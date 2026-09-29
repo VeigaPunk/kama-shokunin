@@ -94,3 +94,106 @@ substring match yields 0 names there vs 4 on 34113, so telemetry silently degrad
 `journal`); `0.0.0.0:40993` exposes a browsable `/tmp` listing on the LAN;
 `127.0.0.1:9222` DevTools with 21 logged-in targets; 8790/8791 are the fleet's credential
 brokers (kagi) — a model consumer repointed there would aim prompts at `omp auth-gateway`.
+
+## round 2 — freshness axis
+
+**Move:** turn point-in-time endpoint reconciliation into durable,
+invocation-to-invocation comparison. Before: freshness **6**; `check` sampled the
+current 11 rows but retained no predecessor, so repeated exit-2 runs could not say
+whether drift changed. After: freshness **7**; `tools/kama-probe.sh snapshot`
+writes a dated `kama-probe/v2` JSON, compares normalized state with
+`registry/history/latest.tsv`, and appends field/row transitions to
+`registry/history/DELTA.md`. The honest boundary is **invocation history**, not
+periodic monitoring: no scheduler was installed.
+
+**Shipped build:**
+
+- `tools/kama-probe.sh`: 1051 lines, mode 0755, md5
+  `61e82ee22dc89292175c5431f1ed6dc1`; fourth subcommand `snapshot`,
+  `--history DIR`, JSON stdout, lock + atomic baseline replacement, symlink
+  refusal, persistence-field normalization.
+- `tools/test-snapshot.sh`: 171 lines, mode 0755, md5
+  `860f26ac05938cdfc1a8816eff1570b4`.
+- tracked state: `registry/history/latest.tsv` sha256
+  `fd98f07a2d845a31cdf0582aa0faf9180e0903754b33248897a7e4211d9843da`;
+  `registry/history/DELTA.md` sha256
+  `493afecbd6dd85df0f08f4541ecd340b03dc5df797a73bf8744cfd94edebab5a`;
+  dated JSON and `.lock` are ignored.
+- domain memory: `corpus/knowledge/snapshot-history.md`,
+  `corpus/lessons/round-2.md`, round-2 citation errata, updated corpus index,
+  `SKILL.md`, `PROVINCE.md`, `SHONEN.md`, and this scorecard/log.
+
+**Live proof on the shipped build:**
+
+```text
+snapshot=20260929T043044Z prev=- rows=11 model_ok=3 drift=8 transitions=0 exit=2
+snapshot=20260929T043052Z prev=20260929T043044Z rows=11 model_ok=3 drift=8 transitions=0 exit=2
+```
+
+Both runs wrote valid dated JSON. The unchanged second run left both tracked
+sha256 values above unchanged, so a future timer does not dirty the repository on
+every stable sample. Exit 2 is the gate result (eight live drifts), not a
+persistence error. Final `bash tools/kama-probe.sh check` remained
+`registry_rows_evaluated=11 model_ok=3 drift=8 exit=2`.
+
+**Behavioral gate:** `bash -n` clean; `shellcheck -S warning` clean;
+`bash tools/test-snapshot.sh` → `RESULT pass=24 fail=0` in 1.15 s. The hermetic
+fixture proves initial baseline, valid/redacted JSON stdout+file, byte-stable
+unchanged state, `MODEL_OK→DEAD`, served-id change, row add, row removal,
+malformed-baseline recovery + audit note, no phantom transition, `--port`
+refusal, and symlinked-history containment. Scratch probes additionally classified
+vLLM- and Ollama-shaped `/v1/models` responses as `MODEL_OK` and a plain JSON
+look-alike as `FOREIGN_SERVICE`; because neither runtime/package is installed,
+this is parser evidence only, not real-runtime integration.
+
+**Persistence boundary:** tracked state excludes resolved URLs, registry notes,
+raw evidence, query/userinfo, and full model paths. It stores only id, verdict,
+reason, normalized served basename, port, and file-match; control characters are
+removed. Dated JSON validates before `DELTA.md` or `latest.tsv` advances.
+Malformed baselines rebaseline with warnings and a ledger note instead of
+fabricating `row-absent` events or breaking the endpoint gate. `flock` serializes
+writers; tmp+rename makes the baseline atomic.
+
+**Freshness re-verification:** all load-bearing live domain facts held: 8080 still
+returns Jitsi HTML/non-model responses, 34113 still serves the expected llama.cpp
+model, the registry still evaluates 11 rows (3 ok / 8 drift), and the stale pins
+remain unrepaired. Review caught and recorded three citation-state changes:
+`enabled_providers` is at `~/.config/the-janitor/opencode.json:5-7` (not line 16);
+`~/bench-arena/loop.sh` moved to `~/archive/bench-arena/loop.sh`; the round-1
+23-listener census refreshed to 20 due ephemeral socket churn. The bad line
+attribution and moved path are corrected in corpus; the filed round-1 log remains
+historical.
+
+**Scheduling handoff:** `systemctl --user list-timers --all` showed only
+`ai-usage.timer`, `webzites-probe.timer`, and `charter-scribe.timer`; `crontab`,
+`crond`, `cron`, `at`, `atd`, and `anacron` are absent. Kama cannot install or
+enable units (`PROVINCE.md` write boundary), so `.ufo/l0-questions.md` asks the
+operator whether to add a user timer. Until answered, sampling remains
+per-round/manual and can miss short-lived transitions.
+
+**L2 ledger (11 agents, one batched dispatch):** `KamaPlannerSnap` bounded the
+state contract; `KamaLabratRuntime` measured response-shape compatibility and
+runtime absence; `KamaExecutorDocs` drafted the operator contract;
+`KamaCriticClaims` rejected the “periodic” overclaim; `KamaConnectorSib`
+confirmed no sibling owns this check and no existing timer runs it;
+`KamaReviewerFresh` re-derived citations and caught the stale line/path/count;
+`KamaSentinelSnap` found credential-shaped persistence, control-character,
+symlink, and torn-write risks; `KamaMutationSnap` supplied transition scenarios;
+`KamaRevengerHist` reconstructed why a ledger would have distinguished the
+8080→34113 cutover; `KamaScribeReport` supplied the report skeleton;
+`KamaSimplifier` removed derivable `index.jsonl` dead weight. L1 integrated and
+re-tested the findings; scratch prose was not copied as authority.
+
+**Operator relay — model fallback (reported, out of kama province):** effective
+config has `modelRoles.m_swe = devin/swe-2:max`,
+`modelRoles.m_daybreak = openai-codex/gpt-daybreak-blue-latest:max`,
+`retry.modelFallback = true`, but `retry.fallbackChains.m_swe = null` and
+`fallbackChains.m_daybreak = null`. Therefore the exact
+`m_swe → openai-codex/gpt-daybreak-blue-latest:max` chain is **not configured**.
+This session logged nine genuine `Devin stream error resource_exhausted` events
+from `03:35:54Z` through `03:49:17Z`; no model-change event accompanied them.
+The only model changes were `devin/swe-2` at `03:19:34Z` and a later direct
+`openai-codex/gpt-daybreak-blue-latest` selection at `04:13:34Z`, both with
+`resolvedModelIsFallback:false`. Observed result: capacity failures did **not**
+advance through a configured chain; the later Daybreak switch was not marked as
+fallback. No failure was forced and no route/mission config was changed.

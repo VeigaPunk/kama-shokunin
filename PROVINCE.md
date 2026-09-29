@@ -11,7 +11,7 @@ drift, served-model reconciliation, probe conventions.
 | baseURL values in consumer configs | `~/.config/opencode/opencode.json:158`, `~/.config/opencode/agents/janitor.md:21` |
 | served-model-id reconciliation | `GET /v1/models` vs `--alias` vs the configured model id |
 | liveness/readiness probe conventions | `/health`, `/props`, `/slots` |
-| endpoint-drift detection | `tools/kama-probe.sh` + `registry/endpoint-consumers.tsv` |
+| endpoint-drift detection + invocation history | `tools/kama-probe.sh snapshot`, `registry/endpoint-consumers.tsv`, `registry/history/{latest.tsv,DELTA.md}` |
 | endpoint-consumers cross-lane registry | `corpus/knowledge/consumer-registry.md`, `cross-lane-scope.md` |
 
 **Refuses:** model quality/eval (kengaku), credential material & auth flows (kagi),

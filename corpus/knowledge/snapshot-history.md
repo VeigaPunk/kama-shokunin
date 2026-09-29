@@ -1,0 +1,84 @@
+# Endpoint snapshot history — invocation contract
+
+Round 2 adds stateful comparison to the read-only endpoint gate. It does **not**
+install or imply a scheduler. Freshness is now diffable whenever an authorized
+caller invokes the command; cadence remains operator-owned.
+
+## Run it
+
+```sh
+bash tools/kama-probe.sh snapshot
+```
+
+The command evaluates the same registry rows and returns the same gate status as
+`check`: `0` when every declared consumer reconciles, `2` when at least one row
+drifts, and `1` for a probe/tool error (`tools/kama-probe.sh:932-1003`). Therefore
+an exit `2` means the snapshot was written successfully **and** captured drift;
+it is not a persistence failure.
+
+Use `--history DIR` for an isolated history root. `snapshot --port N` is refused
+because a single-port probe has no registry row set to persist
+(`tools/kama-probe.sh:111-150`).
+
+## Persisted contract
+
+| Artifact | Contract | Tracked |
+|---|---|---|
+| `<ISO-UTC>.json` | Full normalized row state for one invocation; schema `kama-probe/v2` | no; local run evidence |
+| `latest.tsv` | Comparison baseline: `id`, `verdict`, `reason`, normalized served-model id, port, file-match | yes |
+| `DELTA.md` | Append-only, one line per changed field or row-set transition | yes |
+| `.lock` | `flock` serialization for concurrent invocations | no |
+
+The first run writes one `baseline recorded` line and zero transitions. An
+unchanged run writes its local dated JSON but leaves both tracked artifacts
+byte-stable; `latest.tsv` advances only with a transition or recovery rebaseline.
+Later runs compare `verdict`, `reason`, `served_model`, `port`, and `file_match`;
+row additions and removals are explicit transitions (`tools/kama-probe.sh:833-903`).
+The dated JSON must validate before either tracked artifact advances, so a failed
+snapshot is retried against the previous baseline rather than silently consuming
+a transition (`tools/kama-probe.sh:932-1007`).
+
+A malformed or unreadable baseline cannot turn garbage into a phantom
+`row-absent` event. Malformed lines are discarded and warned; if no usable rows
+remain, the run rebaselines. `DELTA.md` records a `baseline-note` audit line.
+This preserves the endpoint gate result while making loss of history visible.
+
+## Persistence boundary
+
+Endpoint URLs, registry notes, raw evidence strings, and full model paths do not
+land in tracked state. `latest.tsv` and `DELTA.md` keep only normalized fields;
+served ids are basenames with a trailing `.gguf` removed
+(`tools/kama-probe.sh:911-928`). Control characters are stripped. Userinfo,
+query, and fragment components are removed before a resolved URL can reach the
+snapshot path (`tools/kama-probe.sh:555-572`). The history root and tracked
+outputs refuse symlinks, and `flock` plus atomic baseline replacement prevent
+interleaved/torn writes (`tools/kama-probe.sh:932-1003`). The command remains
+read-only toward consumers and services; its only writes are beneath the chosen
+history directory.
+
+## Round-2 measurements
+
+- Final live default-history baseline:
+  `snapshot=20260929T043044Z prev=- rows=11 model_ok=3 drift=8 transitions=0 exit=2`.
+- Immediate stable re-run:
+  `snapshot=20260929T043052Z prev=20260929T043044Z rows=11 model_ok=3 drift=8 transitions=0 exit=2`.
+- Hermetic behavioral harness:
+  `bash tools/test-snapshot.sh` → `RESULT pass=24 fail=0` in 1.15 s. It exercises
+  baseline creation, stable rerun, `MODEL_OK→DEAD`, served-id change, row add,
+  row removal, malformed-baseline recovery/audit, `--port` refusal, and symlink
+  containment.
+
+The tracked baseline is `registry/history/latest.tsv`; the first-run ledger is
+`registry/history/DELTA.md`. The unchanged live rerun added no ledger line.
+
+## Limits and scheduling handoff
+
+This is sampled state, not event capture: a transition that begins and ends
+between invocations is invisible. Nothing in this repository invokes `snapshot`
+on a clock. Host inspection found systemd user timers are the viable scheduler
+surface and cron/at/anacron absent, but `PROVINCE.md` forbids kama from installing
+or enabling units. The operator must choose cadence and failure notification.
+Until then, the honest claim is **invocation history**, not periodic monitoring.
+
+The schema also does not cover declared-vs-served context size; it records
+endpoint identity only. That remains a separate freshness gap.

@@ -20,15 +20,20 @@ gaps grow with rounds.
 | `lessons/round-1-citations.md` | independent verification of every frozen fact | 1 |
 | `lessons/round-1-safety.md` | adversarial audit: secret leakage, scope/authority, trust boundary | 1 |
 | `lessons/probe-mutation-matrix.md` | mutation classes the probe must detect + the classes it misses | 1 |
+| `knowledge/snapshot-history.md` | invocation-to-invocation endpoint state, transition semantics, persistence boundary, scheduling handoff | 2 |
+| `lessons/round-2.md` | freshness claim boundary, implementation/review traps, persistence threat model | 2 |
 
 ## Known gaps
 
 - **Operator-dependent:** the stale pins in `~/.config/opencode/opencode.json:158`,
   `~/.config/opencode/agents/janitor.md:21`, and `~/.local/bin/the-janitor:19` are
   *detected and reported*, never rewritten by kama (operator-owned files).
-- No periodic/automated re-verification yet — `tools/kama-probe.sh` is manual
-  (round-2 candidate: turn it into a scheduled freshness check).
+- Invocation comparison is automated, but invocation cadence is not:
+  `tools/kama-probe.sh snapshot` records dated state and deltas only when called.
+  Installing/enabling a systemd user timer remains operator-owned.
 - Windows/Podman-style runtimes absent from the census (single-host, Docker only).
-- Served-model reconciliation is proven for the llama.cpp runtime only; vLLM/ollama
-  runtimes are classified by rule, not measured (`MODEL_OK` vs look-alike stub).
+- Real-runtime reconciliation is proven for llama.cpp only. vLLM/Ollama-shaped
+  fixtures pass, but neither runtime is installed; this is parser evidence, not
+  runtime integration.
+- Declared-vs-served context size (32768 vs live 16384) is not in the snapshot schema.
 - No coverage of *remote* endpoint health (that is kake/kumitate territory).

@@ -60,3 +60,19 @@ Command: `find ~/.local/bin -type f -perm /111 -print0 | xargs -0 grep -nH -E 'M
 Observed output includes `~/.local/bin/the-janitor:16-19`; `xask-l3` and `xask` also set generic `MODEL_ID` variables for command-line selection, but neither output contains a local Qwen `MODEL_ENDPOINT`. Thus the executable census adds `the-janitor` as the only additional local endpoint pin found by this scan.
 
 The registry requested by the parent lane is not present in this checkout at audit time (`test -f registry/endpoint-consumers.tsv` was not run before this artifact was written); this lesson records evidence only and does not create or modify that sibling-owned registry.
+
+## Round-2 citation errata
+
+The 2026-09-29 re-verification found three non-domain changes while the endpoint
+identity facts remained stable:
+
+- `~/.config/the-janitor/opencode.json:16` is the 8080 `baseURL`; the
+  `enabled_providers: ["qwen-local"]` fact is at lines 5–7. The round-1 fact was
+  correct and its line attribution was not.
+- `~/bench-arena/loop.sh:5` moved to `~/archive/bench-arena/loop.sh:5`; the
+  `http://127.0.0.1:8080/metrics` default is unchanged.
+- `listener-census.md` preserves a 23-listener point-in-time sample; the refresh
+  observed 20. Ephemeral listener count is not an invariant.
+
+The round-1 `kama-probe.sh` hash is historical evidence, not the current build.
+Round-2's current hash and behavior are pinned in `SCORECARD.md` and `LOG.md`.

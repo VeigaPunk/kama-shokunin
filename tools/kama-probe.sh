@@ -6,19 +6,24 @@
 # believes it is, right now" — never "is the model good" (kengaku) or "is the request
 # safe" (kagi).
 #
-# Read-only. Probes 127.0.0.1 only (--noproxy '*'); never touches a consumer config.
-# Writes only under ${KAMA_PROBE_TMPDIR:-/tmp}/kama-probe.XXXXXX (removed on exit).
-# Deterministic: no timestamps, no ordering by hash; output is byte-stable for
-# identical live state.
+# Read-only toward live services and consumer configs. listeners/consumers/check
+# write only to a removed mktemp dir. snapshot additionally writes inside its
+# explicit history dir. Non-snapshot output is byte-stable for identical state;
+# snapshot intentionally carries UTC ids/timestamps and a predecessor link.
 #
 # Subcommands:
 #   listeners   enumerate loopback TCP listeners (ss -ltn) and classify each
 #   consumers   resolve each registry consumer's declared baseURL FROM ITS OWN FILE
 #               (never from the TSV text) and report declared-vs-actual
 #   check       reconcile registry entries against live classification (exit gate)
+#   snapshot    run the check evaluation AND persist it: dated JSON + a TSV baseline
+#               + a transition ledger under a history dir. On every run after the
+#               first, each row is diffed against the previous baseline and verdict/
+#               served-model/port/file-match transitions are appended to DELTA.md —
+#               the bounded drift window a manual `check` cannot give (v4 contract).
 #
-# Flags (all subcommands): --json  --port N  --expect ID  --id KEY  --registry PATH
-#                          --timeout S  --connect-timeout S  --help
+# Common flags: --json  --registry PATH  --timeout S  --connect-timeout S  --help
+# Matrix flags: --port N  --expect ID  --id KEY | snapshot-only: --history DIR
 #
 # Verdict vocabulary (exact strings):
 #   MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP
@@ -32,9 +37,18 @@
 #   both served and expected ids are NORMALISED before comparison: drop the directory
 #   (basename) then strip ONE trailing ".gguf"; comparison is case-sensitive.
 #   If normalisation leaves either side empty -> MODEL_MISMATCH, reason unresolvable-id.
+# History layout (snapshot; DIR default <repo>/registry/history, override --history):
+#   <ISO-UTC>.json   dated, persistence-safe row state (schema kama-probe/v2)
+#   latest.tsv       baseline, one row per consumer: id,verdict,reason,served,port,fmatch
+#   DELTA.md         append-only ledger; one line per transition, "<ts> id field old->new"
+# First run writes a "baseline" line and records no transitions. A corrupt or
+# unreadable latest.tsv rebaselines (warned + noted) rather than breaking the
+# gate. snapshot refuses --port mode: a matrix probe has no registry baseline.
+# Persisted rows exclude evidence, notes, resolved URLs and raw model paths;
+# served ids use the same basename/.gguf normalization as identity comparison.
 #
-# Deps: ss, curl, coreutils. python3 optional (exact JSON-pointer resolution and
-# exact served-id extraction; grep fallbacks used when absent).
+# Deps: ss, curl, flock, coreutils. python3 optional (exact JSON-pointer/model-id
+# parsing and generated-JSON validation; grep fallbacks used when absent).
 set -euo pipefail
 umask 077
 
@@ -51,6 +65,7 @@ OPT_PORT=""
 OPT_EXPECT=""
 OPT_ID=""
 OPT_REGISTRY="$REGISTRY_DEFAULT"
+OPT_HISTORY="$REPO_ROOT/registry/history"
 SUBCOMMAND=""
 
 HAVE_PY=0
@@ -69,11 +84,13 @@ trap cleanup EXIT INT TERM
 
 usage() {
   cat <<'EOF'
-usage: kama-probe.sh <listeners|consumers|check> [flags]
+usage: kama-probe.sh <listeners|consumers|check|snapshot> [flags]
 
   listeners            enumerate loopback TCP listeners and classify each
   consumers            resolve each registry consumer's baseURL from its own file
   check                reconcile registry entries against live classification
+  snapshot             check + persist: dated JSON, TSV baseline, DELTA.md ledger
+                       under a history dir (see the header contract)
 
 flags:
   --json               emit JSON on stdout (diagnostics stay on stderr)
@@ -81,6 +98,7 @@ flags:
   --expect ID          expected model id for --port mode ("*" or "-" = any)
   --id KEY             row id to label --port mode with (default cli-override)
   --registry PATH      registry TSV to use (default registry/endpoint-consumers.tsv)
+  --history DIR        snapshot history dir (default registry/history; snapshot only)
   --timeout S          per-request curl --max-time in seconds (default 5)
   --connect-timeout S  per-request curl --connect-timeout in seconds (default 2)
   --help               this text
@@ -93,7 +111,7 @@ EOF
 parse_args() {
   while [ $# -gt 0 ]; do
     case "$1" in
-      listeners|consumers|check) [ -z "$SUBCOMMAND" ] && SUBCOMMAND=$1 || die "duplicate subcommand: $1" ;;
+      listeners|consumers|check|snapshot) [ -z "$SUBCOMMAND" ] && SUBCOMMAND=$1 || die "duplicate subcommand: $1" ;;
       --json) JSON_OUT=1 ;;
       --port) shift; [ $# -gt 0 ] || die "--port needs a value"; OPT_PORT=$1 ;;
       --port=*) OPT_PORT=${1#*=} ;;
@@ -107,6 +125,8 @@ parse_args() {
       --timeout=*) TIMEOUT=${1#*=} ;;
       --connect-timeout) shift; [ $# -gt 0 ] || die "--connect-timeout needs a value"; CONNECT_TIMEOUT=$1 ;;
       --connect-timeout=*) CONNECT_TIMEOUT=${1#*=} ;;
+      --history) shift; [ $# -gt 0 ] || die "--history needs a value"; OPT_HISTORY=$1 ;;
+      --history=*) OPT_HISTORY=${1#*=} ;;
       --help|-h) usage; exit 0 ;;
       *) die "unknown argument: $1 (see --help)" ;;
     esac
@@ -124,6 +144,9 @@ parse_args() {
   fi
   if [ -n "$OPT_EXPECT" ] && [ -z "$OPT_PORT" ]; then
     die "--expect is only meaningful with --port (matrix mode)"
+  fi
+  if [ "$SUBCOMMAND" = "snapshot" ] && [ -n "$OPT_PORT" ]; then
+    die "snapshot refuses --port: a matrix probe has no registry baseline to persist"
   fi
 }
 
@@ -542,6 +565,10 @@ resolve_spec() { # $1 consumer path, $2 resolver spec
   if [[ $raw =~ https?://[^\"\ ]+ ]]; then
     local url=${BASH_REMATCH[0]}
     url=${url%%/}
+    # never surface credentials: strip userinfo and query/fragment from the
+    # resolved endpoint before it reaches output or the ledger (sentinel r2)
+    url=${url%%\?*}; url=${url%%\#*}
+    if [[ $url =~ ^https?://[^/]*@ ]]; then url="${url%%://*}://${url#*@}"; fi
     printf '%s|url' "$url"
     return 0
   fi
@@ -567,12 +594,6 @@ url_port() {
   local u=${1#*://}
   u=${u%%/*}
   case "$u" in *:*) printf '%s' "${u##*:}" ;; *) printf '80' ;; esac
-}
-
-url_host() {
-  local u=${1#*://}
-  u=${u%%/*}
-  case "$u" in *:*) printf '%s' "${u%:*}" ;; *) printf '%s' "$u" ;; esac
 }
 
 # ---------------------------------------------------------------- registry read
@@ -715,22 +736,36 @@ cmd_consumers() {
   return "$exit_code"
 }
 
-cmd_check() {
-  local -a table=() json_rows=()
-  table+=("$(printf 'id\tconsumer\tdeclared\tverdict\treason\tserved_model\tevidence')")
-  local exit_code=0 n_ok=0 n_drift=0
+# ---------------------------------------------------------------- row evaluation
+# Shared by check and snapshot. Fills EV_* parallel arrays + EV_JSON (pretty-printed
+# row objects, 4-space indented). Returns the gate exit code (0 clean / 2 drift).
+EV_N=0 EV_OK=0 EV_DRIFT=0 EV_JSON=''
+declare -a EV_IDS=() EV_PATHS=() EV_DECLARED=() EV_RESOLVED=() EV_FMATCH=() EV_RKIND=()
+declare -a EV_ENDPOINT=() EV_PORT=() EV_EXPECT=() EV_VERDICT=() EV_REASON=()
+declare -a EV_SERVED=() EV_DRIFTROW=() EV_EVIDENCE=() EV_NOTES=()
+
+eval_rows() {
+  local -a json_rows=()
+  EV_N=0 EV_OK=0 EV_DRIFT=0 EV_JSON=''
+  EV_IDS=() EV_PATHS=() EV_DECLARED=() EV_RESOLVED=() EV_FMATCH=() EV_RKIND=()
+  EV_ENDPOINT=() EV_PORT=() EV_EXPECT=() EV_VERDICT=() EV_REASON=()
+  EV_SERVED=() EV_DRIFTROW=() EV_EVIDENCE=() EV_NOTES=()
 
   if [ -n "$OPT_PORT" ]; then
     local v_id="${OPT_ID:-cli-override}"
     local declared="http://127.0.0.1:$OPT_PORT/v1"
     classify "$OPT_PORT" "${OPT_EXPECT:-}"
-    if [ "$C_VERDICT" = "MODEL_OK" ]; then n_ok=1; else n_drift=1; exit_code=2; fi
-    table+=("$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s' \
-      "$v_id" "--port $OPT_PORT override" "$declared" "$C_VERDICT" "$C_REASON" "$C_SERVED" "$C_EVIDENCE")")
+    EV_IDS=("$v_id"); EV_PATHS=("-"); EV_DECLARED=("$declared"); EV_RESOLVED=("-")
+    EV_FMATCH=("cli-override"); EV_RKIND=("cli-override"); EV_ENDPOINT=("$declared")
+    EV_PORT=("$OPT_PORT"); EV_EXPECT=("${OPT_EXPECT:--}"); EV_VERDICT=("$C_VERDICT")
+    EV_REASON=("$C_REASON"); EV_SERVED=("$C_SERVED"); EV_EVIDENCE=("$C_EVIDENCE")
+    EV_NOTES=(""); EV_N=1
+    if [ "$C_VERDICT" = "MODEL_OK" ]; then EV_OK=1; EV_DRIFTROW=(false)
+    else EV_DRIFT=1; EV_DRIFTROW=(true); fi
     json_rows+=("$(printf '    {"id":%s,"consumer_path":"-","declared":%s,"file_match":"cli-override","resolver_kind":"cli-override","expected_model_id":%s,"verdict":%s,"reason":%s,"served_model":%s,"drift":%s,"evidence":%s,"notes":""}' \
       "$(jstr "$v_id")" "$(jstr "$declared")" "$(jstr "${OPT_EXPECT:--}")" "$(jstr "$C_VERDICT")" \
       "$(jstr "$C_REASON")" "$(jstr "$C_SERVED")" \
-      "$([ "$C_VERDICT" = MODEL_OK ] && echo false || echo true)" "$(jstr "$C_EVIDENCE")")")
+      "${EV_DRIFTROW[0]}" "$(jstr "$C_EVIDENCE")")")
   else
     read_registry "$OPT_REGISTRY"
     local i id declared expected pnum verdict drift
@@ -743,10 +778,13 @@ cmd_check() {
       drift=false
       if [ "$verdict" != "MODEL_OK" ]; then drift=true; fi
       case "$R_FMATCH" in yes|inherited) : ;; *) drift=true ;; esac
-      if [ "$drift" = true ]; then n_drift=$((n_drift+1)); exit_code=2; else n_ok=$((n_ok+1)); fi
-      table+=("$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s' \
-        "$id" "${REG_PATHS[i]}" "$declared" "$verdict" "$C_REASON" "$C_SERVED" \
-        "file=$R_FMATCH via $R_KIND @$pnum; $C_EVIDENCE")")
+      if [ "$drift" = true ]; then EV_DRIFT=$((EV_DRIFT+1)); else EV_OK=$((EV_OK+1)); fi
+      EV_IDS+=("$id"); EV_PATHS+=("${REG_PATHS[i]}"); EV_DECLARED+=("$declared")
+      EV_RESOLVED+=("${R_RESOLVED:--}"); EV_FMATCH+=("$R_FMATCH"); EV_RKIND+=("$R_KIND")
+      EV_ENDPOINT+=("$R_ENDPOINT"); EV_PORT+=("$pnum"); EV_EXPECT+=("$expected")
+      EV_VERDICT+=("$verdict"); EV_REASON+=("$C_REASON"); EV_SERVED+=("$C_SERVED")
+      EV_DRIFTROW+=("$drift"); EV_EVIDENCE+=("$C_EVIDENCE"); EV_NOTES+=("${REG_NOTES[i]}")
+      EV_N=$((EV_N+1))
       json_rows+=("$(printf '    {"id":%s,"consumer_path":%s,"resolver":%s,"declared":%s,"resolved_from_file":%s,"file_match":%s,"resolve_kind":%s,"endpoint":%s,"port":%s,"expected_model_id":%s,"verdict":%s,"reason":%s,"served_model":%s,"drift":%s,"evidence":%s,"notes":%s}' \
         "$(jstr "$id")" "$(jstr "${REG_PATHS[i]}")" "$(jstr "${REG_SPECS[i]}")" "$(jstr "$declared")" \
         "$(jstr "${R_RESOLVED:--}")" "$(jstr "$R_FMATCH")" "$(jstr "$R_KIND")" "$(jstr "$R_ENDPOINT")" \
@@ -754,17 +792,241 @@ cmd_check() {
         "$(jstr "$C_SERVED")" "$drift" "$(jstr "$C_EVIDENCE")" "$(jstr "${REG_NOTES[i]}")")")
     done
   fi
+  EV_JSON=$(json_array "${json_rows[@]}")
+  [ "$EV_DRIFT" -gt 0 ] && return 2 || return 0
+}
 
-  local evaluated=${#json_rows[@]}
+cmd_check() {
+  # `eval_rows || exit_code=$?`: a bare call would trip set -e on the drift exit 2
+  local exit_code=0
+  eval_rows || exit_code=$?
   if [ "$JSON_OUT" -eq 1 ]; then
     emit_json "$(printf '{\n  "schema": "kama-probe/v1",\n  "subcommand": "check",\n  "registry": %s,\n  "verdict_vocabulary": "%s",\n  "exit_codes": {"0": "every declared consumer reconciles", "2": "at least one drift", "1": "probe error"},\n  "summary": {"registry_rows_evaluated": %s, "model_ok": %s, "drift": %s, "exit": %s},\n  "rows": [\n%s\n  ]\n}\n' \
-      "$(jstr "$OPT_REGISTRY")" "$VOCAB" "$evaluated" "$n_ok" "$n_drift" "$exit_code" \
-      "$(json_array "${json_rows[@]}")")"
+      "$(jstr "$OPT_REGISTRY")" "$VOCAB" "$EV_N" "$EV_OK" "$EV_DRIFT" "$exit_code" \
+      "$EV_JSON")"
     return "$exit_code"
   fi
 
+  local -a table=()
+  table+=("$(printf 'id\tconsumer\tdeclared\tverdict\treason\tserved_model\tevidence')")
+  local i
+  for ((i=0; i<EV_N; i++)); do
+    table+=("$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s' \
+      "${EV_IDS[i]}" "${EV_PATHS[i]}" "${EV_DECLARED[i]}" "${EV_VERDICT[i]}" \
+      "${EV_REASON[i]}" "${EV_SERVED[i]}" \
+      "file=${EV_FMATCH[i]} via ${EV_RKIND[i]} @${EV_PORT[i]}; ${EV_EVIDENCE[i]}")")
+  done
   printf '%s\n' "${table[@]}" | print_table
-  printf 'registry_rows_evaluated=%s model_ok=%s drift=%s exit=%s\n' "$evaluated" "$n_ok" "$n_drift" "$exit_code"
+  printf 'registry_rows_evaluated=%s model_ok=%s drift=%s exit=%s\n' "$EV_N" "$EV_OK" "$EV_DRIFT" "$exit_code"
+  return "$exit_code"
+}
+
+# ---------------------------------------------------------------- snapshot
+# Compute row-set transitions against the previous latest.tsv baseline — pure
+# comparison, no writes; the caller decides when DELTA.md is appended (after the
+# dated JSON validates, so a failed snapshot re-derives transitions next run).
+# Baseline row format: id \t verdict \t reason \t served \t port \t fmatch.
+# Sets DELTA_LINES[], N_TRANS, PREV_ID. $1 ts, $2 history dir.
+declare -a DELTA_LINES=()
+N_TRANS=0 PREV_ID='-'
+
+diff_baseline() {
+  local ts=$1 hist=$2
+  local -A PV_V=() PV_R=() PV_S=() PV_P=() PV_F=()
+  PREV_ID='-'
+  local -a MAL_NOTES=()
+  if [ -f "$hist/latest.tsv" ] && [ ! -r "$hist/latest.tsv" ]; then
+    # unreadable baseline: rebaseline rather than die with a bare shell redirect
+    # error (contract: losing a baseline must never break the gate)
+    warn "latest.tsv unreadable — rebaselining"
+    MAL_NOTES+=("- $ts baseline-note unreadable-latest.tsv; rebaseline")
+  elif [ -f "$hist/latest.tsv" ]; then
+    local id v r s p f bad=0
+    while IFS=$'\t' read -r id v r s p f; do
+      case "${id:-}" in ''|'#'*)
+        case "${id:-}" in '#@snapshot_id'*) PREV_ID=${id##* } ;; esac
+        continue ;;
+      esac
+      # a baseline row is only believable if its verdict is in the vocabulary —
+      # garbage lines are dropped (warned + noted in DELTA.md), not turned into
+      # phantom row-absent transitions and not silently forgiven
+      case " ${v:-} " in
+        *\ MODEL_OK\ *|*\ MODEL_MISMATCH\ *|*\ FOREIGN_SERVICE\ *|*\ UNAUTHORIZED_SERVICE\ *|*\ DEAD\ *|*\ NOT_HTTP\ *) : ;;
+        *) warn "latest.tsv: dropping malformed baseline row for id='$id'"
+           MAL_NOTES+=("- $ts baseline-note malformed-row-dropped id='$(persist_clean "$id")'")
+           bad=1; continue ;;
+      esac
+      PV_V[$id]=${v:-} PV_R[$id]=${r:-} PV_S[$id]=${s:-} PV_P[$id]=${p:-} PV_F[$id]=${f:-}
+    done < "$hist/latest.tsv"
+    if [ "${#PV_V[@]}" -eq 0 ]; then
+      warn "latest.tsv has no usable baseline rows — rebaselining"
+    elif [ "$bad" -eq 1 ]; then
+      warn "latest.tsv had malformed rows (dropped); this snapshot rebaselines them"
+    fi
+  fi
+
+  DELTA_LINES=() N_TRANS=0
+  [ "${#MAL_NOTES[@]}" -gt 0 ] && DELTA_LINES+=("${MAL_NOTES[@]}")
+  local i rid
+  if [ "${#PV_V[@]}" -eq 0 ]; then
+    DELTA_LINES+=("- $ts baseline recorded ($EV_N rows); transitions begin with the next snapshot")
+  else
+    local -A SEEN=()
+    for ((i=0; i<EV_N; i++)); do
+      rid=$(persist_clean "${EV_IDS[i]}")
+      SEEN[$rid]=1
+      if [ -z "${PV_V[$rid]+x}" ]; then
+        DELTA_LINES+=("- $ts $rid row-added verdict=${EV_VERDICT[i]} port=${EV_PORT[i]} served=$(served_persist "${EV_SERVED[i]}")")
+        N_TRANS=$((N_TRANS+1))
+        continue
+      fi
+      local fields=(verdict reason served_model port file_match)
+      # served_model compares PERSISTED form (normalised basename) on both sides —
+      # a raw GGUF-path change that keeps the basename is not an identity change.
+      local vals_new=("${EV_VERDICT[i]}" "$(persist_clean "${EV_REASON[i]}")" "$(served_persist "${EV_SERVED[i]}")" "$(persist_clean "${EV_PORT[i]}")" "$(persist_clean "${EV_FMATCH[i]}")")
+      local vals_old=("$(persist_clean "${PV_V[$rid]}")" "$(persist_clean "${PV_R[$rid]}")" "$(persist_clean "${PV_S[$rid]}")" "$(persist_clean "${PV_P[$rid]}")" "$(persist_clean "${PV_F[$rid]}")")
+      local k
+      for ((k=0; k<${#fields[@]}; k++)); do
+        if [ "${vals_new[k]}" != "${vals_old[k]}" ]; then
+          DELTA_LINES+=("- $ts $rid ${fields[k]} ${vals_old[k]:--} -> ${vals_new[k]:--}")
+          N_TRANS=$((N_TRANS+1))
+        fi
+      done
+    done
+    # sorted for deterministic output (planner r2: assoc-array order is arbitrary)
+    while IFS= read -r rid; do
+      if [ -z "${SEEN[$rid]+x}" ]; then
+        DELTA_LINES+=("- $ts $(persist_clean "$rid") row-absent (was verdict=$(persist_clean "${PV_V[$rid]}") port=$(persist_clean "${PV_P[$rid]}"))")
+        N_TRANS=$((N_TRANS+1))
+      fi
+    done < <(printf '%s\n' "${!PV_V[@]}" | sort)
+  fi
+}
+
+# ------------------------------------------------- persisted-field hygiene
+# Fields that land in latest.tsv / DELTA.md must not carry control chars (a
+# hostile loopback service can inject TAB/CR via Server/Content-Type headers and
+# corrupt the TSV trust anchor — sentinel round-2) or URL userinfo/query (creds
+# in a baseURL must never persist to the ledger).
+persist_clean() { # $1 -> single-line, tab-free, control-stripped value
+  local s=${1-}
+  s=${s//$'\t'/ }; s=${s//$'\n'/ }; s=${s//$'\r'/ }
+  s=$(printf '%s' "$s" | tr -d '[:cntrl:]')
+  printf '%s' "$s"
+}
+
+# served ids persist as NORMALISED basenames (matches contract v2 semantics):
+# two ids differing only in directory or a trailing .gguf are the same model.
+served_persist() { # $1 comma-joined raw served ids -> comma-joined basenames
+  local s=${1-} out='' parts=() p
+  [ "$s" = "-" ] && { printf '%s' '-'; return 0; }
+  IFS=',' read -r -a parts <<< "$s"
+  for p in "${parts[@]}"; do
+    p=$(normalize_id "$(persist_clean "$p")")
+    [ -n "$p" ] || p='-'
+    out+="${out:+,}$p"
+  done
+  printf '%s' "${out:--}"
+}
+
+cmd_snapshot() {
+  # `eval_rows || exit_code=$?`: a bare call would trip set -e on the drift exit 2
+  local exit_code=0
+  eval_rows || exit_code=$?
+  local hist=$OPT_HISTORY ts snap_id snap_file
+  ts=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+  snap_id=$(date -u +%Y%m%dT%H%M%SZ)
+  snap_file="$hist/$snap_id.json"
+  if [ -e "$snap_file" ] || [ -L "$snap_file" ]; then
+    snap_file="$hist/$snap_id-p$$.json"
+    { [ ! -e "$snap_file" ] && [ ! -L "$snap_file" ]; } ||
+      die "snapshot filename collision: $snap_file"
+  fi
+
+  # symlink refusal before mkdir -p: a planted link would aim the writes outside
+  # the lane's repo (sentinel round-2 finding — containment check on history dir)
+  [ -L "$hist" ] && die "history dir is a symlink (refused): $hist"
+  mkdir -p -- "$hist" || die "cannot create history dir: $hist"
+  [ -d "$hist" ] && [ -w "$hist" ] || die "history dir not writable: $hist"
+  local output_path
+  for output_path in "$hist/.lock" "$hist/DELTA.md" "$hist/latest.tsv"; do
+    [ -L "$output_path" ] && die "history output is a symlink (refused): $output_path"
+  done
+
+  # Serialise snapshots: concurrent runs would interleave DELTA.md and tear the
+  # baseline. Snapshot integrity requires flock; other subcommands do not.
+  command -v flock >/dev/null 2>&1 || die "missing snapshot dependency: flock"
+  exec 9>"$hist/.lock" || die "cannot open snapshot lock: $hist/.lock"
+  flock -w 10 9 || die "snapshot lock busy: $hist/.lock"
+
+  diff_baseline "$ts" "$hist"
+
+  # Dated JSON first — if validation/write fails, the baseline is not advanced
+  # and DELTA.md is not appended. Persist only the transition contract fields:
+  # no registry notes, probe evidence, resolved URLs, or raw filesystem paths.
+  local -a snap_rows=()
+  local i
+  for ((i=0; i<EV_N; i++)); do
+    snap_rows+=("$(printf '    {"id":%s,"consumer_path":%s,"port":%s,"expected_model_id":%s,"verdict":%s,"reason":%s,"served_model":%s,"file_match":%s,"drift":%s}' \
+      "$(jstr "$(persist_clean "${EV_IDS[i]}")")" "$(jstr "$(persist_clean "${EV_PATHS[i]}")")" \
+      "${EV_PORT[i]}" "$(jstr "$(persist_clean "${EV_EXPECT[i]}")")" \
+      "$(jstr "${EV_VERDICT[i]}")" "$(jstr "$(persist_clean "${EV_REASON[i]}")")" \
+      "$(jstr "$(served_persist "${EV_SERVED[i]}")")" \
+      "$(jstr "$(persist_clean "${EV_FMATCH[i]}")")" "${EV_DRIFTROW[i]}")")
+  done
+  local snap_json
+  snap_json=$(printf '{\n  "schema": "kama-probe/v2",\n  "subcommand": "snapshot",\n  "snapshot": {"id": %s, "ts": %s, "prev_snapshot": %s, "registry": %s, "history_dir": %s},\n  "verdict_vocabulary": "%s",\n  "exit_codes": {"0": "every declared consumer reconciles", "2": "at least one drift", "1": "probe error"},\n  "summary": {"registry_rows_evaluated": %s, "model_ok": %s, "drift": %s, "transitions": %s, "exit": %s},\n  "rows": [\n%s\n  ]\n}\n' \
+    "$(jstr "$snap_id")" "$(jstr "$ts")" "$(jstr "$PREV_ID")" \
+    "$(jstr "$(persist_clean "$OPT_REGISTRY")")" "$(jstr "$(persist_clean "$hist")")" \
+    "$VOCAB" "$EV_N" "$EV_OK" "$EV_DRIFT" "$N_TRANS" "$exit_code" \
+    "$(json_array "${snap_rows[@]}")")
+  if [ "$HAVE_PY" -eq 1 ]; then
+    printf '%s\n' "$snap_json" | python3 -c 'import json,sys; json.load(sys.stdin)' \
+      || die "internal error: generated snapshot JSON failed to parse (probe bug)"
+  fi
+  printf '%s\n' "$snap_json" > "$snap_file" || die "cannot write snapshot file: $snap_file"
+
+  if [ ! -f "$hist/DELTA.md" ]; then
+    printf '# kama snapshot DELTA.md — endpoint-verdict transition ledger\n#\n' > "$hist/DELTA.md" \
+      || die "DELTA.md not writable: $hist"
+    printf '# Append-only; one line per row-field change between snapshots, in\n# chronological order. Generated by kama-probe.sh snapshot; never hand-edited.\n\n' \
+      >> "$hist/DELTA.md"
+  fi
+  if [ ${#DELTA_LINES[@]} -gt 0 ]; then
+    printf '%s\n' "${DELTA_LINES[@]}" >> "$hist/DELTA.md" || die "DELTA.md not writable: $hist"
+  fi
+
+  # Advance tracked state only when the state changed (or recovery rebaselined).
+  # Stable scheduled runs must not dirty the repository merely by changing a
+  # snapshot id. tmp+mv prevents a killed write from tearing latest.tsv.
+  if [ ${#DELTA_LINES[@]} -gt 0 ]; then
+    {
+      printf '#@snapshot_id %s\t# columns: id\tverdict\treason\tserved_model\tport\tfile_match\n' "$snap_id"
+      local i
+      for ((i=0; i<EV_N; i++)); do
+        printf '%s\t%s\t%s\t%s\t%s\t%s\n' \
+          "${EV_IDS[i]}" "${EV_VERDICT[i]}" "$(persist_clean "${EV_REASON[i]:--}")" \
+          "$(served_persist "${EV_SERVED[i]:--}")" "${EV_PORT[i]}" "$(persist_clean "${EV_FMATCH[i]:--}")"
+      done
+    } > "$hist/latest.tsv.new.$$" || die "cannot write baseline: $hist/latest.tsv"
+    mv -- "$hist/latest.tsv.new.$$" "$hist/latest.tsv" || die "cannot replace baseline: $hist/latest.tsv"
+  fi
+
+  if [ "$JSON_OUT" -eq 1 ]; then
+    emit_json "$snap_json"
+  else
+    local -a table=()
+    table+=("$(printf 'id\tconsumer\tverdict\treason\tserved_model\tport\tfile_match')")
+    for ((i=0; i<EV_N; i++)); do
+      table+=("$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s' \
+        "${EV_IDS[i]}" "${EV_PATHS[i]}" "${EV_VERDICT[i]}" "${EV_REASON[i]}" \
+        "${EV_SERVED[i]}" "${EV_PORT[i]}" "${EV_FMATCH[i]}")")
+    done
+    printf '%s\n' "${table[@]}" | print_table
+    printf 'snapshot=%s prev=%s rows=%s model_ok=%s drift=%s transitions=%s exit=%s\n' \
+      "$snap_id" "$PREV_ID" "$EV_N" "$EV_OK" "$EV_DRIFT" "$N_TRANS" "$exit_code"
+    printf 'history=%s (dated JSON + latest.tsv baseline + DELTA.md ledger)\n' "$hist"
+  fi
   return "$exit_code"
 }
 
@@ -782,6 +1044,7 @@ main() {
     listeners) load_listeners; cmd_listeners ;;
     consumers) cmd_consumers ;;
     check) cmd_check ;;
+    snapshot) cmd_snapshot ;;
     *) usage >&2; exit 1 ;;
   esac
 }

@@ -8,7 +8,7 @@ description: Domain specialist — local model serving & endpoint health — sco
 Local model serving & endpoint health. This lane answers exactly one question:
 **is the thing at this baseURL the model this config believes it is, right now.**
 
-Rank: shonen (round 1). Verdict vocabulary is frozen and shared with
+Rank: shonen (round 2). Verdict vocabulary is frozen and shared with
 `tools/kama-probe.sh`: `MODEL_OK` | `MODEL_MISMATCH` | `FOREIGN_SERVICE` |
 `UNAUTHORIZED_SERVICE` | `DEAD` | `NOT_HTTP`. Exit codes: `0` all declared
 consumers reconcile, `2` ≥1 drift, `1` probe error.
@@ -180,14 +180,22 @@ and `[{"id":0,"n_ctx":16384,…},{"id":1,…}]` from `/slots` (matches `--parall
    `ufo-fsd-thetick` / `ufo-fsd-local-helper`). The tally grows as registry rows
    are added, so read the last line rather than this document's number. Expect
    `0` only after every consumer is repointed.
-2. `bash tools/kama-probe.sh listeners` — live census over every listening TCP
+2. **Capture comparable state** —
+   `bash tools/kama-probe.sh snapshot; echo $?`. The final tracked baseline ended
+   `snapshot=20260929T043044Z prev=- rows=11 model_ok=3 drift=8 transitions=0 exit=2`;
+   an unchanged run ended `snapshot=20260929T043052Z prev=20260929T043044Z ...`
+   and left both tracked artifacts byte-stable. Exit `2` mirrors the drift gate;
+   it is not a write failure. The command writes a local dated JSON plus tracked
+   `latest.tsv` and `DELTA.md`; `--history DIR` isolates the state. This is
+   invocation history, not a scheduler (`corpus/knowledge/snapshot-history.md`).
+3. `bash tools/kama-probe.sh listeners` — live census over every listening TCP
    port, exit `0`. Counts move with ephemeral `omp` listeners (one run tallied
    `probed=18 model_endpoints=1 foreign_service=12 unauthorized_service=2 dead=1 not_http=2`),
    so pin the *classifications*, not the tally: `34113` `MODEL_OK` (with
    `served_model` = the full GGUF path), `8080` `FOREIGN_SERVICE`, `8790`/`8791`
    `UNAUTHORIZED_SERVICE`, `8888` `NOT_HTTP`, `631` `FOREIGN_SERVICE`
    (`Server: CUPS/2.4 IPP/2.1`).
-3. `bash tools/kama-probe.sh consumers` — registry reconciled against the files;
+4. `bash tools/kama-probe.sh consumers` — registry reconciled against the files;
    columns `declared | resolved_from_file | file_match | resolver_kind | endpoint |
    port | verdict | served_model`; exit `0` today (it is a listing, not a gate —
    `check` is the gate), tally `consumer_rows_evaluated=11 exit=0`. Read
@@ -195,25 +203,24 @@ and `[{"id":0,"n_ctx":16384,…},{"id":1,…}]` from `/slots` (matches `--parall
    `file_match=inherited`, `resolver_kind=raw` (its file pins a bare model, so
    the registry's declared 8080 stands) and still reconciles to
    `FOREIGN_SERVICE`; `systemd-*` rows are `resolver_kind=port:<n>`.
-4. `bash tools/kama-probe.sh check --json` — machine form, same exit codes as
+5. `bash tools/kama-probe.sh check --json` — machine form, same exit codes as
    item 1 (`EXIT=2` today): stdout JSON with keys `schema` (`kama-probe/v1`),
    `subcommand`, `verdict_vocabulary`, `exit_codes`, `registry`, `rows[]`
    (`id | consumer_path | declared | resolved_from_file | file_match |
    resolve_kind | endpoint | port | expected_model_id | verdict`), and
    `summary` = `{"registry_rows_evaluated":11,"model_ok":3,"drift":8,"exit":2}`.
-   `listeners --json` and `consumers --json` behave the same way, exit `0`.
-   (An earlier build this round wrote the payload to stderr and fed an empty
-   stdin to its pretty-printer, exiting 1; fixed in the build pinned under
-   "Cited sources" — do not carry the old traceback forward.)
-5. `curl -sS --max-time 5 http://127.0.0.1:34113/health` → `{"status":"ok"}`.
-6. `curl -sS --max-time 5 -D- -o/dev/null http://127.0.0.1:34113/v1/models | grep -i '^Server:'` → `Server: llama.cpp`.
-7. `curl -sS --max-time 5 http://127.0.0.1:34113/v1/models | jq -r '.data[0].id'` → `/scratch/models/qwen3-coder-30b/Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS.gguf`.
-8. `ss -ltnp | grep -E ':(34113|8080|8888)'` — model on 34113 (`llama-server`), Jitsi mappings on 8080/8888.
-9. `docker ps --format '{{.Names}} {{.Ports}}' | grep -E '8080|8888'` — names the squatter.
-10. `grep -n -- '--port' ~/.config/systemd/user/qwen-coder*.service*` — the producer's truth (`qwen-coder.service:17 --port 34113`; every archived unit at `:16` still `8080`).
-11. `grep -rn 'baseURL\|MODEL_ENDPOINT' ~/.config/opencode/opencode.json ~/.config/opencode/agents/janitor.md ~/.config/opencode/agents/distiller.md ~/.config/the-janitor/opencode.json ~/.local/bin/the-janitor` — every live pin in one shot.
-12. `systemctl --user show qwen-coder.service -p ActiveState -p SubState -p MainPID` → `active` / `running` / `1299`.
-13. After any fix: re-run item 1 and require exit `0` before reporting done.
+   `listeners --json` and `consumers --json` behave the same way, exit `0`;
+   `snapshot --json` emits its persisted `kama-probe/v2` document on stdout.
+6. `curl -sS --max-time 5 http://127.0.0.1:34113/health` → `{"status":"ok"}`.
+7. `curl -sS --max-time 5 -D- -o/dev/null http://127.0.0.1:34113/v1/models | grep -i '^Server:'` → `Server: llama.cpp`.
+8. `curl -sS --max-time 5 http://127.0.0.1:34113/v1/models | jq -r '.data[0].id'` → `/scratch/models/qwen3-coder-30b/Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS.gguf`.
+9. `ss -ltnp | grep -E ':(34113|8080|8888)'` — model on 34113 (`llama-server`), Jitsi mappings on 8080/8888.
+10. `docker ps --format '{{.Names}} {{.Ports}}' | grep -E '8080|8888'` — names the squatter.
+11. `grep -n -- '--port' ~/.config/systemd/user/qwen-coder*.service*` — the producer's truth (`qwen-coder.service:17 --port 34113`; every archived unit at `:16` still `8080`).
+12. `grep -rn 'baseURL\|MODEL_ENDPOINT' ~/.config/opencode/opencode.json ~/.config/opencode/agents/janitor.md ~/.config/opencode/agents/distiller.md ~/.config/the-janitor/opencode.json ~/.local/bin/the-janitor` — every live pin in one shot.
+13. `systemctl --user show qwen-coder.service -p ActiveState -p SubState -p MainPID` → `active` / `running` / `1299`.
+14. After any fix: run item 2 to preserve the transition, then require item 1 to
+    exit `0` before reporting done.
 
 ## Anti-patterns
 
@@ -286,11 +293,12 @@ and `[{"id":0,"n_ctx":16384,…},{"id":1,…}]` from `/slots` (matches `--parall
   in `~/.local/bin/omp` (`strings -a ~/.local/bin/omp | grep LLAMA_CPP_BASE_URL`
   → `LLAMA_CPP_BASE_URL || "http://127.0.0.1:8080",`).
 - This lane's runnable artifacts: `tools/kama-probe.sh` (`check`, `listeners`,
-  `consumers`, each with `--json`; md5 `932ea3dc365e066e740731cf6a939506` at close
-  of round 1), `registry/endpoint-consumers.tsv` (11 rows, md5
+  `consumers`, and `snapshot`; JSON stdout for all four),
+  `tools/test-snapshot.sh` (24 behavioral checks), and
+  `registry/endpoint-consumers.tsv` (11 rows, md5
   `87eb156b7cc36e98f3cbfb37c00f5351`; 6 columns — `id`, `consumer_path`,
   `json_pointer_or_grep`, `declared_baseurl`, `expected_model_id`, `notes`) —
-  every output quoted above is from these builds, 2026-09-28. Row ids:
+  round-2 hashes and measured outputs are pinned in `LOG.md`. Row ids:
   `opencode-qwen-local`, `janitor-agent`, `opencode-distiller`, `janitor-cli`,
   `janitor-opencode`, `omp-llama-cpp-default`, `systemd-qwen-coder`,
   `systemd-qwen-coder-fossil`, `systemd-qwen-coder-ctx32k-latent`,
