@@ -1,0 +1,43 @@
+# registry/endpoint-consumers.tsv — endpoint-consumers cross-lane registry (kama-shokunin)
+#
+# Tab-separated, 6 columns; '#' comments and blank lines ignored; the 'id' header row is
+# skipped. Rows must be consumers that are LIVE or LOADABLE — pure file fossils
+# (e.g. ~/.config/opencode/opencode.json.*.bak) are inventoried in the census instead of
+# being reconciled here, so drift counts keep meaning "an endpoint in service is wrong".
+#
+#   id <TAB> consumer_path <TAB> json_pointer_or_grep <TAB> declared_baseurl <TAB> expected_model_id <TAB> notes
+#
+# id                 stable row key, echoed in probe output.
+# consumer_path      file that pins (or defaults) the endpoint: config, systemd unit, script,
+#                    or binary default. '~' expands to $HOME; relative paths resolve against
+#                    the repo root. The probe only ever reads it.
+# json_pointer_or_grep
+#                    how the probe re-derives the declared baseURL FROM THE FILE ITSELF
+#                    (declared_baseurl is the registry's claim, never the source of truth):
+#                      json:<RFC6901 pointer>  exact drill-down (python3; leaf-key grep fallback)
+#                      grep:<ERE>              first match wins. A match containing a URL is
+#                                              used verbatim; a match containing an EXPLICIT port
+#                                              marker (port=NNNN, --port NNNN, host:NNNN) is
+#                                              synthesised to http://127.0.0.1:<port>/v1;
+#                                              anything else marks the row file_match=inherited
+#                                              (the baseURL comes from the named provider).
+#                    A bare digit run is never read as a port — "Qwen3-Coder-30B" is not port 30.
+# declared_baseurl   the endpoint the registry believes this consumer targets.
+# expected_model_id  model id this consumer believes it is talking to; '*' or '-' = any.
+# notes              provenance / risk class. Free text, no tabs.
+#
+# Verdicts come from tools/kama-probe.sh:
+#   MODEL_OK | MODEL_MISMATCH | FOREIGN_SERVICE | UNAUTHORIZED_SERVICE | DEAD | NOT_HTTP
+# Evidence: path:line of the pin + probe command output.
+id	consumer_path	json_pointer_or_grep	declared_baseurl	expected_model_id	notes
+opencode-qwen-local	~/.config/opencode/opencode.json	json:/provider/qwen-local/options/baseURL	http://localhost:8080/v1	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	active pin: opencode.json:158 (file mtime 2026-09-28, pin still stale)
+janitor-agent	~/.config/opencode/agents/janitor.md	grep:http://127\.0\.0\.1:[0-9]+/v1	http://127.0.0.1:8080/v1	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	no fallback: janitor.md:20-21 states there is no fallback, so a foreign endpoint fails hard
+opencode-distiller	~/.config/opencode/agents/distiller.md	grep:^model: qwen-local/.+	http://127.0.0.1:8080/v1	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	CASCADE-PROTECTED: distiller.md:5-7 cascades qwen-local > openai/gpt-5.6-sol-fast > xai/grok-4.5; it survives the stale endpoint
+janitor-cli	~/.local/bin/the-janitor	grep:MODEL_ENDPOINT="[^"]*"	http://127.0.0.1:8080/v1	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	shell-level pin: the-janitor:16-19 (MODEL_PROVIDER / MODEL_ID / MODEL_ENDPOINT)
+janitor-opencode	~/.config/the-janitor/opencode.json	json:/provider/qwen-local/options/baseURL	http://127.0.0.1:8080/v1	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	janitor's own OpenCode config: baseURL :16, model/small_model :8-9; enabled_providers=[qwen-local] fails closed
+omp-llama-cpp-default	~/.local/bin/omp	grep:LLAMA_CPP_BASE_URL	http://127.0.0.1:8080	-	code-level default: baseUrl = LLAMA_CPP_BASE_URL || http://127.0.0.1:8080 in the omp binary; env var unset, so the stale port is the fallback
+systemd-qwen-coder	~/.config/systemd/user/qwen-coder.service	grep:--port[[:space:]]+[0-9]+	http://127.0.0.1:34113/v1	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	EXPECTED TRUTH: --port 34113 at qwen-coder.service:17, --alias model path :19; must read MODEL_OK
+systemd-qwen-coder-fossil	~/.config/systemd/user/qwen-coder.service.bak.1788033391	grep:--port[[:space:]]+[0-9]+	http://127.0.0.1:8080/v1	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	fossil: --port 8080 at line 16; epoch 1788033391 = 2026-08-29, the origin of the stale pin
+systemd-qwen-coder-ctx32k-latent	~/.config/systemd/user/qwen-coder.ctx32k-q4.service	grep:--port[[:space:]]+[0-9]+	http://127.0.0.1:8080/v1	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	latent conflict: disabled "UNTESTED variant", --port 8080 at line 16 — enabling it would collide with the Jitsi service now on 8080
+ufo-fsd-thetick	~/Projects/origin-work/ufo-fsd-alpha/config/the-tick.machine.json	grep:http://127\.0\.0\.1:34113[^"]*	http://127.0.0.1:34113/v1/chat/completions	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	CORRECT PORT (positive control): the-tick.machine.json:16 pins the live port; cross-repo consumer, declared value is a full endpoint path not a bare baseURL
+ufo-fsd-local-helper	~/Projects/origin-work/ufo-fsd-alpha/scripts/local-helper.mjs	grep:http://127\.0\.0\.1:[0-9]+	http://127.0.0.1:34113	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	CORRECT PORT (positive control): local-helper.mjs:8 DEFAULT_URL; cross-repo consumer
