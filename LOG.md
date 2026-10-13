@@ -197,9 +197,3 @@ The only model changes were `devin/swe-2` at `03:19:34Z` and a later direct
 `resolvedModelIsFallback:false`. Observed result: capacity failures did **not**
 advance through a configured chain; the later Daybreak switch was not marked as
 fallback. No failure was forced and no route/mission config was changed.
-## 2026-10-13 — HOURS.md ledger opened
-
-- Operator seed per PROTOCOL.md §Craft-hours: shonen→shokunin now requires
-  ≥10,000 verified craft-hours AND the SHONEN gate. Ledger starts at 0;
-  instrumented rounds accrue collective in-domain lane-minutes.
-- Evidence: fleet commit; PROTOCOL.md §Craft-hours.
