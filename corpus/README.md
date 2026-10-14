@@ -25,9 +25,11 @@ gaps grow with rounds.
 
 ## Known gaps
 
-- **Operator-dependent:** the stale pins in `~/.config/opencode/opencode.json:158`,
-  `~/.config/opencode/agents/janitor.md:21`, and `~/.local/bin/the-janitor:19` are
-  *detected and reported*, never rewritten by kama (operator-owned files).
+- **Operator-dependent (historical):** the stale pins in `~/.config/opencode/opencode.json:158`,
+  `~/.config/opencode/agents/janitor.md:21`, and `~/.local/bin/the-janitor:19` were
+  *detected and reported*, never rewritten by kama (operator-owned files). As of the
+  2026-10-14 re-census all three files are deleted or emptied — see
+  `knowledge/consumer-registry.md` §Errata; the drift resolved by deletion, not repoint.
 - Invocation comparison is automated, but invocation cadence is not:
   `tools/kama-probe.sh snapshot` records dated state and deltas only when called.
   Installing/enabling a systemd user timer remains operator-owned.

@@ -27,6 +27,58 @@ There are **two distinct consumer generations** on this box, and they disagree:
 So the box contains both the bug and its known-good fix, on different surfaces, with no owner for
 the reconciliation. That is precisely kama's domain (MINT.md §Reasoning).
 
+## Errata — 2026-10-14 re-census (append-only; rows below keep their round-1 text)
+
+The box changed under this registry. Everything in this section was re-measured on
+2026-10-14; claims it supersedes stay quoted in the table as *historical*.
+
+- **The `ufo-fsd-alpha` tree moved.** `~/Projects/origin-work/ufo-fsd-alpha` no
+  longer exists; the same repository now lives at `~/Projects/ufo-fsd-alpha`,
+  HEAD `964f443e` ("routing: regenerate omp-seat-routing mirror"). Every
+  `origin-work/` citation below names that relocated tree. Re-measured anchors
+  in the new location: `config/the-tick.machine.json:16` still carries
+  `"endpoint": "http://127.0.0.1:34113/v1/chat/completions"` (`apiModel` at
+  `:13`, `parallelSlots`/`contextTokens` at `:17-18` — the model block is
+  `:7-13`, not `:7-14`); `scripts/local-helper.mjs:8` still pins
+  `http://127.0.0.1:34113`, `UFO_LOCAL_HELPER_URL` override is at `:312`
+  (doc) / `:325` (call site), the credential-free-loopback `endpoint_invalid`
+  gate is at `:155-161`; `tests/the-tick.test.js:61, :125, :1457` and
+  `docs/THE-TICK.md:29` still pin 34113;
+  `tests/local-helper.test.js:263-266` still holds the four 8080 rejection
+  fixtures; `evidence/nightcall-integration/nc2-verify-global-r01-route-authority.json:135,:144`
+  unchanged. The moved tree's remotes re-measured: `cursor` →
+  `origin.cursor.com/jo-o-veiga/ufo-fsd-alpha.git`, `origin` →
+  `github.com/VeigaPunk/ufo-fsd-alpha.git` (the names swapped roles vs the
+  round-1 record; `nc5-sandbox` is gone).
+- **The second checkout is gone.** `~/Projects/webzites/` (incl. `repos/ufo-fsd-alpha`
+  and `repos/llm-wiki`) does not exist; row #38 and the llm-wiki non-model rows
+  are historical.
+- **Most consumer files are gone.** Deleted since round 2:
+  `~/.config/opencode/agents/`, `~/.config/opencode/opencode.json.*.bak*`,
+  `~/.config/the-janitor/`, `~/.local/bin/the-janitor`,
+  `~/.local/bin/codex-titanium-kimi`, `~/.local/bin/omp.stock-18.2.2.bak`,
+  `~/.config/systemd/user/qwen-coder*.service*`, `~/archive/bench-arena/loop.sh`,
+  `/tmp/fleet-override.yml`, `~/.omp/agent/skills/kimi-webbridge`,
+  `~/.config/systemd/user/omp-auth-*.service`. `~/.config/opencode/opencode.json`
+  still exists but is now 5 lines — the `qwen-local` provider and its
+  `localhost:8080/v1` pin are gone. Rows #1-#11, #14-#16, #21, #31-#34 are
+  therefore historical: the *drift they recorded was real*, but no live file
+  still carries it. `~/.local/bin/omp` (#12) still contains
+  `LLAMA_CPP_BASE_URL || "http://127.0.0.1:8080"`. `~/.omp/agent/config.yml`
+  still exists; its `:168` auth-broker URL is gone — no `127.0.0.1`/`localhost`
+  strings remain, so row #13 is historical too. `opencode.log` (#35) still exists.
+- **Neither port answers.** `127.0.0.1:34113` (llama-server) and `127.0.0.1:8080`
+  (Jitsi) both refuse connections now; `qwen-coder.service` is inactive and its
+  unit file deleted. Every `MODEL_OK`/`FOREIGN_SERVICE` verdict in the table is
+  historical; today's `check` reads
+  `registry_rows_evaluated=3 model_ok=0 drift=3 exit=2` (three DEAD rows:
+  `omp-llama-cpp-default`, `ufo-fsd-thetick`, `ufo-fsd-local-helper`). DELTA.md
+  records the row-removal transitions.
+- **Registry rows now cite the tree as `$UFO_SRC/...`.** `tools/kama-probe.sh`
+  resolves `--ufo-src` > `$UFO_SRC` env > first existing of
+  `~/Projects/ufo-fsd-alpha`, `~/Projects/origin-work/ufo-fsd-alpha`; the
+  endpoint registry no longer hardcodes a checkout location.
+
 ## Consumer table (config pins)
 
 The **live verdict** column uses the binding vocabulary: `MODEL_OK` | `MODEL_MISMATCH` |
@@ -51,10 +103,10 @@ marked `—(no probe: non-model / archival)`.
 | 14 | `~/.config/systemd/user/omp-auth-broker.service:7` (`--bind=127.0.0.1:8790`), `:2` desc | `127.0.0.1:8790` | 8790 | omp auth-broker | **UNAUTHORIZED_SERVICE** (401) | kumitate/kagi |
 | 15 | `~/.config/systemd/user/omp-auth-gateway.service:8` (`--bind=127.0.0.1:8791`), `:2`; `~/.config/systemd/user/kimi-auth-proxy.service:2` (`127.0.0.1:8791`) | `127.0.0.1:8791` | 8791 | omp auth-gateway / kimi OAuth proxy | **UNAUTHORIZED_SERVICE** (401, JSON) | kumitate/kagi |
 | 16 | `~/.local/bin/codex-titanium-kimi:3` (comment: gateway at `127.0.0.1:8791`) | `127.0.0.1:8791` | 8791 | kimi-code OAuth proxy consumer | **UNAUTHORIZED_SERVICE** (401) | kumitate/kagi |
-| 17 | `~/Projects/origin-work/ufo-fsd-alpha/config/the-tick.machine.json:16` (`"endpoint": "http://127.0.0.1:34113/v1/chat/completions"`), model block `:7-14` (`apiModel` = `Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS`), `:17-18` (2 slots / 16384 ctx) | `http://127.0.0.1:34113/v1/chat/completions` | 34113 | Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS | **MODEL_OK** ✅ | **kumitate** (ufo-fsd-alpha runtime; its corpus `ops-watchers.md:393` names `config.backend.endpoint`) |
-| 18 | `~/Projects/origin-work/ufo-fsd-alpha/scripts/local-helper.mjs:8` (`const DEFAULT_URL = "http://127.0.0.1:34113"`), `:159` (`UFO_LOCAL_HELPER_URL` override), `:163-165` (refuses anything not credential-free loopback HTTP, incl. `localhost`/`[::1]`/`127.0.0.1`) | `http://127.0.0.1:34113` (default) | 34113 | dedupe/digest/classify helper (`ufo-local-helper-v1`) | **MODEL_OK** ✅ | kumitate |
-| 19 | `~/Projects/origin-work/ufo-fsd-alpha/docs/THE-TICK.md:40` | `http://127.0.0.1:34113/v1/chat/completions` | 34113 | doc of #17 | **MODEL_OK** ✅ (doc matches live server) | kumitate |
-| 20 | `~/Projects/origin-work/ufo-fsd-alpha/evidence/nightcall-integration/nc2-verify-global-r01-route-authority.json:135` (`"endpoint": "http://127.0.0.1:34113/v1/chat/completions"`), `:144` (verbatim: "No Qwen3-Coder/34113/Tick model identifier matched the global OMP config or project mission/OMP overlays") | `http://127.0.0.1:34113/v1/chat/completions` | 34113 | recorded evidence artifact | **MODEL_OK** ✅ | kumitate |
+| 17 | `~/Projects/ufo-fsd-alpha/config/the-tick.machine.json:16` (`"endpoint": "http://127.0.0.1:34113/v1/chat/completions"`; re-measured 2026-10-14 after the tree relocated — the `origin-work/` path is historical), model block `:7-13` (`apiModel` = `Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS` at `:13`), `:17-18` (2 slots / 16384 ctx) | `http://127.0.0.1:34113/v1/chat/completions` | 34113 | Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS | **MODEL_OK** ✅ — *historical: 34113 is connection-refused today (§Errata)* | **kumitate** (ufo-fsd-alpha runtime; its corpus `ops-watchers.md:393` names `config.backend.endpoint`) |
+| 18 | `~/Projects/ufo-fsd-alpha/scripts/local-helper.mjs:8` (`const DEFAULT_URL = "http://127.0.0.1:34113"`), `:312` doc + `:325` call site (`UFO_LOCAL_HELPER_URL` override), `:155-161` (refuses anything not credential-free loopback HTTP, incl. `localhost`/`[::1]`/`127.0.0.1`) — re-measured 2026-10-14 | `http://127.0.0.1:34113` (default) | 34113 | dedupe/digest/classify helper (`ufo-local-helper-v1`) | **MODEL_OK** ✅ — *historical (§Errata)* | kumitate |
+| 19 | `~/Projects/ufo-fsd-alpha/docs/THE-TICK.md:29` (re-measured 2026-10-14; was `:40` in round 1) | `http://127.0.0.1:34113/v1/chat/completions` | 34113 | doc of #17 | **MODEL_OK** ✅ — *historical* | kumitate |
+| 20 | `~/Projects/ufo-fsd-alpha/evidence/nightcall-integration/nc2-verify-global-r01-route-authority.json:135` (`"endpoint": "http://127.0.0.1:34113/v1/chat/completions"`), `:144` (verbatim: "No Qwen3-Coder/34113/Tick model identifier matched the global OMP config or project mission/OMP overlays") — re-measured, unchanged | `http://127.0.0.1:34113/v1/chat/completions` | 34113 | recorded evidence artifact | **MODEL_OK** ✅ — *historical* | kumitate |
 | 21 | `~/archive/bench-arena/loop.sh:5` (`METRICS_URL=${LLAMA_METRICS_URL:-http://127.0.0.1:8080/metrics}`), `:10` (scrape fn; moved from `~/bench-arena/`) | `http://127.0.0.1:8080/metrics` | 8080 | llama.cpp `/metrics` scraper (default target) | **FOREIGN_SERVICE** — the port answers **HTTP 200 `application/openmetrics-text`, 27461 B**, but it is **Jitsi jvb's** openmetrics stream, not llama.cpp's (`grep -icE 'prompt\|eval'` = 0 → a corrected reader pointed at 8080 logs zeros instead of failing) | **kengaku** (bench-arena owner) |
 | 22 | `~/projects/shokunin/kengaku-shokunin/SKILL.md:322-323` | `localhost:8080` / `127.0.0.1:34113` | both | — (documents the drift) | records FOREIGN_SERVICE on 8080 / MODEL_OK on 34113 | kengaku |
 | 23 | `~/projects/shokunin/kengaku-shokunin/PROVINCE.md:14` | `http://127.0.0.1:34113` | 34113 | Qwen3-Coder-30B-A3B-Instruct UD-IQ2_XXS, `owned_by=llamacpp`, `n_ctx=16384` | **MODEL_OK** ✅ | kengaku |
@@ -70,9 +122,9 @@ marked `—(no probe: non-model / archival)`.
 | 33 | `~/.config/opencode/opencode.json.pre-fast-oauth-20260829.bak:155` | `http://localhost:8080/v1` | 8080 | `qwen-local` | — archival | unowned (archival) |
 | 34 | `~/.config/opencode/opencode.json.bak-20260921-devin-slots:144` | `http://localhost:8080/v1` | 8080 | `qwen-local` | — archival | unowned (archival) |
 | 35 | `~/.local/share/opencode/log/opencode.log:3898, 5281, 6194, 6308, …` | `http://localhost:8080/health`, `…/v1/models`, `…/v1/chat/completions` | 8080 | historical consumer **behavior** (permission-evaluated `curl` probes, all 2026-08-29T06:xxZ) | — historical: those probes *succeeded* then; the same paths now return the Jetty 404 (L1-F3) — the log is the pre-drift snapshot | kengaku/kagi (historical) |
-| 36 | `~/Projects/origin-work/ufo-fsd-alpha/tests/the-tick.test.js:87, :1858` (`endpoint: "http://127.0.0.1:34113/v1/chat/completions"`), `:158` (`http://192.168.1.1:34113/…`, non-loopback rejection fixture) | `http://127.0.0.1:34113/v1/chat/completions` | 34113 | the-tick unit fixtures | **MODEL_OK** ✅ (fixture matches the live port; tests do no real inference) | kumitate |
-| 37 | `~/Projects/origin-work/ufo-fsd-alpha/tests/local-helper.test.js:247-250` (`http://user:pass@127.0.0.1:8080`, `https://127.0.0.1:8080`, `…/?debug=1`, `…/#frag`) | `127.0.0.1:8080` **as a rejection example** | 8080 | negative fixtures for `local-helper`'s `endpoint_invalid` gate (`:163-165`) | — not a pin: these four 8080 URLs are exactly the *shapes the helper must refuse*; incidental use of 8080 as a sample host | kumitate |
-| 38 | `~/Projects/webzites/repos/ufo-fsd-alpha/config/the-tick.machine.json:16` and `…/scripts/local-helper.mjs:8` | `http://127.0.0.1:34113/v1/chat/completions` / `http://127.0.0.1:34113` | 34113 | **second, independent checkout** of the same repo (inode 20320717 vs 2916710; HEAD `0522e67a` vs `5725fa7d3`; both share remote `origin` = `origin.cursor.com/jo-o-veiga/ufo-fsd-alpha.git`, while the `origin-work` tree additionally has `github` = `github.com/VeigaPunk/ufo-fsd-alpha.git` and a **dangling** `nc5-sandbox` = `/home/vgpnk/Projects/ephemeral/nc5/origin.git` — path absent, `git ls-remote nc5-sandbox` → `does not appear to be a git repository`) | **MODEL_OK** ✅ — the 34113 pin is not a one-checkout accident; *both* trees carry it | kumitate |
+| 36 | `~/Projects/ufo-fsd-alpha/tests/the-tick.test.js:61, :1457` (`endpoint: "http://127.0.0.1:34113/v1/chat/completions"`), `:125` (`http://192.168.1.1:34113/…`, non-loopback rejection fixture) — re-measured 2026-10-14 | `http://127.0.0.1:34113/v1/chat/completions` | 34113 | the-tick unit fixtures | **MODEL_OK** ✅ — *historical* | kumitate |
+| 37 | `~/Projects/ufo-fsd-alpha/tests/local-helper.test.js:263-266` (`http://user:pass@127.0.0.1:8080`, `https://127.0.0.1:8080`, `…/?debug=1`, `…/#frag`) — re-measured 2026-10-14 | `127.0.0.1:8080` **as a rejection example** | 8080 | negative fixtures for `local-helper`'s `endpoint_invalid` gate (`:155-161`) | — not a pin: these four 8080 URLs are exactly the *shapes the helper must refuse*; incidental use of 8080 as a sample host | kumitate |
+| 38 | `~/Projects/webzites/repos/ufo-fsd-alpha/config/the-tick.machine.json:16` and `…/scripts/local-helper.mjs:8` — **checkout deleted 2026-10 (§Errata); row kept as historical evidence** | `http://127.0.0.1:34113/v1/chat/completions` / `http://127.0.0.1:34113` | 34113 | **second, independent checkout** of the same repo (inode 20320717 vs 2916710; HEAD `0522e67a` vs `5725fa7d3`; both shared remote `origin` = `origin.cursor.com/jo-o-veiga/ufo-fsd-alpha.git`, while the `origin-work` tree additionally had `github` = `github.com/VeigaPunk/ufo-fsd-alpha.git` and a **dangling** `nc5-sandbox` = `/home/vgpnk/Projects/ephemeral/nc5/origin.git` — path absent, `git ls-remote nc5-sandbox` → `does not appear to be a git repository`) | **MODEL_OK** ✅ — *historical* | kumitate |
 
 ### Row that must not be forgotten: the reconciliation gap
 
@@ -82,7 +134,7 @@ limited to the stale 8080 family. Three independent executable sites declare the
 
 - `~/.config/opencode/opencode.json:161` + `~/.config/opencode/agents/{janitor,distiller}.md:5`
 - `~/.local/bin/the-janitor:17` (`MODEL_ID`) and `~/.config/the-janitor/opencode.json:8-9`
-- the **correct-pin** family too: `~/Projects/origin-work/ufo-fsd-alpha/config/the-tick.machine.json:13`
+- the **correct-pin** family too: `~/Projects/ufo-fsd-alpha/config/the-tick.machine.json:13` (re-measured 2026-10-14; `origin-work/` path historical)
   (`"apiModel": "Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS"`) and
   `…/scripts/local-helper.mjs:9` (`DEFAULT_MODEL = "Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS"`)
 
@@ -132,11 +184,11 @@ form.
 
 | consumer path:line | pins | verdict |
 |---|---|---|
-| `~/Projects/origin-work/ufo-fsd-alpha/config/the-tick.machine.json:16` | 34113 | MODEL_OK |
-| `~/Projects/origin-work/ufo-fsd-alpha/scripts/local-helper.mjs:8` | 34113 | MODEL_OK |
-| `~/Projects/webzites/repos/ufo-fsd-alpha/config/the-tick.machine.json:16` (2nd checkout) | 34113 | MODEL_OK |
-| `~/Projects/webzites/repos/ufo-fsd-alpha/scripts/local-helper.mjs:8` (2nd checkout) | 34113 | MODEL_OK |
-| `~/projects/shokunin/kengaku-shokunin/PROVINCE.md:14` | 34113 | MODEL_OK |
+| `~/Projects/ufo-fsd-alpha/config/the-tick.machine.json:16` (re-measured 2026-10-14 at HEAD `964f443e`) | 34113 | MODEL_OK — *historical: port dead today* |
+| `~/Projects/ufo-fsd-alpha/scripts/local-helper.mjs:8` (re-measured 2026-10-14) | 34113 | MODEL_OK — *historical: port dead today* |
+| `~/Projects/webzites/repos/ufo-fsd-alpha/config/the-tick.machine.json:16` (2nd checkout — **tree deleted**, §Errata) | 34113 | MODEL_OK — *historical* |
+| `~/Projects/webzites/repos/ufo-fsd-alpha/scripts/local-helper.mjs:8` (2nd checkout — **tree deleted**) | 34113 | MODEL_OK — *historical* |
+| `~/projects/shokunin/kengaku-shokunin/PROVINCE.md:14` | 34113 | MODEL_OK — *historical: port dead today* |
 
 **Two distinct checkouts, not one.** `~/Projects/origin-work/ufo-fsd-alpha` (inode 2916710, HEAD
 `5725fa7d3`) and `~/Projects/webzites/repos/ufo-fsd-alpha` (inode 20320717, HEAD `0522e67a`) are
@@ -161,6 +213,12 @@ Discovering the second tree matters methodologically: `find /home/vgpnk/projects
 local-helper.mjs` returns **nothing**, because `/home/vgpnk/projects` (inode 101125103) and
 `/home/vgpnk/Projects` (inode 27238) are **different directories** on this case-sensitive
 filesystem. Any census rooted at the lowercase path silently misses this entire repo family.
+
+*2026-10-14 errata:* the paragraph above is historical. One checkout survives —
+`~/Projects/ufo-fsd-alpha` (inode 41021, HEAD `964f443e`) — whose remotes
+re-measure as `cursor` → `origin.cursor.com/jo-o-veiga/ufo-fsd-alpha.git` and
+`origin` → `github.com/VeigaPunk/ufo-fsd-alpha.git` (names swapped vs round 1;
+`nc5-sandbox` gone). Both pin-bearing files still carry the 34113 value.
 
 **Answer to the brief's "expected: none"**: expectation **falsified** — five shipped artifacts across
 two checkouts (four executable configs + one lane doc) pin the live port. The stale 8080 pins and the
@@ -268,8 +326,8 @@ Absence is evidence: these are the surfaces a naive reader would expect to hold 
 | `~/.agents/` (skills + godspeed-core + AGENTS.md) | `grep -rn -E 'localhost:[0-9]+\|127\.0\.0\.1:[0-9]+' ~/.agents` | **no matches** (exit 1) |
 | `/tmp/fleet-override.yml` | `grep -nE 'localhost:[0-9]+\|127\.0\.0\.1:[0-9]+\|base.?url' /tmp/fleet-override.yml` | **no matches** (exit 1). All 14 `agentModelOverrides` values are `@m_*` aliases (`@m_lunamax`, `@m_flash`, `@m_zfl`) that resolve to REMOTE providers through `~/.omp/agent/config.yml` — confirming L1-F11: the dispatch layer never resolves to a loopback baseURL. |
 | `~/.omp/agent/config.yml` modelRoles / fallbackChains | `grep -n -E '127\.0\.0\.1\|localhost\|baseUrl\|baseURL' ~/.omp/agent/config.yml` | only hit is `:168` (`auth.broker.url`, an auth vault, not a model). **No model role carries a local baseURL.** |
-| `~/Projects/origin-work/ufo-fsd-alpha/.omp/` (config.yml, ufo-l1.yml, agents/, skills/, hooks/, ssot/) | `grep -rn -E 'localhost:[0-9]+\|127\.0\.0\.1:[0-9]+' ~/Projects/origin-work/ufo-fsd-alpha/.omp` | **no matches**; the only "endpoint" strings are prose in `skills/ufo/references/run-logic.md:556` and `skills/wwkd/SKILL.md:131`. Model routing there is remote. |
-| `~/Projects/webzites/repos/llm-wiki` state/config surfaces (`state/librarian-config.yaml`, `scripts/`, `CLAUDE.md`, `README.md`) | `grep -rn -E '(localhost\|127\.0\.0\.1):(11434\|1234\|34113\|5000\|8000)' ~/Projects/webzites/repos/llm-wiki --exclude-dir=.git` | **no model-endpoint pins**. `state/librarian-config.yaml` has no endpoint key at all (only `paper_acquisition` policy + sci-hub mirrors); `scripts/vendor/scihub-paper-downloader.py` computes `base_url` from a *remote* URL. The only `11434` mentions are tutorial prose in `wiki/karpathy/…/local-first-ai-tools.md:63,:191`. |
+| `~/Projects/ufo-fsd-alpha/.omp/` (config.yml, ufo-l1.yml, agents/, skills/, hooks/, ssot/) — re-measured 2026-10-14 at the relocated path | `grep -rn -E 'localhost:[0-9]+\|127\.0\.0\.1:[0-9]+' ~/Projects/ufo-fsd-alpha/.omp` | **no matches** (re-confirmed); the only "endpoint" strings remain prose — `skills/ufo/references/run-logic.md:495` and `skills/wwkd/SKILL.md:129` (re-measured; was `:556`/`:131`). Model routing there is remote. |
+| `~/Projects/webzites/repos/llm-wiki` state/config surfaces (`state/librarian-config.yaml`, `scripts/`, `CLAUDE.md`, `README.md`) — **tree deleted 2026-10 (§Errata); historical** | `grep -rn -E '(localhost\|127\.0\.0\.1):(11434\|1234\|34113\|5000\|8000)' ~/Projects/webzites/repos/llm-wiki --exclude-dir=.git` | **no model-endpoint pins** (historical). `state/librarian-config.yaml` had no endpoint key; `scripts/vendor/scihub-paper-downloader.py` computed `base_url` from a *remote* URL. The only `11434` mentions were tutorial prose in `wiki/karpathy/…/local-first-ai-tools.md:63,:191`. |
 | `~/.config/systemd/user/` as a *consumer* of a local model | `grep -rn -E 'localhost:[0-9]+\|127\.0\.0\.1:[0-9]+' ~/.config/systemd/user` | **zero local-*model* pins.** `qwen-coder.service` is the *server* (#9); `qwen-coder.ctx32k-q4.service`/`.bak` are disabled/archival server variants (#10/#11); `omp-auth-broker`, `omp-auth-gateway`, `kimi-auth-proxy` are auth proxies (#13-15), not model endpoints. |
 | `~/projects/shokunin/kumitate-shokunin`, `kotoba-shokunin`, `kake-shokunin`, `kasegi-shokunin`, `.ufo/` (as *config*) | lane-wide sweep below | **no config pins**; every hit is prose/evidence in `corpus/**.md` (14 kotoba/kake hits are the `127.0.0.1:9222` CDP lease, 41 kagi hits are `8090/8080/40961` prose, 48 `.ufo` hits are round reports). Kumitate's 2 hits are *docs of #17/#18*, both 34113. |
 

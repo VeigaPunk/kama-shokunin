@@ -112,10 +112,10 @@ GET http://127.0.0.1:34113/v1/models   → 200, Server: llama.cpp
 | `~/.local/bin/the-janitor:19` `MODEL_ENDPOINT="http://127.0.0.1:8080/v1"` | 8080 | same (`:17`) | Jitsi JVB | **NO — drift** |
 | `~/.omp/agent/config.yml:166-168` (`auth:` 166, `broker:` 167, `url:` **168**) `auth.broker.url: http://127.0.0.1:8790` | 8790 | n/a (vault) | `omp auth-broker` → `401` JSON | **YES** — 401 is the expected unauthenticated answer |
 | omp built-in llama.cpp provider default (binary string, `strings omp`) `baseUrl: Bun.env.LLAMA_CPP_BASE_URL \|\| "http://127.0.0.1:8080"` | 8080 | n/a | Jitsi JVB | **NO — drift (code-level default)** |
-| **`~/Projects/origin-work/ufo-fsd-alpha/config/the-tick.machine.json:16`** `"endpoint": "http://127.0.0.1:34113/v1/chat/completions"` | 34113 | `:13` `"apiModel": "Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS"` (bare id) while `:12` `"path"` is the full GGUF path — **one file carries both id forms** | `llama-server` `MODEL_OK` | **YES (endpoint)** — the one correctly-pinned family |
-| `~/Projects/origin-work/ufo-fsd-alpha/scripts/local-helper.mjs:8` `const DEFAULT_URL = "http://127.0.0.1:34113"` | 34113 | same (`:9` `DEFAULT_MODEL` = bare id) | `llama-server` `MODEL_OK` | **YES (endpoint)** |
-| `~/Projects/origin-work/ufo-fsd-alpha/tests/the-tick.test.js:87,:1858` `endpoint: "http://127.0.0.1:34113/v1/chat/completions"` | 34113 | fixtures | `llama-server` | **YES (fixture)** |
-| **`~/Projects/webzites/repos/ufo-fsd-alpha/config/the-tick.machine.json:16`** + `scripts/local-helper.mjs:8` (a **second checkout**, HEAD `0522e67a`, inode `20320717`; the other is HEAD `5725fa7d3`, inode `2916710`) | 34113 | as above | `llama-server` `MODEL_OK` | **YES (endpoint)** — two independent trees, same correct pin |
+| **`~/Projects/ufo-fsd-alpha/config/the-tick.machine.json:16`** `"endpoint": "http://127.0.0.1:34113/v1/chat/completions"` — re-measured 2026-10-14 after relocation (`origin-work/` path historical; HEAD `964f443e`) | 34113 | `:13` `"apiModel": "Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS"` (bare id) while `:12` `"path"` is the full GGUF path — **one file carries both id forms** | `llama-server` `MODEL_OK` — *historical: 34113 connection-refused today* | **YES (endpoint)** — the one correctly-pinned family |
+| `~/Projects/ufo-fsd-alpha/scripts/local-helper.mjs:8` `const DEFAULT_URL = "http://127.0.0.1:34113"` — re-measured | 34113 | same (`:9` `DEFAULT_MODEL` = bare id) | `llama-server` `MODEL_OK` — *historical* | **YES (endpoint)** |
+| `~/Projects/ufo-fsd-alpha/tests/the-tick.test.js:61,:1457` `endpoint: "http://127.0.0.1:34113/v1/chat/completions"` — re-measured (was `:87,:1858`) | 34113 | fixtures | `llama-server` — *historical* | **YES (fixture)** |
+| **`~/Projects/webzites/repos/ufo-fsd-alpha/config/the-tick.machine.json:16`** + `scripts/local-helper.mjs:8` — **checkout deleted 2026-10; historical** | 34113 | as above | `llama-server` `MODEL_OK` — *historical* | **YES (endpoint)** — two independent trees, same correct pin |
 
 Remote detail (measured, `git remote -v` untruncated): the two trees **share `origin`**
 `https://origin.cursor.com/jo-o-veiga/ufo-fsd-alpha.git` — same repo-level convention, which is why
@@ -267,9 +267,9 @@ ss -tanp | awk '$1=="TIME-WAIT" && $4 ~ /^127\.0\.0\.1:[0-9]+$/ {print $5}' | so
                                                               # 26 127.0.0.1:8080 / 6 127.0.0.1:34113 (T+20s); T0 was 62 / 12
 
 # C18 — correct-pin family (§3)
-sed -n '14,20p' ~/Projects/origin-work/ufo-fsd-alpha/config/the-tick.machine.json   # "endpoint": "http://127.0.0.1:34113/v1/chat/completions" + parallelSlots 2 / contextTokens 16384
-sed -n '5,12p'  ~/Projects/origin-work/ufo-fsd-alpha/scripts/local-helper.mjs       # DEFAULT_URL = "http://127.0.0.1:34113", DEFAULT_MODEL = bare model id
-grep -n '34113' ~/Projects/origin-work/ufo-fsd-alpha/tests/the-tick.test.js         # :87, :1858 fixtures
+sed -n '14,20p' ~/Projects/ufo-fsd-alpha/config/the-tick.machine.json   # "endpoint": "http://127.0.0.1:34113/v1/chat/completions" + parallelSlots 2 / contextTokens 16384 (re-measured 2026-10-14; origin-work/ path historical)
+sed -n '5,12p'  ~/Projects/ufo-fsd-alpha/scripts/local-helper.mjs       # DEFAULT_URL = "http://127.0.0.1:34113", DEFAULT_MODEL = bare model id
+grep -n '34113' ~/Projects/ufo-fsd-alpha/tests/the-tick.test.js         # :61, :125, :1457 (re-measured; was :87, :1858)
 
 # C19 — id-axis invisibility + the two-checkout / path-case facts (§0.1, §3, §4)
 curl -sS -o /tmp/b -w 'code=%{http_code}\n' -X POST -H 'content-type: application/json' \
@@ -279,11 +279,11 @@ curl -sS -o /dev/null -w 'code=%{http_code}\n' \
      http://127.0.0.1:34113/v1/models/Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS   # 404 not_found_error
 curl -sS http://127.0.0.1:34113/v1/models | python3 -c 'import json,sys;d=json.load(sys.stdin);print(sorted(d["models"][0]),sorted(d["data"][0]))'
                                                        # models[]: no id key; data[]: id + aliases (both full path)
-for d in ~/Projects/origin-work/ufo-fsd-alpha ~/Projects/webzites/repos/ufo-fsd-alpha; do git -C $d rev-parse --short HEAD; git -C $d remote get-url origin; done
-                                                       # 5725fa7d3 / 0522e67a, both https://origin.cursor.com/jo-o-veiga/ufo-fsd-alpha.git
+for d in ~/Projects/ufo-fsd-alpha; do git -C $d rev-parse --short HEAD; git -C $d remote -v; done
+                                                       # 964f443e; cursor→cursor.com…, origin→github.com… (2026-10-14; the second checkout and the old remote set are historical)
 stat -c '%n inode=%i' /home/vgpnk/projects /home/vgpnk/Projects    # 101125103 vs 27238 — different directories
 find /home/vgpnk/projects -maxdepth 3 -name 'ufo-fsd-alpha'        # nothing (checkouts are under the capital root)
-sed -n '11,17p' ~/Projects/origin-work/ufo-fsd-alpha/config/the-tick.machine.json   # :12 path (gguf), :13 apiModel (bare id), :16 endpoint 34113
+sed -n '11,17p' ~/Projects/ufo-fsd-alpha/config/the-tick.machine.json   # :12 path (gguf), :13 apiModel (bare id), :16 endpoint 34113
 ```
 
 ## 6. Measured vs inferred

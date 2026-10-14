@@ -52,6 +52,8 @@ which is now `docker-jitsi-meet-jvb-1` (Jetty HTML 404 on `/v1/*`; `/metrics` re
 `--port 34113`), and `~/Projects/origin-work/ufo-fsd-alpha/{config/the-tick.machine.json:16,
 scripts/local-helper.mjs:8}` already pin the correct port — the box holds the bug and its
 fix simultaneously.
+*[errata 2026-10-14: `origin-work/ufo-fsd-alpha` relocated to `~/Projects/ufo-fsd-alpha`
+(HEAD `964f443e`); the path above is historical — see `corpus/knowledge/consumer-registry.md` §Errata.]*
 
 **Facts that changed the contract mid-round** (each verified live, each in `corpus/`):
 llama.cpp answers `POST /v1/chat/completions` with **200** for any requested model name and
@@ -197,3 +199,67 @@ The only model changes were `devin/swe-2` at `03:19:34Z` and a later direct
 `resolvedModelIsFallback:false`. Observed result: capacity failures did **not**
 advance through a configured chain; the later Daybreak switch was not marked as
 fallback. No failure was forced and no route/mission config was changed.
+
+## round 3 — re-census: substrate relocation + box teardown (freshness axis)
+
+**Move:** bring the lane back to verified ground after two external shocks —
+the `ufo-fsd-alpha` tree relocated (`~/Projects/origin-work/ufo-fsd-alpha` →
+`~/Projects/ufo-fsd-alpha`, HEAD `964f443e`) and the box deleted most of the
+consumer surface outright — then restart the gate loop on the surviving rows.
+
+**Survey (before):** `bash tools/kama-probe.sh check` →
+`registry_rows_evaluated=11 model_ok=0 drift=11 exit=2` — every row DEAD
+`connection-refused`, the two `ufo-fsd` rows additionally `file=missing`
+(hardcoded `origin-work/` path), and a python `KeyError: 'provider'` on stderr
+because `opencode.json` lost its `qwen-local` block. `tools/test-snapshot.sh`
+→ `RESULT pass=24 fail=0` (hermetic suite unaffected).
+
+**Failure classification:** (a) stale origin path — 2 registry rows + 5 corpus
+docs; (b) citations to deleted files — 8 registry rows (opencode/janitor/
+systemd-qwen files) + `webzites` second checkout + llm-wiki rows;
+(c) moved-and-restructured citations (line drift) — `the-tick.test.js:87,:1858`
+→ `:61,:1457`, `local-helper.test.js:247-250` → `:263-266`, `THE-TICK.md:40` →
+`:29`, `local-helper.mjs:159/:163-165` → `:312/:325/:155-161`,
+`run-logic.md:556` → `:495`, `wwkd/SKILL.md:131` → `:129`; (d) genuine lane
+defect — zero.
+
+**Repair:** `kama-probe.sh` gained `--ufo-src` + `$UFO_SRC` env + first-existing
+candidate derivation (kumitate round-23/24 pattern); `$UFO_SRC` rows degrade to
+`file=missing`, never to a guessed path. Registry cut 11 → 3 rows: the eight
+consumer files no longer exist, and the registry contract admits only
+LIVE-or-LOADABLE consumers — deletion recorded as 16 transitions in DELTA.md,
+not silent edit. Corpus: append-only §Errata in `consumer-registry.md`; live
+re-anchoring to measured lines everywhere the claim still verifies; historical
+markers on the rest.
+
+**Live proof after:**
+
+```text
+check:    registry_rows_evaluated=3 model_ok=0 drift=3 exit=2
+snapshot: snapshot=20261014T124232Z prev=20260929T043044Z rows=3 model_ok=0 drift=3 transitions=16 exit=2
+snapshot: snapshot=20261014T124525Z prev=20261014T124232Z rows=3 model_ok=0 drift=3 transitions=0 exit=2
+consumers: consumer_rows_evaluated=3 exit=0 (ufo-fsd rows resolve file=yes via $UFO_SRC)
+test:     RESULT pass=24 fail=0; bash -n clean (shellcheck absent on this box)
+```
+
+**Domain change (larger than the relocation):** `qwen-coder.service` is
+inactive and its unit deleted; ports 34113 and 8080 both refuse connections;
+`~/.config/opencode/opencode.json` is 5 lines with no `qwen-local` provider;
+`~/.config/the-janitor/`, `~/.local/bin/the-janitor`,
+`~/.config/opencode/agents/`, all `opencode.json.*.bak*`,
+`~/.config/systemd/user/qwen-coder*`, `~/archive/bench-arena/loop.sh`,
+`/tmp/fleet-override.yml`, `~/Projects/webzites/`, and `~/Projects/ephemeral/`
+are gone. The stale-pin drift this lane was minted to watch is resolved by
+deletion, not repoint. Surviving pins: `~/.local/bin/omp` builtin
+`LLAMA_CPP_BASE_URL || "http://127.0.0.1:8080"` (still in the binary) and the
+two ufo-fsd 34113 pins (verified at the relocated path).
+
+**Carried debt:** the probe's positive controls (`ufo-fsd-thetick`,
+`ufo-fsd-local-helper`) read DEAD today — correct *pin* but dead *endpoint*.
+Unblock: operator restarts `qwen-coder.service` (or a successor unit); then
+MODEL_OK returns and the controls regain meaning. Named in SCORECARD.
+
+**Out-of-province report:** the local model-serving surface is nearly empty.
+If `qwen-coder` is permanently retired, this lane's province contracts to the
+omp binary default + cross-repo pins; a province revision is an L0/fleet
+decision, not a lane self-edit.

@@ -66,6 +66,7 @@ OPT_EXPECT=""
 OPT_ID=""
 OPT_REGISTRY="$REGISTRY_DEFAULT"
 OPT_HISTORY="$REPO_ROOT/registry/history"
+OPT_UFO_SRC=""
 SUBCOMMAND=""
 
 HAVE_PY=0
@@ -99,9 +100,12 @@ flags:
   --id KEY             row id to label --port mode with (default cli-override)
   --registry PATH      registry TSV to use (default registry/endpoint-consumers.tsv)
   --history DIR        snapshot history dir (default registry/history; snapshot only)
+  --ufo-src DIR        ufo-fsd-alpha checkout for '$UFO_SRC/...' registry rows
+                       (default: $UFO_SRC env, else first existing of
+                       ~/Projects/ufo-fsd-alpha then ~/Projects/origin-work/ufo-fsd-alpha;
+                       if none exists, $UFO_SRC rows resolve as file=missing)
   --timeout S          per-request curl --max-time in seconds (default 5)
   --connect-timeout S  per-request curl --connect-timeout in seconds (default 2)
-  --help               this text
 
 verdicts: MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP
 exit: 0 reconciled | 2 drift | 1 probe error
@@ -126,12 +130,17 @@ parse_args() {
       --connect-timeout) shift; [ $# -gt 0 ] || die "--connect-timeout needs a value"; CONNECT_TIMEOUT=$1 ;;
       --connect-timeout=*) CONNECT_TIMEOUT=${1#*=} ;;
       --history) shift; [ $# -gt 0 ] || die "--history needs a value"; OPT_HISTORY=$1 ;;
+      --ufo-src) shift; [ $# -gt 0 ] || die "--ufo-src needs a value"; OPT_UFO_SRC=$1 ;;
+      --ufo-src=*) OPT_UFO_SRC=${1#*=} ;;
       --history=*) OPT_HISTORY=${1#*=} ;;
       --help|-h) usage; exit 0 ;;
       *) die "unknown argument: $1 (see --help)" ;;
     esac
     shift
   done
+  if [ -n "$OPT_UFO_SRC" ]; then
+    [ -d "$OPT_UFO_SRC" ] || die "--ufo-src is not a directory: $OPT_UFO_SRC"
+  fi
   [ -n "$SUBCOMMAND" ] || { usage >&2; exit 1; }
   local v
   for v in "$TIMEOUT" "$CONNECT_TIMEOUT"; do
@@ -515,9 +524,41 @@ classify() { # $1 port, $2 expected -> sets C_VERDICT C_SERVED C_EVIDENCE C_REAS
   return 0
 }
 
+# ---------------------------------------------------------------- ufo-fsd source root
+# Cross-repo consumer rows cite the ufo-fsd-alpha checkout as '$UFO_SRC/<relpath>'
+# so the registry survives a relocation of that tree (2026-10-12: it moved from
+# ~/Projects/origin-work/ to ~/Projects/; the old root may exist again or not).
+# Resolution order, first match wins: --ufo-src flag > $UFO_SRC env > first
+# existing candidate dir. If nothing resolves, the row degrades to file=missing
+# (an honest DEAD/absent verdict), never to a silently guessed path.
+UFO_SRC_CACHE=""
+UFO_SRC_RESOLVED=0
+
+ufo_src() { # -> resolved dir on stdout (may be empty)
+  if [ "$UFO_SRC_RESOLVED" -eq 0 ]; then
+    UFO_SRC_RESOLVED=1
+    if [ -n "$OPT_UFO_SRC" ]; then
+      UFO_SRC_CACHE=$OPT_UFO_SRC
+    elif [ -n "${UFO_SRC:-}" ] && [ -d "${UFO_SRC:-}" ]; then
+      UFO_SRC_CACHE=$UFO_SRC
+    else
+      local cand
+      for cand in "$HOME/Projects/ufo-fsd-alpha" "$HOME/Projects/origin-work/ufo-fsd-alpha"; do
+        if [ -d "$cand" ]; then UFO_SRC_CACHE=$cand; break; fi
+      done
+    fi
+  fi
+  printf '%s' "$UFO_SRC_CACHE"
+}
+
 # ---------------------------------------------------------------- resolve
-expand_path() { # $1 -> ~ expanded, relative paths anchored at the repo root
+expand_path() { # $1 -> ~ expanded, $UFO_SRC/ resolved, relative paths anchored at the repo root
   local p=$1
+  case "$p" in
+    '$UFO_SRC/'*|'$UFO_SRC')
+      local src; src=$(ufo_src)
+      if [ -n "$src" ]; then p="$src${p#\$UFO_SRC}"; else printf '%s' ""; return 0; fi ;;
+  esac
   # shellcheck disable=SC2088  # the quoted '~' is a literal prefix we substitute ourselves
   case "$p" in
     "~"|"~/"*) p="$HOME${p#\~}" ;;

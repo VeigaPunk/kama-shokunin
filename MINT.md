@@ -26,6 +26,9 @@ the real wiki lives at `~/Projects/webzites/repos/llm-wiki`; the repo had never 
 `migrate`d. Same defect class: an assumed path/endpoint drifted and no lane's contract made
 catching it their job.
 
+*2026-10-14 errata: `~/Projects/webzites` no longer exists — the wiki example is
+now historical twice over.*
+
 ## Roster scan (rejected fits)
 
 `MANIFEST.json` roster at mint time, and why none absorb this:

@@ -86,8 +86,9 @@ Fossil copies that must never be restored: `opencode.json.pre-qwen-model-2026082
 **The drift is not one-sided** — correct pins coexist with stale ones, which is
 why a single consumer's success proves nothing:
 
-- `~/Projects/origin-work/ufo-fsd-alpha/config/the-tick.machine.json:16` →
-  `http://127.0.0.1:34113/v1/chat/completions` (`MODEL_OK`);
+- `~/Projects/ufo-fsd-alpha/config/the-tick.machine.json:16` →
+  `http://127.0.0.1:34113/v1/chat/completions` (`MODEL_OK`; tree relocated from
+  `origin-work/` on 2026-10-12 — re-measured at HEAD `964f443e`);
   same repo, `scripts/local-helper.mjs:8` → `DEFAULT_URL = "http://127.0.0.1:34113"`.
   Census rows and ownership: `corpus/knowledge/consumer-registry.md:54-55`. Both
   are registry rows (`ufo-fsd-thetick`, `ufo-fsd-local-helper`) and act as the
@@ -173,11 +174,12 @@ and `[{"id":0,"n_ctx":16384,…},{"id":1,…}]` from `/slots` (matches `--parall
 1. **Reconcile** — the entry point, runnable as written from the repo root:
    `bash tools/kama-probe.sh check; echo $?`
    Today it prints one row per registry entry and ends
-   `registry_rows_evaluated=11 model_ok=3 drift=8 exit=2` → `EXIT=2` — exactly the
-   drift this lane exists to name: eight rows `FOREIGN_SERVICE` at 8080 (five live
-   pins, the `omp` builtin default, two systemd traps) against three `MODEL_OK`
-   rows at 34113 (`systemd-qwen-coder` plus the two cross-repo positive controls
-   `ufo-fsd-thetick` / `ufo-fsd-local-helper`). The tally grows as registry rows
+   `registry_rows_evaluated=3 model_ok=0 drift=3 exit=2` → `EXIT=2` — after the
+   2026-10 re-census only three rows remain live or loadable
+   (`omp-llama-cpp-default`, `ufo-fsd-thetick`, `ufo-fsd-local-helper`), all
+   reading `DEAD` because neither 8080 nor 34113 answers now; the eight
+   consumer files the older tally measured were deleted from the box and are
+   recorded in `consumer-registry.md` §Errata. The tally grows as registry rows
    are added, so read the last line rather than this document's number. Expect
    `0` only after every consumer is repointed.
 2. **Capture comparable state** —
@@ -288,22 +290,26 @@ and `[{"id":0,"n_ctx":16384,…},{"id":1,…}]` from `/slots` (matches `--parall
   `~/.config/opencode/agents/janitor.md:5,20-21`;
   `~/.config/opencode/agents/distiller.md:5,7`;
   `~/.local/bin/the-janitor:16-19,47`; `~/.config/the-janitor/opencode.json:5-6,8-9,16`.
-- Correct-pin counterexamples: `~/Projects/origin-work/ufo-fsd-alpha/config/the-tick.machine.json:16`,
-  `~/Projects/origin-work/ufo-fsd-alpha/scripts/local-helper.mjs:8`; builtin default
+- Correct-pin counterexamples: `~/Projects/ufo-fsd-alpha/config/the-tick.machine.json:16`,
+  `~/Projects/ufo-fsd-alpha/scripts/local-helper.mjs:8` (relocated tree, re-measured); builtin default
   in `~/.local/bin/omp` (`strings -a ~/.local/bin/omp | grep LLAMA_CPP_BASE_URL`
   → `LLAMA_CPP_BASE_URL || "http://127.0.0.1:8080",`).
 - This lane's runnable artifacts: `tools/kama-probe.sh` (`check`, `listeners`,
   `consumers`, and `snapshot`; JSON stdout for all four),
   `tools/test-snapshot.sh` (24 behavioral checks), and
-  `registry/endpoint-consumers.tsv` (11 rows, md5
-  `87eb156b7cc36e98f3cbfb37c00f5351`; 6 columns — `id`, `consumer_path`,
+  `registry/endpoint-consumers.tsv` (3 rows, md5
+  `aa033020d99d2e271d2eb0499ab8281f`; 6 columns — `id`, `consumer_path`,
   `json_pointer_or_grep`, `declared_baseurl`, `expected_model_id`, `notes`) —
-  round-2 hashes and measured outputs are pinned in `LOG.md`. Row ids:
+  round-2 hashes and measured outputs are pinned in `LOG.md`. Cross-repo rows
+  cite the ufo-fsd-alpha checkout as `$UFO_SRC/<relpath>` (resolved by
+  `--ufo-src` > `$UFO_SRC` env > first existing of `~/Projects/ufo-fsd-alpha`,
+  `~/Projects/origin-work/ufo-fsd-alpha`). Row ids:
+  `omp-llama-cpp-default`, `ufo-fsd-thetick`, `ufo-fsd-local-helper`.
+  Removed rows (consumer files deleted from the box, 2026-10 re-census):
   `opencode-qwen-local`, `janitor-agent`, `opencode-distiller`, `janitor-cli`,
-  `janitor-opencode`, `omp-llama-cpp-default`, `systemd-qwen-coder`,
-  `systemd-qwen-coder-fossil`, `systemd-qwen-coder-ctx32k-latent`,
-  `ufo-fsd-thetick`, `ufo-fsd-local-helper`.
-- Producer: `~/.config/systemd/user/qwen-coder.service:13-23` (mtime 2026-09-08
+  `janitor-opencode`, `systemd-qwen-coder`, `systemd-qwen-coder-fossil`,
+  `systemd-qwen-coder-ctx32k-latent`.
+- Producer (historical — files deleted, service inactive): `~/.config/systemd/user/qwen-coder.service:13-23` (mtime 2026-09-08
   20:43:13), `~/.config/systemd/user/qwen-coder.service.bak.1788033391:16`,
   `~/.config/systemd/user/qwen-coder.ctx32k-q4.service:16` (disabled),
   `~/.local/bin/llama-server` (`version: 0.3.0-dev (build 1, commit d7bd3bf)`).

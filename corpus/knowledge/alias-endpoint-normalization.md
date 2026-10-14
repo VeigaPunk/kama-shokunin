@@ -33,17 +33,19 @@ The canonical unit is the global `modelRoles` alias (`m_*`). The selector is the
 **Loopback answer (2026-09-28): no.** The required metadata-only search was:
 
 ```text
-$ grep -nE "(baseURL|baseUrl|endpoint):[[:space:]]*https?://(127\\.0\\.0\\.1|localhost)(:|/)" ~/.omp/agent/config.yml /tmp/fleet-override.yml ~/Projects/origin-work/ufo-fsd-alpha/.omp/config.yml ~/Projects/origin-work/ufo-fsd-alpha/config/*.yml 2>/dev/null
+$ grep -nE "(baseURL|baseUrl|endpoint):[[:space:]]*https?://(127\\.0\\.0\\.1|localhost)(:|/)" ~/.omp/agent/config.yml /tmp/fleet-override.yml ~/Projects/ufo-fsd-alpha/.omp/config.yml ~/Projects/ufo-fsd-alpha/config/*.yml 2>/dev/null
 ```
 
-Output: no matching lines (empty output, exit status 1). Therefore no alias in the merged/overlay routing configs carries a loopback baseURL today. This is about dispatch aliases; the separate local llama-server endpoint is not an alias route.
+Output: no matching lines (empty output, exit status 1). Therefore no alias in the merged/overlay routing configs carries a loopback baseURL. This is about dispatch aliases; the separate local llama-server endpoint is not an alias route.
+
+*2026-10-14 errata:* re-measured at the relocated tree `~/Projects/ufo-fsd-alpha` (HEAD `964f443e`) — same empty result. `/tmp/fleet-override.yml` no longer exists; `~/.omp/agent/config.yml` still has no loopback baseURL (its `auth.broker.url` is also gone).
 
 ## Normalization and precedence
 
 1. Read `modelRoles` from the global config as the alias registry; retain one row per alias and preserve its selector verbatim.
 2. Apply the mission route bucket from `MISSION.md:37-43` and the kama route map at `kama-round-1.md:7`: role classes select `@m_*` aliases, but neither file defines a second selector or endpoint.
 3. Apply `/tmp/fleet-override.yml` as the dispatch-time `--config` overlay. It repeats role-to-alias assignments only; it does not redefine `modelRoles`, so it adds no alias rows and no baseURL.
-4. Apply the origin-work project config and mission overlays at dispatch precedence for their own keys. `mission-nightcall.yml:4-5` explicitly says model delegation resolves through the global `m_*` table and carries no project route pins; `l1-max-context.yml:19-22` is context policy only. The project `.omp/config.yml` likewise contains no model alias table.
+4. Apply the project config and mission overlays at dispatch precedence for their own keys. `config/mission-nightcall.yml:4-5` explicitly says model delegation resolves through the global `m_*` table and carries no project route pins (re-measured 2026-10-14); `config/l1-max-context.yml:19-22` is context policy only. The project `.omp/config.yml` likewise contains no model alias table.
 5. When an alias or assignment is repeated, collapse it to the effective highest-precedence value (overlay/`--config` over global for keys it actually defines); identical repeats are one row. No credential or token values are copied.
 
 ## Residual risk and detection

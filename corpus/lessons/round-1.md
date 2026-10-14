@@ -33,8 +33,9 @@ and `corpus/knowledge/consumer-registry.md`.
    (`~/.local/bin/omp`: `baseUrl = Bun.env.LLAMA_CPP_BASE_URL || "http://127.0.0.1:8080"`).
    A census rooted only at `~/.config/opencode/` finds neither.
 7. **Look for the fix before assuming the bug is universal.** The box simultaneously held
-   the bug (`8080` family) and its fix (`~/Projects/origin-work/ufo-fsd-alpha/config/
-   the-tick.machine.json:16`, `scripts/local-helper.mjs:8` → `34113`), in two checkouts.
+   the bug (`8080` family) and its fix (`~/Projects/ufo-fsd-alpha/config/
+   the-tick.machine.json:16`, `scripts/local-helper.mjs:8` → `34113`; re-measured
+   2026-10-14 after the tree relocated from `origin-work/` — historical path).
    Report the asymmetry; do not silently "fix" the consumer.
 
 ## Method traps (each produced a wrong conclusion this round)
@@ -69,6 +70,9 @@ whose match is too loose in one direction and too strict in the other).
 - L1's own F11 (`m_flash` route) → **stale**; live line 24 is
   `m_flash: charm-hyper/deepseek-v4.1-flash:max`. Corrected in
   `corpus/lessons/round-1-citations.md` and never repeated.
+- *2026-10-14 errata:* the second checkout (`~/Projects/webzites`) is deleted and
+  the surviving tree's remote names changed (`cursor`/`origin` swapped);
+  `consumer-registry.md` §Errata carries the current map.
 
 ## Round-2 seeds
 
