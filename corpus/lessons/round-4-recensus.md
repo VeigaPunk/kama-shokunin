@@ -29,3 +29,7 @@ operator restores a serving unit. Province contraction remains an L0 decision.
 Stale live prose recorded, not rewritten: `SKILL.md` still teaches a live
 11-row `MODEL_OK` world; `PROVINCE.md:10-11` owns deleted host pins;
 `endpoint-identity.md` line citations drifted (`:481-487` is the match path).
+
+## Independent audit erratum (appended 2026-10-14)
+
+Independent audit: gates re-ran green/expected (consumers 0, check 2 DEAD, listeners 0, snapshot pass=24 fail=0, `bash -n` clean). Identity/pathspec/record confirmed. Dead-path sweep found **46 unique lines** still reading as current locations (`SKILL.md:222` janitor-path checklist greps, `consumer-registry.md:111-119` lowercase `~/projects/shokunin/...`, `listener-census.md:122` + `round-1.md:69` origin-work as live) — named debt, owner kama, unblock: rewrite those lines to the capital-P path or mark them historical. Also corrected in this round: `endpoint-identity.md` cited `tools/kama-probe.sh:481-487` for `schema-unrecognized`; the real site is `:516`.
