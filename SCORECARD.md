@@ -3,6 +3,15 @@
 Contract per `AXES.md` §SCORECARD.md contract. Scores are 0–10, self-assessed,
 each bound to an evidence pointer and the round that last changed it.
 
+**Current authority (actual round 5, blocked attempt):** assigned LIVE axes
+remain operability and freshness (`../MISSION.md`); freshness is the lower
+inherited author assessment. The numeric rows below are historical assessments,
+not remeasured present file lengths, coverage denominators, or a completion
+counter. Round-5 per-axis evidence below supersedes their current-state reading;
+no scalar score is advanced. Historical reports exist for rounds 1, 2 and 4;
+round 3's report gap remains unresolved. The headless launch counter 1 is not a
+verified completed round. This attempt adds **zero** verified completed rounds.
+
 ## Axes
 
 | Axis | Before → After | Evidence pointer | Last change |
@@ -35,12 +44,15 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 ## Planned
 
-Round 4: **freshness** — add declared-vs-served context-size reconciliation
-(`limit.context` vs live `/props`/server args) to the snapshot schema. Carried
-from the pre-re-census plan; it is *blocked on the same debt* (nothing listens
-on 34113 today — the plan assumes a live server to reconcile against).
-Scheduling is separately operator-owned and filed through the L0 side channel;
-do not install a timer inside kama's write boundary.
+After operator-owned route/binding repair, a **fresh session** remeasures the
+lowest LIVE axis and chooses the next falsifiable freshness move. Do not repeat
+the landed round-5 runbook correction as new progress. Candidate frontier:
+re-anchor still-live probe citations through explicit corpus correction entries;
+retain the dated source records. See `.ufo/round-5/continuation.md`.
+
+Declared-vs-served context size remains a separate blocked feature: no current
+serving context is available. Service restoration, scheduling and global route
+configuration remain operator-owned; no timer or successor unit is installed.
 
 ## Retired
 
@@ -56,3 +68,50 @@ and context drift have saturated (not observed).
 | Round | Axis | Before | After | Evidence |
 |---|---|---|---|---|
 | 4 | freshness | measured at HEAD (see lesson) | verdicts recorded per gate, no scalar | `corpus/lessons/round-4-recensus.md` |
+| 5 (blocked attempt) | freshness | 3 mismatches / same 4 summary fields | 0 mismatches / 4; local delta only, no round admission | `.ufo/round-5/acceptance.json`; `corpus/lessons/round-5.md` |
+
+## Actual round 5 — local verdicts, not native judgment
+
+Measured tree: work commit bound by `.ufo/round-5/landed-evidence.json`; real
+commands and full streams/exits in `.ufo/round-5/acceptance.json`. The probe and
+snapshot implementations, registry identities/URLs/model expectations and
+tracked history are unchanged. Only registry notes were inherited as edits.
+
+| Axis | Verdict | Evidence and limit |
+|---|---|---|
+| freshness | improved | The four dependent documented summary fields agree with the real sample: mismatches 3 → 0. Active instructions date September successes and distinguish dead endpoints from correct pins. This is a local documentation delta, not an admitted round. |
+| operability | unchanged | Existing command paths still run: check exit 2, consumers exit 0; fixture `RESULT pass=24 fail=0`, exit 0; two isolated snapshots exit 2 with byte-stable TSV/ledger. No runtime recovery or new behavior claimed. |
+| depth | unchanged | No new serving/runtime knowledge admitted; existing normalized-id and identity/liveness rules retained. Historical counts of lines/signatures/checklist steps are not current measurements. |
+| coverage | unchanged | Same three registry ids and domain surfaces; no new consumer census or integration with vLLM/Ollama. Historical census totals are not a live denominator. |
+| calibration | unchanged | Missing independent spot-check, receipt binding, native dispatch and round-3 report stay explicit; correction of overclaims is not proof of externally calibrated judgment. |
+| adjacency | unchanged | Route, service, credentials, scheduling and fleet-ledger actions remain with their owners; only lane-local records changed. |
+
+| Learning trend | Verdict | Evidence and limit |
+|---|---|---|
+| expansion | unchanged | No new frontier knowledge or consumer surface admitted. |
+| quality | improved | Stale active runbook superseded by measured instructions; `corpus/QUALITY.md` grounds admission criteria in the round-5 lesson. Historical corpus is explicitly dated, not erased. |
+| discernment | unchanged | No outside non-author admit/reject spot-check. Author assertions remain `[~]`, never promotion `[x]`. |
+
+**Admission: BLOCKED, not saturated.** Canonical wave plan validates exactly
+32 scopes, exit 0, but authorized native routing cannot be realized; zero task
+calls and zero verified-round increment. `wave-payload.json` is a rendered
+plan, not a run. No native Phase 0/self-iter failure was re-executed.
+
+**Named debt and unblock:**
+- Operator/global route owner: content executor/scribe → `@m_composer`,
+  audit/review/scout/critic (including sentinel/revenger/simplifier/mutation
+  roles when used) → `@m_grok`, connector → `@m_antigravity` with requested
+  `@m_zfl` fallback. Observed mappings and exact differences:
+  `.ufo/round-5/route-preflight.json`; native routes currently select generic
+  buckets instead.
+- Fleet integrator: provide the real taskKey, report/receipt paths and
+  prompt/config digest binding absent from the interactive Sighting record.
+  No applicable task receipt or Sighting completion is claimed.
+- Operator: restore an authorized serving runtime or decide permanent
+  retirement. Until then the registered endpoints sample DEAD; do not change
+  expected values to hide it.
+- Fleet integrator: reconcile historical round-3 report omission and establish
+  an evidence-backed cumulative verified-round total; no retroactive pass.
+- Kama next fresh-session move: re-anchor still-live corpus citations while
+  preserving dated history, then obtain authorized independent review.
+

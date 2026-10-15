@@ -4,6 +4,24 @@ Proprietary memory for the local model serving & endpoint health domain. Every e
 cites its source (`path:line` or a command + its raw output). Coverage map and open
 gaps grow with rounds.
 
+## Live authority vs historical census
+
+Every `knowledge/` and `lessons/` entry is a **dated census record** of what was
+observed on its citation date — never proof that an endpoint serves today. Live
+authority is one current authorized `bash tools/kama-probe.sh check` run. As of
+2026-10-15 the admitted truth (3 registry rows, 0 `MODEL_OK`, drift 3, exit 2;
+all rows `DEAD`) and the supersession boundary for September-era identity
+samples are recorded in `lessons/round-1-relaunch-freshness.md`.
+
+**Actual round-5 correction:** `lessons/round-5.md` completes the local runbook
+cutover and records the interrupted relaunch as inherited, unverified work.
+Its real command captures live in `.ufo/round-5/` at the lane root; neither a
+dated corpus nor a prior successful probe substitutes for a new sample.
+Historical references to installed runtimes, counts, aliases and paths retain
+their observation dates. New admissions and corrections follow `QUALITY.md`.
+Round admission is blocked by missing native role routes and receipt bindings;
+the local documentation improvement is not a completed training round.
+
 ## Coverage map
 
 | Entry | Covers | Round |
@@ -22,6 +40,10 @@ gaps grow with rounds.
 | `lessons/probe-mutation-matrix.md` | mutation classes the probe must detect + the classes it misses | 1 |
 | `knowledge/snapshot-history.md` | invocation-to-invocation endpoint state, transition semantics, persistence boundary, scheduling handoff | 2 |
 | `lessons/round-2.md` | freshness claim boundary, implementation/review traps, persistence threat model | 2 |
+| `lessons/round-1-relaunch-freshness.md` | gate: 2026-10-15 endpoint teardown admitted as current runbook truth; September cases as dated historical samples | 1 (relaunch) |
+| `lessons/round-4-recensus.md` | October teardown, stale-prose/source-anchor errata, missing round-3 report debt | 4 |
+| `lessons/round-5.md` | current-vs-historical runbook cutover, measured admit/reject decisions, blocked dispatch and continuation | 5 (blocked attempt) |
+| `QUALITY.md` | domain admission bar: current sample, pin provenance, temporal/source authority, invocation limits, ownership | 5 (blocked attempt) |
 
 ## Known gaps
 
@@ -37,5 +59,19 @@ gaps grow with rounds.
 - Real-runtime reconciliation is proven for llama.cpp only. vLLM/Ollama-shaped
   fixtures pass, but neither runtime is installed; this is parser evidence, not
   runtime integration.
-- Declared-vs-served context size (32768 vs live 16384) is not in the snapshot schema.
+- Historical declared-vs-served context size (September: 32768 vs 16384) is not in the snapshot schema; no current runtime context is established.
 - No coverage of *remote* endpoint health (that is kake/kumitate territory).
+
+## Frontier
+
+- Correct still-live source anchors through new cited correction entries;
+  historical corpus samples stay immutable. Round-4 debt is not erased by a
+  current-state banner.
+- Reconcile declared-vs-served context size only as a separate feature move
+  when an authorized serving runtime permits a real comparison.
+- Non-author spot-check of at least one admitted and one rejected candidate;
+  unavailable in round 5, so discernment and promotion remain unverified.
+- Operator/integrator prerequisites, not corpus expansion: authorized native
+  role bindings, a real receipt binding, serving-runtime disposition and
+  historical verified-round reconciliation. See lane-root
+  `.ufo/round-5/continuation.md`; no outside-repo repair is absorbed here.

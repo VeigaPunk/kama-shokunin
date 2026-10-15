@@ -269,3 +269,151 @@ decision, not a lane self-edit.
 
 Full round detail: `corpus/lessons/round-4-recensus.md`. Advisory inventories:
 `../.ufo/waves/shokunin12h-20261014-p1-repair/members/`.
+
+## round-1 — 2026-10-15 relaunch: current runbook freshness
+
+**Steer and scope.** This explicit round-1 follows the recorded training rounds
+through round 4 at `c390918f8f6d5d1b52787e4720c8642377fdcb8c`; it does not
+renumber or rewrite them. `MISSION.md:29` assigns operability + freshness,
+whereas the generated prompt and `shokunin.conf:52` say operability +
+calibration. Mission precedence selects freshness, the lower assigned axis
+(7 versus operability 8 in the inherited scorecard). Scores are author
+assessments, not measurements of model quality.
+
+**Motivating re-verification.** `bash tools/kama-probe.sh check` returned
+`registry_rows_evaluated=3 model_ok=0 drift=3 exit=2`: the builtin fallback
+row at 8080 and both explicit UFO pins at 34113 were `DEAD` /
+`connection-refused`; explicit pins resolved `file=yes`, the builtin row
+`file=inherited`. This is endpoint unavailability now, not a broken probe,
+verified active traffic, or permanent retirement.
+
+The active runbook still described a successful September runtime, missing
+janitor/unit paths, and an eleven-row JSON summary. At the baseline commit,
+the following fixed-denominator counting command produced
+`fields_checked=4 mismatches=3`: documented/observed rows 11/3,
+model_ok 3/0, drift 8/3, exit 2/2.
+
+```sh
+bash tools/kama-probe.sh check --json | python3 -c 'import json,re,sys,pathlib; actual=json.load(sys.stdin)["summary"]; text=pathlib.Path("SKILL.md").read_text(); expected=json.loads(re.search(r"`summary` = `([^`]+)`",text).group(1)); mismatches={k:{"documented":v,"observed":actual[k]} for k,v in expected.items() if actual[k]!=v}; print(json.dumps({"fields_checked":len(expected),"mismatches":len(mismatches),"details":mismatches},sort_keys=True))'
+```
+
+**Single change.** Reconcile active instructions and province surfaces with
+that sampled state; retain September successes as dated historical evidence,
+not readiness guarantees. Registry row identities, URLs, model expectations,
+probe implementation and snapshot schema remain unchanged. Note-only registry
+corrections distinguish correct pins from live positive controls. Regenerate
+the inherited bare-checkmarked SHONEN evidence as canonical author assertions
+(`[~]`); no independent promotion verifier exists in this round.
+The new `corpus/lessons/round-1-relaunch-freshness.md` supersedes stale-current
+interpretations without rewriting historical corpus entries.
+
+**Dispatch evidence.** One native OMP `task` batch returned “Spawned 9
+background agents”: `KamaPlannerFresh` (planner), `KamaConnectorScope`
+(connector), `KamaExecutorRunbook`, `KamaExecutorProvince`,
+`KamaExecutorLesson` (executors), `KamaScribeEvidence` (scribe),
+`KamaScoutSurface` (scout), `KamaReviewerRunbook` (reviewer), and
+`KamaCriticFreshness` (critic). Role selectors used the unchanged host
+`task.agentModelOverrides`; no model parameter, alias pin, routing change,
+or domain-source write. This bounded shared-writer craft batch follows the
+shokunin OMP binding, not a claimed validated generic UFO wave: the latter
+excludes planner (`ufo-swarm-wave.mjs:256-269`). The inherited L0 question
+“kama | round-1 | Reconcile the relaunched counter…” records that conflict.
+
+**Acceptance boundary.** Keep the same four summary fields; compare the
+delivered revision to a fresh real probe. Matching that sample cannot prove
+continuous freshness, four independent checks, endpoint recovery, or runtime
+integration. Review must also eliminate unconditional historical success
+claims and allow expected exit 2 to complete this documentation-only task.
+Service restoration, consumer repointing, timer installation, and context-size
+reconciliation are not part of this move. Delivery measurement follows in an
+appended entry once its measured commit exists.
+
+## Actual round 5 — interactive cutover and dispatch blocker
+
+2026-10-15. Start revision `c390918f8f6d5d1b52787e4720c8642377fdcb8c`.
+One attempted axis-move: freshness. Plan saved before implementation at
+`plans/wwkd-round-5-interactive-freshness.md`.
+
+**Correction to the inherited relaunch entry above:** its `round-1` label and
+nine-seat batch describe interrupted headless work, not a new verified round
+or authority for this interactive dispatch. Historical round-4 work and reports
+remain intact; round 3's report is still missing. The prior driver launch
+counter 1 is not a completed-round count. This session made zero native task
+calls and adds zero verified completed rounds. No historical log, report or
+native session bytes were overwritten.
+
+**Motivation and local change.** A new registered-endpoint measurement
+(`.ufo/round-5/before-check.json`) found the same three dead rows, while the
+active SKILL JSON example still documented 11 rows, MODEL_OK=3 and drift=8.
+The same four dependent fields had `fields_checked=4 mismatches=3`.
+The runbook now records the measured negative result, dates September examples,
+separates inherited defaults from effective runtime URLs, distinguishes correct
+pins from endpoint readiness, and makes operator-owned restoration a handoff,
+not an implicit completion condition. No probe/schema/model-expectation change.
+
+Inherited province/registry-note corrections, corpus index text, author-asserted
+SHONEN marks and the unfinished relaunch lesson were preserved and reconciled.
+`corpus/lessons/round-5.md` explicitly supersedes current-state interpretations
+without rewriting corpus history. Missing `corpus/QUALITY.md` now carries five
+domain criteria grounded in the actual admit/reject decisions; the corpus index
+links both and records the unverified frontier. SKILL registers existing local
+gate/probe semantics without pretending a new self-test exists.
+
+**Checks, complete output retained.** `.ufo/round-5/acceptance.json` stores every
+argv, stdout, stderr and exit code. Delivered local summary comparison:
+`fields_checked=4 mismatches=0`. Full verdict lines:
+
+```text
+registry_rows_evaluated=3 model_ok=0 drift=3 exit=2
+consumer_rows_evaluated=3 exit=0
+RESULT pass=24 fail=0
+snapshot=20261015T051015Z prev=- rows=3 model_ok=0 drift=3 transitions=0 exit=2
+snapshot=20261015T051015Z prev=20261015T051015Z rows=3 model_ok=0 drift=3 transitions=0 exit=2
+```
+
+`check` and `check --json` exited 2; `consumers`, existing fixture suite and
+shell syntax invocation exited 0. Both isolated real snapshots exited 2 and
+left their TSV/ledger byte-stable. The temporary history was removed after
+capturing normalized baseline/ledger bytes; tracked default history was not
+advanced. No arbitrary listener scan, external research, native transcript/
+credential/environment/journal read, service repair or host config write.
+
+**Dispatch blocker, not a smaller substitute.** Exactly 32 distinct review
+scopes validated through canonical `ufo-swarm-wave.mjs plan --route-families`,
+exit 0 (`spawn=32 resume=0 total=32`); the canonical pure renderer produced the
+saved payload. Route-family status is `unprobed`, not a model-health check.
+Actual required aliases are not selected by the global native task overrides:
+executor → @m_mid instead of @m_composer; scribe → @m_fast instead of
+@m_composer; reviewer/sentinel/revenger → @m_mid and
+scout/simplifier/mutation-tester → @m_fast instead of @m_grok; critic →
+@m_strong instead of @m_grok; connector → @m_mid instead of @m_antigravity.
+The antigravity fallback chain is empty, not the requested @m_zfl fallback.
+Evidence: `.ufo/round-5/route-preflight.json`, `wave-validation.json`,
+`wave-plan.json`, `wave-payload.json`. No task batch, runtime registry, agent
+handle or specialist report was fabricated. Global route repair belongs to the
+operator; no pins or overlays were introduced.
+
+**Admission and trends.** Local axis verdicts in SCORECARD: freshness improved;
+operability/depth/coverage/calibration/adjacency unchanged. Learning quality
+improved locally; expansion and discernment unchanged. No harmed axis observed,
+but this does **not** admit the round: the mandatory dispatch did not occur.
+No outside spot-check or promotion `[x]`; no Rust/native verdict or saturation.
+The previously reported red native Phase 0/self-iter path was not rerun.
+
+**Receipt boundary.** The matching interactive Sighting metadata has no
+taskKey, resultPath/receiptPath or prompt/config digest binding at top level or
+under dispatch. No arbitrary task key or digest is substituted. The receipt
+prerequisite artifact names the missing binding; a display-only mission-result
+envelope is not task acceptance. No applicable task receipt is claimed and the
+Sighting mission must not be completed. Only the fleet integrator can provide
+the binding and reconcile the historical verified-round total.
+
+**Concrete continuation.** After authorized global role routes and real receipt
+binding are supplied, redispatch a fresh session on the same logical lane,
+preserving all old artifacts. Re-measure the lowest LIVE axis; do not reset to
+round 1 or re-count this landed correction. Next candidate freshness work:
+still-live source-anchor correction entries, not corpus rewrites. Operator
+serving-runtime disposition, missing round-3 report and independent admit/reject
+review remain named debt. Exact work commit and file-byte binding are published
+after the work commit in `.ufo/round-5/landed-evidence.json` and the own-repo
+report `.ufo/reports/round-5/kama.md`. NO PUSH.

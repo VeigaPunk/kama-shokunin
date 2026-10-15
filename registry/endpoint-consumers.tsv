@@ -32,6 +32,6 @@
 #   MODEL_OK | MODEL_MISMATCH | FOREIGN_SERVICE | UNAUTHORIZED_SERVICE | DEAD | NOT_HTTP
 # Evidence: path:line of the pin + probe command output.
 id	consumer_path	json_pointer_or_grep	declared_baseurl	expected_model_id	notes
-omp-llama-cpp-default	~/.local/bin/omp	grep:LLAMA_CPP_BASE_URL	http://127.0.0.1:8080	-	code-level default: baseUrl = LLAMA_CPP_BASE_URL || http://127.0.0.1:8080 in the omp binary; env var unset, so the stale port is the fallback
-ufo-fsd-thetick	$UFO_SRC/config/the-tick.machine.json	grep:http://127\.0\.0\.1:34113[^"]*	http://127.0.0.1:34113/v1/chat/completions	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	CORRECT PORT (positive control): the-tick.machine.json:16 pins the live port at HEAD 964f443e; cross-repo consumer, declared value is a full endpoint path not a bare baseURL
-ufo-fsd-local-helper	$UFO_SRC/scripts/local-helper.mjs	grep:http://127\.0\.0\.1:[0-9]+	http://127.0.0.1:34113	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	CORRECT PORT (positive control): local-helper.mjs:8 DEFAULT_URL; cross-repo consumer
+omp-llama-cpp-default	~/.local/bin/omp	grep:LLAMA_CPP_BASE_URL	http://127.0.0.1:8080	-	code-level fallback pin, not proof of the effective environment-selected URL; check reuses the declaration when file_match=inherited; sampled DEAD in registry/history/latest.tsv
+ufo-fsd-thetick	$UFO_SRC/config/the-tick.machine.json	grep:http://127\.0\.0\.1:34113[^"]*	http://127.0.0.1:34113/v1/chat/completions	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	surviving explicit pin; historical positive control, currently DEAD in registry/history/latest.tsv; a correct pin does not establish a live endpoint
+ufo-fsd-local-helper	$UFO_SRC/scripts/local-helper.mjs	grep:http://127\.0\.0\.1:[0-9]+	http://127.0.0.1:34113	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	surviving explicit DEFAULT_URL pin; historical positive control, currently DEAD in registry/history/latest.tsv; runtime readiness must be re-probed

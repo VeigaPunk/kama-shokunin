@@ -7,12 +7,35 @@ drift, served-model reconciliation, probe conventions.
 
 | Surface | Concrete artifact on this box |
 |---|---|
-| local model-serving processes & their ports | `~/.config/systemd/user/qwen-coder.service` (llama-server, `127.0.0.1:34113`) |
-| baseURL values in consumer configs | `~/.config/opencode/opencode.json:158`, `~/.config/opencode/agents/janitor.md:21` |
+| producer discovery & read-only service inspection of local serving ports | `tools/kama-probe.sh listeners` (`ss -ltn` loopback enumeration + per-listener classification). The serving unit formerly pinned here — `~/.config/systemd/user/qwen-coder.service` (llama-server, `127.0.0.1:34113`) — is deleted; row-absent since snapshot `20261014T124232Z` (`registry/history/DELTA.md:20`). kama governs discovering whatever serves these ports and never claims an installed server |
+| baseURL pins in surviving/loadable consumers | the three surviving registry rows in `registry/endpoint-consumers.tsv`: `~/.local/bin/omp` (`LLAMA_CPP_BASE_URL` fallback → `http://127.0.0.1:8080`, `file_match=inherited`, not proof of an effective environment-selected endpoint), `$UFO_SRC/config/the-tick.machine.json:16`, `$UFO_SRC/scripts/local-helper.mjs:8`. Historical, no longer live pins: `~/.config/opencode/opencode.json:158` (the provider block was removed; the file is now 5 lines holding `$schema`/`theme`/`autoupdate` only) and `~/.config/opencode/agents/janitor.md:21` (file deleted); both verified by read-only host inspection, never rewritten |
 | served-model-id reconciliation | `GET /v1/models` vs `--alias` vs the configured model id |
 | liveness/readiness probe conventions | `/health`, `/props`, `/slots` |
 | endpoint-drift detection + invocation history | `tools/kama-probe.sh snapshot`, `registry/endpoint-consumers.tsv`, `registry/history/{latest.tsv,DELTA.md}` |
 | endpoint-consumers cross-lane registry | `corpus/knowledge/consumer-registry.md`, `cross-lane-scope.md` |
+
+**Observed state (lane baseline `c390918`, tracked snapshot `20261014T124232Z`):**
+`bash tools/kama-probe.sh check` evaluates 3 registry rows — `model_ok=0`, `drift=3`,
+exit 2; every row in `registry/history/latest.tsv` is `DEAD` connection-refused
+(`8080` and `34113`). `ufo-fsd-thetick` and `ufo-fsd-local-helper` are
+correct-pin/dead-endpoint: `file_match=yes` attests the pin, NOT a live `MODEL_OK` —
+this lane reports pin correctness and serving liveness separately and never asserts
+`MODEL_OK` from retired samples (`registry/history/DELTA.md:9,:12,:20` keep the former
+`MODEL_OK`/`systemd-qwen-coder` state as history). Serving runtime is explicitly
+unavailable on the concrete surfaces — nothing listens on `8080` or `34113` (probe
+connection-refused verdicts; `systemctl --user status qwen-coder` → "Unit
+qwen-coder.service could not be found"); restoring a unit is operator-owned work under the
+boundary below. The outage retires nothing in this domain: server/health discovery and
+drift reconciliation remain governed here — province contraction is an L0 decision.
+
+**Actual round-5 sample (2026-10-15):** the same three rows still sample
+`DEAD` / connection-refused, exit 2. Explicit UFO pins resolve `file_match=yes`;
+the builtin fallback is `inherited`/`raw`, not proof of an effective runtime
+URL or active traffic. Bounded service/socket metadata agrees with the
+not-found producer and unserved registered ports. Full command evidence:
+`.ufo/round-5/{before-check,host-shape,acceptance}.json`. This supersedes a
+current-readiness reading of older successful examples without retiring the
+producer-discovery domain or authorizing service restoration.
 
 **Refuses:** model quality/eval (kengaku), credential material & auth flows (kagi),
 dispatch/route mechanism (kumitate), remote web surfaces (kake). Boundary rule: kama
