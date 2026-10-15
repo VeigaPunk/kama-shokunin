@@ -33,3 +33,25 @@ Stale live prose recorded, not rewritten: `SKILL.md` still teaches a live
 ## Independent audit erratum (appended 2026-10-14)
 
 Independent audit: gates re-ran green/expected (consumers 0, check 2 DEAD, listeners 0, snapshot pass=24 fail=0, `bash -n` clean). Identity/pathspec/record confirmed. Dead-path sweep found **46 unique lines** still reading as current locations (`SKILL.md:222` janitor-path checklist greps, `consumer-registry.md:111-119` lowercase `~/projects/shokunin/...`, `listener-census.md:122` + `round-1.md:69` origin-work as live) — named debt, owner kama, unblock: rewrite those lines to the capital-P path or mark them historical. Also corrected in this round: `endpoint-identity.md` cited `tools/kama-probe.sh:481-487` for `schema-unrecognized`; the real site is `:516`.
+
+### Audit detail (appended 2026-10-14)
+
+Historical-marking audit: describe-don't-pin holds for missing-file content hashes
+(no md5/sha256 of a missing file is asserted as current identity) and FAILS for
+unmarked current claims. Still present tense: `lessons/round-1-citations.md:78`
+calls the round-2 probe hash current (`SCORECARD.md:10` pins the later digest);
+`SCORECARD.md:12` says `SKILL.md` is 323 lines / 11 error signatures where `wc -l`
+is 329 and `:152-163` holds 12; `SKILL.md:33-54,:66-67,:90,:114,:161,:186-188,
+:196-198,:203,:213,:222-223,:264-265,:326` still carry pid 1299, `MODEL_OK` on
+34113, Jitsi on 8080, the 11-row tally and the `20260929` snapshot as the final
+baseline (`curl` to 34113/8080 exits 7; `qwen-coder.service` not-found,
+`MainPID=0`; tracked baseline is `20261014T124232Z`); `SKILL.md:120,:317` place
+`m_flash` at line 24 (a comment) where the key is `config.yml:433`;
+`SKILL.md:93,:101` cite `consumer-registry.md:54-55`/`:49` for rows that live
+elsewhere; `endpoint-identity.md:5,:9,:13,:21,:97,:122,:127` and
+`snapshot-history.md:15,:21,:36,:53` still point at the wrong probe/census lines
+(the `:516` fix covered only one site); `consumer-registry.md:101` locates the omp
+default at line 1544771 where the string is at newline-line 1149391;
+`drift-timeline.md:24` still calls `opencode.json:158` current though the file is
+5 lines. Owner kama; unblock: mark those lines historical and repoint the probe
+citations. Dead positive controls remain operator debt.
