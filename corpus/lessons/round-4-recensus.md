@@ -55,3 +55,13 @@ default at line 1544771 where the string is at newline-line 1149391;
 `drift-timeline.md:24` still calls `opencode.json:158` current though the file is
 5 lines. Owner kama; unblock: mark those lines historical and repoint the probe
 citations. Dead positive controls remain operator debt.
+
+### Counter-vs-log audit (appended 2026-10-15)
+
+`CVL-DRIVER-AGREE`: `.ufo/state/kama.round` = `1`, the watchdog log's only kama
+launch and last wrap are both `round=1`, and `.ufo/reports/round-1/kama.md` titles
+itself round 1 — `STATE_COUNTER_LOG_MISMATCH` does not fire. **Record gap (named,
+pre-existing):** reports exist for rounds 2 and 4 and `LOG.md` carries headings for
+rounds 2, 3 and 4, but **round 3 has no report file** (`CVL-LANELOG-REPORT-GAP`).
+That is an absent file, not an unhealthy lane. Unblock: file a round-3 report or
+record the omission as debt in the round-4 record.
