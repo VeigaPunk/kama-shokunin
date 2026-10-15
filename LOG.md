@@ -417,3 +417,27 @@ serving-runtime disposition, missing round-3 report and independent admit/reject
 review remain named debt. Exact work commit and file-byte binding are published
 after the work commit in `.ufo/round-5/landed-evidence.json` and the own-repo
 report `.ufo/reports/round-5/kama.md`. NO PUSH.
+
+### Actual round-5 landing and handoff evidence
+
+Work landed as `e246c40ec1b4ba08c36359934f69b8064b7dc54a` under
+`kama-shokunin <kama@shokunin.local>`. The post-commit real `check --json`
+again exited 2 with all three registered rows DEAD and the runbook comparison
+`fields_checked=4 mismatches=0`; complete streams and manifest digest:
+`.ufo/round-5/landed-evidence.json`.
+
+The own-repo report was written after that work commit at
+`.ufo/reports/round-5/kama.md`. `.ufo/round-5/continuation.json` binds its
+actual bytes and the fresh-session markdown handoff by SHA-256. Additional
+metadata-only binding search is retained at `.ufo/round-5/binding-search.json`:
+matching Sighting, launch and panes rows lack receipt bindings; the documented
+default queue and matching prompt digest sidecars were not found. This does
+not assert global absence of all possible operator artifacts.
+
+The display-only mission-result envelope was minted and validated (both exit
+0), recording zero subagents and unsound/blocked/incomplete. It is not a task
+receipt, native verdict, completed round, or fleet acceptance. No applicable
+receipt was fabricated and Sighting completion was not invoked. The blocked
+report/handoff are landed for durability, not as an admission signal. This
+attempt adds zero verified completions; external route and receipt prerequisites
+remain the concrete unblock. No second round and no push.
