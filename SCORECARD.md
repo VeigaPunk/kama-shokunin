@@ -50,3 +50,9 @@ inactive and deleted, and every model endpoint is dead. Retirement still
 requires evidence the surface is *permanently* gone (not observed — the
 34113 pins ship in a maintained upstream repo), or that invocation history
 and context drift have saturated (not observed).
+
+## Move log
+
+| Round | Axis | Before | After | Evidence |
+|---|---|---|---|---|
+| 4 | freshness | measured at HEAD (see lesson) | verdicts recorded per gate, no scalar | `corpus/lessons/round-4-recensus.md` |
