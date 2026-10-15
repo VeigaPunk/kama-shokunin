@@ -1,7 +1,7 @@
 # round-4 re-census — source-root derivation already correct; endpoints dead
 
 2026-10-14. Steered round 4. Advisory inventories:
-`.ufo/waves/shokunin12h-20261014-p1-repair/members/Kama*.md`.
+`../.ufo/waves/shokunin12h-20261014-p1-repair/members/Kama*.md`.
 
 ## Verdict lines (measured)
 
