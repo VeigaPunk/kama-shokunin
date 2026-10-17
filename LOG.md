@@ -441,3 +441,8 @@ receipt was fabricated and Sighting completion was not invoked. The blocked
 report/handoff are landed for durability, not as an admission signal. This
 attempt adds zero verified completions; external route and receipt prerequisites
 remain the concrete unblock. No second round and no push.
+
+## 2026-10-16 — protocol conformance: SCORECARD contract fields
+
+Operator conformance rollout under the 2026-10-16 fleet amendment (`84bade0`), not a craft round: `Axes`, `Planned` and `Retired` already existed as real recordable sections.
+`Capabilities` (empty `— none yet —` repertoire row) and `Saturation` (line + window N deferred to the lane's next round), the genuinely missing contract fields, were appended as additive scaffolds per `AXES.md` §SCORECARD.md contract. No axis claim was made and no score moved; no push.
