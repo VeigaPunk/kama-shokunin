@@ -446,3 +446,8 @@ remain the concrete unblock. No second round and no push.
 
 Operator conformance rollout under the 2026-10-16 fleet amendment (`84bade0`), not a craft round: `Axes`, `Planned` and `Retired` already existed as real recordable sections.
 `Capabilities` (empty `— none yet —` repertoire row) and `Saturation` (line + window N deferred to the lane's next round), the genuinely missing contract fields, were appended as additive scaffolds per `AXES.md` §SCORECARD.md contract. No axis claim was made and no score moved; no push.
+## 2026-10-17 — root README added
+
+- **Trigger.** Operator request for a repository front door. This checkout had no root `README.md`.
+- **Action.** Added `README.md` from `PROVINCE.md` (the one question, write boundary, three-row DEAD sample) and `tools/kama-probe.sh` header (subcommands, verdict vocabulary, exit 0/2/1). `tools/test-snapshot.sh` is named because it is in `tools/`. The scorecard banner that round 5 advanced no scalar is quoted as the card's own limit.
+- **Non-claims.** No Devin wiki URL existed here and none was added. No axis claim, no score change, no probe run. Not a craft round.
