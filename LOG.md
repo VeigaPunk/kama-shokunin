@@ -446,3 +446,19 @@ remain the concrete unblock. No second round and no push.
 
 Operator conformance rollout under the 2026-10-16 fleet amendment (`84bade0`), not a craft round: `Axes`, `Planned` and `Retired` already existed as real recordable sections.
 `Capabilities` (empty `— none yet —` repertoire row) and `Saturation` (line + window N deferred to the lane's next round), the genuinely missing contract fields, were appended as additive scaffolds per `AXES.md` §SCORECARD.md contract. No axis claim was made and no score moved; no push.
+
+## 2026-10-17 — readable front door
+
+Root README was absent. Claims are taken from PROVINCE.md (`bash tools/kama-probe.sh check`, exit 2 is drift, write boundary) and the `tools/kama-probe.sh` header. SHONEN.md boxes are `[~]` author assertions.
+
+Corpus index: `corpus/README.md` is sha256-pinned in `.ufo/round-5/worktree-byte-manifest.json` and was not edited, including its missing final newline. `corpus/knowledge/`, `corpus/lessons/`, evidence, fixtures, and earlier LOG entries were not rewrapped.
+
+Lint fixes: none. Human-legible Markdown in this repo had no unpinned same-line defect.
+
+Lint left in place:
+- PROVINCE.md: missing final newline; sha256 pinned in .ufo/round-5/worktree-byte-manifest.json
+- SKILL.md: missing final newline; sha256 pinned in .ufo/round-5/worktree-byte-manifest.json
+- SHONEN.md: missing final newline; sha256 pinned in .ufo/round-5/worktree-byte-manifest.json
+- corpus/README.md: missing final newline; sha256 pinned in .ufo/round-5/worktree-byte-manifest.json
+
+Devin: a search for `devin.ai` in this repo found no URL to edit. No wiki URL was added.
