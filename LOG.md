@@ -446,3 +446,10 @@ remain the concrete unblock. No second round and no push.
 
 Operator conformance rollout under the 2026-10-16 fleet amendment (`84bade0`), not a craft round: `Axes`, `Planned` and `Retired` already existed as real recordable sections.
 `Capabilities` (empty `— none yet —` repertoire row) and `Saturation` (line + window N deferred to the lane's next round), the genuinely missing contract fields, were appended as additive scaffolds per `AXES.md` §SCORECARD.md contract. No axis claim was made and no score moved; no push.
+
+## 2026-10-17 — repository README
+
+- **Trigger.** The repository root had no `README.md`.
+- **Evidence.** The one question, the verdict vocabulary, and the write boundary are `PROVINCE.md` and the opening of `SKILL.md`. The recorded sample (`bash tools/kama-probe.sh check`, `model_ok=0`, `drift=3`, exit 2) is the observed-state paragraph in `PROVINCE.md`. `corpus/lessons/round-1-safety.md` and `corpus/knowledge/cross-lane-scope.md` exist.
+- **Action.** Added `README.md`. Corpus indexes were not edited. No Devin wiki URL was present.
+- **Outcome.** No axis claim; no score moved. The page does not claim a live `MODEL_OK`.
