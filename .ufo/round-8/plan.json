@@ -1,0 +1,32 @@
+{
+  "round": 8,
+  "loop": 1,
+  "lane": "kama",
+  "date": "2026-10-18",
+  "dispatch_utc": null,
+  "outcome": "blocked-with-data: wire id opencode-go/glm-5.3-flash-free rejected by host model catalog before dispatch (zero seats spawned); full catalog evidence in telemetry.json; L0 question appended",
+  "model": "opencode-go/glm-5.3-flash-free",
+  "effort": "wire default (AgentSwarm exposes no per-seat effort pin; free variant serves at its default)",
+  "seats_total": 64,
+  "seat_classes": {"audit": 20, "evidence": 12, "tps_probe": 32},
+  "seat_protocol": ".ufo/round-8/SEAT-PROTOCOL.md (carried verbatim modulo round number)",
+  "sibling_model_status": "opencode-go/deepseek-v4.1-flash-free: rounds 6-7 both blocked-with-data, 128/128 spawn failures, upstream 400 Model is unavailable persistent across 18:32-18:37Z (.ufo/round-6/telemetry.json, .ufo/round-7/telemetry.json)",
+  "claims": [
+    {
+      "axis": "freshness",
+      "claim": "Re-anchor still-live source anchors through explicit dated corpus correction entries while preserving dated history (standing queue, SCORECARD.md Planned; .ufo/round-5/continuation.md).",
+      "before": "sum(active_unresolved) across .ufo/round-8/audit/*.before.json",
+      "after": "sum(active_unresolved) across .ufo/round-8/audit/*.after.json; counting command: jq -s 'map(.active_unresolved)|add' over each set",
+      "verifies_if": "after_total < before_total AND git diff shows append-only changes to historical corpus lines"
+    },
+    {
+      "axis": "operability",
+      "claim": "Refresh the gate evidence bundle at round-8 HEAD: all probe commands plus host shape re-run 2026-10-18, committed under .ufo/round-8/gates/, SCORECARD evidence pointers re-measured to the new dated sample.",
+      "before": "gate evidence dated 2026-10-15 (.ufo/round-5/); rounds 6-7 produced no gate runs; expected truth: check exit 2 (3 DEAD rows), consumers exit 0, test-snapshot 24/0",
+      "after": ".ufo/round-8/gates/*.json with 2026-10-18 timestamps and identical verdict vocabulary",
+      "verifies_if": "all gate artifacts exist, exits match the preserved truth (DEAD persists), timestamps current"
+    }
+  ],
+  "unchanged_axes_expected": ["depth", "coverage", "calibration", "adjacency"],
+  "non_goals": ["service restoration", "registry expected-value changes", "push", "sibling or integrator files"]
+}

@@ -475,3 +475,21 @@ Operator conformance rollout under the 2026-10-16 fleet amendment (`84bade0`), n
   concurrency ceiling: 0 usable seats.
   Evidence: `.ufo/round-7/{plan.json,SEAT-PROTOCOL.md,telemetry.json}`;
   report at fleet root `.ufo/reports/round-7/kama.md`.
+
+## round 8 — blocked dispatch (goal-mode load-test, loop 1, glm round 1)
+
+- 2026-10-18 — Round 8 attempted `opencode-go/glm-5.3-flash-free` (64 seats,
+  ONE batched AgentSwarm call). The host runtime rejected the wire id in its
+  model catalog BEFORE any seat was created — zero spawn attempts, zero
+  upstream contact. Verbatim error + full host catalog:
+  `.ufo/round-8/telemetry.json`. Distinct from rounds 6-7: those aliases were
+  catalog-valid and died upstream (provider outage); this alias does not
+  exist locally (host catalog gap). No opencode-go glm variant (free or
+  paid) is dispatchable on this host; glm-5.3-flash exists only as
+  `zai-coding-plan/glm-5.3-flash[-low]` and `devin/glm-5-3-flash-*`.
+  No substitution made (goal stop rule requires operator sign-off).
+  L0 question appended: fleet `.ufo/l0-questions.md` (kama | round-8).
+  No content changed; no axis claims executed; no scalar advanced.
+  Admission: BLOCKED-WITH-DATA.
+  Evidence: `.ufo/round-8/{plan.json,SEAT-PROTOCOL.md,telemetry.json}`;
+  report at fleet root `.ufo/reports/round-8/kama.md`.

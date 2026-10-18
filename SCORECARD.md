@@ -71,6 +71,7 @@ and context drift have saturated (not observed).
 | 5 (blocked attempt) | freshness | 3 mismatches / same 4 summary fields | 0 mismatches / 4; local delta only, no round admission | `.ufo/round-5/acceptance.json`; `corpus/lessons/round-5.md` |
 | 6 (blocked dispatch) | — | — | — | `.ufo/round-6/telemetry.json` |
 | 7 (blocked dispatch) | — | — | — | `.ufo/round-7/telemetry.json` |
+| 8 (blocked dispatch) | — | — | — | `.ufo/round-8/telemetry.json` |
 
 ## Actual round 5 — local verdicts, not native judgment
 
@@ -156,4 +157,19 @@ Unavailability persistent across three probes spanning ~25 min
 (18:32, 18:33, 18:37Z); loop-1 deepseek concurrency ceiling: 0 usable
 seats. No scalar advanced. Evidence: `.ufo/round-7/telemetry.json`; report
 at fleet root `.ufo/reports/round-7/kama.md`.
+
+## Round 8 — blocked dispatch, no axis claims (2026-10-18)
+
+Goal-mode round 8 (loop 1 of 3, glm free round 1 of 2): the host runtime
+rejected the wire id `opencode-go/glm-5.3-flash-free` in its model catalog
+**before any seat was created** — zero spawns, zero upstream contact
+(distinct failure class from rounds 6-7, where catalog-valid aliases died
+upstream with 400). Verdicts: **all axes unchanged** (no round executed).
+Admission: **BLOCKED-WITH-DATA**. No opencode-go glm variant (free or paid)
+exists in this host's catalog; glm-5.3-flash is present only on the zai and
+devin lanes, which are different providers — substitution deferred to
+operator sign-off. L0 question filed at fleet `.ufo/l0-questions.md`
+(kama | round-8). No scalar advanced. Evidence:
+`.ufo/round-8/telemetry.json`; report at fleet root
+`.ufo/reports/round-8/kama.md`.
 
