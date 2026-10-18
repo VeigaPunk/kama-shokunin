@@ -70,6 +70,7 @@ and context drift have saturated (not observed).
 | 4 | freshness | measured at HEAD (see lesson) | verdicts recorded per gate, no scalar | `corpus/lessons/round-4-recensus.md` |
 | 5 (blocked attempt) | freshness | 3 mismatches / same 4 summary fields | 0 mismatches / 4; local delta only, no round admission | `.ufo/round-5/acceptance.json`; `corpus/lessons/round-5.md` |
 | 6 (blocked dispatch) | — | — | — | `.ufo/round-6/telemetry.json` |
+| 7 (blocked dispatch) | — | — | — | `.ufo/round-7/telemetry.json` |
 
 ## Actual round 5 — local verdicts, not native judgment
 
@@ -142,4 +143,17 @@ itself the loop-1 availability finding; effective concurrency ceiling at
 2026-10-18T18:33Z: 0 usable seats. No scalar advanced. Evidence:
 `.ufo/round-6/telemetry.json`; report at fleet root
 `.ufo/reports/round-6/kama.md`.
+
+## Round 7 — blocked dispatch, no axis claims (2026-10-18)
+
+Goal-mode round 7 (loop 1 of 3, deepseek free round 2 of 2): availability
+re-test of `opencode-go/deepseek-v4.1-flash-free`. 64/64 seats failed at
+spawn with the identical upstream error
+`400 Upstream request failed: Model is unavailable.` (wave wall 41.5 s) —
+the same failure as round 6 ~4 min earlier. Verdicts: **all axes
+unchanged** (no round executed). Admission: **BLOCKED-WITH-DATA**.
+Unavailability persistent across three probes spanning ~25 min
+(18:32, 18:33, 18:37Z); loop-1 deepseek concurrency ceiling: 0 usable
+seats. No scalar advanced. Evidence: `.ufo/round-7/telemetry.json`; report
+at fleet root `.ufo/reports/round-7/kama.md`.
 

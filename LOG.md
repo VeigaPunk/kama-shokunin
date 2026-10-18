@@ -462,3 +462,16 @@ Operator conformance rollout under the 2026-10-16 fleet amendment (`84bade0`), n
   scalar advanced. Admission: BLOCKED-WITH-DATA.
   Evidence: `.ufo/round-6/{plan.json,SEAT-PROTOCOL.md,telemetry.json}`;
   report at fleet root `.ufo/reports/round-6/kama.md`.
+
+## round 7 — blocked dispatch (goal-mode load-test, loop 1, availability re-test)
+
+- 2026-10-18 — Round 7 re-tested `opencode-go/deepseek-v4.1-flash-free`:
+  64 seats, ONE batched AgentSwarm call. 64/64 spawn failures with the
+  identical upstream error `400 Upstream request failed: Model is
+  unavailable.`; wave wall 41.5 s; zero completions. Third probe of this
+  model in ~25 min (18:32, 18:33, 18:37Z) — unavailability is persistent,
+  not a transient rate limit. No content changed; no axis claims executed;
+  no scalar advanced. Admission: BLOCKED-WITH-DATA. Loop-1 deepseek
+  concurrency ceiling: 0 usable seats.
+  Evidence: `.ufo/round-7/{plan.json,SEAT-PROTOCOL.md,telemetry.json}`;
+  report at fleet root `.ufo/reports/round-7/kama.md`.
