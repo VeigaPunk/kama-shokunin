@@ -69,6 +69,7 @@ and context drift have saturated (not observed).
 |---|---|---|---|---|
 | 4 | freshness | measured at HEAD (see lesson) | verdicts recorded per gate, no scalar | `corpus/lessons/round-4-recensus.md` |
 | 5 (blocked attempt) | freshness | 3 mismatches / same 4 summary fields | 0 mismatches / 4; local delta only, no round admission | `.ufo/round-5/acceptance.json`; `corpus/lessons/round-5.md` |
+| 6 (blocked dispatch) | — | — | — | `.ufo/round-6/telemetry.json` |
 
 ## Actual round 5 — local verdicts, not native judgment
 
@@ -126,4 +127,19 @@ Rows enter only through a round that demonstrates the capability running (`AXES.
 ## Saturation
 
 The lane's saturation line and stagnation window N are to be declared by the lane on its next round per `AXES.md` §The stagnation nudge; not asserted by this conformance change.
+
+## Round 6 — blocked dispatch, no axis claims (2026-10-18)
+
+Goal-mode round 6 (loop 1 of 3, deepseek free round 1 of 2): 64-seat
+AgentSwarm dispatched on `opencode-go/deepseek-v4.1-flash-free`; 64/64 seats
+failed at spawn with the identical upstream error
+`400 Upstream request failed: Model is unavailable.` (wave wall 41.6 s); a
+single-seat re-probe ~2 min later failed with the same error. Zero seats
+reached model execution — no claim work ran, no self-measurement exists.
+Verdicts: **all axes unchanged** (no round executed). Admission:
+**BLOCKED-WITH-DATA** — the upstream unavailability of the free wire id is
+itself the loop-1 availability finding; effective concurrency ceiling at
+2026-10-18T18:33Z: 0 usable seats. No scalar advanced. Evidence:
+`.ufo/round-6/telemetry.json`; report at fleet root
+`.ufo/reports/round-6/kama.md`.
 

@@ -1,0 +1,31 @@
+{
+  "round": 6,
+  "loop": 1,
+  "lane": "kama",
+  "date": "2026-10-18",
+  "dispatch_utc": "2026-10-18T18:32:33Z (last clock sync before dispatch)",
+  "outcome": "blocked-with-data: 64/64 spawn failures, upstream 400 Model is unavailable; zero seats executed",
+  "model": "opencode-go/deepseek-v4.1-flash-free",
+  "effort": "wire default (AgentSwarm exposes no per-seat effort pin; free variant serves at its default)",
+  "seats_total": 64,
+  "seat_classes": {"audit": 20, "evidence": 12, "tps_probe": 32},
+  "claims": [
+    {
+      "axis": "freshness",
+      "claim": "Re-anchor still-live source anchors through explicit dated corpus correction entries while preserving dated history (standing queue, SCORECARD.md Planned; .ufo/round-5/continuation.md).",
+      "before": "sum(active_unresolved) across .ufo/round-6/audit/*.before.json",
+      "after": "sum(active_unresolved) across .ufo/round-6/audit/*.after.json; verify via counting command: jq -s 'map(.active_unresolved)|add' over each set",
+      "correction_format": "*[correction 2026-10-18 (round 6): ...]* appended only; no deletion or modification of existing lines",
+      "verifies_if": "after_total < before_total AND git diff shows append-only changes to historical corpus lines (no deletions of dated records)"
+    },
+    {
+      "axis": "operability",
+      "claim": "Refresh the gate evidence bundle at round-6 HEAD: all four probe commands plus host shape re-run 2026-10-18, committed under .ufo/round-6/gates/, SCORECARD evidence pointers re-measured to the new dated sample.",
+      "before": "gate evidence dated 2026-10-15 (.ufo/round-5/before-check.json et al.); expected truth preserved: check exit 2 (3 DEAD rows), consumers exit 0, test-snapshot 24/0",
+      "after": ".ufo/round-6/gates/*.json with 2026-10-18 timestamps and identical verdict vocabulary",
+      "verifies_if": "all gate artifacts exist, exits match the round-5 truth (DEAD persists — no weakening), timestamps current"
+    }
+  ],
+  "unchanged_axes_expected": ["depth", "coverage", "calibration", "adjacency"],
+  "non_goals": ["service restoration", "registry expected-value changes", "push", "sibling or integrator files"]
+}

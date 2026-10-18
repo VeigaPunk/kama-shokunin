@@ -446,3 +446,19 @@ remain the concrete unblock. No second round and no push.
 
 Operator conformance rollout under the 2026-10-16 fleet amendment (`84bade0`), not a craft round: `Axes`, `Planned` and `Retired` already existed as real recordable sections.
 `Capabilities` (empty `— none yet —` repertoire row) and `Saturation` (line + window N deferred to the lane's next round), the genuinely missing contract fields, were appended as additive scaffolds per `AXES.md` §SCORECARD.md contract. No axis claim was made and no score moved; no push.
+
+## round 6 — blocked dispatch (goal-mode load-test, loop 1)
+
+- 2026-10-18 — Round 6 dispatched per operator goal: 64 seats, ONE batched
+  AgentSwarm call, model `opencode-go/deepseek-v4.1-flash-free` (free
+  variant; wire-default effort — AgentSwarm exposes no per-seat effort pin).
+  Result: 64/64 spawn failures with the identical upstream error
+  `400 Upstream request failed: Model is unavailable.`; wave wall 41.6 s;
+  zero completions; peak concurrency 0. Single-seat re-probe ~2 min later:
+  same error (persistent, not transient). Alias accepted by the host
+  dispatch catalog — failure originates at the provider gateway. Zero tokens
+  generated; no TPS inferable; the unavailability IS the loop-1 finding.
+  No corpus/probe/registry content changed; no axis claims executed; no
+  scalar advanced. Admission: BLOCKED-WITH-DATA.
+  Evidence: `.ufo/round-6/{plan.json,SEAT-PROTOCOL.md,telemetry.json}`;
+  report at fleet root `.ufo/reports/round-6/kama.md`.
