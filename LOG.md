@@ -493,3 +493,22 @@ Operator conformance rollout under the 2026-10-16 fleet amendment (`84bade0`), n
   Admission: BLOCKED-WITH-DATA.
   Evidence: `.ufo/round-8/{plan.json,SEAT-PROTOCOL.md,telemetry.json}`;
   report at fleet root `.ufo/reports/round-8/kama.md`.
+
+## round 9 — blocked dispatch (goal-mode load-test, loop 1, glm round 2; loop 1 closes)
+
+- 2026-10-18 — Round 9 re-attempted `opencode-go/glm-5.3-flash-free` (64
+  seats, ONE batched AgentSwarm call). Identical local rejection to round 8:
+  wire id absent from the host model catalog, call failed validation before
+  any seat was created (zero spawns, zero upstream contact, 0.0 s). The
+  29-alias catalog was byte-identical to round 8's — unchanged 18:39Z ->
+  18:41Z. L0 question (kama | round-8) remains unanswered; no substitution
+  made (goal stop rule). No content changed; no axis claims executed; no
+  scalar advanced. Admission: BLOCKED-WITH-DATA.
+  Evidence: `.ufo/round-9/{plan.json,SEAT-PROTOCOL.md,telemetry.json}`;
+  report at fleet root `.ufo/reports/round-9/kama.md`.
+- 2026-10-18 — Loop 1 closure artifact: new knowledge entry
+  `corpus/knowledge/free-tier-provider-limits.md` (loop-1 final table:
+  deepseek-free 128/128 upstream 400s, 0-seat ceiling, outage persistent
+  18:32-18:37Z; glm-free not dispatchable on host, catalog gap across two
+  probes; loop tokens 0; inferred TPS not measurable). Indexed in
+  `corpus/README.md`. Loops 2-3 sections left pending for their rounds.

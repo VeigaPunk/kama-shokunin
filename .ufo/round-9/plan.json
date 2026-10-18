@@ -1,0 +1,35 @@
+{
+  "round": 9,
+  "loop": 1,
+  "lane": "kama",
+  "date": "2026-10-18",
+  "dispatch_utc": null,
+  "outcome": "blocked-with-data: wire id rejected by host catalog again, identical to round 8 (catalog unchanged 18:39Z -> 18:41Z); loop 1 closed 0 tokens",
+  "model": "opencode-go/glm-5.3-flash-free",
+  "effort": "wire default (AgentSwarm exposes no per-seat effort pin)",
+  "seats_total": 64,
+  "seat_classes": {"audit": 20, "evidence": 12, "tps_probe": 32},
+  "seat_protocol": ".ufo/round-9/SEAT-PROTOCOL.md (carried verbatim modulo round number)",
+  "prior_rounds_status": {
+    "deepseek": "rounds 6-7 blocked-with-data: 128/128 catalog-valid spawns rejected upstream, 400 Model is unavailable, persistent 18:32-18:37Z",
+    "glm": "round 8 blocked-with-data: wire id rejected by host model catalog before dispatch (zero seats); L0 question filed"
+  },
+  "claims": [
+    {
+      "axis": "freshness",
+      "claim": "Re-anchor still-live source anchors through explicit dated corpus correction entries while preserving dated history.",
+      "before": "sum(active_unresolved) across .ufo/round-9/audit/*.before.json",
+      "after": "sum(active_unresolved) across .ufo/round-9/audit/*.after.json",
+      "verifies_if": "after_total < before_total AND git diff shows append-only changes to historical corpus lines"
+    },
+    {
+      "axis": "operability",
+      "claim": "Refresh the gate evidence bundle at round-9 HEAD under .ufo/round-9/gates/.",
+      "before": "gate evidence dated 2026-10-15; no gate runs since",
+      "after": ".ufo/round-9/gates/*.json dated 2026-10-18 with preserved verdict vocabulary (check exit 2, consumers exit 0, test-snapshot 24/0)",
+      "verifies_if": "all gate artifacts exist, exits match preserved truth, timestamps current"
+    }
+  ],
+  "unchanged_axes_expected": ["depth", "coverage", "calibration", "adjacency"],
+  "non_goals": ["service restoration", "registry expected-value changes", "push", "sibling or integrator files", "provider substitution without operator sign-off"]
+}
