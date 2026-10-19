@@ -136,3 +136,18 @@ None in place: every registry row is new this round.
 - **Critic**: plan claim 2 falsified as operability (agreed: closed). C1 "falsified" on four points — missed `consumer-registry.md:101` (now A51), A16's unresolvable pointer (fixed), class enum (normalized to `active`/`historical`), and a vacuous-pass counter (the command now prints `rows=`). Disputed and left for the non-author check: A20 (the critic reads "No writer exists for #1/#6" as still literally true; the lane reads the open-gap bullet's premise as stale because consumers #1 and #6 no longer exist). C3 "weakened": the critic holds that `SOURCES.md` is a coverage move, not a capability; the campaign binding names it a capability whose row enters only on a clean census — the operator rules. The counter still does not validate `new_pointer`s; reviewers sampled them by hand.
 - **Sentinel**: HIGH — the L1 gate runs (see §Contested L1 gate runs); MEDIUM — A18 body read (fixed) and mid-file insertions (fixed); LOW — newline-only rewrites of three files' last lines (recorded in `LOG.md`); credential scans of round-10 bytes: 0 hits.
 - **Connector**: 0 sibling `SOURCES.md` rows share these URLs; boundary sentences adopted (kumitate: gateway/routing; kengaku: quantization quality; kagi: auth).
+
+## Errata — post-review (2026-10-19)
+
+- **Mistake 14's `stale_named_lines` count is retired.** It measured 15 at base `35e9175` and measures 29 at `1e41928`: its substring greps also match this round's correction lines, which quote each old pointer by design, so it cannot distinguish a stale line from its correction. Superseded by the ledger measurements in §Corrections (uncorrected 50 → 0) and the new-pointer validation below. Mistake 14's fix column ("target 15 to 0") is withdrawn with it.
+- **C1 measurement, corrected.** "Uncorrected 0" means every ledger row has an appended dated correction; it does not mean every row was re-anchored. New-pointer classification (`bash .ufo/round-10/audit/validate-new-pointers.sh`, bounds-only; host paths line-count only):
+
+```text
+terminal   A17 none — dead surface
+terminal   A51 UNDECIDABLE — exact offset not re-derived: the host binary body is not read in this round
+rows=50 resolved=48 terminal=2 unresolved=0
+```
+
+  So 48 rows are re-anchored to in-bounds pointers; A17 and A51 are corrected to explicit terminal states and are **not** re-anchored. Negative control: a two-row ledger with `SKILL.md:9999` and `nope.md:1` prints `unresolved=2`. Content correspondence (not just bounds) remains the sampled reviewer check.
+- **§Contested L1 gate runs — ruling.** The orchestrator ruled the L1's read-only gate runs on the lane's own registered local endpoints in-province (the documentation-only rule targeted external live targets). No admitted claim rests on them; S030 stays `rejected` (append-only) with its flip met. Mistake 25 (`listeners` outside checklist step 7's scope) stands: that is a lane-scope slip, not a campaign-rule one.
+- **C3 restated** on knowledge entries only (9 → 12, `source: S###` 0 → 3); the coverage-map `19 → 24` included two administrative rows. Per-entry rationale: `SCORECARD.md` §Erratum — round 10 post-review.
