@@ -372,3 +372,19 @@ are still live exactly as recorded — re-verified this round.
 5. Whether `llama-server` on **34113** stays up across reboot — `qwen-coder.service` is enabled and
    running since 2026-09-28 02:55 (L1-F8), but `Restart=on-failure` with `StartLimitBurst=3` means a
    crash-loop ends in a silently dead endpoint that no consumer registry watches.
+
+## Corrections — round 10 (2026-10-19)
+
+*[correction 2026-10-19 (round 10, A19): `are still live exactly as recorded` at line 359 is stale (wc -l ~/.config/opencode/opencode.json; for p in ~/.config/the-janitor/opencode.json; do test -e "$p" && echo "present $p" || echo "absent $p"; done => 5 ~/.config/opencode/opencode.json ; absent ~/.config/the-janitor/opencode.json — shape-only, no body read); current anchor: `corpus/knowledge/consumer-registry.md:62-75; SKILL.md:35-47`]*
+
+*[correction 2026-10-19 (round 10, A20): `No writer exists for #1/#6` at line 363 is stale (wc -l ~/.config/opencode/opencode.json; for p in ~/.config/the-janitor/opencode.json; do test -e "$p" && echo "present $p" || echo "absent $p"; done => 5 ~/.config/opencode/opencode.json ; absent ~/.config/the-janitor/opencode.json — shape-only, no body read); the former repair gap has no live #1/#6 target; current anchor: `corpus/knowledge/consumer-registry.md:62-66`]*
+
+*[correction 2026-10-19 (round 10, A21): `qwen-coder.service:16` at line 366 is stale (for p in ~/.config/systemd/user/qwen-coder.service; do test -e "$p" && echo "present $p" || echo "absent $p"; done => absent ~/.config/systemd/user/qwen-coder.service — shape-only, no body read); no current unit evidence supports a CORS-origin or browser-rejection claim; current anchor: `corpus/knowledge/consumer-registry.md:56-75; SKILL.md:44-47`]*
+
+*[correction 2026-10-19 (round 10, A22): `qwen-coder.service` at line 372 is stale (for p in ~/.config/systemd/user/qwen-coder.service; do test -e "$p" && echo "present $p" || echo "absent $p"; done => absent ~/.config/systemd/user/qwen-coder.service — shape-only, no body read); current anchor: `SKILL.md:44-47`]*
+
+*[correction 2026-10-19 (round 10, A23): `Restart=on-failure` at line 373 is stale (for p in ~/.config/systemd/user/qwen-coder.service; do test -e "$p" && echo "present $p" || echo "absent $p"; done => absent ~/.config/systemd/user/qwen-coder.service — shape-only, no body read); current anchor: `SKILL.md:44-47`]*
+
+*[correction 2026-10-19 (round 10, A24): `crash-loop ends in a silently dead endpoint` at line 374 is stale (for p in ~/.config/systemd/user/qwen-coder.service; do test -e "$p" && echo "present $p" || echo "absent $p"; done => absent ~/.config/systemd/user/qwen-coder.service — shape-only, no body read); current anchor: `SKILL.md:44-47`]*
+
+*[correction 2026-10-19 (round 10, A51): `~/.local/bin/omp:1544771` at line 101 is stale (sed -n '53,54p' corpus/lessons/round-4-recensus.md => (the ':516' fix covered only one site); 'consumer-registry.md:101' locates the omp ; default at line 1544771 where the string is at newline-line 1149391;); current anchor: `UNDECIDABLE — exact offset not re-derived: the host binary body is not read in this round (KQ8, KQ5)`]*

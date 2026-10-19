@@ -100,3 +100,9 @@ process with access to `/proc` or the loopback interface can observe metadata;
 this audit does not claim to solve host compromise. The fixed output allow-list
 limits blast radius to endpoint/model metadata and verdicts; it does not grant
 kama authority to repair configuration or control services.
+
+## Corrections — round 10 (2026-10-19)
+
+*[correction 2026-10-19 (round 10, A42): `PROVINCE.md:22-26` at line 32 is stale (nl -ba PROVINCE.md | sed -n '22,26p;45,49p' => lines 22-26 now describe sampled health state; the write boundary is at 45-49); current anchor: `PROVINCE.md:45-49`]*
+
+*[correction 2026-10-19 (round 10, A43): `PROVINCE.md:22-26` at line 58 is stale (nl -ba PROVINCE.md | sed -n '22,26p;45,49p' => lines 22-26 now describe sampled health state; the operator approval/write boundary is at 45-49); current anchor: `PROVINCE.md:45-49`]*

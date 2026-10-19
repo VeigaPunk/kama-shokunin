@@ -341,3 +341,5 @@ lane-local evidence, never native judgment or mission-completion authority.
   `../.ufo/reports/round-3/kagi.md` and
   `../.ufo/reports/round-4/kengaku.md`. Fleet sources are read-only; route
   availability is not inferred from this lane's dated alias census.
+- Where to learn more: `corpus/SOURCES.md` — tiered, revision-anchored engine docs
+  (llama.cpp, vLLM, SGLang, Ollama, GGUF, Prometheus/OTel) with study paths; documentation, never a local-runtime sample.

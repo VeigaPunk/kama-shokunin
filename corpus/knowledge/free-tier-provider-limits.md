@@ -63,3 +63,7 @@ via sustained upstream outage, glm-free via host catalog gap. As of
 2026-10-18T18:42Z no free-tier token has been generated in this test; the
 "effective free-tier concurrency limit" for both providers in this window
 is **0 seats**, pinned by `.ufo/round-6..9/telemetry.json`.
+
+## Corrections — round 10 (2026-10-19)
+
+*[correction 2026-10-19 (round 10, A39): `rounds 6–17` at line 1 is stale (nl -ba corpus/knowledge/free-tier-provider-limits.md | sed -n '26,57p' => the status board contains rounds 6-9 only, and loops 2-3 remain pending); current anchor: `corpus/knowledge/free-tier-provider-limits.md:26-57`]*

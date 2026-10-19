@@ -70,3 +70,7 @@ No credential value was copied into this repository or report; the read-tool
 range overrun was filed through `xd://report_issue`. Carry-forward rule: query
 narrow symbols/keys and report route structure without printing provider secret
 values.
+
+## Corrections — round 10 (2026-10-19)
+
+*[correction 2026-10-19 (round 10, A41): `tools/kama-probe.sh:799-803,932-936` at line 23 is stale (nl -ba tools/kama-probe.sh | sed -n '799,803p;840,848p;932,936p;973,976p' => 799-803 is the --port result path and 932-936 is transition handling; check/snapshot now capture `eval_rows` status at 840-848 and 973-976); current anchor: `tools/kama-probe.sh:840-848,973-976`]*

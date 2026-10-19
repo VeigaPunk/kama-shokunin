@@ -127,3 +127,21 @@ A verdict is a timestamped observation, not a promise about the next request. Re
 | Trusting the runtime header or comparing raw IDs byte-for-byte | The response has `Server: llama.cpp` but serves a full GGUF path (F4), while the provider key is the basename without `.gguf` (F6); **[INFERENCE]** bytewise comparison would falsely mismatch. | Require a recognized model array, normalize both IDs to basename and strip one trailing `.gguf`, then compare case-sensitively (`tools/kama-probe.sh:32-34,338-350`). |
 | Promoting a backup/disabled unit as if it were the active listener | The dated backup and disabled “UNTESTED variant” both use `--port 8080` (F9, F10), although the enabled active service uses `34113` (F8). | Distinguish active listener evidence from fossils and disabled variants; `listeners` reports what owns the port now. |
 | Assuming OMP model-role aliases imply a local URL | The fleet's `m_qwen` and other model roles resolve to remote providers; no `@m_*` alias carries a local base URL (F11). | Only declare local consumers from an actual baseURL/endpoint pin; a model role name is not endpoint identity. |
+
+## Corrections — round 10 (2026-10-19)
+
+*[correction 2026-10-19 (round 10, A01): `tools/kama-probe.sh:47-48,83-85` at line 5 is stale (nl -ba tools/kama-probe.sh | sed -n '47,48p;61,62p;83,85p' => 47-48 describe persisted rows, 83-85 are cleanup; timeout defaults are at 61-62); current anchor: `tools/kama-probe.sh:61-62,107-108`]*
+
+*[correction 2026-10-19 (round 10, A02): `tools/kama-probe.sh:386` at line 9 is stale (nl -ba tools/kama-probe.sh | sed -n '80,85p;98,100p;120,125p;150,159p;386p;418p;723,733p;795,803p' => 386 is model matching, 80-85 cleanup/helpers, 723-733 row resolution, GET is at 418 and direct --port evaluation at 795-803); the accompanying `tools/kama-probe.sh:80-85,723-733` is stale too; current anchor: `tools/kama-probe.sh:418,98-100,120-125,150-159,795-803`]*
+
+*[correction 2026-10-19 (round 10, A03): `corpus/knowledge/listener-census.md:171` at line 13 is stale (nl -ba corpus/knowledge/listener-census.md | sed -n '171p;179p' => 171 is the section heading; port 40961 is the row at 179); current anchor: `corpus/knowledge/listener-census.md:179`]*
+
+*[correction 2026-10-19 (round 10, A04): `tools/kama-probe.sh:32-34,338-350` at line 21 is stale (nl -ba tools/kama-probe.sh | sed -n '32,39p;338,385p' => normalization rules are at 34-39 and the current implementation at 370-385); current anchor: `tools/kama-probe.sh:34-39,370-385`]*
+
+*[correction 2026-10-19 (round 10, A05): `tools/kama-probe.sh:47-48,83-85` at line 97 is stale (nl -ba tools/kama-probe.sh | sed -n '47,48p;61,62p;83,85p;107,108p;253,256p;279,302p' => timeout defaults are 61-62, 253-256 is listener bookkeeping, and fetch makes one curl request at 279-302); the accompanying `tools/kama-probe.sh:253-256` is stale too; current anchor: `tools/kama-probe.sh:61-62,107-108,279-302`]*
+
+*[correction 2026-10-19 (round 10, A06): `opencode.json:158` at line 122 is stale (wc -l ~/.config/opencode/opencode.json => 5 ~/.config/opencode/opencode.json — shape-only, no body read); the claimed live llama-server at 34113 and Janitor 8080 pin are historical as well; current anchor: `corpus/knowledge/consumer-registry.md:56-75; SKILL.md:35-47`]*
+
+*[correction 2026-10-19 (round 10, A07): `tools/kama-probe.sh:32-34,338-350` at line 127 is stale (nl -ba tools/kama-probe.sh | sed -n '32,39p;338,385p' => normalization rules are at 34-39 and the current implementation at 370-385); current anchor: `tools/kama-probe.sh:34-39,370-385`]*
+
+*[correction 2026-10-19 (round 10, A08): `enabled active service uses` at line 128 is stale (nl -ba SKILL.md | sed -n '44,47p' => the unit is not-found and neither registered port has a listener); F8 is a historical observation, not the active service state; current anchor: `SKILL.md:44-47`]*

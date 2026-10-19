@@ -40,3 +40,7 @@ These are scratch fixtures, not repository dependencies. The live M1/M5/M7 probe
 - L1-F8/L1-F9: active service uses 34113; the stale 8080 pin originated in the old unit.
 - Live census: `/home/vgpnk/.local/bin/the-janitor:16-19` is a fourth stale-port pin, in addition to the opencode provider and agent pins.
 - Live commands and outputs are recorded in the matrix and fixture files above.
+
+## Corrections — round 10 (2026-10-19)
+
+*[correction 2026-10-19 (round 10, A40): `repository currently has no` at line 3 is stale (nl -ba tools/kama-probe.sh | sed -n '1,3p'; nl -ba registry/endpoint-consumers.tsv | sed -n '1,8p' => both the probe and endpoint registry exist in this repository); current anchor: `tools/kama-probe.sh:1-3; registry/endpoint-consumers.tsv:1-8`]*

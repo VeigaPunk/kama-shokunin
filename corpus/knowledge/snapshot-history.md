@@ -82,3 +82,17 @@ Until then, the honest claim is **invocation history**, not periodic monitoring.
 
 The schema also does not cover declared-vs-served context size; it records
 endpoint identity only. That remains a separate freshness gap.
+
+## Corrections — round 10 (2026-10-19)
+
+*[correction 2026-10-19 (round 10, A09): `tools/kama-probe.sh:932-1003` at line 15 is stale (nl -ba tools/kama-probe.sh | sed -n '110,111p;845,848p;932,1003p' => 932-1003 is baseline/snapshot logic; exit meanings are at 110-111 and check JSON at 845-848); current anchor: `tools/kama-probe.sh:110-111,845-848`]*
+
+*[correction 2026-10-19 (round 10, A10): `tools/kama-probe.sh:111-150` at line 21 is stale (nl -ba tools/kama-probe.sh | sed -n '111,159p' => the --port snapshot refusal is at 157-159, beyond the old cited range); current anchor: `tools/kama-probe.sh:157-159`]*
+
+*[correction 2026-10-19 (round 10, A11): `tools/kama-probe.sh:833-903` at line 36 is stale (nl -ba tools/kama-probe.sh | sed -n '833,903p;919,943p' => additions and removals are now emitted at 919-943); current anchor: `tools/kama-probe.sh:919-943`]*
+
+*[correction 2026-10-19 (round 10, A13): `tools/kama-probe.sh:911-928` at line 51 is stale (nl -ba tools/kama-probe.sh | sed -n '911,928p;959,970p' => served-id persistence normalization is now at 959-970); current anchor: `tools/kama-probe.sh:959-970`]*
+
+*[correction 2026-10-19 (round 10, A14): `tools/kama-probe.sh:555-572` at line 53 is stale (nl -ba tools/kama-probe.sh | sed -n '555,572p;608,612p' => 555-572 expands paths; resolved-URL userinfo/query/fragment stripping is at 608-612); current anchor: `tools/kama-probe.sh:608-612`]*
+
+*[correction 2026-10-19 (round 10, A15): `tools/kama-probe.sh:932-1003` at line 55 is stale (nl -ba tools/kama-probe.sh | sed -n '932,1003p;1040,1054p' => symlink refusals and flock are at 987-1003; atomic baseline replacement is at 1040-1054); current anchor: `tools/kama-probe.sh:987-1003,1040-1054`]*

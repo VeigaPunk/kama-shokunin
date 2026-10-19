@@ -49,3 +49,31 @@ Each line is copy-pasteable as a report handoff; `[INFERENCE]` marks a boundary 
 ## Adjacency rule
 
 If the evidence predicate belongs to another domain—credentials/auth, eval quality, route selection, instruction content, remote web properties, bounty targets, or fleet protocol—kama records only the observed endpoint fact and its evidence, names the owning lane, and hands it off; kama MUST NOT absorb that domain's source edits, authority, credential material, or duplicate evaluation/route work. For host-owned configuration and services, report drift and leave the change to the operator. (`../AXES.md:16-17`; `MINT.md:56-59`; `PROVINCE.md:22-30`.)
+
+## Corrections — round 10 (2026-10-19)
+
+*[correction 2026-10-19 (round 10, A25): `/home/vgpnk/.config/opencode/opencode.json:154-163` at line 12 is stale (wc -l ~/.config/opencode/opencode.json => 5 ~/.config/opencode/opencode.json — shape-only, no body read); the line's `PROVINCE.md:22-26` is also no longer the write-boundary location; current anchor: `corpus/knowledge/consumer-registry.md:62-75; SKILL.md:35-47`]*
+
+*[correction 2026-10-19 (round 10, A26): `/home/vgpnk/.config/opencode/agents/janitor.md:5,19-24` at line 13 is stale (for p in ~/.config/opencode/agents/janitor.md; do test -e "$p" && echo "present $p" || echo "absent $p"; done => absent ~/.config/opencode/agents/janitor.md — shape-only, no body read); current anchor: `corpus/knowledge/consumer-registry.md:56-73`]*
+
+*[correction 2026-10-19 (round 10, A27): `/home/vgpnk/.config/opencode/agents/distiller.md:5-8` at line 14 is stale (for p in ~/.config/opencode/agents/distiller.md; do test -e "$p" && echo "present $p" || echo "absent $p"; done => absent ~/.config/opencode/agents/distiller.md — shape-only, no body read); current anchor: `corpus/knowledge/consumer-registry.md:56-73`]*
+
+*[correction 2026-10-19 (round 10, A28): `/home/vgpnk/.local/bin/the-janitor:16-19` at line 16 is stale (for p in ~/.local/bin/the-janitor; do test -e "$p" && echo "present $p" || echo "absent $p"; done => absent ~/.local/bin/the-janitor — shape-only, no body read); its `PROVINCE.md:22-26` citation no longer points to the write boundary; current anchor: `corpus/knowledge/consumer-registry.md:56-73; PROVINCE.md:45-49`]*
+
+*[correction 2026-10-19 (round 10, A29): `/home/vgpnk/.config/systemd/user/qwen-coder.service:13-22` at line 17 is stale (for p in ~/.config/systemd/user/qwen-coder.service; do test -e "$p" && echo "present $p" || echo "absent $p"; done => absent ~/.config/systemd/user/qwen-coder.service — shape-only, no body read); the `PROVINCE.md:22-26` write-boundary citation moved to 45-49; current anchor: `corpus/knowledge/consumer-registry.md:56-76; SKILL.md:44-47`]*
+
+*[correction 2026-10-19 (round 10, A30): `The endpoint currently at `127.0.0.1:8080`` at line 20 is stale (nl -ba SKILL.md | sed -n '44,47p'; nl -ba PROVINCE.md | sed -n '22,26p;45,49p' => current sample has no listener on 8080 or 34113, and the write boundary is now at PROVINCE 45-49); the old `PROVINCE.md:22-26` citation is not the boundary; current anchor: `SKILL.md:44-47; PROVINCE.md:45-49`]*
+
+*[correction 2026-10-19 (round 10, A31): `/home/vgpnk/.config/opencode/agents/janitor.md:19-21` at line 29 is stale (for p in ~/.config/opencode/agents/janitor.md ~/.config/opencode/agents/distiller.md; do test -e "$p" && echo "present $p" || echo "absent $p"; done => absent ~/.config/opencode/agents/janitor.md ; absent ~/.config/opencode/agents/distiller.md — shape-only, no body read); the accompanying `distiller.md:5-8` is also a deleted-file pointer; current anchor: `corpus/knowledge/consumer-registry.md:56-73`]*
+
+*[correction 2026-10-19 (round 10, A32): `PROVINCE.md:22-26` at line 30 is stale (nl -ba PROVINCE.md | sed -n '22,26p;45,49p'; nl -ba SKILL.md | sed -n '44,47p' => the current write boundary is PROVINCE 45-49, and the service/unit is absent); the cited systemd unit path is no longer present; current anchor: `PROVINCE.md:45-49; SKILL.md:44-47`]*
+
+*[correction 2026-10-19 (round 10, A33): `provider and Janitor wrapper still target 8080` at line 38 is stale (wc -l ~/.config/opencode/opencode.json; for p in ~/.local/bin/the-janitor; do test -e "$p" && echo "present $p" || echo "absent $p"; done => 5 ~/.config/opencode/opencode.json ; absent ~/.local/bin/the-janitor — shape-only, no body read); current anchor: `corpus/knowledge/consumer-registry.md:56-75; SKILL.md:35-47`]*
+
+*[correction 2026-10-19 (round 10, A34): `local llama.cpp serving endpoint for the configured Qwen GGUF` at line 39 is stale (nl -ba SKILL.md | sed -n '44,47p' => the unit is not-found and the two model ports have no listeners); the round-4 report remains historical evidence, not current serving state; current anchor: `SKILL.md:44-47`]*
+
+*[correction 2026-10-19 (round 10, A35): `janitor.md` at line 41 is stale (for p in ~/.config/opencode/agents/janitor.md ~/.config/opencode/agents/distiller.md; do test -e "$p" && echo "present $p" || echo "absent $p"; done => absent ~/.config/opencode/agents/janitor.md ; absent ~/.config/opencode/agents/distiller.md — shape-only, no body read); the line's `distiller.md:5-8` pointer is likewise to a deleted agent file; current anchor: `corpus/knowledge/consumer-registry.md:56-73; SKILL.md:44-47`]*
+
+*[correction 2026-10-19 (round 10, A36): `Kama recommends repointing the qwen-local provider baseURL` at line 47 is stale (wc -l ~/.config/opencode/opencode.json => 5 ~/.config/opencode/opencode.json — shape-only, no body read); the line's opencode, Janitor-agent, distiller-agent, CLI-wrapper and qwen-coder unit paths plus `PROVINCE.md:22-26` are all obsolete current-state anchors; current anchor: `corpus/knowledge/consumer-registry.md:56-75; SKILL.md:35-47; PROVINCE.md:45-49`]*
+
+*[correction 2026-10-19 (round 10, A37): `PROVINCE.md:22-30` at line 51 is stale (nl -ba PROVINCE.md | sed -n '22,30p;45,49p' => lines 22-30 contain sampled outage state, while the operator write boundary is at 45-49); current anchor: `PROVINCE.md:45-49`]*

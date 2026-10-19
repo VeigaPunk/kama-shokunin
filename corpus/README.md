@@ -76,3 +76,19 @@ the local documentation improvement is not a completed training round.
   role bindings, a real receipt binding, serving-runtime disposition and
   historical verified-round reconciliation. See lane-root
   `.ufo/round-5/continuation.md`; no outside-repo repair is absorbed here.
+
+## Corrections — round 10 (2026-10-19)
+
+*[correction 2026-10-19 (round 10, A50): `6–17 (in progress; loop 1 final)` at line 47 is stale (nl -ba corpus/knowledge/free-tier-provider-limits.md | sed -n '26,57p' => the status board has rounds 6-9 only, with loops 2-3 pending); current anchor: `corpus/knowledge/free-tier-provider-limits.md:26-57`]*
+
+## Coverage map — round 10 additions (2026-10-19)
+
+Appended rather than inserted, so no existing line moves (`QUALITY.md` KQ7).
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/runtime-health-surface-matrix.md` | cross-engine `/health` semantics (llama.cpp, vLLM, SGLang, Ollama) vs separate identity routes — documentation, revision-pinned, not local integration | 10 |
+| `knowledge/serving-metrics-crosswalk.md` | local engine exporter flags, metric names and TTFT/TPOT/queue/cache boundaries (llama.cpp, vLLM, SGLang, OTel GenAI) — never identity evidence | 10 |
+| `knowledge/gguf-runtime-compatibility-boundary.md` | GGUF naming is not an identity parser or support certificate; per-engine/per-hardware GGUF load and quantization paths | 10 |
+| `SOURCES.md` | where kama learns: tiered, revision-anchored source registry, study paths, search log (contract v1) | 10 |
+| `lessons/round-10.md` | mistakes mined (rounds 1–10), source gate, stale-anchor corrections, closed plan claim | 10 |
