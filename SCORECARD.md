@@ -641,3 +641,68 @@ sampling of round 16. Next steered move, from the debt named in
 fail-capable (`health_ready` body, termination cause, graded
 `loading_envelope_exact`) and the matrix's reason/exit/drift grading
 load-bearing; K05 (declared versus served context) remains open.
+
+## Round 17 — graded fields backed by failing detectors; fail-capable live checks (2026-10-20)
+
+Outside round 16 is `ok / admitted true` (`corpus/lessons/round-16-verifier-spotcheck.md`);
+its routed defects and the jj-migration risks are dispositioned in
+`corpus/lessons/round-17.md`. Calibration 7 is the lowest assigned axis; no
+stagnation waiver. Claim separation criterion: `corpus/lessons/round-17.md`
+§Declared claims (C1 touches only check.py and its detectors, C2 only the live
+tool, its gate and its controls; the probe is byte-identical throughout).
+
+**C1 calibration (lowest axis):** `SKILL.md:533` claimed check.py "grades
+verdict, reason, exit and drift" and maps harness errors to exit 2; no detector
+could fail any of those gradings (round-16 mutants 5/5 survived), `served_model`
+and the route were not graded, and a non-object probe row ended in a traceback.
+Repair: graded `served_model` and route, per-row malformed/non-UTF-8 handling,
+fault-control detector, mutant grid. Counting commands: `python3
+tests/probe-verdicts/fault-controls.py --check <frozen|current> --json` and
+`python3 .ufo/waves/round-17/c1/mutants.py --grid --out PATH`. Score **7 → 7**:
+an instrument's self-description made true is a bounded calibration repair, not
+a mastery change.
+
+**C2 operability (hardening of `live-llamacpp-lifecycle`, sourced on S042–S044):**
+receipt v2 checks fail on the misbehaviour they name. Counting command:
+`python3 tests/llamacpp-live/controls.py --tool ABS --gate ABS --json` on the
+frozen and the current tool+gate, plus three real b11755 runs gated with four
+pins. Score **8 → 8**; no new capability row (the round-16 row is hardened, not
+new).
+
+### Round-17 measured results
+
+Measured against the working tree that the round-17 build commit lands (hash in
+`LOG.md` §round 17); raw outputs `.ufo/waves/round-17/runs/` and
+`.ufo/waves/round-17/live/`.
+
+| Claim | Axis / score | Counting command | Before → after | Verdict (author) |
+|---|---|---|---|---|
+| C1 graded fields backed by a failing detector | calibration **7 → 7**, delta 0 | `fault-controls.py --check …`; `mutants.py --grid` | fixed detector: frozen check.py accepts 3 of 8 faults (served_model, route skip, malformed) → current 0 of 8; mutants under the full detector: frozen 7 of 8 applicable killed → current 10 of 10; under the round-16 pair detector both gates kill only reject-all (1 of 8, 1 of 10) | improved, bounded |
+| C2 fail-capable live checks | operability **8 → 8**, delta 0 | `controls.py --tool … --gate …`; `kama-llamacpp-live.py` ×3 + `check-receipt.py` with four pins | frozen tool+gate accept 6 of 8 bad controls (+1 inconclusive) → current 0 of 8, each failing its targeted check; gate-flip arm 0 accepted; real runs 11/11 ×3, `VALID` | improved |
+
+No-harm: probe `36b64978…` unchanged; matrix digest `bf9068d8…` unchanged;
+round-16 `measure.py` PASS in a `/tmp` clone with the new check.py;
+`test-snapshot.sh` 30/0; round-16 v1 receipts `VALID` with four pins. Other axes
+unchanged: freshness 8 (llama.cpp b11756/b11757 checked: the three server files
+are byte-identical; no registered endpoint re-sampled), depth 7 (one appended
+section deepens an existing entry), coverage 9 (no new surface), adjacency 7
+(handoffs advised, nothing absorbed). Sources validate exit 0; rows 41 → 46
+(A 38 → 43, mined 31 → 36).
+
+**Capabilities — canonical list as of round 17:** unchanged from round 16
+(`sources-registry` now 46 rows; `ollama-offline-evidence-replay`;
+`live-llamacpp-lifecycle`, whose evidence pointer is now receipt v2
+`.ufo/waves/round-17/live/receipt-1.json` + `check-receipt.py` and the controls).
+Stagnation window: last capability entry round 16 (window 1 of 4).
+
+Trend verdicts (author, pending outside review): expansion unchanged (no
+uncovered ground; one existing entry deepened; no new capability); quality
+improved (the round-16 entry's v1 limits are superseded by graded checks backed
+by sources and controls; seven lane statements corrected by appended text; no
+admitted entry failed re-check); discernment unchanged (no non-author sample yet).
+
+**Planned — supersedes earlier planned statements:** outside non-author sampling
+of round 17. Next steered move: K05 (declared versus served context) on the
+lane-owned fixture, or the round-16 M3 harness `shutdown()` design gap; the
+matrix-byte debts (why-line numbers, one duplicate class) wait for a round that
+re-pins the matrix digest.

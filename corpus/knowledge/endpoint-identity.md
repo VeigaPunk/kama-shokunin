@@ -214,3 +214,5 @@ sentence is still documented (README @ 704366d76:1258) but the code does not
 serve it in that mode. A mid-load `MODEL_OK` from a direct llama-server at this
 build is therefore not expected [INFERENCE from the code path, consistent with
 the round-16 live receipt in `corpus/knowledge/llamacpp-loading-lifecycle.md`].
+
+Round-17 correction (routed by `corpus/lessons/round-16-verifier-spotcheck.md` defect 4). Correction to line 202 (2026-10-20, source accessed 2026-10-20). "Every non-frontend path" narrows to every path except the frontend set (`/` and embedded UI assets, `server-http.cpp:309-311`) and `OPTIONS` requests, which return before the gate at `server-http.cpp:347-352`. The envelope's type and code are at `:319-320`, beside the message at `:318`. `/health` and `/v1/health` are not exempt from the loading gate: the public-endpoint set at `:251-258` is consulted only by the API-key check (`:267`).

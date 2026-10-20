@@ -1,26 +1,39 @@
 #!/usr/bin/env python3
-"""Independent validator for a kama-llamacpp-live/v1 receipt.
+"""Independent validator for kama-llamacpp-live/v1 and /v2 receipts.
 
 Bound to the exact receipt keys emitted by
-``tools/kama-llamacpp-live.py`` (round-16 hardening batch):
+``tools/kama-llamacpp-live.py`` (round-16 hardening batch + round-17
+v2 fail-capable checks):
 started_utc/ended_utc, server{arg,realpath,sha256,install_tree,
 install_tree_sha256,server_impl_sha256|null}, model{path,sha256},
 model_sha256_post, probe{path,sha256}, alias, ctx, threads, port,
 port_refusal_set, child_env_keys, argv, transitions, loading_503,
 loading_observed, loading_envelope_exact, port_listener_ownership,
 captures{health,models,props,slots,metrics}, probes[2]
-{expect,argv,exit,result,stderr_tail}, teardown{returncode,...,
-port_refuses,...}, checks[] {id,documented_by,passed,observed},
-setup_error, port_pick_note, pdeathsig.
+{expect,argv,exit,result,stderr_tail}, teardown{returncode,
+sigterm_sent,sigkill_sent,alive_at_teardown_start,port_refuses,...},
+checks[] {id,documented_by,passed,observed}, setup_error,
+port_pick_note, pdeathsig.
 
 Every claim is re-derived from the stored evidence; a bare
-``"passed": true`` is never trusted.
+``"passed": true`` is never trusted.  Under v2 each check's claimed
+``passed`` is additionally compared against the value re-derived here.
 
-Checks (each exactly once, all passed, all re-derived):
+v1 checks (each exactly once, all passed, all re-derived):
   health_ready, models_alias_id, models_owned_by_llamacpp,
   metrics_not_enabled (status must be exactly 501), props_alias,
   probe_model_ok, probe_mismatch, teardown_exited,
   teardown_port_closed, model_unchanged
+
+v2 checks (each exactly once, all passed, all re-derived):
+  health_ready (status 200 AND body parses to {"status":"ok"}),
+  models_alias_id, models_owned_by_llamacpp, metrics_not_enabled,
+  props_alias, probe_model_ok, probe_mismatch,
+  teardown_graceful (alive_at_teardown_start, SIGTERM sent, no
+  SIGKILL, graceful exit status 0), teardown_port_closed (only
+  after the port was proven owned by the child), and
+  loading_envelope_graded (a check must consume the stored loading
+  evidence), model_unchanged
 
 Usage:
   check-receipt.py RECEIPT [--expect-model-sha256 HEX]
@@ -43,6 +56,7 @@ import tempfile
 
 
 RECEIPT_SCHEMA = "kama-llamacpp-live/v1"
+RECEIPT_SCHEMA_V2 = "kama-llamacpp-live/v2"
 PROBE_SCHEMA = "kama-probe/v1"
 HARD_PINS = (8080, 34113)
 MISMATCH_EXPECT = "kama-not-this-model"
@@ -50,7 +64,7 @@ MISMATCH_EXPECT = "kama-not-this-model"
 # present in the harness env; the receipt records names, never values.
 CHILD_ENV_ALLOWLIST = {"PATH", "HOME", "LANG", "LC_ALL", "TMPDIR"}
 
-REQUIRED_CHECKS = (
+REQUIRED_CHECKS_V1 = (
     "health_ready",
     "models_alias_id",
     "models_owned_by_llamacpp",
@@ -62,6 +76,22 @@ REQUIRED_CHECKS = (
     "teardown_port_closed",
     "model_unchanged",
 )
+
+REQUIRED_CHECKS_V2 = (
+    "health_ready",
+    "models_alias_id",
+    "models_owned_by_llamacpp",
+    "metrics_not_enabled",
+    "props_alias",
+    "probe_model_ok",
+    "probe_mismatch",
+    "teardown_graceful",
+    "teardown_port_closed",
+    "loading_envelope_graded",
+    "model_unchanged",
+)
+
+HEALTH_READY_DOC = {"status": "ok"}
 
 MISSING = object()
 
@@ -171,9 +201,11 @@ def validate(receipt, expect_model=None, expect_server=None,
         return ["receipt is not a JSON object"]
 
     # --- schema / run outcome ---------------------------------------------
-    if receipt.get("schema") != RECEIPT_SCHEMA:
-        bad(f"schema is {receipt.get('schema')!r}, want "
-            f"{RECEIPT_SCHEMA!r}")
+    schema = receipt.get("schema")
+    is_v2 = schema == RECEIPT_SCHEMA_V2
+    if schema not in (RECEIPT_SCHEMA, RECEIPT_SCHEMA_V2):
+        bad(f"schema is {schema!r}, want {RECEIPT_SCHEMA!r} or "
+            f"{RECEIPT_SCHEMA_V2!r}")
     if receipt.get("setup_error") is not None:
         bad(f"setup_error is {receipt.get('setup_error')!r} "
             "(a complete run has setup_error null)")
@@ -583,6 +615,13 @@ def validate(receipt, expect_model=None, expect_server=None,
         pr = teardown.get("port_refuses")
         if pr is not None and not isinstance(pr, bool):
             bad(f"teardown.port_refuses {pr!r} is not bool|null")
+        if is_v2:
+            for name in ("sigterm_sent", "sigkill_sent",
+                         "alive_at_teardown_start"):
+                if not isinstance(teardown.get(name), bool):
+                    bad(f"teardown.{name} "
+                        f"{teardown.get(name)!r} is not a boolean "
+                        "(v2 requires it)")
 
     # --- checks array ---------------------------------------------------------
     checks = receipt.get("checks")
@@ -611,13 +650,23 @@ def validate(receipt, expect_model=None, expect_server=None,
             bad(f"check {cid!r}: passed is false")
         if not isinstance(c.get("observed"), dict):
             bad(f"check {cid!r}: observed is not an object")
-    for cid in REQUIRED_CHECKS:
+    required = REQUIRED_CHECKS_V2 if is_v2 else REQUIRED_CHECKS_V1
+    for cid in required:
         if cid not in by_id:
             bad(f"required check {cid!r} is absent")
     for cid in by_id:
-        if cid not in REQUIRED_CHECKS:
+        if cid not in required:
             bad(f"unexpected check id {cid!r} (the schema names "
-                "exactly 10)")
+                f"exactly {len(required)})")
+
+    def claim(cid, want):
+        """v2 only: compare the check's claimed passed against the
+        value re-derived from stored evidence."""
+        c = by_id.get(cid)
+        if isinstance(c, dict) and isinstance(c.get("passed"), bool) \
+                and c["passed"] != want:
+            bad(f"check {cid!r}: claims passed={c['passed']} but "
+                f"evidence re-derivation gives {want}")
 
     def obs(cid):
         o = by_id.get(cid)
@@ -625,12 +674,26 @@ def validate(receipt, expect_model=None, expect_server=None,
         return o if isinstance(o, dict) else {}
 
     # --- re-derive each check from the raw evidence ----------------------------
+    health_body = parse_body(dig(captures, "health", "body")
+                             if dig(captures, "health", "body")
+                             is not MISSING else None)
     if "health_ready" in by_id:
         if health_status is MISSING:
             bad("health_ready: captures.health.status missing")
         elif health_status != 200:
             bad(f"health_ready: captures.health.status "
                 f"{health_status!r} != 200")
+        if is_v2:
+            # v2: status alone cannot pass — the ready body must be
+            # exactly the documented {"status":"ok"} document; a 200
+            # {"status":"degraded"} fails.
+            if health_body != HEALTH_READY_DOC:
+                bad(f"health_ready: captures.health.body "
+                    f"{health_body!r} != the documented ready body "
+                    f"{HEALTH_READY_DOC!r}")
+            claim("health_ready",
+                  health_status == 200 and health_body
+                  == HEALTH_READY_DOC)
         o = obs("health_ready")
         if "status" in o and o["status"] != health_status:
             bad(f"health_ready: observed.status {o['status']!r} != "
@@ -653,6 +716,10 @@ def validate(receipt, expect_model=None, expect_server=None,
                 and o["expected_alias"] != alias:
             bad(f"models_alias_id: observed.expected_alias "
                 f"{o['expected_alias']!r} != alias {alias!r}")
+        if is_v2:
+            claim("models_alias_id",
+                  models_doc is not None and bool(ids)
+                  and all(i == alias for i in ids))
 
     if "models_owned_by_llamacpp" in by_id:
         if models_doc is None:
@@ -666,6 +733,10 @@ def validate(receipt, expect_model=None, expect_server=None,
         if "owned_by" in o and o["owned_by"] != owners:
             bad(f"models_owned_by_llamacpp: observed.owned_by "
                 f"{o['owned_by']!r} != re-parsed {owners}")
+        if is_v2:
+            claim("models_owned_by_llamacpp",
+                  models_doc is not None and bool(owners)
+                  and all(o == "llamacpp" for o in owners))
 
     if "metrics_not_enabled" in by_id:
         if metrics_status is MISSING:
@@ -678,6 +749,8 @@ def validate(receipt, expect_model=None, expect_server=None,
         if "status" in o and o["status"] != metrics_status:
             bad(f"metrics_not_enabled: observed.status "
                 f"{o['status']!r} != captured {metrics_status!r}")
+        if is_v2:
+            claim("metrics_not_enabled", metrics_status == 501)
 
     if "props_alias" in by_id:
         if not isinstance(props_fields, dict):
@@ -694,6 +767,10 @@ def validate(receipt, expect_model=None, expect_server=None,
                     "model_alias"):
             bad("props_alias: observed.fields.model_alias disagrees "
                 "with captures.props.fields.model_alias")
+        if is_v2:
+            claim("props_alias",
+                  isinstance(props_fields, dict)
+                  and props_fields.get("model_alias") == alias)
 
     if "probe_model_ok" in by_id:
         info = probe_info.get("ok")
@@ -717,6 +794,12 @@ def validate(receipt, expect_model=None, expect_server=None,
                 if k in o and o[k] != want:
                     bad(f"probe_model_ok: observed.{k} {o[k]!r} != "
                         f"{want!r}")
+            if is_v2:
+                claim("probe_model_ok",
+                      isinstance(row, dict)
+                      and row.get("verdict") == "MODEL_OK"
+                      and row.get("reason") == "matched"
+                      and info["rec"].get("exit") == 0)
 
     if "probe_mismatch" in by_id:
         info = probe_info.get("mismatch")
@@ -741,8 +824,14 @@ def validate(receipt, expect_model=None, expect_server=None,
                 if k in o and o[k] != want:
                     bad(f"probe_mismatch: observed.{k} {o[k]!r} != "
                         f"{want!r}")
+            if is_v2:
+                claim("probe_mismatch",
+                      isinstance(row, dict)
+                      and row.get("verdict") == "MODEL_MISMATCH"
+                      and row.get("reason") == "served-id-mismatch"
+                      and info["rec"].get("exit") == 2)
 
-    if "teardown_exited" in by_id:
+    if not is_v2 and "teardown_exited" in by_id:
         if not teardown:
             bad("teardown_exited: no teardown evidence")
         elif teardown.get("returncode") is None:
@@ -755,18 +844,100 @@ def validate(receipt, expect_model=None, expect_server=None,
                 f"{o['returncode']!r} != teardown.returncode "
                 f"{teardown.get('returncode')!r}")
 
+    if is_v2 and "teardown_graceful" in by_id:
+        # v2: a bare reaped returncode cannot pass — teardown must be
+        # the harness's own graceful SIGTERM on a child proven alive
+        # when teardown began, with no SIGKILL escalation and the
+        # documented graceful exit status 0 (llama.cpp installs its
+        # own SIGINT/SIGTERM handler and exits 0; a signal death like
+        # -15 or an error exit fails).
+        td_alive = teardown.get("alive_at_teardown_start")
+        td_term = teardown.get("sigterm_sent")
+        td_kill = teardown.get("sigkill_sent")
+        td_rc = teardown.get("returncode")
+        if td_alive is not True:
+            bad(f"teardown_graceful: teardown.alive_at_teardown_start "
+                f"is {td_alive!r}, want true (must prove the child was "
+                "alive when teardown began)")
+        if td_term is not True:
+            bad(f"teardown_graceful: teardown.sigterm_sent is "
+                f"{td_term!r}, want true (harness-initiated SIGTERM)")
+        if td_kill is not False:
+            bad(f"teardown_graceful: teardown.sigkill_sent is "
+                f"{td_kill!r}, want false (SIGKILL escalation fails "
+                "graceful teardown)")
+        if td_rc != 0:
+            bad(f"teardown_graceful: teardown.returncode {td_rc!r} "
+                "!= 0 (the documented graceful SIGTERM exit status)")
+        claim("teardown_graceful",
+              td_alive is True and td_term is True
+              and td_kill is False and td_rc == 0)
+        o = obs("teardown_graceful")
+        for k, want in (("returncode", 0), ("sigterm_sent", True),
+                        ("sigkill_sent", False),
+                        ("alive_at_teardown_start", True)):
+            if k in o and o[k] != want:
+                bad(f"teardown_graceful: observed.{k} {o[k]!r} != "
+                    f"{want!r}")
+
     if "teardown_port_closed" in by_id:
         if not teardown:
             bad("teardown_port_closed: no teardown evidence")
         elif teardown.get("port_refuses") is not True:
             bad(f"teardown_port_closed: teardown.port_refuses is "
                 f"{teardown.get('port_refuses')!r}, want true")
+        if is_v2:
+            # v2: port_refuses is only meaningful after the ready
+            # listener was proven to be our own child — a refused port
+            # we never owned is vacuous evidence of teardown.
+            if own != "child":
+                bad(f"teardown_port_closed: "
+                    f"port_listener_ownership is {own!r}; "
+                    "port_refuses is vacuous without recorded child "
+                    "ownership")
+            claim("teardown_port_closed",
+                  own == "child"
+                  and teardown.get("port_refuses") is True)
         o = obs("teardown_port_closed")
         if "port_refuses" in o and o["port_refuses"] != teardown.get(
                 "port_refuses"):
             bad(f"teardown_port_closed: observed.port_refuses "
                 f"{o['port_refuses']!r} != teardown.port_refuses "
                 f"{teardown.get('port_refuses')!r}")
+
+    if is_v2 and "loading_envelope_graded" in by_id:
+        # v2: the loading envelope is a CHECK, not only a recorded
+        # field — its claimed passed must equal the envelope value
+        # re-derived from the stored loading_503 body, and a run with
+        # nothing to grade cannot pass it.
+        if want_lef is None:
+            bad("loading_envelope_graded: no loading_503 body stored, "
+                "nothing graded")
+        elif want_lef is not True:
+            bad(f"loading_envelope_graded: stored loading_503 body "
+                "re-derives to a non-exact envelope "
+                f"(loading_envelope_exact {want_lef!r})")
+        # Every distinct stored 503 body must be the exact envelope, not
+        # only the first (loading_503); a later malformed body fails.
+        bodies = receipt.get("loading_503_bodies")
+        if not isinstance(bodies, list) or not bodies:
+            bad("loading_envelope_graded: loading_503_bodies missing or "
+                "empty in a v2 receipt")
+            all_exact = False
+        else:
+            all_exact = all(
+                isinstance(b, dict)
+                and loading_envelope_ok(parse_body(b.get("body"))) is True
+                for b in bodies)
+            if not all_exact:
+                bad("loading_envelope_graded: a stored loading_503_bodies "
+                    "entry is not the exact envelope")
+        claim("loading_envelope_graded", want_lef is True and all_exact)
+        o = obs("loading_envelope_graded")
+        if "exact" in o and o["exact"] != want_lef:
+            bad(f"loading_envelope_graded: observed.exact "
+                f"{o['exact']!r} != re-derived loading_envelope_exact "
+                f"{want_lef!r}")
 
     if "model_unchanged" in by_id:
         if is_hex64(model_sha) and is_hex64(model_post):
@@ -784,6 +955,10 @@ def validate(receipt, expect_model=None, expect_server=None,
         if is_hex64(o.get("post")) and is_hex64(model_post) \
                 and o["post"] != model_post:
             bad("model_unchanged: observed.post != model_sha256_post")
+        if is_v2:
+            claim("model_unchanged",
+                  is_hex64(model_sha) and is_hex64(model_post)
+                  and model_sha == model_post)
 
     return problems
 
@@ -987,6 +1162,33 @@ def _selftest_receipt():
     }
 
 
+def _selftest_receipt_v2():
+    """One valid v2 receipt: the v1 literal upgraded — graceful
+    SIGTERM teardown (returncode 0, child alive at teardown start) and
+    the v2 check id set (teardown_graceful replaces teardown_exited,
+    loading_envelope_graded added)."""
+    r = copy.deepcopy(_selftest_receipt())
+    r["schema"] = RECEIPT_SCHEMA_V2
+    r["teardown"].update(returncode=0, alive_at_teardown_start=True)
+    r["loading_503_bodies"] = [
+        {"body": r["loading_503"]["body"], "repeats": 0}]
+    checks = []
+    for c in r["checks"]:
+        if c["id"] == "teardown_exited":
+            c = {"id": "teardown_graceful", "documented_by": "d",
+                 "passed": True,
+                 "observed": {"alive_at_teardown_start": True,
+                              "sigterm_sent": True,
+                              "sigkill_sent": False,
+                              "returncode": 0}}
+        if c["id"] == "model_unchanged":
+            checks.append({"id": "loading_envelope_graded",
+                           "documented_by": "d", "passed": True,
+                           "observed": {"exact": True}})
+        checks.append(c)
+    r["checks"] = checks
+    return r
+
 def _selftest():
     base = _selftest_receipt()
     expects = ["--expect-model-sha256", MODEL_SHA,
@@ -1066,6 +1268,58 @@ def _selftest():
         lambda r: r["tool"].update(sha256="7" * 64),
         extra=["--expect-tool-sha256", TOOL_SHA])
 
+    # ---- v2: valid receipt + fail-capable check mutations ------------------
+    base_v2 = _selftest_receipt_v2()
+    cases.append(("v2-valid", base_v2, expects, 0))
+
+    def mut2(name, fn, extra=None):
+        r = copy.deepcopy(base_v2)
+        fn(r)
+        cases.append((name, r, extra or [], 1))
+
+    mut2("v2-health-degraded-body",
+         lambda r: r["captures"]["health"].update(
+             body='{"status":"degraded"}'))
+    mut2("v2-sigkill-sent",
+         lambda r: r["teardown"].update(sigkill_sent=True))
+    mut2("v2-returncode-minus15-sigterm-death",
+         lambda r: r["teardown"].update(returncode=-15))
+    mut2("v2-returncode-1-error-exit",
+         lambda r: r["teardown"].update(returncode=1))
+    mut2("v2-sigterm-not-sent-clean-rc",
+         lambda r: r["teardown"].update(sigterm_sent=False))
+    mut2("v2-ownership-unproven-port-refuses",
+         lambda r: r.update(port_listener_ownership="unproven"))
+    mut2("v2-loading-exact-false-check-claims-pass",
+         lambda r: (r["loading_503"].update(body='{"error":{}}'),
+                    r["transitions"][1].update(body='{"error":{}}'),
+                    r.update(loading_envelope_exact=False)))
+    mut2("v2-loading-503-nonexact-transitions",
+         lambda r: (r["transitions"][1].update(
+             body='{"error":{"message":"Warming","type":"x","code":503}}'),
+            r["loading_503"].update(
+                body='{"error":{"message":"Warming","type":"x",'
+                     '"code":503}}'),
+            r.update(loading_envelope_exact=False)))
+    mut2("v2-missing-loading-envelope-graded",
+         lambda r: r["checks"].remove(
+             next(c for c in r["checks"]
+                  if c["id"] == "loading_envelope_graded")))
+    mut2("v2-v1-check-id-teardown-exited",
+         lambda r: next(c for c in r["checks"]
+                        if c["id"] == "teardown_graceful").update(
+             id="teardown_exited"))
+    mut2("v2-child-not-alive-at-teardown",
+         lambda r: r["teardown"].update(alive_at_teardown_start=False))
+    mut2("v2-health-body-extra-key",
+         lambda r: r["captures"]["health"].update(
+             body='{"status":"ok","extra":1}'))
+    mut2("v2-later-loading-body-nonexact",
+         lambda r: r["loading_503_bodies"].append(
+             {"body": '{"error":{"message":"Busy",'
+                      '"type":"unavailable_error","code":"503"}}',
+              "repeats": 2}))
+
     failures = []
     with tempfile.TemporaryDirectory(prefix="check-receipt-") as td:
         for i, (name, receipt, extra, want) in enumerate(cases):
@@ -1091,8 +1345,10 @@ def _selftest():
         for f in failures:
             print(f"SELFTEST FAIL {f}", file=sys.stderr)
         return 1
-    print(f"selftest: {len(cases) - 1} mutations + unreadable case "
-          "all rejected; valid receipt accepted")
+    n_mut = sum(1 for c in cases if c[3] != 0)
+    n_ok = len(cases) - n_mut
+    print(f"selftest: {n_ok} valid receipt(s) accepted; {n_mut} "
+          "mutations + unreadable case all rejected")
     return 0
 
 
@@ -1101,7 +1357,7 @@ def _selftest():
 
 def main(argv=None):
     ap = argparse.ArgumentParser(
-        description="Validate a kama-llamacpp-live/v1 receipt.")
+        description="Validate a kama-llamacpp-live/v1 or /v2 receipt.")
     ap.add_argument("receipt", nargs="?", help="receipt JSON path")
     ap.add_argument("--expect-model-sha256", metavar="HEX",
                     help="require the recorded model sha256")

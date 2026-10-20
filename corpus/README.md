@@ -226,3 +226,20 @@ fixture was sampled; nothing was restored.
 Line 119's "llama.cpp nullable loading metadata" names a README sentence that
 the direct-mode code does not serve; see `served-identity-crosswalk.md`
 §Correction — round 16.
+
+§Correction — round 17 (loading-gate scope, OPTIONS; routed by `lessons/round-16-verifier-spotcheck.md` defect 4).
+
+Line 206's row says the llama.cpp loading gate answers "every non-frontend path 503 before the API key". At b11755 (704366d76) the gate exempts only the frontend set (`/` and embedded UI assets, `server-http.cpp:309-311`). OPTIONS requests return earlier, in the pre-routing handler at `server-http.cpp:347-352`, and are not 503'd. Every other path, including `/health` and `/v1/models`, gets the envelope while `is_ready` is false; the state gate (`:354`) runs before the API-key gate (`:357`). Envelope fields: message `:318`, type `:319`, code `:320`. Source: llama.cpp 704366d76 `tools/server/server-http.cpp`, accessed 2026-10-20.
+
+## Round-17 graded fields and fail-capable live checks
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/llamacpp-loading-lifecycle.md` §Round 17 | the exact `/health` ready body in code (S042), the SIGINT/SIGTERM shutdown path and exit statuses (S043), Python returncode semantics (S044), three v2 live runs (S046); deepens the round-16 entry, no new ground | 17 |
+| `lessons/round-17.md` | C1/C2 gate decisions, mined mistake M1 (S041 in-place edit) with the append-only guard, round-16 routed-defect and jj-risk dispositions | 17 |
+
+Frontier disposition: "live grading of a loading server by the receipt" (round-16
+paragraph above) is now held — receipt v2 grades every observed loading 503 body
+(42–45 per run) and fails a run that observed none. Still open: router mode and
+sleep, other engines, K05 declared-versus-served context, and the registered
+consumers (still `DEAD`, not probed). No new coverage-map ground this round.

@@ -146,3 +146,66 @@ status only, not the `{"status":"ok"}` body; `teardown_exited` and
 `teardown_port_closed` prove reaping and a refused port, not that SIGTERM caused
 the exit; `loading_envelope_exact` is recorded, not graded
 (`.ufo/waves/round-16/falsify/advice/ReviewLiveHarnessCode.md`).
+
+## Round 17 — ready body, graceful teardown and fail-capable live checks (appended 2026-10-20)
+
+Provenance supplement (the header above is unchanged): source S042
+(`tools/server/server-context.cpp` @ 704366d76, `get_health` 5288-5299), S043
+(`tools/server/server.cpp` @ 704366d76, signal path 26-38, 519-534, 575-590;
+`server-queue.cpp` 132-136), S044 (Python 3.14 `Popen.returncode`), S046
+(own-work receipts `.ufo/waves/round-17/live/receipt-{1,2,3}.json`);
+verified-at: 2026-10-20 — sources re-fetched at the pinned commit and saved
+with digests under `.ufo/waves/round-17/sources/` (`pins.json`); live runs
+2026-10-20T15:57:44.932Z–15:57:45.445Z by L1 through `tools/kama-llamacpp-live.py`
+(sha256 0efd1723…), each gated `VALID` with all four pins; recheck: on-release,
+as above.
+
+**Ready body.** The only 200 body the `/health` handler emits is
+`res->ok({{"status", "ok"}});` (S042, server-context.cpp:5297), serialized
+compact: 15 bytes `{"status":"ok"}`, sha256 `a29ee2b1…d288`. The README's
+`{"status": "ok" }` (S035, README:489) is documentation spacing, so the live
+check compares parsed JSON for equality with exactly `{"status": "ok"}`. A 200
+with any other body (for example `{"status":"degraded"}`) is not this handler.
+A body check must use GET: `OPTIONS` is answered by the pre-routing CORS branch
+(server-http.cpp:347-352) before the state gate.
+
+**Graceful teardown.** SIGINT and SIGTERM share one handler, registered at
+server.cpp:529-534 only after `load_model` (507) and `is_ready.store(true)` (515)
+(S043). The first signal calls `ctx_server.terminate()` (519-523), which stops
+the task loop (`server-queue.cpp:132-136`); the main thread then cleans up, joins
+the HTTP thread and returns 0 (server.cpp:575-590). A later signal prints
+"Received second interrupt, terminating immediately." and calls `exit(1)`
+(server.cpp:30-34). A SIGTERM delivered before line 534 meets the default action,
+so Python sees returncode -15: "A negative value -N indicates that the child was
+terminated by signal N (POSIX only)." (S044). Returncode 0 alone does not say who
+sent the signal; the receipt binds it to the harness through a fresh `poll()`
+before `killpg` (`alive_at_teardown_start`), `sigterm_sent` only on successful
+delivery, `sigkill_sent` false, and port ownership proven for the child earlier
+in the same run.
+
+**Observed (S046).** Three runs on the pinned build and fixture: `/health` 200
+`{"status":"ok"}`; 42, 45 and 45 loading 503s on `/v1/models`, every one the exact
+envelope (one distinct body, sha256 `baa09177…957c`); SIGTERM to a live child,
+returncode 0 after 3 ms, no SIGKILL, port refused afterwards; 11/11 checks.
+Independent scratch probes this round (advice `ProbeSigtermExit.md`,
+`ProbeHealthBody.md`, `CriticC2Predicates.md`) saw returncode 0 in every
+post-ready SIGTERM run and -15 for SIGTERM during loading.
+
+**The v1 limits above are superseded for receipt v2** (`kama-llamacpp-live/v2`):
+`health_ready` grades the body; `teardown_exited` is replaced by
+`teardown_graceful` (harness SIGTERM to a live child, no SIGKILL, returncode 0,
+child ownership); `teardown_port_closed` fails unless child ownership was proven;
+`loading_envelope_graded` fails when no 503 was observed or when any stored 503
+body is not exact; an exception in teardown still writes a receipt with
+`internal:<ExcType>` and exit 2. `model_unchanged` stays as input integrity, not
+subject evidence. Fake-server controls (`tests/llamacpp-live/controls.py`) show
+each check failing on the misbehaviour it names.
+
+**Correction (appended).** Line 29 above says the gate answers "every other
+path" apart from frontend assets; `OPTIONS` is also excluded — it is answered
+at server-http.cpp:347-352 before the state gate at 354. The body's `type` and
+`code` are at server-http.cpp:319-320, alongside `message` at 318.
+
+Limits: one build (b11755 = 704366d76), CPU, fixture model, single-model mode,
+sampled instants on unregistered loopback ports. Not consumer health (8080 and
+34113 untouched, still `DEAD`), not router mode or sleep, not generation.

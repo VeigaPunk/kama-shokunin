@@ -67,3 +67,14 @@ the three consumers stay `DEAD`. The release is a GitHub Pre-release; the
 install is identified by its asset digest (S038), not the tag. The install tree,
 its `~/.local/bin/llama-server` link (which now precedes `/usr/bin` on PATH) and
 the cache persist on the host; removal is the operator's call.
+**Round-17 note — the same fixture, stricter receipt (2026-10-20).** The lane-owned
+child is unchanged in scope (same install, same pinned GGUF, unregistered
+loopback ports, torn down in the run) and still **pending L0 ratification**. The
+tool now emits `kama-llamacpp-live/v2`: exact ready body, harness-SIGTERM
+graceful teardown with returncode 0, ownership-gated port closure, every loading
+503 graded, a receipt on internal faults, and loopback-only listener ownership.
+Fake-server controls run only `/tmp` fakes on ephemeral loopback ports. No
+`/usr/bin/llama-server` exists, so the `~/.local/bin` link shadows nothing; the
+"precedes `/usr/bin` on PATH" wording above is shell-local. The retained release
+archive `~/.local/opt/llama-b11755-bin-ubuntu-x64.tar.gz` (sha256 `753bfa73…e226`)
+is part of the operator-owned footprint.

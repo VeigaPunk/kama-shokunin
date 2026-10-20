@@ -1,0 +1,1 @@
+clone: git clone lane /tmp/kama-r17-noharm; checkout cff9e62; overlay current tests/probe-verdicts/check.py (sha ddc3f3cceaee9687de4d6aa29cd4adb72833e08ef0657371dff97cf582fe2099); run .ufo/waves/round-16/measure.py and tools/test-snapshot.sh there (never in the lane)

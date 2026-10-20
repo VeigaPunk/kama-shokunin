@@ -36,7 +36,12 @@ Modes:
   `git cat-file blob <resolved-before>:corpus/QUALITY.md`.  Record the actual
   `git rev-parse HEAD`, never a hardcoded worktree hash.  The historical blob
   is retrieved with GIT_* stripped and --no-replace-objects; any retrieval
-  failure is probe_error, never clean.
+  failure is probe_error, never clean.  When the --quality bytes differ from
+  the measured HEAD blob (an uncommitted or differently committed edit),
+  the gate cannot evaluate the committed wording: the verdict is
+  worktree_not_at_measured_revision (exit 4) whenever every other check is
+  clean.  A real content failure still exits 1 even when the worktree
+  diverges; unreadable input or a failed git read stays probe_error (3).
 * frozen (--manifest PATH): expected.json SHA-256 pins before and after
   snapshots.  Both input digests are verified before any content check; a
   mismatch is snapshot_tampered (exit 2).  The historical prefix is checked
@@ -48,13 +53,22 @@ temporary fixtures and asserts exit code plus stable finding id for: before
 red, after green, missing exit-map literal, missing capture/comparison
 literal, reintroduced mistaken wording, reintroduced KQ15 comparison
 formulation, contradictory comparison roles, conflicting exit class, missing
-KQ16 row, and altered pinned snapshot.  A green selftest is gate
+KQ16 row, and altered pinned snapshot.  It also builds a sandbox git repo
+inside the TemporaryDirectory (never the lane), commits the frozen before
+and after snapshots, copies this script with BEFORE_REVISION pinned to the
+sandbox before commit, and asserts live-mode exit code plus finding for:
+divergent-but-clean worktree (worktree_not_at_measured_revision, exit 4),
+committed-clean worktree (clean, exit 0), and divergent worktree whose own
+content fails (documentation_mismatch, exit 1).  A green selftest is gate
 self-consistency only.  It writes only inside its own TemporaryDirectory.
 
 Exit codes / stable findings: 0 clean; 1 documentation_mismatch;
-2 snapshot_tampered; 3 probe_error (unmeasured).  Evaluation modes (excluding
---help, which is conventional argparse plaintext) emit exactly one JSON object
-on stdout and never print file contents, only digests and sizes.
+2 snapshot_tampered; 3 probe_error (unmeasured); 4
+worktree_not_at_measured_revision (live --quality bytes differ from the
+measured HEAD blob while every other check is clean).  Evaluation modes
+(excluding --help, which is conventional argparse plaintext) emit exactly
+one JSON object on stdout and never print file contents, only digests and
+sizes.
 """
 from __future__ import annotations
 
@@ -109,6 +123,7 @@ FINDINGS = {
     'documentation_mismatch': 1,
     'snapshot_tampered': 2,
     'probe_error': 3,
+    'worktree_not_at_measured_revision': 4,
 }
 SCOPE = (
     'bounded textual KQ16 gate: wording conformance only; no new capability, '
@@ -124,6 +139,8 @@ LIMITS = [
     'Capture provenance is author-attested only. Byte identity cannot reveal which command produced a snapshot, and expected.json has no capture-command field.',
     'Manifest SHA-256 pins establish input immutability, not semantic truth, correspondence, or a verdict; a coherent manifest+snapshot rewrite remains possible, as does an in-place rewrite of the live unpinned file.',
     'Frozen mode does not re-fetch git history; before provenance is the pinned manifest entry. Live mode is explicitly unpinned.',
+    'Live mode can only evaluate the wording committed at the measured HEAD; when --quality bytes differ from that blob the finding is worktree_not_at_measured_revision (exit 4) only while divergence is the sole failure, and any other check failure still reports documentation_mismatch (exit 1) with the divergence kept as an observation.',
+    'The live-mode selftest sandbox builds its own git repo and runs a temporary script copy whose BEFORE_REVISION line is repinned to the sandbox before commit; the lane pin is never altered and the copied gate logic is otherwise byte-identical.',
     'Exit precedence and fail-closed source/integrity semantics live in the reviewed round-12 code and receipts, not in this wording check.',
     'A green --selftest shows frozen construction and gate self-consistency only, never semantic or execution evidence.',
     'expected.json records kq15_line_sha256 as informational metadata. The gate enforces the whole pinned before digest plus raw byte prefix, which implies the historical KQ15 line is preserved, but the recorded line digest is not compared separately.',
@@ -452,9 +469,20 @@ def run_live(args):
         and before_assessment['missing_assertions'] == DENOMINATOR
         and canonical_quality
         and not quality_symlink
-        and worktree_matches_head
     )
-    return finish(result, 'clean' if clean else 'documentation_mismatch', observations)
+    if clean and not worktree_matches_head:
+        # The --quality bytes differ from the blob committed at the measured
+        # HEAD: the gate cannot evaluate the committed wording, so a clean
+        # otherwise-verdict reports could-not-evaluate (exit 4) instead of
+        # grading uncommitted text as a documentation failure.  Any other
+        # check failure keeps precedence and stays documentation_mismatch;
+        # the divergence stays recorded as an observation either way.
+        finding = 'worktree_not_at_measured_revision'
+    elif clean:
+        finding = 'clean'
+    else:
+        finding = 'documentation_mismatch'
+    return finish(result, finding, observations)
 
 
 def load_manifest(path):
@@ -767,6 +795,36 @@ def run_selftest(args):
         'after', base_manifest['after']['sha256'], 2, 'snapshot_tampered',
     )
 
+    # Live-mode sandbox cases: HEAD moves between the pinned before and
+    # after commits while per-case worktree bytes stand in for --quality.
+    live_cases = [
+        {
+            'name': 'live_worktree_divergent_clean',
+            'head': 'before',
+            'worktree': after_data,
+            'expected_exit': FINDINGS['worktree_not_at_measured_revision'],
+            'expected_finding': 'worktree_not_at_measured_revision',
+        },
+        {
+            'name': 'live_committed_clean',
+            'head': 'after',
+            'worktree': after_data,
+            'expected_exit': FINDINGS['clean'],
+            'expected_finding': 'clean',
+        },
+        {
+            'name': 'live_worktree_divergent_content_failure',
+            'head': 'before',
+            'worktree': mutate_admit(
+                after_text,
+                lambda cell: cell.replace(EXIT_MAP_LITERAL, ''),
+                'live divergent content failure',
+            ).encode(),
+            'expected_exit': FINDINGS['documentation_mismatch'],
+            'expected_finding': 'documentation_mismatch',
+        },
+    ]
+
     results = []
     with tempfile.TemporaryDirectory(prefix='kama-r13-selftest-') as tempdir:
         root = Path(tempdir)
@@ -830,6 +888,98 @@ def run_selftest(args):
                 'pass': passed,
             })
 
+        # Live-mode sandbox: a throwaway git repo (never the lane).  The gate
+        # copy sits at lane/.ufo/waves/round-13/measure.py so LANE resolves
+        # to the sandbox root; its BEFORE_REVISION line is repinned to the
+        # sandbox before commit exactly once so before_is_pinned_start stays
+        # honest.  All other gate logic in the copy is byte-identical.
+        repo = root / 'live-sandbox' / 'lane'
+        script_dir = repo / '.ufo' / 'waves' / 'round-13'
+        script_dir.mkdir(parents=True)
+        quality_path = repo / 'corpus' / 'QUALITY.md'
+        quality_path.parent.mkdir(parents=True)
+
+        def sandbox_git(*git_args):
+            proc = subprocess.run(
+                ['git', '-C', str(repo),
+                 '-c', 'user.name=kama-r13-selftest',
+                 '-c', 'user.email=kama-r13-selftest@localhost',
+                 '-c', 'commit.gpgsign=false'] + list(git_args),
+                stdin=subprocess.DEVNULL, capture_output=True,
+                timeout=30, env=git_env(), text=True, shell=False,
+            )
+            if proc.returncode != 0:
+                raise GateError(
+                    f"sandbox git {git_args[0]} exited {proc.returncode}: "
+                    f'{proc.stderr.strip()[:200]}'
+                )
+            return proc.stdout.strip()
+
+        head_oids = {}
+        script_path = script_dir / 'measure.py'
+        sandbox_error = None
+        try:
+            sandbox_git('init', '--quiet')
+            quality_path.write_bytes(before_data)
+            sandbox_git('add', 'corpus/QUALITY.md')
+            sandbox_git('commit', '--quiet', '-m', 'sandbox before')
+            head_oids['before'] = sandbox_git('rev-parse', 'HEAD')
+            quality_path.write_bytes(after_data)
+            sandbox_git('add', 'corpus/QUALITY.md')
+            sandbox_git('commit', '--quiet', '-m', 'sandbox after')
+            head_oids['after'] = sandbox_git('rev-parse', 'HEAD')
+            pin_literal = f"BEFORE_REVISION = '{BEFORE_REVISION}'"
+            source = Path(__file__).resolve().read_text(encoding='utf-8')
+            if source.count(pin_literal) != 1:
+                raise GateError('selftest repin anchor matched != 1 time')
+            script_path.write_text(
+                source.replace(
+                    pin_literal,
+                    f"BEFORE_REVISION = '{head_oids['before']}'",
+                ),
+                encoding='utf-8',
+            )
+        except (GateError, OSError, subprocess.TimeoutExpired) as exc:
+            sandbox_error = str(exc)
+
+        for case in live_cases:
+            observed = {'exit': None, 'finding': None, 'missing_assertions': None}
+            parsed = False
+            try:
+                if sandbox_error is not None:
+                    raise GateError(f'sandbox construction failed: {sandbox_error}')
+                sandbox_git('reset', '--quiet', '--hard', head_oids[case['head']])
+                quality_path.write_bytes(case['worktree'])
+                child = [sys.executable, '-I', '-B', str(script_path)]
+                proc = subprocess.run(
+                    child, stdin=subprocess.DEVNULL, capture_output=True,
+                    timeout=120, text=True, shell=False,
+                )
+                payload = json.loads(proc.stdout)
+                observed = {
+                    'exit': proc.returncode,
+                    'finding': payload.get('finding'),
+                    'missing_assertions': None,
+                }
+                parsed = True
+            except (GateError, OSError, subprocess.TimeoutExpired, json.JSONDecodeError) as exc:
+                observed['error'] = str(exc)
+            results.append({
+                'name': case['name'],
+                'expected_exit': case['expected_exit'],
+                'expected_finding': case['expected_finding'],
+                'expected_missing_assertions': None,
+                'observed_exit': observed['exit'],
+                'observed_finding': observed['finding'],
+                'observed_missing_assertions': None,
+                'parsed': parsed,
+                'pass': (
+                    parsed
+                    and observed['exit'] == case['expected_exit']
+                    and observed['finding'] == case['expected_finding']
+                ),
+            })
+
     passed = sum(1 for case in results if case['pass'])
     failed = len(results) - passed
     result = {
@@ -838,7 +988,7 @@ def run_selftest(args):
         'scope': SCOPE,
         'bounded_textual_gate': True,
         'no_new_capability_claim': True,
-        'selftest_scope': 'frozen construction and gate self-consistency only; not semantic, runtime, or execution evidence',
+        'selftest_scope': 'frozen fixture and live-sandbox git construction plus gate self-consistency only; not semantic, runtime, or execution evidence',
         'finding_object': (
             'round-13 QUALITY KQ16 wording and frozen QUALITY digest pins; '
             'not round-12 SOURCES.md or model-source provenance'

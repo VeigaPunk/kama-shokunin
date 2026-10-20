@@ -988,3 +988,38 @@ and in SKILL/lesson, not treated as current authority.
   Tools installed: llama.cpp b11755 (official release asset into
   `~/.local/opt`, linked into `~/.local/bin`) and the pinned GGUF; no pacman.
   Stale-lane: respawn-per-round; no other kama mission open.
+
+## round 17 — graded fields and fail-capable live checks (2026-10-20)
+
+- Start `cff9e62f05aa7cfb9059444f62eb787100719713`, clean tree, nothing inherited.
+  Lane VCS is jj-colocated; commits only through `scripts/hyaku/jj-lane.sh`.
+- Motivating evidence, C1 (calibration): round-16 `MutateHarness.md` — 5/5
+  check.py grading mutants survive the only detector; `served_model` and route
+  ungraded; a non-object probe row tracebacks. C2 (operability):
+  `ReviewLiveHarnessCode.md` — `health_ready`, `teardown_exited`,
+  `teardown_port_closed` cannot fail on the behaviour they name; the loading
+  envelope is graded by nothing; a teardown fault escapes without a receipt.
+  Mined mistake: S041 edited in place (routed defect 3). jj risks: round-13
+  live gate false failure, `.ufo/state/` unignored.
+- Build wave: 82 seats validated under policy v2 (band 64–100) and dispatched as
+  one task call after one job-cap refusal (82 refused, 0 spawned) and gated
+  retries: scout 19, executor 15, reviewer 14, scribe 10, connector 8, critic 6,
+  revenger 4, sentinel 2, simplifier 2, mutation-tester 2; 82 completed, 0
+  dead; first-line verdicts 34 confirm / 32 partial / 1 refute / 15 n/a / 0
+  nonconformant. L1 holds the planner seat; the planning data-walk rode
+  `RevengerPlannerWalk`.
+- Landed: `tests/probe-verdicts/check.py` (graded served_model and route,
+  per-row malformed and non-UTF-8 output), `tests/probe-verdicts/fault-controls.py`,
+  `.ufo/waves/round-17/c1/mutants.py`; `tools/kama-llamacpp-live.py` receipt v2,
+  `tests/llamacpp-live/check-receipt.py` v1+v2, `tests/llamacpp-live/controls.py`;
+  `tools/sources-append-only.py`; `.ufo/waves/round-13/measure.py` exit 4;
+  `.ufo/waves/round-17/count-verdicts.py`, `dispatch-provenance.py`; SOURCES
+  S042–S046; QUALITY KQ20–KQ22; appended corrections (OPTIONS wording) in
+  README, SKILL.md and three knowledge entries; `.gitignore` (`.ufo/state/`,
+  `__pycache__/`); `AGENTS.md` VCS rule.
+- Measured (L1): C1 fixed-detector accepted faults 3 → 0, full-detector mutants
+  7/8 → 10/10 killed (pair detector 1/8 → 1/10); C2 accepted-bad controls 6 (+1
+  inconclusive) → 0; three real b11755 v2 runs 11/11, gate `VALID` with four
+  pins. No-harm: probe and matrix bytes unchanged; round-16 measure PASS in a
+  `/tmp` clone; snapshot 30/0; v1 receipts `VALID`. Details:
+  `corpus/lessons/round-17.md` §Measurements, `SCORECARD.md` §Round 17.

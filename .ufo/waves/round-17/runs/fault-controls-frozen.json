@@ -1,0 +1,157 @@
+{
+  "schema": "kama-fault-controls/v1",
+  "check": ".ufo/waves/round-17/frozen/tests_probe-verdicts_check.py",
+  "check_sha256": "b853576edd54e006c4d8742c1a7335a0d6cca475d107acce7792da75b6145762",
+  "probe_sha256": "36b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3",
+  "matrix": {
+    "files": 9,
+    "tests": 72,
+    "sha256": "bf9068d89e4cb8a080167cb32cc818943d717a65fcbd21edb2b8256e22771f32"
+  },
+  "positive_control": {
+    "id": "F0",
+    "title": "positive control (identity pass-through)",
+    "target": null,
+    "rows": [
+      "ReadyControls.expect-exact-id",
+      "ReadyControls.expect-different-id",
+      "LoadingEnvelope.canonical-alias",
+      "ForeignControls.openmetrics-text",
+      "AuthAndDead.closed-port-connection-refused"
+    ],
+    "runs": 1,
+    "check_exit": 0,
+    "detected": true,
+    "why": "check exited 0 with JSON; all 5 rows passed (positive control healthy)"
+  },
+  "seconds": 53.1,
+  "faults": [
+    {
+      "id": "F1",
+      "title": "reason forged",
+      "target": "reason",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias"
+      ],
+      "runs": 1,
+      "check_exit": 1,
+      "detected": true,
+      "why": "check exited 1 with JSON; all 3 faulted rows failed the 'reason' conjunct (expect-exact-id:reason expect-different-id:reason canonical-alias:reason)"
+    },
+    {
+      "id": "F2",
+      "title": "exit flipped",
+      "target": "exit",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias"
+      ],
+      "runs": 1,
+      "check_exit": 1,
+      "detected": true,
+      "why": "check exited 1 with JSON; all 3 faulted rows failed the 'exit' conjunct (expect-exact-id:exit expect-different-id:exit canonical-alias:exit)"
+    },
+    {
+      "id": "F3",
+      "title": "drift negated",
+      "target": "drift",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias"
+      ],
+      "runs": 1,
+      "check_exit": 1,
+      "detected": true,
+      "why": "check exited 1 with JSON; all 3 faulted rows failed the 'drift' conjunct (expect-exact-id:drift expect-different-id:drift canonical-alias:drift)"
+    },
+    {
+      "id": "F4",
+      "title": "verdict lower-cased",
+      "target": "verdict",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias"
+      ],
+      "runs": 1,
+      "check_exit": 1,
+      "detected": true,
+      "why": "check exited 1 with JSON; all 3 faulted rows failed the 'verdict' conjunct (expect-exact-id:drift,verdict expect-different-id:verdict canonical-alias:verdict)"
+    },
+    {
+      "id": "F5",
+      "title": "served_model forged (incl. non-empty on DEAD)",
+      "target": "served_model",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "AuthAndDead.closed-port-connection-refused"
+      ],
+      "runs": 1,
+      "check_exit": 0,
+      "detected": false,
+      "why": "check exited 0 (wanted 1); stdout[:120]='{\\n  \"schema\": \"kama-probe-verdicts/v1\",\\n  \"probe\": \"wrap.py\",\\n  \"probe_sha256\": \"49a2468aff1af9b1dd700eddc6cc27363ab9a7c'"
+    },
+    {
+      "id": "F6",
+      "title": "route skip (no GET /v1/models; cached replay)",
+      "target": "route",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias",
+        "ForeignControls.openmetrics-text"
+      ],
+      "runs": 4,
+      "check_exit": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "detected": false,
+      "why": "check exited 0 (wanted 1); stdout[:120]='{\\n  \"schema\": \"kama-probe-verdicts/v1\",\\n  \"probe\": \"wrap.py\",\\n  \"probe_sha256\": \"49a2468aff1af9b1dd700eddc6cc27363ab9a7c' | check exited 0 (wanted 1); stdout[:120]='{\\n  \"schema\": \"kama-probe-verdicts/v1\",\\n  \"probe\": \"wrap.py\",\\n  \"probe_sha256\": \"49a2468aff1af9b1dd700eddc6cc27363ab9a7c' | check exited 0 (wanted 1); stdout[:120]='{\\n  \"schema\": \"kama-probe-verdicts/v1\",\\n  \"probe\": \"wrap.py\",\\n  \"probe_sha256\": \"49a2468aff1af9b1dd700eddc6cc27363ab9a7c' | check exited 0 (wanted 1); stdout[:120]='{\\n  \"schema\": \"kama-probe-verdicts/v1\",\\n  \"probe\": \"wrap.py\",\\n  \"probe_sha256\": \"49a2468aff1af9b1dd700eddc6cc27363ab9a7c'"
+    },
+    {
+      "id": "F7",
+      "title": "hang past probe timeout",
+      "target": "error",
+      "rows": [
+        "ReadyControls.expect-exact-id"
+      ],
+      "runs": 1,
+      "check_exit": 1,
+      "detected": true,
+      "why": "check exited 1 with JSON; all 1 faulted rows failed the 'error' conjunct (expect-exact-id:drift,error,exit,reason,route,served_model,verdict)"
+    },
+    {
+      "id": "F8",
+      "title": "malformed stdout",
+      "target": "error",
+      "rows": [
+        "ReadyControls.expect-exact-id",
+        "ReadyControls.expect-different-id",
+        "LoadingEnvelope.canonical-alias",
+        "ForeignControls.openmetrics-text",
+        "AuthAndDead.closed-port-connection-refused"
+      ],
+      "runs": 6,
+      "check_exit": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "detected": false,
+      "why": "[empty-array] check exited 1 with JSON; all 5 faulted rows failed the 'error' conjunct (expect-exact-id:drift,error,reason,served_model,verdict expect-different-id:drift,error,reason,served_model,verdict canonical-alias:drift,error,reason,served_model,verdict openmetrics-text:drift,error,reason,served_model,verdict closed-port-connection-refused:drift,error,reason,served_model,verdict) | [rows-empty] check exited 1 with JSON; all 5 faulted rows failed the 'error' conjunct (expect-exact-id:drift,error,reason,served_model,verdict expect-different-id:drift,error,reason,served_model,verdict canonical-alias:drift,error,reason,served_model,verdict openmetrics-text:drift,error,reason,served_model,verdict closed-port-connection-refused:drift,error,reason,served_model,verdict) | [row-not-object] check exited 1 but stdout is not parseable JSON (traceback or human text); stdout[:120]='' | [row-null] check exited 1 but stdout is not parseable JSON (traceback or human text); stdout[:120]='' | [non-json] check exited 1 with JSON; all 5 faulted rows failed the 'error' conjunct (expect-exact-id:drift,error,reason,served_model,verdict expect-different-id:drift,error,reason,served_model,verdict canonical-alias:drift,error,reason,served_model,verdict openmetrics-text:drift,error,reason,served_model,verdict closed-port-connection-refused:drift,error,reason,served_model,verdict) | [non-utf8] check exited 1 but stdout is not parseable JSON (traceback or human text); stdout[:120]=''"
+    }
+  ],
+  "detected": 5,
+  "accepted": 3
+}

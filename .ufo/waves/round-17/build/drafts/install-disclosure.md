@@ -1,0 +1,9 @@
+## Draft: install disclosure precision (routed defect 5, round-16 lesson §Routed defects 5)
+
+**Retained archive under L0 question (b).** The llama.cpp b11755 install disclosed in §Install judgment is backed by a retained archive, `~/.local/opt/llama-b11755-bin-ubuntu-x64.tar.gz` (22,240,468 bytes, mtime 2026-10-20 10:17 -0300). Neither that path nor the archive is named in L0 question (b), which asks whether to keep or remove "the persistent install, the PATH link and the model cache". Read-only checks on 2026-10-20 show its sha256 is 753bfa7327a75b477d4d14cde71e0e46a40acc3a1408c5504530b78c33a6e226, equal to the upstream asset digest for `llama-b11755-bin-ubuntu-x64.tar.gz` on the b11755 Pre-release. Its `llama-b11755/llama-server` member hashes to b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804, identical to the extracted `~/.local/opt/llama-b11755/llama-server`. **No `/usr/bin/llama-server` exists** and `command -v -a llama-server` lists only `~/.local/bin/llama-server`, so the PATH link shadows no other binary on this host. The install is unchanged; removal of the archive, install, link or model cache remains an operator decision through L0 question (b).
+
+**L0 follow-up line (append-ready, one line):**
+
+kama | round-17 | Round-16 question (b) (`.ufo/l0-questions.md:58`) does not name the retained archive `~/.local/opt/llama-b11755-bin-ubuntu-x64.tar.gz` (sha256 753bfa73…e226, equal to the upstream b11755 asset digest): do you also decide keep-or-remove for that archive alongside the install, PATH link and model cache?
+
+**Unknowns (not verified here):** whether the lane's kama runtime PATH matches this shell's PATH (only this shell was observed); whether any other host location outside PATH holds a llama-server (not searched); and the operator's removal decision (none recorded).

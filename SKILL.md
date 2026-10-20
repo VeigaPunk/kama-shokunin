@@ -551,3 +551,33 @@ single-model llama-server at b11755 (or at the round-10 pin c0fd7862): while
 loading it answers `/v1/models` with the 503 envelope, and the round-16 live
 receipt captured exactly that body. The row's answer ("No") still stands for
 router catalogs, sleeping servers and Ollama.
+
+Round-17 correction (routed by `corpus/lessons/round-16-verifier-spotcheck.md` defect 4). Correction to line 519 (2026-10-20, source accessed 2026-10-20). "Every non-frontend path ... before the API-key check" excludes `OPTIONS` requests, which the pre-routing handler answers at `server-http.cpp:347-352` before the state gate (`:354`). Exempt set is the frontend set only (`:309-311`); `/health` is gated. Type and code are at `:319-320` alongside the message at `:318`. The match rule in this section is unchanged.
+
+## Round-17 gate grading and fail-capable live checks (owner: kama)
+
+Supersedes, without editing, three statements of §Round-16: the stub-matrix row's
+"grades verdict, reason, exit and drift" now has a failing detector behind each
+field and also grades `served_model` and the `GET /v1/models` route; its "2
+harness/schema error" now also covers no traceback on malformed probe output (a
+malformed or non-UTF-8 probe stdout is a recorded row failure, exit 1); the live
+row's "0 all 10 checks pass" and the gate row's "10 check ids" describe receipt
+v1, while the tool now emits `kama-llamacpp-live/v2` with 11 checks. The round-13
+row at line 430 gains exit 4. Criteria: `corpus/QUALITY.md` KQ20–KQ22.
+
+| Name | Kind / entry command | Verdict map | Self-test | Pinned values | Write scope | Owner |
+|---|---|---|---|---|---|---|
+| Probe verdict stub matrix (graded fields) | gate: `python3 tests/probe-verdicts/check.py [--probe PATH] [--json]` | 0 all rows pass, 1 a row failed (including malformed or non-UTF-8 probe output, recorded per row), 2 harness/schema error; a row passes only when verdict, reason, exit, drift, `served_model` (derived from the row's own `/v1/models` body exactly as the probe's `served_ids()` precedence, `-` for every non-model verdict) and route (`GET /v1/models` among the stub's requests; closed-port rows exempt) all hold | `--selftest`: full matrix plus 5 rejected schema cases (4 malformed + duplicate name, in a temporary directory) | matrix files unchanged: 9 files, set sha256 `bf9068d8…1f32`, 72 rows | stdout only; loopback stubs | kama |
+| C1 fault controls | gate on a gate: `python3 tests/probe-verdicts/fault-controls.py [--check PATH] [--json]` | F0 identity control must pass (else exit 2); F1 reason, F2 exit, F3 drift, F4 verdict case, F5 served_model, F6 route skip (per-row cached output, no `/v1/models` contact), F7 hang, F8 malformed and non-UTF-8 stdout: detected only when check.py exits 1 with parseable JSON and every faulted row fails on the targeted field; 0 none accepted, 1 any accepted, 2 own fault | `--list`; asserts matrix digest and 72 tests in its scratch copy | the nine matrix files, copied, never written | `/tmp` scratch only | kama |
+| C1 mutant grid | measurement: `python3 .ufo/waves/round-17/c1/mutants.py --grid --out PATH` | 0 completed (counts in JSON), 2 own fault/refusal; mutants M0 ignore-verdict, M1 ignore-reason, M2 ignore-exit, M3 ignore-drift, M4 casefold-verdict, M5 timeout-pass, M6 ignore-served_model, M7 ignore-route, M8 malformed-passes, M9 reject-all; `site_missing` is not applicable | `--selftest`, `--dry-run` | content-anchored sites; matrix digest `bf9068d8…` and 72 tests refused otherwise | `/tmp` scratch; `--out` refused inside `tests/probe-verdicts/` | kama |
+| Live llama.cpp lifecycle v2 | capability: `python3 tools/kama-llamacpp-live.py --model ~/.cache/kama-shokunin/models/stories260K.gguf --model-sha256 270cba1b…d256d --out PATH` | 0 all 11 checks pass, 1 a check failed, 2 setup error or internal fault (receipt still written, `internal:<ExcType>`), 3 model digest mismatch; checks `health_ready` (200 and body exactly `{"status":"ok"}`), `teardown_graceful` (fresh poll shows the child alive, harness SIGTERM delivered, no SIGKILL, returncode 0, child ownership), `teardown_port_closed` (child ownership proven and port refused), `loading_envelope_graded` (503s observed and every stored body exact; none observed fails), `model_unchanged` (input integrity only), plus the six v1 subject checks | none; controls below | sources bound in-receipt (`source_binding`: llama.cpp 704366d76 spans, S036, S042, S043) | receipt path; temp log removed | kama |
+| Live receipt gate v1+v2 | gate: `python3 tests/llamacpp-live/check-receipt.py RECEIPT --expect-model-sha256 H --expect-server-sha256 H --expect-probe-sha256 H --expect-tool-sha256 H` | 0 valid, 1 invalid, 2 unreadable; v1 receipts validate exactly as in round 16; v2 re-derives every check from stored evidence, including every stored loading body | `--selftest`: 26 v1 + 13 v2 mutations rejected, 2 valid receipts accepted | — | stdout | kama |
+| C2 live controls | measurement: `python3 tests/llamacpp-live/controls.py --tool ABS_PATH --gate ABS_PATH [--json]` (absolute paths) | K0 good fake must be accepted; K1 degraded health, K2 bad loading body, K3 self-exit, K4 ignores SIGTERM, K5 rc 1 on SIGTERM, K6 teardown fault, K7 hang, K8 default SIGTERM (-15) must be rejected with the targeted check failing; gate-flip arm re-submits each bad receipt with its failing checks flipped to passed; 0 accepted_bad 0 and good_ok, 1 otherwise, 2 own fault | — | stages tool + registry copies per control, so frozen copies run unchanged | `/tmp`; fake process groups killed by pidfile | kama |
+| SOURCES append-only guard | gate: `python3 tools/sources-append-only.py --from A --to B [--json]` | 0 no violation, 1 removed row or a changed cell outside `status`/`recheck`/`used-by`, 2 unreadable/parse; run over every consecutive commit pair of the round (KQ22) | `--selftest` 14 cases | must flag S041 on `--from b8e485c --to ccc4bb3` | read-only `git show` | kama |
+| Round-13 live gate exit 4 | gate: `python3 .ufo/waves/round-13/measure.py --quality corpus/QUALITY.md` | adds 4 could-not-evaluate (`worktree_not_at_measured_revision`) when every check is clean but the worktree QUALITY.md differs from the measured revision; content failures stay 1 | `--selftest` 13 cases (3 new, sandbox git repo) | frozen `expected.json` unchanged | stdout | kama |
+
+Order of operations under jj: commit through the lane helper first, then run the
+round-13 live gate. Wave artifacts `.ufo/waves/round-17/count-verdicts.py` (strict
+first-line `VERDICT:` counter) and `.ufo/waves/round-17/dispatch-provenance.py`
+(policy identity, one `taskCall` canonicalization, spawned count from async task
+results) are process tools, not axis evidence.

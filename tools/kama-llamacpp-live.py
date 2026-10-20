@@ -18,10 +18,10 @@ Exit codes:
     1  at least one check failed (server ran; receipt written)
     2  setup error (missing binary/model, launch failure, ready timeout,
        terminated by signal, receipt write failure)
-    3  model digest mismatch (refuses to launch)
-
-Receipt schema: ``kama-llamacpp-live/v1``. Only argv is recorded from the
-launch environment — never env.
+Receipt schema: ``kama-llamacpp-live/v2``. Only argv is recorded from the
+launch environment — never env. Any exception in teardown or the finally
+block still writes a receipt with ``setup_error`` ``internal:<ExcType>``
+and exit 2 — never an escaped traceback without a receipt.
 
 Deps: python3 stdlib only, plus whatever the probed server and
 ``bash tools/kama-probe.sh`` (curl, ss) need.
@@ -47,11 +47,21 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-SCHEMA = 'kama-llamacpp-live/v1'
+SCHEMA = 'kama-llamacpp-live/v2'
 SCRIPT = Path(__file__).resolve()
 LANE = SCRIPT.parent.parent
 REGISTRY = LANE / 'registry' / 'endpoint-consumers.tsv'
 DEFAULT_PROBE = LANE / 'tools' / 'kama-probe.sh'
+
+# Pinned upstream evidence for the sourced predicates (b11755).
+LLAMA_COMMIT = '704366d76f8748cf9ad3df62a464bfcc8d1ae6ad'
+_LLAMA_RAW = ('https://raw.githubusercontent.com/ggml-org/llama.cpp/'
+              + LLAMA_COMMIT + '/tools/server/')
+POPEN_RETURNCODE_DOC = ('https://docs.python.org/3/library/subprocess.html'
+                        '#subprocess.Popen.returncode')
+# The exact JSON document a ready /health must answer (object equality;
+# a 200 with {"status":"degraded"} is not ready).
+HEALTH_READY_BODY = {'status': 'ok'}
 
 # Ports that must never be served even if the OS offers them: the two known
 # consumer pins plus anything the registry TSV names (parsed at runtime).
@@ -62,6 +72,7 @@ POLL_TIMEOUT = 0.5          # per-request readiness poll timeout, seconds
 PROBE_TIMEOUT = 60          # seconds per kama-probe.sh invocation
 TERM_GRACE = 10.0           # SIGTERM grace before SIGKILL
 TRANSITION_BODY_CAP = 4096  # verbatim body kept on lifecycle transitions
+LOADING_BODY_MAX = 256      # distinct loading-503 bodies kept verbatim
 CAPTURE_BODY_CAP = 65536    # verbatim body kept on ready captures (= read cap)
 LOG_KEEP = re.compile(r'build|model loaded|listening|loading', re.IGNORECASE)
 HTTP_BODY_CAP = 65536       # max bytes read per response (R3)
@@ -76,9 +87,9 @@ CHILD_ENV_KEYS = ('PATH', 'HOME', 'LANG', 'LC_ALL', 'TMPDIR')
 # Documentation anchors for the checks array (llama.cpp b11755).
 DOC = {
     'health_ready': (
-        'llama.cpp tools/server/README.md @ b11755: GET /health returns 200 '
-        '{"status":"ok"} once the model is loaded; 503 {"error":{"message":'
-        '"Loading model","type":"unavailable_error","code":503}} while loading'
+        'llama.cpp ' + _LLAMA_RAW + 'server-context.cpp L5288-5299: '
+        'get_health answers res->ok({{"status","ok"}}); a 200 with any '
+        'other body (e.g. {"status":"degraded"}) is not ready'
     ),
     'models_alias_id': (
         'llama.cpp tools/server README @ b11755 GET /v1/models: '
@@ -104,17 +115,38 @@ DOC = {
         'tools/kama-probe.sh classify() contract: non-matching served id -> '
         'MODEL_MISMATCH reason "served-id-mismatch", exit 2'
     ),
-    'teardown_exited': (
-        'lane ownership: the spawned process group must terminate on '
-        'SIGTERM/SIGKILL (returncode observed)'
+    'teardown_graceful': (
+        'llama.cpp ' + _LLAMA_RAW + 'server.cpp L529-534 installs '
+        'signal_handler for SIGTERM, L519-523 shutdown_handler calls '
+        'ctx_server.terminate(), L575-590 start_loop() unblocks and '
+        'llama_server returns 0 — the documented graceful exit status; '
+        'per ' + POPEN_RETURNCODE_DOC + ' a negative returncode means '
+        'the child was terminated by that signal and fails; the "0" '
+        'grounds on this shutdown code path plus the round-16 observed '
+        'receipt (returncode 0, 3 ms), not on the Python row alone. '
+        'Also requires port_listener_ownership == "child" proven before '
+        'teardown, i.e. harness-initiated on our own child'
     ),
     'teardown_port_closed': (
-        'lane ownership: the served loopback port must refuse connections '
-        'after teardown'
+        'lane ownership: passes only when the port was proven owned by '
+        'our child earlier in this run (port_listener_ownership '
+        '"child") AND refuses connections after teardown; vacuous '
+        'otherwise -> fail'
+    ),
+    'loading_envelope_graded': (
+        'llama.cpp ' + _LLAMA_RAW + 'server-http.cpp L314-325: while '
+        'is_ready is false every non-frontend path answers 503 '
+        '{"error":{"message":"Loading model","type":"unavailable_error"'
+        ',"code":503}}. Grades EVERY distinct captured 503 body; no 503 '
+        'observed -> fail with {"loading_observed": false} (a real '
+        'b11755 run shows dozens). Limit: bodies are deduped by sha256 '
+        'and capped at LOADING_BODY_MAX, so identical repeats are '
+        'graded once'
     ),
     'model_unchanged': (
-        'lane ownership: the GGUF must hash identically after teardown; '
-        'a change would mean the run mutated its input'
+        'lane input integrity, not subject behaviour: the GGUF must '
+        'hash identically after teardown; only external mutation can '
+        'flip it'
     ),
 }
 
@@ -170,14 +202,12 @@ def install_tree(server_real):
     return tree, combined
 
 
-def loading_envelope_exact(loading_503):
-    """True iff the captured loading-503 body parses to the documented
-    envelope: error.message=="Loading model", error.type=="unavailable_error",
-    error.code is int and ==503. None when no 503 was seen. Not a check."""
-    if loading_503 is None:
-        return None
+def _envelope_ok(body_text):
+    """True iff one loading-503 body parses to the documented envelope:
+    error.message=="Loading model", error.type=="unavailable_error",
+    error.code is int and ==503."""
     try:
-        doc = json.loads(loading_503.get('body') or '')
+        doc = json.loads(body_text or '')
     except (ValueError, TypeError):
         return False
     err = doc.get('error') if isinstance(doc, dict) else None
@@ -187,6 +217,30 @@ def loading_envelope_exact(loading_503):
     return (err.get('message') == 'Loading model'
             and err.get('type') == 'unavailable_error'
             and type(code) is int and code == 503)
+
+
+def loading_envelope_exact(loading_503):
+    """Envelope grade of the first captured 503 body (receipt field
+    loading_envelope_exact): True/False, or None when no 503 was seen.
+    Not a check."""
+    if loading_503 is None:
+        return None
+    return _envelope_ok(loading_503.get('body'))
+
+
+def loading_envelopes_all(bodies):
+    """True iff every distinct captured 503 body is the exact envelope;
+    None when no body was captured. Grounds loading_envelope_graded."""
+    if not bodies:
+        return None
+    return all(_envelope_ok(b.get('body')) for b in bodies)
+
+
+class _BodyLog(list):
+    """Distinct loading-503 bodies, plus the count dropped past
+    LOADING_BODY_MAX so coverage limits are recorded, never hidden.
+    Serializes as a plain JSON array."""
+    dropped = 0
 
 
 def refused_ports():
@@ -255,7 +309,13 @@ def pick_port(refused, requested=None):
 
 
 def _listen_inodes(port):
-    """Socket inodes LISTENing on `port`, from /proc/net/tcp{,6} (state 0A)."""
+    """Socket inodes LISTENing on `port` AND bound to loopback, from
+    /proc/net/tcp{,6} (state 0A). Local-address hex column: 127/8 is
+    little-endian xxxxx7F? -> the high byte is 7F iff the address is in
+    127.0.0.0/8; ::1 ends 00000001; an IPv4-mapped 127/8 is the
+    v4-mapped prefix 0000000000000000FFFF00 plus the v4 tail. A child
+    bound to 0.0.0.0 or :: still answers loopback connects but is not
+    counted as the loopback-port owner — fail-closed."""
     inodes = set()
     for proc_net in ('/proc/net/tcp', '/proc/net/tcp6'):
         try:
@@ -265,12 +325,21 @@ def _listen_inodes(port):
                     parts = line.split()
                     if len(parts) < 10 or parts[3] != '0A':
                         continue
-                    if int(parts[1].rsplit(':', 1)[1], 16) == port:
-                        inodes.add(parts[9])
+                    addr_hex, port_hex = parts[1].rsplit(':', 1)
+                    if int(port_hex, 16) != port:
+                        continue
+                    if proc_net.endswith('tcp6'):
+                        if not (addr_hex.endswith('00000001')
+                                or (addr_hex[:24]
+                                    == '0000000000000000FFFF00'
+                                    and addr_hex.endswith('7F'))):
+                            continue
+                    elif not addr_hex.endswith('7F'):
+                        continue
+                    inodes.add(parts[9])
         except (OSError, ValueError, IndexError):
             continue
     return inodes
-
 
 def port_owned_by(pid, port):
     """True: a LISTEN socket on `port` is an fd of `pid` (our child owns it).
@@ -439,7 +508,8 @@ def readiness_loop(proc, port, ready_timeout):
     Phase 'models': GET /v1/models on a reused keep-alive connection, NO
     sleep, 0.5 s per-request timeout, until the first non-503 answer — the
     ~5-6 ms loading window needs an unbroken request cadence. The first 503
-    is kept verbatim (status, Server/Content-Type, body <=4096, sha256).
+    is kept verbatim in loading_503, and every distinct 503 body is kept
+    in loading_bodies (status, Server/Content-Type, body <=4096, sha256).
 
     Phase 'health': GET /health the same way until 200.
 
@@ -447,12 +517,17 @@ def readiness_loop(proc, port, ready_timeout):
     port_owned_by(child, port); foreign or unproven ownership discards every
     recorded body and is a setup error — a stranger's loading body can never
     reach loading_503.
-
-    Returns (transitions, loading_503, ready, failure_code, ownership)."""
+    Returns (transitions, loading_503, loading_bodies, ready,
+    failure_code, ownership). loading_bodies lists every DISTINCT 503
+    body (deduped by sha256, repeats counted, capped) so the graded
+    check covers all observed envelopes, not just the first."""
     t0 = time.monotonic()
     deadline = t0 + ready_timeout
     transitions = []
     loading_503 = None
+    loading_bodies = _BodyLog()   # every distinct 503 body, {path,
+                                  # body_sha256, body, repeats}
+    _seen_503 = {}                # body_sha256 -> index into loading_bodies
     ownership = None
     proven = False
     conn = _KeepAlive(port)
@@ -476,50 +551,66 @@ def readiness_loop(proc, port, ready_timeout):
                 return ('port-listener-not-our-child' if owned is False
                         else 'port-listener-ownership-unproven')
             proven = True
-        if loading_503 is None and result['status'] == 503 and proven:
-            loading_503 = {
-                't_ms': row['t_ms'],
-                'path': path,
-                'status': 503,
-                'headers': _header_subset(result['headers']),
-                'body_sha256': row['body_sha256'],
-                'body': result['body'][:TRANSITION_BODY_CAP].decode(
-                    'utf-8', errors='replace'),
-            }
+        if result['status'] == 503 and proven:
+            body_text = result['body'][:TRANSITION_BODY_CAP].decode(
+                'utf-8', errors='replace')
+            sha = row['body_sha256']
+            if sha in _seen_503:
+                loading_bodies[_seen_503[sha]]['repeats'] += 1
+            elif len(loading_bodies) < LOADING_BODY_MAX:
+                _seen_503[sha] = len(loading_bodies)
+                loading_bodies.append({'path': path,
+                                       'body_sha256': sha,
+                                       'body': body_text,
+                                       'repeats': 0})
+            else:
+                loading_bodies.dropped += 1
+            if loading_503 is None:
+                loading_503 = {
+                    't_ms': row['t_ms'],
+                    'path': path,
+                    'status': 503,
+                    'headers': _header_subset(result['headers']),
+                    'body_sha256': sha,
+                    'body': body_text,
+                }
         return None
 
     try:
         while time.monotonic() < deadline:
             rc = proc.poll()
             if rc is not None:
-                return (transitions, loading_503, False,
+                return (transitions, loading_503, loading_bodies, False,
                         f'server-exited-early-rc{rc}', ownership)
             err = _observe('models', '/v1/models', conn.get('/v1/models'))
             if err:
-                _discard_bodies(transitions, loading_503)
-                return transitions, None, False, err, ownership
+                _discard_bodies(transitions, loading_503, loading_bodies)
+                return transitions, None, [], False, err, ownership
             if transitions[-1]['status'] not in (None, 503):
                 break
         else:
-            return transitions, loading_503, False, 'ready-timeout', ownership
+            return (transitions, loading_503, loading_bodies, False,
+                    'ready-timeout', ownership)
         while time.monotonic() < deadline:
             rc = proc.poll()
             if rc is not None:
-                return (transitions, loading_503, False,
+                return (transitions, loading_503, loading_bodies, False,
                         f'server-exited-early-rc{rc}', ownership)
             err = _observe('health', '/health', conn.get('/health'))
             if err:
-                _discard_bodies(transitions, loading_503)
-                return transitions, None, False, err, ownership
+                _discard_bodies(transitions, loading_503, loading_bodies)
+                return transitions, None, [], False, err, ownership
             if transitions[-1]['status'] == 200 \
                     and transitions[-1]['path'] == '/health':
-                return transitions, loading_503, True, None, ownership
-        return transitions, loading_503, False, 'ready-timeout', ownership
+                return (transitions, loading_503, loading_bodies, True,
+                        None, ownership)
+        return (transitions, loading_503, loading_bodies, False,
+                'ready-timeout', ownership)
     finally:
         conn._close()
 
 
-def _discard_bodies(transitions, loading_503):
+def _discard_bodies(transitions, loading_503, loading_bodies=()):
     """D1: on an ownership failure, no recorded body may survive — a
     stranger's response must never reach the receipt."""
     for row in transitions:
@@ -528,7 +619,9 @@ def _discard_bodies(transitions, loading_503):
     if loading_503 is not None:
         loading_503['body'] = None
         loading_503['body_sha256'] = None
-
+    for b in loading_bodies:
+        b['body'] = None
+        b['body_sha256'] = None
 
 
 def verify_live(proc, port, label):
@@ -537,7 +630,7 @@ def verify_live(proc, port, label):
     'unproven'. Callers: before ready_captures, before each probe, after
     probes."""
     if proc.poll() is not None:
-        return f'{label}:child-exited-rc{proc.returncode}', None
+        return f'{label}:child-exited-rc{proc.returncode}', 'unproven'
     owned = port_owned_by(proc.pid, port)
     if owned is not True:
         code = ('port-listener-not-our-child' if owned is False
@@ -653,28 +746,54 @@ def probe_row(rec):
     return None
 
 
+def _child_running(proc):
+    """Fresh aliveness: poll() reaps a self-exited child. False when the
+    process is gone or the state cannot be proven — killpg stays off a
+    dead child so its pgid can never hit a reincarnated process."""
+    try:
+        return proc is not None and proc.poll() is None
+    except Exception:
+        return False
+
+
+def _port_refuses(port):
+    """True iff a loopback connect to `port` is refused; False for any
+    other outcome (a live listener, timeout, or reset)."""
+    try:
+        socket.create_connection(('127.0.0.1', port), timeout=1.0).close()
+        return False
+    except ConnectionRefusedError:
+        return True
+    except OSError:
+        return False
+
+
 def teardown(proc, port, log_path):
     """SIGTERM the process group, SIGKILL after TERM_GRACE, then prove the
-    port refuses connections and reduce the temp log to kept lines."""
+    port refuses connections and reduce the temp log to kept lines.
+    alive_at_teardown_start records whether the child was still running
+    when teardown began — a self-exited child was never signalled."""
     out = {'returncode': None, 'sigterm_sent': False, 'sigkill_sent': False,
+           'alive_at_teardown_start': _child_running(proc),
            'term_wait_ms': None, 'port_refuses': None, 'log_lines': [],
            'log_lines_truncated': False, 'log_path': str(log_path)}
+    if out['alive_at_teardown_start']:  # F5: killpg only on a live child
+        try:
+            os.killpg(proc.pid, signal.SIGTERM)
+            out['sigterm_sent'] = True  # recorded only on delivery
+        except (ProcessLookupError, PermissionError, OSError):
+            pass
     if proc is not None:
-        if proc.returncode is None:  # F5: killpg only while child is alive
-            out['sigterm_sent'] = True
-            try:
-                os.killpg(proc.pid, signal.SIGTERM)
-            except (ProcessLookupError, PermissionError, OSError):
-                pass
         t0 = time.monotonic()
         try:
             proc.wait(timeout=TERM_GRACE)
         except subprocess.TimeoutExpired:
-            out['sigkill_sent'] = True
-            try:
-                os.killpg(proc.pid, signal.SIGKILL)
-            except (ProcessLookupError, PermissionError, OSError):
-                pass
+            if _child_running(proc):  # re-check: it may have exited just now
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                    out['sigkill_sent'] = True
+                except (ProcessLookupError, PermissionError, OSError):
+                    pass
             try:
                 proc.wait(timeout=5)
             except subprocess.TimeoutExpired:
@@ -682,32 +801,29 @@ def teardown(proc, port, log_path):
         out['term_wait_ms'] = round((time.monotonic() - t0) * 1000)
         out['returncode'] = proc.returncode
     # prove the port is closed
+    out['port_refuses'] = _port_refuses(port)
+    # reduce the log to kept lines; the temp file is unlinked even when
+    # reduction raises, so an internal fault never leaves it behind
     try:
-        socket.create_connection(('127.0.0.1', port), timeout=1.0).close()
-        out['port_refuses'] = False
-    except ConnectionRefusedError:
-        out['port_refuses'] = True
-    except OSError:
-        out['port_refuses'] = False
-    # reduce the log to kept lines, then delete it
-    try:
-        with open(log_path, 'rb') as fh:  # keep only the last LOG_TAIL_CAP bytes (R3)
-            fh.seek(0, os.SEEK_END)
-            size = fh.tell()
-            fh.seek(max(0, size - LOG_TAIL_CAP))
-            tail = fh.read()
-        text = tail.decode('utf-8', errors='replace')
-        out['log_tail_truncated'] = size > LOG_TAIL_CAP
-    except OSError:
-        text = ''
-        out['log_tail_truncated'] = None
-    kept = [ln for ln in text.splitlines() if LOG_KEEP.search(ln)]
-    out['log_lines_truncated'] = len(kept) > LOG_KEEP_MAX
-    out['log_lines'] = kept[:LOG_KEEP_MAX]
-    try:
-        os.unlink(log_path)
-    except OSError:
-        pass
+        try:
+            with open(log_path, 'rb') as fh:  # keep only the last LOG_TAIL_CAP bytes (R3)
+                fh.seek(0, os.SEEK_END)
+                size = fh.tell()
+                fh.seek(max(0, size - LOG_TAIL_CAP))
+                tail = fh.read()
+            text = tail.decode('utf-8', errors='replace')
+            out['log_tail_truncated'] = size > LOG_TAIL_CAP
+        except OSError:
+            text = ''
+            out['log_tail_truncated'] = None
+        kept = [ln for ln in text.splitlines() if LOG_KEEP.search(ln)]
+        out['log_lines_truncated'] = len(kept) > LOG_KEEP_MAX
+        out['log_lines'] = kept[:LOG_KEEP_MAX]
+    finally:
+        try:
+            os.unlink(log_path)
+        except OSError:
+            pass
     return out
 
 
@@ -716,13 +832,119 @@ def _check(check_id, passed, observed):
             'passed': bool(passed), 'observed': observed}
 
 
+# Byte-contiguous spans of the pinned llama.cpp commit that ground the v2
+# sourced predicates. Each binding is {check, row, commit, path, url,
+# lines:[a,b], file_sha256, span_text, span_sha256}. `row` is the SOURCES
+# registry id when a landed row already covers the proposition; null means
+# this round still owes a row (the span is still cited and re-derivable).
+# The span text is literal here so the gate can re-derive span_sha256
+# without network access; file_sha256 is the raw digest of the whole file
+# at the pinned commit (S036/S037 record the same digests).
+def _binding(check, row, path, first, last, file_sha256, span_text):
+    return {
+        'check': check,
+        'row': row,
+        'commit': LLAMA_COMMIT,
+        'path': 'tools/server/' + path,
+        'url': _LLAMA_RAW + path,
+        'lines': [first, last],
+        'file_sha256': file_sha256,
+        'span_text': span_text,
+        'span_sha256': hashlib.sha256(
+            span_text.encode('utf-8')).hexdigest(),
+    }
+
+
+SERVER_CONTEXT_SHA = (
+    'dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329')
+SERVER_HTTP_SHA = (
+    '24ede172e526763567dbe929da5b16250693d7a2e44334ef0126649b6d3f5fdb')
+SERVER_SHA_CPP = (
+    '2143962217e9d6275f28c42d599139bb702e2f880dccbad01ab9d8b094f5aef4')
+
+
+def source_bindings():
+    """Producer half of the source-binding contract (one entry per sourced
+    predicate span). Plain data; never executed, never network-read."""
+    return [
+        _binding(
+            'health_ready', None, 'server-context.cpp', 5288, 5299,
+            SERVER_CONTEXT_SHA,
+            '    this->get_health = [this](const server_http_req &) {\n'
+            '        // error and loading states are handled by middleware\n'
+            '        auto res = create_response(true);\n'
+            '\n'
+            '        // this endpoint can be accessed during sleeping\n'
+            '        // the next LOC is to avoid someone accidentally use '
+            'ctx_server\n'
+            '        bool ctx_server; // do NOT delete this line\n'
+            '        GGML_UNUSED(ctx_server);\n'
+            '\n'
+            '        res->ok({{"status", "ok"}});\n'
+            '        return res;\n'
+            '    };\n'),
+        _binding(
+            'loading_envelope_graded', 'S036', 'server-http.cpp',
+            314, 325, SERVER_HTTP_SHA,
+            '            res.status = 503;\n'
+            '            res.set_content(\n'
+            '                safe_json_to_str(json {\n'
+            '                    {"error", {\n'
+            '                        {"message", "Loading model"},\n'
+            '                        {"type", "unavailable_error"},\n'
+            '                        {"code", 503}\n'
+            '                    }}\n'
+            '                }),\n'
+            '                "application/json; charset=utf-8"\n'
+            '            );\n'
+            '            return false;\n'),
+        _binding(
+            'teardown_graceful', None, 'server.cpp', 529, 534,
+            SERVER_SHA_CPP,
+            '        struct sigaction sigint_action;\n'
+            '        sigint_action.sa_handler = signal_handler;\n'
+            '        sigemptyset (&sigint_action.sa_mask);\n'
+            '        sigint_action.sa_flags = 0;\n'
+            '        sigaction(SIGINT, &sigint_action, NULL);\n'
+            '        sigaction(SIGTERM, &sigint_action, NULL);\n'),
+        _binding(
+            'teardown_graceful', None, 'server.cpp', 519, 523,
+            SERVER_SHA_CPP,
+            '        shutdown_handler = [&](int) {\n'
+            '            mcp_mgr.shutdown();\n'
+            '            // this will unblock start_loop()\n'
+            '            ctx_server.terminate();\n'
+            '        };\n'),
+        _binding(
+            'teardown_graceful', None, 'server.cpp', 575, 590,
+            SERVER_SHA_CPP,
+            '        // this call blocks the main thread until '
+            'queue_tasks.terminate() is called\n'
+            '        ctx_server.start_loop();\n'
+            '\n'
+            '        clean_up();\n'
+            '        ctx_http.join();\n'
+            '        if (monitor_thread.joinable()) {\n'
+            '            monitor_thread.join();\n'
+            '        }\n'
+            '\n'
+            '        auto * ll_ctx = ctx_server.get_llama_context();\n'
+            '        if (ll_ctx != nullptr) {\n'
+            '            common_memory_breakdown_print(ll_ctx);\n'
+            '        }\n'
+            '    }\n'
+            '\n'
+            '    return 0;\n'),
+    ]
+
+
 def build_parser():
     p = argparse.ArgumentParser(
         prog='kama-llamacpp-live.py',
         description='Launch an ephemeral llama-server on a free unregistered '
                     'loopback port, capture its lifecycle, probe it with '
                     'kama-probe.sh, tear it down, and emit a '
-                    'kama-llamacpp-live/v1 receipt.',
+                    'kama-llamacpp-live/v2 receipt.',
     )
     p.add_argument('--server', default=None,
                    help='llama-server binary (default: shutil.which'
@@ -844,6 +1066,8 @@ def main(argv=None):
         'argv': None,
         'transitions': [],
         'loading_503': None,
+        'loading_503_bodies': [],
+        'loading_bodies_dropped': 0,
         'loading_observed': False,
         'loading_envelope_exact': None,
         'captures': {},
@@ -851,6 +1075,10 @@ def main(argv=None):
         'teardown': None,
         'checks': [],
         'setup_error': None,
+        'internal_fault': None,
+        'child_pid': None,
+        'port_listener_ownership': 'unproven',
+        'source_binding': source_bindings(),
         'port_pick_note': 'port released after bind(:0) and re-bound by the '
                           'server; a sub-second collision race is possible',
         'tool': {'path': str(SCRIPT),
@@ -907,17 +1135,21 @@ def main(argv=None):
         )
         try:
             proc = subprocess.Popen(server_argv, **popen_kwargs)
+            receipt['child_pid'] = proc.pid
         finally:
             log_file.close()  # child holds its own dup of the fd
         receipt['pdeathsig'] = {'requested': True, 'prctl_ok': 'unknown'}
 
-        transitions, loading_503, ready, fail, ownership = readiness_loop(
-            proc, port, args.ready_timeout)
+        (transitions, loading_503, loading_bodies, ready, fail,
+         ownership) = readiness_loop(proc, port, args.ready_timeout)
         receipt['port_listener_ownership'] = {
             True: 'child', False: 'foreign', None: 'unproven',
         }[ownership]
         receipt['transitions'] = transitions
         receipt['loading_503'] = loading_503
+        receipt['loading_503_bodies'] = loading_bodies
+        receipt['loading_bodies_dropped'] = getattr(
+            loading_bodies, 'dropped', 0)
         receipt['loading_observed'] = loading_503 is not None
         receipt['loading_envelope_exact'] = loading_envelope_exact(loading_503)
         if not ready:
@@ -935,8 +1167,16 @@ def main(argv=None):
 
         checks = []
         health_status = captures['health']['status']
-        checks.append(_check('health_ready', health_status == 200,
-                             {'status': health_status}))
+        health_body = None
+        try:
+            health_body = json.loads(captures['health'].get('body') or '')
+        except (ValueError, TypeError):
+            pass
+        checks.append(_check(
+            'health_ready',
+            health_status == 200 and health_body == HEALTH_READY_BODY,
+            {'status': health_status, 'body': health_body,
+             'expected_body': HEALTH_READY_BODY}))
 
         data = models_doc.get('data') if isinstance(models_doc, dict) else None
         ids = [e.get('id') for e in data if isinstance(e, dict)] \
@@ -1008,28 +1248,112 @@ def main(argv=None):
         receipt['setup_error'] = f'unexpected:{type(exc).__name__}'
         exit_code = 2
     finally:
-        # R2/F1: block SIGINT/SIGTERM/SIGHUP for the whole shutdown — teardown,
-        # model rehash AND the receipt write. Handlers are restored only after
-        # the write, in the outer-finally epilogue below.
-        for sig in old_handlers:
-            signal.signal(sig, signal.SIG_IGN)
+        # R2/F1: block SIGINT/SIGTERM/SIGHUP for the whole shutdown —
+        # teardown, model rehash AND the receipt write. Handlers are
+        # restored only after the write, in the outer-finally epilogue.
+        # Every failure in here writes a receipt and exits 2 — nothing
+        # escapes as a traceback.
+        internal_fault = None
+        try:
+            for sig in old_handlers:
+                signal.signal(sig, signal.SIG_IGN)
+        except Exception as exc:
+            internal_fault = type(exc).__name__
+        td = None
+        checks = receipt.get('checks') or []
         try:
             if log_path is not None or proc is not None:
                 try:
-                    receipt['teardown'] = teardown(proc, port, log_path)
+                    td = teardown(proc, port, log_path)
                 except Exception as exc:
-                    receipt['teardown'] = {'error': f'{type(exc).__name__}: {exc}'}
-            checks = receipt.get('checks') or []
-            if receipt['teardown'] is not None:
-                checks.append(_check(
-                    'teardown_exited',
-                    receipt['teardown']['returncode'] is not None,
-                    {'returncode': receipt['teardown']['returncode'],
-                     'sigkill_sent': receipt['teardown']['sigkill_sent']}))
-                checks.append(_check(
-                    'teardown_port_closed',
-                    receipt['teardown']['port_refuses'] is True,
-                    {'port_refuses': receipt['teardown']['port_refuses']}))
+                    internal_fault = type(exc).__name__
+                    td = {
+                        'error': f'{type(exc).__name__}: {exc}',
+                        'returncode': proc.returncode if proc else None,
+                        'sigterm_sent': False,
+                        'sigkill_sent': False,
+                        'alive_at_teardown_start':
+                            _child_running(proc),
+                        'port_refuses': None,
+                        'term_wait_ms': None,
+                        'log_lines': [],
+                    }
+        except Exception as exc:
+            internal_fault = internal_fault or type(exc).__name__
+        # last-chance kill: any fault path that left the group running
+        # still reaps it here — poll() is fresh, so a dead child's pgid
+        # can never hit a reincarnated process.
+        try:
+            if _child_running(proc):
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                    if isinstance(td, dict):
+                        td['sigkill_sent'] = True
+                except (ProcessLookupError, PermissionError, OSError):
+                    pass
+                try:
+                    proc.wait(timeout=5)
+                    if isinstance(td, dict):
+                        td['returncode'] = proc.returncode
+                except subprocess.TimeoutExpired:
+                    pass
+        except Exception as exc:
+            internal_fault = internal_fault or type(exc).__name__
+        # a faulted teardown never probed the port; do it now that the
+        # backstop above had its chance to reap the group
+        if isinstance(td, dict) and td.get('port_refuses') is None:
+            try:
+                td['port_refuses'] = _port_refuses(port)
+            except Exception as exc:
+                internal_fault = internal_fault or type(exc).__name__
+        receipt['teardown'] = td
+        try:
+            graceful = (
+                isinstance(td, dict)
+                and td.get('sigterm_sent') is True
+                and td.get('sigkill_sent') is False
+                and td.get('alive_at_teardown_start') is True
+                and td.get('returncode') == 0
+                and receipt.get('port_listener_ownership') == 'child')
+            checks.append(_check(
+                'teardown_graceful', graceful,
+                {'sigterm_sent': td.get('sigterm_sent')
+                 if isinstance(td, dict) else None,
+                 'sigkill_sent': td.get('sigkill_sent')
+                 if isinstance(td, dict) else None,
+                 'alive_at_teardown_start':
+                     td.get('alive_at_teardown_start')
+                     if isinstance(td, dict) else None,
+                 'returncode': td.get('returncode')
+                 if isinstance(td, dict) else None,
+                 'port_listener_ownership':
+                     receipt.get('port_listener_ownership'),
+                 'error': td.get('error')
+                 if isinstance(td, dict) else None}))
+            checks.append(_check(
+                'teardown_port_closed',
+                isinstance(td, dict)
+                and td.get('port_refuses') is True
+                and receipt.get('port_listener_ownership') == 'child',
+                {'port_refuses': td.get('port_refuses')
+                 if isinstance(td, dict) else None,
+                 'port_listener_ownership':
+                     receipt.get('port_listener_ownership')}))
+            bodies = receipt.get('loading_503_bodies') or []
+            total_503 = sum(1 + (b.get('repeats') or 0)
+                            for b in bodies if isinstance(b, dict))
+            checks.append(_check(
+                'loading_envelope_graded',
+                receipt.get('loading_observed') is True
+                and loading_envelopes_all(bodies) is True,
+                {'loading_observed':
+                     receipt.get('loading_observed'),
+                 'distinct_bodies': len(bodies),
+                 'bodies_dropped':
+                     receipt.get('loading_bodies_dropped', 0),
+                 'total_503_responses': total_503,
+                 'all_exact': loading_envelopes_all(bodies),
+                 'exact': loading_envelopes_all(bodies)}))
             try:
                 receipt['model_sha256_post'] = sha256_file(args.model)
             except OSError as exc:
@@ -1037,35 +1361,56 @@ def main(argv=None):
             checks.append(_check(
                 'model_unchanged',
                 receipt['model_sha256_post'] == model_sha,
-                {'pre': model_sha, 'post': receipt['model_sha256_post']}))
+                {'pre': model_sha,
+                 'post': receipt['model_sha256_post']}))
             receipt['checks'] = checks
-        finally:
+        except Exception as exc:
+            internal_fault = internal_fault or type(exc).__name__
+        try:
+            if internal_fault is not None:
+                receipt['internal_fault'] = f'internal:{internal_fault}'
+                if receipt['setup_error'] is None:
+                    receipt['setup_error'] = receipt['internal_fault']
+                exit_code = 2
+            elif receipt['setup_error'] is None:
+                exit_code = (0 if all(
+                    isinstance(c, dict) and c.get('passed') is True
+                    for c in receipt['checks']) else 1)
+        except Exception as exc:  # last guard: never escape the finally
+            receipt['internal_fault'] = f'internal:{type(exc).__name__}'
             if receipt['setup_error'] is None:
-                exit_code = (0 if all(c['passed'] for c in receipt['checks'])
-                             else 1)
+                receipt['setup_error'] = receipt['internal_fault']
+            exit_code = 2
 
-    # F1: receipt write + handler restore run outside the try/finally so the
-    # receipt is emitted even after an unexpected mid-run exception.
-    receipt['ended_utc'] = _utc_now()
+    # F1: receipt write + handler restore run outside the try/finally so
+    # the receipt is emitted even after an unexpected mid-run exception.
+    # The outer finally restores handlers on every escape, including an
+    # internal fault inside the block above.
     emitted = False
     try:
-        _emit(receipt, args.out)
-        emitted = True
-    except Terminated as exc:
-        # a signal landed during the write; annotate and retry once
-        receipt['setup_error'] = (
-            f"{receipt['setup_error']}+terminated-during-emit"
-            if receipt['setup_error'] else f'terminated:{exc}')
-        exit_code = 2
+        receipt['ended_utc'] = _utc_now()
         try:
             _emit(receipt, args.out)
             emitted = True
-        except (OSError, Terminated):
-            pass
-    except OSError as exc:
-        print(f'kama-llamacpp-live: cannot write receipt: {exc}',
-              file=sys.stderr)
-        exit_code = 2
+        except Terminated as exc:
+            # a signal landed during the write; annotate and retry once
+            receipt['setup_error'] = (
+                f"{receipt['setup_error']}+terminated-during-emit"
+                if receipt['setup_error'] else f'terminated:{exc}')
+            exit_code = 2
+            try:
+                _emit(receipt, args.out)
+                emitted = True
+            except (OSError, Terminated):
+                pass
+        except OSError as exc:
+            print(f'kama-llamacpp-live: cannot write receipt: {exc}',
+                  file=sys.stderr)
+            exit_code = 2
+        except Exception as exc:
+            print('kama-llamacpp-live: emit fault '
+                  f'{type(exc).__name__}: {exc}', file=sys.stderr)
+            exit_code = 2
     finally:
         for sig, handler in old_handlers.items():
             signal.signal(sig, handler)

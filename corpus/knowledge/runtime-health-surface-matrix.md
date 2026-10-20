@@ -73,3 +73,5 @@ Ollama v0.40.6 `/v1/models` lists available models whatever the load state.
 Lead files: `.ufo/waves/round-16/build/advice/` `ScoutVllmStartup.md`,
 `ScoutTgiStartup.md`, `ScoutSglangStartup.md`, `ScoutOllamaLoading.md`. None of
 these is a runtime observation of the engine.
+
+Round-17 correction (routed by `corpus/lessons/round-16-verifier-spotcheck.md` defect 4). Correction to line 65 (2026-10-20, source accessed 2026-10-20). "On every non-frontend path" narrows to every path except the frontend set (`server-http.cpp:309-311`) and `OPTIONS` (answered at `:347-352`, before the state gate at `:354`). `/v1/models` and `/health` remain inside the gate; the exempt set at `:251-258` is used only by the API-key check (`:267`). Envelope message, type and code: `:318-320`.

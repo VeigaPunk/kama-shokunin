@@ -24,10 +24,11 @@ Probe invocation per test (exact)::
     bash PROBE check --port P --expect E --json --timeout 2 --connect-timeout 1
 
 Exit 0 iff every record passes, 1 on any test failure (including a probe
-timeout), 2 on a harness/schema error. ``--json`` puts the machine document on
-stdout; without it a human summary is printed. ``--selftest`` additionally
-feeds 4 embedded malformed tests through the schema validator and fails if any
-is accepted.
+timeout or malformed probe output), 2 on a harness/schema error. ``--json``
+puts the machine document on stdout; without it a human summary is printed.
+``--selftest`` additionally feeds 4 embedded malformed tests through the
+schema validator, checks the duplicate-name guard across two files, and
+fails if any of these is accepted.
 """
 
 from __future__ import annotations
@@ -39,6 +40,7 @@ import json
 import socket
 import subprocess
 import sys
+import tempfile
 import threading
 from pathlib import Path
 
@@ -147,9 +149,9 @@ def validate_test(test, source, index):
     return test
 
 
-def load_matrix():
-    """Load every sibling *.json in sorted order; fail closed on any fault."""
-    sources = sorted(CHECK_DIR.glob("*.json"))
+def load_matrix(directory=CHECK_DIR):
+    """Load every *.json in *directory* in sorted order; fail closed on any fault."""
+    sources = sorted(Path(directory).glob("*.json"))
     tests = []
     names = {}
     for source in sources:
@@ -274,10 +276,133 @@ def run_probe(probe, port, expect):
     argv = ["bash", str(probe), *PROBE_ARGV_TAIL[:1],
             "--port", str(port), "--expect", expect,
             *PROBE_ARGV_TAIL[1:]]
-    return subprocess.run(argv, capture_output=True, text=True,
-                          timeout=PROBE_TIMEOUT)
+    proc = subprocess.run(argv, capture_output=True, timeout=PROBE_TIMEOUT)
+    # Decode strictly: non-UTF-8 probe output is malformed probe output (a
+    # recorded per-row failure), never an uncaught UnicodeDecodeError.
+    try:
+        out = proc.stdout.decode("utf-8")
+    except UnicodeDecodeError as exc:
+        out = f"<non-utf8 probe stdout: {exc}>"
+    err = proc.stderr.decode("utf-8", errors="replace")
+    return subprocess.CompletedProcess(argv, proc.returncode, out, err)
 
 
+# ------------------------------------------------- probe-contract invariants
+# The two graders below re-derive what the probe CONTRACT requires from the
+# row's own stub routes, so a grading-weakening mutant cannot widen either.
+def served_ids_of(body):
+    """Extract served ids from a /v1/models body exactly as the probe does.
+
+    Mirrors tools/kama-probe.sh served_ids() (lines 335-368, python3 path):
+    the body must be a JSON object; first non-empty group wins with
+    precedence data[].id -> models[].id -> models[].name -> models[].model
+    -> top-level id, deduplicated preserving order. Returns [] otherwise.
+    """
+    if isinstance(body, dict):
+        doc = body                      # body_json routes arrive decoded
+    else:
+        try:
+            doc = json.loads(body) if isinstance(body, str) else None
+        except json.JSONDecodeError:
+            return []
+        if not isinstance(doc, dict):
+            return []
+
+    def group(seq, key):
+        if not isinstance(seq, list):
+            return []
+        return [item[key] for item in seq
+                if isinstance(item, dict)
+                and isinstance(item.get(key), str) and item.get(key)]
+
+    for ids in (group(doc.get("data"), "id"),
+                group(doc.get("models"), "id"),
+                group(doc.get("models"), "name"),
+                group(doc.get("models"), "model"),
+                [doc["id"]] if isinstance(doc.get("id"), str)
+                and doc.get("id") else []):
+        if ids:
+            return list(dict.fromkeys(ids))
+    return []
+
+
+def models_route(test):
+    """Resolve which route the stub serves for GET /v1/models (or None)."""
+    route = test["routes"].get("/v1/models")
+    if route is None:
+        route = test["default_route"]
+    if route is None or route.get("raw") == "close":
+        return None
+    return route
+
+
+def expected_served_model(test, verdict):
+    """The served_model value the probe contract REQUIRES for this row.
+
+    classify() (tools/kama-probe.sh:455) starts every call with C_SERVED='-'
+    and only ever rewrites it inside the `is2 && has_models` arm (lines
+    524-529), the arm whose verdicts are MODEL_OK / MODEL_MISMATCH: there
+    C_SERVED becomes the comma-joined ids parsed from the /v1/models body
+    ('-' when the winning group is empty). Every other verdict — DEAD,
+    NOT_HTTP, FOREIGN_SERVICE, UNAUTHORIZED_SERVICE, MODEL_LOADING —
+    returns with C_SERVED still '-'.
+
+    So, keyed on the OBSERVED verdict: MODEL_OK / MODEL_MISMATCH must carry
+    exactly the ids this row's own stub /v1/models body yields via
+    served_ids() precedence; every other verdict must carry '-'.
+    """
+    if verdict not in ("MODEL_OK", "MODEL_MISMATCH"):
+        return "-"
+    route = models_route(test)
+    if route is None:
+        return "-"
+    body = route.get("body_json", route.get("body_text"))
+    ids = served_ids_of(body)
+    return ",".join(ids) if ids else "-"
+
+
+def fetched_models_route(test, requests):
+    """True iff the stub recorded GET /v1/models; None for closed-port rows.
+
+    classify() opens with fetch "$port" "/v1/models" (kama-probe.sh:456), so
+    any verdict claim about a stub endpoint that the stub never saw on that
+    path is a contract violation. The handler's route fallback splits '?'
+    (check.py make_handler), so the path is compared without its query.
+    """
+    if test["port_mode"] != "stub":
+        return None
+    return any(r.get("method") == "GET"
+               and r.get("path", "").split("?", 1)[0] == "/v1/models"
+               for r in requests)
+
+
+def probe_output_row(stdout):
+    """Validate probe --json stdout; return (row, why) — row None when bad.
+
+    Contract: one JSON object whose "rows" is a non-empty list and whose
+    first element is an object with verdict/reason strings and a drift
+    bool (the row fields check() emits via eval_rows json_rows, probe
+    lines 852-855). Anything else is malformed probe output: the caller
+    records a per-row failure, never a traceback.
+    """
+    try:
+        doc = json.loads(stdout)
+    except json.JSONDecodeError as exc:
+        return None, f"stdout is not JSON ({exc})"
+    if not isinstance(doc, dict):
+        return None, f"top-level value is {type(doc).__name__}, not an object"
+    rows = doc.get("rows")
+    if not isinstance(rows, list) or not rows:
+        return None, "\"rows\" is not a non-empty list"
+    row = rows[0]
+    if not isinstance(row, dict):
+        return None, f"rows[0] is {type(row).__name__}, not an object"
+    for key in ("verdict", "reason"):
+        if not isinstance(row.get(key), str):
+            return None, f"rows[0].{key} is not a string"
+    if not isinstance(row.get("drift"), bool):
+        return None, "rows[0].drift is not a bool"
+    return row, None
 def grade(entry, probe):
     """Serve one test's stub (or closed port), run the probe, record the row."""
     test, source = entry["test"], entry["source"]
@@ -290,11 +415,14 @@ def grade(entry, probe):
         "expect": test["expect"],
         "expected": dict(test["expected"]),
         "requests": [],
+        "route_ok": None,
         "probe_exit": None,
         "verdict": None,
         "reason": None,
         "drift": None,
         "served_model": None,
+        "served_model_expected": None,
+        "served_model_ok": None,
         "evidence": None,
         "error": None,
         "passed": False,
@@ -317,25 +445,30 @@ def grade(entry, probe):
         try:
             proc = run_probe(probe, port, test["expect"])
         except subprocess.TimeoutExpired:
+            record["route_ok"] = fetched_models_route(test,
+                                                    record["requests"])
             record["error"] = f"probe timed out after {PROBE_TIMEOUT}s"
             return record
         record["probe_exit"] = proc.returncode
+        record["route_ok"] = fetched_models_route(test, record["requests"])
         if server is not None and not record["requests"]:
             # A live stub that saw nothing means the probe never reached a
             # listening port — a harness serve fault, not a probe verdict.
             record["error"] = ("stub accepted no requests; probe never "
                                "reached a listening socket")
             return record
-        try:
-            doc = json.loads(proc.stdout)
-            row = doc["rows"][0]
-        except (json.JSONDecodeError, KeyError, IndexError, TypeError) as exc:
-            record["error"] = (f"unparseable probe output: {exc}; "
+        row, why_bad = probe_output_row(proc.stdout)
+        if row is None:
+            record["error"] = (f"malformed probe output: {why_bad}; "
                                f"stdout={proc.stdout[-300:]!r} "
                                f"stderr={proc.stderr[-300:]!r}")
             return record
         for key in ("verdict", "reason", "drift", "served_model", "evidence"):
             record[key] = row.get(key)
+        record["served_model_expected"] = expected_served_model(
+            test, record["verdict"])
+        record["served_model_ok"] = (
+            record["served_model"] == record["served_model_expected"])
         expected = test["expected"]
         record["passed"] = (
             record["verdict"] == expected["verdict"]
@@ -344,6 +477,8 @@ def grade(entry, probe):
             # probe contract: drift == (verdict != MODEL_OK); assert it so an
             # inconsistent drift flag (e.g. MODEL_LOADING must drift) fails.
             and record["drift"] == (record["verdict"] != "MODEL_OK")
+            and record["served_model_ok"]
+            and record["route_ok"] is not False
         )
         return record
     except OSError as exc:
@@ -379,8 +514,17 @@ SELFTEST_MALFORMED = [
      "MODEL_OK paired with exit 2"),
 ]
 
+# One minimal valid test; two files carrying it under the same name exercise
+# the duplicate-name guard in load_matrix() without touching the matrix dir.
+SELFTEST_VALID_TEST = {"name": "selftest-dup", "family": "Selftest",
+                       "why": "x", "port_mode": "closed", "routes": {},
+                       "default_route": None, "expect": "*",
+                       "expected": {"verdict": "DEAD",
+                                    "reason": "x", "exit": 2}}
+
+
 def run_selftest():
-    """Assert the schema validator rejects each embedded malformed test."""
+    """Assert the validator rejects each malformed test and duplicate names."""
     results = []
     for test, label in SELFTEST_MALFORMED:
         try:
@@ -391,6 +535,23 @@ def run_selftest():
         else:
             results.append({"label": label, "rejected": False,
                             "detail": "validator accepted a malformed test"})
+    # Duplicate-name guard: the same test name in two sibling files must be
+    # a schema error (exit 2 upstream). Proven in a temp dir — never in the
+    # real matrix directory.
+    with tempfile.TemporaryDirectory(prefix="kama-check-selftest-") as tmp:
+        tmp_path = Path(tmp)
+        for fname in ("a.json", "b.json"):
+            (tmp_path / fname).write_text(
+                json.dumps([dict(SELFTEST_VALID_TEST)]), encoding="utf-8")
+        try:
+            load_matrix(tmp_path)
+        except HarnessError as exc:
+            results.append({"label": "duplicate test name across files",
+                            "rejected": True, "detail": str(exc)})
+        else:
+            results.append({"label": "duplicate test name across files",
+                            "rejected": False,
+                            "detail": "load_matrix accepted a duplicate name"})
     return {"malformed_tests": len(results),
             "rejected": sum(1 for r in results if r["rejected"]),
             "results": results,
@@ -415,6 +576,11 @@ def human_summary(records, doc):
                   f"{rec['expected']['reason']}/{rec['expected']['exit']})")
         if rec["error"]:
             detail += f" error={rec['error']}"
+        if rec.get("served_model_ok") is False:
+            detail += (f" served_model={rec['served_model']!r} "
+                       f"(expected {rec['served_model_expected']!r})")
+        if rec.get("route_ok") is False:
+            detail += " route=missing-GET-/v1/models"
         seen = ", ".join(f"{r['method']} {r['path']}" for r in rec["requests"])
         lines.append(f"[{status}] {rec['name']} ({rec['family']}): {detail}"
                      + (f" requests=[{seen}]" if seen else ""))
@@ -446,7 +612,7 @@ def build_parser():
                              "(human summary moves to stderr)")
     parser.add_argument("--selftest", action="store_true",
                         help="also assert the validator rejects 4 embedded "
-                             "malformed tests")
+                             "malformed tests and a duplicate name")
     return parser
 
 
