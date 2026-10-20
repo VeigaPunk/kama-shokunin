@@ -753,3 +753,37 @@ and still exit 2. The old fidelity.py:55–56 “every exit-2 finding” comment
 is inaccurate because `unpinned` ranks below `source_mismatch`; its code
 and historical receipts remain unchanged and the comment is marked here
 and in SKILL/lesson, not treated as current authority.
+
+## round 13 — measured work and author disposition (2026-10-20)
+
+- Work commit `641e1b6f1bef0e12d14c2e23388d7592ff0cb594` carries KQ16,
+  bounded textual gate/frozen inputs, SKILL registry, source S033, corpus
+  navigation and the 32-seat evidence. Every change above belongs to the
+  criterion-precision trigger at this LOG's round-13 entry.
+- Executed once after integration: `python3 .ufo/waves/round-13/measure.py
+  --manifest .ufo/waves/round-13/frozen/expected.json`, selecting frozen
+  before/after QUALITY separately: before exit 1 `documentation_mismatch`,
+  missing2; after exit 0 `clean`, missing0. Live default exits 0 with the
+  original git blob, preserved prefix and final QUALITY at measured HEAD.
+  `.ufo/waves/round-13/acceptance.json`: ok true, errors empty.
+- `--selftest` exits 0, ten passed / zero failed. Symmetric omissions,
+  reintroduced exit/comparator wording, contradictory roles/values and
+  missing active row fail with their committed expected findings/counts;
+  tampered frozen input exits 2 `snapshot_tampered` before counting.
+  Literal counts and controls are bounded conformance, never semantic truth.
+- Independently retrieved start git bytes equal frozen-before; final QUALITY
+  equals frozen-after; original byte prefix preserved. Existing S001–S032
+  row strings unchanged; only S033 added. The receipt records full commands,
+  digests and raw streams. No old fidelity/serving gate was rerun.
+- Required final source validate and census both exit 0:
+  `.ufo/waves/round-13/sources-final.json`; rows32→33/A29→30/mined22→23,
+  B0/C3/queued5/rejected5 unchanged. Before and after validation retain
+  scoped W04 S031; no invalid tier/status or missing registry.
+- Author verdict: C1 calibration improved, numeric score 7→7 (delta0);
+  every other axis unchanged, no observed harm in this scope. All three
+  learning trends unchanged. Independent round-13 closure must sample
+  admits/rejects before admission; no promotion is asserted.
+- Final dispositions and limits:
+  `.ufo/waves/round-13/integration-review.json`;
+  `corpus/lessons/round-13.md` measured section. No tool installs or new L0
+  question. Runtime restoration/timer disposition remains operator-owned.

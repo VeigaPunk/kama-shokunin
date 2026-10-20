@@ -115,3 +115,107 @@ succeeded (`record.json`, `record-relative.json`).
 The final measured revision, complete command streams/exits, census and advisor
 dispositions are appended after integration; nothing above represents an unrun
 check as passed.
+
+### Final measured author disposition
+
+Measured work revision: `641e1b6f1bef0e12d14c2e23388d7592ff0cb594`.
+Full command/cwd/stdout/stderr/real-exit/parsed-output receipt:
+`.ufo/waves/round-13/acceptance.json`, `ok: true`, errors empty.
+Each command below ran once after all implementation seats landed:
+
+| Command from lane root | Observed exit / finding | Bounded observation |
+|---|---|---|
+| `python3 .ufo/waves/round-13/measure.py --manifest .ufo/waves/round-13/frozen/expected.json --quality .ufo/waves/round-13/frozen/before/corpus/QUALITY.md` | 1 / `documentation_mismatch` | selected before: 2 missing assertions |
+| Same command, `--quality .ufo/waves/round-13/frozen/after/corpus/QUALITY.md` | 0 / `clean` | selected after: 0 missing assertions |
+| `python3 .ufo/waves/round-13/measure.py` | 0 / `clean` | actual historical git blob read; original prefix preserved; final QUALITY equals measured HEAD; before 2 / after 0 |
+| `python3 .ufo/waves/round-13/measure.py --selftest` | 0 / `clean` | 10 passed, 0 failed; actual child CLI fixtures asserting exit, stable finding ID and missing-count expectations |
+
+Selftest controls: before red 1/missing2; after green 0/missing0;
+remove either literal 1/missing1; reintroduce bad exit wording, old comparator
+wording, reversed comparison roles or a conflicting exit value each returns
+1/`documentation_mismatch` even with both literals present; missing KQ16
+returns 1/missing2; altered pinned input returns 2/`snapshot_tampered`.
+The last finding names the round-13 QUALITY pin, not the historical
+round-12 source snapshot. These are observed bounded control outcomes,
+not semantic or runtime validation.
+
+Independent byte calculations in the same receipt retrieve
+`git --no-replace-objects -C <lane> cat-file blob
+941bb32c3f591bc63cbf7579b2b6c552228307cd:corpus/QUALITY.md`.
+Frozen-before equals that blob; frozen-after equals actual final QUALITY;
+the original bytes are an exact prefix of final QUALITY. Digests:
+before `157495271d58d6deb56260b093923961e40fb8402ed7475bc4a05c88cdd173cf`,
+after `596f87caf560a5b6c70e7796597a9d2788b9074149ae99f205b73ef2dbb813da`.
+All S001–S032 row strings equal their start-commit counterparts; only S033
+is added. A self-consistent frozen manifest alone was not used as git-source
+correspondence evidence.
+
+C1 is **improved** as precise effective criterion correspondence, calibration
+7 → 7, delta 0. The two substantive corrections are independently grounded
+by actual code/committed-receipt static review (`advice/ReviewExit.md`,
+`EvidenceScribe.md`, `ReceiptFacts.md`), with the primary-finding and verified
+anchor qualifications in the actual KQ16 row. The count is wording adoption,
+not semantic discovery. Other axes unchanged; no observed harm within scope.
+All three trends remain unchanged. Outside round-13 admit/reject sampling
+and admission are pending independent non-author closure; no promotion.
+
+### Advisor integration and limits
+
+Final criterion review: ReviewPreservation approves original-prefix retention
+and limited supersession; ReviewExit's final anchor-verified counterexample
+was incorporated before freezing. ReviewProbe finds no blocking code defect;
+SafetyPaths finds no high/medium safety defect. Their old `--help` concern
+is resolved by documenting conventional plaintext help separately from JSON
+evaluation modes, not suppressing normal argparse behavior.
+Informational KQ15 line-hash fields are not separate enforcement; whole
+before-input digests plus prefix checks cover historical preservation.
+Frozen path containment/digests and the actual literal parser have bounded
+scope, not arbitrary Markdown/paraphrase understanding. Those limits remain
+explicit. Mid-flight “file absent” reports are superseded by actual final
+files and this receipt, not treated as final-tree defects. Spec proposals for
+new governance protocols were not adopted. `integration-review.json` records
+accepted, rejected and bounded interpretations.
+
+No old gate, serving probe or endpoint was executed. Only this round's
+criterion gate, isolated selftest and required source census were run.
+
+## Census — before and after
+
+Required command, both invocations exit **0**:
+`/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama`
+
+Before output:
+```text
+kama W04 S031 duplicate url docs.ollama.com/api/tags across scopes
+kama ok /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md
+```
+
+After output:
+```text
+kama W04 S031 duplicate url docs.ollama.com/api/tags across scopes
+kama ok /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md
+```
+
+The displayed whitespace separates original TSV columns; raw streams are
+preserved in `sources-before.json` and `sources-final.json` beside the gate
+receipt. Existing W04 is scoped same-URL curation, not independent corroboration.
+Counting command (both exit **0**):
+`/home/vgpnk/Projects/shokunin/scripts/sources-census.sh census --root /home/vgpnk/Projects/shokunin kama`.
+
+| Census field | Before | After |
+|---|---:|---:|
+| rows | 32 | 33 |
+| tier A | 29 | 30 |
+| tier B | 0 | 0 |
+| tier C | 3 | 3 |
+| mined | 22 | 23 |
+| queued | 5 | 5 |
+| rejected | 5 | 5 |
+| invalid tier/status; missing registry | 0 | 0 |
+
+Added by tier: A +1, B +0, C +0. New S033 absent → mined; no old cell
+changes; frontier ground advanced: none. Bounded search by Sources opened
+three distinct pages (git-cat-file latest, matching 2.55.0 manual, git-show),
+screened three, included one new row, retained two for existing-row/version
+corroboration, excluded zero for quality. Stop: precise capture/comparison
+method and its version caveat located; no wider Git or runtime claim sought.

@@ -364,3 +364,33 @@ Evidence: `corpus/lessons/round-13.md` Gate/Mistakes;
 of this round's admit/reject decisions. Future externally steered work chooses
 an actual serving-domain move from observed evidence; context capacity and
 runtime restoration remain operator-dependent, not claimed by criterion work.
+
+### Round-13 measured results
+
+Measured commit: `641e1b6f1bef0e12d14c2e23388d7592ff0cb594`.
+Counting command: `python3 .ufo/waves/round-13/measure.py --manifest
+.ufo/waves/round-13/frozen/expected.json`; explicit `--quality
+.ufo/waves/round-13/frozen/{before,after}/corpus/QUALITY.md` selects each
+side of the same counting calculation. Receipt:
+`.ufo/waves/round-13/acceptance.json`.
+
+| Claim | Axis / score delta | Before → after | Verdict / limits |
+|---|---|---|---|
+| C1 | calibration 7 → 7, delta 0 | two missing precise assertions → zero; selected before exit 1 `documentation_mismatch`, after exit 0 `clean` | improved effective criterion precision; source/code/receipt review establishes substantive correction, literal count only measures adoption |
+
+Live invocation `python3 .ufo/waves/round-13/measure.py` exits 0,
+before 2 / after 0, verifying actual start git blob, preserved prefix and
+final QUALITY equal to measured HEAD. Frozen-before independently equals
+the start git blob; frozen-after equals final QUALITY. All old S-row strings
+are unchanged. `--selftest` exits 0: ten actual CLI controls pass, none fail.
+Both omission controls exit 1/missing1; bad/reversed/conflicting wording exits
+1 even when missing-count is zero; tampered snapshot exits 2 before counting.
+Gate registration: `SKILL.md` round-13 registry; all exit classes explicit.
+
+Final source validation/census both exit 0; rows 32 → 33, A 29 → 30,
+mined 22 → 23; B 0, C 3, queued 5, rejected 5 unchanged. S033 method
+support is not covered serving ground. Receipt `sources-final.json`.
+Other axes unchanged; no observed harm within scope; no capability row added.
+Expansion, quality and discernment are **unchanged**, with the prior D4
+quality credit confined to round 12. Admission awaits independent non-author
+round-13 admit/reject sampling, never author-wave agreement.

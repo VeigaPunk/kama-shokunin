@@ -4,8 +4,19 @@ Reviewed statically: `.ufo/waves/round-13/measure.py` (905 lines, 38531 B, sha25
 
 Axes: subprocess construction · env/config/endpoint leak · git replacement-source confusion · filesystem writes · read scope.
 
+## Final-revision addendum (supersedes sha in line 3)
+Final reviewed file is `measure.py` sha256 `2399d64dcde477dd26f6f1092819b6392fc812dc5a64a949f8e075d6a0918fd6` (39463 B per Measure; sha observed by me via `sha256sum`). The frozen hashes are unchanged (observed). Measure states the update is documentation-only. I did not diff the full file: I did not keep a copy of the previous version. I re-checked only the safety-relevant lines listed below. Visible changes:
+- Docstring L55-57 now reads "Evaluation modes (excluding --help, which is conventional argparse plaintext) emit exactly one JSON object".
+- LIMITS L132 now discloses that `GIT_CONFIG_GLOBAL`/`GIT_CONFIG_NOSYSTEM` are not forced.
+
+The code lines cited below from the earlier sha shift by +5. I re-checked each one by grep: `Parser` 141→146, `git_env` 259→264, git `subprocess.run` 276→281, `before_is_pinned_start` 389→394, `worktree_matches_head` 392→397, `is_relative_to` 488→493, frozen revision check 577→582, `TemporaryDirectory` 766→771, child `-I -B` 784→789, `except Exception` 887→892.
+
+**L1 status: accepted residual, documented.** Measure kept argparse `--help`, which still exits 0 with plaintext. The docstring no longer contradicts that, and `--help` is not an evaluation mode. Any receipt or wrapper that consumes exit codes must not invoke `--help`.
+
+The unforced git config isolation is now a disclosed limit. I observed no global/system/repo config that affects `rev-parse` or `cat-file blob`. [INFERENCE] Setting `GIT_CONFIG_NOSYSTEM=1` and `GIT_CONFIG_GLOBAL=/dev/null` in `git_env` would remove that dependence, and that is the smallest remaining hardening. It is optional.
+
 ## Verdict
-No high or medium defect in the final code. One low bug (L1). Two earlier issues, A–E, were sent to Measure against sha `3f2b98eb…`; all are closed in the final code (see the closure table).
+No high or medium defect in the final code. One low issue (L1) is now accepted as a documented residual. Earlier issues A–E were sent to Measure against sha `3f2b98eb…`; all are closed (see the closure table).
 
 ## Findings
 
