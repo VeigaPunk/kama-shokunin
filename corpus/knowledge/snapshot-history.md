@@ -102,3 +102,13 @@ endpoint identity only. That remains a separate freshness gap.
 source: retained historical evidence — `tools/kama-probe.sh` snapshot implementation and the round-10 appended correction anchors; `tools/test-snapshot.sh` fixture harness (its 24/0 result is historical, not run this round); `registry/history/latest.tsv` snapshot 20261014T124232Z; `registry/history/DELTA.md:6` baseline and dated October transitions; `corpus/lessons/round-2.md`; history commits `83bee7f` and `1e41928`. The dated JSON behind round-2 ids 20260929T043044Z/20260929T043052Z is not retained; those ids and summary strings survive as prose, not reproducible original JSON evidence.
 verified-at: original observations 2026-09-29 and 2026-10-14; metadata review 2026-10-20 only. Baseline timestamp and row count are corroborated by `registry/history/DELTA.md:6`; `model_ok=3 drift=8 exit=2` remains round-2 history without retained dated JSON. The tracked October sample is in `latest.tsv` and DELTA transitions. No live probe, snapshot run or endpoint revalidation occurred in round 11; none of this file's endpoint-state claims is refreshed.
 recheck: `bash tools/test-snapshot.sh` checks the hermetic loopback-fixture contract, not current endpoints. A separately authorized live sample may use `bash tools/kama-probe.sh snapshot --history .ufo/manual-snapshot` (writes isolated lane history, not read-only, and never replaces the cited tracked baseline). Reopen the round-10 appended implementation anchors with ranged file reads before relying on their current contents.
+
+## Correction — round 16 (2026-10-20)
+
+`bash tools/test-snapshot.sh` now reports `RESULT pass=30 fail=0`
+(`.ufo/waves/round-16/run-test-snapshot.txt`); the 24/0 figure above is the
+historical count. The six new assertions check that a seeded `latest.tsv` row
+with verdict `MODEL_LOADING` is accepted by `diff_baseline`, and that the
+near-miss `MODEL_LOADED` is still dropped as malformed. The snapshot schema
+string stays `kama-probe/v2`; an older probe copy reading a history written by
+the new probe would drop `MODEL_LOADING` rows as malformed (rollback limit).

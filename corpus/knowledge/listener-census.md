@@ -385,3 +385,13 @@ stale port outnumber connections to the real model ~5:1 in TIME-WAIT churn (62:1
 source: retained historical evidence — this file's own measurement header (live on-box probes, 2026-09-28 ~22:47–22:52 -0300, host `plazir27`) and its §5 command ledger C1–C19 plus the §7.1 same-session re-check, retained as committed bytes at `c6199a2542440db77d69918599e5a378ee116337` (2026-09-28, round-1) and `ea72c3eae4ecc68dab2b0a08153c9c1d2e16df21` (2026-10-14, round-3 re-census); corroborating retained records: `LOG.md:72` (`KamaScoutListeners` 23-listener census, landed by that peer before it died) and `LOG.md:164-167` (a later refresh observed 20 listeners — ephemeral socket churn); no host path, config, or endpoint was re-opened for this supplement, so the source is the retained record, not current host state
 verified-at: original census 2026-09-28 approximately 22:47–22:52 -0300, with in-file 2026-10-14 remeasurements; metadata review 2026-10-20 only. Retained in-repo bytes reviewed; the original 34489-byte prefix is pinned by `.ufo/waves/round-11/legacy-baseline.json`. No listener, endpoint, host config or environment re-opened, and no live revalidation claimed.
 recheck: on authorization — a future declared census scope permits `bash tools/kama-probe.sh listeners` (unprivileged, loopback census, not a drift gate). It does not by itself authorize privilege escalation or process-command-line reads: ownerless socket attribution needs explicit operator authorization for that inspection, otherwise record UNDECIDABLE with the blocked command/error under KQ8. Compare dated observations by bind address and owner only after establishing that authorization; no census ran in round 11.
+
+## Correction — round 16 (2026-10-20): the status-agnostic foreign clause has one exception
+
+§9's requested clause ("HTTP responder that is not the model API",
+status-agnostic) and its line-363 premise were applied by the probe as rule 5
+of `endpoint-identity.md`. One response class is now carved out: a 503 to
+`GET /v1/models` with the exact llama.cpp loading envelope grades
+`MODEL_LOADING`, not `FOREIGN_SERVICE` (`endpoint-identity.md` §Correction —
+round 16). None of this census's rows was a 503, so no verdict recorded here
+changes. No listener census ran in round 16 (KQ10).

@@ -553,3 +553,46 @@ Expansion, quality and discernment **unchanged**: no new knowledge/capability
 ground, no serving-knowledge revalidation, and no independent round15
 admit/reject sample. Gate repair is credited under C1 only. Outside
 admission remains pending; four promotion assertions remain `[~]`.
+
+## Current state (round 16) — supersedes the stale current-tense readings above
+
+This block supersedes, without rewriting, the "Current authority" paragraph
+(lines 6-13), §Planned (lines 45-55) and the round-10 saturation reading
+(line 132). Assigned axes: **operability + calibration** (`../shokunin.conf:52`).
+Latest numeric readings: operability 8, calibration 7, freshness 8, coverage 9,
+depth 7, adjacency 7 (round-10 erratum and later rows; rounds 11-15 changed none).
+Calibration 7 is the lowest assigned axis; saturation line 8, so the
+stagnation nudge is inactive because calibration is below it. Capability rows
+held: `sources-registry` (round 10; registry now 41 rows after round 16) and
+`ollama-offline-evidence-replay` (round 14, §Round-14 measured results). The
+registered consumers were last sampled `DEAD` in `registry/history/latest.tsv`
+(snapshot 20261014T124232Z); nothing listens on 8080 or 34113.
+
+## Round 16 — loading-envelope verdict and live llama.cpp lifecycle (2026-10-20)
+
+Outside round 15 is `ok / admitted true`
+(`corpus/lessons/round-15-verifier-spotcheck.md`); its routed defects are
+dispositioned in `corpus/lessons/round-16.md`. No stagnation waiver.
+
+**C1 calibration (lowest axis):** the probe graded a loading llama.cpp
+server "non-2xx HTTP from a non-model service" (`FOREIGN_SERVICE` /
+`non-2xx-non-model-http`) since round 1, although the lane documented the
+loading body in round 10. Repair: `MODEL_LOADING` / `llamacpp-loading` for the
+exact envelope only (KQ19), plus appended corrections to every lane document
+that called the vocabulary fixed or the state foreign. Counting command:
+`python3 .ufo/waves/round-16/measure.py` (frozen
+`.ufo/waves/round-16/frozen/kama-probe-before.sh` versus `tools/kama-probe.sh`
+over the literal matrix `tests/probe-verdicts/*.json`). Planned score
+**7 → 7**: one overreach caught on one envelope is not a mastery change.
+
+**C2 operability (capability acquisition):** `live-llamacpp-lifecycle` —
+start the pinned official llama.cpp b11755 server with a pinned GGUF on an
+unregistered loopback port, capture its surfaces, grade it with the probe,
+tear it down and prove teardown; receipt re-derived by
+`tests/llamacpp-live/check-receipt.py`. Before: no lane tool could start a
+runtime (last real llama.cpp sample round 3). Counting command: the live tool
+plus the gate (SKILL.md §Round-16). Planned score **8 → 8** with a capability
+row; the caps at lines 26-28 (one engine, host paths, invocation-driven) stay.
+
+Sourced claim: C1 rests on S036/S037 (llama.cpp code at 704366d76), opened
+this round. Measured values are appended below after execution.

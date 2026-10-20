@@ -56,3 +56,17 @@ documents nullable `/v1/models` `meta` while loading, a separate router
 `GET /models` status field, and `/health` as exempt from waking sleeping models.
 A successful model-list identity match is not an inference-readiness guarantee.
 These are documentation corrections, not observations of a local runtime.
+
+## Correction — round 16 (2026-10-20)
+
+Line 55's "nullable `/v1/models` `meta` while loading" is README text (S001,
+re-read at 704366d76 as `S035`, README:1258). In direct single-model mode at
+that build the loading window is served by the 503 middleware on every
+non-frontend path, `/v1/models` included (`S036`, `S037`). The llama.cpp row at
+line 14 is consistent with that code. Engine contrasts gathered this round from
+source and kept as advice, not as rows: vLLM v0.32.0 and TGI v3.3.7 do not
+listen until ready (connection refused); SGLang v0.5.22 answers `/v1/models`
+200 while `/health` is 503; Ollama `/v1/models` lists available models
+whatever the load state. Grounding: `.ufo/waves/round-16/build/advice/`
+`ScoutVllmStartup.md`, `ScoutTgiStartup.md`, `ScoutSglangStartup.md`,
+`ScoutOllamaLoading.md`. None of these is a local runtime observation.

@@ -96,3 +96,14 @@ the guard, while the actual historical red source remains byte-intact.
 Grounding: `lessons/round-15.md` §Final falsification dispositions;
 `.ufo/waves/round-15/falsify/advice/BoundaryVerdicts.md` and
 `.ufo/waves/round-15/falsify/advice/LedgerR1.md` at the lane root.
+
+## Criteria added — round 16 (2026-10-20, author-appended; no outside review yet)
+
+No earlier criterion is superseded. KQ4 (fixtures are not runtime integration),
+KQ13 (inventory, residency, identity and readiness are separate), KQ14, KQ16,
+KQ17 and KQ18 remain in force. KQ19 governs a probe verdict that grades a
+documented not-ready model-server state.
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ19 | A verdict for a documented not-ready model-server state (here `MODEL_LOADING` / `llamacpp-loading`: HTTP 503 on `GET /v1/models` whose JSON `error` object has `message` exactly `Loading model`, `type` exactly `unavailable_error` and an integer — not bool, float or string — `code` 503; extra top-level keys allowed) names the pinned upstream code that emits the state (llama.cpp 704366d76 = b11755, `server-http.cpp:307-328`) and is shown by a literal stub matrix run through the probe CLI. The frozen probe fails exactly the expected-loading rows and passes every other row; the repaired probe passes all rows; the set of changed verdicts equals the expected-loading set; verdict, reason, exit and drift are all graded. The matrix carries exact-triple near-misses (other `unavailable_error` messages, case/space/punctuation variants, float/bool/string code, non-503 statuses, auth statuses) and ready positives (`MODEL_OK`, `MODEL_MISMATCH`). Every lane document that enumerates the vocabulary or routes the state elsewhere gets an appended correction in the same round. | The verdict is widened to any 503, any `unavailable_error` or a substring; it is read as runtime identification, served identity or readiness; a green run lacks the frozen red arm or the near-misses; `/health` or `/` is used as the trigger; the python3 precondition is unstated (without python3 the old `FOREIGN_SERVICE` path returns); router mode, sleeping, other engines or other builds are claimed from this one envelope. | `lessons/round-16.md` §Mistakes M1 and §Gate; `.ufo/waves/round-16/run-before.json`, `run-after.json`. |

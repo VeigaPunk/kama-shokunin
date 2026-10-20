@@ -159,6 +159,29 @@ else
   ok "malformed line never becomes phantom transition"
 fi
 
+# Vocabulary growth: a baseline row whose verdict is MODEL_LOADING is trusted as
+# a real prior verdict once the verdict is whitelisted in diff_baseline, while a
+# near-miss unknown verdict is still dropped as malformed. The seeded TSV
+# supplies the verdicts, so no live loading server is needed; the dead fixture
+# only gives fixture-b its honest DEAD classification.
+printf 'fixture-a\tMODEL_LOADING\tllamacpp-loading\t-\t%s\tyes\nfixture-z\tMODEL_LOADED\tbogus\t-\t%s\tno\n' \
+  "$PORT" "$PORT" > "$HIST/latest.tsv"
+run_probe "$WORK/snap6.out" snapshot --registry "$REG" --history "$HIST"
+[ "$RC" -eq 2 ] && ok "grown-vocabulary baseline keeps drift exit 2" || bad "grown-vocabulary baseline exit $RC"
+assert_contains "$HIST/DELTA.md" 'fixture-a row-absent \(was verdict=MODEL_LOADING' "MODEL_LOADING baseline row accepted and diffed"
+if grep -q "malformed-row-dropped id='fixture-a'" "$HIST/DELTA.md"; then
+  bad "MODEL_LOADING baseline row dropped as malformed"
+else
+  ok "MODEL_LOADING baseline row never audited as malformed"
+fi
+if grep -q "dropping malformed baseline row for id='fixture-a'" "$WORK/snap6.out"; then
+  bad "MODEL_LOADING baseline row warned as malformed"
+else
+  ok "MODEL_LOADING baseline row never warns"
+fi
+assert_contains "$WORK/snap6.out" "dropping malformed baseline row for id='fixture-z'" "unknown verdict still warns"
+assert_contains "$HIST/DELTA.md" "baseline-note malformed-row-dropped id='fixture-z'" "unknown verdict still audited and dropped"
+
 # Matrix probes have no registry baseline; symlinked output roots are refused.
 run_probe "$WORK/port.out" snapshot --port "$PORT" --history "$WORK/port-history"
 [ "$RC" -eq 1 ] && ok "snapshot --port refused with probe-error exit" || bad "snapshot --port exit $RC"

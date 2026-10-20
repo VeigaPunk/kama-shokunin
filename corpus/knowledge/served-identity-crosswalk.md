@@ -132,3 +132,18 @@ conclusion is restated in the `MODEL_OK` bullet at line 52 ("never establishes
 ... local (vs remote) provenance on Ollama"); it carries the same `[INFERENCE]`
 status and is not an additional page quote. No other failure-case sentence is
 reclassified, and no case is added or removed.
+
+## Correction — round 16 (2026-10-20): "observed mid-load" does not hold for direct llama-server at b11755
+
+Case 1 at line 33, the readiness bullet at line 50 and the `MODEL_OK` bullet at
+line 52 read S001's README sentence (`meta` can be `null` "while the model is
+still loading") as a reachable mid-load `/v1/models` answer. At llama.cpp
+704366d76 (b11755) a single-model server's pre-routing middleware answers
+`/v1/models` with HTTP 503 `Loading model` until `is_ready` is set after
+`load_model` returns (`S036` server-http.cpp:307-328 and 354; `S037`
+server.cpp:493-515). The README sentence remains documented (`S035`,
+README:1258) but that code path does not serve it in direct mode. The
+conclusion that a model-list match is not readiness still holds, for other
+reasons: router-mode catalog entries carry per-model `status` values, and a
+sleeping server answers `/v1/models` from cache. The probe now grades the 503
+envelope `MODEL_LOADING` (`endpoint-identity.md` §Correction — round 16).

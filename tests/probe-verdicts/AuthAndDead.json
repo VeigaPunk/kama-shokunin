@@ -1,0 +1,104 @@
+[
+  {
+    "name": "AuthAndDead.401-authentication-error-envelope",
+    "family": "AuthAndDead",
+    "why": "401 with llama.cpp authentication_error envelope: status branch (kama-probe.sh:459) fires before any body check -> UNAUTHORIZED_SERVICE http-401.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 401,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Invalid API key", "type": "authentication_error", "code": 401}}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "UNAUTHORIZED_SERVICE", "reason": "http-401", "exit": 2}
+  },
+  {
+    "name": "AuthAndDead.403-authentication-error-envelope",
+    "family": "AuthAndDead",
+    "why": "403 with llama.cpp authentication_error envelope: status branch (kama-probe.sh:460) fires before any body check -> UNAUTHORIZED_SERVICE http-403.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 403,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Forbidden", "type": "authentication_error", "code": 403}}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "UNAUTHORIZED_SERVICE", "reason": "http-403", "exit": 2}
+  },
+  {
+    "name": "AuthAndDead.401-carrying-loading-envelope",
+    "family": "AuthAndDead",
+    "why": "401 whose body is the exact loading envelope: auth branch precedes the new MODEL_LOADING check and the status is not 503 -> stays UNAUTHORIZED_SERVICE http-401, never MODEL_LOADING.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 401,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "UNAUTHORIZED_SERVICE", "reason": "http-401", "exit": 2}
+  },
+  {
+    "name": "AuthAndDead.403-carrying-loading-envelope",
+    "family": "AuthAndDead",
+    "why": "403 carrying the loading envelope: same precedence on the other auth code -> UNAUTHORIZED_SERVICE http-403; a body-only MODEL_LOADING matcher would false-pass here.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 403,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "UNAUTHORIZED_SERVICE", "reason": "http-403", "exit": 2}
+  },
+  {
+    "name": "AuthAndDead.401-plain-text-body",
+    "family": "AuthAndDead",
+    "why": "401 with a non-JSON body: verdict keys on status alone (kama-probe.sh:459), body content is never consulted -> UNAUTHORIZED_SERVICE http-401.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 401,
+        "headers": {"Content-Type": "text/plain"},
+        "body_text": "Unauthorized"
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "UNAUTHORIZED_SERVICE", "reason": "http-401", "exit": 2}
+  },
+  {
+    "name": "AuthAndDead.closed-port-connection-refused",
+    "family": "AuthAndDead",
+    "why": "No listener on the port: curl rc=7 maps to DEAD connection-refused (kama-probe.sh:426-430).",
+    "port_mode": "closed",
+    "routes": {},
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "DEAD", "reason": "connection-refused", "exit": 2}
+  },
+  {
+    "name": "AuthAndDead.raw-accept-then-close",
+    "family": "AuthAndDead",
+    "why": "Stub accepts the TCP connection, sends nothing, closes: curl rc=52 empty reply -> NOT_HTTP empty-reply (kama-probe.sh:436-440).",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {"raw": "close"}
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "NOT_HTTP", "reason": "empty-reply", "exit": 2}
+  }
+]

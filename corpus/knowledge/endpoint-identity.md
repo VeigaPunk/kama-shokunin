@@ -178,3 +178,38 @@ not by itself a chat-completions POST; F4 records `models[0].name`, not by itsel
 every header and alternate response field. Original “fresh” examples are dated
 2026-09-28 samples, never present service authority. These limits supersede
 broader readings of those F-citations without rewriting historical observations.
+
+## Correction — round 16 (2026-10-20): the llama.cpp loading envelope is not "foreign"
+
+source: `S036` (llama.cpp `tools/server/server-http.cpp` @ 704366d76 = release b11755, lines 307-328 and 354-358), `S035` (README @ 704366d76 §GET `/health`, lines 479-490), `S037` (server.cpp @ 704366d76, lines 493-515); lane gate `python3 tests/probe-verdicts/check.py` and `corpus/lessons/round-16.md`
+verified-at: 2026-10-20 — upstream files opened at the pinned commit; frozen-versus-repaired stub matrix run by L1 (receipts under `.ufo/waves/round-16/`)
+recheck: on-release — re-open the pinned middleware when the installed llama.cpp build changes
+
+Line 3 ("The verdict vocabulary is fixed") and the closing note at line 163
+("verdict vocabulary are unchanged") are superseded: the vocabulary now has
+seven verdicts. Rule 5 at line 17 ("A live HTTP error response from a
+non-model service is foreign, not dead") overreached for one exact case and is
+narrowed, not deleted. When `GET /v1/models` answers HTTP 503 and the body
+parses as a JSON object whose `error` object has `message` exactly
+`Loading model`, `type` exactly `unavailable_error` and an integer `code`
+of 503, the probe now emits `MODEL_LOADING` / `llamacpp-loading` (drift,
+exit 2). The check runs after rule 3 (401/403) and before rule 4 (HTML).
+Every other non-2xx non-model response keeps rule 5.
+
+Why: at b11755 a single-model llama-server starts its listener before
+`load_model` and sets `is_ready` only afterwards (S037), and its pre-routing
+middleware answers every non-frontend path with that 503 body while not ready,
+before the API-key check (S036). The old table therefore graded a loading
+model server as a "non-model service". Limits: the match is on body shape and
+does not prove the runtime is llama.cpp or which model is loading. Router mode
+never emits the envelope. The no-slot (`no slot available`) and router-stream
+(`Stream owner model is loading, retry later`) `unavailable_error` bodies stay
+on rule 5. Without python3 the body keeps its old `FOREIGN_SERVICE` verdict.
+
+Line 161 cites S001's README sentence that `meta` may be `null` "while the
+model is still loading". At b11755 single-model mode that window is answered
+by the 503 middleware, not by a `/v1/models` 200 (S036, S037). The README
+sentence is still documented (README @ 704366d76:1258) but the code does not
+serve it in that mode. A mid-load `MODEL_OK` from a direct llama-server at this
+build is therefore not expected [INFERENCE from the code path, consistent with
+the round-16 live receipt in `corpus/knowledge/llamacpp-loading-lifecycle.md`].

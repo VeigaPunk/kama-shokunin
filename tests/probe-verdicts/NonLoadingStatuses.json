@@ -1,0 +1,114 @@
+[
+  {
+    "name": "NonLoadingStatuses.ok200-json-envelope",
+    "family": "NonLoadingStatuses",
+    "why": "Exact llama.cpp loading envelope at HTTP 200 with JSON CT: no data/models array and status != 503, so classify() lands on 2xx+json -> schema-unrecognized.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "schema-unrecognized", "exit": 2}
+  },
+  {
+    "name": "NonLoadingStatuses.ok200-plain-envelope",
+    "family": "NonLoadingStatuses",
+    "why": "Same loading-shaped body at 200 but served as text/plain: 2xx without JSON CT takes the non-model-2xx branch, proving CT selects the reason.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "text/plain"},
+        "body_text": "{\"error\":{\"message\":\"Loading model\",\"type\":\"unavailable_error\",\"code\":503}}"
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-model-2xx", "exit": 2}
+  },
+  {
+    "name": "NonLoadingStatuses.err500-envelope",
+    "family": "NonLoadingStatuses",
+    "why": "Loading envelope at HTTP 500: non-2xx and not the pinned 503 gate, so it stays a generic non-model error page -> non-2xx-non-model-http.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 500,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  },
+  {
+    "name": "NonLoadingStatuses.err502-envelope",
+    "family": "NonLoadingStatuses",
+    "why": "Loading envelope at HTTP 502 (proxy/gateway shape): exact-body matcher must not fire off-status; non-2xx -> non-2xx-non-model-http.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 502,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  },
+  {
+    "name": "NonLoadingStatuses.err504-envelope",
+    "family": "NonLoadingStatuses",
+    "why": "Loading envelope at HTTP 504: gateway-timeout status with a loading body is still a foreign non-2xx service, not MODEL_LOADING.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 504,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  },
+  {
+    "name": "NonLoadingStatuses.err404-envelope",
+    "family": "NonLoadingStatuses",
+    "why": "Loading envelope at HTTP 404: a route-less service echoing the body is non-2xx without the 503 pin -> non-2xx-non-model-http.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 404,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  },
+  {
+    "name": "NonLoadingStatuses.err429-envelope",
+    "family": "NonLoadingStatuses",
+    "why": "Loading envelope at HTTP 429: rate-limited non-model service carrying the body verbatim must not flip to MODEL_LOADING -> non-2xx-non-model-http.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 429,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  }
+]

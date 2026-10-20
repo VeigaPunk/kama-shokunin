@@ -1,0 +1,156 @@
+[
+  {
+    "name": "LoadingEnvelope.canonical-alias",
+    "family": "LoadingEnvelope",
+    "why": "Byte-exact llama.cpp b11755 loading wire body on /v1/models (and /health, which the not-ready middleware answers identically); the alias expect is irrelevant because a loading server serves no id yet.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json; charset=utf-8", "Server": "llama.cpp"},
+        "body_text": "{\"error\":{\"message\":\"Loading model\",\"type\":\"unavailable_error\",\"code\":503}}"
+      },
+      "/health": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json; charset=utf-8", "Server": "llama.cpp"},
+        "body_text": "{\"error\":{\"message\":\"Loading model\",\"type\":\"unavailable_error\",\"code\":503}}"
+      }
+    },
+    "default_route": {
+      "status": 503,
+      "headers": {"Content-Type": "application/json; charset=utf-8", "Server": "llama.cpp"},
+      "body_text": "{\"error\":{\"message\":\"Loading model\",\"type\":\"unavailable_error\",\"code\":503}}"
+    },
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_LOADING", "reason": "llamacpp-loading", "exit": 2}
+  },
+  {
+    "name": "LoadingEnvelope.wildcard-expect",
+    "family": "LoadingEnvelope",
+    "why": "--expect '*' is the probe's wildcard accept-any id; the loading envelope must still read MODEL_LOADING, never promoted to expected-wildcard.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json; charset=utf-8", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      },
+      "/health": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json; charset=utf-8", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "MODEL_LOADING", "reason": "llamacpp-loading", "exit": 2}
+  },
+  {
+    "name": "LoadingEnvelope.dash-expect",
+    "family": "LoadingEnvelope",
+    "why": "--expect '-' is the probe's other no-expected-id form (classify wildcard branch); the 503 loading envelope still wins before any id logic runs.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json; charset=utf-8", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": {
+      "status": 503,
+      "headers": {"Content-Type": "application/json; charset=utf-8", "Server": "llama.cpp"},
+      "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+    },
+    "expect": "-",
+    "expected": {"verdict": "MODEL_LOADING", "reason": "llamacpp-loading", "exit": 2}
+  },
+  {
+    "name": "LoadingEnvelope.no-server-header",
+    "family": "LoadingEnvelope",
+    "why": "No Server header: classify() documents that a Server header alone is never proof, so envelope detection must be body-driven and still fire without it.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json; charset=utf-8"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      },
+      "/health": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json; charset=utf-8"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_LOADING", "reason": "llamacpp-loading", "exit": 2}
+  },
+  {
+    "name": "LoadingEnvelope.plain-json-content-type",
+    "family": "LoadingEnvelope",
+    "why": "Content-Type application/json without the charset parameter (proxy or older build may strip it); detection keys on status+body, not the header value.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      },
+      "/health": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "MODEL_LOADING", "reason": "llamacpp-loading", "exit": 2}
+  },
+  {
+    "name": "LoadingEnvelope.key-order-permuted",
+    "family": "LoadingEnvelope",
+    "why": "Inner error keys serialized as type,code,message instead of the wire order; a JSON-object match must be key-order agnostic, not a literal byte compare.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json; charset=utf-8", "Server": "llama.cpp"},
+        "body_text": "{\"error\":{\"type\":\"unavailable_error\",\"code\":503,\"message\":\"Loading model\"}}"
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_LOADING", "reason": "llamacpp-loading", "exit": 2}
+  },
+  {
+    "name": "LoadingEnvelope.pretty-printed-body",
+    "family": "LoadingEnvelope",
+    "why": "Same envelope with insignificant JSON whitespace (indentation/newlines); the rule says 'a JSON object whose error object has...', so formatting must not matter.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json; charset=utf-8", "Server": "llama.cpp"},
+        "body_text": "{\n  \"error\": {\n    \"message\": \"Loading model\",\n    \"type\": \"unavailable_error\",\n    \"code\": 503\n  }\n}\n"
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "MODEL_LOADING", "reason": "llamacpp-loading", "exit": 2}
+  },
+  {
+    "name": "LoadingEnvelope.every-non-frontend-path",
+    "family": "LoadingEnvelope",
+    "why": "server-http.cpp:312-325 returns the envelope for EVERY non-frontend path while !is_ready; here only default_route serves it so /v1/models and /health both resolve through the catch-all.",
+    "port_mode": "stub",
+    "routes": {},
+    "default_route": {
+      "status": 503,
+      "headers": {"Content-Type": "application/json; charset=utf-8", "Server": "llama.cpp"},
+      "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+    },
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_LOADING", "reason": "llamacpp-loading", "exit": 2}
+  }
+]

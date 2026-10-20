@@ -921,3 +921,33 @@ and in SKILL/lesson, not treated as current authority.
   Host-cap mechanics were reported to Main/kumitate, not absorbed into
   endpoint ownership. No new L0 question; existing operator runtime/cadence
   decisions remain open. Stale-lane: no other kama mission open.
+
+## round 16 — loading-envelope verdict and live llama.cpp lifecycle (2026-10-20)
+
+- Start `20e392ea683a36bc223eb7cb45897acfb45456a3`, clean tree, nothing
+  inherited. Assignment operability + calibration; calibration 7 is lowest
+  (7 versus operability 8); no stagnation waiver.
+- Motivating evidence: L1 smoke at 10:17 -03 saw a real b11755 llama-server
+  answer `GET /v1/models` with 503 `{"error":{"message":"Loading model",
+  "type":"unavailable_error","code":503}}` while loading; the frozen probe on
+  a stub of that body returned `FOREIGN_SERVICE` / `non-2xx-non-model-http`
+  exit 2 ("non-2xx HTTP from a non-model service").
+- C1 calibration: `MODEL_LOADING` for the exact envelope only (KQ19), with
+  appended corrections in five knowledge entries, the registry header comment
+  and SKILL.md. C2 operability capability: `tools/kama-llamacpp-live.py` plus
+  `tests/llamacpp-live/check-receipt.py`.
+- Install (operator tooling directive 2026-10-19, pacman paused): llama.cpp
+  b11755 official release asset `llama-b11755-bin-ubuntu-x64.tar.gz` (sha256
+  `753bfa7327a75b477d4d14cde71e0e46a40acc3a1408c5504530b78c33a6e226`, equal to
+  the GitHub API digest) into `~/.local/opt/llama-b11755`, linked
+  `~/.local/bin/llama-server`; reason C2. Model `stories260K.gguf` (sha256
+  `270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d`) into
+  `~/.cache/kama-shokunin/models/`.
+- Build wave: 81 seats validated under policy v2 (64-100) and dispatched in one
+  task call: executor 16, scout 20, reviewer 14, critic 6, sentinel 2,
+  connector 8, revenger 4, scribe 10, simplifier 1. Canonical planner is L1;
+  `RevengerPlannerWalk` is the bounded planning data-walk. Provenance:
+  `.ufo/waves/round-16/build/validation.json` (argv, cwd, three environment
+  bindings, `taskCall` sha256).
+- Lesson `corpus/lessons/round-16.md`; sources S035-S041 added, S017 used-by
+  extended. Measured results follow in the next entry.

@@ -198,3 +198,24 @@ semantics. Existing live integration, context-capacity and service-
 restoration frontier gaps remain open. No authorized serving runtime was
 sampled or restored. New own-work S034 supports the actual guard diagnosis;
 S012 remains a separate loaded-metadata boundary, not a readiness test.
+
+## Round-16 loading-envelope verdict and live llama.cpp lifecycle
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/llamacpp-loading-lifecycle.md` | llama.cpp b11755 loading gate in code (every non-frontend path 503 before the API key), single-model versus router readiness, the probe's `MODEL_LOADING` mapping and limits, one live lane-owned run | 16 |
+| `lessons/round-16.md` | C1/C2 gate decisions, mined mistake M1 (round-1 overreach), round-15 routed-defect dispositions | 16 |
+
+The `/health` 503 body was already held at `knowledge/runtime-health-surface-matrix.md:14`
+(round 10); credit here is the code path onto `/v1/models`, the corrected
+probe verdict and the live capability, not the body itself. Appended
+corrections: `endpoint-identity.md`, `consumer-registry.md`, `listener-census.md`,
+`served-identity-crosswalk.md`, `runtime-health-surface-matrix.md`.
+
+Frontier disposition: the "real-runtime evidence for llama.cpp only, and stale"
+gap now has a re-runnable lane-owned sample on the current build. Still open:
+live grading of a loading server (the tiny model loads in about 8 ms; no 503
+was captured by the receipt), router mode and sleep (source reads only), other
+engines (source reads only), K05 declared-versus-served context, and the
+registered consumers, which stay `DEAD` and were not probed. A lane-owned
+fixture was sampled; nothing was restored.

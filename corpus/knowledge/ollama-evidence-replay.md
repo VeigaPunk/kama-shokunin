@@ -372,3 +372,12 @@ classifier's own duplicate-*selection* finding (`invalid_input`, row 3).
   R1 was a static diagnosis; actual red/green execution is recorded by L1
   in round15. A final-prose-matched causal control removes only the two
   predicate lines and is distinct from the preserved historical source.
+
+- **Repair ordering precision (appended round 16, outside round-15 routed
+  defect 5).** The Repair bullet's "before the minimum-unique check" means
+  evaluation order, not a short-circuit. `corpus_problems()`
+  (`.ufo/waves/round-14/measure.py:351-365`) appends `duplicate case names`
+  first and then still evaluates `unique < MINIMUM_UNIQUE_CASES`, so a
+  duplicated and undersized corpus can report both problems. `run()`
+  (`.ufo/waves/round-14/measure.py:375-381,396-398`) rejects with per-case
+  unmeasured records and exit 1 before spawning any child.

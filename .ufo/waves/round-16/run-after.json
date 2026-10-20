@@ -1,0 +1,2474 @@
+{
+  "name": "after",
+  "command": [
+    "python3",
+    "/home/vgpnk/Projects/shokunin/kama-shokunin/tests/probe-verdicts/check.py",
+    "--probe",
+    "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-probe.sh",
+    "--json"
+  ],
+  "cwd": "/home/vgpnk/Projects/shokunin/kama-shokunin",
+  "exit": 0,
+  "stdout_sha256": "64fe78afa27797b987baedd69bf177d8e679f10cdf75eabc0340eb4ef79b22ab",
+  "parsed": {
+    "schema": "kama-probe-verdicts/v1",
+    "probe": "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-probe.sh",
+    "probe_sha256": "6edd3c4cfdf3f86c98202cef58859c29406d4a9cec17495454c514ac5972fa50",
+    "matrix_sources": [
+      "AuthAndDead.json",
+      "EnvelopeShapes.json",
+      "ForeignControls.json",
+      "LoadingEnvelope.json",
+      "LoadingRace.json",
+      "NearMissTriple.json",
+      "NonLoadingStatuses.json",
+      "Overbroad503.json",
+      "ReadyControls.json"
+    ],
+    "tests": 72,
+    "passes": 72,
+    "failures": 0,
+    "records": [
+      {
+        "name": "AuthAndDead.401-authentication-error-envelope",
+        "family": "AuthAndDead",
+        "source": "AuthAndDead.json",
+        "why": "401 with llama.cpp authentication_error envelope: status branch (kama-probe.sh:459) fires before any body check -> UNAUTHORIZED_SERVICE http-401.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "UNAUTHORIZED_SERVICE",
+          "reason": "http-401",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "UNAUTHORIZED_SERVICE",
+        "reason": "http-401",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 401 application/json (Server: llama.cpp); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 43623
+      },
+      {
+        "name": "AuthAndDead.403-authentication-error-envelope",
+        "family": "AuthAndDead",
+        "source": "AuthAndDead.json",
+        "why": "403 with llama.cpp authentication_error envelope: status branch (kama-probe.sh:460) fires before any body check -> UNAUTHORIZED_SERVICE http-403.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "UNAUTHORIZED_SERVICE",
+          "reason": "http-403",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "UNAUTHORIZED_SERVICE",
+        "reason": "http-403",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 403 application/json (Server: llama.cpp); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 37213
+      },
+      {
+        "name": "AuthAndDead.401-carrying-loading-envelope",
+        "family": "AuthAndDead",
+        "source": "AuthAndDead.json",
+        "why": "401 whose body is the exact loading envelope: auth branch precedes the new MODEL_LOADING check and the status is not 503 -> stays UNAUTHORIZED_SERVICE http-401, never MODEL_LOADING.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "UNAUTHORIZED_SERVICE",
+          "reason": "http-401",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "UNAUTHORIZED_SERVICE",
+        "reason": "http-401",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 401 application/json (Server: llama.cpp); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 41053
+      },
+      {
+        "name": "AuthAndDead.403-carrying-loading-envelope",
+        "family": "AuthAndDead",
+        "source": "AuthAndDead.json",
+        "why": "403 carrying the loading envelope: same precedence on the other auth code -> UNAUTHORIZED_SERVICE http-403; a body-only MODEL_LOADING matcher would false-pass here.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "UNAUTHORIZED_SERVICE",
+          "reason": "http-403",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "UNAUTHORIZED_SERVICE",
+        "reason": "http-403",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 403 application/json (Server: kama-stub); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 44913
+      },
+      {
+        "name": "AuthAndDead.401-plain-text-body",
+        "family": "AuthAndDead",
+        "source": "AuthAndDead.json",
+        "why": "401 with a non-JSON body: verdict keys on status alone (kama-probe.sh:459), body content is never consulted -> UNAUTHORIZED_SERVICE http-401.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "UNAUTHORIZED_SERVICE",
+          "reason": "http-401",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "UNAUTHORIZED_SERVICE",
+        "reason": "http-401",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 401 text/plain (Server: kama-stub); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 40567
+      },
+      {
+        "name": "AuthAndDead.closed-port-connection-refused",
+        "family": "AuthAndDead",
+        "source": "AuthAndDead.json",
+        "why": "No listener on the port: curl rc=7 maps to DEAD connection-refused (kama-probe.sh:426-430).",
+        "port_mode": "closed",
+        "expect": "*",
+        "expected": {
+          "verdict": "DEAD",
+          "reason": "connection-refused",
+          "exit": 2
+        },
+        "requests": [],
+        "probe_exit": 2,
+        "verdict": "DEAD",
+        "reason": "connection-refused",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "rc=7 Failed to connect to 127.0.0.1:51349 after 0 ms: Could not connect to server; GET /v1/models -> 000",
+        "error": null,
+        "passed": true,
+        "port": 51349
+      },
+      {
+        "name": "AuthAndDead.raw-accept-then-close",
+        "family": "AuthAndDead",
+        "source": "AuthAndDead.json",
+        "why": "Stub accepts the TCP connection, sends nothing, closes: curl rc=52 empty reply -> NOT_HTTP empty-reply (kama-probe.sh:436-440).",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "NOT_HTTP",
+          "reason": "empty-reply",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "NOT_HTTP",
+        "reason": "empty-reply",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "rc=52 empty reply on a TCP-accepted port; GET /v1/models -> 000",
+        "error": null,
+        "passed": true,
+        "port": 40965
+      },
+      {
+        "name": "EnvelopeShapes.InvalidJsonBody",
+        "family": "EnvelopeShapes",
+        "source": "EnvelopeShapes.json",
+        "why": "503 body is truncated JSON containing all triple tokens; an unparseable body can never satisfy the exact-triple rule.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 40699
+      },
+      {
+        "name": "EnvelopeShapes.TopLevelArray",
+        "family": "EnvelopeShapes",
+        "source": "EnvelopeShapes.json",
+        "why": "Exact triple present but the top-level JSON value is an array, not an object; fails the JSON-object requirement.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 38915
+      },
+      {
+        "name": "EnvelopeShapes.ErrorAsString",
+        "family": "EnvelopeShapes",
+        "source": "EnvelopeShapes.json",
+        "why": "error is the string 'Loading model', not an object; the triple fields cannot be read so the rule does not fire.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 34455
+      },
+      {
+        "name": "EnvelopeShapes.MissingCode",
+        "family": "EnvelopeShapes",
+        "source": "EnvelopeShapes.json",
+        "why": "error object has exact message and type but no integer code field; all three members are required.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 35171
+      },
+      {
+        "name": "EnvelopeShapes.CodeAsString",
+        "family": "EnvelopeShapes",
+        "source": "EnvelopeShapes.json",
+        "why": "code is the string '503', not integer 503; the rule demands an exact integer so this stays FOREIGN_SERVICE.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 40159
+      },
+      {
+        "name": "EnvelopeShapes.ExtraFieldsAllowed",
+        "family": "EnvelopeShapes",
+        "source": "EnvelopeShapes.json",
+        "why": "Exact error triple with extra top-level siblings; the rule inspects error only, extra fields are allowed -> MODEL_LOADING.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 404|",
+        "error": null,
+        "passed": true,
+        "port": 42119
+      },
+      {
+        "name": "EnvelopeShapes.NestedEnvelope",
+        "family": "EnvelopeShapes",
+        "source": "EnvelopeShapes.json",
+        "why": "Exact triple inside error nested one level deeper under 'outer'; top-level error object is absent -> no match.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 37931
+      },
+      {
+        "name": "EnvelopeShapes.Padding64KiB",
+        "family": "EnvelopeShapes",
+        "source": "EnvelopeShapes.json",
+        "why": "Exact triple plus a 64 KiB extra padding field; size and extras must not defeat detection -> MODEL_LOADING.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 404|",
+        "error": null,
+        "passed": true,
+        "port": 45231
+      },
+      {
+        "name": "EnvelopeShapes.BomPrefixedJson",
+        "family": "EnvelopeShapes",
+        "source": "EnvelopeShapes.json",
+        "why": "UTF-8 BOM precedes an otherwise exact-triple body; strict JSON parsing rejects a leading BOM -> stays FOREIGN_SERVICE.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 46085
+      },
+      {
+        "name": "ForeignControls.html-index",
+        "family": "ForeignControls",
+        "source": "ForeignControls.json",
+        "why": "Foreign web UI answering /v1/models with a 200 text/html index page must stay FOREIGN_SERVICE html-non-model (ishtml via Content-Type, kama-probe.sh:506-511).",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "html-non-model",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "html-non-model",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 200 text/html; charset=utf-8 (Server: kama-stub); 200|text/html; charset=utf-8 @ /",
+        "error": null,
+        "passed": true,
+        "port": 38253
+      },
+      {
+        "name": "ForeignControls.openmetrics-text",
+        "family": "ForeignControls",
+        "source": "ForeignControls.json",
+        "why": "200 application/openmetrics-text exposition has no JSON content type and no model array, so it is FOREIGN_SERVICE non-model-2xx (kama-probe.sh:514-519) \u2014 status-only liveness must not pass.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-model-2xx",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-model-2xx",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 200 application/openmetrics-text; version=1.0.0; charset=utf-8 (Server: kama-stub) (2xx service with no recognisable model array); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 39355
+      },
+      {
+        "name": "ForeignControls.json-no-model-array",
+        "family": "ForeignControls",
+        "source": "ForeignControls.json",
+        "why": "200 application/json object without a data[] or models[] list is FOREIGN_SERVICE schema-unrecognized (body_has_model_array kama-probe.sh:392-411, reason at 516).",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "schema-unrecognized",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "schema-unrecognized",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (2xx service with no recognisable model array); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 41615
+      },
+      {
+        "name": "ForeignControls.json-data-object-not-array",
+        "family": "ForeignControls",
+        "source": "ForeignControls.json",
+        "why": "200 JSON whose data key is an object, not an array, still fails body_has_model_array (requires isinstance list, kama-probe.sh:403-405) -> schema-unrecognized; guards a naive key-presence check.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "schema-unrecognized",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "schema-unrecognized",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (2xx service with no recognisable model array); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 35105
+      },
+      {
+        "name": "ForeignControls.not-found-json",
+        "family": "ForeignControls",
+        "source": "ForeignControls.json",
+        "why": "404 JSON error body is a non-2xx HTTP answer from a non-model service -> FOREIGN_SERVICE non-2xx-non-model-http (kama-probe.sh:520-522).",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 404 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 39545
+      },
+      {
+        "name": "ForeignControls.server-error-json",
+        "family": "ForeignControls",
+        "source": "ForeignControls.json",
+        "why": "500 JSON error object whose type is server_error, not the exact llama.cpp loading shape, stays FOREIGN_SERVICE non-2xx-non-model-http; C1 may only match message+type+code exactly.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 500 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 41317
+      },
+      {
+        "name": "ForeignControls.busy-unavailable-error",
+        "family": "ForeignControls",
+        "source": "ForeignControls.json",
+        "why": "503 unavailable_error 'no slot available' matches llama.cpp type+code but not the exact 'Loading model' message \u2014 C1 scope limit keeps it FOREIGN_SERVICE non-2xx-non-model-http.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 43251
+      },
+      {
+        "name": "ForeignControls.loading-message-wrong-type",
+        "family": "ForeignControls",
+        "source": "ForeignControls.json",
+        "why": "503 with message 'Loading model' but type server_error defeats a message-only MODEL_LOADING match; the C1 rule requires all three fields exact, so the verdict stays FOREIGN_SERVICE.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 42201
+      },
+      {
+        "name": "LoadingEnvelope.canonical-alias",
+        "family": "LoadingEnvelope",
+        "source": "LoadingEnvelope.json",
+        "why": "Byte-exact llama.cpp b11755 loading wire body on /v1/models (and /health, which the not-ready middleware answers identically); the alias expect is irrelevant because a loading server serves no id yet.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json; charset=utf-8 (Server: llama.cpp) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 503|application/json; charset=utf-8",
+        "error": null,
+        "passed": true,
+        "port": 35811
+      },
+      {
+        "name": "LoadingEnvelope.wildcard-expect",
+        "family": "LoadingEnvelope",
+        "source": "LoadingEnvelope.json",
+        "why": "--expect '*' is the probe's wildcard accept-any id; the loading envelope must still read MODEL_LOADING, never promoted to expected-wildcard.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json; charset=utf-8 (Server: llama.cpp) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 503|application/json; charset=utf-8",
+        "error": null,
+        "passed": true,
+        "port": 35905
+      },
+      {
+        "name": "LoadingEnvelope.dash-expect",
+        "family": "LoadingEnvelope",
+        "source": "LoadingEnvelope.json",
+        "why": "--expect '-' is the probe's other no-expected-id form (classify wildcard branch); the 503 loading envelope still wins before any id logic runs.",
+        "port_mode": "stub",
+        "expect": "-",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json; charset=utf-8 (Server: llama.cpp) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 503|application/json; charset=utf-8",
+        "error": null,
+        "passed": true,
+        "port": 33947
+      },
+      {
+        "name": "LoadingEnvelope.no-server-header",
+        "family": "LoadingEnvelope",
+        "source": "LoadingEnvelope.json",
+        "why": "No Server header: classify() documents that a Server header alone is never proof, so envelope detection must be body-driven and still fire without it.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json; charset=utf-8 (Server: kama-stub) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 503|application/json; charset=utf-8",
+        "error": null,
+        "passed": true,
+        "port": 35425
+      },
+      {
+        "name": "LoadingEnvelope.plain-json-content-type",
+        "family": "LoadingEnvelope",
+        "source": "LoadingEnvelope.json",
+        "why": "Content-Type application/json without the charset parameter (proxy or older build may strip it); detection keys on status+body, not the header value.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: llama.cpp) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 503|application/json",
+        "error": null,
+        "passed": true,
+        "port": 33153
+      },
+      {
+        "name": "LoadingEnvelope.key-order-permuted",
+        "family": "LoadingEnvelope",
+        "source": "LoadingEnvelope.json",
+        "why": "Inner error keys serialized as type,code,message instead of the wire order; a JSON-object match must be key-order agnostic, not a literal byte compare.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json; charset=utf-8 (Server: llama.cpp) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 404|",
+        "error": null,
+        "passed": true,
+        "port": 38419
+      },
+      {
+        "name": "LoadingEnvelope.pretty-printed-body",
+        "family": "LoadingEnvelope",
+        "source": "LoadingEnvelope.json",
+        "why": "Same envelope with insignificant JSON whitespace (indentation/newlines); the rule says 'a JSON object whose error object has...', so formatting must not matter.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json; charset=utf-8 (Server: llama.cpp) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 404|",
+        "error": null,
+        "passed": true,
+        "port": 39651
+      },
+      {
+        "name": "LoadingEnvelope.every-non-frontend-path",
+        "family": "LoadingEnvelope",
+        "source": "LoadingEnvelope.json",
+        "why": "server-http.cpp:312-325 returns the envelope for EVERY non-frontend path while !is_ready; here only default_route serves it so /v1/models and /health both resolve through the catch-all.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json; charset=utf-8 (Server: llama.cpp) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 503|application/json; charset=utf-8",
+        "error": null,
+        "passed": true,
+        "port": 37643
+      },
+      {
+        "name": "LoadingRace.HealthAlreadyOk",
+        "family": "LoadingRace",
+        "source": "LoadingRace.json",
+        "why": "Synthetic race (not reachable on b11755, where one atomic is_ready gates both paths): /health green while /v1/models still returns the loading envelope; verdict must key on /v1/models.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: llama.cpp) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 200|application/json",
+        "error": null,
+        "passed": true,
+        "port": 39357
+      },
+      {
+        "name": "LoadingRace.HealthExplicit404",
+        "family": "LoadingRace",
+        "source": "LoadingRace.json",
+        "why": "Loading envelope on /v1/models while /health answers a bare 404 (synthetic surface; b11755 serves the envelope on /health too); MODEL_LOADING does not depend on /health at all.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: llama.cpp) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 404|application/json",
+        "error": null,
+        "passed": true,
+        "port": 36935
+      },
+      {
+        "name": "LoadingRace.HealthUnlisted",
+        "family": "LoadingRace",
+        "source": "LoadingRace.json",
+        "why": "Loading envelope on /v1/models with /health never routed (default_route null -> stub 404; synthetic surface on b11755); verdict still MODEL_LOADING.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: llama.cpp) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 404|",
+        "error": null,
+        "passed": true,
+        "port": 41461
+      },
+      {
+        "name": "LoadingRace.HealthAlsoLoading",
+        "family": "LoadingRace",
+        "source": "LoadingRace.json",
+        "why": "Both endpoints return the identical loading envelope; the /v1/models envelope alone is sufficient for MODEL_LOADING.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: llama.cpp) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 503|application/json",
+        "error": null,
+        "passed": true,
+        "port": 43081
+      },
+      {
+        "name": "LoadingRace.HealthConnClosed",
+        "family": "LoadingRace",
+        "source": "LoadingRace.json",
+        "why": "Loading envelope on /v1/models while /health accepts TCP then closes with no reply (synthetic); an unreachable health surface must not demote MODEL_LOADING.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: llama.cpp) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> err-52",
+        "error": null,
+        "passed": true,
+        "port": 45555
+      },
+      {
+        "name": "LoadingRace.InverseHealthLoadingModelsOk",
+        "family": "LoadingRace",
+        "source": "LoadingRace.json",
+        "why": "Synthetic inverse race (unreachable on b11755, where is_ready flips both paths together): /health still returns the loading envelope but /v1/models is 200 with a model array whose id matches --expect; /v1/models decides -> MODEL_OK matched.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "MODEL_OK",
+          "reason": "matched",
+          "exit": 0
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 0,
+        "verdict": "MODEL_OK",
+        "reason": "matched",
+        "drift": false,
+        "served_model": "stories260K",
+        "evidence": "GET /v1/models -> 200 application/json (Server: llama.cpp) (runtime=llama.cpp; expected=stories260K; reason=matched)",
+        "error": null,
+        "passed": true,
+        "port": 40967
+      },
+      {
+        "name": "LoadingRace.InverseWildcardExpect",
+        "family": "LoadingRace",
+        "source": "LoadingRace.json",
+        "why": "Synthetic inverse race with --expect '*': /health still loading, /v1/models 200 model array -> MODEL_OK expected-wildcard, proving a loading /health never overrides a ready /v1/models.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "MODEL_OK",
+          "reason": "expected-wildcard",
+          "exit": 0
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 0,
+        "verdict": "MODEL_OK",
+        "reason": "expected-wildcard",
+        "drift": false,
+        "served_model": "stories260K",
+        "evidence": "GET /v1/models -> 200 application/json (Server: llama.cpp) (runtime=llama.cpp; expected=*; reason=expected-wildcard)",
+        "error": null,
+        "passed": true,
+        "port": 36619
+      },
+      {
+        "name": "LoadingRace.InverseHealthLoadingIdMismatch",
+        "family": "LoadingRace",
+        "source": "LoadingRace.json",
+        "why": "Synthetic inverse race must not force OK: /health still loading and /v1/models 200 but the served id disagrees with --expect -> MODEL_MISMATCH served-id-mismatch.",
+        "port_mode": "stub",
+        "expect": "qwen3-8b",
+        "expected": {
+          "verdict": "MODEL_MISMATCH",
+          "reason": "served-id-mismatch",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_MISMATCH",
+        "reason": "served-id-mismatch",
+        "drift": true,
+        "served_model": "stories260K",
+        "evidence": "GET /v1/models -> 200 application/json (Server: llama.cpp) (runtime=llama.cpp; expected=qwen3-8b; reason=served-id-mismatch)",
+        "error": null,
+        "passed": true,
+        "port": 37765
+      },
+      {
+        "name": "LoadingRace.HealthOkNonLoading503",
+        "family": "LoadingRace",
+        "source": "LoadingRace.json",
+        "why": "Race boundary: /health already 200 and /v1/models is 503 but the envelope is a different unavailable_error ('no slot available'); exact-match rule keeps FOREIGN_SERVICE.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: llama.cpp) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 44825
+      },
+      {
+        "name": "NearMissTriple.code-float-503.0",
+        "family": "NearMissTriple",
+        "source": "NearMissTriple.json",
+        "why": "code 503.0 is a JSON float, not an integer; Python 503.0 == 503 is True, so a plain == matcher would wrongly accept it (CriticC1Overfit, RevengerEnvelopeHistory).",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json; charset=utf-8 (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 46449
+      },
+      {
+        "name": "NearMissTriple.code-boolean-true",
+        "family": "NearMissTriple",
+        "source": "NearMissTriple.json",
+        "why": "code true: bool is an int subclass in Python, so isinstance(code, int) alone would not reject it.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json; charset=utf-8 (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 38139
+      },
+      {
+        "name": "NearMissTriple.message-trailing-period",
+        "family": "NearMissTriple",
+        "source": "NearMissTriple.json",
+        "why": "\"Loading model.\" differs from the exact message by one byte; equality, not prefix or substring.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json; charset=utf-8 (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 44763
+      },
+      {
+        "name": "NearMissTriple.message-surrounding-space",
+        "family": "NearMissTriple",
+        "source": "NearMissTriple.json",
+        "why": "\" Loading model \" must not be stripped into a match.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json; charset=utf-8 (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 40927
+      },
+      {
+        "name": "NearMissTriple.router-stream-owner-loading",
+        "family": "NearMissTriple",
+        "source": "NearMissTriple.json",
+        "why": "Real b11755 router-only unavailable_error message (server-models.cpp:2585) contains 'loading' but is not the startup gate; a substring matcher would accept it.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json; charset=utf-8 (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 36691
+      },
+      {
+        "name": "NearMissTriple.empty-503",
+        "family": "NearMissTriple",
+        "source": "NearMissTriple.json",
+        "why": "A content-less 503 (SGLang Starting /health shape) carries no envelope and stays on the generic path.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 45657
+      },
+      {
+        "name": "NearMissTriple.readme-key-order-positive",
+        "family": "NearMissTriple",
+        "source": "NearMissTriple.json",
+        "why": "README@704366d:486 prints code,message,type order while the live server sends message,type,code; the parsed triple decides, not byte order.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json; charset=utf-8 (Server: kama-stub) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 404|",
+        "error": null,
+        "passed": true,
+        "port": 36677
+      },
+      {
+        "name": "NearMissTriple.exact-envelope-labelled-html",
+        "family": "NearMissTriple",
+        "source": "NearMissTriple.json",
+        "why": "Exact JSON envelope served with Content-Type text/html: the rule keys on the parsed body at status 503, so it is MODEL_LOADING (pins the branch order before the HTML sniff).",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "MODEL_LOADING",
+          "reason": "llamacpp-loading",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_LOADING",
+        "reason": "llamacpp-loading",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 text/html (Server: kama-stub) (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> 404|",
+        "error": null,
+        "passed": true,
+        "port": 43393
+      },
+      {
+        "name": "NonLoadingStatuses.ok200-json-envelope",
+        "family": "NonLoadingStatuses",
+        "source": "NonLoadingStatuses.json",
+        "why": "Exact llama.cpp loading envelope at HTTP 200 with JSON CT: no data/models array and status != 503, so classify() lands on 2xx+json -> schema-unrecognized.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "schema-unrecognized",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "schema-unrecognized",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 200 application/json (Server: kama-stub) (2xx service with no recognisable model array); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 38529
+      },
+      {
+        "name": "NonLoadingStatuses.ok200-plain-envelope",
+        "family": "NonLoadingStatuses",
+        "source": "NonLoadingStatuses.json",
+        "why": "Same loading-shaped body at 200 but served as text/plain: 2xx without JSON CT takes the non-model-2xx branch, proving CT selects the reason.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-model-2xx",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-model-2xx",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 200 text/plain (Server: kama-stub) (2xx service with no recognisable model array); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 38779
+      },
+      {
+        "name": "NonLoadingStatuses.err500-envelope",
+        "family": "NonLoadingStatuses",
+        "source": "NonLoadingStatuses.json",
+        "why": "Loading envelope at HTTP 500: non-2xx and not the pinned 503 gate, so it stays a generic non-model error page -> non-2xx-non-model-http.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 500 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 32841
+      },
+      {
+        "name": "NonLoadingStatuses.err502-envelope",
+        "family": "NonLoadingStatuses",
+        "source": "NonLoadingStatuses.json",
+        "why": "Loading envelope at HTTP 502 (proxy/gateway shape): exact-body matcher must not fire off-status; non-2xx -> non-2xx-non-model-http.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 502 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 42313
+      },
+      {
+        "name": "NonLoadingStatuses.err504-envelope",
+        "family": "NonLoadingStatuses",
+        "source": "NonLoadingStatuses.json",
+        "why": "Loading envelope at HTTP 504: gateway-timeout status with a loading body is still a foreign non-2xx service, not MODEL_LOADING.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 504 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 41901
+      },
+      {
+        "name": "NonLoadingStatuses.err404-envelope",
+        "family": "NonLoadingStatuses",
+        "source": "NonLoadingStatuses.json",
+        "why": "Loading envelope at HTTP 404: a route-less service echoing the body is non-2xx without the 503 pin -> non-2xx-non-model-http.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 404 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 33099
+      },
+      {
+        "name": "NonLoadingStatuses.err429-envelope",
+        "family": "NonLoadingStatuses",
+        "source": "NonLoadingStatuses.json",
+        "why": "Loading envelope at HTTP 429: rate-limited non-model service carrying the body verbatim must not flip to MODEL_LOADING -> non-2xx-non-model-http.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 429 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 42811
+      },
+      {
+        "name": "Overbroad503.nginx-html-503",
+        "family": "Overbroad503",
+        "source": "Overbroad503.json",
+        "why": "nginx-style HTML 503 page is a generic reverse-proxy/maintenance response, not a model service; HTML at any status maps to html-non-model.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "html-non-model",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "html-non-model",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 text/html (Server: kama-stub); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 41223
+      },
+      {
+        "name": "Overbroad503.error-string",
+        "family": "Overbroad503",
+        "source": "Overbroad503.json",
+        "why": "JSON body whose error member is a bare string (maintenance), not the llama.cpp error-object envelope; must stay non-2xx-non-model-http.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 41911
+      },
+      {
+        "name": "Overbroad503.no-slot-available",
+        "family": "Overbroad503",
+        "source": "Overbroad503.json",
+        "why": "Real llama.cpp unavailable_error envelope but message is 'no slot available' (server up, all slots busy) \u2014 message mismatch means FOREIGN_SERVICE, not MODEL_LOADING.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 39917
+      },
+      {
+        "name": "Overbroad503.lowercase-loading",
+        "family": "Overbroad503",
+        "source": "Overbroad503.json",
+        "why": "Envelope shape is right but message 'loading model' is lowercase; the C1 rule requires exact 'Loading model', so a case-insensitive implementation is overbroad.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 35749
+      },
+      {
+        "name": "Overbroad503.server-error-type",
+        "family": "Overbroad503",
+        "source": "Overbroad503.json",
+        "why": "Message matches 'Loading model' but type is server_error, not unavailable_error \u2014 a different failure mode that must not read as a model still loading.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 46785
+      },
+      {
+        "name": "Overbroad503.code-string",
+        "family": "Overbroad503",
+        "source": "Overbroad503.json",
+        "why": "Envelope carries code \"503\" as a JSON string, not the integer 503; the rule requires an integer code so a string-coercing check is overbroad.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 41153
+      },
+      {
+        "name": "Overbroad503.no-error-wrapper",
+        "family": "Overbroad503",
+        "source": "Overbroad503.json",
+        "why": "Loading fields sit at the JSON top level without the error object wrapper; envelope detection must require the nested error member.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 application/json (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 39547
+      },
+      {
+        "name": "Overbroad503.plaintext-loading",
+        "family": "Overbroad503",
+        "source": "Overbroad503.json",
+        "why": "text/plain 503 body 'Loading model' (e.g. a hand-rolled proxy) contains the right words but is not the JSON envelope; body sniffing the phrase is overbroad.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "FOREIGN_SERVICE",
+          "reason": "non-2xx-non-model-http",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/"
+          },
+          {
+            "method": "GET",
+            "path": "/metrics"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "FOREIGN_SERVICE",
+        "reason": "non-2xx-non-model-http",
+        "drift": true,
+        "served_model": "-",
+        "evidence": "GET /v1/models -> 503 text/plain (Server: kama-stub) (non-2xx HTTP from a non-model service); 404| @ /",
+        "error": null,
+        "passed": true,
+        "port": 38277
+      },
+      {
+        "name": "ReadyControls.expect-exact-id",
+        "family": "ReadyControls",
+        "source": "ReadyControls.json",
+        "why": "Ready b11755 /v1/models body (data[].id + owned_by llamacpp + Ollama models[]); --expect equal to data[0].id is the baseline MODEL_OK matched row.",
+        "port_mode": "stub",
+        "expect": "kama-ready",
+        "expected": {
+          "verdict": "MODEL_OK",
+          "reason": "matched",
+          "exit": 0
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 0,
+        "verdict": "MODEL_OK",
+        "reason": "matched",
+        "drift": false,
+        "served_model": "kama-ready",
+        "evidence": "GET /v1/models -> 200 application/json (Server: llama.cpp) (runtime=llama.cpp; expected=kama-ready; reason=matched); GET /health -> 200|application/json",
+        "error": null,
+        "passed": true,
+        "port": 42867
+      },
+      {
+        "name": "ReadyControls.expect-wildcard-star",
+        "family": "ReadyControls",
+        "source": "ReadyControls.json",
+        "why": "--expect '*' takes the wildcard arm in classify() before id matching, so any 2xx body with a model array is MODEL_OK expected-wildcard.",
+        "port_mode": "stub",
+        "expect": "*",
+        "expected": {
+          "verdict": "MODEL_OK",
+          "reason": "expected-wildcard",
+          "exit": 0
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 0,
+        "verdict": "MODEL_OK",
+        "reason": "expected-wildcard",
+        "drift": false,
+        "served_model": "kama-ready",
+        "evidence": "GET /v1/models -> 200 application/json (Server: llama.cpp) (runtime=llama.cpp; expected=*; reason=expected-wildcard); GET /health -> 200|application/json",
+        "error": null,
+        "passed": true,
+        "port": 36885
+      },
+      {
+        "name": "ReadyControls.expect-wildcard-dash",
+        "family": "ReadyControls",
+        "source": "ReadyControls.json",
+        "why": "--expect '-' is the third wildcard literal in classify()'s ''|'*'|'-' case arm and must also yield MODEL_OK expected-wildcard, not a mismatch.",
+        "port_mode": "stub",
+        "expect": "-",
+        "expected": {
+          "verdict": "MODEL_OK",
+          "reason": "expected-wildcard",
+          "exit": 0
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 0,
+        "verdict": "MODEL_OK",
+        "reason": "expected-wildcard",
+        "drift": false,
+        "served_model": "kama-ready",
+        "evidence": "GET /v1/models -> 200 application/json (Server: llama.cpp) (runtime=llama.cpp; expected=-; reason=expected-wildcard)",
+        "error": null,
+        "passed": true,
+        "port": 44307
+      },
+      {
+        "name": "ReadyControls.expect-different-id",
+        "family": "ReadyControls",
+        "source": "ReadyControls.json",
+        "why": "A real model array with a resolvable --expect that no served id normalizes to must be MODEL_MISMATCH served-id-mismatch, not MODEL_OK \u2014 defeats a '200+models is always OK' stub.",
+        "port_mode": "stub",
+        "expect": "qwen2.5-7b-instruct",
+        "expected": {
+          "verdict": "MODEL_MISMATCH",
+          "reason": "served-id-mismatch",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_MISMATCH",
+        "reason": "served-id-mismatch",
+        "drift": true,
+        "served_model": "kama-ready",
+        "evidence": "GET /v1/models -> 200 application/json (Server: llama.cpp) (runtime=llama.cpp; expected=qwen2.5-7b-instruct; reason=served-id-mismatch)",
+        "error": null,
+        "passed": true,
+        "port": 36039
+      },
+      {
+        "name": "ReadyControls.expect-gguf-path-basename",
+        "family": "ReadyControls",
+        "source": "ReadyControls.json",
+        "why": "normalize_id strips the directory and one trailing .gguf from --expect, so a path/to/<served-id>.gguf must still be MODEL_OK matched.",
+        "port_mode": "stub",
+        "expect": "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+        "expected": {
+          "verdict": "MODEL_OK",
+          "reason": "matched",
+          "exit": 0
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 0,
+        "verdict": "MODEL_OK",
+        "reason": "matched",
+        "drift": false,
+        "served_model": "stories260K",
+        "evidence": "GET /v1/models -> 200 application/json (Server: llama.cpp) (runtime=llama.cpp; expected=/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf; reason=matched); GET /health -> 200|application/json",
+        "error": null,
+        "passed": true,
+        "port": 38043
+      },
+      {
+        "name": "ReadyControls.served-id-carries-gguf-suffix",
+        "family": "ReadyControls",
+        "source": "ReadyControls.json",
+        "why": "normalize_id also applies to served ids: a data[].id of 'kama-ready.gguf' must match --expect 'kama-ready' \u2014 symmetric basename/.gguf stripping, still MODEL_OK matched.",
+        "port_mode": "stub",
+        "expect": "kama-ready",
+        "expected": {
+          "verdict": "MODEL_OK",
+          "reason": "matched",
+          "exit": 0
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 0,
+        "verdict": "MODEL_OK",
+        "reason": "matched",
+        "drift": false,
+        "served_model": "kama-ready.gguf",
+        "evidence": "GET /v1/models -> 200 application/json (Server: llama.cpp) (runtime=llama.cpp; expected=kama-ready; reason=matched)",
+        "error": null,
+        "passed": true,
+        "port": 39135
+      },
+      {
+        "name": "ReadyControls.ollama-name-not-served-id",
+        "family": "ReadyControls",
+        "source": "ReadyControls.json",
+        "why": "served_ids precedence picks the non-empty data[].id group and never falls through to models[].name/.model or aliases[]; expecting the Ollama-side name must be served-id-mismatch.",
+        "port_mode": "stub",
+        "expect": "stories260K",
+        "expected": {
+          "verdict": "MODEL_MISMATCH",
+          "reason": "served-id-mismatch",
+          "exit": 2
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 2,
+        "verdict": "MODEL_MISMATCH",
+        "reason": "served-id-mismatch",
+        "drift": true,
+        "served_model": "kama-ready",
+        "evidence": "GET /v1/models -> 200 application/json (Server: llama.cpp) (runtime=llama.cpp; expected=stories260K; reason=served-id-mismatch)",
+        "error": null,
+        "passed": true,
+        "port": 41995
+      },
+      {
+        "name": "ReadyControls.second-data-id-match",
+        "family": "ReadyControls",
+        "source": "ReadyControls.json",
+        "why": "model_matches iterates every served id (router mode exposes several data[] entries); --expect equal to data[1].id must be MODEL_OK matched, not mismatch on first-entry-only comparison.",
+        "port_mode": "stub",
+        "expect": "tiny-vocab",
+        "expected": {
+          "verdict": "MODEL_OK",
+          "reason": "matched",
+          "exit": 0
+        },
+        "requests": [
+          {
+            "method": "GET",
+            "path": "/v1/models"
+          },
+          {
+            "method": "GET",
+            "path": "/health"
+          }
+        ],
+        "probe_exit": 0,
+        "verdict": "MODEL_OK",
+        "reason": "matched",
+        "drift": false,
+        "served_model": "kama-ready,tiny-vocab",
+        "evidence": "GET /v1/models -> 200 application/json (Server: llama.cpp) (runtime=llama.cpp; expected=tiny-vocab; reason=matched); GET /health -> 200|application/json",
+        "error": null,
+        "passed": true,
+        "port": 45547
+      }
+    ]
+  },
+  "stderr_tail": "models, GET /health]\n[PASS] ReadyControls.served-id-carries-gguf-suffix (ReadyControls): verdict=MODEL_OK reason=matched exit=0 (expected MODEL_OK/matched/0) requests=[GET /v1/models, GET /health]\n[PASS] ReadyControls.ollama-name-not-served-id (ReadyControls): verdict=MODEL_MISMATCH reason=served-id-mismatch exit=2 (expected MODEL_MISMATCH/served-id-mismatch/2) requests=[GET /v1/models, GET /health]\n[PASS] ReadyControls.second-data-id-match (ReadyControls): verdict=MODEL_OK reason=matched exit=0 (expected MODEL_OK/matched/0) requests=[GET /v1/models, GET /health]\ntests=72 passes=72 failures=0\n"
+}

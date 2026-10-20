@@ -1,0 +1,82 @@
+[
+ {
+  "name": "NearMissTriple.code-float-503.0",
+  "family": "NearMissTriple",
+  "why": "code 503.0 is a JSON float, not an integer; Python 503.0 == 503 is True, so a plain == matcher would wrongly accept it (CriticC1Overfit, RevengerEnvelopeHistory).",
+  "port_mode": "stub",
+  "routes": {"/v1/models": {"status": 503, "headers": {"Content-Type": "application/json; charset=utf-8"}, "body_text": "{\"error\":{\"message\":\"Loading model\",\"type\":\"unavailable_error\",\"code\":503.0}}"}},
+  "default_route": null,
+  "expect": "*",
+  "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+ },
+ {
+  "name": "NearMissTriple.code-boolean-true",
+  "family": "NearMissTriple",
+  "why": "code true: bool is an int subclass in Python, so isinstance(code, int) alone would not reject it.",
+  "port_mode": "stub",
+  "routes": {"/v1/models": {"status": 503, "headers": {"Content-Type": "application/json; charset=utf-8"}, "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": true}}}},
+  "default_route": null,
+  "expect": "*",
+  "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+ },
+ {
+  "name": "NearMissTriple.message-trailing-period",
+  "family": "NearMissTriple",
+  "why": "\"Loading model.\" differs from the exact message by one byte; equality, not prefix or substring.",
+  "port_mode": "stub",
+  "routes": {"/v1/models": {"status": 503, "headers": {"Content-Type": "application/json; charset=utf-8"}, "body_json": {"error": {"message": "Loading model.", "type": "unavailable_error", "code": 503}}}},
+  "default_route": null,
+  "expect": "*",
+  "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+ },
+ {
+  "name": "NearMissTriple.message-surrounding-space",
+  "family": "NearMissTriple",
+  "why": "\" Loading model \" must not be stripped into a match.",
+  "port_mode": "stub",
+  "routes": {"/v1/models": {"status": 503, "headers": {"Content-Type": "application/json; charset=utf-8"}, "body_json": {"error": {"message": " Loading model ", "type": "unavailable_error", "code": 503}}}},
+  "default_route": null,
+  "expect": "*",
+  "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+ },
+ {
+  "name": "NearMissTriple.router-stream-owner-loading",
+  "family": "NearMissTriple",
+  "why": "Real b11755 router-only unavailable_error message (server-models.cpp:2585) contains 'loading' but is not the startup gate; a substring matcher would accept it.",
+  "port_mode": "stub",
+  "routes": {"/v1/models": {"status": 503, "headers": {"Content-Type": "application/json; charset=utf-8"}, "body_json": {"error": {"message": "Stream owner model is loading, retry later", "type": "unavailable_error", "code": 503}}}},
+  "default_route": null,
+  "expect": "*",
+  "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+ },
+ {
+  "name": "NearMissTriple.empty-503",
+  "family": "NearMissTriple",
+  "why": "A content-less 503 (SGLang Starting /health shape) carries no envelope and stays on the generic path.",
+  "port_mode": "stub",
+  "routes": {"/v1/models": {"status": 503, "headers": {}, "body_text": ""}},
+  "default_route": null,
+  "expect": "*",
+  "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+ },
+ {
+  "name": "NearMissTriple.readme-key-order-positive",
+  "family": "NearMissTriple",
+  "why": "README@704366d:486 prints code,message,type order while the live server sends message,type,code; the parsed triple decides, not byte order.",
+  "port_mode": "stub",
+  "routes": {"/v1/models": {"status": 503, "headers": {"Content-Type": "application/json; charset=utf-8"}, "body_text": "{\"error\": {\"code\": 503, \"message\": \"Loading model\", \"type\": \"unavailable_error\"}}"}},
+  "default_route": null,
+  "expect": "stories260K",
+  "expected": {"verdict": "MODEL_LOADING", "reason": "llamacpp-loading", "exit": 2}
+ },
+ {
+  "name": "NearMissTriple.exact-envelope-labelled-html",
+  "family": "NearMissTriple",
+  "why": "Exact JSON envelope served with Content-Type text/html: the rule keys on the parsed body at status 503, so it is MODEL_LOADING (pins the branch order before the HTML sniff).",
+  "port_mode": "stub",
+  "routes": {"/v1/models": {"status": 503, "headers": {"Content-Type": "text/html"}, "body_text": "{\"error\":{\"message\":\"Loading model\",\"type\":\"unavailable_error\",\"code\":503}}"}},
+  "default_route": null,
+  "expect": "*",
+  "expected": {"verdict": "MODEL_LOADING", "reason": "llamacpp-loading", "exit": 2}
+ }
+]

@@ -27,6 +27,13 @@
 #
 # Verdict vocabulary (exact strings):
 #   MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP
+#   MODEL_LOADING
+#
+# MODEL_LOADING: GET /v1/models answered 503 with the exact llama.cpp single-model
+# loading envelope {"error":{"message":"Loading model","type":"unavailable_error","code":503}}
+# (b11755 tools/server/server-http.cpp:307-328). Drift (exit 2): not ready. A body-shape
+# match only — runtime identity and served model are unverified. Router mode never
+# emits it; requires python3 (without it the body keeps FOREIGN_SERVICE).
 #
 # Exit codes: 0 every declared consumer reconciles | 2 at least one drift
 #             1 probe error (bad arg, missing dep, unreadable registry) — never a verdict
@@ -52,7 +59,7 @@
 set -euo pipefail
 umask 077
 
-VOCAB="MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP"
+VOCAB="MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP MODEL_LOADING"
 
 SELF_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
 REPO_ROOT=$(cd -- "$SELF_DIR/.." && pwd)
@@ -107,7 +114,7 @@ flags:
   --timeout S          per-request curl --max-time in seconds (default 5)
   --connect-timeout S  per-request curl --connect-timeout in seconds (default 2)
 
-verdicts: MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP
+verdicts: MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP MODEL_LOADING
 exit: 0 reconciled | 2 drift | 1 probe error
 EOF
 }
@@ -410,6 +417,35 @@ PY
   grep -qE '"(data|models)"[[:space:]]*:[[:space:]]*\[' "$body" 2>/dev/null
 }
 
+# llama.cpp loading gate (b11755 tools/server/server-http.cpp:307-325): while
+# is_ready is false every non-frontend path returns 503 with the exact envelope
+# {"error":{"message":"Loading model","type":"unavailable_error","code":503}}.
+# That is not-ready drift; the body shape does not prove the runtime. Exact match only —
+# any deviation (e.g. "no slot available" unavailable_error, code as string or
+# float, non-503 status) falls through to the generic path. Requires python3:
+# a grep approximation cannot prove the exact envelope, so without python3 the
+# body keeps its old FOREIGN_SERVICE verdict (fail closed, never false-pass).
+body_is_llamacpp_loading() { # $1 body file -> 0 only on the exact loading envelope
+  [ "$HAVE_PY" -eq 1 ] || return 1
+  python3 - "$1" <<'PY' 2>/dev/null
+import json, sys
+try:
+    doc = json.load(open(sys.argv[1]))
+except Exception:
+    sys.exit(1)
+if not isinstance(doc, dict):
+    sys.exit(1)
+err = doc.get("error")
+if not isinstance(err, dict):
+    sys.exit(1)
+code = err.get("code")
+if err.get("message") == "Loading model" and err.get("type") == "unavailable_error" \
+        and not isinstance(code, bool) and isinstance(code, int) and code == 503:
+    sys.exit(0)
+sys.exit(1)
+PY
+}
+
 # ---------------------------------------------------------------- classify
 # shellcheck disable=SC2034
 classify() { # $1 port, $2 expected -> sets C_VERDICT C_SERVED C_EVIDENCE C_REASON
@@ -461,6 +497,13 @@ classify() { # $1 port, $2 expected -> sets C_VERDICT C_SERVED C_EVIDENCE C_REAS
   esac
   if [ -n "$C_VERDICT" ]; then
     C_EVIDENCE="$base; $(probe_short "$port" "/") @ /"
+    return 0
+  fi
+
+  if [ "$F_CODE" = "503" ] && [ -s "$FBODY" ] && body_is_llamacpp_loading "$FBODY"; then
+    C_VERDICT=MODEL_LOADING
+    C_REASON=llamacpp-loading
+    C_EVIDENCE="$base (body matches the llama.cpp loading envelope: not ready; runtime identity and served model unverified); GET /health -> $(probe_short "$port" "/health")"
     return 0
   fi
 
@@ -677,7 +720,7 @@ cmd_listeners() {
 
   local -a json_rows=() table=()
   table+=("$(printf 'port\tbind\towner\tverdict\treason\tserved_model\tevidence')")
-  local i n_model=0 n_dead=0 n_foreign=0 n_nothttp=0 n_unauth=0
+  local i n_model=0 n_dead=0 n_foreign=0 n_nothttp=0 n_unauth=0 n_loading=0
   for ((i=0; i<${#ports[@]}; i++)); do
     port=${ports[i]}
     classify "$port" "${OPT_EXPECT:-}"
@@ -687,6 +730,7 @@ cmd_listeners() {
       FOREIGN_SERVICE) n_foreign=$((n_foreign+1)) ;;
       NOT_HTTP) n_nothttp=$((n_nothttp+1)) ;;
       UNAUTHORIZED_SERVICE) n_unauth=$((n_unauth+1)) ;;
+      MODEL_LOADING) n_loading=$((n_loading+1)) ;;
     esac
     table+=("$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s' \
       "$port" "${scopes[i]}" "${OWNER[$port]:--}" "$C_VERDICT" "$C_REASON" "$C_SERVED" "$C_EVIDENCE")")
@@ -696,13 +740,13 @@ cmd_listeners() {
   done
 
   if [ "$JSON_OUT" -eq 1 ]; then
-    emit_json "$(printf '{\n  "schema": "kama-probe/v1",\n  "subcommand": "listeners",\n  "verdict_vocabulary": "%s",\n  "exit_codes": {"0": "probe completed", "2": "drift (listeners does not gate)", "1": "probe error"},\n  "summary": {"probed": %s, "model_endpoints": %s, "foreign_service": %s, "unauthorized_service": %s, "dead": %s, "not_http": %s},\n  "listeners": [\n%s\n  ]\n}\n' \
-      "$VOCAB" "${#ports[@]}" "$n_model" "$n_foreign" "$n_unauth" "$n_dead" "$n_nothttp" "$(json_array "${json_rows[@]}")")"
+    emit_json "$(printf '{\n  "schema": "kama-probe/v1",\n  "subcommand": "listeners",\n  "verdict_vocabulary": "%s",\n  "exit_codes": {"0": "probe completed", "2": "drift (listeners does not gate)", "1": "probe error"},\n  "summary": {"probed": %s, "model_endpoints": %s, "foreign_service": %s, "unauthorized_service": %s, "dead": %s, "not_http": %s, "model_loading": %s},\n  "listeners": [\n%s\n  ]\n}\n' \
+      "$VOCAB" "${#ports[@]}" "$n_model" "$n_foreign" "$n_unauth" "$n_dead" "$n_nothttp" "$n_loading" "$(json_array "${json_rows[@]}")")"
     return 0
   fi
   printf '%s\n' "${table[@]}" | print_table
-  printf 'probed=%s model_endpoints=%s foreign_service=%s unauthorized_service=%s dead=%s not_http=%s\n' \
-    "${#ports[@]}" "$n_model" "$n_foreign" "$n_unauth" "$n_dead" "$n_nothttp"
+  printf 'probed=%s model_endpoints=%s foreign_service=%s unauthorized_service=%s dead=%s not_http=%s model_loading=%s\n' \
+    "${#ports[@]}" "$n_model" "$n_foreign" "$n_unauth" "$n_dead" "$n_nothttp" "$n_loading"
 }
 
 # shared row builder: resolve a registry row's file value
@@ -892,7 +936,7 @@ diff_baseline() {
       # garbage lines are dropped (warned + noted in DELTA.md), not turned into
       # phantom row-absent transitions and not silently forgiven
       case " ${v:-} " in
-        *\ MODEL_OK\ *|*\ MODEL_MISMATCH\ *|*\ FOREIGN_SERVICE\ *|*\ UNAUTHORIZED_SERVICE\ *|*\ DEAD\ *|*\ NOT_HTTP\ *) : ;;
+        *\ MODEL_OK\ *|*\ MODEL_MISMATCH\ *|*\ FOREIGN_SERVICE\ *|*\ UNAUTHORIZED_SERVICE\ *|*\ DEAD\ *|*\ NOT_HTTP\ *|*\ MODEL_LOADING\ *) : ;;
         *) warn "latest.tsv: dropping malformed baseline row for id='$id'"
            MAL_NOTES+=("- $ts baseline-note malformed-row-dropped id='$(persist_clean "$id")'")
            bad=1; continue ;;
