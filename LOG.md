@@ -951,3 +951,40 @@ and in SKILL/lesson, not treated as current authority.
   bindings, `taskCall` sha256).
 - Lesson `corpus/lessons/round-16.md`; sources S035-S041 added, S017 used-by
   extended. Measured results follow in the next entry.
+
+## round 16 — committed measurement and bounded verdict (2026-10-20)
+
+- Measured and pushed revision `726f737a942f1606d66e032f1efbcbb6f689ccf1`
+  (first implementation `b8e485c` was not final). Receipt
+  `.ufo/waves/round-16/acceptance.json`, ok true, errors empty.
+- C1: `python3 .ufo/waves/round-16/measure.py` exit 0. Frozen probe
+  (`93ee4302…cd64` = blob `20e392e:tools/kama-probe.sh`) 55 pass / 17 fail
+  exit 1; current probe 72/72 exit 0; changed verdicts exactly the 17
+  `MODEL_LOADING` rows; matrix set digest and counts pinned. Doc ledger
+  `stale-statements.py`: 17 uncorrected at `20e392e` → 0 at HEAD. Calibration
+  score 7 → 7.
+- C2: live tool exit 0, 10/10 checks, gate `VALID` with model, server, probe
+  and tool pins; frozen-probe control 10/10; the loading window was captured
+  live (38 exact-envelope 503s on `/v1/models`) and its body replays as
+  `MODEL_LOADING` (current) versus `FOREIGN_SERVICE` (frozen). Controls: digest
+  mismatch exit 3; ports 34113, 8080 and listening 631 exit 2; nothing left
+  running. Capability `live-llamacpp-lifecycle` added; operability 8 → 8.
+- Corrections appended in seven knowledge files (vocabulary, loading state,
+  harness count, round-15 defect 5) plus SKILL.md, README, registry header.
+  The earlier entry's "five knowledge entries" counted only the
+  vocabulary/loading subset.
+- Falsify wave: 79 seats validated (policy v2) and dispatched in one call:
+  reviewer 33, scout 10, executor 9, critic 8, connector 6, mutation-tester 4,
+  revenger 3, scribe 3, sentinel 2, simplifier 1; 79 completed, 0 failed.
+  Provenance ledger `.ufo/waves/round-16/falsify/provenance-ledger.json`
+  (argv, three environment bindings, `taskCall` sha256 `72e81bc6…0812`, spawned
+  attempt bound to it). Round total 160 seats, 0 dead.
+- Repairs and remaining debt: `corpus/lessons/round-16.md` §Falsify wave.
+  Process incidents M6 (a seat ran `measure.py`; restored) and M7
+  (session-store traversal recurred) are recorded, not evidence. One misrooted
+  seat report moved from the fleet root into the lane (byte-exact, `cmp`).
+- Trends (author): expansion improved, quality improved, discernment unchanged.
+  L0 question filed on the lane-owned fixture and the persistent install.
+  Tools installed: llama.cpp b11755 (official release asset into
+  `~/.local/opt`, linked into `~/.local/bin`) and the pinned GGUF; no pacman.
+  Stale-lane: respawn-per-round; no other kama mission open.

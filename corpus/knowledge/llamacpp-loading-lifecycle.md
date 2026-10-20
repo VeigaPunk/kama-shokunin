@@ -1,5 +1,5 @@
 source: S036 (llama.cpp `tools/server/server-http.cpp` @ 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad = release b11755, `middleware_server_state` lines 307-328, pre-routing order 347-359); S037 (`tools/server/server.cpp` @ same commit, lines 440-515); S035 (README @ same commit, §GET `/health` lines 479-490, §GET `/v1/models` line 1258); S038 (release b11755 asset identity); S039 (pinned GGUF identity); S040 (llm-d v0.10 readiness-probe page, liveness versus model-aware readiness); S017 (Kubernetes probe lifecycle vocabulary); S041 (own-work live receipt `.ufo/waves/round-16/live/receipt.json`)
-verified-at: 2026-10-20 — upstream files fetched at the pinned commit and saved with digests under `.ufo/waves/round-16/sources/` (`pins.json`); live run 2026-10-20T13:49:38.040Z–13:49:38.170Z by L1 through `tools/kama-llamacpp-live.py`; stub matrix run by L1 through `tests/probe-verdicts/check.py`
+verified-at: 2026-10-20 — upstream files fetched at the pinned commit and saved with digests under `.ufo/waves/round-16/sources/llama.cpp-704366d/`; final live run 2026-10-20T14:06:27.859Z–14:06:27.974Z by L1 through `tools/kama-llamacpp-live.py` (sha256 b8c5e8d4…); stub matrix run by L1 through `tests/probe-verdicts/check.py`
 recheck: on-release — re-open the pinned middleware and re-run the live harness when the installed llama.cpp build changes; the receipt is a dated sample, never present service state
 
 # llama.cpp loading-to-ready lifecycle and the MODEL_LOADING verdict
@@ -98,8 +98,9 @@ reading (fail closed: still drift, never a false `MODEL_OK`).
 
 ## Live observation — round 16 (lane-owned fixture, not service restoration)
 
-Receipt `.ufo/waves/round-16/live/receipt.json` (`kama-llamacpp-live/v1`),
-2026-10-20T13:49:38.040Z–13:49:38.170Z:
+Final receipt `.ufo/waves/round-16/live/receipt.json` (`kama-llamacpp-live/v1`,
+tool sha256 `b8c5e8d402595f3b…`, probe sha256 `36b64978ee3a3aa2…`),
+2026-10-20T14:06:27.859Z–14:06:27.974Z:
 
 - Binary: `~/.local/opt/llama-b11755/llama-server`, launcher sha256
   `b6a31a8e97615a2a…`, `libllama-server-impl.so` `e404b91a81c9ab65…`, install
@@ -108,27 +109,40 @@ Receipt `.ufo/waves/round-16/live/receipt.json` (`kama-llamacpp-live/v1`),
 - Model: `~/.cache/kama-shokunin/models/stories260K.gguf`, sha256
   `270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d` before and
   after the run; alias `kama-stories260k`.
-- Port 32845 on 127.0.0.1, listener proven owned by the child before captures
-  and before each probe; refusal set
-  {8080, 34113} plus any listening port. Child environment: `HOME`, `LANG`,
-  `PATH` only; `--offline`.
-- Load window: `/health` and `/v1/models` refused once, then `/health` 200. No
-  503 was captured: `loading_observed` false. The tiny model loads in about 8 ms
-  (server log). An earlier L1 smoke run (10:17 -03, not receipted) did see
-  `/v1/models` 503 with the exact body during load.
+- Port 37527 on 127.0.0.1, listener proven owned by the child at the first HTTP
+  answer, before captures and before each probe; refusal set {8080, 34113} plus
+  every registry port, and a port already listening is refused. Child
+  environment: `HOME`, `LANG`, `PATH` only; `--offline`.
+- Load window (polling `/v1/models` alone on one keep-alive connection):
+  connection refused for the first 6 ms (210 attempts), then 38 answers of HTTP
+  503 with `Server: llama.cpp`, `Content-Type: application/json; charset=utf-8`
+  and body `{"error":{"message":"Loading model","type":"unavailable_error","code":503}}`
+  (sha256 `baa09177…957c`, keys in `message, type, code` order;
+  `loading_envelope_exact` true), then `/v1/models` 200 and `/health` 200 at
+  11 ms. Server log: model loaded at about 8.4 ms after start.
+- The captured body, replayed on a stub with its status and headers
+  (`live/replay-captured-503.py`, output `replay-captured-503.txt`), grades
+  `MODEL_LOADING` / `llamacpp-loading` exit 2 with the current probe and
+  `FOREIGN_SERVICE` / `non-2xx-non-model-http` exit 2 with the frozen one.
 - Ready: `/health` 200; `/v1/models` 200 with `data[].id` `kama-stories260k` and
   `owned_by` `llamacpp`; `/metrics` 501 (no `--metrics`); `/slots` 200.
 - Probe: `MODEL_OK` matched exit 0 with the alias; `MODEL_MISMATCH`
   served-id-mismatch exit 2 with `kama-not-this-model`.
-- Teardown: SIGTERM, return code 0, port refuses afterwards; no
-  `llama-server` process and nothing on 8080/34113 afterwards (L1 `pgrep`/`ss`).
+- Teardown: SIGTERM, return code 0, port refuses afterwards; no `llama-server`
+  process and nothing on 8080/34113 afterwards (`live/controls.txt`).
 
-Control: the same run with the frozen pre-round probe
-(`receipt-frozen-probe.json`) also passes all 10 checks, so this capability does
-not depend on the `MODEL_LOADING` change.
+Control: a separate run with the frozen pre-round probe
+(`receipt-frozen-probe.json`, port 43229) also passes all 10 checks, so this
+capability does not depend on the `MODEL_LOADING` change.
 
 What the receipt does not show: which weights a production deployment serves
 (the id is the caller's alias), health of the registered consumers (8080 and
 34113 were refused, never touched, and stay `DEAD` in `registry/history/latest.tsv`),
 generation, quality, performance, GPU paths, router mode or sleep, and a live
-`MODEL_LOADING` grade (the harness probes only after `/health` is 200).
+probe verdict during load (the harness records the raw 503 but runs the probe
+only after `/health` is 200; the probe verdict on that body comes from the
+replay). Known harness limits from the falsify wave: `health_ready` checks the
+status only, not the `{"status":"ok"}` body; `teardown_exited` and
+`teardown_port_closed` prove reaping and a refused port, not that SIGTERM caused
+the exit; `loading_envelope_exact` is recorded, not graded
+(`.ufo/waves/round-16/falsify/advice/ReviewLiveHarnessCode.md`).

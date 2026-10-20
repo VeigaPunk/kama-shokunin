@@ -9,25 +9,29 @@ is the lowest assigned axis versus operability 8; no stagnation waiver.
 ## Declared claims
 
 - **C1 calibration — catch the probe's loading-server overreach.** Since round 1
-  (`c6199a2`) `tools/kama-probe.sh` graded every non-2xx, non-HTML response
-  without a model array `FOREIGN_SERVICE` / `non-2xx-non-model-http`, evidence
-  "non-2xx HTTP from a non-model service". A loading llama.cpp server answers
-  `/v1/models` exactly that way. The lane's own matrix (round 10,
-  `runtime-health-surface-matrix.md:14`) already documented the body, and no
-  criterion compared that knowledge with the probe's behaviour. The repair adds
+  (`c6199a2`) `tools/kama-probe.sh` graded every remaining non-2xx, non-HTML
+  response without a model array (after the 401/403 rule)
+  `FOREIGN_SERVICE` / `non-2xx-non-model-http`, evidence "non-2xx HTTP from a
+  non-model service". A loading llama.cpp server answers `/v1/models` exactly
+  that way. The lane's matrix (round 10, `runtime-health-surface-matrix.md:14`)
+  documented the body for `/health` only, and the round-11 crosswalk read the
+  README as a `/v1/models` 200 while loading; no criterion compared engine
+  states with the probe's verdicts. The repair adds
   `MODEL_LOADING` / `llamacpp-loading` for the exact envelope only, keeps every
   other verdict, and appends corrections to each lane document that called the
-  vocabulary fixed or routed the state elsewhere. Counting command: `python3
+  vocabulary fixed or routed the state elsewhere. Counting commands: `python3
   .ufo/waves/round-16/measure.py` (frozen versus current probe over the literal
-  stub matrix `tests/probe-verdicts/*.json`).
+  stub matrix `tests/probe-verdicts/*.json`) and `python3
+  .ufo/waves/round-16/stale-statements.py --rev REV` (17-row ledger of stale
+  lane statements and the round-16 correction that must cite each).
 - **C2 operability — capability: live, lane-owned llama.cpp lifecycle run.**
   `tools/kama-llamacpp-live.py` starts the official b11755 llama-server with a
   pinned 1.2 MB GGUF on an unregistered loopback port, captures the documented
   surfaces, runs the probe against it, tears it down and proves teardown;
   `tests/llamacpp-live/check-receipt.py` re-derives every check from stored
   evidence. Before: no lane tool could start a runtime; the last real
-  llama.cpp observation was round 3 (2026-10-14), and the registered consumers
-  are `DEAD`.
+  llama.cpp answer was the round-2 baseline (2026-09-29T04:30:44Z; round 3 saw
+  only refused connections), and the registered consumers are `DEAD`.
 
 The two claims are separable. C1 needs no runtime (stub servers only). The C2
 live run with the frozen pre-round probe passes all 10 checks
@@ -47,7 +51,7 @@ All sources opened 2026-10-20. Quotes are verbatim and at most 25 words.
 | Not-ready is a readiness class, not dead and not foreign | admit, scoped | S017 probes.md:70 "Readiness probes determine when a container is ready to accept traffic."; S040 (vLLM-only) "The vLLM `/health` endpoint only indicates that the server process is running, not that models are loaded and ready to serve." |
 | S040 supersedes S021 (URL 404) | admit | recorded S021 URL returned 404 on 2026-10-20; versioned v0.10 page returned 200 with the same text (advice `ScoutLlmdReadiness.md`) |
 | Live capability on the pinned build | admit, scoped | S038 asset record `"digest": "sha256:753bfa7327a75b477d4d14cde71e0e46a40acc3a1408c5504530b78c33a6e226"`, page label "Pre-release"; S039 model card "Various models to be used in llama.cpp CI workflow." |
-| A green live receipt proves registered-consumer health or restoration | reject | S041 receipt port 32845 and refusal set {8080, 34113}; `registry/history/latest.tsv` still `DEAD`; nothing was restored |
+| A green live receipt proves registered-consumer health or restoration | reject | S041 receipt port 37527 and refusal set {8080, 34113}; `registry/history/latest.tsv` still `DEAD`; nothing was restored |
 | Live receipt as own-work row | admit | S041 check `probe_model_ok` observed `{"exit": 0, "reason": "matched", "verdict": "MODEL_OK"}` |
 | Generalize `MODEL_LOADING` to vLLM, SGLang, TGI, Ollama, LocalAI, LM Studio, KoboldCpp | reject | engine scans (wave advice) found no such body on `/v1/models`; kept as advice, not rows |
 
@@ -100,3 +104,96 @@ agreed), so no criterion is owed for a disagreement.
   `tests/llamacpp-live/check-receipt.py` → `VALID`; frozen-probe control 10/10;
   digest mismatch → exit 3 before launch; `--port 34113` → exit 2
   `port-refused-registered:34113`.
+
+## Falsify wave — dispositions (79 seats, 2026-10-20)
+
+Confirmed by re-running: frozen 55/17 and current 72/72 (record-for-record
+against the receipts, 9 runs, 4 concurrent); frozen-probe provenance chain;
+live reproduction 10/10 by a second seat; refusals and digest gate; snapshot
+persistence of `MODEL_LOADING` (`transitions=0` on rerun); `listeners` and
+`check` registry-mode integration; the python3 fallback; all 8 matcher mutants
+killed; the API-key precedence live (5 launches, 140 unkeyed 503s before any
+401, `ExecApiKeyLiveOrder.md`); a live loading window (10/10 launches by
+`ExecLoadingWindowCapture.md`, 453 byte-identical 503 bodies).
+
+Repaired in the round (commit `726f737`):
+
+- Live harness: ownership is proven at the first HTTP answer (a stranger's body
+  had landed in `loading_503`, `CriticC2Admission.md` D1); `/v1/models` is
+  polled alone on keep-alive, so the final receipt captured 38 exact-envelope
+  503s on the real server (`loading_envelope_exact` true); unexpected errors
+  still write a receipt (exit 2); redirects refused; `killpg` only on a live
+  child; the prctl pipe no longer leaks into the child, so `pdeathsig.prctl_ok`
+  is recorded as `unknown`; the receipt carries `tool` and `probe` digests.
+- Receipt gate: rebound a second time (ownership must be `child`; argv,
+  probe argv and declared port bound; loading fields consistent with
+  transitions; install-tree digest recomputed; `None` entries fail closed);
+  26 single-field mutations rejected; real receipts `VALID` with all four pins;
+  the frozen-probe receipt fails with the current probe's pin (exit 1).
+- `measure.py`: matrix set digest and counts (72, 17) pinned and gate exits
+  checked, so a trimmed matrix can no longer PASS (`ReviewMeasurePy.md` F1).
+- Matrix: two duplicate rows replaced by `ForeignControls.code-integer-500`
+  (the `code == 503` conjunct was unpinned: an any-integer matcher scored 72/72)
+  and `ForeignControls.html-body-sniff-text-plain` (the HTML body sniff was
+  unpinned). Totals stay 72 rows, 17 `MODEL_LOADING`.
+- Doc ledger `stale-statements.py`: 17 → 0 uncorrected (`CriticC1Admission.md`
+  asked for a counted doc-side before→after). New corrections for SKILL.md:361,
+  corpus/README.md:119 and endpoint-identity.md:126.
+- Narrowed wording: router (only the router's own `/health` and `/v1/models`
+  never answer with the body), exit (only `check`/`snapshot` gate), OPTIONS
+  exemption, older builds can be false-ready (the entry had said "never a false
+  `MODEL_OK`", contradicting its own leads), other engines are leads not
+  knowledge (KQ6), PROVINCE narrowing marked pending L0, PATH shadowing stated.
+- S041's anchor and teaches cells were amended before closure because the
+  receipt file was regenerated; the row was first committed this round
+  (`b8e485c`). No earlier-round row changed.
+
+Kept as debt (not repaired; named so the next round can take them): matrix
+`why` line citations use frozen numbering (+36/+43); one remaining duplicate
+(`EnvelopeShapes.CodeAsString` = `Overbroad503.code-string`) and the
+`LoadingRace` non-200 trio are one equivalence class; `check.py` grades reason,
+exit and drift but no row makes them load-bearing (5 harness mutants survive,
+`MutateHarness.md`), never grades `served_model`, has no route-match assertion,
+its selftest does not reach the duplicate-name guard, and malformed probe output
+ends in a traceback (exit 1, not 2); `ReadyControls` cannot tell exact from
+substring or case-insensitive id matching (pre-existing `MODEL_OK` semantics);
+live checks `health_ready` (status only), `teardown_exited` and
+`teardown_port_closed` are weak and `loading_envelope_exact` is not graded
+(`ReviewLiveHarnessCode.md`); an exception inside the harness `finally` block can
+still escape; the frozen manifest lacks a prior-exposure field.
+
+### Mistakes added by the falsify wave
+
+| ID | Class | Evidence pointer | Captured-by | Fix / failure obligation |
+|---|---|---|---|---|
+| M6 | seat ran a prohibited command | `FamilyOverbroad503` ran `measure.py` by accident, rewrote both run receipts and restored them with `git checkout` (verdicts identical, its disclosure); build-wave `ReviewSkillPlacement` ran `check-receipt.py --selftest` | context clause "never measure.py" (worked as a detector only through disclosure) | final receipts regenerated by L1 at `726f737` and digested in `acceptance.json`; open: no mechanical guard stops a seat running it |
+| M7 | session-store traversal recurs (round-15 routed defect 3) | `ReviewLesson` grep printed four `.ufo/interactive-sessions/` lines (unused); `ReviewReadmeProvinceShonen` `find ~/.config ~/.omp` listed session file names; `RerunSnapshotHarness` grep surfaced matches (none opened) | context clause — insufficient, the class repeated | open. Next wave context must give exact exclusions (`grep -r --exclude-dir=interactive-sessions`, never `find ~/.omp`); no fail-capable fix exists yet |
+| M8 | M2 incomplete | the first rebind still accepted a forged loading transition, `--host 0.0.0.0`, another `-m` path and an `unknown` ownership token (`RerunReceiptGate.md`, `ReviewReceiptGateCode.md`, `MutateReceiptGate.md`) | falsify-wave mutation seats | second rebind; 26 mutations rejected; shown able to fail by the frozen-receipt/current-pin control (exit 1) |
+
+Corrections to the table above: M3's fix column claimed a smoke that would
+catch the hang; it would not (a stub without `serve_forever` still hangs on
+`shutdown()`, `CriticMistakesFailCapable.md`). The actual backstops are the
+30 s per-probe and 600 s per-run timeouts; M3 stays open as a harness design
+gap. M4 undercounted: `ScoutMetricsSource` and `ReviewSourcesRowsA` also wrote
+reports at the fleet root and moved them; `RevengerRunReceipts` left one there,
+swept by L1 (report §Mistakes). M5 undercounted: `ConnectTameshi`,
+`ConnectKake`, `ConnectMori` and `ConnectKengaku` also read sibling-lane files
+beyond SKILL/PROVINCE/QUALITY by their own reports.
+
+Discernment: no non-author admit/reject sample exists for this round; all 160
+seats are lane-dispatched (LEARNING.md). Outside review remains pending.
+
+Gate locations (falsify-wave `CriticSourceRows.md` D1/D2, `ReviewSourcesRowsB.md`
+F1): all accessed 2026-10-20. S035
+`https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/README.md`
+lines 487 and 1258; S036 `…/704366d76…/tools/server/server-http.cpp` lines 312
+and 318; S037 `…/704366d76…/tools/server/server.cpp` line 493; the no-slot and
+router-stream quotes are `server-context.cpp:5396` and `server-models.cpp:2585`
+at the same commit (pinned copies under `.ufo/waves/round-16/sources/`); S038
+`https://github.com/ggml-org/llama.cpp/releases/tag/b11755`, expanded-assets
+digest line; S039 `https://huggingface.co/ggml-org/models-moved`, model card
+README line 1 (identity cells come from the tree API, not the quote); S040
+`https://llm-d.ai/docs/0.10/operations/readiness-probes` §Problem Statement
+(21 words); S017 `https://kubernetes.io/docs/concepts/workloads/pods/probes/`
+§Types of probe, readiness sentence (11 words); S041 `receipt.json` check
+`probe_model_ok`, re-serialized compactly from the pretty-printed file.

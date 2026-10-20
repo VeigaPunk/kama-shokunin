@@ -596,3 +596,48 @@ row; the caps at lines 26-28 (one engine, host paths, invocation-driven) stay.
 
 Sourced claim: C1 rests on S036/S037 (llama.cpp code at 704366d76), opened
 this round. Measured values are appended below after execution.
+
+### Round-16 measured results
+
+Measured revision `726f737a942f1606d66e032f1efbcbb6f689ccf1` (pushed); receipt
+`.ufo/waves/round-16/acceptance.json` (ok true, errors empty). All
+measurements are L1 runs after both waves returned. Correction to C2 above:
+the last real llama.cpp answer was round 2 (2026-09-29T04:30:44Z), not round 3,
+which saw only refused connections.
+
+| Claim | Axis / score | Counting command | Before → after | Verdict |
+|---|---|---|---|---|
+| C1 loading-envelope verdict | calibration **7 → 7**, delta 0 | `python3 .ufo/waves/round-16/measure.py`; `python3 .ufo/waves/round-16/stale-statements.py --rev REV` | stub matrix (72 rows, 17 `MODEL_LOADING`, set sha256 `bf9068d8…1f32`): frozen 55 pass / 17 fail (exit 1) → current 72 / 0 (exit 0), changed verdicts exactly the 17 loading rows; stale lane statements 17 uncorrected at `20e392e` → 0 at `726f737` | improved, bounded: one overreach caught, its corpus traces corrected; no mastery change |
+| C2 `live-llamacpp-lifecycle` | operability **8 → 8**, delta 0; capability row added | `python3 tools/kama-llamacpp-live.py …` + `python3 tests/llamacpp-live/check-receipt.py RECEIPT --expect-model-sha256 … --expect-server-sha256 … --expect-probe-sha256 … --expect-tool-sha256 …` | 0 lane tools able to start a runtime → 1; receipt 10/10 checks, `VALID`; frozen-probe control 10/10; loading window captured live (38 × 503 exact envelope on `/v1/models`) | capability acquired; operability caps at lines 26-28 unchanged |
+
+No-harm runs: `bash tools/test-snapshot.sh` 30/0 (was 24/0; the new cases
+go red on the frozen probe, 27/3); `check.py --selftest` 72/72 + 4/4. Sources
+validate exit 0; rows 34 → 41 (A 31 → 38, mined 24 → 31, B 0, C 3, queued 5,
+rejected 5). Other axes unchanged: freshness 8 (the pinned README was re-read
+and the stale round-11 reading corrected, but no registered endpoint was
+re-sampled), depth 7, coverage 9, adjacency 7 (persistent install and PATH
+shadowing disclosed; province narrowing pending L0).
+
+**Capabilities — canonical list as of round 16** (supersedes the one-row table
+at lines 122-128 without editing it; rows enter only with a demonstration):
+
+| Capability | What it can now do | Evidence pointer | First-working round |
+|---|---|---|---|
+| sources-registry | Curate where kama learns: 41 opened, tier-scoped rows; contract-v1 census clean | `corpus/SOURCES.md`; `scripts/sources-census.sh validate … kama` exit 0 | 10 |
+| ollama-offline-evidence-replay | Reconcile caller-supplied `/api/tags` + `/api/ps` captures fail-closed, readiness always unknown | `python3 tools/kama-ollama-evidence.py --selftest`; §Round-14 measured results | 14 |
+| live-llamacpp-lifecycle | Start the pinned llama.cpp b11755 server with a 1.2 MB CI fixture GGUF on an unregistered loopback port, capture its loading and ready surfaces, grade it with the probe, tear it down; receipt gate re-derives every check. Not consumer health, quality or timing | `.ufo/waves/round-16/live/receipt.json` + `check-receipt.py` (SKILL.md §Round-16) | 16 |
+
+Stagnation window: a capability entered at round 16, so the window restarts;
+calibration 7 stays below the saturation line 8, so the lowest-axis rule binds
+next round. Trend verdicts (author, pending outside review): expansion
+improved (new knowledge entry on code-level loading behaviour plus a demonstrated
+capability); quality improved (round-11 README reading corrected against pinned
+code and a live capture; seven corpus files corrected); discernment unchanged
+(no non-author admit/reject sample this round).
+
+**Planned — supersedes earlier planned statements:** outside non-author
+sampling of round 16. Next steered move, from the debt named in
+`corpus/lessons/round-16.md` §Falsify wave: make the live checks
+fail-capable (`health_ready` body, termination cause, graded
+`loading_envelope_exact`) and the matrix's reason/exit/drift grading
+load-bearing; K05 (declared versus served context) remains open.
