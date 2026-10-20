@@ -526,3 +526,10 @@ Operator conformance rollout under the 2026-10-16 fleet amendment (`84bade0`), n
 
 - Orchestrator adjudication: ADMIT conditional. Appended, append-only: SCORECARD axes erratum (freshness 7 → 8, coverage 8 → 9, superseding the stale top table) and C3 restatement on knowledge entries (9 → 12; sourced 0 → 3) with per-entry rationale; lesson errata retiring Mistake 14's substring count (15 base / 29 head — it matches correction lines); C1 measurement split into resolved 48 / terminal 2 (A17 dead surface, A51 UNDECIDABLE — not re-anchored) / unresolved 0 via new `.ufo/round-10/audit/validate-new-pointers.sh` (negative control unresolved=2); gate-run ruling recorded (in-province; S030 stays rejected).
 - Fleet census `sources-census.sh validate` → `ok`, exit 0.
+
+## 2026-10-17 — README: Devin wiki link
+
+- Operator directive (2026-10-17): insert the Devin wiki link into the README header of every repository with a generated wiki.
+- Change: `README.md` created (lane-header convention) with a `**Wiki:**` link to https://app.devin.ai/org/veigapunk/wiki/VeigaPunk/kama-shokunin?branch=master.
+- Evidence: the org's Devin wiki index lists this repo's generated wiki; sibling lane READMEs carry the same `**Wiki:**` header.
+- Documentation-only change; no round run, no axis moved, no verdict changed.
