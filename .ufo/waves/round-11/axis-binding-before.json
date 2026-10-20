@@ -1,0 +1,10 @@
+{
+  "command": [
+    "python3",
+    "-c",
+    "import json,pathlib,sys; p=pathlib.Path('.ufo/waves/round-11/claims.json'); d=json.loads(p.read_text()); rows=pathlib.Path('../shokunin.conf').read_text().splitlines(); row=next(x for x in rows if x.startswith('kama|kama-shokunin|')); actual=[x.strip() for x in row.split('|')[2].split('(')[0].split('+')]; declared=d['mission_axes']; ok=actual==declared; print(json.dumps({'finding':'axis_binding_clean' if ok else 'axis_binding_mismatch','declared':declared,'actual':actual,'source':'../shokunin.conf:52'})); sys.exit(0 if ok else 1)"
+  ],
+  "stdout": "{\"finding\": \"axis_binding_mismatch\", \"declared\": [\"operability\", \"freshness\"], \"actual\": [\"operability\", \"calibration\"], \"source\": \"../shokunin.conf:52\"}\n",
+  "stderr": "",
+  "exit": 1
+}

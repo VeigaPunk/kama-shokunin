@@ -388,3 +388,17 @@ are still live exactly as recorded — re-verified this round.
 *[correction 2026-10-19 (round 10, A24): `crash-loop ends in a silently dead endpoint` at line 374 is stale (for p in ~/.config/systemd/user/qwen-coder.service; do test -e "$p" && echo "present $p" || echo "absent $p"; done => absent ~/.config/systemd/user/qwen-coder.service — shape-only, no body read); current anchor: `SKILL.md:44-47`]*
 
 *[correction 2026-10-19 (round 10, A51): `~/.local/bin/omp:1544771` at line 101 is stale (sed -n '53,54p' corpus/lessons/round-4-recensus.md => (the ':516' fix covered only one site); 'consumer-registry.md:101' locates the omp ; default at line 1544771 where the string is at newline-line 1149391;); current anchor: `UNDECIDABLE — exact offset not re-derived: the host binary body is not read in this round (KQ8, KQ5)`]*
+
+## Provenance supplement — round 11 (2026-10-19)
+source: retained historical evidence only — round-1 record: corpus/lessons/round-1.md:3-5 (2026-09-28 commands) and corpus/lessons/round-1-citations.md:7-18 (F1–F12); 2026-10-14 teardown: corpus/lessons/round-4-recensus.md:26-27 and registry/history/DELTA.md:6-22 (2026-09-29T04:30:44Z baseline followed by 2026-10-14T12:42:32Z transitions); registry/history/latest.tsv holds the 20261014T124232Z three-DEAD-row snapshot, not the older baseline; 2026-10-15 sample: corpus/lessons/round-1-relaunch-freshness.md:10-16; 2026-10-19 corrections: .ufo/round-10/audit/stale-anchors.tsv (A19–A24, A51) and .ufo/round-10/gates/check.json (retained historical sample, no round-11 endpoint authority). Host presence was not re-measured this review: the historical record distinguishes surviving #12/#13/#35 and relocated UFO pins from deleted consumers, so no blanket file-absence claim is made.
+verified-at: original observations 2026-09-28, 2026-10-14 and 2026-10-15, plus 2026-10-19 corrections; metadata review 2026-10-20 only. Retained in-repo anchors reviewed; no endpoint contacted or live revalidation claimed. The original 39951-byte prefix is pinned by `.ufo/waves/round-11/legacy-baseline.json`; host file presence is not refreshed.
+recheck: under a future authorized probe scope, run `bash tools/kama-probe.sh check` and read its actual 0/2/1 exit independently; history capture requires an explicit lane-owned isolated directory via `bash tools/kama-probe.sh snapshot --history DIR`, not the tracked historical baseline. Reopen target-presence and line-count metadata before reusing historical verdicts; do not read credential-bearing config bodies or presume old row counts remain current.
+
+### Shape-evidence limit — round 11
+
+The round-10 A20 correction and October row-presence prose must not be read as
+proof of a file body's current pin solely from `test -e` or `wc -l`.
+Those commands establish presence and bounds only. Historical teardown samples
+remain dated evidence; current pin presence/absence needs a separately
+authorized resolver observation. This narrows the prior “no live #1/#6 target”
+wording without silently claiming a new host inspection (QUALITY KQ14).

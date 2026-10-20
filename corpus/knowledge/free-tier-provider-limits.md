@@ -67,3 +67,11 @@ is **0 seats**, pinned by `.ufo/round-6..9/telemetry.json`.
 ## Corrections — round 10 (2026-10-19)
 
 *[correction 2026-10-19 (round 10, A39): `rounds 6–17` at line 1 is stale (nl -ba corpus/knowledge/free-tier-provider-limits.md | sed -n '26,57p' => the status board contains rounds 6-9 only, and loops 2-3 remain pending); current anchor: `corpus/knowledge/free-tier-provider-limits.md:26-57`]*
+
+## Provenance supplement — round 11 (2026-10-19)
+
+source: retained historical evidence — `.ufo/round-6/telemetry.json`, `.ufo/round-7/telemetry.json`, `.ufo/round-8/telemetry.json`, `.ufo/round-9/telemetry.json` and the corresponding fleet `.ufo/reports/round-6/kama.md` through `round-9/kama.md`; this file also contains earlier pointers and appended A39 correction. No claim that these are the only in-file pointers is made.
+verified-at: original observations 2026-10-18; metadata review 2026-10-20 only. Retained telemetry/report records were reopened. The board's counts are historical; observation/recording dates come from the telemetry records, not a date column in that board. No endpoint, provider, dispatch catalog or wire id was contacted, and those observations are not refreshed.
+recheck: run from the lane root, retained-metadata check (no network): `for n in 6 7 8 9; do python3 -c "import json;d=json.load(open(f'.ufo/round-$n/telemetry.json'));print(d['round'],d['recorded_utc'],d['seats_dispatched'],d['seats_completed'],d['seats_failed'])"; test -f /home/vgpnk/Projects/shokunin/.ufo/reports/round-$n/kama.md && echo "round-$n fleet report present"; done`; live availability revalidation needs a new operator-authorized single-seat probe of the exact wire id `opencode-go/deepseek-v4.1-flash-free` plus a fresh dispatch-catalog listing for the glm arm `opencode-go/glm-5.3-flash-free` — dispatch-surface work, not a documentation-round action.
+
+*[provenance supplement appended 2026-10-20 (round-11 wave; steered label 2026-10-19): no byte above is rewritten and no observation above is refreshed by this supplement.]*

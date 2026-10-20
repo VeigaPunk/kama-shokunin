@@ -533,3 +533,50 @@ Operator conformance rollout under the 2026-10-16 fleet amendment (`84bade0`), n
 - Change: `README.md` created (lane-header convention) with a `**Wiki:**` link to https://app.devin.ai/org/veigapunk/wiki/VeigaPunk/kama-shokunin?branch=master.
 - Evidence: the org's Devin wiki index lists this repo's generated wiki; sibling lane READMEs carry the same `**Wiki:**` header.
 - Documentation-only change; no round run, no axis moved, no verdict changed.
+
+## round 11 — explicit provenance and served-identity limits (2026-10-20)
+
+- Claims: **C1 calibration**, the lowest assigned axis, adds honest provenance
+  supplements to nine legacy knowledge files while preserving original prefixes;
+  **C2 coverage** admits one documentation crosswalk with remote-inventory,
+  nullable-loading, router-state and alias/digest limits beyond prior coverage.
+  Declaration/errata: `.ufo/waves/round-11/claims.json`; neither changes runtime
+  health or claims local Ollama integration. Scores remain 7/9, delta 0 each.
+- Motivation: the round-10 plan's “18 entries” combines nine legacy knowledge
+  files with lessons, and the original metadata is absent from those nine files;
+  frozen source bytes and field inventory are in `.ufo/waves/round-11/frozen/`
+  and `legacy-baseline.json`. Existing matrix:17 already held tags versus ps;
+  the new crosswalk credits this rather than counting it again.
+- Inherited headless round-11 outputs are resolved under this entry: reuse the
+  reviewed supplements, source edits, crosswalk, QUALITY/README corrections and
+  frozen baseline; retain original spec/declaration/advice as historical work,
+  not final verdicts. `.ufo/round-10/plan.json` and `SEAT-PROTOCOL.md` are inherited
+  undelivered planning artifacts, committed only for durability; their old
+  provider/route instructions are not executed.
+- Source frontier: S001/S010/S011/S012/S016 reopened, S031 added from documented
+  remote fields; exact cell changes/quote in `corpus/lessons/round-11.md` §Gate.
+  K02 crosswalk held; K05 context capacity still needs an authorized runtime.
+  `corpus/SOURCES.md` old nonmutable cells are preserved; W04 duplicate URL
+  denotes a scoped superseding row, not independent corroboration.
+- Review-driven repairs: correct host-presence/retirement overclaims, baseline
+  line 6, obsolete config-body rechecks, unsafe privilege implications and
+  metadata-versus-documentation authority; append source-attribution limits to
+  endpoint identity and a shape-evidence limit to consumer registry. QUALITY
+  KQ11–KQ14 and SKILL's interpretation table/gate registry capture the lessons.
+  `corpus/lessons/round-11.md` records accepted/rejected candidates and review
+  dispositions; old corpus prefixes remain immutable.
+- Swarm: inherited 32-seat build dispatch plus a validated 32-seat continuation
+  verification dispatch, each one task call, role-routed without model arguments.
+  L1 is canonical planner; bounded revenger data-walks advise. Specs/dispatch/
+  registries/seat reports are under `.ufo/waves/round-11/`. Missing inherited
+  Measure/Safety advisory reports are not fabricated; current evidence covers
+  those concerns. Three misrooted continuation reports were copied into this
+  lane and fleet-original cleanup routed to Main.
+- Reproducibility: `measure.py` keeps field/prefix measurements distinct from
+  semantic admission; `reproduce.py` checks frozen input digests, runs CLI/
+  fixture cases and isolated negative controls. Fresh measurements are recorded
+  in the later append below after measuring this committed revision.
+- Boundaries: no live endpoint, environment or credential inspection, service
+  mutation, scheduling or upstream push. No tools installed. Outside non-author
+  admit/reject review requested from the orchestrator; all lane-dispatched
+  reviewers remain author advisors, and SHONEN boxes remain `[~]`.

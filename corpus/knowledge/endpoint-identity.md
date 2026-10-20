@@ -145,3 +145,36 @@ A verdict is a timestamped observation, not a promise about the next request. Re
 *[correction 2026-10-19 (round 10, A07): `tools/kama-probe.sh:32-34,338-350` at line 127 is stale (nl -ba tools/kama-probe.sh | sed -n '32,39p;338,385p' => normalization rules are at 34-39 and the current implementation at 370-385); current anchor: `tools/kama-probe.sh:34-39,370-385`]*
 
 *[correction 2026-10-19 (round 10, A08): `enabled active service uses` at line 128 is stale (nl -ba SKILL.md | sed -n '44,47p' => the unit is not-found and neither registered port has a listener); F8 is a historical observation, not the active service state; current anchor: `SKILL.md:44-47`]*
+
+## Provenance supplement — round 11 (2026-10-19)
+
+source: frozen L1 evidence F1–F12, observed in the round-1 live census (2026-09-28) and retained/re-derived in `corpus/lessons/round-1-citations.md` rows F1–F12; retained local census/output artifacts `corpus/knowledge/listener-census.md` (measured 2026-09-28 ~22:47–22:52 -0300), `corpus/knowledge/served-model-identity.md` (round-1 readiness probes), `corpus/knowledge/consumer-registry.md` (round-1 census; 2026-10-14 errata; round-10 corrections) and `SKILL.md` (round-10 corrected pointers); contract artifacts `tools/kama-probe.sh` and `registry/endpoint-consumers.tsv`, both present at review; plus this file's own appended `## Corrections — round 10 (2026-10-19)` block.
+verified-at: original on-box observations 2026-09-28 (round-1 live census); the file was revised 2026-10-14 (round 4) and 2026-10-19 (round 10, appended corrections). Round-11 provenance review performed 2026-10-20T02:14Z as metadata only — this file and the cited retained pointers were re-opened read-only and checked for existence and shape; no endpoint, socket or service was contacted and no on-box observation was revalidated live, so confidence here is provenance-of-record only, not endpoint health.
+recheck: a future authorized endpoint census may run `bash tools/kama-probe.sh check --json` for registered loopback metadata only; listener discovery needs its own declared scope. Reopen `corpus/lessons/round-1-citations.md` as historical evidence, not execution authority. Do not replay F6/F7/F11/F12 configuration-body reads or other obsolete recorded commands; host inspection needs a separately approved, shape-only plan. Round 11 ran none of these.
+
+### Readiness terminology correction — round 11 (2026-10-20 UTC)
+
+The line-89 label “Identity readiness” and “Gate traffic on a matching expected
+ID” overstate this metadata probe. A matching advertised identifier establishes
+only the model-list reconciliation predicate used by `MODEL_OK`; it is not a
+guarantee of loaded weights, inference success, capacity, or traffic readiness.
+S001's pinned llama.cpp README permits `meta: null` while loading; S011/S012
+separate Ollama available inventory from loaded inventory. The model-list probe
+implementation and verdict vocabulary are unchanged. Any functional inference
+canary remains separately authorized work, not an identity query.
+
+The preceding supplement's metadata-review date applies to retained host
+observations only. This separate terminology correction is documentation-reviewed
+2026-10-20 against S001's pinned README and S011/S012/S031; its source authority
+and detailed limits are `served-identity-crosswalk.md`, not a new endpoint run.
+
+### Historical attribution limits — round 11
+
+The frozen F1–F12 citation table is narrower than some original wording above:
+F1 is partial for host-side socket ownership, while F2 identifies the container
+mapping, not direct `docker-proxy` process ownership. Treat the latter as
+inference, not a directly observed host owner. F3 records HEAD/GET responses,
+not by itself a chat-completions POST; F4 records `models[0].name`, not by itself
+every header and alternate response field. Original “fresh” examples are dated
+2026-09-28 samples, never present service authority. These limits supersede
+broader readings of those F-citations without rewriting historical observations.

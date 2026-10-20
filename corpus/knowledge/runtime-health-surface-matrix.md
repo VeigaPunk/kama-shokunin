@@ -38,3 +38,21 @@ No local runtime was contacted: nothing here says any engine is installed, runni
 ## Cited sources
 
 S001 llama.cpp server README §GET `/health`, §GET `/v1/models` (commit c0fd7862, opened 2026-10-19); S002 vLLM Online Serving §Instrumentator APIs; S004 vLLM `health(raw_request)` source block; S006 SGLang Native APIs §Health Check, §Get Model Info, §Get Server Info; S009 Ollama API introduction §Base URLs; S010 Ollama OpenAI compatibility §Endpoints; S017 Kubernetes Liveness, Readiness, and Startup Probes §Types of probe (canonical path `/docs/concepts/workloads/pods/probes/`); S020 SGLang v0.5.22 release notes §Parallelism & Disaggregation.
+
+## Correction — round 11 (reviewed 2026-10-20 UTC)
+
+The Ollama row at line 17 already named `/api/tags` versus `/api/ps`; round 11
+does not claim that distinction as new coverage. Its S009/S010 citations support
+the base roots and compatibility subset, not the native inventory semantics.
+The native routes are grounded in reopened S011 (`GET /api/tags`, 200 description
+“List available models”) and S012 (`GET /api/ps`, 200 description “Models currently
+loaded into memory”). S031's same-page remote-entry correction grounds
+`remote_model` and `remote_host`: [INFERENCE] available inventory is not proof
+of local weights.
+
+The llama.cpp row at line 14 must not be generalized to router or sleeping-model
+state. S001's pinned README at `c0fd78626405c6d9b934efef0ec7291fcc20e3d6`
+documents nullable `/v1/models` `meta` while loading, a separate router
+`GET /models` status field, and `/health` as exempt from waking sleeping models.
+A successful model-list identity match is not an inference-readiness guarantee.
+These are documentation corrections, not observations of a local runtime.

@@ -343,3 +343,32 @@ lane-local evidence, never native judgment or mission-completion authority.
   availability is not inferred from this lane's dated alias census.
 - Where to learn more: `corpus/SOURCES.md` — tiered, revision-anchored engine docs
   (llama.cpp, vLLM, SGLang, Ollama, GGUF, Prometheus/OTel) with study paths; documentation, never a local-runtime sample.
+
+## Round-11 calibration and identity limits (2026-10-20)
+
+The current lane assignment is the kama row in fleet `shokunin.conf`, as
+directed by MISSION's Fleet shape section: operability + calibration. The
+historical roster example and earlier freshness plans are historical authority,
+not a present assignment (`corpus/lessons/round-11.md`).
+
+Legacy corpus supplements add `source:`, `verified-at:` and `recheck:` without
+rewriting dated observations. A metadata review improves the explicit limits of
+the record; it does not refresh endpoint observations. New knowledge still
+opens with the trio. Admission remains `corpus/QUALITY.md` KQ11–KQ13.
+
+| Question | Evidence to distinguish | Limit |
+|---|---|---|
+| Does a listed model name prove loaded weights or readiness? | Engine-specific inventory, loading and residency fields | No: llama.cpp may list an id during loading; Ollama tags may be remote, and `/api/ps` expires. |
+| Can alias equality prove artifact equality? | Documented aliases versus any native digest fields | No cross-engine identity equivalence; a tags/ps digest join remains inference, not a documented mapping. |
+| Is an old `MODEL_OK` sample current authority? | Sample time and original runtime, separately from metadata-review date | No current inference-readiness or local-residency claim follows. |
+
+Sources: `corpus/knowledge/served-identity-crosswalk.md` (S001, S010–S012,
+S016, S031); `corpus/lessons/round-11.md` §Gate. This changes interpretation
+guidance, not probe behavior, runtime authorization or endpoint expectations.
+
+### Round-11 local evidence registry (owner: kama)
+
+| Name | Kind / entry command | Exit map | Self-test / pinned values | Write scope |
+|---|---|---|---|---|
+| Legacy provenance integrity | gate: `python3 .ufo/waves/round-11/measure.py provenance` | 0 clean; 1 failed; 2 could-not-evaluate | `python3 .ufo/waves/round-11/measure.py --selftest`; `.ufo/waves/round-11/legacy-baseline.json`, digest pinned in the script; frozen input `.ufo/waves/round-11/frozen/before/`, expected verdict/digests in `frozen/expected.json` | Read-only; self-test creates and removes isolated temporary fixtures |
+| Crosswalk metadata count | probe: `python3 .ufo/waves/round-11/measure.py crosswalk` | 0 metadata present; 1 absent/incomplete metadata; 2 could-not-evaluate; none is semantic admission | Same `--selftest`; required source IDs in script, semantic authority in the opened S-rows | Read-only; self-test temporary fixtures only |

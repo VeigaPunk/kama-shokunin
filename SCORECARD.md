@@ -218,3 +218,38 @@ C3 restatement: the coverage-map delta `19 → 24` quoted in §Round 10 counts t
 - `gguf-runtime-compatibility-boundary.md` — no GGUF/quantization runtime-compatibility row existed; the served-id normalization rule was the only GGUF-related content.
 
 Ruling recorded: the orchestrator ruled (2026-10-19) that the L1's read-only gate runs against the lane's own registered local endpoints are inside kama's province; the documentation-only rule targeted external live targets. No claim rests on them either way; S030 stays rejected under append-only (its flip condition is now met; a re-admitting row may be added in a later round).
+
+## Round 11 — authority and declared moves (2026-10-20)
+
+This section supersedes every earlier **current** assignment/planned statement,
+not the historical observations. MISSION's Fleet shape delegates assignment to
+`../shokunin.conf`: the current kama row is **operability + calibration**, not the
+historical example's operability + freshness. Calibration 7 is lowest assigned
+(operability 8); across the full historical table it ties depth/adjacency at 7.
+Round-10 outside review exists at `corpus/lessons/round-10-verifier-spotcheck.md`;
+earlier missing-review prose describes earlier attempts, never round 10's final
+disposition or this round's verification.
+
+Declared C1 is calibration of historical provenance, not refreshed runtime
+observations; C2 works the previously tracked coverage axis on additional
+local-model identity edge classes, an in-domain extension permitted by AXES.
+The nine legacy knowledge files, not eighteen knowledge-plus-lesson records,
+are C1's fixed denominator. New entries open with provenance; legacy corrections
+append it to preserve frozen bytes and citation anchors.
+
+Self-assessments stay calibration **7 → 7 (delta 0)**, coverage **9 → 9 (delta 0)**.
+The measured field/entry counts are the falsifiable claim evidence, not an
+objective conversion to a global 0–10 scale. Prior scalar moves remain historical
+self-assessments. Operability 8, freshness 8, depth 7 and adjacency 7 are
+unchanged; none is claimed to improve. No new capability is asserted.
+
+The fresh reproduction command is
+`python3 .ufo/waves/round-11/reproduce.py`; it runs the pinned original tree,
+current tree, CLI self-test and isolated missing-field/prefix/tampered-baseline
+controls. Its committed receipt records the revision actually measured.
+
+**Planned — supersedes earlier planned rows:** obtain outside admit/reject
+sampling for this round; use the next externally steered round to address
+remaining actionable serving-domain evidence, never launch a new round here.
+K05 remains runtime-dependent. No service restoration, automatic schedule,
+provider substitution or route change is authorized by these claims.

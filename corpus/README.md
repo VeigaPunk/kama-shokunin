@@ -92,3 +92,35 @@ Appended rather than inserted, so no existing line moves (`QUALITY.md` KQ7).
 | `knowledge/gguf-runtime-compatibility-boundary.md` | GGUF naming is not an identity parser or support certificate; per-engine/per-hardware GGUF load and quantization paths | 10 |
 | `SOURCES.md` | where kama learns: tiered, revision-anchored source registry, study paths, search log (contract v1) | 10 |
 | `lessons/round-10.md` | mistakes mined (rounds 1–10), source gate, stale-anchor corrections, closed plan claim | 10 |
+
+## Corrections — round 11 (reviewed 2026-10-20 UTC)
+
+- The blanket “dated census record” description at lines 9–10 applies to the
+  historical host samples, not the vendor/spec documentation entries added in
+  round 10. Each entry's provenance states which kind of evidence it contains;
+  neither kind proves a present local responder.
+- The line-32 index description overstates `served-model-identity.md`. Its
+  original bytes contain a historical readiness/metrics output fragment
+  (`/health`, `/props`, `/slots`, `/metrics`), not alias reconciliation or a
+  minimal identity-proof procedure. Round 11 appends explicit provenance and
+  limits without rewriting the fragment.
+- The round-5 missing-review/binding statements above describe that attempt.
+  The external round-10 disposition is recorded, without modification, in
+  `lessons/round-10-verifier-spotcheck.md`. It does not verify round 11.
+- Round-11 C1 has a fixed denominator of nine legacy **knowledge** entries.
+  The old SCORECARD plan's eighteen included lessons; the knowledge provenance
+  requirement does not turn those historical lessons into knowledge entries.
+  Metadata review dates are 2026-10-20 UTC; the steered round label is unchanged.
+
+## Coverage map — round 11 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/served-identity-crosswalk.md` | Extends the pre-existing tags/ps distinction with remote inventory, expiry, alias/digest inference limits, llama.cpp nullable loading metadata and router-state boundaries; documentation only | 11 |
+
+## Frontier disposition — round 11
+
+K02's documented served-identity crosswalk is now held at the path above. It
+does not establish Ollama runtime integration, a live responder, or context
+capacity. K05 remains deferred until an authorized serving runtime exists.
+Independent round-11 admit/reject review remains pending outside this lane.

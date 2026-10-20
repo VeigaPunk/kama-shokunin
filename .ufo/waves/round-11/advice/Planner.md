@@ -1,0 +1,27 @@
+# Planner findings — round 11
+
+Review read-only at **2026-10-20T02:14:42Z** (`date -u`); round-11's 2026-10-19 label is not the actual review timestamp.
+
+## Axes
+
+Temporal truth; legacy-byte integrity; complete nine-file coverage; and routed-role fidelity. No tools installed, no runtime contacted, and no build, test, lint, formatter, or implementation edit performed.
+
+## Evidence walk
+
+- `.ufo/waves/round-11/legacy-baseline.json` records **9** legacy paths, each missing `source`, `verified-at`, and `recheck` (27 required fields total). Its `corpus/knowledge/served-model-identity.md` record is SHA-256 `294e1192181837cfbc31480c07c005cc012cbd7de7852c6ca58bb1d36d4b630b`, **1221** bytes, missing all three.
+- I read that legacy file and measured it read-only: `wc -c` = 1221 and `sha256sum` exactly matches the baseline at the timestamp above. This one-file sample is still the original prefix/content; it begins with blank lines and a readiness-field-probes heading, and contains historical command/output text for `/health`, `/props`, `/slots`, and `/metrics`, but no provenance fields. Those embedded `curl` commands were not run. This establishes only this file's observed baseline match, not the other eight files or a runtime state.
+- `corpus/README.md:9–10` says: “Every knowledge/ and lessons/ entry is a dated census record of what was observed on its citation date”. Thus adding review metadata must not recast old probe output as current identity/readiness.
+- C2's planned contract in `.ufo/waves/round-11/spec.json` (Crosswalk item) calls for a new entry with opening `source:`, `verified-at:`, `recheck:`; source IDs S016/S001/S010/S011/S012; a per-engine table of routes and id/name/digest fields; distinct availability, loaded-model, alias-identity, and readiness meanings; limits on conclusions; documented alias/path-normalization limits; grounded failure cases and province handoff. It explicitly distinguishes llama.cpp alias path vs returned id and Ollama `/api/tags`, `/api/ps`, and `/v1/models`; it says OpenAI reference is not local runtime proof and rejects universal readiness/loaded-weight inference. I reviewed the contract only; I did not reopen public vendor docs or attest that the entry has landed.
+
+## Minimal acceptance skeleton
+
+1. Treat the baseline as the finite input set: expect `legacy_files=9`; before correction it predicts `missing_files=9`, `missing_fields=27`. Define `missing_files` explicitly (recommended: files with any required-field cardinality failure) so it cannot be confused with an unreadable/missing physical input; malformed baseline or unreadable input should be invalid-input exit 2.
+2. For each baseline path, read raw bytes. Let `N=baseline.bytes`; require `len(current) >= N` and `sha256(current[:N]) == baseline.sha256`. This proves append-only prefix preservation without incorrectly comparing the entire now-longer file. Do not decode/re-encode, normalize CRLF/LF, strip whitespace, or compare only a line count. A shorter file, changed byte, or altered original newline is a prefix violation even if all metadata is present.
+3. Count exact, case-sensitive, column-zero `source:`, `verified-at:`, and `recheck:` lines; each must occur exactly once per file. Indented forms, `source-name:`, and duplicate fields must not pass. A zero-count field contributes to `missing_fields`; a duplicate must still fail the cardinality gate (report its violation distinctly rather than silently treating “at least one” as valid). Clean C1 acceptance is `legacy_files=9`, `missing_files=0`, `missing_fields=0`, `prefix_violations=0`, exit 0; missing fields or prefix mutation exit 1; invalid invocation/input exit 2.
+4. For C2, the lightweight measurement should report whether the planned file exists and its provenance is present; do not make a keyword/wording regex a semantic validator. Human review checks that source-backed rows really separate the four concepts and preserve the specified engine distinctions and limits. `verified-at` records the actual doc-review date and scope, not a claim that legacy endpoints were re-probed today.
+
+**One-case overfit counterexample:** a checker that examines only `served-model-identity.md` passes after its three fields are appended, yet the other eight baseline files can remain untouched with 24 fields absent. Therefore a single-file happy path cannot support the C1 zero-missing claim; acceptance must iterate the complete baseline map.
+
+## Routing / limits
+
+The task calls this a functional “planner” seat and notes the validator excludes that taxonomy; the wave item's declared role in `spec.json` and `dispatch.json` is `revenger`, preserving host routing without a bypass. `spawn-result.json` likewise lists `revenger` among the routed roles. I report the functional planner findings under the actual `revenger` routing taxonomy; no planner-role substitution or validator bypass was attempted. The requested `xd://lsp` lookup was unavailable (“No such tool” in the mounted-device response), so no references/implementation/definition navigation was possible; I rely on the read contract and observed file bytes, not grep as semantic proof. No independent outside review or C1/C2 execution is claimed.
