@@ -509,3 +509,47 @@ Final measured revision, counts and verdict are appended after execution.
 admit/reject sampling; a subsequent steered move should build actual
 serving-domain evidence rather than repeat this guard correction.
 Live integration/context capacity remains operator-runtime dependent.
+
+### Round-15 executed results
+
+Measured and pushed implementation revision:
+`4b1b4ad1ba31660cc44c82d204dc85c1355e36d2`.
+Receipt `.ufo/waves/round-15/acceptance.json`: **ok true**, errors empty.
+All executions were L1 post-integration, after both waves returned.
+
+| Claim | Axis / score | Measured before → after | Verdict |
+|---|---|---|---|
+| C1 declared-name duplicate-corpus admission | calibration 7 → 7, delta0 | same 50-test matrix: 23 passed/27 failed against original → 50 passed/0 failed; 27 duplicate controls accepted/measured → rejected before runner child creation | improved bounded enforcement; no mastery, classifier-policy or runtime claim |
+
+Counting command from lane root:
+`python3 tests/ollama-corpus-guard/check.py --runner PATH`.
+Before PATH `.ufo/waves/round-15/frozen/measure-before.py`; after PATH
+`.ufo/waves/round-14/measure.py` (also default).
+Both controls use explicit temporary tool/cases flags inside the harness,
+so relocated defaults never supply false red evidence.
+Predicate-only `frozen/guard-only-red.py` also reproduces the
+same23/50 result with final prose unchanged and only the guard removed.
+
+Observed duplicate-control classifier/Popen counts **483/483 → 0/0**;
+valid-control counts **402/402 → 402/402**. All27 rejected controls have
+exact `corpus: duplicate case names`, null findings/exits and zero audited
+process events. Valid controls defeat reject-all. Total runner audit
+events count both Popen and `_posixsubprocess.fork_exec`, not two children.
+Full nested results and streams are retained in `run-{before,causal_red,after}.json`.
+
+`python3 tests/ollama-corpus-guard/check.py --selftest`: exit0/clean,
+50 passed/0 failed; same literal oracle, not independent corroboration.
+`python3 .ufo/waves/round-14/measure.py`: exit0, original51/51 exact
+finding/exit/scope matches, unique names51. Original classifier, cases,
+receipt, serving tools/registry, province and SHONEN remain byte-equal
+to start (`fidelity.json`). No live serving probe was run.
+
+Final source validate/census exit0; rows33→34, A30→31, mined23→24;
+B0/C3/queued5/rejected5 unchanged. Only S012 used-by changes in existing
+rows; S034 is scoped own-work diagnosis, not expansion or discovery.
+
+Other five axes **unchanged**; no observed harm within the stated scope.
+Expansion, quality and discernment **unchanged**: no new knowledge/capability
+ground, no serving-knowledge revalidation, and no independent round15
+admit/reject sample. Gate repair is credited under C1 only. Outside
+admission remains pending; four promotion assertions remain `[~]`.

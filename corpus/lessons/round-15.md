@@ -199,3 +199,88 @@ in the initial Gate. No other new source row is admitted.
   parsing despite the no-verification request. Neither is a lane gate,
   runner or classifier test receipt, and neither supplies the round
   measurement. L1 alone performs the recorded post-integration executions.
+
+## Executed author disposition
+
+Measured/pushed work revision:
+`4b1b4ad1ba31660cc44c82d204dc85c1355e36d2`.
+All command/cwd/exit/full stdout/stderr and complete nested runner results
+are committed under `.ufo/waves/round-15/run-*.json`; summary and additional
+per-record assertions: `acceptance.json`, **ok true**, errors `[]`.
+L1 ran these after both waves and final edits, not during seat implementation.
+
+| Counting command, from lane root | Real exit | Observed |
+|---|---:|---|
+| `python3 tests/ollama-corpus-guard/check.py --runner .ufo/waves/round-15/frozen/measure-before.py` | 1 | 23 passed, 27 failed; each duplicate control actually measures instead of rejecting |
+| Same command with `--runner .ufo/waves/round-15/frozen/guard-only-red.py` | 1 | Same23/50; final prose identical, predicate removed only |
+| `python3 tests/ollama-corpus-guard/check.py` | 0 | clean,50 passed,0 failed |
+| `python3 tests/ollama-corpus-guard/check.py --selftest` | 0 | clean,50 passed,0 failed; same oracle, not independent evidence |
+| `python3 .ufo/waves/round-14/measure.py` | 0 | Original51/51 literal finding/exit/scope matches, unique names51 |
+
+Fixed denominator: 12 committed matrix files,50 unique IDs,27 negative
+controls and23 positive controls. Every negative has at least16 distinct
+stripped nonblank names plus a real duplicate; every positive is all-distinct.
+The matrix contains885 total declared case names:483 on negative controls,
+402 on positives. These are repeated invocations of **one** held classifier
+payload, not885 distinct classifier tests, new facts or API coverage.
+Metadata counting and per-file digests: `fidelity.json`; reproducible command
+above emits all fixed IDs and totals from the actual matrix.
+
+Both red controls show classifier/Popen counts483/483 on negative cases,
+402/402 on positives; every runner returns0 and every classifier clone
+returns loaded_same_digest/0. After: negative controls show0 classifier
+entries,0 Popen calls and0 process-audit events; all27 return exact
+`corpus: duplicate case names`, runner exit1, all records unmeasured with
+null findings/exits, passed false and the exact corpus reason.
+Positive controls retain402 classifier entries and402 Popen calls.
+Their804 total process events consist of402 Popen and402 private fork-exec
+events: **two observed events per child, not804 children**. Original
+red-control total is1770 events,885 children. Counters are never substituted
+for outer verdicts or a classifier finding.
+
+`fidelity.json` independently compares the frozen bytes with direct
+`git --no-replace-objects -C <lane> cat-file blob
+e545ed99aaa519196a2a7779b0a293b2ce4c765c:.ufo/waves/round-14/measure.py`,
+the literal expected SHA and blob identity above; correspondence true.
+Final runner equals that source plus the two-line guard and explicitly
+narrowed docstring/limits. The derived causal control equals final source
+minus only the two guard lines. Measured code and all12 matrix files match
+the named work commit. Ten protected files equal their start blobs; six
+existing instruction/knowledge/ledger files preserve their full prefixes;
+all existing source cells except the recorded S012 used-by are unchanged.
+
+Final required source validation uses exactly the start command and exits0:
+
+```text
+kama W04 S031 duplicate url docs.ollama.com/api/tags across scopes
+kama ok /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md
+```
+
+Final `census` also exits0: rows34, A31/B0/C3,
+mined24/queued5/rejected5, invalid tier/status0, missing0.
+Thus rows33→34, A30→31 and mined23→24; only new S034 plus S012 used-by.
+Full streams/exits: `sources-final-{validate,census}.json`.
+No new API/knowledge/capability/frontier ground is counted from those rows.
+
+**Author claim:** C1 calibration improved, numeric7→7; other five axes
+unchanged, no observed harm in this finite declared-name contract.
+**Trends:** expansion unchanged, quality unchanged, discernment unchanged.
+This repairs a measurement promise; it neither revalidates serving knowledge
+nor independently spot-checks round15 admits/rejects. Outside15 review still
+owns admission and promotion; author-side agreement is not that review.
+
+Actual spawns: build64 then falsify32, total96. Build60 completed and4
+provider-failed scouts (402 credits), none replaced; falsify32 completed,
+none failed. Two refused build attempts spawned0 and are not extra seats.
+Role mix/validated unchanged payloads, assignments and terminal summaries
+are retained under `build/` and `falsify/`. L1 held the canonical planner
+seat; PlannerWalk was bounded revenger work. Same-handle continuations do
+not count as new seats. Tool installs/updates: none.
+
+Cross-domain handoff: the observed background-job-limit100 refusals belong
+to kumitate's dispatch mechanics; host scope/diagnosis was supplied by Main,
+not inferred from model endpoint evidence. Main resolved admission timing;
+no route or runtime mechanism was changed by kama. Credentials remain kagi's,
+model evaluation kengaku's, and service/consumer actions operator-owned.
+No new L0 question; pre-existing runtime disposition/cadence questions stay
+with the operator. Stale-lane: respawn-per-round, no other kama mission open.

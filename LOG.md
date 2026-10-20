@@ -879,3 +879,45 @@ and in SKILL/lesson, not treated as current authority.
 - L1 holds the canonical planner seat; bounded PlannerWalk is a revenger.
   No per-task model, route mutation, host service action, installation,
   consumer modification, credential/session/database access or promotion.
+
+## round 15 — committed red/green measurement and bounded verdict (2026-10-20)
+
+- Initial pushed implementation `70af36c2b15b46d3b4b3c15ef20459cff640dfaf`
+  added the two-line guard. Falsification prompted explicit declared-nonblank
+  scope in active prose, the private fork-exec audit event and a final-prose-
+  matched causal control. Final measured/pushed work revision:
+  `4b1b4ad1ba31660cc44c82d204dc85c1355e36d2`.
+- Counting command `python3 tests/ollama-corpus-guard/check.py --runner PATH`
+  uses the same50 literal tests: original snapshot23 passed/27 failed exit1
+  → repaired50/50 exit0; predicate-only red23/50 exit1. The old/source
+  correspondence, literal digest and sole-predicate causal delta are
+  verified in `.ufo/waves/round-15/fidelity.json`.
+- Duplicate controls' classifier/Popen invocations483/483→0/0; positive
+  controls402/402 retained. The exact corpus error, null per-case findings/
+  exits and zero audited process events distinguish real rejection from
+  missing-tool or unsupported behavior. Full nested streams/results are
+  retained; summary `.ufo/waves/round-15/acceptance.json` is ok true,
+  errors empty. No command is inferred from another run.
+- New guard selftest exits0,50/50; same oracle as measurement, not independent
+  corroboration. Original `.ufo/waves/round-14/measure.py` on its original
+  corpus exits0,51/51 exact findings/exits/scope. No live endpoint/probe,
+  current readiness or service restoration is claimed.
+- Required source validate and census exit0 at both ends; rows33→34,
+  A30→31, mined23→24; B0/C3/queued5/rejected5 unchanged. New own-workS034
+  records outside R1's original-code diagnosis; only existing S012 used-by
+  changes. Row growth earns no coverage/capability/discovery credit.
+- C1 calibration improved, score7→7; all other axes unchanged. Expansion,
+  quality and discernment unchanged: this is measurement-guard enforcement,
+  not newly held serving knowledge or independent outside15 judgment.
+  No new capability row or promotion. Final lesson:
+  `corpus/lessons/round-15.md` §Executed author disposition.
+- Validated build64/falsify32, actual total96. Build60 complete/4 provider-
+  failed scouts, no replacement; falsify32 complete/0 failed. Refused
+  dispatch attempts spawned0. Canonical planner is L1, bounded data-walk
+  revenger. Reports/role mix/handles preserved under the round15 wave.
+- Pacman pause was relayed to live seats and added before falsify dispatch.
+  No installs/updates. Disclosed seat search/syntax/in-process-evaluation
+  deviations are recorded in the lesson; excluded as measurement evidence.
+  Host-cap mechanics were reported to Main/kumitate, not absorbed into
+  endpoint ownership. No new L0 question; existing operator runtime/cadence
+  decisions remain open. Stale-lane: no other kama mission open.
