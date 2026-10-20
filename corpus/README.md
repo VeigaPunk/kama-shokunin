@@ -175,3 +175,26 @@ operator-runtime dependent. Outside round-13 review admitted that bounded
 criterion repair (`lessons/round-13-verifier-spotcheck.md`); its D2 is clarified
 by appended round-14 prose, not by rewriting old receipts. This round still
 needs its own independent non-author admit/reject sample.
+
+## Round-15 executable corpus-guard repair — reliability, not repertoire growth
+
+Outside `lessons/round-14-verifier-spotcheck.md` admitted the original unique
+offline repertoire and routed R1 (minimum cardinality did not enforce
+duplicate-name rejection) plus R2 (partial seat output versus terminal
+provider failure). `lessons/round-15.md` learns both without rewriting
+the old receipt or lesson.
+
+`knowledge/ollama-evidence-replay.md` now carries a named correction and
+`QUALITY.md` KQ18 requires a discriminating duplicate corpus above the
+minimum-unique threshold, a positive unique control, real CLI invocation
+and observable pre-child rejection. The current runner is repaired;
+the baseline stays at `.ufo/waves/round-15/frozen/measure-before.py`.
+Runnable evidence: `python3 tests/ollama-corpus-guard/check.py`.
+The final measured revision/results are recorded in the round15 lesson.
+
+No new knowledge entry, API surface or capability row is added. Expansion
+is unchanged; the operational correction is not rediscovered tags/ps
+semantics. Existing live integration, context-capacity and service-
+restoration frontier gaps remain open. No authorized serving runtime was
+sampled or restored. New own-work S034 supports the actual guard diagnosis;
+S012 remains a separate loaded-metadata boundary, not a readiness test.

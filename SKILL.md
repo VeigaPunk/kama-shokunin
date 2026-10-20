@@ -474,3 +474,32 @@ behavior, not serving state or arbitrary-input correctness. Selftest green is
 capability evidence; a separately recorded run against a named committed
 revision is the round measurement. No live gate is executed by non-author
 closure; that reviewer inspects committed evidence.
+
+## Round-15 measurement corpus admission — corrected executable guard
+
+The round-14 measurement runner's duplicate-name rejection promise was false
+for corpora with at least sixteen distinct stripped names plus a duplicate.
+Outside `corpus/lessons/round-14-verifier-spotcheck.md` R1 found that defect;
+`corpus/lessons/round-15.md` preserves the named historical correction and
+red-before obligation. The original unique corpus and historical receipt
+remain unchanged. This repair does not change the domain classifier.
+
+Corpus identity is the existing runner's `name.strip()` convention, not
+Ollama model-name normalization. Case distinctions remain distinct; this
+guard does not add Unicode normalization or a new schema-admission policy.
+The preflight rejects duplicate declared names before the tool is invoked.
+Minimum cardinality and uniqueness are separate obligations.
+
+| Name | Kind / entry command | Verdict map | Self-test | Pinned values | Write scope | Owner |
+|---|---|---|---|---|---|---|
+| Ollama measurement corpus duplicate guard | gate: `python3 tests/ollama-corpus-guard/check.py` exercises `.ufo/waves/round-14/measure.py` | 0 clean test contract, 1 failed test contract (`test_failed`); neither means serving readiness | `python3 tests/ollama-corpus-guard/check.py --selftest`; same literal matrix through actual runner child CLI and actual classifier with temporary invocation marker | `tests/ollama-corpus-guard/*.json` literal duplicate/positive expectations; original classifier cases remain at `tests/ollama-evidence/cases.json` | stdout plus removed isolated temporary fixture/wrapper/marker files; no network or live surface write | kama |
+
+This registered command is a regression gate for the historical measurement
+artifact, not a replacement for the domain classifier or a promoted serving
+command. It earns no operability, coverage or repertoire-growth credit.
+
+Use `--runner .ufo/waves/round-15/frozen/measure-before.py` with the same
+contract to expose the old duplicate-admission defect. A green guard check
+certifies only this finite measurement contract, not arbitrary-input
+correctness, source authenticity or runtime health. S012's loaded-memory
+documentation remains a limit, never readiness evidence.

@@ -313,3 +313,54 @@ and neither a malformed, duplicate, conflicting nor remote entry can produce
 - Cross-references (not re-derived): `served-identity-crosswalk.md` §Claim,
   Ollama row, failure cases 3/5/6, alias limits; `runtime-health-surface-matrix.md:17`;
   `SKILL.md` §Served-id normalization.
+
+## Round-15 correction — measurement runner duplicate-corpus promise was false (R1)
+
+Appended 2026-10-20 as the named correction routed by
+`corpus/lessons/round-14-verifier-spotcheck.md` R1. This corrects a harness
+guard claim only: it adds no new API fact, engine behavior, runtime
+observation or classification rule, and changes nothing above about the
+classifier's own duplicate-*selection* finding (`invalid_input`, row 3).
+
+- **The promise was false for ≥16 unique names.** The round-14 measurement
+  wrapper `.ufo/waves/round-14/measure.py` declared (docstring and
+  `LIMITS`) that "narrower or duplicated corpora fail before any child
+  runs", but its `corpus_problems()` only counted unique `name.strip()`
+  values against the 16-name minimum and never compared the declared-name
+  total against the unique count. A corpus with ≥16 distinct names plus a
+  repeated name therefore passed the guard and spawned child processes.
+- **Repair.** The runner now additionally rejects any repeated declared
+  name (`"duplicate case names"`) before the minimum-unique check and
+  before any child process; a valid all-distinct ≥16-name corpus measures
+  exactly as before. The domain classifier `tools/kama-ollama-evidence.py`
+  is unchanged — this was a measurement-harness defect, not a replay
+  verdict defect. The pre-repair source is frozen at
+  `.ufo/waves/round-15/frozen/measure-before.py`.
+- **Committed fail-capable tests.** `python3
+  tests/ollama-corpus-guard/check.py` replays the literal matrices in
+  `tests/ollama-corpus-guard/*.json` — duplicate placements (prepend,
+  append, middle, adjacent, distant, multiple, triplicate), whitespace and
+  tab collisions, a non-ASCII duplicate, the object `cases` envelope, and
+  valid ≥16-unique controls — through the real runner; `--selftest` runs
+  the same matrix, and `--runner .ufo/waves/round-15/frozen/measure-before.py`
+  exercises the frozen snapshot to expose the old duplicate-admission
+  defect. Its exit digits are a test contract result, never a model or
+  readiness verdict.
+- **Historical receipt stands as the actual unique result.** The round-14
+  receipt's corpus was independently recounted as 51 cases / 51 unique
+  names, so its recorded fixture results and denominator remain the
+  historical actual unique-corpus measurement and are not rewritten. Only
+  the generalized "duplicated corpora fail" guarantee was wrong; arbitrary
+  caller-corpus quality beyond this finite test matrix is still not
+  certified.
+- **Historical command versus current path.** The old description of the
+  measurement wrapper as a round artifact is retained. Round15 registers
+  a regression gate for that artifact, not a permanent serving command or
+  new domain capability. Its current path now contains the corrected guard.
+  Reconstruct round14's runner from measured revision
+  `e545ed99aaa519196a2a7779b0a293b2ce4c765c` at
+  `.ufo/waves/round-14/measure.py`, or use the byte-identical preserved
+  round15 baseline with explicit `--tool` and `--cases`. Do not reproduce
+  a historical run by silently treating the repaired current path as the
+  original bytes. Source correspondence and literal digest are recorded
+  with the round15 acceptance evidence.

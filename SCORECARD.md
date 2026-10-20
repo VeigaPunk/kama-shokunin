@@ -470,3 +470,42 @@ Trends: expansion improved through demonstrated capability only; quality and
 discernment unchanged (no new conceptual/source truth or outside round-14
 sampling). Author claim verdict improved; admission awaits independent
 non-author closure, no promotion box is newly certified.
+
+## Round 15 — executable duplicate-corpus admission repair (2026-10-20)
+
+Current assignment is operability + calibration (`../shokunin.conf` kama row).
+Calibration7 remains the lowest versus operability8; no stagnation waiver.
+Outside round14 is `ok / admitted true` within its unique fixed repertoire
+(`corpus/lessons/round-14-verifier-spotcheck.md`); its R1 explicitly excludes
+the false generalized corpus-duplicate guarantee and routes an executable
+repair. R2 distinguishes partial advice from terminal provider success.
+
+**C1 calibration:** reject duplicate-containing measurement corpora even
+when at least sixteen distinct stripped names remain, before runner child
+creation; retain valid all-unique corpus measurement. This is an actual
+guard repair, not a new API fact or a wording-only recalibration.
+Before source is `.ufo/waves/round-15/frozen/measure-before.py`, pinned to
+`6e348e28943849aceb08d6954dee92be48ce9ba8` and its original path/digest by
+`frozen/manifest.json`. Current implementation changes only the guard.
+
+Counting command: `python3 tests/ollama-corpus-guard/check.py --runner PATH`;
+use the frozen source path for before and `.ufo/waves/round-14/measure.py`
+for after. Expected results come from committed literal matrix files under
+`tests/ollama-corpus-guard/`, not from recalculating policy as oracle.
+Negative controls have at least sixteen unique names plus a duplicate;
+positive controls defeat a vacuous reject-all implementation. Real runner
+and classifier CLI paths, corpus error reason and observed process boundaries
+must all correspond. The historical original 51-case classifier corpus and
+receipt remain unchanged.
+
+Calibration **7 → 7, delta 0**; finite-contract repair does not establish a
+new mastery score. No capability row is added: the repaired measurement
+guard's enforcement is credited once, not rebranded as classifier reliability
+or repertoire growth. S034 records the original predicate supporting outside
+R1's diagnosis; S012 is the metadata/readiness boundary, not case-name policy.
+Final measured revision, counts and verdict are appended after execution.
+
+**Planned — supersedes earlier plan:** independent non-author round15
+admit/reject sampling; a subsequent steered move should build actual
+serving-domain evidence rather than repeat this guard correction.
+Live integration/context capacity remains operator-runtime dependent.

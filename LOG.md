@@ -850,3 +850,32 @@ and in SKILL/lesson, not treated as current authority.
   new L0 questions, operator config changes or self-certified promotion.
   Final author verdict and historical D2 clarification:
   `corpus/lessons/round-14.md`; outside closure still owns admission.
+
+## round 15 — executable duplicate-corpus admission repair (2026-10-20)
+
+- Trigger: non-author `corpus/lessons/round-14-verifier-spotcheck.md` R1 found
+  the runner promised duplicate rejection while enforcing only a minimum
+  unique-name count. R2 requires partial-output versus terminal-success
+  clarification. Both discoveries are credited to CloseKamaR14.
+- C1 calibration, the lowest assigned axis (7 versus operability8), repairs
+  the duplicate predicate only. Before source is preserved with pinned
+  revision/path/digest at `.ufo/waves/round-15/frozen/manifest.json`; same
+  new child-CLI matrix must expose that defect and pass after correction.
+  Numeric calibration stays7; no arbitrary-input mastery or new runtime.
+- `tests/ollama-corpus-guard/` supplies literal invalid controls above the
+  minimum-cardinality threshold and valid controls. The harness invokes the
+  actual runner and classifier, with temporary observation of invocation
+  boundaries. Expected values are committed independently of recomputation.
+- Named historical corrections and admit/reject decisions live in
+  `corpus/lessons/round-15.md`; KQ18 adds the missing discriminating
+  corpus-validator criterion. No old receipt or lesson is rewritten.
+- S012 was reopened for the loaded-memory versus readiness boundary, not
+  vendor authority over the lane's corpus policy. Source handling, all
+  actual commands/exits and measured revision are recorded after integration.
+- First two 64-seat build dispatch attempts were completely refused with
+  the session-wide background-job limit100; no agents spawned. One direct
+  unchanged retry subsequently spawned64. Refusal and validated payload
+  evidence are retained under `.ufo/waves/round-15/build/`.
+- L1 holds the canonical planner seat; bounded PlannerWalk is a revenger.
+  No per-task model, route mutation, host service action, installation,
+  consumer modification, credential/session/database access or promotion.

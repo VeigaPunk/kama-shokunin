@@ -355,6 +355,8 @@ def corpus_problems(cases):
             declared.append(name.strip())
     unique = len(set(declared))
     problems = []
+    if len(declared) != unique:
+        problems.append("duplicate case names")
     if unique < MINIMUM_UNIQUE_CASES:
         problems.append(
             f"{unique} unique case names; at least {MINIMUM_UNIQUE_CASES} required"
