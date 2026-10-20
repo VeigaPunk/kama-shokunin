@@ -62,3 +62,28 @@ The pre-round predicate at `e75cf680` tested `endswith('00000001')` for `::1`
 and compared a 24-character prefix against a 22-character literal for mapped
 addresses. Both errors are mined in `lessons/round-18.md`; that old description
 is historical, not the current v3 predicate.
+
+## Round-18 falsify source anchors and limits
+
+Source locations: S048 —
+https://github.com/torvalds/linux/blob/v7.2/net/ipv6/tcp_ipv6.c#L2172-L2179
+and https://github.com/torvalds/linux/blob/v7.2/include/uapi/linux/in6.h#L38;
+S049 — https://github.com/torvalds/linux/blob/v7.2/Documentation/networking/proc_net_tcp.rst#L4-L12;
+S050 — https://www.rfc-editor.org/rfc/rfc4291#section-2.5.3 and
+https://www.rfc-editor.org/rfc/rfc4291#section-2.5.5.2.
+
+This mechanism is newly **documented in the corpus**, not newly invented in v3:
+the old lifecycle entry already asserted child ownership, and the old tool
+already joined procfs inodes to child fds. V3 corrects the IPv6 decoding arm.
+The table's bind probes were in the host namespace; the separate argv study's
+isolated namespace does not establish these IPv6 cases there.
+
+The procfs race limit also extends across HTTP: a response is received before
+the subsequent listener-ownership check, so a responder could close and the
+child bind before ownership is sampled [INFERENCE, not reproduced]. The join
+does not authenticate which process authored earlier captured bytes.
+
+ProbeTcp6Format case D bound host `::` with dual-stack enabled, a wildcard, not
+an exclusively-loopback address. That was an experiment safety departure even
+though it was closed and the production policy refuses wildcards; it must not
+be described as “only loopback listeners” or copied as a safe default.

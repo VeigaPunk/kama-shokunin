@@ -267,3 +267,22 @@ with `--require-schema v3` and model/server/probe/tool SHA-256 pins
 (`runs/commands.json`, measured production commit
 `c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d`). These are actual surfaces, not
 the fake K0 control. Their counts say nothing about generation or other models.
+
+Round-18 falsify clarifications: **S056 supersedes S054's general last-wins
+wording**. Scalar port/host handlers replace their values, but api-key and
+spec-type handlers append; spec-type is duplicate-warning-exempt. Exact launch
+argv equality remains a lane policy, not a theorem derived from the warning.
+The S051 parenthetical “canonical /3.14/library/exceptions.html” means only the
+historical redirect alias; the versioned reviewed page is
+`https://docs.python.org/3.14/builtins/exceptions.html`. Its unversioned canonical
+link serves 3.15 and is not the host-version source. BaseExceptionGroup can also
+escape Exception; the tool's BaseException guard covers it, without relying on
+the abbreviated three-example list.
+
+**Four-pin limit:** `--expect-server-sha256` pins the launcher file. This release
+loads `libllama-server-impl.so`; the receipt records its digest and the install
+tree, but those are not independently expected by the current four-pin gate.
+A consistent implementation/tree swap can remain internally VALID. Therefore
+“four-pin VALID” is not authentication of the complete runtime implementation.
+The retained real runs used the observed unchanged installation; no library was
+swapped. Implementation-digest preconditions remain a separate possible move.

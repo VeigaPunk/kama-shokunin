@@ -51,6 +51,7 @@ row here, not by editing round 17's lesson.
 | The frozen parser recognises real IPv6 loopback listeners | reject, observed counterexample | `.ufo/waves/round-18/build/advice/ProbeTcp6Format.md`: real `::1` and `::ffff:127.0.0.1` listeners yield raw hex ending `01000000` and `0100007F`; frozen `port_owned_by` returns None for both, IPv4 True. |
 | A green lane-owned fixture certifies registered-consumer health | reject | Registry consumers still have no new sample; no run in this round binds 8080 or 34113. |
 | Three v3 runs on the real pinned fixture evaluate and pass, with four-pin schema-floor validation | admit bounded own-work S055, opened 2026-10-20 | `.ufo/waves/round-18/live/receipt-1.json` JSON path `outcome`: `"pass"`; `checks`: 11 evaluated true; `runs/live-gate-1.stdout`: `VALID`; commands/exits and the other two receipts in `runs/commands.json`. |
+| All repeated llama.cpp options are last-wins and warn | reject the general S054 reading; admit S056 correction, opened 2026-10-20 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/common/arg.cpp:3538: `params.api_keys.push_back(key);`; scalar port assigns at 3354, spec-type appends at 4321 and is warning-exempt at 833. |
 
 Existing SOURCES rows' status/recheck/used-by cells remain unchanged unless an
 explicit old→new addition is recorded below. S001–S047's immutable cells stay intact.
@@ -191,3 +192,57 @@ Its Gate row above is own-work evidence, not a first-party upstream contract.
   not a safe pattern to copy. All new fake/receipt forgery checks keep the
   wildcard argv as **data**, never a host launch instruction. No persistent
   service or registry state was changed.
+
+## Fresh source/provenance corrections
+
+- S056 supersedes S054's over-general reading: scalar `--port` and clearing
+  `--host` are last-wins; api-key/spec-type options append, and spec-type is
+  warning-exempt. `ReopenS054.md` located the omitted caveats; L1 re-read the
+  pinned handlers. Exact argv remains the lane's policy regardless of option
+  semantics. S054's immutable cells are untouched; Gate correction above.
+- S049 used-by old `corpus/knowledge/loopback-listener-ownership.md` → same plus
+  `corpus/lessons/round-18.md`. S050 old same ownership entry → same plus
+  `corpus/knowledge/llamacpp-loading-lifecycle.md, corpus/lessons/round-18.md`.
+  Their status/recheck/immutable cells do not change.
+- S048's support header is now retained byte-exact as
+  `sources/linux-in6.h`, sha256 `4b70a423…6b27d`, matching the already cited
+  upstream header digest. The source-pins capture manifest is not retroactively
+  presented as having originally saved it.
+- Dispatch precision: attempts.json contains **32** capacity observations in
+  total, minimum15, none≤5; thirty refers only to the long gated loop. The reused
+  validator registry retains95 declarations from the wholly refused plan, of
+  which exactly75 received IDs. Actual spawning is75, not95. Version/band and
+  this qualification are in `build/validation-supplement.json`; final-output
+  resource observations for all75 are in `build/terminal-evidence.json`.
+
+Fresh residual, not falsely closed: `ConnectTsukuroi.md` shows that the current
+four-pin gate's server pin identifies the launcher executable, not an external
+expected digest for `libllama-server-impl.so`. The receipt records implementation
+and install-tree digests and checks internal consistency, but a consistent swap
+is not authenticated by those four pins. No install file was changed. A future
+implementation-digest precondition is distinct from this round's named R6 fixes.
+
+### Gate location/hierarchy clarifications (falsify)
+
+The earlier `tcp_ipv6.c:2176` citation meant a file plus line, not a literal URL
+path. The working source location is
+[tcp_ipv6.c#L2173-L2177](https://github.com/torvalds/linux/blob/v7.2/net/ipv6/tcp_ipv6.c#L2173-L2177):
+`src->s6_addr32[0], src->s6_addr32[1],`. Full observed Gate strings are
+`::1` → `00000000000000000000000001000000` and `::ffff:127.0.0.1` →
+`0000000000000000FFFF00000100007F` (`ProbeTcp6Format.md`, repeated in ReopenS048).
+S048's support header is retained now; its digest was already correctly cited.
+
+S051's parenthetical “canonical /3.14/library/exceptions.html” is imprecise:
+that path is a redirect alias to the versioned builtins page used by this round.
+The page's unversioned canonical link serves Python3.15 and was not the source.
+The abbreviated three-example list is not the complete BaseException hierarchy:
+Exception is also a direct child and BaseExceptionGroup can escape an
+Exception-only guard. The integrated tool catches BaseException itself.
+ReopenS051 found only a footer rebuild in the live page bytes; no strict
+`pin.py --verify` pass is claimed (only the retained offline selftest passed).
+
+KQ23's three comparative M8 citation-component controls are retained as
+`kq23-controls.py`: S043 negative, S047 necessary-condition positive, and S047
+with the reset citation removed. This is deliberately not a semantic/NLP gate
+or a proof that all shutdown calls are read; the human judgement remains named
+in the earlier review and outside sampling remains pending.

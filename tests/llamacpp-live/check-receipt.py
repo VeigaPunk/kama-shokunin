@@ -534,6 +534,19 @@ def validate(receipt, expect_model=None, expect_server=None,
     if not isinstance(transitions, list):
         bad("transitions is missing or not an array")
         transitions = []
+    if is_v3:
+        # Derive the null license only from producer-shaped observations.
+        # Alternate paths or string/float status encodings must not hide a 503.
+        for i, row in enumerate(transitions):
+            if not isinstance(row, dict):
+                bad(f"transitions[{i}] is not an object")
+                continue
+            if row.get("path") not in ("/v1/models", "/health"):
+                bad(f"transitions[{i}].path is not a producer route")
+            status = row.get("status", MISSING)
+            if status is not None and (
+                    type(status) is not int or not 100 <= status <= 599):
+                bad(f"transitions[{i}].status is not null or an HTTP integer")
     has_503_transition = any(
         isinstance(t, dict) and t.get("status") == 503
         for t in transitions)
@@ -1898,6 +1911,14 @@ def _selftest():
     mut3("v3-models-capture-503-ids-intact",
          lambda r: r["captures"]["models"].update(status=503),
          receipt=no_loading)
+    for label, path, status in (
+            ("route-alias", "/v1/models/", 503),
+            ("status-string", "/v1/models", "503"),
+            ("status-float", "/v1/models", 503.0),
+            ("status-bool", "/v1/models", True)):
+        mut3("v3-transition-encoding-" + label,
+             lambda r, p=path, s=status: r["transitions"].append(
+                 {"path": p, "status": s}), receipt=no_loading)
     mut3("v3-transition-503-nonexact",
          lambda r: r["transitions"][1].update(body='{"error":{}}'))
     mut3("v3-transition-503-truncated",

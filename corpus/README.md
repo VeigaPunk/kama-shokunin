@@ -266,3 +266,20 @@ Frontier advanced: loopback listener ownership mechanism (absent from the old
 host census, whose attribution used privileged ss). Still open: other engines,
 router/sleep mode, K05 declared-vs-served context and registered-consumer
 reconciliation. No model-quality claim or consumer resampling occurred.
+
+Round-18 source precision (falsify): S047 narrows **one first-signal ordering
+path**, not every S043 observation. Handler install is server.cpp:534; task-loop
+reset is server-queue.cpp:279. Between them the stop write can be overwritten,
+leaving the server serving until a later signal follows the second-signal exit1
+path. The ordinary post-start return0 path remains in code, subject to the
+unexamined shutdown/locking assumptions; the lost-window consequence is static,
+not reproduced. Health200/order alone did not exclude that window in the actual
+runs; their recorded harness SIGTERM, no SIGKILL and returncode0 are the relevant
+run evidence.
+
+S056 supersedes S054's general duplicate-option wording: scalar port/host replace,
+api-key/spec-type append, and spec-type is warning-exempt. Current exact argv is
+lane policy in all cases. Four-pin VALID binds the launcher digest, not an
+independent expected implementation-library digest; see the knowledge entry's
+explicit consistent-swap limitation. New coverage remains ownership mechanism,
+not full runtime attestation.

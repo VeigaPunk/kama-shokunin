@@ -27,6 +27,8 @@ misbehaviour; see CONTROLS):
             self-declared v1 under --require-schema v3, extra --api-key X,
             non-exact 503 transition with exact loading bodies, duplicate
             --host
+  k23       models_alias_id + models_owned_by_llamacpp: /v1/models capture
+            answers 503 with intact model IDs and ownership
 
 Classification (per control, from observations only):
   accepted             tool exit 0 and gate exit 0, receipt written, no
@@ -218,7 +220,7 @@ PIDFILE = '%%PIDFILE%%'
 HELPER_LIFETIME = %%HELPER_LIFETIME%%
 DECOY = 'fakealias-decoy'
 MISMATCH_EXPECT = 'kama-not-this-model'
-STATE = {'models': 0, 'health': 0, 'probe_models': 0}
+STATE = {'models': 0, 'health': 0, 'probe_models': 0, 'ready': False}
 
 
 def _val(flag, default=None):
@@ -353,6 +355,8 @@ class Handler(BaseHTTPRequestHandler):
             if probe:
                 STATE['probe_models'] += 1
             probe_number = STATE['probe_models'] if probe else 0
+            if SHAPE == 'k23' and not probe and STATE['ready']:
+                return self._send(503, _models(probe, probe_number))
             self._send(200, _models(probe, probe_number))
             # k3: exit rc 0 on our own, right after the second probe run's
             # /v1/models has been fully flushed — i.e. after the harness's
@@ -365,6 +369,8 @@ class Handler(BaseHTTPRequestHandler):
             STATE['health'] += 1
             if env is not None:
                 return self._send(503, env)
+            if SHAPE == 'k23':
+                STATE['ready'] = True
             status = 'degraded' if SHAPE == 'k1' else 'ok'
             return self._send(200, {'status': status})
         if path == '/props':
@@ -746,6 +752,16 @@ def _k22(doc):
     refuse duplicate flags."""
     _insert_before_tail(doc.get('argv'), ['--host', '0.0.0.0'])
     return doc
+
+
+@control('k23', shape='k23',
+         targets=('models_alias_id', 'models_owned_by_llamacpp'), exits=(1,))
+def _k23():
+    """models_alias_id + models_owned_by_llamacpp — after the server is
+    ready, the tool's /v1/models capture answers 503 with a parseable body
+    retaining the expected id and owned_by='llamacpp'. Curl probes still see
+    200; both model checks must fail on the captured HTTP status, not on the
+    intact model identity."""
 
 
 ALL_IDS = tuple(CONTROLS)
@@ -1514,6 +1530,7 @@ def selftest():
     st = {'wd': None}
     failures = []
     n = [0]
+    gate_flip_faults = []
 
     def expect(cond, label):
         n[0] += 1
@@ -1523,6 +1540,15 @@ def selftest():
     def tool(cid, tool_exit, doc, gate=None, **kw):
         return grade_tool_row(CONTROLS[cid], _syn_obs(tool_exit, doc, **kw),
                               st, gate or _FakeGate())
+
+    def summarize_selftest(rows, selected):
+        """Catch only the expected gate-flip invariant failure so the rest
+        of the synthetic matrix still runs under the drop-arm mutant."""
+        try:
+            return summarize(rows, selected)
+        except ControlsFault as exc:
+            gate_flip_faults.append(str(exc))
+            return None
 
     def cls(row):
         return (row['classification'], row['bucket'])
@@ -1557,21 +1583,23 @@ def selftest():
     k1doc = _syn_receipt(fail=('health_ready',))
     r = tool('k1', 1, k1doc)
     expect(cls(r) == ('rejected-targeted', 'ok'), 'k1 targeted refusal')
-    expect(isinstance(r['gate_flip'], dict) and r['gate_flip']['rejected']
-           and r['gate_flip']['flipped'] == ['health_ready']
-           and r['gate_flip']['targeted'],
-           'k1 gate-flip arm runs and the strict gate refuses it')
-    s = summarize([r], ['k1'])
-    expect(s['gate_flip_arms'] == 1 and s['accepted_bad'] == 0
-           and exit_code(dict(s, good_ok=True)) == 0,
-           'k1 strict: one flip arm, nothing accepted')
+    s = summarize_selftest([r], ['k1'])
+    flip = r.get('gate_flip')
+    expect(s is None or (
+        isinstance(flip, dict) and flip['rejected']
+        and flip['flipped'] == ['health_ready'] and flip['targeted']
+        and s['gate_flip_arms'] == 1 and s['accepted_bad'] == 0
+        and exit_code(dict(s, good_ok=True)) == 0),
+        'k1 gate-flip arm: strict gate rejects the doctored receipt')
     r = tool('k1', 1, k1doc, gate=_FakeGate('lax'))
+    s = summarize_selftest([r], ['k1'])
+    flip = r.get('gate_flip')
     expect(cls(r) == ('rejected-targeted', 'ok')
-           and r['gate_flip']['accepted'],
+           and ((isinstance(flip, dict) and flip['accepted'])
+                or (flip is None and s is None)),
            'k1 lax gate accepts the doctored receipt')
-    s = summarize([r], ['k1'])
-    expect(s['gate_flip_bad'] == 1 and s['accepted_bad'] == 1
-           and exit_code(s) == 1,
+    expect(s is None or (s['gate_flip_bad'] == 1 and s['accepted_bad'] == 1
+                         and exit_code(s) == 1),
            'accepted gate-flip counts in accepted_bad and fails the run')
     r = tool('k1', 0, _syn_receipt(truth_fail=('health_ready',)))
     expect(r['classification'] == 'misclassified'
@@ -1580,7 +1608,8 @@ def selftest():
     r = tool('k1', 1, _syn_receipt(fail=('models_alias_id',)))
     expect(cls(r) == ('rejected-untargeted', 'misclassified'),
            'k1 refused off-target -> misclassified')
-    expect(summarize([r], ['k1'])['inconclusive'] == 1,
+    s = summarize_selftest([r], ['k1'])
+    expect(s is None or s['inconclusive'] == 1,
            'off-target bad refusal counts as inconclusive')
     r = tool('k1', 1, k1doc, gate=_FakeGate(fixed=(0, ['valid r'])))
     expect(r['bucket'] == 'misclassified',
@@ -1637,14 +1666,19 @@ def selftest():
     zl = _syn_receipt(null=('loading_envelope_graded',))
     r = tool('k16', 2, zl)
     expect(cls(r) == ('not-evaluated', 'ok'), 'k16 coherent not-evaluated')
-    expect(isinstance(r['gate_flip'], dict)
-           and r['gate_flip']['rejected']
-           and r['gate_flip']['targeted']
-           and r['gate_flip']['flipped'] == ['loading_envelope_graded'],
-           'k16 null->true flip is refused on the loading check')
+    s = summarize_selftest([r], ['k16'])
+    flip = r.get('gate_flip')
+    expect(s is None or (
+        isinstance(flip, dict) and flip['rejected'] and flip['targeted']
+        and flip['flipped'] == ['loading_envelope_graded']
+        and s['gate_flip_arms'] == 1 and s['accepted_bad'] == 0),
+        'k16 null->true flip is refused on the loading check')
     r = tool('k16', 2, zl, gate=_FakeGate('lax'))
-    expect(r['gate_flip']['accepted']
-           and summarize([r], ['k16'])['accepted_bad'] == 1,
+    s = summarize_selftest([r], ['k16'])
+    flip = r.get('gate_flip')
+    expect((isinstance(flip, dict) and flip['accepted'] and s is not None
+            and s['accepted_bad'] == 1)
+           or (flip is None and s is None),
            'k16 lax gate accepting the doctored pass -> accepted_bad')
     r = tool('k16', 1, _syn_receipt(fail=('loading_envelope_graded',)))
     expect(r['bucket'] == 'misclassified', 'k16 exit 1 (R4) -> misclassified')
@@ -1769,20 +1803,26 @@ def selftest():
         full.append(tool(cid, exitc, doc))
     full += [grade_forgery_row(CONTROLS[c], st, strict, base)
              for c in ('k19', 'k20', 'k21', 'k22')]
-    s = summarize(full, [r['id'] for r in full])
-    expect(s['uncontrolled_checks'] == [] and exit_code(s) == 0
-           and s['good_ok'] is True and s['gate_flip_arms'] == 11
-           and s['input_integrity_checks'] == ['model_unchanged'],
-           f'full synthetic suite clean: {s}')
-    s = summarize([r for r in full if r['id'] != 'k9'], ['all-but-k9'])
-    expect(s['uncontrolled_checks'] == ['models_alias_id'],
+    s = summarize_selftest(full, [r['id'] for r in full])
+    expect(s is None or (
+        s['uncontrolled_checks'] == [] and exit_code(s) == 0
+        and s['good_ok'] is True and s['gate_flip_arms'] == 11
+        and s['input_integrity_checks'] == ['model_unchanged']),
+        f'full synthetic suite clean: {s}')
+    s = summarize_selftest([r for r in full if r['id'] != 'k9'],
+                           ['all-but-k9'])
+    expect(s is None or s['uncontrolled_checks'] == ['models_alias_id'],
            'dropping k9 uncovers models_alias_id')
-    s = summarize(full + [tool('k17', 2, _syn_receipt(
-        setup_error='port-listener-ownership-unproven'))], ['+k17'])
-    expect(s['good_rejected'] == 1 and exit_code(s) == 1,
+    s = summarize_selftest(
+        full + [tool('k17', 2, _syn_receipt(
+            setup_error='port-listener-ownership-unproven'))], ['+k17'])
+    expect(s is None or (s['good_rejected'] == 1 and exit_code(s) == 1),
            'good_rejected fails the run')
     expect(set(r['classification'] for r in full) <= set(CLASSES),
            'classifications stay in the declared set')
+
+    expect(not gate_flip_faults,
+           'gate-flip arm: a missing required flip arm is caught without aborting')
 
     for f in failures:
         print(f'SELFTEST FAIL {f}', file=sys.stderr)

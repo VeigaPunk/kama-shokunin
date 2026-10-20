@@ -624,3 +624,17 @@ KQ23 checks state resets and trigger-to-outcome reasoning; KQ24 keeps absent
 observations separate. Neither source opening nor a killed finite mutant set
 establishes universal detector adequacy. `corpus/lessons/round-18.md` binds the
 named survivor universe and residual limitations to measured evidence.
+
+Round-18 explicit row supersessions: line 576's append-only “14 cases” is replaced
+by the round-18 **42/42** selftest, and line 574's gate tally is replaced by
+**5 VALID + 1 NOT-EVALUATED positive receipts; 61 mutations plus unreadable
+rejected** (`runs/gate-selftest.stdout`). These are dated measured tallies, not
+forever-fixed expectations. The round-17 mutants dry-run requires
+`--check /absolute/path/to/check.py --dry-run`, not bare `--dry-run`.
+
+S056 qualifies S054: port/host replace, api-key/spec-type append, spec-type does
+not emit the duplicate warning. This does not weaken exact argv equality.
+Four-pin VALID externally pins the launcher only; implementation-library/tree
+digests are recorded/self-consistent, not an independent expected implementation
+pin (`falsify/advice/ConnectTsukuroi.md`). Exact argv is not secret scanning or
+effective-config attestation. Host-repair and credential mechanisms stay outside.

@@ -1101,6 +1101,22 @@ def _selftest():
         raise AssertionError('setup-error must take precedence over false')
     if good[0]['evaluated'] is not True or unknown[0]['evaluated'] is not False:
         raise AssertionError('tri-state evaluated field mapping failed')
+    with tempfile.TemporaryDirectory(prefix='kama-emit-selftest-') as directory:
+        original_replace = os.replace
+        def interrupted_replace(_source, _destination):
+            raise KeyboardInterrupt('atomic-publish-selftest')
+        os.replace = interrupted_replace
+        try:
+            try:
+                _emit({'schema': SCHEMA}, str(Path(directory) / 'receipt.json'))
+            except KeyboardInterrupt:
+                pass
+            else:
+                raise AssertionError('atomic publish interruption did not propagate')
+        finally:
+            os.replace = original_replace
+        if list(Path(directory).iterdir()):
+            raise AssertionError('atomic publish interruption leaked a sibling temp')
     print('selftest: ok; closed tcp6 listeners ' + ', '.join(tested_ports))
     return 0
 
@@ -1118,7 +1134,7 @@ def _emit(receipt, out_path):
             with os.fdopen(fd, 'w', encoding='utf-8') as fh:
                 fh.write(text)
             os.replace(tmp, out_path)
-        except OSError:
+        except BaseException:
             try:
                 os.unlink(tmp)
             except OSError:

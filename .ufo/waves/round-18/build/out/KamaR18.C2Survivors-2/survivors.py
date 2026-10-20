@@ -15,6 +15,9 @@ applied to a scratch COPY of the tool; nothing in the lane is written.
     site_missing    OLD absent                   } reported and counted as
     site_ambiguous  OLD occurs more than once     } NOT killed — never skipped
     stillborn       the edited copy does not compile
+The original set is 15 named round-17 items; FC-nonzero is one explicit
+historical supplement, for 16 total. Fresh wave-2 controls remain a separate
+denominator and are not included.
 
 (a) check.py mutants H1 H2 H3 H5 H6 H7 — exact edits from
     .ufo/waves/round-17/falsify/advice/MutC1Preregistered.md (H1-H3) and
@@ -25,19 +28,22 @@ applied to a scratch COPY of the tool; nothing in the lane is written.
       killed  <=> exit 1 or accepted > 0; exit 2 is an own fault and
                   inconclusive, never a kill. The unmutated current check.py
                   baseline must give exit 0, accepted 0, and healthy F0.
-(b) fault-controls self-mutants FC-target / FC-f6cache / FC-f0gate —
-    MutFaultControlsSelf.md mutants (a) (c) (d) — applied to the FROZEN tool
-    (before) and to the CURRENT tool (after). Detector: `--selftest
-    --matrix-dir tests/probe-verdicts` plus its main run `--check <current
-    check.py> --probe tools/kama-probe.sh --matrix-dir tests/probe-verdicts
-    --json`.
-      killed  <=> the selftest exits non-zero where the unmutated copy's
-                  exits 0, OR the main run's decision
-                  (exit, positive_control.detected, detected, accepted,
-                  {fault id: detected}) differs from the unmutated copy's.
-    `runs`, `check_exit` and `why` are diagnostics and are not compared:
-    round 17's survivors moved only those, and printing a different
-    diagnostic is not rejecting the weakened detector.
+(b) fault-controls self-mutants FC-target / FC-f6cache / FC-f0gate plus
+    historical supplement FC-nonzero (MutFaultControlsSelf.md mutants
+    (a)-(d)), applied to the FROZEN tool (before) and CURRENT tool (after).
+    FC-nonzero retains the prior round-17 frozen D/A 5/3 -> 6/2 decision
+    change; under this counter's current-check baseline its frozen outcome is
+    expected to survive, while the current classifier selftest kills it.
+    Detector: `--selftest --matrix-dir tests/probe-verdicts` plus its main
+    run `--check <current check.py> --probe tools/kama-probe.sh
+    --matrix-dir tests/probe-verdicts --json`.
+      killed  <=> a named selftest assertion fails while the unmutated
+                  selftest passes, OR the main-run decision differs from its
+                  unmutated baseline. The arms are independent: one valid kill
+                  wins over an inconclusive opposite arm, whose raw status and
+                  reason remain recorded. Exit 2 alone is never a kill.
+    Decision fields compared are exit, positive_control.detected, detected,
+    accepted, and {fault id: detected}; diagnostics do not decide the kill.
 (c) sources-append-only self-mutants AO-opened (M3a: compared cells taken
     from header[:8], which drops `opened`) and AO-blank (M4b: parsing stops at
     the first blank line after the header) — MutAppendOnlyGuard.md —
@@ -90,8 +96,8 @@ so every default a tool derives from its own location resolves in scratch.
 
 --jobs (default 1) bounds concurrent child runs. A fault-controls suite serves
 one loopback stub at a time, so --jobs 1 keeps one fake server alive at a
-time. All families together execute 22 full fault-controls suites (slow
-timeout faults included), 8 fault-controls selftests, 6 append-only
+time. All families together execute 24 full fault-controls suites (slow
+timeout faults included), 10 fault-controls selftests, 6 append-only
 selftests, 2 provenance records and 6 check.py runs.
 
 --out is created exclusively: an existing path is refused, never clobbered.
@@ -99,6 +105,8 @@ selftests, 2 provenance records and 6 check.py runs.
 Exit: 0 every named item killed/handled/correct on the CURRENT side of every
 selected family and frozen witnesses match; 1 otherwise if outcomes are
 conclusive; 2 for own fault or an inconclusive run/baseline/frozen witness.
+On own fault, completed family results/counts remain in JSON; `results_complete`
+and `partial_results` distinguish partial evidence. The exit remains 2.
 
 Safety
 ------
@@ -187,7 +195,7 @@ CAP = {"fc-main": 1800, "fc-selftest": 600, "ao-selftest": 120,
 FAMILIES = ("a", "b", "c", "d", "e")
 FAMILY_TITLES = {
     "a": "check.py H-mutants vs fault-controls (frozen -> current detector)",
-    "b": "fault-controls self-mutants (frozen -> current tool)",
+    "b": "fault-controls self-mutants + historical supplement (frozen -> current)",
     "c": "sources-append-only self-mutants (frozen -> current tool)",
     "d": "dispatch-provenance refused count on round-17 evidence",
     "e": "check.py crash faults (frozen -> current check.py)",
@@ -200,11 +208,13 @@ ADVICE_FILES = {
     "e": ("MalformedNonUtf8.md", "TimeoutPath.md"),
 }
 ADVICE_ROOT = LANE / ".ufo" / "waves" / "round-17" / "falsify" / "advice"
+ADVICE18_ROOT = ROUND18 / "falsify" / "advice"
+SURVIVOR_UNIVERSE_ADVICE = ADVICE18_ROOT / "SurvivorUniverse.md"
 FROZEN_EXPECTED = {
     "a": {"H1": "survived", "H2": "survived", "H3": "survived",
           "H5": "survived", "H6": "survived", "H7": "survived"},
     "b": {"FC-target": "survived", "FC-f6cache": "survived",
-          "FC-f0gate": "survived"},
+          "FC-f0gate": "survived", "FC-nonzero": "survived"},
     "c": {"AO-opened": "survived", "AO-blank": "survived"},
     "d": {"refused-count": "miscount"},
     "e": {"nested-json": "accepted", "bigint": "accepted",
@@ -276,6 +286,24 @@ MUTANTS = {
          "advice": ADVICE17 + "MutFaultControlsSelf.md:95-104",
          "old": '            if not positive["detected"]:\n',
          "new": '            if False and not positive["detected"]:\n'},
+        {"id": "FC-nonzero", "title": "any nonzero check exit counts as detected",
+         "advice": ADVICE17 + "MutFaultControlsSelf.md:50-70; "
+                   ".ufo/waves/round-18/falsify/advice/"
+                   "SurvivorUniverse.md:30-43",
+         "universe": "historical-supplement",
+         "prior_kill_evidence": {
+             "round17": "MutFaultControlsSelf.md: frozen D/A 5/3 -> 6/2; "
+                        "current-only decision survived",
+             "counter_protocol": "frozen tool on current check.py expected "
+                                 "survived; current selftest kills on its "
+                                 "off-target reason-fault classifier case"},
+         "old": ('    positive = bool(fault.get("positive"))\n'
+                 '    target = fault.get("target")\n'),
+         "new": ('    positive = bool(fault.get("positive"))\n'
+                 '    if not positive:\n'
+                 '        return exit_code != 0, f"check exited {exit_code}; '
+                 'any nonzero exit counts"\n'
+                 '    target = fault.get("target")\n')},
     ),
     "c": (
         {"id": "AO-opened",
@@ -307,6 +335,23 @@ CRASH_FAULTS = (
      "title": "probe timeout leaves a foreground external sleep",
      "payload": None},
 )
+def named_denominator():
+    detector_items = [mutant for family in ("a", "b", "c")
+                      for mutant in MUTANTS[family]]
+    supplements = [item for item in detector_items
+                   if item.get("universe") == "historical-supplement"]
+    # Family d is one fixed refused-count item; family e is CRASH_FAULTS.
+    original = len(detector_items) - len(supplements) + 1 + len(CRASH_FAULTS)
+    return {
+        "original_round17": original,
+        "historical_supplement_count": len(supplements),
+        "historical_supplement_ids": [item["id"] for item in supplements],
+        "total_named": original + len(supplements),
+        "fresh_wave2_included": False,
+        "fresh_wave2_count": 0,
+    }
+
+
 
 
 class OwnFault(Exception):
@@ -904,8 +949,12 @@ def classify_a(base_view, view):
     return "survived", "exit 0, accepted 0"
 [...]
 
+TARGET_REASON_FAILURE = (
+    "classifier: target-conjunct attribution: "
+    "reason fault failed on verdict only")
 SELFTEST_TARGETS = {
-    "FC-target": "target-conjunct attribution",
+    "FC-target": TARGET_REASON_FAILURE,
+    "FC-nonzero": TARGET_REASON_FAILURE,
     "FC-f6cache": "F6: replay run shares one cache",
     "FC-f0gate": "F0 gate: a reject-everything",
     "AO-opened": "only `opened` changes",
@@ -1076,9 +1125,15 @@ def mutants_of(family, text, prefix):
 
 
 def head(mutant):
-    return {"id": mutant["id"], "title": mutant["title"],
+    item = {"id": mutant["id"], "title": mutant["title"],
             "advice": mutant["advice"],
             "edit": {"old": mutant["old"], "new": mutant["new"]}}
+    if mutant["id"] in SELFTEST_TARGETS:
+        item["expected_selftest_failure"] = SELFTEST_TARGETS[mutant["id"]]
+    for key in ("universe", "prior_kill_evidence"):
+        if key in mutant:
+            item[key] = mutant[key]
+    return item
 
 
 def close_items(by_id):
@@ -1425,6 +1480,9 @@ def prepare(ctx, families, cur, sums):
     for family in families:
         for filename in ADVICE_FILES[family]:
             ctx.snapshot(f"advice/{family}/{filename}", ADVICE_ROOT / filename)
+    if "b" in families:
+        ctx.snapshot("advice/historical/SurvivorUniverse.md",
+                     SURVIVOR_UNIVERSE_ADVICE)
 
 
 def count(results):
@@ -1462,6 +1520,19 @@ def frozen_witness_validation(results):
             if got != want:
                 mismatches.append(row)
     return {"witnesses": witnesses, "mismatches": mismatches}
+def record_family_result(doc, family, finish):
+    results = dict(doc["results"])
+    results[family] = finish()
+    counts = count(results)
+    witnesses = frozen_witness_validation(results)
+    doc["results"] = results
+    doc["counts"] = counts
+    doc["frozen_witness_validation"] = witnesses
+
+
+def mark_own_fault(doc):
+    doc["partial_results"] = bool(doc["results"]) and not doc["results_complete"]
+    doc["exit"] = 2
 
 
 # ---------------------------------------------------------------- driver
@@ -1538,10 +1609,17 @@ def run_count(args):
                       "version": sys.version.split()[0]},
            "lane": str(LANE), "families": args.family, "jobs": args.jobs,
            "own_faults": []}
-    doc["named_universe"] = "round-17 published named survivors, families a-e"
+    doc["named_universe"] = "round-17 original named survivors plus historical supplements"
+    doc["named_denominator"] = named_denominator()
     doc["fresh_wave2"] = {
         "included": False, "mutants": 0,
         "reason": "fresh wave-2 mutants are a separate denominator"}
+    doc["results"] = {}
+    doc["counts"] = count(doc["results"])
+    doc["frozen_witness_validation"] = frozen_witness_validation(
+        doc["results"])
+    doc["results_complete"] = False
+    doc["partial_results"] = False
     ctx = None
     try:
         ctx = Context(args.jobs)
@@ -1553,11 +1631,9 @@ def run_count(args):
         prepare(ctx, args.family, cur, sums)
         finishers = {family: FAMILY_FUNCS[family](ctx, cur, sums)
                      for family in args.family}
-        doc["results"] = {family: finish()
-                          for family, finish in finishers.items()}
-        doc["counts"] = count(doc["results"])
-        doc["frozen_witness_validation"] = frozen_witness_validation(
-            doc["results"])
+        for family, finish in finishers.items():
+            record_family_result(doc, family, finish)
+        doc["results_complete"] = True
     except OwnFault as exc:
         doc["own_faults"].append(str(exc))
     except KeyboardInterrupt:
@@ -1580,9 +1656,7 @@ def run_count(args):
             doc["teardown"] = teardown
     doc["seconds"] = round(time.monotonic() - started, 1)
     if doc["own_faults"]:
-        doc.pop("results", None)
-        doc.pop("counts", None)
-        doc["exit"] = 2
+        mark_own_fault(doc)
     else:
         inconclusive = doc["counts"]["inconclusive"]
         witness_mismatches = doc["frozen_witness_validation"]["mismatches"]
@@ -1686,6 +1760,53 @@ def selftest_pure(check):
             check(f"{mutant['id']} applies once to frozen {tool}, compiles, "
                   "reverses exactly", site["status"] == "ok"
                   and mutated != text and restored, site)
+    denominator = named_denominator()
+    check("named universe is 15 originals + 1 historical = 16, not wave 2",
+          denominator == {
+              "original_round17": 15, "historical_supplement_count": 1,
+              "historical_supplement_ids": ["FC-nonzero"],
+              "total_named": 16, "fresh_wave2_included": False,
+              "fresh_wave2_count": 0}, denominator)
+    historical = next(item for item in MUTANTS["b"]
+                      if item["id"] == "FC-nonzero")
+    check("FC-nonzero retains historical prior-kill provenance",
+          historical["universe"] == "historical-supplement"
+          and "5/3 -> 6/2" in historical["prior_kill_evidence"]["round17"]
+          and "current-only decision survived"
+          in historical["prior_kill_evidence"]["round17"]
+          and "current selftest kills"
+          in historical["prior_kill_evidence"]["counter_protocol"])
+    stable_target = ("classifier: target-conjunct attribution: "
+                     "reason fault failed on verdict only")
+    check("FC-target and FC-nonzero bind the stable off-target classifier case",
+          TARGET_REASON_FAILURE == stable_target
+          and SELFTEST_TARGETS.get("FC-target") == stable_target
+          and SELFTEST_TARGETS.get("FC-nonzero") == stable_target)
+    partial_doc = {
+        "results": {}, "counts": count({}),
+        "frozen_witness_validation": frozen_witness_validation({}),
+        "results_complete": False, "own_faults": []}
+    a_result = {"items": [
+        {"id": mutant, "before": "survived", "after": "killed"}
+        for mutant in FROZEN_EXPECTED["a"]]}
+    record_family_result(partial_doc, "a", lambda: a_result)
+
+    def fail_later_family():
+        raise OwnFault("synthetic later-family failure")
+
+    try:
+        record_family_result(partial_doc, "b", fail_later_family)
+    except OwnFault as exc:
+        partial_doc["own_faults"].append(str(exc))
+    mark_own_fault(partial_doc)
+    check("own fault preserves completed results/counts and keeps exit 2",
+          partial_doc["exit"] == 2 and partial_doc["partial_results"]
+          and not partial_doc["results_complete"]
+          and list(partial_doc["results"]) == ["a"]
+          and partial_doc["counts"]["named"] == {"a": 6, "total": 6}
+          and partial_doc["counts"]["after"]["total"] == 0
+          and not partial_doc["frozen_witness_validation"]["mismatches"],
+          partial_doc)
 
     def view(exit_code, accepted=None, faults=None, timed_out=False):
         decision = None if accepted is None else {
@@ -1885,7 +2006,7 @@ def selftest_machinery(ctx, check):
                                "accepted": 0, "faults": {"F1": True}},
                   decision or tail(main["stderr"]))
     check("(b) frozen fault-controls selftest passes unmutated and misses all "
-          "three self-mutants", set(exits.values()) == {0}, exits)
+          "four self-mutants", set(exits.values()) == {0}, exits)
 
     check_copy = stage_check(ctx, "st/e", check_bytes)
     for fault in CRASH_FAULTS:

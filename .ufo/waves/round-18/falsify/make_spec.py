@@ -89,7 +89,7 @@ for n,t in critics.items(): add(n,'critic','# Attack: '+t)
 for n,t in {
 'FreshGate':'Preregister and run 4 fresh non-equivalent v3 gate mutants NOT identical to existing selftest cases; each has off-suite distinguishing receipt, exact source site, green pristine and targeted kill/survival. Try status/counter/schema-boundary weaknesses, no production edits.',
 'FreshFault':'Preregister and run 4 fresh fault-controls/check.py detector mutants beyond H1-H7 and named F0/cache/target. Off-suite witness required; test current detector, distinguish equivalent/site_missing/inconclusive. State full universe.',
-'FreshAppend':'Preregister and run 4 fresh append-only parser/provenance mutants beyond opened/blank-line/refusal parser. Run selftest + distinguishing fixture; don't count an own-fault as targeted kill.',
+'FreshAppend':'Preregister and run 4 fresh append-only parser/provenance mutants beyond opened/blank-line/refusal parser. Run selftest + distinguishing fixture; never count an own-fault as targeted kill.',
 'FreshControls':'Preregister and run 4 fresh live-control classifier mutants beyond dropped gate-flip/K0 exit/K6 exact2. Try null laundering/fail precedence/target attribution/mapped-good. Run selftest and selected controls in clone, report survivors honestly.'
 }.items(): add(n,'mutation-tester','# Fresh mutation attack: '+t)
 for n,t in {

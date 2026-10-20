@@ -88,3 +88,9 @@ recognition now covers native ::1 and mapped 127/8 using sourced procfs decoding
 `corpus/knowledge/loopback-listener-ownership.md`; other engines and K05 stay frontier.
 Internal BaseException faults are contained into setup-error receipts; install
 retention and the llama-b11755 archive remain the operator's decisions.
+
+Current-emitter clarification (round-18 falsify): the tool **now emits v3**;
+this explicitly supersedes the round-17 “now emits v2” sentence at line73.
+Internal-fault receipt promises refer to guarded lifecycle paths with writable
+output, not help/usage, an unwritable output file or an unconditional guarantee
+against interruption between every Python instruction.

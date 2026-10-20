@@ -65,15 +65,14 @@ survived). Baseline and mutant are staged in identical layouts that mirror
 registry/endpoint-consumers.tsv when the original resolves one), so path
 resolution matches between them. Detectors:
 * selftest — ``--selftest`` of the copy; usable only when the unmutated
-  copy exits 0; a mutant exiting nonzero is killed.
+  copy exits 0; a targeted mutant failure is an independent kill.
 * numbers — the copy's ``--json`` run per pair (current; frozen too when
   given). The unmutated copy runs --baseline-runs times (default 2) per
-  pair; a pair whose baseline runs disagree is ``unstable`` and its diffs
-  are reported but never credited. Killed when the signature (controls
-  exit, the four counts, good_ok, gate_flip_bad, gate_flip_arms,
-  inconclusive, per-control classifications) differs or the mutant run
-  faults. ``killed_by`` names the detector and every differing key, so a
-  kill by measure's own gate_flip_arms coverage count is visible as such.
+  pair. A clean signature change against a stable usable baseline is a
+  numeric kill. Spawn errors, timeouts, controls own-fault exits, malformed
+  outputs and unusable/unstable pristine baselines are inconclusive, never
+  numeric kills; the run and fault details remain in the report.
+  ``killed_by`` records only selftest kills or credited signature changes.
 The original controls file is re-hashed at the end (must be unchanged).
 
 Exit codes
@@ -707,6 +706,16 @@ def signature_diff(base, other):
     return diffs
 
 
+def mutant_outcome(killed_by, numbers):
+    """Only positive detectors kill; unresolved numeric pairs are inconclusive."""
+    if killed_by:
+        return 'killed'
+    if not numbers or any(result.get('status') == 'inconclusive'
+                          for result in numbers.values()):
+        return 'inconclusive'
+    return 'survived'
+
+
 # ----------------------------------------------------------- measurement
 
 def _collect_inputs(pairs, doc):
@@ -883,7 +892,8 @@ def stage_controls(dest, controls, source):
 
 
 def _compact(rec):
-    keep = ('exit', 'timed_out', 'duration_s', 'stdout_sha256',
+    keep = ('argv', 'exit', 'timed_out', 'spawn_error', 'duration_s',
+            'stdout_sha256', 'stdout_bytes', 'stderr_tail',
             'doc_canonical_sha256', 'faults', 'leaked_processes')
     out = {k: rec.get(k) for k in keep}
     out['signature'] = signature(rec['summary']) if rec.get('summary') \
@@ -1001,26 +1011,38 @@ def run_self_mutants(args, mutants=MUTANTS):
                         f"selftest (exit {msel['exit']})")
             for pname, tool, gate in pairs:
                 if not doc['baseline'][pname]['usable']:
-                    entry['numbers'][pname] = {'status': 'baseline-unusable'}
+                    entry['numbers'][pname] = {
+                        'status': 'inconclusive',
+                        'reason': 'pristine baseline unusable',
+                        'differs': None,
+                        'diff': ['pristine baseline unusable; see baseline'],
+                        'credited': False}
                     continue
                 rec = run_controls(mut, tool, gate, probe_path, scratch,
                                    f'mut-{name}-{pname}', args.timeout)
                 _attach(rec)
                 if rec['faults']:
-                    diff = ['run-fault: ' + '; '.join(rec['faults'])]
-                else:
-                    ref = base_sig[pname] or signature(
-                        _first_summary(doc['baseline'][pname]))
-                    diff = signature_diff(ref, signature(rec['summary']))
+                    entry['numbers'][pname] = {
+                        'status': 'inconclusive', 'differs': None,
+                        'reason': 'mutated controls run faulted',
+                        'diff': ['run-fault: ' + '; '.join(rec['faults'])],
+                        'credited': False, 'run': _compact(rec)}
+                    continue
+                ref = base_sig[pname] or signature(
+                    _first_summary(doc['baseline'][pname]))
+                diff = signature_diff(ref, signature(rec['summary']))
                 credited = base_sig[pname] is not None
-                entry['numbers'][pname] = {'differs': bool(diff),
-                                           'diff': diff,
-                                           'credited': credited,
-                                           'run': _compact(rec)}
+                status = ('changed' if diff else 'unchanged') \
+                    if credited else 'inconclusive'
+                entry['numbers'][pname] = {
+                    'status': status, 'differs': bool(diff), 'diff': diff,
+                    'reason': None if credited else 'pristine baseline unstable',
+                    'credited': credited, 'run': _compact(rec)}
                 if diff and credited:
                     entry['killed_by'].append(
                         f'numbers:{pname} (' + '; '.join(diff) + ')')
-            entry['status'] = 'killed' if entry['killed_by'] else 'survived'
+            entry['status'] = mutant_outcome(entry['killed_by'],
+                                              entry['numbers'])
     finally:
         late = reap_scratch(scratch)
         shutil.rmtree(scratch, ignore_errors=True)
@@ -1136,6 +1158,11 @@ def print_self_mutants(doc):
         print(f"  {m['name']:<20} {m['status']:<17} {where}")
         for k in m['killed_by']:
             print(f'      killed_by {k}')
+        for pname, numeric in m.get('numbers', {}).items():
+            if numeric.get('status') == 'inconclusive':
+                detail = numeric.get('reason') or '; '.join(
+                    numeric.get('diff', []))
+                print(f'      numbers:{pname} inconclusive: {detail}')
     for warn in doc['warnings']:
         print(f'  warning: {warn}')
     if doc['exit'] == EXIT_FAULT:
@@ -1186,6 +1213,8 @@ def k6_rejected(receipt_written, tool_exit, spec=K6Spec):
 
 
 def selftest():
+    if MODE == 'crash-selftest':
+        return 1
     ok = (k0_accepted(0, 0) and not k0_accepted(-15, 0)
           and k6_rejected(True, 2) and not k6_rejected(True, 1))
     print('fake selftest', 'ok' if ok else 'FAILED')
@@ -1217,7 +1246,7 @@ def main():
             return 2
         return selftest()
     before = '/frozen/' in a.tool
-    if MODE == 'crash':
+    if MODE in ('crash', 'crash-selftest'):
         print('fake: own fault', file=sys.stderr)
         return 2
     if MODE == 'garbage':
@@ -1456,6 +1485,25 @@ def selftest():
     expect(any('good_ok is not a boolean' in x for x in f),
            'summarize: good_ok type validation')
 
+    # Numeric fault evidence is unresolved, not a mutant kill. A distinct
+    # targeted selftest failure may independently kill the same mutant.
+    numeric_fault = {
+        'current': {'status': 'inconclusive', 'differs': None,
+                    'diff': ['run-fault: controls exit 2; stdout not JSON'],
+                    'credited': False}}
+    expect(mutant_outcome([], numeric_fault) == 'inconclusive'
+           and 'run-fault' in numeric_fault['current']['diff'][0],
+           'numeric own-fault without selftest kill is inconclusive')
+    selftest_kill = ['selftest (exit 1)']
+    expect(mutant_outcome(selftest_kill, numeric_fault) == 'killed'
+           and selftest_kill == ['selftest (exit 1)']
+           and not any(k.startswith('numbers:') for k in selftest_kill),
+           'selftest kill stands alone when numeric evidence faults')
+    expect(mutant_outcome([], {
+        'frozen': {'status': 'inconclusive',
+                   'reason': 'pristine baseline unusable'}})
+        == 'inconclusive',
+        'invalid pristine baseline is inconclusive')
     root = Path(tempfile.mkdtemp(prefix='kama-c1-measure-selftest-'))
     try:
         gitroot, test_rev = _selftest_git(root)
@@ -1562,6 +1610,39 @@ def selftest():
             'noop': 'survived', 'missing': 'site_missing',
             'ambiguous': 'site_ambiguous', 'invalid': 'invalid_mutation'},
             f'self-mutants synthetic: exit {code} {doc.get("summary")}')
+        numeric_ownfault = {
+            'numeric-ownfault': (
+                'synthetic own fault with no selftest failure',
+                (("MODE = 'numeric-ownfault'", "MODE = 'crash'"),))}
+        paths = _selftest_tree(root, 'numeric-ownfault', gitroot, test_rev)
+        doc, code = run_self_mutants(
+            _args(paths, '--self-mutants', '--baseline-runs', '1'),
+            mutants=numeric_ownfault)
+        m = doc['mutants'][0]
+        expect(code == 1 and m['status'] == 'inconclusive'
+               and m['killed_by'] == []
+               and all(n['status'] == 'inconclusive'
+                       and any('run-fault' in d for d in n['diff'])
+                       for n in m['numbers'].values()),
+               f'numeric own fault without selftest kill: {m}')
+
+        targeted_selftest = {
+            'selftest-kill-ownfault': (
+                'synthetic targeted selftest failure plus own fault',
+                (("MODE = 'selftest-kill-ownfault'",
+                  "MODE = 'crash-selftest'"),))}
+        paths = _selftest_tree(root, 'selftest-kill-ownfault', gitroot,
+                               test_rev)
+        doc, code = run_self_mutants(
+            _args(paths, '--self-mutants', '--baseline-runs', '1'),
+            mutants=targeted_selftest)
+        m = doc['mutants'][0]
+        expect(code == 0 and m['status'] == 'killed'
+               and m['killed_by'] == ['selftest (exit 1)']
+               and all(n['status'] == 'inconclusive'
+                       and any('run-fault' in d for d in n['diff'])
+                       for n in m['numbers'].values()),
+               f'targeted selftest kill stands alone: {m}')
         paths = _selftest_tree(root, 'noselftest', gitroot, test_rev)
         doc, code = run_self_mutants(_args(paths, '--self-mutants',
                                            '--mutant', 'loosen-k0-exit'))
@@ -1578,8 +1659,9 @@ def selftest():
         num = (doc['mutants'] or [{}])[0].get('numbers', {}).get('current',
                                                                  {})
         expect(code == 1
-               and doc['summary'] == {'drop-gate-flip-arm': 'survived'}
+               and doc['summary'] == {'drop-gate-flip-arm': 'inconclusive'}
                and doc['baseline']['current']['stable'] is False
+               and num.get('status') == 'inconclusive'
                and num.get('differs') is True
                and num.get('credited') is False,
                f'self-mutants unstable baseline: exit {code} '
