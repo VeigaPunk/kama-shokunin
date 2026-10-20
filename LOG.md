@@ -787,3 +787,32 @@ and in SKILL/lesson, not treated as current authority.
   `.ufo/waves/round-13/integration-review.json`;
   `corpus/lessons/round-13.md` measured section. No tool installs or new L0
   question. Runtime restoration/timer disposition remains operator-owned.
+
+## round 14 — executable offline Ollama evidence reconciliation (2026-10-20)
+
+- Trigger: latest SCORECARD plan requested an actual serving-domain move after
+  two bounded wording/evidence rounds. Existing `served-identity-crosswalk.md`
+  holds tags/ps and digest-join concepts but no executable offline replay.
+  C1 calibration capability targets the lowest assigned axis (7 versus
+  operability 8), with score held 7 → 7. `claims.json` and `rulings.json`
+  under `.ufo/waves/round-14/` fix scope, before state and conflict precedence.
+- Changes: `tools/kama-ollama-evidence.py`, independent literal
+  `tests/ollama-evidence/cases.json`, measurement runner, source-grounded
+  `corpus/knowledge/ollama-evidence-replay.md`, KQ17, SKILL registry and corpus
+  navigation. Each belongs to this one capability claim. S012/S031 fields
+  were reopened; strict joins and ps remote-field handling are lane inference.
+- Outside round-13 D2: append historical count-table clarification in
+  `corpus/lessons/round-14.md`: redirected manifest has source-only mismatch
+  count 1 under verified anchor, outer `manifest_invalid` exit 2. Historical
+  lesson, receipts, implementation and all non-author files remain unchanged.
+  This is routed presentation-debt resolution, not a second axis claim.
+- One validated 32-seat wave is dispatched unchanged in one task call;
+  L1 canonical planner plus bounded revenger data-walk. Seats never execute
+  verification. Every report and registry binding is committed as evidence.
+  Existing endpoint probe, consumer registry, snapshots, external services,
+  routes, credentials and operator configs remain untouched.
+- New capture classifier never contacts a runtime. Readiness is always unknown;
+  input origin, timing and same-daemon identity are not established. Exact
+  metadata correspondence is not present serving capability or permission to
+  route. Final measured revision, command outputs and per-axis disposition
+  are appended after integration. No tool installs or new L0 decision yet.

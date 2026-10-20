@@ -159,3 +159,19 @@ snapshot checker. This round adds no knowledge entry, covered serving
 surface, capability or runtime sample. K02 remains held; K05 context capacity
 remains dependent on an authorized serving runtime. Current criterion repair
 does not erase those limits or claim they have been rechecked.
+
+## Round-14 executable evidence replay — capability, not integration
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/ollama-evidence-replay.md` | Runnable offline `/api/tags` and `/api/ps` capture reconciliation: exact selected names/digests, remote and malformed evidence, explicit unknown readiness; operational workflow newly held beyond the conceptual crosswalk | 14 |
+| `lessons/round-14.md` | Fixed-corpus capability measurement, source/policy separation, historical outer-verdict/count clarification requested by outside round-13 D2 | 14 |
+
+The conceptual available/running/remote distinction and candidate digest join
+were already held in `knowledge/served-identity-crosswalk.md`; this is executable
+repertoire, not newly discovered API semantics. Existing Ollama integration,
+live context-capacity and service-restoration gaps remain open. K05 is still
+operator-runtime dependent. Outside round-13 review admitted that bounded
+criterion repair (`lessons/round-13-verifier-spotcheck.md`); its D2 is clarified
+by appended round-14 prose, not by rewriting old receipts. This round still
+needs its own independent non-author admit/reject sample.

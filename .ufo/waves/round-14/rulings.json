@@ -1,0 +1,31 @@
+{
+  "authority": "L1 KamaR14",
+  "final_total_order": [
+    "1. Validate both inputs, arrays, all entry objects and recognized present-field types; malformed -> invalid_input2.",
+    "2. Compute both exact selected lists; more than one entry in either -> invalid_input2, even when tags has zero.",
+    "3. No selected tags entry -> unknown2, even when the selected ps entry has an alias conflict or remote marker.",
+    "4. Selected tags/ps entry with both nonempty name/model and unequal values -> identity_conflict1.",
+    "5. Missing/empty selected tag digest or, when selected, ps digest -> unknown2, even when a valid remote marker exists.",
+    "6. Valid nonempty selected remote marker -> remote_inventory1, even when nonempty digests differ.",
+    "7. No selected ps entry -> available_not_loaded1, meaning absent exact name only in supplied capture.",
+    "8. Compare selected nonempty digests exactly: unequal -> identity_conflict1; equal -> loaded_same_digest0."
+  ],
+  "input_rules": [
+    "Reject invalid JSON, duplicate JSON keys, absent files, nonobject envelopes, missing/nonarray models or nonobject entries as invalid_input exit2.",
+    "Across all entries, recognized name/model/digest/remote_model/remote_host fields if present must be strings; other types including null are invalid_input2. Unknown unrelated fields are ignored.",
+    "Selection: name == expected OR model == expected, exact case-sensitive strings. No trimming, basename, latest tag inference or digest normalization.",
+    "More than one selected entry in either array is invalid_input2 regardless digest agreement.",
+    "Selected entry whose nonempty name and nonempty model differ is identity_conflict1 before remote handling.",
+    "No tags selection is unknown2, even with ps selection. Missing or empty selected digest is unknown2. Missing selected model field is permitted if name supplies identity, and vice versa.",
+    "Absent or empty string remote markers are not remote. Any valid nonempty string remote marker on selected tags or ps is remote_inventory1, before unequal digests. Ps marker recognition is conservative inference not vendor schema.",
+    "No selected ps plus valid selected local tag digest is available_not_loaded1, meaning only absent from supplied ps capture.",
+    "Selected nonempty unequal digests are identity_conflict1; equal digests loaded_same_digest0. Neither proves current liveness, local weights or readiness. readiness always unknown and scope offline-captures-not-runtime.",
+    "Do not inspect expiry/current time/file mtime; both capture times, simultaneity and same-daemon origin unknown. File stat for regular-file safety is allowed, not timestamp evidence."
+  ],
+  "mode_rules": [
+    "--help conventional plaintext exit0 is not classification. Bad classification argv produces JSON invalid_input2.",
+    "--selftest outer clean0/selftest_failed1 is mode-dependent, intentional; never infer domain classification from exit alone. Actual child CLI assertions require stable finding_id and exact exit plus readiness/scope.",
+    "Nonvacuous fixture corpus has at least16 unique case names and independent literal expected_exit/expected_finding. No network/acquisition feature."
+  ],
+  "integration": "Later concrete owner discoveries may require an explicit appended ruling, not automatic acceptance of advisory proposals. Advisory high/medium labels from missing code are prospective risks, not observed vulnerabilities."
+}

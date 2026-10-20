@@ -394,3 +394,39 @@ Other axes unchanged; no observed harm within scope; no capability row added.
 Expansion, quality and discernment are **unchanged**, with the prior D4
 quality credit confined to round 12. Admission awaits independent non-author
 round-13 admit/reject sampling, never author-wave agreement.
+
+## Round 14 — offline Ollama evidence replay capability (2026-10-20)
+
+Current assignment remains operability + calibration (`../shokunin.conf` kama
+row). Calibration 7 is lowest versus operability 8. The top round-5 block is
+historical, not current assignment authority. No stagnation waiver.
+Outside round-13 disposition is **ok / admitted true** at
+`corpus/lessons/round-13-verifier-spotcheck.md`; that disposition supersedes
+round-13's pending-review wording, without rewriting the filed record.
+
+**C1 calibration / capability:** acquire an offline Ollama exported-metadata
+replay classifier. Existing available/running/remote and candidate digest-join
+concepts are credited to `served-identity-crosswalk.md`. New repertoire is the
+actual CLI policy over fixed literal adversarial cases. Before at
+`e1b3d746dbfd2100b61c67b6389217252592460f`: no classifier blob
+(`.ufo/waves/round-14/before-capability.json`). After target: every committed
+case matches literal finding/exit through the child CLI; readiness remains
+unknown for all. This retrospective unsupported-before baseline is capability
+absence, not an old runtime bug or red-before semantic repair.
+
+Calibration **7 → 7, delta 0**; no mastery score is inferred from a finite
+fixture corpus. Source S012/S031 fields were reopened, strict join policy is
+inference. `corpus/knowledge/ollama-evidence-replay.md` holds the operational
+workflow; source rows gain only allowed used-by links. Existing serving probes,
+runtime integration, registry expectations and observed endpoint state are
+unchanged. Other axes remain unchanged unless separately evidenced below.
+
+Supplemental outside D2 historical table clarification is appended only in
+`corpus/lessons/round-14.md`; discovery belongs to CloseKamaR13 and this counts
+toward no claim/axis/trend improvement. No old gate or receipt is rewritten.
+`QUALITY.md` KQ17 preserves outer verdict versus subfinding separation.
+
+**Planned — supersedes earlier plan:** obtain independent non-author sampling
+of this capability's admits/rejects; future steered domain work should target
+new observed serving evidence. Live integration/context capacity remains
+operator-dependent. Do not claim offline replay as runtime restoration.

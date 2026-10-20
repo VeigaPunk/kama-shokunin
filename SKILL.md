@@ -434,3 +434,43 @@ arbitrary natural-language correctness. Static source/code and committed
 receipt review establish the substantive correction separately; a matching
 pin or green self-test cannot replace that review. No new serving capability,
 runtime integration, endpoint sample or domain expansion is asserted.
+
+## Round-14 offline Ollama evidence replay (owner: kama)
+
+Use `python3 tools/kama-ollama-evidence.py --tags PATH --ps PATH --expect EXACT_NAME`
+only for caller-authorized exported JSON metadata. This tool acquires no evidence
+and contacts no endpoint. Workflow and source/inference boundaries:
+`corpus/knowledge/ollama-evidence-replay.md` (S012/S031); full precedence:
+`.ufo/waves/round-14/rulings.json`.
+
+| Finding | Exit | Meaning limited to supplied captures |
+|---|---:|---|
+| `loaded_same_digest` | 0 | One exact selected name is listed in each capture with equal nonempty digest; not runtime readiness |
+| `available_not_loaded` | 1 | Selected local tag is absent under that exact name from the supplied ps capture; another alias may list the same digest |
+| `remote_inventory` | 1 | A selected entry carries a nonempty remote marker; ps-side recognition is conservative inference |
+| `identity_conflict` | 1 | Selected name/model conflict or selected digests differ; timing and source are unknown |
+| `unknown` | 2 | Insufficient selected identity/digest evidence; never a successful correspondence |
+| `invalid_input` | 2 | Missing/unreadable or malformed input, bad field types, duplicate JSON keys or selected entries |
+
+`readiness` is always `unknown`; `scope` is always
+`offline-captures-not-runtime`. Names and digests compare exactly, without GGUF,
+basename, case, whitespace, implicit tag or prefix normalization. The strict
+join is the lane's inference policy, not a vendor contract. Nothing proves that
+the inputs came from one host, one daemon, simultaneous captures, or Ollama at
+all. No current liveness, local-weight residency, installed runtime, generation
+success or permission to route follows. Timestamps are not assessed.
+
+Do not transfer exit meanings across tools: existing `kama-probe.sh check`
+uses 0 reconciled / 1 tool error / 2 drift; replay uses 0 metadata match /
+1 nonmatching-or-remote evidence / 2 could-not-evaluate. Inspect JSON finding
+and scope, never use exit 0 alone as a routing or readiness gate.
+
+| Name | Kind / entry command | Verdict map | Self-test | Pinned values | Write scope | Owner |
+|---|---|---|---|---|---|---|
+| Offline Ollama capture reconciliation | gate: `python3 tools/kama-ollama-evidence.py --tags PATH --ps PATH --expect EXACT_NAME` | 0 clean captured metadata correspondence; 1 failed captured policy; 2 could-not-evaluate; finding IDs above distinguish results; plaintext `--help` exit 0 is help, not classification | `python3 tools/kama-ollama-evidence.py --selftest`; actual isolated child CLI cases assert literal exits and stable IDs plus readiness/scope; outer 0 `clean`, 1 `selftest_failed` | `tests/ollama-evidence/cases.json` literal expected exits/findings; fixed offline inputs, no mutable fleet artifact | Classification writes stdout only; selftest writes removed temporary fixtures only | kama |
+
+The measurement runner `.ufo/waves/round-14/measure.py` reports fixed-corpus
+behavior, not serving state or arbitrary-input correctness. Selftest green is
+capability evidence; a separately recorded run against a named committed
+revision is the round measurement. No live gate is executed by non-author
+closure; that reviewer inspects committed evidence.
