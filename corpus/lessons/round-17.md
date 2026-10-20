@@ -181,3 +181,132 @@ Commands run by L1 after wave 1 returned; outputs under `.ufo/waves/round-17/run
 
 Discernment: no non-author admit/reject sample exists for this round yet; every
 seat is lane-dispatched (LEARNING.md). Outside review remains pending.
+
+## Falsify wave — dispositions (80 seats, 2026-10-20)
+
+Validated under policy v2 and dispatched as one task call at 18:35:33Z after gated
+waits on the session job cap (no refused call; `falsify/attempts.json`; validation
+and provenance written by `.ufo/waves/round-17/dispatch-provenance.py`:
+`falsify/validation.json`, `falsify/provenance-ledger.json`, spawned 80 via the
+task-result header, bound to `taskCall` sha256 `9c4c8a64…2958`). Role mix: reviewer
+34, scout 8, critic 7, executor 6, connector 6, scribe 6, revenger 5,
+mutation-tester 4, sentinel 2, simplifier 2. Terminal: 71 completed; 9 failed on
+provider rate limits (`429 rate_limit_error`, m_opus ×7 critic/sentinel, m_haiku ×1
+scribe, plus `TrendVerdicts` ended without a final message). Two of the failed seats
+(`ServedModelOracle`, `ScribeReportTrends`) had already written reports; seven left
+none: `C1AdmissionCritic`, `C2AdmissionCritic`, `C2SourcedClaim`, `ControlsSafety`,
+`MistakesFailCapable`, `SeparabilityNoHarm`, `TrendVerdicts` — dead seats, not
+respawned. First-line verdicts of the 73 reports (strict counter): 22 confirm, 45
+partial, 0 refute, 5 n/a, 1 nonconformant (`RerunFaultCurrent` opens with a heading;
+its body verdict is confirm).
+
+**Confirmed by re-running (in `/tmp` clones at `54a2926`):** C1 fixed-detector
+numbers frozen 5/3 and current 8/0, byte-identical modulo time (`RerunFaultFrozen`,
+`RerunFaultCurrent`); the whole mutant grid, every cell and mutant
+(`RerunMutantGrid`, 22 min); C2 frozen 6 accepted-bad + K3 inconclusive and current 0,
+the current run byte-identical twice (`RerunControlsFrozen`, `RerunControlsCurrent`);
+three fresh real b11755 runs 11/11, four-pin `VALID` (`LiveRerun`) and 20 more idle
+runs with 24–48 503s each (`LiveFastLoad`); no-harm — round-16 measure PASS
+(`R16MeasureClone`), snapshot 30/0 and check.py 72/72 + 5/5 (`SnapshotClone`), matrix
+and probe bytes identical (`MatrixBytes`), v1 receipts and v1 gate path intact
+(`GateV1Compat`, `RevengerGateDiff`), the four legacy check.py conjuncts preserved
+(`RevengerCheckPyDiff`); route match exact (`RouteMatchEdge`); selftest writes only
+under a temporary directory (`CheckPySelftestScope`); census 41 → 46 reproduced
+(`CensusRerun`); KQ22 pairwise guard (`AppendOnlyPairwise`); routed-defect-2 counts
+(`CountVerdictsRerun`); 0→79 provenance demo (`ProvenanceRerun`); round-13 exit 4
+with the frozen gate exiting 1 on the same bytes (`R13GateSandbox`); no doc history
+rewritten (`AppendOnlyDocs`); no `__pycache__`, no round-16 receipt rewritten
+(`SentinelWaveDiscipline`); S042, S044, S045 re-opened, agree on every cell.
+
+**Corrected in the round (correction commit, appended text only):**
+- S043's `teaches` overstated "a first SIGTERM after install ends in `return 0`": a
+  signal between handler install and `start_loop` is lost (`ReopenS043`,
+  `KnowledgeAppendix`). New row **S047 supersedes S043**; the knowledge entry carries
+  an appended correction. S043's cells are untouched (KQ22).
+- SKILL.md §Round-17 had seven wrong cells (`SkillRound17Rows`): appended correction
+  paragraph (fault-controls `--selftest` not `--list`; live command must pass
+  `--server`; `source_binding` rows; controls exit predicate includes
+  `gate_flip_bad` and `inconclusive`; K7 untargeted; gate-flip not isolating for
+  K3/K6/K7; round-13 row at line 430 gains exit 4).
+- `AGENTS.md` VCS rule (this round's own line): exit 3 also comes from `push`; exit 4
+  only when every other check is clean (`GitignoreAgents`, `RoutedDefects`,
+  `R13GateSandbox`).
+- Wording in this lesson, superseded here rather than rewritten: "each bad control
+  failing its targeted check" (§Measurements) holds for K1–K6 and K8; K7 is rejected
+  on a setup error with no targeted check (`ControlsAttribution`,
+  `RerunControlsCurrent`). "Pre-round copies of every file this round changes are
+  frozen" (line 9) means the five measured code files; the docs and new files are
+  recoverable from `cff9e62` (`SentinelWaveDiscipline` F1). M2's captured-by "none"
+  should read: detected by outside closures and lane seats in earlier rounds, but no
+  rule made fail-capability an admission condition (`MistakesTable`). The S046 Gate
+  quote is a projection of the stored object (it omits `"error": null` and
+  `"port_listener_ownership": "child"`), not a verbatim substring (`ReopenS046`). The
+  frozen manifest's missing prior-exposure field is manifest metadata, not matrix
+  bytes, so "all need matrix bytes" was false for it (`RoutedDefects`); it stays open
+  as a cheap next-round item. The measured lane commit is `54a29268e208…`
+  (SCORECARD's pointer to LOG named no hash; `LogEntry`, `ReportReadiness`). The
+  three live runs' tool exits are now stored (`live/run-exits.txt`).
+
+**Kept as debt (not repaired this round; each named so the next round can take it):**
+- C2 false failure under saturation: 1 of 60 real runs at 32x `stress-ng` load saw no
+  503 and failed `loading_envelope_graded` on a healthy server (`LiveUnderLoad`); idle
+  0 of 20+3 (`LiveFastLoad`). The rule is fail-closed by design (KQ21 rejects vacuous
+  passes); the honest next move is to classify zero observation as could-not-evaluate
+  (exit 2) rather than a failed check. Disclosed as a trade risk in SCORECARD.
+- Receipt gate as a trust boundary: a receipt can self-declare v1 and escape every v2
+  predicate; extra argv flags (`--api-key X`, duplicate `--host`/`--port`) validate;
+  a non-exact 503 in `transitions` with exact `loading_503_bodies` validates;
+  `source_binding` and `internal_fault` are ungraded; the 256-distinct-body cap drops
+  a malformed 257th body silently (`GateForgeries`, `ConnectKagi`,
+  `SourceBindingCheck`, `ShonenProvince`). Next: `--require-schema v2`, exact argv
+  re-derivation, and grading every 503 row in `transitions`.
+- KQ21 coverage: six v2 checks (`models_alias_id`, `models_owned_by_llamacpp`,
+  `metrics_not_enabled`, `props_alias`, `probe_model_ok`, `probe_mismatch`) have no
+  retained round-17 bad control; round-16's review showed four of them failing on a
+  bad fake (`ReviewLiveHarnessCode.md` run b), but that control is not retained in
+  `controls.py` (`DocStringsSources`, `KQRowsReview`). Under KQ21 they are not counted
+  as subject evidence this round; C2's claim rests on the four checks the controls
+  flip.
+- Live tool: `::1`/IPv4-mapped loopback listeners are not recognised as child-owned
+  (`LoopbackOwnership`); `BaseException` and some epilogue faults escape without a
+  receipt and teardown injections can leak the temp log (`InternalFaultPath`); K6
+  accepts any nonzero exit, not exactly 2 (`KQRowsReview`); Python docs citation in
+  `documented_by` still says `/3/`, not S044's `/3.14/` (`ReopenS044`).
+- C1 coverage limits found by non-author-authored mutants: H1 (reason
+  case-insensitive), H2 (verdict `.strip()`), H3 (route ignores method — note
+  `RouteMatchEdge` found method is checked; H3's form survived because every stub row
+  sees a GET), H5 (normalised ids), H6 (no-request branch passes), H7 (grade last row)
+  all survive both detectors (`MutC1Preregistered`, `MutC1Preregistered2`); two-row
+  output is already accepted (H8 n/a); the served_model oracle mirrors the probe and
+  the matrix never exercises its verdict gating (`ServedModelOracle`,
+  `ServedIdsMirror`: newline, trailing-comma and grep-fallback divergences unexercised);
+  deeply nested JSON and 5,000-digit integers in probe output still traceback
+  (`MalformedNonUtf8`); an escaped `sleep` survives a probe timeout (`TimeoutPath`).
+  The C1 claim is therefore "the documented gradings plus served_model and route now
+  each have a killing fault", not "check.py cannot be weakened".
+- Detectors of the detectors: dropping the targeted-conjunct requirement, sharing the
+  F6 cache, or bypassing the F0 gate in `fault-controls.py` changes no reported number
+  (`MutFaultControlsSelf`); dropping the gate-flip arm or loosening K0's exit in
+  `controls.py` survives the frozen/current comparison (`MutControlsSelf`);
+  `sources-append-only.py` survives dropping the `opened` cell and dropping rows after
+  a blank line (`MutAppendOnlyGuard`).
+- Provenance: a refused task call still records `refused: 0` (`ProvenanceRerun`); the
+  lane re-derives policy identity that the wave producer already emits — offered to
+  kumitate (`ConnectKumitate`).
+- Simplification: 136 provably dead lines in the C1 tools (`SimplifyC1Tools`) and
+  narrow C2 cuts (`SimplifyC2Tools`) — deferred so the measured bytes stay the bytes
+  that were measured.
+
+**Handoffs advised, not absorbed:** argv credential flags and authenticated health
+to kagi (`ConnectKagi`); a structured replay adapter to tameshi (`ConnectTameshi`);
+producer-minted provenance to kumitate (`ConnectKumitate`); shipped-ELF identity to
+kaidoku (`ConnectKaidoku`); install retention stays operator/L0 (`ConnectTsukuroi`).
+
+**Mistake added by the falsify wave:**
+
+| ID | Class | Evidence pointer | Captured-by | Fix / failure obligation |
+|---|---|---|---|---|
+| M8 | L1 cited a source row past what its lines prove | S043 `teaches` (`corpus/SOURCES.md` S043) vs `server-queue.cpp:279` (`ReopenS043`) | falsify scout re-open (KQ6 locates the section; nothing requires reading the whole control path) | superseding row S047; knowledge correction. Shown able to fail: the re-open seat located the counterexample line in the pinned bytes |
+
+Discernment: still no non-author admit/reject sample for round 17; every seat is
+lane-dispatched. Outside review remains pending.

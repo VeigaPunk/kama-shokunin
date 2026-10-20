@@ -1023,3 +1023,26 @@ and in SKILL/lesson, not treated as current authority.
   pins. No-harm: probe and matrix bytes unchanged; round-16 measure PASS in a
   `/tmp` clone; snapshot 30/0; v1 receipts `VALID`. Details:
   `corpus/lessons/round-17.md` §Measurements, `SCORECARD.md` §Round 17.
+- Measured lane commit (build): `54a29268e2083caa2b1e0d54ee1e7d90961302f3` (landed
+  by the helper). `PROVINCE.md` (+round-17 note) and `SHONEN.md` (box-2 pointer
+  extension) were also in that commit.
+
+## round 17 — falsify wave and corrections (2026-10-20)
+
+- Falsify wave: 80 seats validated (policy v2) and dispatched in one task call at
+  18:35:33Z after capacity-gated waits (no refused call): reviewer 34, scout 8,
+  critic 7, executor 6, connector 6, scribe 6, revenger 5, mutation-tester 4,
+  sentinel 2, simplifier 2. 71 completed; 9 failed on 429 rate limits (m_opus ×7,
+  m_haiku ×1, one no final message); 7 left no report (dead, not respawned). Seats
+  spawned after the orchestrator's routing notes ran on the routes then in force.
+  First-line verdicts: 22 confirm / 45 partial / 0 refute / 5 n/a / 1 nonconformant.
+- Every C1/C2 number re-ran identically in `/tmp` clones; no-harm reconfirmed.
+- Corrections (appended): S047 supersedes S043 (lost-signal window); SKILL.md
+  §Round-17 seven cells and the round-13 row exit 4; knowledge-entry correction
+  (signal window, replay limit, saturation false failure); `AGENTS.md` exit 3/exit 4
+  wording; lesson §Falsify wave with dispositions, debt and M8; SCORECARD falsify
+  verdicts and planned row. Debt named in the lesson.
+- Round total 162 seats (82 + 80). Tools installed by L1 or its seats this round:
+  none recorded (two `uv tool` installs, ruff 0.17.1 and vulture 2.16 at 13:14 -03,
+  exist on the host and are not attributed to any kama seat report).
+  Stale-lane: respawn-per-round driver; no other kama mission open.

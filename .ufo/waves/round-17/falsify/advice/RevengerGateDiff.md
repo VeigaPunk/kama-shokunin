@@ -1,0 +1,28 @@
+VERDICT: partial — V1 grading is substantially preserved behind schema selection, but not byte-for-byte; a new unguarded health-body parse leaves a possible V1 exception-path divergence.
+
+# Attack target
+
+Attacked `tests/llamacpp-live/check-receipt.py`, comparing `cff9e62` (round start) to `54a29268e2083caa2b1e0d54ee1e7d90961302f3` (round commit), specifically whether the current V1 path preserves the old gate and what V2 adds.
+
+# Findings
+
+1. **Not byte-for-byte; ordinary V1 check grading is retained by explicit selection.** The frozen V1 required-check tuple has the same ten IDs, in the same order, as current `REQUIRED_CHECKS_V1`; current validation chooses it unless `schema == kama-llamacpp-live/v2`. The V1 health status check and the `teardown_exited` derivation remain in the non-V2 path. The renamed constant and conditional wrapper are source changes, not a byte-identical V1 implementation. Evidence: `.ufo/waves/round-17/frozen/tests_llamacpp-live_check-receipt.py:53-64` — “`teardown_exited`”; `tests/llamacpp-live/check-receipt.py:67-78` — “`REQUIRED_CHECKS_V1`”; `tests/llamacpp-live/check-receipt.py:653-660` — “`REQUIRED_CHECKS_V2 if is_v2 else REQUIRED_CHECKS_V1`”; frozen `:628-637` and current `:680-700`; current `:834-845` — “`if not is_v2 and "teardown_exited" in by_id:`”.
+
+2. **Shared schema diagnostics changed, but no V1-validity change is apparent there.** The old validator required only V1; the current validator admits V1 or V2. For any other schema, the receipt remains invalid, but its diagnostic now says either schema is accepted rather than only V1. Evidence: frozen `:174-176` — “`want {RECEIPT_SCHEMA!r}`”; current `:203-208` — “`want ... or ... RECEIPT_SCHEMA_V2`”.
+
+3. **V2 adds eleven-check grading, not merely new receipt fields.** V2's check set replaces `teardown_exited` with `teardown_graceful`, adds `loading_envelope_graded`, and retains the other nine V1 IDs. For V2, the gate compares each check's claimed `passed` value with a derivation from evidence. It requires `/health` status 200 and a parsed JSON object exactly equal to `{"status":"ok"}` (semantic JSON equality, not byte-for-byte body equality); it requires teardown evidence that the child was alive at teardown start, SIGTERM was sent, SIGKILL was not sent, and return code was 0; port closure additionally requires recorded `port_listener_ownership == "child"`; and the loading-envelope check requires stored 503 evidence and grades every entry in the nonempty `loading_503_bodies` list. Evidence: `tests/llamacpp-live/check-receipt.py:80-94`; `:662-669`; `:686-696`; `:847-900`; `:908-935`. The V2 self-test source includes targeted health, teardown, ownership, and loading-body mutations at `:1280-1321`; this report did not execute them.
+
+4. **V1 shared-helper caveat.** `parse_body` itself is unchanged from the frozen file, but the current validator newly calls it unconditionally on `captures.health.body` before the V2 guard. For ordinary JSON, that parsed value is unused for V1. **[INFERENCE]** A deeply nested JSON body string may cause Python's `json.loads` to raise `RecursionError`; `parse_body` catches only `ValueError` and `TypeError`, so this added call could make a pathological V1 receipt abort instead of following the old status-only path. This edge was not exercised. Evidence: frozen `:129-136` and current `:159-166` — “`except (ValueError, TypeError)`”; current `:677-679` — “`health_body = parse_body(...)`”, before the `if is_v2` comparison at `:686`.
+
+**Advice:** characterize or remove the unguarded V1 parse if strict V1 behavioral equivalence is required. Apart from this potential exception path and the invalid-schema diagnostic text, the diff's new outcome checks are gated on V2; no changed helper definition was found that tightens ordinary V1 acceptance.
+
+# Commands and exit codes
+
+- `git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff --stat cff9e62 54a29268e2083caa2b1e0d54ee1e7d90961302f3 -- tests/llamacpp-live/ && echo '=== FULL DIFF ===' && git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff cff9e62 54a29268e2083caa2b1e0d54ee1e7d90961302f3 -- tests/llamacpp-live/check-receipt.py` — exit 0; diff stat: `check-receipt.py` +274/−18.
+- `cd /home/vgpnk/Projects/shokunin/kama-shokunin && git show cff9e62:tests/llamacpp-live/check-receipt.py | sha256sum && git ls-tree -r --name-only 54a29268e2083caa2b1e0d54ee1e7d90961302f3 -- .ufo/waves/round-17/frozen/ && git ls-tree -r --name-only 54a29268e2083caa2b1e0d54ee1e7d90961302f3 -- tests/llamacpp-live/` — exit 0; frozen V1 gate digest `6b9576a13dde1872977a6af4547599a75cf484f37fe6fe0f4f5557349b09ced6`, matching `manifest.json`.
+- `rm -rf /tmp/RevengerGateDiff-clone /tmp/RevengerGateDiff-scratch && mkdir -p /tmp/RevengerGateDiff-scratch && git clone -q /home/vgpnk/Projects/shokunin/kama-shokunin /tmp/RevengerGateDiff-clone && git -C /tmp/RevengerGateDiff-clone checkout -q 54a29268e2083caa2b1e0d54ee1e7d90961302f3 && git -C /tmp/RevengerGateDiff-clone show cff9e62:tests/llamacpp-live/check-receipt.py > /tmp/RevengerGateDiff-scratch/v1-gate.py && git -C /tmp/RevengerGateDiff-clone show 54a29268e2083caa2b1e0d54ee1e7d90961302f3:tests/llamacpp-live/check-receipt.py > /tmp/RevengerGateDiff-scratch/current-gate.py && wc -l /tmp/RevengerGateDiff-scratch/*.py && sha256sum /tmp/RevengerGateDiff-scratch/*.py` — exit 0; frozen/current lengths 1,147/1,403 lines.
+- `rm -rf /tmp/RevengerGateDiff-clone /tmp/RevengerGateDiff-scratch` — exit 0; scratch removed.
+
+# Limitations and installs
+
+Static diff/source reconstruction only: no receipt gate, self-test, controls, llama-server, or other runtime was invoked. No installation or update.

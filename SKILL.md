@@ -581,3 +581,19 @@ round-13 live gate. Wave artifacts `.ufo/waves/round-17/count-verdicts.py` (stri
 first-line `VERDICT:` counter) and `.ufo/waves/round-17/dispatch-provenance.py`
 (policy identity, one `taskCall` canonicalization, spawned count from async task
 results) are process tools, not axis evidence.
+
+Round-17 falsify corrections to the table above (appended; `corpus/lessons/round-17.md`
+§Falsify wave): C1 fault controls — the self-test is `--selftest` (checks the source
+matrix: 9 files, 72 rows, digest), not `--list`, which only prints the fault table;
+the full run stages and verifies the scratch copy. Live lifecycle v2 — pass
+`--server /home/vgpnk/.local/opt/llama-b11755/llama-server` explicitly (without it
+`shutil.which` picks whatever `llama-server` is first on PATH); the in-receipt
+`source_binding` names S036 for the loading span only, the `/health` and teardown
+spans carry `row: null` (their rows are S042 and S043/S047); exit 1 can also come from
+a model rehash `OSError`, and a `BaseException` (e.g. KeyboardInterrupt) can escape
+without a receipt. C2 controls — exit 0 requires `accepted_bad`, `gate_flip_bad` and
+`inconclusive` all 0 and `good_ok`; K7 (hang) has no targeted check, its rejection
+is a setup error; the gate-flip arm does not isolate re-derivation for K3, K6 and K7,
+whose receipts carry `setup_error`. Round-13 row at line 430: exit 4
+(`worktree_not_at_measured_revision`, could-not-evaluate) is now a declared code, so
+that row's "undeclared nonzero codes" clause no longer covers it.

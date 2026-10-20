@@ -706,3 +706,30 @@ of round 17. Next steered move: K05 (declared versus served context) on the
 lane-owned fixture, or the round-16 M3 harness `shutdown()` design gap; the
 matrix-byte debts (why-line numbers, one duplicate class) wait for a round that
 re-pins the matrix digest.
+
+### Round-17 falsify results (appended)
+
+Measured lane commit: `54a29268e2083caa2b1e0d54ee1e7d90961302f3` (the pointer above
+to LOG named no hash). Falsify wave: 80 seats, 71 completed, 9 failed on provider
+rate limits (7 left no report); every C1 and C2 number re-ran identically in `/tmp`
+clones (`corpus/lessons/round-17.md` §Falsify wave). Rows 46 → 47 (S047 supersedes
+S043; A 43 → 44, mined 36 → 37).
+
+Verdicts after falsification (author, pending outside review):
+
+- **C1 calibration — improved, bounded.** The self-description is now backed for
+  the named fields and the two new invariants; non-author-authored mutants H1–H3,
+  H5–H7 survive both detectors, so the claim is "each documented grading has a
+  killing fault", not "the gate cannot be weakened". Score 7 → 7.
+- **C2 operability — improved, with a disclosed trade risk.** Accepted-bad controls
+  6 → 0 and three plus twenty-three real runs `VALID`; but 1 of 60 real runs under
+  32x CPU saturation failed `loading_envelope_graded` on a healthy server (the v1
+  receipt would have passed it), and six v2 checks have no retained bad control, so
+  C2 rests on the four checks the controls flip. The operator may read the
+  saturation false failure as an operability trade; it is reported, not netted out.
+  Score 8 → 8.
+
+Planned (supersedes the planned row above): (1) classify zero loading observation as
+could-not-evaluate (exit 2) and retain bad controls for the six uncontrolled v2
+checks; (2) gate hardening: `--require-schema v2`, exact argv re-derivation, grade
+every 503 in `transitions`; (3) frozen-manifest prior-exposure field; then K05.

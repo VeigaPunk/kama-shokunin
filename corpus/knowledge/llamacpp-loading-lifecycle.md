@@ -209,3 +209,20 @@ at server-http.cpp:347-352 before the state gate at 354. The body's `type` and
 Limits: one build (b11755 = 704366d76), CPU, fixture model, single-model mode,
 sampled instants on unregistered loopback ports. Not consumer health (8080 and
 34113 untouched, still `DEAD`), not router mode or sleep, not generation.
+
+**Round-17 falsify correction (appended).** The graceful-teardown paragraph above
+says the first signal stops the task loop and the main thread returns 0. That holds
+once `start_loop` is running: a SIGTERM delivered after the handler install
+(server.cpp:534) but before `start_loop` resets `running = true`
+(`server-queue.cpp:279`) is lost, the server keeps serving, and a later signal exits 1
+(S047, supersedes S043; static ordering, not reproduced). The harness signals only
+after `/health` 200, the readiness captures and both probe runs, so its runs did not
+hit that window, but `/health` 200 (server.cpp:515) does not by itself prove the
+handler is installed. "The v1 limits above are superseded" covers the health-body,
+teardown and loading-grading limits only: the live probe still runs after readiness,
+so a probe verdict on the loading body still comes from the replay. "Still `DEAD`"
+for the registered consumers is the last snapshot (20261014T124232Z), not a new
+sample. Under heavy CPU saturation the loading window can fall between two polls: in
+the falsify wave 1 of 60 real runs at 32x `stress-ng` load observed no 503 and failed
+`loading_envelope_graded` on a healthy server (0 of 20 idle runs, 0 of 30 at 3-12x
+load; `.ufo/waves/round-17/falsify/advice/LiveUnderLoad.md`, `LiveFastLoad.md`).
