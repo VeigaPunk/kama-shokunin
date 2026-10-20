@@ -41,15 +41,18 @@ Measurement mode
    never derived. Shape ``v1-derived`` (schema kama-live-controls/v1, the
    frozen controls) derives only what v1 states exactly: good_rejected =
    0/1 from ``good_ok`` (k0 is v1's only good control) and a per-row
-   classification from accepted/inconclusive/attributed; ``misclassified``
-   and ``uncontrolled_checks`` stay ``null`` (v1 has no classification and
-   lists failed checks only). ``model_unchanged`` is removed from
-   uncontrolled_checks into ``uncontrolled_excluded`` (input integrity).
+   classification from accepted/inconclusive/attributed. For reported v2,
+   ``misclassified`` is cross-checked against row ``bucket`` (not
+   ``classification``); rows from an older reported schema without bucket
+   use classification as the compatibility fallback. ``uncontrolled_checks``
+   stay ``null`` for v1 (no classification and failed checks only).
+   ``model_unchanged`` is removed from uncontrolled_checks into
+   ``uncontrolled_excluded``.
    ``gate_flip_arms`` is read from the controls JSON when present, otherwise
    derived from rows whose ``gate_flip`` is an object (the arm ran).
 5. Report: before -> after for the four counts plus good_ok, gate_flip_bad,
-   gate_flip_arms, inconclusive; per-control classification diffs; input
-   and controls-JSON digests.
+   gate_flip_arms, inconclusive; per-control classification and bucket diffs;
+   controls-JSON digests.
 
 Self-mutants mode
 -----------------
@@ -120,6 +123,7 @@ EXCLUDED_UNCONTROLLED = frozenset({'model_unchanged'})
 CLASSIFICATIONS = frozenset({'accepted', 'rejected-targeted',
                              'rejected-untargeted', 'not-evaluated',
                              'misclassified'})
+BUCKETS = frozenset({'ok', 'accepted_bad', 'good_rejected', 'misclassified'})
 CONTROLS_TIMEOUT = 3600.0   # one full controls.py run (each control <=240s)
 SELFTEST_TIMEOUT = 600.0
 STDERR_TAIL = 2000
@@ -468,6 +472,8 @@ def summarize(doc, controls_exit):
         if shape == 'v1-derived':
             cls, src = _v1_classification(r), 'derived-v1'
             targeted = r.get('expected_failed')
+            bucket = None
+            bucket_source = 'v1-unavailable'
         else:
             cls = r.get('classification')
             if cls not in CLASSIFICATIONS:
@@ -484,6 +490,17 @@ def summarize(doc, controls_exit):
             targeted_hit = r.get('targeted_hit')
             if not (isinstance(targeted_hit, bool) or targeted_hit is None):
                 faults.append(f'{cid}: targeted_hit is not boolean/null')
+            if 'bucket' in r:
+                bucket = r['bucket']
+                if bucket not in BUCKETS:
+                    faults.append(f'{cid}: invalid bucket {bucket!r}')
+                    bucket = None
+                    bucket_source = 'invalid'
+                else:
+                    bucket_source = 'reported'
+            else:
+                bucket = None
+                bucket_source = 'classification-fallback'
         failed = r.get('failed_checks')
         if not isinstance(failed, list) \
                 or not all(isinstance(x, str) for x in failed):
@@ -498,7 +515,8 @@ def summarize(doc, controls_exit):
             flip_arms += int(ran)
         rows[cid] = {
             'classification': cls, 'classification_source': src,
-            'bucket': r.get('bucket'),
+            'bucket': bucket,
+            'bucket_source': bucket_source,
             'expected': r.get('expected'), 'targeted': targeted,
             'targeted_hit': r.get('targeted_hit') if shape == 'reported'
             else None,
@@ -553,13 +571,18 @@ def summarize(doc, controls_exit):
                                    if c in EXCLUDED_UNCONTROLLED})
                 uncontrolled = sorted({c for c in raw
                                        if c not in EXCLUDED_UNCONTROLLED})
-        if misclassified is not None and rows \
-                and all(r['classification'] for r in rows.values()):
-            n = sum(1 for r in rows.values()
-                    if r['classification'] == 'misclassified')
-            if n != misclassified:
+        if misclassified is not None and rows:
+            n, counted = 0, 0
+            for row in rows.values():
+                if row['bucket_source'] == 'reported':
+                    counted += 1
+                    n += row['bucket'] == 'misclassified'
+                elif row['bucket_source'] == 'classification-fallback':
+                    counted += 1
+                    n += row['classification'] == 'misclassified'
+            if counted == len(rows) and n != misclassified:
                 faults.append(f'misclassified={misclassified} but {n} row(s) '
-                              'classified misclassified')
+                              'have a misclassified outcome bucket')
 
     summary = {
         'shape': shape, 'schema': doc.get('schema'),
@@ -642,11 +665,15 @@ def control_diffs(before, after):
         b, a = before['rows'].get(cid), after['rows'].get(cid)
         bc = b['classification'] if b else None
         ac = a['classification'] if a else None
+        bb = b['bucket'] if b else None
+        ab = a['bucket'] if a else None
         out.append({
             'id': cid,
             'present': 'both' if b and a else ('before' if b else 'after'),
             'before': bc, 'after': ac,
-            'changed': bc != ac or (b is None) != (a is None),
+            'before_bucket': bb, 'after_bucket': ab,
+            'changed': (bc != ac or bb != ab
+                        or (b is None) != (a is None)),
             'before_failed_checks': b['failed_checks'] if b else None,
             'after_failed_checks': a['failed_checks'] if a else None,
             'targeted': (a or b)['targeted']})
@@ -659,17 +686,21 @@ def signature(summary):
         sig[key] = summary[key]
     sig['classifications'] = {cid: row['classification']
                               for cid, row in summary['rows'].items()}
+    sig['buckets'] = {cid: row['bucket']
+                      for cid, row in summary['rows'].items()}
     return sig
 
 
 def signature_diff(base, other):
     diffs = []
     for key in base:
-        if key == 'classifications':
+        if key in ('classifications', 'buckets'):
             b, o = base[key], other[key]
+            field = ('classification' if key == 'classifications'
+                     else 'bucket')
             for cid in sorted(set(b) | set(o)):
                 if b.get(cid) != o.get(cid):
-                    diffs.append(f'classification[{cid}]: {b.get(cid)!r} -> '
+                    diffs.append(f'{field}[{cid}]: {b.get(cid)!r} -> '
                                  f'{o.get(cid)!r}')
         elif base[key] != other[key]:
             diffs.append(f'{key}: {base[key]!r} -> {other[key]!r}')
@@ -1030,7 +1061,8 @@ def _first_summary(base):
     sig = base['runs'][0]['signature']
     return {'controls_exit': sig['controls_exit'],
             **{k: sig[k] for k in COUNT_KEYS + EXTRA_KEYS},
-            'rows': {cid: {'classification': c}
+            'rows': {cid: {'classification': c,
+                           'bucket': sig['buckets'].get(cid)}
                      for cid, c in sig['classifications'].items()}}
 
 
@@ -1165,10 +1197,12 @@ def row(cid, cls, failed, targeted, st=None, gate=None, receipt_doc=None):
     if cid != 'k0':
         gate_flip = _gate_flip(st, gate, receipt_doc, failed)
     targets = [targeted] if isinstance(targeted, str) else []
+    bucket = ('misclassified' if cls == 'misclassified'
+              else 'accepted_bad' if cid != 'k0' and cls == 'accepted'
+              else 'ok')
     return {'id': cid, 'classification': cls, 'failed_checks': failed,
             'targeted': targets, 'targeted_hit': cls == 'rejected-targeted',
-            'bucket': 'good' if cid == 'k0' else 'bad',
-            'gate_flip': gate_flip}
+            'bucket': bucket, 'gate_flip': gate_flip}
 
 
 def main():
@@ -1356,8 +1390,9 @@ def selftest():
                  'misclassified': 0, 'good_ok': True,
                  'uncontrolled_checks': ['model_unchanged'],
                  'controls': [{'id': 'k0', 'classification': 'accepted',
-                               'targeted': [], 'targeted_hit': None,
-                               'failed_checks': [], 'gate_flip': None}]}
+                               'bucket': 'ok', 'targeted': [],
+                               'targeted_hit': None, 'failed_checks': [],
+                               'gate_flip': None}]}
     s, f, _ = summarize(clean_doc, 0)
     expect(not f and s['uncontrolled_checks'] == []
            and s['uncontrolled_excluded'] == ['model_unchanged']
@@ -1367,6 +1402,46 @@ def selftest():
     s, f, _ = summarize(dict(clean_doc, misclassified=2), 0)
     expect(any('exited 0 against' in x for x in f),
            'summarize: exit 0 contradicting counts is a fault')
+
+    # Exact k16/top-level regression projection from round-18
+    # runs/c1-measure.json runs.before.doc. The observed classification is
+    # rejected-targeted; expected-outcome bucket is misclassified.
+    rawbefore_k16 = {
+        'schema': 'kama-live-controls/v2',
+        'accepted_bad': 5, 'good_rejected': 1, 'misclassified': 1,
+        'uncontrolled_checks': [], 'good_ok': True,
+        'gate_flip_bad': 0, 'gate_flip_arms': 16, 'inconclusive': 0,
+        'controls': [{
+            'id': 'k16', 'classification': 'rejected-targeted',
+            'bucket': 'misclassified', 'expected': 'not-evaluated',
+            'targeted': ['loading_envelope_graded'], 'targeted_hit': True,
+            'failed_checks': ['loading_envelope_graded'],
+            'tool_exit': 1, 'gate_exit': 1,
+            'gate_flip': {'accepted': False, 'cleared': [], 'exit': 1,
+                          'flipped': ['loading_envelope_graded'],
+                          'rejected': True, 'targeted': True},
+        }],
+    }
+    s, f, _ = summarize(rawbefore_k16, 1)
+    expect(not f and s['misclassified'] == 1
+           and s['rows']['k16']['classification'] == 'rejected-targeted'
+           and s['rows']['k16']['bucket'] == 'misclassified',
+           'rawbefore k16: count bucket without relabeling classification')
+
+    # Older reported-schema rows without bucket retain classification-based
+    # consistency checking for compatibility.
+    no_bucket = {
+        'schema': 'kama-live-controls/v2', 'accepted_bad': 0,
+        'good_rejected': 0, 'misclassified': 1, 'uncontrolled_checks': [],
+        'good_ok': True,
+        'controls': [{'id': 'legacy', 'classification': 'misclassified',
+                      'targeted': [], 'targeted_hit': None,
+                      'failed_checks': []}],
+    }
+    s, f, _ = summarize(no_bucket, 1)
+    expect(not f and s['rows']['legacy']['bucket_source']
+           == 'classification-fallback',
+           'reported schema without bucket uses legacy classification')
     s, f, _ = summarize({k: v for k, v in clean_doc.items()
                          if k != 'good_rejected'}, 1)
     expect(not f and s['good_rejected'] is None and any(

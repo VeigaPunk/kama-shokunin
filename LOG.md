@@ -1080,3 +1080,22 @@ and in SKILL/lesson, not treated as current authority.
   author's pending/unchanged reading in SCORECARD line 702
   (`round-17-verifier-spotcheck.md:217–221`). Round-18 author/seat checks do not
   themselves satisfy the independent non-author spot-check duty.
+
+## round 18 — measured c6dc46f and counter-interface corrections
+
+- Landed implementation `c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d`.
+  Official `python3 .ufo/waves/round-18/runs/run.py`: 32 commands, 30 expected,
+  two counter own-faults retained (not called passes). Three real v3 runs each
+  11/11, schema-floor/four-pin VALID; legacy pairs unchanged; snapshot 30/0 and
+  round-16 measure PASS in sandbox clone. Commands, outputs and exits in `runs/`.
+- Corrected C1 counter's two-axis seam: expected-outcome bucket determines
+  misclassified count; observed classification remains rejected-targeted for
+  frozen k16. Exact raw regression added; counter selftest 38/38 in owner clone.
+- Corrected C2 counter's independent-arm combination: a named targeted selftest
+  kill survives an inconclusive main arm; main exit2 alone is still inconclusive.
+  Both arm outcomes retained; regression cases give selftest 60/60 in owner clone.
+  No subject predicate or control was weakened by either counter repair.
+- S055 records the measured real v3 receipts; old SOURCE cells remain immutable
+  except the logged S047 used-by addition. Lesson records the two execution
+  conformance disclosures (late canonical reread; the argv probe's brief wildcard
+  launch). Final claim measurements await corrected counting invocations.

@@ -974,12 +974,12 @@ def main_arm(base_view, view):
 
 
 def combine_arms(arms):
-    """Any inconclusive arm prevents a kill claim for the self-mutant."""
+    """Any independently conclusive detector arm is sufficient to kill."""
     statuses = [status for status, _ in arms]
-    if any(status == "inconclusive" for status in statuses):
-        return "inconclusive"
     if "killed" in statuses:
         return "killed"
+    if any(status == "inconclusive" for status in statuses):
+        return "inconclusive"
     if all(status == "survived" for status in statuses):
         return "survived"
     return "inconclusive"
@@ -1732,11 +1732,21 @@ def selftest_pure(check):
     check("(b/c) failing baseline selftest is inconclusive",
           selftest_arm(fake(1, b""), target_failure, "targeted")[0]
           == "inconclusive")
-    check("(b) an inconclusive arm prevents a kill",
-          combine_arms([("inconclusive", ""), ("killed", "")])
-          == "inconclusive"
-          and combine_arms([("survived", ""), ("survived", "")])
-          == "survived")
+    targeted_arm = selftest_arm(base_selftest, target_failure, "targeted")
+    unrelated_arm = selftest_arm(base_selftest, unrelated_failure, "targeted")
+    own_fault_arm = main_arm(good, view(2))
+    passing_arm = selftest_arm(base_selftest, base_selftest, "targeted")
+    check("(b) targeted selftest kill survives an other-arm exit 2",
+          targeted_arm[0] == "killed" and own_fault_arm[0] == "inconclusive"
+          and combine_arms([targeted_arm, own_fault_arm]) == "killed")
+    check("(b) no targeted selftest kill plus main exit 2 stays inconclusive",
+          unrelated_arm[0] == "inconclusive" and own_fault_arm[0] == "inconclusive"
+          and combine_arms([unrelated_arm, own_fault_arm]) == "inconclusive")
+    check("(b) passing selftest plus main exit 2 remains inconclusive",
+          passing_arm[0] == "survived" and own_fault_arm[0] == "inconclusive"
+          and combine_arms([passing_arm, own_fault_arm]) == "inconclusive")
+    check("(b) both surviving arms survive",
+          combine_arms([("survived", ""), ("survived", "")]) == "survived")
     doc = {"positive_control": {"detected": True}, "detected": 8, "accepted": 0,
            "faults": [{"id": "F1", "detected": True}]}
     check("fault-controls decision extracted",

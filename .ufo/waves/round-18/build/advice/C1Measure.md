@@ -1,4 +1,4 @@
-VERDICT: confirm — the C1 measurement and self-mutant modes are implemented, pinned and self-tested; frozen v1’s missing metrics are reported as unavailable.
+VERDICT: confirm — v2 misclassified consistency now follows outcome buckets; the exact rawbefore k16 mismatch has a regression fixture.
 
 # Axes
 
@@ -32,7 +32,7 @@ VERDICT: confirm — the C1 measurement and self-mutant modes are implemented, p
 
 # Risks and limitations
 
-- The behavioral run used frozen v1 controls on both sides, so it did not validate round-18 v2 runtime output. The scoped follow-up below confirms only the three exact mutant-source anchors in integrated v2 controls; L1 should still run the delivered command against the integrated v2 controls/tool/gate.
+- The earlier scratch behavior run used frozen v1 controls. L1's later c6dc46f run supplied the actual v2 output used for the regression fixture; L1 should rerun the counter with this corrected code.
 - A consistently falsified controls report (self-consistent but wrong counts and classifications) is outside this counter’s ability to detect. Staged self-mutants preserve controls-directory siblings and registry, but code that reads other external lane files may still differ. A leaked daemon that re-execs without retaining the scratch path in its command line may escape process cleanup.
 - `loosen-k0-exit` survived the frozen K0 observations because the accepted `-15` path was not observed. `k6-any-nonzero` was `site_missing` only in frozen v1; its current v2 source anchor is present, as confirmed below.
 - No tools were installed or updated.
@@ -42,3 +42,11 @@ VERDICT: confirm — the C1 measurement and self-mutant modes are implemented, p
 - Checked only the three self-mutant source anchors against the integrated `tests/llamacpp-live/controls.py`; each exact source string in `measure.py:138-150` occurs once, so no compatible alternatives were needed. `controls.py:1135` — quote: `gate_flip = _gate_flip(st, gate, receipt_doc, failed)`; `controls.py:1028` — quote: `accepted = (tool_exit == 0 and gate_exit == 0`; `controls.py:1031` — quote: `exit_ok = tool_exit in spec.exits`.
 - The previously observed `k6-any-nonzero: site_missing` applied to frozen v1 only; integrated v2 has the exact K6 anchor. The K0 `accepted` expression is in the shared `classify_run` path, not a dedicated K0-only block; the existing edit matches, and this follow-up did not change mutant scope.
 - No controls run, build, test, or selftest was run for this interface-only follow-up. The refreshed delivered file is byte-identical to the prior copy: SHA-256 `55b26b3b47e316f6b013fae980550073bad3972009c7dcee75d8d0da9e568c17`.
+
+## Follow-up: misclassified bucket root fix
+
+- Root cause: v2 preserves two axes. `classification` is the observed result; `bucket` records whether it matched the control's expected outcome. The top-level `misclassified` count is aggregated from `bucket`, not the classification string. `controls.py:56-60` — quote: “any other mismatch -> misclassified”; `controls.py:1248-1249` — quote: `res[r['bucket']] += 1`.
+- `measure.py` now cross-checks `misclassified` against row `bucket` when present, preserves classification and bucket separately in row summaries/diffs and self-mutant signatures, and uses classification only as the compatibility fallback for older reported rows without bucket. Invalid present buckets remain faults; the consistency check is not suppressed. `measure.py:491-503,572-585,658-705` — quote: `bucket_source = 'reported'`.
+- Added a selftest projection of the exact rawbefore `k16` record: `.ufo/waves/round-18/runs/c1-measure.json` `.runs.before.doc.controls[id=k16]` — quote: `"classification":"rejected-targeted","bucket":"misclassified","expected":"not-evaluated"`. The fixture asserts the top-level count remains 1 while preserving both row values. `measure.py:1406-1429` — quote: `rawbefore k16: count bucket without relabeling classification`.
+- Verification in the clone: `python3 -m py_compile .ufo/waves/round-18/c1/measure.py` exited 0; `python3 -B .ufo/waves/round-18/c1/measure.py --selftest` exited 0 (38/38). No real controls run was performed; L1 owns the counter rerun.
+- Refreshed deliverable: `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/build/out/C1Measure-2/measure.py`, SHA-256 `a9577ed889572e929b404268b87d50000c56e62c36e6c54f6f9113a3012a490f`. New-file deliverable; no unified diff.

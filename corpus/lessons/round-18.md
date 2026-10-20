@@ -50,6 +50,7 @@ row here, not by editing round 17's lesson.
 | llama.cpp rejects duplicate flags itself | reject; admit S054 last-wins warning | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/common/arg.cpp:836: "DEPRECATED: argument '%s' specified multiple times, use comma-separated values instead (only last value will be used)". |
 | The frozen parser recognises real IPv6 loopback listeners | reject, observed counterexample | `.ufo/waves/round-18/build/advice/ProbeTcp6Format.md`: real `::1` and `::ffff:127.0.0.1` listeners yield raw hex ending `01000000` and `0100007F`; frozen `port_owned_by` returns None for both, IPv4 True. |
 | A green lane-owned fixture certifies registered-consumer health | reject | Registry consumers still have no new sample; no run in this round binds 8080 or 34113. |
+| Three v3 runs on the real pinned fixture evaluate and pass, with four-pin schema-floor validation | admit bounded own-work S055, opened 2026-10-20 | `.ufo/waves/round-18/live/receipt-1.json` JSON path `outcome`: `"pass"`; `checks`: 11 evaluated true; `runs/live-gate-1.stdout`: `VALID`; commands/exits and the other two receipts in `runs/commands.json`. |
 
 Existing SOURCES rows' status/recheck/used-by cells remain unchanged unless an
 explicit old→new addition is recorded below. S001–S047's immutable cells stay intact.
@@ -147,3 +148,46 @@ Source bookkeeping: S047 used-by old `corpus/lessons/round-17.md` → same plus
 `corpus/knowledge/llamacpp-loading-lifecycle.md, corpus/lessons/round-18.md`.
 No old status/recheck or immutable cell changes. New-row edits before their first
 commit are drafts, not retroactive changes to an admitted row.
+
+## Official measurement pass and counter-integration defects
+
+Measured production revision `c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d`.
+`python3 .ufo/waves/round-18/runs/run.py` executed 32 commands; 30 met their
+declared exits. All ten selftests, real v3 runs/gates (three each), five legacy
+receipt pairs, wrong-probe-pin rejection, snapshot clone and round-16 measure
+clone passed their expected outcomes. Raw commands, exits, stdout/stderr and
+digests are retained under `runs/`, not inferred from seat reports.
+
+Two official counting commands were **could-not-evaluate**, not quietly called
+pass: c1 measure exit 2 on a top-level/per-row `misclassified` mismatch in its
+before arm; c2 exit 2 on two family-b composite outcomes despite targeted red
+selftests (the independent main arm refused its deliberately broken instrument).
+Both failures are routed to their original counter owners, with regression
+fixtures required. Original failed evidence remains; corrected reruns are new
+artifacts, never overwritten to conceal the failure.
+
+C1 raw subject/control cells at that pass: accepted-bad **5 → 0**,
+good-rejected **1 → 0**, misclassified **1 → 0**, uncontrolled-check count
+**0 → 0** under the new control suite. The last number measures retained control
+coverage on both subjects, not a claim the six check predicates were absent in
+v2. Controls-self mutants all three killed by selftest. C2 raw named universe:
+15 before; current six H kills, three handled crash/cleanup faults, two
+append-only kills, refused-count correct82, one FC self kill and two FC
+inconclusives. A corrected counter must preserve those raw arms.
+
+S055 was added only after reading the three real v3 receipts and gate outputs.
+Its Gate row above is own-work evidence, not a first-party upstream contract.
+
+## Execution conformance disclosures
+
+- The complete canonical protocol reread occurred **after** build dispatch,
+  rather than in the required load order. The earlier prompt/fleet-axis/skill
+  reads do not excuse that ordering defect. No exemption is claimed.
+- The ProbeArgvEffects item conflicted with its wave's loopback-only rule by
+  explicitly asking for a duplicate `--host 0.0.0.0` launch. Its report records
+  an actual wildcard listener for 14.2 ms, immediately killed without HTTP,
+  followed by a separate isolated-network-namespace experiment; final PID/ss
+  checks found none of that seat's processes. This was unnecessary exposure,
+  not a safe pattern to copy. All new fake/receipt forgery checks keep the
+  wildcard argv as **data**, never a host launch instruction. No persistent
+  service or registry state was changed.

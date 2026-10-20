@@ -259,3 +259,11 @@ internal consistency, not an authenticated execution trace: an author who
 consistently removes evidence can still forge a story. Exact argv does not prove
 effective config free from HOME/config.ini inputs. These limits are not hidden
 by the retained fake-server controls or the real b11755 samples.
+
+Round-18 own-work observation S055: the three retained real b11755 v3 receipts
+in `.ufo/waves/round-18/live/receipt-{1,2,3}.json` each have outcome `pass`,
+11 evaluated true checks and a captured loading observation. Each validates
+with `--require-schema v3` and model/server/probe/tool SHA-256 pins
+(`runs/commands.json`, measured production commit
+`c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d`). These are actual surfaces, not
+the fake K0 control. Their counts say nothing about generation or other models.
