@@ -1,3 +1,34 @@
+# ARCHIVAL — ROUND-10 SEAT PROTOCOL IS HISTORICAL, UNDELIVERED AND NONEXECUTED (round-12 notice, 2026-10-20)
+
+**THIS BANNER OVERRIDES THE TITLE BELOW AND EVERY DIRECTIVE IN THE ORIGINAL TEXT.** The phrase `L1-issued, binding on all 64 seats` in the next heading is a dated 2026-10-18 self-description. It binds no seat, agent, round, or host. Nothing below this banner is a current instruction, a current authorization, or a reusable procedure.
+
+**Status.** Historical planning artifact, retained only for provenance. Its own `plan.json` records `"dispatch_utc": null` and loop 1 as blocked-with-data, and `.ufo/round-10/tps-probes/` is empty; the file entered git only in round 11, in `3285cdf7a50481694a36c4425cf32c915ab5e5f0`, after round-11 verifier defect D5 asked for this in-file label (`corpus/lessons/round-11-verifier-spotcheck.md`). As a live instruction set it is nonexecuted: nothing here is running or pending; dated receipt files that may sit in the same directory are frozen observations, not evidence that this protocol is current.
+
+**Not current authorization.** It grants no permission and imposes no obligation to write, edit, audit, probe, dispatch, capture telemetry, commit, renumber, or "carry verbatim" anything. Only the active round's canonical assignment and lane contract authorize current work; if this text conflicts with them, they win.
+
+**No old routing, host, or environment instruction here is reusable.** In particular:
+
+- *Original L1* — the header `(L1-issued, binding on all 64 seats)` is history; the 64-seat scheme and its classes are not current.
+- *Original L13* (hard rule 1) — the AUDIT write grant to an assigned file plus `.ufo/round-10/audit/` is expired; no scope is assigned now.
+- *Original L16* (hard rule 4) — "a failed task ... is a success as a measurement seat" is not a success definition today; a blocked or erroring run stays blocked or failed.
+- *Original L17* (hard rule 5) — the read-only inspection allowance for `~/.config`, `~/.omp`, systemd units, or any sibling repo is not a live allowance; those surfaces remain host/config-owned and out of this lane's scope, and its short "never write" list is not a complete boundary — the active lane contract alone defines the boundary.
+- *Original L22–L23* (AUDIT steps 1–2) — expanding `$UFO_SRC` and falling back to `~/Projects/ufo-fsd-alpha` or `~/Projects/origin-work/ufo-fsd-alpha` authorizes no environment read and no path probe; no fallback root is endorsed.
+- *Original L23* — loopback-URL `runtime-surface` classification authorizes no endpoint call, curl, probe, or config-body read.
+- *Original L23* — `git cat-file -e <hash>` bookkeeping is historical; round-10 hashes carry no current action.
+- *Original L27–L29* (AUDIT step 5) — the correction template is never to be re-issued: it hard-codes `2026-10-18 (round 10)` and would back-date a new claim.
+- *Original L35* (EVIDENCE) — "run exactly the commands in your scope" defines no command set today, and full stdout/stderr capture into committed JSON could persist credential-adjacent output; no such execution or capture is authorized.
+- *Original L35, L39–L41* (EVIDENCE and TPS-PROBE) — capture targets under `.ufo/round-10/gates/`, `.ufo/round-10/audit/` and `.ufo/round-10/tps-probes/` are not live; the round-10 tree already holds 14 tracked paths, so replay would write into retained history.
+- *Original L43–L54* — the `SEAT-TELEMETRY` block is an expired reporting format, not a current requirement or acceptance format.
+- *`plan.json:7,11`* — the pinned route/model `opencode-go/deepseek-v4.1-flash-free` and `carried verbatim modulo round number` authorize no routing reuse, copy-forward, renumbering, or re-dating of this protocol into any later round.
+
+**Scope of this notice.** It covers this file only. The same template is tracked at `.ufo/round-6/SEAT-PROTOCOL.md` through `.ufo/round-9/SEAT-PROTOCOL.md`, each opening with the same binding header; each needs its own archival label before any reuse.
+
+**Original bytes preserved.** Everything from the `---` rule below is the unaltered round-10 file: 56 lines, 4413 bytes, SHA-256 `e9fbaa02b4329ec415ac73eb0a6a5eaf4c91ae17f2889cc96232fb51f5d49c0a` (the tracked blob `69659feb5f77a80a7c6020fbe95ba75c3d38ff72` at `3285cdf`). Verify with `tail -c 4413 .ufo/round-10/SEAT-PROTOCOL.md | sha256sum`; append only, never rewrite those bytes.
+
+**No claim.** This banner asserts no host, service, endpoint, capability, score, or freshness state. It is a scope label required by D5, not evidence about any surface the original text cites.
+
+---
+
 # Round 10 — seat protocol (L1-issued, binding on all 64 seats)
 
 Repo root for every seat: `/home/vgpnk/Projects/shokunin/kama-shokunin`. Date: 2026-10-18.

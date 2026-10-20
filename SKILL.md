@@ -372,3 +372,38 @@ guidance, not probe behavior, runtime authorization or endpoint expectations.
 |---|---|---|---|---|
 | Legacy provenance integrity | gate: `python3 .ufo/waves/round-11/measure.py provenance` | 0 clean; 1 failed; 2 could-not-evaluate | `python3 .ufo/waves/round-11/measure.py --selftest`; `.ufo/waves/round-11/legacy-baseline.json`, digest pinned in the script; frozen input `.ufo/waves/round-11/frozen/before/`, expected verdict/digests in `frozen/expected.json` | Read-only; self-test creates and removes isolated temporary fixtures |
 | Crosswalk metadata count | probe: `python3 .ufo/waves/round-11/measure.py crosswalk` | 0 metadata present; 1 absent/incomplete metadata; 2 could-not-evaluate; none is semantic admission | Same `--selftest`; required source IDs in script, semantic authority in the opened S-rows | Read-only; self-test temporary fixtures only |
+
+## Round-12 correction — admission criteria pointer (D3, 2026-10-20)
+
+The sentence "Admission remains `corpus/QUALITY.md` KQ11–KQ13" in the round-11
+section above is a dated pointer to the criteria that round added; it is not a
+reduced admission rule. Admission of any new entry or explicit correction is
+judged against the complete applicable `corpus/QUALITY.md` criteria set —
+KQ1–KQ14 plus every subsequently appended criterion (round 12 appends KQ15) —
+all applicable, never a subset, with each row's recorded supersession preserved
+(KQ14 governs KQ7's sufficiency). KQ11–KQ13 alone admit nothing. The dated
+sentence is preserved as history and is not rewritten. This correction adds no
+serving capability, probe behavior or endpoint expectation.
+
+## Round-12 local evidence registry (owner: kama)
+
+Additive to the earlier registry rows above; none of those rows change. This is
+lane-local historical-evidence repair, not a serving capability or readiness
+claim.
+
+| Name | Kind / entry command | Verdict map (code → class) | Self-test | Pinned values | Write scope | Owner |
+|---|---|---|---|---|---|---|
+| Exact-source snapshot fidelity (D1 corrective snapshot) | gate: `python3 .ufo/waves/round-12/fidelity.py --snapshot PATH [--manifest PATH] [--repo PATH]`; default snapshot `.ufo/waves/round-12/frozen/corpus/SOURCES.md`, default manifest `auto` → `.ufo/waves/round-12/frozen/expected.json`; immutable source constants commit `2f7303c242319c1dc96c6bcf7702ac18b3ca1aad`, path `corpus/SOURCES.md` | 0 clean; 1 failed (`source_mismatch`); 2 could-not-evaluate (`snapshot_tampered`, `snapshot_unavailable`, `manifest_invalid`, `source_unavailable`, `unpinned`, `internal_error`); any undeclared nonzero code reads could-not-evaluate | `python3 .ufo/waves/round-12/fidelity.py --selftest` (spelling `--selftest`): real child CLI over temporary snapshot/manifest fixtures and a temporary empty git repo, reading the pinned immutable blob from the live lane repo read-only (`--repo`), asserting exit code and stable finding ID for clean, coherent snapshot+manifest mutation, snapshot tamper, unavailable source, unpinned match and mismatch, manifest anchor redirect, absent manifest, missing snapshot and symlink refusal | `.ufo/waves/round-12/frozen/expected.json` pins snapshot SHA-256 and path, source revision, path, blob OID and content SHA-256, and expected clean verdict; default snapshot `.ufo/waves/round-12/frozen/corpus/SOURCES.md` captured byte-exactly via `git show`, never tool-rendered text | Read-only over the lane repo and git history; no endpoint or live-service access; ordinary runs write nothing; `--selftest` writes and removes isolated temporary trees only | kama |
+
+Notes: the default invocation checks the default snapshot against the committed
+manifest. An overridden snapshot supplied without `--manifest` is unpinned: a
+byte mismatch is still `source_mismatch` (exit 1), but a matching unpinned
+snapshot is `unpinned` (exit 2, could-not-evaluate), never clean; the committed
+default manifest is the pinned form. The gate verifies the pinned digest before
+comparing a verdict, so an edited snapshot is could-not-evaluate
+(`snapshot_tampered`), not a compared source verdict. Source correspondence is
+reported separately from digest integrity: snapshot bytes are compared with the
+immutable git blob at the code-constant revision and path, and a manifest
+cannot redirect that anchor, so a coherent snapshot+manifest edit still reports
+`source_mismatch`. The frozen expected file pins a fixed immutable source
+revision and does not track mutable `HEAD`.

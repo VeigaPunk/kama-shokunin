@@ -279,3 +279,31 @@ author-dispatched review and green measurements do not replace it.
 Trend assessment: expansion improved (one new sourced extension), quality
 improved (bounded corrections and safe rechecks); discernment unchanged pending
 the round-11 outside sample. No axis harm observed within the documented scope.
+
+## Round 12 — source-correspondence calibration (2026-10-20)
+
+Current assignment remains operability + calibration (`../shokunin.conf:52`).
+Calibration 7 is lower than operability 8; the stagnation nudge is inactive.
+The outside round-11 decision is **ok / admitted true**, at
+`corpus/lessons/round-11-verifier-spotcheck.md`; this supersedes round 11's
+pending-review statement without rewriting that historical statement.
+
+Declared **C1 calibration**: one historical auxiliary snapshot disagrees with
+its declared source commit; a new byte-exact corrective snapshot reduces source
+mismatches **1 → 0**, with integrity checked independently. Counting command:
+`python3 .ufo/waves/round-12/reproduce.py`. Source revision is
+`2f7303c242319c1dc96c6bcf7702ac18b3ca1aad`; round-start revision is
+`79fa257719e8688692ed1dc443589331ba22b7fe`. They identify different things:
+the immutable source blob and the tree receiving this correction.
+
+Numeric calibration stays **7 → 7 (delta 0)**. Other assessments remain
+operability 8, freshness 8, depth 7, coverage 9, adjacency 7. No conversion
+from mismatch counts to a universal mastery score, capability repertoire entry,
+new serving surface, runtime validation or coverage expansion is claimed.
+Evidence: `.ufo/waves/round-12/claims.json`; lesson `round-12.md` §Mistakes
+and §Gate; source row S032 after the opened evidence is recorded there.
+
+**Planned — supersedes earlier next-round prose:** outside non-author sampling
+of this round's admit/reject decisions; future externally steered work chooses
+serving-domain claims from fresh evidence. Context capacity and runtime
+restoration remain operator-dependent, not silently replaced with bookkeeping.

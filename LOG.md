@@ -602,3 +602,69 @@ Operator conformance rollout under the 2026-10-16 fleet amendment (`84bade0`), n
   (score 9 → 9); operability/freshness/depth/adjacency unchanged.
   Trends: expansion/quality improved, discernment unchanged awaiting
   outside round-11 admit/reject sampling. No new capability or promotion.
+
+## round 12 — source fidelity and routed clarification (2026-10-20)
+
+- Declared C1 calibration (lowest assigned): one auxiliary frozen snapshot
+  mismatch → zero in a new corrective snapshot, separately checking source
+  correspondence and digest integrity. Scores stay calibration 7 → 7; no new
+  serving capability, readiness, coverage or runtime freshness claim.
+  Declaration: `.ufo/waves/round-12/claims.json`; motivation: non-author
+  `corpus/lessons/round-11-verifier-spotcheck.md` D1 with its unequal actual/
+  frozen SHA-256 values and finding that internal digest agreement was insufficient.
+- D1 corrective evidence is new under `.ufo/waves/round-12/`; old round-11
+  frozen bytes, manifest and receipt remain untouched. Fail-capable
+  `fidelity.py` and `reproduce.py` distinguish source mismatch, integrity
+  tampering and unavailable authority. Their committed-revision results are
+  appended below after the single integrated acceptance run.
+- D2–D5 are explicit clarifications, not additional claims: SOURCES appends
+  opening-date and landed-K02 navigation correction plus inference/registry
+  supersession boundaries; crosswalk appends the matching inference limit;
+  SKILL appends complete applicable QUALITY authority and the local gate row;
+  the undelivered historical round-10 seat protocol receives an unmistakable
+  in-file archival disclaimer. Its historical directions are void, not replayed.
+  Lesson `round-12.md` §Mistakes maps every routed item to its rule/criterion.
+- QUALITY KQ15, motivated by D1, requires exact immutable-source comparison
+  independently of a shipped integrity manifest and preserves KQ14's semantic
+  human-review boundary. Reopened own-work source evidence and registry row
+  are recorded in the lesson Gate after access, never pre-claimed as observed.
+- One validated 32-seat wave: 7 executor, 5 scout, 4 connector, 7 reviewer,
+  4 critic, 2 sentinel, 2 scribe, 1 revenger. L1 holds canonical planner seat;
+  PlannerWalk is the bounded revenger planning advisor. Complete validator
+  taskCall dispatched once unchanged, roles host-routed with no model argument.
+  Evidence: `.ufo/waves/round-12/{spec,dispatch,record,spawn-result}.json`
+  and `advice/`; no advisor is outside non-author closure.
+- Starting tree clean at `79fa257719e8688692ed1dc443589331ba22b7fe`; no
+  inherited lane-authored leftovers. Non-author verifier files are read-only.
+  No endpoint/service/config/environment/credential inspection or mutation,
+  routing change, scheduler or upstream push. Tools installed/updated: none.
+  Stale-lane: respawn-per-round; no other kama mission is open. Operator-side
+  cleanup item in round-11 closure remains Main's action, not this lane's write.
+
+### round-12 erratum to round-11 frozen-source wording
+
+This corrects the current reading of round-11 lines 547–548 (“frozen source
+bytes”) and lines 594–595 (“Eleven frozen input digests were verified”).
+The eleven integrity checks did **not** independently establish source-commit
+correspondence. Outside round-11 review found nine original knowledge blobs
+matching git, but the auxiliary SOURCES snapshot differed:
+actual `9dc40d25a595b3d42b39649e17094cfa4e7190cfbf340331252dd29dea22093a`,
+old frozen `52665cf2d648112be2683c61485d42da1bf1dc859ea1df41d857672c60142fa1`.
+The old file's truncated line and display footer were frozen self-consistently.
+The round-generated legacy baseline is metadata, not a source blob at the
+older revision. C1 has a fixed one-file denominator chosen from D1, not a new
+ten-file audit or a rediscovered defect. A new snapshot matching the source
+is a construction check; the improvement is a separately source-anchored,
+fail-capable gate plus this explicit limit correction. The old bytes and
+receipts stay committed unchanged. Authority:
+`corpus/lessons/round-11-verifier-spotcheck.md` §Checking frozen input correspondence;
+`corpus/lessons/round-12.md` §Claim limit and prior-overlap credit.
+
+Archive-placement ruling (D5): L1 authorized a **prepended**, unmistakable
+historical/nonexecuted warning in `.ufo/round-10/SEAT-PROTOCOL.md`, a
+non-corpus undelivered planning artifact. This is an explicit exception to the
+initial seat's append/prefix instruction, not an exception to corpus/LOG or
+SOURCES append-only rules. All original 4,413 bytes remain a contiguous suffix;
+original SHA-256 is `e9fbaa02b4329ec415ac73eb0a6a5eaf4c91ae17f2889cc96232fb51f5d49c0a`.
+The old binding title is now preceded by its override, never current permission.
+Owner evidence: `.ufo/waves/round-12/advice/ArchiveDisclaimer.md`.

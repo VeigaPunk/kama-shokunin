@@ -83,3 +83,52 @@ the accompanying corrections to older entries.
 - S012 — Ollama List running models, §OpenAPI `/api/ps`, OpenAPI 3.1.0 info.version 0.1.0 (round-10 open 2026-10-19; re-opened 2026-10-20)
 - S031 — Ollama List models (remote entries), same `/api/tags` page §OpenAPI `ModelSummary`; supersedes S011's local-residency implication (opened 2026-10-20)
 - Cross-references (not re-derived here): `runtime-health-surface-matrix.md:14,17`; `endpoint-identity.md` §ID normalization; `corpus/README.md:32`; `PROVINCE.md` outage/write-boundary state; `cross-lane-scope.md` adjacency rule.
+
+## Correction — round 12 D4 (authored 2026-10-20 UTC)
+
+This note adds the two labels D4 of `corpus/lessons/round-11-verifier-spotcheck.md`
+requests. It reopens no page and adds no source row, fact, or coverage claim; it
+cites the registry rows as recorded and leaves every original line, date and
+citation above unchanged, including `verified-at`/`recheck` and the QUALITY
+clearance. `corpus/SOURCES.md` cells are not rewritten; the label is carried
+here because registry cells are append-only.
+
+- **The locality conclusion is [INFERENCE].** The "a tags entry does not prove
+  local weights (S031)" clause at line 29 and failure case 6 at line 38
+  ("Available inventory is not proof of local weights") are kama's inference,
+  not text from the opened page. The documented basis is the S031 row
+  (`corpus/SOURCES.md` §Registry row S031, `docs` / tier A, opened 2026-10-20):
+  `/api/tags` `ModelSummary` carries optional `remote_model` ("Name of the
+  upstream model, if the model is remote") and `remote_host` (described in that
+  row's claim cell as the upstream Ollama URL). [INFERENCE] Because the page
+  documents that `/api/tags` membership can be remote, membership alone cannot
+  establish locally resident weights; the page's "locally available" summary
+  wording is not a per-entry locality guarantee. S011
+  (`corpus/SOURCES.md` §Registry row S011, opened 2026-10-19) carries the same
+  implication, so the same label applies to its summary wording.
+- **`supersedes S011` is registry supersession, not an upstream change.** The
+  line 1 and line 84 phrases "supersedes S011's local-residency implication"
+  record a scope relation inside kama's `SOURCES-CONTRACT-v1` registry: S031 and
+  S011 are two rows over the same `https://docs.ollama.com/api/tags` page, opened
+  2026-10-20 and 2026-10-19 respectively, and S031 narrows S011's
+  local-residency wording only (`corpus/SOURCES.md` §Registry rows S011 and
+  S031; the registry search
+  log records the review finding: "A same-page review finding (remote entries
+  exist) produced one new row: S031", and that "S011's non-status fields stay as
+  written"). It is not evidence that Ollama changed its documentation between
+  the two opens, not a claim that the page said something different on
+  2026-10-19, and not a retraction of S011's non-status cells — `name`, `digest`,
+  `size`, `details`, and the available-vs-loaded distinction remain as recorded.
+  No upstream diff was observed between the two opens, and none is claimed.
+
+**Scope over `## Grounded failure cases`.** These labels govern that section
+(heading at line 31), not only the table: "Grounded" describes each case's
+documented premise, not every sentence in it — case 1 at line 33 already carries
+an inline `[INFERENCE]` for its conclusion. In case 6 at line 38 the premise
+(tags may carry the remote fields; S010's signed-in local-server precondition) is
+documented, while the concluding sentence "Available inventory is not proof of
+local weights" is the `[INFERENCE]` identified above. The same locality
+conclusion is restated in the `MODEL_OK` bullet at line 52 ("never establishes
+... local (vs remote) provenance on Ollama"); it carries the same `[INFERENCE]`
+status and is not an additional page quote. No other failure-case sentence is
+reclassified, and no case is added or removed.

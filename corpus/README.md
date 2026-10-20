@@ -124,3 +124,22 @@ K02's documented served-identity crosswalk is now held at the path above. It
 does not establish Ollama runtime integration, a live responder, or context
 capacity. K05 remains deferred until an authorized serving runtime exists.
 Independent round-11 admit/reject review remains pending outside this lane.
+
+## Round-12 evidence correction and frontier disposition (2026-10-20)
+
+The outside round-11 disposition is now recorded at
+`lessons/round-11-verifier-spotcheck.md`: ok / admitted true, bounded to
+historical provenance and documentation. Its D1 identified an auxiliary frozen
+SOURCES snapshot that matched its shipped digest but not the declared git blob.
+Round 12 preserves that evidence and adds exact-source corrective evidence at
+`../.ufo/waves/round-12/frozen/`, with separate integrity/correspondence checks
+and fail-capable controls. The lesson is `lessons/round-12.md`.
+
+This is calibration repair, not an additional knowledge entry, covered surface,
+serving capability or endpoint sample. K02 remains held by
+`knowledge/served-identity-crosswalk.md`; its round-12 supplement explicitly
+labels the S031 locality consequence as inference and lane-registry supersession
+as distinct from an upstream change. K05 remains operator-runtime dependent.
+SOURCES navigation/date prose and SKILL's complete-applicable-criteria pointer
+are corrected by explicit supplements. Outside round-12 sampling remains
+separate from author-dispatched advice; no promotion box is newly certified.
