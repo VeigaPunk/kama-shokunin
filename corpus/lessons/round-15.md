@@ -126,3 +126,76 @@ failure for duplicate rejection. Original-corpus retention is measured
 against the repaired runner at its original lane-relative location.
 The guard matrix clones one already-held passing classifier payload;
 its process counts are not additional semantic classifier coverage.
+
+### R2 authority clarification after falsification
+
+The R2 clarification relies on the outside
+`round-14-verifier-spotcheck.md` §Routed defects item2 and its L2-floor
+section, which explicitly record no replacement and substantive committed
+advice despite provider failure. Those facts are not inferred merely from
+the advice file or the `dead_seats` field. “Partial output” means output
+not establishing successful terminal completion; it does not assert that
+the Markdown file labels its own content incomplete or identify which
+transport attempt wrote it.
+
+`integration-review.json` credits the **normalization contract**, which is
+also independently held in SKILL/crosswalk/rulings; it does not admit every
+sentence in `ExistingProbe.md`. The build R2Partial draft's proposed rule
+equating terminal completion with an accepted integration row is rejected:
+integration dispositions and terminal task status are different evidence.
+No new R2 discovery, successful-completion count or axis credit follows.
+
+## Gate
+
+Source-admission supplement to the initial Gate, appended after source-owner
+and falsification review: **admit S034** as own-work tier A for the preserved
+original code's minimum-only guard, not repaired behavior, new discovery or
+independent provenance. Source opened 2026-10-20:
+`.ufo/waves/round-15/frozen/measure-before.py`, original
+`.ufo/waves/round-14/measure.py` at
+`6e348e28943849aceb08d6954dee92be48ce9ba8`, `corpus_problems`:350–362.
+Located line358 quote: `if unique < MINIMUM_UNIQUE_CASES:` (4 words).
+Reject reading its A tier as a runtime authority or a green measurement.
+The discovery remains CloseKamaR14's R1. `every round` means baseline/source
+correspondence on reuse, not a mutable serving observation. S012 was reopened
+for the separate metadata/readiness rejection; its quote/date/location are
+in the initial Gate. No other new source row is admitted.
+
+## Final falsification dispositions
+
+- BoundaryVerdicts/LedgerR1 correctly noted that the runner's active
+  docstring and limits still used broad “duplicated corpora” wording.
+  L1 narrows those current strings to **declared nonblank string names**
+  and explicitly excludes missing/blank/non-string names; no new
+  validation policy is added. The earlier `70af36c` implementation had
+  exactly two inserted predicate lines. Final code preserves that predicate
+  and additionally qualifies its prose, so “only two added lines” is a
+  claim about that earlier work revision, not the final file diff.
+- FalsifyAudit identified Python 3.14's `_posixsubprocess.fork_exec`
+  event as missing from the observation list. L1 includes it and narrows
+  the event-list description; valid controls are graded on Popen count,
+  not all-event count. No native/FFI, malicious-runner or grandchild
+  completeness is claimed.
+- `frozen/guard-only-red.py` is a **derived causal control**, not a
+  historical source: final runner with exactly the two predicate lines
+  removed, keeping the final prose identical. Its manifest pins source/
+  derived digests and the removed fragment. Original frozen source stays
+  untouched. Both controls must expose the same declared-name defect.
+- FalsifyMeasurement's distinction is retained: outer corpus error,
+  unmeasured records and process counters are different facts. L1 also
+  inspects full retained records: rejected findings/exits null, passed
+  false and reasons exactly the corpus error; valid clones' findings and
+  exits match their literal held classifier oracle. The helper alone is
+  not claimed to enforce every extra receipt assertion.
+- Full-matrix results only, no `--only`, establish nonvacuity; a selected
+  negative test alone does not defeat reject-all. Matrix counts are not
+  classifier coverage. Advice count discrepancies are settled by actual
+  committed-input parsing, never by counting report assertions.
+- R1 was an outside **static** diagnosis, not an outside execution.
+  The new L1 red/green observations are the first executed discrimination
+  recorded here. Source/row growth is bookkeeping, not discovery credit.
+- A scribe disclosed in-process evaluation of the committed guard despite
+  its no-execution instruction; the harness owner performed AST syntax
+  parsing despite the no-verification request. Neither is a lane gate,
+  runner or classifier test receipt, and neither supplies the round
+  measurement. L1 alone performs the recorded post-integration executions.

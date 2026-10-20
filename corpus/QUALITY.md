@@ -85,3 +85,14 @@ adds no criterion.
 | ID | Admit only when | Reject or limit when | Motivating lesson |
 |---|---|---|---|
 | KQ18 | A corpus validator's documented rejection promise is backed by a guard that enforces every independent conjunct of that promise — minimum unique-name cardinality and name injectivity over stripped names are separate obligations — and is demonstrated by a discriminating red/green pair through the actual runner CLI: the same duplicate-corpus expectation is red against the frozen original runner, which measures instead of rejecting, and green against the repaired runner, where the duplicate corpus is rejected before any classifier child is spawned with zero child invocations, while a corpus of at least the minimum number of all-distinct names still measures through. The frozen original stays byte-intact as the red control; only the guard changes, with classifier policy and the committed corpus untouched. | A unique-count ≥ minimum check alone is called a duplicate rejection — a corpus with sixteen distinct names and one duplicate satisfies the cardinality floor while violating injectivity; the red control is exercised anywhere but through the actual runner CLI, or a green repaired run is offered without a red-against-original demonstration; rejection happens after any child invocation; the frozen before-source is deleted or mutated during the repair; or a historical receipt is retracted because a more general later-discovered promise was false — the outside-recounted 51/51 unique-name corpus and its recorded results remain valid on the fixed repertoire actually measured. | `lessons/round-15.md` Gate C1 and §Mistakes vacuous row; discovery is outside `lessons/round-14-verifier-spotcheck.md` R1 (`measure.py:13–14,77` and `LIMITS` promise versus `corpus_problems():350–362` unique-count-only check), credited to the non-author verifier; the guard repair is calibration 7 → 7, delta 0, and claims no credit for discovery or admission. |
+
+**KQ18 scope clarification after round15 falsification:** “name injectivity”
+here means the existing runner's declared **nonblank string** names, stripped
+and compared case-sensitively. Missing, blank and non-string names are excluded
+from that guard and are not certified by this repair. The active runner prose
+now names those exclusions; no all-schema rejection guarantee is admitted.
+The final predicate-only causal control preserves final prose and removes only
+the guard, while the actual historical red source remains byte-intact.
+Grounding: `lessons/round-15.md` §Final falsification dispositions;
+`.ufo/waves/round-15/falsify/advice/BoundaryVerdicts.md` and
+`.ufo/waves/round-15/falsify/advice/LedgerR1.md` at the lane root.

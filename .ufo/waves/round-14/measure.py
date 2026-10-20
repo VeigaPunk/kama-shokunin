@@ -10,8 +10,9 @@ the same JSON document asserts ``schema == "kama-ollama-evidence/v1"``,
 ``scope == "offline-captures-not-runtime"``. Every mismatch is listed in the
 record's ``reasons`` with independent expected/observed exit and ID retained.
 
-The fixture document must declare at least 16 unique case names; a narrower or
-duplicated corpus fails the whole measurement before any child is spawned.
+The fixture document must declare at least 16 unique nonblank string case names;
+too few such names or repeated declared names fail before any child is spawned.
+Missing, blank and non-string names are outside this declared-name guard.
 
 Fixture document (default ``tests/ollama-evidence/cases.json``) is a JSON array
 (or an object with a ``cases`` array) of objects:
@@ -74,7 +75,7 @@ LIMITS = [
     "each fixture is graded on child process exit, finding_id, schema kama-ollama-evidence/v1, verdict_exit mirroring the process exit, readiness unknown, and scope offline-captures-not-runtime; every mismatch is listed in reasons",
     "fixtures are caller-supplied exported metadata; this harness performs no acquisition, network access, or runtime probe",
     "an absent, non-file, or unlaunchable tool marks every fixture unsupported and fails; no fallback classifier exists",
-    "the case document must declare at least 16 unique fixture names; narrower or duplicated corpora fail before any child runs",
+    "the case document must declare at least 16 unique nonblank string fixture names; too few such names or repeated declared names fail before any child runs; missing, blank and non-string names are outside this guard",
     "a passing run measures this fixed fixture set against one tool build; it makes no readiness, liveness, integration, or model-quality claim",
 ]
 

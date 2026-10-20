@@ -364,3 +364,11 @@ classifier's own duplicate-*selection* finding (`invalid_input`, row 3).
   a historical run by silently treating the repaired current path as the
   original bytes. Source correspondence and literal digest are recorded
   with the round15 acceptance evidence.
+- **Final declared-name boundary.** The runner's active docstring and
+  `LIMITS` now explicitly mean declared nonblank string names under the
+  existing strip policy. Missing, blank and non-string names remain outside
+  that guard; this repair adds no new schema validation. The original
+  general wording is not certified even after the predicate fix. Outside
+  R1 was a static diagnosis; actual red/green execution is recorded by L1
+  in round15. A final-prose-matched causal control removes only the two
+  predicate lines and is distinct from the preserved historical source.

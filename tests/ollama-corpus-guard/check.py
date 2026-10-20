@@ -28,8 +28,8 @@ Two independent spawn observations are recorded per test:
   unchanged, so the runner exercises the real domain classifier CLI
   contract through a real child process;
 * a temporary runner launcher that installs ``sys.addaudithook`` for
-  process-creation audit events (``subprocess.Popen``, ``os.system``,
-  ``os.posix_spawn*``, ``os.fork*``, ``os.exec*``) appending each event to
+  listed process-creation audit events (``subprocess.Popen``, ``os.system``,
+  ``os.posix_spawn*``, ``os.fork*``, ``os.exec*``, ``_posixsubprocess.fork_exec``), appending each event to
   an audit file, then executes the real runner through
   ``runpy.run_path`` as ``__main__``.
 
@@ -74,10 +74,11 @@ TAIL_CHARS = 600
 EXIT_CLEAN = 0
 EXIT_FAILED = 1
 
-# Audit-hook prefixes recorded by the runner launcher: the observable
-# process-creation surface of a Python runner on this platform.
+# Listed audit-hook prefixes recorded by the runner launcher; not an
+# exhaustive or malicious-runner process-containment boundary.
 PROCESS_EVENT_PREFIXES = (
     "subprocess.Popen",
+    "_posixsubprocess.fork_exec",
     "os.system",
     "os.posix_spawn",
     "os.fork",
