@@ -253,3 +253,29 @@ sampling for this round; use the next externally steered round to address
 remaining actionable serving-domain evidence, never launch a new round here.
 K05 remains runtime-dependent. No service restoration, automatic schedule,
 provider substitution or route change is authorized by these claims.
+
+### Round-11 measured results
+
+Measured work commit: `3285cdf7a50481694a36c4425cf32c915ab5e5f0`.
+Counting command for both separable modes:
+`python3 .ufo/waves/round-11/reproduce.py`; complete stdout/exit receipt:
+`.ufo/waves/round-11/acceptance.json`.
+
+| Claim | Axis / score delta | Before → after | Verdict and limit |
+|---|---|---|---|
+| C1 | calibration 7 → 7; delta 0 | nine legacy files: missing fields 27 → 0; prefix violations 0 → 0; original exit 1 → final exit 0 | improved explicit evidence calibration; human/source dispositions in lesson; no runtime freshness claim |
+| C2 | coverage 9 → 9; delta 0 | crosswalk entry 0 → 1, metadata-mode exit 1 → 0 | improved documented edge-case coverage; prior tags/ps/expiry/alias facts credited; metadata check is not semantic verification |
+
+The same run verified eleven frozen input digests, self-test **19/19** (exit 0),
+and isolated missing-field/prefix mutants (exit 1 with their named findings)
+plus altered baseline (exit 2 `snapshot_tampered`). Source census:
+`sources-census.sh census --root /home/vgpnk/Projects/shokunin kama` yields
+rows 31, A=28/C=3, mined=21/queued=5/rejected=5; validation exit 0 with
+intentional W04 for S031. Original frozen census is rows 30,
+A=27/C=3, mined=17/queued=8/rejected=5 (exit 0).
+
+Admission remains **awaiting outside round-11 admit/reject spot-check**;
+author-dispatched review and green measurements do not replace it.
+Trend assessment: expansion improved (one new sourced extension), quality
+improved (bounded corrections and safe rechecks); discernment unchanged pending
+the round-11 outside sample. No axis harm observed within the documented scope.

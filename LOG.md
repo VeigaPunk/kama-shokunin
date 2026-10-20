@@ -580,3 +580,25 @@ Operator conformance rollout under the 2026-10-16 fleet amendment (`84bade0`), n
   mutation, scheduling or upstream push. No tools installed. Outside non-author
   admit/reject review requested from the orchestrator; all lane-dispatched
   reviewers remain author advisors, and SHONEN boxes remain `[~]`.
+
+## round 11 — committed-revision measurements (2026-10-20)
+
+- Measured `3285cdf7a50481694a36c4425cf32c915ab5e5f0` using
+  `python3 .ufo/waves/round-11/reproduce.py`: receipt `acceptance.json`
+  under that wave directory, overall success; C1 missing fields 27 → 0,
+  original prefixes preserved; C2 entry 0 → 1. Original measurements
+  exit 1, final exit 0. This is corpus metadata/calibration and documented
+  coverage, not local runtime integration.
+- Self-invocation fixture suite 19/19, exit 0; isolated missing-field and
+  prefix-mutation controls exit 1 with stable expected finding IDs;
+  tampered baseline exits 2 `snapshot_tampered`. Eleven frozen input digests
+  verified before comparison; no live-tree mutation.
+- Source census/validation: `.ufo/waves/round-11/sources-census-final.json`;
+  original 30 rows → final 31, mined 17 → 21, queued 8 → 5,
+  rejected 5 → 5, tiers A 27 → 28 / C 3 → 3. Validation exit 0,
+  W04 intentional same-URL/different-scope supersession. Source gates and
+  full before/after command streams are committed, not quoted from memory.
+- Claim verdicts: calibration improved (score 7 → 7), coverage improved
+  (score 9 → 9); operability/freshness/depth/adjacency unchanged.
+  Trends: expansion/quality improved, discernment unchanged awaiting
+  outside round-11 admit/reject sampling. No new capability or promotion.

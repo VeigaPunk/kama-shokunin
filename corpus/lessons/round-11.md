@@ -172,3 +172,69 @@ Author-advisor reports sometimes include read-only digest/diff inspections
 despite “no checks” summaries. These are advisory inspections, not the L1's
 acceptance run or an outside verdict. Main's post-integration reproduction is
 the sole fresh claim measurement in the continuation.
+
+## Measurements on the landed work revision
+
+Command: `python3 .ufo/waves/round-11/reproduce.py`.
+Measured commit: `3285cdf7a50481694a36c4425cf32c915ab5e5f0`;
+complete receipt `.ufo/waves/round-11/acceptance.json`, overall exit 0.
+
+| Measurement | Before | After / control |
+|---|---|---|
+| Legacy files / missing fields / prefix violations | 9 / 27 / 0; exit 1, `missing-field` | 9 / 0 / 0; exit 0 |
+| New crosswalk entry / mode exit | 0 / 1 | 1 / 0; existence/provenance only |
+| Isolated missing-field mutation | clean copied repaired state | exit 1, `missing-field` |
+| Isolated original-prefix mutation | unchanged pinned baseline | exit 1, `prefix-mutation` |
+| Isolated baseline-byte mutation | unchanged script digest pin | exit 2, `snapshot_tampered` |
+| Self-invocation suite | isolated fixtures, not live endpoints | 19/19 passed; exit 0 |
+
+Eleven frozen input digests were verified before comparing expected outcomes;
+the raw red-before and mutant finding text is committed in the receipt.
+Missing provenance is thus shown able to fail with the same command; semantic
+honesty still rests on the documented review/dispositions, not this tally.
+
+### Census evidence
+
+Round-start (inherited, before source edits) command:
+`/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama`
+printed `kama ok /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md`,
+exit 0 (`sources-validate-before.json`). The inherited census was 30 rows;
+the continuation's initial validation already saw inherited S031 and printed
+the same W04/ok lines as the final validation below. Neither is presented as a
+new source admission.
+
+The frozen original source registry was independently counted in this
+continuation using
+`/home/vgpnk/Projects/shokunin/scripts/sources-census.sh census --file .ufo/waves/round-11/frozen/before/corpus/SOURCES.md`:
+
+```text
+file rows 30
+file tier.A 27
+file tier.C 3
+file status.mined 17
+file status.queued 8
+file status.rejected 5
+```
+
+Exit 0. Final census command:
+`/home/vgpnk/Projects/shokunin/scripts/sources-census.sh census --root /home/vgpnk/Projects/shokunin kama`:
+
+```text
+kama rows 31
+kama tier.A 28
+kama tier.C 3
+kama status.mined 21
+kama status.queued 5
+kama status.rejected 5
+```
+
+Exit 0. Final validation uses the required round-start command:
+
+```text
+kama W04 S031 duplicate url docs.ollama.com/api/tags across scopes
+kama ok /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md
+```
+
+Exit 0; W04 is intentional, not a waived error. These excerpts render TSV tabs
+as spaces; full byte-preserved outputs, including FLEET totals/zero-invalid
+fields, are in `.ufo/waves/round-11/sources-census-final.json`.
