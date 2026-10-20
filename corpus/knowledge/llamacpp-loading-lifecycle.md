@@ -34,20 +34,27 @@ mapping, the scope limits, and one live lane-owned run.
    then runs the state gate, then the API-key check (server-http.cpp:347-359).
    A loading server with `--api-key` therefore answers 503, not 401.
 4. **Ready.** `/health` returns `{"status":"ok"}`; `/v1/models` returns 200 with
-   `data[]` (id = the `--alias`, `owned_by` `llamacpp`) and an Ollama-shaped
-   `models[]` array.
+   one `data[]` entry (id = the first `--alias` in sorted order, else the `-m`
+   path; `owned_by` `llamacpp`, server-context.cpp:5168-5225) and an
+   Ollama-shaped `models[]` array.
 5. **Router mode is different.** The router stores `is_ready = true` right after
-   its listener starts, before any model loads (server.cpp:460), so it never
-   emits this body. Its `/v1/models` is a catalog with per-model `status`.
+   its listener starts, before any model loads (server.cpp:455-460), so the
+   router's own `/health` and `/v1/models` never answer with this body; its
+   `/v1/models` is a catalog with per-model `status`. Routes the router proxies
+   to a per-model child (`/metrics`, `/slots`, inference) can relay a loading
+   child's 503 [INFERENCE from server-models.cpp; not run]. The probe only asks
+   `/v1/models`, so its verdicts are unaffected.
 6. **Sleep is different.** A sleeping server answers `/v1/models` and `/health`
-   200 from cache; sleeping does not reset `is_ready` [INFERENCE from code
-   paths; not run].
+   200 from cache (server-context.cpp:5725-5733); sleeping does not reset
+   `is_ready` [INFERENCE from code paths; not run].
 7. **Documentation lags code.** The README documents the 503 body only under
    `/health` (README:485-487, key order `code, message, type`) and says `/v1/models`
    `meta` "can be `null` (for example, while the model is still loading)"
-   (README:1258). In direct mode at this build the code answers that window with
-   the 503, not a 200. The live server sends keys in `message, type, code` order,
-   so matching must parse JSON, never compare bytes.
+   (README:1258). In direct mode the code answers that window with the 503, not
+   a 200; the same code order holds at the round-10 pin c0fd7862, so the README
+   reading was never observable there either. The server emits keys in
+   insertion order `message, type, code` (server-http.cpp:318-320), so matching
+   must parse JSON, never compare bytes.
 
 ## Probe mapping (repaired `tools/kama-probe.sh`)
 
@@ -65,24 +72,29 @@ reading (fail closed: still drift, never a false `MODEL_OK`).
 
 ## Scope limits
 
-- **Engine-specific.** Engine scans this round (advice under
-  `.ufo/waves/round-16/build/advice/`, source reads, no runtimes run): vLLM
-  v0.32.0, TGI v3.3.7 and KoboldCpp 1.123.1 (default mode) do not listen until
-  ready, so a probe sees `DEAD`; SGLang v0.5.22 answers `/v1/models` 200 while
-  `/health` is 503; Ollama and LocalAI list configured or available models with
-  200 whatever the load state; LM Studio documents no 503. None of these emits
-  this body, and `MODEL_LOADING` claims none of them.
+- **Engine-specific; other engines are leads, not admitted facts.** Build-wave
+  source and doc reads (advice under `.ufo/waves/round-16/build/advice/`, no
+  SOURCES row, no runtime run; KQ6 does not admit them) suggest: vLLM v0.32.0,
+  TGI v3.3.7 and KoboldCpp 1.123.1 (default mode) do not listen until ready, so a
+  probe would see `DEAD`; SGLang v0.5.22 answers `/v1/models` 200 while
+  `/health` is 503; Ollama v0.40.6 lists available models with 200 whatever the
+  load state; LocalAI v4.11.0 binds only after startup preload; LM Studio's docs
+  mention no 503 (docs only). `MODEL_LOADING` claims none of these engines.
 - **Not-ready is not dead and not foreign.** Kubernetes separates readiness
   (withhold traffic, keep running) from liveness (restart) (S017); llm-d's v0.10
   guide separates process liveness on `/health` from model-aware readiness on
   `/v1/models` for vLLM (S040). `MODEL_LOADING` is the readiness class. S040 is
   vLLM-scoped and does not support the llama.cpp body.
-- **Older builds.** Between roughly b6000 and b7502 llama.cpp exempted
-  `/v1/models` from the gate, so this verdict could not fire there (missed
-  detection, never a false `MODEL_OK`) [advice: `RevengerEnvelopeHistory.md`,
-  `ReviewMatcherExactness.md`; sampled tags, not bisected].
+- **Older builds can be false-ready.** Sampled tags (not bisected) suggest that
+  between roughly b6000 and b7502 llama.cpp let `/v1/models` through during
+  load. A probe there sees a model list and can grade a loading server
+  `MODEL_OK` [lead: `RevengerEnvelopeHistory.md`, `ReviewMatcherExactness.md`].
+  The verdict is tied to the pinned build; re-open S036 when the build changes.
 - **A copied body matches.** Any server or proxy sending the exact body is
-  graded `MODEL_LOADING`. That is still drift (exit 2).
+  graded `MODEL_LOADING`. That is still drift (exit 2 from `check`/`snapshot`).
+- **Overlap with earlier entries.** The router catalog and sleep cache were
+  already held in `served-identity-crosswalk.md` (round 11); they are repeated
+  here only as limits, not as new ground.
 
 ## Live observation — round 16 (lane-owned fixture, not service restoration)
 

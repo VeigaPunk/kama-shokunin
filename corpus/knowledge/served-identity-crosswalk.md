@@ -142,8 +142,15 @@ still loading") as a reachable mid-load `/v1/models` answer. At llama.cpp
 `/v1/models` with HTTP 503 `Loading model` until `is_ready` is set after
 `load_model` returns (`S036` server-http.cpp:307-328 and 354; `S037`
 server.cpp:493-515). The README sentence remains documented (`S035`,
-README:1258) but that code path does not serve it in direct mode. The
-conclusion that a model-list match is not readiness still holds, for other
-reasons: router-mode catalog entries carry per-model `status` values, and a
-sleeping server answers `/v1/models` from cache. The probe now grades the 503
-envelope `MODEL_LOADING` (`endpoint-identity.md` §Correction — round 16).
+README:1258) but that code path does not serve it in direct mode. The probe
+now grades the 503 envelope `MODEL_LOADING` (`endpoint-identity.md`
+§Correction — round 16).
+The same code order already held at this entry's own pin c0fd7862, so lines 9,
+13 ("answering while loading"), 27, 33, 50, 52 and 63 were never observable in
+direct mode. What a direct-mode `/v1/models` 200 does show is that `load_model`
+returned (`is_ready` set): load completion, not an inference-success guarantee
+(KQ13). The broader "a model-list match is not readiness" conclusion still
+holds for router mode (catalog `status` values) and for a sleeping server
+(`/v1/models` from cache, server-context.cpp:5725-5733 at 704366d76, pinned
+under `.ufo/waves/round-16/sources/`; sleep is opt-in, `--sleep-idle-seconds`
+default -1).

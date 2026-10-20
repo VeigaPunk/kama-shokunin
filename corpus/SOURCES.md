@@ -125,3 +125,26 @@ is cross-source synthesis: the reopened ps page (2026-10-20) describes only the
 running list ("Models currently loaded into memory"); the available-list half
 comes from S011's tags page. The cell stays as written; this note marks the
 synthesis. S011's reciprocal clause has the same character.
+
+**Round-16 falsify-wave notes on S035–S041 (2026-10-20; no cell changes).**
+Row URLs for the Gate: S035–S037 are the commit-pinned GitHub blob URLs in
+their `source` cells, with raw copies and digests under
+`.ufo/waves/round-16/sources/llama.cpp-704366d/` (now also `server-context.cpp`
+`dd1de0f2…2329`, `server-models.cpp` `9c5a6f2c…8b4a`, `common/arg.cpp`
+`bf4c58c1…822d`, which hold the `no slot available` and `Stream owner model is
+loading` lines quoted in the lesson). S036: "every non-frontend path" excludes
+`OPTIONS`, which is answered at server-http.cpp:347-353 before the state gate.
+S037: "never emits that body" holds for the router's own handlers
+(`/health`, `/v1/models`); routes the router proxies to a loading per-model
+child can relay the child's 503 [INFERENCE from server-models.cpp]. S038: the
+digest advice stands because the release records no immutability guarantee;
+"Pre-release" marks readiness, not mutability. S040: the S021 404 is path rot
+after the docs moved under `operations/lifecycle/` (the latest page is
+`https://llm-d.ai/docs/operations/lifecycle/readiness-probes`; the
+`/docs/1.0/...` path returns 404), the cutover cause is inference, and the vLLM
+`/health` behaviour itself is S004's ground. In the round-16 search-log
+supplement, the 9 identified sources are the 7 new rows, S017 and the
+`server-context.cpp`/`server-models.cpp` pair counted as one code read, and
+"v0.10 and v1.0 versioned pages → 200" should read "v0.10 page and the latest
+`operations/lifecycle/` page → 200". The Health path above still lists S021;
+read S040 in its place.

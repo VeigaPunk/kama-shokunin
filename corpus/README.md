@@ -209,13 +209,20 @@ S012 remains a separate loaded-metadata boundary, not a readiness test.
 The `/health` 503 body was already held at `knowledge/runtime-health-surface-matrix.md:14`
 (round 10); credit here is the code path onto `/v1/models`, the corrected
 probe verdict and the live capability, not the body itself. Appended
-corrections: `endpoint-identity.md`, `consumer-registry.md`, `listener-census.md`,
-`served-identity-crosswalk.md`, `runtime-health-surface-matrix.md`.
+corrections for the vocabulary and the loading state: `endpoint-identity.md`,
+`consumer-registry.md`, `listener-census.md`, `served-identity-crosswalk.md`,
+`runtime-health-surface-matrix.md`; plus `snapshot-history.md` (harness count)
+and `ollama-evidence-replay.md` (round-15 routed defect 5).
 
-Frontier disposition: the "real-runtime evidence for llama.cpp only, and stale"
-gap now has a re-runnable lane-owned sample on the current build. Still open:
-live grading of a loading server (the tiny model loads in about 8 ms; no 503
-was captured by the receipt), router mode and sleep (source reads only), other
+Frontier disposition: the gap "real-runtime proof exists for llama.cpp only, and
+the last sample is stale" (lines 60-62) now has a re-runnable lane-owned sample
+on the current build. Still open: live grading of a loading server by the
+receipt (the tiny model loads in a few milliseconds; see the round-16 lesson for
+what the falsify wave captured), router mode and sleep (source reads only), other
 engines (source reads only), K05 declared-versus-served context, and the
 registered consumers, which stay `DEAD` and were not probed. A lane-owned
 fixture was sampled; nothing was restored.
+
+Line 119's "llama.cpp nullable loading metadata" names a README sentence that
+the direct-mode code does not serve; see `served-identity-crosswalk.md`
+§Correction — round 16.

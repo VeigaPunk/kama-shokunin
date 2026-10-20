@@ -29,6 +29,7 @@ Deps: python3 stdlib only, plus whatever the probed server and
 from __future__ import annotations
 
 import argparse
+import http.client
 import hashlib
 import json
 import os
@@ -58,7 +59,6 @@ HARD_REFUSED_PORTS = {8080, 34113}
 PORT_PICK_ATTEMPTS = 64
 
 POLL_TIMEOUT = 0.5          # per-request readiness poll timeout, seconds
-POLL_INTERVAL = 0.02        # tight loop, but not a CPU spin
 PROBE_TIMEOUT = 60          # seconds per kama-probe.sh invocation
 TERM_GRACE = 10.0           # SIGTERM grace before SIGKILL
 TRANSITION_BODY_CAP = 4096  # verbatim body kept on lifecycle transitions
@@ -295,17 +295,12 @@ def port_owned_by(pid, port):
 
 def _preexec_pdeathsig():
     """Child-side: die with SIGKILL if the harness parent dies (Linux).
-    Reports the prctl(2) result byte ('1' ok / '0' rc!=0) to the parent
-    through _PDEATHSIG_W so the receipt records a measured prctl_ok."""
+    Outcome is not observable post-close_fds, so the receipt records
+    prctl_ok 'unknown' honestly rather than a guessed boolean (F2)."""
     try:
         import ctypes
         libc = ctypes.CDLL(None, use_errno=True)
-        rc = libc.prctl(1, signal.SIGKILL, 0, 0, 0)  # PR_SET_PDEATHSIG
-        if _PDEATHSIG_W[0] >= 0:
-            try:
-                os.write(_PDEATHSIG_W[0], b'1' if rc == 0 else b'0')
-            except OSError:
-                pass
+        libc.prctl(1, signal.SIGKILL, 0, 0, 0)  # PR_SET_PDEATHSIG
         if os.getppid() != _FORKED_PPID[0]:
             os._exit(1)  # parent already gone before prctl landed
     except Exception:  # pragma: no cover - best effort hardening
@@ -313,11 +308,9 @@ def _preexec_pdeathsig():
 
 
 _FORKED_PPID = [0]
-_PDEATHSIG_W = [-1]
 
 
 
-_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 
 
 def _header_subset(headers):
@@ -391,59 +384,150 @@ def _sig(row):
     return (row['status'], row['error'], row['body_sha256'])
 
 
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """F3: refuse redirects — a 30x must surface as its own status, never
+    be followed to a foreign document."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+_OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}),
+                                      _NoRedirect)
+
+
+class _KeepAlive:
+    """Reused http.client connection for the tight readiness polls.
+    Recycled once on transport errors so a server-side close is retried."""
+
+    def __init__(self, port, timeout=POLL_TIMEOUT):
+        self.port = port
+        self.timeout = timeout
+        self.conn = None
+
+    def get(self, path):
+        for attempt in range(2):
+            try:
+                if self.conn is None:
+                    self.conn = http.client.HTTPConnection(
+                        '127.0.0.1', self.port, timeout=self.timeout)
+                self.conn.request('GET', path)
+                resp = self.conn.getresponse()
+                raw = resp.read(HTTP_BODY_CAP + 1)
+                return {'status': resp.status, 'error': None,
+                        'headers': dict(resp.getheaders()),
+                        'body': raw[:HTTP_BODY_CAP],
+                        'body_truncated': len(raw) > HTTP_BODY_CAP}
+            except (OSError, http.client.HTTPException) as exc:
+                self._close()
+                if attempt == 1:
+                    return {'status': None, 'error': type(exc).__name__,
+                            'headers': {}, 'body': b'',
+                            'body_truncated': False}
+
+    def _close(self):
+        try:
+            if self.conn is not None:
+                self.conn.close()
+        finally:
+            self.conn = None
+
+
 def readiness_loop(proc, port, ready_timeout):
-    """Poll /health and /v1/models alternately from t=0. Records every
-    signature transition per path (consecutive identical observations fold
-    into `repeats`) until /health answers 200 — and then only when the
-    LISTEN socket is provably our child's (a stranger listener on the
-    re-bound port would otherwise pass readiness). Returns (transitions,
-    loading_503, ready, failure_code, ownership)."""
+    """Two-phase lifecycle capture (ExecLoadingWindowCapture design):
+
+    Phase 'models': GET /v1/models on a reused keep-alive connection, NO
+    sleep, 0.5 s per-request timeout, until the first non-503 answer — the
+    ~5-6 ms loading window needs an unbroken request cadence. The first 503
+    is kept verbatim (status, Server/Content-Type, body <=4096, sha256).
+
+    Phase 'health': GET /health the same way until 200.
+
+    D1: the FIRST successful HTTP response (any status) immediately triggers
+    port_owned_by(child, port); foreign or unproven ownership discards every
+    recorded body and is a setup error — a stranger's loading body can never
+    reach loading_503.
+
+    Returns (transitions, loading_503, ready, failure_code, ownership)."""
     t0 = time.monotonic()
     deadline = t0 + ready_timeout
     transitions = []
-    last_sig = {'/health': None, '/v1/models': None}
     loading_503 = None
-    while time.monotonic() < deadline:
-        rc = proc.poll()
-        if rc is not None:
-            return (transitions, loading_503, False,
-                    f'server-exited-early-rc{rc}', None)
-        for path in ('/health', '/v1/models'):
-            result = http_get(port, path)
-            row = _transition_row(t0, path, result)
-            sig = _sig(row)
-            if transitions and last_sig[path] == sig:
-                # fold identical consecutive observation into the last row
-                # for this path
-                idx = next(i for i in range(len(transitions) - 1, -1, -1)
-                           if transitions[i]['path'] == path)
-                transitions[idx]['repeats'] += 1
-                transitions[idx]['t_ms'] = row['t_ms']
-            else:
-                transitions.append(row)
-                last_sig[path] = sig
-            if (loading_503 is None and result['status'] == 503):
-                loading_503 = {
-                    't_ms': row['t_ms'],
-                    'path': path,
-                    'status': 503,
-                    'headers': _header_subset(result['headers']),
-                    'body_sha256': row['body_sha256'],
-                    'body': result['body'].decode('utf-8', errors='replace'),
-                }
-            if path == '/health' and result['status'] == 200:
-                owned = port_owned_by(proc.pid, port)
-                if owned is not True:
-                    # R1: unproven ownership (None) is a setup error too —
-                    # a stranger or an unreadable /proc must not pass.
-                    code = ('port-listener-not-our-child' if owned is False
-                            else 'port-listener-ownership-unproven')
-                    return transitions, loading_503, False, code, owned
-                return transitions, loading_503, True, None, owned
-            if time.monotonic() >= deadline:
+    ownership = None
+    proven = False
+    conn = _KeepAlive(port)
+
+    def _observe(phase, path, result):
+        nonlocal loading_503, ownership, proven
+        row = _transition_row(t0, path, result)
+        row['phase'] = phase
+        sig = _sig(row)
+        if transitions and _sig(transitions[-1]) == sig \
+                and transitions[-1]['path'] == path:
+            transitions[-1]['repeats'] += 1
+            transitions[-1]['t_ms'] = row['t_ms']
+        else:
+            transitions.append(row)
+        if result['status'] is not None and not proven:
+            # D1: prove the child owns the listener on first contact
+            owned = port_owned_by(proc.pid, port)
+            ownership = owned
+            if owned is not True:
+                return ('port-listener-not-our-child' if owned is False
+                        else 'port-listener-ownership-unproven')
+            proven = True
+        if loading_503 is None and result['status'] == 503 and proven:
+            loading_503 = {
+                't_ms': row['t_ms'],
+                'path': path,
+                'status': 503,
+                'headers': _header_subset(result['headers']),
+                'body_sha256': row['body_sha256'],
+                'body': result['body'][:TRANSITION_BODY_CAP].decode(
+                    'utf-8', errors='replace'),
+            }
+        return None
+
+    try:
+        while time.monotonic() < deadline:
+            rc = proc.poll()
+            if rc is not None:
+                return (transitions, loading_503, False,
+                        f'server-exited-early-rc{rc}', ownership)
+            err = _observe('models', '/v1/models', conn.get('/v1/models'))
+            if err:
+                _discard_bodies(transitions, loading_503)
+                return transitions, None, False, err, ownership
+            if transitions[-1]['status'] not in (None, 503):
                 break
-        time.sleep(POLL_INTERVAL)
-    return transitions, loading_503, False, 'ready-timeout', None
+        else:
+            return transitions, loading_503, False, 'ready-timeout', ownership
+        while time.monotonic() < deadline:
+            rc = proc.poll()
+            if rc is not None:
+                return (transitions, loading_503, False,
+                        f'server-exited-early-rc{rc}', ownership)
+            err = _observe('health', '/health', conn.get('/health'))
+            if err:
+                _discard_bodies(transitions, loading_503)
+                return transitions, None, False, err, ownership
+            if transitions[-1]['status'] == 200 \
+                    and transitions[-1]['path'] == '/health':
+                return transitions, loading_503, True, None, ownership
+        return transitions, loading_503, False, 'ready-timeout', ownership
+    finally:
+        conn._close()
+
+
+def _discard_bodies(transitions, loading_503):
+    """D1: on an ownership failure, no recorded body may survive — a
+    stranger's response must never reach the receipt."""
+    for row in transitions:
+        row['body'] = None
+        row['body_sha256'] = None
+    if loading_503 is not None:
+        loading_503['body'] = None
+        loading_503['body_sha256'] = None
 
 
 
@@ -576,11 +660,12 @@ def teardown(proc, port, log_path):
            'term_wait_ms': None, 'port_refuses': None, 'log_lines': [],
            'log_lines_truncated': False, 'log_path': str(log_path)}
     if proc is not None:
-        out['sigterm_sent'] = True
-        try:
-            os.killpg(proc.pid, signal.SIGTERM)
-        except (ProcessLookupError, PermissionError, OSError):
-            pass
+        if proc.returncode is None:  # F5: killpg only while child is alive
+            out['sigterm_sent'] = True
+            try:
+                os.killpg(proc.pid, signal.SIGTERM)
+            except (ProcessLookupError, PermissionError, OSError):
+                pass
         t0 = time.monotonic()
         try:
             proc.wait(timeout=TERM_GRACE)
@@ -768,6 +853,8 @@ def main(argv=None):
         'setup_error': None,
         'port_pick_note': 'port released after bind(:0) and re-bound by the '
                           'server; a sub-second collision race is possible',
+        'tool': {'path': str(SCRIPT),
+                 'sha256': None},  # filled below; self-hash of this script
     }
 
     server_argv = [
@@ -781,6 +868,10 @@ def main(argv=None):
         '--offline',
     ]
     receipt['argv'] = server_argv
+    try:
+        receipt['tool']['sha256'] = sha256_file(SCRIPT)
+    except OSError:
+        pass  # self-hash unverifiable is recorded as null, not fatal
     child_env = {k: os.environ[k] for k in CHILD_ENV_KEYS if k in os.environ}
     receipt['child_env_keys'] = sorted(child_env)
 
@@ -802,14 +893,10 @@ def main(argv=None):
         except OSError as exc:
             raise SetupError(f'log-mkstemp-failed:{exc}') from exc
         log_file = os.fdopen(log_fd, 'wb')
-        # prctl reporting pipe: the child writes one byte after prctl();
-        # exec() closes it, so EOF means the outcome is honestly 'unknown'
-        try:
-            r_fd, w_fd = os.pipe()
-        except OSError:
-            r_fd = w_fd = -1
+        # F2: no pass_fds/pipe — close_fds would close a reporting fd before
+        # preexec_fn runs, so the prctl outcome is recorded honestly as
+        # 'unknown'; the prctl itself remains best-effort hardening.
         _FORKED_PPID[0] = os.getpid()
-        _PDEATHSIG_W[0] = w_fd
         popen_kwargs = dict(
             stdin=subprocess.DEVNULL,
             stdout=log_file,
@@ -818,32 +905,11 @@ def main(argv=None):
             preexec_fn=_preexec_pdeathsig,
             env=child_env,
         )
-        if w_fd >= 0:
-            popen_kwargs['pass_fds'] = (w_fd,)
         try:
             proc = subprocess.Popen(server_argv, **popen_kwargs)
         finally:
             log_file.close()  # child holds its own dup of the fd
-            if w_fd >= 0:
-                try:
-                    os.close(w_fd)
-                except OSError:
-                    pass
-                _PDEATHSIG_W[0] = -1
-        if r_fd >= 0:
-            try:
-                got = os.read(r_fd, 1)
-            except OSError:
-                got = b''
-            finally:
-                try:
-                    os.close(r_fd)
-                except OSError:
-                    pass
-            prctl_ok = {b'1': True, b'0': False}.get(got, 'unknown')
-        else:
-            prctl_ok = 'unknown'
-        receipt['pdeathsig'] = {'requested': True, 'prctl_ok': prctl_ok}
+        receipt['pdeathsig'] = {'requested': True, 'prctl_ok': 'unknown'}
 
         transitions, loading_503, ready, fail, ownership = readiness_loop(
             proc, port, args.ready_timeout)
@@ -938,9 +1004,13 @@ def main(argv=None):
     except Terminated as exc:
         receipt['setup_error'] = f'terminated:{exc}'
         exit_code = 2
+    except Exception as exc:  # F1: unexpected post-launch failure -> exit 2
+        receipt['setup_error'] = f'unexpected:{type(exc).__name__}'
+        exit_code = 2
     finally:
-        # R2: block SIGINT/SIGTERM/SIGHUP during teardown; restore handlers only
-        # after teardown + model rehash complete.
+        # R2/F1: block SIGINT/SIGTERM/SIGHUP for the whole shutdown — teardown,
+        # model rehash AND the receipt write. Handlers are restored only after
+        # the write, in the outer-finally epilogue below.
         for sig in old_handlers:
             signal.signal(sig, signal.SIG_IGN)
         try:
@@ -970,17 +1040,36 @@ def main(argv=None):
                 {'pre': model_sha, 'post': receipt['model_sha256_post']}))
             receipt['checks'] = checks
         finally:
-            for sig, handler in old_handlers.items():
-                signal.signal(sig, handler)
-        if receipt['setup_error'] is None:
-            exit_code = 0 if all(c['passed'] for c in receipt['checks']) else 1
+            if receipt['setup_error'] is None:
+                exit_code = (0 if all(c['passed'] for c in receipt['checks'])
+                             else 1)
 
+    # F1: receipt write + handler restore run outside the try/finally so the
+    # receipt is emitted even after an unexpected mid-run exception.
     receipt['ended_utc'] = _utc_now()
+    emitted = False
     try:
         _emit(receipt, args.out)
+        emitted = True
+    except Terminated as exc:
+        # a signal landed during the write; annotate and retry once
+        receipt['setup_error'] = (
+            f"{receipt['setup_error']}+terminated-during-emit"
+            if receipt['setup_error'] else f'terminated:{exc}')
+        exit_code = 2
+        try:
+            _emit(receipt, args.out)
+            emitted = True
+        except (OSError, Terminated):
+            pass
     except OSError as exc:
         print(f'kama-llamacpp-live: cannot write receipt: {exc}',
               file=sys.stderr)
+        exit_code = 2
+    finally:
+        for sig, handler in old_handlers.items():
+            signal.signal(sig, handler)
+    if not emitted:
         return 2
     return exit_code
 

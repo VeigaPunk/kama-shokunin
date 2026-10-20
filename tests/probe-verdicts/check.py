@@ -26,7 +26,7 @@ Probe invocation per test (exact)::
 Exit 0 iff every record passes, 1 on any test failure (including a probe
 timeout), 2 on a harness/schema error. ``--json`` puts the machine document on
 stdout; without it a human summary is printed. ``--selftest`` additionally
-feeds 3 embedded malformed tests through the schema validator and fails if any
+feeds 4 embedded malformed tests through the schema validator and fails if any
 is accepted.
 """
 
@@ -445,7 +445,7 @@ def build_parser():
                         help="emit the machine document on stdout "
                              "(human summary moves to stderr)")
     parser.add_argument("--selftest", action="store_true",
-                        help="also assert the validator rejects 3 embedded "
+                        help="also assert the validator rejects 4 embedded "
                              "malformed tests")
     return parser
 

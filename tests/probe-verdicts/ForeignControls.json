@@ -101,15 +101,15 @@
     "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
   },
   {
-    "name": "ForeignControls.busy-unavailable-error",
+    "name": "ForeignControls.code-integer-500",
     "family": "ForeignControls",
-    "why": "503 unavailable_error 'no slot available' matches llama.cpp type+code but not the exact 'Loading model' message — C1 scope limit keeps it FOREIGN_SERVICE non-2xx-non-model-http.",
+    "why": "503 whose error has the exact message and type but integer code 500: the rule needs code == 503, so an any-integer-code matcher would wrongly grade it MODEL_LOADING (falsify-wave ReviewQualityKq19; replaces a duplicate of Overbroad503.no-slot-available).",
     "port_mode": "stub",
     "routes": {
       "/v1/models": {
         "status": 503,
         "headers": {"Content-Type": "application/json"},
-        "body_json": {"error": {"message": "no slot available", "type": "unavailable_error", "code": 503}}
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 500}}
       }
     },
     "default_route": null,
@@ -117,19 +117,19 @@
     "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
   },
   {
-    "name": "ForeignControls.loading-message-wrong-type",
+    "name": "ForeignControls.html-body-sniff-text-plain",
     "family": "ForeignControls",
-    "why": "503 with message 'Loading model' but type server_error defeats a message-only MODEL_LOADING match; the C1 rule requires all three fields exact, so the verdict stays FOREIGN_SERVICE.",
+    "why": "200 HTML page served as text/plain: only the body sniff (<!doctype ... html) marks it HTML, so this row pins that sniff, which no Content-Type text/html row exercises (falsify-wave FamilyForeignControls F4; replaces a duplicate of Overbroad503.server-error-type).",
     "port_mode": "stub",
     "routes": {
       "/v1/models": {
-        "status": 503,
-        "headers": {"Content-Type": "application/json"},
-        "body_json": {"error": {"message": "Loading model", "type": "server_error", "code": 503}}
+        "status": 200,
+        "headers": {"Content-Type": "text/plain"},
+        "body_text": "<!DOCTYPE html><html><head><title>router admin</title></head><body>login</body></html>"
       }
     },
     "default_route": null,
     "expect": "*",
-    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "html-non-model", "exit": 2}
   }
 ]

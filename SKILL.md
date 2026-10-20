@@ -506,9 +506,10 @@ documentation remains a limit, never readiness evidence.
 
 ## Round-16 verdict vocabulary and live llama.cpp lifecycle (owner: kama)
 
-The verdict list at lines 11-14 gains a seventh verdict, `MODEL_LOADING`.
-`tools/kama-probe.sh` `VOCAB` is the single source; the line-11 list is kept as
-history. Decision-table addition (applies before rows 129/131):
+The six-verdict list at lines 11-14 is superseded, not edited: the vocabulary now
+has a seventh verdict, `MODEL_LOADING`. `tools/kama-probe.sh` `VOCAB` is the
+authority; its `--help` text and the `diff_baseline` whitelist repeat the same
+seven words by hand. Decision-table addition (applies before rows 129/131):
 
 | Situation | Verdict | Action |
 |---|---|---|
@@ -520,20 +521,33 @@ loading, before the API-key check): `503`
 `{"error":{"message":"Loading model","type":"unavailable_error","code":503}}`.
 The README prints the keys as `code, message, type`; match parsed fields, never
 bytes. The probe needs python3 for this verdict; without it the old
-`FOREIGN_SERVICE` reading returns. Router mode never emits the body; a sleeping
-server answers `/v1/models` 200 from cache. Details and sources:
+`FOREIGN_SERVICE` reading returns. `check` and `snapshot` exit 2 on it;
+`listeners` and `consumers` report it without gating. The router's own
+`/v1/models` never answers with the body; a sleeping server answers
+`/v1/models` 200 from cache. Details and sources:
 `corpus/knowledge/llamacpp-loading-lifecycle.md`; criterion: `corpus/QUALITY.md`
 KQ19.
 
 | Name | Kind / entry command | Verdict map | Self-test | Pinned values | Write scope | Owner |
 |---|---|---|---|---|---|---|
 | Probe verdict stub matrix | gate: `python3 tests/probe-verdicts/check.py [--probe PATH] [--json]` | 0 all rows pass, 1 a row failed, 2 harness/schema error; grades verdict, reason, exit and drift | `--selftest`: full matrix plus 4 malformed tests rejected | `tests/probe-verdicts/*.json` literal expectations (72 rows, 9 families, 17 `MODEL_LOADING`) | stdout only; loopback stub servers on ephemeral ports, closed after each row | kama |
-| C1 counting command | measurement: `python3 .ufo/waves/round-16/measure.py` | 0 frozen arm fails exactly the `MODEL_LOADING` rows and current passes all; 1 not; 3/4 frozen snapshot manifest or blob mismatch | none (runs the gate twice) | frozen probe sha256 `93ee4302718f97862135472411ecf7aa6d5a0dc5cf778cce2c8deefe97a2cd64` = blob of `20e392e:tools/kama-probe.sh` | `.ufo/waves/round-16/run-*.json` | kama |
+| C1 counting command | measurement: `python3 .ufo/waves/round-16/measure.py` | 0 the frozen arm fails exactly the `MODEL_LOADING` rows, the current probe passes all, matrix set digest and counts (72 rows, 17 loading) match the pins and the gate exits are 1/0; 1 not; 3 frozen manifest unreadable or malformed; 4 frozen snapshot does not match its manifest or the git blob | none (runs the gate twice) | frozen probe sha256 `93ee4302718f97862135472411ecf7aa6d5a0dc5cf778cce2c8deefe97a2cd64` = blob of `20e392e:tools/kama-probe.sh`; matrix set sha256 pinned in the script | `.ufo/waves/round-16/run-*.json` | kama |
 | Live llama.cpp lifecycle | capability: `python3 tools/kama-llamacpp-live.py --server ~/.local/opt/llama-b11755/llama-server --model ~/.cache/kama-shokunin/models/stories260K.gguf --model-sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d --alias kama-stories260k --out PATH` | 0 all 10 checks pass, 1 a check failed, 2 setup error (port refused or not owned, child exited, unreadable registry), 3 model digest mismatch before launch | receipt gate below | asset sha256 `753bfa7327a75b477d4d14cde71e0e46a40acc3a1408c5504530b78c33a6e226` (S038); model sha256 as in the command (S039); refused ports 8080, 34113, every registry port and every listening port | the receipt path; a temporary server log, deleted; one child process on 127.0.0.1, torn down | kama |
-| Live receipt gate | gate: `python3 tests/llamacpp-live/check-receipt.py RECEIPT [--expect-model-sha256 H] [--expect-server-sha256 H] [--expect-probe-sha256 H]` | 0 valid, 1 invalid (every problem listed), 2 unreadable | `--selftest`: 16 single-field mutations rejected | 10 check ids; checks re-derived from stored captures and probe output | stdout only | kama |
+| Live receipt gate | gate: `python3 tests/llamacpp-live/check-receipt.py RECEIPT --expect-model-sha256 H --expect-server-sha256 H --expect-probe-sha256 H [--expect-tool-sha256 H]` — pass the pins; without `--expect-server-sha256` a receipt from another build can validate | 0 valid, 1 invalid (every problem listed), 2 unreadable | `--selftest`: single-field mutations rejected (count printed) | 10 check ids; checks re-derived from stored captures and probe output | stdout only | kama |
 
 The live run is a lane-owned fixture on an unregistered loopback port. It is
 not service restoration, says nothing about the registered consumers (still
 `DEAD`), and grades no model quality. It starts no unit and writes nothing under
 `~/.config`, `~/.omp` or systemd. Use the binary's absolute path: a later
 `/usr/bin/llama-server` must not be confused with the pinned build.
+`~/.local/bin/llama-server` now precedes `/usr/bin` on this host's PATH for every
+user; always pass `--server` with the absolute path. The fixture model is a
+1.2 MB, 292,800-parameter F32 CI file and the expected id is the harness's own
+`--alias`, so a passing receipt says nothing about weights, quality or timing
+of any real deployment.
+
+Line 361's "llama.cpp may list an id during loading" does not hold for a direct
+single-model llama-server at b11755 (or at the round-10 pin c0fd7862): while
+loading it answers `/v1/models` with the 503 envelope, and the round-16 live
+receipt captured exactly that body. The row's answer ("No") still stands for
+router catalogs, sleeping servers and Ollama.

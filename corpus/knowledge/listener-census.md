@@ -393,5 +393,6 @@ status-agnostic) and its line-363 premise were applied by the probe as rule 5
 of `endpoint-identity.md`. One response class is now carved out: a 503 to
 `GET /v1/models` with the exact llama.cpp loading envelope grades
 `MODEL_LOADING`, not `FOREIGN_SERVICE` (`endpoint-identity.md` §Correction —
-round 16). None of this census's rows was a 503, so no verdict recorded here
-changes. No listener census ran in round 16 (KQ10).
+round 16). The "frozen" six-verdict vocabulary named at lines 7-8 is likewise
+superseded by seven verdicts. None of this census's rows was a 503, so no
+verdict recorded here changes. No listener census ran in round 16 (KQ10).

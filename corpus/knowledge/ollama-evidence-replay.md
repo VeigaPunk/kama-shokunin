@@ -373,8 +373,8 @@ classifier's own duplicate-*selection* finding (`invalid_input`, row 3).
   in round15. A final-prose-matched causal control removes only the two
   predicate lines and is distinct from the preserved historical source.
 
-- **Repair ordering precision (appended round 16, outside round-15 routed
-  defect 5).** The Repair bullet's "before the minimum-unique check" means
+- **Repair ordering precision (appended round 16; routed defect 5 of the
+  outside round-15 spot-check).** The Repair bullet's "before the minimum-unique check" means
   evaluation order, not a short-circuit. `corpus_problems()`
   (`.ufo/waves/round-14/measure.py:351-365`) appends `duplicate case names`
   first and then still evaluates `unique < MINIMUM_UNIQUE_CASES`, so a

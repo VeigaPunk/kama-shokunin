@@ -31,9 +31,11 @@
 #
 # MODEL_LOADING: GET /v1/models answered 503 with the exact llama.cpp single-model
 # loading envelope {"error":{"message":"Loading model","type":"unavailable_error","code":503}}
-# (b11755 tools/server/server-http.cpp:307-328). Drift (exit 2): not ready. A body-shape
-# match only — runtime identity and served model are unverified. Router mode never
-# emits it; requires python3 (without it the body keeps FOREIGN_SERVICE).
+# (b11755 tools/server/server-http.cpp:307-328). Not ready; drift, so `check` and
+# `snapshot` exit 2 (`listeners` and `consumers` report it without gating). A
+# body-shape match only — runtime identity and served model are unverified. The
+# router's own /v1/models never answers with it; requires python3 (without it the
+# body keeps FOREIGN_SERVICE).
 #
 # Exit codes: 0 every declared consumer reconciles | 2 at least one drift
 #             1 probe error (bad arg, missing dep, unreadable registry) — never a verdict

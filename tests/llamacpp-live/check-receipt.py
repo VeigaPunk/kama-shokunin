@@ -34,11 +34,13 @@ Exit: 0 receipt valid, 1 receipt invalid (every problem listed),
 import argparse
 import copy
 import datetime
+import hashlib
 import json
 import os
 import subprocess
 import sys
 import tempfile
+
 
 RECEIPT_SCHEMA = "kama-llamacpp-live/v1"
 PROBE_SCHEMA = "kama-probe/v1"
@@ -62,6 +64,14 @@ REQUIRED_CHECKS = (
 )
 
 MISSING = object()
+
+
+def install_tree_sha(tree):
+    """Recompute producer install_tree_sha256(): sha256 over the sorted
+    'name sha\\n' lines."""
+    return hashlib.sha256(
+        ''.join(f'{n} {tree[n]}\n' for n in sorted(tree)).encode()
+    ).hexdigest()
 
 
 def loading_envelope_ok(doc):
@@ -150,7 +160,8 @@ def probe_row0(rec):
 
 
 def validate(receipt, expect_model=None, expect_server=None,
-             expect_probe=None):
+             expect_probe=None, expect_tool=None):
+
     problems = []
 
     def bad(msg):
@@ -251,12 +262,19 @@ def validate(receipt, expect_model=None, expect_server=None,
             elif is_hex64(server_sha) and base in tree \
                     and tree[base] != server_sha:
                 bad(f"server.install_tree[{base!r}] != server.sha256")
-    # install_tree_sha256 may be null when the dir listing failed.
-    check_digest(problems, "server.install_tree_sha256",
-                 server.get("install_tree_sha256"), allow_none=True)
+    # install_tree_sha256 = sha256 over sorted 'name sha\n' lines; null
+    # only when the producer could not list the directory.
+    tree_sha = server.get("install_tree_sha256")
+    check_digest(problems, "server.install_tree_sha256", tree_sha,
+                 allow_none=True)
+    if isinstance(tree, dict) and tree and is_hex64(tree_sha):
+        if install_tree_sha(tree) != tree_sha:
+            bad("server.install_tree_sha256 != recomputation over "
+                "install_tree members")
     # server_impl_sha256 is null when the release has no impl .so.
     check_digest(problems, "server.server_impl_sha256",
                  server.get("server_impl_sha256"), allow_none=True)
+
 
     # --- model ----------------------------------------------------------------
     model = receipt.get("model")
@@ -297,6 +315,27 @@ def validate(receipt, expect_model=None, expect_server=None,
             bad(f"--expect-{name}-sha256 {val!r} is not 64 lowercase "
                 "hex chars")
 
+    # --- tool identity (optional block LiveHarness adds after the fact) ---
+    tool = receipt.get("tool")
+    if tool is not None:
+        if not isinstance(tool, dict):
+            bad("tool is present but not an object {path, sha256}")
+        else:
+            if not isinstance(tool.get("path"), str) \
+                    or not tool["path"]:
+                bad("tool.path missing or not a non-empty string")
+            check_digest(problems, "tool.sha256", tool.get("sha256"))
+            if is_hex64(tool.get("sha256")) and expect_tool is not None \
+                    and tool["sha256"] != expect_tool:
+                bad(f"tool.sha256 {tool['sha256']} != expected "
+                    f"{expect_tool}")
+    elif expect_tool is not None:
+        bad("--expect-tool-sha256 given but receipt has no tool block")
+    if expect_tool is not None and not is_hex64(expect_tool):
+        bad(f"--expect-tool-sha256 {expect_tool!r} is not 64 lowercase "
+            "hex chars")
+
+
     # --- child env keys: allowlisted names only, never values -------------------
     env_keys = receipt.get("child_env_keys")
     if not isinstance(env_keys, list):
@@ -319,16 +358,32 @@ def validate(receipt, expect_model=None, expect_server=None,
             isinstance(a, str) for a in argv):
         bad("argv is missing or not an array of strings")
     else:
+        if argv and argv[0] != server.get("realpath"):
+            bad(f"argv[0] {argv[0]!r} != server.realpath "
+                f"{server.get('realpath')!r}")
+        model_path = model.get("path")
+        if isinstance(model_path, str) \
+                and argv_flag(argv, "-m") != model_path:
+            bad(f"argv -m {argv_flag(argv, '-m')!r} != model.path "
+                f"{model_path!r}")
         if alias and argv_flag(argv, "--alias") != alias:
             bad(f"argv --alias {argv_flag(argv, '--alias')!r} != "
                 f"receipt alias {alias!r}")
+        if argv_flag(argv, "--host") != "127.0.0.1":
+            bad(f"argv --host {argv_flag(argv, '--host')!r} != "
+                "'127.0.0.1'")
         if isinstance(port, int) and argv_flag(argv, "--port") != str(
                 port):
             bad(f"argv --port {argv_flag(argv, '--port')!r} != "
                 f"receipt port {port}")
-        for flag in ("--host", "-c", "-t"):
-            if argv_flag(argv, flag) is None:
-                bad(f"argv is missing {flag}")
+        ctx, threads = receipt.get("ctx"), receipt.get("threads")
+        if isinstance(ctx, int) and not isinstance(ctx, bool) \
+                and argv_flag(argv, "-c") != str(ctx):
+            bad(f"argv -c {argv_flag(argv, '-c')!r} != ctx {ctx!r}")
+        if isinstance(threads, int) and not isinstance(threads, bool) \
+                and argv_flag(argv, "-t") != str(threads):
+            bad(f"argv -t {argv_flag(argv, '-t')!r} != threads "
+                f"{threads!r}")
         tail = argv[-2:]
         if tail != ["--no-webui", "--offline"]:
             bad(f"argv tail {tail!r} != ['--no-webui', '--offline']")
@@ -340,11 +395,28 @@ def validate(receipt, expect_model=None, expect_server=None,
     l503 = receipt.get("loading_503")
     if l503 is not None and not isinstance(l503, dict):
         bad("loading_503 is present but not an object")
+    if isinstance(l503, dict):
+        if l503.get("status") != 503:
+            bad(f"loading_503.status {l503.get('status')!r} != 503")
+        if l503.get("path") not in ("/v1/models", "/health"):
+            bad(f"loading_503.path {l503.get('path')!r} not in "
+                "/v1/models|/health")
+
+    transitions = receipt.get("transitions")
+    if not isinstance(transitions, list):
+        bad("transitions is missing or not an array")
+        transitions = []
+    has_503_transition = any(
+        isinstance(t, dict) and t.get("status") == 503
+        for t in transitions)
     if isinstance(lo, bool):
-        if l503 is not None and lo is not True:
-            bad("loading_503 recorded but loading_observed is false")
-        if l503 is None and lo is not False:
-            bad("loading_observed is true but loading_503 is null")
+        if lo != (l503 is not None):
+            bad(f"loading_observed {lo} != (loading_503 is not None)")
+        if lo != has_503_transition:
+            bad(f"loading_observed {lo} but transitions "
+                f"{'record' if has_503_transition else 'record no'} "
+                "status-503 row")
+
     # loading_envelope_exact is a receipt FIELD (bool|null), not a check.
     lef = receipt.get("loading_envelope_exact")
     if l503 is None:
@@ -360,15 +432,18 @@ def validate(receipt, expect_model=None, expect_server=None,
             f"the stored loading_503 body gives {want_lef!r}")
 
     own = receipt.get("port_listener_ownership")
-    if own not in ("child", "foreign", "unknown"):
+    if own not in ("child", "foreign", "unproven"):
         bad(f"port_listener_ownership {own!r} not in "
-            "child|foreign|unknown")
-    elif own == "foreign":
-        bad("port_listener_ownership is 'foreign' — the ready listener "
-            "was not our child")
+            "child|foreign|unproven")
+    elif own != "child":
+        bad(f"port_listener_ownership is {own!r} — a valid receipt "
+            "requires the ready listener proven to be our child")
 
-    if not isinstance(receipt.get("transitions"), list):
-        bad("transitions is missing or not an array")
+    pd = receipt.get("pdeathsig")
+    if pd is not None and not (isinstance(pd, dict)
+                               and pd.get("requested") is True):
+        bad(f"pdeathsig {pd!r} is not the producer's "
+            "{requested: true, prctl_ok: ...} record")
 
     # --- captures -------------------------------------------------------------
     captures = receipt.get("captures")
@@ -384,14 +459,13 @@ def validate(receipt, expect_model=None, expect_server=None,
                             is not MISSING else None)
     data = models_doc.get("data") if isinstance(models_doc, dict) \
         else None
+    # Producer predicate: e.get('id')/e.get('owned_by') are appended as-is —
+    # an entry lacking the key contributes None and fails the all() checks.
     ids, owners = [], []
     if isinstance(data, list):
-        for e in data:
-            if isinstance(e, dict):
-                if e.get("id") is not None:
-                    ids.append(e["id"])
-                if e.get("owned_by") is not None:
-                    owners.append(e["owned_by"])
+        ids = [e.get("id") for e in data if isinstance(e, dict)]
+        owners = [e.get("owned_by") for e in data
+                  if isinstance(e, dict)]
 
     props_fields = dig(captures, "props", "fields")
     metrics_status = dig(captures, "metrics", "status")
@@ -426,9 +500,26 @@ def validate(receipt, expect_model=None, expect_server=None,
     for name, rec in (("ok", ok_probe), ("mismatch", bad_probe)):
         if rec is None:
             continue
+        pargv = rec.get("argv")
+        if not isinstance(pargv, list) \
+                or not all(isinstance(a, str) for a in pargv):
+            bad(f"probe {name}: argv missing or not a string array")
+        else:
+            if "check" not in pargv:
+                bad(f"probe {name}: argv does not invoke 'check'")
+            if isinstance(port, int) \
+                    and argv_flag(pargv, "--port") != str(port):
+                bad(f"probe {name}: argv --port "
+                    f"{argv_flag(pargv, '--port')!r} != served port "
+                    f"{port}")
+            if argv_flag(pargv, "--expect") != rec.get("expect"):
+                bad(f"probe {name}: argv --expect "
+                    f"{argv_flag(pargv, '--expect')!r} != record expect "
+                    f"{rec.get('expect')!r}")
         ex = rec.get("exit")
         if isinstance(ex, bool) or not isinstance(ex, int):
             bad(f"probe {name}: exit is {ex!r}, want int")
+
         row = probe_row0(rec)
         res = rec.get("result")
         res = res if isinstance(res, dict) else None
@@ -474,10 +565,10 @@ def validate(receipt, expect_model=None, expect_server=None,
                 f"{rec.get('expect')!r}")
         if isinstance(port, int):
             declared = row.get("declared")
-            if isinstance(declared, str) and declared != \
-                    f"http://127.0.0.1:{port}/v1":
+            if declared != f"http://127.0.0.1:{port}/v1":
                 bad(f"probe {name}: declared endpoint {declared!r} "
-                    f"does not match the served port {port}")
+                    f"!= http://127.0.0.1:{port}/v1 (must name the "
+                    "served port; null/other rejected)")
 
     # --- teardown -------------------------------------------------------------
     teardown = receipt.get("teardown")
@@ -705,8 +796,9 @@ MODEL_SHA = "a" * 64
 SERVER_SHA = "b" * 64
 PROBE_SHA = "c" * 64
 IMPL_SHA = "d" * 64
-TREE_SHA = "e" * 64
+TOOL_SHA = "9" * 64
 LIB_SHA = "f" * 64
+
 
 ENVELOPE_BODY = json.dumps({"error": {"message": "Loading model",
                                       "type": "unavailable_error",
@@ -764,7 +856,10 @@ def _selftest_receipt():
                    "install_tree": {"llama-server": SERVER_SHA,
                                     "libllama-server-impl.so": IMPL_SHA,
                                     "libllama.so": LIB_SHA},
-                   "install_tree_sha256": TREE_SHA,
+                   "install_tree_sha256": install_tree_sha(
+                       {"llama-server": SERVER_SHA,
+                        "libllama-server-impl.so": IMPL_SHA,
+                        "libllama.so": LIB_SHA}),
                    "server_impl_sha256": IMPL_SHA},
         "model": {"path": "/home/x/.cache/kama-shokunin/models/"
                           "stories260K.gguf",
@@ -772,16 +867,21 @@ def _selftest_receipt():
         "model_sha256_post": MODEL_SHA,
         "probe": {"path": "/lane/tools/kama-probe.sh",
                   "sha256": PROBE_SHA},
+        "tool": {"path": "/lane/tools/kama-llamacpp-live.py",
+                 "sha256": TOOL_SHA},
+        "argv": ["/home/x/.local/opt/llama-b11755/bin/llama-server",
+                 "-m", "/home/x/.cache/kama-shokunin/models/"
+                      "stories260K.gguf",
+                 "--alias", ALIAS, "--host", "127.0.0.1",
+                 "--port", str(PORT), "-c", "256", "-t", "1",
+                 "--no-webui", "--offline"],
+
         "alias": ALIAS,
         "ctx": 256,
         "threads": 1,
         "port": PORT,
         "port_refusal_set": [8080, 34113],
         "child_env_keys": ["HOME", "LC_ALL", "PATH", "TMPDIR"],
-        "argv": ["/home/x/.local/opt/llama-b11755/bin/llama-server",
-                 "-m", "stories260K.gguf", "--alias", ALIAS,
-                 "--host", "127.0.0.1", "--port", str(PORT),
-                 "-c", "256", "-t", "1", "--no-webui", "--offline"],
         "transitions": [
             {"t_ms": 4, "path": "/health", "status": None,
              "error": "ConnectionRefusedError",
@@ -809,7 +909,8 @@ def _selftest_receipt():
         "loading_observed": True,
         "loading_envelope_exact": True,
         "port_listener_ownership": "child",
-        "pdeathsig": "SIGKILL (PR_SET_PDEATHSIG, Linux best-effort)",
+        "pdeathsig": {"requested": True, "prctl_ok": True},
+
         "captures": {
             "health": {"path": "/health", "status": 200, "error": None,
                        "headers": {"Content-Type": "application/json"},
@@ -890,8 +991,10 @@ def _selftest():
     base = _selftest_receipt()
     expects = ["--expect-model-sha256", MODEL_SHA,
                "--expect-server-sha256", SERVER_SHA,
-               "--expect-probe-sha256", PROBE_SHA]
+               "--expect-probe-sha256", PROBE_SHA,
+               "--expect-tool-sha256", TOOL_SHA]
     cases = [("valid", base, expects, 0)]
+
 
     def mut(name, fn, extra=None):
         r = copy.deepcopy(base)
@@ -936,6 +1039,32 @@ def _selftest():
         lambda r: r["child_env_keys"].append("AWS_SECRET"))
     mut("argv-missing-offline",
         lambda r: r["argv"].remove("--offline"))
+    # falsify-wave survivors: one new rule each
+    mut("ownership-unproven",
+        lambda r: r.update(port_listener_ownership="unproven"))
+    mut("argv0-not-realpath",
+        lambda r: r["argv"].__setitem__(0, "/usr/bin/false"))
+    mut("argv-wrong-host",
+        lambda r: r["argv"].__setitem__(
+            r["argv"].index("127.0.0.1"), "0.0.0.0"))
+    mut("probe-argv-missing-check",
+        lambda r: r["probes"][0]["argv"].remove("check"))
+    mut("probe-declared-null",
+        lambda r: r["probes"][0]["result"]["rows"][0].update(
+            declared=None))
+    mut("loading-observed-without-503-transition",
+        lambda r: r["transitions"][1].update(status=404))
+    mut("loading-503-wrong-path",
+        lambda r: r["loading_503"].update(path="/metrics"))
+    mut("install-tree-sha-tampered",
+        lambda r: r["server"].update(install_tree_sha256="0" * 64))
+    mut("models-entry-missing-id",
+        lambda r: r["captures"]["models"].update(body=json.dumps(
+            {"data": [{"id": ALIAS, "owned_by": "llamacpp"},
+                      {"owned_by": "llamacpp"}]})))
+    mut("tool-sha-mismatch-expect",
+        lambda r: r["tool"].update(sha256="7" * 64),
+        extra=["--expect-tool-sha256", TOOL_SHA])
 
     failures = []
     with tempfile.TemporaryDirectory(prefix="check-receipt-") as td:
@@ -980,6 +1109,9 @@ def main(argv=None):
                     help="require the recorded server sha256")
     ap.add_argument("--expect-probe-sha256", metavar="HEX",
                     help="require the recorded probe sha256")
+    ap.add_argument("--expect-tool-sha256", metavar="HEX",
+                    help="require the recorded harness-tool sha256")
+
     ap.add_argument("--selftest", action="store_true",
                     help="run built-in valid/mutation matrix and exit")
     args = ap.parse_args(argv)
@@ -1000,7 +1132,8 @@ def main(argv=None):
     problems = validate(receipt,
                         expect_model=args.expect_model_sha256,
                         expect_server=args.expect_server_sha256,
-                        expect_probe=args.expect_probe_sha256)
+                        expect_probe=args.expect_probe_sha256,
+                        expect_tool=args.expect_tool_sha256)
     if problems:
         print(f"INVALID {args.receipt}: {len(problems)} problem(s)")
         for p in problems:

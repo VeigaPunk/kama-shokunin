@@ -275,6 +275,21 @@ def build_parser():
     return parser
 
 
+# Matrix breadth pin (falsify-wave ReviewMeasurePy F1/F2): a trimmed or swapped
+# matrix must not yield a PASS. The digest covers every *.json file name and its
+# sha256 under tests/probe-verdicts/, sorted by name.
+EXPECTED_MATRIX_SHA256 = "bf9068d89e4cb8a080167cb32cc818943d717a65fcbd21edb2b8256e22771f32"
+EXPECTED_TESTS = 72
+EXPECTED_LOADING = 17
+
+
+def matrix_digest():
+    files = sorted((CHECK.parent).glob("*.json"))
+    lines = "".join(
+        f"{f.name} {hashlib.sha256(f.read_bytes()).hexdigest()}\n" for f in files)
+    return len(files), hashlib.sha256(lines.encode()).hexdigest()
+
+
 def main(argv=None):
     args = build_parser().parse_args(argv)
     names = [name for name, _ in args.probe]
@@ -287,6 +302,12 @@ def main(argv=None):
     print(f"frozen snapshot verified: sha256 {frozen_sha} "
           f"(blob {manifest.get('source_commit', DEFAULT_COMMIT)}:"
           f"{manifest.get('source_path', DEFAULT_SOURCE_PATH)})")
+    n_files, m_sha = matrix_digest()
+    print(f"matrix: {n_files} files, set sha256 {m_sha}")
+    if m_sha != EXPECTED_MATRIX_SHA256:
+        print(f"measure: matrix set digest {m_sha} != pinned "
+              f"{EXPECTED_MATRIX_SHA256}", file=sys.stderr)
+        return EXIT_FAIL
 
     probes = [("before", FROZEN), ("after", AFTER_PROBE)] + list(args.probe)
     receipts = []
@@ -358,14 +379,25 @@ def main(argv=None):
     print(f"\ndirectional: loading_expectations={len(loading_names)} "
           f"before_failed={len(before_failed)} changed={len(changed_names)} "
           f"equal={directional}")
+    breadth = (len(before_recs) == EXPECTED_TESTS == len(after_recs)
+               and len(loading_names) == EXPECTED_LOADING)
+    exits = (before.get("exit") == 1 and after.get("exit") == 0)
+    print(f"breadth: tests={len(before_recs)}/{len(after_recs)} "
+          f"(pinned {EXPECTED_TESTS}) loading={len(loading_names)} "
+          f"(pinned {EXPECTED_LOADING}) ok={breadth}; check.py exits "
+          f"before={before.get('exit')} after={after.get('exit')} ok={exits}")
     ok = (isinstance(before_failures, int) and before_failures >= 1
           and after_failures == 0
-          and all_changed_loading and directional)
+          and all_changed_loading and directional and breadth and exits)
 
     if not ok:
         reasons = []
         if not (isinstance(before_failures, int) and before_failures >= 1):
             reasons.append(f"before failures {before_failures!r} (need >=1)")
+        if not breadth:
+            reasons.append("matrix breadth differs from the pinned counts")
+        if not exits:
+            reasons.append("check.py exits are not before=1 / after=0")
         if after_failures != 0:
             reasons.append(f"after failures {after_failures!r} (need 0)")
         if not all_changed_loading:

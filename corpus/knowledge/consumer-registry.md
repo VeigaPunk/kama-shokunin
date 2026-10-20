@@ -405,8 +405,9 @@ wording without silently claiming a new host inspection (QUALITY KQ14).
 
 ## Correction — round 16 (2026-10-20): seven-verdict vocabulary
 
-The "binding vocabulary" list at lines 84-85 gains `MODEL_LOADING` (a 503 to
-`GET /v1/models` carrying the exact llama.cpp loading envelope; drift, exit 2).
+The "binding vocabulary" list at lines 84-85 is superseded, not edited: the
+vocabulary now also includes `MODEL_LOADING` (a 503 to `GET /v1/models`
+carrying the exact llama.cpp loading envelope; drift, `check` exit 2).
 Definition, sources and limits: `endpoint-identity.md` §Correction — round 16
 and `llamacpp-loading-lifecycle.md`. No consumer row or live verdict in this
 file changes; no registered endpoint was probed for this correction.

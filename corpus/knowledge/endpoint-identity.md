@@ -188,7 +188,8 @@ recheck: on-release — re-open the pinned middleware when the installed llama.c
 Line 3 ("The verdict vocabulary is fixed") and the closing note at line 163
 ("verdict vocabulary are unchanged") are superseded: the vocabulary now has
 seven verdicts. Rule 5 at line 17 ("A live HTTP error response from a
-non-model service is foreign, not dead") overreached for one exact case and is
+non-model service is foreign, not dead") and its restatement as an
+anti-pattern remedy at line 126 overreached for one exact case and are
 narrowed, not deleted. When `GET /v1/models` answers HTTP 503 and the body
 parses as a JSON object whose `error` object has `message` exactly
 `Loading model`, `type` exactly `unavailable_error` and an integer `code`

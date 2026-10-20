@@ -58,9 +58,12 @@ operator-authorized tooling directive at `~/.local/opt/llama-b11755`, linked
 `~/.local/bin/llama-server`) with a pinned 1.2 MB GGUF kept in the lane-owned
 cache `~/.cache/kama-shokunin/`, on a free loopback port that is never a
 registered consumer port or a listening port, and tears it down in the same run.
-This narrows round 1's "L0 must approve any endpoint outside the declared local
-model registry" only for the process this tool started; any other unregistered
+This proposes narrowing round 1's "L0 must approve any endpoint outside the
+declared local model registry" only for the process this tool started, **pending
+L0 ratification** (`.ufo/l0-questions.md`, kama round-16); any other unregistered
 endpoint still needs L0. It is not service restoration, starts no unit, writes
 nothing under `~/.config`, `~/.omp` or systemd, and changes no registered row:
-the three consumers stay `DEAD`. The install tree and cache persist on the host;
-removal is the operator's call.
+the three consumers stay `DEAD`. The release is a GitHub Pre-release; the
+install is identified by its asset digest (S038), not the tag. The install tree,
+its `~/.local/bin/llama-server` link (which now precedes `/usr/bin` on PATH) and
+the cache persist on the host; removal is the operator's call.
