@@ -100,3 +100,87 @@ invalid tier/status0, missing0. W04 is existing same-URL scoped curation,
 not independent corroboration. Final outputs and exits are recorded below
 after all implementation owners finish. Frontier advanced: executable
 offline evidence replay repertoire only; no new API concept or live runtime.
+
+## Final measured author disposition
+
+Measured/pushed work revision:
+`e545ed99aaa519196a2a7779b0a293b2ce4c765c`.
+Complete command/cwd/streams/real exits/parsed results:
+`.ufo/waves/round-14/acceptance.json`, **ok true**, errors empty.
+All verification below was performed by L1 after the implementation owners
+finished, not by seats or a non-author integrator.
+
+| Run from lane root | Exit | Observed result |
+|---|---:|---|
+| `python3 .ufo/waves/round-14/measure.py --tool .ufo/waves/round-14/frozen/before/tools/kama-ollama-evidence.py` | 1 | Tool absent, 0 passed / 51 unsupported; no child fallback or exit-only false success |
+| Same runner, `--tool .ufo/waves/round-14/frozen/precedence-before.py` | 1 | Actual same-round draft: 49 passed / 2 failed |
+| Same runner, `--tool tools/kama-ollama-evidence.py` (also default) | 0 | Corrected committed classifier: 51 passed / 0 failed |
+| `python3 tools/kama-ollama-evidence.py --selftest` | 0 | `clean`, 51 passed / 0 failed through actual isolated child CLIs |
+| Same runner, `--tool .ufo/waves/round-14/frozen/precedence-only-red.py` | 1 | Isolated causal control: 49 passed / 2 failed; only `classify()` restored from actual defective draft, all other final-source bytes unchanged |
+
+All harness runs use the exact same fixed oracle SHA-256:
+`4a4de0b85009c42804e43c8ae8833bd6f0673edc71ae5ec8baa1e3201e158ae4`.
+The initial absence baseline is retrospective against a proved immutable
+start-tree absence, not a prior classifier bug. The two real red-before
+failures are:
+
+- `remote_missing_digest`: expected exit2/`unknown`; draft observed
+  exit1/`remote_inventory`.
+- `tags_none_ps_duplicates`: expected exit2/`invalid_input`; draft observed
+  exit2/`unknown`. Shared numeric exit does not satisfy the finding assertion.
+
+The corrected tool matches both. The causal control preserves all final
+source bytes except the AST-located `classify()` replacement; its manifest
+pins final source commit/path/SHA, draft SHA and derived SHA. Thus this
+specific mistake fix is shown able to fail with the decision-order fix as
+the only delta. Original draft and all historical artifacts remain intact.
+
+Fixed expected-finding histogram: loaded10, available3, unknown10,
+identity_conflict5, remote5, invalid_input18. A constant-answer implementation
+could match at most 18/51, not all 51. Both harness and selftest assert exact
+exit, stable finding, schema, reported exit, readiness and scope. These are
+same-oracle checks, not two independent semantic or runtime authorities.
+
+Final source commands are identical to the initial commands and both exit
+**0**. Complete streams: `sources-final-{validate,census}.json`. Validate output:
+
+```text
+kama W04 S031 duplicate url docs.ollama.com/api/tags across scopes
+kama ok /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md
+```
+
+| Census field | Before | After |
+|---|---:|---:|
+| rows | 33 | 33 |
+| tier A / B / C | 30 / 0 / 3 | 30 / 0 / 3 |
+| mined / queued / rejected | 23 / 5 / 5 | 23 / 5 / 5 |
+| invalid tier / status; missing registry | 0 / 0; 0 | 0 / 0; 0 |
+
+Direct Git-object/current-byte comparisons (`preservation.json`) confirm
+original prefixes for QUALITY, README, SKILL, LOG and SCORECARD, all 33 source
+rows' immutable cells, exactly two allowed used-by changes, and equality of
+all 25 protected tracked lesson/registry/old-tool/province/SHONEN files to
+start blobs. Ignored history files are not inferred from git. No old serving
+or fidelity gate was executed.
+
+C1 **calibration improved**, numeric7→7, through new executable replay
+repertoire. Other five axes unchanged, no observed harm within scope.
+Capability row enters only after the passing demonstration. Expansion
+**improved** through that capability; quality and discernment **unchanged**:
+no new conceptual API truth, existing entry revalidation, or outside
+round-14 sampling is claimed. Independent non-author admission remains
+pending. SHONEN remains four author assertions; no promotion.
+
+One of 32 dispatched seats, ExistingProbe, died with provider
+`Cursor RESOURCE_EXHAUSTED` and was not replaced. Its bounded normalization
+recon is recoverable from the already-read SKILL/crosswalk and explicit
+no-normalization controls. Other seats supplied substantive implementation
+and advisory reviews; missing-file reports describe mid-flight states,
+not final defects. Final static owner reviews and L1 acceptance supersede
+those states; speculative extra protocols, samefile bans and time validation
+were rejected in `integration-review.json`.
+
+Tools installed/updated: **none**. New L0 questions: **none**. Stale-lane:
+respawn-per-round; no other mission of kama is open. Live runtime, context
+capacity, consumer mutation, credentials, routing and service restoration
+remain outside this offline capability and with their existing owners.

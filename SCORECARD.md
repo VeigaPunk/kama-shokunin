@@ -430,3 +430,43 @@ toward no claim/axis/trend improvement. No old gate or receipt is rewritten.
 of this capability's admits/rejects; future steered domain work should target
 new observed serving evidence. Live integration/context capacity remains
 operator-dependent. Do not claim offline replay as runtime restoration.
+
+### Round-14 measured results and capabilities
+
+Measured work commit: `e545ed99aaa519196a2a7779b0a293b2ce4c765c`.
+Counting command: `python3 .ufo/waves/round-14/measure.py --tool PATH`.
+Use absent `.ufo/waves/round-14/frozen/before/tools/kama-ollama-evidence.py`
+for the retrospective starting-capability baseline (actual start git tree
+contains no tool), preserved `frozen/precedence-before.py` for the actual
+same-round defective draft, and `tools/kama-ollama-evidence.py` for final.
+
+| Claim | Axis / score | Before → after | Verdict and limits |
+|---|---|---|---|
+| C1 offline Ollama evidence replay | calibration 7 → 7, delta 0 | 0/51 supported at absent-tool baseline → 51/51 exact CLI finding/exit/schema/readiness/scope matches; actual draft 49/51 → corrected 51/51 | improved new replay repertoire; finite synthetic metadata, no actual serving integration/readiness |
+
+Both corpus runs share SHA-256
+`4a4de0b85009c42804e43c8ae8833bd6f0673edc71ae5ec8baa1e3201e158ae4`.
+Actual draft failures are `remote_missing_digest` (expected unknown2, observed
+remote_inventory1) and `tags_none_ps_duplicates` (expected invalid_input2,
+observed unknown2). Only precedence was corrected; same final oracle.
+`python3 tools/kama-ollama-evidence.py --selftest` also exits 0/clean,
+51 passed and 0 failed, but shares that same-round separately authored oracle;
+it is not independent external corroboration. Receipt:
+`.ufo/waves/round-14/acceptance.json`, ok true, errors empty.
+
+| Capability | What it can now do | Evidence pointer | First-working round |
+|---|---|---|---|
+| ollama-offline-evidence-replay | Reconcile caller-supplied tags/ps captures using exact names/digests and fail-closed remote/unknown/invalid classifications, with readiness always unknown | `python3 tools/kama-ollama-evidence.py --selftest`; measured command/streams and 51 literal cases in `.ufo/waves/round-14/acceptance.json` at work commit above | 14 |
+
+No other numeric axis changes: operability8, freshness8, depth7, coverage9,
+adjacency7 unchanged. Source validate and census both exit0; rows33→33,
+A30/B0/C3 and mined23/queued5/rejected5 unchanged; only S012/S031 used-by
+gains the replay workflow. Prefix preservation true for all five active
+instruction/ledger files; all 25 protected tracked files equal their start
+blobs (`preservation.json`). One scout seat died with provider
+RESOURCE_EXHAUSTED; the 32-seat dispatch is retained, no replacement spawned.
+
+Trends: expansion improved through demonstrated capability only; quality and
+discernment unchanged (no new conceptual/source truth or outside round-14
+sampling). Author claim verdict improved; admission awaits independent
+non-author closure, no promotion box is newly certified.

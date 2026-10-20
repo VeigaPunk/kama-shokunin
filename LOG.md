@@ -816,3 +816,37 @@ and in SKILL/lesson, not treated as current authority.
   metadata correspondence is not present serving capability or permission to
   route. Final measured revision, command outputs and per-axis disposition
   are appended after integration. No tool installs or new L0 decision yet.
+
+## round 14 — committed measurement and capability admission by author (2026-10-20)
+
+- Work commit `e545ed99aaa519196a2a7779b0a293b2ce4c765c` is pushed.
+  `.ufo/waves/round-14/acceptance.json` records actual commands/streams and
+  named revision: absent tool0/51 supported exit1 → final51/51 matches exit0;
+  actual draft49/51 exit1 → corrected51/51; selftest51/51 exit0 `clean`.
+- Current draft implementation mistakes: remote marker preempted missing
+  digest, and no-tags return preempted duplicate ps selection. Preserved actual
+  draft plus AST-derived causal control reproduce the same two named failures.
+  The causal control changes only `classify()` back to its actual draft
+  ordering; all other final-source bytes remain identical. This satisfies the
+  mistake fix's fail-capability obligation without inventing prior behavior.
+- Counting command: `python3 .ufo/waves/round-14/measure.py --tool PATH`,
+  shared fixed oracle SHA256
+  `4a4de0b85009c42804e43c8ae8833bd6f0673edc71ae5ec8baa1e3201e158ae4`.
+  Six-field assertions cover exit/finding/schema/reported-exit/readiness/scope.
+  Fixed findings10/3/10/5/5/18; constant-answer maximum18/51.
+  Same oracle supports selftest and measurement, not independent authority.
+- `SCORECARD.md` now adds demonstrated `ollama-offline-evidence-replay`,
+  first-working round14. C1 calibration improved, score7→7; other axes
+  unchanged. Expansion improved through executable repertoire only; quality
+  and discernment unchanged pending new knowledge/outside sampling. No live
+  Ollama integration, current serving state or readiness is claimed.
+- Final required source validate/census exit0, rows33→33/A30/B0/C3,
+  mined23/queued5/rejected5 unchanged; allowed S012/S031 used-by additions
+  only. `preservation.json` records all five instruction/ledger prefixes true,
+  all immutable source cells true and all25 protected tracked files equal.
+- One 32-seat wave, one provider-failed scout, no replacement; roles and
+  validated payload/seat reports retained. All verification was L1 final
+  execution after owners finished, never sibling gates. No tool installs,
+  new L0 questions, operator config changes or self-certified promotion.
+  Final author verdict and historical D2 clarification:
+  `corpus/lessons/round-14.md`; outside closure still owns admission.
