@@ -407,3 +407,30 @@ immutable git blob at the code-constant revision and path, and a manifest
 cannot redirect that anchor, so a coherent snapshot+manifest edit still reports
 `source_mismatch`. The frozen expected file pins a fixed immutable source
 revision and does not track mutable `HEAD`.
+
+## Round-13 criterion precision and local evidence registry (owner: kama)
+
+KQ16 in `corpus/QUALITY.md` corrects two inaccurate KQ15 formulations,
+without reducing any other applicable criterion. Distinct stable finding IDs
+do not require distinct numeric exits. The round-12 mapping 1/2/2 applies to
+the selected primary finding; a higher-ranked integrity failure can coexist
+with source mismatch. Capture via `git show` is author-recorded provenance;
+the comparator's implemented operation is `git cat-file blob`. Separate
+command paths still share the same repository object store.
+
+The historical `fidelity.py:55–56` comment overstates precedence: `unpinned`
+is below `source_mismatch` in the actual `PRIORITY`. Treat the comment as
+inaccurate, not as an instruction to alter valid code or reinterpret receipts.
+The existing registry's primary-finding exit map remains valid. Round-12
+quality attribution belongs to its D4 crosswalk interpretation, not to
+fidelity-gate machinery alone (`corpus/lessons/round-13.md`).
+
+| Name | Kind / entry command | Verdict map | Self-test | Pinned values | Write scope | Owner |
+|---|---|---|---|---|---|---|
+| Two-proposition criterion textual conformance | gate: `python3 .ufo/waves/round-13/measure.py --quality corpus/QUALITY.md`; frozen input uses explicit `--quality PATH --manifest PATH` | 0 clean textual assertions (`clean`); 1 failed (`documentation_mismatch`); 2 could-not-evaluate (`snapshot_tampered`, the round-13 QUALITY snapshot pin); 3 could-not-evaluate (`probe_error`, unavailable/invalid input); undeclared nonzero codes could-not-evaluate; none is semantic admission or endpoint readiness | `python3 .ufo/waves/round-13/measure.py --selftest` invokes the actual CLI over isolated fixtures and checks literal exits/finding IDs | `.ufo/waves/round-13/frozen/expected.json` pins frozen input SHA-256 values and expected verdicts; immutable before revision recorded in script and claims.json | Normal invocation read-only; self-test creates and removes isolated temporary fixtures only | kama |
+
+This gate checks two explicit formulations in the effective KQ16 row, not
+arbitrary natural-language correctness. Static source/code and committed
+receipt review establish the substantive correction separately; a matching
+pin or green self-test cannot replace that review. No new serving capability,
+runtime integration, endpoint sample or domain expansion is asserted.

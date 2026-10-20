@@ -143,3 +143,19 @@ as distinct from an upstream change. K05 remains operator-runtime dependent.
 SOURCES navigation/date prose and SKILL's complete-applicable-criteria pointer
 are corrected by explicit supplements. Outside round-12 sampling remains
 separate from author-dispatched advice; no promotion box is newly certified.
+
+## Round-13 criterion precision and frontier disposition (2026-10-20)
+
+Outside round-12 review is now held at
+`lessons/round-12-verifier-spotcheck.md`: ok / admitted true. Its D1 becomes
+an appended KQ16 erratum in `QUALITY.md`, distinguishing stable finding IDs
+from numeric exit classes and capture from independent blob comparison.
+`lessons/round-13.md` records the mistake, sourced method and bounded
+measurement. Existing criterion/receipt bytes remain historical evidence.
+
+The previous quality verdict is grounded in round-12 D4's stronger
+`knowledge/served-identity-crosswalk.md` interpretation, not merely the
+snapshot checker. This round adds no knowledge entry, covered serving
+surface, capability or runtime sample. K02 remains held; K05 context capacity
+remains dependent on an authorized serving runtime. Current criterion repair
+does not erase those limits or claim they have been rechecked.

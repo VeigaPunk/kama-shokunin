@@ -698,3 +698,58 @@ Owner evidence: `.ufo/waves/round-12/advice/ArchiveDisclaimer.md`.
   in the newly added archive banner was corrected: verifier D5 followed, not
   preceded, the round-11 introduction commit. Gate/code/frozen bytes unchanged
   after measurement.
+
+## round 13 — criterion precision after outside review (2026-10-20)
+
+- Trigger: `corpus/lessons/round-12-verifier-spotcheck.md` D1 identifies
+  KQ15's mistaken “distinct nonzero exits” and capture/comparison wording.
+  The implementation already distinguishes finding IDs with exit classes
+  1/2/2; valid code and historical criterion bytes are preserved.
+- Declared C1 calibration (lowest assigned 7 versus operability 8):
+  two effective criterion discrepancies → target zero. Fixed denominator
+  is the two routed formulations, not a corpus-wide truth claim.
+  `corpus/lessons/round-13.md` Gate/Mistakes and
+  `.ufo/waves/round-13/claims.json` carry the scope and rejection decisions.
+- Appended KQ16 learns that disagreement without a new admission method.
+  Source S033 supports `git cat-file blob` comparison semantics separately
+  from S032's `git show` capture semantics; method documentation never
+  proves a recorded comparison occurred or establishes present endpoints.
+- The outside review's quality-attribution item is addressed explicitly:
+  round-12 quality rests on the stronger D4 interpretation in
+  `corpus/knowledge/served-identity-crosswalk.md`, not gate machinery alone.
+  No new serving-knowledge quality or expansion delta is claimed here.
+- One validated 32-seat wave, one unchanged taskCall, canonical planner held
+  by L1; advice is author-side, never independent admission. Specs, registry,
+  dispatch and roles live in `.ufo/waves/round-13/`.
+- No tool installation, endpoint/config/service mutation, timer, route change
+  or credential inspection. No inherited uncommitted lane work. Existing
+  outside verifier lessons remain read-only. No new L0 operator decision.
+- Measurement receipts and measured work revision are appended after final
+  integration; unrun checks are not asserted as passed.
+
+### round-13 attribution correction and static-review limits
+
+The phrase “learns that disagreement” in the entry above is superseded:
+CloseKamaR12 agreed with all sampled gate decisions; D1 is outside criterion
+precision debt, not a new admit/reject disagreement. That closure already
+credited round-12 discernment subject to this wording repair. Round-13
+trends are **expansion unchanged; quality unchanged; discernment unchanged
+pending outside sampling**. The calibration repair is still a bounded
+correspondence improvement, score 7 → 7, not discovery or new knowledge.
+
+The earlier author critic `.ufo/waves/round-12/advice/AttackSourceCuration.md`
+already flagged capture/comparison conflation; the previous sweep fixed its
+lesson but missed KQ15. `corpus/lessons/round-13.md` mines that own miss.
+The outside D1 and static code/receipt review establish the two substantive
+defects. Red-before phrase absence is a documentation-conformance count,
+not independent semantic falsification; its isolated mutations demonstrate
+only the bounded checker's failure behavior.
+
+Capture with `git show` is author-recorded provenance, not inferable from
+matching bytes. Comparison uses `git cat-file blob`, independent of the
+manifest but sharing the same repository object store. Exit mapping applies
+to primary findings; `snapshot_tampered` can coexist with source mismatch
+and still exit 2. The old fidelity.py:55–56 “every exit-2 finding” comment
+is inaccurate because `unpinned` ranks below `source_mismatch`; its code
+and historical receipts remain unchanged and the comment is marked here
+and in SKILL/lesson, not treated as current authority.

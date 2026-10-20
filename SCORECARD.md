@@ -336,3 +336,31 @@ Other axes unchanged; no observed axis harm within this evidence-repair scope.
 Trends: expansion unchanged, quality improved, discernment unchanged pending
 outside round-12 admit/reject sampling. Round admission awaits that non-author
 closure; these are author-measured results, not promotion.
+
+## Round 13 — effective criterion precision (2026-10-20)
+
+Current assignment: operability + calibration (`../shokunin.conf:52`).
+Calibration 7 is the lowest assigned axis; no stagnation waiver is invoked.
+Outside round-12 disposition: **ok / admitted true** at
+`corpus/lessons/round-12-verifier-spotcheck.md`. Its D1 and quality-attribution
+items motivate this round; C0 remains orchestrator/protocol work.
+
+**C1 calibration:** two routed KQ15 formulations are made precise by appended
+KQ16: distinct stable finding IDs versus shared exit classes (1/2/2), and
+`git show` capture versus independent `git cat-file blob` comparison.
+Before fixed denominator: two missing precise assertions; target after: zero.
+This is bounded criterion correspondence, not a semantic proof from phrase
+presence, new knowledge, current endpoint evidence or a new serving capability.
+Historical KQ15 bytes and valid fidelity implementation remain unchanged.
+
+Calibration **7 → 7, delta 0**; operability 8, freshness 8, depth 7,
+coverage 9 and adjacency 7 unchanged. The claim's count is not converted to
+a universal mastery score. Source method support S033 is opened this round;
+actual source/code/receipt review remains distinct from documentation.
+Evidence: `corpus/lessons/round-13.md` Gate/Mistakes;
+`.ufo/waves/round-13/claims.json`, `advice/EvidenceScribe.md`.
+
+**Planned — supersedes earlier planned statements:** obtain outside sampling
+of this round's admit/reject decisions. Future externally steered work chooses
+an actual serving-domain move from observed evidence; context capacity and
+runtime restoration remain operator-dependent, not claimed by criterion work.
