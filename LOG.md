@@ -1046,3 +1046,37 @@ and in SKILL/lesson, not treated as current authority.
   none recorded (two `uv tool` installs, ruff 0.17.1 and vulture 2.16 at 13:14 -03,
   exist on the host and are not attributed to any kama seat report).
   Stale-lane: respawn-per-round driver; no other kama mission open.
+
+## round 18 — receipt outcome classification and named-survivor calibration (2026-10-20)
+
+- Declared C1 operability (8 → 8), C2 calibration (7 → 7; lowest assigned axis).
+  Motivation: outside round-17 R4's false failure on zero 503 observations;
+  R5's six untested v2 checks; R6's schema/argv/transitions/ownership/exception
+  debts; R7's surviving detector weaknesses and refused-count zero.
+  Full contract and bounded universe: `corpus/lessons/round-18.md`.
+- C1: v3 tri-state receipt + schema-floor gate, exact argv (raw model.arg retained),
+  transition loading bodies and coverage checked, sourced Linux tcp6 ownership,
+  BaseException cleanup/receipts. `tools/kama-llamacpp-live.py`,
+  `tests/llamacpp-live/check-receipt.py`, `tests/llamacpp-live/controls.py`.
+  S048/S050/S051/S054 are load-bearing; S052 is convention only.
+- C2: malformed-decoder rows and process-group timeout cleanup, expanded
+  fault-controls and their self-checks, append-only selftests (opened/blank lines),
+  textual refusal provenance. `tests/probe-verdicts/`, `tools/sources-append-only.py`,
+  `.ufo/waves/round-18/dispatch-provenance.py`, `.ufo/waves/round-18/c2/`.
+  Numeric survivor outcomes are recorded after the official counting runs.
+- Frontier: S048–S054 opened/curated; new
+  `corpus/knowledge/loopback-listener-ownership.md` holds previously absent
+  mechanism; `corpus/README.md` appends its coverage row and S047 correction.
+  KQ23 mines round-17 M8 and KQ24 distinguishes an unobserved trigger. S047's
+  missing Gate row is appended in the new lesson; historical lesson untouched.
+- Integration found a paired synthetic/source-URL bug (real receipt rejected)
+  and an ids-intact ready-capture 503 gap; both repaired in tool/gate with retained
+  selftest coverage. Evidence: round-18 lesson M6/M7.
+- Build wave refit 95 → 75 after one wholly refused 95-seat dispatch and capacity
+  gating; validated under policy v2 and dispatched as one taskCall. L1 is planner.
+  Work is integrated from isolated seat clones, not concurrent production writers.
+  Specs, validation, assignments and refused payload retained under round-18/build.
+- Round-17's final outside discernment verdict is **improved**, superseding the
+  author's pending/unchanged reading in SCORECARD line 702
+  (`round-17-verifier-spotcheck.md:217–221`). Round-18 author/seat checks do not
+  themselves satisfy the independent non-author spot-check duty.

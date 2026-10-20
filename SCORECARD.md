@@ -733,3 +733,35 @@ Planned (supersedes the planned row above): (1) classify zero loading observatio
 could-not-evaluate (exit 2) and retain bad controls for the six uncontrolled v2
 checks; (2) gate hardening: `--require-schema v2`, exact argv re-derivation, grade
 every 503 in `transitions`; (3) frozen-manifest prior-exposure field; then K05.
+
+## Round 18 — outcome classification and detector self-calibration (2026-10-20)
+
+Round-17 outside review admitted the two bounded claims and judged **discernment
+improved** (`round-17-verifier-spotcheck.md:217–221`), superseding the pending
+author reading at line 702. R1–R7 dispositions are in `lessons/round-18.md`.
+Assignment remains operability + calibration; calibration 7 is lowest, no waiver.
+
+**C1 operability, sourced, score 8 → 8 (delta 0):** receipt v3 separates no loading
+observation from an observed failure; retains subject-misbehaviour controls for six
+checks; hardens schema floor, exact argv, loading transitions, IPv6 ownership and
+internal-fault receipts. Counting command:
+`python3 .ufo/waves/round-18/c1/measure.py` with its explicit tool/gate/control
+inputs (official invocation and input hashes in `round-18/runs/`). The same
+capability is hardened, not newly acquired. One engine, host paths and
+invocation-driven sampling still cap operability.
+
+**C2 calibration, score 7 → 7 (delta 0):** a statement→mutant→detector ledger makes
+the named round-17 survivors and escaped fault paths explicit. Counting command:
+`python3 .ufo/waves/round-18/c2/survivors.py --json --out PATH`, with the
+frozen/source manifest and current file pins. The universe is H1–H3/H5–H7,
+the named detector-self/append-only survivors, refusal prose and two malformed
+decoder/process-group faults; it is not a claim of universal detector adequacy.
+Fresh falsify-wave mutants are reported separately, never silently added to the
+original denominator or hidden if they survive.
+
+Capabilities unchanged from the canonical round-16 list: sources-registry,
+ollama-offline-evidence-replay, live-llamacpp-lifecycle. New knowledge ground
+(procfs ownership/IPv6 encoding) is coverage expansion under C1, not a fourth
+claim or another runtime. Other scores unchanged: freshness 8, coverage 9,
+depth 7, adjacency 7. Last capability entry round 16; stagnation window 2 of 4.
+Measured results, measured commit and exact commands are appended after execution.

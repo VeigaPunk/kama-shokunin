@@ -78,3 +78,13 @@ Fake-server controls run only `/tmp` fakes on ephemeral loopback ports. No
 "precedes `/usr/bin` on PATH" wording above is shell-local. The retained release
 archive `~/.local/opt/llama-b11755-bin-ubuntu-x64.tar.gz` (sha256 `753bfa73…e226`)
 is part of the operator-owned footprint.
+
+**Round-18 note — v3 and listener ownership.** Same pending-ratification fixture,
+same binary/model and registered-port refusal. V3 distinguishes a missed loading
+observation (tool 2 / gate 3 NOT-EVALUATED) from a failed observed property; a green
+receipt still proves no registered-consumer health. Linux child-owned listener
+recognition now covers native ::1 and mapped 127/8 using sourced procfs decoding
+(S048/S050). Wildcards remain refused. The mechanism enters core via
+`corpus/knowledge/loopback-listener-ownership.md`; other engines and K05 stay frontier.
+Internal BaseException faults are contained into setup-error receipts; install
+retention and the llama-b11755 archive remain the operator's decisions.

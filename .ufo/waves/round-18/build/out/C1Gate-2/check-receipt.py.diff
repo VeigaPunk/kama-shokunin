@@ -1,0 +1,1117 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/frozen/tests_llamacpp-live_check-receipt.py	2026-10-20 16:46:09.901727587 -0300
++++ /tmp/kama-r18-C1Gate-2/tests/llamacpp-live/check-receipt.py	2026-10-20 18:17:52.570026865 -0300
+@@ -1,48 +1,35 @@
+ #!/usr/bin/env python3
+-"""Independent validator for kama-llamacpp-live/v1 and /v2 receipts.
++"""Independent validator for kama-llamacpp-live/v1, /v2 and /v3 receipts.
+ 
+-Bound to the exact receipt keys emitted by
+-``tools/kama-llamacpp-live.py`` (round-16 hardening batch + round-17
+-v2 fail-capable checks):
+-started_utc/ended_utc, server{arg,realpath,sha256,install_tree,
+-install_tree_sha256,server_impl_sha256|null}, model{path,sha256},
+-model_sha256_post, probe{path,sha256}, alias, ctx, threads, port,
+-port_refusal_set, child_env_keys, argv, transitions, loading_503,
+-loading_observed, loading_envelope_exact, port_listener_ownership,
+-captures{health,models,props,slots,metrics}, probes[2]
+-{expect,argv,exit,result,stderr_tail}, teardown{returncode,
+-sigterm_sent,sigkill_sent,alive_at_teardown_start,port_refuses,...},
+-checks[] {id,documented_by,passed,observed}, setup_error,
+-port_pick_note, pdeathsig.
++Bound to the exact receipt keys emitted by ``tools/kama-llamacpp-live.py``.
++The gate re-derives checks from stored response, probe, and teardown
++evidence; it never trusts a claimed check result by itself. v1 and v2
++retain their existing verdict behavior. v3 adds a tri-state check contract,
++an outcome field, exact launch argv binding, and pinned source-binding
++validation. It never fetches upstream source: file digests are checked
++against the pinned identities and span hashes are re-derived from text.
+ 
+-Every claim is re-derived from the stored evidence; a bare
+-``"passed": true`` is never trusted.  Under v2 each check's claimed
+-``passed`` is additionally compared against the value re-derived here.
++v1 checks: health_ready, models_alias_id, models_owned_by_llamacpp,
++metrics_not_enabled, props_alias, probe_model_ok, probe_mismatch,
++teardown_exited, teardown_port_closed, model_unchanged.
+ 
+-v1 checks (each exactly once, all passed, all re-derived):
+-  health_ready, models_alias_id, models_owned_by_llamacpp,
+-  metrics_not_enabled (status must be exactly 501), props_alias,
+-  probe_model_ok, probe_mismatch, teardown_exited,
+-  teardown_port_closed, model_unchanged
+-
+-v2 checks (each exactly once, all passed, all re-derived):
+-  health_ready (status 200 AND body parses to {"status":"ok"}),
+-  models_alias_id, models_owned_by_llamacpp, metrics_not_enabled,
+-  props_alias, probe_model_ok, probe_mismatch,
+-  teardown_graceful (alive_at_teardown_start, SIGTERM sent, no
+-  SIGKILL, graceful exit status 0), teardown_port_closed (only
+-  after the port was proven owned by the child), and
+-  loading_envelope_graded (a check must consume the stored loading
+-  evidence), model_unchanged
++v2 and v3 checks: health_ready (status 200 and exact {"status":"ok"}
++body), models_alias_id, models_owned_by_llamacpp, metrics_not_enabled,
++props_alias, probe_model_ok, probe_mismatch, teardown_graceful,
++teardown_port_closed (only after child ownership), loading_envelope_graded,
++model_unchanged. In v3 only loading_envelope_graded may be unevaluated,
++and only when no /v1/models 503 was observed.
+ 
+ Usage:
+   check-receipt.py RECEIPT [--expect-model-sha256 HEX]
+                            [--expect-server-sha256 HEX]
+                            [--expect-probe-sha256 HEX]
++                           [--expect-tool-sha256 HEX]
++                           [--require-schema v1|v2|v3]
+   check-receipt.py --selftest
+ 
+-Exit: 0 receipt valid, 1 receipt invalid (every problem listed),
+-      2 receipt unreadable / not JSON.
++Exit: 0 VALID, 1 INVALID, 2 unreadable / not JSON,
++      3 NOT-EVALUATED (otherwise valid v3 with its sole permitted null).
+ """
+ import argparse
+ import copy
+@@ -57,6 +44,7 @@
+ 
+ RECEIPT_SCHEMA = "kama-llamacpp-live/v1"
+ RECEIPT_SCHEMA_V2 = "kama-llamacpp-live/v2"
++RECEIPT_SCHEMA_V3 = "kama-llamacpp-live/v3"
+ PROBE_SCHEMA = "kama-probe/v1"
+ HARD_PINS = (8080, 34113)
+ MISMATCH_EXPECT = "kama-not-this-model"
+@@ -93,6 +81,82 @@
+ 
+ HEALTH_READY_DOC = {"status": "ok"}
+ 
++LLAMA_COMMIT = "704366d76f8748cf9ad3df62a464bfcc8d1ae6ad"
++LLAMA_RAW = (
++    "https://raw.githubusercontent.com/ggml-org/llama.cpp/"
++    f"{LLAMA_COMMIT}/")
++# Pinned source identities emitted by source_bindings() in the harness.
++# The receipt's source text is hash-checked against these spans, while the
++# whole-file digests are checked against this pinned map; the gate does not
++# fetch or independently authenticate upstream file bytes.
++SOURCE_BINDING_EXPECTED = (
++    ("health_ready", None, "tools/server/server-context.cpp",
++     (5288, 5299),
++     "dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329",
++     "2ff50edd63f4b7a37ccfcd21210c29f781f777f010eb6e2963ed8585ad3447dd"),
++    ("loading_envelope_graded", "S036",
++     "tools/server/server-http.cpp", (314, 325),
++     "24ede172e526763567dbe929da5b16250693d7a2e44334ef0126649b6d3f5fdb",
++     "4c5aac23af4cacc39abc525dceeed59f8e95e8584771e6e1a84a752c719da775"),
++    ("teardown_graceful", None, "tools/server/server.cpp", (529, 534),
++     "2143962217e9d6275f28c42d599139bb702e2f880dccbad01ab9d8b094f5aef4",
++     "f14a9b67bce667741f028a3fb33239b96281c21de0688a14e3a66da251b1e163"),
++    ("teardown_graceful", None, "tools/server/server.cpp", (519, 523),
++     "2143962217e9d6275f28c42d599139bb702e2f880dccbad01ab9d8b094f5aef4",
++     "97408c516bf5c805b12ca6fa407956473489277ec626b41511e3abe6e2510a70"),
++    ("teardown_graceful", None, "tools/server/server.cpp", (575, 590),
++     "2143962217e9d6275f28c42d599139bb702e2f880dccbad01ab9d8b094f5aef4",
++     "d0f09fae6947f25b42ccf00ef09231c9e8f9bf46b5499d9e1f070a58d8ad163d"),
++)
++
++
++def validate_source_binding(problems, bindings, check_ids):
++    """Re-derive each pinned source span and reject changed identities."""
++    if not isinstance(bindings, list):
++        problems.append("source_binding is missing or not an array")
++        return
++    if len(bindings) != len(SOURCE_BINDING_EXPECTED):
++        problems.append(
++            f"source_binding has {len(bindings)} entries, want exactly "
++            f"{len(SOURCE_BINDING_EXPECTED)} pinned spans")
++    for i, spec in enumerate(SOURCE_BINDING_EXPECTED):
++        if i >= len(bindings):
++            break
++        binding = bindings[i]
++        if not isinstance(binding, dict):
++            problems.append(f"source_binding[{i}] is not an object")
++            continue
++        check, row, path, lines, file_sha, span_sha = spec
++        expected = {
++            "check": check,
++            "row": row,
++            "commit": LLAMA_COMMIT,
++            "path": path,
++            "url": LLAMA_RAW + path.removeprefix("tools/server/"),
++            "lines": list(lines),
++            "file_sha256": file_sha,
++            "span_sha256": span_sha,
++        }
++        for key, value in expected.items():
++            if binding.get(key) != value:
++                problems.append(
++                    f"source_binding[{i}].{key} "
++                    f"{binding.get(key)!r} != pinned {value!r}")
++        if check not in check_ids:
++            problems.append(
++                f"source_binding[{i}] names absent check {check!r}")
++        text = binding.get("span_text")
++        if not isinstance(text, str):
++            problems.append(f"source_binding[{i}].span_text is not a string")
++        elif hashlib.sha256(text.encode("utf-8")).hexdigest() != span_sha:
++            problems.append(
++                f"source_binding[{i}].span_text does not match the "
++                "pinned span_sha256")
++        elif len(text.splitlines(keepends=True)) != lines[1] - lines[0] + 1:
++            problems.append(
++                f"source_binding[{i}].span_text line count does not match "
++                "its pinned lines")
++
+ MISSING = object()
+ 
+ 
+@@ -202,13 +266,24 @@
+ 
+     # --- schema / run outcome ---------------------------------------------
+     schema = receipt.get("schema")
+-    is_v2 = schema == RECEIPT_SCHEMA_V2
+-    if schema not in (RECEIPT_SCHEMA, RECEIPT_SCHEMA_V2):
+-        bad(f"schema is {schema!r}, want {RECEIPT_SCHEMA!r} or "
+-            f"{RECEIPT_SCHEMA_V2!r}")
+-    if receipt.get("setup_error") is not None:
+-        bad(f"setup_error is {receipt.get('setup_error')!r} "
++    is_v3 = schema == RECEIPT_SCHEMA_V3
++    is_v2 = schema in (RECEIPT_SCHEMA_V2, RECEIPT_SCHEMA_V3)
++    if schema not in (RECEIPT_SCHEMA, RECEIPT_SCHEMA_V2,
++                      RECEIPT_SCHEMA_V3):
++        bad(f"schema is {schema!r}, want {RECEIPT_SCHEMA!r}, "
++            f"{RECEIPT_SCHEMA_V2!r} or {RECEIPT_SCHEMA_V3!r}")
++    setup_error = receipt.get("setup_error")
++    if setup_error is not None:
++        bad(f"setup_error is {setup_error!r} "
+             "(a complete run has setup_error null)")
++    internal_fault = receipt.get("internal_fault")
++    if is_v3:
++        if internal_fault is not None and not isinstance(
++                internal_fault, str):
++            bad(f"internal_fault {internal_fault!r} is not string|null")
++        if internal_fault is not None and setup_error != internal_fault:
++            bad(f"internal_fault {internal_fault!r} != setup_error "
++                f"{setup_error!r}")
+ 
+     # --- timestamps ---------------------------------------------------------
+     started = parse_ts(receipt.get("started_utc"))
+@@ -393,11 +468,13 @@
+         if argv and argv[0] != server.get("realpath"):
+             bad(f"argv[0] {argv[0]!r} != server.realpath "
+                 f"{server.get('realpath')!r}")
+-        model_path = model.get("path")
++        model_path = model.get("arg") if is_v3 else model.get("path")
++        if is_v3 and (not isinstance(model_path, str) or not model_path):
++            bad(f"model.arg {model_path!r} missing or not a non-empty string")
+         if isinstance(model_path, str) \
+                 and argv_flag(argv, "-m") != model_path:
+-            bad(f"argv -m {argv_flag(argv, '-m')!r} != model.path "
+-                f"{model_path!r}")
++            bad(f"argv -m {argv_flag(argv, '-m')!r} != model "
++                f"{'arg' if is_v3 else 'path'} {model_path!r}")
+         if alias and argv_flag(argv, "--alias") != alias:
+             bad(f"argv --alias {argv_flag(argv, '--alias')!r} != "
+                 f"receipt alias {alias!r}")
+@@ -419,6 +496,23 @@
+         tail = argv[-2:]
+         if tail != ["--no-webui", "--offline"]:
+             bad(f"argv tail {tail!r} != ['--no-webui', '--offline']")
++        if is_v3 and isinstance(model_path, str) \
++                and isinstance(server.get("realpath"), str) \
++                and isinstance(alias, str) \
++                and isinstance(port, int) and not isinstance(port, bool) \
++                and isinstance(ctx, int) and not isinstance(ctx, bool) \
++                and isinstance(threads, int) and not isinstance(
++                    threads, bool):
++            expected_argv = [
++                server["realpath"], "-m", model_path,
++                "--alias", alias, "--host", "127.0.0.1",
++                "--port", str(port), "-c", str(ctx), "-t", str(threads),
++                "--no-webui", "--offline",
++            ]
++            if argv != expected_argv:
++                bad("argv does not exactly match the producer's "
++                    "server.realpath/model.arg/alias/host/port/ctx/"
++                    "threads command")
+ 
+     # --- loading lifecycle ----------------------------------------------------
+     lo = receipt.get("loading_observed")
+@@ -430,9 +524,11 @@
+     if isinstance(l503, dict):
+         if l503.get("status") != 503:
+             bad(f"loading_503.status {l503.get('status')!r} != 503")
+-        if l503.get("path") not in ("/v1/models", "/health"):
++        if l503.get("path") not in (
++                ("/v1/models",) if is_v3 else
++                ("/v1/models", "/health")):
+             bad(f"loading_503.path {l503.get('path')!r} not in "
+-                "/v1/models|/health")
++                f"{'/v1/models' if is_v3 else '/v1/models|/health'}")
+ 
+     transitions = receipt.get("transitions")
+     if not isinstance(transitions, list):
+@@ -441,14 +537,43 @@
+     has_503_transition = any(
+         isinstance(t, dict) and t.get("status") == 503
+         for t in transitions)
++    model_503_rows = [
++        t for t in transitions
++        if isinstance(t, dict) and t.get("path") == "/v1/models"
++        and t.get("status") == 503
++    ]
++    if is_v3:
++        for i, row in enumerate(transitions):
++            if not isinstance(row, dict):
++                bad(f"transition[{i}] is not an object")
++                continue
++            status = row.get("status")
++            if status is not None and (
++                    isinstance(status, bool) or not isinstance(status, int)):
++                bad(f"transition[{i}].status {status!r} is not int|null")
+     if isinstance(lo, bool):
+         if lo != (l503 is not None):
+             bad(f"loading_observed {lo} != (loading_503 is not None)")
+-        if lo != has_503_transition:
++        if is_v3:
++            if lo != bool(model_503_rows):
++                bad(f"loading_observed {lo} != whether transitions "
++                    "contain a /v1/models 503")
++        elif lo != has_503_transition:
+             bad(f"loading_observed {lo} but transitions "
+                 f"{'record' if has_503_transition else 'record no'} "
+                 "status-503 row")
+ 
++    if is_v3:
++        for i, row in enumerate(model_503_rows):
++            body = row.get("body")
++            if not isinstance(body, str) or not loading_envelope_ok(
++                    parse_body(body)):
++                bad(f"transitions /v1/models 503 row {i} does not carry "
++                    "the exact loading envelope")
++            if row.get("body_read_truncated") is True \
++                    or row.get("body_over_cap") is True:
++                bad(f"transitions /v1/models 503 row {i} is truncated")
++
+     # loading_envelope_exact is a receipt FIELD (bool|null), not a check.
+     lef = receipt.get("loading_envelope_exact")
+     if l503 is None:
+@@ -486,6 +611,23 @@
+         if not isinstance(captures.get(name), dict):
+             bad(f"captures.{name} missing or not an object")
+ 
++    if is_v3:
++        for name in ("health", "models"):
++            capture = captures.get(name)
++            if not isinstance(capture, dict):
++                continue
++            body = capture.get("body")
++            digest = capture.get("body_sha256")
++            if not isinstance(body, str):
++                bad(f"captures.{name}.body is not a stored string")
++                continue
++            if capture.get("body_read_truncated") is True \
++                    or capture.get("body_truncated") is True:
++                bad(f"captures.{name}.body is truncated")
++            if not is_hex64(digest) or hashlib.sha256(
++                    body.encode("utf-8")).hexdigest() != digest:
++                bad(f"captures.{name}.body_sha256 does not match its "
++                    "stored body")
+     models_doc = parse_body(dig(captures, "models", "body")
+                             if dig(captures, "models", "body")
+                             is not MISSING else None)
+@@ -595,6 +737,14 @@
+             bad(f"probe {name}: row expected_model_id "
+                 f"{row.get('expected_model_id')!r} != record expect "
+                 f"{rec.get('expect')!r}")
++        if is_v3:
++            if row.get("expected_model_id") != rec.get("expect"):
++                bad(f"probe {name}: row expected_model_id "
++                    f"{row.get('expected_model_id')!r} != record expect "
++                    f"{rec.get('expect')!r}")
++            if row.get("served_model") != alias:
++                bad(f"probe {name}: served_model "
++                    f"{row.get('served_model')!r} != alias {alias!r}")
+         if isinstance(port, int):
+             declared = row.get("declared")
+             if declared != f"http://127.0.0.1:{port}/v1":
+@@ -644,20 +794,50 @@
+         if not isinstance(c.get("documented_by"), str) \
+                 or not c["documented_by"]:
+             bad(f"check {cid!r}: documented_by missing")
+-        if not isinstance(c.get("passed"), bool):
+-            bad(f"check {cid!r}: passed is not a boolean")
+-        elif c["passed"] is not True:
+-            bad(f"check {cid!r}: passed is false")
+-        if not isinstance(c.get("observed"), dict):
+-            bad(f"check {cid!r}: observed is not an object")
+-    required = REQUIRED_CHECKS_V2 if is_v2 else REQUIRED_CHECKS_V1
+-    for cid in required:
+-        if cid not in by_id:
+-            bad(f"required check {cid!r} is absent")
+-    for cid in by_id:
+-        if cid not in required:
+-            bad(f"unexpected check id {cid!r} (the schema names "
+-                f"exactly {len(required)})")
++        passed = c.get("passed")
++        if is_v3:
++            if passed is not True and passed is not False and passed is not None:
++                bad(f"check {cid!r}: passed is not true|false|null")
++            elif passed is False:
++                bad(f"check {cid!r}: passed is false")
++            evaluated = c.get("evaluated")
++            if not isinstance(evaluated, bool):
++                bad(f"check {cid!r}: evaluated is not a boolean")
++            elif evaluated and passed is None:
++                bad(f"check {cid!r}: evaluated true but passed is null")
++            elif not evaluated and passed is not None:
++                bad(f"check {cid!r}: evaluated false but passed is "
++                    f"{passed!r}, want null")
++            elif not evaluated:
++                observed = c.get("observed")
++                reason = (observed.get("not_evaluated_reason")
++                          if isinstance(observed, dict) else None)
++                if cid != "loading_envelope_graded" or lo is not False \
++                        or model_503_rows:
++                    bad(f"check {cid!r}: only loading_envelope_graded "
++                        "may be unevaluated, and only with no "
++                        "/v1/models 503")
++                if reason != "no-loading-503-observed":
++                    bad(f"check {cid!r}: observed.not_evaluated_reason "
++                        f"{reason!r} != 'no-loading-503-observed'")
++        else:
++            if not isinstance(passed, bool):
++                bad(f"check {cid!r}: passed is not a boolean")
++            elif passed is not True:
++                bad(f"check {cid!r}: passed is false")
++        if not isinstance(c.get("observed"), dict):
++            bad(f"check {cid!r}: observed is not an object")
++    required = REQUIRED_CHECKS_V2 if is_v2 else REQUIRED_CHECKS_V1
++    for cid in required:
++        if cid not in by_id:
++            bad(f"required check {cid!r} is absent")
++    for cid in by_id:
++        if cid not in required:
++            bad(f"unexpected check id {cid!r} (the schema names "
++                f"exactly {len(required)})")
++    if is_v3:
++        validate_source_binding(problems, receipt.get("source_binding"),
++                                set(by_id))
+ 
+     def claim(cid, want):
+         """v2 only: compare the check's claimed passed against the
+@@ -673,6 +853,14 @@
+         o = o.get("observed") if isinstance(o, dict) else None
+         return o if isinstance(o, dict) else {}
+ 
++
++    def require_observed(cid, values):
++        """v3: require each recorded observation to match raw evidence."""
++        observed = obs(cid)
++        for key, value in values.items():
++            if key not in observed or observed[key] != value:
++                bad(f"{cid}: observed.{key} {observed.get(key)!r} "
++                    f"!= re-derived {value!r}")
+     # --- re-derive each check from the raw evidence ----------------------------
+     health_body = parse_body(dig(captures, "health", "body")
+                              if dig(captures, "health", "body")
+@@ -698,6 +886,12 @@
+         if "status" in o and o["status"] != health_status:
+             bad(f"health_ready: observed.status {o['status']!r} != "
+                 f"captured status {health_status!r}")
++        if is_v3:
++            require_observed("health_ready", {
++                "status": health_status,
++                "body": health_body,
++                "expected_body": HEALTH_READY_DOC,
++            })
+ 
+     if "models_alias_id" in by_id:
+         if models_doc is None:
+@@ -716,6 +910,10 @@
+                 and o["expected_alias"] != alias:
+             bad(f"models_alias_id: observed.expected_alias "
+                 f"{o['expected_alias']!r} != alias {alias!r}")
++        if is_v3:
++            require_observed("models_alias_id", {
++                "data_ids": ids, "expected_alias": alias,
++            })
+         if is_v2:
+             claim("models_alias_id",
+                   models_doc is not None and bool(ids)
+@@ -733,6 +931,10 @@
+         if "owned_by" in o and o["owned_by"] != owners:
+             bad(f"models_owned_by_llamacpp: observed.owned_by "
+                 f"{o['owned_by']!r} != re-parsed {owners}")
++        if is_v3:
++            require_observed("models_owned_by_llamacpp", {
++                "owned_by": owners,
++            })
+         if is_v2:
+             claim("models_owned_by_llamacpp",
+                   models_doc is not None and bool(owners)
+@@ -749,6 +951,10 @@
+         if "status" in o and o["status"] != metrics_status:
+             bad(f"metrics_not_enabled: observed.status "
+                 f"{o['status']!r} != captured {metrics_status!r}")
++        if is_v3:
++            require_observed("metrics_not_enabled", {
++                "status": metrics_status,
++            })
+         if is_v2:
+             claim("metrics_not_enabled", metrics_status == 501)
+ 
+@@ -767,6 +973,8 @@
+                     "model_alias"):
+             bad("props_alias: observed.fields.model_alias disagrees "
+                 "with captures.props.fields.model_alias")
++        if is_v3:
++            require_observed("props_alias", {"fields": props_fields})
+         if is_v2:
+             claim("props_alias",
+                   isinstance(props_fields, dict)
+@@ -794,6 +1002,12 @@
+                 if k in o and o[k] != want:
+                     bad(f"probe_model_ok: observed.{k} {o[k]!r} != "
+                         f"{want!r}")
++            if is_v3 and isinstance(row, dict):
++                require_observed("probe_model_ok", {
++                    "exit": info["rec"].get("exit"),
++                    "verdict": row.get("verdict"),
++                    "reason": row.get("reason"),
++                })
+             if is_v2:
+                 claim("probe_model_ok",
+                       isinstance(row, dict)
+@@ -824,6 +1038,12 @@
+                 if k in o and o[k] != want:
+                     bad(f"probe_mismatch: observed.{k} {o[k]!r} != "
+                         f"{want!r}")
++            if is_v3 and isinstance(row, dict):
++                require_observed("probe_mismatch", {
++                    "exit": info["rec"].get("exit"),
++                    "verdict": row.get("verdict"),
++                    "reason": row.get("reason"),
++                })
+             if is_v2:
+                 claim("probe_mismatch",
+                       isinstance(row, dict)
+@@ -879,6 +1099,15 @@
+             if k in o and o[k] != want:
+                 bad(f"teardown_graceful: observed.{k} {o[k]!r} != "
+                     f"{want!r}")
++        if is_v3:
++            require_observed("teardown_graceful", {
++                "returncode": td_rc,
++                "sigterm_sent": td_term,
++                "sigkill_sent": td_kill,
++                "alive_at_teardown_start": td_alive,
++                "port_listener_ownership": own,
++                "error": teardown.get("error"),
++            })
+ 
+     if "teardown_port_closed" in by_id:
+         if not teardown:
+@@ -904,8 +1133,13 @@
+             bad(f"teardown_port_closed: observed.port_refuses "
+                 f"{o['port_refuses']!r} != teardown.port_refuses "
+                 f"{teardown.get('port_refuses')!r}")
++        if is_v3:
++            require_observed("teardown_port_closed", {
++                "port_refuses": teardown.get("port_refuses"),
++                "port_listener_ownership": own,
++            })
+ 
+-    if is_v2 and "loading_envelope_graded" in by_id:
++    if is_v2 and not is_v3 and "loading_envelope_graded" in by_id:
+         # v2: the loading envelope is a CHECK, not only a recorded
+         # field — its claimed passed must equal the envelope value
+         # re-derived from the stored loading_503 body, and a run with
+@@ -939,6 +1173,151 @@
+                 f"{o['exact']!r} != re-derived loading_envelope_exact "
+                 f"{want_lef!r}")
+ 
++
++    if is_v3 and "loading_envelope_graded" in by_id:
++        bodies = receipt.get("loading_503_bodies")
++        dropped = receipt.get("loading_bodies_dropped")
++        bodies_list = bodies if isinstance(bodies, list) else []
++        bodies_valid = isinstance(bodies, list)
++        if not bodies_valid:
++            bad("loading_envelope_graded: loading_503_bodies is not an "
++                "array")
++        if isinstance(dropped, bool) or not isinstance(dropped, int) \
++                or dropped < 0:
++            bad(f"loading_bodies_dropped {dropped!r} is not a "
++                "non-negative integer")
++            dropped_valid = False
++        else:
++            dropped_valid = True
++
++        transition_counts = {}
++        transitions_valid = True
++        for i, row in enumerate(model_503_rows):
++            text = row.get("body")
++            digest = row.get("body_sha256")
++            repeats = row.get("repeats")
++            exact = isinstance(text, str) and loading_envelope_ok(
++                parse_body(text))
++            digest_ok = (isinstance(text, str) and is_hex64(digest)
++                         and hashlib.sha256(
++                             text.encode("utf-8")).hexdigest() == digest)
++            repeats_ok = (isinstance(repeats, int)
++                          and not isinstance(repeats, bool) and repeats >= 0)
++            if not exact:
++                transitions_valid = False
++            if not digest_ok:
++                transitions_valid = False
++                bad(f"loading transition {i} body_sha256 does not match "
++                    "its stored body")
++            if not repeats_ok:
++                transitions_valid = False
++                bad(f"loading transition {i}.repeats is not a "
++                    "non-negative integer")
++            if row.get("body_read_truncated") is True \
++                    or row.get("body_over_cap") is True:
++                transitions_valid = False
++            if is_hex64(digest) and repeats_ok:
++                transition_counts[digest] = (
++                    transition_counts.get(digest, 0) + 1 + repeats)
++
++        body_counts = {}
++        body_flags = []
++        for i, body in enumerate(bodies_list):
++            if not isinstance(body, dict):
++                bodies_valid = False
++                body_flags.append(False)
++                bad(f"loading_503_bodies[{i}] is not an object")
++                continue
++            text = body.get("body")
++            digest = body.get("body_sha256")
++            repeats = body.get("repeats")
++            exact = (body.get("path") == "/v1/models"
++                     and isinstance(text, str)
++                     and loading_envelope_ok(parse_body(text)))
++            digest_ok = (isinstance(text, str) and is_hex64(digest)
++                         and hashlib.sha256(
++                             text.encode("utf-8")).hexdigest() == digest)
++            repeats_ok = (isinstance(repeats, int)
++                          and not isinstance(repeats, bool) and repeats >= 0)
++            if not exact:
++                bodies_valid = False
++                bad(f"loading_503_bodies[{i}] is not an exact "
++                    "/v1/models loading envelope")
++            if not digest_ok:
++                bodies_valid = False
++                bad(f"loading_503_bodies[{i}].body_sha256 does not match "
++                    "its stored body")
++            if not repeats_ok:
++                bodies_valid = False
++                bad(f"loading_503_bodies[{i}].repeats is not a "
++                    "non-negative integer")
++            if is_hex64(digest) and repeats_ok:
++                if digest in body_counts:
++                    bodies_valid = False
++                    bad(f"loading_503_bodies duplicates body digest "
++                        f"{digest}")
++                body_counts[digest] = 1 + repeats
++            body_flags.append(exact and digest_ok and repeats_ok)
++
++        if body_counts != transition_counts:
++            bad("loading_503_bodies digests/repeats do not cover the "
++                "stored /v1/models 503 transitions exactly")
++            bodies_valid = False
++        dropped_expected = max(0, len(transition_counts) - len(bodies_list))
++        if dropped_valid and dropped != dropped_expected:
++            bad(f"loading_bodies_dropped {dropped} != re-derived "
++                f"omission count {dropped_expected}")
++            dropped_valid = False
++        if dropped_valid and dropped != 0:
++            bad("loading_envelope_graded cannot pass with an unretained "
++                "loading body")
++            dropped_valid = False
++
++        all_exact = (all(body_flags) if bodies_list else None)
++        if l503 is None:
++            first_loading_matches = not model_503_rows
++        else:
++            first_loading_matches = bool(model_503_rows) \
++                and l503.get("path") == "/v1/models" \
++                and l503.get("body") == model_503_rows[0].get("body") \
++                and l503.get("body_sha256") \
++                    == model_503_rows[0].get("body_sha256")
++        if not first_loading_matches:
++            bad("loading_503 does not match the first /v1/models 503 "
++                "transition")
++
++        no_loading_observed = (
++            lo is False and not model_503_rows and l503 is None
++            and bodies_valid and not bodies_list
++            and dropped_valid and dropped == 0)
++        if no_loading_observed:
++            derived_passed = None
++        else:
++            derived_passed = bool(
++                lo is True and model_503_rows and want_lef is True
++                and all_exact is True and transitions_valid and bodies_valid
++                and dropped_valid and first_loading_matches)
++        c = by_id["loading_envelope_graded"]
++        if c.get("passed") is not derived_passed:
++            bad("check 'loading_envelope_graded' passed "
++                f"{c.get('passed')!r} != re-derived {derived_passed!r}")
++        if c.get("evaluated") is not (derived_passed is not None):
++            bad("check 'loading_envelope_graded' evaluated "
++                f"{c.get('evaluated')!r} != re-derived "
++                f"{derived_passed is not None}")
++        o = obs("loading_envelope_graded")
++        expected_observed = {
++            "loading_observed": lo,
++            "distinct_bodies": len(bodies_list),
++            "bodies_dropped": dropped,
++            "total_503_responses": sum(body_counts.values()),
++            "all_exact": all_exact,
++            "exact": all_exact,
++        }
++        for key, value in expected_observed.items():
++            if key not in o or o[key] != value:
++                bad(f"loading_envelope_graded: observed.{key} "
++                    f"{o.get(key)!r} != re-derived {value!r}")
+     if "model_unchanged" in by_id:
+         if is_hex64(model_sha) and is_hex64(model_post):
+             if model_sha != model_post:
+@@ -955,11 +1334,39 @@
+         if is_hex64(o.get("post")) and is_hex64(model_post) \
+                 and o["post"] != model_post:
+             bad("model_unchanged: observed.post != model_sha256_post")
++        if is_v3:
++            require_observed("model_unchanged", {
++                "pre": model_sha, "post": model_post,
++            })
+         if is_v2:
+             claim("model_unchanged",
+                   is_hex64(model_sha) and is_hex64(model_post)
+                   and model_sha == model_post)
+ 
++    if is_v3:
++        outcome = receipt.get("outcome")
++        if outcome not in ("pass", "fail", "not-evaluated",
++                           "setup-error"):
++            bad(f"outcome {outcome!r} is not a v3 outcome")
++        if internal_fault is not None:
++            if not internal_fault.startswith("internal:") \
++                    or not internal_fault[len("internal:"):]:
++                bad(f"internal_fault {internal_fault!r} is not "
++                    "'internal:<ExcType>'")
++        states = [c.get("passed") for c in by_id.values()
++                  if isinstance(c, dict)]
++        if setup_error is not None or internal_fault is not None:
++            derived_outcome = "setup-error"
++        elif any(value is False for value in states):
++            derived_outcome = "fail"
++        elif any(value is None for value in states):
++            derived_outcome = "not-evaluated"
++        else:
++            derived_outcome = "pass"
++        if outcome != derived_outcome:
++            bad(f"outcome {outcome!r} != re-derived "
++                f"{derived_outcome!r}")
++
+     return problems
+ 
+ 
+@@ -975,17 +1382,89 @@
+ LIB_SHA = "f" * 64
+ 
+ 
+-ENVELOPE_BODY = json.dumps({"error": {"message": "Loading model",
+-                                      "type": "unavailable_error",
+-                                      "code": 503}},
+-                           separators=(",", ":"))
+-MODELS_BODY = json.dumps({
+-    "object": "list",
+-    "data": [{"id": ALIAS, "object": "model", "created": 0,
+-              "owned_by": "llamacpp"}],
+-}, separators=(",", ":"))
+-
+-
++ENVELOPE_BODY = json.dumps({"error": {"message": "Loading model",
++                                      "type": "unavailable_error",
++                                      "code": 503}},
++                           separators=(",", ":"))
++MODELS_BODY = json.dumps({
++    "object": "list",
++    "data": [{"id": ALIAS, "object": "model", "created": 0,
++              "owned_by": "llamacpp"}],
++}, separators=(",", ":"))
++
++def _selftest_source_binding():
++    texts = (
++        "    this->get_health = [this](const server_http_req &) {\n"
++        "        // error and loading states are handled by middleware\n"
++        "        auto res = create_response(true);\n"
++        "\n"
++        "        // this endpoint can be accessed during sleeping\n"
++        "        // the next LOC is to avoid someone accidentally use "
++        "ctx_server\n"
++        "        bool ctx_server; // do NOT delete this line\n"
++        "        GGML_UNUSED(ctx_server);\n"
++        "\n"
++        '        res->ok({{"status", "ok"}});\n'
++        "        return res;\n"
++        "    };\n",
++        "            res.status = 503;\n"
++        "            res.set_content(\n"
++        "                safe_json_to_str(json {\n"
++        '                    {"error", {\n'
++        '                        {"message", "Loading model"},\n'
++        '                        {"type", "unavailable_error"},\n'
++        '                        {"code", 503}\n'
++        '                    }}\n'
++        '                }),\n'
++        "                \"application/json; charset=utf-8\"\n"
++        "            );\n"
++        "            return false;\n",
++        "        struct sigaction sigint_action;\n"
++        "        sigint_action.sa_handler = signal_handler;\n"
++        "        sigemptyset (&sigint_action.sa_mask);\n"
++        "        sigint_action.sa_flags = 0;\n"
++        "        sigaction(SIGINT, &sigint_action, NULL);\n"
++        "        sigaction(SIGTERM, &sigint_action, NULL);\n",
++        "        shutdown_handler = [&](int) {\n"
++        "            mcp_mgr.shutdown();\n"
++        "            // this will unblock start_loop()\n"
++        "            ctx_server.terminate();\n"
++        '        };\n',
++        "        // this call blocks the main thread until "
++        "queue_tasks.terminate() is called\n"
++        "        ctx_server.start_loop();\n"
++        "\n"
++        "        clean_up();\n"
++        "        ctx_http.join();\n"
++        '        if (monitor_thread.joinable()) {\n'
++        '            monitor_thread.join();\n'
++        '        }\n'
++        "\n"
++        '        auto * ll_ctx = ctx_server.get_llama_context();\n'
++        '        if (ll_ctx != nullptr) {\n'
++        '            common_memory_breakdown_print(ll_ctx);\n'
++        '        }\n'
++        '    }\n'
++        "\n"
++        "    return 0;\n",
++    )
++    bindings = []
++    for spec, text in zip(SOURCE_BINDING_EXPECTED, texts):
++        check, row, path, lines, file_sha, span_sha = spec
++        bindings.append({
++            "check": check,
++            "row": row,
++            "commit": LLAMA_COMMIT,
++            "path": path,
++            "url": LLAMA_RAW + path.removeprefix("tools/server/"),
++            "lines": list(lines),
++            "file_sha256": file_sha,
++            "span_text": text,
++            "span_sha256": hashlib.sha256(text.encode("utf-8")).hexdigest(),
++        })
++    return bindings
++
++
+ def _probe_rec(expect, verdict, reason, exit_code, drift):
+     return {
+         "expect": expect,
+@@ -1189,6 +1668,51 @@
+     r["checks"] = checks
+     return r
+ 
++def _selftest_receipt_v3():
++    r = _selftest_receipt_v2()
++    r["schema"] = RECEIPT_SCHEMA_V3
++    r["model"]["arg"] = r["model"]["path"]
++    r["source_binding"] = _selftest_source_binding()
++    r["internal_fault"] = None
++    r["outcome"] = "pass"
++    r["captures"]["health"]["body_sha256"] = hashlib.sha256(
++        r["captures"]["health"]["body"].encode("utf-8")).hexdigest()
++    r["captures"]["models"]["body_sha256"] = hashlib.sha256(
++        r["captures"]["models"]["body"].encode("utf-8")).hexdigest()
++    r["loading_bodies_dropped"] = 0
++    loading_sha = hashlib.sha256(ENVELOPE_BODY.encode("utf-8")).hexdigest()
++    r["transitions"][1].update(body_sha256=loading_sha)
++    r["loading_503"].update(body_sha256=loading_sha)
++    r["loading_503_bodies"] = [{
++        "path": "/v1/models",
++        "body_sha256": loading_sha,
++        "body": ENVELOPE_BODY,
++        "repeats": r["transitions"][1]["repeats"],
++    }]
++    for check in r["checks"]:
++        check["evaluated"] = True
++        if check["id"] == "health_ready":
++            check["observed"].update(
++                body=HEALTH_READY_DOC, expected_body=HEALTH_READY_DOC)
++        elif check["id"] == "props_alias":
++            check["observed"]["fields"] = copy.deepcopy(
++                r["captures"]["props"]["fields"])
++        elif check["id"] == "teardown_graceful":
++            check["observed"].update(
++                port_listener_ownership="child", error=None)
++        elif check["id"] == "teardown_port_closed":
++            check["observed"]["port_listener_ownership"] = "child"
++        elif check["id"] == "loading_envelope_graded":
++            check["observed"].update({
++                "loading_observed": True,
++                "distinct_bodies": 1,
++                "bodies_dropped": 0,
++                "total_503_responses": 13,
++                "all_exact": True,
++                "exact": True,
++            })
++    return r
++
+ def _selftest():
+     base = _selftest_receipt()
+     expects = ["--expect-model-sha256", MODEL_SHA,
+@@ -1320,6 +1844,163 @@
+                       '"type":"unavailable_error","code":"503"}}',
+               "repeats": 2}))
+ 
++    base_v3 = _selftest_receipt_v3()
++    cases.append(("v3-valid", base_v3, expects, 0))
++    no_loading = copy.deepcopy(base_v3)
++    no_loading["transitions"] = [
++        row for row in no_loading["transitions"]
++        if not (row.get("path") == "/v1/models"
++                and row.get("status") == 503)]
++    no_loading.update(loading_503=None, loading_503_bodies=[],
++                      loading_bodies_dropped=0, loading_observed=False,
++                      loading_envelope_exact=None, outcome="not-evaluated")
++    load_check = next(c for c in no_loading["checks"]
++                      if c["id"] == "loading_envelope_graded")
++    load_check.update(passed=None, evaluated=False)
++    load_check["observed"].update({
++        "loading_observed": False,
++        "distinct_bodies": 0,
++        "bodies_dropped": 0,
++        "total_503_responses": 0,
++        "all_exact": None,
++        "exact": None,
++        "not_evaluated_reason": "no-loading-503-observed",
++    })
++    cases.append(("v3-no-loading-not-evaluated", no_loading, expects, 3))
++
++    cases.extend([
++        ("v1-require-schema-v1", base, expects
++         + ["--require-schema", "v1"], 0),
++        ("v1-require-schema-v2-rejects-v1", base, expects
++         + ["--require-schema", "v2"], 1),
++        ("v2-require-schema-v3-rejects-v2", base_v2, expects
++         + ["--require-schema", "v3"], 1),
++        ("v3-require-schema-v3", base_v3, expects
++         + ["--require-schema", "v3"], 0),
++    ])
++
++    def mut3(name, fn, receipt=None, extra=None, want=1):
++        r = copy.deepcopy(base_v3 if receipt is None else receipt)
++        fn(r)
++        cases.append((name, r, extra or [], want))
++
++    mut3("v3-extra-server-argv-flag",
++         lambda r: r["argv"].insert(-2, "--metrics"))
++    mut3("v3-duplicate-server-argv-flag",
++         lambda r: r["argv"].__setitem__(
++             slice(-2, -2), ["--port", "45679"]))
++    mut3("v3-model-arg-does-not-match-argv",
++         lambda r: r["model"].update(arg="/other/model.gguf"))
++    mut3("v3-transition-503-nonexact",
++         lambda r: r["transitions"][1].update(body='{"error":{}}'))
++    mut3("v3-transition-string-status-503",
++         lambda r: r["transitions"].append({
++             "path": "/v1/models", "status": "503",
++             "body": '{"error":{}}',
++             "body_sha256": hashlib.sha256(
++                 b'{"error":{}}').hexdigest(),
++             "body_read_truncated": False, "body_over_cap": False,
++             "repeats": 0,
++         }))
++    mut3("v3-transition-503-truncated",
++         lambda r: r["transitions"][1].update(body_over_cap=True))
++    mut3("v3-teardown-port-close-unowned",
++         lambda r: (r.update(port_listener_ownership="foreign"),
++                    next(c for c in r["checks"]
++                         if c["id"] == "teardown_port_closed")
++                    ["observed"].update(
++                        port_listener_ownership="foreign")))
++    mut3("v3-source-binding-tampered",
++         lambda r: r["source_binding"][0].update(row="S999"))
++    mut3("v3-internal-fault-not-mirrored",
++         lambda r: r.update(internal_fault="internal:KeyboardInterrupt",
++                            outcome="setup-error"))
++    mut3("v3-loading-observed-count-forged",
++         lambda r: next(c for c in r["checks"]
++                        if c["id"] == "loading_envelope_graded")
++         ["observed"].update(total_503_responses=999))
++    mut3("v3-health-observed-body-forged",
++         lambda r: next(c for c in r["checks"]
++                        if c["id"] == "health_ready")
++         ["observed"].update(body={"status": "degraded"}))
++    mut3("v3-probe-served-model-forged",
++         lambda r: r["probes"][0]["result"]["rows"][0].update(
++             served_model="ghost-model"))
++    mut3("v3-nonboolean-evaluated",
++         lambda r: next(c for c in r["checks"]
++                        if c["id"] == "health_ready")
++         .update(evaluated="yes"))
++    mut3("v3-outcome-fail-with-all-true-checks",
++         lambda r: r.update(outcome="fail"))
++    mut3("v3-unobserved-loading-missing-reason",
++         lambda r: next(c for c in r["checks"]
++                        if c["id"] == "loading_envelope_graded")
++         ["observed"].pop("not_evaluated_reason"),
++         receipt=no_loading)
++    mut3("v3-unobserved-loading-claimed-evaluated",
++         lambda r: next(c for c in r["checks"]
++                        if c["id"] == "loading_envelope_graded")
++         .update(evaluated=True),
++         receipt=no_loading)
++    mut3("v3-nonloading-check-is-null",
++         lambda r: (next(c for c in r["checks"]
++                         if c["id"] == "health_ready")
++                    .update(passed=None, evaluated=False),
++                    next(c for c in r["checks"]
++                         if c["id"] == "health_ready")
++                    ["observed"].update(
++                        not_evaluated_reason=
++                        "no-loading-503-observed"),
++                    r.update(outcome="not-evaluated")))
++    mut3("v3-loading-check-null-although-503-present",
++         lambda r: (next(c for c in r["checks"]
++                         if c["id"] == "loading_envelope_graded")
++                    .update(passed=None, evaluated=False),
++                    next(c for c in r["checks"]
++                         if c["id"] == "loading_envelope_graded")
++                    ["observed"].update(
++                        not_evaluated_reason=
++                        "no-loading-503-observed"),
++                    r.update(outcome="not-evaluated")))
++    mut3("v3-outcome-pass-with-null",
++         lambda r: r.update(outcome="pass"),
++         receipt=no_loading)
++
++    def drop_257th_loading_body(r):
++        first = r["transitions"][1]
++        rows = []
++        bodies = []
++        for i in range(257):
++            body = ENVELOPE_BODY + (" " * i)
++            digest = hashlib.sha256(body.encode("utf-8")).hexdigest()
++            row = copy.deepcopy(first)
++            row.update(t_ms=40 + i, body=body, body_sha256=digest,
++                       repeats=0, body_read_truncated=False,
++                       body_over_cap=False)
++            rows.append(row)
++            if i < 256:
++                bodies.append({
++                    "path": "/v1/models", "body_sha256": digest,
++                    "body": body, "repeats": 0,
++                })
++        r["transitions"] = [
++            r["transitions"][0], *rows, r["transitions"][2]]
++        r["loading_503"] = {
++            "t_ms": rows[0]["t_ms"], "path": "/v1/models",
++            "status": 503, "body_sha256": rows[0]["body_sha256"],
++            "body": rows[0]["body"],
++        }
++        r["loading_503_bodies"] = bodies
++        r["loading_bodies_dropped"] = 1
++        check = next(c for c in r["checks"]
++                     if c["id"] == "loading_envelope_graded")
++        check["observed"].update(
++            distinct_bodies=256, bodies_dropped=1,
++            total_503_responses=256)
++
++    mut3("v3-silently-dropped-257th-loading-body",
++         drop_257th_loading_body)
++
+     failures = []
+     with tempfile.TemporaryDirectory(prefix="check-receipt-") as td:
+         for i, (name, receipt, extra, want) in enumerate(cases):
+@@ -1334,6 +2015,18 @@
+                 failures.append(
+                     f"{name}: exit {proc.returncode}, want {want}; "
+                     f"stdout={proc.stdout.strip()[:400]!r}")
++            elif want == 0 and not proc.stdout.startswith("VALID "):
++                failures.append(
++                    f"{name}: exit 0 did not print a VALID verdict: "
++                    f"{proc.stdout.strip()[:400]!r}")
++            elif want == 1 and not proc.stdout.startswith("INVALID "):
++                failures.append(
++                    f"{name}: exit 1 did not print an INVALID verdict: "
++                    f"{proc.stdout.strip()[:400]!r}")
++            elif want == 3 and not proc.stdout.startswith("NOT-EVALUATED "):
++                failures.append(
++                    f"{name}: exit 3 did not print NOT-EVALUATED: "
++                    f"{proc.stdout.strip()[:400]!r}")
+     proc = subprocess.run(
+         [sys.executable, os.path.abspath(__file__),
+          "/nonexistent/receipt.json"],
+@@ -1345,10 +2038,12 @@
+         for f in failures:
+             print(f"SELFTEST FAIL {f}", file=sys.stderr)
+         return 1
+-    n_mut = sum(1 for c in cases if c[3] != 0)
+-    n_ok = len(cases) - n_mut
+-    print(f"selftest: {n_ok} valid receipt(s) accepted; {n_mut} "
+-          "mutations + unreadable case all rejected")
++    n_valid = sum(1 for c in cases if c[3] == 0)
++    n_not_evaluated = sum(1 for c in cases if c[3] == 3)
++    n_mut = sum(1 for c in cases if c[3] == 1)
++    print(f"selftest: {n_valid} VALID and {n_not_evaluated} "
++          f"NOT-EVALUATED receipts accepted; {n_mut} mutations + "
++          "unreadable case rejected")
+     return 0
+ 
+ 
+@@ -1357,7 +2052,7 @@
+ 
+ def main(argv=None):
+     ap = argparse.ArgumentParser(
+-        description="Validate a kama-llamacpp-live/v1 or /v2 receipt.")
++        description="Validate kama-llamacpp-live/v1, /v2 and /v3 receipts.")
+     ap.add_argument("receipt", nargs="?", help="receipt JSON path")
+     ap.add_argument("--expect-model-sha256", metavar="HEX",
+                     help="require the recorded model sha256")
+@@ -1367,6 +2062,8 @@
+                     help="require the recorded probe sha256")
+     ap.add_argument("--expect-tool-sha256", metavar="HEX",
+                     help="require the recorded harness-tool sha256")
++    ap.add_argument("--require-schema", choices=("v1", "v2", "v3"),
++                    help="reject receipts below this schema version")
+ 
+     ap.add_argument("--selftest", action="store_true",
+                     help="run built-in valid/mutation matrix and exit")
+@@ -1390,11 +2087,28 @@
+                         expect_server=args.expect_server_sha256,
+                         expect_probe=args.expect_probe_sha256,
+                         expect_tool=args.expect_tool_sha256)
++    if args.require_schema and isinstance(receipt, dict):
++        minimum = {"v1": 1, "v2": 2, "v3": 3}[args.require_schema]
++        declared = receipt.get("schema")
++        version = {
++            RECEIPT_SCHEMA: 1,
++            RECEIPT_SCHEMA_V2: 2,
++            RECEIPT_SCHEMA_V3: 3,
++        }.get(declared)
++        if version is not None and version < minimum:
++            problems.append(
++                f"schema {declared!r} is below --require-schema "
++                f"{args.require_schema}")
+     if problems:
+         print(f"INVALID {args.receipt}: {len(problems)} problem(s)")
+         for p in problems:
+             print(f"  - {p}")
+         return 1
++    if isinstance(receipt, dict) \
++            and receipt.get("schema") == RECEIPT_SCHEMA_V3 \
++            and receipt.get("outcome") == "not-evaluated":
++        print(f"NOT-EVALUATED {args.receipt}")
++        return 3
+     print(f"VALID {args.receipt}")
+     return 0
+ 

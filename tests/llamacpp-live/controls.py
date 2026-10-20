@@ -1,32 +1,117 @@
 #!/usr/bin/env python3
-"""controls.py — C2 counting command for the kama-llamacpp-live harness.
+"""controls.py — C1 counting command for the kama-llamacpp-live harness.
 
 Runs the lifecycle tool (tools/kama-llamacpp-live.py, or a staged/frozen copy)
-against a generated fake llama-server and then runs the receipt gate
-(tests/llamacpp-live/check-receipt.py) on whatever receipt the tool wrote.
-K0 is a documented-behaviour server that MUST be accepted; K1-K8 each corrupt
-exactly one behaviour or fault and MUST be rejected via the check that grades
-that specific misbehaviour. A bad control that is accepted — or that crashes
-the harness without a receipt — is an ACCEPTED-BAD defect. A run that is
-rejected by a check other than the targeted one is INCONCLUSIVE (reported
-separately, never counted as detection).
+against generated fake llama-servers, runs the receipt gate
+(tests/llamacpp-live/check-receipt.py) on whatever receipt the tool wrote,
+and feeds forged copies of the good control's receipt to the gate alone.
+Every control declares what it expects — ``accepted``, ``rejected-targeted``
+(refused via the check / predicate that grades its one misbehaviour) or
+``not-evaluated`` — and the observed outcome is classified and compared.
 
     controls.py --tool PATH --gate PATH [--probe PATH] [--json] [--only ID]
+    controls.py --selftest
+
+Controls (each registered with a docstring naming its target and the
+misbehaviour; see CONTROLS):
+  k0        GOOD documented-behaviour server (must be accepted)
+  k1-k8     round-17 controls, unchanged shapes (k6 now needs tool exit 2)
+  k9-k14    one per previously uncontrolled check: models_alias_id,
+            models_owned_by_llamacpp, metrics_not_enabled, props_alias,
+            probe_model_ok, probe_mismatch
+  k15       teardown_port_closed: a helper keeps the listener after exit 0
+  k16       GOOD zero-loading server (never 503): expected not-evaluated
+  k17       GOOD server on AF_INET6 ::ffff:127.0.0.1 (V6ONLY=0): accepted
+  k18       KeyboardInterrupt injected into teardown: receipt + exit 2
+  k19-k22   forged receipts from this run's k0 receipt (gate only):
+            self-declared v1 under --require-schema v3, extra --api-key X,
+            non-exact 503 transition with exact loading bodies, duplicate
+            --host
+
+Classification (per control, from observations only):
+  accepted             tool exit 0 and gate exit 0, receipt written, no
+                       timeout (forgeries: gate exit 0)
+  rejected-targeted    receipt written, the tool and/or gate refused it, the
+                       target was hit (a targeted check is passed:false in the
+                       receipt or named by a gate problem line; a targeted
+                       setup_error/internal_fault token is recorded; for
+                       forgeries a gate problem line matches the predicate),
+                       and for a bad control the tool exit is in its exit set
+  rejected-untargeted  refused, target not hit
+  not-evaluated        tool exit 2, gate exit 3, receipt outcome
+                       'not-evaluated', setup_error null, no false check and
+                       the null checks exactly the contract's nullable set
+                       (loading_envelope_graded with observed.
+                       not_evaluated_reason 'no-loading-503-observed', and
+                       loading_observed false); forgeries: gate exit 3
+  misclassified        anything else: gate VALID on a run whose tool exit is
+                       nonzero; gate NOT-EVALUATED without that coherent
+                       receipt; no gate verdict (timeout, unknown exit, exit 2
+                       on a parseable receipt); a rejection of a bad
+                       control with a tool exit outside its exit set; a good
+                       control with no verdict (escape or timeout)
+  A BAD control that escapes without a receipt, or times out, is classified
+  accepted: it is never credited as a rejection (round-17 rule).
+
+Buckets: classification == expected -> ok; bad control accepted ->
+accepted_bad; good control expected accepted but rejected-* ->
+good_rejected; any other mismatch -> misclassified (this includes the
+zero-loading control failing with exit 1, the R4 defect). A gate-flip arm
+the gate accepts is an accepted forged receipt: it counts in accepted_bad and
+in its sub-count gate_flip_bad.
+
+Unknown-flag rule. A gate that answers a control's extra flag (k19's
+``--require-schema v3``) with an argparse usage error (exit 2 and
+"unrecognized arguments" on stderr) cannot apply that predicate, so it does
+not reject on the targeted predicate: the control is classified from the
+same bytes run through the gate without the flag, and that verdict can never
+be rejected-targeted (VALID -> accepted, i.e. accepted_bad; INVALID ->
+rejected-untargeted, i.e. misclassified). This is how the frozen round-17
+gate is graded honestly.
 
 Arms:
-* primary: tool exit + receipt checks + gate exit per control.
-* gate-flip: for every bad control whose receipt records failing checks, a
-  copy of that receipt with only the failing checks' ``passed`` flipped to
-  true is re-run through the gate, which MUST still reject it (the gate
-  re-derives checks from the stored evidence). Gate acceptance of a doctored
-  receipt is counted in ``gate_flip_bad``.
-* attribution: ``expected_failed`` per control is a list of lowercase check-id
-  substrings (tokens, not exact ids, so the same expectation survives check
-  renames between receipt versions). A rejected run whose failed checks do
-  not cover the token set is ``inconclusive``.
+* primary: tool exit + receipt checks + gate exit per in-tool control.
+* gate-flip: every in-tool control not expected accepted whose receipt has a
+  check that is not passed:true gets a doctored copy — those checks set
+  passed:true (and evaluated:true where present), outcome 'pass' where
+  present, setup_error and internal_fault null — which the gate MUST refuse
+  (it re-derives every check from the stored evidence). Skipping an
+  applicable arm is a fault of this script (exit 2), so ``gate_flip_arms``
+  cannot silently drop to zero.
+* forgery: k19-k22 run only the gate, on single-purpose forgeries of this
+  run's k0 receipt (a private k0 run supplies it under --only). A base k0
+  receipt that is not gate-VALID makes every forgery misclassified.
 
-Exit: 0 iff accepted_bad == 0, gate_flip_bad == 0, inconclusive == 0 and the
-good control was accepted; 1 otherwise; 2 on a fault in this script itself.
+JSON (schema kama-live-controls/v2): per control id, kind, good, expected,
+classification, bucket, reason, targeted (check ids, setup token or
+problem-line pattern), targeted_hit, failed_checks, null_checks, exits,
+tool/gate exits, receipt schema/outcome/digest, gate problem lines and the
+gate_flip record; top level accepted_bad, good_rejected, misclassified,
+inconclusive (bad controls with named targets rejected-untargeted, inside misclassified;
+K7 has no check target and is intentionally excluded),
+gate_flip_bad, gate_flip_arms, good_ok, uncontrolled_checks (receipt check
+ids that no control rejected-targeted as expected via that check this run,
+minus the input-integrity check model_unchanged, which is listed in
+input_integrity_checks), controlled_checks, tool/gate/probe sha256.
+uncontrolled_checks is meaningful only for the full suite.
+
+Exit: 0 iff accepted_bad == 0, good_rejected == 0, misclassified == 0 and
+k0 was accepted (good_ok; not measured under --only without k0); 1
+otherwise; 2 on a fault in this script itself. ``--selftest`` grades
+synthetic outcomes through the same classifier, gate-flip arm and summary
+(no tool, gate, server or port) and exits 0 when every case holds, else 1.
+
+What this cannot detect: the fakes model documented llama.cpp surfaces, not
+llama-server itself (real load timing, argv parsing, signal handling stay
+unexercised). k9/k10 separate the tool's non-curl capture from curl probes
+by User-Agent; k13/k14 further switch one of the two curl responses by request
+count. A tool that changes its client or request order may no longer isolate
+those checks; such cases are rejected-untargeted/misclassified, not credited
+as coverage. Gate attribution rests on problem-line wording (different
+wording is rejected-untargeted, fail-closed); only gate exit codes are read
+as verdicts. IPv6 ownership is exercised only for ::ffff:127.0.0.1 (a ::1-only
+listener is unreachable at the 127.0.0.1 the tool polls, so it cannot be a
+good control).
 
 Design notes
 ------------
@@ -35,31 +120,33 @@ Design notes
   therefore stages a mini lane layout inside a TemporaryDirectory:
   work/lane/tools/<tool-basename>, work/lane/registry/endpoint-consumers.tsv,
   work/srv/fake_server.py (the only file in srv/). This is what makes the
-  same command work verbatim against the round-17 frozen copies.
+  same command work verbatim against the frozen copies.
 * The fake server is a generated stdlib script that parses the argv the tool
   passes (-m, --alias, --host, --port, -c, -t are read; unknown flags are
   ignored) and serves a behaviour shape baked in at generation time (the
   tool's child env allowlist would strip any env-var shape selector). It
-  writes its pid to work/srv/fake.pid after launch; the pid file is created
-  after the tool's install_tree hash, so the recorded tree only ever contains
-  fake_server.py. Cleanup verifies /proc/<pid>/cmdline names that exact fake
-  path, then kills the process GROUP (the tool uses start_new_session, so the
-  fake's pgid == its pid) — a control can never leave a listener behind.
-* Every serving fake answers >=3 loading 503s (exact llama.cpp envelope on
-  /v1/models, plus the first /health poll) before going ready, so the v2
-  loading-envelope checks have real evidence on the good control too.
-* K6 runs the tool in-process inside a child ``python3 -c`` wrapper
-  (importlib exec + ``teardown`` monkeypatched to raise; a fired-flag proves
-  the patch landed), never in this process — the v1 tool would otherwise
-  leave SIGINT/SIGTERM ignored here when its KeyError skips the handler
-  restore. A surviving fake is reaped by its pdeathsig on wrapper exit and
-  by the pgid kill regardless.
+  writes every pid it owns to work/srv/fake.pid after launch; the pid file is
+  created after the tool's install_tree hash, so the recorded tree only ever
+  contains fake_server.py. Cleanup verifies /proc/<pid>/cmdline names that
+  exact fake path, then kills the fake's process GROUP (the tool uses
+  start_new_session, so the fake leads its own group and k15's helper shares
+  it) — a control can never leave a listener behind.
+* Serving fakes answer >=3 loading 503s (exact llama.cpp envelope on
+  /v1/models, plus the first /health poll) before going ready, so the
+  loading-envelope checks have real evidence; k16 alone never answers 503.
+* The tool runs in its own session; on timeout its whole group is SIGKILLed
+  before it is reaped. k6/k18 run the tool in-process inside a child
+  ``python3 -c`` wrapper (importlib exec + module-global ``teardown``
+  replaced by a function that raises; a fired-flag proves the patch landed),
+  never in this process. A surviving fake is reaped by its pdeathsig on
+  wrapper exit and by the pid-file group kill regardless.
 * TMPDIR is pointed at each control's workdir so the tool's own mkstemp log
   lands inside the sandbox.
 
 Ports: none are bound by this script; the tool itself picks a free
-unregistered ephemeral port (its refused-port logic excludes 8080, 34113 and
-every port token in the staged registry copy).
+unregistered loopback port (its refused-port logic excludes 8080, 34113 and
+every port token in the staged registry copy), and every fake binds only
+127.0.0.1 or ::ffff:127.0.0.1.
 
 Deps: python3 stdlib; the fake serves only what the tool and kama-probe.sh
 (curl) request.
@@ -69,16 +156,19 @@ from __future__ import annotations
 import argparse
 import copy
 import hashlib
+import inspect
 import json
 import os
+import re
 import shutil
 import signal
 import subprocess
 import sys
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 
-SCHEMA = 'kama-live-controls/v1'
+SCHEMA = 'kama-live-controls/v2'
 LANE = Path(__file__).resolve().parents[2]
 REGISTRY_SRC = LANE / 'registry' / 'endpoint-consumers.tsv'
 DEFAULT_PROBE = LANE / 'tools' / 'kama-probe.sh'
@@ -87,12 +177,33 @@ ALIAS = 'fakealias'
 MODEL_BYTES = bytes(range(32))
 TOOL_TIMEOUT = 180.0   # >= TERM_GRACE(10)+SIGKILL wait(5)+probe budget; L1: >=180
 GATE_TIMEOUT = 60.0
+HELPER_LIFETIME = 240  # k15 helper's own SIGALRM bound, > TOOL_TIMEOUT
+
+RECEIPT_V1 = 'kama-llamacpp-live/v1'
+# Receipt check ids of the v2/v3 schema (the universe for uncontrolled_checks,
+# extended at run time by every id a receipt carries).
+CHECK_IDS = (
+    'health_ready', 'models_alias_id', 'models_owned_by_llamacpp',
+    'metrics_not_enabled', 'props_alias', 'probe_model_ok',
+    'probe_mismatch', 'teardown_graceful', 'teardown_port_closed',
+    'loading_envelope_graded', 'model_unchanged',
+)
+INPUT_INTEGRITY = ('model_unchanged',)
+# v3 contract: passed:null is legal only here, with this reason.
+NULLABLE = {'loading_envelope_graded': 'no-loading-503-observed'}
+CLASSES = ('accepted', 'rejected-targeted', 'rejected-untargeted',
+           'not-evaluated', 'misclassified')
+EXACT_ENVELOPE = {'error': {'message': 'Loading model',
+                            'type': 'unavailable_error', 'code': 503}}
+NON_EXACT_ENVELOPE = {'error': {'message': 'Loading model',
+                                'type': 'unavailable_error', 'code': '503'}}
 
 
 # ---------------------------------------------------------------- fake server
 
-# Tokens %%SHAPE%% and %%PIDFILE%% are substituted per control. The fake parses
-# the same argv the tool builds for llama-server; anything unknown is ignored.
+# Tokens %%SHAPE%%, %%PIDFILE%% and %%HELPER_LIFETIME%% are substituted per
+# control. The fake parses the same argv the tool builds for llama-server;
+# anything unknown is ignored.
 FAKE_TEMPLATE = r'''#!/usr/bin/env python3
 """Generated fake llama-server for tests/llamacpp-live/controls.py."""
 import json
@@ -104,6 +215,9 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 
 SHAPE = '%%SHAPE%%'
 PIDFILE = '%%PIDFILE%%'
+HELPER_LIFETIME = %%HELPER_LIFETIME%%
+DECOY = 'fakealias-decoy'
+MISMATCH_EXPECT = 'kama-not-this-model'
 STATE = {'models': 0, 'health': 0, 'probe_models': 0}
 
 
@@ -123,10 +237,11 @@ ALIAS = _val('--alias', 'fakealias')
 _ = (_val('-m'), _val('--host'), _val('-c'), _val('-t'))
 
 
-def _write_pidfile():
+def _write_pidfile(pids):
+    """Every process of this fake, one pid per line (k15 adds its helper)."""
     try:
         with open(PIDFILE, 'w', encoding='ascii') as fh:
-            fh.write(str(os.getpid()) + '\n')
+            fh.write(''.join(str(p) + '\n' for p in pids))
     except OSError:
         pass
 
@@ -150,12 +265,11 @@ else:
 
 if SHAPE == 'k7':
     # Listens, never answers: raw accept backlog, no accept() at all.
-    signal.signal(signal.SIGTERM, _term_exit0)
     lsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     lsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     lsock.bind(('127.0.0.1', PORT))
     lsock.listen(16)
-    _write_pidfile()
+    _write_pidfile([os.getpid()])
     while True:
         signal.pause()
 
@@ -163,12 +277,32 @@ GOOD_ENVELOPE = {'error': {'message': 'Loading model',
                            'type': 'unavailable_error', 'code': 503}}
 BAD_ENVELOPE = {'error': {'message': 'Busy', 'type': 'unavailable_error',
                           'code': '503'}}
-LOADING = {'/v1/models': 3, '/health': 1}  # loading 503s per path before ready
-MODELS_OK = {'object': 'list', 'data': [
-    {'id': ALIAS, 'object': 'model', 'created': 0, 'owned_by': 'llamacpp'}]}
-PROPS = {'model_alias': ALIAS, 'total_slots': 1, 'is_sleeping': False,
-         'build_info': 'controls-fake', 'default_generation_settings':
-         {'n_ctx': 256}}
+# loading 503s per path before ready; k16 is ready at once (never 503)
+LOADING = {} if SHAPE == 'k16' else {'/v1/models': 3, '/health': 1}
+
+
+def _models(probe, probe_number):
+    """/v1/models document. `probe`: the request came from curl
+    (kama-probe.sh); the tool's readiness polls and capture are not curl.
+    `probe_number` is the one-based curl request count for this fake."""
+    entry = {'id': ALIAS, 'object': 'model', 'created': 0,
+             'owned_by': 'llamacpp'}
+    if SHAPE == 'k9' and not probe:
+        entry['id'] = DECOY
+    if SHAPE == 'k10' and not probe:
+        entry['owned_by'] = 'openai'
+    if SHAPE == 'k13' and probe and probe_number == 1:
+        entry['id'] = DECOY
+    if SHAPE == 'k14' and probe and probe_number == 2:
+        entry['id'] = MISMATCH_EXPECT
+    return {'object': 'list', 'data': [entry]}
+
+
+def _props():
+    return {'model_alias': DECOY if SHAPE == 'k12' else ALIAS,
+            'total_slots': 1, 'is_sleeping': False,
+            'build_info': 'controls-fake',
+            'default_generation_settings': {'n_ctx': 256}}
 
 
 def _envelope():
@@ -190,14 +324,17 @@ class Handler(BaseHTTPRequestHandler):
         except OSError:
             pass
 
-    def _send(self, code, obj):
-        body = json.dumps(obj, separators=(',', ':')).encode()
+    def _send_bytes(self, code, body, ctype):
         self.send_response(code)
-        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Type', ctype)
         self.send_header('Content-Length', str(len(body)))
         self.end_headers()
         self.wfile.write(body)
         self.wfile.flush()
+
+    def _send(self, code, obj):
+        self._send_bytes(code, json.dumps(obj, separators=(',', ':')).encode(),
+                         'application/json')
 
     def _loading(self, path, hits):
         """Still inside the scripted loading window? -> 503 envelope."""
@@ -207,20 +344,20 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = self.path.split('?', 1)[0].split('#', 1)[0]
-        ua = self.headers.get('User-Agent') or ''
+        probe = 'curl' in (self.headers.get('User-Agent') or '')
         if path == '/v1/models':
             env = self._loading(path, STATE['models'])
             STATE['models'] += 1
             if env is not None:
                 return self._send(503, env)
-            if 'curl' in ua:
+            if probe:
                 STATE['probe_models'] += 1
-            self._send(200, MODELS_OK)
+            probe_number = STATE['probe_models'] if probe else 0
+            self._send(200, _models(probe, probe_number))
             # k3: exit rc 0 on our own, right after the second probe run's
             # /v1/models has been fully flushed — i.e. after the harness's
             # probe captures are served, before its teardown starts.
-            if SHAPE == 'k3' and 'curl' in ua \
-                    and STATE['probe_models'] >= 2:
+            if SHAPE == 'k3' and probe and STATE['probe_models'] >= 2:
                 os._exit(0)
             return
         if path == '/health':
@@ -231,10 +368,15 @@ class Handler(BaseHTTPRequestHandler):
             status = 'degraded' if SHAPE == 'k1' else 'ok'
             return self._send(200, {'status': status})
         if path == '/props':
-            return self._send(200, PROPS)
+            return self._send(200, _props())
         if path == '/slots':
             return self._send(200, [{'id': 0, 'state': 0}])
         if path == '/metrics':
+            if SHAPE == 'k11':
+                return self._send_bytes(
+                    200, b'# TYPE llamacpp:prompt_tokens_total counter\n'
+                         b'llamacpp:prompt_tokens_total 0\n',
+                    'text/plain; version=0.0.4')
             return self._send(501, {'error': {
                 'message': 'metrics not enabled',
                 'type': 'unavailable_error', 'code': 501}})
@@ -242,42 +384,78 @@ class Handler(BaseHTTPRequestHandler):
             'message': 'not found', 'type': 'not_found_error', 'code': 404}})
 
 
+class DualStackServer(HTTPServer):
+    """k17: AF_INET6 socket bound to the IPv4-mapped loopback
+    ::ffff:127.0.0.1 with IPV6_V6ONLY=0, so 127.0.0.1 clients reach it and
+    /proc/net/tcp6 (not tcp) lists the listener."""
+    address_family = socket.AF_INET6
+
+    def server_bind(self):
+        self.socket.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_V6ONLY, 0)
+        self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.bind(self.server_address)
+        self.server_address = self.socket.getsockname()
+        self.server_name = 'localhost'   # no reverse lookup of the address
+        self.server_port = self.server_address[1]
+
+
 HTTPServer.allow_reuse_address = True
-_httpd = HTTPServer(('127.0.0.1', PORT), Handler)
-_write_pidfile()
+if SHAPE == 'k17':
+    _httpd = DualStackServer(('::ffff:127.0.0.1', PORT, 0, 0), Handler)
+else:
+    _httpd = HTTPServer(('127.0.0.1', PORT), Handler)
+_pids = [os.getpid()]
+if SHAPE == 'k15':
+    # The helper inherits the listening socket, ignores SIGTERM and never
+    # accepts: after the server itself exits 0 on the harness SIGTERM the
+    # port still completes TCP handshakes. Same process group as the server;
+    # bounded by SIGALRM (default disposition) in case nobody kills it.
+    _helper = os.fork()
+    if _helper == 0:
+        for _sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+            signal.signal(_sig, signal.SIG_IGN)
+        signal.alarm(HELPER_LIFETIME)
+        while True:
+            signal.pause()
+    _pids.append(_helper)
+_write_pidfile(_pids)
 _httpd.serve_forever()
 '''
 
 
-# K6: run the tool in-process inside a child wrapper so a teardown fault that
-# escapes the tool's own handlers cannot corrupt this controls process (the v1
-# tool leaves SIGINT/SIGTERM/SIGHUP ignored when its KeyError skips restore).
-# importlib exec (not runpy.run_path) so the module is fully defined before the
-# patch lands and its __main__ guard never runs main() under us. The patched
-# teardown writes a fired-flag before raising so K6 cannot pass vacuously when
-# the patch silently missed. A surviving fake dies via pdeathsig on wrapper
-# exit plus the caller's pgid kill. Exits 4 on an unhandled escape.
-K6_WRAPPER = r'''
+# k6/k18: run the tool in-process inside a child wrapper so a teardown fault
+# that escapes the tool's own handlers cannot corrupt this controls process
+# (a tool can leave SIGINT/SIGTERM/SIGHUP ignored when a fault skips its
+# restore). importlib exec (not runpy.run_path) so the module is fully
+# defined before the patch lands and its __main__ guard never runs main()
+# under us. The patched teardown writes a fired-flag before raising so the
+# control cannot pass vacuously when the patch silently missed. A surviving
+# fake dies via pdeathsig on wrapper exit plus the caller's group kill.
+# Exits 4 on an unhandled escape (no receipt is written then).
+INJECT_WRAPPER = r'''
 import importlib.util
 import sys
 import traceback
 
-flag_path = sys.argv[1]
-tool = sys.argv[2]
-tool_args = sys.argv[3:]
+flag_path, exc_name, tool = sys.argv[1], sys.argv[2], sys.argv[3]
+tool_args = sys.argv[4:]
+EXC = {'RuntimeError': RuntimeError,
+       'KeyboardInterrupt': KeyboardInterrupt}[exc_name]
 spec = importlib.util.spec_from_file_location('kama_live_under_test', tool)
 mod = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(mod)
 
-def _boom(*a, **k):
+
+def _inject(*a, **k):
     try:
         with open(flag_path, 'w', encoding='ascii') as fh:
             fh.write('fired\n')
     except OSError:
         pass
-    raise RuntimeError('controls-k6: injected teardown fault')
+    raise EXC('controls: injected teardown ' + exc_name)
 
-mod.teardown = _boom
+
+mod.teardown = _inject
 sys.argv = [tool] + tool_args
 try:
     rc = mod.main()
@@ -292,44 +470,290 @@ class ControlsFault(Exception):
     """This suite's own machinery failed; mapped to exit 2, never a verdict."""
 
 
+class ForgeError(Exception):
+    """The base receipt lacks the field a forgery rewrites."""
+
+
 # ------------------------------------------------------------------ controls
 
-# id -> (shape, extra tool argv, run via K6 wrapper, expected failed-check-id
-#        substrings (lowercase; empty = no check-level grading expected),
-#        description)
-CONTROLS = {
-    'k0': ('k0', [], False, [],
-           'good: >=3 exact loading 503s on /v1/models and /health, then '
-           'documented ready surfaces; SIGTERM handler exits 0; MUST be '
-           'accepted'),
-    'k1': ('k1', [], False, ['health'],
-           'health-degraded: /health 200 {"status":"degraded"} after loading'),
-    'k2': ('k2', [], False, ['loading', 'envelope'],
-           'loading-bad-envelope: 3x /v1/models + 1x /health 503 with '
-           'message "Busy" and string code "503", then ready'),
-    'k3': ('k3', [], False, ['teardown'],
-           'self-exit: exits rc 0 itself right after the probe captures, '
-           'before teardown'),
-    'k4': ('k4', [], False, ['teardown', 'sigkill', 'kill',
-                             'graceful'],
-           'ignores-SIGTERM: requires the harness SIGKILL escalation'),
-    'k5': ('k5', [], False, ['teardown', 'graceful', 'signal',
-                            'returncode', 'exit_status'],
-           'exits rc 1 on SIGTERM'),
-    'k6': ('k0', [], True, ['teardown', 'fault'],
-           'teardown-fault: tool teardown() monkeypatched to raise '
-           'RuntimeError; receipt must still be written, exit 2'),
-    'k7': ('k7', ['--ready-timeout', '2'], False, [],
-           'hang: listens, never answers (bounded by --ready-timeout 2)'),
-    'k8': ('k8', [], False, ['teardown', 'graceful', 'signal',
-                            'returncode', 'exit_status'],
-           'default SIGTERM disposition: killed by signal (rc -15)'),
-}
-TEARDOWN_TOKENS = ('teardown', 'sigterm', 'sigkill', 'graceful')
+@dataclass(frozen=True)
+class Spec:
+    cid: str
+    kind: str            # 'tool' | 'inprocess' | 'forgery'
+    shape: str           # fake-server shape (tool kinds)
+    extra: tuple         # extra tool argv
+    inject: str | None   # exception raised from teardown (inprocess)
+    good: bool           # documented-behaviour server
+    expect: str          # expected classification
+    targets: tuple       # targeted check ids (any one must be hit)
+    setup_token: str | None  # required in setup_error/internal_fault
+    problem_re: str | None   # forgery: gate problem-line pattern
+    gate_args: tuple     # forgery: extra gate argv
+    exits: tuple         # tool exits consistent with the expectation
+    forge: object        # forgery: base receipt doc -> forged doc
+    doc: str
+
+
+CONTROLS = {}
+
+
+def control(cid, *, kind='tool', shape=None, extra=(), inject=None,
+            good=False, expect='rejected-targeted', targets=(),
+            setup_token=None, problem_re=None, gate_args=(), exits=(1,)):
+    """Register a control; the decorated function's docstring is its
+    documentation and, for forgeries, the function is the forgery."""
+    def register(fn):
+        CONTROLS[cid] = Spec(
+            cid=cid, kind=kind, shape=shape or cid, extra=tuple(extra),
+            inject=inject, good=good, expect=expect, targets=tuple(targets),
+            setup_token=setup_token, problem_re=problem_re,
+            gate_args=tuple(gate_args), exits=tuple(exits),
+            forge=fn if kind == 'forgery' else None,
+            doc=inspect.cleandoc(fn.__doc__ or ''))
+        return fn
+    return register
+
+
+@control('k0', good=True, expect='accepted', exits=(0,))
+def _k0():
+    """GOOD — documented-behaviour server: three exact loading 503s on
+    /v1/models and one on /health, then the documented ready surfaces; its
+    SIGTERM handler exits 0. Must be accepted; its receipt is the base of
+    the forged-receipt controls k19-k22."""
+
+
+@control('k1', targets=('health_ready',))
+def _k1():
+    """health_ready — /health answers 200 {"status":"degraded"} after
+    loading (a status-only readiness check would pass it)."""
+
+
+@control('k2', targets=('loading_envelope_graded',))
+def _k2():
+    """loading_envelope_graded — three /v1/models and one /health 503 with
+    message "Busy" and string code "503", then ready."""
+
+
+@control('k3', targets=('teardown_graceful', 'teardown_port_closed'),
+         exits=(1, 2))
+def _k3():
+    """teardown_graceful — the server exits rc 0 by itself right after the
+    second probe's /v1/models is served, before teardown, so the harness
+    SIGTERM never reaches a live child (teardown_port_closed then lacks
+    proven ownership). Exit 1 or 2: whether the post-probe liveness loss is
+    a setup error is the tool's design choice."""
+
+
+@control('k4', targets=('teardown_graceful',))
+def _k4():
+    """teardown_graceful — ignores SIGTERM, so teardown needs the SIGKILL
+    escalation."""
+
+
+@control('k5', targets=('teardown_graceful',))
+def _k5():
+    """teardown_graceful — exits rc 1 on SIGTERM."""
+
+
+@control('k6', kind='inprocess', shape='k0', inject='RuntimeError',
+         targets=('teardown_graceful',), setup_token='RuntimeError',
+         exits=(2,))
+def _k6():
+    """teardown_graceful + internal fault — the tool's teardown() is
+    replaced by a function raising RuntimeError; the receipt must still be
+    written with internal:RuntimeError, and the tool must exit exactly 2."""
+
+
+@control('k7', shape='k7', extra=('--ready-timeout', '2'),
+         expect='rejected-untargeted', exits=(2,))
+def _k7():
+    """setup error ready-timeout — the server listens but never answers
+    (raw backlog, no accept), bounded by --ready-timeout 2: a receipt with
+    setup_error ready-timeout and exit 2."""
+
+
+@control('k8', targets=('teardown_graceful',))
+def _k8():
+    """teardown_graceful — default SIGTERM disposition: killed by the
+    signal (returncode -15)."""
+
+
+@control('k9', targets=('models_alias_id',))
+def _k9():
+    """models_alias_id — /v1/models data[0].id is 'fakealias-decoy' for
+    the tool's own requests (readiness polls and capture), while curl (the
+    probe) still sees the alias, so only the capture-graded check fails."""
+
+
+@control('k10', targets=('models_owned_by_llamacpp',))
+def _k10():
+    """models_owned_by_llamacpp — /v1/models data[0].owned_by is 'openai'
+    for the tool's own requests; ids stay the alias and curl sees the
+    documented 'llamacpp'."""
+
+
+@control('k11', targets=('metrics_not_enabled',))
+def _k11():
+    """metrics_not_enabled — GET /metrics answers 200 with Prometheus text
+    although the server ran without --metrics (llama.cpp answers 501)."""
+
+
+@control('k12', targets=('props_alias',))
+def _k12():
+    """props_alias — /props model_alias is 'fakealias-decoy' instead of the
+    --alias value; /v1/models stays correct for everyone."""
+
+
+@control('k13', targets=('probe_model_ok',))
+def _k13():
+    """probe_model_ok — the first curl /v1/models response (matching probe)
+    is 'fakealias-decoy', while the second curl response (mismatch probe)
+    returns the alias. The capture still sees the alias: only probe_model_ok
+    fails; the second probe still mismatches correctly."""
+
+
+@control('k14', targets=('probe_mismatch',))
+def _k14():
+    """probe_mismatch — the second curl /v1/models response (mismatch probe)
+    is 'kama-not-this-model', while the first curl response (matching probe)
+    and the tool's capture return the alias. The second probe therefore
+    reports MODEL_OK/matched/exit 0 instead of MODEL_MISMATCH."""
+
+
+@control('k15', targets=('teardown_port_closed',))
+def _k15():
+    """teardown_port_closed — a forked helper inherits the listening socket,
+    ignores SIGTERM and never accepts: the server exits 0 gracefully on the
+    harness SIGTERM but the port still completes connections afterwards."""
+
+
+@control('k16', good=True, expect='not-evaluated',
+         targets=('loading_envelope_graded',), exits=(2,))
+def _k16():
+    """GOOD zero-loading — ready at once, never answers 503 (a load faster
+    than the polls). Nothing was observed to grade the loading envelope:
+    expected not-evaluated (loading_envelope_graded passed:null, tool exit 2,
+    gate exit 3). Failing it (exit 1) is the R4 misclassification; passing
+    it vacuously is one too."""
+
+
+@control('k17', shape='k17', good=True, expect='accepted',
+         setup_token='ownership', exits=(0,))
+def _k17():
+    """GOOD dual-stack listener — the k0 server on an AF_INET6 socket bound
+    to ::ffff:127.0.0.1 with IPV6_V6ONLY=0 (listed in /proc/net/tcp6 as an
+    IPv4-mapped loopback address). Must be accepted; a rejection, e.g.
+    ownership unproven, is a false failure (good_rejected)."""
+
+
+@control('k18', kind='inprocess', shape='k0', inject='KeyboardInterrupt',
+         targets=('teardown_graceful',), setup_token='KeyboardInterrupt',
+         exits=(2,))
+def _k18():
+    """teardown_graceful + BaseException — the tool's teardown() is
+    replaced by a function raising KeyboardInterrupt; the receipt must
+    still be written with internal:KeyboardInterrupt and the tool must exit
+    exactly 2 (an escape without a receipt counts as accepted-bad)."""
+
+
+def _insert_before_tail(argv, extra):
+    """Insert `extra` before the producer's fixed '--no-webui' tail so a
+    tail-only check still passes; append when that tail is absent."""
+    if not isinstance(argv, list):
+        raise ForgeError('base receipt argv is not a list')
+    try:
+        i = argv.index('--no-webui')
+    except ValueError:
+        i = len(argv)
+    argv[i:i] = list(extra)
+
+
+@control('k19', kind='forgery', problem_re=r'schema',
+         gate_args=('--require-schema', 'v3'))
+def _k19(doc):
+    """schema floor — the good receipt re-declared kama-llamacpp-live/v1
+    with the v1 check set (teardown_graceful becomes teardown_exited,
+    loading_envelope_graded is dropped, per-check evaluated and top-level
+    outcome are removed) so the weaker v1 predicates would grade it. Run
+    with --require-schema v3 the gate must refuse it naming the schema; the
+    same bytes without the flag are expected VALID (v1 path unchanged),
+    recorded as flagless_gate_exit."""
+    doc['schema'] = RECEIPT_V1
+    doc.pop('outcome', None)
+    td = doc.get('teardown') if isinstance(doc.get('teardown'), dict) else {}
+    checks = []
+    for c in doc.get('checks') or []:
+        if not isinstance(c, dict):
+            continue
+        c = {k: v for k, v in c.items() if k != 'evaluated'}
+        if c.get('id') == 'loading_envelope_graded':
+            continue
+        if c.get('id') == 'teardown_graceful':
+            c = {'id': 'teardown_exited',
+                 'documented_by': c.get('documented_by') or 'controls k19',
+                 'passed': True,
+                 'observed': {'returncode': td.get('returncode')}}
+        checks.append(c)
+    doc['checks'] = checks
+    return doc
+
+
+@control('k20', kind='forgery', problem_re=r'^(?!.*\bprobe).*\bargv')
+def _k20(doc):
+    """argv exactness — '--api-key X' inserted into the recorded server argv
+    just before the fixed '--no-webui --offline' tail: every flag value and
+    the tail still match, so only re-deriving the whole argv from receipt
+    fields refuses it."""
+    _insert_before_tail(doc.get('argv'), ['--api-key', 'X'])
+    return doc
+
+
+@control('k21', kind='forgery', problem_re=r'transition')
+def _k21(doc):
+    """transitions envelope — the /v1/models loading-503 transitions row is
+    split into an exact row and a row whose body carries code "503" as a
+    string (body_sha256 recomputed, so the row is self-consistent; the 503
+    total is kept when the row had repeats), while loading_503 and
+    loading_503_bodies keep only exact bodies. Grading only the
+    deduplicated bodies misses it; every /v1/models 503 row must be
+    graded."""
+    rows = doc.get('transitions')
+    if not isinstance(rows, list):
+        raise ForgeError('base receipt transitions is not a list')
+    for i, row in enumerate(rows):
+        if isinstance(row, dict) and row.get('path') == '/v1/models' \
+                and row.get('status') == 503:
+            break
+    else:
+        raise ForgeError('base receipt has no /v1/models 503 transitions row')
+    forged = copy.deepcopy(rows[i])
+    body = json.dumps(NON_EXACT_ENVELOPE, separators=(',', ':'))
+    forged['body'] = body
+    forged['body_sha256'] = hashlib.sha256(body.encode('utf-8')).hexdigest()
+    forged['repeats'] = 0
+    reps = rows[i].get('repeats')
+    if isinstance(reps, int) and not isinstance(reps, bool) and reps >= 1:
+        rows[i]['repeats'] = reps - 1
+    rows.insert(i + 1, forged)
+    return doc
+
+
+@control('k22', kind='forgery', problem_re=r'^(?!.*\bprobe).*\bargv')
+def _k22(doc):
+    """argv exactness (duplicate flag) — a second '--host 0.0.0.0' inserted
+    before the tail: a first-occurrence flag lookup still reads 127.0.0.1,
+    so the recorded argv no longer states one loopback host; the gate must
+    refuse duplicate flags."""
+    _insert_before_tail(doc.get('argv'), ['--host', '0.0.0.0'])
+    return doc
+
+
 ALL_IDS = tuple(CONTROLS)
 
 
-def sha256_text(path):
+# ------------------------------------------------------------ process plumbing
+
+def sha256_file(path):
     h = hashlib.sha256()
     with open(path, 'rb') as fh:
         for chunk in iter(lambda: fh.read(1 << 20), b''):
@@ -337,43 +761,61 @@ def sha256_text(path):
     return h.hexdigest()
 
 
+def _canonical_sha256(doc):
+    return hashlib.sha256(json.dumps(doc, sort_keys=True,
+                                     separators=(',', ':')).encode(
+                                         'utf-8')).hexdigest()
+
+
 def _fake_source(shape, pidfile):
     return (FAKE_TEMPLATE
             .replace('%%SHAPE%%', shape)
-            .replace('%%PIDFILE%%', str(pidfile)))
+            .replace('%%PIDFILE%%', str(pidfile))
+            .replace('%%HELPER_LIFETIME%%', str(HELPER_LIFETIME)))
 
 
 def _kill_fake(srvdir):
-    """Kill the fake's process GROUP. The tool uses start_new_session, so the
-    fake's pgid == its pid; /proc/<pid>/cmdline must name this exact fake
-    script before any signal is sent (pid-reuse guard)."""
+    """SIGKILL every process the fake recorded in fake.pid (one pid per
+    line, the server first). A pid is signalled only while
+    /proc/<pid>/cmdline still names this exact fake script (pid-reuse
+    guard). Its process group is killed when that group is the one the
+    server leads (the tool's start_new_session; k15's helper shares it) and
+    is not this script's own group; otherwise the pid alone."""
     pidfile = Path(srvdir) / 'fake.pid'
-    fake = Path(srvdir) / 'fake_server.py'
+    fake = str(Path(srvdir) / 'fake_server.py')
     try:
-        pid = int(pidfile.read_text(encoding='ascii').strip())
+        pids = [int(t) for t in pidfile.read_text(encoding='ascii').split()]
     except (OSError, ValueError):
         return
-    if pid <= 0:
+    if not pids:
         return
-    try:
-        with open(f'/proc/{pid}/cmdline', 'rb') as fh:
-            cmdline = fh.read().decode('utf-8', 'replace')
-    except OSError:
-        return  # already gone
-    if str(fake) not in cmdline:
-        return  # not our fake (pid reused); do not signal
-    try:
-        os.killpg(pid, signal.SIGKILL)
-    except (ProcessLookupError, PermissionError, OSError):
+    leader = pids[0]
+    for pid in pids:
+        if pid <= 1:
+            continue
         try:
-            os.kill(pid, signal.SIGKILL)
+            with open(f'/proc/{pid}/cmdline', 'rb') as fh:
+                cmdline = fh.read().decode('utf-8', 'replace')
+        except OSError:
+            continue  # already gone
+        if fake not in cmdline:
+            continue  # not our fake (pid reused); do not signal
+        try:
+            pgid = os.getpgid(pid)
+            if pgid == leader and pgid != os.getpgrp():
+                os.killpg(pgid, signal.SIGKILL)
+            else:
+                os.kill(pid, signal.SIGKILL)
         except (ProcessLookupError, PermissionError, OSError):
-            pass
+            try:
+                os.kill(pid, signal.SIGKILL)
+            except (ProcessLookupError, PermissionError, OSError):
+                pass
 
 
-def _stage_control(root, cid, shape, tool):
-    """Per-control sandbox: mini lane layout + fake dir + model + receipt."""
-    wd = Path(root) / cid
+def _stage_control(root, run_id, shape, tool):
+    """Per-run sandbox: mini lane layout + fake dir + model + receipt."""
+    wd = Path(root) / run_id
     srv = wd / 'srv'
     tools_dir = wd / 'lane' / 'tools'
     registry_dir = wd / 'lane' / 'registry'
@@ -383,11 +825,14 @@ def _stage_control(root, cid, shape, tool):
     staged_tool = tools_dir / Path(tool).name
     shutil.copyfile(tool, staged_tool)
     os.chmod(staged_tool, 0o755)
-    if REGISTRY_SRC.is_file():
+    # A fabricated empty registry would let the lifecycle tool select a port
+    # that belongs to an endpoint consumer. Fail closed instead.
+    if not REGISTRY_SRC.is_file() or not os.access(REGISTRY_SRC, os.R_OK):
+        raise ControlsFault(f'registry unavailable: {REGISTRY_SRC}')
+    try:
         shutil.copyfile(REGISTRY_SRC, registry_dir / 'endpoint-consumers.tsv')
-    else:
-        (registry_dir / 'endpoint-consumers.tsv').write_text(
-            '# staged empty registry for controls\n', encoding='utf-8')
+    except OSError as exc:
+        raise ControlsFault(f'cannot stage registry: {exc}') from exc
 
     fake = srv / 'fake_server.py'
     fake.write_text(_fake_source(shape, srv / 'fake.pid'), encoding='utf-8')
@@ -415,227 +860,961 @@ def _tool_argv(st, probe, extra):
     ] + list(extra)
 
 
-def _read_receipt(path):
-    """(doc|None, file_exists). A file that exists but cannot be read or
-    parsed still counts as written (the tool emitted bytes) but its checks
-    are ungradeable, recorded as <receipt-unparseable>."""
-    if not os.path.isfile(path):
-        return None, False
+def _execute(cmd, env, cwd):
+    """Run the tool in its own session. On timeout (or an interrupt of this
+    script) its whole group is SIGKILLed while the unreaped leader still
+    pins the pgid. Returns (exit|None, stderr, timed_out)."""
+    proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                            text=True, env=env, cwd=cwd,
+                            start_new_session=True)
     try:
-        with open(path, 'r', encoding='utf-8') as fh:
-            return json.load(fh), True
-    except (OSError, ValueError):
-        return None, True
-
-
-def _failed_checks(doc):
-    out = []
-    checks = doc.get('checks') if isinstance(doc, dict) else None
-    if isinstance(checks, list):
-        for c in checks:
-            if isinstance(c, dict) and c.get('passed') is False:
-                out.append(str(c.get('id')))
-    return out
-
-
-def _teardown_ok(doc):
-    """None: no teardown-ish check in the receipt. Else all(passed) over
-    checks whose id carries a teardown token."""
-    checks = doc.get('checks') if isinstance(doc, dict) else None
-    vals = []
-    if isinstance(checks, list):
-        for c in checks:
-            cid = str(c.get('id', '')).lower() if isinstance(c, dict) else ''
-            if any(t in cid for t in TEARDOWN_TOKENS):
-                vals.append(bool(c.get('passed')))
-    return all(vals) if vals else None
-
-
-def _attributed(failed, expected):
-    """True when expected tokens exist and at least one token appears in the
-    recorded failed-check ids; None when no attribution is expected."""
-    if not expected:
-        return None
-    low = [f.lower() for f in failed]
-    return any(tok in fid for tok in expected for fid in low)
-
-
-def _gate_flip(st, gate, receipt_doc, failed):
-    """Gate-only arm: flip only the failing checks' passed->true and require
-    the gate to still reject (it re-derives checks from stored evidence).
-    Returns {'exit','rejected','accepted'} or None when not applicable."""
-    if not failed:
-        return None
-    flip = copy.deepcopy(receipt_doc)
-    flipped = 0
-    for c in flip.get('checks') or []:
-        if isinstance(c, dict) and c.get('passed') is False:
-            c['passed'] = True
-            flipped += 1
-    if not flipped:
-        return None
-    flip_path = st['wd'] / 'receipt-flipped.json'
-    flip_path.write_text(json.dumps(flip, indent=2, sort_keys=True) + '\n',
-                         encoding='utf-8')
-    try:
-        gp = subprocess.run(
-            [sys.executable, str(gate), str(flip_path)],
-            capture_output=True, text=True, timeout=GATE_TIMEOUT)
-        rc = gp.returncode
+        _out, err = proc.communicate(timeout=TOOL_TIMEOUT)
+        return proc.returncode, err or '', False
     except subprocess.TimeoutExpired:
-        rc = None
-    return {'exit': rc, 'rejected': rc == 1,
-            'accepted': rc == 0, 'flipped': flipped,
-            # non-null means the gate could reject on setup_error alone, so
-            # this arm does not isolate check re-derivation for this receipt
-            'receipt_setup_error': receipt_doc.get('setup_error')}
-
-
-def run_control(root, cid, tool, gate, probe):
-    shape, extra, inprocess, expected, _desc = CONTROLS[cid]
-    st = _stage_control(root, cid, shape, tool)
-    env = dict(os.environ)
-    env['TMPDIR'] = str(st['wd'])
-
-    argv = _tool_argv(st, probe, extra)
-    k6_flag = st['wd'] / 'k6.fired'
-    if inprocess:
-        cmd = [sys.executable, '-B', '-c', K6_WRAPPER, str(k6_flag)] + argv
-    else:
-        cmd = [sys.executable] + argv
-
-    tool_exit = None
-    tool_stderr_tail = ''
-    tool_timed_out = False
-    try:
-        cp = subprocess.run(cmd, capture_output=True, text=True,
-                            timeout=TOOL_TIMEOUT, env=env,
-                            cwd=str(st['wd']))
-        tool_exit = cp.returncode
-        tool_stderr_tail = (cp.stderr or '')[-2000:]
-    except subprocess.TimeoutExpired as exc:
-        tool_timed_out = True
-        tool_stderr_tail = (exc.stderr or '')[-2000:] \
-            if isinstance(exc.stderr, str) else ''
-    finally:
-        _kill_fake(st['srv'])
-
-    doc, receipt_written = _read_receipt(st['receipt'])
-    receipt_doc = doc if isinstance(doc, dict) else None
-    if inprocess and not k6_flag.is_file() and receipt_written:
-        # The run reached a receipt without the patched teardown firing: the
-        # patch missed (renamed/indirect call) and K6 would grade real
-        # teardown. A missing receipt is an escape instead, counted below.
-        raise ControlsFault(
-            f'k6: patched teardown never fired under {st["staged_tool"]}')
-
-    gate_exit = None
-    if receipt_written:
         try:
-            gp = subprocess.run(
-                [sys.executable, str(gate), str(st['receipt'])],
-                capture_output=True, text=True, timeout=GATE_TIMEOUT)
-            gate_exit = gp.returncode
-        except subprocess.TimeoutExpired:
-            gate_exit = None
+            os.killpg(proc.pid, signal.SIGKILL)
+        except OSError:
+            pass
+        _out, err = proc.communicate()
+        return None, err or '', True
+    except BaseException:
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except OSError:
+            pass
+        proc.wait()
+        raise
 
-    escaped = not receipt_written
-    failed = _failed_checks(receipt_doc) if receipt_doc else []
-    if receipt_written and receipt_doc is None:
-        failed.append('<receipt-unparseable>')
-    if tool_timed_out:
-        failed.append('<tool-timeout>')
-    td_ok = _teardown_ok(receipt_doc)
-    attributed = _attributed(failed, expected)
 
-    if cid == 'k0':
-        accepted = (tool_exit == 0 and gate_exit == 0
-                    and not escaped and not tool_timed_out)
-        rejected = not accepted
-        inconclusive = False
-    else:
-        base = (receipt_written and not tool_timed_out
-                and (tool_exit != 0 or (gate_exit is not None
-                                        and gate_exit != 0)))
-        if cid == 'k6':
-            # contract: receipt written on the internal fault, exit 2; accept
-            # any nonzero+receipt as a rejection, record the exact exit.
-            rejected = receipt_written and tool_exit not in (0, None)
-        else:
-            rejected = base
-        accepted = not rejected
-        # L1 decision 4: a rejected run whose failed checks do not cover the
-        # expected tokens is inconclusive (rejected for the wrong reason),
-        # never counted as detection.
-        inconclusive = bool(rejected and attributed is False)
+def _read_receipt(path):
+    """(doc|None, file_exists, sha256|None). A file that exists but cannot
+    be parsed still counts as written (the tool emitted bytes)."""
+    if not os.path.isfile(path):
+        return None, False, None
+    try:
+        raw = Path(path).read_bytes()
+    except OSError:
+        return None, True, None
+    digest = hashlib.sha256(raw).hexdigest()
+    try:
+        return json.loads(raw.decode('utf-8')), True, digest
+    except ValueError:
+        return None, True, digest
 
-    gate_flip = None
-    if cid != 'k0' and receipt_doc is not None:
-        gate_flip = _gate_flip(st, gate, receipt_doc, failed)
 
+# ---------------------------------------------------------------------- gate
+
+def _gate_result(rc, stdout, stderr, path_text, extra):
+    """Normalise one gate run: problem lines are stdout lines, lowercased,
+    with the receipt path removed so file names never match a token."""
+    text = stdout or ''
+    if path_text:
+        text = text.replace(str(path_text), '<receipt>')
     return {
-        'id': cid,
-        'tool_exit': tool_exit,
-        'gate_exit': gate_exit,
-        'receipt_written': receipt_written,
-        'failed_checks': failed,
-        'expected_failed': expected,
-        'attributed': attributed,
-        'inconclusive': inconclusive,
-        'accepted': accepted,
-        'rejected': rejected,
-        'escaped': escaped,
-        'teardown_ok': td_ok,
-        'gate_flip': gate_flip,
-        'tool_stderr_tail': tool_stderr_tail[-400:] or None,
+        'exit': rc,
+        'problems': [ln.strip().lower() for ln in text.splitlines()
+                     if ln.strip()],
+        'usage_error': (rc == 2 and bool(extra)
+                        and 'unrecognized arguments' in (stderr or '')),
+        'stderr_tail': (stderr or '')[-400:] or None,
     }
 
 
-def _print_human(rows, result, selected):
-    for r in rows:
-        if r['id'] == 'k0':
-            verdict = 'GOOD-OK' if r['accepted'] else 'GOOD-REJECTED'
-        elif r['accepted']:
-            verdict = 'ACCEPTED-BAD'
-        elif r['inconclusive']:
-            verdict = 'INCONCLUSIVE'
-        else:
-            verdict = 'rejected'
-        esc = ' ESCAPED' if r['escaped'] else ''
-        td = '' if r['teardown_ok'] is None else \
-            f" teardown_ok={r['teardown_ok']}"
-        gf = ''
-        if r['gate_flip'] is not None:
-            gf = (' gate_flip=REJECTED' if r['gate_flip']['rejected']
-                  else ' gate_flip=ACCEPTED!')
-        att = '' if r['attributed'] is None else f" attributed={r['attributed']}"
-        print(f"{r['id']:<3} tool={r['tool_exit']!s:<5} "
-              f"gate={r['gate_exit']!s:<5} "
-              f"receipt={'yes' if r['receipt_written'] else 'NO '}"
-              f"{esc}{td}{att}{gf} failed={r['failed_checks']} -> {verdict}")
-    print(f"controls: {', '.join(selected)}; "
-          f"accepted_bad={result['accepted_bad']} "
-          f"gate_flip_bad={result['gate_flip_bad']} "
-          f"inconclusive={result['inconclusive']} "
-          f"good_ok={result['good_ok']}")
+class SubprocessGate:
+    """The receipt gate under test, one subprocess per verdict."""
 
+    def __init__(self, path):
+        self.path = str(path)
+
+    def run(self, st, name, doc=None, path=None, extra=()):
+        if path is None:
+            path = Path(st['wd']) / name
+            path.write_text(json.dumps(doc, indent=2, sort_keys=True) + '\n',
+                            encoding='utf-8')
+        cmd = [sys.executable, self.path, str(path)] + list(extra)
+        try:
+            gp = subprocess.run(cmd, capture_output=True, text=True,
+                                timeout=GATE_TIMEOUT,
+                                stdin=subprocess.DEVNULL)
+        except subprocess.TimeoutExpired:
+            return _gate_result(None, '', 'gate timeout', str(path), extra)
+        return _gate_result(gp.returncode, gp.stdout, gp.stderr, str(path),
+                            extra)
+
+
+def _id_re(cid):
+    return re.compile(r'(?<![a-z0-9_])' + re.escape(cid.lower())
+                      + r'(?![a-z0-9_])')
+
+
+def _named_checks(gate_out, ids):
+    """Check ids (from `ids`) named by any gate problem line."""
+    if not gate_out:
+        return []
+    lines = gate_out['problems']
+    return sorted(c for c in set(ids)
+                  if any(_id_re(c).search(ln) for ln in lines))
+
+
+def _check_states(doc):
+    """(failed ids: passed is False, null ids: passed neither True nor
+    False, every id carried)."""
+    failed, null, ids = [], [], []
+    checks = doc.get('checks') if isinstance(doc, dict) else None
+    if isinstance(checks, list):
+        for c in checks:
+            if not isinstance(c, dict):
+                continue
+            cid = str(c.get('id'))
+            ids.append(cid)
+            if c.get('passed') is False:
+                failed.append(cid)
+            elif c.get('passed') is not True:
+                null.append(cid)
+    return failed, null, ids
+
+
+# ------------------------------------------------------------------- grading
+
+def _target_hit(spec, doc, hit_ids):
+    """True/False when the control has a target, None otherwise."""
+    if not spec.targets and not spec.setup_token:
+        return None
+    checks_ok = (not spec.targets) or any(t in hit_ids for t in spec.targets)
+    token_ok = True
+    if spec.setup_token:
+        fields = ((doc.get('setup_error'), doc.get('internal_fault'))
+                  if isinstance(doc, dict) else ())
+        token_ok = any(isinstance(f, str) and spec.setup_token in f
+                       for f in fields)
+    return bool(checks_ok and token_ok)
+
+
+def _coherent_not_evaluated(tool_exit, doc, failed, null):
+    if tool_exit != 2:
+        return False, f'gate NOT-EVALUATED but tool exit {tool_exit} (want 2)'
+    if not isinstance(doc, dict):
+        return False, 'gate NOT-EVALUATED on an unparseable receipt'
+    if doc.get('outcome') != 'not-evaluated':
+        return False, (f"gate NOT-EVALUATED but receipt outcome "
+                       f"{doc.get('outcome')!r}")
+    if doc.get('setup_error') is not None:
+        return False, (f"NOT-EVALUATED with setup_error "
+                       f"{doc.get('setup_error')!r}")
+    if failed:
+        return False, f'NOT-EVALUATED with false checks {failed}'
+    if not null or set(null) != set(NULLABLE):
+        return False, (f'null checks {null} are not exactly the nullable '
+                       f'set {sorted(NULLABLE)}')
+    if doc.get('loading_observed') is not False:
+        return False, (f"loading_envelope_graded null but loading_observed "
+                       f"{doc.get('loading_observed')!r}")
+    for c in doc.get('checks') or []:
+        if isinstance(c, dict) and c.get('id') in NULLABLE:
+            obs = c.get('observed') if isinstance(c.get('observed'),
+                                                  dict) else {}
+            if obs.get('not_evaluated_reason') != NULLABLE[c['id']]:
+                return False, (f"{c['id']}: observed.not_evaluated_reason "
+                               f"{obs.get('not_evaluated_reason')!r}")
+    return True, 'tool exit 2 and gate NOT-EVALUATED on the nullable check only'
+
+
+def classify_run(spec, tool_exit, tool_timed_out, receipt_written,
+                 receipt_doc, gate_exit, failed_checks, null_checks, named):
+    """Pure classification of one in-tool run -> (class, reason, hit)."""
+    hit = _target_hit(spec, receipt_doc,
+                      set(failed_checks) | set(named))
+    accepted = (tool_exit == 0 and gate_exit == 0
+                and receipt_written and receipt_doc is not None
+                and not tool_timed_out)
+    exit_ok = tool_exit in spec.exits
+    if tool_timed_out or not receipt_written:
+        why = ('tool timed out' if tool_timed_out
+               else f'no receipt written (tool exit {tool_exit})')
+        if spec.good:
+            return 'misclassified', f'{why}: no verdict on a good server', hit
+        return 'accepted', f'{why}: never credited as a rejection', hit
+    if accepted:
+        return 'accepted', 'tool exit 0 and gate VALID', hit
+    if gate_exit == 0:
+        return 'misclassified', (f'gate VALID on a run whose tool exit is '
+                                 f'{tool_exit}'), hit
+    if gate_exit == 3:
+        ok, why = _coherent_not_evaluated(tool_exit, receipt_doc,
+                                          failed_checks, null_checks)
+        return ('not-evaluated' if ok else 'misclassified'), why, hit
+    if gate_exit not in (1, 2):
+        return 'misclassified', f'no gate verdict (gate exit {gate_exit})', hit
+    if gate_exit == 2 and receipt_doc is not None:
+        return 'misclassified', 'gate exit 2 on a parseable receipt', hit
+    where = (f'tool exit {tool_exit}, gate exit {gate_exit}, failed '
+             f'{failed_checks}, setup_error '
+             f"{receipt_doc.get('setup_error') if receipt_doc else None!r}")
+    if not exit_ok and not spec.good:
+        return 'misclassified', (f'tool exit {tool_exit} is outside the '
+                                 f'contract {list(spec.exits)}: {where}'), hit
+    if not hit:
+        return 'rejected-untargeted', f'refused off-target: {where}', hit
+    return 'rejected-targeted', f'refused on target: {where}', hit
+
+
+def bucket_of(spec, classification):
+    if classification == spec.expect:
+        return 'ok'
+    if not spec.good and classification == 'accepted':
+        return 'accepted_bad'
+    if spec.good and spec.expect == 'accepted' \
+            and classification.startswith('rejected-'):
+        return 'good_rejected'
+    return 'misclassified'
+
+
+def _gate_flip(st, gate, receipt_doc, failed):
+    """Gate-only arm: doctor the receipt into a clean-looking pass (every
+    check in `failed` — passed false or null — set passed:true and
+    evaluated:true where present; outcome 'pass' where present; setup_error
+    and internal_fault null) and require the gate to refuse it, which it can
+    only do by re-deriving the checks from the stored evidence. None when
+    there is nothing to flip."""
+    if not failed:
+        return None
+    flip = copy.deepcopy(receipt_doc)
+    flipped = []
+    for c in flip.get('checks') or []:
+        if isinstance(c, dict) and c.get('passed') is not True:
+            c['passed'] = True
+            if 'evaluated' in c:
+                c['evaluated'] = True
+            flipped.append(str(c.get('id')))
+    if not flipped:
+        return None
+    if 'outcome' in flip:
+        flip['outcome'] = 'pass'
+    cleared = [k for k in ('setup_error', 'internal_fault')
+               if flip.get(k) is not None]
+    for k in cleared:
+        flip[k] = None
+    out = gate.run(st, 'receipt-flipped.json', doc=flip)
+    return {'exit': out['exit'], 'accepted': out['exit'] == 0,
+            'rejected': out['exit'] not in (0, None),
+            'flipped': flipped, 'cleared': cleared,
+            'targeted': bool(_named_checks(out, flipped))}
+
+
+def _base_row(spec):
+    return {
+        'id': spec.cid, 'kind': spec.kind, 'good': spec.good,
+        'expected': spec.expect,
+        'description': spec.doc.split('\n\n', 1)[0].replace('\n', ' '),
+        'targeted': (list(spec.targets)
+                     + ([spec.setup_token] if spec.setup_token else [])
+                     + ([spec.problem_re] if spec.problem_re else [])),
+        'exits': list(spec.exits) if spec.kind != 'forgery' else None,
+    }
+
+
+def grade_tool_row(spec, obs, st, gate):
+    """Grade one in-tool run (real or synthetic) -> public row."""
+    tool_exit = obs['tool_exit']
+    receipt_written = obs['receipt_written']
+    receipt_doc = obs['receipt_doc']
+    gate_out = None
+    if receipt_written:
+        gate_out = gate.run(st, 'receipt.json', doc=receipt_doc,
+                            path=obs.get('receipt_path'))
+    gate_exit = gate_out['exit'] if gate_out else None
+    failed_checks, null_checks, ids = _check_states(receipt_doc)
+    named = _named_checks(gate_out, set(CHECK_IDS) | set(ids))
+    cls, reason, hit = classify_run(
+        spec, tool_exit, obs['tool_timed_out'], receipt_written,
+        receipt_doc, gate_exit, failed_checks, null_checks, named)
+    failed = failed_checks + null_checks
+    gate_flip = None
+    if spec.expect != 'accepted' and receipt_doc is not None:
+        gate_flip = _gate_flip(st, gate, receipt_doc, failed)
+    doc = receipt_doc if isinstance(receipt_doc, dict) else {}
+    row = _base_row(spec)
+    row.update({
+        'classification': cls,
+        'bucket': bucket_of(spec, cls),
+        'reason': reason,
+        'targeted_hit': hit,
+        'tool_exit': tool_exit,
+        'tool_timed_out': obs['tool_timed_out'],
+        'gate_exit': gate_exit,
+        'receipt_written': receipt_written,
+        'receipt_parsed': receipt_doc is not None,
+        'receipt_sha256': obs.get('receipt_sha256'),
+        'receipt_schema': doc.get('schema'),
+        'receipt_outcome': doc.get('outcome'),
+        'receipt_check_ids': ids,
+        'setup_error': doc.get('setup_error'),
+        'internal_fault': doc.get('internal_fault'),
+        'failed_checks': failed_checks,
+        'null_checks': null_checks,
+        'gate_named_checks': named,
+        'gate_problems': (gate_out['problems'][:12] if gate_out else []),
+        'escaped': not receipt_written,
+        'inject_fired': obs.get('inject_fired'),
+        'gate_flip': gate_flip,
+        'tool_stderr_tail': (obs.get('tool_stderr_tail') or '')[-400:] or None,
+    })
+    return row
+
+
+def classify_forgery(spec, verdict, usable):
+    """Pure classification of one gate verdict on a forged receipt."""
+    pat = re.compile(spec.problem_re)
+    hit = bool(usable and any(pat.search(ln) for ln in verdict['problems']))
+    ex = verdict['exit']
+    if ex == 0:
+        return 'accepted', 'gate VALID on a forged receipt', hit
+    if ex == 1:
+        if hit:
+            return 'rejected-targeted', 'gate INVALID naming the predicate', hit
+        return 'rejected-untargeted', 'gate INVALID off-predicate', hit
+    if ex == 3:
+        return 'not-evaluated', 'gate NOT-EVALUATED on a forged receipt', hit
+    return 'misclassified', f'no gate verdict (gate exit {ex})', hit
+
+
+def grade_forgery_row(spec, st, gate, base):
+    """Forge `base` (this run's k0 receipt) and grade the gate verdict."""
+    row = _base_row(spec)
+    row.update({'base_source': base.get('source') if base else None,
+                'base_gate_exit': base.get('gate_exit') if base else None,
+                'gate_args': list(spec.gate_args), 'gate_exit': None,
+                'flag_gate_exit': None, 'flagless_gate_exit': None,
+                'usage_error': False, 'forged_sha256': None,
+                'gate_problems': [], 'targeted_hit': None,
+                'failed_checks': [], 'null_checks': [],
+                'gate_flip': None})
+
+    def finish(cls, reason):
+        row.update(classification=cls, bucket=bucket_of(spec, cls),
+                   reason=reason)
+        return row
+
+    if not base or not isinstance(base.get('doc'), dict):
+        return finish('misclassified', 'no parseable base k0 receipt')
+    try:
+        forged = spec.forge(copy.deepcopy(base['doc']))
+    except ForgeError as exc:
+        return finish('misclassified', f'cannot forge: {exc}')
+    row['forged_sha256'] = _canonical_sha256(forged)
+    verdict = gate.run(st, 'gate-input.json', doc=forged,
+                       extra=spec.gate_args)
+    usable = True
+    if spec.gate_args:
+        row['flag_gate_exit'] = verdict['exit']
+        flagless = gate.run(st, 'gate-input.json', doc=forged)
+        row['flagless_gate_exit'] = flagless['exit']
+        if verdict['usage_error']:
+            # unknown-flag rule: classify the flagless bytes, never targeted
+            row['usage_error'] = True
+            verdict, usable = flagless, False
+    row['gate_exit'] = verdict['exit']
+    row['gate_problems'] = verdict['problems'][:12]
+    cls, reason, hit = classify_forgery(spec, verdict, usable)
+    row['targeted_hit'] = hit
+    if not usable:
+        reason = (f'gate refused {" ".join(spec.gate_args)} as an unknown '
+                  f'flag; graded on the flagless run: {reason}')
+    if base.get('gate_exit') != 0:
+        return finish('misclassified', (f"base k0 receipt is not gate-VALID "
+                                        f"(exit {base.get('gate_exit')}); "
+                                        f'forgery not isolating; {reason}'))
+    return finish(cls, reason)
+
+
+# ------------------------------------------------------------------- summary
+
+def _flip_owed(row):
+    """The gate-flip arm must have run for this row."""
+    return (row['kind'] != 'forgery' and row['expected'] != 'accepted'
+            and row.get('receipt_parsed')
+            and bool(row['failed_checks'] or row['null_checks']))
+
+
+def summarize(rows, selected):
+    """Aggregate public rows into the counts; raises ControlsFault when an
+    owed gate-flip arm did not run."""
+    res = {'accepted_bad': 0, 'good_rejected': 0, 'misclassified': 0,
+           'inconclusive': 0, 'gate_flip_bad': 0, 'gate_flip_arms': 0}
+    universe = set(CHECK_IDS)
+    controlled = {}
+    for r in rows:
+        if r['bucket'] in ('accepted_bad', 'good_rejected', 'misclassified'):
+            res[r['bucket']] += 1
+        if not r['good'] and r['kind'] != 'forgery' and r['targeted'] \
+                and r['classification'] == 'rejected-untargeted':
+            res['inconclusive'] += 1
+        gf = r.get('gate_flip')
+        if _flip_owed(r) and not isinstance(gf, dict):
+            raise ControlsFault(f"{r['id']}: gate-flip arm owed but not run")
+        if isinstance(gf, dict):
+            res['gate_flip_arms'] += 1
+            if gf['accepted']:
+                res['gate_flip_bad'] += 1
+                res['accepted_bad'] += 1
+        universe |= set(r.get('receipt_check_ids') or [])
+        if r['kind'] != 'forgery' and r['bucket'] == 'ok' \
+                and r['classification'] == 'rejected-targeted':
+            hits = set(r['failed_checks']) | set(r['gate_named_checks'])
+            for t in r['targeted']:
+                if t in hits:
+                    controlled.setdefault(t, []).append(r['id'])
+    good = [r for r in rows if r['id'] == 'k0']
+    res['good_ok'] = (good[0]['classification'] == 'accepted'
+                      if good else None)
+    res['uncontrolled_checks'] = sorted(universe - set(controlled)
+                                        - set(INPUT_INTEGRITY))
+    res['controlled_checks'] = {k: controlled[k] for k in sorted(controlled)}
+    res['input_integrity_checks'] = list(INPUT_INTEGRITY)
+    res['selected'] = list(selected)
+    return res
+
+
+def exit_code(res):
+    clean = (res['accepted_bad'] == 0 and res['good_rejected'] == 0
+             and res['misclassified'] == 0)
+    return 0 if (clean and res['good_ok'] is not False) else 1
+
+
+# ----------------------------------------------------------------------- runs
+
+def run_tool_control(root, spec, tool, probe, gate, run_id=None):
+    """Execute one in-tool control -> (public row, receipt doc|None)."""
+    rid = run_id or spec.cid
+    st = _stage_control(root, rid, spec.shape, tool)
+    env = dict(os.environ)
+    env['TMPDIR'] = str(st['wd'])
+    argv = _tool_argv(st, probe, spec.extra)
+    flag = st['wd'] / 'inject.fired'
+    if spec.inject:
+        cmd = [sys.executable, '-B', '-c', INJECT_WRAPPER, str(flag),
+               spec.inject] + argv
+    else:
+        cmd = [sys.executable] + argv
+    try:
+        tool_exit, stderr, timed_out = _execute(cmd, env, str(st['wd']))
+    finally:
+        _kill_fake(st['srv'])
+    doc, written, digest = _read_receipt(st['receipt'])
+    fired = flag.is_file() if spec.inject else None
+    if spec.inject and written and not fired:
+        # The run reached a receipt without the patched teardown firing: the
+        # patch missed (renamed/indirect call) and the control would grade
+        # real teardown. A missing receipt is an escape instead.
+        raise ControlsFault(
+            f'{spec.cid}: patched teardown never fired under '
+            f'{st["staged_tool"]}')
+    obs = {'tool_exit': tool_exit, 'tool_timed_out': timed_out,
+           'receipt_written': written,
+           'receipt_doc': doc if isinstance(doc, dict) else None,
+           'receipt_path': st['receipt'] if written else None,
+           'receipt_sha256': digest, 'inject_fired': fired,
+           'tool_stderr_tail': stderr}
+    return grade_tool_row(spec, obs, st, gate), obs['receipt_doc']
+
+
+def _forgery_stage(root, cid):
+    wd = Path(root) / cid
+    wd.mkdir(parents=True, exist_ok=True)
+    return {'wd': wd}
+
+
+def _print_human(result, rc):
+    for r in result['controls']:
+        gf = ''
+        if r.get('gate_flip') is not None:
+            gf = (' flip=ACCEPTED!' if r['gate_flip']['accepted']
+                  else f" flip={r['gate_flip']['exit']}")
+        print(f"{r['id']:<4} {r['kind']:<9} tool={r.get('tool_exit')!s:<5} "
+              f"gate={r.get('gate_exit')!s:<5} {r['classification']:<19} "
+              f"[{r['bucket']}]{gf} failed={r['failed_checks']} "
+              f"null={r['null_checks']} — {r['reason']}")
+    print(f"controls: {', '.join(result['selected'])}; "
+          f"accepted_bad={result['accepted_bad']} "
+          f"good_rejected={result['good_rejected']} "
+          f"misclassified={result['misclassified']} "
+          f"gate_flip_bad={result['gate_flip_bad']} "
+          f"gate_flip_arms={result['gate_flip_arms']} "
+          f"good_ok={result['good_ok']} "
+          f"uncontrolled={result['uncontrolled_checks']} exit={rc}")
+
+
+# ------------------------------------------------------------------ selftest
+
+SYN_V3 = 'kama-llamacpp-live/v3'
+SYN_ENVELOPE = json.dumps(EXACT_ENVELOPE, separators=(',', ':'))
+
+
+def _syn_argv():
+    return ['/srv/fake_server.py', '-m', '/m.gguf', '--alias', ALIAS,
+            '--host', '127.0.0.1', '--port', '40000', '-c', '256', '-t', '1',
+            '--no-webui', '--offline']
+
+
+def _syn_receipt(fail=(), null=(), truth_fail=(), setup_error=None,
+                 internal_fault=None, outcome=None):
+    """Synthetic v3-shaped receipt. `_truth` stands for the stored evidence
+    a hardened gate re-derives each check from."""
+    truth = {cid: True for cid in CHECK_IDS}
+    for cid in tuple(fail) + tuple(truth_fail):
+        truth[cid] = False
+    for cid in null:
+        truth[cid] = None
+    checks = []
+    for cid in CHECK_IDS:
+        passed = False if cid in fail else (None if cid in null else True)
+        observed = {}
+        if passed is None:
+            observed['not_evaluated_reason'] = NULLABLE.get(cid, 'other')
+        checks.append({'id': cid, 'documented_by': 'selftest',
+                       'passed': passed, 'evaluated': passed is not None,
+                       'observed': observed})
+    if outcome is None:
+        outcome = ('setup-error' if setup_error else 'fail' if fail
+                   else 'not-evaluated' if null else 'pass')
+    sha = hashlib.sha256(SYN_ENVELOPE.encode('utf-8')).hexdigest()
+    loading_not_observed = 'loading_envelope_graded' in null
+    transitions = [
+        {'t_ms': 1, 'path': '/v1/models', 'status': 200,
+         'body': '{}', 'body_sha256': 'x', 'repeats': 0},
+        {'t_ms': 2, 'path': '/health', 'status': 200,
+         'body': '{\"status\":\"ok\"}', 'body_sha256': 'y', 'repeats': 0},
+    ]
+    loading = None
+    bodies = []
+    if not loading_not_observed:
+        transitions.insert(0, {
+            't_ms': 0, 'path': '/v1/models', 'status': 503,
+            'body': SYN_ENVELOPE, 'body_sha256': sha, 'repeats': 2})
+        loading = {'t_ms': 0, 'path': '/v1/models', 'status': 503,
+                   'body': SYN_ENVELOPE, 'body_sha256': sha}
+        bodies = [{'path': '/v1/models', 'body': SYN_ENVELOPE,
+                   'body_sha256': sha, 'repeats': 2}]
+    return {
+        'schema': SYN_V3, 'checks': checks, 'setup_error': setup_error,
+        'internal_fault': internal_fault, 'outcome': outcome,
+        'loading_observed': not loading_not_observed,
+        'loading_503': loading,
+        'loading_envelope_exact': True if loading else None,
+        'argv': _syn_argv(), 'teardown': {'returncode': 0},
+        'transitions': transitions,
+        'loading_503_bodies': bodies,
+        'captures': {'models': {'status': 200}},
+        '_truth': truth,
+    }
+
+
+class _FakeGate:
+    """Synthetic gate for --selftest (never a subprocess). 'strict' models a
+    hardened v3 gate (schema floor, exact argv, every /v1/models 503 row,
+    each claimed check vs `_truth`); 'lax' only trusts claimed `passed`
+    values and setup_error, like a gate without re-derivation. no_flag
+    answers --require-schema with an argparse usage error; fixed returns
+    one canned (exit, problem lines) for every call."""
+
+    def __init__(self, mode='strict', no_flag=False, fixed=None):
+        self.mode, self.no_flag, self.fixed = mode, no_flag, fixed
+        self.calls = []
+
+    def run(self, st, name, doc=None, path=None, extra=()):
+        extra = list(extra)
+        self.calls.append((name, tuple(extra)))
+        if self.no_flag and '--require-schema' in extra:
+            return _gate_result(2, '', 'check-receipt.py: error: '
+                                'unrecognized arguments: --require-schema v3',
+                                None, extra)
+        if self.fixed is not None:
+            return _gate_result(self.fixed[0], '\n'.join(self.fixed[1]), '',
+                                None, extra)
+        problems = self._problems(doc, extra)
+        checks = [c for c in doc.get('checks') or [] if isinstance(c, dict)]
+        if problems:
+            return _gate_result(1, 'INVALID r\n' + '\n'.join(
+                '  - ' + p for p in problems), '', None, extra)
+        if any(c.get('passed') is None for c in checks):
+            return _gate_result(3, 'NOT-EVALUATED r', '', None, extra)
+        return _gate_result(0, 'VALID r', '', None, extra)
+
+    def _problems(self, doc, extra):
+        out = []
+        schema = doc.get('schema')
+        if '--require-schema' in extra and schema != SYN_V3:
+            out.append(f'schema {schema!r} is below the required v3')
+        checks = [c for c in doc.get('checks') or [] if isinstance(c, dict)]
+        for c in checks:
+            if c.get('passed') is False:
+                out.append(f"check {c.get('id')!r}: passed is false")
+        if doc.get('setup_error') is not None:
+            out.append(f"setup_error is {doc.get('setup_error')!r}")
+        if self.mode == 'strict' and schema == SYN_V3:
+            for c in checks:
+                cid = c.get('id')
+                if c.get('evaluated') is not (c.get('passed') is not None):
+                    out.append(f"check {cid!r}: evaluated disagrees with passed")
+                if c.get('passed') is None:
+                    observed = c.get('observed')
+                    observed = observed if isinstance(observed, dict) else {}
+                    if cid != 'loading_envelope_graded':
+                        out.append(f"check {cid!r}: null is not licensed")
+                    if observed.get('not_evaluated_reason') \
+                            != 'no-loading-503-observed':
+                        out.append(f"check {cid!r}: wrong not_evaluated_reason")
+                    transition_503 = any(
+                        isinstance(t, dict) and t.get('status') == 503
+                        for t in doc.get('transitions', []))
+                    if (doc.get('loading_observed') is not False
+                            or transition_503
+                            or doc.get('loading_503') is not None
+                            or doc.get('loading_503_bodies')):
+                        out.append("loading_envelope_graded: no-loading "
+                                   "reason contradicts stored 503 evidence")
+            want_outcome = (
+                'setup-error' if doc.get('setup_error') is not None
+                else 'fail' if any(c.get('passed') is False for c in checks)
+                else 'not-evaluated'
+                if any(c.get('passed') is None for c in checks) else 'pass')
+            if doc.get('outcome') != want_outcome:
+                out.append('outcome disagrees with checks and setup_error')
+            truth = doc.get('_truth') or {}
+            for c in checks:
+                want = truth.get(c.get('id'), True)
+                if c.get('passed') != want:
+                    out.append(f"check {c.get('id')!r}: claims passed="
+                               f"{c.get('passed')} but re-derivation gives "
+                               f'{want}')
+            if doc.get('argv') != _syn_argv():
+                out.append('argv is not the exact argv re-derived from the '
+                           'receipt fields')
+            for i, t in enumerate(doc.get('transitions') or []):
+                if t.get('path') == '/v1/models' and t.get('status') == 503 \
+                        and t.get('body') != SYN_ENVELOPE:
+                    out.append(f'transitions[{i}]: /v1/models 503 body is '
+                               'not the exact loading envelope')
+        return out
+
+
+def _syn_obs(tool_exit, doc, written=True, timed_out=False, fired=None):
+    return {'tool_exit': tool_exit, 'tool_timed_out': timed_out,
+            'receipt_written': written, 'receipt_doc': doc,
+            'receipt_path': None, 'receipt_sha256': None,
+            'inject_fired': fired, 'tool_stderr_tail': None}
+
+
+def selftest():
+    """Synthetic outcomes through classify_run/grade_tool_row/_gate_flip/
+    grade_forgery_row/summarize/exit_code. Each case pins one rule; the
+    K0 exit predicate, the gate-flip arm and the k6 exit contract each have
+    a case that fails when that rule is weakened."""
+    st = {'wd': None}
+    failures = []
+    n = [0]
+
+    def expect(cond, label):
+        n[0] += 1
+        if not cond:
+            failures.append(label)
+
+    def tool(cid, tool_exit, doc, gate=None, **kw):
+        return grade_tool_row(CONTROLS[cid], _syn_obs(tool_exit, doc, **kw),
+                              st, gate or _FakeGate())
+
+    def cls(row):
+        return (row['classification'], row['bucket'])
+
+    good = _syn_receipt()
+    # --- k0: the accept predicate (tool exit 0 AND gate exit 0)
+    r = tool('k0', 0, good)
+    expect(cls(r) == ('accepted', 'ok') and r['gate_flip'] is None,
+           'k0 exit 0 + VALID -> accepted')
+    for bad_exit in (-15, -9, 1, 2, 3, 4):
+        r = tool('k0', bad_exit, good)
+        expect(r['classification'] != 'accepted'
+               and r['bucket'] == 'misclassified',
+               f'k0 tool exit {bad_exit} + VALID is never accepted')
+    r = tool('k0', -15, good)
+    expect(summarize([r], ['k0'])['good_ok'] is False,
+           'k0 exit -15 -> good_ok false')
+    r = tool('k0', None, None, written=False, timed_out=True)
+    expect(cls(r) == ('misclassified', 'misclassified'),
+           'k0 timeout -> misclassified')
+    r = tool('k0', 4, None, written=False)
+    expect(cls(r) == ('misclassified', 'misclassified'),
+           'k0 escape -> misclassified')
+    r = tool('k0', 0, _syn_receipt(fail=('health_ready',)))
+    expect(r['bucket'] == 'good_rejected', 'k0 refused -> good_rejected')
+    r = tool('k0', 0, good, gate=_FakeGate(fixed=(3, ['not-evaluated r'])))
+    expect(r['bucket'] == 'misclassified', 'k0 gate exit 3 -> misclassified')
+    r = tool('k0', 0, good, gate=_FakeGate(fixed=(None, [])))
+    expect(r['bucket'] == 'misclassified', 'k0 gate timeout -> misclassified')
+
+    # --- k1: targeted refusal + the gate-flip arm
+    k1doc = _syn_receipt(fail=('health_ready',))
+    r = tool('k1', 1, k1doc)
+    expect(cls(r) == ('rejected-targeted', 'ok'), 'k1 targeted refusal')
+    expect(isinstance(r['gate_flip'], dict) and r['gate_flip']['rejected']
+           and r['gate_flip']['flipped'] == ['health_ready']
+           and r['gate_flip']['targeted'],
+           'k1 gate-flip arm runs and the strict gate refuses it')
+    s = summarize([r], ['k1'])
+    expect(s['gate_flip_arms'] == 1 and s['accepted_bad'] == 0
+           and exit_code(dict(s, good_ok=True)) == 0,
+           'k1 strict: one flip arm, nothing accepted')
+    r = tool('k1', 1, k1doc, gate=_FakeGate('lax'))
+    expect(cls(r) == ('rejected-targeted', 'ok')
+           and r['gate_flip']['accepted'],
+           'k1 lax gate accepts the doctored receipt')
+    s = summarize([r], ['k1'])
+    expect(s['gate_flip_bad'] == 1 and s['accepted_bad'] == 1
+           and exit_code(s) == 1,
+           'accepted gate-flip counts in accepted_bad and fails the run')
+    r = tool('k1', 0, _syn_receipt(truth_fail=('health_ready',)))
+    expect(r['classification'] == 'misclassified'
+           and r['gate_named_checks'] == ['health_ready'],
+           'k1 tool pass caught only by the gate -> misclassified exit')
+    r = tool('k1', 1, _syn_receipt(fail=('models_alias_id',)))
+    expect(cls(r) == ('rejected-untargeted', 'misclassified'),
+           'k1 refused off-target -> misclassified')
+    expect(summarize([r], ['k1'])['inconclusive'] == 1,
+           'off-target bad refusal counts as inconclusive')
+    r = tool('k1', 1, k1doc, gate=_FakeGate(fixed=(0, ['valid r'])))
+    expect(r['bucket'] == 'misclassified',
+           'gate VALID on a failed run -> misclassified')
+    r = tool('k1', 4, None, written=False)
+    expect(cls(r) == ('accepted', 'accepted_bad') and r['escaped'],
+           'bad escape without receipt -> accepted_bad')
+    r = tool('k1', None, None, written=False, timed_out=True)
+    expect(r['bucket'] == 'accepted_bad', 'bad timeout -> accepted_bad')
+    r = tool('k1', 1, None, written=True,
+             gate=_FakeGate(fixed=(2, ['unreadable'])))
+    expect(cls(r) == ('rejected-untargeted', 'misclassified'),
+           'unparseable receipt -> refused off-target')
+    try:
+        summarize([dict(tool('k1', 1, k1doc), gate_flip=None)], ['k1'])
+        expect(False, 'skipped gate-flip arm must fault')
+    except ControlsFault:
+        expect(True, 'skipped gate-flip arm faults')
+
+    # --- k6 / k18 / k7: exit contract
+    k6doc = _syn_receipt(fail=('teardown_graceful',),
+                         setup_error='internal:RuntimeError',
+                         internal_fault='internal:RuntimeError')
+    r = tool('k6', 2, k6doc, fired=True)
+    expect(cls(r) == ('rejected-targeted', 'ok'), 'k6 receipt + exit 2')
+    for wrong in (1, 3, -15):
+        r = tool('k6', wrong, k6doc, fired=True)
+        expect(r['bucket'] == 'misclassified',
+               f'k6 tool exit {wrong} is outside the exit-2 contract')
+    r = tool('k6', 2, _syn_receipt(fail=('teardown_graceful',),
+                                   setup_error='internal:ValueError'))
+    expect(cls(r) == ('rejected-untargeted', 'misclassified'),
+           'k6 wrong fault token -> off-target')
+    r = tool('k18', 4, None, written=False, fired=True)
+    expect(r['bucket'] == 'accepted_bad', 'k18 escape -> accepted_bad')
+    r = tool('k18', 2, _syn_receipt(
+        fail=('teardown_graceful',),
+        setup_error='internal:KeyboardInterrupt'), fired=True)
+    expect(cls(r) == ('rejected-targeted', 'ok'), 'k18 receipt + exit 2')
+    r = tool('k18', 1, _syn_receipt(
+        fail=('teardown_graceful',),
+        setup_error='internal:KeyboardInterrupt'), fired=True)
+    expect(r['bucket'] == 'misclassified', 'k18 exit 1 -> misclassified')
+    k7doc = _syn_receipt(fail=('teardown_graceful',),
+                         setup_error='ready-timeout')
+    r = tool('k7', 2, k7doc)
+    expect(cls(r) == ('rejected-untargeted', 'ok')
+           and r['targeted_hit'] is None,
+           'k7 ready-timeout remains intentionally un-attributed')
+    expect(tool('k7', 1, k7doc)['bucket'] == 'misclassified',
+           'k7 exit 1 violates the setup-error exit-2 contract')
+
+    # --- k16: not-evaluated coherence and fail/null precedence
+    zl = _syn_receipt(null=('loading_envelope_graded',))
+    r = tool('k16', 2, zl)
+    expect(cls(r) == ('not-evaluated', 'ok'), 'k16 coherent not-evaluated')
+    expect(isinstance(r['gate_flip'], dict)
+           and r['gate_flip']['rejected']
+           and r['gate_flip']['targeted']
+           and r['gate_flip']['flipped'] == ['loading_envelope_graded'],
+           'k16 null->true flip is refused on the loading check')
+    r = tool('k16', 2, zl, gate=_FakeGate('lax'))
+    expect(r['gate_flip']['accepted']
+           and summarize([r], ['k16'])['accepted_bad'] == 1,
+           'k16 lax gate accepting the doctored pass -> accepted_bad')
+    r = tool('k16', 1, _syn_receipt(fail=('loading_envelope_graded',)))
+    expect(r['bucket'] == 'misclassified', 'k16 exit 1 (R4) -> misclassified')
+    r = tool('k16', 0, good)
+    expect(cls(r) == ('accepted', 'misclassified'),
+           'k16 vacuous pass -> misclassified')
+    expect(tool('k16', 2, dict(zl, outcome='fail'))['bucket']
+           == 'misclassified', 'k16 outcome mismatch -> misclassified')
+    expect(tool('k16', 2, _syn_receipt(null=('props_alias',)))['bucket']
+           == 'misclassified', 'k16 null outside the nullable set')
+    zl_obs = copy.deepcopy(zl)
+    zl_obs['loading_observed'] = True
+    expect(tool('k16', 2, zl_obs)['bucket'] == 'misclassified',
+           'k16 null while loading observed -> misclassified')
+
+    # H1/F-launder: observed 503 evidence cannot be declared "no 503".
+    laundered = copy.deepcopy(zl)
+    bad_body = json.dumps(NON_EXACT_ENVELOPE, separators=(',', ':'))
+    bad_sha = hashlib.sha256(bad_body.encode('utf-8')).hexdigest()
+    laundered['transitions'].insert(0, {
+        't_ms': 0, 'path': '/v1/models', 'status': 503,
+        'body': bad_body, 'body_sha256': bad_sha, 'repeats': 0})
+    laundered['_truth']['loading_envelope_graded'] = False
+    r = tool('k16', 2, laundered)
+    expect(r['gate_exit'] == 1
+           and r['classification'] == 'rejected-targeted'
+           and r['bucket'] == 'misclassified'
+           and 'loading_envelope_graded' in r['gate_named_checks'],
+           'F-launder: gate rejects declared null despite observed bad 503')
+
+    # H2/F-precedence: a real failure plus no loading observation remains
+    # outcome fail/tool exit 1, never NOT-EVALUATED.
+    mixed = _syn_receipt(fail=('health_ready',),
+                         null=('loading_envelope_graded',))
+    r = tool('k1', 1, mixed)
+    expect(mixed['outcome'] == 'fail' and r['gate_exit'] == 1
+           and cls(r) == ('rejected-targeted', 'ok')
+           and 'health_ready' in r['failed_checks'],
+           'F-precedence: failure dominates legitimate loading null')
+
+    # --- k17: good dual-stack
+    r = tool('k17', 2, _syn_receipt(
+        fail=('teardown_graceful',),
+        setup_error='port-listener-ownership-unproven'))
+    expect(cls(r) == ('rejected-targeted', 'good_rejected'),
+           'k17 ownership unproven -> good_rejected')
+    expect(cls(tool('k17', 0, good)) == ('accepted', 'ok'), 'k17 accepted')
+
+    # --- forgeries
+    base = {'doc': good, 'gate_exit': 0, 'source': 'k0'}
+    strict, lax = _FakeGate(), _FakeGate('lax')
+    frozen = _FakeGate('lax', no_flag=True)
+    for cid in ('k19', 'k20', 'k21', 'k22'):
+        r = grade_forgery_row(CONTROLS[cid], st, strict, base)
+        expect(cls(r) == ('rejected-targeted', 'ok'),
+               f'{cid} strict gate refuses on the predicate')
+        r = grade_forgery_row(CONTROLS[cid], st, frozen, base)
+        expect(cls(r) == ('accepted', 'accepted_bad'),
+               f'{cid} lax/frozen gate accepts -> accepted_bad')
+    r = grade_forgery_row(CONTROLS['k19'], st, strict, base)
+    expect(r['flagless_gate_exit'] == 0 and r['flag_gate_exit'] == 1,
+           'k19 forgery is VALID without the flag')
+    r = grade_forgery_row(CONTROLS['k19'], st, frozen, base)
+    expect(r['usage_error'] and r['targeted_hit'] is False,
+           'k19 unknown flag is never a targeted refusal')
+    r = grade_forgery_row(CONTROLS['k19'], st, _FakeGate('strict',
+                                                         no_flag=True), base)
+    expect(r['usage_error'] and r['bucket'] in ('accepted_bad',
+                                                'misclassified'),
+           'k19 unknown flag -> flagless verdict only')
+    r = grade_forgery_row(CONTROLS['k20'], st, _FakeGate(fixed=(
+        1, ['invalid r', "- probe ok: argv --port '1' != served port 2"])),
+        base)
+    expect(cls(r) == ('rejected-untargeted', 'misclassified'),
+           'k20 probe-argv line is not the server-argv predicate')
+    r = grade_forgery_row(CONTROLS['k20'], st, strict, None)
+    expect(r['bucket'] == 'misclassified', 'forgery without base')
+    r = grade_forgery_row(CONTROLS['k20'], st, strict,
+                          dict(base, gate_exit=1))
+    expect(r['bucket'] == 'misclassified', 'forgery on an invalid base')
+    nod = copy.deepcopy(good)
+    nod['transitions'] = [t for t in nod['transitions']
+                          if t['status'] != 503]
+    r = grade_forgery_row(CONTROLS['k21'], st, strict,
+                          dict(base, doc=nod))
+    expect(r['bucket'] == 'misclassified', 'k21 base without a 503 row')
+    forged = CONTROLS['k20'].forge(copy.deepcopy(good))
+    expect(forged['argv'][-2:] == ['--no-webui', '--offline']
+           and forged['argv'][-4:-2] == ['--api-key', 'X'],
+           'k20 keeps the fixed tail')
+    forged = CONTROLS['k21'].forge(copy.deepcopy(good))
+    rows503 = [t for t in forged['transitions'] if t['status'] == 503]
+    expect(len(rows503) == 2 and rows503[0]['body'] == SYN_ENVELOPE
+           and rows503[1]['body'] != SYN_ENVELOPE
+           and sum(1 + t['repeats'] for t in rows503) == 3
+           and forged['loading_503_bodies'] == good['loading_503_bodies']
+           and rows503[1]['body_sha256'] == hashlib.sha256(
+               rows503[1]['body'].encode()).hexdigest(),
+           'k21 splits the 503 row, bodies untouched')
+    forged = CONTROLS['k19'].forge(copy.deepcopy(good))
+    ids = [c['id'] for c in forged['checks']]
+    expect(forged['schema'] == RECEIPT_V1 and 'outcome' not in forged
+           and 'teardown_exited' in ids and 'teardown_graceful' not in ids
+           and 'loading_envelope_graded' not in ids
+           and not any('evaluated' in c for c in forged['checks']),
+           'k19 rewrites to the v1 check set')
+
+    # --- full synthetic suite: counts, uncontrolled checks, exit
+    full = [tool('k0', 0, good)]
+    for cid, exitc, doc in (
+            ('k1', 1, k1doc),
+            ('k2', 1, _syn_receipt(fail=('loading_envelope_graded',))),
+            ('k4', 1, _syn_receipt(fail=('teardown_graceful',))),
+            ('k9', 1, _syn_receipt(fail=('models_alias_id',))),
+            ('k10', 1, _syn_receipt(fail=('models_owned_by_llamacpp',))),
+            ('k11', 1, _syn_receipt(fail=('metrics_not_enabled',))),
+            ('k12', 1, _syn_receipt(fail=('props_alias',))),
+            ('k13', 1, _syn_receipt(fail=('probe_model_ok',))),
+            ('k14', 1, _syn_receipt(fail=('probe_mismatch',))),
+            ('k15', 1, _syn_receipt(fail=('teardown_port_closed',))),
+            ('k16', 2, zl)):
+        full.append(tool(cid, exitc, doc))
+    full += [grade_forgery_row(CONTROLS[c], st, strict, base)
+             for c in ('k19', 'k20', 'k21', 'k22')]
+    s = summarize(full, [r['id'] for r in full])
+    expect(s['uncontrolled_checks'] == [] and exit_code(s) == 0
+           and s['good_ok'] is True and s['gate_flip_arms'] == 11
+           and s['input_integrity_checks'] == ['model_unchanged'],
+           f'full synthetic suite clean: {s}')
+    s = summarize([r for r in full if r['id'] != 'k9'], ['all-but-k9'])
+    expect(s['uncontrolled_checks'] == ['models_alias_id'],
+           'dropping k9 uncovers models_alias_id')
+    s = summarize(full + [tool('k17', 2, _syn_receipt(
+        setup_error='port-listener-ownership-unproven'))], ['+k17'])
+    expect(s['good_rejected'] == 1 and exit_code(s) == 1,
+           'good_rejected fails the run')
+    expect(set(r['classification'] for r in full) <= set(CLASSES),
+           'classifications stay in the declared set')
+
+    for f in failures:
+        print(f'SELFTEST FAIL {f}', file=sys.stderr)
+    print(f'selftest: {n[0]} cases, {len(failures)} failure(s)')
+    return 1 if failures else 0
+
+
+# ---------------------------------------------------------------------- main
 
 def main(argv=None):
     ap = argparse.ArgumentParser(
-        description='C2 accepted-bad control counter for '
-                    'kama-llamacpp-live + check-receipt.')
-    ap.add_argument('--tool', required=True,
+        description='C1 control counter for kama-llamacpp-live + '
+                    'check-receipt (kama-live-controls/v2).')
+    ap.add_argument('--tool',
                     help='kama-llamacpp-live.py (or a frozen copy) to grade')
-    ap.add_argument('--gate', required=True,
+    ap.add_argument('--gate',
                     help='check-receipt.py (or a frozen copy) to grade')
     ap.add_argument('--probe', default=None,
                     help=f'kama-probe.sh (default: {DEFAULT_PROBE})')
     ap.add_argument('--json', action='store_true',
                     help='print only the JSON result object')
     ap.add_argument('--only', choices=ALL_IDS, default=None,
-                    help='run a single control (good_ok ignored when k0 '
-                         'is not selected)')
+                    help='run a single control (good_ok is null when k0 is '
+                         'not selected; forgeries run a private k0 for '
+                         'their base receipt)')
+    ap.add_argument('--selftest', action='store_true',
+                    help='grade synthetic outcomes (no tool/gate/server)')
     args = ap.parse_args(argv)
+    if args.selftest:
+        return selftest()
+    if not args.tool or not args.gate:
+        ap.error('--tool and --gate are required')
 
     for label, path in (('tool', args.tool), ('gate', args.gate),
                         ('probe', args.probe or DEFAULT_PROBE)):
@@ -643,57 +1822,60 @@ def main(argv=None):
             print(f'controls: {label} not found: {path}', file=sys.stderr)
             return 2
     probe = os.path.realpath(args.probe or DEFAULT_PROBE)
-
-    result = {
-        'schema': SCHEMA,
-        'tool_sha256': sha256_text(args.tool),
-        'gate_sha256': sha256_text(args.gate),
-        'controls': [],
-        'accepted_bad': 0,
-        'gate_flip_bad': 0,
-        'inconclusive': 0,
-        'good_ok': True,
-    }
-
+    gate = SubprocessGate(args.gate)
     selected = (args.only,) if args.only else ALL_IDS
+    rows = []
     try:
         with tempfile.TemporaryDirectory(
                 prefix='kama-live-controls-') as root:
+            base = None
             for cid in selected:
+                spec = CONTROLS[cid]
+                if spec.kind == 'forgery':
+                    if base is None:
+                        try:
+                            k0row, k0doc = run_tool_control(
+                                root, CONTROLS['k0'], args.tool, probe, gate,
+                                run_id='k0-base')
+                        finally:
+                            _kill_fake(Path(root) / 'k0-base' / 'srv')
+                        base = {'doc': k0doc, 'gate_exit': k0row['gate_exit'],
+                                'source': 'k0-base'}
+                    rows.append(grade_forgery_row(
+                        spec, _forgery_stage(root, cid), gate, base))
+                    continue
                 try:
-                    row = run_control(root, cid, args.tool, args.gate, probe)
+                    row, doc = run_tool_control(root, spec, args.tool, probe,
+                                                gate)
                 finally:
                     # belt-and-braces: kill any fake that outlived its run
                     _kill_fake(Path(root) / cid / 'srv')
-                result['controls'].append(row)
-                if row['id'] == 'k0':
-                    result['good_ok'] = bool(row['accepted'])
-                else:
-                    if row['accepted']:
-                        result['accepted_bad'] += 1
-                    if row['inconclusive']:
-                        result['inconclusive'] += 1
-                    if row['gate_flip'] is not None \
-                            and row['gate_flip']['accepted']:
-                        result['gate_flip_bad'] += 1
+                if cid == 'k0':
+                    base = {'doc': doc, 'gate_exit': row['gate_exit'],
+                            'source': 'k0'}
+                rows.append(row)
+            summary = summarize(rows, selected)
     except Exception as exc:
         print(f'controls: own fault: {type(exc).__name__}: {exc}',
               file=sys.stderr)
         return 2
 
-    if 'k0' not in selected:
-        result['good_ok'] = None  # not measured under --only
-
-    clean = (result['accepted_bad'] == 0
-             and result['gate_flip_bad'] == 0
-             and result['inconclusive'] == 0)
-    good_ok = bool(result['good_ok']) if result['good_ok'] is not None \
-        else True
+    result = {
+        'schema': SCHEMA,
+        'tool_sha256': sha256_file(args.tool),
+        'gate_sha256': sha256_file(args.gate),
+        'probe_sha256': sha256_file(probe),
+        'receipt_schemas': sorted({r['receipt_schema'] for r in rows
+                                   if r.get('receipt_schema')}),
+        'controls': rows,
+    }
+    result.update(summary)
+    rc = exit_code(result)
     if args.json:
         print(json.dumps(result, indent=2, sort_keys=True))
     else:
-        _print_human(result['controls'], result, selected)
-    return 0 if (clean and good_ok) else 1
+        _print_human(result, rc)
+    return rc
 
 
 if __name__ == '__main__':

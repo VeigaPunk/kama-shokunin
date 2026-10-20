@@ -1,0 +1,996 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/frozen/tools_kama-llamacpp-live.py	2026-10-20 16:46:09.899727581 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/build/out/KamaR18.C1LiveTool-2/kama-llamacpp-live.py	2026-10-20 18:08:03.090421623 -0300
+@@ -14,14 +14,13 @@
+ optional ``--out`` receipt file.
+ 
+ Exit codes:
+-    0  every check passed
+-    1  at least one check failed (server ran; receipt written)
+-    2  setup error (missing binary/model, launch failure, ready timeout,
+-       terminated by signal, receipt write failure)
+-Receipt schema: ``kama-llamacpp-live/v2``. Only argv is recorded from the
+-launch environment — never env. Any exception in teardown or the finally
+-block still writes a receipt with ``setup_error`` ``internal:<ExcType>``
+-and exit 2 — never an escaped traceback without a receipt.
++    0  outcome pass: every evaluated check passed
++    1  outcome fail: at least one evaluated check failed
++    2  outcome not-evaluated or setup-error (including internal faults)
++Receipt schema: ``kama-llamacpp-live/v3``. Checks record both ``passed``
++(true/false/null) and ``evaluated``. A missing loading-503 observation is
++not-evaluated, never a server failure. The exact child argv is recorded;
++environment values are never recorded.
+ 
+ Deps: python3 stdlib only, plus whatever the probed server and
+ ``bash tools/kama-probe.sh`` (curl, ss) need.
+@@ -47,7 +46,7 @@
+ from datetime import datetime, timezone
+ from pathlib import Path
+ 
+-SCHEMA = 'kama-llamacpp-live/v2'
++SCHEMA = 'kama-llamacpp-live/v3'
+ SCRIPT = Path(__file__).resolve()
+ LANE = SCRIPT.parent.parent
+ REGISTRY = LANE / 'registry' / 'endpoint-consumers.tsv'
+@@ -57,8 +56,9 @@
+ LLAMA_COMMIT = '704366d76f8748cf9ad3df62a464bfcc8d1ae6ad'
+ _LLAMA_RAW = ('https://raw.githubusercontent.com/ggml-org/llama.cpp/'
+               + LLAMA_COMMIT + '/tools/server/')
+-POPEN_RETURNCODE_DOC = ('https://docs.python.org/3/library/subprocess.html'
+-                        '#subprocess.Popen.returncode')
++POPEN_RETURNCODE_DOC = (
++    'https://docs.python.org/3.14/library/subprocess.html'
++    '#subprocess.Popen.returncode')
+ # The exact JSON document a ready /health must answer (object equality;
+ # a 200 with {"status":"degraded"} is not ready).
+ HEALTH_READY_BODY = {'status': 'ok'}
+@@ -137,9 +137,9 @@
+         'llama.cpp ' + _LLAMA_RAW + 'server-http.cpp L314-325: while '
+         'is_ready is false every non-frontend path answers 503 '
+         '{"error":{"message":"Loading model","type":"unavailable_error"'
+-        ',"code":503}}. Grades EVERY distinct captured 503 body; no 503 '
+-        'observed -> fail with {"loading_observed": false} (a real '
+-        'b11755 run shows dozens). Limit: bodies are deduped by sha256 '
++        ',"code":503}}. Grades EVERY distinct /v1/models 503 body; no '
++        '/v1/models 503 observed -> not evaluated with '
++        '{"loading_observed": false}. Bodies are deduped by sha256 '
+         'and capped at LOADING_BODY_MAX, so identical repeats are '
+         'graded once'
+     ),
+@@ -308,39 +308,65 @@
+     raise SetupError('no-free-unregistered-port')
+ 
+ 
++def _tcp6_is_loopback(addr_hex):
++    """Recognize procfs tcp6 addresses after reversing each host-endian word."""
++    if len(addr_hex) != 32:
++        return False
++    try:
++        raw = bytes.fromhex(addr_hex)
++    except ValueError:
++        return False
++    address = bytearray(16)
++    for start in range(0, 16, 4):
++        address[start:start + 4] = raw[start:start + 4][::-1]
++    address = bytes(address)
++    return (address == b'\0' * 15 + b'\1'
++            or (address[:12] == b'\0' * 10 + b'\xff\xff'
++                and address[12] == 127))
++
++
++def _proc_listener_inode(proc_net, line, port):
++    """Return an eligible loopback LISTEN inode from one procfs row."""
++    parts = line.split()
++    if len(parts) < 10 or parts[3] != '0A':
++        return None
++    try:
++        addr_hex, port_hex = parts[1].rsplit(':', 1)
++        if int(port_hex, 16) != port:
++            return None
++        if proc_net.endswith('tcp6'):
++            if not _tcp6_is_loopback(addr_hex):
++                return None
++        elif (len(addr_hex) != 8
++              or addr_hex[-2:].upper() != '7F'):
++            return None
++        return parts[9]
++    except (ValueError, IndexError):
++        return None
++
++
+ def _listen_inodes(port):
+-    """Socket inodes LISTENing on `port` AND bound to loopback, from
+-    /proc/net/tcp{,6} (state 0A). Local-address hex column: 127/8 is
+-    little-endian xxxxx7F? -> the high byte is 7F iff the address is in
+-    127.0.0.0/8; ::1 ends 00000001; an IPv4-mapped 127/8 is the
+-    v4-mapped prefix 0000000000000000FFFF00 plus the v4 tail. A child
+-    bound to 0.0.0.0 or :: still answers loopback connects but is not
+-    counted as the loopback-port owner — fail-closed."""
++    """Socket inodes LISTENing on `port` AND bound to loopback in procfs.
++
++    IPv4 addresses use little-endian byte order. Each 32-bit word in tcp6's
++    address column is also little-endian; reversing each word yields the
++    network-order IPv6 address. Native ::1 and IPv4-mapped 127/8 are loopback.
++    Wildcard addresses are deliberately not counted — fail-closed.
++    """
+     inodes = set()
+     for proc_net in ('/proc/net/tcp', '/proc/net/tcp6'):
+         try:
+             with open(proc_net, encoding='ascii') as fh:
+                 next(fh, None)
+                 for line in fh:
+-                    parts = line.split()
+-                    if len(parts) < 10 or parts[3] != '0A':
+-                        continue
+-                    addr_hex, port_hex = parts[1].rsplit(':', 1)
+-                    if int(port_hex, 16) != port:
+-                        continue
+-                    if proc_net.endswith('tcp6'):
+-                        if not (addr_hex.endswith('00000001')
+-                                or (addr_hex[:24]
+-                                    == '0000000000000000FFFF00'
+-                                    and addr_hex.endswith('7F'))):
+-                            continue
+-                    elif not addr_hex.endswith('7F'):
+-                        continue
+-                    inodes.add(parts[9])
++                    inode = _proc_listener_inode(proc_net, line, port)
++                    if inode is not None:
++                        inodes.add(inode)
+         except (OSError, ValueError, IndexError):
+             continue
+     return inodes
+ 
++
+ def port_owned_by(pid, port):
+     """True: a LISTEN socket on `port` is an fd of `pid` (our child owns it).
+     False: listener exists but none of its inodes is in the child's fd table
+@@ -551,7 +577,8 @@
+                 return ('port-listener-not-our-child' if owned is False
+                         else 'port-listener-ownership-unproven')
+             proven = True
+-        if result['status'] == 503 and proven:
++        if (result['status'] == 503 and path == '/v1/models'
++                and proven):
+             body_text = result['body'][:TRANSITION_BODY_CAP].decode(
+                 'utf-8', errors='replace')
+             sha = row['body_sha256']
+@@ -827,12 +854,44 @@
+     return out
+ 
+ 
+-def _check(check_id, passed, observed):
++def _check(check_id, passed, observed, not_evaluated_reason=None):
++    if passed is None:
++        if not_evaluated_reason is None:
++            raise ValueError('a null check needs a not-evaluated reason')
++        observed = dict(observed) if isinstance(observed, dict) else {
++            'value': observed}
++        observed['not_evaluated_reason'] = not_evaluated_reason
++        evaluated = False
++    else:
++        passed = bool(passed)
++        evaluated = True
+     return {'id': check_id, 'documented_by': DOC[check_id],
+-            'passed': bool(passed), 'observed': observed}
+-
+-
+-# Byte-contiguous spans of the pinned llama.cpp commit that ground the v2
++            'passed': passed, 'evaluated': evaluated,
++            'observed': observed}
++
++
++def _outcome_exit(checks, setup_error):
++    """Return the v3 outcome and process exit code from check state."""
++    if setup_error is not None:
++        return 'setup-error', 2
++    states = [check.get('passed') for check in checks
++              if isinstance(check, dict)]
++    if any(state is False for state in states):
++        return 'fail', 1
++    if any(state is None for state in states):
++        return 'not-evaluated', 2
++    if states and all(state is True for state in states):
++        return 'pass', 0
++    return 'setup-error', 2
++
++
++def _record_internal(receipt, exc):
++    token = f'internal:{type(exc).__name__}'
++    receipt['internal_fault'] = token
++    receipt['setup_error'] = token
++
++
++# Byte-contiguous spans of the pinned llama.cpp commit that ground the v3
+ # sourced predicates. Each binding is {check, row, commit, path, url,
+ # lines:[a,b], file_sha256, span_text, span_sha256}. `row` is the SOURCES
+ # registry id when a landed row already covers the proposition; null means
+@@ -944,14 +1003,14 @@
+         description='Launch an ephemeral llama-server on a free unregistered '
+                     'loopback port, capture its lifecycle, probe it with '
+                     'kama-probe.sh, tear it down, and emit a '
+-                    'kama-llamacpp-live/v2 receipt.',
++                    'kama-llamacpp-live/v3 receipt.',
+     )
+     p.add_argument('--server', default=None,
+                    help='llama-server binary (default: shutil.which'
+                         '("llama-server")); realpath+sha256 recorded')
+-    p.add_argument('--model', required=True, help='GGUF path')
+-    p.add_argument('--model-sha256', required=True,
+-                   help='expected hex sha256 of --model; mismatch -> exit 3')
++    p.add_argument('--model', default=None, help='GGUF path')
++    p.add_argument('--model-sha256', default=None,
++                   help='expected hex sha256 of --model; mismatch -> exit 2')
+     p.add_argument('--alias', default='kama-live-probe',
+                    help='--alias passed to llama-server')
+     p.add_argument('--probe', default=str(DEFAULT_PROBE),
+@@ -967,9 +1026,87 @@
+                         'when it is a registered consumer port (8080, 34113, '
+                         'any port in registry/endpoint-consumers.tsv) or '
+                         'already listening')
++    p.add_argument('--selftest', action='store_true',
++                   help='run parser and outcome self-tests without a server')
+     return p
+ 
+ 
++def _selftest():
++    """Exercise procfs parsing, live tcp6 ownership rows, and v3 verdicts."""
++    port = 0x1234
++    tcp6_rows = (
++        ('00000000000000000000000001000000', True),
++        ('0000000000000000FFFF00000100007F', True),
++        ('00000000000000000000000002000000', False),
++        ('00000000000000000000000000000000', False),
++    )
++    for addr_hex, expected in tcp6_rows:
++        row = (f'0: {addr_hex}:{port:04X} '
++               '00000000000000000000000000000000:0000 0A '
++               '00000000:00000000 00:00000000 00000000 1000 0 43210')
++        if _proc_listener_inode('/proc/net/tcp6', row, port) != (
++                '43210' if expected else None):
++            raise AssertionError(f'tcp6 proc-row parse failed: {addr_hex}')
++
++    refused = refused_ports()
++    tested_ports = []
++    for address in ('::1', '::ffff:127.0.0.1'):
++        listener_port = pick_port(refused)
++        tested_ports.append(f'{address}:{listener_port}')
++        with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as listener:
++            listener.setsockopt(socket.IPPROTO_IPV6,
++                                socket.IPV6_V6ONLY, 0)
++            listener.bind((address, listener_port))
++            listener.listen(1)
++            inode_match = re.fullmatch(
++                r'socket:\[(\d+)\]',
++                os.readlink(f'/proc/self/fd/{listener.fileno()}'))
++            if inode_match is None:
++                raise AssertionError('listener fd has no procfs socket inode')
++            inode = inode_match.group(1)
++            if inode not in _listen_inodes(listener_port):
++                raise AssertionError(
++                    f'live tcp6 listener not recognized: {address}')
++            with open('/proc/net/tcp6', encoding='ascii') as fh:
++                rows = fh.readlines()[1:]
++            live_row = next(
++                (row for row in rows
++                 if len(row.split()) >= 10
++                 and row.split()[9] == inode),
++                None)
++            if live_row is None:
++                raise AssertionError('live listener absent from /proc/net/tcp6')
++            local_hex = live_row.split()[1].rsplit(':', 1)[0]
++            if not _tcp6_is_loopback(local_hex):
++                raise AssertionError(
++                    f'live tcp6 loopback parser failed: {address}')
++
++    good = [_check('health_ready', True, {})]
++    bad = [_check('health_ready', False, {})]
++    unknown = [_check(
++        'loading_envelope_graded', None, {'loading_observed': False},
++        'no-loading-503-observed')]
++    if _outcome_exit(good, None) != ('pass', 0):
++        raise AssertionError('pass outcome/exit mapping failed')
++    if _outcome_exit(bad, None) != ('fail', 1):
++        raise AssertionError('fail outcome/exit mapping failed')
++    if _outcome_exit(unknown, None) != ('not-evaluated', 2):
++        raise AssertionError('not-evaluated outcome/exit mapping failed')
++    if _outcome_exit([], 'internal:KeyboardInterrupt') != (
++            'setup-error', 2):
++        raise AssertionError('setup-error outcome/exit mapping failed')
++
++    if _outcome_exit(bad, 'internal:KeyboardInterrupt') != (
++            'setup-error', 2):
++        raise AssertionError('setup-error must take precedence over false')
++    if good[0]['evaluated'] is not True or unknown[0]['evaluated'] is not False:
++        raise AssertionError('tri-state evaluated field mapping failed')
++    print('selftest: ok; closed tcp6 listeners ' + ', '.join(tested_ports))
++    return 0
++
++
++
++
+ def _emit(receipt, out_path):
+     text = json.dumps(receipt, ensure_ascii=True, allow_nan=False,
+                       indent=2, sort_keys=True) + '\n'
+@@ -992,77 +1129,40 @@
+ 
+ 
+ def main(argv=None):
+-    args = build_parser().parse_args(argv)
+-
+-    # ---- setup: resolve and verify identities BEFORE launch ----------------
+-    server_arg = args.server or shutil.which('llama-server')
+-    if not server_arg:
+-        print('kama-llamacpp-live: no llama-server on PATH and --server '
+-              'not given', file=sys.stderr)
+-        return 2
+-    server_real = os.path.realpath(server_arg)
+-    if not (os.path.isfile(server_real) and os.access(server_real, os.X_OK)):
+-        print(f'kama-llamacpp-live: server not executable: {server_real}',
+-              file=sys.stderr)
+-        return 2
+-    if not os.path.isfile(args.model):
+-        print(f'kama-llamacpp-live: model not found: {args.model}',
+-              file=sys.stderr)
+-        return 2
+-    if not os.path.isfile(args.probe):
+-        print(f'kama-llamacpp-live: probe not found: {args.probe}',
+-              file=sys.stderr)
+-        return 2
+-
+-    model_sha = sha256_file(args.model)
+-    if model_sha.lower() != args.model_sha256.lower():
+-        print('kama-llamacpp-live: model digest mismatch\n'
+-              f'  expected: {args.model_sha256.lower()}\n'
+-              f'  actual:   {model_sha}\n'
+-              '  refusing to launch', file=sys.stderr)
+-        return 3
+-
+-    try:
+-        server_sha = sha256_file(server_real)
+-        tree, tree_sha = install_tree(server_real)
+-        impl_path = os.path.join(os.path.dirname(server_real),
+-                                 'libllama-server-impl.so')
+-        impl_sha = (sha256_file(impl_path)
+-                    if os.path.isfile(impl_path) else None)
+-        probe_sha = sha256_file(args.probe)
+-        refused = refused_ports()
+-        port = pick_port(refused, args.port)
+-    except SetupError as exc:
+-        print(f'kama-llamacpp-live: {exc.code}', file=sys.stderr)
+-        return 2
+-    except OSError as exc:
+-        print(f'kama-llamacpp-live: setup error: {exc}', file=sys.stderr)
+-        return 2
++    parser = build_parser()
++    args = parser.parse_args(argv)
++    if args.selftest:
++        try:
++            return _selftest()
++        except BaseException as exc:
++            try:
++                print(f'kama-llamacpp-live selftest: {type(exc).__name__}',
++                      file=sys.stderr)
++            except BaseException:
++                pass
++            return 1
++    if args.model is None or args.model_sha256 is None:
++        parser.error('--model and --model-sha256 are required unless '
++                     '--selftest is used')
+ 
+     receipt = {
+         'schema': SCHEMA,
+-        'started_utc': _utc_now(),
++        'started_utc': None,
+         'ended_utc': None,
+         'server': {
+-            'arg': server_arg,
+-            'realpath': server_real,
+-            'sha256': server_sha,
+-            'install_tree': tree,
+-            'install_tree_sha256': tree_sha,
+-            'server_impl_sha256': impl_sha,
+-        },
+-        'model': {
+-            'path': os.path.realpath(args.model),
+-            'sha256': model_sha,
++            'arg': args.server, 'realpath': None, 'sha256': None,
++            'install_tree': {}, 'install_tree_sha256': None,
++            'server_impl_sha256': None,
+         },
++        'model': {'arg': args.model, 'path': None, 'sha256': None},
+         'model_sha256_post': None,
+-        'probe': {'path': str(args.probe), 'sha256': probe_sha},
++        'probe': {'path': str(args.probe), 'sha256': None},
+         'alias': args.alias,
+         'ctx': args.ctx,
+         'threads': args.threads,
+-        'port': port,
+-        'port_refusal_set': sorted(refused),
+-        'child_env_keys': sorted(CHILD_ENV_KEYS),
++        'port': None,
++        'port_refusal_set': [],
++        'child_env_keys': [],
+         'argv': None,
+         'transitions': [],
+         'loading_503': None,
+@@ -1078,66 +1178,122 @@
+         'internal_fault': None,
+         'child_pid': None,
+         'port_listener_ownership': 'unproven',
+-        'source_binding': source_bindings(),
+-        'port_pick_note': 'port released after bind(:0) and re-bound by the '
+-                          'server; a sub-second collision race is possible',
+-        'tool': {'path': str(SCRIPT),
+-                 'sha256': None},  # filled below; self-hash of this script
++        'source_binding': [],
++        'tool': {'path': str(SCRIPT), 'sha256': None},
++        'outcome': 'setup-error',
+     }
++    proc = None
++    log_path = None
++    port = None
++    model_sha = None
++    child_env = {}
++    old_handlers = {}
++    emitted = False
++    exit_code = 2
+ 
+-    server_argv = [
+-        server_real, '-m', args.model,
+-        '--alias', args.alias,
+-        '--host', '127.0.0.1',
+-        '--port', str(port),
+-        '-c', str(args.ctx),
+-        '-t', str(args.threads),
+-        '--no-webui',
+-        '--offline',
+-    ]
+-    receipt['argv'] = server_argv
+     try:
+-        receipt['tool']['sha256'] = sha256_file(SCRIPT)
+-    except OSError:
+-        pass  # self-hash unverifiable is recorded as null, not fatal
+-    child_env = {k: os.environ[k] for k in CHILD_ENV_KEYS if k in os.environ}
+-    receipt['child_env_keys'] = sorted(child_env)
++        receipt['started_utc'] = _utc_now()
++
++        server_arg = args.server or shutil.which('llama-server')
++        if not server_arg:
++            raise SetupError('no-llama-server')
++        server_real = os.path.realpath(server_arg)
++        if not (os.path.isfile(server_real) and os.access(server_real, os.X_OK)):
++            raise SetupError(f'server-not-executable:{server_real}')
++        if not os.path.isfile(args.model):
++            raise SetupError(f'model-not-found:{args.model}')
++        if not os.path.isfile(args.probe):
++            raise SetupError(f'probe-not-found:{args.probe}')
++
++        model_sha = sha256_file(args.model)
++        receipt['model'].update({
++            'path': os.path.realpath(args.model),
++            'sha256': model_sha,
++        })
++        if model_sha.lower() != args.model_sha256.lower():
++            raise SetupError('model-digest-mismatch')
+ 
+-    proc = None
+-    log_path = None
+-    exit_code = 2
++        server_sha = sha256_file(server_real)
++        tree, tree_sha = install_tree(server_real)
++        impl_path = os.path.join(os.path.dirname(server_real),
++                                 'libllama-server-impl.so')
++        impl_sha = (sha256_file(impl_path)
++                    if os.path.isfile(impl_path) else None)
++        probe_sha = sha256_file(args.probe)
++        refused = refused_ports()
++        port = pick_port(refused, args.port)
++        receipt['server'].update({
++            'arg': server_arg,
++            'realpath': server_real,
++            'sha256': server_sha,
++            'install_tree': tree,
++            'install_tree_sha256': tree_sha,
++            'server_impl_sha256': impl_sha,
++        })
++        receipt['probe']['sha256'] = probe_sha
++        receipt['port'] = port
++        receipt['port_refusal_set'] = sorted(refused)
++        receipt['source_binding'] = source_bindings()
++        receipt['port_pick_note'] = (
++            'port released after bind(:0) and re-bound by the server; '
++            'a sub-second collision race is possible')
++
++        server_argv = [
++            server_real, '-m', args.model,
++            '--alias', args.alias,
++            '--host', '127.0.0.1',
++            '--port', str(port),
++            '-c', str(args.ctx),
++            '-t', str(args.threads),
++            '--no-webui',
++            '--offline',
++        ]
++        receipt['argv'] = server_argv
++        try:
++            receipt['tool']['sha256'] = sha256_file(SCRIPT)
++        except OSError:
++            pass
++        child_env = {key: os.environ[key] for key in CHILD_ENV_KEYS
++                     if key in os.environ}
++        receipt['child_env_keys'] = sorted(child_env)
+ 
+-    def _term_handler(signum, _frame):
+-        raise Terminated(f'signal {signum}')
++        def _term_handler(signum, _frame):
++            raise Terminated(f'signal {signum}')
+ 
+-    old_handlers = {}
+-    for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
+-        old_handlers[sig] = signal.signal(sig, _term_handler)
++        for sig in (signal.SIGINT, signal.SIGTERM, signal.SIGHUP):
++            old_handlers[sig] = signal.signal(sig, _term_handler)
+ 
+-    try:
+         try:
+-            log_fd, log_path = tempfile.mkstemp(prefix='kama-llamacpp-live-',
+-                                                suffix='.log')
++            log_fd, log_path = tempfile.mkstemp(
++                prefix='kama-llamacpp-live-', suffix='.log')
+         except OSError as exc:
+             raise SetupError(f'log-mkstemp-failed:{exc}') from exc
+-        log_file = os.fdopen(log_fd, 'wb')
+-        # F2: no pass_fds/pipe — close_fds would close a reporting fd before
+-        # preexec_fn runs, so the prctl outcome is recorded honestly as
+-        # 'unknown'; the prctl itself remains best-effort hardening.
+-        _FORKED_PPID[0] = os.getpid()
+-        popen_kwargs = dict(
+-            stdin=subprocess.DEVNULL,
+-            stdout=log_file,
+-            stderr=subprocess.STDOUT,
+-            start_new_session=True,
+-            preexec_fn=_preexec_pdeathsig,
+-            env=child_env,
+-        )
+         try:
+-            proc = subprocess.Popen(server_argv, **popen_kwargs)
++            log_file = os.fdopen(log_fd, 'wb')
++        except BaseException:
++            try:
++                os.close(log_fd)
++            except OSError:
++                pass
++            raise
++        try:
++            _FORKED_PPID[0] = os.getpid()
++            popen_kwargs = dict(
++                stdin=subprocess.DEVNULL,
++                stdout=log_file,
++                stderr=subprocess.STDOUT,
++                start_new_session=True,
++                preexec_fn=_preexec_pdeathsig,
++                env=child_env,
++            )
++            try:
++                proc = subprocess.Popen(server_argv, **popen_kwargs)
++            except OSError as exc:
++                raise SetupError(
++                    f'launch-failed:{type(exc).__name__}') from exc
+             receipt['child_pid'] = proc.pid
+         finally:
+-            log_file.close()  # child holds its own dup of the fd
++            log_file.close()
+         receipt['pdeathsig'] = {'requested': True, 'prctl_ok': 'unknown'}
+ 
+         (transitions, loading_503, loading_bodies, ready, fail,
+@@ -1155,7 +1311,6 @@
+         if not ready:
+             raise SetupError(fail)
+ 
+-        # R1 liveness gate before the ready captures
+         err, owned_state = verify_live(proc, port, 'pre-captures')
+         receipt['port_listener_ownership'] = owned_state
+         if err:
+@@ -1164,8 +1319,8 @@
+         captures = ready_captures(port)
+         models_doc = captures.pop('_models_doc')
+         receipt['captures'] = captures
++        checks = receipt['checks']
+ 
+-        checks = []
+         health_status = captures['health']['status']
+         health_body = None
+         try:
+@@ -1179,19 +1334,19 @@
+              'expected_body': HEALTH_READY_BODY}))
+ 
+         data = models_doc.get('data') if isinstance(models_doc, dict) else None
+-        ids = [e.get('id') for e in data if isinstance(e, dict)] \
++        ids = [entry.get('id') for entry in data if isinstance(entry, dict)] \
+             if isinstance(data, list) else []
+-        owners = [e.get('owned_by') for e in data if isinstance(e, dict)] \
++        owners = [entry.get('owned_by') for entry in data
++                  if isinstance(entry, dict)] \
+             if isinstance(data, list) else []
+         checks.append(_check(
+             'models_alias_id',
+-            bool(ids) and all(i == args.alias for i in ids),
++            bool(ids) and all(value == args.alias for value in ids),
+             {'data_ids': ids, 'expected_alias': args.alias}))
+         checks.append(_check(
+             'models_owned_by_llamacpp',
+-            bool(owners) and all(o == 'llamacpp' for o in owners),
++            bool(owners) and all(value == 'llamacpp' for value in owners),
+             {'owned_by': owners}))
+-
+         checks.append(_check(
+             'metrics_not_enabled',
+             captures['metrics']['status'] is not None
+@@ -1205,14 +1360,14 @@
+             and props_fields.get('model_alias') == args.alias,
+             {'fields': props_fields}))
+ 
+-        for i, expect in enumerate((args.alias, MISMATCH_EXPECT)):
+-            err, owned_state = verify_live(proc, port, f'pre-probe-{i + 1}')
++        for index, expect in enumerate((args.alias, MISMATCH_EXPECT)):
++            err, owned_state = verify_live(
++                proc, port, f'pre-probe-{index + 1}')
+             receipt['port_listener_ownership'] = owned_state
+             if err:
+                 raise SetupError(err)
+-            rec = run_probe(args.probe, port, expect, child_env)
+-            receipt['probes'].append(rec)
+-        # R1: one more gate after the probes, before verdict checks
++            receipt['probes'].append(
++                run_probe(args.probe, port, expect, child_env))
+         err, owned_state = verify_live(proc, port, 'post-probes')
+         receipt['port_listener_ownership'] = owned_state
+         if err:
+@@ -1235,54 +1390,42 @@
+             and bad_row.get('reason') == 'served-id-mismatch',
+             {'exit': bad_probe['exit'], 'verdict': bad_row.get('verdict'),
+              'reason': bad_row.get('reason')}))
+-
+-        receipt['checks'] = checks
+-        exit_code = 0 if all(c['passed'] for c in checks) else 1
+     except SetupError as exc:
+         receipt['setup_error'] = exc.code
+-        exit_code = 2
+     except Terminated as exc:
+         receipt['setup_error'] = f'terminated:{exc}'
+-        exit_code = 2
+-    except Exception as exc:  # F1: unexpected post-launch failure -> exit 2
+-        receipt['setup_error'] = f'unexpected:{type(exc).__name__}'
+-        exit_code = 2
++    except BaseException as exc:
++        _record_internal(receipt, exc)
+     finally:
+-        # R2/F1: block SIGINT/SIGTERM/SIGHUP for the whole shutdown —
+-        # teardown, model rehash AND the receipt write. Handlers are
+-        # restored only after the write, in the outer-finally epilogue.
+-        # Every failure in here writes a receipt and exits 2 — nothing
+-        # escapes as a traceback.
+-        internal_fault = None
+-        try:
+-            for sig in old_handlers:
++        for sig in tuple(old_handlers):
++            try:
+                 signal.signal(sig, signal.SIG_IGN)
+-        except Exception as exc:
+-            internal_fault = type(exc).__name__
++            except BaseException as exc:
++                _record_internal(receipt, exc)
++
+         td = None
+-        checks = receipt.get('checks') or []
+-        try:
+-            if log_path is not None or proc is not None:
+-                try:
+-                    td = teardown(proc, port, log_path)
+-                except Exception as exc:
+-                    internal_fault = type(exc).__name__
+-                    td = {
+-                        'error': f'{type(exc).__name__}: {exc}',
+-                        'returncode': proc.returncode if proc else None,
+-                        'sigterm_sent': False,
+-                        'sigkill_sent': False,
+-                        'alive_at_teardown_start':
+-                            _child_running(proc),
+-                        'port_refuses': None,
+-                        'term_wait_ms': None,
+-                        'log_lines': [],
+-                    }
+-        except Exception as exc:
+-            internal_fault = internal_fault or type(exc).__name__
+-        # last-chance kill: any fault path that left the group running
+-        # still reaps it here — poll() is fresh, so a dead child's pgid
+-        # can never hit a reincarnated process.
++        if proc is not None or log_path is not None:
++            try:
++                td = teardown(proc, port, log_path)
++            except BaseException as exc:
++                _record_internal(receipt, exc)
++                returncode = None
++                if proc is not None:
++                    try:
++                        returncode = proc.returncode
++                    except BaseException as read_exc:
++                        _record_internal(receipt, read_exc)
++                td = {
++                    'error': f'internal:{type(exc).__name__}',
++                    'returncode': returncode,
++                    'sigterm_sent': False,
++                    'sigkill_sent': False,
++                    'alive_at_teardown_start': None,
++                    'port_refuses': None,
++                    'term_wait_ms': None,
++                    'log_lines': [],
++                }
++
+         try:
+             if _child_running(proc):
+                 try:
+@@ -1291,132 +1434,156 @@
+                         td['sigkill_sent'] = True
+                 except (ProcessLookupError, PermissionError, OSError):
+                     pass
++                except BaseException as exc:
++                    _record_internal(receipt, exc)
+                 try:
+                     proc.wait(timeout=5)
+                     if isinstance(td, dict):
+                         td['returncode'] = proc.returncode
+                 except subprocess.TimeoutExpired:
+                     pass
+-        except Exception as exc:
+-            internal_fault = internal_fault or type(exc).__name__
+-        # a faulted teardown never probed the port; do it now that the
+-        # backstop above had its chance to reap the group
+-        if isinstance(td, dict) and td.get('port_refuses') is None:
++                except BaseException as exc:
++                    _record_internal(receipt, exc)
++        except BaseException as exc:
++            _record_internal(receipt, exc)
++
++        if isinstance(td, dict) and td.get('port_refuses') is None \
++                and port is not None:
+             try:
+                 td['port_refuses'] = _port_refuses(port)
+-            except Exception as exc:
+-                internal_fault = internal_fault or type(exc).__name__
++            except BaseException as exc:
++                _record_internal(receipt, exc)
+         receipt['teardown'] = td
++
++        if port is not None:
++            checks = receipt['checks']
++            try:
++                graceful = (
++                    isinstance(td, dict)
++                    and td.get('sigterm_sent') is True
++                    and td.get('sigkill_sent') is False
++                    and td.get('alive_at_teardown_start') is True
++                    and td.get('returncode') == 0
++                    and receipt.get('port_listener_ownership') == 'child')
++                checks.append(_check(
++                    'teardown_graceful', graceful,
++                    {'sigterm_sent': td.get('sigterm_sent')
++                     if isinstance(td, dict) else None,
++                     'sigkill_sent': td.get('sigkill_sent')
++                     if isinstance(td, dict) else None,
++                     'alive_at_teardown_start':
++                         td.get('alive_at_teardown_start')
++                         if isinstance(td, dict) else None,
++                     'returncode': td.get('returncode')
++                     if isinstance(td, dict) else None,
++                     'port_listener_ownership':
++                         receipt.get('port_listener_ownership'),
++                     'error': td.get('error')
++                     if isinstance(td, dict) else None}))
++                checks.append(_check(
++                    'teardown_port_closed',
++                    isinstance(td, dict)
++                    and td.get('port_refuses') is True
++                    and receipt.get('port_listener_ownership') == 'child',
++                    {'port_refuses': td.get('port_refuses')
++                     if isinstance(td, dict) else None,
++                     'port_listener_ownership':
++                         receipt.get('port_listener_ownership')}))
++                bodies = receipt.get('loading_503_bodies') or []
++                total_503 = sum(
++                    1 + (body.get('repeats') or 0)
++                    for body in bodies if isinstance(body, dict))
++                all_exact = loading_envelopes_all(bodies)
++                loading_observed = receipt.get('loading_observed') is True
++                checks.append(_check(
++                    'loading_envelope_graded',
++                    (all_exact is True) if loading_observed else None,
++                    {'loading_observed': receipt.get('loading_observed'),
++                     'distinct_bodies': len(bodies),
++                     'bodies_dropped':
++                         receipt.get('loading_bodies_dropped', 0),
++                     'total_503_responses': total_503,
++                     'all_exact': all_exact,
++                     'exact': all_exact},
++                    None if loading_observed
++                    else 'no-loading-503-observed'))
++                if model_sha is not None:
++                    try:
++                        receipt['model_sha256_post'] = sha256_file(args.model)
++                    except OSError as exc:
++                        receipt['model_sha256_post'] = f'rehash-error:{exc}'
++                    checks.append(_check(
++                        'model_unchanged',
++                        receipt['model_sha256_post'] == model_sha,
++                        {'pre': model_sha,
++                         'post': receipt['model_sha256_post']}))
++            except BaseException as exc:
++                _record_internal(receipt, exc)
++
++        if log_path is not None:
++            for attempt in range(2):
++                try:
++                    os.unlink(log_path)
++                    break
++                except FileNotFoundError:
++                    break
++                except BaseException as exc:
++                    _record_internal(receipt, exc)
++                    if attempt == 1:
++                        break
++
+         try:
+-            graceful = (
+-                isinstance(td, dict)
+-                and td.get('sigterm_sent') is True
+-                and td.get('sigkill_sent') is False
+-                and td.get('alive_at_teardown_start') is True
+-                and td.get('returncode') == 0
+-                and receipt.get('port_listener_ownership') == 'child')
+-            checks.append(_check(
+-                'teardown_graceful', graceful,
+-                {'sigterm_sent': td.get('sigterm_sent')
+-                 if isinstance(td, dict) else None,
+-                 'sigkill_sent': td.get('sigkill_sent')
+-                 if isinstance(td, dict) else None,
+-                 'alive_at_teardown_start':
+-                     td.get('alive_at_teardown_start')
+-                     if isinstance(td, dict) else None,
+-                 'returncode': td.get('returncode')
+-                 if isinstance(td, dict) else None,
+-                 'port_listener_ownership':
+-                     receipt.get('port_listener_ownership'),
+-                 'error': td.get('error')
+-                 if isinstance(td, dict) else None}))
+-            checks.append(_check(
+-                'teardown_port_closed',
+-                isinstance(td, dict)
+-                and td.get('port_refuses') is True
+-                and receipt.get('port_listener_ownership') == 'child',
+-                {'port_refuses': td.get('port_refuses')
+-                 if isinstance(td, dict) else None,
+-                 'port_listener_ownership':
+-                     receipt.get('port_listener_ownership')}))
+-            bodies = receipt.get('loading_503_bodies') or []
+-            total_503 = sum(1 + (b.get('repeats') or 0)
+-                            for b in bodies if isinstance(b, dict))
+-            checks.append(_check(
+-                'loading_envelope_graded',
+-                receipt.get('loading_observed') is True
+-                and loading_envelopes_all(bodies) is True,
+-                {'loading_observed':
+-                     receipt.get('loading_observed'),
+-                 'distinct_bodies': len(bodies),
+-                 'bodies_dropped':
+-                     receipt.get('loading_bodies_dropped', 0),
+-                 'total_503_responses': total_503,
+-                 'all_exact': loading_envelopes_all(bodies),
+-                 'exact': loading_envelopes_all(bodies)}))
+-            try:
+-                receipt['model_sha256_post'] = sha256_file(args.model)
+-            except OSError as exc:
+-                receipt['model_sha256_post'] = f'rehash-error:{exc}'
+-            checks.append(_check(
+-                'model_unchanged',
+-                receipt['model_sha256_post'] == model_sha,
+-                {'pre': model_sha,
+-                 'post': receipt['model_sha256_post']}))
+-            receipt['checks'] = checks
+-        except Exception as exc:
+-            internal_fault = internal_fault or type(exc).__name__
++            receipt['ended_utc'] = _utc_now()
++        except BaseException as exc:
++            _record_internal(receipt, exc)
+         try:
+-            if internal_fault is not None:
+-                receipt['internal_fault'] = f'internal:{internal_fault}'
+-                if receipt['setup_error'] is None:
+-                    receipt['setup_error'] = receipt['internal_fault']
+-                exit_code = 2
+-            elif receipt['setup_error'] is None:
+-                exit_code = (0 if all(
+-                    isinstance(c, dict) and c.get('passed') is True
+-                    for c in receipt['checks']) else 1)
+-        except Exception as exc:  # last guard: never escape the finally
+-            receipt['internal_fault'] = f'internal:{type(exc).__name__}'
+-            if receipt['setup_error'] is None:
+-                receipt['setup_error'] = receipt['internal_fault']
+-            exit_code = 2
+-
+-    # F1: receipt write + handler restore run outside the try/finally so
+-    # the receipt is emitted even after an unexpected mid-run exception.
+-    # The outer finally restores handlers on every escape, including an
+-    # internal fault inside the block above.
+-    emitted = False
+-    try:
+-        receipt['ended_utc'] = _utc_now()
++            receipt['outcome'], exit_code = _outcome_exit(
++                receipt['checks'], receipt['setup_error'])
++        except BaseException as exc:
++            _record_internal(receipt, exc)
++            receipt['outcome'], exit_code = 'setup-error', 2
++
++        needs_reemit = False
+         try:
+             _emit(receipt, args.out)
+             emitted = True
+         except Terminated as exc:
+-            # a signal landed during the write; annotate and retry once
+             receipt['setup_error'] = (
+-                f"{receipt['setup_error']}+terminated-during-emit"
+-                if receipt['setup_error'] else f'terminated:{exc}')
+-            exit_code = 2
++                receipt.get('internal_fault') or f'terminated:{exc}')
++            receipt['outcome'], exit_code = 'setup-error', 2
++            needs_reemit = True
++        except BaseException as exc:
++            _record_internal(receipt, exc)
++            receipt['outcome'], exit_code = 'setup-error', 2
++            needs_reemit = True
++
++        restore_fault = False
++        for sig, handler in old_handlers.items():
++            try:
++                signal.signal(sig, handler)
++            except BaseException as exc:
++                _record_internal(receipt, exc)
++                restore_fault = True
++
++        if needs_reemit or restore_fault:
++            try:
++                receipt['outcome'], exit_code = _outcome_exit(
++                    receipt['checks'], receipt['setup_error'])
++            except BaseException as exc:
++                _record_internal(receipt, exc)
++                receipt['outcome'], exit_code = 'setup-error', 2
+             try:
+                 _emit(receipt, args.out)
+                 emitted = True
+-            except (OSError, Terminated):
+-                pass
+-        except OSError as exc:
+-            print(f'kama-llamacpp-live: cannot write receipt: {exc}',
+-                  file=sys.stderr)
+-            exit_code = 2
+-        except Exception as exc:
+-            print('kama-llamacpp-live: emit fault '
+-                  f'{type(exc).__name__}: {exc}', file=sys.stderr)
+-            exit_code = 2
+-    finally:
+-        for sig, handler in old_handlers.items():
+-            signal.signal(sig, handler)
+-    if not emitted:
+-        return 2
+-    return exit_code
++            except Terminated as exc:
++                receipt['setup_error'] = (
++                    receipt.get('internal_fault') or f'terminated:{exc}')
++                receipt['outcome'], exit_code = 'setup-error', 2
++            except BaseException as exc:
++                _record_internal(receipt, exc)
++                receipt['outcome'], exit_code = 'setup-error', 2
++
++    return exit_code if emitted else 2
+ 
+ 
+ if __name__ == '__main__':

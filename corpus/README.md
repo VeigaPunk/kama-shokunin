@@ -243,3 +243,26 @@ paragraph above) is now held — receipt v2 grades every observed loading 503 bo
 (42–45 per run) and fails a run that observed none. Still open: router mode and
 sleep, other engines, K05 declared-versus-served context, and the registered
 consumers (still `DEAD`, not probed). No new coverage-map ground this round.
+
+## Round-18 correction and loopback ownership
+
+The round-17 coverage row at line 238 credits the SIGINT/SIGTERM path to S043
+alone. **S047 supersedes S043's first-signal claim**: a post-install signal can be
+overwritten by `start_loop()` resetting `running`; see the necessary-condition
+scope and missing Gate row repaired in `lessons/round-18.md`. S043 still identifies
+the registration and second-signal exit path; it is not a sufficient guarantee.
+
+The v2 rule above, “fails a run that observed none”, is historical. V3 makes
+zero observed loading 503s **not-evaluated** (tool 2; gate 3 / NOT-EVALUATED),
+never pass and never an observed failure; another evaluated failure still wins.
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/loopback-listener-ownership.md` | newly held mechanism: Linux procfs socket-inode/child-fd ownership join; tcp6 host-word encoding of ::1 and mapped 127/8 (S048–S050); wildcard exclusion as harness policy | 18 |
+| `knowledge/llamacpp-loading-lifecycle.md` §Round 18 | v3 tri-state receipt and schema floor, exact argv, loading-transition grading and retained control boundary; deepening, not another engine | 18 |
+| `lessons/round-18.md` | R1–R7 dispositions, KQ23/KQ24, named-survivor calibration and falsification evidence | 18 |
+
+Frontier advanced: loopback listener ownership mechanism (absent from the old
+host census, whose attribution used privileged ss). Still open: other engines,
+router/sleep mode, K05 declared-vs-served context and registered-consumer
+reconciliation. No model-quality claim or consumer resampling occurred.

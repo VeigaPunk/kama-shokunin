@@ -1,0 +1,159 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/frozen/round-17_dispatch-provenance.py	2026-10-20 16:46:09.910727615 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/build/out/C2Provenance-2/dispatch-provenance.py	2026-10-20 18:02:32.077572693 -0300
+@@ -1,5 +1,8 @@
+ #!/usr/bin/env python3
+-"""dispatch-provenance.py — wave-dispatch provenance ledger (round-17, routed defect 1).
++"""dispatch-provenance.py — wave-dispatch provenance ledger (round-18 correction).
++
++Round-17 residual fixed here: per-task "Background job limit reached" messages
++were previously missed by the refused counter.
+ 
+ Round-16 routed defect 1 (corpus/lessons/round-16-verifier-spotcheck.md:182):
+ (a) every wave's validation must record the policy version and every
+@@ -69,13 +72,18 @@
+ recent `wave_run` entry — so an attempt is tied to the same taskCall
+ digest that produced it.
+ 
+-`refused` keeps the round-16 legacy tally (keys literally "refused" or
++`refused` retains the round-16 legacy tally (keys literally "refused" or
+ "spawned" carrying ints, and "status"/"state" fields with those exact
+-string values). `spawned` is resolved for OMP async task results, whose
+-members are `pending` progress rows rather than a count key. Methods,
+-in precedence order; the first observed wins and is named in
+-`spawned_method`, while every observed per-method value is kept in
+-`spawned_methods`:
++string values). If a result text contains task-specific `Background job
++limit reached (N)` messages, `refused` instead counts distinct task labels
++in those messages; this text observation takes precedence to avoid adding
++the same refusals twice when both representations occur. Otherwise the
++legacy tally is used.
++
++`spawned` is resolved for OMP async task results, whose members are
++`pending` progress rows rather than a count key. Methods, in precedence
++order; the first observed wins and is named in `spawned_method`, while
++every observed per-method value is kept in `spawned_methods`:
+ 
+     1. omp_text_spawned_header — "Spawned N background agents" in any
+        "text" string of the result JSON;
+@@ -87,11 +95,12 @@
+        "pending";
+     5. key_status_tally — the legacy tally, only when positive.
+ 
+-A non-JSON result file is still scanned as raw text for the header and
+-bullet patterns (round-16 results were stored as the JSON wrapper
+-{"at", "result": {"text", "details": {"progress": [...]}}}; a bare text
+-dump is scanned too). A parseable result with no observations yields
+-spawned 0 / spawned_method null; an undecodable one yields null/null.
++A non-JSON result file is still scanned as raw text for refusal messages,
++the spawn header and bullet patterns (round-16 results were stored as the
++JSON wrapper {"at", "result": {"text", "details": {"progress": [...]}}};
++a bare text dump is scanned too). A parseable result with no observations
++yields refused 0 and spawned 0 / spawned_method null; an undecodable one
++yields null for counts without observations.
+ 
+ Mode 3 — emit a per-wave validation.json:
+ 
+@@ -165,6 +174,9 @@
+ # OMP async task-result spawn markers (defect 1c).
+ SPAWN_HEADER_RE = re.compile(r"Spawned (\d+) background agents")
+ SPAWN_BULLET_RE = re.compile(r"^\s*-\s*`[^`]+`\s*\(job\b", re.M)
++
++REFUSED_TASK_RE = re.compile(
++    r"(?:^|[;:]\s*)([^;:\n]+):\s*Background job limit reached \(\d+\)")
+ SPAWN_METHODS = (
+     "omp_text_spawned_header",
+     "omp_text_member_bullets",
+@@ -353,14 +365,13 @@
+     return None
+ 
+ 
+-# --- attempt-result count extraction -------------------------------------
+-# `refused` keeps the round-16 legacy tally: any dict key literally
+-# "refused" or "spawned" carrying an int, and any "status"/"state" field
+-# whose string value is exactly "refused" or "spawned". `spawned` is
+-# resolved separately for OMP async task results (defect 1c): members
+-# arrive as `pending` progress rows plus a "Spawned N background agents"
+-# text, never as a `spawned` count key — the round-16 tally therefore
+-# recorded 0 for 79 spawned seats.
++# Task-specific "Background job limit reached (N)" text overrides the
++# legacy refused tally and counts distinct labels. Without that observation,
++# refused keeps the round-16 tally: integer "refused"/"spawned" fields plus
++# exact "status"/"state" values. `spawned` is resolved separately for OMP
++# async task results (defect 1c): members arrive as `pending` progress rows
++# plus a "Spawned N background agents" text, not a `spawned` count key — the
++# round-16 tally therefore recorded 0 for 79 spawned seats.
+ 
+ def tally_counts(node, counts):
+     if isinstance(node, dict):
+@@ -397,6 +408,19 @@
+             yield from _iter_texts(item)
+ 
+ 
++def refused_observations(result_json, raw_text):
++    """Return distinct task labels with a background-job-limit refusal."""
++    texts = list(_iter_texts(result_json)) if result_json is not None else []
++    if not texts and raw_text is not None:
++        texts = [raw_text]
++    return {
++        match.group(1).strip()
++        for text in texts
++        for match in REFUSED_TASK_RE.finditer(text)
++        if match.group(1).strip()
++    }
++
++
+ def _progress_lists(node, out):
+     """Collect 'progress' lists whose elements are all dicts carrying
+     'id' and 'status' — the OMP per-member progress shape."""
+@@ -475,10 +499,12 @@
+             raw_text = None
+     tally = extract_counts(result_json) if parseable \
+         else {"refused": None, "spawned": None}
++    refused_tasks = refused_observations(result_json, raw_text)
++    refused = len(refused_tasks) if refused_tasks else tally["refused"]
+     obs = spawned_observations(result_json, raw_text)
+     spawned, method = resolve_spawned(obs, tally["spawned"])
+     detail = {
+-        "refused": tally["refused"],
++        "refused": refused,
+         "spawned": spawned,
+         "spawned_method": method,
+         "spawned_methods": obs,
+@@ -767,6 +793,25 @@
+         check("load_policy missing file -> null identity",
+               missing["sha256"] is None and missing["version"] is None)
+ 
++    # Refused task-call text; duplicate labels count once.
++    refusal_text = (
++        "Failed to start background task jobs: Seat-0: Background job "
++        "limit reached (100). Wait for running jobs to finish or cancel "
++        "one.; Seat-1: Background job limit reached (100). Wait for "
++        "running jobs to finish or cancel one.; Seat-0: Background job "
++        "limit reached (100). Wait for running jobs to finish or cancel one.")
++    refusal_only = json.dumps(
++        {"result": {"text": refusal_text}}).encode("utf-8")
++    parseable, detail = parse_attempt_result(refusal_only)
++    check("refused text counts distinct task labels",
++          parseable and detail["refused"] == 2 and detail["spawned"] == 0)
++
++    mixed_text = refusal_text + "\nSpawned 3 background agents using executor."
++    mixed = json.dumps({"result": {"text": mixed_text}}).encode("utf-8")
++    parseable, detail = parse_attempt_result(mixed)
++    check("mixed refused and spawned observations",
++          parseable and detail["refused"] == 2 and detail["spawned"] == 3)
++
+     # (c) spawned counting — OMP async result shapes.
+     member_rows = [{"id": "Seat-%d" % i, "status": "pending"}
+                    for i in range(3)]
+@@ -818,8 +863,9 @@
+           and detail["refused"] == 1)
+ 
+     _, detail = parse_attempt_result(b'{"results": []}')
+-    check("parseable-empty result -> spawned 0, method null",
+-          detail["spawned"] == 0 and detail["spawned_method"] is None)
++    check("parseable-empty result -> refused/spawned 0",
++          detail["refused"] == 0 and detail["spawned"] == 0
++          and detail["spawned_method"] is None)
+ 
+     # (a,b) run-entry construction — policy + canonicalization in entry.
+     fixture_policy = {"path": "/x/policy.json", "sha256": "0" * 64,

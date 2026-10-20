@@ -1,0 +1,583 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/frozen/tools_sources-append-only.py	2026-10-20 16:46:09.906727602 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/build/out/C2AppendOnly-2/sources-append-only.py	2026-10-20 18:16:52.004923478 -0300
+@@ -8,21 +8,37 @@
+   python3 tools/sources-append-only.py --selftest
+ 
+ Reads both blobs with `git -C REPO show REV:PATH` (read-only; never touches
+-the working tree or index), parses the `## Registry` markdown table in each,
+-and diffs rows by `id`:
++the working tree or index), parses the `## Registry` table in each, and
++diffs rows by `id`:
+ 
+   - a row present in --from but absent in --to is a violation (removed row)
+   - a row present in both whose cells differ outside the contract's mutable
+-    set {status, recheck, used-by} is a violation, reported per cell old->new
++    set {status, recheck, used-by} is a violation, reported per cell old->new;
++    the compared set must be exactly the seven immutable contract cells
++    {source, kind, tier, scope, anchor, teaches, opened}, else exit 2
+   - a row present only in --to is allowed and reported as added
+   - row re-ordering is ignored (rows are compared by id, not position)
+ 
++The registry section runs from the one `Registry` heading to the next heading
++of the same or a higher level. Blank lines, prose and deeper subheadings do
++not end it: every table segment in it is read with the first header, and a
++later repeat of that header or of a separator line is skipped. No row is
++lost by parsing: a table line that is not a well-formed `S0NN` row, a table
++line without a leading pipe, and a row-like line (`| S0NN |`, also with
++markup around the id or without the leading pipe) anywhere in the blob that
++was not read as a registry row are parse errors, never skipped. Fenced code,
++HTML comments and setext headings are not modelled; they can only add rows
++to the section or end in exit 2, never hide a row.
++
+ Exit codes:
+   0  no violations (added rows and mutable-cell changes are fine)
+   1  at least one append-only violation
+-  2  unreadable blob or unparseable registry (missing section/header, missing
+-     required columns, malformed row width, duplicate id) — the guard refuses
+-     to grade a table it cannot fully parse
++  2  unreadable blob (git failure, not UTF-8) or unparseable registry
++     (missing or repeated `Registry` heading, header column names not exactly
++     the contract's eleven in any order, missing or misfit separator,
++     malformed row width, unrecognised table line, row-like line outside the
++     parsed registry, duplicate id) — the guard refuses to grade a table it
++     cannot fully parse; an internal fault also exits 2, never 1
+ 
+ Cell-splitting note: GFM technically requires `\|` inside code spans in table
+ cells; this parser is deliberately more forgiving — a `|` inside a backtick
+@@ -40,15 +56,28 @@
+ import subprocess
+ import sys
+ 
++CONTRACT_COLUMNS = (
++    "id", "source", "kind", "tier", "scope", "anchor", "teaches",
++    "status", "opened", "recheck", "used-by",
++)
+ MUTABLE_CELLS = frozenset({"status", "recheck", "used-by"})
++# Pinned independently of MUTABLE_CELLS: editing either set, or deriving the
++# compared columns by slice, becomes a guard fault (exit 2) on every run
++# instead of a quietly narrower comparison.
++IMMUTABLE_CELLS = frozenset(
++    {"source", "kind", "tier", "scope", "anchor", "teaches", "opened"}
++)
+ ID_RE = re.compile(r"^S[0-9]{3,}$")
+ ROW_RE = re.compile(r"^ {0,3}\|")
+-HEADING_RE = re.compile(r"^ {0,3}#{1,6} ")
+-REGISTRY_RE = re.compile(r"^ {0,3}#{1,6}\s+Registry\s*$")
++HEADING_RE = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]|$)")
++REGISTRY_RE = re.compile(r"^ {0,3}(#{1,6})[ \t]+Registry(?:[ \t]+#+)?[ \t]*$")
++# What a reader takes for a registry row: an S-number first cell, optionally
++# wrapped in markup, with or without the leading pipe.
++ROWLIKE_RE = re.compile(r"^\s*\|?\s*[`*_\[]*[Ss][0-9]+[`*_\]]*\s*\|")
+ 
+ 
+ class ParseError(Exception):
+-    """A registry blob the guard cannot fully parse; maps to exit 2."""
++    """A registry the guard cannot fully parse or grade; maps to exit 2."""
+ 
+ 
+ def split_cells(line):
+@@ -95,67 +124,112 @@
+     return cells
+ 
+ 
++def has_bare_pipe(line):
++    r"""True if `line` holds a `|` that split_cells would treat as a delimiter."""
++    in_code = False
++    i = 0
++    while i < len(line):
++        ch = line[i]
++        if ch == "\\" and not in_code and line[i + 1:i + 2] == "|":
++            i += 2
++            continue
++        if ch == "`":
++            in_code = not in_code
++        elif ch == "|" and not in_code:
++            return True
++        i += 1
++    return False
++
++
+ def is_separator(cells):
+     return bool(cells) and all(re.fullmatch(r":?-+:?", c) for c in cells)
+ 
+ 
+ def parse_registry(text, label):
+-    """Parse the `## Registry` table. Returns {id: {col: value}} and column order."""
++    """Parse every table segment of the `## Registry` section.
++
++    Returns ({id: {col: value}}, header). Raises ParseError instead of
++    dropping a row (see the module docstring for what counts as one).
++    """
+     lines = text.splitlines()
+-    start = None
+-    for idx, line in enumerate(lines):
+-        if REGISTRY_RE.match(line):
+-            start = idx + 1
+-            break
+-    if start is None:
++    headings = [idx for idx, line in enumerate(lines) if REGISTRY_RE.match(line)]
++    if not headings:
+         raise ParseError(f"{label}: no `## Registry` heading found")
++    if len(headings) > 1:
++        raise ParseError(
++            f"{label}: {len(headings)} `Registry` headings (lines "
++            + ", ".join(str(h + 1) for h in headings)
++            + "); refusing to pick one"
++        )
++    level = len(REGISTRY_RE.match(lines[headings[0]]).group(1))
++    start = headings[0] + 1
+ 
+     rows_by_id = {}
++    row_lines = set()
+     header = None
+     seen_separator = False
+     for idx in range(start, len(lines)):
+         line = lines[idx]
+-        if HEADING_RE.match(line):
+-            break
++        heading = HEADING_RE.match(line)
++        if heading:
++            if len(heading.group(1)) <= level:
++                break
++            continue  # a deeper subheading stays inside the registry section
+         if not ROW_RE.match(line):
+-            continue
++            if has_bare_pipe(line):
++                raise ParseError(
++                    f"{label}:{idx + 1}: table line without a leading pipe "
++                    "in the registry section; refusing to drop it"
++                )
++            continue  # blank line or prose; later table segments still count
+         cells = split_cells(line)
+         if cells is None:
+             raise ParseError(
+                 f"{label}:{idx + 1}: unterminated table row (no closing pipe)"
+             )
+         if header is None:
++            if sorted(cells) != sorted(CONTRACT_COLUMNS):
++                raise ParseError(
++                    f"{label}:{idx + 1}: header columns {cells} are not exactly "
++                    f"the contract's {list(CONTRACT_COLUMNS)}"
++                )
+             header = cells
+             continue
+         if not seen_separator:
+-            if not is_separator(cells):
++            if not is_separator(cells) or len(cells) != len(header):
+                 raise ParseError(
+-                    f"{label}:{idx + 1}: expected `|---|...` separator after header"
++                    f"{label}:{idx + 1}: expected a {len(header)}-column "
++                    "`|---|...` separator after header"
+                 )
+             seen_separator = True
+             continue
++        if cells == header or is_separator(cells):
++            continue  # a later table segment repeats the header and separator
+         if len(cells) != len(header):
+             raise ParseError(
+                 f"{label}:{idx + 1}: row has {len(cells)} cells, "
+                 f"header has {len(header)}"
+             )
+         row = dict(zip(header, cells))
+-        rid = row.get("id", "")
++        rid = row["id"]
+         if not ID_RE.match(rid):
+-            # non-id pipe lines inside the registry section are not rows;
+-            # tolerate them only if they do not look like a mangled data row
+-            if rid.startswith("S"):
+-                raise ParseError(f"{label}:{idx + 1}: malformed id `{rid}`")
+-            continue
++            raise ParseError(
++                f"{label}:{idx + 1}: table line with id cell `{rid}` is not a "
++                "registry row; refusing to drop it"
++            )
+         if rid in rows_by_id:
+             raise ParseError(f"{label}:{idx + 1}: duplicate id {rid}")
+         rows_by_id[rid] = row
++        row_lines.add(idx)
+ 
+     if header is None or not seen_separator:
+         raise ParseError(f"{label}: registry section has no complete table header")
+-    for needed in {"id"} | MUTABLE_CELLS:
+-        if needed not in header:
+-            raise ParseError(f"{label}: header missing required column `{needed}`")
++    for idx, line in enumerate(lines):
++        if idx not in row_lines and ROWLIKE_RE.match(line):
++            raise ParseError(
++                f"{label}:{idx + 1}: row-like line outside the parsed registry "
++                "table; refusing to drop it"
++            )
+     if not rows_by_id:
+         raise ParseError(f"{label}: registry table has no data rows")
+     return rows_by_id, header
+@@ -168,8 +242,14 @@
+       kind == "removed"      -> details is None
+       kind == "cell-changed" -> details is [{cell, from, to}] for non-mutable cells
+     added_ids: ids present only in --to (allowed).
++    Raises ParseError if the compared columns are not exactly IMMUTABLE_CELLS.
+     """
+     immutable_cols = [c for c in header if c not in MUTABLE_CELLS and c != "id"]
++    if sorted(immutable_cols) != sorted(IMMUTABLE_CELLS):
++        raise ParseError(
++            f"compared cells {immutable_cols} are not exactly the contract's "
++            f"immutable cells {sorted(IMMUTABLE_CELLS)}"
++        )
+     violations = []
+     for rid in sorted(set(from_rows) | set(to_rows)):
+         old = from_rows.get(rid)
+@@ -190,23 +270,32 @@
+     return violations, added
+ 
+ 
++def decode_blob(raw, label):
++    try:
++        return raw.decode("utf-8")
++    except UnicodeDecodeError as e:
++        raise ParseError(f"{label}: blob is not UTF-8 ({e})") from None
++
++
+ def git_show(repo, rev, path):
+     # A rev beginning with '-' would be parsed by git-show as an option
+     # (e.g. --output=FILE writes a file); a ':' would corrupt the REV:PATH
+     # spec. Reject both before reaching the subprocess.
+     if rev.startswith("-") or ":" in rev:
+         raise ParseError(f"invalid revision selector {rev!r}")
+-    proc = subprocess.run(
+-        ["git", "-C", repo, "show", f"{rev}:{path}"],
+-        capture_output=True,
+-        text=True,
+-    )
++    try:
++        proc = subprocess.run(
++            ["git", "-C", repo, "show", f"{rev}:{path}"],
++            capture_output=True,
++        )
++    except OSError as e:
++        raise ParseError(f"cannot run git: {e}") from None
+     if proc.returncode != 0:
+         raise ParseError(
+             f"git show {rev}:{path} failed (rc={proc.returncode}): "
+-            f"{proc.stderr.strip()}"
++            f"{proc.stderr.decode('utf-8', 'replace').strip()}"
+         )
+-    return proc.stdout
++    return decode_blob(proc.stdout, f"{rev}:{path}")
+ 
+ 
+ def run_check(args):
+@@ -215,14 +304,18 @@
+         to_text = git_show(args.repo, args.to_rev, args.path)
+         from_rows, header = parse_registry(from_text, f"{args.from_rev}:{args.path}")
+         to_rows, _ = parse_registry(to_text, f"{args.to_rev}:{args.path}")
+-    except ParseError as e:
++        violations, added = diff_registries(from_rows, to_rows, header)
++    except Exception as e:  # a traceback would exit 1, the violation code
++        if isinstance(e, ParseError):
++            error = str(e)
++        else:
++            error = f"internal error: {type(e).__name__}: {e}"
+         if args.json:
+-            print(json.dumps({"error": str(e), "violations": None}))
++            print(json.dumps({"error": error, "violations": None}))
+         else:
+-            print(f"error: {e}", file=sys.stderr)
++            print(f"error: {error}", file=sys.stderr)
+         return 2
+ 
+-    violations, added = diff_registries(from_rows, to_rows, header)
+     if args.json:
+         print(
+             json.dumps(
+@@ -267,68 +360,76 @@
+ )
+ _REGISTRY = "# SOURCES — where t learns\n\n## Registry\n\n" + _HDR
+ _TAIL = "\n## Paths\n\n- x — S001: why\n"
++_DEFAULTS = {
++    "source": "src-x", "kind": "docs", "tier": "A", "scope": "scope-x",
++    "anchor": "anchor-x", "teaches": "teaches-x", "status": "queued",
++    "opened": "2026-10-20", "recheck": "90d", "used-by": "—",
++}
++# The contract's verdict on an in-place edit of each cell (CORPUS.md
++# SOURCES-CONTRACT-v1 rule 2), written out rather than derived from the
++# constants under test so that a narrowed comparison cannot also narrow it.
++_CELL_EDIT_EXIT = {
++    "source": 1, "kind": 1, "tier": 1, "scope": 1, "anchor": 1, "teaches": 1,
++    "status": 0, "opened": 1, "recheck": 0, "used-by": 0,
++}
+ 
+ 
+-def _row(rid, teaches="teaches-x", status="queued", recheck="90d", used_by="—",
+-         anchor="anchor-x", source="src-x", kind="docs", tier="A",
+-         scope="scope-x", opened="2026-10-20"):
+-    return (
+-        f"| {rid} | {source} | {kind} | {tier} | {scope} | {anchor} | {teaches} "
+-        f"| {status} | {opened} | {recheck} | {used_by} |"
+-    )
++def _row(rid, **cells):
++    vals = dict(_DEFAULTS)
++    for key, value in cells.items():
++        col = key.replace("_", "-")
++        if col not in vals:
++            raise ValueError(f"_row: unknown column {key!r}")
++        vals[col] = value
++    return "| " + " | ".join([rid, *vals.values()]) + " |"
+ 
+ 
+ def _doc(*rows):
+     return _REGISTRY + "\n".join(rows) + _TAIL
+ 
+ 
++def _drop_opened(text):
++    """The same document with the `opened` column deleted (10 columns)."""
++    return (
++        text.replace("| opened |", "|", 1)
++        .replace("|---" * 11 + "|", "|---" * 10 + "|", 1)
++        .replace("| 2026-10-20 |", "|")
++    )
++
++
+ def run_selftest():
+-    base_s001 = _row("S001")
+-    base_s002 = _row("S002", teaches="teaches-y")
+-
++    s001 = _row("S001")
++    s002 = _row("S002", teaches="teaches-y")
++    segment = _HDR.rstrip("\n")  # a later table segment's header + separator
+     cases = []
+ 
+-    def case(name, from_text, to_text, want_exit, want_ids=None):
+-        cases.append((name, from_text, to_text, want_exit, want_ids or set()))
++    def case(name, from_text, to_text, want_exit, want=(), added=(), error=""):
++        cases.append((name, from_text, to_text, want_exit, set(want), list(added), error))
+ 
+     # 1. identical tables -> clean
+-    case("identical", _doc(base_s001, base_s002), _doc(base_s001, base_s002), 0)
++    case("identical", _doc(s001, s002), _doc(s001, s002), 0)
+ 
+     # 2. status-only change -> allowed
+     case(
+         "status-only change",
+-        _doc(base_s001),
++        _doc(s001),
+         _doc(_row("S001", status="mined", used_by="corpus/knowledge/x.md")),
+         0,
+     )
+ 
+     # 3. teaches change -> violation on S001
+-    case(
+-        "teaches change",
+-        _doc(base_s001),
+-        _doc(_row("S001", teaches="rewritten")),
+-        1,
+-        {"S001"},
+-    )
++    case("teaches change", _doc(s001), _doc(_row("S001", teaches="rewritten")), 1,
++         {"S001:teaches"})
+ 
+     # 4. removed row -> violation on S002
+-    case("removed row", _doc(base_s001, base_s002), _doc(base_s001), 1, {"S002"})
++    case("removed row", _doc(s001, s002), _doc(s001), 1, {"S002:removed"})
+ 
+-    # 5. added row -> clean
+-    case(
+-        "added row",
+-        _doc(base_s001),
+-        _doc(base_s001, _row("S003", teaches="new")),
+-        0,
+-    )
++    # 5. added row -> clean, and reported as added
++    case("added row", _doc(s001), _doc(s001, _row("S003", teaches="new")), 0,
++         added=["S003"])
+ 
+     # 6. row re-ordering -> ignored
+-    case(
+-        "reordered rows",
+-        _doc(base_s001, base_s002),
+-        _doc(base_s002, base_s001),
+-        0,
+-    )
++    case("reordered rows", _doc(s001, s002), _doc(s002, s001), 0)
+ 
+     # 7. pipe inside backticks is literal cell content, not a delimiter
+     bt = _row("S001", teaches="shows `a | b` split")
+@@ -341,63 +442,148 @@
+     # 9. recheck + used-by change -> allowed
+     case(
+         "recheck and used-by change",
+-        _doc(base_s001),
++        _doc(s001),
+         _doc(_row("S001", recheck="on-release", used_by="corpus/lessons/r.md")),
+         0,
+     )
+ 
+     # 10. anchor change -> violation (the S041 failure mode)
+-    case(
+-        "anchor change",
+-        _doc(base_s001),
+-        _doc(_row("S001", anchor="receipt v2")),
+-        1,
+-        {"S001"},
+-    )
++    case("anchor change", _doc(s001), _doc(_row("S001", anchor="receipt v2")), 1,
++         {"S001:anchor"})
+ 
+     # 11. malformed row width -> parse error
+-    bad = _doc(base_s001).replace(
+-        base_s001, "| S001 | only | three | cells |"
+-    )
+-    case("malformed row width", bad, _doc(base_s001), 2)
++    bad = _doc(s001).replace(s001, "| S001 | only | three | cells |")
++    case("malformed row width", bad, _doc(s001), 2, error="row has 4 cells")
+ 
+     # 12. duplicate id -> parse error
+-    case("duplicate id", _doc(base_s001, base_s001), _doc(base_s001), 2)
++    case("duplicate id", _doc(s001, s001), _doc(s001), 2, error="duplicate id S001")
+ 
+     # 13. missing registry section -> parse error
+-    case("missing registry", "# no table\n", _doc(base_s001), 2)
++    case("missing registry", "# no table\n", _doc(s001), 2, error="no `## Registry`")
+ 
+     # 14. source cell change -> violation (mutable set is exactly 3 cells)
+-    case(
+-        "source change",
+-        _doc(base_s001),
+-        _doc(_row("S001", source="edited-url")),
+-        1,
+-        {"S001"},
+-    )
++    case("source change", _doc(s001), _doc(_row("S001", source="edited-url")), 1,
++         {"S001:source"})
++
++    # 15-24. one in-place edit per contract cell, graded by the written-out
++    # oracle: `opened`, `kind`, `tier` and `scope` had no case before
++    for cell, want_exit in _CELL_EDIT_EXIT.items():
++        edited = _row("S001", **{cell.replace("-", "_"): f"edited-{cell}"})
++        case(f"only `{cell}` changes", _doc(s001, s002), _doc(edited, s002),
++             want_exit, {f"S001:{cell}"} if want_exit else ())
+ 
++    # 25-29. rows after a blank line, in a later table segment or under a
++    # deeper subheading are registry rows, never dropped
++    case("edit after a blank line", _doc(s001, "", s002),
++         _doc(s001, "", _row("S002", teaches="rewritten")), 1, {"S002:teaches"})
++    case("row added after a blank line", _doc(s001), _doc(s001, "", _row("S003")),
++         0, added=["S003"])
++    case("row removed from a later table segment", _doc(s001, "", segment, s002),
++         _doc(s001, "", segment), 1, {"S002:removed"})
++    case("edit in a later table segment", _doc(s001, "", segment, s002),
++         _doc(s001, "", segment, _row("S002", teaches="teaches-y", opened="2026-10-21")),
++         1, {"S002:opened"})
++    sub = "### Later rows"
++    case("edit under a deeper subheading", _doc(s001, "", sub, "", s002),
++         _doc(s001, "", sub, "", _row("S002", teaches="teaches-y", scope="widened")),
++         1, {"S002:scope"})
++
++    # 30-38. a row the parser cannot read, or a table it cannot read
++    # consistently, is reported (exit 2), never silently skipped
++    case("row-like line outside the registry", _doc(s001), _doc(s001) + s002 + "\n",
++         2, error="row-like line outside")
++    case("row without a leading pipe", _doc(s001, s002),
++         _doc(s001, s002.lstrip("| ")), 2, error="without a leading pipe")
++    case("row with a marked-up id", _doc(s001, _row("`S002`")),
++         _doc(s001, _row("`S002`", teaches="rewritten")), 2,
++         error="id cell ``S002`` is not")
++    case("row with a lower-case id", _doc(s001, _row("s002")),
++         _doc(s001, _row("s002", teaches="rewritten")), 2,
++         error="id cell `s002` is not")
++    case("later segment with another header",
++         _doc(s001, "", segment.replace("| source | kind |", "| kind | source |", 1),
++              s002),
++         _doc(s001), 2, error="id cell `id` is not")
++    case("two Registry headings", _doc(s001) + "\n## Registry\n\n" + _HDR + s002 + "\n",
++         _doc(s001), 2, error="2 `Registry` headings")
++    case("header repeats a column",
++         _doc(s001).replace("| opened |", "| teaches |", 1),
++         _doc(_row("S001", teaches="rewritten")).replace("| opened |", "| teaches |", 1),
++         2, error="header columns")
++    case("--to drops the opened column", _doc(s001), _drop_opened(_doc(s001)), 2,
++         error="header columns")
++    case("separator narrower than the header",
++         _doc(s001).replace("|---" * 11 + "|", "|---|---|", 1), _doc(s001), 2,
++         error="11-column `|---|...` separator")
++    # 39. an ATX closing sequence still names the Registry heading
++    case("closing hashes on the Registry heading",
++         _doc(s001).replace("## Registry", "## Registry ##", 1),
++         _doc(_row("S001", tier="B")).replace("## Registry", "## Registry ##", 1),
++         1, {"S001:tier"})
++
+     failures = 0
+-    for name, from_text, to_text, want_exit, want_ids in cases:
++    for name, from_text, to_text, want_exit, want, want_added, want_error in cases:
++        got, got_added, got_error = set(), [], ""
+         try:
+             from_rows, header = parse_registry(from_text, "from")
+             to_rows, _ = parse_registry(to_text, "to")
+-            violations, _ = diff_registries(from_rows, to_rows, header)
++            violations, got_added = diff_registries(from_rows, to_rows, header)
+             got_exit = 1 if violations else 0
+-            got_ids = {v["id"] for v in violations}
+-        except ParseError:
+-            got_exit, got_ids = 2, set()
+-        ok = got_exit == want_exit and (want_exit != 1 or got_ids == want_ids)
+-        status = "ok" if ok else "FAIL"
++            for v in violations:
++                if v["kind"] == "removed":
++                    got.add(f"{v['id']}:removed")
++                else:
++                    got.update(f"{v['id']}:{d['cell']}" for d in v["details"])
++        except ParseError as e:
++            got_exit, got_error = 2, str(e)
++        except Exception as e:  # a crashing case is a FAIL line, not an abort
++            got_exit, got_error = "crash", f"{type(e).__name__}: {e}"
++        ok = (
++            got_exit == want_exit
++            and got == want
++            and got_added == want_added
++            and want_error in got_error
++        )
+         if not ok:
+             failures += 1
+         print(
+-            f"{status}: {name} (want exit {want_exit}"
+-            + (f" ids {sorted(want_ids)}" if want_ids else "")
++            f"{'ok' if ok else 'FAIL'}: {name} (want exit {want_exit}"
++            + (f" {sorted(want)}" if want else "")
++            + (f" added {want_added}" if want_added else "")
++            + (f" error ~{want_error!r}" if want_error else "")
+             + f", got exit {got_exit}"
+-            + (f" ids {sorted(got_ids)}" if got_ids else "")
++            + (f" {sorted(got)}" if got else "")
++            + (f" added {got_added}" if got_added else "")
++            + (f" error {got_error!r}" if got_error else "")
+             + ")"
+         )
+-    print(f"{len(cases) - failures}/{len(cases)} selftest cases passed")
++
++    # detectors of the detector: the oracle covers every fixture column, the
++    # pinned compared set rejects a header without `opened`, and a non-UTF-8
++    # blob is a parse error (exit 2), not a traceback (exit 1)
++    fixture_cols = [c.strip() for c in _HDR.splitlines()[0].strip().strip("|").split("|")]
++    checks = [
++        ("oracle covers every fixture column",
++         fixture_cols[1:] == list(_CELL_EDIT_EXIT) == list(_DEFAULTS)),
++    ]
++    for name, call in (
++        ("compared set without `opened` is refused",
++         lambda: diff_registries({}, {}, [c for c in fixture_cols if c != "opened"])),
++        ("non-UTF-8 blob is a parse error",
++         lambda: decode_blob(b"## Registry \xff\n", "blob")),
++    ):
++        try:
++            call()
++            checks.append((name, False))
++        except ParseError:
++            checks.append((name, True))
++    for name, ok in checks:
++        if not ok:
++            failures += 1
++        print(f"{'ok' if ok else 'FAIL'}: {name}")
++
++    total = len(cases) + len(checks)
++    print(f"{total - failures}/{total} selftest cases passed")
+     return 1 if failures else 0
+ 
+ 

@@ -597,3 +597,30 @@ is a setup error; the gate-flip arm does not isolate re-derivation for K3, K6 an
 whose receipts carry `setup_error`. Round-13 row at line 430: exit 4
 (`worktree_not_at_measured_revision`, could-not-evaluate) is now a declared code, so
 that row's "undeclared nonzero codes" clause no longer covers it.
+
+## Round-18 v3 receipt and detector-bound claims (owner: kama)
+
+The round-17 v2 rows remain historical. Current lifecycle output is
+`kama-llamacpp-live/v3`. Zero loading observations no longer fail a healthy run;
+they remain non-accepted as NOT-EVALUATED. This does not certify consumer health.
+
+| Surface | Command / exit contract | Boundary |
+|---|---|---|
+| Live v3 tool | `python3 tools/kama-llamacpp-live.py --server /home/vgpnk/.local/opt/llama-b11755/llama-server --model /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf --model-sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d --out /tmp/kama-live.json`; 0 outcome pass, 1 evaluated failure, 2 not-evaluated or setup-error (including digest refusal/internal fault) | Only loading-envelope grading may be null, with `evaluated:false` and reason `no-loading-503-observed`. Failure dominates null. Use `outcome`, not exit!=0 alone. Help/usage and an unwritable output cannot promise a receipt file. |
+| Receipt gate | `python3 tests/llamacpp-live/check-receipt.py /tmp/kama-live.json --require-schema v3 --expect-model-sha256 HEX --expect-server-sha256 HEX --expect-probe-sha256 HEX --expect-tool-sha256 HEX`; 0 VALID, 1 INVALID, 2 unreadable, 3 NOT-EVALUATED | Require v3 for a current run; explicit schema floor prevents self-declared v1 escaping v3 checks. Intentional historical v1/v2 checking omits/lowers the floor. Pins identify bytes; the receipt is still self-reported, not authenticated execution. |
+| Ownership parser | `python3 tools/kama-llamacpp-live.py --selftest` | S048/S050-backed tcp6 decoding recognises exact ::1 and mapped 127/8, never wildcard addresses; checks literal procfs rows and real loopback sockets. Linux mechanism only. |
+| Input registry guard | `python3 tools/sources-append-only.py --selftest`; `--from REV --to REV` | 42 selftest cases including immutable opened/kind/tier/scope and post-blank rows; exits 0 clean, 1 violation, 2 unreadable/parse/internal fault. KQ22 still requires every consecutive source-changing commit pair, not base-to-tip only. |
+| Probe-verdict checker | `python3 tests/probe-verdicts/check.py --selftest --probe /absolute/path/to/tools/kama-probe.sh` | Nested/huge-number JSON errors become row failures; timeout kills the probe's session process group. Deliberately detached children are outside that process-group boundary. Matrix bytes remain the round-16 nine-file/72-row set. |
+| Wave provenance | `python3 .ufo/waves/round-18/dispatch-provenance.py --selftest` | 30 self-checks include textual job-limit refusals. On the round-17 input: frozen refused 0 → corrected 82, spawned 0; exact message format is a limitation, not arbitrary refusal detection. |
+
+S054 grounds exact launch argv equality: duplicate flag warnings are not refusals.
+The model's raw `arg` and resolved `path` are distinct; relative model arguments
+are legitimate when consistently recorded. A models ready capture must be HTTP
+200 as well as carry the expected alias/owner. S051 grounds containing internal
+BaseException faults (not suppressing a failed check). Python returncode citations
+now target `/3.14/`; the `/3/` page is not the host-version authority.
+
+KQ23 checks state resets and trigger-to-outcome reasoning; KQ24 keeps absent
+observations separate. Neither source opening nor a killed finite mutant set
+establishes universal detector adequacy. `corpus/lessons/round-18.md` binds the
+named survivor universe and residual limitations to measured evidence.

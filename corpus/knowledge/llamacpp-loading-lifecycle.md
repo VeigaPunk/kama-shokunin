@@ -226,3 +226,36 @@ sample. Under heavy CPU saturation the loading window can fall between two polls
 the falsify wave 1 of 60 real runs at 32x `stress-ng` load observed no 503 and failed
 `loading_envelope_graded` on a healthy server (0 of 20 idle runs, 0 of 30 at 3-12x
 load; `.ufo/waves/round-17/falsify/advice/LiveUnderLoad.md`, `LiveFastLoad.md`).
+
+## Round 18 — missing observation is not failure; v3 boundary
+
+The round-17 line “That holds once start_loop is running” is too strong if read
+as sufficient for termination. S047 supplies a necessary ordering condition:
+before the reset at server-queue.cpp:279 a handled stop can be overwritten.
+Unexamined shutdown calls, mutex acquisition and platform signal behaviour still
+limit a general termination guarantee (KQ23; `lessons/round-18.md`). The harness's
+observed returncode-0 teardown is a run observation, not a universal theorem.
+
+Receipt `kama-llamacpp-live/v3` retains the existing capability and adds
+`evaluated` plus tri-state `passed`. Only `loading_envelope_graded` may be null,
+for `no-loading-503-observed`; tool exit 2 / gate exit 3 says NOT-EVALUATED.
+A genuine false check dominates the missing observation and exits 1. Thus the
+old “fails when no 503 was observed” rule no longer describes current code.
+S052 supports only keeping an empty observation distinct, not these lane numbers.
+
+The v3 gate accepts `--require-schema v3` to refuse a receipt declaring a weaker
+schema. Omit it only for intentional historical v1/v2 receipt verification.
+It re-derives exact launch argv (including raw `model.arg`), grades recorded
+loading 503 transitions as well as retained bodies, and rejects dropped-body
+coverage gaps. S054 shows why server-side duplicate warnings are not rejection.
+The raw model argument and resolved input path are separately recorded, avoiding
+the old false failure on a genuine relative model path.
+
+S048/S050 ground the fixed IPv6 listener-ownership parser; S051 explains why
+Exception-only guards missed KeyboardInterrupt/SystemExit. Internal faults
+produce setup-error receipts and exit 2 where output remains writable. A receipt
+write failure cannot promise a file it could not write. The gate re-derives
+internal consistency, not an authenticated execution trace: an author who
+consistently removes evidence can still forge a story. Exact argv does not prove
+effective config free from HOME/config.ini inputs. These limits are not hidden
+by the retained fake-server controls or the real b11755 samples.

@@ -1,0 +1,222 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/frozen/tests_probe-verdicts_check.py	2026-10-20 16:46:09.903727593 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/build/out/KamaR18.C2CheckPyRobust-2/check.py	2026-10-20 18:08:17.405422211 -0300
+@@ -37,11 +37,15 @@
+ import hashlib
+ import http.server
+ import json
++import os
++import shlex
++import signal
+ import socket
+ import subprocess
+ import sys
+ import tempfile
+ import threading
++import time
+ from pathlib import Path
+ 
+ CHECK_DIR = Path(__file__).resolve().parent
+@@ -272,18 +276,32 @@
+         sock.close()
+ 
+ 
+-def run_probe(probe, port, expect):
++def run_probe(probe, port, expect, timeout=PROBE_TIMEOUT):
+     argv = ["bash", str(probe), *PROBE_ARGV_TAIL[:1],
+             "--port", str(port), "--expect", expect,
+             *PROBE_ARGV_TAIL[1:]]
+-    proc = subprocess.run(argv, capture_output=True, timeout=PROBE_TIMEOUT)
++    proc = subprocess.Popen(argv, stdout=subprocess.PIPE,
++                            stderr=subprocess.PIPE, start_new_session=True)
++    try:
++        stdout, stderr = proc.communicate(timeout=timeout)
++    except subprocess.TimeoutExpired:
++        # The probe may have spawned descendants that hold the pipes open.
++        # Give it an isolated process group so timeout cleanup reaches them too.
++        try:
++            os.killpg(proc.pid, signal.SIGKILL)
++        except ProcessLookupError:
++            pass
++        if proc.poll() is None:
++            proc.kill()
++        proc.communicate()
++        raise
+     # Decode strictly: non-UTF-8 probe output is malformed probe output (a
+     # recorded per-row failure), never an uncaught UnicodeDecodeError.
+     try:
+-        out = proc.stdout.decode("utf-8")
++        out = stdout.decode("utf-8")
+     except UnicodeDecodeError as exc:
+         out = f"<non-utf8 probe stdout: {exc}>"
+-    err = proc.stderr.decode("utf-8", errors="replace")
++    err = stderr.decode("utf-8", errors="replace")
+     return subprocess.CompletedProcess(argv, proc.returncode, out, err)
+ 
+ 
+@@ -387,8 +405,8 @@
+     """
+     try:
+         doc = json.loads(stdout)
+-    except json.JSONDecodeError as exc:
+-        return None, f"stdout is not JSON ({exc})"
++    except (ValueError, RecursionError) as exc:
++        return None, f"stdout is not JSON ({type(exc).__name__}: {exc})"
+     if not isinstance(doc, dict):
+         return None, f"top-level value is {type(doc).__name__}, not an object"
+     rows = doc.get("rows")
+@@ -403,7 +421,8 @@
+     if not isinstance(row.get("drift"), bool):
+         return None, "rows[0].drift is not a bool"
+     return row, None
+-def grade(entry, probe):
++
++def grade(entry, probe, timeout=PROBE_TIMEOUT):
+     """Serve one test's stub (or closed port), run the probe, record the row."""
+     test, source = entry["test"], entry["source"]
+     record = {
+@@ -443,11 +462,11 @@
+                              daemon=True).start()
+         record["port"] = port
+         try:
+-            proc = run_probe(probe, port, test["expect"])
++            proc = run_probe(probe, port, test["expect"], timeout)
+         except subprocess.TimeoutExpired:
+             record["route_ok"] = fetched_models_route(test,
+                                                     record["requests"])
+-            record["error"] = f"probe timed out after {PROBE_TIMEOUT}s"
++            record["error"] = f"probe timed out after {timeout}s"
+             return record
+         record["probe_exit"] = proc.returncode
+         record["route_ok"] = fetched_models_route(test, record["requests"])
+@@ -514,6 +533,15 @@
+      "MODEL_OK paired with exit 2"),
+ ]
+ 
++SELFTEST_MALFORMED_OUTPUTS = [
++    ("60,000-level JSON nesting",
++     '{"rows":' + "[" * 60_000 + "0" + "]" * 60_000 + "}",
++     "RecursionError"),
++    ("5,000-digit JSON integer",
++     '{"rows":[' + "9" * 5_000 + "]}",
++     "ValueError"),
++]
++
+ # One minimal valid test; two files carrying it under the same name exercise
+ # the duplicate-name guard in load_matrix() without touching the matrix dir.
+ SELFTEST_VALID_TEST = {"name": "selftest-dup", "family": "Selftest",
+@@ -523,8 +551,84 @@
+                                     "reason": "x", "exit": 2}}
+ 
+ 
++def selftest_malformed_output_rows():
++    """Ensure decoder-limit output fails one row and grading continues."""
++    global bind_closed_port
++    with tempfile.TemporaryDirectory(
++            prefix="kama-check-output-selftest-") as tmp:
++        tmp_path = Path(tmp)
++        probe = tmp_path / "probe.sh"
++        payload_file = tmp_path / "payload.json"
++        probe.write_text(
++            f"cat {shlex.quote(str(payload_file))}\nexit 2\n",
++            encoding="utf-8")
++        entry = {"test": dict(SELFTEST_VALID_TEST), "source": "<selftest>"}
++        real_bind_closed_port = bind_closed_port
++        bind_closed_port = lambda: 0
++        output_results = []
++        try:
++            for label, stdout, exception_type in SELFTEST_MALFORMED_OUTPUTS:
++                payload_file.write_text(stdout, encoding="utf-8")
++                record = grade(entry, probe)
++                row, why_bad = probe_output_row(stdout)
++                parser_rejected = (
++                    row is None and isinstance(why_bad, str)
++                    and why_bad.startswith(
++                        f"stdout is not JSON ({exception_type}:"))
++                recorded_failure = (
++                    record["passed"] is False
++                    and isinstance(record["error"], str)
++                    and record["error"].startswith("malformed probe output:"))
++                output_results.append({
++                    "label": label,
++                    "rejected": parser_rejected and recorded_failure,
++                    "detail": why_bad or "parser accepted malformed output",
++                    "recorded_error": record["error"],
++                })
++            payload_file.write_text(json.dumps({
++                "rows": [{"verdict": "DEAD", "reason": "x", "drift": True,
++                          "served_model": "-", "evidence": "selftest"}],
++            }), encoding="utf-8")
++            successor = grade(entry, probe)
++        finally:
++            bind_closed_port = real_bind_closed_port
++        return output_results, successor["passed"] is True
++
++
++def selftest_timeout_process_group():
++    """Check timeout reporting and cleanup of a same-group probe child."""
++    global bind_closed_port
++    with tempfile.TemporaryDirectory(
++            prefix="kama-check-timeout-selftest-") as tmp:
++        tmp_path = Path(tmp)
++        marker = tmp_path / "escaped"
++        probe = tmp_path / "probe.sh"
++        child_code = ("import pathlib,sys,time; time.sleep(0.4); "
++                      "pathlib.Path(sys.argv[1]).write_text('escaped')")
++        probe.write_text(
++            f"{shlex.quote(sys.executable)} -c {shlex.quote(child_code)} "
++            f"{shlex.quote(str(marker))} &\nwait\n",
++            encoding="utf-8")
++        entry = {"test": dict(SELFTEST_VALID_TEST), "source": "<selftest>"}
++        real_bind_closed_port = bind_closed_port
++        bind_closed_port = lambda: 0
++        try:
++            record = grade(entry, probe, timeout=0.1)
++        finally:
++            bind_closed_port = real_bind_closed_port
++        time.sleep(0.5)
++        timed_out = record["error"] == "probe timed out after 0.1s"
++        child_completed = marker.exists()
++        return {
++            "label": "timeout kills probe process-group child",
++            "recorded_error": record["error"],
++            "child_completed": child_completed,
++            "passed": (timed_out and record["passed"] is False
++                       and not child_completed),
++        }
++
+ def run_selftest():
+-    """Assert the validator rejects each malformed test and duplicate names."""
++    """Assert schema rejection, malformed-output handling, and timeout cleanup."""
+     results = []
+     for test, label in SELFTEST_MALFORMED:
+         try:
+@@ -552,11 +656,25 @@
+             results.append({"label": "duplicate test name across files",
+                             "rejected": False,
+                             "detail": "load_matrix accepted a duplicate name"})
+-    return {"malformed_tests": len(results),
+-            "rejected": sum(1 for r in results if r["rejected"]),
+-            "results": results,
+-            "passed": all(r["rejected"] for r in results)}
+ 
++    output_results, successor_passed = selftest_malformed_output_rows()
++    timeout_result = selftest_timeout_process_group()
++    return {
++        "malformed_tests": len(results),
++        "rejected": sum(1 for r in results if r["rejected"]),
++        "results": results,
++        "malformed_outputs": len(output_results),
++        "malformed_outputs_rejected": sum(
++            1 for r in output_results if r["rejected"]),
++        "output_results": output_results,
++        "successor_row_passed": successor_passed,
++        "timeout_test": timeout_result,
++        "passed": (all(r["rejected"] for r in results)
++                   and all(r["rejected"] for r in output_results)
++                   and successor_passed
++                   and timeout_result["passed"]),
++    }
++
+ 
+ # ---------------------------------------------------------------- driver
+ def sha256_file(path):
