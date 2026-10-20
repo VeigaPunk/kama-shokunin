@@ -307,3 +307,32 @@ and §Gate; source row S032 after the opened evidence is recorded there.
 of this round's admit/reject decisions; future externally steered work chooses
 serving-domain claims from fresh evidence. Context capacity and runtime
 restoration remain operator-dependent, not silently replaced with bookkeeping.
+
+### Round-12 measured results
+
+Measured work revision: `33f46685b418af868259952884e34b93633820cb`.
+Command: `python3 .ufo/waves/round-12/reproduce.py`, invoked from the fleet
+root with the absolute script path; receipt
+`.ufo/waves/round-12/acceptance.json`, overall exit 0 / `ok: true`.
+
+| Claim | Axis / score delta | Before → after | Verdict / limit |
+|---|---|---|---|
+| C1 | calibration 7 → 7, delta 0 | One source path: old snapshot mismatch 1 / exit 1 `source_mismatch`; corrective snapshot mismatch 0 / exit 0 `clean` | improved fail-capable source correspondence plus explicit integrity-only erratum; old snapshot intentionally retained, not overwritten; new match is a construction check, not a discovery |
+
+Both observations had `source_anchor_matches: true`; before
+`source_matches: false`, after `true`. Integrity is independently checked on
+the corrective snapshot. Selftest 11 passed / 0 failed; coherent snapshot+pin
+mutation exits 1 `source_mismatch`, pin-only corruption exits 2
+`snapshot_tampered` with **source mismatches 0**, source-redirection manifest
+exits 2 `manifest_invalid`, empty source repo exits 2 `source_unavailable`.
+All seven runner records matched their literal expectations and HEAD stayed
+unchanged during measurement. No existing serving tool or endpoint was run.
+
+Final source validation exit 0; rows 31 → 32, A 28 → 29, mined 21 → 22,
+queued/rejected unchanged. Source S032 is opened Git documentation supporting
+capture semantics; no capability or covered-ground row enters the repertoire.
+Receipt `.ufo/waves/round-12/sources-final.json`.
+Other axes unchanged; no observed axis harm within this evidence-repair scope.
+Trends: expansion unchanged, quality improved, discernment unchanged pending
+outside round-12 admit/reject sampling. Round admission awaits that non-author
+closure; these are author-measured results, not promotion.

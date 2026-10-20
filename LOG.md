@@ -668,3 +668,33 @@ SOURCES append-only rules. All original 4,413 bytes remain a contiguous suffix;
 original SHA-256 is `e9fbaa02b4329ec415ac73eb0a6a5eaf4c91ae17f2889cc96232fb51f5d49c0a`.
 The old binding title is now preceded by its override, never current permission.
 Owner evidence: `.ufo/waves/round-12/advice/ArchiveDisclaimer.md`.
+
+## round 12 — committed-revision measurement and disposition (2026-10-20)
+
+- Measured work `33f46685b418af868259952884e34b93633820cb` once with
+  `python3 .ufo/waves/round-12/reproduce.py` (absolute path, fleet-root cwd).
+  Receipt `.ufo/waves/round-12/acceptance.json`: exit 0 / ok true; all seven
+  records match expected exits/findings; HEAD unchanged during measurement.
+  Old snapshot source mismatch 1 (`source_mismatch`, exit 1) versus corrective
+  snapshot 0 (`clean`, exit 0), both with valid independent source anchors.
+- Self-invocation: 11/11, exit 0. Coherent snapshot+manifest mutation remains
+  `source_mismatch`, exit 1; pristine snapshot with corrupt pin remains source
+  match/count 0 but `snapshot_tampered`, exit 2. Redirected source manifest is
+  `manifest_invalid`, exit 2; missing source is `source_unavailable`, exit 2.
+  This demonstrates the D1 fix can fail without modifying historical evidence.
+- Final source validation/census both exit 0; required command and full output
+  in `.ufo/waves/round-12/sources-final.json`, before in `sources-before.json`.
+  Rows 31 → 32, tier A 28 → 29, mined 21 → 22; queued 5/rejected 5 and C 3
+  unchanged. New S032 docs/A supports capture method, not serving readiness;
+  lesson Gate contains the opened URL/date/located quotes and all cell changes.
+- Author verdict: C1 calibration improved, score 7 → 7 (delta 0); other axes
+  unchanged, no observed harm. Trends expansion unchanged, quality improved,
+  discernment unchanged pending fresh outside round-12 sampling. No capability,
+  new knowledge entry, runtime repair or promotion is claimed.
+- The superseded-claim sweep covered every changed domain document and archive
+  using pattern `Every row was opened|every row was opened|next entry, K02|KQ11–KQ13|binding on all 64|supersedes S011|frozen_digests_verified|Eleven frozen input digests`.
+  Historical hits have explicit overriding supplements in SOURCES, SKILL,
+  crosswalk and this LOG, or the archive's leading warning. A chronology typo
+  in the newly added archive banner was corrected: verifier D5 followed, not
+  preceded, the round-11 introduction commit. Gate/code/frozen bytes unchanged
+  after measurement.

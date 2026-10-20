@@ -194,3 +194,79 @@ the structural observation that digest integrity alone misses capture-time
 corruption is handed to the protocol owner in the fleet report, not absorbed.
 Earlier historical template copies are not executed or renumbered by this
 round; its scoped D5 ruling labels the named round-10 artifact.
+
+## Measured author disposition
+
+Work revision `33f46685b418af868259952884e34b93633820cb`.
+Executed once: `python3 .ufo/waves/round-12/reproduce.py` through its absolute
+path from the fleet root. Full command/streams/exits and parsed outputs:
+`.ufo/waves/round-12/acceptance.json`; exit **0**, `ok: true`.
+The conditional §Gate admit is now **admit by author measurement**, still
+pending independent non-author closure.
+
+| Case | Observed exit / finding | Source-only mismatch count |
+|---|---|---|
+| Old round-11 snapshot, no pin | 1 / `source_mismatch` | 1 |
+| New corrective snapshot, committed pin | 0 / `clean` | 0 |
+| Coherent changed snapshot + changed manifest | 1 / `source_mismatch` | 1 |
+| Pristine snapshot + corrupt manifest pin | 2 / `snapshot_tampered` | 0 |
+| Manifest redirected to committed old truncated copy | 2 / `manifest_invalid` | not admitted as a comparison |
+| Empty source repo | 2 / `source_unavailable` | unavailable, not a successful source comparison |
+| CLI selftest | 0 / 11 passed, 0 failed | capability of this evidence gate, not serving capability |
+
+All seven records met literal exit/finding/field expectations; independently
+retrieved source OID/SHA-256/length match pinned authority and corrective bytes.
+Old snapshot digest remains `52665cf2…`; actual/corrective source digest remains
+`9dc40d25…`. Both before/after comparisons have `source_anchor_matches: true`;
+`source_matches` is false/true respectively. HEAD did not change during run.
+The source-only count never converts a pin failure into a source mismatch.
+D1's fixed prevention is thus shown able to fail in isolated controls, not
+merely asserted from a green selftest or a newly generated self-consistent pin.
+
+The CLI selftest is eleven fixtures (including the late pin-only fixture),
+superseding advisor snapshots describing ten. Source-anchor failure is a static
+guard, not a separately exercised forged-git-object test. No endpoint, service,
+config, environment-value or credential probe ran.
+
+## Census — after
+
+Required validation command:
+`/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama`
+
+```text
+kama W04 S031 duplicate url docs.ollama.com/api/tags across scopes
+kama ok /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md
+```
+
+Exit **0**. Counting command:
+`/home/vgpnk/Projects/shokunin/scripts/sources-census.sh census --root /home/vgpnk/Projects/shokunin kama`
+
+```text
+kama rows 32
+kama tier.A 29
+kama tier.C 3
+kama status.mined 22
+kama status.queued 5
+kama status.rejected 5
+FLEET rows 32
+FLEET tier.A 29
+FLEET tier.B 0
+FLEET tier.C 3
+FLEET tier.invalid 0
+FLEET status.queued 5
+FLEET status.mined 22
+FLEET status.rejected 5
+FLEET status.invalid 0
+FLEET missing 0
+```
+
+Exit **0**. Before: rows 31/A 28/C 3/mined 21/queued 5/rejected 5.
+After adds one docs/A mined row, S032; no existing cell changes, no frontier
+ground advanced, no admitted knowledge entry. Full TSV streams retain original
+tabs in `.ufo/waves/round-12/sources-final.json`; before in `sources-before.json`.
+
+Author trends: expansion **unchanged** (zero new covered ground), quality
+**improved** (fail-capable exact-source repair and explicit D1–D5 limits),
+discernment **unchanged** pending independent round-12 admit/reject sampling.
+Learning from the outside D1 finding grounds KQ15 but author advisors do not
+certify this round. Other axes unchanged; no observed axis harm in this scope.
