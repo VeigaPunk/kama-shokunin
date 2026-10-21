@@ -246,3 +246,109 @@ KQ23's three comparative M8 citation-component controls are retained as
 with the reset citation removed. This is deliberately not a semantic/NLP gate
 or a proof that all shutdown calls are read; the human judgement remains named
 in the earlier review and outside sampling remains pending.
+
+## Falsify wave and recovery attempt 2 (2026-10-21)
+
+Falsify wave: 76 seats validated under policy v2 (`falsify/validation.json`, spec
+sha256 `ecf2668a…`, band 64–100) and spawned as one unchanged taskCall at
+23:15:12Z. Roles: reviewer 24, scout 16, critic 8, scribe 7, executor 5,
+mutation-tester 4, connector 4, revenger 4, sentinel 2, simplifier 2. 66 seats
+returned a verdict-bearing report before the coordinator's quota death:
+**28 confirm, 34 partial, 1 refute, 3 nonconformant** (format only; their bodies
+carry partial/confirm verdicts); 10 seats left no report and stay dead —
+they were not respawned. `falsify/advice/` retains all 66 reports; the count
+command is `python3 .ufo/waves/round-17/count-verdicts.py
+.ufo/waves/round-18/falsify/advice --expect-names .ufo/waves/round-18/falsify/spec.json --json`.
+
+Attempt 1 ended on provider quota with `lane-dead-no-report` and left pushed
+checkpoint `101f3991d3570bc9350fbf9c5561f4be1185699d` (unadmitted, 96 retained
+paths). Reused after re-verification: the implementation commits `c6dc46f` and
+`1c325b2`, both wave specs/registries/advice, live receipts, frozen manifest,
+strict canonicalisation tooling and the corpus/appends already integrated in
+the checkpoint (S047/S051/S054/S056 text, README precision paragraph,
+knowledge entries). Discarded: the 20 never-assigned build members (declared in
+`build/advice/swarm-registry.json`; `dispatch-95.json` is the refused payload),
+the 10 dead falsify seats (no output), and the
+pre-repair `runs/c2-survivors.json`, kept under `runs/pre-repair/` as the
+counter-defect record after its corrected rerun.
+
+Fixed from falsify findings in this attempt (each with a fail-capable case):
+
+| Finding | Fix | Detector |
+|---|---|---|
+| `PrivacyScope` **refute**: `child_env_keys` element interpolated into gate output, echoing any `NAME=<value>` | constant problem text, never the element | new `env-key-value-echo` mutation + loop assertion that the secret is absent from stdout/stderr |
+| `GateCaptureHashes` H1: `/health` 503 carrying the exact loading envelope accepted NOT-EVALUATED | envelope rows on any producer route contradict `loading_observed=false`; null license refuses them | `v3-health-loading-envelope-null-license` mutation on the no-loading receipt |
+| `ConnectTsukuroi`: four pins bind the 17,864-byte loader stub, not the 7.67 MB impl; three consistent swaps print VALID | `--expect-server-impl-sha256`; official runner passes the observed impl digest as a fifth pin | `impl-sha-mismatch-expect`, `impl-digest-absent-expect`; real receipt-1 re-validated with five pins |
+| `CounterC1` F1/F2/F3: CLEAN forgeable by under-reported `accepted_bad`/`good_rejected` rows, an undeclared `model_unchanged` label, and a conflicting `gate_flip_arms` | row-vs-count under-report faults; exclusion only when declared in `input_integrity_checks`; arms below the row count fault (above = note) | `model-only-undeclared`, laundering-row, bucket-gap and arms unit cases; selftest 45/45 |
+| `KnowledgeOwnership` 3f: honest limit missing (no live IPv6 join; selftest only) and the endianness rule stated as parser behaviour | appended two bullets in `corpus/knowledge/loopback-listener-ownership.md`; 3a–3e (race, namespace, wildcard case D, anchors, prior overlap) were already corrected in the checkpoint's "Round-18 falsify source anchors and limits" section and re-verified | falsifier pointers, `ResidCorpus.md` |
+| `ReopenS047` F2: window-exclusion inference from `/health` ordering | appended correction: receipts' `returncode 0`/`sigkill_sent false` is the deciding evidence; order argument marked [INFERENCE] | receipts + `ReopenS047.md` confirmed-6 |
+| `ReopenS047` F1, `ReopenS051`, `ReopenS054`, S047/R3 README precision | landed at the checkpoint (README precision paragraph with both window endpoints, `returncode 0` path and static-only caveat; S051 redirect/canonical clarification and BaseExceptionGroup in the knowledge entry; S056 supersedes S054's general wording) and re-verified this attempt | `ResidCorpus.md` F1–F6; `corpus/SOURCES.md:209-213` |
+| four-pin knowledge limit superseded by the fifth pin | appended correction in `corpus/knowledge/llamacpp-loading-lifecycle.md`, including the one-of-51-members residual | runner argv + gate selftest |
+
+Deferred as named debt, not silently closed (falsifier reports retained):
+`GateCaptureHashes` M1–M4 (props/slots digests and statuses, capture/teardown
+`error` fields, optional probe `summary`, non-model transition rows and the
+final-transition/`captures.health` cross-check), the fresh mutants surviving in
+`FreshGate` (4/4), `FreshControls` (2), `FreshAppend` (3/4), `FaultF0`
+(vacuous empty fault list; unanchored fault records), `FaultTarget`
+(multi-row-only guard loss), `GateLoadingTransitions` (repeat/dedup rewrites),
+`GateModelsStatus` (tool selftest blind to a relaxed model-status check),
+`GateNullLicense` (two transition-row encodings), `AppendCells`
+(comparator-normalisation and exit-mapping survivors), `ConnectTameshi`
+(counter conventions refused this round), `ConnectKagi` (handoff line),
+`ConnectKumitate` (producer-shape note), `MistakesFailCapable` (M7 producer side
+has no fail-capable detector; KQ23 prose-applied). `PrivacyScope`'s informational
+leaves stay as recorded: dummy credential-shaped test values in build advice and
+intentional host-path provenance in retained receipts.
+
+## Mistakes — recovery attempt
+
+| ID | Class | Evidence pointer | Captured-by | Fix / shown able to fail |
+|---|---|---|---|---|
+| M8 | Measurement-publication gap: both official counters ended exit 2 at the checkpoint, and the published head counter bytes no longer matched the retained run | `ReportNumbers.md`, `MistakesFailCapable.md`, `C2Admission.md`, `ConnectTameshi.md`; `runs/c1-measure.exit`/`c2-survivors.exit` at 101f399 | falsify wave 2's re-run duty; the coordinator treated counter repair as done without re-running | corrected counters now exit 0 on the official invocation; the stale artifact is retained under `runs/pre-repair/`; the run records measured argv and exits |
+| M9 | Counter trusts its child for 3 of 4 counts (row-vs-count divergence), and an exclusion label was trusted without a declaration | `CounterC1.md` E1/E3/E5 | fresh falsifier attacked the counting command, not just the subject | row-vs-count under-report faults, declared-exclusion requirement, arms-below-rows fault; unit cases added |
+
+### Residual falsification call (7 seats; no GRANT needed)
+
+The recovery had ≤49 seats of the ≤200 round budget, so it ran **no 64–100
+wave**: one ordinary `task` call of 7 reviewer/critic seats (the ≤8 residual
+allowance). They attacked the fixes above in `/tmp` copies of `101f3991` plus
+the working-tree bytes. Verdicts: five confirm (`ResidPrivacy`, `ResidHealth`,
+`ResidImplPin`, `ResidCounterC2`), two partial (`ResidCounterC1`, `ResidCorpus`),
+plus `ResidClaims` partial on C1's commit labelling and the overwritten-receipt
+defect. Reports: `.ufo/waves/round-18/residual/advice/`.
+
+Integrated from the seats: off-allowlist raw-token regression case and the
+non-string `child_env_keys` crash (`ResidPrivacy` P2/P3); impl
+field↔`install_tree` cross-check and a softened pin claim (`ResidImplPin`
+P2/P3); the bucket-gap cross-check hole, the `good_ok=false` contradiction and
+over-report notes (`ResidCounterC1`); C2's implemented kill rule, its 42-run
+count and `combine_arms([])` (`ResidCounterC2`); live receipts restored from
+`101f3991` with recovery receipts moved to `live-recovery/`, and a clean-tree
+refusal in `run.py` (`ResidClaims` F1/F2); removal of a duplicated ownership
+correction and naming of the checkpoint-integrated Reopen items
+(`ResidCorpus` F1–F6); guarded finalizer signal-handler restore with a hostile
+mapping unit test (`ToolFaultPaths` P2, previously undispositioned).
+
+Disposition of the remaining non-confirm falsify reports not named above:
+report-draft advisories (`LessonResiduals`, `ReportNumbers`, `ReportSources`,
+`ReportTrends`, `ReportWork`, `ReportWaves`, `ReportHandoff`) described the
+pre-recovery state (both counters exit 2, no final report); the measured pass
+and this round's report supersede them. `C2Admission`'s missing full counter
+arm is the post-repair rerun. `SurvivorUniverse` is disclosed below. `ReopenS053`'s
+bookkeeping nits (tier/status wording) are noted and left as written.
+
+Named residuals from the residual call, not silently closed:
+- only 1 of 51 install-tree members is pinned; `libllama-common`/`libggml`/
+  `libllama` swaps stay internally VALID under the fifth pin;
+- a `/health` 503 with a truncated or non-JSON body stays NOT-EVALUATED (exit 3),
+  never VALID;
+- `gate_flip_arms=0` with no flip rows is internally consistent and passes;
+- the C2 selftest-kill arm has no full-enumeration check, so an early-abort
+  selftest carrying the target literal reads as killed (ConnectTameshi D4);
+- FC-target's 600-byte retained tail truncates the matched problem line;
+- `counts.after.total` folds inconclusive (exit 2 still blocks a pass);
+- named detector-self mutant (b) "any nonzero exit counts" is absent from
+  family b: the C2 denominator is the ledger's 15, not the full (a)–(d) set
+  (`SurvivorUniverse.md`), and adding it needs a frozen-vs-current comparison
+  shape this counter does not implement.

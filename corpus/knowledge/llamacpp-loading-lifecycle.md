@@ -286,3 +286,27 @@ A consistent implementation/tree swap can remain internally VALID. Therefore
 “four-pin VALID” is not authentication of the complete runtime implementation.
 The retained real runs used the observed unchanged installation; no library was
 swapped. Implementation-digest preconditions remain a separate possible move.
+
+**Round-18 falsify corrections (appended 2026-10-21).**
+
+- *Window-exclusion evidence (ReopenS047 F2).* The sentence "The harness
+  signals only after `/health` 200, the readiness captures and both probe runs,
+  so its runs did not hit that window" is not sound evidence: `/health` 200 is
+  set at server.cpp:515, before the handler install at 534, and the captures and
+  probes run on the HTTP thread, not the main thread. The deciding evidence is
+  the receipts' teardown fields: `returncode 0`, `sigkill_sent false`, one
+  SIGTERM. A signal lost in [534, 279] leaves the process serving until the
+  next signal (exit 1) and would have needed SIGKILL; a pre-534 signal would
+  die by default disposition (-15). The observation-order argument is
+  [INFERENCE] only.
+- *Gate pins.* The "Four-pin limit" paragraph above is historical. The gate now
+  accepts `--expect-server-impl-sha256`, and the official round-18 runner passes
+  the observed `libllama-server-impl.so` digest as a fifth pin, alongside the
+  launcher, model, probe and tool pins. The gate also rejects a receipt whose
+  `server_impl_sha256` disagrees with `install_tree['libllama-server-impl.so']`.
+  The flagless default records the implementation/tree digests without an
+  expected value, so a consistent swap remains VALID *unless* the caller
+  supplies the impl pin. Residual: only that one of 51 install-tree members is
+  pinned — `libllama-common`/`libggml`/`libllama` swaps stay internally VALID
+  under the fifth pin (`ResidImplPin.md` P2). A five-pin VALID is not an
+  authenticated execution trace; it binds the bytes the lane observed.

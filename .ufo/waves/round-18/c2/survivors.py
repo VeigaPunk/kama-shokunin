@@ -32,7 +32,9 @@ applied to a scratch COPY of the tool; nothing in the lane is written.
     check.py> --probe tools/kama-probe.sh --matrix-dir tests/probe-verdicts
     --json`.
       killed  <=> the selftest exits non-zero where the unmutated copy's
-                  exits 0, OR the main run's decision
+                  exits 0 AND that output names this mutant's target
+                  literal (`selftest_arm`: a non-zero exit without the
+                  target literal is inconclusive), OR the main run's decision
                   (exit, positive_control.detected, detected, accepted,
                   {fault id: detected}) differs from the unmutated copy's.
     `runs`, `check_exit` and `why` are diagnostics and are not compared:
@@ -90,9 +92,10 @@ so every default a tool derives from its own location resolves in scratch.
 
 --jobs (default 1) bounds concurrent child runs. A fault-controls suite serves
 one loopback stub at a time, so --jobs 1 keeps one fake server alive at a
-time. All families together execute 22 full fault-controls suites (slow
+time. All families together execute 20 full fault-controls main runs (slow
 timeout faults included), 8 fault-controls selftests, 6 append-only
-selftests, 2 provenance records and 6 check.py runs.
+selftests, 2 provenance records and 6 check.py runs — 42 child runs; an
+identical (argv, cwd) run is memoized.
 
 --out is created exclusively: an existing path is refused, never clobbered.
 
@@ -976,6 +979,8 @@ def main_arm(base_view, view):
 def combine_arms(arms):
     """Any independently conclusive detector arm is sufficient to kill."""
     statuses = [status for status, _ in arms]
+    if not statuses:
+        return "inconclusive"
     if "killed" in statuses:
         return "killed"
     if any(status == "inconclusive" for status in statuses):

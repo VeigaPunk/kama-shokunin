@@ -23,6 +23,7 @@ and only when no /v1/models 503 was observed.
 Usage:
   check-receipt.py RECEIPT [--expect-model-sha256 HEX]
                            [--expect-server-sha256 HEX]
+                           [--expect-server-impl-sha256 HEX]
                            [--expect-probe-sha256 HEX]
                            [--expect-tool-sha256 HEX]
                            [--require-schema v1|v2|v3]
@@ -254,7 +255,8 @@ def probe_row0(rec):
 
 
 def validate(receipt, expect_model=None, expect_server=None,
-             expect_probe=None, expect_tool=None):
+             expect_probe=None, expect_tool=None,
+             expect_server_impl=None):
 
     problems = []
 
@@ -381,6 +383,22 @@ def validate(receipt, expect_model=None, expect_server=None,
     # server_impl_sha256 is null when the release has no impl .so.
     check_digest(problems, "server.server_impl_sha256",
                  server.get("server_impl_sha256"), allow_none=True)
+    impl_sha = server.get("server_impl_sha256")
+    if is_hex64(impl_sha) and isinstance(tree, dict) \
+            and "libllama-server-impl.so" in tree \
+            and tree["libllama-server-impl.so"] != impl_sha:
+        bad("server.server_impl_sha256 != "
+            "install_tree['libllama-server-impl.so']")
+    if expect_server_impl is not None:
+        # The launcher is a loader stub; this pin binds the bytes of the
+        # recorded implementation library. Other tree members (common/rpc
+        # libraries) remain unpinned unless the caller hashes them too.
+        if not is_hex64(impl_sha):
+            bad("--expect-server-impl-sha256 given but receipt has no "
+                "server.server_impl_sha256 digest")
+        elif impl_sha != expect_server_impl:
+            bad(f"server.server_impl_sha256 {impl_sha} != expected "
+                f"{expect_server_impl}")
 
 
     # --- model ----------------------------------------------------------------
@@ -417,7 +435,8 @@ def validate(receipt, expect_model=None, expect_server=None,
         bad(f"probe.sha256 {probe_sha} != expected {expect_probe}")
 
     for name, val in (("model", expect_model), ("server", expect_server),
-                      ("probe", expect_probe)):
+                      ("probe", expect_probe),
+                      ("server-impl", expect_server_impl)):
         if val is not None and not is_hex64(val):
             bad(f"--expect-{name}-sha256 {val!r} is not 64 lowercase "
                 "hex chars")
@@ -450,12 +469,14 @@ def validate(receipt, expect_model=None, expect_server=None,
     else:
         for k in env_keys:
             if not isinstance(k, str) or not k or "=" in k:
-                bad(f"child_env_keys element {k!r} is not a bare "
-                    "variable name")
+                # Never interpolate the element: a receipt carrying
+                # NAME=<value> must not leak that value into diagnostics.
+                bad("child_env_keys element is not a bare variable name")
             elif k not in CHILD_ENV_ALLOWLIST:
-                bad(f"child_env_keys element {k!r} is outside the "
+                bad("child_env_keys element is outside the "
                     "allowlist PATH/HOME/LANG/LC_ALL/TMPDIR")
-        if env_keys != sorted(set(env_keys)):
+        if all(isinstance(k, str) for k in env_keys) \
+                and env_keys != sorted(set(env_keys)):
             bad("child_env_keys is not the producer's sorted unique "
                 "list")
 
@@ -555,6 +576,14 @@ def validate(receipt, expect_model=None, expect_server=None,
         if isinstance(t, dict) and t.get("path") == "/v1/models"
         and t.get("status") == 503
     ]
+    # Any producer route can record a loading envelope (the producer polls
+    # /health too); the null license may not ignore a /health 503 envelope.
+    envelope_503_rows = [
+        t for t in transitions
+        if isinstance(t, dict) and t.get("status") == 503
+        and isinstance(t.get("body"), str)
+        and loading_envelope_ok(parse_body(t.get("body")))
+    ]
     if isinstance(lo, bool):
         if lo != (l503 is not None):
             bad(f"loading_observed {lo} != (loading_503 is not None)")
@@ -562,6 +591,11 @@ def validate(receipt, expect_model=None, expect_server=None,
             if lo != bool(model_503_rows):
                 bad(f"loading_observed {lo} != whether transitions "
                     "contain a /v1/models 503")
+            if lo is False and envelope_503_rows:
+                bad(f"loading_observed false but transitions record "
+                    f"{len(envelope_503_rows)} status-503 loading "
+                    "envelope row(s) on "
+                    f"{sorted({r.get('path') for r in envelope_503_rows})}")
         elif lo != has_503_transition:
             bad(f"loading_observed {lo} but transitions "
                 f"{'record' if has_503_transition else 'record no'} "
@@ -817,10 +851,10 @@ def validate(receipt, expect_model=None, expect_server=None,
                 reason = (observed.get("not_evaluated_reason")
                           if isinstance(observed, dict) else None)
                 if cid != "loading_envelope_graded" or lo is not False \
-                        or model_503_rows:
+                        or model_503_rows or envelope_503_rows:
                     bad(f"check {cid!r}: only loading_envelope_graded "
-                        "may be unevaluated, and only with no "
-                        "/v1/models 503")
+                        "may be unevaluated, and only with no observed "
+                        "loading 503 envelope")
                 if reason != "no-loading-503-observed":
                     bad(f"check {cid!r}: observed.not_evaluated_reason "
                         f"{reason!r} != 'no-loading-503-observed'")
@@ -1732,9 +1766,13 @@ def _selftest():
     base = _selftest_receipt()
     expects = ["--expect-model-sha256", MODEL_SHA,
                "--expect-server-sha256", SERVER_SHA,
+               "--expect-server-impl-sha256", IMPL_SHA,
                "--expect-probe-sha256", PROBE_SHA,
                "--expect-tool-sha256", TOOL_SHA]
     cases = [("valid", base, expects, 0)]
+    # child_env_keys entries come from an untrusted receipt: a value after
+    # '=' must never be echoed into gate output or collected diagnostics.
+    env_secret = "kama-selftest-env-value-2f6b1d"
 
 
     def mut(name, fn, extra=None):
@@ -1778,6 +1816,12 @@ def _selftest():
         lambda r: r.update(loading_envelope_exact=False))
     mut("env-key-off-allowlist",
         lambda r: r["child_env_keys"].append("AWS_SECRET"))
+    mut("env-key-value-echo",
+        lambda r: r["child_env_keys"].append("PATH=" + env_secret))
+    mut("env-key-raw-value-echo",
+        lambda r: r["child_env_keys"].append("SK_" + env_secret))
+    mut("env-key-nonstring",
+        lambda r: r["child_env_keys"].append({"v": env_secret}))
     mut("argv-missing-offline",
         lambda r: r["argv"].remove("--offline"))
     # falsify-wave survivors: one new rule each
@@ -1799,6 +1843,18 @@ def _selftest():
         lambda r: r["loading_503"].update(path="/metrics"))
     mut("install-tree-sha-tampered",
         lambda r: r["server"].update(install_tree_sha256="0" * 64))
+    mut("impl-sha-mismatch-expect",
+        lambda r: r["server"].update(server_impl_sha256="0" * 64),
+        extra=expects)
+    mut("impl-digest-absent-expect",
+        lambda r: r["server"].update(server_impl_sha256=None),
+        extra=expects)
+    mut("impl-field-tree-mismatch",
+        lambda r: (r["server"]["install_tree"].update(
+                       **{"libllama-server-impl.so": "e" * 64}),
+                   r["server"].update(install_tree_sha256=install_tree_sha(
+                       r["server"]["install_tree"]))),
+        extra=expects)
     mut("models-entry-missing-id",
         lambda r: r["captures"]["models"].update(body=json.dumps(
             {"data": [{"id": ALIAS, "owned_by": "llamacpp"},
@@ -1921,6 +1977,16 @@ def _selftest():
                  {"path": p, "status": s}), receipt=no_loading)
     mut3("v3-transition-503-nonexact",
          lambda r: r["transitions"][1].update(body='{"error":{}}'))
+    # H1 (falsify GateCaptureHashes): a /health 503 carrying the exact loading
+    # envelope contradicts loading_observed=false, whatever the route.
+    mut3("v3-health-loading-envelope-null-license",
+         lambda r: r["transitions"].append({
+             "t_ms": 1100, "path": "/health", "status": 503,
+             "error": None,
+             "body_sha256": hashlib.sha256(
+                 ENVELOPE_BODY.encode("utf-8")).hexdigest(),
+             "body": ENVELOPE_BODY, "body_over_cap": False,
+             "repeats": 3}), receipt=no_loading)
     mut3("v3-transition-503-truncated",
          lambda r: r["transitions"][1].update(body_over_cap=True))
     mut3("v3-teardown-port-close-unowned",
@@ -2046,6 +2112,10 @@ def _selftest():
                 failures.append(
                     f"{name}: exit 3 did not print NOT-EVALUATED: "
                     f"{proc.stdout.strip()[:400]!r}")
+            if env_secret in proc.stdout or env_secret in proc.stderr:
+                failures.append(
+                    f"{name}: gate echoed a child_env_keys value into "
+                    "diagnostics")
     proc = subprocess.run(
         [sys.executable, os.path.abspath(__file__),
          "/nonexistent/receipt.json"],
@@ -2077,6 +2147,9 @@ def main(argv=None):
                     help="require the recorded model sha256")
     ap.add_argument("--expect-server-sha256", metavar="HEX",
                     help="require the recorded server sha256")
+    ap.add_argument("--expect-server-impl-sha256", metavar="HEX",
+                    help="require the recorded server implementation "
+                         "library sha256")
     ap.add_argument("--expect-probe-sha256", metavar="HEX",
                     help="require the recorded probe sha256")
     ap.add_argument("--expect-tool-sha256", metavar="HEX",
@@ -2104,6 +2177,7 @@ def main(argv=None):
     problems = validate(receipt,
                         expect_model=args.expect_model_sha256,
                         expect_server=args.expect_server_sha256,
+                        expect_server_impl=args.expect_server_impl_sha256,
                         expect_probe=args.expect_probe_sha256,
                         expect_tool=args.expect_tool_sha256)
     if args.require_schema and isinstance(receipt, dict):

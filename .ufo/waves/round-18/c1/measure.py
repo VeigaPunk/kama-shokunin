@@ -44,12 +44,16 @@ Measurement mode
    classification from accepted/inconclusive/attributed. For reported v2,
    ``misclassified`` is cross-checked against row ``bucket`` (not
    ``classification``); rows from an older reported schema without bucket
-   use classification as the compatibility fallback. ``uncontrolled_checks``
-   stay ``null`` for v1 (no classification and failed checks only).
-   ``model_unchanged`` is removed from uncontrolled_checks into
-   ``uncontrolled_excluded``.
+   use classification as the compatibility fallback. ``accepted_bad`` and
+   ``good_rejected`` are cross-checked the same way and may not under-report
+   rows (a partial projection reporting fewer bad buckets is legal and only
+   noted). ``uncontrolled_checks`` stay ``null`` for v1 (no classification
+   and failed checks only). An ``uncontrolled_checks`` id is removed into
+   ``uncontrolled_excluded`` only when the document itself declares it in
+   ``input_integrity_checks``; an undeclared label stays uncontrolled here.
    ``gate_flip_arms`` is read from the controls JSON when present, otherwise
-   derived from rows whose ``gate_flip`` is an object (the arm ran).
+   derived from rows whose ``gate_flip`` is an object (the arm ran); a
+   reported value below the row count is a fault, above it only a note.
 5. Report: before -> after for the four counts plus good_ok, gate_flip_bad,
    gate_flip_arms, inconclusive; per-control classification and bucket diffs;
    controls-JSON digests.
@@ -522,7 +526,10 @@ def summarize(doc, controls_exit):
             else None,
             'failed_checks': failed_checks,
             'tool_exit': r.get('tool_exit'), 'gate_exit': r.get('gate_exit'),
-            'gate_flip_ran': ran}
+            'gate_flip_ran': ran,
+            'gate_flip_accepted': (r['gate_flip'].get('accepted')
+                                   if isinstance(r.get('gate_flip'), dict)
+                                   else None)}
         order.append(cid)
 
     good_ok = doc.get('good_ok')
@@ -535,9 +542,12 @@ def summarize(doc, controls_exit):
     gate_flip_arms = _count(doc, 'gate_flip_arms', faults)
     if gate_flip_arms is not None:
         arms_source = 'reported'
-        if flip_seen and gate_flip_arms != flip_arms:
-            notes.append(f'gate_flip_arms={gate_flip_arms} but {flip_arms} '
-                         'row(s) carry a gate_flip object')
+        if gate_flip_arms < flip_arms:
+            faults.append(f'gate_flip_arms={gate_flip_arms} but {flip_arms} '
+                          'row(s) carry a gate_flip object')
+        elif gate_flip_arms > flip_arms:
+            notes.append(f'gate_flip_arms={gate_flip_arms} exceeds '
+                         f'{flip_arms} row(s) with a gate_flip object')
     elif flip_seen:
         gate_flip_arms, arms_source = flip_arms, 'derived:rows'
     else:
@@ -567,10 +577,27 @@ def summarize(doc, controls_exit):
             else:
                 if len(raw) != len(set(raw)):
                     faults.append('uncontrolled_checks contains duplicates')
+                declared = doc.get('input_integrity_checks')
+                if declared is None:
+                    declared = []
+                elif not isinstance(declared, list) \
+                        or not all(isinstance(c, str) for c in declared):
+                    faults.append('input_integrity_checks is not a list of '
+                                  f'strings: {declared!r}')
+                    declared = []
                 excluded = sorted({c for c in raw
-                                   if c in EXCLUDED_UNCONTROLLED})
-                uncontrolled = sorted({c for c in raw
-                                       if c not in EXCLUDED_UNCONTROLLED})
+                                   if c in EXCLUDED_UNCONTROLLED
+                                   and c in declared})
+                keep = set(excluded)
+                undeclared = sorted({c for c in raw
+                                     if c in EXCLUDED_UNCONTROLLED
+                                     and c not in declared})
+                if undeclared:
+                    notes.append(
+                        'exclusion label(s) ' + ','.join(undeclared)
+                        + ' not declared in input_integrity_checks; '
+                        'counted as uncontrolled')
+                uncontrolled = sorted({c for c in raw if c not in keep})
         if misclassified is not None and rows:
             n, counted = 0, 0
             for row in rows.values():
@@ -583,6 +610,35 @@ def summarize(doc, controls_exit):
             if counted == len(rows) and n != misclassified:
                 faults.append(f'misclassified={misclassified} but {n} row(s) '
                               'have a misclassified outcome bucket')
+        # accepted_bad and good_rejected are certified only when the child's
+        # rows do not record MORE bad outcomes than it reports: a consistent
+        # under-report is otherwise CLEAN. Counting is restricted to rows that
+        # carry a reported bucket, so one bucket-less sibling cannot disable
+        # the check; fewer rows than the certified count is legal and noted.
+        bucket_rows = [row for row in rows.values()
+                       if row['bucket_source'] == 'reported']
+        if bucket_rows:
+            n_ab = sum(1 for row in bucket_rows
+                       if row['bucket'] == 'accepted_bad')
+            n_flip = sum(1 for row in rows.values()
+                         if row['gate_flip_accepted'] is True)
+            if accepted_bad is not None and accepted_bad < n_ab + n_flip:
+                faults.append(f'accepted_bad={accepted_bad} but {n_ab} '
+                              f'accepted_bad bucket row(s) + {n_flip} '
+                              'accepted gate-flip row(s)')
+            if accepted_bad is not None and accepted_bad > n_ab + n_flip:
+                notes.append(f'accepted_bad={accepted_bad} exceeds {n_ab} '
+                             f'bucket + {n_flip} flip row(s)')
+            n_gr = sum(1 for row in bucket_rows
+                       if row['bucket'] == 'good_rejected')
+            if good_rejected is not None and good_rejected < n_gr:
+                faults.append(f'good_rejected={good_rejected} but {n_gr} '
+                              'row(s) have a good_rejected outcome bucket')
+            if good_rejected is not None and good_rejected > n_gr:
+                notes.append(f'good_rejected={good_rejected} exceeds '
+                             f'{n_gr} bucket row(s)')
+        if good_ok is False and good_rejected == 0:
+            faults.append('good_ok is false but good_rejected is 0')
 
     summary = {
         'shape': shape, 'schema': doc.get('schema'),
@@ -1253,8 +1309,12 @@ def main():
         rows.append(row('k1', 'accepted', [], 'health_ready'))
         rows.append(row('k9', 'misclassified', ['teardown_graceful'],
                         'props_alias'))
+        k17 = row('k17', 'rejected-targeted', ['ownership'], 'ownership')
+        k17['bucket'] = 'good_rejected'
+        rows.append(k17)
         doc = {'accepted_bad': 1, 'good_rejected': 1, 'misclassified': 1,
                'uncontrolled_checks': ['props_alias', 'model_unchanged'],
+               'input_integrity_checks': ['model_unchanged'],
                'good_ok': False}
         rc = 1
     else:
@@ -1263,10 +1323,13 @@ def main():
         rows.append(row('k9', 'rejected-targeted', ['props_alias'],
                         'props_alias'))
         unc = {'dirty': ['props_alias'],
-               'model-only': ['model_unchanged']}.get(MODE, [])
+               'model-only': ['model_unchanged'],
+               'model-only-undeclared': ['model_unchanged']}.get(MODE, [])
         doc = {'accepted_bad': 1 if MODE == 'inconsistent' else 0,
                'good_rejected': 0, 'misclassified': 0,
                'uncontrolled_checks': unc, 'good_ok': True}
+        if MODE == 'model-only':
+            doc['input_integrity_checks'] = ['model_unchanged']
         rc = {'exit1clean': 1, 'exit2json': 2}.get(MODE, 0)
     doc.update(schema='kama-live-controls/v2', tool_sha256=tool_sha,
                gate_sha256=_sha(a.gate), controls=rows)
@@ -1389,6 +1452,7 @@ def selftest():
     clean_doc = {'schema': 'x/v2', 'accepted_bad': 0, 'good_rejected': 0,
                  'misclassified': 0, 'good_ok': True,
                  'uncontrolled_checks': ['model_unchanged'],
+                 'input_integrity_checks': ['model_unchanged'],
                  'controls': [{'id': 'k0', 'classification': 'accepted',
                                'bucket': 'ok', 'targeted': [],
                                'targeted_hit': None, 'failed_checks': [],
@@ -1397,6 +1461,40 @@ def selftest():
     expect(not f and s['uncontrolled_checks'] == []
            and s['uncontrolled_excluded'] == ['model_unchanged']
            and clean_reasons(s) == [], 'summarize: clean + excluded')
+    undeclared = dict(clean_doc)
+    undeclared.pop('input_integrity_checks')
+    s, f, _ = summarize(undeclared, 0)
+    expect(not f and s['uncontrolled_checks'] == ['model_unchanged']
+           and s['uncontrolled_excluded'] == [],
+           'summarize: undeclared exclusion label stays uncontrolled')
+    launder = dict(clean_doc, controls=clean_doc['controls'] + [{
+        'id': 'k1', 'classification': 'accepted', 'bucket': 'accepted_bad',
+        'targeted': [], 'targeted_hit': None, 'failed_checks': [],
+        'gate_flip': None}])
+    _, f, _ = summarize(launder, 0)
+    expect(any('accepted_bad=0 but 1' in x for x in f),
+           'summarize: accepted_bad row/count divergence is a fault')
+    gap = dict(clean_doc, controls=clean_doc['controls'] + [
+        {'id': 'k2', 'classification': 'rejected-targeted',
+         'targeted': [], 'targeted_hit': None, 'failed_checks': [],
+         'gate_flip': None},
+        {'id': 'k1', 'classification': 'accepted', 'bucket': 'accepted_bad',
+         'targeted': [], 'targeted_hit': None, 'failed_checks': [],
+         'gate_flip': None}])
+    _, f, _ = summarize(gap, 0)
+    expect(any('accepted_bad=0 but 1' in x for x in f),
+           'summarize: bucket-less sibling cannot disable the cross-check')
+    _, f, _ = summarize(dict(clean_doc, good_ok=False), 0)
+    expect(any('good_ok is false' in x for x in f),
+           'summarize: good_ok false with zero good_rejected is a fault')
+    flips = dict(clean_doc, gate_flip_arms=0, controls=[
+        dict(clean_doc['controls'][0],
+             gate_flip={'accepted': False, 'exit': 1})])
+    _, f, _ = summarize(flips, 0)
+    expect(any('gate_flip_arms=0' in x for x in f),
+           'summarize: under-reported gate_flip_arms is a fault')
+    _, f, _ = summarize(dict(clean_doc, gate_flip_arms=99), 0)
+    expect(not f, 'summarize: over-reported gate_flip_arms is a note')
     bad = dict(clean_doc, accepted_bad=True)
     expect(summarize(bad, 1)[1], 'summarize: bool count is a fault')
     s, f, _ = summarize(dict(clean_doc, misclassified=2), 0)
@@ -1499,6 +1597,10 @@ def selftest():
                in doc['reasons'], f'dirty: exit {code} {doc["reasons"]}')
         doc, code = measure_mode('model-only')
         expect(code == 0, f'model-only: exit {code} {doc["reasons"]}')
+        doc, code = measure_mode('model-only-undeclared')
+        expect(code == 1 and 'uncontrolled_checks=model_unchanged'
+               in doc['reasons'],
+               f'model-only-undeclared: exit {code} {doc["reasons"]}')
         doc, code = measure_mode('exit1clean')
         expect(code == 0 and doc['reasons'] == [],
                f'exit1clean: exit {code} {doc["reasons"]}')

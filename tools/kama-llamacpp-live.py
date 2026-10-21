@@ -891,6 +891,30 @@ def _record_internal(receipt, exc):
     receipt['setup_error'] = token
 
 
+def _restore_signal_handlers(old_handlers, receipt, saved=False):
+    """Ignore or restore the pre-harness signal dispositions.
+
+    Never raises: a fault while materialising or walking the mapping is
+    recorded on the receipt and must not abort the finalizer (teardown,
+    safety-net kill and receipt emission still run). Returns True when a
+    restore fault was recorded. `saved=False` sets SIG_IGN (finalizer);
+    `saved=True` restores each saved handler (outer epilogue).
+    """
+    try:
+        items = tuple(old_handlers.items())
+    except BaseException as exc:
+        _record_internal(receipt, exc)
+        return True
+    fault = False
+    for sig, handler in items:
+        try:
+            signal.signal(sig, handler if saved else signal.SIG_IGN)
+        except BaseException as exc:
+            _record_internal(receipt, exc)
+            fault = True
+    return fault
+
+
 # Byte-contiguous spans of the pinned llama.cpp commit that ground the v3
 # sourced predicates. Each binding is {check, row, commit, path, url,
 # lines:[a,b], file_sha256, span_text, span_sha256}. `row` is the SOURCES
@@ -1117,6 +1141,17 @@ def _selftest():
             os.replace = original_replace
         if list(Path(directory).iterdir()):
             raise AssertionError('atomic publish interruption leaked a sibling temp')
+
+    class _HostileHandlers(dict):
+        def items(self):
+            raise RuntimeError('selftest-hostile-handlers')
+
+    selftest_receipt = {'internal_fault': None, 'setup_error': None}
+    if _restore_signal_handlers(
+            _HostileHandlers({signal.SIGTERM: None}),
+            selftest_receipt) is not True or selftest_receipt.get(
+                'internal_fault') != 'internal:RuntimeError':
+        raise AssertionError('finalizer handler restore fault escaped')
     print('selftest: ok; closed tcp6 listeners ' + ', '.join(tested_ports))
     return 0
 
@@ -1417,11 +1452,7 @@ def main(argv=None):
     except BaseException as exc:
         _record_internal(receipt, exc)
     finally:
-        for sig in tuple(old_handlers):
-            try:
-                signal.signal(sig, signal.SIG_IGN)
-            except BaseException as exc:
-                _record_internal(receipt, exc)
+        _restore_signal_handlers(old_handlers, receipt)
 
         td = None
         if proc is not None or log_path is not None:
@@ -1577,13 +1608,8 @@ def main(argv=None):
             receipt['outcome'], exit_code = 'setup-error', 2
             needs_reemit = True
 
-        restore_fault = False
-        for sig, handler in old_handlers.items():
-            try:
-                signal.signal(sig, handler)
-            except BaseException as exc:
-                _record_internal(receipt, exc)
-                restore_fault = True
+        restore_fault = _restore_signal_handlers(
+            old_handlers, receipt, saved=True)
 
         if needs_reemit or restore_fault:
             try:

@@ -5,6 +5,14 @@ import datetime, hashlib, json, shutil, subprocess, sys, tempfile, time
 L=Path('/home/vgpnk/Projects/shokunin/kama-shokunin'); W=L/'.ufo/waves/round-18'; R=W/'runs'; F=W/'frozen'
 records=[]
 rev=subprocess.check_output(['git','-C',str(L),'rev-parse','master'],text=True).strip()
+dirty_lines=[line for line in subprocess.check_output(
+    ['git','-C',str(L),'status','--porcelain'],text=True).splitlines()
+    if not any(line[3:].startswith(prefix) for prefix in (
+        '.ufo/waves/round-18/runs/', '.ufo/waves/round-18/live-recovery/'))]
+dirty='\n'.join(dirty_lines)
+if dirty:
+    print('refusing: lane working tree is dirty; commit the measured bytes first:\n'+dirty,file=sys.stderr)
+    sys.exit(2)
 def sha(p): return hashlib.sha256(Path(p).read_bytes()).hexdigest()
 def run(name,argv,want=0,cwd=L,timeout=7200):
     t=time.monotonic(); at=datetime.datetime.now(datetime.timezone.utc).isoformat()
@@ -37,12 +45,15 @@ run('c1-measure',c1+['--out',R/'c1-measure.json'])
 run('c1-self-mutants',c1+['--self-mutants','--baseline-runs','1','--out',R/'c1-self-mutants.json'])
 # Real producer/gate runs: pin caller-selected bytes, never resolve the binary from PATH.
 server=Path('/home/vgpnk/.local/opt/llama-b11755/llama-server')
+impl=server.parent/'libllama-server-impl.so'
+if not impl.is_file():
+    raise SystemExit(f'impl library missing: {impl}')
 model=Path('/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf')
 model_sha='270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d'
 for i in range(1,4):
-    receipt=W/'live'/('receipt-'+str(i)+'.json');receipt.parent.mkdir(exist_ok=True)
+    receipt=W/'live-recovery'/('receipt-'+str(i)+'.json');receipt.parent.mkdir(parents=True,exist_ok=True)
     run('live-'+str(i),[P,L/'tools/kama-llamacpp-live.py','--server',server,'--model',model,'--model-sha256',model_sha,'--alias','kama-r18-live','--out',receipt])
-    run('live-gate-'+str(i),[P,L/'tests/llamacpp-live/check-receipt.py',receipt,'--require-schema','v3','--expect-model-sha256',model_sha,'--expect-server-sha256',sha(server),'--expect-probe-sha256',sha(L/'tools/kama-probe.sh'),'--expect-tool-sha256',sha(L/'tools/kama-llamacpp-live.py')])
+    run('live-gate-'+str(i),[P,L/'tests/llamacpp-live/check-receipt.py',receipt,'--require-schema','v3','--expect-model-sha256',model_sha,'--expect-server-sha256',sha(server),'--expect-server-impl-sha256',sha(impl),'--expect-probe-sha256',sha(L/'tools/kama-probe.sh'),'--expect-tool-sha256',sha(L/'tools/kama-llamacpp-live.py')])
 # Historical receipt compatibility with each receipt's own four recorded pins.
 legacy=[L/'.ufo/waves/round-16/live/receipt.json',L/'.ufo/waves/round-16/live/receipt-frozen-probe.json']+[L/('.ufo/waves/round-17/live/receipt-'+str(i)+'.json') for i in range(1,4)]
 for i,p in enumerate(legacy):

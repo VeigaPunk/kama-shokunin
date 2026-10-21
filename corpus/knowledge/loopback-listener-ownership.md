@@ -87,3 +87,23 @@ ProbeTcp6Format case D bound host `::` with dual-stack enabled, a wildcard, not
 an exclusively-loopback address. That was an experiment safety departure even
 though it was closed and the production policy refuses wildcards; it must not
 be described as “only loopback listeners” or copied as a safe default.
+
+## Round-18 falsify corrections (appended 2026-10-21)
+
+These append; the paragraphs above are not rewritten. `KamaR18.KnowledgeOwnership`
+(`.ufo/waves/round-18/falsify/advice/KnowledgeOwnership.md`) and the residual
+review `ResidCorpus.md` checked the entry at `1c325b2`/the working tree against
+the pinned bytes and the raw build reports. The race, namespace scope, host
+wildcard case D, source anchors and prior overlap are already recorded in the
+"Round-18 falsify source anchors and limits" section above, which is not
+duplicated here.
+
+- **Honest limit (3f).** No full v3 run bound an IPv6 listener: the selftest
+  exercises the address parsers on real sockets, while the live join was
+  exercised over IPv4 only. This is not a receipt capability and not runtime
+  integration.
+- **Endianness wording.** "Decode all words according to host endianness" is
+  an inferred general rule, not what the retained parser does: it reverses
+  each 32-bit word unconditionally (`tools/kama-llamacpp-live.py:311-321`), so
+  a big-endian host would be misread. Big-endian output remains unobserved, as
+  the body states.
