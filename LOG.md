@@ -1247,3 +1247,5 @@ and in SKILL/lesson, not treated as current authority.
 
 - Final corrected measurement: `run.py` at `9add96e462e62dc5141cd02730b7a699268b3513` ran 21/21 commands at expected exits, harness0 (`runs/9add96e4`). C1: 15 cells, frozen misclassified6/current0, mismatches0/unrun0. C2: 23/23 fixture predicates; no mismatches, snapshot tampering or unavailable rows; real-file oracle/receipt agree.
 - Final S065 census: rows57→65, A54→62/C3, mined46→52, queued5→6, rejected6→7, missing0; `sources-validate`/`sources-census` exit0 with six W04 warnings S031/S043/S056/S060/S064/S065. The failed c731 and 04de measurements are retained but not credited.
+
+- R19 verifier routed instrument-registration item is closed by `SKILL.md:652-654` at `0957ce619789d13bb5779606078fa1498114d2c7`: `citation-provenance.py`, `install-tree-grid.py`, and receipt-gate `--expect-install-tree-sha256` now have explicit rows and verdict/selftest contracts.
