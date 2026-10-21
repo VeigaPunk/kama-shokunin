@@ -104,6 +104,9 @@ def git_env(**extra):
     env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1", **extra)
     return env
 
+# Seconds per git call; real audits take milliseconds per call.
+GIT_TIMEOUT = 20
+
 
 def git(repo, *args, stdin=None, env=None, errors="strict"):
     """stdout as UTF-8 text with universal newlines (as text mode did).
@@ -113,7 +116,13 @@ def git(repo, *args, stdin=None, env=None, errors="strict"):
     try:
         proc = subprocess.run(["git", *GIT_ISOLATION, "-C", str(repo), *args],
                               input=None if stdin is None else stdin.encode(),
-                              capture_output=True, env=env or git_env())
+                              capture_output=True, env=env or git_env(),
+                              timeout=GIT_TIMEOUT)
+    except subprocess.TimeoutExpired as exc:
+        # e.g. a FIFO at .git/config, an include target, .git/shallow or a
+        # ref file blocks git's read: a hang is never a verdict
+        raise EvalError(f"git {' '.join(args)} in {repo}: timed out after "
+                        f"{GIT_TIMEOUT}s") from exc
     except OSError as exc:
         raise EvalError(f"cannot run git: {exc}") from exc
     if proc.returncode != 0:
@@ -191,11 +200,14 @@ def round_commits(lane_repo, branch, lane, rnd):
     rows = []
     for i in range(0, len(fields), 4):
         sha, author, atime, subject = fields[i:i + 4]
-        if (not re.fullmatch(r"[0-9a-f]{40}", sha)
-                or not re.fullmatch(r"[0-9]{1,12}", atime)):
-            raise EvalError(f"unexpected git log record {sha[:80]!r} "
-                            f"{atime[:40]!r}")
+        if not re.fullmatch(r"[0-9a-f]{40}", sha):
+            raise EvalError(f"unexpected git log record {sha[:80]!r}")
         if author == f"{lane}-shokunin" and pat.match(subject):
+            # only required candidates need a usable time; an unrelated
+            # commit with a malformed date must not block the audit
+            if not re.fullmatch(r"[0-9]{1,18}", atime):
+                raise EvalError(f"unexpected git log record {sha} "
+                                f"author time {atime[:40]!r}")
             rows.append({"sha": sha, "atime": int(atime), "subject": subject})
     return rows
 
@@ -384,14 +396,14 @@ def apply_errata(results, errata, repos):
             used.update(e["line"] for e in match)
     unmatched = [e for e in errata
                  if e["round"] in selected and e["line"] not in used]
-    # only hex corrections are looked up: a revision expression such as
-    # HEAD or :/text is never a correction
-    status = lookup(repos, [e["correction"] for e in errata
-                            if e["kind"] in RESOLVABLE and re.fullmatch(
-                                r"[0-9a-f]{7,40}", e["correction"])],
-                    "^{commit}")
+    # only hex corrections are looked up (case-folded, as git does): a
+    # revision expression such as HEAD or :/text is never a correction
+    hexed = {e["line"]: e["correction"].lower() for e in errata
+             if e["kind"] in RESOLVABLE
+             and re.fullmatch(r"[0-9a-fA-F]{7,40}", e["correction"])}
+    status = lookup(repos, list(hexed.values()), "^{commit}")
     invalid = [e for e in errata if e["kind"] in RESOLVABLE and (
-        status.get(e["correction"]) != "found"
+        status.get(hexed.get(e["line"])) != "found"
         or (e["kind"] == "landed-omitted" and e["correction"] != e["token"]))]
     return unmatched, invalid
 
@@ -437,26 +449,53 @@ def check_history_repo(repo):
         raise EvalError(f"{repo}: shallow repository")
     for rel in ("info/grafts", "objects/pack"):
         path = Path(repo, git(repo, "rev-parse", "--git-path", rel).strip())
-        if rel == "info/grafts" and os.path.lexists(path):
+        if rel == "info/grafts" and grafts_effective(path):
             raise EvalError(f"{repo}: {path} rewrites history")
         if rel == "objects/pack" and path.is_dir() and any(
-                p.suffix == ".promisor" for p in path.iterdir()):
+                p.suffix == ".promisor" and p.with_suffix(".pack").exists()
+                for p in path.iterdir()):
             raise EvalError(f"{repo}: partial clone (promisor pack)")
-    for line in git(repo, "config", "--list", "--name-only").split("\n"):
-        if line == "extensions.partialclone" or re.fullmatch(
-                r"remote\..+\.promisor", line):
-            raise EvalError(f"{repo}: partial clone ({line})")
+    listing = git(repo, "config", "--null", "--list",
+                  errors="surrogateescape")
+    for entry in filter(None, listing.split("\0")):
+        key, _, value = entry.partition("\n")
+        if key == "extensions.partialclone" or (
+                re.fullmatch(r"remote\..+\.promisor", key)
+                and git_bool(value)):
+            raise EvalError(f"{repo}: partial clone ({key})")
+
+
+def grafts_effective(path):
+    """True unless the grafts file is absent or holds only blank and `#`
+    comment lines (which git skips); anything not a regular file, or any
+    other line, may rewrite history and is refused unread."""
+    try:
+        mode = os.lstat(path).st_mode
+    except FileNotFoundError:
+        return False
+    if not stat.S_ISREG(mode):
+        return True
+    return any(line.strip() and not line.startswith(b"#")
+               for line in Path(path).read_bytes().splitlines())
+
+
+def git_bool(value):
+    """git's boolean config spelling; a bare key (no '=') is true."""
+    v = value.strip().lower()
+    return v in ("", "true", "yes", "on") or (
+        re.fullmatch(r"-?[0-9]+", v) is not None and int(v) != 0)
 
 
 def resolve_branch(lane_repo, branch):
-    """Pin the lane tip once. A plain name is refs/heads/<name> first, so a
-    same-named tag cannot shadow the branch; other revisions as given."""
-    try:
+    """Pin the lane tip once. A plain name that exists as refs/heads/<name>
+    must peel to a commit there (a same-named tag never substitutes for a
+    broken branch); other revisions resolve as given."""
+    head = f"refs/heads/{branch}"
+    if git(lane_repo, "for-each-ref", "--format=%(refname)", head).strip():
         return git(lane_repo, "rev-parse", "--verify",
-                   f"refs/heads/{branch}^{{commit}}").strip()
-    except EvalError:
-        return git(lane_repo, "rev-parse", "--verify",
-                   f"{branch}^{{commit}}").strip()
+                   f"{head}^{{commit}}").strip()
+    return git(lane_repo, "rev-parse", "--verify",
+               f"{branch}^{{commit}}").strip()
 
 
 def run(args):

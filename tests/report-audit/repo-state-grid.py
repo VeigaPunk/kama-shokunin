@@ -25,6 +25,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+import signal
 import sys
 import tempfile
 
@@ -407,7 +408,7 @@ def f_errata_revision(tmp):
     lc = commit(lane, "kama-shokunin", 1000, "round-1: work")
     publish(fleet, report([lc]) + b"\n## Notes\n\nsee " + FAKE.encode() + b"\n")
     commit(lane, "fixture", 1600, "errata", "registry/report-landing-errata.tsv",
-           f"1\tunresolved-full-hash\t{FAKE}\tHEAD\tev\n".encode())
+           f"1\tunresolved-full-hash\t{FAKE}\t:/round-1\tev\n".encode())
     return lane, fleet, ["errata"], None
 
 
@@ -476,6 +477,109 @@ def f_huge_timestamp(tmp):
     g(lane, "update-ref", "refs/heads/master", bad)
     return lane, fleet, [], None
 
+
+
+def f_filter_promisor(tmp):
+    """`remote.<name>.partialclonefilter` alone makes a promisor remote, so
+    a missing-object lookup would fetch (and run core.sshCommand)."""
+    lane, fleet = pair(tmp)
+    lc = commit(lane, "kama-shokunin", 1000, "round-1: work")
+    fake = "abcdefabcdefabcdefabcdefabcdefabcdefabcd"
+    publish(fleet, report([lc, fake]))
+    marker = Path(tmp, "filter-fetch-ran")
+    for k, v in (("remote.origin.url", "ssh://example.invalid/x.git"),
+                 ("remote.origin.partialclonefilter", "blob:none"),
+                 ("core.sshCommand", f"touch {marker}; false")):
+        g(lane, "config", k, v)
+    subprocess.run(["git", "-C", str(lane), "cat-file", "-e", fake],
+                   capture_output=True, env=env())
+    require(marker.exists(), "filter-only promisor did not lazy fetch")
+    marker.unlink()
+    return lane, fleet, [], marker
+
+
+def f_shallow_fleet(tmp):
+    """A shallow fleet hides the report's first add behind the boundary."""
+    lane, fleet = pair(tmp)
+    lc = commit(lane, "kama-shokunin", 1000, "round-1: work")
+    commit(lane, "kama-shokunin", 2500, "round-1: more")
+    publish(fleet, report([lc]), when=2000)
+    tip = commit(fleet, "fleet", 3000, "later", "notes.md")
+    Path(fleet, ".git/shallow").write_text(tip + "\n")
+    require(g(fleet, "rev-list", "--count", "HEAD") == "1",
+            "fleet shallow ineffective")
+    return lane, fleet, [], None
+
+
+def f_broken_branch(tmp):
+    """refs/heads/master exists but does not peel to a commit; a
+    same-named tag must not stand in for it."""
+    lane, fleet, lc = base(tmp)
+    tree = g(lane, "rev-parse", f"{lc}^{{tree}}")
+    g(lane, "tag", "master", lc)
+    Path(lane, ".git/refs/heads/master").write_text(tree + "\n")
+    require(g(lane, "for-each-ref", "--format=%(refname) %(objecttype)",
+              "refs/heads/master") == "refs/heads/master tree",
+            "tree-valued branch ref not listed")
+    return lane, fleet, [], None
+
+
+def f_config_fifo(tmp):
+    """A lane-local include.path naming a FIFO blocks every git call."""
+    lane, fleet, _ = base(tmp)
+    fifo = Path(tmp, "include-fifo")
+    os.mkfifo(fifo)
+    g(lane, "config", "include.path", str(fifo))
+    p = subprocess.run(["timeout", "5", "git", "-C", str(lane), "rev-parse",
+                        "HEAD"], capture_output=True, env=env())
+    require(p.returncode == 124, "FIFO include did not block git")
+    return lane, fleet, [], None
+
+
+def c_promisor_false(tmp):
+    lane, fleet, _ = base(tmp)
+    g(lane, "config", "remote.origin.promisor", "false")
+    return lane, fleet, [], None
+
+
+def c_orphan_marker(tmp):
+    lane, fleet, _ = base(tmp)
+    Path(lane, ".git/objects/pack").mkdir(parents=True, exist_ok=True)
+    Path(lane, ".git/objects/pack/pack-deadbeef.promisor").write_bytes(b"")
+    return lane, fleet, [], None
+
+
+def c_upper_correction(tmp):
+    lane, fleet = pair(tmp)
+    lc = commit(lane, "kama-shokunin", 1000, "round-1: work")
+    publish(fleet, report([lc]) + b"\n## Notes\n\nsee " + FAKE.encode() + b"\n")
+    commit(lane, "fixture", 1600, "errata", "registry/report-landing-errata.tsv",
+           f"1\tunresolved-full-hash\t{FAKE}\t{lc.upper()}\tev\n".encode())
+    return lane, fleet, ["errata"], None
+
+
+def c_comment_grafts(tmp):
+    """A grafts file holding only comments and blank lines changes nothing:
+    git skips those lines, so the omission must still be found."""
+    lane, fleet, _ = _hidden_history(tmp)
+    Path(lane, ".git/info").mkdir(exist_ok=True)
+    Path(lane, ".git/info/grafts").write_text("# no grafts\n\n")
+    require(g(lane, "rev-list", "--count", "HEAD") == "2",
+            "comment-only grafts changed history")
+    return lane, fleet, [], None
+
+
+def c_long_time(tmp):
+    """A valid 13-digit author time (after the report) is post-report."""
+    lane, fleet, lc = base(tmp)
+    tree = g(lane, "rev-parse", f"{lc}^{{tree}}")
+    body = (f"tree {tree}\nparent {lc}\n"
+            f"author kama-shokunin <a@x> 9999999999999 +0000\n"
+            f"committer kama-shokunin <a@x> 9999999999999 +0000\n\n"
+            f"round-1: far future\n").encode()
+    g(lane, "update-ref", "refs/heads/master",
+      g(lane, "hash-object", "-t", "commit", "-w", "--stdin", data=body))
+    return lane, fleet, [], None
 
 
 def o_alternates(tmp):
@@ -555,18 +659,30 @@ CASES = [
     ("F14-mailmap-fifo", "fault", f_mailmap_fifo, 0, []),
     ("F15-sha256-lane", "fault", f_sha256_lane, 2, None),
     ("F16-errata-invalid-utf8", "fault", f_errata_bytes, 2, None),
-    ("F17-errata-revision-correction", "fault", f_errata_revision, 1,
+    ("F17-errata-revision-correction", "contract", f_errata_revision, 1,
      ["unresolved-full-hash"]),
     ("F18-bad-byte-unrelated-subject", "fault", f_bad_subject, 0, []),
     ("F19-bad-byte-round-subject", "fault", f_bad_round_subject, 1,
      ["landed-omitted"]),
     ("F20-quotepath-open-range", "fault", f_quote_path, 0, []),
-    ("F21-nested-subdirectory-lane", "fault", f_nested_subdir, 2, None),
+    ("F21-nested-subdirectory-lane", "contract", f_nested_subdir, 2, None),
     ("F22-utf16-log-cutoff", "fault", f_utf16_cutoff, 0, []),
-    ("F23-promisor-pack-without-config", "fault", f_promisor_pack, 2, None),
-    ("F24-huge-round-number", "fault", f_huge_round, 2, None),
+    ("F23-promisor-pack-without-config", "contract", f_promisor_pack, 2, None),
+    ("F24-huge-round-number", "contract", f_huge_round, 2, None),
     ("F25-subject-record-injection", "fault", f_subject_injection, 0, []),
     ("F26-huge-author-timestamp", "fault", f_huge_timestamp, 2, None),
+    ("F27-filter-only-promisor-remote", "fault", f_filter_promisor, 1,
+     ["landed-unresolved", "unresolved-full-hash"]),
+    ("F28-shallow-fleet", "fault", f_shallow_fleet, 2, None),
+    ("F29-broken-branch-same-named-tag", "fault", f_broken_branch, 2, None),
+    ("F30-config-include-fifo", "fault", f_config_fifo, 2, None),
+    ("C09-promisor-false-config", "control", c_promisor_false, 0, []),
+    ("C10-orphan-promisor-marker", "control", c_orphan_marker, 0, []),
+    ("C11-uppercase-errata-correction", "control", c_upper_correction, 0,
+     ["unresolved-full-hash"]),
+    ("C12-thirteen-digit-author-time", "control", c_long_time, 0, []),
+    ("C13-comment-only-grafts", "control", c_comment_grafts, 1,
+     ["landed-omitted"]),
     ("O01-alternates-foreign-object", "open", o_alternates, 1,
      ["landed-unresolved", "unresolved-full-hash"]),
     ("O02-gitfile-redirect", "open", o_gitfile, 1, ["landed-omitted"]),
@@ -586,6 +702,7 @@ REASONS = {
     "F16-errata-invalid-utf8": "output is not UTF-8",
     "F21-nested-subdirectory-lane": "not a repository top level",
     "F23-promisor-pack-without-config": "promisor pack",
+    "F30-config-include-fifo": "timed out after",
     "F24-huge-round-number": "could-not-evaluate: internal: ValueError",
     "F26-huge-author-timestamp": "unexpected git log record",
 }
@@ -607,12 +724,18 @@ def run_case(auditor, case, tmp):
              "1-" if "open-range" in extra else "1"]
     if "errata" not in extra:
         argv.append("--no-errata")
+    # own session, so a timeout also kills a git grandchild blocked on a
+    # FIFO (the frozen arm otherwise leaves it running after the case)
+    proc = subprocess.Popen(argv, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, env=env(), cwd=tmp,
+                            start_new_session=True)
     try:
-        p = subprocess.run(argv, capture_output=True, timeout=TIMEOUT,
-                           env=env(), cwd=tmp)
-        code, out, err, timed_out = p.returncode, p.stdout, p.stderr, False
-    except subprocess.TimeoutExpired as exc:
-        code, out, err, timed_out = None, exc.stdout or b"", exc.stderr or b"", True
+        out, err = proc.communicate(timeout=TIMEOUT)
+        code, timed_out = proc.returncode, False
+    except subprocess.TimeoutExpired:
+        os.killpg(proc.pid, signal.SIGKILL)
+        out, err = proc.communicate()
+        code, timed_out = None, True
     kinds = None
     if code in (0, 1):
         try:
@@ -671,11 +794,15 @@ def main(argv=None):
                     tmp = Path(root, arm, f"{i:02d}")
                     tmp.mkdir(parents=True)
                     rows.append(run_case(auditors[arm], case, tmp))
-                graded = [r for r in rows if r["kind"] in ("fault", "control")]
+                graded = [r for r in rows
+                          if r["kind"] in ("fault", "control", "contract")]
                 doc["arms"][arm] = {
                     "faults": sum(r["kind"] == "fault" for r in rows),
                     "faults_met": sum(r["met"] for r in rows
                                       if r["kind"] == "fault"),
+                    "contracts": sum(r["kind"] == "contract" for r in rows),
+                    "contracts_met": sum(r["met"] for r in rows
+                                         if r["kind"] == "contract"),
                     "controls": sum(r["kind"] == "control" for r in rows),
                     "controls_met": sum(r["met"] for r in rows
                                         if r["kind"] == "control"),
@@ -702,6 +829,7 @@ def main(argv=None):
                       f"timeout={int(r['timed_out'])} "
                       f"{'met' if r['met'] else 'NOT-MET'}")
             print(f"{arm} faults={res['faults_met']}/{res['faults']} "
+                  f"contracts={res['contracts_met']}/{res['contracts']} "
                   f"controls={res['controls_met']}/{res['controls']} "
                   f"tracebacks={res['tracebacks']} "
                   f"executed={res['commands_executed']} "
