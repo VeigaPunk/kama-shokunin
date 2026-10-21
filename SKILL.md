@@ -745,3 +745,30 @@ and the author-time audit design is own-work, not a guarantee from that page.
 The Python error-signal rows S075/S076 are clarified by S087/S088:
 `/3.14/` is a series URL, not a micro-release pin. The observed page-title
 drift3.14.8→3.14.9 did not alter the quoted open/os error semantics.
+
+## Round22 report/source classification correction (owner: kama)
+
+The report-wide full-hash rule now distinguishes exact committed Registry
+source-URL occurrences from lane/fleet commit citations. The first HTTPS
+URL in a structurally valid S-row authorizes only its full form and the
+source-census-normalized form; this is not a hash-value whitelist. No source
+URL exemption applies inside Landed changes, and a bare copy of the same
+foreign hash remains unresolved. Missing legacy SOURCES means no exemptions;
+Git/read/type errors are could-not-evaluate. The JSON `source_url_hashes`
+field names hashes whose occurrences are confined to classified URLs.
+
+This makes verbatim source-validation output usable in a round report
+without mistaking its upstream revision URLs for lane commit citations.
+It does not validate upstream bytes/claims, broaden the trusted-repository
+scope, or alter the Landed omission rules (KQ33).
+
+| Name | Kind / entry command | Verdict map | Self-test | Pinned values | Write scope | Owner |
+|---|---|---|---|---|---|---|
+| Registered-source report witness | gate: `python3 .ufo/waves/round-22/report-source-fix/ReportSourceFix/out/red-green-witness.py` | 0 clean/red-green-match; 1 failed/red-green-mismatch; 2 could-not-evaluate (snapshot_tampered/unavailable) | `--selftest`: CLI positive, manifest/report tamper, missing candidate, old-as-current genuine mismatch and child-error controls | code-pinned SHA of red-green-fixture.json; manifest pins old script/registry/census blobs at cc9f8d3 and exact report fixture digest | stdout; removed temporary synthetic Git repos only; actual lane/fleet read-only | kama |
+
+The main report auditor retains its existing entry/exit contract and
+`--selftest`; source URL loading is from committed `--branch` bytes, never
+the worktree. D4 local-Git-config/history and UTF-8 hardening remains frontier.
+
+The existing first canonical Landed-section interpretation is unchanged;
+competing duplicate sections are not made semantically valid by this fix.

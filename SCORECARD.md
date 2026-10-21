@@ -1107,3 +1107,17 @@ Planned: keep the remaining receipt-header, historical crash-as-kill,
 external-library/loader identity and K05/other-engine frontier explicit;
 trusted-repo audit hardening and richer diagnostics are not acquired here.
 Await outside R22 admit/reject sampling. No next round is started.
+
+### C1 calibration — final report conformance component
+
+The same axis also needs to distinguish a curated source-URL occurrence
+from an owned commit citation when pasting mandatory source-census output.
+The old report checker would reject the upstream40-hex in those URLs
+([INFERENCE] before the fixed-input witness executes). C1 therefore includes
+this independently measurable conformance repair, with score still7→7:
+`python3 .ufo/waves/round-22/report-source-fix/ReportSourceFix/out/red-green-witness.py`
+must observe old exit1/one false owned-hash finding → current exit0/zero,
+while preserving real bare/Landed/omission findings. This is not a new axis,
+source-validity guarantee, serving capability or D4 security hardening.
+The original helper32-cell and29-command results remain unchanged; final
+committed-tree followup counts are appended after measurement.

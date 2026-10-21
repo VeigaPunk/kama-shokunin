@@ -295,3 +295,43 @@ no other observed axis harmed. Expansion unchanged; quality improved;
 discernment improved through learned prior outside D2/D4 criteria, not
 self-attested current outside review. No capability or promotion row added.
 Non-author round22 admission/sample remains the orchestrator's next act.
+
+## Final-report conformance discovery — same calibration axis
+
+While preparing the required verbatim validation outputs, the L1 found a
+second calibration distinction within this same round claim: an upstream
+revision inside a curated source URL is not a lane/fleet commit citation.
+Both actual repos returned128 for that upstream object (observed once, not
+rerun); the old auditor's unconditional FULL scan would misclassify the
+mandatory census text. No errata row or hash-specific whitelist is added.
+
+| ID | Class | Evidence | Captured-by | Fix / discriminating witness |
+|---|---|---|---|---|
+| M4 | Untyped source-URL hash treated as owned commit citation | required `fr-sources-validate.stdout` at6433390a; old auditor atcc9f8d3; `report-source-fix/ReportSourceCritic.md` | KQ28's all-token wording missed the source-reference type | Exact committed Registry URL occurrences outside Landed get their own classification; bare/superset/unregistered/Leads/worktree-only cases stay checked. `report-source-fix/ReportSourceFix/out/red-green-witness.py` pins the same census report and expected old-red/current-green finding; actual results appended after its committed-tree run. KQ33 qualifies only the full-token rule. |
+| M5 | Proposed final audit command used lane rather than fleet report path | ReportSourceFix.md proposed command and L1 addendum | round contract's absolute report path | corrected before execution; no misroot write occurred. Record correction only, not a scored fail-capable fix. |
+
+This is a report-conformance repair on calibration, coalesced with C1 under
+the one-claim-per-axis rule, not a new serving capability or another axis.
+The original29-command helper measurement stays intact. Each repair is
+independently measurable: helper32-cell comparison does not need the auditor,
+and source-URL recognition does not need the helper.
+
+Two fresh ordinary seats (ReportSourceFix executor, ReportSourceCritic)
+completed this newly discovered bounded followup; no replacement of any dead
+seat. Total74 unique seats,22 original deaths,57 retained seat reports.
+The two-seat ordinary reservation was obtained immediately after dispatch,
+not before (roster.json records grant/live/cap); the64-seat wave had proper
+pre-dispatch reservation. No cap refusal, route/model change or new L0.
+
+The candidate was statically reviewed against nineteen discriminating
+cases; the L1 additionally blocked nested full-URL substring matches, removed
+an unused private wrapper, and made the witness independent of its disposable
+clone. It now has a code-pinned manifest and CLI positive/tamper/error controls.
+No new followup check is called passed here before execution.
+
+Boundaries: classification uses only structurally valid Registry source
+cells from committed --branch data; exact full HTTPS and census-normalized
+forms are recognized. It is occurrence-scoped, never hash-value-scoped.
+Landed checks are unchanged. Missing legacy registry supplies no exemptions;
+Git/type/decoding errors are CNE. Source URL classification is neither source
+truth/provenance validation nor D4 untrusted-repository hardening.

@@ -137,11 +137,6 @@ def landed_match(text):
                      re.S | re.M)
 
 
-def landed_section(text):
-    match = landed_match(text)
-    return None if match is None else match.group(1)
-
-
 def checkable_abbrev(token):
     """A Landed token is checked as a citation only if it cannot be an
     ordinary word or number: 40 hex, or both a digit and a letter."""
@@ -246,7 +241,7 @@ def classify_full_hashes(text, source_urls, landed):
     if source_urls is None:
         return FULL.findall(text), []
     url_spans = [match.span() for match in source_urls.finditer(text)]
-    lo, hi = landed.span(1) if landed else (-1, -1)
+    lo, hi = landed.span() if landed else (-1, -1)
     tokens, classified, unclassified = [], set(), set()
     for match in FULL.finditer(text):
         start, end = match.span()
@@ -571,9 +566,9 @@ def selftest():
             check("token-bounds", FULL.findall("f" * 39) == []
                   and ABBREV.findall("e" * 6) == []
                   and ABBREV.findall("a" * 7 + "g") == [])
-            check("heading-anchor", landed_section(
+            check("heading-anchor", landed_match(
                 "prefix ## Landed changes\nx\n") is None
-                and landed_section("## Landed changes (c)\nx\n") == "x\n")
+                and landed_match("## Landed changes (c)\nx\n").group(1) == "x\n")
             check("hex-words-not-citations", not checkable_abbrev("defaced")
                   and not checkable_abbrev("1234567")
                   and checkable_abbrev("deadbee1")
@@ -696,6 +691,15 @@ def selftest():
                       ("unresolved-full-hash", foreign),
                       ("landed-unresolved", foreign),
                       ("landed-omitted", c)])
+                  and doc["results"][0]["source_url_hashes"] == [])
+            source_draft.write_text(
+                "## Work performed\nfixture\n## Landed changes " + source_url
+                + "\n" + all_landed + "\n", encoding="utf-8")
+            rc, doc = run(_ns(base, report=[f"1={source_draft}"]))
+            kinds = sorted((item["kind"], item["token"])
+                           for item in doc["results"][0]["defects"])
+            check("landed-heading-source-url-keeps-full-hash-check",
+                  rc == 1 and kinds == [("unresolved-full-hash", foreign)]
                   and doc["results"][0]["source_url_hashes"] == [])
             blobs = Path(tmp, "blobs")
             blobs.mkdir()

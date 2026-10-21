@@ -163,3 +163,9 @@ not new host stop conditions or a universal mutation-testing score policy.
 |---|---|---|---|
 | KQ31 | A correction to immutable SOURCES scope/anchor/teaches is a newly opened row whose teaches starts `supersedes S0NN —`; the old row and filed explanation stay intact. | A prose cell supersession is marked but no replacement row exists; this is not v1 conformance even if readers can find the correction. | `lessons/round-22.md` D2; CloseKama21 rounds[406] |
 | KQ32 | A report-landing audit is explicitly limited to the trusted fleet/lane repositories until repository-local Git-config/history and UTF-8/error hardening is demonstrated separately. | Global/system config and environment scrubbing is treated as suppressing local Git configuration or as a security guarantee for arbitrary repositories. | `lessons/round-22.md` D4; CloseKama21 rounds[406] and late C1EnvSentinel debt |
+
+## Criterion added — round22 report/source type boundary
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ33 (qualifies KQ28's report-wide full-hash rule only) | A 40-hex occurrence is classified as an external source reference only inside an exact first HTTPS source URL (or its source-census-normalized form) from a structurally valid Registry row in the committed SOURCES blob, outside Landed changes. Bare copies, unregistered/superset URLs, malformed rows, Leads and worktree-only registrations remain checked; Landed resolution/omission rules never change. | All occurrences of a hash are exempted by value; a generic URL or substring hides a bad citation; committed-source loading errors become a clean/missing fallback; classification is called source-validity or untrusted-repository proof. | `lessons/round-22.md` M4; pinned census-report red/green witness and source-URL boundary selftests |

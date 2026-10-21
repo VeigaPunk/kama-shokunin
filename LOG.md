@@ -1328,3 +1328,26 @@ and in SKILL/lesson, not treated as current authority.
   narrowly through learned prior outside D2/D4 feedback and KQ31/KQ32.
   No new capability/promotion, no model-quality/current consumer-health claim.
   Existing fixture/archive L0 questions retained; no new question or install.
+
+## round22 — final report/source classification conformance repair
+
+- Preparing mandatory verbatim source-validation output exposed a new
+  calibration distinction: upstream40-hex values inside curated source URLs
+  are not owned commit citations. Both actual repositories returned128
+  missing for the upstream object; those lookups were not repeated.
+  Old-script false-positive behavior is a static inference until the pinned
+  red/green witness executes; the manifest declares expected old1/current0.
+- Two fresh ordinary seats completed (executor ReportSourceFix and critic
+  ReportSourceCritic); no replacements. L1 integrated committed-source URL
+  occurrence classification, stricter nested-URL boundaries, unchanged Landed
+  checks including its heading, and no hash-specific whitelist/errata row.
+  An unused private section wrapper was removed with its maintained caller
+  migrated. D4 untrusted-repo hardening remains unclaimed.
+- Added a manifest-pinned synthetic CLI witness and its own CLI selftest;
+  relocated it off the disposable clone. KQ33, SKILL registry and lesson M4
+  record the distinction. This is within C1 calibration, not another axis or
+  new serving repertoire. Original6433390a/29-command evidence is unchanged.
+- Followup source/fixtures/recipe are under `.ufo/waves/round-22/report-source-fix/`;
+  verification follows a clean commit and results append afterward. Total74
+  unique seats,22 original provider deaths,57 retained reports; the2-seat
+  ordinary followup's headroom grant was late and is disclosed in its roster.
