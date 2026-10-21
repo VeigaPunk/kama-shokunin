@@ -805,3 +805,37 @@ detector-self denominator (mutant (b)); (3) pin the remaining install-tree
 members the receipt names, or state the boundary as policy; (4) obtain the
 outside non-author admit/reject spot-check for this round; K05 remains
 runtime-dependent and operator-owned.
+
+**Erratum (round 19, routed defect 3):** the official C2 counting invocation is
+`python3 .ufo/waves/round-18/c2/survivors.py --json` — the JSON document is
+`runs/c2-survivors.stdout`; the `--out PATH` wording in the C2 declaration row
+above is superseded. `runs/c2-survivors.json` is a pre-official corrected run
+retained beside the official stdout; they agree.
+
+## Round 19 — revision-qualified citations and the install-tree pin (2026-10-21)
+
+Assignment remains operability + calibration; **calibration 7 is the lowest
+assigned axis**. The four routed round-18 defects are corrected first
+(lesson erratum, S055 qualification, SCORECARD erratum, residual assignments).
+
+**C1 calibration, 7 → 8, sourced:** revision-qualified citations become
+machine-checkable. Counting command `python3 tools/citation-provenance.py`:
+before `required=3 found=0 verified=0 missing=3` exit 1; after
+`required=3 found=3 verified=3 missing=0 mismatch=0` exit 0, selftest 5 cases.
+Evidence: `registry/required-citations.json`, the `cite(...)` tokens in
+`corpus/lessons/round-18.md`, S057's admission of the identity-boundary limit.
+
+**C2 operability, 8 → 8 (delta 0):** sixth pin
+`--expect-install-tree-sha256`; counting command
+`python3 tests/llamacpp-live/install-tree-grid.py … --gate
+tests/llamacpp-live/check-receipt.py --receipt
+.ufo/waves/round-18/live-recovery/receipt-1.json …` — without the pin
+`baseline=VALID members=3 rejected=0/3` exit 1, with `--tree-sha`
+`baseline=VALID rejected=3/3` exit 0. The pin binds observed bytes, not an
+upstream constant, and does not authenticate execution.
+
+Other axes unchanged: freshness 8, coverage 9, depth 7, adjacency 7.
+Capabilities unchanged; stagnation window 4 of 4 is reached at round end —
+the next round should be a capability/frontier move unless the operator rules
+otherwise. Planned: close the named gate coverage leaves, add the C2
+enumeration check, and obtain the outside non-author spot-check.

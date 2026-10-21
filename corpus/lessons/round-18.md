@@ -383,3 +383,39 @@ Recovery live receipts are `live-recovery/receipt-{1,2,3}.json` (tool
 `83eac5c0…`, outcome `pass`, ports 40999/36277/43877). The checkpoint receipts
 under `live/` were restored to their cited bytes (tool `dc036d7d…`, ports
 33769/44109/45359), so S055's citation resolves to the bytes it describes.
+
+## Erratum — round-19 routed defects (appended 2026-10-21)
+
+- **Residual verdicts (routed defect 1).** The residual call's committed
+  verdicts are **4 confirm** (`ResidPrivacy`, `ResidHealth`, `ResidImplPin`,
+  `ResidCounterC2`) and **3 partial** (`ResidCounterC1`, `ResidCorpus`,
+  `ResidClaims`), not "five confirm, two partial" plus a separate claims
+  partial. Dispatch record (defect 4):
+  `.ufo/waves/round-18/residual/assignments.json` — 6 reviewer, 1 critic.
+- **S055 / Gate-row pointer revision (defect 2).** S055's commands and exits
+  exist at `1c325b2`/`101f3991`; `runs/commands.json` does not exist at the
+  cited measured commit `c6dc46f`. At the tip, `runs/commands.json` (measured
+  `eb78788b`) and `runs/live-gate-*.stdout` describe the **`live-recovery/`**
+  receipts (tool `83eac5c0…`), while the `live/` receipts are the checkpoint
+  bytes (restored; tool `dc036d7d…`). The round-18 Gate admission row therefore
+  holds for `live/` at `1c325b2`; `live-recovery/` is the tip's separate
+  observation, not a replacement.
+- **SCORECARD C2 command (defect 3).** The official counting invocation is
+  `python3 .ufo/waves/round-18/c2/survivors.py --json`; its JSON document is
+  `runs/c2-survivors.stdout`. The `--out PATH` wording in the C2 declaration
+  row is superseded (the counter's `--out` is exclusive-create by design).
+  `runs/c2-survivors.json` (04:08Z) is a pre-official corrected run retained
+  beside the official stdout (05:11Z); the two agree.
+
+## Round-19 citation provenance (appended 2026-10-21)
+
+The routed revision defects are now machine-checked by
+`tools/citation-provenance.py` against `registry/required-citations.json`
+(token shape `cite(<rev>, <path>, sha256=<digest>)`):
+
+- S055's commands/exits exist at the checkpoint revision:
+  cite(1c325b2e58fcfdc6761f645b44cedfb1d65243e6, .ufo/waves/round-18/runs/commands.json, sha256=ce7dc79c9523b92c33e0cbb141299db6196b2aa64b3c307779eee1842b51b84a)
+- The recovery gate output describes `live-recovery/`, not the checkpoint `live/`:
+  cite(eb78788b35b832d08887d4c366d1d0c1df3a6c19, .ufo/waves/round-18/runs/live-gate-1.stdout, sha256=b2043ba8a7b20b707367f03c13d25333ed045c4ec303b2ff3cc0df0dc5395c15)
+- The official C2 document is the stdout, not a surviving `--out` file:
+  cite(1b85a24eca4d1fe81ef8d9ddf513fda1aad93e0e, .ufo/waves/round-18/runs/c2-survivors.stdout, sha256=ea2e3e0258346410a04cef27a79c1ec0bbe1fd8ce8db13e683da327950cf272d)

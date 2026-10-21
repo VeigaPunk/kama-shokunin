@@ -24,6 +24,7 @@ Usage:
   check-receipt.py RECEIPT [--expect-model-sha256 HEX]
                            [--expect-server-sha256 HEX]
                            [--expect-server-impl-sha256 HEX]
+                           [--expect-install-tree-sha256 HEX]
                            [--expect-probe-sha256 HEX]
                            [--expect-tool-sha256 HEX]
                            [--require-schema v1|v2|v3]
@@ -256,7 +257,7 @@ def probe_row0(rec):
 
 def validate(receipt, expect_model=None, expect_server=None,
              expect_probe=None, expect_tool=None,
-             expect_server_impl=None):
+             expect_server_impl=None, expect_tree=None):
 
     problems = []
 
@@ -380,6 +381,13 @@ def validate(receipt, expect_model=None, expect_server=None,
         if install_tree_sha(tree) != tree_sha:
             bad("server.install_tree_sha256 != recomputation over "
                 "install_tree members")
+    if expect_tree is not None:
+        if not is_hex64(tree_sha):
+            bad("--expect-install-tree-sha256 given but receipt has no "
+                "server.install_tree_sha256 digest")
+        elif tree_sha != expect_tree:
+            bad(f"server.install_tree_sha256 {tree_sha} != expected "
+                f"{expect_tree}")
     # server_impl_sha256 is null when the release has no impl .so.
     check_digest(problems, "server.server_impl_sha256",
                  server.get("server_impl_sha256"), allow_none=True)
@@ -436,7 +444,8 @@ def validate(receipt, expect_model=None, expect_server=None,
 
     for name, val in (("model", expect_model), ("server", expect_server),
                       ("probe", expect_probe),
-                      ("server-impl", expect_server_impl)):
+                      ("server-impl", expect_server_impl),
+                      ("install-tree", expect_tree)):
         if val is not None and not is_hex64(val):
             bad(f"--expect-{name}-sha256 {val!r} is not 64 lowercase "
                 "hex chars")
@@ -1769,7 +1778,10 @@ def _selftest():
                "--expect-server-impl-sha256", IMPL_SHA,
                "--expect-probe-sha256", PROBE_SHA,
                "--expect-tool-sha256", TOOL_SHA]
-    cases = [("valid", base, expects, 0)]
+    base_tree = base["server"]["install_tree_sha256"]
+    cases = [("valid", base, expects, 0),
+             ("tree-pin-valid", base,
+              expects + ["--expect-install-tree-sha256", base_tree], 0)]
     # child_env_keys entries come from an untrusted receipt: a value after
     # '=' must never be echoed into gate output or collected diagnostics.
     env_secret = "kama-selftest-env-value-2f6b1d"
@@ -1849,6 +1861,21 @@ def _selftest():
     mut("impl-digest-absent-expect",
         lambda r: r["server"].update(server_impl_sha256=None),
         extra=expects)
+    mut("tree-sha-mismatch-expect",
+        lambda r: r["server"].update(install_tree_sha256="0" * 64),
+        extra=expects + ["--expect-install-tree-sha256", base_tree])
+    mut("tree-sha-absent-expect",
+        lambda r: r["server"].update(install_tree_sha256=None),
+        extra=expects + ["--expect-install-tree-sha256", base_tree])
+    mut("tree-sha-malformed-expect",
+        lambda r: r["server"].update(install_tree_sha256="not-a-digest"),
+        extra=expects + ["--expect-install-tree-sha256", base_tree])
+    mut("tree-consistent-member-swap",
+        lambda r: (r["server"]["install_tree"].update(
+                       **{"libggml-base.so.0.27.0": "e" * 64}),
+                   r["server"].update(install_tree_sha256=install_tree_sha(
+                       r["server"]["install_tree"]))),
+        extra=expects + ["--expect-install-tree-sha256", base_tree])
     mut("impl-field-tree-mismatch",
         lambda r: (r["server"]["install_tree"].update(
                        **{"libllama-server-impl.so": "e" * 64}),
@@ -2150,6 +2177,8 @@ def main(argv=None):
     ap.add_argument("--expect-server-impl-sha256", metavar="HEX",
                     help="require the recorded server implementation "
                          "library sha256")
+    ap.add_argument("--expect-install-tree-sha256", metavar="HEX",
+                    help="require the recorded install-tree sha256")
     ap.add_argument("--expect-probe-sha256", metavar="HEX",
                     help="require the recorded probe sha256")
     ap.add_argument("--expect-tool-sha256", metavar="HEX",
@@ -2178,6 +2207,7 @@ def main(argv=None):
                         expect_model=args.expect_model_sha256,
                         expect_server=args.expect_server_sha256,
                         expect_server_impl=args.expect_server_impl_sha256,
+                        expect_tree=args.expect_install_tree_sha256,
                         expect_probe=args.expect_probe_sha256,
                         expect_tool=args.expect_tool_sha256)
     if args.require_schema and isinstance(receipt, dict):
