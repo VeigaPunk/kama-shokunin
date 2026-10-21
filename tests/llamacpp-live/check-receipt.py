@@ -444,6 +444,8 @@ def validate(receipt, expect_model=None, expect_server=None,
     # inside the pinned regular-file tree.
     links = server.get("install_links", MISSING)
     links_sha = server.get("install_links_sha256")
+    if links is MISSING and "install_links_sha256" in server:
+        bad("server.install_links_sha256 present without install_links")
     if links is not MISSING:
         if not isinstance(links, dict) or not all(
                 isinstance(k, str) and isinstance(v, str)
@@ -451,12 +453,19 @@ def validate(receipt, expect_model=None, expect_server=None,
             bad("server.install_links is not an object of basename -> "
                 "link text")
         else:
-            check_digest(problems, "server.install_links_sha256", links_sha,
-                         allow_none=not links)
+            # the producer always digests the map (even {}); null only
+            # accompanies a setup error, which is INVALID on its own
+            check_digest(problems, "server.install_links_sha256", links_sha)
             if is_hex64(links_sha) and install_links_sha(links) != links_sha:
                 bad("server.install_links_sha256 != recomputation over "
                     "install_links")
             for name in sorted(links):
+                if not name or "/" in name or name in (".", "..",
+                                                       "glibc-hwcaps") \
+                        or any(ord(ch) < 0x20 for ch in name):
+                    bad(f"server.install_links key {name!r} is not a plain "
+                        "member basename")
+                    continue
                 if isinstance(tree, dict) and name in tree:
                     bad(f"server.install_links[{name!r}] is also a regular "
                         "install_tree member")
@@ -466,6 +475,11 @@ def validate(receipt, expect_model=None, expect_server=None,
                                          else {})
                 if why:
                     bad(f"server.install_links[{name!r}]: {why}")
+    unpinned = server.get("install_unpinned", MISSING)
+    if unpinned is not MISSING and not (
+            isinstance(unpinned, list)
+            and all(isinstance(n, str) for n in unpinned)):
+        bad("server.install_unpinned is not a list of subdirectory names")
     if require_links and links is MISSING:
         bad("--require-install-links given but receipt has no "
             "server.install_links block")
@@ -1993,6 +2007,16 @@ def _selftest():
         lambda r: r["server"].update(install_links_sha256="0" * 64))
     mut("links-sha-null-nonempty",
         lambda r: r["server"].update(install_links_sha256=None))
+    mut("links-orphan-digest", lambda r: (
+        r["server"].pop("install_links"), None))
+    for i, bad_key in enumerate(("", ".", "glibc-hwcaps", "sub/libx.so",
+                                 "lib\nx.so")):
+        mut(f"links-bad-key-{i}", lambda r, k=bad_key: relink(
+            r, dict(SELFTEST_LINKS, **{k: "libllama.so"})))
+    mut("unpinned-not-list", lambda r: r["server"].update(
+        install_unpinned="openvino-licensing"))
+    mut("links-empty-null-digest", lambda r: r["server"].update(
+        install_links={}, install_links_sha256=None))
     mut("links-dangling", lambda r: relink(
         r, dict(SELFTEST_LINKS, **{"libllama.so.0": "libllama.so.9"})))
     mut("links-absolute-outside", lambda r: relink(
@@ -2021,6 +2045,14 @@ def _selftest():
     cases.append(("links-canonical-digest-valid", canonical,
                   expects + ["--expect-install-links-sha256",
                              canonical["server"]["install_links_sha256"]], 0))
+    # Non-ASCII link name: the canonical form escapes it (\u00e9); a
+    # non-escaping encoder would produce a different digest.
+    unicode_links = copy.deepcopy(base)
+    unicode_links["server"]["install_links"] = dict(
+        SELFTEST_LINKS, **{"lib\u00e9.so": "libllama.so.0"})
+    unicode_links["server"]["install_links_sha256"] = (
+        "9e226427f148781fc333f5a86313104c49363043e03149c651457cd6e55b1758")
+    cases.append(("links-unicode-canonical-valid", unicode_links, expects, 0))
     mut("models-entry-missing-id",
         lambda r: r["captures"]["models"].update(body=json.dumps(
             {"data": [{"id": ALIAS, "owned_by": "llamacpp"},

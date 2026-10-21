@@ -1,0 +1,44 @@
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -91,29 +91,18 @@
+ 
+ 
+ def lookup(repos, tokens, peel=""):
+-    """{token: 'found'|'ambiguous'|'missing'} across repos, via one
+-    `cat-file --batch-check` per repo; a git failure is EvalError."""
+-    tokens = sorted(set(tokens))
+-    status = {t: "missing" for t in tokens}
+-    if not tokens:
+-        return status
+-    for repo in repos:
+-        out = git(repo, "cat-file", "--batch-check",
+-                  stdin="".join(f"{t}{peel}\n" for t in tokens))
+-        lines = out.split("\n")[:len(tokens)]
+-        if len(lines) != len(tokens):
+-            raise EvalError(f"cat-file --batch-check in {repo}: short output")
+-        for token, line in zip(tokens, lines):
+-            if line.endswith(" missing"):
+-                continue
+-            if line.endswith(" ambiguous"):
+-                if status[token] != "found":
+-                    status[token] = "ambiguous"
+-                continue
+-            parts = line.split(" ")
+-            if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}", parts[0]):
+-                raise EvalError(f"cat-file in {repo}: unexpected {line!r}")
+-            status[token] = "found"
++    """{token: 'found'|'missing'} across repos, one cat-file -e per token
++    (variant: no ambiguous state)."""
++    status = {}
++    for token in sorted(set(tokens)):
++        status[token] = "missing"
++        for repo in repos:
++            proc = subprocess.run(["git", "-C", str(repo), "cat-file", "-e",
++                                   f"{token}{peel}"], capture_output=True,
++                                  text=True, env=git_env())
++            if proc.returncode == 0:
++                status[token] = "found"
++                break
+     return status
+ 
+ 

@@ -360,3 +360,12 @@ execution authentication or upstream provenance. Relative targets that leave
 the directory (`../lib/…`) are rejected rather than followed; a layout that
 needs them is outside this pin. System libraries resolved outside the install
 directory remain unpinned.
+
+**Round-21 falsify correction (appended).** "Fail closed, never smaller" above
+is superseded: the producer refuses only loader-relevant or unrepresentable
+entries (`glibc-hwcaps` of any type, links not resolving to a regular member,
+special files, control-character names, unreadable or unhashed members); other
+subdirectories are recorded by name in `install_unpinned` with contents outside
+the pin. The links digest is always present when the block is (no null). The
+ldconfig chain is S066's; "re-resolved at every exec" is kama's inference from
+S067, whose step (4) reads the ldconfig cache.

@@ -1,0 +1,18 @@
+== B0 symlink target length accepted on /tmp filesystem (bisection)
+ largest creatable symlink target on /tmp: 1023 bytes
+ filesystem: xfs
+== B1 hop limit: producer records, gate accepts, kernel/dlopen behaviour
+ k= 39 symlink hops: producer problems=[] recorded=39 gate=ACCEPT | open ok | dlopen ok
+ k= 40 symlink hops: producer problems=[] recorded=40 gate=ACCEPT | open ok | dlopen ok
+ k= 41 symlink hops: producer problems=[] recorded=41 gate=ACCEPT | open ELOOP | dlopen FAILS: /tmp/kama-r21-C2DigestSentinel/work/hops-41/hop0.so: cannot open shared object file: Too many levels of symbolic links
+ k= 42 symlink hops: producer problems=[] recorded=42 gate=ACCEPT | open ELOOP | dlopen FAILS: /tmp/kama-r21-C2DigestSentinel/work/hops-42/hop0.so: cannot open shared object file: Too many levels of symbolic links
+ k=100 symlink hops: producer problems=[] recorded=100 gate=ACCEPT | open ELOOP | dlopen FAILS: /tmp/kama-r21-C2DigestSentinel/work/hops-100/hop0.so: cannot open shared object file: Too many levels of symbolic links
+== B2 retarget between producer snapshot and load (no post-run recheck)
+ snapshot problems: []
+ snapshot links: {'libllama.so': 'libllama.so.0', 'libllama.so.0': 'libllama.so.0.7.0'}
+ loader result before swap (which()): 1 exit 0
+ loader result after swap  (which()): 2 exit 0 (2 = libB loaded)
+ re-snapshot after swap links: {'libllama.so': 'libllama.so.0', 'libllama.so.0': 'libllama.so.0.7.1'}
+ re-snapshot links_sha256 differs from receipt: True
+ re-snapshot tree_sha256 differs from receipt: False
+done B

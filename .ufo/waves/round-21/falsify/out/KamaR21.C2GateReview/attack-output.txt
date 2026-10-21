@@ -1,0 +1,175 @@
+gate     /tmp/kama-r21-C2GateReview/lane/tests/llamacpp-live/check-receipt.py sha256=6b8764374f1cc1059ba7520f7e7a68f37acc6a31b3e72220f4b42826e72d4a61
+producer /tmp/kama-r21-C2GateReview/lane/tools/kama-llamacpp-live.py sha256=e4cc6d8885c7755717157fd23bfce3be39288990a9cf5985cb1c56a4b11cf68f
+live receipt /tmp/kama-r21-C2GateReview/lane/.ufo/waves/round-21/runs/b76727f3/live-receipt.json sha256=e1fc04ab95b345ed2167c79b739cc912cbefd48b518cd3d9d28cc5ece199cc38
+
+## gate CLI on mutants of the committed live v3 receipt
+case                           want  rc ok      sec  verdict
+base                              0   0 OK     0.04  VALID
+                                    note: committed live v3 receipt, default flags
+strip-both-default                0   0 OK     0.04  VALID
+                                    note: links block and digest deleted; default mode accepts (downgrade)
+strip-both-require                1   1 OK     0.04  INVALID
+                                    note: same with --require-install-links
+                                    gate: - --require-install-links given but receipt has no server.install_links block
+strip-both-pin                    1   1 OK     0.03  INVALID
+                                    note: same with --expect-install-links-sha256
+                                    gate: - --expect-install-links-sha256 given but receipt has no server.install_links_sha256 digest
+orphan-digest-garbage             0   0 OK     0.03  VALID
+                                    note: no links block, digest field 'zz' present (never checked)
+orphan-digest-garbage-require     1   1 OK     0.04  INVALID
+                                    note: same with --require-install-links
+                                    gate: - --require-install-links given but receipt has no server.install_links block
+orphan-digest-valid               0   0 OK     0.03  VALID
+                                    note: no links block, correct digest of L0 present (never checked)
+empty-block-null-digest           0   0 OK     0.03  VALID
+                                    note: install_links {} with install_links_sha256 null
+empty-block-null-digest-require    0   0 OK     0.04  VALID
+                                    note: same with --require-install-links
+empty-block-null-digest-pin       1   1 OK     0.03  INVALID
+                                    note: same with the links pin
+                                    gate: - --expect-install-links-sha256 given but receipt has no server.install_links_sha256 digest
+empty-block-hex-digest            0   0 OK     0.03  VALID
+                                    note: install_links {} with sha256('{}') (producer success shape)
+nonempty-null-digest              1   1 OK     0.03  INVALID
+                                    note: non-empty links, null digest
+                                    gate: - server.install_links_sha256 None is not a 64-char lowercase hex string
+name-SOH-chain-ok                 0   0 OK     0.04  VALID
+                                    note: control-char (0x01) link name; producer fails closed, gate accepts
+name-LF-chain-ok                  0   0 OK     0.03  VALID
+                                    note: newline in link name
+name-NUL-chain-ok                 0   0 OK     0.03  VALID
+                                    note: NUL in link name
+name-DEL-chain-ok                 0   0 OK     0.03  VALID
+                                    note: DEL (0x7f) in link name
+name-surrogate-chain-ok           0   0 OK     0.04  VALID
+                                    note: surrogate-escaped (non-UTF-8) name
+target-dot                        1   1 OK     0.04  INVALID
+                                    note: link target '.'
+                                    gate: - server.install_links['libdot.so']: target '.' leaves the pinned directory
+target-dotdot                     1   1 OK     0.04  INVALID
+                                    note: link target '..'
+                                    gate: - server.install_links['libdot.so']: target '..' leaves the pinned directory
+target-dotslash                   1   1 OK     0.04  INVALID
+                                    note: same-directory './name' rejected (producer records it without problem)
+                                    gate: - server.install_links['libdot.so']: target './libggml.so.0.27.0' leaves the pinned directory
+target-empty                      1   1 OK     0.04  INVALID
+                                    note: empty link target
+                                    gate: - server.install_links['libdot.so']: target '' leaves the pinned directory
+target-trailing-slash             1   1 OK     0.04  INVALID
+                                    note: target with trailing '/'
+                                    gate: - server.install_links['libdot.so']: target 'libggml.so.0.27.0/' leaves the pinned directory
+target-nul                        1   1 OK     0.03  INVALID
+                                    note: target with trailing NUL
+                                    gate: - server.install_links['libdot.so']: chain ends at 'libggml.so.0.27.0\x00', not a pinned install_tree member
+target-case                       1   1 OK     0.04  INVALID
+                                    note: target with different case
+                                    gate: - server.install_links['libdot.so']: chain ends at 'LIBGGML.SO.0.27.0', not a pinned install_tree member
+target-server-exe                 0   0 OK     0.04  VALID
+                                    note: chain ends at executable llama-server (pinned member): accepted
+target-text-LICENSE               0   0 OK     0.04  VALID
+                                    note: chain ends at text file LICENSE (pinned member): accepted
+dangling                          1   1 OK     0.03  INVALID
+                                    note: chain ends outside pinned tree
+                                    gate: - server.install_links['libggml.so']: chain ends at 'libggml.so.0.99', not a pinned install_tree member
+                                    gate: - server.install_links['libggml.so.0']: chain ends at 'libggml.so.0.99', not a pinned install_tree member
+loop                              1   1 OK     0.04  INVALID
+                                    note: two-link cycle
+                                    gate: - server.install_links['libggml.so']: symlink loop
+                                    gate: - server.install_links['libggml.so.0']: symlink loop
+shadow-tree-member                1   1 OK     0.03  INVALID
+                                    note: link named like a pinned member
+                                    gate: - server.install_links['llama-cli'] is also a regular install_tree member
+links-is-list                     1   1 OK     0.03  INVALID
+                                    note: install_links as array
+                                    gate: - server.install_links is not an object of basename -> link text
+links-is-null                     1   1 OK     0.03  INVALID
+                                    note: install_links null
+                                    gate: - server.install_links is not an object of basename -> link text
+links-int-value                   1   1 OK     0.03  INVALID
+                                    note: non-string link text
+                                    gate: - server.install_links is not an object of basename -> link text
+pin-uppercase                     1   1 OK     0.04  INVALID
+                                    note: pin given in uppercase hex
+                                    gate: - --expect-install-links-sha256 '5CB9F4865C8E1315DBD1BAA99310C9BC65DDCF469929488359C66587B6470060' is not 64 lowercase hex chars
+pin-leading-space                 1   1 OK     0.04  INVALID
+                                    note: pin with leading space
+                                    gate: - --expect-install-links-sha256 ' 5cb9f4865c8e1315dbd1baa99310c9bc65ddcf469929488359c66587b6470060' is not 64 lowercase hex chars
+retarget-unpinned                 0   0 OK     0.03  VALID
+                                    note: consistent retarget onto another pinned member, no pin (documented)
+retarget-pinned                   1   1 OK     0.04  INVALID
+                                    note: same retarget with the links pin
+                                    gate: - server.install_links_sha256 3a37618c9116db2463b5aec52c6f08e25ac33ca1a20cf4eb3c52937ccdb5b408 != expected 5cb9f4865c8e1315dbd1baa99310c9bc65ddcf469929488359c66
+tree-end-removed                  1   1 OK     0.04  INVALID
+                                    note: chain end removed from install_tree; tree digest recomputed
+                                    gate: - server.install_links['libggml.so']: chain ends at 'libggml.so.0.27.0', not a pinned install_tree member
+                                    gate: - server.install_links['libggml.so.0']: chain ends at 'libggml.so.0.27.0', not a pinned install_tree member
+sha-uppercase-recomputed          1   1 OK     0.04  INVALID
+                                    note: install_links_sha256 is the correct digest in uppercase
+                                    gate: - server.install_links_sha256 '5CB9F4865C8E1315DBD1BAA99310C9BC65DDCF469929488359C66587B6470060' is not a 64-char lowercase hex string
+chain-2000                        0   0 OK     0.19  VALID
+                                    note: timing: 2000-link chain, all valid
+chain-8000                        0   0 OK     2.54  VALID
+                                    note: timing: 8000-link chain, all valid
+orphan-digest-null                0   0 OK     0.04  VALID
+                                    note: no links block, digest null (never checked)
+name-slash-chain-ok               0   0 OK     0.04  VALID
+                                    note: link key with '/': subdirectory link the producer refuses
+name-empty-chain-ok               0   0 OK     0.04  VALID
+                                    note: empty link key
+name-dot-chain-ok                 0   0 OK     0.04  VALID
+                                    note: link key '.'
+name-dotdot-chain-ok              0   0 OK     0.04  VALID
+                                    note: link key '..'
+mutant cases: 45 run, 0 differ from the verdict predicted by source reading
+
+## producer (real install_tree/install_links) vs gate on synthetic trees
+## gate rc counts unrelated argv/probe mismatches; only link lines are signal
+baseline                   producer OK tree=['libA.so.0.1', 'llama-server'] links=[('libA.so', 'libA.so.0'), ('libA.so.0', 'libA.so.0.1')] read-error=None
+                           gate rc=1 link-related lines=0
+dot-slash-target           producer OK tree=['libA.so.0.1', 'llama-server'] links=[('libA.so', 'libA.so.0'), ('libA.so.0', 'libA.so.0.1'), ('libB.so', './libA.so.0.1')] read-error=None
+                           gate rc=1 link-related lines=2
+                             gate: - server.install_links['libB.so']: target './libA.so.0.1' leaves the pinned directory
+                             gate: - argv[0] '/home/vgpnk/.local/opt/llama-b11755/llama-server' != server.realpath '/tmp/kama-r21-C2GateReview/work/tree-dot-slash-target/llama-server'
+dot-target                 producer OK tree=['libA.so.0.1', 'llama-server'] links=[('libA.so', 'libA.so.0'), ('libA.so.0', 'libA.so.0.1'), ('libC.so', '.')] read-error=None
+                           gate rc=1 link-related lines=2
+                             gate: - server.install_links['libC.so']: target '.' leaves the pinned directory
+                             gate: - argv[0] '/home/vgpnk/.local/opt/llama-b11755/llama-server' != server.realpath '/tmp/kama-r21-C2GateReview/work/tree-dot-target/llama-server'
+absolute-outside           producer OK tree=['libA.so.0.1', 'llama-server'] links=[('libA.so', 'libA.so.0'), ('libA.so.0', 'libA.so.0.1'), ('libD.so', '/tmp/kama-r21-C2GateReview/work/outside/libA.so.0.1')] read-error=None
+                           gate rc=1 link-related lines=1
+                             gate: - server.install_links['libD.so']: target '/tmp/kama-r21-C2GateReview/work/outside/libA.so.0.1' leaves the pinned directory
+dangling                   producer OK tree=['libA.so.0.1', 'llama-server'] links=[('libA.so', 'libA.so.0'), ('libA.so.0', 'libA.so.0.1'), ('libE.so', 'libNOPE.so.9')] read-error=None
+                           gate rc=1 link-related lines=1
+                             gate: - server.install_links['libE.so']: chain ends at 'libNOPE.so.9', not a pinned install_tree member
+loop                       producer OK tree=['libA.so.0.1', 'llama-server'] links=[('libA.so', 'libA.so.0'), ('libA.so.0', 'libA.so.0.1'), ('libF.so', 'libG.so'), ('libG.so', 'libF.so')] read-error=None
+                           gate rc=1 link-related lines=2
+                             gate: - server.install_links['libF.so']: symlink loop
+                             gate: - server.install_links['libG.so']: symlink loop
+dir-symlink-dot            producer OK tree=['libA.so.0.1', 'llama-server'] links=[('hwdir', '.'), ('libA.so', 'libA.so.0'), ('libA.so.0', 'libA.so.0.1')] read-error=None
+                           gate rc=1 link-related lines=2
+                             gate: - server.install_links['hwdir']: target '.' leaves the pinned directory
+                             gate: - argv[0] '/home/vgpnk/.local/opt/llama-b11755/llama-server' != server.realpath '/tmp/kama-r21-C2GateReview/work/tree-dir-symlink-dot/llama-server'
+unreadable-unlinked        producer REFUSES: ['libU.so.0.1:unreadable']
+subdir-glibc-hwcaps        producer REFUSES: ['glibc-hwcaps:not-regular-or-symlink']
+fifo-member                producer REFUSES: ['pipe.so:not-regular-or-symlink']
+newline-name-member        producer REFUSES: ["'lib\\nI.so':control-character-in-name"]
+surrogate-name-link        producer OK tree=['libA.so.0.1', 'llama-server'] links=[('libA.so', 'libA.so.0'), ('libA.so.0', 'libA.so.0.1'), ('lib\udcffS.so', 'libA.so.0.1')] read-error=None
+                           gate rc=1 link-related lines=1
+                             gate: - argv[0] '/home/vgpnk/.local/opt/llama-b11755/llama-server' != server.realpath '/tmp/kama-r21-C2GateReview/work/tree-surrogate-name-link/llama-server'
+read-error-linked          producer OK tree=['llama-server'] links=[('libA.so', 'libA.so.0'), ('libA.so.0', 'libA.so.0.1')] read-error=libA.so.0.1
+                           gate rc=1 link-related lines=3
+                             gate: - server.install_links['libA.so']: chain ends at 'libA.so.0.1', not a pinned install_tree member
+                             gate: - server.install_links['libA.so.0']: chain ends at 'libA.so.0.1', not a pinned install_tree member
+                             gate: - argv[0] '/home/vgpnk/.local/opt/llama-b11755/llama-server' != server.realpath '/tmp/kama-r21-C2GateReview/work/tree-read-error-linked/llama-server'
+read-error-unlinked        producer OK tree=['libA.so.0.1', 'llama-server'] links=[('libA.so', 'libA.so.0'), ('libA.so.0', 'libA.so.0.1')] read-error=libU.so.0.1
+                           gate rc=1 link-related lines=1
+                             gate: - argv[0] '/home/vgpnk/.local/opt/llama-b11755/llama-server' != server.realpath '/tmp/kama-r21-C2GateReview/work/tree-read-error-unlinked/llama-server'
+
+## real tree (read-only)
+install_tree_sha256 match=True install_links_sha256 match=True members=51 links=10 problems=[]
+
+## gate.link_chain_problem direct probes
+link_chain_problem('a', {'a': '.'}, {'b': 'h'}) -> "target '.' leaves the pinned directory"
+link_chain_problem('a', {'a': 'b', 'b': 'a'}, {}) -> 'symlink loop'
+link_chain_problem('a', {'a': 'b'}, {'b': 'h'}) -> None
+link_chain_problem('a', {'a': 'b'}, {'c': 'h'}) -> "chain ends at 'b', not a pinned install_tree member"
+link_chain_problem('a', {'a': ''}, {'b': 'h'}) -> "target '' leaves the pinned directory"

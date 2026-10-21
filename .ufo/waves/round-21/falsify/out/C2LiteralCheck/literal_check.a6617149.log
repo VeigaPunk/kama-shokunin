@@ -1,0 +1,49 @@
+state: LANE=/tmp/kama-r21-C2LiteralCheck/lane
+gate sha256=6b8764374f1cc1059ba7520f7e7a68f37acc6a31b3e72220f4b42826e72d4a61 producer sha256=e4cc6d8885c7755717157fd23bfce3be39288990a9cf5985cb1c56a4b11cf68f
+OBSERVE unicode case literal :: no links-unicode-canonical-valid case in this state
+OBSERVE producer key-sort literal :: no key-sorted assertion in this state
+CONFIRM PASS printf|sha256sum SELFTEST literal :: digest=83bdd3ccfa67701a8531e8fad561d5765c61410f060eb203c4646521749f704e exit=0
+CONFIRM PASS printf|sha256sum receipt install_links :: digest=5cb9f4865c8e1315dbd1baa99310c9bc65ddcf469929488359c66587b6470060 exit=0
+CONFIRM PASS printf|sha256sum producer literal :: digest=deb111fa5739ffa31de111667ad4b1f085391143f1b88c757b5801364ce4aac9 exit=0
+SELFTEST_LINKS={'libllama.so.0': 'libllama.so', 'libllama-alias.so': 'libllama.so.0'}
+CONFIRM PASS gate install_links_sha(SELFTEST_LINKS) == LIT :: 83bdd3ccfa67701a8531e8fad561d5765c61410f060eb203c4646521749f704e
+CONFIRM PASS producer links_digest(SELFTEST_LINKS) == LIT :: 83bdd3ccfa67701a8531e8fad561d5765c61410f060eb203c4646521749f704e
+CONFIRM PASS SELFTEST bytes == hand-written text, producer == gate
+receipt file sha256=e1fc04ab95b345ed2167c79b739cc912cbefd48b518cd3d9d28cc5ece199cc38 entries=10
+CONFIRM PASS gate recomputation over receipt install_links == RCPT :: 5cb9f4865c8e1315dbd1baa99310c9bc65ddcf469929488359c66587b6470060
+CONFIRM PASS producer digest over receipt install_links == RCPT :: 5cb9f4865c8e1315dbd1baa99310c9bc65ddcf469929488359c66587b6470060
+CONFIRM PASS receipt stored install_links_sha256 == recomputed :: 5cb9f4865c8e1315dbd1baa99310c9bc65ddcf469929488359c66587b6470060
+CONFIRM PASS receipt bytes == hand-written text, producer == gate
+CONFIRM PASS every receipt link chain ends at a pinned install_tree member :: 10 links
+OBSERVE installed tree now (read-only lstat/readlink) :: links_equal_receipt=True digest=5cb9f4865c8e1315dbd1baa99310c9bc65ddcf469929488359c66587b6470060 problems=[]
+CONFIRM PASS AST identical modulo function name and docstring
+CONFIRM PASS function bodies byte-identical
+  diff| --- check-receipt.py:install_links_sha
+  diff| +++ kama-llamacpp-live.py:links_digest
+  diff| @@ -1,6 +1,6 @@
+  diff| -def install_links_sha(links):
+  diff| -    """Recompute producer install_links_sha256(): sha256 over canonical JSON
+  diff| -    (sorted keys, compact separators, ASCII escapes) of the link map."""
+  diff| +def links_digest(links):
+  diff| +    """sha256 over canonical JSON (sorted keys, ASCII escapes): injective for
+  diff| +    any {str: str} map, including names with newlines or ' -> '."""
+  diff|      return hashlib.sha256(json.dumps(
+  diff|          links, sort_keys=True, separators=(',', ':'),
+  diff|          ensure_ascii=True).encode('ascii')).hexdigest()
+CONFIRM PASS encoders identical (bytes and digest) on 10-input battery :: 10/10
+CONFIRM PASS gate --selftest on the pinned commit exits 0 with the frozen summary :: exit=0 summary='selftest: 11 VALID and 1 NOT-EVALUATED receipts accepted; 91 mutations + unreadable case rejected'
+OBSERVE gate mutant base :: SELFTEST_LINKS digest 83bdd3ccfa67701a.. equals_LIT=True; --selftest exit=0; failing cases=[]
+OBSERVE gate mutant nosort :: SELFTEST_LINKS digest ed203addb9b256bb.. equals_LIT=False; --selftest exit=1; failing cases=['links-canonical-digest-valid']
+OBSERVE gate mutant sepdefault :: SELFTEST_LINKS digest 6b00d9426a48bc42.. equals_LIT=False; --selftest exit=1; failing cases=['links-canonical-digest-valid']
+OBSERVE gate mutant noascii :: SELFTEST_LINKS digest 83bdd3ccfa67701a.. equals_LIT=True; --selftest exit=0; failing cases=[]
+OBSERVE producer mutant base :: _install_identity_selftest passes
+OBSERVE producer mutant nosort :: _install_identity_selftest passes
+OBSERVE producer mutant sepdefault :: _install_identity_selftest raises AssertionError: install_links_sha256 digest mismatch
+OBSERVE producer mutant noascii :: _install_identity_selftest passes
+CONFIRM PASS live receipt VALID with --require-install-links and RCPT pin :: VALID /tmp/kama-r21-c2lit-k2cqwvha/ctl.json
+OBSERVE r1-empty-null-no-pin :: exit=0 :: VALID /tmp/kama-r21-c2lit-k2cqwvha/r1-empty-null-no-pin.json
+OBSERVE r1-empty-null-pin-of-empty :: exit=1 :: INVALID /tmp/kama-r21-c2lit-k2cqwvha/r1-empty-null-pin-of-empty.json: 1 problem(s)
+CONFIRM PASS non-empty install_links with null digest is rejected :: INVALID /tmp/kama-r21-c2lit-k2cqwvha/r2-nonempty-null.json: 1 problem(s)
+CONFIRM PASS tampered digest is rejected :: INVALID /tmp/kama-r21-c2lit-k2cqwvha/r3-tampered.json: 1 problem(s)
+OBSERVE non-ASCII source characters, gate lines 1960-2035 / producer lines 1101-1160 :: 0 / 0
+confirm-failures=0

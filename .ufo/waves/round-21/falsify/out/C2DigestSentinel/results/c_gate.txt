@@ -1,0 +1,29 @@
+== C0 baseline (unmodified round-21 live receipt, lane pins)
+ live receipt, pins: exit=0 | VALID /tmp/kama-r21-C2DigestSentinel/work/live-receipt.json
+== C1 tree member names not validated: merged name with \n and space
+ merged 'LICENSE' + 'ggml-rpc-server' -> one key; members 51 -> 50
+ recomputed digest equal to pin: True
+ merged-name receipt, tree pin: exit=0 | VALID /tmp/kama-r21-C2DigestSentinel/work/c1-tree-merged.json
+== C2 lone-surrogate-pair key: raw CESU bytes in the file vs escaped form
+ CESU bytes (raw surrogates in file): exit=2 |  | stderr: check-receipt: cannot read /tmp/kama-r21-C2DigestSentinel/work/c2-cesu.json: 'utf-8' codec can't decode byte 0xed in position 14637: invalid
+ escaped surrogate pair (json combines to astral): exit=1 | INVALID /tmp/kama-r21-C2DigestSentinel/work/c2-esc.json: 1 problem(s)
+== C3 empty install_links + null digest satisfies --require-install-links
+ empty links, null digest, --require-install-links: exit=0 | VALID /tmp/kama-r21-C2DigestSentinel/work/c3-empty-links.json
+ same, with links pin: exit=1 | INVALID /tmp/kama-r21-C2DigestSentinel/work/c3-empty-links.json: 1 problem(s)
+ producer digest of {} would be 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a (producer never emits null)
+== C4 duplicate JSON keys: gate (last wins) vs first-wins reader
+ duplicate key [first=invalid 0.7.1, last=valid 0.7.0]: exit=0 | VALID /tmp/kama-r21-C2DigestSentinel/work/c4-dup.json
+ first-wins reader: libllama.so.0 -> libllama.so.0.7.1 | digest 16fd3e325d726d69 vs pin 5cb9f4865c8e1315
+ first-wins chain verdict: chain ends at 'libllama.so.0.7.1', not a pinned install_tree member
+== C5 producer-shaped receipt for a 41-hop chain the loader cannot open
+ producer problems: [] | recorded links: 41
+ 41-hop receipt, its own digest pins: exit=0 | VALID /tmp/kama-r21-C2DigestSentinel/work/c5-hops41.json
+== C6 non-UTF-8 symlink names/targets: gate verdicts on a receipt
+ producer problems: [] | link keys (ascii): ["'\\udcffsoname'"]
+ non-UTF-8 link receipt: exit=0 | VALID /tmp/kama-r21-C2DigestSentinel/work/c6-surr.json
+== C7 gate on a tree member name with a lone surrogate (internal exception path)
+ surrogate member name: exit=1 |  | stderr: UnicodeEncodeError: 'utf-8' codec can't encode character '\udcff' in position 4319: surrogates not allowed
+== C8 absolute-target soname link: producer records, gate rejects
+ producer problems: [] | recorded: {'libext.so.0': '/usr/lib/libz.so.1'}
+ absolute-target receipt: exit=1 | INVALID /tmp/kama-r21-C2DigestSentinel/work/c8-abs.json: 1 problem(s)
+done C

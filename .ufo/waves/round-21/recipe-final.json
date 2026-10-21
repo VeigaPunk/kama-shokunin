@@ -1,0 +1,387 @@
+[
+ {
+  "name": "fleet-revision",
+  "argv": [
+   "git",
+   "-C",
+   "/home/vgpnk/Projects/shokunin",
+   "rev-parse",
+   "HEAD"
+  ],
+  "exit": 0,
+  "timeout": 30
+ },
+ {
+  "name": "c1-absent-at-base",
+  "argv": [
+   "git",
+   "-C",
+   "{lane}",
+   "cat-file",
+   "-e",
+   "7a6bc911f9eb7dbea9e3b81f5f2449ecda10096d:tools/report-landing-audit.py"
+  ],
+  "exit": 128,
+  "timeout": 180
+ },
+ {
+  "name": "c1-audit-selftest",
+  "argv": [
+   "{python}",
+   "{lane}/tools/report-landing-audit.py",
+   "--selftest"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "c1-audit-raw",
+  "argv": [
+   "{python}",
+   "{lane}/tools/report-landing-audit.py",
+   "--rounds",
+   "10-20",
+   "--no-errata",
+   "--json",
+   "--fleet-repo",
+   "/home/vgpnk/Projects/shokunin"
+  ],
+  "exit": 1,
+  "timeout": 180
+ },
+ {
+  "name": "c1-audit-ledger",
+  "argv": [
+   "{python}",
+   "{lane}/tools/report-landing-audit.py",
+   "--rounds",
+   "10-20",
+   "--json",
+   "--fleet-repo",
+   "/home/vgpnk/Projects/shokunin"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "c2-grid-selftest",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/install-links-grid.py",
+   "--selftest"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "c2-grid-frozen",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/install-links-grid.py",
+   "--arm",
+   "frozen",
+   "--json"
+  ],
+  "exit": 1,
+  "timeout": 180
+ },
+ {
+  "name": "c2-grid-current",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/install-links-grid.py",
+   "--arm",
+   "current",
+   "--json"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "c2-grid-both",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/install-links-grid.py",
+   "--arm",
+   "both",
+   "--json"
+  ],
+  "exit": 1,
+  "timeout": 180
+ },
+ {
+  "name": "c2-gate-selftest",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/check-receipt.py",
+   "--selftest"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "c2-producer-selftest",
+  "argv": [
+   "{python}",
+   "{lane}/tools/kama-llamacpp-live.py",
+   "--selftest"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "c2-live-receipt",
+  "argv": [
+   "{python}",
+   "{lane}/tools/kama-llamacpp-live.py",
+   "--server",
+   "/home/vgpnk/.local/opt/llama-b11755/llama-server",
+   "--model",
+   "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+   "--model-sha256",
+   "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+   "--alias",
+   "kama-r21-live",
+   "--ctx",
+   "256",
+   "--threads",
+   "1",
+   "--out",
+   "{out}/live-receipt.json"
+  ],
+  "exit": 0,
+  "timeout": 300
+ },
+ {
+  "name": "c2-live-gate-pinned",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/check-receipt.py",
+   "{out}/live-receipt.json",
+   "--require-schema",
+   "v3",
+   "--require-install-links",
+   "--expect-model-sha256",
+   "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+   "--expect-install-tree-sha256",
+   "6c216313a88d71b141bc62f684b8f95c040710ff050801b13521861826785a2c",
+   "--expect-install-links-sha256",
+   "5cb9f4865c8e1315dbd1baa99310c9bc65ddcf469929488359c66587b6470060"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "c2-live-gate-wrong-links-pin",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/check-receipt.py",
+   "{out}/live-receipt.json",
+   "--require-install-links",
+   "--expect-install-links-sha256",
+   "0000000000000000000000000000000000000000000000000000000000000000"
+  ],
+  "exit": 1,
+  "timeout": 180
+ },
+ {
+  "name": "c2-legacy-receipt-1",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/check-receipt.py",
+   "{lane}/.ufo/waves/round-18/live-recovery/receipt-1.json"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "c2-legacy-receipt-2",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/check-receipt.py",
+   "{lane}/.ufo/waves/round-18/live-recovery/receipt-2.json"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "c2-legacy-receipt-3",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/check-receipt.py",
+   "{lane}/.ufo/waves/round-18/live-recovery/receipt-3.json"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "c2-legacy-receipt-1-required",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/check-receipt.py",
+   "{lane}/.ufo/waves/round-18/live-recovery/receipt-1.json",
+   "--require-install-links"
+  ],
+  "exit": 1,
+  "timeout": 180
+ },
+ {
+  "name": "nh-error-pair",
+  "argv": [
+   "{python}",
+   "{lane}/tools/error-verdict-census.py",
+   "--json"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-error-selftest",
+  "argv": [
+   "{python}",
+   "{lane}/tools/error-verdict-census.py",
+   "--selftest"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-install-tree-grid-selftest",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/install-tree-grid.py",
+   "--selftest"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-gguf-selftest",
+  "argv": [
+   "{python}",
+   "{lane}/tools/gguf-identity.py",
+   "--selftest"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-gguf-measure",
+  "argv": [
+   "{python}",
+   "{lane}/.ufo/waves/round-20/c2/measure.py",
+   "--json"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-citation",
+  "argv": [
+   "{python}",
+   "{lane}/tools/citation-provenance.py",
+   "--json"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-citation-selftest",
+  "argv": [
+   "{python}",
+   "{lane}/tools/citation-provenance.py",
+   "--selftest"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-sources-append-only",
+  "argv": [
+   "{python}",
+   "{lane}/tools/sources-append-only.py",
+   "--from",
+   "7a6bc911f9eb7dbea9e3b81f5f2449ecda10096d",
+   "--to",
+   "{revision}",
+   "--repo",
+   "{lane}"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-snapshot-selftest",
+  "argv": [
+   "bash",
+   "{lane}/tools/test-snapshot.sh"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "fr-sources-validate",
+  "argv": [
+   "/home/vgpnk/Projects/shokunin/scripts/sources-census.sh",
+   "validate",
+   "--root",
+   "/home/vgpnk/Projects/shokunin",
+   "kama"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "fr-sources-census",
+  "argv": [
+   "/home/vgpnk/Projects/shokunin/scripts/sources-census.sh",
+   "census",
+   "--root",
+   "/home/vgpnk/Projects/shokunin",
+   "kama"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "c2-legacy-receipt-2-required",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/check-receipt.py",
+   "{lane}/.ufo/waves/round-18/live-recovery/receipt-2.json",
+   "--require-install-links"
+  ],
+  "exit": 1,
+  "timeout": 180
+ },
+ {
+  "name": "c2-legacy-receipt-3-required",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/check-receipt.py",
+   "{lane}/.ufo/waves/round-18/live-recovery/receipt-3.json",
+   "--require-install-links"
+  ],
+  "exit": 1,
+  "timeout": 180
+ },
+ {
+  "name": "c2-unpinnable-e2e",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/unpinnable-e2e.py"
+  ],
+  "exit": 0,
+  "timeout": 300
+ },
+ {
+  "name": "c2-no-llama-server-left",
+  "argv": [
+   "pgrep",
+   "-f",
+   "llama-b11755/llama-server"
+  ],
+  "exit": 1,
+  "timeout": 30
+ }
+]

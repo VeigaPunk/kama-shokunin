@@ -1,0 +1,47 @@
+== A1 links_digest injectivity over str->str maps
+ digest(lone-surrogate-pair key) == digest(astral key): True
+ JSON text of both: {"\ud83d\ude00":"x"} | {"\ud83d\ude00":"x"}
+ gate install_links_sha256 equal: True
+ docstring example {"a":"b\nc -> d"} != {"a":"b","c":"d"}: True
+ fs decode of CESU bytes ED A0 BD (would be U+D83D): '\udced\udca0\udcbd'
+ DEL / C1 variants give distinct digests: 3
+== A2 non-UTF-8 symlink NAME and TARGET in a real directory
+ install_tree members (ascii): ["'libllama.so.0.7.0'", "'llama-server'"]
+ install_links (ascii): {"'libdangle.so'": "'\\udcfe-dangling'", "'\\udcffsoname'": "'libllama.so.0.7.0'"}
+ install_links problems: []
+ links JSON (ensure_ascii): {"libdangle.so": "\udcfe-dangling", "\udcffsoname": "libllama.so.0.7.0"}
+ gate chain verdict for 'libdangle.so': chain ends at '\udcfe-dangling', not a pinned install_tree member
+ gate chain verdict for '\udcffsoname': None
+== A3 non-UTF-8 REGULAR member name
+ install_tree raises: UnicodeEncodeError: 'utf-8' codec can't encode character '\udcfe' in position 78: surrogates not allowed
+ install_links problems (same dir): []
+== A4 Unicode normalization (NFC vs NFD names)
+ NFC and NFD link names distinct: True
+ tree members (ascii): ["'libe\\u0301-only.so'", "'libe\\u0301-real.so'", "'lib\\xe9-real.so'", "'llama-server'"]
+ links (ascii): {"'libcross.so'": "'lib\\xe9-only.so'", "'libe\\u0301.so.0'": "'libe\\u0301-real.so'", "'lib\\xe9.so.0'": "'lib\\xe9-real.so'"}
+ problems: []
+ gate verdict NFC link: None
+ gate verdict NFD link: None
+ gate verdict cross-form link (NFC target absent): chain ends at 'libé-only.so', not a pinned install_tree member
+ kernel: stat(NFC target) exists: True
+ kernel: stat(cross-form NFC target) exists: False
+== A5 very long link text
+ symlink target length 255: created
+ symlink target length 4000: OSError errno=36
+ symlink target length 4095: OSError errno=36
+ symlink target length 4096: OSError errno=36
+ problems: []
+ recorded links: 2
+ gate verdict 255-byte chain: None
+ gate verdict 4000-byte dangling link: chain ends at 'L4000.so', not a pinned install_tree member
+== A6 control characters and names differing only by controls
+ DEL/C1/U+2028/U+0085 names: problems: []
+ DEL/C1/U+2028/U+0085 names: recorded keys (ascii): ["'libllama.so.0\\u2028'", "'libllama.so.0\\x7f'", "'libllama.so.0\\x80'", "'libllama.so.0\\x85'", "'libllama.so.0\\x9b'"]
+ C0 ESC name problems: ["'lib\\x1bx.so':control-character-in-name"]
+ FIFO with U+009B in name: problem text (ascii): ["'fifo\\x9bname:not-regular-or-symlink'"]
+== A7 install_tree text digest: names containing newline/space
+ honest text: 'libA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nlibB bbb...
+ forged text: 'libA aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\nlibB bbb...
+ install_tree_sha256 equal (gate recomputation): True
+ member counts honest/forged: (3, 2)
+done A

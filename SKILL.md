@@ -694,3 +694,15 @@ report under Landed changes. Generate Landed changes from
 `install_tree_sha256` unchanged; `install_links_sha256` changes or the producer
 refuses (`install-tree-unpinnable`). Pin the links digest when the install must
 not drift (S066, S067).
+
+**Round-21 falsify corrections to the rows above.** The audit reads committed
+fleet report bytes (`git show HEAD:`), not working-tree files; `--rounds 10-`
+lists committed reports only. Citations are any ≥7-hex mention inside Landed;
+tokens without both a digit and a letter (and not 40-hex) are not checked as
+citations. Grid exit 1 also covers a real tree that is not gate-clean; the
+producer now refuses `glibc-hwcaps`, links not resolving to members, special
+files and unhashed members, and records other subdirectories in
+`install_unpinned`. Gate selftest at the final commit: 12 VALID + 1
+NOT-EVALUATED, 99 mutations. Pre-launch refusal check:
+`python3 tests/llamacpp-live/unpinnable-e2e.py` (0 all refused, 1 a case
+launched or passed, 2 could-not-evaluate).

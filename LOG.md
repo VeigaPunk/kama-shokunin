@@ -1249,3 +1249,9 @@ and in SKILL/lesson, not treated as current authority.
 - Final S065 census: rows57→65, A54→62/C3, mined46→52, queued5→6, rejected6→7, missing0; `sources-validate`/`sources-census` exit0 with six W04 warnings S031/S043/S056/S060/S064/S065. The failed c731 and 04de measurements are retained but not credited.
 
 - R19 verifier routed instrument-registration item is closed by `SKILL.md:652-654` at `0957ce619789d13bb5779606078fa1498114d2c7`: `citation-provenance.py`, `install-tree-grid.py`, and receipt-gate `--expect-install-tree-sha256` now have explicit rows and verdict/selftest contracts.
+
+## round 21 — report landing audit and soname-aware install identity
+
+- Motivation C1: the round-20 closure (fleet `221707d`) found report line 7's spliced hash and four Landed omissions; no instrument checked either. Motivation C2: R19 TreeCap — a soname retarget left every pin unchanged.
+- Draft `a29bb84a`; build wave 86 seats; integration `1471344b`; first official measurement `b76727f3` 28/28 (`runs/b76727f3`), live v3 receipt with 10 links. Falsify wave 67 seats (1 dead: ConnectorSiblingReports, Antigravity 429 quota). Falsify fixes and final measurement are recorded in `corpus/lessons/round-21.md` §Falsify-wave integration and `SCORECARD.md` §Round 21.
+- C1 calibration 7→7 detector: `report-landing-audit.py --rounds 10-20 --no-errata` exit 1, 9 defects; with ledger exit 0. C2 operability 8→8: grid frozen link 0/13 → current 13/13. Sources S066–S074 (rows 65→74).

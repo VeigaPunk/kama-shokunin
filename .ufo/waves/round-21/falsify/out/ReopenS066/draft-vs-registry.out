@@ -1,0 +1,22 @@
+cells draft=11 registry=11
+id: SAME
+source: SAME
+kind: SAME
+tier: SAME
+scope: DIFF
+  draft    : ldconfig's documented soname link layout and which link it calls the SONAME; not ldconfig's implementation, not the DT_SONAME tag
+  registry : documented soname link layout (linker name → SONAME → real name) on glibc systems; not ldconfig's implementation and not the DT_SONAME tag
+anchor: DIFF
+  draft    : §DESCRIPTION paragraphs 2 and 3 (SONAME chain example and the sentence after it); man-pages 6.19, page dated 2026-08-03 (man7 footer "Linux man-pages 6.19"; tarball .TH footer "(unreleased)"; installed man-pages 6.19-1 identical to the tarball except that footer); tarball man-pages-6.19.tar.xz sha256 88a7c42ad2e03d8b96dc72d95e451f2d875ff0f43103a8eb8ac8242133bdcb05; man7 HTML sha256 6a81540a534692ed7cb6d5434275e08b3ade388311bdb88f1e4e506be2bfde38, fetched 2026-10-21
+  registry : §DESCRIPTION ¶1 and ¶3 (SONAME chain example `libfoo.so -> libfoo.so.1 -> libfoo.so.1.12`); man-pages 6.19, page dated 2026-08-03; opened 2026-10-21
+teaches: DIFF
+  draft    : Names the middle link of a soname chain (libfoo.so -> libfoo.so.1 -> libfoo.so.1.12) as the library's SONAME and warns that failing to follow that pattern may cause compatibility issues after an upgrade; the page never names DT_SONAME, so this row does not tie that tag to the link name.
+  registry : The SONAME is a symlink in the middle of a chain that ldconfig creates; which file it names is install state that a regular-file digest cannot see.
+status: DIFF
+  draft    : queued
+  registry : mined
+opened: SAME
+recheck: SAME
+used_by: DIFF
+  draft    : —
+  registry : corpus/knowledge/llamacpp-loading-lifecycle.md, corpus/lessons/round-21.md

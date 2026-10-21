@@ -210,39 +210,56 @@ def links_digest(links):
         ensure_ascii=True).encode('ascii')).hexdigest()
 
 
-def install_links(server_real):
-    """({basename: link text}, digest, problems) for dirname(server_real).
+def install_links(server_real, tree=None):
+    """({basename: link text}, digest, problems, unpinned) for
+    dirname(server_real).
     install_tree() skips symlinks, so a retargeted soname link
     (libllama.so.0 -> ...) would otherwise leave every pin unchanged. Link
     text is recorded unresolved; the gate checks that each chain ends at a
     pinned regular member. `problems` names entries that make the directory
-    unpinnable: unreadable members, failed lstat/readlink, and entries that
-    are neither regular files nor symlinks (a glibc-hwcaps/ subdirectory is
-    searched by the loader before the directory itself). The caller fails
-    closed on any problem instead of recording a partial identity."""
-    links, problems = {}, []
+    unpinnable: unreadable members, failed lstat/readlink, a `glibc-hwcaps`
+    entry of any type except absent (the loader searches it before the
+    directory itself), special files (FIFO, socket, device), symlinks whose
+    target does not resolve to a regular file in the same directory, and,
+    when `tree` (install_tree()'s map) is given, regular members it failed
+    to hash. The caller fails closed on any problem instead of recording a
+    partial identity. `unpinned` names other subdirectories (for example a
+    licensing folder in OpenVINO release archives): recorded by name, their
+    contents outside this pin, never silently dropped."""
+    links, problems, unpinned = {}, [], []
     directory = os.path.dirname(server_real)
     try:
         entries = sorted(os.listdir(directory))
     except OSError as exc:
-        return links, None, [f'listdir:{exc.strerror}']
+        return links, None, [f'listdir:{exc.strerror}'], unpinned
     for name in entries:
         full = os.path.join(directory, name)
         if any(ord(ch) < 0x20 for ch in name):
             # install_tree's 'name sha\n' lines are ambiguous for such names
             problems.append(f'{name!r}:control-character-in-name')
             continue
+        if name == 'glibc-hwcaps':
+            problems.append(f'{name}:loader-searched-subdirectory')
+            continue
         try:
             mode = os.lstat(full).st_mode
             if stat.S_ISLNK(mode):
                 links[name] = os.readlink(full)
+                real = os.path.realpath(full)
+                if not (os.path.isfile(real) and os.path.dirname(real)
+                        == os.path.realpath(directory)):
+                    problems.append(f'{name}:link-not-to-member')
+            elif stat.S_ISDIR(mode):
+                unpinned.append(name)
             elif not stat.S_ISREG(mode):
                 problems.append(f'{name}:not-regular-or-symlink')
             elif not os.access(full, os.R_OK):
                 problems.append(f'{name}:unreadable')
+            elif tree is not None and name not in tree:
+                problems.append(f'{name}:not-hashed')
         except OSError as exc:
             problems.append(f'{name}:{exc.strerror}')
-    return links, links_digest(links), problems
+    return links, links_digest(links), problems, unpinned
 
 
 def _envelope_ok(body_text):
@@ -1116,18 +1133,22 @@ def _install_identity_selftest():
         os.symlink('libllama.so.0.7.0', soname)
         os.symlink('libllama.so.0', os.path.join(directory, 'libllama.so'))
         tree, tree_sha = install_tree(server)
-        links, links_sha, problems = install_links(server)
+        links, links_sha, problems, unpinned = install_links(server)
         if tree != {n: hashlib.sha256(b).hexdigest()
                     for n, b in members.items()}:
             raise AssertionError(f'install_tree members mismatch: {tree!r}')
         if links != {'libllama.so': 'libllama.so.0',
-                     'libllama.so.0': 'libllama.so.0.7.0'} or problems:
+                     'libllama.so.0': 'libllama.so.0.7.0'} or problems \
+                or unpinned:
             raise AssertionError(f'install_links mismatch: {links!r} '
                                  f'{problems!r}')
         if links_sha != hashlib.sha256(
                 b'{"libllama.so":"libllama.so.0",'
                 b'"libllama.so.0":"libllama.so.0.7.0"}').hexdigest():
             raise AssertionError('install_links_sha256 digest mismatch')
+        if links_digest({'b': 'x', 'a': 'y'}) != hashlib.sha256(
+                b'{"a":"y","b":"x"}').hexdigest():
+            raise AssertionError('install_links digest is not key-sorted')
         if links_digest({'a': 'b\nc -> d'}) == links_digest(
                 {'a': 'b', 'c': 'd'}):
             raise AssertionError('install_links digest is not injective')
@@ -1145,10 +1166,28 @@ def _install_identity_selftest():
             raise AssertionError('newline member name not a problem')
         os.unlink(os.path.join(directory, 'lib\nx.so'))
         os.makedirs(os.path.join(directory, 'glibc-hwcaps', 'x86-64-v3'))
-        if install_links(server)[2] != ['glibc-hwcaps:not-regular-or-symlink']:
-            raise AssertionError('subdirectory not reported as a problem')
+        if install_links(server)[2] != [
+                'glibc-hwcaps:loader-searched-subdirectory']:
+            raise AssertionError('glibc-hwcaps not reported as a problem')
         os.rmdir(os.path.join(directory, 'glibc-hwcaps', 'x86-64-v3'))
         os.rmdir(os.path.join(directory, 'glibc-hwcaps'))
+        os.symlink(tempfile.gettempdir(), os.path.join(directory, 'glibc-hwcaps'))
+        if install_links(server)[2] != [
+                'glibc-hwcaps:loader-searched-subdirectory']:
+            raise AssertionError('symlinked glibc-hwcaps not reported')
+        os.unlink(os.path.join(directory, 'glibc-hwcaps'))
+        os.symlink(tempfile.gettempdir(), os.path.join(directory, 'libx.so'))
+        if install_links(server)[2] != ['libx.so:link-not-to-member']:
+            raise AssertionError('link to a directory not reported')
+        os.unlink(os.path.join(directory, 'libx.so'))
+        os.mkdir(os.path.join(directory, 'openvino-licensing'))
+        found = install_links(server)
+        if found[2] or found[3] != ['openvino-licensing']:
+            raise AssertionError('other subdirectory not recorded unpinned')
+        os.rmdir(os.path.join(directory, 'openvino-licensing'))
+        partial = {k: v for k, v in tree.items() if k != 'libllama.so.0.7.1'}
+        if install_links(server, partial)[2] != ['libllama.so.0.7.1:not-hashed']:
+            raise AssertionError('member missing from install_tree not reported')
         lib = os.path.join(directory, 'libllama.so.0.7.0')
         os.chmod(lib, 0)
         try:
@@ -1373,7 +1412,8 @@ def main(argv=None):
 
         server_sha = sha256_file(server_real)
         tree, tree_sha = install_tree(server_real)
-        links, links_sha, link_problems = install_links(server_real)
+        links, links_sha, link_problems, unpinned = install_links(
+            server_real, tree)
         if link_problems:
             raise SetupError('install-tree-unpinnable:'
                              + ';'.join(link_problems[:8]))
@@ -1392,6 +1432,7 @@ def main(argv=None):
             'install_tree_sha256': tree_sha,
             'install_links': links,
             'install_links_sha256': links_sha,
+            'install_unpinned': unpinned,
             'server_impl_sha256': impl_sha,
         })
         receipt['probe']['sha256'] = probe_sha

@@ -91,12 +91,18 @@ def git(repo, *args, stdin=None, env=None):
 
 
 def lookup(repos, tokens, peel=""):
-    """{token: 'found'|'ambiguous'|'missing'} across repos, via one
-    `cat-file --batch-check` per repo; a git failure is EvalError."""
+    """{token: 'found'|'ambiguous'|'missing'} across repos, via
+    `cat-file --batch-check` per repo; a git failure is EvalError. With a
+    peel, git answers `missing` for an ambiguous short name, so the bare
+    name is asked first to keep ambiguity visible."""
     tokens = sorted(set(tokens))
     status = {t: "missing" for t in tokens}
     if not tokens:
         return status
+    if peel:
+        bare = lookup(repos, tokens)
+        status.update({t: "ambiguous" for t, s in bare.items()
+                       if s == "ambiguous"})
     for repo in repos:
         out = git(repo, "cat-file", "--batch-check",
                   stdin="".join(f"{t}{peel}\n" for t in tokens))
@@ -109,6 +115,8 @@ def lookup(repos, tokens, peel=""):
             if line.endswith(" ambiguous"):
                 if status[token] != "found":
                     status[token] = "ambiguous"
+                continue
+            if line.endswith(" excluded") or line.endswith(" dangling"):
                 continue
             parts = line.split(" ")
             if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}", parts[0]):
@@ -140,7 +148,7 @@ def round_commits(lane_repo, branch, lane, rnd):
         if not record:
             continue
         fields = record.split(SEP, 3)
-        if len(fields) != 4 or not fields[2].isdigit():
+        if len(fields) != 4 or not re.fullmatch(r"[0-9]+", fields[2]):
             raise EvalError(f"unexpected git log record {record[:80]!r}")
         sha, author, atime, subject = fields
         if author == f"{lane}-shokunin" and pat.match(subject):
@@ -166,7 +174,15 @@ def read_report(path):
 def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path):
     rel = f".ufo/reports/round-{rnd}/{lane}.md"
     report = Path(path) if path else Path(fleet_repo) / rel
-    text = read_report(report)
+    if path:
+        text = read_report(report)
+    else:
+        # committed fleet bytes, not a possibly edited working-tree copy
+        try:
+            text = git(fleet_repo, "show", f"HEAD:{rel}")
+        except EvalError as exc:
+            raise EvalError(f"round {rnd}: {rel} not committed in fleet "
+                            f"HEAD") from exc
     cutoff = report_cutoff(fleet_repo, rel)
     committed = cutoff is not None
     if cutoff is None:
@@ -214,7 +230,8 @@ def parse_errata(text, origin):
         if not line.strip() or line.startswith("#"):
             continue
         parts = line.split("\t")
-        if len(parts) != 5 or not parts[0].isdigit() or parts[1] not in KINDS:
+        if len(parts) != 5 or not re.fullmatch(r"[0-9]+", parts[0]) \
+                or parts[1] not in KINDS:
             raise EvalError(f"errata {origin}:{num}: malformed row")
         rows.append({"line": num, "round": int(parts[0]), "kind": parts[1],
                      "token": parts[2], "correction": parts[3],
@@ -259,10 +276,10 @@ def parse_rounds(spec, fleet_repo, lane):
     rounds = set()
     for part in spec.split(","):
         part = part.strip()
-        if re.fullmatch(r"\d+", part):
+        if re.fullmatch(r"[0-9]+", part):
             rounds.add(int(part))
             continue
-        m = re.fullmatch(r"(\d+)-(\d*)", part)
+        m = re.fullmatch(r"([0-9]+)-([0-9]*)", part)
         if not m:
             raise EvalError(f"--rounds: bad item {part!r}")
         lo = int(m.group(1))
@@ -272,10 +289,12 @@ def parse_rounds(spec, fleet_repo, lane):
                 raise EvalError(f"--rounds: empty range {part!r}")
             rounds.update(range(lo, hi + 1))
         else:
-            present = [int(p.name.split("-", 1)[1])
-                       for p in (Path(fleet_repo) / ".ufo/reports").glob("round-*")
-                       if p.name.split("-", 1)[1].isdigit()
-                       and (p / f"{lane}.md").is_file()]
+            # committed fleet reports only, never working-tree drafts
+            listed = git(fleet_repo, "ls-tree", "-r", "--name-only", "HEAD",
+                         "--", ".ufo/reports")
+            pat = re.compile(rf"\.ufo/reports/round-([0-9]+)/{re.escape(lane)}\.md")
+            present = [int(m.group(1)) for m in map(pat.fullmatch,
+                                                    listed.split("\n")) if m]
             rounds.update(n for n in present if n >= lo)
     return rounds
 
@@ -286,7 +305,7 @@ def run(args):
     overrides = {}
     for item in args.report or []:
         key, sep, value = item.partition("=")
-        if not sep or not key.isdigit() or not value:
+        if not sep or not re.fullmatch(r"[0-9]+", key) or not value:
             raise EvalError(f"--report wants N=PATH, got {item!r}")
         overrides[int(key)] = value
     rounds = sorted(parse_rounds(args.rounds, fleet_repo, args.lane)
@@ -397,6 +416,7 @@ def selftest():
             _commit(lane, "round-1: lookalike", "kama-shokunin-extra", 1161)
             _commit(lane, "round-10: other round", "kama-shokunin", 1170)
             _commit(lane, "xround-1: prefixed", "kama-shokunin", 1171)
+            edge = _commit(lane, "round-1: at cutoff", "kama-shokunin", 1200)
             mash = a[:20] + b[20:]
             rep = fleet / ".ufo/reports/round-1/kama.md"
             rep.parent.mkdir(parents=True)
@@ -405,12 +425,29 @@ def selftest():
                 "prefix ## Landed changes is not a heading\n"
                 "## Landed changes (commits)\n- `" + a[:9] + "` work\n- `" + b
                 + "` measure\n- `" + d[:7] + "` rebased\n- `deadbee1` typo\n"
+                "- `" + edge[:10] + "` boundary\n"
                 "- words: defaced acceded 1234567 20261021 " + "f" * 39 + "\n"
                 "- short " + "e" * 6 + " and " + a[:7] + "g\n"
                 "## Before\n" + c[:9] + " cited outside\n",
                 encoding="utf-8")
+            # author time is the cutoff: committer time 6000 must not move it
             _commit(fleet, "round-1: kama report", "kama-shokunin", 1200,
-                    ".ufo/reports/round-1/kama.md")
+                    ".ufo/reports/round-1/kama.md", committed=6000)
+            body = rep.read_text(encoding="utf-8")
+            for when, action in ((1400, "rm"), (1500, "add")):
+                env = git_env(GIT_AUTHOR_NAME="x", GIT_COMMITTER_NAME="x",
+                              GIT_AUTHOR_EMAIL="a@x", GIT_COMMITTER_EMAIL="a@x",
+                              GIT_AUTHOR_DATE=f"@{when} +0000",
+                              GIT_COMMITTER_DATE=f"@{when} +0000")
+                if action == "rm":
+                    git(fleet, "rm", "-q", ".ufo/reports/round-1/kama.md",
+                        env=env)
+                else:
+                    rep.parent.mkdir(parents=True, exist_ok=True)
+                    rep.write_text(body, encoding="utf-8")
+                    git(fleet, "add", ".ufo/reports/round-1/kama.md", env=env)
+                git(fleet, "-c", "commit.gpgsign=false", "commit", "-q", "-m",
+                    f"report {action}", env=env)
             late = _commit(lane, "round-1: late advice", "kama-shokunin", 1300)
             base = argparse.Namespace(
                 lane_repo=str(lane), fleet_repo=str(fleet), branch="master",
@@ -428,9 +465,12 @@ def selftest():
                 ("unresolved-full-hash", mash), ("landed-omitted", c),
                 ("landed-unresolved", "deadbee1")]))
             check("subject-without-space-required",
-                  not any(t == b for _, t in kinds) and res["required"] == 4)
+                  not any(t == b for _, t in kinds) and res["required"] == 5)
+            check("boundary-commit-required-not-post", edge not in
+                  res["post_report"] and not any(t == edge for _, t in kinds))
+            check("first-add-cutoff-not-readd", res["cutoff"] == 1200)
             check("author-exact-other-round-and-prefix-ignored",
-                  res["round_commits"] == 5)
+                  res["round_commits"] == 6)
             check("author-time-cutoff-survives-rebase",
                   d not in res["post_report"])
             check("post-report-excluded", res["post_report"] == [late])
@@ -442,7 +482,28 @@ def selftest():
                 and landed_section("## Landed changes (c)\nx\n") == "x\n")
             check("hex-words-not-citations", not checkable_abbrev("defaced")
                   and not checkable_abbrev("1234567")
-                  and checkable_abbrev("deadbee1"))
+                  and checkable_abbrev("deadbee1")
+                  and checkable_abbrev("1" * 40) and checkable_abbrev("f" * 40))
+            blobs = Path(tmp, "blobs")
+            blobs.mkdir()
+            names = []
+            for i in range(1500):
+                (blobs / str(i)).write_text(f"blob {i}\n", encoding="utf-8")
+                names.append(str(blobs / str(i)))
+            oids = git(lane, "hash-object", "-w", "--stdin-paths",
+                       stdin="\n".join(names) + "\n").split()
+            seen, short = {}, None
+            for oid in oids:
+                if oid[:4] in seen and seen[oid[:4]] != oid:
+                    short = oid[:4]
+                    break
+                seen[oid[:4]] = oid
+            check("ambiguous-prefix-is-ambiguous", short is not None
+                  and lookup((lane,), [short]) == {short: "ambiguous"}
+                  and lookup((lane,), [short], "^{commit}")
+                  == {short: "ambiguous"}
+                  and lookup((lane,), [oids[0]]) == {oids[0]: "found"}
+                  and lookup((lane,), ["0" * 40]) == {"0" * 40: "missing"})
             errata = Path(tmp, "errata.tsv")
 
             def with_rows(*rows):
@@ -484,10 +545,11 @@ def selftest():
                 lambda: run(_ns(base, no_errata=False, errata=str(errata)))))
             draft = Path(tmp, "draft.md")
             draft.write_text("## Landed changes\n" + "\n".join(
-                x[:12] for x in (a, b, c, d)) + "\n## End\n", encoding="utf-8")
+                x[:12] for x in (a, b, c, d, edge)) + "\n## End\n",
+                encoding="utf-8")
             rc, doc = run(_ns(base, report=[f"1={draft}"]))
             check("draft-uses-fleet-cutoff", rc == 0
-                  and doc["results"][0]["required"] == 4
+                  and doc["results"][0]["required"] == 5
                   and doc["results"][0]["report_committed"])
             draft.write_text("## Work performed\n" + a + "\n", encoding="utf-8")
             rc, doc = run(_ns(base, report=[f"1={draft}"]))
@@ -501,6 +563,12 @@ def selftest():
                   and not doc["results"][0]["report_committed"])
             check("missing-report-is-error",
                   is_error(lambda: run(_ns(base, rounds="2"))))
+            pristine = rep.read_text(encoding="utf-8")
+            rep.write_text("edited, uncommitted\n", encoding="utf-8")
+            rc, doc = run(base)
+            check("committed-report-bytes-not-worktree", rc == 1 and len(
+                doc["results"][0]["defects"]) == 3)
+            rep.write_text(pristine, encoding="utf-8")
             check("reversed-range-is-error",
                   is_error(lambda: run(_ns(base, rounds="3-2"))))
             check("empty-report-path-is-error",

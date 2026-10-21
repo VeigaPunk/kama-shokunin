@@ -1,0 +1,124 @@
+{
+  "commit": "b76727f31e522763ce24e43d6ec86d21b507a11f",
+  "cases": [
+    {
+      "case": "baseline",
+      "install_tree": {
+        "ok": true,
+        "members": [
+          "libllama.so.0.7.0",
+          "llama-server"
+        ],
+        "sha256": "8d3e98d6e64a756ddefb6409bb7d7bacbfbf061ad27d78474f24c7d8f2296ca3"
+      },
+      "install_links": {
+        "ok": true,
+        "links": {
+          "libllama.so.0": "libllama.so.0.7.0"
+        },
+        "sha256": "4a97ef1073d06b5a987e0546f01e22549919fda9b9fac9d8abaf02cb319d72cf",
+        "problems": []
+      }
+    },
+    {
+      "case": "nonutf8-regular-name",
+      "install_tree": {
+        "ok": false,
+        "exception": "UnicodeEncodeError",
+        "message": "'utf-8' codec can't encode character '\\udcff' in position 161: surrogates not allowed"
+      },
+      "install_links": {
+        "ok": true,
+        "links": {
+          "libllama.so.0": "libllama.so.0.7.0"
+        },
+        "sha256": "4a97ef1073d06b5a987e0546f01e22549919fda9b9fac9d8abaf02cb319d72cf",
+        "problems": []
+      }
+    },
+    {
+      "case": "nonutf8-symlink-name",
+      "install_tree": {
+        "ok": true,
+        "members": [
+          "libllama.so.0.7.0",
+          "llama-server"
+        ],
+        "sha256": "8d3e98d6e64a756ddefb6409bb7d7bacbfbf061ad27d78474f24c7d8f2296ca3"
+      },
+      "install_links": {
+        "ok": true,
+        "links": {
+          "libllama.so.0": "libllama.so.0.7.0",
+          "\udcffy.so": "llama-server"
+        },
+        "sha256": "962ca16ae78df05fb7db16a71f972fbca148af3745bb2cf4f5d6b33a86954079",
+        "problems": []
+      }
+    },
+    {
+      "case": "nonutf8-dir-name",
+      "install_tree": {
+        "ok": true,
+        "members": [
+          "libllama.so.0.7.0",
+          "llama-server"
+        ],
+        "sha256": "8d3e98d6e64a756ddefb6409bb7d7bacbfbf061ad27d78474f24c7d8f2296ca3"
+      },
+      "install_links": {
+        "ok": true,
+        "links": {
+          "libllama.so.0": "libllama.so.0.7.0"
+        },
+        "sha256": "4a97ef1073d06b5a987e0546f01e22549919fda9b9fac9d8abaf02cb319d72cf",
+        "problems": [
+          "\udcffdir:not-regular-or-symlink"
+        ]
+      }
+    },
+    {
+      "case": "control-char-name",
+      "install_tree": {
+        "ok": true,
+        "members": [
+          "lib\nx.so",
+          "libllama.so.0.7.0",
+          "llama-server"
+        ],
+        "sha256": "d5812577de27e63d986fe65cc8dccfe221c1336b6d359aa01e16d6ee58cf4515"
+      },
+      "install_links": {
+        "ok": true,
+        "links": {
+          "libllama.so.0": "libllama.so.0.7.0"
+        },
+        "sha256": "4a97ef1073d06b5a987e0546f01e22549919fda9b9fac9d8abaf02cb319d72cf",
+        "problems": [
+          "'lib\\nx.so':control-character-in-name"
+        ]
+      }
+    },
+    {
+      "case": "subdir-glibc-hwcaps",
+      "install_tree": {
+        "ok": true,
+        "members": [
+          "libllama.so.0.7.0",
+          "llama-server"
+        ],
+        "sha256": "8d3e98d6e64a756ddefb6409bb7d7bacbfbf061ad27d78474f24c7d8f2296ca3"
+      },
+      "install_links": {
+        "ok": true,
+        "links": {
+          "libllama.so.0": "libllama.so.0.7.0"
+        },
+        "sha256": "4a97ef1073d06b5a987e0546f01e22549919fda9b9fac9d8abaf02cb319d72cf",
+        "problems": [
+          "glibc-hwcaps:not-regular-or-symlink"
+        ]
+      }
+    }
+  ]
+}

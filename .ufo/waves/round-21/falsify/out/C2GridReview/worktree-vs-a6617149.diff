@@ -1,0 +1,285 @@
+diff --git c/tests/llamacpp-live/check-receipt.py w/tests/llamacpp-live/check-receipt.py
+index 8d83fe7..d2dbdcb 100755
+--- c/tests/llamacpp-live/check-receipt.py
++++ w/tests/llamacpp-live/check-receipt.py
+@@ -444,6 +444,8 @@ def validate(receipt, expect_model=None, expect_server=None,
+     # inside the pinned regular-file tree.
+     links = server.get("install_links", MISSING)
+     links_sha = server.get("install_links_sha256")
++    if links is MISSING and "install_links_sha256" in server:
++        bad("server.install_links_sha256 present without install_links")
+     if links is not MISSING:
+         if not isinstance(links, dict) or not all(
+                 isinstance(k, str) and isinstance(v, str)
+@@ -451,12 +453,19 @@ def validate(receipt, expect_model=None, expect_server=None,
+             bad("server.install_links is not an object of basename -> "
+                 "link text")
+         else:
+-            check_digest(problems, "server.install_links_sha256", links_sha,
+-                         allow_none=not links)
++            # the producer always digests the map (even {}); null only
++            # accompanies a setup error, which is INVALID on its own
++            check_digest(problems, "server.install_links_sha256", links_sha)
+             if is_hex64(links_sha) and install_links_sha(links) != links_sha:
+                 bad("server.install_links_sha256 != recomputation over "
+                     "install_links")
+             for name in sorted(links):
++                if not name or "/" in name or name in (".", "..",
++                                                       "glibc-hwcaps") \
++                        or any(ord(ch) < 0x20 for ch in name):
++                    bad(f"server.install_links key {name!r} is not a plain "
++                        "member basename")
++                    continue
+                 if isinstance(tree, dict) and name in tree:
+                     bad(f"server.install_links[{name!r}] is also a regular "
+                         "install_tree member")
+@@ -466,6 +475,11 @@ def validate(receipt, expect_model=None, expect_server=None,
+                                          else {})
+                 if why:
+                     bad(f"server.install_links[{name!r}]: {why}")
++    unpinned = server.get("install_unpinned", MISSING)
++    if unpinned is not MISSING and not (
++            isinstance(unpinned, list)
++            and all(isinstance(n, str) for n in unpinned)):
++        bad("server.install_unpinned is not a list of subdirectory names")
+     if require_links and links is MISSING:
+         bad("--require-install-links given but receipt has no "
+             "server.install_links block")
+@@ -1993,6 +2007,16 @@ def _selftest():
+         lambda r: r["server"].update(install_links_sha256="0" * 64))
+     mut("links-sha-null-nonempty",
+         lambda r: r["server"].update(install_links_sha256=None))
++    mut("links-orphan-digest", lambda r: (
++        r["server"].pop("install_links"), None))
++    for i, bad_key in enumerate(("", ".", "glibc-hwcaps", "sub/libx.so",
++                                 "lib\nx.so")):
++        mut(f"links-bad-key-{i}", lambda r, k=bad_key: relink(
++            r, dict(SELFTEST_LINKS, **{k: "libllama.so"})))
++    mut("unpinned-not-list", lambda r: r["server"].update(
++        install_unpinned="openvino-licensing"))
++    mut("links-empty-null-digest", lambda r: r["server"].update(
++        install_links={}, install_links_sha256=None))
+     mut("links-dangling", lambda r: relink(
+         r, dict(SELFTEST_LINKS, **{"libllama.so.0": "libllama.so.9"})))
+     mut("links-absolute-outside", lambda r: relink(
+@@ -2021,6 +2045,14 @@ def _selftest():
+     cases.append(("links-canonical-digest-valid", canonical,
+                   expects + ["--expect-install-links-sha256",
+                              canonical["server"]["install_links_sha256"]], 0))
++    # Non-ASCII link name: the canonical form escapes it (\u00e9); a
++    # non-escaping encoder would produce a different digest.
++    unicode_links = copy.deepcopy(base)
++    unicode_links["server"]["install_links"] = dict(
++        SELFTEST_LINKS, **{"lib\u00e9.so": "libllama.so.0"})
++    unicode_links["server"]["install_links_sha256"] = (
++        "9e226427f148781fc333f5a86313104c49363043e03149c651457cd6e55b1758")
++    cases.append(("links-unicode-canonical-valid", unicode_links, expects, 0))
+     mut("models-entry-missing-id",
+         lambda r: r["captures"]["models"].update(body=json.dumps(
+             {"data": [{"id": ALIAS, "owned_by": "llamacpp"},
+diff --git c/tests/llamacpp-live/install-links-grid.py w/tests/llamacpp-live/install-links-grid.py
+index 4ffcca7..c3f16f9 100755
+--- c/tests/llamacpp-live/install-links-grid.py
++++ w/tests/llamacpp-live/install-links-grid.py
+@@ -17,7 +17,8 @@ cell, and asks each arm whether the recorded install identity changed:
+ Cells name the soname links that `libllama-server-impl.so`/`llama-server`
+ list in DT_NEEDED for release b11755 (NEEDED_SONAMES; absent names are a
+ could-not-evaluate, never skipped). Classes: `link` (only symlinks change),
+-`subdir` (a glibc-hwcaps/ copy the loader searches first), `regular`
++`subdir` (a glibc-hwcaps/ copy or link the loader searches first, which the
++producer refuses, or another subdirectory, recorded as unpinned), `regular`
+ (regular member changes; control), `type` (symlink becomes a regular file;
+ control) and `null` (no change; false-positive control). The current arm
+ also reports the receipt gate's chain verdict (check-receipt.py
+@@ -101,8 +102,11 @@ def mirror(src, dst):
+         elif full.is_file():
+             shutil.copyfile(full, dst / entry)
+             shutil.copymode(full, dst / entry)
++        elif full.is_dir():
++            shutil.copytree(full, dst / entry, symlinks=True)
+         else:
+-            raise EvalError(f"{full}: neither regular file nor symlink")
++            raise EvalError(f"{full}: neither regular file, directory nor "
++                            "symlink")
+ 
+ 
+ def _relink(d, name, target):
+@@ -158,6 +162,10 @@ def build_cells(tree, sonames=NEEDED_SONAMES):
+          lambda d: (_relink(d, key, key + ".loop"),
+                     os.symlink(key, d / (key + ".loop")))),
+         ("subdir-hwcaps-shadow", "subdir", lambda d: _hwcaps(d, key)),
++        ("subdir-hwcaps-symlink", "subdir",
++         lambda d: os.symlink(tempfile.gettempdir(), d / "glibc-hwcaps")),
++        ("subdir-other-recorded", "subdir",
++         lambda d: (d / "openvino-licensing").mkdir()),
+         ("regular-append-byte", "regular", lambda d: _append(d / key_real)),
+         ("regular-add-file", "regular",
+          lambda d: (d / "kama-extra.so").write_bytes(b"x")),
+@@ -173,9 +181,10 @@ def identity(module, server, with_links):
+     tree, tree_sha = module.install_tree(str(server))
+     if not with_links:
+         return {"install_tree_sha256": tree_sha}, tree, {}
+-    links, links_sha, problems = module.install_links(str(server))
++    links, links_sha, problems, unpinned = module.install_links(
++        str(server), tree)
+     return ({"install_tree_sha256": tree_sha, "install_links_sha256": links_sha,
+-             "problems": problems}, tree, links)
++             "problems": problems, "unpinned": unpinned}, tree, links)
+ 
+ 
+ def gate_problems(gate, tree, links):
+@@ -349,8 +358,8 @@ def selftest():
+         (t / "glibc-hwcaps").rmdir()
+         os.unlink(t / "libggml.so.0")
+         os.symlink("libggml.so.9", t / "libggml.so.0")
+-        rc_bad, _ = run(t, ("current",), sonames=("libllama.so.0",))
+-        checks.append(("dangling-real-tree-fails", rc_bad == 1))
++        checks.append(("dangling-real-tree-unpinnable", is_error(
++            lambda: run(t, ("current",), sonames=("libllama.so.0",)))))
+     for name, ok in checks:
+         print(f"{'ok' if ok else 'FAIL'} {name}")
+     failed = sum(not ok for _, ok in checks)
+diff --git c/tools/kama-llamacpp-live.py w/tools/kama-llamacpp-live.py
+index 4d7bdce..f030e6f 100755
+--- c/tools/kama-llamacpp-live.py
++++ w/tools/kama-llamacpp-live.py
+@@ -210,39 +210,56 @@ def links_digest(links):
+         ensure_ascii=True).encode('ascii')).hexdigest()
+ 
+ 
+-def install_links(server_real):
+-    """({basename: link text}, digest, problems) for dirname(server_real).
++def install_links(server_real, tree=None):
++    """({basename: link text}, digest, problems, unpinned) for
++    dirname(server_real).
+     install_tree() skips symlinks, so a retargeted soname link
+     (libllama.so.0 -> ...) would otherwise leave every pin unchanged. Link
+     text is recorded unresolved; the gate checks that each chain ends at a
+     pinned regular member. `problems` names entries that make the directory
+-    unpinnable: unreadable members, failed lstat/readlink, and entries that
+-    are neither regular files nor symlinks (a glibc-hwcaps/ subdirectory is
+-    searched by the loader before the directory itself). The caller fails
+-    closed on any problem instead of recording a partial identity."""
+-    links, problems = {}, []
++    unpinnable: unreadable members, failed lstat/readlink, a `glibc-hwcaps`
++    entry of any type except absent (the loader searches it before the
++    directory itself), special files (FIFO, socket, device), symlinks whose
++    target does not resolve to a regular file in the same directory, and,
++    when `tree` (install_tree()'s map) is given, regular members it failed
++    to hash. The caller fails closed on any problem instead of recording a
++    partial identity. `unpinned` names other subdirectories (for example a
++    licensing folder in OpenVINO release archives): recorded by name, their
++    contents outside this pin, never silently dropped."""
++    links, problems, unpinned = {}, [], []
+     directory = os.path.dirname(server_real)
+     try:
+         entries = sorted(os.listdir(directory))
+     except OSError as exc:
+-        return links, None, [f'listdir:{exc.strerror}']
++        return links, None, [f'listdir:{exc.strerror}'], unpinned
+     for name in entries:
+         full = os.path.join(directory, name)
+         if any(ord(ch) < 0x20 for ch in name):
+             # install_tree's 'name sha\n' lines are ambiguous for such names
+             problems.append(f'{name!r}:control-character-in-name')
+             continue
++        if name == 'glibc-hwcaps':
++            problems.append(f'{name}:loader-searched-subdirectory')
++            continue
+         try:
+             mode = os.lstat(full).st_mode
+             if stat.S_ISLNK(mode):
+                 links[name] = os.readlink(full)
++                real = os.path.realpath(full)
++                if not (os.path.isfile(real) and os.path.dirname(real)
++                        == os.path.realpath(directory)):
++                    problems.append(f'{name}:link-not-to-member')
++            elif stat.S_ISDIR(mode):
++                unpinned.append(name)
+             elif not stat.S_ISREG(mode):
+                 problems.append(f'{name}:not-regular-or-symlink')
+             elif not os.access(full, os.R_OK):
+                 problems.append(f'{name}:unreadable')
++            elif tree is not None and name not in tree:
++                problems.append(f'{name}:not-hashed')
+         except OSError as exc:
+             problems.append(f'{name}:{exc.strerror}')
+-    return links, links_digest(links), problems
++    return links, links_digest(links), problems, unpinned
+ 
+ 
+ def _envelope_ok(body_text):
+@@ -1116,18 +1133,22 @@ def _install_identity_selftest():
+         os.symlink('libllama.so.0.7.0', soname)
+         os.symlink('libllama.so.0', os.path.join(directory, 'libllama.so'))
+         tree, tree_sha = install_tree(server)
+-        links, links_sha, problems = install_links(server)
++        links, links_sha, problems, unpinned = install_links(server)
+         if tree != {n: hashlib.sha256(b).hexdigest()
+                     for n, b in members.items()}:
+             raise AssertionError(f'install_tree members mismatch: {tree!r}')
+         if links != {'libllama.so': 'libllama.so.0',
+-                     'libllama.so.0': 'libllama.so.0.7.0'} or problems:
++                     'libllama.so.0': 'libllama.so.0.7.0'} or problems \
++                or unpinned:
+             raise AssertionError(f'install_links mismatch: {links!r} '
+                                  f'{problems!r}')
+         if links_sha != hashlib.sha256(
+                 b'{"libllama.so":"libllama.so.0",'
+                 b'"libllama.so.0":"libllama.so.0.7.0"}').hexdigest():
+             raise AssertionError('install_links_sha256 digest mismatch')
++        if links_digest({'b': 'x', 'a': 'y'}) != hashlib.sha256(
++                b'{"a":"y","b":"x"}').hexdigest():
++            raise AssertionError('install_links digest is not key-sorted')
+         if links_digest({'a': 'b\nc -> d'}) == links_digest(
+                 {'a': 'b', 'c': 'd'}):
+             raise AssertionError('install_links digest is not injective')
+@@ -1145,10 +1166,28 @@ def _install_identity_selftest():
+             raise AssertionError('newline member name not a problem')
+         os.unlink(os.path.join(directory, 'lib\nx.so'))
+         os.makedirs(os.path.join(directory, 'glibc-hwcaps', 'x86-64-v3'))
+-        if install_links(server)[2] != ['glibc-hwcaps:not-regular-or-symlink']:
+-            raise AssertionError('subdirectory not reported as a problem')
++        if install_links(server)[2] != [
++                'glibc-hwcaps:loader-searched-subdirectory']:
++            raise AssertionError('glibc-hwcaps not reported as a problem')
+         os.rmdir(os.path.join(directory, 'glibc-hwcaps', 'x86-64-v3'))
+         os.rmdir(os.path.join(directory, 'glibc-hwcaps'))
++        os.symlink(tempfile.gettempdir(), os.path.join(directory, 'glibc-hwcaps'))
++        if install_links(server)[2] != [
++                'glibc-hwcaps:loader-searched-subdirectory']:
++            raise AssertionError('symlinked glibc-hwcaps not reported')
++        os.unlink(os.path.join(directory, 'glibc-hwcaps'))
++        os.symlink(tempfile.gettempdir(), os.path.join(directory, 'libx.so'))
++        if install_links(server)[2] != ['libx.so:link-not-to-member']:
++            raise AssertionError('link to a directory not reported')
++        os.unlink(os.path.join(directory, 'libx.so'))
++        os.mkdir(os.path.join(directory, 'openvino-licensing'))
++        found = install_links(server)
++        if found[2] or found[3] != ['openvino-licensing']:
++            raise AssertionError('other subdirectory not recorded unpinned')
++        os.rmdir(os.path.join(directory, 'openvino-licensing'))
++        partial = {k: v for k, v in tree.items() if k != 'libllama.so.0.7.1'}
++        if install_links(server, partial)[2] != ['libllama.so.0.7.1:not-hashed']:
++            raise AssertionError('member missing from install_tree not reported')
+         lib = os.path.join(directory, 'libllama.so.0.7.0')
+         os.chmod(lib, 0)
+         try:
+@@ -1373,7 +1412,8 @@ def main(argv=None):
+ 
+         server_sha = sha256_file(server_real)
+         tree, tree_sha = install_tree(server_real)
+-        links, links_sha, link_problems = install_links(server_real)
++        links, links_sha, link_problems, unpinned = install_links(
++            server_real, tree)
+         if link_problems:
+             raise SetupError('install-tree-unpinnable:'
+                              + ';'.join(link_problems[:8]))
+@@ -1392,6 +1432,7 @@ def main(argv=None):
+             'install_tree_sha256': tree_sha,
+             'install_links': links,
+             'install_links_sha256': links_sha,
++            'install_unpinned': unpinned,
+             'server_impl_sha256': impl_sha,
+         })
+         receipt['probe']['sha256'] = probe_sha

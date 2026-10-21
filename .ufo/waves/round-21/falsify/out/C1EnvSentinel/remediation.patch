@@ -1,0 +1,58 @@
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -74,15 +74,24 @@
+     the audited repos nor the selftest fixtures can be redirected."""
+     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+     env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1", **extra)
++    # git's default ignore/attributes files live under XDG_CONFIG_HOME or HOME and
++    # GIT_CONFIG_GLOBAL does not cover them; GIT_NO_REPLACE_OBJECTS stops refs/replace/*
++    # from rewriting the commits the audit reads.
++    env.update(XDG_CONFIG_HOME=os.devnull, HOME=os.devnull, GIT_NO_REPLACE_OBJECTS="1")
+     return env
+ 
+ 
++# Repo-local config that changes how `git log` prints, or makes it run a program
++# (log.showSignature runs gpg.program), is overridden on the command line.
++GIT_PINS = ("-c", "log.showSignature=false", "-c", "i18n.logOutputEncoding=UTF-8")
++
++
+ def git(repo, *args, stdin=None, env=None):
+     try:
+-        proc = subprocess.run(["git", "-C", str(repo), *args], input=stdin,
++        proc = subprocess.run(["git", "-C", str(repo), *GIT_PINS, *args], input=stdin,
+                               capture_output=True, text=True,
+                               env=env or git_env())
+-    except OSError as exc:
++    except (OSError, UnicodeDecodeError) as exc:
+         raise EvalError(f"cannot run git: {exc}") from exc
+     if proc.returncode != 0:
+         raise EvalError(f"git {' '.join(args)} in {repo}: rc={proc.returncode} "
+@@ -280,6 +289,19 @@
+     return rounds
+ 
+ 
++def assert_plain_repo(repo):
++    """Refuse a path that is not a repository's top level, or a repository whose
++    own state (shallow boundary, grafts, object alternates) changes which commits
++    the audit can see."""
++    if Path(git(repo, "rev-parse", "--show-toplevel").strip()).resolve() != repo:
++        raise EvalError(f"{repo}: not a repository top level")
++    if git(repo, "rev-parse", "--is-shallow-repository").strip() != "false":
++        raise EvalError(f"{repo}: shallow repository")
++    for item in ("objects/info/alternates", "info/grafts"):
++        if (repo / git(repo, "rev-parse", "--git-path", item).strip()).exists():
++            raise EvalError(f"{repo}: {item} present")
++
++
+ def run(args):
+     lane_repo = Path(args.lane_repo).resolve()
+     fleet_repo = Path(args.fleet_repo).resolve()
+@@ -295,6 +317,8 @@
+         raise EvalError("no rounds selected")
+     git(lane_repo, "rev-parse", "--verify", f"{args.branch}^{{commit}}")
+     git(fleet_repo, "rev-parse", "--verify", "HEAD^{commit}")
++    for repo in (lane_repo, fleet_repo):
++        assert_plain_repo(repo)
+     results = [audit_round(lane_repo, fleet_repo, args.branch, args.lane, r,
+                            overrides.get(r)) for r in rounds]
+     errata = load_errata(args, lane_repo)

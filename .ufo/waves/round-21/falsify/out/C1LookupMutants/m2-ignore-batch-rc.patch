@@ -1,0 +1,15 @@
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -98,8 +98,10 @@
+     if not tokens:
+         return status
+     for repo in repos:
+-        out = git(repo, "cat-file", "--batch-check",
+-                  stdin="".join(f"{t}{peel}\n" for t in tokens))
++        out = subprocess.run(
++            ["git", "-C", str(repo), "cat-file", "--batch-check"],
++            input="".join(f"{t}{peel}\n" for t in tokens), capture_output=True,
++            text=True, env=git_env()).stdout
+         lines = out.split("\n")[:len(tokens)]
+         if len(lines) != len(tokens):
+             raise EvalError(f"cat-file --batch-check in {repo}: short output")

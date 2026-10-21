@@ -1,0 +1,54 @@
++ python3 probe.py --lane /tmp/kama-r21-KnowledgeAccuracy/lane --work /tmp/kama-r21-KnowledgeAccuracy/probe-work --tree /home/vgpnk/.local/opt/llama-b11755/llama-server --receipt /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/runs/b76727f3/live-receipt.json --r18 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18
+== 1 gate boundary scenarios: gate.validate() on the round-21 v3 fixture
+[S0 base] VALID kw={} problems=[]
+[S1 block dropped, default] VALID kw={} problems=[]
+[S1 block dropped, require] INVALID kw={'require_links': True} problems=['--require-install-links given but receipt has no server.install_links block']
+[S1 block dropped, pin=base] INVALID kw={'expect_links': '83bdd3ccfa67701a8531e8fad561d5765c61410f060eb203c4646521749f704e'} problems=['--expect-install-links-sha256 given but receipt has no server.install_links_sha256 digest']
+[S2 empty map + null digest, default] VALID kw={} problems=[]
+[S2 empty map + null digest, require] VALID kw={'require_links': True} problems=[]
+[S2 empty map + null digest, pin=base] INVALID kw={'expect_links': '83bdd3ccfa67701a8531e8fad561d5765c61410f060eb203c4646521749f704e'} problems=['--expect-install-links-sha256 given but receipt has no server.install_links_sha256 digest']
+[S3 empty map + digest({}), pin=base] INVALID kw={'expect_links': '83bdd3ccfa67701a8531e8fad561d5765c61410f060eb203c4646521749f704e'} problems=['server.install_links_sha256 44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a != expected 83bdd3ccfa67701a8531e8fad561d5765c61410f060eb203c4646521749f704e']
+[S4 non-empty map + null digest] INVALID kw={} problems=['server.install_links_sha256 None is not a 64-char lowercase hex string']
+[S5 './' same-directory target] INVALID kw={} problems=["server.install_links['libllama.so.0']: target './libllama.so' leaves the pinned directory"]
+[S6 consistent retarget, default] VALID kw={} problems=[]
+[S6 consistent retarget, pin=base] INVALID kw={'expect_links': '83bdd3ccfa67701a8531e8fad561d5765c61410f060eb203c4646521749f704e'} problems=['server.install_links_sha256 439b8c3f77d6efb84e315c9386c23b22f4071be57b5a0c4b50f3c0b5c87eaf9c != expected 83bdd3ccfa67701a8531e8fad561d5765c61410f060eb203c4646521749f704e']
+[S7 link name == regular member] INVALID kw={} problems=["server.install_links['llama-server'] is also a regular install_tree member"]
+[S8 dangling chain] INVALID kw={} problems=["server.install_links['libllama.so.0']: chain ends at 'missing.so', not a pinned install_tree member"]
+[S9 loop] INVALID kw={} problems=["server.install_links['a.so']: symlink loop", "server.install_links['b.so']: symlink loop"]
+[S10 '../x/' target] INVALID kw={} problems=["server.install_links['libllama.so.0']: target '../x/libllama.so' leaves the pinned directory"]
+[S11 producer setup-error skeleton] INVALID kw={} problems=['server.install_tree is empty']
+== 2 CLI exit codes: check-receipt.py on the same mutations
+exit=0 [drop-block]  :: VALID /tmp/kama-r21-KnowledgeAccuracy/probe-work/drop-block.json
+exit=1 [drop-block] --require-install-links :: INVALID /tmp/kama-r21-KnowledgeAccuracy/probe-work/drop-block.json: 1 problem(s) |   - --require-install-links given but receipt has no server.install_links block
+exit=0 [empty-null] --require-install-links :: VALID /tmp/kama-r21-KnowledgeAccuracy/probe-work/empty-null.json
+exit=1 [empty-null] --expect-install-links-sha256 83bdd3ccfa67701a8531e8fad561d5765c61410f060eb203c4646521749f704e :: INVALID /tmp/kama-r21-KnowledgeAccuracy/probe-work/empty-null.json: 1 problem(s) |   - --expect-install-links-sha256 given but receipt has no server.install_links_sha256 digest
+exit=1 [dot-target]  :: INVALID /tmp/kama-r21-KnowledgeAccuracy/probe-work/dot-target.json: 1 problem(s) |   - server.install_links['libllama.so.0']: target './libllama.so' leaves the pinned directory
+== 3 producer install_tree / install_links on a synthetic tree (fault injection)
+unmodified: regular ['libllama.so.0.7.0', 'libllama.so.0.7.1', 'llama-server'] links {'libllama.so.0': 'libllama.so.0.7.0'} problems []
+injected EIO on libllama.so.0.7.1: regular ['libllama.so.0.7.0', 'llama-server'] tree_sha changed True install_links problems []
+chmod 000 (euid 1000): regular ['libllama.so.0.7.0', 'llama-server'] problems ['libllama.so.0.7.1:unreadable']
+name 'lib\x01x.so' -> problems ["'lib\\x01x.so':control-character-in-name"]
+name 'lib\x7fx.so' -> problems []
+name 'lib\x85x.so' -> problems []
+== 4 glibc-hwcaps loader order (gcc stubs, RUNPATH=$ORIGIN, env -i)
+A glibc-hwcaps/x86-64-v3 copy present: prog exit 1 (1 = hwcaps copy, 2 = base)
+A glibc-hwcaps removed:                prog exit 2
+B symlink glibc-hwcaps -> ../outside:  prog exit 1 (1 = loaded from outside the tree)
+  trace: ['21-KnowledgeAccuracy/probe-work/hwcaps/tree/glibc-hwcaps/x86-64-v4/libprobe.so.0', '21-KnowledgeAccuracy/probe-work/hwcaps/tree/glibc-hwcaps/x86-64-v3/libprobe.so.0']
+  producer install_links {'glibc-hwcaps': '../outside'} problems [] regular ['libprobe.so.0', 'prog']
+  gate chain rule for 'glibc-hwcaps': target '../outside' leaves the pinned directory
+== 5 real install tree (read-only) vs live receipt
+producer install_tree_sha256 6c216313a88d71b141bc62f684b8f95c040710ff050801b13521861826785a2c regular 51
+receipt  install_tree_sha256 6c216313a88d71b141bc62f684b8f95c040710ff050801b13521861826785a2c regular 51
+producer install_links_sha256 5cb9f4865c8e1315dbd1baa99310c9bc65ddcf469929488359c66587b6470060 links 10 problems []
+receipt  install_links_sha256 5cb9f4865c8e1315dbd1baa99310c9bc65ddcf469929488359c66587b6470060 links 10
+maps equal: links True | tree True
+line-joined 'name -> target' digest (pre-canonical): b58f1b4df160c4e2accb95bac964a5648d24fc31e769f8044296a1fa431b9e10
+== 6 round-18 v3 receipts through the current gate (CLI)
+live/receipt-1.json: default exit 0; --require-install-links exit 1
+live/receipt-2.json: default exit 0; --require-install-links exit 1
+live/receipt-3.json: default exit 0; --require-install-links exit 1
+live-recovery/receipt-1.json: default exit 0; --require-install-links exit 1
+live-recovery/receipt-2.json: default exit 0; --require-install-links exit 1
+live-recovery/receipt-3.json: default exit 0; --require-install-links exit 1
+probe-done

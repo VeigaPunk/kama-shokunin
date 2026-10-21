@@ -1,0 +1,26 @@
+VERDICT: partial - the scoped 9-finding detector result holds, but no 9→0 repair or scalar calibration gain is measured
+Target: Round-21 C1 wording in `corpus/lessons/round-21.md` §Declared claims and SCORECARD.md if updated.
+Axes: calibration (assigned-lowest, 7) is directly implicated; the new runnable audit is at most an operability artifact (8). C2 is unaffected.
+
+## Counterexample and evidence
+
+- The “all defects already known by the closure” premise is not supported for the R20 closure. Its MANIFEST entry records D1 (bad R20 hash) plus D2 (four R20 omissions): five findings. The detector's other four are one R10 and three R18 omissions. The R10 closure did record commit `4066035` as post-review work, but its note does not call out the report/Landed discrepancy; do not infer private reviewer knowledge from silence. Source trail: `corpus/lessons/round-21.md:10-19`, `.ufo/waves/round-21/build/advice/ErrataR18R10.md:18-26`, `AuditReport10.md:14-26`, `AuditReport18.md:13-27`, `AuditReport20.md:20-42`.
+- A detector over known historical labels can still validate a detector if checked against an independent hand-derived reference; that is a bounded retrospective performance result, not discovery of all nine or repair of their reports. Here the lesson reports 11 per-report recounts, 0 FP/FN on the named kinds; retained R10/R18/R20 recounts agree with the tool. This is evidence for the bounded test, not an independent sample of future reports.
+- Reproduction (isolated clone at `a6617149722c73d90e142fbdc8154d6967055f7e`; `python3 -B` avoids bytecode writes):
+  - `python3 -B tools/report-landing-audit.py --lane-repo /tmp/kama-r21-C1ClaimAdmissibility/lane --fleet-repo /home/vgpnk/Projects/shokunin --branch master --rounds 10-20 --no-errata --json` — exit 1; stdout summary: reports=11, required_commits=42, defects=9 (1 `unresolved-full-hash`, 8 `landed-omitted`), status=failed.
+  - Same command without `--no-errata` — exit 0; stdout summary still defects=9, but corrected=9 / uncorrected=0 / status=clean. The ledger labels findings; it does not alter the reports.
+  - `python3 -B tools/report-landing-audit.py --selftest` — exit 0; stdout `selftest cases=32 failed=0`.
+  - `git -C /tmp/kama-r21-C1ClaimAdmissibility/lane cat-file -e 7a6bc911f9eb7dbea9e3b81f5f2449ecda10096d:tools/report-landing-audit.py` — exit 128; stderr says the path exists on disk but not in that base commit. There is no frozen detector result at round start, so “0 before → 9 after” is not a measured detector comparison.
+  - `python3 -B tools/report-landing-audit.py --lane-repo /tmp/kama-r21-C1ClaimAdmissibility/lane --fleet-repo /home/vgpnk/Projects/shokunin --branch master --rounds 1,2,4,6-20 --no-errata --json` — exit 1; stdout summary defects=19, of which 10 are from R1-9. `AuditEarlyRounds.md:20-40` shows 9/10 early raw findings are format/extractor artifacts and one is substantive; that wider mixed-format total is not an admissible like-for-like denominator.
+  - `git -C /home/vgpnk/Projects/shokunin log --oneline -- .ufo/reports/round-10/kama.md` — exit 0, one commit `b69b7ba`; R18 — exit 0, one commit `23bdc3f`; R20 — exit 0, one commit `04eb5d2`. The current reports still contain the old cited/omitted material; no report repair is evidenced by the ledger.
+- Therefore the admissible result is **9 findings, 9 independently recounted on the selected 11-report set, 0 observed FP/FN**—not a before→after count. The underlying report-defect count remains **9→9**. `corrected=9 / uncorrected=0` is only ledger annotation coverage, not defect removal.
+- The claimed R21-draft pass is not in the official `commands.json` C1 command entries: those record base absence, selftest, raw R10-20 and ledger R10-20 only. Treat the draft pass as separate until its own argv/stdout/exit receipt is cited.
+- Wording precision: `tools/report-landing-audit.py:61-64` defines **five** defect kinds; only two occur in this sample. “Detects four finite defect kinds” should say five defined kinds (two observed), unless it explicitly means four other zero-count kinds plus the observed classes.
+
+## Calibration judgment and smallest safe correction
+
+AXES.md defines calibration as self-assessment quality, with SCORECARD/SHONEN matching observed state. This audit checks report citation/landing integrity, not SCORECARD/SHONEN statements; it is calibration-adjacent evidence, not a direct measure of the whole axis. Keep **7→7** as an unchanged self-assessment: defensible as no scalar gain, not evidence of an improvement score. The target SCORECARD snapshot at `a661714` still ends with R20 results; it has no R21 measurement entry.
+
+Smallest safe wording: “C1 adds a report-landing detector (five defined classes; two observed). On the selected R10-20 reports it found 9 raw findings; 11 hand recounts reported 9/9 agreement with 0 observed FP/FN. Reports remain unchanged (9 raw findings before/after); the ledger marks all 9, which is annotation, not repair. This is a bounded retrospective detector validation; calibration remains 7→7 with no scalar increase. Round-21 draft pass, if retained, is a separate n=1 check and must carry its own receipt.”
+
+No lane source, scorecard, report, fleet file, or live model was modified. No tools were installed.

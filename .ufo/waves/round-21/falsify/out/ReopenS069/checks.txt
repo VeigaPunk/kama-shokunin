@@ -1,0 +1,27 @@
+ReopenS069 - executed checks (access date: 2026-10-21, from `date -u +%F`)
+Lane not modified. Scratch /tmp/kama-r21-ReopenS069 removed at the end (see report).
+
+1. curl -sS -f -o hash.go.b64 -w 'hash.go HTTP %{http_code}' '<go.googlesource.com/mod/+/refs/tags/v0.42.0/sumdb/dirhash/hash.go>?format=TEXT' && base64 -d > hash.go && sha256sum
+   -> HTTP 200 text/plain; decoded sha256 24de6a735c1605e39b6381e6962787faa5c59adab896fb66dbc1ac8b6afcb297; exit 0
+2. same for zip/zip.go
+   -> HTTP 200 text/plain; decoded sha256 b749c43c2ded96ed19307cedb2c8a70d1375cc2ef46977b225ad441c67be76aa; exit 0
+3. git ls-remote https://go.googlesource.com/mod refs/tags/v0.42.0 'refs/tags/v0.42.0^{}'
+   -> b5136e5ba156da612a1efc6e49b55988a134a5e0  refs/tags/v0.42.0 (no peeled line: lightweight tag); exit 0
+4. curl -o /dev/null -w 'HTTP %{http_code}' on the two HTML pages -> 200, 200; exit 0
+5. git clone -q --no-checkout <lane> <scratch>/lane; git show b76727f31e522763ce24e43d6ec86d21b507a11f:corpus/SOURCES.md > SOURCES.b76727f.md
+   cmp <lane>/corpus/SOURCES.md SOURCES.b76727f.md -> exit 0 (on-disk file == measured commit)
+6. contract v1 census, cwd = scratch lane at b76727f (commands from CORPUS.md lines 133-147):
+   rows 74; malformed 0; tier A=70 B=1 C=3; status mined=60 queued=7 rejected=7; duplicate ids none;
+   enum/tier-inflation none; mined used-by missing none; S069 NF=13; corpus/lessons/round-21.md exists; all exit 0
+7. grep (tool) on decoded sources: zip.go:42 "// • Symbolic links and other irregular files are not allowed."
+   hash.go:76 "return os.Open(filepath.Join(dir, strings.TrimPrefix(name, prefix)))"; one match each
+8. go version -> go1.27.3 linux/amd64; command -v go -> /home/vgpnk/.local/bin/go -> /home/vgpnk/.local/opt/go1.27.3/go/bin/go; exit 0
+   (toolchain pre-existing; installed by sibling SrcGoDirhash-6 per its advice; this seat installed nothing)
+9. GOTOOLCHAIN=local go mod init probe && go get golang.org/x/mod@v0.42.0 -> exit 0
+   cmp decoded hash.go vs module-cache dirhash/hash.go -> exit 0; cmp decoded zip.go vs module-cache zip/zip.go -> exit 0
+10. go vet . -> exit 0; go run . <work> > out/ReopenS069/probe-output.txt -> exit 0 (see probe-output.txt; main.go is the probe)
+11. find <dir> -type f -printf '%P\n' | sort -> a.txt (exit 0)
+    find <dir> -printf '%P %y\n' | sort -> "a.txt f", "link.txt l", "" d (exit 0)
+12. sed -n '70,148p' CORPUS.md vs sed -n '3,81p' .ufo/waves/kaika/SOURCES-CONTRACT-v1.md; diff -> exit 1: 3 hunks, only heading depth
+    (### Shape / ### Rules / ### Census in CORPUS.md vs ## in kaika file); 79 lines each
+13. Reads: /home/vgpnk/.omp/agent/RULES.md (tooling rules). No install, upgrade, or pacman transaction by this seat.

@@ -1,0 +1,17 @@
+--- /tmp/kama-r21-C2LiveReceiptVerify/gate-b76727f3.py	2026-10-21 08:25:10.199967834 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/tests/llamacpp-live/check-receipt.py	2026-10-21 08:21:47.835408739 -0300
+@@ -2021,6 +2021,14 @@
+     cases.append(("links-canonical-digest-valid", canonical,
+                   expects + ["--expect-install-links-sha256",
+                              canonical["server"]["install_links_sha256"]], 0))
++    # Non-ASCII link name: the canonical form escapes it (\u00e9); a
++    # non-escaping encoder would produce a different digest.
++    unicode_links = copy.deepcopy(base)
++    unicode_links["server"]["install_links"] = dict(
++        SELFTEST_LINKS, **{"lib\u00e9.so": "libllama.so.0"})
++    unicode_links["server"]["install_links_sha256"] = (
++        "9e226427f148781fc333f5a86313104c49363043e03149c651457cd6e55b1758")
++    cases.append(("links-unicode-canonical-valid", unicode_links, expects, 0))
+     mut("models-entry-missing-id",
+         lambda r: r["captures"]["models"].update(body=json.dumps(
+             {"data": [{"id": ALIAS, "owned_by": "llamacpp"},

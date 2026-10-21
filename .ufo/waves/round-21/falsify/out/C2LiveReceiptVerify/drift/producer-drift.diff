@@ -1,0 +1,12 @@
+--- /tmp/kama-r21-C2LiveReceiptVerify/producer-b76727f3.py	2026-10-21 08:24:56.661914208 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-llamacpp-live.py	2026-10-21 08:23:17.484385292 -0300
+@@ -1128,6 +1128,9 @@
+                 b'{"libllama.so":"libllama.so.0",'
+                 b'"libllama.so.0":"libllama.so.0.7.0"}').hexdigest():
+             raise AssertionError('install_links_sha256 digest mismatch')
++        if links_digest({'b': 'x', 'a': 'y'}) != hashlib.sha256(
++                b'{"a":"y","b":"x"}').hexdigest():
++            raise AssertionError('install_links digest is not key-sorted')
+         if links_digest({'a': 'b\nc -> d'}) == links_digest(
+                 {'a': 'b', 'c': 'd'}):
+             raise AssertionError('install_links digest is not injective')

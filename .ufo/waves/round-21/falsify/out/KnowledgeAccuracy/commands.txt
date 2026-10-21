@@ -1,0 +1,30 @@
+KnowledgeAccuracy round-21 falsify: commands executed and observed exit codes.
+Lane clone: /tmp/kama-r21-KnowledgeAccuracy/lane at a6617149722c73d90e142fbdc8154d6967055f7e (scratch; deleted at finish).
+No server was started. The real install tree was read only. No tool was installed or updated.
+
+git cat-file -t a6617149722c73d90e142fbdc8154d6967055f7e                     -> commit, exit 0
+git clone -q <fleet> <scratch>/lane && git checkout -q a6617149...            -> exit 0
+git cat-file -t 7a6bc911f9eb7dbea9e3b81f5f2449ecda10096d                      -> commit, exit 0
+git cat-file -t b76727f31e522763ce24e43d6ec86d21b507a11f                      -> commit, exit 0
+git diff --quiet b76727f3 a6617149 -- tools tests corpus/knowledge corpus/SOURCES.md -> exit 0 (identical)
+git diff 7a6bc911 a6617149 -- tools/kama-llamacpp-live.py                     -> first hunk @@ -202 (install_tree body unchanged), exit 0
+curl -sSfL <nix 2.34.1 raw index.md @ 26842787> ; sed -n 20,40p ; grep symlink -> line 29 `symlink = str("target"), str(target);`, exit 0
+curl -sSfL api.github.com/repos/NixOS/nix/git/refs/tags/2.34.1               -> HTTP 403, exit 22 (not used)
+git ls-remote --tags https://github.com/NixOS/nix.git refs/tags/2.34.1 ...   -> 26842787496f2293c676fb36db38dacfd63497e0 refs/tags/2.34.1^{}, exit 0
+curl -sSfL <nix raw file-system-object.md and content-address.md @ 26842787> ; grep -i symlink -> exit 0
+readelf -d llama-server | grep NEEDED|RUNPATH ; (libllama-server-impl.so, libllama.so.0.7.0) -> RUNPATH [$ORIGIN], exit 0
+zcat /usr/share/man/man8/ld.so.8.gz | grep -c -i symlink                      -> 0 matches, exit 1
+zcat /usr/share/man/man8/ld.so.8.gz | grep -n -i hwcap                       -> lines 214-901 incl. 901 `glibc-hwcaps/x86-64-v3:glibc-hwcaps/x86-64-v2:.`, exit 0
+cat artifact://44625 (man7 ld.so(8), man-pages 6.19) ; grep -c -i symlink    -> 0, exit 1; hwcaps NOTES line present, exit 0
+pacman -Qo /usr/share/man/man8/ld.so.8.gz ; pacman -Qi man-pages ; pacman -Q glibc  -> man-pages 6.19-1, glibc 2.44+r50, exit 0 each (queries only)
+ldconfig -p | grep -c llama                                                    -> 0, grep exit 1
+grep -rh "opt|kama|llama" /etc/ld.so.conf /etc/ld.so.conf.d/ ; /usr/lib/ld.so.conf.d -> no ~/.local/opt entry, exit 1
+grep -rn ldconfig tools tests corpus/knowledge (lane)                          -> only supplement prose, no tool code
+python3 tests/llamacpp-live/check-receipt.py --selftest                       -> "11 VALID and 1 NOT-EVALUATED ...; 91 mutations", exit 0
+python3 tests/llamacpp-live/install-links-grid.py --selftest                  -> selftest cases=13 failed=0, exit 0
+python3 tools/kama-llamacpp-live.py --selftest                                -> selftest: ok, exit 0
+python3 tests/llamacpp-live/install-links-grid.py (current arm, real tree)    -> link 13/13 subdir 1/1 regular 3/3 type 1/1 null 0/1 wrong=0 real_tree_gate_clean=True, exit 0
+python3 tests/llamacpp-live/install-links-grid.py --arm both                  -> frozen link 0/13 subdir 0/1; back_compat equal=True; exit 1 (expected)
+probe.py (this directory)  --lane <scratch lane> --tree ~/.local/opt/llama-b11755/llama-server --receipt <live-receipt.json> --r18 <round-18>  -> probe-done, exit 0
+gcc --version -> gcc (GCC) 16.2.1 ; readelf --version -> GNU Binutils 2.47 ; python3 --version -> 3.14.8
+web fetch (reader): man7 ldconfig(8) (man-pages 6.19, footer 2026-08-03); man7 ld.so(8) (6.19, footer 2026-08-03); nix.dev NAR 2.34 -> fetched

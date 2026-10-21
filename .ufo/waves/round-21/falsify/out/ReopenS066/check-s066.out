@@ -1,0 +1,65 @@
+PASS man7 HTML sha256 equals the pinned 2026-10-21 fetch :: 6a81540a534692ed7cb6d5434275e08b3ade388311bdb88f1e4e506be2bfde38
+INFO man7 DESCRIPTION paragraphs (blank-line split) :: 6
+INFO   para 1 :: ldconfig creates the necessary links and cache to the most recent shared libraries found in the directories specified on...
+INFO   para 2 :: The cache is used by the run-time linker, ld.so or ld-linux.so. ldconfig checks the header and filenames of the librarie...
+INFO   para 3 :: ldconfig will look only at files that are named lib*.so* (for regular shared objects) or ld-*.so* (for the dynamic loade...
+INFO   para 4 :: libfoo.so -> libfoo.so.1 -> libfoo.so.1.12
+INFO   para 5 :: Failure to follow this pattern may result in compatibility issues after an upgrade.
+INFO   para 6 :: If the file /etc/tunables.conf exists, it contains tunables to be applied to all processes. These tunables are stored in...
+PASS man7 DESCRIPTION paragraph count == upstream 6.19 troff chunk count :: 6 vs 6
+PASS man7 DESCRIPTION word tokens == upstream 6.19 troff, paragraph by paragraph
+PASS host 6.19-1 DESCRIPTION chunks == upstream 6.19 chunks
+INFO upstream 6.19 tarball .TH :: .TH ldconfig 8 2026-08-03 "Linux man-pages (unreleased)"
+INFO host man-pages 6.19-1 .TH :: .TH ldconfig 8 2026-08-03 "Linux man-pages 6.19"
+PASS man7 footer reads 'Linux man-pages 6.19' and date 2026-08-03
+PASS upstream .TH date 2026-08-03
+INFO upstream .TH names the version as '(unreleased)' :: True
+PASS round-21.md §Gate row for S066 present
+PASS Gate row has '§DESCRIPTION ¶N: "..."' form
+PASS Gate quote <= 25 words :: 12 words: 'where the middle file (libfoo.so.1 here) is the SONAME for the library'
+PASS Gate quote verbatim in man7 DESCRIPTION (whitespace-normalised) :: paragraph(s) [3]
+PASS Gate ¶ number equals the paragraph holding the quote :: Gate ¶3, found ¶[3]
+PASS Gate quote verbatim in upstream 6.19 troff :: chunk(s) [3]
+PASS Gate URL equals the row URL
+PASS exactly one S066 row :: 1
+PASS S066 row has 11 cells (awk NF 13) :: 11
+INFO row.id :: S066
+INFO row.source :: Linux ldconfig(8) — https://man7.org/linux/man-pages/man8/ldconfig.8.html
+INFO row.kind :: docs
+INFO row.tier :: A
+INFO row.scope :: documented soname link layout (linker name → SONAME → real name) on glibc systems; not ldconfig's implementation and not the DT_SONAME tag
+INFO row.anchor :: §DESCRIPTION ¶1 and ¶3 (SONAME chain example `libfoo.so -> libfoo.so.1 -> libfoo.so.1.12`); man-pages 6.19, page dated 2026-08-03; opened 2026-10-21
+INFO row.teaches :: The SONAME is a symlink in the middle of a chain that ldconfig creates; which file it names is install state that a regular-file digest cannot see.
+INFO row.status :: mined
+INFO row.opened :: 2026-10-21
+INFO row.recheck :: on-release
+INFO row.used_by :: corpus/knowledge/llamacpp-loading-lifecycle.md, corpus/lessons/round-21.md
+PASS kind in contract enum :: docs
+PASS tier is A :: A
+PASS status is mined :: mined
+PASS opened is ISO 2026-10-21 :: 2026-10-21
+PASS recheck is a valid cadence or date :: on-release
+PASS mined row has >= 1 used-by path :: 2
+PASS used-by path exists and cites S066: corpus/knowledge/llamacpp-loading-lifecycle.md
+PASS used-by path exists and cites S066: corpus/lessons/round-21.md
+PASS anchor cites §DESCRIPTION ¶1 and the first ¶ holds 'creates the necessary links'
+FAIL anchor '¶3' holds the chain example (example is its own indented block) :: example found in ¶[4]
+PASS teaches cell contains no pipe (census rule)
+INFO man7 page occurrences of 'DT_' :: 0
+INFO man7 page occurrences of 'ELF' :: 0
+INFO man7 page occurrences of 'DT_SONAME' :: 0
+INFO man7 page occurrences of 'symlink' :: 0
+INFO man7 page occurrences of 'symbolic link' :: 1
+INFO man7 page occurrences of 'linker name' :: 0
+INFO man7 page occurrences of 'real name' :: 0
+INFO man7 page occurrences of 'digest' :: 0
+INFO man7 page occurrences of 'install' :: 0
+INFO man7 page occurrences of 'glibc' :: 4
+INFO man7 page occurrences of 'expects' :: 1
+INFO man7 page occurrences of 'creates' :: 1
+PASS man7 page never names DT_SONAME (scope exclusion is consistent)
+PASS man7 page gives glibc version notes (scope 'glibc systems')
+PASS ¶1 says ldconfig creates 'the necessary links'
+PASS ¶3 says ldconfig 'expects a certain pattern' for symbolic links
+PASS 'Failure to follow this pattern...' sentence present (paragraph 5)
+SUMMARY checks=31 pass=30 fail=1

@@ -1,0 +1,114 @@
+--- PIN:tools/report-landing-audit.py
++++ worktree:tools/report-landing-audit.py
+@@ -167,5 +167,13 @@
+     rel = f".ufo/reports/round-{rnd}/{lane}.md"
+     report = Path(path) if path else Path(fleet_repo) / rel
+-    text = read_report(report)
++    if path:
++        text = read_report(report)
++    else:
++        # committed fleet bytes, not a possibly edited working-tree copy
++        try:
++            text = git(fleet_repo, "show", f"HEAD:{rel}")
++        except EvalError as exc:
++            raise EvalError(f"round {rnd}: {rel} not committed in fleet "
++                            f"HEAD") from exc
+     cutoff = report_cutoff(fleet_repo, rel)
+     committed = cutoff is not None
+@@ -398,4 +406,5 @@
+             _commit(lane, "round-10: other round", "kama-shokunin", 1170)
+             _commit(lane, "xround-1: prefixed", "kama-shokunin", 1171)
++            edge = _commit(lane, "round-1: at cutoff", "kama-shokunin", 1200)
+             mash = a[:20] + b[20:]
+             rep = fleet / ".ufo/reports/round-1/kama.md"
+@@ -406,10 +415,27 @@
+                 "## Landed changes (commits)\n- `" + a[:9] + "` work\n- `" + b
+                 + "` measure\n- `" + d[:7] + "` rebased\n- `deadbee1` typo\n"
++                "- `" + edge[:10] + "` boundary\n"
+                 "- words: defaced acceded 1234567 20261021 " + "f" * 39 + "\n"
+                 "- short " + "e" * 6 + " and " + a[:7] + "g\n"
+                 "## Before\n" + c[:9] + " cited outside\n",
+                 encoding="utf-8")
++            # author time is the cutoff: committer time 6000 must not move it
+             _commit(fleet, "round-1: kama report", "kama-shokunin", 1200,
+-                    ".ufo/reports/round-1/kama.md")
++                    ".ufo/reports/round-1/kama.md", committed=6000)
++            body = rep.read_text(encoding="utf-8")
++            for when, action in ((1400, "rm"), (1500, "add")):
++                env = git_env(GIT_AUTHOR_NAME="x", GIT_COMMITTER_NAME="x",
++                              GIT_AUTHOR_EMAIL="a@x", GIT_COMMITTER_EMAIL="a@x",
++                              GIT_AUTHOR_DATE=f"@{when} +0000",
++                              GIT_COMMITTER_DATE=f"@{when} +0000")
++                if action == "rm":
++                    git(fleet, "rm", "-q", ".ufo/reports/round-1/kama.md",
++                        env=env)
++                else:
++                    rep.parent.mkdir(parents=True, exist_ok=True)
++                    rep.write_text(body, encoding="utf-8")
++                    git(fleet, "add", ".ufo/reports/round-1/kama.md", env=env)
++                git(fleet, "-c", "commit.gpgsign=false", "commit", "-q", "-m",
++                    f"report {action}", env=env)
+             late = _commit(lane, "round-1: late advice", "kama-shokunin", 1300)
+             base = argparse.Namespace(
+@@ -429,7 +455,10 @@
+                 ("landed-unresolved", "deadbee1")]))
+             check("subject-without-space-required",
+-                  not any(t == b for _, t in kinds) and res["required"] == 4)
++                  not any(t == b for _, t in kinds) and res["required"] == 5)
++            check("boundary-commit-required-not-post", edge not in
++                  res["post_report"] and not any(t == edge for _, t in kinds))
++            check("first-add-cutoff-not-readd", res["cutoff"] == 1200)
+             check("author-exact-other-round-and-prefix-ignored",
+-                  res["round_commits"] == 5)
++                  res["round_commits"] == 6)
+             check("author-time-cutoff-survives-rebase",
+                   d not in res["post_report"])
+@@ -443,5 +472,24 @@
+             check("hex-words-not-citations", not checkable_abbrev("defaced")
+                   and not checkable_abbrev("1234567")
+-                  and checkable_abbrev("deadbee1"))
++                  and checkable_abbrev("deadbee1")
++                  and checkable_abbrev("1" * 40) and checkable_abbrev("f" * 40))
++            blobs = Path(tmp, "blobs")
++            blobs.mkdir()
++            names = []
++            for i in range(1500):
++                (blobs / str(i)).write_text(f"blob {i}\n", encoding="utf-8")
++                names.append(str(blobs / str(i)))
++            oids = git(lane, "hash-object", "-w", "--stdin-paths",
++                       stdin="\n".join(names) + "\n").split()
++            seen, short = {}, None
++            for oid in oids:
++                if oid[:4] in seen and seen[oid[:4]] != oid:
++                    short = oid[:4]
++                    break
++                seen[oid[:4]] = oid
++            check("ambiguous-prefix-is-ambiguous", short is not None
++                  and lookup((lane,), [short]) == {short: "ambiguous"}
++                  and lookup((lane,), [oids[0]]) == {oids[0]: "found"}
++                  and lookup((lane,), ["0" * 40]) == {"0" * 40: "missing"})
+             errata = Path(tmp, "errata.tsv")
+ 
+@@ -485,8 +533,9 @@
+             draft = Path(tmp, "draft.md")
+             draft.write_text("## Landed changes\n" + "\n".join(
+-                x[:12] for x in (a, b, c, d)) + "\n## End\n", encoding="utf-8")
++                x[:12] for x in (a, b, c, d, edge)) + "\n## End\n",
++                encoding="utf-8")
+             rc, doc = run(_ns(base, report=[f"1={draft}"]))
+             check("draft-uses-fleet-cutoff", rc == 0
+-                  and doc["results"][0]["required"] == 4
++                  and doc["results"][0]["required"] == 5
+                   and doc["results"][0]["report_committed"])
+             draft.write_text("## Work performed\n" + a + "\n", encoding="utf-8")
+@@ -502,4 +551,10 @@
+             check("missing-report-is-error",
+                   is_error(lambda: run(_ns(base, rounds="2"))))
++            pristine = rep.read_text(encoding="utf-8")
++            rep.write_text("edited, uncommitted\n", encoding="utf-8")
++            rc, doc = run(base)
++            check("committed-report-bytes-not-worktree", rc == 1 and len(
++                doc["results"][0]["defects"]) == 3)
++            rep.write_text(pristine, encoding="utf-8")
+             check("reversed-range-is-error",
+                   is_error(lambda: run(_ns(base, rounds="3-2"))))

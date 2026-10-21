@@ -1,0 +1,57 @@
+ReopenS068 verification log (seat KamaR21.ReopenS068), access date 2026-10-21
+Lane: /home/vgpnk/Projects/shokunin/kama-shokunin (read-only; no lane writes; no installs)
+Cwd for lane commands: lane root. Scratch /tmp/kama-r21-ReopenS068 (removed at end).
+
+[lane reads]
+grep -n "S068" corpus/SOURCES.md                                  exit=0  -> line 80
+ls -l corpus/knowledge/llamacpp-loading-lifecycle.md corpus/lessons/round-21.md  exit=0  -> both present
+grep -n "S068" corpus/knowledge/llamacpp-loading-lifecycle.md    exit=0  -> lines 330, 339
+grep -n "S068" corpus/lessons/round-21.md                         exit=0  -> line 44
+grep -rn "S068" corpus/                                           exit=0  -> 4 matches in 3 files (SOURCES 80; knowledge 330, 339; lesson 44)
+awk -F'|' 'S068 row' corpus/SOURCES.md                            exit=0  -> NF=13; status=mined; used-by=corpus/knowledge/llamacpp-loading-lifecycle.md, corpus/lessons/round-21.md
+awk -F'|' 'S-rows with NF!=13' corpus/SOURCES.md                  exit=0  -> malformed_rows=0
+awk -F'|' 'duplicate ids' corpus/SOURCES.md | sort | uniq -d       exit=0  -> empty
+grep -cE '^\|[[:space:]]*S[0-9]{3,}[[:space:]]*\|' corpus/SOURCES.md exit=0  -> 74
+
+[source, pinned]
+git ls-remote --tags https://github.com/NixOS/nix '2.34.1' '2.34.1^{}'   exit=0
+  2c486b7ccea34fc24321b44e34c0a4aec401d2f4 refs/tags/2.34.1
+  26842787496f2293c676fb36db38dacfd63497e0 refs/tags/2.34.1^{}
+curl -fsSL raw .../NixOS/nix/2.34.1/doc/manual/source/protocols/nix-archive/index.md   exit=0
+curl -fsSL raw .../NixOS/nix/26842787496f2293c676fb36db38dacfd63497e0/.../index.md     exit=0
+sha256sum (both) 11d16341595cdc287935e00bdb8062618ecb43a26c643c5f4cdd709d3b0713f1
+cmp tag vs commit copy                                             exit=0
+index.md line 29 (line-numbered read): symlink = str("target"), str(target);
+index.md line 23: | str("type"), str("symlink") symlink ; line 27: regular ... str("contents"), str(contents);
+index.md line 34: directory-entry ... str("node"), nar-obj ...
+
+[source, row URL (direct HTTP, not the reader)]
+curl -sS -L -w "%{http_code} %{url_effective} redirects=%{num_redirects}" https://nix.dev/manual/nix/2.34/protocols/nix-archive/            exit=0  200 redirects=0
+curl -sS -L -w ... https://nix.dev/manual/nix/2.34/protocols/nix-archive/index.html                                                       exit=0  200 redirects=0
+saved HTML: rendered <title> "Nix Archive (NAR) Format - Nix 2.34.9 Reference Manual"; EBNF symlink line at HTML line 221;
+  Kaitai doc strings at HTML lines 295 ("The type of the node: 'regular', 'directory', or 'symlink'."), 404 ("A symbolic link node."), 413 ("The destination path of the symlink.")
+
+[version drift check]
+git ls-remote --tags https://github.com/NixOS/nix '2.34.9' '2.34.9^{}'  exit=0
+  7aae9ef8f5e4b2b9a6f59c82e955ec6372903a3d refs/tags/2.34.9
+  5fb7eb7d64ba7b78819aa3ac6a7fdd21354910fc refs/tags/2.34.9^{}
+curl -fsSL raw .../2.34.9/.../nix-archive/index.md                  exit=0; sha256 11d16341... ; cmp vs 2.34.1 copy exit=0
+
+[scope and teaches grounding]
+curl -fsSL raw .../2.34.1/src/libutil/archive.cc                    exit=0; sha256 1c1bcf95126b1d7e3d6c67685f2208cd8f9601d94d9f2a9cc314d0eac272b6c0
+  archive.cc line 94-95: else if (st.type == tSymlink) / sink << "type" << "symlink" << "target" << this_.readLink(path);
+curl -fsSL raw .../2.34.1/doc/manual/source/store/file-system-object/content-address.md   exit=0; sha256 6ceb186525633cde6ba0be96bce3cd493f8ceee2cb4217b0b1d03eefffc7a0ac
+  line 14: "The simplest method is to serialise the entire file system object tree into a single binary string, and then hash that binary string, yielding the content address."
+  lines 46-49: "For these reasons, Nix has its very own archive format—the Nix Archive (NAR) format," ... "The exact specification of the Nix Archive format is in [specified here]..."
+curl -fsSL raw .../2.34.1/doc/manual/source/store/file-system-object.md   exit=0; sha256 7697cf3a0b2a3f648c5a0a01bb661db8787b86a3c7b189295ddd598a0e9f9c2d
+  line 17: "An arbitrary string, known as the *target* of the symlink."
+  line 19: "In general, Nix does not assign any semantics to symbolic links."
+curl -fsSL raw .../2.34.1/doc/manual/source/store/store-object/content-address.md   exit=0; sha256 52c27c9a1c0f007e0292446c1e9f437f5deb7292de2d35fa8b3227b71ec12ea5
+  line 4-5: "can also be content-addressed, unless they are input-addressed"
+  line 98-100: "### Nix Archive { #method-nix-archive }" / "This uses the corresponding Nix Archive ... method of file system object content addressing."
+
+[build advice cross-check]
+glob .ufo/waves/round-21/build/advice/SrcNixNar.md  -> present; its archive.cc (1c1bcf95), content-address (6ceb1865) and index.md (11d16341) prefixes reproduce
+
+[tools]
+No installs or upgrades. Used existing curl, git, sha256sum, cmp, awk, grep, sort, uniq.

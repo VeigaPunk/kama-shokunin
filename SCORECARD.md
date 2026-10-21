@@ -992,3 +992,42 @@ The post-S065 census is rows57→65: tier A54→62/C3; mined46→52, queued5→6
 rejected6→7, missing0. Validation/census both exit0; six W04 duplicate-URL
 warnings (S031/S043/S056/S060/S064/S065) are explicit. Exact streams and exits
 are retained under `runs/9add96e4/`.
+
+## Round 21 — report landing audit and soname-aware install identity
+
+Assigned axes operability 8 + calibration 7 (`../shokunin.conf`); calibration
+is the lowest non-retired assigned axis, below saturation 8, so no stagnation
+waiver. Round start `7a6bc911f9eb7dbea9e3b81f5f2449ecda10096d` (round 20
+admitted by CloseKama20). Lesson: `corpus/lessons/round-21.md`.
+
+### Round-21 measured results — clean committed tree b76727f3
+
+`python3 .ufo/waves/round-21/run.py --recipe .ufo/waves/round-21/recipe.json
+--out .ufo/waves/round-21/runs/b76727f3` on measured commit
+`b76727f31e522763ce24e43d6ec86d21b507a11f`: **28/28 commands met their declared
+exits**, harness exit 0 (`runs/b76727f3/commands.json`).
+
+| Claim | Axis/score | Before → after | Counting command | Evidence |
+|---|---|---|---|---|
+| C1 report landing audit (detector) | calibration 7 → 7 | instrument absent at round start (`git cat-file -e 7a6bc911:tools/report-landing-audit.py` exit 128) → 9 defects detected over the 11 reports of rounds 10–20 (1 unresolved full hash r20; 8 landed omissions r10×1, r18×3, r20×4), 42 required / 4 post-report commits, each hand-confirmed by an independent build-seat recount (0 FP, 0 FN); ledger run corrected 9, uncorrected 0 (bookkeeping, not the credited move); selftest 32/32 | `python3 tools/report-landing-audit.py --rounds 10-20 --no-errata --json` (exit 1) and `--rounds 10-20 --json` (exit 0) | `runs/b76727f3/c1-audit-{raw,ledger,selftest}.stdout`; `build/advice/AuditReport1{0..9}.md`, `AuditReport20.md` |
+| C2 soname-aware install identity | operability 8 → 8 | real b11755 tree, 19 cells: frozen arm (install_tree at 7a6bc911) link 0/13, subdir 0/1, regular 3/3, type 1/1, null 0/1 → current link 13/13, subdir 1/1, regular 3/3, type 1/1, null 0/1, real tree gate-clean; `install_tree_sha256` unchanged (6c216313…); gate selftest 6+1/77 → 11+1/91; live v3 receipt with 10 links (`5cb9f486…`) VALID pinned with `--require-install-links`, INVALID on a wrong links pin; three R18 legacy receipts VALID, INVALID under `--require-install-links` | `python3 tests/llamacpp-live/install-links-grid.py --arm frozen --json` (exit 1), `--arm current --json` (exit 0), `--arm both --json` (exit 1) | `runs/b76727f3/c2-*.stdout`, `runs/b76727f3/live-receipt.json` |
+
+No-harm reruns in the same recipe: error-verdict census pair/selftest, install-tree
+grid selftest, GGUF selftest and capability measure, citation provenance and
+selftest, SOURCES append-only guard (9 appended rows, no violations), snapshot
+selftest (RESULT pass=30 fail=0), census validate/census — all at their declared
+exits. Other scores held: freshness 8, coverage 9, depth 7, adjacency 7.
+
+Sources: census rows 65 → 74 (A 62 → 70, B 0 → 1, C 3; mined 52 → 60, queued
+6 → 7, rejected 7), validate exit 0; S066–S069 ground C2, S070–S073 ground C1,
+S074 queued.
+
+Capabilities: no row added. C2 hardens the existing live-receipt capability's
+install pin (wave-1 CapabilityRuleReader); C1 is a calibration instrument, not
+new serving repertoire. Capability window: 1 of 4 rounds since round 20's row.
+
+Planned: obtain the outside non-author round-21 spot-check; remaining frontier —
+historical crash-as-kill leaves, receipt-header minimization, system-library
+(outside-directory) identity, K05/other-engine serving evidence, and an
+unreadable-member fail-closed rule for `install_tree` consumers outside the
+live producer. No next round is started here.

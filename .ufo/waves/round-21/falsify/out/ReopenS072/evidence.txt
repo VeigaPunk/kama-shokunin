@@ -1,0 +1,38 @@
+ReopenS072 evidence (kama round 21, FALSIFY seat). Access date 2026-10-21 (date -u +%F, exit 0).
+Lane read-only: clone of the lane at a6617149 in scratch; worktree read via cmp/read only.
+Scratch /tmp/kama-r21-ReopenS072 removed before yield. Artifacts here: probe.sh, probe.log, help-*-0.45.1.txt.
+
+E1  read https://docs.jj-vcs.dev/latest/cli-reference/ (reader). Heading "## `jj metaedit`"; description para: "Whenever any metadata is updated, the committer name, email, and timestamp are also updated for all rebased commits. The name and email may come from the `JJ_USER` and `JJ_EMAIL` ..."
+E2  curl -fsS --max-time 90 -o cli-reference.html https://docs.jj-vcs.dev/latest/cli-reference/ -> exit 0 (curl-exit=0); 406891 bytes; sha256 5df178565d444fbc99dc4459cdd7c80ac09b67069eb7b22405d3a45c053089ef
+    grep (tool) on raw html: line 10463 holds "the committer name, email, and timestamp are also updated for all rebased commits." (exact, incl. period).
+    Disclaimer lines 8640-8642: "This CLI reference is experimental. It is automatically generated, but / does not match the `jj help` output exactly." / "Run `jj help <COMMAND>` for more authoritative documentation."
+    No version string in the raw html (grep v0.x.y / jj 0.x: no match).
+E3  git ls-remote --tags https://github.com/jj-vcs/jj.git 'refs/tags/v0.45.1*' -> 7c41cdeb16b6b321c64e789a966b6adf723816a5 refs/tags/v0.45.1 (exit 0, ls-remote-v0451-exit=0); no peeled ^{} line (lightweight tag).
+E4  git ls-remote --tags ... 'refs/tags/v0.4[6-9]*' 'refs/tags/v0.5*' -> 7d382314f9420b4b8d932245b49c99492c812b9f v0.46.0; eda79bf7d3627a2b10e3a61a6090f3f6fde3d8f4 v0.5.0; 7bca6854a0a83a0b2ff821f413616181b8c6ee86 v0.5.1 (exit 0, ls-remote-newer-exit=0)
+E5  curl -fsS -o rel-v0.46.0.html https://github.com/jj-vcs/jj/releases/tag/v0.46.0 -> exit 0; grep datetime: 2026-10-07T21:28:17Z ("07 Oct 21:28"); page shows [Latest] badge.
+    curl ... releases/tag/v0.45.1 -> exit 0; datetime 2026-09-03T16:24:38Z.
+    read https://github.com/jj-vcs/jj/releases/latest -> resolves to /jj-vcs/jj/releases/tag/v0.46.0.
+    read https://api.github.com/repos/jj-vcs/jj/releases/latest -> HTTP 403 (not used).
+    v0.46.0 release notes (read of tag page): "Added commands `jj file edit` and `jj file delete` ..."; "`jj workspace remove` removes a workspace and its directory from disk."
+E6  grep (tool) raw GitHub sources, sentence location:
+    cli/tests/cli-reference@.md.snap @ v0.45.1: line 2067 "## `jj metaedit`"; line 2071 the sentence (preceded by summary line 2069).
+    cli/tests/cli-reference@.md.snap @ v0.46.0: line 2133 the sentence.
+    cli/src/commands/metaedit.rs @ v0.45.1: lines 36-37 (doc comment, "/// " wrap after "timestamp"). Same lines 36-37 @ v0.46.0 and @ main.
+    docs/cli-reference.md @ v0.45.1: read ok (include wrapper, 27 lines); no sentence there (grep: none); the text lives in the snapshot above.
+E7  grep (tool) versioned docs pages: https://docs.jj-vcs.dev/v0.45.1/cli-reference/ sentence at line 2134; /v0.46.0/ at line 2194; /latest/ at line 2194 (same grep rendering).
+E8  pinned binary (exit 0 each): jj --version -> jj 0.45.1-7c41cdeb16b6b321c64e789a966b6adf723816a5 (jj-version-exit=0)
+    sha256sum /home/vgpnk/.local/bin/jj -> cd5efc3eb281d606bf9b5523167f79661da0f8c76a5aa32d61c07c7a351b6b44 (sha-exit=0)
+    jj metaedit --help -> exit 0 (help-exit=0); sentence wrapped between "for all" and "rebased commits." (help line 4 begins "rebased commits."); joined text verbatim. Saved as help-metaedit-0.45.1.txt.
+    jj file --help -> exit 0 (file-help-exit=0); subcommands annotate, chmod, list, search, show; no edit/delete. saved help-file-0.45.1.txt.
+    jj workspace --help -> exit 0 (workspace-help-exit=0); grep remove|edit|delete: No matches found. saved help-workspace-0.45.1.txt.
+E9  grep (tool) latest page command overview: line 63 `jj file delete`, line 64 `jj file edit`, line 149 `jj workspace remove`; sections at 1242, 1262, 4005.
+E10 probe.sh (exit 0, probe-exit=0; isolated HOME/XDG/JJ_CONFIG; no network) with jj 0.45.1:
+    before rebase: mzwktmproztm author=probe-author 2020-01-01 00:00:00.000 +00:00 | committer=probe-author 2026-10-21 08:23:45.000 -03:00
+    after rebase (JJ_USER=probe-rebaser): mzwktmproztm author=probe-author 2020-01-01 00:00:00.000 +00:00 | committer=probe-rebaser 2026-10-21 08:23:47.000 -03:00
+    rebase output: "Rebased 1 commits to destination."
+E11 lane clone at a6617149 (exit codes printed in-run): rev-parse b76727f3 -> 0; b76727f3 ancestor of a6617149 -> 0; reverse -> 1.
+    cmp (exit 0 each): corpus/SOURCES.md a6617149 == worktree; b76727f3 == a6617149; corpus/lessons/round-21.md a6617149 == worktree; b76727f3 == a6617149.
+E12 contract census on clone (each exit 0): rows 74; malformed (NF!=13) 0; tiers A=70 B=1 C=3; status mined=60 queued=7 rejected=7; duplicate ids none; enum/tier-inflation violations none; S072 NF=13; used-by paths for mined rows: every path exists (no "missing:" line).
+E13 grep (tool) "S072" under corpus/: SOURCES.md:84 (the row); lessons/round-21.md:48 (Gate row), :76 (Wave-1 line). No knowledge/ entry cites it.
+E14 grep (tool) tools/report-landing-audit.py @ a6617149: l.25-26 docstring "Author time is used because rebases (jj-lane.sh recovery) rewrite committer time but keep author time."; l.134 format %an/%at; l.152 report_cutoff --format=%at; l.183-184 pre/post by atime.
+Gate quote: "the committer name, email, and timestamp are also updated for all rebased commits." = 13 words.

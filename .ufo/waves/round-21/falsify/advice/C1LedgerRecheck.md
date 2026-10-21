@@ -1,0 +1,32 @@
+VERDICT: confirm - all 9 report-landing-errata.tsv rows verified at a6617149722c73d90e142fbdc8154d6967055f7e: tokens/kinds/corrections check out and every evidence-prose claim matches the fleet reports; no remaining inaccuracy found.
+
+Target: `registry/report-landing-errata.tsv` @ a6617149 (9 data rows; created a29bb84, prose corrected in 1471344). Fleet reports read at `/home/vgpnk/Projects/shokunin/.ufo/reports/round-{10,18,20}/kama.md`; disk == committed HEAD (sha256 equal for all three). Method: read-only scratch clone `/tmp/kama-r21-C1LedgerRecheck/lane` @ a6617149 (clone+checkout exit 0, worktree clean, lane untouched). No tool installs (system python3/git only).
+
+Per-row verification (token | kind | correction | prose):
+1. r20 unresolved-full-hash `0957ce6…d894` → correction `0957ce6…d2c7`: token ABSENT in lane and fleet (`git cat-file -t`, expected for this kind); correction resolves (kama-shokunin, at 1792571024 ≤ cutoff 1792577594). Prose exact: first 15 hex of `0957ce619789d13b…` ("0957ce619789d13") + last 25 hex of `33a6777…` ("d894ef21bc863486bcb35b56c") = the row token char-for-char; round-20 report line 7 carries that splice, line 10 carries the correct full hash; the line-7 sentence names both referents ("the committed R20 implementation/frozen population and original measurement"); lane `SCORECARD.md:891` @ a6617149 = "Work/frozen-population commit \`33a6777…\`;". ACCURATE.
+2. r20 landed-omitted `33a6777…` = correction, resolves (at 1792566309 ≤ cutoff). Prose = commit subject verbatim; grep "33a6777" in round-20 report: 0 hits (no ≥7-hex prefix anywhere; tool's cited_elsewhere=false corroborates); only the 25-hex tail inside the line-7 splice. ACCURATE.
+3. r20 landed-omitted `0957ce6…d2c7` = correction, resolves. Prose: full hash only at line 10 (grep "0957ce6": lines 7 and 10 only; 7 is the corrupted splice); Landed changes (§13–19: c7311039/04de7a87/9add96e4/3ec5ea68/7a6bc911) does not cite it; measurement table (lines 25–26) Measured-commit column = `9add96e4…`, not 0957ce6. ACCURATE. [Observation, non-defect: line 7 also cites the 8-hex `runs/0957ce61/` prefix; "cited by full hash at Work performed line 10 only" stays literally true.]
+4. r20 landed-omitted `92b1462…` = correction, resolves (at 1792573685 ≤ cutoff); prose = subject verbatim ("record measurements and validate falsify wave"); grep 0 hits in report (cited_elsewhere=false). ACCURATE.
+5. r20 landed-omitted `846e366…` = correction, resolves (at 1792574702 ≤ cutoff); prose = subject verbatim ("record falsify wave assignments"); grep 0 hits (cited_elsewhere=false). ACCURATE.
+6. r18 landed-omitted `101f399…` = correction, resolves; checkpoint(r18) subject verbatim incl. "after coordinator quota failure; unadmitted" (at 1792539394 ≤ cutoff 1792561152); cited at round-18 report line 19 ("pushing checkpoint \`101f3991…\`", inside Work performed §3–72); absent from Landed changes (§73+; grep hits only 19/26/27). ACCURATE.
+7. r18 landed-omitted `1c325b2…` = correction, resolves (at 1792538038 ≤ cutoff); prose = subject verbatim; cited at line 27 (continuation of the line-26 "implementation commits" bullet); not in Landed. ACCURATE.
+8. r18 landed-omitted `c6dc46f…` = correction, resolves (at 1792525303 ≤ cutoff); prose = subject verbatim; cited at line 26; not in Landed. ACCURATE.
+9. r10 landed-omitted `40660352…` = correction, resolves (at 1792450060 ≤ cutoff 1792450135); prose = subject verbatim ("post-review fixes"); cited at round-10 report line 114 inside the appended "## Post-review fixes" (§112; file ends at 125; second hit line 120 same section); not in Landed changes (§28). ACCURATE.
+
+Eligibility, all 8 landed-omitted rows: author kama-shokunin, subject `round-N:`/`checkpoint(rN)`, author time ≤ first fleet commit adding the round report (git log --diff-filter=A: r10 1792450135, r18 1792561152, r20 1792577594) — identical to the audit tool's printed cutoffs. correction == token for every landed-omitted row; the one unresolved-full-hash row's correction is the only differing one and resolves.
+
+Wave-1 corrections re-verified (git diff a29bb84→1471344, 3 rows rewritten):
+- Splice row: "first 16 hex … last 24 hex" → "first 15 hex … last 25 hex" (16/24 was arithmetically wrong; 15/25 verified exact above).
+- 33a6777 row: "absent from the whole report" → "not cited by full hash or >=7-hex prefix anywhere … (only its 25-hex tail survives inside the line-7 splice)" (old wording was false — the tail does survive).
+- 0957ce6 row: "cited only in Work performed line 10 and the measurement table" → "cited by full hash at Work performed line 10 only … the measurement table cites 9add96e4, not 0957ce61" (old wording was false).
+All three current versions check against the reports as shown above.
+
+End-to-end reproduction (audit tool re-run from scratch @ a6617149 against the live fleet reports):
+- `--lane-repo <scratch> --fleet-repo /home/vgpnk/Projects/shokunin --branch master --rounds 10-20 --no-errata --json` → exit 1; defects 9 (1 unresolved-full-hash r20, 8 landed-omitted r10×1 r18×3 r20×4), required 42, post_report 4 — same shape as the official b76727f3 run (runs/b76727f3/commands.json: same argv, exit 1).
+- Same with the committed errata → exit 0; corrected 9, errata_rows 9, errata_invalid 0, errata_unmatched 0, status clean — matches official exit 0. corrected_by indices 3–11 map 1:1 onto the 9 rows in file order.
+
+Timeline: prose corrections 1471344 authored 2026-10-21T11:11:06Z and is an ancestor of b76727f3 (merge-base --is-ancestor, exit 0); official audit started 11:14:00Z → the official measurement already used the corrected rows. These two commits are the only ones touching the ledger since round start 7a6bc911.
+
+Residual risk: none found in the 9 rows. Single observation: row 3 does not mention the 8-hex `runs/0957ce61/` prefix citation at report line 7 (its literal claim remains true). Fleet reports were audited from disk; disk == HEAD for all three.
+
+Commands cited, all executed with observed results: git clone/checkout (exit 0); fleet first-add loop (exit 0); git cat-file -t per token (bad token ABSENT, eight "commit"); git show -s metadata loop (exit 0); sha256 disk-vs-HEAD loop (equal); grep line-number passes (results above); SCORECARD.md:886-896 read; two audit runs (exit 1, exit 0); merge-base + date -u (exit 0); scratch dirty-line count 0. Scratch deleted after this report. No tools installed; lane, fleet and sibling state untouched.

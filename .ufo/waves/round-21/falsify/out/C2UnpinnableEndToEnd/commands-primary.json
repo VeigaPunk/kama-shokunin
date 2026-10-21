@@ -1,0 +1,108 @@
+[
+ {
+  "name": "pgrep-before",
+  "argv": [
+   "pgrep",
+   "-af",
+   "llama-server"
+  ],
+  "exit": 1,
+  "seconds": 0.03
+ },
+ {
+  "name": "pgrep-scratch-before",
+  "argv": [
+   "pgrep",
+   "-af",
+   "kama-r21-C2UnpinnableEndToEnd"
+  ],
+  "exit": 1,
+  "seconds": 0.03
+ },
+ {
+  "name": "producer-primary",
+  "argv": [
+   "python3",
+   "/tmp/kama-r21-C2UnpinnableEndToEnd/lane/tools/kama-llamacpp-live.py",
+   "--server",
+   "/tmp/kama-r21-C2UnpinnableEndToEnd/tree/llama-server",
+   "--model",
+   "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+   "--model-sha256",
+   "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+   "--out",
+   "/tmp/kama-r21-C2UnpinnableEndToEnd/r.json"
+  ],
+  "exit": 2,
+  "seconds": 0.09
+ },
+ {
+  "name": "pgrep-after",
+  "argv": [
+   "pgrep",
+   "-af",
+   "llama-server"
+  ],
+  "exit": 1,
+  "seconds": 0.03
+ },
+ {
+  "name": "pgrep-scratch-after",
+  "argv": [
+   "pgrep",
+   "-af",
+   "kama-r21-C2UnpinnableEndToEnd"
+  ],
+  "exit": 1,
+  "seconds": 0.03
+ },
+ {
+  "name": "gate-primary",
+  "argv": [
+   "python3",
+   "/tmp/kama-r21-C2UnpinnableEndToEnd/lane/tests/llamacpp-live/check-receipt.py",
+   "/tmp/kama-r21-C2UnpinnableEndToEnd/r.json"
+  ],
+  "exit": 1,
+  "seconds": 0.04
+ },
+ {
+  "name": "gate-primary-require-links",
+  "argv": [
+   "python3",
+   "/tmp/kama-r21-C2UnpinnableEndToEnd/lane/tests/llamacpp-live/check-receipt.py",
+   "/tmp/kama-r21-C2UnpinnableEndToEnd/r.json",
+   "--require-install-links"
+  ],
+  "exit": 1,
+  "seconds": 0.04
+ },
+ {
+  "name": "glibc-version",
+  "argv": [
+   "getconf",
+   "GNU_LIBC_VERSION"
+  ],
+  "exit": 0,
+  "seconds": 0.0
+ },
+ {
+  "name": "ld-so-help",
+  "argv": [
+   "/lib64/ld-linux-x86-64.so.2",
+   "--help"
+  ],
+  "exit": 0,
+  "seconds": 0.0
+ },
+ {
+  "name": "readelf-dynamic-server",
+  "argv": [
+   "readelf",
+   "-d",
+   "/tmp/kama-r21-C2UnpinnableEndToEnd/tree/llama-server"
+  ],
+  "exit": 0,
+  "seconds": 0.0
+ }
+]

@@ -1,0 +1,79 @@
+ReopenS073 evidence - 2026-10-21 UTC (date -u +%F -> 2026-10-21, exit 0)
+Lane read-only: git show / git clone (scratch) / grep / awk / cmp / diff; no writes to lane index, worktree, or refs.
+Installs/upgrades by this seat: none. Used system git 2.56.0, curl, python3, man-db, col (util-linux).
+Scratch /tmp/kama-r21-ReopenS073 removed before finish.
+
+[E1] curl -sS -L -o git-log.html https://git-scm.com/docs/git-log
+     http=200 url_eff=https://git-scm.com/docs/git-log bytes=375834 curl_exit=0
+     sha256 c62fb02ef74ba3f9dbcc551bdc84f4264eab71a3bc983b988e2c505ffaa005ad
+     reader text: "git-log last updated in 2.56.0"; "Latest version" dropdown top entry 2.56.0 (2026-09-28)
+
+[E2] curl -sS -L -o git-log-2.56.0.html https://git-scm.com/docs/git-log/2.56.0
+     http=200 bytes=375705 curl_exit=0
+     sha256 8680c41404737153a17d34be09b012d5f8544bcd6def0eb50aef6a45f2115c08
+     both pages: grep -c -F 'author date, UNIX timestamp' = 1; 'committer date, UNIX timestamp' = 1;
+     'Select only files that are Added' = 1; grep -o 'last updated in [0-9.]+' = "last updated in 2.56.0"
+
+[E3] git --version -> git version 2.56.0 (exit 0)
+     man -w git-log -> /usr/share/man/man1/git-log.1.gz (exit 0)
+     zcat git-log.1.gz | grep -m1 '^\.TH' -> "Git 2\&.56\&.0" (exit 0); rendered footer "Git 2.56.0 2026-09-27 GIT-LOG(1)"
+
+[E4] man -P cat git-log 2>/dev/null | col -b  (exit 0; 2876 lines)
+     1120 PRETTY FORMATS; 1355 "author date, UNIX timestamp"; 1401 "committer date, UNIX timestamp";
+     1657 DIFF FORMATTING; 2197 "--diff-filter=[(A|C|D|M|R|T|U|X|B)...[*]]"; 2198 "Select only files that are Added (A), Copied (C), Deleted (D), Modi-"
+     grep -n -E exits 0.
+
+[E5] unversioned HTML (E1 file): <h2 id="_pretty_formats"> line 5223; %at entry 5561-5563 (<p>author date, UNIX timestamp</p> at 5563);
+     %ct entry 5621-5623 (<p>committer date, UNIX timestamp</p> at 5623); <h2 id="_diff_formatting"> line 5982;
+     --diff-filter option 6730-6732 (<p>Select only files that are Added (...), Copied (...),</p> at 6732). grep exit 0.
+
+[E6] reader text of the live page (artifact://44680): --diff-filter occurs at lines 424 (under the -L option: "as are pickaxe options (-S, -G) and --diff-filter"),
+     2533 (--name-only cross-reference), 2835-2851 (option text, file-level: "Select only files that are Added (A), ...").
+     No sentence on the page ties --diff-filter to commit selection. (Reviewed by grep + read; exit 0.)
+
+[E7] round-21.md line 49 (Gate row S073), worktree vs committed b76727f:
+     git show b76727f:corpus/lessons/round-21.md | grep -F 'admit S073'  -> exit 0; cmp with worktree grep -F 'admit S073' -> exit 0 (identical).
+     grep -F 'Git 2.56.0 §PRETTY FORMATS `%at`: "author date, UNIX timestamp"' corpus/lessons/round-21.md -> exit 0 (quote verbatim, 4 words).
+
+[E8] build/advice/SrcGitLogDiffFilter.md (S066 draft, superseded):
+     grep -n -F 'author date, UNIX' -> exit 1 (no match). Line 8 quotes "committer date, UNIX timestamp" (%ct); line 9 quotes --diff-filter "Select only files that are Added (A), Copied (C), Deleted (D), Modified (M), Renamed (R)" (15 words).
+
+[E9] falsify/out/ReopenS073/experiment.py run (scratch repo, git 2.56.0, fixed dates) -> rerun-output.txt, exit 0
+     c1 add f:    author 1000000000 ct 1000000500 (distinct)
+     c5 re-add f: author 1000000900 ct 1000000100 (distinct, committer earlier)
+     git log --diff-filter=A --format=%s -- f -> "c5 re-add f", "c1 add f"  (two add commits)
+     git log --diff-filter=D --format=%s -- f -> "c4 delete f"
+     git log --diff-filter=A --format=%s (no path) -> "c5 re-add f", "c3 add g", "c1 add f"
+
+[E10] tools/report-landing-audit.py at b76727f (sha256 bd671a1e1e79a76a5c644d4efccd5baf0ce1121e9f308987ca816a5645520d69):
+     line 134 round_commits: git log --format=%H{SEP}%an{SEP}%at{SEP}%s{END} (SEP/END are module constants; %at = lane commit author time)
+     line 152 report_cutoff: git log --diff-filter=A --format=%at -- rel; lines 153-154: int(out[-1]) (oldest add in default order)
+     grep -n -E 'diff-filter|%at|%ct' exit 0 (same lines 134, 152 in worktree).
+
+[E11] worktree tools/report-landing-audit.py vs b76727f blob: cmp exit 1 (differs at line 169).
+     diff exit 1: 169 -> 169-177 (reads HEAD:<rel> when no path given); 445 -> 453-472 (added selftests); 503 -> 531-536 (added selftest).
+     %at / --diff-filter lines identical.
+
+[E12] census, lane root, contract v1 commands (CORPUS.md lines 66-80):
+     rows 74 (exit 0); malformed 0 (exit 0); tiers A=70 B=1 C=3; status mined=60 queued=7 rejected=7 (exit 0 each);
+     duplicate ids: none; enum/tier-inflation: none; mined used-by missing: none (exit 0 each).
+
+[E13] S073 fields (awk, exit 0): 1 S073 | 2 git-log pretty formats and --diff-filter - https://git-scm.com/docs/git-log | 3 docs | 4 A |
+     5 %at/%ct placeholders and added-path selection at Git 2.56.0; not commit rewriting |
+     6 §PRETTY FORMATS %at and %ct; §DIFF FORMATTING --diff-filter; Git 2.56.0 manual and local man page opened 2026-10-21 |
+     7 --diff-filter=A selects the commit that added a path; %at and %ct are distinct timestamps, and the audit's cutoff reads author time. |
+     8 mined | 9 2026-10-21 | 10 on-release | 11 corpus/lessons/round-21.md
+     committed a6617149 and b76727f copies of the row: cmp vs worktree exit 0 each.
+
+[E14] test -e corpus/lessons/round-21.md -> exit 0. grep -rn 'S073' corpus tools -> exit 0; hits: lesson 19, 49, 76; SOURCES.md 85, 105.
+     No corpus/knowledge/ entry cites S073.
+
+[E15] CORPUS.md section "SOURCES.md - where a shokunin learns" (awk, up to "### Maintained parser note", 86 lines) vs
+     fleet .ufo/waves/kaika/SOURCES-CONTRACT-v1.md: diff exit 1, 23 diff lines: title line, a 3-line carry-over preface plus blank,
+     and heading depth (Shape, Rules, Census). Rule and census text identical.
+
+[E16] scratch clone at b76727f (git clone --no-checkout, checkout --detach), python3 tools/sources-append-only.py
+     --from 7a6bc911f9eb7dbea9e3b81f5f2449ecda10096d --to b76727f31e522763ce24e43d6ec86d21b507a11f
+     -> "added S066 (allowed)" ... "added S074 (allowed)"; "no append-only violations"; exit 0.
+
+[E17] SOURCES.md lines 6-7 (read): "Every row was opened in round 10 (2026-10-19); the round lesson `lessons/round-10.md` §Gate carries each row's URL, access date and quote."

@@ -1,0 +1,46 @@
+== D0 control: clean stub tree reaches the launch point
+ clean: rc=2 setup_error='launch-failed:OSError' internal_fault=None outcome='setup-error'
+   launch attempted (sentinel calls)=1
+   receipt server.install_tree members=['libllama.so.0.7.0', 'stub-server']
+   receipt server.install_links={'libllama.so.0': 'libllama.so.0.7.0'}
+== D1 silent member drop: read error (EIO) on an UNLINKED member
+ eio main(): rc=2 setup_error='launch-failed:OSError' internal_fault=None outcome='setup-error'
+   launch attempted (sentinel calls)=1
+   receipt server.install_tree members=['libllama.so.0.7.0', 'stub-server']
+   receipt server.install_links={'libllama.so': 'libllama.so.0', 'libllama.so.0': 'libllama.so.0.7.0'}
+   install_links problems under fault: []
+   server_block under fault: tree members=2 problems=[]
+   honest tree members=3 digest 0c6024cbe3e3ec11
+   gate on faulty-but-consistent receipt, no pin: exit=0
+   gate on same receipt, honest tree+links pin: exit=1 | ['INVALID /tmp/kama-r21-C2DigestSentinel/work/d1-eio-nopin.json: 1 problem(s)', '  - server.install_tree_sha256 6225ead94787f127838918b05763fc3ca75e66b7b5506ddeaf9bb1c89dbd0e2a != expected 0c6024cbe3e3ec1106fa965db9ba67a75d8681e0d4db734539823ddd0a402dbe']
+== D2 TOCTOU variant: member unlinked between install_tree lstat and open
+ race main(): rc=2 setup_error='launch-failed:OSError' internal_fault=None outcome='setup-error'
+   launch attempted (sentinel calls)=1
+   receipt server.install_tree members=['libllama.so.0.7.0', 'stub-server']
+   receipt server.install_links={}
+== D3 non-UTF-8 regular member name
+ nonutf8 main(): rc=2 setup_error='internal:UnicodeEncodeError' internal_fault='internal:UnicodeEncodeError' outcome='setup-error'
+   launch attempted (sentinel calls)=0
+   receipt server.install_tree members=[]
+   receipt server.install_links={}
+== D4 absolute-target soname link (producer PASS path)
+ abs-target main(): rc=2 setup_error='launch-failed:OSError' internal_fault=None outcome='setup-error'
+   launch attempted (sentinel calls)=1
+   receipt server.install_tree members=['libllama.so.0.7.0', 'stub-server']
+   receipt server.install_links={'libext.so.0': '/usr/lib/libz.so.1'}
+== D5 C0 control-character name
+ ctrl main(): rc=2 setup_error="install-tree-unpinnable:'lib\\x1bx.so':control-character-in-name" internal_fault=None outcome='setup-error'
+   launch attempted (sentinel calls)=0
+   receipt server.install_tree members=[]
+   receipt server.install_links={}
+== D6 glibc-hwcaps subdirectory
+ hwcaps main(): rc=2 setup_error='install-tree-unpinnable:glibc-hwcaps:not-regular-or-symlink' internal_fault=None outcome='setup-error'
+   launch attempted (sentinel calls)=0
+   receipt server.install_tree members=[]
+   receipt server.install_links={}
+== D7 unreadable regular member (uid 1000, mode 000)
+ unreadable main(): rc=2 setup_error='install-tree-unpinnable:libsec.so:unreadable' internal_fault=None outcome='setup-error'
+   launch attempted (sentinel calls)=0
+   receipt server.install_tree members=[]
+   receipt server.install_links={}
+done D

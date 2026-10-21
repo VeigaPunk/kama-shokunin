@@ -1,0 +1,96 @@
+{
+  "target": "tools/report-landing-audit.py",
+  "commit": "a6617149722c73d90e142fbdc8154d6967055f7e",
+  "pristine_and_restored_sha256": "bd671a1e1e79a76a5c644d4efccd5baf0ce1121e9f308987ca816a5645520d69",
+  "method": "Apply exactly one replacement in the isolated scratch checkout. Run probe.py phase NAME. Reverse that replacement, then run probe.py phase mN-restored. Each phase runs the same four bounded detectors concurrently. The pristine phase precedes m1; each restored phase is also the next mutant's pristine phase.",
+  "mutants": [
+    {
+      "id": "M1",
+      "phase": "m1-lane-committer",
+      "line": 134,
+      "before": "    out = git(lane_repo, \"log\", f\"--format=%H{SEP}%an{SEP}%at{SEP}%s{END}\",",
+      "after": "    out = git(lane_repo, \"log\", f\"--format=%H{SEP}%an{SEP}%ct{SEP}%s{END}\",",
+      "mutated_sha256": "11e1c22abbfa6f3cad1e645d99189c939f47a3ff45b348e92b642767715de304",
+      "expected_detector": "selftest author-time-cutoff-survives-rebase; boundary lane-author-time",
+      "claimed_detector_verdict": "killed",
+      "extended_detector_verdict": "killed"
+    },
+    {
+      "id": "M2",
+      "phase": "m2-fleet-committer",
+      "line": 152,
+      "before": "    out = git(fleet_repo, \"log\", \"--diff-filter=A\", \"--format=%at\", \"--\",",
+      "after": "    out = git(fleet_repo, \"log\", \"--diff-filter=A\", \"--format=%ct\", \"--\",",
+      "mutated_sha256": "8e48f674833f1563d794878db2066e5d1d6c7b28fd6b55011120429afceb2b05",
+      "expected_detector": "report cutoff author-time check; added boundary fleet-author-time",
+      "claimed_detector_verdict": "survived",
+      "extended_detector_verdict": "killed"
+    },
+    {
+      "id": "M3",
+      "phase": "m3-latest-add",
+      "line": 154,
+      "before": "    return int(out[-1]) if out else None",
+      "after": "    return int(out[0]) if out else None",
+      "mutated_sha256": "b85567407ecae725d55c699b2429d3d980756b9e2d2785c5891d55f178880ca6",
+      "expected_detector": "first-add cutoff check; added boundaries first-add-not-readd and first-add-post-split",
+      "claimed_detector_verdict": "survived",
+      "extended_detector_verdict": "killed"
+    },
+    {
+      "id": "M4",
+      "phase": "m4-exclusive-pre",
+      "line": 183,
+      "before": "    pre = [c for c in commits if c[\"atime\"] <= cutoff]",
+      "after": "    pre = [c for c in commits if c[\"atime\"] < cutoff]",
+      "mutated_sha256": "439a783f43a9cbf568a9a8755a4144c7f13515ce69dc405c2cb2d56c370c9467",
+      "expected_detector": "same-second required commit check; added boundary inclusive-required",
+      "claimed_detector_verdict": "survived",
+      "extended_detector_verdict": "killed"
+    },
+    {
+      "id": "M5",
+      "phase": "m5-inclusive-post",
+      "line": 184,
+      "before": "    post = [c for c in commits if c[\"atime\"] > cutoff]",
+      "after": "    post = [c for c in commits if c[\"atime\"] >= cutoff]",
+      "mutated_sha256": "8409392ad6dbb0ca2df963e2ccf67e862edade1fef0b120c7771351c4ac3b52c",
+      "expected_detector": "same-second pre/post disjointness check; added boundary post-split",
+      "claimed_detector_verdict": "survived",
+      "extended_detector_verdict": "killed"
+    },
+    {
+      "id": "M6",
+      "phase": "m6-unselected-unmatched",
+      "line": 249,
+      "before": "                 if e[\"round\"] in selected and e[\"line\"] not in used]",
+      "after": "                 if e[\"round\"] not in selected and e[\"line\"] not in used]",
+      "mutated_sha256": "336125d9f4abb2937c029f15a6b57f3f881c3af0c007b657cb22818b5df1b7b8",
+      "expected_detector": "selftest unmatched-errata-fails and unselected-round-row-ignored; boundary selected-unmatched-only",
+      "claimed_detector_verdict": "killed",
+      "extended_detector_verdict": "killed"
+    },
+    {
+      "id": "M7",
+      "phase": "m7-omitted-self-comparison",
+      "line": 254,
+      "before": "        or (e[\"kind\"] == \"landed-omitted\" and e[\"correction\"] != e[\"token\"]))]",
+      "after": "        or (e[\"kind\"] == \"landed-omitted\" and e[\"correction\"] != e[\"correction\"]))]",
+      "mutated_sha256": "37c0e01dd35d52502dca272c625e844fa7e4b312d15196bfd12d3a9ebc82ee7c",
+      "expected_detector": "selftest omitted-correction-must-be-the-commit; boundary omitted-correction-equals-token",
+      "claimed_detector_verdict": "killed",
+      "extended_detector_verdict": "killed"
+    },
+    {
+      "id": "M8",
+      "phase": "m8-blob-correction",
+      "line": 251,
+      "before": "                            if e[\"kind\"] in RESOLVABLE], \"^{commit}\")",
+      "after": "                            if e[\"kind\"] in RESOLVABLE], \"\")",
+      "mutated_sha256": "84dc392cefad0a03be8f251e22d67f51178097bce4325272e9d06dbdceebd37e",
+      "expected_detector": "selftest blob-is-not-a-correction; boundary blob-rejected",
+      "claimed_detector_verdict": "killed",
+      "extended_detector_verdict": "killed"
+    }
+  ]
+}

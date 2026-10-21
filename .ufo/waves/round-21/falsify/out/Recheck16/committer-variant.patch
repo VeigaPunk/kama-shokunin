@@ -1,0 +1,20 @@
+--- a/tools/report-landing-audit.py
++++ b/committer-variant.py
+@@ -131,7 +131,7 @@
+ 
+ 
+ def round_commits(lane_repo, branch, lane, rnd):
+-    out = git(lane_repo, "log", f"--format=%H{SEP}%an{SEP}%at{SEP}%s{END}",
++    out = git(lane_repo, "log", f"--format=%H{SEP}%an{SEP}%ct{SEP}%s{END}",
+               branch)
+     pat = re.compile(rf"^(?:round-{rnd}:|checkpoint\(r{rnd}\))")
+     rows = []
+@@ -149,7 +149,7 @@
+ 
+ 
+ def report_cutoff(fleet_repo, rel):
+-    out = git(fleet_repo, "log", "--diff-filter=A", "--format=%at", "--",
++    out = git(fleet_repo, "log", "--diff-filter=A", "--format=%ct", "--",
+               rel).split()
+     return int(out[-1]) if out else None
+ 

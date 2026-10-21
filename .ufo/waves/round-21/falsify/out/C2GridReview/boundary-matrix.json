@@ -1,0 +1,194 @@
+[
+ {
+  "args": [
+   "--tree",
+   "/tmp/kama-r21-C2GridReview/trees/nodev",
+   "--arm",
+   "current"
+  ],
+  "case": "no-dev-links",
+  "note": "5 dev links removed; dev cell should vanish silently",
+  "rc": 0,
+  "stderr": "",
+  "stdout_head": [
+   "null-unchanged                           class=null    current=same",
+   "needed-retarget-libggml-base.so.0        class=link    current=changed"
+  ],
+  "summary": [
+   "summary arm=current link=12/12 subdir=1/1 regular=3/3 type=1/1 null=0/1 wrong=0 real_tree_gate_clean=True status=pass"
+  ]
+ },
+ {
+  "args": [
+   "--tree",
+   "/tmp/kama-r21-C2GridReview/trees/hwcaps",
+   "--arm",
+   "current"
+  ],
+  "case": "hwcaps-dir-in-tree",
+  "note": "expect could-not-evaluate (not pinnable)",
+  "rc": 2,
+  "stderr": "could-not-evaluate: EvalError: /tmp/kama-r21-C2GridReview/trees/hwcaps: real tree is not pinnable: ['glibc-hwcaps:not-regular-or-symlink']",
+  "stdout_head": [],
+  "summary": []
+ },
+ {
+  "args": [
+   "--tree",
+   "/tmp/kama-r21-C2GridReview/trees/nosoname",
+   "--arm",
+   "current"
+  ],
+  "case": "missing-soname-link",
+  "note": "expect could-not-evaluate",
+  "rc": 2,
+  "stderr": "could-not-evaluate: EvalError: /tmp/kama-r21-C2GridReview/trees/nosoname: missing soname link(s): libmtmd.so.0",
+  "stdout_head": [],
+  "summary": []
+ },
+ {
+  "args": [
+   "--tree",
+   "/tmp/kama-r21-C2GridReview/trees/dangling",
+   "--arm",
+   "current"
+  ],
+  "case": "dangling-soname-in-tree",
+  "note": "expect exit 1 (real tree not gate-clean)",
+  "rc": 1,
+  "stderr": "",
+  "stdout_head": [
+   "null-unchanged                           class=null    current=same gate=libggml.so:chain ends at 'libggml.so.9', not a pinned install_tree member;libggml.so.0:chain ends at 'libggml.so.9', not a pinned install_tree member",
+   "needed-retarget-libggml-base.so.0        class=link    current=changed gate=libggml.so:chain ends at 'libggml.so.9', not a pinned install_tree member;libggml.so.0:chain ends at 'libggml.so.9', not a pinned install_tree member"
+  ],
+  "summary": [
+   "summary arm=current link=13/13 subdir=1/1 regular=3/3 type=1/1 null=0/1 wrong=0 real_tree_gate_clean=False status=pass"
+  ]
+ },
+ {
+  "args": [
+   "--tree",
+   "/tmp/kama-r21-C2GridReview/trees/unreadable",
+   "--arm",
+   "current"
+  ],
+  "case": "unreadable-member-current",
+  "note": "expect could-not-evaluate (not pinnable)",
+  "rc": 2,
+  "stderr": "could-not-evaluate: EvalError: /tmp/kama-r21-C2GridReview/trees/unreadable: real tree is not pinnable: ['libllama-common.so.0.7.0:unreadable']",
+  "stdout_head": [],
+  "summary": []
+ },
+ {
+  "args": [
+   "--tree",
+   "/tmp/kama-r21-C2GridReview/trees/unreadable",
+   "--arm",
+   "frozen"
+  ],
+  "case": "unreadable-member-frozen",
+  "note": "frozen producer silently drops unreadable member",
+  "rc": 2,
+  "stderr": "could-not-evaluate: PermissionError: [Errno 13] Permission denied: '/tmp/kama-r21-C2GridReview/trees/unreadable/libllama-common.so.0.7.0'",
+  "stdout_head": [],
+  "summary": []
+ },
+ {
+  "args": [
+   "--tree",
+   "/tmp/kama-r21-C2GridReview/trees/fifo",
+   "--arm",
+   "current"
+  ],
+  "case": "fifo-member-current",
+  "note": "expect could-not-evaluate",
+  "rc": 2,
+  "stderr": "could-not-evaluate: EvalError: /tmp/kama-r21-C2GridReview/trees/fifo: real tree is not pinnable: ['kama-fifo:not-regular-or-symlink']",
+  "stdout_head": [],
+  "summary": []
+ },
+ {
+  "args": [
+   "--tree",
+   "/tmp/kama-r21-C2GridReview/trees/noserver",
+   "--arm",
+   "current"
+  ],
+  "case": "no-llama-server",
+  "note": "expect could-not-evaluate",
+  "rc": 2,
+  "stderr": "could-not-evaluate: EvalError: /tmp/kama-r21-C2GridReview/trees/noserver/llama-server missing",
+  "stdout_head": [],
+  "summary": []
+ },
+ {
+  "args": [
+   "--tree",
+   "/tmp/kama-r21-C2GridReview/trees/does-not-exist",
+   "--arm",
+   "current"
+  ],
+  "case": "missing-tree",
+  "note": "expect could-not-evaluate",
+  "rc": 2,
+  "stderr": "could-not-evaluate: EvalError: /tmp/kama-r21-C2GridReview/trees/does-not-exist/llama-server missing",
+  "stdout_head": [],
+  "summary": []
+ },
+ {
+  "args": [
+   "--tree",
+   "alias-real",
+   "--arm",
+   "current",
+   "--json"
+  ],
+  "case": "symlinked-tree-json-vs-measured",
+  "identical_to_measured_current_json": true,
+  "rc": 0,
+  "stderr": ""
+ },
+ {
+  "args": [
+   "--arm",
+   "frozen"
+  ],
+  "case": "nogit-arm-frozen",
+  "note": "git show fails -> could-not-evaluate",
+  "rc": 2,
+  "stderr": "could-not-evaluate: EvalError: git show 7a6bc911f9eb7dbea9e3b81f5f2449ecda10096d:tools/kama-llamacpp-live.py: fatal: not a git repository (or any parent up to mount point /)\nStopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).",
+  "stdout_head": [],
+  "summary": []
+ },
+ {
+  "args": [
+   "--arm",
+   "current"
+  ],
+  "case": "nogit-arm-current",
+  "note": "current arm needs no git",
+  "rc": 0,
+  "stderr": "",
+  "stdout_head": [
+   "null-unchanged                           class=null    current=same",
+   "needed-retarget-libggml-base.so.0        class=link    current=changed"
+  ],
+  "summary": [
+   "summary arm=current link=13/13 subdir=1/1 regular=3/3 type=1/1 null=0/1 wrong=0 real_tree_gate_clean=True status=pass"
+  ]
+ },
+ {
+  "args": [
+   "--tree",
+   "/home/vgpnk/.local/opt/llama-b11755/LICENSE",
+   "--arm",
+   "current"
+  ],
+  "case": "tree-is-file",
+  "note": "expect could-not-evaluate",
+  "rc": 2,
+  "stderr": "could-not-evaluate: EvalError: /home/vgpnk/.local/opt/llama-b11755/LICENSE/llama-server missing",
+  "stdout_head": [],
+  "summary": []
+ }
+]

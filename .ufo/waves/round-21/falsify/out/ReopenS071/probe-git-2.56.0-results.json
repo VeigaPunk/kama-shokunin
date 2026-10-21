@@ -1,0 +1,80 @@
+{
+ "git_version": "git version 2.56.0",
+ "init": {
+  "argv": "git init -q /tmp/kama-r21-ReopenS071/probe",
+  "exit": 0,
+  "stdout": "",
+  "stderr": ""
+ },
+ "fast_import": {
+  "argv": "git -C /tmp/kama-r21-ReopenS071/probe fast-import --quiet",
+  "exit": 0,
+  "stdout": "",
+  "stderr": ""
+ },
+ "object_count": 3000,
+ "ambiguous_4hex_prefixes": 66,
+ "chosen_prefix": "02b0",
+ "tests": {
+  "batch_check_ambiguous_prefix": {
+   "argv": "git -C /tmp/kama-r21-ReopenS071/probe cat-file --batch-check",
+   "exit": 0,
+   "stdout": "02b0 ambiguous\n",
+   "stderr": "error: short object ID 02b0 is ambiguous\nhint: The candidates are:\nhint:   02b013f blob\nhint:   02b0175 blob\n"
+  },
+  "batch_check_missing_zero_oid": {
+   "argv": "git -C /tmp/kama-r21-ReopenS071/probe cat-file --batch-check",
+   "exit": 0,
+   "stdout": "0000000000000000000000000000000000000000 missing\n",
+   "stderr": ""
+  },
+  "batch_check_missing_name": {
+   "argv": "git -C /tmp/kama-r21-ReopenS071/probe cat-file --batch-check",
+   "exit": 0,
+   "stdout": "zz-nope missing\n",
+   "stderr": ""
+  },
+  "batch_check_present_full": {
+   "argv": "git -C /tmp/kama-r21-ReopenS071/probe cat-file --batch-check",
+   "exit": 0,
+   "stdout": "0022b390b63a9fda4e407c096127126b8d9f81b7 blob 10\n",
+   "stderr": ""
+  },
+  "batch_check_missing_with_peel": {
+   "argv": "git -C /tmp/kama-r21-ReopenS071/probe cat-file --batch-check",
+   "exit": 0,
+   "stdout": "zz-nope^{commit} missing\n",
+   "stderr": ""
+  },
+  "batch_check_bad_format": {
+   "argv": "git -C /tmp/kama-r21-ReopenS071/probe cat-file --batch-check=%(nosuchatom)",
+   "exit": 128,
+   "stdout": "",
+   "stderr": "fatal: bad cat-file format: %(nosuchatom)\n"
+  },
+  "batch_check_git_failure_bad_gitdir": {
+   "argv": "git cat-file --batch-check",
+   "exit": 128,
+   "stdout": "",
+   "stderr": "fatal: not a git repository: '/nonexistent-r21'\n"
+  },
+  "e_missing_zero_oid": {
+   "argv": "git -C /tmp/kama-r21-ReopenS071/probe cat-file -e 0000000000000000000000000000000000000000",
+   "exit": 1,
+   "stdout": "",
+   "stderr": ""
+  },
+  "e_ambiguous_prefix": {
+   "argv": "git -C /tmp/kama-r21-ReopenS071/probe cat-file -e 02b0",
+   "exit": 128,
+   "stdout": "",
+   "stderr": "error: short object ID 02b0 is ambiguous\nhint: The candidates are:\nhint:   02b013f blob\nhint:   02b0175 blob\nfatal: Not a valid object name 02b0\n"
+  },
+  "e_present": {
+   "argv": "git -C /tmp/kama-r21-ReopenS071/probe cat-file -e 0022b390b63a9fda4e407c096127126b8d9f81b7",
+   "exit": 0,
+   "stdout": "",
+   "stderr": ""
+  }
+ }
+}

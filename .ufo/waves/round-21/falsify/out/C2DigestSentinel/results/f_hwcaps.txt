@@ -1,0 +1,14 @@
+== F1 baseline: pinned soname chain, no hwcaps symlink
+ loader: 1 (1 = libA from the pinned tree)
+== F2 add symlink glibc-hwcaps -> absolute external dir
+ loader: 2 exit 0 (2 = external libB via hwcaps search) 
+ producer install_tree members: ['libllama.so.0.7.0', 'stub-server']
+ producer install_links: {'glibc-hwcaps': '/tmp/kama-r21-C2DigestSentinel/work/evil-hwcaps', 'libllama.so.0': 'libllama.so.0.7.0'} | problems: []
+ producer main(): rc 2 | setup_error launch-failed:OSError | launch attempted (sentinel calls): 1
+ receipt install_links: {'glibc-hwcaps': '/tmp/kama-r21-C2DigestSentinel/work/evil-hwcaps', 'libllama.so.0': 'libllama.so.0.7.0'}
+ gate on the producer-shaped receipt: exit 1 | - server.install_links['glibc-hwcaps']: target '/tmp/kama-r21-C2DigestSentinel/work/evil-hwcaps' leaves the pinned directory
+== F3 relative variant: glibc-hwcaps -> ../evil-hwcaps
+ loader: 2 exit 0 (2 = external libB)
+ producer install_links: {'glibc-hwcaps': '../evil-hwcaps', 'libllama.so.0': 'libllama.so.0.7.0'} | problems: []
+ gate on relative-variant receipt: exit 1 | - server.install_links['glibc-hwcaps']: target '../evil-hwcaps' leaves the pinned directory
+done F

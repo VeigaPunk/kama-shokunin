@@ -17,7 +17,8 @@ cell, and asks each arm whether the recorded install identity changed:
 Cells name the soname links that `libllama-server-impl.so`/`llama-server`
 list in DT_NEEDED for release b11755 (NEEDED_SONAMES; absent names are a
 could-not-evaluate, never skipped). Classes: `link` (only symlinks change),
-`subdir` (a glibc-hwcaps/ copy the loader searches first), `regular`
+`subdir` (a glibc-hwcaps/ copy or link the loader searches first, which the
+producer refuses, or another subdirectory, recorded as unpinned), `regular`
 (regular member changes; control), `type` (symlink becomes a regular file;
 control) and `null` (no change; false-positive control). The current arm
 also reports the receipt gate's chain verdict (check-receipt.py
@@ -33,7 +34,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import importlib.util
 import json
 import os
 from pathlib import Path
@@ -86,10 +86,8 @@ def current_producer(lane=LANE):
 
 
 def gate_module():
-    spec = importlib.util.spec_from_file_location("kama_gate", GATE)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+    # exec from source: no __pycache__ written beside the gate
+    return load_source("kama_gate", GATE.read_text(encoding="utf-8"), GATE)
 
 
 def mirror(src, dst):
@@ -101,8 +99,11 @@ def mirror(src, dst):
         elif full.is_file():
             shutil.copyfile(full, dst / entry)
             shutil.copymode(full, dst / entry)
+        elif full.is_dir():
+            shutil.copytree(full, dst / entry, symlinks=True)
         else:
-            raise EvalError(f"{full}: neither regular file nor symlink")
+            raise EvalError(f"{full}: neither regular file, directory nor "
+                            "symlink")
 
 
 def _relink(d, name, target):
@@ -158,6 +159,10 @@ def build_cells(tree, sonames=NEEDED_SONAMES):
          lambda d: (_relink(d, key, key + ".loop"),
                     os.symlink(key, d / (key + ".loop")))),
         ("subdir-hwcaps-shadow", "subdir", lambda d: _hwcaps(d, key)),
+        ("subdir-hwcaps-symlink", "subdir",
+         lambda d: os.symlink(tempfile.gettempdir(), d / "glibc-hwcaps")),
+        ("subdir-other-recorded", "subdir",
+         lambda d: (d / "openvino-licensing").mkdir()),
         ("regular-append-byte", "regular", lambda d: _append(d / key_real)),
         ("regular-add-file", "regular",
          lambda d: (d / "kama-extra.so").write_bytes(b"x")),
@@ -173,9 +178,10 @@ def identity(module, server, with_links):
     tree, tree_sha = module.install_tree(str(server))
     if not with_links:
         return {"install_tree_sha256": tree_sha}, tree, {}
-    links, links_sha, problems = module.install_links(str(server))
+    links, links_sha, problems, unpinned = module.install_links(
+        str(server), tree)
     return ({"install_tree_sha256": tree_sha, "install_links_sha256": links_sha,
-             "problems": problems}, tree, links)
+             "problems": problems, "unpinned": unpinned}, tree, links)
 
 
 def gate_problems(gate, tree, links):
@@ -349,8 +355,8 @@ def selftest():
         (t / "glibc-hwcaps").rmdir()
         os.unlink(t / "libggml.so.0")
         os.symlink("libggml.so.9", t / "libggml.so.0")
-        rc_bad, _ = run(t, ("current",), sonames=("libllama.so.0",))
-        checks.append(("dangling-real-tree-fails", rc_bad == 1))
+        checks.append(("dangling-real-tree-unpinnable", is_error(
+            lambda: run(t, ("current",), sonames=("libllama.so.0",)))))
     for name, ok in checks:
         print(f"{'ok' if ok else 'FAIL'} {name}")
     failed = sum(not ok for _, ok in checks)

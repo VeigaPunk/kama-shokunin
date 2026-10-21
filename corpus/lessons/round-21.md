@@ -108,3 +108,46 @@ Prose correctness, cross-round citations and unlabelled non-commit hashes are
 not judged. C2 binds bytes and link text present when the receipt was written;
 it does not authenticate execution or provenance, and a consistent retarget
 onto another pinned member is detected only with the pin.
+
+## Falsify-wave integration (67 seats; appended after the b76727f3 measurement)
+
+Corrections to the text above (append-only; earlier lines stay): C1 has **five**
+defect kinds, not four; "schema v4 (LinksDigestEncoding F2)" is LinksPolicyCritic
+item 2 / LinksGateReview F2; scores come from SCORECARD, not `shokunin.conf`;
+S071's section is §BATCH OUTPUT; M2's "relabelled reused" covers `1c325b2` and
+`c6dc46f` (`101f399` is the recovery checkpoint); AuditErrataMutants and
+LinksGateMutants reports live under `build/out/`; `jj-lane.sh` is the fleet
+`scripts/hyaku/jj-lane.sh`; AuditLaneDocHashes counted 24 upstream commits + 1
+non-git hex (LessonPointers P1–P9). M5's fix has no failure witness (MistakesFailCapable):
+it is a record correction, not a fail-capable fix. M4's writer was not identified.
+
+Code changes after b76727f3 (all re-measured at the final commit):
+- C1: committed fleet report bytes are read (`git show HEAD:`), not the working tree;
+  the open range lists committed reports via `ls-tree`; ASCII-only digit parsing;
+  ambiguous short names are asked unpeeled first, because a `^{commit}` peel makes
+  git answer `missing` (Recheck10/13/16/18/19, C1ExitReprobe — `landed-ambiguous`
+  was unreachable); selftest 32 → 36 (fleet author vs committer time, first-add vs
+  re-add, commit at the cutoff, 40-hex exemption, ambiguity). Known limits kept:
+  a citation is any ≥7-hex mention in Landed (C1DraftDryRun FN-1), hex words and
+  all-digit/all-letter short tokens are not checked as citations (C1HexFilterFN),
+  closed stdout still exits 0.
+- C2: the producer refuses (`install-tree-unpinnable`) a `glibc-hwcaps` entry of any
+  type, symlinks not resolving to a regular member of the directory, special files,
+  control-character names, unreadable members and regular members `install_tree`
+  failed to hash; other subdirectories (OpenVINO `openvino-licensing/`, C2ClaimCritic)
+  are recorded in `install_unpinned` instead of refused, so those layouts still run.
+  Gate: links digest required whenever the block exists, orphan digests and
+  non-basename link keys rejected, `install_unpinned` type-checked, Unicode
+  canonical literal (C2GateMutants survivor); selftest 12 VALID + 1 NE, 99 mutations.
+  Grid: two more subdir cells (hwcaps symlink, recorded other subdir); new
+  `tests/llamacpp-live/unpinnable-e2e.py` proves pre-launch refusal end to end.
+- Wave-1 seat fixtures under `build/out/` that used the draft line encoding no
+  longer verify (C2BackCompatRegrade: 16); they were never measured evidence.
+- SOURCES S066–S074 wording corrections are appended in `corpus/SOURCES.md`
+  §Round-21 falsify corrections; rows unchanged.
+
+Claim wording after falsification: C1 is a **detector** move (instrument absent →
+9 hand-confirmed defects over rounds 10–20, 0 FP/FN in 11+11 recounts); ledger 9→0
+is bookkeeping (C1ClaimCritic, C1ClaimAdmissibility). C2 is integrity coverage on
+the measured flat b11755 install; 0/N → N/N is detection by construction against a
+regular-file-only frozen arm (C2ClaimCritic). Neither moves a score.

@@ -1,0 +1,59 @@
+LessonPointers: executed commands and observed exit codes (scratch = /tmp/kama-r21-LessonPointers, removed at end)
+
+Setup
+- cmp <lane>/corpus/lessons/round-21.md <worktree>/corpus/lessons/round-21.md                        -> rc 0
+- git clone -q <lane> <scratch>/lane && git -C <scratch>/lane checkout -q a6617149722c73d90e142fbdc8154d6967055f7e -> rc 0
+- git clone -q --mirror /home/vgpnk/Projects/shokunin <scratch>/fleet.git                              -> rc 0
+- git clone -q /home/vgpnk/Projects/shokunin <scratch>/fleetwt   (HEAD 9881be6, working tree for the tool) -> rc 0
+
+Hashes (git cat-file -t / -e)
+- lane: 7a6bc911…, a29bb84, 4066035, 33a6777, 0957ce6, 92b1462, 846e366, 101f399, 1c325b2, c6dc46f, b76727f3…, a6617149… -> rc 0 each (commit)
+- lane and fleet: 0957ce619789d13d894ef21bc863486bcb35b56c -> rc 128 both ("could not get object info")
+- fleet: 221707d -> rc 0 (commit); lane 221707d -> rc 128
+- fleet: cat-file -e master:.ufo/reports/round-21/kama.md -> rc 128 ("does not exist in 'master'"); control round-20 path -> rc 0
+- lane: cat-file -e a6617149:corpus/lessons/round-21.md -> rc 0
+- nix 26842787 (short): lane rc 128, not expected to resolve (upstream)
+
+Audit tool (lane tools/report-landing-audit.py at a6617149; --fleet-repo = fleetwt; --branch = a6617149…)
+- --selftest                                     -> rc 0, "selftest cases=32 failed=0"
+- a29bb84 copy --selftest                        -> rc 0, "selftest cases=15 failed=0"
+- --rounds 10-20 --no-errata --json              -> rc 1 (9 defects: unresolved-full-hash 1, landed-omitted 8; required 42; post 4)
+- --rounds 10-20 --json (ledger)                 -> rc 0 (defects 9, corrected 9, uncorrected 0, status clean)
+- --rounds 10-20 --no-errata (text)              -> rc 1
+- --rounds 10-20 (ledger, text)                  -> rc 0
+- --rounds 10-  (open range, default ledger)     -> rc 0 (reports 11, corrected 9)
+- --rounds 3                                     -> rc 2 ("cannot read …/round-3/kama.md: No such file")
+- --rounds 14 and --rounds 16 (ledger)           -> rc 0 each (rows for other rounds not reported)
+- --rounds 19 --no-errata --report 19=<committed> -> rc 0 (cutoff from fleet first-add)
+- python3 hashcount.py <lane> <fleetwt> a6617149… (corpus/** unique 40-hex classification) -> rc 0 (80 unique: lane 42, fleet 10, unresolved 28)
+
+Recorded measured run (runs/b76727f3/*.exit, read only)
+- c1-audit-raw 1; c1-audit-ledger 0; c1-audit-selftest 0; c1-absent-at-base 128
+- c2-grid-frozen 1 (expected: frozen arm misses link-only cells); c2-grid-current 0; c2-grid-both 1
+- c2-live-gate-pinned 0; c2-live-gate-wrong-links-pin 1; c2-legacy-receipt-1 0; c2-legacy-receipt-1-required 1
+- fr-sources-census 0; fr-sources-validate 0 (W04 duplicate-URL warnings on S067, S071); nh-sources-append-only 0
+- commands.json: 28 commands; c1 audits use --rounds 10-20 only (no --report 21=)
+
+Source fetches (curl; HTTP 200 unless noted)
+- ldconfig.8, ld.so.8, nix.dev NAR, go zip.go/hash.go (tag v0.42.0, base64 -d rc 0), jj CLI reference, gitrevisions, revisions.adoc (raw, tag v2.56.0), git-cat-file, git-log, tldp shared-libraries -> rc 0 each (downloads); status 200 each
+- raw nix index.md at tag 2.34.1 -> rc 0 (line 29 symlink EBNF)
+- api.github.com nix git/refs/tags/2.34.1 -> annotated object 2c486b7c; git/tags/2c486b7c… -> commit 26842787496f2293c676fb36db38dacfd63497e0 (rc 0)
+- api.github.com jj-vcs/jj git/refs/tags/v0.45.1 -> commit 7c41cdeb16b6b321c64e789a966b6adf723816a5 (rc 0)
+
+Local manuals and CLIs
+- man -P cat git-cat-file / git-log / gitrevisions -> rc 0 each (git-log line 1355 = "author date, UNIX timestamp")
+- jj metaedit --help -> rc 0; jj --version -> rc 0 (jj 0.45.1-7c41cdeb…)
+- git --version -> rc 0 (2.56.0)
+
+Set and count checks
+- comm -23/-13 of build/advice listing vs `git ls-files .ufo/waves/round-21/build/advice` -> rc 0, no differences (82 tracked)
+- cut -f2 | sort | uniq -c on AuditLaneDocHashes-6/unique-tokens.tsv -> 43 lane, 10 fleet, 25 UNRESOLVED (a29bb84 scan)
+- git diff --numstat 7a6bc911 a6617149 -- corpus/SOURCES.md -> 11 insertions, 0 deletions
+- git diff --stat b76727f3 a6617149 -- tools tests registry corpus SKILL.md AGENTS.md -> rc 0, empty (no code change between measured and attacked commit)
+
+Text checks (grep / read tool, rc per tool call)
+- quotes located in fetched sources: ldconfig.html:99–100; ldso.html:102–103; nix index.md:29; zip.go:42; hash.go:76; revisions.adoc:16; jj-cli.html:10463; git-log.html:5563; tldp.html:174–175; git-cat-file.html:2707 (BATCH OUTPUT h2 at :2590)
+- producer/gate/grid names: kama-llamacpp-live.py:213 install_links, :1162 _selftest, :1378 install-tree-unpinnable; check-receipt.py install_links_sha, --require-install-links, --expect-install-links-sha256; install-links-grid.py:135 next(…, None), :377 except Exception, :383 return 2
+- advice verdicts read: AuditReport10–20 (11), AuditEarlyRounds, AuditLaneDocHashes, ErrataR20Splice, ErrataR20Omitted, ErrataR18R10, RevengeOmissionCause, LinksDigestEncoding, LinksGateReview, LinksPolicyCritic, SrcGitCatFile, SrcTldpSoname, C1ClaimCritic, C1C2Separability, AuditReport20
+
+Installs and updates: none. Processes started: none. Lane, fleet, index, MANIFEST, ~/.config and ~/.omp: not written.

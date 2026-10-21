@@ -1,0 +1,42 @@
+git: git version 2.56.0
+
+## author vs committer timestamps, every commit
+$ git log --format=%s|at=%at|ct=%ct
+c5 re-add f|at=1000000900|ct=1000000100
+c4 delete f|at=1000000800|ct=1000000800
+c3 add g|at=1000000700|ct=1000000700
+c2 modify f|at=1000000600|ct=1000000600
+c1 add f|at=1000000000|ct=1000000500
+
+## commits that touch f, no filter
+$ git log --format=%s -- f
+c5 re-add f
+c4 delete f
+c2 modify f
+c1 add f
+
+## --diff-filter=A on f: commits that add f
+$ git log --diff-filter=A --format=%s -- f
+c5 re-add f
+c1 add f
+
+## --diff-filter=D on f: commits that delete f
+$ git log --diff-filter=D --format=%s -- f
+c4 delete f
+
+## --diff-filter=A with no path
+$ git log --diff-filter=A --format=%s
+c5 re-add f
+c3 add g
+c1 add f
+
+## %at of the add commits on f
+$ git log --diff-filter=A --format=%at -- f
+1000000900
+1000000000
+
+## %ct of the add commits on f
+$ git log --diff-filter=A --format=%ct -- f
+1000000100
+1000000500
+

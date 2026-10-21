@@ -249,3 +249,21 @@ round-20 falsify scout; its report is
 included 1 correction row (S065), excluded 0. Quote: “None is equivalent to
 passing zero.” Stop: the special-case distinction is located; no broader
 interpreter-termination mapping was sought.
+
+## Round-21 falsify corrections — S066–S074 (appended 2026-10-21)
+
+Falsify seats re-opened every round-21 row (`.ufo/waves/round-21/falsify/advice/ReopenS0NN.md`,
+`SourcesConformance.md`). URLs, revisions, quotes, status and used-by held; the wording
+below supersedes only the named cells, rows above stay byte-identical (rule 2).
+
+- **S066** teaches → "ldconfig maintains a SONAME link chain (`libfoo.so -> libfoo.so.1 -> libfoo.so.1.12`), the middle file being the SONAME; deviating from the pattern risks compatibility issues after an upgrade." The digest consequence is kama's own inference (`corpus/lessons/round-21.md`), not the page's. Anchor: the chain example is §DESCRIPTION ¶4; page footer "(unreleased)" in the tarball troff.
+- **S067** scope → "glibc ld.so: …"; teaches → "a slash-less DT_NEEDED name is resolved at load time by the page's fixed order, steps (1)–(5); step (4) reads the ldconfig cache rather than walking directories; the page is silent on symlinks." The previous "directory search at every exec … live state" wording overstated the page.
+- **S068** scope → "NAR serialization of content-addressed store objects" (not every store path); `latest` 2.34 docs now render Nix 2.34.9 with an identical grammar line.
+- **S069** teaches → "h1 hashes the bytes a link resolves to, never its target text: a same-bytes retarget leaves it unchanged; a dangling or directory link makes HashDir fail." zip.go's line-42 restriction is documentation; CheckZip does not enforce it. The TreeCap comparison is kama's inference.
+- **S070** teaches keeps "unique within the repository"; the peel half is quoted in the lesson Gate supplement.
+- **S071** anchor → §BATCH OUTPUT (not §OUTPUT); teaches → "batch-check prints `missing` for an unresolvable name and `ambiguous` for an ambiguous short name; with a `^{commit}` peel an ambiguous short name is reported `missing`." Separating a git failure relies on the exit status, not the page; the audit therefore asks the bare name first.
+- **S072** the `latest` URL now serves jj v0.46.0 with the same sentence; the 0.45.1 pin is the installed `jj metaedit --help`. The author-time half of teaches is the lane's own probe (`.ufo/waves/round-21/falsify/out/ReopenS072/`), not the page.
+- **S073** teaches → "%at is the author date and %ct the committer date, both UNIX timestamps; --diff-filter=A keeps only added files, so a re-added path has more than one add commit." The audit's use of author time is lane design, recorded in the lesson.
+- **S074** queued rationale → ldconfig(8) (S066) does not say installers modify links to change what is used; S074 stays queued (tier B, 2003 guide) because no round-21 claim rests on the installer role. Kind remains `docs`.
+
+Search-log addendum: the falsify re-opens add 9 page fetches (identified 9, screened 9, rows 0 new) and two negative sweeps — `symlink|symbolic` over ld.so(8) (0 matches, `ReopenS067.md`) and a check that git-cat-file documents no `-e` status for a well-formed missing object (`SrcGitCatFile.md`).

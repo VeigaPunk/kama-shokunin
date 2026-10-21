@@ -1,0 +1,56 @@
+0     INFO          rc=0    tool=/tmp/kama-r21-C1EnvSentinel/fixed/tools/report-landing-audit.py work=/tmp/kama-r21-C1EnvSentinel/exp/run-fixed git version 2.56.0 python=3.14.8
+0b    INFO          rc=0    decoy-only commit X=9ffb8417a48cbcfe952c92432d55a4c969a6eaec in /tmp/kama-r21-C1EnvSentinel/exp/run-fixed/decoy.git
+0c    INFO          rc=1    baseline base fixture | rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+0d    INFO          rc=1    baseline full fixture | rc=1 status=failed defects=['unresolved-full-hash:9ffb8417a4']
+A1    ISOLATED      rc=1    GIT_DIR=decoy.git | rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+A2    ISOLATED      rc=1    GIT_INDEX_FILE=/nonexistent/idx | rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+A3    ISOLATED      rc=1    GIT_OBJECT_DIRECTORY=decoy/objects (X only there) | rc=1 status=failed defects=['unresolved-full-hash:9ffb8417a4']
+A4    ISOLATED      rc=1    GIT_ALTERNATE_OBJECT_DIRECTORIES=decoy/objects (X only there) | rc=1 status=failed defects=['unresolved-full-hash:9ffb8417a4']
+A5    ISOLATED      rc=1    GIT_COMMON_DIR=decoy.git | rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+A6    ISOLATED      rc=1    GIT_WORK_TREE+GIT_NAMESPACE+GIT_CONFIG_COUNT(i18n UTF-16LE) | rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+A7    ISOLATED      rc=1    GIT_CONFIG_GLOBAL+GIT_CONFIG_SYSTEM evil files | rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+B1    ISOLATED      rc=0    selftest, host env | selftest cases=32 failed=0 | 
+B2    ISOLATED      rc=0    selftest, GIT_* decoys + GIT_TEMPLATE_DIR hook exit 1 | selftest cases=32 failed=0 | hook_marks=0 | 
+B3    ISOLATED      rc=0    selftest with TMPDIR inside a git worktree | selftest cases=32 failed=0 | 
+C1a   ISOLATED      rc=1    XDG git/config evil (gpgsign, templateDir hook, fsmonitor, showSignature) | rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+C1a'  INFO          rc=-    marks after audit under XDG evil = 0
+C1b   ISOLATED      rc=0    selftest under XDG evil | selftest cases=32 failed=0 | marks=0 | 
+C1c   CONTROL       rc=128  plain git, same XDG config: add rc=0 commit rc=128 marks=['fsmonitor-xdg.sh', 'gpg-xdg.sh', 'pre-commit']
+C2a   ISOLATED      rc=1    HOME/.gitconfig evil (same content), XDG unset | rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+C2b   ISOLATED      rc=0    selftest under HOME evil | selftest cases=32 failed=0 | marks=0 | 
+C2c   CONTROL       rc=128  plain git, same HOME config: add rc=0 commit rc=128 marks=['fsmonitor-home.sh', 'gpg-home.sh', 'pre-commit']
+C3a   ISOLATED      rc=1    XDG git/ignore lists f: audit (no git add on audit path) | rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+C3b   ISOLATED      rc=0    selftest under XDG git/ignore | selftest cases=32 failed=0 | 
+C3c   CONTROL       rc=1    plain git add f under same git/ignore | The following paths are ignored by one of your .gitignore files:
+C4    NOT-READ      rc=1    git config user.name with XDG_CONFIG_DIRS evil -> ''
+C5a   ISOLATED      rc=1    XDG git/attributes: f working-tree-encoding=UTF-16LE, audit | rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+C5b   ISOLATED      rc=0    selftest under XDG git/attributes | selftest cases=32 failed=0 | 
+C5c   CONTROL       rc=128  plain git add f (17 bytes) under same attributes | fatal: failed to encode 'f' from UTF-16LE to UTF-8
+D1    FAIL-CLOSED   rc=2    root-owned lane, vgpnk audits | could-not-evaluate: git rev-parse --verify master^{commit} in /tmp/kama-r21-C1EnvSentinel/exp/run-fixed/safe/lane: rc=128 fatal: detected dubious ownership in repository 
+D2    CONTROL       rc=0    plain git with operator safe.directory for the lane
+D3    FAIL-CLOSED   rc=2    audit with operator safe.directory in XDG config | could-not-evaluate: git rev-parse --verify master^{commit} in /tmp/kama-r21-C1EnvSentinel/exp/run-fixed/safe/lane: rc=128 fatal: detected dubious ownership in repository 
+E1    CHANGED       rc=2    --lane-repo=non-repo dir inside fleet | rc=2 stdout='' | normal rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+E2    CEILING-GONE  rc=2    same with GIT_CEILING_DIRECTORIES=fleet (stripped) | rc=2 stdout=''
+E3    CONTROL       rc=128  plain git honors the ceiling: with ceiling rc=128; without ceiling rc=0
+F1a   INFO          rc=1    signed tip, no repo config | marks=0 | rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+F1b   NOT-EXEC      rc=1    audited repo's own config: showSignature+gpg.program | marks=[] | rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+F3a   CHANGED       rc=1    refs/replace of omitted c2 | rc=1 status=failed defects=['landed-omitted:9c7ed1d429'] | base rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+F3b   CHANGED       rc=1    operator GIT_NO_REPLACE_OBJECTS=1 is stripped; replacement still honored
+F3c   CONTROL       rc=0    git --no-replace-objects log shows: round-1: measure | round-1: work
+F4    CHANGED       rc=2    fleet alternates -> decoy objects | cat-file X before rc=128 after rc=0 (commit) | rc=2 stdout='' | base rc=1 status=failed defects=['unresolved-full-hash:9ffb8417a4']
+F5    CHANGED       rc=2    lane .git/shallow at tip | rev-list count 3->1 | rc=2 stdout='' | base rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+F5b   CHANGED       rc=2    lane info/grafts re-parents tip onto c1 | rev-list count=2 | rc=2 stdout='' | base rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+F6a   NOT-RUN       rc=1    audited repo core.hooksPath pre-commit during audit | marks=0
+F6b   CONTROL       rc=0    same hook fires on a real commit | marks=1
+F7a   NOT-RUN       rc=1    audited repo core.fsmonitor during audit | marks=0
+F7b   CONTROL       rc=0    git status on same repo runs it | marks=1
+F8    ISOLATED      rc=1    audited repo i18n.logOutputEncoding=UTF-16LE |  | stdout='{\n "errata_invalid": [],\n "err'
+F9    NOT-EXEC      rc=1    audited FLEET repo's own config, signed root report commit | marks=[] | rc=1 status=failed defects=['landed-omitted:9c7ed1d429']
+U1    OTHER         rc=2    invalid-UTF-8 commit subject (raw object) | stdout='' | could-not-evaluate: cannot run git: 'utf-8' codec can't decode byte 0xff in position 77: invalid start byte
+U1p   CONTROL       rc=0    plain git log subject bytes: 'round-1: measure \\xff'
+S-A   CAUGHT        rc=2    mutant: no GIT_* stripping -> selftest |  | could-not-evaluate: git add f in /tmp/report-landing-selftest-_izbgdao/lane: rc=128 fatal: this operation must be run in a work tree
+S-B1  MISSED        rc=0    mutant: strip GIT_DIR only -> selftest | selftest cases=32 failed=0
+S-B2  CHANGED       rc=0    same mutant, CLI with GIT_ALTERNATE_OBJECT_DIRECTORIES | rc=0 status=clean defects=[]
+S-C1  MISSED        rc=0    mutant: no GIT_CONFIG_GLOBAL pin -> selftest, host env | selftest cases=32 failed=0
+S-C2  UNEXPECTED    rc=0    mutant: no GIT_CONFIG_GLOBAL pin -> selftest under XDG evil | selftest cases=32 failed=0 | leaked_marks=0
+S-D   PIN-HOLDS     rc=0    mutant: drop explicit commit.gpgsign=false override, XDG evil gpgsign | selftest cases=32 failed=0 | marks=0
