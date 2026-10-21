@@ -1290,3 +1290,19 @@ and in SKILL/lesson, not treated as current authority.
   repository-local Git-config/history/UTF-8 hardening. Broader hardening,
   prelaunch races, gate chain bound and JSON edge cases remain frontier
   rather than quietly certified by the narrow helper repair.
+
+- Build accounting corrected/retained:64 unique seats,47 original successes
+  and17 original provider deaths. Peer messages resumed the same ApiFix,
+  CallerRepair and Matrix identities; candidates are preserved but not
+  integrated. Latest build outcomes50 successes/14 failures; reports52
+  include two terminal-failed partial reports. No replacement identities.
+- Residual ordinary batch8 (under64 distinct attack items; no padded wave):
+  three completed/five Devin-rate-limit deaths. Actual producer mutants5/5
+  killed; independent claim critic found no blocker at971d4549, pending
+  official measurement. Receipt paths and informational diagnostic suffix
+  survivor are recorded in the round lesson; no exact-text guarantee.
+- FinalSources reopened all12 initial rows and found missing knowledge
+  used-by entries plus Python micro-version page drift. Used-by changes for
+  S075–S080 are logged old→new in the lesson; freshly reopened S087/S088
+  clarify series URLs without rewriting immutable cells. Final additions14.
+  Official recipe includes each consecutive source-touching commit pair.

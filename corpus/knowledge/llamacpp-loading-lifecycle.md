@@ -413,3 +413,18 @@ the loader search includes a cache step rather than a directory walk at every
 exec, and NAR is serialization prior art rather than every store-path hash.
 The source-row changes and bounded quotes are in the round-22 lesson Gate;
 historical paragraphs/rows above remain unchanged.
+
+R22 residual source clarification: current Python-source readings use
+S087/S088 (superseding S075/S076). The `/3.14/` documentation URL floats
+across micro releases: first read3.14.8, later read3.14.9, same quoted error
+semantics. Neither page is a fixed3.14.8 URL pin; the host's installed version
+and the documentation render are separate observations.
+
+**Measured diagnostic boundary.** The matrix grades refusal class, stage,
+member and exception cause; the trailing error-description text is
+informational, not a graded property (the detail-erased mutant in
+`residual/FinalClaim/FinalClaim/` passes). Producer stat/read diagnostics now
+name the first failing operation/file, for example `read:'X':Permission denied`,
+rather than the former later-scan `X:unreadable`/`X:not-hashed` list.
+The `install-tree-unpinnable:` prefix and actual refusal remain unchanged;
+no multi-error aggregation or exact description-text guarantee is credited.

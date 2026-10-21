@@ -1,0 +1,27 @@
+--- tools/kama-llamacpp-live.py
++++ mutant/broad-baseexception/tools/kama-llamacpp-live.py
+@@ -184,21 +184,21 @@
+     directory = os.path.dirname(server_real)
+     try:
+         entries = sorted(os.listdir(directory))
+-    except OSError as exc:
++    except BaseException as exc:
+         raise SetupError('install-tree-unpinnable:listdir:'
+                          + (exc.strerror or type(exc).__name__)) from exc
+     for name in entries:
+         full = os.path.join(directory, name)
+         try:
+             st = os.lstat(full)
+-        except OSError as exc:
++        except BaseException as exc:
+             raise SetupError(f'install-tree-unpinnable:lstat:{name!r}:'
+                              + (exc.strerror or type(exc).__name__)) from exc
+         if not stat.S_ISREG(st.st_mode):
+             continue
+         try:
+             tree[name] = sha256_file(full)
+-        except OSError as exc:
++        except BaseException as exc:
+             raise SetupError(f'install-tree-unpinnable:read:{name!r}:'
+                              + (exc.strerror or type(exc).__name__)) from exc
+     combined = hashlib.sha256(

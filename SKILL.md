@@ -741,3 +741,7 @@ Current source interpretation for the R21 rows uses correction rows
 S078–S086 (superseding S066–S074). Historical source rows and prose remain
 intact; S084's generated latest reference is not the installed jj version,
 and the author-time audit design is own-work, not a guarantee from that page.
+
+The Python error-signal rows S075/S076 are clarified by S087/S088:
+`/3.14/` is a series URL, not a micro-release pin. The observed page-title
+drift3.14.8→3.14.9 did not alter the quoted open/os error semantics.

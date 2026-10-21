@@ -179,3 +179,69 @@ fixtures,12 source rows,3 consumers,4 routed records,1 trust restriction),
 below64; no padded second swarm. Eight ordinary fresh falsifiers cover that
 inventory after this integration commit. Their results are author-dispatched
 advice, not the outside admit/reject spot-check.
+
+## Residual source-review integration
+
+FinalSources reopened all twelve rows S075–S086, finding their quotes/scopes
+sound (`residual/FinalSources.md`, receipts/pages beneath FinalSources/).
+It found two record issues, both learned without rewriting immutable cells:
+
+- S075–S080 `used-by` old `corpus/lessons/round-22.md` → new
+  `corpus/lessons/round-22.md, corpus/knowledge/llamacpp-loading-lifecycle.md`.
+  Their status/recheck remain unchanged; every other existing cell is intact.
+- The Python `/3.14/` pages changed title3.14.8→3.14.9 during the round,
+  with unchanged quotes. The L1 reopened both and appended S087/S088:
+  opening-time3.14.8 is historical, not a micro-version URL pin. These new
+  correction rows avoid repeating D2's prose-only pattern. Source population
+  is now fourteen added rows, superseding the earlier twelve-row forecast.
+
+### Gate — micro-version clarification
+
+Both opened2026-10-21 by FinalSources and the L1; page titles3.14.9:
+
+| Row | URL and location | Located quote (≤25 words) |
+|---|---|---|
+| S087 supersedes S075 | https://docs.python.org/3.14/builtins/functions.html#open, Built-in Functions open first paragraph | “If the file cannot be opened, an OSError is raised.” |
+| S088 supersedes S076 | https://docs.python.org/3.14/library/os.html, introduction Note and os.lstat first paragraph | “All functions in this module raise OSError (or subclasses thereof) in the case of invalid or inaccessible file names and paths”; lstat “does not follow symbolic links.” |
+
+Two identified/screened/included correction candidates, zero exclusions.
+S077's opening-time version label remains a historical access observation,
+not an exact-micro URL pin. Durable ld.so negative-sweep input and command are
+`sources/ld.so-man-pages-6.19.txt` and `sources/ldso-sweep.json`; no-matches
+was rerun over the complete reader text. The read tool's raw slice UI-footer
+defect was reported, and structured displayContent text preserved the source
+without the footers; no partial capture is credited.
+
+## Residual verdicts before official measurement
+
+Eight ordinary falsifiers: FinalMutations, FinalSources and FinalClaim
+completed; five reviewers died immediately on Devin free-model rate limits.
+Exact last errors and traces are retained in
+`residual/completion-summary.json`; no replacement or retry identity.
+Round total72 unique seats,22 original provider deaths (19 latest failures
+after the three same-identity build resumes),55 retained reports.
+
+- FinalMutations: five actual-producer mutants killed with emitted
+  `incomplete-install-identity`/exit1; deleted list/stat/read refusals produce
+  3/6/9 failed rows, broad Exception/BaseException catches3/6. Pristine and
+  each byte-restored source pass all32 rows. Patches, digests, exact failed
+  names and raw streams are retained under `residual/FinalMutations/`.
+  Broad catches yield AttributeError instead of preserving the injected
+  exception: the completed matrix grades that specific propagation mismatch,
+  not a crash exit alone.
+- FinalClaim: no blocking issue at971d4549, pending official clean-tree run.
+  Independent matrix0/18→18/18, controls14/14;13 real-tree successes identical,
+  five real-errno helper failures refused by both old/new producer blocks,
+  real install-tree digest unchanged. Actual receipts are at
+  `residual/FinalClaim/FinalClaim/receipts.json` (the final chat summary
+  omitted the nested directory; the filed seat report cites it correctly).
+- Detail-erased mutant survives: the trailing error description is
+  informational, not measured. Stage/member/refusal/cause are measured.
+  Producer stat/read text now describes the first failing file/operation,
+  rather than the old later-scan unreadable/not-hashed list; stable prefix
+  unchanged. No exact diagnostic text or aggregation claim.
+
+Source review findings were integrated above. Residual attack inventory
+grew60→62 when two micro-version correction rows were added; still below64.
+Fresh primary reopens ground those rows; outside non-author sampling remains
+the closure's duty. The official recipe follows after the next clean commit.

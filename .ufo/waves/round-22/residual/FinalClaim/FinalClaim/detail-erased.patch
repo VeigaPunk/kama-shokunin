@@ -1,0 +1,27 @@
+--- tools/kama-llamacpp-live.py	2026-10-21 10:27:04.181815443 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-22/residual/FinalClaim/tmp/detail-erased.py	2026-10-21 10:33:41.302974832 -0300
+@@ -186,21 +186,21 @@
+         entries = sorted(os.listdir(directory))
+     except OSError as exc:
+         raise SetupError('install-tree-unpinnable:listdir:'
+-                         + (exc.strerror or type(exc).__name__)) from exc
++                         + '') from exc
+     for name in entries:
+         full = os.path.join(directory, name)
+         try:
+             st = os.lstat(full)
+         except OSError as exc:
+             raise SetupError(f'install-tree-unpinnable:lstat:{name!r}:'
+-                             + (exc.strerror or type(exc).__name__)) from exc
++                             + '') from exc
+         if not stat.S_ISREG(st.st_mode):
+             continue
+         try:
+             tree[name] = sha256_file(full)
+         except OSError as exc:
+             raise SetupError(f'install-tree-unpinnable:read:{name!r}:'
+-                             + (exc.strerror or type(exc).__name__)) from exc
++                             + '') from exc
+     combined = hashlib.sha256(
+         ''.join(f'{n} {tree[n]}\n' for n in sorted(tree)).encode()).hexdigest()
+     return tree, combined
