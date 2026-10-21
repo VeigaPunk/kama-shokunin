@@ -9,8 +9,11 @@ Population: the fleet reports `.ufo/reports/round-N/kama.md` for the selected
 rounds (`A-B` inclusive, `A-` = every round >= A with a fleet report).
 Defect kinds (finite, mechanical; no prose judgment):
 
-  unresolved-full-hash  a 40-hex token anywhere in the report that is no git
-                        object in the lane repo or the fleet repo
+  unresolved-full-hash  a 40-hex token in the report that is no git object in
+                        the lane or fleet repo, except an occurrence inside
+                        an exact Registry source URL from the committed
+                        `corpus/SOURCES.md` blob, outside `## Landed changes`;
+                        URL classification is not source-validity proof
   landed-unresolved     a 7..40-hex token inside `## Landed changes` that
                         contains a digit and a letter (40-hex always) and is
                         no commit in either repo
@@ -56,6 +59,10 @@ import time
 
 LANE = "kama"
 ERRATA = "registry/report-landing-errata.tsv"
+SOURCES = "corpus/SOURCES.md"
+SOURCE_URL = re.compile(r"https?://[^ \t\n\r\f\v|]+")
+SOURCE_URL_END = r"(?=[\s`'\"<>()\[\]|,;*]|\Z)"
+SOURCE_ROW = re.compile(r"S[0-9]{3,}")
 FULL = re.compile(r"(?<![0-9A-Za-z])[0-9a-f]{40}(?![0-9A-Za-z])")
 ABBREV = re.compile(r"(?<![0-9A-Za-z])[0-9a-f]{7,40}(?![0-9A-Za-z])")
 KINDS = ("unresolved-full-hash", "landed-unresolved", "landed-ambiguous",
@@ -125,9 +132,13 @@ def lookup(repos, tokens, peel=""):
     return status
 
 
+def landed_match(text):
+    return re.search(r"^## Landed changes[^\n]*\n(.*?)(?=^## |\Z)", text,
+                     re.S | re.M)
+
+
 def landed_section(text):
-    match = re.search(r"^## Landed changes[^\n]*\n(.*?)(?=^## |\Z)", text,
-                      re.S | re.M)
+    match = landed_match(text)
     return None if match is None else match.group(1)
 
 
@@ -171,7 +182,85 @@ def read_report(path):
         raise EvalError(f"cannot read {path}: {exc}") from exc
 
 
-def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path):
+def census_source_urls(text):
+    """Return the source URL and census-normalized form for each valid S-row."""
+    urls = set()
+    in_registry = False
+    for line in text.split("\n"):
+        if re.match(r" {0,3}##[ \t]", line):
+            in_registry = line.lstrip(" ")[2:].strip(" \t") == "Registry"
+            continue
+        if re.match(r" {0,3}#[ \t]", line):
+            in_registry = False
+            continue
+        if not in_registry or not re.match(r" {0,3}\|", line):
+            continue
+        cells = line.lstrip(" ").split("|")
+        if len(cells) != 13 or not SOURCE_ROW.fullmatch(cells[1].strip(" \t")):
+            continue
+        match = SOURCE_URL.search(cells[2])
+        if match is None or not match.group(0).startswith("https://"):
+            continue
+        full = match.group(0)
+        census = re.sub(r"#[^ ]*$", "", full)
+        census = re.sub(r"/$", "", census)
+        census = re.sub(r"^[A-Za-z]+://", "", census)
+        host, slash, rest = census.partition("/")
+        urls.add((full, host.lower() + slash + rest))
+    return urls
+
+
+def load_source_urls(lane_repo, branch):
+    """Read only the committed regular SOURCES.md blob; absent is legacy."""
+    try:
+        entry = git(lane_repo, "ls-tree", branch, "--", SOURCES).rstrip("\n")
+    except UnicodeDecodeError as exc:
+        raise EvalError(f"cannot read {branch}:{SOURCES} tree entry: {exc}") from exc
+    if not entry:
+        return None
+    metadata, sep, path = entry.partition("\t")
+    fields = metadata.split()
+    if (not sep or "\n" in entry or path != SOURCES or len(fields) != 3
+            or fields[1] != "blob" or fields[0] not in ("100644", "100755")):
+        raise EvalError(f"{branch}:{SOURCES}: not a regular blob")
+    try:
+        text = git(lane_repo, "cat-file", "blob", fields[2])
+    except UnicodeDecodeError as exc:
+        raise EvalError(f"cannot decode {branch}:{SOURCES}: {exc}") from exc
+    forms = census_source_urls(text)
+    if not forms:
+        return None
+
+    def alternatives(values):
+        return "|".join(re.escape(value) for value in
+                        sorted(values, key=len, reverse=True))
+
+    full = alternatives({url for url, _ in forms})
+    census = alternatives({url for _, url in forms})
+    return re.compile(
+        rf"(?<![A-Za-z0-9._~%+@:/-])(?:{full}|{census}){SOURCE_URL_END}")
+
+
+def classify_full_hashes(text, source_urls, landed):
+    """Keep FULL scanning unchanged except for exact URL occurrences."""
+    if source_urls is None:
+        return FULL.findall(text), []
+    url_spans = [match.span() for match in source_urls.finditer(text)]
+    lo, hi = landed.span(1) if landed else (-1, -1)
+    tokens, classified, unclassified = [], set(), set()
+    for match in FULL.finditer(text):
+        start, end = match.span()
+        token = match.group(0)
+        if (lo <= start < hi or not any(
+                left <= start and end <= right for left, right in url_spans)):
+            tokens.append(token)
+            unclassified.add(token)
+        else:
+            classified.add(token)
+    return tokens, sorted(classified - unclassified)
+
+
+def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path, source_urls):
     rel = f".ufo/reports/round-{rnd}/{lane}.md"
     report = Path(path) if path else Path(fleet_repo) / rel
     if path:
@@ -191,10 +280,13 @@ def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path):
         cutoff = int(time.time())
     repos = (lane_repo, fleet_repo)
     defects = []
-    full = lookup(repos, FULL.findall(text))
+    landed = landed_match(text)
+    full_tokens, classified_hashes = classify_full_hashes(
+        text, source_urls, landed)
+    full = lookup(repos, full_tokens)
     defects += [{"kind": "unresolved-full-hash", "token": t}
                 for t, s in full.items() if s != "found"]
-    section = landed_section(text)
+    section = None if landed is None else landed.group(1)
     commits = round_commits(lane_repo, branch, lane, rnd)
     pre = [c for c in commits if c["atime"] <= cutoff]
     post = [c for c in commits if c["atime"] > cutoff]
@@ -220,6 +312,7 @@ def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path):
         "round": rnd, "report": str(report), "report_committed": committed,
         "cutoff": cutoff, "round_commits": len(commits),
         "required": len(pre), "post_report": [c["sha"] for c in post],
+        "source_url_hashes": classified_hashes,
         "defects": defects,
     }
 
@@ -314,8 +407,9 @@ def run(args):
         raise EvalError("no rounds selected")
     git(lane_repo, "rev-parse", "--verify", f"{args.branch}^{{commit}}")
     git(fleet_repo, "rev-parse", "--verify", "HEAD^{commit}")
+    source_urls = load_source_urls(lane_repo, args.branch)
     results = [audit_round(lane_repo, fleet_repo, args.branch, args.lane, r,
-                           overrides.get(r)) for r in rounds]
+                           overrides.get(r), source_urls) for r in rounds]
     errata = load_errata(args, lane_repo)
     unmatched, invalid = apply_errata(results, errata, (lane_repo, fleet_repo))
     by_kind = {k: 0 for k in KINDS}
@@ -484,6 +578,125 @@ def selftest():
                   and not checkable_abbrev("1234567")
                   and checkable_abbrev("deadbee1")
                   and checkable_abbrev("1" * 40) and checkable_abbrev("f" * 40))
+            foreign = "704366d76f8748cf9ad3df62a464bfcc8d1ae6ad"
+            source_url = (
+                "https://GitHub.com/ggml-org/llama.cpp/blob/" + foreign
+                + "/tools/server/README.md/#readme")
+            census_url = (
+                "github.com/ggml-org/llama.cpp/blob/" + foreign
+                + "/tools/server/README.md")
+            malformed_url = (
+                "https://other.example/project/blob/" + foreign + "/source.cc")
+            lead_url = (
+                "https://other.example/project/blob/" + foreign + "/lead.cc")
+            source_fixture = (
+                "## Registry\n"
+                "| id | source | kind | tier | scope | anchor | teaches | "
+                "status | opened | recheck | used-by |\n"
+                "|---|---|---|---|---|---|---|---|---|---|---|\n"
+                "| S001 | upstream — " + source_url
+                + " | code | A | fixture scope | fixture anchor | fixture "
+                "teaches | mined | 2026-10-21 | on-release | — |\n"
+                "| S002 | malformed — " + malformed_url
+                + " | code | A | fixture scope | fixture anchor | fixture "
+                "teaches | mined | 2026-10-21 | on-release |\n"
+                "## Leads\n"
+                "| S003 | lead — " + lead_url
+                + " | code | A | fixture scope | fixture anchor | fixture "
+                "teaches | mined | 2026-10-21 | on-release | — |\n")
+            all_landed = "\n".join(
+                f"- `{oid}`" for oid in (a, b, c, d, edge))
+            source_draft = Path(tmp, "source-url-draft.md")
+
+            def source_case(body, landed_lines=None):
+                landed_lines = all_landed if landed_lines is None else landed_lines
+                source_draft.write_text(
+                    "## Work performed\n" + body + "\n"
+                    "## Landed changes\n" + landed_lines + "\n",
+                    encoding="utf-8")
+                result, report = run(_ns(
+                    base, report=[f"1={source_draft}"]))
+                kinds = sorted((item["kind"], item["token"])
+                               for item in report["results"][0]["defects"])
+                return result, report, kinds
+
+            rc, doc, kinds = source_case(source_url)
+            check("absent-source-registry-is-no-exemption",
+                  rc == 1 and kinds == [("unresolved-full-hash", foreign)]
+                  and doc["results"][0]["source_url_hashes"] == [])
+            _commit(lane, source_fixture, "source-fixture", 1250,
+                    "corpus/SOURCES.md")
+            rc, doc, kinds = source_case(source_url)
+            check("curated-full-source-url-accepted",
+                  rc == 0 and kinds == []
+                  and doc["results"][0]["source_url_hashes"] == [foreign])
+            rc, doc, kinds = source_case(census_url)
+            check("census-normalized-source-url-accepted",
+                  rc == 0 and kinds == []
+                  and doc["results"][0]["source_url_hashes"] == [foreign])
+            rc, doc, kinds = source_case(source_url + "\n" + foreign)
+            check("bare-copy-of-curated-hash-remains-unresolved",
+                  rc == 1 and kinds == [("unresolved-full-hash", foreign)]
+                  and doc["results"][0]["source_url_hashes"] == [])
+            unregistered_url = (
+                "https://github.com/ggml-org/llama.cpp/blob/" + foreign
+                + "/tools/server/other.cc")
+            rc, doc, kinds = source_case(unregistered_url)
+            check("unregistered-source-url-remains-unresolved",
+                  rc == 1 and kinds == [("unresolved-full-hash", foreign)]
+                  and doc["results"][0]["source_url_hashes"] == [])
+            rc, doc, kinds = source_case(malformed_url)
+            check("malformed-source-row-is-not-an-exemption",
+                  rc == 1 and kinds == [("unresolved-full-hash", foreign)]
+                  and doc["results"][0]["source_url_hashes"] == [])
+            rc, doc, kinds = source_case(lead_url)
+            check("leads-url-is-not-a-registry-exemption",
+                  rc == 1 and kinds == [("unresolved-full-hash", foreign)]
+                  and doc["results"][0]["source_url_hashes"] == [])
+            rc, doc, kinds = source_case("not" + census_url)
+            check("census-url-left-boundary",
+                  rc == 1 and kinds == [("unresolved-full-hash", foreign)]
+                  and doc["results"][0]["source_url_hashes"] == [])
+            rc, doc, kinds = source_case(census_url + ".bak")
+            check("census-url-right-boundary",
+                  rc == 1 and kinds == [("unresolved-full-hash", foreign)]
+                  and doc["results"][0]["source_url_hashes"] == [])
+            rc, doc, kinds = source_case("http://" + census_url)
+            check("scheme-stripped-url-not-matched-inside-http",
+                  rc == 1 and kinds == [("unresolved-full-hash", foreign)]
+                  and doc["results"][0]["source_url_hashes"] == [])
+            rc, doc, kinds = source_case("https://outer.example/" + source_url)
+            check("full-source-url-not-matched-inside-another-url",
+                  rc == 1 and kinds == [("unresolved-full-hash", foreign)]
+                  and doc["results"][0]["source_url_hashes"] == [])
+            uncommitted_hash = "9" * 40
+            uncommitted_url = (
+                "https://worktree.example/project/blob/" + uncommitted_hash
+                + "/source.cc")
+            (lane / SOURCES).write_text(
+                source_fixture.replace(
+                    "## Leads\n",
+                    "| S004 | worktree — " + uncommitted_url
+                    + " | code | A | fixture scope | fixture anchor | fixture "
+                    "teaches | mined | 2026-10-21 | on-release | — |\n"
+                    "## Leads\n", 1),
+                encoding="utf-8")
+            rc, doc, kinds = source_case(uncommitted_url)
+            check("worktree-source-row-does-not-authorize",
+                  rc == 1 and kinds == [
+                      ("unresolved-full-hash", uncommitted_hash)]
+                  and doc["results"][0]["source_url_hashes"] == [])
+            landed_without_checkpoint = "\n".join(
+                f"- `{oid}`" for oid in (a, b, d, edge))
+            landed_without_checkpoint += "\n- " + source_url
+            rc, doc, kinds = source_case(
+                "no source URL in body", landed_without_checkpoint)
+            check("landed-source-url-keeps-both-hash-checks",
+                  rc == 1 and kinds == sorted([
+                      ("unresolved-full-hash", foreign),
+                      ("landed-unresolved", foreign),
+                      ("landed-omitted", c)])
+                  and doc["results"][0]["source_url_hashes"] == [])
             blobs = Path(tmp, "blobs")
             blobs.mkdir()
             names = []
