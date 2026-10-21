@@ -72,14 +72,17 @@ def main(argv=None):
     if args.selftest:
         return run_selftest()
 
-    base = json.loads(Path(args.receipt).read_text(encoding="utf-8"))
+    try:
+        base = json.loads(Path(args.receipt).read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        print(f"install-tree-grid: cannot read {args.receipt}: {exc}",
+              file=sys.stderr)
+        return 2
     tree = base["server"].get("install_tree")
     if not isinstance(tree, dict) or not tree:
         print("install-tree-grid: receipt has no install_tree", file=sys.stderr)
         return 2
-    members = args.members or [m for m in DEFAULT_MEMBERS if m in tree]
-    if not members:
-        members = sorted(tree)[:3]
+    members = args.members or list(DEFAULT_MEMBERS)
     argv = pins(args, args.tree_sha)
     with tempfile.TemporaryDirectory(prefix="install-tree-grid-") as tmp:
         tmp = Path(tmp)
@@ -88,7 +91,9 @@ def main(argv=None):
         exit_code, out = gate_exit(args.gate, base_path, argv)
         baseline = "VALID" if exit_code == 0 else "INVALID"
         rows = []
-        for member in members:
+        # An invalid baseline makes every mutant "rejected" for the wrong
+        # reason; do not run or count them (one gate call only).
+        for member in (members if baseline == "VALID" else []):
             if member not in tree:
                 rows.append({"member": member, "status": "absent"})
                 continue
@@ -180,7 +185,7 @@ def run_selftest():
                    0, "VALID", "rejected", 1)
         check_case("absent member", valid_path, 1, "VALID", "absent", 0,
                     members="absent-member.so")
-        check_case("bad receipt", bad_path, 2, "INVALID", "rejected", 1)
+        check_case("bad receipt", bad_path, 2, "INVALID", None, 0)
 
     if failures:
         for failure in failures:

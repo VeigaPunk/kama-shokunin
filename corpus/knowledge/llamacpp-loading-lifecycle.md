@@ -310,3 +310,13 @@ swapped. Implementation-digest preconditions remain a separate possible move.
   pinned — `libllama-common`/`libggml`/`libllama` swaps stay internally VALID
   under the fifth pin (`ResidImplPin.md` P2). A five-pin VALID is not an
   authenticated execution trace; it binds the bytes the lane observed.
+
+
+**Round-19 sixth-pin note (appended).** The four-pin limit above is historical
+for the official runner: `--expect-install-tree-sha256` now pins the observed
+`sorted(name sha)` digest of the install directory's regular files, and the
+gate rejects a field↔tree disagreement. Scope: 51 regular files on this host;
+the soname symlinks (`libllama.so.0`, `libggml.so.0`, …) and system NEEDED
+libraries (`libc`, `libstdc++`, `libssl`, …) are outside it, so retargeting a
+link or substituting a system library leaves the pin unchanged (CritC2Inflation,
+TreeCap). The pin binds observed bytes; it is not authentication of execution.

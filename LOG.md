@@ -1133,3 +1133,31 @@ and in SKILL/lesson, not treated as current authority.
 - Census 47 → 56 rows (A 44 → 53, C 3; mined 37 → 45, rejected 5 → 6), both exits 0;
   validate keeps three W04 duplicates (S031, S043, S056).
 - No installs or host mutations. Stale-lane: respawn-per-round driver; no other kama mission open.
+
+## round 19 — revision-qualified citations and the install-tree pin (2026-10-21)
+
+- Routed round-18 defects fixed first: residual verdicts are 4 confirm / 3
+  partial with a committed dispatch record; S055/`Gate` pointers are
+  revision-qualified; the SCORECARD C2 command erratum names `--json`; the
+  6-reviewer/1-critic split is in `residual/assignments.json`.
+- C1 calibration 7 → 8: `tools/citation-provenance.py` +
+  `registry/required-citations.json` bind `cite(rev, path, sha256=…)` tokens to
+  a required document and verify the blob at that revision. Counting:
+  missing=3 exit 1 → missing=0 verified=3 exit 0; selftest 15 cases
+  (`evidence/c1-counting.txt`).
+- C2 operability 8 → 8: sixth gate pin `--expect-install-tree-sha256`, passed
+  by the runner from the producer's `install_tree()` digest;
+  `tests/llamacpp-live/install-tree-grid.py` (with `--selftest`, absent defaults
+  fail closed). Counting: consistent swaps `rejected=0/3` exit 1 → `3/3`
+  exit 0 (`evidence/c2-grid.txt`).
+- Frontier: S057 (man7 ld.so(8)) row + lesson Gate (10- and 11-word located
+  quotes); census 56 → 57 (A 54, C 3; mined 46), exits 0; validate exit 0 with
+  the three expected W04s.
+- Waves: build wave 64 seats (scout 18, reviewer 12, executor 10, critic 6,
+  scribe 5, connector 4, mutation-tester 3, revenger 3, sentinel 2,
+  simplifier 1; planner = L1). Falsify wave validated at 66 seats; dispatch
+  refused at the host job cap (66/66 failed to start, none spawned, recorded in
+  `falsify/refused-attempt-1.json`), never split or shrunk. Wave-1 findings
+  integrated where they were claim-critical; the rest are named debt.
+- No installs or host mutations. Stale-lane: respawn-per-round driver; no other
+  kama mission open.

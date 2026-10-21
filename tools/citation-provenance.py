@@ -51,35 +51,45 @@ def git_blob(lane, rev, path):
 
 
 def scan(docs):
-    """[(doc, rev, path, sha)] tokens found in the documents."""
+    """([(doc, rev, path, sha)], unreadable_docs) for the documents."""
     found = []
+    unreadable = []
     for doc in docs:
         try:
             text = Path(doc).read_text(encoding="utf-8")
         except OSError as exc:
             print(f"citation-provenance: cannot read {doc}: {exc}",
                   file=sys.stderr)
+            unreadable.append(str(doc))
             continue
         for match in TOKEN.finditer(text):
             found.append((str(doc), match.group(1), match.group(2),
                           match.group(3)))
-    return found
+    return found, unreadable
 
 
-def check(lane, registry, docs):
+def check(lane, registry, docs, allow_off_ref=False):
+    probe = subprocess.run(["git", "-C", str(lane), "rev-parse", "--git-dir"],
+                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if probe.returncode != 0:
+        raise ValueError(f"lane is not a git repository: {lane}")
     rows = json.loads(Path(registry).read_text(encoding="utf-8"))
     if not isinstance(rows, list) or not rows:
         raise ValueError("registry must be a non-empty JSON array")
-    tokens = scan(docs)
+    tokens, unreadable = scan(docs)
     results = []
     for row in rows:
         rid, rev, path = row.get("id"), row.get("rev"), row.get("path")
         want = row.get("sha256")
+        doc_bind = row.get("doc")
         if not all(isinstance(v, str) and v
                    for v in (rid, rev, path, want)):
             raise ValueError(f"invalid registry row: {row!r}")
+        if doc_bind is not None and not isinstance(doc_bind, str):
+            raise ValueError(f"invalid registry doc: {row!r}")
         same_target = [t for t in tokens if t[1] == rev and t[2] == path]
-        hits = [t for t in same_target if t[3] == want]
+        hits = [t for t in same_target if t[3] == want
+                and (doc_bind is None or str(t[0]).endswith(doc_bind))]
         stale = [t for t in same_target if t[3] != want]
         observed, error = git_blob(lane, rev, path)
         status = "ok"
@@ -89,16 +99,25 @@ def check(lane, registry, docs):
             status = "missing"
         elif error is not None or observed != want:
             status = "mismatch"
+        elif not allow_off_ref:
+            anc = subprocess.run(
+                ["git", "-C", str(lane), "merge-base", "--is-ancestor",
+                 rev, "origin/master"], stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
+            if anc.returncode != 0:
+                status = "off-ref"
         results.append({
             "id": rid, "rev": rev, "path": path, "sha256": want,
             "documents": sorted({h[0] for h in hits}),
             "observed_sha256": observed, "error": error, "status": status})
     counts = {
         "required": len(results),
+        "docs_unreadable": len(unreadable),
         "found": sum(1 for r in results if r["documents"]),
         "verified": sum(1 for r in results if r["status"] == "ok"),
         "missing": sum(1 for r in results if r["status"] == "missing"),
         "mismatch": sum(1 for r in results if r["status"] == "mismatch"),
+        "off_ref": sum(1 for r in results if r["status"] == "off-ref"),
     }
     return counts, results
 
@@ -132,7 +151,7 @@ def selftest():
 
         def run(text, expect):
             doc.write_text(text, encoding="utf-8")
-            counts, _ = check(lane, registry, [doc])
+            counts, _ = check(lane, registry, [doc], allow_off_ref=True)
             ok = ((counts["missing"], counts["mismatch"]) == (0, 0)
                   if expect == 0 else
                   (counts["missing"], counts["mismatch"]) != (0, 0))
@@ -154,16 +173,33 @@ def selftest():
         stale = "2" * 64
         doc.write_text(f"cite({rev}, evidence.txt, sha256={stale})",
                        encoding="utf-8")
-        counts, _ = check(lane, registry, [doc])
+        counts, _ = check(lane, registry, [doc], allow_off_ref=True)
         if counts["mismatch"] != 1:
             failures.append(f"stale-equal: {counts}")
         if not DEFAULT_DOCS or not all(d for d in DEFAULT_DOCS):
             failures.append("default docs list is empty")
+        other = lane / "other.md"
+        other.write_text(f"cite({rev}, evidence.txt, sha256={digest})",
+                         encoding="utf-8")
+        bound = json.loads(registry.read_text(encoding="utf-8"))
+        bound[0]["doc"] = "doc.md"
+        registry.write_text(json.dumps(bound), encoding="utf-8")
+        counts, _ = check(lane, registry, [other], allow_off_ref=True)
+        if counts["missing"] != 1:
+            failures.append(f"doc-binding: {counts}")
+        doc.write_text(f"cite({rev}, evidence.txt, sha256={digest})",
+                       encoding="utf-8")
+        counts, _ = check(lane, registry, [doc], allow_off_ref=True)
+        if (counts["missing"], counts["verified"]) != (0, 1):
+            failures.append(f"doc-binding-ok: {counts}")
+        counts, _ = check(lane, registry, [doc, lane / "absent.md"], allow_off_ref=True)
+        if counts["docs_unreadable"] != 1 or counts["verified"] != 1:
+            failures.append(f"unreadable-doc: {counts}")
     if failures:
         for f in failures:
             print(f"SELFTEST FAIL {f}", file=sys.stderr)
         return 1
-    print("selftest: ok (12 cases)")
+    print("selftest: ok (15 cases)")
     return 0
 
 
@@ -173,6 +209,8 @@ def main(argv=None):
     ap.add_argument("--docs", nargs="+", default=None)
     ap.add_argument("--lane", default=None)
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--allow-off-ref", action="store_true",
+                    help="accept revisions that are not ancestors of origin/master")
     ap.add_argument("--selftest", action="store_true")
     args = ap.parse_args(argv)
     if args.selftest:
@@ -181,7 +219,8 @@ def main(argv=None):
     docs = args.docs or [str(lane / d) for d in DEFAULT_DOCS]
     registry = args.registry or str(lane / DEFAULT_REGISTRY)
     try:
-        counts, results = check(lane, registry, docs)
+        counts, results = check(lane, registry, docs,
+                               allow_off_ref=args.allow_off_ref)
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print(f"citation-provenance: {exc}", file=sys.stderr)
         return 2
@@ -196,7 +235,10 @@ def main(argv=None):
                       f"expected={row['sha256'][:12]} "
                       f"observed={(row['observed_sha256'] or 'absent')[:12]}"
                       + (f" ({row['error']})" if row["error"] else ""))
-    return 0 if counts["missing"] == 0 and counts["mismatch"] == 0 else 1
+    if counts["docs_unreadable"]:
+        return 2
+    return 0 if counts["missing"] == 0 and counts["mismatch"] == 0 \
+        and counts["off_ref"] == 0 else 1
 
 
 if __name__ == "__main__":
