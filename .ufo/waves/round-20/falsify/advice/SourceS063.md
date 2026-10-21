@@ -1,0 +1,15 @@
+VERDICT: partial - PIT semantics and the rejection are correct, but S063's used-by field misses citing artifacts.
+
+# Findings
+- `corpus/SOURCES.md:75` records S063 as code / tier A, opened `2026-10-21`, pinned to `hcoles/pitest` commit `f7fe5adfa5fb6e727c12d2403a48f5e4e9dd2fc6`; its `used-by` cell is `—`.
+- Reopened the pinned primary source: [DetectionStatus.java](https://github.com/hcoles/pitest/blob/f7fe5adfa5fb6e727c12d2403a48f5e4e9dd2fc6/pitest/src/main/java/org/pitest/mutationtest/DetectionStatus.java#L61-L109). Located line 63: `RUN_ERROR(true)`. Its enum comment says “Something went wrong. Don't know what but it was probably bad.” `isDetected()` returns the stored flag (lines 102–109); its Javadoc says the flag indicates the mutation was distinguished from un-mutated code by the test suite while ignoring some ambiguity.
+- Located [ScorePrecursor.java](https://github.com/hcoles/pitest/blob/f7fe5adfa5fb6e727c12d2403a48f5e4e9dd2fc6/pitest-entry/src/main/java/org/pitest/mutationtest/statistics/ScorePrecursor.java#L34-L46), lines 34–46: detected mutations are summed after filtering counts by `a.getStatus().isDetected()`. `toScore()` passes that total to `Score`; [Score.java](https://github.com/hcoles/pitest/blob/f7fe5adfa5fb6e727c12d2403a48f5e4e9dd2fc6/pitest-entry/src/main/java/org/pitest/mutationtest/statistics/Score.java#L39-L43) prints it as “Killed” and uses it in the detected percentage. Therefore this PIT revision includes RUN_ERROR in its detected/Killed numerator; RUN_ERROR remains its own status, not the KILLED status.
+- Tier A is appropriate only for the row's narrow scope: first-party PIT score policy at this pinned revision. It is not authority for a universal error/verdict rule.
+- The rejected status is consistent with the reason: PIT's `RUN_ERROR(true)` contradicts, rather than supports, a universal claim that runtime errors never count as detected. The row's explicit flip is: “a PIT-policy comparison needs that precise distinction.” That permits a narrowly scoped PIT-policy comparison; it does not turn the source into support for a universal rule.
+
+## Registry cross-check
+- `corpus/SOURCES.md:75` has `used-by: —`, but `corpus/knowledge/error-is-not-a-verdict.md:1,33-36` cites S063 and uses PIT's RUN_ERROR score treatment as a counterexample; `corpus/lessons/round-20.md:17,56` also cites it. `CORPUS.md:107-108` defines used-by as paths of knowledge entries or lessons citing the row. Thus the dash does not match those citations. This does not change why the row is rejected as support for the universal claim; the assigned file was not edited.
+
+## Limits
+- No LSP device/server was exposed: `read xd://lsp` returned “No such tool” (available mounted devices were `ast_edit`, `debug`). Semantic findings above are from the reopened pinned source text and caller chain, not grep output.
+- No tools installed or updated; no tests or runtime checks performed.

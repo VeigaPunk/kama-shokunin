@@ -1,0 +1,9 @@
+VERDICT: confirm - The stored cell matches its expected frozen/current classes; both arms ran, with no discrepancy.
+
+- Cell definition: `.ufo/waves/round-20/build/out/CensusHarness/error-injection-cells.json:9` records `grid-invalid-then-traceback`, mode `invalid-then-traceback`, expected frozen `rejected`, current `error`, `known_red: true`.
+- Paired evidence: `.ufo/waves/round-20/runs/0957ce61/error-pair.stdout:90-98` records `frozen_class: rejected`, `current_class: error`, matching expectations, and both `frozen_ran: true` and `current_ran: true`.
+- Arm-specific corroboration: `error-frozen.stdout:90-98` records frozen `rejected`, `frozen_witness_match: true`, and `frozen_ran: true`; `error-current.stdout:90-98` records current `error` and `current_ran: true`.
+- Not exit-only: `tools/error-verdict-census.py:164-180` classifies from parsed structured stdout (`baseline`, one result-row `status`) and requires the corresponding exit to agree; exit alone does not select the class. `tests/llamacpp-live/install-tree-grid.py:81-93` first treats a traceback in stdout/stderr as `ERROR`, before checking exit plus `INVALID`/`VALID` output markers. Its injected `INVALID followed by traceback` case is at lines 271-273.
+- `commands.json:95-126` records separate frozen/current census invocations, expected exits, and `timed_out: false`; `error-pair` is recorded at lines 129-141. The pair stdout's per-cell ran flags, rather than the command exits, establish both arms ran.
+- LSP device unavailable (`xd://lsp` returned “No such tool”; only `ast_edit` and `debug` were mounted); source statements above are literal file evidence, not LSP-semantic checks.
+- Discrepancy: none observed. No matrix rerun performed.

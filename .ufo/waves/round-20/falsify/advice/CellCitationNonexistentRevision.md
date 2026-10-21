@@ -1,0 +1,7 @@
+VERDICT: confirm - The stored cell and paired result agree, both arms ran, and `failed` is classified from citation counts plus exit consistency, not exit alone.
+
+- **Stored cell:** `.ufo/waves/round-20/build/out/CensusHarness/error-injection-cells.json:12` specifies `citation-nonexistent-revision`, mode `nonexistent-revision`, expected frozen/current class `failed`, and `known_red: false`.
+- **Exact paired row:** `.ufo/waves/round-20/runs/0957ce61/error-pair.stdout:123-131` records frozen/current `failed`, matching expected classes, `frozen_witness_match: true`, `frozen_ran: true`, and `current_ran: true`. No discrepancy with the stored cell.
+- **Exit-alone check:** `tools/error-verdict-census.py:184-205` (`classify_citation`) parses stdout JSON counts; it reports `failed` only when unreadable is zero, at least one of `missing`, `mismatch`, or `off_ref` is nonzero, and `rc == 1`. Otherwise that count case is `could-not-evaluate`; an unreadable document is separately classified as `error` only with `rc == 2`. `:258-284` sets the fixture revision to `f` repeated 40 for this mode, creates a matching citation/registry, then applies that classifier.
+
+**Residual risk / verification gap:** The stored pair row contains classifications and run flags, not per-arm raw JSON counts or return codes; this review did not rerun the matrix. No LSP device was available; no caller/definition search was needed for this stored-row check.

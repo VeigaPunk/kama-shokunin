@@ -1,0 +1,6 @@
+VERDICT: confirm - The pinned cell and paired output agree: both survivor arms were evaluated as killed.
+
+- Cell registry: `.ufo/waves/round-20/build/out/CensusHarness/error-injection-cells.json:16` identifies `survivor-selftest-complete-target-failure`, mode `complete-target-failure`, with expected frozen/current classes both `killed` and `known_red: false`.
+- Exact measured row: `.ufo/waves/round-20/runs/0957ce61/error-pair.stdout:166-175` reports `frozen_class: killed`, `current_class: killed`, both expected classes `killed`, `frozen_witness_match: true`, `frozen_ran: true`, and `current_ran: true`. No discrepancy found.
+- Verdict is not inferred from exit status alone: `.ufo/waves/round-20/build/out/CensusHarness/error-verdict-census.py:206-213` checks the run gate, parses stdout JSON, and returns its `outcome` (`killed`/`survived`/`error`); it does not read the return-code tuple element. `:283-293` runs the survivor probe and passes its result to that classifier. The child helper at `:75-91` distinguishes process launch/timeout from return code.
+- LSP unavailable: `read xd://lsp` returned “No such tool” (mounted devices were `ast_edit`, `debug`); source behavior was checked directly in the harness.

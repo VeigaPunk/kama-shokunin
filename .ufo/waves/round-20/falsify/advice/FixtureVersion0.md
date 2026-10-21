@@ -1,0 +1,7 @@
+VERDICT: confirm - version-0 fixture produces the expected fail-closed exit and named reason; its digest and declared fixture metadata match.
+
+- Ran `/usr/bin/python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/gguf-identity.py /home/vgpnk/Projects/shokunin/kama-shokunin/tests/gguf-identity/fixtures/version-0.gguf --json`; observed `gguf-identity: unsupported_version`, exit 2.
+- `tests/gguf-identity/expected.json:245-256` expects exit 2 and reason `unsupported_version`; describes version 0, little endian, zero tensors/KV entries, and 24 bytes. Exit and reason match exactly.
+- `tests/gguf-identity/SHA256SUMS:9` and expected.json:253 give `ada42c5980f056051b81fd7321bed631436eb08e044820484dcee010035b3c74`; direct `sha256sum` of the fixture returned that digest. `wc -c` returned 24. `xxd -g 1 -l 24` showed `GGUF`, four zero version bytes, and zero bytes for both 64-bit counts.
+- Metadata limitation: despite `--json`, this rejected input emits no JSON metadata; source `tools/gguf-identity.py:236-247` raises `unsupported_version` before selecting endianness or reading counts, and `:961-966` returns the diagnostic before the JSON-print branch at `:982-983`. The input facts above are fixture bytes/declaration, not decoded metadata returned by the tool.
+- Scope: this establishes offline parser behavior for an unsupported-version fixture only; it provides no evidence about serving, loaded-weight authentication, or model quality.

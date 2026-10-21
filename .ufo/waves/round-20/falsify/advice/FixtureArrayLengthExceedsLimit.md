@@ -1,0 +1,9 @@
+VERDICT: confirm - the fixture is rejected with its pinned exit code and named reason, and its bytes match the pinned hash.
+
+- Ran `/usr/bin/python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/gguf-identity.py /home/vgpnk/Projects/shokunin/kama-shokunin/tests/gguf-identity/fixtures/array-length-exceeds-limit.gguf --json`; observed `gguf-identity: array_too_large`, exit 2. Stream capture showed empty stdout and that diagnostic on stderr.
+- Pinned fixture record: `tests/gguf-identity/expected.json:395-402` expects exit 2 and reason `array_too_large`; it describes a uint8 array of 2^40 elements against a 1,000,000-element bound. It has no `metadata` field, consistent with rejection rather than decoded metadata.
+- Parser evidence: `tools/gguf-identity.py:37,177-180` sets the 1,000,000 limit and raises `array_too_large` as soon as the declared length exceeds it, before array values are read. `tests/gguf-identity/expected.json:419` pins the same default limit.
+- `--json` emits no JSON document on this failure: `tools/gguf-identity.py:961-966` returns through the `GGUFError` diagnostic path before the successful-result JSON block at 982-983. This matches the fixture's pinned failure expectations; no metadata payload is expected for this rejected fixture.
+- Actual SHA-256 is `e27ab4f5b0d28dcb23adbb5266ddf79a669a46c5642058166a3fb247a41f4c2d` and size is 58 bytes; both match `expected.json:401-402` and `SHA256SUMS:22`.
+- Scope: this establishes bounded parser behavior only; it is not evidence of serving, model loading, loaded-weight authentication, or model quality.
+- LSP unavailable: `read xd://lsp` returned “No such tool” (mounted devices: ast_edit, debug). Text search was only used to locate cited lines; the source excerpts above were read directly.

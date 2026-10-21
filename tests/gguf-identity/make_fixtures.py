@@ -420,7 +420,7 @@ def make_fixtures() -> list[dict[str, Any]]:
             endianness="little",
             tensor_count=0,
             kv_count=count,
-            basis=malformed_basis + " Tool --max-kv defaults to 1,000,000; count field is uint64: gguf.md:294-298.",
+            basis=malformed_basis + " Count field is uint64: gguf.md:294-298; this parser defaults --max-kv to 100,000.",
         )
 
     duplicate_key = "test.duplicate"
@@ -542,8 +542,8 @@ def main() -> int:
         "generator": "make_fixtures.py (Python standard library only; no parser imports)",
         "limits": {
             "maximum_fixture_size_bytes_exclusive": 4096,
-            "tool_default_max_kv": 1_000_000,
-            "tool_default_max_string_bytes": 16_777_216,
+            "tool_default_max_kv": 100_000,
+            "tool_default_max_string_bytes": 1_048_576,
             "tool_default_max_array_length": 1_000_000,
             "tool_default_max_array_depth": 32,
         },

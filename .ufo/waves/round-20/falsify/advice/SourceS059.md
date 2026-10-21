@@ -1,0 +1,16 @@
+VERDICT: confirm - S059 accurately scopes the pinned Python reader's version/endian behavior and explicitly disclaims universal validity.
+
+# Source reopened
+- Reopened `gguf-py/gguf/gguf_reader.py` and `gguf-py/gguf/constants.py` at `704366d76f8748cf9ad3df62a464bfcc8d1ae6ad` on 2026-10-21 (the row's `opened` date). GitHub commit metadata gives 2026-10-20T11:02:05Z; the existing opening record associates the pin with llama.cpp tag `b11755` (`.ufo/waves/round-20/build/advice/SrcGgufPyReader.md:4`).
+- Located excerpt: `READER_SUPPORTED_VERSIONS = [2, GGUF_VERSION]` (`gguf_reader.py:41`); `GGUF_VERSION = 3` (`constants.py:11`). The reader rejects a parsed version outside the list (`gguf_reader.py:150-152`): its supported set at this pin is **2 and 3**, not all GGUF versions.
+- Endian excerpt: `if temp_version[0] & 65535 == 0:` followed by the comment “(probably) a GGUF file created for the opposite byte order” and `self.byte_order = 'S'` (`gguf_reader.py:145-149`). It then checks the adjusted version against the supported list (`:150-152`) and chooses host/swapped `GGUFEndian` from `sys.byteorder` and `byte_order` (`:153-161`). The magic is separately read with `override_order='<'` (`:141-143`).
+- `GGUFValueType` is defined in the anchored constants file (`constants.py:6278-6291`), matching the row's enum anchor and the reader's typed metadata handling.
+
+# Row fidelity
+- `corpus/SOURCES.md:71` matches the reopened source: `code | A`; scope is this release's reference Python reader behavior for version and byte order, explicitly “not a universal validity oracle”; anchor names the exact reader branches, `GGUFValueType`, and opening report. The registry says tiers are scoped to each row's scope (`SOURCES.md:5`), so this A-tier source supports behavior of this pinned code, not a global format-validity or loader-acceptance claim.
+- Its teaching sentence (“independent real-file metadata oracle”; supported subset is an implementation property) is bounded correctly. The linked opening record reports one pinned-source real-file parse (`SrcGgufPyReader.md:11`); that is sample metadata evidence, not proof that the reader accepts every valid file or that every loader accepts its subset. Round-20's queue rationale likewise says this is reader behavior, “not proof every loader accepts these versions” (`corpus/lessons/round-20.md:52`).
+- `queued`, `opened 2026-10-21`, and `on-release` match the row as recorded. `used-by` is `—`; searching the corpus for `S059`/`SrcGgufPyReader` found only this registry row and the round-20 queue entry, no knowledge document consuming it.
+
+# Limitations and method
+- The byte-order signal is the reader's heuristic (“probably”), not a universal proof of byte order. The source's non-little-host branch assumes big-endian and explicitly disclaims PDP/other orders (`gguf_reader.py:153-161`); the existing opening record says no big-endian host was available to exercise that branch (`SrcGgufPyReader.md:18`). No reader execution was performed in this reopen.
+- No LSP device/server was exposed for this remote file. Literal search was used only to locate line numbers; findings above are based on direct reads of the exact pinned source. No tools were installed and `SOURCES.md` was not edited.

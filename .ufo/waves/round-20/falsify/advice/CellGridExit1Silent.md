@@ -1,0 +1,9 @@
+VERDICT: confirm - the stored grid-exit1-silent row matches its pinned expectations and shows both arms ran.
+
+- Registry: `.ufo/waves/round-20/build/out/CensusHarness/error-injection-cells.json:3` pins `mode: silent1`, frozen `rejected`, current `error`, and `known_red: true`.
+- Exact stored row: `.ufo/waves/round-20/runs/0957ce61/error-pair.stdout:23-32` records `frozen_class: rejected`, `current_class: error`, the same expected classes, `frozen_witness_match: true`, and both `frozen_ran` and `current_ran` true. Header lines 2-10 say `arm: both`, `cells: 15`, `unrun: []`, with zero frozen witness mismatches and zero current misclassifications.
+- The recorded `error-pair` command is `/usr/bin/python3 .../tools/error-verdict-census.py --json`, exit 0 as expected (`.ufo/waves/round-20/runs/0957ce61/commands.json`, `error-pair` record).
+- Exit-only check: `tools/error-verdict-census.py:164-180` shows `classify_grid` first parses stdout JSON. A valid baseline needs exactly one row and a recognized row `status`; its class is returned only when the process exit matches that status (`rejected` requires exit 0). An `ERROR` baseline requires exit 2; otherwise the result is `could-not-evaluate`. The silent-exit fixture is `raise SystemExit(1)` (`tests/llamacpp-live/install-tree-grid.py:266-269`). Thus the census classifier does not infer this verdict from exit status alone.
+- LSP status was unavailable: `xd://lsp` returned “No such tool” (mounted devices listed only `ast_edit`, `debug`). Source inspection was the fallback, not LSP semantic evidence.
+
+Residual verification gap: the stored pair row does not include each child process's raw stdout/stderr/exit, so those cannot be independently reconstructed from this artifact. No discrepancy was found in the requested stored row; the matrix was not rerun.

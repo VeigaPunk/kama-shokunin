@@ -43,3 +43,11 @@ historical counter. Probe-checker subject crashes may still be row failures
 Other historical mutation runners and post-verdict crashes are disclosed
 residuals. Missing docs/git already returned citation-checker exit 2 at the
 round-start commit; no improvement is credited for those correct paths.
+
+## `sys.exit(None)` scope qualification — S065 (2026-10-21)
+
+S061's status-1 statement applies to non-`None` noninteger exit objects. Python
+3.14.8 says “None is equivalent to passing zero” in the `sys.exit` argument
+paragraph; the other noninteger object case prints to stderr and produces exit
+1. S065 supersedes only the overbroad exception wording in S061; this does not
+change the evidence rule that an exit status alone is not an emitted verdict.

@@ -1,0 +1,9 @@
+VERDICT: confirm - the pinned depth-limit fixture is rejected with the expected exit, reason, digest, and size.
+
+- Ran the requested command: `/usr/bin/python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/gguf-identity.py /home/vgpnk/Projects/shokunin/kama-shokunin/tests/gguf-identity/fixtures/array-nesting-exceeds-limit.gguf --json`.
+- Observed exit `2`; stdout was empty (0 bytes); stderr was exactly `gguf-identity: array_nesting_too_deep\n` (38 bytes).
+- `tests/gguf-identity/expected.json:404-412` identifies this fixture as 40-deep vs. bound 32 and expects exit `2`, reason `array_nesting_too_deep`, SHA-256 `201606a9107a21a94fd015c3e2a41bf851e711572177b8667bfa61563a91e052`, size `538` bytes. Actual `sha256sum` and `stat` matched both values; `tests/gguf-identity/SHA256SUMS:23` carries the same digest.
+- Parser evidence: `tools/gguf-identity.py:36-39` sets `MAX_ARRAY_DEPTH = 32`; `:171-173` raises `array_nesting_too_deep` when array depth reaches the limit. Fixture generator `tests/gguf-identity/make_fixtures.py:494-504` nests 40 arrays and records that expected reason.
+- `--json` does not emit a JSON object on this rejection: `tools/gguf-identity.py:964-966` catches `GGUFError`, prints its named reason to stderr, and returns its exit code before the JSON output branch at `:982-983`. The metadata comparison here is the fixture registry's digest and byte size; the rejected parse produced no decoded metadata.
+- Scope: this demonstrates the pinned parser's depth-limit rejection only; it provides no evidence about serving, loaded weights, authentication, or model quality.
+- LSP was unavailable: `read xd://lsp` returned “No such tool” (mounted devices were `ast_edit` and `debug`). Source lookups are literal fallback evidence, not semantic LSP proof.

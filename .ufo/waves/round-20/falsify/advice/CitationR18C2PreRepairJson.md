@@ -1,0 +1,8 @@
+VERDICT: confirm - Registry row matches the pinned Git blob and its round-18 doc cite token exactly.
+
+- `registry/required-citations.json:80-84` contains the sole row with id `r18-c2-pre-repair-json`: rev `101f3991d3570bc9350fbf9c5561f4be1185699d`, path `.ufo/waves/round-18/runs/c2-survivors.json`, SHA-256 `bd217de0030d1b69f07c0ac3cc334ccdac192896441a177bb13eb3c308509829`, doc `corpus/lessons/round-18.md`. The registry parsed as a JSON list; lookup found one matching id.
+- `git cat-file -t 101f3991d3570bc9350fbf9c5561f4be1185699d` returned `commit`; `git ls-tree` showed the specified path exists at that revision.
+- `git show 101f3991d3570bc9350fbf9c5561f4be1185699d:.ufo/waves/round-18/runs/c2-survivors.json | sha256sum` returned exactly `bd217de0030d1b69f07c0ac3cc334ccdac192896441a177bb13eb3c308509829` (match).
+- `corpus/lessons/round-18.md:467` binds the same revision, path, and SHA in its `Pre-repair C2 JSON` cite token; all three values match the registry row. The retained `runs/pre-repair/c2-survivors.json` copy also hashes to the pinned SHA.
+- The current path has SHA-256 `8cc59a65d1a23119479354a1a370f29dbc95ed204135761781ae8cf095582f13`, not the pre-repair SHA. This is consistent with the separately documented corrected version: lessons line 472 cites that hash at revision `1b85a24eca4d1fe81ef8d9ddf513fda1aad93e0e`, and registry lines 115-119 identify it as `r18-c2-corrected-preofficial-json`.
+- Registry and document were not modified.

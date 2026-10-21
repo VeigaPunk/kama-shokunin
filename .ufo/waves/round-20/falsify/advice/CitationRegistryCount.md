@@ -1,0 +1,7 @@
+VERDICT: confirm - The rerun matches the committed official run on the requested count vector and exit status.
+
+- Reran `/usr/bin/python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/citation-provenance.py --json`; output counts were `required=17`, `found=17`, `verified=17`, `missing=0`, `mismatch=0`, `off_ref=0` (`docs_unreadable=0`). Captured exact exit: `0`.
+- Official frozen run: `.ufo/waves/round-20/runs/0957ce61/commands.json:2` pins measured commit `0957ce619789d13bb5779606078fa1498114d2c7`; lines 21-33 record the same argv, exit `0`, expected exit `0`, no timeout, and stdout digest. `citation-count.stdout:2-9` records the same requested counts; `citation-count.exit:1` records `exit=0`. Read-only `git show HEAD:...citation-count.exit` returned `exit=0`; the committed stdout hash matches the manifest hash.
+- Scope: this is 17/17 required registry rows verified, not a census of every citation in lane documents or evidence that all lane citations are registered. The checker defaults to `registry/required-citations.json` and its `DEFAULT_DOCS` list (`tools/citation-provenance.py:33-35, 324-327`); count fields are computed over registry results (`:115-122`).
+
+Report: .ufo/waves/round-20/falsify/advice/CitationRegistryCount.md

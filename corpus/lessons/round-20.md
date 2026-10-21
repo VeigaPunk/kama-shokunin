@@ -180,3 +180,95 @@ evidence; the official results, not draft selftest labels, are authoritative.
 The production aggregate runner omits the worker's redundant fixture-only
 mode; original worker sources/transcripts remain versioned advice.
 
+## Wave-2 integration corrections (appended)
+
+- **S063 used-by, old → new:** `—` → `corpus/knowledge/error-is-not-a-verdict.md, corpus/lessons/round-20.md`. `SourceS063.md` verified both citations. Only the permitted `used-by` cell changed; S063 remains a rejected counterexample to a universal error-exclusion claim.
+- **S065 correction row:** the S061 wording omitted the `sys.exit(None)` special case. S065, opened from Python 3.14.8 `sys.exit`, records “None is equivalent to passing zero” and supersedes only that scope; the knowledge entry has an appended qualification. Search note and row are at the end of `corpus/SOURCES.md`.
+- **S051 line range:** M8 at line 82 incorrectly called 210–215 the current S051 text. The S051 clarification is currently at `corpus/SOURCES.md:217-222`; 210–215 is the S056 supplement. The R18 lesson's appended stable-heading correction at `:447-451` remains the durable pointer; no source row was rewritten.
+- **C2 fixture boundary:** `v3-all-scalars` expected.json contains twelve `test.*` values, but `c2/measure.py:459-484` compares selected identity keys/types, arrays, header counts/version/endianness, size and digest, not those arbitrary scalar values. Thus 23/23 means all declared measurement predicates passed, not generic scalar-value recovery; the C2 claim remains limited to selected declared identity fields.
+- **Grid signal/timeout probes:** deleting either explicit branch preserved the `error` class through the fallback but weakened reason detail (`MutGridSignal.md`, `MutGridTimeout.md`). No claim about diagnostic-reason equivalence is made; the C1 outcome-class boundary remains.
+
+## Gate supplement — S065 `sys.exit(None)` exception (opened 2026-10-21)
+
+| Candidate | Decision | URL, revision, location and quote |
+|---|---|---|
+| S061's non-`None` exit-1 rule also applies to `sys.exit(None)` | reject that broad reading; add S065 as a correction row | https://docs.python.org/3.14/library/sys.html#sys.exit, Python 3.14.8, §sys.exit optional-argument paragraph: “None is equivalent to passing zero.” |
+
+The reopened paragraph distinguishes the `None` special case from “any other
+object” printed to stderr with status 1. S065's `teaches` field supersedes only
+that scope in S061; it does not change the error-versus-verdict claim. Search
+log: one source candidate identified, screened and included as S065; excluded
+zero; stop after the special-case wording was located. Existing S061 cells
+remain unchanged.
+
+### S051 range after the S065 append (appended)
+
+M8's `SOURCES.md:210-215` pointer was already stale after earlier R20 rows
+shifted the S051 clarification to `217-222`. Appending S065 after S064 moved the
+current clarification to `218-223`. The LOG's pre-S065 range was time-bounded;
+this note gives the current range. The stable heading and revision-qualified
+R18 lesson correction remain the durable pointer.
+
+## Trend verdicts and previous verifier disagreement
+
+- **Expansion: improved.** The scorecard adds one first-working offline GGUF
+  identity capability (`SCORECARD.md:909-918`); this is a capability surface,
+  not a source-row-count argument.
+- **Quality: improved, bounded.** C1's finite 15-cell misclassification count
+  falls 6→0; C2 passes its declared 23-fixture predicates and oracle/receipt
+  agreement. The preceding fixture note limits scalar-value coverage.
+- **Discernment: unchanged for R20.** There was no independent non-author R20
+  admit/reject sample. The prior R19 verifier reopened three decisions, agreed
+  with two admits and one reject, and credited R19 discernment as improved after
+  the author record was written (`round-19-verifier-spotcheck.md:160-172`).
+
+That verifier disagreed with the R19 author trend: expansion was unchanged
+because no knowledge/capability surface was added, despite the lane's
+“improved (narrow)” wording. R20's expansion verdict is improved for the new
+capability row, not for S-row growth. This preserves the historical R19 record
+and makes the time boundary explicit.
+
+## CellGridRealInvalidVerdict source binding
+
+Its falsify seat report remains `partial` because it did not itself pin the
+execution-time source bytes. The official `run.py` refuses a dirty tree
+(`run.py:25-27`) and records `measured_commit`; `runs/0957ce61/commands.json`
+records `0957ce619789d13bb5779606078fa1498114d2c7`. Read-only hashing of that
+commit's `tests/llamacpp-live/install-tree-grid.py` gives
+`d9689c0718a6001f808c00c7b5318327e0757713033e9df04994687a422650c5`.
+This binds the measured classifier source at that revision; it does not claim
+additional cells or broader detector coverage.
+
+## GGUF fixture default metadata correction
+
+`FixtureKvCount2pow40.md` found that `expected.json` and its generator described
+`--max-kv` as 1,000,000 while `tools/gguf-identity.py` sets both limit and
+default to 100,000. The adjacent `tool_default_max_string_bytes` was also stale:
+16,777,216 versus the parser's 1,048,576. The generator now records the actual
+defaults and separates the upstream uint64 count fact from this parser default
+in the fixture basis. Regeneration retained all 23 fixture hashes; the
+`SHA256SUMS` file hash remains
+`ab51c80f26ce1c155f5b5e8377a6363df9fa93ff6ac1669000a9aaf70d995812`. This is
+manifest/test-description correction only: no parser behavior or fixture bytes
+changed, and the 2^40 count still rejects as `kv_count_too_large`.
+
+## Falsify wave-2 disposition
+
+The 86-seat wave used roles reviewer60/mutation-tester17/scout6/critic2/
+connector1. Attempt 1 was refused before spawning any seats by the host job cap;
+after at least 180 seconds the unchanged payload spawned all 86. Seventy-three
+completed with one report each; thirteen exhausted provider retries without
+advice. No seat was replaced; the round total is 158 spawned seats across build
+and falsify. The exact dead-seat names/errors, retry record, and advice counts
+are in `falsify/{seat-failures.json,dispatch-attempts.json,verdict-count.json,
+completion-summary.json}`.
+
+Top-level advice verdicts: confirm66, partial7, refute0, nonconformant0. All
+seventeen mutation probes produced results: fifteen killed their targeted
+mutants, while signal and timeout-branch deletion preserved the `error` class
+and only lost diagnostic detail. Integrated partial findings: S063 `used-by`
+was corrected; S061's `None` case received S065; the S051 range was updated
+after insertions; the fixture default-limit manifest was corrected; and the
+grid classifier source was bound to its clean measured commit. The
+v3-all-scalars comparison gap and timeout-reason detail remain explicit limits.
+No extra ordinary residual-review task call was used.

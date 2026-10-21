@@ -1,0 +1,8 @@
+VERDICT: confirm - the reversed-magic fixture is rejected with the expected exit and reason; its checksum and size match.
+
+- Ran `/usr/bin/python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/gguf-identity.py /home/vgpnk/Projects/shokunin/kama-shokunin/tests/gguf-identity/fixtures/bad-magic-reversed.gguf --json`: output `gguf-identity: bad_magic`, exit code `1`.
+- `od -An -tx1 -N16 .../bad-magic-reversed.gguf` begins `46 55 47 47` (`FUGG`). `tools/gguf-identity.py:234-235` requires literal `GGUF` and raises `bad_magic` with exit 1; `:964-966` prints the named reason to stderr and returns that code. This rejection path emits no JSON object.
+- Expected entry `tests/gguf-identity/expected.json:238-242` specifies `expected_exit: 1`, `expected_reason: bad_magic`, `size_bytes: 24`, and SHA-256 `0eb46933dddacd5c001470652b20acd7b38ce6a37376c5171f3e3a61e3cc6951`. Actual `stat` size is 24 and `sha256sum` matches both that entry and `SHA256SUMS:8`. The expected entry has no metadata field; invalid magic produces no decoded metadata.
+- Scope: this confirms only parser rejection of this fixture; it is not evidence of serving, loading, loaded-weight authentication, or model quality.
+
+Residual risk / verification gaps: JSON-mode error serialization is not specified by this fixture; the observed failure response is a named stderr message, not JSON. The `lsp` device is unavailable (`xd://lsp` returned “No such tool”; only `ast_edit` and `debug` were mounted), so no LSP status/references/definition/diagnostics checks were possible.

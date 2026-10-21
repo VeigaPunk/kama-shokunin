@@ -1,0 +1,12 @@
+VERDICT: confirm - the stored grid-timeout row matches both expected error classes, both arms ran, and classification was not exit-only.
+
+## Evidence
+- Manifest row `.ufo/waves/round-20/build/out/CensusHarness/error-injection-cells.json:5` is `grid-timeout`, mode `timeout`, expected frozen/current `error`, `known_red=false`.
+- Exact result row `.ufo/waves/round-20/runs/0957ce61/error-pair.stdout:46-54` reports frozen/current `error`, both expected classes `error`, `frozen_witness_match=true`, `frozen_ran=true`, and `current_ran=true`. The run summary at `error-pair.stdout:2-10` says `arm=both`, `cells=15`, and `unrun=[]`.
+- The recorded command `.ufo/waves/round-20/runs/0957ce61/commands.json:129-141` invokes `tools/error-verdict-census.py --json` and records aggregate exit 0, `timed_out=false`. The aggregate exit is not a cell verdict.
+- The invoked runner's default cell resolver is `tools/error-verdict-census.py:377-383,445-449`; with no tools-local manifest, it resolves `registry/error-injection-cells.json`. That manifest and the specified build-output manifest have identical SHA-256 `ff3b7da9c060a7f12a7ca081c79db06899a4f5c9418d26ffe4a88bc6c607f469` (read-only `sha256sum` comparison), so the checked cell row is the runner's exact input.
+- No exit-only classification: `tools/error-verdict-census.py:164-180` requires parsed JSON plus status-consistent inner exit (`error` requires exit 2); its selftest at `:417-420` rejects a JSON `error` status with clean exit. The timeout fixture raises `TimeoutExpired` for the mutant gate (`registry/error-injection-fixtures/sitecustomize.py:15-19`); `tests/llamacpp-live/install-tree-grid.py:76-78,150-157,180-184` turns that into an `ERROR`/`error` JSON witness and error exit. Thus the observed class is backed by output status and matching exit, not exit alone.
+
+## Discrepancy and verification gaps
+- No discrepancy between the manifest's expected classes and the stored row's observed classes; both run flags are true.
+- `xd://lsp` is unavailable (`No such tool`; only `ast_edit` and `debug` are mounted), so LSP references/definition/diagnostics could not be queried. This artifact-focused check used direct reads; no matrix or tests were rerun.

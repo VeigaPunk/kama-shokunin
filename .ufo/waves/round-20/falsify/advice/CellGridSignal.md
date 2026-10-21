@@ -1,0 +1,8 @@
+VERDICT: confirm - the stored grid-signal row matches the pinned frozen/current classes, both arms ran, and its classification is not based on exit alone.
+
+- Registry: `.ufo/waves/round-20/build/out/CensusHarness/error-injection-cells.json`, row `$[2]` (`grid-signal`): expected frozen `accepted`, current `error`, `known_red: true`.
+- Paired result: `.ufo/waves/round-20/runs/0957ce61/error-pair.stdout:35-43` reports frozen `accepted`, current `error`, both expected classes, `frozen_witness_match: true`, `frozen_ran: true`, and `current_ran: true`. Summary lines 1-10 say `arm: both` and `unrun: []`.
+- Per-arm cross-check: `error-frozen.stdout:35-43` records the accepted frozen class and matching witness; `error-current.stdout:35-43` records current `error` and `current_ran: true` (frozen is intentionally null in that current-only arm).
+- Not exit-only: `tools/error-verdict-census.py:164-179` parses the instrument's JSON row status and checks that its exit code is consistent with that status; the exit code alone cannot choose the verdict. `tests/llamacpp-live/install-tree-grid.py:81-93` treats a signal as `ERROR` and only recognizes `INVALID`/`VALID` when the corresponding exit and stdout prefix agree; lines 152-155 map that observed verdict to the row status.
+- Discrepancy: none against the pinned row expectations.
+- Verification gap: no `lsp` device was available (`read xd://lsp` returned “No such tool”; only `ast_edit` and `debug` were mounted). Text search was used only to locate source; the cited source excerpts were read directly. No matrix rerun performed.

@@ -1,0 +1,9 @@
+VERDICT: confirm - the stored survivor-selftest-early-abort row matches its pinned classes and both paired arms ran.
+
+Evidence:
+- `.ufo/waves/round-20/build/out/CensusHarness/error-injection-cells.json:15` pins `expected_frozen_class=killed`, `expected_current_class=could-not-evaluate`, and `known_red=true`.
+- Exact row `.ufo/waves/round-20/runs/0957ce61/error-pair.stdout:156-164` records frozen=`killed`, current=`could-not-evaluate`, the same expected classes, `frozen_witness_match=true`, and `frozen_ran=true` / `current_ran=true`.
+- Arm-specific stored rows corroborate execution: `error-frozen.stdout:156-164` has frozen `killed` and `frozen_ran=true`; `error-current.stdout:156-164` has current `could-not-evaluate` and `current_ran=true`.
+- The census classifier `.ufo/waves/round-20/build/out/CensusHarness/error-verdict-census.py:206-213` classifies from the wrapper's JSON `outcome` and otherwise returns `could-not-evaluate`; it does not use the child's exit code as the class. The early-abort fixture at `error-injection-fixtures/survivor-arm-probe.py:19-23` supplies exit 1 with only `FAIL target assertion` and no completion summary. Current `.ufo/waves/round-18/c2/survivors.py:962-989` requires matching selftest enumeration and the named failure before returning `killed`; incomplete output is inconclusive. Thus the frozen `killed` is the pinned known-red behavior, while current does not infer a kill from exit 1 alone.
+
+Discrepancy: none in the requested stored row. This review inspected the pinned artifacts and source; it did not rerun the matrix. LSP was unavailable (`read xd://lsp` returned “No such tool”; only `ast_edit` and `debug` were mounted); source behavior above is based on directly read excerpts, not grep semantics.

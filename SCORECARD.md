@@ -924,3 +924,31 @@ serving evidence remain named frontier. No next round is started here.
 ### Round-20 correction — R18 C2 survivor output scope
 
 The unqualified “they agree” at line 813 is limited by `corpus/lessons/round-18.md:474-480`: the pre-official JSON and official stdout agree on the 15 item outcomes, summary counts, frozen witnesses and 42 run-status tuples, not on the full documents. The R20 comparison found equal `.counts` but unequal `.results` and different `tool.sha256` values (`87cad1ca…` vs `ac934794…`). R20 did not rerun the full 42-run survivor counter.
+
+### Round-20 fixture coverage boundary
+
+The 23/23 figure at line 901 covers the predicates implemented by `c2/measure.py`, not every value in every fixture. `v3-all-scalars` carries 12 `test.*` scalar values in `expected.json`; the measurement compares identity keys/types, arrays, header fields, size and digest, not those arbitrary scalar values. C2 remains the bounded declared-identity capability; no general scalar-value recovery is claimed.
+
+### Round-20 trend verdicts and prior-closure reconciliation
+
+| Trend | Verdict | Evidence |
+|---|---|---|
+| expansion | improved | One first-working offline GGUF identity capability is added at lines 909–918; this is a real capability surface, not source-row growth. |
+| quality | improved | C1's 15-cell misclassification count falls 6→0 and C2's declared 23-fixture predicates plus oracle/receipt comparison pass; bounded by the fixture-coverage note above. |
+| discernment | unchanged | No independent non-author R20 admit/reject sample. The prior R19 closure's two admits and one reject agreed, so it credited R19 discernment as improved after the author record was written. |
+
+The R19 verifier also judged expansion unchanged at that time because R19 added
+no knowledge/capability surface, contrary to the author's then-current
+“improved (narrow)” wording; R20 expansion is improved for the new capability
+row, not for source growth. See `corpus/lessons/round-19-verifier-spotcheck.md:160-172`.
+
+### Round-20 fixture manifest correction
+
+The partial `FixtureKvCount2pow40` review found stale local-tool defaults in
+the generated fixture manifest. `make_fixtures.py` and regenerated
+`tests/gguf-identity/expected.json` now record `--max-kv` 100,000 and
+`--max-str` 1,048,576, matching `tools/gguf-identity.py:32-35`; the KV fixture
+basis separately attributes the uint64 field to the pinned format text. The
+23 fixture digests are unchanged (`SHA256SUMS` SHA-256
+`ab51c80f26ce1c155f5b5e8377a6363df9fa93ff6ac1669000a9aaf70d995812`). No parser
+behavior or C2 coverage claim changed.
