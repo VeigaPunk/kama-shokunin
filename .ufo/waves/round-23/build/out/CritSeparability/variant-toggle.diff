@@ -1,0 +1,32 @@
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index fcc255c..253801e 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -85,12 +85,26 @@ def git_env(**extra):
+ 
+ 
+ def git(repo, *args, stdin=None, env=None):
++    v = os.environ.get("KAMA_VARIANT", "")
++    pre = []
++    if "R" in v:
++        pre.append("--no-replace-objects")
++    if "L" in v:
++        pre.append("--no-lazy-fetch")
++    if "E" in v:
++        pre += ["-c", "i18n.logOutputEncoding=UTF-8"]
++    if "F" in v:
++        pre += ["-c", "log.follow=false"]
+     try:
+-        proc = subprocess.run(["git", "-C", str(repo), *args], input=stdin,
++        proc = subprocess.run(["git", *pre, "-C", str(repo), *args], input=stdin,
+                               capture_output=True, text=True,
+                               env=env or git_env())
+     except OSError as exc:
+         raise EvalError(f"cannot run git: {exc}") from exc
++    except UnicodeDecodeError as exc:
++        if "D" not in v:
++            raise
++        raise EvalError(f"git {' '.join(args)} in {repo}: not UTF-8: {exc}") from exc
+     if proc.returncode != 0:
+         raise EvalError(f"git {' '.join(args)} in {repo}: rc={proc.returncode} "
+                         f"{proc.stderr.strip()}")

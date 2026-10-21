@@ -1,0 +1,168 @@
+## S0-control-clean
+  expect: 0/0
+  base: rc=0 status=clean defects=[] err=''
+  snap: rc=0 status=clean defects=[] err=''
+  base rows: [('L2', 1700000100), ('L1', 1700000000)]
+  snap rows: [('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S1-control-omit
+  expect: 1/1
+  base: rc=1 status=failed defects=['UNCORRECTED landed-omitted a3afb2764e5bbd966ea6fa55bf5a50887cb91216'] err=''
+  snap: rc=1 status=failed defects=['UNCORRECTED landed-omitted a3afb2764e5bbd966ea6fa55bf5a50887cb91216'] err=''
+  base rows: [('L2', 1700000100), ('L1', 1700000000)]
+  snap rows: [('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S2-i18n-logOutputEncoding
+  expect: 0 (base: traceback, L1 probe (a))
+  base: rc=1 status=- defects=[] err="UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9 in position 247: invalid continua"
+  snap: rc=0 status=clean defects=[] err=''
+  base rows: UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9 in position 247: invali
+  snap rows: [('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S3-log.follow-fleet
+  expect: 1 (L2 omitted); base-with-follow expected 0
+  base: rc=0 status=clean defects=[] err=''
+  snap: rc=1 status=failed defects=['UNCORRECTED landed-omitted 544f53219957b9d8f4a0a224c6278e661ae9d486'] err=''
+  base rows: [('L2', 1700000100), ('L1', 1700000000)]
+  snap rows: [('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: 1700000050  snap cutoff: 1700000200
+## S4-log.mailmap-lane
+  expect: 0/0 (%an is raw; mailmap should not matter)
+  base: rc=0 status=clean defects=[] err=''
+  snap: rc=0 status=clean defects=[] err=''
+  base rows: [('L2', 1700000100), ('L1', 1700000000)]
+  snap rows: [('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S5-showSignature-exec
+  expect: 0 snap; base expected to run marker
+  base: rc=0 status=clean defects=[] err='' markers=['gpg-ran.txt']
+  snap: rc=0 status=clean defects=[] err='' markers=[]
+  base rows: [('L2', 1700000100), ('L1', 1700000000)]
+  snap rows: [('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S6-grafts-hide
+  expect: 2 snap (refuse); base expected 0 (false)
+  base: rc=0 status=clean defects=[] err=''
+  snap: rc=2 status=- defects=[] err='could-not-evaluate: /tmp/kama-r23/CloseKama22.RevRoundCommits/probe/fx/S6-grafts-hide/lane'
+  base rows: [('L2', 1700000100)]
+  snap rows: [('L2', 1700000100)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S7-shallow-hide
+  expect: 2 snap (refuse); base expected 0 (false)
+  base: rc=0 status=clean defects=[] err=''
+  snap: rc=2 status=- defects=[] err='could-not-evaluate: /tmp/kama-r23/CloseKama22.RevRoundCommits/probe/fx/S7-shallow-hide/lan'
+  base rows: [('L2', 1700000100)]
+  snap rows: [('L2', 1700000100)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S8-replace-omitted
+  expect: 1 (L1 omitted); base expected 0 (false)
+  base: rc=0 status=clean defects=[] err=''
+  snap: rc=1 status=failed defects=['UNCORRECTED landed-omitted a3afb2764e5bbd966ea6fa55bf5a50887cb91216'] err=''
+  base rows: [('L2', 1700000100)]
+  snap rows: [('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S9-tag-shadows-branch
+  expect: 1 (L2 omitted); base expected 0 (false)
+  base: rc=0 status=clean defects=[] err=''
+  snap: rc=1 status=failed defects=['UNCORRECTED landed-omitted 544f53219957b9d8f4a0a224c6278e661ae9d486'] err=''
+  base rows: [('L1', 1700000000)]
+  snap rows: [('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S10-author-field-injected-atime
+  expect: 1 (L2 omitted); both expected 0 (residual)
+  base: rc=0 status=clean defects=[] err=''
+  snap: rc=0 status=clean defects=[] err=''
+  base rows: [('L2', 4000000000), ('L1', 1700000000)]
+  snap rows: [('L2', 4000000000), ('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S11-subject-END-fake-record
+  expect: 0 (both cited); both expected 1 (false fail)
+  base: rc=1 status=failed defects=['UNCORRECTED landed-omitted 1234567890abcdef1234567890abcdef12345678'] err=''
+  snap: rc=1 status=failed defects=['UNCORRECTED landed-omitted 1234567890abcdef1234567890abcdef12345678'] err=''
+  base rows: [('12345678', 1700000000), ('L2', 1700000100), ('L1', 1700000000)]
+  snap rows: [('12345678', 1700000000), ('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S12-5000-digit-atime
+  expect: 2 (refuse); both expected traceback exit 1
+  base: rc=1 status=- defects=[] err='ValueError: Exceeds the limit (4300 digits) for integer string conversion: value has 5000 '
+  snap: rc=1 status=- defects=[] err='ValueError: Exceeds the limit (4300 digits) for integer string conversion: value has 5000 '
+  base rows: ValueError: Exceeds the limit (4300 digits) for integer string conversio
+  snap rows: ValueError: Exceeds the limit (4300 digits) for integer string conversio
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S13-utf16-subject-no-header
+  expect: 1 (L2 omitted); both expected 0 (false)
+  base: rc=0 status=clean defects=[] err=''
+  snap: rc=0 status=clean defects=[] err=''
+  base rows: [('L1', 1700000000)]
+  snap rows: [('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S13b-utf16-unknown-encoding
+  expect: 1 (L2 omitted); both expected 0 (false)
+  base: rc=0 status=clean defects=[] err=''
+  snap: rc=0 status=clean defects=[] err=''
+  base rows: [('L1', 1700000000)]
+  snap rows: [('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S13c-utf16-known-encoding
+  expect: 1 (control: git re-encodes)
+  base: rc=0 status=clean defects=[] err=''
+  snap: rc=0 status=clean defects=[] err=''
+  base rows: [('L1', 1700000000)]
+  snap rows: [('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S14-invalid-utf8-unrelated-subject
+  expect: 0 (both cited); base expected 2 refusal
+  base: rc=1 status=- defects=[] err="UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 68: invalid start byt"
+  snap: rc=0 status=clean defects=[] err=''
+  base rows: UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 68: invalid
+  snap rows: [('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S15-fleet-log.showRoot-false
+  expect: 0 (L1 only; L2 post-report); base expected 2
+  base: rc=2 status=- defects=[] err='could-not-evaluate: round 23: .ufo/reports/round-23/kama.md has no fleet commit'
+  snap: rc=0 status=clean defects=[] err=''
+  base rows: [('L2', 1700000100), ('L1', 1700000000)]
+  snap rows: [('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: None  snap cutoff: 1700000050
+## S16a-merge-adds-report-default
+  expect: 2 (no merge diffs by default)
+  base: rc=2 status=- defects=[] err='could-not-evaluate: round 23: .ufo/reports/round-23/kama.md has no fleet commit'
+  snap: rc=2 status=- defects=[] err='could-not-evaluate: round 23: .ufo/reports/round-23/kama.md has no fleet commit'
+  base rows: [('L2', 1700000100), ('L1', 1700000000)]
+  snap rows: [('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: None  snap cutoff: None
+## S16b-merge-adds-report-diffMerges
+  expect: 0 (config-dependent verdict; not in GIT_ISOLATION)
+  base: rc=2 status=- defects=[] err='could-not-evaluate: round 23: .ufo/reports/round-23/kama.md has no fleet commit'
+  snap: rc=2 status=- defects=[] err='could-not-evaluate: round 23: .ufo/reports/round-23/kama.md has no fleet commit'
+  base rows: [('L2', 1700000100), ('L1', 1700000000)]
+  snap rows: [('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: None  snap cutoff: None
+## S17-copy-diff.renames-copies
+  expect: 0 (control)
+  base: rc=0 status=clean defects=[] err=''
+  snap: rc=0 status=clean defects=[] err=''
+  base rows: [('L2', 1700000100), ('L1', 1700000000)]
+  snap rows: [('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S18-core.fsmonitor-exec
+  expect: 0; marker expected absent
+  base: rc=0 status=clean defects=[] err='' markers=[]
+  snap: rc=0 status=clean defects=[] err='' markers=[]
+  base rows: [('L2', 1700000100), ('L1', 1700000000)]
+  snap rows: [('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S19-trace2-eventTarget-side-effect
+  expect: 0; trace file side effect only
+  base: rc=0 status=clean defects=[] err='' markers=[]
+  snap: rc=0 status=clean defects=[] err='' markers=[]
+  base rows: [('L2', 1700000100), ('L1', 1700000000)]
+  snap rows: [('L2', 1700000100), ('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200
+## S20-future-dated-author
+  expect: 0 (L2 treated post-report; design hole)
+  base: rc=0 status=clean defects=[] err=''
+  snap: rc=0 status=clean defects=[] err=''
+  base rows: [('L2', 4000000000), ('L1', 1700000000)]
+  snap rows: [('L2', 4000000000), ('L1', 1700000000)]
+  base cutoff: 1700000200  snap cutoff: 1700000200

@@ -1,0 +1,226 @@
+=== baseline-clean rc=0 expect=0 
+--- stdout
+round=10 required=2 post_report=0 defects=0
+summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+
+--- stderr
+
+=== control-plain-omitted rc=1 expect=1 
+--- stdout
+round=10 required=3 post_report=0 defects=1
+  UNCORRECTED landed-omitted 5accd641df6689a81f13796f869937d3fd00a430
+summary reports=1 defects=1 corrected=0 uncorrected=1 errata_unmatched=0 errata_invalid=0 status=failed
+
+--- stderr
+
+=== sep-in-author-hides-commit rc=0 expect=1 
+--- stdout
+round=10 required=2 post_report=0 defects=0
+summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+
+--- stderr
+
+=== digit-prefix-satisfies-omit rc=0 expect=1 (prefix 6807178 unverified; expect 1 if unchecked tokens cannot cite)
+--- stdout
+round=10 required=3 post_report=0 defects=0
+summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+
+--- stderr
+
+=== textconv-on-show-blob rc=0 expect=0 textconv_ran=False
+--- stdout
+round=10 required=2 post_report=0 defects=0
+summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+
+--- stderr
+
+=== symlink-report-target-text rc=0 expect=2 
+--- stdout
+round=10 required=2 post_report=0 defects=0
+summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+
+--- stderr
+
+=== symlink-report-dangling rc=1 expect=2 
+--- stdout
+round=10 required=2 post_report=0 defects=3
+  UNCORRECTED landed-section-missing -
+  UNCORRECTED landed-omitted 4942bf816de413a2882926086eb4f97ac7c92656
+  UNCORRECTED landed-omitted ec7bda17475472f9812e9d4b5435f6170e3dfe4d
+summary reports=1 defects=3 corrected=0 uncorrected=3 errata_unmatched=0 errata_invalid=0 status=failed
+
+--- stderr
+
+=== directory-at-report-path rc=1 expect=2 
+--- stdout
+round=10 required=2 post_report=0 defects=3
+  UNCORRECTED landed-section-missing -
+  UNCORRECTED landed-omitted 4942bf816de413a2882926086eb4f97ac7c92656
+  UNCORRECTED landed-omitted ec7bda17475472f9812e9d4b5435f6170e3dfe4d
+summary reports=1 defects=3 corrected=0 uncorrected=3 errata_unmatched=0 errata_invalid=0 status=failed
+
+--- stderr
+
+=== blob-control-present rc=0 expect=0 
+--- stdout
+round=10 required=2 post_report=0 defects=0
+summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+
+--- stderr
+
+=== corrupt-loose-object rc=1 expect=2 
+--- stdout
+round=10 required=2 post_report=0 defects=1
+  UNCORRECTED unresolved-full-hash b54632dc2672f2bec07afcedf7786d54291cf834
+summary reports=1 defects=1 corrected=0 uncorrected=1 errata_unmatched=0 errata_invalid=0 status=failed
+
+--- stderr
+
+=== author-date-30-digits rc=0 expect=1 
+--- stdout
+round=10 required=2 post_report=1 defects=0
+summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+
+--- stderr
+
+=== author-date-5000-digits rc=1 expect=2 
+--- stdout
+
+--- stderr
+Traceback (most recent call last):
+  File "/tmp/revexit/rla_v2.py", line 924, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/tmp/revexit/rla_v2.py", line 908, in main
+    status, doc = run(args)
+                  ~~~^^^^^^
+  File "/tmp/revexit/rla_v2.py", line 483, in run
+    results = [audit_round(lane_repo, fleet_repo, tip, args.lane, r,
+               ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                           overrides.get(r), source_urls) for r in rounds]
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/revexit/rla_v2.py", line 320, in audit_round
+    commits = round_commits(lane_repo, branch, lane, rnd)
+  File "/tmp/revexit/rla_v2.py", line 196, in round_commits
+    rows.append({"sha": sha, "atime": int(atime), "subject": subject})
+                                      ~~~^^^^^^^
+ValueError: Exceeds the limit (4300 digits) for integer string conversion: value has 5000 digits; use sys.set_int_max_str_digits() to increase the limit
+
+c12 P=02aa688 lane-candidates=['02aa6886134cd32be9247451ab8e0c0189e64957', '02aa688fd0797e988e5107f5cadfdf0759884977'] fleet-candidates=['02aa688fd0797e988e5107f5cadfdf0759884977']
+=== ambiguous-prefix-masked rc=0 expect=1 lane-cands=2 fleet-cands=1
+--- stdout
+round=10 required=3 post_report=0 defects=0
+summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+
+--- stderr
+
+=== ref-named-like-abbrev rc=2 expect=2 
+--- stdout
+
+--- stderr
+could-not-evaluate: /tmp/revexit/v2cases/c13/lane: citation abcdef1 names a ref
+
+=== shallow-lane-clone rc=2 expect=2 
+--- stdout
+
+--- stderr
+could-not-evaluate: /tmp/revexit/v2cases/c14/lane-shallow: shallow repository
+
+=== partial-lane-clone rc=2 expect=2 
+--- stdout
+
+--- stderr
+could-not-evaluate: /tmp/revexit/v2cases/c15/lane-partial: partial clone (promisor pack)
+
+=== info-grafts-present rc=2 expect=2 
+--- stdout
+
+--- stderr
+could-not-evaluate: /tmp/revexit/v2cases/c16/lane: /tmp/revexit/v2cases/c16/lane/.git/info/grafts rewrites history
+
+=== lane-path-is-subdirectory rc=2 expect=2 
+--- stdout
+
+--- stderr
+could-not-evaluate: /tmp/revexit/v2cases/c17/lane/sub: not a repository top level
+
+=== rounds-arg-5000-digits rc=1 expect=2 
+--- stdout
+
+--- stderr
+Traceback (most recent call last):
+  File "/tmp/revexit/rla_v2.py", line 924, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/tmp/revexit/rla_v2.py", line 908, in main
+    status, doc = run(args)
+                  ~~~^^^^^^
+  File "/tmp/revexit/rla_v2.py", line 474, in run
+    rounds = sorted(parse_rounds(args.rounds, fleet_repo, args.lane)
+                    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/revexit/rla_v2.py", line 407, in parse_rounds
+    rounds.add(int(part))
+               ~~~^^^^^^
+ValueError: Exceeds the limit (4300 digits) for integer string conversion: value has 5001 digits; use sys.set_int_max_str_digits() to increase the limit
+
+=== errata-round-5000-digits rc=1 expect=2 
+--- stdout
+
+--- stderr
+Traceback (most recent call last):
+  File "/tmp/revexit/rla_v2.py", line 924, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/tmp/revexit/rla_v2.py", line 908, in main
+    status, doc = run(args)
+                  ~~~^^^^^^
+  File "/tmp/revexit/rla_v2.py", line 485, in run
+    errata = load_errata(args, lane_repo, tip)
+  File "/tmp/revexit/rla_v2.py", line 370, in load_errata
+    return parse_errata(Path(args.errata).read_text(encoding="utf-8"),
+                        args.errata)
+  File "/tmp/revexit/rla_v2.py", line 359, in parse_errata
+    rows.append({"line": num, "round": int(parts[0]), "kind": parts[1],
+                                       ~~~^^^^^^^^^^
+ValueError: Exceeds the limit (4300 digits) for integer string conversion: value has 5001 digits; use sys.set_int_max_str_digits() to increase the limit
+
+=== round-range-memory rc=1 expect=2 
+--- stdout
+
+--- stderr
+Traceback (most recent call last):
+  File "/tmp/revexit/rla_v2.py", line 924, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/tmp/revexit/rla_v2.py", line 908, in main
+    status, doc = run(args)
+                  ~~~^^^^^^
+  File "/tmp/revexit/rla_v2.py", line 474, in run
+    rounds = sorted(parse_rounds(args.rounds, fleet_repo, args.lane)
+                    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/tmp/revexit/rla_v2.py", line 417, in parse_rounds
+    rounds.update(range(lo, hi + 1))
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^
+MemoryError
+
+=== eval-msg-nonascii-ascii-stderr rc=2 expect=2 
+--- stdout
+
+--- stderr
+could-not-evaluate: git rev-parse --show-object-format in /tmp/revexit/v2cases/c21/\xe9-missing: rc=128 fatal: cannot change to '/tmp/revexit/v2cases/c21/\xe9-missing': No such file or directory
+
+=== render-nonascii-ascii-stdout rc=1 expect=2 
+--- stdout
+
+--- stderr
+Traceback (most recent call last):
+  File "/tmp/revexit/rla_v2.py", line 924, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/tmp/revexit/rla_v2.py", line 909, in main
+    print(json.dumps(doc, indent=1, sort_keys=True) if args.json
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          else render(doc), flush=True)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'ascii' codec can't encode character '\xe9' in position 129: ordinal not in range(128)
+

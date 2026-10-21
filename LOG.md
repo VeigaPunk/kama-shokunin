@@ -1371,3 +1371,39 @@ and in SKILL/lesson, not treated as current authority.
 - C1 calibration7→7 verified narrowly; no new capability/axis/promotion.
   Final publication carries the followup receipts separately from measured
   input80a6d07c; the fleet report names every pushed round22 commit.
+
+## round 23 — repository-local git state in the report landing audit (2026-10-21)
+
+- Declared C1 calibration 7→7 (narrow D4 movement) for
+  `tools/report-landing-audit.py`: on the graded rows of
+  `tests/report-audit/repo-state-grid.py`, repository-local git state in the
+  audited lane and fleet no longer crashes the auditor into exit 1, flips a
+  verdict, hangs it, or runs a repository-configured program. Motivation: the
+  base auditor promised "Errors are never verdicts" and unredirectable
+  repositories (`4fe9339f:tools/report-landing-audit.py:42-45,79-81`); the
+  first L1's probe saw tracebacks, false clean verdicts through replace refs
+  and a lazy fetch that ran `core.sshCommand`. Lesson
+  `corpus/lessons/round-23.md` (Gate, M1–M7, falsify disposition).
+- Lane commits by the first L1 (CloseKama22): `e0f0434`, `34b2376`,
+  `245a37f`. It died with the host session at 13:10:51 -03 mid-integration
+  of the falsify wave; KamaR23-2 inherited the uncommitted integration,
+  re-verified it, added the grafts-content check (C13/M32/S101) and the
+  grid's session kill, and landed `e876b953e9da28d2dffd29c923052bc626148c27` (code) and the round's
+  prose/evidence commit.
+- Measured at `e876b953e9da28d2dffd29c923052bc626148c27`: grid `--arm both --json` exit 1 by design —
+  current faults 26/26, contracts 4/4, controls 13/13, 0 tracebacks/
+  executions/timeouts; frozen faults 0/26, contracts 1/4, controls 13/13,
+  9 tracebacks, 3 executions, 2 timeouts. Mutants: exit 0; 31 mutants, 30 killed on grid exit 1, each with its failed rows listed (M16/M19/M22/M24 by contract rows F21/F17/F23/F24); survivor M20 (40-hex `%H` check). Selftest
+  50/50. Rounds 10–22 ledger and `--no-errata` byte-identical between arms
+  (`nh-history-parity` exit 0; 13 reports, 54 required, 9 raw defects all
+  corrected). Evidence `.ufo/waves/round-23/final/`.
+- Sources 88→101 (S089–S101; S095 mined→rejected, superseded by S096;
+  S099/S100 supersede S092/S091). KQ34 added. Census/validate exit 0.
+- Trades reported, not prettified: T01 blobless partial clone and F23
+  paired promisor pack without config refuse where frozen gave a verdict;
+  git ≥ 2.45 floor. Open channels and near variants are listed in the lesson.
+- Seats: build wave 68 (1 dead: RevClaimScope), falsify wave 73 (4 dead with
+  the host session: RowC01Clean, RowF07LogFollow, RowF09SignatureProgram,
+  CritOpenHonesty); round total 141 of 200. Fleet incidents: four `.promisor`
+  markers written into the fleet repo by a falsify probe (removed, M4); one
+  scribe misroot swept into this lane (M5).

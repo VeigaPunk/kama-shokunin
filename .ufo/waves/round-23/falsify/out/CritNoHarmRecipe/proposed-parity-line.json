@@ -1,0 +1,8 @@
+[
+ {
+  "name": "nh-history-parity",
+  "argv": ["{python}", "-c", "import subprocess,sys\nlane,fleet,cand=sys.argv[1:4]\nfz=subprocess.check_output(['git','-C',lane,'cat-file','blob','4fe9339f8fc3a4a4a479d9c938a850da12f1124d:tools/report-landing-audit.py'])\nbad=0\nfor r in ('10-21','10-22'):\n for m in ([],['--no-errata']):\n  a=['--lane-repo',lane,'--fleet-repo',fleet,'--rounds',r,'--json',*m]\n  c=subprocess.run([sys.executable,cand,*a],capture_output=True)\n  f=subprocess.run([sys.executable,'-',*a],input=fz,capture_output=True)\n  ok=(c.returncode,c.stdout,c.stderr)==(f.returncode,f.stdout,f.stderr)\n  bad|=not ok\n  print(r,*m,'current',c.returncode,'frozen',f.returncode,'same' if ok else 'DIFF')\nsys.exit(1 if bad else 0)", "{lane}", "/home/vgpnk/Projects/shokunin", "{lane}/tools/report-landing-audit.py"],
+  "exit": 0,
+  "timeout": 300
+ }
+]

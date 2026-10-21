@@ -1,0 +1,89 @@
+# RevLookup F1 falsify grid — peel/cross-repo ambiguity overwrite
+repo         : /home/vgpnk/Projects/shokunin/kama-shokunin
+repo HEAD    : 245a37f69628c2c6bb29bbf17897d8fb5946c857 (== expected tip)
+git          : git version 2.56.0
+frozen arm   : 4fe9339f8fc3a4a4a479d9c938a850da12f1124d:tools/report-landing-audit.py sha256=09ecd63bdc3a5be5264e6d2966602a32e52ca0678dc89de99959318245ab3b3f
+current arm  : 245a37f69628c2c6bb29bbf17897d8fb5946c857:tools/report-landing-audit.py sha256=f228f17420134a4a4fb6d1f93b943f78647e7e60882f767e6cb7cba11d6928a7
+scratch      : /tmp/kama-r23w2/ExecAmbiguityFixture-grid
+cb=68c726c cc=8877aee unique=9be247d first=8877aeef7b32 absent=d3adb33,d3adb34 (premises verified with plain git)
+
+== Section A: lookup() matrix (module level)
+== A1a control: bare commit+blob prefix in lane -> ambiguous
+   expect(current): {'68c726c': 'ambiguous'}
+   frozen : {'68c726c': 'ambiguous'}
+   current: {'68c726c': 'ambiguous'}
+   met(current): yes
+== A1b fault: peel commit+blob prefix keeps ambiguity visible
+   expect(current): {'68c726c': 'ambiguous'}
+   frozen : {'68c726c': 'found'}
+   current: {'68c726c': 'found'}
+   met(current): no
+== A2a fault: bare cross-repo prefix (lane both, fleet first) -> ambiguous
+   expect(current): {'8877aee': 'ambiguous'}
+   frozen : {'8877aee': 'found'}
+   current: {'8877aee': 'found'}
+   met(current): no
+== A2b fault: peel cross-repo prefix -> ambiguous
+   expect(current): {'8877aee': 'ambiguous'}
+   frozen : {'8877aee': 'found'}
+   current: {'8877aee': 'found'}
+   met(current): no
+== A2c control: bare cross-repo prefix, fleet lacks both -> ambiguous
+   expect(current): {'8877aee': 'ambiguous'}
+   frozen : {'8877aee': 'ambiguous'}
+   current: {'8877aee': 'ambiguous'}
+   met(current): yes
+== A3 control: unique real prefix -> found (bare and peel)
+   expect(current): found (bare and peel)
+   frozen : {'9be247d': 'found'}
+   current: {'9be247d': 'found'}
+   met(current): yes
+== A4 control: absent token -> missing
+   expect(current): {'d3adb33': 'missing'}
+   frozen : {'d3adb33': 'missing'}
+   current: {'d3adb33': 'missing'}
+   met(current): yes
+
+== Section B: audit replay (subprocess, main() exit codes)
+== B1 fault: Landed cites commit+blob 7-hex prefix
+   expect(current): rc=1 defects=['landed-ambiguous:68c726c']
+   frozen : rc=0 defects=[] t=0.06s
+   current: rc=0 defects=[] t=0.07s
+   met(current): no
+== B2 fault: Landed cites cross-repo commit+commit prefix
+   expect(current): rc=1 defects=['landed-ambiguous:8877aee']
+   frozen : rc=0 defects=[] t=0.05s
+   current: rc=0 defects=[] t=0.06s
+   met(current): no
+== B2c control: same citation, fleet lacks both commits
+   expect(current): rc=1 defects=['landed-ambiguous:8877aee']
+   frozen : rc=1 defects=['landed-ambiguous:8877aee'] t=0.05s
+   current: rc=1 defects=['landed-ambiguous:8877aee'] t=0.06s
+   met(current): yes
+== B3 control: Landed cites a unique real prefix
+   expect(current): rc=0 defects=[]
+   frozen : rc=0 defects=[] t=0.05s
+   current: rc=0 defects=[] t=0.06s
+   met(current): yes
+== B4 control: Landed cites an absent token
+   expect(current): rc=1 defects=['landed-unresolved:d3adb33']
+   frozen : rc=1 defects=['landed-unresolved:d3adb33'] t=0.06s
+   current: rc=1 defects=['landed-unresolved:d3adb33'] t=0.06s
+   met(current): yes
+== B5 fault: errata correction is the ambiguous commit+blob prefix
+   expect(current): rc=1 defects contain 'errata-invalid:68c726c'
+   frozen : rc=0 defects=['landed-unresolved:d3adb33'] t=0.06s
+   current: rc=0 defects=['landed-unresolved:d3adb33'] t=0.07s
+   met(current): no
+== B5c control: errata correction absent everywhere
+   expect(current): rc=1 defects contain 'errata-invalid:d3adb34'
+   frozen : rc=1 defects=['errata-invalid:d3adb34', 'landed-unresolved:d3adb33'] t=0.06s
+   current: rc=1 defects=['errata-invalid:d3adb34', 'landed-unresolved:d3adb33'] t=0.07s
+   met(current): yes
+
+== Verdict
+fault rows unmet on current : ['A1b', 'A2a', 'A2b', 'B1', 'B2', 'B5']
+control rows unmet on current: none
+slowest current-arm audit run: 0.07
+F1 HOLDS: the current arm erases a real abbreviation ambiguity (peel/cross-repo overwrite); normative expectation not met.
+(frozen cells are context only; scratch kept at /tmp/kama-r23w2/ExecAmbiguityFixture-grid)

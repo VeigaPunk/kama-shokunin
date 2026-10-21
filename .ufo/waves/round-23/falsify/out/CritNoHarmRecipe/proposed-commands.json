@@ -1,0 +1,321 @@
+{
+ "measured_commit": "245a37f69628c2c6bb29bbf17897d8fb5946c857",
+ "recipe_sha256": "4cbc03b312dbf9951141008e1fdeb68ba44ce645ee876efcd8577ccee262d54c",
+ "commands": [
+  {
+   "name": "nh-fleet-clean-pre",
+   "argv": [
+    "/usr/bin/python3",
+    "-c",
+    "import pathlib,subprocess,sys;r=sys.argv[1];g=lambda *a:subprocess.run(['git','-C',r,*a],capture_output=True,text=True,errors='surrogateescape').stdout.strip();gd=pathlib.Path(r,g('rev-parse','--git-dir'));bad=[str(p) for p in (gd/'objects/pack').glob('*.promisor')]+[x for x in g('for-each-ref','--format=%(refname)','refs/replace/').split() if x]+[str(p) for p in (gd/'info/grafts',gd/'shallow',gd/'objects/info/alternates') if p.exists()]+[l for l in g('config','--local','--name-only','--list').split() if l.endswith('.promisor') or l=='extensions.partialclone'];print(chr(10).join(bad) or 'clean');sys.exit(1 if bad else 0)",
+    "/home/vgpnk/Projects/shokunin"
+   ],
+   "started_utc": "2026-10-21T16:01:39.905650+00:00",
+   "exit": 0,
+   "expected_exit": 0,
+   "timed_out": false,
+   "stdout_sha256": "2e22da2ab13713309ac75219e525b8e06ed02f3f1963b8feef203fa25827f93d",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  },
+  {
+   "name": "nh-lane-clean-pre",
+   "argv": [
+    "/usr/bin/python3",
+    "-c",
+    "import pathlib,subprocess,sys;r=sys.argv[1];g=lambda *a:subprocess.run(['git','-C',r,*a],capture_output=True,text=True,errors='surrogateescape').stdout.strip();gd=pathlib.Path(r,g('rev-parse','--git-dir'));bad=[str(p) for p in (gd/'objects/pack').glob('*.promisor')]+[x for x in g('for-each-ref','--format=%(refname)','refs/replace/').split() if x]+[str(p) for p in (gd/'info/grafts',gd/'shallow',gd/'objects/info/alternates') if p.exists()]+[l for l in g('config','--local','--name-only','--list').split() if l.endswith('.promisor') or l=='extensions.partialclone'];print(chr(10).join(bad) or 'clean');sys.exit(1 if bad else 0)",
+    "/tmp/kama-r23w2/CritNoHarmRecipe"
+   ],
+   "started_utc": "2026-10-21T16:01:39.935472+00:00",
+   "exit": 0,
+   "expected_exit": 0,
+   "timed_out": false,
+   "stdout_sha256": "2e22da2ab13713309ac75219e525b8e06ed02f3f1963b8feef203fa25827f93d",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  },
+  {
+   "name": "nh-audit-ledger-10-21",
+   "argv": [
+    "/usr/bin/python3",
+    "/tmp/kama-r23w2/CritNoHarmRecipe/tools/report-landing-audit.py",
+    "--rounds",
+    "10-21",
+    "--fleet-repo",
+    "/home/vgpnk/Projects/shokunin",
+    "--json"
+   ],
+   "started_utc": "2026-10-21T16:01:39.965166+00:00",
+   "exit": 0,
+   "expected_exit": 0,
+   "timed_out": false,
+   "stdout_sha256": "853d7fca4a17a1ee6402a6c5a9878bbb8a84810dea7d2619927dc4c49d619ba0",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  },
+  {
+   "name": "nh-audit-raw-10-21",
+   "argv": [
+    "/usr/bin/python3",
+    "/tmp/kama-r23w2/CritNoHarmRecipe/tools/report-landing-audit.py",
+    "--rounds",
+    "10-21",
+    "--fleet-repo",
+    "/home/vgpnk/Projects/shokunin",
+    "--no-errata",
+    "--json"
+   ],
+   "started_utc": "2026-10-21T16:01:40.473495+00:00",
+   "exit": 1,
+   "expected_exit": 1,
+   "timed_out": false,
+   "stdout_sha256": "110e1804d7d37d5daf7084c5e49a4846c223cc7e6bb673721cdb68737e968138",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  },
+  {
+   "name": "nh-frozen-ledger-10-22",
+   "argv": [
+    "/usr/bin/python3",
+    "-c",
+    "import subprocess,sys;lane=sys.argv[1];src=subprocess.check_output(['git','-C',lane,'cat-file','blob','4fe9339f8fc3a4a4a479d9c938a850da12f1124d:tools/report-landing-audit.py']);sys.argv=[lane+'/tools/report-landing-audit.py']+sys.argv[2:];exec(compile(src,sys.argv[0],'exec'),{'__name__':'__main__','__file__':sys.argv[0]})",
+    "/tmp/kama-r23w2/CritNoHarmRecipe",
+    "--rounds",
+    "10-22",
+    "--fleet-repo",
+    "/home/vgpnk/Projects/shokunin",
+    "--json"
+   ],
+   "started_utc": "2026-10-21T16:01:40.889352+00:00",
+   "exit": 0,
+   "expected_exit": 0,
+   "timed_out": false,
+   "stdout_sha256": "1ae84922500fe6e41ae72d6eb022fc72fbb7c60f63e9995487fde32bed46cc51",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  },
+  {
+   "name": "nh-frozen-raw-10-22",
+   "argv": [
+    "/usr/bin/python3",
+    "-c",
+    "import subprocess,sys;lane=sys.argv[1];src=subprocess.check_output(['git','-C',lane,'cat-file','blob','4fe9339f8fc3a4a4a479d9c938a850da12f1124d:tools/report-landing-audit.py']);sys.argv=[lane+'/tools/report-landing-audit.py']+sys.argv[2:];exec(compile(src,sys.argv[0],'exec'),{'__name__':'__main__','__file__':sys.argv[0]})",
+    "/tmp/kama-r23w2/CritNoHarmRecipe",
+    "--rounds",
+    "10-22",
+    "--fleet-repo",
+    "/home/vgpnk/Projects/shokunin",
+    "--no-errata",
+    "--json"
+   ],
+   "started_utc": "2026-10-21T16:01:41.365477+00:00",
+   "exit": 1,
+   "expected_exit": 1,
+   "timed_out": false,
+   "stdout_sha256": "13b17b1cb1e5042388b4797a12d77bb358e068893a0c451342c7f83e86504cdd",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  },
+  {
+   "name": "nh-fleet-snapshot",
+   "argv": [
+    "git",
+    "clone",
+    "-q",
+    "--bare",
+    "--no-local",
+    "file:///home/vgpnk/Projects/shokunin",
+    "/tmp/kama-r23w2/CritNoHarmRecipe-probe/run-proposed/fleet.git"
+   ],
+   "started_utc": "2026-10-21T16:01:41.858921+00:00",
+   "exit": 0,
+   "expected_exit": 0,
+   "timed_out": false,
+   "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  },
+  {
+   "name": "nh-snapshot-ledger-current",
+   "argv": [
+    "/usr/bin/python3",
+    "/tmp/kama-r23w2/CritNoHarmRecipe/tools/report-landing-audit.py",
+    "--rounds",
+    "10-22",
+    "--fleet-repo",
+    "/tmp/kama-r23w2/CritNoHarmRecipe-probe/run-proposed/fleet.git",
+    "--json"
+   ],
+   "started_utc": "2026-10-21T16:01:42.592514+00:00",
+   "exit": 0,
+   "expected_exit": 0,
+   "timed_out": false,
+   "stdout_sha256": "1fa975476c0169761eec0075583f015f1abdbf5c06f1a36d51dc6680cb431436",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  },
+  {
+   "name": "nh-snapshot-ledger-frozen",
+   "argv": [
+    "/usr/bin/python3",
+    "-c",
+    "import subprocess,sys;lane=sys.argv[1];src=subprocess.check_output(['git','-C',lane,'cat-file','blob','4fe9339f8fc3a4a4a479d9c938a850da12f1124d:tools/report-landing-audit.py']);sys.argv=[lane+'/tools/report-landing-audit.py']+sys.argv[2:];exec(compile(src,sys.argv[0],'exec'),{'__name__':'__main__','__file__':sys.argv[0]})",
+    "/tmp/kama-r23w2/CritNoHarmRecipe",
+    "--rounds",
+    "10-22",
+    "--fleet-repo",
+    "/tmp/kama-r23w2/CritNoHarmRecipe-probe/run-proposed/fleet.git",
+    "--json"
+   ],
+   "started_utc": "2026-10-21T16:01:42.962094+00:00",
+   "exit": 0,
+   "expected_exit": 0,
+   "timed_out": false,
+   "stdout_sha256": "1fa975476c0169761eec0075583f015f1abdbf5c06f1a36d51dc6680cb431436",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  },
+  {
+   "name": "nh-snapshot-raw-current",
+   "argv": [
+    "/usr/bin/python3",
+    "/tmp/kama-r23w2/CritNoHarmRecipe/tools/report-landing-audit.py",
+    "--rounds",
+    "10-22",
+    "--fleet-repo",
+    "/tmp/kama-r23w2/CritNoHarmRecipe-probe/run-proposed/fleet.git",
+    "--no-errata",
+    "--json"
+   ],
+   "started_utc": "2026-10-21T16:01:43.307218+00:00",
+   "exit": 1,
+   "expected_exit": 1,
+   "timed_out": false,
+   "stdout_sha256": "7cf28de44e021e7e231f29da0f473d2b37071fdf1e28b54d4ef05c360fbfde94",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  },
+  {
+   "name": "nh-snapshot-raw-frozen",
+   "argv": [
+    "/usr/bin/python3",
+    "-c",
+    "import subprocess,sys;lane=sys.argv[1];src=subprocess.check_output(['git','-C',lane,'cat-file','blob','4fe9339f8fc3a4a4a479d9c938a850da12f1124d:tools/report-landing-audit.py']);sys.argv=[lane+'/tools/report-landing-audit.py']+sys.argv[2:];exec(compile(src,sys.argv[0],'exec'),{'__name__':'__main__','__file__':sys.argv[0]})",
+    "/tmp/kama-r23w2/CritNoHarmRecipe",
+    "--rounds",
+    "10-22",
+    "--fleet-repo",
+    "/tmp/kama-r23w2/CritNoHarmRecipe-probe/run-proposed/fleet.git",
+    "--no-errata",
+    "--json"
+   ],
+   "started_utc": "2026-10-21T16:01:43.653132+00:00",
+   "exit": 1,
+   "expected_exit": 1,
+   "timed_out": false,
+   "stdout_sha256": "7cf28de44e021e7e231f29da0f473d2b37071fdf1e28b54d4ef05c360fbfde94",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  },
+  {
+   "name": "nh-citation-selftest",
+   "argv": [
+    "/usr/bin/python3",
+    "/tmp/kama-r23w2/CritNoHarmRecipe/tools/citation-provenance.py",
+    "--selftest"
+   ],
+   "started_utc": "2026-10-21T16:01:43.995652+00:00",
+   "exit": 0,
+   "expected_exit": 0,
+   "timed_out": false,
+   "stdout_sha256": "63600acdb9b38a2d768372efe6be057a920851db750cd4628f47bed2c40d33ba",
+   "stderr_sha256": "5a8f85c084181d506d1eccd694dc370f747822deefae3025ae420cf72500a815",
+   "as_expected": true
+  },
+  {
+   "name": "nh-io-selftest",
+   "argv": [
+    "/usr/bin/python3",
+    "/tmp/kama-r23w2/CritNoHarmRecipe/tests/llamacpp-live/install-io-grid.py",
+    "--selftest"
+   ],
+   "started_utc": "2026-10-21T16:01:44.520395+00:00",
+   "exit": 0,
+   "expected_exit": 0,
+   "timed_out": false,
+   "stdout_sha256": "31c9abb0977675faceba66b48fa787935e14e84eacff01bcd65676b300f15821",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  },
+  {
+   "name": "nh-io-frozen",
+   "argv": [
+    "/usr/bin/python3",
+    "/tmp/kama-r23w2/CritNoHarmRecipe/tests/llamacpp-live/install-io-grid.py",
+    "--arm",
+    "frozen",
+    "--json"
+   ],
+   "started_utc": "2026-10-21T16:01:45.502310+00:00",
+   "exit": 1,
+   "expected_exit": 1,
+   "timed_out": false,
+   "stdout_sha256": "d4ae3c8d3529a350bd99c4f488fc5f654542851c88a3f625dd8853fcc7f82f4c",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  },
+  {
+   "name": "nh-io-both",
+   "argv": [
+    "/usr/bin/python3",
+    "/tmp/kama-r23w2/CritNoHarmRecipe/tests/llamacpp-live/install-io-grid.py",
+    "--arm",
+    "both",
+    "--json"
+   ],
+   "started_utc": "2026-10-21T16:01:45.656875+00:00",
+   "exit": 1,
+   "expected_exit": 1,
+   "timed_out": false,
+   "stdout_sha256": "ba7081af3263c6ab51a66b1a025d84fa14b845c20b01c9d33f7f14ba606cf96f",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  },
+  {
+   "name": "nh-sources-append-only-long",
+   "argv": [
+    "/usr/bin/python3",
+    "/tmp/kama-r23w2/CritNoHarmRecipe/tools/sources-append-only.py",
+    "--from",
+    "10271460cc575fc2280aa831e442726385fc2319",
+    "--to",
+    "245a37f69628c2c6bb29bbf17897d8fb5946c857",
+    "--repo",
+    "/tmp/kama-r23w2/CritNoHarmRecipe"
+   ],
+   "started_utc": "2026-10-21T16:01:45.821398+00:00",
+   "exit": 0,
+   "expected_exit": 0,
+   "timed_out": false,
+   "stdout_sha256": "ef4cd6362f22597a5be0d89e3d2030b18ea226b8cd5c2bb006e33f386da1f9e2",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  },
+  {
+   "name": "nh-fleet-clean-post",
+   "argv": [
+    "/usr/bin/python3",
+    "-c",
+    "import pathlib,subprocess,sys;r=sys.argv[1];g=lambda *a:subprocess.run(['git','-C',r,*a],capture_output=True,text=True,errors='surrogateescape').stdout.strip();gd=pathlib.Path(r,g('rev-parse','--git-dir'));bad=[str(p) for p in (gd/'objects/pack').glob('*.promisor')]+[x for x in g('for-each-ref','--format=%(refname)','refs/replace/').split() if x]+[str(p) for p in (gd/'info/grafts',gd/'shallow',gd/'objects/info/alternates') if p.exists()]+[l for l in g('config','--local','--name-only','--list').split() if l.endswith('.promisor') or l=='extensions.partialclone'];print(chr(10).join(bad) or 'clean');sys.exit(1 if bad else 0)",
+    "/home/vgpnk/Projects/shokunin"
+   ],
+   "started_utc": "2026-10-21T16:01:45.882421+00:00",
+   "exit": 0,
+   "expected_exit": 0,
+   "timed_out": false,
+   "stdout_sha256": "2e22da2ab13713309ac75219e525b8e06ed02f3f1963b8feef203fa25827f93d",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  }
+ ]
+}

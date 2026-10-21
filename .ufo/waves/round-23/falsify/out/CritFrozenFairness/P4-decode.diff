@@ -1,0 +1,11 @@
+--- ../CritFrozenFairness-frozen.py	2026-10-21 12:46:49.219911681 -0300
++++ P4-decode.py	2026-10-21 12:50:54.835662177 -0300
+@@ -91,6 +91,8 @@
+                               env=env or git_env())
+     except OSError as exc:
+         raise EvalError(f"cannot run git: {exc}") from exc
++    except UnicodeDecodeError as exc:
++        raise EvalError(f"git {' '.join(args)} in {repo}: cannot decode: {exc}") from exc
+     if proc.returncode != 0:
+         raise EvalError(f"git {' '.join(args)} in {repo}: rc={proc.returncode} "
+                         f"{proc.stderr.strip()}")

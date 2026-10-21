@@ -1,0 +1,131 @@
+frozen  sha256=09ecd63bdc3a5be5264e6d2966602a32e52ca0678dc89de99959318245ab3b3f (4fe9339f blob fcc255ce…)
+current sha256=684764108872cea153284dfec89848d5efdf5b30dd37db026434dea2b623e210 (snapshot of live worktree tools/report-landing-audit.py)
+
+IDENTICAL clean-basic  exit f=0 c=0 stdout== stderr==
+    why: real bullets: 9/7/10-hex and full hashes; boundary (atime==cutoff) and rebased (committer later) commits required; post-report commit ignored
+    frozen : status=clean required=5 post=1 defects=[] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL clean-table-prose  exit f=0 c=0 stdout== stderr==
+    why: real Landed shapes: table rows and bold prose carrying full hashes
+    frozen : status=clean required=5 post=1 defects=[] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL clean-crlf  exit f=0 c=0 stdout== stderr==
+    why: committed report bytes with CRLF line endings (both arms normalise CR)
+    frozen : status=clean required=5 post=1 defects=[] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL clean-utf8-body  exit f=0 c=0 stdout== stderr==
+    why: em dash and accented prose in body (real reports contain these)
+    frozen : status=clean required=5 post=1 defects=[] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL clean-nonascii-foreign-author  exit f=0 c=0 stdout== stderr==
+    why: non-ASCII author on a non-kama commit; author filter must still reject it
+    frozen : status=clean required=5 post=1 defects=[] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL clean-i18n-utf8-config  exit f=0 c=0 stdout== stderr==
+    why: lane sets i18n.logOutputEncoding=UTF-8 with a non-ASCII subject on a non-kama commit
+    frozen : status=clean required=5 post=1 defects=[] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL clean-log-follow-config  exit f=0 c=0 stdout== stderr==
+    why: fleet sets log.follow=true; no rename involved
+    frozen : status=clean required=5 post=1 defects=[] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL clean-alternates-clone-shared  exit f=0 c=0 stdout== stderr==
+    why: lane is clone --shared (objects/info/alternates); borrowed objects must still resolve as local
+    frozen : status=clean required=5 post=1 defects=[] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL omission-uncited  exit f=1 c=1 stdout== stderr==
+    why: required commit B (full hash) absent from Landed and everywhere
+    frozen : status=failed required=5 post=1 defects=['landed-omitted:4e3d9680fad8'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL omission-cited-elsewhere  exit f=1 c=1 stdout== stderr==
+    why: required commit C cited only in Work performed (cited_elsewhere)
+    frozen : status=failed required=5 post=1 defects=['landed-omitted:965a4bf617d2'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL unresolved-fabricated-full  exit f=1 c=1 stdout== stderr==
+    why: fabricated 40-hex in body, no replace ref, no source row
+    frozen : status=failed required=5 post=1 defects=['unresolved-full-hash:1234567890ab'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL unresolved-mashup-real-shape  exit f=1 c=1 stdout== stderr==
+    why: 15-hex prefix of A spliced to 25-hex suffix of B (the round-20 real defect shape)
+    frozen : status=failed required=5 post=1 defects=['unresolved-full-hash:db796f8b820b'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL landed-unresolved-typo  exit f=1 c=1 stdout== stderr==
+    why: Landed token deadbee1 (digit+letter, no commit)
+    frozen : status=failed required=5 post=1 defects=['landed-unresolved:deadbee1'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL section-missing  exit f=1 c=1 stdout== stderr==
+    why: no ## Landed changes heading; all five required commits omitted
+    frozen : status=failed required=5 post=1 defects=['landed-section-missing:-', 'landed-omitted:d193b0a66923', 'landed-omitted:ac6e652811e9', 'landed-omitted:965a4bf617d2', 'landed-omitted:4e3d9680fad8', 'landed-omitted:db796f8b820b'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL section-prefix-not-heading  exit f=1 c=1 stdout== stderr==
+    why: 'prefix ## Landed changes' is not a heading (landed_match anchor)
+    frozen : status=failed required=5 post=1 defects=['landed-section-missing:-', 'landed-omitted:d193b0a66923', 'landed-omitted:ac6e652811e9', 'landed-omitted:965a4bf617d2', 'landed-omitted:4e3d9680fad8', 'landed-omitted:db796f8b820b'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL ambiguous-commit-commit  exit f=1 c=1 stdout== stderr==
+    why: 7-hex Landed token shared by two commits (expect landed-ambiguous if peel keeps bare ambiguity)
+    frozen : status=failed required=5 post=1 defects=['landed-ambiguous:060a251'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL ambiguous-commit-blob  exit f=0 c=0 stdout== stderr==
+    why: 7-hex token shared by one commit and one blob; the commit is the only commit candidate, so ^{commit} peel may resolve it (type-sensitive control)
+    frozen : status=clean required=5 post=1 defects=[] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL ambiguous-blob-blob  exit f=1 c=1 stdout== stderr==
+    why: 7-hex token shared only by blobs (no commit candidate)
+    frozen : status=failed required=5 post=1 defects=['landed-ambiguous:05ef24a'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL errata-committed-corrects-omitted  exit f=0 c=0 stdout== stderr==
+    why: errata row read from committed branch blob (default path used by the historical harness)
+    frozen : status=clean required=5 post=1 defects=['landed-omitted:4e3d9680fad8*'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL errata-file-corrects-section-missing  exit f=0 c=0 stdout== stderr==
+    why: section-missing corrected by a non-commit correction '-' (kind not resolvable) plus five omitted rows
+    frozen : status=clean required=5 post=1 defects=['landed-section-missing:-*', 'landed-omitted:d193b0a66923*', 'landed-omitted:ac6e652811e9*', 'landed-omitted:965a4bf617d2*', 'landed-omitted:4e3d9680fad8*', 'landed-omitted:db796f8b820b*'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL errata-unmatched  exit f=1 c=1 stdout== stderr==
+    why: row for selected round matching no defect
+    frozen : status=failed required=5 post=1 defects=[] errata_unmatched=1 errata_invalid=1 src_hashes=[]
+IDENTICAL errata-invalid-blob-correction  exit f=1 c=1 stdout== stderr==
+    why: correction names a blob
+    frozen : status=failed required=5 post=1 defects=['unresolved-full-hash:db796f8b820b*'] errata_unmatched=0 errata_invalid=1 src_hashes=[]
+IDENTICAL errata-invalid-fabricated-correction  exit f=1 c=1 stdout== stderr==
+    why: correction is a non-existent 40-hex
+    frozen : status=failed required=5 post=1 defects=['unresolved-full-hash:db796f8b820b*'] errata_unmatched=0 errata_invalid=1 src_hashes=[]
+IDENTICAL errata-invalid-omitted-differs  exit f=1 c=1 stdout== stderr==
+    why: landed-omitted correction differs from the omitted commit
+    frozen : status=failed required=5 post=1 defects=['landed-omitted:4e3d9680fad8*'] errata_unmatched=0 errata_invalid=1 src_hashes=[]
+IDENTICAL errata-abbrev-correction-accepted  exit f=0 c=0 stdout== stderr==
+    why: unresolved-full-hash corrected by a 10-hex abbrev of a real commit
+    frozen : status=clean required=5 post=1 defects=['unresolved-full-hash:db796f8b820b*'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+DIFF      errata-refname-correction  exit f=0 c=1 stdout=!= stderr==
+    why: correction is a branch name (non-hex); frozen accepts via rev-parse, candidate requires hex 7..40
+    frozen : status=clean required=5 post=1 defects=['unresolved-full-hash:db796f8b820b*'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+    current: status=failed required=5 post=1 defects=['unresolved-full-hash:db796f8b820b*'] errata_unmatched=0 errata_invalid=1 src_hashes=[]
+IDENTICAL source-registered-scheme-cited  exit f=0 c=0 stdout== stderr==
+    why: registered full URL cited exactly (exempt)
+    frozen : status=clean required=5 post=1 defects=[] errata_unmatched=0 errata_invalid=0 src_hashes=['704366d76f8748cf9ad3df62a464bfcc8d1ae6ad']
+IDENTICAL source-registered-census-cited  exit f=0 c=0 stdout== stderr==
+    why: registered URL cited census-form (no scheme), as in real round-22 lines 109-111
+    frozen : status=clean required=5 post=1 defects=[] errata_unmatched=0 errata_invalid=0 src_hashes=['704366d76f8748cf9ad3df62a464bfcc8d1ae6ad']
+IDENTICAL source-unregistered-url  exit f=1 c=1 stdout== stderr==
+    why: same hash, path not in the registry
+    frozen : status=failed required=5 post=1 defects=['unresolved-full-hash:704366d76f87'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL source-bare-copy-of-registered-hash  exit f=1 c=1 stdout== stderr==
+    why: bare 40-hex copy of a registered hash
+    frozen : status=failed required=5 post=1 defects=['unresolved-full-hash:704366d76f87'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL source-url-inside-landed  exit f=1 c=1 stdout== stderr==
+    why: registered URL placed inside Landed changes (not exempt)
+    frozen : status=failed required=5 post=1 defects=['unresolved-full-hash:704366d76f87', 'landed-unresolved:704366d76f87'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL source-malformed-row  exit f=1 c=1 stdout== stderr==
+    why: registry row with 12 cells (not a registry row)
+    frozen : status=failed required=5 post=1 defects=['unresolved-full-hash:704366d76f87'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL source-registry-absent  exit f=1 c=1 stdout== stderr==
+    why: no corpus/SOURCES.md on branch (legacy: no exemption)
+    frozen : status=failed required=5 post=1 defects=['unresolved-full-hash:704366d76f87'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+IDENTICAL draft-render-fleet-cutoff  exit f=1 c=1 stdout== stderr==
+    why: --report draft uses committed fleet cutoff; render compared
+    frozen : summary reports=1 defects=1 corrected=0 uncorrected=1 errata_unmatched=0 errata_invalid=0 status=failed
+IDENTICAL draft-uncommitted-now  exit f=1 c=1 stdout== stderr==
+    why: uncommitted draft: cutoff = now, late commit required; render compared
+    frozen : summary reports=1 defects=1 corrected=0 uncorrected=1 errata_unmatched=0 errata_invalid=0 status=failed
+IDENTICAL missing-report-could-not-evaluate  exit f=2 c=2 stdout== stderr=!= (exit-only)
+    why: no committed report, no draft: exit 2 in both arms (stderr wording differs by design)
+    frozen : exit=2
+    current: exit=2
+    stderr frozen : could-not-evaluate: round 1: .ufo/reports/round-1/kama.md not committed in fleet HEAD
+    stderr current: could-not-evaluate: round 1: cannot read .ufo/reports/round-1/kama.md at fleet HEAD: git show HEAD:.ufo/reports/round-1/kama.md in /tmp/revcontrols-se88bjt1/mis
+IDENTICAL unusable-lane-could-not-evaluate  exit f=2 c=2 stdout== stderr=!= (exit-only)
+    why: lane path does not exist: exit 2 in both arms
+    frozen : exit=2
+    current: exit=2
+    stderr frozen : could-not-evaluate: git rev-parse --verify master^{commit} in /tmp/revcontrols-se88bjt1/unusable-lane-could-not-evaluate/no-such-lane: rc=128 fatal: cannot chan
+    stderr current: could-not-evaluate: git rev-parse --show-object-format in /tmp/revcontrols-se88bjt1/unusable-lane-could-not-evaluate/no-such-lane: rc=128 fatal: cannot change t
+DIFF      expdiff-lane-path-is-subdirectory  exit f=0 c=2 stdout=!= stderr=!=
+    why: lane path inside the repository, not top level: candidate refuses non-top-level repositories, frozen audits them
+    frozen : status=clean required=5 post=1 defects=[] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+    current: exit=2
+DIFF      expdiff-tag-shadows-branch-omitted  exit f=0 c=1 stdout=!= stderr==
+    why: lightweight tag named master at round-1 commit A: frozen resolves master through refs/tags first and misses omitted B; candidate pins refs/heads/master
+    frozen : status=clean required=1 post=0 defects=[] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+    current: status=failed required=5 post=1 defects=['landed-omitted:4e3d9680fad8'] errata_unmatched=0 errata_invalid=0 src_hashes=[]
+
+cases=39 identical=36 differ=3 diff_names=['errata-refname-correction', 'expdiff-lane-path-is-subdirectory', 'expdiff-tag-shadows-branch-omitted']

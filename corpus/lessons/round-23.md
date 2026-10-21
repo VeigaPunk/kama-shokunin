@@ -90,3 +90,120 @@ text; it is not registered.
   (FollowFixture); sibling tools `citation-provenance.py` and
   `sources-append-only.py` remain unisolated (ConnFleetAuditors,
   SiblingGitSurvey).
+
+## Falsify-wave integration and coordinator replacement (appended)
+
+Appended by KamaR23-2, the replacement L1 after the host session froze and
+was killed (SIGHUP, 2026-10-21 13:10:51 -03) while the first L1
+(CloseKama22) was integrating the falsify wave. Everything above this
+section was written at `245a37f6` and stays unchanged; corrections below
+are append-only.
+
+Inherited and re-verified: the uncommitted auditor, grid and mutant edits
+(F27–F30, C09–C12, contract kind for F17/F21/F23/F24, M26–M31, mutant kill
+only on grid exit 1, 20 s git timeout); the uncommitted SKILL, QUALITY,
+README and knowledge appends (each rewritten to the measured state below);
+the round recipe. Discarded: nothing. Added by the replacement: an
+info/grafts check that ignores blank and `#` lines as git does (S101;
+control C13, mutant M32), and a grid timeout that kills the auditor's whole
+session (frozen-arm FIFO rows had left blocked git grandchildren running —
+56 such processes from this round were killed).
+
+Measured in a clean clone of `e876b953e9da28d2dffd29c923052bc626148c27` (git 2.56.0, Python 3.14.8; grid
+population `f29fab8d…364a`, current auditor `da5041a8…5af1`, frozen
+`09ecd63b…3b3f`):
+
+- `python3 tests/report-audit/repo-state-grid.py --arm both --json` → exit 1
+  (frozen red by design). Current: faults 26/26, contracts 4/4, controls
+  13/13, tracebacks 0, executed 0, timeouts 0. Frozen: faults 0/26,
+  contracts 1/4, controls 13/13, tracebacks 9, executed 3, timeouts 2.
+- `python3 tests/report-audit/isolation-mutants.py --json` → exit 0; 31 mutants, 30 killed on grid exit 1, each with its failed rows listed (M16/M19/M22/M24 by contract rows F21/F17/F23/F24); survivor M20 (40-hex `%H` check)
+- `python3 tools/report-landing-audit.py --selftest` → 50/50, exit 0.
+
+### Corrections
+
+- The frozen arm's traceback count is 9, not the 8 written above (F26 was
+  added after the count; ScribeLogEntry, ConnQualityRules).
+- `--no-lazy-fetch` is not defensive-only: a `remote.<n>.partialclonefilter`
+  remote passes every refusal and lazy-fetches through `core.sshCommand`
+  without it (CritDefensiveOnly P01/P02). Grid F27 now grades that channel
+  and kills M02.
+- The 40-hex `%H` check (M20) stays defensive-only, but not because
+  signature display is disabled: no repository-local state reached it
+  (CritDefensiveOnly). Its survival is reported, not credited.
+- "Frozen 0/26" is not 26 fair isolation wins: F17, F21, F23 and F24 are
+  contract changes (now kind `contract`), and F06, F13, F16, F26 pin
+  current's own refusal wording (CritFrozenFairness). The catch-all alone
+  removes all 9 tracebacks while meeting only F24 (CritSeparabilityW2).
+- S095's `teaches` asserted a subprocess text-mode mechanism its page does
+  not document (SrcS095). Status S095 mined→rejected; S096 supersedes it
+  with the narrowed claim; S097/S098 anchor text mode and the TextIOWrapper
+  strict default. S099 supersedes S092 (anchor is §Handling Missing
+  Objects, SrcS092). S100 supersedes S091 (scope covers the transport key;
+  adds `gpg.program` for F09, SrcS091). No other status, recheck or used-by
+  changed.
+
+### Gate — rows opened by the replacement L1 (2026-10-21)
+
+- S096 https://docs.python.org/3.14/builtins/stdtypes.html#bytes.decode
+  (3.14.9; `/library/` 301-redirects here) — "If 'strict' (the default), a
+  UnicodeError exception is raised."
+- S097 https://docs.python.org/3.14/library/subprocess.html (3.14.9),
+  `subprocess.run()` — "opened in text mode using the specified encoding and
+  errors or the io.TextIOWrapper default".
+- S098 https://docs.python.org/3.14/library/io.html (3.14.9),
+  `io.TextIOWrapper` errors — "Pass 'strict' to raise a ValueError exception
+  if there is an encoding error (the default of None has the same effect)".
+- S099 https://git-scm.com/docs/partial-clone (2.56.0), §Handling Missing
+  Objects — "no check as to whether the missing object is actually a
+  promisor object is performed".
+- S100 https://git-scm.com/docs/git-config (2.56.0), `gpg.program` —
+  "Pathname of the program to use instead of "gpg" when making or verifying
+  a PGP signature."
+- S101 https://raw.githubusercontent.com/git/git/v2.56.0/commit.c
+  `read_graft_line` — "strbuf_rtrim(line); if (!line->len || line->buf[0] ==
+  '#') return NULL;"
+
+### Mistakes (continued)
+
+| # | class | evidence pointer | captured-by | fix |
+|---|---|---|---|---|
+| M4 | Seat wrote fault fixtures into the real fleet repository: a falsify probe resolved its pack directory by upward git discovery from a non-repository path and created four zero-byte `.promisor` markers in `/home/vgpnk/Projects/shokunin/.git/objects/pack` (12:50:16 and 12:58:00 -03), which made the current audit refuse the real fleet | `.ufo/waves/round-23/falsify/fleet-contamination/promisor-markers.txt`; `falsify/out/RowF06LazyFetch-2/probe-variants.sh:56`; CritAxisScore, CritTradeoffHarm H1 | the wave contract forbade fleet writes but nothing checked a fixture's repository root | fixture builders must assert `rev-parse --show-toplevel` equals the fresh temp dir before writing into `.git`; the markers were removed by the first L1 and are absent at the replacement's check; C10 makes an orphan marker (no paired `.pack`) a control, so a stray marker no longer refuses a complete repository. Shown able to fail: M29 (drop the pairing) is killed by C10 |
+| M5 | Seat misroot: scribe ScribeLogEntry wrote its report and draft under the fleet root (`/home/vgpnk/Projects/shokunin/.ufo/waves/round-23/falsify/…`) via a relative path | moved byte-exact into this lane (`falsify/advice/ScribeLogEntry.md` sha256 `e4eeeee5…bffb`, `falsify/out/ScribeLogEntry/LOG-round-23-entry.md` `2232b195…f292`), `cmp` equal, fleet copies removed | the wave context's absolute-path rule (not enforced) | swept before the report |
+| M6 | Over-refusal shipped as isolation: the first integration refused any existing info/grafts file, so a complete repository with a comment-only grafts file went from a correct frozen verdict to exit 2 (CritRefusalScope) | replacement re-run of CritRefusalScope's probe on the working tree: `empty-grafts` and `comment-grafts` frozen 0 → current 2; the other nine cases equal | none (no control row) | C13 control + `grafts_effective` (S101); re-run: both cases now 0; M32 (refuse any grafts file) is killed by C13 |
+| M7 | Harness leak: the grid's timeout killed only the auditor, leaving git children blocked on fixture FIFOs | 56 blocked `git` processes under `/tmp/repo-state-grid-*` / `/tmp/kama-r23w2/` (12:18–13:29 -03) | none | `run_case` starts each auditor in its own session and kills the session on timeout; after the final grid run 0 such processes remained |
+
+### Falsify-wave disposition
+
+73 seats dispatched (68 reports; dead: RowC01Clean, RowF07LogFollow,
+RowF09SignatureProgram, CritOpenHonesty, killed with the host session, no
+output). Integrated: F27 (filter-only promisor), F28 (shallow fleet), F29
+(broken branch + same-named tag), F30 (include FIFO, git timeout), C09–C13,
+contract kind, mutant kill rule, M26–M32 (MutRetestA–D, CritDefensiveOnly,
+CritAxisScore, CritRefusalScope, ConnQualityRules, SentinelDoSW2 hang half).
+Reported open, not claimed (the claim covers the graded rows only; these
+falsify any wider reading):
+
+- near variants of graded channels still flip or refuse differently:
+  `i18n.commitEncoding=UTF-16` (RowF22), the `resolve_branch` fallback when
+  `refs/heads/<name>` exists but is unusable (RowF12), enclosing-repository
+  variants of the subdirectory check (RowF21), promisor near variants
+  (RowF23), timestamp near variants (RowF26), fenced/commented "Landed"
+  headings (RowC04);
+- a second `## Landed changes` section is ignored in both arms
+  (ExecSecondLanded, measured 0/3 faults met in both arms);
+  prefix-ambiguity overwrite (ExecAmbiguityFixture, 6/6 unmet in both arms);
+  gitfile/linked-worktree redirect and FIFO `HEAD` (RevengeGitfile; the
+  hang half is now bounded by the git timeout, not graded);
+  `--shared`-of-partial bypass (CritTradeoffHarm H2, both arms);
+- `--errata` naming a FIFO blocks; no memory ceiling on git output or on
+  the SOURCES URL alternation (SentinelDoSW2);
+- other kama/fleet gates that call git are unisolated (ConnSiblingTools);
+- surviving detector-coverage mutants proposed by MutRetestA–D that the
+  replacement did not add (e.g. N01 log-byte ignore, N02 listing-byte
+  ignore, N03 casefold branch, D02 BOM stripping, D03 promisor symlink).
+
+Declared trades, reported for the operator under the no-trade rule: a
+complete blobless partial clone (T01) and a paired promisor pack without
+promisor config (F23) are refused (exit 2) where frozen gave a verdict, and
+git ≥ 2.45 is required.

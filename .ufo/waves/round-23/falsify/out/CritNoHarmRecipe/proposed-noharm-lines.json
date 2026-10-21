@@ -1,0 +1,104 @@
+[
+ {
+  "name": "nh-fleet-clean-pre",
+  "argv": ["{python}", "-c", "import pathlib,subprocess,sys;r=sys.argv[1];g=lambda *a:subprocess.run(['git','-C',r,*a],capture_output=True,text=True,errors='surrogateescape').stdout.strip();gd=pathlib.Path(r,g('rev-parse','--git-dir'));bad=[str(p) for p in (gd/'objects/pack').glob('*.promisor')]+[x for x in g('for-each-ref','--format=%(refname)','refs/replace/').split() if x]+[str(p) for p in (gd/'info/grafts',gd/'shallow',gd/'objects/info/alternates') if p.exists()]+[l for l in g('config','--local','--name-only','--list').split() if l.endswith('.promisor') or l=='extensions.partialclone'];print(chr(10).join(bad) or 'clean');sys.exit(1 if bad else 0)", "/home/vgpnk/Projects/shokunin"],
+  "exit": 0,
+  "timeout": 60
+ },
+ {
+  "name": "nh-lane-clean-pre",
+  "argv": ["{python}", "-c", "import pathlib,subprocess,sys;r=sys.argv[1];g=lambda *a:subprocess.run(['git','-C',r,*a],capture_output=True,text=True,errors='surrogateescape').stdout.strip();gd=pathlib.Path(r,g('rev-parse','--git-dir'));bad=[str(p) for p in (gd/'objects/pack').glob('*.promisor')]+[x for x in g('for-each-ref','--format=%(refname)','refs/replace/').split() if x]+[str(p) for p in (gd/'info/grafts',gd/'shallow',gd/'objects/info/alternates') if p.exists()]+[l for l in g('config','--local','--name-only','--list').split() if l.endswith('.promisor') or l=='extensions.partialclone'];print(chr(10).join(bad) or 'clean');sys.exit(1 if bad else 0)", "{lane}"],
+  "exit": 0,
+  "timeout": 60
+ },
+ {
+  "name": "nh-audit-ledger-10-21",
+  "argv": ["{python}", "{lane}/tools/report-landing-audit.py", "--rounds", "10-21", "--fleet-repo", "/home/vgpnk/Projects/shokunin", "--json"],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-audit-raw-10-21",
+  "argv": ["{python}", "{lane}/tools/report-landing-audit.py", "--rounds", "10-21", "--fleet-repo", "/home/vgpnk/Projects/shokunin", "--no-errata", "--json"],
+  "exit": 1,
+  "timeout": 180
+ },
+ {
+  "name": "nh-frozen-ledger-10-22",
+  "argv": ["{python}", "-c", "import subprocess,sys;lane=sys.argv[1];src=subprocess.check_output(['git','-C',lane,'cat-file','blob','4fe9339f8fc3a4a4a479d9c938a850da12f1124d:tools/report-landing-audit.py']);sys.argv=[lane+'/tools/report-landing-audit.py']+sys.argv[2:];exec(compile(src,sys.argv[0],'exec'),{'__name__':'__main__','__file__':sys.argv[0]})", "{lane}", "--rounds", "10-22", "--fleet-repo", "/home/vgpnk/Projects/shokunin", "--json"],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-frozen-raw-10-22",
+  "argv": ["{python}", "-c", "import subprocess,sys;lane=sys.argv[1];src=subprocess.check_output(['git','-C',lane,'cat-file','blob','4fe9339f8fc3a4a4a479d9c938a850da12f1124d:tools/report-landing-audit.py']);sys.argv=[lane+'/tools/report-landing-audit.py']+sys.argv[2:];exec(compile(src,sys.argv[0],'exec'),{'__name__':'__main__','__file__':sys.argv[0]})", "{lane}", "--rounds", "10-22", "--fleet-repo", "/home/vgpnk/Projects/shokunin", "--no-errata", "--json"],
+  "exit": 1,
+  "timeout": 180
+ },
+ {
+  "name": "nh-fleet-snapshot",
+  "argv": ["git", "clone", "-q", "--bare", "--no-local", "file:///home/vgpnk/Projects/shokunin", "{out}/fleet.git"],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-snapshot-ledger-current",
+  "argv": ["{python}", "{lane}/tools/report-landing-audit.py", "--rounds", "10-22", "--fleet-repo", "{out}/fleet.git", "--json"],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-snapshot-ledger-frozen",
+  "argv": ["{python}", "-c", "import subprocess,sys;lane=sys.argv[1];src=subprocess.check_output(['git','-C',lane,'cat-file','blob','4fe9339f8fc3a4a4a479d9c938a850da12f1124d:tools/report-landing-audit.py']);sys.argv=[lane+'/tools/report-landing-audit.py']+sys.argv[2:];exec(compile(src,sys.argv[0],'exec'),{'__name__':'__main__','__file__':sys.argv[0]})", "{lane}", "--rounds", "10-22", "--fleet-repo", "{out}/fleet.git", "--json"],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-snapshot-raw-current",
+  "argv": ["{python}", "{lane}/tools/report-landing-audit.py", "--rounds", "10-22", "--fleet-repo", "{out}/fleet.git", "--no-errata", "--json"],
+  "exit": 1,
+  "timeout": 180
+ },
+ {
+  "name": "nh-snapshot-raw-frozen",
+  "argv": ["{python}", "-c", "import subprocess,sys;lane=sys.argv[1];src=subprocess.check_output(['git','-C',lane,'cat-file','blob','4fe9339f8fc3a4a4a479d9c938a850da12f1124d:tools/report-landing-audit.py']);sys.argv=[lane+'/tools/report-landing-audit.py']+sys.argv[2:];exec(compile(src,sys.argv[0],'exec'),{'__name__':'__main__','__file__':sys.argv[0]})", "{lane}", "--rounds", "10-22", "--fleet-repo", "{out}/fleet.git", "--no-errata", "--json"],
+  "exit": 1,
+  "timeout": 180
+ },
+ {
+  "name": "nh-citation-selftest",
+  "argv": ["{python}", "{lane}/tools/citation-provenance.py", "--selftest"],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-io-selftest",
+  "argv": ["{python}", "{lane}/tests/llamacpp-live/install-io-grid.py", "--selftest"],
+  "exit": 0,
+  "timeout": 120
+ },
+ {
+  "name": "nh-io-frozen",
+  "argv": ["{python}", "{lane}/tests/llamacpp-live/install-io-grid.py", "--arm", "frozen", "--json"],
+  "exit": 1,
+  "timeout": 120
+ },
+ {
+  "name": "nh-io-both",
+  "argv": ["{python}", "{lane}/tests/llamacpp-live/install-io-grid.py", "--arm", "both", "--json"],
+  "exit": 1,
+  "timeout": 120
+ },
+ {
+  "name": "nh-sources-append-only-long",
+  "argv": ["{python}", "{lane}/tools/sources-append-only.py", "--from", "10271460cc575fc2280aa831e442726385fc2319", "--to", "{revision}", "--repo", "{lane}"],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-fleet-clean-post",
+  "argv": ["{python}", "-c", "import pathlib,subprocess,sys;r=sys.argv[1];g=lambda *a:subprocess.run(['git','-C',r,*a],capture_output=True,text=True,errors='surrogateescape').stdout.strip();gd=pathlib.Path(r,g('rev-parse','--git-dir'));bad=[str(p) for p in (gd/'objects/pack').glob('*.promisor')]+[x for x in g('for-each-ref','--format=%(refname)','refs/replace/').split() if x]+[str(p) for p in (gd/'info/grafts',gd/'shallow',gd/'objects/info/alternates') if p.exists()]+[l for l in g('config','--local','--name-only','--list').split() if l.endswith('.promisor') or l=='extensions.partialclone'];print(chr(10).join(bad) or 'clean');sys.exit(1 if bad else 0)", "/home/vgpnk/Projects/shokunin"],
+  "exit": 0,
+  "timeout": 60
+ }
+]

@@ -1,0 +1,58 @@
+diff --git 1/cur_audit_v2.py 2/home/vgpnk/Projects/shokunin/kama-shokunin/tools/report-landing-audit.py
+index 9755654..76fbf44 100755
+--- 1/cur_audit_v2.py
++++ 2/home/vgpnk/Projects/shokunin/kama-shokunin/tools/report-landing-audit.py
+@@ -45,10 +45,14 @@ unusable git or non-UTF-8 git output, shallow/grafted/non-sha1 repository,
+ malformed ledger, empty round selection, output failure).
+ Errors are never verdicts.
+ 
+-Repository trust (round 23): refs/replace, lazy fetch, signature display,
+-log re-encoding, log.follow and .mailmap are neutralized; objects borrowed
+-through objects/info/alternates still resolve as local, and other
+-repository-local channels are not claimed. Audit trusted repositories only.
++Repository trust (round 23, tests/report-audit/repo-state-grid.py):
++refs/replace, lazy fetch, signature display, log re-encoding,
++log.follow/log.showRoot and .mailmap are neutralized; a plain --branch name
++means refs/heads/<name>; shallow, grafted, partial-clone, non-sha1 and
++non-top-level repositories and ref-named citations are refused. Objects
++borrowed through objects/info/alternates or a .git gitfile still resolve as
++local, and other repository-local channels are not claimed. Audit trusted
++repositories only; git >= 2.45 is required.
+ """
+ from __future__ import annotations
+ 
+@@ -85,14 +89,12 @@ class EvalError(Exception):
+ # Repository-local state that changed, crashed or hijacked verdicts in the
+ # round-23 fault grid: refs/replace substitutions, promisor lazy fetches and
+ # signature verification (both may run repo-configured programs), re-encoded
+-# log output, log.follow/log.showRoot cutoffs, an eagerly read worktree
+-# .mailmap and path quoting. Old git without --no-lazy-fetch rejects the
+-# option, which is an EvalError.
++# log output, log.follow/log.showRoot cutoffs and an eagerly read worktree
++# .mailmap. Old git (< 2.45) rejects --no-lazy-fetch, which is an EvalError.
+ GIT_ISOLATION = ("--no-replace-objects", "--no-lazy-fetch",
+                  "-c", "i18n.logOutputEncoding=UTF-8",
+                  "-c", "log.follow=false", "-c", "log.showRoot=true",
+-                 "-c", "log.showSignature=false", "-c", "log.mailmap=false",
+-                 "-c", "core.quotePath=true")
++                 "-c", "log.showSignature=false", "-c", "log.mailmap=false")
+ 
+ 
+ def git_env(**extra):
+@@ -385,13 +387,14 @@ def apply_errata(results, errata, repos):
+             used.update(e["line"] for e in match)
+     unmatched = [e for e in errata
+                  if e["round"] in selected and e["line"] not in used]
++    # only hex corrections are looked up: a revision expression such as
++    # HEAD or :/text is never a correction
+     status = lookup(repos, [e["correction"] for e in errata
+                             if e["kind"] in RESOLVABLE and re.fullmatch(
+                                 r"[0-9a-f]{7,40}", e["correction"])],
+                     "^{commit}")
+     invalid = [e for e in errata if e["kind"] in RESOLVABLE and (
+-        not re.fullmatch(r"[0-9a-f]{7,40}", e["correction"])
+-        or status.get(e["correction"]) != "found"
++        status.get(e["correction"]) != "found"
+         or (e["kind"] == "landed-omitted" and e["correction"] != e["token"]))]
+     return unmatched, invalid
+ 

@@ -1,0 +1,20 @@
+--- candidate.py	2026-10-21 12:10:33.690542726 -0300
++++ allsur.py	2026-10-21 12:10:54.077519010 -0300
+@@ -107,7 +107,7 @@
+         raise EvalError(f"git {' '.join(args)} in {repo}: rc={proc.returncode} "
+                         f"{proc.stderr.decode(errors='replace').strip()}")
+     try:
+-        out = proc.stdout.decode("utf-8")
++        out = proc.stdout.decode("utf-8", "surrogateescape")
+     except UnicodeDecodeError as exc:
+         raise EvalError(f"git {' '.join(args)} in {repo}: output is not "
+                         f"UTF-8: {exc}") from exc
+@@ -189,7 +189,7 @@
+     try:
+         if not stat.S_ISREG(os.stat(path).st_mode):
+             raise EvalError(f"{path}: not a regular file")
+-        return Path(path).read_text(encoding="utf-8")
++        return Path(path).read_text(encoding="utf-8", errors="surrogateescape")
+     except (OSError, UnicodeDecodeError) as exc:
+         raise EvalError(f"cannot read {path}: {exc}") from exc
+ 

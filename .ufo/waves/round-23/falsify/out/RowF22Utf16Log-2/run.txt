@@ -1,0 +1,25 @@
+lane HEAD: 245a37f69628c2c6bb29bbf17897d8fb5946c857
+current sha256: f228f17420134a4a4fb6d1f93b943f78647e7e60882f767e6cb7cba11d6928a7
+frozen  sha256: 09ecd63bdc3a5be5264e6d2966602a32e52ca0678dc89de99959318245ab3b3f
+
+F22 premise: fleet i18n.logOutputEncoding=UTF-16 -> git log --format=%at bytes: b'\xff\xfe2\x000\x000\x000\x00\n'
+F22 frozen {'exit': 1, 'traceback': True, 'cutoff': None, 'kinds': 'unparseable', 'stderr_tail': "newlines\n    data = data.decode(encoding, errors)\nUnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte"}
+F22 current {'exit': 0, 'traceback': False, 'cutoff': 2000, 'kinds': [], 'stderr_tail': ''}
+
+control (no i18n config)
+  cutoff query bytes (repo config): b'3000\n2000\n'
+  cutoff query bytes (isolated):    b'3000\n2000\n'
+   frozen {'exit': 0, 'traceback': False, 'cutoff': 2000, 'kinds': [], 'stderr_tail': ''}
+   current {'exit': 0, 'traceback': False, 'cutoff': 2000, 'kinds': [], 'stderr_tail': ''}
+  lane post-report commit: d5ac28747f836975e82117c4c2cdf4169c23138f
+   add-record 561d71540042f3bec363ef28299739d6bbe1c4b3 ['author fixture <a@x> 3000 +0000']
+   add-record 66c99fe816fd44184c421b3104404ca55cd68849 ['author fixture <a@x> 2000 +0000']
+
+near variant i18n.commitEncoding=UTF-16
+  cutoff query bytes (repo config): b'\xff\xfe3\x000\x000\x000\x00\n\n'
+  cutoff query bytes (isolated):    b'3000\n\n'
+   frozen {'exit': 1, 'traceback': True, 'cutoff': None, 'kinds': 'unparseable', 'stderr_tail': "newlines\n    data = data.decode(encoding, errors)\nUnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 0: invalid start byte"}
+   current {'exit': 1, 'traceback': False, 'cutoff': 3000, 'kinds': ['landed-omitted'], 'stderr_tail': ''}
+  lane post-report commit: d5ac28747f836975e82117c4c2cdf4169c23138f
+   add-record 95c4e5292a5bd5cda9b69f4404b0f096154e07a3 ['author fixture <a@x> 3000 +0000']
+   add-record 3f969fb58f234e3517c3b11baa193ff4c3e079a3 ['author fixture <a@x> 2000 +0000']

@@ -51,3 +51,30 @@ S061's status-1 statement applies to non-`None` noninteger exit objects. Python
 paragraph; the other noninteger object case prints to stderr and produces exit
 1. S065 supersedes only the overbroad exception wording in S061; this does not
 change the evidence rule that an exit status alone is not an emitted verdict.
+
+## Round-23 deepening — the auditor's own exit class
+
+Appended 2026-10-21 (round 23); the frontmatter above describes the
+round-20 sources. `tools/report-landing-audit.py` used `1` for `failed`, and
+its `main()` mapped only `EvalError`/`OSError` to `2`. Its git calls used
+`text=True`, so captured output was decoded by the io.TextIOWrapper default
+(S097), which raises on invalid bytes (S098); git may emit non-UTF-8 log text
+verbatim (S093). A repository-local `i18n.logOutputEncoding`, a non-UTF-8
+committed report or errata blob, or a 5000-digit field therefore crashed it
+into exit 1: an error read as a verdict. The round-23 grid observes 9 such
+frozen-arm tracebacks (F01, F02, F16, F18, F19, F20, F22, F24, F26); the
+lesson's first count of 8 predates F26.
+
+The fix has two layers: decode git output as bytes with an explicit `strict`
+UTF-8 decode mapped to a typed refusal (S096), and catch any remaining
+exception as could-not-evaluate. A grid credits a refusal only when its
+stderr carries the pinned reason, so the catch-all cannot launder an
+unrelated failure into a "met" row. The catch-all alone meets exactly one
+fault row (F24) yet removes all 9 tracebacks (falsify-wave ablation,
+CritSeparabilityW2), so "0 tracebacks" is not evidence of isolation; only
+per-row reasons and per-element mutants that the grid kills on a named row
+are (KQ34). A mutant "kill" counts only on grid exit 1, never on a grid that
+could not evaluate.
+
+source: S093, S096, S097, S098, corpus/lessons/round-23.md; evidence
+`tests/report-audit/repo-state-grid.py`, `tests/report-audit/isolation-mutants.py`.

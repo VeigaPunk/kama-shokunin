@@ -1,0 +1,174 @@
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index fcc255c..c24571b 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -39,9 +39,14 @@ that match no defect are `errata-unmatched`. A row is `errata-invalid` when
+ its correction is not a lane/fleet commit (resolvable kinds) or, for
+ `landed-omitted`, differs from the omitted commit itself.
+ 
++Repository-local history is read as committed: `refs/replace/*` are ignored
++(`git --no-replace-objects`), and a `.git/info/grafts` file in the lane or
++fleet repo is refused (exit 2), because grafts rewrite commit parents.
++
+ Exit: 0 clean (no uncorrected defect, no unmatched/invalid errata row);
+ 1 failed (at least one); 2 could-not-evaluate (missing/irregular report,
+-unusable git, malformed ledger, empty round selection, output failure).
++unusable git, grafts file, malformed ledger, empty round selection,
++output failure).
+ Errors are never verdicts.
+ """
+ from __future__ import annotations
+@@ -76,18 +81,28 @@ class EvalError(Exception):
+     """Could not evaluate: never converted into a verdict."""
+ 
+ 
++# --no-replace-objects (git(1)): object lookups and history walks read the
++# committed objects, not refs/replace/* substitutes. git exports the same
++# setting to the processes it starts. Grafts are not covered: refuse_grafts().
++GIT_ISOLATION = ("--no-replace-objects",)
++
++
+ def git_env(**extra):
+-    """No inherited GIT_* variables and no user/system config, so neither
+-    the audited repos nor the selftest fixtures can be redirected."""
++    """No inherited GIT_* variables and no user/system config, so the
++    environment cannot redirect the audited repos or the selftest fixtures.
++    Replace refs are ignored by git() (GIT_ISOLATION) and grafts are refused
++    by refuse_grafts(). GIT_NO_REPLACE_OBJECTS mirrors GIT_ISOLATION for any
++    process started with this environment."""
+     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+-    env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1", **extra)
++    env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1",
++               GIT_NO_REPLACE_OBJECTS="1", **extra)
+     return env
+ 
+ 
+ def git(repo, *args, stdin=None, env=None):
+     try:
+-        proc = subprocess.run(["git", "-C", str(repo), *args], input=stdin,
+-                              capture_output=True, text=True,
++        proc = subprocess.run(["git", *GIT_ISOLATION, "-C", str(repo), *args],
++                              input=stdin, capture_output=True, text=True,
+                               env=env or git_env())
+     except OSError as exc:
+         raise EvalError(f"cannot run git: {exc}") from exc
+@@ -387,6 +402,16 @@ def parse_rounds(spec, fleet_repo, lane):
+     return rounds
+ 
+ 
++def refuse_grafts(repo):
++    """`info/grafts` rewrites commit parents for every history walk, and
++    --no-replace-objects covers replace refs only, so the walk would not be
++    the committed history. Refuse rather than audit it."""
++    rel = git(repo, "rev-parse", "--git-path", "info/grafts").strip()
++    if os.path.lexists(Path(repo) / rel):
++        raise EvalError(f"{repo}: {rel} rewrites commit parents; history is "
++                        "not the committed graph")
++
++
+ def run(args):
+     lane_repo = Path(args.lane_repo).resolve()
+     fleet_repo = Path(args.fleet_repo).resolve()
+@@ -402,6 +427,8 @@ def run(args):
+         raise EvalError("no rounds selected")
+     git(lane_repo, "rev-parse", "--verify", f"{args.branch}^{{commit}}")
+     git(fleet_repo, "rev-parse", "--verify", "HEAD^{commit}")
++    refuse_grafts(lane_repo)
++    refuse_grafts(fleet_repo)
+     source_urls = load_source_urls(lane_repo, args.branch)
+     results = [audit_round(lane_repo, fleet_repo, args.branch, args.lane, r,
+                            overrides.get(r), source_urls) for r in rounds]
+@@ -796,6 +823,93 @@ def selftest():
+                 lambda: run(_ns(base, lane_repo=str(Path(tmp, "nope"))))))
+             check("open-range-finds-reports",
+                   parse_rounds("1-", fleet, "kama") == {1})
++            # Repository-local rewrites (refs/replace, grafts) must not change
++            # a verdict. Each case builds its own repositories.
++            omit_lane = Path(tmp, "omit-lane")
++            omit_fleet = Path(tmp, "omit-fleet")
++            for repo in (omit_lane, omit_fleet):
++                repo.mkdir()
++                git(repo, "init", "-q", "-b", "master")
++            omit_work = _commit(omit_lane, "round-1: work", "kama-shokunin",
++                                1000)
++            omitted = _commit(omit_lane, "round-1: omitted", "kama-shokunin",
++                              1100)
++            omit_rep = omit_fleet / ".ufo/reports/round-1/kama.md"
++            omit_rep.parent.mkdir(parents=True)
++            omit_rep.write_text("## Landed changes\n- `" + omit_work[:9]
++                                + "` work\n", encoding="utf-8")
++            _commit(omit_fleet, "round-1: report", "fleet", 1200,
++                    ".ufo/reports/round-1/kama.md")
++            # replace the omitted commit by an unrelated commit with the same
++            # parent and tree, authored by someone who is not the lane
++            omit_tree = git(omit_lane, "rev-parse",
++                            f"{omitted}^{{tree}}").strip()
++            replacement = git(omit_lane, "commit-tree", omit_tree, "-p",
++                              omit_work, "-m", "unrelated", env=git_env(
++                                  GIT_AUTHOR_NAME="someone",
++                                  GIT_COMMITTER_NAME="someone",
++                                  GIT_AUTHOR_EMAIL="a@x",
++                                  GIT_COMMITTER_EMAIL="a@x",
++                                  GIT_AUTHOR_DATE="@1150 +0000",
++                                  GIT_COMMITTER_DATE="@1150 +0000")).strip()
++            git(omit_lane, "update-ref", f"refs/replace/{omitted}", replacement)
++            rc, doc = run(_ns(base, lane_repo=str(omit_lane),
++                              fleet_repo=str(omit_fleet)))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("replace-ref-does-not-hide-omitted-commit",
++                  rc == 1 and kinds == [("landed-omitted", omitted)])
++            fake_lane = Path(tmp, "fake-lane")
++            fake_fleet = Path(tmp, "fake-fleet")
++            for repo in (fake_lane, fake_fleet):
++                repo.mkdir()
++                git(repo, "init", "-q", "-b", "master")
++            fake_work = _commit(fake_lane, "round-1: work", "kama-shokunin",
++                                1000)
++            fake = "1234567890abcdef1234567890abcdef12345678"
++            fake_rep = fake_fleet / ".ufo/reports/round-1/kama.md"
++            fake_rep.parent.mkdir(parents=True)
++            fake_rep.write_text("## Landed changes\n- `" + fake_work[:9]
++                                + "` work\n## Notes\nfabricated " + fake
++                                + "\n", encoding="utf-8")
++            _commit(fake_fleet, "round-1: report", "fleet", 1200,
++                    ".ufo/reports/round-1/kama.md")
++            git(fake_lane, "update-ref", f"refs/replace/{fake}", fake_work)
++            rc, doc = run(_ns(base, lane_repo=str(fake_lane),
++                              fleet_repo=str(fake_fleet)))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("replace-ref-does-not-resolve-fabricated-hash",
++                  rc == 1 and kinds == [("unresolved-full-hash", fake)])
++            # grafts rewrite parents, which --no-replace-objects does not cover
++            Path(fake_lane, ".git", "info", "grafts").write_text(
++                fake_work + "\n", encoding="utf-8")
++            check("grafts-file-is-refused", is_error(lambda: run(_ns(
++                base, lane_repo=str(fake_lane), fleet_repo=str(fake_fleet)))))
++            blob_lane = Path(tmp, "blob-lane")
++            blob_fleet = Path(tmp, "blob-fleet")
++            for repo in (blob_lane, blob_fleet):
++                repo.mkdir()
++                git(repo, "init", "-q", "-b", "master")
++            blob_work = _commit(blob_lane, "round-1: work", "kama-shokunin",
++                                1000)
++            blob_rep = blob_fleet / ".ufo/reports/round-1/kama.md"
++            blob_rep.parent.mkdir(parents=True)
++            blob_rep.write_text("## Landed changes\n- `" + blob_work[:9]
++                                + "` work\n", encoding="utf-8")
++            _commit(blob_fleet, "round-1: report", "fleet", 1200,
++                    ".ufo/reports/round-1/kama.md")
++            # the committed report bytes must be read, not a replacement blob
++            report_blob = git(blob_fleet, "rev-parse",
++                              "HEAD:.ufo/reports/round-1/kama.md").strip()
++            substitute = git(blob_fleet, "hash-object", "-w", "--stdin",
++                             stdin="## Landed changes\n").strip()
++            git(blob_fleet, "update-ref", f"refs/replace/{report_blob}",
++                substitute)
++            rc, doc = run(_ns(base, lane_repo=str(blob_lane),
++                              fleet_repo=str(blob_fleet)))
++            check("replace-ref-does-not-substitute-report-bytes",
++                  rc == 0 and doc["summary"]["defects"] == 0)
+         finally:
+             if saved is None:
+                 os.environ.pop("GIT_DIR", None)

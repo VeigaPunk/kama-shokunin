@@ -1,0 +1,20 @@
+A c03 rc=0 round_commits=2 required=2 defects=0
+A   git log author field for hidden: 'kama-shokunin\x1f1700|1700000150|round-10: hidden\n'
+A2 plain author rc=1 round_commits=3 required=3 defects=1
+B c10 rc=0 round_commits=3 required=2 post_report=['3be40e4e18'] big=3be40e4e18 cutoff=1700000500
+B   git log %at for big commit: '999999999999999999999999999999' (len=30)
+C c04-control(no digit token) rc=1 expect 1
+C c04(with digit token 6807178) rc=0 expect 1 (if unverified token cannot cite)
+D plain `git show HEAD:path` textconv_ran=False first-line='# kama round 10'
+D `git show --textconv HEAD:path` textconv_ran=True first-line='## Work performed'
+D   attr check: '.ufo/reports/round-10/kama.md: diff: zz'
+D audit rc=0 textconv_ran=False expect 0
+E `git show HEAD:.ufo/reports/round-10/kama.md` -> '# kama round 10\n\n## Work performed\n- did the work\n\n## Landed'... (151 chars)
+E audit rc=0 expect 2
+F git cat-file --batch-check rc=0 stdout='b54632dc2672f2bec07afcedf7786d54291cf834 missing' stderr='error: inflate: data stream error (incorrect header check)\nerror: unable to unpack b54632dc2672f2bec07afcedf7786d54291cf'
+F audit rc=1 defects=[('unresolved-full-hash', 'b54632dc26')] expect 2
+G P=d8825ea lane=d8825eacbc fleet=d8825ea864 lane-cands=['d8825eacbca7735dfd251a7cd58f17676768e3a2'] fleet-cands=['d8825ea864e0592e75f839766eb5bd2ce9c43cc3']
+G audit rc=0 defects=[] expect 1
+H closed-stdout clean-report rc=0 stderr='' expect 2
+I /dev/full stdout rc=2 stderr='could-not-evaluate: output: [Errno 28] No space left on device' expect 2
+J open-range with 5000-digit round path rc=1 stderr-last='ValueError: Exceeds the limit (4300 digits) for integer string conversion: value has 5000 digits; use sys.set_int_max_st' expect 2

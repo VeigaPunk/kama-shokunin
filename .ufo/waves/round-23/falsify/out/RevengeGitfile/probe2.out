@@ -1,0 +1,28 @@
+## F1 positive controls: do strace and marks see git's child programs?
+  status via front_h (strace): programs=['/bin/sh', '/usr/bin/git', '/usr/bin/sh', '/usr/bin/touch'] marks=['MARK-include-fsmonitor']
+  diff via front_h (porcelain): marks=['MARK-diff-external']
+  log -p --ext-diff via front_h: marks=['MARK-diff-external']
+  auditor via front_h (strace): programs=['/usr/bin/git', '/usr/bin/python3'] marks=[]
+
+## F2 FIFO admin entries (hang?) on a fresh linked worktree pair
+  HEAD FIFO (hw1): classify_pre -> REFUSE (preflight, no git call): admin HEAD is fifo
+  HEAD FIFO (hw1): auditor -> {'rc': 'TIMEOUT(hang)'}
+  commondir FIFO (hw2): classify_pre -> REFUSE (preflight, no git call): admin commondir is fifo
+  commondir FIFO (hw2): auditor -> {'rc': 'TIMEOUT(hang)'}
+  leftover git processes for hw2 admin: 0
+
+## F3 ablation of consistency checks
+  linked wt (legit)      {'backlink_names_this_gitfile': True, 'admin_is_under_common_worktrees': True, 'common_lists_this_worktree': True}
+  linked wtrel (legit)   {'backlink_names_this_gitfile': True, 'admin_is_under_common_worktrees': True, 'common_lists_this_worktree': True}
+  copied wt-copy         {'backlink_names_this_gitfile': False, 'admin_is_under_common_worktrees': True, 'common_lists_this_worktree': False}
+  forged atk-wt          {'backlink_names_this_gitfile': True, 'admin_is_under_common_worktrees': False, 'common_lists_this_worktree': False}
+
+## F4 symlinked lane alias (legit linked worktree behind a symlink)
+  classify: LINKED: worktree of /tmp/gitfile-r23-run/fx2/main/.git
+  auditor: {'rc': 0, 'status': 'clean', 'required': 2, 'round_commits': 2, 'defects': []}
+
+## F5 authenticity: consistency checks are not identity checks
+  foreign repo with forged core.worktree -> classify: GITFILE-STANDALONE: core.worktree back-link verified
+  top-level from forged lane: /tmp/gitfile-r23-run/fx2/forged
+  auditor on forged lane + fleet_e: {'rc': 1, 'status': 'failed', 'required': 2, 'round_commits': 2, 'defects': ['landed-unresolved:50e355551140']}
+  attacker-owned linked worktree -> classify: LINKED: worktree of /tmp/gitfile-r23-run/fx2/am/.git

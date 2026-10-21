@@ -1,0 +1,31 @@
+L0=69c64e9b5693ba3197144004359add55341782d5 X=ec9f5884b193e6518f29ea4a7be90acfc86f1821 Y=0a3221e0963a1ae98eff7747526cee07e2357811
+== E7 default log (tip X replaced by Y: expect unrelated/z then one) ==
+ec9f588|z|unrelated;69c64e9|kama-shokunin|one;
+== E8 --no-replace-objects log (expect two/kama then one/kama) ==
+ec9f588|kama-shokunin|two;69c64e9|kama-shokunin|one;
+== E9 GIT_NO_REPLACE_OBJECTS=1 log ==
+ec9f588|kama-shokunin|two;69c64e9|kama-shokunin|one;
+== E10 cat-file --batch-check of X: default | flag | env ==
+ec9f5884b193e6518f29ea4a7be90acfc86f1821 commit 160
+ec9f5884b193e6518f29ea4a7be90acfc86f1821 commit 178
+ec9f5884b193e6518f29ea4a7be90acfc86f1821 commit 178
+== E14 child git spawned by alias (flag not inherited; env is) ==
+none:  unrelated
+flag:  two
+env:   two
+both:  two
+== E18 grafts: default, flag, GIT_GRAFT_FILE=/dev/null (r2: B parentless) ==
+default: ec9f588|kama-shokunin|two;
+flag:    ec9f588|kama-shokunin|two;
+env-NRO: ec9f588|kama-shokunin|two;
+GRAFT=/dev/null: ec9f588|kama-shokunin|two;69c64e9|kama-shokunin|one;
+child alias w/ GRAFT=/dev/null env: two;one;
+rev-list --count HEAD default/GRAFT_null: 1 2
+
+== E19 is GIT_GRAFT_FILE / GIT_SHALLOW_FILE documented? (man git) ==
+266:\fBGIT_NO_REPLACE_OBJECTS\fR
+2090:\fBGIT_NO_REPLACE_OBJECTS\fR
+== E20 shallow file: default vs GIT_SHALLOW_FILE=/dev/null ==
+default: ec9f588|kama-shokunin|two;
+GIT_SHALLOW_FILE=/dev/null: ec9f588|kama-shokunin|two;69c64e9|kama-shokunin|one;
+T=/tmp/rf-exp3.NQFb

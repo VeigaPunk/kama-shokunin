@@ -1,0 +1,24 @@
+{
+ "measured_commit": "245a37f69628c2c6bb29bbf17897d8fb5946c857",
+ "recipe_sha256": "8998ec6bf5ce5d9bd8224026d31169b7d9bb49f0dd4b6955a435f28cf7f46528",
+ "commands": [
+  {
+   "name": "nh-history-parity",
+   "argv": [
+    "/usr/bin/python3",
+    "-c",
+    "import subprocess,sys\nlane,fleet,cand=sys.argv[1:4]\nfz=subprocess.check_output(['git','-C',lane,'cat-file','blob','4fe9339f8fc3a4a4a479d9c938a850da12f1124d:tools/report-landing-audit.py'])\nbad=0\nfor r in ('10-21','10-22'):\n for m in ([],['--no-errata']):\n  a=['--lane-repo',lane,'--fleet-repo',fleet,'--rounds',r,'--json',*m]\n  c=subprocess.run([sys.executable,cand,*a],capture_output=True)\n  f=subprocess.run([sys.executable,'-',*a],input=fz,capture_output=True)\n  ok=(c.returncode,c.stdout,c.stderr)==(f.returncode,f.stdout,f.stderr)\n  bad|=not ok\n  print(r,*m,'current',c.returncode,'frozen',f.returncode,'same' if ok else 'DIFF')\nsys.exit(1 if bad else 0)",
+    "/tmp/kama-r23w2/CritNoHarmRecipe",
+    "/home/vgpnk/Projects/shokunin",
+    "/tmp/kama-r23w2/CritNoHarmRecipe/tools/report-landing-audit.py"
+   ],
+   "started_utc": "2026-10-21T16:03:48.688730+00:00",
+   "exit": 0,
+   "expected_exit": 0,
+   "timed_out": false,
+   "stdout_sha256": "d91cc9de51f794db9d0da9f32f3fc23127083f28df011da0e1f74f689a63dd48",
+   "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+   "as_expected": true
+  }
+ ]
+}

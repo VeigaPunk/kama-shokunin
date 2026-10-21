@@ -1,0 +1,93 @@
+base sha256=09ecd63bdc3a5be5 current sha256=79d9e124e8171b47
+C0   control: clean
+     base: rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+     cur : rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+C0b  control: valid UTF-8 non-ASCII subject, default config
+     base: rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+     cur : rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+A1a  repo-local i18n.logOutputEncoding=ISO-8859-1 + non-ASCII subject
+     base: rc=1 TRACEBACK UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9 in position 78: invalid
+     cur : rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+A1b  control: same repo config, ASCII subject
+     base: rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+     cur : rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+A1c  raw commit, invalid UTF-8 subject, round commit NOT cited
+     base: rc=1 TRACEBACK UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9 in position 78: invalid
+     cur : rc=1 summary reports=1 defects=1 corrected=0 uncorrected=1 errata
+A1d  raw commit, invalid UTF-8 author on a NON-round commit
+     base: rc=1 TRACEBACK UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9 in position 126: invali
+     cur : rc=1 summary reports=1 defects=1 corrected=0 uncorrected=1 errata
+A2a  raw commit, invalid UTF-8 author on the round commit, NOT cited
+     base: rc=1 TRACEBACK UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9 in position 45: invalid
+     cur : rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+A2c  control: valid author, NOT cited
+     base: rc=1 summary reports=1 defects=1 corrected=0 uncorrected=1 errata
+     cur : rc=1 summary reports=1 defects=1 corrected=0 uncorrected=1 errata
+A3   invalid UTF-8 committed fleet report (git show HEAD:rel)
+     base: rc=1 TRACEBACK UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9 in position 11: invalid
+     cur : rc=2 could-not-evaluate: round 1: cannot read .ufo/reports/round-1/kama.md at fleet H
+A4   invalid UTF-8 errata blob on branch (git show branch:ERRATA)
+     base: rc=1 TRACEBACK UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 4: invalid 
+     cur : rc=2 could-not-evaluate: git show ba4f12e0f77510e73b623c15ec89cb0180bdd14c:registry/r
+A4c  control: invalid errata via --errata PATH (wrapped)
+     base: rc=2 could-not-evaluate: cannot read errata /tmp/kama-r23-fx-ylgax4un/A4c/bad.tsv: 'u
+     cur : rc=2 could-not-evaluate: cannot read errata /tmp/kama-r23-fx-ylgax4un/A4c/bad.tsv: 'u
+A5   fleet core.quotePath=false + raw non-UTF-8 name under .ufo/reports, open-ended rounds
+     base: rc=1 TRACEBACK UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 50: invalid
+     cur : rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+A5c  control: same name, default quotePath
+     base: rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+     cur : rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+A6   CLI --lane with invalid UTF-8 bytes (git stderr echoes them, rc!=0)
+     base: rc=1 TRACEBACK UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 34: invalid
+     cur : rc=2 could-not-evaluate: round 1: cannot read .ufo/reports/round-1/\udcff.md at fleet
+A7   ASCII locale env + valid non-ASCII subject
+     base: rc=1 TRACEBACK decoding with 'ANSI_X3.4-1968' codec failed
+     cur : rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+A8   ASCII locale env + non-ASCII errata correction
+     base: rc=1 TRACEBACK decoding with 'ANSI_X3.4-1968' codec failed
+     cur : rc=1 TRACEBACK UnicodeEncodeError: 'ascii' codec can't encode character '\xe9' in position 129:
+A9   control: invalid corpus/SOURCES.md blob (wrapped)
+     base: rc=2 could-not-evaluate: cannot decode master:corpus/SOURCES.md: 'utf-8' codec can't 
+     cur : rc=2 could-not-evaluate: git cat-file blob 29e181ebb88626236ef10f2af5bc94781c8061f1 i
+B1   errata round field of 4301 digits (int limit, every default run)
+     base: rc=1 TRACEBACK ValueError: Exceeds the limit (4300 digits) for integer string conversion: value
+     cur : rc=1 TRACEBACK ValueError: Exceeds the limit (4300 digits) for integer string conversion: value
+B1c  control: 4300-digit round field
+     base: rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+     cur : rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+B2   fleet path .ufo/reports/round-<4301 digits>/kama.md, open-ended rounds
+     base: rc=1 TRACEBACK ValueError: Exceeds the limit (4300 digits) for integer string conversion: value
+     cur : rc=1 TRACEBACK ValueError: Exceeds the limit (4300 digits) for integer string conversion: value
+B2c  control: fleet round-2 report, open-ended rounds
+     base: rc=1 summary reports=2 defects=1 corrected=0 uncorrected=1 errata
+     cur : rc=1 summary reports=2 defects=1 corrected=0 uncorrected=1 errata
+B3   CLI --rounds with 4301 digits
+     base: rc=1 TRACEBACK ValueError: Exceeds the limit (4300 digits) for integer string conversion: value
+     cur : rc=1 TRACEBACK ValueError: Exceeds the limit (4300 digits) for integer string conversion: value
+C1   non-ASCII errata field printed to ASCII stdout (text output)
+     base: rc=1 TRACEBACK UnicodeEncodeError: 'ascii' codec can't encode character '\xe9' in position 129:
+     cur : rc=1 TRACEBACK UnicodeEncodeError: 'ascii' codec can't encode character '\xe9' in position 129:
+C1c  control: same, --json (ASCII-escaped)
+     base: rc=1 }
+     cur : rc=1 }
+D1   plain git commit, author name contains 0x1f + digits, NOT cited (framing)
+     base: rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+     cur : rc=0 summary reports=1 defects=0 corrected=0 uncorrected=0 errata
+D1c  control: plain author, NOT cited
+     base: rc=1 summary reports=1 defects=1 corrected=0 uncorrected=1 errata
+     cur : rc=1 summary reports=1 defects=1 corrected=0 uncorrected=1 errata
+E1   symlink loop as --lane-repo
+     base: rc=2 could-not-evaluate: git rev-parse --verify master^{commit} in /tmp/kama-r23-fx-y
+     cur : rc=2 could-not-evaluate: git rev-parse --show-object-format in /tmp/kama-r23-fx-ylgax
+E2   stdout pipe closed before output (clean run)
+     base: rc=2 ['could-not-evaluate: output: [Errno 32] Broken pipe']
+     cur : rc=2 ['could-not-evaluate: output: [Errno 32] Broken pipe']
+E3   git show HEAD:rel          rc=0 textconv_runs=0
+E3   git show --textconv        rc=0 textconv_runs=1
+E3   git log --diff-filter=A    rc=0 textconv_runs=0
+E3   git log -p                 rc=0 textconv_runs=1
+E3   git cat-file blob          rc=0 textconv_runs=0
+     audit (base) textconv_runs during run: 0
+E4   selftest base: rc=0 traceback=False out=['selftest cases=50 failed=0']
+E4   selftest cur: rc=0 traceback=False out=['selftest cases=50 failed=0']

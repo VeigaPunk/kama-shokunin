@@ -1148,3 +1148,41 @@ axis harm. No new capability; trends remain expansion unchanged, quality
 improved, discernment improved through learned outside feedback. The
 registered-URL classification is not upstream-source validation or D4
 untrusted-repository hardening.
+
+## Round 23 — repository-local git state and the auditor's exit class
+
+Declared claim C1, **calibration 7 → 7** (narrow; lowest assigned
+non-retired axis), sourced on S089–S101. Round base `4fe9339f`; code measured
+at `e876b953e9da28d2dffd29c923052bc626148c27` (auditor sha256 `da5041a8…5af1`, grid population
+`f29fab8d…364a`). Frontier **D4 partially advanced**: report-audit
+repository trust on the graded rows only; KQ32's trusted-repository-only use
+stays in force, KQ34 governs credit.
+
+| C1 component | Before (frozen `4fe9339f`) → after (current) | Counting command | Evidence |
+|---|---|---|---|
+| Repository-local fault rows met (crash/flip/hang/execute → typed refusal or correct verdict) | 0/26 → 26/26; tracebacks 9 → 0, executed programs 3 → 0, timeouts 2 → 0 | `python3 tests/report-audit/repo-state-grid.py --arm both --json` (exit 1: frozen red by design) | `corpus/lessons/round-23.md` §Falsify-wave integration; `.ufo/waves/round-23/final/grid-both.json` |
+| Contract rows (declared contract changes) | 1/4 → 4/4 | same | same |
+| Controls (no-harm on unfaulted and inert states) | 13/13 → 13/13 | same | same |
+| Isolation elements killed by a named row | 22/24 killed (245a37f) → 30/31 killed on a named row; survivor M20 defensive-only | `python3 tests/report-audit/isolation-mutants.py --json` | `.ufo/waves/round-23/final/mutants.json` |
+| Existing selftest / historical ledger, no harm | 50/50 → 50/50; rounds 10–22 ledger and `--no-errata` byte-identical to frozen (exit 0 / exit 1, 9 raw defects all corrected) | `python3 tools/report-landing-audit.py --selftest`; recipe line `nh-history-parity` | `.ufo/waves/round-23/final/` |
+
+Not 26 independent isolation wins: F17/F21/F23/F24 are contract changes and
+several rows pin current's own refusal wording (CritFrozenFairness); the
+catch-all alone removes every traceback (CritSeparabilityW2). Operability
+is **traded, not unchanged**, on two declared states: a complete blobless
+partial clone (T01) and a paired promisor pack without promisor config (F23)
+now refuse (exit 2) where frozen gave a verdict; git ≥ 2.45 is required.
+Open, both arms: alternates/gitfile redirect, `--shared`-of-partial bypass,
+second Landed section, ambiguity overwrite, errata CR, `--errata` FIFO,
+memory ceilings, near variants named in the lesson, unisolated sibling gates.
+
+Trend verdicts: expansion **unchanged** (no new knowledge entry or
+capability; one entry deepened, 13 source rows); quality **improved** (KQ34,
+superseding rows for three defective source rows); discernment **improved**
+(falsify findings turned into graded rows, corrected counts and a rejected
+source row).
+
+**Planned — supersedes earlier planned statements:** outside non-author
+closure of r23; then either close the open near-variant channels one graded
+row at a time or bound the auditor's input sizes, and decide with the
+operator whether the T01/F23 trades stand.

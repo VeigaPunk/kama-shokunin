@@ -1,0 +1,17 @@
+# utf8-probe.sh replays L1 faults F1 (logOutputEncoding latin-1) and F2 (0xff in committed report) on /tmp fixtures.
+# Usage: bash utf8-probe.sh <path-to-report-landing-audit.py>
+## HEAD 4fe9339f (tools/report-landing-audit.py via git archive)
+control exit=0 last_stderr_line=[]
+f1-logenc exit=1 last_stderr_line=[UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9 in position 62: invalid continuation byte]
+f2-report-bytes exit=1 last_stderr_line=[UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 78: invalid start byte]
+T=/tmp/kama-r23/RevengeExitConvention/fx/run.zITX
+## WT sha1 b5591fe0 (earlier read of the working tree; read-only copy)
+control exit=0 last_stderr_line=[]
+f1-logenc exit=0 last_stderr_line=[]
+f2-report-bytes exit=2 last_stderr_line=[could-not-evaluate: round 1: cannot read .ufo/reports/round-1/kama.md at fleet HEAD: git show HEAD:.ufo/reports/round-1/kama.md in /tmp/kama-r23/RevengeExitConvention/fx/run.WAmk/f2/fleet: output is not UTF-8: 'utf-8' codec can't decode byte 0xff in position 78: invalid start byte]
+T=/tmp/kama-r23/RevengeExitConvention/fx/run.WAmk
+## WT sha1 4b1a755c (final read of the working tree; read-only copy)
+control exit=0 last_stderr_line=[]
+f1-logenc exit=0 last_stderr_line=[]
+f2-report-bytes exit=2 last_stderr_line=[could-not-evaluate: round 1: cannot read .ufo/reports/round-1/kama.md at fleet HEAD: git show HEAD:.ufo/reports/round-1/kama.md in /tmp/kama-r23/RevengeExitConvention/fx/run.U55r/f2/fleet: output is not UTF-8: 'utf-8' codec can't decode byte 0xff in position 78: invalid start byte]
+T=/tmp/kama-r23/RevengeExitConvention/fx/run.U55r

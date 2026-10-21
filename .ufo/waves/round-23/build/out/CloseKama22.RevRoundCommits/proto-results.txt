@@ -1,0 +1,34 @@
+## candidate S0-control-clean
+  rows: [('L2', 1700000100), ('L1', 1700000000)]
+  snap-cli: rc=0 status=clean defects=[] err=''
+## candidate S1-control-omit
+  rows: [('L2', 1700000100), ('L1', 1700000000)]
+  snap-cli: rc=1 status=failed defects=['UNCORRECTED landed-omitted a3afb2764e5bbd966ea6fa55bf5a50887cb91216'] err=''
+## candidate S10-author-field-injected-atime
+  rows: EvalError: control byte in record f1caa77224f7ffe089b6ed79da0070390a1f8081
+  snap-cli: rc=0 status=clean defects=[] err=''
+## candidate S11-subject-END-fake-record
+  rows: EvalError: control byte in record 2d39930f11b4cc4a7b5b560ed74ffffe7f2316ae
+  snap-cli: rc=1 status=failed defects=['UNCORRECTED landed-omitted 1234567890abcdef1234567890abcdef12345678'] err=''
+## candidate S12-5000-digit-atime
+  rows: EvalError: control byte in record abc8578126f8793fd3e59446836679d0f5c57072
+  snap-cli: rc=1 status=- defects=[] err='ValueError: Exceeds the limit (4300 digits) for integer string conversion: value has 5000 '
+## candidate S13-utf16-subject-no-header
+  rows: EvalError: NUL byte in commit 50754082985e4af57828d1a4d2a7211d51a6760c
+  snap-cli: rc=0 status=clean defects=[] err=''
+## candidate S13b-utf16-unknown-encoding
+  rows: EvalError: NUL byte in commit 7291fe99682d977e4173b45136aae5cb920b89e8
+  snap-cli: rc=0 status=clean defects=[] err=''
+## candidate S13c-utf16-known-encoding
+  rows: EvalError: NUL byte in commit 2a6c2c8d3e7cc9c0d2a4abb7de1f6ac467c3d082
+  snap-cli: rc=0 status=clean defects=[] err=''
+## candidate S14-invalid-utf8-unrelated-subject
+  rows: [('L2', 1700000100), ('L1', 1700000000)]
+  snap-cli: rc=0 status=clean defects=[] err=''
+## candidate S20-future-dated-author
+  rows: [('L2', 4000000000), ('L1', 1700000000)]
+  snap-cli: rc=0 status=clean defects=[] err=''
+## S21-fleet-replace-add (cites L1 only; correct verdict 1)
+  base: rc=0 status=clean defects=[] err=''
+  snap: rc=1 status=failed defects=['UNCORRECTED landed-omitted 544f53219957b9d8f4a0a224c6278e661ae9d486'] err=''
+  base cutoff: 1700000010  snap cutoff: 1700000200

@@ -1,0 +1,803 @@
+#!/usr/bin/env python3
+"""Finite repo-state fault grid for tools/report-landing-audit.py.
+
+Every case builds fresh scratch lane and fleet repositories in a temporary
+directory, never the real lane or fleet. Each arm gets its own copy of the case
+fixture and runs the auditor on it with a 30 s limit. The frozen arm is git blob
+4fe9339f8fc3a4a4a479d9c938a850da12f1124d:tools/report-landing-audit.py written
+to a temp file. The current arm is --current PATH (default: the auditor under
+--repo).
+
+Usage: repo-state-grid.py [--arm frozen|current|both] [--current PATH]
+                          [--repo PATH] [--json] [--keep] [--selftest]
+
+Exit: 0 gate holds; 1 gate violated; 2 cannot evaluate (fixture, pin, frozen
+blob, unusable input). Gates over graded rows (fault, guard, control):
+  frozen   every graded row meets its correct-auditor expectation. Expected 1,
+           because the frozen blob is the defective pre-fix auditor.
+  current  every graded row meets its correct-auditor expectation.
+  both     current meets every graded expectation; frozen violates every fault
+           row, so each fixture really reproduces its defect; control rows have
+           identical outcomes on both arms.
+Open and tradeoff rows are observed and reported; they never gate.
+Observed per row and arm: verdict, exit, traceback, marker (a command planted
+in the fixture ran), timed_out, and the sorted defect kinds of the audit.
+"""
+import argparse
+import hashlib
+import json
+import os
+from pathlib import Path
+import shutil
+import signal
+import subprocess
+import sys
+import tempfile
+
+REPO = Path(__file__).resolve().parents[2]
+AUDIT_PATH = "tools/report-landing-audit.py"
+FROZEN_COMMIT = "4fe9339f8fc3a4a4a479d9c938a850da12f1124d"
+FROZEN_BLOB = "fcc255ce5115a749dfbd09cf992ba9851a2dc90a"
+FROZEN_SHA256 = "09ecd63bdc3a5be5264e6d2966602a32e52ca0678dc89de99959318245ab3b3f"
+POPULATION_SHA256 = "7be080caa14787f531e24f807f196037023a30fa5a67b81ebd58e40f4545de0a"
+TIMEOUT_S = 30
+GRADED = ("fault", "guard", "control")
+TRACEBACK = b"Traceback (most recent call last)"
+LANE_AUTHOR = "kama-shokunin"
+REL = ".ufo/reports/round-1/kama.md"
+LC_SUBJECT = "round-1: work"
+FAKE = "1234567890abcdef1234567890abcdef12345678"
+FAKE2 = "abcdefabcdefabcdefabcdefabcdefabcdefabcd"
+PGP_SIG = ("-----BEGIN PGP SIGNATURE-----\n\n"
+           "iQEzBAABCAAdFiEEAAAAAAAAAAAAAAAAAAAAAAAAAAAFAmAAAAAACgkQAAAAAAAAAAAAAA\n"
+           "-----END PGP SIGNATURE-----")
+SSH_SIG = ("-----BEGIN SSH SIGNATURE-----\n"
+           "U1NIU0lHAAAAAQAAADMAAAALc3NoLWVkMjU1MTkAAAAg\n"
+           "-----END SSH SIGNATURE-----")
+
+
+class SetupError(Exception):
+    """Fixture, pin or blob could not be built; reported as cannot-evaluate."""
+
+
+def sha256(data):
+    return hashlib.sha256(data).hexdigest()
+
+
+def clean_env(extra=None):
+    """Inherited GIT_* variables are dropped; no user or system git config."""
+    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1")
+    env.update(extra or {})
+    return env
+
+
+def run_git(args, *, env=None, stdin=None):
+    proc = subprocess.run(["git", *args], input=stdin, stdout=subprocess.PIPE,
+                          stderr=subprocess.PIPE, env=clean_env(env), timeout=120)
+    if proc.returncode != 0:
+        detail = proc.stderr.decode("utf-8", "replace").strip()
+        raise SetupError(f"git {' '.join(args)}: rc={proc.returncode}: {detail}")
+    return proc.stdout
+
+
+def git(repo, *args, env=None, stdin=None):
+    out = run_git(["-C", str(repo), *args], env=env, stdin=stdin)
+    return out.decode("utf-8", "replace").strip()
+
+
+def ident(who, when):
+    """Explicit author and committer identity for every fixture commit."""
+    addr = f"{who}@example.invalid"
+    return {"GIT_AUTHOR_NAME": who, "GIT_AUTHOR_EMAIL": addr,
+            "GIT_COMMITTER_NAME": who, "GIT_COMMITTER_EMAIL": addr,
+            "GIT_AUTHOR_DATE": f"@{when} +0000", "GIT_COMMITTER_DATE": f"@{when} +0000"}
+
+
+def init_repo(path, sha256_format=False):
+    args = ["init", "-q", "--template=", "-b", "master"]
+    if sha256_format:
+        args.append("--object-format=sha256")
+    run_git([*args, str(path)])
+
+
+def commit(repo, files, subject, when, who):
+    for rel, data in files.items():
+        target = repo / rel
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        git(repo, "add", "-A", "--", rel)
+    git(repo, "-c", "commit.gpgsign=false", "commit", "-q", "--no-verify", "-F", "-",
+        env=ident(who, when), stdin=(subject + "\n").encode("utf-8"))
+    return git(repo, "rev-parse", "HEAD")
+
+
+def commit_tree(repo, tree, parents, message, when, who):
+    args = ["commit-tree", tree]
+    for parent in parents:
+        args += ["-p", parent]
+    return git(repo, *args, env=ident(who, when), stdin=(message + "\n").encode("utf-8"))
+
+
+def tree_with(repo, files, index):
+    env = {"GIT_INDEX_FILE": str(index)}
+    index.unlink(missing_ok=True)
+    for rel, data in files.items():
+        blob = git(repo, "hash-object", "-w", "--stdin", stdin=data)
+        git(repo, "update-index", "--add", "--cacheinfo", f"100644,{blob},{rel}", env=env)
+    return git(repo, "write-tree", env=env)
+
+
+def signed_commit(repo, parent, when, who, subject, sig):
+    """Commit object carrying a crafted gpgsig header; no signing program runs."""
+    tree = git(repo, "rev-parse", f"{parent}^{{tree}}")
+    who_line = f"{who} <{who}@example.invalid> {when} +0000"
+    head = [f"tree {tree}", f"parent {parent}", f"author {who_line}", f"committer {who_line}"]
+    sig_lines = sig.split("\n")
+    head.append("gpgsig " + sig_lines[0])
+    head += [" " + line for line in sig_lines[1:]]
+    body = "\n".join(head) + "\n\n" + subject + "\n"
+    return git(repo, "hash-object", "-t", "commit", "-w", "--stdin", stdin=body.encode("utf-8"))
+
+
+class Fixture:
+    """One arm's scratch tree: lane, fleet, marker path and index file."""
+
+    def __init__(self, root):
+        self.root = root
+        self.lane = root / "lane"
+        self.fleet = root / "fleet"
+        self.marker = root / "marker"
+        self.index = root / "index"
+
+    def trap(self, name):
+        """Planted command: records that it executed, then fails."""
+        path = self.root / name
+        path.write_text(f"#!/bin/sh\n: > '{self.marker}'\nexit 1\n", encoding="utf-8")
+        path.chmod(0o755)
+        return str(path)
+
+
+def _bytes(item):
+    return item if isinstance(item, bytes) else item.encode("utf-8")
+
+
+def report(landed, notes=(), section=True):
+    text = b""
+    if section:
+        text += b"## Landed changes\n\n" + b"".join(b"- " + _bytes(x) + b"\n" for x in landed)
+    if notes:
+        text += (b"\n" if text else b"") + b"## Notes\n\n" + b"".join(
+            b"- " + _bytes(x) + b"\n" for x in notes)
+    return text
+
+
+def lane_base(fx):
+    """Lane round-1 commit at t=1000 by the lane author."""
+    return commit(fx.lane, {"f": b"work\n"}, LC_SUBJECT, 1000, LANE_AUTHOR)
+
+
+def fleet_report(fx, landed, notes=(), *, section=True, when=2000, rel=REL):
+    """Fleet commit adding the round-1 report; its author time is the cutoff."""
+    return commit(fx.fleet, {rel: report(landed, notes, section)}, "round-1: report", when, "fleet")
+
+
+def ambiguous_pair():
+    """Two blob payloads whose ids share a 7-hex prefix holding a digit and a letter."""
+    seen = {}
+    for i in range(1 << 20):
+        data = f"collide {i}\n".encode("utf-8")
+        oid = hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
+        key = oid[:7]
+        if not (any(c.isdigit() for c in key) and any(c in "abcdef" for c in key)):
+            continue
+        if key in seen:
+            return key, seen[key], data
+        seen[key] = data
+    raise SetupError("no 7-hex prefix collision found")
+
+
+# --------------------------------------------------------------- fixture builders
+# Each builder populates fx.lane and fx.fleet and returns the (lane, fleet) paths
+# to audit. Every git write carries an explicit identity; failures raise.
+
+def build_clean(fx):
+    lc = lane_base(fx)
+    fleet_report(fx, [lc])
+    return fx.lane, fx.fleet
+
+
+def build_omitted(fx):
+    lc = lane_base(fx)
+    fleet_report(fx, [lc])
+    commit(fx.lane, {"g": b"more\n"}, "round-1: more", 1200, LANE_AUTHOR)
+    return fx.lane, fx.fleet
+
+
+def build_unresolved(fx):
+    lc = lane_base(fx)
+    fleet_report(fx, [lc], notes=[FAKE])
+    return fx.lane, fx.fleet
+
+
+def build_ambiguous(fx):
+    lc = lane_base(fx)
+    prefix, first, second = ambiguous_pair()
+    for data in (first, second):
+        git(fx.lane, "hash-object", "-w", "--stdin", stdin=data)
+    fleet_report(fx, [lc[:12], prefix])
+    return fx.lane, fx.fleet
+
+
+def build_shared_clone(fx):
+    lc = lane_base(fx)
+    fleet_report(fx, [lc])
+    clone = fx.root / "lane-shared"
+    run_git(["clone", "-q", "--shared", str(fx.lane), str(clone)])
+    return clone, fx.fleet
+
+
+def build_landed_unresolved(fx):
+    lc = lane_base(fx)
+    fleet_report(fx, [lc, "c0ffee1"])
+    return fx.lane, fx.fleet
+
+
+def build_section_missing(fx):
+    lane_base(fx)
+    fleet_report(fx, [], notes=["none"], section=False)
+    return fx.lane, fx.fleet
+
+
+def build_latin1_subject(fx):
+    lc = lane_base(fx)
+    fleet_report(fx, [lc])
+    commit(fx.lane, {"note.txt": b"x\n"}, "note caf\u00e9", 1100, "someone")
+    git(fx.lane, "config", "i18n.logOutputEncoding", "ISO-8859-1")
+    return fx.lane, fx.fleet
+
+
+def build_invalid_report(fx):
+    lc = lane_base(fx)
+    fleet_report(fx, [lc], notes=[b"\xff\xfe bad"])
+    return fx.lane, fx.fleet
+
+
+def build_replace_omitted(fx):
+    lc = lane_base(fx)
+    fleet_report(fx, [lc])
+    x = commit(fx.lane, {"g": b"second\n"}, "round-1: more", 1200, LANE_AUTHOR)
+    tree = git(fx.lane, "rev-parse", f"{x}^{{tree}}")
+    replacement = commit_tree(fx.lane, tree, [lc], "unrelated", 1200, "someone")
+    git(fx.lane, "replace", x, replacement)
+    return fx.lane, fx.fleet
+
+
+def build_replace_fabricated(fx):
+    lc = lane_base(fx)
+    fleet_report(fx, [lc], notes=[FAKE])
+    git(fx.lane, "update-ref", f"refs/replace/{FAKE}", lc)
+    return fx.lane, fx.fleet
+
+
+def build_fleet_replace(fx):
+    lc = lane_base(fx)
+    original = fleet_report(fx, [lc], notes=[FAKE])
+    tree = tree_with(fx.fleet, {REL: report([lc])}, fx.index)
+    replacement = commit_tree(fx.fleet, tree, [], "round-1: report", 2000, "fleet")
+    git(fx.fleet, "replace", original, replacement)
+    return fx.lane, fx.fleet
+
+
+def build_promisor(fx):
+    lc = lane_base(fx)
+    fleet_report(fx, [lc], notes=[FAKE2])
+    git(fx.lane, "config", "core.repositoryformatversion", "1")
+    git(fx.lane, "config", "extensions.partialClone", "origin")
+    git(fx.lane, "config", "remote.origin.url", "ssh://example.invalid/x.git")
+    git(fx.lane, "config", "remote.origin.promisor", "true")
+    git(fx.lane, "config", "core.sshCommand", fx.trap("ssh-trap.sh"))
+    return fx.lane, fx.fleet
+
+
+def build_follow_rename(fx):
+    lc = lane_base(fx)
+    commit(fx.lane, {"g": b"late\n"}, "round-1: late", 2000, LANE_AUTHOR)
+    fleet_report(fx, [lc], when=1500, rel="old/kama.md")
+    (fx.fleet / REL).parent.mkdir(parents=True, exist_ok=True)
+    git(fx.fleet, "mv", "old/kama.md", REL)
+    git(fx.fleet, "-c", "commit.gpgsign=false", "commit", "-q", "--no-verify",
+        "-m", "round-1: move report", env=ident("fleet", 2500))
+    git(fx.fleet, "config", "log.follow", "true")
+    return fx.lane, fx.fleet
+
+
+def build_signed_probes(fx):
+    lc = lane_base(fx)
+    fleet_report(fx, [lc])
+    pgp = signed_commit(fx.lane, lc, 1100, "someone", "signed probe pgp", PGP_SIG)
+    ssh = signed_commit(fx.lane, pgp, 1150, "someone", "signed probe ssh", SSH_SIG)
+    git(fx.lane, "update-ref", "refs/heads/master", ssh)
+    trap = fx.trap("gpg-trap.sh")
+    git(fx.lane, "config", "log.showSignature", "true")
+    git(fx.lane, "config", "gpg.program", trap)
+    git(fx.lane, "config", "gpg.ssh.program", trap)
+    return fx.lane, fx.fleet
+
+
+def _shallow_chain(fx):
+    """Lane history: round-1 O (uncited, t=900) <- base S (t=1000) <- LC (cited, t=1100)."""
+    commit(fx.lane, {"o": b"early\n"}, "round-1: early", 900, LANE_AUTHOR)
+    s = commit(fx.lane, {"s": b"base\n"}, "chore: base", 1000, "someone")
+    lc = commit(fx.lane, {"f": b"work\n"}, LC_SUBJECT, 1100, LANE_AUTHOR)
+    fleet_report(fx, [lc])
+    return s, lc
+
+
+def build_shallow(fx):
+    s, _ = _shallow_chain(fx)
+    (fx.lane / ".git" / "shallow").write_text(s + "\n", encoding="utf-8")
+    return fx.lane, fx.fleet
+
+
+def build_grafts(fx):
+    _, lc = _shallow_chain(fx)
+    grafts = fx.lane / ".git" / "info" / "grafts"
+    grafts.parent.mkdir(parents=True, exist_ok=True)
+    grafts.write_text(lc + "\n", encoding="utf-8")
+    return fx.lane, fx.fleet
+
+
+def build_tag_shadow(fx):
+    lc = lane_base(fx)
+    fleet_report(fx, [lc])
+    commit(fx.lane, {"g": b"second\n"}, "round-1: second", 1200, LANE_AUTHOR)
+    git(fx.lane, "tag", "master", lc)
+    return fx.lane, fx.fleet
+
+
+def build_mailmap_fifo(fx):
+    lc = lane_base(fx)
+    fleet_report(fx, [lc])
+    os.mkfifo(fx.lane / ".mailmap")
+    return fx.lane, fx.fleet
+
+
+def build_sha256_lane(fx):
+    shutil.rmtree(fx.lane)
+    init_repo(fx.lane, sha256_format=True)
+    lc = lane_base(fx)
+    fleet_report(fx, [lc])
+    return fx.lane, fx.fleet
+
+
+def build_errata_invalid(fx):
+    lc = lane_base(fx)
+    fleet_report(fx, [lc])
+    commit(fx.lane, {"registry/report-landing-errata.tsv": b"# errata\n\xff\xfe\n"},
+           "registry: errata", 1300, "someone")
+    return fx.lane, fx.fleet
+
+
+def build_open_alternates(fx):
+    alt = fx.root / "alt"
+    init_repo(alt)
+    obj = commit(alt, {"a.txt": b"alternate-only\n"}, "alt: object", 1050, "someone")
+    lc = lane_base(fx)
+    fleet_report(fx, [lc], notes=[obj])
+    info = fx.lane / ".git" / "objects" / "info"
+    info.mkdir(parents=True, exist_ok=True)
+    (info / "alternates").write_text(str(alt / ".git" / "objects") + "\n", encoding="utf-8")
+    return fx.lane, fx.fleet
+
+
+def build_partial_clone(fx):
+    origin = fx.root / "origin"
+    init_repo(origin)
+    git(origin, "config", "uploadpack.allowFilter", "true")
+    git(origin, "config", "uploadpack.allowAnySHA1InWant", "true")
+    lc = commit(origin, {"f": b"work\n", "corpus/SOURCES.md": b"# Sources\n\n## Registry\n"},
+                LC_SUBJECT, 1000, LANE_AUTHOR)
+    shutil.rmtree(fx.lane)
+    run_git(["clone", "-q", "--no-checkout", "--filter=blob:none",
+             f"file://{origin}", str(fx.lane)])
+    fleet_report(fx, [lc])
+    return fx.lane, fx.fleet
+
+
+# ------------------------------------------------------------------ case table
+
+def E(exit_code, kinds=None, *, traceback=False, marker=False, timed_out=False):
+    """Correct-auditor expectation; kinds None means the defect list is not checked."""
+    return {"exit": exit_code, "kinds": kinds, "traceback": traceback,
+            "marker": marker, "timed_out": timed_out}
+
+
+CASES = [
+    {"name": "C1-clean", "kind": "control", "build": build_clean, "no_errata": True,
+     "expect": E(0, []), "note": "clean report; the only round-1 commit is cited"},
+    {"name": "C2-omitted-round-commit", "kind": "control", "build": build_omitted,
+     "no_errata": True, "expect": E(1, ["landed-omitted"]),
+     "note": "uncited round-1 commit before the report"},
+    {"name": "C3-unresolved-full-hash", "kind": "control", "build": build_unresolved,
+     "no_errata": True, "expect": E(1, ["unresolved-full-hash"]),
+     "note": "fabricated 40-hex outside Landed changes"},
+    {"name": "C4-ambiguous-abbrev", "kind": "control", "build": build_ambiguous,
+     "no_errata": True, "expect": E(1, ["landed-ambiguous"]),
+     "note": "7-hex Landed token shared by two lane blobs"},
+    {"name": "C5-clone-shared-clean", "kind": "control", "build": build_shared_clone,
+     "no_errata": True, "expect": E(0, []),
+     "note": "git clone --shared of the clean lane (alternates are legitimate)"},
+    {"name": "C6-landed-unresolved-abbrev", "kind": "control", "build": build_landed_unresolved,
+     "no_errata": True, "expect": E(1, ["landed-unresolved"]),
+     "note": "absent 7-hex Landed token with a digit and a letter"},
+    {"name": "C7-section-missing", "kind": "control", "build": build_section_missing,
+     "no_errata": True, "expect": E(1, ["landed-omitted", "landed-section-missing"]),
+     "note": "report without a Landed changes section"},
+    {"name": "F1-logoutputencoding-latin1", "kind": "fault", "build": build_latin1_subject,
+     "no_errata": True, "expect": E(0, []),
+     "note": "lane i18n.logOutputEncoding=ISO-8859-1 with a non-ASCII subject; must equal control"},
+    {"name": "F2-invalid-utf8-report", "kind": "fault", "build": build_invalid_report,
+     "no_errata": True, "expect": E(2),
+     "note": "invalid UTF-8 bytes in committed fleet report; refusal without traceback"},
+    {"name": "F3-replace-hides-omitted", "kind": "fault", "build": build_replace_omitted,
+     "no_errata": True, "expect": E(1, ["landed-omitted"]),
+     "note": "lane refs/replace hides an omitted round-1 commit"},
+    {"name": "F4-replace-fabricated-full", "kind": "fault", "build": build_replace_fabricated,
+     "no_errata": True, "expect": E(1, ["unresolved-full-hash"]),
+     "note": "lane refs/replace/<fabricated 40-hex> makes the citation resolve"},
+    {"name": "F4b-fleet-replace-report-text", "kind": "fault", "build": build_fleet_replace,
+     "no_errata": True, "expect": E(1, ["unresolved-full-hash"]),
+     "note": "fleet replace of the report commit changes its text; verdict must equal unreplaced"},
+    {"name": "F5-promisor-sshcommand", "kind": "fault", "build": build_promisor,
+     "no_errata": True, "expect": E(1, ["unresolved-full-hash"]),
+     "note": "promisor lane with core.sshCommand planted; must not run it and must not fetch"},
+    {"name": "F6-follow-renamed-report", "kind": "fault", "build": build_follow_rename,
+     "no_errata": True, "expect": E(1, ["landed-omitted"]),
+     "note": "fleet log.follow=true; report first added t=1500, renamed into place t=2500; "
+             "uncited commit t=2000"},
+    {"name": "F7-showsignature-program", "kind": "fault", "build": build_signed_probes,
+     "no_errata": True, "expect": E(0, []),
+     "note": "lane log.showSignature=true with gpg.program and gpg.ssh.program planted; "
+             "must equal control"},
+    {"name": "F8-shallow-hides-omitted", "kind": "fault", "build": build_shallow,
+     "no_errata": True, "expect": E(2),
+     "note": "lane .git/shallow hides an omitted commit; refusal"},
+    {"name": "F9-grafts-hides-omitted", "kind": "fault", "build": build_grafts,
+     "no_errata": True, "expect": E(2),
+     "note": "lane .git/info/grafts hides an omitted commit; refusal"},
+    {"name": "F10-tag-shadows-branch", "kind": "fault", "build": build_tag_shadow,
+     "no_errata": True, "expect": E(1, ["landed-omitted"]),
+     "note": "tag master at an older commit; omission only on refs/heads/master"},
+    {"name": "F11-mailmap-fifo", "kind": "fault", "build": build_mailmap_fifo,
+     "no_errata": True, "expect": E(0, []),
+     "note": "FIFO at lane worktree .mailmap; verdict as control and no hang"},
+    {"name": "F12-sha256-lane", "kind": "fault", "build": build_sha256_lane,
+     "no_errata": True, "expect": E(2), "note": "SHA-256 lane object format; refusal"},
+    {"name": "F13-invalid-utf8-errata", "kind": "fault", "build": build_errata_invalid,
+     "no_errata": False, "expect": E(2),
+     "note": "invalid UTF-8 committed errata blob with errata enabled; refusal"},
+    {"name": "O1-alternates-fabricated", "kind": "open", "build": build_open_alternates,
+     "no_errata": True, "expect": None,
+     "note": "OPEN: alternates resolve a citation to an object outside the lane history; "
+             "observed only"},
+    {"name": "T1-blob-filtered-partial-clone", "kind": "tradeoff", "build": build_partial_clone,
+     "no_errata": True, "expect": None,
+     "note": "TRADEOFF: blob-filtered partial clone lane; observed only"},
+]
+
+
+def population_digest():
+    rows = [{"name": c["name"], "kind": c["kind"], "build": c["build"].__name__,
+             "no_errata": c["no_errata"], "expect": c["expect"], "note": c["note"]}
+            for c in CASES]
+    return sha256(json.dumps(rows, sort_keys=True, separators=(",", ":")).encode("utf-8"))
+
+
+# --------------------------------------------------------------- run and classify
+
+def observe(rc, timed_out, out, err, marker):
+    traceback = TRACEBACK in err
+    try:
+        doc = json.loads(out.decode("utf-8"))
+    except (UnicodeDecodeError, ValueError):
+        doc = None
+    json_status, defects = None, None
+    if (isinstance(doc, dict) and isinstance(doc.get("summary"), dict)
+            and isinstance(doc.get("results"), list)):
+        json_status = doc["summary"].get("status")
+        try:
+            defects = sorted(d["kind"] for r in doc["results"] for d in r["defects"])
+        except (KeyError, TypeError):
+            defects = None
+    if timed_out:
+        verdict = "hang"
+    elif traceback:
+        verdict = "crash"
+    else:
+        verdict = {0: "clean", 1: "failed", 2: "could-not-evaluate"}.get(rc, "other")
+    return {"verdict": verdict, "exit": rc, "traceback": traceback, "marker": marker,
+            "timed_out": timed_out, "json_status": json_status, "defects": defects}
+
+
+def invoke(cmd, marker, timeout=TIMEOUT_S):
+    marker.unlink(missing_ok=True)
+    proc = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, env=clean_env(), start_new_session=True)
+    timed_out = False
+    try:
+        out, err = proc.communicate(timeout=timeout)
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        try:
+            os.killpg(proc.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        out, err = proc.communicate()
+    rc = None if timed_out else proc.returncode
+    return observe(rc, timed_out, out, err, marker.exists())
+
+
+def audit(script, lane, fleet, *, no_errata, marker):
+    cmd = [sys.executable, str(script), "--lane-repo", str(lane), "--fleet-repo", str(fleet),
+           "--branch", "master", "--rounds", "1", "--json"]
+    if no_errata:
+        cmd.append("--no-errata")
+    return invoke(cmd, marker)
+
+
+def meets(obs, expect):
+    if expect is None:
+        return None
+    seen = (obs["exit"], obs["traceback"], obs["marker"], obs["timed_out"])
+    want = (expect["exit"], expect["traceback"], expect["marker"], expect["timed_out"])
+    if seen != want:
+        return False
+    return expect["kinds"] is None or obs["defects"] == expect["kinds"]
+
+
+def core(obs):
+    return (obs["exit"], obs["traceback"], obs["marker"], obs["timed_out"], obs["defects"])
+
+
+def decide(rows, mode):
+    """Gate over the rows. Pure, so the selftest can drive it with synthetic rows."""
+    gate_arms = ("current",) if mode == "both" else (mode,)
+    graded = [row for row in rows if row["kind"] in GRADED]
+    reasons = []
+    for arm in gate_arms:
+        missed = [row["case"] for row in graded if row["ok"][arm] is not True]
+        if missed:
+            reasons.append(f"{arm} expectation not met: {', '.join(missed)}")
+    if mode == "both":
+        for row in rows:
+            if row["kind"] == "fault" and row["ok"]["frozen"] is True:
+                reasons.append(f"fault not reproduced by frozen: {row['case']}")
+            if row["kind"] == "control" and (core(row["observed"]["frozen"])
+                                             != core(row["observed"]["current"])):
+                reasons.append(f"control differs across arms: {row['case']}")
+    return {"mode": mode, "pass": not reasons, "reasons": reasons}
+
+
+def fmt(obs):
+    flags = [name for name, on in (("TB", obs["traceback"]), ("MARKER", obs["marker"]),
+                                   ("TIMEOUT", obs["timed_out"])) if on]
+    kinds = "-" if obs["defects"] is None else (",".join(obs["defects"]) or "none")
+    tag = f"[{','.join(flags)}]" if flags else ""
+    return f"{obs['verdict']}/{obs['exit']}{tag}({kinds})"
+
+
+def render(doc):
+    lines = [f"population_sha256={doc['population_sha256']}"]
+    if doc["frozen"]:
+        lines.append(f"frozen={doc['frozen']['commit'][:12]} blob={doc['frozen']['blob'][:12]} "
+                     f"sha256={doc['frozen']['sha256'][:12]}")
+    if doc["current"]:
+        lines.append(f"current={doc['current']['path']} sha256={doc['current']['sha256'][:12]}")
+    for row in doc["rows"]:
+        cells = [f"{row['case']:<30}", f"{row['kind']:<8}"]
+        cells += [f"{arm}={fmt(obs)}" for arm, obs in row["observed"].items()]
+        marks = []
+        for arm, ok in row["ok"].items():
+            label = "observed" if ok is None else ("ok" if ok else "VIOLATION")
+            marks.append(f"{arm}:{label}")
+        cells.append(" ".join(marks))
+        lines.append("  ".join(cells))
+    lines.append(f"mode={doc['mode']} pass={doc['pass']}")
+    lines += [f"  - {reason}" for reason in doc["reasons"]]
+    return "\n".join(lines)
+
+
+def frozen_source(repo):
+    blob = git(repo, "rev-parse", f"{FROZEN_COMMIT}:{AUDIT_PATH}")
+    data = run_git(["-C", str(repo), "show", f"{FROZEN_COMMIT}:{AUDIT_PATH}"])
+    if blob != FROZEN_BLOB or sha256(data) != FROZEN_SHA256:
+        raise SetupError(f"frozen blob mismatch in {repo}: blob={blob} sha256={sha256(data)}")
+    return data
+
+
+def run_case(run_root, idx, case, arms, scripts):
+    """Each arm gets a fresh fixture, so one arm's git writes cannot reach the other."""
+    observed = {}
+    for arm in arms:
+        root = run_root / f"case-{idx:02d}-{arm}"
+        root.mkdir()
+        fx = Fixture(root)
+        init_repo(fx.lane)
+        init_repo(fx.fleet)
+        lane, fleet = case["build"](fx)
+        observed[arm] = audit(scripts[arm], lane, fleet, no_errata=case["no_errata"],
+                              marker=fx.marker)
+    return observed
+
+
+def make_row(case, observed):
+    expect = case["expect"]
+    return {"case": case["name"], "kind": case["kind"], "note": case["note"],
+            "expect": expect, "observed": observed,
+            "ok": {arm: meets(obs, expect) for arm, obs in observed.items()}}
+
+
+def grid(args):
+    repo = Path(args.repo).resolve()
+    mode = args.arm
+    arms = ("frozen", "current") if mode == "both" else (mode,)
+    digest = population_digest()
+    if digest != POPULATION_SHA256:
+        raise SetupError(f"population digest {digest} differs from pinned {POPULATION_SHA256}")
+    current = Path(args.current).resolve() if args.current else (repo / AUDIT_PATH).resolve()
+    run_root = Path(tempfile.mkdtemp(prefix="repo-state-grid-"))
+    rows = []
+    try:
+        scripts = {}
+        if "frozen" in arms:
+            scripts["frozen"] = run_root / "frozen-report-landing-audit.py"
+            scripts["frozen"].write_bytes(frozen_source(repo))
+        if "current" in arms:
+            if not current.is_file():
+                raise SetupError(f"current auditor is not a file: {current}")
+            scripts["current"] = current
+        for idx, case in enumerate(CASES):
+            rows.append(make_row(case, run_case(run_root, idx, case, arms, scripts)))
+    finally:
+        if args.keep:
+            print(f"fixtures kept under {run_root}", file=sys.stderr)
+        else:
+            shutil.rmtree(run_root, ignore_errors=True)
+    decision = decide(rows, mode)
+    doc = {
+        "mode": mode,
+        "pass": decision["pass"],
+        "reasons": decision["reasons"],
+        "population_sha256": digest,
+        "frozen": ({"commit": FROZEN_COMMIT, "blob": FROZEN_BLOB, "sha256": FROZEN_SHA256}
+                   if "frozen" in arms else None),
+        "current": ({"path": str(current), "sha256": sha256(current.read_bytes())}
+                    if "current" in arms else None),
+        "rows": rows,
+    }
+    print(json.dumps(doc, indent=1, sort_keys=True) if args.json else render(doc), flush=True)
+    return 0 if decision["pass"] else 1
+
+
+# ----------------------------------------------------------------------- selftest
+
+def selftest(repo):
+    checks = []
+
+    def check(name, ok):
+        checks.append((name, bool(ok)))
+
+    def passes(fn):
+        try:
+            fn()
+        except SetupError:
+            return False
+        return True
+
+    check("population-pinned", population_digest() == POPULATION_SHA256)
+    check("names-unique", len({c["name"] for c in CASES}) == len(CASES))
+    check("graded-rows-have-expectations",
+          all(c["expect"] is not None for c in CASES if c["kind"] in GRADED))
+    check("observe-only-rows-have-no-expectation",
+          all(c["expect"] is None for c in CASES if c["kind"] not in GRADED))
+    check("frozen-blob-pinned", passes(lambda: frozen_source(repo)))
+
+    clean, failed_expect = E(0, []), E(1, ["landed-omitted"])
+    with tempfile.TemporaryDirectory(prefix="repo-state-grid-selftest-") as tmp:
+        tmp = Path(tmp)
+        marker = tmp / "marker"
+        stubs = {
+            "hang": "import time\ntime.sleep(120)\n",
+            "crash": "raise RuntimeError('boom')\n",
+            "marker": ("import json, pathlib, sys\n"
+                       "pathlib.Path(sys.argv[1]).write_text('ran', encoding='utf-8')\n"
+                       "print(json.dumps({'summary': {'status': 'clean'}, 'results': []}))\n"),
+            "failed": ("import json, sys\n"
+                       "print(json.dumps({'summary': {'status': 'failed'}, 'results': "
+                       "[{'defects': [{'kind': 'landed-omitted', 'token': 'x'}]}]}))\n"
+                       "sys.exit(1)\n"),
+            "refused": "import sys\nprint('could-not-evaluate: stub', file=sys.stderr)\n"
+                       "sys.exit(2)\n",
+        }
+        obs = {}
+        for name, source in stubs.items():
+            path = tmp / f"stub-{name}.py"
+            path.write_text(source, encoding="utf-8")
+            obs[name] = invoke([sys.executable, str(path), str(marker)], marker, timeout=2)
+
+    check("hang-is-killed-and-classified", obs["hang"]["verdict"] == "hang"
+          and obs["hang"]["timed_out"] and obs["hang"]["exit"] is None)
+    check("traceback-with-exit-1-is-crash", obs["crash"]["verdict"] == "crash"
+          and obs["crash"]["traceback"] and obs["crash"]["exit"] == 1)
+    check("planted-command-detected", obs["marker"]["marker"]
+          and obs["marker"]["verdict"] == "clean" and obs["marker"]["defects"] == [])
+    check("failed-kinds-parsed", obs["failed"]["verdict"] == "failed"
+          and obs["failed"]["defects"] == ["landed-omitted"])
+    check("refusal-has-no-kinds", obs["refused"]["verdict"] == "could-not-evaluate"
+          and obs["refused"]["defects"] is None)
+    check("timeout-is-not-clean", meets(obs["hang"], clean) is False)
+    check("planted-command-violates-clean", meets(obs["marker"], clean) is False)
+    check("failed-meets-its-expectation", meets(obs["failed"], failed_expect) is True)
+
+    def synth(exit_code, defects=None):
+        return {"verdict": "synthetic", "exit": exit_code, "traceback": False, "marker": False,
+                "timed_out": False, "json_status": None, "defects": defects}
+
+    def row(kind, expect, frozen, current):
+        observed = {"frozen": frozen, "current": current}
+        return {"case": kind, "kind": kind, "expect": expect, "observed": observed,
+                "ok": {arm: meets(o, expect) for arm, o in observed.items()}}
+
+    good = [row("fault", clean, synth(1, ["landed-omitted"]), synth(0, [])),
+            row("control", clean, synth(0, []), synth(0, []))]
+    check("both-passes-reproduced-and-fixed", decide(good, "both")["pass"])
+    check("both-fails-on-unreproduced-fault", not decide(
+        [row("fault", clean, synth(0, []), synth(0, []))], "both")["pass"])
+    check("both-fails-when-current-misses", not decide(
+        [row("fault", clean, synth(1, ["x"]), synth(1, ["x"]))], "both")["pass"])
+    check("both-fails-on-control-divergence", not decide(
+        [row("control", clean, synth(0, []), synth(0, ["x"]))], "both")["pass"])
+    check("frozen-mode-fails-while-faults-present", not decide(good, "frozen")["pass"])
+    check("current-mode-passes-when-fixed", decide(good, "current")["pass"])
+
+    failed = [name for name, ok in checks if not ok]
+    for name, ok in checks:
+        print(f"{'ok' if ok else 'FAIL'} {name}")
+    print(f"selftest checks={len(checks)} failed={len(failed)}")
+    return 0 if not failed else 1
+
+
+# --------------------------------------------------------------------------- main
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        description="Repo-state fault grid for report-landing-audit.py.")
+    parser.add_argument("--arm", choices=("frozen", "current", "both"), default="both")
+    parser.add_argument("--current", metavar="PATH",
+                        help="current auditor for arms current and both "
+                             "(default: tools/report-landing-audit.py under --repo)")
+    parser.add_argument("--repo", metavar="PATH", default=str(REPO),
+                        help=f"git repository holding commit {FROZEN_COMMIT[:12]}")
+    parser.add_argument("--json", action="store_true", help="machine-readable output")
+    parser.add_argument("--keep", action="store_true", help="keep fixture directories")
+    parser.add_argument("--selftest", action="store_true", help="check the harness itself")
+    args = parser.parse_args(argv)
+    if args.current and args.arm == "frozen":
+        parser.error("--current applies to --arm current or both")
+    try:
+        if args.selftest:
+            return selftest(Path(args.repo).resolve())
+        return grid(args)
+    except (SetupError, OSError, subprocess.SubprocessError) as exc:
+        print(f"cannot-evaluate: {exc}", file=sys.stderr)
+        return 2
+    except Exception:  # a harness defect is still never a verdict
+        import traceback
+        traceback.print_exc()
+        print("cannot-evaluate: internal error", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

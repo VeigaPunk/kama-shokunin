@@ -1,0 +1,38 @@
+--- candidate.py	2026-10-21 12:10:33.690542726 -0300
++++ split.py	2026-10-21 12:10:49.165505969 -0300
+@@ -94,7 +94,7 @@
+     return env
+ 
+ 
+-def git(repo, *args, stdin=None, env=None):
++def git(repo, *args, stdin=None, env=None, errors="strict"):
+     """stdout as strict UTF-8 text with universal newlines (as text mode
+     did); undecodable output is an EvalError, never a traceback verdict."""
+     try:
+@@ -107,7 +107,7 @@
+         raise EvalError(f"git {' '.join(args)} in {repo}: rc={proc.returncode} "
+                         f"{proc.stderr.decode(errors='replace').strip()}")
+     try:
+-        out = proc.stdout.decode("utf-8")
++        out = proc.stdout.decode("utf-8", errors)
+     except UnicodeDecodeError as exc:
+         raise EvalError(f"git {' '.join(args)} in {repo}: output is not "
+                         f"UTF-8: {exc}") from exc
+@@ -163,7 +163,7 @@
+ 
+ def round_commits(lane_repo, branch, lane, rnd):
+     out = git(lane_repo, "log", f"--format=%H{SEP}%an{SEP}%at{SEP}%s{END}",
+-              branch)
++              branch, errors="surrogateescape")
+     pat = re.compile(rf"^(?:round-{rnd}:|checkpoint\(r{rnd}\))")
+     rows = []
+     for record in out.split(END):
+@@ -396,7 +396,7 @@
+         else:
+             # committed fleet reports only, never working-tree drafts
+             listed = git(fleet_repo, "ls-tree", "-r", "--name-only", "HEAD",
+-                         "--", ".ufo/reports")
++                         "--", ".ufo/reports", errors="surrogateescape")
+             pat = re.compile(rf"\.ufo/reports/round-([0-9]+)/{re.escape(lane)}\.md")
+             present = [int(m.group(1)) for m in map(pat.fullmatch,
+                                                     listed.split("\n")) if m]

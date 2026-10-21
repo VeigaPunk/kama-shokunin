@@ -1,0 +1,113 @@
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index fcc255c..0d4d89d 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -51,6 +51,7 @@ import json
+ import os
+ from pathlib import Path
+ import re
++import shutil
+ import stat
+ import subprocess
+ import sys
+@@ -78,7 +79,10 @@ class EvalError(Exception):
+ 
+ def git_env(**extra):
+     """No inherited GIT_* variables and no user/system config, so neither
+-    the audited repos nor the selftest fixtures can be redirected."""
++    the audited repos nor the selftest fixtures can be redirected. Every
++    git invocation also carries the global --no-lazy-fetch flag (git
++    >= 2.44), so repo-local promisor state cannot execute a lazy fetch
++    during the audit; a git too old for the flag is a typed refusal."""
+     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+     env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1", **extra)
+     return env
+@@ -86,12 +90,16 @@ def git_env(**extra):
+ 
+ def git(repo, *args, stdin=None, env=None):
+     try:
+-        proc = subprocess.run(["git", "-C", str(repo), *args], input=stdin,
+-                              capture_output=True, text=True,
+-                              env=env or git_env())
++        proc = subprocess.run(
++            ["git", "--no-lazy-fetch", "-C", str(repo), *args], input=stdin,
++            capture_output=True, text=True, env=env or git_env())
+     except OSError as exc:
+         raise EvalError(f"cannot run git: {exc}") from exc
+     if proc.returncode != 0:
++        if proc.returncode == 129 and "no-lazy-fetch" in proc.stderr:
++            raise EvalError(
++                "git --no-lazy-fetch unsupported (needs git >= 2.44); "
++                "refusing to evaluate where a lazy fetch could run")
+         raise EvalError(f"git {' '.join(args)} in {repo}: rc={proc.returncode} "
+                         f"{proc.stderr.strip()}")
+     return proc.stdout
+@@ -803,6 +811,68 @@ def selftest():
+                 os.environ["GIT_DIR"] = saved
+         check("inherited-GIT_DIR-untouched", sorted(
+             p.name for p in (decoy / "objects").iterdir()) == decoy_before)
++    with tempfile.TemporaryDirectory(
++            prefix="report-landing-lazyfetch-") as ltmp:
++        # repo-local promisor state must not execute a lazy fetch while
++        # the audit resolves tokens (git_env cannot strip repo config)
++        prom = Path(ltmp, "prom")
++        git(ltmp, "init", "-q", "-b", "master", str(prom))
++        _commit(prom, "seed", "fixture", 100)
++        git(prom, "config", "extensions.partialClone", "origin")
++        git(prom, "remote", "add", "origin", "ssh://example.invalid/x.git")
++        marker = Path(ltmp, "MARKER")
++        ssh = Path(ltmp, "fakessh.sh")
++        ssh.write_text(f"#!/bin/sh\ntouch '{marker}'\nexit 0\n")
++        ssh.chmod(0o755)
++        git(prom, "config", "core.sshCommand", str(ssh))
++        missing = "1234567890abcdef1234567890abcdef12345678"
++        proc = subprocess.run(
++            ["git", "-C", str(prom), "cat-file", "--batch-check"],
++            input=missing + "\n", capture_output=True, text=True,
++            env=git_env())
++        check("lazyfetch-trap-armed", proc.returncode == 0
++              and proc.stdout.startswith(missing + " missing")
++              and marker.exists())
++        marker.unlink()
++        draft = Path(ltmp, "draft.md")
++        draft.write_text("## Work performed\n" + missing + "\n"
++                         "## Landed changes\nnone\n", encoding="utf-8")
++        lbase = argparse.Namespace(
++            lane_repo=str(prom), fleet_repo=str(prom), branch="master",
++            lane="kama", rounds="1", report=None, errata=None,
++            no_errata=True)
++        try:
++            rc, doc = run(_ns(lbase, report=[f"1={draft}"]))
++        except EvalError as exc:
++            # a git without the flag must be refused, never audited open
++            check("lazyfetch-no-fetch-verdict-intact",
++                  "no-lazy-fetch" in str(exc) and not marker.exists())
++        else:
++            kinds = sorted((d["kind"], d["token"])
++                           for d in doc["results"][0]["defects"])
++            check("lazyfetch-no-fetch-verdict-intact",
++                  rc == 1 and kinds == [("unresolved-full-hash", missing)]
++                  and not marker.exists())
++        real_git = shutil.which("git")
++        shim = Path(ltmp, "shim")
++        shim.mkdir()
++        fake = shim / "git"
++        fake.write_text(
++            "#!/bin/sh\n"
++            "if [ \"$1\" = \"--no-lazy-fetch\" ]; then\n"
++            "  echo \"error: unknown option no-lazy-fetch\" >&2\n"
++            "  exit 129\n"
++            "fi\n"
++            f"exec '{real_git}' \"$@\"\n")
++        fake.chmod(0o755)
++        saved_path = os.environ["PATH"]
++        os.environ["PATH"] = str(shim) + os.pathsep + saved_path
++        try:
++            refused = is_error(
++                lambda: run(_ns(lbase, report=[f"1={draft}"])))
++        finally:
++            os.environ["PATH"] = saved_path
++        check("lazyfetch-old-git-refused", refused)
+     failed = [n for n, ok in cases if not ok]
+     for name, ok in cases:
+         print(f"{'ok' if ok else 'FAIL'} {name}")

@@ -1,0 +1,111 @@
+diff --git 1/cur_audit_v2.py 2/proto_audit.py
+index 9755654..e48ce0f 100755
+--- 1/cur_audit_v2.py
++++ 2/proto_audit.py
+@@ -92,7 +92,8 @@ GIT_ISOLATION = ("--no-replace-objects", "--no-lazy-fetch",
+                  "-c", "i18n.logOutputEncoding=UTF-8",
+                  "-c", "log.follow=false", "-c", "log.showRoot=true",
+                  "-c", "log.showSignature=false", "-c", "log.mailmap=false",
+-                 "-c", "core.quotePath=true")
++                 "-c", "core.quotePath=true",
++                 "-c", "core.disambiguate=none")
+ 
+ 
+ def git_env(**extra):
+@@ -126,41 +127,66 @@ def git(repo, *args, stdin=None, env=None, errors="strict"):
+     return out.replace("\r\n", "\n").replace("\r", "\n")
+ 
+ 
+-def lookup(repos, tokens, peel=""):
+-    """{token: 'found'|'ambiguous'|'missing'} across repos, via
+-    `cat-file --batch-check` per repo; a git failure is EvalError. With a
+-    peel, git answers `missing` for an ambiguous short name, so the bare
+-    name is asked first to keep ambiguity visible."""
+-    tokens = sorted(set(tokens))
+-    status = {t: "missing" for t in tokens}
+-    if not tokens:
+-        return status
+-    if peel:
+-        bare = lookup(repos, tokens)
+-        status.update({t: "ambiguous" for t, s in bare.items()
+-                       if s == "ambiguous"})
+-    for repo in repos:
+-        out = git(repo, "cat-file", "--batch-check",
+-                  stdin="".join(f"{t}{peel}\n" for t in tokens))
+-        lines = out.split("\n")[:len(tokens)]
+-        if len(lines) != len(tokens):
+-            raise EvalError(f"cat-file --batch-check in {repo}: short output")
+-        for token, line in zip(tokens, lines):
+-            if line.endswith(" missing"):
+-                continue
+-            if line.endswith(" ambiguous"):
+-                if status[token] != "found":
+-                    status[token] = "ambiguous"
+-                continue
+-            if line.endswith(" excluded") or line.endswith(" dangling"):
+-                continue
++def object_is_genuine(repo, oid):
++    """cat-file trusts loose headers and never re-hashes bytes; a name
++    counts only when its bytes hash to it."""
++    import hashlib
++    proc = subprocess.run(["git", *GIT_ISOLATION, "-C", str(repo), "cat-file",
++                           "--batch"], input=f"{oid}\n".encode(),
++                          capture_output=True, env=git_env())
++    head, _, rest = proc.stdout.partition(b"\n")
++    fields = head.decode(errors="replace").split(" ")
++    if proc.returncode != 0 or len(fields) != 3:
++        return False
++    kind, size = fields[1], fields[2]
++    body = rest[:int(size)]
++    return hashlib.sha1(f"{kind} {size}\0".encode() + body).hexdigest() == oid
++
++
++def _probe(repo, tokens, peel):
++    """{token: 'found'|'ambiguous'|'missing'} for one repo and one peel."""
++    out = git(repo, "cat-file", "--batch-check",
++              stdin="".join(f"{t}{peel}\n" for t in tokens))
++    lines = out.split("\n")[:len(tokens)]
++    if len(lines) != len(tokens):
++        raise EvalError(f"cat-file --batch-check in {repo}: short output")
++    result = {}
++    for token, line in zip(tokens, lines):
++        if line.endswith((" missing", " excluded", " dangling")):
++            result[token] = "missing"
++        elif line.endswith(" ambiguous"):
++            result[token] = "ambiguous"
++        else:
+             parts = line.split(" ")
+             if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}", parts[0]):
+                 raise EvalError(f"cat-file in {repo}: unexpected {line!r}")
+             if not peel and not parts[0].startswith(token):
+-                # git resolved a same-named ref before the object prefix
+                 raise EvalError(f"{repo}: citation {token} names a ref")
+-            status[token] = "found"
++            if not object_is_genuine(repo, parts[0]):
++                raise EvalError(f"{repo}: object {parts[0]} does not hash "
++                                f"to its name")
++            result[token] = "found"
++    return result
++
++
++def lookup(repos, tokens, peel=""):
++    """{token: 'found'|'ambiguous'|'missing'}. Ambiguity is read from the bare
++    name in each repo and is sticky: neither a peel nor another repo can
++    erase it."""
++    tokens = sorted(set(tokens))
++    status = {t: "missing" for t in tokens}
++    if not tokens:
++        return status
++    ambiguous = set()
++    for repo in repos:
++        bare = _probe(repo, tokens, "")
++        ambiguous.update(t for t, s in bare.items() if s == "ambiguous")
++        seen = _probe(repo, tokens, peel) if peel else bare
++        for token, state in seen.items():
++            if state == "found":
++                status[token] = "found"
++    for token in ambiguous:
++        status[token] = "ambiguous"
+     return status
+ 
+ 

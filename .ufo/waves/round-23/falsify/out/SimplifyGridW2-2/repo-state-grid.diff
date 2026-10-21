@@ -1,0 +1,230 @@
+diff --git i/tests/report-audit/repo-state-grid.py w/tests/report-audit/repo-state-grid.py
+index c5dfeee..363d873 100755
+--- i/tests/report-audit/repo-state-grid.py
++++ w/tests/report-audit/repo-state-grid.py
+@@ -109,25 +109,43 @@ def publish(fleet, text, when=2000, path=REL):
+     commit(fleet, "fleet", when, "round-1: report", path, text)
+ 
+ 
+-def base(tmp):
+-    """Lane with one cited round-1 commit; fleet report citing it."""
+-    lane, fleet = pair(tmp)
+-    lc = commit(lane, "kama-shokunin", 1000, "round-1: work")
+-    publish(fleet, report([lc]))
+-    return lane, fleet, lc
+-
+-
+ def require(cond, what):
+     if not cond:
+         raise Premise(what)
+ 
+ 
++def git_out(repo, *args):
++    return subprocess.run(["git", "-C", str(repo), *args],
++                          capture_output=True, env=env()).stdout
++
++
++def cited(tmp, lane_fmt=None, fleet_extra=b"", nl=None):
++    """Lane with one cited round-1 commit; fleet report citing it."""
++    lane, fleet = pair(tmp, lane_fmt)
++    lc = commit(lane, "kama-shokunin", 1000, "round-1: work")
++    body = report([lc]) + fleet_extra
++    if nl is not None:
++        body = body.replace(b"\n", nl)
++    publish(fleet, body)
++    return lane, fleet, lc
++
++
++base = cited
++
++
++def errata_file(lane, content):
++    commit(lane, "fixture", 1600, "errata",
++           "registry/report-landing-errata.tsv", content)
++
++
++NOTES_FAKE = b"\n## Notes\n\nsee " + FAKE.encode() + b"\n"
++
++
+ # ------------------------------------------------------------------ cases
+ # Each builder returns (lane, fleet, argv_extra, marker_or_None).
+ 
+ def c_clean(tmp):
+-    lane, fleet, _ = base(tmp)
+-    return lane, fleet, [], None
++    return (*base(tmp)[:2], [], None)
+ 
+ 
+ def c_omission(tmp):
+@@ -137,10 +155,7 @@ def c_omission(tmp):
+ 
+ 
+ def c_fake_full(tmp):
+-    lane, fleet = pair(tmp)
+-    lc = commit(lane, "kama-shokunin", 1000, "round-1: work")
+-    publish(fleet, report([lc]) + b"\n## Notes\n\nsee " + FAKE.encode() + b"\n")
+-    return lane, fleet, [], None
++    return (*cited(tmp, fleet_extra=NOTES_FAKE)[:2], [], None)
+ 
+ 
+ def c_no_landed(tmp):
+@@ -162,32 +177,25 @@ def c_shared_clone(tmp):
+ def c_errata_ok(tmp):
+     lane, fleet, _ = base(tmp)
+     x = commit(lane, "kama-shokunin", 1500, "round-1: more")
+-    commit(lane, "fixture", 1600, "errata", "registry/report-landing-errata.tsv",
+-           f"1\tlanded-omitted\t{x}\t{x}\tev\n".encode())
++    errata_file(lane, f"1\tlanded-omitted\t{x}\t{x}\tev\n".encode())
+     return lane, fleet, ["errata"], None
+ 
+ 
+ def c_crlf(tmp):
+-    lane, fleet = pair(tmp)
+-    lc = commit(lane, "kama-shokunin", 1000, "round-1: work")
+-    publish(fleet, report([lc]).replace(b"\n", b"\r\n"))
+-    return lane, fleet, [], None
++    return (*cited(tmp, nl=b"\r\n")[:2], [], None)
++
+ 
+ def c_cr_only(tmp):
+     """Old-Mac line endings: text-mode reads translated lone CR."""
+-    lane, fleet = pair(tmp)
+-    lc = commit(lane, "kama-shokunin", 1000, "round-1: work")
+-    publish(fleet, report([lc]).replace(b"\n", b"\r"))
+-    return lane, fleet, [], None
++    return (*cited(tmp, nl=b"\r")[:2], [], None)
+ 
+ 
+ def f_utf16_cutoff(tmp):
+     """Fleet-local UTF-16 log output reaches the %at cutoff digits."""
+     lane, fleet, _ = base(tmp)
+     g(fleet, "config", "i18n.logOutputEncoding", "UTF-16")
+-    out = subprocess.run(["git", "-C", str(fleet), "log", "--format=%at"],
+-                         capture_output=True, env=env()).stdout
+-    require(b"\x00" in out, "UTF-16 log output not observed")
++    require(b"\x00" in git_out(fleet, "log", "--format=%at"),
++            "UTF-16 log output not observed")
+     return lane, fleet, [], None
+ 
+ 
+@@ -217,17 +225,13 @@ def f_log_encoding(tmp):
+     lane, fleet, _ = base(tmp)
+     commit(lane, "someone", 1100, "note caf\u00e9")
+     g(lane, "config", "i18n.logOutputEncoding", "ISO-8859-1")
+-    out = subprocess.run(["git", "-C", str(lane), "log", "-1", "--format=%s"],
+-                         capture_output=True, env=env()).stdout
+-    require(b"\xe9" in out, "log output not re-encoded to Latin-1")
++    require(b"\xe9" in git_out(lane, "log", "-1", "--format=%s"),
++            "log output not re-encoded to Latin-1")
+     return lane, fleet, [], None
+ 
+ 
+ def f_report_bytes(tmp):
+-    lane, fleet = pair(tmp)
+-    lc = commit(lane, "kama-shokunin", 1000, "round-1: work")
+-    publish(fleet, report([lc]) + b"\xff\xfe bad\n")
+-    return lane, fleet, [], None
++    return (*cited(tmp, fleet_extra=b"\xff\xfe bad\n")[:2], [], None)
+ 
+ 
+ def f_replace_omission(tmp):
+@@ -345,19 +349,24 @@ def _hidden_history(tmp):
+     return lane, fleet, lc
+ 
+ 
+-def f_shallow(tmp):
++def _hide_history(tmp, shallow):
+     lane, fleet, lc = _hidden_history(tmp)
+-    Path(lane, ".git/shallow").write_text(lc + "\n")
+-    require(g(lane, "rev-list", "--count", "HEAD") == "1", "shallow ineffective")
++    if shallow:
++        Path(lane, ".git/shallow").write_text(lc + "\n")
++    else:
++        Path(lane, ".git/info").mkdir(exist_ok=True)
++        Path(lane, ".git/info/grafts").write_text(lc + "\n")
++    require(g(lane, "rev-list", "--count", "HEAD") == "1",
++            "shallow ineffective" if shallow else "grafts ineffective")
+     return lane, fleet, [], None
+ 
+ 
++def f_shallow(tmp):
++    return _hide_history(tmp, True)
++
++
+ def f_grafts(tmp):
+-    lane, fleet, lc = _hidden_history(tmp)
+-    Path(lane, ".git/info").mkdir(exist_ok=True)
+-    Path(lane, ".git/info/grafts").write_text(lc + "\n")
+-    require(g(lane, "rev-list", "--count", "HEAD") == "1", "grafts ineffective")
+-    return lane, fleet, [], None
++    return _hide_history(tmp, False)
+ 
+ 
+ def f_tag_shadow(tmp):
+@@ -388,26 +397,20 @@ def f_mailmap_fifo(tmp):
+ 
+ 
+ def f_sha256_lane(tmp):
+-    lane, fleet = pair(tmp, lane_fmt="sha256")
+-    lc = commit(lane, "kama-shokunin", 1000, "round-1: work")
++    lane, fleet, lc = cited(tmp, lane_fmt="sha256")
+     require(len(lc) == 64, "lane is not sha256")
+-    publish(fleet, report([lc]))
+     return lane, fleet, [], None
+ 
+ 
+ def f_errata_bytes(tmp):
+     lane, fleet, _ = base(tmp)
+-    commit(lane, "fixture", 1600, "errata", "registry/report-landing-errata.tsv",
+-           b"# \xff bad\n")
++    errata_file(lane, b"# \xff bad\n")
+     return lane, fleet, ["errata"], None
+ 
+ 
+ def f_errata_revision(tmp):
+-    lane, fleet = pair(tmp)
+-    lc = commit(lane, "kama-shokunin", 1000, "round-1: work")
+-    publish(fleet, report([lc]) + b"\n## Notes\n\nsee " + FAKE.encode() + b"\n")
+-    commit(lane, "fixture", 1600, "errata", "registry/report-landing-errata.tsv",
+-           f"1\tunresolved-full-hash\t{FAKE}\tHEAD\tev\n".encode())
++    lane, fleet, _ = cited(tmp, fleet_extra=NOTES_FAKE)
++    errata_file(lane, f"1\tunresolved-full-hash\t{FAKE}\tHEAD\tev\n".encode())
+     return lane, fleet, ["errata"], None
+ 
+ 
+@@ -423,7 +426,6 @@ def _bad_subject(tmp, round_subject):
+ def f_bad_subject(tmp):
+     return _bad_subject(tmp, False)
+ 
+-
+ def f_bad_round_subject(tmp):
+     return _bad_subject(tmp, True)
+ 
+@@ -439,16 +441,13 @@ def f_quote_path(tmp):
+     g(fleet, "commit", "-q", "-m", "odd", GIT_AUTHOR_DATE="@2100 +0000",
+       GIT_COMMITTER_DATE="@2100 +0000")
+     g(fleet, "config", "core.quotePath", "false")
+-    raw = subprocess.run(["git", "-C", str(fleet), "ls-tree", "-r",
+-                          "--name-only", "HEAD"], capture_output=True,
+-                         env=env()).stdout
+-    require(b"caf\xe9.md" in raw, "ls-tree did not emit raw path bytes")
++    require(b"caf\xe9.md" in git_out(fleet, "ls-tree", "-r", "--name-only", "HEAD"),
++            "ls-tree did not emit raw path bytes")
+     return lane, fleet, ["open-range"], None
+ 
+ def f_huge_round(tmp):
+     """A 5000-digit round number exceeds Python's int-conversion limit."""
+-    lane, fleet, _ = base(tmp)
+-    return lane, fleet, ["rounds=" + "9" * 5000], None
++    return (*base(tmp)[:2], ["rounds=" + "9" * 5000], None)
+ 
+ 
+ def f_subject_injection(tmp):
+@@ -477,7 +476,6 @@ def f_huge_timestamp(tmp):
+     return lane, fleet, [], None
+ 
+ 
+-
+ def o_alternates(tmp):
+     lane, fleet = pair(tmp)
+     lc = commit(lane, "kama-shokunin", 1000, "round-1: work")

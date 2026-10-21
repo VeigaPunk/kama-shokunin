@@ -1,0 +1,90 @@
+OldGitFloor findings - kama round-23 build wave
+Scope: fail-closed behaviour of global --no-lazy-fetch and --no-replace-objects on git older than 2.44.
+Frozen base for comparison: master 4fe9339f. Its tools/report-landing-audit.py has no GIT_ISOLATION and
+contains neither flag (git cat-file -p 4fe9339f:tools/report-landing-audit.py | grep: no match).
+
+== 1. Results ==
+R1. --no-lazy-fetch does NOT exist before git 2.45.0. The floor is 2.45.0, not 2.44.
+    git 2.24.1, 2.43.2 and 2.44.0 refuse it at global position: exit 129, stderr
+    "unknown option: --no-lazy-fetch" + usage, empty stdout, and the repo-configured
+    promisor command is NOT executed (marker absent). git 2.45.0 and 2.56.0 accept it.
+R2. Fail-closed: yes, by refusal. Nothing is evaluated and nothing executes.
+R3. --no-replace-objects is accepted and honored on every tested binary, 2.24.1 through 2.56.0.
+    It is not a floor-raiser. Documented since git.txt v1.7.0 (absent at v1.6.5).
+R4. The env form GIT_NO_LAZY_FETCH=1 is NOT fail-closed below 2.45: it is silently ignored on
+    2.43.2 and 2.44.0 (repo command runs; exit 0 "missing") and on 2.24.1 (repo command runs; exit 128).
+    It is honored on 2.45.0 and 2.56.0 only. Never use it as a fallback for older git.
+R5. Consumer (lane working copy tools/report-landing-audit.py, sha256 79d9e124e8171b47dc69f5af657bcf938fcb77a4915f7758d50eccd6c72f226c):
+    on git 2.43.2 the first git call (rev-parse --show-object-format) fails rc=129, the tool
+    exits 2 with "could-not-evaluate: git rev-parse --show-object-format in .../lane: rc=129
+    unknown option: --no-lazy-fetch", stdout 0 bytes. The same run under host git 2.56.0
+    passes that call and fails later only because the trivial fixture has no report file.
+    The difference is caused by the flag. GIT_ISOLATION (lines 91-95) is passed to every
+    git() call (line 113), so on git <2.45.0 any run that reaches git() is refused as a typed EvalError at its first call.
+
+== 2. Binaries (official channels; no pacman; no installs) ==
+host-2.56.0  /usr/bin/git (pre-existing; untouched)                          git version 2.56.0
+v2.45.0      archive.archlinux.org git-2.45.0-1-x86_64.pkg.tar.zst           sha256 122f310b029d4c0057dab7f1138174826d72a4f2d15d19e86d22740a53728b96
+v2.44.0      archive.archlinux.org git-2.44.0-1-x86_64.pkg.tar.zst           sha256 8217cf3d618da85b8671f0849d349a5d5b1f0e9bc6cbead279391dfa41771ecd
+v2.43.2      archive.archlinux.org git-2.43.2-1-x86_64.pkg.tar.zst           sha256 eacd6675e5c90e3e403465efbf57c75b2ea0d4e6f151e2e9f61b385a91bdf802
+v2.24.1      archive.archlinux.org git-2.24.1-4-x86_64.pkg.tar.zst (oldest in the archive) sha256 eee2c2dc6894e69e2b4f350669f5590253507af837ed916135debc62b807e507
+Extracted with bsdtar into /tmp/kama-r23-ogf/v<ver>/ (no install). Each runs `--version` correctly and
+ldd shows no missing shared libs. .sig files were fetched for 2.43.2, 2.44.0 and 2.45.0. gpg against the
+host archlinux.gpg keyring reports "Can't check signature: No public key", so signatures are NOT verified.
+No key was imported. Source build from kernel.org was not performed (the prebuilt official packages ran).
+
+== 3. Probe matrix (probe-floor.sh; full output in probe-output.txt; stderr per case in cases/) ==
+Columns: 2.24.1 | 2.43.2 | 2.44.0 | 2.45.0 | 2.56.0 (host)
+L0 control, no flag     : 128 fatal, marker YES | 0 "missing", YES | 0 "missing", YES | 0 "missing", YES | 0 "missing", YES
+L1 git --no-lazy-fetch cat-file --batch-check
+                        : 129 unknown option, marker no | 129 unknown option, no | 129 unknown option, no | 0 "missing", no | 0 "missing", no
+L2 git cat-file --batch-check --no-lazy-fetch (sub-position)
+                        : 129 "error: unknown option `no-lazy-fetch'" on ALL versions incl. 2.45.0 and 2.56.0 (flag is global-only)
+L3 env GIT_NO_LAZY_FETCH=1
+                        : 128, marker YES (ignored) | 0 "missing", YES (ignored) | 0 "missing", YES (ignored) | 0 "missing", no (honored) | 0 "missing", no (honored)
+R0 control (replacement active): commit size 133 on ALL versions (replacement "replacement-replacement-longer")
+R1 git --no-replace-objects     : commit size 107 on ALL versions (original "orig"; verified with cat-file -p on 2.43.2 and 2.24.1)
+R2 env GIT_NO_REPLACE_OBJECTS=1 : 107 on ALL versions
+R3 -c core.useReplaceRefs=false : 107 on ALL versions
+Note: a promisor fetch failure with no flag is "missing" at exit 0 on 2.43.2 through 2.56.0 and exit 128 on 2.24.1.
+Acceptance-only check (not honoring): the remaining GIT_ISOLATION tokens (--no-replace-objects,
+-c i18n.logOutputEncoding=UTF-8, -c log.follow=false, -c log.showRoot=true, -c log.showSignature=false,
+-c log.mailmap=false, -c core.quotePath=true) return rc 0 on 2.24.1, 2.43.2, 2.44.0 and 2.45.0 when
+--no-lazy-fetch is omitted. Git silently ignores unknown config keys, so this does not prove they are honored.
+
+== 4. Provenance (provenance.txt; fetched raw.githubusercontent.com/git/git/<tag>/...) ==
+- Documentation/git.txt: --no-replace-objects absent at v1.6.4 and v1.6.5; present at v1.7.0 line 260
+  ("Do not use replacement refs to replace git objects"), v2.43.0, v2.44.0, v2.45.0.
+- Documentation/git.txt: --no-lazy-fetch absent at v2.43.0 and v2.44.0 (0 matches); present at v2.45.0
+  lines 182-187 ("This is equivalent to setting the GIT_NO_LAZY_FETCH environment variable to 1");
+  present at v2.46.0 line 183.
+- Documentation/RelNotes/2.45.0.txt line 120: "git --no-lazy-fetch cmd" allows to run "cmd" while
+  disabling lazy fetching ... It sits under the "Performance, Internal Implementation, Development
+  Support etc." heading (line 105); "Fixes since v2.44" is at line 214. RelNotes/2.44.0.txt has no
+  "lazy" match (13719 bytes fetched).
+- RelNotes/1.6.5.txt and RelNotes/1.7.0.txt returned HTTP 404; the git.txt tag content was cited instead.
+
+== 5. Not verified / limits ==
+- 2.43.0 and 2.43.1 were not run individually (2.43.2 only). The oldest binary available from the
+  Arch archive is 2.24.1; no older runtime was tested. The --no-replace-objects floor below 2.24.1
+  rests on git.txt v1.7.0 documentation only. No source build was run.
+- Signatures unverified (missing packager key; no keyserver fetch was performed).
+- The consumer test used trivial /tmp fixtures and the lane working copy as of this run; the candidate
+  is still in flux, so the tool's sha256 is recorded above. The full fault grid was not run.
+- The 2.44.0 consumer path was tested only at the argv level (identical refusal message), not end-to-end.
+- No fault fixture was run against real lane or fleet repos.
+
+== 6. Installs / updates ==
+None. Only downloads of official Arch Linux Archive package files and .sig files into /tmp/kama-r23-ogf/pkg
+(curl, https), extraction with bsdtar into /tmp/kama-r23-ogf/v<ver>, and gpg verify with a temp homedir
+/tmp/kama-r23-ogf/gnupg. No pacman. Nothing written to ~/.local/bin, the system, or the lane's .git/.jj.
+
+== 7. Files written by this seat ==
+.ufo/waves/round-23/build/out/OldGitFloor/findings            (this file)
+.ufo/waves/round-23/build/out/OldGitFloor/probe-floor.sh      (probe script; usage in header)
+.ufo/waves/round-23/build/out/OldGitFloor/probe-output.txt    (matrix output of the run)
+.ufo/waves/round-23/build/out/OldGitFloor/cases/*.stderr      (40 per-case stderr captures)
+.ufo/waves/round-23/build/out/OldGitFloor/provenance.txt      (git.txt / RelNotes excerpts)
+.ufo/waves/round-23/build/out/OldGitFloor/e2e/               (audit-tool e2e stderr/stdout)
+.ufo/waves/round-23/build/advice/OldGitFloor.md              (report)
+Scratch only (not deliverables): /tmp/kama-r23-ogf/ (probe repos under /tmp/kama-r23-ogf/probe, e2e under /tmp/kama-r23-ogf/e2e).

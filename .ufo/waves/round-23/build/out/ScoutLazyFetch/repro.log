@@ -1,0 +1,35 @@
+A=0279ea14b76873b218b459b33b50af95c647ae63 C=2d8e07d2eb1d3e90b528113b61c22ac788efdc05 E=8576b8ecc4f4e30208f063ac5897e08780c16767 BLOB=5626abf0f72e58d7a153368ba57db4c673c0e171 reportblob=4258773e40ce32d3417005b1b566245a06ad2e07
+cp-file config-only promisor on a FULL repo:
+fabricated: 0123456789abcdef0123456789abcdef01234567 missing
+  marker=1
+--- audit matrix ---
+S1 base clean draft                rc=0 marker=0
+0 | summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean 
+S1 fix  clean draft                rc=0 marker=0
+0 | summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean 
+S2 base evil committed             rc=1 marker=0
+0 |   UNCORRECTED unresolved-full-hash 8576b8ecc4f4e30208f063ac5897e08780c16767 summary reports=1 defects=1 corrected=0 unco
+S2 fix  evil committed             rc=1 marker=0
+0 |   UNCORRECTED unresolved-full-hash 8576b8ecc4f4e30208f063ac5897e08780c16767 summary reports=1 defects=1 corrected=0 unco
+S3 base promisor->evil             rc=0 marker=1  | summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean 
+S3 fix  promisor->evil             rc=1 marker=0
+0 |   UNCORRECTED unresolved-full-hash 8576b8ecc4f4e30208f063ac5897e08780c16767 summary reports=1 defects=1 corrected=0 unco
+S4 base partial fleet              rc=0 marker=0
+0 | summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean 
+   fleet-p in-pack [in-pack: 5] -> [in-pack: 6]
+S4 fix  partial fleet              rc=2 marker=0
+0 | could-not-evaluate: round 1: .ufo/reports/round-1/kama.md not committed in fleet HEAD 
+S5 base marker-fail                rc=2 marker=1  | could-not-evaluate: round 1: .ufo/reports/round-1/kama.md not committed in fleet HEAD 
+S5 fix  marker-fail                rc=2 marker=0
+0 | could-not-evaluate: round 1: .ufo/reports/round-1/kama.md not committed in fleet HEAD 
+S6 base clean+promisor             rc=0 marker=8  | summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean 
+S6 fix  clean+promisor             rc=0 marker=0
+0 | summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean 
+S7 base blob cited                 rc=0 marker=0
+0 | summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean 
+S7 fix  blob cited                 rc=1 marker=0
+0 |   UNCORRECTED unresolved-full-hash 5626abf0f72e58d7a153368ba57db4c673c0e171 summary reports=1 defects=1 corrected=0 unco
+S8 base blob gone                  rc=2 marker=0
+0 | could-not-evaluate: git cat-file --batch-check in /tmp/kama-r23-lf/repro/lane-b3: rc=128 fatal: '/tmp/kama-r23-lf/repro/
+S8 fix  blob gone                  rc=1 marker=0
+0 |   UNCORRECTED unresolved-full-hash 5626abf0f72e58d7a153368ba57db4c673c0e171 summary reports=1 defects=1 corrected=0 unco

@@ -1,0 +1,224 @@
+[
+ {
+  "name": "c1-grid-frozen",
+  "argv": [
+   "{python}",
+   "{lane}/tests/report-audit/repo-state-grid.py",
+   "--arm",
+   "frozen",
+   "--json"
+  ],
+  "exit": 1,
+  "timeout": 600
+ },
+ {
+  "name": "c1-grid-current",
+  "argv": [
+   "{python}",
+   "{lane}/tests/report-audit/repo-state-grid.py",
+   "--arm",
+   "current",
+   "--json"
+  ],
+  "exit": 0,
+  "timeout": 600
+ },
+ {
+  "name": "c1-grid-both",
+  "argv": [
+   "{python}",
+   "{lane}/tests/report-audit/repo-state-grid.py",
+   "--arm",
+   "both",
+   "--json"
+  ],
+  "exit": 1,
+  "timeout": 900
+ },
+ {
+  "name": "c1-isolation-mutants",
+  "argv": [
+   "{python}",
+   "{lane}/tests/report-audit/isolation-mutants.py",
+   "--json"
+  ],
+  "exit": 0,
+  "timeout": 1800
+ },
+ {
+  "name": "audit-selftest",
+  "argv": [
+   "{python}",
+   "{lane}/tools/report-landing-audit.py",
+   "--selftest"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "audit-historical-ledger",
+  "argv": [
+   "{python}",
+   "{lane}/tools/report-landing-audit.py",
+   "--rounds",
+   "10-22",
+   "--fleet-repo",
+   "/home/vgpnk/Projects/shokunin",
+   "--json"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "audit-historical-raw",
+  "argv": [
+   "{python}",
+   "{lane}/tools/report-landing-audit.py",
+   "--rounds",
+   "10-22",
+   "--fleet-repo",
+   "/home/vgpnk/Projects/shokunin",
+   "--no-errata",
+   "--json"
+  ],
+  "exit": 1,
+  "timeout": 180
+ },
+ {
+  "name": "source-witness-selftest",
+  "argv": [
+   "{python}",
+   "{lane}/.ufo/waves/round-22/report-source-fix/ReportSourceFix/out/red-green-witness.py",
+   "--selftest"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "source-witness",
+  "argv": [
+   "{python}",
+   "{lane}/.ufo/waves/round-22/report-source-fix/ReportSourceFix/out/red-green-witness.py"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "citation-noharm",
+  "argv": [
+   "{python}",
+   "{lane}/tools/citation-provenance.py",
+   "--json"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "io-current-noharm",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/install-io-grid.py",
+   "--arm",
+   "current",
+   "--json"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "sources-validate",
+  "argv": [
+   "/home/vgpnk/Projects/shokunin/scripts/sources-census.sh",
+   "validate",
+   "--root",
+   "/home/vgpnk/Projects/shokunin",
+   "kama"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "sources-census",
+  "argv": [
+   "/home/vgpnk/Projects/shokunin/scripts/sources-census.sh",
+   "census",
+   "--root",
+   "/home/vgpnk/Projects/shokunin",
+   "kama"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "sources-append-only",
+  "argv": [
+   "{python}",
+   "{lane}/tools/sources-append-only.py",
+   "--from",
+   "4fe9339f8fc3a4a4a479d9c938a850da12f1124d",
+   "--to",
+   "{revision}",
+   "--repo",
+   "{lane}"
+  ],
+  "exit": 0,
+  "timeout": 180
+ },
+ {
+  "name": "nh-history-parity",
+  "argv": [
+   "{python}",
+   "-c",
+   "import subprocess,sys\nlane,fleet,cand=sys.argv[1:4]\nfz=subprocess.check_output(['git','-C',lane,'cat-file','blob','4fe9339f8fc3a4a4a479d9c938a850da12f1124d:tools/report-landing-audit.py'])\nbad=0\nfor r in ('10-21','10-22'):\n for m in ([],['--no-errata']):\n  a=['--lane-repo',lane,'--fleet-repo',fleet,'--rounds',r,'--json',*m]\n  c=subprocess.run([sys.executable,cand,*a],capture_output=True)\n  f=subprocess.run([sys.executable,'-',*a],input=fz,capture_output=True)\n  ok=(c.returncode,c.stdout,c.stderr)==(f.returncode,f.stdout,f.stderr)\n  bad|=not ok\n  print(r,*m,'current',c.returncode,'frozen',f.returncode,'same' if ok else 'DIFF')\nsys.exit(1 if bad else 0)",
+   "{lane}",
+   "/home/vgpnk/Projects/shokunin",
+   "{lane}/tools/report-landing-audit.py"
+  ],
+  "exit": 0,
+  "timeout": 300
+ },
+ {
+  "name": "nh-r22-io-selftest",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/install-io-grid.py",
+   "--selftest"
+  ],
+  "exit": 0,
+  "timeout": 120
+ },
+ {
+  "name": "nh-r22-io-frozen",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/install-io-grid.py",
+   "--arm",
+   "frozen",
+   "--json"
+  ],
+  "exit": 1,
+  "timeout": 120
+ },
+ {
+  "name": "nh-r22-io-both",
+  "argv": [
+   "{python}",
+   "{lane}/tests/llamacpp-live/install-io-grid.py",
+   "--arm",
+   "both",
+   "--json"
+  ],
+  "exit": 1,
+  "timeout": 120
+ },
+ {
+  "name": "nh-citation-selftest",
+  "argv": [
+   "{python}",
+   "{lane}/tools/citation-provenance.py",
+   "--selftest"
+  ],
+  "exit": 0,
+  "timeout": 180
+ }
+]

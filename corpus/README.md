@@ -313,3 +313,23 @@ surface. Frontier unchanged: external-system-library identity, receipt-header
 minimization, historical crash-as-kill leaves, K05/other-engine serving, and
 real registered-consumer reconciliation remain open. No new endpoint sample
 or service restoration is asserted.
+
+## Frontier disposition — round 23
+
+Advanced (partially): **D4** report-audit repository trust. The auditor's
+handling of repository-local git state is now a graded, mutant-checked grid
+(26 fault, 4 contract and 13 control rows; frozen meets 0/26 faults, current
+26/26; `lessons/round-23.md`), and `knowledge/error-is-not-a-verdict.md`
+§Round-23 records the exit-class lesson. The 26 are not 26 independent
+isolation wins: the falsify wave showed several rows pin current's own
+refusal wording, and three were reclassified as contract changes. This is
+not untrusted-repository safety: alternates and gitfile redirects
+(O01/O02), the `--shared`-of-partial bypass, prefix-ambiguity overwrite,
+duplicate Landed sections, errata CR splitting, an `--errata` FIFO, memory
+ceilings, and the unisolated sibling tools `citation-provenance.py` and
+`sources-append-only.py` stay open. Declared trade: a complete blobless
+partial clone or paired promisor pack is refused where frozen gave a
+verdict. Other frontier unchanged: external-system-library identity,
+receipt-header minimization, historical crash-as-kill leaves,
+K05/other-engine serving and real registered-consumer reconciliation. No
+endpoint sample or service restoration is asserted.

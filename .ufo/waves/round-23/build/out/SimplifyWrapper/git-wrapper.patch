@@ -1,0 +1,50 @@
+diff --git i/tools/report-landing-audit.py w/tools/report-landing-audit.py
+index fcc255c..adba7a6 100755
+--- i/tools/report-landing-audit.py
++++ w/tools/report-landing-audit.py
+@@ -76,25 +76,40 @@ class EvalError(Exception):
+     """Could not evaluate: never converted into a verdict."""
+ 
+ 
++_GIT_PREFIX = (
++    "--no-replace-objects", "--no-lazy-fetch",
++    "-c", "i18n.logOutputEncoding=UTF-8",
++    "-c", "log.follow=false",
++)
++
++
+ def git_env(**extra):
+     """No inherited GIT_* variables and no user/system config, so neither
+     the audited repos nor the selftest fixtures can be redirected."""
+     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+-    env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1", **extra)
++    env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1",
++               GIT_NO_REPLACE_OBJECTS="1", GIT_NO_LAZY_FETCH="1", **extra)
+     return env
+ 
+ 
+ def git(repo, *args, stdin=None, env=None):
++    if stdin is not None and isinstance(stdin, str):
++        stdin = stdin.encode("utf-8")
+     try:
+-        proc = subprocess.run(["git", "-C", str(repo), *args], input=stdin,
+-                              capture_output=True, text=True,
++        proc = subprocess.run(["git", *_GIT_PREFIX, "-C", str(repo), *args],
++                              input=stdin, capture_output=True,
+                               env=env or git_env())
+     except OSError as exc:
+         raise EvalError(f"cannot run git: {exc}") from exc
+     if proc.returncode != 0:
++        err = proc.stderr.decode("utf-8", errors="replace").strip()
+         raise EvalError(f"git {' '.join(args)} in {repo}: rc={proc.returncode} "
+-                        f"{proc.stderr.strip()}")
+-    return proc.stdout
++                        f"{err}")
++    try:
++        return proc.stdout.decode("utf-8")
++    except UnicodeDecodeError as exc:
++        raise EvalError(f"git {' '.join(args)} in {repo}: output not UTF-8"
++                        ) from exc
+ 
+ 
+ def lookup(repos, tokens, peel=""):

@@ -772,3 +772,43 @@ the worktree. D4 local-Git-config/history and UTF-8 hardening remains frontier.
 
 The existing first canonical Landed-section interpretation is unchanged;
 competing duplicate sections are not made semantically valid by this fix.
+
+## Round23 repository-state isolation of the report auditor (owner: kama)
+
+Appended; the R21/R22 trusted-repository restriction above still holds
+(KQ32, narrowed by KQ34 to graded rows). Every git call of
+`tools/report-landing-audit.py` now runs as
+`git --no-replace-objects --no-lazy-fetch -c i18n.logOutputEncoding=UTF-8
+-c log.follow=false -c log.showRoot=true -c log.showSignature=false
+-c log.mailmap=false -C <repo> …` and decodes stdout strictly as UTF-8
+(surrogateescape only for the lane log records and the fleet report
+listing, which are matched on ASCII and never emitted). Lane log records are
+NUL-delimited. A plain `--branch` name means `refs/heads/<name>`, pinned once.
+
+Refused with exit 2 (could-not-evaluate, reason on stderr): non-UTF-8 git
+output; a git call that runs longer than 20 s (a FIFO config/include/ref
+blocks git); shallow repositories, an info/grafts file holding any line git
+would apply (blank and `#` lines are ignored, S101), a partial clone
+(`extensions.partialclone`, a `remote.*.promisor` that is true, or a
+`.promisor` marker paired with its `.pack`), non-sha1 or non-top-level
+repositories, for the lane and the fleet; a Landed citation that names a
+ref; an unparseable log record; any unanticipated exception. A
+`remote.*.partialclonefilter`-only remote is not refused: `--no-lazy-fetch`
+keeps its missing objects missing (F27). Requires git ≥ 2.45 (older git
+rejects `--no-lazy-fetch` → exit 2 on every run).
+
+| Name | Kind / entry command | Verdict map | Self-test | Pinned values | Write scope | Owner |
+|---|---|---|---|---|---|---|
+| Repository-state fault grid | gate: `python3 tests/report-audit/repo-state-grid.py --arm frozen\|current\|both [--json]` | 0 every graded (fault, contract, control) row met; 1 a row not met (`--arm frozen` and `both` are 1 by design); 2 fixture premise failed or harness error | premise per builder; exit-2 rows pin the refusal reason; 13 controls | frozen auditor `4fe9339f:tools/report-landing-audit.py`; population SHA over case table and reasons; 30 s per-case timeout that kills the auditor's whole session | temporary fixture repos only | kama |
+| Isolation mutants | gate: `python3 tests/report-audit/isolation-mutants.py [--json]` | 0 pristine passed and every mutant ran (kills on grid exit 1 and survivors listed); 2 pristine failed, a pattern did not match once, or the grid could not evaluate a mutant | pristine run is the positive control | 31 single-literal mutants of the auditor | temporary copies only | kama |
+
+Open, not claimed (both arms identical unless noted): objects borrowed
+through `objects/info/alternates` or a `.git` gitfile redirect resolve as
+local, and a `--shared` clone of a partial clone bypasses the promisor
+refusal; peel/cross-repo prefix ambiguity can be overwritten by a later
+`found`; only the first `## Landed changes` section is read; a CR inside an
+errata line splits it; `--errata` naming a FIFO blocks; no memory ceiling on
+git output or the SOURCES URL alternation. Declared trades (frozen 0 →
+current 2 on complete repositories): a blobless partial clone (T01) and a
+paired promisor pack without promisor config (F23). Never point the auditor
+at an untrusted repository.

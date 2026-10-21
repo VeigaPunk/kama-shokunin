@@ -1,0 +1,154 @@
+## refs/replace names a fabricated 40-hex oid -> existing blob
+   probe=e4f1c2a9b7d30816f5e2a4b9c0d1e2f3a4b5c6d7 peel=-
+   base: {'e4f1c2a9b7d30816f5e2a4b9c0d1e2f3a4b5c6d7': 'found'}
+   cur : {'e4f1c2a9b7d30816f5e2a4b9c0d1e2f3a4b5c6d7': 'missing'}
+   note: 
+## control: real blob with the same replace ref present
+   probe=ce013625030ba8dba906f756967f9e9ca394464a peel=-
+   base: {'ce013625030ba8dba906f756967f9e9ca394464a': 'found'}
+   cur : {'ce013625030ba8dba906f756967f9e9ca394464a': 'found'}
+   note: 
+## refs/replace: real commit replaced by a blob
+   probe=9f6024bd819173fe6e779d6ee47d0817549cb349 peel=^{commit}
+   base: {'9f6024bd819173fe6e779d6ee47d0817549cb349': 'missing'}
+   cur : {'9f6024bd819173fe6e779d6ee47d0817549cb349': 'found'}
+   note: 
+## refs/replace: real commit replaced by a blob
+   probe=9f6024bd819173fe6e779d6ee47d0817549cb349 peel=-
+   base: {'9f6024bd819173fe6e779d6ee47d0817549cb349': 'found'}
+   cur : {'9f6024bd819173fe6e779d6ee47d0817549cb349': 'found'}
+   note: 
+## promisor remote, object absent locally, core.sshCommand planted
+   probe=c00ec7f68cf1b4429cea15395857b27de9b2b8bf peel=-
+   base: {'c00ec7f68cf1b4429cea15395857b27de9b2b8bf': 'missing'} | sshCommand ran=True
+   cur : {'c00ec7f68cf1b4429cea15395857b27de9b2b8bf': 'missing'} | sshCommand ran=False
+   note: 
+## promisor remote serves the object (file://), absent locally
+   probe=4b5b58ad15de018309aa4f9380ace4931f3c3db8 peel=-
+   base: {'4b5b58ad15de018309aa4f9380ace4931f3c3db8': 'found'}
+   cur : {'4b5b58ad15de018309aa4f9380ace4931f3c3db8': 'missing'}
+   note: 
+## cur run-level gate on the same promisor config
+   probe=- peel=-
+   base: no gate in base
+   cur : EvalError: /tmp/kama-r23/RevLookup/fx/promisor_avail_check: partial clone (extensions.partialclone)
+   note: 
+## branch named as a fabricated 7-hex citation
+   probe=a1b2c3d peel=-
+   base: {'a1b2c3d': 'found'}
+   cur : EvalError: /tmp/kama-r23/RevLookup/fx/ref_shadow: citation a1b2c3d names a ref
+   note: 
+## branch named as a fabricated 7-hex citation
+   probe=a1b2c3d peel=^{commit}
+   base: {'a1b2c3d': 'found'}
+   cur : EvalError: /tmp/kama-r23/RevLookup/fx/ref_shadow: citation a1b2c3d names a ref
+   note: 
+## tag named as a fabricated 7-hex citation
+   probe=b2c3d4e peel=^{commit}
+   base: {'b2c3d4e': 'found'}
+   cur : EvalError: /tmp/kama-r23/RevLookup/fx/ref_shadow: citation b2c3d4e names a ref
+   note: 
+## control: real 7-hex prefix of the same commit
+   probe=1eb355c peel=^{commit}
+   base: {'1eb355c': 'found'}
+   cur : {'1eb355c': 'found'}
+   note: 
+## control: branch named as a fabricated 40-hex
+   probe=e4f1c2a9b7d30816f5e2a4b9c0d1e2f3a4b5c6d7 peel=-
+   base: {'e4f1c2a9b7d30816f5e2a4b9c0d1e2f3a4b5c6d7': 'missing'}
+   cur : {'e4f1c2a9b7d30816f5e2a4b9c0d1e2f3a4b5c6d7': 'missing'}
+   note: 
+## control: branch named as a fabricated 40-hex
+   probe=e4f1c2a9b7d30816f5e2a4b9c0d1e2f3a4b5c6d7 peel=^{commit}
+   base: {'e4f1c2a9b7d30816f5e2a4b9c0d1e2f3a4b5c6d7': 'missing'}
+   cur : {'e4f1c2a9b7d30816f5e2a4b9c0d1e2f3a4b5c6d7': 'missing'}
+   note: 
+## loose object at a fabricated name whose bytes do not hash to it (git cat-file -t: blob)
+   probe=e4f1c2a9b7d30816f5e2a4b9c0d1e2f3a4b5c6d7 peel=-
+   base: {'e4f1c2a9b7d30816f5e2a4b9c0d1e2f3a4b5c6d7': 'found'}
+   cur : EvalError: /tmp/kama-r23/RevLookup/fx/planted_object: object e4f1c2a9b7d30816f5e2a4b9c0d1e2f3a4b5c6d7 does not hash to its name
+   note: 
+## same planted loose object, peel
+   probe=e4f1c2a9b7d30816f5e2a4b9c0d1e2f3a4b5c6d7 peel=^{commit}
+   base: {'e4f1c2a9b7d30816f5e2a4b9c0d1e2f3a4b5c6d7': 'missing'}
+   cur : EvalError: /tmp/kama-r23/RevLookup/fx/planted_object: object e4f1c2a9b7d30816f5e2a4b9c0d1e2f3a4b5c6d7 does not hash to its name
+   note: 
+## annotated tag OBJECT 7-hex prefix (its target is a commit)
+   probe=3fa9e67 peel=-
+   base: {'3fa9e67': 'found'}
+   cur : {'3fa9e67': 'found'}
+   note: 
+## annotated tag OBJECT 7-hex prefix (its target is a commit)
+   probe=3fa9e67 peel=^{commit}
+   base: {'3fa9e67': 'found'}
+   cur : {'3fa9e67': 'found'}
+   note: 
+## objects/info/alternates: object only in the alternate
+   probe=48784600a877a3f01777f6466501af6d0023bfb6 peel=-
+   base: {'48784600a877a3f01777f6466501af6d0023bfb6': 'found'}
+   cur : {'48784600a877a3f01777f6466501af6d0023bfb6': 'found'}
+   note: 
+## commit + blob share a 7-hex prefix (same repo)
+   probe=68c726c peel=-
+   base: {'68c726c': 'ambiguous'}
+   cur : {'68c726c': 'ambiguous'}
+   note: 
+## commit + blob share a 7-hex prefix (same repo)
+   probe=68c726c peel=^{commit}
+   base: {'68c726c': 'found'}
+   cur : {'68c726c': 'ambiguous'}
+   note: 
+## two commits share a 7-hex prefix (same repo)
+   probe=8877aee peel=-
+   base: {'8877aee': 'ambiguous'}
+   cur : {'8877aee': 'ambiguous'}
+   note: 
+## two commits share a 7-hex prefix (same repo)
+   probe=8877aee peel=^{commit}
+   base: {'8877aee': 'ambiguous'}
+   cur : {'8877aee': 'ambiguous'}
+   note: 
+## cross-repo: lane holds both commits, fleet holds only the first
+   probe=8877aee peel=-
+   base: {'8877aee': 'found'}
+   cur : {'8877aee': 'ambiguous'}
+   note: 
+## cross-repo: lane holds both commits, fleet holds only the first
+   probe=8877aee peel=^{commit}
+   base: {'8877aee': 'found'}
+   cur : {'8877aee': 'ambiguous'}
+   note: 
+## repo-local core.disambiguate=none, commit + blob collision
+   probe=68c726c peel=bare / ^{commit}
+   base: {'68c726c': 'ambiguous'} / {'68c726c': 'found'}
+   cur : {'68c726c': 'ambiguous'} / {'68c726c': 'ambiguous'}
+   note: 
+## repo-local core.disambiguate=blob, commit + blob collision
+   probe=68c726c peel=bare / ^{commit}
+   base: {'68c726c': 'found'} / {'68c726c': 'found'}
+   cur : {'68c726c': 'ambiguous'} / {'68c726c': 'ambiguous'}
+   note: 
+## repo-local core.disambiguate=tree, commit + blob collision
+   probe=68c726c peel=bare / ^{commit}
+   base: {'68c726c': 'ambiguous'} / {'68c726c': 'found'}
+   cur : {'68c726c': 'ambiguous'} / {'68c726c': 'ambiguous'}
+   note: 
+## repo-local core.disambiguate=commit, commit + blob collision
+   probe=68c726c peel=bare / ^{commit}
+   base: {'68c726c': 'found'} / {'68c726c': 'found'}
+   cur : {'68c726c': 'ambiguous'} / {'68c726c': 'ambiguous'}
+   note: 
+## repo-local core.disambiguate=committish, commit + blob collision
+   probe=68c726c peel=bare / ^{commit}
+   base: {'68c726c': 'found'} / {'68c726c': 'found'}
+   cur : {'68c726c': 'ambiguous'} / {'68c726c': 'ambiguous'}
+   note: 
+## repo-local core.disambiguate=tag, commit + blob collision
+   probe=68c726c peel=bare / ^{commit}
+   base: EvalError: git cat-file --batch-check in /tmp/kama-r23/RevLookup/fx/collide_lane: rc=128 error: unknown hint type for 'core.disambiguate': tag
+fatal: bad config variable 'core.disambiguate' in file '.git/config' at line  / EvalError: git cat-file --batch-check in /tmp/kama-r23/RevLookup/fx/collide_lane: rc=128 error: unknown hint type for 'core.disambiguate': tag
+fatal: bad config variable 'core.disambiguate' in file '.git/config' at line 
+   cur : EvalError: git cat-file --batch-check in /tmp/kama-r23/RevLookup/fx/collide_lane: rc=128 error: unknown hint type for 'core.disambiguate': tag
+fatal: bad config variable 'core.disambiguate' in file '.git/config' at line  / EvalError: git cat-file --batch-check in /tmp/kama-r23/RevLookup/fx/collide_lane: rc=128 error: unknown hint type for 'core.disambiguate': tag
+fatal: bad config variable 'core.disambiguate' in file '.git/config' at line 
+   note: 
