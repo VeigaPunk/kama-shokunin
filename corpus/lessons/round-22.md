@@ -335,3 +335,31 @@ forms are recognized. It is occurrence-scoped, never hash-value-scoped.
 Landed checks are unchanged. Missing legacy registry supplies no exemptions;
 Git/type/decoding errors are CNE. Source URL classification is neither source
 truth/provenance validation nor D4 untrusted-repository hardening.
+
+## Final conformance measurement — 80a6d07c
+
+The static M4 prediction is now observed, not merely inferred. On clean
+committed input `80a6d07c09593191b7a6f86d92851fe3cc0619c2`:
+
+`python3 .ufo/waves/round-22/run.py --recipe .ufo/waves/round-22/report-source-fix/recipe.json --out .ufo/waves/round-22/report-source-fix/runs/80a6d07c`
+
+All10 declared exits met, harness0, no timeout/mismatch. The pinned witness
+returns red-green-match0: old script1 with one false owned-hash finding,
+current0 with no defects and explicit source-URL classification. Manifest,
+old script, registry, census and report fixture digests are checked before
+comparison; actual lane/fleet Git writes false. Audit selftest50/50; witness
+selftest6/6, including snapshot tamper and child-error-not-verdict controls.
+
+Historic rounds10–21 remain9 raw defects/all9 corrected,49 required and5
+post-report commits over12 reports; invalid/unmatched/uncorrected0. The
+current helper remains18/18 refusals,14/14 controls,0 returned null/partial
+identities; citation17/17 clean. Final source census/validate0 at88 rows;
+no immutable-source violation. No upstream validity or untrusted-repository
+security guarantee is inferred from URL classification.
+
+Receipts under `report-source-fix/runs/80a6d07c/` are published after the
+measured input, not claimed present inside it. The original29-command input
+6433390a and the later10-command input80a6d07c are separate evidence.
+Final C1 author verdict verified (calibration7→7); no observed axis harmed.
+Expansion unchanged; quality improved; discernment improved via learned
+prior outside feedback. Independent non-author admission remains pending.

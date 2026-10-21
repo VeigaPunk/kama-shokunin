@@ -1351,3 +1351,23 @@ and in SKILL/lesson, not treated as current authority.
   verification follows a clean commit and results append afterward. Total74
   unique seats,22 original provider deaths,57 retained reports; the2-seat
   ordinary followup's headroom grant was late and is disclosed in its roster.
+
+## round22 — final scoped conformance results
+
+- Followup implementation landed
+  `80a6d07c09593191b7a6f86d92851fe3cc0619c2`; its clean-tree scoped recipe
+  ran10/10 commands at expected exits, harness0, no timeouts/mismatches.
+  The original6433390a/29-command run remains a separate measured input.
+- Pinned report/census witness now observes the prior inference: old audit
+  exit1/one false owned-hash finding → current exit0/zero, same synthetic
+  repos/report, no actual lane/fleet Git writes. Auditor selftest50/50;
+  witness CLI selftest6/6. Registered URLs classify by occurrence only;
+  bare copies, unregistered/superset/Leads/worktree rows and Landed remain
+  checked. No token-specific errata or whitelist.
+- Historic12 reports retain9 raw defects/all9 corrected, required49,
+  post-report5, invalid/unmatched/uncorrected0. Citation17/17 clean;
+  helper current18/18 refusal and14/14 controls unchanged. Final source
+  census/validate0, rows88, immutable-source guard0.
+- C1 calibration7→7 verified narrowly; no new capability/axis/promotion.
+  Final publication carries the followup receipts separately from measured
+  input80a6d07c; the fleet report names every pushed round22 commit.

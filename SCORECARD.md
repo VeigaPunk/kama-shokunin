@@ -1121,3 +1121,30 @@ while preserving real bare/Landed/omission findings. This is not a new axis,
 source-validity guarantee, serving capability or D4 security hardening.
 The original helper32-cell and29-command results remain unchanged; final
 committed-tree followup counts are appended after measurement.
+
+### Final scoped committed-tree measurement — 80a6d07c
+
+`python3 .ufo/waves/round-22/run.py --recipe
+.ufo/waves/round-22/report-source-fix/recipe.json --out
+.ufo/waves/round-22/report-source-fix/runs/80a6d07c` measured
+`80a6d07c09593191b7a6f86d92851fe3cc0619c2`: **10/10 declared exits**,
+zero timeouts/mismatches, harness0. This is a scoped later run, not a claim
+that the earlier29 commands reran on this tree.
+
+| C1 calibration component | Before → after | Counting command / observed verdict | Evidence |
+|---|---|---|---|
+| Owned-commit versus registered-source URL classification | one false owned-hash finding → zero on the same pinned census report; old1 → current0 | `python3 .ufo/waves/round-22/report-source-fix/ReportSourceFix/out/red-green-witness.py`: red-green-match/0, failures[] | `report-source-fix/runs/80a6d07c/source-witness.stdout`; old script SHA80a58825…, current09ecd63b…, manifest SHA499442f1… |
+| Existing helper component, no harm | current remains18/18 refusals,14/14 controls,0 null/partial/violations | `python3 tests/llamacpp-live/install-io-grid.py --arm current --json`:0 | `io-current-noharm.stdout`; source8c0dbb2b…, population5b38422c… |
+
+Audit selftest **50/50**; witness CLI selftest **6/6**, including tampered
+inputs, genuine old-as-current mismatch and child-error CNE. Historic
+rounds10–21 still yield exactly9 raw defects, all9 corrected by the unchanged
+ledger; uncorrected0, invalid0, unmatched0, required49/post-report5 over12
+reports. Citation17/17 remains clean. Final census/validate again0 at88 rows;
+SOURCES immutable data/rows unchanged since6433390a.
+
+Final C1 author verdict remains **verified**, calibration7→7, no observed
+axis harm. No new capability; trends remain expansion unchanged, quality
+improved, discernment improved through learned outside feedback. The
+registered-URL classification is not upstream-source validation or D4
+untrusted-repository hardening.
