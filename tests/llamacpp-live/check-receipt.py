@@ -358,6 +358,9 @@ def validate(receipt, expect_model=None, expect_server=None,
     if not isinstance(tree, dict):
         bad("server.install_tree is missing or not an object of "
             "basename -> sha256")
+    elif not tree:
+        # An empty map plus a copied digest would defeat every tree pin.
+        bad("server.install_tree is empty")
     else:
         for name, h in tree.items():
             if not is_hex64(h):
@@ -1863,6 +1866,10 @@ def _selftest():
         extra=expects)
     mut("tree-sha-mismatch-expect",
         lambda r: r["server"].update(install_tree_sha256="0" * 64),
+        extra=expects + ["--expect-install-tree-sha256", base_tree])
+    mut("tree-empty-map-with-pin",
+        lambda r: r["server"].update(install_tree={},
+                                     install_tree_sha256=base_tree),
         extra=expects + ["--expect-install-tree-sha256", base_tree])
     mut("tree-sha-absent-expect",
         lambda r: r["server"].update(install_tree_sha256=None),

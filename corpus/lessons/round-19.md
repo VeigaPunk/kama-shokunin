@@ -17,8 +17,10 @@
   and `libllama` are rejected 0/3 (all three accepted) before the pin and rejected 3/3 with it,
   baseline VALID both times.
 
-Causally separable: C1 owns the checker/registry/lesson/SOURCES/SCORECARD
-corrections; C2 owns the gate, runner argv and grid. No shared source file.
+Causally separable by counting command: C1 owns the checker/registry and its
+tokens; C2 owns the gate, runner argv and grid. They share two documents
+(`corpus/SOURCES.md`, `SCORECARD.md`) as citation carriers, but neither
+counter reads the other claim's inputs (CritSeparability 2x2 toggle).
 
 ## Gate
 
@@ -73,3 +75,14 @@ commit (it now includes `tree-grid-no-pin` exit 1, `tree-grid-pin` exit 0 and
 | M1 | A "machine-checkable" citation gate that accepts the token in any default doc does not bind it to the authoritative claim | `CritAxisHarm.md` (LOG-only token exits 0) | fresh critic attacked the claim wording, not the code | registry `doc` binding + LOG-only and widened-`--docs` selftest cases (15 total); before/after `missing=3` → `missing=0` |
 | M2 | A grid selftest can pass a wrong fixture (present member asked for as absent) and still look green | `GridSelftest` delivered `absent member: row='rejected'` | first execution of the seat's selftest by L1 | genuinely absent member name; selftest green, absent case exercised |
 | M3 | A pin computed from the directory it verifies is an observed value, not an upstream constant, and symlinked members escape it | `TreeCap.md` (retargeted soname leaves digest unchanged) | fresh scout's fixture probe | claim wording "observed bytes, not authentication"; symlink gap named as debt |
+
+## C1 scope correction (falsify-wave refutation accepted, appended)
+
+`CritC1Inflation` refuted the original C1 wording ("the four routed pointer
+defects become machine-checkable"). What the instrument actually checks: the
+digests and ancestry of the three registry rows, in the registry-bound document
+(sentence-to-token correspondence is not checked; defects 1 and 4 are record
+corrections, not pointer checks). The `gate-live-1` row is re-pinned to
+`1b85a24` (`1cb5a41b…`), the blob that actually names `live-recovery/`. C1
+therefore lands **calibration 7 → 7 (delta 0), verdict improved-bounded**, not
+the declared 7 → 8; the score is not raised on a refuted wording.

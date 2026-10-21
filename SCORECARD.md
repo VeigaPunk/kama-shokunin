@@ -839,3 +839,13 @@ Capabilities unchanged; stagnation window 4 of 4 is reached at round end —
 the next round should be a capability/frontier move unless the operator rules
 otherwise. Planned: close the named gate coverage leaves, add the C2
 enumeration check, and obtain the outside non-author spot-check.
+
+
+**Round-19 C1 erratum (falsify-wave refutation accepted):** C1 lands
+**calibration 7 → 7 (delta 0)**, verdict *improved-bounded*, not 7 → 8. The
+checker binds three registry-row digests (document-bound, ancestry-gated,
+15 selftest cases); it does not bind the sentence beside a token, and routed
+defects 1 and 4 are record corrections rather than pointer checks. The
+`gate-live-1` row is re-pinned to `1b85a24`/`1cb5a41b…` as the blob that names
+`live-recovery/`. Wording correction: see `corpus/lessons/round-19.md`
+§C1 scope correction.

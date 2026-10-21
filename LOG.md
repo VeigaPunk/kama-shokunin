@@ -1161,3 +1161,14 @@ and in SKILL/lesson, not treated as current authority.
   integrated where they were claim-critical; the rest are named debt.
 - No installs or host mutations. Stale-lane: respawn-per-round driver; no other
   kama mission open.
+
+### round 19 erratum (appended)
+
+- The round-18 residual verdicts are **4 confirm / 3 partial** (not "five
+  confirm, two partial"); the dispatch record is
+  `.ufo/waves/round-18/residual/assignments.json`.
+- C1 lands **calibration 7 → 7** (improved-bounded), not 7 → 8: a fresh critic
+  refuted the "machine-checkable for all four defects" wording; the checker
+  binds three registry-row digests in the bound document and does not check the
+  sentence beside a token. `gate-live-1` is re-pinned to `1b85a24`
+  (`1cb5a41b…`).

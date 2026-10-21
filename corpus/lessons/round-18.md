@@ -416,6 +416,6 @@ The routed revision defects are now machine-checked by
 - S055's commands/exits exist at the checkpoint revision:
   cite(1c325b2e58fcfdc6761f645b44cedfb1d65243e6, .ufo/waves/round-18/runs/commands.json, sha256=ce7dc79c9523b92c33e0cbb141299db6196b2aa64b3c307779eee1842b51b84a)
 - The recovery gate output describes `live-recovery/`, not the checkpoint `live/`:
-  cite(eb78788b35b832d08887d4c366d1d0c1df3a6c19, .ufo/waves/round-18/runs/live-gate-1.stdout, sha256=b2043ba8a7b20b707367f03c13d25333ed045c4ec303b2ff3cc0df0dc5395c15)
+  cite(1b85a24eca4d1fe81ef8d9ddf513fda1aad93e0e, .ufo/waves/round-18/runs/live-gate-1.stdout, sha256=1cb5a41bbfeb8f0f9306d9bf86df83d33cf9bc3aa46887c574e1dd07875574c7)
 - The official C2 document is the stdout, not a surviving `--out` file:
   cite(1b85a24eca4d1fe81ef8d9ddf513fda1aad93e0e, .ufo/waves/round-18/runs/c2-survivors.stdout, sha256=ea2e3e0258346410a04cef27a79c1ec0bbe1fd8ce8db13e683da327950cf272d)
