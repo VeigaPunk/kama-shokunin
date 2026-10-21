@@ -15,7 +15,7 @@ Scope: read-only git-history reconstruction. Final pin: HEAD = origin/master = 8
 The round-start tip per context is 1b85a24, so B and D were inherited. E is round-19's.
 
 ## Status at 8d9191f
-- S055 artifact bytes unchanged since 1c325b2 in the committed tree, through 8d9191f: commands.json b8dadf30…, live-gate-1 1cb5a41b…, live/receipt-1 e616f67e…, live-recovery/receipt-1 89728a0248f2…, run.py 5add39f79923…, tool 83eac5c04893…, check-receipt a0dc1d07220f…, SOURCES 8b6b1c7d3645….
+- Committed values at 8d9191f, each with the commit that last changed it: `runs/commands.json` b8dadf30… (1b85a24); `runs/live-gate-1.stdout` 1cb5a41b… (1b85a24); `runs/run.py` 5add39f79923… (7229fa9); `tools/kama-llamacpp-live.py` 83eac5c04893… (0c75c61); `tests/llamacpp-live/check-receipt.py` a0dc1d07220f… (f1790e2); `corpus/SOURCES.md` 8b6b1c7d3645… (f1790e2); `live/receipt-1.json` e616f67e… (1c325b2); `live-recovery/receipt-1.json` 89728a0248f2… (1b85a24).
 - E corrected: lesson:418-421 now cites the checkpoint (1c325b2, b2043ba8…) and the recovery (1b85a24, 1cb5a41b…) as separate tokens. The registry adds `gate-live-checkpoint` (rev 1c325b2) beside `gate-live-1` (rev 1b85a24). The HEAD checker exits 0, 4/4 verified.
 - The checker does not detect the E class. The HEAD checker, run on the mis-bound 7229fa9 registry, still exits 0 (3/3 verified). Its doc binding and `origin/master` ancestry gate test neither the digest's first-appearance commit nor the sentence (checker blob 5c887572b37a, unchanged from 30ed378 through 8d9191f).
 - SOURCES:217 still qualifies only `runs/commands.json` and `runs/live-gate-*.stdout`. It does not qualify `runs/run.py` (writes `live-recovery/` since 0c75c61) or the S055 tool pin dc036d7d (`tools/` is 83eac5c0 since 0c75c61).
