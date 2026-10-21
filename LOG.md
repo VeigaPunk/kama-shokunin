@@ -1428,3 +1428,37 @@ and in SKILL/lesson, not treated as current authority.
   cap, unchanged payload spawned on the next attempt. Planner is L1;
   bounded data-walk is connector ConnPlan. Evidence in
   `.ufo/waves/round-24/build/`; no actual round-24 improvements claimed yet.
+
+### Round-24 correction provenance refinement
+
+CritEvidence's independent reading corrects the gloss above at
+`d1b9d95:LOG.md:1417-1420`: the literal "68 reports" occurs in
+`corpus/lessons/round-23.md:178`, not in the filed fleet report (whose
+73 seats minus 4 missing reports already implies 69). The lesson count
+is superseded by 69 durable falsify reports.
+
+The old process claim is also narrower than the retained record proves:
+56 was a matching-process count, while a different listing pattern kept
+40 truncated identity rows (38 git, gpg-agent, scdaemon), not 56 identified
+FIFO-blocked git processes. Only 19 retained rows could be linked to FIFO
+fixtures; 16 counted identities were not retained. The matching count
+became zero after cleanup, but this does not independently prove every
+victim's identity or blocking cause. Retained listing and classification:
+`.ufo/waves/round-24/build/out/CritEvidence/`.
+
+### Prospective oracle correction before candidate inspection
+
+The initial preregistration's missing-citation→unknown solely because of
+promisor metadata conflicts with the original local-object contract
+(`tools/report-landing-audit.py:12-19`) and the exact historical restoration
+witness: its authorized errata correct a locally missing spliced hash.
+CritScores identified that contradiction before L1 candidate inspection.
+`oracle-amendment-1.json` records a prospective correction: required
+unavailable reads remain could-not-evaluate; metadata alone does not alter
+ordinary local resolution, missing findings or errata. No whole-root
+completeness precondition is introduced for unused data. A missing citation
+known to name unavailable referenced local content still refuses.
+
+The original unknown-citation expectation remains filed and is explicitly
+withdrawn/not-achieved, not retroactively passed. This entry and amendment
+were written before L1 inspected, measured or integrated any candidate.
