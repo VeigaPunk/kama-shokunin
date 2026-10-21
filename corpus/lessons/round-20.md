@@ -296,3 +296,21 @@ while the updated reference file hashed to
 retained `gguf-measure.stdout` contains only this reference-hash mismatch and
 credits no fixture outcome. `REFERENCE_SHA256` is now updated to that exact
 file digest; this failure is retained separately from the final rerun.
+
+## Corrected final measurement — 9add96e4
+
+The committed-tree runner
+`python3 .ufo/waves/round-20/run.py --recipe .ufo/waves/round-20/recipe.json
+--out .ufo/waves/round-20/runs/9add96e4` measured
+`9add96e462e62dc5141cd02730b7a699268b3513`; all 21 commands met their declared
+exits, harness exit0. C1 remains 15 cells, frozen misclassified6/current0,
+witness mismatches0, red-vector mismatches0, unrun0. C2 is 23/23 declared
+fixture predicates with mismatches0, snapshot tampering0, unavailable0, and
+real-file oracle/receipt agreement. Its arbitrary scalar-value boundary stays
+as stated above.
+
+The source census after S065 is rows57→65 (A54→62/C3; mined46→52, queued5→6,
+rejected6→7, missing0). `sources-validate` and `sources-census` both exit0;
+W04 warnings are S031/S043/S056/S060/S064/S065. Exact stdout, stderr, argv and
+exit records are in `.ufo/waves/round-20/runs/9add96e4/commands.json` and its
+sidecars. The c731 and 04de fail-closed outputs remain retained, not credited.

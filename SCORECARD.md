@@ -975,3 +975,20 @@ updated `measure-reference.json` is
 2 before fixture evaluation; no C2 outcomes are credited. The test-harness
 constant is now bound to the exact current reference file, and this failed run
 is retained separately from final verification.
+
+### Corrected final measurement — clean tree 9add96e4
+
+`python3 .ufo/waves/round-20/run.py --recipe .ufo/waves/round-20/recipe.json
+--out .ufo/waves/round-20/runs/9add96e4` records measured commit
+`9add96e462e62dc5141cd02730b7a699268b3513`: **21/21 commands met their declared
+exits; harness exit 0**. C1 remains 15 pinned cells, frozen misclassified6 →
+current0, no witness/red-vector mismatch and no unrun cell. C2 reports 23/23
+fixture predicates, zero mismatches/snapshot tampering/unavailable rows, and
+successful real-file oracle plus receipt agreement; this remains declared
+metadata identity, not loaded-weight authentication or arbitrary scalar-value
+recovery.
+
+The post-S065 census is rows57→65: tier A54→62/C3; mined46→52, queued5→6,
+rejected6→7, missing0. Validation/census both exit0; six W04 duplicate-URL
+warnings (S031/S043/S056/S060/S064/S065) are explicit. Exact streams and exits
+are retained under `runs/9add96e4/`.
