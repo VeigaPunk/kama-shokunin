@@ -202,6 +202,30 @@ def install_tree(server_real):
     return tree, combined
 
 
+def install_links(server_real):
+    """{basename: link text} for every symlink in dirname(server_real), plus
+    a combined digest over the sorted 'name -> text' lines. install_tree()
+    skips symlinks, so a retargeted soname link (libllama.so.0 -> ...) would
+    otherwise leave every pin unchanged. Link text is recorded unresolved;
+    the gate checks that each chain ends at a pinned regular member."""
+    links = {}
+    directory = os.path.dirname(server_real)
+    try:
+        entries = sorted(os.listdir(directory))
+    except OSError:
+        return links, None
+    for name in entries:
+        full = os.path.join(directory, name)
+        try:
+            if stat.S_ISLNK(os.lstat(full).st_mode):
+                links[name] = os.readlink(full)
+        except OSError:
+            continue
+    combined = hashlib.sha256(''.join(
+        f'{n} -> {links[n]}\n' for n in sorted(links)).encode()).hexdigest()
+    return links, combined
+
+
 def _envelope_ok(body_text):
     """True iff one loading-503 body parses to the documented envelope:
     error.message=="Loading model", error.type=="unavailable_error",
@@ -1203,6 +1227,7 @@ def main(argv=None):
         'server': {
             'arg': args.server, 'realpath': None, 'sha256': None,
             'install_tree': {}, 'install_tree_sha256': None,
+            'install_links': {}, 'install_links_sha256': None,
             'server_impl_sha256': None,
         },
         'model': {'arg': args.model, 'path': None, 'sha256': None},
@@ -1266,6 +1291,7 @@ def main(argv=None):
 
         server_sha = sha256_file(server_real)
         tree, tree_sha = install_tree(server_real)
+        links, links_sha = install_links(server_real)
         impl_path = os.path.join(os.path.dirname(server_real),
                                  'libllama-server-impl.so')
         impl_sha = (sha256_file(impl_path)
@@ -1279,6 +1305,8 @@ def main(argv=None):
             'sha256': server_sha,
             'install_tree': tree,
             'install_tree_sha256': tree_sha,
+            'install_links': links,
+            'install_links_sha256': links_sha,
             'server_impl_sha256': impl_sha,
         })
         receipt['probe']['sha256'] = probe_sha

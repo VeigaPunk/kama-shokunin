@@ -170,6 +170,34 @@ def install_tree_sha(tree):
     ).hexdigest()
 
 
+def install_links_sha(links):
+    """Recompute producer install_links_sha256(): sha256 over the sorted
+    'name -> link text\\n' lines."""
+    return hashlib.sha256(
+        ''.join(f'{n} -> {links[n]}\n' for n in sorted(links)).encode()
+    ).hexdigest()
+
+
+def link_chain_problem(name, links, tree):
+    """None when the symlink chain from `name` ends at a pinned regular
+    member of install_tree; otherwise a reason. Only same-directory
+    basenames are followed: any other target escapes the pinned tree."""
+    seen = set()
+    current = name
+    while current in links:
+        if current in seen:
+            return "symlink loop"
+        seen.add(current)
+        target = links[current]
+        if not isinstance(target, str) or not target or "/" in target \
+                or target in (".", ".."):
+            return f"target {target!r} leaves the pinned directory"
+        current = target
+    if current not in tree:
+        return f"chain ends at {current!r}, not a pinned install_tree member"
+    return None
+
+
 def loading_envelope_ok(doc):
     """Mirror of producer loading_envelope_exact(): message/type exact,
     code an int equal to 503."""
@@ -257,7 +285,7 @@ def probe_row0(rec):
 
 def validate(receipt, expect_model=None, expect_server=None,
              expect_probe=None, expect_tool=None,
-             expect_server_impl=None, expect_tree=None):
+             expect_server_impl=None, expect_tree=None, expect_links=None):
 
     problems = []
 
@@ -410,6 +438,43 @@ def validate(receipt, expect_model=None, expect_server=None,
         elif impl_sha != expect_server_impl:
             bad(f"server.server_impl_sha256 {impl_sha} != expected "
                 f"{expect_server_impl}")
+    # install_links: optional (receipts before round 21 lack it). When
+    # present, every soname symlink must be recorded, digested and resolve
+    # inside the pinned regular-file tree.
+    links = server.get("install_links", MISSING)
+    links_sha = server.get("install_links_sha256")
+    if links is not MISSING:
+        if not isinstance(links, dict) or not all(
+                isinstance(k, str) and isinstance(v, str)
+                for k, v in links.items()):
+            bad("server.install_links is not an object of basename -> "
+                "link text")
+        else:
+            check_digest(problems, "server.install_links_sha256", links_sha,
+                         allow_none=not links)
+            if is_hex64(links_sha) and install_links_sha(links) != links_sha:
+                bad("server.install_links_sha256 != recomputation over "
+                    "install_links")
+            for name in sorted(links):
+                if isinstance(tree, dict) and name in tree:
+                    bad(f"server.install_links[{name!r}] is also a regular "
+                        "install_tree member")
+                    continue
+                why = link_chain_problem(name, links,
+                                         tree if isinstance(tree, dict)
+                                         else {})
+                if why:
+                    bad(f"server.install_links[{name!r}]: {why}")
+    if expect_links is not None:
+        if not is_hex64(expect_links):
+            bad(f"--expect-install-links-sha256 {expect_links!r} is not 64 "
+                "lowercase hex chars")
+        elif links is MISSING or not is_hex64(links_sha):
+            bad("--expect-install-links-sha256 given but receipt has no "
+                "server.install_links_sha256 digest")
+        elif links_sha != expect_links:
+            bad(f"server.install_links_sha256 {links_sha} != expected "
+                f"{expect_links}")
 
 
     # --- model ----------------------------------------------------------------
@@ -1439,6 +1504,9 @@ PROBE_SHA = "c" * 64
 IMPL_SHA = "d" * 64
 TOOL_SHA = "9" * 64
 LIB_SHA = "f" * 64
+# Soname-style chain: libllama-alias.so -> libllama.so.0 -> libllama.so.
+SELFTEST_LINKS = {"libllama.so.0": "libllama.so",
+                  "libllama-alias.so": "libllama.so.0"}
 
 
 ENVELOPE_BODY = json.dumps({"error": {"message": "Loading model",
@@ -1573,6 +1641,8 @@ def _selftest_receipt():
                        {"llama-server": SERVER_SHA,
                         "libllama-server-impl.so": IMPL_SHA,
                         "libllama.so": LIB_SHA}),
+                   "install_links": SELFTEST_LINKS,
+                   "install_links_sha256": install_links_sha(SELFTEST_LINKS),
                    "server_impl_sha256": IMPL_SHA},
         "model": {"path": "/home/x/.cache/kama-shokunin/models/"
                           "stories260K.gguf",
@@ -1782,9 +1852,18 @@ def _selftest():
                "--expect-probe-sha256", PROBE_SHA,
                "--expect-tool-sha256", TOOL_SHA]
     base_tree = base["server"]["install_tree_sha256"]
+    base_links = base["server"]["install_links_sha256"]
     cases = [("valid", base, expects, 0),
              ("tree-pin-valid", base,
-              expects + ["--expect-install-tree-sha256", base_tree], 0)]
+              expects + ["--expect-install-tree-sha256", base_tree], 0),
+             ("links-pin-valid", base,
+              expects + ["--expect-install-links-sha256", base_links], 0)]
+    legacy = copy.deepcopy(base)
+    del legacy["server"]["install_links"]
+    del legacy["server"]["install_links_sha256"]
+    cases.append(("links-absent-legacy-valid", legacy, expects, 0))
+    cases.append(("links-absent-with-pin", legacy,
+                  expects + ["--expect-install-links-sha256", base_links], 1))
     # child_env_keys entries come from an untrusted receipt: a value after
     # '=' must never be echoed into gate output or collected diagnostics.
     env_secret = "kama-selftest-env-value-2f6b1d"
@@ -1889,6 +1968,42 @@ def _selftest():
                    r["server"].update(install_tree_sha256=install_tree_sha(
                        r["server"]["install_tree"]))),
         extra=expects)
+
+    def relink(r, links):
+        r["server"]["install_links"] = links
+        r["server"]["install_links_sha256"] = install_links_sha(links)
+
+    links_pin = ["--expect-install-links-sha256", base_links]
+    # A consistent retarget onto another pinned member is VALID without a
+    # links pin (documented limit) and INVALID with one.
+    retargeted = copy.deepcopy(base)
+    relink(retargeted, dict(SELFTEST_LINKS, **{"libllama.so.0": "llama-server"}))
+    cases.append(("links-retarget-unpinned-valid", retargeted, expects, 0))
+    cases.append(("links-retarget-pinned", retargeted,
+                  expects + links_pin, 1))
+    mut("links-sha-tampered",
+        lambda r: r["server"].update(install_links_sha256="0" * 64))
+    mut("links-sha-null-nonempty",
+        lambda r: r["server"].update(install_links_sha256=None))
+    mut("links-dangling", lambda r: relink(
+        r, dict(SELFTEST_LINKS, **{"libllama.so.0": "libllama.so.9"})))
+    mut("links-absolute-outside", lambda r: relink(
+        r, dict(SELFTEST_LINKS, **{"libllama.so.0": "/usr/lib/libllama.so"})))
+    mut("links-dotdot-outside", lambda r: relink(
+        r, dict(SELFTEST_LINKS, **{"libllama.so.0": "../libllama.so"})))
+    mut("links-loop", lambda r: relink(
+        r, {"libllama.so.0": "libllama-alias.so",
+            "libllama-alias.so": "libllama.so.0"}))
+    mut("links-not-object",
+        lambda r: r["server"].update(install_links="libllama.so.0"))
+    mut("links-non-string-target", lambda r: r["server"].update(
+        install_links={"libllama.so.0": 5}))
+    mut("links-shadows-member", lambda r: relink(
+        r, dict(SELFTEST_LINKS, **{"libllama.so": "llama-server"})))
+    mut("links-pin-malformed", lambda r: None,
+        extra=expects + ["--expect-install-links-sha256", "zz"])
+    mut("links-dropped-pinned", lambda r: relink(r, {}),
+        extra=expects + links_pin)
     mut("models-entry-missing-id",
         lambda r: r["captures"]["models"].update(body=json.dumps(
             {"data": [{"id": ALIAS, "owned_by": "llamacpp"},
@@ -2186,6 +2301,9 @@ def main(argv=None):
                          "library sha256")
     ap.add_argument("--expect-install-tree-sha256", metavar="HEX",
                     help="require the recorded install-tree sha256")
+    ap.add_argument("--expect-install-links-sha256", metavar="HEX",
+                    help="require the recorded install-links (symlink) "
+                         "sha256")
     ap.add_argument("--expect-probe-sha256", metavar="HEX",
                     help="require the recorded probe sha256")
     ap.add_argument("--expect-tool-sha256", metavar="HEX",
@@ -2215,6 +2333,7 @@ def main(argv=None):
                         expect_server=args.expect_server_sha256,
                         expect_server_impl=args.expect_server_impl_sha256,
                         expect_tree=args.expect_install_tree_sha256,
+                        expect_links=args.expect_install_links_sha256,
                         expect_probe=args.expect_probe_sha256,
                         expect_tool=args.expect_tool_sha256)
     if args.require_schema and isinstance(receipt, dict):
