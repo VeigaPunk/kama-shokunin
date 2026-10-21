@@ -232,8 +232,8 @@ def main(argv=None):
             if row["status"] != "ok":
                 print(f"  {row['status']}: {row['id']} "
                       f"{row['rev']}:{row['path']} "
-                      f"expected={row['sha256'][:12]} "
-                      f"observed={(row['observed_sha256'] or 'absent')[:12]}"
+                      f"expected={row['sha256']} "
+                      f"observed={row['observed_sha256'] or 'absent'}"
                       + (f" ({row['error']})" if row["error"] else ""))
     if counts["docs_unreadable"]:
         return 2
