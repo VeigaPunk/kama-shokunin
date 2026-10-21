@@ -952,3 +952,15 @@ basis separately attributes the uint64 field to the pinned format text. The
 23 fixture digests are unchanged (`SHA256SUMS` SHA-256
 `ab51c80f26ce1c155f5b5e8377a6363df9fa93ff6ac1669000a9aaf70d995812`). No parser
 behavior or C2 coverage claim changed.
+
+### First post-manifest verification — failed closed
+
+The run at `runs/c7311039` correctly failed `gguf-measure-selftest` and
+`gguf-measure` (exit 2): the updated manifest hash
+`714226dfb6ae578fb1718f6c19b76c1328cf9dfc74ced01e5f280b39bfeccd48` disagreed
+with the old `c2/measure-reference.json` pin
+`1ffe884a523fb85866ac43775fee0a5be1f69398c09a3dae8b8832f39c9f7f9f`.
+`gguf-measure.stdout` marks all 23 fixtures `snapshot_tampered` and
+`parser_attempted: false`; no C2 outcomes are credited from this run. The
+reference pin is now updated to the exact manifest digest; this run remains
+retained as failure evidence, not a passing measurement.

@@ -272,3 +272,16 @@ after insertions; the fixture default-limit manifest was corrected; and the
 grid classifier source was bound to its clean measured commit. The
 v3-all-scalars comparison gap and timeout-reason detail remain explicit limits.
 No extra ordinary residual-review task call was used.
+
+## First post-manifest measurement failure and correction
+
+The first official rerun at `c7311039` failed closed: both GGUF measurement
+commands exited 2 because `c2/measure-reference.json` still pinned old
+`expected.json` SHA-256 `1ffe884a523fb85866ac43775fee0a5be1f69398c09a3dae8b8832f39c9f7f9f`, while the corrected manifest hashes to
+`714226dfb6ae578fb1718f6c19b76c1328cf9dfc74ced01e5f280b39bfeccd48`. The retained output
+`.ufo/waves/round-20/runs/c7311039/gguf-measure.stdout` reports
+`snapshot_tampered` for all 23 fixtures and `parser_attempted: false`; thus no
+fixture result was credited by this run. The reference's fixture identities
+remain the same; only `fixture_manifest.expected_json_sha256` was updated to
+the exact new manifest digest. The failed run is retained as evidence, not
+counted as final verification.
