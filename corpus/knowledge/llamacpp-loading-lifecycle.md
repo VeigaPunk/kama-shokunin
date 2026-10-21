@@ -369,3 +369,47 @@ subdirectories are recorded by name in `install_unpinned` with contents outside
 the pin. The links digest is always present when the block is (no null). The
 ldconfig chain is S066's; "re-resolved at every exec" is kama's inference from
 S067, whose step (4) reads the ldconfig cache.
+
+## Round-22 supplement — helper I/O refusal (2026-10-21)
+
+source: S075 Python 3.14.8 open; S076 os introduction Note and os.lstat; S077 os.access counterexample; own-work `tools/kama-llamacpp-live.py`, `tests/llamacpp-live/install-io-grid.py`
+verified-at: round-22 committed measurement recorded in `corpus/lessons/round-22.md`
+recheck: `python3 tests/llamacpp-live/install-io-grid.py --arm both --json` (frozen arm intentionally red); `--arm current --json` and `--selftest` must be clean
+
+The R21 producer's `install_links(server, tree)` backstop already rejected
+ordinary unreadable/unhashed members. Its lower-level `install_tree` helper
+nevertheless returned an empty/null pair after listing failure or a smaller
+regular-file map and comparable digest after stat/read failure. This appendix
+narrows the improvement to that helper's contract and its direct consumers,
+not a newly discovered producer-level escape or retroactive receipt validation.
+
+`install_tree` now raises its own `SetupError` with
+`install-tree-unpinnable:<stage>:<member where applicable>:<error detail>` on
+any OSError from the operations it actually performs. The exception cause
+retains the originating error. Successful regular-file maps and the sorted
+`name sha\n` encoding are unchanged. Symlinks, directories and special entries
+remain intentionally outside this map; `install_links` separately implements
+their existing policy. A permission precheck is not a replacement for handling
+the real operation (S077).
+
+The matrix's frozen/current results are helper outcomes. Its supplementary
+`paired_problems` records the old two-helper backstop after a transient injected
+fault; it neither launches the server nor claims a producer CLI experiment.
+List failures returning null and member omissions returning digests are counted
+separately. `check-receipt.py` still accepts the historical JSON schema: it
+cannot infer files an older producer omitted, and a digest copied from that
+partial receipt is not an independent complete-directory pin.
+
+This is a scan-time, non-atomic observation. C1 handles raised I/O errors only.
+The lstat→open replacement window (including a FIFO that blocks), in-place
+rewrites during a read, replacement after hashing/before launch or after
+launch, unpinned subdirectory contents, external system libraries and loader
+configuration remain outside the guarantee. No authenticated execution,
+race-safety, model-quality or current registered-endpoint health is inferred.
+
+R21 source-correction representation repaired in R22: current readings use
+S078/S079/S080 in place of S066/S067/S068. The chain pattern is documented,
+the loader search includes a cache step rather than a directory walk at every
+exec, and NAR is serialization prior art rather than every store-path hash.
+The source-row changes and bounded quotes are in the round-22 lesson Gate;
+historical paragraphs/rows above remain unchanged.

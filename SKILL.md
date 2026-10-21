@@ -706,3 +706,38 @@ files and unhashed members, and records other subdirectories in
 NOT-EVALUATED, 99 mutations. Pre-launch refusal check:
 `python3 tests/llamacpp-live/unpinnable-e2e.py` (0 all refused, 1 a case
 launched or passed, 2 could-not-evaluate).
+
+## Round-22 install helper completeness boundary (owner: kama)
+
+S075/S076 ground the actual operation's OSError signal, not a Python-mandated
+directory identity policy. `install_tree(server_real)` now either returns its
+unchanged regular-file map/digest or raises
+`SetupError('install-tree-unpinnable:<stage>:…')`; it never silently skips an
+I/O error. Symlink/nonregular skips remain intentional and belong to
+`install_links` policy. `os.access` alone cannot establish later I/O success
+(rejected remedy S077). See the bounded scan-time limits and historical
+receipt caveat in `corpus/knowledge/llamacpp-loading-lifecycle.md` §Round-22.
+
+| Name | Kind / entry command | Verdict map | Self-test | Pinned values | Write scope | Owner |
+|---|---|---|---|---|---|---|
+| Install helper I/O completeness | gate: `python3 tests/llamacpp-live/install-io-grid.py --arm current --json`; use `--arm frozen` or `both` for the intentionally red before-state | 0 clean; 1 incomplete-install-identity (escaped fault or control mismatch); 2 could-not-evaluate (unavailable source/fault not reached/input error); errors never earn refusal credit | `--selftest`: CLI fixtures include complete helper, always-refuse/empty, individual refusal deletions and broad catches | `FROZEN`/`FROZEN_SHA`, fixed FAULTS/CONTROLS and independent literal-byte hashlib oracle in script; current source SHA emitted; official run pins clean branch commit | stdout and removed temporary synthetic trees only; no server or network | kama |
+
+**Decision/checklist:** if directory enumeration, lstat or member hashing
+raises OSError, stop identity comparison and report the refused stage/member;
+do not compare an empty/null or survivor-only result with a stored pin.
+TypeError/programming errors and interrupts are not directory-refusal evidence.
+For an old receipt, retain its historical schema: this helper repair cannot
+discover omitted historical members or certify the bytes that executed.
+
+**R21 outside-routing trust restriction (learned R22).** The report-landing
+audit is supported only on this trusted lane and fleet repository. Its Git
+environment/system/global-config scrubbing is not repository-local config
+isolation, history-integrity proof or safe arbitrary-repository execution.
+UTF-8/error/top-level handling and the late selftest fallback/GIT_DIR debt
+remain unclaimed until separately hardened. Never point it at an untrusted
+repository under the current guarantee (KQ32; round-22 lesson D4).
+
+Current source interpretation for the R21 rows uses correction rows
+S078–S086 (superseding S066–S074). Historical source rows and prose remain
+intact; S084's generated latest reference is not the installed jj version,
+and the author-time audit design is own-work, not a guarantee from that page.

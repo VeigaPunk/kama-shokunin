@@ -1,0 +1,148 @@
+diff --git i/tools/kama-llamacpp-live.py w/tools/kama-llamacpp-live.py
+index f030e6f..30aad33 100755
+--- i/tools/kama-llamacpp-live.py
++++ w/tools/kama-llamacpp-live.py
+@@ -154,9 +154,10 @@ DOC = {
+ class SetupError(Exception):
+     """Fatal pre-check failure; mapped to exit 2 with a stable reason token."""
+ 
+-    def __init__(self, code):
+-        super().__init__(code)
++    def __init__(self, code, detail=None):
+         self.code = code
++        self.detail = detail
++        super().__init__(code if detail is None else f'{code}:{detail}')
+ 
+ 
+ class Terminated(Exception):
+@@ -176,27 +177,31 @@ def sha256_file(path):
+     return h.hexdigest()
+ 
+ def install_tree(server_real):
+-    """{basename: sha256} for every regular file in dirname(server_real),
+-    plus a combined digest over the sorted 'name sha' lines. Symlinks are
+-    skipped as members (they are not regular files)."""
++    """Return regular members and their sorted-name digest from the install
++    directory. Symlinks and other nonregular entries are skipped as members.
++    Enumeration, lstat, and regular-file read failures raise
++    SetupError('install-tree-unpinnable') instead of returning partial data."""
+     tree = {}
+     directory = os.path.dirname(server_real)
+     try:
+         entries = sorted(os.listdir(directory))
+-    except OSError:
+-        return tree, None
++    except OSError as exc:
++        detail = f'listdir:{exc.strerror or type(exc).__name__}'
++        raise SetupError('install-tree-unpinnable', detail) from exc
+     for name in entries:
+         full = os.path.join(directory, name)
+         try:
+             st = os.lstat(full)
+-        except OSError:
+-            continue
++        except OSError as exc:
++            detail = f'lstat:{name!r}:{exc.strerror or type(exc).__name__}'
++            raise SetupError('install-tree-unpinnable', detail) from exc
+         if not stat.S_ISREG(st.st_mode):
+             continue
+         try:
+             tree[name] = sha256_file(full)
+-        except OSError:
+-            continue
++        except OSError as exc:
++            detail = f'read:{name!r}:{exc.strerror or type(exc).__name__}'
++            raise SetupError('install-tree-unpinnable', detail) from exc
+     combined = hashlib.sha256(
+         ''.join(f'{n} {tree[n]}\n' for n in sorted(tree)).encode()).hexdigest()
+     return tree, combined
+@@ -1116,10 +1121,9 @@ def build_parser():
+ 
+ 
+ def _install_identity_selftest():
+-    """Stub install: regular server and libs plus a soname chain. The chain
+-    is recorded only by install_links(); a retarget moves only
+-    install_links_sha256; a subdirectory or unreadable member is a problem
+-    (fail closed), never a silently smaller identity."""
++    """Stub install: assert exact regular-file identity and symlink behavior.
++    Enumeration, stat, and read faults must fail closed instead of producing
++    a partial map and digest."""
+     members = {'llama-server': b'server-stub\n',
+                'libllama.so.0.7.0': b'lib-0.7.0\n',
+                'libllama.so.0.7.1': b'lib-0.7.1\n'}
+@@ -1134,9 +1138,63 @@ def _install_identity_selftest():
+         os.symlink('libllama.so.0', os.path.join(directory, 'libllama.so'))
+         tree, tree_sha = install_tree(server)
+         links, links_sha, problems, unpinned = install_links(server)
+-        if tree != {n: hashlib.sha256(b).hexdigest()
+-                    for n, b in members.items()}:
++        expected_tree = {n: hashlib.sha256(b).hexdigest()
++                         for n, b in members.items()}
++        if tree != expected_tree:
+             raise AssertionError(f'install_tree members mismatch: {tree!r}')
++        expected_tree_sha = hashlib.sha256(
++            ''.join(f'{n} {expected_tree[n]}\n'
++                    for n in sorted(expected_tree)).encode()).hexdigest()
++        if tree_sha != expected_tree_sha:
++            raise AssertionError(f'install_tree digest mismatch: {tree_sha}')
++        from unittest import mock
++        import errno
++
++        def fail_on(operation, target, strerror):
++            original = (sha256_file if operation == 'read'
++                        else getattr(os, operation))
++            calls = [0]
++            target = os.path.abspath(target)
++
++            def fail(path):
++                if os.path.abspath(os.fspath(path)) == target:
++                    calls[0] += 1
++                    raise OSError(errno.EIO, strerror)
++                return original(path)
++
++            patcher = (mock.patch.dict(globals(), {'sha256_file': fail})
++                       if operation == 'read'
++                       else mock.patch.object(os, operation, new=fail))
++            return patcher, calls
++
++        member = 'libllama.so.0.7.0'
++        for operation, target, strerror, detail in (
++                ('listdir', directory, 'selftest-listdir',
++                 'listdir:selftest-listdir'),
++                ('lstat', os.path.join(directory, member), 'selftest-lstat',
++                 f'lstat:{member!r}:selftest-lstat'),
++                ('read', os.path.join(directory, member), 'selftest-read',
++                 f'read:{member!r}:selftest-read')):
++            patcher, calls = fail_on(operation, target, strerror)
++            with patcher:
++                try:
++                    install_tree(server)
++                except SetupError as exc:
++                    if exc.code != 'install-tree-unpinnable' \
++                            or exc.detail != detail or str(exc) != \
++                            f'install-tree-unpinnable:{detail}':
++                        raise AssertionError(
++                            f'{operation} failure lost its reason: {exc}')
++                    if not isinstance(exc.__cause__, OSError) \
++                            or exc.__cause__.strerror != strerror:
++                        raise AssertionError(
++                            f'{operation} failure lost its OSError cause')
++                else:
++                    raise AssertionError(
++                        f'{operation} failure returned an install identity')
++            if calls[0] != 1:
++                raise AssertionError(
++                    f'{operation} fault was injected {calls[0]} times')
+         if links != {'libllama.so': 'libllama.so.0',
+                      'libllama.so.0': 'libllama.so.0.7.0'} or problems \
+                 or unpinned:
+@@ -1600,7 +1658,8 @@ def main(argv=None):
+             {'exit': bad_probe['exit'], 'verdict': bad_row.get('verdict'),
+              'reason': bad_row.get('reason')}))
+     except SetupError as exc:
+-        receipt['setup_error'] = exc.code
++        receipt['setup_error'] = (
++            f'{exc.code}:{exc.detail}' if exc.detail is not None else exc.code)
+     except Terminated as exc:
+         receipt['setup_error'] = f'terminated:{exc}'
+     except BaseException as exc:

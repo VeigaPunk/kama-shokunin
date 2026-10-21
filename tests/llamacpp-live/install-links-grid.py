@@ -175,7 +175,13 @@ def build_cells(tree, sonames=NEEDED_SONAMES):
 
 
 def identity(module, server, with_links):
-    tree, tree_sha = module.install_tree(str(server))
+    try:
+        tree, tree_sha = module.install_tree(str(server))
+    except module.SetupError as exc:
+        if not with_links:
+            raise
+        return ({"setup_error": exc.code,
+                 "problems": [exc.code], "unpinned": []}, {}, {})
     if not with_links:
         return {"install_tree_sha256": tree_sha}, tree, {}
     links, links_sha, problems, unpinned = module.install_links(

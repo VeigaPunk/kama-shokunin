@@ -150,3 +150,16 @@ not new host stop conditions or a universal mutation-testing score policy.
 |---|---|---|---|
 | KQ28 | A round report's `## Landed changes` names every lane commit of the round (subject `round-N:`/`checkpoint(rN)`, authored before the report's first fleet commit) by hash, and every full hash in the report resolves; `python3 tools/report-landing-audit.py --rounds 10-<N-1> --report N=<draft>` exits 0 before the fleet commit and its summary is pasted. Historical defects are corrected only by ledger rows that name the omitted commit itself or a resolvable commit. | A hash hand-spliced from two commits; a Landed list written from memory that drops build or attempt commits; a ledger row that "corrects" an omission with an unrelated commit. | `lessons/round-21.md` M1–M3; raw audit exit 1 with 9 defects over rounds 10–20 |
 | KQ29 | An identity digest over a directory names what it omits and fails closed on entries it cannot represent; members the consumer actually uses (for a loader: soname links and searched subdirectories) are either recorded or make the producer refuse. Digest encodings are injective. | A regular-file-only digest that stays equal after a soname retarget or a `glibc-hwcaps/` shadow copy; a skipped unreadable member; `name -> text\n` lines that collide for names containing newlines. | `lessons/round-21.md` C2; R19 TreeCap; `tests/llamacpp-live/install-links-grid.py` frozen link 0/13 |
+
+## Criterion added — round 22 (helper contract gap)
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ30 | A reusable identity helper refuses I/O failures at its own boundary, before returning a comparison result; the fixed finite injected population separately records null returns, partial digests and explicit refusals, proves each fault reached its target, preserves successful digest bytes and intentional exclusions, and retains non-OSError propagation controls. The helper's outcome and a caller's later backstop are reported separately. | An error silently becomes a smaller identity; an os.access precheck replaces actual error handling; root-dependent chmod alone supplies failure evidence; a caller's existing refusal is claimed as a new producer-level improvement; an untriggered injection or arbitrary crash earns refusal credit. | `lessons/round-22.md` M1; R21 KQ29 protected the producer but left the bare install_tree contract weaker |
+
+## Criteria added — round-21 outside routing learned in round22
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ31 | A correction to immutable SOURCES scope/anchor/teaches is a newly opened row whose teaches starts `supersedes S0NN —`; the old row and filed explanation stay intact. | A prose cell supersession is marked but no replacement row exists; this is not v1 conformance even if readers can find the correction. | `lessons/round-22.md` D2; CloseKama21 rounds[406] |
+| KQ32 | A report-landing audit is explicitly limited to the trusted fleet/lane repositories until repository-local Git-config/history and UTF-8/error hardening is demonstrated separately. | Global/system config and environment scrubbing is treated as suppressing local Git configuration or as a security guarantee for arbitrary repositories. | `lessons/round-22.md` D4; CloseKama21 rounds[406] and late C1EnvSentinel debt |

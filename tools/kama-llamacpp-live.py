@@ -176,27 +176,31 @@ def sha256_file(path):
     return h.hexdigest()
 
 def install_tree(server_real):
-    """{basename: sha256} for every regular file in dirname(server_real),
-    plus a combined digest over the sorted 'name sha' lines. Symlinks are
-    skipped as members (they are not regular files)."""
+    """Complete regular-file map and digest for dirname(server_real).
+    Symlinks/nonregular entries are intentionally skipped; install_links()
+    handles their policy. Any listing/stat/read OSError refuses the identity
+    with SetupError rather than returning a partial comparable digest."""
     tree = {}
     directory = os.path.dirname(server_real)
     try:
         entries = sorted(os.listdir(directory))
-    except OSError:
-        return tree, None
+    except OSError as exc:
+        raise SetupError('install-tree-unpinnable:listdir:'
+                         + (exc.strerror or type(exc).__name__)) from exc
     for name in entries:
         full = os.path.join(directory, name)
         try:
             st = os.lstat(full)
-        except OSError:
-            continue
+        except OSError as exc:
+            raise SetupError(f'install-tree-unpinnable:lstat:{name!r}:'
+                             + (exc.strerror or type(exc).__name__)) from exc
         if not stat.S_ISREG(st.st_mode):
             continue
         try:
             tree[name] = sha256_file(full)
-        except OSError:
-            continue
+        except OSError as exc:
+            raise SetupError(f'install-tree-unpinnable:read:{name!r}:'
+                             + (exc.strerror or type(exc).__name__)) from exc
     combined = hashlib.sha256(
         ''.join(f'{n} {tree[n]}\n' for n in sorted(tree)).encode()).hexdigest()
     return tree, combined
@@ -221,9 +225,10 @@ def install_links(server_real, tree=None):
     entry of any type except absent (the loader searches it before the
     directory itself), special files (FIFO, socket, device), symlinks whose
     target does not resolve to a regular file in the same directory, and,
-    when `tree` (install_tree()'s map) is given, regular members it failed
-    to hash. The caller fails closed on any problem instead of recording a
-    partial identity. `unpinned` names other subdirectories (for example a
+    when `tree` is given, regular members absent from that map (a caller's
+    partial map or files appearing between scans). install_tree itself now
+    raises on I/O failure. The caller refuses any problem instead of recording
+    a partial identity. `unpinned` names other subdirectories (for example a
     licensing folder in OpenVINO release archives): recorded by name, their
     contents outside this pin, never silently dropped."""
     links, problems, unpinned = {}, [], []

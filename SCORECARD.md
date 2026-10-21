@@ -1031,3 +1031,38 @@ historical crash-as-kill leaves, receipt-header minimization, system-library
 (outside-directory) identity, K05/other-engine serving evidence, and an
 unreadable-member fail-closed rule for `install_tree` consumers outside the
 live producer. No next round is started here.
+
+## Round 22 — install_tree helper error/identity separation
+
+Declared C1 calibration **7 → 7**, the lowest assigned non-retired axis
+(operability8); no stagnation waiver. Round-start branch master:
+`10271460cc575fc2280aa831e442726385fc2319`.
+
+Before: raised listing errors return an empty/null pair; raised stat/hash
+errors silently omit a member from a comparable digest. After criterion:
+the bare helper explicitly refuses each activated OSError before returning
+a comparison result, while successful map/digest and non-OSError propagation
+remain unchanged. Counting command:
+`python3 tests/llamacpp-live/install-io-grid.py --arm both --json`.
+The measured revision/counts are appended after the official clean-tree run.
+
+This works the existing calibration gap, not a new capability. The producer's
+existing two-helper backstop is not claimed as a new improvement; historical
+receipt schema, intentional symlink/nonregular exclusions and scan-time/race
+limits remain. Sources S075/S076 and rejected remedy S077; motivating lesson
+`corpus/lessons/round-22.md`. Other axis scores held. No capability row added;
+window 2 of4 since round20.
+
+### Round-22 correction of round-21 measured-record lag (D1)
+
+The R21 table at lines1003–1023 is an earlier measurement, not its final one.
+The final committed receipt
+`.ufo/waves/round-21/runs/7054dba1/commands.json` names measured commit
+`7054dba144ec04b0ffb3c427783f3ece85b5adc4`: **33 commands, zero mismatches**,
+not the earlier b76727f3/28-command run. Counting command:
+`python3 -c 'import json; d=json.load(open(".ufo/waves/round-21/runs/7054dba1/commands.json")); print(d["measured_commit"], len(d["commands"]), sum(not r["as_expected"] for r in d["commands"]))'`.
+The outside CloseKama21 closure independently reran all33 successfully and
+records the final grid21 cells (link13/13, subdir3/3, regular3/3, type1/1,
+null0/1), gate12 VALID+1 NOT-EVALUATED/99 mutations, producer/e2e and
+no-harm results (`../MANIFEST.json` rounds[406]). This is an appended record
+correction, not a fresh R22 execution of the R21 live recipe.

@@ -1255,3 +1255,38 @@ and in SKILL/lesson, not treated as current authority.
 - Motivation C1: the round-20 closure (fleet `221707d`) found report line 7's spliced hash and four Landed omissions; no instrument checked either. Motivation C2: R19 TreeCap — a soname retarget left every pin unchanged.
 - Draft `a29bb84a`; build wave 86 seats; integration `1471344b`; first official measurement `b76727f3` 28/28 (`runs/b76727f3`), live v3 receipt with 10 links. Falsify wave 67 seats (1 dead: ConnectorSiblingReports, Antigravity 429 quota). Falsify fixes and final measurement are recorded in `corpus/lessons/round-21.md` §Falsify-wave integration and `SCORECARD.md` §Round 21.
 - C1 calibration 7→7 detector: `report-landing-audit.py --rounds 10-20 --no-errata` exit 1, 9 defects; with ledger exit 0. C2 operability 8→8: grid frozen link 0/13 → current 13/13. Sources S066–S074 (rows 65→74).
+
+## round 22 — helper I/O refusal and finite comparison calibration
+
+- Declared C1 calibration7→7 at start `10271460cc575fc2280aa831e442726385fc2319`;
+  motivating evidence: R21 SCORECARD Planned bare-helper debt and
+  `corpus/lessons/round-22.md` M1. Existing producer backstop is distinguished
+  from helper returns; no producer-level red-before or new capability claimed.
+- Three `install_tree` OSError fallbacks now raise stage/member-specific
+  SetupError with the original cause; successful sorted regular-file digest
+  unchanged. Direct links-grid and e2e caller error boundaries migrated; receipt
+  gate changes only its legacy-null explanatory comment.
+- New finite matrix, selftest mutants and official recipe:
+  `tests/llamacpp-live/install-io-grid.py`, `.ufo/waves/round-22/{run.py,recipe.json}`.
+  Official clean-tree measurement and pushed hash are recorded in the appended
+  results, not inferred from a dirty working tree.
+- S075/S076 ground real operation errors; S077 rejects access-only remediation.
+  Knowledge/SKILL supplements and KQ30 preserve helper/caller and null/partial
+  distinctions, old receipt-schema compatibility and scan-time/race limitations.
+- Build wave64 dispatched as one validated call; code-writing and scribe seats
+  died before code delivery. The L1 integrated code directly; read-only advice
+  mistaking these known L1 edits for seat writes is retained without rewriting.
+
+- Prior outside closure (fleet rounds[406]) learned: R21's final measured
+  commit7054dba1 has33 commands/0 mismatches, not the earlier b76727f3/28
+  table; SCORECARD now appends that correction. R21 original wave deaths2
+  (RegressSkillGates Haiku429; ConnectorSiblingReports Gemini429), reports
+  build85/falsify66 at closure, not the stale still-running description.
+- D2's marked-but-prose-only source corrections now have freshly reopened
+  S078–S086 superseding rows; old S066–S074 stay unchanged. KQ31 rejects the
+  missing-row pattern. Total new source rows this round12, including C1's
+  S075–S077; this corrects the provisional three-row population above.
+- D4 learned via a trusted-repositories-only warning and KQ32; no claim to
+  repository-local Git-config/history/UTF-8 hardening. Broader hardening,
+  prelaunch races, gate chain bound and JSON edge cases remain frontier
+  rather than quietly certified by the narrow helper repair.

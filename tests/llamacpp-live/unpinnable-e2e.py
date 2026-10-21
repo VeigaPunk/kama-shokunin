@@ -70,7 +70,10 @@ def main():
         with tempfile.TemporaryDirectory(prefix="kama-unpinnable-") as tmp:
             pristine = Path(tmp) / "pristine"
             copy_tree(args.tree, pristine)
-            tree, _ = producer.install_tree(str(pristine / "llama-server"))
+            try:
+                tree, _ = producer.install_tree(str(pristine / "llama-server"))
+            except producer.SetupError as exc:
+                raise RuntimeError(f"pristine identity unavailable: {exc.code}") from exc
             problems = producer.install_links(str(pristine / "llama-server"),
                                               tree)[2]
             rows.append({"case": "pristine-scan", "problems": problems})

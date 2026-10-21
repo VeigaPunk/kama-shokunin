@@ -404,8 +404,8 @@ def validate(receipt, expect_model=None, expect_server=None,
             elif is_hex64(server_sha) and base in tree \
                     and tree[base] != server_sha:
                 bad(f"server.install_tree[{base!r}] != server.sha256")
-    # install_tree_sha256 = sha256 over sorted 'name sha\n' lines; null
-    # only when the producer could not list the directory.
+    # install_tree_sha256 = sha256 over sorted 'name sha\n' lines. Legacy
+    # producers used null on listing failure; current install_tree raises.
     tree_sha = server.get("install_tree_sha256")
     check_digest(problems, "server.install_tree_sha256", tree_sha,
                  allow_none=True)

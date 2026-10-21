@@ -297,3 +297,19 @@ fixture captures training2048 and served256, usable for historical comparison,
 not a new live endpoint sample. K05 across real registered consumers, other
 engines, loaded-weight authentication and model quality remain unclaimed.
 
+
+## Round-22 deepening — helper errors are not smaller identities
+
+`knowledge/llamacpp-loading-lifecycle.md` §Round-22 and
+`lessons/round-22.md` distinguish the bare install helper's explicit I/O refusal
+from the producer's already-existing install_links backstop. S075/S076 ground
+the raised-operation signal; S077 rejects an access-only precheck.
+`tests/llamacpp-live/install-io-grid.py` fixes the fault/control population and
+compares frozen/current helper outcomes without a server or host permission
+dependency. Successful encoding and historical receipt schema are preserved.
+
+This repairs/deepens held identity ground, not a new knowledge/capability
+surface. Frontier unchanged: external-system-library identity, receipt-header
+minimization, historical crash-as-kill leaves, K05/other-engine serving, and
+real registered-consumer reconciliation remain open. No new endpoint sample
+or service restoration is asserted.
