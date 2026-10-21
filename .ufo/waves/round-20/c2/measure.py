@@ -23,7 +23,10 @@ from typing import Any
 EXIT_PASS = 0
 EXIT_MISMATCH = 1
 EXIT_UNAVAILABLE = 2
+EXIT_CNE = 2
+STATUS_SNAPSHOT_TAMPERED = "snapshot_tampered"
 BASE_REVISION = "37bd4c5bd456a2f8a54d3312c28495c321715856"
+REFERENCE_SHA256 = "fb367e9e2c91eaadf4fb48bddb7a984a2c0c0feda41a45a00d75bbed182c5bc6"
 STATIC_KEYS = (
     "general.architecture",
     "general.name",
@@ -108,6 +111,26 @@ def load_json(path: Path, limit: int = 1024 * 1024) -> tuple[bytes, Any]:
     except (UnicodeDecodeError, json.JSONDecodeError) as exc:
         raise UnavailableError(path.name + " is not valid UTF-8 JSON") from exc
     return raw, value
+def load_pinned_json(
+    path: Path, limit: int, expected_sha256: str, field: str,
+    issues: list[dict[str, Any]],
+) -> tuple[Any, str | None, bool]:
+    try:
+        raw = read_limited(path, limit)
+    except UnavailableError as exc:
+        add_issue(issues, "unavailable", field, "readable JSON", type(exc).__name__)
+        return None, None, False
+
+    digest = hashlib.sha256(raw).hexdigest()
+    tampered = digest != expected_sha256
+    if tampered:
+        add_issue(issues, STATUS_SNAPSHOT_TAMPERED, field + ".sha256", expected_sha256, digest)
+    try:
+        document = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        add_issue(issues, "unavailable", field + ".json", "valid UTF-8 JSON", type(exc).__name__)
+        return None, digest, tampered
+    return document, digest, tampered
 
 
 def projection(entry: dict[str, Any]) -> dict[str, Any]:
@@ -119,8 +142,46 @@ def projection(entry: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def finding_id(kind: str, field: str) -> str:
+    if kind == STATUS_SNAPSHOT_TAMPERED:
+        if field.startswith("fixture."):
+            return "snapshot_tampered:fixture:" + field.split(".", 1)[1]
+        if field.startswith("expected_json"):
+            return "snapshot_tampered:expected_json"
+        if field.startswith("oracle_json") or field.startswith("oracle."):
+            return "snapshot_tampered:oracle_json"
+        if field.startswith("receipt_evidence"):
+            return "snapshot_tampered:receipt_evidence"
+        if field.startswith("reference"):
+            return "snapshot_tampered:reference"
+        return "snapshot_tampered:" + field
+    if kind == "unavailable" and field.startswith("fixture."):
+        return "unavailable:fixture:" + field.split(".", 1)[1]
+    return kind + ":" + field
+
+
 def add_issue(issues: list[dict[str, Any]], kind: str, field: str, expected: Any, actual: Any) -> None:
-    issues.append({"kind": kind, "field": field, "expected": expected, "actual": actual})
+    identifier = finding_id(kind, field)
+    if kind == STATUS_SNAPSHOT_TAMPERED and any(
+        issue.get("finding_id") == identifier for issue in issues
+    ):
+        return
+    issues.append({
+        "kind": kind,
+        "finding_id": identifier,
+        "field": field,
+        "expected": expected,
+        "actual": actual,
+    })
+def reference_snapshot(path: Path) -> tuple[dict[str, Any], list[dict[str, Any]]]:
+    facts = file_facts(path, 256 * 1024)
+    issues: list[dict[str, Any]] = []
+    if facts["sha256"] != REFERENCE_SHA256:
+        add_issue(
+            issues, STATUS_SNAPSHOT_TAMPERED, "reference.sha256",
+            REFERENCE_SHA256, facts["sha256"],
+        )
+    return facts, issues
 
 
 def validate_manifest_and_fixtures(
@@ -128,30 +189,22 @@ def validate_manifest_and_fixtures(
 ) -> tuple[dict[str, Any] | None, list[dict[str, Any]], dict[str, str], str | None]:
     issues: list[dict[str, Any]] = []
     fixture_states: dict[str, str] = {}
-    expected_digest: str | None = None
-    try:
-        raw, document = load_json(expected_path)
-    except UnavailableError as exc:
-        add_issue(issues, "unavailable", "expected_json", "readable JSON", type(exc).__name__)
-        for item in reference["fixture_manifest"]["fixtures"]:
-            fixture_states[item["id"]] = "unavailable"
-        return None, issues, fixture_states, None
-
-    expected_digest = hashlib.sha256(raw).hexdigest()
     pinned = reference["fixture_manifest"]
-    if expected_digest != pinned["expected_json_sha256"]:
-        add_issue(
-            issues,
-            "mismatch",
-            "expected_json.sha256",
-            pinned["expected_json_sha256"],
-            expected_digest,
-        )
-
+    document, expected_digest, manifest_tampered = load_pinned_json(
+        expected_path, 1024 * 1024, pinned["expected_json_sha256"],
+        "expected_json", issues,
+    )
+    if document is None:
+        state = STATUS_SNAPSHOT_TAMPERED if manifest_tampered else "unavailable"
+        for item in pinned["fixtures"]:
+            fixture_states[item["id"]] = state
+        return None, issues, fixture_states, expected_digest
     if not isinstance(document, dict) or not isinstance(document.get("fixtures"), list):
         add_issue(issues, "unavailable", "expected_json.fixtures", "array", type(document).__name__)
         for item in pinned["fixtures"]:
-            fixture_states[item["id"]] = "unavailable"
+            fixture_states[item["id"]] = (
+                STATUS_SNAPSHOT_TAMPERED if manifest_tampered else "unavailable"
+            )
         return None, issues, fixture_states, expected_digest
 
     actual_projection = [
@@ -159,7 +212,11 @@ def validate_manifest_and_fixtures(
         for item in document["fixtures"]
     ]
     if not same_json_value(actual_projection, pinned["fixtures"]):
-        add_issue(issues, "mismatch", "expected_json.fixture_manifest", pinned["fixtures"], actual_projection)
+        manifest_tampered = True
+        add_issue(
+            issues, STATUS_SNAPSHOT_TAMPERED, "expected_json.fixture_manifest",
+            pinned["fixtures"], actual_projection,
+        )
 
     expected_by_id: dict[str, dict[str, Any]] = {}
     duplicate_ids: set[str] = set()
@@ -170,7 +227,11 @@ def validate_manifest_and_fixtures(
             duplicate_ids.add(item["id"])
         expected_by_id[item["id"]] = item
     for duplicate in sorted(duplicate_ids):
-        add_issue(issues, "mismatch", "expected_json.duplicate_id", "unique fixture ids", duplicate)
+        manifest_tampered = True
+        add_issue(
+            issues, STATUS_SNAPSHOT_TAMPERED, "expected_json.duplicate_id",
+            "unique fixture ids", duplicate,
+        )
 
     for item in pinned["fixtures"]:
         fixture_id = item["id"]
@@ -187,35 +248,34 @@ def validate_manifest_and_fixtures(
             add_issue(issues, "unavailable", "fixture." + fixture_id, "present regular file", type(exc).__name__)
             continue
         if facts["size_bytes"] != item["size_bytes"] or facts["sha256"] != item["sha256"]:
-            fixture_states[fixture_id] = "mismatch"
+            fixture_states[fixture_id] = STATUS_SNAPSHOT_TAMPERED
             add_issue(
-                issues,
-                "mismatch",
-                "fixture." + fixture_id,
+                issues, STATUS_SNAPSHOT_TAMPERED, "fixture." + fixture_id,
                 {"size_bytes": item["size_bytes"], "sha256": item["sha256"]},
                 facts,
             )
+        elif manifest_tampered:
+            fixture_states[fixture_id] = STATUS_SNAPSHOT_TAMPERED
         else:
             fixture_states[fixture_id] = "ready"
 
     return document, issues, fixture_states, expected_digest
 
 
-def validate_oracle(path: Path, reference: dict[str, Any]) -> tuple[dict[str, Any] | None, list[dict[str, Any]], str | None]:
+def validate_oracle(
+    path: Path, reference: dict[str, Any]
+) -> tuple[dict[str, Any] | None, list[dict[str, Any]], str | None]:
     issues: list[dict[str, Any]] = []
-    try:
-        raw, oracle = load_json(path)
-    except UnavailableError as exc:
-        add_issue(issues, "unavailable", "oracle_json", "readable JSON", type(exc).__name__)
-        return None, issues, None
-
-    actual_digest = hashlib.sha256(raw).hexdigest()
     pinned = reference["oracle"]
-    if actual_digest != pinned["sha256"]:
-        add_issue(issues, "mismatch", "oracle_json.sha256", pinned["sha256"], actual_digest)
+    oracle, actual_digest, tampered = load_pinned_json(
+        path, 1024 * 1024, pinned["sha256"], "oracle_json", issues
+    )
     if not isinstance(oracle, dict):
-        add_issue(issues, "unavailable", "oracle_json", "object", type(oracle).__name__)
+        if oracle is not None:
+            add_issue(issues, "unavailable", "oracle_json", "object", type(oracle).__name__)
         return None, issues, actual_digest
+    if tampered:
+        return oracle, issues, actual_digest
 
     checks: list[tuple[str, Any, Any]] = [
         ("reader.package", pinned["reader"]["package"], oracle.get("reader", {}).get("package") if isinstance(oracle.get("reader"), dict) else None),
@@ -231,43 +291,40 @@ def validate_oracle(path: Path, reference: dict[str, Any]) -> tuple[dict[str, An
     for key, value in pinned["identity_keys"].items():
         checks.append(("metadata." + key, value, metadata.get(key)))
     for key, summary in pinned["arrays"].items():
-        oracle_summary = {
-            "type": "ARRAY<" + summary["type"] + ">",
-            "length": summary["length"],
-        }
+        oracle_summary = {"type": "ARRAY<" + summary["type"] + ">", "length": summary["length"]}
         checks.append(("metadata." + key, oracle_summary, metadata.get(key)))
     for field, expected, actual in checks:
         if not same_json_value(expected, actual):
-            add_issue(issues, "mismatch", "oracle." + field, expected, actual)
+            add_issue(issues, STATUS_SNAPSHOT_TAMPERED, "oracle." + field, expected, actual)
     return oracle, issues, actual_digest
 def validate_receipt_evidence(
     path: Path, reference: dict[str, Any]
 ) -> tuple[dict[str, Any], list[dict[str, Any]]]:
     issues: list[dict[str, Any]] = []
     row: dict[str, Any] = {"path": str(path)}
-    try:
-        raw, evidence = load_json(path)
-    except UnavailableError as exc:
-        add_issue(issues, "unavailable", "receipt_evidence", "readable JSON", type(exc).__name__)
-        row.update({"status": "unavailable", "error": type(exc).__name__})
-        return row, issues
-
-    digest = hashlib.sha256(raw).hexdigest()
-    row["sha256"] = digest
-    expected_digest = reference["receipt_result_source_sha256"]
-    if digest != expected_digest:
-        add_issue(issues, "mismatch", "receipt_evidence.sha256", expected_digest, digest)
+    evidence, digest, tampered = load_pinned_json(
+        path, 1024 * 1024, reference["receipt_result_source_sha256"],
+        "receipt_evidence", issues,
+    )
+    if digest is not None:
+        row["sha256"] = digest
     if not isinstance(evidence, dict) or not isinstance(evidence.get("receipt"), dict):
         add_issue(issues, "unavailable", "receipt_evidence.receipt", "object", None)
-        row["status"] = "unavailable"
+        row["status"] = STATUS_SNAPSHOT_TAMPERED if tampered else "unavailable"
         return row, issues
 
     actual_receipt = evidence["receipt"]
     row["receipt"] = actual_receipt
+    if tampered:
+        row["status"] = STATUS_SNAPSHOT_TAMPERED
+        return row, issues
     expected_receipt = reference["receipt_result"]
     if not same_json_value(expected_receipt, actual_receipt):
-        add_issue(issues, "mismatch", "receipt_evidence.receipt", expected_receipt, actual_receipt)
-    row["status"] = "mismatch" if issues else "pass"
+        add_issue(
+            issues, STATUS_SNAPSHOT_TAMPERED,
+            "receipt_evidence.receipt", expected_receipt, actual_receipt,
+        )
+    row["status"] = STATUS_SNAPSHOT_TAMPERED if issues else "pass"
     return row, issues
 
 
@@ -437,14 +494,19 @@ def measure_fixture(
         "expected_reason": pinned["expected_reason"],
     }
     mismatches: list[dict[str, Any]] = []
-    if expected_entry is None:
-        row.update({"status": "mismatch", "error": "missing_or_relabelled_expected_entry"})
-        compare_field(mismatches, "fixture." + pinned["id"] + ".expected_entry", pinned, None)
-    elif state == "unavailable":
+    if state == STATUS_SNAPSHOT_TAMPERED:
+        row.update({"status": STATUS_SNAPSHOT_TAMPERED, "error": "snapshot_tampered"})
+        return row
+    if state == "unavailable":
         row.update({"status": "unavailable", "error": "fixture_unavailable"})
         return row
-    elif state == "mismatch":
-        row.update({"status": "mismatch", "error": "fixture_digest_mismatch"})
+    if expected_entry is None:
+        row.update({"status": STATUS_SNAPSHOT_TAMPERED, "error": "expected_entry_missing"})
+        add_issue(
+            mismatches, STATUS_SNAPSHOT_TAMPERED,
+            "fixture." + pinned["id"] + ".expected_entry", pinned, None,
+        )
+        row["mismatches"] = mismatches
         return row
 
     observation = run_tool(tool, fixture_path, timeout)
@@ -624,24 +686,57 @@ def measure_model(
 
 
 def code_for(statuses: list[str]) -> int:
-    if "unavailable" in statuses:
-        return EXIT_UNAVAILABLE
+    if STATUS_SNAPSHOT_TAMPERED in statuses or "unavailable" in statuses:
+        return EXIT_CNE
     if "mismatch" in statuses:
         return EXIT_MISMATCH
     return EXIT_PASS
+def result_status(
+    exit_code: int, issues: list[dict[str, Any]], rows: list[dict[str, Any]]
+) -> str:
+    if any(issue["kind"] == STATUS_SNAPSHOT_TAMPERED for issue in issues) or any(
+        row.get("status") == STATUS_SNAPSHOT_TAMPERED for row in rows
+    ):
+        return STATUS_SNAPSHOT_TAMPERED
+    if exit_code == EXIT_CNE:
+        return "unavailable"
+    if exit_code == EXIT_MISMATCH:
+        return "mismatch"
+    return "pass"
 
 
-def selftest(expected_path: Path, oracle_path: Path, reference: dict[str, Any]) -> tuple[dict[str, Any], int]:
+
+
+def selftest(
+    expected_path: Path, oracle_path: Path, receipt_evidence_path: Path,
+    reference_path: Path, reference: dict[str, Any],
+) -> tuple[dict[str, Any], int]:
     expected, expected_issues, _, _ = validate_manifest_and_fixtures(expected_path, reference)
     oracle, oracle_issues, _ = validate_oracle(oracle_path, reference)
-    if expected is None or oracle is None or expected_issues or oracle_issues:
+    receipt_evidence, receipt_issues = validate_receipt_evidence(receipt_evidence_path, reference)
+    _, reference_issues = reference_snapshot(reference_path)
+    baseline_issues = expected_issues + oracle_issues + receipt_issues + reference_issues
+    if expected is None or oracle is None or baseline_issues:
         return {
-            "schema": "kama.gguf-identity-measure-selftest.v1",
+            "schema": "kama.gguf-identity-measure-selftest.v3",
             "status": "unavailable",
-            "reason": "baseline_inputs_not_pinned_or_readable",
-        }, EXIT_UNAVAILABLE
+            "reason": "baseline_snapshots_not_pinned_or_readable",
+        }, EXIT_CNE
 
     checks: list[dict[str, Any]] = []
+
+    def record_check(name: str, expected_id: str, issues: list[dict[str, Any]]) -> None:
+        observed_ids = sorted({issue["finding_id"] for issue in issues})
+        observed_exit = code_for([issue["kind"] for issue in issues])
+        checks.append({
+            "name": name,
+            "expected_finding_id": expected_id,
+            "expected_exit": EXIT_CNE,
+            "observed_finding_ids": observed_ids,
+            "observed_exit": observed_exit,
+            "passed": expected_id in observed_ids and observed_exit == EXIT_CNE,
+        })
+
     with tempfile.TemporaryDirectory(prefix="gguf-measure-selftest-") as temp:
         root = Path(temp)
         base = root / "baseline"
@@ -649,54 +744,110 @@ def selftest(expected_path: Path, oracle_path: Path, reference: dict[str, Any]) 
 
         missing_root = root / "missing"
         shutil.copytree(base, missing_root)
-        first_file = reference["fixture_manifest"]["fixtures"][0]["file"]
-        (missing_root / first_file).unlink()
-        _, missing_issues, _, _ = validate_manifest_and_fixtures(missing_root / expected_path.name, reference)
-        missing_detected = any(issue["kind"] == "unavailable" and issue["field"].startswith("fixture.") for issue in missing_issues)
-        checks.append({"name": "deleted_fixture_is_unavailable", "passed": missing_detected})
+        first = reference["fixture_manifest"]["fixtures"][0]
+        (missing_root / first["file"]).unlink()
+        _, missing_issues, _, _ = validate_manifest_and_fixtures(
+            missing_root / expected_path.name, reference
+        )
+        record_check("deleted_fixture_unavailable", "unavailable:fixture:" + first["id"], missing_issues)
+
+        changed_fixture_root = root / "changed-fixture"
+        shutil.copytree(base, changed_fixture_root)
+        changed_fixture = changed_fixture_root / first["file"]
+        changed_bytes = bytearray(changed_fixture.read_bytes())
+        changed_bytes[-1] ^= 1
+        changed_fixture.write_bytes(changed_bytes)
+        _, changed_fixture_issues, _, _ = validate_manifest_and_fixtures(
+            changed_fixture_root / expected_path.name, reference
+        )
+        record_check(
+            "changed_fixture_snapshot",
+            "snapshot_tampered:fixture:" + first["id"],
+            changed_fixture_issues,
+        )
 
         relabel_root = root / "relabelled"
         shutil.copytree(base, relabel_root)
         relabel_expected = relabel_root / expected_path.name
-        doc = json.loads(relabel_expected.read_text(encoding="utf-8"))
-        doc["fixtures"][0]["id"] = doc["fixtures"][0]["id"] + "-renamed"
-        relabel_expected.write_text(json.dumps(doc, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        document = json.loads(relabel_expected.read_text(encoding="utf-8"))
+        document["fixtures"][0]["id"] += "-renamed"
+        relabel_expected.write_text(
+            json.dumps(document, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
         _, relabel_issues, _, _ = validate_manifest_and_fixtures(relabel_expected, reference)
-        relabel_detected = any(issue["kind"] == "mismatch" and issue["field"] in ("expected_json.sha256", "expected_json.fixture_manifest") for issue in relabel_issues)
-        checks.append({"name": "relabelled_fixture_is_mismatch", "passed": relabel_detected})
+        record_check("relabelled_fixture_manifest", "snapshot_tampered:expected_json", relabel_issues)
 
         wrong_oracle_path = root / "wrong-oracle.json"
         wrong_oracle = json.loads(oracle_path.read_text(encoding="utf-8"))
         wrong_oracle["version"] = int(wrong_oracle["version"]) + 1
-        wrong_oracle_path.write_text(json.dumps(wrong_oracle, ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        wrong_oracle_path.write_text(
+            json.dumps(wrong_oracle, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
         _, wrong_oracle_issues, _ = validate_oracle(wrong_oracle_path, reference)
-        wrong_oracle_detected = any(issue["kind"] == "mismatch" and issue["field"] == "oracle.version" for issue in wrong_oracle_issues)
-        checks.append({"name": "wrong_oracle_is_mismatch", "passed": wrong_oracle_detected})
+        record_check("wrong_oracle_snapshot", "snapshot_tampered:oracle_json", wrong_oracle_issues)
+
+        wrong_receipt_path = root / "wrong-receipt-evidence.json"
+        wrong_receipt = json.loads(receipt_evidence_path.read_text(encoding="utf-8"))
+        wrong_receipt["receipt"]["context"]["total_slots"] += 1
+        wrong_receipt_path.write_text(
+            json.dumps(wrong_receipt, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        _, wrong_receipt_issues = validate_receipt_evidence(wrong_receipt_path, reference)
+        record_check("wrong_receipt_evidence_snapshot", "snapshot_tampered:receipt_evidence", wrong_receipt_issues)
+
+        wrong_reference_path = root / "wrong-reference.json"
+        wrong_reference = json.loads(reference_path.read_text(encoding="utf-8"))
+        wrong_reference["oracle"]["version"] = int(wrong_reference["oracle"]["version"]) + 1
+        wrong_reference_path.write_text(
+            json.dumps(wrong_reference, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        _, wrong_reference_issues = reference_snapshot(wrong_reference_path)
+        record_check("co-drifted_reference_snapshot", "snapshot_tampered:reference", wrong_reference_issues)
+
+    behavior_mismatch_exit = code_for(["mismatch"])
+    checks.append({
+        "name": "normal_behavior_mismatch_exit",
+        "expected_exit": EXIT_MISMATCH,
+        "observed_exit": behavior_mismatch_exit,
+        "passed": behavior_mismatch_exit == EXIT_MISMATCH,
+    })
 
     passed = all(check["passed"] for check in checks)
     return {
-        "schema": "kama.gguf-identity-measure-selftest.v1",
+        "schema": "kama.gguf-identity-measure-selftest.v3",
         "status": "passed" if passed else "failed",
         "check_count": len(checks),
         "checks": checks,
     }, EXIT_PASS if passed else EXIT_MISMATCH
+def find_lane_root(script_path: Path | None = None) -> Path:
+    script = (script_path or Path(__file__)).resolve()
+    for candidate in script.parents:
+        if (
+            (candidate / "tools" / "gguf-identity.py").is_file()
+            and (candidate / "registry").is_dir()
+        ):
+            return candidate
+    raise UnavailableError("lane root not found through tools/ and registry/")
 
 
 def default_paths() -> dict[str, Path]:
-    out_root = Path(__file__).resolve().parent.parent
-    project_root = Path(__file__).resolve().parents[6]
-    final_tool_dir = out_root / "GgufTool-final"
+    lane_root = find_lane_root()
+    build_out = lane_root / ".ufo" / "waves" / "round-20" / "build" / "out"
+    final_tool_dir = build_out / "GgufTool-final"
     return {
-        "expected": project_root / "tests" / "gguf-identity" / "expected.json",
-        "oracle": out_root / "GgufOracle" / "stories260K.oracle.json",
-        "tool": final_tool_dir / "gguf-identity.py",
+        "expected": lane_root / "tests" / "gguf-identity" / "expected.json",
+        "oracle": build_out / "GgufOracle" / "stories260K.oracle.json",
+        "tool": lane_root / "tools" / "gguf-identity.py",
         "receipt_evidence": final_tool_dir / "stories260K-receipt.json",
         "model": Path("/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf"),
-        "receipt": project_root / ".ufo" / "waves" / "round-18" / "live-recovery" / "receipt-1.json",
-        "repo": project_root,
+        "receipt": lane_root / ".ufo" / "waves" / "round-18" / "live-recovery" / "receipt-1.json",
+        "repo": lane_root,
         "reference": Path(__file__).resolve().with_name("measure-reference.json"),
     }
-
 
 def make_parser() -> argparse.ArgumentParser:
     defaults = default_paths()
@@ -711,7 +862,9 @@ def make_parser() -> argparse.ArgumentParser:
     parser.add_argument("--reference", type=Path, default=defaults["reference"], help="independent pinned reference JSON")
     parser.add_argument("--timeout", type=float, default=10.0, help="per-invocation deadline in seconds")
     parser.add_argument("--transcript", type=Path, help="write the JSON result to this path")
-    parser.add_argument("--selftest", action="store_true", help="exercise deleted/relabelled fixture and wrong-oracle detection")
+    parser.add_argument("--json", action="store_true", help="accepted for wave recipe compatibility; output is always JSON")
+    parser.add_argument("--selftest", action="store_true",
+                        help="exercise pinned-input tamper and behavior controls")
     return parser
 
 
@@ -726,44 +879,68 @@ def emit(result: dict[str, Any], exit_code: int, transcript: Path | None = None)
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = make_parser().parse_args(argv)
+    args = None
     try:
+        args = make_parser().parse_args(argv)
+        if args.timeout <= 0 or args.timeout > 60:
+            raise UnavailableError("timeout must be positive and no greater than 60 seconds")
+
+        reference_facts = file_facts(args.reference, 256 * 1024)
+        if reference_facts["sha256"] != REFERENCE_SHA256:
+            issues: list[dict[str, Any]] = []
+            add_issue(
+                issues, STATUS_SNAPSHOT_TAMPERED, "reference.sha256",
+                REFERENCE_SHA256, reference_facts["sha256"],
+            )
+            return emit({
+                "schema": "kama.gguf-identity-fixture-measurement.v1",
+                "status": STATUS_SNAPSHOT_TAMPERED,
+                "snapshot_tampered": issues,
+                "mismatches": [],
+                "unavailable": [],
+                "inputs": {"reference": {"path": str(args.reference), **reference_facts}},
+            }, EXIT_CNE, args.transcript)
+
         _, reference = load_json(args.reference, limit=256 * 1024)
         if not isinstance(reference, dict) or reference.get("schema") != "kama.gguf-identity-measure-reference.v1":
             raise UnavailableError("reference file has an unsupported schema")
-        if args.timeout <= 0 or args.timeout > 60:
-            raise UnavailableError("timeout must be positive and no greater than 60 seconds")
         if args.selftest:
-            result, code = selftest(args.expected, args.oracle, reference)
+            result, code = selftest(
+                args.expected, args.oracle, args.receipt_evidence,
+                args.reference, reference,
+            )
             return emit(result, code, args.transcript)
 
-        expected_doc, expected_issues, fixture_states, expected_digest = validate_manifest_and_fixtures(args.expected, reference)
+        expected_doc, expected_issues, fixture_states, expected_digest = validate_manifest_and_fixtures(
+            args.expected, reference
+        )
         oracle_doc, oracle_issues, oracle_digest = validate_oracle(args.oracle, reference)
         receipt_evidence, receipt_evidence_issues = validate_receipt_evidence(
             args.receipt_evidence, reference
         )
         issues = expected_issues + oracle_issues + receipt_evidence_issues
+        snapshot_blocked = any(
+            issue["kind"] == STATUS_SNAPSHOT_TAMPERED for issue in issues
+        )
 
-        tool_row: dict[str, Any] = {}
         try:
-            tool_facts = file_facts(args.tool, 1024 * 1024)
-            tool_row = {"path": str(args.tool), **tool_facts}
-            if tool_facts["sha256"] != reference["tool_sha256"]:
-                add_issue(
-                    issues, "mismatch", "tool.sha256",
-                    reference["tool_sha256"], tool_facts["sha256"],
-                )
+            tool_row = {"path": str(args.tool), **file_facts(args.tool, 1024 * 1024)}
+            tool_available = True
         except UnavailableError as exc:
             tool_row = {"path": str(args.tool), "status": "unavailable", "error": type(exc).__name__}
-            issues.append({"kind": "unavailable", "field": "tool", "expected": "readable regular script", "actual": type(exc).__name__})
+            tool_available = False
+            add_issue(issues, "unavailable", "tool", "readable regular script", type(exc).__name__)
 
         frozen = frozen_before(args.repo, reference)
         if frozen.get("status") == "unavailable":
-            issues.append({"kind": "unavailable", "field": "frozen_before", "expected": "capability_absent", "actual": frozen.get("error")})
+            add_issue(issues, "unavailable", "frozen_before", "capability_absent", frozen.get("error"))
         elif frozen.get("status") != reference["frozen_before"]["expected_status"]:
-            issues.append({"kind": "mismatch", "field": "frozen_before.status", "expected": reference["frozen_before"]["expected_status"], "actual": frozen.get("status")})
+            add_issue(
+                issues, "mismatch", "frozen_before.status",
+                reference["frozen_before"]["expected_status"], frozen.get("status"),
+            )
 
-        expected_by_id = {}
+        expected_by_id: dict[str, dict[str, Any]] = {}
         if expected_doc is not None and isinstance(expected_doc.get("fixtures"), list):
             expected_by_id = {
                 item.get("id"): item
@@ -772,21 +949,48 @@ def main(argv: list[str] | None = None) -> int:
             }
         reason_equivalence = reference["fixture_manifest"]["reason_equivalence"]
         fixture_rows: list[dict[str, Any]] = []
-        tool_available = "status" not in tool_row
         for pinned in reference["fixture_manifest"]["fixtures"]:
-            fixture_path = args.expected.parent / pinned["file"]
-            entry = expected_by_id.get(pinned["id"])
-            state = fixture_states.get(pinned["id"], "unavailable")
-            if not tool_available:
-                fixture_rows.append({"id": pinned["id"], "file": pinned["file"], "status": "unavailable", "error": "tool_unavailable"})
+            if snapshot_blocked:
+                fixture_rows.append({
+                    "id": pinned["id"], "file": pinned["file"],
+                    "status": STATUS_SNAPSHOT_TAMPERED, "error": "snapshot_tampered",
+                })
                 continue
-            fixture_rows.append(
-                measure_fixture(pinned, entry, state, fixture_path, args.tool, args.timeout, reason_equivalence)
+            if not tool_available:
+                fixture_rows.append({
+                    "id": pinned["id"], "file": pinned["file"],
+                    "status": "unavailable", "error": "tool_unavailable",
+                })
+                continue
+            fixture_rows.append(measure_fixture(
+                pinned,
+                expected_by_id.get(pinned["id"]),
+                fixture_states.get(pinned["id"], "unavailable"),
+                args.expected.parent / pinned["file"],
+                args.tool,
+                args.timeout,
+                reason_equivalence,
+            ))
+
+        if snapshot_blocked:
+            model_row: dict[str, Any] = {
+                "id": "stories260K.gguf",
+                "status": STATUS_SNAPSHOT_TAMPERED,
+                "parser_attempted": False,
+                "error": "snapshot_tampered",
+            }
+        elif not tool_available:
+            model_row = {
+                "id": "stories260K.gguf",
+                "status": "unavailable",
+                "parser_attempted": False,
+                "error": "tool_unavailable",
+            }
+        else:
+            model_row, _ = measure_model(
+                args.model, args.tool, args.receipt, args.timeout, reference
             )
 
-        model_row, _ = measure_model(
-            args.model, args.tool, args.receipt, args.timeout, reference
-        )
         statuses = [row.get("status", "unavailable") for row in fixture_rows]
         statuses.extend((
             model_row.get("status", "unavailable"),
@@ -794,22 +998,17 @@ def main(argv: list[str] | None = None) -> int:
             frozen.get("status", "unavailable"),
         ))
         statuses.extend(issue["kind"] for issue in issues)
-        normalized_statuses = [
-            "unavailable" if status == "unavailable"
-            else "mismatch" if status == "mismatch"
-            else "pass"
-            for status in statuses
-        ]
-        exit_code = code_for(normalized_statuses)
-        overall = "pass" if exit_code == EXIT_PASS else "mismatch" if exit_code == EXIT_MISMATCH else "unavailable"
+        exit_code = code_for(statuses)
+        all_rows = [*fixture_rows, model_row, receipt_evidence]
+        overall = result_status(exit_code, issues, all_rows)
         row_mismatches = [
-            {"row": row.get("id"), **mismatch}
+            {"row": row.get("id"), **finding}
             for row in (*fixture_rows, model_row)
-            for mismatch in row.get("mismatches", [])
+            for finding in row.get("mismatches", [])
         ]
         row_unavailable = [
             {"row": row.get("id"), "error": row.get("error", "not_evaluated")}
-            for row in (*fixture_rows, model_row)
+            for row in (*fixture_rows, model_row, receipt_evidence)
             if row.get("status") == "unavailable"
         ]
         result = {
@@ -821,27 +1020,39 @@ def main(argv: list[str] | None = None) -> int:
                 "python": sys.executable,
                 "tool": str(args.tool),
                 "fixture_command_shape": [sys.executable, str(args.tool), "<fixture>", "--json"],
-                "model_command": [sys.executable, str(args.tool), str(args.model), "--json", "--receipt", str(args.receipt)],
+                "model_command": [
+                    sys.executable, str(args.tool), str(args.model), "--json",
+                    "--receipt", str(args.receipt),
+                ],
                 "timeout_per_tool_invocation_seconds": args.timeout,
             },
             "frozen_before": frozen,
             "inputs": {
+                "reference": {"path": str(args.reference), "sha256": reference_facts["sha256"]},
                 "tool": tool_row,
                 "expected_json": {"path": str(args.expected), "sha256": expected_digest},
                 "oracle_json": {"path": str(args.oracle), "sha256": oracle_digest},
                 "receipt_evidence": receipt_evidence,
-                "model": {"path": str(args.model), **({"sha256": model_row.get("sha256"), "size_bytes": model_row.get("size_bytes")} if model_row.get("sha256") else {})},
+                "model": {
+                    "path": str(args.model),
+                    **({"sha256": model_row.get("sha256"), "size_bytes": model_row.get("size_bytes")}
+                       if model_row.get("sha256") else {}),
+                },
                 "receipt": {"path": str(args.receipt), "parser_result": model_row.get("receipt")},
             },
             "fixtures": fixture_rows,
             "model": model_row,
             "receipt_reconciliation": model_row.get("receipt"),
             "mismatches": [issue for issue in issues if issue["kind"] == "mismatch"] + row_mismatches,
+            "snapshot_tampered": [
+                issue for issue in issues if issue["kind"] == STATUS_SNAPSHOT_TAMPERED
+            ],
             "unavailable": [issue for issue in issues if issue["kind"] == "unavailable"] + row_unavailable,
             "summary": {
                 "fixtures_total": len(fixture_rows),
                 "fixtures_passed": sum(row.get("status") == "pass" for row in fixture_rows),
                 "fixtures_mismatched": sum(row.get("status") == "mismatch" for row in fixture_rows),
+                "fixtures_snapshot_tampered": sum(row.get("status") == STATUS_SNAPSHOT_TAMPERED for row in fixture_rows),
                 "fixtures_unavailable": sum(row.get("status") == "unavailable" for row in fixture_rows),
                 "oracle_validated": oracle_doc is not None and not oracle_issues,
                 "receipt_evidence_validated": receipt_evidence.get("status") == "pass",
@@ -853,9 +1064,17 @@ def main(argv: list[str] | None = None) -> int:
             result["transcript_path"] = str(args.transcript)
         return emit(result, exit_code, args.transcript)
     except UnavailableError as exc:
-        return emit({"schema": "kama.gguf-identity-fixture-measurement.v1", "status": "unavailable", "error": type(exc).__name__}, EXIT_UNAVAILABLE)
+        return emit({
+            "schema": "kama.gguf-identity-fixture-measurement.v1",
+            "status": "unavailable",
+            "error": type(exc).__name__,
+        }, EXIT_CNE, getattr(args, "transcript", None))
     except (OSError, ValueError, KeyError, TypeError) as exc:
-        return emit({"schema": "kama.gguf-identity-fixture-measurement.v1", "status": "unavailable", "error": type(exc).__name__}, EXIT_UNAVAILABLE)
+        return emit({
+            "schema": "kama.gguf-identity-fixture-measurement.v1",
+            "status": "unavailable",
+            "error": type(exc).__name__,
+        }, EXIT_CNE, getattr(args, "transcript", None))
 
 
 if __name__ == "__main__":
