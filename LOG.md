@@ -1407,3 +1407,24 @@ and in SKILL/lesson, not treated as current authority.
   CritOpenHonesty); round total 141 of 200. Fleet incidents: four `.promisor`
   markers written into the fleet repo by a falsify probe (removed, M4); one
   scribe misroot swept into this lane (M5).
+
+## round 24 — repair-first preregistration (2026-10-21)
+
+- Round-23 outside closure, MANIFEST rounds[428], rejected-harmed:
+  calibration improved but operability harmed. This supersedes any admission
+  reading of the round-23 author verdict and its quality-improved trend.
+  Disclosure of a trade does not waive the no-trade rule.
+- Correction to filed `.ufo/reports/round-23/kama.md`: falsify wave has
+  69 durable lane reports, not 68 (RowC03 wrote before its final response
+  aborted); 40 of the 56 killed FIFO-process identities were retained, not
+  all 56. Filed round-23 bytes remain immutable.
+- Preregistered C1 calibration7→7 narrow: restore justified correct local
+  verdicts on complete promisor-marked repositories while retaining
+  no-lazy-fetch/execution isolation and refusing unavailable evidence.
+  Expected outcomes are fixed before implementation in
+  `.ufo/waves/round-24/preregistration.json`; base `0df800e8`.
+  A metadata marker alone is not evidence of missing objects.
+- Build wave validated at 64 seats; first call refused by background-job
+  cap, unchanged payload spawned on the next attempt. Planner is L1;
+  bounded data-walk is connector ConnPlan. Evidence in
+  `.ufo/waves/round-24/build/`; no actual round-24 improvements claimed yet.
