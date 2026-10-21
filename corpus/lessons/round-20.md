@@ -285,3 +285,14 @@ fixture result was credited by this run. The reference's fixture identities
 remain the same; only `fixture_manifest.expected_json_sha256` was updated to
 the exact new manifest digest. The failed run is retained as evidence, not
 counted as final verification.
+
+## Second post-manifest measurement failure and correction
+
+The rerun at `04de7a87` advanced past the manifest pin but failed closed before
+fixture evaluation because `c2/measure.py` still pinned the prior reference
+file hash `fb367e9e2c91eaadf4fb48bddb7a984a2c0c0feda41a45a00d75bbed182c5bc6`,
+while the updated reference file hashed to
+`e3f0349ab13cf08c7934d43c71a6ec27c7283150e90e39f3dd2d63f9be9c7bcb`. The
+retained `gguf-measure.stdout` contains only this reference-hash mismatch and
+credits no fixture outcome. `REFERENCE_SHA256` is now updated to that exact
+file digest; this failure is retained separately from the final rerun.

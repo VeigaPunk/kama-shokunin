@@ -26,7 +26,7 @@ EXIT_UNAVAILABLE = 2
 EXIT_CNE = 2
 STATUS_SNAPSHOT_TAMPERED = "snapshot_tampered"
 BASE_REVISION = "37bd4c5bd456a2f8a54d3312c28495c321715856"
-REFERENCE_SHA256 = "fb367e9e2c91eaadf4fb48bddb7a984a2c0c0feda41a45a00d75bbed182c5bc6"
+REFERENCE_SHA256 = "e3f0349ab13cf08c7934d43c71a6ec27c7283150e90e39f3dd2d63f9be9c7bcb"
 STATIC_KEYS = (
     "general.architecture",
     "general.name",

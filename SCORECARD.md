@@ -964,3 +964,14 @@ with the old `c2/measure-reference.json` pin
 `parser_attempted: false`; no C2 outcomes are credited from this run. The
 reference pin is now updated to the exact manifest digest; this run remains
 retained as failure evidence, not a passing measurement.
+
+### Second post-manifest verification — failed closed
+
+The rerun at `runs/04de7a87` reached the updated manifest but exposed a second
+stale pin: `c2/measure.py` expected reference SHA-256
+`fb367e9e2c91eaadf4fb48bddb7a984a2c0c0feda41a45a00d75bbed182c5bc6`, while the
+updated `measure-reference.json` is
+`e3f0349ab13cf08c7934d43c71a6ec27c7283150e90e39f3dd2d63f9be9c7bcb`. It exited
+2 before fixture evaluation; no C2 outcomes are credited. The test-harness
+constant is now bound to the exact current reference file, and this failed run
+is retained separately from final verification.
