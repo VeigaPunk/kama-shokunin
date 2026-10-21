@@ -31,7 +31,7 @@ Observed digest: printed in full by `--json`; text prints a 12-hex prefix. L4 JS
 - Harm check: no doc quotes the text-row format (grep of `corpus/`, `SCORECARD.md`, `LOG.md`, `registry/`). Ancestry gate unchanged (baseline `off_ref=0`).
 
 ## Residual risk and gaps
-- The lane moved repeatedly during review. Gate row re-pinned `eb78788b…/b2043ba8…` → `1b85a24e…/1cb5a41b…`. Tool went `edc9e06a…` → `9632e4a9…` → `d442262d…` with an off-ref gate added. HEAD went `8bf99cae…` → `7229fa95…` → `f1790e25…`. Re-run `sh out/rerun-latest.sh` on the integrated tree before relying on these numbers.
+- The lane moved repeatedly during review. Gate row re-pinned `eb78788b…/b2043ba8…` → `1b85a24e…/1cb5a41b…`. Tool hashes seen in order: `edc9e06a…`, `00998d52…`, `2d07296d…`, `9632e4a9…`, `d442262d…` (off-ref gate added in `d442262d…`). HEAD went `8bf99cae…` → `7229fa95…` → `f1790e25…`. Re-run `sh out/rerun-latest.sh` on the integrated tree before relying on these numbers.
 - Across snapshots, the first (`edc9e06a…`) classified doc-only and registry-only flips as `missing`. The current tool classifies them as `mismatch`. That change is the stale branch. My numbers come from the latest state only.
 - My work copy's git HEAD is `7229fa95…` and its `origin/master` is `7229fa95…`. The off-ref check ran against that. Read-only check on the lane: both registry revs (`1b85a24e…`, `1c325b2e…`) are ancestors of the lane's `origin/master` `f1790e25…` (`merge-base --is-ancestor`, exit 0).
 - The stale check ignores the `doc` binding, so a stale token in any scanned doc fails the row. No test covers a bound-doc row with a stale token elsewhere. [INFERENCE: intent unknown]
