@@ -1462,3 +1462,11 @@ known to name unavailable referenced local content still refuses.
 The original unknown-citation expectation remains filed and is explicitly
 withdrawn/not-achieved, not retroactively passed. This entry and amendment
 were written before L1 inspected, measured or integrated any candidate.
+
+The independent 44-case original/amended expectation manifest is frozen in
+`.ufo/waves/round-24/oracle-snapshot-before-inspection.json` before L1
+candidate source inspection or measurements. Its exact finding/token
+crosswalk includes complete missing-token failures, referenced missing
+content refusals, wrong-type failures, unrelated-hole controls, and the
+historical corrected-missing-token workflow. Later oracle changes, if
+needed, must be separately disclosed rather than replacing this snapshot.
