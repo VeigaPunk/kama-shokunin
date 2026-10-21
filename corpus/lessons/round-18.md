@@ -305,7 +305,7 @@ intentional host-path provenance in retained receipts.
 
 | ID | Class | Evidence pointer | Captured-by | Fix / shown able to fail |
 |---|---|---|---|---|
-| M8 | Measurement-publication gap: both official counters ended exit 2 at the checkpoint, and the published head counter bytes no longer matched the retained run | `ReportNumbers.md`, `MistakesFailCapable.md`, `C2Admission.md`, `ConnectTameshi.md`; `runs/c1-measure.exit`/`c2-survivors.exit` at 101f399 | falsify wave 2's re-run duty; the coordinator treated counter repair as done without re-running | corrected counters now exit 0 on the official invocation; the stale artifact is retained under `runs/pre-repair/`; the run records measured argv and exits |
+| M8 | Measurement-publication gap: both official counters ended exit 2 at the checkpoint, and the published head counter bytes no longer matched the retained run | `ReportNumbers.md`, `MistakesFailCapable.md`, `C2Admission.md`, `ConnectTameshi.md`; `runs/c1-measure.exit`/`c2-survivors.exit` at 101f399 | falsify wave 2's re-run duty; the coordinator treated counter repair as done without re-running | both corrected counters exit 0 on the official invocation (C1 5→0/1→0/1→0/0→0; C2 15 named, after 11 killed/1 correct/3 handled); the stale artifact is retained under `runs/pre-repair/`; the run records measured argv and exits |
 | M9 | Counter trusts its child for 3 of 4 counts (row-vs-count divergence), and an exclusion label was trusted without a declaration | `CounterC1.md` E1/E3/E5 | fresh falsifier attacked the counting command, not just the subject | row-vs-count under-report faults, declared-exclusion requirement, arms-below-rows fault; unit cases added |
 
 ### Residual falsification call (7 seats; no GRANT needed)
@@ -352,3 +352,34 @@ Named residuals from the residual call, not silently closed:
   family b: the C2 denominator is the ledger's 15, not the full (a)–(d) set
   (`SurvivorUniverse.md`), and adding it needs a frozen-vs-current comparison
   shape this counter does not implement.
+
+## Official measurement pass — recovery attempt 2
+
+This supersedes the earlier "Official measurement pass and counter-integration
+defects" section's could-not-evaluate state for the current bytes; that failed
+pass at `c6dc46f` remains as history, not overwritten.
+
+Measured tree: `eb78788b35b832d08887d4c366d1d0c1df3a6c19` (branch tip at run
+start with a clean tree; `runs/commands.json` `measured_commit`). Work commit
+`0c75c611474cfc9f3c549e056fb0b736b20b854f`; evidence commit
+`888cd384a9cd06dd93d3fe6b05a9d829b9972122` carries the residual seats and
+censuses; the harness fix is `eb78788b`. `python3
+.ufo/waves/round-18/runs/run.py` executed 32 commands and all met their declared
+exits (harness exit 0), including three live v3 runs and their five-pin gates
+`VALID`, five legacy receipt pairs, the wrong-probe-pin negative control (exit 1),
+the snapshot and round-16 clone measures, both counters exit 0, and the
+probe-matrix identity check over all ten inputs.
+
+C1 (`runs/c1-measure.json`): accepted-bad **5 → 0**, good-rejected **1 → 0**,
+misclassified **1 → 0**, uncontrolled **0 → 0**, gate_flip_arms 16 → 17,
+counter exit 0, faults `[]`, frozen pins verified, no leaked processes.
+
+C2 (`runs/c2-survivors.stdout`, the counter's JSON document; its `--out` stays
+exclusive): 15 named (a6 b3 c2 d1 e3); before survived 11 / miscount 1 /
+accepted 3 → after killed 11 / correct 1 / handled 3; inconclusive 0/0; frozen
+witnesses 15 with 0 mismatches; exit 0; tool sha256 `ac934794…`.
+
+Recovery live receipts are `live-recovery/receipt-{1,2,3}.json` (tool
+`83eac5c0…`, outcome `pass`, ports 40999/36277/43877). The checkpoint receipts
+under `live/` were restored to their cited bytes (tool `dc036d7d…`, ports
+33769/44109/45359), so S055's citation resolves to the bytes it describes.

@@ -765,3 +765,43 @@ ollama-offline-evidence-replay, live-llamacpp-lifecycle. New knowledge ground
 claim or another runtime. Other scores unchanged: freshness 8, coverage 9,
 depth 7, adjacency 7. Last capability entry round 16; stagnation window 2 of 4.
 Measured results, measured commit and exact commands are appended after execution.
+
+### Round-18 measured results (recovery attempt 2)
+
+Work commit `0c75c611474cfc9f3c549e056fb0b736b20b854f` (code/corpus),
+evidence commit `888cd384a9cd06dd93d3fe6b05a9d829b9972122`, harness commit
+`eb78788b35b832d08887d4c366d1d0c1df3a6c19`; the official
+`python3 .ufo/waves/round-18/runs/run.py` started on that clean tip and
+`runs/commands.json` records `measured_commit` = that tip, 32 commands, all
+expected exits, harness exit 0. Raw stdout/stderr, exits and input digests are
+retained under `runs/`.
+
+| Claim | Axis / score | Before → after (measured) | Counting command | Evidence pointer |
+|---|---|---|---|---|
+| C1 — outcome classification and receipt boundary | operability **8 → 8** (delta 0) | accepted_bad **5 → 0**; good_rejected **1 → 0**; misclassified **1 → 0**; uncontrolled_checks **0 → 0**; gate_flip_arms 16 → 17; counter exit 0, faults none | `python3 .ufo/waves/round-18/c1/measure.py --controls tests/llamacpp-live/controls.py --frozen-tool … --frozen-gate … --tool tools/kama-llamacpp-live.py --gate tests/llamacpp-live/check-receipt.py --probe tools/kama-probe.sh --json` (full argv in `runs/commands.json` `c1-measure`) | `runs/c1-measure.json`; real v3 runs and five-pin gate VALID in `runs/live-gate-{1,2,3}.stdout` |
+| C2 — statement→mutant→detector ledger | calibration **7 → 7** (delta 0) | 15 named items; before survived 11 / miscount 1 / accepted 3 → after killed 11 / correct 1 / handled 3; inconclusive 0 → 0; exit 0 | `python3 .ufo/waves/round-18/c2/survivors.py --json` (full argv in `runs/commands.json` `c2-survivors`; the JSON document is `runs/c2-survivors.stdout`, and the counter's exclusive `--out` is never clobbered) | `runs/c2-survivors.stdout`; frozen witnesses 15/15 matched; family-b rerun 0 divergences (`residual/advice/ResidCounterC2.md`) |
+
+Disclosures for these numbers: C2's denominator is the ledger's 15 named
+items, not the full detector-self (a)–(d) set — mutant (b) "any nonzero exit
+counts" is named in `SurvivorUniverse.md` and excluded with reason; two of the
+11 kills (FC-target, FC-f6cache) flip from inconclusive to killed only because
+the counter's arm-combination rule was repaired, while their raw main-arm
+results did not change. The stale pre-repair artifact is retained at
+`runs/pre-repair/c2-survivors.json`. The earlier exit-2 pass at `c6dc46f` is
+historical and not overwritten.
+
+Other axes unchanged: freshness 8, coverage 9, depth 7, adjacency 7.
+Capabilities unchanged from the canonical round-16 list; no capability row
+enters this round (the C1/C2 moves are hardened measurement and classification,
+not new repertoire). Last capability entry round 16; stagnation window now 3 of
+4 — the next round should be a capability/frontier move unless an axis drops.
+
+**Planned (supersedes earlier planned rows):** (1) close the named gate leaves
+from `GateCaptureHashes` M1–M4 and the fresh-mutant survivors (`FreshGate`,
+`FreshControls`, `FreshAppend`, `FaultF0`, `FaultTarget`,
+`GateLoadingTransitions`, `GateModelsStatus`, `GateNullLicense`, `AppendCells`);
+(2) add an enumeration check to the C2 selftest-kill arm and decide the
+detector-self denominator (mutant (b)); (3) pin the remaining install-tree
+members the receipt names, or state the boundary as policy; (4) obtain the
+outside non-author admit/reject spot-check for this round; K05 remains
+runtime-dependent and operator-owned.

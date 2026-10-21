@@ -1099,3 +1099,37 @@ and in SKILL/lesson, not treated as current authority.
   except the logged S047 used-by addition. Lesson records the two execution
   conformance disclosures (late canonical reread; the argv probe's brief wildcard
   launch). Final claim measurements await corrected counting invocations.
+
+## round 18 — recovery attempt 2: falsify integration, clean-tree measurement, residual call (2026-10-21)
+
+- Attempt 1 died on provider quota (`lane-dead-no-report`, fleet `.ufo/watchdog.log:536`)
+  leaving pushed checkpoint `101f3991…`. Re-verified and reused: commits `c6dc46f`/`1c325b2`,
+  both wave specs/registries/advice, the live receipts (restored to their checkpoint bytes
+  after the recovery run overwrote them in place), the frozen manifest,
+  strict-canonicalisation tooling, and the corpus text already integrated at the checkpoint.
+  Discarded: the 20 never-assigned build members, the 10 dead falsify seats, and the
+  pre-repair counter artifact (kept under `runs/pre-repair/`).
+- Fixed from the falsify wave (76 seats; 66 reports: 28 confirm / 34 partial / 1 refute /
+  3 nonconformant): the `PrivacyScope` refute (no `child_env_keys` value in diagnostics, plus
+  raw-token and non-string cases), `GateCaptureHashes` H1 (`/health` loading envelope cannot
+  stay NOT-EVALUATED), `ConnectTsukuroi` impl binding (fifth pin + field↔tree cross-check),
+  `CounterC1` seams (row/count under-report, declared exclusion, arms, bucket-gap gap),
+  guarded finalizer signal-handler restore (`ToolFaultPaths` P2, unit-tested), and C2
+  docstring/count/empty-arms corrections. Corpus appends: ownership honest-limit and
+  endianness; lifecycle window-exclusion evidence and the five-pin residual; lesson
+  dispositions and M8/M9.
+- Residual call: 7 reviewer/critic seats (the ≤8 allowance; no 64–100 wave with ≤49 seats
+  left): five confirm, two partial, and `ResidClaims` partial on commit labelling and the
+  overwritten receipts. Fixes and named residuals are in `corpus/lessons/round-18.md`
+  §Residual falsification call.
+- Work commit `0c75c611…`, evidence commit `888cd384…`, harness commit `eb78788b…`; the
+  official `python3 .ufo/waves/round-18/runs/run.py` on that clean tip ran 32 commands with
+  every expected exit and harness exit 0. The measured tree is the tip recorded in
+  `runs/commands.json`.
+- C1 (operability 8 → 8): accepted-bad 5 → 0, good-rejected 1 → 0, misclassified 1 → 0,
+  uncontrolled 0 → 0; gate_flip_arms 16 → 17; counter exit 0 with no faults.
+- C2 (calibration 7 → 7): 15 named items; before survived 11 / miscount 1 / accepted 3 →
+  after killed 11 / correct 1 / handled 3; exit 0; the family-b rerun diverged 0 times.
+- Census 47 → 56 rows (A 44 → 53, C 3; mined 37 → 45, rejected 5 → 6), both exits 0;
+  validate keeps three W04 duplicates (S031, S043, S056).
+- No installs or host mutations. Stale-lane: respawn-per-round driver; no other kama mission open.
