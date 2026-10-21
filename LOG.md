@@ -1470,3 +1470,12 @@ crosswalk includes complete missing-token failures, referenced missing
 content refusals, wrong-type failures, unrelated-hole controls, and the
 historical corrected-missing-token workflow. Later oracle changes, if
 needed, must be separately disclosed rather than replacing this snapshot.
+
+Before L1 candidate inspection, CritUnknown independently exposed a hidden
+dependency: a missing subtree can conceal the cited missing blob's name.
+`oracle-supplement-2.json` adds that adversarial case and controls without
+changing the frozen44. Only an actually unresolved citation can invoke this
+opaque-dependency refusal; known-present wrong-type objects still fail
+normally, and an unused hole with all citations resolved is not a blanket
+refusal. The supplement also forbids newer Git flags that would raise the
+existing version prerequisite.
