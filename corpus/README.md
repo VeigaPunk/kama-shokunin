@@ -333,3 +333,25 @@ verdict. Other frontier unchanged: external-system-library identity,
 receipt-header minimization, historical crash-as-kill leaves,
 K05/other-engine serving and real registered-consumer reconciliation. No
 endpoint sample or service restoration is asserted.
+
+## Frontier correction — round24
+
+The round23 author quality-improved reading is superseded by outside
+closure rounds[428]: operability and quality were harmed. A disclosed loss
+of a correct runnable verdict is not an admissible trade.
+
+D4 remains partial. Its promisor rule is now local-evidence-based:
+metadata alone does not refuse a complete or locally sufficient repository;
+actual unavailable required evidence does. A missing cited object already
+referenced locally, or hidden behind an opaque dependency, is not a proved
+absence. An unrelated historical blob does not become a completeness gate.
+`lessons/round-24.md` and `knowledge/error-is-not-a-verdict.md` §Round24
+explain the original/prospective oracle distinction and KQ35.
+
+Correction to the previous paragraph's paired-marker wording: F23 is a
+genuinely incomplete `--no-checkout` fixture, not the complete T01 witness.
+The Git>=2.45 prerequisite remains open to operator disposition (R23-H2).
+Other frontier unchanged: external-system-library identity, receipt-header
+minimization, historical crash-as-kill leaves, K05/other-engine serving and
+real registered-consumer reconciliation. No endpoint sample, service
+restoration, new knowledge entry or new serving capability is asserted.

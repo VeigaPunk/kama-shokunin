@@ -9,9 +9,11 @@ a pass), and runs an auditor as a subprocess with a timeout. Arms:
   current  tools/report-landing-audit.py beside this test (or --current PATH)
 
 Graded rows are `fault` (repository-local state must not crash, flip or
-hijack the verdict) and `control` (ordinary verdicts both arms must keep).
-`open` rows (known unhandled channels) and `tradeoff` rows (declared new
-refusals) are reported, never graded.
+hijack the verdict), `contract` (declared policy), and `control` (ordinary
+verdicts both arms must keep). `open` rows are reported, never graded.
+Round24 restores T01 as a graded control, gives F06 the ordinary local
+missing-citation findings, and gives F23 a content-derived refusal reason.
+The filed round23 population remains immutable in its committed evidence.
 
 Exit: 0 every graded row of every selected arm met its expectation; 1 at
 least one did not; 2 could not evaluate (fixture premise failed, git or
@@ -648,7 +650,8 @@ CASES = [
      ["landed-unresolved", "unresolved-full-hash"]),
     ("F05-replace-fleet-report", "fault", f_replace_report, 1,
      ["landed-omitted"]),
-    ("F06-lazy-fetch-command", "fault", f_lazy_fetch, 2, None),
+    ("F06-lazy-fetch-command", "fault", f_lazy_fetch, 1,
+     ["landed-unresolved", "unresolved-full-hash"]),
     ("F07-log-follow-cutoff", "fault", f_log_follow, 1, ["landed-omitted"]),
     ("F08-log-showroot-cutoff", "fault", f_show_root, 0, []),
     ("F09-signature-program", "fault", f_signature_program, 0, []),
@@ -686,7 +689,7 @@ CASES = [
     ("O01-alternates-foreign-object", "open", o_alternates, 1,
      ["landed-unresolved", "unresolved-full-hash"]),
     ("O02-gitfile-redirect", "open", o_gitfile, 1, ["landed-omitted"]),
-    ("T01-blobless-partial-clone", "tradeoff", t_blobless, 0, []),
+    ("T01-blobless-partial-clone", "control", t_blobless, 0, []),
 ]
 
 
@@ -694,14 +697,13 @@ CASES = [
 # startup error cannot pass as the intended refusal.
 REASONS = {
     "F02-report-invalid-utf8": "output is not UTF-8",
-    "F06-lazy-fetch-command": "partial clone",
     "F10-shallow-lane": "shallow repository",
     "F11-grafts-lane": "rewrites history",
     "F13-ref-named-abbreviation": "names a ref",
     "F15-sha256-lane": "object format",
     "F16-errata-invalid-utf8": "output is not UTF-8",
     "F21-nested-subdirectory-lane": "not a repository top level",
-    "F23-promisor-pack-without-config": "promisor pack",
+    "F23-promisor-pack-without-config": "unavailable required object",
     "F30-config-include-fifo": "timed out after",
     "F24-huge-round-number": "could-not-evaluate: internal: ValueError",
     "F26-huge-author-timestamp": "unexpected git log record",

@@ -78,3 +78,42 @@ could not evaluate.
 
 source: S093, S096, S097, S098, corpus/lessons/round-23.md; evidence
 `tests/report-audit/repo-state-grid.py`, `tests/report-audit/isolation-mutants.py`.
+
+## Round24 — isolation is not evidence availability
+
+The round23 containment work did not justify its metadata-only refusal.
+Outside closure rounds[428] reproduced a correct clean verdict lost on a
+complete promisor-marked clone. Disclosure of that trade did not waive the
+no-trade rule; KQ35 and the round24 paired controls learn that disagreement.
+
+Keep three questions separate:
+
+1. **May the tool acquire evidence?** No: the global `--no-lazy-fetch`,
+   no-replace-objects and signature/log suppression boundary remains.
+2. **Can the required local evidence be read?** A failed history, tree,
+   source, report, ledger or tag-target read is could-not-evaluate, not
+   empty data. Promisor packaging alone answers nothing (S103).
+3. **What does a negative local lookup mean?** A locally absent fabricated
+   citation keeps the ordinary finite finding and authorized errata.
+   But when the token names content referenced locally and unavailable, or
+   an opaque missing tree/commit conceals that dependency, the required
+   evidence is unevaluable. An unrelated blob hole is not that token.
+   The same rule applies with or without promisor metadata.
+
+S102 documents the `?`-prefixed encountered-missing output used only as
+a bounded diagnostic, not a global completeness precondition or proof
+about a remote object universe. Rejected S104 shows why fsck green cannot
+substitute for required-object availability. A locally present wrong-type
+blob in Landed is still a genuine finding, not an unavailable object.
+
+The initial round24 preregistration conflated metadata with unknown
+citations and would block the historical errata-corrected spliced hash.
+That expectation is retained, withdrawn/not-achieved, and separately
+reported; `oracle-amendment-1.json` prospectively follows the original
+local-object contract. The 44-case snapshot predates L1 source inspection;
+`oracle-supplement-2.json` adds independent opaque-dependency cases.
+No candidate result was used to silently rewrite those filed outcomes.
+
+source: S102, S103, S104 (rejected candidate); `corpus/lessons/round-24.md`;
+evidence: `tests/report-audit/promisor-grid.py` with its committed expectation
+manifest, `.ufo/waves/round-24/` registration/oracle history.

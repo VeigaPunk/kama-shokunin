@@ -812,3 +812,60 @@ git output or the SOURCES URL alternation. Declared trades (frozen 0 →
 current 2 on complete repositories): a blobless partial clone (T01) and a
 paired promisor pack without promisor config (F23). Never point the auditor
 at an untrusted repository.
+
+## Round24 correction — local evidence, not promisor declarations (owner: kama)
+
+This supersedes the round23 promisor-refusal and trade sentences above.
+Outside closure rounds[428] rejected round23 as harmed: refusing a correct
+complete-state workflow is harm even when disclosed. T01 is a checked-out
+single-blob clone whose checkout hydrates that blob; F23 is a different,
+`--no-checkout` fixture whose cited blob is genuinely unavailable.
+
+The local-object contract (`tools/report-landing-audit.py`) is metadata
+neutral. Keep the existing global Git isolation options and 20-second
+deadline. A complete or locally sufficient marked repository receives the
+same substantive verdict as its unmarked twin; the tool neither fetches
+objects nor guesses empty data on a failed required read.
+
+| Evidence state | Outcome |
+|---|---|
+| All required reads succeed; citation resolves in either audited local repository | Normal clean/failed verdict and ordinary authorized errata handling |
+| Locally present blob/tree fails a commit-only peel | Genuine `landed-unresolved`, not an unknown object |
+| Citation is absent locally, with no unavailable referenced content hiding its identity | Ordinary unresolved finding; metadata alone does not change it; authorized errata still applies |
+| Required history, source registry, report, ledger or tag-target content cannot be read | Content-derived could-not-evaluate (exit2), naming the required object/path |
+| An unresolved citation matches an unavailable referenced object, or a missing tree/commit conceals its dependency names | Content-derived could-not-evaluate; never a guessed defect or an errata-rescued unknown |
+| Unrelated missing blobs, branches or unused trees; every citation already resolves | No blanket completeness precondition |
+
+Missing-object diagnosis is lazy and token-scoped. It consults present
+commit/tree/tag roots, including dangling objects, only for an unresolved
+token; it never narrows normal object lookup to branch reachability.
+Two isolated `rev-list --missing=print` walks (the second filtering blobs)
+distinguish blob holes from opaque tree/commit dependencies. Commit graphs
+are disabled for these diagnostics; they are not an integrity theorem.
+S102 documents the encountered-missing format, S103 packaging provenance,
+and rejected S104 explains why fsck green is not local availability proof.
+
+| Name | Kind / entry command | Verdict map | Self-test | Pinned values | Write scope | Owner |
+|---|---|---|---|---|---|---|
+| Promisor local-evidence grid | gate: `python3 tests/report-audit/promisor-grid.py --arm frozen\|current\|both [--json]` | 0 selected arm observations meet their declared column; 1 mismatch/twin mismatch/object acquisition; 2 harness/premise/unavailable input. Frozen-history reproduction is not improvement: `amended_view_met` supplies the comparable target score. The original withdrawn view is reported separately. | `--selftest`; fixed cases, grade checks, isolated fixtures | adjacent `promisor-grid-expectations.json`; original44 frozen before L1 source inspection plus3 disclosed opaque-dependency cells; frozen auditor `0df800e:tools/report-landing-audit.py`; exact finding/token, raw/uncorrected distinction and twin documents | temporary fixture repositories under `/fast/scratch/hyaku/kama-r24`, removed unless `--keep`; optional explicit `--out` | kama |
+
+Git>=2.45 remains an inherited prerequisite, not restored older-Git support
+or operator approval; R23-H2 is carried in the round24 L0 question.
+Trusted repositories only (KQ32/KQ34). No remote completeness or remote
+abbreviation uniqueness is claimed. Gitfile/alternates identity, prefix
+ambiguity overwrite, duplicate Landed sections, errata CR/FIFO handling,
+memory ceilings, live serving and sibling-tool isolation remain unclaimed.
+
+### Round24 mutation experiment registry correction
+
+These are bounded sensitivity experiments, not a claim that every mutation
+must be killed or that a completed inventory is an admission gate.
+This supersedes the round23 mutation row's31-element current reading:
+M14/M22/M27/M29 are explicitly retired because their metadata-classifier
+component was deleted; M17 follows the current local-store spelling.
+Survival alone does not establish defensive-only status.
+
+| Name | Kind / entry command | Verdict map | Self-test | Pinned values | Write scope | Owner |
+|---|---|---|---|---|---|---|
+| Promisor mutation experiment | probe: `python3 tests/report-audit/promisor-mutants.py --json` | 0 inventory evaluated (kills and survivors listed, not universal green); 2 could-not-evaluate. Pristine failure, grid errors, leaks, timeouts, uncompiled/unapplied mutants and unidentifiable failures kill nothing. | `--selftest`, isolated CLI verdict fixtures; `--anchors PATH --json` checks unique applicable/compiling mutations without executing the grid |11 named mutations with declared target cells; PM08 no-lazy-fetch removal static-only and never executed; original/amended expectation manifest in the grid | removed temporary auditor copies; grid-owned scratch fixtures | kama |
+| Retained isolation mutation experiment | probe: `python3 tests/report-audit/isolation-mutants.py [--only NAME] [--json]` | 0 pristine passed and selected inventory evaluated, survivors reported; 2 fail-fast could-not-evaluate | pristine grid positive control; existing literal inventory and retirement output |27 retained literals,4 retired IDs without reuse; `RETIRED` explains their removed component; unchanged isolation elements remain explicit | temporary source copies and grid fixtures | kama |

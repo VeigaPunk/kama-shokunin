@@ -1479,3 +1479,30 @@ opaque-dependency refusal; known-present wrong-type objects still fail
 normally, and an unused hole with all citations resolved is not a blanket
 refusal. The supplement also forbids newer Git flags that would raise the
 existing version prerequisite.
+
+### Round24 implementation and integration
+
+- Integrated AuditRepair's local evidence rule: deleted the metadata
+  classifier, retained the Git isolation/deadline, preserved ordinary
+  local absence/authorized errata, and diagnosed unavailable referenced
+  content only for unresolved tokens. Opaque tree/commit dependencies
+  cannot produce guessed findings. Actual failed required reads name the
+  required path/object, including a root-tree OID where available.
+- Integrated GridOracle's47-cell original/amended oracle, including the
+  unchanged44 snapshot plus3 independent supplement cells. L1 retained
+  strong object-identity grading, adopting only the PG46 fixture repair
+  from the later proposal, not its path-based grader relaxation.
+- Migrated the legacy grid's F06 local-missing outcome, F23 content reason
+  and T01 graded-control classification. Filed r23 evidence is unchanged.
+  Retired4 obsolete metadata-classifier mutations without ID reuse;
+  retained27 applicable elements, with M17's moved message migrated.
+- Integrated the11-mutation promisor experiment: inventory completion is
+  exit0, evaluation error exit2, never a kill. Pristine errors, timeouts,
+  leaks and uncompiled/unapplied mutants receive no credit. PM08 remains
+  static-only; no new transport/execution payload is required.
+- Added sources S102–S104 (two mined, one rejected) and KQ35; appended
+  SKILL, README, knowledge and lesson corrections. No new serving
+  capability or numeric score promotion.
+- Main measurement follows the fresh falsification stage. Preliminary
+  seat results remain attributed to their exact candidate/harness hashes,
+  not substituted for the final committed-tree run.
