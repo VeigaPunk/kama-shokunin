@@ -82,3 +82,41 @@ used-by `corpus/lessons/round-24.md` →
 `corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md`.
 No S001–S101 field changed. The Git>=2.45 prerequisite is explicitly not
 approved or repaired: R23-H2 is carried as the round24 L0 question.
+
+## Gate consumer reconciliation (after build source review)
+
+ConnPriorSources found two ledger-level support defects, not a failed repair.
+S095 was already rejected but still named the current auditor; that consumer
+now points at the supported bytes-mode row S096. The immutable rejected
+S095 teaches cell is not rewritten: S105 is the explicit superseding
+rejection record, while S096 remains its narrowed positive replacement.
+
+- S105, reject: https://docs.python.org/3.14/builtins/stdtypes.html#bytes.decode,
+  accessed2026-10-21, opening titlePython3.14.9 (series URL). Located quote
+  in bytes.decode errors: “If 'strict' (the default), a UnicodeError exception
+  is raised.” The retained reader snapshot has zero matches for subprocess,
+  TextIOWrapper, or text mode; command: regex case-insensitive counts over
+  `.ufo/waves/round-24/sources/python-bytes-decode-reader.txt`; observed
+  counts0/0/0. `.ufo/waves/round-24/sources/S105.json` pins that snapshot.
+  This page cannot document those different APIs; S097/S098 anchor them.
+
+Only mutable used-by cells changed below; all immutable data of S001–S104
+is preserved. Status/recheck unchanged. Each consumer transition is logged:
+
+| ID | used-by old | used-by new |
+|---|---|---|
+| S083 | corpus/lessons/round-22.md | corpus/lessons/round-22.md, corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md |
+| S089 | corpus/lessons/round-23.md, tools/report-landing-audit.py | corpus/lessons/round-23.md, tools/report-landing-audit.py, corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md |
+| S094 | corpus/lessons/round-23.md | corpus/lessons/round-23.md, corpus/lessons/round-24.md |
+| S095 | corpus/lessons/round-23.md, tools/report-landing-audit.py | corpus/lessons/round-23.md, corpus/lessons/round-24.md |
+| S096 | corpus/lessons/round-23.md, corpus/knowledge/error-is-not-a-verdict.md | corpus/lessons/round-23.md, corpus/knowledge/error-is-not-a-verdict.md, tools/report-landing-audit.py, corpus/lessons/round-24.md |
+| S099 | corpus/lessons/round-23.md | corpus/lessons/round-23.md, corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md |
+| S100 | corpus/lessons/round-23.md, tools/report-landing-audit.py, tests/report-audit/repo-state-grid.py | corpus/lessons/round-23.md, tools/report-landing-audit.py, tests/report-audit/repo-state-grid.py, corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md |
+| S101 | corpus/lessons/round-23.md, tools/report-landing-audit.py | corpus/lessons/round-23.md, tools/report-landing-audit.py, corpus/lessons/round-24.md |
+| S102 | corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md | corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md, tools/report-landing-audit.py, tests/report-audit/promisor-grid.py, SKILL.md |
+| S103 | corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md | corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md, tests/report-audit/promisor-grid.py, SKILL.md |
+| S104 | corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md | corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md, SKILL.md |
+
+This final consumer reconciliation supersedes the earlier
+“No S001–S101 field changed” statement only for the mutable used-by
+column. No immutable row data, status or recheck value was changed.

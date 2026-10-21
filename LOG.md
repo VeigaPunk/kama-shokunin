@@ -1506,3 +1506,14 @@ existing version prerequisite.
 - Main measurement follows the fresh falsification stage. Preliminary
   seat results remain attributed to their exact candidate/harness hashes,
   not substituted for the final committed-tree run.
+
+ConnPriorSources' final build review found ledger-level source support
+debts: the current bytes-mode auditor was still a consumer of rejected
+S095 rather than narrowed S096, and the knowledge appendix omitted the
+existing S089/S100 boundary authorities. Reconciled only mutable used-by
+cells with every old→new transition recorded in the lesson, and appended
+the missing knowledge source chain. Freshly reopened bytes.decode docs
+support S105, an explicit superseding rejection record for S095's
+cross-API inference (the old immutable teaches cell stays filed).
+Source rows now extend through S105; the retained public reader snapshot
+and source receipt are under `.ufo/waves/round-24/sources/`.

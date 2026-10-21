@@ -1186,3 +1186,28 @@ source row).
 closure of r23; then either close the open near-variant channels one graded
 row at a time or bound the auditor's input sizes, and decide with the
 operator whether the T01/F23 trades stand.
+
+## Round24 — authority and declared repair
+
+Outside closure rounds[428] supersedes the round23 author's admission and
+quality-improved readings: rejected-harmed, calibration improved but
+operability/quality harmed. The historical measurements above remain filed;
+disclosing a trade did not make it admissible.
+
+Declared C1 calibration7→7 (lowest assigned non-retired axis): distinguish
+metadata from actual local evidence availability, restoring justified
+correct verdicts without allowing acquisition or guessed unavailable data.
+The initial registration's blanket unknown-citation expectation is
+withdrawn/not-achieved, not retroactively passed. Its original view stays
+in `.ufo/waves/round-24/preregistration.json` and
+`tests/report-audit/promisor-grid-expectations.json`, alongside the
+prospective correction `.ufo/waves/round-24/oracle-amendment-1.json` and
+`.ufo/waves/round-24/oracle-supplement-2.json`.
+
+Integration is pinned at `ed1cc3a342bd801fe2d0f54f7ba2eb4ca42d5f05`;
+the comparable quantitative record is the amended47-cell target, not the
+frozen-history reproduction column. Final measurements are separate
+committed-tree evidence after fresh falsification; this declaration does
+not claim that those runs have occurred. No numeric promotion or new
+capability. The Git>=2.45 prerequisite remains an unresolved R23-H2
+operator decision, not older-Git restoration.

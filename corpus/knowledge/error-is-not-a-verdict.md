@@ -117,3 +117,11 @@ No candidate result was used to silently rewrite those filed outcomes.
 source: S102, S103, S104 (rejected candidate); `corpus/lessons/round-24.md`;
 evidence: `tests/report-audit/promisor-grid.py` with its committed expectation
 manifest, `.ufo/waves/round-24/` registration/oracle history.
+
+Round24 source-chain supplement (ConnPriorSources review): the containment
+boundary in question1 is supported by S089/S100, and the local batch/missing
+record context by S083/S099; these supplement the S102–S104 list above.
+S105 records the explicit rejection rationale for S095's cross-API
+inference without rewriting that filed row. S096 remains the narrowed
+positive bytes.decode authority. The registry's mutable consumer cells
+and the round24 lesson's old→new table reconcile these actual uses.
