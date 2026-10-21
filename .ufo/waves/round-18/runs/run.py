@@ -7,8 +7,9 @@ records=[]
 rev=subprocess.check_output(['git','-C',str(L),'rev-parse','master'],text=True).strip()
 dirty_lines=[line for line in subprocess.check_output(
     ['git','-C',str(L),'status','--porcelain'],text=True).splitlines()
-    if not any(line[3:].startswith(prefix) for prefix in (
-        '.ufo/waves/round-18/runs/', '.ufo/waves/round-18/live-recovery/'))]
+    if not ((line[3:].startswith('.ufo/waves/round-18/runs/')
+             and not line[3:].endswith('/run.py'))
+            or line[3:].startswith('.ufo/waves/round-18/live-recovery/'))]
 dirty='\n'.join(dirty_lines)
 if dirty:
     print('refusing: lane working tree is dirty; commit the measured bytes first:\n'+dirty,file=sys.stderr)
@@ -71,7 +72,9 @@ with tempfile.TemporaryDirectory(prefix='kama-r18-L1-noharm-') as tmp:
     run('snapshot-clone',['bash',clone/'tools/test-snapshot.sh'],cwd=clone)
     run('r16-measure-clone',[P,clone/'.ufo/waves/round-16/measure.py'],cwd=clone)
 # Full named C2 universe, serial child runs and retained raw evidence.
-run('c2-survivors',[P,W/'c2/survivors.py','--json','--out',R/'c2-survivors.json'])
+# The counter's --out is exclusive-create by design; keep its JSON on
+# stdout so a rerun never has to clobber retained evidence.
+run('c2-survivors',[P,W/'c2/survivors.py','--json'])
 identity={}
 for rel in ['tools/kama-probe.sh']+[str(p.relative_to(L)) for p in sorted((L/'tests/probe-verdicts').glob('*.json'))]:
     old=subprocess.check_output(['git','-C',str(L),'show','e75cf680b53484a61709ee1b2787d8dbc6419f74:'+rel]);new=(L/rel).read_bytes()
