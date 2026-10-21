@@ -1,0 +1,35 @@
+REAL members 51 tree_sha 6c216313a88d71b141bc62f684b8f95c040710ff050801b13521861826785a2c
+REAL links 10 links_sha b58f1b4df160c4e2accb95bac964a5648d24fc31e769f8044296a1fa431b9e10
+REAL gate_links_digest_equals_producer True gate_tree_digest_equals_producer True
+REAL chain libggml-base.so -> libggml-base.so.0 => verdict None
+REAL chain libggml-base.so.0 -> libggml-base.so.0.27.0 => verdict None
+REAL chain libggml.so -> libggml.so.0 => verdict None
+REAL chain libggml.so.0 -> libggml.so.0.27.0 => verdict None
+REAL chain libllama-common.so -> libllama-common.so.0 => verdict None
+REAL chain libllama-common.so.0 -> libllama-common.so.0.7.0 => verdict None
+REAL chain libllama.so -> libllama.so.0 => verdict None
+REAL chain libllama.so.0 -> libllama.so.0.7.0 => verdict None
+REAL chain libmtmd.so -> libmtmd.so.0 => verdict None
+REAL chain libmtmd.so.0 -> libmtmd.so.0.7.0 => verdict None
+A base unpinned -> []
+A base pinned(links,tree) -> []
+B retarget-to-member tree_sha_unchanged= True links_sha_changed= True
+B retarget-to-member unpinned -> []
+B retarget-to-member pinned_to_base_links -> ['server.install_links_sha256 5d6692f27bae5fbe1909369b241f97d1c190720b257c8287f5bfb2d46cd46dfa != expected 5db72dbde4ff7c6105a045c107d1a5f6404e9faecafc1d9b340323eeab27fbbb']
+C dangling unpinned -> ["server.install_links['libllama.so']: chain ends at 'libllama.so.9', not a pinned install_tree member", "server.install_links['libllama.so.0']: chain ends at 'libllama.so.9', not a pinned install_tree member"]
+C absolute unpinned -> ["server.install_links['libllama.so']: target '/usr/lib/libllama.so' leaves the pinned directory", "server.install_links['libllama.so.0']: target '/usr/lib/libllama.so' leaves the pinned directory"]
+D digest-only(real digest, no links) unpinned -> []
+D digest-only(real digest, no links) pinned -> ['--expect-install-links-sha256 given but receipt has no server.install_links_sha256 digest']
+D digest-only(bogus digest, no links) unpinned -> []
+D links-without-digest-key unpinned -> ['server.install_links_sha256 None is not a 64-char lowercase hex string']
+D stripped-both unpinned -> []
+D stripped-both pinned -> ['--expect-install-links-sha256 given but receipt has no server.install_links_sha256 digest']
+D uppercase digest unpinned -> ["server.install_links_sha256 '5DB72DBDE4FF7C6105A045C107D1A5F6404E9FAECAFC1D9B340323EEAB27FBBB' is not a 64-char lowercase hex string"]
+D slash-name key unpinned -> []
+D empty+null unpinned -> []
+D links=null unpinned -> ['server.install_links is not an object of basename -> link text']
+SURR links-key validate: ["EXCEPTION UnicodeEncodeError: 'utf-8' codec can't encode character '\\udcff' in position 113: surrogates not allowed"]
+SURR CLI base links-key exit=0 stdout='VALID /tmp/kama-r21-LinksGateReview/synth2/surrogate-links.json' stderr_last=[]
+SURR CLI base tree-key exit=1 stdout='' stderr_last=["UnicodeEncodeError: 'utf-8' codec can't encode character '\\udcff' in position 340: surrogates not allowed"]
+SURR CLI head links-key exit=1 stdout='' stderr_last=["UnicodeEncodeError: 'utf-8' codec can't encode character '\\udcff' in position 113: surrogates not allowed"]
+SURR CLI head tree-key exit=1 stdout='' stderr_last=["UnicodeEncodeError: 'utf-8' codec can't encode character '\\udcff' in position 340: surrogates not allowed"]

@@ -1,0 +1,365 @@
+{
+  "assignment": "AuditErrataMutants",
+  "axes": {
+    "calibration": 7,
+    "operability": 8
+  },
+  "commit": "a29bb84abbb8b4d328f5970a89e448330a3a42ac",
+  "detector_command_exits": 63,
+  "existing_pair_killed": [
+    "M04",
+    "M05",
+    "M07",
+    "M08",
+    "M09"
+  ],
+  "existing_pair_survived": [
+    "M01",
+    "M02",
+    "M03",
+    "M06",
+    "M10"
+  ],
+  "focused_killed": [
+    "M01",
+    "M02",
+    "M03",
+    "M04",
+    "M05",
+    "M06",
+    "M07",
+    "M08",
+    "M09",
+    "M10"
+  ],
+  "inconclusive": [],
+  "ledger_after_sha256": "baaf4bdaf30c1ce0a08434017cc279b34aa6745450cedabb9e0c3fe144fce53d",
+  "ledger_before_sha256": "baaf4bdaf30c1ce0a08434017cc279b34aa6745450cedabb9e0c3fe144fce53d",
+  "mutations": [
+    {
+      "expected_detector": "Focused CLI case round-must-equal: wrong-round row remains unmatched and defect uncorrected; exit 1.",
+      "focused_exit": 1,
+      "focused_failed": [
+        "round-must-equal"
+      ],
+      "id": "M01",
+      "mutant": "Drop round equality from errata matching (original lines 170-172).",
+      "mutated_sha256": "ce4478a065e443de51a3976ca8b8e1842d878a86b61acc39f1ce17b47efe82d1",
+      "population_exit": 0,
+      "restored_exact_bytes": true,
+      "restored_exits": [
+        0,
+        0,
+        0
+      ],
+      "selftest_exit": 0
+    },
+    {
+      "expected_detector": "Focused CLI case kind-must-equal: wrong-kind row remains unmatched and defect uncorrected; exit 1.",
+      "focused_exit": 1,
+      "focused_failed": [
+        "kind-must-equal"
+      ],
+      "id": "M02",
+      "mutant": "Drop kind equality from errata matching (original line 171).",
+      "mutated_sha256": "e2ae47627155587207102c88c2b747a9faa27a80cddcaef613aaaea8d058bc23",
+      "population_exit": 0,
+      "restored_exact_bytes": true,
+      "restored_exits": [
+        0,
+        0,
+        0
+      ],
+      "selftest_exit": 0
+    },
+    {
+      "expected_detector": "Focused CLI case token-must-equal-not-prefix: 7-hex prefix is not an exact 40-hex defect token; exit 1.",
+      "focused_exit": 1,
+      "focused_failed": [
+        "token-must-equal-not-prefix"
+      ],
+      "id": "M03",
+      "mutant": "Broaden token equality to defect-token prefix matching (original line 172).",
+      "mutated_sha256": "2716e3f60cabc0fe1a3384859656361c82bab1cdaac164e62850e61014dd0ed2",
+      "population_exit": 0,
+      "restored_exact_bytes": true,
+      "restored_exits": [
+        0,
+        0,
+        0
+      ],
+      "selftest_exit": 0
+    },
+    {
+      "expected_detector": "Selftest unmatched-errata-fails; focused unmatched-row-fails: extra valid-correction row must cause exit 1.",
+      "focused_exit": 1,
+      "focused_failed": [
+        "round-must-equal",
+        "kind-must-equal",
+        "token-must-equal-not-prefix",
+        "unmatched-row-fails"
+      ],
+      "id": "M04",
+      "mutant": "Drop unmatched-row reporting by returning an empty unmatched list (original line 175).",
+      "mutated_sha256": "7b0af0d3ef8f54614c9758f0c4432e5ec176a42172af1aee637f059eb033ee6f",
+      "population_exit": 0,
+      "restored_exact_bytes": true,
+      "restored_exits": [
+        0,
+        0,
+        0
+      ],
+      "selftest_exit": 1
+    },
+    {
+      "expected_detector": "Selftest invalid-correction-fails; focused nonexistent-correction-fails must retain errata_invalid=1 and exit 1.",
+      "focused_exit": 1,
+      "focused_failed": [
+        "nonexistent-correction-fails",
+        "blob-is-not-correction-commit"
+      ],
+      "id": "M05",
+      "mutant": "Invert RESOLVABLE membership, skipping invalid corrections for resolvable defect kinds (original line 178).",
+      "mutated_sha256": "581427927eaf496c9c17151e7ba95e8e53169b15d99c09a96cf93049f35c43cc",
+      "population_exit": 0,
+      "restored_exact_bytes": true,
+      "restored_exits": [
+        0,
+        0,
+        0
+      ],
+      "selftest_exit": 1
+    },
+    {
+      "expected_detector": "Focused CLI case blob-is-not-correction-commit: existing blob correction must be errata-invalid and exit 1.",
+      "focused_exit": 1,
+      "focused_failed": [
+        "blob-is-not-correction-commit"
+      ],
+      "id": "M06",
+      "mutant": "Weaken correction resolution from commit to any Git object (original line 179).",
+      "mutated_sha256": "66ebad85eca9aba0492c629376a98d66f161ebbcc74f67ee3ce1c8b682790b83",
+      "population_exit": 0,
+      "restored_exact_bytes": true,
+      "restored_exits": [
+        0,
+        0,
+        0
+      ],
+      "selftest_exit": 0
+    },
+    {
+      "expected_detector": "Selftest malformed-errata-is-error; focused malformed-field-count/round/kind-exit2: CLI must exit 2 with could-not-evaluate.",
+      "focused_exit": 1,
+      "focused_failed": [
+        "malformed-field-count-exit2",
+        "malformed-round-exit2",
+        "malformed-kind-exit2"
+      ],
+      "id": "M07",
+      "mutant": "Silently skip malformed rows instead of raising EvalError (original line 159).",
+      "mutated_sha256": "b00814a93687b00cf0aeaf0479dd9b066e76643dffc04400da566404e63e97d9",
+      "population_exit": 0,
+      "restored_exact_bytes": true,
+      "restored_exits": [
+        0,
+        0,
+        0
+      ],
+      "selftest_exit": 1
+    },
+    {
+      "expected_detector": "Selftest errata-clean and uncommitted-draft-requires-all; committed-ledger population must exit 0; focused exact-clean-exit0.",
+      "focused_exit": 1,
+      "focused_failed": [
+        "exact-clean-exit0"
+      ],
+      "id": "M08",
+      "mutant": "Map clean status to exit 1 rather than 0 (original line 225).",
+      "mutated_sha256": "105f3de66b7dc355c1e7b439643676e90fbec8b6db966fbcd5805bf0a49608f7",
+      "population_exit": 1,
+      "restored_exact_bytes": true,
+      "restored_exits": [
+        0,
+        0,
+        0
+      ],
+      "selftest_exit": 1
+    },
+    {
+      "expected_detector": "Selftest raw-fails, unmatched-errata-fails, invalid-correction-fails and missing-section-fails; focused raw-defect-exit1.",
+      "focused_exit": 1,
+      "focused_failed": [
+        "round-must-equal",
+        "kind-must-equal",
+        "token-must-equal-not-prefix",
+        "unmatched-row-fails",
+        "nonexistent-correction-fails",
+        "blob-is-not-correction-commit",
+        "raw-defect-exit1"
+      ],
+      "id": "M09",
+      "mutant": "Map failed status to exit 0 rather than 1 (original line 226).",
+      "mutated_sha256": "0ceaf45ff2b2a7c6d173ce880a27114c7b84f27411090828706e86ce209b5d75",
+      "population_exit": 0,
+      "restored_exact_bytes": true,
+      "restored_exits": [
+        0,
+        0,
+        0
+      ],
+      "selftest_exit": 1
+    },
+    {
+      "expected_detector": "Focused malformed-field-count/round/kind-exit2 and missing-report-exit2: stderr could-not-evaluate and exit exactly 2.",
+      "focused_exit": 1,
+      "focused_failed": [
+        "malformed-field-count-exit2",
+        "malformed-round-exit2",
+        "malformed-kind-exit2",
+        "missing-report-exit2"
+      ],
+      "id": "M10",
+      "mutant": "Map could-not-evaluate CLI errors to exit 1 rather than 2 (original line 398).",
+      "mutated_sha256": "510dbd05a58023475e10d2fe6551fb60d00fa8f1798fa1c260afe8182a040762",
+      "population_exit": 0,
+      "restored_exact_bytes": true,
+      "restored_exits": [
+        0,
+        0,
+        0
+      ],
+      "selftest_exit": 0
+    }
+  ],
+  "phase_hashes": [
+    {
+      "after_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "before_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "exact_pristine": true,
+      "phase": "pristine"
+    },
+    {
+      "after_sha256": "ce4478a065e443de51a3976ca8b8e1842d878a86b61acc39f1ce17b47efe82d1",
+      "before_sha256": "ce4478a065e443de51a3976ca8b8e1842d878a86b61acc39f1ce17b47efe82d1",
+      "exact_pristine": false,
+      "phase": "M01.mutated"
+    },
+    {
+      "after_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "before_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "exact_pristine": true,
+      "phase": "M01.restored"
+    },
+    {
+      "after_sha256": "e2ae47627155587207102c88c2b747a9faa27a80cddcaef613aaaea8d058bc23",
+      "before_sha256": "e2ae47627155587207102c88c2b747a9faa27a80cddcaef613aaaea8d058bc23",
+      "exact_pristine": false,
+      "phase": "M02.mutated"
+    },
+    {
+      "after_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "before_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "exact_pristine": true,
+      "phase": "M02.restored"
+    },
+    {
+      "after_sha256": "2716e3f60cabc0fe1a3384859656361c82bab1cdaac164e62850e61014dd0ed2",
+      "before_sha256": "2716e3f60cabc0fe1a3384859656361c82bab1cdaac164e62850e61014dd0ed2",
+      "exact_pristine": false,
+      "phase": "M03.mutated"
+    },
+    {
+      "after_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "before_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "exact_pristine": true,
+      "phase": "M03.restored"
+    },
+    {
+      "after_sha256": "7b0af0d3ef8f54614c9758f0c4432e5ec176a42172af1aee637f059eb033ee6f",
+      "before_sha256": "7b0af0d3ef8f54614c9758f0c4432e5ec176a42172af1aee637f059eb033ee6f",
+      "exact_pristine": false,
+      "phase": "M04.mutated"
+    },
+    {
+      "after_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "before_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "exact_pristine": true,
+      "phase": "M04.restored"
+    },
+    {
+      "after_sha256": "581427927eaf496c9c17151e7ba95e8e53169b15d99c09a96cf93049f35c43cc",
+      "before_sha256": "581427927eaf496c9c17151e7ba95e8e53169b15d99c09a96cf93049f35c43cc",
+      "exact_pristine": false,
+      "phase": "M05.mutated"
+    },
+    {
+      "after_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "before_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "exact_pristine": true,
+      "phase": "M05.restored"
+    },
+    {
+      "after_sha256": "66ebad85eca9aba0492c629376a98d66f161ebbcc74f67ee3ce1c8b682790b83",
+      "before_sha256": "66ebad85eca9aba0492c629376a98d66f161ebbcc74f67ee3ce1c8b682790b83",
+      "exact_pristine": false,
+      "phase": "M06.mutated"
+    },
+    {
+      "after_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "before_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "exact_pristine": true,
+      "phase": "M06.restored"
+    },
+    {
+      "after_sha256": "b00814a93687b00cf0aeaf0479dd9b066e76643dffc04400da566404e63e97d9",
+      "before_sha256": "b00814a93687b00cf0aeaf0479dd9b066e76643dffc04400da566404e63e97d9",
+      "exact_pristine": false,
+      "phase": "M07.mutated"
+    },
+    {
+      "after_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "before_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "exact_pristine": true,
+      "phase": "M07.restored"
+    },
+    {
+      "after_sha256": "105f3de66b7dc355c1e7b439643676e90fbec8b6db966fbcd5805bf0a49608f7",
+      "before_sha256": "105f3de66b7dc355c1e7b439643676e90fbec8b6db966fbcd5805bf0a49608f7",
+      "exact_pristine": false,
+      "phase": "M08.mutated"
+    },
+    {
+      "after_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "before_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "exact_pristine": true,
+      "phase": "M08.restored"
+    },
+    {
+      "after_sha256": "0ceaf45ff2b2a7c6d173ce880a27114c7b84f27411090828706e86ce209b5d75",
+      "before_sha256": "0ceaf45ff2b2a7c6d173ce880a27114c7b84f27411090828706e86ce209b5d75",
+      "exact_pristine": false,
+      "phase": "M09.mutated"
+    },
+    {
+      "after_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "before_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "exact_pristine": true,
+      "phase": "M09.restored"
+    },
+    {
+      "after_sha256": "510dbd05a58023475e10d2fe6551fb60d00fa8f1798fa1c260afe8182a040762",
+      "before_sha256": "510dbd05a58023475e10d2fe6551fb60d00fa8f1798fa1c260afe8182a040762",
+      "exact_pristine": false,
+      "phase": "M10.mutated"
+    },
+    {
+      "after_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "before_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+      "exact_pristine": true,
+      "phase": "M10.restored"
+    }
+  ],
+  "pristine_script_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d",
+  "restored_script_sha256": "a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d"
+}

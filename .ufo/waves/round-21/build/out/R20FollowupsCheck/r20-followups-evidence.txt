@@ -1,0 +1,452 @@
+# R20FollowupsCheck evidence (commands re-run; exit codes as observed)
+
+### bad hash object in lane clone
+$ (cwd /) git -C /tmp/kama-r21-R20FollowupsCheck/lane cat-file -t 0957ce619789d13d894ef21bc863486bcb35b56c
+exit=128
+
+[stderr]
+fatal: git cat-file: could not get object info
+
+### bad hash object in fleet repo
+$ (cwd /) git -C /home/vgpnk/Projects/shokunin cat-file -t 0957ce619789d13d894ef21bc863486bcb35b56c
+exit=128
+
+[stderr]
+fatal: git cat-file: could not get object info
+
+### correct hash object in lane clone
+$ (cwd /) git -C /tmp/kama-r21-R20FollowupsCheck/lane cat-file -t 0957ce619789d13bb5779606078fa1498114d2c7
+exit=0
+commit
+
+### fleet first-add commit of round-20 report
+$ (cwd /) git -C /home/vgpnk/Projects/shokunin --no-optional-locks log --diff-filter=A --format=%H %ct %an %s -- .ufo/reports/round-20/kama.md
+exit=0
+04eb5d2d9b4712c5266bdc36fbb16c2fefd7b392 1792577594 kama-shokunin round-20: kama report
+
+### lane round-20/21 commits by kama-shokunin (subject filter)
+$ (cwd /) git -C /tmp/kama-r21-R20FollowupsCheck/lane log --format=%H %an %s --author=kama-shokunin --grep=^round-2[01]:
+exit=0
+a29bb84abbb8b4d328f5970a89e448330a3a42ac kama-shokunin round-21: report landing audit with errata ledger; symlink-aware install-links pin, gate checks and grid
+7a6bc911f9eb7dbea9e3b81f5f2449ecda10096d kama-shokunin round-20: log routed verifier tool registrations
+3ec5ea6882994ff2e950a76b4e951b8973505f5e kama-shokunin round-20: record corrected final verification
+9add96e462e62dc5141cd02730b7a699268b3513 kama-shokunin round-20: synchronize measurement reference pin
+04de7a8720139e57cf4960013229b8fd23d497f5 kama-shokunin round-20: bind fixture manifest and retain failed run
+c7311039bcbd76c38b0648d33197864331f34364 kama-shokunin round-20: integrate falsify evidence and correct fixture metadata
+846e366dc9dbac58463494a7e05ad060ae3ed3b0 kama-shokunin round-20: record falsify wave assignments
+92b146253fd3a8c4bfade94c909dc63b13d6f4a8 kama-shokunin round-20: record measurements and validate falsify wave
+0957ce619789d13bb5779606078fa1498114d2c7 kama-shokunin round-20: pin independent capability measurement, official recipe and complete build accounting
+33a6777866d0f63d894ef21bc863486bcb35b56c kama-shokunin round-20: named error regression guards, offline GGUF identity, routed corrections and build evidence
+
+### R20 raw (--no-errata), expect 5 defects
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 20 --no-errata
+exit=1
+round=20 required=9 post_report=0 defects=5
+  UNCORRECTED unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+  UNCORRECTED landed-omitted 846e366dc9dbac58463494a7e05ad060ae3ed3b0
+  UNCORRECTED landed-omitted 92b146253fd3a8c4bfade94c909dc63b13d6f4a8
+  UNCORRECTED landed-omitted 0957ce619789d13bb5779606078fa1498114d2c7
+  UNCORRECTED landed-omitted 33a6777866d0f63d894ef21bc863486bcb35b56c
+summary reports=1 defects=5 corrected=0 uncorrected=5 errata_unmatched=0 errata_invalid=0 status=failed
+
+### rounds 10-20 raw, expect 9 defects
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 10-20 --no-errata
+exit=1
+round=10 required=2 post_report=0 defects=1
+  UNCORRECTED landed-omitted 40660352d4a9eb00a5d6195f0f064f5c64618143
+round=11 required=2 post_report=0 defects=0
+round=12 required=2 post_report=0 defects=0
+round=13 required=2 post_report=0 defects=0
+round=14 required=2 post_report=0 defects=0
+round=15 required=3 post_report=0 defects=0
+round=16 required=3 post_report=0 defects=0
+round=17 required=2 post_report=0 defects=0
+round=18 required=7 post_report=0 defects=3
+  UNCORRECTED landed-omitted 101f3991d3570bc9350fbf9c5561f4be1185699d
+  UNCORRECTED landed-omitted 1c325b2e58fcfdc6761f645b44cedfb1d65243e6
+  UNCORRECTED landed-omitted c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d
+round=19 required=8 post_report=4 defects=0
+round=20 required=9 post_report=0 defects=5
+  UNCORRECTED unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+  UNCORRECTED landed-omitted 846e366dc9dbac58463494a7e05ad060ae3ed3b0
+  UNCORRECTED landed-omitted 92b146253fd3a8c4bfade94c909dc63b13d6f4a8
+  UNCORRECTED landed-omitted 0957ce619789d13bb5779606078fa1498114d2c7
+  UNCORRECTED landed-omitted 33a6777866d0f63d894ef21bc863486bcb35b56c
+summary reports=11 defects=9 corrected=0 uncorrected=9 errata_unmatched=0 errata_invalid=0 status=failed
+
+### rounds 10-20 with ledger, expect clean
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 10-20
+exit=0
+round=10 required=2 post_report=0 defects=1
+  corrected landed-omitted 40660352d4a9eb00a5d6195f0f064f5c64618143
+round=11 required=2 post_report=0 defects=0
+round=12 required=2 post_report=0 defects=0
+round=13 required=2 post_report=0 defects=0
+round=14 required=2 post_report=0 defects=0
+round=15 required=3 post_report=0 defects=0
+round=16 required=3 post_report=0 defects=0
+round=17 required=2 post_report=0 defects=0
+round=18 required=7 post_report=0 defects=3
+  corrected landed-omitted 101f3991d3570bc9350fbf9c5561f4be1185699d
+  corrected landed-omitted 1c325b2e58fcfdc6761f645b44cedfb1d65243e6
+  corrected landed-omitted c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d
+round=19 required=8 post_report=4 defects=0
+round=20 required=9 post_report=0 defects=5
+  corrected unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+  corrected landed-omitted 846e366dc9dbac58463494a7e05ad060ae3ed3b0
+  corrected landed-omitted 92b146253fd3a8c4bfade94c909dc63b13d6f4a8
+  corrected landed-omitted 0957ce619789d13bb5779606078fa1498114d2c7
+  corrected landed-omitted 33a6777866d0f63d894ef21bc863486bcb35b56c
+summary reports=11 defects=9 corrected=9 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+
+### rounds 20 only with ledger (subset run)
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 20
+exit=1
+round=20 required=9 post_report=0 defects=5
+  corrected unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+  corrected landed-omitted 846e366dc9dbac58463494a7e05ad060ae3ed3b0
+  corrected landed-omitted 92b146253fd3a8c4bfade94c909dc63b13d6f4a8
+  corrected landed-omitted 0957ce619789d13bb5779606078fa1498114d2c7
+  corrected landed-omitted 33a6777866d0f63d894ef21bc863486bcb35b56c
+errata-unmatched line=8 landed-omitted 101f3991d3570bc9350fbf9c5561f4be1185699d
+errata-unmatched line=9 landed-omitted 1c325b2e58fcfdc6761f645b44cedfb1d65243e6
+errata-unmatched line=10 landed-omitted c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d
+errata-unmatched line=11 landed-omitted 40660352d4a9eb00a5d6195f0f064f5c64618143
+summary reports=1 defects=5 corrected=5 uncorrected=0 errata_unmatched=4 errata_invalid=0 status=failed
+
+### selftest, expect 15 cases
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --selftest
+exit=0
+ok raw-fails
+ok mashup-detected
+ok checkpoint-omission-detected
+ok bad-abbrev-detected
+ok exact-defect-count
+ok foreign-author-and-other-round-ignored
+ok post-report-excluded
+ok errata-clean
+ok unmatched-errata-fails
+ok invalid-correction-fails
+ok malformed-errata-is-error
+ok uncommitted-draft-requires-all
+ok missing-section-fails
+ok missing-report-is-error
+ok unusable-git-is-error
+selftest cases=15 failed=0
+
+### canonical lane default run (no args)
+$ (cwd /home/vgpnk/Projects/shokunin/kama-shokunin) python3 tools/report-landing-audit.py
+exit=0
+round=10 required=2 post_report=0 defects=1
+  corrected landed-omitted 40660352d4a9eb00a5d6195f0f064f5c64618143
+round=11 required=2 post_report=0 defects=0
+round=12 required=2 post_report=0 defects=0
+round=13 required=2 post_report=0 defects=0
+round=14 required=2 post_report=0 defects=0
+round=15 required=3 post_report=0 defects=0
+round=16 required=3 post_report=0 defects=0
+round=17 required=2 post_report=0 defects=0
+round=18 required=7 post_report=0 defects=3
+  corrected landed-omitted 101f3991d3570bc9350fbf9c5561f4be1185699d
+  corrected landed-omitted 1c325b2e58fcfdc6761f645b44cedfb1d65243e6
+  corrected landed-omitted c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d
+round=19 required=8 post_report=4 defects=0
+round=20 required=9 post_report=0 defects=5
+  corrected unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+  corrected landed-omitted 846e366dc9dbac58463494a7e05ad060ae3ed3b0
+  corrected landed-omitted 92b146253fd3a8c4bfade94c909dc63b13d6f4a8
+  corrected landed-omitted 0957ce619789d13bb5779606078fa1498114d2c7
+  corrected landed-omitted 33a6777866d0f63d894ef21bc863486bcb35b56c
+summary reports=11 defects=9 corrected=9 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+
+### ablation: ledger line 3 removed, expect exactly that defect uncorrected
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 10-20 --errata /tmp/kama-r21-R20FollowupsCheck/ablate/without-line3.tsv
+exit=1
+round=10 required=2 post_report=0 defects=1
+  corrected landed-omitted 40660352d4a9eb00a5d6195f0f064f5c64618143
+round=11 required=2 post_report=0 defects=0
+round=12 required=2 post_report=0 defects=0
+round=13 required=2 post_report=0 defects=0
+round=14 required=2 post_report=0 defects=0
+round=15 required=3 post_report=0 defects=0
+round=16 required=3 post_report=0 defects=0
+round=17 required=2 post_report=0 defects=0
+round=18 required=7 post_report=0 defects=3
+  corrected landed-omitted 101f3991d3570bc9350fbf9c5561f4be1185699d
+  corrected landed-omitted 1c325b2e58fcfdc6761f645b44cedfb1d65243e6
+  corrected landed-omitted c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d
+round=19 required=8 post_report=4 defects=0
+round=20 required=9 post_report=0 defects=5
+  UNCORRECTED unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+  corrected landed-omitted 846e366dc9dbac58463494a7e05ad060ae3ed3b0
+  corrected landed-omitted 92b146253fd3a8c4bfade94c909dc63b13d6f4a8
+  corrected landed-omitted 0957ce619789d13bb5779606078fa1498114d2c7
+  corrected landed-omitted 33a6777866d0f63d894ef21bc863486bcb35b56c
+summary reports=11 defects=9 corrected=8 uncorrected=1 errata_unmatched=0 errata_invalid=0 status=failed
+
+### ablation: ledger line 4 removed, expect exactly that defect uncorrected
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 10-20 --errata /tmp/kama-r21-R20FollowupsCheck/ablate/without-line4.tsv
+exit=1
+round=10 required=2 post_report=0 defects=1
+  corrected landed-omitted 40660352d4a9eb00a5d6195f0f064f5c64618143
+round=11 required=2 post_report=0 defects=0
+round=12 required=2 post_report=0 defects=0
+round=13 required=2 post_report=0 defects=0
+round=14 required=2 post_report=0 defects=0
+round=15 required=3 post_report=0 defects=0
+round=16 required=3 post_report=0 defects=0
+round=17 required=2 post_report=0 defects=0
+round=18 required=7 post_report=0 defects=3
+  corrected landed-omitted 101f3991d3570bc9350fbf9c5561f4be1185699d
+  corrected landed-omitted 1c325b2e58fcfdc6761f645b44cedfb1d65243e6
+  corrected landed-omitted c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d
+round=19 required=8 post_report=4 defects=0
+round=20 required=9 post_report=0 defects=5
+  corrected unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+  corrected landed-omitted 846e366dc9dbac58463494a7e05ad060ae3ed3b0
+  corrected landed-omitted 92b146253fd3a8c4bfade94c909dc63b13d6f4a8
+  corrected landed-omitted 0957ce619789d13bb5779606078fa1498114d2c7
+  UNCORRECTED landed-omitted 33a6777866d0f63d894ef21bc863486bcb35b56c
+summary reports=11 defects=9 corrected=8 uncorrected=1 errata_unmatched=0 errata_invalid=0 status=failed
+
+### ablation: ledger line 5 removed, expect exactly that defect uncorrected
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 10-20 --errata /tmp/kama-r21-R20FollowupsCheck/ablate/without-line5.tsv
+exit=1
+round=10 required=2 post_report=0 defects=1
+  corrected landed-omitted 40660352d4a9eb00a5d6195f0f064f5c64618143
+round=11 required=2 post_report=0 defects=0
+round=12 required=2 post_report=0 defects=0
+round=13 required=2 post_report=0 defects=0
+round=14 required=2 post_report=0 defects=0
+round=15 required=3 post_report=0 defects=0
+round=16 required=3 post_report=0 defects=0
+round=17 required=2 post_report=0 defects=0
+round=18 required=7 post_report=0 defects=3
+  corrected landed-omitted 101f3991d3570bc9350fbf9c5561f4be1185699d
+  corrected landed-omitted 1c325b2e58fcfdc6761f645b44cedfb1d65243e6
+  corrected landed-omitted c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d
+round=19 required=8 post_report=4 defects=0
+round=20 required=9 post_report=0 defects=5
+  corrected unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+  corrected landed-omitted 846e366dc9dbac58463494a7e05ad060ae3ed3b0
+  corrected landed-omitted 92b146253fd3a8c4bfade94c909dc63b13d6f4a8
+  UNCORRECTED landed-omitted 0957ce619789d13bb5779606078fa1498114d2c7
+  corrected landed-omitted 33a6777866d0f63d894ef21bc863486bcb35b56c
+summary reports=11 defects=9 corrected=8 uncorrected=1 errata_unmatched=0 errata_invalid=0 status=failed
+
+### ablation: ledger line 6 removed, expect exactly that defect uncorrected
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 10-20 --errata /tmp/kama-r21-R20FollowupsCheck/ablate/without-line6.tsv
+exit=1
+round=10 required=2 post_report=0 defects=1
+  corrected landed-omitted 40660352d4a9eb00a5d6195f0f064f5c64618143
+round=11 required=2 post_report=0 defects=0
+round=12 required=2 post_report=0 defects=0
+round=13 required=2 post_report=0 defects=0
+round=14 required=2 post_report=0 defects=0
+round=15 required=3 post_report=0 defects=0
+round=16 required=3 post_report=0 defects=0
+round=17 required=2 post_report=0 defects=0
+round=18 required=7 post_report=0 defects=3
+  corrected landed-omitted 101f3991d3570bc9350fbf9c5561f4be1185699d
+  corrected landed-omitted 1c325b2e58fcfdc6761f645b44cedfb1d65243e6
+  corrected landed-omitted c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d
+round=19 required=8 post_report=4 defects=0
+round=20 required=9 post_report=0 defects=5
+  corrected unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+  corrected landed-omitted 846e366dc9dbac58463494a7e05ad060ae3ed3b0
+  UNCORRECTED landed-omitted 92b146253fd3a8c4bfade94c909dc63b13d6f4a8
+  corrected landed-omitted 0957ce619789d13bb5779606078fa1498114d2c7
+  corrected landed-omitted 33a6777866d0f63d894ef21bc863486bcb35b56c
+summary reports=11 defects=9 corrected=8 uncorrected=1 errata_unmatched=0 errata_invalid=0 status=failed
+
+### ablation: ledger line 7 removed, expect exactly that defect uncorrected
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 10-20 --errata /tmp/kama-r21-R20FollowupsCheck/ablate/without-line7.tsv
+exit=1
+round=10 required=2 post_report=0 defects=1
+  corrected landed-omitted 40660352d4a9eb00a5d6195f0f064f5c64618143
+round=11 required=2 post_report=0 defects=0
+round=12 required=2 post_report=0 defects=0
+round=13 required=2 post_report=0 defects=0
+round=14 required=2 post_report=0 defects=0
+round=15 required=3 post_report=0 defects=0
+round=16 required=3 post_report=0 defects=0
+round=17 required=2 post_report=0 defects=0
+round=18 required=7 post_report=0 defects=3
+  corrected landed-omitted 101f3991d3570bc9350fbf9c5561f4be1185699d
+  corrected landed-omitted 1c325b2e58fcfdc6761f645b44cedfb1d65243e6
+  corrected landed-omitted c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d
+round=19 required=8 post_report=4 defects=0
+round=20 required=9 post_report=0 defects=5
+  corrected unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+  UNCORRECTED landed-omitted 846e366dc9dbac58463494a7e05ad060ae3ed3b0
+  corrected landed-omitted 92b146253fd3a8c4bfade94c909dc63b13d6f4a8
+  corrected landed-omitted 0957ce619789d13bb5779606078fa1498114d2c7
+  corrected landed-omitted 33a6777866d0f63d894ef21bc863486bcb35b56c
+summary reports=11 defects=9 corrected=8 uncorrected=1 errata_unmatched=0 errata_invalid=0 status=failed
+
+### mutant: last hex of line-3 token changed, expect exit 1
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 10-20 --errata /tmp/kama-r21-R20FollowupsCheck/ablate/mut-token.tsv
+exit=1
+round=10 required=2 post_report=0 defects=1
+  corrected landed-omitted 40660352d4a9eb00a5d6195f0f064f5c64618143
+round=11 required=2 post_report=0 defects=0
+round=12 required=2 post_report=0 defects=0
+round=13 required=2 post_report=0 defects=0
+round=14 required=2 post_report=0 defects=0
+round=15 required=3 post_report=0 defects=0
+round=16 required=3 post_report=0 defects=0
+round=17 required=2 post_report=0 defects=0
+round=18 required=7 post_report=0 defects=3
+  corrected landed-omitted 101f3991d3570bc9350fbf9c5561f4be1185699d
+  corrected landed-omitted 1c325b2e58fcfdc6761f645b44cedfb1d65243e6
+  corrected landed-omitted c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d
+round=19 required=8 post_report=4 defects=0
+round=20 required=9 post_report=0 defects=5
+  UNCORRECTED unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+  corrected landed-omitted 846e366dc9dbac58463494a7e05ad060ae3ed3b0
+  corrected landed-omitted 92b146253fd3a8c4bfade94c909dc63b13d6f4a8
+  corrected landed-omitted 0957ce619789d13bb5779606078fa1498114d2c7
+  corrected landed-omitted 33a6777866d0f63d894ef21bc863486bcb35b56c
+errata-unmatched line=3 unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56d
+summary reports=11 defects=9 corrected=8 uncorrected=1 errata_unmatched=1 errata_invalid=0 status=failed
+
+### mutant: line-3 round 20->21, expect exit 1
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 10-20 --errata /tmp/kama-r21-R20FollowupsCheck/ablate/mut-round.tsv
+exit=1
+round=10 required=2 post_report=0 defects=1
+  corrected landed-omitted 40660352d4a9eb00a5d6195f0f064f5c64618143
+round=11 required=2 post_report=0 defects=0
+round=12 required=2 post_report=0 defects=0
+round=13 required=2 post_report=0 defects=0
+round=14 required=2 post_report=0 defects=0
+round=15 required=3 post_report=0 defects=0
+round=16 required=3 post_report=0 defects=0
+round=17 required=2 post_report=0 defects=0
+round=18 required=7 post_report=0 defects=3
+  corrected landed-omitted 101f3991d3570bc9350fbf9c5561f4be1185699d
+  corrected landed-omitted 1c325b2e58fcfdc6761f645b44cedfb1d65243e6
+  corrected landed-omitted c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d
+round=19 required=8 post_report=4 defects=0
+round=20 required=9 post_report=0 defects=5
+  UNCORRECTED unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+  corrected landed-omitted 846e366dc9dbac58463494a7e05ad060ae3ed3b0
+  corrected landed-omitted 92b146253fd3a8c4bfade94c909dc63b13d6f4a8
+  corrected landed-omitted 0957ce619789d13bb5779606078fa1498114d2c7
+  corrected landed-omitted 33a6777866d0f63d894ef21bc863486bcb35b56c
+errata-unmatched line=3 unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+summary reports=11 defects=9 corrected=8 uncorrected=1 errata_unmatched=1 errata_invalid=0 status=failed
+
+### draft r20-draft-as-committed
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 20 --no-errata --report 20=/tmp/kama-r21-R20FollowupsCheck/ablate/r20-draft-as-committed.md
+exit=1
+round=20 required=9 post_report=0 defects=5
+  UNCORRECTED unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+  UNCORRECTED landed-omitted 846e366dc9dbac58463494a7e05ad060ae3ed3b0
+  UNCORRECTED landed-omitted 92b146253fd3a8c4bfade94c909dc63b13d6f4a8
+  UNCORRECTED landed-omitted 0957ce619789d13bb5779606078fa1498114d2c7
+  UNCORRECTED landed-omitted 33a6777866d0f63d894ef21bc863486bcb35b56c
+summary reports=1 defects=5 corrected=0 uncorrected=5 errata_unmatched=0 errata_invalid=0 status=failed
+
+### draft r20-draft-hash-fixed-only
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 20 --no-errata --report 20=/tmp/kama-r21-R20FollowupsCheck/ablate/r20-draft-hash-fixed-only.md
+exit=1
+round=20 required=9 post_report=0 defects=4
+  UNCORRECTED landed-omitted 846e366dc9dbac58463494a7e05ad060ae3ed3b0
+  UNCORRECTED landed-omitted 92b146253fd3a8c4bfade94c909dc63b13d6f4a8
+  UNCORRECTED landed-omitted 0957ce619789d13bb5779606078fa1498114d2c7
+  UNCORRECTED landed-omitted 33a6777866d0f63d894ef21bc863486bcb35b56c
+summary reports=1 defects=4 corrected=0 uncorrected=4 errata_unmatched=0 errata_invalid=0 status=failed
+
+### draft r20-draft-bullets-only
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 20 --no-errata --report 20=/tmp/kama-r21-R20FollowupsCheck/ablate/r20-draft-bullets-only.md
+exit=1
+round=20 required=9 post_report=0 defects=1
+  UNCORRECTED unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+summary reports=1 defects=1 corrected=0 uncorrected=1 errata_unmatched=0 errata_invalid=0 status=failed
+
+### draft r20-draft-hash-fixed-and-bullets
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 20 --no-errata --report 20=/tmp/kama-r21-R20FollowupsCheck/ablate/r20-draft-hash-fixed-and-bullets.md
+exit=0
+round=20 required=9 post_report=0 defects=0
+summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+
+### draft r20-draft-digit-noise-in-landed
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 20 --no-errata --report 20=/tmp/kama-r21-R20FollowupsCheck/ablate/r20-draft-digit-noise-in-landed.md
+exit=1
+round=20 required=9 post_report=0 defects=2
+  UNCORRECTED landed-unresolved 1099158
+  UNCORRECTED landed-unresolved 20261021
+summary reports=1 defects=2 corrected=0 uncorrected=2 errata_unmatched=0 errata_invalid=0 status=failed
+
+### draft r21-draft-cites-nothing
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 21 --no-errata --report 21=/tmp/kama-r21-R20FollowupsCheck/ablate/r21-draft-cites-nothing.md
+exit=1
+round=21 required=1 post_report=0 defects=1
+  UNCORRECTED landed-omitted a29bb84abbb8b4d328f5970a89e448330a3a42ac
+summary reports=1 defects=1 corrected=0 uncorrected=1 errata_unmatched=0 errata_invalid=0 status=failed
+
+### draft r21-draft-cites-a29bb84
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 21 --no-errata --report 21=/tmp/kama-r21-R20FollowupsCheck/ablate/r21-draft-cites-a29bb84.md
+exit=0
+round=21 required=1 post_report=0 defects=0
+summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+
+### draft r21-draft-cites-a29bb84-plus-typo
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 21 --no-errata --report 21=/tmp/kama-r21-R20FollowupsCheck/ablate/r21-draft-cites-a29bb84-plus-typo.md
+exit=1
+round=21 required=1 post_report=0 defects=1
+  UNCORRECTED landed-unresolved deadbee1
+summary reports=1 defects=1 corrected=0 uncorrected=1 errata_unmatched=0 errata_invalid=0 status=failed
+
+### draft r21-draft-fake-full-hash-in-body
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 21 --no-errata --report 21=/tmp/kama-r21-R20FollowupsCheck/ablate/r21-draft-fake-full-hash-in-body.md
+exit=1
+round=21 required=1 post_report=0 defects=1
+  UNCORRECTED unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+summary reports=1 defects=1 corrected=0 uncorrected=1 errata_unmatched=0 errata_invalid=0 status=failed
+
+### exact pre-commit gate form: default range + --report 21 (expect reports=12, exit 0)
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --report 21=/tmp/kama-r21-R20FollowupsCheck/ablate/r21-draft-cites-a29bb84.md
+exit=0
+round=10 required=2 post_report=0 defects=1
+  corrected landed-omitted 40660352d4a9eb00a5d6195f0f064f5c64618143
+round=11 required=2 post_report=0 defects=0
+round=12 required=2 post_report=0 defects=0
+round=13 required=2 post_report=0 defects=0
+round=14 required=2 post_report=0 defects=0
+round=15 required=3 post_report=0 defects=0
+round=16 required=3 post_report=0 defects=0
+round=17 required=2 post_report=0 defects=0
+round=18 required=7 post_report=0 defects=3
+  corrected landed-omitted 101f3991d3570bc9350fbf9c5561f4be1185699d
+  corrected landed-omitted 1c325b2e58fcfdc6761f645b44cedfb1d65243e6
+  corrected landed-omitted c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d
+round=19 required=8 post_report=4 defects=0
+round=20 required=9 post_report=0 defects=5
+  corrected unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c
+  corrected landed-omitted 846e366dc9dbac58463494a7e05ad060ae3ed3b0
+  corrected landed-omitted 92b146253fd3a8c4bfade94c909dc63b13d6f4a8
+  corrected landed-omitted 0957ce619789d13bb5779606078fa1498114d2c7
+  corrected landed-omitted 33a6777866d0f63d894ef21bc863486bcb35b56c
+round=21 required=1 post_report=0 defects=0
+summary reports=12 defects=9 corrected=9 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+
+### post-commit gate form before r21 report exists in fleet (expect exit 2)
+$ (cwd /tmp/kama-r21-R20FollowupsCheck/lane) python3 tools/report-landing-audit.py --fleet-repo /home/vgpnk/Projects/shokunin --branch a29bb84abbb8b4d328f5970a89e448330a3a42ac --rounds 10-21
+exit=2
+
+[stderr]
+could-not-evaluate: round 21: cannot read /home/vgpnk/Projects/shokunin/.ufo/reports/round-21/kama.md: [Errno 2] No such file or directory: '/home/vgpnk/Projects/shokunin/.ufo/reports/round-21/kama.md'
+
+### sha256 comparisons
+sha256 lane ledger            baaf4bdaf30c1ce0a08434017cc279b34aa6745450cedabb9e0c3fe144fce53d
+sha256 clone ledger           baaf4bdaf30c1ce0a08434017cc279b34aa6745450cedabb9e0c3fe144fce53d
+sha256 lane audit script      a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d
+sha256 clone audit script     a60acc3a2444eddb34122d84f8d88cd0bcc5c6b103c90f2ca2e9ef330c28df9d
+sha256 fleet r20 committed (04eb5d2) 35bbcbb841dfe66a93ce348b2312b9c1b288509e00c451e5230c510c19c1c893
+sha256 fleet r20 working tree    35bbcbb841dfe66a93ce348b2312b9c1b288509e00c451e5230c510c19c1c893
+
+### splice arithmetic
+bad[:15]==good[:15] True; bad[15:]==alt[15:] True
+bad[:16]=0957ce619789d13d good[:16]=0957ce619789d13b equal=False
+valid splits j (bad == good[:j]+alt[j:]): [14, 15]

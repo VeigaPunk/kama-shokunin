@@ -1,0 +1,26 @@
+id	consumer	consumes_or_pins	base_7a6bc91	a29bb84	would_change	pinned_breaks	evidence
+C01	tools/kama-llamacpp-live.py install_tree() L178-202	tree digest of real install dir	51 entries 6c216313…	51 entries 6c216313… (identical)	no	no	A5,D32
+C02	tools/kama-llamacpp-live.py install_links() L205-226 + receipt fields L1230,1294,1308-1309	new receipt fields	absent	10 links, sha b58f1b4d…	yes: new live receipts carry install_links	no (no committed pin)	A5,D32
+C03	tools/kama-llamacpp-live.py _selftest() (no install_* calls)	producer --selftest	exit 0	exit 0	no	no	B20
+C04	tests/llamacpp-live/check-receipt.py install_tree checks L385-421	tree digest, server basename, --expect-install-tree-sha256	unchanged	unchanged	no	no	D28
+C05	tests/llamacpp-live/check-receipt.py install_links checks L441-477	optional links block; chain checks; --expect-install-links-sha256	absent	added; legacy receipts skip (links is MISSING)	yes (new rules)	no	D28,D30
+C06	tests/llamacpp-live/check-receipt.py --selftest count line L2282-2283	printed count text	6 VALID+1 NE, 77 mutations	9 VALID+1 NE, 90 mutations	yes (text only)	no: no script parses the count; run.py:56 compares exit only	B18
+C07	tests/llamacpp-live/install-tree-grid.py (blob 329a1268, unchanged)	gate constants + _selftest_receipt via run_path	selftest exit 0	selftest exit 0	no (gate input changed, output same)	no	B19
+C08	recipe grid-no-tree-pin (exit 1) and grid-tree-pin (exit 0)	--tree-sha 6c216313…; --tool-sha 83eac5c0… (receipt-recorded)	exit 1 / 0; rejected 0/3 / 3/3	identical verdicts; stdout differs only in tmp dir names	no	no	C26
+C09	tests/llamacpp-live/install-links-grid.py (new in draft)	frozen producer at 7a6bc91 via git show; working-tree producer	absent	selftest exit 0, 12 cases	new	no pins	B23
+C10	tests/llamacpp-live/controls.py --selftest	gate behaviour on forgeries	70 cases, 0 failures	70 cases, 0 failures	no	no	B21
+C11	tools/error-verdict-census.py FROZEN_SOURCE_SHA256 (GRID 6f51803c…, CITATION 5c887572…, SURVIVORS ac934794…)	git show FROZEN_REV=37bd4c5b content, lines 141-153	selftest 0; frozen 1; current 0; pair 0	identical JSON; same exits	no	no (pins are FROZEN_REV content, not working files)	B22,C25
+C12	recipe.json: 8 gate/grid/census rows	exit codes	all as expected	all as expected	stdout only (C06, C08)	no	C24
+C13	recipe.json: 11 other lane-bound rows (citation x2, survivor, gguf x5, append x3)	exit codes	all as expected	all as expected	stdout: citation-count and gguf-measure paths only; append-round HEAD only	no	C27
+C14	recipe.json: sources-validate, sources-census	fleet SOURCES.md under fleet root (not clone-bound)	exit 0 (fleet)	not rerun per clone; exit 0 on live fleet	n/a	no	C24
+C15	21 committed receipt-named JSON through the gate	verdict line and exit	see receipt-verdicts.tsv	identical	no	no	D28
+C16	round-18 live-recovery/receipt-1.json as grid base	receipt tool.sha256 83eac5c0… (recorded)	VALID with 83eac5 pin	VALID with 83eac5 pin; INVALID exit 2 with current-file c05cd8bf pin	pin choice matters	latent: breaks if re-pinned to current tool file	D29
+C17	.ufo/waves/round-18/runs/run.py (round-18 runner; NOT run: launches llama-server)	tool/tree pins computed at run time; legacy rows use each receipt's own pins; dirty guard L8-17	n/a	n/a	a fresh run would record c05cd8bf and install_links [INFERENCE]	no (self-consistent on rerun) [INFERENCE]	E33
+C18	.ufo/waves/round-20/build/out/FreshnessS039/freshness_check.py (read-only)	installed tree digest vs round-18 receipt-1	match (recorded)	exit 0; 16 match, 0 mismatch, 0 error	no	no	D31
+C19	recorded runs runs/{9add96e4,04de7a87,c7311039,0957ce61}/ (receipt-gate-selftest.stdout '77 mutations'; commands.json stdout_sha256)	recorded output hashes; as_expected	historical at their commits	not re-compared	n/a (immutable record)	no	C19
+C20	SelftestsAtCommit/*, RegReceiptSixPin/selftest-stdout.txt, round-19 evidence/final-selftests.txt	count '77' text	historical	historical	n/a	no	C19
+C21	prose: SCORECARD.md:906; corpus/lessons/round-20.md:153	'77 mutations' in round-20 rows	accurate for 0957ce61	unchanged text	n/a	no (round-21 record must state 90)	C21
+C22	lane working tree: ' M tools/kama-llamacpp-live.py' (blank line L1152; sha 7de1e81e…) and '?? .ufo/waves/round-21/build/'	official runner clean-tree guard	n/a	run.py refuses (exit 2, reproduced in scratch clone with one untracked file)	yes (blocks runs)	latent: lane live run would record tool sha 7de1e81e… [INFERENCE]	E33
+C23	untracked round-21 LinksDigestFix/patch.diff (not applied to lane)	gate and producer	9+1 / 90	patched scratch: 9+1 / 93; producer exit 0; links grid exit 0; real-tree digests unchanged	yes if integrated	no (real-tree pins survive)	B24
+C24	pre-existing silent skip: install_tree L190-199 and install_links 'except OSError: continue'	digest over partial tree	present	present	no (pre-existing; copied into install_links)	n/a	E34
+C25	untracked round-21 machine-type files (103 mention a term; subset py/sh in inflight-summary.json)	seat probes and scripts	n/a	not referenced by any committed recipe	only if integrated	no	inflight-machine-consumers.tsv

@@ -1,0 +1,19 @@
+# Commands run by AuditGitEnvSentinel (kama round 21). rc = observed exit. Scratch: /tmp/kama-r21-AuditGitEnvSentinel (removed at end).
+git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-parse HEAD                     -> a29bb84 rc0
+git -C .../kama-shokunin status --short (first batch; no GIT_OPTIONAL_LOCKS=0)         -> rc0; .git/index mtime 07:47:52 (disclosed)
+env | sort | grep -E '^(GIT_|GIT)'                                                      -> GIT_EDITOR, GIT_PAGER, GIT_TERMINAL_PROMPT only; rc0
+git config --global --get-all {core.hooksPath,commit.gpgsign,gpg.program,init.templatedir,include.path,core.fsmonitor,user.signingkey} -> all rc1 (unset)
+ls /usr/share/git-core/templates/hooks                                                  -> only *.sample
+ls <lane gitdir>/hooks | grep -v '\.sample$'                                            -> rc1 (no active hook)
+git clone -q --no-hardlinks <lane> /tmp/kama-r21-AuditGitEnvSentinel/lane              -> rc0 (HEAD a29bb84; tool sha256 a60acc3a)
+probe: git init/commit/alias/branch/sha256 checks (hook env, alias env, branch shadow, GIT_DEFAULT_HASH) -> rc0 each
+python3 probe_env.py <clone>/tools/report-landing-audit.py <scratch> orig               -> rc0 (2.2 s)
+python3 probe_env.py fixed/A.py <scratch> A                                              -> rc0 (6.4 s with AB)
+python3 probe_env.py fixed/AB.py <scratch> AB                                            -> rc0
+python3 fixed/A.py --selftest                                                            -> rc0, selftest cases=15 failed=0
+python3 fixed/AB.py --selftest                                                           -> rc0 (first run rc1 NameError: git_env; fixed, rerun rc0)
+git -C <clone> apply --check fix-A-env-isolation.patch / fix-AB-full.patch               -> rc0 / rc0
+python3 <tool> --lane-repo <clone> --fleet-repo /home/vgpnk/Projects/shokunin --rounds 10-20 --json        -> rc0 (orig, A, AB); cmp rc0
+python3 <tool> ... --no-errata                                                           -> rc1 (9 defects), identical for orig and AB (cmp rc0)
+git -C .../kama-shokunin show HEAD:tools/report-landing-audit.py | sha256sum             -> a60acc3a rc0
+GIT_OPTIONAL_LOCKS=0 git -C .../kama-shokunin rev-parse HEAD (end)                       -> a29bb84 rc0; index mtime 08:02:05 (written by an unattributed process; see report; tested: GIT_OPTIONAL_LOCKS=0 rev-parse and status leave mtime unchanged)

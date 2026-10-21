@@ -1,0 +1,68 @@
+SPLICED receipt check (not a live capture; nothing launched)
+lane HEAD a29bb84abbb8b4d328f5970a89e448330a3a42ac
+producer /tmp/kama-r21-LinksRealReceipt/lane/tools/kama-llamacpp-live.py sha256=c05cd8bf36668b841246e9a8fdf9cf351b63a3d8423a154233230ceb69ae764e
+gate     /tmp/kama-r21-LinksRealReceipt/lane/tests/llamacpp-live/check-receipt.py sha256=01fbf81387f1a72bebf0b3ca76b9c50d9850300c5776ee49bcfcba709d46a121
+tree     /home/vgpnk/.local/opt/llama-b11755 server.sha256=b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804
+round-18 receipt /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/live-recovery/receipt-1.json sha256=89728a0248f208ada93ae9b2ce08a5da5e65bcd30259c43b8329d3e6d3bca863
+
+real install_tree: members=51 install_tree_sha256=6c216313a88d71b141bc62f684b8f95c040710ff050801b13521861826785a2c
+real install_links: links=10 install_links_sha256=b58f1b4df160c4e2accb95bac964a5648d24fc31e769f8044296a1fa431b9e10
+    libggml-base.so -> libggml-base.so.0
+    libggml-base.so.0 -> libggml-base.so.0.27.0
+    libggml.so -> libggml.so.0
+    libggml.so.0 -> libggml.so.0.27.0
+    libllama-common.so -> libllama-common.so.0
+    libllama-common.so.0 -> libllama-common.so.0.7.0
+    libllama.so -> libllama.so.0
+    libllama.so.0 -> libllama.so.0.7.0
+    libmtmd.so -> libmtmd.so.0
+    libmtmd.so.0 -> libmtmd.so.0.7.0
+round-18 recorded: members=51 install_tree_sha256=6c216313a88d71b141bc62f684b8f95c040710ff050801b13521861826785a2c
+round-18 vs real: tree_equal=True tree_sha_equal=True server_sha_equal=True differing_members=[]
+
+retarget: libllama.so.0 -> libllama-common.so.0.7.0 tree_sha_equal_real=True links_sha_equal_real=False links_differing=['libllama.so.0']
+dangling: libllama.so.0 -> libllama.so.9 tree_sha_equal_real=True links_sha_equal_real=False links_differing=['libllama.so.0']
+
+wrote /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksRealReceipt/spliced-real.json changed_fields=['server.install_links', 'server.install_links_sha256']
+wrote /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksRealReceipt/spliced-retarget.json changed_fields=['server.install_links', 'server.install_links_sha256']
+wrote /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksRealReceipt/spliced-dangling.json changed_fields=['server.install_links', 'server.install_links_sha256']
+wrote /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksRealReceipt/identities.json
+
+[B0] round-18 receipt as recorded, no pin
+    exit=0 predeclared=0 OK
+    | VALID /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/live-recovery/receipt-1.json
+    argv: check-receipt.py receipt-1.json
+[B1] round-18 receipt as recorded, links pin
+    exit=1 predeclared=1 OK
+    | INVALID /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/live-recovery/receipt-1.json: 1 problem(s)
+    |   - --expect-install-links-sha256 given but receipt has no server.install_links_sha256 digest
+    argv: check-receipt.py receipt-1.json --expect-install-links-sha256 b58f1b4df160c4e2accb95bac964a5648d24fc31e769f8044296a1fa431b9e10
+[R1] real-tree splice, no pin
+    exit=0 predeclared=0 OK
+    | VALID /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksRealReceipt/spliced-real.json
+    argv: check-receipt.py spliced-real.json
+[R2] real-tree splice, links pin = real digest
+    exit=0 predeclared=0 OK
+    | VALID /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksRealReceipt/spliced-real.json
+    argv: check-receipt.py spliced-real.json --expect-install-links-sha256 b58f1b4df160c4e2accb95bac964a5648d24fc31e769f8044296a1fa431b9e10
+[R3] retarget splice, no pin
+    exit=0 predeclared=0 OK
+    | VALID /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksRealReceipt/spliced-retarget.json
+    argv: check-receipt.py spliced-retarget.json
+[R4] retarget splice, links pin = real digest
+    exit=1 predeclared=1 OK
+    | INVALID /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksRealReceipt/spliced-retarget.json: 1 problem(s)
+    |   - server.install_links_sha256 a1afacc2c04d554d4d08666a0272d6d1f128c1071c236a8cbc5409b1c1926036 != expected b58f1b4df160c4e2accb95bac964a5648d24fc31e769f8044296a1fa431b9e10
+    argv: check-receipt.py spliced-retarget.json --expect-install-links-sha256 b58f1b4df160c4e2accb95bac964a5648d24fc31e769f8044296a1fa431b9e10
+[R5] retarget splice, tree pin = real digest
+    exit=0 predeclared=0 OK
+    | VALID /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksRealReceipt/spliced-retarget.json
+    argv: check-receipt.py spliced-retarget.json --expect-install-tree-sha256 6c216313a88d71b141bc62f684b8f95c040710ff050801b13521861826785a2c
+[R6] dangling splice, no pin
+    exit=1 predeclared=1 OK
+    | INVALID /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksRealReceipt/spliced-dangling.json: 2 problem(s)
+    |   - server.install_links['libllama.so']: chain ends at 'libllama.so.9', not a pinned install_tree member
+    |   - server.install_links['libllama.so.0']: chain ends at 'libllama.so.9', not a pinned install_tree member
+    argv: check-receipt.py spliced-dangling.json
+
+matrix rows=8 mismatches=0

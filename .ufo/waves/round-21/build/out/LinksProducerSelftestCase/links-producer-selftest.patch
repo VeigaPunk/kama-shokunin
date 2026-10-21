@@ -1,0 +1,65 @@
+diff --git i/tools/kama-llamacpp-live.py w/tools/kama-llamacpp-live.py
+index 3f470c8..0b203a1 100755
+--- i/tools/kama-llamacpp-live.py
++++ w/tools/kama-llamacpp-live.py
+@@ -1079,8 +1079,51 @@ def build_parser():
+     return p
+ 
+ 
++def _install_identity_selftest():
++    """Stub install: one regular server, two regular libs and a soname chain.
++    install_links() must map and digest the chain; install_tree() must never
++    see it; retargeting the chain must move install_links_sha256 only."""
++    members = {'llama-server': b'server-stub\n',
++               'libllama.so.0.7.0': b'lib-0.7.0\n',
++               'libllama.so.0.7.1': b'lib-0.7.1\n'}
++    with tempfile.TemporaryDirectory(
++            prefix='kama-install-selftest-') as directory:
++        for name, body in members.items():
++            with open(os.path.join(directory, name), 'wb') as fh:
++                fh.write(body)
++        server = os.path.join(directory, 'llama-server')
++        soname = os.path.join(directory, 'libllama.so.0')
++        os.symlink('libllama.so.0.7.0', soname)
++        os.symlink('libllama.so.0', os.path.join(directory, 'libllama.so'))
++        tree, tree_sha = install_tree(server)
++        links, links_sha = install_links(server)
++        if tree != {n: hashlib.sha256(b).hexdigest()
++                    for n, b in members.items()}:
++            raise AssertionError(f'install_tree members mismatch: {tree!r}')
++        if tree_sha != hashlib.sha256(''.join(
++                f'{n} {tree[n]}\n' for n in sorted(tree)).encode()).hexdigest():
++            raise AssertionError('install_tree_sha256 digest mismatch')
++        if links != {'libllama.so': 'libllama.so.0',
++                     'libllama.so.0': 'libllama.so.0.7.0'}:
++            raise AssertionError(f'install_links map mismatch: {links!r}')
++        if links_sha != hashlib.sha256(
++                b'libllama.so -> libllama.so.0\n'
++                b'libllama.so.0 -> libllama.so.0.7.0\n').hexdigest():
++            raise AssertionError('install_links_sha256 digest mismatch')
++        os.unlink(soname)
++        os.symlink('libllama.so.0.7.1', soname)
++        moved_tree, moved_tree_sha = install_tree(server)
++        moved_links, moved_links_sha = install_links(server)
++        if moved_links.get('libllama.so.0') != 'libllama.so.0.7.1':
++            raise AssertionError('retarget not recorded by install_links')
++        if moved_links_sha == links_sha:
++            raise AssertionError('retarget left install_links_sha256 unchanged')
++        if (moved_tree, moved_tree_sha) != (tree, tree_sha):
++            raise AssertionError('retarget moved install_tree identity')
++
++
+ def _selftest():
+-    """Exercise procfs parsing, live tcp6 ownership rows, and v3 verdicts."""
++    """Exercise procfs parsing, tcp6 ownership, v3 verdicts, install identity."""
+     port = 0x1234
+     tcp6_rows = (
+         ('00000000000000000000000001000000', True),
+@@ -1176,6 +1219,7 @@ def _selftest():
+             selftest_receipt) is not True or selftest_receipt.get(
+                 'internal_fault') != 'internal:RuntimeError':
+         raise AssertionError('finalizer handler restore fault escaped')
++    _install_identity_selftest()
+     print('selftest: ok; closed tcp6 listeners ' + ', '.join(tested_ports))
+     return 0
+ 

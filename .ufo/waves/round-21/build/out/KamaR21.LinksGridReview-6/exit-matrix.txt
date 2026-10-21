@@ -1,0 +1,34 @@
+# KamaR21.LinksGridReview-6 exit matrix
+# Subject: tests/llamacpp-live/install-links-grid.py at a29bb84 (lane HEAD a29bb84; lane file sha256 4a538de2...ee93 == git blob).
+# Runs from a scratch clone (/tmp/kama-r21-LinksGridReview/lane @ a29bb84), never from the lane. python3 3.14.8, git 2.56.0 (system; no installs).
+# G = <scratch>/lane/tests/llamacpp-live/install-links-grid.py
+
+$G --selftest                                                  exit 0  "selftest cases=12 failed=0" (selftest.txt)
+$G --arm both                                                  exit 1  (arm-both.txt)
+$G --arm current                                               exit 0  (arm-current.txt)
+$G --arm frozen                                                exit 1  (arm-frozen.txt)
+$G --json                                                      exit 1  default arm both (both.json)
+$G --arm current --json                                        exit 0  (current.json)
+$G --tree <missing dir> --arm current                          exit 2  could-not-evaluate: .../llama-server missing
+$G --tree <dir without symlinks> --arm current                 exit 2  could-not-evaluate: ... no symlinks
+$G --tree <dir without symlinks> --arm both                    exit 2  same
+no-git copy of grid+gate+producer: --selftest                  exit 2  git show ...: fatal: not a git repository
+no-git copy of grid+gate+producer: --arm current               exit 0
+no-git copy of grid+gate+producer: --arm frozen                exit 2
+LC_ALL=C PYTHONUTF8=0 PYTHONCOERCECLOCALE=0: --arm frozen      exit 1  UnicodeDecodeError ('ascii'), uncaught in frozen_producer
+LC_ALL=C PYTHONUTF8=0 PYTHONCOERCECLOCALE=0: --arm current     exit 0
+tempfile.tempdir=/nonexistent (runpy wrapper): --selftest      exit 1  uncaught FileNotFoundError (selftest path)
+tempfile.tempdir=/nonexistent (runpy wrapper): --arm current   exit 2  could-not-evaluate: ... No such file or directory
+synthetic: libx.so.1 regular, libx.so->libx.so.1, llama-server->external file: --arm current
+                                                               exit 1  uncaught StopIteration, build_cells line 115
+synthetic real dir (llama-server, a.so.1, a.so->a.so.1): --arm current
+                                                               exit 0  (control)
+same dir reached through a symlink: --arm current              exit 1  link-retarget-member and link-retarget-second current=same; wrong=2
+synthetic dir + dangling soname liby.so->liby.so.9: --arm current
+                                                               exit 0  null row gate=liby.so:chain ends at 'liby.so.9'...
+fidelity control (mirror drops libggml-base.so.0.27.0): --arm current
+                                                               exit 2  could-not-evaluate: mirror identity differs from ... (current)
+ast_and_realpath.py                                            exit 0  sha256_file and install_tree ast_equal=True (7a6bc91 vs a29bb84)
+digest_check.py                                                exit 0  (real-tree-digest-recompute.txt)
+inspect_cells.py                                               exit 0  (cell-effects.txt)
+find ~/.local/opt/llama-b11755 -newermt '2026-10-20 08:11' | wc -l   0 (61 entries untouched)

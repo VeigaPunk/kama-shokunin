@@ -1,0 +1,39 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -207,20 +207,14 @@
+     a combined digest over the sorted 'name -> text' lines. install_tree()
+     skips symlinks, so a retargeted soname link (libllama.so.0 -> ...) would
+     otherwise leave every pin unchanged. Link text is recorded unresolved;
+-    the gate checks that each chain ends at a pinned regular member."""
++    the gate checks that each chain ends at a pinned regular member. Fail
++    closed like install_tree(): no entry is silently omitted."""
+     links = {}
+     directory = os.path.dirname(server_real)
+-    try:
+-        entries = sorted(os.listdir(directory))
+-    except OSError:
+-        return links, None
+-    for name in entries:
++    for name in sorted(os.listdir(directory)):
+         full = os.path.join(directory, name)
+-        try:
+-            if stat.S_ISLNK(os.lstat(full).st_mode):
+-                links[name] = os.readlink(full)
+-        except OSError:
+-            continue
++        if stat.S_ISLNK(os.lstat(full).st_mode):
++            links[name] = os.readlink(full)
+     combined = hashlib.sha256(''.join(
+         f'{n} -> {links[n]}\n' for n in sorted(links)).encode()).hexdigest()
+     return links, combined
+--- a/tests/llamacpp-live/check-receipt.py
++++ b/tests/llamacpp-live/check-receipt.py
+@@ -451,7 +451,7 @@
+                 "link text")
+         else:
+             check_digest(problems, "server.install_links_sha256", links_sha,
+-                         allow_none=not links)
++                         allow_none=False)
+             if is_hex64(links_sha) and install_links_sha(links) != links_sha:
+                 bad("server.install_links_sha256 != recomputation over "
+                     "install_links")

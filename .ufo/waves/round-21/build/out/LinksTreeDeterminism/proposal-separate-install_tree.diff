@@ -1,0 +1,33 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -178,25 +178,15 @@
+ def install_tree(server_real):
+     """{basename: sha256} for every regular file in dirname(server_real),
+     plus a combined digest over the sorted 'name sha' lines. Symlinks are
+-    skipped as members (they are not regular files)."""
++    skipped as members (they are not regular files). Fail closed: an OSError
++    listing or reading any entry propagates, so a partial map is never
++    recorded as the install identity."""
+     tree = {}
+     directory = os.path.dirname(server_real)
+-    try:
+-        entries = sorted(os.listdir(directory))
+-    except OSError:
+-        return tree, None
+-    for name in entries:
++    for name in sorted(os.listdir(directory)):
+         full = os.path.join(directory, name)
+-        try:
+-            st = os.lstat(full)
+-        except OSError:
+-            continue
+-        if not stat.S_ISREG(st.st_mode):
+-            continue
+-        try:
++        if stat.S_ISREG(os.lstat(full).st_mode):
+             tree[name] = sha256_file(full)
+-        except OSError:
+-            continue
+     combined = hashlib.sha256(
+         ''.join(f'{n} {tree[n]}\n' for n in sorted(tree)).encode()).hexdigest()
+     return tree, combined

@@ -320,3 +320,43 @@ the soname symlinks (`libllama.so.0`, `libggml.so.0`, …) and system NEEDED
 libraries (`libc`, `libstdc++`, `libssl`, …) are outside it, so retargeting a
 link or substituting a system library leaves the pin unchanged (CritC2Inflation,
 TreeCap). The pin binds observed bytes; it is not authentication of execution.
+
+## Round-21 supplement — install identity covers soname links (appended 2026-10-21)
+
+The round-19 scope note above stays historical: `install_tree_sha256` still
+pins regular files only and keeps its exact encoding, so every earlier receipt
+and pin verifies unchanged.
+
+source: own-work `tools/kama-llamacpp-live.py` (`install_tree`, `install_links`, `links_digest`), `tests/llamacpp-live/check-receipt.py` (`install_links_sha`, `link_chain_problem`, `--expect-install-links-sha256`, `--require-install-links`), `tests/llamacpp-live/install-links-grid.py`; S066 ldconfig(8) §DESCRIPTION; S067 ld.so(8) search order; S068 Nix NAR symlink node
+verified-at: 2026-10-21 — grid and selftests at the round-21 measured commit (see `lessons/round-21.md`)
+recheck: on-release — rerun the grid and both selftests after any change to the install scan, the digest encoding or the chain rule, or a new llama.cpp release layout
+
+**Rule.** A soname (`libllama.so.0`, `libggml.so.0`, …) is a symlink in the
+middle of the chain ldconfig maintains (S066), and the loader re-resolves a
+slash-less DT_NEEDED name by directory search at every exec (S067). Retargeting
+such a link changes the object the loader maps while a regular-file digest is
+unchanged. A directory identity therefore records each link's raw target text
+as its own typed entry (the NAR design, S068): `install_links` maps basename →
+`readlink` text and `install_links_sha256` hashes its canonical JSON (sorted
+keys, ASCII escapes; injective, unlike line-joined text).
+
+**Fail closed, never smaller.** The producer refuses (`setup-error
+install-tree-unpinnable:…`) when the install directory holds an entry it cannot
+pin: an unreadable member, a failed lstat/readlink, a name with a control
+character, or anything neither a regular file nor a symlink. The last covers a
+`glibc-hwcaps/` subdirectory, which the loader searches before the directory
+itself (observed by the round-21 LinksLoaderProof seat).
+
+**Gate.** `install_links` is optional because legacy v3 receipts lack it; when
+present, its digest must recompute, no link may share a name with a regular
+member, and every chain must end at a pinned regular member through
+same-directory basenames (targets with `/`, loops and dangling chains are
+rejected). A consistent retarget onto another pinned member is detected only
+by `--expect-install-links-sha256`; a stripped block only by
+`--require-install-links` or that pin.
+
+**Boundaries.** Binding observed regular-file bytes and link text is not
+execution authentication or upstream provenance. Relative targets that leave
+the directory (`../lib/…`) are rejected rather than followed; a layout that
+needs them is outside this pin. System libraries resolved outside the install
+directory remain unpinned.

@@ -171,11 +171,11 @@ def install_tree_sha(tree):
 
 
 def install_links_sha(links):
-    """Recompute producer install_links_sha256(): sha256 over the sorted
-    'name -> link text\\n' lines."""
-    return hashlib.sha256(
-        ''.join(f'{n} -> {links[n]}\n' for n in sorted(links)).encode()
-    ).hexdigest()
+    """Recompute producer install_links_sha256(): sha256 over canonical JSON
+    (sorted keys, compact separators, ASCII escapes) of the link map."""
+    return hashlib.sha256(json.dumps(
+        links, sort_keys=True, separators=(',', ':'),
+        ensure_ascii=True).encode('ascii')).hexdigest()
 
 
 def link_chain_problem(name, links, tree):
@@ -285,7 +285,8 @@ def probe_row0(rec):
 
 def validate(receipt, expect_model=None, expect_server=None,
              expect_probe=None, expect_tool=None,
-             expect_server_impl=None, expect_tree=None, expect_links=None):
+             expect_server_impl=None, expect_tree=None, expect_links=None,
+             require_links=False):
 
     problems = []
 
@@ -465,6 +466,9 @@ def validate(receipt, expect_model=None, expect_server=None,
                                          else {})
                 if why:
                     bad(f"server.install_links[{name!r}]: {why}")
+    if require_links and links is MISSING:
+        bad("--require-install-links given but receipt has no "
+            "server.install_links block")
     if expect_links is not None:
         if not is_hex64(expect_links):
             bad(f"--expect-install-links-sha256 {expect_links!r} is not 64 "
@@ -1862,6 +1866,10 @@ def _selftest():
     del legacy["server"]["install_links"]
     del legacy["server"]["install_links_sha256"]
     cases.append(("links-absent-legacy-valid", legacy, expects, 0))
+    cases.append(("links-present-required-valid", base,
+                  expects + ["--require-install-links"], 0))
+    cases.append(("links-absent-required", legacy,
+                  expects + ["--require-install-links"], 1))
     cases.append(("links-absent-with-pin", legacy,
                   expects + ["--expect-install-links-sha256", base_links], 1))
     # child_env_keys entries come from an untrusted receipt: a value after
@@ -2004,6 +2012,15 @@ def _selftest():
         extra=expects + ["--expect-install-links-sha256", "zz"])
     mut("links-dropped-pinned", lambda r: relink(r, {}),
         extra=expects + links_pin)
+    # Independent literal: sha256 of the canonical JSON text of
+    # SELFTEST_LINKS, so an ordering/encoding change in install_links_sha()
+    # cannot hide behind the shared recomputation.
+    canonical = copy.deepcopy(base)
+    canonical["server"]["install_links_sha256"] = (
+        "83bdd3ccfa67701a8531e8fad561d5765c61410f060eb203c4646521749f704e")
+    cases.append(("links-canonical-digest-valid", canonical,
+                  expects + ["--expect-install-links-sha256",
+                             canonical["server"]["install_links_sha256"]], 0))
     mut("models-entry-missing-id",
         lambda r: r["captures"]["models"].update(body=json.dumps(
             {"data": [{"id": ALIAS, "owned_by": "llamacpp"},
@@ -2304,6 +2321,9 @@ def main(argv=None):
     ap.add_argument("--expect-install-links-sha256", metavar="HEX",
                     help="require the recorded install-links (symlink) "
                          "sha256")
+    ap.add_argument("--require-install-links", action="store_true",
+                    help="reject receipts without a server.install_links "
+                         "block (legacy v3 receipts lack it)")
     ap.add_argument("--expect-probe-sha256", metavar="HEX",
                     help="require the recorded probe sha256")
     ap.add_argument("--expect-tool-sha256", metavar="HEX",
@@ -2334,6 +2354,7 @@ def main(argv=None):
                         expect_server_impl=args.expect_server_impl_sha256,
                         expect_tree=args.expect_install_tree_sha256,
                         expect_links=args.expect_install_links_sha256,
+                        require_links=args.require_install_links,
                         expect_probe=args.expect_probe_sha256,
                         expect_tool=args.expect_tool_sha256)
     if args.require_schema and isinstance(receipt, dict):

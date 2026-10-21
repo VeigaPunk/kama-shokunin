@@ -1,0 +1,228 @@
+selftest: 6 VALID and 1 NOT-EVALUATED receipts accepted; 77 mutations + unreadable case rejected
+# rev=base selftest_return=0 recorded_cases=84
+case-0-valid.json	exit=0	VALID /tmp/check-receipt-qxfq9lvi/case-0-valid.json
+case-1-tree-pin-valid.json	exit=0	VALID /tmp/check-receipt-qxfq9lvi/case-1-tree-pin-valid.json
+case-2-schema-id-changed.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-2-schema-id-changed.json: 1 problem(s)
+        - schema is 'kama-llamacpp-live/v0', want 'kama-llamacpp-live/v1', 'kama-llamacpp-live/v2' or 'kama-llamacpp-live/v3'
+case-3-missing-check-model-unchanged.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-3-missing-check-model-unchanged.json: 1 problem(s)
+        - required check 'model_unchanged' is absent
+case-4-duplicated-check-id.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-4-duplicated-check-id.json: 1 problem(s)
+        - check id 'health_ready' appears more than once
+case-5-port-34113.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-5-port-34113.json: 7 problem(s)
+        - port 34113 is a registered consumer pin
+        - port 34113 is inside the receipt's own port_refusal_set
+        - argv --port '45678' != receipt port 34113
+        - probe ok: argv --port '45678' != served port 34113
+        - probe ok: declared endpoint 'http://127.0.0.1:45678/v1' != http://127.0.0.1:34113/v1 (must name the served port; null/other rejected)
+        - probe mismatch: argv --port '45678' != served port 34113
+        - probe mismatch: declared endpoint 'http://127.0.0.1:45678/v1' != http://127.0.0.1:34113/v1 (must name the served port; null/other rejected)
+case-6-port-inside-refusal-set.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-6-port-inside-refusal-set.json: 1 problem(s)
+        - port 45678 is inside the receipt's own port_refusal_set
+case-7-wrong-digest-vs-expect.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-7-wrong-digest-vs-expect.json: 3 problem(s)
+        - model.sha256 0000000000000000000000000000000000000000000000000000000000000000 != expected aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+        - model_unchanged: model.sha256 != model_sha256_post (the run mutated its input model)
+        - model_unchanged: observed.pre != model.sha256
+case-8-model-changed-post-digest.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-8-model-changed-post-digest.json: 2 problem(s)
+        - model_unchanged: model.sha256 != model_sha256_post (the run mutated its input model)
+        - model_unchanged: observed.post != model_sha256_post
+case-9-missing-teardown.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-9-missing-teardown.json: 5 problem(s)
+        - teardown evidence is missing or empty
+        - teardown_exited: no teardown evidence
+        - teardown_exited: observed.returncode -15 != teardown.returncode None
+        - teardown_port_closed: no teardown evidence
+        - teardown_port_closed: observed.port_refuses True != teardown.port_refuses None
+case-10-model-ok-claimed-exit-2.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-10-model-ok-claimed-exit-2.json: 2 problem(s)
+        - probe ok: verdict MODEL_OK but exit 2 (must be 0)
+        - probe_model_ok: recorded exit 2 != 0
+case-11-passed-flipped-against-stored-probe.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-11-passed-flipped-against-stored-probe.json: 3 problem(s)
+        - probe mismatch: verdict MODEL_OK but exit 2 (must be 0)
+        - probe_mismatch: stored verdict 'MODEL_OK' != MODEL_MISMATCH
+        - probe_mismatch: stored reason 'matched' != served-id-mismatch
+case-12-metrics-200-not-501.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-12-metrics-200-not-501.json: 1 problem(s)
+        - metrics_not_enabled: /metrics status 200 != 501 (llama.cpp without --metrics answers exactly 501)
+case-13-ended-before-started.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-13-ended-before-started.json: 1 problem(s)
+        - ended_utc '2026-10-20T12:59:00.000Z' precedes started_utc '2026-10-20T13:00:00.000Z'
+case-14-mismatch-probe-expects-alias.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-14-mismatch-probe-expects-alias.json: 2 problem(s)
+        - no probes[] record with expect == 'kama-not-this-model'
+        - probe_mismatch: no mismatch-expect probe record
+case-15-envelope-flag-inconsistent.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-15-envelope-flag-inconsistent.json: 1 problem(s)
+        - loading_envelope_exact is False but re-derivation from the stored loading_503 body gives True
+case-16-env-key-off-allowlist.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-16-env-key-off-allowlist.json: 2 problem(s)
+        - child_env_keys element is outside the allowlist PATH/HOME/LANG/LC_ALL/TMPDIR
+        - child_env_keys is not the producer's sorted unique list
+case-17-env-key-value-echo.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-17-env-key-value-echo.json: 2 problem(s)
+        - child_env_keys element is not a bare variable name
+        - child_env_keys is not the producer's sorted unique list
+case-18-env-key-raw-value-echo.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-18-env-key-raw-value-echo.json: 2 problem(s)
+        - child_env_keys element is outside the allowlist PATH/HOME/LANG/LC_ALL/TMPDIR
+        - child_env_keys is not the producer's sorted unique list
+case-19-env-key-nonstring.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-19-env-key-nonstring.json: 1 problem(s)
+        - child_env_keys element is not a bare variable name
+case-20-argv-missing-offline.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-20-argv-missing-offline.json: 1 problem(s)
+        - argv tail ['1', '--no-webui'] != ['--no-webui', '--offline']
+case-21-ownership-unproven.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-21-ownership-unproven.json: 1 problem(s)
+        - port_listener_ownership is 'unproven' — a valid receipt requires the ready listener proven to be our child
+case-22-argv0-not-realpath.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-22-argv0-not-realpath.json: 1 problem(s)
+        - argv[0] '/usr/bin/false' != server.realpath '/home/x/.local/opt/llama-b11755/bin/llama-server'
+case-23-argv-wrong-host.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-23-argv-wrong-host.json: 1 problem(s)
+        - argv --host '0.0.0.0' != '127.0.0.1'
+case-24-probe-argv-missing-check.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-24-probe-argv-missing-check.json: 1 problem(s)
+        - probe ok: argv does not invoke 'check'
+case-25-probe-declared-null.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-25-probe-declared-null.json: 1 problem(s)
+        - probe ok: declared endpoint None != http://127.0.0.1:45678/v1 (must name the served port; null/other rejected)
+case-26-loading-observed-without-503-transition.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-26-loading-observed-without-503-transition.json: 1 problem(s)
+        - loading_observed True but transitions record no status-503 row
+case-27-loading-503-wrong-path.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-27-loading-503-wrong-path.json: 1 problem(s)
+        - loading_503.path '/metrics' not in /v1/models|/health
+case-28-install-tree-sha-tampered.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-28-install-tree-sha-tampered.json: 1 problem(s)
+        - server.install_tree_sha256 != recomputation over install_tree members
+case-29-impl-sha-mismatch-expect.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-29-impl-sha-mismatch-expect.json: 2 problem(s)
+        - server.server_impl_sha256 != install_tree['libllama-server-impl.so']
+        - server.server_impl_sha256 0000000000000000000000000000000000000000000000000000000000000000 != expected dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+case-30-impl-digest-absent-expect.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-30-impl-digest-absent-expect.json: 1 problem(s)
+        - --expect-server-impl-sha256 given but receipt has no server.server_impl_sha256 digest
+case-31-tree-sha-mismatch-expect.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-31-tree-sha-mismatch-expect.json: 2 problem(s)
+        - server.install_tree_sha256 != recomputation over install_tree members
+        - server.install_tree_sha256 0000000000000000000000000000000000000000000000000000000000000000 != expected 24f0b0a81302abd039376b09dccdc2082a5ec5e1e3e08138f41c57d554e43bf1
+case-32-tree-empty-map-with-pin.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-32-tree-empty-map-with-pin.json: 1 problem(s)
+        - server.install_tree is empty
+case-33-tree-sha-absent-expect.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-33-tree-sha-absent-expect.json: 1 problem(s)
+        - --expect-install-tree-sha256 given but receipt has no server.install_tree_sha256 digest
+case-34-tree-sha-malformed-expect.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-34-tree-sha-malformed-expect.json: 2 problem(s)
+        - server.install_tree_sha256 'not-a-digest' is not a 64-char lowercase hex string
+        - --expect-install-tree-sha256 given but receipt has no server.install_tree_sha256 digest
+case-35-tree-consistent-member-swap.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-35-tree-consistent-member-swap.json: 1 problem(s)
+        - server.install_tree_sha256 3c6d8ae94b07ccae2b5714289f594951df5824ee97bff245ebb48da724e90cf2 != expected 24f0b0a81302abd039376b09dccdc2082a5ec5e1e3e08138f41c57d554e43bf1
+case-36-impl-field-tree-mismatch.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-36-impl-field-tree-mismatch.json: 1 problem(s)
+        - server.server_impl_sha256 != install_tree['libllama-server-impl.so']
+case-37-models-entry-missing-id.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-37-models-entry-missing-id.json: 3 problem(s)
+        - models_alias_id: served ids ['kama-live-probe', None] are not all the alias 'kama-live-probe'
+        - models_alias_id: observed.data_ids ['kama-live-probe'] != re-parsed ids ['kama-live-probe', None]
+        - models_owned_by_llamacpp: observed.owned_by ['llamacpp'] != re-parsed ['llamacpp', 'llamacpp']
+case-38-tool-sha-mismatch-expect.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-38-tool-sha-mismatch-expect.json: 1 problem(s)
+        - tool.sha256 7777777777777777777777777777777777777777777777777777777777777777 != expected 9999999999999999999999999999999999999999999999999999999999999999
+case-39-v2-valid.json	exit=0	VALID /tmp/check-receipt-qxfq9lvi/case-39-v2-valid.json
+case-40-v2-health-degraded-body.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-40-v2-health-degraded-body.json: 2 problem(s)
+        - health_ready: captures.health.body {'status': 'degraded'} != the documented ready body {'status': 'ok'}
+        - check 'health_ready': claims passed=True but evidence re-derivation gives False
+case-41-v2-sigkill-sent.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-41-v2-sigkill-sent.json: 2 problem(s)
+        - teardown_graceful: teardown.sigkill_sent is True, want false (SIGKILL escalation fails graceful teardown)
+        - check 'teardown_graceful': claims passed=True but evidence re-derivation gives False
+case-42-v2-returncode-minus15-sigterm-death.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-42-v2-returncode-minus15-sigterm-death.json: 2 problem(s)
+        - teardown_graceful: teardown.returncode -15 != 0 (the documented graceful SIGTERM exit status)
+        - check 'teardown_graceful': claims passed=True but evidence re-derivation gives False
+case-43-v2-returncode-1-error-exit.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-43-v2-returncode-1-error-exit.json: 2 problem(s)
+        - teardown_graceful: teardown.returncode 1 != 0 (the documented graceful SIGTERM exit status)
+        - check 'teardown_graceful': claims passed=True but evidence re-derivation gives False
+case-44-v2-sigterm-not-sent-clean-rc.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-44-v2-sigterm-not-sent-clean-rc.json: 2 problem(s)
+        - teardown_graceful: teardown.sigterm_sent is False, want true (harness-initiated SIGTERM)
+        - check 'teardown_graceful': claims passed=True but evidence re-derivation gives False
+case-45-v2-ownership-unproven-port-refuses.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-45-v2-ownership-unproven-port-refuses.json: 3 problem(s)
+        - port_listener_ownership is 'unproven' — a valid receipt requires the ready listener proven to be our child
+        - teardown_port_closed: port_listener_ownership is 'unproven'; port_refuses is vacuous without recorded child ownership
+        - check 'teardown_port_closed': claims passed=True but evidence re-derivation gives False
+case-46-v2-loading-exact-false-check-claims-pass.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-46-v2-loading-exact-false-check-claims-pass.json: 3 problem(s)
+        - loading_envelope_graded: stored loading_503 body re-derives to a non-exact envelope (loading_envelope_exact False)
+        - check 'loading_envelope_graded': claims passed=True but evidence re-derivation gives False
+        - loading_envelope_graded: observed.exact True != re-derived loading_envelope_exact False
+case-47-v2-loading-503-nonexact-transitions.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-47-v2-loading-503-nonexact-transitions.json: 3 problem(s)
+        - loading_envelope_graded: stored loading_503 body re-derives to a non-exact envelope (loading_envelope_exact False)
+        - check 'loading_envelope_graded': claims passed=True but evidence re-derivation gives False
+        - loading_envelope_graded: observed.exact True != re-derived loading_envelope_exact False
+case-48-v2-missing-loading-envelope-graded.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-48-v2-missing-loading-envelope-graded.json: 1 problem(s)
+        - required check 'loading_envelope_graded' is absent
+case-49-v2-v1-check-id-teardown-exited.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-49-v2-v1-check-id-teardown-exited.json: 2 problem(s)
+        - required check 'teardown_graceful' is absent
+        - unexpected check id 'teardown_exited' (the schema names exactly 11)
+case-50-v2-child-not-alive-at-teardown.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-50-v2-child-not-alive-at-teardown.json: 2 problem(s)
+        - teardown_graceful: teardown.alive_at_teardown_start is False, want true (must prove the child was alive when teardown began)
+        - check 'teardown_graceful': claims passed=True but evidence re-derivation gives False
+case-51-v2-health-body-extra-key.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-51-v2-health-body-extra-key.json: 2 problem(s)
+        - health_ready: captures.health.body {'status': 'ok', 'extra': 1} != the documented ready body {'status': 'ok'}
+        - check 'health_ready': claims passed=True but evidence re-derivation gives False
+case-52-v2-later-loading-body-nonexact.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-52-v2-later-loading-body-nonexact.json: 2 problem(s)
+        - loading_envelope_graded: a stored loading_503_bodies entry is not the exact envelope
+        - check 'loading_envelope_graded': claims passed=True but evidence re-derivation gives False
+case-53-v3-valid.json	exit=0	VALID /tmp/check-receipt-qxfq9lvi/case-53-v3-valid.json
+case-54-v3-no-loading-not-evaluated.json	exit=3	NOT-EVALUATED /tmp/check-receipt-qxfq9lvi/case-54-v3-no-loading-not-evaluated.json
+case-55-v1-require-schema-v1.json	exit=0	VALID /tmp/check-receipt-qxfq9lvi/case-55-v1-require-schema-v1.json
+case-56-v1-require-schema-v2-rejects-v1.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-56-v1-require-schema-v2-rejects-v1.json: 1 problem(s)
+        - schema 'kama-llamacpp-live/v1' is below --require-schema v2
+case-57-v2-require-schema-v3-rejects-v2.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-57-v2-require-schema-v3-rejects-v2.json: 1 problem(s)
+        - schema 'kama-llamacpp-live/v2' is below --require-schema v3
+case-58-v3-require-schema-v3.json	exit=0	VALID /tmp/check-receipt-qxfq9lvi/case-58-v3-require-schema-v3.json
+case-59-v3-extra-server-argv-flag.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-59-v3-extra-server-argv-flag.json: 1 problem(s)
+        - argv does not exactly match the producer's server.realpath/model.arg/alias/host/port/ctx/threads command
+case-60-v3-duplicate-server-argv-flag.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-60-v3-duplicate-server-argv-flag.json: 1 problem(s)
+        - argv does not exactly match the producer's server.realpath/model.arg/alias/host/port/ctx/threads command
+case-61-v3-model-arg-does-not-match-argv.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-61-v3-model-arg-does-not-match-argv.json: 2 problem(s)
+        - argv -m '/home/x/.cache/kama-shokunin/models/stories260K.gguf' != model arg '/other/model.gguf'
+        - argv does not exactly match the producer's server.realpath/model.arg/alias/host/port/ctx/threads command
+case-62-v3-models-capture-503-ids-intact.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-62-v3-models-capture-503-ids-intact.json: 4 problem(s)
+        - models_alias_id: captures.models.status 503 != 200 (round-18 RevTriStateDesign)
+        - models_alias_id: observed.status 200 != re-derived 503
+        - models_owned_by_llamacpp: captures.models.status 503 != 200
+        - models_owned_by_llamacpp: observed.status 200 != re-derived 503
+case-63-v3-transition-encoding-route-alias.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-63-v3-transition-encoding-route-alias.json: 1 problem(s)
+        - transitions[2].path is not a producer route
+case-64-v3-transition-encoding-status-string.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-64-v3-transition-encoding-status-string.json: 1 problem(s)
+        - transitions[2].status is not null or an HTTP integer
+case-65-v3-transition-encoding-status-float.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-65-v3-transition-encoding-status-float.json: 9 problem(s)
+        - transitions[2].status is not null or an HTTP integer
+        - loading_observed False != whether transitions contain a /v1/models 503
+        - transitions /v1/models 503 row 0 does not carry the exact loading envelope
+        - check 'loading_envelope_graded': only loading_envelope_graded may be unevaluated, and only with no observed loading 503 envelope
+        - loading transition 0 body_sha256 does not match its stored body
+        - loading transition 0.repeats is not a non-negative integer
+        - loading_503 does not match the first /v1/models 503 transition
+        - check 'loading_envelope_graded' passed None != re-derived False
+        - check 'loading_envelope_graded' evaluated False != re-derived True
+case-66-v3-transition-encoding-status-bool.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-66-v3-transition-encoding-status-bool.json: 1 problem(s)
+        - transitions[2].status is not null or an HTTP integer
+case-67-v3-transition-503-nonexact.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-67-v3-transition-503-nonexact.json: 4 problem(s)
+        - transitions /v1/models 503 row 0 does not carry the exact loading envelope
+        - loading transition 0 body_sha256 does not match its stored body
+        - loading_503 does not match the first /v1/models 503 transition
+        - check 'loading_envelope_graded' passed True != re-derived False
+case-68-v3-health-loading-envelope-null-license.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-68-v3-health-loading-envelope-null-license.json: 2 problem(s)
+        - loading_observed false but transitions record 1 status-503 loading envelope row(s) on ['/health']
+        - check 'loading_envelope_graded': only loading_envelope_graded may be unevaluated, and only with no observed loading 503 envelope
+case-69-v3-transition-503-truncated.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-69-v3-transition-503-truncated.json: 2 problem(s)
+        - transitions /v1/models 503 row 0 is truncated
+        - check 'loading_envelope_graded' passed True != re-derived False
+case-70-v3-teardown-port-close-unowned.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-70-v3-teardown-port-close-unowned.json: 4 problem(s)
+        - port_listener_ownership is 'foreign' — a valid receipt requires the ready listener proven to be our child
+        - teardown_graceful: observed.port_listener_ownership 'child' != re-derived 'foreign'
+        - teardown_port_closed: port_listener_ownership is 'foreign'; port_refuses is vacuous without recorded child ownership
+        - check 'teardown_port_closed': claims passed=True but evidence re-derivation gives False
+case-71-v3-source-binding-tampered.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-71-v3-source-binding-tampered.json: 1 problem(s)
+        - source_binding[0].row 'S999' != pinned None
+case-72-v3-internal-fault-not-mirrored.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-72-v3-internal-fault-not-mirrored.json: 1 problem(s)
+        - internal_fault 'internal:KeyboardInterrupt' != setup_error None
+case-73-v3-loading-observed-count-forged.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-73-v3-loading-observed-count-forged.json: 1 problem(s)
+        - loading_envelope_graded: observed.total_503_responses 999 != re-derived 13
+case-74-v3-health-observed-body-forged.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-74-v3-health-observed-body-forged.json: 1 problem(s)
+        - health_ready: observed.body {'status': 'degraded'} != re-derived {'status': 'ok'}
+case-75-v3-probe-served-model-forged.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-75-v3-probe-served-model-forged.json: 1 problem(s)
+        - probe ok: served_model 'ghost-model' != alias 'kama-live-probe'
+case-76-v3-nonboolean-evaluated.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-76-v3-nonboolean-evaluated.json: 1 problem(s)
+        - check 'health_ready': evaluated is not a boolean
+case-77-v3-outcome-fail-with-all-true-checks.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-77-v3-outcome-fail-with-all-true-checks.json: 1 problem(s)
+        - outcome 'fail' != re-derived 'pass'
+case-78-v3-unobserved-loading-missing-reason.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-78-v3-unobserved-loading-missing-reason.json: 1 problem(s)
+        - check 'loading_envelope_graded': observed.not_evaluated_reason None != 'no-loading-503-observed'
+case-79-v3-unobserved-loading-claimed-evaluated.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-79-v3-unobserved-loading-claimed-evaluated.json: 2 problem(s)
+        - check 'loading_envelope_graded': evaluated true but passed is null
+        - check 'loading_envelope_graded' evaluated True != re-derived False
+case-80-v3-nonloading-check-is-null.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-80-v3-nonloading-check-is-null.json: 1 problem(s)
+        - check 'health_ready': only loading_envelope_graded may be unevaluated, and only with no observed loading 503 envelope
+case-81-v3-loading-check-null-although-503-present.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-81-v3-loading-check-null-although-503-present.json: 3 problem(s)
+        - check 'loading_envelope_graded': only loading_envelope_graded may be unevaluated, and only with no observed loading 503 envelope
+        - check 'loading_envelope_graded' passed None != re-derived True
+        - check 'loading_envelope_graded' evaluated False != re-derived True
+case-82-v3-outcome-pass-with-null.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-82-v3-outcome-pass-with-null.json: 1 problem(s)
+        - outcome 'pass' != re-derived 'not-evaluated'
+case-83-v3-silently-dropped-257th-loading-body.json	exit=1	INVALID /tmp/check-receipt-qxfq9lvi/case-83-v3-silently-dropped-257th-loading-body.json: 3 problem(s)
+        - loading_503_bodies digests/repeats do not cover the stored /v1/models 503 transitions exactly
+        - loading_envelope_graded cannot pass with an unretained loading body
+        - check 'loading_envelope_graded' passed True != re-derived False

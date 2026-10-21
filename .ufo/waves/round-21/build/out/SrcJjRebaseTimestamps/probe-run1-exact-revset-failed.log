@@ -1,0 +1,75 @@
+binary=/home/vgpnk/.local/bin/jj
+cd5efc3eb281d606bf9b5523167f79661da0f8c76a5aa32d61c07c7a351b6b44  /home/vgpnk/.local/bin/jj
+Warning: Per-repo config not found. Generating an empty one.
+Per-repo config is stored in the same directory as your user config for security reasons.
+If you work across multiple computers, you may want to keep your user config directory in sync.
+jj 0.45.1-7c41cdeb16b6b321c64e789a966b6adf723816a5
+exit=0
+$ /home/vgpnk/.local/bin/jj git init
+Initialized repo in "."
+exit=0
+$ /home/vgpnk/.local/bin/jj describe -m T0-base
+Working copy  (@) now at: xpmyzqkq 8c756a48 T0-base
+Parent commit (@-)      : zzzzzzzz 00000000 (empty) (no description set)
+exit=0
+$ /home/vgpnk/.local/bin/jj new -m T1-feat1
+Working copy  (@) now at: omuyzoqt 69053ade (empty) T1-feat1
+Parent commit (@-)      : xpmyzqkq 8c756a48 T0-base
+exit=0
+$ /home/vgpnk/.local/bin/jj new -m T2-feat2
+Working copy  (@) now at: xzmkmuzp ae7d3ff4 (empty) T2-feat2
+Parent commit (@-)      : omuyzoqt d1abb1d4 T1-feat1
+exit=0
+$ /home/vgpnk/.local/bin/jj new root() -m T3-newtrunk
+Working copy  (@) now at: twyukxmv 20751847 (empty) T3-newtrunk
+Parent commit (@-)      : zzzzzzzz 00000000 (empty) (no description set)
+Added 0 files, modified 0 files, removed 3 files
+exit=0
+$ /home/vgpnk/.local/bin/jj status
+Working copy changes:
+A nt.txt
+Working copy  (@) : twyukxmv abea8f3b T3-newtrunk
+Parent commit (@-): zzzzzzzz 00000000 (empty) (no description set)
+exit=0
+== S0 built: T0 <- T1 <- T2 ; T3 is a separate root child
+exit=0
+### Test A: rewrite ancestor T0 with no parent change (descendants auto-rebased)
+$ /home/vgpnk/.local/bin/jj describe -r description("T0-base") -m T0-base-edited
+No revisions to describe.
+exit=0
+== S1 after Test A (no CUT yet)
+exit=0
+CUT=1792579911 (stand-in for the fleet report commit time)
+### Test B: rebase T1+descendants onto T3 (parent changed), rebaser identity via --config
+$ /home/vgpnk/.local/bin/jj --config user.name="kama-probe-rebaser" --config user.email="rebaser@example.invalid" rebase -s description("T1-feat1") -d description("T3-newtrunk")
+Error: No revisions found to use as parent
+exit=1
+== S2 after Test B (rebased after CUT)
+exit=0
+### Test C: control, identical rebase again (expect no rewrite)
+$ /home/vgpnk/.local/bin/jj --config user.name="kama-probe-rebaser" --config user.email="rebaser@example.invalid" rebase -s description("T1-feat1") -d description("T3-newtrunk")
+Error: No revisions found to use as parent
+exit=1
+== S3 after Test C control
+exit=0
+### Test D: jj git push of the rebased bookmark (no signing configured)
+init_bare_exit=0
+$ /home/vgpnk/.local/bin/jj git remote add origin /tmp/kama-r21-SrcJjRebaseTimestamps/probe/remote.git
+exit=0
+$ /home/vgpnk/.local/bin/jj bookmark create feat -r description("T2-feat2")
+Error: Revset `description("T2-feat2")` didn't resolve to any revisions
+exit=1
+== S4 before push (bookmark feat on T2)
+exit=0
+$ /home/vgpnk/.local/bin/jj git push --bookmark feat
+Warning: No matching bookmarks for names: feat
+Nothing changed.
+exit=0
+== S5 after Test D push (expect identical commit ids and epochs)
+exit=0
+-- remote view
+fatal: ambiguous argument 'feat': unknown revision or path not in the working tree.
+Use '--' to separate paths from revisions, like this:
+'git <command> [<revision>...] -- [<file>...]'
+exit=128
+DONE

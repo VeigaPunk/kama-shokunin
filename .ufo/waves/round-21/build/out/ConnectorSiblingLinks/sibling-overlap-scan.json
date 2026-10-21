@@ -1,0 +1,34 @@
+{
+  "scan_date": "2026-10-21",
+  "lane": "kama-shokunin",
+  "round": 21,
+  "searches": {
+    "install_tree": {
+      "pattern": "install_tree",
+      "sibling_hits": 0,
+      "lane_hits": 47,
+      "verdict": "unique_to_kama"
+    },
+    "symlink_traversal": {
+      "pattern": "readlink|S_ISLNK|islink",
+      "sibling_patterns": {
+        "souji-shokunin": "souji-rev-pin.py:138-164 refuses symlinks outright; souji-evidence-cache.py:466 resolves readlink to check protected tree escapes",
+        "tameshi-shokunin": "witness-metadata.py:346 rejects S_ISLNK components; pin-disposition.py:258 rejects S_ISLNK repos",
+        "kagi-shokunin": "revision-audit.py:165,192 uses O_NOFOLLOW and rejects S_ISLNK as PATH-ESCAPE",
+        "chousa-shokunin": "research-gate.sh:270,628,1148 uses readlink -f for boundary containment checking",
+        "tsukuroi-shokunin": "boot-chain-audit.sh:388 inspects new_root symlink target"
+      },
+      "synthesis": "Siblings treat symlinks as boundary/escape hazards in git worktrees; kama C2 treats symlinks as legitimate intra-directory sonames for binary installs, validated via non-escaping link chains terminating at pinned regular members."
+    },
+    "report_landed_audits": {
+      "pattern": "'Landed changes'|cat-file",
+      "sibling_patterns": {
+        "kotodama-shokunin": "reports/round-31/closure-ledger.json finding F-C31-1 audits missing 'Landed changes' heading in round-23 report; precedent: immutable reports recorded via append-only ledger, not rewritten",
+        "tabi-shokunin": "lessons/round-16-verifier-spotcheck.md:31 scans hex tokens >=7 chars via git cat-file -t and git merge-base --is-ancestor",
+        "tsukuroi-shokunin": "lessons/round-19-verifier-spotcheck.md:25 extracts 14 unique 40-hex hashes and tests cat-file -t + merge-base ancestry; tools/_revision.py:53 sanitizes GIT_* env and sets GIT_OPTIONAL_LOCKS=0",
+        "souji-shokunin": "tools/souji-landing-gate.py:22 reads committed bytes via git cat-file blob under clean GIT_* env; checks seat failure carry and measured_commit resolution"
+      },
+      "synthesis": "Kama C1 report-landing-audit.py directly aligns with kotodama F-C31-1 precedent (append-only errata for immutable reports). Sibling best-practice from tsukuroi and souji suggests sanitizing GIT_* env and setting GIT_OPTIONAL_LOCKS=0."
+    }
+  }
+}

@@ -1,0 +1,109 @@
+diff --git i/tests/llamacpp-live/install-links-grid.py w/tests/llamacpp-live/install-links-grid.py
+index b7d0424..1f35389 100755
+--- i/tests/llamacpp-live/install-links-grid.py
++++ w/tests/llamacpp-live/install-links-grid.py
+@@ -49,28 +49,26 @@ class EvalError(Exception):
+     """Could not evaluate: never a verdict."""
+ 
+ 
+-def load_source(name, source, path):
++def _exec_module(name, source, path):
+     module = types.ModuleType(name)
+     module.__file__ = str(path)
+     exec(compile(source, str(path), "exec"), module.__dict__)
+     return module
+ 
+ 
+-def frozen_producer():
+-    proc = subprocess.run(["git", "-C", str(LANE), "show",
+-                           f"{FROZEN_REV}:{PRODUCER}"],
+-                          capture_output=True, text=True)
+-    if proc.returncode != 0:
+-        raise EvalError(f"git show {FROZEN_REV}:{PRODUCER}: "
+-                        f"{proc.stderr.strip()}")
+-    return load_source("frozen_producer", proc.stdout,
+-                       LANE / f"{PRODUCER}@{FROZEN_REV[:12]}")
+-
+-
+-def current_producer():
++def load_producer(rev=None):
+     path = LANE / PRODUCER
+-    return load_source("current_producer", path.read_text(encoding="utf-8"),
+-                       path)
++    if rev is not None:
++        proc = subprocess.run(["git", "-C", str(LANE), "show",
++                               f"{rev}:{PRODUCER}"],
++                              capture_output=True, text=True)
++        if proc.returncode != 0:
++            raise EvalError(f"git show {rev}:{PRODUCER}: "
++                            f"{proc.stderr.strip()}")
++        return _exec_module("frozen_producer", proc.stdout,
++                            LANE / f"{PRODUCER}@{rev[:12]}")
++    return _exec_module("current_producer", path.read_text(encoding="utf-8"),
++                        path)
+ 
+ 
+ def gate_module():
+@@ -162,9 +160,9 @@ def run(tree, arms):
+         raise EvalError(f"{tree}/{SERVER} missing")
+     modules = {}
+     if "frozen" in arms:
+-        modules["frozen"] = frozen_producer()
++        modules["frozen"] = load_producer(FROZEN_REV)
+     if "current" in arms:
+-        modules["current"] = current_producer()
++        modules["current"] = load_producer()
+         if not hasattr(modules["current"], "install_links"):
+             raise EvalError("current producer has no install_links()")
+     gate = gate_module() if "current" in arms else None
+@@ -181,10 +179,9 @@ def run(tree, arms):
+                 raise EvalError(f"mirror {tree}: {exc}") from exc
+             base = {arm: identities(m, mdir / SERVER, arm == "current")[0]
+                     for arm, m in modules.items()}
+-            for arm in modules:
+-                if base[arm] != real_ids[arm]:
+-                    raise EvalError(f"mirror identity differs from {tree} "
+-                                    f"({arm})")
++            if not all(base[arm] == real_ids[arm] for arm in modules):
++                bad = next(a for a in modules if base[a] != real_ids[a])
++                raise EvalError(f"mirror identity differs from {tree} ({bad})")
+             mutate(mdir)
+             row = {"cell": name, "class": klass, "expect_change":
+                    klass != "null"}
+@@ -208,11 +205,13 @@ def run(tree, arms):
+     for arm in modules:
+         missed = [r["cell"] for r in rows
+                   if r[arm]["changed"] != r["expect_change"]]
+-        by = {}
+-        for klass in ("link", "regular", "type", "null"):
+-            sel = [r for r in rows if r["class"] == klass]
+-            by[klass] = {"cells": len(sel),
+-                         "changed": sum(r[arm]["changed"] for r in sel)}
++        by = {
++            klass: {
++                "cells": len(sel := [r for r in rows if r["class"] == klass]),
++                "changed": sum(r[arm]["changed"] for r in sel),
++            }
++            for klass in ("link", "regular", "type", "null")
++        }
+         summary[arm] = {"by_class": by, "wrong": missed,
+                         "status": "pass" if not missed else "fail"}
+     if "frozen" in modules and "current" in modules:
+@@ -282,12 +281,11 @@ def selftest():
+                        bool(gate_rows["link-absolute-outside"])))
+         checks.append(("gate-flags-loop", bool(gate_rows["link-loop"])))
+         checks.append(("gate-quiet-on-null", not gate_rows["null-unchanged"]))
+-        for label, path in (("missing-tree-error", Path(tmp) / "nope"),):
+-            try:
+-                run(path, ("current",))
+-                checks.append((label, False))
+-            except EvalError:
+-                checks.append((label, True))
++        try:
++            run(Path(tmp) / "nope", ("current",))
++            checks.append(("missing-tree-error", False))
++        except EvalError:
++            checks.append(("missing-tree-error", True))
+         flat = Path(tmp) / "flat"
+         flat.mkdir()
+         (flat / SERVER).write_bytes(b"s")

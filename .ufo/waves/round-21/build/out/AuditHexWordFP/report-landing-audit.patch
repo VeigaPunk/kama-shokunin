@@ -1,0 +1,78 @@
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index 728ebe1..45313a4 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -48,7 +48,7 @@ import time
+ 
+ LANE = "kama"
+ FULL = re.compile(r"(?<![0-9A-Za-z])[0-9a-f]{40}(?![0-9A-Za-z])")
+-ABBREV = re.compile(r"(?<![0-9A-Za-z])[0-9a-f]{7,40}(?![0-9A-Za-z])")
++INLINE_ABBREV = re.compile(r"`([0-9a-f]{7,39})`")
+ KINDS = ("unresolved-full-hash", "landed-unresolved", "landed-omitted",
+          "landed-section-missing")
+ RESOLVABLE = ("unresolved-full-hash", "landed-unresolved", "landed-omitted")
+@@ -76,6 +76,11 @@ def is_object(repos, token, kind=""):
+     return False
+ 
+ 
++def commit_tokens(text):
++    """Return full OIDs and abbreviated OIDs explicitly marked as code."""
++    return set(FULL.findall(text)) | set(INLINE_ABBREV.findall(text))
++
++
+ def landed_section(text):
+     match = re.search(r"^## Landed changes[^\n]*\n(.*?)(?=^## |\Z)", text,
+                       re.S | re.M)
+@@ -124,11 +129,11 @@ def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path):
+         defects.append({"kind": "landed-section-missing", "token": "-"})
+         section = ""
+     else:
+-        for token in sorted(set(ABBREV.findall(section))):
++        for token in sorted(commit_tokens(section)):
+             if not is_object(repos, token, "commit"):
+                 defects.append({"kind": "landed-unresolved", "token": token})
+-    cited = set(ABBREV.findall(section))
+-    cited_anywhere = set(ABBREV.findall(text))
++    cited = commit_tokens(section)
++    cited_anywhere = commit_tokens(text)
+     for commit in pre:
+         if not any(commit["sha"].startswith(t) for t in cited):
+             defects.append({"kind": "landed-omitted", "token": commit["sha"],
+@@ -294,7 +299,7 @@ def selftest():
+         rep.write_text(
+             "# r1\n## Work performed\nmeasured at " + mash + "\n"
+             "## Landed changes\n- `" + a[:9] + "` work\n- `" + b + "` measure\n"
+-            "- `deadbee1` typo\n## Before\n" + c[:9] + " cited outside\n",
++            "- `deadbee1` typo\n## Before\n`" + c[:9] + "` cited outside\n",
+             encoding="utf-8")
+         _commit(fleet, "round-1: kama report", "kama-shokunin", 1200,
+                 ".ufo/reports/round-1/kama.md")
+@@ -344,12 +349,26 @@ def selftest():
+         except EvalError:
+             check("malformed-errata-is-error", True)
+         draft = Path(tmp, "draft.md")
+-        draft.write_text("## Landed changes\n" + "\n".join(
+-            x[:12] for x in (a, b, c, late)) + "\n## End\n", encoding="utf-8")
++        draft.write_text(
++            "## Landed changes\n"
++            + "\n".join(f"`{x[:12]}`" for x in (a, b, c, late))
++            + "\n## End\n", encoding="utf-8")
+         rc, doc = run(argparse.Namespace(**{**vars(base), "rounds": "1",
+                                             "report": [f"1={draft}"]}))
+         check("uncommitted-draft-requires-all", rc == 0
+               and doc["results"][0]["required"] == 4)
++        lookalikes = Path(tmp, "lookalikes.md")
++        lookalikes.write_text(
++            "## Landed changes\n" + "\n".join((a, b, c, late))
++            + "\n- words: defaced acceded facade1\n"
++            + "- digest prefix: `ab51c80f…`\n"
++            + "- PR #1234567; ISO date 2026-10-21\n## End\n",
++            encoding="utf-8")
++        rc, doc = run(argparse.Namespace(**{**vars(base),
++                                            "report": [f"1={lookalikes}"]}))
++        kinds = [d["kind"] for d in doc["results"][0]["defects"]]
++        check("lookalikes-ignored-full-ids-retained",
++              rc == 0 and doc["results"][0]["required"] == 4 and not kinds)
+         draft.write_text("## Work performed\n" + a + "\n", encoding="utf-8")
+         rc, doc = run(argparse.Namespace(**{**vars(base),
+                                             "report": [f"1={draft}"]}))

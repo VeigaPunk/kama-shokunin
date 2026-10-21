@@ -1,0 +1,195 @@
+$ git -C scratch-lane diff -- tools/report-landing-audit.py -> rc=0 bytes=2070 written=report-landing-audit-env-scrub.patch
+$ git diff --stat -> rc=0: tools/report-landing-audit.py | 21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
+py_compile patched script -> ok
+$ git clone -q scratch-lane applychk -> rc=0
+applychk HEAD -> rc=0 a29bb84abbb8b4d328f5970a89e448330a3a42ac
+$ git apply --check PATCH -> rc=0 
+$ git apply PATCH -> rc=0
+applied file byte-identical to patched scratch-lane file: True
+unpatched baseline clone rc=0; 'def git_env' present in baseline: False
+## selftest matrix: UNPATCHED a29bb84  (/tmp/kama-r21-AuditGitEnvExec/base/tools/report-landing-audit.py)
+- V0 clean: rc=0 | decoy_entries_changed=0 [] | selftest cases=15 failed=0 | fails=[] | stderr_last=-
+    full stdout of V0 clean:
+      | ok raw-fails
+      | ok mashup-detected
+      | ok checkpoint-omission-detected
+      | ok bad-abbrev-detected
+      | ok exact-defect-count
+      | ok foreign-author-and-other-round-ignored
+      | ok post-report-excluded
+      | ok errata-clean
+      | ok unmatched-errata-fails
+      | ok invalid-correction-fails
+      | ok malformed-errata-is-error
+      | ok uncommitted-draft-requires-all
+      | ok missing-section-fails
+      | ok missing-report-is-error
+      | ok unusable-git-is-error
+      | selftest cases=15 failed=0
+- V1 GIT_DIR=bare-decoy: rc=1 | decoy_entries_changed=2 ['.', 'config'] | NO VERDICT LINE | fails=[] | stderr_last=subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-eqdxeqsk/lane', 'add', 'f']' returned non-zero exit status 128.
+    full stdout of V1 GIT_DIR=bare-decoy:
+- V2 GIT_CONFIG_GLOBAL=hostile-both: rc=1 | decoy_entries_changed=0 [] | NO VERDICT LINE | fails=[] | stderr_last=subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-oj4f_k40/lane', 'commit', '-q', '-m', 'round-1: work']' returned n
+    full stdout of V2 GIT_CONFIG_GLOBAL=hostile-both:
+- V3 GIT_CONFIG_GLOBAL=hostile-gpgsign: rc=1 | decoy_entries_changed=0 [] | NO VERDICT LINE | fails=[] | stderr_last=subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-lmon2wk_/lane', 'commit', '-q', '-m', 'round-1: work']' returned n
+    full stdout of V3 GIT_CONFIG_GLOBAL=hostile-gpgsign:
+- V4 GIT_CONFIG_GLOBAL=hostile-hooks: rc=1 | decoy_entries_changed=0 [] | NO VERDICT LINE | fails=[] | stderr_last=subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-hqd00amw/lane', 'commit', '-q', '-m', 'round-1: work']' returned n
+    full stdout of V4 GIT_CONFIG_GLOBAL=hostile-hooks:
+- V5 GIT_DIR=bare-decoy+hostile-both: rc=1 | decoy_entries_changed=2 ['.', 'config'] | NO VERDICT LINE | fails=[] | stderr_last=subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-we89896b/lane', 'add', 'f']' returned non-zero exit status 128.
+    full stdout of V5 GIT_DIR=bare-decoy+hostile-both:
+- V6 GIT_DIR=non-bare-decoy/.git: rc=1 | decoy_entries_changed=61 ['.git', '.git/COMMIT_EDITMSG', '.git/MERGE_RR'] | selftest cases=15 failed=4 | fails=['FAIL exact-defect-count', 'FAIL foreign-author-and-other-round-ignored', 'FAIL errata-clean', 'FAIL uncommitted-draft-requires-all'] | stderr_last=-
+    full stdout of V6 GIT_DIR=non-bare-decoy/.git:
+      | ok raw-fails
+      | ok mashup-detected
+      | ok checkpoint-omission-detected
+      | ok bad-abbrev-detected
+      | FAIL exact-defect-count
+      | FAIL foreign-author-and-other-round-ignored
+      | ok post-report-excluded
+      | FAIL errata-clean
+      | ok unmatched-errata-fails
+      | ok invalid-correction-fails
+      | ok malformed-errata-is-error
+      | FAIL uncommitted-draft-requires-all
+      | ok missing-section-fails
+      | ok missing-report-is-error
+      | ok unusable-git-is-error
+      | selftest cases=15 failed=4
+## selftest matrix: PATCHED env-scrub  (/tmp/kama-r21-AuditGitEnvExec/lane/tools/report-landing-audit.py)
+- V0 clean: rc=0 | decoy_entries_changed=0 [] | selftest cases=15 failed=0 | fails=[] | stderr_last=-
+    full stdout of V0 clean:
+      | ok raw-fails
+      | ok mashup-detected
+      | ok checkpoint-omission-detected
+      | ok bad-abbrev-detected
+      | ok exact-defect-count
+      | ok foreign-author-and-other-round-ignored
+      | ok post-report-excluded
+      | ok errata-clean
+      | ok unmatched-errata-fails
+      | ok invalid-correction-fails
+      | ok malformed-errata-is-error
+      | ok uncommitted-draft-requires-all
+      | ok missing-section-fails
+      | ok missing-report-is-error
+      | ok unusable-git-is-error
+      | selftest cases=15 failed=0
+- V1 GIT_DIR=bare-decoy: rc=0 | decoy_entries_changed=0 [] | selftest cases=15 failed=0 | fails=[] | stderr_last=-
+    full stdout of V1 GIT_DIR=bare-decoy:
+      | ok raw-fails
+      | ok mashup-detected
+      | ok checkpoint-omission-detected
+      | ok bad-abbrev-detected
+      | ok exact-defect-count
+      | ok foreign-author-and-other-round-ignored
+      | ok post-report-excluded
+      | ok errata-clean
+      | ok unmatched-errata-fails
+      | ok invalid-correction-fails
+      | ok malformed-errata-is-error
+      | ok uncommitted-draft-requires-all
+      | ok missing-section-fails
+      | ok missing-report-is-error
+      | ok unusable-git-is-error
+      | selftest cases=15 failed=0
+- V2 GIT_CONFIG_GLOBAL=hostile-both: rc=0 | decoy_entries_changed=0 [] | selftest cases=15 failed=0 | fails=[] | stderr_last=-
+    full stdout of V2 GIT_CONFIG_GLOBAL=hostile-both:
+      | ok raw-fails
+      | ok mashup-detected
+      | ok checkpoint-omission-detected
+      | ok bad-abbrev-detected
+      | ok exact-defect-count
+      | ok foreign-author-and-other-round-ignored
+      | ok post-report-excluded
+      | ok errata-clean
+      | ok unmatched-errata-fails
+      | ok invalid-correction-fails
+      | ok malformed-errata-is-error
+      | ok uncommitted-draft-requires-all
+      | ok missing-section-fails
+      | ok missing-report-is-error
+      | ok unusable-git-is-error
+      | selftest cases=15 failed=0
+- V3 GIT_CONFIG_GLOBAL=hostile-gpgsign: rc=0 | decoy_entries_changed=0 [] | selftest cases=15 failed=0 | fails=[] | stderr_last=-
+    full stdout of V3 GIT_CONFIG_GLOBAL=hostile-gpgsign:
+      | ok raw-fails
+      | ok mashup-detected
+      | ok checkpoint-omission-detected
+      | ok bad-abbrev-detected
+      | ok exact-defect-count
+      | ok foreign-author-and-other-round-ignored
+      | ok post-report-excluded
+      | ok errata-clean
+      | ok unmatched-errata-fails
+      | ok invalid-correction-fails
+      | ok malformed-errata-is-error
+      | ok uncommitted-draft-requires-all
+      | ok missing-section-fails
+      | ok missing-report-is-error
+      | ok unusable-git-is-error
+      | selftest cases=15 failed=0
+- V4 GIT_CONFIG_GLOBAL=hostile-hooks: rc=0 | decoy_entries_changed=0 [] | selftest cases=15 failed=0 | fails=[] | stderr_last=-
+    full stdout of V4 GIT_CONFIG_GLOBAL=hostile-hooks:
+      | ok raw-fails
+      | ok mashup-detected
+      | ok checkpoint-omission-detected
+      | ok bad-abbrev-detected
+      | ok exact-defect-count
+      | ok foreign-author-and-other-round-ignored
+      | ok post-report-excluded
+      | ok errata-clean
+      | ok unmatched-errata-fails
+      | ok invalid-correction-fails
+      | ok malformed-errata-is-error
+      | ok uncommitted-draft-requires-all
+      | ok missing-section-fails
+      | ok missing-report-is-error
+      | ok unusable-git-is-error
+      | selftest cases=15 failed=0
+- V5 GIT_DIR=bare-decoy+hostile-both: rc=0 | decoy_entries_changed=0 [] | selftest cases=15 failed=0 | fails=[] | stderr_last=-
+    full stdout of V5 GIT_DIR=bare-decoy+hostile-both:
+      | ok raw-fails
+      | ok mashup-detected
+      | ok checkpoint-omission-detected
+      | ok bad-abbrev-detected
+      | ok exact-defect-count
+      | ok foreign-author-and-other-round-ignored
+      | ok post-report-excluded
+      | ok errata-clean
+      | ok unmatched-errata-fails
+      | ok invalid-correction-fails
+      | ok malformed-errata-is-error
+      | ok uncommitted-draft-requires-all
+      | ok missing-section-fails
+      | ok missing-report-is-error
+      | ok unusable-git-is-error
+      | selftest cases=15 failed=0
+- V6 GIT_DIR=non-bare-decoy/.git: rc=0 | decoy_entries_changed=0 [] | selftest cases=15 failed=0 | fails=[] | stderr_last=-
+    full stdout of V6 GIT_DIR=non-bare-decoy/.git:
+      | ok raw-fails
+      | ok mashup-detected
+      | ok checkpoint-omission-detected
+      | ok bad-abbrev-detected
+      | ok exact-defect-count
+      | ok foreign-author-and-other-round-ignored
+      | ok post-report-excluded
+      | ok errata-clean
+      | ok unmatched-errata-fails
+      | ok invalid-correction-fails
+      | ok malformed-errata-is-error
+      | ok uncommitted-draft-requires-all
+      | ok missing-section-fails
+      | ok missing-report-is-error
+      | ok unusable-git-is-error
+      | selftest cases=15 failed=0
+$ git -C FLEET rev-parse --git-dir -> rc=0 .git 
+errata ledger present in scratch lane: True
+- UNPATCHED clean: rc=0 stdout_sha256=f8752ce97c83e32c bytes=4827 stderr_last=-
+- PATCHED clean: rc=0 stdout_sha256=f8752ce97c83e32c bytes=4827 stderr_last=-
+- UNPATCHED GIT_DIR=bare-decoy: rc=2 stdout_sha256=e3b0c44298fc1c14 bytes=0 stderr_last=could-not-evaluate: git rev-parse --verify master^{commit} in /tmp/kama-r21-AuditGitEnvExec/lane: rc=128 fatal: Needed a single revision
+- PATCHED GIT_DIR=bare-decoy: rc=0 stdout_sha256=f8752ce97c83e32c bytes=4827 stderr_last=-
+decoy entries changed during production runs: 0
+clean parity (rc+stdout identical): True
+GIT_DIR parity (rc+stdout identical): False
+clean summary: reports=11 defects=9 uncorrected=0 status=clean
+gpgconf --kill all rc=0; scratch process lines=[]

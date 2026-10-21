@@ -202,28 +202,47 @@ def install_tree(server_real):
     return tree, combined
 
 
+def links_digest(links):
+    """sha256 over canonical JSON (sorted keys, ASCII escapes): injective for
+    any {str: str} map, including names with newlines or ' -> '."""
+    return hashlib.sha256(json.dumps(
+        links, sort_keys=True, separators=(',', ':'),
+        ensure_ascii=True).encode('ascii')).hexdigest()
+
+
 def install_links(server_real):
-    """{basename: link text} for every symlink in dirname(server_real), plus
-    a combined digest over the sorted 'name -> text' lines. install_tree()
-    skips symlinks, so a retargeted soname link (libllama.so.0 -> ...) would
-    otherwise leave every pin unchanged. Link text is recorded unresolved;
-    the gate checks that each chain ends at a pinned regular member."""
-    links = {}
+    """({basename: link text}, digest, problems) for dirname(server_real).
+    install_tree() skips symlinks, so a retargeted soname link
+    (libllama.so.0 -> ...) would otherwise leave every pin unchanged. Link
+    text is recorded unresolved; the gate checks that each chain ends at a
+    pinned regular member. `problems` names entries that make the directory
+    unpinnable: unreadable members, failed lstat/readlink, and entries that
+    are neither regular files nor symlinks (a glibc-hwcaps/ subdirectory is
+    searched by the loader before the directory itself). The caller fails
+    closed on any problem instead of recording a partial identity."""
+    links, problems = {}, []
     directory = os.path.dirname(server_real)
     try:
         entries = sorted(os.listdir(directory))
-    except OSError:
-        return links, None
+    except OSError as exc:
+        return links, None, [f'listdir:{exc.strerror}']
     for name in entries:
         full = os.path.join(directory, name)
-        try:
-            if stat.S_ISLNK(os.lstat(full).st_mode):
-                links[name] = os.readlink(full)
-        except OSError:
+        if any(ord(ch) < 0x20 for ch in name):
+            # install_tree's 'name sha\n' lines are ambiguous for such names
+            problems.append(f'{name!r}:control-character-in-name')
             continue
-    combined = hashlib.sha256(''.join(
-        f'{n} -> {links[n]}\n' for n in sorted(links)).encode()).hexdigest()
-    return links, combined
+        try:
+            mode = os.lstat(full).st_mode
+            if stat.S_ISLNK(mode):
+                links[name] = os.readlink(full)
+            elif not stat.S_ISREG(mode):
+                problems.append(f'{name}:not-regular-or-symlink')
+            elif not os.access(full, os.R_OK):
+                problems.append(f'{name}:unreadable')
+        except OSError as exc:
+            problems.append(f'{name}:{exc.strerror}')
+    return links, links_digest(links), problems
 
 
 def _envelope_ok(body_text):
@@ -1079,8 +1098,71 @@ def build_parser():
     return p
 
 
+def _install_identity_selftest():
+    """Stub install: regular server and libs plus a soname chain. The chain
+    is recorded only by install_links(); a retarget moves only
+    install_links_sha256; a subdirectory or unreadable member is a problem
+    (fail closed), never a silently smaller identity."""
+    members = {'llama-server': b'server-stub\n',
+               'libllama.so.0.7.0': b'lib-0.7.0\n',
+               'libllama.so.0.7.1': b'lib-0.7.1\n'}
+    with tempfile.TemporaryDirectory(
+            prefix='kama-install-selftest-') as directory:
+        for name, body in members.items():
+            with open(os.path.join(directory, name), 'wb') as fh:
+                fh.write(body)
+        server = os.path.join(directory, 'llama-server')
+        soname = os.path.join(directory, 'libllama.so.0')
+        os.symlink('libllama.so.0.7.0', soname)
+        os.symlink('libllama.so.0', os.path.join(directory, 'libllama.so'))
+        tree, tree_sha = install_tree(server)
+        links, links_sha, problems = install_links(server)
+        if tree != {n: hashlib.sha256(b).hexdigest()
+                    for n, b in members.items()}:
+            raise AssertionError(f'install_tree members mismatch: {tree!r}')
+        if links != {'libllama.so': 'libllama.so.0',
+                     'libllama.so.0': 'libllama.so.0.7.0'} or problems:
+            raise AssertionError(f'install_links mismatch: {links!r} '
+                                 f'{problems!r}')
+        if links_sha != hashlib.sha256(
+                b'{"libllama.so":"libllama.so.0",'
+                b'"libllama.so.0":"libllama.so.0.7.0"}').hexdigest():
+            raise AssertionError('install_links_sha256 digest mismatch')
+        if links_digest({'a': 'b\nc -> d'}) == links_digest(
+                {'a': 'b', 'c': 'd'}):
+            raise AssertionError('install_links digest is not injective')
+        os.unlink(soname)
+        os.symlink('libllama.so.0.7.1', soname)
+        moved = install_tree(server), install_links(server)
+        if moved[1][0].get('libllama.so.0') != 'libllama.so.0.7.1' \
+                or moved[1][1] == links_sha:
+            raise AssertionError('retarget not recorded by install_links')
+        if moved[0] != (tree, tree_sha):
+            raise AssertionError('retarget moved install_tree identity')
+        with open(os.path.join(directory, 'lib\nx.so'), 'wb'):
+            pass
+        if install_links(server)[2] != ["'lib\\nx.so':control-character-in-name"]:
+            raise AssertionError('newline member name not a problem')
+        os.unlink(os.path.join(directory, 'lib\nx.so'))
+        os.makedirs(os.path.join(directory, 'glibc-hwcaps', 'x86-64-v3'))
+        if install_links(server)[2] != ['glibc-hwcaps:not-regular-or-symlink']:
+            raise AssertionError('subdirectory not reported as a problem')
+        os.rmdir(os.path.join(directory, 'glibc-hwcaps', 'x86-64-v3'))
+        os.rmdir(os.path.join(directory, 'glibc-hwcaps'))
+        lib = os.path.join(directory, 'libllama.so.0.7.0')
+        os.chmod(lib, 0)
+        try:
+            if not os.access(lib, os.R_OK) and install_links(server)[2] \
+                    != ['libllama.so.0.7.0:unreadable']:
+                raise AssertionError('unreadable member not a problem')
+        finally:
+            os.chmod(lib, 0o644)
+
+
 def _selftest():
-    """Exercise procfs parsing, live tcp6 ownership rows, and v3 verdicts."""
+    """Exercise procfs parsing, live tcp6 ownership rows, v3 verdicts and
+    install identity."""
+    _install_identity_selftest()
     port = 0x1234
     tcp6_rows = (
         ('00000000000000000000000001000000', True),
@@ -1291,7 +1373,10 @@ def main(argv=None):
 
         server_sha = sha256_file(server_real)
         tree, tree_sha = install_tree(server_real)
-        links, links_sha = install_links(server_real)
+        links, links_sha, link_problems = install_links(server_real)
+        if link_problems:
+            raise SetupError('install-tree-unpinnable:'
+                             + ';'.join(link_problems[:8]))
         impl_path = os.path.join(os.path.dirname(server_real),
                                  'libllama-server-impl.so')
         impl_sha = (sha256_file(impl_path)

@@ -1,0 +1,189 @@
+{
+  "revision": "a29bb84abbb8b4d328f5970a89e448330a3a42ac",
+  "note": "All command records ran from /tmp/kama-r21-LinksGateMutants/lane except scratch_absent, which ran from the out directory; the not-started attempt has no process exit.",
+  "records": [
+    {
+      "label": "pristine_sha256",
+      "command": [
+        "sha256sum",
+        "/tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py"
+      ],
+      "exit": 0,
+      "stdout": "01fbf81387f1a72bebf0b3ca76b9c50d9850300c5776ee49bcfcba709d46a121  /tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py\n",
+      "stderr": ""
+    },
+    {
+      "label": "stock_pristine",
+      "command": [
+        "python3",
+        "/tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py",
+        "--selftest"
+      ],
+      "exit": 0,
+      "stdout": "selftest: 9 VALID and 1 NOT-EVALUATED receipts accepted; 90 mutations + unreadable case rejected\n",
+      "stderr": ""
+    },
+    {
+      "label": "stock_mutated_sha256",
+      "command": [
+        "sha256sum",
+        "/tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py"
+      ],
+      "exit": 0,
+      "stdout": "ad401ce7101f494aff7f90080f7d6b658c780bb56583c865a183f08392e1ba37  /tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py\n",
+      "stderr": ""
+    },
+    {
+      "label": "stock_mutated",
+      "command": [
+        "python3",
+        "/tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py",
+        "--selftest"
+      ],
+      "exit": 0,
+      "stdout": "selftest: 9 VALID and 1 NOT-EVALUATED receipts accepted; 90 mutations + unreadable case rejected\n",
+      "stderr": ""
+    },
+    {
+      "label": "stock_restored_sha256",
+      "command": [
+        "sha256sum",
+        "/tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py"
+      ],
+      "exit": 0,
+      "stdout": "01fbf81387f1a72bebf0b3ca76b9c50d9850300c5776ee49bcfcba709d46a121  /tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py\n",
+      "stderr": ""
+    },
+    {
+      "label": "stock_restored",
+      "command": [
+        "python3",
+        "/tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py",
+        "--selftest"
+      ],
+      "exit": 0,
+      "stdout": "selftest: 9 VALID and 1 NOT-EVALUATED receipts accepted; 90 mutations + unreadable case rejected\n",
+      "stderr": ""
+    },
+    {
+      "label": "killer_case_patch",
+      "command": [
+        "git",
+        "diff",
+        "--",
+        "tests/llamacpp-live/check-receipt.py"
+      ],
+      "exit": 0,
+      "stdout": "diff --git i/tests/llamacpp-live/check-receipt.py w/tests/llamacpp-live/check-receipt.py\nindex 8a6b5dd..c63804e 100755\n--- i/tests/llamacpp-live/check-receipt.py\n+++ w/tests/llamacpp-live/check-receipt.py\n@@ -1858,6 +1858,13 @@ def _selftest():\n               expects + [\"--expect-install-tree-sha256\", base_tree], 0),\n              (\"links-pin-valid\", base,\n               expects + [\"--expect-install-links-sha256\", base_links], 0)]\n+    # Fixed SHA-256 of the canonical sorted lines, not the helper's output.\n+    canonical_links = copy.deepcopy(base)\n+    canonical_links[\"server\"][\"install_links_sha256\"] = (\n+        \"5e1129f24f3c3b6f3d0cca22876663fc\"\n+        \"7ac39810b8b7287e7a9c0b350ff64bcf\")\n+    cases.append((\"links-canonical-digest-valid\", canonical_links,\n+                  expects, 0))\n     legacy = copy.deepcopy(base)\n     del legacy[\"server\"][\"install_links\"]\n     del legacy[\"server\"][\"install_links_sha256\"]\n",
+      "stderr": ""
+    },
+    {
+      "label": "augmented_pristine_sha256",
+      "command": [
+        "sha256sum",
+        "/tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py"
+      ],
+      "exit": 0,
+      "stdout": "a0a653dbd751b3448f55921929ae6aa61e4ddcd87b35dbb44e75af3c758bd121  /tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py\n",
+      "stderr": ""
+    },
+    {
+      "label": "augmented_pristine",
+      "command": [
+        "python3",
+        "/tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py",
+        "--selftest"
+      ],
+      "exit": 0,
+      "stdout": "selftest: 10 VALID and 1 NOT-EVALUATED receipts accepted; 90 mutations + unreadable case rejected\n",
+      "stderr": ""
+    },
+    {
+      "label": "augmented_mutated_sha256",
+      "command": [
+        "sha256sum",
+        "/tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py"
+      ],
+      "exit": 0,
+      "stdout": "e1197cbe6fb0e7ba1b37f596fa3e33073e54ebdc1ddfd92bfe9e2049df98c806  /tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py\n",
+      "stderr": ""
+    },
+    {
+      "label": "augmented_mutated",
+      "command": [
+        "python3",
+        "/tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py",
+        "--selftest"
+      ],
+      "exit": 1,
+      "stdout": "",
+      "stderr": "SELFTEST FAIL links-canonical-digest-valid: exit 1, want 0; stdout='INVALID /tmp/check-receipt-6rb3i57s/case-3-links-canonical-digest-valid.json: 1 problem(s)\\n  - server.install_links_sha256 != recomputation over install_links'\n"
+    },
+    {
+      "label": "augmented_restored_sha256",
+      "command": [
+        "sha256sum",
+        "/tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py"
+      ],
+      "exit": 0,
+      "stdout": "a0a653dbd751b3448f55921929ae6aa61e4ddcd87b35dbb44e75af3c758bd121  /tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py\n",
+      "stderr": ""
+    },
+    {
+      "label": "augmented_restored",
+      "command": [
+        "python3",
+        "/tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py",
+        "--selftest"
+      ],
+      "exit": 0,
+      "stdout": "selftest: 10 VALID and 1 NOT-EVALUATED receipts accepted; 90 mutations + unreadable case rejected\n",
+      "stderr": ""
+    },
+    {
+      "label": "final_exact_restoration_sha256",
+      "command": [
+        "sha256sum",
+        "/tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py"
+      ],
+      "exit": 0,
+      "stdout": "01fbf81387f1a72bebf0b3ca76b9c50d9850300c5776ee49bcfcba709d46a121  /tmp/kama-r21-LinksGateMutants/lane/tests/llamacpp-live/check-receipt.py\n",
+      "stderr": ""
+    },
+    {
+      "label": "scratch_cleanup",
+      "command": [
+        "rm",
+        "-rf",
+        "/tmp/kama-r21-LinksGateMutants"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "label": "scratch_absent_first_attempt_not_started",
+      "command": [
+        "test",
+        "!",
+        "-e",
+        "/tmp/kama-r21-LinksGateMutants"
+      ],
+      "exit": null,
+      "stdout": "",
+      "stderr": "Process was not started: FileNotFoundError because the subprocess cwd had just been deleted."
+    },
+    {
+      "label": "scratch_absent",
+      "command": [
+        "test",
+        "!",
+        "-e",
+        "/tmp/kama-r21-LinksGateMutants"
+      ],
+      "exit": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ]
+}

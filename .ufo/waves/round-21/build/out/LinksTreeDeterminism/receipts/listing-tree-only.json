@@ -1,0 +1,501 @@
+{
+ "alias": "kama-live-probe",
+ "argv": [
+  "/tmp/kama-r21-LinksTreeDeterminism/tree/llama-server",
+  "-m",
+  "/home/x/.cache/kama-shokunin/models/stories260K.gguf",
+  "--alias",
+  "kama-live-probe",
+  "--host",
+  "127.0.0.1",
+  "--port",
+  "45678",
+  "-c",
+  "256",
+  "-t",
+  "1",
+  "--no-webui",
+  "--offline"
+ ],
+ "captures": {
+  "health": {
+   "body": "{\"status\":\"ok\"}",
+   "body_sha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+   "body_truncated": false,
+   "error": null,
+   "headers": {
+    "Content-Type": "application/json"
+   },
+   "path": "/health",
+   "status": 200
+  },
+  "metrics": {
+   "error": null,
+   "path": "/metrics",
+   "status": 501
+  },
+  "models": {
+   "body": "{\"object\":\"list\",\"data\":[{\"id\":\"kama-live-probe\",\"object\":\"model\",\"created\":0,\"owned_by\":\"llamacpp\"}]}",
+   "body_sha256": "702c1f94500a5877e5ec607f93ccafe1bbdaef1bb1210a5f6d342906c215102a",
+   "body_truncated": false,
+   "error": null,
+   "headers": {
+    "Content-Type": "application/json"
+   },
+   "path": "/v1/models",
+   "status": 200
+  },
+  "props": {
+   "body_sha256": "4444444444444444444444444444444444444444444444444444444444444444",
+   "error": null,
+   "fields": {
+    "build_info": "b11755-704366d",
+    "default_generation_settings.n_ctx": 256,
+    "is_sleeping": false,
+    "model_alias": "kama-live-probe",
+    "total_slots": 1
+   },
+   "headers": {},
+   "path": "/props",
+   "status": 200
+  },
+  "slots": {
+   "body_sha256": "5555555555555555555555555555555555555555555555555555555555555555",
+   "element_count": 1,
+   "error": null,
+   "headers": {},
+   "path": "/slots",
+   "status": 200
+  }
+ },
+ "checks": [
+  {
+   "documented_by": "d",
+   "evaluated": true,
+   "id": "health_ready",
+   "observed": {
+    "body": {
+     "status": "ok"
+    },
+    "expected_body": {
+     "status": "ok"
+    },
+    "status": 200
+   },
+   "passed": true
+  },
+  {
+   "documented_by": "d",
+   "evaluated": true,
+   "id": "models_alias_id",
+   "observed": {
+    "data_ids": [
+     "kama-live-probe"
+    ],
+    "expected_alias": "kama-live-probe",
+    "status": 200
+   },
+   "passed": true
+  },
+  {
+   "documented_by": "d",
+   "evaluated": true,
+   "id": "models_owned_by_llamacpp",
+   "observed": {
+    "owned_by": [
+     "llamacpp"
+    ],
+    "status": 200
+   },
+   "passed": true
+  },
+  {
+   "documented_by": "d",
+   "evaluated": true,
+   "id": "metrics_not_enabled",
+   "observed": {
+    "status": 501
+   },
+   "passed": true
+  },
+  {
+   "documented_by": "d",
+   "evaluated": true,
+   "id": "props_alias",
+   "observed": {
+    "fields": {
+     "build_info": "b11755-704366d",
+     "default_generation_settings.n_ctx": 256,
+     "is_sleeping": false,
+     "model_alias": "kama-live-probe",
+     "total_slots": 1
+    }
+   },
+   "passed": true
+  },
+  {
+   "documented_by": "d",
+   "evaluated": true,
+   "id": "probe_model_ok",
+   "observed": {
+    "exit": 0,
+    "reason": "matched",
+    "verdict": "MODEL_OK"
+   },
+   "passed": true
+  },
+  {
+   "documented_by": "d",
+   "evaluated": true,
+   "id": "probe_mismatch",
+   "observed": {
+    "exit": 2,
+    "reason": "served-id-mismatch",
+    "verdict": "MODEL_MISMATCH"
+   },
+   "passed": true
+  },
+  {
+   "documented_by": "d",
+   "evaluated": true,
+   "id": "teardown_graceful",
+   "observed": {
+    "alive_at_teardown_start": true,
+    "error": null,
+    "port_listener_ownership": "child",
+    "returncode": 0,
+    "sigkill_sent": false,
+    "sigterm_sent": true
+   },
+   "passed": true
+  },
+  {
+   "documented_by": "d",
+   "evaluated": true,
+   "id": "teardown_port_closed",
+   "observed": {
+    "port_listener_ownership": "child",
+    "port_refuses": true
+   },
+   "passed": true
+  },
+  {
+   "documented_by": "d",
+   "evaluated": true,
+   "id": "loading_envelope_graded",
+   "observed": {
+    "all_exact": true,
+    "bodies_dropped": 0,
+    "distinct_bodies": 1,
+    "exact": true,
+    "loading_observed": true,
+    "total_503_responses": 13
+   },
+   "passed": true
+  },
+  {
+   "documented_by": "d",
+   "evaluated": true,
+   "id": "model_unchanged",
+   "observed": {
+    "post": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "pre": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+   },
+   "passed": true
+  }
+ ],
+ "child_env_keys": [
+  "HOME",
+  "LC_ALL",
+  "PATH",
+  "TMPDIR"
+ ],
+ "ctx": 256,
+ "ended_utc": "2026-10-20T13:00:12.500Z",
+ "internal_fault": null,
+ "loading_503": {
+  "body": "{\"error\":{\"message\":\"Loading model\",\"type\":\"unavailable_error\",\"code\":503}}",
+  "body_sha256": "baa09177700f64520a799fd2628bb3663c1486b25e17e4a507f2e6c81bef957c",
+  "headers": {
+   "content-type": "application/json",
+   "server": "llama.cpp"
+  },
+  "path": "/v1/models",
+  "status": 503,
+  "t_ms": 40
+ },
+ "loading_503_bodies": [
+  {
+   "body": "{\"error\":{\"message\":\"Loading model\",\"type\":\"unavailable_error\",\"code\":503}}",
+   "body_sha256": "baa09177700f64520a799fd2628bb3663c1486b25e17e4a507f2e6c81bef957c",
+   "path": "/v1/models",
+   "repeats": 12
+  }
+ ],
+ "loading_bodies_dropped": 0,
+ "loading_envelope_exact": true,
+ "loading_observed": true,
+ "model": {
+  "arg": "/home/x/.cache/kama-shokunin/models/stories260K.gguf",
+  "path": "/home/x/.cache/kama-shokunin/models/stories260K.gguf",
+  "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+ },
+ "model_sha256_post": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+ "outcome": "pass",
+ "pdeathsig": {
+  "prctl_ok": true,
+  "requested": true
+ },
+ "port": 45678,
+ "port_listener_ownership": "child",
+ "port_pick_note": "port released after bind(:0) and re-bound by the server",
+ "port_refusal_set": [
+  8080,
+  34113
+ ],
+ "probe": {
+  "path": "/lane/tools/kama-probe.sh",
+  "sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+ },
+ "probes": [
+  {
+   "argv": [
+    "bash",
+    "/lane/tools/kama-probe.sh",
+    "check",
+    "--port",
+    "45678",
+    "--expect",
+    "kama-live-probe",
+    "--json"
+   ],
+   "exit": 0,
+   "expect": "kama-live-probe",
+   "result": {
+    "rows": [
+     {
+      "consumer_path": "-",
+      "declared": "http://127.0.0.1:45678/v1",
+      "drift": false,
+      "evidence": "GET /v1/models -> 200",
+      "expected_model_id": "kama-live-probe",
+      "file_match": "cli-override",
+      "id": "cli-override",
+      "notes": "",
+      "reason": "matched",
+      "resolver_kind": "cli-override",
+      "served_model": "kama-live-probe",
+      "verdict": "MODEL_OK"
+     }
+    ],
+    "schema": "kama-probe/v1",
+    "subcommand": "check",
+    "summary": {
+     "drift": 0,
+     "exit": 0,
+     "model_ok": 1,
+     "registry_rows_evaluated": 1
+    }
+   },
+   "stderr_tail": null
+  },
+  {
+   "argv": [
+    "bash",
+    "/lane/tools/kama-probe.sh",
+    "check",
+    "--port",
+    "45678",
+    "--expect",
+    "kama-not-this-model",
+    "--json"
+   ],
+   "exit": 2,
+   "expect": "kama-not-this-model",
+   "result": {
+    "rows": [
+     {
+      "consumer_path": "-",
+      "declared": "http://127.0.0.1:45678/v1",
+      "drift": true,
+      "evidence": "GET /v1/models -> 200",
+      "expected_model_id": "kama-not-this-model",
+      "file_match": "cli-override",
+      "id": "cli-override",
+      "notes": "",
+      "reason": "served-id-mismatch",
+      "resolver_kind": "cli-override",
+      "served_model": "kama-live-probe",
+      "verdict": "MODEL_MISMATCH"
+     }
+    ],
+    "schema": "kama-probe/v1",
+    "subcommand": "check",
+    "summary": {
+     "drift": 1,
+     "exit": 2,
+     "model_ok": 0,
+     "registry_rows_evaluated": 1
+    }
+   },
+   "stderr_tail": null
+  }
+ ],
+ "schema": "kama-llamacpp-live/v3",
+ "server": {
+  "arg": "/tmp/kama-r21-LinksTreeDeterminism/tree/llama-server",
+  "install_links": {
+   "libggml-base.so": "libggml-base.so.0",
+   "libggml-base.so.0": "libggml-base.so.0.27.0",
+   "libggml.so": "libggml.so.0",
+   "libggml.so.0": "libggml.so.0.27.0",
+   "libllama-common.so": "libllama-common.so.0",
+   "libllama-common.so.0": "libllama-common.so.0.7.0",
+   "libllama.so": "libllama.so.0",
+   "libllama.so.0": "libllama.so.0.7.0",
+   "libmtmd.so": "libmtmd.so.0",
+   "libmtmd.so.0": "libmtmd.so.0.7.0"
+  },
+  "install_links_sha256": "b58f1b4df160c4e2accb95bac964a5648d24fc31e769f8044296a1fa431b9e10",
+  "install_tree": {},
+  "install_tree_sha256": null,
+  "realpath": "/tmp/kama-r21-LinksTreeDeterminism/tree/llama-server",
+  "server_impl_sha256": "e404b91a81c9ab65756b6a57b97b42115a5f429c5060c4b7f0d717ca595b59ed",
+  "sha256": "b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804"
+ },
+ "setup_error": null,
+ "source_binding": [
+  {
+   "check": "health_ready",
+   "commit": "704366d76f8748cf9ad3df62a464bfcc8d1ae6ad",
+   "file_sha256": "dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329",
+   "lines": [
+    5288,
+    5299
+   ],
+   "path": "tools/server/server-context.cpp",
+   "row": null,
+   "span_sha256": "2ff50edd63f4b7a37ccfcd21210c29f781f777f010eb6e2963ed8585ad3447dd",
+   "span_text": "    this->get_health = [this](const server_http_req &) {\n        // error and loading states are handled by middleware\n        auto res = create_response(true);\n\n        // this endpoint can be accessed during sleeping\n        // the next LOC is to avoid someone accidentally use ctx_server\n        bool ctx_server; // do NOT delete this line\n        GGML_UNUSED(ctx_server);\n\n        res->ok({{\"status\", \"ok\"}});\n        return res;\n    };\n",
+   "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp"
+  },
+  {
+   "check": "loading_envelope_graded",
+   "commit": "704366d76f8748cf9ad3df62a464bfcc8d1ae6ad",
+   "file_sha256": "24ede172e526763567dbe929da5b16250693d7a2e44334ef0126649b6d3f5fdb",
+   "lines": [
+    314,
+    325
+   ],
+   "path": "tools/server/server-http.cpp",
+   "row": "S036",
+   "span_sha256": "4c5aac23af4cacc39abc525dceeed59f8e95e8584771e6e1a84a752c719da775",
+   "span_text": "            res.status = 503;\n            res.set_content(\n                safe_json_to_str(json {\n                    {\"error\", {\n                        {\"message\", \"Loading model\"},\n                        {\"type\", \"unavailable_error\"},\n                        {\"code\", 503}\n                    }}\n                }),\n                \"application/json; charset=utf-8\"\n            );\n            return false;\n",
+   "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-http.cpp"
+  },
+  {
+   "check": "teardown_graceful",
+   "commit": "704366d76f8748cf9ad3df62a464bfcc8d1ae6ad",
+   "file_sha256": "2143962217e9d6275f28c42d599139bb702e2f880dccbad01ab9d8b094f5aef4",
+   "lines": [
+    529,
+    534
+   ],
+   "path": "tools/server/server.cpp",
+   "row": null,
+   "span_sha256": "f14a9b67bce667741f028a3fb33239b96281c21de0688a14e3a66da251b1e163",
+   "span_text": "        struct sigaction sigint_action;\n        sigint_action.sa_handler = signal_handler;\n        sigemptyset (&sigint_action.sa_mask);\n        sigint_action.sa_flags = 0;\n        sigaction(SIGINT, &sigint_action, NULL);\n        sigaction(SIGTERM, &sigint_action, NULL);\n",
+   "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server.cpp"
+  },
+  {
+   "check": "teardown_graceful",
+   "commit": "704366d76f8748cf9ad3df62a464bfcc8d1ae6ad",
+   "file_sha256": "2143962217e9d6275f28c42d599139bb702e2f880dccbad01ab9d8b094f5aef4",
+   "lines": [
+    519,
+    523
+   ],
+   "path": "tools/server/server.cpp",
+   "row": null,
+   "span_sha256": "97408c516bf5c805b12ca6fa407956473489277ec626b41511e3abe6e2510a70",
+   "span_text": "        shutdown_handler = [&](int) {\n            mcp_mgr.shutdown();\n            // this will unblock start_loop()\n            ctx_server.terminate();\n        };\n",
+   "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server.cpp"
+  },
+  {
+   "check": "teardown_graceful",
+   "commit": "704366d76f8748cf9ad3df62a464bfcc8d1ae6ad",
+   "file_sha256": "2143962217e9d6275f28c42d599139bb702e2f880dccbad01ab9d8b094f5aef4",
+   "lines": [
+    575,
+    590
+   ],
+   "path": "tools/server/server.cpp",
+   "row": null,
+   "span_sha256": "d0f09fae6947f25b42ccf00ef09231c9e8f9bf46b5499d9e1f070a58d8ad163d",
+   "span_text": "        // this call blocks the main thread until queue_tasks.terminate() is called\n        ctx_server.start_loop();\n\n        clean_up();\n        ctx_http.join();\n        if (monitor_thread.joinable()) {\n            monitor_thread.join();\n        }\n\n        auto * ll_ctx = ctx_server.get_llama_context();\n        if (ll_ctx != nullptr) {\n            common_memory_breakdown_print(ll_ctx);\n        }\n    }\n\n    return 0;\n",
+   "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server.cpp"
+  }
+ ],
+ "started_utc": "2026-10-20T13:00:00.000Z",
+ "teardown": {
+  "alive_at_teardown_start": true,
+  "log_lines": [
+   "llama.cpp build b11755",
+   "model loaded",
+   "listening on 127.0.0.1:45678"
+  ],
+  "log_lines_truncated": false,
+  "log_path": "/tmp/kama-llamacpp-live-x.log",
+  "port_refuses": true,
+  "returncode": 0,
+  "sigkill_sent": false,
+  "sigterm_sent": true,
+  "term_wait_ms": 320
+ },
+ "threads": 1,
+ "tool": {
+  "path": "/lane/tools/kama-llamacpp-live.py",
+  "sha256": "9999999999999999999999999999999999999999999999999999999999999999"
+ },
+ "transitions": [
+  {
+   "body": "",
+   "body_over_cap": false,
+   "body_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+   "error": "ConnectionRefusedError",
+   "headers": {},
+   "path": "/health",
+   "repeats": 3,
+   "status": null,
+   "t_ms": 4
+  },
+  {
+   "body": "{\"error\":{\"message\":\"Loading model\",\"type\":\"unavailable_error\",\"code\":503}}",
+   "body_over_cap": false,
+   "body_sha256": "baa09177700f64520a799fd2628bb3663c1486b25e17e4a507f2e6c81bef957c",
+   "error": null,
+   "headers": {
+    "content-type": "application/json",
+    "server": "llama.cpp"
+   },
+   "path": "/v1/models",
+   "repeats": 12,
+   "status": 503,
+   "t_ms": 40
+  },
+  {
+   "body": "{\"status\":\"ok\"}",
+   "body_over_cap": false,
+   "body_sha256": "2222222222222222222222222222222222222222222222222222222222222222",
+   "error": null,
+   "headers": {
+    "content-type": "application/json",
+    "server": "llama.cpp"
+   },
+   "path": "/health",
+   "repeats": 0,
+   "status": 200,
+   "t_ms": 900
+  }
+ ]
+}

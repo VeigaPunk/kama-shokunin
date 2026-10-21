@@ -1,0 +1,32 @@
+OperatorTeachings evidence, round 21 (seat KamaR21.OperatorTeachings-6). Read-only; the lane was not modified.
+Each line: command -> observed exit (or tool result where the tool has no exit code).
+
+E1  git clone -q /home/vgpnk/Projects/shokunin/kama-shokunin /tmp/kama-r21-OperatorTeachings/lane -> exit 0
+E2  git -C <scratch> checkout -q a29bb84abbb8b4d328f5970a89e448330a3a42ac -> exit 0; rev-parse HEAD = a29bb84abbb8b4d328f5970a89e448330a3a42ac (exit 0)
+E3  ls -la corpus/lessons/operator-*.md -> "No such file or directory", exit 2 (zero operator-*.md files)
+E4  cmp draft (a29bb84) vs lane tree: corpus/QUALITY.md -> exit 0; SKILL.md -> exit 0; considerthese/2026-10-20.md -> exit 0
+E5  python3 scan of .ufo/l0-questions.md, lines starting "kama |" -> exit 0; 80 split lines; 10 kama lines: 13,15,17,21,31,41,48,52,58,68; "ANSWER" marker on 52 (and 53, tsukuroi); no RESOLVED/RULING marker on any kama line other than the words "ruling" in 58 and 68 (questions, not answers)
+E6  git -C <scratch> log --format=... -- corpus/QUALITY.md -> exit 0; last 33a6777 (2026-10-21, round-20)
+    git -C <scratch> log -- SKILL.md -> exit 0; last 0957ce6 (2026-10-21, round-20)
+    git -C <scratch> log -- considerthese -> exit 0; 836b018 (2026-10-20), 893e3c5 (2026-10-19)
+E7  git check-ignore -v kama-shokunin (fleet root) -> ".gitignore:1:*-shokunin/<TAB>kama-shokunin", exit 0
+E8  grep -n interactive .gitignore (lane draft) -> "1:.ufo/interactive-sessions/", exit 0
+    git check-ignore -v .ufo/interactive-sessions/x (lane draft) -> ".gitignore:1", exit 0
+    git log -- .gitignore (lane draft) -> 6978097 2026-10-17 "kama: ignore interactive session logs", exit 0
+E9  git cat-file -t on the 17 commit citations in considerthese (69780977 96bbd742 1e489406 5396a876 e545ed99 70af36c2 4b1b4ad1 b8bdc56e 1e41928a 3285cdf7 33f46685 641e1b6f f396b989 4bcae65a d0f5a2d2 35e9175f 6978097) -> all "commit", exit 0 each
+E10 git cat-file -t 0957ce619789d13d894ef21bc863486bcb35b56c -> no object, exit 128 (round-20 report line 7 hash)
+    git cat-file -t 0957ce619789d13bb5779606078fa1498114d2c7 -> commit, exit 0 (round-20 report line 10 hash)
+    sed -n 7p / sed -n 10p of /home/vgpnk/Projects/shokunin/.ufo/reports/round-20/kama.md with a 40-hex regex -> line 7 = ...d894ef21bc863486bcb35b56c; line 10 = ...bb5779606078fa1498114d2c7; exit 0
+E11 test -f corpus/lessons/round-20-verifier-spotcheck.md -> exit 1 (absent)
+    test -f corpus/lessons/round-19-verifier-spotcheck.md -> exit 0 (present)
+E12 python3 scan tests/probe-verdicts/*.json: 72 rows; rows with expected.reason == "unresolvable-id": 0; exit 0
+    _grep "reset" in tests/probe-verdicts -> no matches
+E13 python3 scan of scripts/hyaku/lane-addendum.md (257 lines): headings and any "6.2" text -> only line 1 is a heading and contains no "6.2"; exit 0
+E14 test -f PROVINCE.md (lane draft) -> exit 0; test -f /home/vgpnk/Projects/shokunin/scripts/hyaku/lane-addendum.md -> exit 0
+E15 test -d .ufo/waves/round-21/build/advice -> exit 0
+E16 static read install-links-grid.py:258-284: check at :275 is bare "rc == 1"; JSON checks at :264-274 (no exit code; read only)
+E17 mkdir -p .ufo/waves/round-21/build/out/OperatorTeachings -> exit 0
+    rm -rf /tmp/kama-r21-OperatorTeachings -> exit 0; test -d /tmp/kama-r21-OperatorTeachings -> exit 1 (gone)
+
+Specialized tools used (no exit codes): _glob, _grep, _read, _write. Keyword sweeps over SKILL.md, corpus/QUALITY.md and PROVINCE.md for: ratif, admit, spot-check, planner, Capabilit, Saturation, FOREIGN, unresolvable, LLAMA_CPP_BASE_URL, inherited, timer, systemd, ctx, 16384, 32768, wire, catalog, promise, SOURCES.
+Installs and updates: none (no pacman, uv, npm or cargo calls).

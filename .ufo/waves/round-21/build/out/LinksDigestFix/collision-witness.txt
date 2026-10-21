@@ -1,0 +1,10 @@
+Digest framing witness (the calculation predates the patch; it demonstrates the original encoding collision).
+
+Command:
+python3 -c 'import hashlib; encode=lambda d: "".join(f"{n} -> {d[n]}\n" for n in sorted(d)).encode(); pairs=(({"x -> y":"z"},{"x":"y -> z"}), ({"a":"b\nc -> d"},{"a":"b","c":"d"})); [print(f"collision={encode(a)==encode(b)} sha256={hashlib.sha256(encode(a)).hexdigest()}") for a,b in pairs]'; rc=$?; printf 'exit=%d\n' "$rc"; exit "$rc"
+
+Exit: 0
+Stdout:
+collision=True sha256=356b43ee14edcd8a26ce863b8d5d37e7633c1622a60b06658da051c30f3007a2
+collision=True sha256=fb587fc2dcd15f6233021dd67e51d36dee8027a0ed1b5dbb7fe81ca9c356a6fa
+exit=0

@@ -1,0 +1,41 @@
+# ErrataR20Splice: every command run for the report, with observed exit code (rc).
+# lane = /home/vgpnk/Projects/shokunin/kama-shokunin (HEAD a29bb84...)
+# fleet = /home/vgpnk/Projects/shokunin
+# T = 0957ce619789d13d894ef21bc863486bcb35b56c  (round-20 report :7, errata row 3 token)
+# CORR = 0957ce619789d13bb5779606078fa1498114d2c7 (errata row 3 correction)
+# WORK = 33a6777866d0f63d894ef21bc863486bcb35b56c (work/frozen-population commit)
+# Nothing below writes to a repository index, a ref, or a lane file.
+
+git -C lane rev-parse HEAD                                  rc0  a29bb84abbb8b4d328f5970a89e448330a3a42ac
+git -C lane cat-file -t T ; git -C fleet cat-file -t T      rc128 both (not an object in either repo)
+git -C lane cat-file -t CORR ; git -C lane cat-file -t WORK rc0  both "commit"
+git -C fleet cat-file -t CORR ; git -C fleet cat-file -t WORK rc128 both (not fleet objects)
+git -C lane log --all --format=%H | wc -l                   rc0  196 (HEAD-only: 82, rc0)
+git -C fleet log --all --format=%H | wc -l                  rc0  958 (HEAD-only: 951, rc0)
+git cat-file --batch-all-objects --batch-check (lane / fleet) rc0  3582 / 8996 objects; 197 / 1022 commits
+git log --all -S T --reverse   (lane; fleet)                rc0  lane: 00aa1486, a29bb84 ; fleet: 04eb5d2d, 221707d2
+git log --all -G 0957ce619789d13d --reverse (lane; fleet)   rc0  same sets as -S
+git log -n1 --format=... 00aa1486 / a29bb84 / 33a67778 / 0957ce61  rc0  parents: 7a6bc91 / 7a6bc91 / 37bd4c5 / 33a67778
+git merge-base --is-ancestor 00aa1486 HEAD                  rc1  (not an ancestor of HEAD)
+git merge-base --is-ancestor {0957ce61,33a67778,9add96e4,7a6bc91} HEAD   rc0 each
+git merge-base --is-ancestor 0957ce61 9add96e4              rc0  (original measurement precedes corrected rerun)
+git for-each-ref --contains 00aa1486                        rc0  refs/jj/keep/00aa1486a0dee3375d6e974adc45ee501d7ab4d7 only
+git for-each-ref --contains a29bb84                         rc0  refs/heads/master, refs/remotes/origin/master, refs/jj/keep/a29bb84...
+git diff --stat 00aa1486 a29bb84                            rc0  empty (identical trees)
+git show a29bb84:LOG.md ; a29bb84:SCORECARD.md ; a29bb84:corpus/lessons/round-20.md   rc0  (LOG 1204-1208; SC 889-892; lesson 131-136 read)
+git show 0957ce61:SKILL.md                                  rc0  lines 652-656 hold the routed rows named by report :10
+git show 0957ce61:.ufo/waves/round-20/build/completion-summary.json   rc0  "spawned": 72, "completed_original_seats": 70
+git show a29bb84:.ufo/waves/round-20/runs/0957ce61/commands.json      rc0  "measured_commit": CORR
+git ls-tree --name-only 33a67778 .ufo/waves/round-20/                 rc0  build, evidence, run.py, sources (no c1, c2, recipe.json, runs)
+git ls-tree --name-only 33a67778 .ufo/waves/round-20/build/          rc0  no completion-summary.json, no verdict-count.json
+git ls-tree --name-only 0957ce61 .ufo/waves/round-20/                 rc0  adds c1, c2, recipe.json, completion/verdict files
+git log --diff-filter=A --format=... -- .ufo/waves/round-20/runs/0957ce61/commands.json   rc0  92b1462 (06:08:05 -0300)
+git log --reverse --format=... 37bd4c5..7a6bc911            rc0  9 commits, 04:05:09 (33a67778) to 07:10:48 (7a6bc91)
+git log --format=... -- .ufo/reports/round-20/kama.md (fleet) rc0  04eb5d2 (07:13:14 -0300) only
+git show 04eb5d2d:.ufo/reports/round-20/kama.md (fleet)     rc0  line 7 holds T; identical to working tree (diff rc0)
+git log --all --find-object=<blob> for 5 fleet blobs and lane blob 19fef3a9   rc0  (mapping in splice_check.stdout lines 32-48)
+git grep -n -e 0957ce619789d13d -e 894ef21bc863486bcb35b56c <00aa1486|a29bb84|7a6bc911>   rc0  token prefix hits only in 00aa1486 and a29bb84 (errata row 3); 894ef21b hits in LOG/SCORECARD are the tail of WORK
+python3 .ufo/waves/round-21/build/out/ErrataR20Splice/splice_check.py > splice_check.stdout   rc0  RESULT PASS (26 PASS, 0 FAIL)
+_grep (tool) full token, fleet root, default ignore rules    -> MANIFEST.json:10112 and .ufo/reports/round-20/kama.md:7 only
+_grep (tool) lane registry/tools/corpus/LOG/SCORECARD/SKILL/round-21 -> token prefix only in registry/report-landing-errata.tsv:3 (and round-21 dispatch/advice text)
+# Tool installs/updates: none. Scratch /tmp/kama-r21-ErrataR20Splice removed after the report was written.

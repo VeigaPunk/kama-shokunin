@@ -1,0 +1,86 @@
+git=git version 2.56.0 python=Python 3.14.8
+== 0a baseline: default range + default errata (expect exit 0, status=clean)
+summary reports=11 defects=9 corrected=9 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+   exit=0
+== 0b baseline: --no-errata (expect exit 1, uncorrected=9)
+summary reports=11 defects=9 corrected=0 uncorrected=9 errata_unmatched=0 errata_invalid=0 status=failed
+   exit=1
+== 0c selftest, clean environment (expect exit 0, failed=0)
+selftest cases=15 failed=0
+   exit=0
+== 1 git missing from PATH (expect exit 1 with traceback: escape from main)
+    raise child_exception_type(errno_num, err_msg, err_filename)
+FileNotFoundError: [Errno 2] No such file or directory: 'git'
+   exit=1
+== 2 reversed range --rounds 20-10 --no-errata (expect exit 0, reports=0)
+summary reports=0 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+   exit=0
+== 3 single round --rounds 10 with default errata (expect exit 1; round 10 corrected, rows of rounds 18/20 unmatched)
+summary reports=1 defects=1 corrected=1 uncorrected=0 errata_unmatched=8 errata_invalid=0 status=failed
+   exit=1
+== 4 override without =PATH (expect exit 1; baseline --rounds 19 --no-errata is exit 0)
+summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+   baseline_exit=0
+summary reports=1 defects=4 corrected=0 uncorrected=4 errata_unmatched=0 errata_invalid=0 status=failed
+   exit=1
+== 5 committed report passed by path (expect exit 1; docstring cutoff applies only to uncommitted reports)
+summary reports=1 defects=4 corrected=0 uncorrected=4 errata_unmatched=0 errata_invalid=0 status=failed
+   exit=1
+   override json: report_committed=False cutoff=1792580298 required=12
+   no-override json: report_committed=True cutoff=1792565257 required=8
+== 6 stdout is /dev/full on a clean run (expect exit 1 traceback: clean verdict becomes failed)
+   exit=1
+OSError: [Errno 28] No space left on device
+== 7 reader closes pipe on a clean run (expect exit 1 BrokenPipeError)
+   exit=1
+BrokenPipeError: [Errno 32] Broken pipe
+== 8 stdout closed on a clean run (expect exit 0 with no output)
+   exit=0
+== 9 report path is a FIFO (expect exit 124 from timeout: never returns)
+   exit=124
+== 10 selftest under user gitconfig with gpgsign and missing gpg (expect traceback, exit 1)
+subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-kk2wpo9i/lane', 'commit', '-q', '-m', 'round-1: work']' returned non-zero exit status 128.
+   exit=1
+== 11 ambiguous 7-hex abbreviation in Landed changes (git exit 128 recorded as absent: expect exit 1)
+   ambiguous_prefix=f530ce0
+  UNCORRECTED landed-unresolved f530ce0
+summary reports=1 defects=1 corrected=0 uncorrected=1 errata_unmatched=0 errata_invalid=0 status=failed
+   exit=1
+fatal: Not a valid object name f530ce0^{commit}
+   git cat-file -e f530ce0^{commit} exit=128
+== 12 unrelated commit subject with U+2028 (expect exit 0 control, then exit 2 for the same report)
+summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=0 errata_invalid=0 status=clean
+   control_exit=0
+could-not-evaluate: not enough values to unpack (expected 4, got 1)
+   exit=2
+== 13 controls: documented exit-2 inputs (expect exit 2 each)
+could-not-evaluate: 'utf-8' codec can't decode byte 0xff in position 2: invalid start byte
+   utf8_report_exit=2
+could-not-evaluate: round 21: cannot read /home/vgpnk/Projects/shokunin/.ufo/reports/round-21/kama.md: [Errno 2] No such file or directory: '/home/vgpnk/Projects/shokunin/.ufo/reports/round-21/kama.md'
+   missing_report_exit=2
+could-not-evaluate: invalid literal for int() with base 10: 'x'
+   bad_rounds_exit=2
+could-not-evaluate: git rev-parse --verify nope^{commit} in /tmp/kama-r21-AuditExitContract/lane: rc=128 fatal: Needed a single revision
+   bad_branch_exit=2
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+   lane_not_repo_exit=2
+== 14 ledger row whose correction is not a commit (expect exit 1: errata-invalid)
+errata-invalid line=3 correction=0000000000000000000000000000000000000000
+summary reports=11 defects=9 corrected=9 uncorrected=0 errata_unmatched=0 errata_invalid=1 status=failed
+   exit=1
+== 15 ledger row with unknown kind (expect exit 2: malformed ledger)
+could-not-evaluate: errata /tmp/aud-exit-repro.pDoNEv/bad-kind.tsv:1: malformed row
+   exit=2
+== 16 audit references in the lane tree (expect only the tool itself and its errata ledger)
+/tmp/kama-r21-AuditExitContract/lane/tools/report-landing-audit.py
+/tmp/kama-r21-AuditExitContract/lane/registry/report-landing-errata.tsv
+   grep_exit=0
+== 17 git exit semantics on the ambiguous repo (absent vs ambiguous vs present)
+   absent_fullhash_no_peel_exit=1
+   absent_fullhash_commit_peel_exit=128
+   ambiguous_commit_peel_exit=128
+   ambiguous_revparse_quiet_exit=1
+f530ce0 ambiguous
+0000000000000000000000000000000000000001 missing
+   batch_check_exit=0
+done

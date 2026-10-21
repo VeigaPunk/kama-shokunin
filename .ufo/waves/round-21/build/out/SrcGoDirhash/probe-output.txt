@@ -1,0 +1,52 @@
+== A. directory variant: dirhash.DirFiles / HashDir(Hash1) ==
+A1 soname link             DirFiles err=<nil> files=[example.com/m@v1.0.0/lib/libalt.so example.com/m@v1.0.0/lib/libllama.so.0 example.com/m@v1.0.0/lib/libllama.so.0.0.1 example.com/m@v1.0.0/lib/libnew.so]
+A1 soname link             HashDir  h="h1:mbavPMhdqo4LoLpelNyeDv7SOJciMgCp2iNN49wga6w="
+A2 retarget same bytes     DirFiles err=<nil> files=[example.com/m@v1.0.0/lib/libalt.so example.com/m@v1.0.0/lib/libllama.so.0 example.com/m@v1.0.0/lib/libllama.so.0.0.1 example.com/m@v1.0.0/lib/libnew.so]
+A2 retarget same bytes     HashDir  h="h1:mbavPMhdqo4LoLpelNyeDv7SOJciMgCp2iNN49wga6w="
+A3 retarget diff bytes     DirFiles err=<nil> files=[example.com/m@v1.0.0/lib/libalt.so example.com/m@v1.0.0/lib/libllama.so.0 example.com/m@v1.0.0/lib/libllama.so.0.0.1 example.com/m@v1.0.0/lib/libnew.so]
+A3 retarget diff bytes     HashDir  h="h1:yVhRoTrH+NzBtkws6F0NEprHTtaQ+IbWrAfYcY55M7Q="
+A4 link removed            DirFiles err=<nil> files=[example.com/m@v1.0.0/lib/libalt.so example.com/m@v1.0.0/lib/libllama.so.0.0.1 example.com/m@v1.0.0/lib/libnew.so]
+A4 link removed            HashDir  h="h1:hCAH+j8zz+CNk+g81b3ZxZlvzJ/oQS5YXYOIqSma5nc="
+A5 regular copy same bytes DirFiles err=<nil> files=[example.com/m@v1.0.0/lib/libalt.so example.com/m@v1.0.0/lib/libllama.so.0 example.com/m@v1.0.0/lib/libllama.so.0.0.1 example.com/m@v1.0.0/lib/libnew.so]
+A5 regular copy same bytes HashDir  h="h1:mbavPMhdqo4LoLpelNyeDv7SOJciMgCp2iNN49wga6w="
+A6 dangling link           DirFiles err=<nil> files=[example.com/m@v1.0.0/lib/dangling example.com/m@v1.0.0/lib/libalt.so example.com/m@v1.0.0/lib/libllama.so.0 example.com/m@v1.0.0/lib/libllama.so.0.0.1 example.com/m@v1.0.0/lib/libnew.so]
+A6 dangling link           HashDir  h="ERR:open /tmp/kama-r21-SrcGoDirhash/exp/work/a6/lib/dangling: no such file or directory"
+A7 link to directory       DirFiles err=<nil> files=[example.com/m@v1.0.0/lib/dirlink example.com/m@v1.0.0/lib/libalt.so example.com/m@v1.0.0/lib/libllama.so.0.0.1 example.com/m@v1.0.0/lib/libnew.so example.com/m@v1.0.0/sub/inner.txt]
+A7 link to directory       HashDir  h="ERR:read /tmp/kama-r21-SrcGoDirhash/exp/work/a7/lib/dirlink: is a directory"
+A8 symlinked root          DirFiles err=/tmp/kama-r21-SrcGoDirhash/exp/work/a8 is not a directory files=[]
+A8 symlinked root          HashDir  h="ERR:/tmp/kama-r21-SrcGoDirhash/exp/work/a8 is not a directory"
+== A9. chain shortcut (C2 grid cell link-same-resolution-shortcut analogue) ==
+A9 before="h1:R5CuHzG6CpaMdt8IJn/HSodDf28gL3OyBuL/IxQar1s=" after="h1:R5CuHzG6CpaMdt8IJn/HSodDf28gL3OyBuL/IxQar1s=" equal=true
+== D. equality summary (HashDir, Hash1) ==
+D1 link vs identical-bytes retarget equal=true
+D2 link vs different-bytes retarget equal=false
+D3 link vs regular copy of identical bytes equal=true
+== B. module zip variant: xzip.CheckDir / CreateFromDir / HashZip ==
+B1 CheckDir err=<nil> valid=[/tmp/kama-r21-SrcGoDirhash/exp/work/b1/lib/libalt.so /tmp/kama-r21-SrcGoDirhash/exp/work/b1/lib/libllama.so.0.0.1 /tmp/kama-r21-SrcGoDirhash/exp/work/b1/lib/libnew.so /tmp/kama-r21-SrcGoDirhash/exp/work/b1/sub/inner.txt]
+   omitted=[/tmp/kama-r21-SrcGoDirhash/exp/work/b1/lib/dangling: not a regular file /tmp/kama-r21-SrcGoDirhash/exp/work/b1/lib/dirlink: not a regular file /tmp/kama-r21-SrcGoDirhash/exp/work/b1/lib/libllama.so.0: not a regular file]
+   invalid=[]
+B2 CreateFromDir err=<nil> bytes=726
+   entry example.com/m@v1.0.0/lib/libalt.so           mode=-rw-rw-rw-
+   entry example.com/m@v1.0.0/lib/libllama.so.0.0.1   mode=-rw-rw-rw-
+   entry example.com/m@v1.0.0/lib/libnew.so           mode=-rw-rw-rw-
+   entry example.com/m@v1.0.0/sub/inner.txt           mode=-rw-rw-rw-
+B2 HashZip h="h1:Y3ku0ozoE7FBf+fsoBP40n5JsYDCEfXNLMtKYu+m+UQ=" err=<nil>
+B3 HashDir(regular-only) h="h1:Y3ku0ozoE7FBf+fsoBP40n5JsYDCEfXNLMtKYu+m+UQ=" err=<nil> equal_HashZip=true
+B4 HashDir(tree with links) h="" err=open /tmp/kama-r21-SrcGoDirhash/exp/work/b1/lib/dangling: no such file or directory
+== C. zip entries with symlink mode: xzip.CheckZip / HashZip / Unzip ==
+   symlink-mode zip:
+   entry example.com/m@v1.0.0/lib/libllama.so.0.0.1   mode=-rw-r--r--
+   entry example.com/m@v1.0.0/lib/libllama.so.0       mode=Lrwxrwxrwx
+   regular-mode zip:
+   entry example.com/m@v1.0.0/lib/libllama.so.0.0.1   mode=-rw-r--r--
+   entry example.com/m@v1.0.0/lib/libllama.so.0       mode=-rw-r--r--
+C1 CheckZip(symlink entry) err=<nil> valid=[example.com/m@v1.0.0/lib/libllama.so.0.0.1 example.com/m@v1.0.0/lib/libllama.so.0] invalid=[]
+C1 CheckZip(regular entry) err=<nil> valid=[example.com/m@v1.0.0/lib/libllama.so.0.0.1 example.com/m@v1.0.0/lib/libllama.so.0] invalid=[]
+C2 HashZip(symlink entry) h="h1:2ZiWFRb3JgPj0iMBiqr8UoroFJvj/7VJHZW5l+F/B0o=" err=<nil>
+C2 HashZip(regular entry) h="h1:2ZiWFRb3JgPj0iMBiqr8UoroFJvj/7VJHZW5l+F/B0o=" err=<nil> equal=true
+C3 Unzip(symlink-mode zip) err=<nil>
+   drwxr-xr-x .
+   drwxr-xr-x lib
+   -r--r--r-- lib/libllama.so.0
+   -r--r--r-- lib/libllama.so.0.0.1
+   walk err=<nil>

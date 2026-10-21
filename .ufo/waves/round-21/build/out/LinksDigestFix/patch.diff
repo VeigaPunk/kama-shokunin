@@ -1,0 +1,91 @@
+diff --git i/tests/llamacpp-live/check-receipt.py w/tests/llamacpp-live/check-receipt.py
+index 8a6b5dd..6083fcc 100755
+--- i/tests/llamacpp-live/check-receipt.py
++++ w/tests/llamacpp-live/check-receipt.py
+@@ -456,6 +456,12 @@ def validate(receipt, expect_model=None, expect_server=None,
+                 bad("server.install_links_sha256 != recomputation over "
+                     "install_links")
+             for name in sorted(links):
++                if "\n" in name or " -> " in name:
++                    bad(f"server.install_links[{name!r}] has a name that "
++                        "makes install_links_sha256 ambiguous")
++                if "\n" in links[name]:
++                    bad(f"server.install_links[{name!r}] has link text "
++                        "that makes install_links_sha256 ambiguous")
+                 if isinstance(tree, dict) and name in tree:
+                     bad(f"server.install_links[{name!r}] is also a regular "
+                         "install_tree member")
+@@ -1981,6 +1987,20 @@ def _selftest():
+     cases.append(("links-retarget-unpinned-valid", retargeted, expects, 0))
+     cases.append(("links-retarget-pinned", retargeted,
+                   expects + links_pin, 1))
++    mut("links-name-newline", lambda r: relink(
++        r, {"libllama.so.0\nalias": "libllama.so"}))
++    mut("links-name-separator", lambda r: relink(
++        r, {"libllama.so.0 -> alias": "libllama.so"}))
++
++    def relink_newline_target(r):
++        links = dict(SELFTEST_LINKS, **{
++            "libllama.so.0": "libllama.so\n"})
++        tree = r["server"]["install_tree"]
++        tree["libllama.so\n"] = LIB_SHA
++        r["server"]["install_tree_sha256"] = install_tree_sha(tree)
++        relink(r, links)
++
++    mut("links-target-newline", relink_newline_target)
+     mut("links-sha-tampered",
+         lambda r: r["server"].update(install_links_sha256="0" * 64))
+     mut("links-sha-null-nonempty",
+diff --git i/tools/kama-llamacpp-live.py w/tools/kama-llamacpp-live.py
+index 3f470c8..eca491a 100755
+--- i/tools/kama-llamacpp-live.py
++++ w/tools/kama-llamacpp-live.py
+@@ -207,7 +207,9 @@ def install_links(server_real):
+     a combined digest over the sorted 'name -> text' lines. install_tree()
+     skips symlinks, so a retargeted soname link (libllama.so.0 -> ...) would
+     otherwise leave every pin unchanged. Link text is recorded unresolved;
+-    the gate checks that each chain ends at a pinned regular member."""
++    the gate checks that each chain ends at a pinned regular member. Names
++    cannot contain ' -> ' or newlines, and link text cannot contain newlines,
++    keeping the textual digest unambiguous."""
+     links = {}
+     directory = os.path.dirname(server_real)
+     try:
+@@ -218,7 +220,10 @@ def install_links(server_real):
+         full = os.path.join(directory, name)
+         try:
+             if stat.S_ISLNK(os.lstat(full).st_mode):
+-                links[name] = os.readlink(full)
++                target = os.readlink(full)
++                if '\n' in name or ' -> ' in name or '\n' in target:
++                    raise SetupError('install-link-digest-ambiguous-input')
++                links[name] = target
+         except OSError:
+             continue
+     combined = hashlib.sha256(''.join(
+@@ -1149,6 +1154,25 @@ def _selftest():
+         raise AssertionError('setup-error must take precedence over false')
+     if good[0]['evaluated'] is not True or unknown[0]['evaluated'] is not False:
+         raise AssertionError('tri-state evaluated field mapping failed')
++    invalid_link_cases = (
++        ('line\nfeed', 'target'),
++        ('separator -> name', 'target'),
++        ('link', 'line\nfeed'),
++    )
++    for name, target in invalid_link_cases:
++        with tempfile.TemporaryDirectory(
++                prefix='kama-links-selftest-') as directory:
++            os.symlink(target, os.path.join(directory, name))
++            try:
++                install_links(os.path.join(directory, 'llama-server'))
++            except SetupError as exc:
++                if exc.code != 'install-link-digest-ambiguous-input':
++                    raise AssertionError(
++                        'unexpected unsafe install-link rejection')
++            else:
++                raise AssertionError(
++                    f'unsafe install link accepted: {name!r}, {target!r}')
++
+     with tempfile.TemporaryDirectory(prefix='kama-emit-selftest-') as directory:
+         original_replace = os.replace
+         def interrupted_replace(_source, _destination):

@@ -1,0 +1,70 @@
+## P1 install_links_sha256 is not injective (one crafted link name)
+G links      : {'libllama.so': 'libllama.so.0', 'libllama.so.0': 'libllama.so.0.7.0'}
+B links      : {'libllama.so -> libllama.so.0\nlibllama.so.0': 'libllama.so.0.7.0'}
+G links_sha  : a49818c8cb55183fadcb5d49c073b294f1139c3abe213c07f98988c192169e26
+B links_sha  : a49818c8cb55183fadcb5d49c073b294f1139c3abe213c07f98988c192169e26
+links_sha equal: True | link maps equal: False | install_tree_sha equal: True
+B chain check: 'libllama.so -> libllama.so.0\nlibllama.so.0' -> None
+gate no pin, G: VALID
+gate no pin, B: VALID
+gate pin=G digest, B: VALID
+
+## P1b install_tree (frozen 7a6bc91 and current) has the same ambiguity
+frozen tree A: {'a': 'cb1ad2119d8fafb69566510ee712661f9f14b83385006ef92aec47f523a38358', 'b': 'dcdb704109a454784b81229d2b05f368692e758bfa33cb61d04c1b93791b0273'}
+frozen tree N: {'a cb1ad2119d8fafb69566510ee712661f9f14b83385006ef92aec47f523a38358\nb': 'dcdb704109a454784b81229d2b05f368692e758bfa33cb61d04c1b93791b0273'}
+frozen install_tree_sha256 equal: True
+
+## P2 target rule: same-directory ./x and absolute same-dir targets
+chain ./x   : target './libllama.so.0.7.0' leaves the pinned directory
+chain plain : None
+chain sub/x : target 'sub/libllama.so.0.7.0' leaves the pinned directory
+producer records: {'libllama.so.0': './libllama.so.0.7.0'}
+gate no pin, ./x: INVALID: server.install_links['libllama.so.0']: target './libllama.so.0.7.0' leaves the pinned directory
+producer records abs same-dir: {'libllama.so.0': '/tmp/kama-r21-LinksPolicyCritic/probe-3n84apkg/libllama.so.0.7.0'}
+gate no pin, abs same-dir: INVALID: server.install_links['libllama.so.0']: target '/tmp/kama-r21-LinksPolicyCritic/probe-3n84apkg/libllama.so.0.7.0' leaves the pinned directory
+
+## P3 same-resolution rewrite: libllama.so -> libllama.so.0.7.0
+before: {'libllama.so': 'libllama.so.0', 'libllama.so.0': 'libllama.so.0.7.0'}
+after : {'libllama.so': 'libllama.so.0.7.0', 'libllama.so.0': 'libllama.so.0.7.0'}
+tree digest unchanged: True | links digest changed: True
+resolved bytes identical: True
+gate no pin: VALID
+gate pin=pre-rewrite: INVALID: server.install_links_sha256 8da9d5fa247df222949f2a2f451547fc4861d7b730432a31e473951fcc2d549a != expected a49818c8cb55183fadcb5d49c073b294f1139c3abe213c07f98988c192169e26
+
+## P4 retarget onto another pinned member (synthetic, LICENSE)
+gate no pin: VALID
+gate pin=original: INVALID: server.install_links_sha256 22a92eff5601f88d1c1569f10d08624a4afeaf17d5c8a16125c7c8493a7611e0 != expected a49818c8cb55183fadcb5d49c073b294f1139c3abe213c07f98988c192169e26
+
+## P4b real-tree mirror: retarget libmtmd.so.0 -> LICENSE
+baseline chain libmtmd.so.0: None
+baseline ld.so --list exit: 0 | libmtmd line: ['libmtmd.so.0 => /tmp/kama-r21-LinksPolicyCritic/mirror/libmtmd.so.0 (0x00007f5e0ec44000)']
+links digest changed: True | tree digest changed: False
+retargeted chain libmtmd.so.0: None
+gate no pin: VALID
+gate pin=baseline: INVALID: server.install_links_sha256 292e5a24cb4f6c0bd673ab100ce7e55d291eafb94bc86811a5e592c9568afaa6 != expected b58f1b4df160c4e2accb95bac964a5648d24fc31e769f8044296a1fa431b9e10
+retargeted ld.so --list exit: 127 | stderr: ['/tmp/kama-r21-LinksPolicyCritic/mirror/llama-server: error while loading shared libraries: /tmp/kama-r21-LinksPolicyCritic/mirror/libmtmd.so.0: invalid ELF header']
+
+## P5 optional install_links: strip the fields from a new receipt
+schema: kama-llamacpp-live/v3
+gate no pin: VALID
+gate pin=G digest: INVALID: --expect-install-links-sha256 given but receipt has no server.install_links_sha256 digest
+
+## P6 DT_NEEDED census over the real tree (readelf -d, read-only)
+links (10): ['libggml-base.so', 'libggml-base.so.0', 'libggml.so', 'libggml.so.0', 'libllama-common.so', 'libllama-common.so.0', 'libllama.so', 'libllama.so.0', 'libmtmd.so', 'libmtmd.so.0']
+named in some DT_NEEDED: ['libggml-base.so.0', 'libggml.so.0', 'libllama-common.so.0', 'libllama.so.0', 'libmtmd.so.0']
+never in DT_NEEDED: ['libggml-base.so', 'libggml.so', 'libllama-common.so', 'libllama.so', 'libmtmd.so']
+grid first link (sorted[0]): libggml-base.so | grid second link (sorted[-1]): libmtmd.so.0
+
+## P7 frozen install_tree digest across link-only edits
+delete libllama.so frozen digest unchanged: True
+add extra link     frozen digest unchanged: True
+dangling soname    frozen digest unchanged: True
+absolute outside   frozen digest unchanged: True
+
+## P8 listing failure: producer returns {} / None
+install_links missing dir: ({}, None)
+install_tree missing dir: ({}, None)
+gate no pin, empty links: VALID
+gate pin=G digest, empty links: INVALID: --expect-install-links-sha256 given but receipt has no server.install_links_sha256 digest
+
+probe done

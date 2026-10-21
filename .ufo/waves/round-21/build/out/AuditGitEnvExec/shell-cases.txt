@@ -1,0 +1,16 @@
+## targeted GIT_DIR=<bare decoy> probe (scratch)
+$ GIT_DIR=<bare> git -C <tmp> init -q -b master -> rc=0 stderr='warning: re-init: ignored --initial-branch=master'
+  config bytes identical=True | config mtime changed=True | decoy root dir mtime changed=True
+$ GIT_DIR=<bare> git -C <tmp> add f -> rc=128 stderr='fatal: this operation must be run in a work tree'
+
+## shell-level cases: cmd is `python3 tools/report-landing-audit.py --selftest; echo exit=$?` in the given clone
+tools: git version 2.56.0; Python 3.14.8
+U1 unpatched clean | env: (none) | clone: base | ['exit=0'] | ok=15 | ['selftest cases=15 failed=0'] | [] | decoy_content_unchanged=n/a | crash=-
+U2 unpatched GIT_DIR=bare-decoy | env: GIT_DIR=/tmp/kama-r21-AuditGitEnvExec/cli/u2.git | clone: base | ['exit=1'] | ok=0 | [] | [] | decoy_content_unchanged=True | crash=subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-5zvqjvdn/lane', 'add', 'f']' returne
+U3 unpatched GIT_CONFIG_GLOBAL=hostile-both | env: GIT_CONFIG_GLOBAL=/tmp/kama-r21-AuditGitEnvExec/hostile-both.gitconfig | clone: base | ['exit=1'] | ok=0 | [] | [] | decoy_content_unchanged=n/a | crash=subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-gdi663jz/lane', 'commit', '-q', '-m'
+U4 unpatched GIT_CONFIG_COUNT gpgsign | env: GIT_CONFIG_COUNT=1, GIT_CONFIG_KEY_0=commit.gpgsign, GIT_CONFIG_VALUE_0=true | clone: base | ['exit=1'] | ok=0 | [] | [] | decoy_content_unchanged=n/a | crash=subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-_hk0jdfy/lane', 'commit', '-q', '-m'
+P1 patched clean | env: (none) | clone: lane | ['exit=0'] | ok=15 | ['selftest cases=15 failed=0'] | [] | decoy_content_unchanged=n/a | crash=-
+P2 patched GIT_DIR=bare-decoy | env: GIT_DIR=/tmp/kama-r21-AuditGitEnvExec/cli/p2.git | clone: lane | ['exit=0'] | ok=15 | ['selftest cases=15 failed=0'] | [] | decoy_content_unchanged=True | crash=-
+P3 patched GIT_CONFIG_GLOBAL=hostile-both | env: GIT_CONFIG_GLOBAL=/tmp/kama-r21-AuditGitEnvExec/hostile-both.gitconfig | clone: lane | ['exit=0'] | ok=15 | ['selftest cases=15 failed=0'] | [] | decoy_content_unchanged=n/a | crash=-
+P4 patched GIT_CONFIG_COUNT gpgsign | env: GIT_CONFIG_COUNT=1, GIT_CONFIG_KEY_0=commit.gpgsign, GIT_CONFIG_VALUE_0=true | clone: lane | ['exit=0'] | ok=15 | ['selftest cases=15 failed=0'] | [] | decoy_content_unchanged=n/a | crash=-
+gpgconf --kill all rc=0; scratch process lines=[]

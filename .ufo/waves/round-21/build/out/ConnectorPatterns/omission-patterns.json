@@ -1,0 +1,77 @@
+{
+  "pattern": "identity-summaries-silently-dropping-members",
+  "assigned_axes": {
+    "operability": 8,
+    "calibration": 7
+  },
+  "instances": [
+    {
+      "id": "LIVE-INSTALL-TREE-OSError",
+      "path": "tools/kama-llamacpp-live.py:191-199",
+      "mechanism": "except OSError: continue in install_tree()",
+      "omission": "Unreadable/unstatable regular files are silently skipped from tree dict; digest is computed over surviving subset",
+      "executed_proof": "chmod 0 on f2.so -> tree contains only ['f1.so'], sha256=57387bbeec8e5012 returned clean",
+      "axis": "operability"
+    },
+    {
+      "id": "LIVE-INSTALL-LINKS-OSError",
+      "path": "tools/kama-llamacpp-live.py:220-223",
+      "mechanism": "except OSError: continue in install_links()",
+      "omission": "Unreadable symlinks during os.readlink() are silently omitted from links dict; install_links_sha256 covers only accessible links",
+      "executed_proof": "Mocked OSError on l2.so readlink -> links contains only ['l1.so'], sha256=c5d0d74dc3f58d6f returned clean",
+      "axis": "operability"
+    },
+    {
+      "id": "CENSUS-SELFTEST-DENOMINATOR",
+      "path": "tools/error-verdict-census.py:421-430",
+      "mechanism": "Loop filters r['instrument'] == SURVIVORS while print reports len(rows)",
+      "omission": "13 of 15 pinned cells (8 grid, 5 citation) are never executed in selftest; summary announces 15 pinned cells",
+      "executed_proof": "Total rows: 15, executed: 2, unexecuted in selftest: 13",
+      "axis": "calibration"
+    },
+    {
+      "id": "AUDIT-COMMIT-FILTER-DROPS",
+      "path": "tools/report-landing-audit.py:88-94",
+      "mechanism": "Strict author == lane-shokunin and regex rf'^(?:round-{rnd}:|checkpoint\\(r{rnd}\\))'",
+      "omission": "Integrator/operator commits or variant subjects (e.g. 'round-21 (hyaku phase 2):', 'round-21 :') are silently excluded from required commit set",
+      "executed_proof": "Regex test confirms 'round-21 (hyaku phase 2):' and 'round-21 : ' fail match",
+      "axis": "calibration"
+    },
+    {
+      "id": "AUDIT-HEX-CASE-SENSITIVITY",
+      "path": "tools/report-landing-audit.py:50-51",
+      "mechanism": "FULL and ABBREV regexes use strictly lowercase [0-9a-f]",
+      "omission": "Uppercase hex hashes [0-9A-F] in report body or Landed changes are silently ignored",
+      "executed_proof": "h_upper.upper() matches neither FULL nor ABBREV",
+      "axis": "calibration"
+    },
+    {
+      "id": "PROBE-SERVED-IDS-EXCEPTION-AND-BREAK",
+      "path": "tools/kama-probe.sh:340-367",
+      "mechanism": "except Exception: sys.exit(0) and break on first non-empty group",
+      "omission": "Malformed JSON silently yields empty model set (exit 0); lower-precedence model ID groups are dropped",
+      "executed_proof": "Multi-group test doc with data and models groups drops 'models' and top-level 'id'",
+      "axis": "operability"
+    },
+    {
+      "id": "REFUSED-PORTS-DROPS",
+      "path": "tools/kama-llamacpp-live.py:287-295",
+      "mechanism": "Fixed tuple of 6 regexes; except ValueError: continue",
+      "omission": "Non-matching port formats or conversion errors silently drop port from refused set",
+      "axis": "operability"
+    },
+    {
+      "id": "CLEAN-FAKES-PIDFILE-ERROR",
+      "path": "tests/llamacpp-live/controls.py:788-800",
+      "mechanism": "except (OSError, ValueError): return and except OSError: continue",
+      "omission": "Unreadable pidfile silently aborts orphan cleanup without signaling",
+      "axis": "operability"
+    }
+  ],
+  "quality_anchors": [
+    "KQ9: negative/scope claim requires full-set read (count first, then read)",
+    "KQ17: finding and aggregate count reported separately; fail-closed precedence",
+    "KQ25: errors must not vanish from denominator; counter requires completed relevant run",
+    "KQ27: independently enumerate counts after artifact changes; no hardcoded selftest tally as coverage"
+  ]
+}

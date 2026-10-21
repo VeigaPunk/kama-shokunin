@@ -1,0 +1,460 @@
+
+$ git -C lane rev-parse --short HEAD
+a29bb84
+  -> exit=0
+
+$ git -C lane log --oneline 7a6bc91..a29bb84
+a29bb84 round-21: report landing audit with errata ledger; symlink-aware install-links pin, gate checks and grid
+  -> exit=0
+
+=== R20 closure: D1 unresolved full hash, D2 landed omissions ===
+
+$ git -C lane cat-file -e 0957ce619789d13d894ef21bc863486bcb35b56c (bad hash)
+  -> exit=1
+
+$ git -C fleet cat-file -e 0957ce619789d13d894ef21bc863486bcb35b56c (bad hash)
+  -> exit=1
+
+$ git -C lane cat-file -e 0957ce619789d13bb5779606078fa1498114d2c7 (correct hash)
+  -> exit=0
+
+$ git -C fleet log -- .ufo/reports/round-20/kama.md
+04eb5d2 kama-shokunin 2026-10-21 round-20: kama report
+  -> exit=0
+
+$ fleet round-20 report line 7 (bad hash)
+- Reused the committed R20 implementation/frozen population and original measurement at `0957ce619789d13d894ef21bc863486
+  -> exit=0
+
+$ fleet round-20 report lines 13-19 (Landed changes)
+## Landed changes
+
+- `c7311039bcbd76c38b0648d33197864331f34364` — 73 falsify reports, wave accounting, S063/S065/S051 c
+- `04de7a8720139e57cf4960013229b8fd23d497f5` — updated `c2/measure-reference.json`'s `expected_json_
+- `9add96e462e62dc5141cd02730b7a699268b3513` — synchronized `c2/measure.py`'s `REFERENCE_SHA256` and
+- `3ec5ea6882994ff2e950a76b4e951b8973505f5e` — committed the final corrected 21-command run and its 
+- `7a6bc911f9eb7dbea9e3b81f5f2449ecda10096d` — logged the R19 verifier's routed instrument-registrat
+  -> exit=0
+
+$ fleet report HEAD blob sha256 vs working-tree sha256
+35bbcbb841dfe66a93ce348b2312b9c1b288509e00c451e5230c510c19c1c893  -
+35bbcbb841dfe66a93ce348b2312b9c1b288509e00c451e5230c510c19c1c893  /home/vgpnk/Projects/shokunin/.ufo/reports/round-20/kama.md
+  -> exit=0
+
+$ splice: bad[1-15] vs correct[1-15]; bad[16-40] vs 33a6777[16-40]
+0957ce619789d13
+0957ce619789d13
+d894ef21bc863486bcb35b56c
+d894ef21bc863486bcb35b56c
+  -> exit=0
+
+$ draft errata rows 3-7 (registry/report-landing-errata.tsv at a29bb84)
+20	unresolved-full-hash	0957ce619789d13d894ef21bc863486bcb35b56c	0957ce619789d13bb5779606078fa1498114d2c7	roun
+20	landed-omitted	33a6777866d0f63d894ef21bc863486bcb35b56c	33a6777866d0f63d894ef21bc863486bcb35b56c	round-20: 
+20	landed-omitted	0957ce619789d13bb5779606078fa1498114d2c7	0957ce619789d13bb5779606078fa1498114d2c7	round-20: 
+20	landed-omitted	92b146253fd3a8c4bfade94c909dc63b13d6f4a8	92b146253fd3a8c4bfade94c909dc63b13d6f4a8	round-20: 
+20	landed-omitted	846e366dc9dbac58463494a7e05ad060ae3ed3b0	846e366dc9dbac58463494a7e05ad060ae3ed3b0	round-20: 
+  -> exit=0
+
+=== L0 questions in fleet root (tracked) ===
+
+$ git -C fleet ls-files --error-unmatch .ufo/l0-questions.md
+.ufo/l0-questions.md
+  -> exit=0
+
+$ fleet L0 line 58 (kama round-16 fixture ratification)
+kama | round-16 | Ratify or reject the lane-owned live llama.cpp fixture: `kama-shokunin/t
+  -> exit=0
+
+$ fleet L0 line 68 (kama round-17 llama archive)
+kama | round-17 | Round-16 question (b) does not name the retained release archive `~/.loc
+  -> exit=0
+
+$ fleet L0 answer markers (count)
+2
+  -> exit=0
+
+$ fleet L0 answer markers (line numbers)
+52:kama | round-11 | Planner t
+53:tsukuroi | round-12 | Recon
+  -> exit=0
+
+=== host llama.cpp install facts (read-only) ===
+
+$ command -v llama-server
+/home/vgpnk/.local/bin/llama-server
+  -> exit=0
+
+$ readlink -f ~/.local/bin/llama-server
+/home/vgpnk/.local/opt/llama-b11755/llama-server
+  -> exit=0
+
+$ test -e /usr/bin/llama-server
+  -> exit=1
+
+$ release archive present
+-rw-r--r-- 1 vgpnk vgpnk 22240468 Oct 20 10:17 /home/vgpnk/.local/opt/llama-b11755-bin-ubuntu-x64.tar.gz
+  -> exit=0
+
+$ compgen -G '/tmp/kama-r19-*' (empty = scratch removed)
+  -> exit=1
+
+=== R16 falsify verdicts recount from committed advice ===
+
+$ round-16 falsify advice file count
+80
+  -> exit=0
+
+$ round-16 falsify first-line VERDICT distribution (*.md)
+     34 confirm
+      5 NONCONFORMANT
+     40 partial
+  -> exit=0
+
+=== R15/R16/R17 lane state at a29bb84 ===
+
+$ corpus/README.md:238 (S043-only exit-status pointer; no S047)
+| `knowledge/llamacpp-loading-lifecycle.md` §Round 17 | the exact `/health` ready body in code (S042), the SIGINT/SIGTERM shutdown path and exit statuses (S043), Python returncode semantics (S044), th
+  -> exit=0
+
+$ corpus/README.md:230-232 (round-17 correction: OPTIONS only)
+§Correction — round 17 (loading-gate scope, OPTIONS; routed by `lessons/round-16-verifier-spotcheck.md` defect 4).
+
+Line 206's row says the llama.cpp loading gate answers "every non-frontend path 503 before the API key". At b11755 (7043
+  -> exit=0
+
+$ SKILL.md:652-654 (verifier registrations, incl. --expect-install-tree-sha256)
+| Citation provenance | gate: `python3 tools/citation-provenance.py [--json]` (official ru
+| Install-tree consistent-swap grid | gate on a gate: `python3 tests/llamacpp-live/install
+| Live receipt gate with six pins | gate: `python3 tests/llamacpp-live/check-receipt.py RE
+  -> exit=0
+
+$ controls.py:18-21 (six v2 checks with retained controls k9-k14)
+  k1-k8     round-17 controls, unchanged shapes (k6 now needs tool exit 2)
+  k9-k14    one per previously uncontrolled check: models_alias_id,
+            models_owned_by_llamacpp, metrics_not_enabled, props_alias,
+            probe_model_ok, probe_mismatch
+  -> exit=0
+
+$ check-receipt.py:33-34 (exit map: 2 unreadable, 3 NOT-EVALUATED)
+Exit: 0 VALID, 1 INVALID, 2 unreadable / not JSON,
+      3 NOT-EVALUATED (otherwise valid v3 with its sole permitted null).
+  -> exit=0
+
+$ check-receipt.py:609-613 (exact argv re-derivation)
+            ]
+            if argv != expected_argv:
+                bad("argv does not exactly match the producer's "
+                    "server.realpath/model.arg/alias/host/port/ctx/"
+                    "threads command")
+  -> exit=0
+
+$ kama-llamacpp-live.py: count 'except BaseException'
+20
+  -> exit=0
+
+$ kama-llamacpp-live.py: count '/3/' docs link (expect 0)
+0
+  -> exit=1
+
+$ kama-llamacpp-live.py:59-61 (docs link now /3.14/)
+POPEN_RETURNCODE_DOC = (
+    'https://docs.python.org/3.14/library/subprocess.html'
+    '#subprocess.Popen.returncode')
+  -> exit=0
+
+$ tools/sources-append-only.py tracked
+tools/sources-append-only.py
+  -> exit=0
+
+$ SOURCES.md S012 cross-source synthesis note
+148:is cross-source synthesis: the reopened ps page (2026-10-20) describes only the
+  -> exit=0
+
+$ ollama-evidence-replay.md ordering precision (appended r16)
+376:- **Repair ordering precision (appended round 16; routed defect 5 of the
+  -> exit=0
+
+$ round-17 lesson M1 (S041 in-place) and M7 ('still no mechanical guard')
+| M1 (mined) | append-only registry violation: S041 `anchor` and `teaches` rewritten in place after the row's first commit | `corpus/SOURCES
+| M6 | seat write misroots and bound slips | `ScoutPythonReturncode`, `ScoutReceiptSchemaConsumers` and `RevengerS041Edit` first wrote repor
+  -> exit=0
+
+$ round-16 lesson M6/M7 rows
+| M6 | seat ran a prohibited command | `FamilyOverbroad503` ran `measure.py` by accident, rewrote both run receipts and restored them with `
+| M7 | session-store traversal recurs (round-15 routed defect 3) | `ReviewLesson` grep printed four `.ufo/interactive-sessions/` lines (unus
+  -> exit=0
+
+$ round-17 spot-check: seven falsify seats not respawned
+   - Seven falsify seats died and were not respawned: `C1AdmissionCritic`,
+     `C2AdmissionCritic`, `C2SourcedClaim`, `ControlsSafety`, `MistakesFailCapable`,
+     `SeparabilityNoHarm`, `TrendVerdicts`. Their attacks remain undone; this closure
+     covered only separability (by file set) and the sourced claim (by re-open).
+  -> exit=0
+
+$ fleet MISSION.md bucket map (route map item)
+|---|---|
+| planner, connector | heavy-reasoning route |
+| executor, scribe, scout | fast-execution route |
+| reviewer, critic, sentinel, revenger, labrat, mutation-tester, simplifier, distiller | economy rou
+  -> exit=0
+
+$ SHONEN [~] count (expect 4)
+4
+  -> exit=0
+
+=== R18 / R19 / R20 carried items at a29bb84 ===
+
+$ round-18 lesson 316 (five-confirm text kept, append-only)
+the working-tree bytes. Verdicts: five confirm (`ResidPrivacy`, `ResidHealth`,
+  -> exit=0
+
+$ round-18 lesson 387-389 (round-19 erratum)
+## Erratum — round-19 routed defects (appended 2026-10-21)
+
+- **Residual verdicts (routed defect 1).** The residual call's committed
+  -> exit=0
+
+$ round-18 lesson 425-427 (round-20 correction of line-42 rewrite)
+## Round-20 correction — filed wording and retrospective roster
+
+Commit `30ed378` rewrote the Gate rejection row at line 42 instead of appending
+  -> exit=0
+
+$ round-18 lesson 441-449 (retrospective roster + S051 heading qualification)
+`.ufo/waves/round-18/residual/assignments.json` is superseded: it is a
+retrospective roster first committed in round 19 (`7229fa9`), not original
+spawn/task-call evidence. The 4/3 verdict split is supported by the advice
+files; the asserted 6 reviewer / 1 critic role split still lacks independent
+dispatch evidence. See adjacent `assignments.PROVENANCE.md`.
+
+Line-anchor qualification: the S051 prose cited as `SOURCES.md:209-213` is
+at those lines at `8bf99cae`; S057 was appended after S056 (not inserted
+mid-table) and shifted later prose by one. Refer to the heading "S051
+  -> exit=0
+
+$ round-18 lesson 288-291 (deferred named debt: GateCaptureHashes, fresh mutants)
+Deferred as named debt, not silently closed (falsifier reports retained):
+`GateCaptureHashes` M1–M4 (props/slots digests and statuses, capture/teardown
+`error` fields, optional probe `summary`, non-model transition rows and the
+final-transition/`captures.health` cross-check), the fresh mutants surviving in
+  -> exit=0
+
+$ round-18 lesson: mutant (b) exclusion lines
+351:- named detector-self mutant (b) "any nonzero exit counts" is absent from
+  -> exit=0
+
+$ SOURCES.md S055 qualification and S051 clarification
+S051 identity-label clarification (no cell rewrite): the parenthetical's word
+“canonical” for `/3.14/library/exceptions.html` is not the HTML canonical relation;
+S055 revision qualification (appended 2026-10-21): the cited `runs/commands.json`
+exists only from `1c325b2`/`101f3991` onward, not at the `c6dc46f` measured
+  -> exit=0
+
+$ SCORECARD.md 785-786 (mutant (b) excluded), 799-802 (deferred R18 plan), 809-811 (C2 erratum)
+items, not the full detector-self (a)–(d) set — mutant (b) "any nonzero exit
+counts" is named in `SurvivorUniverse.md` and excluded with reason; two of the
+**Planned (supersedes earlier planned rows):** (1) close the named gate leaves
+from `GateCaptureHashes` M1–M4 and the fresh-mutant survivors (`FreshGate`,
+`FreshControls`, `FreshAppend`, `FaultF0`, `FaultTarget`,
+`GateLoadingTransitions`, `GateModelsStatus`, `GateNullLicense`, `AppendCells`);
+**Erratum (round 19, routed defect 3):** the official C2 counting invocation is
+`python3 .ufo/waves/round-18/c2/survivors.py --json` — the JSON document is
+`runs/c2-survivors.stdout`; the `--out PATH` wording in the C2 declaration row
+  -> exit=0
+
+$ SCORECARD.md 853-855 (round-20 correction of round-19 record)
+### Round-20 correction of round-19 record
+
+The round-19 declaration at 823–824 and erratum at 846 are superseded:
+  -> exit=0
+
+$ SCORECARD.md 919-922 (R20 planned frontier incl. symlinked soname identity)
+
+Planned: historical crash-as-kill leaves outside the 15-cell set, broader
+receipt-header minimization, symlinked soname identity and K05/other-engine
+serving evidence remain named frontier. No next round is started here.
+  -> exit=0
+
+$ round-19 lesson 109-111 (falsify-label appended correction)
+
+The headings "Falsify-wave and residual findings" and "falsify-wave refutation
+accepted" misattribute the advice: CritC1Inflation, CritAxisHarm, TreeCap,
+  -> exit=0
+
+$ LOG.md 1176-1181 (round-20 correction of round-19 counts) and 1193-1196 (scratch removal)
+## round 20 — corrections to round-19 records (2026-10-21)
+
+- Round-19 C1 `missing=3` / `verified=3` at 1146 and "three registry-row
+  digests" at 1172 are superseded: final registry **4**; before missing4,
+  after verified4; evidence `round-19/evidence/c1-counting.txt`, measured
+  `028235e6`. Selftest printed15 (earlier five-case wording was stale).
+- Removed authorized `/tmp/kama-r19-*` scratch (~5.9 GiB), after stopping
+  orphan ScorecardErratum strace/survivors process tree. Elapsed24:31 total,
+  about13 minutes after round completion (not24 minutes after completion).
+  Exact paths and action receipt `round-20/evidence/r19-scratch-removal.txt`.
+  -> exit=0
+
+$ round-20 lesson 81 (M7: 42-run counter not rerun)
+| M7 | Whole-output agreement inferred from equal survivor summaries | R19 route 7d; R18 `c2-survivors.json` versus `c2-survivors.stdout`: counts equal, full `results` unequal, tool hashes `87cad1cad4565be01ce06e7f92c578c2f449c951894a880166040c3f118dc3ac` vers
+  -> exit=0
+
+$ round-20 lesson 188-189 (declared limits: v3 scalars, timeout-reason precision)
+- **C2 fixture boundary:** `v3-all-scalars` expected.json contains twelve `test.*` values, but `c2/measure.py:459-484` c
+- **Grid signal/timeout probes:** deleting either explicit branch preserved the `error` class through the fallback but w
+  -> exit=0
+
+$ round-20 lesson 206-209 (S051 pointer correction)
+M8's `SOURCES.md:210-215` pointer was already stale after earlier R20 rows
+shifted the S051 clarification to `217-222`. Appending S065 after S064 moved the
+current clarification to `218-223`. The LOG's pre-S065 range was time-bounded;
+this note gives the current range. The stable heading and revision-qualified
+  -> exit=0
+
+$ residual assignments + PROVENANCE tracked; census-after tracked; final-selftests tracked; clean rerun tracked
+.ufo/waves/round-18/residual/assignments.PROVENANCE.md
+.ufo/waves/round-19/evidence/final-selftests.txt
+.ufo/waves/round-19/sources/census-after.txt
+.ufo/waves/round-20/build/out/SelftestsAtCommit/final-selftests-37bd4c5b.txt
+  -> exit=0
+
+$ git log: census-after.txt first commit
+33a6777 round-20: named error regression guards, offline GGUF identity, routed corrections and build evidence
+  -> exit=0
+
+$ git log: final-selftests.txt commits (dirty-tree header)
+f1790e2 round-19: empty-tree rejection, C1 scope erratum, separability correction, final receipts
+  -> exit=0
+
+$ final-selftests.txt line 1 (measured_tree header)
+measured_tree=working-tree-on-5b108c1a7e943c571140df3a1d7e2e29bfdfb501
+  -> exit=0
+
+$ registry rows with id (expect 17)
+17
+  -> exit=0
+
+$ registry r18-* rows (expect 13)
+13
+  -> exit=0
+
+$ install-tree-grid.py:85-91 (exit 1 counts as rejected only with INVALID stdout)
+    elif code < 0:
+        verdict, reason = "ERROR", f"killed by signal {-code}"
+    elif code == 1 and out.startswith("INVALID "):
+        verdict, reason = "INVALID", None
+    elif code == 0 and out.startswith("VALID "):
+        verdict, reason = "VALID", None
+    else:
+  -> exit=0
+
+$ citation-provenance.py:300-302 (observed-digest selftest branch)
+        actual = (counts["missing"], counts["mismatch"], counts["verified"])
+        if actual != (0, 1, 0):
+            failures.append(f"observed-digest: {counts}")
+  -> exit=0
+
+$ run.py:5 hard-coded lane root (SentinalSecrets)
+L=Path('/home/vgpnk/Projects/shokunin/kama-shokunin'); W=L/'.ufo/waves/round-18'; R=W/'runs'; F=W/'frozen'
+  -> exit=0
+
+$ install_tree silent skips (GridDefaults / TreeDeterminism finding 3)
+            st = os.lstat(full)
+        except OSError:
+            continue
+        if not stat.S_ISREG(st.st_mode):
+            continue
+        try:
+            tree[name] = sha256_file(full)
+        except OSError:
+            continue
+  -> exit=0
+
+$ draft install_links (TreeCap fix) with silent skip
+def install_links(server_real):
+    """{basename: link text} for every symlink in dirname(server_real), plus
+    a combined digest over the sorted 'name -> text' lines. install_tree()
+    skips symlinks, so a retargeted soname link (libllama.so.0 -> ...) would
+    otherwise leave every pin unchanged. Link text is recorded unresolved;
+    the gate checks that each chain ends at a pinned regular member."""
+    links = {}
+    directory = os.path.dirname(server_real)
+    try:
+        entries = sorted(os.listdir(directory))
+    except OSError:
+        return links, None
+    for name in entries:
+        full = os.path.join(directory, name)
+        try:
+            if stat.S_ISLNK(os.lstat(full).st_mode):
+                links[name] = os.readlink(full)
+        except OSError:
+            continue
+  -> exit=0
+
+$ TreeDeterminism seat advice verdict line
+VERDICT: confirm - install_tree() is deterministic on untouched inputs (2 calls, 2 fresh interpreters, 20 repeats: one digest, 6c216313…, equal to the round-18 
+  -> exit=0
+
+=== attribution: first commit carrying each resolution string ===
+
+$ R19 erratum in round-18 lesson
+7229fa9 round-19: citation provenance, install-tree pin, r18 defect corrections
+  -> exit=0
+
+$ R20 correction of line-42 rewrite
+33a6777 round-20: named error regression guards, offline GGUF identity, routed corrections and build evidence
+  -> exit=0
+
+$ S055 revision qualification
+7229fa9 round-19: citation provenance, install-tree pin, r18 defect corrections
+  -> exit=0
+
+$ SCORECARD C2 erratum (round 19, routed defect 3)
+7229fa9 round-19: citation provenance, install-tree pin, r18 defect corrections
+  -> exit=0
+
+$ SCORECARD round-20 correction of round-19 record
+33a6777 round-20: named error regression guards, offline GGUF identity, routed corrections and build evidence
+  -> exit=0
+
+$ SKILL.md citation-provenance registration
+33a6777 round-20: named error regression guards, offline GGUF identity, routed corrections and build evidence
+  -> exit=0
+
+$ registry r18 rows
+33a6777 round-20: named error regression guards, offline GGUF identity, routed corrections and build evidence
+  -> exit=0
+
+$ citation-provenance observed-digest branch
+33a6777 round-20: named error regression guards, offline GGUF identity, routed corrections and build evidence
+  -> exit=0
+
+$ grid INVALID-only kill rule
+33a6777 round-20: named error regression guards, offline GGUF identity, routed corrections and build evidence
+  -> exit=0
+
+$ S012 cross-source synthesis note
+b8e485c round-16: MODEL_LOADING verdict for the llama.cpp loading envelope and live llama.cpp lifecycle capability
+  -> exit=0
+
+$ replay ordering precision (appended)
+b8e485c round-16: MODEL_LOADING verdict for the llama.cpp loading envelope and live llama.cpp lifecycle capability
+  -> exit=0
+
+$ R20 round-20 commits (subject round-20:)
+9
+  -> exit=0
+
+=== citation provenance tool in scratch clone at a29bb84 ===
+
+$ citation-provenance.py (default run)
+required=17 docs_unreadable=0 found=17 verified=17 missing=0 mismatch=0 off_ref=0
+  -> exit=0
+
+$ citation-provenance.py --selftest
+citation-provenance: cannot read /tmp/citation-provenance-j4n9pmon/lane/absent.md: [Errno 2] No such file or directory: '/tmp/citation-provenance-j4n9pmon/lane/absent.md'
+selftest: ok (24 cases)
+  -> exit=0
+
+done

@@ -1,0 +1,44 @@
+# Follow-up probes, 2026-10-21, read-only (git object reads, git ls-remote, curl HEAD, one bounded GET). Outputs verbatim.
+# Exit codes are given where the command was run through bash; Python-run probes print the HTTP status.
+
+## git cat-file -e (git --no-replace-objects -C <repo> cat-file -e <sha>; echo exit)
+lane  704366d76f8748cf9ad3df62a464bfcc8d1ae6ad exit=1   (unresolved upstream commit)
+lane  a29bb84abbb8b4d328f5970a89e448330a3a42ac exit=0   (lane draft commit)
+lane  dff173077a887df99b458d6fa07f68a099d92e9d exit=1   (fleet-only report commit)
+fleet dff173077a887df99b458d6fa07f68a099d92e9d exit=0
+
+## ollama 6d02a43a75cd3364b3c230e9070f1413e60f0d02 (curl -sS -I -L; exit=0)
+https://github.com/ollama/ollama/commit/6d02a43a75cd3364b3c230e9070f1413e60f0d02 -> 200
+https://raw.githubusercontent.com/ollama/ollama/6d02a43a75cd3364b3c230e9070f1413e60f0d02/docs/import.mdx -> 200
+docs/import.md at the same SHA -> 404 (upstream-check.tsv row 11)
+
+## stryker a56f265c77c1cc811b10f0bae73ec1b0083d52a9 (curl -sS -I -L; exit=0)
+https://github.com/stryker-mutator/stryker-js/commit/a56f265c77c1cc811b10f0bae73ec1b0083d52a9 -> 404
+https://github.com/stryker-mutator/stryker-mutator.github.io/commit/a56f265c77c1cc811b10f0bae73ec1b0083d52a9 -> 404
+https://github.com/stryker-mutator/stryker/commit/a56f265c77c1cc811b10f0bae73ec1b0083d52a9 -> 404 (effective URL is stryker-js)
+raw docs/mutant-states-and-metrics.md at a56f265c in stryker-js and stryker-mutator.github.io -> 404 (upstream-check.tsv rows 15-16)
+raw docs/mutant-states-and-metrics.md and docs/mutation-testing-elements/mutant-states-and-metrics.md at master and main, stryker-js and stryker-mutator.github.io -> 404 x8 (Python curl, status 404)
+https://stryker-mutator.io/docs/mutation-testing-elements/mutant-states-and-metrics/ -> 200, 27426 bytes (Python GET)
+  its "Edit this page" link: https://github.com/stryker-mutator/mutation-testing-elements/edit/master/docs/mutant-states-and-metrics.md
+https://github.com/stryker-mutator/mutation-testing-elements/commit/a56f265c77c1cc811b10f0bae73ec1b0083d52a9 -> 200 (exit=0)
+https://raw.githubusercontent.com/stryker-mutator/mutation-testing-elements/a56f265c77c1cc811b10f0bae73ec1b0083d52a9/docs/mutant-states-and-metrics.md -> 200 (exit=0)
+https://raw.githubusercontent.com/stryker-mutator/mutation-testing-elements/master/docs/mutant-states-and-metrics.md -> 200 (exit=0)
+
+## git ls-remote (exit 0 each; GIT_TERMINAL_PROMPT=0)
+$ git ls-remote https://github.com/ggml-org/llama.cpp refs/tags/b11755 refs/pull/18001/head
+aec7bdb42b33b3177ae232ba36d08535eeaae1fe	refs/pull/18001/head
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad	refs/tags/b11755
+
+$ git ls-remote --tags https://github.com/ggml-org/llama.cpp     (8119 lines)
+lines ending refs/tags/b11755: 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad	refs/tags/b11755   (no ^{} peel line -> direct commit tag)
+
+$ git ls-remote https://github.com/torvalds/linux refs/tags/v7.2
+237a1c39e8dfd3e1c6f1f023eea37a48ec04cc63	refs/tags/v7.2   (pattern query omits the peeled line)
+
+$ git ls-remote --tags https://github.com/torvalds/linux     (1906 lines)
+237a1c39e8dfd3e1c6f1f023eea37a48ec04cc63	refs/tags/v7.2
+8d3ae59288f1e7d58d76558a6ee96d533bc5019f	refs/tags/v7.2^{}   (annotated tag peels to 8d3ae592)
+
+## Not used / failed (recorded for honesty)
+GitHub REST API (PR 18001 head, tag b11755, tag v7.2) -> HTTP 403 "rate limit exceeded" (unauthenticated quota); replaced by git ls-remote.
+https://github.com/torvalds/linux/compare/8d3ae592...237a1c39 -> 404 (input error: 237a1c39 is a tag object, not a commit); discarded.

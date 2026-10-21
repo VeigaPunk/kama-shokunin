@@ -1,0 +1,72 @@
+{
+  "commit": "a29bb84abbb8b4d328f5970a89e448330a3a42ac",
+  "mutant": {
+    "id": "M1-drop-readlink-text",
+    "file": "tools/kama-llamacpp-live.py",
+    "line": 225,
+    "before": "        f'{n} -> {links[n]}\\n' for n in sorted(links)).encode()).hexdigest()",
+    "after": "        f'{n}\\n' for n in sorted(links)).encode()).hexdigest()"
+  },
+  "source_sha256": {
+    "producer_pristine": "c05cd8bf36668b841246e9a8fdf9cf351b63a3d8423a154233230ceb69ae764e",
+    "producer_mutated": "dcb4063c097b8a3b825a049c9277be1e79fe9432ef1e927fe3d90304aa07d4f0",
+    "producer_restored": "c05cd8bf36668b841246e9a8fdf9cf351b63a3d8423a154233230ceb69ae764e",
+    "grid_all_stages": "4a538de21df3fdf301a168204a247f7f593c7297ee93829159cdadd67b7f8320"
+  },
+  "detector_environment": {
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "cwd": "/tmp/kama-r21-LinksGridMutants-6/lane",
+    "per_command_timeout_seconds": 180
+  },
+  "runs": [
+    {
+      "stage": "pristine",
+      "command": "python3 /tmp/kama-r21-LinksGridMutants-6/lane/tests/llamacpp-live/install-links-grid.py --selftest",
+      "exit": 0,
+      "timed_out": false,
+      "stdout": "ok frozen-misses-all-link-cells\nok current-catches-all\nok controls-both-arms\nok null-quiet\nok combined-exit-1-because-frozen\nok current-only-exit-0\nok gate-flags-dangling\nok gate-flags-outside\nok gate-flags-loop\nok gate-quiet-on-null\nok missing-tree-error\nok no-symlink-tree-error\nselftest cases=12 failed=0\n",
+      "stderr": ""
+    },
+    {
+      "stage": "pristine",
+      "command": "python3 /tmp/kama-r21-LinksGridMutants-6/lane/tests/llamacpp-live/install-links-grid.py --arm current",
+      "exit": 0,
+      "timed_out": false,
+      "stdout": "null-unchanged                   class=null    current=same\nlink-retarget-member             class=link    current=changed\nlink-retarget-second             class=link    current=changed\nlink-dangling                    class=link    current=changed gate=libggml-base.so:chain ends at 'libggml-base.so.missing', not a pinned install_tree member\nlink-absolute-outside            class=link    current=changed gate=libggml-base.so:target '/usr/lib/libc.so.6' leaves the pinned directory\nlink-dotdot                      class=link    current=changed gate=libggml-base.so:target '../libggml-base.so.0.27.0' leaves the pinned directory\nlink-delete                      class=link    current=changed\nlink-add                         class=link    current=changed\nlink-same-resolution-shortcut    class=link    current=changed\nlink-loop                        class=link    current=changed gate=libggml-base.so:symlink loop;libggml-base.so.loop:symlink loop\nregular-append-byte              class=regular current=changed\nregular-add-file                 class=regular current=changed\ntype-link-to-regular-copy        class=type    current=changed\nsummary arm=current link=9/9 regular=2/2 type=1/1 null=0/1 wrong=0 status=pass\n",
+      "stderr": ""
+    },
+    {
+      "stage": "mutated",
+      "command": "python3 /tmp/kama-r21-LinksGridMutants-6/lane/tests/llamacpp-live/install-links-grid.py --selftest",
+      "exit": 1,
+      "timed_out": false,
+      "stdout": "ok frozen-misses-all-link-cells\nFAIL current-catches-all\nok controls-both-arms\nok null-quiet\nok combined-exit-1-because-frozen\nFAIL current-only-exit-0\nok gate-flags-dangling\nok gate-flags-outside\nok gate-flags-loop\nok gate-quiet-on-null\nok missing-tree-error\nok no-symlink-tree-error\nselftest cases=12 failed=2\n",
+      "stderr": ""
+    },
+    {
+      "stage": "mutated",
+      "command": "python3 /tmp/kama-r21-LinksGridMutants-6/lane/tests/llamacpp-live/install-links-grid.py --arm current",
+      "exit": 1,
+      "timed_out": false,
+      "stdout": "null-unchanged                   class=null    current=same\nlink-retarget-member             class=link    current=same\nlink-retarget-second             class=link    current=same\nlink-dangling                    class=link    current=same gate=libggml-base.so:chain ends at 'libggml-base.so.missing', not a pinned install_tree member\nlink-absolute-outside            class=link    current=same gate=libggml-base.so:target '/usr/lib/libc.so.6' leaves the pinned directory\nlink-dotdot                      class=link    current=same gate=libggml-base.so:target '../libggml-base.so.0.27.0' leaves the pinned directory\nlink-delete                      class=link    current=changed\nlink-add                         class=link    current=changed\nlink-same-resolution-shortcut    class=link    current=same\nlink-loop                        class=link    current=changed gate=libggml-base.so:symlink loop;libggml-base.so.loop:symlink loop\nregular-append-byte              class=regular current=changed\nregular-add-file                 class=regular current=changed\ntype-link-to-regular-copy        class=type    current=changed\nsummary arm=current link=3/9 regular=2/2 type=1/1 null=0/1 wrong=6 status=fail\n",
+      "stderr": ""
+    },
+    {
+      "stage": "restored",
+      "command": "python3 /tmp/kama-r21-LinksGridMutants-6/lane/tests/llamacpp-live/install-links-grid.py --selftest",
+      "exit": 0,
+      "timed_out": false,
+      "stdout": "ok frozen-misses-all-link-cells\nok current-catches-all\nok controls-both-arms\nok null-quiet\nok combined-exit-1-because-frozen\nok current-only-exit-0\nok gate-flags-dangling\nok gate-flags-outside\nok gate-flags-loop\nok gate-quiet-on-null\nok missing-tree-error\nok no-symlink-tree-error\nselftest cases=12 failed=0\n",
+      "stderr": ""
+    },
+    {
+      "stage": "restored",
+      "command": "python3 /tmp/kama-r21-LinksGridMutants-6/lane/tests/llamacpp-live/install-links-grid.py --arm current",
+      "exit": 0,
+      "timed_out": false,
+      "stdout": "null-unchanged                   class=null    current=same\nlink-retarget-member             class=link    current=changed\nlink-retarget-second             class=link    current=changed\nlink-dangling                    class=link    current=changed gate=libggml-base.so:chain ends at 'libggml-base.so.missing', not a pinned install_tree member\nlink-absolute-outside            class=link    current=changed gate=libggml-base.so:target '/usr/lib/libc.so.6' leaves the pinned directory\nlink-dotdot                      class=link    current=changed gate=libggml-base.so:target '../libggml-base.so.0.27.0' leaves the pinned directory\nlink-delete                      class=link    current=changed\nlink-add                         class=link    current=changed\nlink-same-resolution-shortcut    class=link    current=changed\nlink-loop                        class=link    current=changed gate=libggml-base.so:symlink loop;libggml-base.so.loop:symlink loop\nregular-append-byte              class=regular current=changed\nregular-add-file                 class=regular current=changed\ntype-link-to-regular-copy        class=type    current=changed\nsummary arm=current link=9/9 regular=2/2 type=1/1 null=0/1 wrong=0 status=pass\n",
+      "stderr": ""
+    }
+  ],
+  "verdict": "killed by both assigned detectors; baseline and restoration both clean"
+}

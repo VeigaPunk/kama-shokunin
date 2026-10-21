@@ -1,0 +1,67 @@
+RevengeGateConsumers - commands run and observed exits (round 21, BUILD, leaf seat)
+Base = 7a6bc911f9eb7dbea9e3b81f5f2449ecda10096d (round-21 start). Draft = a29bb84abbb8b4d328f5970a89e448330a3a42ac.
+Scratch clones/exports lived under /tmp/kama-r21-RevengeGateConsumers (removed at finish). Lane writes: only this out dir and the report.
+Installs/updates: none (python3 3.14.8 /usr/bin/python3 and git 2.56.0 pre-existing; stdlib only).
+
+A. Lane state (read-only git; no index writes; --no-optional-locks)
+A1  git cat-file -t 7a6bc91 / a29bb84                       -> commit / commit   exit 0 / 0
+A2  git rev-parse HEAD ; rev-parse refs/heads/master       -> a29bb84 / a29bb84 exit 0 / 0
+A3  git status --porcelain (at scan time)                  -> " M tools/kama-llamacpp-live.py", "?? .ufo/waves/round-21/build/"  exit 0
+A4  git diff --stat 7a6bc91 a29bb84                        -> 7 files, 921 insertions, 2 deletions  exit 0
+A5  git diff -U0 7a6bc91 a29bb84 -- tools/kama-llamacpp-live.py | grep '^@@'
+                                                           -> hunks @204,0 (+24 install_links), @1205 (+1230), @1268 (+1294), @1281 (+1308,2); install_tree body L178-202 untouched  exit 0
+A6  git grep -n -I -E 'install_tree|install_links' <rev> -- ':!.ufo/interactive-sessions' ':!.jj'
+                                                           -> draft 456 lines / 127 files; base 402 lines / 126 files  exit 0 / 0
+A7  git grep -n FROZEN_SOURCE_SHA256 <rev>                 -> tools/error-verdict-census.py:33 (both revs)  exit 0
+A8  git show a29bb84:.ufo/waves/round-20/recipe.json       -> 21 rows; recipe sha256 fdac0eaf... (same as lane file)  exit 0
+A9  git ls-tree -r --name-only a29bb84 | grep receipt JSON -> 21 receipt-named JSON  exit 0
+A10 git check-ignore .ufo/interactive-sessions/x ; .jj/x   -> both ignored ; git ls-files on both -> none tracked  exit 0 / 0
+A11 git grep -n -A1 'except OSError:' 7a6bc91 -- tools/kama-llamacpp-live.py -> install_tree silent skips at L192-193 and L198-199 (base)  exit 0
+A12 sha256sum: lane tools/kama-llamacpp-live.py 7de1e81e...(dirty) ; draft c05cd8bf...; base 83eac5c0...;
+    check-receipt.py draft 01fbf813... base a0dc1d07...; install-tree-grid.py d9689c07... both  exit 0
+
+B. Selftests in scratch clones (exit observed)
+B1  check-receipt.py --selftest   base  exit 0  "6 VALID and 1 NOT-EVALUATED receipts accepted; 77 mutations + unreadable case rejected"
+                                  draft exit 0  "9 VALID and 1 NOT-EVALUATED receipts accepted; 90 mutations + unreadable case rejected"
+                                  patch exit 0  "9 VALID and 1 NOT-EVALUATED receipts accepted; 93 mutations + unreadable case rejected"
+B2  install-tree-grid.py --selftest   base exit 0 ; draft exit 0 ; patch exit 0
+B3  kama-llamacpp-live.py --selftest  base exit 0 ; draft exit 0 ; patch exit 0   (ephemeral loopback listeners only; no llama-server)
+B4  controls.py --selftest            base exit 0 "70 cases, 0 failure(s)" ; draft exit 0 same
+B5  error-verdict-census.py --selftest base exit 0 ; draft exit 0
+B6  install-links-grid.py --selftest  draft exit 0 "selftest cases=12 failed=0" ; patch exit 0
+B7  git apply --check and git apply LinksDigestFix/patch.diff on a29bb84 scratch clone -> exit 0 / 0 (2 files, 46+ 2-)
+B8  producer/gate line-count sanity: draft check-receipt.py blob 8a6b5dd2..., producer blob 3f470c8a...
+
+C. Recipe rows replayed by hand in scratch clones (diagnostic; NOT the official run.py; no commands.json written)
+C1  19 lane-bound rows, both revisions: observed exit == recipe expected exit in every case (recipe-replay.tsv)
+C2  sources-validate, sources-census: fleet-root-bound (argv names /home/vgpnk/Projects/shokunin); exit 0 on the live fleet; not clone-bound
+C3  error-frozen exit 1 both (6 misclassified, 3 error-class cells); error-current exit 0 both (0 misclassified, 8 error-class);
+    error-pair exit 0 both; --json outputs byte-identical base vs draft (cmp exit 0)
+C4  grid-no-tree-pin exit 1 both (baseline VALID, rejected 0/3); grid-tree-pin exit 0 both (rejected 3/3);
+    stdout identical after normalizing install-tree-grid-XXXX temp names
+C5  citation-count exit 0 both; gguf-measure exit 0 both; identical after clone-path normalization
+C6  append-round exit 0 both (--to HEAD = 7a6bc91 / a29bb84); identical after HEAD normalization; append-negative exit 1 both
+C7  check-receipt.py <each of 21 receipt-named JSON>, both revs: same exit and verdict line for 21/21 (receipt-verdicts.tsv)
+
+D. Pins and real install tree (read-only)
+D1  producer install_tree() on ~/.local/opt/llama-b11755/llama-server, base = draft = patch: 51 entries, 6c216313a88d71b1... (imported via importlib; no launch)
+D2  producer install_links(): 10 symlinks, sha b58f1b4d... (draft = patch); check-receipt link_chain_problem None for all 10
+D3  synthetic receipt = round-18 receipt-1 + real links: validate() problems [] (no pin) and [] (pin b58f1b4d...); historical receipt + links pin -> 'given but receipt has no server.install_links_sha256 digest'; retarget libllama.so.0 to .7.1 (non-member) -> 2 problems  (artifacts: out/raw/synthetic-links-receipt.json)
+D4  install-tree-grid.py --gate check-receipt.py --receipt round-18 live-recovery/receipt-1.json --tool-sha c05cd8bf... (CURRENT tool file) --tree-sha 6c216313...
+                                                           -> baseline INVALID, exit 2 (recipe pin 83eac5c0... gives exit 0)
+D5  freshness_check.py (round-20 build copy, read-only, --out scratch) -> exit 0; 16 match, 0 mismatch, 0 error
+D6  round-18 runner and round-20 runner read: run.py L56-58 (producer install_tree on real tree), L65-69 (live + pins), L70-77 (legacy own-pins); round-20 run.py L25-27 clean-tree guard
+
+E. Hazards
+E1  scratch clone + one untracked file -> python3 .ufo/waves/round-20/run.py --recipe ... --out <scratch>/out/dirty-run-attempt
+                                                           -> "measurement requires a clean committed working tree", exit 2; out dir NOT created (test -e exit 1)
+E2  temp dir: regular file chmod 000 next to llama-server -> install_tree returns keys ['llama-server'] only, no error (pre-existing silent skip)
+E3  os.walk over .ufo/waves/round-21 (at scan time): 608 files scanned, 184 mention install_tree|install_links|mutations|gate/grid names, 103 machine-type (inflight-summary.json)
+E4  tracked-file scan of gate flags across lane (git grep -E 'expect-|check-receipt'): consumers listed in consumers-tracked.tsv
+
+F. Not executed (deliberate)
+F1  No live kama-llamacpp-live.py run, no llama-server, no model download, no port bind by any tool.
+F2  round-18 runs/run.py NOT run (its live steps launch llama-server); its behaviour is inferred from source [INFERENCE].
+F3  Official run.py on the lane NOT run (lane dirty; official runs are L1's).
+F4  controls.py non-selftest mode NOT run (live harness).
+F5  Untracked LinksGridSonameCells patch NOT applied or measured (outside target).

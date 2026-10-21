@@ -1,0 +1,122 @@
+binary=/home/vgpnk/.local/bin/jj
+cd5efc3eb281d606bf9b5523167f79661da0f8c76a5aa32d61c07c7a351b6b44  /home/vgpnk/.local/bin/jj
+Warning: Per-repo config not found. Generating an empty one.
+Per-repo config is stored in the same directory as your user config for security reasons.
+If you work across multiple computers, you may want to keep your user config directory in sync.
+jj 0.45.1-7c41cdeb16b6b321c64e789a966b6adf723816a5
+exit=0
+$ /home/vgpnk/.local/bin/jj git init
+Initialized repo in "."
+exit=0
+$ /home/vgpnk/.local/bin/jj describe -m T0-base
+Working copy  (@) now at: wkrmqmmp be495724 T0-base
+Parent commit (@-)      : zzzzzzzz 00000000 (empty) (no description set)
+exit=0
+$ /home/vgpnk/.local/bin/jj new -m T1-feat1
+Working copy  (@) now at: uqumymqo 48d2bc49 (empty) T1-feat1
+Parent commit (@-)      : wkrmqmmp be495724 T0-base
+exit=0
+$ /home/vgpnk/.local/bin/jj new -m T2-feat2
+Working copy  (@) now at: loowylxk fb8d2070 (empty) T2-feat2
+Parent commit (@-)      : uqumymqo 05d00fc8 T1-feat1
+exit=0
+$ /home/vgpnk/.local/bin/jj new root() -m T3-newtrunk
+Working copy  (@) now at: krztlzvw 7d9f1e33 (empty) T3-newtrunk
+Parent commit (@-)      : zzzzzzzz 00000000 (empty) (no description set)
+Added 0 files, modified 0 files, removed 3 files
+exit=0
+$ /home/vgpnk/.local/bin/jj status
+Working copy changes:
+A nt.txt
+Working copy  (@) : krztlzvw 0c268d26 T3-newtrunk
+Parent commit (@-): zzzzzzzz 00000000 (empty) (no description set)
+exit=0
+== S0 built: T0 <- T1 <- T2 ; T3 is a separate root child
+krztlzvw 0c268d26b653 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:35.000 -03:00 | T3-newtrunk
+loowylxk 7ccd0aa8d5b3 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:35.000 -03:00 | T2-feat2
+uqumymqo 05d00fc82606 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:35.000 -03:00 | T1-feat1
+wkrmqmmp be495724e2f5 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:35.000 -03:00 | T0-base
+exit=0
+   git 0c268d2 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579955  | T3-newtrunk
+   git 7ccd0aa author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579955  | T2-feat2
+   git 05d00fc author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579955  | T1-feat1
+   git be49572 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579955  | T0-base
+### Test A: rewrite ancestor T0 with no parent change (descendants auto-rebased)
+$ /home/vgpnk/.local/bin/jj describe -r description(substring:"T0-base") -m T0-base-edited
+Rebased 2 descendant commits.
+exit=0
+== S1 after Test A (no CUT yet)
+loowylxk 4acc84741d95 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:37.000 -03:00 | T2-feat2
+uqumymqo 055f0dc2a3fa A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:37.000 -03:00 | T1-feat1
+wkrmqmmp eef24f5239b3 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:37.000 -03:00 | T0-base-edited
+krztlzvw 0c268d26b653 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:35.000 -03:00 | T3-newtrunk
+exit=0
+   git 4acc847 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579957  | T2-feat2
+   git 055f0dc author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579957  | T1-feat1
+   git eef24f5 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579957  | T0-base-edited
+   git 0c268d2 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579955  | T3-newtrunk
+CUT=1792579959 (stand-in for the fleet report commit time)
+### Test B: rebase T1+descendants onto T3 (parent changed), rebaser identity via --config
+$ /home/vgpnk/.local/bin/jj --config user.name="kama-probe-rebaser" --config user.email="rebaser@example.invalid" rebase -s description(substring:"T1-feat1") -d description(substring:"T3-newtrunk")
+Rebased 2 commits to destination.
+exit=0
+== S2 after Test B (rebased after CUT)
+loowylxk 501b95b96753 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-rebaser 2026-10-21 07:52:41.000 -03:00 | T2-feat2
+uqumymqo a0a7aa524c62 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-rebaser 2026-10-21 07:52:41.000 -03:00 | T1-feat1
+wkrmqmmp eef24f5239b3 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:37.000 -03:00 | T0-base-edited
+krztlzvw 0c268d26b653 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:35.000 -03:00 | T3-newtrunk
+exit=0
+   git 501b95b author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579961 ct>CUT:post | T2-feat2
+   git a0a7aa5 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579961 ct>CUT:post | T1-feat1
+   git eef24f5 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579957 ct<=CUT:pre | T0-base-edited
+   git 0c268d2 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579955 ct<=CUT:pre | T3-newtrunk
+### Test C: control, identical rebase again (expect no rewrite)
+$ /home/vgpnk/.local/bin/jj --config user.name="kama-probe-rebaser" --config user.email="rebaser@example.invalid" rebase -s description(substring:"T1-feat1") -d description(substring:"T3-newtrunk")
+Skipped rebase of 2 commits that were already in place.
+Nothing changed.
+exit=0
+== S3 after Test C control
+loowylxk 501b95b96753 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-rebaser 2026-10-21 07:52:41.000 -03:00 | T2-feat2
+uqumymqo a0a7aa524c62 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-rebaser 2026-10-21 07:52:41.000 -03:00 | T1-feat1
+wkrmqmmp eef24f5239b3 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:37.000 -03:00 | T0-base-edited
+krztlzvw 0c268d26b653 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:35.000 -03:00 | T3-newtrunk
+exit=0
+   git 501b95b author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579961 ct>CUT:post | T2-feat2
+   git a0a7aa5 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579961 ct>CUT:post | T1-feat1
+   git eef24f5 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579957 ct<=CUT:pre | T0-base-edited
+   git 0c268d2 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579955 ct<=CUT:pre | T3-newtrunk
+### Test D: jj git push of the rebased bookmark (no signing configured)
+init_bare_exit=0
+$ /home/vgpnk/.local/bin/jj git remote add origin /tmp/kama-r21-SrcJjRebaseTimestamps/probe/remote.git
+exit=0
+$ /home/vgpnk/.local/bin/jj bookmark create feat -r description(substring:"T2-feat2")
+Created 1 bookmarks pointing to loowylxk 501b95b9 feat | T2-feat2
+exit=0
+== S4 before push (bookmark feat on T2)
+loowylxk 501b95b96753 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-rebaser 2026-10-21 07:52:41.000 -03:00 | T2-feat2
+uqumymqo a0a7aa524c62 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-rebaser 2026-10-21 07:52:41.000 -03:00 | T1-feat1
+wkrmqmmp eef24f5239b3 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:37.000 -03:00 | T0-base-edited
+krztlzvw 0c268d26b653 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:35.000 -03:00 | T3-newtrunk
+exit=0
+   git 501b95b author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579961 ct>CUT:post | T2-feat2
+   git a0a7aa5 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579961 ct>CUT:post | T1-feat1
+   git eef24f5 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579957 ct<=CUT:pre | T0-base-edited
+   git 0c268d2 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579955 ct<=CUT:pre | T3-newtrunk
+$ /home/vgpnk/.local/bin/jj git push --bookmark feat
+Changes to push to origin:
+  bookmark: feat [add to 501b95b96753]
+exit=0
+== S5 after Test D push (expect identical commit ids and epochs)
+loowylxk 501b95b96753 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-rebaser 2026-10-21 07:52:41.000 -03:00 | T2-feat2
+uqumymqo a0a7aa524c62 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-rebaser 2026-10-21 07:52:41.000 -03:00 | T1-feat1
+wkrmqmmp eef24f5239b3 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:37.000 -03:00 | T0-base-edited
+krztlzvw 0c268d26b653 A:kama-probe-author 2026-10-21 07:52:35.000 -03:00 C:kama-probe-author 2026-10-21 07:52:35.000 -03:00 | T3-newtrunk
+exit=0
+   git 501b95b author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579961 ct>CUT:post | T2-feat2
+   git a0a7aa5 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579961 ct>CUT:post | T1-feat1
+   git eef24f5 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579957 ct<=CUT:pre | T0-base-edited
+   git 0c268d2 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579955 ct<=CUT:pre | T3-newtrunk
+-- remote view
+   remote feat 501b95b96753a039257b3cca78f8cde211c99267 author=kama-probe-author authorEpoch=1792579955 committerEpoch=1792579961 | T2-feat2
+exit=0
+DONE

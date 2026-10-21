@@ -1,0 +1,92 @@
+diff --git a/tests/llamacpp-live/install-links-grid.py b/tests/llamacpp-live/install-links-grid.py
+index b7d0424..0c9fe3d 100755
+--- a/tests/llamacpp-live/install-links-grid.py
++++ b/tests/llamacpp-live/install-links-grid.py
+@@ -15,9 +15,11 @@ cell, and asks each arm whether the recorded install identity changed:
+ 
+ Cell classes: `link` (only symlinks change), `regular` (a regular member
+ changes; control), `type` (a symlink becomes a regular file; control), and
+-`null` (no change; false-positive control). The current arm additionally
+-reports the receipt gate's chain verdict (tests/llamacpp-live/check-receipt.py
+-link_chain_problem) for every link cell.
++`null` (no change; false-positive control). This variant includes a retarget
++cell for each in-tree symlink named in `libllama-server-impl.so` DT_NEEDED;
++the `libllama.so.0` cell points to `libllama-common.so.0.7.0`. The current
++arm additionally reports the receipt gate's chain verdict
++(tests/llamacpp-live/check-receipt.py link_chain_problem) for every link cell.
+ 
+ Exit: 0 when the selected arm(s) detect every link/regular/type cell and no
+ null cell; 1 when an arm misses a cell or flags the null cell; 2 when the
+@@ -43,6 +45,13 @@ GATE = LANE / "tests/llamacpp-live/check-receipt.py"
+ FROZEN_REV = "7a6bc911f9eb7dbea9e3b81f5f2449ecda10096d"
+ DEFAULT_TREE = Path.home() / ".local/opt/llama-b11755"
+ SERVER = "llama-server"
++NEEDED_SONAMES = (
++    "libllama-common.so.0",
++    "libmtmd.so.0",
++    "libllama.so.0",
++    "libggml.so.0",
++    "libggml-base.so.0",
++)
+ 
+ 
+ class EvalError(Exception):
+@@ -102,25 +111,35 @@ def _relink(d, name, target):
+ 
+ 
+ def build_cells(tree):
+-    """Named cells over the real tree's own soname links. Each mutation is
+-    a function of the mirror directory; cells needing absent names are
+-    skipped with a reason rather than silently passing."""
+-    links = links_of(tree)
++    """Target real in-tree DT_NEEDED soname links plus integrity controls."""
++    links = set(links_of(tree))
++    missing = [name for name in NEEDED_SONAMES if name not in links]
++    if missing:
++        raise EvalError(f"{tree}: missing DT_NEEDED symlink(s): "
++                        + ", ".join(missing))
+     regular = sorted(e for e in os.listdir(tree)
+                      if (tree / e).is_file() and not (tree / e).is_symlink())
+-    if not links:
+-        raise EvalError(f"{tree}: no symlinks; the grid needs a soname tree")
+-    first, second = links[0], links[-1]
+-    real_of = {n: os.path.realpath(tree / n) for n in links}
+-    other_member = next(r for r in regular
+-                        if str(tree / r) != real_of[first])
++    first = NEEDED_SONAMES[0]
++    real_of = {name: os.path.realpath(tree / name)
++               for name in NEEDED_SONAMES}
+     target_reg = os.path.basename(real_of[first])
+-    return [
+-        ("null-unchanged", "null", lambda d: None),
+-        ("link-retarget-member", "link",
+-         lambda d: _relink(d, first, other_member)),
+-        ("link-retarget-second", "link",
+-         lambda d: _relink(d, second, other_member)),
++
++    retargets = {}
++    for name in NEEDED_SONAMES:
++        target = ("libllama-common.so.0.7.0" if name == "libllama.so.0"
++                  else "libllama.so.0.7.0")
++        if target not in regular:
++            raise EvalError(f"{tree}: DT_NEEDED retarget member {target} "
++                            "is absent")
++        if os.readlink(tree / name) == target:
++            raise EvalError(f"{tree}/{name}: retarget cell would be unchanged")
++        retargets[name] = target
++
++    cells = [("null-unchanged", "null", lambda d: None)]
++    for name, target in retargets.items():
++        cells.append((f"needed-retarget-{name}-to-{target}", "link",
++                      lambda d, n=name, t=target: _relink(d, n, t)))
++    cells.extend([
+         ("link-dangling", "link",
+          lambda d: _relink(d, first, first + ".missing")),
+         ("link-absolute-outside", "link",
+@@ -144,7 +163,8 @@ def build_cells(tree):
+         ("type-link-to-regular-copy", "type",
+          lambda d: (os.unlink(d / first),
+                     shutil.copyfile(d / target_reg, d / first))),
+-    ]
++    ])
++    return cells

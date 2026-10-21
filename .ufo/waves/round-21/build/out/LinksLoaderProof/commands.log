@@ -1,0 +1,457 @@
+
+$ ldd --version
+ldd (GNU libc) 2.44
+Copyright (C) 2024 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+Written by Roland McGrath and Ulrich Drepper.
+[exit 0]
+
+$ python3 --version
+Python 3.14.8
+[exit 0]
+
+$ gcc --version
+gcc (GCC) 16.2.1 20260810
+Copyright (C) 2026 Free Software Foundation, Inc.
+This is free software; see the source for copying conditions.  There is NO
+warranty; not even for MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+[exit 0]
+
+$ readelf --version
+GNU readelf (GNU Binutils) 2.47
+Copyright (C) 2026 Free Software Foundation, Inc.
+This program is free software; you may redistribute it under the terms of
+the GNU General Public License version 3 or (at your option) any later version.
+This program has absolutely no warranty.
+[exit 0]
+
+$ git --version
+git version 2.56.0
+[exit 0]
+
+$ git -C /tmp/kama-r21-LinksLoaderProof/lane rev-parse HEAD
+a29bb84abbb8b4d328f5970a89e448330a3a42ac
+[exit 0]
+
+$ sha256sum -- /tmp/kama-r21-LinksLoaderProof/lane/tools/kama-llamacpp-live.py
+c05cd8bf36668b841246e9a8fdf9cf351b63a3d8423a154233230ceb69ae764e  /tmp/kama-r21-LinksLoaderProof/lane/tools/kama-llamacpp-live.py
+[exit 0]
+
+$ sed -n 84p;1320,1321p;1335,1336p;1366p /tmp/kama-r21-LinksLoaderProof/lane/tools/kama-llamacpp-live.py
+CHILD_ENV_KEYS = ('PATH', 'HOME', 'LANG', 'LC_ALL', 'TMPDIR')
+        server_argv = [
+            server_real, '-m', args.model,
+        child_env = {key: os.environ[key] for key in CHILD_ENV_KEYS
+                     if key in os.environ}
+                env=child_env,
+[exit 0]
+
+$ sed -n 1295,1298p /tmp/kama-r21-LinksLoaderProof/lane/tools/kama-llamacpp-live.py
+        impl_path = os.path.join(os.path.dirname(server_real),
+                                 'libllama-server-impl.so')
+        impl_sha = (sha256_file(impl_path)
+                    if os.path.isfile(impl_path) else None)
+[exit 0]
+
+$ sed -n 178,226p /tmp/kama-r21-LinksLoaderProof/lane/tools/kama-llamacpp-live.py
+def install_tree(server_real):
+    """{basename: sha256} for every regular file in dirname(server_real),
+    plus a combined digest over the sorted 'name sha' lines. Symlinks are
+    skipped as members (they are not regular files)."""
+    tree = {}
+    directory = os.path.dirname(server_real)
+    try:
+        entries = sorted(os.listdir(directory))
+    except OSError:
+        return tree, None
+    for name in entries:
+        full = os.path.join(directory, name)
+        try:
+            st = os.lstat(full)
+        except OSError:
+            continue
+        if not stat.S_ISREG(st.st_mode):
+            continue
+        try:
+            tree[name] = sha256_file(full)
+        except OSError:
+            continue
+    combined = hashlib.sha256(
+        ''.join(f'{n} {tree[n]}\n' for n in sorted(tree)).encode()).hexdigest()
+    return tree, combined
+
+
+def install_links(server_real):
+    """{basename: link text} for every symlink in dirname(server_real), plus
+    a combined digest over the sorted 'name -> text' lines. install_tree()
+    skips symlinks, so a retargeted soname link (libllama.so.0 -> ...) would
+    otherwise leave every pin unchanged. Link text is recorded unresolved;
+    the gate checks that each chain ends at a pinned regular member."""
+    links = {}
+    directory = os.path.dirname(server_real)
+    try:
+        entries = sorted(os.listdir(directory))
+    except OSError:
+        return links, None
+    for name in entries:
+        full = os.path.join(directory, name)
+        try:
+            if stat.S_ISLNK(os.lstat(full).st_mode):
+                links[name] = os.readlink(full)
+        except OSError:
+            continue
+    combined = hashlib.sha256(''.join(
+        f'{n} -> {links[n]}\n' for n in sorted(links)).encode()).hexdigest()
+    return links, combined
+[exit 0]
+
+$ readelf -d -W /home/vgpnk/.local/opt/llama-b11755/llama-server
+
+Dynamic section at offset 0x2d18 contains 31 entries:
+  Tag        Type                         Name/Value
+ 0x0000000000000001 (NEEDED)             Shared library: [libllama-server-impl.so]
+ 0x0000000000000001 (NEEDED)             Shared library: [libstdc++.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libgcc_s.so.1]
+ 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]
+ 0x000000000000001d (RUNPATH)            Library runpath: [$ORIGIN]
+ 0x000000000000000c (INIT)               0x1000
+ 0x000000000000000d (FINI)               0x1838
+ 0x0000000000000019 (INIT_ARRAY)         0x3d08
+ 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)
+ 0x000000000000001a (FINI_ARRAY)         0x3d10
+ 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)
+ 0x000000006ffffef5 (GNU_HASH)           0x3b0
+ 0x0000000000000005 (STRTAB)             0x728
+ 0x0000000000000006 (SYMTAB)             0x410
+ 0x000000000000000a (STRSZ)              1023 (bytes)
+ 0x000000000000000b (SYMENT)             24 (bytes)
+ 0x0000000000000015 (DEBUG)              0x0
+ 0x0000000000000003 (PLTGOT)             0x3f48
+ 0x0000000000000002 (PLTRELSZ)           336 (bytes)
+ 0x0000000000000014 (PLTREL)             RELA
+ 0x0000000000000017 (JMPREL)             0xd68
+ 0x0000000000000007 (RELA)               0xc30
+ 0x0000000000000008 (RELASZ)             312 (bytes)
+ 0x0000000000000009 (RELAENT)            24 (bytes)
+ 0x000000000000001e (FLAGS)              BIND_NOW
+ 0x000000006ffffffb (FLAGS_1)            Flags: NOW PIE
+ 0x000000006ffffffe (VERNEED)            0xb70
+ 0x000000006fffffff (VERNEEDNUM)         3
+ 0x000000006ffffff0 (VERSYM)             0xb28
+ 0x000000006ffffff9 (RELACOUNT)          6
+ 0x0000000000000000 (NULL)               0x0
+[exit 0]
+
+$ readelf -d -W /home/vgpnk/.local/opt/llama-b11755/libllama-server-impl.so
+
+Dynamic section at offset 0x6810c8 contains 37 entries:
+  Tag        Type                         Name/Value
+ 0x0000000000000001 (NEEDED)             Shared library: [libllama-common.so.0]
+ 0x0000000000000001 (NEEDED)             Shared library: [libmtmd.so.0]
+ 0x0000000000000001 (NEEDED)             Shared library: [libllama.so.0]
+ 0x0000000000000001 (NEEDED)             Shared library: [libggml.so.0]
+ 0x0000000000000001 (NEEDED)             Shared library: [libggml-base.so.0]
+ 0x0000000000000001 (NEEDED)             Shared library: [libssl.so.3]
+ 0x0000000000000001 (NEEDED)             Shared library: [libcrypto.so.3]
+ 0x0000000000000001 (NEEDED)             Shared library: [libstdc++.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libm.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libgcc_s.so.1]
+ 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [ld-linux-x86-64.so.2]
+ 0x000000000000000e (SONAME)             Library soname: [libllama-server-impl.so]
+ 0x000000000000001d (RUNPATH)            Library runpath: [$ORIGIN]
+ 0x000000000000000c (INIT)               0x8d000
+ 0x000000000000000d (FINI)               0x301fc8
+ 0x0000000000000019 (INIT_ARRAY)         0x67e2a8
+ 0x000000000000001b (INIT_ARRAYSZ)       80 (bytes)
+ 0x000000000000001a (FINI_ARRAY)         0x67e2f8
+ 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)
+ 0x000000006ffffef5 (GNU_HASH)           0x328
+ 0x0000000000000005 (STRTAB)             0x1e740
+ 0x0000000000000006 (SYMTAB)             0x6680
+ 0x000000000000000a (STRSZ)              328837 (bytes)
+ 0x000000000000000b (SYMENT)             24 (bytes)
+ 0x0000000000000003 (PLTGOT)             0x683000
+ 0x0000000000000002 (PLTRELSZ)           54624 (bytes)
+ 0x0000000000000014 (PLTREL)             RELA
+ 0x0000000000000017 (JMPREL)             0x7ee08
+ 0x0000000000000007 (RELA)               0x70ee8
+ 0x0000000000000008 (RELASZ)             57120 (bytes)
+ 0x0000000000000009 (RELAENT)            24 (bytes)
+ 0x000000006ffffffe (VERNEED)            0x70bd8
+ 0x000000006fffffff (VERNEEDNUM)         7
+ 0x000000006ffffff0 (VERSYM)             0x6ebc6
+ 0x000000006ffffff9 (RELACOUNT)          599
+ 0x0000000000000000 (NULL)               0x0
+[exit 0]
+
+$ readelf -d -W /home/vgpnk/.local/opt/llama-b11755/libggml.so.0.27.0
+
+Dynamic section at offset 0x9db8 contains 29 entries:
+  Tag        Type                         Name/Value
+ 0x0000000000000001 (NEEDED)             Shared library: [libggml-base.so.0]
+ 0x0000000000000001 (NEEDED)             Shared library: [libstdc++.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libgcc_s.so.1]
+ 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]
+ 0x000000000000000e (SONAME)             Library soname: [libggml.so.0]
+ 0x000000000000001d (RUNPATH)            Library runpath: [$ORIGIN]
+ 0x000000000000000c (INIT)               0x2000
+ 0x000000000000000d (FINI)               0x7a38
+ 0x0000000000000019 (INIT_ARRAY)         0xada8
+ 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)
+ 0x000000000000001a (FINI_ARRAY)         0xadb0
+ 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)
+ 0x000000006ffffef5 (GNU_HASH)           0x2f0
+ 0x0000000000000005 (STRTAB)             0xb90
+ 0x0000000000000006 (SYMTAB)             0x3c8
+ 0x000000000000000a (STRSZ)              2880 (bytes)
+ 0x000000000000000b (SYMENT)             24 (bytes)
+ 0x0000000000000003 (PLTGOT)             0xb000
+ 0x0000000000000002 (PLTRELSZ)           1560 (bytes)
+ 0x0000000000000014 (PLTREL)             RELA
+ 0x0000000000000017 (JMPREL)             0x1970
+ 0x0000000000000007 (RELA)               0x1868
+ 0x0000000000000008 (RELASZ)             264 (bytes)
+ 0x0000000000000009 (RELAENT)            24 (bytes)
+ 0x000000006ffffffe (VERNEED)            0x1778
+ 0x000000006fffffff (VERNEEDNUM)         3
+ 0x000000006ffffff0 (VERSYM)             0x16d0
+ 0x000000006ffffff9 (RELACOUNT)          3
+ 0x0000000000000000 (NULL)               0x0
+[exit 0]
+
+$ gcc -shared -fPIC -DAS_LIB -Wl,-soname,libctorcontrol.so.1 -o /tmp/kama-r21-LinksLoaderProof/ctor/libctorcontrol.so.1 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksLoaderProof/ctor-control.c
+[exit 0]
+
+$ gcc -o /tmp/kama-r21-LinksLoaderProof/ctor/ctorprog /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksLoaderProof/ctor-control.c -Wl,--no-as-needed -L/tmp/kama-r21-LinksLoaderProof/ctor -l:libctorcontrol.so.1 -Wl,-rpath,$ORIGIN
+[exit 0]
+
+$ readelf -d -W /tmp/kama-r21-LinksLoaderProof/ctor/ctorprog
+
+Dynamic section at offset 0x2e00 contains 24 entries:
+  Tag        Type                         Name/Value
+ 0x0000000000000001 (NEEDED)             Shared library: [libctorcontrol.so.1]
+ 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]
+ 0x000000000000001d (RUNPATH)            Library runpath: [$ORIGIN]
+ 0x000000000000000c (INIT)               0x1000
+ 0x000000000000000d (FINI)               0x1124
+ 0x0000000000000019 (INIT_ARRAY)         0x3df0
+ 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)
+ 0x000000000000001a (FINI_ARRAY)         0x3df8
+ 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)
+ 0x000000006ffffef5 (GNU_HASH)           0x3c8
+ 0x0000000000000005 (STRTAB)             0x478
+ 0x0000000000000006 (SYMTAB)             0x3e8
+ 0x000000000000000a (STRSZ)              164 (bytes)
+ 0x000000000000000b (SYMENT)             24 (bytes)
+ 0x0000000000000015 (DEBUG)              0x0
+ 0x0000000000000007 (RELA)               0x558
+ 0x0000000000000008 (RELASZ)             192 (bytes)
+ 0x0000000000000009 (RELAENT)            24 (bytes)
+ 0x000000006ffffffb (FLAGS_1)            Flags: PIE
+ 0x000000006ffffffe (VERNEED)            0x528
+ 0x000000006fffffff (VERNEEDNUM)         1
+ 0x000000006ffffff0 (VERSYM)             0x51c
+ 0x000000006ffffff9 (RELACOUNT)          3
+ 0x0000000000000000 (NULL)               0x0
+[exit 0]
+
+$ env -i PATH=/usr/bin:/bin LANG=C LD_DEBUG=libs /usr/lib/ld-linux-x86-64.so.2 --list /tmp/kama-r21-LinksLoaderProof/ctor/ctorprog
+   1444387:	find library=libctorcontrol.so.1 [0]; searching
+   1444387:	 search path=/tmp/kama-r21-LinksLoaderProof/ctor/glibc-hwcaps/x86-64-v4:/tmp/kama-r21-LinksLoaderProof/ctor/glibc-hwcaps/x86-64-v3:/tmp/kama-r21-LinksLoaderProof/ctor/glibc-hwcaps/x86-64-v2:/tmp/kama-r21-LinksLoaderProof/ctor		(RUNPATH from file /tmp/kama-r21-LinksLoaderProof/ctor/ctorprog)
+   1444387:	  trying file=/tmp/kama-r21-LinksLoaderProof/ctor/glibc-hwcaps/x86-64-v4/libctorcontrol.so.1
+   1444387:	    (no such file)
+   1444387:	  trying file=/tmp/kama-r21-LinksLoaderProof/ctor/glibc-hwcaps/x86-64-v3/libctorcontrol.so.1
+   1444387:	    (no such file)
+   1444387:	  trying file=/tmp/kama-r21-LinksLoaderProof/ctor/glibc-hwcaps/x86-64-v2/libctorcontrol.so.1
+   1444387:	    (no such file)
+   1444387:	  trying file=/tmp/kama-r21-LinksLoaderProof/ctor/libctorcontrol.so.1
+   1444387:	
+   1444387:	find library=libc.so.6 [0]; searching
+   1444387:	 search path=/tmp/kama-r21-LinksLoaderProof/ctor		(RUNPATH from file /tmp/kama-r21-LinksLoaderProof/ctor/ctorprog)
+   1444387:	  trying file=/tmp/kama-r21-LinksLoaderProof/ctor/libc.so.6
+   1444387:	    (no such file)
+   1444387:	 search cache=/etc/ld.so.cache
+   1444387:	  trying file=/usr/lib/libc.so.6
+   1444387:	
+	linux-vdso.so.1 (0x00007fd4f24fb000)
+	libctorcontrol.so.1 => /tmp/kama-r21-LinksLoaderProof/ctor/libctorcontrol.so.1 (0x00007fd4f24b4000)
+	libc.so.6 => /usr/lib/libc.so.6 (0x00007fd4f2200000)
+	/lib64/ld-linux-x86-64.so.2 => /usr/lib/ld-linux-x86-64.so.2 (0x00007fd4f24fd000)
+[exit 0]
+
+$ marker
+marker absent: constructor did not run
+[exit 0]
+
+$ env -i PATH=/usr/bin:/bin LANG=C /usr/bin/ldd -r /tmp/kama-r21-LinksLoaderProof/ctor/ctorprog
+	linux-vdso.so.1 (0x00007ff7d1233000)
+	libctorcontrol.so.1 => /tmp/kama-r21-LinksLoaderProof/ctor/libctorcontrol.so.1 (0x00007ff7d11ec000)
+	libc.so.6 => /usr/lib/libc.so.6 (0x00007ff7d0e00000)
+	/lib64/ld-linux-x86-64.so.2 => /usr/lib64/ld-linux-x86-64.so.2 (0x00007ff7d1235000)
+[exit 0]
+
+$ marker
+marker absent: constructor did not run
+[exit 0]
+
+$ env -i PATH=/usr/bin:/bin LANG=C /usr/bin/ldd /tmp/kama-r21-LinksLoaderProof/ctor/ctorprog
+	linux-vdso.so.1 (0x00007f77c4f90000)
+	libctorcontrol.so.1 => /tmp/kama-r21-LinksLoaderProof/ctor/libctorcontrol.so.1 (0x00007f77c4f49000)
+	libc.so.6 => /usr/lib/libc.so.6 (0x00007f77c4c00000)
+	/lib64/ld-linux-x86-64.so.2 => /usr/lib64/ld-linux-x86-64.so.2 (0x00007f77c4f92000)
+[exit 0]
+
+$ marker
+marker absent: constructor did not run
+[exit 0]
+
+$ env -i PATH=/usr/bin:/bin LANG=C /tmp/kama-r21-LinksLoaderProof/ctor/ctorprog
+[exit 0]
+
+$ marker
+marker present: constructor ran
+[exit 0]
+
+$ cp -a /home/vgpnk/.local/opt/llama-b11755 /tmp/kama-r21-LinksLoaderProof/tree
+[exit 0]
+
+$ sha256sum /home/vgpnk/.local/opt/llama-b11755/llama-server /tmp/kama-r21-LinksLoaderProof/tree/llama-server
+b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804  /home/vgpnk/.local/opt/llama-b11755/llama-server
+b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804  /tmp/kama-r21-LinksLoaderProof/tree/llama-server
+[exit 0]
+exit=0   find /tmp/kama-r21-LinksLoaderProof/tree -maxdepth 1 -type l -printf %f -> %l\n  -> S0-baseline.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C LD_DEBUG=libs,files /usr/lib/ld-linux-x86-64.so.2 --list /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S0-baseline.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C /usr/bin/ldd /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S0-baseline.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C /usr/bin/ldd -r /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S0-baseline.txt
+exit=0   ident /tmp/kama-r21-LinksLoaderProof/tree libggml.so.0  -> S0-baseline.txt
+exit=0   python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksLoaderProof/digests.py /tmp/kama-r21-LinksLoaderProof/lane/tools/kama-llamacpp-live.py /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S0-baseline.txt
+exit=0   python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksLoaderProof/digests.py /tmp/kama-r21-LinksLoaderProof/lane/tools/kama-llamacpp-live.py /home/vgpnk/.local/opt/llama-b11755/llama-server  -> S0-baseline.txt
+
+$ gcc -shared -fPIC -O2 -Wl,-soname,libggml.so.0 -o /tmp/kama-r21-LinksLoaderProof/build/libggml.so.0.0.0-decoy /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksLoaderProof/decoy.c
+[exit 0]
+
+$ readelf -d -W /tmp/kama-r21-LinksLoaderProof/build/libggml.so.0.0.0-decoy
+
+Dynamic section at offset 0x2e38 contains 21 entries:
+  Tag        Type                         Name/Value
+ 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]
+ 0x000000000000000e (SONAME)             Library soname: [libggml.so.0]
+ 0x000000000000000c (INIT)               0x1000
+ 0x000000000000000d (FINI)               0x10f8
+ 0x0000000000000019 (INIT_ARRAY)         0x3e28
+ 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)
+ 0x000000000000001a (FINI_ARRAY)         0x3e30
+ 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)
+ 0x000000006ffffef5 (GNU_HASH)           0x2d0
+ 0x0000000000000005 (STRTAB)             0x388
+ 0x0000000000000006 (SYMTAB)             0x2f8
+ 0x000000000000000a (STRSZ)              150 (bytes)
+ 0x000000000000000b (SYMENT)             24 (bytes)
+ 0x0000000000000007 (RELA)               0x450
+ 0x0000000000000008 (RELASZ)             168 (bytes)
+ 0x0000000000000009 (RELAENT)            24 (bytes)
+ 0x000000006ffffffe (VERNEED)            0x430
+ 0x000000006fffffff (VERNEEDNUM)         1
+ 0x000000006ffffff0 (VERSYM)             0x41e
+ 0x000000006ffffff9 (RELACOUNT)          3
+ 0x0000000000000000 (NULL)               0x0
+[exit 0]
+
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksLoaderProof/mk_variant.py /home/vgpnk/.local/opt/llama-b11755/libggml.so.0.27.0 /tmp/kama-r21-LinksLoaderProof/build/libggml.so.0.27.0-sameabi
+/tmp/kama-r21-LinksLoaderProof/build/libggml.so.0.27.0-sameabi: flipped file offset 0x2eb (last byte of .note.gnu.build-id)
+[exit 0]
+
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksLoaderProof/mk_variant.py /home/vgpnk/.local/opt/llama-b11755/libllama-server-impl.so /tmp/kama-r21-LinksLoaderProof/build/libllama-server-impl.so-sameabi
+/tmp/kama-r21-LinksLoaderProof/build/libllama-server-impl.so-sameabi: flipped file offset 0x323 (last byte of .note.gnu.build-id)
+[exit 0]
+
+$ readelf -n -W /home/vgpnk/.local/opt/llama-b11755/libggml.so.0.27.0
+
+Displaying notes found in: .note.gnu.property
+  Owner                Data size 	Description
+  GNU                  0x00000010	NT_GNU_PROPERTY_TYPE_0	      Properties: x86 feature: IBT, SHSTK
+
+Displaying notes found in: .note.gnu.build-id
+  Owner                Data size 	Description
+  GNU                  0x00000014	NT_GNU_BUILD_ID (unique build ID bitstring)	    Build ID: 097f8f7f2aa564274a7c4460bfc9562fe307f4d5
+[exit 0]
+
+$ readelf -n -W /tmp/kama-r21-LinksLoaderProof/build/libggml.so.0.27.0-sameabi
+
+Displaying notes found in: .note.gnu.property
+  Owner                Data size 	Description
+  GNU                  0x00000010	NT_GNU_PROPERTY_TYPE_0	      Properties: x86 feature: IBT, SHSTK
+
+Displaying notes found in: .note.gnu.build-id
+  Owner                Data size 	Description
+  GNU                  0x00000014	NT_GNU_BUILD_ID (unique build ID bitstring)	    Build ID: 097f8f7f2aa564274a7c4460bfc9562fe307f4d4
+[exit 0]
+
+$ sha256sum /home/vgpnk/.local/opt/llama-b11755/libggml.so.0.27.0 /tmp/kama-r21-LinksLoaderProof/build/libggml.so.0.27.0-sameabi /tmp/kama-r21-LinksLoaderProof/build/libggml.so.0.0.0-decoy /home/vgpnk/.local/opt/llama-b11755/libllama-server-impl.so /tmp/kama-r21-LinksLoaderProof/build/libllama-server-impl.so-sameabi
+8643a58bb37af6fb153e2ea98b48efa227855725ee51c05f4ca76b9867956463  /home/vgpnk/.local/opt/llama-b11755/libggml.so.0.27.0
+137ad56b797c1471dac6b5bbef7a6b5810c28d12b8c148383bbc5547d21bf5e1  /tmp/kama-r21-LinksLoaderProof/build/libggml.so.0.27.0-sameabi
+b0cb014abf80542bb839ff563ccc941e4a3441d48ab803f658155df897523ca4  /tmp/kama-r21-LinksLoaderProof/build/libggml.so.0.0.0-decoy
+e404b91a81c9ab65756b6a57b97b42115a5f429c5060c4b7f0d717ca595b59ed  /home/vgpnk/.local/opt/llama-b11755/libllama-server-impl.so
+3059abebbe2a1448983a87de7d20a7ec3c8e63a85fa293c6fb74a037fc715b2b  /tmp/kama-r21-LinksLoaderProof/build/libllama-server-impl.so-sameabi
+[exit 0]
+
+$ cp /tmp/kama-r21-LinksLoaderProof/build/libggml.so.0.0.0-decoy /tmp/kama-r21-LinksLoaderProof/build/libggml.so.0.27.0-sameabi /tmp/kama-r21-LinksLoaderProof/tree/
+[exit 0]
+exit=0   find /tmp/kama-r21-LinksLoaderProof/tree -maxdepth 1 -type l -printf %f -> %l\n  -> S1-staged.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C LD_DEBUG=libs,files /usr/lib/ld-linux-x86-64.so.2 --list /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S1-staged.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C /usr/bin/ldd /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S1-staged.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C /usr/bin/ldd -r /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S1-staged.txt
+exit=0   ident /tmp/kama-r21-LinksLoaderProof/tree libggml.so.0  -> S1-staged.txt
+exit=0   python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksLoaderProof/digests.py /tmp/kama-r21-LinksLoaderProof/lane/tools/kama-llamacpp-live.py /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S1-staged.txt
+
+$ ln -sfn libggml.so.0.0.0-decoy /tmp/kama-r21-LinksLoaderProof/tree/libggml.so.0
+[exit 0]
+exit=0   find /tmp/kama-r21-LinksLoaderProof/tree -maxdepth 1 -type l -printf %f -> %l\n  -> S2-retarget-stub.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C LD_DEBUG=libs,files /usr/lib/ld-linux-x86-64.so.2 --list /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S2-retarget-stub.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C /usr/bin/ldd /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S2-retarget-stub.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C /usr/bin/ldd -r /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S2-retarget-stub.txt
+exit=0   ident /tmp/kama-r21-LinksLoaderProof/tree libggml.so.0  -> S2-retarget-stub.txt
+exit=0   python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksLoaderProof/digests.py /tmp/kama-r21-LinksLoaderProof/lane/tools/kama-llamacpp-live.py /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S2-retarget-stub.txt
+
+$ ln -sfn libggml.so.0.27.0-sameabi /tmp/kama-r21-LinksLoaderProof/tree/libggml.so.0
+[exit 0]
+exit=0   find /tmp/kama-r21-LinksLoaderProof/tree -maxdepth 1 -type l -printf %f -> %l\n  -> S3-retarget-sameabi.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C LD_DEBUG=libs,files /usr/lib/ld-linux-x86-64.so.2 --list /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S3-retarget-sameabi.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C /usr/bin/ldd /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S3-retarget-sameabi.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C /usr/bin/ldd -r /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S3-retarget-sameabi.txt
+exit=0   ident /tmp/kama-r21-LinksLoaderProof/tree libggml.so.0  -> S3-retarget-sameabi.txt
+exit=0   python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksLoaderProof/digests.py /tmp/kama-r21-LinksLoaderProof/lane/tools/kama-llamacpp-live.py /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S3-retarget-sameabi.txt
+
+$ ln -sfn libggml.so.0.27.0-missing /tmp/kama-r21-LinksLoaderProof/tree/libggml.so.0
+[exit 0]
+exit=0   find /tmp/kama-r21-LinksLoaderProof/tree -maxdepth 1 -type l -printf %f -> %l\n  -> S4-retarget-dangling.txt
+exit=127 env -i PATH=/usr/bin:/bin LANG=C LD_DEBUG=libs,files /usr/lib/ld-linux-x86-64.so.2 --list /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S4-retarget-dangling.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C /usr/bin/ldd /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S4-retarget-dangling.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C /usr/bin/ldd -r /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S4-retarget-dangling.txt
+exit=1   ident /tmp/kama-r21-LinksLoaderProof/tree libggml.so.0  -> S4-retarget-dangling.txt
+exit=0   python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksLoaderProof/digests.py /tmp/kama-r21-LinksLoaderProof/lane/tools/kama-llamacpp-live.py /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S4-retarget-dangling.txt
+
+$ ln -sfn libggml.so.0.27.0 /tmp/kama-r21-LinksLoaderProof/tree/libggml.so.0
+[exit 0]
+
+$ mkdir -p /tmp/kama-r21-LinksLoaderProof/tree/glibc-hwcaps/x86-64-v3
+[exit 0]
+
+$ sh -c cd "$1" && for f in *; do case $f in glibc-hwcaps) continue ;; esac; cp -a "$f" "$2"/ || exit 1; done sh /tmp/kama-r21-LinksLoaderProof/tree /tmp/kama-r21-LinksLoaderProof/tree/glibc-hwcaps/x86-64-v3
+[exit 0]
+
+$ cp /tmp/kama-r21-LinksLoaderProof/build/libllama-server-impl.so-sameabi /tmp/kama-r21-LinksLoaderProof/tree/glibc-hwcaps/x86-64-v3/libllama-server-impl.so
+[exit 0]
+exit=0   find /tmp/kama-r21-LinksLoaderProof/tree -maxdepth 1 -type l -printf %f -> %l\n  -> S5-hwcaps-shadow.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C LD_DEBUG=libs,files /usr/lib/ld-linux-x86-64.so.2 --list /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S5-hwcaps-shadow.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C /usr/bin/ldd /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S5-hwcaps-shadow.txt
+exit=0   env -i PATH=/usr/bin:/bin LANG=C /usr/bin/ldd -r /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S5-hwcaps-shadow.txt
+exit=0   ident /tmp/kama-r21-LinksLoaderProof/tree libggml.so.0  -> S5-hwcaps-shadow.txt
+exit=0   python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-21/build/out/LinksLoaderProof/digests.py /tmp/kama-r21-LinksLoaderProof/lane/tools/kama-llamacpp-live.py /tmp/kama-r21-LinksLoaderProof/tree/llama-server  -> S5-hwcaps-shadow.txt
+exit=0   ident /tmp/kama-r21-LinksLoaderProof/tree/glibc-hwcaps/x86-64-v3 libggml.so.0  -> S5-hwcaps-shadow.txt
+exit=0   ident /tmp/kama-r21-LinksLoaderProof/tree/glibc-hwcaps/x86-64-v3 libllama-server-impl.so  -> S5-hwcaps-shadow.txt
+exit=0   sha256sum -- /tmp/kama-r21-LinksLoaderProof/tree/libllama-server-impl.so  -> S5-hwcaps-shadow.txt
+exit=0   summarize.py -> summary.txt

@@ -1,0 +1,25 @@
+RESULT E1-tree-newline-collision: OK :: equal_digest=True digest=18f9055c950ae5fce572428e5b477be1c05ccac1dc2c13a579d0bdc4db882882 mapA_keys=2 mapB_keys=1 mapB_key0='notes-1.txt 7692c3ad3540bb803c020b3aee66cd8887123234ea0c6e7143c0add73ff431ed\nnotes-2.txt'
+RESULT E2-links-arrow-collision: OK :: equal_digest=True digest=356b43ee14edcd8a26ce863b8d5d37e7633c1622a60b06658da051c30f3007a2 mapA={'x -> y': 'z'} mapB={'x': 'y -> z'}
+RESULT E3-links-newline-soname-collision: OK :: equal_digest=True digest=5e1129f24f3c3b6f3d0cca22876663fc7ac39810b8b7287e7a9c0b350ff64bcf keysB=['libllama-alias.so -> libllama.so.0\nlibllama.so.0']
+RESULT E4-gate-accepts-links-decoy: OK :: legit_problems=[] decoy_problems=[] decoy_map={'libllama-alias.so -> libllama.so.0\nlibllama.so.0': 'libllama.so'}
+RESULT E5-gate-accepts-tree-decoy: OK :: legit_problems=[] decoy_problems=[] decoy_keys=['libllama-server-impl.so', 'libllama.so', 'llama-server', 'notes-1.txt 7692c3ad3540bb803c020b3aee66cd8887123234ea0c6e7143c0add73ff431ed\nnotes-2.txt']
+RESULT E6-gate-impl-digest-not-bound-to-tree: OK :: receipt claims impl sha with impl absent from install_tree; problems=[]
+RESULT E7-nonutf8-name-crashes-digest: OK :: gate_validate=UnicodeEncodeError producer_install_tree=UnicodeEncodeError
+RESULT E8-subdir-and-fifo-invisible: OK :: tree_equal=True links_equal=True digest=7d908e9af8096452cd47f6397e591c072c67df2cab9e58cb0ec23b9050ca5284
+RESULT E9-real-tree-digests: OK :: regular_members=51 install_tree_sha256=6c216313a88d71b141bc62f684b8f95c040710ff050801b13521861826785a2c links=10 install_links_sha256=b58f1b4df160c4e2accb95bac964a5648d24fc31e769f8044296a1fa431b9e10
+RESULT E10-real-tree-soname-absent-gate-accepts: OK :: serialization_equal=True digest_equal=True legit_problems=[] decoy_problems=[] decoy_absent=libllama.so,libllama.so.0
+RESULT E10b-producer-digest-of-decoy-dir: OK :: producer install_links_sha256 for decoy dir=b58f1b4df160c4e2accb95bac964a5648d24fc31e769f8044296a1fa431b9e10 pinned=b58f1b4df160c4e2accb95bac964a5648d24fc31e769f8044296a1fa431b9e10
+RESULT E11-exhaustive-link-parses: OK :: alternating_parses=6765 same_digest_parses=6765 gate_accepted=162 names_absent_in_some_accepted=['libggml-base.so', 'libggml-base.so.0', 'libggml.so', 'libggml.so.0', 'libllama-common.so', 'libllama-common.so.0', 'libllama.so', 'libllama.so.0', 'libmtmd.so', 'libmtmd.so.0']
+RESULT E12-tree-window-absorptions: OK :: windows_tried=147 gate_accepted=101 absorbable_members=39 never_absorbable=['ggml-rpc-server', 'libggml-base.so.0.27.0', 'libggml-rpc.so', 'libggml.so.0.27.0', 'libllama-cli-impl.so', 'libllama-common.so.0.7.0', 'libllama-server-impl.so', 'libllama.so.0.7.0', 'libmtmd.so.0.7.0', 'llama-results', 'llama-server', 'llama-tts']
+RESULT E12b-witness-cpu-backends-removed: UNEXPECTED :: absorbed_cpu_backends=14 serialization_equal=True problems=[]
+RESULT E12c-witness-license-absorbed: OK :: key='LICENSE 94f29bbed6a22c35b992c5c6ebf0e7c92f13b836b90f36f461c9cf2f0f1d010d\nggml-rpc-server' problems=[]
+RESULT E12d-impl-absorbed-caught-only-by-impl-pin: UNEXPECTED :: without_impl_pin=["server.install_links['libllama.so']: chain ends at 'libllama.so.0.7.0', not a pinned install_tree member", "server.install_links['libllama.so.0']: chain ends at 'libllama.so.0.7.0', not a pinned install_tree member"] with_impl_pin=['--expect-server-impl-sha256 given but receipt has no server.server_impl_sha256 digest', "server.install_links['libllama.so']: chain ends at 'libllama.so.0.7.0', not a pinned install_tree member", "server.install_links['libllama.so.0']: chain ends at 'libllama.so.0.7.0', not a pinned install_tree member"]
+RESULT E13-random-tree-parses: OK :: samples=2000 serialization_equal=all gate_accepted=2 distinct_absorbed_members_in_accepted=31
+RESULT E14-json-duplicate-keys-last-wins: OK :: json.load silently keeps the last duplicate key
+RESULT E15-cli-real-legit: OK :: exit=0 want=0 :: VALID /tmp/kama-r21-LinksDigestEncoding/receipts/cli-real-legit.json
+RESULT E15-cli-real-soname-decoy: OK :: exit=0 want=0 :: VALID /tmp/kama-r21-LinksDigestEncoding/receipts/cli-real-soname-decoy.json
+RESULT E15-cli-real-cpu-decoy: OK :: exit=0 want=0 :: VALID /tmp/kama-r21-LinksDigestEncoding/receipts/cli-real-cpu-decoy.json
+RESULT E15-cli-real-impl-absorbed-with-impl-pin: OK :: exit=1 want=1 :: INVALID /tmp/kama-r21-LinksDigestEncoding/receipts/cli-real-impl-absorbed-with-impl-pin.json: 3 prob
+RESULT E15-cli-nonutf8-name: OK :: exit=1 want=1 :: uncaught-exception: UnicodeEncodeError: 'utf-8' codec can't encode character '\udcff' in position 244: surrogates not al
+SUMMARY written to /tmp/kama-r21-LinksDigestEncoding/probe-results.json
+UNEXPECTED: ['E12b-witness-cpu-backends-removed', 'E12d-impl-absorbed-caught-only-by-impl-pin']

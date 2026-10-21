@@ -1,0 +1,66 @@
+SrcGitLogDiffFilter — executed evidence, 2026-10-21
+Scratch: /tmp/kama-r21-SrcGitLogDiffFilter (removed after this file was written).
+Values such as 1792579747 are the sandbox clock at run time; rerun-output.txt holds a later rerun.
+
+## 0. Commands and exits
+- git --version -> "git version 2.56.0" (rc 0)
+- pacman -Q git -> "git 2.56.0-1" (rc 0; query only, no transaction)
+- man -P cat git-log | git-rebase | git-commit | git -> rc 0 each (saved to scratch docs/)
+- git clone -q /home/vgpnk/Projects/shokunin/kama-shokunin <scratch>/lane ; git checkout -q a29bb84… -> rc 0 (scratch copy only)
+- git -C /home/vgpnk/Projects/shokunin log --diff-filter=A --format='%H|%at|%ct|%cI|%s' -- .ufo/reports/round-20/kama.md -> rc 0:
+  04eb5d2… | 1792577594 | 1792577594 | 2026-10-21T07:13:14-03:00 | round-20: kama report
+- Same loop for round-10..round-21 -> rc 0 each; round-21 has no add commit yet.
+- Web fetches (read tool): https://git-scm.com/docs/git-log, git-rebase, git-commit, git, pretty-formats; text searches of the fetched artifacts (41566, 42157, 42344, 42343, 42158) returned every quoted line.
+- Python cells (scratch repos, git 2.56.0): E1–E6, E3 extension, S1/S2 via audit_round, census baseline and draft, append-only check, history checks; every git call rc 0; census checks rc 0; append-only rc 0; S1/S2 no exceptions.
+
+## 1. Manual text checks (verbatim)
+- git-log, PRETTY FORMATS: "committer date, UNIX timestamp" (%ct); "author date, UNIX timestamp" (%at).
+- git-log, DIFF FORMATTING: "Select only files that are Added (A), Copied (C), Deleted (D), Modified (M), Renamed (R), have their type …"
+- git-log, OPTIONS, Commit Ordering: "By default, the commits are shown in reverse chronological order."; --date-order: "show commits in the commit timestamp order."; --author-date-order: "show commits in the author timestamp order."
+- git-commit, OPTIONS: "--date=<date> Override the author date used in the commit."; --reset-author: "This also renews the author timestamp."
+- git-rebase, OPTIONS: --force-rebase "Individually replay all rebased commits instead of fast-forwarding over the unchanged ones."; --committer-date-is-author-date "Instead of using the current time as the committer date, use the author date of the commit being rebased as the committer date."
+- git(1), Environment Variables: GIT_COMMITTER_DATE "The date used for the committer identity when creating commit or tag objects, or when writing reflogs."
+- Revision: git-log "last updated in 2.56.0"; git-rebase, git-commit, pretty-formats show "2.55.0 → 2.56.0 no changes" (rebase/pretty-formats last updated 2.54.0; commit last updated 2.55.0).
+
+## 2. Scratch experiments (python cell output, verbatim)
+E1a before amend        : (0, '38be1cd|1000000200|1000000200|two')
+E1b amend, no date env  : (0, '') (0, '10f9385|1000000200|1792579747|two amended')
+E1c amend --reset-author: (0, '') (0, 'c75be79|1792579747|1792579747|two reset')
+E1d amend, committer pinned @1000000500: (0, '') (0, 'd5031fb|1792579747|1000000500|two pinned')
+E2a feat before rebase  : (0, 'c8dac27|1000000200|1000000200|feat1') {'rc': 0, 'ct_lines': ['1000000200'], 'cutoff(split()[-1])': 1000000200}
+E2b rebase main         : (0, '') (0, 'dfabab7|1000000200|1792579747|feat1') {'rc': 0, 'ct_lines': ['1792579747'], 'cutoff(split()[-1])': 1792579747}
+E2c rebase main again   : (0, 'Current branch feat is up to date.') (0, 'dfabab7|1000000200|1792579747|feat1')
+E2d rebase --force-rebase: (0, '') (0, 'dfabab7|1000000200|1792579747|feat1') {'rc': 0, 'ct_lines': ['1792579747'], 'cutoff(split()[-1])': 1792579747}
+E2e --committer-date-is-author-date: (0, '') (0, 'a00e41a|1000000200|1000000200|feat1') {'rc': 0, 'ct_lines': ['1000000200'], 'cutoff(split()[-1])': 1000000200}
+E3 git log --all (X at=900 ct=100; Y at=100 ct=900):
+(0, '25f12fb|1000000100|1000000900|Y\n7843ffe|1000000900|1000000100|X')
+E3 --all -> (0, '25f12fb|1000000100|1000000900|Y\n7843ffe|1000000900|1000000100|X')
+E3 --all --date-order -> (0, '25f12fb|1000000100|1000000900|Y\n7843ffe|1000000900|1000000100|X')
+E3 --all --topo-order -> (0, '25f12fb|1000000100|1000000900|Y\n7843ffe|1000000900|1000000100|X')
+E4 --diff-filter=A default order: (0, '669919d|1000000400|1000000400|readd4\n8f8c3c6|1000000100|1000000100|add1')
+E4 --diff-filter=A --reverse    : (0, '8f8c3c6|1000000100|1000000100|add1\n669919d|1000000400|1000000400|readd4')
+E4 cutoff                       : {'rc': 0, 'ct_lines': ['1000000400', '1000000100'], 'cutoff(split()[-1])': 1000000100}
+E5 skewed readd (ct=50) : (0, 'b77259e|1000000400|1000000050|readd4\n8f8c3c6|1000000100|1000000100|add1')
+E5 cutoff               : {'rc': 0, 'ct_lines': ['1000000050', '1000000100'], 'cutoff(split()[-1])': 1000000100}
+E6a cutoff before amend : {'rc': 0, 'ct_lines': ['1000000100'], 'cutoff(split()[-1])': 1000000100}
+E6b amend, no date env  : (0, '') {'rc': 0, 'ct_lines': ['1792579747'], 'cutoff(split()[-1])': 1792579747}
+
+## 3. Synthetic audit runs (real audit_round from lane tools/report-landing-audit.py at a29bb84)
+S1 before rewrite : {'cutoff': 1200, 'committed': True, 'required(pre)': 2, 'post_report': [], 'defects': [('landed-omitted', '9c7ed1d42')]} b= 9c7ed1d42
+S1 after amend    : {'cutoff': 1200, 'committed': True, 'required(pre)': 1, 'post_report': ['b815a2ea2'], 'defects': []} b2= b815a2ea2
+S1 ctimes         : b815a2e 1100 1792579989 round-1: measure / db796f8 1000 1000 round-1: work
+S2 before amend   : {'cutoff': 1200, 'committed': True, 'required(pre)': 2, 'post_report': ['784c57086'], 'defects': []} c= 784c57086
+S2 after amend    : {'cutoff': 1792579989, 'committed': True, 'required(pre)': 3, 'post_report': [], 'defects': [('landed-omitted', '784c57086')]}
+S2 fleet ctime    : cd6b91a 1200 1792579989 round-1: kama report
+
+## 4. Census and append-only (scratch copy of corpus/SOURCES.md)
+[before] rc=0 out='65' | '0' | 'A=62 C=3' | 'mined=52 queued=6 rejected=7' | '' | '' | '' (all empty checks)
+draft row cell count = 11 (contract: 11); git-scm.com/docs/git-log absent from base file (False)
+[after]  rc=0 out='66' | '0' | 'A=63 C=3' | 'mined=52 queued=7 rejected=7' | '' | '' | '' (all empty checks)
+scratch commit rc = 0
+append-only rc = 0 " added S066 (allowed)\nno append-only violations"
+
+## 5. Real history (lane a29bb84 vs fleet)
+- lane commits 82; kama round/checkpoint commits 60; at != ct for 14 of 60 (e.g. 7a6bc911f at 1792577448, ct 1792577449); ct < at for 0 of 82.
+- Fleet round-10..20 kama.md add commits: at == ct for all 11 (e.g. round-20 04eb5d2 at 1792577594, ct 1792577594); round-21: none yet.
+- Straddles per round (at <= cutoff < ct; and the reverse): r10 0/0, r11 0/0, r12 0/0, r13 0/0, r14 0/0, r15 0/0, r16 0/0, r17 0/0, r18 0/0, r19 0/0, r20 0/0.

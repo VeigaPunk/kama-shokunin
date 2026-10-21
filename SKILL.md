@@ -671,3 +671,26 @@ capabilities appendix of SCORECARD; source mechanisms and limits are in
 `corpus/knowledge/gguf-declared-identity.md`. Existing consumer routes,
 registered endpoints, model downloads and persistent servers remain operator-owned.
 
+## Round-21 instrument registry: report landing audit and install links (owner: kama)
+
+Supersedes the round-20 "six pins" row only by adding an optional seventh pin
+and a completeness flag; its historical tallies stay dated. Round-21 measured
+gate selftest: **11 VALID + 1 NOT-EVALUATED, 91 mutations plus unreadable
+rejected** (was 6 + 1 / 77 at round-start `7a6bc911`).
+
+| Name | Kind / entry command | Verdict map | Self-test | Pinned values | Write scope | Owner |
+|---|---|---|---|---|---|---|
+| Report landing audit | gate on fleet reports: `python3 tools/report-landing-audit.py [--rounds 10-] [--report N=DRAFT] [--errata PATH \| --no-errata] [--json]` | 0 clean (no uncorrected defect, no unmatched/invalid ledger row); 1 failed; 2 could-not-evaluate (missing/irregular report, unusable git, malformed ledger, empty round set, output failure) | `--selftest`: temporary lane+fleet repos under an inherited decoy `GIT_DIR`; splice, omissions, rebase/author-time cutoff, hex words, ledger matching/invalid corrections, exit-2 inputs | ledger `registry/report-landing-errata.tsv` read from the committed `--branch` blob; defect kinds and round-commit rule in the script | stdout only; reads lane and fleet git objects | kama |
+| Live receipt gate, links pin | gate: `python3 tests/llamacpp-live/check-receipt.py RECEIPT … [--expect-install-links-sha256 H] [--require-install-links]` | as the six-pin row; additionally INVALID when install_links is malformed, its canonical-JSON digest does not recompute, a chain leaves the directory/loops/dangles, a link shadows a member, the pin differs, or the block is absent under `--require-install-links` | `--selftest` adds legacy-absent VALID, retarget VALID-unpinned/INVALID-pinned, independent canonical-digest literal and 13 link mutations | caller-supplied links digest; legacy v3 receipts without the block stay VALID unless required or pinned | stdout only | kama |
+| Install-links detection grid | gate on the pin: `python3 tests/llamacpp-live/install-links-grid.py [--tree DIR] [--arm current\|frozen\|both] [--json]` | 0 every non-null cell detected, null quiet, real tree gate-clean; 1 an arm missed (the `frozen` round-start arm always does); 2 could-not-evaluate (missing tree/soname, unpinnable real tree, git/copy/internal error) | `--selftest`: synthetic soname tree reached through a symlinked path; frozen misses link/subdir cells, current catches all; error and dangling-tree cases | `NEEDED_SONAMES` (b11755 DT_NEEDED links) and `FROZEN_REV` in the script; mirrors the tree under a temporary directory | temporary mirror removed; stdout | kama |
+
+**Checklist addition (round 21).** Before committing a round report to the
+fleet repo, run `python3 tools/report-landing-audit.py --rounds 10-<N-1>
+--report <N>=<draft path>`; it must exit 0, and its summary line goes into the
+report under Landed changes. Generate Landed changes from
+`git log --reverse --format='%H %s' <round-start>..<branch>`, never from memory.
+
+**Decision row.** Soname symlink retargeted or a `glibc-hwcaps/` copy added →
+`install_tree_sha256` unchanged; `install_links_sha256` changes or the producer
+refuses (`install-tree-unpinnable`). Pin the links digest when the install must
+not drift (S066, S067).

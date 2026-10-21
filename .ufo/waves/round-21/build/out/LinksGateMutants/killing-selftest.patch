@@ -1,0 +1,18 @@
+diff --git i/tests/llamacpp-live/check-receipt.py w/tests/llamacpp-live/check-receipt.py
+index 8a6b5dd..c63804e 100755
+--- i/tests/llamacpp-live/check-receipt.py
++++ w/tests/llamacpp-live/check-receipt.py
+@@ -1858,6 +1858,13 @@ def _selftest():
+               expects + ["--expect-install-tree-sha256", base_tree], 0),
+              ("links-pin-valid", base,
+               expects + ["--expect-install-links-sha256", base_links], 0)]
++    # Fixed SHA-256 of the canonical sorted lines, not the helper's output.
++    canonical_links = copy.deepcopy(base)
++    canonical_links["server"]["install_links_sha256"] = (
++        "5e1129f24f3c3b6f3d0cca22876663fc"
++        "7ac39810b8b7287e7a9c0b350ff64bcf")
++    cases.append(("links-canonical-digest-valid", canonical_links,
++                  expects, 0))
+     legacy = copy.deepcopy(base)
+     del legacy["server"]["install_links"]
+     del legacy["server"]["install_links_sha256"]

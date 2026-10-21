@@ -1,0 +1,37 @@
+LinksTreeDeterminism (round 21) - executed commands and exit codes.
+Scratch /tmp/kama-r21-LinksTreeDeterminism (deleted after copy). Lane never written. Fleet repo read via clone only.
+
+ 1. git clone -q <lane> <scratch>/lane && git -C <scratch>/lane checkout -q a29bb84...   -> exit 0 (HEAD a29bb84)
+ 2. cp -a ~/.local/opt/llama-b11755 <scratch>/tree                                        -> exit 0 (61 entries: 51 regular, 10 symlinks)
+ 3. readelf -d <tree>/llama-server                                                       -> exit 0 (NEEDED libllama-server-impl.so, libstdc++, libgcc_s, libc; RUNPATH $ORIGIN)
+ 4. python3 -B tests/llamacpp-live/check-receipt.py --selftest  (a29bb84)                -> exit 0 ("9 VALID and 1 NOT-EVALUATED ...; 90 mutations + unreadable case rejected")
+ 5. producer install_tree/install_links on SRC and COPY (importlib)                      -> exit 0 (both 6c216313... / b58f1b4d..., 51 members, 10 links)
+ 6. readelf -Ws --dyn-syms libggml.so.0.27.0 | grep ggml_backend_load                   -> exit 0 (ggml_backend_load_all_from_path, ggml_backend_load_all, ggml_backend_load)
+ 7. readelf -d libggml.so.0.27.0 ; readelf -d libggml-cpu-zen4.so                        -> exit 0 (no libggml-cpu NEEDED anywhere checked)
+ 8. out/probe.py <lane> <tree> <out>  (baseline a29bb84)
+      run A  exit 1  earlier harness version: argv binding bug; nothing injected; tree verified intact
+      run B  exit 0  earlier harness version: pin verdict included chain messages (superseded)
+      run C  exit 0  FINAL out/probe.py -> summary.json, sweep.tsv, receipts/ (numbers in report come only from run C)
+      restore check after each run: exit 0 (51 members, 6c216313..., links 10, b58f1b4d...)
+ 9. gate CLI on 9 exemplar receipts: default / --expect-install-tree-sha256 / --expect-install-links-sha256 -> exit codes in cli-matrix.txt
+10. lane-fix (scratch copy): two edits (producer install_tree/install_links; gate line 454). ast.parse both files -> exit 0
+11. lane-fix check-receipt.py --selftest                                                -> exit 0 (9+1; 90 mutations)
+12. diff -u lane lane-fix (producer, gate)                                              -> exit 1 (differs; expected)
+13. out/probe.py <lane-fix> <tree> <out-fix>                                            -> exit 0 (summary-lane-fix.json)
+14. out/failclosed_main.py <lane-fix> <tree> <out> <model> <sha> <probe>                -> exit 0 (driver); main_exit 2 (failclosed_main.txt)
+15. install-links-grid.py --selftest:
+      minimal lane-fix copy (no .git; frozen arm needs git show)                        -> exit 2 (ARTIFACT of the minimal copy; kept for transparency)
+      lane-full (full clone + both patches)                                             -> exit 0 (selftest cases=12 failed=0)
+      baseline lane                                                                     -> exit 0 (selftest cases=12 failed=0)
+16. lane-full check-receipt.py --selftest                                               -> exit 0 (9+1; 90 mutations)
+17. install-links-grid.py --arm current --json: baseline lane -> exit 0; lane-fix -> exit 0; cmp -> exit 0 (identical)
+18. git log --format='%h %ad %s' --date=short -S'return tree, None' -- tools/kama-llamacpp-live.py -> exit 0 (b8e485c, 2026-10-20, round-16)
+19. git show 7a6bc91:tools/kama-llamacpp-live.py | <lines 177-202 OSError>             -> exit 0 (OSError at lines 186, 192, 198)
+20. git diff --stat 7a6bc91 a29bb84 -- tools/kama-llamacpp-live.py tests/llamacpp-live/ -> exit 0 (3 files, 481 insertions, 2 deletions)
+21. python3 -B static scan of 50 ELF members (readelf -d) + composition of sweep.tsv      -> exit 0 (needed-and-composition.txt)
+22. git -C <scratch>/lane apply --check: proposal.diff, proposal-C2.diff, proposal-separate-install_tree.diff -> exit 0 each (proposal-apply-check.txt)
+23. variant-c2 and variant-tree (baseline + one hunk each): diff exit 1 each (expected); ast.parse exit 0;
+      out/probe.py on each                                                              -> exit 0 each (summary-variant-*.json)
+
+Processes started: none that persist. Installs: none. No llama-server or live tool run.
+Reproduce: steps 2, 8 (probe.py LANE TREE OUT), 13, 14 (failclosed_main.py LANEFIX TREE OUT MODEL SHA256 PROBE).

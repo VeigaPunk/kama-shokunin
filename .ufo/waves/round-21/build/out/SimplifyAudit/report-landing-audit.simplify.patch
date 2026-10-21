@@ -1,0 +1,111 @@
+diff --git c/tools/report-landing-audit.py w/tools/report-landing-audit.py
+index 728ebe1..c2ef58e 100755
+--- c/tools/report-landing-audit.py
++++ w/tools/report-landing-audit.py
+@@ -58,9 +58,9 @@ class EvalError(Exception):
+     """Could not evaluate: never converted into a verdict."""
+ 
+ 
+-def git(repo, *args, check=True):
++def git(repo, *args, check=True, env=None):
+     proc = subprocess.run(["git", "-C", str(repo), *args],
+-                          capture_output=True, text=True)
++                          capture_output=True, text=True, env=env)
+     if check and proc.returncode != 0:
+         raise EvalError(f"git {' '.join(args)} in {repo}: rc={proc.returncode} "
+                         f"{proc.stderr.strip()}")
+@@ -90,7 +90,7 @@ def round_commits(lane_repo, branch, lane, rnd):
+     for line in out.splitlines():
+         sha, author, ctime, subject = line.split("\t", 3)
+         if author == f"{lane}-shokunin" and pat.match(subject):
+-            rows.append({"sha": sha, "ctime": int(ctime), "subject": subject})
++            rows.append({"sha": sha, "ctime": int(ctime)})
+     return rows
+ 
+ 
+@@ -118,8 +118,9 @@ def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path):
+             defects.append({"kind": "unresolved-full-hash", "token": token})
+     section = landed_section(text)
+     commits = round_commits(lane_repo, branch, lane, rnd)
+-    pre = [c for c in commits if c["ctime"] <= cutoff]
+-    post = [c for c in commits if c["ctime"] > cutoff]
++    pre, post = [], []
++    for c in commits:
++        (pre if c["ctime"] <= cutoff else post).append(c)
+     if section is None:
+         defects.append({"kind": "landed-section-missing", "token": "-"})
+         section = ""
+@@ -128,13 +129,9 @@ def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path):
+             if not is_object(repos, token, "commit"):
+                 defects.append({"kind": "landed-unresolved", "token": token})
+     cited = set(ABBREV.findall(section))
+-    cited_anywhere = set(ABBREV.findall(text))
+     for commit in pre:
+         if not any(commit["sha"].startswith(t) for t in cited):
+-            defects.append({"kind": "landed-omitted", "token": commit["sha"],
+-                            "cited_elsewhere": any(
+-                                commit["sha"].startswith(t)
+-                                for t in cited_anywhere)})
++            defects.append({"kind": "landed-omitted", "token": commit["sha"]})
+     return {
+         "round": rnd, "report": str(report), "report_committed": committed,
+         "cutoff": cutoff, "round_commits": len(commits),
+@@ -166,18 +163,17 @@ def load_errata(path):
+ def apply_errata(results, errata, repos):
+     used = set()
+     for res in results:
++        rnd = res["round"]
+         for defect in res["defects"]:
+-            match = [e for e in errata if e["round"] == res["round"]
+-                     and e["kind"] == defect["kind"]
++            lines = [e["line"] for e in errata
++                     if e["round"] == rnd and e["kind"] == defect["kind"]
+                      and e["token"] == defect["token"]]
+-            defect["corrected_by"] = [e["line"] for e in match]
+-            used.update(e["line"] for e in match)
++            defect["corrected_by"] = lines
++            used.update(lines)
+     unmatched = [e for e in errata if e["line"] not in used]
+-    invalid = []
+-    for row in errata:
+-        if row["kind"] in RESOLVABLE and not is_object(
+-                repos, row["correction"], "commit"):
+-            invalid.append(row)
++    invalid = [row for row in errata
++               if row["kind"] in RESOLVABLE
++               and not is_object(repos, row["correction"], "commit")]
+     return unmatched, invalid
+ 
+ 
+@@ -253,11 +249,6 @@ def render(doc):
+ 
+ # --------------------------------------------------------------------- selftest
+ 
+-def _sh(repo, *args, env=None):
+-    subprocess.run(["git", "-C", str(repo), *args], check=True,
+-                   capture_output=True, text=True, env=env)
+-
+-
+ def _commit(repo, msg, author, when, path="f"):
+     env = dict(os.environ, GIT_AUTHOR_NAME=author, GIT_COMMITTER_NAME=author,
+                GIT_AUTHOR_EMAIL="a@x", GIT_COMMITTER_EMAIL="a@x",
+@@ -267,8 +258,8 @@ def _commit(repo, msg, author, when, path="f"):
+     target.parent.mkdir(parents=True, exist_ok=True)
+     with open(target, "a", encoding="utf-8") as fh:
+         fh.write(msg + "\n")
+-    _sh(repo, "add", path, env=env)
+-    _sh(repo, "commit", "-q", "-m", msg, env=env)
++    git(repo, "add", path, env=env)
++    git(repo, "commit", "-q", "-m", msg, env=env)
+     return git(repo, "rev-parse", "HEAD").stdout.strip()
+ 
+ 
+@@ -282,7 +273,7 @@ def selftest():
+         lane, fleet = Path(tmp, "lane"), Path(tmp, "fleet")
+         for repo in (lane, fleet):
+             repo.mkdir()
+-            _sh(repo, "init", "-q", "-b", "master")
++            git(repo, "init", "-q", "-b", "master")
+         a = _commit(lane, "round-1: work", "kama-shokunin", 1000)
+         b = _commit(lane, "round-1: measure", "kama-shokunin", 1100)
+         c = _commit(lane, "checkpoint(r1): save", "kama-shokunin", 1150)

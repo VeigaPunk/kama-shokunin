@@ -1,0 +1,117 @@
+# Selftest injection cases: orig = a60acc3a (as committed a29bb84); A = env isolation; AB = A + hardening
+# rc = exit of `python3 <tool> --selftest` under the injected env; vic = keys of the throwaway victim repo that changed
+
+A9_clean_selftest_repeat
+  orig  rc=0 vic=- selftest cases=15 failed=0
+  A     rc=0 vic=- selftest cases=15 failed=0
+  AB    rc=0 vic=- selftest cases=15 failed=0
+E0_control_clean_env
+  orig  rc=0 vic=[] selftest cases=15 failed=0
+  A     rc=0 vic=[] selftest cases=15 failed=0
+  AB    rc=0 vic=[] selftest cases=15 failed=0
+E10_PATH_without_git
+  orig  rc=1 vic=[] FileNotFoundError: [Errno 2] No such file or directory: 'git'
+  A     rc=1 vic=[] FileNotFoundError: [Errno 2] No such file or directory: 'git'
+  AB    rc=2 vic=[]
+E1_GIT_DIR
+  orig  rc=1 vic=['HEAD', 'refs', 'log', 'index_sha256', 'loose_objects'] selftest cases=15 failed=4 FAIL=4
+  A     rc=0 vic=[] selftest cases=15 failed=0
+  AB    rc=0 vic=[] selftest cases=15 failed=0
+E1b_GIT_DIR_plus_GIT_WORK_TREE
+  orig  rc=1 vic=[] subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-ctey_kqr/lane', 'add', 'f']' returned non-zero exit status 128.
+  A     rc=0 vic=[] selftest cases=15 failed=0
+  AB    rc=0 vic=[] selftest cases=15 failed=0
+E2_GIT_INDEX_FILE_absolute
+  orig  rc=1 vic=['index_sha256'] subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-khbbmwyf/lane', 'commit', '-q', '-m', 'round-1: work']' returned non-zero exit status 1.
+  A     rc=0 vic=[] selftest cases=15 failed=0
+  AB    rc=0 vic=[] selftest cases=15 failed=0
+E2b_GIT_INDEX_FILE_relative_hook_style
+  orig  rc=0 vic=[] selftest cases=15 failed=0
+  A     rc=0 vic=[] selftest cases=15 failed=0
+  AB    rc=0 vic=[] selftest cases=15 failed=0
+E3_GIT_OBJECT_DIRECTORY
+  orig  rc=0 vic=['loose_objects'] selftest cases=15 failed=0
+  A     rc=0 vic=[] selftest cases=15 failed=0
+  AB    rc=0 vic=[] selftest cases=15 failed=0
+E3b_GIT_COMMON_DIR
+  orig  rc=0 vic=['loose_objects'] selftest cases=15 failed=0
+  A     rc=0 vic=[] selftest cases=15 failed=0
+  AB    rc=0 vic=[] selftest cases=15 failed=0
+E4_GIT_WORK_TREE_only
+  orig  rc=1 vic=[] subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-53ripfa7/lane', 'init', '-q', '-b', 'master']' returned non-zero exit status 128.
+  A     rc=0 vic=[] selftest cases=15 failed=0
+  AB    rc=0 vic=[] selftest cases=15 failed=0
+E5_global_core_hooksPath
+  orig  rc=0 vic=[] selftest cases=15 failed=0 hook_marker_lines=7
+  A     rc=0 vic=[] selftest cases=15 failed=0 hook_marker_lines=0
+  AB    rc=0 vic=[] selftest cases=15 failed=0 hook_marker_lines=0
+E5b_global_init_templateDir
+  orig  rc=1 vic=[] subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-oqcg04rz/lane', 'commit', '-q', '-m', 'round-1: work']' returned non-zero exit status 1.
+  A     rc=0 vic=[] selftest cases=15 failed=0
+  AB    rc=0 vic=[] selftest cases=15 failed=0
+E6_global_commit_gpgsign
+  orig  rc=1 vic=[] subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-nr10wonh/lane', 'commit', '-q', '-m', 'round-1: work']' returned non-zero exit status 128.
+  A     rc=0 vic=[] selftest cases=15 failed=0
+  AB    rc=0 vic=[] selftest cases=15 failed=0
+E6b_env_GIT_CONFIG_COUNT_gpgsign
+  orig  rc=1 vic=[] subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-ky2f2jff/lane', 'commit', '-q', '-m', 'round-1: work']' returned non-zero exit status 128.
+  A     rc=0 vic=[] selftest cases=15 failed=0
+  AB    rc=0 vic=[] selftest cases=15 failed=0
+E7_env_GIT_TEMPLATE_DIR
+  orig  rc=1 vic=[] subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-xv19u95c/lane', 'commit', '-q', '-m', 'round-1: work']' returned non-zero exit status 1.
+  A     rc=0 vic=[] selftest cases=15 failed=0
+  AB    rc=0 vic=[] selftest cases=15 failed=0
+E8_outer_git_c_then_alias
+  orig  rc=1 vic=[] subprocess.CalledProcessError: Command '['git', '-C', '/tmp/report-landing-selftest-fldji7hb/lane', 'commit', '-q', '-m', 'round-1: work']' returned non-zero exit status 128.
+  A     rc=0 vic=[] selftest cases=15 failed=0
+  AB    rc=0 vic=[] selftest cases=15 failed=0
+E9_GIT_DEFAULT_HASH_sha256
+  orig  rc=1 vic=[] selftest cases=15 failed=3 FAIL=3
+  A     rc=0 vic=[] selftest cases=15 failed=0
+  AB    rc=0 vic=[] selftest cases=15 failed=0
+
+# Audit cases (round 20 of the real report, lane = throwaway clone, fleet = fixture or real)
+A0_clean_baseline
+  orig  rc=1 required=9 defects=5 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+  A     rc=1 required=9 defects=5 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+  AB    rc=1 required=9 defects=5 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+A10_clean_audit_repeat
+  orig  rc=1 required=9 defects=5 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+  A     rc=1 required=9 defects=5 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+  AB    rc=1 required=9 defects=5 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+A1_GIT_DIR_victim
+  orig  rc=1 required=0 defects=12 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+  A     rc=1 required=9 defects=5 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+  AB    rc=1 required=9 defects=5 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+A2_prose_lane_clean
+  orig  rc=1 required=9 defects=7 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+  A     rc=1 required=9 defects=7 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+  AB    rc=1 required=9 defects=7 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+A3_prose_lane_with_branch_deadbee1
+  orig  rc=1 required=9 defects=6 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+  A     rc=1 required=9 defects=6 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+  AB    rc=1 required=9 defects=7 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+A4_PATH_without_git_audit
+  orig  rc=1 stderr=["FileNotFoundError: [Errno 2] No such file or directory: 'git'"] stdout_ESC=False unmatched=[]
+  A     rc=1 stderr=["FileNotFoundError: [Errno 2] No such file or directory: 'git'"] stdout_ESC=False unmatched=[]
+  AB    rc=2 stderr=["could-not-evaluate: git unavailable: [Errno 2] No such file or directory: 'git'"] stdout_ESC=False unmatched=[]
+A5_errata_ESC_in_token_text_mode
+  orig  rc=1 stderr=[] stdout_ESC=True unmatched=["'errata-unmatched line=1 landed-omitted \\x1b[31mESC'"]
+  A     rc=1 stderr=[] stdout_ESC=True unmatched=["'errata-unmatched line=1 landed-omitted \\x1b[31mESC'"]
+  AB    rc=2 stderr=['could-not-evaluate: errata /tmp/kama-r21-AuditGitEnvSentinel/exp-AB/errata-esc.tsv:1: control character in row'] stdout_ESC=False unmatched=[]
+A6_errata_correction_shell_payload
+  orig  rc=1 required=9 defects=5 corrected=1 errata_invalid=1 errata_unmatched=0 stdout_ESC=False
+  A     rc=1 required=9 defects=5 corrected=1 errata_invalid=1 errata_unmatched=0 stdout_ESC=False
+  AB    rc=1 required=9 defects=5 corrected=1 errata_invalid=1 errata_unmatched=0 stdout_ESC=False
+A7_errata_correction_HEAD_minus_1
+  orig  rc=1 required=9 defects=5 corrected=1 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+  A     rc=1 required=9 defects=5 corrected=1 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+  AB    rc=1 required=9 defects=5 corrected=1 errata_invalid=1 errata_unmatched=0 stdout_ESC=False
+A8_report_shell_payload
+  orig  rc=1 required=9 defects=4 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+  A     rc=1 required=9 defects=4 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+  AB    rc=1 required=9 defects=4 corrected=0 errata_invalid=0 errata_unmatched=0 stdout_ESC=False
+
+PWN_files_created: orig=[] A=[] AB=[]
+no_mutation_clean_runs (lane, fleet changed keys): {"orig": {"fleet_plain": [], "lane": []}, "A": {"fleet_plain": [], "lane": []}, "AB": {"fleet_plain": [], "lane": []}}
+real round 10-20 (read-only fleet): orig==A (cmp rc 0), orig==AB (cmp rc 0), --no-errata identical (cmp rc 0); status=clean, defects=9, corrected=9

@@ -1,0 +1,59 @@
+# probe E1-E11 (offline; temp dirs under scratch; real tree read-only)
+python 3.14.8
+== E1 normal chain
+E1 tree_members ['libllama.so.0.7.0', 'llama-server']
+E1 links {'libllama.so': 'libllama.so.0', 'libllama.so.0': 'libllama.so.0.7.0'}
+E1 links_sha a49818c8cb55183fadcb5d49c073b294f1139c3abe213c07f98988c192169e26
+E1 gate_recompute_equal True
+E1 chain libllama.so None
+E1 chain libllama.so.0 None
+== E2 no symlinks
+E2 install_links -> ({}, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+E2 EMPTY e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+== E2b listing denied
+E2b install_tree -> ({}, None)
+E2b install_links -> ({}, None)
+== E3 per-entry OSError (emulated race / EIO)
+E3a lstat ENOENT on libllama.so.0 -> ({'libllama.so': 'libllama.so.0'}, '3ea82ba3506b0e0c8688fcc7e0ebea73e580b972a572efaacca5dac1fbb15645', False)
+E3a gate chain libllama.so after omission -> chain ends at 'libllama.so.0', not a pinned install_tree member
+E3b lstat ENOENT on both chain links -> ({}, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855', True)
+E3c readlink EIO on libllama.so -> ({'libllama.so.0': 'libllama.so.0.7.0'}, '7a0c43f0a255f76a3d3660f49379f64c6fa43aa8ca19dcfb818bd8b51fb053f6')
+== E4 non-UTF-8 bytes
+E4a install_tree (non-UTF-8 symlink NAME) -> fbab4ddc4a66a9e6618c7fe1dfa83b373c7fa96b77e50cbd64a294324c463e06
+E4a install_links (non-UTF-8 symlink NAME) -> RAISED UnicodeEncodeError 'utf-8' codec can't encode character '\udcff' in position 3: surrogates not allowed
+E4b install_tree (non-UTF-8 symlink TARGET) -> fbab4ddc4a66a9e6618c7fe1dfa83b373c7fa96b77e50cbd64a294324c463e06
+E4b install_links (non-UTF-8 symlink TARGET) -> RAISED UnicodeEncodeError 'utf-8' codec can't encode character '\udcfe' in position 10: surrogates not allowed
+E4c install_tree (non-UTF-8 REGULAR name; pre-existing) -> RAISED UnicodeEncodeError 'utf-8' codec can't encode character '\udcfe' in position 3: surrogates not allowed
+== E5 digest collision
+E5 links_A {'a': 'b -> c'}
+E5 links_B {'a -> b': 'c'}
+E5 maps_equal False | tree_sha_equal True | links_sha_equal True a956b706fa485e20fefba04979b60ecb27cd06a68b3fda48f3e71058f5cf695f
+E5 gate chain A(a) None | B(a -> b) None
+== E7 real tree (read-only)
+E7 regular_members 51 install_tree_sha256 6c216313a88d71b141bc62f684b8f95c040710ff050801b13521861826785a2c equals_R20_pin True
+E7 links 10 {"libggml-base.so": "libggml-base.so.0", "libggml-base.so.0": "libggml-base.so.0.27.0", "libggml.so": "libggml.so.0", "libggml.so.0": "libggml.so.0.27.0", "libllama-common.so": "libllama-common.so.0", "libllama-common.so.0": "libllama-common.so.0.7.0", "libllama.so": "libllama.so.0", "libllama.so.0": "libllama.so.0.7.0", "libmtmd.so": "libmtmd.so.0", "libmtmd.so.0": "libmtmd.so.0.7.0"}
+E7 links_sha b58f1b4df160c4e2accb95bac964a5648d24fc31e769f8044296a1fa431b9e10 gate_recompute_equal True
+E7 chain_problems {'libggml-base.so': None, 'libggml-base.so.0': None, 'libggml.so': None, 'libggml.so.0': None, 'libllama-common.so': None, 'libllama-common.so.0': None, 'libllama.so': None, 'libllama.so.0': None, 'libmtmd.so': None, 'libmtmd.so.0': None}
+== E8 source_binding
+E8 counts producer 5 gate 5
+E8 0 health_ready matches_gate_pin False span_recomputes True
+E8 1 loading_envelope_graded matches_gate_pin False span_recomputes True
+E8 2 teardown_graceful matches_gate_pin False span_recomputes True
+E8 3 teardown_graceful matches_gate_pin False span_recomputes True
+E8 4 teardown_graceful matches_gate_pin False span_recomputes True
+== E9 gate acceptance of link-field variants (CLI)
+E9 fixture install_links {'libllama.so.0': 'libllama.so', 'libllama-alias.so': 'libllama.so.0'}
+E9 valid-as-emitted -> exit 0 | VALID /tmp/kama-r21-LinksProducerReview/probe-jzya1zhl/valid.json
+E9 links-stripped -> exit 0 | VALID /tmp/kama-r21-LinksProducerReview/probe-jzya1zhl/stripped.json
+E9 links-stripped + pin -> exit 1 | INVALID /tmp/kama-r21-LinksProducerReview/probe-jzya1zhl/stripped.json: 1 problem(s)
+E9 links-emptied to sha('') -> exit 0 | VALID /tmp/kama-r21-LinksProducerReview/probe-jzya1zhl/emptied.json
+E9 links-emptied to sha('') + pin -> exit 1 | INVALID /tmp/kama-r21-LinksProducerReview/probe-jzya1zhl/emptied.json: 1 problem(s)
+E9 links {} + null digest -> exit 0 | VALID /tmp/kama-r21-LinksProducerReview/probe-jzya1zhl/nulldigest.json
+E9 links {} + null digest + pin -> exit 1 | INVALID /tmp/kama-r21-LinksProducerReview/probe-jzya1zhl/nulldigest.json: 1 problem(s)
+== E10 producer --selftest coverage (mutant copy in scratch)
+E10 mutant --selftest exit 0 | selftest: ok; closed tcp6 listeners ::1:42095, ::ffff:127.0.0.1:43573 
+E10 mutant direct install_links() call -> RAISED RuntimeError mutant: install_links disabled
+== E11 absolute target
+E11 chain x -> /usr/share/x target '/usr/share/x' leaves the pinned directory
+cleanup root removed: True
+EXIT=0
