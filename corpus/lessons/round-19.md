@@ -86,3 +86,11 @@ corrections, not pointer checks). The `gate-live-1` row is re-pinned to
 `1b85a24` (`1cb5a41b…`), the blob that actually names `live-recovery/`. C1
 therefore lands **calibration 7 → 7 (delta 0), verdict improved-bounded**, not
 the declared 7 → 8; the score is not raised on a refuted wording.
+
+- **Kill classification (TameshiConventions/C2BaselineInvalid).** The grid now
+  counts a mutant as rejected only on gate exit 1 (INVALID); exit 2/3 and
+  tracebacks are `error`, and an invalid baseline runs zero members and exits 2.
+  The selftest covers the invalid-baseline and absent-member cases.
+- **Citation scope honesty (RevisionDriftScan).** 609 of 635 lane-path citations
+  in the four scanned docs still carry no revision; the claim is that the three
+  registry-bound citations are machine-checked, not that all citations are.

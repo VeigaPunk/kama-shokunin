@@ -1,52 +1,73 @@
-VERDICT: partial - explicit-member `absent` status and the exit rule are confirmed on both the tested copy and lane HEAD `7229fa9`; default-set absent members are silently dropped (or the default set is replaced) while the grid exits 0, so "absent is reported, not silently skipped" holds only for `--members`.
+VERDICT: confirm - at HEAD `f1790e2` an absent member reports `absent`, is never counted as rejected, and forces exit 1 (exit 2 when the baseline is invalid). The silent default-set drop found at `7229fa9` is fixed at `5b108c1` and still fixed at `f1790e2`; one Low gap remains: the docstring defines exit 1 only as "a mutant survived".
 
 # C2MemberAbsent: absent-member grid check (round 19)
 
 **Question.** Ask `install-tree-grid.py` for a member absent from the receipt tree; confirm the `absent` status and the exit rule.
 
-**Versions tested (both re-run; identical except the new selftest).**
-- A. Copy taken at 03:20 (lane HEAD `8bf99ca` plus the uncommitted round-19 working tree): grid sha `467d44d8…`, gate `afc9e79b…`.
-- B. Lane HEAD `7229fa9` (round-19 commit that now holds both files; `git show 7229fa9:<path> | sha256sum` equals the snapshot: grid `49a42f81…`, gate `10912f24…`). The lane rewrote both files at 03:33, after my copy. B's gate adds two selftest mutants (`tree-sha-absent-expect`, `tree-sha-malformed-expect`); every gate step gave identical exits.
+**Versions verified** (one script, `out/reproduce.sh`, one log per source):
 
-**Receipt and pins.** `.ufo/waves/round-18/live-recovery/receipt-1.json` (sha `89728a02…`; schema v3; outcome pass; 51-member `install_tree`; tree sha `6c216313…`). Pins equal receipt-recorded values and on-disk hashes: server `b6a31a8e…` (installed `llama-server`), probe `36b64978…`, tool `83eac5c0…`, impl `e404b91a…`. Model `270cba1b…` is receipt-recorded only; the model file was not re-hashed.
+| tag | source | grid sha256 | gate sha256 |
+|---|---|---|---|
+| A | my copy, 03:20 (HEAD `8bf99ca` + round-19 working tree then) | `467d44d8…` | `afc9e79b…` |
+| B | HEAD `7229fa9` | `49a42f81…` | `10912f24…` |
+| C | working tree 03:39:10, uncommitted (= my proposed patch, byte-identical) | `e3a48957…` | `10912f24…` |
+| D | HEAD `5b108c1` (= working tree 03:40:51) | `2acfec23…` | `10912f24…` |
+| F | HEAD `f1790e2` (03:42:45), **current at report time** | `2acfec23…` | `a0dc1d07…` |
 
-**Reproduce.** `bash /tmp/kama-r19-C2MemberAbsent/out/reproduce.sh` (A) and `SRC=lane-now bash /tmp/kama-r19-C2MemberAbsent/out/reproduce.sh` (B). Logs: `out/reproduce.log`, `out/reproduce-lane-now.log`. Hashes: `out/index.sha256`. Step numbers below match `### NN` labels in the logs.
+The lane changed repeatedly during this run: three commits and four working-tree rewrites. Each snapshot was checked with `cmp` or `git show <rev>:<path> | sha256sum`. Nothing after `f1790e2` is covered. The only lane write is this report, as the trailer requires.
+
+**Receipt and pins.** `.ufo/waves/round-18/live-recovery/receipt-1.json` (sha `89728a02…`; v3; pass; 51-member tree; tree sha `6c216313…`). Pins equal receipt-recorded values and on-disk hashes: server `b6a31a8e…` (installed `llama-server`), probe `36b64978…`, tool `83eac5c0…`, impl `e404b91a…`. Model `270cba1b…` is receipt-recorded only; the model file was not re-hashed.
+
+**Reproduce.** `bash /tmp/kama-r19-C2MemberAbsent/out/reproduce.sh` (A), or `SRC=lane-now|lane-wt|lane-wt3|lane-f1790 bash …/out/reproduce.sh` (B–F). Logs: `out/reproduce*.log`. Hashes: `out/index.sha256`.
+
+## Results (exit per step; `###` labels in the logs)
+
+| step | run | A | B | C | D | F |
+|---|---|---|---|---|---|---|
+| 00 | gate, real receipt, all pins | 0 | 0 | 0 | 0 | 0 |
+| 01 | absent only, tree pin on | 1 | 1 | 1 | 1 | 1 |
+| 02 | absent only, pre-pin | 1 | 1 | 1 | 1 | 1 |
+| 03 | present `libggml-base` + absent | 1 | 1 | 1 | 1 | 1 |
+| 04 | absent only, `--json` | 1 | 1 | 1 | 1 | 1 |
+| 05 | two absent | 1 | 1 | 1 | 1 | 1 |
+| 06 | zero model pin (baseline INVALID) + absent | 2 | 2 | 2 | 2 | 2 |
+| 07 | default members, pin on (control) | 0 | 0 | 0 | 0 | 0 |
+| 08 | default members, pre-pin (control) | 1 | 1 | 1 | 1 | 1 |
+| 09 | gate, receipt without `libllama.so.0.7.0` | 0 | 0 | 0 | 0 | 0 |
+| 10 | default members, that receipt, pin on | **0** | **0** | 1 | 1 | 1 |
+| 11 | explicit members, that receipt, pin on | 1 | 1 | 1 | 1 | 1 |
+| 12a | gate, receipt without any default | 0 | 0 | 0 | 0 | 0 |
+| 12b | default members, that receipt, pin on | **0** | **0** | 1 | 1 | 1 |
+| 13 | receipt path does not exist | 1 | 1 | 1 | 2 | 2 |
+| 14 | lane `--selftest` | – | 0 | 0 | 0 | 0 |
+
+Bold = silent exit 0 on the default set, before the fix. Under C–F step 06 prints `members=0` with no absent row (invalid-baseline rows are suppressed); exit 2 is unchanged. Step 13 is a traceback with exit 1 in A–C and a clean message with exit 2 in D/F. P-series (proposed patch on B's grid): P1 1, P2 1, P3 0, P4 1, P5 1 in every source. P0 (diff vs my patch) is 0 only for C, since C is byte-identical to it.
 
 ## Absent status: confirmed
-`--members libllama-absent-probe.so.0.0.0`, not in `server.install_tree`, yields row `absent`. No gate runs for it (B L92-94; the JSON row carries only `member` and `status`, step 04). Output `rejected=0/1`, exit 1 (step 01). Step 02 is the pre-pin variant, also exit 1.
+`--members libllama-absent-probe.so.0.0.0` (not in `server.install_tree`) yields row `absent`. F L97-99: no gate run for it. The JSON row carries only `member` and `status` (step 04). Output `baseline=VALID members=1 rejected=0/1`, exit 1 (step 01).
 
-## Exit rule: confirmed as implemented
-B L118-120: baseline not VALID gives exit 2; otherwise `0 if rejected == len(rows) else 1`. Absent rows are counted in `len(rows)` but never in `rejected`, so any absent row forces exit 1. Exit 0 is impossible with an absent row.
+## Exit rule: confirmed
+F L123-125: baseline not VALID gives 2; otherwise `0 if rejected == len(rows) else 1`. Absent rows count in `len(rows)` but never in `rejected` (F L110), so any absent row forces exit 1 and exit 0 is impossible with one. Step 06 shows exit 2 takes precedence under an invalid baseline.
 
-| step | run | exit | key stdout |
-|---|---|---|---|
-| 01 | absent only, pin on | 1 | `rejected=0/1`, `absent` |
-| 03 | `libggml-base` + absent | 1 | `rejected=1/2` |
-| 05 | two absent | 1 | `rejected=0/2` |
-| 06 | zero model pin (baseline INVALID) + absent | 2 | `baseline=INVALID`; exit 2 takes precedence |
-| 07 | default members, pin on (control) | 0 | `rejected=3/3` (matches C2's pinned count) |
-| 08 | default members, pre-pin (control) | 1 | `rejected=0/3`, all `accepted` (matches C2's pre-pin count) |
-| 13 | lane `--selftest` (B only) | 0 | `selftest: ... absent member ... passed` |
+## Finding 1: silent default-set drop (Medium). Present at B, fixed at C/D/F
+B L80: `members = args.members or [m for m in DEFAULT_MEMBERS if m in tree]`. B L81-82: if none are present, `members = sorted(tree)[:3]`. The absent branch (B L92-94) is unreachable for default names.
+- Step 10: exit 0, `members=2 rejected=2/2`, no row for `libllama.so.0.7.0`.
+- Step 12b: exit 0, `members=3 rejected=3/3` on `LICENSE`, `ggml-rpc-server`, `libggml-cpu-alderlake.so`.
+- B's selftest always passes `--members` (B L155), so it never exercised this path.
+- The real round-18 tree has all three defaults (step 07), so no recorded result changed.
+- Latent risk: the runner's `tree-grid-pin` (run.py L67, source read, not executed) uses default members and passes iff exit 0 (run.py L95, source read). On a tree missing a default, B would pass with reduced coverage. [INFERENCE: how likely such a tree is.]
+- Fix, now in HEAD: F L85 `members = args.members or list(DEFAULT_MEMBERS)`, fallback removed. Steps 10 and 12b now exit 1 with `absent` rows (C/D/F). Controls 07/08 and P3/P4 are unchanged.
 
-## Finding 1: absent default members are silently dropped (Medium, latent)
-B L80: `members = args.members or [m for m in DEFAULT_MEMBERS if m in tree]`. B L81-82: if none are present, `members = sorted(tree)[:3]`. The absent branch (L92-94) is never reached for default names.
-- Step 09: the gate accepts a receipt with `libllama.so.0.7.0` removed and its digest recomputed (exit 0).
-- Step 10: default grid, pin on: exit 0, `members=2 rejected=2/2`, no row for `libllama.so.0.7.0`.
-- Steps 12a/12b: all three defaults removed: exit 0, `members=3 rejected=3/3`, on `LICENSE`, `ggml-rpc-server`, `libggml-cpu-alderlake.so`.
-- B's new selftest always passes `--members` (L155), so it never exercises this path.
-- The real round-18 tree has all three defaults (step 07), so no current result changes. Latent risk: the runner's `tree-grid-pin` (run.py L67, source read, not executed) uses default members and passes iff exit 0 (run.py L95, source read). A tree missing a default would pass with reduced coverage. [INFERENCE: how likely such a tree is.]
+## Finding 2: exit 1 for absent is not documented (Low)
+The docstring (F L17-18) still defines 1 as "a mutant survived". Absent-only (step 01) and a survivor run (step 08) both exit 1; only the status word differs. The lane's selftest (F L186-187) now pins absent → 1, so the behavior is contract-by-test but not by docstring. Suggest documenting absent as "requested, not measured; counts as not rejected". [INFERENCE, untested] Exit 2 for requested-absent would keep 1 = "survived", but would change the selftest and any caller that reads the code.
 
-## Finding 2: exit 1 conflates "absent" with "survived" (Low)
-Docstring B L17-18: 1 = "a mutant survived". Absent-only (step 01) and a survivor run (step 08) both exit 1; only the status word differs. `absent` is not in the exit contract, and `rejected=0/1` reads like a survivor.
-
-## Proposed fix: tested, not applied
-Replace B L80-82 with `members = args.members or list(DEFAULT_MEMBERS)` and delete the fallback. Diff: `out/lane-now-proposed/grid.diff` (and `out/proposed/grid.diff` for A).
-- Steps P1/P2: a missing default becomes an `absent` row and exit 1 (was exit 0).
-- Controls unchanged: P3 real tree, pin on, exit 0 at 3/3; P4 pre-pin, exit 1 at 0/3; P5 explicit absent, exit 1.
-- [INFERENCE, untested] Mapping requested-absent to exit 2 ("bad input") would keep exit 1 meaning "survived". That needs a docstring change and a check of the runner's `want` expectations.
+## New behavior at D/F (informational)
+- An invalid baseline now runs no members (F L96), so absent names are not listed in that case. Exit 2 still signals it.
+- An unreadable receipt now exits 2 with a message (F L77-80), instead of a traceback with exit 1.
 
 ## Gaps and disclosures
+- Lane moved during the run: commits `7229fa9` (03:34:47), `5b108c1`, `f1790e2` (03:42:45); working-tree writes at 03:33:02, 03:33:16, 03:39:10, 03:40:51. The gate at `f1790e2` adds seven lines (empty-tree rejection); no step changed.
+- `pgrep` matched two `check-receipt.py` processes running from the lane path (PIDs 415891, 416261) that this work did not start. A copy-path check afterwards found none (leftover step, exit 1).
 - One read-only `git status --short -- .ufo/waves/round-19/build/advice` ran in the lane. It may refresh the index stat cache; no content changed. Other lane git calls were `log`, `show`, and `rev-parse`.
-- The first run's `pgrep` matched two `check-receipt.py` processes running from the lane path (PIDs 415891, 416261) that this work did not start. A copy-path check afterwards found none (leftover step, exit 1).
-- Not run: the lane's `run.py` (it writes lane artifacts) and model-file hashing.
-- Only lane write: this report, per the trailer. Installs or updates: none.
+- Not run: the lane's `run.py` (it writes lane artifacts); model-file hashing.
+- Installs or updates: none.

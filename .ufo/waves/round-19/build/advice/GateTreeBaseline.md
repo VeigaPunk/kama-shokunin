@@ -13,7 +13,7 @@ VERDICT: confirm - the pre-pin grid (gate 1b85a24, no tree pin) rejects 0/3 cons
 | cell | gate | tree pin | exit | grid output |
 |---|---|---|---|---|
 | Before | 1b85a24 blob, sha256 `1dfcf23e…ad99` | off | **1** | `baseline=VALID members=3 rejected=0/3 tree_pin=off` |
-| After | 7229fa9 blob, sha256 `10912f24…dd92` | on | **0** | `baseline=VALID members=3 rejected=3/3 tree_pin=on` |
+| After | 7229fa9 blob, sha256 `10912f24…92dd` | on | **0** | `baseline=VALID members=3 rejected=3/3 tree_pin=on` |
 
 Commands (run in `/tmp/kama-r19-GateTreeBaseline`; pins are receipt-1's recorded values; absolute-path forms are in `out/head-7229fa9/COMMANDS.txt`):
 ```
@@ -26,7 +26,7 @@ Commands (run in `/tmp/kama-r19-GateTreeBaseline`; pins are receipt-1's recorded
 
 ## Attribution
 - After: each of the 3 mutants exits 1 with one problem, `server.install_tree_sha256 <recomputed> != expected 6c216313…`. Before: each of the 3 mutants is `VALID` (exit 0).
-- Gate delta 1b85a24 → 7229fa9 (`git diff --numstat`, exit 0): 33 insertions, 3 deletions. These are usage text, the `expect_tree` parameter, the tree-pin check in `validate`, the expect-loop entry, the argparse flag, and selftest cases (two new mutations, selftest-only). Control C shows the unpinned path is unchanged.
+- Gate delta 1b85a24 → 7229fa9 (`git diff --numstat`, exit 0): 33 insertions, 3 deletions. These are usage text, the `expect_tree` parameter, the tree-pin check in `validate`, the expect-loop entry, the argparse flag, and selftest cases (two new mutations, selftest-only). On every measured no-pin case (grid cells A and C; direct checks G1 and G2) the two gates give identical verdicts.
 - Pin value: the live producer `install_tree()` on `/home/vgpnk/.local/opt/llama-b11755` gives `6c216313…` (51 members, none differing from receipt-1; `out/producer-install-tree.json`). This is the same value `run.py` passes (HEAD lines 58-61).
 - The lane's `run.py` (HEAD lines 67-68) already expects exit 1 for the no-pin run and 0 for the pin run. The measurements match.
 

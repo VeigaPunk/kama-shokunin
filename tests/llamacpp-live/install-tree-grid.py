@@ -104,9 +104,13 @@ def main(argv=None):
             path = tmp / (member.replace("/", "_") + ".json")
             path.write_text(json.dumps(mutant), encoding="utf-8")
             code, text = gate_exit(args.gate, path, argv)
+            # A kill is an INVALID verdict (exit 1), never an error (2) or
+            # NOT-EVALUATED (3); tameshi's convention and the gate's own
+            # selftest both require an emitted verdict.
+            status = ("rejected" if code == 1 else
+                      "error" if code in (2, 3) else "accepted")
             rows.append({"member": member, "gate_exit": code,
-                         "status": "rejected" if code != 0 else "accepted",
-                         "stdout": text})
+                         "status": status, "stdout": text})
     rejected = sum(1 for r in rows if r["status"] == "rejected")
     doc = {"schema": "kama-install-tree-grid/v1",
            "gate": str(args.gate), "receipt": str(args.receipt),

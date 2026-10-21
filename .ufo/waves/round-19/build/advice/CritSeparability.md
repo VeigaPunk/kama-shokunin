@@ -18,7 +18,7 @@ VERDICT: partial - C1 and C2 are causally separable by counting command (2x2 tog
 | tests/llamacpp-live/check-receipt.py (sixth pin, selftest cases) | | yes | grid, gate |
 | tests/llamacpp-live/install-tree-grid.py (new) | | yes | grid |
 | .ufo/waves/round-18/runs/run.py | | yes | none (not executed) |
-| corpus/SOURCES.md | S055 block, EOF lines 217-224 | S057 row, line 69 | **C1 (DEFAULT_DOCS)** |
+| corpus/SOURCES.md | S055 block, EOF lines 217-221 | S057 row, line 69 | **C1 (DEFAULT_DOCS)** |
 | SCORECARD.md | defect-3 erratum 809-813, C1 para 821-826 | C2 para 828-835 | **C1 (DEFAULT_DOCS)** |
 | corpus/lessons/round-19.md (untracked) | declares | declares; S057 gate table | none (inert) |
 

@@ -1,6 +1,6 @@
 VERDICT: refute - C1 as worded overreaches: the checker digest-checks three registry rows and nothing about the sentences beside them; one pin verifies bytes that contradict its sentence; defects 1 and 4 have no machine check.
 
-Scope: `cp -a` snapshot of the lane (03:29Z, 2026-10-21) at /tmp/kama-r19-CritC1Inflation; lane untouched. Every command, exit and output: `/tmp/kama-r19-CritC1Inflation/out/RECEIPT.md`; raw receipts in `out/receipts/`; fixtures in `out/mutants/`.
+Scope: `cp -a` snapshot of the lane (03:29 local time, 2026-10-21) at /tmp/kama-r19-CritC1Inflation; lane untouched. Every command, exit and output: `/tmp/kama-r19-CritC1Inflation/out/RECEIPT.md`; raw receipts in `out/receipts/`; fixtures in `out/mutants/`.
 
 ## Holds (narrow mechanism only)
 - `python3 tools/citation-provenance.py` -> `required=3 found=3 verified=3 missing=0 mismatch=0`, exit 0 (R0). `--selftest` -> `selftest: ok (5 cases)`, exit 0 (R2).
