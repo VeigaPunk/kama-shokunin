@@ -1306,3 +1306,25 @@ and in SKILL/lesson, not treated as current authority.
   S075–S080 are logged old→new in the lesson; freshly reopened S087/S088
   clarify series URLs without rewriting immutable cells. Final additions14.
   Official recipe includes each consecutive source-touching commit pair.
+
+## round 22 — committed-tree measured results and publication
+
+- Implementation landed971d4549; source/residual integration landed6433390a.
+  Official recipe at clean input commit
+  `6433390a5c8f4412c2410c114309ffced5c0572f` ran29/29 commands at expected
+  exits, harness0, no timeouts/mismatches. Outputs are published separately
+  under `.ufo/waves/round-22/runs/6433390a/`, not attributed as input files.
+- C1 calibration7→7 verified: activated faults18, helper refusals0→18,
+  null returns3→0, partial digests15→0, controls14/14 both arms; selftest8/8.
+  Counting commands/stream hashes and population SHA are in commands.json,
+  summary.json and the round lesson. Old producer backstop18/18 not credited
+  as new behavior. Five actual-producer mutants killed with clean positives.
+- No-harm receipt/producer/grid/legacy-receipt, error-census, GGUF23/23,
+  citation17/17, snapshot30/0 and prelaunch3/3 checks meet declared exits.
+  Final source rows88 (74→88), added A13/B1/C0, mined72/queued8/rejected8;
+  census/validate0 with20 duplicate-URL warnings, missing0. Both consecutive
+  source-touching commit-pair guards pass; all pre-round rows immutable.
+- Trends: expansion unchanged; quality improved; discernment improved
+  narrowly through learned prior outside D2/D4 feedback and KQ31/KQ32.
+  No new capability/promotion, no model-quality/current consumer-health claim.
+  Existing fixture/archive L0 questions retained; no new question or install.

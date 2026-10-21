@@ -245,3 +245,53 @@ Source review findings were integrated above. Residual attack inventory
 grew60→62 when two micro-version correction rows were added; still below64.
 Fresh primary reopens ground those rows; outside non-author sampling remains
 the closure's duty. The official recipe follows after the next clean commit.
+
+## Official measured outcome — 6433390a
+
+The L1 ran once after all build/residual seats settled:
+
+`python3 .ufo/waves/round-22/run.py --recipe .ufo/waves/round-22/recipe.json --out .ufo/waves/round-22/runs/6433390a`
+
+Measured clean committed branch tip
+`6433390a5c8f4412c2410c114309ffced5c0572f`:29/29 expected exits,0
+timeouts/mismatches, harness0. `runs/6433390a/commands.json` preserves actual
+argv, UTC starts, exits and stream digests; output publication is a later
+commit, not a claim the outputs existed inside the measured input tree.
+
+| C1 finite measure | Frozen10271460 | Current6433390a |
+|---|---:|---:|
+| Activated OSError fault rows | 18 | 18 |
+| Explicit helper refusals | 0 | 18 |
+| Null results returned under fault | 3 | 0 |
+| Partial digests returned under fault | 15 | 0 |
+| Unchanged success/propagation controls passed | 14/14 | 14/14 |
+| Contract violations | 18 | 0 |
+
+Counting command `python3 tests/llamacpp-live/install-io-grid.py --arm both
+--json` exits1 because the frozen arm is intentionally red; selected current
+arm exits0, frozen1. Selftest8/8, including always-refuse/empty CNE controls
+and refusal-deletion/broad-catch fixtures. Population SHA
+`5b38422c32c5fb8bdfe1b69ed003f260914c339a2c12abf0f984790f4ca9833d`;
+frozen sourcecec67949…, current8c0dbb2b…. The old two-helper backstop's
+18/18 refusals remain separate from the helper improvement.
+
+No-harm recipe meets every declared exit: links grid/current21 cases and
+its selftest, producer selftest, receipt gate12 VALID+1 NOT-EVALUATED and99
+mutations+unreadable, three old receipts, error census current misclassified0
+and unrun0, GGUF23/23 with oracle/receipt agreement, citation17/17,
+snapshot30 pass0 fail, prelaunch unpinnable3/3 with child_pid/argv null.
+No live model server or registered-consumer probe ran; isolated ownership
+socket/stub selftests are not new serving evidence.
+
+Source census/validate commands are the exact absolute argv in the recipe.
+Rows74→88, A70→83/B1→2/C3; mined60→72/queued7→8/rejected7→8,
+missing0. Validate/census exit0;20 W04 warnings are scoped duplicate URLs,
+not enum/shape failures. Source-pair guards base10271460→971d4549
+(12 additions) and971d4549→6433390a (2 additions, permitted used-by
+changes) both exit0; aggregate14-addition guard also0. Streams retained.
+
+Author verdict: C1 verified narrow calibration improvement, score7→7,
+no other observed axis harmed. Expansion unchanged; quality improved;
+discernment improved through learned prior outside D2/D4 criteria, not
+self-attested current outside review. No capability or promotion row added.
+Non-author round22 admission/sample remains the orchestrator's next act.

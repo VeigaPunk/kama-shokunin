@@ -1066,3 +1066,44 @@ records the final grid21 cells (link13/13, subdir3/3, regular3/3, type1/1,
 null0/1), gate12 VALID+1 NOT-EVALUATED/99 mutations, producer/e2e and
 no-harm results (`../MANIFEST.json` rounds[406]). This is an appended record
 correction, not a fresh R22 execution of the R21 live recipe.
+
+### Round-22 final measured results — clean tree 6433390a
+
+`python3 .ufo/waves/round-22/run.py --recipe .ufo/waves/round-22/recipe.json
+--out .ufo/waves/round-22/runs/6433390a` measured committed branch tip
+`6433390a5c8f4412c2410c114309ffced5c0572f`: **29/29 declared exits met**,
+zero timeouts/mismatches, harness exit0 (`commands.json`).
+
+| Claim | Axis/score | Before → after | Counting commands | Evidence |
+|---|---|---|---|---|
+| C1 helper I/O error/identity separation | calibration7 → 7; verified narrow improvement | faults18; explicit refusals0/18 → 18/18; null returns3 → 0; partial digests15 → 0; controls14/14 in both arms; current violations0 | `python3 tests/llamacpp-live/install-io-grid.py --arm frozen --json` (1), `--arm current --json` (0), `--arm both --json` (1 intentionally red frozen) | `runs/6433390a/c1-io-{frozen,current,both}.stdout`; frozen producer10271460/SHAcec67949, current SHA8c0dbb2b; population SHA5b38422c |
+
+The frozen two-helper backstop refuses18/18 after the transient faults; no
+new producer-level escape is credited. Gate selftest8/8; five actual-producer
+mutants killed with clean/restored positives (`residual/FinalMutations/`).
+The error-detail suffix is informational, not graded; first-file diagnostic
+grammar change and scan-time/race limits are explicit in the knowledge entry.
+
+No-harm: install-links grid current21 cells all expected (links13/13,
+subdirs3/3, regular3/3, type1/1, null0/1), gate12 VALID+1 NOT-EVALUATED/99
+mutations+unreadable, producer selftest, three R18 legacy receipts, GGUF23/23
+with real-file oracle/receipt agreement, citation17/17, error census current
+misclassified0/unrun0, snapshot30 pass0 fail, and prelaunch refusal3/3 all
+meet declared exits. No live model server launched or registered consumer
+sampled; this is capability reliability/calibration, not a new repertoire row.
+
+Source census command `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh census --root /home/vgpnk/Projects/shokunin kama`:
+rows74→88, A70→83/B1→2/C3, mined60→72/queued7→8/rejected7→8, missing0;
+validate exit0 with20 W04 duplicate-URL warnings. Actual absolute argv/streams
+are in the recipe receipts. Both consecutive source-touching commit-pair
+guards pass; S075–S080 used-by changes are logged in the lesson.
+
+Trends: expansion **unchanged** (no new entry/capability); quality **improved**
+(measured helper gap and sourced corrections); discernment **improved**
+narrowly because prior outside D2/D4 feedback became grounded KQ31/KQ32,
+not because author-dispatched review is outside attestation.
+
+Planned: keep the remaining receipt-header, historical crash-as-kill,
+external-library/loader identity and K05/other-engine frontier explicit;
+trusted-repo audit hardening and richer diagnostics are not acquired here.
+Await outside R22 admit/reject sampling. No next round is started.
