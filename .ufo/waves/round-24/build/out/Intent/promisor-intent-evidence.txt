@@ -1,0 +1,143 @@
+# Intent lane evidence — extracted verbatim from scratch clone /fast/scratch/hyaku/kama-r24/Intent (base 0df800e896f6bce285a81e794ad4ae1d1e6c3a71)
+
+## check_history_repo, FIRST form (git show e0f0434:tools/report-landing-audit.py)
+def check_history_repo(repo):
+    """Refuse a repository whose visible history is not its object history
+    (shallow boundary, info/grafts), whose missing objects belong to a
+    promisor remote (absence is not evidence there), or whose object names
+    the 40-hex scanners cannot read (non-sha1 object format)."""
+    fmt = git(repo, "rev-parse", "--show-object-format").strip()
+    if fmt != "sha1":
+        raise EvalError(f"{repo}: object format {fmt!r}, not sha1")
+    if git(repo, "rev-parse", "--show-prefix").strip():
+        raise EvalError(f"{repo}: not a repository top level")
+    if git(repo, "rev-parse", "--is-shallow-repository").strip() != "false":
+        raise EvalError(f"{repo}: shallow repository")
+    for rel in ("info/grafts", "objects/pack"):
+        path = Path(repo, git(repo, "rev-parse", "--git-path", rel).strip())
+        if rel == "info/grafts" and os.path.lexists(path):
+            raise EvalError(f"{repo}: {path} rewrites history")
+        if rel == "objects/pack" and path.is_dir() and any(
+                p.suffix == ".promisor" for p in path.iterdir()):
+            raise EvalError(f"{repo}: partial clone (promisor pack)")
+    for line in git(repo, "config", "--list", "--name-only").split("\n"):
+        if line == "extensions.partialclone" or re.fullmatch(
+                r"remote\..+\.promisor", line):
+            raise EvalError(f"{repo}: partial clone ({line})")
+
+
+
+## check_history_repo, FINAL form at base (tools/report-landing-audit.py:437-465)
+
+def check_history_repo(repo):
+    """Refuse a repository whose visible history is not its object history
+    (shallow boundary, info/grafts), whose missing objects belong to a
+    promisor remote (absence is not evidence there), or whose object names
+    the 40-hex scanners cannot read (non-sha1 object format)."""
+    fmt = git(repo, "rev-parse", "--show-object-format").strip()
+    if fmt != "sha1":
+        raise EvalError(f"{repo}: object format {fmt!r}, not sha1")
+    if git(repo, "rev-parse", "--show-prefix").strip():
+        raise EvalError(f"{repo}: not a repository top level")
+    if git(repo, "rev-parse", "--is-shallow-repository").strip() != "false":
+        raise EvalError(f"{repo}: shallow repository")
+    for rel in ("info/grafts", "objects/pack"):
+        path = Path(repo, git(repo, "rev-parse", "--git-path", rel).strip())
+        if rel == "info/grafts" and grafts_effective(path):
+            raise EvalError(f"{repo}: {path} rewrites history")
+        if rel == "objects/pack" and path.is_dir() and any(
+                p.suffix == ".promisor" and p.with_suffix(".pack").exists()
+                for p in path.iterdir()):
+            raise EvalError(f"{repo}: partial clone (promisor pack)")
+    listing = git(repo, "config", "--null", "--list",
+                  errors="surrogateescape")
+    for entry in filter(None, listing.split("\0")):
+        key, _, value = entry.partition("\n")
+        if key == "extensions.partialclone" or (
+                re.fullmatch(r"remote\..+\.promisor", key)
+                and git_bool(value)):
+            raise EvalError(f"{repo}: partial clone ({key})")
+
+## GIT_ISOLATION comment + tuple (tools/report-landing-audit.py:88-96)
+# Repository-local state that changed, crashed or hijacked verdicts in the
+# round-23 fault grid: refs/replace substitutions, promisor lazy fetches and
+# signature verification (both may run repo-configured programs), re-encoded
+# log output, log.follow/log.showRoot cutoffs and an eagerly read worktree
+# .mailmap. Old git (< 2.45) rejects --no-lazy-fetch, which is an EvalError.
+GIT_ISOLATION = ("--no-replace-objects", "--no-lazy-fetch",
+                 "-c", "i18n.logOutputEncoding=UTF-8",
+                 "-c", "log.follow=false", "-c", "log.showRoot=true",
+                 "-c", "log.showSignature=false", "-c", "log.mailmap=false")
+
+## module docstring trust paragraph (tools/report-landing-audit.py:44-55)
+unusable git or non-UTF-8 git output, shallow/grafted/non-sha1 repository,
+malformed ledger, empty round selection, output failure).
+Errors are never verdicts.
+
+Repository trust (round 23, tests/report-audit/repo-state-grid.py):
+refs/replace, lazy fetch, signature display, log re-encoding,
+log.follow/log.showRoot and .mailmap are neutralized; a plain --branch name
+means refs/heads/<name>; shallow, grafted, partial-clone, non-sha1 and
+non-top-level repositories and ref-named citations are refused. Objects
+borrowed through objects/info/alternates or a .git gitfile still resolve as
+local, and other repository-local channels are not claimed. Audit trusted
+repositories only; git >= 2.45 is required.
+
+## F27 fixture (tests/report-audit/repo-state-grid.py:482-497)
+def f_filter_promisor(tmp):
+    """`remote.<name>.partialclonefilter` alone makes a promisor remote, so
+    a missing-object lookup would fetch (and run core.sshCommand)."""
+    lane, fleet = pair(tmp)
+    lc = commit(lane, "kama-shokunin", 1000, "round-1: work")
+    fake = "abcdefabcdefabcdefabcdefabcdefabcdefabcd"
+    publish(fleet, report([lc, fake]))
+    marker = Path(tmp, "filter-fetch-ran")
+    for k, v in (("remote.origin.url", "ssh://example.invalid/x.git"),
+                 ("remote.origin.partialclonefilter", "blob:none"),
+                 ("core.sshCommand", f"touch {marker}; false")):
+        g(lane, "config", k, v)
+    subprocess.run(["git", "-C", str(lane), "cat-file", "-e", fake],
+                   capture_output=True, env=env())
+    require(marker.exists(), "filter-only promisor did not lazy fetch")
+    marker.unlink()
+
+## C09 + C10 controls (tests/report-audit/repo-state-grid.py:539-549)
+def c_promisor_false(tmp):
+    lane, fleet, _ = base(tmp)
+    g(lane, "config", "remote.origin.promisor", "false")
+    return lane, fleet, [], None
+
+
+def c_orphan_marker(tmp):
+    lane, fleet, _ = base(tmp)
+    Path(lane, ".git/objects/pack").mkdir(parents=True, exist_ok=True)
+    Path(lane, ".git/objects/pack/pack-deadbeef.promisor").write_bytes(b"")
+    return lane, fleet, [], None
+
+## T01 tradeoff fixture (tests/report-audit/repo-state-grid.py:596-602) + row :689
+def t_blobless(tmp):
+    lane, fleet, _ = base(tmp)
+    g(lane, "config", "uploadpack.allowFilter", "true")
+    clone = Path(tmp, "blobless")
+    g(tmp, "-c", "protocol.file.allow=always", "clone", "-q",
+      "--filter=blob:none", "--no-local", f"file://{lane}", str(clone))
+    return clone, fleet, [], None
+    ("T01-blobless-partial-clone", "tradeoff", t_blobless, 0, []),
+
+## graded row expectations (tests/report-audit/repo-state-grid.py:674-689)
+    ("F27-filter-only-promisor-remote", "fault", f_filter_promisor, 1,
+     ["landed-unresolved", "unresolved-full-hash"]),
+    ("F28-shallow-fleet", "fault", f_shallow_fleet, 2, None),
+    ("F29-broken-branch-same-named-tag", "fault", f_broken_branch, 2, None),
+    ("F30-config-include-fifo", "fault", f_config_fifo, 2, None),
+    ("C09-promisor-false-config", "control", c_promisor_false, 0, []),
+    ("C10-orphan-promisor-marker", "control", c_orphan_marker, 0, []),
+    ("C11-uppercase-errata-correction", "control", c_upper_correction, 0,
+     ["unresolved-full-hash"]),
+    ("C12-thirteen-digit-author-time", "control", c_long_time, 0, []),
+    ("C13-comment-only-grafts", "control", c_comment_grafts, 1,
+     ["landed-omitted"]),
+    ("O01-alternates-foreign-object", "open", o_alternates, 1,
+     ["landed-unresolved", "unresolved-full-hash"]),
+    ("O02-gitfile-redirect", "open", o_gitfile, 1, ["landed-omitted"]),
+    ("T01-blobless-partial-clone", "tradeoff", t_blobless, 0, []),

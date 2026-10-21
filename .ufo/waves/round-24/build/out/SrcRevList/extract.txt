@@ -1,0 +1,70 @@
+git-rev-list — official documentation extract (source evidence)
+================================================================
+URL (latest):   https://git-scm.com/docs/git-rev-list
+URL (pinned):   https://git-scm.com/docs/git-rev-list/2.56.0
+HTTP:           200 (latest), 200 (pinned)
+Fetched:        2026-10-21T17:53:42Z (server Date header, headers.txt)
+Page label:     "git-rev-list last updated in 2.56.0" (rev-list-2.56.0.html:1322)
+Local git:      2.56.0 (`git --version`), local man page text matches
+sha256 latest:  6eca09d9ef21dd4270ff2c73cac7ee26964aebc470f4dfc52705eb27749ce65f
+sha256 pinned:  2c9b7ed2177a70b69fa1c801f026ce2a2e6ece0a842f2055c98f44b7c405c7d4
+Diff:           section text identical between latest and pinned (same dt/dd text)
+
+In-page anchor ids and raw-HTML lines (pinned copy)
+--------------------------------------------------
+§Object Traversal                          #_object_traversal                     line 4516
+--objects                                   #Documentation/git-rev-list.txt---objects                    line 4522 (text 4524-4527)
+--no-object-names                           #Documentation/git-rev-list.txt---no-object-names            line 4570 (text 4572-4575)
+--missing=<missing-action>                  #Documentation/git-rev-list.txt---missingmissing-action       line 4654
+  --missing=error paragraph                 lines 4659-4660
+  --missing=allow-any paragraph             lines 4663-4665
+  --missing=allow-promisor paragraph        lines 4668-4670
+  --missing=print paragraph                 lines 4673-4674
+  --missing=print-info paragraph            line 4677 onward
+  missing-tips paragraph                    lines 4705-4707
+-z (NUL mode, missing=yes token)            option text 3809-3833; token example line 3828
+--missing-only                              dt line 4710; text 4712-4722
+
+Verbatim quotes (whitespace-normalized; <=25 words each)
+--------------------------------------------------------
+Q1 --objects (12 words):
+"Print the object IDs of any object referenced by the listed commits."
+
+Q2 --no-object-names (16 words):
+"Only useful with --objects; does not print the names of the object IDs that are found."
+
+Q3 --missing=print (16 words):
+"The form --missing=print is like allow-any, but will also print a list of the missing objects."
+
+Q4 --missing=print prefix (8 words):
+"Object IDs are prefixed with a \u201c?\u201d character."
+
+Q5 --missing=allow-any silence (9 words):
+"Missing objects will silently be omitted from the results."
+
+Q6 --missing=error default (16 words):
+"The form --missing=error requests that rev-list stop with an error if a missing object is encountered."
+
+Q7 missing tips (22 words):
+"If some tips passed to the traversal are missing, they will be considered as missing too, and the traversal will ignore them."
+
+Q8 missing tips without OID (14 words):
+"In case we cannot get their Object ID though, an error will be raised."
+
+Q9 -z missing record (syntax, exact):
+"<OID> NUL missing=yes NUL [<token>=<value> NUL]..."
+
+Q10 --quiet connectivity/exit status (22 words; --quiet dt line 3670, text 3672-3676):
+"is primarily meant to allow the caller to test the exit status to see if a range of objects is fully connected"
+
+Full --missing section (normalized text, pinned page lines 4654-4708)
+---------------------------------------------------------------------
+A debug option to help with future "partial clone" development. This option specifies how missing objects are handled. The form --missing=error requests that rev-list stop with an error if a missing object is encountered. This is the default action. The form --missing=allow-any will allow object traversal to continue if a missing object is encountered. Missing objects will silently be omitted from the results. The form --missing=allow-promisor is like allow-any, but will only allow object traversal to continue for EXPECTED promisor missing objects. Unexpected missing objects will raise an error. The form --missing=print is like allow-any, but will also print a list of the missing objects. Object IDs are prefixed with a "?" character. The form --missing=print-info is like print, but will also print additional information about the missing object inferred from its containing object. The information is all printed on the same line with the missing object ID in the form: ?<oid> [<token>=<value>]... The <token>=<value> pairs containing additional information are separated from each other by a SP. The value is encoded in a token specific fashion, but SP or LF contained in value are always expected to be represented in such a way that the resulting encoded value does not have either of these two problematic bytes. Each <token>=<value> may be one of the following: The path=<path> shows the path of the missing object inferred from a containing object. A path containing SP or special characters is enclosed in double-quotes in the C style as needed. The type=<type> shows the type of the missing object inferred from a containing object. If some tips passed to the traversal are missing, they will be considered as missing too, and the traversal will ignore them. In case we cannot get their Object ID though, an error will be raised.
+
+-z full text (normalized, lines 3822-3832)
+------------------------------------------
+Instead of being newline-delimited, each outputted object and its accompanying metadata is delimited using NUL bytes. Output is printed in the following form: <OID> NUL [<token>=<value> NUL]... Additional object metadata, such as object paths or boundary objects, is printed using the <token>=<value> form. Token values are printed as-is without any encoding/truncation. An OID entry never contains a = character and thus is used to signal the start of a new object record. Examples: <OID> NUL <OID> NUL path=<path> NUL <OID> NUL boundary=yes NUL <OID> NUL missing=yes NUL [<token>=<value> NUL]... This mode is only compatible with the --objects, --boundary, and --missing output options.
+
+--missing-only (normalized, lines 4712-4722)
+---------------------------------------------
+When used together with --missing=print or --missing=print-info, suppress all output for present objects and print only the missing ones. The selected --missing= format is preserved (so --missing=print-info still emits path= / type= fields), but the leading "?" prefix used by the non--z forms is omitted. This is useful for scripting, as a simpler and faster alternative to post-processing the output of --missing=print. This option is incompatible with --count and --disk-usage. It is an error to use --missing-only without --missing=print or --missing=print-info.

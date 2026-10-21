@@ -1,0 +1,114 @@
+EXCERPT: git.git v2.56.0 Documentation/technical/partial-clone.adoc
+sha256 9512d7ee0b79680f61d3f98c9eae42cc1dbaeef63535c5502cff66d7bce19264
+fetched https://raw.githubusercontent.com/git/git/v2.56.0/Documentation/technical/partial-clone.adoc 2026-10-21
+
+--- lines 5-5 ---
+   5  allows Git to function without having a complete copy of the repository.
+
+--- lines 33-38 ---
+  33  A remote that can later provide the missing objects is called a
+  34  promisor remote, as it promises to send the objects when
+  35  requested. Initially Git supported only one promisor remote, the origin
+  36  remote from which the user cloned and that was configured in the
+  37  "extensions.partialClone" config option. Later support for more than
+  38  one promisor remote has been implemented.
+
+--- lines 40-46 ---
+  40  Use of partial clone requires that the user be online and the origin
+  41  remote or other promisor remotes be available for on-demand fetching
+  42  of missing objects.  This may or may not be problematic for the user.
+  43  For example, if the user can stay within the pre-selected subset of
+  44  the source tree, they may not encounter any missing objects.
+  45  Alternatively, the user could try to pre-fetch various objects if they
+  46  know that they are going offline.
+
+--- lines 93-100 ---
+  93  These filtered packfiles are *incomplete* in the traditional sense because
+  94  they may contain objects that reference objects not contained in the
+  95  packfile and that the client doesn't already have.  For example, the
+  96  filtered packfile may contain trees or tags that reference missing blobs
+  97  or commits that reference missing trees.
+  98  
+  99  - On the client these incomplete packfiles are marked as "promisor packfiles"
+ 100    and treated differently by various commands.
+
+--- lines 108-129 ---
+ 108  Handling Missing Objects
+ 109  ------------------------
+ 110  
+ 111  - An object may be missing due to a partial clone or fetch, or missing
+ 112    due to repository corruption.  To differentiate these cases, the
+ 113    local repository specially indicates such filtered packfiles
+ 114    obtained from promisor remotes as "promisor packfiles".
+ 115  +
+ 116  These promisor packfiles consist of a "<name>.promisor" file with
+ 117  arbitrary contents (like the "<name>.keep" files), in addition to
+ 118  their "<name>.pack" and "<name>.idx" files.
+ 119  
+ 120  - The local repository considers a "promisor object" to be an object that
+ 121    it knows (to the best of its ability) that promisor remotes have promised
+ 122    that they have, either because the local repository has that object in one of
+ 123    its promisor packfiles, or because another promisor object refers to it.
+ 124  +
+ 125  When Git encounters a missing object, Git can see if it is a promisor object
+ 126  and handle it appropriately.  If not, Git can report a corruption.
+ 127  +
+ 128  This means that there is no need for the client to explicitly maintain an
+ 129  expensive-to-modify list of missing objects.[a]
+
+--- lines 131-145 ---
+ 131  - Since almost all Git code currently expects any referenced object to be
+ 132    present locally and because we do not want to force every command to do
+ 133    a dry-run first, a fallback mechanism is added to allow Git to attempt
+ 134    to dynamically fetch missing objects from promisor remotes.
+ 135  +
+ 136  When the normal object lookup fails to find an object, Git invokes
+ 137  promisor_remote_get_direct() to try to get the object from a promisor
+ 138  remote and then retry the object lookup.  This allows objects to be
+ 139  "faulted in" without complicated prediction algorithms.
+ 140  +
+ 141  For efficiency reasons, no check as to whether the missing object is
+ 142  actually a promisor object is performed.
+ 143  +
+ 144  Dynamic object fetching tends to be slow as objects are fetched one at
+ 145  a time.
+
+--- lines 150-155 ---
+ 150  - `rev-list` has been taught to print missing objects.
+ 151  +
+ 152  This can be used by other commands to bulk prefetch objects.
+ 153  For example, a "git log -p A..B" may internally want to first do
+ 154  something like "git rev-list --objects --quiet --missing=print A..B"
+ 155  and prefetch those objects in bulk.
+
+--- lines 157-164 ---
+ 157  - `fsck` has been updated to be fully aware of promisor objects.
+ 158  
+ 159  - `repack` in GC has been updated to not touch promisor packfiles at all,
+ 160    and to only repack other objects.
+ 161  
+ 162  - The per-repository flag "fetch_if_missing" is used to control whether an
+ 163    object lookup will attempt to dynamically fetch a missing object or
+ 164    report an error.
+
+--- lines 166-168 ---
+ 166  We are not happy with this global variable and would like to remove it,
+ 167  but that requires significant refactoring of the object code to pass an
+ 168  additional flag.
+
+--- lines 323-337 ---
+ 323  [a] expensive-to-modify list of missing objects:  Earlier in the design of
+ 324      partial clone we discussed the need for a single list of missing objects.
+ 325      This would essentially be a sorted linear list of OIDs that were
+ 326      omitted by the server during a clone or subsequent fetches.
+ 327  
+ 328  This file would need to be loaded into memory on every object lookup.
+ 329  It would need to be read, updated, and re-written (like the .git/index)
+ 330  on every explicit "git fetch" command *and* on any dynamic object fetch.
+ 331  
+ 332  The cost to read, update, and write this file could add significant
+ 333  overhead to every command if there are many missing objects.  For example,
+ 334  if there are 100M missing blobs, this file would be at least 2GiB on disk.
+ 335  
+ 336  With the "promisor" concept, we *infer* a missing object based upon the
+ 337  type of packfile that references it.

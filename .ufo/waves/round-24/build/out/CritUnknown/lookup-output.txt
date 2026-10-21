@@ -1,0 +1,21 @@
+## lookup() over probe fixtures (bare, then ^{commit})
+Lfull bare: {'BA': 'found', 'BA9': 'found', 'C1': 'found', 'C2': 'found', 'NEVER': 'missing', 'TAG': 'found', 'TREE': 'found'}
+Lfull peel: {'BA': 'missing', 'BA9': 'missing', 'C1': 'found', 'C2': 'found', 'NEVER': 'missing', 'TAG': 'found', 'TREE': 'missing'}
+Lmark bare: {'BA': 'found', 'BA9': 'found', 'C1': 'found', 'C2': 'found', 'NEVER': 'missing', 'TAG': 'found', 'TREE': 'found'}
+Lmark peel: {'BA': 'missing', 'BA9': 'missing', 'C1': 'found', 'C2': 'found', 'NEVER': 'missing', 'TAG': 'found', 'TREE': 'missing'}
+Lc1 bare: {'BA': 'found', 'BA9': 'found', 'C1': 'missing', 'C2': 'found', 'NEVER': 'missing', 'TAG': 'found', 'TREE': 'found'}
+Lc1 peel: {'BA': 'missing', 'BA9': 'missing', 'C1': 'missing', 'C2': 'found', 'NEVER': 'missing', 'TAG': 'found', 'TREE': 'missing'}
+Ltag bare: {'BA': 'found', 'BA9': 'found', 'C1': 'found', 'C2': 'missing', 'NEVER': 'missing', 'TAG': 'found', 'TREE': 'found'}
+Ltag peel: {'BA': 'missing', 'BA9': 'missing', 'C1': 'found', 'C2': 'missing', 'NEVER': 'missing', 'TAG': 'missing', 'TREE': 'missing'}
+Lbare bare: {'BA': 'found', 'BA9': 'found', 'C1': 'missing', 'C2': 'found', 'NEVER': 'missing', 'TAG': 'found', 'TREE': 'found'}
+Lbare peel: {'BA': 'missing', 'BA9': 'missing', 'C1': 'missing', 'C2': 'found', 'NEVER': 'missing', 'TAG': 'found', 'TREE': 'missing'}
+cross-repo (Lc1, Lfull) peel C1: {'1a179a8c81da37d3c3776d2c0ab7b3d004679797': 'found'}
+cross-repo (Lc1, Lfull) bare BA^{commit} wrongtype: {'5626abf0f72e58d7a153368ba57db4c673c0e171': 'missing'}
+
+## short-prefix collision: blob + commit sharing a 5-hex prefix
+side commit 1a9a44585df715aba4197f2a606d430cbb28d2e1 blob 1a9a4fe8842bec77e4df0b8ffcadecb7a699a1bf prefix 1a9a4
+full clone bare: {'1a9a4': 'ambiguous'}
+full clone peel: {'1a9a4': 'found'}
+promisor clone bare: {'1a9a4': 'found'}
+promisor clone peel: {'1a9a4': 'missing'}
+promisor clone raw peel stdout: 1a9a4^{commit} missing | stderr: error: 1a9a4^{commit}: expected commit type, but the object dereferences to blob type

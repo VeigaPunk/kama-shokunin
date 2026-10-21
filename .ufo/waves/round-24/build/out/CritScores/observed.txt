@@ -1,0 +1,37 @@
+CritScores r24 — observed outputs (git version 2.56.0), 2026-10-21.
+Run interactively under /fast/scratch/hyaku/kama-r24/CritScores (fresh root,
+toplevel asserted before .git writes); equivalent steps are in probe.sh.
+
+P1 multi-commit blobless clone (3 commits rewriting f; uploadpack.allowFilter=true)
+  config: remote.origin.promisor=true, remote.origin.partialclonefilter=blob:none
+  packs: two *.pack each with paired *.promisor
+  log --format='%H %s' master                      rc=0 (3 commits)
+  ls-tree master -- f ; cat-file -e master:f        rc=0
+  log --diff-filter=A --format=%at -- f            rc=0, output 1001
+  rev-list --objects --missing=print --no-object-names master:
+    3 commits, 3 trees, 1 blob present, then
+    ?19793c8403a4268ff90e144b244929189fe95101
+    ?cbf739ec903b34bf3e62501d52765d2efc6142c4      (2 historical blobs missing)
+  same with --filter=blob:none                      no '?' lines
+  show master~2:f                                   fatal: bad object master~2:f, rc=128
+  .git/FETCH_HEAD                                   absent (no fetch)
+
+P2 promisor-configured repo (remote.origin.promisor=true, url file:///nonexistent-*)
+  missing middle commit 180a16e7…:
+    log: "error: Could not read 180a16e79e34a2afb22e79bb570e8d12cebaa3ef"
+         "fatal: Failed to traverse parents of commit 56bdaa0f…"   rc=128
+    cat-file --batch-check: "180a16e7… missing"                  (data, rc=0)
+  missing root tree fd047995…:
+    log --diff-filter=A -- f: "fatal: unable to read tree (fd0479958dc51ed279bd553ee9b14390fff8d158)" rc=128
+    plain log: rc=0
+
+P3 read-only, real repositories (GIT_ISOLATION-style flags, no writes)
+  token 0957ce619789d13d894ef21bc863486bcb35b56c (registry/report-landing-errata.tsv round 20
+  unresolved-full-hash row):
+    kama-shokunin  cat-file --batch-check -> missing ; no promisor/partialclone local config
+    fleet          cat-file --batch-check -> missing ; no promisor/partialclone local config
+    fleet HEAD:.ufo/reports/round-20/kama.md contains the token: 1 line
+
+P4 fleet-shaped repo, promisor-configured, subtree HEAD:.ufo/reports removed
+  ls-tree -r --name-only HEAD -- .ufo/reports:
+    "error: Could not read c55f0088d2879352cf4dbe9b0d172ac1980826e4"  rc=1 (nonzero; git() -> EvalError)

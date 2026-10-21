@@ -1,0 +1,148 @@
+ConnNoHarm — bounded local fixture probes against the round-23 base auditor
+Date: 2026-10-21. Host: linux x86_64, git 2.56.0, Python 3.14.8.
+Scratch: /fast/scratch/hyaku/kama-r24/ConnNoHarm (nothing written to the lane,
+the fleet, or /home/vgpnk/Projects/shokunin/.git).
+
+Auditor under test (the round-24 base, unchanged):
+  git -C work cat-file blob 0df800e896f6bce285a81e794ad4ae1d1e6c3a71:tools/report-landing-audit.py
+  sha256 da5041a8191e0e6ec385adc7c659ddc7544a835aff65dd45b34de623c5765af1
+  (= the "current auditor da5041a8…5af1" recorded in corpus/lessons/round-23.md)
+
+Fixture primitives were imported from the unmodified r23 grid
+(tests/report-audit/repo-state-grid.py at base 0df800e); the auditor was run
+as a subprocess with the grid's own env() (GIT_CONFIG_GLOBAL=/dev/null,
+GIT_CONFIG_NOSYSTEM=1, no inherited GIT_*) and --rounds 1 --no-errata.
+No network transport was used or attempted: every "remote" URL in these
+fixtures is a local path that does not exist.
+
+1) Marked (promisor metadata) but content-complete lane
+   config: core.repositoryformatversion=1, extensions.partialclone=origin,
+           remote.origin.url=<nonexistent local path>,
+           remote.origin.promisor=true, remote.origin.partialclonefilter=blob:none
+   base auditor -> exit 2, stderr
+     "could-not-evaluate: <lane>: partial clone (extensions.partialclone)"
+   identical fixture without the marking -> exit 0, defects []
+   => the r23 refusal fires on metadata alone, on a complete repository.
+
+2) Marked lane + genuine omitted pre-cutoff commit
+   base auditor -> exit 2 "partial clone (...)"
+   identical fixture without the marking -> exit 1, kinds ['landed-omitted']
+
+3) Promisor=false (remote.origin.promisor=false) + fabricated 40-hex citation
+   base auditor -> exit 1, kinds ['unresolved-full-hash']   (proved absence)
+
+4) Orphan .promisor marker (no paired .pack) + fabricated 40-hex citation
+   base auditor -> exit 1, kinds ['unresolved-full-hash']   (proved absence)
+
+5) Locally present blob cited in "## Landed changes" (wrong type)
+   base auditor -> exit 1, kinds ['landed-unresolved']      (real finding)
+   git answers the peeled form as missing:
+     $ printf '<blob>^{commit}\n' | git cat-file --batch-check
+     error: <blob>^{commit}: expected commit type, but the object dereferences to blob type
+     <blob>^{commit} missing
+   => a wrong-type citation is indistinguishable from absence in git's answer;
+      an "unknown" rule that keys on git's "missing" would swallow it.
+
+6) Citation present only in the fleet, absent from the marked lane
+   base auditor -> exit 0, defects []   (resolved across repositories)
+
+7) git's own answer in a promisor-backed store, with the isolation flags on
+   $ printf '1234...5678\n' | git --no-replace-objects --no-lazy-fetch \
+       -C <marked lane> cat-file --batch-check
+   1234567890abcdef1234567890abcdef12345678 missing      (rc 0, no fetch)
+   => git cannot distinguish "absent" from "promised but absent"; the
+      unknown-vs-absent decision must be made from repository state.
+
+8) Completeness probe (offline, no fetch)
+   $ git --no-replace-objects --no-lazy-fetch -C <repo> \
+         rev-list --objects --missing=print --no-object-names master
+   complete marked repo  -> rc 0, 3 object lines, no "?" line
+   genuine blobless clone-> rc 0, 3 object lines, 1 line "?6e98d181…" (the
+                            filtered blob); nothing fetched
+   (the blobless clone carries core.repositoryformatversion=1,
+    remote.origin.promisor=true, remote.origin.partialclonefilter=blob:none
+    and, on this git, no extensions.partialclone key)
+
+9) Candidate grid patch validation (bounded: 11 selected rows only)
+   git apply --check -> ok; py_compile -> ok
+   python3 tests/report-audit/repo-state-grid.py --arm current
+       --current <base auditor> --case F06 --case F23 --case F27 --case T01
+       --case C14 .. --case C20
+   F06 fault        exit=2 kinds=None  NOT-MET (reason pin: base says
+                    "partial clone", the new pin says "unknown")
+   F23 contract     exit=2 kinds=None  NOT-MET (same reason-pin mismatch)
+   F27 fault        exit=1 kinds=['landed-unresolved','unresolved-full-hash']
+                    NOT-MET (policy change: exit 1 -> exit 2)
+   T01 tradeoff     exit=2 kinds=None  NOT-MET (re-pinned 0 -> 2)
+   C14 control      exit=2 NOT-MET   C15 control exit=2 NOT-MET
+   C16 control      exit=2 NOT-MET   C19 control exit=2 NOT-MET
+   C20 control      exit=2 NOT-MET
+   C17 control      exit=1 kinds=['unresolved-full-hash']  met
+   C18 control      exit=1 kinds=['unresolved-full-hash']  met
+   faults=0/2 contracts=0/1 controls=2/7 tracebacks=0 executed=0 timeouts=0
+   => 5 rows discriminate the r24 policy, 2 rows are true no-harm controls
+      that already pass on the r23 base, no fixture premise failed.
+
+10) Candidate mutant-harness patch validation
+    git apply --check -> ok; py_compile -> ok; import -> 29 mutants,
+    RETIRED = ['M14-promisor-config','M22-promisor-pack'],
+    NEEDS_REPOINT = ['M27-promisor-boolean','M29-promisor-pack-pairing']
+
+11) Frozen arm (r23 grid frozen = 4fe9339f) on the seven new rows only
+    python3 tests/report-audit/repo-state-grid.py --arm frozen \
+        --case C14 ... --case C20
+    frozen C14-marked-clean            exit=0 kinds=[]                   met
+    frozen C15-marked-omission         exit=1 kinds=['landed-omitted']  met
+    frozen C16-marked-missing-citation exit=1 kinds=['unresolved-full-hash'] NOT-MET
+    frozen C17-unmarked-missing-citation exit=1 kinds=['unresolved-full-hash'] met
+    frozen C18-orphan-marker-missing-citation exit=1 kinds=['unresolved-full-hash'] met
+    frozen C19-marked-wrongtype-citation exit=1 kinds=['landed-unresolved'] met
+    frozen C20-marked-cross-repo-citation exit=0 kinds=[]               met
+    controls=6/7 violations=1 tracebacks=0 executed=0 timeouts=0
+    => the r22 base answers the marked-missing-citation row with a proved
+       absence (exit 1) instead of the unknown refusal (exit 2): the frozen
+       arm's violation count moves 29 -> 30, and the delta is recorded.
+
+12) CORRECTION — T01 vs F23 clone shapes (my first issue measured F23, not T01)
+    Both fixtures are the grid's own builders, run unchanged from base 0df800e:
+      T01  g.t_blobless        : clone --filter=blob:none --no-local (WITH checkout)
+      F23  g.f_promisor_pack   : clone --filter=blob:none --no-local --no-checkout
+    git rev-list --objects --missing=print --no-object-names master:
+      T01  3 objects, missing=[]           <- the checkout hydrated the only blob
+      F23  3 objects, missing=['?6e98d181389d343031fd578c6a775ce0889a8b0d']
+    worktree file "f": T01 present, F23 absent
+    config: both core.repositoryformatversion=1, remote.origin.promisor=true,
+            remote.origin.partialclonefilter=blob:none
+    r23 base auditor (0df800e blob, sha256 da5041a8…5af1):
+      T01  -> exit 2 "could-not-evaluate: …/blobless: partial clone (promisor pack)"
+      F23  -> exit 2 "could-not-evaluate: …/blobless: partial clone (promisor pack)"
+    => T01 is content-complete: its correct verdict is the clean exit 0 the full
+       clone gives, it must be restored and GRADED (kind tradeoff -> control),
+       and it is the r24 claim's visible red cell.
+       F23 is genuinely incomplete: exit 2 stands, only its ground changes
+       (availability refusal instead of a metadata refusal).
+
+13) Candidate grid patches, both variants (A = preregistration literal,
+    B = closure-grounded), against the r23 base auditor (current arm)
+      variant A: git apply --check ok, py_compile ok
+        F06 exit=2 NOT-MET   F23 exit=2 NOT-MET   F27 exit=1 NOT-MET
+        T01 exit=2 NOT-MET (now a graded control; the r23 base still refuses)
+        C14 exit=2 NOT-MET   C15 exit=2 NOT-MET   C16 exit=2 NOT-MET
+        C17 exit=1 met       C18 exit=1 met
+        C19 exit=2 NOT-MET   C20 exit=2 NOT-MET   C21 exit=2 NOT-MET
+        violations=10
+      variant B: git apply --check ok, py_compile ok
+        F06 exit=2 NOT-MET   F23 exit=2 NOT-MET   F27 exit=1 met (unchanged)
+        T01/C14/C15/C16/C19/C20/C21 exit=2 NOT-MET   C17/C18 exit=1 met
+        violations=9
+    (a row that already passes on the r23 base is a no-harm control; a row
+     that fails only on the r23 base discriminates the r24 policy)
+
+14) Frozen arm (4fe9339f) on the new and restored rows, variant A grid
+    T01 exit=0 met          C14 exit=0 met       C15 exit=1 met
+    C16 exit=1 NOT-MET      C17 exit=1 met       C18 exit=1 met
+    C19 exit=1 met          C20 exit=0 met       C21 exit=0 NOT-MET
+    controls=7/9 violations=2
+    => the frozen arm's violation count moves 29 -> 31 (+C16, +C21); T01 is met
+       on the frozen arm, which confirms that the correct T01 verdict is the
+       clean exit 0 the r22 base already produced.

@@ -1,0 +1,205 @@
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index cf706c5..dd4fa8a 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -42,14 +42,19 @@ its correction is not a lane/fleet commit (resolvable kinds) or, for
+ Exit: 0 clean (no uncorrected defect, no unmatched/invalid errata row);
+ 1 failed (at least one); 2 could-not-evaluate (missing/irregular report,
+ unusable git or non-UTF-8 git output, shallow/grafted/non-sha1 repository,
+-malformed ledger, empty round selection, output failure).
+-Errors are never verdicts.
++an unavailable required object, a citation absent from every repository
++when one has a promisor remote, malformed ledger, empty round selection,
++output failure). Errors are never verdicts.
+ 
+ Repository trust (round 23, tests/report-audit/repo-state-grid.py):
+ refs/replace, lazy fetch, signature display, log re-encoding,
+ log.follow/log.showRoot and .mailmap are neutralized; a plain --branch name
+-means refs/heads/<name>; shallow, grafted, partial-clone, non-sha1 and
+-non-top-level repositories and ref-named citations are refused. Objects
++means refs/heads/<name>; shallow, grafted, non-sha1 and non-top-level
++repositories and ref-named citations are refused. Promisor metadata alone
++is not (round 24): required objects are read without lazy fetch, so a
++missing one fails git. A promisor repository whose refs reach every object
++answers citations as a full clone would; one that lacks a reachable object
++leaves a citation that is no local commit/object unknown. Objects
+ borrowed through objects/info/alternates or a .git gitfile still resolve as
+ local, and other repository-local channels are not claimed. Audit trusted
+ repositories only; git >= 2.45 is required.
+@@ -136,17 +141,24 @@ def git(repo, *args, stdin=None, env=None, errors="strict"):
+     return out.replace("\r\n", "\n").replace("\r", "\n")
+ 
+ 
+-def lookup(repos, tokens, peel=""):
++def lookup(repos, tokens, peel="", promised=False, types=None):
+     """{token: 'found'|'ambiguous'|'missing'} across repos, via
+     `cat-file --batch-check` per repo; a git failure is EvalError. With a
+     peel, git answers `missing` for an ambiguous short name, so the bare
+-    name is asked first to keep ambiguity visible."""
++    name is asked first to keep ambiguity visible.
++
++    `promised`: some audited repository has a promisor remote and lacks an
++    object its refs reach. A token not found is then unknown, an
++    EvalError, except a full name present locally as a blob or tree (its
++    type is fixed by its name). A short name is never settled there: a
++    promised commit sharing its prefix would win the `^{commit}` peel."""
+     tokens = sorted(set(tokens))
+     status = {t: "missing" for t in tokens}
+     if not tokens:
+         return status
++    found_type = {} if types is None else types
+     if peel:
+-        bare = lookup(repos, tokens)
++        bare = lookup(repos, tokens, types=found_type)
+         status.update({t: "ambiguous" for t, s in bare.items()
+                        if s == "ambiguous"})
+     for repo in repos:
+@@ -171,6 +183,16 @@ def lookup(repos, tokens, peel=""):
+                 # git resolved a same-named ref before the object prefix
+                 raise EvalError(f"{repo}: citation {token} names a ref")
+             status[token] = "found"
++            if not peel:
++                found_type[token] = parts[1]
++    if promised:
++        unknown = [t for t, s in status.items() if s != "found" and not (
++            len(t) == 40 and found_type.get(t) in ("blob", "tree"))]
++        if unknown:
++            raise EvalError(f"citation unknown, not settled by local objects "
++                            f"of a promisor-backed repository: "
++                            f"{' '.join(unknown[:8])}"
++                            f"{' ...' if len(unknown) > 8 else ''}")
+     return status
+ 
+ 
+@@ -299,7 +321,8 @@ def classify_full_hashes(text, source_urls, landed):
+     return tokens, sorted(classified - unclassified)
+ 
+ 
+-def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path, source_urls):
++def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path, source_urls,
++                promised):
+     rel = f".ufo/reports/round-{rnd}/{lane}.md"
+     report = Path(path) if path else Path(fleet_repo) / rel
+     if path:
+@@ -322,7 +345,7 @@ def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path, source_urls):
+     landed = landed_match(text)
+     full_tokens, classified_hashes = classify_full_hashes(
+         text, source_urls, landed)
+-    full = lookup(repos, full_tokens)
++    full = lookup(repos, full_tokens, promised=promised)
+     defects += [{"kind": "unresolved-full-hash", "token": t}
+                 for t, s in full.items() if s != "found"]
+     section = None if landed is None else landed.group(1)
+@@ -334,7 +357,7 @@ def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path, source_urls):
+         section = ""
+     cited = set(ABBREV.findall(section))
+     status = lookup(repos, [t for t in cited if checkable_abbrev(t)],
+-                    "^{commit}")
++                    "^{commit}", promised)
+     for token, state in status.items():
+         if state == "missing":
+             defects.append({"kind": "landed-unresolved", "token": token})
+@@ -384,7 +407,7 @@ def load_errata(args, lane_repo, tip):
+                         f"{args.branch}:{ERRATA}")
+ 
+ 
+-def apply_errata(results, errata, repos):
++def apply_errata(results, errata, repos, promised):
+     selected = {r["round"] for r in results}
+     used = set()
+     for res in results:
+@@ -401,7 +424,7 @@ def apply_errata(results, errata, repos):
+     hexed = {e["line"]: e["correction"].lower() for e in errata
+              if e["kind"] in RESOLVABLE
+              and re.fullmatch(r"[0-9a-fA-F]{7,40}", e["correction"])}
+-    status = lookup(repos, list(hexed.values()), "^{commit}")
++    status = lookup(repos, list(hexed.values()), "^{commit}", promised)
+     invalid = [e for e in errata if e["kind"] in RESOLVABLE and (
+         status.get(hexed.get(e["line"])) != "found"
+         or (e["kind"] == "landed-omitted" and e["correction"] != e["token"]))]
+@@ -437,9 +460,13 @@ def parse_rounds(spec, fleet_repo, lane):
+ 
+ def check_history_repo(repo):
+     """Refuse a repository whose visible history is not its object history
+-    (shallow boundary, info/grafts), whose missing objects belong to a
+-    promisor remote (absence is not evidence there), or whose object names
+-    the 40-hex scanners cannot read (non-sha1 object format)."""
++    (shallow boundary, info/grafts) or whose object names the 40-hex
++    scanners cannot read (non-sha1 object format). Return whether the
++    local objects may differ from a full clone with the same refs: a
++    promisor (promisor pack, partial clone extension, promisor or filter
++    remote) AND an object reachable from some ref absent. Metadata alone
++    is no refusal; required objects are read with lazy fetch off, so a
++    missing one fails git."""
+     fmt = git(repo, "rev-parse", "--show-object-format").strip()
+     if fmt != "sha1":
+         raise EvalError(f"{repo}: object format {fmt!r}, not sha1")
+@@ -447,22 +474,36 @@ def check_history_repo(repo):
+         raise EvalError(f"{repo}: not a repository top level")
+     if git(repo, "rev-parse", "--is-shallow-repository").strip() != "false":
+         raise EvalError(f"{repo}: shallow repository")
+-    for rel in ("info/grafts", "objects/pack"):
+-        path = Path(repo, git(repo, "rev-parse", "--git-path", rel).strip())
+-        if rel == "info/grafts" and grafts_effective(path):
+-            raise EvalError(f"{repo}: {path} rewrites history")
+-        if rel == "objects/pack" and path.is_dir() and any(
+-                p.suffix == ".promisor" and p.with_suffix(".pack").exists()
+-                for p in path.iterdir()):
+-            raise EvalError(f"{repo}: partial clone (promisor pack)")
++    path = Path(repo, git(repo, "rev-parse", "--git-path",
++                          "info/grafts").strip())
++    if grafts_effective(path):
++        raise EvalError(f"{repo}: {path} rewrites history")
++    if not promisor_backed(repo):
++        return False
++    # every ref, not only the audited tips: a full clone with the same refs
++    # also holds objects only another branch or tag reaches
++    listing = git(repo, "rev-list", "--objects", "--no-object-names",
++                  "--all", "--missing=print")
++    return any(line.startswith("?") for line in listing.split("\n"))
++
++
++def promisor_backed(repo):
++    packs = Path(repo, git(repo, "rev-parse", "--git-path",
++                           "objects/pack").strip())
++    if packs.is_dir() and any(
++            p.suffix == ".promisor" and p.with_suffix(".pack").exists()
++            for p in packs.iterdir()):
++        return True
+     listing = git(repo, "config", "--null", "--list",
+                   errors="surrogateescape")
+     for entry in filter(None, listing.split("\0")):
+         key, _, value = entry.partition("\n")
+-        if key == "extensions.partialclone" or (
++        if key == "extensions.partialclone" or re.fullmatch(
++                r"remote\..+\.partialclonefilter", key) or (
+                 re.fullmatch(r"remote\..+\.promisor", key)
+                 and git_bool(value)):
+-            raise EvalError(f"{repo}: partial clone ({key})")
++            return True
++    return False
+ 
+ 
+ def grafts_effective(path):
+@@ -511,15 +552,18 @@ def run(args):
+                     | set(overrides))
+     if not rounds:
+         raise EvalError("no rounds selected")
++    promised = False
+     for repo in (lane_repo, fleet_repo):
+-        check_history_repo(repo)
++        promised = check_history_repo(repo) or promised
+     tip = resolve_branch(lane_repo, args.branch)
+     git(fleet_repo, "rev-parse", "--verify", "HEAD^{commit}")
+     source_urls = load_source_urls(lane_repo, tip)
+     results = [audit_round(lane_repo, fleet_repo, tip, args.lane, r,
+-                           overrides.get(r), source_urls) for r in rounds]
++                           overrides.get(r), source_urls, promised)
++               for r in rounds]
+     errata = load_errata(args, lane_repo, tip)
+-    unmatched, invalid = apply_errata(results, errata, (lane_repo, fleet_repo))
++    unmatched, invalid = apply_errata(results, errata, (lane_repo, fleet_repo),
++                                      promised)
+     by_kind = {k: 0 for k in KINDS}
+     total = corrected = 0
+     for res in results:

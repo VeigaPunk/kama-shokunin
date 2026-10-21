@@ -1,0 +1,39 @@
+--- /fast/scratch/hyaku/kama-r24/CaseMissingFleetReport/repo/tools/report-landing-audit.py	2026-10-21 14:54:37.916401755 -0300
++++ /fast/scratch/hyaku/kama-r24/CaseMissingFleetReport/work/mutants/mutant-M3-skip-round.py	2026-10-21 14:57:02.317536613 -0300
+@@ -451,18 +451,11 @@
+         path = Path(repo, git(repo, "rev-parse", "--git-path", rel).strip())
+         if rel == "info/grafts" and grafts_effective(path):
+             raise EvalError(f"{repo}: {path} rewrites history")
+-        if rel == "objects/pack" and path.is_dir() and any(
+-                p.suffix == ".promisor" and p.with_suffix(".pack").exists()
+-                for p in path.iterdir()):
+-            raise EvalError(f"{repo}: partial clone (promisor pack)")
+     listing = git(repo, "config", "--null", "--list",
+                   errors="surrogateescape")
+     for entry in filter(None, listing.split("\0")):
+         key, _, value = entry.partition("\n")
+-        if key == "extensions.partialclone" or (
+-                re.fullmatch(r"remote\..+\.promisor", key)
+-                and git_bool(value)):
+-            raise EvalError(f"{repo}: partial clone ({key})")
++        pass
+ 
+ 
+ def grafts_effective(path):
+@@ -516,8 +509,14 @@
+     tip = resolve_branch(lane_repo, args.branch)
+     git(fleet_repo, "rev-parse", "--verify", "HEAD^{commit}")
+     source_urls = load_source_urls(lane_repo, tip)
+-    results = [audit_round(lane_repo, fleet_repo, tip, args.lane, r,
+-                           overrides.get(r), source_urls) for r in rounds]
++    results = []
++    for r in rounds:
++        try:
++            results.append(audit_round(
++                lane_repo, fleet_repo, tip, args.lane, r,
++                overrides.get(r), source_urls))
++        except EvalError:
++            continue  # MUTANT M3: skip unreadable rounds
+     errata = load_errata(args, lane_repo, tip)
+     unmatched, invalid = apply_errata(results, errata, (lane_repo, fleet_repo))
+     by_kind = {k: 0 for k in KINDS}

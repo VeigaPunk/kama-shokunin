@@ -1,0 +1,62 @@
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -437,9 +437,14 @@
+ 
+ def check_history_repo(repo):
+     """Refuse a repository whose visible history is not its object history
+-    (shallow boundary, info/grafts), whose missing objects belong to a
+-    promisor remote (absence is not evidence there), or whose object names
+-    the 40-hex scanners cannot read (non-sha1 object format)."""
++    (shallow boundary, info/grafts) or whose object names the 40-hex
++    scanners cannot read (non-sha1 object format).
++
++    A promisor-marked repository is not refused for its marks: the marks
++    are metadata, not evidence. What decides auditability is the content:
++    a partial clone whose objects are all present locally is auditable and
++    must give the same verdicts as a full clone, and one that is missing
++    objects cannot support a verdict (absence is not evidence there)."""
+     fmt = git(repo, "rev-parse", "--show-object-format").strip()
+     if fmt != "sha1":
+         raise EvalError(f"{repo}: object format {fmt!r}, not sha1")
+@@ -447,22 +452,25 @@
+         raise EvalError(f"{repo}: not a repository top level")
+     if git(repo, "rev-parse", "--is-shallow-repository").strip() != "false":
+         raise EvalError(f"{repo}: shallow repository")
+-    for rel in ("info/grafts", "objects/pack"):
+-        path = Path(repo, git(repo, "rev-parse", "--git-path", rel).strip())
+-        if rel == "info/grafts" and grafts_effective(path):
+-            raise EvalError(f"{repo}: {path} rewrites history")
+-        if rel == "objects/pack" and path.is_dir() and any(
+-                p.suffix == ".promisor" and p.with_suffix(".pack").exists()
+-                for p in path.iterdir()):
+-            raise EvalError(f"{repo}: partial clone (promisor pack)")
+-    listing = git(repo, "config", "--null", "--list",
+-                  errors="surrogateescape")
+-    for entry in filter(None, listing.split("\0")):
+-        key, _, value = entry.partition("\n")
+-        if key == "extensions.partialclone" or (
+-                re.fullmatch(r"remote\..+\.promisor", key)
+-                and git_bool(value)):
+-            raise EvalError(f"{repo}: partial clone ({key})")
++    path = Path(repo, git(repo, "rev-parse", "--git-path", "info/grafts").strip())
++    if grafts_effective(path):
++        raise EvalError(f"{repo}: {path} rewrites history")
++    check_content_complete(repo)
++
++
++def check_content_complete(repo):
++    """Refuse a repository whose reachable objects are not all present.
++
++    `rev-list --objects --all --missing=print` lists every object reachable
++    from every ref and names the ones it cannot find as ?<oid>. The audit
++    runs git with --no-lazy-fetch, so a promisor remote is never contacted
++    and a missing object stays missing.
++    """
++    out = git(repo, "rev-list", "--objects", "--all", "--missing=print")
++    missing = [line[1:] for line in out.split("\n") if line.startswith("?")]
++    if missing:
++        raise EvalError(f"{repo}: partial clone with missing objects "
++                        f"({len(missing)} missing)")
+ 
+ 
+ def grafts_effective(path):

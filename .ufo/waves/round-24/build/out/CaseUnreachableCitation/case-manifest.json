@@ -1,0 +1,97 @@
+{
+  "case": "CaseUnreachableCitation",
+  "round": 24,
+  "axis": "C1 calibration (7->7) - promisor metadata vs unavailable evidence",
+  "preregistration": ".ufo/waves/round-24/preregistration.json",
+  "preregistered_base": "0df800e896f6bce285a81e794ad4ae1d1e6c3a71",
+  "auditor_blob_at_base": "cf706c52233139920da60f8b55d06f031286c4f9",
+  "claim": "A commit citation whose object exists locally but is not in the branch closure (and, for X1, not in any ref closure) stays RESOLVABLE. Promisor metadata alone must not turn a locally complete lane into exit 2.",
+  "discriminates": "object-existence-based citation resolution (cat-file) vs reachability-based resolution (rev-list of the branch, or of all refs)",
+  "expected": [
+    {
+      "name": "P01-unreachable-citation-full",
+      "kind": "control",
+      "arm": "full",
+      "description": "Lane without promisor metadata. Cited commits C1 (on master), C2 (on master), X1 (dangling: no ref anywhere), X2 (reachable only via refs/keep/x2, outside the master closure).",
+      "expected_exit": 0,
+      "expected_kinds": [],
+      "expected_findings": [],
+      "rationale": "All four citations resolve by object existence. No round-1 lane commit on master is uncited, so no landed-omitted. This arm must be identical before and after the repair."
+    },
+    {
+      "name": "P02-unreachable-citation-promisor",
+      "kind": "control",
+      "arm": "promisor",
+      "description": "The same lane, marked promisor by config only (extensions.partialClone=origin, remote.origin.promisor=true, remote.origin.partialclonefilter=blob:none) with every object still present locally and no promisor pack.",
+      "expected_exit": 0,
+      "expected_kinds": [],
+      "expected_findings": [],
+      "rationale": "Promisor metadata is a declaration, not evidence of incompleteness. Content completeness and availability of required evidence determine the outcome, so this arm must match P01 exactly (same substantive clean findings, not exit 2).",
+      "before_repair": {
+        "auditor": "base 0df800e / blob cf706c52",
+        "exit": 2,
+        "stderr": "could-not-evaluate: <lane>: partial clone (extensions.partialclone)",
+        "note": "This is the r23 harm the round-24 repair removes; it is recorded here as the pre-repair observation, not as an expectation."
+      }
+    }
+  ],
+  "expected_before": {
+    "P01": {"exit": 0, "kinds": []},
+    "P02": {"exit": 2, "reason": "partial clone (extensions.partialclone)"}
+  },
+  "observed_base": {
+    "P01": {"exit": 0, "kinds": []},
+    "P02": {"exit": 2, "reason": "partial clone (extensions.partialclone)"}
+  },
+  "observed_with_scratch_candidate_repair": {
+    "P01": {"exit": 0, "kinds": []},
+    "P02": {"exit": 0, "kinds": []},
+    "candidate": "candidate-repaired.py (scratch only; the lane production file is unchanged)",
+    "candidate_patch": "candidate-repair.patch"
+  },
+  "mutation_sensitivity": [
+    {
+      "mutant": "mutant-reachability.py",
+      "mutation": "lookup() filters tokens by the rev-list --all closure instead of asking the object store",
+      "P01": {"exit": 1, "kinds": ["landed-unresolved", "unresolved-full-hash"], "tokens": ["d6ac5ce1aa9a15089c8fe365dd2c9ee7d00546d8"]},
+      "P02": {"exit": 1, "kinds": ["landed-unresolved", "unresolved-full-hash"], "tokens": ["d6ac5ce1aa9a15089c8fe365dd2c9ee7d00546d8"]},
+      "killed": true,
+      "note": "X1 is dangling, so a rev-list --all closure drops it and the citation is falsely reported unresolved."
+    },
+    {
+      "mutant": "mutant-branch-closure.py",
+      "mutation": "lookup() filters tokens by the rev-list master closure",
+      "P01": {"exit": 1, "kinds": ["landed-unresolved", "unresolved-full-hash"], "tokens": ["04eddf3735cb31171057f11924041dffd2c8d936", "d6ac5ce1aa9a15089c8fe365dd2c9ee7d00546d8"]},
+      "P02": {"exit": 1, "kinds": ["landed-unresolved", "unresolved-full-hash"], "tokens": ["04eddf3735cb31171057f11924041dffd2c9ee7d00546d8", "d6ac5ce1aa9a15089c8fe365dd2c9ee7d00546d8"]},
+      "killed": true,
+      "note": "Both X1 and X2 are outside the master closure, so both citations are falsely reported unresolved."
+    }
+  ],
+  "availability_semantics": {
+    "source": "probe-availability.json",
+    "C1": {"existence": true, "all_refs": true, "branch": true},
+    "X1": {"existence": true, "all_refs": false, "branch": false},
+    "X2": {"existence": true, "all_refs": true, "branch": false}
+  },
+  "offline_guarantees": {
+    "network": "none: the promisor remote URL points at a non-existent local path (<scratch>/absent-origin.git), never created",
+    "lazy_fetch": "every git call in the fixture builders passes --no-lazy-fetch",
+    "payloads": "no core.sshCommand, no gpg.program, no filter transport hook, no signing program is configured",
+    "transport_assertion": "the runner asserts no transport-error text ('does not appear to be a git repository', 'Could not read from remote repository', 'unable to access', 'Could not resolve host') appears in the auditor stderr",
+    "fixtures_written_only_to": "/fast/scratch/hyaku/kama-r24/CaseUnreachableCitation/",
+    "no_tmp_fixtures": true
+  },
+  "artifacts": {
+    "builder_and_runner": ".ufo/waves/round-24/build/out/CaseUnreachableCitation/case_unreachable_citation.py",
+    "grid_fragment": ".ufo/waves/round-24/build/out/CaseUnreachableCitation/grid-case-fragment.py",
+    "availability_probe": ".ufo/waves/round-24/build/out/CaseUnreachableCitation/probe_availability.py",
+    "availability_observations": ".ufo/waves/round-24/build/out/CaseUnreachableCitation/probe-availability.json",
+    "base_observations": ".ufo/waves/round-24/build/out/CaseUnreachableCitation/observed-base.json",
+    "scratch_candidate": ".ufo/waves/round-24/build/out/CaseUnreachableCitation/candidate-repaired.py",
+    "scratch_candidate_patch": ".ufo/waves/round-24/build/out/CaseUnreachableCitation/candidate-repair.patch",
+    "mutants": [
+      ".ufo/waves/round-24/build/out/CaseUnreachableCitation/mutant-reachability.py",
+      ".ufo/waves/round-24/build/out/CaseUnreachableCitation/mutant-branch-closure.py"
+    ]
+  }
+}

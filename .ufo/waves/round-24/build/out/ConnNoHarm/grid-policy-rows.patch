@@ -1,0 +1,175 @@
+--- a/tests/report-audit/repo-state-grid.py
++++ b/tests/report-audit/repo-state-grid.py
+@@ -12,6 +12,18 @@
+ hijack the verdict) and `control` (ordinary verdicts both arms must keep).
+ `open` rows (known unhandled channels) and `tradeoff` rows (declared new
+ refusals) are reported, never graded.
++
++Round-24 policy change (append-only, base 0df800e): promisor metadata is no
++longer a refusal. A repository that carries promisor metadata but holds every
++required object locally must produce the same verdict as the identical full
++clone; a citation that is missing everywhere in a promisor-backed store is
++unknown (exit 2), not a proved absence. Rows changed by that policy, with
++their round-23 expectation kept here for the record:
++  F06 exit 2 reason "partial clone" -> exit 2 reason "unknown"
++  F23 exit 2 reason "promisor pack" -> exit 2 reason "unknown"
++  F27 exit 1 [landed-unresolved, unresolved-full-hash] -> exit 2 (unknown)
++  T01 exit 0 (tradeoff, ungraded) -> exit 0, graded as a control
++Every other row keeps its round-23 expectation unchanged.
+ 
+ Exit: 0 every graded row of every selected arm met its expectation; 1 at
+ least one did not; 2 could not evaluate (fixture premise failed, git or
+@@ -625,6 +637,101 @@
+     front.mkdir()
+     Path(front, ".git").write_text(f"gitdir: {Path(decoy, '.git')}\n")
+     return front, fleet, [], None
++
++
++def _marked(tmp):
++    """Complete lane carrying promisor metadata only: every object it needs
++    is local. `remote.origin.url` names a path that does not exist, so a
++    lazy fetch could not reach a transport even if the isolation flag were
++    removed."""
++    lane, fleet, lc = base(tmp)
++    g(lane, "config", "core.repositoryformatversion", "1")
++    g(lane, "config", "extensions.partialclone", "origin")
++    g(lane, "config", "remote.origin.url", str(Path(tmp, "absent.git")))
++    g(lane, "config", "remote.origin.promisor", "true")
++    g(lane, "config", "remote.origin.partialclonefilter", "blob:none")
++    return lane, fleet, lc
++
++
++def c_marked_clean(tmp):
++    """r24 policy: promisor metadata alone must not refuse a complete
++    repository; the verdict equals the identical full clone's (exit 0)."""
++    lane, fleet, _ = _marked(tmp)
++    return lane, fleet, [], None
++
++
++def c_marked_omission(tmp):
++    """r24 policy: a genuine omitted pre-cutoff commit in a marked but
++    complete lane is still a landed-omitted finding (exit 1)."""
++    lane, fleet, _ = _marked(tmp)
++    commit(lane, "kama-shokunin", 1500, "round-1: more")
++    return lane, fleet, [], None
++
++
++def c_marked_missing_citation(tmp):
++    """A citation missing everywhere in a promisor-marked store whose
++    selected roots are complete locally: the expectation is policy
++    dependent (exit 2 unknown, or exit 1 proved absence)."""
++    lane, fleet, lc = _marked(tmp)
++    publish(fleet, report([lc]) + b"\n## Notes\n\nsee " + FAKE.encode() + b"\n")
++    return lane, fleet, [], None
++
++
++def c_unmarked_missing_citation(tmp):
++    """remote.origin.promisor=false: the store is not promisor-backed, so a
++    missing citation stays a proved absence (exit 1)."""
++    lane, fleet, lc = base(tmp)
++    g(lane, "config", "remote.origin.promisor", "false")
++    publish(fleet, report([lc]) + b"\n## Notes\n\nsee " + FAKE.encode() + b"\n")
++    return lane, fleet, [], None
++
++
++def c_orphan_marker_missing_citation(tmp):
++    """An orphan .promisor marker without a paired .pack is not a promisor
++    store: a missing citation stays a proved absence (exit 1)."""
++    lane, fleet, lc = base(tmp)
++    Path(lane, ".git/objects/pack").mkdir(parents=True, exist_ok=True)
++    Path(lane, ".git/objects/pack/pack-deadbeef.promisor").write_bytes(b"")
++    publish(fleet, report([lc]) + b"\n## Notes\n\nsee " + FAKE.encode() + b"\n")
++    return lane, fleet, [], None
++
++
++def c_marked_wrongtype_citation(tmp):
++    """A locally present blob cited as a Landed commit stays a real failed
++    finding (exit 1): git answers a wrong-type peel as "missing", so an
++    unknown-absence rule must not swallow it."""
++    lane, fleet, lc = _marked(tmp)
++    blob = g(lane, "rev-parse", f"{lc}:f")
++    publish(fleet, report([lc, blob]))
++    return lane, fleet, [], None
++
++
++def c_marked_cross_repo_citation(tmp):
++    """A citation absent from the marked lane but present in the fleet is
++    resolved, not unknown (exit 0): absence is decided after every audited
++    repository has been consulted."""
++    lane, fleet, lc = _marked(tmp)
++    seed = commit(fleet, "fleet", 500, "seed", "seed.md", b"seed\n")
++    publish(fleet, report([lc]) + b"\n## Notes\n\nsee " + seed.encode() + b"\n")
++    return lane, fleet, [], None
++
++
++def c_incomplete_closure(tmp):
++    """A promisor-marked store whose selected roots' closure is incomplete
++    locally (the only blob is filtered out and never checked out): the
++    unavailable required object is a could-not-evaluate (exit 2) even when
++    every citation resolves."""
++    lane, fleet, lc = base(tmp)
++    g(lane, "config", "uploadpack.allowFilter", "true")
++    clone = Path(tmp, "blobless")
++    g(tmp, "-c", "protocol.file.allow=always", "clone", "-q", "--no-checkout",
++      "--filter=blob:none", "--no-local", f"file://{lane}", str(clone))
++    missing = subprocess.run(["git", "-C", str(clone), "rev-list", "--objects",
++                               "--missing=print", "--no-object-names", "master"],
++                              capture_output=True, env=env()).stdout
++    require(any(l.startswith(b"?") for l in missing.splitlines()),
++            "clone --no-checkout did not leave the blob missing")
++    return clone, fleet, [], None
+ 
+ 
+ CASES = [
+@@ -671,8 +778,7 @@
+     ("F24-huge-round-number", "contract", f_huge_round, 2, None),
+     ("F25-subject-record-injection", "fault", f_subject_injection, 0, []),
+     ("F26-huge-author-timestamp", "fault", f_huge_timestamp, 2, None),
+-    ("F27-filter-only-promisor-remote", "fault", f_filter_promisor, 1,
+-     ["landed-unresolved", "unresolved-full-hash"]),
++    ("F27-filter-only-promisor-remote", "fault", f_filter_promisor, 2, None),
+     ("F28-shallow-fleet", "fault", f_shallow_fleet, 2, None),
+     ("F29-broken-branch-same-named-tag", "fault", f_broken_branch, 2, None),
+     ("F30-config-include-fifo", "fault", f_config_fifo, 2, None),
+@@ -686,7 +792,21 @@
+     ("O01-alternates-foreign-object", "open", o_alternates, 1,
+      ["landed-unresolved", "unresolved-full-hash"]),
+     ("O02-gitfile-redirect", "open", o_gitfile, 1, ["landed-omitted"]),
+-    ("T01-blobless-partial-clone", "tradeoff", t_blobless, 0, []),
++    ("T01-blobless-partial-clone", "control", t_blobless, 0, []),
++    ("C14-marked-clean", "control", c_marked_clean, 0, []),
++    ("C15-marked-omission", "control", c_marked_omission, 1,
++     ["landed-omitted"]),
++    ("C16-marked-missing-citation", "control", c_marked_missing_citation, 2,
++     None),
++    ("C17-unmarked-missing-citation", "control",
++     c_unmarked_missing_citation, 1, ["unresolved-full-hash"]),
++    ("C18-orphan-marker-missing-citation", "control",
++     c_orphan_marker_missing_citation, 1, ["unresolved-full-hash"]),
++    ("C19-marked-wrongtype-citation", "control",
++     c_marked_wrongtype_citation, 1, ["landed-unresolved"]),
++    ("C20-marked-cross-repo-citation", "control",
++     c_marked_cross_repo_citation, 0, []),
++    ("C21-incomplete-closure", "control", c_incomplete_closure, 2, None),
+ ]
+ 
+ 
+@@ -694,14 +814,16 @@
+ # startup error cannot pass as the intended refusal.
+ REASONS = {
+     "F02-report-invalid-utf8": "output is not UTF-8",
+-    "F06-lazy-fetch-command": "partial clone",
++    "F06-lazy-fetch-command": "unknown",
+     "F10-shallow-lane": "shallow repository",
+     "F11-grafts-lane": "rewrites history",
+     "F13-ref-named-abbreviation": "names a ref",
+     "F15-sha256-lane": "object format",
+     "F16-errata-invalid-utf8": "output is not UTF-8",
+     "F21-nested-subdirectory-lane": "not a repository top level",
+-    "F23-promisor-pack-without-config": "promisor pack",
++    "F23-promisor-pack-without-config": "unknown",
++    "C16-marked-missing-citation": "unknown",
++    "C21-incomplete-closure": "unknown",
+     "F30-config-include-fifo": "timed out after",
+     "F24-huge-round-number": "could-not-evaluate: internal: ValueError",
+     "F26-huge-author-timestamp": "unexpected git log record",

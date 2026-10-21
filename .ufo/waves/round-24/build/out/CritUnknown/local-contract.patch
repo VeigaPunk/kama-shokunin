@@ -1,0 +1,69 @@
+--- a/tools/report-landing-audit.py	2026-10-21 15:05:34.052701451 -0300
++++ b/tools/report-landing-audit.py	2026-10-21 15:05:40.803863925 -0300
+@@ -48,8 +48,11 @@
+ Repository trust (round 23, tests/report-audit/repo-state-grid.py):
+ refs/replace, lazy fetch, signature display, log re-encoding,
+ log.follow/log.showRoot and .mailmap are neutralized; a plain --branch name
+-means refs/heads/<name>; shallow, grafted, partial-clone, non-sha1 and
+-non-top-level repositories and ref-named citations are refused. Objects
++means refs/heads/<name>; shallow, grafted, non-sha1 and non-top-level
++repositories and ref-named citations are refused. A citation is checked
++against the objects present locally; promisor metadata does not change
++that, and an object the audit must read but cannot (lazy fetch is off)
++fails git, which is could-not-evaluate. Objects
+ borrowed through objects/info/alternates or a .git gitfile still resolve as
+ local, and other repository-local channels are not claimed. Audit trusted
+ repositories only; git >= 2.45 is required.
+@@ -437,9 +440,8 @@
+ 
+ def check_history_repo(repo):
+     """Refuse a repository whose visible history is not its object history
+-    (shallow boundary, info/grafts), whose missing objects belong to a
+-    promisor remote (absence is not evidence there), or whose object names
+-    the 40-hex scanners cannot read (non-sha1 object format)."""
++    (shallow boundary, info/grafts) or whose object names the 40-hex
++    scanners cannot read (non-sha1 object format)."""
+     fmt = git(repo, "rev-parse", "--show-object-format").strip()
+     if fmt != "sha1":
+         raise EvalError(f"{repo}: object format {fmt!r}, not sha1")
+@@ -447,22 +449,10 @@
+         raise EvalError(f"{repo}: not a repository top level")
+     if git(repo, "rev-parse", "--is-shallow-repository").strip() != "false":
+         raise EvalError(f"{repo}: shallow repository")
+-    for rel in ("info/grafts", "objects/pack"):
+-        path = Path(repo, git(repo, "rev-parse", "--git-path", rel).strip())
+-        if rel == "info/grafts" and grafts_effective(path):
+-            raise EvalError(f"{repo}: {path} rewrites history")
+-        if rel == "objects/pack" and path.is_dir() and any(
+-                p.suffix == ".promisor" and p.with_suffix(".pack").exists()
+-                for p in path.iterdir()):
+-            raise EvalError(f"{repo}: partial clone (promisor pack)")
+-    listing = git(repo, "config", "--null", "--list",
+-                  errors="surrogateescape")
+-    for entry in filter(None, listing.split("\0")):
+-        key, _, value = entry.partition("\n")
+-        if key == "extensions.partialclone" or (
+-                re.fullmatch(r"remote\..+\.promisor", key)
+-                and git_bool(value)):
+-            raise EvalError(f"{repo}: partial clone ({key})")
++    path = Path(repo, git(repo, "rev-parse", "--git-path",
++                          "info/grafts").strip())
++    if grafts_effective(path):
++        raise EvalError(f"{repo}: {path} rewrites history")
+ 
+ 
+ def grafts_effective(path):
+@@ -477,13 +467,6 @@
+         return True
+     return any(line.strip() and not line.startswith(b"#")
+                for line in Path(path).read_bytes().splitlines())
+-
+-
+-def git_bool(value):
+-    """git's boolean config spelling; a bare key (no '=') is true."""
+-    v = value.strip().lower()
+-    return v in ("", "true", "yes", "on") or (
+-        re.fullmatch(r"-?[0-9]+", v) is not None and int(v) != 0)
+ 
+ 
+ def resolve_branch(lane_repo, branch):

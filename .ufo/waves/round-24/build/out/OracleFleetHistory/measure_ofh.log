@@ -1,0 +1,112 @@
+
+### M1 fleet_plain: add-commits for the report path
+6be21321a5b65214774a19b5ba19cafef344b634 5000 round-1: re-add report again
+a1ad0b24dbb20635537ec08d04af5b2c9e2ef6b9 3000 round-1: re-add report
+8b0559d8407ec5bb93f95b1438ff3f885b3bea46 1000 round-1: kama report
+rc=0
+
+### M1b fleet_plain: --format=%at list (report_cutoff takes the last entry)
+5000
+3000
+1000
+rc=0
+
+### M2 fleet_plain: full log of the report path
+6be21321a5b65214774a19b5ba19cafef344b634 5000 round-1: re-add report again
+fedc57e8c3997105766d60bf9556e703e49dad97 4000 round-1: drop report again
+a1ad0b24dbb20635537ec08d04af5b2c9e2ef6b9 3000 round-1: re-add report
+603bcebae02a896bcdbeb27cee2f2348ae75f782 2000 round-1: drop report
+8b0559d8407ec5bb93f95b1438ff3f885b3bea46 1000 round-1: kama report
+rc=0
+
+### M3 fleet_marked_cfg: promisor config, closure completeness
+true
+rc=0
+0
+missing-lines-above (0 = complete)
+
+### M4 fleet_marked_cfg: same add-commit list as the plain twin
+6be21321a5b65214774a19b5ba19cafef344b634 5000
+a1ad0b24dbb20635537ec08d04af5b2c9e2ef6b9 3000
+8b0559d8407ec5bb93f95b1438ff3f885b3bea46 1000
+rc=0
+
+### M5 fleet_marked_pack: paired .promisor/.pack markers, closure completeness
+pack-98f593a5d192f9285f2dd80c85a4873131850075.idx
+pack-98f593a5d192f9285f2dd80c85a4873131850075.pack
+pack-98f593a5d192f9285f2dd80c85a4873131850075.promisor
+pack-98f593a5d192f9285f2dd80c85a4873131850075.rev
+promisor-config-rc=1
+0
+missing-lines-above (0 = complete)
+6be21321a5b65214774a19b5ba19cafef344b634 5000
+a1ad0b24dbb20635537ec08d04af5b2c9e2ef6b9 3000
+8b0559d8407ec5bb93f95b1438ff3f885b3bea46 1000
+rc=0
+
+### M6 fleet_hist_missing: first-add blob deleted (promisor config present)
+true
+rc=0
+-- closure scan (rev-list --objects --missing=print)
+?6d06f68c89213cb1fca438aa91f5b61a39dabc4a
+rc=0
+-- tip-only scan (ls-tree -r HEAD blobs, cat-file --batch-check)
+87a06f716a222a7fa8cccbbb414b9d4355129761 .ufo/reports/round-1/kama.md
+87a06f716a222a7fa8cccbbb414b9d4355129761 blob 262
+rc=0
+-- HEAD report bytes
+# Round 1 kama report
+
+## Work performed
+Synthetic fixture report for the round-24 promisor completeness case.
+
+## Landed changes (commits)
+- `66dbbea` alpha work
+
+## Notes
+second revision of the same round report
+marker 0123456789abcdef0123456789abcdef01234567
+rc=0
+-- add-commit list (cutoff source) with the first-add blob absent
+1a82d8215d18ff5e7b937257dcaa08c2604887ae 5000
+74b6ae90cafadb360b3ff6919d3e18132630ab29 3000
+8b0559d8407ec5bb93f95b1438ff3f885b3bea46 1000
+rc=0
+-- cat-file --batch-check on the missing first-add blob
+6d06f68c89213cb1fca438aa91f5b61a39dabc4a missing
+rc=0
+
+### M7 lane: round-1 commits and their author times
+06488039699b085505edc49338ec35a438f5a9a2 1700 kama-shokunin round-10: other round
+ce760034065667ef38ccb053077436766d1ae0c4 1600 someone round-1: foreign author
+975aebfdf92fc0b9f2751d9a9330dc5487cb5aa5 2500 kama-shokunin round-1: gamma
+03b3e245662c564d0203f22c727f6ce4ae2f3ad0 1500 kama-shokunin round-1: beta
+66dbbead34edb3c94ef25757657dacb951a94dfe 500 kama-shokunin round-1: alpha
+
+### M8 fleet_plain vs marked twins: identical report bytes at HEAD
+fleet_plain 6d06f68c89213cb1fca438aa91f5b61a39dabc4a
+fleet_marked_cfg 6d06f68c89213cb1fca438aa91f5b61a39dabc4a
+fleet_marked_pack 6d06f68c89213cb1fca438aa91f5b61a39dabc4a
+fleet_hist 87a06f716a222a7fa8cccbbb414b9d4355129761
+
+### M9 reading the missing first-add blob with --no-lazy-fetch (must fail, no fetch)
+fatal: bad object 8b0559d8407ec5bb93f95b1438ff3f885b3bea46:.ufo/reports/round-1/kama.md
+rc=128
+fatal: git cat-file 6d06f68c89213cb1fca438aa91f5b61a39dabc4a: bad file
+rc=128
+-- remote that a lazy fetch would have used (never contacted)
+https://example.invalid/fleet.git
+
+### M10 skew fleet: add-commit author times (re-add carries the EARLIER time)
+7603d7928dd1e683b9fb14eb0e557d0912f6d1b8 500 round-1: re-add report
+8b0559d8407ec5bb93f95b1438ff3f885b3bea46 1000 round-1: kama report
+rc=0
+-- closure scan of the skew marked twin
+0
+missing-lines-above (0 = complete)
+
+### M11 lane_skew commits
+ee124a68b7dabe6ad0ccb5657442376067021c27 2500 kama-shokunin round-1: gamma
+ec3ce607aaf8f756a173697717c8fdc5ba7b8a6d 1500 kama-shokunin round-1: beta
+10c475bac3d7543111638f968aa37164adf46fb5 700 kama-shokunin round-1: mid
+66dbbead34edb3c94ef25757657dacb951a94dfe 500 kama-shokunin round-1: alpha

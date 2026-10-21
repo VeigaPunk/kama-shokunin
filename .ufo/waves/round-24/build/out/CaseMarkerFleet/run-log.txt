@@ -1,0 +1,105 @@
+CaseMarkerFleet — run log (round 24, base 0df800e896f6bce285a81e794ad4ae1d1e6c3a71)
+Seat: KamaR23-2.CaseMarkerFleet-2 (leaf member, no dispatch).
+Date: 2026-10-21.
+
+ENVIRONMENT
+  git --version          -> git version 2.56.0
+  python3 --version      -> Python 3.14.8
+  scratch root           -> /fast/scratch/hyaku/kama-r24/CaseMarkerFleet
+  lane repo (read-only)  -> /home/vgpnk/Projects/shokunin/kama-shokunin
+  lane HEAD at measure  -> d1b9d956a0beda9ac32a1a2cf6ced875faeada0d (L1/siblings moved it;
+                            the audit blob under test is UNCHANGED from base, see below)
+  tools/report-landing-audit.py sha256 (worktree) = da5041a8191e0e6ec385adc7c659ddc7544a835aff65dd45b34de623c5765af1
+  git show 0df800e:tools/report-landing-audit.py | sha256sum = da5041a8191e0e6ec385adc7c659ddc7544a835aff65dd45b34de623c5765af1
+  -> the base blob and the current worktree blob are byte-identical: the case is a
+     failing oracle for the candidate as it stands, not only for the frozen arm.
+
+COMMANDS EXECUTED (all bounded, local, offline; no candidate or full suite run)
+  git clone --no-hardlinks -q /home/vgpnk/Projects/shokunin/kama-shokunin \
+      /fast/scratch/hyaku/kama-r24/CaseMarkerFleet/repo
+  git -C .../repo checkout -q 0df800e896f6bce285a81e794ad4ae1d1e6c3a71
+  python3 build/case-marker-fleet.py --auditor repo/tools/report-landing-audit.py \
+      --oracle <out>/oracle-case-marker-fleet.json --out obs/base.json
+  python3 build/make-probe.py
+  python3 build/case-marker-fleet.py --auditor build/auditor-probe.py \
+      --oracle <out>/oracle-case-marker-fleet.json --out obs/probe.json
+  python3 build/unknown-citation-probe.py        -> obs/unknown-citation.json
+  python3 build/run-grid-fragment.py              -> obs/fragment-rows.json
+  (git plumbing used by the fixture: init, add, commit, config, rev-parse,
+   rev-list --objects --all --missing=print, fsck --connectivity-only,
+   cat-file --batch-all-objects --batch-check, log --diff-filter=A)
+
+MEASURED (base auditor 0df800e, sha256 da5041a8…)
+  V1-clean     plain arm: exit 0, defects [], cutoff 2000, required 1
+               marker arm: exit 2, stderr "…: partial clone (extensions.partialclone)"
+  V2-omission  plain arm: exit 1, defects [landed-omitted 29e8ea69cc44bbb72af22255c5231a7d13b577e0],
+                           cutoff 2000, required 2
+               marker arm: exit 2, stderr "…: partial clone (extensions.partialclone)"
+  boundary (marker + report blob removed): exit 2, no verdict, no fetch
+  unknown-citation (marker + citation to an absent object): exit 2, no verdict, no fetch
+
+MEASURED (scratch satisfiability probe, sha256 58da34f4…, NOT a production edit)
+  V1-clean     marker arm == plain arm (exit 0, defects [], cutoff 2000, required 1)
+  V2-omission  marker arm == plain arm (exit 1, defects [landed-omitted 29e8ea69…],
+               cutoff 2000, required 2)
+  boundary     still exit 2 ("cannot read .ufo/reports/round-1/kama.md at fleet HEAD")
+  unknown      exit 2 ("citation(s) not available locally in a promisor-backed
+               repository: unknown, not absent")
+
+CONTAINMENT / NO-HARM PROOF
+  every fixture repository lives under /fast/scratch/hyaku/kama-r24/CaseMarkerFleet/run/
+  no git root at or above the scratch path:
+      git -C /fast                     rev-parse --show-toplevel -> fatal: not a git repository
+      git -C /fast/scratch             -> fatal: not a git repository
+      git -C /fast/scratch/hyaku       -> fatal: not a git repository
+      git -C .../kama-r24              -> fatal: not a git repository
+      git -C .../CaseMarkerFleet       -> fatal: not a git repository
+  find /tmp -maxdepth 1 -newermt '2026-10-21 17:50'  -> (no entries): no fixture escaped to /tmp
+  the lane repository's tracked files are untouched by this seat (only the sanctioned
+  out/ + advice/ paths were written); lane git index untouched (git diff --cached empty);
+  no ~/.gitconfig exists and no operator/sibling config was written;
+  the scratch clone is pinned at 0df800e with a clean status.
+  determinism: the lane commit sha db796f8b820bf3825c58832419138cdba23206a7 and the
+  omission token 29e8ea69cc44bbb72af22255c5231a7d13b577e0 are identical across all
+  7 runs of the fixture (fixed author/committer dates and identities).
+
+ARTIFACT HASHES (sha256)
+  58da34f452534812bd958ec4160a786f096ed11aa704316e2200e3a1ea01de6d  auditor-probe.py
+  c0e152fa0b38772617c9cf2e4ea6444e324e48943b05c950194d9bd56ee5c7d8  case-marker-fleet.py
+  86a09bb3ac6b6a8b479f0cc41baf1a6bed2c68035de8e9abc786251c197c03b6  grid-fragment.py
+  9301799fd70872ef6c1c9a1576a99b5e5395d169caefb82225be6e75f324196a  make-probe.py
+  987ea588851407fe2516e1eee6db1479363f7a5a398d53d73e492b1e29555af8  obs-base.json
+  96c9cdb64bcad1984145b32ee29c360fc4c25b2a33274f3ab246ce15c94c67f8  obs-fragment-rows.json
+  0c71f4484f995b70364dd0440f3bb5fac664349d079d2d98e58935de1608bea7  obs-probe.json
+  07a5716c349838b52f3db6540b64115f3934e84f864bfaeeca3b48f5d0013fd0  obs-unknown-citation.json
+  cc94d9ec91da77cc38825079d9948ca6e9a5ed1d896440795c6bf1c34bae41c3  oracle-case-marker-fleet.json
+  a9eb86b9d525dde903fbf77d83d33c33ac8053946b869c8c4db3c483bb6df1ff  run-grid-fragment.py
+  9eb3ae25cce7051b208aabf91424e5796eee5f3623a897a9f7078d78b78cc42b  unknown-citation-probe.py
+
+INSTALLS
+  None. No package was installed or updated by this seat (git 2.56.0 and Python 3.14.8
+  were already present).
+
+APPEND 2026-10-21 (end-of-seat reproducibility recheck)
+  python3 <out>/case-marker-fleet.py --auditor <out>/auditor-probe.py \
+      --oracle <out>/oracle-case-marker-fleet.json --out obs/recheck.json
+  -> rc 0; V1-clean marker==plain True; V2-omission marker==plain True;
+     no_transport True in both; boundary exit 2.  (obs-recheck.json)
+  case_marker_fleet.py is a byte-identical alias of case-marker-fleet.py
+  (sha256 c0e152fa0b38772617c9cf2e4ea6444e324e48943b05c950194d9bd56ee5c7d8);
+  it exists so unknown-citation-probe.py can import the builder by module name.
+  FINAL ARTIFACT HASHES (sha256, out/CaseMarkerFleet/)
+    58da34f452534812bd958ec4160a786f096ed11aa704316e2200e3a1ea01de6d  auditor-probe.py
+    c0e152fa0b38772617c9cf2e4ea6444e324e48943b05c950194d9bd56ee5c7d8  case-marker-fleet.py
+    c0e152fa0b38772617c9cf2e4ea6444e324e48943b05c950194d9bd56ee5c7d8  case_marker_fleet.py
+    86a09bb3ac6b6a8b479f0cc41baf1a6bed2c68035de8e9abc786251c197c03b6  grid-fragment.py
+    9301799fd70872ef6c1c9a1576a99b5e5395d169caefb82225be6e75f324196a  make-probe.py
+    987ea588851407fe2516e1eee6db1479363f7a5a398d53d73e492b1e29555af8  obs-base.json
+    96c9cdb64bcad1984145b32ee29c360fc4c25b2a33274f3ab246ce15c94c67f8  obs-fragment-rows.json
+    0c71f4484f995b70364dd0440f3bb5fac664349d079d2d98e58935de1608bea7  obs-probe.json
+    07a5716c349838b52f3db6540b64115f3934e84f864bfaeeca3b48f5d0013fd0  obs-unknown-citation.json
+    cc94d9ec91da77cc38825079d9948ca6e9a5ed1d896440795c6bf1c34bae41c3  oracle-case-marker-fleet.json
+    a9eb86b9d525dde903fbf77d83d33c33ac8053946b869c8c4db3c483bb6df1ff  run-grid-fragment.py
+    9eb3ae25cce7051b208aabf91424e5796eee5f3623a897a9f7078d78b78cc42b  unknown-citation-probe.py
+  (obs-recheck.json and this log are hashed after the append; recompute with
+   sha256sum out/CaseMarkerFleet/* if a manifest is needed.)

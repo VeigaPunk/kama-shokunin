@@ -1,0 +1,105 @@
+{
+  "case": "C-WT1-wrong-type-citation-landed",
+  "written_before": "builder implementation",
+  "preregistration": ".ufo/waves/round-24/preregistration.json",
+  "base": "0df800e896f6bce285a81e794ad4ae1d1e6c3a71",
+  "auditor": "tools/report-landing-audit.py",
+  "question": "A report cites a locally present BLOB where a Landed commit is required. The object exists, so the citation is resolvable and its type is known: it is not a commit. That is a real failed finding (exit 1), never an uncertain missing (exit 2).",
+  "fixture": {
+    "lane": "one commit 'round-1: work' by kama-shokunin at author time 1000; file 'f' whose blob sha T is the wrong-type citation target",
+    "fleet": "commit 'round-1: report' at author time 2000 adding .ufo/reports/round-1/kama.md",
+    "report": "## Landed changes cites the real lane commit LC (40-hex) and the blob sha T (40-hex); no other hex token",
+    "blob_target": "T = sha1 of the lane file blob; cat-file -t T == blob; T^{commit} does not peel",
+    "arms": {
+      "full": "plain offline clone of the origins; no promisor metadata at all",
+      "promisor-metadata": "same content, plus promisor metadata only: core.repositoryformatversion=1, remote.origin.promisor=true, remote.origin.partialclonefilter=blob:none; every object already present locally; remote.origin.url is a local path"
+    },
+    "offline": "no network transport, no remote command, no credential helper, no core.sshCommand; the only remote URL is a local filesystem path"
+  },
+  "expectations": {
+    "full": {
+      "exit": 1,
+      "defect_kinds": ["landed-unresolved"],
+      "defect_tokens": ["T"],
+      "must_not_contain": ["unresolved-full-hash", "landed-omitted", "landed-ambiguous", "landed-section-missing"],
+      "rationale": "T exists in the lane, so the full-hash existence scan resolves it; only the Landed commit requirement fails. Exactly one defect."
+    },
+    "promisor-metadata": {
+      "exit": 1,
+      "defect_kinds": ["landed-unresolved"],
+      "defect_tokens": ["T"],
+      "must_not_contain": ["unresolved-full-hash", "landed-omitted", "landed-ambiguous", "landed-section-missing"],
+      "rationale": "Same substantive finding as the full clone: promisor metadata alone does not establish incompleteness, and a present wrong-type object is proved evidence, not an unknown."
+    }
+  },
+  "amendments": [
+    {
+      "added_after": "the builder existed; expectation unchanged, arms added for coverage",
+      "arms": {
+        "promisor-lane-only": {
+          "exit": 1,
+          "defect_kinds": ["landed-unresolved"],
+          "defect_tokens": ["T"],
+          "rationale": "Only the lane carries the metadata; the citation still resolves locally in the lane, so the finding must stand."
+        },
+        "promisor-fleet-only": {
+          "exit": 1,
+          "defect_kinds": ["landed-unresolved"],
+          "defect_tokens": ["T"],
+          "rationale": "Only the fleet carries the metadata; the cited blob is in the lane and present, so the finding must stand."
+        },
+        "non-promisor-unrelated-hole": {
+          "exit": 1,
+          "defect_kinds": ["landed-unresolved"],
+          "defect_tokens": ["T"],
+          "rationale": "An unrelated missing blob (referenced by a post-report tree, deleted from the store, cited nowhere) must not change the verdict. Measured at base: exit 1 with exactly this one defect, so the expectation is anchored, not guessed.",
+          "frozen_base_measured": {"exit": 1, "kinds": ["landed-unresolved"], "token": "T"}
+        },
+        "promisor-metadata-unrelated-hole": {
+          "exit": 1,
+          "defect_kinds": ["landed-unresolved"],
+          "defect_tokens": ["T"],
+          "rationale": "Same as the row above with promisor metadata on both repositories: an unrelated hole is still unrelated. Kills an 'any hole means unknown' rule applied to peel failures.",
+          "frozen_base_measured": {"exit": 2, "reason_substring": "partial clone", "note": "the r23 refusal precedes any content check"}
+        }
+      },
+      "peer_row_note": "Peer OracleLocalBlobType built the same shape as its P10/P10b with a different fixture token 4c226b603e6a26a14212b131fcac232ca7318852. That token belongs to the peer fixture; it must stay apart from T=6e98d181389d343031fd578c6a775ce0889a8b0d in every expectations file.",
+      "mechanism_correction": "Landed-span tokens are ALWAYS in the full-hash scan: without corpus/SOURCES.md, classify_full_hashes returns FULL.findall(text) over the whole report (tools/report-landing-audit.py:285); with SOURCES.md, :293 (lo <= start < hi) puts every Landed-span token INTO the scanned set, and only an exact Registry-URL occurrence outside the Landed span is diverted to 'classified'. Therefore T is seen by BOTH lookups in this cell: the no-peel lookup resolves it (the blob is present) and the peel to a commit fails, which is what yields the single defect. The absence of unresolved-full-hash here is therefore NOT a Landed-span exclusion effect, and the expectation must not be written as SOURCES-dependent."
+    }
+  ],
+  "frozen_base_0df800e_expectation": {
+    "full": {"exit": 1, "note": "base already reports the wrong-type citation as a failed finding"},
+    "promisor-metadata": {"exit": 2, "reason_substring": "partial clone", "note": "base refuses any promisor-marked repository before looking at content; this is the r23 harm"}
+  },
+  "candidate_requirement": "promisor-metadata arm must reach the same exit and the same defect kinds as the full arm; exit 2 (could-not-evaluate) on this cell is a regression of the r23 harm, and an extra unresolved-full-hash defect (blob not found) is a second regression: the object is present.",
+  "discrimination_filed_view": {
+    "note": "Original registration view, kept as filed (immutable). Superseded prospectively for the absent-token rule by oracle-amendment-1.json; see discrimination_amended_view. The C-WT1 expectations in this file are NOT changed by the amendment.",
+    "present_wrong_type": "exit 1, landed-unresolved",
+    "present_absent": "exit 2, could-not-evaluate (absence is not evidence in a promisor-backed repository)",
+    "owner_of_absent_case": "CaseUnknownCitation (sibling lane)",
+    "git_evidence": "git cat-file --batch-check prints '<sha> blob <size>' for the bare blob and '<sha>^{commit} missing' on stdout (rc=0) with stderr 'error: <sha>^{commit}: expected commit type, but the object dereferences to blob type'"
+  },
+  "discrimination_amended_view": {
+    "authority": ".ufo/waves/round-24/oracle-amendment-1.json (committed 123640b, before any candidate observation), superseding preregistration expected_after[3] prospectively; plus preregistration expected_after[1], [4] and [6]",
+    "l1_preintegration_decision": "L1 (via KamaR23-2, 123640b): the four known-present blob-in-Landed arms remain exit 1 / landed-unresolved with the same token T. No metadata blanket unknown. The initial 'unknown citation => exit 2' expectation is retained as withdrawn / not met in a separate view, not relabelled passed.",
+    "present_wrong_type": "exit 1, landed-unresolved - unchanged by the amendment: the object is present, so metadata alone cannot change the verdict, and the wrong type is proved evidence",
+    "present_absent_in_a_complete_store": "not exit 2. Promisor metadata alone never changes the verdict: an absent token in a complete store keeps the twin verdict (ordinary failed 1 + unresolved-full-hash; peer row P06/P08).",
+    "known_unavailable_referenced_content": "exit 2 (CNE) with a content-derived reason, never a guessed empty verdict (peer rows P07/P09: the cited token is known to name unavailable referenced local content).",
+    "neighbour_rows_finalized": {
+      "P01/P02/P03/P05": "exit 0, defects [], summary == full-clone twin",
+      "P04": "filter-only promisor, exit 0, no harm (valid only because the token resolves locally)",
+      "P06": "promisor metadata + fabricated token absent from a COMPLETE store -> exit 1 + exactly {unresolved-full-hash, the fabricated sha}",
+      "P07": "promisor metadata + cited token known-missing in the missing set -> exit 2, content-derived CNE",
+      "P08": "promisor metadata + UNRELATED hole + fabricated token -> exit 1 + {unresolved-full-hash, 0123456789abcdef0123456789abcdef01234567}",
+      "P08b": "same in a non-promisor store -> exit 1, same",
+      "P09": "non-promisor store + cited token IS the hole -> exit 2 (declared non-promisor policy row)"
+    },
+    "pair_that_must_hold": "present but wrong type -> failed 1 (C-WT1); present but unavailable required content -> CNE 2 (P07/P09); absent in a complete store -> ordinary failed 1 (P06/P08); no metadata blanket unknown."
+  },
+  "not_claimed": [
+    "tree-typed or tag-typed citations (not built)",
+    "short/abbreviated wrong-type tokens (not built)",
+    "a wrong-type citation that is simultaneously absent (not built)",
+    "any claim about untrusted repositories, live serving, or higher scalar score"
+  ]
+}

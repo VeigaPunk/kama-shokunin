@@ -1,0 +1,27 @@
+# git semantics for case C-WT1 (blob 6e98d181389d343031fd578c6a775ce0889a8b0d)
+# git git version 2.56.0
+
+$ git cat-file -t 6e98d181389d343031fd578c6a775ce0889a8b0d
+rc=0
+stdout: blob
+
+$ git cat-file --batch-check <<< ...
+rc=0
+stdout: 6e98d181389d343031fd578c6a775ce0889a8b0d blob 14
+
+$ git cat-file --batch-check <<< ...
+rc=0
+stdout: 6e98d181389d343031fd578c6a775ce0889a8b0d^{commit} missing
+stderr: error: 6e98d181389d343031fd578c6a775ce0889a8b0d^{commit}: expected commit type, but the object dereferences to blob type
+
+$ git rev-parse --verify 6e98d181389d343031fd578c6a775ce0889a8b0d^{commit}
+rc=128
+stderr: error: 6e98d181389d343031fd578c6a775ce0889a8b0d^{commit}: expected commit type, but the object dereferences to blob type
+        fatal: Needed a single revision
+
+$ git cat-file --batch-check <<< ...
+rc=0
+stdout: 0000000000000000000000000000000000000000^{commit} missing
+
+$ git cat-file -e 6e98d181389d343031fd578c6a775ce0889a8b0d
+rc=0

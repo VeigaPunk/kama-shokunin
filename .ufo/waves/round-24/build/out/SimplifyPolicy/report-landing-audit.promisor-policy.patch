@@ -1,0 +1,188 @@
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index cf706c5..d9934fb 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -48,11 +48,14 @@ Errors are never verdicts.
+ Repository trust (round 23, tests/report-audit/repo-state-grid.py):
+ refs/replace, lazy fetch, signature display, log re-encoding,
+ log.follow/log.showRoot and .mailmap are neutralized; a plain --branch name
+-means refs/heads/<name>; shallow, grafted, partial-clone, non-sha1 and
+-non-top-level repositories and ref-named citations are refused. Objects
+-borrowed through objects/info/alternates or a .git gitfile still resolve as
+-local, and other repository-local channels are not claimed. Audit trusted
+-repositories only; git >= 2.45 is required.
++means refs/heads/<name>; shallow, grafted, non-sha1 and non-top-level
++repositories and ref-named citations are refused. A promisor-backed
++repository is audited like any other when its evidence is present: the
++metadata alone does not make it unauditable, and a citation it cannot
++resolve is unknown rather than proved absent, so it is a could-not-evaluate.
++Objects borrowed through objects/info/alternates or a .git gitfile still
++resolve as local, and other repository-local channels are not claimed. Audit
++trusted repositories only; git >= 2.45 is required.
+ """
+ from __future__ import annotations
+ 
+@@ -136,11 +139,15 @@ def git(repo, *args, stdin=None, env=None, errors="strict"):
+     return out.replace("\r\n", "\n").replace("\r", "\n")
+ 
+ 
+-def lookup(repos, tokens, peel=""):
++def lookup(repos, tokens, peel="", promisor=False):
+     """{token: 'found'|'ambiguous'|'missing'} across repos, via
+     `cat-file --batch-check` per repo; a git failure is EvalError. With a
+     peel, git answers `missing` for an ambiguous short name, so the bare
+-    name is asked first to keep ambiguity visible."""
++    name is asked first to keep ambiguity visible. `cat-file --batch-check`
++    reports an absent object as `missing` and exits 0, so absence is only
++    proof when no audited repository is promisor-backed: there a missing
++    object may live on the promisor remote, which is unknown, not absence,
++    and is an EvalError rather than a defect."""
+     tokens = sorted(set(tokens))
+     status = {t: "missing" for t in tokens}
+     if not tokens:
+@@ -149,6 +156,12 @@ def lookup(repos, tokens, peel=""):
+         bare = lookup(repos, tokens)
+         status.update({t: "ambiguous" for t, s in bare.items()
+                        if s == "ambiguous"})
++        # an object that is present locally is never unknown: a token that
++        # names a non-commit is a proved wrong type, not a commit that may
++        # still live on the promisor remote
++        present = {t for t, s in bare.items() if s == "found"}
++    else:
++        present = set()
+     for repo in repos:
+         out = git(repo, "cat-file", "--batch-check",
+                   stdin="".join(f"{t}{peel}\n" for t in tokens))
+@@ -171,6 +184,15 @@ def lookup(repos, tokens, peel=""):
+                 # git resolved a same-named ref before the object prefix
+                 raise EvalError(f"{repo}: citation {token} names a ref")
+             status[token] = "found"
++    if promisor:
++        # every repository was asked: an object absent everywhere may be
++        # held by the promisor remote, so it is unknown, not proved absent
++        unknown = sorted(t for t, s in status.items()
++                         if s == "missing" and t not in present)
++        if unknown:
++            raise EvalError("unknown citation "
++                            f"{', '.join(unknown[:8])}: a promisor-backed "
++                            "repository may hold it")
+     return status
+ 
+ 
+@@ -299,7 +321,8 @@ def classify_full_hashes(text, source_urls, landed):
+     return tokens, sorted(classified - unclassified)
+ 
+ 
+-def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path, source_urls):
++def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path, source_urls,
++                promisor=False):
+     rel = f".ufo/reports/round-{rnd}/{lane}.md"
+     report = Path(path) if path else Path(fleet_repo) / rel
+     if path:
+@@ -322,7 +345,7 @@ def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path, source_urls):
+     landed = landed_match(text)
+     full_tokens, classified_hashes = classify_full_hashes(
+         text, source_urls, landed)
+-    full = lookup(repos, full_tokens)
++    full = lookup(repos, full_tokens, promisor=promisor)
+     defects += [{"kind": "unresolved-full-hash", "token": t}
+                 for t, s in full.items() if s != "found"]
+     section = None if landed is None else landed.group(1)
+@@ -334,7 +357,7 @@ def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path, source_urls):
+         section = ""
+     cited = set(ABBREV.findall(section))
+     status = lookup(repos, [t for t in cited if checkable_abbrev(t)],
+-                    "^{commit}")
++                    "^{commit}", promisor=promisor)
+     for token, state in status.items():
+         if state == "missing":
+             defects.append({"kind": "landed-unresolved", "token": token})
+@@ -384,7 +407,7 @@ def load_errata(args, lane_repo, tip):
+                         f"{args.branch}:{ERRATA}")
+ 
+ 
+-def apply_errata(results, errata, repos):
++def apply_errata(results, errata, repos, promisor=False):
+     selected = {r["round"] for r in results}
+     used = set()
+     for res in results:
+@@ -401,7 +424,7 @@ def apply_errata(results, errata, repos):
+     hexed = {e["line"]: e["correction"].lower() for e in errata
+              if e["kind"] in RESOLVABLE
+              and re.fullmatch(r"[0-9a-fA-F]{7,40}", e["correction"])}
+-    status = lookup(repos, list(hexed.values()), "^{commit}")
++    status = lookup(repos, list(hexed.values()), "^{commit}", promisor=promisor)
+     invalid = [e for e in errata if e["kind"] in RESOLVABLE and (
+         status.get(hexed.get(e["line"])) != "found"
+         or (e["kind"] == "landed-omitted" and e["correction"] != e["token"]))]
+@@ -437,9 +460,12 @@ def parse_rounds(spec, fleet_repo, lane):
+ 
+ def check_history_repo(repo):
+     """Refuse a repository whose visible history is not its object history
+-    (shallow boundary, info/grafts), whose missing objects belong to a
+-    promisor remote (absence is not evidence there), or whose object names
+-    the 40-hex scanners cannot read (non-sha1 object format)."""
++    (shallow boundary, info/grafts) or whose object names the 40-hex
++    scanners cannot read (non-sha1 object format). Returns True when the
++    repository is promisor-backed (a promisor pack marker, a promisor
++    remote, or a partial-clone filter): its objects may be incomplete, so a
++    locally absent object is unknown there, not proved absence. The metadata
++    alone does not make the repository unauditable."""
+     fmt = git(repo, "rev-parse", "--show-object-format").strip()
+     if fmt != "sha1":
+         raise EvalError(f"{repo}: object format {fmt!r}, not sha1")
+@@ -447,6 +473,7 @@ def check_history_repo(repo):
+         raise EvalError(f"{repo}: not a repository top level")
+     if git(repo, "rev-parse", "--is-shallow-repository").strip() != "false":
+         raise EvalError(f"{repo}: shallow repository")
++    promisor = False
+     for rel in ("info/grafts", "objects/pack"):
+         path = Path(repo, git(repo, "rev-parse", "--git-path", rel).strip())
+         if rel == "info/grafts" and grafts_effective(path):
+@@ -454,15 +481,18 @@ def check_history_repo(repo):
+         if rel == "objects/pack" and path.is_dir() and any(
+                 p.suffix == ".promisor" and p.with_suffix(".pack").exists()
+                 for p in path.iterdir()):
+-            raise EvalError(f"{repo}: partial clone (promisor pack)")
++            promisor = True
+     listing = git(repo, "config", "--null", "--list",
+                   errors="surrogateescape")
+     for entry in filter(None, listing.split("\0")):
+         key, _, value = entry.partition("\n")
+         if key == "extensions.partialclone" or (
+                 re.fullmatch(r"remote\..+\.promisor", key)
+-                and git_bool(value)):
+-            raise EvalError(f"{repo}: partial clone ({key})")
++                and git_bool(value)) or (
++                re.fullmatch(r"remote\..+\.partialclonefilter", key)
++                and value.strip()):
++            promisor = True
++    return promisor
+ 
+ 
+ def grafts_effective(path):
+@@ -511,15 +541,21 @@ def run(args):
+                     | set(overrides))
+     if not rounds:
+         raise EvalError("no rounds selected")
++    promisor = False
+     for repo in (lane_repo, fleet_repo):
+-        check_history_repo(repo)
++        # both repositories are always inspected: a short-circuit here would
++        # skip the fleet's own shallow/graft/sha256/top-level refusal
++        if check_history_repo(repo):
++            promisor = True
+     tip = resolve_branch(lane_repo, args.branch)
+     git(fleet_repo, "rev-parse", "--verify", "HEAD^{commit}")
+     source_urls = load_source_urls(lane_repo, tip)
+     results = [audit_round(lane_repo, fleet_repo, tip, args.lane, r,
+-                           overrides.get(r), source_urls) for r in rounds]
++                           overrides.get(r), source_urls, promisor)
++               for r in rounds]
+     errata = load_errata(args, lane_repo, tip)
+-    unmatched, invalid = apply_errata(results, errata, (lane_repo, fleet_repo))
++    unmatched, invalid = apply_errata(results, errata, (lane_repo, fleet_repo),
++                                      promisor)
+     by_kind = {k: 0 for k in KINDS}
+     total = corrected = 0
+     for res in results:

@@ -120,3 +120,42 @@ is preserved. Status/recheck unchanged. Each consumer transition is logged:
 This final consumer reconciliation supersedes the earlier
 “No S001–S101 field changed” statement only for the mutable used-by
 column. No immutable row data, status or recheck value was changed.
+
+## Named residual debt carried, not discharged
+
+ConnClosure's final build review routes the old identifiers explicitly:
+RowF12, RowF21, RowF22, RowF23, RowF26, RowC04, ExecSecondLanded,
+ExecAmbiguityFixture, RevengeGitfile, CritTradeoffHarm H2, SentinelDoSW2,
+ConnSiblingTools, and supplementary surviving detector variants
+N01/N02/N03/D02/D03 remain the historical r23 near-variant/coverage debt.
+Their original evidence is `.ufo/waves/round-23/falsify/advice/` and
+`corpus/lessons/round-23.md` §Falsify-wave disposition. This round does not
+claim those classes closed merely because the primary local-evidence
+contract was repaired. The weak historical assertions
+`uncommitted-draft-uses-now` and `inherited-GIT_DIR-untouched` remain outside
+the declared repair, not silently fixed.
+
+An additional bounded coverage limitation is preserved: the47-cell grid
+does not distinguish refs-only traversal from all present-object roots
+for a dangling commit that names a missing cited blob. The implementation
+uses present commit/tree/tag roots and ConnClosure's independent probe
+holds; fresh falsification is asked to attack that distinction. The47
+registered expectations are not rewritten to add headline credit.
+R23-H2 remains carried, not discharged, pending the operator ruling.
+
+## Gate
+
+Continuation after final build-source review; this adds the late rejection
+record to the initial Gate without rewriting its filed entries.
+
+- S105, rejected: https://docs.python.org/3.14/builtins/stdtypes.html#bytes.decode,
+  opened2026-10-21, titlePython3.14.9 (series URL), bytes.decode errors
+  paragraph: “If 'strict' (the default), a UnicodeError exception is
+  raised.” This does not document subprocess/TextIOWrapper text mode;
+  the retained public reader snapshot's searches give0/0/0, pinned in
+  `.ufo/waves/round-24/sources/S105.json`.
+
+The final consumer-reconciliation table above supersedes every earlier
+no-used-by-change reading in this lesson; only mutable consumer cells
+changed, with their old→new values retained. No old immutable teaches
+claim was silently repaired.

@@ -1,0 +1,20 @@
+--- tools/report-landing-audit.py	2026-10-21 13:34:11.053754887 -0300
++++ .ufo/waves/round-24/build/out/RevFailureMap/tool-MEASUREMENT-no-promisor-refusal.py	2026-10-21 15:01:54.930245912 -0300
+@@ -454,7 +454,7 @@
+         if rel == "objects/pack" and path.is_dir() and any(
+                 p.suffix == ".promisor" and p.with_suffix(".pack").exists()
+                 for p in path.iterdir()):
+-            raise EvalError(f"{repo}: partial clone (promisor pack)")
++            pass  # MEASUREMENT COPY: metadata alone no longer refuses
+     listing = git(repo, "config", "--null", "--list",
+                   errors="surrogateescape")
+     for entry in filter(None, listing.split("\0")):
+@@ -462,7 +462,7 @@
+         if key == "extensions.partialclone" or (
+                 re.fullmatch(r"remote\..+\.promisor", key)
+                 and git_bool(value)):
+-            raise EvalError(f"{repo}: partial clone ({key})")
++            pass  # MEASUREMENT COPY: metadata alone no longer refuses
+ 
+ 
+ def grafts_effective(path):

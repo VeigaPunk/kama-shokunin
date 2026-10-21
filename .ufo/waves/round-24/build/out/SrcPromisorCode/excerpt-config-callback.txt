@@ -1,0 +1,59 @@
+   122	static int promisor_remote_config(const char *var, const char *value,
+   123					  const struct config_context *ctx UNUSED,
+   124					  void *data)
+   125	{
+   126		struct promisor_remote_config *config = data;
+   127		const char *name;
+   128		size_t namelen;
+   129		const char *subkey;
+   130	
+   131		if (parse_config_key(var, "remote", &name, &namelen, &subkey) < 0)
+   132			return 0;
+   133	
+   134		if (!strcmp(subkey, "promisor")) {
+   135			char *remote_name;
+   136	
+   137			if (!git_config_bool(var, value))
+   138				return 0;
+   139	
+   140			remote_name = xmemdupz(name, namelen);
+   141	
+   142			if (!promisor_remote_lookup(config, remote_name, NULL))
+   143				promisor_remote_new(config, remote_name);
+   144	
+   145			free(remote_name);
+   146			return 0;
+   147		}
+   148		if (!strcmp(subkey, "partialclonefilter")) {
+   149			struct promisor_remote *r;
+   150			char *remote_name = xmemdupz(name, namelen);
+   151	
+   152			r = promisor_remote_lookup(config, remote_name, NULL);
+   153			if (!r)
+   154				r = promisor_remote_new(config, remote_name);
+   155	
+   156			free(remote_name);
+   157	
+   158			if (!r)
+   159				return 0;
+   160	
+   161			FREE_AND_NULL(r->partial_clone_filter);
+   162			return git_config_string(&r->partial_clone_filter, var, value);
+   163		}
+   164	
+   165		return 0;
+   166	}
+   167	
+   168	static void promisor_remote_init(struct repository *r)
+   169	{
+   170		struct promisor_remote_config *config;
+   171	
+   172		if (r->promisor_remote_config)
+   173			return;
+   174		config = r->promisor_remote_config =
+   175			xcalloc(1, sizeof(*r->promisor_remote_config));
+   176		config->promisors_tail = &config->promisors;
+   177	
+   178		repo_config(r, promisor_remote_config, config);
+   179	
+   180		if (r->repository_format_partial_clone) {

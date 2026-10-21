@@ -1,0 +1,78 @@
+{
+  "case": "missing-lane-sources-blob",
+  "case_id": "CaseMissingLaneBlob",
+  "round": 24,
+  "axis": "C1 calibration 7->7: promisor metadata vs unavailable required evidence",
+  "fixture_builder": "case_missing_lane_blob.py",
+  "fixture_builder_sha256": "90874c0d9cfe6b071a17903e9fd790e10f1383c4fab38d425633c8e42efe9a89",
+  "git_version": "git version 2.56.0",
+  "auditor_under_test_sha256": "da5041a8191e0e6ec385adc7c659ddc7544a835aff65dd45b34de623c5765af1",
+  "auditor_base": "0df800e896f6bce285a81e794ad4ae1d1e6c3a71:tools/report-landing-audit.py",
+  "fixture_digests": {
+    "origin_lane_tip": "7f03e554cdc06b4c97a19e3191a4c7ab9c220462",
+    "origin_lane_round1_commit": "db796f8b820bf3825c58832419138cdba23206a7",
+    "sources_blob_oid": "b109f41fdebcb812e709b8e671d692a15f343218",
+    "report_url": "https://example.invalid/fixture/blob/1234567890abcdef1234567890abcdef12345678",
+    "url_hash_token": "1234567890abcdef1234567890abcdef12345678"
+  },
+  "arms": [
+    {
+      "name": "control_full_clone",
+      "lane": "origin lane, complete local objects",
+      "expect_rc": 0,
+      "expect_stdout_json": true,
+      "expect_defects": 0,
+      "expect_status": "clean",
+      "expect_source_url_hashes_contains": ["1234567890abcdef1234567890abcdef12345678"],
+      "note": "the registered URL is exempt because corpus/SOURCES.md is readable; the cited lane commit is present"
+    },
+    {
+      "name": "treatment_promisor",
+      "lane": "blob:none clone of the origin lane: promisor-marked, committed corpus/SOURCES.md blob absent locally",
+      "expect_rc": 2,
+      "expect_stdout_json": false,
+      "expect_defects": null,
+      "expect_stderr_contains_any": ["corpus/SOURCES.md", "b109f41fdebcb812e709b8e671d692a15f343218", "cat-file", "unavailable", "missing"],
+      "expect_stderr_excludes_any": ["does not appear to be a git repository", "Could not read from remote repository", "unable to access"],
+      "note": "REQUIRED EVIDENCE UNAVAILABLE => exit 2. Never exit 0 (clean) and never exit 1 (failed). The reason must be content, not the metadata-only refusal 'partial clone ...'."
+    },
+    {
+      "name": "probe_metadata_stripped",
+      "lane": "copy of treatment_promisor with the promisor metadata removed and the blob still absent",
+      "expect_rc": 2,
+      "expect_stdout_json": false,
+      "expect_stderr_contains_any": ["b109f41fdebcb812e709b8e671d692a15f343218", "cat-file"],
+      "note": "the path the r24 repair must take once promisor metadata is accepted: the missing blob decides, exit 2"
+    },
+    {
+      "name": "legacy_exemption",
+      "lane": "lane that never committed corpus/SOURCES.md (same fleet report)",
+      "expect_rc": 1,
+      "expect_stdout_json": true,
+      "expect_defects": 1,
+      "expect_defect_kind": "unresolved-full-hash",
+      "expect_defect_token": "1234567890abcdef1234567890abcdef12345678",
+      "note": "DOCUMENTARY ARM, not a pass criterion: this is the exemption signature. A repair that treats an unreadable committed registry as legacy-absent reproduces exactly this on treatment_promisor."
+    },
+    {
+      "name": "treatment_no_remote",
+      "lane": "blob:none clone whose remote URL points at a nonexistent local path",
+      "expect_rc": 2,
+      "expect_stderr_identical_to": "treatment_promisor",
+      "note": "identical stderr (repo path normalised) proves the promisor remote was never contacted"
+    }
+  ],
+  "invariants": {
+    "no_object_added_by_any_audit": true,
+    "no_lazy_fetch": "the set of object ids in the lane clone's local object store must be identical before and after every audit run; the missing SOURCES blob must never appear in it",
+    "no_network_transport": "the only remote is a local file:// path (local synthetic fixture)",
+    "no_execution_payload": "no remote program, hook or command is configured or triggered",
+    "no_config_caused_hang": "every git call inside the auditor keeps its 20s deadline; the fixture's git calls use a 60s ceiling"
+  },
+  "base_observations_round23_tool": {
+    "treatment_promisor": {"rc": 2, "stderr": "could-not-evaluate: <lane>: partial clone (promisor pack)"},
+    "probe_metadata_stripped": {"rc": 2, "stderr": "could-not-evaluate: git cat-file blob b109f41fdebcb812e709b8e671d692a15f343218 in <lane>: rc=128 fatal: git cat-file b109f41fdebcb812e709b8e671d692a15f343218: bad file"},
+    "control_full_clone": {"rc": 0, "defects": 0},
+    "legacy_exemption": {"rc": 1, "defects": 1, "kind": "unresolved-full-hash"}
+  }
+}

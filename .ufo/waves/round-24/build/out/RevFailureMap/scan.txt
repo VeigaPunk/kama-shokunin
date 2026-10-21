@@ -1,0 +1,123 @@
+# target: tools/report-landing-audit.py
+# lines: 967
+
+## git() call sites (errors= mode, caller)
+  L 192  errors='surrogateescape'      in round_commits()
+  L 268  errors=strict (default)       in load_source_urls()
+  L 458  errors='surrogateescape'      in check_history_repo()
+  L 517  errors=strict (default)       in run()
+  L 578  errors=strict (default)       in _commit()
+  L 579  errors=strict (default)       in _commit()
+  L 153  errors=strict (default)       in lookup()
+  L 383  errors=strict (default)       in load_errata()
+  L 602  errors=strict (default)       in selftest()
+  L 216  errors=strict (default)       in report_cutoff()
+  L 260  errors=strict (default)       in load_source_urls()
+  L 310  errors=strict (default)       in audit_round()
+  L 429  errors='surrogateescape'      in parse_rounds()
+  L 443  errors=strict (default)       in check_history_repo()
+  L 446  errors=strict (default)       in check_history_repo()
+  L 494  errors=strict (default)       in resolve_branch()
+  L 497  errors=strict (default)       in resolve_branch()
+  L 580  errors=strict (default)       in _commit()
+  L 448  errors=strict (default)       in check_history_repo()
+  L 495  errors=strict (default)       in resolve_branch()
+  L 610  errors=strict (default)       in selftest()
+  L 651  errors=strict (default)       in selftest()
+  L 451  errors=strict (default)       in check_history_repo()
+  L 645  errors=strict (default)       in selftest()
+  L 650  errors=strict (default)       in selftest()
+  L 823  errors=strict (default)       in selftest()
+  L 864  errors=strict (default)       in selftest()
+
+## except handlers
+  L 121  except subprocess.TimeoutExpired -> raise EvalError(f"git {' '.join(args)} in {repo}: timed out after {GIT
+  L 126  except OSError                  -> raise EvalError(f'cannot run git: {exc}') from exc
+  L 133  except UnicodeDecodeError       -> raise EvalError(f"git {' '.join(args)} in {repo}: output is not UTF-8:
+  L 226  except (OSError, UnicodeDecodeError) -> raise EvalError(f'cannot read {path}: {exc}') from exc
+  L 474  except FileNotFoundError        -> return False
+  L 948  except EvalError                -> print(f'could-not-evaluate: {exc}', file=sys.stderr)
+  L 951  except OSError                  -> try:
+    print(f'could-not-evaluate: output: {exc}', file=sys.stderr)
+
+  L 957  except Exception                -> try:
+    print(f'could-not-evaluate: internal: {type(exc).__name__}: {
+  L 311  except EvalError                -> raise EvalError(f'round {rnd}: cannot read {rel} at fleet HEAD: {exc}'
+  L 381  except (OSError, UnicodeDecodeError) -> raise EvalError(f'cannot read errata {args.errata}: {exc}') from exc
+  L 596  except EvalError                -> return True
+  L 954  except OSError                  -> pass
+  L 961  except Exception                -> pass
+
+## raise sites
+  L 129  [EVALERROR] EvalError(f"git {' '.join(args)} in {repo}: rc={proc.returncode} {proc.stderr.decode(errors='replace
+  L 198  [EVALERROR] EvalError(f'unexpected git log output ({len(fields)} fields)')
+  L 267  [EVALERROR] EvalError(f'{branch}:{SOURCES}: not a regular blob')
+  L 445  [EVALERROR] EvalError(f'{repo}: object format {fmt!r}, not sha1')
+  L 447  [EVALERROR] EvalError(f'{repo}: not a repository top level')
+  L 449  [EVALERROR] EvalError(f'{repo}: shallow repository')
+  L 513  [EVALERROR] EvalError('no rounds selected')
+  L 124  [EVALERROR] EvalError(f"git {' '.join(args)} in {repo}: timed out after {GIT_TIMEOUT}s")
+  L 127  [EVALERROR] EvalError(f'cannot run git: {exc}')
+  L 134  [EVALERROR] EvalError(f"git {' '.join(args)} in {repo}: output is not UTF-8: {exc}")
+  L 157  [EVALERROR] EvalError(f'cat-file --batch-check in {repo}: short output')
+  L 204  [EVALERROR] EvalError(f'unexpected git log record {sha[:80]!r}')
+  L 224  [EVALERROR] EvalError(f'{path}: not a regular file')
+  L 227  [EVALERROR] EvalError(f'cannot read {path}: {exc}')
+  L 318  [EVALERROR] EvalError(f'round {rnd}: {rel} has no fleet commit')
+  L 367  [EVALERROR] EvalError(f'errata {origin}:{num}: malformed row')
+  L 420  [EVALERROR] EvalError(f'--rounds: bad item {part!r}')
+  L 453  [EVALERROR] EvalError(f'{repo}: {path} rewrites history')
+  L 457  [EVALERROR] EvalError(f'{repo}: partial clone (promisor pack)')
+  L 465  [EVALERROR] EvalError(f'{repo}: partial clone ({key})')
+  L 508  [EVALERROR] EvalError(f'--report wants N=PATH, got {item!r}')
+  L 169  [EVALERROR] EvalError(f'cat-file in {repo}: unexpected {line!r}')
+  L 172  [EVALERROR] EvalError(f'{repo}: citation {token} names a ref')
+  L 209  [EVALERROR] EvalError(f'unexpected git log record {sha} author time {atime[:40]!r}')
+  L 312  [EVALERROR] EvalError(f'round {rnd}: cannot read {rel} at fleet HEAD: {exc}')
+  L 382  [EVALERROR] EvalError(f'cannot read errata {args.errata}: {exc}')
+  L 425  [EVALERROR] EvalError(f'--rounds: empty range {part!r}')
+
+## lookup() status consumers (verdict sinks)
+
+## filesystem reads without a git() timeout wrapper
+  L 225  read_text    in read_report()
+  L 638  read_text    in selftest()
+  L 896  read_text    in selftest()
+  L 379  read_text    in load_errata()
+  L 603  iterdir      in selftest()
+  L 456  iterdir      in check_history_repo()
+  L 479  read_bytes   in grafts_effective()
+  L 918  iterdir      in selftest()
+
+## functions and the exception types they can raise
+  git_env                  L  99  ['-']
+  git                      L 111  ['EvalError']
+  lookup                   L 139  ['EvalError']
+  landed_match             L 177  ['-']
+  checkable_abbrev         L 182  ['-']
+  round_commits            L 189  ['EvalError', 'ValueError']
+  report_cutoff            L 215  ['ValueError']
+  read_report              L 221  ['EvalError', 'OSError']
+  census_source_urls       L 230  ['-']
+  load_source_urls         L 258  ['EvalError']
+  alternatives             L 273  ['-']
+  classify_full_hashes     L 283  ['-']
+  audit_round              L 302  ['EvalError', 'OSError', 'ValueError']
+  parse_errata             L 359  ['EvalError', 'ValueError']
+  load_errata              L 374  ['EvalError', 'OSError']
+  apply_errata             L 387  ['-']
+  parse_rounds             L 411  ['EvalError', 'ValueError']
+  check_history_repo       L 438  ['EvalError', 'OSError']
+  grafts_effective         L 468  ['OSError']
+  git_bool                 L 482  ['ValueError']
+  resolve_branch           L 489  ['-']
+  run                      L 501  ['EvalError', 'OSError', 'ValueError']
+  render                   L 545  ['-']
+  _commit                  L 569  ['OSError']
+  _ns                      L 583  ['-']
+  selftest                 L 587  ['OSError']
+  check                    L 590  ['-']
+  is_error                 L 593  ['-']
+  source_case              L 719  ['-']
+  with_rows                L 839  ['-']
+  main                     L 926  ['OSError']

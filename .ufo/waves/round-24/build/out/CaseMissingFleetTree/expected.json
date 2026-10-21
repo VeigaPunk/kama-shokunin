@@ -1,0 +1,141 @@
+{
+  "case": "CaseMissingFleetTree",
+  "lane": "reviewer (leaf, no dispatch)",
+  "round": 24,
+  "base_commit": "0df800e896f6bce285a81e794ad4ae1d1e6c3a71",
+  "preregistration": ".ufo/waves/round-24/preregistration.json",
+  "oracle_kind": "offline local synthetic fixture; no network transport; no repository program execution",
+  "written_before": "fixture construction and before any candidate implementation exists",
+  "fixture_family": "fleet report traversal needs an ancestor tree that is absent from the fleet object store",
+  "invocation": [
+    "python3", "<auditor>",
+    "--lane-repo", "<lane>", "--fleet-repo", "<fleet>",
+    "--rounds", "1", "--no-errata", "--json"
+  ],
+  "env": {
+    "GIT_CONFIG_GLOBAL": "/dev/null",
+    "GIT_CONFIG_NOSYSTEM": "1",
+    "inherited_GIT_variables": "none",
+    "note": "same env contract as tests/report-audit/repo-state-grid.py"
+  },
+  "fixture_shape": {
+    "lane": "one commit 'round-1: work' by author kama-shokunin, author time 1000, path 'f'",
+    "fleet_commit_F1": "author time 2000, first add of .ufo/reports/round-1/kama.md, whose '## Landed changes' section cites the lane commit by its full 40-hex sha",
+    "fleet_commit_F2": "author time 2100, adds notes.txt; F2 is fleet HEAD",
+    "report_bytes": "read from the committed blob at fleet HEAD (F2), never from the worktree",
+    "missing_object": "the ROOT TREE of F1 is removed from the fleet object store (loose object file deleted); every other object, including HEAD's tree and the report blob, stays present",
+    "promisor_marking": "remote.origin.url=<local canary repo>, remote.origin.promisor=true, extensions.partialclone=origin, remote.origin.partialclonefilter=blob:none",
+    "canary": "a local git repository used only as a transport detector; any lazy fetch would be observable there"
+  },
+  "rows": [
+    {
+      "id": "MFT-1-missing-fleet-ancestor-tree-promisor-marked",
+      "kind": "fault",
+      "primary": true,
+      "fixture": "fleet promisor-marked AND F1 root tree absent",
+      "expected_exit": 2,
+      "expected_verdict": null,
+      "expected_findings": [],
+      "checks": {
+        "exit": 2,
+        "stderr_contains": ["could-not-evaluate"],
+        "stdout_contains_verdict": false,
+        "stderr_has_traceback": false,
+        "canary_untouched": true,
+        "no_fetch_head": true,
+        "no_new_pack": true
+      },
+      "must_not": [
+        "exit 0 (a clean verdict)",
+        "exit 1 (a failed verdict)",
+        "a guessed first-add cutoff (now, tip-only, or any value not established from present objects)",
+        "a defect list of any kind (no verdict may be emitted at all)"
+      ],
+      "rationale": "The report's first-add cutoff is derived from a fleet history traversal that diffs the tree of every commit on the path. With F1's tree absent, that traversal cannot complete: the cutoff is unknown, and unknown is not absence. preregistration expected_after bullet 3: 'An unavailable required commit/tree/blob/report object: exit2 could-not-evaluate, never a clean or failed verdict.'",
+      "frozen_base_expected_exit": 2,
+      "frozen_base_note": "the r23 base also exits 2, but for the wrong reason: the blanket promisor-metadata refusal in check_history_repo ('partial clone (remote.origin.promisor)'), not for the missing object. The row is therefore a no-harm row for the repair: the exit code must not move, the justification must."
+    },
+    {
+      "id": "MFT-2-missing-fleet-ancestor-tree-unmarked",
+      "kind": "control",
+      "fixture": "identical to MFT-1 but with no promisor metadata at all (plain local fleet, F1 root tree absent)",
+      "expected_exit": 2,
+      "expected_verdict": null,
+      "expected_findings": [],
+      "checks": {
+        "exit": 2,
+        "stderr_contains": ["could-not-evaluate"],
+        "stdout_contains_verdict": false,
+        "stderr_has_traceback": false,
+        "canary_untouched": true,
+        "no_fetch_head": true,
+        "no_new_pack": true
+      },
+      "must_not": [
+        "exit 0 (a clean verdict)",
+        "exit 1 (a failed verdict)"
+      ],
+      "rationale": "Availability, not metadata, decides. MFT-1 and MFT-2 differ only in the promisor configuration and must reach the same outcome; the pair shows the repair is driven by object availability. A candidate that refuses MFT-1 for metadata reasons but answers MFT-2 (or vice versa) has not implemented the preregistered policy.",
+      "frozen_base_expected_exit": 2
+    },
+    {
+      "id": "MFT-3-complete-fleet-promisor-marked",
+      "kind": "control",
+      "pair_row": true,
+      "fixture": "identical to MFT-1 but every object present (no deletion); the same promisor metadata",
+      "expected_exit": 0,
+      "expected_verdict": "clean",
+      "expected_findings": [],
+      "checks": {
+        "exit": 0,
+        "stdout_json_summary_status": "clean",
+        "stdout_defects": 0,
+        "stderr_has_traceback": false,
+        "canary_untouched": true,
+        "no_fetch_head": true,
+        "no_new_pack": true
+      },
+      "must_not": [
+        "exit 2 (the r23 blanket refusal: this is the operability harm r24 repairs)",
+        "exit 1 (no defect exists in this fixture: the lane commit is cited)"
+      ],
+      "rationale": "preregistration expected_after bullet 1: 'Complete local promisor-marked lane and fleet clones with valid cited commits: exact same substantive clean/failed findings as otherwise identical full clones, not exit2.' The pair MFT-1/MFT-3 is the minimal discriminator between 'marked' and 'incomplete'.",
+      "frozen_base_expected_exit": 2,
+      "frozen_base_note": "known r23 harm, recorded as evidence, not as an acceptance criterion for the frozen arm"
+    },
+    {
+      "id": "MFT-4-complete-fleet-unmarked",
+      "kind": "control",
+      "fixture": "identical to MFT-3 without promisor metadata",
+      "expected_exit": 0,
+      "expected_verdict": "clean",
+      "expected_findings": [],
+      "checks": {
+        "exit": 0,
+        "stdout_json_summary_status": "clean",
+        "stdout_defects": 0,
+        "stderr_has_traceback": false
+      },
+      "must_not": ["exit 2", "exit 1"],
+      "rationale": "Soundness of the fixture itself: the same objects audited through an ordinary local fleet give a clean verdict, so MFT-3's exit 2 can only come from the promisor metadata, never from the fixture shape.",
+      "frozen_base_expected_exit": 0
+    }
+  ],
+  "premise_checks": [
+    "F1 root tree object is absent from the fleet object store (cat-file -e fails)",
+    "fleet HEAD tree and the report blob are present (git show HEAD:<report> succeeds)",
+    "git log --diff-filter=A --format=%at -- <report> does not complete in the marked repository under --no-lazy-fetch: the ancestor tree is genuinely NEEDED by the report traversal (otherwise the row would be vacuous)",
+    "the canary repository is a real local git repository before the audit run and is unchanged afterwards"
+  ],
+  "not_claimed": [
+    "the exact wording of the candidate's refusal message",
+    "that any particular closure-checking git command is used",
+    "any behavior of live serving or of the promisor transport itself"
+  ],
+  "bounds": {
+    "no_network": true,
+    "no_repository_program_execution": true,
+    "scratch_root": "/fast/scratch/hyaku/kama-r24/CaseMissingFleetTree",
+    "repo_writes": "none outside .ufo/waves/round-24/build/out/CaseMissingFleetTree/"
+  }
+}

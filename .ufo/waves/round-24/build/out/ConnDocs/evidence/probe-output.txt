@@ -1,0 +1,78 @@
+
+== 1. document callsites asserting a blanket partial-clone refusal
+  SKILL.md: 7 matching line(s)
+    SKILL.md:791: would apply (blank and `#` lines are ignored, S101), a partial clone
+    SKILL.md:792: (`extensions.partialclone`, a `remote.*.promisor` that is true, or a
+    SKILL.md:793: `.promisor` marker paired with its `.pack`), non-sha1 or non-top-level
+    SKILL.md:796: `remote.*.partialclonefilter`-only remote is not refused: `--no-lazy-fetch`
+    SKILL.md:807: local, and a `--shared` clone of a partial clone bypasses the promisor
+    SKILL.md:812: current 2 on complete repositories): a blobless partial clone (T01) and a
+    SKILL.md:813: paired promisor pack without promisor config (F23). Never point the auditor
+  SCORECARD.md: 2 matching line(s)
+    SCORECARD.md:1172: is **traded, not unchanged**, on two declared states: a complete blobless
+    SCORECARD.md:1173: partial clone (T01) and a paired promisor pack without promisor config (F23)
+  corpus/README.md: 2 matching line(s)
+    corpus/README.md:330: `sources-append-only.py` stay open. Declared trade: a complete blobless
+    corpus/README.md:331: partial clone or paired promisor pack is refused where frozen gave a
+  corpus/lessons/round-23.md: 15 matching line(s)
+    corpus/lessons/round-23.md:23: SrcGitConfig, SrcPartialClone, SrcGitLogFollow, SrcGitRepoLayout and
+    corpus/lessons/round-23.md:29: from the promisor remote on demand." Supports F03–F05 and F06.
+    corpus/lessons/round-23.md:39: whether the missing object is actually a promisor object is performed".
+    corpus/lessons/round-23.md:65: | M2 | Unchecked fixture premise: the L1 probe's f3 `commit-tree` silently failed without an identity and f6 could not flip, so a cell could "pass" wi
+    corpus/lessons/round-23.md:76: info/grafts, promisor config or pack, non-sha1 object format, non-top-level
+    corpus/lessons/round-23.md:80: (the promisor refusal runs first) and the 40-hex `%H` check (signature
+    corpus/lessons/round-23.md:83: - Declared tradeoffs: partial clones and shallow clones are refused even when
+    corpus/lessons/round-23.md:127: - `--no-lazy-fetch` is not defensive-only: a `remote.<n>.partialclonefilter`
+    corpus/lessons/round-23.md:159: promisor object is performed".
+    corpus/lessons/round-23.md:171: | M4 | Seat wrote fault fixtures into the real fleet repository: a falsify probe resolved its pack directory by upward git discovery from a non-reposi
+    corpus/lessons/round-23.md:180: output). Integrated: F27 (filter-only promisor), F28 (shallow fleet), F29
+    corpus/lessons/round-23.md:190: variants of the subdirectory check (RowF21), promisor near variants
+    corpus/lessons/round-23.md:204: ignore, N03 casefold branch, D02 BOM stripping, D03 promisor symlink).
+    corpus/lessons/round-23.md:207: complete blobless partial clone (T01) and a paired promisor pack without
+    corpus/lessons/round-23.md:208: promisor config (F23) are refused (exit 2) where frozen gave a verdict, and
+  corpus/lessons/round-24.md: 4 matching line(s)
+    corpus/lessons/round-24.md:24: “These promisor packfiles consist of a \"<name>.promisor\" file with arbitrary
+    corpus/lessons/round-24.md:32: “if (is_promisor_object(options->repo, &obj->oid))” … “return 0;”.
+    corpus/lessons/round-24.md:33: It returns before checking HAS_OBJ for that promisor object. A green fsck
+    corpus/lessons/round-24.md:53: | stale-premise: confusing T01 with F23 | T01 clones with checkout (hydrates its single blob); F23 uses --no-checkout and asserts a real reachable blo
+  corpus/QUALITY.md: 2 matching line(s)
+    corpus/QUALITY.md:177: | KQ34 (narrows, does not supersede, KQ32) | A gate's isolation or exit-class promise is credited only through a committed crosswalk that is not self-
+    corpus/QUALITY.md:183: | KQ35 (qualifies KQ34; no-trade rule unchanged) | Paired complete-state controls preserve the independent correct clean/failed verdict under metadata
+  corpus/knowledge/error-is-not-a-verdict.md: 0 matching line(s)
+  README.md: 0 matching line(s)
+  corpus/knowledge/*.md total promisor/partial/lazy-fetch hits: 0
+
+== 2. grid population digest coupling (tests/report-audit/repo-state-grid.py:711-714)
+  base population digest      : f29fab8d9af1d02de7f6fa4c7b39b2307113d3716fd4b11cffdd0cd65d55364a
+  digest pinned in docs       : f29fab8d9af1d02de7f6fa4c7b39b2307113d3716fd4b11cffdd0cd65d55364a
+  reproduces                   : True
+  re-pin F23 reason -> digest : 0e280a7c65168a9c3deeb88e2ce8388137237b8fcfb3d4a17469dd0eb15b97ff
+  T01 kind tradeoff->control  : 3164a39e34941cbfbe5db42fde058753c0df8d6d308de06593086ecfac6d7f0e
+  => the digest moves with the reason strings and the policy-row kind
+
+== 3. isolation-mutant literal coupling (tests/report-audit/isolation-mutants.py:119-122)
+  mutant population at base: 31
+  variant A: refusal raises replaced by `pass`: patterns not matching exactly once -> [('M14-promisor-config', 0), ('M22-promisor-pack', 0)]
+  variant B: promisor detection block removed: patterns not matching exactly once -> [('M13-grafts-check', 0), ('M14-promisor-config', 0), ('M22-promisor-pack', 0), ('M27-promisor-boolean', 0), ('M29-promisor-pack-pairing', 0)]
+  => a repaired auditor makes the r23 mutant file exit 2 (could-not-evaluate)
+
+== 4. base fixture semantics (T01 vs F23 vs F27)
+  T01 lane: objects=3 missing=0 promisor_packs=2 config=[remote.origin.promisor true | remote.origin.partialclonefilter blob:none]
+  T01 fleet: objects=6 missing=0 promisor_packs=0
+  T01 base auditor exit=2 kinds= stderr=could-not-evaluate: /tmp/conndocs-kfz_psgf/blobless: partial clone (promisor pack)
+
+  F23 lane: objects=3 missing=1 promisor_packs=1
+    missing: ['?6e98d181389d343031fd578c6a775ce0889a8b0d']
+  F23 fleet: objects=6 missing=0 promisor_packs=0
+  F23 base auditor exit=2 kinds= stderr=could-not-evaluate: /tmp/conndocs-0j7e1puo/blobless: partial clone (promisor pack)
+
+  F27 lane: objects=3 missing=0 promisor_packs=0 config=[remote.origin.partialclonefilter blob:none]
+  F27 fleet: objects=6 missing=0 promisor_packs=0
+  F27 base auditor exit=1 kinds=['landed-unresolved', 'unresolved-full-hash'] stderr=
+
+  base grid expectations (tests/report-audit/repo-state-grid.py:651,670,674,689):
+    F06 exit2 reason 'partial clone' | F23 contract exit2 reason 'promisor pack'
+    F27 fault exit1 kinds [landed-unresolved, unresolved-full-hash]
+    T01 tradeoff exit0 (tradeoff rows are reported, never graded: grid :13-14)
+
+Done.

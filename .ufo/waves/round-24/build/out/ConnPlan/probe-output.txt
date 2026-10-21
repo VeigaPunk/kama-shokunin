@@ -1,0 +1,66 @@
+Q1 setup: deleted blob 814f4a422927b82f5f8a43f8fab6d3839e3983f2 (True)
+--- Q1 cat-file --batch-check (deleted blob, promisor-marked)
+rc=0
+stdout=814f4a422927b82f5f8a43f8fab6d3839e3983f2 missing
+
+stderr=
+--- Q2 git log -- <report path> with unrelated blob deleted
+rc=0
+stdout=1792605518
+
+stderr=
+--- Q2b git log <tip> with unrelated blob deleted
+rc=0
+stdout='2777f4b2951bd3491f26e3e6d48519c57ed10e42\x00probe\x001792605518\x00round-1: more\x0028e4b4620d1f9db3186d8b024f658105f86ad427\x00probe\x001792605518\x00round-1: work\x00'
+stderr=
+Q3 setup: deleted root tree 81cf1b094463f7c0fbbb2dd8ab0433c2984985a4 (True)
+--- Q3 git log -- <report path> with root tree deleted
+rc=128
+stdout=
+stderr=fatal: unable to read tree (81cf1b094463f7c0fbbb2dd8ab0433c2984985a4)
+--- Q3b git log <tip> (no path) with root tree deleted
+rc=0
+stdout='2777f4b2951bd3491f26e3e6d48519c57ed10e42\x00probe\x001792605518\x00round-1: more\x0028e4b4620d1f9db3186d8b024f658105f86ad427\x00probe\x001792605518\x00round-1: work\x00'
+stderr=
+Q4 setup: deleted ancestor commit 28e4b4620d1f9db3186d8b024f658105f86ad427 (True)
+--- Q4 git log <tip> with ancestor commit deleted
+rc=128
+stdout=''
+stderr=error: Could not read 28e4b4620d1f9db3186d8b024f658105f86ad427
+fatal: Failed to traverse parents of commit 2777f4b2951bd3491f26e3e6d48519c57ed10e42
+--- Q5 rev-list --objects --missing=print --no-object-names
+rc=0
+stdout=2777f4b2951bd3491f26e3e6d48519c57ed10e42
+81cf1b094463f7c0fbbb2dd8ab0433c2984985a4
+e35554ed7a193dc0cd74acd5927ca7c3b2e2df31
+2daa29d160a1de2a8112da22f4cdd4a18ee35b2c
+606b448d45fd994fa8e6d1594e7cf54c70d999a8
+bd47425de30d0f3b3c70fada0fada5924075db50
+03dd8756dbd8d370a9429afde2fe0065cac81e6c
+f719efd430d52bcfc8566a43b2eb655688d38871
+814f4a422927b82f5f8a43f8fab6d3839e3983f2
+?28e4b4620d1f9db3186d8b024f658105f86ad427
+
+stderr=
+--- Q6 cat-file --batch-check of absent oid under --no-lazy-fetch
+rc=0
+stdout=0000000000000000000000000000000000000000 missing
+
+stderr=
+marker_exists=False
+--- Q6b git log -- path (present objects)
+rc=0
+stdout=1792605518
+
+stderr=
+marker_exists=False
+--- Q7 cat-file --batch-check <blob>^{commit} (type mismatch)
+rc=0
+stdout=814f4a422927b82f5f8a43f8fab6d3839e3983f2^{commit} missing
+
+stderr=error: 814f4a422927b82f5f8a43f8fab6d3839e3983f2^{commit}: expected commit type, but the object dereferences to blob type
+--- Q7b cat-file --batch-check <commit>^{commit}
+rc=0
+stdout=2777f4b2951bd3491f26e3e6d48519c57ed10e42 commit 220
+
+stderr=

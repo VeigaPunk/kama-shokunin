@@ -1,0 +1,39 @@
+--- /fast/scratch/hyaku/kama-r24/CaseMissingFleetReport/repo/tools/report-landing-audit.py	2026-10-21 14:54:37.916401755 -0300
++++ /fast/scratch/hyaku/kama-r24/CaseMissingFleetReport/work/mutants/mutant-M2-empty-report.py	2026-10-21 14:57:02.317432793 -0300
+@@ -305,12 +305,12 @@
+     if path:
+         text = read_report(report)
+     else:
+-        # committed fleet bytes, not a possibly edited working-tree copy
++        # MUTANT M2: an unreadable fleet report is read as
++        # an EMPTY report (a guessed absence).
+         try:
+             text = git(fleet_repo, "show", f"HEAD:{rel}")
+-        except EvalError as exc:
+-            raise EvalError(f"round {rnd}: cannot read {rel} at fleet "
+-                            f"HEAD: {exc}") from exc
++        except EvalError:
++            text = ""
+     cutoff = report_cutoff(fleet_repo, rel)
+     committed = cutoff is not None
+     if cutoff is None:
+@@ -451,18 +451,11 @@
+         path = Path(repo, git(repo, "rev-parse", "--git-path", rel).strip())
+         if rel == "info/grafts" and grafts_effective(path):
+             raise EvalError(f"{repo}: {path} rewrites history")
+-        if rel == "objects/pack" and path.is_dir() and any(
+-                p.suffix == ".promisor" and p.with_suffix(".pack").exists()
+-                for p in path.iterdir()):
+-            raise EvalError(f"{repo}: partial clone (promisor pack)")
+     listing = git(repo, "config", "--null", "--list",
+                   errors="surrogateescape")
+     for entry in filter(None, listing.split("\0")):
+         key, _, value = entry.partition("\n")
+-        if key == "extensions.partialclone" or (
+-                re.fullmatch(r"remote\..+\.promisor", key)
+-                and git_bool(value)):
+-            raise EvalError(f"{repo}: partial clone ({key})")
++        pass
+ 
+ 
+ def grafts_effective(path):

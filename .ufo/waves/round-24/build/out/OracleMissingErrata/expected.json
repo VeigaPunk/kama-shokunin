@@ -1,0 +1,370 @@
+{
+  "oracle": "missing-committed-lane-errata-blob",
+  "round": 24,
+  "base_revision": "0df800e896f6bce285a81e794ad4ae1d1e6c3a71",
+  "authored": "before any candidate implementation existed (no candidate file was present when this table was written)",
+  "principles": [
+    "The errata ledger is required evidence: its rows decide whether a defect is corrected, and an unmatched ledger row is itself a failure verdict.",
+    "A committed ledger whose blob object is unavailable locally is missing evidence, not an absent ledger: the auditor must exit 2 (could-not-evaluate), never fall back to an empty ledger and emit a verdict.",
+    "An absent ledger fallback converts missing evidence into a verdict. In the zero-defect arms (E10/E12) that fallback yields exit 0 clean, a clean verdict derived from evidence that was never read.",
+    "Promisor metadata alone proves nothing: a promisor-marked repository whose content is complete must yield the same substantive verdict as its non-promisor twin.",
+    "Absence of an object in a promisor-backed repository is unknown, not proved absent: a cited object that is promised but not local is exit 2, while the same object genuinely absent from a non-promisor repository is evidence and yields the ordinary verdict."
+  ],
+  "arms": [
+    {
+      "arm": "E1-ledger-present-complete",
+      "expect_exit": 0,
+      "expect_status": "clean",
+      "expect_defects": 1,
+      "expect_corrected": 1,
+      "expect_uncorrected": 0,
+      "expect_errata_rows": 1,
+      "expect_errata_unmatched": 0,
+      "expect_errata_invalid": 0,
+      "expect_kinds": [
+        "landed-omitted"
+      ],
+      "expect_correction": "the ledger row names the omitted commit, so the omission is corrected",
+      "class": "control-complete",
+      "note": "the ledger row names the omitted commit, so the omission is corrected; the corrected/uncorrected counts pinned here are the reference the marked twin E7 and the amendment's 'authorized errata matching' must preserve"
+    },
+    {
+      "arm": "E2-ledger-committed-blob-missing-promisor",
+      "expect_exit": 2,
+      "expect_status": null,
+      "expect_defects": null,
+      "expect_corrected": null,
+      "expect_uncorrected": null,
+      "expect_errata_rows": null,
+      "expect_kinds": null,
+      "require_stderr": [
+        "could-not-evaluate"
+      ],
+      "forbid_stderr": [
+        "Traceback"
+      ],
+      "class": "fault-committed-blob-unavailable-promisor",
+      "note": "the committed ledger blob was deleted locally in a promisor-marked clone; a fetch-enabled read would restore it, so the exit-2 must come from the missing object and never from a fetch"
+    },
+    {
+      "arm": "E3-ledger-committed-blob-missing-blobless",
+      "expect_exit": 2,
+      "expect_status": null,
+      "expect_defects": null,
+      "expect_corrected": null,
+      "expect_uncorrected": null,
+      "expect_errata_rows": null,
+      "expect_kinds": null,
+      "require_stderr": [
+        "could-not-evaluate"
+      ],
+      "forbid_stderr": [
+        "Traceback"
+      ],
+      "class": "fault-committed-blob-unavailable-blobless",
+      "note": "a blob:none clone in which every blob except the ledger was copied back; the ledger is the single unavailable object"
+    },
+    {
+      "arm": "E4-ledger-absent-from-tree",
+      "expect_exit": 2,
+      "expect_status": null,
+      "expect_defects": null,
+      "expect_corrected": null,
+      "expect_uncorrected": null,
+      "expect_errata_rows": null,
+      "expect_kinds": null,
+      "require_stderr": [
+        "could-not-evaluate"
+      ],
+      "forbid_stderr": [
+        "Traceback"
+      ],
+      "class": "control-no-harm",
+      "note": "the ledger path was never committed; the base auditor already exits 2 here and a candidate must not change this non-promisor row"
+    },
+    {
+      "arm": "E5-ledger-committed-blob-missing-no-promisor",
+      "expect_exit": 2,
+      "expect_status": null,
+      "expect_defects": null,
+      "expect_corrected": null,
+      "expect_uncorrected": null,
+      "expect_errata_rows": null,
+      "expect_kinds": null,
+      "require_stderr": [
+        "could-not-evaluate"
+      ],
+      "forbid_stderr": [
+        "Traceback",
+        "partial clone"
+      ],
+      "class": "fault-committed-blob-unavailable-no-promisor",
+      "note": "no promisor metadata at all, so a 'partial clone' refusal reason would be a false attribution; the required evidence is simply unavailable"
+    },
+    {
+      "arm": "E6-ledger-present-row-mismatch",
+      "expect_exit": 1,
+      "expect_status": "failed",
+      "expect_defects": 1,
+      "expect_corrected": 0,
+      "expect_uncorrected": 1,
+      "expect_errata_rows": 1,
+      "expect_errata_unmatched": 1,
+      "expect_errata_invalid": 1,
+      "expect_kinds": [
+        "landed-omitted"
+      ],
+      "class": "control-corrected-vs-uncorrected",
+      "note": "pins the uncorrected side of the ledger table: the row names a token that matches no defect, so the omission stays uncorrected and the row is both unmatched and invalid"
+    },
+    {
+      "arm": "E7-promisor-marked-complete",
+      "expect_exit": 0,
+      "expect_status": "clean",
+      "expect_defects": 1,
+      "expect_corrected": 1,
+      "expect_uncorrected": 0,
+      "expect_errata_rows": 1,
+      "expect_errata_unmatched": 0,
+      "expect_errata_invalid": 0,
+      "expect_kinds": [
+        "landed-omitted"
+      ],
+      "class": "control-promisor-metadata-only",
+      "note": "promisor metadata is present but every object is local: the substantive verdict must equal the E1 twin, not exit 2. This is the r23 harm (blanket refusal of complete promisor-marked repositories) stated as a measurable row"
+    },
+    {
+      "arm": "E8-promisor-marked-ledger-correction-object-missing",
+      "expect_exit": 1,
+      "expect_status": "failed",
+      "expect_defects": 2,
+      "expect_corrected": 1,
+      "expect_uncorrected": 1,
+      "expect_errata_rows": 1,
+      "expect_errata_unmatched": 0,
+      "expect_errata_invalid": 1,
+      "expect_kinds": [
+        "landed-omitted",
+        "unresolved-full-hash"
+      ],
+      "class": "control-promisor-vs-proved-absence-marked",
+      "note": "the E9 twin with promisor metadata and a local origin that genuinely holds the named correction commit (verified: a fetch-enabled read restores it). The verdict must still equal the E9 twin: promisor metadata alone never changes local-object resolution or a clean/failed verdict (oracle-amendment-1.json prospective_expected[0] and [3]). The tripwire separately proves the auditor did not fetch the promised object."
+    },
+    {
+      "arm": "E9-ledger-correction-object-missing-no-promisor",
+      "expect_exit": 1,
+      "expect_status": "failed",
+      "expect_defects": 2,
+      "expect_corrected": 1,
+      "expect_uncorrected": 1,
+      "expect_errata_rows": 1,
+      "expect_errata_unmatched": 0,
+      "expect_errata_invalid": 1,
+      "expect_kinds": [
+        "landed-omitted",
+        "unresolved-full-hash"
+      ],
+      "class": "control-promisor-vs-proved-absence",
+      "note": "the plain twin of E8: the named correction commit exists nowhere in the audited repositories, so its absence is evidence and the ledger row is invalid (exit 1). The marked and unmarked twins must retain identical substantive verdicts (oracle-amendment-1.json prospective_expected[3])."
+    },
+    {
+      "arm": "E10-promisor-marked-ledger-missing-no-defects",
+      "expect_exit": 2,
+      "expect_status": null,
+      "expect_defects": null,
+      "expect_corrected": null,
+      "expect_uncorrected": null,
+      "expect_errata_rows": null,
+      "expect_kinds": null,
+      "require_stderr": [
+        "could-not-evaluate"
+      ],
+      "forbid_stderr": [
+        "Traceback"
+      ],
+      "class": "fault-clean-verdict-from-missing-evidence",
+      "note": "the ledger row names the omitted commit, so the omission is corrected; the corrected/uncorrected counts pinned here are the reference the marked twin E7 and the amendment's 'authorized errata matching' must preserve"
+    },
+    {
+      "arm": "E11-promisor-marked-ledger-present-no-defects",
+      "expect_exit": 0,
+      "expect_status": "clean",
+      "expect_defects": 0,
+      "expect_corrected": 0,
+      "expect_uncorrected": 0,
+      "expect_errata_rows": 1,
+      "expect_errata_unmatched": 0,
+      "expect_errata_invalid": 0,
+      "expect_kinds": [],
+      "class": "control-promisor-metadata-only-zero-defect",
+      "note": "the ledger row names the omitted commit, so the omission is corrected; the corrected/uncorrected counts pinned here are the reference the marked twin E7 and the amendment's 'authorized errata matching' must preserve"
+    },
+    {
+      "arm": "E12-ledger-missing-no-defects-no-promisor",
+      "expect_exit": 2,
+      "expect_status": null,
+      "expect_defects": null,
+      "expect_corrected": null,
+      "expect_uncorrected": null,
+      "expect_errata_rows": null,
+      "expect_kinds": null,
+      "require_stderr": [
+        "could-not-evaluate"
+      ],
+      "forbid_stderr": [
+        "Traceback",
+        "partial clone"
+      ],
+      "class": "fault-clean-verdict-from-missing-evidence-no-promisor",
+      "note": "the ledger row names the omitted commit, so the omission is corrected; the corrected/uncorrected counts pinned here are the reference the marked twin E7 and the amendment's 'authorized errata matching' must preserve"
+    },
+    {
+      "arm": "E13-errata-corrected-missing-sha-plain",
+      "expect_exit": 0,
+      "expect_status": "clean",
+      "expect_defects": 1,
+      "expect_corrected": 1,
+      "expect_uncorrected": 0,
+      "expect_errata_rows": 1,
+      "expect_errata_unmatched": 0,
+      "expect_errata_invalid": 0,
+      "expect_kinds": [
+        "unresolved-full-hash"
+      ],
+      "class": "control-errata-corrected-missing-sha-plain",
+      "note": "the ledger row names the omitted commit, so the omission is corrected; the corrected/uncorrected counts pinned here are the reference the marked twin E7 and the amendment's 'authorized errata matching' must preserve"
+    },
+    {
+      "arm": "E14-errata-corrected-missing-sha-promisor",
+      "expect_exit": 0,
+      "expect_status": "clean",
+      "expect_defects": 1,
+      "expect_corrected": 1,
+      "expect_uncorrected": 0,
+      "expect_errata_rows": 1,
+      "expect_errata_unmatched": 0,
+      "expect_errata_invalid": 0,
+      "expect_kinds": [
+        "unresolved-full-hash"
+      ],
+      "class": "control-errata-corrected-missing-sha-promisor",
+      "note": "the ledger row names the omitted commit, so the omission is corrected; the corrected/uncorrected counts pinned here are the reference the marked twin E7 and the amendment's 'authorized errata matching' must preserve"
+    },
+    {
+      "arm": "E15-blobless-lane-ledger-hydrated",
+      "expect_exit": 0,
+      "expect_status": "clean",
+      "expect_defects": 1,
+      "expect_corrected": 1,
+      "expect_uncorrected": 0,
+      "expect_errata_rows": 1,
+      "expect_errata_unmatched": 0,
+      "expect_errata_invalid": 0,
+      "expect_kinds": [
+        "landed-omitted"
+      ],
+      "class": "control-blobless-hydrated",
+      "note": "a blob:none clone whose ledger blob was copied back: every object the audit reads is present locally while the repository still carries a promisor pack and promisor metadata. The verdict must equal the plain twin E1. Refusing on the promisor pack alone would be the blanket precondition the amendment forbids (prospective_expected[4]: incomplete but locally sufficient repositories are not refused merely because an unrelated object is missing)."
+    }
+  ],
+  "invariants": [
+    "no arm may produce a traceback",
+    "no arm may time out",
+    "no arm may leave the missing object present afterwards (a lazy fetch would restore it): the runner re-probes availability after every run",
+    "no arm may execute a configured program (no transport, no signature helper, no ssh command)"
+  ],
+  "measured_base_0df800e": {
+    "E1": {
+      "exit": 0,
+      "status": "clean",
+      "defects": 1,
+      "corrected": 1,
+      "uncorrected": 0,
+      "errata_rows": 1,
+      "errata_unmatched": 0,
+      "errata_invalid": 0
+    },
+    "E2": {
+      "exit": 2,
+      "reason": "partial clone (remote.origin.promisor)"
+    },
+    "E3": {
+      "exit": 2,
+      "reason": "partial clone (promisor pack)"
+    },
+    "E4": {
+      "exit": 2,
+      "reason": "path 'registry/report-landing-errata.tsv' does not exist"
+    },
+    "E5": {
+      "exit": 2,
+      "reason": "bad object"
+    },
+    "E6": {
+      "exit": 1,
+      "status": "failed",
+      "defects": 1,
+      "corrected": 0,
+      "uncorrected": 1,
+      "errata_rows": 1,
+      "errata_unmatched": 1,
+      "errata_invalid": 1
+    },
+    "E7": {
+      "exit": 2,
+      "reason": "partial clone (extensions.partialclone)",
+      "expected": 0
+    },
+    "E8": {
+      "exit": 2,
+      "reason": "partial clone (extensions.partialclone)",
+      "expected": 1
+    },
+    "E9": {
+      "exit": 1,
+      "status": "failed",
+      "defects": 2,
+      "corrected": 1,
+      "uncorrected": 1,
+      "errata_rows": 1,
+      "errata_unmatched": 0,
+      "errata_invalid": 1
+    },
+    "E10": {
+      "exit": 2,
+      "reason": "partial clone (extensions.partialclone)"
+    },
+    "E11": {
+      "exit": 2,
+      "reason": "partial clone (extensions.partialclone)",
+      "expected": 0
+    },
+    "E12": {
+      "exit": 2,
+      "reason": "bad object"
+    },
+    "E13": {
+      "exit": 0,
+      "status": "clean",
+      "defects": 1,
+      "corrected": 1,
+      "uncorrected": 0,
+      "errata_rows": 1,
+      "errata_unmatched": 0,
+      "errata_invalid": 0
+    },
+    "E14": {
+      "exit": 2,
+      "reason": "partial clone (extensions.partialclone)",
+      "expected": 0
+    },
+    "note": "the base meets 10 of 14 arms. The four failures are E7, E8, E11 and E14: every arm whose only distinguishing feature is promisor metadata on a content-complete repository. That is the r23 harm, stated as measurable rows. With the metadata stripped from a copy of each fixture, the same fixtures give E7 exit 0 clean (defects 1, corrected 1), E11 exit 0 clean (defects 0, errata_rows 1), E8 exit 1 failed (the E9 counts) and E14 exit 0 clean (defects 1, corrected 1) -- the substantive expectations the candidate must reproduce."
+  },
+  "authority": {
+    "preregistration": ".ufo/waves/round-24/preregistration.json",
+    "live_amendment": ".ufo/waves/round-24/oracle-amendment-1.json (L1 decision, live)",
+    "supplement": ".ufo/waves/round-24/oracle-supplement-2.json",
+    "sibling_snapshot": ".ufo/waves/round-24/oracle-snapshot-before-inspection.json (44 cases)",
+    "note": "expected_after[3] of the original preregistration (a missing citation in any promisor-backed repository is unknown => exit2) was WITHDRAWN prospectively by the live amendment. This oracle therefore requires promisor metadata alone never to change a verdict; E8 was re-pinned from exit2 to exit1 to match E9, and E13/E14 reproduce the PG29/PG30 shape."
+  }
+}

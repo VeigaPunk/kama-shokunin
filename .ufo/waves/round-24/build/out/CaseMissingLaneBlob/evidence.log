@@ -1,0 +1,78 @@
+CaseMissingLaneBlob — evidence log (append-only)
+round 24, lane KamaR23-2.CaseMissingLaneBlob-2
+host: linux x86_64, git version 2.56.0, Python 3.14.8
+base: 0df800e896f6bce285a81e794ad4ae1d1e6c3a71
+auditor under test: tools/report-landing-audit.py sha256 da5041a8191e0e6ec385adc7c659ddc7544a835aff65dd45b34de623c5765af1
+  (identical to `git show 0df800e:tools/report-landing-audit.py`; lane HEAD d1b9d956a0beda9ac32a1a2cf6ced875faeada0d adds only the preregistration)
+scratch: /fast/scratch/hyaku/kama-r24/CaseMissingLaneBlob/{repo,fixture}
+  repo = `git clone --no-hardlinks /home/vgpnk/Projects/shokunin/kama-shokunin repo` (read-only observation copy; `find repo/.git/objects -type f -links +1` => empty, no hardlinks shared with the source)
+
+--- 1. fixture construction (all inside scratch) -----------------------------
+python3 .ufo/waves/round-24/build/out/CaseMissingLaneBlob/case_missing_lane_blob.py \
+  --workspace /fast/scratch/hyaku/kama-r24/CaseMissingLaneBlob/fixture \
+  --auditor  /fast/scratch/hyaku/kama-r24/CaseMissingLaneBlob/repo/tools/report-landing-audit.py --json
+  => base-run.json (6800 bytes), base-run.err (0 bytes)
+
+origin lane (complete local objects):
+  tip                 7f03e554cdc06b4c97a19e3191a4c7ab9c220462
+  round-1 commit      db796f8b820bf3825c58832419138cdba23206a7  (author kama-shokunin, author time @1000)
+  registry commit     (author fixture, author time @1100) adds corpus/SOURCES.md
+  corpus/SOURCES.md   blob b109f41fdebcb812e709b8e671d692a15f343218
+  fleet               commit @2000 adds .ufo/reports/round-1/kama.md citing the round-1 commit
+                      and, under "## Notes", the registered URL
+                      https://example.invalid/fixture/blob/1234567890abcdef1234567890abcdef12345678
+
+promisor lane (git clone --no-checkout --filter=blob:none --no-local file://<origin lane>):
+  tip                 7f03e554cdc06b4c97a19e3191a4c7ab9c220462  (same history)
+  remote.origin.promisor=true
+  remote.origin.partialclonefilter=blob:none
+  extensions.partialclone           (absent: git 2.56 sets only the remote keys)
+  .git/objects/pack/pack-6dc76237d1c459a61e806adc888fd9222bdb575a.promisor
+  `git --no-lazy-fetch ls-tree master -- corpus/SOURCES.md`
+      => 100644 blob b109f41fdebcb812e709b8e671d692a15f343218 corpus/SOURCES.md
+  `git --no-lazy-fetch cat-file -e b109f41fdebcb812e709b8e671d692a15f343218` => rc 128
+  `git cat-file blob b109f41f...` (lazy fetch allowed) => rc 0, content fetched:
+      the promised blob IS reachable offline from the local file:// remote, so a
+      missing --no-lazy-fetch would silently materialise it. The auditor keeps
+      the flag; the fixture therefore measures exactly that.
+
+--- 2. observations (auditor = r23 base tool) -------------------------------
+arm                          rc  stdout-json  findings
+control_full_clone           0  yes          0 defects, status clean,
+                                             source_url_hashes=[1234567890abcdef1234567890abcdef12345678]
+                                             (the registry was read and the URL was exempt)
+treatment_promisor           2  no           stderr: "could-not-evaluate: <lane>: partial clone (promisor pack)"
+probe_metadata_stripped      2  no           stderr: "could-not-evaluate: git cat-file blob b109f41fdebcb812e709b8e671d692a15f343218 in <lane>: rc=128 fatal: git cat-file b109f41fdebcb812e709b8e671d692a15f343218: bad file"
+legacy_exemption             1  yes          1 defect: unresolved-full-hash 1234567890abcdef1234567890abcdef12345678
+treatment_no_remote          2  no           stderr identical to treatment_promisor after normalising the repo path
+
+no_object_added_by_any_audit = true for all five arms
+  (object-id set of the lane clone compared before/after each run via
+   `git --no-lazy-fetch cat-file --batch-check --batch-all-objects --unordered`;
+   the missing SOURCES blob never appears => no lazy fetch ran)
+
+--- 3. containment ----------------------------------------------------------------
+find /tmp -maxdepth 2 -newermt '-2 hours' \( -name '*kama*' -o -name '*report-landing*' \
+     -o -name '*promisor*' -o -name '*fixture*' \)   => no hits
+lane repo HEAD unchanged: d1b9d956a0beda9ac32a1a2cf6ced875faeada0d
+no commits, no pushes, no lane index write; only files written are under
+  .ufo/waves/round-24/build/advice/CaseMissingLaneBlob.md and
+  .ufo/waves/round-24/build/out/CaseMissingLaneBlob/
+
+--- 4. reproducibility (second independent workspace) -----------------------
+python3 .../case_missing_lane_blob.py --workspace /fast/scratch/hyaku/kama-r24/CaseMissingLaneBlob/fixture2 \
+  --auditor .../repo/tools/report-landing-audit.py --json > /fast/scratch/hyaku/kama-r24/CaseMissingLaneBlob/run2.json
+  origin tip             7f03e554cdc06b4c97a19e3191a4c7ab9c220462  (identical to run 1)
+  lane round-1 commit    db796f8b820bf3825c58832419138cdba23206a7  (identical to run 1)
+  SOURCES blob oid       b109f41fdebcb812e709b8e671d692a15f343218  (identical to run 1)
+  rcs identical across runs: control 0, treatment 2, probe 2, legacy 1, no-remote 2
+  no_object_added_by_any_audit = true; stderr_identical_without_remote = true
+
+--- 5. concurrent sibling edits (transparency) ------------------------------
+The lane working tree changed during this lane by other seats (not by this one):
+  M LOG.md (+17), M corpus/SOURCES.md (+3), ?? corpus/lessons/round-24.md
+This lane wrote only:
+  .ufo/waves/round-24/build/advice/CaseMissingLaneBlob.md
+  .ufo/waves/round-24/build/out/CaseMissingLaneBlob/{case_missing_lane_blob.py,expected.json,evidence.log}
+tools/report-landing-audit.py is untouched by every seat so far:
+  sha256 da5041a8191e0e6ec385adc7c659ddc7544a835aff65dd45b34de623c5765af1 (== base 0df800e)

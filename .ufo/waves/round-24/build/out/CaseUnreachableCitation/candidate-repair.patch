@@ -1,0 +1,25 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/report-landing-audit.py	2026-10-21 13:34:11.053754887 -0300
++++ candidate-repaired.py	2026-10-21 15:03:25.676319087 -0300
+@@ -457,12 +457,21 @@
+             raise EvalError(f"{repo}: partial clone (promisor pack)")
+     listing = git(repo, "config", "--null", "--list",
+                   errors="surrogateescape")
++    promisor = False
+     for entry in filter(None, listing.split("\0")):
+         key, _, value = entry.partition("\n")
+         if key == "extensions.partialclone" or (
+                 re.fullmatch(r"remote\..+\.promisor", key)
+                 and git_bool(value)):
+-            raise EvalError(f"{repo}: partial clone ({key})")
++            promisor = True
++    if promisor:
++        # metadata alone is not evidence of incompleteness; only genuinely
++        # unavailable objects are. Required objects are checked by
++        # availability below, not by the declaration.
++        missing = git(repo, "rev-list", "--objects", "--all",
++                      "--missing=print")
++        if any(line.startswith("?") for line in missing.split("\n")):
++            raise EvalError(f"{repo}: partial clone (missing objects)")
+ 
+ 
+ def grafts_effective(path):

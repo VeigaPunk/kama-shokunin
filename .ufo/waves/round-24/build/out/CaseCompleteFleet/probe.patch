@@ -1,0 +1,75 @@
+diff --git i/tools/report-landing-audit.py w/tools/report-landing-audit.py
+index cf706c5..7a83298 100755
+--- i/tools/report-landing-audit.py
++++ w/tools/report-landing-audit.py
+@@ -80,6 +80,9 @@ KINDS = ("unresolved-full-hash", "landed-unresolved", "landed-ambiguous",
+ RESOLVABLE = ("unresolved-full-hash", "landed-unresolved", "landed-ambiguous",
+               "landed-omitted")
+ 
++# PROBE: repositories whose missing objects are not evidence of absence
++PROMISOR_BACKED = set()
++
+ 
+ class EvalError(Exception):
+     """Could not evaluate: never converted into a verdict."""
+@@ -171,6 +174,14 @@ def lookup(repos, tokens, peel=""):
+                 # git resolved a same-named ref before the object prefix
+                 raise EvalError(f"{repo}: citation {token} names a ref")
+             status[token] = "found"
++    # PROBE: in a promisor-backed repository an absent object may live on
++    # the promisor remote: absence is not evidence, so the audit cannot
++    # conclude a verdict about it.
++    if any(str(Path(r).resolve()) in PROMISOR_BACKED for r in repos):
++        absent = sorted(t for t, s in status.items() if s == "missing")
++        if absent:
++            raise EvalError(f"{absent[0]}: absent in a promisor-backed "
++                            f"repository; absence is not evidence")
+     return status
+ 
+ 
+@@ -437,9 +448,13 @@ def parse_rounds(spec, fleet_repo, lane):
+ 
+ def check_history_repo(repo):
+     """Refuse a repository whose visible history is not its object history
+-    (shallow boundary, info/grafts), whose missing objects belong to a
+-    promisor remote (absence is not evidence there), or whose object names
+-    the 40-hex scanners cannot read (non-sha1 object format)."""
++    (shallow boundary, info/grafts) or whose object names the 40-hex
++    scanners cannot read (non-sha1 object format).
++
++    PROBE (satisfiability only, not the production fix): promisor metadata
++    is no longer a refusal.  A promisor-backed repository is recorded; the
++    absence of an object there is handled where the object is looked up,
++    because only a missing object makes absence a non-verdict."""
+     fmt = git(repo, "rev-parse", "--show-object-format").strip()
+     if fmt != "sha1":
+         raise EvalError(f"{repo}: object format {fmt!r}, not sha1")
+@@ -447,6 +462,7 @@ def check_history_repo(repo):
+         raise EvalError(f"{repo}: not a repository top level")
+     if git(repo, "rev-parse", "--is-shallow-repository").strip() != "false":
+         raise EvalError(f"{repo}: shallow repository")
++    promisor = False
+     for rel in ("info/grafts", "objects/pack"):
+         path = Path(repo, git(repo, "rev-parse", "--git-path", rel).strip())
+         if rel == "info/grafts" and grafts_effective(path):
+@@ -454,7 +470,7 @@ def check_history_repo(repo):
+         if rel == "objects/pack" and path.is_dir() and any(
+                 p.suffix == ".promisor" and p.with_suffix(".pack").exists()
+                 for p in path.iterdir()):
+-            raise EvalError(f"{repo}: partial clone (promisor pack)")
++            promisor = True
+     listing = git(repo, "config", "--null", "--list",
+                   errors="surrogateescape")
+     for entry in filter(None, listing.split("\0")):
+@@ -462,7 +478,10 @@ def check_history_repo(repo):
+         if key == "extensions.partialclone" or (
+                 re.fullmatch(r"remote\..+\.promisor", key)
+                 and git_bool(value)):
+-            raise EvalError(f"{repo}: partial clone ({key})")
++            promisor = True
++    if promisor:
++        PROMISOR_BACKED.add(str(Path(repo).resolve()))
++    return promisor
+ 
+ 
+ def grafts_effective(path):

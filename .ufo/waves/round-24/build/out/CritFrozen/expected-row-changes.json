@@ -1,0 +1,46 @@
+{
+ "author": "CritFrozen",
+ "frozen_at": "2026-10-21T17:58:15Z",
+ "candidate_present_at_freeze": false,
+ "basis": "preregistration.json lines 7-12 plus tools/report-landing-audit.py@0df800e read sites; derived from fixture histories, not from any candidate",
+ "retained_grid": {
+  "file": "tests/report-audit/repo-state-grid.py",
+  "frozen_revision_keep": "4fe9339f8fc3a4a4a479d9c938a850da12f1124d",
+  "r23_population_sha256": "f29fab8d9af1d02de7f6fa4c7b39b2307113d3716fd4b11cffdd0cd65d55364a",
+  "rows": [
+   {"case": "T01-blobless-partial-clone", "r23": ["tradeoff", 0, []], "r24": ["control", 0, []],
+    "class": "harm-made-graded", "premise_add": "promisor pack present AND rev-list --objects --missing=print shows zero missing",
+    "r22_frozen": "met (exit0)", "r23_frozen": "not met (exit2)"},
+   {"case": "F23-promisor-pack-without-config", "r23": ["contract", 2, "promisor pack"], "r24": ["contract", 2, "<new unknown-citation reason>"],
+    "class": "reason-only", "count_as_gain_vs_r23": false},
+   {"case": "F06-lazy-fetch-command", "r23": ["fault", 2, "partial clone"], "r24": ["fault", 2, "<new unknown-citation reason>"],
+    "class": "reason-only", "count_as_gain_vs_r23": false, "marker_must_stay_absent": true},
+   {"case": "F27-filter-only-promisor-remote", "r23": ["fault", 1, ["landed-unresolved", "unresolved-full-hash"]], "r24": ["fault", 2, "<new unknown-citation reason>"],
+    "class": "policy-flip-new-refusal", "justification": "fixture premise repo-state-grid.py:494-496 proves git treats the filter-only remote as promisor; SrcPromisorCode promisor-remote.c:148-163",
+    "count_as_gain": false, "decide_before_candidate": true},
+   {"case": "F28-shallow-fleet", "r23": ["fault", 2, null], "r24": ["fault", 2, "shallow repository"], "class": "pin-reason"},
+   {"case": "F29-broken-branch-same-named-tag", "r23": ["fault", 2, null], "r24": ["fault", 2, "dereferences to tree type"], "class": "pin-reason"}
+  ],
+  "new_rows": [
+   {"case": "C14-promisor-false-fabricated", "build": "c_promisor_false + report cites FAKE outside Landed", "expect": [1, ["unresolved-full-hash"]], "kills": "M27-promisor-boolean successor"},
+   {"case": "C15-orphan-marker-fabricated", "build": "c_orphan_marker + report cites FAKE outside Landed", "expect": [1, ["unresolved-full-hash"]], "kills": "M29-promisor-pack-pairing successor"},
+   {"case": "C16-blobless-history-blob-missing", "build": "2 lane commits (round-1 work @1000, note by someone @1100), blob:none file:// clone with checkout, origin url set to absent path; cite only round-1 commit", "expect": [0, []],
+    "premise": "exactly one missing object (historical blob), not cited, not read by any audit git call", "r22_frozen": "exit0 (premise.json)", "r23_frozen": "exit2 (premise.json)"}
+  ]
+ },
+ "real_lane_control": {
+  "source": "MANIFEST.json rounds[428].verification.harm_ruling",
+  "r23_closure_result": "r22 rc0 on promisor clone rounds 10-22; r23 rc2",
+  "r24_expected_inference": {
+   "rounds 10-19,21,22": "rc0 with errata, stdout byte-equal to full-lane run",
+   "round 20 or any range containing it": "exit2: token 0957ce619789d13d894ef21bc863486bcb35b56c absent in both repos; lane promisor-backed -> unknown (preregistration.json:10)"
+  },
+  "status": "unrun for candidate; [INFERENCE] from final/audit-historical-ledger.stdout and registry/report-landing-errata.tsv:3"
+ },
+ "scoring": {
+  "met": "exit == expected exactly AND kinds equal AND pinned reason substring AND no marker/fetch/timeout/traceback",
+  "separate_counters": ["over_refusals (expected 0/1, got 2)", "false_verdicts (expected 2, got 0/1)", "fetched (objects/ listing changed)"],
+  "gate": "over_refusals == 0 AND false_verdicts == 0 AND fetched == 0 AND executed == 0",
+  "grid_exit_2_only_for": "fixture premise failure; never for auditor exit 2"
+ }
+}

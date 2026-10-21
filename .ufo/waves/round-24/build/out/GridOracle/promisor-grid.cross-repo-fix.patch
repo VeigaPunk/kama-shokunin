@@ -1,0 +1,29 @@
+--- a/tests/report-audit/promisor-grid.py (cca76aa3)
++++ b/tests/report-audit/promisor-grid.py (d6aa4e74)
+@@ -364,6 +364,11 @@
+     f0 = commit(fleet, "fleet", 1900, "fleet: init", "notes.md", "notes\n")
+     shas["fleet_commit"] = f0
+     cites = [l1]
++    if opt.get("cross_repo"):
++        # a citation that exists only in the SECOND audited repository: the
++        # lane does not hold it, so the resolution can only come from the
++        # fleet.  A lookup that consults the first repository alone must miss.
++        cites.append(f0)
+     notes = []
+     if opt.get("cited_blob"):
+         notes.append(f"blob {shas['f_blob']}")
+@@ -439,8 +444,14 @@
+         if object_exists(lane, shas["spliced"]) or \
+                 object_exists(fleet, shas["spliced"]):
+             raise Premise("the spliced token exists in an audited repository")
++    if opt.get("cross_repo"):
++        if object_exists(lane, f0):
++            raise Premise("the cross-repository token is in the lane too")
++        if not object_exists(fleet, f0):
++            raise Premise("the cross-repository token is not in the fleet")
+     premise = {
+         "errata": bool(opt.get("errata")),
++        "cross_repo_token": f0 if opt.get("cross_repo") else None,
+         "lane_promisor": promisor_facts(lane)["promisor_backed"],
+         "fleet_promisor": promisor_facts(fleet)["promisor_backed"],
+         "lane_missing": missing_objects(lane, "refs/heads/master"),

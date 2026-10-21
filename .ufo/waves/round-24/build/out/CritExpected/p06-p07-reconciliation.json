@@ -1,0 +1,43 @@
+{
+ "by": "CritExpected",
+ "written": "2026-10-21T18:10Z",
+ "authority": ".ufo/waves/round-24/oracle-amendment-1.json (sha256 930b087a218f880a55c4507b7f11309eae130e2b5dd2111e27d5653b39c8f82f, lane 123640b, 15:04:12 -0300); original preregistration expected_after[3] retained separately as withdrawn/not-met",
+ "candidate_consulted": false,
+ "pin_form": "exit, exact sorted list of (kind, token) from results[].defects with --no-errata, and for exit 2 a stderr pin; kinds-only is insufficient",
+ "token_rule": "token is the hex string as cited in the report (lower-case); landed-omitted token is the full lane sha",
+ "exit2_pin": {
+  "must": ["stderr starts with 'could-not-evaluate:'", "stdout is not a JSON verdict", "stderr names the unavailable object id (40-hex) or the required path whose object is unavailable"],
+  "must_not": ["regex partial clone \\((promisor pack|extensions\\.partialclone|remote\\..*\\.promisor)\\)"]
+ },
+ "rows": [
+  {"row": "P06 (OracleLocalBlobType scenario J)", "shape": "promisor metadata, complete store, fabricated 40-hex outside Landed", "exit": 1,
+   "defects": [["unresolved-full-hash", "0123456789abcdef0123456789abcdef01234567"]],
+   "summary": {"defects": 1, "uncorrected": 1, "status": "failed", "by_kind.unresolved-full-hash": 1, "required_commits": 1, "reports": 1, "rounds": [1]},
+   "source": "construction + full-clone twin; amendment bullets 1 and 4"},
+  {"row": "P07 (OracleLocalBlobType scenario K)", "shape": "promisor-marked lane; cited blob de1d85fdd17416717224bf9faa67ca1009cc9df1 is referenced by a present tree reachable from lane commit 6844bdb5 and absent (rev-list --missing=print lists it)", "exit": 2,
+   "defects": null, "stderr_must_contain": "de1d85fdd17416717224bf9faa67ca1009cc9df1",
+   "source": "construction: the cited token is in the bounded missing set; amendment bullet 3"},
+  {"row": "P08 (proposed discriminator)", "shape": "promisor-marked lane with an UNRELATED hole (missing historical blob, not cited) plus a fabricated 40-hex outside Landed that is not in the missing set", "exit": 1,
+   "defects": [["unresolved-full-hash", "<fabricated token>"]],
+   "source": "amendment bullets 3 and 5; kills 'any hole => unknown' (P07 alone does not)"},
+  {"row": "WrongType (known-present blob B cited as 40-hex in Landed)", "exit": 1,
+   "defects": [["landed-unresolved", "<B>"]],
+   "note": "no unresolved-full-hash: the no-peel full-hash lookup finds B. A missing-object traversal must not turn this into exit 2: B is present.",
+   "source": "base lookup semantics (tools/report-landing-audit.py:139-174 at 0df800e8) + full-clone twin"}
+ ],
+ "gridoracle_conflicts": {
+  "file": "/fast/scratch/hyaku/kama-r24/GridOracle/tests/report-audit/promisor-grid-expectations.json (mtime 15:02:29, pre-amendment)",
+  "PG23-unknown-citation-complete-promisor": {"was": [2, null], "amended": [1, "[(landed-unresolved,T),(unresolved-full-hash,T)] if T cited in Landed; [(unresolved-full-hash,T)] if outside"], "note": "the file's own calibration 'alternate_reading'; flip and record original as withdrawn"},
+  "PG24-unknown-citation-fleet-promisor": {"was": [2, null], "amended": "same as PG23"},
+  "PG22-unknown-citation-incomplete-promisor": {"was": [2, null], "amended": "1 with exact pairs if the cited token is NOT in the bounded missing set (P08 shape); 2 only if the cited token is the missing object (P07 shape). 'Exit 2 under both readings' no longer holds"},
+  "PG28-unhydrated-blobless-lane": {"was": [2, "unavailable"], "amended": "2 only if a missing object is one the audit reads (lane tip corpus/SOURCES.md or errata blob, a tip-path tree, a commit); otherwise the twin verdict (amendment bullet 5; r22 4fe9339f gives the correct 0 on that shape, premise-v2.json unhydrated_two_files)"},
+  "PG15/PG16-missing-lane-tree": {"note": "2 is valid only if the removed tree is the tip root tree or on the corpus/ or registry/ path; a historical commit's tree is not read"},
+  "all_rows": "add (kind, token) pairs; reason_classes 'unavailable'/'unknown-citation' are substring bags ('missing', 'cannot', 'unknown') that do not exclude metadata refusals: add the must_not regex above",
+  "missing_rows": ["P07 shape", "P08 shape", "WrongType Landed blob"]
+ },
+ "retained_r23_grid_rows": {
+  "F06-lazy-fetch-command": {"was": [2, "partial clone"], "amended": [1, [["landed-unresolved", "abcdefabcdefabcdefabcdefabcdefabcdefabcd"], ["unresolved-full-hash", "abcdefabcdefabcdefabcdefabcdefabcdefabcd"]]], "keep": "executed=0 graded"},
+  "F27-filter-only-promisor-remote": {"was": [1, ["landed-unresolved", "unresolved-full-hash"]], "amended": [1, [["landed-unresolved", "abcdefabcdefabcdefabcdefabcdefabcdefabcd"], ["unresolved-full-hash", "abcdefabcdefabcdefabcdefabcdefabcdefabcd"]]], "keep": "executed=0 graded"},
+  "F23-promisor-pack-without-config": {"was": [2, "promisor pack"], "amended": [2, "stderr names the cited blob oid (it is the missing object reachable from lc: P07 shape)"]}
+ }
+}

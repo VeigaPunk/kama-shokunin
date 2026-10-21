@@ -1,0 +1,100 @@
+{
+  "case": "CaseUnknownCitation",
+  "round": 24,
+  "written_before": "candidate implementation (audit repair) and before any base observation",
+  "preregistration": ".ufo/waves/round-24/preregistration.json",
+  "policy_source": [
+    "expected_after[3]: An unavailable required commit/tree/blob/report object: exit2 could-not-evaluate, never a clean or failed verdict.",
+    "expected_after[4]: A missing citation in any promisor-backed repository is unknown, not proved absent: exit2 unless resolved locally by another audited repository.",
+    "expected_after[6]: Metadata-only declarations do not establish incompleteness; content completeness and availability of required evidence determine the outcome."
+  ],
+  "case_statement": "A fleet report cites a full 40-hex commit that is absent from both audited repositories while the audited lane is promisor-backed and the cited commit exists in the lane's promisor remote. Local absence therefore proves nothing: the outcome must be could-not-evaluate (exit 2) and must NOT be reported as an unresolved-full-hash defect.",
+  "arms": {
+    "A-main": {
+      "role": "case",
+      "lane": "lane-filter (promisor remote: remote.origin.url + remote.origin.partialclonefilter=blob:none)",
+      "fleet": "fleet (report cites the unknown commit in ## Notes)",
+      "required": {
+        "exit": 2,
+        "defect_kinds": [],
+        "must_not_contain_defect_kind": ["unresolved-full-hash"],
+        "json_document": false,
+        "rationale": "the cited commit exists in the promisor remote, so its local absence is unknown, not proved; an unresolved-full-hash verdict would assert a proved absence the audit cannot establish"
+      },
+      "predicted_base_0df800e": {
+        "exit": 1,
+        "defect_kinds": ["unresolved-full-hash"],
+        "why": "the base refuses only extensions.partialclone / remote.*.promisor / paired .promisor markers; a filter-only promisor remote is not refused, so the base treats local absence as proved"
+      }
+    },
+    "B-control": {
+      "role": "paired control (attribution)",
+      "lane": "lane-filter (identical promisor lane as A-main)",
+      "fleet": "fleet-clean (same report without the unknown citation)",
+      "required": {
+        "exit": 0,
+        "defect_kinds": [],
+        "rationale": "promisor metadata alone must not refuse: A-main exit 2 together with B-control exit 0 proves the exit 2 of A-main is caused by the unknown citation and not by the promisor metadata"
+      },
+      "predicted_base_0df800e": {
+        "exit": 0,
+        "defect_kinds": []
+      }
+    },
+    "C-full": {
+      "role": "case (canonical promisor configuration)",
+      "lane": "lane-full (remote.origin.url + remote.origin.partialclonefilter=blob:none + extensions.partialclone=origin + remote.origin.promisor=true)",
+      "fleet": "fleet (report cites the unknown commit in ## Notes)",
+      "required": {
+        "exit": 2,
+        "defect_kinds": [],
+        "must_not_contain_defect_kind": ["unresolved-full-hash"],
+        "json_document": false,
+        "rationale": "same policy row as A-main, reached through the canonical partial-clone configuration instead of the filter-only one"
+      },
+      "predicted_base_0df800e": {
+        "exit": 2,
+        "defect_kinds": [],
+        "why": "the base refuses any partial clone before reading the report (blanket metadata refusal); the outcome coincides but for the wrong reason, which is why A-main carries the discriminating weight"
+      }
+    },
+    "D-store-lane": {
+      "role": "witness (store-positive / closure-negative citation, filter-only promisor lane)",
+      "lane": "lane-filter + a commit object that is in the lane's object store but NOT reachable from the pinned root (rev-list never lists it; cat-file resolves it)",
+      "fleet": "fleet-side (report cites that object in ## Notes)",
+      "required": {
+        "exit": 0,
+        "defect_kinds": [],
+        "rationale": "the citation IS locally resolvable, so it is not unknown: expected_after[4] forbids a refusal ('unless resolved locally'), and expected_after[1] demands the same substantive clean/failed finding as the otherwise identical full clone (exit 0). An implementation that decides 'unknown citation' by enumerating the pinned-root closure instead of consulting the object store answers exit 2 here and is falsified by this arm"
+      },
+      "predicted_base_0df800e": {
+        "exit": 0,
+        "defect_kinds": [],
+        "why": "the base resolves the citation through cat-file in the lane store and never refuses a filter-only promisor lane"
+      }
+    },
+    "E-store-full": {
+      "role": "witness (store-positive / closure-negative citation, canonical promisor lane)",
+      "lane": "lane-full (canonical partial-clone configuration) + the same store-positive / closure-negative commit object",
+      "fleet": "fleet-side (report cites that object in ## Notes)",
+      "required": {
+        "exit": 0,
+        "defect_kinds": [],
+        "rationale": "same witness property on the canonical configuration, so an implementation cannot be enumeration-based on filter-only lanes and store-based on canonical ones; also expected_after[1]: a complete promisor-marked lane with a resolvable cited commit must give the full clone's substantive verdict, not exit 2"
+      },
+      "predicted_base_0df800e": {
+        "exit": 2,
+        "defect_kinds": [],
+        "why": "the base refuses any partial clone before reading the report (blanket metadata refusal) although every cited object is locally present: this is the r23 operability harm"
+      }
+    }
+  },
+  "revision_note": "Arms A-main, B-control and C-full were written before the base 0df800e was run and before any candidate existed; their entries are unchanged. Arms D-store-lane and E-store-full were added after the CaseMissingAncestor review (2026-10-21) showed that A-main+B-control+C-full do not by themselves falsify an enumeration-based unknown-citation rule; their expectations are derived from expected_after[1] and expected_after[4] and were fixed before the base was run on them.",
+  "attribution_rule": "The exit-2 of A-main and C-full is attributed to the unknown citation by the paired control B-control (exit 0 on the same promisor lane). No refusal wording is pinned, so the expectation is not coupled to the candidate's message text.",
+  "not_asserted": [
+    "no transport, fetch or lazy-fetch behaviour is asserted",
+    "no script execution, no repository program, no network",
+    "no specific refusal wording",
+    "no claim about the other promisor arms of the round-24 grid"
+  ]
+}

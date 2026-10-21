@@ -1,0 +1,70 @@
+
+=== P17 lane history and audit verdicts (author kama-shokunin) ===
+C1=16fc48b75a999ed3ef602c49dcf61d992324fa81 C2=d130eb1f31baf79126ff62e650d6dfd08136236c
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/report-landing-audit.py --lane-repo /fast/scratch/hyaku/kama-r24/SimplifyPolicy/probe3.qrTz1r/lane-plain --fleet-repo /fast/scratch/hyaku/kama-r24/SimplifyPolicy/probe3.qrTz1r/fleet --rounds 1 --no-errata --json
+    {
+     "errata_invalid": [],
+     "errata_unmatched": [],
+     "results": [
+      {
+       "cutoff": 2000,
+       "defects": [
+        {
+         "cited_elsewhere": false,
+         "corrected_by": [],
+         "kind": "landed-omitted",
+         "token": "d130eb1f31baf79126ff62e650d6dfd08136236c"
+        }
+       ],
+       "post_report": [],
+       "report": "/fast/scratch/hyaku/kama-r24/SimplifyPolicy/probe3.qrTz1r/fleet/.ufo/reports/round-1/kama.md",
+       "report_committed": true,
+       "required": 2,
+       "round": 1,
+       "round_commits": 2,
+       "source_url_hashes": []
+      }
+     ],
+     "summary": {
+      "by_kind": {
+       "landed-ambiguous": 0,
+       "landed-omitted": 1,
+       "landed-section-missing": 0,
+       "landed-unresolved": 0,
+       "unresolved-full-hash": 0
+      },
+      "corrected": 0,
+      "defects": 1,
+      "errata_invalid": 0,
+      "errata_rows": 0,
+      "errata_unmatched": 0,
+      "post_report_commits": 0,
+      "reports": 1,
+      "required_commits": 2,
+      "rounds": [
+       1
+      ],
+      "status": "failed",
+      "uncorrected": 1
+     }
+    }
+    [rc=1]
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/report-landing-audit.py --lane-repo /fast/scratch/hyaku/kama-r24/SimplifyPolicy/probe3.qrTz1r/lane-partial --fleet-repo /fast/scratch/hyaku/kama-r24/SimplifyPolicy/probe3.qrTz1r/fleet --rounds 1 --no-errata --json
+    could-not-evaluate: /fast/scratch/hyaku/kama-r24/SimplifyPolicy/probe3.qrTz1r/lane-partial: partial clone (promisor pack)
+    [rc=2]
+
+=== P18 silent absence: cat-file --batch-check on a missing blob under --no-lazy-fetch ===
+blob of g = ef49dd86a6957875edcd0bff210337d6b6dd063c
+$ git --no-lazy-fetch cat-file --batch-check
+    ef49dd86a6957875edcd0bff210337d6b6dd063c missing
+    [rc=0]
+$ git --no-lazy-fetch show HEAD:g
+    fatal: bad object HEAD:g
+    [rc=128]
+$ git --no-lazy-fetch cat-file -e ef49dd86a6957875edcd0bff210337d6b6dd063c
+    [rc=1]
+$ git --no-lazy-fetch log --diff-filter=A --format=%at -- f
+    1000
+    [rc=0]
+
+ROOT=/fast/scratch/hyaku/kama-r24/SimplifyPolicy/probe3.qrTz1r

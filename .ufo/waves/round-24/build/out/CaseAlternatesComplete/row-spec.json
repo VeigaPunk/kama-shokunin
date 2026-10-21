@@ -1,0 +1,70 @@
+{
+  "case": "CaseAlternatesComplete",
+  "round": 24,
+  "base": "0df800e896f6bce285a81e794ad4ae1d1e6c3a71",
+  "builder": ".ufo/waves/round-24/build/out/CaseAlternatesComplete/case_alternates_complete.py",
+  "auditor_base": ".ufo/waves/round-24/build/out/CaseAlternatesComplete/audit-base.py",
+  "invocation": "python3 case_alternates_complete.py --build --auditor <auditor-under-test> --policy after --json",
+  "fixture_ids": {
+    "A_cited_lane_commit": "db796f8b820bf3825c58832419138cdba23206a7",
+    "B_omitted_lane_commit": "ce743590588f9a15c068e2c3a3e4a1b6648fdf8f",
+    "R_report_commit": "1940965bce034fac27efbdbeb7284f48d654324f",
+    "report_blob": "315f23b8fdb782eabb6e4cf8201d4f79fc18b885"
+  },
+  "expected_exit": 1,
+  "expected_defects": [["landed-omitted", "ce743590588f9a15c068e2c3a3e4a1b6648fdf8f"]],
+  "expected_summary": {
+    "reports": 1,
+    "defects": 1,
+    "uncorrected": 1,
+    "required": 2,
+    "post_report": 0,
+    "status": "failed"
+  },
+  "rows": [
+    {
+      "id": "alternates-complete-control",
+      "arm": "control",
+      "grade": "control",
+      "construction": "git clone --no-hardlinks store (own objects, no marking)",
+      "expect_exit": 1,
+      "expect_defects": [["landed-omitted", "ce743590588f9a15c068e2c3a3e4a1b6648fdf8f"]]
+    },
+    {
+      "id": "alternates-complete-shared",
+      "arm": "case-1",
+      "grade": "control",
+      "construction": "git clone --shared store (alternates only); store promisor-marked, clone not",
+      "expect_exit": 1,
+      "expect_defects": [["landed-omitted", "ce743590588f9a15c068e2c3a3e4a1b6648fdf8f"]]
+    },
+    {
+      "id": "alternates-complete-shared-marked",
+      "arm": "case-2",
+      "grade": "fault",
+      "construction": "git clone --shared store (alternates only); store and clone both promisor-marked",
+      "expect_exit": 1,
+      "expect_defects": [["landed-omitted", "ce743590588f9a15c068e2c3a3e4a1b6648fdf8f"]],
+      "frozen_base_observed": {
+        "exit": 2,
+        "stderr": "could-not-evaluate: .../case2-lane: partial clone (remote.origin.promisor)",
+        "note": "the r23 harm this row must remove"
+      }
+    },
+    {
+      "id": "alternates-complete-unmarked",
+      "arm": "case-2-unmarked",
+      "grade": "control",
+      "construction": "git clone --shared store with the three declaration keys unset (diagnostic: isolates the declaration as the sole trigger)",
+      "expect_exit": 1,
+      "expect_defects": [["landed-omitted", "ce743590588f9a15c068e2c3a3e4a1b6648fdf8f"]]
+    }
+  ],
+  "constraints": {
+    "transport": "no fetch/ls-remote/upload-pack/pull/push/clone call is permitted; proven by a git shim on PATH",
+    "remote_reachability": "promisor remotes point at a nonexistent local path",
+    "scratch_root": "/fast/scratch/hyaku/kama-r24/CaseAlternatesComplete/run",
+    "isolation_flags": ["--no-replace-objects", "--no-lazy-fetch"],
+    "policy_agnostic": "the expectation holds whether or not an alternate store's marking counts as promisor-backed; nothing is missing in this case"
+  }
+}

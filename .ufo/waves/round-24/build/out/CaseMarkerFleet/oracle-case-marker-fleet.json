@@ -1,0 +1,63 @@
+{
+  "case": "CaseMarkerFleet",
+  "round": 24,
+  "preregistered_at": "2026-10-21 (written before the fixture builder existed and before any run)",
+  "base_commit": "0df800e896f6bce285a81e794ad4ae1d1e6c3a71",
+  "frozen_auditor": {
+    "path": "tools/report-landing-audit.py",
+    "blob_sha256": "da5041a8191e0e6ec385adc7c659ddc7544a835aff65dd45b34de623c5765af1",
+    "refusal_site": "tools/report-landing-audit.py:438-466 (check_history_repo)"
+  },
+  "claim_under_test": "Promisor marker metadata is not evidence of incompleteness. A fleet repository that carries promisor marker metadata but holds every required object locally must yield the same substantive findings and the same report cutoff as an otherwise identical ordinary fleet clone.",
+  "fixture": {
+    "kind": "paired twins, offline, synthetic, local only",
+    "lane": "one lane repository per variant, shared by both arms",
+    "fleet_plain": "ordinary complete repository, no promisor metadata",
+    "fleet_marker": "byte-identical object store copied from fleet_plain, plus promisor marker metadata only",
+    "marker_metadata": [
+      "core.repositoryformatversion=1",
+      "extensions.partialclone=origin",
+      "remote.origin.url=<nonexistent local path>",
+      "remote.origin.promisor=true",
+      "remote.origin.partialclonefilter=blob:none"
+    ],
+    "transport_guard": "protocol.allow=never in the marker arm; remote url names a path that does not exist",
+    "fleet_report": ".ufo/reports/round-1/kama.md committed in the fleet with author time 2000",
+    "report_cutoff_expected": 2000
+  },
+  "variants": [
+    {
+      "id": "V1-clean",
+      "lane_commits": [
+        {"sha": "LC", "author": "kama-shokunin", "atime": 1000, "subject": "round-1: work", "cited": true}
+      ],
+      "expected": {"exit": 0, "defect_kinds": [], "cutoff": 2000, "required": 1, "round_commits": 1}
+    },
+    {
+      "id": "V2-omission",
+      "lane_commits": [
+        {"sha": "LC", "author": "kama-shokunin", "atime": 1000, "subject": "round-1: work", "cited": true},
+        {"sha": "X", "author": "kama-shokunin", "atime": 1500, "subject": "round-1: more", "cited": false}
+      ],
+      "expected": {"exit": 1, "defect_kinds": ["landed-omitted"], "cutoff": 2000, "required": 2, "round_commits": 2}
+    }
+  ],
+  "expected_after_repair": [
+    "marker arm exit == plain arm exit, for every variant",
+    "marker arm defect multiset (kind, token) == plain arm defect multiset, for every variant",
+    "marker arm cutoff == plain arm cutoff == 2000, for every variant",
+    "marker arm required count == plain arm required count, for every variant",
+    "marker arm never exits 2 (could-not-evaluate): marker metadata alone must not decide the outcome",
+    "no transport is invoked and no object is added: marker object count, pack file list and FETCH_HEAD are unchanged after the audit"
+  ],
+  "expected_at_base_0df800e": [
+    "plain arm matches the variant expectation exactly (the fixture is correct at base)",
+    "marker arm exits 2 with stderr containing 'partial clone' (the r23 blanket refusal this round repairs)"
+  ],
+  "discriminating_boundary": "A marker-marked repository that is actually missing a required object must NOT be evaluated (exit 2, never a clean or failed verdict). That is the sibling missing-content case; this case's fixture is complete, so its premise (every required object present locally) is what makes the marker arm evaluable.",
+  "must_not": [
+    "no network transport (no ssh/https/file fetch), no repo-configured program execution",
+    "no fixture outside /fast/scratch/hyaku/kama-r24/CaseMarkerFleet",
+    "no write to the lane repository, its Git index, .jj, operator config, or any sibling lane"
+  ]
+}

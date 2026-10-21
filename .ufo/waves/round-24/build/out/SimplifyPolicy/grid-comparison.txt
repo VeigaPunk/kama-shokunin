@@ -1,0 +1,24 @@
+r23 repo-state-grid.py, arm 'current': base = lane tool (r23 candidate),
+cand = scratch candidate with the promisor policy (see the patch).
+
+case                               kind      base                                   cand                                   changed
+F06-lazy-fetch-command             fault     exit=2 kinds=None                      exit=2 kinds=None                      YES
+F23-promisor-pack-without-config   contract  exit=2 kinds=None                      exit=2 kinds=None                      YES
+F27-filter-only-promisor-remote    fault     exit=1 kinds=landed-unresolved,unresolved-full-hash exit=2 kinds=None                      YES
+T01-blobless-partial-clone         tradeoff  exit=2 kinds=None                      exit=0 kinds=                          YES
+
+base {"commands_executed": 0, "contracts": 4, "contracts_met": 4, "controls": 13, "controls_met": 13, "faults": 26, "faults_met": 26, "timeouts": 0, "tracebacks": 0, "violations": 0}
+cand {"commands_executed": 0, "contracts": 4, "contracts_met": 3, "controls": 13, "controls_met": 13, "faults": 26, "faults_met": 24, "timeouts": 0, "tracebacks": 0, "violations": 3}
+
+F06-lazy-fetch-command: expected exit=2 kinds=None
+   base: exit=2 met=True | could-not-evaluate: /tmp/repo-state-grid-7pb9pwvs/current/13/lane: partial clone (extensions.partialclone)
+   cand: exit=2 met=False | could-not-evaluate: unknown citation abcdefabcdefabcdefabcdefabcdefabcdefabcd: a promisor-backed repository may hold it
+F23-promisor-pack-without-config: expected exit=2 kinds=None
+   base: exit=2 met=True | could-not-evaluate: /tmp/repo-state-grid-7pb9pwvs/current/30/blobless: partial clone (promisor pack)
+   cand: exit=2 met=False | could-not-evaluate: unknown citation 6e98d181389d343031fd578c6a775ce0889a8b0d: a promisor-backed repository may hold it
+F27-filter-only-promisor-remote: expected exit=1 kinds=['landed-unresolved', 'unresolved-full-hash']
+   base: exit=1 met=True | 
+   cand: exit=2 met=False | could-not-evaluate: unknown citation abcdefabcdefabcdefabcdefabcdefabcdefabcd: a promisor-backed repository may hold it
+T01-blobless-partial-clone: expected exit=0 kinds=[]
+   base: exit=2 met=False | could-not-evaluate: /tmp/repo-state-grid-7pb9pwvs/current/45/blobless: partial clone (promisor pack)
+   cand: exit=0 met=True | 

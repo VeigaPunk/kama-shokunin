@@ -1,0 +1,38 @@
+## P1 middle lane commit object missing (C2, round-1: a), no commit-graph
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/build/out/CritCompleteness/probe.sh: line 35: warning: command substitution: ignored null byte in input
+log %H%an%at%s (round_commits)     rc=128 lines=1   stderr=error: Could not read 9635011b70beb6249a9a523d3c7776911e97f37e fatal: Failed to traverse parents of commit b9892072fdfdc42d5dc6e430cf78bb44a0da8aa3 
+rev-list master                    rc=128 lines=1   stderr=error: Could not read 9635011b70beb6249a9a523d3c7776911e97f37e fatal: Failed to traverse parents of commit b9892072fdfdc42d5dc6e430cf78bb44a0da8aa3 
+rev-list --missing=allow-any       rc=0   lines=2   stderr=
+rev-list --missing=print           rc=0   lines=3   stderr=
+rev-list --exclude-promisor-objects rc=128 lines=1   stderr=fatal: Failed to traverse parents of commit b9892072fdfdc42d5dc6e430cf78bb44a0da8aa3 
+## P2 same, but commit-graph written before the object went missing
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/build/out/CritCompleteness/probe.sh: line 35: warning: command substitution: ignored null byte in input
+log %H%an%at%s (round_commits)     rc=128 lines=1   stderr=fatal: cannot read commit object 9635011b70beb6249a9a523d3c7776911e97f37e 
+log --format=%H                    rc=0   lines=4   stderr=
+rev-list master                    rc=0   lines=4   stderr=
+rev-list --objects --missing=print rc=0   lines=17  stderr=
+   ^ missing lines: 0
+log --diff-filter=A -- report      rc=0   lines=1   stderr=
+fsck --connectivity-only           rc=18  lines=3   stderr=error: HEAD: invalid reflog entry 9635011b70beb6249a9a523d3c7776911e97f37e error: HEAD: invalid reflog entry 9635011b70beb6249a9a523d3c7776911e97f37e error: ref
+## P3 tip subtree corpus/ missing (load_source_urls)
+ls-tree tip -- corpus/SOURCES.md   rc=1   lines=0   stderr=error: Could not read d95a19b5695baa58b183ccfc4830b8415ae2569c 
+## P4 report subtree missing (parse_rounds A-)
+ls-tree -r --name-only -- .ufo/reports rc=1   lines=0   stderr=error: Could not read a69eaa349062ed99f413cff73d54d0624c72f4dc 
+show HEAD:report                   rc=128 lines=0   stderr=fatal: path '.ufo/reports/round-1/kama.md' exists on disk, but not in 'HEAD' 
+## P5 historical root tree of C1 missing (report_cutoff)
+log --diff-filter=A -- report      rc=128 lines=0   stderr=fatal: unable to read tree (f44875a1b80164e1eaa4f28082171593ebb16642) 
+## P6 SOURCES blob missing; batch-check lookup channel
+cat-file blob SOURCES              rc=128 lines=0   stderr=fatal: git cat-file 85de9cf93344b897ee6b677d44c645d747f82b0c: bad file 
+   batch-check: 85de9cf93344b897ee6b677d44c645d747f82b0c missing|9635011b70beb6249a9a523d3c7776911e97f37e commit 185|
+   batch-check after C2 removed: 85de9cf93344b897ee6b677d44c645d747f82b0c missing|9635011b7^{commit} missing|
+   no-lazy-fetch off (expect fetch attempt): fatal: '/fast/scratch/hyaku/kama-r24/CritCompleteness/probe/does-not-exist' does not appear to be a git repository|fatal: Could not read from remote repository.||Please make sure you have the correct access rights|and the repository exists.|85de9cf93344b897ee6b677d44c645d747f82b0c missing|9635011b7^
+## P7 filter-only promisor (no promisor bool, no extension)
+   no-lazy-fetch off: fatal: '/fast/scratch/hyaku/kama-r24/CritCompleteness/probe/does-not-exist' does not appear to be a git repository|fatal: Could not read from remote repository.||Please make sure you have the correct access rights|and the repository exists.|85de9cf93344b897ee6b677d44c645d747f82b0c missing|
+   no-lazy-fetch on : 85de9cf93344b897ee6b677d44c645d747f82b0c missing|
+## P8 genuine promisor pack: C3,C4 packed with .promisor; C2,C1 absent (promisor objects)
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/build/out/CritCompleteness/probe.sh: line 35: warning: command substitution: ignored null byte in input
+log %H%an%at%s (round_commits)     rc=128 lines=1   stderr=error: Could not read 9635011b70beb6249a9a523d3c7776911e97f37e fatal: Failed to traverse parents of commit b9892072fdfdc42d5dc6e430cf78bb44a0da8aa3 
+rev-list --exclude-promisor-objects rc=0   lines=0   stderr=
+rev-list --missing=allow-promisor  rc=128 lines=2   stderr=fatal: unexpected missing commit object '9635011b70beb6249a9a523d3c7776911e97f37e' 
+fsck --connectivity-only           rc=0   lines=0   stderr=
+   allow-promisor round-1 commits visible: 1 of 2

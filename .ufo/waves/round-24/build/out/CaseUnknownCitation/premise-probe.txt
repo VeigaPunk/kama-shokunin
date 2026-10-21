@@ -1,0 +1,17 @@
+# CaseUnknownCitation premise probe (offline, local file:// to a nonexistent path; no network, no script)
+# git 2.56.0; repo with remote.origin.url + remote.origin.partialclonefilter=blob:none (filter-only promisor remote)
+
+$ git cat-file -e 29e8ea69cc44bbb72af22255c5231a7d13b577e0      # no --no-lazy-fetch
+fatal: '/fast/scratch/hyaku/kama-r24/CaseUnknownCitation/probe/absent-origin' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+rc=1
+
+$ git --no-lazy-fetch cat-file -e 29e8ea69cc44bbb72af22255c5231a7d13b577e0
+rc=1
+
+$ printf '<sha>\n' | git --no-lazy-fetch cat-file --batch-check
+29e8ea69cc44bbb72af22255c5231a7d13b577e0 missing
+rc=0

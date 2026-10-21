@@ -1,0 +1,685 @@
+diff --git i/tools/report-landing-audit.py w/tools/report-landing-audit.py
+index cf706c5..91518a9 100755
+--- i/tools/report-landing-audit.py
++++ w/tools/report-landing-audit.py
+@@ -48,11 +48,25 @@ Errors are never verdicts.
+ Repository trust (round 23, tests/report-audit/repo-state-grid.py):
+ refs/replace, lazy fetch, signature display, log re-encoding,
+ log.follow/log.showRoot and .mailmap are neutralized; a plain --branch name
+-means refs/heads/<name>; shallow, grafted, partial-clone, non-sha1 and
+-non-top-level repositories and ref-named citations are refused. Objects
+-borrowed through objects/info/alternates or a .git gitfile still resolve as
+-local, and other repository-local channels are not claimed. Audit trusted
+-repositories only; git >= 2.45 is required.
++means refs/heads/<name>; shallow, grafted, non-sha1 and non-top-level
++repositories and ref-named citations are refused. Objects borrowed through
++objects/info/alternates or a .git gitfile still resolve as local, and other
++repository-local channels are not claimed. Audit trusted repositories only;
++git >= 2.45 is required.
++
++Partial clones (round 24): a citation that neither audited repository
++holds is still a proved absence, whatever the repository declares: promisor
++metadata alone never changes a verdict, and the promisor remote is never
++contacted (the --no-lazy-fetch isolation covers every git call). The one
++case that is not a verdict is a citation whose content cannot be read: for
++a token that no audited repository resolves, the objects the store
++references but cannot serve are listed with `rev-list --objects
++--missing=print` over the store's present objects (the commit graph is
++switched off for that walk), and a token that names one of them, or that a
++missing tree or commit could hide, is unknown, not absent, so the audit
++refuses (exit 2, `unknown: unavailable required object`, naming the object).
++Missing objects the citation does not name are unrelated and block nothing;
++the diagnosis is never a precondition on the audit.
+ """
+ from __future__ import annotations
+ 
+@@ -79,12 +93,43 @@ KINDS = ("unresolved-full-hash", "landed-unresolved", "landed-ambiguous",
+          "landed-omitted", "landed-section-missing")
+ RESOLVABLE = ("unresolved-full-hash", "landed-unresolved", "landed-ambiguous",
+               "landed-omitted")
++# how a local answer ranks: a resolved object wins, an ambiguous prefix is a
++# proved fact, an object whose content cannot be read is unknown, a known
++# object of the wrong type is a proved mismatch, and an object nobody holds
++# is the weakest answer.
++RANK = {"absent": 0, "wrongtype": 1, "unknown": 2, "ambiguous": 3, "found": 4}
+ 
+ 
+ class EvalError(Exception):
+     """Could not evaluate: never converted into a verdict."""
+ 
+ 
++class RepoStore:
++    """One audited repository and the commit root the audit reads.
++
++    The root is the audit's context (the pinned lane branch tip, the fleet
++    tip). The store also remembers the objects the repository references
++    but cannot serve -- over all its present objects, reachable or not, not
++    only over the root: a citation to one of them cannot be proved absent,
++    so the audit refuses instead of reporting a verdict about it. The set
++    is computed once per store, in this run only."""
++
++    __slots__ = ("path", "root", "_missing")
++
++    def __init__(self, path, root):
++        self.path = path
++        self.root = root
++        self._missing = None
++
++    def missing(self):
++        """(missing, opaque): the object ids the local history references
++        but the repository cannot serve, and the subset that hides names
++        (computed at most once per store)."""
++        if self._missing is None:
++            self._missing = missing_reachable(self.path, self.root)
++        return self._missing
++
++
+ # Repository-local state that changed, crashed or hijacked verdicts in the
+ # round-23 fault grid: refs/replace substitutions, promisor lazy fetches and
+ # signature verification (both may run repo-configured programs), re-encoded
+@@ -136,41 +181,73 @@ def git(repo, *args, stdin=None, env=None, errors="strict"):
+     return out.replace("\r\n", "\n").replace("\r", "\n")
+ 
+ 
+-def lookup(repos, tokens, peel=""):
+-    """{token: 'found'|'ambiguous'|'missing'} across repos, via
+-    `cat-file --batch-check` per repo; a git failure is EvalError. With a
+-    peel, git answers `missing` for an ambiguous short name, so the bare
+-    name is asked first to keep ambiguity visible."""
++def lookup(stores, tokens, peel=""):
++    """{token: 'found'|'ambiguous'|'unknown'|'wrongtype'|'absent'} across
++    stores, via `cat-file --batch-check` per store; a git failure is
++    EvalError. With a peel, git answers `missing' for an ambiguous short
++    name, so the bare name is asked first to keep ambiguity visible.
++
++    'wrongtype' names an object that exists locally but is not a commit:
++    a proved local mismatch. 'unknown' names an object that exists but
++    whose peeled target the repository cannot serve (a tag whose target
++    is unavailable): its content cannot be read, so it is no verdict.
++    With no peel, any object type is a found token."""
+     tokens = sorted(set(tokens))
+-    status = {t: "missing" for t in tokens}
++    status = {t: "absent" for t in tokens}
+     if not tokens:
+         return status
+-    if peel:
+-        bare = lookup(repos, tokens)
+-        status.update({t: "ambiguous" for t, s in bare.items()
+-                       if s == "ambiguous"})
+-    for repo in repos:
+-        out = git(repo, "cat-file", "--batch-check",
++
++    def offer(token, state):
++        if RANK[state] > RANK[status[token]]:
++            status[token] = state
++
++    bare = lookup(stores, tokens) if peel else None
++    if bare is not None:
++        # git answers 'missing' for an ambiguous short name under a peel,
++        # so the bare answer keeps the ambiguity visible
++        for token, state in bare.items():
++            if state == "ambiguous":
++                offer(token, "ambiguous")
++    for store in stores:
++        out = git(store.path, "cat-file", "--batch-check",
+                   stdin="".join(f"{t}{peel}\n" for t in tokens))
+         lines = out.split("\n")[:len(tokens)]
+         if len(lines) != len(tokens):
+-            raise EvalError(f"cat-file --batch-check in {repo}: short output")
++            raise EvalError(f"cat-file --batch-check in {store.path}: "
++                            f"short output")
++        unresolved = []
+         for token, line in zip(tokens, lines):
+             if line.endswith(" missing"):
++                if (bare is not None and bare[token] == "found"
++                        and status[token] == "absent"):
++                    unresolved.append(token)
+                 continue
+             if line.endswith(" ambiguous"):
+-                if status[token] != "found":
+-                    status[token] = "ambiguous"
++                offer(token, "ambiguous")
+                 continue
+             if line.endswith(" excluded") or line.endswith(" dangling"):
+                 continue
+             parts = line.split(" ")
+             if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}", parts[0]):
+-                raise EvalError(f"cat-file in {repo}: unexpected {line!r}")
++                raise EvalError(f"cat-file in {store.path}: unexpected {line!r}")
+             if not peel and not parts[0].startswith(token):
+                 # git resolved a same-named ref before the object prefix
+-                raise EvalError(f"{repo}: citation {token} names a ref")
+-            status[token] = "found"
++                raise EvalError(f"{store.path}: citation {token} names a ref")
++            offer(token, "found")
++        if unresolved:
++            # the object is here; ask whether what it dereferences to is
++            # here too: a tag whose target is unavailable is unknown, a
++            # tag or blob that dereferences to a known object is a proved
++            # mismatch
++            out = git(store.path, "cat-file", "--batch-check",
++                      stdin="".join(f"{t}^{{}}\n" for t in unresolved))
++            lines = out.split("\n")[:len(unresolved)]
++            if len(lines) != len(unresolved):
++                raise EvalError(f"cat-file --batch-check in {store.path}: "
++                                f"short output")
++            for token, line in zip(unresolved, lines):
++                offer(token, "unknown" if line.endswith(" missing")
++                      else "wrongtype")
+     return status
+ 
+ 
+@@ -186,11 +263,35 @@ def checkable_abbrev(token):
+                                 and re.search(r"[a-f]", token) is not None)
+ 
+ 
++def root_tree(repo, root):
++    """The tree id the root commit names, or None.
++
++    The id is in the commit header, so it is readable even when the tree
++    object itself is absent: a refusal about a missing tree can then name
++    that tree. When the commit cannot be read either, None is returned and
++    the caller keeps its own reason."""
++    try:
++        tree = git(repo, "log", "-1", "--format=%T", root).strip()
++    except EvalError:
++        return None
++    return tree if re.fullmatch(r"[0-9a-f]{40}", tree) else None
++
++
++def required_read(what, exc):
++    """A read of evidence the audit needs failed: the object is not
++    available, so the audit refuses with a content-derived reason that
++    names what was wanted."""
++    return EvalError(f"unavailable required object: {what}: {exc}")
++
++
+ def round_commits(lane_repo, branch, lane, rnd):
+     """NUL-delimited records: git truncates names and subjects at NUL, so
+     no commit text can inject or shift a field (\\x1f/\\x1e can)."""
+-    out = git(lane_repo, "log", "-z", "--format=%H%x00%an%x00%at%x00%s",
+-              branch, errors="surrogateescape")
++    try:
++        out = git(lane_repo, "log", "-z", "--format=%H%x00%an%x00%at%x00%s",
++                  branch, errors="surrogateescape")
++    except EvalError as exc:
++        raise required_read(f"the {lane} history of {branch}", exc) from exc
+     fields = out.split("\0")
+     if fields and fields[-1] == "":
+         fields.pop()
+@@ -213,8 +314,14 @@ def round_commits(lane_repo, branch, lane, rnd):
+ 
+ 
+ def report_cutoff(fleet_repo, rel):
+-    out = git(fleet_repo, "log", "--diff-filter=A", "--format=%at", "--",
+-              rel).split()
++    try:
++        out = git(fleet_repo, "log", "--diff-filter=A", "--format=%at", "--",
++                  rel).split()
++    except EvalError as exc:
++        tree = root_tree(fleet_repo, "HEAD")
++        what = (f"the first add of {rel} in {fleet_repo} (tip tree {tree})"
++                if tree else f"the first add of {rel} in {fleet_repo}")
++        raise required_read(what, exc) from exc
+     return int(out[-1]) if out else None
+ 
+ 
+@@ -257,7 +364,13 @@ def census_source_urls(text):
+ 
+ def load_source_urls(lane_repo, branch):
+     """Read only the committed regular SOURCES.md blob; absent is legacy."""
+-    entry = git(lane_repo, "ls-tree", branch, "--", SOURCES).rstrip("\n")
++    try:
++        entry = git(lane_repo, "ls-tree", branch, "--", SOURCES).rstrip("\n")
++    except EvalError as exc:
++        tree = root_tree(lane_repo, branch)
++        what = (f"{branch}:{SOURCES} (tip tree {tree}) in {lane_repo}" if tree
++                else f"{branch}:{SOURCES} in {lane_repo}")
++        raise required_read(what, exc) from exc
+     if not entry:
+         return None
+     metadata, sep, path = entry.partition("\t")
+@@ -265,7 +378,11 @@ def load_source_urls(lane_repo, branch):
+     if (not sep or "\n" in entry or path != SOURCES or len(fields) != 3
+             or fields[1] != "blob" or fields[0] not in ("100644", "100755")):
+         raise EvalError(f"{branch}:{SOURCES}: not a regular blob")
+-    text = git(lane_repo, "cat-file", "blob", fields[2])
++    try:
++        text = git(lane_repo, "cat-file", "blob", fields[2])
++    except EvalError as exc:
++        raise required_read(f"{branch}:{SOURCES} ({fields[2]}) in {lane_repo}",
++                            exc) from exc
+     forms = census_source_urls(text)
+     if not forms:
+         return None
+@@ -299,7 +416,39 @@ def classify_full_hashes(text, source_urls, landed):
+     return tokens, sorted(classified - unclassified)
+ 
+ 
+-def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path, source_urls):
++def refuse_unknown(rnd, status, stores):
++    """Refuse a citation that names content which cannot be read.
++
++    A resolved, ambiguous or wrong-type token is a finding; a token that
++    nobody holds is a proved absence unless the history references it (or
++    hides it behind a missing tree or commit), in which case its absence
++    is not proved and the audit must refuse instead of reporting a
++    verdict about it. Every refusal names the object that is not
++    available: the cited token itself, the object the store references
++    under that name, or the missing tree or commit that could hide it."""
++    for token, state in status.items():
++        if state in ("found", "ambiguous", "wrongtype"):
++            continue
++        if state == "unknown":
++            raise EvalError(
++                f"round {rnd}: unknown: unavailable required object: {token} "
++                f"is present but its content cannot be served")
++        store = unknown_citation(stores, token)
++        if store is not None:
++            raise EvalError(
++                f"round {rnd}: unknown: unavailable required object: {token} "
++                f"is referenced by the history of {store.path} but the "
++                f"repository cannot serve it")
++        hole, hole_oid = opaque_hole(stores)
++        if hole is not None:
++            raise EvalError(
++                f"round {rnd}: unknown: unavailable required object: {token} "
++                f"could be hidden behind the missing tree or commit "
++                f"{hole_oid} in {hole.path}")
++
++
++def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path, source_urls,
++                stores):
+     rel = f".ufo/reports/round-{rnd}/{lane}.md"
+     report = Path(path) if path else Path(fleet_repo) / rel
+     if path:
+@@ -309,20 +458,22 @@ def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path, source_urls):
+         try:
+             text = git(fleet_repo, "show", f"HEAD:{rel}")
+         except EvalError as exc:
+-            raise EvalError(f"round {rnd}: cannot read {rel} at fleet "
+-                            f"HEAD: {exc}") from exc
++            tree = root_tree(fleet_repo, "HEAD")
++            what = (f"{rel} at fleet HEAD (tip tree {tree}, {fleet_repo})"
++                    if tree else f"{rel} at fleet HEAD ({fleet_repo})")
++            raise required_read(what, exc) from exc
+     cutoff = report_cutoff(fleet_repo, rel)
+     committed = cutoff is not None
+     if cutoff is None:
+         if path is None:
+             raise EvalError(f"round {rnd}: {rel} has no fleet commit")
+         cutoff = int(time.time())
+-    repos = (lane_repo, fleet_repo)
+     defects = []
+     landed = landed_match(text)
+     full_tokens, classified_hashes = classify_full_hashes(
+         text, source_urls, landed)
+-    full = lookup(repos, full_tokens)
++    full = lookup(stores, full_tokens)
++    refuse_unknown(rnd, full, stores)
+     defects += [{"kind": "unresolved-full-hash", "token": t}
+                 for t, s in full.items() if s != "found"]
+     section = None if landed is None else landed.group(1)
+@@ -333,13 +484,18 @@ def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path, source_urls):
+         defects.append({"kind": "landed-section-missing", "token": "-"})
+         section = ""
+     cited = set(ABBREV.findall(section))
+-    status = lookup(repos, [t for t in cited if checkable_abbrev(t)],
++    status = lookup(stores, [t for t in cited if checkable_abbrev(t)],
+                     "^{commit}")
++    refuse_unknown(rnd, status, stores)
+     for token, state in status.items():
+-        if state == "missing":
+-            defects.append({"kind": "landed-unresolved", "token": token})
+-        elif state == "ambiguous":
++        if state == "found":
++            continue
++        if state == "ambiguous":
+             defects.append({"kind": "landed-ambiguous", "token": token})
++            continue
++        # 'absent' (proved absent) and 'wrongtype' (locally known, not a
++        # commit) are both failed findings
++        defects.append({"kind": "landed-unresolved", "token": token})
+     cited_anywhere = set(ABBREV.findall(text))
+     for commit in pre:
+         if not any(commit["sha"].startswith(t) for t in cited):
+@@ -384,7 +540,7 @@ def load_errata(args, lane_repo, tip):
+                         f"{args.branch}:{ERRATA}")
+ 
+ 
+-def apply_errata(results, errata, repos):
++def apply_errata(results, errata, stores):
+     selected = {r["round"] for r in results}
+     used = set()
+     for res in results:
+@@ -401,7 +557,29 @@ def apply_errata(results, errata, repos):
+     hexed = {e["line"]: e["correction"].lower() for e in errata
+              if e["kind"] in RESOLVABLE
+              and re.fullmatch(r"[0-9a-fA-F]{7,40}", e["correction"])}
+-    status = lookup(repos, list(hexed.values()), "^{commit}")
++    status = lookup(stores, list(hexed.values()), "^{commit}")
++    for e in errata:
++        token = hexed.get(e["line"])
++        if token is None or e["round"] not in selected:
++            continue
++        state = status.get(token)
++        if state == "unknown":
++            raise EvalError(
++                f"errata line {e['line']}: unknown: unavailable required "
++                f"object: {token} is present but its content cannot be served")
++        if state == "absent":
++            store = unknown_citation(stores, token)
++            if store is not None:
++                raise EvalError(
++                    f"errata line {e['line']}: unknown: unavailable required "
++                    f"object: {token} is referenced by the history of "
++                    f"{store.path} but the repository cannot serve it")
++            hole, hole_oid = opaque_hole(stores)
++            if hole is not None:
++                raise EvalError(
++                    f"errata line {e['line']}: unknown: unavailable required "
++                    f"object: {token} could be hidden behind the missing tree "
++                    f"or commit {hole_oid} in {hole.path}")
+     invalid = [e for e in errata if e["kind"] in RESOLVABLE and (
+         status.get(hexed.get(e["line"])) != "found"
+         or (e["kind"] == "landed-omitted" and e["correction"] != e["token"]))]
+@@ -437,9 +615,10 @@ def parse_rounds(spec, fleet_repo, lane):
+ 
+ def check_history_repo(repo):
+     """Refuse a repository whose visible history is not its object history
+-    (shallow boundary, info/grafts), whose missing objects belong to a
+-    promisor remote (absence is not evidence there), or whose object names
+-    the 40-hex scanners cannot read (non-sha1 object format)."""
++    (shallow boundary, info/grafts) or whose object names the 40-hex
++    scanners cannot read (non-sha1 object format). A partial clone is not
++    a refusal: what it declares changes no verdict, only the availability
++    of the objects it can serve decides."""
+     fmt = git(repo, "rev-parse", "--show-object-format").strip()
+     if fmt != "sha1":
+         raise EvalError(f"{repo}: object format {fmt!r}, not sha1")
+@@ -447,22 +626,95 @@ def check_history_repo(repo):
+         raise EvalError(f"{repo}: not a repository top level")
+     if git(repo, "rev-parse", "--is-shallow-repository").strip() != "false":
+         raise EvalError(f"{repo}: shallow repository")
+-    for rel in ("info/grafts", "objects/pack"):
+-        path = Path(repo, git(repo, "rev-parse", "--git-path", rel).strip())
+-        if rel == "info/grafts" and grafts_effective(path):
+-            raise EvalError(f"{repo}: {path} rewrites history")
+-        if rel == "objects/pack" and path.is_dir() and any(
+-                p.suffix == ".promisor" and p.with_suffix(".pack").exists()
+-                for p in path.iterdir()):
+-            raise EvalError(f"{repo}: partial clone (promisor pack)")
+-    listing = git(repo, "config", "--null", "--list",
+-                  errors="surrogateescape")
+-    for entry in filter(None, listing.split("\0")):
+-        key, _, value = entry.partition("\n")
+-        if key == "extensions.partialclone" or (
+-                re.fullmatch(r"remote\..+\.promisor", key)
+-                and git_bool(value)):
+-            raise EvalError(f"{repo}: partial clone ({key})")
++    path = Path(repo, git(repo, "rev-parse", "--git-path",
++                          "info/grafts").strip())
++    if grafts_effective(path):
++        raise EvalError(f"{repo}: {path} rewrites history")
++
++
++def present_roots(repo):
++    """Every present object that can root a traversal: the commits, trees
++    and tags the local object database holds, reachable or not. A dangling
++    commit, tree or tag can reference an object the repository cannot
++    serve, and no ref reaches it."""
++    out = git(repo, "cat-file", "--batch-all-objects",
++              "--batch-check=%(objectname) %(objecttype)")
++    roots = []
++    for line in out.split("\n"):
++        name, _, kind = line.partition(" ")
++        if kind in ("commit", "tree", "tag") and \
++                re.fullmatch(r"[0-9a-f]{40}", name):
++            roots.append(name)
++    return roots
++
++
++def missing_reachable(repo, root):
++    """(missing, opaque): the object ids the local history references but
++    the repository cannot serve, and the subset of them that hides names.
++
++    Two walks over the same roots: one with `--objects` (every missing id,
++    blobs included) and one with `--filter=blob:none` (the missing ids
++    that are not blobs, so a missing tree or commit is visible: the names
++    of the objects below it are not known at all). `rev-list
++    --missing=print` names the missing ids with a `?` prefix instead of
++    failing; the --no-lazy-fetch isolation keeps a promisor remote
++    untouched. The roots are every present object of the store, so a
++    dangling commit, tree or tag that references a missing object is seen
++    too; this is a diagnosis of what the store cannot serve, never a
++    precondition on the audit. The commit graph is switched off for the
++    walks so that it cannot hide an unavailable object."""
++    roots = present_roots(repo)
++    if root not in roots:
++        roots.append(root)
++    stdin = "".join(f"{r}\n" for r in roots)
++
++    def walk(extra):
++        out = git(repo, "-c", "core.commitGraph=false", "rev-list",
++                  "--objects", "--missing=print", "--no-object-names", *extra,
++                  "--stdin", stdin=stdin)
++        return {line[1:] for line in out.split("\n") if line.startswith("?")}
++
++    return walk(()), walk(("--filter=blob:none",))
++
++
++def build_store(repo, root):
++    """The audited repository and the commit root the audit reads: the
++    pinned lane branch tip or the fleet tip. The root is the audit's
++    context, not a completeness gate; the store-wide diagnosis of what
++    the repository cannot serve runs only for a citation that no audited
++    repository resolves."""
++    return RepoStore(repo, root)
++
++
++def unknown_citation(stores, token):
++    """The store whose history references the cited token but cannot serve
++    it, or None.
++
++    Such a token is not a proved absence: the repository references it and
++    cannot hand it over, so the audit must refuse rather than report a
++    verdict about it. A missing object the citation does not name is
++    unrelated and does not block anything."""
++    for store in stores:
++        missing, _ = store.missing()
++        for oid in missing:
++            if oid == token or oid.startswith(token):
++                return store
++    return None
++
++
++def opaque_hole(stores):
++    """The store with a missing tree or commit and one such object id, or
++    (None, None).
++
++    Behind such a hole the names of the objects below it are not known, so
++    an unresolved token could be hiding there. The id is the lowest one the
++    store reports, so a refusal names the same unavailable object every
++    time."""
++    for store in stores:
++        _, opaque = store.missing()
++        if opaque:
++            return store, sorted(opaque)[0]
++    return None, None
+ 
+ 
+ def grafts_effective(path):
+@@ -479,13 +731,6 @@ def grafts_effective(path):
+                for line in Path(path).read_bytes().splitlines())
+ 
+ 
+-def git_bool(value):
+-    """git's boolean config spelling; a bare key (no '=') is true."""
+-    v = value.strip().lower()
+-    return v in ("", "true", "yes", "on") or (
+-        re.fullmatch(r"-?[0-9]+", v) is not None and int(v) != 0)
+-
+-
+ def resolve_branch(lane_repo, branch):
+     """Pin the lane tip once. A plain name that exists as refs/heads/<name>
+     must peel to a commit there (a same-named tag never substitutes for a
+@@ -514,12 +759,17 @@ def run(args):
+     for repo in (lane_repo, fleet_repo):
+         check_history_repo(repo)
+     tip = resolve_branch(lane_repo, args.branch)
+-    git(fleet_repo, "rev-parse", "--verify", "HEAD^{commit}")
++    fleet_tip = git(fleet_repo, "rev-parse", "--verify",
++                    "HEAD^{commit}").strip()
++    # the roots the audit reads: the pinned lane tip and the fleet tip
++    stores = (build_store(lane_repo, tip),
++              build_store(fleet_repo, fleet_tip))
+     source_urls = load_source_urls(lane_repo, tip)
+     results = [audit_round(lane_repo, fleet_repo, tip, args.lane, r,
+-                           overrides.get(r), source_urls) for r in rounds]
++                           overrides.get(r), source_urls, stores)
++               for r in rounds]
+     errata = load_errata(args, lane_repo, tip)
+-    unmatched, invalid = apply_errata(results, errata, (lane_repo, fleet_repo))
++    unmatched, invalid = apply_errata(results, errata, stores)
+     by_kind = {k: 0 for k in KINDS}
+     total = corrected = 0
+     for res in results:
+@@ -828,12 +1078,13 @@ def selftest():
+                     short = oid[:4]
+                     break
+                 seen[oid[:4]] = oid
++            store = RepoStore(lane, "HEAD")
+             check("ambiguous-prefix-is-ambiguous", short is not None
+-                  and lookup((lane,), [short]) == {short: "ambiguous"}
+-                  and lookup((lane,), [short], "^{commit}")
++                  and lookup((store,), [short]) == {short: "ambiguous"}
++                  and lookup((store,), [short], "^{commit}")
+                   == {short: "ambiguous"}
+-                  and lookup((lane,), [oids[0]]) == {oids[0]: "found"}
+-                  and lookup((lane,), ["0" * 40]) == {"0" * 40: "missing"})
++                  and lookup((store,), [oids[0]]) == {oids[0]: "found"}
++                  and lookup((store,), ["0" * 40]) == {"0" * 40: "absent"})
+             errata = Path(tmp, "errata.tsv")
+ 
+             def with_rows(*rows):
+@@ -909,6 +1160,120 @@ def selftest():
+                 lambda: run(_ns(base, lane_repo=str(Path(tmp, "nope"))))))
+             check("open-range-finds-reports",
+                   parse_rounds("1-", fleet, "kama") == {1})
++
++            # round 24: metadata alone changes nothing, availability does
++            blob_draft = Path(tmp, "blob-draft.md")
++            blob_draft.write_text(
++                "## Landed changes\n- `" + blob + "` blob\n", encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={blob_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("wrongtype-citation-is-a-failed-finding",
++                  rc == 1 and ("landed-unresolved", blob) in kinds)
++            git(lane, "repack", "-ad")
++            pack_dir = Path(lane, git(lane, "rev-parse", "--git-path",
++                                      "objects/pack").strip())
++            marker = sorted(pack_dir.glob("*.pack"))[0].with_suffix(".promisor")
++            marker.write_text("", encoding="utf-8")
++            trap = Path(tmp, "lazy-fetch-ran")
++            for key, value in (("extensions.partialClone", "origin"),
++                               ("remote.origin.url",
++                                "ssh://example.invalid/x.git"),
++                               ("remote.origin.promisor", "true"),
++                               ("remote.origin.partialclonefilter",
++                                "blob:none"),
++                               ("core.sshCommand",
++                                f"touch {trap}; false")):
++                git(lane, "config", key, value)
++            rc, doc = run(base)
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("promisor-metadata-keeps-the-local-verdict",
++                  rc == 1 and kinds == sorted([
++                      ("unresolved-full-hash", mash), ("landed-omitted", c),
++                      ("landed-unresolved", "deadbee1")]))
++            check("promisor-remote-is-never-contacted", not trap.exists())
++            hole_commit = _commit(lane, "round-1: hole", "kama-shokunin",
++                                  1300, "hole.txt")
++            mid = _commit(lane, "round-1: mid", "kama-shokunin", 1400,
++                          "mid.txt")
++            _commit(lane, "round-1: top", "kama-shokunin", 1500, "top.txt")
++            hole = git(lane, "rev-parse", f"{hole_commit}:hole.txt").strip()
++            Path(lane, git(lane, "rev-parse", "--git-path",
++                           "objects").strip(),
++                 hole[:2], hole[2:]).unlink()
++            rc, doc = run(base)
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("unrelated-missing-object-does-not-block",
++                  rc == 1 and kinds == sorted([
++                      ("unresolved-full-hash", mash), ("landed-omitted", c),
++                      ("landed-unresolved", "deadbee1")]))
++            hole_draft = Path(tmp, "hole-draft.md")
++            hole_draft.write_text(
++                "## Work performed\n" + hole + "\n"
++                "## Landed changes\n- `" + a[:9] + "` work\n", encoding="utf-8")
++            check("citation-of-a-missing-object-is-unknown",
++                  is_error(lambda: run(_ns(base, report=[f"1={hole_draft}"]))))
++            errata_hole = Path(tmp, "errata-hole.tsv")
++            errata_hole.write_text(
++                "1\tunresolved-full-hash\t" + hole + "\t" + a + "\tevidence\n",
++                encoding="utf-8")
++            check("errata-cannot-rescue-unavailable-content",
++                  is_error(lambda: run(_ns(base, report=[f"1={hole_draft}"],
++                                          no_errata=False,
++                                          errata=str(errata_hole)))))
++            errata_fake = Path(tmp, "errata-fake.tsv")
++            errata_fake.write_text(
++                "1\tunresolved-full-hash\t" + mash + "\t" + a + "\tevidence\n",
++                encoding="utf-8")
++            rc, doc = run(_ns(base, no_errata=False, errata=str(errata_fake)))
++            defects = doc["results"][0]["defects"]
++            check("errata-corrects-an-ordinary-absent-citation",
++                  rc == 1 and doc["summary"]["errata_invalid"] == 0
++                  and any(d["token"] == mash and d["corrected_by"]
++                          for d in defects)
++                  and doc["summary"]["uncorrected"] == 2)
++            identity = git_env(GIT_AUTHOR_NAME="kama-shokunin",
++                               GIT_COMMITTER_NAME="kama-shokunin",
++                               GIT_AUTHOR_EMAIL="a@x",
++                               GIT_COMMITTER_EMAIL="a@x")
++            tree = git(lane, "rev-parse", "HEAD^{tree}").strip()
++            target = git(lane, "commit-tree", tree, "-m", "tag target",
++                         env=identity).strip()
++            git(lane, "tag", "-a", "-m", "hole", "v-hole", target,
++                env=identity)
++            tag_oid = git(lane, "rev-parse", "v-hole").strip()
++            Path(lane, git(lane, "rev-parse", "--git-path",
++                           "objects").strip(),
++                 target[:2], target[2:]).unlink()
++            tag_draft = Path(tmp, "tag-draft.md")
++            tag_draft.write_text(
++                "## Landed changes\n- `" + tag_oid + "` tag\n",
++                encoding="utf-8")
++            check("known-tag-with-unavailable-target-is-unknown",
++                  is_error(lambda: run(_ns(base, report=[f"1={tag_draft}"]))))
++            missing, opaque = missing_reachable(
++                lane, git(lane, "rev-parse", "HEAD").strip())
++            check("blob-hole-is-not-an-opaque-hole",
++                  hole in missing and hole not in opaque)
++            tree = git(lane, "rev-parse", f"{mid}^{{tree}}").strip()
++            Path(lane, git(lane, "rev-parse", "--git-path",
++                           "objects").strip(),
++                 tree[:2], tree[2:]).unlink()
++            missing, opaque = missing_reachable(
++                lane, git(lane, "rev-parse", "HEAD").strip())
++            check("missing-tree-is-an-opaque-hole", tree in opaque)
++            clean_draft = Path(tmp, "clean-draft.md")
++            clean_draft.write_text(
++                "## Landed changes\n" + "".join(
++                    f"- `{oid}` cited\n" for oid in (a, b, c, d, edge)),
++                encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={clean_draft}"]))
++            check("unused-tree-hole-does-not-block-resolved-citations",
++                  rc == 0 and doc["results"][0]["defects"] == [])
++            check("opaque-hole-makes-an-unresolved-token-unknown",
++                  is_error(lambda: run(base)))
+         finally:
+             if saved is None:
+                 os.environ.pop("GIT_DIR", None)

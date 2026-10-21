@@ -1,0 +1,29 @@
+# tool: /home/vgpnk/Projects/shokunin/kama-shokunin/tools/report-landing-audit.py
+# EvalError -> exit 2 (could-not-evaluate); defect -> exit 1; clean -> exit 0
+
+## A. git() error branches (subprocess.run substituted)
+  [ok] timeout -> EvalError: EvalError: git log --format=%H in /tmp/x: timed out after 20s
+  [ok] OSError -> EvalError: EvalError: cannot run git: no such file or directory
+  [ok] rc != 0 -> EvalError: EvalError: git log --format=%H in /tmp/x: rc=128 fatal: bad object
+  [ok] undecodable stdout -> EvalError: EvalError: git log --format=%H in /tmp/x: output is not UTF-8: 'utf-8' codec can't decode byte 0xff in position 3: invalid start by
+  [ok] undecodable stderr, rc=0 -> no error: returned 'ok\n'
+  [ok] CRLF normalisation + strict decode -> EvalError: EvalError: git log --format=%H in /tmp/x: output is not UTF-8: 'utf-8' codec can't decode byte 0xff in position 0: invalid start by
+
+## B. promisor metadata on a complete local repo (all objects present)
+  repo: /fast/scratch/hyaku/kama-r24/rfm-promisor-_m3g1ira/lane
+  head: c270f7d298a3475fe0488c1f42e6c6fb6e626832
+  config remote.origin.promisor=true, remote.origin.url=file:///nonexistent/promisor.git
+  check_history_repo -> EvalError: /fast/scratch/hyaku/kama-r24/rfm-promisor-_m3g1ira/lane: partial clone (remote.origin.promisor)
+  disposition today: exit 2 (could-not-evaluate) for a repository whose every object is present locally
+
+## C. lookup() disposition of an absent token (complete local repo)
+  lookup -> {'0000000000000000000000000000000000000000': 'missing'}
+  lookup(head) -> {'c270f7d298a3475fe0488c1f42e6c6fb6e626832': 'found'}
+
+## interim: 9/9 probes as expected
+## scratch: /fast/scratch/hyaku/kama-r24/rfm-promisor-_m3g1ira
+
+## D. non-EvalError escapes (disposition observed through main())
+  D1 unreadable info/grafts -> exit=2 stderr="could-not-evaluate: output: [Errno 13] Permission denied: '/fast/scratch/hyaku/kama-r24/rfm-grafts-dixlfruj/lane/.git/info/grafts'"
+  D2 non-numeric %at -> exit=2 stderr='could-not-evaluate: internal: ValueError: ValueError("invalid literal for int() with base 10: \'not-a-number\'")'
+## summary: 11/11 probes as expected

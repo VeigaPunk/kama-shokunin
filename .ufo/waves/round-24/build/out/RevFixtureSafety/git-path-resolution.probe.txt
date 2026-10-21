@@ -1,0 +1,20 @@
+# RevFixtureSafety bounded local probe — git path resolution semantics
+# host git: git version 2.56.0; python: Python 3.14.8
+# capturing shell cwd: /fast/scratch/hyaku/kama-r24/RevFixtureSafety/probe
+# repo under test: /fast/scratch/hyaku/kama-r24/RevFixtureSafety/probe/r1 (git init -q -b master)
+
+== A. --git-path objects/pack from a valid repo (-C r1) ==
+.git/objects/pack
+== B. --git-path from a subdirectory of the repo ==
+../.git/objects/pack
+== C. --git-path from a NON-repository path inside a repository (upward discovery) ==
+../.git/objects/pack
+   --absolute-git-dir: /fast/scratch/hyaku/kama-r24/RevFixtureSafety/.git
+== D. --git-path from a path outside any repository ==
+fatal: not a git repository (or any parent up to mount point /)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+   rc=128 (fatal: not a git repository)
+
+== E. consequence: a shell that captured A's relative output and resolved it against ITS OWN cwd ==
+   captured value '.git/objects/pack' resolved at cwd $P/probe -> /fast/scratch/hyaku/kama-r24/RevFixtureSafety/probe/.git/objects/pack
+   the same string resolved at cwd $P -> /fast/scratch/hyaku/kama-r24/RevFixtureSafety/.git/objects/pack  (the ENCLOSING repository)

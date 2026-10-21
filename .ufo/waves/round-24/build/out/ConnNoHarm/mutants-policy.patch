@@ -1,0 +1,74 @@
+--- a/tests/report-audit/isolation-mutants.py
++++ b/tests/report-audit/isolation-mutants.py
+@@ -43,8 +43,11 @@
+      'raise EvalError(f"{repo}: shallow repository")', 'pass'),
+     ("M13-grafts-check",
+      'raise EvalError(f"{repo}: {path} rewrites history")', 'pass'),
+-    ("M14-promisor-config",
+-     'raise EvalError(f"{repo}: partial clone ({key})")', 'pass'),
++    # M14-promisor-config and M22-promisor-pack are retired in round 24:
++    # the blanket promisor refusals they weakened are deleted by policy
++    # (metadata is not missing evidence). Their coverage moves to the
++    # promisor-grid policy rows and to promisor-mutants.py; the retirement
++    # is reported, never silent.  See RETIRED below.
+     ("M15-object-format",
+      'raise EvalError(f"{repo}: object format {fmt!r}, not sha1")', 'pass'),
+     ("M16-top-level",
+@@ -61,8 +64,6 @@
+      'if not re.fullmatch(r"[0-9a-f]{40}", sha):', 'if False:'),
+     ("M21-newlines", 'return out.replace("\\r\\n", "\\n").replace("\\r", "\\n")',
+      'return out'),
+-    ("M22-promisor-pack",
+-     'raise EvalError(f"{repo}: partial clone (promisor pack)")', 'pass'),
+     ("M23-strict-decode-catch",
+      'out = proc.stdout.decode("utf-8", errors)',
+      'out = proc.stdout.decode("utf-8", "replace")'),
+@@ -84,6 +85,26 @@
+      'return any(line.strip() and not line.startswith(b"#")',
+      'return True or any(line.strip() and not line.startswith(b"#")'),
+ ]
++
++
++RETIRED = {
++    "M14-promisor-config": "round-24 policy: the blanket promisor-config "
++    "refusal is deleted; the element is re-graded as unknown-absence "
++    "classification in tests/report-audit/promisor-grid.py",
++    "M22-promisor-pack": "round-24 policy: the blanket promisor-pack "
++    "refusal is deleted; the paired-marker detection survives as "
++    "unknown-absence classification",
++}
++
++# Literals that must be re-pointed at the round-24 candidate text before a
++# run: a vanished pattern aborts the whole harness (could-not-evaluate), so
++# the coupling is stated here instead of failing silently.
++NEEDS_REPOINT = {
++    "M27-promisor-boolean": "the promisor boolean literal moves with the "
++    "new promisor-state detection; keep the element, re-choose the literal",
++    "M29-promisor-pack-pairing": "the paired .promisor/.pack expression "
++    "survives as detection, not refusal; re-choose the literal if it moved",
++}
+ 
+ 
+ def grid(auditor):
+@@ -133,6 +154,10 @@
+     doc = {"pristine": "passed", "mutants": len(rows),
+            "killed": sum(r["killed"] for r in rows),
+            "surviving": [r["mutant"] for r in rows if not r["killed"]],
++           "retired": sorted(RETIRED),
++           "retired_reason": RETIRED,
++           "needs_repoint": sorted(NEEDS_REPOINT),
++           "needs_repoint_reason": NEEDS_REPOINT,
+            "rows": rows}
+     if args.json:
+         print(json.dumps(doc, indent=1, sort_keys=True))
+@@ -142,6 +167,10 @@
+                   f"grid={r['grid_exit']} rows={r['failed_rows']}")
+         print(f"mutants={doc['mutants']} killed={doc['killed']} "
+               f"surviving={doc['surviving']}")
++        if RETIRED:
++            print(f"retired={sorted(RETIRED)}")
++        if NEEDS_REPOINT:
++            print(f"needs-repoint={sorted(NEEDS_REPOINT)}")
+     return 0
+ 
+ 

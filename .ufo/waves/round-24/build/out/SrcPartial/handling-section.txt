@@ -1,0 +1,49 @@
+RENDERED §Handling Missing Objects (anchor #_handling_missing_objects)
+source https://git-scm.com/docs/partial-clone accessed 2026-10-21
+source HTML sha256 8a6493225f76dba8e5b1eb75234f7370e057ee87c11e07a2681dbf522b16c9ad
+extraction sha256 cf675da017592ef2b8a718b9a95b019719cb080ae34ba615132a434c6090ce29
+
+id="_handling_missing_objects">Handling Missing Objects
+An object may be missing due to a partial clone or fetch, or missing
+due to repository corruption. To differentiate these cases, the
+local repository specially indicates such filtered packfiles
+obtained from promisor remotes as "promisor packfiles".
+These promisor packfiles consist of a "<name>.promisor" file with
+arbitrary contents (like the "<name>.keep" files), in addition to
+their "<name>.pack" and "<name>.idx" files.
+The local repository considers a "promisor object" to be an object that
+it knows (to the best of its ability) that promisor remotes have promised
+that they have, either because the local repository has that object in one of
+its promisor packfiles, or because another promisor object refers to it.
+When Git encounters a missing object, Git can see if it is a promisor object
+and handle it appropriately. If not, Git can report a corruption.
+This means that there is no need for the client to explicitly maintain an
+expensive-to-modify list of missing objects.[a]
+Since almost all Git code currently expects any referenced object to be
+present locally and because we do not want to force every command to do
+a dry-run first, a fallback mechanism is added to allow Git to attempt
+to dynamically fetch missing objects from promisor remotes.
+When the normal object lookup fails to find an object, Git invokes
+promisor_remote_get_direct() to try to get the object from a promisor
+remote and then retry the object lookup. This allows objects to be
+"faulted in" without complicated prediction algorithms.
+For efficiency reasons, no check as to whether the missing object is
+actually a promisor object is performed.
+Dynamic object fetching tends to be slow as objects are fetched one at
+a time.
+checkout (and any other command using unpack-trees) has been taught
+to bulk pre-fetch all required missing blobs in a single batch.
+rev-list has been taught to print missing objects.
+This can be used by other commands to bulk prefetch objects.
+For example, a "git log -p A..B" may internally want to first do
+something like "git rev-list --objects --quiet --missing=print A..B"
+and prefetch those objects in bulk.
+fsck has been updated to be fully aware of promisor objects.
+repack in GC has been updated to not touch promisor packfiles at all,
+and to only repack other objects.
+The per-repository flag "fetch_if_missing" is used to control whether an
+object lookup will attempt to dynamically fetch a missing object or
+report an error.
+We are not happy with this global variable and would like to remove it,
+but that requires significant refactoring of the object code to pass an
+additional flag.

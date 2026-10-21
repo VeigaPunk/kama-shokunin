@@ -1,0 +1,31 @@
+--- /fast/scratch/hyaku/kama-r24/CaseMissingFleetReport/repo/tools/report-landing-audit.py	2026-10-21 14:54:37.916401755 -0300
++++ /fast/scratch/hyaku/kama-r24/CaseMissingFleetReport/work/mutants/mutant-M4-no-lazy-fetch.py	2026-10-21 14:57:02.317638353 -0300
+@@ -90,7 +90,7 @@
+ # signature verification (both may run repo-configured programs), re-encoded
+ # log output, log.follow/log.showRoot cutoffs and an eagerly read worktree
+ # .mailmap. Old git (< 2.45) rejects --no-lazy-fetch, which is an EvalError.
+-GIT_ISOLATION = ("--no-replace-objects", "--no-lazy-fetch",
++GIT_ISOLATION = ("--no-replace-objects",
+                  "-c", "i18n.logOutputEncoding=UTF-8",
+                  "-c", "log.follow=false", "-c", "log.showRoot=true",
+                  "-c", "log.showSignature=false", "-c", "log.mailmap=false")
+@@ -451,18 +451,11 @@
+         path = Path(repo, git(repo, "rev-parse", "--git-path", rel).strip())
+         if rel == "info/grafts" and grafts_effective(path):
+             raise EvalError(f"{repo}: {path} rewrites history")
+-        if rel == "objects/pack" and path.is_dir() and any(
+-                p.suffix == ".promisor" and p.with_suffix(".pack").exists()
+-                for p in path.iterdir()):
+-            raise EvalError(f"{repo}: partial clone (promisor pack)")
+     listing = git(repo, "config", "--null", "--list",
+                   errors="surrogateescape")
+     for entry in filter(None, listing.split("\0")):
+         key, _, value = entry.partition("\n")
+-        if key == "extensions.partialclone" or (
+-                re.fullmatch(r"remote\..+\.promisor", key)
+-                and git_bool(value)):
+-            raise EvalError(f"{repo}: partial clone ({key})")
++        pass
+ 
+ 
+ def grafts_effective(path):
