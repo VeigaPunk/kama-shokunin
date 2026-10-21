@@ -41,8 +41,18 @@ its correction is not a lane/fleet commit (resolvable kinds) or, for
 
 Exit: 0 clean (no uncorrected defect, no unmatched/invalid errata row);
 1 failed (at least one); 2 could-not-evaluate (missing/irregular report,
-unusable git, malformed ledger, empty round selection, output failure).
+unusable git or non-UTF-8 git output, shallow/grafted/non-sha1 repository,
+malformed ledger, empty round selection, output failure).
 Errors are never verdicts.
+
+Repository trust (round 23, tests/report-audit/repo-state-grid.py):
+refs/replace, lazy fetch, signature display, log re-encoding,
+log.follow/log.showRoot and .mailmap are neutralized; a plain --branch name
+means refs/heads/<name>; shallow, grafted, partial-clone, non-sha1 and
+non-top-level repositories and ref-named citations are refused. Objects
+borrowed through objects/info/alternates or a .git gitfile still resolve as
+local, and other repository-local channels are not claimed. Audit trusted
+repositories only; git >= 2.45 is required.
 """
 from __future__ import annotations
 
@@ -76,25 +86,46 @@ class EvalError(Exception):
     """Could not evaluate: never converted into a verdict."""
 
 
+# Repository-local state that changed, crashed or hijacked verdicts in the
+# round-23 fault grid: refs/replace substitutions, promisor lazy fetches and
+# signature verification (both may run repo-configured programs), re-encoded
+# log output, log.follow/log.showRoot cutoffs and an eagerly read worktree
+# .mailmap. Old git (< 2.45) rejects --no-lazy-fetch, which is an EvalError.
+GIT_ISOLATION = ("--no-replace-objects", "--no-lazy-fetch",
+                 "-c", "i18n.logOutputEncoding=UTF-8",
+                 "-c", "log.follow=false", "-c", "log.showRoot=true",
+                 "-c", "log.showSignature=false", "-c", "log.mailmap=false")
+
+
 def git_env(**extra):
-    """No inherited GIT_* variables and no user/system config, so neither
-    the audited repos nor the selftest fixtures can be redirected."""
+    """No inherited GIT_* variables and no user/system config. This alone
+    does not isolate repository-local config or refs; git() adds
+    GIT_ISOLATION for the channels the fault grid covers."""
     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
     env.update(GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1", **extra)
     return env
 
 
-def git(repo, *args, stdin=None, env=None):
+def git(repo, *args, stdin=None, env=None, errors="strict"):
+    """stdout as UTF-8 text with universal newlines (as text mode did).
+    Strict by default: undecodable output is an EvalError, never a
+    traceback verdict. Callers that only match ASCII fields and never emit
+    the text (lane log records, report path listing) pass surrogateescape."""
     try:
-        proc = subprocess.run(["git", "-C", str(repo), *args], input=stdin,
-                              capture_output=True, text=True,
-                              env=env or git_env())
+        proc = subprocess.run(["git", *GIT_ISOLATION, "-C", str(repo), *args],
+                              input=None if stdin is None else stdin.encode(),
+                              capture_output=True, env=env or git_env())
     except OSError as exc:
         raise EvalError(f"cannot run git: {exc}") from exc
     if proc.returncode != 0:
         raise EvalError(f"git {' '.join(args)} in {repo}: rc={proc.returncode} "
-                        f"{proc.stderr.strip()}")
-    return proc.stdout
+                        f"{proc.stderr.decode(errors='replace').strip()}")
+    try:
+        out = proc.stdout.decode("utf-8", errors)
+    except UnicodeDecodeError as exc:
+        raise EvalError(f"git {' '.join(args)} in {repo}: output is not "
+                        f"UTF-8: {exc}") from exc
+    return out.replace("\r\n", "\n").replace("\r", "\n")
 
 
 def lookup(repos, tokens, peel=""):
@@ -128,6 +159,9 @@ def lookup(repos, tokens, peel=""):
             parts = line.split(" ")
             if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}", parts[0]):
                 raise EvalError(f"cat-file in {repo}: unexpected {line!r}")
+            if not peel and not parts[0].startswith(token):
+                # git resolved a same-named ref before the object prefix
+                raise EvalError(f"{repo}: citation {token} names a ref")
             status[token] = "found"
     return status
 
@@ -146,7 +180,7 @@ def checkable_abbrev(token):
 
 def round_commits(lane_repo, branch, lane, rnd):
     out = git(lane_repo, "log", f"--format=%H{SEP}%an{SEP}%at{SEP}%s{END}",
-              branch)
+              branch, errors="surrogateescape")
     pat = re.compile(rf"^(?:round-{rnd}:|checkpoint\(r{rnd}\))")
     rows = []
     for record in out.split(END):
@@ -154,7 +188,8 @@ def round_commits(lane_repo, branch, lane, rnd):
         if not record:
             continue
         fields = record.split(SEP, 3)
-        if len(fields) != 4 or not re.fullmatch(r"[0-9]+", fields[2]):
+        if (len(fields) != 4 or not re.fullmatch(r"[0-9a-f]{40}", fields[0])
+                or not re.fullmatch(r"[0-9]+", fields[2])):
             raise EvalError(f"unexpected git log record {record[:80]!r}")
         sha, author, atime, subject = fields
         if author == f"{lane}-shokunin" and pat.match(subject):
@@ -265,8 +300,8 @@ def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path, source_urls):
         try:
             text = git(fleet_repo, "show", f"HEAD:{rel}")
         except EvalError as exc:
-            raise EvalError(f"round {rnd}: {rel} not committed in fleet "
-                            f"HEAD") from exc
+            raise EvalError(f"round {rnd}: cannot read {rel} at fleet "
+                            f"HEAD: {exc}") from exc
     cutoff = report_cutoff(fleet_repo, rel)
     committed = cutoff is not None
     if cutoff is None:
@@ -327,7 +362,7 @@ def parse_errata(text, origin):
     return rows
 
 
-def load_errata(args, lane_repo):
+def load_errata(args, lane_repo, tip):
     if args.no_errata:
         return []
     if args.errata:
@@ -336,7 +371,7 @@ def load_errata(args, lane_repo):
                                 args.errata)
         except (OSError, UnicodeDecodeError) as exc:
             raise EvalError(f"cannot read errata {args.errata}: {exc}") from exc
-    return parse_errata(git(lane_repo, "show", f"{args.branch}:{ERRATA}"),
+    return parse_errata(git(lane_repo, "show", f"{tip}:{ERRATA}"),
                         f"{args.branch}:{ERRATA}")
 
 
@@ -352,8 +387,12 @@ def apply_errata(results, errata, repos):
             used.update(e["line"] for e in match)
     unmatched = [e for e in errata
                  if e["round"] in selected and e["line"] not in used]
+    # only hex corrections are looked up: a revision expression such as
+    # HEAD or :/text is never a correction
     status = lookup(repos, [e["correction"] for e in errata
-                            if e["kind"] in RESOLVABLE], "^{commit}")
+                            if e["kind"] in RESOLVABLE and re.fullmatch(
+                                r"[0-9a-f]{7,40}", e["correction"])],
+                    "^{commit}")
     invalid = [e for e in errata if e["kind"] in RESOLVABLE and (
         status.get(e["correction"]) != "found"
         or (e["kind"] == "landed-omitted" and e["correction"] != e["token"]))]
@@ -379,12 +418,48 @@ def parse_rounds(spec, fleet_repo, lane):
         else:
             # committed fleet reports only, never working-tree drafts
             listed = git(fleet_repo, "ls-tree", "-r", "--name-only", "HEAD",
-                         "--", ".ufo/reports")
+                         "--", ".ufo/reports", errors="surrogateescape")
             pat = re.compile(rf"\.ufo/reports/round-([0-9]+)/{re.escape(lane)}\.md")
             present = [int(m.group(1)) for m in map(pat.fullmatch,
                                                     listed.split("\n")) if m]
             rounds.update(n for n in present if n >= lo)
     return rounds
+
+
+def check_history_repo(repo):
+    """Refuse a repository whose visible history is not its object history
+    (shallow boundary, info/grafts), whose missing objects belong to a
+    promisor remote (absence is not evidence there), or whose object names
+    the 40-hex scanners cannot read (non-sha1 object format)."""
+    fmt = git(repo, "rev-parse", "--show-object-format").strip()
+    if fmt != "sha1":
+        raise EvalError(f"{repo}: object format {fmt!r}, not sha1")
+    if git(repo, "rev-parse", "--show-prefix").strip():
+        raise EvalError(f"{repo}: not a repository top level")
+    if git(repo, "rev-parse", "--is-shallow-repository").strip() != "false":
+        raise EvalError(f"{repo}: shallow repository")
+    for rel in ("info/grafts", "objects/pack"):
+        path = Path(repo, git(repo, "rev-parse", "--git-path", rel).strip())
+        if rel == "info/grafts" and os.path.lexists(path):
+            raise EvalError(f"{repo}: {path} rewrites history")
+        if rel == "objects/pack" and path.is_dir() and any(
+                p.suffix == ".promisor" for p in path.iterdir()):
+            raise EvalError(f"{repo}: partial clone (promisor pack)")
+    for line in git(repo, "config", "--list", "--name-only").split("\n"):
+        if line == "extensions.partialclone" or re.fullmatch(
+                r"remote\..+\.promisor", line):
+            raise EvalError(f"{repo}: partial clone ({line})")
+
+
+def resolve_branch(lane_repo, branch):
+    """Pin the lane tip once. A plain name is refs/heads/<name> first, so a
+    same-named tag cannot shadow the branch; other revisions as given."""
+    try:
+        return git(lane_repo, "rev-parse", "--verify",
+                   f"refs/heads/{branch}^{{commit}}").strip()
+    except EvalError:
+        return git(lane_repo, "rev-parse", "--verify",
+                   f"{branch}^{{commit}}").strip()
 
 
 def run(args):
@@ -400,12 +475,14 @@ def run(args):
                     | set(overrides))
     if not rounds:
         raise EvalError("no rounds selected")
-    git(lane_repo, "rev-parse", "--verify", f"{args.branch}^{{commit}}")
+    for repo in (lane_repo, fleet_repo):
+        check_history_repo(repo)
+    tip = resolve_branch(lane_repo, args.branch)
     git(fleet_repo, "rev-parse", "--verify", "HEAD^{commit}")
-    source_urls = load_source_urls(lane_repo, args.branch)
-    results = [audit_round(lane_repo, fleet_repo, args.branch, args.lane, r,
+    source_urls = load_source_urls(lane_repo, tip)
+    results = [audit_round(lane_repo, fleet_repo, tip, args.lane, r,
                            overrides.get(r), source_urls) for r in rounds]
-    errata = load_errata(args, lane_repo)
+    errata = load_errata(args, lane_repo, tip)
     unmatched, invalid = apply_errata(results, errata, (lane_repo, fleet_repo))
     by_kind = {k: 0 for k in KINDS}
     total = corrected = 0
