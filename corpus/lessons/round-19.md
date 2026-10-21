@@ -8,7 +8,7 @@
   token per material citation and verify the blob at that revision; the lesson,
   `SOURCES.md` (S055 qualification), `SCORECARD.md` erratum and
   `residual/assignments.json` carry the corrections. Counting command:
-  `python3 tools/citation-provenance.py` (prints `required=3 found=3 verified=3
+  `python3 tools/citation-provenance.py` (prints `required=4 found=4 verified=4
   missing=0 mismatch=0`, exit 0; before the tokens: `missing=3`, exit 1).
 - **C2 operability, 8 → 8 (delta 0; sourced in S057):** a sixth receipt pin,
   `--expect-install-tree-sha256`, plus `tests/llamacpp-live/install-tree-grid.py`.
