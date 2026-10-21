@@ -79,7 +79,6 @@ KINDS = ("unresolved-full-hash", "landed-unresolved", "landed-ambiguous",
          "landed-omitted", "landed-section-missing")
 RESOLVABLE = ("unresolved-full-hash", "landed-unresolved", "landed-ambiguous",
               "landed-omitted")
-SEP, END = "\x1f", "\x1e"
 
 
 class EvalError(Exception):
@@ -179,19 +178,23 @@ def checkable_abbrev(token):
 
 
 def round_commits(lane_repo, branch, lane, rnd):
-    out = git(lane_repo, "log", f"--format=%H{SEP}%an{SEP}%at{SEP}%s{END}",
+    """NUL-delimited records: git truncates names and subjects at NUL, so
+    no commit text can inject or shift a field (\\x1f/\\x1e can)."""
+    out = git(lane_repo, "log", "-z", "--format=%H%x00%an%x00%at%x00%s",
               branch, errors="surrogateescape")
+    fields = out.split("\0")
+    if fields and fields[-1] == "":
+        fields.pop()
+    if len(fields) % 4:
+        raise EvalError(f"unexpected git log output ({len(fields)} fields)")
     pat = re.compile(rf"^(?:round-{rnd}:|checkpoint\(r{rnd}\))")
     rows = []
-    for record in out.split(END):
-        record = record.lstrip("\n")
-        if not record:
-            continue
-        fields = record.split(SEP, 3)
-        if (len(fields) != 4 or not re.fullmatch(r"[0-9a-f]{40}", fields[0])
-                or not re.fullmatch(r"[0-9]+", fields[2])):
-            raise EvalError(f"unexpected git log record {record[:80]!r}")
-        sha, author, atime, subject = fields
+    for i in range(0, len(fields), 4):
+        sha, author, atime, subject = fields[i:i + 4]
+        if (not re.fullmatch(r"[0-9a-f]{40}", sha)
+                or not re.fullmatch(r"[0-9]{1,12}", atime)):
+            raise EvalError(f"unexpected git log record {sha[:80]!r} "
+                            f"{atime[:40]!r}")
         if author == f"{lane}-shokunin" and pat.match(subject):
             rows.append({"sha": sha, "atime": int(atime), "subject": subject})
     return rows
@@ -242,10 +245,7 @@ def census_source_urls(text):
 
 def load_source_urls(lane_repo, branch):
     """Read only the committed regular SOURCES.md blob; absent is legacy."""
-    try:
-        entry = git(lane_repo, "ls-tree", branch, "--", SOURCES).rstrip("\n")
-    except UnicodeDecodeError as exc:
-        raise EvalError(f"cannot read {branch}:{SOURCES} tree entry: {exc}") from exc
+    entry = git(lane_repo, "ls-tree", branch, "--", SOURCES).rstrip("\n")
     if not entry:
         return None
     metadata, sep, path = entry.partition("\t")
@@ -253,10 +253,7 @@ def load_source_urls(lane_repo, branch):
     if (not sep or "\n" in entry or path != SOURCES or len(fields) != 3
             or fields[1] != "blob" or fields[0] not in ("100644", "100755")):
         raise EvalError(f"{branch}:{SOURCES}: not a regular blob")
-    try:
-        text = git(lane_repo, "cat-file", "blob", fields[2])
-    except UnicodeDecodeError as exc:
-        raise EvalError(f"cannot decode {branch}:{SOURCES}: {exc}") from exc
+    text = git(lane_repo, "cat-file", "blob", fields[2])
     forms = census_source_urls(text)
     if not forms:
         return None
@@ -916,6 +913,13 @@ def main(argv=None):
         try:
             print(f"could-not-evaluate: output: {exc}", file=sys.stderr)
         except OSError:
+            pass
+        return 2
+    except Exception as exc:  # an unanticipated error is never a verdict
+        try:
+            print(f"could-not-evaluate: internal: {type(exc).__name__}: "
+                  f"{exc!r}"[:2000], file=sys.stderr)
+        except Exception:
             pass
         return 2
 

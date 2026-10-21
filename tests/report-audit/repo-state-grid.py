@@ -445,6 +445,38 @@ def f_quote_path(tmp):
     require(b"caf\xe9.md" in raw, "ls-tree did not emit raw path bytes")
     return lane, fleet, ["open-range"], None
 
+def f_huge_round(tmp):
+    """A 5000-digit round number exceeds Python's int-conversion limit."""
+    lane, fleet, _ = base(tmp)
+    return lane, fleet, ["rounds=" + "9" * 5000], None
+
+
+def f_subject_injection(tmp):
+    """A non-round subject carrying the old \\x1e/\\x1f record separators
+    injects a forged required round commit into the parsed log."""
+    lane, fleet, lc = base(tmp)
+    forged = ("note\x1e" + "f" * 40 + "\x1fkama-shokunin\x1f1500"
+              "\x1fround-1: forged").encode()
+    bad = raw_commit(lane, g(lane, "rev-parse", f"{lc}^{{tree}}"), [lc],
+                     forged + b"\n", 1100, author="someone")
+    g(lane, "update-ref", "refs/heads/master", bad)
+    return lane, fleet, [], None
+
+
+def f_huge_timestamp(tmp):
+    """A lane commit whose author time has 5000 digits."""
+    lane, fleet, lc = base(tmp)
+    tree = g(lane, "rev-parse", f"{lc}^{{tree}}")
+    body = (f"tree {tree}\nparent {lc}\n"
+            f"author kama-shokunin <a@x> {'9' * 5000} +0000\n"
+            f"committer kama-shokunin <a@x> 1100 +0000\n\n"
+            f"round-1: overflow\n").encode()
+    bad = g(lane, "hash-object", "-t", "commit", "-w", "--literally",
+            "--stdin", data=body)
+    g(lane, "update-ref", "refs/heads/master", bad)
+    return lane, fleet, [], None
+
+
 
 def o_alternates(tmp):
     lane, fleet = pair(tmp)
@@ -532,6 +564,9 @@ CASES = [
     ("F21-nested-subdirectory-lane", "fault", f_nested_subdir, 2, None),
     ("F22-utf16-log-cutoff", "fault", f_utf16_cutoff, 0, []),
     ("F23-promisor-pack-without-config", "fault", f_promisor_pack, 2, None),
+    ("F24-huge-round-number", "fault", f_huge_round, 2, None),
+    ("F25-subject-record-injection", "fault", f_subject_injection, 0, []),
+    ("F26-huge-author-timestamp", "fault", f_huge_timestamp, 2, None),
     ("O01-alternates-foreign-object", "open", o_alternates, 1,
      ["landed-unresolved", "unresolved-full-hash"]),
     ("O02-gitfile-redirect", "open", o_gitfile, 1, ["landed-omitted"]),
@@ -551,6 +586,8 @@ REASONS = {
     "F16-errata-invalid-utf8": "output is not UTF-8",
     "F21-nested-subdirectory-lane": "not a repository top level",
     "F23-promisor-pack-without-config": "promisor pack",
+    "F24-huge-round-number": "could-not-evaluate: internal: ValueError",
+    "F26-huge-author-timestamp": "unexpected git log record",
 }
 
 
@@ -565,7 +602,9 @@ def run_case(auditor, case, tmp):
     lane, fleet, extra, marker = build(tmp)
     argv = [sys.executable, str(auditor), "--lane-repo", str(lane),
             "--fleet-repo", str(fleet), "--json"]
-    argv += ["--rounds", "1-" if "open-range" in extra else "1"]
+    rounds = [e[7:] for e in extra if e.startswith("rounds=")]
+    argv += ["--rounds", rounds[0] if rounds else
+             "1-" if "open-range" in extra else "1"]
     if "errata" not in extra:
         argv.append("--no-errata")
     try:

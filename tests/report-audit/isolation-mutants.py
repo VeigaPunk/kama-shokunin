@@ -56,7 +56,7 @@ MUTANTS = [
      '                                r"[0-9a-f]{7,40}", e["correction"])],',
      'if e["kind"] in RESOLVABLE],'),
     ("M20-log-sha-shape",
-     'not re.fullmatch(r"[0-9a-f]{40}", fields[0])\n                or ', ""),
+     'not re.fullmatch(r"[0-9a-f]{40}", sha)\n                or ', ""),
     ("M21-newlines", 'return out.replace("\\r\\n", "\\n").replace("\\r", "\\n")',
      'return out'),
     ("M22-promisor-pack",
@@ -64,6 +64,10 @@ MUTANTS = [
     ("M23-strict-decode-catch",
      'out = proc.stdout.decode("utf-8", errors)',
      'out = proc.stdout.decode("utf-8", "replace")'),
+    ("M24-catch-all", "except Exception as exc:  # an unanticipated error "
+     "is never a verdict", "except ZeroDivisionError as exc:"),
+    ("M25-timestamp-shape", 're.fullmatch(r"[0-9]{1,12}", atime)',
+     're.fullmatch(r"[0-9]+", atime)'),
 ]
 
 
