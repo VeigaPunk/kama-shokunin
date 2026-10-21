@@ -1195,3 +1195,37 @@ and in SKILL/lesson, not treated as current authority.
   about13 minutes after round completion (not24 minutes after completion).
   Exact paths and action receipt `round-20/evidence/r19-scratch-removal.txt`.
 
+
+## round 20 — landed implementation and committed measurement
+
+- Declared C1 calibration7→7 (named error classification), C2 operability8→8
+  (new offline GGUF declared-identity replay capability). Motivation and sourced
+  Gate: `corpus/lessons/round-20.md`; mistakes M1–M6, KQ25–KQ27.
+- Work/frozen population landed `33a6777866d0f63d894ef21bc863486bcb35b56c`;
+  counting tools/recipe completed at measured
+  `0957ce619789d13bb5779606078fa1498114d2c7`.
+- Official `python3 .ufo/waves/round-20/run.py --recipe
+  .ufo/waves/round-20/recipe.json --out .ufo/waves/round-20/runs/0957ce61`:
+  21/21 expected exits, harness0. C1 cells15, false classes6→0, no unrun/witness
+  mismatch; C2 absent→working, fixtures23/23, real-file oracle and captured
+  receipt engine-agreement. Model declares2048; captured train2048, props256.
+- Source census57→64 (A54→61, C3; mined46→51, queued5→6, rejected6→7),
+  validate0, five W04 duplicate URLs (S031/S043/S056/S060/S064). New knowledge
+  entries cite mined sources, not row-count expansion alone.
+- Citation checker now24 counted invocations, registry17 verified (4 old +13
+  material revision/path instances); observed-digest branch fail-capable.
+  Official gate77 mutation tally is committed; the record is not dirty-tree
+  `working-tree-on-5b108c1a`. Survivor pure classifier checks49/49; no full
+  42-run survivor measurement this round.
+- Build wave72 spawned after one whole-call72 refusal and same-payload retry;
+  original terminal70 completed/2 dead (CellDesign, SrcGateStandard), no
+  replacement. Reports71, including SrcGateStandard's partial artifact;
+  KnowGguf format nonconformant. Counts41 confirm/27 partial/2 refute/1
+  nonconformant; terminal status is separate from first-line report counts.
+- New capability row follows the executed demonstration; no model quality,
+  current consumer health or authenticated execution claim. Cross-domain
+  findings stay advisory; detailed conformance defects/limits in lesson20.
+
+
+- R19 residuals re-verified and bounded: grid rejection now requires an emitted `INVALID` verdict (15-cell frozen/current census); citation observed-digest selftest case is fail-capable; the 13 R18 citation instances are in the 17-row registry and verify. R18 `SCORECARD.md:813`'s “they agree” is corrected at the end of the scorecard and in `corpus/lessons/round-18.md:474-480`: only summary/outcome/run-status fields agree; full results and tool hashes differ, and no R20 full 42-run survivor measurement is claimed.
+- S051’s shifted source pointer is corrected append-only at `corpus/lessons/round-18.md:447-451`; the stable “S051 identity-label clarification” heading replaces an unqualified line range. The current source span is `corpus/SOURCES.md:210-215`; no registry cells were rewritten.

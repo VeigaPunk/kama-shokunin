@@ -885,3 +885,42 @@ identity, current endpoint health, model quality or authenticated execution.
 Other axes held: freshness 8, coverage 9, depth 7, adjacency 7. The final
 measurement appendix records commands, counts and the measured revision.
 
+
+### Round-20 measured results — committed tree 0957ce61
+
+Work/frozen-population commit `33a6777866d0f63d894ef21bc863486bcb35b56c`;
+measured tree `0957ce619789d13bb5779606078fa1498114d2c7`.
+`python3 .ufo/waves/round-20/run.py --recipe .ufo/waves/round-20/recipe.json
+--out .ufo/waves/round-20/runs/0957ce61` ran **21 commands**, all declared
+exits met, harness exit0. Raw streams, exits, argv and SHA256 are retained in
+that output directory; no live model server was launched.
+
+| Claim | Axis/score | Before → after | Counting command | Evidence |
+|---|---|---|---|---|
+| C1 finite named error regressions | calibration 7 → 7 | **15** pinned cells; misclassified **6 → 0**; frozen witness mismatches0, red-vector mismatches0, unrun0; frozen arm exits1, current arm0, pair0 | `python3 tools/error-verdict-census.py --arm frozen --json`; `--arm current --json`; `--json` | `runs/0957ce61/error-{frozen,current,pair}.stdout`; frozen source at 37bd4c5 |
+| C2 offline GGUF declared identity / captured agreement | operability 8 → 8; new capability | tool absent at base → working reader; **23/23** independent fixtures pass; real-file oracle and receipt agreement pass, mismatches0/unavailable0 | `python3 .ufo/waves/round-20/c2/measure.py --json` | `runs/0957ce61/gguf-measure.stdout`; model version3, tensors48, KV19, declared2048 = captured training2048; props256 informational |
+
+Supplementary routed repairs: citation registry **4 → 17** (13 reconstructed
+revision/path instances, not all citations), all17 verified; citation selftest24
+invocations, GGUF selftest30/30, measurement selftest7/7, survivor pure-classifier
+checks49/49. Receipt gate6 VALID +1 NOT-EVALUATED, 77 mutations and unreadable
+rejected. No-tree-pin grid remains0/3 rejected (exit1); six-pin grid3/3 (exit0).
+
+### capabilities: append — first working round 20
+
+| Name | What it can do | Demonstration | First-working round |
+|---|---|---|---|
+| gguf-declared-identity-replay | decode bounded local GGUF metadata offline, bind the file SHA to a captured v3 receipt and compare declared training/embedding/vocabulary metadata; not loaded-weight authentication | `python3 tools/gguf-identity.py /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf --receipt .ufo/waves/round-18/live-recovery/receipt-1.json --json`; `runs/0957ce61/gguf-receipt.stdout` exit0; independent oracle/fixture measure above | 20 |
+
+The three canonical round-16 capabilities remain; this adds one repertoire row.
+Other scores held (freshness8, coverage9, depth7, adjacency7); score changes and
+outside admission remain the non-author closure's decision. Capability window
+resets by this working demonstration, not by source-row growth.
+
+Planned: historical crash-as-kill leaves outside the 15-cell set, broader
+receipt-header minimization, symlinked soname identity and K05/other-engine
+serving evidence remain named frontier. No next round is started here.
+
+### Round-20 correction — R18 C2 survivor output scope
+
+The unqualified “they agree” at line 813 is limited by `corpus/lessons/round-18.md:474-480`: the pre-official JSON and official stdout agree on the 15 item outcomes, summary counts, frozen witnesses and 42 run-status tuples, not on the full documents. The R20 comparison found equal `.counts` but unequal `.results` and different `tool.sha256` values (`87cad1ca…` vs `ac934794…`). R20 did not rerun the full 42-run survivor counter.

@@ -78,6 +78,8 @@ a deliberate counterexample; no broader mutation policy or model evaluation.
 | M4 | Filed lesson line rewritten | `30ed378`, round-18 line 42; `Lesson18Line42.md` | PROTOCOL append-only correction rule | named appendix records old and superseding text; history retained |
 | M5 | Non-spawned falsify wave attributed criticism | round-19 falsify 0/66; `FalsifyLabelFix.md` | disclosure rule | append corrections: critics were build seats, not outside reviewers |
 | M6 | Seat outlived round and retained scratch | `evidence/r19-scratch-removal.txt`; `LessonMistakes.md` | seat cleanup rule | L1 stopped orphan strace/survivors process tree and removed authorized r19 scratch; 24:31 total elapsed, about 13 minutes after round completion, not 24 minutes after completion |
+| M7 | Whole-output agreement inferred from equal survivor summaries | R19 route 7d; R18 `c2-survivors.json` versus `c2-survivors.stdout`: counts equal, full `results` unequal, tool hashes `87cad1cad4565be01ce06e7f92c578c2f449c951894a880166040c3f118dc3ac` versus `ac934794af1eee8067ea11f7f8cc31702ea7dfad257fec2649f2d638477bac75` | KQ14 content review and KQ17 verdict/count separation | R18 lesson `:474-480` limits agreement to 15 item outcomes, counts, frozen witnesses and 42 run-status tuples; R20 did not rerun the full 42-run counter. The result inequality falsifies whole-document equality. |
+| M8 | S051 source range omitted a sentence and shifted after S057 | `.ufo/waves/round-20/build/out/S051AnchorShift/qualification-drafts.md:29-31`; current source text `corpus/SOURCES.md:210-215` | KQ7 append-only stale-anchor rule | R18 lesson `:447-451` appends the revision-qualified correction and stable heading; source row cells remain unchanged. |
 
 ## Recovery and author boundaries
 
@@ -124,4 +126,57 @@ also makes the retained FC-f6cache selftest arm inconclusive (wrapper_checks
 about its measured code, not a promise of the new counter's full-run tally.
 `SurvivorsArmEnum.md` and `arm-regression-transcript-final.txt` record this.
 No full 42-run survivor measurement was rerun in round20.
+
+
+## Official measurement — committed 0957ce61
+
+Work/population landed `33a6777866d0f63d894ef21bc863486bcb35b56c`; complete
+measured tree `0957ce619789d13bb5779606078fa1498114d2c7`.
+`python3 .ufo/waves/round-20/run.py --recipe .ufo/waves/round-20/recipe.json
+--out .ufo/waves/round-20/runs/0957ce61` exits0: **21/21** declared exits met.
+`commands.json` retains argv, measured revision, raw-stream digests and exits.
+
+- C1: `tools/error-verdict-census.py --arm frozen --json` exit1 (6 false
+  classes/15); `--arm current --json` exit0 (0/15); pair exit0, frozen witness
+  mismatches0, red-vector mismatches0, unrun `[]`. Synthetic emitted-verdict
+  positives and genuine complete target failure remain; no all-error shortcut.
+  The timeout cell uses a pinned immediate TimeoutExpired shim (not a real
+  long hang); the grid's own selftest also exercises a bounded actual timeout.
+- C2: `c2/measure.py --json` exit0, fixtures23/23, no mismatches/tampered/
+  unavailable inputs, oracle validated, model parser actually observed.
+  Base reports `capability_absent`, not a fabricated parser failure.
+  Real file: GGUFv3/tensors48/KV19, llama context2048, blocks5, embedding64;
+  captured meta.n_ctx_train2048, n_embd64, n_vocab512 agree. Props256/slots4
+  remain informational with no division. Scope is receipt self-report.
+- Citation count17/17 (4 +13 reconstructed instances), selftest24 cases;
+  GGUF selftest30/30, aggregate measure selftest7/7; survivor pure checks49/49.
+  Gate6 VALID +1 NOT-EVALUATED, mutations77 plus unreadable rejected. Actual
+  old receipt grid0/3 without tree pin (exit1), 3/3 with pin (exit0).
+- Census command `scripts/sources-census.sh validate --root
+  /home/vgpnk/Projects/shokunin kama` exit0 with W04 for S031/S043/S056/S060/
+  S064; `census` exit0: rows57→64, A54→61/C3, mined46→51, queued5→6,
+  rejected6→7. No existing immutable source cell changed.
+
+### Build-wave disposition
+
+72 seats, roles scout16/reviewer13/executor12/critic6/mutation-tester2/
+revenger2/sentinel2/connector6/scribe12/simplifier1; planner is L1.
+First entire72 call refused, second unchanged call spawned72 after ~3 minutes.
+Original70 completed/2 dead: CellDesign and SrcGateStandard (Zai 429 type1302,
+retry budget exhausted after5). SrcGateStandard left an artifact; CellDesign
+did not. Same-seat integration continuations were author-side; StaleCountSweep
+continuation failed on Haiku429 with retry-after8231000ms, its original report
+retained. No dead seat replaced. Native result/refusal, registry and accounting
+are under `build/`; counts script41 confirm/27 partial/2 refute/1
+format-nonconformant (KnowGguf), files71. Out-only reports copied byte-exact;
+two scout finals are explicitly L1 transcriptions.
+
+CritC1Wording's scope refute accepted. ProbeCheckCrash's refute describes
+fail-closed subject-row failure, not a mutation kill and not a repaired cell.
+Other partials are bounded by the delivered artifacts and limits above.
+The three ordinary fixes after delivery were typed input/alias/Unicode
+handling, strict error aggregate exits, and explicit survivor observation
+evidence; the official results, not draft selftest labels, are authoritative.
+The production aggregate runner omits the worker's redundant fixture-only
+mode; original worker sources/transcripts remain versioned advice.
 
