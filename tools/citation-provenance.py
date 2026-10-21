@@ -76,6 +76,8 @@ def check(lane, registry, docs, allow_off_ref=False):
     rows = json.loads(Path(registry).read_text(encoding="utf-8"))
     if not isinstance(rows, list) or not rows:
         raise ValueError("registry must be a non-empty JSON array")
+    if not all(isinstance(row, dict) for row in rows):
+        raise ValueError("registry rows must be JSON objects")
     tokens, unreadable = scan(docs)
     results = []
     for row in rows:
@@ -145,19 +147,110 @@ def selftest():
         digest = hashlib.sha256(b"payload\n").hexdigest()
         doc = lane / "doc.md"
         registry = lane / "required.json"
-        registry.write_text(json.dumps([{
+        base_row = {
             "id": "fixture", "rev": rev, "path": "evidence.txt",
-            "sha256": digest}]), encoding="utf-8")
+            "sha256": digest}
+        registry.write_text(json.dumps([base_row]), encoding="utf-8")
+
+        cases = 0
+
+        def check_case(*args, **kwargs):
+            nonlocal cases
+            cases += 1
+            return check(*args, **kwargs)
 
         def run(text, expect):
             doc.write_text(text, encoding="utf-8")
-            counts, _ = check(lane, registry, [doc], allow_off_ref=True)
+            counts, _ = check_case(lane, registry, [doc], allow_off_ref=True)
             ok = ((counts["missing"], counts["mismatch"]) == (0, 0)
                   if expect == 0 else
                   (counts["missing"], counts["mismatch"]) != (0, 0))
             if not ok:
                 failures.append(f"{expect}: {counts}")
             return counts
+
+        def cli_case(label, expected, *args, stdout_contains=None,
+                     stderr_contains=None, child_env=None):
+            nonlocal cases
+            cases += 1
+            try:
+                cli_env = env if child_env is None else {**env, **child_env}
+                result = subprocess.run(
+                    [sys.executable, str(Path(__file__).resolve()),
+                     *(str(arg) for arg in args)],
+                    env=cli_env, stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE, text=True, timeout=30)
+            except (OSError, subprocess.TimeoutExpired) as exc:
+                failures.append(f"cli-{label}: invocation failed: {exc}")
+                return
+            if (result.returncode != expected
+                    or (stdout_contains is not None
+                        and stdout_contains not in result.stdout)
+                    or (stderr_contains is not None
+                        and stderr_contains not in result.stderr)):
+                failures.append(
+                    f"cli-{label}: expected exit={expected} "
+                    f"stdout~={stdout_contains!r} "
+                    f"stderr~={stderr_contains!r}; "
+                    f"got exit={result.returncode} "
+                    f"stdout={result.stdout!r} stderr={result.stderr!r}")
+
+        doc.write_text(f"cite({rev}, evidence.txt, sha256={digest})",
+                       encoding="utf-8")
+        not_git = Path(tmp) / "not-git"
+        not_git.mkdir()
+        cli_case("unusable-git", 2, "--lane", not_git,
+                 "--registry", registry, "--docs", doc, "--allow-off-ref",
+                 stderr_contains="lane is not a git repository")
+        cli_case("unusable-registry", 2, "--lane", lane,
+                 "--registry", Path(tmp) / "absent-registry.json",
+                 "--docs", doc, "--allow-off-ref")
+        malformed_registry = Path(tmp) / "malformed-registry.json"
+        malformed_registry.write_text("[1]", encoding="utf-8")
+        cli_case("malformed-registry-row", 2, "--lane", lane,
+                 "--registry", malformed_registry, "--docs", doc,
+                 "--allow-off-ref",
+                 stderr_contains="registry rows must be JSON objects")
+        missing_doc = lane / "absent.md"
+        cli_case("unreadable-doc", 2, "--lane", lane,
+                 "--registry", registry, "--docs", missing_doc,
+                 "--allow-off-ref", stdout_contains="docs_unreadable=1",
+                 stderr_contains="cannot read")
+        doc.write_text("no token here", encoding="utf-8")
+        cli_case("missing-citation", 1, "--lane", lane,
+                 "--registry", registry, "--docs", doc, "--allow-off-ref",
+                 stdout_contains="missing=1")
+        doc.write_text(f"cite({rev}, evidence.txt, sha256={'0' * 64})",
+                       encoding="utf-8")
+        cli_case("mismatching-citation", 1, "--lane", lane,
+                 "--registry", registry, "--docs", doc, "--allow-off-ref",
+                 stdout_contains="mismatch=1")
+        doc.write_text(f"cite({rev}, evidence.txt, sha256={digest})",
+                       encoding="utf-8")
+        cli_case("off-ref-citation", 1, "--lane", lane,
+                 "--registry", registry, "--docs", doc,
+                 stdout_contains="off_ref=1")
+        bad_rev = "f" * 40
+        registry.write_text(json.dumps([dict(base_row, rev=bad_rev)]),
+                             encoding="utf-8")
+        doc.write_text(
+            f"cite({bad_rev}, evidence.txt, sha256={digest})",
+            encoding="utf-8")
+        cli_case("unresolvable-revision", 1, "--lane", lane,
+                 "--registry", registry, "--docs", doc, "--allow-off-ref",
+                 stdout_contains="mismatch=1")
+        no_bin = Path(tmp) / "no-bin"
+        no_bin.mkdir()
+        registry.write_text(json.dumps([base_row]), encoding="utf-8")
+        doc.write_text(f"cite({rev}, evidence.txt, sha256={digest})",
+                       encoding="utf-8")
+        cli_case("unusable-git-executable", 2, "--lane", lane,
+                 "--registry", registry, "--docs", doc, "--allow-off-ref",
+                 child_env={"PATH": str(no_bin)}, stderr_contains="git")
+        registry.write_text(json.dumps([base_row]), encoding="utf-8")
+        doc.write_text(f"cite({rev}, evidence.txt, sha256={digest})",
+                       encoding="utf-8")
+
         run(f"cite({rev}, evidence.txt, sha256={digest})", 0)
         run(f"cite({rev}, evidence.txt, sha256={digest})\n"
             f"cite({rev}, evidence.txt, sha256={digest})", 0)
@@ -173,7 +266,7 @@ def selftest():
         stale = "2" * 64
         doc.write_text(f"cite({rev}, evidence.txt, sha256={stale})",
                        encoding="utf-8")
-        counts, _ = check(lane, registry, [doc], allow_off_ref=True)
+        counts, _ = check_case(lane, registry, [doc], allow_off_ref=True)
         if counts["mismatch"] != 1:
             failures.append(f"stale-equal: {counts}")
         if not DEFAULT_DOCS or not all(d for d in DEFAULT_DOCS):
@@ -184,22 +277,35 @@ def selftest():
         bound = json.loads(registry.read_text(encoding="utf-8"))
         bound[0]["doc"] = "doc.md"
         registry.write_text(json.dumps(bound), encoding="utf-8")
-        counts, _ = check(lane, registry, [other], allow_off_ref=True)
+        counts, _ = check_case(lane, registry, [other], allow_off_ref=True)
         if counts["missing"] != 1:
             failures.append(f"doc-binding: {counts}")
         doc.write_text(f"cite({rev}, evidence.txt, sha256={digest})",
                        encoding="utf-8")
-        counts, _ = check(lane, registry, [doc], allow_off_ref=True)
+        counts, _ = check_case(lane, registry, [doc], allow_off_ref=True)
         if (counts["missing"], counts["verified"]) != (0, 1):
             failures.append(f"doc-binding-ok: {counts}")
-        counts, _ = check(lane, registry, [doc, lane / "absent.md"], allow_off_ref=True)
+        counts, _ = check_case(lane, registry, [doc, lane / "absent.md"], allow_off_ref=True)
         if counts["docs_unreadable"] != 1 or counts["verified"] != 1:
             failures.append(f"unreadable-doc: {counts}")
+
+        claimed_digest = hashlib.sha256(b"different payload\n").hexdigest()
+        row = json.loads(registry.read_text(encoding="utf-8"))
+        row[0]["sha256"] = claimed_digest
+        registry.write_text(json.dumps(row), encoding="utf-8")
+        doc.write_text(
+            f"cite({rev}, evidence.txt, sha256={claimed_digest})",
+            encoding="utf-8")
+        counts, _ = check_case(lane, registry, [doc], allow_off_ref=True)
+        actual = (counts["missing"], counts["mismatch"], counts["verified"])
+        if actual != (0, 1, 0):
+            failures.append(f"observed-digest: {counts}")
+
     if failures:
         for f in failures:
             print(f"SELFTEST FAIL {f}", file=sys.stderr)
         return 1
-    print("selftest: ok (15 cases)")
+    print(f"selftest: ok ({cases} cases)")
     return 0
 
 

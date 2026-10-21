@@ -1,0 +1,42 @@
+ConnectKengaku (kama round 20) — pinned source anchors, fetched/read 2026-10-21. Verbatim lines.
+llama.cpp commit 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad (= receipt build_info b11755-704366d76)
+
+[A] tools/server/server-context.cpp — lane copy .ufo/waves/round-17/sources/llama.cpp-704366d76/tools/server/server-context.cpp
+    sha256 dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329 (== receipt-1.json source_binding[0].file_sha256)
+    :1375  SRV_WRN("the slot context (%d) exceeds the training context of the model (%d) - capping\n",
+    :4654  // context size of a single slot, capped by --kv-unified-per-slot and by the training context of the model
+    :4662  return std::min(res, llama_model_n_ctx_train(model_tgt));
+    :4829  /* slot_n_ctx              */ impl->n_ctx_slot(),
+    :4848  /* model_n_ctx_train       */ llama_model_n_ctx_train(impl->model_tgt),
+    :5186  {"n_ctx",       meta.slot_n_ctx},            (/v1/models data[].meta)
+    :5187  {"n_ctx_train", meta.model_n_ctx_train},
+    :5236  { "n_ctx",  meta.slot_n_ctx },                 (/props default_generation_settings, :5243)
+
+[B] https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/src/llama-model.cpp
+    HTTP 200, 186516 B, sha256 4a209cc688c2da1a5fe4eecf08e1a397b3bea71e93f0f37c42979200c9399182
+    :1382  ml.get_key(LLM_KV_CONTEXT_LENGTH,          hparams.n_ctx_train);
+
+[C] https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/src/llama-model-loader.h
+    HTTP 200, 9885 B, sha256 4eb5318f7b70333015386d612738f507153770e4e5635895b2c1d8355ff22103
+    :207   bool get_key(enum llm_kv kid, T & result, bool required = true);
+
+[D] https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/src/llama-model-loader.cpp
+    HTTP 200, 80776 B, sha256 7975d83406627e405d36876472495c6111696e70db66c65a629d6213ec54fc04
+    :32    #define LLAMA_FTYPE_PREFIX "(guessed) "
+    :76    return (ftype & LLAMA_FTYPE_GUESSED) ? name : name + guessed_prefix_len;
+    :790   // this is a way to mark that we have "guessed" the file type
+    :795   if (get_key(LLM_KV_GENERAL_FILE_TYPE, ftype_val, false)) {
+    :422   auto it = kv_overrides.find(key);
+    :430   throw std::runtime_error(format("key not found in model: %s", key.c_str()));
+
+[E] kengaku-shokunin @ e0037a8da26850fcf4c4b6ba40f14a017b3ecf2d (read-only; file clean vs HEAD)
+    corpus/evidence/round12-fleet/r12-endpoint-freshness.md
+    :351-353 "Script (reproduce verbatim; stdlib only; reads the file strictly sequentially and stops at the end of the tensor-info table"
+    :369   if et == 8: return sum(len(s64()) for _ in range(n))   # ARRAY of STRING
+    :400   data_offset = (-f.tell()) % 32 + f.tell()
+    :432   tokenizer.ggml.tokens payload bytes: (1372760, 151936)
+    :441-442 "Σ raw tensor bytes = **10 327 717 888**, which is **exactly** the served `meta.size`."
+    corpus/evidence/round10-fleet/models-34113.json data[0].meta: n_ctx 16384, n_ctx_train 262144, ftype "IQ2_XXS - 2.0625 bpw"
+    corpus/evidence/round10-fleet/r10-scout-endpoint.md:67 "(unified KV ⇒ each slot reports the **full** 16384, not 16384/2)"
+    PROVINCE.md:136 "| **kama** | serving plane + endpoint identity —"
+    SKILL.md:478-479 "every number from these probes is a **sub-3-bit (UD-IQ2_XXS) + llama.cpp serving-stack** observation"

@@ -928,6 +928,37 @@ def selftest_summary_ok(run):
     return bool(match and match.group(1) == match.group(2))
 
 
+def selftest_enumeration_matches(base_run, run):
+    """Require the mutant selftest to report the baseline's full case set."""
+    base_doc, _ = parse_json_bytes(base_run["stdout"])
+    doc, _ = parse_json_bytes(run["stdout"])
+    if isinstance(base_doc, dict) and isinstance(doc, dict):
+        counts = (
+            "selftest", "matrix_files", "matrix_tests", "matrix_sha256",
+            "rows_checked", "families_covered", "faults_checked",
+            "classifier_cases", "wrapper_checks",
+        )
+        if not all(key in base_doc and doc.get(key) == base_doc[key]
+                   for key in counts):
+            return False
+        return all(
+            isinstance(base_doc.get(key), dict)
+            and isinstance(doc.get(key), dict)
+            and set(doc[key]) == set(base_doc[key])
+            for key in ("gate", "escape"))
+    summary = r"(?m)^(\d+)/(\d+) selftest cases passed\s*$"
+    base_match = re.search(summary, tail(base_run["stdout"], 8000))
+    output = tail(run["stdout"], 8000)
+    match = re.search(summary, output)
+    if not base_match or not match:
+        return False
+    if (base_match.group(1) != base_match.group(2)
+            or match.group(2) != base_match.group(2)):
+        return False
+    failed_cases = sum(line.startswith("FAIL") for line in output.splitlines())
+    return int(match.group(1)) + failed_cases == int(match.group(2))
+
+
 def selftest_arm(base_run, run, expected_failure):
     """Only a named selftest assertion is a kill; exit 2 is inconclusive."""
     record = run["record"]
@@ -942,6 +973,8 @@ def selftest_arm(base_run, run, expected_failure):
             else ("inconclusive", "exit 0 without a valid passing selftest")
     if record["exit"] != 1:
         return "inconclusive", f"unexpected selftest exit {record['exit']}"
+    if not selftest_enumeration_matches(base_run, run):
+        return "inconclusive", "selftest did not enumerate the baseline case set"
     doc, _ = parse_json_bytes(run["stdout"])
     if isinstance(doc, dict) and isinstance(doc.get("problems"), list):
         targeted = (doc.get("passed") is False and any(
@@ -1721,13 +1754,74 @@ def selftest_pure(check):
     def fake(exit_code, stdout):
         return {"record": {"exit": exit_code, "timed_out": False,
                            "spawn_error": None}, "stdout": stdout}
-    base_selftest = fake(0, b'{"passed":true,"problems":[]}')
-    target_failure = fake(1, json.dumps({
-        "passed": False, "problems": ["targeted check failed"]}).encode())
-    unrelated_failure = fake(1, json.dumps({
-        "passed": False, "problems": ["different selftest failed"]}).encode())
-    check("(b/c) named target selftest failure kills",
-          selftest_arm(base_selftest, target_failure, "targeted")[0] == "killed")
+    fc_counts = {
+        "selftest": "kama-fault-controls/selftest-v1",
+        "matrix_files": 9,
+        "matrix_tests": 72,
+        "matrix_sha256": "bf9068d89e4cb8a080167cb32cc818943d717a65fcbd21edb2b8256e22771f32",
+        "rows_checked": 5,
+        "families_covered": ["DEAD", "FOREIGN_SERVICE", "MODEL_LOADING",
+                             "MODEL_MISMATCH", "MODEL_OK"],
+        "faults_checked": 18,
+        "classifier_cases": 23,
+        "gate": {"reject-everything": {}, "accept-everything": {}},
+        "wrapper_checks": 35,
+        "escape": {"direct-kill": {}, "group-kill": {}},
+    }
+    base_selftest = fake(0, json.dumps(dict(
+        fc_counts, passed=True, problems=[])).encode())
+    target_failure = fake(1, json.dumps(dict(
+        fc_counts, passed=False,
+        problems=["target-conjunct attribution"])).encode())
+    unrelated_failure = fake(1, json.dumps(dict(
+        fc_counts, passed=False, problems=["different selftest failed"])).encode())
+    check("(b/c) completed FC-target JSON selftest remains a kill",
+          selftest_arm(base_selftest, target_failure,
+                       SELFTEST_TARGETS["FC-target"])[0] == "killed")
+    # Retained C2 evidence for this exact append-only source: 42/42 baseline,
+    # and AO-blank's complete targeted failure at 36/42.
+    ao_baseline = fake(0, b"42/42 selftest cases passed\n")
+    ao_target_line = (
+        "FAIL: edit after a blank line (want exit 1 ['S002:teaches'], "
+        "got exit 2 error 'from:9: row-like line outside the parsed "
+        "registry table; refusing to drop it')")
+    ao_fail_lines = [
+        ao_target_line,
+        ("FAIL: row added after a blank line (want exit 0 added ['S003'], "
+         "got exit 2 error 'to:9: row-like line outside the parsed "
+         "registry table; refusing to drop it')"),
+        ("FAIL: row removed from a later table segment "
+         "(want exit 1 ['S002:removed'], got exit 2 error "
+         "'from:11: row-like line outside the parsed registry table; "
+         "refusing to drop it')"),
+        ("FAIL: edit in a later table segment "
+         "(want exit 1 ['S002:opened'], got exit 2 error "
+         "'from:11: row-like line outside the parsed registry table; "
+         "refusing to drop it')"),
+        ("FAIL: edit under a deeper subheading "
+         "(want exit 1 ['S002:scope'], got exit 2 error "
+         "'from:11: row-like line outside the parsed registry table; "
+         "refusing to drop it')"),
+        ("FAIL: later segment with another header "
+         "(want exit 2 error ~'id cell `id` is not', got exit 2 error "
+         "'from:11: row-like line outside the parsed registry table; "
+         "refusing to drop it')"),
+    ]
+    ao_complete_failure = fake(
+        1, ("\n".join(ao_fail_lines)
+            + "\n36/42 selftest cases passed\n").encode())
+    ao_early_abort = fake(1, (ao_target_line + "\n").encode())
+    ao_short_summary = fake(
+        1, (ao_target_line + "\n1/42 selftest cases passed\n").encode())
+    check("(b/c) completed 42-case target failure kills",
+          selftest_arm(ao_baseline, ao_complete_failure,
+                       SELFTEST_TARGETS["AO-blank"])[0] == "killed")
+    check("(b/c) early-abort same target literal is inconclusive",
+          selftest_arm(ao_baseline, ao_early_abort,
+                       SELFTEST_TARGETS["AO-blank"])[0] == "inconclusive")
+    check("(b/c) one-of-42 summary with one target FAIL is incomplete",
+          selftest_arm(ao_baseline, ao_short_summary,
+                       SELFTEST_TARGETS["AO-blank"])[0] == "inconclusive")
     check("(b/c) unrelated selftest failure is inconclusive",
           selftest_arm(base_selftest, unrelated_failure, "targeted")[0]
           == "inconclusive")
@@ -1735,9 +1829,10 @@ def selftest_pure(check):
           selftest_arm(base_selftest, fake(2, b""), "targeted")[0]
           == "inconclusive")
     check("(b/c) failing baseline selftest is inconclusive",
-          selftest_arm(fake(1, b""), target_failure, "targeted")[0]
-          == "inconclusive")
-    targeted_arm = selftest_arm(base_selftest, target_failure, "targeted")
+          selftest_arm(fake(1, b""), target_failure,
+                       SELFTEST_TARGETS["FC-target"])[0] == "inconclusive")
+    targeted_arm = selftest_arm(base_selftest, target_failure,
+                                SELFTEST_TARGETS["FC-target"])
     unrelated_arm = selftest_arm(base_selftest, unrelated_failure, "targeted")
     own_fault_arm = main_arm(good, view(2))
     passing_arm = selftest_arm(base_selftest, base_selftest, "targeted")

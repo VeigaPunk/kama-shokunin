@@ -1,0 +1,38 @@
+[
+  {
+    "id": "grid-crash",
+    "instrument": "tests/llamacpp-live/install-tree-grid.py",
+    "mode": "crash",
+    "argv": ["--gate", "{work}/fake_gate.py", "--receipt", "{work}/receipt.json", "--model-sha", "a", "--server-sha", "b", "--impl-sha", "c", "--probe-sha", "d", "--tool-sha", "e", "--tree-sha", "f", "--members", "libllama.so.0.7.0", "--json"],
+    "expected_class": "error",
+    "parser_id": "grid_status",
+    "inject": {"env": {"MODE": "{mode}"}, "files": {"fake_gate.py": {"text": "import os,signal,sys\nif sys.argv[1].endswith('baseline.json'):\n print('VALID baseline'); sys.exit(0)\nmode=os.environ['MODE']\nif mode == 'crash': raise RuntimeError('injected')\nif mode == 'silent1': sys.exit(1)\nif mode == 'sigkill': os.kill(os.getpid(), signal.SIGKILL)\nif mode == 'invalid': print('INVALID injected'); sys.exit(1)\n"}, "receipt.json": {"json": {"server": {"install_tree": {"libllama.so.0.7.0": "1111111111111111111111111111111111111111111111111111111111111111"}, "install_tree_sha256": ""}}}}}
+  },
+  {
+    "id": "grid-silent1",
+    "instrument": "tests/llamacpp-live/install-tree-grid.py",
+    "mode": "silent1",
+    "argv": ["--gate", "{work}/fake_gate.py", "--receipt", "{work}/receipt.json", "--model-sha", "a", "--server-sha", "b", "--impl-sha", "c", "--probe-sha", "d", "--tool-sha", "e", "--tree-sha", "f", "--members", "libllama.so.0.7.0", "--json"],
+    "expected_class": "error",
+    "parser_id": "grid_status",
+    "inject": {"env": {"MODE": "{mode}"}, "files": {"fake_gate.py": {"text": "import os,signal,sys\nif sys.argv[1].endswith('baseline.json'):\n print('VALID baseline'); sys.exit(0)\nmode=os.environ['MODE']\nif mode == 'crash': raise RuntimeError('injected')\nif mode == 'silent1': sys.exit(1)\nif mode == 'sigkill': os.kill(os.getpid(), signal.SIGKILL)\nif mode == 'invalid': print('INVALID injected'); sys.exit(1)\n"}, "receipt.json": {"json": {"server": {"install_tree": {"libllama.so.0.7.0": "1111111111111111111111111111111111111111111111111111111111111111"}, "install_tree_sha256": ""}}}}}
+  },
+  {
+    "id": "grid-sigkill",
+    "instrument": "tests/llamacpp-live/install-tree-grid.py",
+    "mode": "sigkill",
+    "argv": ["--gate", "{work}/fake_gate.py", "--receipt", "{work}/receipt.json", "--model-sha", "a", "--server-sha", "b", "--impl-sha", "c", "--probe-sha", "d", "--tool-sha", "e", "--tree-sha", "f", "--members", "libllama.so.0.7.0", "--json"],
+    "expected_class": "error",
+    "parser_id": "grid_status",
+    "inject": {"env": {"MODE": "{mode}"}, "files": {"fake_gate.py": {"text": "import os,signal,sys\nif sys.argv[1].endswith('baseline.json'):\n print('VALID baseline'); sys.exit(0)\nmode=os.environ['MODE']\nif mode == 'crash': raise RuntimeError('injected')\nif mode == 'silent1': sys.exit(1)\nif mode == 'sigkill': os.kill(os.getpid(), signal.SIGKILL)\nif mode == 'invalid': print('INVALID injected'); sys.exit(1)\n"}, "receipt.json": {"json": {"server": {"install_tree": {"libllama.so.0.7.0": "1111111111111111111111111111111111111111111111111111111111111111"}, "install_tree_sha256": ""}}}}}
+  },
+  {
+    "id": "grid-valid-rejection",
+    "instrument": "tests/llamacpp-live/install-tree-grid.py",
+    "mode": "invalid",
+    "argv": ["--gate", "{work}/fake_gate.py", "--receipt", "{work}/receipt.json", "--model-sha", "a", "--server-sha", "b", "--impl-sha", "c", "--probe-sha", "d", "--tool-sha", "e", "--tree-sha", "f", "--members", "libllama.so.0.7.0", "--json"],
+    "expected_class": "rejected",
+    "parser_id": "grid_status",
+    "inject": {"env": {"MODE": "{mode}"}, "files": {"fake_gate.py": {"text": "import os,signal,sys\nif sys.argv[1].endswith('baseline.json'):\n print('VALID baseline'); sys.exit(0)\nmode=os.environ['MODE']\nif mode == 'crash': raise RuntimeError('injected')\nif mode == 'silent1': sys.exit(1)\nif mode == 'sigkill': os.kill(os.getpid(), signal.SIGKILL)\nif mode == 'invalid': print('INVALID injected'); sys.exit(1)\n"}, "receipt.json": {"json": {"server": {"install_tree": {"libllama.so.0.7.0": "1111111111111111111111111111111111111111111111111111111111111111"}, "install_tree_sha256": ""}}}}}
+  }
+]

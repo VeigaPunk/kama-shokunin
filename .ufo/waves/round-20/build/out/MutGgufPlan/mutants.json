@@ -1,0 +1,440 @@
+{
+  "schema": "kama-gguf-mutant-design/v1",
+  "assignment": "MutGgufPlan",
+  "mode": "design-only",
+  "axes": [
+    {"name": "operability", "assigned_score": 8, "design_focus": "Precise fixtures, independent oracles, and bounded observable detectors; no capability measurement claimed."},
+    {"name": "calibration", "assigned_score": 7, "design_focus": "Expected kills are [INFERENCE]; crashes and missing evaluations never become observed kills."}
+  ],
+  "frozen_lane_revision": "37bd4c5bd456a2f8a54d3312c28495c321715856",
+  "designed_mutant_count": 26,
+  "inference_notice": "[INFERENCE] All fixture recipes, mutant effects, and expected detector outcomes below are designs, not executed results. No synthetic fixture was generated and no parser, reconciliation selftest, oracle, or mutant was run by this seat.",
+  "mutation_probe": {
+    "executed": false,
+    "subject_bytes_modified": false,
+    "pristine_output": null,
+    "mutated_output": null,
+    "restored_output": null,
+    "verdict": "not-run-design-only",
+    "before_sha256": null,
+    "mutated_sha256": null,
+    "after_sha256": null,
+    "restoration": "Not applicable: no mutation was applied. Reference-source hashes below are provenance, not before/after mutation evidence."
+  },
+  "reference_targets": {
+    "parser": {
+      "path": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/GgufTool/gguf-identity.py",
+      "sha256_at_read": "fe3c81a567108dd7d6b8d543a1d624aa3d38ab2ab92640d6e89d59bb193c1a61",
+      "status": "Observed delivered source; not modified or executed here. Semantic seams below must be remapped if L1 integration changes its bytes."
+    },
+    "reconcile": {
+      "path": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/GgufReconcile/gguf_receipt_reconcile.py",
+      "sha256_at_read": "9d4696078413d055b813d47018255de5c0213fe0eb7ecc554d8b9185a7700328",
+      "status": "Observed separate helper; source inspection does not establish integrated --receipt behavior."
+    }
+  },
+  "authorities": {
+    "spec": {
+      "url": "https://github.com/ggml-org/ggml/blob/da8e2a54b919557b816b1c2beb432ccb766f7ce0/docs/gguf.md",
+      "revision": "da8e2a54b919557b816b1c2beb432ccb766f7ce0",
+      "opened": true,
+      "located_quotes": [
+        {"location": "File Structure, gguf_header_t magic comment, L275-L279", "quote": "Must be `GGUF` at the byte level: `0x47` `0x47` `0x55` `0x46`."},
+        {"location": "File Structure, gguf_header_t, L291-L293", "quote": "uint64_t tensor_count;"},
+        {"location": "File Structure, gguf_header_t, L293", "quote": "uint64_t metadata_kv_count;"},
+        {"location": "File Structure, ARRAY description, L218", "quote": "the length of the array is the number of elements in the array, not the number of bytes."},
+        {"location": "Standardized key-value pairs, L366", "quote": "Some models may use `uint32` for their values; it is recommended that readers support both."},
+        {"location": "General / Required, L381", "quote": "If the alignment is **not** specified, assume it is `32`."},
+        {"location": "LLM, L448", "quote": "length of the context (in tokens) that the model was trained on."}
+      ]
+    },
+    "reader_source": {
+      "url": "https://github.com/ggml-org/llama.cpp/blob/8baabd53b77d1c48c6ef8d3b620436292f3f6231/gguf-py/gguf/gguf_reader.py",
+      "revision": "8baabd53b77d1c48c6ef8d3b620436292f3f6231",
+      "opened": true,
+      "locations": ["GGUFReader.__init__: magic, supported versions, endian detection, uint64 counts", "GGUFReader._push_field: duplicate-key KeyError", "GGUFReader._get_str: string bounds", "GGUFReader._get_field_parts: typed scalars and arrays", "ReaderField.contents: UTF-8 conversion and typed metadata projection"],
+      "limitation": "This source revision is not asserted to be the source revision of the PyPI wheel. Its static behavior is not a locally executed oracle result."
+    },
+    "official_oracle_artifact": {
+      "path": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/GgufOracle/stories260K.oracle.json",
+      "location": "L2-L15 package/file/header provenance; L29-L43 scalar identity",
+      "package": "gguf",
+      "version": "0.19.0",
+      "wheel_sha256": "70bcd10edfe697fb2dad6e40af2234b9d8ece9a41a99761405121ebda1c3c1cd",
+      "real_model_projection": {"version": 3, "tensor_count": 48, "kv_count": 19, "general.architecture": "llama", "general.name": "llama", "llama.context_length": 2048, "llama.block_count": 5, "llama.embedding_length": 64},
+      "scope": "Read existing peer-produced artifact only. No oracle invocation by this seat; new synthetic fixture oracle outcomes remain [INFERENCE]."
+    },
+    "slot_context": {
+      "url": "https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp",
+      "revision": "704366d76f8748cf9ad3df62a464bfcc8d1ae6ad",
+      "opened": true,
+      "located_quotes": [
+        {"location": "generation props, L279", "quote": "int32_t n_ctx   = 0;  // context size per slot"},
+        {"location": "default_generation_settings_for_props, L5235", "quote": "{ \"n_ctx\",  meta.slot_n_ctx },"},
+        {"location": "props object, L5243", "quote": "{ \"total_slots\",                 params.n_parallel },"}
+      ]
+    },
+    "receipt": {
+      "path": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/live-recovery/receipt-1.json",
+      "sha256": "89728a0248f208ada93ae9b2ce08a5da5e65bcd30259c43b8329d3e6d3bca863",
+      "observed_projection": {"props_location": "L58-L77", "served_n_ctx": 256, "total_slots": 4, "ctx_location": "L237", "ctx": 256, "model_sha256_post_location": "L267", "model_sha256_post": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"},
+      "scope": "Historical receipt read and hashed; no current live-server measurement."
+    },
+    "lane_policy": {
+      "parser_locations": "Reference parser Reader/read_exact/skip/value and decode_metadata, L108-L278",
+      "reconcile_locations": "Reference helper _positive_integer, reconcile_receipt and run_receipt_reconciliation, L43-L169",
+      "scope": "Current declared bounds and result vocabulary, not universal GGUF format requirements."
+    }
+  },
+  "fixture_encoding": {
+    "status": "[INFERENCE] Recipes only; no fixture files created by this seat.",
+    "header": "Four literal bytes 47 47 55 46, then endian-specific uint32 version, uint64 tensor_count, uint64 kv_count; metadata begins at byte 24.",
+    "string": "Endian-specific uint64 UTF-8 byte length followed by exactly those bytes, with no NUL terminator.",
+    "kv": "GGUF string key, uint32 type tag, typed value; no padding between KVs or array elements.",
+    "type_ids": {"UINT8": 0, "INT8": 1, "UINT16": 2, "INT16": 3, "UINT32": 4, "INT32": 5, "FLOAT32": 6, "BOOL": 7, "STRING": 8, "ARRAY": 9, "UINT64": 10, "INT64": 11, "FLOAT64": 12},
+    "array": "uint32 element_type, uint64 element_count, then that many values. STRING elements each retain their own uint64 byte length.",
+    "ordinary_fixture_completion": "Use tensor_count=0; for complete-container positive oracle fixtures, pad after metadata to the explicit general.alignment (or 32 when absent). Never add padding inside a deliberately truncated value.",
+    "B_ID": {
+      "version": 3,
+      "endianness": "little",
+      "tensor_count": 0,
+      "metadata_in_order": [
+        ["general.architecture", "STRING", "llama"],
+        ["general.name", "STRING", "fixture-model"],
+        ["general.file_type", "UINT32", 0],
+        ["general.alignment", "UINT32", 32],
+        ["tokenizer.ggml.model", "STRING", "llama"],
+        ["llama.block_count", "UINT32", 5],
+        ["llama.embedding_length", "UINT32", 64],
+        ["llama.context_length", "UINT32", 2048]
+      ]
+    },
+    "R_BASE": {
+      "synthetic": true,
+      "schema": "kama-llamacpp-live/v3",
+      "model_sha256_post": "SHA256 of the exact generated GGUF fixture, using independent hashlib over all file bytes",
+      "model": {"sha256": "same full-file digest unless a case overrides it"},
+      "alias": "served-alias",
+      "ctx": 1024,
+      "captures": {"props": {"fields": {"model_alias": "served-alias", "default_generation_settings.n_ctx": 1024, "total_slots": 4}}},
+      "scope": "Minimal synthetic reconciliation input, not a live receipt or receipt-gate validity assertion."
+    },
+    "materialization_bounds": "Every proposed new fixture fits within 1 MiB. Huge lengths/counts are encoded in their fixed-width fields, never materialized as huge arrays or files. The real 1,185,376-byte model is an existing external input, not copied into this output directory."
+  },
+  "detector_contract": {
+    "status": "[INFERENCE] Detector design only; no detector command was run or is presented as executed.",
+    "observation": "For positive parsing cases, require completed decoded JSON and compare version, endianness, counts, selected keys and array summaries to committed independent expectations. For malformed parser cases, match the named DecodeError outcome, its exact public stderr reason and exit, not exit alone. For reconciliation compare returned status/exit_code, digest binding, numeric context fields and classification; explicitly catch only ReceiptReconciliationError for malformed-receipt expectations.",
+    "positive_oracle": "Generate small complete positive containers independently of the subject's fixture/pack_value helpers; use pinned official gguf.GGUFReader and ReaderField.contents to freeze expected values before mutation. Do not use the subject's output as its own oracle.",
+    "negative_oracle": "Use explicit wire-format facts or declared lane-bound policy as indicated per mutant. Do not assume every malformed case is rejected by every official reader. Never call the full official reader on a huge declared count just to establish an expected bounded rejection.",
+    "three_arms": ["In one isolated disposable copy, save and hash pristine subject bytes and freeze detector/fixtures/oracle records.", "Run the exact same selected bounded detector on pristine bytes; any baseline failure is inconclusive.", "Apply exactly the single behavior change named by that mutant and run the unchanged detector.", "Restore exact pristine bytes in a finally path even after detector failure; compare restoration hash to the saved pristine hash, then run the unchanged detector on restored bytes."],
+    "killed": "Only after pristine and restored expectations pass: a completed, identified subject outcome contradicts a frozen expected value, acceptance/rejection, identity verdict or context classification.",
+    "survived": "The selected detector completes and the identified mutated outcome still satisfies its frozen expectations. Record a coverage finding or a redundant/equivalent mutation; never weaken the contract to manufacture a kill.",
+    "inconclusive": "Baseline/restoration failure, missing fixture/oracle, uncaught exception, silent nonzero, signal, timeout, early-abort selftest, malformed observation or missing selected case result. A matching target literal in crash output is not a kill.",
+    "future_bounds": {"wall_seconds_per_case": 5, "maximum_new_fixture_bytes": 1048576, "maximum_captured_output_bytes": 65536, "no_live_server": true, "one_mutant_at_a_time": true},
+    "current_verdict_for_every_entry": "not-run-design-only",
+    "current_observed_output_for_every_entry": null
+  },
+  "mutants": [
+    {
+      "id": "GGUF-M01",
+      "name": "AcceptNonGGUFMagic",
+      "axis": "operability",
+      "mutation": "Remove only decode_metadata's bad-magic rejection at reference parser L220-L221.",
+      "fixture": {"id": "magic-nope-valid-body", "base": "B_ID", "wire_edit": "Replace bytes [0,4) with ASCII NOPE; preserve every remaining byte."},
+      "oracle": {"authorities": ["spec", "reader_source"], "expected": "Non-GGUF magic must not produce a decoded identity."},
+      "expected_detector": {"pristine": {"exit": 1, "reason": "bad_magic"}, "mutated": "Decoded success with the same metadata despite invalid magic.", "must_assert": "Exact bad_magic outcome and exit 1; a success result kills this mutant."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M02",
+      "name": "AcceptUnsupportedVersion99",
+      "axis": "calibration",
+      "mutation": "Replace only the unsupported-version branch with little-endian version acceptance; preserve magic/count/string decoding.",
+      "fixture": {"id": "version-99-valid-v3-layout", "base": "B_ID", "wire_edit": "Set uint32 at [4,8) to 99 in little endian; body remains the small v3-layout body."},
+      "oracle": {"authorities": ["reader_source", "lane_policy"], "expected": "This parser supports 2 and 3, not guessed future version 99."},
+      "expected_detector": {"pristine": {"exit": 2, "reason": "unsupported_version"}, "mutated": "Decoded success reporting version 99.", "must_assert": "A named unsupported_version result, not generic nonzero."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M03",
+      "name": "TruncateV3TensorCountToUint32",
+      "axis": "operability",
+      "mutation": "Mask the tensor_count value with 0xffffffff immediately after its existing uint64 read, preserving the eight-byte cursor advance.",
+      "fixture": {"id": "v3-tensor-count-high-word", "base": "B_ID", "wire_edit": "Set tensor_count to 4294967303 (2^32+7); keep kv_count=8 and ordinary metadata. Do not materialize tensor descriptors."},
+      "oracle": {"authorities": ["spec"], "kind": "Independent header-wire literal, not a whole-model validity oracle", "expected": {"tensor_count": 4294967303}, "limitation": "Header-only decoding intentionally does not prove the enormous tensor population exists. The full official reader is not the oracle for acceptance of this deliberately header-only witness."},
+      "expected_detector": {"pristine": {"exit": 0, "tensor_count": 4294967303}, "mutated": {"exit": 0, "tensor_count": 7}, "must_assert": "Exact uint64 header count; low-word-only tests cannot kill this mutant."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M04",
+      "name": "TruncateV3KvCountBeforeBounds",
+      "axis": "operability",
+      "mutation": "Mask only the decoded kv_count to uint32 before its existing max_kv comparison, without changing cursor advance.",
+      "fixture": {"id": "v3-kv-count-high-word-low-eight", "base": "B_ID", "wire_edit": "Declare kv_count=4294967304 (2^32+8), but physically retain only the eight B_ID entries."},
+      "oracle": {"authorities": ["spec", "lane_policy"], "expected": "Declared count exceeds the observed default max_kv=1000000; bounded rejection precedes iteration.", "safety": "Do not run the full official reader over this declared count. The expected policy verdict is independent of package limits."},
+      "expected_detector": {"pristine": {"exit": 2, "reason": "kv_count_too_large"}, "mutated": "Accepts exactly eight physical entries and reports kv_count=8.", "must_assert": "Named count-bound rejection; a small count fixture alone does not detect this width truncation."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M05",
+      "name": "DecodeScalarValuesAsLittleEndianAlways",
+      "axis": "operability",
+      "mutation": "At Reader.value's scalar unpack, replace self.endian with '<' only for scalar values; leave version/count/key-length decoding unchanged.",
+      "fixture": {"id": "v3-big-endian-identity", "base": "B_ID", "wire_edit": "Encode version, counts, key/value lengths, type tags and scalar values big-endian; retain literal GGUF magic bytes."},
+      "oracle": {"authorities": ["spec", "reader_source"], "kind": "Official reader projection of a complete small BE container", "expected": {"endianness": "big", "llama.context_length": 2048, "llama.block_count": 5, "llama.embedding_length": 64}},
+      "expected_detector": {"pristine": "Decoded success with the oracle values.", "mutated": "Decoded success with byte-swapped numeric identity values.", "must_assert": "Exact numeric values, not just BE recognition, supported-version acceptance or exit 0."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M06",
+      "name": "DuplicateMetadataLastWriterWins",
+      "axis": "calibration",
+      "mutation": "Disable only the key-in-seen rejection in decode_metadata; ordinary candidates assignment then overwrites the earlier key.",
+      "fixture": {"id": "duplicate-general-name", "base": "B_ID", "metadata_edit": "Append a second general.name STRING 'shadow-name' and update kv_count to 9."},
+      "oracle": {"authorities": ["reader_source", "lane_policy"], "expected": "Official reader source _push_field rejects duplicates; this lane also declares duplicate_key rather than choosing an identity."},
+      "expected_detector": {"pristine": {"exit": 2, "reason": "duplicate_key"}, "mutated": "Decoded success selecting shadow-name.", "must_assert": "Reject the duplicate even when both entries are independently well-formed."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M07",
+      "name": "ZeroPadTruncatedScalarRead",
+      "axis": "calibration",
+      "mutation": "At read_exact's beyond-file guard, return a zero-padded short read instead of rejecting. Keep this one behavioral point isolated.",
+      "fixture": {"id": "last-u64-missing-one-byte", "recipe": "Header v3 LE tensor_count=0 kv_count=2; general.architecture STRING llama, then llama.context_length UINT64=2048 with only its first seven payload bytes present. End file immediately; no alignment padding."},
+      "oracle": {"authorities": ["spec", "lane_policy"], "expected": "A uint64 payload requires eight bytes; seven bytes is truncated, not a value completed by the reader."},
+      "expected_detector": {"pristine": {"exit": 2, "reason": "truncated_value"}, "mutated": "Decoded success with a fabricated context_length of 2048.", "must_assert": "Named truncation; empty or partial decoded identity must not satisfy the malformed-fixture expectation."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M08",
+      "name": "UnknownTypeFallsBackToUint8",
+      "axis": "operability",
+      "mutation": "Replace Reader.value's unknown-type rejection with type_id=0, leaving all known-type handling intact.",
+      "fixture": {"id": "type-13-one-byte-tail", "base": "B_ID", "metadata_edit": "Append fixture.unknown with type tag 13 and one raw byte 00; update kv_count to 9."},
+      "oracle": {"authorities": ["spec", "reader_source"], "expected": "Tag 13 is not among supported metadata value types 0 through 12."},
+      "expected_detector": {"pristine": {"exit": 2, "reason": "unknown_value_type"}, "mutated": "Decoded success after silently consuming the unknown value as UINT8.", "must_assert": "A named unknown_value_type result even for an unselected metadata key."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M09",
+      "name": "ReplaceInvalidUtf8InsteadOfRejecting",
+      "axis": "calibration",
+      "mutation": "Change only read_string's UTF-8 errors mode from strict to replace.",
+      "fixture": {"id": "non-utf8-general-name", "base": "B_ID", "metadata_edit": "Replace general.name's encoded string payload with length=1 and byte ff; re-encode subsequent entries at the corrected offset."},
+      "oracle": {"authorities": ["spec", "reader_source"], "kind": "UTF-8 requirement plus official ReaderField.contents strict string conversion", "expected": "Do not emit a replacement-character identity for invalid source bytes."},
+      "expected_detector": {"pristine": {"exit": 2, "reason": "invalid_utf8"}, "mutated": "Decoded success with general.name equal to the Unicode replacement character.", "must_assert": "Named invalid_utf8 outcome; checking only valid ASCII names misses the defect."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M10",
+      "name": "HardcodeLlamaIdentityNamespace",
+      "axis": "operability",
+      "mutation": "Replace the architecture used to form ARCH_IDENTITY_SUFFIXES keys with the constant llama, leaving general.architecture's reported value untouched.",
+      "fixture": {"id": "mpt-with-llama-context-decoy", "base": "B_ID", "metadata_edit": "Set general.architecture=mpt; rename its context/block/embedding keys to mpt.* with context=1024; append llama.context_length UINT32=8192."},
+      "oracle": {"authorities": ["spec", "reader_source"], "kind": "Official scalar metadata projection plus general.architecture namespace rule", "expected": {"general.architecture": "mpt", "mpt.context_length": 1024}},
+      "expected_detector": {"pristine": "Decoded mpt identity uses context 1024.", "mutated": "Selected identity uses the llama decoy or omits the correct mpt context.", "must_assert": "Selected key name and value, not merely presence of any .context_length value."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M11",
+      "name": "ReadUint64MetadataAsUint32",
+      "axis": "operability",
+      "mutation": "Change SCALARS[10] from ('Q',8) to ('I',4), a single type-width table entry.",
+      "fixture": {"id": "u64-context-high-word-last", "base": "B_ID", "metadata_edit": "Keep other numeric identity fields UINT32; make the final llama.context_length UINT64=4294969344 (2^32+2048)."},
+      "oracle": {"authorities": ["spec", "reader_source"], "kind": "Official reader exact uint64 metadata projection", "expected": {"llama.context_length": 4294969344}},
+      "expected_detector": {"pristine": {"exit": 0, "llama.context_length": 4294969344}, "mutated": {"exit": 0, "llama.context_length": 2048}, "must_assert": "Exact value above 2^32; context intentionally placed last so this mutant produces a completed wrong value instead of only crashing on a later key."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M12",
+      "name": "ReportArrayByteCountAsElementCount",
+      "axis": "operability",
+      "mutation": "For a fixed-width numeric array, feed byte_count rather than length to its ArraySummary; retain correct payload skipping.",
+      "fixture": {"id": "two-u32-array-elements", "base": "B_ID", "metadata_edit": "Append fixture.numeric ARRAY<UINT32> with elements 16909060 and 84281096; kv_count=9."},
+      "oracle": {"authorities": ["spec", "reader_source"], "kind": "Official array contents length and type", "expected": {"arrays.fixture.numeric": {"type": "UINT32", "length": 2}}},
+      "expected_detector": {"pristine": "Array summary length 2 and type UINT32.", "mutated": "Array summary length 8 although payload decoding succeeds.", "must_assert": "Exact array element count, not only successful bounds checking or accepted exit."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M13",
+      "name": "SeekPastTruncatedArrayPayload",
+      "axis": "calibration",
+      "mutation": "In Reader.skip, remove only the self.offset+count>self.size arm of the guard; retain count<0 rejection and all array length/budget limits.",
+      "fixture": {"id": "last-array-four-u64-no-payload", "base": "B_ID", "metadata_edit": "Append fixture.tail ARRAY<UINT64> length=4 with zero payload bytes. End file immediately after the array count; do not pad."},
+      "oracle": {"authorities": ["spec", "lane_policy"], "expected": "A declared 32-byte payload cannot be skipped beyond EOF. Length 4 is deliberately below every independent array cap."},
+      "expected_detector": {"pristine": {"exit": 2, "reason": "truncated_array_values"}, "mutated": "Decoded success with a length-4 array summary after unchecked seek.", "must_assert": "Exact truncation outcome. Making the array last isolates the missing EOF guard from later reads."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M14",
+      "name": "SkipStringArrayAsLengthWordsOnly",
+      "axis": "operability",
+      "mutation": "Replace string-array recursive value traversal with a fixed skip of length*8 bytes, as though only the length words were stored.",
+      "fixture": {"id": "string-array-then-identity-sentinel", "recipe": "Prepend fixture.strings ARRAY<STRING> ['A','BC'] before the eight B_ID entries; kv_count=9. The nonempty payloads make the metadata entry following the array start at a different offset from length*8."},
+      "oracle": {"authorities": ["spec", "reader_source"], "kind": "Official reader exact string-array length/type and subsequent scalar projection", "expected": {"arrays.fixture.strings": {"type": "STRING", "length": 2}, "general.architecture": "llama", "general.name": "fixture-model"}},
+      "expected_detector": {"pristine": "Complete successful identity and the exact array summary.", "mutated": "A controlled malformed-key/string outcome or incorrect following identity due to the wrong cursor.", "must_assert": "Require the completed expected identity. If the mutant only causes an uncaught exception or missing observation, record inconclusive, not killed."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M15",
+      "name": "AlignEveryMetadataEntry",
+      "axis": "operability",
+      "mutation": "Insert one alignment skip to the next multiple of 32 at the start of each metadata-entry iteration after the first.",
+      "fixture": {"id": "packed-unaligned-kvs", "base": "B_ID", "construction": "Keep the specified entries tightly packed with no inter-entry padding; only pad after the entire metadata region for the positive complete-container oracle."},
+      "oracle": {"authorities": ["spec", "reader_source"], "expected": "File Structure says fields and arrays are sequential without alignment unless otherwise specified; B_ID exact metadata must decode."},
+      "expected_detector": {"pristine": "Complete exact B_ID identity, kv_count=8.", "mutated": "Wrong following metadata or a named domain rejection after reading padding-free bytes at an invented boundary.", "must_assert": "Full positive oracle projection. An uncaught exception alone remains inconclusive."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M16",
+      "name": "OverwriteExplicitAlignmentWithDefault32",
+      "axis": "operability",
+      "mutation": "Force the selected output value keys['general.alignment'] to 32 instead of retaining its decoded value.",
+      "fixture": {"id": "explicit-alignment-64", "base": "B_ID", "metadata_edit": "Set general.alignment UINT32=64 and complete-container padding to a multiple of 64."},
+      "oracle": {"authorities": ["spec", "reader_source"], "kind": "Official reader explicit alignment metadata", "expected": {"general.alignment": 64}},
+      "expected_detector": {"pristine": "Reports declared alignment 64.", "mutated": "Reports 32 with exit 0.", "must_assert": "Explicit declared value; do not add a requirement that this header-only decoder synthesize a missing alignment key."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M17",
+      "name": "BindIdentityByAliasInsteadOfSha256",
+      "axis": "calibration",
+      "mutation": "Replace the file/post-digest comparison with general.name versus receipt model_alias equality.",
+      "fixture": {"id": "same-name-wrong-digest", "base": "B_ID plus R_BASE", "receipt_edits": "Set model_alias and alias to fixture-model so names agree; set model_sha256_post to a different valid lowercase 64-hex digest from the exact local file."},
+      "oracle": {"authorities": ["lane_policy", "receipt"], "kind": "Independent full-file hashlib digest plus explicit post-hash identity contract", "expected": {"status": "identity-mismatch", "exit_code": 1}},
+      "expected_detector": {"pristine": "identity-mismatch despite matching names.", "mutated": "Reconciled/matched identity because names agree.", "must_assert": "The digest-based identity verdict. Countercontrol: matching digest plus different alias must reconcile and keep names.comparison_is_verdict=false."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M18",
+      "name": "BindReceiptPreHashInsteadOfPostHash",
+      "axis": "calibration",
+      "mutation": "Read expected_sha from receipt.model.sha256 instead of receipt.model_sha256_post at the identity binding seam.",
+      "fixture": {"id": "pre-matches-post-differs", "base": "B_ID plus R_BASE", "receipt_edits": "Keep model.sha256 equal to the exact local digest but set model_sha256_post to a different valid digest."},
+      "oracle": {"authorities": ["lane_policy", "receipt"], "expected": {"status": "identity-mismatch", "exit_code": 1}},
+      "expected_detector": {"pristine": "identity-mismatch from the post hash.", "mutated": "Reconciled identity from the pre hash.", "must_assert": "Post-hash authority only. Countercontrol with model.sha256 different and model_sha256_post matching must reconcile; these synthetic cases do not claim the full live receipt gate would pass."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M19",
+      "name": "HashOnlyDecodedHeaderRegion",
+      "axis": "calibration",
+      "mutation": "Change stream_sha256 to stop at the end of metadata instead of streaming the complete file; leave structural decoding header-only.",
+      "fixture": {"id": "full-file-digest-with-tensor-tail", "recipe": "Construct a complete small GGUF with B_ID metadata and one tensor (one F32 element, one dimension, aligned data offset); set the synthetic receipt post hash to independent SHA256 of every file byte. Include a second file with identical header/descriptors but a different F32 payload as a countercontrol."},
+      "oracle": {"authorities": ["lane_policy", "reader_source"], "kind": "Independent hashlib full-file digest and official reader metadata/tensor-container sanity", "expected": "Reported sha256 equals the full-file digest; matching full-file receipt reconciles."},
+      "expected_detector": {"pristine": "Full-file digest is exact and receipt identity matches.", "mutated": "Reported header-only digest differs and/or matching receipt is spuriously identity-mismatch.", "must_assert": "Exact reported sha256 independently of the receipt outcome. Countercontrol hashes must differ for the two payloads although all selected metadata agree."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M20",
+      "name": "MultiplyServedContextByTotalSlots",
+      "axis": "calibration",
+      "mutation": "At classification only, compare served_context*total_slots to train_context instead of served_context.",
+      "fixture": {"id": "per-slot-within-total-exceeds", "base": "B_ID plus R_BASE", "receipt_edits": {"ctx": 4096, "captures.props.fields.default_generation_settings.n_ctx": 1024, "captures.props.fields.total_slots": 4}},
+      "oracle": {"authorities": ["slot_context", "lane_policy"], "expected": {"train_context_length": 2048, "served_n_ctx": 1024, "configured_ctx": 4096, "total_slots": 4, "classification": "within"}},
+      "expected_detector": {"pristine": {"exit_code": 0, "classification": "within"}, "mutated": {"exit_code": 0, "classification": "exceeds-train"}, "must_assert": "Exact classification and unscaled served_n_ctx. Exit-only checks miss this mutant because both arms succeed."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M21",
+      "name": "DivideServedContextByTotalSlotsAgain",
+      "axis": "calibration",
+      "mutation": "At classification only, compare served_context//total_slots to train_context, treating the already per-slot /props value as a total.",
+      "fixture": {"id": "per-slot-exceeds-divided-within", "base": "B_ID plus R_BASE", "receipt_edits": {"ctx": 4096, "captures.props.fields.default_generation_settings.n_ctx": 4096, "captures.props.fields.total_slots": 4}},
+      "oracle": {"authorities": ["slot_context", "lane_policy"], "expected": {"train_context_length": 2048, "served_n_ctx": 4096, "classification": "exceeds-train"}},
+      "expected_detector": {"pristine": {"exit_code": 0, "classification": "exceeds-train", "warnings_nonempty": true}, "mutated": {"exit_code": 0, "classification": "within"}, "must_assert": "Classification and warning content, not exit code. The receipt is synthetic; this design does not assert the historical server served 4096."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M22",
+      "name": "CompareRequestedCtxInsteadOfServedProps",
+      "axis": "calibration",
+      "mutation": "Use receipt.ctx in the train-versus-served comparison while leaving the reported served_n_ctx unchanged.",
+      "fixture": {"id": "requested-within-served-exceeds", "base": "B_ID plus R_BASE", "receipt_edits": {"ctx": 1024, "captures.props.fields.default_generation_settings.n_ctx": 4096, "captures.props.fields.total_slots": 4}},
+      "oracle": {"authorities": ["slot_context", "receipt", "lane_policy"], "expected": {"configured_ctx": 1024, "served_n_ctx": 4096, "classification": "exceeds-train"}},
+      "expected_detector": {"pristine": "exit 0, classification exceeds-train, requested and served values both retained.", "mutated": "exit 0, classification within because requested ctx is smaller.", "must_assert": "Compare the served capture field; the task's historical receipt has ctx==served_n_ctx and alone cannot distinguish these sources."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M23",
+      "name": "TreatExactTrainingBoundaryAsExceeds",
+      "axis": "calibration",
+      "mutation": "Change only served_context > train_context to served_context >= train_context.",
+      "fixture": {"id": "served-equals-train", "base": "B_ID plus R_BASE", "receipt_edits": {"ctx": 2048, "captures.props.fields.default_generation_settings.n_ctx": 2048}},
+      "oracle": {"authorities": ["lane_policy"], "expected": {"classification": "within", "warnings": [], "exit_code": 0}},
+      "expected_detector": {"pristine": "within with no exceeds-train warning.", "mutated": "exceeds-train warning at equality, still exit 0.", "must_assert": "Equality boundary and warning emptiness; strictly smaller/larger cases cannot kill this comparator mutant."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M24",
+      "name": "PromoteContextWarningToFailure",
+      "axis": "calibration",
+      "mutation": "For the exceeds-train branch, return a failure exit/status rather than retaining reconciled exit 0 and a warning.",
+      "fixture": {"id": "matched-identity-context-warning", "base": "B_ID plus R_BASE", "receipt_edits": {"captures.props.fields.default_generation_settings.n_ctx": 4096}},
+      "oracle": {"authorities": ["lane_policy", "spec"], "expected": {"status": "reconciled", "exit_code": 0, "identity.status": "matched", "context.classification": "exceeds-train", "warnings_nonempty": true}, "scope": "The helper's declared warning contract; declared training length is not proof of runtime loading failure or universally enforced hard maximum."},
+      "expected_detector": {"pristine": "Completed identity match and exceeds-train warning, exit 0.", "mutated": "Completed failure verdict/nonzero despite matching identity and a warning-only condition.", "must_assert": "Status, exit_code, identity and warning together. Silent nonzero or an uncaught exception is inconclusive, never an observed failure verdict."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M25",
+      "name": "InventServedContextFromRequestedCtx",
+      "axis": "calibration",
+      "mutation": "Change fields.get('default_generation_settings.n_ctx') to fall back to document.ctx when the capture field is absent.",
+      "fixture": {"id": "missing-props-nctx-valid-request", "base": "B_ID plus R_BASE", "receipt_edits": "Delete only the flat captures.props.fields['default_generation_settings.n_ctx'] key; retain valid ctx=1024, matching post hash, aliases and total_slots."},
+      "oracle": {"authorities": ["lane_policy", "receipt"], "expected": "No served-context evidence exists. ReceiptReconciliationError identifies the missing positive integer; the public wrapper returns exit 2, not an identity mismatch or a context verdict."},
+      "expected_detector": {"pristine": {"typed_outcome": "ReceiptReconciliationError", "public_exit": 2, "message_contains": "default_generation_settings.n_ctx"}, "mutated": "Reconciles and invents served_n_ctx=1024 with classification within.", "must_assert": "No context verdict on unavailable evidence; a fallback success kills the mutant. Do not count a crashed wrapper as the expected error outcome."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    },
+    {
+      "id": "GGUF-M26",
+      "name": "AcceptBooleanAsPositiveContextInteger",
+      "axis": "calibration",
+      "mutation": "Remove only the isinstance(value,bool) arm from _positive_integer's guard, leaving the ordinary int/range checks intact.",
+      "fixture": {"id": "boolean-props-nctx", "base": "B_ID plus R_BASE", "receipt_edits": {"captures.props.fields.default_generation_settings.n_ctx": true}},
+      "oracle": {"authorities": ["lane_policy"], "expected": "JSON true is a boolean, not a measured positive token count. The helper explicitly rejects bool even though Python bool subclasses int."},
+      "expected_detector": {"pristine": {"typed_outcome": "ReceiptReconciliationError", "public_exit": 2, "message_contains": "default_generation_settings.n_ctx"}, "mutated": "Reconciles with served_n_ctx=true, numerically treated as 1, and classification within.", "must_assert": "Exact JSON numeric type as well as value; do not let Python True==1 make the detector accept a boolean count."},
+      "expected_evidence": "[INFERENCE]",
+      "verdict": "not-run"
+    }
+  ],
+  "existing_fixture_alignment": {
+    "status": "Peer-proposed names, not independently observed materialized fixture files at design time.",
+    "candidate_reuse": ["bad-magic", "version-99", "v3-big-endian", "v3-identity", "duplicate-key", "non-utf8-value", "array-len-exceeds-file"],
+    "important_distinctions": ["Nonzero small counts catch cursor-width mistakes but not a preserving-offset uint32 truncation; M03/M04 include a high word.", "The real receipt's ctx=served_n_ctx=256 does not kill source substitution; M22 deliberately separates them.", "Slot multiply/divide, equality, array element-count and numeric-endian mutants require comparing decoded fields, not exit-only agreement.", "A generated fixture is not a confirmed kill until its pristine baseline, mutant outcome and exact restored arm have actually been observed."]
+  },
+  "commands_executed_here": [
+    {"command": "git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-parse 37bd4c5bd456a2f8a54d3312c28495c321715856^{commit}", "exit": 0, "stdout": "37bd4c5bd456a2f8a54d3312c28495c321715856\n"},
+    {"command": "sha256sum /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/live-recovery/receipt-1.json", "exit": 0, "stdout": "89728a0248f208ada93ae9b2ce08a5da5e65bcd30259c43b8329d3e6d3bca863  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-18/live-recovery/receipt-1.json\n"},
+    {"command": "git ls-remote https://github.com/ggml-org/ggml.git HEAD", "exit": 0, "stdout": "da8e2a54b919557b816b1c2beb432ccb766f7ce0\tHEAD\n"},
+    {"command": "git ls-remote https://github.com/ggml-org/llama.cpp.git HEAD", "exit": 0, "stdout": "8baabd53b77d1c48c6ef8d3b620436292f3f6231\tHEAD\n"},
+    {"command": "sha256sum /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/GgufTool/gguf-identity.py /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/GgufReconcile/gguf_receipt_reconcile.py", "exit": 0, "stdout": "fe3c81a567108dd7d6b8d543a1d624aa3d38ab2ab92640d6e89d59bb193c1a61  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/GgufTool/gguf-identity.py\n9d4696078413d055b813d47018255de5c0213fe0eb7ecc554d8b9185a7700328  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/GgufReconcile/gguf_receipt_reconcile.py\n"}
+  ],
+  "tool_install_update_record": [],
+  "lane_source_modifications": [],
+  "official_measurement_status": "Not run; no score, integration, shipping, kill-rate or coverage-admission verdict asserted."
+}

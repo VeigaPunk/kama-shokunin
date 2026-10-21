@@ -1,0 +1,340 @@
+# run-retro.sh log - RETROSPECTIVE (round-20); run 2026-10-21T04:27:35-03:00 (2026-10-21T07:27:35Z)
+# script=/home/vgpnk/Projects/shokunin/scripts/sources-census.sh sha256=3fb7261569f46423dd80ecc23e0a23789a7926f667c7a3fc559d2439d4a64e30 fleet_rev=4a2bb5c3052e979d2203b31b2901da218419b6e9 script_dirty=[] gawk=5.4.1 TODAY=2026-10-21
+
+### before: SOURCES.md blob id
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-parse 8bf99cae7de2517fd4ebe209f3b940aeabb6b687:corpus/SOURCES.md
+1e09b77990e25822d5a7b1be57b62a790bbf6308
+exit=0
+
+### before: git-archive copy equals git-show copy
+$ cmp /tmp/kama-r20-CensusR19Retro/before/kama-shokunin/corpus/SOURCES.md /tmp/kama-r20-CensusR19Retro/before-tree/kama-shokunin/corpus/SOURCES.md
+exit=0
+
+### before: tracked paths at rev
+$ bash -c git\ -C\ \"\$1\"\ ls-tree\ -r\ --name-only\ \"\$2\"\ \|\ wc\ -l _ /home/vgpnk/Projects/shokunin/kama-shokunin 8bf99cae7de2517fd4ebe209f3b940aeabb6b687
+1349
+exit=0
+
+### before: extracted files and symlinks
+$ bash -c find\ \"\$1\"\ \\\(\ -type\ f\ -o\ -type\ l\ \\\)\ \|\ wc\ -l _ /tmp/kama-r20-CensusR19Retro/before-tree/kama-shokunin
+1349
+exit=0
+
+### before: registry rows by grep (spot-check oracle)
+$ grep -cE \^\\\|\ \*S\[0-9\]\{3\}\  /tmp/kama-r20-CensusR19Retro/before/kama-shokunin/corpus/SOURCES.md
+56
+exit=0
+
+### before: assigned census command before any shokunin.conf exists
+$ /home/vgpnk/Projects/shokunin/scripts/sources-census.sh census --root /tmp/kama-r20-CensusR19Retro/before kama
+[stderr]
+ERROR: config not found: /tmp/kama-r20-CensusR19Retro/before/shokunin.conf
+ERROR: unknown lane (not a dir, not in conf or root): kama
+exit=2
+
+### before: census, SOURCES.md-only root
+$ /home/vgpnk/Projects/shokunin/scripts/sources-census.sh census --root /tmp/kama-r20-CensusR19Retro/before kama
+kama	rows	56
+kama	tier.A	53
+kama	tier.C	3
+kama	status.mined	45
+kama	status.queued	5
+kama	status.rejected	6
+FLEET	rows	56
+FLEET	tier.A	53
+FLEET	tier.B	0
+FLEET	tier.C	3
+FLEET	tier.invalid	0
+FLEET	status.queued	5
+FLEET	status.mined	45
+FLEET	status.rejected	6
+FLEET	status.invalid	0
+FLEET	missing	0
+exit=0
+
+### before: validate, SOURCES.md-only root (E11 here = used-by path not materialized)
+$ /home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /tmp/kama-r20-CensusR19Retro/before kama
+kama	W04	S031 duplicate url docs.ollama.com/api/tags across scopes
+kama	W04	S043 duplicate url github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server.cpp across scopes
+kama	W04	S056 duplicate url github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/common/arg.cpp across scopes
+kama	E11	S001 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S001 missing used-by corpus/knowledge/serving-metrics-crosswalk.md
+kama	E11	S001 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S002 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S003 missing used-by corpus/knowledge/serving-metrics-crosswalk.md
+kama	E11	S004 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S005 missing used-by corpus/knowledge/gguf-runtime-compatibility-boundary.md
+kama	E11	S006 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S007 missing used-by corpus/knowledge/serving-metrics-crosswalk.md
+kama	E11	S008 missing used-by corpus/knowledge/gguf-runtime-compatibility-boundary.md
+kama	E11	S009 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S010 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S010 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S011 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S011 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S012 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S012 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S012 missing used-by corpus/knowledge/ollama-evidence-replay.md
+kama	E11	S012 missing used-by corpus/lessons/round-15.md
+kama	E11	S013 missing used-by corpus/knowledge/gguf-runtime-compatibility-boundary.md
+kama	E11	S014 missing used-by corpus/knowledge/gguf-runtime-compatibility-boundary.md
+kama	E11	S015 missing used-by corpus/knowledge/gguf-runtime-compatibility-boundary.md
+kama	E11	S016 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S017 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S017 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S018 missing used-by corpus/knowledge/serving-metrics-crosswalk.md
+kama	E11	S019 missing used-by corpus/knowledge/serving-metrics-crosswalk.md
+kama	E11	S020 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S031 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S031 missing used-by corpus/knowledge/ollama-evidence-replay.md
+kama	E11	S032 missing used-by corpus/lessons/round-12.md
+kama	E11	S033 missing used-by corpus/lessons/round-13.md
+kama	E11	S034 missing used-by corpus/lessons/round-15.md
+kama	E11	S035 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S035 missing used-by corpus/knowledge/endpoint-identity.md
+kama	E11	S035 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S035 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S036 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S036 missing used-by corpus/knowledge/endpoint-identity.md
+kama	E11	S036 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S036 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S036 missing used-by corpus/lessons/round-16.md
+kama	E11	S037 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S037 missing used-by corpus/knowledge/endpoint-identity.md
+kama	E11	S037 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S037 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S038 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S039 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S040 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S041 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S042 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S042 missing used-by corpus/lessons/round-17.md
+kama	E11	S043 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S043 missing used-by corpus/lessons/round-17.md
+kama	E11	S044 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S044 missing used-by corpus/lessons/round-17.md
+kama	E11	S045 missing used-by corpus/lessons/round-17.md
+kama	E11	S046 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S046 missing used-by corpus/lessons/round-17.md
+kama	E11	S047 missing used-by corpus/lessons/round-17.md
+kama	E11	S047 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S047 missing used-by corpus/lessons/round-18.md
+kama	E11	S048 missing used-by corpus/knowledge/loopback-listener-ownership.md
+kama	E11	S048 missing used-by corpus/lessons/round-18.md
+kama	E11	S049 missing used-by corpus/knowledge/loopback-listener-ownership.md
+kama	E11	S049 missing used-by corpus/lessons/round-18.md
+kama	E11	S050 missing used-by corpus/knowledge/loopback-listener-ownership.md
+kama	E11	S050 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S050 missing used-by corpus/lessons/round-18.md
+kama	E11	S051 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S051 missing used-by corpus/lessons/round-18.md
+kama	E11	S052 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S052 missing used-by corpus/lessons/round-18.md
+kama	E11	S054 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S054 missing used-by corpus/lessons/round-18.md
+kama	E11	S055 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S055 missing used-by corpus/lessons/round-18.md
+kama	E11	S056 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S056 missing used-by corpus/lessons/round-18.md
+exit=1
+
+### before: census, committed-tree root
+$ /home/vgpnk/Projects/shokunin/scripts/sources-census.sh census --root /tmp/kama-r20-CensusR19Retro/before-tree kama
+kama	rows	56
+kama	tier.A	53
+kama	tier.C	3
+kama	status.mined	45
+kama	status.queued	5
+kama	status.rejected	6
+FLEET	rows	56
+FLEET	tier.A	53
+FLEET	tier.B	0
+FLEET	tier.C	3
+FLEET	tier.invalid	0
+FLEET	status.queued	5
+FLEET	status.mined	45
+FLEET	status.rejected	6
+FLEET	status.invalid	0
+FLEET	missing	0
+exit=0
+
+### before: validate, committed-tree root
+$ /home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /tmp/kama-r20-CensusR19Retro/before-tree kama
+kama	W04	S031 duplicate url docs.ollama.com/api/tags across scopes
+kama	W04	S043 duplicate url github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server.cpp across scopes
+kama	W04	S056 duplicate url github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/common/arg.cpp across scopes
+kama	ok	/tmp/kama-r20-CensusR19Retro/before-tree/kama-shokunin/corpus/SOURCES.md
+exit=0
+
+### before: census stdout identical on both roots: yes
+
+### after: SOURCES.md blob id
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-parse 3389513f5107d5d77213cafa35ff2cbc18845100:corpus/SOURCES.md
+166268c69ceeb70385d08e3bc8701f35c3e69b8c
+exit=0
+
+### after: git-archive copy equals git-show copy
+$ cmp /tmp/kama-r20-CensusR19Retro/after/kama-shokunin/corpus/SOURCES.md /tmp/kama-r20-CensusR19Retro/after-tree/kama-shokunin/corpus/SOURCES.md
+exit=0
+
+### after: tracked paths at rev
+$ bash -c git\ -C\ \"\$1\"\ ls-tree\ -r\ --name-only\ \"\$2\"\ \|\ wc\ -l _ /home/vgpnk/Projects/shokunin/kama-shokunin 3389513f5107d5d77213cafa35ff2cbc18845100
+1431
+exit=0
+
+### after: extracted files and symlinks
+$ bash -c find\ \"\$1\"\ \\\(\ -type\ f\ -o\ -type\ l\ \\\)\ \|\ wc\ -l _ /tmp/kama-r20-CensusR19Retro/after-tree/kama-shokunin
+1431
+exit=0
+
+### after: registry rows by grep (spot-check oracle)
+$ grep -cE \^\\\|\ \*S\[0-9\]\{3\}\  /tmp/kama-r20-CensusR19Retro/after/kama-shokunin/corpus/SOURCES.md
+57
+exit=0
+
+### after: assigned census command before any shokunin.conf exists
+$ /home/vgpnk/Projects/shokunin/scripts/sources-census.sh census --root /tmp/kama-r20-CensusR19Retro/after kama
+[stderr]
+ERROR: config not found: /tmp/kama-r20-CensusR19Retro/after/shokunin.conf
+ERROR: unknown lane (not a dir, not in conf or root): kama
+exit=2
+
+### after: census, SOURCES.md-only root
+$ /home/vgpnk/Projects/shokunin/scripts/sources-census.sh census --root /tmp/kama-r20-CensusR19Retro/after kama
+kama	rows	57
+kama	tier.A	54
+kama	tier.C	3
+kama	status.mined	46
+kama	status.queued	5
+kama	status.rejected	6
+FLEET	rows	57
+FLEET	tier.A	54
+FLEET	tier.B	0
+FLEET	tier.C	3
+FLEET	tier.invalid	0
+FLEET	status.queued	5
+FLEET	status.mined	46
+FLEET	status.rejected	6
+FLEET	status.invalid	0
+FLEET	missing	0
+exit=0
+
+### after: validate, SOURCES.md-only root (E11 here = used-by path not materialized)
+$ /home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /tmp/kama-r20-CensusR19Retro/after kama
+kama	W04	S031 duplicate url docs.ollama.com/api/tags across scopes
+kama	W04	S043 duplicate url github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server.cpp across scopes
+kama	W04	S056 duplicate url github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/common/arg.cpp across scopes
+kama	E11	S001 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S001 missing used-by corpus/knowledge/serving-metrics-crosswalk.md
+kama	E11	S001 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S002 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S003 missing used-by corpus/knowledge/serving-metrics-crosswalk.md
+kama	E11	S004 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S005 missing used-by corpus/knowledge/gguf-runtime-compatibility-boundary.md
+kama	E11	S006 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S007 missing used-by corpus/knowledge/serving-metrics-crosswalk.md
+kama	E11	S008 missing used-by corpus/knowledge/gguf-runtime-compatibility-boundary.md
+kama	E11	S009 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S010 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S010 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S011 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S011 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S012 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S012 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S012 missing used-by corpus/knowledge/ollama-evidence-replay.md
+kama	E11	S012 missing used-by corpus/lessons/round-15.md
+kama	E11	S013 missing used-by corpus/knowledge/gguf-runtime-compatibility-boundary.md
+kama	E11	S014 missing used-by corpus/knowledge/gguf-runtime-compatibility-boundary.md
+kama	E11	S015 missing used-by corpus/knowledge/gguf-runtime-compatibility-boundary.md
+kama	E11	S016 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S017 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S017 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S018 missing used-by corpus/knowledge/serving-metrics-crosswalk.md
+kama	E11	S019 missing used-by corpus/knowledge/serving-metrics-crosswalk.md
+kama	E11	S020 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S031 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S031 missing used-by corpus/knowledge/ollama-evidence-replay.md
+kama	E11	S032 missing used-by corpus/lessons/round-12.md
+kama	E11	S033 missing used-by corpus/lessons/round-13.md
+kama	E11	S034 missing used-by corpus/lessons/round-15.md
+kama	E11	S035 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S035 missing used-by corpus/knowledge/endpoint-identity.md
+kama	E11	S035 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S035 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S036 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S036 missing used-by corpus/knowledge/endpoint-identity.md
+kama	E11	S036 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S036 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S036 missing used-by corpus/lessons/round-16.md
+kama	E11	S037 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S037 missing used-by corpus/knowledge/endpoint-identity.md
+kama	E11	S037 missing used-by corpus/knowledge/served-identity-crosswalk.md
+kama	E11	S037 missing used-by corpus/knowledge/runtime-health-surface-matrix.md
+kama	E11	S038 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S039 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S040 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S041 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S042 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S042 missing used-by corpus/lessons/round-17.md
+kama	E11	S043 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S043 missing used-by corpus/lessons/round-17.md
+kama	E11	S044 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S044 missing used-by corpus/lessons/round-17.md
+kama	E11	S045 missing used-by corpus/lessons/round-17.md
+kama	E11	S046 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S046 missing used-by corpus/lessons/round-17.md
+kama	E11	S047 missing used-by corpus/lessons/round-17.md
+kama	E11	S047 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S047 missing used-by corpus/lessons/round-18.md
+kama	E11	S048 missing used-by corpus/knowledge/loopback-listener-ownership.md
+kama	E11	S048 missing used-by corpus/lessons/round-18.md
+kama	E11	S049 missing used-by corpus/knowledge/loopback-listener-ownership.md
+kama	E11	S049 missing used-by corpus/lessons/round-18.md
+kama	E11	S050 missing used-by corpus/knowledge/loopback-listener-ownership.md
+kama	E11	S050 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S050 missing used-by corpus/lessons/round-18.md
+kama	E11	S051 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S051 missing used-by corpus/lessons/round-18.md
+kama	E11	S052 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S052 missing used-by corpus/lessons/round-18.md
+kama	E11	S054 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S054 missing used-by corpus/lessons/round-18.md
+kama	E11	S055 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S055 missing used-by corpus/lessons/round-18.md
+kama	E11	S056 missing used-by corpus/knowledge/llamacpp-loading-lifecycle.md
+kama	E11	S056 missing used-by corpus/lessons/round-18.md
+kama	E11	S057 missing used-by corpus/lessons/round-19.md
+kama	E11	S057 missing used-by SCORECARD.md
+exit=1
+
+### after: census, committed-tree root
+$ /home/vgpnk/Projects/shokunin/scripts/sources-census.sh census --root /tmp/kama-r20-CensusR19Retro/after-tree kama
+kama	rows	57
+kama	tier.A	54
+kama	tier.C	3
+kama	status.mined	46
+kama	status.queued	5
+kama	status.rejected	6
+FLEET	rows	57
+FLEET	tier.A	54
+FLEET	tier.B	0
+FLEET	tier.C	3
+FLEET	tier.invalid	0
+FLEET	status.queued	5
+FLEET	status.mined	46
+FLEET	status.rejected	6
+FLEET	status.invalid	0
+FLEET	missing	0
+exit=0
+
+### after: validate, committed-tree root
+$ /home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /tmp/kama-r20-CensusR19Retro/after-tree kama
+kama	W04	S031 duplicate url docs.ollama.com/api/tags across scopes
+kama	W04	S043 duplicate url github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server.cpp across scopes
+kama	W04	S056 duplicate url github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/common/arg.cpp across scopes
+kama	ok	/tmp/kama-r20-CensusR19Retro/after-tree/kama-shokunin/corpus/SOURCES.md
+exit=0
+
+### after: census stdout identical on both roots: yes
+
+# done

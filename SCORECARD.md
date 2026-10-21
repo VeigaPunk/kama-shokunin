@@ -849,3 +849,39 @@ defects 1 and 4 are record corrections rather than pointer checks. The
 `gate-live-1` row is re-pinned to `1b85a24`/`1cb5a41b…` as the blob that names
 `live-recovery/`. Wording correction: see `corpus/lessons/round-19.md`
 §C1 scope correction.
+
+### Round-20 correction of round-19 record
+
+The round-19 declaration at 823–824 and erratum at 846 are superseded:
+four registry-row digests, not three; `required=4 found=0 verified=0 missing=4`
+exit 1 → `required=4 found=4 verified=4 missing=0 mismatch=0 off_ref=0` exit 0
+at `028235e6` (`round-19/evidence/c1-counting.txt`). Its selftest printed
+"15 cases", not five. C1 still holds calibration **7 → 7**.
+"Falsify-wave refutation" is a label error: the critics were build seats;
+the round-19 66-seat falsify call spawned zero. Append-only corrections and
+clean-commit retrospective selftest/census receipts are recorded in
+`corpus/lessons/round-20.md` and the appended round-19 lesson correction.
+
+## Round 20 — named error regressions and GGUF declared identity
+
+Assigned axes remain operability 8 + calibration 7 (lowest non-retired
+assigned axis). Calibration below saturation 8 means no stagnation waiver.
+Capability window 4/4 motivates C2 without waiving C1.
+
+**C1 calibration, 7 → 7:** named grid/selftest error-classification regression
+repair, not a universal census. A frozen named-cell population and real-verdict
+controls distinguish crash/abort from credited rejection or kill. Counting
+command `python3 tools/error-verdict-census.py --json`. Base instrument revision
+`37bd4c5bd456a2f8a54d3312c28495c321715856`; the cell registry is committed
+before official measurement. Sources S061/S062/S064; counterexample S063.
+
+**C2 operability, capability acquisition, 8 → 8:** bounded offline GGUF metadata
+identity and captured-receipt comparison, `tools/gguf-identity.py`.
+Independent real-file oracle is `gguf==0.19.0`; the one existing CI GGUF and
+committed independent synthetic fixtures form the finite population.
+Sources S058/S060. Reading declarations does not establish loaded-weight
+identity, current endpoint health, model quality or authenticated execution.
+
+Other axes held: freshness 8, coverage 9, depth 7, adjacency 7. The final
+measurement appendix records commands, counts and the measured revision.
+

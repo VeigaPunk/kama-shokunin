@@ -1,0 +1,1277 @@
+{
+  "accepted_bad": 0,
+  "controlled_checks": {},
+  "controls": [
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "GOOD \u2014 documented-behaviour server: three exact loading 503s on /v1/models and one on /health, then the documented ready surfaces; its SIGTERM handler exits 0. Must be accepted; its receipt is the base of the forged-receipt controls k19-k22.",
+      "escaped": false,
+      "exits": [
+        0
+      ],
+      "expected": "accepted",
+      "failed_checks": [],
+      "gate_exit": -9,
+      "gate_flip": null,
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": true,
+      "id": "k0",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "pass",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "f89484dd42b5299181448674c47e57c9dd367426442f64bf2fb38fc201e30d6d",
+      "receipt_written": true,
+      "setup_error": null,
+      "targeted": [],
+      "targeted_hit": null,
+      "tool_exit": 0,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "health_ready \u2014 /health answers 200 {\"status\":\"degraded\"} after loading (a status-only readiness check would pass it).",
+      "escaped": false,
+      "exits": [
+        1
+      ],
+      "expected": "rejected-targeted",
+      "failed_checks": [
+        "health_ready"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [],
+        "exit": -9,
+        "flipped": [
+          "health_ready"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k1",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "fail",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "de95e904cb4ba0abfab9402aabea7ae8fc637bf4094c8893ab14d7aed8f2a83a",
+      "receipt_written": true,
+      "setup_error": null,
+      "targeted": [
+        "health_ready"
+      ],
+      "targeted_hit": true,
+      "tool_exit": 1,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "loading_envelope_graded \u2014 three /v1/models and one /health 503 with message \"Busy\" and string code \"503\", then ready.",
+      "escaped": false,
+      "exits": [
+        1
+      ],
+      "expected": "rejected-targeted",
+      "failed_checks": [
+        "loading_envelope_graded"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [],
+        "exit": -9,
+        "flipped": [
+          "loading_envelope_graded"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k2",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "fail",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "238de6277fd872eeea7a7278ea63130895116f5817519c6102ea527e94d41e00",
+      "receipt_written": true,
+      "setup_error": null,
+      "targeted": [
+        "loading_envelope_graded"
+      ],
+      "targeted_hit": true,
+      "tool_exit": 1,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "teardown_graceful \u2014 the server exits rc 0 by itself right after the second probe's /v1/models is served, before teardown, so the harness SIGTERM never reaches a live child (teardown_port_closed then lacks proven ownership). Exit 1 or 2: whether the post-probe liveness loss is a setup error is the tool's design choice.",
+      "escaped": false,
+      "exits": [
+        1,
+        2
+      ],
+      "expected": "rejected-targeted",
+      "failed_checks": [
+        "teardown_graceful",
+        "teardown_port_closed"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [
+          "setup_error"
+        ],
+        "exit": -9,
+        "flipped": [
+          "teardown_graceful",
+          "teardown_port_closed"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k3",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "setup-error",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "7e0140d64e7f6c4f7e4a0ab51b84746e0558aa3a17ecb09cc7f3e5f1fbc02fd6",
+      "receipt_written": true,
+      "setup_error": "post-probes:child-exited-rc0",
+      "targeted": [
+        "teardown_graceful",
+        "teardown_port_closed"
+      ],
+      "targeted_hit": true,
+      "tool_exit": 2,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "teardown_graceful \u2014 ignores SIGTERM, so teardown needs the SIGKILL escalation.",
+      "escaped": false,
+      "exits": [
+        1
+      ],
+      "expected": "rejected-targeted",
+      "failed_checks": [
+        "teardown_graceful"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [],
+        "exit": -9,
+        "flipped": [
+          "teardown_graceful"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k4",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "fail",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "a0c06fab3ae0fd0543383641ddfd39371d38dd046f1f9fdf223cc3004ec84067",
+      "receipt_written": true,
+      "setup_error": null,
+      "targeted": [
+        "teardown_graceful"
+      ],
+      "targeted_hit": true,
+      "tool_exit": 1,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "teardown_graceful \u2014 exits rc 1 on SIGTERM.",
+      "escaped": false,
+      "exits": [
+        1
+      ],
+      "expected": "rejected-targeted",
+      "failed_checks": [
+        "teardown_graceful"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [],
+        "exit": -9,
+        "flipped": [
+          "teardown_graceful"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k5",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "fail",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "d8e4177f0708e1b6682209a3eaddf826b35f733bf2f440de1e64a9b7c12ecc24",
+      "receipt_written": true,
+      "setup_error": null,
+      "targeted": [
+        "teardown_graceful"
+      ],
+      "targeted_hit": true,
+      "tool_exit": 1,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "teardown_graceful + internal fault \u2014 the tool's teardown() is replaced by a function raising RuntimeError; the receipt must still be written with internal:RuntimeError, and the tool must exit exactly 2.",
+      "escaped": false,
+      "exits": [
+        2
+      ],
+      "expected": "rejected-targeted",
+      "failed_checks": [
+        "teardown_graceful"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [
+          "setup_error",
+          "internal_fault"
+        ],
+        "exit": -9,
+        "flipped": [
+          "teardown_graceful"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k6",
+      "inject_fired": true,
+      "internal_fault": "internal:RuntimeError",
+      "kind": "inprocess",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "setup-error",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "b323edc8610cb1c0575a73f58e7b04a13f504f004700258c6950fc523488e88b",
+      "receipt_written": true,
+      "setup_error": "internal:RuntimeError",
+      "targeted": [
+        "teardown_graceful",
+        "RuntimeError"
+      ],
+      "targeted_hit": true,
+      "tool_exit": 2,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "setup error ready-timeout \u2014 the server listens but never answers (raw backlog, no accept), bounded by --ready-timeout 2: a receipt with setup_error ready-timeout and exit 2.",
+      "escaped": false,
+      "exits": [
+        2
+      ],
+      "expected": "rejected-untargeted",
+      "failed_checks": [
+        "teardown_graceful",
+        "teardown_port_closed"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [
+          "setup_error"
+        ],
+        "exit": -9,
+        "flipped": [
+          "teardown_graceful",
+          "teardown_port_closed",
+          "loading_envelope_graded"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k7",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [
+        "loading_envelope_graded"
+      ],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "setup-error",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "da6c00fc103aabab4ebd68dade38b2f7d706cd196b3a2ec37ae3db17d7b5d40a",
+      "receipt_written": true,
+      "setup_error": "ready-timeout",
+      "targeted": [],
+      "targeted_hit": null,
+      "tool_exit": 2,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "teardown_graceful \u2014 default SIGTERM disposition: killed by the signal (returncode -15).",
+      "escaped": false,
+      "exits": [
+        1
+      ],
+      "expected": "rejected-targeted",
+      "failed_checks": [
+        "teardown_graceful"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [],
+        "exit": -9,
+        "flipped": [
+          "teardown_graceful"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k8",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "fail",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "019563cbe96529ff8bc83de7e488541838d97c609baf363f580946b3cde0c061",
+      "receipt_written": true,
+      "setup_error": null,
+      "targeted": [
+        "teardown_graceful"
+      ],
+      "targeted_hit": true,
+      "tool_exit": 1,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "models_alias_id \u2014 /v1/models data[0].id is 'fakealias-decoy' for the tool's own requests (readiness polls and capture), while curl (the probe) still sees the alias, so only the capture-graded check fails.",
+      "escaped": false,
+      "exits": [
+        1
+      ],
+      "expected": "rejected-targeted",
+      "failed_checks": [
+        "models_alias_id"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [],
+        "exit": -9,
+        "flipped": [
+          "models_alias_id"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k9",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "fail",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "b97f32ed828d0a9f7559b065cb6cca4c0d47517cb54841ee3bd515b0d8276c10",
+      "receipt_written": true,
+      "setup_error": null,
+      "targeted": [
+        "models_alias_id"
+      ],
+      "targeted_hit": true,
+      "tool_exit": 1,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "models_owned_by_llamacpp \u2014 /v1/models data[0].owned_by is 'openai' for the tool's own requests; ids stay the alias and curl sees the documented 'llamacpp'.",
+      "escaped": false,
+      "exits": [
+        1
+      ],
+      "expected": "rejected-targeted",
+      "failed_checks": [
+        "models_owned_by_llamacpp"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [],
+        "exit": -9,
+        "flipped": [
+          "models_owned_by_llamacpp"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k10",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "fail",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "d9f7f949d38bcb724c8946d16245df188fcba3b553191b1aab5014b1422dfba4",
+      "receipt_written": true,
+      "setup_error": null,
+      "targeted": [
+        "models_owned_by_llamacpp"
+      ],
+      "targeted_hit": true,
+      "tool_exit": 1,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "metrics_not_enabled \u2014 GET /metrics answers 200 with Prometheus text although the server ran without --metrics (llama.cpp answers 501).",
+      "escaped": false,
+      "exits": [
+        1
+      ],
+      "expected": "rejected-targeted",
+      "failed_checks": [
+        "metrics_not_enabled"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [],
+        "exit": -9,
+        "flipped": [
+          "metrics_not_enabled"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k11",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "fail",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "16c992807a75c90c3908202686bd93b7c1252da90ce31437660e81c6d112a604",
+      "receipt_written": true,
+      "setup_error": null,
+      "targeted": [
+        "metrics_not_enabled"
+      ],
+      "targeted_hit": true,
+      "tool_exit": 1,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "props_alias \u2014 /props model_alias is 'fakealias-decoy' instead of the --alias value; /v1/models stays correct for everyone.",
+      "escaped": false,
+      "exits": [
+        1
+      ],
+      "expected": "rejected-targeted",
+      "failed_checks": [
+        "props_alias"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [],
+        "exit": -9,
+        "flipped": [
+          "props_alias"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k12",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "fail",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "98ab187e55fc18443eb6f3ed7a73eebd59fc9eb74f04b2fb52a8fc19df265670",
+      "receipt_written": true,
+      "setup_error": null,
+      "targeted": [
+        "props_alias"
+      ],
+      "targeted_hit": true,
+      "tool_exit": 1,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "probe_model_ok \u2014 the first curl /v1/models response (matching probe) is 'fakealias-decoy', while the second curl response (mismatch probe) returns the alias. The capture still sees the alias: only probe_model_ok fails; the second probe still mismatches correctly.",
+      "escaped": false,
+      "exits": [
+        1
+      ],
+      "expected": "rejected-targeted",
+      "failed_checks": [
+        "probe_model_ok"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [],
+        "exit": -9,
+        "flipped": [
+          "probe_model_ok"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k13",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "fail",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "dbc2f3d4fa01e30c9223004cb08e970357d0ce765db37c6022d6222d485a87a4",
+      "receipt_written": true,
+      "setup_error": null,
+      "targeted": [
+        "probe_model_ok"
+      ],
+      "targeted_hit": true,
+      "tool_exit": 1,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "probe_mismatch \u2014 the second curl /v1/models response (mismatch probe) is 'kama-not-this-model', while the first curl response (matching probe) and the tool's capture return the alias. The second probe therefore reports MODEL_OK/matched/exit 0 instead of MODEL_MISMATCH.",
+      "escaped": false,
+      "exits": [
+        1
+      ],
+      "expected": "rejected-targeted",
+      "failed_checks": [
+        "probe_mismatch"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [],
+        "exit": -9,
+        "flipped": [
+          "probe_mismatch"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k14",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "fail",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "500f714d226afd27f471b98ea46f0b4a4cd14ca13ec41ec1d6bcddf0a89c4834",
+      "receipt_written": true,
+      "setup_error": null,
+      "targeted": [
+        "probe_mismatch"
+      ],
+      "targeted_hit": true,
+      "tool_exit": 1,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "teardown_port_closed \u2014 a forked helper inherits the listening socket, ignores SIGTERM and never accepts: the server exits 0 gracefully on the harness SIGTERM but the port still completes connections afterwards.",
+      "escaped": false,
+      "exits": [
+        1
+      ],
+      "expected": "rejected-targeted",
+      "failed_checks": [
+        "teardown_port_closed"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [],
+        "exit": -9,
+        "flipped": [
+          "teardown_port_closed"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k15",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "fail",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "da2a6f385bc0eed98962b1ae153274d200a82a28f395b547277848af7ec6ea9c",
+      "receipt_written": true,
+      "setup_error": null,
+      "targeted": [
+        "teardown_port_closed"
+      ],
+      "targeted_hit": true,
+      "tool_exit": 1,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "GOOD zero-loading \u2014 ready at once, never answers 503 (a load faster than the polls). Nothing was observed to grade the loading envelope: expected not-evaluated (loading_envelope_graded passed:null, tool exit 2, gate exit 3). Failing it (exit 1) is the R4 misclassification; passing it vacuously is one too.",
+      "escaped": false,
+      "exits": [
+        2
+      ],
+      "expected": "not-evaluated",
+      "failed_checks": [],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [],
+        "exit": -9,
+        "flipped": [
+          "loading_envelope_graded"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": true,
+      "id": "k16",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [
+        "loading_envelope_graded"
+      ],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "not-evaluated",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "2f70d049788891082e5ecfbdd45305fa14ee449ef5ba8f8af8a904b2d791abee",
+      "receipt_written": true,
+      "setup_error": null,
+      "targeted": [
+        "loading_envelope_graded"
+      ],
+      "targeted_hit": false,
+      "tool_exit": 2,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "GOOD dual-stack listener \u2014 the k0 server on an AF_INET6 socket bound to ::ffff:127.0.0.1 with IPV6_V6ONLY=0 (listed in /proc/net/tcp6 as an IPv4-mapped loopback address). Must be accepted; a rejection, e.g. ownership unproven, is a false failure (good_rejected).",
+      "escaped": false,
+      "exits": [
+        0
+      ],
+      "expected": "accepted",
+      "failed_checks": [],
+      "gate_exit": -9,
+      "gate_flip": null,
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": true,
+      "id": "k17",
+      "inject_fired": null,
+      "internal_fault": null,
+      "kind": "tool",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "pass",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "d4df3aa0c7b46d771f06c700ab716fa4918df0fb0d80427fc6900e80f879f42d",
+      "receipt_written": true,
+      "setup_error": null,
+      "targeted": [
+        "ownership"
+      ],
+      "targeted_hit": false,
+      "tool_exit": 0,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "teardown_graceful + BaseException \u2014 the tool's teardown() is replaced by a function raising KeyboardInterrupt; the receipt must still be written with internal:KeyboardInterrupt and the tool must exit exactly 2 (an escape without a receipt counts as accepted-bad).",
+      "escaped": false,
+      "exits": [
+        2
+      ],
+      "expected": "rejected-targeted",
+      "failed_checks": [
+        "teardown_graceful"
+      ],
+      "gate_exit": -9,
+      "gate_flip": {
+        "accepted": false,
+        "cleared": [
+          "setup_error",
+          "internal_fault"
+        ],
+        "exit": -9,
+        "flipped": [
+          "teardown_graceful"
+        ],
+        "rejected": true,
+        "targeted": false
+      },
+      "gate_named_checks": [],
+      "gate_problems": [],
+      "good": false,
+      "id": "k18",
+      "inject_fired": true,
+      "internal_fault": "internal:KeyboardInterrupt",
+      "kind": "inprocess",
+      "null_checks": [],
+      "reason": "no gate verdict (gate exit -9)",
+      "receipt_check_ids": [
+        "health_ready",
+        "models_alias_id",
+        "models_owned_by_llamacpp",
+        "metrics_not_enabled",
+        "props_alias",
+        "probe_model_ok",
+        "probe_mismatch",
+        "teardown_graceful",
+        "teardown_port_closed",
+        "loading_envelope_graded",
+        "model_unchanged"
+      ],
+      "receipt_outcome": "setup-error",
+      "receipt_parsed": true,
+      "receipt_schema": "kama-llamacpp-live/v3",
+      "receipt_sha256": "21850f63fbcc135cec4d2424140f7ac39caf4871ffb76f8a31e6ea3cbd004405",
+      "receipt_written": true,
+      "setup_error": "internal:KeyboardInterrupt",
+      "targeted": [
+        "teardown_graceful",
+        "KeyboardInterrupt"
+      ],
+      "targeted_hit": true,
+      "tool_exit": 2,
+      "tool_stderr_tail": null,
+      "tool_timed_out": false
+    },
+    {
+      "base_gate_exit": -9,
+      "base_source": "k0",
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "schema floor \u2014 the good receipt re-declared kama-llamacpp-live/v1 with the v1 check set (teardown_graceful becomes teardown_exited, loading_envelope_graded is dropped, per-check evaluated and top-level outcome are removed) so the weaker v1 predicates would grade it. Run with --require-schema v3 the gate must refuse it naming the schema; the same bytes without the flag are expected VALID (v1 path unchanged), recorded as flagless_gate_exit.",
+      "exits": null,
+      "expected": "rejected-targeted",
+      "failed_checks": [],
+      "flag_gate_exit": -9,
+      "flagless_gate_exit": -9,
+      "forged_sha256": "52401041ea1d002f90c44f524da6277db7ddba877cef2a0a61826d1483782b5e",
+      "gate_args": [
+        "--require-schema",
+        "v3"
+      ],
+      "gate_exit": -9,
+      "gate_flip": null,
+      "gate_problems": [],
+      "good": false,
+      "id": "k19",
+      "kind": "forgery",
+      "null_checks": [],
+      "reason": "base k0 receipt is not gate-VALID (exit -9); forgery not isolating; no gate verdict (gate exit -9)",
+      "targeted": [
+        "schema"
+      ],
+      "targeted_hit": false,
+      "usage_error": false
+    },
+    {
+      "base_gate_exit": -9,
+      "base_source": "k0",
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "argv exactness \u2014 '--api-key X' inserted into the recorded server argv just before the fixed '--no-webui --offline' tail: every flag value and the tail still match, so only re-deriving the whole argv from receipt fields refuses it.",
+      "exits": null,
+      "expected": "rejected-targeted",
+      "failed_checks": [],
+      "flag_gate_exit": null,
+      "flagless_gate_exit": null,
+      "forged_sha256": "9adb7cc7b82c295e8cc52bf03ecf690d7e6a36566e893bcec93e798c5ddd62fa",
+      "gate_args": [],
+      "gate_exit": -9,
+      "gate_flip": null,
+      "gate_problems": [],
+      "good": false,
+      "id": "k20",
+      "kind": "forgery",
+      "null_checks": [],
+      "reason": "base k0 receipt is not gate-VALID (exit -9); forgery not isolating; no gate verdict (gate exit -9)",
+      "targeted": [
+        "^(?!.*\\bprobe).*\\bargv"
+      ],
+      "targeted_hit": false,
+      "usage_error": false
+    },
+    {
+      "base_gate_exit": -9,
+      "base_source": "k0",
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "transitions envelope \u2014 the /v1/models loading-503 transitions row is split into an exact row and a row whose body carries code \"503\" as a string (body_sha256 recomputed, so the row is self-consistent; the 503 total is kept when the row had repeats), while loading_503 and loading_503_bodies keep only exact bodies. Grading only the deduplicated bodies misses it; every /v1/models 503 row must be graded.",
+      "exits": null,
+      "expected": "rejected-targeted",
+      "failed_checks": [],
+      "flag_gate_exit": null,
+      "flagless_gate_exit": null,
+      "forged_sha256": "7263badb72c288a31cbb8a75b7ecc5f3c5c4ffd012484d5229cd2ea16c9eb1dc",
+      "gate_args": [],
+      "gate_exit": -9,
+      "gate_flip": null,
+      "gate_problems": [],
+      "good": false,
+      "id": "k21",
+      "kind": "forgery",
+      "null_checks": [],
+      "reason": "base k0 receipt is not gate-VALID (exit -9); forgery not isolating; no gate verdict (gate exit -9)",
+      "targeted": [
+        "transition"
+      ],
+      "targeted_hit": false,
+      "usage_error": false
+    },
+    {
+      "base_gate_exit": -9,
+      "base_source": "k0",
+      "bucket": "misclassified",
+      "classification": "misclassified",
+      "description": "argv exactness (duplicate flag) \u2014 a second '--host 0.0.0.0' inserted before the tail: a first-occurrence flag lookup still reads 127.0.0.1, so the recorded argv no longer states one loopback host; the gate must refuse duplicate flags.",
+      "exits": null,
+      "expected": "rejected-targeted",
+      "failed_checks": [],
+      "flag_gate_exit": null,
+      "flagless_gate_exit": null,
+      "forged_sha256": "8ce826ddcd447e6f031069e629222a9f8d6cef6506b48b43f81775d3aead3fe7",
+      "gate_args": [],
+      "gate_exit": -9,
+      "gate_flip": null,
+      "gate_problems": [],
+      "good": false,
+      "id": "k22",
+      "kind": "forgery",
+      "null_checks": [],
+      "reason": "base k0 receipt is not gate-VALID (exit -9); forgery not isolating; no gate verdict (gate exit -9)",
+      "targeted": [
+        "^(?!.*\\bprobe).*\\bargv"
+      ],
+      "targeted_hit": false,
+      "usage_error": false
+    }
+  ],
+  "gate_flip_arms": 17,
+  "gate_flip_bad": 0,
+  "gate_sha256": "98888c320924dd0d2236d5c2713d7ddb431a93259e8f8e6d81d8497fda0d3630",
+  "good_ok": false,
+  "good_rejected": 0,
+  "inconclusive": 0,
+  "input_integrity_checks": [
+    "model_unchanged"
+  ],
+  "misclassified": 23,
+  "probe_sha256": "36b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3",
+  "receipt_schemas": [
+    "kama-llamacpp-live/v3"
+  ],
+  "schema": "kama-live-controls/v2",
+  "selected": [
+    "k0",
+    "k1",
+    "k2",
+    "k3",
+    "k4",
+    "k5",
+    "k6",
+    "k7",
+    "k8",
+    "k9",
+    "k10",
+    "k11",
+    "k12",
+    "k13",
+    "k14",
+    "k15",
+    "k16",
+    "k17",
+    "k18",
+    "k19",
+    "k20",
+    "k21",
+    "k22"
+  ],
+  "tool_sha256": "83eac5c0489377a88c8ecead89af4ca5f057bd0463d8bf8a79467eb6c5de88c4",
+  "uncontrolled_checks": [
+    "health_ready",
+    "loading_envelope_graded",
+    "metrics_not_enabled",
+    "models_alias_id",
+    "models_owned_by_llamacpp",
+    "probe_mismatch",
+    "probe_model_ok",
+    "props_alias",
+    "teardown_graceful",
+    "teardown_port_closed"
+  ]
+}

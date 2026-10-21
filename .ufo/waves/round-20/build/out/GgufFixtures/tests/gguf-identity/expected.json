@@ -1,0 +1,431 @@
+{
+  "exit_codes": {
+    "0": "decoded",
+    "1": "not GGUF (bad magic)",
+    "2": "malformed or unsupported (named reason)",
+    "3": "file unavailable (not exercised by file fixtures)"
+  },
+  "fixtures": [
+    {
+      "basis": "GGUF v2/v3 header and metadata layouts; gguf.md:142-151,198-299,764-780.",
+      "description": "Structurally minimal little-endian v3 header with no tensors or metadata.",
+      "endianness": "little",
+      "expected_exit": 0,
+      "expected_reason": "decoded",
+      "file": "fixtures/v3-minimal.gguf",
+      "id": "v3-minimal",
+      "kv_count": 0,
+      "metadata": {},
+      "sha256": "a4e5e156ddec27e286f75328784d7106b60a4eb1d246e950a001a3f944fbda99",
+      "size_bytes": 24,
+      "tensor_count": 0,
+      "version": 3
+    },
+    {
+      "basis": "GGUF v2/v3 header and metadata layouts; gguf.md:142-151,198-299,764-780. v2 uint64 counts: gguf.md:774-776.",
+      "description": "Little-endian v2 with three metadata records; v2 uses uint64 count fields.",
+      "endianness": "little",
+      "expected_exit": 0,
+      "expected_reason": "decoded",
+      "file": "fixtures/v2-valid.gguf",
+      "id": "v2-valid",
+      "kv_count": 3,
+      "metadata": {
+        "general.architecture": {
+          "type": "string",
+          "value": "llama"
+        },
+        "general.name": {
+          "type": "string",
+          "value": "fixture-v2"
+        },
+        "llama.context_length": {
+          "type": "uint64",
+          "value": 4096
+        }
+      },
+      "sha256": "083128b301233cb7544cbe9c645b445d4da6b201966c2f54d4b834468dd6ceb1",
+      "size_bytes": 151,
+      "tensor_count": 0,
+      "version": 2
+    },
+    {
+      "basis": "GGUF scalar enum and encodings: gguf.md:198-228,231-237.",
+      "description": "One scalar metadata value for every non-array GGUF value type, codes 0-8 and 10-12.",
+      "endianness": "little",
+      "expected_exit": 0,
+      "expected_reason": "decoded",
+      "file": "fixtures/v3-all-scalars.gguf",
+      "id": "v3-all-scalars",
+      "kv_count": 12,
+      "metadata": {
+        "test.bool": {
+          "type": "bool",
+          "value": true
+        },
+        "test.f32": {
+          "type": "float32",
+          "value": 1.5
+        },
+        "test.f64": {
+          "type": "float64",
+          "value": -2.5
+        },
+        "test.i16": {
+          "type": "int16",
+          "value": -32768
+        },
+        "test.i32": {
+          "type": "int32",
+          "value": -2147483648
+        },
+        "test.i64": {
+          "type": "int64",
+          "value": -9223372036854775808
+        },
+        "test.i8": {
+          "type": "int8",
+          "value": -128
+        },
+        "test.string": {
+          "type": "string",
+          "value": "Grüße 🔥"
+        },
+        "test.u16": {
+          "type": "uint16",
+          "value": 65535
+        },
+        "test.u32": {
+          "type": "uint32",
+          "value": 4294967295
+        },
+        "test.u64": {
+          "type": "uint64",
+          "value": 18446744073709551615
+        },
+        "test.u8": {
+          "type": "uint8",
+          "value": 255
+        }
+      },
+      "sha256": "c700f5fca9995362fd75f39fd3202f4838d0600e1cb7015b68f3796dc50ea7e5",
+      "size_bytes": 329,
+      "tensor_count": 0,
+      "version": 3
+    },
+    {
+      "basis": "GGUF arrays may nest; the length counts elements: gguf.md:219-222,252-259.",
+      "description": "Nested arrays, nested uint8/string vectors, an empty int32 array and UTF-8 strings.",
+      "endianness": "little",
+      "expected_exit": 0,
+      "expected_reason": "decoded",
+      "file": "fixtures/v3-nested-array.gguf",
+      "id": "v3-nested-array",
+      "kv_count": 3,
+      "metadata": {
+        "test.empty": {
+          "element_type": "int32",
+          "length": 0,
+          "type": "array"
+        },
+        "test.nested": {
+          "element_type": "array",
+          "length": 2,
+          "type": "array"
+        },
+        "test.strings": {
+          "element_type": "string",
+          "length": 3,
+          "type": "array"
+        }
+      },
+      "sha256": "51c6aa6c677575a0ca734498875f5d0ebbe1c05c56d1d58063d7c57e90412729",
+      "size_bytes": 206,
+      "tensor_count": 0,
+      "version": 3
+    },
+    {
+      "basis": "Big-endian encodes all values: gguf.md:151; v3 adds BE: gguf.md:770-772.",
+      "description": "Big-endian v3; magic remains the literal bytes GGUF and all other fields are big-endian.",
+      "endianness": "big",
+      "expected_exit": 0,
+      "expected_reason": "decoded",
+      "file": "fixtures/v3-big-endian.gguf",
+      "id": "v3-big-endian",
+      "kv_count": 3,
+      "metadata": {
+        "general.architecture": {
+          "type": "string",
+          "value": "llama"
+        },
+        "llama.context_length": {
+          "type": "uint64",
+          "value": 72623859790382856
+        },
+        "test.array": {
+          "element_type": "uint16",
+          "length": 2,
+          "type": "array"
+        }
+      },
+      "sha256": "780f8202683df0b54826f5ac0f85e3d17ee9b798920efe636b3f78a62d369248",
+      "size_bytes": 147,
+      "tensor_count": 0,
+      "version": 3
+    },
+    {
+      "basis": "Identity key definitions: gguf.md:373-384,388-407,449-453,680-684.",
+      "description": "All eight metadata fields used by the model-identity reader, with mixed integer widths.",
+      "endianness": "little",
+      "expected_exit": 0,
+      "expected_reason": "decoded",
+      "file": "fixtures/v3-identity.gguf",
+      "id": "v3-identity",
+      "kv_count": 8,
+      "metadata": {
+        "general.alignment": {
+          "type": "uint32",
+          "value": 32
+        },
+        "general.architecture": {
+          "type": "string",
+          "value": "llama"
+        },
+        "general.file_type": {
+          "type": "uint32",
+          "value": 0
+        },
+        "general.name": {
+          "type": "string",
+          "value": "fixture-identity"
+        },
+        "llama.block_count": {
+          "type": "uint64",
+          "value": 8
+        },
+        "llama.context_length": {
+          "type": "uint32",
+          "value": 2048
+        },
+        "llama.embedding_length": {
+          "type": "uint64",
+          "value": 64
+        },
+        "tokenizer.ggml.model": {
+          "type": "string",
+          "value": "llama"
+        }
+      },
+      "sha256": "bf190f48a0c731e8e2e5b125cf731755999513cfefcf76676a97fbf5017d15c5",
+      "size_bytes": 343,
+      "tensor_count": 0,
+      "version": 3
+    },
+    {
+      "basis": "Magic must be the literal bytes GGUF: gguf.md:278-283.",
+      "description": "Invalid magic bytes b'GGUX'; remainder is a minimal v3-shaped header.",
+      "expected_exit": 1,
+      "expected_reason": "bad_magic",
+      "file": "fixtures/bad-magic-near-miss.gguf",
+      "id": "bad-magic-near-miss",
+      "sha256": "f155e74548bdfba5c21371dc5be79be2ce7422ff7dc9958354d279202b994c66",
+      "size_bytes": 24
+    },
+    {
+      "basis": "Magic must be the literal bytes GGUF: gguf.md:278-283.",
+      "description": "Invalid magic bytes b'FUGG'; remainder is a minimal v3-shaped header.",
+      "expected_exit": 1,
+      "expected_reason": "bad_magic",
+      "file": "fixtures/bad-magic-reversed.gguf",
+      "id": "bad-magic-reversed",
+      "sha256": "0eb46933dddacd5c001470652b20acd7b38ce6a37376c5171f3e3a61e3cc6951",
+      "size_bytes": 24
+    },
+    {
+      "basis": "Expected fail-closed result from the declared gguf-identity.py tool contract. Tool supports v2/v3 only.",
+      "description": "Little-endian header with unsupported version 0.",
+      "endianness": "little",
+      "expected_exit": 2,
+      "expected_reason": "unsupported_version",
+      "file": "fixtures/version-0.gguf",
+      "id": "version-0",
+      "kv_count": 0,
+      "sha256": "ada42c5980f056051b81fd7321bed631436eb08e044820484dcee010035b3c74",
+      "size_bytes": 24,
+      "tensor_count": 0,
+      "version": 0
+    },
+    {
+      "basis": "Expected fail-closed result from the declared gguf-identity.py tool contract. Tool supports v2/v3 only.",
+      "description": "Little-endian header with unsupported version 99.",
+      "endianness": "little",
+      "expected_exit": 2,
+      "expected_reason": "unsupported_version",
+      "file": "fixtures/version-99.gguf",
+      "id": "version-99",
+      "kv_count": 0,
+      "sha256": "2e688af5d0831fe5ae1b2b9404bb860b80f797ca7e0a22a2e61b7d93921190df",
+      "size_bytes": 24,
+      "tensor_count": 0,
+      "version": 99
+    },
+    {
+      "basis": "Historical v1: gguf.md:778-780; current tool supports v2/v3 only.",
+      "description": "Version 1 shape with its historical uint32 tensor/KV counts.",
+      "endianness": "little",
+      "expected_exit": 2,
+      "expected_reason": "unsupported_version",
+      "file": "fixtures/version-1.gguf",
+      "id": "version-1",
+      "kv_count": 0,
+      "sha256": "3d4d198e376009ce341ce70a37f8861a5692bb7190e6e922afcdf0c681f56933",
+      "size_bytes": 16,
+      "tensor_count": 0,
+      "version": 1
+    },
+    {
+      "basis": "Header requires uint64 tensor_count and metadata_kv_count: gguf.md:277-298.",
+      "description": "Valid magic/version followed by only half of the uint64 tensor_count field.",
+      "expected_exit": 2,
+      "expected_reason": "truncated_tensor_count",
+      "file": "fixtures/truncated-header.gguf",
+      "id": "truncated-header",
+      "sha256": "1ee47bfed959cd67cb9ec7ba0d8ddebfd1327a4f8bdfe9256d0b8eb409a0dbb7",
+      "size_bytes": 12
+    },
+    {
+      "basis": "String has uint64 byte length and UTF-8 bytes: gguf.md:231-237.",
+      "description": "A string declares 8 payload bytes but only 2 remain.",
+      "expected_exit": 2,
+      "expected_reason": "truncated_string_value",
+      "file": "fixtures/truncated-string.gguf",
+      "id": "truncated-string",
+      "sha256": "3025680fbd4f651396a090e9febb7320d19bf49cba221d4d4b6e15f7c0b7ecfb",
+      "size_bytes": 60
+    },
+    {
+      "basis": "Expected fail-closed result from the declared gguf-identity.py tool contract. Tool --max-str defaults to 16 MiB; string encoding: gguf.md:231-237.",
+      "description": "A string declares UINT64_MAX bytes, exceeding both file size and the reader string limit.",
+      "expected_exit": 2,
+      "expected_reason": "string_too_large",
+      "file": "fixtures/string-length-exceeds-file.gguf",
+      "id": "string-length-exceeds-file",
+      "sha256": "e932e98a3558d63c804ab0f243f90dbec87546f93a15fee6a8fa0255f678c808",
+      "size_bytes": 53
+    },
+    {
+      "basis": "Only enum codes 0-12 are defined: gguf.md:198-228,270-274.",
+      "description": "Metadata value_type is the first unassigned enum value, 13.",
+      "expected_exit": 2,
+      "expected_reason": "unknown_value_type",
+      "file": "fixtures/unknown-value-type-13.gguf",
+      "id": "unknown-value-type-13",
+      "sha256": "c3b413ffe6dacf6126ae03f740614d5db2e84ff6a0694514afff822b49ae422a",
+      "size_bytes": 48
+    },
+    {
+      "basis": "Expected fail-closed result from the declared gguf-identity.py tool contract. Tool --max-kv defaults to 1,000,000; count field is uint64: gguf.md:294-298.",
+      "description": "v3 metadata_kv_count is 1099511627776; there are no following KV records.",
+      "endianness": "little",
+      "expected_exit": 2,
+      "expected_reason": "kv_count_too_large",
+      "file": "fixtures/kv-count-2pow40.gguf",
+      "id": "kv-count-2pow40",
+      "kv_count": 1099511627776,
+      "sha256": "c7956947aa09e2c2f3304ffd7eba18b54520446b4baf93667af75ef3aaef690b",
+      "size_bytes": 24,
+      "tensor_count": 0,
+      "version": 3
+    },
+    {
+      "basis": "Expected fail-closed result from the declared gguf-identity.py tool contract. Tool --max-kv defaults to 1,000,000; count field is uint64: gguf.md:294-298.",
+      "description": "v3 metadata_kv_count is 4294967297; there are no following KV records.",
+      "endianness": "little",
+      "expected_exit": 2,
+      "expected_reason": "kv_count_too_large",
+      "file": "fixtures/kv-count-2pow32-plus1.gguf",
+      "id": "kv-count-2pow32-plus1",
+      "kv_count": 4294967297,
+      "sha256": "40d8775ea8dfc7f0d8a8905116dae41dd73367f0b151b0450a334ffa9e777fa0",
+      "size_bytes": 24,
+      "tensor_count": 0,
+      "version": 3
+    },
+    {
+      "basis": "Expected fail-closed result from the declared gguf-identity.py tool contract. Duplicate keys rejected by assigned tool contract.",
+      "description": "Two records use the same key with otherwise valid uint8 values.",
+      "expected_exit": 2,
+      "expected_reason": "duplicate_key",
+      "file": "fixtures/duplicate-key.gguf",
+      "id": "duplicate-key",
+      "sha256": "4606213b88ea773f25d6b53c9d7144cf41c32bd08226ef5822fdb2b0f7cd21ef",
+      "size_bytes": 78
+    },
+    {
+      "basis": "Keys must be valid ASCII; GGUF strings are UTF-8: gguf.md:231-237,262-267.",
+      "description": "Key bytes contain an invalid UTF-8 sequence.",
+      "expected_exit": 2,
+      "expected_reason": "invalid_utf8",
+      "file": "fixtures/non-utf8-key.gguf",
+      "id": "non-utf8-key",
+      "sha256": "ff6c67089a63180feb7fcf6ecc41bf75b1303ec4348a4521f7e02ef821dc4761",
+      "size_bytes": 43
+    },
+    {
+      "basis": "GGUF string payloads are UTF-8: gguf.md:231-237.",
+      "description": "String value contains an invalid UTF-8 sequence.",
+      "expected_exit": 2,
+      "expected_reason": "invalid_utf8",
+      "file": "fixtures/non-utf8-value.gguf",
+      "id": "non-utf8-value",
+      "sha256": "66f173acbefd382ca9557bcfb88266fd3d54e39864ecde598bfe4cd424b5688a",
+      "size_bytes": 58
+    },
+    {
+      "basis": "Array length is an element count and all array values follow: gguf.md:219-222,252-259.",
+      "description": "uint32 array declares two elements but only one element is present.",
+      "expected_exit": 2,
+      "expected_reason": "truncated_array_values",
+      "file": "fixtures/truncated-array-values.gguf",
+      "id": "truncated-array-values",
+      "sha256": "eb88692bccb20de70f94bcf8b53a877e5dcda438fc3490d17dffcb18815166fd",
+      "size_bytes": 62
+    },
+    {
+      "basis": "Expected fail-closed result from the declared gguf-identity.py tool contract. Arrays count elements: gguf.md:219-222.",
+      "description": "uint8 array declares 2^40 elements, above the reader's 1,000,000 element bound.",
+      "expected_exit": 2,
+      "expected_reason": "array_too_large",
+      "file": "fixtures/array-length-exceeds-limit.gguf",
+      "id": "array-length-exceeds-limit",
+      "sha256": "e27ab4f5b0d28dcb23adbb5266ddf79a669a46c5642058166a3fb247a41f4c2d",
+      "size_bytes": 58
+    },
+    {
+      "basis": "Expected fail-closed result from the declared gguf-identity.py tool contract. The tool's bounded nested-array contract; spec permits nesting: gguf.md:219-222.",
+      "description": "Array nesting depth is 40, above the reader's depth bound of 32.",
+      "expected_exit": 2,
+      "expected_reason": "array_nesting_too_deep",
+      "file": "fixtures/array-nesting-exceeds-limit.gguf",
+      "id": "array-nesting-exceeds-limit",
+      "sha256": "201606a9107a21a94fd015c3e2a41bf851e711572177b8667bfa61563a91e052",
+      "size_bytes": 538
+    }
+  ],
+  "generator": "make_fixtures.py (Python standard library only; no parser imports)",
+  "limits": {
+    "maximum_fixture_size_bytes_exclusive": 4096,
+    "tool_default_max_array_depth": 32,
+    "tool_default_max_array_length": 1000000,
+    "tool_default_max_kv": 1000000,
+    "tool_default_max_string_bytes": 16777216
+  },
+  "schema": "kama.gguf-identity-fixtures.v1",
+  "specification": {
+    "commit": "da8e2a54b919557b816b1c2beb432ccb766f7ce0",
+    "path": "docs/gguf.md",
+    "repository": "ggml-org/ggml",
+    "sha256": "1dead27b6a522709f0127d194e58c21dbbbf00ba1c64fe37c54d1a9048b05020",
+    "url": "https://raw.githubusercontent.com/ggml-org/ggml/da8e2a54b919557b816b1c2beb432ccb766f7ce0/docs/gguf.md"
+  }
+}

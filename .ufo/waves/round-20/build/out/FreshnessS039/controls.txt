@@ -1,0 +1,27 @@
+# Fail-capability controls for freshness_check.py (sha256 204dd6d4a775014789045da3eccdcee09aecd6c5328854503b706147e736c2a7)
+# Run 2026-10-21 (~07:25Z) from /tmp/kama-r20-FreshnessS039 (scratch, since deleted). Fixtures:
+#   flip.gguf        = cp stories260K.gguf; printf '\x5a' | dd of=flip.gguf bs=1 seek=600000 conv=notrunc  (cmp -l: 1 byte differs)
+#   receipt-mut2.json = jq '.model_sha256_post = ("0"*64)' of round-18/live-recovery/receipt-1.json
+#   absent.tar.gz    = path that does not exist
+#   rev 1b85a24~40   = 96bbd742618bcfae8734d18786112a78ead01c9c (corpus/SOURCES.md absent there)
+# Command per control: python3 freshness_check.py <spec> 2>&1 >/dev/null | grep -v '^match'; echo "exit=${PIPESTATUS[0]}"
+== control: --model /tmp/kama-r20-FreshnessS039/flip.gguf
+mismatch S039 LFS sha256 == model sha256
+mismatch receipt model.path == model path
+mismatch receipt model.sha256 == model sha256
+mismatch receipt model_sha256_post == model sha256
+exit=1
+== control: --archive /tmp/kama-r20-FreshnessS039/absent.tar.gz
+error    archive read
+exit=2
+== control: --receipt /tmp/kama-r20-FreshnessS039/receipt-mut2.json
+mismatch receipt model_sha256_post == model sha256
+exit=1
+== control: --rev 1b85a24~40
+error    S038 row parse
+error    S039 row parse
+exit=2
+# Error details (stdout JSON, non-match checks only):
+# absent archive: {"check":"archive read","detail":"FileNotFoundError: [Errno 2] No such file or directory: '/tmp/kama-r20-FreshnessS039/absent.tar.gz'","status":"error"}
+# rev 1b85a24~40: S038/S039 row parse -> "CalledProcessError: Command '['git', '-C', '/home/vgpnk/Projects/shokunin/kama-shokunin', 'show', '1b85a24~40:corpus/SOURCES.md']' returned non-zero exit status 128."
+# Baseline (no flags): 16/16 match, exit=0 -> freshness-result.json

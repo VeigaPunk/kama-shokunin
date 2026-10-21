@@ -1,0 +1,109 @@
+Pinned scratch checkout
+=======================
+Command:
+  mkdir -p /tmp/kama-r20-CitationExitFix-2 && git clone -q /home/vgpnk/Projects/shokunin/kama-shokunin /tmp/kama-r20-CitationExitFix-2/lane && git -C /tmp/kama-r20-CitationExitFix-2/lane checkout -q 37bd4c5bd456a2f8a54d3312c28495c321715856 && git -C /tmp/kama-r20-CitationExitFix-2/lane rev-parse HEAD
+Observed stdout: 37bd4c5bd456a2f8a54d3312c28495c321715856
+Observed exit: 0
+
+Baseline CLI reproduction (frozen source, unusable git)
+========================================================
+Command:
+  python3 /tmp/kama-r20-CitationExitFix-2/lane/tools/citation-provenance.py --lane /tmp/kama-r20-CitationExitFix-2/not-a-git-repository --registry /tmp/kama-r20-CitationExitFix-2/lane/registry/required-citations.json --docs /tmp/kama-r20-CitationExitFix-2/lane/corpus/SOURCES.md --allow-off-ref; status=$?; printf 'observed_exit=%s\n' "$status"; exit 0
+Observed stdout/stderr:
+  citation-provenance: lane is not a git repository: /tmp/kama-r20-CitationExitFix-2/not-a-git-repository
+  observed_exit=2
+Observed CLI exit: 2; shell-wrapper exit: 0.
+
+Baseline CLI reproduction (frozen source, missing document)
+===========================================================
+Command:
+  python3 /tmp/kama-r20-CitationExitFix-2/lane/tools/citation-provenance.py --lane /tmp/kama-r20-CitationExitFix-2/lane --registry /tmp/kama-r20-CitationExitFix-2/lane/registry/required-citations.json --docs /tmp/kama-r20-CitationExitFix-2/missing-doc.md --allow-off-ref --json; status=$?; printf 'observed_exit=%s\n' "$status"; exit 0
+Observed stdout/stderr:
+  citation-provenance: cannot read /tmp/kama-r20-CitationExitFix-2/missing-doc.md: [Errno 2] No such file or directory: '/tmp/kama-r20-CitationExitFix-2/missing-doc.md'
+  {
+   "counts": {
+    "required": 4,
+    "docs_unreadable": 1,
+    "found": 0,
+    "verified": 0,
+    "missing": 4,
+    "mismatch": 0,
+    "off_ref": 0
+   },
+   "results": [
+    {
+     "id": "s055-commands",
+     "rev": "1c325b2e58fcfdc6761f645b44cedfb1d65243e6",
+     "path": ".ufo/waves/round-18/runs/commands.json",
+     "sha256": "ce7dc79c9523b92c33e0cbb141299db6196b2aa64b3c307779eee1842b51b84a",
+     "documents": [],
+     "observed_sha256": "ce7dc79c9523b92c33e0cbb141299db6196b2aa64b3c307779eee1842b51b84a",
+     "error": null,
+     "status": "missing"
+    },
+    {
+     "id": "gate-live-1",
+     "rev": "1b85a24eca4d1fe81ef8d9ddf513fda1aad93e0e",
+     "path": ".ufo/waves/round-18/runs/live-gate-1.stdout",
+     "sha256": "1cb5a41bbfeb8f0f9306d9bf86df83d33cf9bc3aa46887c574e1dd07875574c7",
+     "documents": [],
+     "observed_sha256": "1cb5a41bbfeb8f0f9306d9bf86df83d33cf9bc3aa46887c574e1dd07875574c7",
+     "error": null,
+     "status": "missing"
+    },
+    {
+     "id": "c2-official-stdout",
+     "rev": "1b85a24eca4d1fe81ef8d9ddf513fda1aad93e0e",
+     "path": ".ufo/waves/round-18/runs/c2-survivors.stdout",
+     "sha256": "ea2e3e0258346410a04cef27a79c1ec0bbe1fd8ce8db13e683da327950cf272d",
+     "documents": [],
+     "observed_sha256": "ea2e3e0258346410a04cef27a79c1ec0bbe1fd8ce8db13e683da327950cf272d",
+     "error": null,
+     "status": "missing"
+    },
+    {
+     "id": "gate-live-checkpoint",
+     "rev": "1c325b2e58fcfdc6761f645b44cedfb1d65243e6",
+     "path": ".ufo/waves/round-18/runs/live-gate-1.stdout",
+     "sha256": "b2043ba8a7b20b707367f03c13d25333ed045c4ec303b2ff3cc0df0dc5395c15",
+     "documents": [],
+     "observed_sha256": "b2043ba8a7b20b707367f03c13d25333ed045c4ec303b2ff3cc0df0dc5395c15",
+     "error": null,
+     "status": "missing"
+    }
+   ]
+  }
+  observed_exit=2
+Observed CLI exit: 2; shell-wrapper exit: 0.
+
+Baseline CLI reproduction (unusable registry)
+==============================================
+Command:
+  python3 /tmp/kama-r20-CitationExitFix-2/lane/tools/citation-provenance.py --lane /tmp/kama-r20-CitationExitFix-2/lane --registry /tmp/kama-r20-CitationExitFix-2/missing-registry.json --docs /tmp/kama-r20-CitationExitFix-2/lane/corpus/SOURCES.md; status=$?; printf 'observed_exit=%s\n' "$status"; exit 0
+Observed stdout/stderr:
+  citation-provenance: [Errno 2] No such file or directory: '/tmp/kama-r20-CitationExitFix-2/missing-registry.json'
+  observed_exit=2
+Observed CLI exit: 2; shell-wrapper exit: 0.
+
+Red regression probe
+====================
+Scratch-only mutant: changed main's caught-unusable-input return 2 to 1 and docs_unreadable return 2 to 1. No lane file was modified.
+Command:
+  python3 /tmp/kama-r20-CitationExitFix-2/lane/tools/citation-provenance.py --selftest; status=$?; printf 'selftest_exit=%s\n' "$status"; exit 0
+Observed stdout/stderr:
+  citation-provenance: cannot read /tmp/citation-provenance-7opfn66s/lane/absent.md: [Errno 2] No such file or directory: '/tmp/citation-provenance-7opfn66s/lane/absent.md'
+  SELFTEST FAIL cli-unusable-git: expected exit=2 stdout~=None stderr~='lane is not a git repository'; got exit=1 stdout='' stderr='citation-provenance: lane is not a git repository: /tmp/citation-provenance-7opfn66s/not-git\n'
+  SELFTEST FAIL cli-unusable-registry: expected exit=2 stdout~=None stderr~=None; got exit=1 stdout='' stderr="citation-provenance: [Errno 2] No such file or directory: '/tmp/citation-provenance-7opfn66s/absent-registry.json'\n"
+  SELFTEST FAIL cli-unreadable-doc: expected exit=2 stdout~='docs_unreadable=1' stderr~='cannot read'; got exit=1 stdout='required=1 docs_unreadable=1 found=0 verified=0 missing=1 mismatch=0 off_ref=0\n  missing: fixture 4601dcff9afed5d771fbeaf0fb5667e9830f6f83:evidence.txt expected=d4e4877bac978b7952f0d544fc52ebff5411d351d129f1f056fa43f11da9af2b observed=d4e4877bac978b7952f0d544fc52ebff5411d351d129f1f056fa43f11da9af2b\n' stderr="citation-provenance: cannot read /tmp/citation-provenance-7opfn66s/lane/absent.md: [Errno 2] No such file or directory: '/tmp/citation-provenance-7opfn66s/lane/absent.md'\n"
+  selftest_exit=1
+Observed selftest exit: 1; shell-wrapper exit: 0.
+
+Green selftest
+==============
+Command:
+  python3 /tmp/kama-r20-CitationExitFix-2/lane/tools/citation-provenance.py --selftest; status=$?; printf 'selftest_exit=%s\n' "$status"; exit 0
+Observed stdout/stderr:
+  citation-provenance: cannot read /tmp/citation-provenance-vfqn10o7/lane/absent.md: [Errno 2] No such file or directory: '/tmp/citation-provenance-vfqn10o7/lane/absent.md'
+  selftest: ok (20 cases)
+  selftest_exit=0
+Observed selftest exit: 0; shell-wrapper exit: 0.

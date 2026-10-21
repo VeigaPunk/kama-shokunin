@@ -1,0 +1,66 @@
+diff --git a/tools/citation-provenance.py b/tools/citation-provenance.py
+index 9182e2c..3bbabc5 100755
+--- a/tools/citation-provenance.py
++++ b/tools/citation-provenance.py
+@@ -158,6 +158,54 @@ def selftest():
+             if not ok:
+                 failures.append(f"{expect}: {counts}")
+             return counts
++        def cli_case(label, expected, *args, stdout_contains=None,
++                     stderr_contains=None):
++            try:
++                result = subprocess.run(
++                    [sys.executable, str(Path(__file__).resolve()),
++                     *(str(arg) for arg in args)],
++                    env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
++                    text=True, timeout=30)
++            except (OSError, subprocess.TimeoutExpired) as exc:
++                failures.append(f"cli-{label}: invocation failed: {exc}")
++                return
++            if (result.returncode != expected
++                    or (stdout_contains is not None
++                        and stdout_contains not in result.stdout)
++                    or (stderr_contains is not None
++                        and stderr_contains not in result.stderr)):
++                failures.append(
++                    f"cli-{label}: expected exit={expected} "
++                    f"stdout~={stdout_contains!r} "
++                    f"stderr~={stderr_contains!r}; "
++                    f"got exit={result.returncode} "
++                    f"stdout={result.stdout!r} stderr={result.stderr!r}")
++
++        doc.write_text(f"cite({rev}, evidence.txt, sha256={digest})",
++                       encoding="utf-8")
++        not_git = Path(tmp) / "not-git"
++        not_git.mkdir()
++        cli_case("unusable-git", 2, "--lane", not_git,
++                 "--registry", registry, "--docs", doc, "--allow-off-ref",
++                 stderr_contains="lane is not a git repository")
++        cli_case("unusable-registry", 2, "--lane", lane,
++                 "--registry", Path(tmp) / "absent-registry.json",
++                 "--docs", doc, "--allow-off-ref")
++        missing_doc = lane / "absent.md"
++        cli_case("unreadable-doc", 2, "--lane", lane,
++                 "--registry", registry, "--docs", missing_doc,
++                 "--allow-off-ref", stdout_contains="docs_unreadable=1",
++                 stderr_contains="cannot read")
++        doc.write_text("no token here", encoding="utf-8")
++        cli_case("missing-citation", 1, "--lane", lane,
++                 "--registry", registry, "--docs", doc, "--allow-off-ref",
++                 stdout_contains="missing=1")
++        doc.write_text(f"cite({rev}, evidence.txt, sha256={'0' * 64})",
++                       encoding="utf-8")
++        cli_case("mismatching-citation", 1, "--lane", lane,
++                 "--registry", registry, "--docs", doc, "--allow-off-ref",
++                 stdout_contains="mismatch=1")
++
+         run(f"cite({rev}, evidence.txt, sha256={digest})", 0)
+         run(f"cite({rev}, evidence.txt, sha256={digest})\n"
+             f"cite({rev}, evidence.txt, sha256={digest})", 0)
+@@ -199,7 +247,7 @@ def selftest():
+         for f in failures:
+             print(f"SELFTEST FAIL {f}", file=sys.stderr)
+         return 1
+-    print("selftest: ok (15 cases)")
++    print("selftest: ok (20 cases)")
+     return 0

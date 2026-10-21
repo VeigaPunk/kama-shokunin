@@ -1172,3 +1172,26 @@ and in SKILL/lesson, not treated as current authority.
   binds three registry-row digests in the bound document and does not check the
   sentence beside a token. `gate-live-1` is re-pinned to `1b85a24`
   (`1cb5a41b…`).
+
+## round 20 — corrections to round-19 records (2026-10-21)
+
+- Round-19 C1 `missing=3` / `verified=3` at 1146 and "three registry-row
+  digests" at 1172 are superseded: final registry **4**; before missing4,
+  after verified4; evidence `round-19/evidence/c1-counting.txt`, measured
+  `028235e6`. Selftest printed15 (earlier five-case wording was stale).
+- CritC1Inflation/CritAxisHarm/TreeCap were build seats, not falsify seats;
+  round-19 falsify spawned0/66. The outside closure's expansion verdict was
+  unchanged (a source row alone is not new repertoire).
+- "Dispatch record" for round-18 residual assignments is superseded by the
+  explicitly retrospective `assignments.PROVENANCE.md`; verdicts4/3 are
+  supported, roles6/1 are assertions without original dispatch evidence.
+- Round-18 lesson line42 in-place rewrite (`30ed378`) recorded by a named
+  appended correction quoting original and superseding wording verbatim.
+- Clean-commit round-19 selftests (37bd4c5), retrospective census receipts
+  (56→57), stale-count sweep and SOURCE append-only checks retained under
+  `.ufo/waves/round-20/build/out/`; none claimed original round-19 receipts.
+- Removed authorized `/tmp/kama-r19-*` scratch (~5.9 GiB), after stopping
+  orphan ScorecardErratum strace/survivors process tree. Elapsed24:31 total,
+  about13 minutes after round completion (not24 minutes after completion).
+  Exact paths and action receipt `round-20/evidence/r19-scratch-removal.txt`.
+

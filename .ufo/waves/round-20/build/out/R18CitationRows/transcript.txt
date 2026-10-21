@@ -1,0 +1,25 @@
+Round-18 citation registry work — execution transcript
+
+Scratch base:
+  /tmp/kama-r20-R18CitationRows/lane
+  HEAD: 37bd4c5bd456a2f8a54d3312c28495c321715856
+  Clone/checkout command exited 0.
+
+Required official check (from scratch lane root; no --docs):
+  $ python3 tools/citation-provenance.py
+  exit: 0
+  stdout: required=17 docs_unreadable=0 found=17 verified=17 missing=0 mismatch=0 off_ref=0
+
+Patch export command:
+  $ git -c diff.mnemonicprefix=false diff --no-ext-diff -- registry/required-citations.json
+  exit: 0
+  result: one file changed, 92 insertions, 0 deletions; saved as required-citations.patch.
+
+Blob evidence:
+  A Python Eval sweep read each specified REV:PATH with `git cat-file blob`, computed SHA-256, and returned successfully (exit 0). All 13 registry additions matched bytes at their pinned revisions. The 13 citations are 12 distinct path strings because `runs/c2-survivors.json` occurs at two revisions with distinct generations.
+
+C2 full-structure comparison:
+  Compared `.ufo/waves/round-18/runs/c2-survivors.stdout` (official, 1b85a24; tool sha256 ac934794…) with `.ufo/waves/round-18/runs/c2-survivors.json` (pre-official, 1b85a24; tool sha256 87cad1ca…). Python Eval completed successfully (exit 0). Preserving every result, arm, witness, count, and run status while normalizing explicit path/time/temporary-PID and captured-stream provenance: result trees match; all 42 run-status tuples match (23 exit 0, 17 exit 1, 2 exit 2); the 15 frozen witnesses all match, with zero mismatches; counts match (15 named, before survived 11/miscount 1/accepted 3, after killed 11/correct 1/handled 3, inconclusive 0/0); own_faults=[] and teardown match.
+  They are not identical structured documents. Tool hashes, start times, per-run paths/timings and captured stream hashes/tails differ. Also `bind_guard.summary` differs while retaining binds=1464 and no protected hits: distinct_ports 1376 vs 1382; min/max 49176/60991 vs 49154/60999. The frozen escaped-sleep PID differs but each document records one escaped PID. Two retained FC selftest stdout tails differ at the first clipped character (both are 600-character tails). Thus only verdict/result equivalence is supported, not full document equality.
+
+No tools were installed or updated.

@@ -1,0 +1,132 @@
+{
+  "schema": "kama.gguf-identity-measure-reference.v1",
+  "frozen_before": {
+    "revision": "37bd4c5bd456a2f8a54d3312c28495c321715856",
+    "path": "tools/gguf-identity.py",
+    "expected_status": "capability_absent"
+  },
+  "fixture_manifest": {
+    "expected_json_sha256": "1ffe884a523fb85866ac43775fee0a5be1f69398c09a3dae8b8832f39c9f7f9f",
+    "fixtures": [
+      {"id":"v3-minimal","file":"fixtures/v3-minimal.gguf","size_bytes":24,"sha256":"a4e5e156ddec27e286f75328784d7106b60a4eb1d246e950a001a3f944fbda99","expected_exit":0,"expected_reason":"decoded"},
+      {"id":"v2-valid","file":"fixtures/v2-valid.gguf","size_bytes":151,"sha256":"083128b301233cb7544cbe9c645b445d4da6b201966c2f54d4b834468dd6ceb1","expected_exit":0,"expected_reason":"decoded"},
+      {"id":"v3-all-scalars","file":"fixtures/v3-all-scalars.gguf","size_bytes":329,"sha256":"c700f5fca9995362fd75f39fd3202f4838d0600e1cb7015b68f3796dc50ea7e5","expected_exit":0,"expected_reason":"decoded"},
+      {"id":"v3-nested-array","file":"fixtures/v3-nested-array.gguf","size_bytes":206,"sha256":"51c6aa6c677575a0ca734498875f5d0ebbe1c05c56d1d58063d7c57e90412729","expected_exit":0,"expected_reason":"decoded"},
+      {"id":"v3-big-endian","file":"fixtures/v3-big-endian.gguf","size_bytes":147,"sha256":"780f8202683df0b54826f5ac0f85e3d17ee9b798920efe636b3f78a62d369248","expected_exit":0,"expected_reason":"decoded"},
+      {"id":"v3-identity","file":"fixtures/v3-identity.gguf","size_bytes":343,"sha256":"bf190f48a0c731e8e2e5b125cf731755999513cfefcf76676a97fbf5017d15c5","expected_exit":0,"expected_reason":"decoded"},
+      {"id":"bad-magic-near-miss","file":"fixtures/bad-magic-near-miss.gguf","size_bytes":24,"sha256":"f155e74548bdfba5c21371dc5be79be2ce7422ff7dc9958354d279202b994c66","expected_exit":1,"expected_reason":"bad_magic"},
+      {"id":"bad-magic-reversed","file":"fixtures/bad-magic-reversed.gguf","size_bytes":24,"sha256":"0eb46933dddacd5c001470652b20acd7b38ce6a37376c5171f3e3a61e3cc6951","expected_exit":1,"expected_reason":"bad_magic"},
+      {"id":"version-0","file":"fixtures/version-0.gguf","size_bytes":24,"sha256":"ada42c5980f056051b81fd7321bed631436eb08e044820484dcee010035b3c74","expected_exit":2,"expected_reason":"unsupported_version"},
+      {"id":"version-99","file":"fixtures/version-99.gguf","size_bytes":24,"sha256":"2e688af5d0831fe5ae1b2b9404bb860b80f797ca7e0a22a2e61b7d93921190df","expected_exit":2,"expected_reason":"unsupported_version"},
+      {"id":"version-1","file":"fixtures/version-1.gguf","size_bytes":16,"sha256":"3d4d198e376009ce341ce70a37f8861a5692bb7190e6e922afcdf0c681f56933","expected_exit":2,"expected_reason":"unsupported_version"},
+      {"id":"truncated-header","file":"fixtures/truncated-header.gguf","size_bytes":12,"sha256":"1ee47bfed959cd67cb9ec7ba0d8ddebfd1327a4f8bdfe9256d0b8eb409a0dbb7","expected_exit":2,"expected_reason":"truncated_tensor_count"},
+      {"id":"truncated-string","file":"fixtures/truncated-string.gguf","size_bytes":60,"sha256":"3025680fbd4f651396a090e9febb7320d19bf49cba221d4d4b6e15f7c0b7ecfb","expected_exit":2,"expected_reason":"truncated_string_value"},
+      {"id":"string-length-exceeds-file","file":"fixtures/string-length-exceeds-file.gguf","size_bytes":53,"sha256":"e932e98a3558d63c804ab0f243f90dbec87546f93a15fee6a8fa0255f678c808","expected_exit":2,"expected_reason":"string_too_large"},
+      {"id":"unknown-value-type-13","file":"fixtures/unknown-value-type-13.gguf","size_bytes":48,"sha256":"c3b413ffe6dacf6126ae03f740614d5db2e84ff6a0694514afff822b49ae422a","expected_exit":2,"expected_reason":"unknown_value_type"},
+      {"id":"kv-count-2pow40","file":"fixtures/kv-count-2pow40.gguf","size_bytes":24,"sha256":"c7956947aa09e2c2f3304ffd7eba18b54520446b4baf93667af75ef3aaef690b","expected_exit":2,"expected_reason":"kv_count_too_large"},
+      {"id":"kv-count-2pow32-plus1","file":"fixtures/kv-count-2pow32-plus1.gguf","size_bytes":24,"sha256":"40d8775ea8dfc7f0d8a8905116dae41dd73367f0b151b0450a334ffa9e777fa0","expected_exit":2,"expected_reason":"kv_count_too_large"},
+      {"id":"duplicate-key","file":"fixtures/duplicate-key.gguf","size_bytes":78,"sha256":"4606213b88ea773f25d6b53c9d7144cf41c32bd08226ef5822fdb2b0f7cd21ef","expected_exit":2,"expected_reason":"duplicate_key"},
+      {"id":"non-utf8-key","file":"fixtures/non-utf8-key.gguf","size_bytes":43,"sha256":"ff6c67089a63180feb7fcf6ecc41bf75b1303ec4348a4521f7e02ef821dc4761","expected_exit":2,"expected_reason":"invalid_utf8"},
+      {"id":"non-utf8-value","file":"fixtures/non-utf8-value.gguf","size_bytes":58,"sha256":"66f173acbefd382ca9557bcfb88266fd3d54e39864ecde598bfe4cd424b5688a","expected_exit":2,"expected_reason":"invalid_utf8"},
+      {"id":"truncated-array-values","file":"fixtures/truncated-array-values.gguf","size_bytes":62,"sha256":"eb88692bccb20de70f94bcf8b53a877e5dcda438fc3490d17dffcb18815166fd","expected_exit":2,"expected_reason":"truncated_array_values"},
+      {"id":"array-length-exceeds-limit","file":"fixtures/array-length-exceeds-limit.gguf","size_bytes":58,"sha256":"e27ab4f5b0d28dcb23adbb5266ddf79a669a46c5642058166a3fb247a41f4c2d","expected_exit":2,"expected_reason":"array_too_large"},
+      {"id":"array-nesting-exceeds-limit","file":"fixtures/array-nesting-exceeds-limit.gguf","size_bytes":538,"sha256":"201606a9107a21a94fd015c3e2a41bf851e711572177b8667bfa61563a91e052","expected_exit":2,"expected_reason":"array_nesting_too_deep"}
+    ],
+    "reason_equivalence": {
+      "decoded": ["decoded"],
+      "bad_magic": ["bad_magic"],
+      "unsupported_version": ["unsupported_version"],
+      "truncated_tensor_count": ["truncated_tensor_count"],
+      "truncated_string_value": ["truncated_string_value"],
+      "string_too_large": ["string_too_large"],
+      "unknown_value_type": ["unknown_value_type"],
+      "kv_count_too_large": ["kv_count_too_large"],
+      "duplicate_key": ["duplicate_key"],
+      "invalid_utf8": ["invalid_utf8"],
+      "truncated_array_values": ["truncated_array_values"],
+      "array_too_large": ["array_too_large"],
+      "array_nesting_too_deep": ["array_nesting_too_deep"]
+    }
+  },
+  "tool_sha256": "3b7eb757d942ea6c541fad12f9974c103dce62f7057ef3f6fd31e2e601cb921a",
+  "oracle": {
+    "sha256": "5e009ef907d68eb724f4db0eb95c33dbeb7d5196ae871c33f57f4c5a2c06c335",
+    "reader": {
+      "package": "gguf",
+      "version": "0.19.0",
+      "wheel_sha256": "70bcd10edfe697fb2dad6e40af2234b9d8ece9a41a99761405121ebda1c3c1cd"
+    },
+    "source_note": "The gguf 0.19.0 wheel and pinned same-version source snapshot differ; see the SrcGgufPyReader evidence.",
+    "file": {
+      "size_bytes": 1185376,
+      "sha256": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+    },
+    "version": 3,
+    "tensor_count": 48,
+    "kv_count": 19,
+    "arrays": {
+      "tokenizer.ggml.tokens": {"type": "STRING", "length": 512},
+      "tokenizer.ggml.scores": {"type": "FLOAT32", "length": 512},
+      "tokenizer.ggml.token_type": {"type": "INT32", "length": 512}
+    },
+    "identity_key_types": {
+      "general.architecture": "STRING",
+      "general.name": "STRING",
+      "tokenizer.ggml.model": "STRING",
+      "llama.context_length": "UINT32",
+      "llama.block_count": "UINT32",
+      "llama.embedding_length": "UINT32"
+    },
+    "identity_keys": {
+      "general.architecture": "llama",
+      "general.name": "llama",
+      "general.file_type": null,
+      "general.alignment": null,
+      "tokenizer.ggml.model": "llama",
+      "llama.context_length": 2048,
+      "llama.block_count": 5,
+      "llama.embedding_length": 64
+    }
+  },
+  "receipt": {
+    "schema": "kama-llamacpp-live/v3",
+    "model_sha256_post": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+    "alias": "kama-r18-live",
+    "ctx": 256,
+    "props_fields": {
+      "model_alias": "kama-r18-live",
+      "default_generation_settings.n_ctx": 256,
+      "total_slots": 4
+    }
+  },
+  "receipt_result_source_sha256": "61529605c2519728ca085ec3c9d6e851b3cb875010220a1e2f37e6e01b3098a7",
+  "receipt_result": {
+    "status": "engine-agreement",
+    "exit_code": 0,
+    "evidence_scope": "receipt-self-report-not-authenticated-execution",
+    "file_sha256": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+    "model_sha256_post": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+    "models_body_sha256": "13fa21491109a1156afa59d7050635c6e57ae8db7d8fbd7be4c248acfe3f9d19",
+    "alias": "kama-r18-live",
+    "selected_model_id": "kama-r18-live",
+    "context": {
+      "gguf_declared_context_length": 2048,
+      "models_meta_n_ctx_train": 2048,
+      "training_context_comparison": "equal",
+      "props_n_ctx": 256,
+      "props_n_ctx_note": "informational-only; not compared with training context",
+      "total_slots": 4,
+      "slot_division_applied": false
+    },
+    "comparisons": [
+      {"field": "llama.embedding_length == meta.n_embd", "gguf_declared": 64, "receipt_reported": 64, "result": "agree"},
+      {"field": "len(tokenizer.ggml.tokens) == meta.n_vocab", "gguf_declared": 512, "receipt_reported": 512, "result": "agree"},
+      {"field": "general.file_type presence == inverse ftype guessed marker", "result": "agree"}
+    ],
+    "uncompared_engine_fields": [
+      "meta.architecture (not part of the comparison contract)",
+      "meta.n_params",
+      "meta.size"
+    ]
+  }
+}

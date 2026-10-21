@@ -1,0 +1,28 @@
+diff --git a/tools/citation-provenance.py b/tools/citation-provenance.py
+index 9182e2c..89dd49d 100755
+--- a/tools/citation-provenance.py
++++ b/tools/citation-provenance.py
+@@ -195,11 +195,24 @@ def selftest():
+         counts, _ = check(lane, registry, [doc, lane / "absent.md"], allow_off_ref=True)
+         if counts["docs_unreadable"] != 1 or counts["verified"] != 1:
+             failures.append(f"unreadable-doc: {counts}")
++
++        claimed_digest = hashlib.sha256(b"different payload\n").hexdigest()
++        row = json.loads(registry.read_text(encoding="utf-8"))
++        row[0]["sha256"] = claimed_digest
++        registry.write_text(json.dumps(row), encoding="utf-8")
++        doc.write_text(
++            f"cite({rev}, evidence.txt, sha256={claimed_digest})",
++            encoding="utf-8")
++        counts, _ = check(lane, registry, [doc], allow_off_ref=True)
++        actual = (counts["missing"], counts["mismatch"], counts["verified"])
++        if actual != (0, 1, 0):
++            failures.append(f"observed-digest: {counts}")
++
+     if failures:
+         for f in failures:
+             print(f"SELFTEST FAIL {f}", file=sys.stderr)
+         return 1
+-    print("selftest: ok (15 cases)")
++    print("selftest: ok (16 cases)")
+     return 0

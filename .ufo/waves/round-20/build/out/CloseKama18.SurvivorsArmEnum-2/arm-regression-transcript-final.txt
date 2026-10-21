@@ -1,0 +1,54 @@
+Final round-18 C2 survivor-arm patch — transcript
+
+Frozen checkout:
+$ git -C /tmp/kama-r20-CloseKama18.SurvivorsArmEnum-2/lane rev-parse HEAD
+stdout: 37bd4c5bd456a2f8a54d3312c28495c321715856
+exit: 0
+
+Baseline counter blob identity:
+$ git -C /tmp/kama-r20-CloseKama18.SurvivorsArmEnum-2/lane show 37bd4c5bd456a2f8a54d3312c28495c321715856:.ufo/waves/round-18/c2/survivors.py | sha256sum && git -C /tmp/kama-r20-CloseKama18.SurvivorsArmEnum-2/lane show eb78788b35b832d08887d4c366d1d0c1df3a6c19:.ufo/waves/round-18/c2/survivors.py | sha256sum
+stdout:
+ac934794af1eee8067ea11f7f8cc31702ea7dfad257fec2649f2d638477bac75  -
+ac934794af1eee8067ea11f7f8cc31702ea7dfad257fec2649f2d638477bac75  -
+exit: 0
+
+Append-only subject identity:
+$ git -C /tmp/kama-r20-CloseKama18.SurvivorsArmEnum-2/lane show 37bd4c5bd456a2f8a54d3312c28495c321715856:tools/sources-append-only.py | sha256sum && git -C /tmp/kama-r20-CloseKama18.SurvivorsArmEnum-2/lane show eb78788b35b832d08887d4c366d1d0c1df3a6c19:tools/sources-append-only.py | sha256sum
+stdout:
+4d7868564226b6caa5957e9d7f4f8910a1c459ec26462a52d42e802be6079c2d  -
+4d7868564226b6caa5957e9d7f4f8910a1c459ec26462a52d42e802be6079c2d  -
+exit: 0
+
+Retained baseline, read but not rerun:
+- `.ufo/waves/round-18/runs/c2-counter-selftest.stdout`: `selftest: 60/60 checks passed`; `runs/commands.json` records measured commit `eb78788b35b832d08887d4c366d1d0c1df3a6c19` and stdout SHA-256 `c033c5414fe0f1f10ca93989588ddd61993009a343c21c3075ab36afa8ad0352`. The counter blob at that revision is byte-identical to the frozen target above.
+- `.ufo/waves/round-18/runs/c2-survivors.json` `.inputs.append-only/current` binds the subject hash above. Its `.results.c.baselines.current.summary` is `42/42 selftest cases passed`; `AO-blank` current arm is exit 1 with target `FAIL` and final summary `36/42`. The raw C2 record retains all six `FAIL` lines but not the complete original stdout bytes.
+
+Arm-only regression command:
+$ python3 /tmp/kama-r20-CloseKama18.SurvivorsArmEnum-2/arm_regression_probe.py
+stdout:
+source_revision: 37bd4c5bd456a2f8a54d3312c28495c321715856
+fault_controls_complete_target_arm: ('killed', 'targeted selftest assertion failed: target-conjunct attribution')
+AO-blank_expected_failure: 'edit after a blank line'
+AO-blank_baseline_summary: '42/42 selftest cases passed\n'
+AO-blank_retained_target_summary: "FAIL: edit after a blank line (want exit 1 ['S002:teaches'], got exit 2 error 'from:9: row-like line outside the parsed registry table; refusing to drop it')\nFAIL: row added after a blank line (want exit 0 added ['S003'], got exit 2 error 'to:9: row-like line outside the parsed registry table; refusing to drop it')\nFAIL: row removed from a later table segment (want exit 1 ['S002:removed'], got exit 2 error 'from:11: row-like line outside the parsed registry table; refusing to drop it')\nFAIL: edit in a later table segment (want exit 1 ['S002:opened'], got exit 2 error 'from:11: row-like line outside the parsed registry table; refusing to drop it')\nFAIL: edit under a deeper subheading (want exit 1 ['S002:scope'], got exit 2 error 'from:11: row-like line outside the parsed registry table; refusing to drop it')\nFAIL: later segment with another header (want exit 2 error ~'id cell `id` is not', got exit 2 error 'from:11: row-like line outside the parsed registry table; refusing to drop it')\n36/42 selftest cases passed\n"
+AO-blank_retained_failure_line_count: 6
+AO-blank_retained_target_exit: 1 (from retained c2-survivors.json)
+AO-blank_completed_target_arm: ('killed', 'targeted selftest assertion failed: edit after a blank line')
+early_abort_stub_argv: ["/usr/bin/python3", "-c", "import sys; print(\"FAIL: edit after a blank line (want exit 1 ['S002:teaches'], got exit 2 error 'from:9: row-like line outside the parsed registry table; refusing to drop it')\"); sys.exit(1)"]
+early_abort_stub_exit: 1
+early_abort_stub_stdout: "FAIL: edit after a blank line (want exit 1 ['S002:teaches'], got exit 2 error 'from:9: row-like line outside the parsed registry table; refusing to drop it')\n"
+AO-blank_early_abort_arm: ('inconclusive', 'selftest did not enumerate the baseline case set')
+AO-blank_short_summary: "FAIL: edit after a blank line (want exit 1 ['S002:teaches'], got exit 2 error 'from:9: row-like line outside the parsed registry table; refusing to drop it')\n1/42 selftest cases passed\n"
+AO-blank_short_summary_arm: ('inconclusive', 'selftest did not enumerate the baseline case set')
+exit: 0
+
+The summary arithmetic now requires baseline total match and candidate passed cases + `FAIL` case lines == declared total; this accepts 36+6=42 and rejects 1+1<42. JSON count/coverage fields and gate/escape keys must match the passing baseline. The abort stub was an actual child process; the completed candidate uses retained target/failure-count/summary facts.
+
+The full patched counter contains three new `check()` assertions. From the retained same-byte baseline 60/60, expected patched counter selftest output is 63/63 if all checks pass [INFERENCE]; full `survivors.py --selftest` was intentionally not run. No full survivor measurement, build, lint, or formatter was run.
+
+Patched source pin:
+$ sha256sum /tmp/kama-r20-CloseKama18.SurvivorsArmEnum-2/lane/.ufo/waves/round-18/c2/survivors.py /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CloseKama18.SurvivorsArmEnum-2/survivors-patched-final.py
+stdout:
+c4c29c5a1d5d8a3981bfff58934d59c03cbb8f76f1dcf540edd8556ec4813890  /tmp/kama-r20-CloseKama18.SurvivorsArmEnum-2/lane/.ufo/waves/round-18/c2/survivors.py
+c4c29c5a1d5d8a3981bfff58934d59c03cbb8f76f1dcf540edd8556ec4813890  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CloseKama18.SurvivorsArmEnum-2/survivors-patched-final.py
+exit: 0

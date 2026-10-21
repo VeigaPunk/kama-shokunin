@@ -1,0 +1,100 @@
+measured_tree=commit:37bd4c5bd456a2f8a54d3312c28495c321715856
+expected_rev=37bd4c5bd456a2f8a54d3312c28495c321715856 match=yes
+head_ref=detached
+clone_of=/home/vgpnk/Projects/shokunin/kama-shokunin
+measured_utc_start=2026-10-21T07:26:00Z
+python3=/usr/bin/python3 Python 3.14.8
+git version 2.56.0
+kernel=Linux 7.2.11-arch1-1
+status_porcelain_before_lines=0
+=== gate selftest ===
+command: python3 tests/llamacpp-live/check-receipt.py --selftest
+blob=e90be78d58c5bf11e402f9c137a81767ad44df23 sha256=a0dc1d07220ff804e375d5947ed8119a3ae697da5dbd0cc83006b2abe39043a6
+--- stdout (1 lines) ---
+selftest: 6 VALID and 1 NOT-EVALUATED receipts accepted; 77 mutations + unreadable case rejected
+--- stderr (0 lines) ---
+exit=0 wall_ms=3140
+=== grid selftest ===
+command: python3 tests/llamacpp-live/install-tree-grid.py --selftest
+blob=5ebd958293f18eae04ed47e4080a4e242893c688 sha256=6f51803c47db597e2f6778b492bfaba14735a23c599bc972f8d33ab477a68f05
+--- stdout (1 lines) ---
+selftest: baseline, member rejection, absent member and bad receipt passed
+--- stderr (0 lines) ---
+exit=0 wall_ms=280
+=== citation-provenance selftest ===
+command: python3 tools/citation-provenance.py --selftest
+blob=9182e2c12a97aa743d2020bbe9956eec91a9d2cd sha256=5c887572b37a80c0757b59a7735da386be2885e463ec2682c1d59f8e9b55110b
+--- stdout (1 lines) ---
+selftest: ok (15 cases)
+--- stderr (1 lines) ---
+citation-provenance: cannot read /tmp/citation-provenance-wzaspdtj/lane/absent.md: [Errno 2] No such file or directory: '/tmp/citation-provenance-wzaspdtj/lane/absent.md'
+exit=0 wall_ms=56
+=== kama-llamacpp-live selftest (no server; ephemeral tcp6 loopback listeners) ===
+command: python3 tools/kama-llamacpp-live.py --selftest
+blob=b9c5d0233475366c08a02159e2db475eae60885b sha256=83eac5c0489377a88c8ecead89af4ca5f057bd0463d8bf8a79467eb6c5de88c4
+--- stdout (1 lines) ---
+selftest: ok; closed tcp6 listeners ::1:38019, ::ffff:127.0.0.1:45893
+--- stderr (0 lines) ---
+exit=0 wall_ms=57
+=== sources-append-only selftest ===
+command: python3 tools/sources-append-only.py --selftest
+blob=cd26e6f7b9058b8454395a68c361f81c99d5a592 sha256=4d7868564226b6caa5957e9d7f4f8910a1c459ec26462a52d42e802be6079c2d
+--- stdout (43 lines) ---
+ok: identical (want exit 0, got exit 0)
+ok: status-only change (want exit 0, got exit 0)
+ok: teaches change (want exit 1 ['S001:teaches'], got exit 1 ['S001:teaches'])
+ok: removed row (want exit 1 ['S002:removed'], got exit 1 ['S002:removed'])
+ok: added row (want exit 0 added ['S003'], got exit 0 added ['S003'])
+ok: reordered rows (want exit 0, got exit 0)
+ok: pipe inside backticks (want exit 0, got exit 0)
+ok: escaped pipe (want exit 0, got exit 0)
+ok: recheck and used-by change (want exit 0, got exit 0)
+ok: anchor change (want exit 1 ['S001:anchor'], got exit 1 ['S001:anchor'])
+ok: malformed row width (want exit 2 error ~'row has 4 cells', got exit 2 error 'from:7: row has 4 cells, header has 11')
+ok: duplicate id (want exit 2 error ~'duplicate id S001', got exit 2 error 'from:8: duplicate id S001')
+ok: missing registry (want exit 2 error ~'no `## Registry`', got exit 2 error 'from: no `## Registry` heading found')
+ok: source change (want exit 1 ['S001:source'], got exit 1 ['S001:source'])
+ok: only `source` changes (want exit 1 ['S001:source'], got exit 1 ['S001:source'])
+ok: only `kind` changes (want exit 1 ['S001:kind'], got exit 1 ['S001:kind'])
+ok: only `tier` changes (want exit 1 ['S001:tier'], got exit 1 ['S001:tier'])
+ok: only `scope` changes (want exit 1 ['S001:scope'], got exit 1 ['S001:scope'])
+ok: only `anchor` changes (want exit 1 ['S001:anchor'], got exit 1 ['S001:anchor'])
+ok: only `teaches` changes (want exit 1 ['S001:teaches'], got exit 1 ['S001:teaches'])
+ok: only `status` changes (want exit 0, got exit 0)
+ok: only `opened` changes (want exit 1 ['S001:opened'], got exit 1 ['S001:opened'])
+ok: only `recheck` changes (want exit 0, got exit 0)
+ok: only `used-by` changes (want exit 0, got exit 0)
+ok: edit after a blank line (want exit 1 ['S002:teaches'], got exit 1 ['S002:teaches'])
+ok: row added after a blank line (want exit 0 added ['S003'], got exit 0 added ['S003'])
+ok: row removed from a later table segment (want exit 1 ['S002:removed'], got exit 1 ['S002:removed'])
+ok: edit in a later table segment (want exit 1 ['S002:opened'], got exit 1 ['S002:opened'])
+ok: edit under a deeper subheading (want exit 1 ['S002:scope'], got exit 1 ['S002:scope'])
+ok: row-like line outside the registry (want exit 2 error ~'row-like line outside', got exit 2 error 'to:11: row-like line outside the parsed registry table; refusing to drop it')
+ok: row without a leading pipe (want exit 2 error ~'without a leading pipe', got exit 2 error 'to:8: table line without a leading pipe in the registry section; refusing to drop it')
+ok: row with a marked-up id (want exit 2 error ~'id cell ``S002`` is not', got exit 2 error 'from:8: table line with id cell ``S002`` is not a registry row; refusing to drop it')
+ok: row with a lower-case id (want exit 2 error ~'id cell `s002` is not', got exit 2 error 'from:8: table line with id cell `s002` is not a registry row; refusing to drop it')
+ok: later segment with another header (want exit 2 error ~'id cell `id` is not', got exit 2 error 'from:9: table line with id cell `id` is not a registry row; refusing to drop it')
+ok: two Registry headings (want exit 2 error ~'2 `Registry` headings', got exit 2 error 'from: 2 `Registry` headings (lines 3, 12); refusing to pick one')
+ok: header repeats a column (want exit 2 error ~'header columns', got exit 2 error "from:5: header columns ['id', 'source', 'kind', 'tier', 'scope', 'anchor', 'teaches', 'status', 'teaches', 'recheck', 'used-by'] are not exactly the contract's ['id', 'source', 'kind', 'tier', 'scope', 'anchor', 'teaches', 'status', 'opened', 'recheck', 'used-by']")
+ok: --to drops the opened column (want exit 2 error ~'header columns', got exit 2 error "to:5: header columns ['id', 'source', 'kind', 'tier', 'scope', 'anchor', 'teaches', 'status', 'recheck', 'used-by'] are not exactly the contract's ['id', 'source', 'kind', 'tier', 'scope', 'anchor', 'teaches', 'status', 'opened', 'recheck', 'used-by']")
+ok: separator narrower than the header (want exit 2 error ~'11-column `|---|...` separator', got exit 2 error 'from:6: expected a 11-column `|---|...` separator after header')
+ok: closing hashes on the Registry heading (want exit 1 ['S001:tier'], got exit 1 ['S001:tier'])
+ok: oracle covers every fixture column
+ok: compared set without `opened` is refused
+ok: non-UTF-8 blob is a parse error
+42/42 selftest cases passed
+--- stderr (0 lines) ---
+exit=0 wall_ms=32
+=== extra: C1 counting command (round-19 final-selftests.txt §C1 shape) ===
+command: python3 tools/citation-provenance.py
+blob=9182e2c12a97aa743d2020bbe9956eec91a9d2cd sha256=5c887572b37a80c0757b59a7735da386be2885e463ec2682c1d59f8e9b55110b
+--- stdout (1 lines) ---
+required=4 docs_unreadable=0 found=4 verified=4 missing=0 mismatch=0 off_ref=0
+--- stderr (0 lines) ---
+exit=0 wall_ms=52
+=== tree after ===
+rev_after=37bd4c5bd456a2f8a54d3312c28495c321715856
+status_porcelain_after_lines=0
+status_porcelain_ignored_after_lines=0
+measured_utc_end=2026-10-21T07:26:03Z
+summary: gate=0 grid=0 citation=0 live=0 sources=0 c1=0 porcelain_after_lines=0

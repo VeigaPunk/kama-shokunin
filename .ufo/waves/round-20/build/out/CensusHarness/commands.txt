@@ -1,0 +1,52 @@
+Exact executed commands and results
+
+1) Scratch checkout
+$ git clone -q /home/vgpnk/Projects/shokunin/kama-shokunin /tmp/kama-r20-CensusHarness/lane && git -C /tmp/kama-r20-CensusHarness/lane checkout -q 37bd4c5bd456a2f8a54d3312c28495c321715856 && git -C /tmp/kama-r20-CensusHarness/lane rev-parse HEAD
+stdout: 37bd4c5bd456a2f8a54d3312c28495c321715856
+exit=0
+
+2) Pinned manifest and fixture digests
+$ sha256sum /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CensusHarness/error-injection-cells.json /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CensusHarness/error-injection-fixtures/grid-gate.py /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CensusHarness/error-injection-fixtures/sitecustomize.py /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CensusHarness/error-injection-fixtures/survivor-arm-probe.py
+stdout: ff3b7da9c060a7f12a7ca081c79db06899a4f5c9418d26ffe4a88bc6c607f469  error-injection-cells.json
+        0e65e584fe9d7bda52af233c7fd189555d4314b1b7ae6267b12cbf1e2d3bbb5f  grid-gate.py
+        6a467c6306862d740416a34b22178d3aae3f72812a43de0387df91bbd5e06ab1  sitecustomize.py
+        bf031256913317e688362adc0f663f6fce77228eba00a265c11adfc8deb95014  survivor-arm-probe.py
+exit=0
+
+3) Frozen instrument SHA-256 values
+$ git -C /tmp/kama-r20-CensusHarness/lane show 37bd4c5bd456a2f8a54d3312c28495c321715856:tests/llamacpp-live/install-tree-grid.py | sha256sum && git -C /tmp/kama-r20-CensusHarness/lane show 37bd4c5bd456a2f8a54d3312c28495c321715856:tools/citation-provenance.py | sha256sum && git -C /tmp/kama-r20-CensusHarness/lane show 37bd4c5bd456a2f8a54d3312c28495c321715856:.ufo/waves/round-18/c2/survivors.py | sha256sum
+stdout: 6f51803c47db597e2f6778b492bfaba14735a23c599bc972f8d33ab477a68f05  -
+        5c887572b37a80c0757b59a7735da386be2885e463ec2682c1d59f8e9b55110b  -
+        ac934794af1eee8067ea11f7f8cc31702ea7dfad257fec2649f2d638477bac75  -
+exit=0
+
+4) Delivered selftest
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CensusHarness/error-verdict-census.py --selftest --cells /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CensusHarness/error-injection-cells.json --fixtures /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CensusHarness/error-injection-fixtures --lane /tmp/kama-r20-CensusHarness/lane
+stdout: selftest: ok (15 pinned cells; manifest guards; error/verdict controls; survivor arm only)
+exit=0
+
+5) Frozen arm
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CensusHarness/error-verdict-census.py --cells /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CensusHarness/error-injection-cells.json --lane /home/vgpnk/Projects/shokunin/kama-shokunin --arm frozen
+stdout: cells=15 frozen_misclassified=6 current_misclassified=NA
+        errors frozen=3 current=NA
+exit=1
+
+6) Current arm
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CensusHarness/error-verdict-census.py --cells /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CensusHarness/error-injection-cells.json --lane /home/vgpnk/Projects/shokunin/kama-shokunin --arm current
+stdout: cells=15 frozen_misclassified=NA current_misclassified=0
+        errors frozen=NA current=8
+exit=0
+
+7) Paired arms
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CensusHarness/error-verdict-census.py --cells /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CensusHarness/error-injection-cells.json --lane /home/vgpnk/Projects/shokunin/kama-shokunin --json
+stdout: see pair.json (15 rows; frozen_misclassified=6, current_misclassified=0, frozen_witness_mismatches=0, red_vector_mismatches=0, unrun=[])
+exit=0
+
+8) CLI help
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-20/build/out/CensusHarness/error-verdict-census.py --help
+stdout excerpt: --arm {both,frozen,current}; frozen exits 1 for its expected errors; current exits 0 only with no current misclassification.
+exit=0
+
+9) Scratch cleanup
+$ rm -rf /tmp/kama-r20-CensusHarness
+exit=0

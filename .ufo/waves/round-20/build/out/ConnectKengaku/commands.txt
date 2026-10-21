@@ -1,0 +1,18 @@
+ConnectKengaku (kama round 20) — executed commands, cwd /tmp/kama-r20-ConnectKengaku unless noted. 2026-10-21.
+K=/home/vgpnk/Projects/shokunin/kengaku-shokunin  L=/home/vgpnk/Projects/shokunin/kama-shokunin
+M=/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf  R=$L/.ufo/waves/round-18/live-recovery/receipt-1.json
+
+git -C $K rev-parse HEAD                                   -> e0037a8da26850fcf4c4b6ba40f14a017b3ecf2d  exit 0
+(cd $K; git grep -c -i -E 'gguf' HEAD -- .)                -> 26 tracked files                         exit 0
+(cd $K; git grep -l -i -E 'context_length|n_ctx_train|general\.architecture|general\.file_type|file_type|ftype|tokenizer\.ggml|block_count|embedding_length|general\.alignment|data_offset' HEAD -- .) -> 10 files  exit 0
+(cd $K; git diff --quiet HEAD -- corpus/evidence/round12-fleet/r12-endpoint-freshness.md corpus/evidence/round10-fleet/)  exit 0 (clean)
+(cd $K; git grep -h -o -E '[A-Za-z0-9_./~-]+\.gguf' HEAD -- . | sort | uniq -c)  -> only the Qwen3-Coder-30B-A3B UD-IQ2_XXS path  exit 0
+test -e /scratch/models/qwen3-coder-30b/Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS.gguf   exit 1 ; ls -la /scratch/models  exit 2
+grep tool on $K/.ufo/waves/round-26, $K/plans/round-26-claims.md, $K/considerthese for gguf|n_ctx|context_length|quantiz|file_type|ftype -> No matches
+uv run --no-project --with gguf python3 engine_vs_oracle.py $M $R > engine_vs_oracle.stdout   exit 0 (8/8 pairs agree)
+uv run --no-project --with gguf python3 -c "...version('gguf'), version('numpy')"  -> gguf 0.19.0 numpy 2.5.4  exit 0
+python3 run_kengaku_r12.py $K e0037a8da26850fcf4c4b6ba40f14a017b3ecf2d $M > kengaku_r12_on_stories260K.stdout  exit 0
+python3 receipts_meta_scan.py $L 37bd4c5bd456a2f8a54d3312c28495c321715856 > receipts_meta_scan.stdout  exit 0
+curl -sS -m 30 https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/src/{llama-model-loader.cpp,llama-model.cpp,llama-model-loader.h}  HTTP 200 x3, exit 0 (sha256 in sources.txt)
+grep -n (loader/model/server-context anchors listed in sources.txt)  exit 0
+Tools: uv 0.13.0 (pre-installed); gguf 0.19.0 + numpy 2.5.4 resolved ephemerally by `uv run --with gguf` (uv cache; nothing installed persistently).

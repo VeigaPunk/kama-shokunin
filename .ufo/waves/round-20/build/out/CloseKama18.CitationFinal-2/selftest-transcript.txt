@@ -1,0 +1,12 @@
+Integrated scratch checkout: `/tmp/kama-r20-CloseKama18FinalCitation/lane`
+Pinned revision: `37bd4c5bd456a2f8a54d3312c28495c321715856` (observed by `git -C /tmp/kama-r20-CloseKama18FinalCitation/lane rev-parse HEAD`, exit 0).
+
+Command: `python3 tools/citation-provenance.py --selftest; rc=$?; printf 'EXIT_CODE=%s\\n' "$rc"; exit 0`
+Observed stdout/stderr:
+```
+citation-provenance: cannot read /tmp/citation-provenance-yq5rqubu/lane/absent.md: [Errno 2] No such file or directory: '/tmp/citation-provenance-yq5rqubu/lane/absent.md'
+selftest: ok (24 cases)
+EXIT_CODE=0
+```
+
+The dynamic case count is the 15 direct `check()` invocations (10 through `run()` plus 5 direct cases, including observed-digest) and 9 subprocess CLI invocations; the non-invocation `DEFAULT_DOCS` assertion is not counted. CLI cases assert: unusable lane → 2; absent registry → 2; malformed row `[1]` → 2 with `registry rows must be JSON objects`; unreadable docs → 2; missing citation → 1; mismatching citation → 1; off-ref → 1; unresolved revision → 1; unavailable `git` executable → 2. The final direct selftest case requires `(missing, mismatch, verified) == (0, 1, 0)` for a citation/registry digest that differs from the actual Git blob.

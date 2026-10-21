@@ -1,0 +1,10 @@
+# StaleCountSweep-2 receipts (lane pin 37bd4c5bd456a2f8a54d3312c28495c321715856)
+git grep -n -E 'required=3|missing=3|verified=3|found=3|three registry-row digests|selftest 5 cases|3 rows' 37bd4c5bd456a2f8a54d3312c28495c321715856  -> exit 0 (hits triaged in StaleCountSweep.md)
+git merge-base --is-ancestor 028235e6 37bd4c5bd456a2f8a54d3312c28495c321715856 -> exit 0
+git show 37bd4c5bd456a2f8a54d3312c28495c321715856:registry/required-citations.json | count rows -> 4 rows, exit 0
+scratch clone @ 37bd4c5bd456a2f8a54d3312c28495c321715856: python3 tools/citation-provenance.py -> required=4 found=4 verified=4 missing=0 mismatch=0 off_ref=0, exit 0
+scratch clone: python3 tools/citation-provenance.py --selftest -> selftest: ok (15 cases), exit 0
+scratch clone: python3 tools/citation-provenance.py --json -> counts required=4 verified=4 missing=0 mismatch=0, exit 0
+scratch clone: python3 tools/citation-provenance.py --docs /dev/null -> required=4 found=0 verified=0 missing=4 mismatch=0 off_ref=0, exit 1
+git log 028235e..37bd4c5bd456a2f8a54d3312c28495c321715856 | wc -l -> 8 commits after measured commit
+final-selftests.txt last commit f1790e2 (ancestor of 028235e6) -> historical 3-row record

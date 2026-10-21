@@ -94,3 +94,41 @@ the declared 7 → 8; the score is not raised on a refuted wording.
 - **Citation scope honesty (RevisionDriftScan).** 609 of 635 lane-path citations
   in the four scanned docs still carry no revision; the claim is that the three
   registry-bound citations are machine-checked, not that all citations are.
+
+## Round-20 appended record corrections
+
+This appendix supersedes the stale C1 counts at lines 12, 75, 83 and 95.
+The final round-19 registry has **4 rows**, not 3. Committed
+`.ufo/waves/round-19/evidence/c1-counting.txt` measured `028235e6`:
+`required=4 found=0 verified=0 missing=4` exit 1 → `required=4 found=4
+verified=4 missing=0 mismatch=0 off_ref=0` exit 0. The selftest printed
+"15 cases" (not the earlier five-case development state); round-20 review
+also found its printed count was not an independently enumerated tally.
+Round-20 adds the observed-digest branch regression rather than treating a
+green historical selftest label as complete coverage.
+
+The headings "Falsify-wave and residual findings" and "falsify-wave refutation
+accepted" misattribute the advice: CritC1Inflation, CritAxisHarm, TreeCap,
+TameshiConventions and C2BaselineInvalid were **build** seats. The validated
+66-seat falsify call spawned **0**, all refused (`falsify/refused-attempt-1.json`).
+No outside review or fresh falsify wave is implied by those headings.
+
+The round-19 report's census paths were uncommitted. Retrospective before/after
+receipts now live under round-20 `build/out/CensusR19Retro/`, explicitly
+labelled source revisions `8bf99cae` and `3389513f`, rows **56 → 57**.
+They were re-recorded in round 20, not recovered original round-19 runs.
+
+`evidence/final-selftests.txt` was a dirty-tree run on `5b108c1a`, not a
+measurement of that commit. **76** gate mutations apply at `7229fa9`/`5b108c1a`;
+**77** apply from `f1790e2` through `37bd4c5`. Round-20
+`build/out/SelftestsAtCommit/` re-records five selftests at clean `37bd4c5`,
+all exit 0, with pre/post empty porcelain. No old receipt is overwritten.
+
+S057 used-by old→new (previously unlogged): `corpus/lessons/round-19.md,
+registry/required-citations.json` → `corpus/lessons/round-19.md, SCORECARD.md`
+at `5b108c1a`. This supersedes lines 33–34; immutable source cells did not change.
+
+The outside round-19 trend verdict is **expansion unchanged**, not the author's
+"improved (narrow)": a source row alone added no knowledge entry or capability.
+Quality and discernment were improved by the outside spot-check.
+

@@ -1,0 +1,216 @@
+{
+ "schema": "kama-r20-xlane-cells/v1",
+ "pins": {
+  "grid": {
+   "repo": "/home/vgpnk/Projects/shokunin/kama-shokunin",
+   "rev": "37bd4c5bd456a2f8a54d3312c28495c321715856",
+   "path": "tests/llamacpp-live/install-tree-grid.py",
+   "sha256": "6f51803c47db597e2f6778b492bfaba14735a23c599bc972f8d33ab477a68f05"
+  },
+  "survivors": {
+   "repo": "/home/vgpnk/Projects/shokunin/kama-shokunin",
+   "rev": "37bd4c5bd456a2f8a54d3312c28495c321715856",
+   "path": ".ufo/waves/round-18/c2/survivors.py",
+   "sha256": "ac934794af1eee8067ea11f7f8cc31702ea7dfad257fec2649f2d638477bac75"
+  },
+  "runner": {
+   "repo": "/home/vgpnk/Projects/shokunin/tameshi-shokunin",
+   "rev": "6acaf4dd2f2a8c9de4312e89a05c0f5155c9f055",
+   "path": "tools/mutate-and-run.sh",
+   "sha256": "d22c4025e8ce38b8890bedc1eb9eb5f61366c22f4741910bbe5a942582294a8b"
+  }
+ },
+ "python": "3.14.8",
+ "scratch_removed": true,
+ "cells": {
+  "grid-invalid-verdict": {
+   "injection": "stdout INVALID + exit 1",
+   "expected_by_tameshi": "verdict:reject",
+   "instrument_exit": 0,
+   "instrument_exit_meaning": "verdict: every mutant rejected",
+   "row_status": "rejected",
+   "gate_exit": 1,
+   "instrument_traceback": false,
+   "stderr_last": [],
+   "observed_class": "verdict:reject",
+   "agrees_with_tameshi_method": true
+  },
+  "grid-uncaught-exception": {
+   "injection": "RuntimeError traceback, exit 1, empty stdout",
+   "expected_by_tameshi": "could-not-evaluate",
+   "instrument_exit": 0,
+   "instrument_exit_meaning": "verdict: every mutant rejected",
+   "row_status": "rejected",
+   "gate_exit": 1,
+   "instrument_traceback": false,
+   "stderr_last": [],
+   "observed_class": "verdict:reject",
+   "agrees_with_tameshi_method": false
+  },
+  "grid-silent-exit-1": {
+   "injection": "exit 1, empty stdout",
+   "expected_by_tameshi": "could-not-evaluate",
+   "instrument_exit": 0,
+   "instrument_exit_meaning": "verdict: every mutant rejected",
+   "row_status": "rejected",
+   "gate_exit": 1,
+   "instrument_traceback": false,
+   "stderr_last": [],
+   "observed_class": "verdict:reject",
+   "agrees_with_tameshi_method": false
+  },
+  "grid-not-evaluated-3": {
+   "injection": "stdout NOT-EVALUATED + exit 3",
+   "expected_by_tameshi": "could-not-evaluate",
+   "instrument_exit": 1,
+   "instrument_exit_meaning": "verdict: a mutant survived",
+   "row_status": "error",
+   "gate_exit": 3,
+   "instrument_traceback": false,
+   "stderr_last": [],
+   "observed_class": "could-not-evaluate",
+   "agrees_with_tameshi_method": true
+  },
+  "grid-sigkill": {
+   "injection": "SIGKILL (returncode -9)",
+   "expected_by_tameshi": "could-not-evaluate",
+   "instrument_exit": 1,
+   "instrument_exit_meaning": "verdict: a mutant survived",
+   "row_status": "accepted",
+   "gate_exit": -9,
+   "instrument_traceback": false,
+   "stderr_last": [],
+   "observed_class": "verdict:accept",
+   "agrees_with_tameshi_method": false
+  },
+  "grid-sigterm": {
+   "injection": "SIGTERM (returncode -15)",
+   "expected_by_tameshi": "could-not-evaluate",
+   "instrument_exit": 1,
+   "instrument_exit_meaning": "verdict: a mutant survived",
+   "row_status": "accepted",
+   "gate_exit": -15,
+   "instrument_traceback": false,
+   "stderr_last": [],
+   "observed_class": "verdict:accept",
+   "agrees_with_tameshi_method": false
+  },
+  "grid-undeclared-exit-4": {
+   "injection": "undeclared exit 4",
+   "expected_by_tameshi": "could-not-evaluate",
+   "instrument_exit": 1,
+   "instrument_exit_meaning": "verdict: a mutant survived",
+   "row_status": "accepted",
+   "gate_exit": 4,
+   "instrument_traceback": false,
+   "stderr_last": [],
+   "observed_class": "verdict:accept",
+   "agrees_with_tameshi_method": false
+  },
+  "grid-valid-verdict": {
+   "injection": "stdout VALID + exit 0",
+   "expected_by_tameshi": "verdict:accept",
+   "instrument_exit": 1,
+   "instrument_exit_meaning": "verdict: a mutant survived",
+   "row_status": "accepted",
+   "gate_exit": 0,
+   "instrument_traceback": false,
+   "stderr_last": [],
+   "observed_class": "verdict:accept",
+   "agrees_with_tameshi_method": true
+  },
+  "runner-true-kill": {
+   "injection": "FAIL label + summary, exit 1",
+   "expected_by_tameshi": "verdict:kill",
+   "instrument_exit": 0,
+   "defect_line": "DEFECT D1: KILLED (exit=1 duration-ms=2)",
+   "headline": "MUTATE: DONE (target=runner-true-kill defects=1 killed=1 survived=0 inconclusive=0 kill-rate=100%)",
+   "tool_sha256": "d22c4025e8ce38b8890bedc1eb9eb5f61366c22f4741910bbe5a942582294a8b",
+   "observed_class": "verdict:kill",
+   "agrees_with_tameshi_method": true
+  },
+  "runner-uncaught-exception": {
+   "injection": "python traceback, exit 1, no summary",
+   "expected_by_tameshi": "could-not-evaluate",
+   "instrument_exit": 0,
+   "defect_line": "DEFECT D1: KILLED (exit=1 duration-ms=24)",
+   "headline": "MUTATE: DONE (target=runner-uncaught-exception defects=1 killed=1 survived=0 inconclusive=0 kill-rate=100%)",
+   "tool_sha256": "d22c4025e8ce38b8890bedc1eb9eb5f61366c22f4741910bbe5a942582294a8b",
+   "observed_class": "verdict:kill",
+   "agrees_with_tameshi_method": false
+  },
+  "runner-sigterm": {
+   "injection": "suite shell SIGTERM (exit 143)",
+   "expected_by_tameshi": "could-not-evaluate",
+   "instrument_exit": 0,
+   "defect_line": "DEFECT D1: KILLED (exit=143 duration-ms=1)",
+   "headline": "MUTATE: DONE (target=runner-sigterm defects=1 killed=1 survived=0 inconclusive=0 kill-rate=100%)",
+   "tool_sha256": "d22c4025e8ce38b8890bedc1eb9eb5f61366c22f4741910bbe5a942582294a8b",
+   "observed_class": "verdict:kill",
+   "agrees_with_tameshi_method": false
+  },
+  "runner-sigkill": {
+   "injection": "suite shell SIGKILL (exit 137)",
+   "expected_by_tameshi": "could-not-evaluate",
+   "instrument_exit": 0,
+   "defect_line": "DEFECT D1: KILLED (exit=137 duration-ms=2)",
+   "headline": "MUTATE: DONE (target=runner-sigkill defects=1 killed=1 survived=0 inconclusive=0 kill-rate=100%)",
+   "tool_sha256": "d22c4025e8ce38b8890bedc1eb9eb5f61366c22f4741910bbe5a942582294a8b",
+   "observed_class": "verdict:kill",
+   "agrees_with_tameshi_method": false
+  },
+  "runner-hang": {
+   "injection": "sleep past --timeout 2 (exit 124)",
+   "expected_by_tameshi": "could-not-evaluate",
+   "instrument_exit": 1,
+   "defect_line": "DEFECT D1: INCONCLUSIVE (exit=124 note=timeout duration-ms=2001)",
+   "headline": "MUTATE: DEGRADED (target=runner-hang defects=1 killed=0 survived=0 inconclusive=1 kill-rate=0%)",
+   "tool_sha256": "d22c4025e8ce38b8890bedc1eb9eb5f61366c22f4741910bbe5a942582294a8b",
+   "observed_class": "could-not-evaluate",
+   "agrees_with_tameshi_method": true
+  },
+  "runner-not-runnable": {
+   "injection": "exec of a missing suite (exit 127)",
+   "expected_by_tameshi": "could-not-evaluate",
+   "instrument_exit": 1,
+   "defect_line": "DEFECT D1: INCONCLUSIVE (exit=127 note=suite-not-found duration-ms=3)",
+   "headline": "MUTATE: DEGRADED (target=runner-not-runnable defects=1 killed=0 survived=0 inconclusive=1 kill-rate=0%)",
+   "tool_sha256": "d22c4025e8ce38b8890bedc1eb9eb5f61366c22f4741910bbe5a942582294a8b",
+   "observed_class": "could-not-evaluate",
+   "agrees_with_tameshi_method": true
+  },
+  "arm-complete-kill": {
+   "injection": "FAIL target line + full count 4/5, exit 1",
+   "expected_by_tameshi": "verdict:kill",
+   "instrument_exit": null,
+   "arm_result": [
+    "killed",
+    "targeted selftest assertion failed: target-conjunct attribution"
+   ],
+   "observed_class": "verdict:kill",
+   "agrees_with_tameshi_method": true
+  },
+  "arm-early-abort": {
+   "injection": "FAIL target line, then abort: no count, exit 1",
+   "expected_by_tameshi": "could-not-evaluate",
+   "instrument_exit": null,
+   "arm_result": [
+    "killed",
+    "targeted selftest assertion failed: target-conjunct attribution"
+   ],
+   "observed_class": "verdict:kill",
+   "agrees_with_tameshi_method": false
+  },
+  "arm-signal": {
+   "injection": "FAIL target line, SIGKILL",
+   "expected_by_tameshi": "could-not-evaluate",
+   "instrument_exit": null,
+   "arm_result": [
+    "inconclusive",
+    "unexpected selftest exit -9"
+   ],
+   "observed_class": "could-not-evaluate",
+   "agrees_with_tameshi_method": true
+  }
+ }
+}

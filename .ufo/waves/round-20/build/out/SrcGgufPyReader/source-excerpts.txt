@@ -1,0 +1,246 @@
+# located excerpts, written 2026-10-21T07:29:54Z from raw files fetched 2026-10-21 (curl exit 0)
+# tag b11755 -> 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad (git ls-remote exit 0)
+
+## https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/gguf-py/gguf/gguf_reader.py
+# sha256 d0ea743200e19d7ef0a4c969edcc4a6dba8e3656a790b217e3bdc7b31170718e bytes 16321 lines 390
+# --- gguf-py/gguf/gguf_reader.py:24-41
+gguf-py/gguf/gguf_reader.py:24: from gguf.constants import (
+gguf-py/gguf/gguf_reader.py:25:     GGML_MAX_DIMS,
+gguf-py/gguf/gguf_reader.py:26:     GGML_QUANT_SIZES,
+gguf-py/gguf/gguf_reader.py:27:     GGUF_DEFAULT_ALIGNMENT,
+gguf-py/gguf/gguf_reader.py:28:     GGUF_MAGIC,
+gguf-py/gguf/gguf_reader.py:29:     GGUF_VERSION,
+gguf-py/gguf/gguf_reader.py:30:     GGMLQuantizationType,
+gguf-py/gguf/gguf_reader.py:31:     GGUFValueType,
+gguf-py/gguf/gguf_reader.py:32:     GGUFEndian,
+gguf-py/gguf/gguf_reader.py:33: )
+gguf-py/gguf/gguf_reader.py:34: 
+gguf-py/gguf/gguf_reader.py:35: # limits mirroring ggml/src/gguf.cpp (not part of gguf.h)
+gguf-py/gguf/gguf_reader.py:36: GGUF_MAX_STRING_LENGTH  = 1024 * 1024 * 1024
+gguf-py/gguf/gguf_reader.py:37: GGUF_MAX_ARRAY_ELEMENTS = 1024 * 1024 * 1024
+gguf-py/gguf/gguf_reader.py:38: 
+gguf-py/gguf/gguf_reader.py:39: logger = logging.getLogger(__name__)
+gguf-py/gguf/gguf_reader.py:40: 
+gguf-py/gguf/gguf_reader.py:41: READER_SUPPORTED_VERSIONS = [2, GGUF_VERSION]
+# --- gguf-py/gguf/gguf_reader.py:116-119
+gguf-py/gguf/gguf_reader.py:116: class GGUFReader:
+gguf-py/gguf/gguf_reader.py:117:     # I - same as host, S - swapped
+gguf-py/gguf/gguf_reader.py:118:     byte_order: Literal['I', 'S'] = 'I'
+gguf-py/gguf/gguf_reader.py:119:     alignment: int = GGUF_DEFAULT_ALIGNMENT
+# --- gguf-py/gguf/gguf_reader.py:137-194
+gguf-py/gguf/gguf_reader.py:137:     def __init__(self, path: os.PathLike[str] | str, mode: Literal['r', 'r+', 'c'] = 'r'):
+gguf-py/gguf/gguf_reader.py:138:         self.data = np.memmap(path, mode = mode)
+gguf-py/gguf/gguf_reader.py:139:         offs = 0
+gguf-py/gguf/gguf_reader.py:140: 
+gguf-py/gguf/gguf_reader.py:141:         # Check for GGUF magic
+gguf-py/gguf/gguf_reader.py:142:         if self._get(offs, np.uint32, override_order = '<')[0] != GGUF_MAGIC:
+gguf-py/gguf/gguf_reader.py:143:             raise ValueError('GGUF magic invalid')
+gguf-py/gguf/gguf_reader.py:144:         offs += 4
+gguf-py/gguf/gguf_reader.py:145: 
+gguf-py/gguf/gguf_reader.py:146:         # Check GGUF version
+gguf-py/gguf/gguf_reader.py:147:         temp_version = self._get(offs, np.uint32)
+gguf-py/gguf/gguf_reader.py:148:         if temp_version[0] & 65535 == 0:
+gguf-py/gguf/gguf_reader.py:149:             # If we get 0 here that means it's (probably) a GGUF file created for
+gguf-py/gguf/gguf_reader.py:150:             # the opposite byte order of the machine this script is running on.
+gguf-py/gguf/gguf_reader.py:151:             self.byte_order = 'S'
+gguf-py/gguf/gguf_reader.py:152:             temp_version = temp_version.view(temp_version.dtype.newbyteorder(self.byte_order))
+gguf-py/gguf/gguf_reader.py:153:         version = temp_version[0]
+gguf-py/gguf/gguf_reader.py:154:         if version not in READER_SUPPORTED_VERSIONS:
+gguf-py/gguf/gguf_reader.py:155:             raise ValueError(f'Sorry, file appears to be version {version} which we cannot handle')
+gguf-py/gguf/gguf_reader.py:156:         if sys.byteorder == "little":
+gguf-py/gguf/gguf_reader.py:157:             # Host is little endian
+gguf-py/gguf/gguf_reader.py:158:             host_endian = GGUFEndian.LITTLE
+gguf-py/gguf/gguf_reader.py:159:             swapped_endian = GGUFEndian.BIG
+gguf-py/gguf/gguf_reader.py:160:         else:
+gguf-py/gguf/gguf_reader.py:161:             # Sorry PDP or other weird systems that don't use BE or LE.
+gguf-py/gguf/gguf_reader.py:162:             host_endian = GGUFEndian.BIG
+gguf-py/gguf/gguf_reader.py:163:             swapped_endian = GGUFEndian.LITTLE
+gguf-py/gguf/gguf_reader.py:164:         self.endianess = swapped_endian if self.byte_order == "S" else host_endian
+gguf-py/gguf/gguf_reader.py:165:         self.fields: OrderedDict[str, ReaderField] = OrderedDict()
+gguf-py/gguf/gguf_reader.py:166:         self.tensors: list[ReaderTensor] = []
+gguf-py/gguf/gguf_reader.py:167:         offs += self._push_field(ReaderField(offs, 'GGUF.version', [temp_version], [0], [GGUFValueType.UINT32]))
+gguf-py/gguf/gguf_reader.py:168: 
+gguf-py/gguf/gguf_reader.py:169:         # Check tensor count and kv count
+gguf-py/gguf/gguf_reader.py:170:         temp_counts = self._get(offs, np.uint64, 2)
+gguf-py/gguf/gguf_reader.py:171:         offs += self._push_field(ReaderField(offs, 'GGUF.tensor_count', [temp_counts[:1]], [0], [GGUFValueType.UINT64]))
+gguf-py/gguf/gguf_reader.py:172:         offs += self._push_field(ReaderField(offs, 'GGUF.kv_count', [temp_counts[1:]], [0], [GGUFValueType.UINT64]))
+gguf-py/gguf/gguf_reader.py:173:         tensor_count, kv_count = temp_counts
+gguf-py/gguf/gguf_reader.py:174:         if tensor_count > GGUF_MAX_ARRAY_ELEMENTS:
+gguf-py/gguf/gguf_reader.py:175:             raise ValueError(f'Tensor count {tensor_count} exceeds maximum {GGUF_MAX_ARRAY_ELEMENTS}')
+gguf-py/gguf/gguf_reader.py:176:         if kv_count > GGUF_MAX_ARRAY_ELEMENTS:
+gguf-py/gguf/gguf_reader.py:177:             raise ValueError(f'KV count {kv_count} exceeds maximum {GGUF_MAX_ARRAY_ELEMENTS}')
+gguf-py/gguf/gguf_reader.py:178:         offs = self._build_fields(offs, kv_count)
+gguf-py/gguf/gguf_reader.py:179: 
+gguf-py/gguf/gguf_reader.py:180:         # Build Tensor Info Fields
+gguf-py/gguf/gguf_reader.py:181:         offs, tensors_fields = self._build_tensor_info(offs, tensor_count)
+gguf-py/gguf/gguf_reader.py:182:         new_align = self.fields.get('general.alignment')
+gguf-py/gguf/gguf_reader.py:183:         if new_align is not None:
+gguf-py/gguf/gguf_reader.py:184:             if new_align.types != [GGUFValueType.UINT32]:
+gguf-py/gguf/gguf_reader.py:185:                 raise ValueError('Bad type for general.alignment field')
+gguf-py/gguf/gguf_reader.py:186:             self.alignment = new_align.parts[-1][0]
+gguf-py/gguf/gguf_reader.py:187:             # Ensure alignment is a non-zero power of two
+gguf-py/gguf/gguf_reader.py:188:             if self.alignment == 0 or (self.alignment & (self.alignment - 1)) != 0:
+gguf-py/gguf/gguf_reader.py:189:                 raise ValueError('Invalid alignment: must be a non-zero power of two')
+gguf-py/gguf/gguf_reader.py:190:         padding = offs % self.alignment
+gguf-py/gguf/gguf_reader.py:191:         if padding != 0:
+gguf-py/gguf/gguf_reader.py:192:             offs += self.alignment - padding
+gguf-py/gguf/gguf_reader.py:193:         self.data_offset = offs
+gguf-py/gguf/gguf_reader.py:194:         self._build_tensors(offs, tensors_fields)
+# --- gguf-py/gguf/gguf_reader.py:226-232
+gguf-py/gguf/gguf_reader.py:226:     def _get_str(self, offset: int) -> tuple[npt.NDArray[np.uint64], npt.NDArray[np.uint8]]:
+gguf-py/gguf/gguf_reader.py:227:         slen = self._get(offset, np.uint64)
+gguf-py/gguf/gguf_reader.py:228:         if int(slen[0]) > GGUF_MAX_STRING_LENGTH:
+gguf-py/gguf/gguf_reader.py:229:             raise ValueError(f'String length {int(slen[0])} exceeds maximum {GGUF_MAX_STRING_LENGTH}')
+gguf-py/gguf/gguf_reader.py:230:         if offset + 8 + int(slen[0]) > self.data.nbytes:
+gguf-py/gguf/gguf_reader.py:231:             raise ValueError(f'String length {int(slen[0])} exceeds remaining file size {self.data.nbytes - offset - 8}')
+gguf-py/gguf/gguf_reader.py:232:         return slen, self._get(offset + 8, np.uint8, slen[0])
+# --- gguf-py/gguf/gguf_reader.py:252-257
+gguf-py/gguf/gguf_reader.py:252:         if gtype == GGUFValueType.ARRAY:
+gguf-py/gguf/gguf_reader.py:253:             raw_itype = self._get(offs, np.uint32)
+gguf-py/gguf/gguf_reader.py:254:             offs += int(raw_itype.nbytes)
+gguf-py/gguf/gguf_reader.py:255:             alen = self._get(offs, np.uint64)
+gguf-py/gguf/gguf_reader.py:256:             if int(alen[0]) > GGUF_MAX_ARRAY_ELEMENTS:
+gguf-py/gguf/gguf_reader.py:257:                 raise ValueError(f'Array length {int(alen[0])} exceeds maximum {GGUF_MAX_ARRAY_ELEMENTS}')
+# --- gguf-py/gguf/gguf_reader.py:281-285
+gguf-py/gguf/gguf_reader.py:281:         # Get Tensor Dimensions Count
+gguf-py/gguf/gguf_reader.py:282:         n_dims = self._get(offs, np.uint32)
+gguf-py/gguf/gguf_reader.py:283:         offs += int(n_dims.nbytes)
+gguf-py/gguf/gguf_reader.py:284:         if n_dims[0] > GGML_MAX_DIMS:
+gguf-py/gguf/gguf_reader.py:285:             raise ValueError(f'Tensor dimensions count {n_dims[0]} exceeds GGML_MAX_DIMS ({GGML_MAX_DIMS})')
+
+## https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/gguf-py/gguf/constants.py
+# sha256 b84596cf8bc54b329dadeb74b7fc741cd4f7528ef8b30c4ec85aadf875ff7c63 bytes 256673 lines 6530
+# --- gguf-py/gguf/constants.py:10-12
+gguf-py/gguf/constants.py:10: GGUF_MAGIC             = 0x46554747  # "GGUF"
+gguf-py/gguf/constants.py:11: GGUF_VERSION           = 3
+gguf-py/gguf/constants.py:12: GGUF_DEFAULT_ALIGNMENT = 32
+# --- gguf-py/gguf/constants.py:22-27
+gguf-py/gguf/constants.py:22:     class General:
+gguf-py/gguf/constants.py:23:         TYPE                       = "general.type"
+gguf-py/gguf/constants.py:24:         ARCHITECTURE               = "general.architecture"
+gguf-py/gguf/constants.py:25:         QUANTIZATION_VERSION       = "general.quantization_version"
+gguf-py/gguf/constants.py:26:         ALIGNMENT                  = "general.alignment"
+gguf-py/gguf/constants.py:27:         FILE_TYPE                  = "general.file_type"
+# --- gguf-py/gguf/constants.py:48-48
+gguf-py/gguf/constants.py:48:         NAME                       = "general.name"
+# --- gguf-py/gguf/constants.py:108-114
+gguf-py/gguf/constants.py:108:     class LLM:
+gguf-py/gguf/constants.py:109:         VOCAB_SIZE                        = "{arch}.vocab_size"
+gguf-py/gguf/constants.py:110:         CONTEXT_LENGTH                    = "{arch}.context_length"
+gguf-py/gguf/constants.py:111:         EMBEDDING_LENGTH                  = "{arch}.embedding_length"
+gguf-py/gguf/constants.py:112:         EMBEDDING_LENGTH_OUT              = "{arch}.embedding_length_out"
+gguf-py/gguf/constants.py:113:         FEATURES_LENGTH                   = "{arch}.features_length"
+gguf-py/gguf/constants.py:114:         BLOCK_COUNT                       = "{arch}.block_count"
+# --- gguf-py/gguf/constants.py:350-351
+gguf-py/gguf/constants.py:350:     class Tokenizer:
+gguf-py/gguf/constants.py:351:         MODEL                = "tokenizer.ggml.model"
+# --- gguf-py/gguf/constants.py:6241-6245
+gguf-py/gguf/constants.py:6241: # from llama_ftype in llama.h
+gguf-py/gguf/constants.py:6242: # ALL VALUES SHOULD BE THE SAME HERE AS THEY ARE OVER THERE.
+gguf-py/gguf/constants.py:6243: class LlamaFileType(IntEnum):
+gguf-py/gguf/constants.py:6244:     ALL_F32              = 0
+gguf-py/gguf/constants.py:6245:     MOSTLY_F16           = 1   # except 1d tensors
+# --- gguf-py/gguf/constants.py:6286-6308
+gguf-py/gguf/constants.py:6286: 
+gguf-py/gguf/constants.py:6287:     GUESSED              = 1024  # not specified in the model file
+gguf-py/gguf/constants.py:6288: 
+gguf-py/gguf/constants.py:6289: 
+gguf-py/gguf/constants.py:6290: class GGUFEndian(IntEnum):
+gguf-py/gguf/constants.py:6291:     LITTLE = 0
+gguf-py/gguf/constants.py:6292:     BIG = 1
+gguf-py/gguf/constants.py:6293: 
+gguf-py/gguf/constants.py:6294: 
+gguf-py/gguf/constants.py:6295: class GGUFValueType(IntEnum):
+gguf-py/gguf/constants.py:6296:     UINT8   = 0
+gguf-py/gguf/constants.py:6297:     INT8    = 1
+gguf-py/gguf/constants.py:6298:     UINT16  = 2
+gguf-py/gguf/constants.py:6299:     INT16   = 3
+gguf-py/gguf/constants.py:6300:     UINT32  = 4
+gguf-py/gguf/constants.py:6301:     INT32   = 5
+gguf-py/gguf/constants.py:6302:     FLOAT32 = 6
+gguf-py/gguf/constants.py:6303:     BOOL    = 7
+gguf-py/gguf/constants.py:6304:     STRING  = 8
+gguf-py/gguf/constants.py:6305:     ARRAY   = 9
+gguf-py/gguf/constants.py:6306:     UINT64  = 10
+gguf-py/gguf/constants.py:6307:     INT64   = 11
+gguf-py/gguf/constants.py:6308:     FLOAT64 = 12
+# --- gguf-py/gguf/constants.py:6452-6468
+gguf-py/gguf/constants.py:6452: # general
+gguf-py/gguf/constants.py:6453: KEY_GENERAL_ARCHITECTURE         = Keys.General.ARCHITECTURE
+gguf-py/gguf/constants.py:6454: KEY_GENERAL_QUANTIZATION_VERSION = Keys.General.QUANTIZATION_VERSION
+gguf-py/gguf/constants.py:6455: KEY_GENERAL_ALIGNMENT            = Keys.General.ALIGNMENT
+gguf-py/gguf/constants.py:6456: KEY_GENERAL_NAME                 = Keys.General.NAME
+gguf-py/gguf/constants.py:6457: KEY_GENERAL_AUTHOR               = Keys.General.AUTHOR
+gguf-py/gguf/constants.py:6458: KEY_GENERAL_URL                  = Keys.General.URL
+gguf-py/gguf/constants.py:6459: KEY_GENERAL_DESCRIPTION          = Keys.General.DESCRIPTION
+gguf-py/gguf/constants.py:6460: KEY_GENERAL_LICENSE              = Keys.General.LICENSE
+gguf-py/gguf/constants.py:6461: KEY_GENERAL_SOURCE_URL           = Keys.General.SOURCE_URL
+gguf-py/gguf/constants.py:6462: KEY_GENERAL_FILE_TYPE            = Keys.General.FILE_TYPE
+gguf-py/gguf/constants.py:6463: 
+gguf-py/gguf/constants.py:6464: # LLM
+gguf-py/gguf/constants.py:6465: KEY_VOCAB_SIZE            = Keys.LLM.VOCAB_SIZE
+gguf-py/gguf/constants.py:6466: KEY_CONTEXT_LENGTH        = Keys.LLM.CONTEXT_LENGTH
+gguf-py/gguf/constants.py:6467: KEY_EMBEDDING_LENGTH      = Keys.LLM.EMBEDDING_LENGTH
+gguf-py/gguf/constants.py:6468: KEY_BLOCK_COUNT           = Keys.LLM.BLOCK_COUNT
+
+## https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/ggml/src/gguf.cpp
+# sha256 7505d6a434dc740941a682fd3b476ef9bd9893ab76adf18c9969daa528bd5be5 bytes 58995 lines 1731
+# --- ggml/src/gguf.cpp:20-21
+ggml/src/gguf.cpp:20: #define GGUF_MAX_STRING_LENGTH  (1024*1024*1024)
+ggml/src/gguf.cpp:21: #define GGUF_MAX_ARRAY_ELEMENTS (1024*1024*1024)
+# --- ggml/src/gguf.cpp:465-519
+ggml/src/gguf.cpp:465:     // file magic
+ggml/src/gguf.cpp:466:     {
+ggml/src/gguf.cpp:467:         std::vector<char> magic;
+ggml/src/gguf.cpp:468:         ok = ok && gr.read(magic, 4);
+ggml/src/gguf.cpp:469: 
+ggml/src/gguf.cpp:470:         if (!ok) {
+ggml/src/gguf.cpp:471:             GGML_LOG_ERROR("%s: failed to read magic\n", __func__);
+ggml/src/gguf.cpp:472:             gguf_free(ctx);
+ggml/src/gguf.cpp:473:             return nullptr;
+ggml/src/gguf.cpp:474:         }
+ggml/src/gguf.cpp:475: 
+ggml/src/gguf.cpp:476:         for (uint32_t i = 0; i < magic.size(); i++) {
+ggml/src/gguf.cpp:477:             if (magic[i] != GGUF_MAGIC[i]) {
+ggml/src/gguf.cpp:478:                 char c0 = isprint(magic[0]) ? magic[0] : '?';
+ggml/src/gguf.cpp:479:                 char c1 = isprint(magic[1]) ? magic[1] : '?';
+ggml/src/gguf.cpp:480:                 char c2 = isprint(magic[2]) ? magic[2] : '?';
+ggml/src/gguf.cpp:481:                 char c3 = isprint(magic[3]) ? magic[3] : '?';
+ggml/src/gguf.cpp:482:                 GGML_LOG_ERROR("%s: invalid magic characters: '%c%c%c%c', expected 'GGUF'\n", __func__, c0, c1, c2, c3);
+ggml/src/gguf.cpp:483:                 gguf_free(ctx);
+ggml/src/gguf.cpp:484:                 return nullptr;
+ggml/src/gguf.cpp:485:             }
+ggml/src/gguf.cpp:486:         }
+ggml/src/gguf.cpp:487:     }
+ggml/src/gguf.cpp:488: 
+ggml/src/gguf.cpp:489:     // header
+ggml/src/gguf.cpp:490:     int64_t n_kv      = 0;
+ggml/src/gguf.cpp:491:     int64_t n_tensors = 0;
+ggml/src/gguf.cpp:492: 
+ggml/src/gguf.cpp:493:     if (ok && gr.read(ctx->version)) {
+ggml/src/gguf.cpp:494:         if (ok && ctx->version == 0) {
+ggml/src/gguf.cpp:495:             GGML_LOG_ERROR("%s: bad GGUF version: %" PRIu32 "\n", __func__, ctx->version);
+ggml/src/gguf.cpp:496:             ok = false;
+ggml/src/gguf.cpp:497:         }
+ggml/src/gguf.cpp:498: 
+ggml/src/gguf.cpp:499:         /*
+ggml/src/gguf.cpp:500:          * bit layout is different when reading non-native endian models.
+ggml/src/gguf.cpp:501:          * assuming that the GGUF version is 3, the non-native endian model
+ggml/src/gguf.cpp:502:          * would read it as 0x30000000. we can use the AND operation against
+ggml/src/gguf.cpp:503:          * the last 4 hexadecimal digits to check if the model is the same
+ggml/src/gguf.cpp:504:          * endianness as the host system.
+ggml/src/gguf.cpp:505:         */
+ggml/src/gguf.cpp:506:         if (ok && (ctx->version & 0x0000FFFF) == 0x00000000) {
+ggml/src/gguf.cpp:507:             GGML_LOG_ERROR("%s: failed to load model: this GGUF file version %" PRIu32 " is extremely large, is there a mismatch between the host and model endianness?\n", __func__, ctx->version);
+ggml/src/gguf.cpp:508:             ok = false;
+ggml/src/gguf.cpp:509:         }
+ggml/src/gguf.cpp:510: 
+ggml/src/gguf.cpp:511:         if (ok && ctx->version == 1) {
+ggml/src/gguf.cpp:512:             GGML_LOG_ERROR("%s: GGUFv1 is no longer supported, please use a more up-to-date version\n", __func__);
+ggml/src/gguf.cpp:513:             ok = false;
+ggml/src/gguf.cpp:514:         }
+ggml/src/gguf.cpp:515:         if (ok && ctx->version > GGUF_VERSION) {
+ggml/src/gguf.cpp:516:             GGML_LOG_ERROR("%s: this GGUF file is version %" PRIu32 " but this software only supports up to version %d\n",
+ggml/src/gguf.cpp:517:                 __func__, ctx->version, GGUF_VERSION);
+ggml/src/gguf.cpp:518:             ok = false;
+ggml/src/gguf.cpp:519:         }

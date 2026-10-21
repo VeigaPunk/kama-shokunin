@@ -1,0 +1,114 @@
+{
+  "schema": "kama-c1-mutants/v1",
+  "mode": "dry-run",
+  "check": "/tmp/kama-r20-MutantsGridCrash/lane/tests/probe-verdicts/check.py",
+  "check_sha256": "12367de62efafa02641c4acb497e50f1be5019b54879a9ac6da13efd5f8071a5",
+  "frozen": null,
+  "mutants": [
+    {
+      "id": "M0",
+      "name": "ignore-verdict",
+      "site_found": true,
+      "killed": null,
+      "evidence": {
+        "semantics": "drop the verdict conjunct from record['passed']; the verdict compare is the first conjunct, so deleting the line would dangle an `and` -- neutralize it to True",
+        "mutation": "conjunct-neutralize: conjunct 'record[\"verdict\"] == expected[\"verdict\"]' -> True"
+      }
+    },
+    {
+      "id": "M1",
+      "name": "ignore-reason",
+      "site_found": true,
+      "killed": null,
+      "evidence": {
+        "semantics": "round-16: delete the reason conjunct from record['passed']",
+        "mutation": "literal-delete: delete line containing 'and record[\"reason\"] == expected[\"reason\"]'"
+      }
+    },
+    {
+      "id": "M2",
+      "name": "ignore-exit",
+      "site_found": true,
+      "killed": null,
+      "evidence": {
+        "semantics": "round-16: delete the probe_exit conjunct",
+        "mutation": "literal-delete: delete line containing 'and record[\"probe_exit\"] == expected[\"exit\"]'"
+      }
+    },
+    {
+      "id": "M3",
+      "name": "ignore-drift",
+      "site_found": true,
+      "killed": null,
+      "evidence": {
+        "semantics": "round-16: delete the drift-invariant conjunct",
+        "mutation": "literal-delete: delete line containing 'and record[\"drift\"] == (record[\"verdict\"] != \"MODEL_OK\")'"
+      }
+    },
+    {
+      "id": "M4",
+      "name": "casefold-verdict",
+      "site_found": true,
+      "killed": null,
+      "evidence": {
+        "semantics": "round-16: casefold() the verdict comparison",
+        "mutation": "literal-casefold: replace 'record[\"verdict\"] == expected[\"verdict\"]'"
+      }
+    },
+    {
+      "id": "M5",
+      "name": "timeout-pass",
+      "site_found": false,
+      "killed": null,
+      "evidence": {
+        "semantics": "round-16: record passed=True inside TimeoutExpired",
+        "status": "site_missing"
+      }
+    },
+    {
+      "id": "M6",
+      "name": "ignore-served_model",
+      "site_found": true,
+      "killed": null,
+      "evidence": {
+        "semantics": "neutralize the served_model invariant (new grading only)",
+        "mutation": "conjunct-served_model_ok: conjunct 'record[\"served_model_ok\"]' -> True"
+      }
+    },
+    {
+      "id": "M7",
+      "name": "ignore-route-match",
+      "site_found": true,
+      "killed": null,
+      "evidence": {
+        "semantics": "neutralize the GET /v1/models route invariant",
+        "mutation": "conjunct-route_ok: conjunct 'record[\"route_ok\"] is not False' -> True"
+      }
+    },
+    {
+      "id": "M8",
+      "name": "malformed-output-passes",
+      "site_found": true,
+      "killed": null,
+      "evidence": {
+        "semantics": "malformed probe output passes instead of failing",
+        "mutation": "pass-before-return: pass before return after 'record[\"error\"] = (f\"malformed probe output: {why_bad}; \"'"
+      }
+    },
+    {
+      "id": "M9",
+      "name": "reject-all",
+      "site_found": true,
+      "killed": null,
+      "evidence": {
+        "semantics": "record['passed'] is False for every row; the full detector's F0 identity positive control must kill it",
+        "mutation": "and-false: replace 'record[\"passed\"] = ('"
+      }
+    }
+  ],
+  "totals": {
+    "mutants": 10,
+    "site_found": 9,
+    "site_missing": 1
+  }
+}

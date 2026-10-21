@@ -94,3 +94,14 @@ this explicitly supersedes the round-17 “now emits v2” sentence at line73.
 Internal-fault receipt promises refer to guarded lifecycle paths with writable
 output, not help/usage, an unwritable output file or an unconditional guarantee
 against interruption between every Python instruction.
+
+**Round-20 frontier note — offline declarations.** GGUF header inspection and
+comparison with an existing byte-pinned fixture receipt enter held ground via
+`corpus/knowledge/gguf-declared-identity.md` (S058/S060). This reads the one
+explicitly named local CI file and metadata only; it loads no weights and
+starts no server. It is not a host-wide model inventory or proof of current
+serving/loaded-weight identity. Context declaration versus effective per-slot
+capacity is not model quality. Kengaku's technique overlap is acknowledged,
+not absorbed. K05 across real consumers and other engines remains frontier.
+Do not traverse Kagi no-enumerate/config roots to discover models.
+

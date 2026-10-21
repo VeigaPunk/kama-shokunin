@@ -1,0 +1,39 @@
+diff --git a/.ufo/waves/round-18/c2/survivors.py b/.ufo/waves/round-18/c2/survivors.py
+--- a/.ufo/waves/round-18/c2/survivors.py
++++ b/.ufo/waves/round-18/c2/survivors.py
+@@ -928,3 +928,26 @@
+     return bool(match and match.group(1) == match.group(2))
+ 
+ 
++def selftest_enumeration_matches(base_run, run):
++    """Require the mutant selftest to report the baseline's full case set."""
++    base_doc, _ = parse_json_bytes(base_run["stdout"])
++    doc, _ = parse_json_bytes(run["stdout"])
++    if isinstance(base_doc, dict) and isinstance(doc, dict):
++        counts = (
++            "selftest", "matrix_files", "matrix_tests", "matrix_sha256",
++            "rows_checked", "families_covered", "faults_checked",
++            "classifier_cases", "wrapper_checks",
++        )
++        if not all(key in base_doc and doc.get(key) == base_doc[key]
++                   for key in counts):
++            return False
++        return all(
++            isinstance(base_doc.get(key), dict)
++            and isinstance(doc.get(key), dict)
++            and set(doc[key]) == set(base_doc[key])
++            for key in ("gate", "escape"))
++    summary = r"(?m)^(\d+)/(\d+) selftest cases passed\s*$"
++    base_match = re.search(summary, tail(base_run["stdout"], 8000))
++    match = re.search(summary, tail(run["stdout"], 8000))
++    return bool(base_match and match
++                and match.group(2) == base_match.group(2))
++
++
+ def selftest_arm(base_run, run, expected_failure):
+@@ -943,3 +966,5 @@
+     if record["exit"] != 1:
+         return "inconclusive", f"unexpected selftest exit {record['exit']}"
++    if not selftest_enumeration_matches(base_run, run):
++        return "inconclusive", "selftest did not enumerate the baseline case set"
+     doc, _ = parse_json_bytes(run["stdout"])

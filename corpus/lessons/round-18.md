@@ -421,3 +421,60 @@ The routed revision defects are now machine-checked by
   cite(1b85a24eca4d1fe81ef8d9ddf513fda1aad93e0e, .ufo/waves/round-18/runs/live-gate-1.stdout, sha256=1cb5a41bbfeb8f0f9306d9bf86df83d33cf9bc3aa46887c574e1dd07875574c7)
 - The official C2 document is the stdout, not a surviving `--out` file:
   cite(1b85a24eca4d1fe81ef8d9ddf513fda1aad93e0e, .ufo/waves/round-18/runs/c2-survivors.stdout, sha256=ea2e3e0258346410a04cef27a79c1ec0bbe1fd8ce8db13e683da327950cf272d)
+
+## Round-20 correction — filed wording and retrospective roster
+
+Commit `30ed378` rewrote the Gate rejection row at line 42 instead of appending
+its correction. Original wording (verbatim at `8bf99cae` and `30ed378^`):
+
+> | Handler installed implies SIGTERM necessarily terminates with 0 | reject S043's overclaim; S047 narrows it | Same pinned files: `server.cpp` install at 534 precedes call at 576, and `server-queue.cpp:279` resets the handler's `running = false;` at 134. An actual termination guarantee additionally needs locking/shutdown assumptions. |
+
+Superseding wording (the line retained from `30ed378`):
+
+> | Handler installed implies SIGTERM necessarily terminates with 0 | reject S043's overclaim; S047 narrows it | Same pinned files: `server.cpp` install at 534 precedes call at 576, and `start_loop()` overwrites `terminate()`'s `running = false` (134) with `running = true` at `server-queue.cpp:279`. An actual termination guarantee additionally needs locking/shutdown assumptions. |
+
+The decision stays reject; the mechanism attribution is corrected. This
+appendix records the original text and the process defect; it does not
+legitimize rewriting filed lessons. Source: round-20 `Lesson18Line42.md`.
+
+The round-19 erratum's label "Dispatch record" for
+`.ufo/waves/round-18/residual/assignments.json` is superseded: it is a
+retrospective roster first committed in round 19 (`7229fa9`), not original
+spawn/task-call evidence. The 4/3 verdict split is supported by the advice
+files; the asserted 6 reviewer / 1 critic role split still lacks independent
+dispatch evidence. See adjacent `assignments.PROVENANCE.md`.
+
+Line-anchor qualification: the S051 prose cited as `SOURCES.md:209-213` is
+at those lines at `8bf99cae`; S057 was appended after S056 (not inserted
+mid-table) and shifted later prose by one. Refer to the heading "S051
+identity-label clarification" at that revision rather than unqualified tip
+line numbers. Future appended registry rows shift it again.
+
+
+## Round-20 additional material citation pins
+
+These are the reconstructed 13 material revision/path instances (12 distinct
+paths; two C2 JSON generations). The original material-citations scanner is
+not tracked, so this is a named selected population, not all material citations.
+
+- S055 receipt: cite(1c325b2e58fcfdc6761f645b44cedfb1d65243e6, .ufo/waves/round-18/live/receipt-1.json, sha256=e616f67e2e2bec196402f56ed3a45fb68f78c9f4e927f0ea7d8acd170caf6d75)
+- Build supplement: cite(101f3991d3570bc9350fbf9c5561f4be1185699d, .ufo/waves/round-18/build/validation-supplement.json, sha256=b081d09c0c89c8b463610b6b2523a19e1934d36543897284b6b3310412511f03)
+- Terminal evidence: cite(101f3991d3570bc9350fbf9c5561f4be1185699d, .ufo/waves/round-18/build/terminal-evidence.json, sha256=44b0694d00c03c2b7af9c0f93e7e83aef073be115bb37fc5d8a33051fd2e371f)
+- Falsify validation: cite(101f3991d3570bc9350fbf9c5561f4be1185699d, .ufo/waves/round-18/falsify/validation.json, sha256=5644346ed0d9b543e1934b4ee32cf7c287bd12d0aed67594bf1201f9e4cbcf5c)
+- Falsify spec: cite(101f3991d3570bc9350fbf9c5561f4be1185699d, .ufo/waves/round-18/falsify/spec.json, sha256=ecf2668ad0829c09c27d318bbc5046513254392b15ce4aa9d8834632f3d904df)
+- Build registry: cite(c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d, .ufo/waves/round-18/build/advice/swarm-registry.json, sha256=a2eb60512cb83da62a895280310d4b6dc1ba6256e48254fbaf526d6e013c11f0)
+- Refused payload: cite(c6dc46fabc51eb1dd0e91647f2e5e6b2b8ae4d6d, .ufo/waves/round-18/build/dispatch-95.json, sha256=59ec84c1fa30c392f8de8b27277550dcad15d006585b4462086e479b92b36744)
+- Pre-repair C2 JSON: cite(101f3991d3570bc9350fbf9c5561f4be1185699d, .ufo/waves/round-18/runs/c2-survivors.json, sha256=bd217de0030d1b69f07c0ac3cc334ccdac192896441a177bb13eb3c308509829)
+- Checkpoint C1 exit: cite(101f3991d3570bc9350fbf9c5561f4be1185699d, .ufo/waves/round-18/runs/c1-measure.exit, sha256=5f8bd21203fdbe78b3339b6c8102f5a67cea53316e7b8797aa7aea63e498d985)
+- Checkpoint C2 exit: cite(101f3991d3570bc9350fbf9c5561f4be1185699d, .ufo/waves/round-18/runs/c2-survivors.exit, sha256=5f8bd21203fdbe78b3339b6c8102f5a67cea53316e7b8797aa7aea63e498d985)
+- Recovered C1: cite(1b85a24eca4d1fe81ef8d9ddf513fda1aad93e0e, .ufo/waves/round-18/runs/c1-measure.json, sha256=83e8a1ed95d0c71739aef9f5e1295e14f05d9cc004b56ad19c796ebe1864e1b3)
+- Retrospective roster (not original dispatch): cite(7229fa95eb122310e9e5334ad799ee3006293ebd, .ufo/waves/round-18/residual/assignments.json, sha256=8d3a9aee251e700319f93210de7bdd945730fdb3d83fc17e5f109451ef389226)
+- Corrected pre-official C2: cite(1b85a24eca4d1fe81ef8d9ddf513fda1aad93e0e, .ufo/waves/round-18/runs/c2-survivors.json, sha256=8cc59a65d1a23119479354a1a370f29dbc95ed204135761781ae8cf095582f13)
+
+Agreement qualification for "they agree" at 407–408: the pre-official JSON and
+official stdout agree on 15 item outcomes, counts, frozen witnesses and 42
+run-status tuples, not entire documents. Tool hashes, paths, time/PID/stream
+provenance and bind-guard distinct-port statistics differ (1382 versus 1376).
+Both binds totals are 1464. Source: round-20 `R18CitationRows.md` and its full
+comparison transcript. No new execution of the old 42-run counter is implied.
+

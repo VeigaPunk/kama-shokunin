@@ -1,0 +1,13 @@
+VERDICT: refute - crashes and SIGKILLs count as failed rows (exit 1), not could-not-evaluate.
+
+Scope: `tests/probe-verdicts/check.py` at round-start revision `37bd4c5bd456a2f8a54d3312c28495c321715856`. No lane files were modified.
+
+Executed (scratch checkout; each command selected one stub and one closed-port row):
+- `python3 /tmp/kama-r20-ProbeCheckCrash/lane/tests/probe-verdicts/check.py --probe /tmp/kama-r20-ProbeCheckCrash/crash.sh --only AuthAndDead.closed-port-connection-refused --only AuthAndDead.401-authentication-error-envelope --json` → harness exit **1**; 2 tests, 0 passes, 2 failures. Traceback arm records probe exits 1; both records have `verdict=null`, `passed=false`. Stub row error: `stub accepted no requests; probe never reached a listening socket`. Closed-port row error: `malformed probe output` with the traceback in stderr.
+- `python3 /tmp/kama-r20-ProbeCheckCrash/lane/tests/probe-verdicts/check.py --probe /tmp/kama-r20-ProbeCheckCrash/sigkill.sh --only AuthAndDead.closed-port-connection-refused --only AuthAndDead.401-authentication-error-envelope --json` → harness exit **1**; 2 tests, 0 passes, 2 failures. Both records have `probe_exit=-9`, `verdict=null`, `passed=false`; stub and closed-port errors are as above, with empty stderr on the closed-port row.
+
+Rule at this revision (`check.py:398-405`): “Anything else is malformed probe output: the caller records a per-row failure, never a traceback.” The module contract (`:26-28`) says exit 1 for any test failure, including malformed probe output, and exit 2 for a harness/schema error. `grade()` records malformed output / no-request stub conditions as row `error`s and returns the record (`:465-484`); `main()` counts every non-passing record as a failure and returns 1 (`:766-790`). Neither fault becomes `HarnessError`/exit 2.
+
+Judgment: these are **recorded row failures**, not harness errors; they are not explicit subject verdicts (`verdict` remains null and `error` is populated). But they still produce `[FAIL]`, increment `failures`, and exit 1. Under the round's C1 rule, “errors are not verdicts” and a crash/signal is “could-not-evaluate/error”: this is not an honest verdict classification if consumers treat row failure/exit 1 as the gate's judgment. The diagnostic fields disclose the crash, but there is no distinct could-not-evaluate result.
+
+Verification limits: exercised one stub and one closed-port matrix row per fault, not the entire matrix. No tools were installed. LSP was unavailable: `xd://lsp` and `xd://lsp_status` both returned `No such tool`; conclusions rely on pinned source reads and executed CLI output, not grep as semantic proof.

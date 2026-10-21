@@ -1,0 +1,21 @@
+Round-18 C2 selftest-arm reproduction
+
+Workspace revision command:
+$ git -C /tmp/kama-r20-CloseKama18.SurvivorsArmEnum-2/lane rev-parse HEAD
+stdout: 37bd4c5bd456a2f8a54d3312c28495c321715856
+exit: 0
+
+Arm-only exercise command (no survivors.py measurement was run):
+$ python3 /tmp/kama-r20-CloseKama18.SurvivorsArmEnum-2/arm_probe.py
+stdout:
+target_id: AO-blank
+expected_failure: 'edit after a blank line'
+baseline_stdout: '1/1 selftest cases passed\n'
+stub_argv: ["/usr/bin/python3", "-c", "import sys; print('FAIL edit after a blank line'); sys.exit(1)"]
+stub_exit: 1
+stub_stdout: 'FAIL edit after a blank line\n'
+stub_stderr: ''
+selftest_arm: ('killed', 'targeted selftest assertion failed: edit after a blank line')
+exit: 0
+
+The baseline record above is synthetic and only satisfies selftest_summary_ok; the stub is an actual child process. This isolates the current selftest_arm behavior. No lane file was edited, and no full survivor measurement or selftest suite was run.

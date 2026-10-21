@@ -1,0 +1,27 @@
+VERDICT: partial - Keep gates fail-closed; limit verdict-evidence rules to measurement claims
+
+Scope / axes
+- Calibration (C1): directly affected; a counter must not claim a kill without observing the subject's decision.
+- Operability: preserve the gate's deny-on-failure behavior. A reporting fix must not turn nonzero into acceptance.
+
+Counterexample and direction (red→green means classifier accuracy; census colors are [INFERENCE], not measured here)
+- Gate: a nonzero/crash can be a conservative *denial* at an admission boundary, but it is not proof that the validator emitted an INVALID verdict. `check-receipt.py` explicitly emits `INVALID ...` and returns 1 for validation problems, returns 2 on read failure, and emits `VALID ...` only on exit 0 (`tests/llamacpp-live/check-receipt.py:2208-2243`, base 37bd4c5bd456a2f8a54d3312c28495c321715856). Thus keep any caller fail-closed on nonzero; for a verdict metric, require the expected marker. C1 cannot turn the actual gate decision from deny to allow. It can turn a red *classification-accuracy* cell green if that cell's oracle is `error`; it cannot improve admission safety. [INFERENCE: the lane's external admission caller accepts only exit 0; no caller was executed here.]
+- Kill-counter: overclaim is demonstrated at `install-tree-grid.py:49-53,107-114,127-129`. The source says a kill is an `INVALID` verdict (line 107), but code classifies every exit 1 as `rejected` without checking stdout (110-111). A synthetic gate returned 0/`VALID` for baseline, then exit 1 with `Traceback ... injected gate crash` for its one mutant; the grid reported `rejected=1`, `status=rejected`, and grid exit 0. Exit status alone falsely certifies a kill. A C1-style correction can turn a misclassified error cell red→green, but for mutation-score green/red it only removes a false kill (green→red/error); it cannot create kill evidence.
+- Selftest: the honest kill is a named failed assertion, not any early abort whose output happens to contain the target. The frozen description accepts nonzero plus target literal (`survivors.py:34-39`); `selftest_arm` uses exit 1 plus `FAIL` line containing the target (`931-955`). A synthetic exit-1 abort line `FAIL F0 gate: a reject-everything - selftest aborted before assertions` was classified `killed` (probe below). This is a false kill if such output is from an early abort [INFERENCE: the probe is synthetic, not a captured lane child trace]. A C1-style correction can turn that error-classification cell red→green, but not improve the kill score; a blanket exit-1→error rule would also erase a genuine targeted assertion and must be avoided.
+
+Smallest safe correction
+- Keep gate enforcement fail-closed. In `install-tree-grid.py`, label a mutant `rejected` only for exit 1 plus stdout beginning `INVALID `; classify exit 1 without that verdict as error/inconclusive. Preserve legitimate `INVALID` results.
+- For kill counters, require an observed decision/rejection before `killed`; missing or malformed decision evidence is inconclusive/error. For selftests, require the named assertion's structured failure, not merely a target substring in an early-abort diagnostic.
+
+Base-source evidence
+- `install-tree-grid.py:91-92` treats nonzero baseline as invalid; `:107-111` documents an emitted verdict but implements exit-code-only mutant classification; `:188-192` selftests valid rejection vs bad-receipt handling.
+- `survivors.py:25-27,897-907` counts a main-arm exit 1 as killed before checking for a usable decision; `:931-955` supplies the selftest target-string rule.
+- `citation-provenance.py:19-20` documents exit 2 for unusable docs/git; `:38-50,94-101` routes `git cat-file` failures to `mismatch` when a matching citation token exists, and `:238-241` returns 1 for mismatch. This is another reason not to globally reinterpret exit 1: missing/mismatched evidence is a real checker failure, while infrastructure errors need a distinct signal.
+
+Commands run (frozen sources staged by `git show`; commit and blob lookup exited 0)
+- `git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-parse --verify 37bd4c5bd456a2f8a54d3312c28495c321715856^{commit} && git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-parse 37bd4c5bd456a2f8a54d3312c28495c321715856:tests/llamacpp-live/install-tree-grid.py 37bd4c5bd456a2f8a54d3312c28495c321715856:tests/llamacpp-live/check-receipt.py 37bd4c5bd456a2f8a54d3312c28495c321715856:.ufo/waves/round-18/c2/survivors.py 37bd4c5bd456a2f8a54d3312c28495c321715856:tools/citation-provenance.py` — exit 0; returned the named commit and four blob IDs.
+- `python3 /tmp/kama-r20-CritC1Conservatism/install-tree-grid.py --selftest` — exit 0; stdout: `selftest: baseline, member rejection, absent member and bad receipt passed`.
+- `python3 /tmp/kama-r20-CritC1Conservatism/grid-crash-probe.py` — driver exit 0; nested grid exit 0, with the row above (`gate_exit: 1`, `stdout: Traceback ... injected gate crash`). Synthetic fake gate only; no live model/server.
+- `python3 /tmp/kama-r20-CritC1Conservatism/classifier-probe.py` — exit 0; stdout: `main-crash=('killed', 'fault-controls exit 1 (detector rejects the mutant)')` and `selftest-abort=('killed', 'targeted selftest assertion failed: F0 gate: a reject-everything')`. Inputs are synthetic.
+- `python3 /tmp/kama-r20-CritC1Conservatism/citation-provenance.py --selftest` — exit 0; stdout: `selftest: ok (15 cases)`; stderr includes its expected unreadable-document diagnostic.
+- Tool installs/updates: none.

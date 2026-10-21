@@ -638,3 +638,35 @@ Four-pin VALID externally pins the launcher only; implementation-library/tree
 digests are recorded/self-consistent, not an independent expected implementation
 pin (`falsify/advice/ConnectTsukuroi.md`). Exact argv is not secret scanning or
 effective-config attestation. Host-repair and credential mechanisms stay outside.
+
+## Round-20 instrument registry and evidence boundaries (owner: kama)
+
+This section registers round-19 instruments that previously lacked rows at
+their required home. It supersedes older commands/tallies only where stated;
+historical table rows stay intact. The sixth receipt pin binds the observed
+regular-file install tree, not soname-symlink destinations or authenticated
+execution. S057 explains loader resolution; TreeCap remains a named limit.
+
+| Name | Kind / entry command | Verdict map | Self-test | Pinned values | Write scope | Owner |
+|---|---|---|---|---|---|---|
+| Citation provenance | gate: `python3 tools/citation-provenance.py [--json]` (official run omits `--docs`) | 0 clean (all required tokens, bytes and ancestry); 1 failed (missing/mismatch/off-ref); 2 could-not-evaluate (unusable registry/docs/git) | `--selftest`, isolated temporary Git repository; count printed, observed-digest branch and CLI error cases included in round20 | `registry/required-citations.json` fixes document, revision, path and SHA256 per required token | stdout; selftest temporary repo removed | kama |
+| Install-tree consistent-swap grid | gate on a gate: `python3 tests/llamacpp-live/install-tree-grid.py --gate tests/llamacpp-live/check-receipt.py --receipt PATH --model-sha H --server-sha H --impl-sha H --probe-sha H --tool-sha H [--tree-sha H] [--json]` | 0 clean (valid baseline and every selected member rejected with emitted INVALID); 1 failed (accepted or absent member); 2 could-not-evaluate (invalid baseline or child error) | `--selftest`, synthetic receipts and fake gates, including actual-verdict and crash/abort controls | default member names in script; receipt's independently supplied five pins and optional tree digest | stdout; temporary mutant receipt tree removed | kama |
+| Live receipt gate with six pins | gate: `python3 tests/llamacpp-live/check-receipt.py RECEIPT --require-schema v3 --expect-model-sha256 H --expect-server-sha256 H --expect-server-impl-sha256 H --expect-install-tree-sha256 H --expect-probe-sha256 H --expect-tool-sha256 H` | 0 VALID/clean; 1 INVALID/failed; 2 unreadable/could-not-evaluate; 3 NOT-EVALUATED/could-not-evaluate | `--selftest`; 77 rejected mutations at round-start `37bd4c5` (not 76 at that revision); measured tallies are dated, not perpetual | supplied model, launcher, implementation, tree, probe and tool digests; stored capture/check consistency | stdout only | kama |
+| Named error-versus-kill regression measure | gate on instruments: `python3 tools/error-verdict-census.py --json` | 0 clean (all pinned cells and controls match current expectations); 1 failed (misclassification); 2 could-not-evaluate (unrun/tampered/missing input) | `--selftest`; real-verdict positives prohibit always-error green | `registry/error-injection-cells.json`, base instrument revision and fixture digests; finite named regression set, not all lane errors | stdout and removed temporary fixtures | kama |
+| Survivor-counter completion boundary | gate on named detectors: `python3 .ufo/waves/round-18/c2/survivors.py --json` | 0 no named after-survivor debt and no inconclusive result; 1 named survivor debt remains; 2 could-not-evaluate (own fault, incomplete selftest, witness mismatch) | `--selftest`; round20 arm fixtures also isolate early abort versus complete target failure; full counter is expensive and not run in round20 | round18 frozen/SHA256SUMS; SELFTEST_TARGETS and completion counts in script; measured old outputs remain revision-qualified | removed temporary clones/fixture processes; stdout or exclusive `--out` | kama |
+| GGUF declared-header identity | probe: `python3 tools/gguf-identity.py FILE --json` | 0 decoded metadata (not loader validation); 1 not GGUF/bad magic; 2 could-not-evaluate (malformed/unsupported/budget); 3 could-not-evaluate (unreadable/nonregular file) | `--selftest`, parser plus captured-receipt fixtures, counts printed | format constants/limits in script; independent `tests/gguf-identity/expected.json` and fixture SHA256SUMS | stdout/stderr only; reads explicitly named regular model file, never loads tensors | kama |
+| Captured GGUF declaration agreement | gate: `python3 tools/gguf-identity.py FILE --receipt RECEIPT --json` | 0 clean (byte-bound declaration agreement with captured metadata); 1 failed (identity/engine mismatch or bad magic); 2 could-not-evaluate (missing/malformed/incomplete evidence); 3 could-not-evaluate (unreadable model) | same `--selftest`, genuine agreement and digest/context mismatch controls | receipt post-model SHA; complete models body SHA; declared context versus meta.n_ctx_train, not props.n_ctx equality | stdout/stderr only; existing receipt/file read, no live server | kama |
+
+### Offline GGUF declared identity
+
+Read a local regular model file without loading weights or contacting a server.
+Compare its byte hash and declared context metadata with an already captured
+receipt; the latter remains historical self-report. `/props` per-slot `n_ctx`
+is not training context and must not be computed as `ctx / total_slots`
+unconditionally (S060). Never interpret a CI fixture's header as model quality.
+
+The capability command and measured controls are recorded in the round-20
+capabilities appendix of SCORECARD; source mechanisms and limits are in
+`corpus/knowledge/gguf-declared-identity.md`. Existing consumer routes,
+registered endpoints, model downloads and persistent servers remain operator-owned.
+

@@ -283,3 +283,17 @@ lane policy in all cases. Four-pin VALID binds the launcher digest, not an
 independent expected implementation-library digest; see the knowledge entry's
 explicit consistent-swap limitation. New coverage remains ownership mechanism,
 not full runtime attestation.
+
+## Round-20 coverage — declared model identity and error evidence
+
+| Entry | New held ground | Evidence |
+|---|---|---|
+| `knowledge/gguf-declared-identity.md` | offline declared GGUF architecture/context metadata versus captured per-slot and training-context fields | mined S058/S060; `tools/gguf-identity.py`; round-20 real-file oracle and malformed fixtures |
+| `knowledge/error-is-not-a-verdict.md` | explicit distinction between a fail-closed subject error and credited mutation rejection; finite named regression repair | mined S061/S062/S064; S063 policy counterexample; `tools/error-verdict-census.py` |
+
+Frontier advanced: offline model declarations now have an executable reader.
+The old "declared-vs-served context is blocked" wording is narrowed: an old
+fixture captures training2048 and served256, usable for historical comparison,
+not a new live endpoint sample. K05 across real registered consumers, other
+engines, loaded-weight authentication and model quality remain unclaimed.
+

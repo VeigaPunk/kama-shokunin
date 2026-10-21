@@ -1,0 +1,33 @@
+Scratch: /tmp/kama-r20-CloseKama18ObservedBranchSelftest/lane
+Scratch setup: `mkdir -p /tmp/kama-r20-CloseKama18ObservedBranchSelftest && git clone -q --shared /home/vgpnk/Projects/shokunin/kama-shokunin /tmp/kama-r20-CloseKama18ObservedBranchSelftest/lane && git -C /tmp/kama-r20-CloseKama18ObservedBranchSelftest/lane checkout -q 37bd4c5bd456a2f8a54d3312c28495c321715856` -> exit 0, no output.
+`git -C /tmp/kama-r20-CloseKama18ObservedBranchSelftest/lane rev-parse HEAD` -> stdout `37bd4c5bd456a2f8a54d3312c28495c321715856`, exit 0.
+
+All following invocations ran from the scratch clone, each as `python3 tools/citation-provenance.py --selftest; rc=$?; printf 'EXIT_CODE=%s\\n' "$rc"; exit 0`. The warning is the existing unreadable-doc fixture's expected stderr.
+
+1. Baseline source, before mutation:
+```
+citation-provenance: cannot read /tmp/citation-provenance-g_w9yisf/lane/absent.md: [Errno 2] No such file or directory: '/tmp/citation-provenance-g_w9yisf/lane/absent.md'
+selftest: ok (15 cases)
+EXIT_CODE=0
+```
+
+2. Red-before: removed the observed-digest branch (`elif error is not None or observed != want:` and `status = "mismatch"`) in the scratch source; old selftest still passes:
+```
+citation-provenance: cannot read /tmp/citation-provenance-88ya7bfi/lane/absent.md: [Errno 2] No such file or directory: '/tmp/citation-provenance-88ya7bfi/lane/absent.md'
+selftest: ok (15 cases)
+EXIT_CODE=0
+```
+
+3. Added the new selftest while branch deletion remained; it fails on the mutant:
+```
+citation-provenance: cannot read /tmp/citation-provenance-zbqfps2i/lane/absent.md: [Errno 2] No such file or directory: '/tmp/citation-provenance-zbqfps2i/lane/absent.md'
+SELFTEST FAIL observed-digest: {'required': 1, 'docs_unreadable': 0, 'found': 1, 'verified': 1, 'missing': 0, 'mismatch': 0, 'off_ref': 0}
+EXIT_CODE=1
+```
+
+4. Restored the original observed-digest branch; updated selftest passes:
+```
+citation-provenance: cannot read /tmp/citation-provenance-kf81eaxr/lane/absent.md: [Errno 2] No such file or directory: '/tmp/citation-provenance-kf81eaxr/lane/absent.md'
+selftest: ok (16 cases)
+EXIT_CODE=0
+```

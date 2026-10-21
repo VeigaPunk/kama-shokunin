@@ -1,0 +1,31 @@
+SrcCtxTrainWarning-2 — executed commands, 2026-10-21 (scratch /tmp/kama-r20-SrcCtxTrainWarning, deleted after)
+Pin: llama.cpp 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad (release b11755). Binary: /home/vgpnk/.local/opt/llama-b11755 (`llama-completion --version`: "version: 0.7.0-dev (build 11755, commit 704366d76)", exit 0).
+
+1. find / -xdev -name llama-context.cpp ...                    -> exit 1, no output (no local llama.cpp source tree on host)
+2. curl -sSfL https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/{src/llama-context.cpp,src/llama-model.cpp,src/llama-arch.cpp,src/llama-hparams.h,include/llama.h,common/common.h,common/common.cpp,src/llama.cpp,tools/server/server-context.cpp}
+                                                                -> every fetch exit 0
+   sha256: src/llama-context.cpp 2a25e556cb0d16725e01ce853fb1b76da91dcb41b803ce1a6bacec89bfb94aa5 (169201 B)
+           src/llama-model.cpp   4a209cc688c2da1a5fe4eecf08e1a397b3bea71e93f0f37c42979200c9399182 (186516 B)
+           src/llama-arch.cpp    1170b4b3b2c99642b4b6b65f245b56e3f9d5a1fb58d8c8dad1fabea52f29fc50 (95201 B)
+           common/common.h       8bcc5708c856653b0094ba312030df9c2f43ec2703e8ad78474fd4339d2540a9
+           tools/server/server-context.cpp dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329
+3. cmp <fetched server-context.cpp> .ufo/waves/round-16/sources/llama.cpp-704366d/server-context.cpp -> exit 0 (lane copy = pin)
+4. sha256sum /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf -> 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d, exit 0
+5. uv run --no-project --with gguf python -c '<GGUFReader: general.architecture, llama.context_length>'
+                                                                -> exit 0; "gguf-py 0.19.0", "general.architecture llama", "llama.context_length 2048"
+6. for c in 4096 256 100 0: timeout 60 llama-completion -m stories260K.gguf -c $c -n 1 -p "Once" -no-cnv -t 1 </dev/null
+                                                                -> exit 0 each (runs/c$c.stderr)
+   c=4096: "W llama_context: n_ctx_seq (4096) > n_ctx_train (2048) -- possible training context overflow"; "generate: n_ctx = 4096"
+   c=256 : "generate: n_ctx = 256"   c=100: "generate: n_ctx = 256"   c=0: "generate: n_ctx = 2048"
+7. timeout 60 llama-completion ... -c 256 ... -v               -> exit 0 (runs/c256v.stderr)
+   "I llama_context: n_ctx_seq (256) < n_ctx_train (2048) -- the full capacity of the model will not be utilized"
+8. grep -c 'exceeds the training context of the model' lib{llama-cli,llama-server,llama-completion}-impl.so -> 0 / 1 / 0
+   readelf -d libllama-cli-impl.so | grep NEEDED              -> includes [libllama-server-impl.so]
+9. unshare -rn timeout 60 llama-cli -m stories260K.gguf -c 4096 -n 1 -p "Once" -st --simple-io -t 1 -v </dev/null
+                                                                -> exit 124 (single turn never finished; timeout SIGTERM at 60 s; log line "cleaning up before exit...")
+   load-time lines (runs/cli-c4096.stderr:1084-1085):
+   "W srv    load_model: the slot context (4096) exceeds the training context of the model (2048) - capping"
+   "I srv    load_model: initializing, n_slots = 1, n_ctx_slot = 2048, kv_unified = 'false'"
+   No network namespace (unshare -rn); llama-cli --help lists no --port/--host.
+10. pgrep -a llama after every run                              -> "no llama processes"
+No llama-server was launched; tools/kama-llamacpp-live.py was not run.
