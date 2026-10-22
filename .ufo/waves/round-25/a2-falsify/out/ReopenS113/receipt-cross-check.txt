@@ -1,0 +1,27 @@
+Cross-check of corpus/SOURCES.md:125 teaches ("total cells = kv_size x n_stream") and of the stream rule (n_stream = 1 when unified, n_seq_max when split) against the committed receipt
+Receipt: .ufo/waves/round-25/final/context-capacity-receipt.json (committed; read with python json, exit 0)
+Method: every "llama_kv_cache: size = ... (N cells, L layers, a/b seqs)" line in each cell's log_lines was parsed; kv_size = N, n_seq_max = a, n_stream = b; unified taken from the cell's last "kv_unified = " line; pool taken from the "llama_context: n_ctx = " lines of the same cell.
+Observed output (python, exit 0):
+
+cells: 14
+K1  args='-c 0'                                  kv_unified=true   pools=[2048, 2048]  size(kv_size,n_seq_max,n_stream)=[(2048,4,1),(2048,4,1)]
+K2  args='-c 2048 -np 2 --no-kv-unified'         kv_unified=false  pools=[2048, 2048]  size=[(1024,2,2),(1024,2,2)]
+K3  args='-c 2048 -np 2 --kv-unified'            kv_unified=true   pools=[2048, 2048]  size=[(2048,2,1),(2048,2,1)]
+K4  args='-c 1024 -np 1'                         kv_unified=false  pools=[1024, 1024]  size=[(1024,1,1),(1024,1,1)]
+K5  args='-c 4096 -np 1'                         kv_unified=false  pools=[4096, 4096]  size=[(4096,1,1),(4096,1,1)]
+K6  args='-c 1000 -np 3 --no-kv-unified'         kv_unified=false  pools=[1536, 1536]  size=[(512,3,3),(512,3,3)]
+K7  args='-np 2 --kv-unified-per-slot 512'       kv_unified=false  pools=[1024, 1024]  size=[(512,2,2),(512,2,2)]
+K8  args='-c 4096 -np 4 --kv-unified --kv-unified-per-slot 512' kv_unified=true pools=[4096, 4096] size=[(4096,4,1),(4096,4,1)]
+X1  args='-np 4 --no-kv-unified'                 kv_unified=false  pools=[2048, 8192, 8192] size=[(512,4,4),(2048,4,4),(2048,4,4)]
+X2  args='-c 8192 -np 4 --no-kv-unified'         kv_unified=false  pools=[8192, 8192]  size=[(2048,4,4),(2048,4,4)]
+X3  args='-np 4 --no-kv-unified --fit off'       kv_unified=false  pools=[2048]        size=[(512,4,4)]
+L1  args='-c 0'                                  kv_unified=true   pools=[2048, 2048]  size=[(2048,4,1),(2048,4,1)]
+L2  args='-c 8192 -np 4 --no-kv-unified'         kv_unified=false  pools=[8192, 8192]  size=[(2048,4,4),(2048,4,4)]
+L3  args='-c 0'                                  kv_unified=true   pools=[2048, 2048]  size=[(2048,4,1),(2048,4,1)]
+violations: none
+
+Reading: for every size line, n_stream follows the stream rule, and the pool equals kv_size x n_stream (X1: the fit probe gives 512 x 4 = 2048; the serving context gives 2048 x 4 = 8192).
+
+Byte check (same receipt): unified, 4/1 seqs, 2048 cells: "size = 1.25 MiB (2048 cells, 5 layers, 4/1 seqs), K (f16): 0.62 MiB" at context-capacity-receipt.json:35. Split, 4/4 seqs, 2048 cells: "size = 5.00 MiB (2048 cells, 5 layers, 4/4 seqs), K (f16): 2.50 MiB" at context-capacity-receipt.json:820. The K figure is 4 times larger with 4 streams, as the stream rule predicts.
+
+Limits: this is the committed dated sample (a receipt, not re-observed here). No registered cell uses a draft or shared-source cache, so the shared override at llama-kv-cache.cpp:92-97 is not exercised by any cell.

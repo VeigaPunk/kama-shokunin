@@ -1,0 +1,21 @@
+Probe: scratch repo /fast/scratch/hyaku/kama-r25a2w2/ReviewerInstrumentDocstring/gp (outside the lane), git 2.56.0.
+Commands and output (exit code of the last command in each block shown):
+
+C=e16db9417e90af52dfa99d29edde26651561df74 (commit C)  D=b31fcf95a72bca161f035d76594367d762fc4697 (commit D)
+refs/tags/deadbee1 -> C ; refs/tags/<C full hex> -> D
+
+$ printf 'deadbee1\ndeadbee1^{commit}\n' | git cat-file --batch-check
+e16db9417e90af52dfa99d29edde26651561df74 commit 116
+e16db9417e90af52dfa99d29edde26651561df74 commit 116
+exit=0
+
+$ printf "$C\n$C^{commit}\n" | git cat-file --batch-check
+e16db9417e90af52dfa99d29edde26651561df74 commit 116
+e16db9417e90af52dfa99d29edde26651561df74 commit 116
+exit=0
+
+$ printf '0000000000000000000000000000000000000000\n' | git cat-file --batch-check
+0000000000000000000000000000000000000000 missing
+exit=0
+
+Reading: a short name that a ref shadows resolves to the ref's commit (not a prefix of it), so the auditor predicate "not parts[0].startswith(token)" fires. A full 40-hex name resolves to the object it spells even when a ref with that name points elsewhere, so the predicate cannot fire for it. Matches .ufo/waves/round-25/a2-build/out/RevengerM17Sites/probe_git_shadow.out (C starts with deadbee1: False; full-hex token prints C, oid==D:False).

@@ -1,0 +1,30 @@
+ReopenS113: fresh fetch and hash check for llama.cpp src/llama-kv-cache.cpp at commit 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad
+Access date (UTC): 2026-10-22; fetch completed 2026-10-22T10:06:55Z.
+Scratch copy (heavy, outside the lane): /fast/scratch/hyaku/kama-r25a2w2/ReopenS113/llama-kv-cache.cpp
+No llama-server was started. No tool was installed or updated (curl, git, python3, sha256sum, wc were already present).
+
+1. curl -sSL --fail -o /fast/scratch/hyaku/kama-r25a2w2/ReopenS113/llama-kv-cache.cpp https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/src/llama-kv-cache.cpp
+   exit 0
+2. sha256sum -> d0739eaf00d8457f4109a616e0beb1cf07ea074c9b460d92a7b6d48c4519d294
+   Compared with SOURCES.md:125 anchor cell (raw file sha256 d0739eaf...d294): EXACT MATCH (python equality check, exit 0).
+   wc -c -> 98638 bytes; wc -l -> 2962 lines.
+3. git hash-object llama-kv-cache.cpp (run in the scratch directory, no -w, nothing written to any repository)
+   -> b7dfadef4638f6221608f48aff0a1f83df281063 ; exit 0
+4. curl -sS --fail -H 'Accept: application/vnd.github+json' -o api-contents-kv.json 'https://api.github.com/repos/ggml-org/llama.cpp/contents/src/llama-kv-cache.cpp?ref=704366d76f8748cf9ad3df62a464bfcc8d1ae6ad'
+   exit 0 ; parsed: name llama-kv-cache.cpp, size 98638, sha b7dfadef4638f6221608f48aff0a1f83df281063 ; equals step 3: True
+5. curl -sS --fail ... 'https://api.github.com/repos/ggml-org/llama.cpp/git/refs/tags/b11755'
+   exit 0 ; "ref": "refs/tags/b11755" ; "object": {"sha": "704366d76f8748cf9ad3df62a464bfcc8d1ae6ad", "type": "commit"}
+   So the release named in SOURCES.md:125 scope (release b11755) is commit 704366d76.
+6. Seat report of the source wave, committed at fa3b62ae:
+   git cat-file -e fa3b62ae6475d111eb466d79af616aeebb08bbb9:.ufo/waves/round-25/a2-build/advice/SrcKvCacheSize.md -> exit 0
+   git show <same>:.ufo/waves/round-25/a2-build/advice/SrcKvCacheSize.md | grep -c d0739eaf00d8457f4109a616e0beb1cf07ea074c9b460d92a7b6d48c4519d294 -> 1
+7. Census, read-only (script header says it writes only stdout or --out; output redirected into this folder):
+   bash /home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama  -> exit 0; stdout in census-validate.tsv (29 W04 lines, none for S113; final line "kama ok"); stderr empty (census-validate.err, 0 bytes)
+   bash /home/vgpnk/Projects/shokunin/scripts/sources-census.sh census --root /home/vgpnk/Projects/shokunin kama -> exit 0; stdout in census-count.tsv (rows 113, tier.A 108, tier.B 2, tier.C 3, status.mined 94, status.queued 8, status.rejected 11)
+   bash .../sources-census.sh overdue --root ... kama | grep S113 -> "kama cadence S113 recheck=on-release opened=2026-10-22" (symbolic cadence, never overdue)
+8. Committed bytes versus working copy (git show <fa3b62ae>:<path> piped to sha256sum; git show only, no git status, no index writes):
+   corpus/SOURCES.md                    committed 45810d49...a6e0df06e6a4a7 = working (same)
+   corpus/knowledge/context-capacity.md committed 0959b234...78b958       = working (same)
+   corpus/lessons/round-25.md           committed 9d7ec295...476a16       != working c26728b0...c73e188 (see committed-vs-working.txt)
+   SOURCES.md:125 (S113 row)            committed 9477d07d...5828d17c     = working (same)
+   round-25.md:29 (S113 Gate line)      committed 0e88feb8...e490d        = working (same)

@@ -1,0 +1,22 @@
+Evidence for the entry's S108 uses. Sources: final/context-capacity-receipt.json (committed) and final/raw/K*.server.log (committed in the lane tree). Read only. No server was started by this seat.
+
+K1
+  receipt args (line 4): "-c 0"   argv lines 5-18: no -np, no kv flag
+  K1.server.log:9     "n_parallel is set to auto, using n_parallel = 4 and kv_unified = true"
+  K1.server.log:1082  "load_model: initializing, n_slots = 4, n_ctx_slot = 2048, kv_unified = 'true'"
+
+K2
+  receipt args (line 99): "-c 2048 -np 2 --no-kv-unified"   argv lines 100-116
+  K2.server.log:1083  "load_model: initializing, n_slots = 2, n_ctx_slot = 1024, kv_unified = 'false'"
+
+K7
+  receipt args (line 575): "-np 2 --kv-unified-per-slot 512"   argv lines 576-591: no -c, no kv flag
+  K7.server.log:9     "--kv-unified-per-slot: sizing KV pool to n_parallel * kv_unified_per_slot = 2 * 512 = 1024"
+  K7.server.log:17-18 "common_init_: fitting params to device memory ..."
+  K7.server.log:549   "will leave 30974 >= 1024 MiB of system memory, no changes needed"
+  K7.server.log:550   "successfully fit params to free device memory"
+  K7.server.log:284, 817   llama_context n_ctx = 1024
+  K7.server.log:290, 823   llama_context kv_unified = false
+  K7.server.log:1084  "load_model: initializing, n_slots = 2, n_ctx_slot = 512, kv_unified = 'false'"
+
+Fit-rule test (entry context-capacity.md:71-74): K7 has no -c, fit on, split cache. The rule as worded predicts training context 2048 x 2 streams = 4096. Observed pool 1024.

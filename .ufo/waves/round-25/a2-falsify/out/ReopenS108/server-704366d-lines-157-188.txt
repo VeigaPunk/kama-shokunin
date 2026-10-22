@@ -1,0 +1,32 @@
+   157	    common_params_print_info(params, !is_router_server);
+   158	
+   159	    if (!is_router_server) {
+   160	        // validate batch size for embeddings
+   161	        // embeddings require all tokens to be processed in a single ubatch
+   162	        // see https://github.com/ggml-org/llama.cpp/issues/12836
+   163	        if (params.embedding && params.n_batch > params.n_ubatch) {
+   164	            SRV_WRN("embeddings enabled with n_batch (%d) > n_ubatch (%d)\n", params.n_batch, params.n_ubatch);
+   165	            SRV_WRN("setting n_batch = n_ubatch = %d to avoid assertion failure\n", params.n_ubatch);
+   166	            params.n_batch = params.n_ubatch;
+   167	        }
+   168	
+   169	        if (params.n_parallel < 0) {
+   170	            SRV_TRC("%s", "n_parallel is set to auto, using n_parallel = 4 and kv_unified = true\n");
+   171	
+   172	            params.n_parallel = 4;
+   173	            params.kv_unified = true;
+   174	        }
+   175	    }
+   176	
+   177	    // size the KV pool from --kv-unified-per-slot, unless the user pinned it with -c
+   178	    // or with -c 0 for max context
+   179	    const bool ctx_pool_auto_sized = params.kv_unified_per_slot > 0 &&
+   180	                                     params.n_ctx == 0 &&
+   181	                                     (uint32_t) params.fit_params_min_ctx != UINT32_MAX;
+   182	
+   183	    if (ctx_pool_auto_sized) {
+   184	        params.n_ctx = params.n_parallel * params.kv_unified_per_slot;
+   185	        SRV_INF("--kv-unified-per-slot: sizing KV pool to n_parallel * kv_unified_per_slot = %d * %d = %d\n", params.n_parallel,
+   186	                params.kv_unified_per_slot, params.n_ctx);
+   187	    }
+   188	

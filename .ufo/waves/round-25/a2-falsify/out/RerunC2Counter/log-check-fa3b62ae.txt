@@ -1,0 +1,37 @@
+== receipt log_lines vs committed server.log ==
+K1  receipt_lines= 36 raw_lines=1206 identical=False receipt_subset_of_raw=True
+K2  receipt_lines= 35 raw_lines=1203 identical=False receipt_subset_of_raw=True
+K3  receipt_lines= 33 raw_lines=1201 identical=False receipt_subset_of_raw=True
+K4  receipt_lines= 34 raw_lines=1201 identical=False receipt_subset_of_raw=True
+K5  receipt_lines= 35 raw_lines=1202 identical=False receipt_subset_of_raw=True
+K6  receipt_lines= 42 raw_lines=1211 identical=False receipt_subset_of_raw=True
+K7  receipt_lines= 36 raw_lines=1204 identical=False receipt_subset_of_raw=True
+K8  receipt_lines= 38 raw_lines=1208 identical=False receipt_subset_of_raw=True
+X1  receipt_lines= 51 raw_lines=1734 identical=False receipt_subset_of_raw=True
+X2  receipt_lines= 35 raw_lines=1205 identical=False receipt_subset_of_raw=True
+X3  receipt_lines= 21 raw_lines= 672 identical=False receipt_subset_of_raw=True
+L1  receipt_lines= 90 raw_lines=1891 identical=False receipt_subset_of_raw=True
+L2  receipt_lines=1237 raw_lines=12708 identical=False receipt_subset_of_raw=True
+L3  receipt_lines=1238 raw_lines=21721 identical=False receipt_subset_of_raw=True
+
+== build line in raw log (first match per cell, K1 and L1 shown) ==
+K1 ['0.00.010.246 I cmn  common_param: common_params_print_info: build 11755 (704366d76) with GNU 11.4.0 for Linux x86_64', '0.00.012.153 I llama_model_loader: loaded meta data with 19 key-value pairs and 48 tensors from /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf (version GGUF V3 (latest))', '0.00.013.696 I llama_model_loader: loaded meta data with 19 key-value pairs and 48 tensors from /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf (version GGUF V3 (latest))']
+L1 ['0.00.003.688 I cmn  common_param: common_params_print_info: build 11755 (704366d76) with GNU 11.4.0 for Linux x86_64', '0.00.005.679 I llama_model_loader: loaded meta data with 19 key-value pairs and 48 tensors from /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf (version GGUF V3 (latest))', '0.00.007.286 I llama_model_loader: loaded meta data with 19 key-value pairs and 48 tensors from /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf (version GGUF V3 (latest))']
+
+== load cells: server-side prompt size and error lines ==
+L1: task.n_tokens=1000 lines=2
+    0.00.502.383 I slot   operator(): id  0 | task 2 | new prompt, n_ctx_slot = 2048, n_keep = 0, task.n_tokens = 1000
+    0.00.502.496 I slot   operator(): id  1 | task 3 | new prompt, n_ctx_slot = 2048, n_keep = 0, task.n_tokens = 1000
+   error-like lines=29
+    0.00.524.024 W decode: failed to find a memory slot for batch of size 2
+    0.00.524.578 W srv        decode: failed to find free space in the KV cache, retrying with smaller batch size, off = 0, n_batch = 1024, ret = 1
+    0.00.524.593 W decode: failed to find a memory slot for batch of size 2
+    0.00.524.666 W srv        decode: failed to find free space in the KV cache, retrying with smaller batch size, off = 0, n_batch = 512, ret = 1
+L2: task.n_tokens=1000 lines=2
+    0.00.503.672 I slot   operator(): id  0 | task 2 | new prompt, n_ctx_slot = 2048, n_keep = 0, task.n_tokens = 1000
+    0.00.503.789 I slot   operator(): id  1 | task 3 | new prompt, n_ctx_slot = 2048, n_keep = 0, task.n_tokens = 1000
+   error-like lines=0
+L3: task.n_tokens=1000 lines=2
+    0.00.502.748 I slot   operator(): id  0 | task 2 | new prompt, n_ctx_slot = 2048, n_keep = 0, task.n_tokens = 1000
+    0.00.628.112 I slot   operator(): id  0 | task 603 | new prompt, n_ctx_slot = 2048, n_keep = 0, task.n_tokens = 1000
+   error-like lines=0

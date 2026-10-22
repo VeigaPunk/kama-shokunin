@@ -1,0 +1,36 @@
+All run 2026-10-22 from /home/vgpnk/Projects/shokunin/kama-shokunin, read-only; scratch /fast/scratch/hyaku/kama-r25a2w2/CriticLearningBarFinal/.
+
+git show fa3b62a:.ufo/waves/round-25/count-c2.py > $S/count-c2.py
+git show fa3b62a:.ufo/waves/round-25/final/context-capacity-receipt.json > $S/receipt-tip.json
+git show 5ea4fc4:.ufo/waves/round-25/final/context-capacity-receipt.json > $S/receipt-5ea4fc4.json
+
+python3 $S/count-c2.py $S/receipt-tip.json
+  registered 14 observed 14 bound True missing []          exit 0
+python3 $S/count-c2.py $S/receipt-5ea4fc4.json
+  registered 14 observed 11 bound True missing ['L1', 'L2', 'L3']   exit 0
+per-cell (props_n_ctx, total_slots, kv_pool_n_ctx, request statuses) equal across the two receipts: True
+
+receipt first-cell start / last-cell stop by commit:
+  5ea4fc4  09:36:51.307Z  09:36:59.361Z
+  46fb04b  09:36:51.307Z  09:36:59.361Z
+  5c95c8f  09:42:42.481Z  09:42:50.463Z
+  fa3b62a  09:42:42.481Z  09:42:50.463Z
+git grep -n "09:36" fa3b62a -- corpus SKILL.md SCORECARD.md
+  corpus/knowledge/context-capacity.md:2  (only hit)
+
+tools/kama-context-capacity.py sha256 at 5c95c8f and fa3b62a: 589841cd...4c27, equal to receipt tool.sha256
+
+raw log line checks (fa3b62a:.ufo/waves/round-25/final/raw/):
+  X1.server.log 283 n_ctx=2048; 812 n_ctx=8192; 1344 n_ctx=8192; 1610 load_model n_slots=4 n_ctx_slot=2048 kv_unified='false'
+  X1.server.log sha256 86312d67...ab7e = receipt raw.server_log
+  L1.server.log 1849-1866: Context size has been exceeded (n_batch=1); task 2 and task 3 send_error; both release at n_tokens = 1025
+  L1.server.log sha256 b025f239...a7d = receipt raw.server_log
+
+Sources re-opened fresh (curl -sS -f -L, all exit 0), base
+https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/
+  common/fit.cpp                    1f83da2a5dc460b893373365e07341695be80d6c662e53679032a138cce4dd58 (= S106 row)
+  tools/server/server-context.cpp   dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329 (= S060/S109)
+  tools/server/server.cpp           2143962217e9d6275f28c42d599139bb702e2f880dccbad01ab9d8b094f5aef4 (= S108)
+  common/arg.cpp                    bf4c58c189a774f2308acfe88e4ec5cebb0c43f60cf05cef4c5b2b9affd5822d (= S110)
+  common/common.h                   8bcc5708c856653b0094ba312030df9c2f43ec2703e8ad78474fd4339d2540a9 (no SOURCES row)
+git grep -n 'common.h' fa3b62a -- corpus/SOURCES.md   -> no output

@@ -74,19 +74,23 @@ statement of that behavior, not the first observation.
 
 ## Fit raises a zero split context to the training context per slot (corrects the round-20 rule for that case only)
 
-When the context resolves to 0 (no `-c`, or `-c 0`, and no
-`--kv-unified-per-slot`, which sizes the context before fit runs; S108,
-server.cpp 179-186) and `--fit` is on (the default), the fit step runs before
-the model loads (S111, common.cpp 1245-1276). It first sets the context to
-the training context times the number of streams: one stream for a unified
-cache, one per slot for a split cache (S106, fit.cpp 195-198 and 266-273). K7
-is the exception in this receipt: no `-c`, fit on and a split cache, but
-`--kv-unified-per-slot 512` sizes the pool to 1024 and fit leaves it there.
+With `--fit` on (the default; S110 declares the handler, the default value
+itself is in `common/common.h`, which has no SOURCES row), the fit step runs
+before the model loads for every launch (S111, common.cpp 1245-1276; K2 with
+`-c 2048` also logs a fit pass). It raises the context only when the context
+is still 0 at that point (no `-c`, or `-c 0`, and no `--kv-unified-per-slot`,
+which sizes the context before fit runs; S108, server.cpp 179-186). Then it
+sets the context to the training context times the number of streams: one
+stream for a unified cache, one per slot for a split cache (S106, fit.cpp
+195-198 and 266-273). K7 is the exception in this receipt: no `-c`, fit on
+and a split cache, but `--kv-unified-per-slot 512` sizes the pool to 1024 and
+fit leaves it there.
 
 - X1 (`-np 4 --no-kv-unified`, no `-c`): pool 8192, 2048 per slot. Its raw
   log (`final/raw/X1.server.log`) shows the fit probe first (`n_ctx = 2048`,
-  line 283) and then the serving context (`n_ctx = 8192`, lines 812 and 1344)
-  before `load_model: initializing` (line 1610).
+  line 283), the fit step's own re-measure at 8192 (line 812, inside the fit
+  pass [INFERENCE from log order]) and the serving context `n_ctx = 8192`
+  (line 1344) before `load_model: initializing` (line 1610).
 - X3 (the same with `--fit off`): pool 2048, 512 per slot. With fit off the
   unset context falls back to the training context and is split (S107,
   line 219). The pair X1/X3 isolates fit as the cause.

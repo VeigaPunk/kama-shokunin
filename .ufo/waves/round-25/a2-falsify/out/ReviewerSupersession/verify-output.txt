@@ -1,0 +1,61 @@
+# ReviewerSupersession — executed evidence (2026-10-22)
+
+Script: /fast/scratch/hyaku/kama-r25a2w2/ReviewerSupersession/verify_supersession.py
+Runs committed tip bytes fa3b62ae6475d111eb466d79af616aeebb08bbb9 via `git show`;
+no llama-server child started.
+
+stdout, exit 0:
+
+```
+crosscheck tip-bytes == worktree: True b1d8172de87a59c0ae0a0860e37f6ebfc3bd2c790281bd14dd759b25cf251f26
+advice     tip-bytes == worktree: True 18db736619d04b606e951c39159849c83ba6826e10ee23fbf70a63abf3b9aeba
+
+advice line 6 = 'The sequence context depends on KV layout (`src/llama-context.cpp:219,377-393`): `n_ctx` starts from explicit context size, or training context when zero, then ' ... [len 824 ]
+crosscheck line 38 = 'def predict(ctx, n_ctx_train, n_parallel, kv_unified, per_slot):'
+crosscheck line 41 = '    n_ctx = pad256(ctx if ctx else n_ctx_train)'
+crosscheck line 42 = '    n_ctx_seq = n_ctx if kv_unified else pad256(n_ctx // n_parallel)'
+
+== predict()/launch_settings on X1 and X3 argv (n_ctx_train=2048) ==
+X1: launch_settings={'ctx': 0, 'np': 4, 'per_slot': 0, 'kvu': False} -> predict per-slot=512 (np=4, unified=False)
+X3: launch_settings raises Unusable: argv element '--fit' is not modelled
+
+== all 11 registered config cells: round-20 predict vs observed /props ==
+K1: predicted=2048 observed=2048 AGREE
+K2: predicted=1024 observed=1024 AGREE
+K3: predicted=2048 observed=2048 AGREE
+K4: predicted=1024 observed=1024 AGREE
+K5: predicted=2048 observed=2048 AGREE
+K6: predicted=512 observed=512 AGREE
+K7: predicted=512 observed=512 AGREE
+K8: predicted=512 observed=512 AGREE
+X1: predicted=512 observed=2048 DISAGREE
+X2: predicted=2048 observed=2048 AGREE
+X3: predicted=512 observed=512 AGREE    (formula only; checker refuses argv)
+agree count of 11: 10
+
+== --table via committed bytes ==
+exit 0
+ctx	np	kvu	n_ctx_train	per_slot_n_ctx (source formula, not served)
+256	auto->4	true	2048	256
+256	4	false	2048	256
+1024	auto->4	true	2048	1024
+1024	4	false	2048	256
+4096	auto->4	true	2048	2048
+0	auto->4	true	2048	2048
+0	4	false	2048	512
+
+== check() on synthetic round-18-format receipts ==
+X1: check exit 1 | receipt-X1.json	INCONSISTENT props==predicted	ctx=0 np=4->4 kv_unified=false n_ctx_train=2048 predicted=512 props.n_ctx=2048 models.meta.n_ctx=2048 total_slots=4 slots(n_ctx=512)=no-match slots(naive ctx/slots=0)=no-match
+X3: check exit 2 | receipt-X3.json	COULD-NOT-EVALUATE	argv element '--fit' is not modelled
+```
+
+Corroborating grep on .ufo/waves/round-25/final/raw/X1.server.log (committed receipt
+raw log): line 283 `llama_context: n_ctx                 = 2048` with line 284
+`n_ctx_seq = 512` (the fit probe), line 295 `n_ctx_seq (512) < n_ctx_train (2048)`
+warning; lines 812 and 1344 `llama_context: n_ctx                 = 8192` with
+`n_ctx_seq = 2048` (serving context); line 1610 `load_model: initializing,
+n_slots = 4, n_ctx_slot = 2048, kv_unified = 'false'`. All match
+corpus/knowledge/context-capacity.md lines 76-82.
+
+grep "fit" over the round-20 script: only docstring line 13 ("The model assumes
+that no --fit run lowered n_ctx"); predict() has no fit parameter.

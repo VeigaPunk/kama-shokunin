@@ -1,0 +1,51 @@
+CriticEntryOverclaim, kama round 25 attempt 2 wave 2. Read-only seat; no llama-server started.
+
+Sources fetched 2026-10-22T10:07Z (access date 2026-10-22), each from
+https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/<path>
+(curl -fsSL, every fetch rc=0). sha256:
+1f83da2a5dc460b893373365e07341695be80d6c662e53679032a138cce4dd58  common/fit.cpp
+2a25e556cb0d16725e01ce853fb1b76da91dcb41b803ce1a6bacec89bfb94aa5  src/llama-context.cpp
+2143962217e9d6275f28c42d599139bb702e2f880dccbad01ab9d8b094f5aef4  tools/server/server.cpp
+dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329  tools/server/server-context.cpp
+bf4c58c189a774f2308acfe88e4ec5cebb0c43f60cf05cef4c5b2b9affd5822d  common/arg.cpp
+d10ea1ff4253a1d6aedef3e73f16c3f2297975ca17254a82fac395aa2213ebd4  common/common.cpp
+8bcc5708c856653b0094ba312030df9c2f43ec2703e8ad78474fd4339d2540a9  common/common.h
+714c067bdbc49bde2735810fbff83eb2933b12c57d50f0012b61fcecb75a6a37  tools/server/README.md
+d0739eaf00d8457f4109a616e0beb1cf07ea074c9b460d92a7b6d48c4519d294  src/llama-kv-cache.cpp
+(fit.cpp and server.cpp digests equal those recorded by a2-build ConnectorSiblingOverlap.)
+
+Located lines used (each quote at most 25 words):
+server.cpp:179-181  "const bool ctx_pool_auto_sized = params.kv_unified_per_slot > 0 && params.n_ctx == 0 && (uint32_t) params.fit_params_min_ctx != UINT32_MAX;"
+server.cpp:184      "params.n_ctx = params.n_parallel * params.kv_unified_per_slot;"
+server.cpp:185      SRV_INF("--kv-unified-per-slot: sizing KV pool to n_parallel * kv_unified_per_slot = %d * %d = %d\n", ...)
+server-context.cpp:1392  SRV_INF("initializing, n_slots = %d, n_ctx_slot = %d, kv_unified = '%s'\n",
+fit.cpp:183-184     "if (mparams->split_mode == LLAMA_SPLIT_MODE_TENSOR) { throw common_params_fit_exception("llama_params_fit is not implemented for SPLIT_MODE_TENSOR, abort");"
+fit.cpp:198         "const bool n_ctx_auto = cparams->n_ctx == 0;"
+fit.cpp:271-272     "if (n_ctx_auto) { cparams->n_ctx = n_ctx_max;"
+fit.cpp:384         "if (global_surplus < 0) {"
+fit.cpp:393-394     "if (n_ctx_auto) { if (n_ctx_max > n_ctx_min_total) {"
+fit.cpp:894-896     catch (const common_params_fit_exception & e) { LOG_WRN(... "failed to fit params to free device memory" ...); status = FAILURE; }
+common.h:457        "int32_t n_ctx = 0; // context size, 0 == context the model was trained with"
+common.h:485        "int32_t fit_params_min_ctx = 4096;"
+arg.cpp:1646-1648   "if (value == 0) { // disable context reduction in llama_params_fit ... params.fit_params_min_ctx = UINT32_MAX;"
+arg.cpp env names   1651 LLAMA_ARG_CTX_SIZE, 1659 LLAMA_ARG_KV_UNIFIED_PER_SLOT, 1734 LLAMA_ARG_KV_UNIFIED, 2556 LLAMA_ARG_N_PARALLEL, 2894 LLAMA_ARG_FIT, 2940 LLAMA_ARG_FIT_CTX
+server-context.cpp:1810-1815  "bool try_clear_idle_slots() { bool res = false; if (!params_base.kv_unified) { return res; }"
+server-context.cpp:4335-4336  "if (!try_clear_idle_slots()) { n_batch /= 2; }"
+server-context.cpp:4318-4321  "for (auto & slot : slots) { if (slot.is_processing()) { send_error(slot, err); slot.release();"
+server-context.cpp:4655-4662  n_ctx_slot(): llama_n_ctx_seq, min with kv_unified_per_slot if > 0, min with llama_model_n_ctx_train
+llama-kv-cache.cpp:84  "n_stream(unified ? 1 : n_seq_max)"
+
+Receipt checks at fa3b62ae6475d111eb466d79af616aeebb08bbb9 (git show, python3, all exit 0):
+- committed receipt (5c95c8f1): started_utc 2026-10-22T09:42:42.438Z, ended_utc 09:42:50.502Z; first cell K1 09:42:42.481Z.
+- superseded receipt (5ea4fc44): started 09:36:51.264Z, ended 09:36:59.400Z.
+- entry line 2 says "observed 2026-10-22T09:36:51Z to 09:36:59Z" -> window of the superseded receipt.
+- K7 (`-np 2 --kv-unified-per-slot 512`, no -c, fit default on, split): pool 1024, per slot 512.
+  final/raw/K7.server.log:9 "I srv  llama_server: --kv-unified-per-slot: sizing KV pool to n_parallel * kv_unified_per_slot = 2 * 512 = 1024"
+  final/raw/K7.server.log:1084 "load_model: initializing, n_slots = 2, n_ctx_slot = 512, kv_unified = 'false'"
+- raw bodies, all 14 cells: /props n_ctx == every /slots n_ctx == /v1/models meta.n_ctx; /slots length == total_slots (holds).
+- K1 vs X2 /props differ only in media_marker (random per launch); /v1/models differ in data[0].created.
+- X1 raw log lines 283 (2048), 547 (fit TRC), 812 and 1344 (8192), 1610 (load_model) match the entry (holds).
+- L1 raw log lines 1849-1866 match the entry (holds).
+- a2-build/out/CriticLearningBarA2/r20-vs-observed.out: K7 r20_pool 2048 obs_pool 1024 pool_agree NO.
+- gguf-declared-identity.md:33-34 points to context-capacity.md (holds).
+- tools/kama-context-capacity.py: no prediction or formula function (rg for predict/expect/formula: none; holds).

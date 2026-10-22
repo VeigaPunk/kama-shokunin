@@ -1,0 +1,21 @@
+entry_lines	statement	class	prior_holder_or_evidence
+2	verified-at: 14 cells observed 09:36:51Z-09:36:59Z	provenance defect	window is the 5ea4fc4 receipt (scores observed 11 under amendment-4 counter); committed receipt 5c95c8f ran 09:42:42Z-09:42:50Z (SCORECARD round-25 capability row agrees with 09:42)
+8-12	two numbers (KV pool, per-slot ceiling); endpoints do not tell them apart	new knowledge	no admitted entry names the pool; K1 vs X2 identical endpoints, pools 2048 vs 8192
+11-12	"differ fourfold in how many full-context requests they can run at once"	untested inference stated as fact	only pool ratio observed; L cells ran 2 x (1000+600) tokens; entry 129-130 itself disclaims other sizes
+22-25,28-31 per-slot column	per-slot values K1-K8, X2, X3	replication	round-20 admitted gguf-declared-identity.md:16-21 (S060) and round-20 nctx-crosscheck.py predict(); 10 of 11 config cells agree
+26-31 pool column	KV pool K5 4096, K6 1536, K7 1024, K8 4096, X1/X2 8192, X3 2048	new observation (source-predicted beforehand: calibration, not discovery)	pool absent from admitted corpus; K7 pool contradicts round-20 implied 2048
+43-47	three endpoints read n_ctx_slot()	replication	round-20 SrcServerNctx.md; S060
+48-51	per-slot capped by --kv-unified-per-slot and training context	replication	gguf-declared-identity.md:16-18
+49-51	K5: only trace of the cap is a log warning	new observation	receipt K5 log_lines
+53-58	pad to 256, split division, pool reset to seq x slots	replication of source reading; K6 values are new observation	round-20 SrcServerNctx.md ("Split mode can also round a small quotient up"; llama-context.cpp 377-393)
+56-58	log says "rounding down to 1536" while the value went up	new observation	receipt K6 log_lines
+58-59	-np unset -> 4 slots, unified	replication	round-20 SrcServerNctx.md (server.cpp 169-174)
+59-60	giving -np keeps default split cache (common.h 580); "K1 versus K2 shows the switch"	new statement, misattributed and unrowed source	K2 passes --no-kv-unified explicitly; K4/K5/K7 show it; common/common.h has no SOURCES row
+61-64	--kv-unified-per-slot without -c sizes pool to slots x N even when split	new knowledge	S108 server.cpp 177-186 (re-read fresh, sha256 21439622...); K7
+65-67	one KV stream per sequence when split, one when unified	new source detail	S113
+71-82	fit raises unset split context to n_ctx_train x streams; X1/X3 isolate fit	new knowledge (first admitted statement; attempt-1 E09 observed earlier, unadmitted)	S106 fit.cpp 195-198, 267-273 (re-read fresh, sha256 1f83da2a...); X1 raw log 283/812/1344/1610 verified
+83-93	scoped supersession of round-20 wave rule	correction of wave evidence, not supersession of an admitted entry	SrcServerNctx.md:6, nctx-crosscheck.py:41; gguf-declared-identity.md not refuted
+95-97	-c 0 disables fit context reduction	new, source-only (not observed on this fixture)	S110 arg.cpp 1646-1649 (re-read fresh)
+101-130	shared pool bounds concurrent requests; L1 both 500 at n_tokens 1025; L2, L3 200	new knowledge	S109 server-context.cpp 4294-4341 (re-read fresh); L1 raw log 1849-1866 verified
+133-146	pool and layout not on /props, /slots, /v1/models; pool line needs -v or -lv 4	new knowledge (scoped to three endpoints)	K1 vs X2; ExecVerbosityControl
+177-185	kengaku 34113 capture	sibling, other-build, historical	not kama knowledge; correctly labelled
