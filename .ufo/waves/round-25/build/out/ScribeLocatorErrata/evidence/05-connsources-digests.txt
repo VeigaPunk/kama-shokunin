@@ -1,0 +1,42 @@
+# E5 — ConnSources falsify-out digests and the §14 self-correction transcript
+# date (UTC): 2026-10-22
+# expected digests quoted by verify.txt §14: restored patch a9ab3f6b084ebb1b603b60a8459fcd2c9b8b061dbbe0af55121a81e0aac1d6f5 ; pre-restore report snapshot ea9ec78afdc69ec04998668502adba8b66f11bfdecee36f68d829712fc7e1706
+
+$ sha256sum /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/falsify/out/ConnSources/integration-packet-4cell-combined.diff /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/falsify/out/ConnSources/integration-patch-3cell-ledger-plus-3-appendix-blocks.diff /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/falsify/out/ConnSources/report-pre-restore-snapshot-2026-10-21.md /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/falsify/out/ConnSources/s093-packet-relative-to-3cell.diff /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/falsify/out/ConnSources/used-by-reconciliation-plus-S093-adjacent.patch /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/falsify/out/ConnSources/used-by-reconciliation.patch /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/falsify/out/ConnSources/verify.txt
+exit=0
+--stdout--
+ba7afdf715f0834028d0a7df3fb2d64e3957a64a15d4ec9e573de18cfa4cdaf3  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/falsify/out/ConnSources/integration-packet-4cell-combined.diff
+87356d9442755e4df58c7d3aed1aa7794cd8d6daa9fa30a1994908370dac2a98  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/falsify/out/ConnSources/integration-patch-3cell-ledger-plus-3-appendix-blocks.diff
+ea9ec78afdc69ec04998668502adba8b66f11bfdecee36f68d829712fc7e1706  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/falsify/out/ConnSources/report-pre-restore-snapshot-2026-10-21.md
+204cae835d0dc2da3be70721fcd22103624916f23008ec3087ceca7e9a01bbec  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/falsify/out/ConnSources/s093-packet-relative-to-3cell.diff
+a9ab3f6b084ebb1b603b60a8459fcd2c9b8b061dbbe0af55121a81e0aac1d6f5  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/falsify/out/ConnSources/used-by-reconciliation-plus-S093-adjacent.patch
+01447cd651ca28be4a8aa7fbc1cb14d69d7c49dc8619e803e420584edceb4c18  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/falsify/out/ConnSources/used-by-reconciliation.patch
+b5ee0d61a0ddbb5e7f40969e161d028d866b79b561c2ee9a728c7292208cc17d  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/falsify/out/ConnSources/verify.txt
+
+$ sed -n 129,152p /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/falsify/out/ConnSources/verify.txt
+exit=0
+--stdout--
+== [14] §11 append-only correction of this seat's own evidence trail ==
+violation: deleted artifact used-by-reconciliation-plus-S093-adjacent.patch + rewrote report §8 file list in place
+
+-- [14a] restored artifact (byte-exact from scratch clone m4) --
+   source of truth: /fast/scratch/hyaku/kama-r24/falsify/ConnSources/m4 working tree (still held the 4-cell diff)
+   m4 git status --porcelain :  M corpus/SOURCES.md 
+   m4 git diff --stat      :  1 file changed, 4 insertions(+), 4 deletions(-)
+   regenerated sha256       : a9ab3f6b084ebb1b603b60a8459fcd2c9b8b061dbbe0af55121a81e0aac1d6f5
+   recorded at creation     : a9ab3f6b084ebb1b603b60a8459fcd2c9b8b061dbbe0af55121a81e0aac1d6f5  (equal)
+   cmp restored vs regenerated: identical (exit 0)
+   restored file sha256     : a9ab3f6b084ebb1b603b60a8459fcd2c9b8b061dbbe0af55121a81e0aac1d6f5
+
+-- [14b] report snapshot preserved BEFORE the §8 restoration --
+   report-pre-restore-snapshot-2026-10-21.md sha256: ea9ec78afdc69ec04998668502adba8b66f11bfdecee36f68d829712fc7e1706
+   equals the then-current report sha256 (ea9ec78a...): yes
+
+-- [14c] §8 restored to its filed text; corrected index lives in report §11.3 --
+   report §8 now lists 5 artifacts again, including the restored 4-cell variant
+   report §11.3 carries the current index with per-file sha256
+
+-- [14d] scope --
+   no test suite, no census rerun, no production file written by this seat
+   production HEAD: 2e254a1763a9c08aa07fc53081287f506c447d84
+

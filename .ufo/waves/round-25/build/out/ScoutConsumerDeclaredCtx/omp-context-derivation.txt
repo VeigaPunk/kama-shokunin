@@ -1,0 +1,109 @@
+omp embedded-JS windows relevant to context capacity
+Source label: ~/.local/bin/omp embedded line 1122945
+  // packages/coding-agent/src/config/model-discovery.ts
+Line numbers below are grep -n offsets inside the ELF's embedded JavaScript text,
+not lines of a source file on disk (no omp source checkout exists under ~/Projects).
+
+1. /props request and result mapping (1123312-1132; verified by
+   LC_ALL=C sed -n '1123309,1123334p')
+1123312:async function sL(u, p, R, T) {
+1123313:  const M = `${cL(p)}/props`;
+1123314:  try {
+1123315:    const I = await oa(GG(p, 150, T), async (B) => {
+1123316:      const H = await u.fetch(M, {
+1123317:        headers: R,
+1123318:        signal: B
+1123319:      });
+1123320:      if (!H.ok) {
+1123321:        return null;
+1123322:      }
+1123323:      return await H.json();
+1123324:    });
+1123325:    if (!n(I)) {
+1123326:      return null;
+1123327:    }
+1123328:    return {
+1123329:      contextWindow: vY(I),
+1123330:      maxTokens: yY(I),
+1123331:      input: PY(I)
+1123332:    };
+The /props template line 1123313 is independently confirmed by
+grep -a -n -F 'cL(p)}/props'.
+
+2. props -> context window (1123091-1123100)
+function vY(u) {
+  const p = u.default_generation_settings;
+  if (n(p)) {
+    const R = ts(p.n_ctx);
+    if (R !== undefined) {
+      return R;
+    }
+  }
+  return ts(u.n_ctx);
+}
+
+3. /v1/models meta -> runtime/training windows (1123101-1123110)
+function SY(u) {
+  const p = u.meta;
+  if (!n(p)) {
+    return {};
+  }
+  return {
+    runtimeContextWindow: ts(p.n_ctx),
+    trainingContextWindow: ts(p.n_ctx_train)
+  };
+}
+
+4. max token sentinel parsing (1123049-1123064)
+function yY(u) {
+  const p = u.default_generation_settings;
+  const R = n(p) ? p.params : undefined;
+  const T = [
+    n(R) ? R.max_tokens : undefined,
+    n(R) ? R.n_predict : undefined,
+    n(p) ? p.max_tokens : undefined,
+    n(p) ? p.n_predict : undefined,
+    u.max_tokens,
+    u.n_predict
+  ];
+  return T.some(gY) ? "contextWindow" : undefined;
+}
+function iL(u, p) {
+  return p === "contextWindow" ? u : Math.min(u, p ?? jK);
+}
+gY returns true only for the value -1 (1123040-1123047).
+
+5. llama.cpp list discovery fallback chain (1123368-1123380)
+1123368:    const pe = oe.runtimeContextWindow ?? oe.configuredContextWindow ?? Y?.contextWindow ?? oe.trainingContextWindow ?? wde;
+1123379:      contextWindow: pe,
+1123380:      maxTokens: iL(pe, Y?.maxTokens),
+
+6. constants
+907533:var ure = 128000;
+907534:var pre = 32768;
+1122946:var wde = ure;
+1122947:var jK = pre;
+
+7. builtin provider object (1174142-1174149)
+    if (!u.has("llama.cpp") && !p.has("llama.cpp")) {
+      this.#m.push({
+        provider: "llama.cpp",
+        api: "openai-responses",
+        baseUrl: Bun.env.LLAMA_CPP_BASE_URL || "http://127.0.0.1:8080",
+        discovery: { type: "llama.cpp" },
+        optional: !Bun.env.LLAMA_CPP_BASE_URL
+      });
+
+8. dispatcher (1123187-1123192)
+function BSt(u, p) {
+  switch (u.discovery.type) {
+    case "ollama":
+      return yDt(u, p);
+    case "llama.cpp":
+      return bDt(u, p);
+
+Interpretation: contextWindow for the llama.cpp consumer is served metadata first
+(runtime meta n_ctx, configured status args, /props n_ctx, training meta n_ctx_train)
+and only falls back to 128000 when all four are absent. maxTokens is min(contextWindow,
+32768) unless /props reports a -1 sentinel for max_tokens or n_predict, in which case
+maxTokens equals contextWindow. The provider object itself declares no numeric capacity.

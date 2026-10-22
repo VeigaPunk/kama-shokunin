@@ -1,0 +1,9 @@
+cell	args	kv_unified (source rule)	pool n_ctx after padding	streams	cells per stream	per-slot cap (n_ctx_slot)	sum of slot caps vs pool	status
+K1	-c 0	true (auto slots: server.cpp:169-173)	2048 (llama-context.cpp:219,377)	1	2048	2048	4 x 2048 = 8192 vs 2048 shared	[INFERENCE] from source; pilot saw n_ctx_slot 2048, kv_unified true
+K2	-c 2048 -np 2 --no-kv-unified	false	2048	2	1024 (2048/2, padded to 256)	1024	2 x 1024 = 2048, private	[INFERENCE]; pilot saw 1024
+K3	-c 2048 -np 2 --kv-unified	true	2048	1	2048	2048	2 x 2048 = 4096 vs 2048 shared	[INFERENCE]; pilot saw 2048
+K4	-c 1024 -np 1	false (common.h:580 default; slots not auto)	1024	1	1024	1024	1 x 1024, private	[INFERENCE]
+K5	-c 4096 -np 1	false	4096	1	4096	2048 (capped by n_ctx_train, server-context.cpp:4662)	cap 2048 vs 4096 cells allocated	[INFERENCE]; round-20 cli run saw n_ctx_slot 2048 at -c 4096
+K6	-c 1000 -np 3 --no-kv-unified	false	1000 -> 1024 (pad) -> 1536 (llama-context.cpp:389-391, warning text says "rounding down")	3	512 (1024/3 = 341, padded to 512)	512	3 x 512 = 1536, private	[INFERENCE]; preregistered prediction stays "unknown"
+K7	-np 2 --kv-unified-per-slot 512	false (slots explicit), despite help text "shared KV pool"	1024 (server.cpp:179-186, n_ctx default 0)	2	512	512	2 x 512 = 1024, private	[INFERENCE]
+K8	-c 4096 -np 4 --kv-unified --kv-unified-per-slot 512	true	4096	1	4096	512 (server-context.cpp:4658-4659)	4 x 512 = 2048 vs 4096 shared	[INFERENCE]

@@ -1,0 +1,129 @@
+ScoutConsumerDeclaredCtx — raw evidence
+Round 25, C2 consumer side. Access date 2026-10-22. Read-only; no endpoint contacted.
+
+Registry scope
+--------------
+registry/endpoint-consumers.tsv:35  omp-llama-cpp-default   ~/.local/bin/omp   grep:LLAMA_CPP_BASE_URL
+registry/endpoint-consumers.tsv:36  ufo-fsd-thetick         $UFO_SRC/config/the-tick.machine.json
+registry/endpoint-consumers.tsv:37  ufo-fsd-local-helper    $UFO_SRC/scripts/local-helper.mjs
+
+$UFO_SRC=<unset>; the registry default resolves to /home/vgpnk/Projects/ufo-fsd-alpha
+and both consumer files exist there (ls -l, exit 0):
+-rw-r--r-- 1 vgpnk vgpnk  1756 Oct  3 21:10 config/the-tick.machine.json
+-rwxr-xr-x 1 vgpnk vgpnk 13983 Oct  3 21:10 scripts/local-helper.mjs
+
+Consumer 1: ~/.local/bin/omp
+----------------------------
+$ file /home/vgpnk/.local/bin/omp
+/home/vgpnk/.local/bin/omp: ELF 64-bit LSB executable, x86-64, version 1 (SYSV),
+dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, for GNU/Linux 3.2.0,
+BuildID[sha1]=a9ea3707c32f242dc5ec7fee3c5fdd9bc99893b3, not stripped
+$ ls -l /home/vgpnk/.local/bin/omp
+-rwxr-xr-x 1 vgpnk vgpnk 256702432 Oct 21 20:37 /home/vgpnk/.local/bin/omp
+
+It is not a text or JS file on disk, but it is a Bun single-file executable whose
+embedded JavaScript is readable as text. Bun version markers found 18 times:
+$ grep -a -c 'Bun v' ~/.local/bin/omp
+18
+No execution was performed.
+
+Embedded source label:
+$ grep -a -n -F 'packages/coding-agent/src/config/model-discovery.ts' ~/.local/bin/omp
+1122945:// packages/coding-agent/src/config/model-discovery.ts
+
+Builtin provider block (embedded-JS line numbers):
+$ grep -a -n -F 'case "llama.cpp":' ~/.local/bin/omp
+1123191:    case "llama.cpp":
+$ grep -a -n -F 'return bDt(u, p);' ~/.local/bin/omp
+1123192:      return bDt(u, p);
+$ grep -a -n -B 70 -A 120 'baseUrl: Bun.env.LLAMA_CPP_BASE_URL' ~/.local/bin/omp
+1174142:    if (!u.has("llama.cpp") && !p.has("llama.cpp")) {
+1174143-      this.#m.push({
+1174144-        provider: "llama.cpp",
+1174145-        api: "openai-responses",
+1174146-        baseUrl: Bun.env.LLAMA_CPP_BASE_URL || "http://127.0.0.1:8080",
+1174147-        discovery: { type: "llama.cpp" },
+1174148-        optional: !Bun.env.LLAMA_CPP_BASE_URL
+1174149-      });
+exit 0
+No context size or max tokens key appears in this provider object.
+
+Fallback constants:
+$ grep -a -n -E '(var|const|let) (wde|jK|ure) ?=' ~/.local/bin/omp
+907533:var ure = 128000;
+1122946:var wde = ure;
+1122947:var jK = pre;
+$ grep -a -n -E '(^|[^A-Za-z0-9_$])pre ?= ?[0-9][0-9_]*' ~/.local/bin/omp
+907534:var pre = 32768;
+exit 0
+
+llama.cpp list discovery uses the 128000 fallback:
+$ grep -a -n -F 'const pe = oe.runtimeContextWindow' ~/.local/bin/omp
+1123368:    const pe = oe.runtimeContextWindow ?? oe.configuredContextWindow ?? Y?.contextWindow ?? oe.trainingContextWindow ?? wde;
+$ grep -a -n -F 'contextWindow: pe' ~/.local/bin/omp
+1123379:      contextWindow: pe,
+$ grep -a -n -F 'maxTokens: iL(pe' ~/.local/bin/omp
+1123380:      maxTokens: iL(pe, Y?.maxTokens),
+
+maxTokens clamp:
+1123062:function iL(u, p) {
+1123063:  return p === "contextWindow" ? u : Math.min(u, p ?? jK);
+1123064:}
+
+/props request and its fields:
+$ grep -a -n -F 'cL(p)}/props' ~/.local/bin/omp
+1123313:  const M = `${cL(p)}/props`;
+1123091:function vY(u) {          // props -> contextWindow
+1123092:  const p = u.default_generation_settings;
+1123094:    const R = ts(p.n_ctx);
+1123099:  return ts(u.n_ctx);
+1123101:function SY(u) {          // /v1/models meta -> context windows
+1123106:    runtimeContextWindow: ts(p.n_ctx),
+1123108:    trainingContextWindow: ts(p.n_ctx_train)
+
+Consumer 2: config/the-tick.machine.json
+----------------------------------------
+$ grep -n 'contextTokens\|parallelSlots' config/the-tick.machine.json
+6:  "contextTokensPerRunner": 8192,
+17:    "parallelSlots": 2,
+18:    "contextTokens": 16384
+exit 0
+
+Invariant enforced by the consumer's validator:
+$ grep -n 'contextTokens' scripts/the-tick-config.mjs
+189:  requireIntegerRange(value.contextTokensPerRunner, { min: 1_024, max: 1_048_576 }, "contextTokensPerRunner");
+215:  requireIntegerRange(value.backend.contextTokens, { min: 1_024, max: 67_108_864 }, "backend.contextTokens");
+216:  if (value.backend.contextTokens !== value.backend.parallelSlots * value.contextTokensPerRunner) {
+217:    fail("backend context must equal slots times contextTokensPerRunner");
+exit 0
+16384 = 2 * 8192, so the declared topology is consistent.
+
+Request-level token cap in the-tick scripts:
+$ grep -rn 'max_tokens\|maxTokens\|n_predict\|num_predict\|maxOutputTokens\|num_ctx\|n_ctx' \
+    scripts/the-tick-*.mjs config/the-tick.machine.json
+(no output, exit 1)
+
+Consumer 3: scripts/local-helper.mjs
+------------------------------------
+$ grep -n 'MAX_N_PREDICT\|DEFAULT_N_PREDICT\|max_tokens\|MAX_INPUT_BYTES' scripts/local-helper.mjs
+10:const MAX_INPUT_BYTES = 12 * 1024;
+11:const MAX_N_PREDICT = 512;
+12:const DEFAULT_N_PREDICT = 256;
+128:    if (size > MAX_INPUT_BYTES) fail("input_too_large", `input exceeds ${MAX_INPUT_BYTES} bytes`);
+228:        max_tokens: nPredict,
+exit 0
+$ grep -n 'context|n_ctx|num_ctx|max_tokens|maxOutputTokens' scripts/local-helper.mjs
+175:      context: lines,
+228:        max_tokens: nPredict,
+337:    ? validateDedupe(result.content, request.context)
+exit 0
+Line 175 and 337 are the dedupe input array named "context"; neither is a model
+context field. No context size is declared anywhere in this file.
+
+Tool limitation observed
+------------------------
+The specialized grep tool returned "No matches found" for LLAMA_CPP_BASE_URL in the
+omp binary, while byte-level grep found 5 occurrences. The binary was therefore read
+with LC_ALL=C grep -a only (read-only, no execution).
+The lsp device is not mounted in this session: reading xd://lsp returned
+"No such tool: xd://lsp. Mounted devices: ast_edit, debug."

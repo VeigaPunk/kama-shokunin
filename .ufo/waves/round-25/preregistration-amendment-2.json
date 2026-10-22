@@ -1,0 +1,45 @@
+{
+ "schema": "kama-round-preregistration-amendment/v1",
+ "round": 25,
+ "attempt": 2,
+ "amends": ".ufo/waves/round-25/preregistration.json and preregistration-amendment-1.json (bytes kept as written at efe58e96)",
+ "written_utc": "2026-10-22T09:30Z, read from `date -u` at 09:26:28Z and 09:26:00Z just before writing; the commit that carries this file is the authoritative order",
+ "why": "Attempt 1 was stood down at 08:30Z by the orchestrator for capacity (job limit), not for a fault. Attempt 2 is a fresh author identity. The attempt-1 build wave was cancelled mid-run; its uncommitted outputs are committed as attempt-1 record only (.ufo/waves/round-25/build/ATTEMPT-1-DISPOSITION.md) and are not claim evidence for attempt 2.",
+ "honesty_notes": [
+  "Not blind: attempt-1 seats observed K1-K8 and nineteen extra edge cells (uncommitted, cancelled outputs). Before writing this amendment the attempt-2 author read the attempt-1 K1-K8 receipt rows and the critic source models, and printed the first 400 characters of each attempt-1 edge-cell summary row (labels, args and argv; the observed values were cut off and not read). K-cell prediction grading therefore stays replication-level for every cell; no prediction hit is counted as learning or as the claim value.",
+  "The X1-X3 and L1-L3 predictions below are source-derived by the attempt-1 critic seats CriticLearningBar and CriticC2Sizing (advice files, written about 08:27Z to 08:28Z) or by the attempt-2 author from the same pinned source; each says which.",
+  "L1 planning walk at 09:26Z (scratch /fast/scratch/hyaku/kama25-a2/pilot-v.log, K6 args, port 47311, killed, port confirmed closed): the KV pool is printed only at full verbosity `-v` (`llama_context: n_ctx = 1536`, log line 284); at `-lv 3` it is absent. That is why every cell now runs with `-v` and why kv_pool_n_ctx is required."
+ ],
+ "C1": {
+  "unchanged_target": "stale 0 (registered command in preregistration.json, enumerating the whole MUTANTS list)",
+  "framing_for_claim_sizing": "Calibration counted as mismatches between a self-assessment and observed repo state: SCORECARD.md line 1166 registers `python3 tests/report-audit/isolation-mutants.py --json` as the counting command for its isolation row; each registered mutant whose literal does not occur exactly once in the measured auditor is one mismatch between that registered instrument and the auditor it claims to measure.",
+  "before_reverified": "registered 27 stale 2 ['M11-listing-surrogates', 'M17-ref-shadow'] at efe58e96 (exit 0), run at about 2026-10-22T09:24Z, before the re-anchor edit",
+  "repair_design": "M11 literal spans the wrapped call (same element). M17 keeps the round-23 element, the peel-guarded check in lookup() (round-23 auditor e876b95 line 170-172 has the same guard); the second call site added in round 24 to bare_objects() becomes new id M33-ref-shadow-bare-objects. No id reused or retired. Denominator 27 -> 28, reported as measured.",
+  "supporting_evidence_not_the_claim_value": "one full `python3 tests/report-audit/isolation-mutants.py --json` run on a sandbox clone at the landed tip: exit code and killed/surviving lists recorded as observed, a survivor reported, not hidden"
+ },
+ "C2": {
+  "kind": "learning claim, frontier K05 (declared versus served context capacity); supersedes the round-20 formula where it is wrong",
+  "axis": "coverage 8 -> 8 (no numeric promotion)",
+  "command": "python3 .ufo/waves/round-25/count-c2.py",
+  "command_rule": "count-c2.py implements amendment 1's strict rule and adds: kv_pool_n_ctx integer that matches a captured `llama_context: n_ctx` log line for every cell; for load cells, request_mode and at least two request records with integer HTTP status, prompt_tokens 1000 and n_predict 600. Receipt binding (server_version contains `build 11755`, fixture sha256 270cba1b...256d) printed as `bound`.",
+  "before": "receipt absent at efe58e96: count-c2.py exit 2 (cannot read receipt); registered 14, observed 0",
+  "after_target": "registered 14 observed 14 bound True",
+  "cells_added": [
+   {"id": "X1", "args": "-np 4 --no-kv-unified", "prediction": "source path (CriticLearningBar, common/fit.cpp 195-198 and 266-273: an unset context with a split cache is fitted to n_ctx_train * n_streams): pool 8192, per-slot 2048. Round-20 nctx-crosscheck.py predict() gives per-slot 512. One of the two is wrong."},
+   {"id": "X2", "args": "-c 8192 -np 4 --no-kv-unified", "prediction": "pool 8192, per-slot 2048; /props, /slots and /v1/models equal K1's although K1 shares one 2048 pool across 4 slots (CriticLearningBar counterexample 3)"},
+   {"id": "X3", "args": "-np 4 --no-kv-unified --fit off", "prediction": "author inference from the same source, unverified: with fit off the unset context falls back to n_ctx_train 2048, split over 4 streams: pool 2048, per-slot 512 (the round-20 value). If X1 is 2048 and X3 is 512, fit is the cause."},
+   {"id": "L1", "args": "-c 0", "request": "two concurrent POST /completion requests, each a 1000-token prompt given as token ids, n_predict 600, ignore_eos true, cache_prompt false", "prediction": "source server-context.cpp 4301 and 4318-4320: the shared 2048 pool cannot hold 2 x 1600 cells, so at least one request ends with an error (`Context size has been exceeded` or equivalent); recorded as observed"},
+   {"id": "L2", "args": "-c 8192 -np 4 --no-kv-unified", "request": "same two concurrent requests", "prediction": "both complete with HTTP 200 (each slot has its own 2048 stream)"},
+   {"id": "L3", "args": "-c 0", "request": "the same two requests sent one after the other", "prediction": "both complete with HTTP 200: the failure in L1 is concurrency, not request size"}
+  ],
+  "launch_rule": "every cell launches `~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port <free port> --no-webui --offline -v <args>`, one child at a time, killed and port confirmed closed; the `-v` flag is not part of the registered args string",
+  "learning_artifacts": [
+   "corpus/knowledge/context-capacity.md: pool versus slot, fit raising an unset split context, the full-context concurrency limit, what the HTTP surfaces cannot show, fixture scope limits (CriticC2Sizing section 6)",
+   "tools/kama-context-capacity.py capability row in the SCORECARD capabilities table, shown running this round",
+   "SKILL.md decision rows grounded in the admitted entry",
+   "an explicit supersession note for round-20 nctx-crosscheck.py where X1 shows it wrong (or a recorded confirmation if X1 shows it right)"
+  ],
+  "prediction_grading": "every prediction match is calibration evidence only; the claim value is the observed count"
+ },
+ "shape": "default two v1 waves (build, then falsify), attempt 2"
+}

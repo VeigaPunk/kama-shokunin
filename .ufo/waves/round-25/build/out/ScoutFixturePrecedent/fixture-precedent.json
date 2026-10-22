@@ -1,0 +1,100 @@
+{
+  "schema": "kama-round25-fixture-precedent/v1",
+  "claim": "C2",
+  "base": "147f5bdd3228ab712520b5f377346cb2d9a64769",
+  "access_date": "2026-10-22",
+  "source_commit": "704366d76f8748cf9ad3df62a464bfcc8d1ae6ad",
+  "binary": {
+    "path": "/home/vgpnk/.local/bin/llama-server",
+    "realpath": "/home/vgpnk/.local/opt/llama-b11755/llama-server",
+    "version_command": "~/.local/bin/llama-server --version",
+    "version_exit": 0,
+    "version_output": "version: 0.7.0-dev (build 11755, commit 704366d76)"
+  },
+  "model": {
+    "path": "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+    "size_bytes": 1185376,
+    "sha256": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+    "matches_receipt_model_sha256_post": true
+  },
+  "precedent_receipts": {
+    "round16": [".ufo/waves/round-16/live/receipt.json", ".ufo/waves/round-16/live/receipt-frozen-probe.json"],
+    "round17": [".ufo/waves/round-17/live/receipt-1.json", ".ufo/waves/round-17/live/receipt-2.json", ".ufo/waves/round-17/live/receipt-3.json"],
+    "round18": [".ufo/waves/round-18/live/receipt-1.json", ".ufo/waves/round-18/live/receipt-2.json", ".ufo/waves/round-18/live/receipt-3.json"],
+    "round18_recovery": [".ufo/waves/round-18/live-recovery/receipt-1.json", ".ufo/waves/round-18/live-recovery/receipt-2.json", ".ufo/waves/round-18/live-recovery/receipt-3.json"],
+    "count": 11,
+    "same_values_all": {
+      "root_ctx": 256,
+      "argv_ctx_flag": ["-c", "256"],
+      "argv_parallel": "absent",
+      "props_default_generation_settings.n_ctx": 256,
+      "props_total_slots": 4,
+      "props_build_info": "b11755-704366d76",
+      "models_meta.n_ctx": 256,
+      "models_meta.n_ctx_train": 2048,
+      "slots_http_status": 200,
+      "slots_element_count": 4
+    }
+  },
+  "exact_argv_that_produced_256": [
+    "/home/vgpnk/.local/opt/llama-b11755/llama-server",
+    "-m",
+    "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+    "--alias",
+    "kama-r18-live",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "40999",
+    "-c",
+    "256",
+    "-t",
+    "1",
+    "--no-webui",
+    "--offline"
+  ],
+  "argv_source": {
+    "producer": "tools/kama-llamacpp-live.py",
+    "ctx_default": "tools/kama-llamacpp-live.py:1107  p.add_argument('--ctx', type=int, default=256, help='-c ctx size')",
+    "argv_assembly": "tools/kama-llamacpp-live.py:1451-1462  server_argv = [server_real, '-m', args.model, '--alias', ..., '-c', str(args.ctx), '-t', str(args.threads), '--no-webui', '--offline']",
+    "flag_surface_absent": "no --parallel/--kv-unified/--slots options exist in the producer's argparse (lines 1097-1118)"
+  },
+  "mechanism_chain": [
+    {"step": 1, "file": "common/arg.cpp", "line": 1406, "fact": "server example default params.n_parallel = -1 (auto)"},
+    {"step": 2, "file": "tools/server/server.cpp", "lines": "169-173", "fact": "n_parallel < 0 -> n_parallel = 4 and kv_unified = true (hardcoded 4)"},
+    {"step": 3, "file": "common/common.cpp", "lines": "1715,1742", "fact": "cparams.n_seq_max = params.n_parallel; cparams.kv_unified = params.kv_unified"},
+    {"step": 4, "file": "src/llama-context.cpp", "line": 219, "fact": "n_ctx == 0 -> n_ctx_train, else the passed n_ctx (256)"},
+    {"step": 5, "file": "src/llama-context.cpp", "lines": "379-392", "fact": "n_ctx padded to 256; unified -> n_ctx_seq = n_ctx; non-unified -> n_ctx_seq = pad(n_ctx / n_seq_max, 256) and n_ctx = n_ctx_seq * n_seq_max"},
+    {"step": 6, "file": "tools/server/server-context.cpp", "lines": "4655-4663", "fact": "n_ctx_slot = min(llama_n_ctx_seq, kv_unified_per_slot if >0, n_ctx_train)"},
+    {"step": 7, "file": "tools/server/server-context.cpp", "lines": "1437,738,5186,5236,5244", "fact": "slot.n_ctx = n_ctx_slot(); /slots n_ctx, /v1/models meta.n_ctx and /props default_generation_settings.n_ctx all read that one value; /props total_slots = params.n_parallel"}
+  ],
+  "result_for_precedent": {
+    "total_slots": 4,
+    "kv_unified": true,
+    "per_slot_n_ctx": 256,
+    "division_applied": false,
+    "derivation": "auto slots gave 4 and unified KV; n_ctx_seq = n_ctx = 256; no division by 4; the served 256 is the launch -c 256, not a capacity transform"
+  },
+  "k_cell_reconciliation": [
+    {"id": "K1", "args": "-c 0", "prediction": "total_slots 4 (auto), kv_unified true, per-slot n_ctx 2048", "source_expectation": "4 and true are hardcoded; 0 -> train 2048; unified -> 2048", "agreement": "prediction matches source; precedent is this branch with -c 256"},
+    {"id": "K2", "args": "-c 2048 -np 2 --no-kv-unified", "prediction": "per-slot n_ctx 1024", "source_expectation": "2048/2 = 1024, pad no-op", "agreement": "matches"},
+    {"id": "K3", "args": "-c 2048 -np 2 --kv-unified", "prediction": "per-slot n_ctx 2048", "source_expectation": "unified -> n_ctx_seq = 2048", "agreement": "matches"},
+    {"id": "K4", "args": "-c 1024 -np 1", "prediction": "kv_unified false, per-slot n_ctx 1024", "source_expectation": "explicit -np keeps kv false; 1024/1", "agreement": "matches"},
+    {"id": "K5", "args": "-c 4096 -np 1", "prediction": "per-slot n_ctx capped at training context 2048", "source_expectation": "min(4096, 2048) = 2048; llama context still 4096; capping warning", "agreement": "matches reported value; allocation stays 4096"},
+    {"id": "K6", "args": "-c 1000 -np 3 --no-kv-unified", "prediction": "unknown: padding and division", "source_expectation": "pad 1000->1024; 1024/3=341 -> pad 512; n_ctx rewritten to 1536; per-slot 512", "agreement": "open prediction; source pre-registers 512 (falsifiable)"},
+    {"id": "K7", "args": "-np 2 --kv-unified-per-slot 512", "prediction": "pool 1024, per-slot 512", "source_expectation": "auto pool 2*512=1024; kv false; 1024/2=512; cap 512", "agreement": "matches"},
+    {"id": "K8", "args": "-c 4096 -np 4 --kv-unified --kv-unified-per-slot 512", "prediction": "per-slot n_ctx 512", "source_expectation": "unified 4096; min(4096,512,2048) = 512", "agreement": "matches"}
+  ],
+  "measurement_gaps": {
+    "producer_cannot_express_cells": "K2-K8 need --parallel/--kv-unified/--kv-unified-per-slot; tools/kama-llamacpp-live.py exposes only --ctx and --threads (lines 1107-1108)",
+    "slots_body_dropped": "tools/kama-llamacpp-live.py:785 captures /slots with keep_body=False and records only element_count (:790,:793); per-slot n_ctx is not in any committed receipt",
+    "init_log_line_filtered_out": "tools/kama-llamacpp-live.py:77 LOG_KEEP = build|model loaded|listening|loading; the 'initializing, n_slots=..., n_ctx_slot=..., kv_unified=...' line (server-context.cpp:1392-1393) does not match; round-18 receipt kept 3 lines, none matching",
+    "non_independence": "/props n_ctx, /slots n_ctx and /v1/models meta.n_ctx are one server-side value (n_ctx_slot); they cannot disagree in a healthy run",
+    "config_confound": "HOME is allowlisted into the child env (tools/kama-llamacpp-live.py:84) and ~/.config/llama.cpp/config.ini currently does not exist; a future config could inject options (round-18 F5 observed api-key injection)"
+  },
+  "unknowns": [
+    "No live server was started this round; source-derived cell values are predictions, not observations.",
+    "The per-slot /slots n_ctx of the 256 run is inferred from props n_ctx plus the source chain; the receipt body was not retained.",
+    "Whether a config.ini could inject --parallel or --kv-unified is inferred from the round-18 F5 config-injection observation, not re-tested here."
+  ]
+}
