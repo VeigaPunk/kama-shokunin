@@ -66,7 +66,7 @@ Line numbers below refer to literal-id-checks.out.
 
 ## 8. Full registry run (all 28, cwd clone at 1fc41e34)
 Command: `python3 tests/report-audit/isolation-mutants.py --json` → `full-mutants.json`, `full-mutants.stderr`.
-Status at the time of writing: running as background job bg_2008. The exit code and survivor list are recorded in the report once the job reports.
+Exit 0, wall 983.9 s. Pristine passed. 28 mutants: 26 killed. Surviving: `M17-ref-shadow` (grid exit 0, the F1 finding) and `M20-log-sha-shape` (grid exit 0; already a survivor at round 23, `corpus/lessons/round-23.md:120`). Per-mutant failed rows are in `full-mutants.json`.
 
 ## 9. Lane file operations (mine only)
 - Created under the lane: `.ufo/waves/round-25/a2-build/advice/` (the report), `.ufo/waves/round-25/a2-build/out/ReviewerC1Patch/` (this folder and its files).

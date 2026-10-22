@@ -185,9 +185,10 @@ Elision convention: `…` marks a cut inside a single long line of the body, nev
 a paraphrase — every quoted fragment is byte-for-byte from the live response.
 
 Also-normal, not faults: `# HELP llamacpp:prompt_tokens_total …` from `/metrics`,
-and `[{"id":0,"n_ctx":16384,…},{"id":1,…}]` from `/slots` (matches `--parallel 2`,
-`--ctx-size 16384` only because that launch also set `--kv-unified`: both slots
-share one 16384-cell pool; see `corpus/knowledge/context-capacity.md`).
+and `[{"id":0,"n_ctx":16384,…},{"id":1,…}]` from `/slots` (consistent with
+`--parallel 2`, `--ctx-size 16384` and `--kv-unified`; under b11755 semantics
+both slots share one 16384-cell pool, not logged for that build; see
+`corpus/knowledge/context-capacity.md`).
 
 ## Checklist — current registered-endpoint workflow
 
@@ -683,10 +684,10 @@ lowers a context on this fixture. Other builds and large models: re-observe.
 
 | Symptom | First check | Verdict | Action |
 |---|---|---|---|
-| A consumer needs the served context; `/props` reports `n_ctx` | `/props` `default_generation_settings.n_ctx` and `total_slots`, `/slots` `n_ctx`, `/v1/models` `meta.n_ctx_train` | `n_ctx` is the per-slot ceiling, not the KV pool; the three endpoints read one function, so agreement is not independent evidence (S060; cells K1-K8) | Report it as a single-request ceiling. Never derive the pool from it. |
-| `-c` unset, `-np` given, split cache | The launch flags and the verbose startup log (`llama_context: n_ctx = N`) | With `--fit` on (default) the pool becomes training context × slots and each slot gets the full training context (S106; X1: 8192 pool, 2048 per slot). With `--fit off` the training context is split (X3: 2048, 512) | Do not use the round-20 `nctx-crosscheck.py` value for this case; it gives 512 and is superseded. |
-| Several requests must run at once on one server | Is the cache unified (`kv_unified = 'true'` in the startup log) and how large is the pool | Concurrent requests are bounded by the pool total, not by the per-slot number: on a shared pool, when the requests together need more cells than the pool holds, every processing request fails with HTTP 500 `Context size has been exceeded.` (S109; L1 both failed at 1025 tokens each of a 2048 pool; L2 and L3 both 200). Tested only with two 1000 + 600 token requests | Size concurrent use from the pool and the request sizes, never from `total_slots` alone. Escalate a consumer that assumes more. |
-| A claim needs the KV pool size | The startup log at `-lv 4` or `-v` | None of `/props`, `/slots` and `/v1/models` carries the pool or the layout at these flags (S112; K1 and X2 report identical values with pools 2048 and 8192); `/metrics` was not read | Require the verbose log line or the launch flags as evidence; without them the pool is unknown. |
+| A consumer needs the served context; `/props` reports `n_ctx` | `/props` `default_generation_settings.n_ctx` and `total_slots`, `/slots` `n_ctx`, `/v1/models` `meta.n_ctx` (and `meta.n_ctx_train` for the training context, a separate value) | `n_ctx` is the per-slot ceiling, not the KV pool; the three endpoints read one function, so agreement is not independent evidence (S060; cells K1-K8) | Report it as a single-request ceiling. Never derive the pool from it. |
+| No `-c` (or `-c 0`), no `--kv-unified-per-slot`, `-np` given, split cache | The verbose startup log (`llama_context: n_ctx = N`, last line) | With `--fit` on (default) fit raises the context to training context × slots and each slot gets the full training context (S106; X1: 8192 pool, 2048 per slot; `-c 0` not run). With `--fit off` (X3) or `--kv-unified-per-slot` (K7) the round-20 per-slot value holds | Do not use the round-20 `nctx-crosscheck.py` value for the fit-on case; it gives 512 there. |
+| Several requests must run at once on one server | Is the cache unified (`kv_unified = 'true'` in the startup log) and how large is the pool | On a shared (unified) pool, concurrent requests draw on the same cells; when together they need more cells than the pool holds, every processing request fails with HTTP 500 `Context size has been exceeded.` (S109; L1: two equal 1000 + 600 token requests both failed at 1025 tokens each on a 2048 pool; L2, split 8192, and L3, sequential, both 200; falsify-wave shared pools 2048 and 3072 fail, 4096 and 8192 pass). On a split cache each request is limited to its own per-slot stream [INFERENCE, S113]. Tested only with two equal requests | On a unified cache, size concurrent use from the pool and the request sizes; on a split cache, from the per-slot value. Never use `total_slots` alone. Escalate a consumer that assumes more. |
+| A claim needs the KV pool size | The startup log at `-lv 4` or `-v` | None of `/props`, `/slots` and `/v1/models` carries the pool or the layout at these flags (S112; K1 and X2 report the same capacity values with pools 2048 and 8192); `/metrics` was not read | Require the verbose log line as evidence. Launch flags count only together with the `LLAMA_ARG_*` environment and only where fit cannot lower the context. Without them the pool is unknown. |
 
 ## Round-21 instrument registry: report landing audit and install links (owner: kama)
 

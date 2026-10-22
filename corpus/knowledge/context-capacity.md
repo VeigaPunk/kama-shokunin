@@ -1,15 +1,17 @@
 source: S106 (common/fit.cpp), S107 (src/llama-context.cpp), S108 (tools/server/server.cpp auto slots and pool sizing), S109 (tools/server/server-context.cpp full-cache decode path), S110 (common/arg.cpp context, fit and slot options), S111 (common/common.cpp fit call), S112 (tools/server/README.md), S113 (src/llama-kv-cache.cpp), S060 (served per-slot value), all at llama.cpp commit 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad (release b11755); live receipt `.ufo/waves/round-25/final/context-capacity-receipt.json`; corpus/lessons/round-25.md Gate
-verified-at: 2026-10-22 — sources opened this round; 14 fixture cells observed 2026-10-22T09:36:51Z to 09:36:59Z on the lane-owned fixture, torn down in the same run
+verified-at: 2026-10-22 — sources opened this round; 14 fixture cells observed 2026-10-22T09:42:42Z to 09:42:50Z (receipt commit 5c95c8f111a981e316cd4933e38fc363e51f8604) on the lane-owned fixture, torn down in the same run
 recheck: on-release — reopen the pinned sources and re-run `python3 tools/kama-context-capacity.py --out <receipt>` when the installed llama.cpp build changes; a receipt is a dated sample, never present service state
 
 # Declared versus served context capacity: pool, slot and concurrency
 
-A GGUF header declares a training context (2048 for the lane fixture). What a
-llama-server serves is two numbers that its HTTP endpoints do not tell apart:
-the **KV pool** (`llama_context: n_ctx`, the whole cache) and the **per-slot
-ceiling** (`n_ctx_slot`, the most one request may use). Two launches can
-report identical endpoints and still differ fourfold in how many full-context
-requests they can run at once.
+A GGUF header declares a training context (2048 for the lane fixture). At
+build 11755 a llama-server has two capacity numbers: the **KV pool**
+(`llama_context: n_ctx`, the whole cache) and the **per-slot ceiling**
+(`n_ctx_slot`, the most one request may use). Its `/props`, `/slots` and
+`/v1/models` endpoints report only the second. On this fixture two launches
+(K1 and X2) report the same values there while their pools differ fourfold
+(2048 and 8192); two concurrent 1600-token requests failed on the K1
+configuration (L1) and passed on the X2 configuration (L2).
 
 Cell ids below refer to the committed receipt. Each cell ran
 `llama-server -m stories260K.gguf --host 127.0.0.1 --port <free> --no-webui
@@ -34,8 +36,11 @@ last `llama_context: n_ctx = N` line of that cell's raw log.
 
 Matches with the round-20 rule are replication and calibration evidence, not
 new knowledge. The K4-K8 predictions (preregistration) and the X and L
-predictions (amendment 2) were written from source before the attempt-2
-runs; K1-K3 copied the pilot. The attempt-1 record (committed at
+predictions (amendment 2) were written before the attempt-2 runs, but not
+blind: X1 and X2 came from a critic who had seen attempt-1 cell values, and
+the prediction credit for K4, K5, K7 and K8 was withdrawn because the author
+had read attempt-1 values (`.ufo/waves/round-25/errata-attempt-2.json`).
+K1-K3 copied the pilot. The attempt-1 record (committed at
 5388b7cf as a cancelled-attempt record) already held an edge cell E09
 (`-np 2`, no `-c`) serving 2048 per slot, so X1 is the first admitted
 statement of that behavior, not the first observation.
@@ -57,7 +62,8 @@ statement of that behavior, not the first observation.
   value went up; quote the number, not the word.
 - Leaving `-np` unset makes the server use 4 slots and a unified cache
   (S108, server.cpp 169-174). Giving `-np` keeps the default split cache
-  (S110; common.h 580). K1 versus K2 shows the switch.
+  (S110 declares the `-kvu` default "enabled if number of slots is auto").
+  K4 and K7 give `-np` without a cache flag and log `kv_unified = 'false'`.
 - `--kv-unified-per-slot N` without `-c` sizes the pool to slots times N even
   when the cache is split (S108, server.cpp 179-186; S112 is the only README
   sizing promise). K7: split cache, pool 1024, 512 per slot. The flag name
@@ -66,12 +72,16 @@ statement of that behavior, not the first observation.
   its size log prints cells per stream (S113, llama-kv-cache.cpp 84, 144,
   301-304).
 
-## Fit raises an unset split context (supersedes the round-20 rule)
+## Fit raises a zero split context to the training context per slot (corrects the round-20 rule for that case only)
 
-When `-c` is unset and `--fit` is on (the default), the fit step runs before
-the model loads (S111, common.cpp 1245-1276) and sets the context to the
-training context times the number of streams: one stream for a unified cache,
-one per slot for a split cache (S106, fit.cpp 195-198 and 266-273).
+When the context resolves to 0 (no `-c`, or `-c 0`, and no
+`--kv-unified-per-slot`, which sizes the context before fit runs; S108,
+server.cpp 179-186) and `--fit` is on (the default), the fit step runs before
+the model loads (S111, common.cpp 1245-1276). It first sets the context to
+the training context times the number of streams: one stream for a unified
+cache, one per slot for a split cache (S106, fit.cpp 195-198 and 266-273). K7
+is the exception in this receipt: no `-c`, fit on and a split cache, but
+`--kv-unified-per-slot 512` sizes the pool to 1024 and fit leaves it there.
 
 - X1 (`-np 4 --no-kv-unified`, no `-c`): pool 8192, 2048 per slot. Its raw
   log (`final/raw/X1.server.log`) shows the fit probe first (`n_ctx = 2048`,
@@ -85,10 +95,15 @@ one per slot for a split cache (S106, fit.cpp 195-198 and 266-273).
   line 6 and `.ufo/waves/round-20/build/out/SrcServerNctx/nctx-crosscheck.py`
   `predict()` (line 41), which returns 512 for X1 because it splits the bare
   training context and models fit only as something that can lower a
-  context. For build 11755 with an unset context, fit on and a split cache,
-  the observed value is 2048; under `--fit off` (X3) the round-20 value holds.
-  On the other ten registered config cells round 20 agrees with the
-  observation. The admitted `corpus/knowledge/gguf-declared-identity.md`
+  context. For build 11755 on this fixture, with no `-c`, no
+  `--kv-unified-per-slot`, fit on and a split cache, the observed per-slot
+  value is the training context (2048), not 512 (X1). Under `--fit off` (X3)
+  and with `--kv-unified-per-slot` (K7) the round-20 per-slot value holds.
+  `-c 0` with a split cache was not run; the source predicts the X1 value
+  [INFERENCE]. On the other ten registered config cells round 20's per-slot
+  value agrees with the observation; round 20 models no pool, and the pool it
+  implies for K7 (2048) differs from the observed 1024.
+  The admitted `corpus/knowledge/gguf-declared-identity.md`
   ("do not divide blindly") is not wrong; it now points here for the rule.
   `tools/kama-context-capacity.py` does not re-implement a formula: it
   observes, and records the pool from the log.
@@ -96,7 +111,7 @@ one per slot for a split cache (S106, fit.cpp 195-198 and 266-273).
   context reduction (S110, arg.cpp 1646-1649). On this fixture fit never
   reduces anything, so the difference does not show here.
 
-## A shared pool limits concurrent requests by its total size
+## On a shared pool, concurrent requests can run out of cells below the per-slot ceiling
 
 The per-slot number limits one request. It does not promise that capacity to
 several requests at once. The L cells sent two `/completion` requests, each a
@@ -109,54 +124,90 @@ several requests at once. The L cells sent two `/completion` requests, each a
 | L2 | `-c 8192 -np 4 --no-kv-unified` | concurrent | both HTTP 200, 600 tokens each, not truncated |
 | L3 | `-c 0` | one after the other | both HTTP 200, 600 tokens each, not truncated |
 
-- Order of events (S109, server-context.cpp 4294-4341): when decoding finds
-  no free KV space the server first halves the batch and retries; when a
-  batch of one still fails it sends `Context size has been exceeded.` to every
+- Order of events (S109, server-context.cpp 4294-4341 and 1810-1835): when
+  decoding finds no free KV space the server first tries to purge idle slots
+  that still hold a cached prompt; if none is purged it halves the batch and
+  retries; when a batch of one still fails it sends `Context size has been
+  exceeded.` to every
   processing slot, clears them and stops. In L1 both slots were released at
   `n_tokens = 1025` (`final/raw/L1.server.log` lines 1849-1866): 2 × 1025
   cells overflow the 2048 pool. Both admitted requests failed, not only the
   newer one. The replicate seat
   (`.ufo/waves/round-25/a2-build/advice/ExecLoadReplicate.md`) saw the same
   outcome in 3 of 3 fresh-server runs per L cell.
-- The limit is the pool total, not a full per-slot context: each L1 request
-  failed at about half of its 2048 per-slot ceiling. L1 and L2 report the
-  same endpoints (per slot 2048, 4 slots); L2's pool is four times larger.
-  L2 changes the pool size and the cache layout together, so it does not
-  separate the two; a shared 8192 pool was not run.
+- On a shared pool the cells ran out before either request reached its
+  per-slot ceiling: each L1 request failed at 1025 tokens, about half of its
+  2048 ceiling, when 2 × 1025 exceeded the 2048 pool. Both requests were the
+  same size, so L1 does not separate a limit on the summed cells from an
+  equal share per request; the source supports the summed reading (S113: a
+  unified cache keeps all sequences in one stream), untested with unequal
+  requests. Each request is still capped by its per-slot ceiling. On a split
+  cache each request is held to its own stream [INFERENCE from S113; not run
+  under load]. L1 and L2 report the same endpoints (per slot 2048, 4 slots);
+  L2's pool is four times larger, but L2 also changes the cache layout.
+- Supporting cells from the falsify wave, not part of the claim count (same
+  request pair, `-c 0` or `--kv-unified`, 4 slots):
+  - Shared pool 8192 (`-c 8192 -np 4 --kv-unified`): both HTTP 200 in 3 of 3
+    runs, as L2. So the layout is not the cause.
+  - Shared pools of 2048 and 3072 fail (both HTTP 500, released at 1025 and
+    1537 tokens each); 4096 passes (one run each). With every endpoint value
+    held equal, only the pool total flips the outcome.
+  - Boundary on the 2048 pool: with `n_predict` 25 both requests pass in 2
+    of 2 runs (1024 tokens each, the pool exactly full); with 26 both fail
+    in 3 of 3. The 1025th token of each request is the first the pool cannot
+    hold.
+  - Shared pool 8192 with `--kv-unified-per-slot 512`: both requests are
+    rejected up front with HTTP 400 `exceed_context_size_error` (1000 tokens
+    exceed 512), so the smaller per-slot ceiling applies first.
+  Evidence: `.ufo/waves/round-25/a2-falsify/advice/ExecSharedPool8192.md`
+  and `ExecBoundaryPool.md`, with raw logs under their `out/` folders.
 - L3 shows the L1 failure needs overlap: the same requests one after the
   other succeed. It covers only `cache_prompt` false (the server default is
   true) and says nothing about freeing cells across slots.
-- Tested: two requests of 1000 + 600 tokens, pool ratio 1 to 4. No claim is
-  made for other request counts or sizes.
+- Tested: two requests with 1000-token prompts, `cache_prompt` false, no
+  streaming. No claim is made for other request counts or prompt sizes.
 
 ## What the three endpoints cannot show
 
 - No field of `/props`, `/slots` or `/v1/models` carries the KV pool or the
   cache layout at these flags (S112 documents none; S060 lists the fields).
-  K1 and X2 return identical values on all three. `/metrics` was not read.
+  K1 and X2 return the same capacity values (`n_ctx`, `total_slots`, slot
+  entries) on all three; they differ only in fields that change per launch
+  (`media_marker`, `created`). `/metrics` was not read.
 - The startup line `load_model: initializing, n_slots = …, n_ctx_slot = …,
   kv_unified = '…'` shows the layout at default verbosity. The pool info line
-  (`llama_context: n_ctx = N`) needs `-lv 4` or `-v`; at default verbosity a
-  pool value appears only in warnings such as K6's "rounding down to 1536"
-  or K5's `n_ctx_seq (4096) > n_ctx_train`. A wave seat compared
+  (`llama_context: n_ctx = N`) needs `-lv 4` or `-v`. At default verbosity a
+  pool value appears only in some launches: in warnings such as K6's
+  "rounding down to 1536" or K5's `n_ctx_seq (4096) > n_ctx_train`, and in
+  K7's info line `--kv-unified-per-slot: sizing KV pool to … = 1024`. A wave
+  seat compared
   plain and `-v` launches for K1, K6 and X1 and found no served value changed
   (`.ufo/waves/round-25/a2-build/advice/ExecVerbosityControl.md`).
 - So a consumer that reads only these endpoints cannot know how many
-  concurrent requests of a given size will fit. Ask for the launch flags or
-  the verbose startup log.
+  concurrent requests of a given size will fit. Ask for the verbose startup
+  log (`llama_context: n_ctx` and `kv_unified`). Launch flags are a weaker
+  substitute: every option involved can also come from an environment
+  variable (`LLAMA_ARG_CTX_SIZE`, `LLAMA_ARG_N_PARALLEL`,
+  `LLAMA_ARG_KV_UNIFIED`, `LLAMA_ARG_KV_UNIFIED_PER_SLOT`, `LLAMA_ARG_FIT`,
+  `LLAMA_ARG_FIT_CTX`; S110), and where fit can lower the context the result
+  also depends on free memory at launch.
 
 ## Scope
 
-Build 11755 (commit 704366d76) only; `--kv-unified-per-slot`, the auto slot
-default and the fit step are build-specific. Fixture `stories260K.gguf`,
+Read only at build 11755 (commit 704366d76); whether other builds treat
+`--kv-unified-per-slot`, the auto slot default and the fit step the same is
+unknown. Fixture `stories260K.gguf`,
 sha256 `270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d`,
 architecture llama, training context 2048, no sliding-window and no
 rope-scaling keys, CPU only, single-model mode, unregistered loopback ports,
-one child at a time. Fit never lowers a context here: its reduction needs a
-training context above `--fit-ctx` (4096 by default) or a cache that does not
-fit in memory (S106, fit.cpp 393-394), and neither holds for this fixture.
-On large models free device memory decides whether fit raises or lowers an
-unset context, so these fixture values do not transfer.
+one child at a time. Fit never lowers a context here: it lowers a context of
+0 only when projected memory misses its target and the training context is
+above `--fit-ctx` (4096 by default) (S106, fit.cpp 384 and 393-394), and
+neither holds for this fixture. On large models with a split cache fit first
+raises a context of 0 to training context × slots and then, if memory is
+short, lowers it toward `--fit-ctx` per stream; with a unified cache it can
+only lower. Free memory at launch decides, so these fixture values do not
+transfer.
 
 ## Does not establish
 
@@ -169,9 +220,11 @@ unset context, so these fixture values do not transfer.
 - Other builds, other engines, router mode, context shift or prompt caching
   (the L cells disabled prompt caching and did not test context shift).
 - Present service state: the receipt is a dated sample of torn-down children.
-- A shared pool of the same total size as L2 (`-c 8192 -np 4 --kv-unified`),
-  a split cache under concurrent load with small per-slot streams, and the
-  `-c 0` split case: none was run.
+- A split cache under concurrent load with small per-slot streams, unequal
+  concurrent requests on a shared pool, and the `-c 0` split case: none was
+  run.
+- Launches where fit stops before resolving the context, for example
+  `-sm tensor` (fit.cpp 183-184) [INFERENCE, not run].
 
 ## Related lane evidence
 
@@ -180,6 +233,7 @@ The sibling lane kengaku committed captures of the production 34113 server
 --kv-unified --parallel 2`, `/slots` showing 2 × 16384 (kengaku
 `corpus/evidence/round10-fleet/r10-scout-endpoint.md`, lines 33 and 67, read
 by `.ufo/waves/round-25/a2-build/advice/ConnectorSiblingOverlap.md`). That is a
-per-slot ceiling of 16384 on one shared 16384-cell pool, the L1 shape. It is
+per-slot ceiling of 16384 on, read with b11755 semantics, one shared
+16384-cell pool, the L1 shape [INFERENCE: no pool log exists for that build]. It is
 historical, other-build evidence, not a kama observation. The X1 supersession
 does not apply to it: `-c` is explicit, fit is off and the cache is unified.

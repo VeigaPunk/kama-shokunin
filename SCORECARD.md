@@ -1275,6 +1275,21 @@ lane's re-derivation path, and the lane's live SKILL registry row
 inventory the command could not deliver. That is a reading, not a proof; the
 closure decides the axis fit. The author does not relabel the axis.
 
+Correction after the falsify wave (non-author critic KamaR25a2.CriticC1AxisFit,
+`.ufo/waves/round-25/a2-falsify/advice/CriticC1AxisFit.md`): the author's
+position does not hold. At the before revision the SKILL row's verdict map
+already registered exit 2 as could-not-evaluate, its "27 retained literals"
+was true, and SCORECARD line 1166 was true at its bound auditor (the counter
+prints `stale 0` at e876b95). The anchors went stale at round-24 commit
+92063cf, after the registry text was written at ed1cc3a: drift, which AXES
+files under freshness, not overreach. The author accepts this. **C1's axis
+fit to calibration is not established**, so this round does not show the
+lowest-axis obligation (calibration 7; depth and adjacency also 7; no
+stagnation waiver, calibration is below the saturation line 8). The measured
+value stands as repair evidence. In the quoted critic text above, "the before
+command aborts" refers to the full instrument run (exit 2 on reaching M11);
+the counting command itself exits 0 and prints `registered 27 stale 2`.
+
 M17 survival: since round-24 commit 92063cf no caller reaches the
 `lookup()` refusal, so M17 survives and grid row F13 now kills M33
 (`.ufo/waves/round-25/a2-build/advice/RevengerM17Sites.md`, causal run on

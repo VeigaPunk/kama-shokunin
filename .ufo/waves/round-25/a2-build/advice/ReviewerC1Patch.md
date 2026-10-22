@@ -73,7 +73,13 @@ Decision outside this patch: keep M17 registered as a survivor. Retiring it need
 
 Command: `python3 tests/report-audit/isolation-mutants.py --json`, cwd the scratch clone at 1fc41e34. Output: `out/ReviewerC1Patch/full-mutants.json`, `full-mutants.stderr`.
 
-FULL_RUN_RESULT_PENDING
+Exit 0 (wall 983.9 s). Pristine passed. 28 mutants: 26 killed. Surviving: `M17-ref-shadow` and `M20-log-sha-shape`.
+
+- `M17-ref-shadow`: grid exit 0, no failed rows. This is F1 above. Round 23 killed the same mutant by F13 (`out/ReviewerC1Patch/r23-changed-mutants.json`).
+- `M20-log-sha-shape`: grid exit 0, no failed rows. It is not part of this patch. It also survived at round 23: `corpus/lessons/round-23.md:120` records "survivor M20 (40-hex %H check)".
+- The other 26 are killed, each with its failed rows listed in `full-mutants.json`. Two of the changed ids: M11 by F20-quotepath-open-range, M33 by F13-ref-named-abbreviation.
+
+Kill count: round 23 had 30 of 31 killed. The tip has 26 of 28 killed. The four retired ids (M14, M22, M27, M29) leave the count, M33 joins it and is killed, and M17 moves from killed to surviving.
 
 ## Files I wrote
 
