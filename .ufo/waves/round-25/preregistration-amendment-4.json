@@ -1,0 +1,22 @@
+{
+ "schema": "kama-round-preregistration-amendment/v1",
+ "round": 25,
+ "attempt": 2,
+ "amends": "count-c2.py (amendments 2 and 3) and tools/kama-context-capacity.py request records",
+ "written_utc": "written after `date -u` printed 2026-10-22T09:38:47Z; the commit carrying this file is the authoritative time",
+ "source_of_findings": [
+  "KamaR25a2.CriticC2SizingA2 (.ufo/waves/round-25/a2-build/advice/CriticC2SizingA2.md): 15 bad receipts still scored 14 of 14 under the amendment-2 counter; proposed counter out/CriticC2SizingA2/count-c2-proposed.py rejects all 15 and, over 20000 mutated cells, accepts nothing the committed counter rejects",
+  "KamaR25a2.CriticLoadCells (.ufo/waves/round-25/a2-build/advice/CriticLoadCells.md): overlap of the two L-cell requests was asserted by a label, not recorded"
+ ],
+ "changes": [
+  "count-c2.py is replaced by the critic's proposed counter with a rewritten docstring: stricter only; it keeps amendment 3's last-pool-line and exact-build rules",
+  "the tool records per request t_start and t_end (process monotonic seconds), truncated and error_type, so the counter can check overlap if and only if the mode is concurrent",
+  "the final receipt is re-run after this amendment is committed; the earlier receipt at 5ea4fc44e1d0b5236e14e8b4881f446626a56682 stays in history and scores 11 of 14 under this counter (its L cells lack request times)"
+ ],
+ "unchanged": "cells, args, target `registered 14 observed 14 bound True missing []` (the full printed line)",
+ "closure_command": "git -C /home/vgpnk/Projects/shokunin/kama-shokunin show <landed tip>:.ufo/waves/round-25/count-c2.py | (cd /home/vgpnk/Projects/shokunin/kama-shokunin && python3 - .ufo/waves/round-25/final/context-capacity-receipt.json) runs the committed counter bytes",
+ "errata_to_amendment_2": [
+  "written_utc said 09:30Z; its commit 5388b7cf has committer time 2026-10-22T09:28:44Z (06:28:44 -03), so 09:30Z was an estimate later than the commit. The commit time is authoritative.",
+  "the C2 before value said `count-c2.py exit 2` at efe58e96; count-c2.py did not exist at efe58e96 (it was added in 5388b7cf). Correct before: at efe58e96 no receipt and no counter existed; run at 5388b7cf, the counter exits 2 and prints no count because the receipt is absent. `observed 0` is therefore an inference from the absent receipt, not a printed value."
+ ]
+}

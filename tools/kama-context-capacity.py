@@ -512,16 +512,24 @@ def _tokenize_prompt(port, cfg):
 
 
 def _completion(port, body):
-    """One POST /completion. Returns the request record."""
+    """One POST /completion. Returns the request record.
+
+    t_start/t_end are time.monotonic() seconds of this process, so the two
+    requests of one load cell can be checked for overlap."""
     t0 = time.monotonic()
     res = http_post(port, '/completion', body, timeout=360.0)
+    t1 = time.monotonic()
     record = {
         'status': res.get('status'),
         'error': None,
+        'error_type': None,
         'prompt_tokens': LOAD_PROMPT_TOKENS,
         'n_predict': LOAD_N_PREDICT,
         'tokens_predicted': None,
-        'elapsed_s': round(time.monotonic() - t0, 3),
+        'truncated': None,
+        'elapsed_s': round(t1 - t0, 3),
+        't_start': t0,
+        't_end': t1,
     }
     if res.get('error') is not None:
         record['error'] = f'network:{res["error"]}'
@@ -532,11 +540,13 @@ def _completion(port, body):
         doc = None
     if res.get('status') == 200 and isinstance(doc, dict):
         record['tokens_predicted'] = doc.get('tokens_predicted')
+        record['truncated'] = doc.get('truncated')
     else:
         err = doc.get('error') if isinstance(doc, dict) else None
         if isinstance(err, dict):
             record['error'] = (err.get('message') or err.get('type')
                                or json.dumps(err))
+            record['error_type'] = err.get('type')
         else:
             record['error'] = (res.get('body') or b'').decode(
                 'utf-8', errors='replace')[:500]
