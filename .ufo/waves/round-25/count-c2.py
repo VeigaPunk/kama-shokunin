@@ -11,13 +11,20 @@ printed separately and must be True for the claim value to stand.
 Usage: python3 .ufo/waves/round-25/count-c2.py [receipt.json]
 Prints: registered N observed M bound B
 Exit 0 always when the receipt parses; exit 2 when it cannot be read.
+
+Amendment 3 (stricter only, after wave seat MutationC2Counter): the pool
+must equal the last `llama_context: n_ctx = N` line as a whole integer, and
+the build binding must read `(build 11755, commit 704366d76)` exactly.
 """
 import json
+import re
 import sys
 
 RECEIPT = ".ufo/waves/round-25/final/context-capacity-receipt.json"
 MODEL_SHA = "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
 LOAD_REQUEST = {"prompt_tokens": 1000, "n_predict": 600}
+POOL_LINE = re.compile(r"llama_context: n_ctx\s+=\s+(\d+)\s*$")
+BUILD = re.compile(r"\(build 11755, commit 704366d76\)")
 CELLS = {
     "K1": ("-c 0", "config"),
     "K2": ("-c 2048 -np 2 --no-kv-unified", "config"),
@@ -52,8 +59,11 @@ def cell_ok(c, kind):
     if not (isinstance(lines, list) and lines
             and all(isinstance(x, str) and x for x in lines)):
         return False
-    if not any("llama_context: n_ctx " in x and x.rstrip().endswith(
-            str(c["kv_pool_n_ctx"])) for x in lines):
+    # amendment 3: the pool must equal the integer of the LAST captured
+    # `llama_context: n_ctx = N` line (fit can log a probe value first)
+    pools = [int(m.group(1)) for m in
+             (POOL_LINE.search(x) for x in lines) if m]
+    if not pools or pools[-1] != c["kv_pool_n_ctx"]:
         return False
     if kind.startswith("load"):
         want = "sequential" if kind == "load-sequential" else "concurrent"
@@ -92,7 +102,8 @@ def main():
             observed.append(cid)
     ver = d.get("server_version") if isinstance(d, dict) else None
     sha = d.get("model_sha256") if isinstance(d, dict) else None
-    bound = isinstance(ver, str) and "build 11755" in ver and sha == MODEL_SHA
+    bound = (isinstance(ver, str) and BUILD.search(ver) is not None
+             and sha == MODEL_SHA)
     missing = [k for k in CELLS if k not in observed]
     print("registered", len(CELLS), "observed", len(observed), "bound", bound,
           "missing", missing)
