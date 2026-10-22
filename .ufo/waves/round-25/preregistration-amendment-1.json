@@ -1,0 +1,26 @@
+{
+ "schema": "kama-round-preregistration-amendment/v1",
+ "round": 25,
+ "amends": ".ufo/waves/round-25/preregistration.json (bytes kept as written)",
+ "written_utc": "2026-10-22T08:30Z (approximate; the file mtime is authoritative)",
+ "source_of_findings": "build-wave critic KamaR25.CriticC2Sizing (.ufo/waves/round-25/build/advice/CriticC2Sizing.md)",
+ "corrections": [
+  {
+   "what": "false timestamp",
+   "detail": "preregistration.json says written_utc 2026-10-22T08:31:00Z. That value was typed, not read from a clock, and is false. File mtimes: pilot run ended 08:18:50Z (scratch srv.log), census before 08:20:23Z, preregistration.json 08:21:12Z, pilot.md 08:21:54Z. The pilot run preceded the preregistration; the pilot write-up file was written 42 s after it. The wave was dispatched at 08:23:56Z."
+  },
+  {
+   "what": "K1-K3 are replication, not predictions",
+   "detail": "K1, K2 and K3 predictions copy the pilot's observed rows. They are labelled replication; prediction grading covers K4, K5, K7 and K8 only. K6 carries no prediction and is a measurement only; the critic's outside source-derived value (padded per-slot 512, pool 1536, made at 08:27Z before any K6 run) is recorded as an outside prediction, not the author's."
+  },
+  {
+   "what": "stricter C2 counting rule (no narrowing: the target value is unchanged and harder to meet)",
+   "detail": "A cell counts as observed only when its id and args equal the preregistered cell, and the receipt carries for it an integer per-slot n_ctx from /props, an integer total_slots, a non-empty integer list of /slots n_ctx, an integer /v1/models meta.n_ctx_train, and at least one captured server log line. Truthy strings, duplicate ids and extra cells do not count. The final counting command implements exactly this and is pasted in the report."
+  },
+  {
+   "what": "added receipt field",
+   "detail": "Each cell also records every server log line matching n_ctx_slot, kv_unified, capping, rounding, KV pool sizing or n_ctx_seq, because /props, /slots and /v1/models meta read one server function and their agreement is not independent evidence; the KV pool size appears only in the log."
+  }
+ ],
+ "unchanged": "C1 and C2 after-values (stale 0; observed 8 of 8), axes, cells and non-narrowing rules"
+}
