@@ -1,0 +1,53 @@
+--- pinned fa3b62ae corpus/lessons/round-25.md
++++ lane worktree corpus/lessons/round-25.md
+@@ -21,7 +21,7 @@
+ |---|---|---|
+ | S106 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/common/fit.cpp | line 270: "llama_context would use only hp_nct in total for n_ctx == 0, resolve the context before measuring anything else:" |
+ | S107 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/src/llama-context.cpp | line 391: "n_ctx is not divisible by n_seq_max - rounding down to %u" |
+-| S108 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server.cpp | lines 172-173: "params.n_parallel = 4; params.kv_unified = true;" and line 184: "params.n_ctx = params.n_parallel * params.kv_unified_per_slot;" |
++| S108 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server.cpp | line 172: "params.n_parallel = 4;"; line 173: "params.kv_unified = true;"; line 184: "params.n_ctx = params.n_parallel * params.kv_unified_per_slot;" |
+ | S109 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp | line 4301: `err = "Context size has been exceeded."` (guarded by line 4298 `if (n_batch == 1 && ret == 1)`) |
+ | S110 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/common/arg.cpp | line 1647: "disable context reduction in llama_params_fit if the user explicitly requests the full context size:" |
+ | S111 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/common/common.cpp | line 1245: `if (params.fit_params) {` and line 1270: `common_fit_params(params.model.path.c_str(), &mparams, &cparams,` |
+@@ -48,8 +48,10 @@
+ | stale-anchor: a registered counting instrument drifted from the source it measures, and nobody re-ran it at landing | `round-24-verifier-spotcheck.md:80-82`, routed at `:151-152`; at efe58e96 the C1 command printed `registered 27 stale 2 ['M11-listing-surrogates', 'M17-ref-shadow']`; the M11 literal stopped matching at round-24 commit 92063cf (`a2-build/advice/RevengerM11Element.md`) | none — KQ28-KQ35 do not ask for a registered count to be re-run when the measured source changes (`a2-build/advice/ScribeMistake.md`) | KQ36 below. Shown able to fail: the same command prints `stale 2` at efe58e96 and `stale 0` at 1fc41e34 (both exit 0; `a2-build/advice/ExecC1BaseRun.md`, `ScribeMistake.md`) |
+ | survival hidden by a same-line re-anchor | M17's re-anchored literal is the round-23 line, but since 92063cf no caller reaches it; F13's kill moved to the new M33 (`a2-build/advice/RevengerM17Sites.md`, causal run on ed1cc3a; `CriticC1NoHarm.md`) | CriticC1NoHarm and MutationM17M33Kill (wave-1 attack seats) | the instrument docstring and SKILL registry row now say M17 survives and why; the full run lists it (`final/c1/c1-tip-mutants.json`: 28 mutants, 26 killed, survivors M17 and M20) |
+ | counter accepted a wrong value | the amendment-2 counter accepted a pool line ending in 12048 for a pool of 2048, the fit-probe pool for X1, a build string `117550`, and unrecorded overlap for L1 (`MutationC2Counter.md`, `CriticC2SizingA2.md`) | the two wave-1 attack seats | amendments 3 and 4: stricter counter. Shown able to fail on synthetic receipts (amendment 3 `check_after_change`; `a2-build/out/CriticC2SizingA2/counter-attacks-proposed.out`) and on the first committed receipt, which scores 11 of 14 under amendment 4 because it lacks request times |
+-| chronology: an amendment written after the receipt it governs | amendment 3 was committed (c808ba07) after the first receipt (5ea4fc44) | the author, on reading CriticC2SizingA2 | amendment 4 (46fb04bd) was committed before the receipt was re-run (5c95c8f1); the earlier receipt stays in history |
+-| false timestamp repeated | amendment 2 `written_utc` 09:30Z is later than its commit (09:28:44Z); the same class amendment 1 corrected | CriticC2SizingA2 | erratum in amendment 4; later amendments name the observed `date -u` output and defer to the commit time |
++| misroot: a seat wrote by a relative path into the fleet root | wave-1 seat ReviewerC1Patch (`a2-build/advice/ReviewerC1Patch.md:94`, detail at `a2-build/out/ReviewerC1Patch/evidence.md:73`) first wrote two files under the fleet root, copied them byte-identical (`cmp`) into the lane and removed the fleet copies and the three directories it had created; the falsify scout confirmed no copy remains at the fleet root (`a2-falsify/advice/ScoutMisroot.md`). Seats also left files under `/tmp` outside their scratch (`CriticC1Calibration.md`, `ScribeQualityCriterion.md`, and three unattributed copies listed by ScoutMisroot) | the wave context rule "every `Report:` trailer path is relative to the lane" (it caught the report path, not the artifact path) | the falsify-wave context repeats the absolute-path rule for artifacts; the L1 misroot sweep before the report checks the fleet root |
++| chronology: an amendment written after the receipt it governs | amendment 3 was committed (c808ba07) after the first receipt (5ea4fc44) | amendment 3 disclosed its own order (`order_disclosure`); CriticC2SizingA2's report followed a minute later | amendment 4 (46fb04bd) was committed before the receipt was re-run (5c95c8f1); the earlier receipt stays in history |
++| false timestamp repeated | amendment 2 `written_utc` 09:30Z is later than its commit (09:28:44Z), and amendment 3 `written_utc` 09:40Z is later than its commit (09:38:45Z); the same class amendment 1 corrected | CriticC2SizingA2 and ReviewerAmendment2 | errata in amendment 4 and `errata-attempt-2.json`; amendment 4 names only the observed `date -u` output and defers to the commit time |
++| axis misfiled: drift declared as a calibration claim | C1 counts instrument-to-auditor anchor drift; the SCORECARD and SKILL statements were true when written (counter `stale 0` at e876b95 and ed1cc3a, stale from 92063cf) (`a2-falsify/advice/CriticC1AxisFit.md` §1-4; `a2-build/advice/CriticC1Calibration.md`) | the prompt's claim-sizing rule for calibration claims (`.ufo/prompts/kama-round-25.md:347-348`), applied by two non-author critics; the preregistration did not apply it | before declaring a calibration claim, name the SCORECARD or SHONEN statement that is false at the before revision (lesson §C1 result). Not yet shown able to fail: no later round has applied it |
+ 
+ ## Routed defects from the round-24 spot-check
+ 
+@@ -85,13 +87,21 @@
+ 1fc41e34: exit 0, pristine passed, 28 mutants, 26 killed, survivors M17 and
+ M20 (`final/c1/`), replicated by a seat (`a2-build/advice/ExecC1TipReplicate.md`).
+ 
+-Axis fit is contested. The critic seat CriticC1Calibration holds that the
+-command counts instrument-to-auditor anchor mismatches, not SCORECARD or
+-SHONEN self-assessment mismatches, and that SCORECARD line 1166 is a
+-historical round-23 measurement. Its correction text is filed verbatim in
+-SCORECARD §Round 25. The author does not relabel the axis after landing; the
+-closure decides. The before command stops on reaching M11, after earlier
+-mutants have run, and emits no JSON; it does not abort before any mutant.
++Axis fit is not established. The wave-1 critic CriticC1Calibration and the
++wave-2 critic CriticC1AxisFit both hold that the command counts
++instrument-to-auditor anchor mismatches, not SCORECARD or SHONEN
++self-assessment mismatches. The wave-2 critic showed that the self-assessment
++was true when written (counter `stale 0` at e876b95 and ed1cc3a; stale from
++92063cf on), so the defect is drift (freshness), not overreach. The author
++accepts this and does not relabel the axis after landing: C1 is repair
++evidence, and the round does not show the lowest-axis obligation. The full
++instrument run (not the counting command) stops on reaching M11, after
++M01-M10 have run, and emits no JSON.
++
++Lesson for later rounds: under the 2026-10-22 claim-sizing rule, a
++calibration claim needs a statement in SCORECARD or SHONEN that is false
++against the repo at the before revision. Check that before declaring the
++axis.
+ 
+ ## C2 result
+ 

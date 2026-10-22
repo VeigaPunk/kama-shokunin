@@ -48,15 +48,15 @@ Both are wording defects. Neither one changes the C1 value or any measured outco
 4. **No hidden survivor.** The survivors are M17 and M20.
    - M20 already survived at round 23 (`LOG.md:1396`, `corpus/lessons/round-23.md:120`, `SCORECARD.md:1166`), so it is not new.
    - M17 is new. It is disclosed in the instrument docstring, `LOG.md:1648`, `SCORECARD.md:1260,1278`, `QUALITY.md:203`, the lesson and the report draft. The only gap is the SKILL row (H1).
-5. **M17 is an equivalent mutant (counterexample attempt failed).** If any production input could reach the `lookup()` refusal, M17 surviving would be a grid gap rather than an equivalent mutant. The only non-test `lookup()` call without a peel is `tools/report-landing-audit.py:538` (`lookup(stores, full_tokens)`). Its tokens come from `FULL = re.compile(r"(?<![0-9A-Za-z])[0-9a-f]{40}(?![0-9A-Za-z])")` (`:90`), so it only ever sees lowercase 40-hex tokens. The self-test calls at `:1170-1174` use an ambiguous short prefix, which returns before the check, or a full id.
+5. **M17 appears equivalent on production call paths examined (counterexample attempt failed).** If a production input could reach the `lookup()` refusal, M17 surviving would be a grid gap rather than an equivalent mutant. The only non-test `lookup()` call without a peel is `tools/report-landing-audit.py:538` (`lookup(stores, full_tokens)`). Its tokens come from `FULL = re.compile(r"(?<![0-9A-Za-z])[0-9a-f]{40}(?![0-9A-Za-z])")` (`:90`), so it only ever sees lowercase 40-hex tokens. The self-test calls at `:1170-1174` use an ambiguous short prefix, which returns before the check, or a full id.
    - Probe (`out/CriticC1NoNewHarm/ref-shadow-probe.txt`, git 2.56.0, scratch repository): with `refs/heads/<A>` and `refs/tags/<A>` both pointing at a different commit B, `git cat-file --batch-check` resolves the 40-hex `<A>` to A itself, and a 12-hex prefix of A also resolves to A. Only a ref whose name equals the token (`deadbeef`) resolves to the ref target B, and that is the abbreviation path through `bare_objects()` and M33. Exit 0.
-   - So, for git 2.56.0, the `lookup()` refusal is unreachable in production and M17 cannot be killed. [INFERENCE] The same holds for other git versions from 2.45 up, because git treats a full-length hex name as an object id before it consults refs; only 2.56.0 was probed. This matches the docstring's own [INFERENCE] at `isolation-mutants.py:36-39`.
+   - [INFERENCE] The `lookup()` refusal is unreachable on these production paths with Git 2.56.0, consistent with M17's survival. The finite probe is not a universal equivalence proof and establishes nothing about untested Git versions. This matches the docstring's qualified [INFERENCE] at `isolation-mutants.py:36-39`; no defensive-only credit follows.
    - Not retiring M17 follows preregistration non-narrowing rule 2 (retire only with a revenger proof). Keeping the round-23 line for M17 and giving the live site a new id satisfies rules 1 and 3 by text.
    - Tradeoff for the judge, not a defect: the id that carried the round-23 F13 kill now points at a likely equivalent mutant, and the new id M33 carries the kill. The opposite assignment would have kept M17's kill history but moved its line. The choice is disclosed.
 6. **No id reuse inside the registered instrument.** M33 is new to `isolation-mutants.py` and to the RETIRED list. The short label "M33" was used once before, in a seat-local harness (`.ufo/waves/round-21/falsify/out/C1SelftestReview/mutation-harness.py:151`, `M33-now-fallback-removed`). That was a different instrument and was never registered. Full ids differ, so this is not a reuse. A reader who abbreviates to "M33" should name the instrument.
 7. **No history rewrite.**
    - `git reflog show master` lists only linear "export from jj" fast-forwards: 147f5bd → efe58e9 → 5388b7c → 1fc41e3 → 5ea4fc4 → c808ba0 → 46fb04b → 5c95c8f → fa3b62a → 46be41c.
-   - `jj --ignore-working-copy op log` shows only snapshot, commit, point-bookmark and push operations. There are no abandon, rebase or squash operations.
+   - The inspected `jj --ignore-working-copy op log` excerpt shows snapshot, commit, point-bookmark and push operations, with no abandon, rebase or squash in that excerpt. This is supporting evidence, not proof that no historical rewrite ever occurred.
    - `git merge-base --is-ancestor` holds for efe58e96 and for 147f5bdd against fa3b62ae.
    - No round-20 to round-24 path and no `.ufo/reports/` path is in `git diff --name-only efe58e96 fa3b62ae`.
    - `LOG.md` and `SCORECARD.md` show zero deleted lines in `git diff --numstat`. Only `SKILL.md` (7), `corpus/SOURCES.md` (1, the S060 used-by change) and `isolation-mutants.py` (3) delete lines.
@@ -83,7 +83,7 @@ Both are wording defects. Neither one changes the C1 value or any measured outco
 
 ## Full instrument run at fa3b62ae (supporting, not the claim value)
 
-Command, from my own clone at fa3b62ae (`git rev-parse HEAD` printed `fa3b62ae6475d111eb466d79af616aeebb08bbb9`, clean tree): `python3 tests/report-audit/isolation-mutants.py --json`, started 2026-10-22T10:10Z. A first launch failed at once with exit 127 because `/usr/bin/time` is not installed. That launch ran nothing, and I relaunched with the bash `time` keyword. Result: pending at the time this report was written; see the update below if one is present. Unrun means unverified. Until then, the "unchanged behaviour at fa3b62ae" statement rests on item 1: no executable line, auditor byte or grid byte changed between 1fc41e34 and fa3b62ae.
+Command, from my own clone at fa3b62ae (`git rev-parse HEAD` printed `fa3b62ae6475d111eb466d79af616aeebb08bbb9`, initially clean tree): `python3 tests/report-audit/isolation-mutants.py --json`. Started 2026-10-22T10:10:20Z, ended 10:26:43Z, exit **0**, empty stderr. Bash timing: real 16m23.403s, user 18m21.097s, sys 3m55.027s. Output: pristine passed, 28 mutants, 26 killed, survivors `M17-ref-shadow` and `M20-log-sha-shape`, four unchanged retired IDs. Per-mutant rows equal the retained 1fc41e34 run (`row-identical-to-1fc41e34-run True`). Evidence: `out/CriticC1NoNewHarm/full-tip-summary.txt`, with raw `full-tip.*` in scratch. A first launch failed with exit 127 because `/usr/bin/time` is absent; it invoked no instrument, and the successful launch used bash `time`.
 
 ## Files written
 
@@ -91,6 +91,7 @@ Command, from my own clone at fa3b62ae (`git rev-parse HEAD` printed `fa3b62ae64
 - `.ufo/waves/round-25/a2-falsify/out/CriticC1NoNewHarm/static-count.txt`
 - `.ufo/waves/round-25/a2-falsify/out/CriticC1NoNewHarm/kill-rows-r23-vs-r25.txt`
 - `.ufo/waves/round-25/a2-falsify/out/CriticC1NoNewHarm/ref-shadow-probe.txt`
+- `.ufo/waves/round-25/a2-falsify/out/CriticC1NoNewHarm/full-tip-summary.txt`
 - Scratch only, under `/fast/scratch/hyaku/kama-r25a2w2/CriticC1NoNewHarm/`: `clone/` (own clone at fa3b62ae), `t-<rev>/` archive extracts, `refprobe/`, and the `full-tip.*` run files.
 
 Report: .ufo/waves/round-25/a2-falsify/advice/CriticC1NoNewHarm.md

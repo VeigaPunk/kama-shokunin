@@ -1,0 +1,6 @@
+mutant	description	committed_counter_output	counter_exit	raw_mismatch_count	first_raw_mismatches
+M1	K1 props_n_ctx 2048 -> 2047, receipt field only	registered 14 observed 14 bound True missing []	0	1	K1: props_n_ctx equals props.body default_generation_settings.n_ctx
+M2	L1 both requests status 500 -> 200, error text kept	registered 14 observed 14 bound True missing []	0	2	L1: request 0: send_error in log is status 500 server_error with same text; L1: request 1: send_error in log is status 500 server_error with same text
+M3	K5 pool 4096 -> 2048 in embedded log and pool fields, self-consistent	registered 14 observed 14 bound True missing []	0	3	K5: log_lines equals exact LOG_KEEP filter of server.log; K5: kv_pool_candidates equals every llama_context n_ctx line in server.log; K5: kv_pool_n_ctx equals last llama_context n_ctx line
+M4	K2 raw_props hash replaced in receipt map only	registered 14 observed 14 bound True missing []	0	1	K2: sha256 of K2.props.body equals receipt raw.raw_props
+M5	K2 props.body bytes changed in memory (n_ctx 1024 -> 1025), receipt unchanged	registered 14 observed 14 bound True missing []	0	2	K2: sha256 of K2.props.body equals receipt raw.raw_props; K2: props_n_ctx equals props.body default_generation_settings.n_ctx

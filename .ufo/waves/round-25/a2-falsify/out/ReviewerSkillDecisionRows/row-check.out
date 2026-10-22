@@ -1,0 +1,81 @@
+# Round-25 decision-row checks (read-only)
+pin fa3b62ae6475d111eb466d79af616aeebb08bbb9
+master 46be41cf674301953837c8863cd2026e8a21fcb0
+pin is an ancestor of master: True
+bytes SKILL.md | pin 036ca4554e1fee67 94578 | worktree e1de48c7d6744c63 95074 | same False
+bytes corpus/knowledge/context-capacity.md | pin 0959b2342c74b23e 12358 | worktree 864c0f2acf93753c 16434 | same False
+bytes .ufo/waves/round-25/final/context-capacity-receipt.json | pin 78c51385991b1261 413554 | worktree 78c51385991b1261 413554 | same True
+
+## 1. Decision table at the pin (lines 675-690) and format
+675 pipes - 
+676 pipes - ### Round-25 decision rows: declared versus served context capacity
+677 pipes - 
+678 pipes - Grounded in `corpus/knowledge/context-capacity.md` (S106-S113, S060) and the
+679 pipes - receipt `.ufo/waves/round-25/final/context-capacity-receipt.json`. Scope:
+680 pipes - build 11755 (704366d76), fixture `stories260K.gguf` sha256 `270cba1b…256d`,
+681 pipes - training context 2048, no sliding-window or rope-scaling keys, fit never
+682 pipes - lowers a context on this fixture. Other builds and large models: re-observe.
+683 pipes - 
+684 pipes 5 | Symptom | First check | Verdict | Action |
+685 pipes 5 |---|---|---|---|
+686 pipes 5 | A consumer needs the served context; `/props` reports `n_ctx` | `/props` `default_generation_setti
+687 pipes 5 | `-c` unset, `-np` given, split cache | The launch flags and the verbose startup log (`llama_contex
+688 pipes 5 | Several requests must run at once on one server | Is the cache unified (`kv_unified = 'true'` in t
+689 pipes 5 | A claim needs the KV pool size | The startup log at `-lv 4` or `-v` | None of `/props`, `/slots` a
+690 pipes - 
+header line 127 equals header line 684: True
+separator line 128 equals separator line 685: True
+
+## 2. Receipt cells against raw bodies (committed receipt)
+K1  -c 0                                           props=2048  slots=[2048, 2048, 2048, 2048] total=4 meta.n_ctx=2048 meta.n_ctx_train=2048 pool(last log line)=2048 kv_unified=true raw_hashes_ok=True receipt_fields_agree=True
+K2  -c 2048 -np 2 --no-kv-unified                  props=1024  slots=[1024, 1024] total=2 meta.n_ctx=1024 meta.n_ctx_train=2048 pool(last log line)=2048 kv_unified=false raw_hashes_ok=True receipt_fields_agree=True
+K3  -c 2048 -np 2 --kv-unified                     props=2048  slots=[2048, 2048] total=2 meta.n_ctx=2048 meta.n_ctx_train=2048 pool(last log line)=2048 kv_unified=true raw_hashes_ok=True receipt_fields_agree=True
+K4  -c 1024 -np 1                                  props=1024  slots=[1024] total=1 meta.n_ctx=1024 meta.n_ctx_train=2048 pool(last log line)=1024 kv_unified=false raw_hashes_ok=True receipt_fields_agree=True
+K5  -c 4096 -np 1                                  props=2048  slots=[2048] total=1 meta.n_ctx=2048 meta.n_ctx_train=2048 pool(last log line)=4096 kv_unified=false raw_hashes_ok=True receipt_fields_agree=True
+K6  -c 1000 -np 3 --no-kv-unified                  props=512   slots=[512, 512, 512] total=3 meta.n_ctx=512 meta.n_ctx_train=2048 pool(last log line)=1536 kv_unified=false raw_hashes_ok=True receipt_fields_agree=True
+K7  -np 2 --kv-unified-per-slot 512                props=512   slots=[512, 512] total=2 meta.n_ctx=512 meta.n_ctx_train=2048 pool(last log line)=1024 kv_unified=false raw_hashes_ok=True receipt_fields_agree=True
+K8  -c 4096 -np 4 --kv-unified --kv-unified-per-slot 512 props=512   slots=[512, 512, 512, 512] total=4 meta.n_ctx=512 meta.n_ctx_train=2048 pool(last log line)=4096 kv_unified=true raw_hashes_ok=True receipt_fields_agree=True
+X1  -np 4 --no-kv-unified                          props=2048  slots=[2048, 2048, 2048, 2048] total=4 meta.n_ctx=2048 meta.n_ctx_train=2048 pool(last log line)=8192 kv_unified=false raw_hashes_ok=True receipt_fields_agree=True
+X2  -c 8192 -np 4 --no-kv-unified                  props=2048  slots=[2048, 2048, 2048, 2048] total=4 meta.n_ctx=2048 meta.n_ctx_train=2048 pool(last log line)=8192 kv_unified=false raw_hashes_ok=True receipt_fields_agree=True
+X3  -np 4 --no-kv-unified --fit off                props=512   slots=[512, 512, 512, 512] total=4 meta.n_ctx=512 meta.n_ctx_train=2048 pool(last log line)=2048 kv_unified=false raw_hashes_ok=True receipt_fields_agree=True
+L1  -c 0                                           props=2048  slots=[2048, 2048, 2048, 2048] total=4 meta.n_ctx=2048 meta.n_ctx_train=2048 pool(last log line)=2048 kv_unified=true raw_hashes_ok=True receipt_fields_agree=True
+L2  -c 8192 -np 4 --no-kv-unified                  props=2048  slots=[2048, 2048, 2048, 2048] total=4 meta.n_ctx=2048 meta.n_ctx_train=2048 pool(last log line)=8192 kv_unified=false raw_hashes_ok=True receipt_fields_agree=True
+L3  -c 0                                           props=2048  slots=[2048, 2048, 2048, 2048] total=4 meta.n_ctx=2048 meta.n_ctx_train=2048 pool(last log line)=2048 kv_unified=true raw_hashes_ok=True receipt_fields_agree=True
+cell start range 2026-10-22T09:42:42.481Z to 2026-10-22T09:42:49.702Z
+cell stop range  2026-10-22T09:42:42.985Z to 2026-10-22T09:42:50.463Z
+entry verified-at at the pin: verified-at: 2026-10-22 — sources opened this round; 14 fixture cells observed 2026-10-22T09:36:51Z to 09:36:59Z on the lane-owned fixture, torn down in the same run
+
+## 3. K1 versus X2 raw bodies; pool or layout keys
+props fields differing K1 vs X2: ['media_marker']
+slots fields differing K1 vs X2: none
+models fields differing K1 vs X2: ['data[0].created']
+K1 props keys naming kv, unified, pool or layout: none
+K1 models keys naming kv, unified, pool or layout: none
+K1 slots keys naming kv, unified, pool or layout: none
+
+## 4. Fixture GGUF header (offline read; no server)
+bytes 1185376 sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d | receipt model_sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d | same True
+general.architecture llama | llama.context_length 2048
+kv pairs 19 | keys containing sliding: none
+keys containing rope with scal or yarn: none
+
+## 5. Round-20 nctx-crosscheck predict() against observed per-slot n_ctx
+K1 fit_on  round20 2048 observed 2048 agree
+K2 fit_on  round20 1024 observed 1024 agree
+K3 fit_on  round20 2048 observed 2048 agree
+K4 fit_on  round20 1024 observed 1024 agree
+K5 fit_on  round20 2048 observed 2048 agree
+K6 fit_on  round20 512 observed 512 agree
+K7 fit_on  round20 512 observed 512 agree
+K8 fit_on  round20 512 observed 512 agree
+X1 fit_on  round20 512 observed 2048 DISAGREE
+X2 fit_on  round20 2048 observed 2048 agree
+X3 fit_off round20 512 observed 512 agree
+L1 fit_on  round20 2048 observed 2048 agree
+L2 fit_on  round20 2048 observed 2048 agree
+L3 fit_on  round20 2048 observed 2048 agree
+config cells (all except X1 and L1-L3) agreeing: 10 of 10
+
+DONE
+
+# exit code: 0

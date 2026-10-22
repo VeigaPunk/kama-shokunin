@@ -1,0 +1,36 @@
+Seat: KamaR25a2.RerunC1FullMutants
+Round: kama round 25, attempt 2, wave 2 (falsify)
+Target: python3 tests/report-audit/isolation-mutants.py --json
+Commit under test: fa3b62ae6475d111eb466d79af616aeebb08bbb9
+
+=== clone (per lane contract; git-writing checks run only in the clone) ===
+git clone --no-hardlinks /home/vgpnk/Projects/shokunin/kama-shokunin \
+    /fast/scratch/hyaku/kama-r25a2w2/RerunC1FullMutants/clone
+  -> exit 0
+cd /fast/scratch/hyaku/kama-r25a2w2/RerunC1FullMutants/clone
+git checkout fa3b62ae6475d111eb466d79af616aeebb08bbb9
+  -> exit 0, HEAD = fa3b62ae6475d111eb466d79af616aeebb08bbb9
+
+=== run ===
+cd /fast/scratch/hyaku/kama-r25a2w2/RerunC1FullMutants/clone
+python3 tests/report-audit/isolation-mutants.py --json \
+    > .../RerunC1FullMutants/run.json 2> .../RerunC1FullMutants/run.err
+  -> exit code 0
+  -> wall time 983.45 s (16 min 23 s); harness reported EXITCODE=0
+  -> run.json 5959 bytes; run.err 0 bytes
+
+environment: python 3.14.8, git 2.56.0 (Arch Linux)
+
+=== comparison ===
+python3 compare.py run.json \
+    /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-25/final/c1/c1-tip-mutants.json \
+    diff-table.md
+  -> exit 0 (0 differences)
+cmp run.json .../final/c1/c1-tip-mutants.json
+  -> exit 0, byte identical
+sha256 of both JSON files:
+  75ad1e03dff31571dcfe85eca26d7154e509daa60ca092238d6942459c56eda1
+
+=== clone state after the run ===
+git status --porcelain=v1
+  -> exit 0, empty output (the instrument works on temporary copies only)
