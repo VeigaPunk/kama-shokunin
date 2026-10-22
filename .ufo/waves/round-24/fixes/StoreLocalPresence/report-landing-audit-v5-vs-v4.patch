@@ -1,0 +1,83 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit-v4.py	2026-10-21 17:11:14.770542509 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit-v5.py	2026-10-21 17:18:44.521327157 -0300
+@@ -734,29 +734,30 @@
+     """(missing, opaque): the object ids the local history references but
+     the repository cannot serve, and the subset of them that hides names.
+ 
+-    Two walks over the same roots: one with `--objects` (every missing id,
+-    blobs included) and one with `--filter=blob:none` (the missing ids
+-    that are not blobs, so a missing tree or commit is visible: the names
+-    of the objects below it are not known at all). `rev-list
+-    --missing=print` names the missing ids with a `?` prefix instead of
+-    failing; the --no-lazy-fetch isolation keeps a promisor remote
+-    untouched. The roots are every present object of the store, so a
+-    dangling commit, tree or tag that references a missing object is seen
+-    too; this is a diagnosis of what the store cannot serve, never a
+-    precondition on the audit. The commit graph is switched off for the
+-    walks so that it cannot hide an unavailable object."""
++    Two walks, two root sets. The first names EVERY missing object of the
++    store: its roots are all present objects, so a dangling commit, tree
++    or tag that references a missing object is seen too, and a citation
++    of that object is still unknown. The second walk names the missing
++    objects that hide names (a missing tree or commit), and its roots are
++    the pinned root ONLY: a hole behind the audit's own root is relevant,
++    unreachable garbage in the store is not. `rev-list --missing=print`
++    names the missing ids with a `?` prefix instead of failing; the
++    --no-lazy-fetch isolation keeps a promisor remote untouched. The
++    commit graph is switched off for the walks so that it cannot hide an
++    unavailable object."""
+     roots = present_roots(repo)
+     if root not in roots:
+         roots.append(root)
+-    stdin = "".join(f"{r}\n" for r in roots)
+ 
+-    def walk(extra):
++    def walk(extra, walk_roots):
+         out = git(repo, "-c", "core.commitGraph=false", "rev-list",
+                   "--objects", "--missing=print", "--no-object-names", *extra,
+-                  "--stdin", stdin=stdin)
++                  "--stdin", stdin="".join(f"{r}\n" for r in walk_roots))
+         return {line[1:] for line in out.split("\n") if line.startswith("?")}
+ 
+-    return walk(()), walk(("--filter=blob:none",))
++    missing = walk((), roots)
++    opaque = walk(("--filter=blob:none",), [root])
++    return missing, opaque
+ 
+ 
+ def build_store(repo, root):
+@@ -1439,6 +1440,34 @@
+                 lane, git(lane, "rev-parse", "HEAD").strip())
+             check("blob-hole-is-not-an-opaque-hole",
+                   hole in missing and hole not in opaque)
++            # unreachable opaque garbage must not block an ordinary audit:
++            # a dangling tree that references a missing blob is not a
++            # dependency of the audited root
++            dangling_blob = git(lane, "hash-object", "-w", "--stdin",
++                                stdin="dangling blob\n").strip()
++            dangling_tree = git(lane, "mktree", stdin=f"100644 blob "
++                                  f"{dangling_blob}\td\n").strip()
++            Path(lane, git(lane, "rev-parse", "--git-path",
++                           "objects").strip(),
++                 dangling_blob[:2], dangling_blob[2:]).unlink()
++            fake = "1234567890abcdef1234567890abcdef12345678"
++            garbage_draft = Path(tmp, "garbage-draft.md")
++            garbage_draft.write_text(
++                "## Work performed\n" + fake + "\n"
++                "## Landed changes\n- `" + a[:9] + "` work\n",
++                encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={garbage_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("unreachable-opaque-garbage-does-not-block",
++                  rc == 1 and ("unresolved-full-hash", fake) in kinds)
++            cited_draft = Path(tmp, "cited-dangling-draft.md")
++            cited_draft.write_text(
++                "## Work performed\n" + dangling_blob + "\n"
++                "## Landed changes\n- `" + a[:9] + "` work\n",
++                encoding="utf-8")
++            check("cited-missing-behind-a-dangling-tree-is-unknown",
++                  is_error(lambda: run(_ns(base, report=[f"1={cited_draft}"]))))
+             tree = git(lane, "rev-parse", f"{mid}^{{tree}}").strip()
+             Path(lane, git(lane, "rev-parse", "--git-path",
+                            "objects").strip(),

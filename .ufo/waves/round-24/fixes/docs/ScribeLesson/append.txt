@@ -1,0 +1,115 @@
+Round 24 lesson — falsify-wave continuation (append-only DRAFT TEXT)
+Append to: corpus/lessons/round-24.md
+Prepared by: ScribeLesson (KamaR23-2.ScribeLesson-2), leaf seat, 2026-10-21.
+
+Status: draft text only. No production file was edited by this seat. The L1
+appends this text and adds the measurements it observes. No final number,
+candidate numerator, exit count or landed hash is claimed here; no new source
+row is introduced; the source-consumer (used-by / facet / raw-quote) append
+blocks belong to the separately owned ConnSources packet and are not repeated.
+Reading pointers: selected core proposal
+fixes/StoreLocalPresence/report-landing-audit-v9.py (sha256 b9be4f…e3b26f);
+selected grid proposal fixes/GridAttestationV3/promisor-grid.py (sha256
+437128b8…5e102c); mutation contract fixes/MutationEvidenceV6/promisor-mutants.py
+(sha256 24549daa…c8f9ed6); dispositions
+.ufo/waves/round-24/proposal-evidence-dispositions.json.
+
+## Mistakes — round24 falsify-wave continuation
+
+| Class | Evidence | Captured-by | Fix / demonstrated boundary |
+|---|---|---|---|
+| cross-store presence: the "this store holds the object" fact was taken from the merge of every audited store while the classification was per store, so an object living in the fleet only looked present in the lane and the lane's own probe turned it into `unknown` (exit 2 `unknown: unavailable required object: 28d34a63…`) where the contract wants the proved mismatch (exit 1 `landed-unresolved`) | StoreLocalPresence README §"The defect"; CodeLookupMerge | falsify wave, before the candidate was integrated | presence is the store's own bare answer, never the merge of all stores; no reverse-order workaround, no metadata classifier, no completeness gate, no weakening of the unreadable-tag case |
+| unknown outranked a known wrongtype for the same canonical object: a tag present in both stores whose target only one store can serve merged to `unknown` (exit 2) although another store had proved the mismatch | StoreLocalPresence README §"Second defect" (measured: target in the fleet only / lane only → `wrongtype`, exit 1; in neither → `unknown`, exit 2) | falsify wave | reconciliation is per canonical object id; objects behind one abbreviated name are not reconciled, so the round-23 ambiguity behaviour stands |
+| an unselected round's ledger row could decide the verdict: every hex correction was read and every unresolvable row counted, so a row of an unaudited round made a clean selected-round audit fail (exit 1) | StoreLocalPresence README §"Third proposal" §1 (CodeErrataBoundary F1) | falsify wave | the correction lookup inputs and the invalid-row comprehension are both restricted to the selected rounds; no object of an unselected round is read at all |
+| required reads failed as bare git errors: the committed errata read and the open-range fleet listing returned a raw git message instead of the required-read class | StoreLocalPresence README §"Third proposal" §2 (CodeRequiredReads) and §"Fifth proposal" (CaseFleetTree M1) | falsify wave | required reads carry the cause and the path inside the message and add the `unavailable required object:` class; a fatal cause (timeout/OS) does not spend a second diagnostic timeout; the 20 s per-call deadline is unchanged |
+| the opaque (name-hiding) fallback was computed over the whole store, so unrelated unreachable garbage in a repository made an ordinary audit refuse where the original local contract wants the ordinary finding (the reported 1 → 2 → 1) | StoreLocalPresence README §"Seventh artifact" (CodePerRunCache F2) | falsify wave | two root sets: known unavailable referenced ids are encountered from all present local commit/tree/tag roots, while opaque missing-name boundaries come only from the pinned audit root; no whole-store or reachable-tree completeness precondition; all-resolved inputs stay runnable despite unused holes |
+| a harness fault could be scored as a legitimate refusal: the grid kept only a 300-character stderr tail, so an internal-error identity could be truncated away and an exit 2 could earn a mutant kill | GridAttestationV3 README §"The gap" (DocQualityF1) | falsify wave | the internal-error identity is captured from the full stderr as the boolean row field `internal_error`; such a row is never met — an internal error or traceback is an unmet observation and cannot earn a kill |
+| a crash was credited as a kill: the mutator ignored `row.traceback` and any internal-error marker, and a violated row outside the mutant's attribution could be credited | MutationEvidenceV6 rationale §1–§2 | falsify wave | a harness fault is could-not-evaluate (exit 2, zero kills) for a traceback, an internal error, an exit outside 0/1/2 or a malformed verdict; a violated row outside `expect_rows` is preserved and reported, earns no kill, and the allowlist is not widened; credited violations are classified from the row's own fields, and a reason-only change is never an acceptance or availability credit |
+
+## Masked and stale premises: three distinctions that are not red regressions
+
+1. The v5 "opaque" fixture deleted a **blob**, not a non-leaf tree or commit, and
+   that shape already passed on the pinned tool: it proved nothing about the
+   fallback scoping. It is retained, renamed, as an unrelated-blob positive
+   control; the real deleted-tree / dangling-commit regression starts at v6
+   (a dangling **present** commit naming a real tree the store cannot serve,
+   with its blob present).
+2. The replay-v1 errata case cited the **same** fleet blob in the report body
+   and in the ledger, so the pinned tool aborted at the report lookup: that red
+   was evidence of the report-lookup defect, not of the correction consumer.
+   v7 and the v2 replay driver isolate it — the report cites a known **lane**
+   blob A and the ledger corrects A with a distinct **fleet-only** blob B, with
+   an explicit no-errata control showing the body's own ordinary finding.
+3. The embedded v7 same-tag test put the target in **both** stores, so the case
+   was already green on the pinned tool: it is retained as a positive control.
+   v8 adds the actual target-only-in-fleet regression, its lane mirror and the
+   both-missing control.
+
+Rule carried into the lesson: every older file and receipt is kept, and a stale
+premise is not a red regression; a masked red is evidence for the masking defect
+only. A fixture's premise must be asserted where it is established (for the
+blobless contract: immediately after the clone, before any optional hydration),
+and hydration changes the input state — it is not a detector repair.
+
+## Method correction: the strict comparable baseline is 14/47; the loose 16/47 is retained under its own label
+
+The amended-view comparison was not comparable between the arms: the frozen arm
+had been scored with `form_check=False` and without the names pin, the current
+arm with the strict rules. Graded with identical strong rules in both arms
+(same exit, defect set, reason class, `names_any_of` pin, no-verdict rule and
+acquisition rule), the strict comparable frozen baseline is **14/47**; the
+earlier **16/47** is the weaker exit/reason-only score, kept under its own
+label and never conflated with the strict one. The two cells that differ are
+PG16-missing-lane-tree-plain and PG20-missing-fleet-tree-plain, where the r23
+base names the required path rather than the tree object id that the strict
+names pin rejects. This is a method correction, **not** two additional product
+wins. The frozen historical reproduction (47/47) is a separate measurement,
+and the final candidate numerator is for the L1 to measure.
+
+## Mutation-contract corrections: PM08 carries no assertion; PM07's V4 retarget is declined
+
+- **PM08** — the static/AST/source-text/wiring assertion proposal is
+  **declined, not repinned**. PM08 remains a manual review-only note: no
+  alternatives, no assertion of any kind, no construction, no execution, no
+  kill credit, skipped by the anchor check (which covers the ten executable
+  mutants only); the inventory reads 11 = 10 executable + 1 manual note. Its
+  wording is scoped to the candidate's repository-reading wrappers and states
+  that it is a manual reading of the isolation flags, not a proof about every
+  git call.
+- **PM07** — the canonical operator is the restored V3 recipe (the store-wide
+  `--all` missing gate, globally redundant against the store-wide traversal).
+  The V4 retarget that rooted the opaque, name-hiding walk at every present
+  root is **declined** and is not the canonical operator. No kill is presumed
+  for PM07; static anchors authenticate mutation applicability only; a valid
+  finite survival stays a completed run (exit 0) and is not global equivalence;
+  `expect_rows` is an attribution envelope, not a promise that every row
+  discriminates; a same-exit diagnostic sensitivity is not an
+  unavailable-evidence acceptance witness.
+- The legacy empty-selection guard is unchanged; only its attribution is
+  corrected — the short-id selector hazard pre-existed the round-24
+  retirement, which changed the id set and exposed the staleness of a
+  hard-coded short id.
+
+## Disclosure status: the original unknown clause stays withdrawn; R23-H2 stays open
+
+- The original blanket unknown requirement (preregistration `expected_after[3]`)
+  remains **withdrawn / not-achieved**, with its original cells and history
+  retained; the prospective amendment is graded separately.
+- Disclosure completeness is falsified, not the headline (CritOriginalWithdrawn,
+  PARTIAL): nine original-reading red cells exist at the pinned base while the
+  summaries name one rule and give no count or identities — two rows are
+  withdrawn outside the amendment's declared supersession scope, one open row
+  hides an original red cell behind a rationale that does not match its
+  fixture, one retained-grid row is presented as a "migration", and the
+  runner's `withdrawn_original_failures` bucket labels live failures as
+  "withdrawn". The filed GridOracle count of withdrawn original-view failures
+  therefore inherits that provenance and is read as *original-view failures*,
+  not as withdrawn ones.
+- **R23-H2** — the git ≥ 2.45 prerequisite is explicitly not approved or
+  repaired; it is carried as the round-24 L0 question, pending the operator
+  ruling. The floor itself was checked statically (CritGitFloor, HOLDS): the
+  new commands do not raise it above 2.45, and the forbidden newer flags
+  (`--missing=print-info`, `--missing-only`) appear nowhere in `tools/` or
+  `tests/` except in the prohibition text.
+- No score promotion, no new frontier capability, no self-admission, and no
+  final count is claimed in this continuation.

@@ -1,0 +1,6 @@
+#!/bin/sh
+# Logging git shim: records the revision arguments the auditor asks for,
+# then execs the real git.  Read-only observation of the audit's own reads.
+LOG="${SHIM_LOG:-/dev/null}"
+printf '%s\n' "$*" >> "$LOG"
+exec /usr/bin/git "$@"

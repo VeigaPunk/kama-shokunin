@@ -1,0 +1,492 @@
+--- a/tests/report-audit/promisor-mutants.py
++++ b/tests/report-audit/promisor-mutants.py
+@@ -16,6 +16,20 @@
+            anchor must occur exactly once); used where the candidate's
+            spelling is not known in advance.
+ 
++Inventory version 2 (corrected attribution and two corrected mutations;
++version 1 stays filed as the receipt producer and is not re-credited). The
++fresh falsifiers of round 24 found two defects in version 1, and version 2
++fixes both: PM08's static gate answered from a substring search, so the
++auditor's prose kept the flag "present" after the isolation tuple had lost
++it (the gate now reads the GIT_ISOLATION tuple literal through the AST and
++requires member -> absent with a compiling mutant), and PM11's gate was
++lazy (it patched the store's missing() method, consulted only while a
++citation is unresolved), so it could not refuse the
++resolved-unused-hole controls (the gate now runs when the store is built).
++The attribution lists below are version 2: they come from an independent
++semantic map of what each mutation must change, and every delta against
++version 1 is listed in the proposal's inventory file.
++
+ Frozen mutant inventory. The inventory follows the round-24 L1 policy
+ decision (oracle-amendment-1.json plus the original local-object contract
+ in the base auditor, lines 12-19): promisor metadata is irrelevant to the
+@@ -101,6 +115,7 @@
+ from __future__ import annotations
+ 
+ import argparse
++import ast
+ import fnmatch
+ import json
+ import os
+@@ -225,22 +240,25 @@
+ _pm_install_ignore_opaque()
+ # --- end PM10 mutation ---'''
+ 
+-# PM11 (any hole refuses): the store refuses whenever it holds any missing
+-# object at all, so an unrelated hole becomes an unconditional precondition.
++# PM11 (any hole refuses): the gate is unconditional and runs when the
++# store is built, so a hole the audit never needs refuses the audit too.
++# The earlier version of this mutant patched the store's missing() method,
++# which is only consulted while a citation is unresolved: it was a lazy
++# gate, and the resolved-unused-hole controls could not see it.
+ PM11_INSERT = '''# --- PM11 mutation: any hole refuses (over-refusal) ---
+ def _pm_install_any_hole():
+-    _cls = globals()["RepoStore"]
+-    _original = _cls.missing
+-
+-    def _patched(self):
+-        missing, opaque = _original(self)
++    _original = globals()["build_store"]
++
++    def _patched(repo, root):
++        store = _original(repo, root)
++        missing, opaque = store.missing()
+         if missing or opaque:
+             raise EvalError(
+-                f"{self.path}: unknown: unavailable required object: "
++                f"{repo}: unknown: unavailable required object: "
+                 f"{len(missing) + len(opaque)} hole(s) in the store")
+-        return missing, opaque
++        return store
+ 
+-    _cls.missing = _patched
++    globals()["build_store"] = _patched
+ 
+ 
+ _pm_install_any_hole()
+@@ -254,11 +272,8 @@
+                     ".promisor+.pack) is not a refusal: a complete "
+                     "promisor-marked repository keeps the verdict of its "
+                     "full-clone twin",
+-        "expect_rows": ["PG01", "PG02", "PG03", "PG04", "PG05", "PG06",
+-                        "PG07", "PG08", "PG09", "PG11", "PG12", "PG13",
+-                        "PG17", "PG21", "PG22", "PG23", "PG24", "PG26",
+-                        "PG28", "PG30", "PG31", "PG33", "PG35", "PG39",
+-                        "PG41", "PG43", "PG44", "PG47", "PG48"],
++        "expect_rows": ["PG01", "PG02", "PG03", "PG04", "PG05", "PG06", "PG09", "PG11", "PG12", "PG13", "PG15", "PG17", "PG19", "PG21", "PG22", "PG23", "PG24", "PG26", "PG28", "PG30", "PG31", "PG33", "PG35", "PG39", "PG41", "PG43", "PG44", "PG46", "PG47", "PG48"],
++        "attribution_basis": "every cell whose audited repository is promisor-marked: a refusal on the metadata alone turns each of them into exit 2",
+         "execution": "grid",
+         "alternatives": [
+             # the candidate may still carry a promisor classifier: refuse on
+@@ -283,8 +298,8 @@
+                     "would stop being an ordinary failed finding. The mutant "
+                     "refuses every absent (or unknown) citation, before the "
+                     "errata ledger is consulted.",
+-        "expect_rows": ["PG22", "PG23", "PG24", "PG25", "PG29", "PG30",
+-                        "PG33", "PG34", "PG37", "PG41", "PG42", "PG47"],
++        "expect_rows": ["PG22", "PG23", "PG24", "PG25", "PG29", "PG30", "PG33", "PG34", "PG37", "PG41", "PG42", "PG46", "PG47"],
++        "attribution_basis": "every cell with an unresolved citation whose ordinary verdict is a failed finding: the errata-corrected absent hash is refused before the ledger is consulted, and the opaque cells misclassify an absence that a missing tree may conceal",
+         "execution": "grid",
+         "alternatives": [
+             {"kind": "insert", "anchor": 'if __name__ == "__main__":',
+@@ -301,8 +316,8 @@
+                     "decision that uses it. Both attack the same verdict "
+                     "surface, so the grid kills them alike: one of them "
+                     "surviving is not evidence about the other.",
+-        "expect_rows": ["PG13", "PG14", "PG15", "PG16", "PG17", "PG18",
+-                        "PG19", "PG20", "PG21", "PG33", "PG34", "PG47"],
++        "expect_rows": ["PG13", "PG14", "PG15", "PG16", "PG17", "PG18", "PG19", "PG20", "PG21", "PG33", "PG34", "PG46", "PG47"],
++        "attribution_basis": "every cell whose required evidence is unavailable and whose verdict must be could-not-evaluate",
+         "execution": "grid",
+         "alternatives": [
+             # the store never learns which objects the repository cannot
+@@ -324,6 +339,7 @@
+                     "than proved absent; the mutant accepts it as absent and "
+                     "reports an ordinary failed finding",
+         "expect_rows": ["PG33", "PG34", "PG46", "PG47"],
++        "attribution_basis": "every cell whose unresolved citation names unavailable referenced content",
+         "execution": "grid",
+         "alternatives": [
+             # the helper that decides "the history references it, the
+@@ -344,6 +360,7 @@
+                     "present in the other audited repository is resolvable; "
+                     "the mutant consults the first repository only",
+         "expect_rows": ["PG26", "PG27"],
++        "attribution_basis": "every cell whose citation resolves only in the second audited repository",
+         "execution": "grid",
+         "alternatives": [
+             {"kind": "regex",
+@@ -362,8 +379,8 @@
+                     "could-not-evaluate; the mutant swallows the failure "
+                     "and guesses a value, turning an unavailable object "
+                     "into a verdict",
+-        "expect_rows": ["PG13", "PG14", "PG16", "PG17", "PG18", "PG20",
+-                        "PG21", "PG43"],
++        "expect_rows": ["PG13", "PG14", "PG15", "PG16", "PG17", "PG18", "PG19", "PG20", "PG21", "PG28", "PG43"],
++        "attribution_basis": "every cell whose verdict must be could-not-evaluate because a required read failed",
+         "execution": "grid",
+         "alternatives": [
+             {"kind": "insert", "anchor": 'if __name__ == "__main__":',
+@@ -378,8 +395,8 @@
+                     "already starts from every present object: there it is "
+                     "observationally identical, survives, and is credited "
+                     "with no kill.",
+-        "expect_rows": ["PG31", "PG32", "PG35", "PG36", "PG44", "PG45",
+-                        "PG48"],
++        "expect_rows": ["PG31", "PG32", "PG35", "PG36", "PG44", "PG45", "PG48"],
++        "attribution_basis": "every cell with a hole the audit does not need: an unrelated hole must not refuse the audit",
+         "execution": "grid",
+         "alternatives": [
+             {"kind": "regex",
+@@ -400,6 +417,7 @@
+                     "promisor remote (transport, repository programs, "
+                     "signatures); removing the flag reopens that channel",
+         "expect_rows": [],
++        "attribution_basis": "static only, never executed",
+         "execution": "static-only",
+         "static_check": "--no-lazy-fetch",
+         "alternatives": [
+@@ -415,6 +433,7 @@
+                     "a locally present blob resolves as found; peeling it "
+                     "to ^{commit} turns a present blob into a missing object",
+         "expect_rows": ["PG38", "PG39"],
++        "attribution_basis": "every cell whose locally present blob must stay an ordinary wrong-type finding",
+         "execution": "grid",
+         "alternatives": [
+             {"kind": "replace", "old": "full = lookup(stores, full_tokens)",
+@@ -429,7 +448,8 @@
+                     "reports an ordinary failed finding. A known-present blob "
+                     "that merely fails commit peeling keeps its wrong-type "
+                     "finding either way.",
+-        "expect_rows": ["PG33", "PG34", "PG46", "PG47"],
++        "expect_rows": ["PG46", "PG47"],
++        "attribution_basis": "every cell whose verdict depends on the opaque non-leaf rule",
+         "execution": "grid",
+         "alternatives": [
+             {"kind": "insert", "anchor": 'if __name__ == "__main__":',
+@@ -444,9 +464,8 @@
+                     "and an unused tree hole next to fully resolved "
+                     "citations keeps the clean verdict; the mutant refuses "
+                     "on any hole",
+-        "expect_rows": ["PG22", "PG25", "PG33", "PG34", "PG35", "PG36",
+-                        "PG37", "PG41", "PG42", "PG44", "PG45", "PG47",
+-                        "PG48"],
++        "expect_rows": ["PG13", "PG14", "PG15", "PG16", "PG17", "PG18", "PG19", "PG20", "PG21", "PG22", "PG28", "PG31", "PG32", "PG33", "PG34", "PG35", "PG36", "PG37", "PG41", "PG42", "PG43", "PG44", "PG45", "PG46", "PG47", "PG48"],
++        "attribution_basis": "every cell whose audited repository holds a hole, whatever verdict the cell expects: the gate is unconditional",
+         "execution": "grid",
+         "alternatives": [
+             {"kind": "insert", "anchor": 'if __name__ == "__main__":',
+@@ -599,6 +618,31 @@
+     return None, ("no alternative applied cleanly: " + " ".join(seen))
+ 
+ 
++def isolation_flag(source, flag):
++    """True when `flag` is a string element of the GIT_ISOLATION tuple
++    literal, False when the tuple exists without it, None when no such
++    tuple literal is found or the source does not parse.
++
++    A substring search cannot answer this: the auditor's prose names the
++    flag, so the flag "is present" in the source even after the tuple has
++    lost it. The check is a literal-tuple membership, read from the AST."""
++    try:
++        tree = ast.parse(source)
++    except SyntaxError:
++        return None
++    for node in ast.walk(tree):
++        if not isinstance(node, ast.Assign):
++            continue
++        if not any(isinstance(t, ast.Name) and t.id == "GIT_ISOLATION"
++                   for t in node.targets):
++            continue
++        value = node.value
++        if isinstance(value, (ast.Tuple, ast.List)):
++            return any(isinstance(e, ast.Constant) and e.value == flag
++                       for e in value.elts)
++    return None
++
++
+ def compiles(source, name):
+     try:
+         compile(source, f"<{name}>", "exec")
+@@ -729,22 +773,36 @@
+                      "execution": mutant["execution"],
+                      "expect_rows": mutant["expect_rows"]}
+             if mutant["execution"] == "static-only":
++                # the static gate never executes the mutant: it reads the
++                # candidate's isolation tuple literal and the mutant's
++                # literal, and requires the flag to be a member before and
++                # absent after, with a mutant that still compiles
+                 marker = mutant.get("static_check")
+                 applied, reason = apply_mutation(source, mutant)
+                 if applied is None:
+                     entry.update(status="could-not-evaluate",
+                                  killed=False, reason=reason)
+                 else:
+-                    present_before = marker in source
+-                    present_after = marker in applied
+-                    entry.update(
+-                        status="static-only-not-executed", killed=False,
+-                        reason=f"{marker} present before={present_before} "
+-                               f"after={present_after}; not executed: a "
+-                               f"fixture that could reach a transport is "
+-                               f"forbidden in this wave",
+-                        static_before=present_before,
+-                        static_after=present_after)
++                    before = isolation_flag(source, marker)
++                    after = isolation_flag(applied, marker)
++                    valid = compiles(applied, mutant["id"])
++                    if before is not True or after is not False or not valid:
++                        entry.update(
++                            status="could-not-evaluate", killed=False,
++                            reason=f"static check failed: {marker} is a "
++                                   f"member of the isolation tuple "
++                                   f"before={before} after={after} "
++                                   f"compiles={valid}")
++                    else:
++                        entry.update(
++                            status="static-only-not-executed", killed=False,
++                            reason=f"{marker} is a member of the isolation "
++                                   f"tuple before and absent after, and "
++                                   f"the mutant compiles; not executed: a "
++                                   f"fixture that could reach a transport "
++                                   f"is forbidden in this wave",
++                            static_before=before, static_after=after,
++                            mutant_compiles=valid)
+                 rows_out.append(entry)
+                 continue
+             mutated, info = apply_mutation(source, mutant)
+@@ -826,9 +884,15 @@
+ # marker PRISTINE is the pristine run, any other candidate is a mutant.
+ 
+ STUB_GRID = '''#!/usr/bin/env python3
+-"""Stub grid for the runner's selftest: no repository, no fixture."""
++"""Stub grid for the runner's selftest: no repository, no fixture.
++
++Every invocation appends a line to GRID_STUB_LOG (the canary): the
++selftest uses it to prove that a pristine failure stops the run before any
++mutant is built or executed.
++"""
+ import json
+ import os
++import os.path
+ import sys
+ 
+ mode = os.environ.get("GRID_STUB_MODE", "ok")
+@@ -840,9 +904,13 @@
+     current = sys.argv[sys.argv.index("--current") + 1]
+ # the pristine candidate is the one the caller names; the runner writes
+ # every mutant to <id>.py, and the frozen ids all start with PM
+-import os.path
+ pristine = not os.path.basename(current).startswith("PM")
+ 
++log = os.environ.get("GRID_STUB_LOG")
++if log:
++    with open(log, "a", encoding="utf-8") as fh:
++        fh.write(("pristine" if pristine else "mutant") + " " + current + "\\n")
++
+ 
+ def row(case, **kw):
+     base = {"case": case, "kind": "policy", "met": True}
+@@ -852,38 +920,42 @@
+ 
+ if mode == "pristine_fails":
+     if pristine:
+-        doc = {"arms": {arm: {"rows": [row("PG01", met=False)]}}}
++        doc = {"arms": {arm: {"rows": [row("PG01-pristine-failure",
++                                           met=False)]}}}
+         print(json.dumps(doc))
+         sys.exit(1)
+-    doc = {"arms": {arm: {"rows": [row("PG01")]}}}
++    doc = {"arms": {arm: {"rows": [row("PG01-pristine-failure")]}}}
+     print(json.dumps(doc))
+     sys.exit(0)
+ if mode == "unmet" and not pristine:
+-    doc = {"arms": {arm: {"rows": [row("PG01", met=False)]}}}
++    doc = {"arms": {arm: {"rows": [row("PG01-unmet-cell", met=False)]}}}
+     print(json.dumps(doc))
+     sys.exit(1)
+ if mode == "twin" and not pristine:
+-    doc = {"arms": {arm: {"rows": [row("PG01", twin_equal=False)]}}}
++    doc = {"arms": {arm: {"rows": [row("PG02-twin-cell", twin_equal=False)]}}}
+     print(json.dumps(doc))
+     sys.exit(1)
+ if mode == "exit2" and not pristine:
+     print("could-not-evaluate: stub", file=sys.stderr)
+     sys.exit(2)
+-if mode == "rc1_no_rows" and not pristine:
+-    doc = {"arms": {arm: {"rows": []}}}
++if mode == "rc1_no_violated_row" and not pristine:
++    # the grid reports a failure but names no violated row: the runner must
++    # report could-not-evaluate for that reason, not a kill
++    doc = {"arms": {arm: {"rows": [row("PG03-met-row")]}}}
+     print(json.dumps(doc))
+     sys.exit(1)
+ if mode == "leak" and not pristine:
+-    doc = {"arms": {arm: {"harness_leaks": ["PG01"],
+-                          "rows": [row("PG01", met=False, leaked=True)]}}}
++    doc = {"arms": {arm: {"harness_leaks": ["PG04-leaked-row"],
++                          "rows": [row("PG04-leaked-row", met=False,
++                                       leaked=True)]}}}
+     print(json.dumps(doc))
+     sys.exit(1)
+ if mode == "timeout_row" and not pristine:
+-    doc = {"arms": {arm: {"rows": [row("PG01", met=False,
++    doc = {"arms": {arm: {"rows": [row("PG05-timed-out-row", met=False,
+                                        timed_out=True)]}}}
+     print(json.dumps(doc))
+     sys.exit(1)
+-doc = {"arms": {arm: {"rows": [row("PG01")]}}}
++doc = {"arms": {arm: {"rows": [row("PG00-clean-row")]}}}
+ print(json.dumps(doc))
+ sys.exit(0)
+ '''
+@@ -988,57 +1060,111 @@
+         grid = root / "stub-grid.py"
+         grid.write_text(STUB_GRID, encoding="utf-8")
+         candidate = root / "candidate.py"
+-        candidate.write_text(CANDIDATE + "# PRISTINE\n", encoding="utf-8")
++        candidate.write_text(CANDIDATE, encoding="utf-8")
+         broken = root / "broken.py"
+         broken.write_text(BROKEN_CANDIDATE, encoding="utf-8")
+ 
+-        def run(mode, cand=None, extra=()):
+-            env = dict(os.environ, GRID_STUB_MODE=mode)
++        def run(mode, cand=None):
++            log = root / f"canary-{mode}.log"
++            env = dict(os.environ, GRID_STUB_MODE=mode,
++                       GRID_STUB_LOG=str(log))
+             proc = subprocess.run(
+                 [sys.executable, str(Path(__file__).resolve()), "--grid",
+-                 str(grid), "--current", str(cand or candidate), "--json",
+-                 *extra],
++                 str(grid), "--current", str(cand or candidate), "--json"],
+                 capture_output=True, env=env, timeout=300)
+             doc = {}
+             try:
+                 doc = json.loads(proc.stdout.decode("utf-8", "replace"))
+             except (ValueError, UnicodeDecodeError):
+                 doc = {}
+-            return proc.returncode, doc, proc.stderr.decode("utf-8", "replace")
+-
+-        cases = [
+-            # (mode, expected exit, expectation)
+-            ("ok", 0, "every mutant evaluated: exit 0"),
+-            ("unmet", 0, "a killed mutant is still an evaluated inventory"),
+-            ("twin", 0, "a failed twin is a violated row"),
+-            ("exit2", 2, "grid exit 2 is could-not-evaluate"),
+-            ("rc1_no_rows", 2, "grid exit 1 without a violated row is CNE"),
+-            ("leak", 2, "a harness leak is could-not-evaluate"),
+-            ("timeout_row", 2, "a timed-out row is could-not-evaluate"),
+-            ("pristine_fails", 2, "a failing pristine run kills nothing"),
+-        ]
+-        for mode, expected, what in cases:
+-            code, doc, err = run(mode)
+-            if code != expected:
+-                failures.append(f"{mode}: exit {code}, expected {expected} "
+-                                f"({what}); stderr={err.strip()[:200]}")
+-            if expected == 2 and doc.get("killed"):
++            calls = []
++            if log.exists():
++                calls = log.read_text(encoding="utf-8").splitlines()
++            return (proc.returncode, doc,
++                    proc.stderr.decode("utf-8", "replace"), calls)
++
++        # 1. a fully evaluated inventory is exit 0, and the mutant phase
++        #    really ran (the canary holds a pristine line and mutant lines)
++        code, doc, err, calls = run("ok")
++        if code != 0:
++            failures.append(f"ok: exit {code}, expected 0")
++        if not calls or not calls[0].startswith("pristine"):
++            failures.append("ok: the canary does not start with the "
++                            f"pristine invocation: {calls[:2]}")
++        if len([c for c in calls if c.startswith("mutant")]) < 1:
++            failures.append("ok: no mutant invocation was recorded")
++
++        # 2. a violated row kills the mutant: at least one kill, and the
++        #    named cell is the one the stub made unmet
++        code, doc, err, calls = run("unmet")
++        if code != 0:
++            failures.append(f"unmet: exit {code}, expected 0")
++        if not doc.get("killed"):
++            failures.append("unmet: no mutant was credited with a kill")
++        named = [r for r in doc.get("rows", [])
++                 if "PG01-unmet-cell" in (r.get("failed_rows") or [])]
++        if not named:
++            failures.append("unmet: the killed mutant did not name "
++                            "PG01-unmet-cell")
++
++        # 3. a failed twin is a violated row, and it is named
++        code, doc, err, calls = run("twin")
++        if code != 0:
++            failures.append(f"twin: exit {code}, expected 0")
++        if not doc.get("killed"):
++            failures.append("twin: no mutant was credited with a kill")
++        named = [r for r in doc.get("rows", [])
++                 if "PG02-twin-cell" in (r.get("failed_rows") or [])]
++        if not named:
++            failures.append("twin: the killed mutant did not name "
++                            "PG02-twin-cell")
++
++        # 4. the could-not-evaluate reasons, each for its own reason
++        for mode, needle in (("exit2", "grid exit 2"),
++                              ("rc1_no_violated_row",
++                               "without an identifiable violated row"),
++                              ("leak", "harness_leaks"),
++                              ("timeout_row", "timed out")):
++            code, doc, err, calls = run(mode)
++            if code != 2:
++                failures.append(f"{mode}: exit {code}, expected 2")
++            if doc.get("killed"):
+                 failures.append(f"{mode}: a could-not-evaluate run credited "
+                                 f"a kill")
+-        # a mutant that does not compile is could-not-evaluate
+-        code, doc, err = run("ok", cand=broken)
++            reasons = " ".join(str(r.get("reason") or "")
++                               for r in doc.get("rows", []))
++            if needle not in reasons:
++                failures.append(f"{mode}: the reason {needle!r} is missing: "
++                                f"{reasons[:200]}")
++
++        # 5. a pristine failure stops the run before any mutant phase: the
++        #    canary must hold exactly one invocation, the pristine one
++        code, doc, err, calls = run("pristine_fails")
++        if code != 2:
++            failures.append(f"pristine_fails: exit {code}, expected 2")
++        if doc.get("killed"):
++            failures.append("pristine_fails: a failing pristine run "
++                            "credited a kill")
++        if len(calls) != 1 or not calls[0].startswith("pristine"):
++            failures.append(f"pristine_fails: the canary shows {len(calls)} "
++                            f"invocations, expected exactly one pristine "
++                            f"one: {calls[:3]}")
++
++        # 6. a mutant that does not compile is could-not-evaluate
++        code, doc, err, calls = run("ok", cand=broken)
+         if code != 2:
+             failures.append(f"broken candidate: exit {code}, expected 2")
+         if not doc.get("could_not_evaluate"):
+             failures.append("broken candidate: no could-not-evaluate entry")
+-        # --anchors returns 2 when a mutant does not compile
++
++        # 7. --anchors returns 2 when a mutant does not compile
+         proc = subprocess.run(
+             [sys.executable, str(Path(__file__).resolve()), "--anchors",
+              str(broken)], capture_output=True, timeout=120)
+         if proc.returncode != 2:
+             failures.append(f"--anchors on a broken candidate: exit "
+                             f"{proc.returncode}, expected 2")
+-        # --anchors returns 0 for a sound candidate
++        # 8. --anchors returns 0 for a sound candidate
+         proc = subprocess.run(
+             [sys.executable, str(Path(__file__).resolve()), "--anchors",
+              str(candidate)], capture_output=True, timeout=120)
+@@ -1047,7 +1173,7 @@
+                             f"{proc.returncode}, expected 0")
+     for failure in failures:
+         print(f"FAIL {failure}")
+-    print(f"selftest cases={len(cases) + 3} failed={len(failures)}")
++    print(f"selftest cases=13 failed={len(failures)}")
+     return 0 if not failures else 2
+ 
+ 

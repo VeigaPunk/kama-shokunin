@@ -464,3 +464,465 @@ pristine candidate are met: four were an over-strict pin of mine and one was a
 defective fixture of mine. **No candidate gap remains** in that set.
 
 **New runner sha256** (the manifest hash is unchanged): see the receipt.
+
+---
+
+## Correction 5 (proposal `fixes/GridMetrics/`, L1 source review of the integrated grid)
+
+**Proposal only — no production edit, no overwrite of the out artifacts.** The
+L1's static review of the integrated grid found a reporting bug and one
+unasserted premise; the fix is delivered as a new proposal directory
+`.ufo/waves/round-24/fixes/GridMetrics/` (`promisor-grid.py` sha256
+`bc2b03dbf90e669b0324c28c59900bb6f739435c0ad1e0ec932c70493b8d125e`,
+`promisor-grid.patch` — 4 hunks, 76 diff lines, `README.md`). Base: lane
+commit `2e254a1`, integrated grid `b034e159…`. The expectation manifest is
+**unchanged** (`d86b7bea…`, 47 cells) and the strong `names_any_of` grader is
+untouched.
+
+**(a) The per-arm amended-view metrics were wrong.** `amended_view_met`
+counted only rows with `met_amended_frozen` true, and `amended_view_unmet`
+listed only frozen-arm rows; in the current arm `met_amended_frozen` is
+`None` everywhere, so the current arm always reported **0** and an empty
+unmet list while the per-row `met` values and the arm's `violations` were
+correct. Fix: the amended view is scored with the key that belongs to the
+arm (`met_amended_frozen` for the frozen arm — the historical baseline —
+`met_amended` for the current arm — the live view), and the summary gains
+`amended_view_measured_on`.
+
+**(b) Withdrawn versus failed.** `withdrawn_original_failures` used to list
+every current-arm row whose *original* view was unmet, which mixes rows the
+amendment changed with rows whose original and amended views agree. Fix:
+`original_view_unmet` lists **all** of them; `withdrawn_original_failures` is
+restricted to the rows whose original and amended expectations differ, and the
+manifest's `amendment_changed_cases` names them. A row whose views agree is no
+longer labelled a withdrawal.
+
+**(c) The removal premise is now asserted.** After each requested drop the
+builder probes the target repository **with lazy fetching disabled** and
+refuses to continue if the object is still available (premise failure ⇒ exit
+2). This closes the CaseUnselectedBranch gap: the previous premise walk
+covered only `refs/heads/master`, so an unselected branch's missing blob was
+never asserted.
+
+**(d) The `--keep` probe rule is documented** in the module docstring: the
+fixtures deliberately keep a blobless clone's local origin **reachable**, so a
+lazy fetch would succeed against it and acquire objects — which the per-run
+before/after inventory reports as `objects_acquired`. A manual probe with
+`--keep` must keep the origin in place and must run git with
+`--no-lazy-fetch`; **the origin must not be disabled or deleted to hide a
+flag regression**, because that would hide the very regression the
+acquisition tripwire exists to catch.
+
+**Bounded verification (no full suite).** `--selftest` 11/11; the 20-cell
+removal family (PG13–PG21, PG31–PG37, PG43–PG46) in both arms against the
+candidate `ea51bc35…`:
+
+| arm | violations | amended view | original view unmet | withdrawn | leaks / tracebacks / timeouts |
+|---|---|---|---|---|---|
+| frozen (r23 base) | 0 | 8 / 20, measured on the frozen arm | — | — | 0 / 0 / 0 |
+| current (candidate) | 0 | **20 / 20, measured on the current arm** | PG34 | PG34 (an amendment-changed row) | 0 / 0 / 0 |
+
+The new drop assertion held on every removal cell. The twelve frozen-arm
+unmet cells are the r23 metadata refusals (the historical baseline), not
+failures. Full suite and any candidate sweep beyond that family: **not run**
+(L1 instruction).
+
+---
+
+## Correction 6 (proposal `fixes/GridAttestation/` — GridMetrics + attestation)
+
+**Proposal only — no production edit, no overwrite of the filed GridMetrics
+proposal.** New directory
+`.ufo/waves/round-24/fixes/GridAttestation/` (`promisor-grid.py` sha256
+`98fe76368c122fcc4bd66e10c1495bd2670dc37c90268a45f4e55900ef0989e5`,
+`promisor-grid.patch` — 395 diff lines, `README.md`). It **contains** the four
+GridMetrics fixes (`bc2b03db…`, left filed where it is) and adds the
+attestation work. The expectation manifest is **unchanged**
+(`d86b7bea…`, 47 cells), the strong `names_any_of` grader is untouched, and
+nothing is fitted to a population.
+
+**The gap (GateGridSelftest).** The selftest's `population(table) ==
+population(table)` attested nothing: a dropped case, a weakened names list
+and a bad twin link all passed. The blobless premise facts were only
+recorded, never asserted, so a clone whose filter was ignored, or a hydration
+that happened silently, would have produced a different fixture under the same
+cell name.
+
+**What the proposal adds.**
+
+1. **A literal byte pin on the manifest** —
+   `MANIFEST_SHA256 = d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1`,
+   checked *before* the selftest and before any arm run; any byte change is
+   refused with `could-not-evaluate: snapshot_tampered: …` and exit 2. The
+   table's bytes are never changed by this proposal.
+2. **A real negative capability replaces the tautology** — `validate_table()`
+   attests the table structurally (unique and well-formed case ids, the
+   pinned case and open-row counts, resolvable builders, twin links that
+   point at real cases, known reason classes, known defect kinds, known token
+   placeholders, a content refusal that carries a `names_any_of` pin), and
+   the selftest proves the *rejection* capability on a dropped case, a
+   weakened names list and a dangling twin link.
+3. **Bounded command-line controls** — the selftest copies the runner and the
+   manifest into scratch and tampers with the copy: a copy with a dropped case
+   and a copy with a weakened names list must both exit 2 with
+   `snapshot_tampered`; an unknown `--case` selector must be refused (exit 2)
+   rather than ignored, also with `--selftest`.
+4. **The blobless fixture contract is asserted** — after a genuine blobless
+   clone the fetch-free missing set must be non-empty (a filter that was
+   ignored ⇒ premise failure, exit 2); a hydrated clone must end with an
+   empty missing set (a silent hydration ⇒ premise failure); an unhydrated
+   clone must still miss the object its cell is about (PG28: the lane's `f`
+   blob; PG43: the fleet's report blob).
+5. **The reachable origin stays reachable** — nothing removes, disables or
+   repoints the blobless clone's local origin: it is the acquisition
+   tripwire. The forensic probes keep using `--no-lazy-fetch` and every
+   fixture keeps its fresh isolated state. No generic copy framework and no
+   whole-closure production gate are added — only the fixture contract and
+   the attestation.
+
+**Bounded verification (no full suite).** `--selftest` 14/14 ok (three
+negative capabilities, three command-line controls, five premise checks). The
+blobless family in both arms against the candidate `ea51bc35…`: frozen arm 0
+violations, amended view 0/4 (the r23 refusals); current arm 0 violations,
+amended view **4/4** — PG05 exit 0, PG06 exit 0, PG28 exit 0, PG43 exit 2, all
+met. The new blobless contract held on every cell of the family: no premise
+failure was raised.
+
+---
+
+## Correction 7 (GridAttestation proposal amended: the amended comparison must be comparable)
+
+**Same proposal directory, updated before integration** —
+`.ufo/waves/round-24/fixes/GridAttestation/promisor-grid.py` sha256
+`6d9e31b7ad2ea8d1cc3770e6ee22d25138de14b92c6b925deb8cdfe365d7159e`,
+`promisor-grid.patch` sha256 `3cd2027e042d6c03e53f471d66c10eebc6948c463d1865477db0998682dd2299`,
+`README.md` sha256 `b85963da492b6a1abc277071cd24effccb9adc58464557a381e88c3265c16755`.
+The manifest (`d86b7bea…`, 47 cells), the strong names grader and the
+expectations are untouched; this is a comparison-method correction, not a
+claim of independent wins.
+
+**The comparability defect.** The amended-view score was measured with
+different rules in the two arms: the frozen arm with `form_check=False` and
+without the names pin, the current arm with the strict rules. The loose
+16 and the current arm's score were therefore not the same measurement. Fix:
+the live **amended** comparison now uses **identical rules in both arms** —
+same exit, same defect set, same reason class, same strong `names_any_of`
+pin, same no-verdict rule, same acquisition rule — and the exit-2 form check
+is arm-independent, with the caller deciding:
+
+| score | rules | meaning |
+|---|---|---|
+| `met_frozen` (frozen column) | `form_check=False` | the historical reproduction: the r23 metadata refusal still counts as met, so the 47/47 history is intact |
+| `met_amended_frozen` | `form_check=True` + the case's names and forbidden list | the strict, comparable baseline |
+| `met_amended` (current arm) | `form_check=True` + the case's names and forbidden list | the live score |
+| `met_amended_frozen_loose` | `form_check=False`, no names | the **former** exit/reason-only score, filed under its own label, never conflated |
+
+**Measured on the frozen arm (historical only, no candidate):** the strict
+baseline is **14 / 47**; the loose score is **16**; the two cells that differ
+are **PG16-missing-lane-tree-plain** and **PG20-missing-fleet-tree-plain**,
+where the r23 base names the required path rather than the tree object id and
+the strict names pin rejects that. The frozen column still reproduces
+**47 / 47** with 0 violations. The old loose 16 is filed, not rewritten; the
+strict number is the one the final measurement should report.
+
+**Exit contract unchanged.** A red "before" target is not a
+could-not-evaluate: the CLI exit code is still driven by the frozen history
+and the current live violations (exit 1), and exit 2 remains reserved for
+harness faults (premise failure, snapshot tamper, harness leak, timeout,
+unknown selector).
+
+---
+
+## Correction 8 (proposal `fixes/GridAttestationV2/` — the blobless contract is proved on the clone; a missing oracle is a CNE)
+
+**Proposal only — no production edit; V1 (`fixes/GridAttestation/`,
+`6d9e31b7…`) stays filed.** New directory
+`.ufo/waves/round-24/fixes/GridAttestationV2/`: `promisor-grid.py` sha256
+`45e778a856e929cf92ccd10d7fbddfc83224fa4ce3332131ead961c6fee1446b`,
+`promisor-grid.patch` (the full delta against the integrated `b034e159…`,
+520 lines), `promisor-grid-v2-delta.patch` (the **incremental** V2 delta
+against V1, 143 lines, sha256 `b4a229d1…`), `README.md` (sha256
+`b85963da…`-line successor). The manifest (`d86b7bea…`, 47 cells), the
+expectations, the strong names grader, the 14-strict/16-loose labelling and
+the origin URL are all unchanged.
+
+**(1) The initial premise gap.** `blobless_clone()` returned the destination
+without checking it and the contract was asserted only *after* the optional
+hydration, so for a hydrated cell a clone whose filter was ignored (a
+complete clone) would still end with an empty missing set — the "genuine
+initial missing" claim was never proved. V2 asserts the contract **on the
+clone itself, immediately after each clone and before any hydration**: the
+fetch-free missing set must be non-empty and must contain the object the
+cell is about (the lane's `f` blob, the fleet's report blob). Only then, and
+only for a hydrating cell, is the clone hydrated and the final missing set
+required to be empty. The unhydrated cells need no second walk — the initial
+assertion already covers them.
+
+**(2) A negative actual-fixture control.** `blobless_clone(...,
+filtered=False)` builds the deliberate negative (a complete clone that claims
+to be a blobless one); a hydrated builder using it must be refused **before**
+the hydration with a premise failure (exit 2). The selftest builds it as a
+real fixture and asserts the refusal, and it also builds the valid path (a
+genuine partial clone hydrated into a complete one) and asserts that the
+final missing set is empty.
+
+**(3) A missing or unreadable manifest is a could-not-evaluate.**
+`load_manifest()` catches the read `OSError` and raises a separate identity,
+`snapshot_unavailable` — without the bytes no tampering can be asserted, so it
+must never be reported as `snapshot_tampered`. The CLI boundary returns **2**
+with that identity on stderr and runs no arm and no auditor. The selftest
+copies the runner *without* its companion manifest and asserts exit 2 with
+`snapshot_unavailable`.
+
+**Bounded verification (no full suite).** `--selftest` **17/17 ok** — three
+negative capabilities, four command-line controls (dropped case, weakened
+names, unknown selector, missing manifest), the negative fixture control, the
+valid hydration path and the five premise checks. The blobless family in both
+arms against the candidate `ea51bc35…`: frozen arm 0 violations, strict
+amended view 0/4 (the r23 refusals); current arm 0 violations, strict amended
+view **4/4** — PG05 0, PG06 0, PG28 0, PG43 2, all met; `objects_acquired`
+empty everywhere. The negative CLI control was measured directly: a runner
+copy without its manifest prints `could-not-evaluate: snapshot_unavailable:
+the expectation manifest is not readable: …` and exits **2**.
+
+---
+
+## Correction 9 (proposal `fixes/GridAttestationV3/` — an internal error is an error, not a refusal)
+
+**Proposal only — no production edit; V1 (`6d9e31b7…`) and V2 (`45e778a8…`)
+stay filed.** New directory
+`.ufo/waves/round-24/fixes/GridAttestationV3/`: `promisor-grid.py` sha256
+`437128b820a4c49882dc985c4f3ac0e89fd2805000dac93c3b3085f6bb5e102c`,
+`promisor-grid.patch` (the full delta against the integrated `b034e159…`,
+558 lines), `promisor-grid-v3-delta.patch` (the **incremental** V3 delta
+against V2, 52 lines, sha256 `d4ad1fb3…`), `README.md`. The manifest
+(`d86b7bea…`, 47 cells), every expectation, the strong names grader, the
+strict-14/loose-16 method, the V2 initial-premise guard, the reachable
+origins and the `--no-lazy` forensic probes are unchanged.
+
+**The gap.** The auditor's catch-all prints
+`could-not-evaluate: internal: <Type>: <exc>` — an unanticipated failure
+that its own contract says is never a verdict. The grid kept only
+`stderr_tail` (the last 300 characters), so the identity could be truncated
+away, and nothing classified such a row as an error: an exit 2 carrying that
+identity could be scored as a legitimate content refusal and earn a mutant
+kill.
+
+**What V3 changes.**
+
+1. The internal-error identity is captured from the **full** stderr as the
+   boolean row field `internal_error`, alongside the existing `traceback`,
+   `timed_out` and `leaked` flags; the 300-character tail is kept.
+2. It is graded as an **error, not a legitimate refusal**: such a row is
+   never `met` (the grading adds "the auditor reported an internal error,
+   which is not a refusal"), so the cell is unmet and appears in the arm's
+   `violating_cases`. No expectation changed and no rule was weakened.
+3. **Bounded actual stand-in controls**: the selftest writes two real
+   stand-in auditors (one emitting `could-not-evaluate: internal: …`, one
+   emitting a Python traceback), runs the grid against them as a
+   subprocess, and asserts that the identity is detected **and** that the row
+   is not `met`. The control is end to end — a real fixture, a real
+   subprocess, a real row.
+
+**Field contract for the mutation runner.** The exact field is
+`internal_error` (boolean, per row). A row with `internal_error` true or
+`traceback` true is an error, not a verdict: a mutation runner must treat it
+as a could-not-evaluate (exit 2, zero kills) rather than as a kill. The
+grid's own exit stays 1 for it (the row is unmet), so the mutation runner's
+stricter rule is the one that decides the kill.
+
+**Bounded verification (no full suite).** `--selftest` **19/19 ok** — three
+negative capabilities, four command-line controls, two stand-in controls, the
+negative fixture control, the valid hydration path and the five premise
+checks. Direct measurement of the stand-in: a stand-in that prints
+`could-not-evaluate: internal: ValueError: boom` and exits 2 yields
+`{"exit": 2, "met": false, "internal_error": true, "traceback": false,
+"timed_out": false, "leaked": false}` and the cell is listed in
+`violating_cases`.
+
+---
+
+## Correction 10 (proposal `fixes/GridAttestationV4/` — behavioural and specific controls)
+
+**Proposal only — no production edit; V1 (`6d9e31b7…`), V2 (`45e778a8…`) and
+V3 (`437128b8…`) stay filed.** New directory
+`.ufo/waves/round-24/fixes/GridAttestationV4/`: `promisor-grid.py` sha256
+`8e0d5c5401bee1c92b0e2421375fd3b03121999a7eef8c97afdac07d35af572d`,
+`promisor-grid.patch` (the full delta against the integrated `b034e159…`,
+601 lines), `promisor-grid-v4-delta.patch` (the **incremental** V4 delta
+against V3, 121 lines, sha256 `7ea7b22a…`), `README.md`. The manifest
+(`d86b7bea…`, 47 cells), every expected value, the method, the grader rules,
+the strict-14/loose-16 labelling, the V2 initial-premise guard and the V3
+`internal_error` contract are unchanged.
+
+**(1) The fixture control was too loose.** `negative-complete-clone-refused`
+accepted **any** `Premise`, so an unrelated setup failure could green it.
+V4 introduces the typed `ContractViolation(Premise)` with a `reason`
+attribute naming the violated clause — `initial-empty` (the clone missed
+nothing: the filter was ignored), `still-missing` (a hydrated clone still
+misses objects) or `missing-object` (the clone does not miss the object the
+cell is about). The control now requires the **specific** clause
+`initial-empty`; anything else leaves it red. The exit path is unchanged
+(exit 2, could-not-evaluate).
+
+**(2) The stand-in controls are now behavioural, with a legitimate
+counter-example.** The old internal stand-in carried no named reason and no
+names, so its row was unmet for the wrong reason and the control would have
+passed even with the grading's internal check deleted. V4 runs three real
+stand-in auditors against the real PG13 cell:
+
+* `content-refusal-meets` — a legitimate content-derived refusal (the
+  correct reason-class term, the correct names `corpus/SOURCES.md`, the
+  `could-not-evaluate:` prefix, no stdout, exit 2) **must meet**; this
+  proves the grader accepts a proper refusal and makes the internal
+  classification the *only* possible cause of a difference;
+* `internal-same-reason-does-not-meet` — the **same** valid reason and names
+  plus the internal identity, with a body long enough to push the prefix out
+  of the 300-character tail: it **must not meet**, and the control also
+  asserts that the prefix is absent from `stderr_tail` while
+  `internal_error` is true — proving the identity comes from the **full**
+  stderr and not from a tail accident;
+* `traceback-detected` — `traceback` true and the row not met.
+
+No control asserts on source text; all three are driven through the real
+command line and the real row.
+
+**Bounded verification (no full suite).** `--selftest` **20/20 ok** — three
+negative capabilities, four command-line controls, three stand-in controls,
+the specific-clause fixture control, the valid hydration path and the five
+premise checks. The blobless family in both arms against the candidate
+`ea51bc35…`: frozen arm 0 violations, strict amended view 0/4 (the r23
+refusals); current arm 0 violations, strict amended view **4/4** — PG05 0,
+PG06 0, PG28 0, PG43 2, all met, with `internal_error` false and
+`objects_acquired` empty in every cell.
+
+---
+
+## Correction 11 (proposal `fixes/GridAttestationV5/` — one dead constant deleted)
+
+**Proposal only — no production edit; V1–V4 stay filed.** New directory
+`.ufo/waves/round-24/fixes/GridAttestationV5/`: `promisor-grid.py` sha256
+`d2aca34a4031b332fc1d558083d27aa098768fa3a0623cfb9ae8e7cf83652469`,
+`promisor-grid-v5-delta.patch` (the incremental V5 delta against V4, sha256
+`4e5b1386…`), `promisor-grid.patch` (the full delta against the integrated
+`b034e159…`, sha256 `7b094360…`), `README.md`.
+
+The whole delta is two removed lines — the unreferenced
+`METADATA_REFUSAL = ("partial clone (", "promisor pack")` and its comment.
+A grep confirmed the constant's only occurrence in the file was its own
+definition. Every **active** metadata-refusal check is preserved: the
+frozen-history reason class remains `REASON_CLASSES["metadata"]`, the
+per-cell `reason_forbidden` rules in the manifest are unchanged, and
+`check_exit2_form` still forbids the metadata phrasing for a current-arm
+refusal. The manifest (`d86b7bea…`, 47 cells), every expectation, the strong
+names grader, the strict-14/loose-16 method, the V2 initial-premise guard,
+the V3 `internal_error` contract, the V4 behavioural controls, the reachable
+origins and the `--no-lazy` forensic probes are all as in V4.
+
+**Verification: none re-run** (L1 instruction — this is cleanup, not new
+validation). The only check performed is a compile check of the proposed
+source (`py_compile`, ok) plus the grep above; the behaviour is identical to
+V4 by construction. The knowledge writer may drop the dead anchor.
+
+---
+
+## Correction 12 (proposal `fixes/GridAttestationV6/` — interface findings N2, N4, N5, N9)
+
+**Proposal only — no production edit; V1–V5 stay filed.** New directory
+`.ufo/waves/round-24/fixes/GridAttestationV6/`: `promisor-grid.py` sha256
+`d8ff2c473a28249433cc52dd42c67252a5af1c54b59c4d3aeee3c243e3cf654f`,
+`promisor-grid-v6-delta.patch` (the incremental V6 delta against V5, 243
+lines, sha256 `05461d8d…`), `promisor-grid.patch` (the full delta against
+the integrated `b034e159…`, 829 lines, sha256 `4371082f…`), `README.md`.
+Source: `.ufo/waves/round-24/postfix/interface-findings-contract.txt` (the
+GridOracle owner items). The 47 primary cases, every expected value, every
+criterion and every twin link are unchanged; the manifest stays
+byte-identical (`d86b7bea…`).
+
+**N2 — the violation count was inflated.** Twin-mismatch rows were appended
+to **both** the live and the frozen failure lists, and a cell that missed its
+own view *and* broke a twin was counted twice. `violations` and
+`violating_cases` now count the **unique** graded cases that fail their
+graded view **or** the twin constraint, **for the selected arm only**
+(`collect_failures`); the graded view is the amended view for the current arm
+and the historical frozen column for the frozen arm. The twin equality
+criterion and the twin links are untouched. *Control*: a synthetic
+asymmetric two-cell twin example must report exactly **two** unique
+violating cases.
+
+**N4 — the grade explanations were lost.** `grade()`'s actual problem
+messages are kept per named view: `problems` (the graded view: the historical
+frozen column for the frozen arm, the amended view for the current arm),
+`amended_problems` (the strict comparable amended target, in both arms) and
+`original_problems` (the original view, current arm). The comparison work is
+done once per view and reused; no rule was weakened and no frozen
+expectation changed. Measured on the frozen arm, PG13's amended view now
+explains itself: `["reason not in class unavailable", "reason is the r23
+metadata refusal", "reason does not name the unavailable object"]`.
+
+**N5 — the fixture root was baked in.** The hard-coded
+`/fast/scratch/hyaku/kama-r24` root is gone: the caller's `TMPDIR` is
+honoured, an explicitly requested scratch that is not usable is a
+**could-not-evaluate (exit 2) before any fixture or auditor exists** — never
+a silent fallback elsewhere, never a traceback with exit 1 — and with no
+`TMPDIR` the standard temporary-directory selection is used. The per-fixture
+containment guards (root inside the grid root, `rev-parse --show-toplevel`
+equality, `--absolute-git-dir`) are unchanged. *Controls*: the requested root
+is honoured and an unavailable requested root is refused with exit 2 in
+**both** the normal and the `--selftest` mode.
+
+**N9 — the dead kind translation.** `run_case`'s kind translation was dead
+(`main` assigns the canonical manifest kind before any CLI output) and is
+removed; the **emitted** values stay the canonical `policy` / `control` /
+`open` and the real consumers are unaffected. Because the translation was
+dead, no consumer ever saw the translated value: the emitted `kind` has
+always been `policy` / `control` / `open`.
+
+**Digest placement (N8 coordination).** The run document now carries the
+byte identities of what was actually measured, together at the top level:
+`doc["auditor_sha256"][arm]` (the auditor blob that arm ran: the pinned r23
+base for `frozen`, the `--current` path for `current`), `doc["grid_sha256"]`
+(the producer's source digest), `doc["expectations_sha256"]` (the pinned
+manifest) and `doc["population_sha256"]` (the case table).
+
+**Bounded verification (no full suite).** `--selftest` **24/24 ok**; a
+bounded three-cell run (PG13, PG26, PG27) against the candidate
+`ea51bc35…`: `auditor_sha256 = {frozen: da5041a8…, current: ea51bc35…}`,
+`expectations_sha256 = d86b7bea…`, `population_sha256 = 612b0a74…`,
+`grid_sha256 = d8ff2c47…`; 0 violations in both arms; PG26/PG27 report
+`twin_equal = true`; the per-view problem lists are populated as described.
+The bounded runs used `TMPDIR` under an owned `/fast/scratch/…` directory.
+
+---
+
+## Correction 13 (proposal `fixes/GridAttestationV7/` — two minimal fidelity cleanups)
+
+**Proposal only — no production edit; V1–V6 stay filed.** New directory
+`.ufo/waves/round-24/fixes/GridAttestationV7/`: `promisor-grid.py` sha256
+`30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270`,
+`promisor-grid-v7-delta.patch` (the incremental V7 delta against V6, sha256
+`9743395a…`), `promisor-grid.patch` (the full delta against the integrated
+`b034e159…`, sha256 `2fcb836e…`), `README.md`. The whole delta is four
+hunks, 32 diff lines: **no code expansion, no schema change, no criterion
+change**, and the emitted `kind` output and the diagnostics are unchanged.
+
+**(1) The unavailable-root control was too loose.** The two controls
+(normal mode and `--selftest` mode) accepted **any** exit-2
+could-not-evaluate, so an unrelated input failure could green them. The
+control now requires the refusal to name the **actual requested root path**,
+to carry the words **"requested scratch"** and **"unavailable"**, and to be
+**no traceback**. The measured refusal text is
+`could-not-evaluate: the requested scratch <path> is unavailable`.
+
+**(2) `collect_failures` had a spare parameter.** The `rows` argument was
+never used; it is removed and its two call sites updated (the arm summary and
+the unique-violation control). The behaviour — the unique graded cases that
+fail their graded view or the twin constraint, for the selected arm only — and
+the emitted `violations` / `violating_cases` are unchanged.
+
+**Bounded verification (no full matrix).** `--selftest` **24/24 ok** with the
+tightened controls; the bounded run used `TMPDIR` under an owned
+`/fast/scratch/hyaku/kama-r24/GridAttestationV7/own-tmp` directory, not the
+public temporary area. The 47 primary cases, every expected value, every
+criterion, every twin link and the manifest bytes (`d86b7bea…`) are
+unchanged.

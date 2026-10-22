@@ -1,0 +1,34 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit-v6.py	2026-10-21 17:21:44.870805409 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit-v7.py	2026-10-21 17:26:11.943678036 -0300
+@@ -1317,6 +1317,31 @@
+                 + "\tevidence\n", encoding="utf-8")
+             rc, doc = run(_ns(base, report=[f"1={fleet_draft}"],
+                                no_errata=False, errata=str(errata_blob)))
++            check("errata-correction-naming-the-cited-fleet-only-blob-is-invalid",
++                  rc == 1 and doc["summary"]["errata_invalid"] == 1
++                  and doc["summary"]["errata_unmatched"] == 0)
++            # the errata correction consumer, ISOLATED: the report cites a
++            # known lane blob (an ordinary finding on its own) and the
++            # ledger corrects that token with a fleet-only blob
++            lane_blob_a = git(lane, "hash-object", "-w", "--stdin",
++                              stdin="known lane blob\n").strip()
++            fleet_blob_b = git(fleet, "hash-object", "-w", "--stdin",
++                               stdin="other fleet blob\n").strip()
++            isolated_draft = Path(tmp, "isolated-errata-draft.md")
++            isolated_draft.write_text(
++                "## Landed changes\n- `" + lane_blob_a + "` lane blob\n",
++                encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={isolated_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("known-lane-blob-citation-is-an-ordinary-finding",
++                  rc == 1 and ("landed-unresolved", lane_blob_a) in kinds)
++            isolated_errata = Path(tmp, "isolated-errata.tsv")
++            isolated_errata.write_text(
++                "1\tlanded-unresolved\t" + lane_blob_a + "\t" + fleet_blob_b
++                + "\tevidence\n", encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={isolated_draft}"],
++                              no_errata=False, errata=str(isolated_errata)))
+             check("errata-correction-naming-a-fleet-only-blob-is-invalid",
+                   rc == 1 and doc["summary"]["errata_invalid"] == 1
+                   and doc["summary"]["errata_unmatched"] == 0)

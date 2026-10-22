@@ -1,0 +1,70 @@
+CaseCrossRepo — independent fixture verification (PG26/PG27)
+scratch clone: /fast/scratch/hyaku/kama-r24/falsify/CaseCrossRepo
+detached HEAD : 2e254a1763a9c08aa07fc53081287f506c447d84
+git           : 2.56.0
+grid root kept: /fast/scratch/hyaku/kama-r24/falsify/CaseCrossRepo/tmp/promisor-grid-7hjz49nm
+  current/000 = PG26-cross-repo-found-promisor
+  current/001 = PG27-cross-repo-found-plain
+  frozen/000, frozen/001 = same fixtures under the r23 base auditor
+
+digests
+  tools/report-landing-audit.py           ea51bc35b71ac09f4c233e21a16be49af555e1333004a0fe166234de79edd220
+  tests/report-audit/promisor-grid.py     b034e1596746d312989b7894c0757b67859df19a476a01ccd95076424135cefa
+  tests/report-audit/promisor-grid-expectations.json
+                                           d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1
+  expectations_sha256 (grid)              d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1
+  population_sha256 (grid)                612b0a74f3eebaa9074bdde8ecd8f194f55ebaf9a35ab2b975fddbff8dd2ed88
+  frozen auditor blob (0df800e)           da5041a8191e0e6ec385adc7c659ddc7544a835aff65dd45b34de623c5765af1
+
+1) bounded grid selection
+   cd /fast/scratch/hyaku/kama-r24/falsify/CaseCrossRepo && \
+   TMPDIR=/fast/scratch/hyaku/kama-r24/falsify/CaseCrossRepo/tmp \
+   python3 tests/report-audit/promisor-grid.py --arm both \
+     --case PG26-cross-repo-found-promisor --case PG27-cross-repo-found-plain --json
+   exit 0, stderr empty.
+   frozen arm : PG26 exit 2 (metadata refusal) ; PG27 exit 0
+   current arm: PG26 exit 0 ; PG27 exit 0 ; violations 0 ; twin_equal true
+   (+ the same run with --keep --out, exit 0)
+
+2) premises, read directly from the kept fixture (independent of the harness)
+   lane  remote.origin.promisor=true, extensions.partialclone=origin,
+         remote.origin.url=<grid>/current/000/absent-remote.git  (path does NOT exist)
+   fleet no promisor config
+   lane  commit list: 58866b563cd900df310588effe79028efc104c33 (round-1: work, t=1000)
+   fleet commit list: 42153ed93c86c66dcb1d0a38fcdbde1cb9a5cfd6 (round-1: report, t=2000)
+                      f723c76c41609df00704d93c29bd44408dcbdd2e (fleet: init, t=1900)
+   report .ufo/reports/round-1/kama.md:
+       ## Landed changes
+       - 58866b563cd900df310588effe79028efc104c33   (lane commit)
+       - f723c76c41609df00704d93c29bd44408dcbdd2e   (fleet commit: present ONLY in the fleet)
+   token f723c76... in lane  : NO  (cat-file -e --no-lazy-fetch --no-replace-objects)
+   token f723c76... in fleet : YES, type commit
+   lane  missing objects (rev-list --missing=print refs/heads/master) : none
+   fleet missing objects (rev-list --missing=print HEAD)              : none
+   PG27 fixture (current/001): identical in every respect except the lane promisor config
+
+3) independent pristine runs of the candidate auditor on the kept fixtures
+   exit 0 (both) ; stderr empty ; summary.status=clean ; by_kind all zero ;
+   defects [] ; results[0] = {round 1, cutoff 2000, required 1, round_commits 1,
+   post_report [], report_committed true, source_url_hashes []}
+   object inventory (cat-file --batch-all-objects | sha256):
+     PG26 lane 1d84dbc08c7c27f95bb923b813ab7880f6bba568f7492c29afe5332b61313800
+        before == after
+     PG26 fleet 6b74174dd26f6e775aa0bd68cc9a05a74e80a2aa269c86b384762c6525796a65
+        before == after
+   normalized twin document (lane/fleet paths replaced by <lane>/<fleet>):
+     PG26 == PG27 : True
+
+4) transport trap (copy of the PG26 fixture; remote.origin.uploadpack -> marker script)
+   auditor exit 0, stderr empty, marker file NOT created : the promisor remote was
+   never contacted.
+
+5) non-vacuity probe: PM05 "consult the first repository only"
+   (scratch copy of tools/report-landing-audit.py, `for store in stores:` ->
+    `for store in stores[:1]:`; production untouched)
+   PG26 fixture: exit 1, status failed,
+     defects [('unresolved-full-hash','f723c76c41609df00704d93c29bd44408dcbdd2e'),
+              ('landed-unresolved','f723c76c41609df00704d93c29bd44408dcbdd2e')]
+   PG27 fixture: exit 1, status failed, identical defect pairs.
+   => the cross-repository citation is load-bearing: the cell fails loudly if the
+      second audited repository is not consulted.

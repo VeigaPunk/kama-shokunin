@@ -1,0 +1,61 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit.py	2026-10-21 16:58:01.011267081 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit-v2.py	2026-10-21 17:04:59.176856227 -0300
+@@ -590,8 +590,12 @@
+                                 args.errata)
+         except (OSError, UnicodeDecodeError) as exc:
+             raise EvalError(f"cannot read errata {args.errata}: {exc}") from exc
+-    return parse_errata(git(lane_repo, "show", f"{tip}:{ERRATA}"),
+-                        f"{args.branch}:{ERRATA}")
++    try:
++        text = git(lane_repo, "show", f"{tip}:{ERRATA}")
++    except EvalError as exc:
++        # the committed ledger is evidence the audit needs
++        raise required_read(f"{tip}:{ERRATA} in {lane_repo}", exc) from exc
++    return parse_errata(text, f"{args.branch}:{ERRATA}")
+ 
+ 
+ def apply_errata(results, errata, stores):
+@@ -606,10 +610,13 @@
+             used.update(e["line"] for e in match)
+     unmatched = [e for e in errata
+                  if e["round"] in selected and e["line"] not in used]
+-    # only hex corrections are looked up (case-folded, as git does): a
+-    # revision expression such as HEAD or :/text is never a correction
++    # only hex corrections of the SELECTED rounds are looked up (case-
++    # folded, as git does): a revision expression such as HEAD or :/text is
++    # never a correction, and a row of a round that was not audited is not
++    # this audit's business -- reading its object would be a guess
+     hexed = {e["line"]: e["correction"].lower() for e in errata
+              if e["kind"] in RESOLVABLE
++             and e["round"] in selected
+              and re.fullmatch(r"[0-9a-fA-F]{7,40}", e["correction"])}
+     status = lookup(stores, list(hexed.values()), "^{commit}")
+     for e in errata:
+@@ -634,9 +641,12 @@
+                     f"errata line {e['line']}: unknown: unavailable required "
+                     f"object: {token} could be hidden behind the missing tree "
+                     f"or commit {hole_oid} in {hole.path}")
+-    invalid = [e for e in errata if e["kind"] in RESOLVABLE and (
+-        status.get(hexed.get(e["line"])) != "found"
+-        or (e["kind"] == "landed-omitted" and e["correction"] != e["token"]))]
++    # a row of a round that was not audited cannot make this audit fail
++    invalid = [e for e in errata if e["round"] in selected
++               and e["kind"] in RESOLVABLE and (
++                   status.get(hexed.get(e["line"])) != "found"
++                   or (e["kind"] == "landed-omitted"
++                       and e["correction"] != e["token"]))]
+     return unmatched, invalid
+ 
+ 
+@@ -1156,6 +1166,11 @@
+                   and doc["summary"]["errata_unmatched"] == 1)
+             rc, doc = with_rows(*good, (2, "landed-omitted", c, c, "x"))
+             check("unselected-round-row-ignored", rc == 0)
++            rc, doc = with_rows(*good, (2, "unresolved-full-hash", "0" * 40,
++                                        "0" * 40, "x"))
++            check("unselected-invalid-correction-is-ignored",
++                  rc == 0 and doc["summary"]["errata_invalid"] == 0
++                  and doc["summary"]["errata_unmatched"] == 0)
+             for label, row in (
+                     ("round-must-equal", (2, "landed-omitted", c, c, "t")),
+                     ("kind-must-equal", (1, "landed-unresolved", c, c, "t")),

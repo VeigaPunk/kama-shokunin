@@ -1,0 +1,46 @@
+--- a/promisor-grid.py (d8ff2c47, GridAttestationV6)
++++ b/promisor-grid.py (GridAttestationV7)
+@@ -1067,7 +1067,7 @@
+     return problems
+ 
+ 
+-def collect_failures(rows, graded, arm):
++def collect_failures(graded, arm):
+     """The unique graded cases that fail their graded view or the twin
+     constraint, for the selected arm only.
+ 
+@@ -1177,7 +1177,7 @@
+          "met_amended": None, "met_frozen": False, "twin_equal": False},
+     ]
+     graded_syn = [r for r in synthetic if r["kind"] in ("policy", "control")]
+-    unique = collect_failures(synthetic, graded_syn, "current")
++    unique = collect_failures(graded_syn, "current")
+     cases.append(("unique-violations-per-arm", unique == ["PG23-x", "PG24-y"]))
+     failed = [n for n, ok in cases if not ok]
+     for name, ok in cases:
+@@ -1290,9 +1290,15 @@
+                               capture_output=True,
+                               env=env(TMPDIR=str(absent)), cwd=str(work))
+         err = proc.stderr.decode(errors="replace")
++        # the refusal must name the requested root and the reason, and must
++        # not be a traceback: an unrelated input failure cannot green it
+         results.append((f"unavailable-root-{mode}-refused",
+                         proc.returncode == 2
+-                        and "could-not-evaluate" in err))
++                        and "could-not-evaluate" in err
++                        and str(absent) in err
++                        and "requested scratch" in err
++                        and "unavailable" in err
++                        and "Traceback" not in err))
+     # a runner copy without its companion manifest: the external oracle is
+     # unavailable, which is a could-not-evaluate and not a tampering claim
+     bare = work / "no-manifest"
+@@ -1425,7 +1431,7 @@
+             # constraint, for the selected arm only: a twin mismatch and an
+             # individual miss in the same cell count once, and the other
+             # arm's failures never leak in
+-            failed = collect_failures(rows, graded, arm)
++            failed = collect_failures(graded, arm)
+             # the amended view is scored per arm: the frozen arm against its
+             # own history (met_amended_frozen), the current arm against the
+             # live view (met_amended).  A single counter mixed both and

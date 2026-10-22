@@ -1,0 +1,52 @@
+--- a/promisor-grid.py (45e778a8, GridAttestationV2)
++++ b/promisor-grid.py (GridAttestationV3)
+@@ -882,6 +882,9 @@
+         problems += check_exit2_form(err, out, names, forbidden)
+     if arm_out["traceback"]:
+         problems.append("traceback")
++    if arm_out.get("internal_error"):
++        problems.append("the auditor reported an internal error, which is "
++                        "not a refusal")
+     if arm_out["timed_out"]:
+         problems.append("timeout")
+     if arm_out["leaked"]:
+@@ -903,6 +906,10 @@
+     acquired = {k: sorted(after[k] - before[k]) for k in after}
+     obs = {"arm": arm, "exit": code,
+            "traceback": "Traceback (most recent call last)" in err,
++           # the auditor's catch-all ("could-not-evaluate: internal: ...") is
++           # an error, not a refusal: it is read from the FULL stderr, because
++           # the 300 character tail can truncate the identity
++           "internal_error": "could-not-evaluate: internal:" in err,
+            "timed_out": timed_out, "leaked": bool(survivors(tmp)),
+            "objects_acquired": acquired,
+            "stderr_tail": err.strip()[-300:]}
+@@ -1162,6 +1169,28 @@
+     err = proc.stderr.decode(errors="replace")
+     results.append(("cli-unknown-selector-refused",
+                     proc.returncode == 2 and "unknown case" in err))
++    # stand-in auditors: the internal-error identity and a traceback must be
++    # detected and must not be scored as legitimate refusals
++    for label, body, field in (
++            ("internal", "import sys\n"
++             "sys.stderr.write('could-not-evaluate: internal: ValueError: "
++             "boom\\n')\nsys.exit(2)\n", "internal_error"),
++            ("traceback", "import sys\n"
++             "sys.stderr.write('Traceback (most recent call last):\\n  "
++             "boom\\nValueError: boom\\n')\nsys.exit(2)\n", "traceback")):
++        stand_in = work / f"stand-in-{label}.py"
++        stand_in.write_text(body, encoding="utf-8")
++        proc = subprocess.run([sys.executable, str(here), "--arm", "current",
++                               "--current", str(stand_in), "--json",
++                               "--case", "PG13-missing-lane-blob-promisor"],
++                              capture_output=True, env=env(), cwd=str(work))
++        try:
++            doc = json.loads(proc.stdout.decode(errors="replace"))
++            row = doc["arms"]["current"]["rows"][0]
++        except (ValueError, KeyError, IndexError):
++            row = {}
++        results.append((f"stand-in-{label}-detected",
++                        row.get(field) is True and row.get("met") is False))
+     # a runner copy without its companion manifest: the external oracle is
+     # unavailable, which is a could-not-evaluate and not a tampering claim
+     bare = work / "no-manifest"

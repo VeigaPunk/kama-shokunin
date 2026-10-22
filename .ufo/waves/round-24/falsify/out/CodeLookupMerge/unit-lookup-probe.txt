@@ -1,0 +1,105 @@
+B holds a copy of A's colliding object 6f754802fe14c0d947c81a55fd4bece2eec04879 (prefix 6f75)
+== fixture facts ==
+A-commit=217a44ce3224b493aef16572b90be9e17ec31924
+B-commit=217a44ce3224b493aef16572b90be9e17ec31924
+B-blob=20b1a083194c2ab56d44cbb907103e91efeea404
+B-tag->blob=a0140942db598103e2c50ab0dd04a1f8ab099ddf
+B-tag->gone-commit=462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384
+A-ambiguous-4hex=6f75
+
+== raw git cat-file --batch-check probes (store B) ==
+  '20b1a083194c2ab56d44cbb907103e91efeea404'                   -> '20b1a083194c2ab56d44cbb907103e91efeea404 blob 12'
+  '20b1a083194c2ab56d44cbb907103e91efeea404^{commit}'          -> '20b1a083194c2ab56d44cbb907103e91efeea404^{commit} missing'
+  '20b1a083194c2ab56d44cbb907103e91efeea404^{}'                -> '20b1a083194c2ab56d44cbb907103e91efeea404 blob 12'
+  'a0140942db598103e2c50ab0dd04a1f8ab099ddf'                   -> 'a0140942db598103e2c50ab0dd04a1f8ab099ddf tag 114'
+  'a0140942db598103e2c50ab0dd04a1f8ab099ddf^{commit}'          -> 'a0140942db598103e2c50ab0dd04a1f8ab099ddf^{commit} missing'
+  'a0140942db598103e2c50ab0dd04a1f8ab099ddf^{}'                -> '20b1a083194c2ab56d44cbb907103e91efeea404 blob 12'
+  '462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384'                   -> '462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384 tag 116'
+  '462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384^{commit}'          -> '462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384^{commit} missing'
+  '462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384^{}'                -> '462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384^{} missing'
+  '217a44ce3224b493aef16572b90be9e17ec31924'                   -> '217a44ce3224b493aef16572b90be9e17ec31924 commit 117'
+  '217a44ce3224b493aef16572b90be9e17ec31924^{commit}'          -> '217a44ce3224b493aef16572b90be9e17ec31924 commit 117'
+  (B) absent token: '0000000000000000000000000000000000000000 missing'
+  (A) ambiguous prefix bare: '6f75 ambiguous'
+  (A) ambiguous prefix peeled: '6f75^{commit} missing'
+  (A) dangling commit bare: '8672b0ebaaf8a05de9559d53f337e8a8b8bc8925 commit 123'
+  (A) dangling commit peeled: '8672b0ebaaf8a05de9559d53f337e8a8b8bc8925 commit 123'
+
+== lookup() results ==
+-- blob-only-in-B (expect wrongtype)
+   stores=(A,B) peel=''         -> {'20b1a083194c2ab56d44cbb907103e91efeea404': 'found'}
+   stores=(A,B) peel='^{commit}' -> {'20b1a083194c2ab56d44cbb907103e91efeea404': 'unknown'}
+   stores=(B,A) peel=''         -> {'20b1a083194c2ab56d44cbb907103e91efeea404': 'found'}
+   stores=(B,A) peel='^{commit}' -> {'20b1a083194c2ab56d44cbb907103e91efeea404': 'wrongtype'}
+-- tag->blob-only-in-B (expect wrongtype)
+   stores=(A,B) peel=''         -> {'a0140942db598103e2c50ab0dd04a1f8ab099ddf': 'found'}
+   stores=(A,B) peel='^{commit}' -> {'a0140942db598103e2c50ab0dd04a1f8ab099ddf': 'unknown'}
+   stores=(B,A) peel=''         -> {'a0140942db598103e2c50ab0dd04a1f8ab099ddf': 'found'}
+   stores=(B,A) peel='^{commit}' -> {'a0140942db598103e2c50ab0dd04a1f8ab099ddf': 'wrongtype'}
+-- tag->gone-only-in-B (expect unknown)
+   stores=(A,B) peel=''         -> {'462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384': 'found'}
+   stores=(A,B) peel='^{commit}' -> {'462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384': 'unknown'}
+   stores=(B,A) peel=''         -> {'462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384': 'found'}
+   stores=(B,A) peel='^{commit}' -> {'462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384': 'unknown'}
+-- commit-only-in-B (expect found)
+   stores=(A,B) peel=''         -> {'217a44ce3224b493aef16572b90be9e17ec31924': 'found'}
+   stores=(A,B) peel='^{commit}' -> {'217a44ce3224b493aef16572b90be9e17ec31924': 'found'}
+   stores=(B,A) peel=''         -> {'217a44ce3224b493aef16572b90be9e17ec31924': 'found'}
+   stores=(B,A) peel='^{commit}' -> {'217a44ce3224b493aef16572b90be9e17ec31924': 'found'}
+-- ambiguous-in-A-only (expect ambiguous)
+   stores=(A,B) peel=''         -> {'6f75': 'found'}
+   stores=(A,B) peel='^{commit}' -> {'6f75': 'unknown'}
+   stores=(B,A) peel=''         -> {'6f75': 'found'}
+   stores=(B,A) peel='^{commit}' -> {'6f75': 'wrongtype'}
+-- ambiguous-in-A-one-copy-in-B
+   stores=(A,B) peel=''         -> {'6f75': 'found'}
+   stores=(A,B) peel='^{commit}' -> {'6f75': 'unknown'}
+   stores=(B,A) peel=''         -> {'6f75': 'found'}
+   stores=(B,A) peel='^{commit}' -> {'6f75': 'wrongtype'}
+-- ambiguous-in-A-resolved-in-B
+   stores=(A,B) peel=''         -> {'6f75': 'found'}
+   stores=(A,B) peel='^{commit}' -> {'6f75': 'unknown'}
+   stores=(B,A) peel=''         -> {'6f75': 'found'}
+   stores=(B,A) peel='^{commit}' -> {'6f75': 'wrongtype'}
+-- dangling-commit-in-A (expect found)
+   stores=(A,B) peel=''         -> {'8672b0ebaaf8a05de9559d53f337e8a8b8bc8925': 'found'}
+   stores=(A,B) peel='^{commit}' -> {'8672b0ebaaf8a05de9559d53f337e8a8b8bc8925': 'found'}
+   stores=(B,A) peel=''         -> {'8672b0ebaaf8a05de9559d53f337e8a8b8bc8925': 'found'}
+   stores=(B,A) peel='^{commit}' -> {'8672b0ebaaf8a05de9559d53f337e8a8b8bc8925': 'found'}
+
+== verdict consequence of lookup() state ==
+   blob-only-in-B (expect wrongtype) stores=(A,B) peel='': {'20b1a083194c2ab56d44cbb907103e91efeea404': 'found'} -> no refusal
+   blob-only-in-B (expect wrongtype) stores=(A,B) peel='^{commit}': {'20b1a083194c2ab56d44cbb907103e91efeea404': 'unknown'} -> REFUSE exit2: round 1: unknown: unavailable required object: 20b1a083194c2ab56d44cbb907103e91efeea404 is present but its content cannot be served
+   blob-only-in-B (expect wrongtype) stores=(B,A) peel='': {'20b1a083194c2ab56d44cbb907103e91efeea404': 'found'} -> no refusal
+   blob-only-in-B (expect wrongtype) stores=(B,A) peel='^{commit}': {'20b1a083194c2ab56d44cbb907103e91efeea404': 'wrongtype'} -> no refusal
+   tag->blob-only-in-B (expect wrongtype) stores=(A,B) peel='': {'a0140942db598103e2c50ab0dd04a1f8ab099ddf': 'found'} -> no refusal
+   tag->blob-only-in-B (expect wrongtype) stores=(A,B) peel='^{commit}': {'a0140942db598103e2c50ab0dd04a1f8ab099ddf': 'unknown'} -> REFUSE exit2: round 1: unknown: unavailable required object: a0140942db598103e2c50ab0dd04a1f8ab099ddf is present but its content cannot be served
+   tag->blob-only-in-B (expect wrongtype) stores=(B,A) peel='': {'a0140942db598103e2c50ab0dd04a1f8ab099ddf': 'found'} -> no refusal
+   tag->blob-only-in-B (expect wrongtype) stores=(B,A) peel='^{commit}': {'a0140942db598103e2c50ab0dd04a1f8ab099ddf': 'wrongtype'} -> no refusal
+   tag->gone-only-in-B (expect unknown) stores=(A,B) peel='': {'462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384': 'found'} -> no refusal
+   tag->gone-only-in-B (expect unknown) stores=(A,B) peel='^{commit}': {'462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384': 'unknown'} -> REFUSE exit2: round 1: unknown: unavailable required object: 462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384 is present but its content cannot be served
+   tag->gone-only-in-B (expect unknown) stores=(B,A) peel='': {'462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384': 'found'} -> no refusal
+   tag->gone-only-in-B (expect unknown) stores=(B,A) peel='^{commit}': {'462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384': 'unknown'} -> REFUSE exit2: round 1: unknown: unavailable required object: 462aec608ce2cb2bd8592f6a0b5b53c6fdf5e384 is present but its content cannot be served
+   commit-only-in-B (expect found) stores=(A,B) peel='': {'217a44ce3224b493aef16572b90be9e17ec31924': 'found'} -> no refusal
+   commit-only-in-B (expect found) stores=(A,B) peel='^{commit}': {'217a44ce3224b493aef16572b90be9e17ec31924': 'found'} -> no refusal
+   commit-only-in-B (expect found) stores=(B,A) peel='': {'217a44ce3224b493aef16572b90be9e17ec31924': 'found'} -> no refusal
+   commit-only-in-B (expect found) stores=(B,A) peel='^{commit}': {'217a44ce3224b493aef16572b90be9e17ec31924': 'found'} -> no refusal
+   ambiguous-in-A-only (expect ambiguous) stores=(A,B) peel='': {'6f75': 'found'} -> no refusal
+   ambiguous-in-A-only (expect ambiguous) stores=(A,B) peel='^{commit}': {'6f75': 'unknown'} -> REFUSE exit2: round 1: unknown: unavailable required object: 6f75 is present but its content cannot be served
+   ambiguous-in-A-only (expect ambiguous) stores=(B,A) peel='': {'6f75': 'found'} -> no refusal
+   ambiguous-in-A-only (expect ambiguous) stores=(B,A) peel='^{commit}': {'6f75': 'wrongtype'} -> no refusal
+   ambiguous-in-A-one-copy-in-B stores=(A,B) peel='': {'6f75': 'found'} -> no refusal
+   ambiguous-in-A-one-copy-in-B stores=(A,B) peel='^{commit}': {'6f75': 'unknown'} -> REFUSE exit2: round 1: unknown: unavailable required object: 6f75 is present but its content cannot be served
+   ambiguous-in-A-one-copy-in-B stores=(B,A) peel='': {'6f75': 'found'} -> no refusal
+   ambiguous-in-A-one-copy-in-B stores=(B,A) peel='^{commit}': {'6f75': 'wrongtype'} -> no refusal
+   ambiguous-in-A-resolved-in-B stores=(A,B) peel='': {'6f75': 'found'} -> no refusal
+   ambiguous-in-A-resolved-in-B stores=(A,B) peel='^{commit}': {'6f75': 'unknown'} -> REFUSE exit2: round 1: unknown: unavailable required object: 6f75 is present but its content cannot be served
+   ambiguous-in-A-resolved-in-B stores=(B,A) peel='': {'6f75': 'found'} -> no refusal
+   ambiguous-in-A-resolved-in-B stores=(B,A) peel='^{commit}': {'6f75': 'wrongtype'} -> no refusal
+   dangling-commit-in-A (expect found) stores=(A,B) peel='': {'8672b0ebaaf8a05de9559d53f337e8a8b8bc8925': 'found'} -> no refusal
+   dangling-commit-in-A (expect found) stores=(A,B) peel='^{commit}': {'8672b0ebaaf8a05de9559d53f337e8a8b8bc8925': 'found'} -> no refusal
+   dangling-commit-in-A (expect found) stores=(B,A) peel='': {'8672b0ebaaf8a05de9559d53f337e8a8b8bc8925': 'found'} -> no refusal
+   dangling-commit-in-A (expect found) stores=(B,A) peel='^{commit}': {'8672b0ebaaf8a05de9559d53f337e8a8b8bc8925': 'found'} -> no refusal
+
+== end-to-end audit of a landed citation of the blob (fleet-only blob) ==
+   (the fleet store is the second store in run(): stores = (lane, fleet))

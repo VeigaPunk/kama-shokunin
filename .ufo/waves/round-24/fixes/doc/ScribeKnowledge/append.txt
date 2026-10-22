@@ -1,0 +1,85 @@
+### Round24 refusal semantics continuation — what a refusal must prove (owner: kama)
+
+Append-only; the round24 sections above stand and nothing here repeats them.
+This states semantics only: no final candidate measurement, count, verdict or
+landed hash is claimed, no production file is edited, and production stays
+pinned at `2e254a17…`. The anchors below are the selected core proposal
+`fixes/StoreLocalPresence/report-landing-audit-v9.py` (sha256 `b9be4f42…`), the
+grid proposal `fixes/GridAttestationV3/promisor-grid.py` (sha256 `437128b8…`)
+and the mutator proposal `fixes/MutationEvidenceV6/`; the pinned production
+`tools/report-landing-audit.py` (sha256 `ea51bc35…`) is cited only where the
+two differ. No new source row, quote, facet or used-by cell is introduced
+here, and none of the source-chain corrections is restated: that packet is
+separately owned.
+
+**Presence is per store, and the proof is per canonical object.** A store's
+own bare answer decides what that store holds; the merge of all audited
+stores must not, or an object living in one repository makes it look present
+and unreadable in the other (v9 `:246`, `bare_objects` at `:190`). A
+conclusive non-commit outcome is reconciled only against the *same canonical
+object id* behind the token: different objects behind one abbreviated name
+are not reconciled and the uncertainty stands (v9 `:294-310`). The pinned
+production still merges the stores for that presence question
+(`tools/report-landing-audit.py:204`, used at `:221`), so the per-store rule
+is the proposal's correction, not a filed production fact.
+
+**Known unavailable ids come from all present roots; the opaque boundary
+comes only from the pinned root.** Two walks, two root sets: the known
+unavailable referenced ids are encountered from every present local
+commit/tree/tag root, so a dangling commit, tree or tag that references an
+unavailable object is seen and a citation of it stays unknown (v9 `:752`,
+`:762`); the opaque missing-name boundary — the missing trees and commits
+whose names are hidden — is walked from the pinned audit root only, so
+unreachable opaque garbage elsewhere in the store is not a dependency of the
+audit (v9 `:763`). The pinned production walks both sets from the same
+all-present roots (`tools/report-landing-audit.py:666-677`), so the split
+root sets are likewise the proposal's correction.
+
+**No whole-store or reachable-tree completeness precondition.** The root is
+the audit's *context* (the pinned lane tip or the fleet tip), not a
+completeness gate; the store-wide diagnosis of what a repository cannot
+serve runs only for a citation that no audited repository resolves (v9
+`:767-774`). An unrelated missing historical blob, an unselected branch or
+an unused file is not a precondition of the audit, and an all-resolved input
+stays runnable despite unused holes. Availability is judged per required
+read, never as a global property of the store.
+
+**A failed read of required evidence is a refusal; a runtime fault is not
+one.** A read of evidence the audit needs that fails becomes a typed
+could-not-evaluate with a content-derived reason naming what was wanted
+(v9 `required_read` at `:343`). A fatal cause — a git timeout or a broken
+git — is marked `fatal` and does not spend a second diagnostic timeout to
+name the object (v9 `:167-178`, and `root_tree` skips the call on a fatal
+cause at `:326-341`). The grid reads the auditor's catch-all identity
+`could-not-evaluate: internal:` from the **full** stderr, because the
+300-character tail truncates it, and treats it as an error that is *not* a
+refusal (grid `:912`, graded at `:883-887`). A traceback or an internal
+error is an unmet observation: it can never earn a mutant kill.
+
+**A diagnostic difference is not an acceptance.** The exit code and the
+diagnostics are separate evidence. A row whose exit is unchanged and whose
+diagnostics differ is `diagnostic-only` and carries no acceptance and no
+availability credit; a normal verdict that became a refusal is `refusal-2`,
+an over-refusal signal and explicitly not an availability credit; only an
+unavailable case that became a real verdict is `actual-verdict`, the
+availability credit; a normal verdict that became another normal verdict is
+`verdict-change`, reported separately; a row without the comparison fields
+is `unclassified` and no class credit is guessed
+(`fixes/MutationEvidenceV6/rationale-v6.md:58-67`). A refusal is never
+labelled an availability acceptance, and a same-exit diagnostic sensitivity
+is not an unavailable-evidence acceptance witness. The paired obligations
+(KQ35) are read from those class rows, not from a raw kill count.
+
+**The shape of a current-arm refusal is graded, not assumed.** Every
+current-arm refusal must be a typed could-not-evaluate on stderr, must
+carry no verdict document on stdout, must give a content-derived reason that
+names the unavailable object, and must never carry the r23 metadata refusal
+(grid `check_exit2_form` at `:840-858`, the forbidden metadata strings at
+`:88`). Reason classes are graded from the row's own fields; a reason-class
+mismatch is a failed row, not a reclassification.
+
+Out of scope here: the fixture and evidence corrections, the grid's
+comparison-method labels and the mutator's pending output-field names, which
+their own lanes own; the source-curation packet and its mutable consumer
+cells, which `ConnSources` owns and which this continuation neither
+duplicates nor alters.

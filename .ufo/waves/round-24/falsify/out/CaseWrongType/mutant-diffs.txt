@@ -1,0 +1,21 @@
+=== mutant A: wrongtype -> absent (tools/report-landing-audit.py) ===
+@@ -247,7 +247,7 @@
+                                 f"short output")
+             for token, line in zip(unresolved, lines):
+                 offer(token, "unknown" if line.endswith(" missing")
+-                      else "wrongtype")
++                      else "absent")
+     return status
+ 
+ 
+
+=== mutant B: wrongtype no longer short-circuits the refusal ===
+@@ -427,7 +427,7 @@
+     available: the cited token itself, the object the store references
+     under that name, or the missing tree or commit that could hide it."""
+     for token, state in status.items():
+-        if state in ("found", "ambiguous", "wrongtype"):
++        if state in ("found", "ambiguous"):
+             continue
+         if state == "unknown":
+             raise EvalError(

@@ -146,6 +146,16 @@ def main(argv=None):
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--only", action="append")
     args = ap.parse_args(argv)
+    # an empty selection is could-not-evaluate, and it is decided before
+    # the source is read, before the pristine run and before any grid
+    # call: a selector that names no mutant must not look like a pass
+    selected = [name for name, _, _ in MUTANTS
+                if not args.only or name in args.only]
+    if args.only and not selected:
+        print(f"could-not-evaluate: --only selected no mutant: "
+              f"{args.only}; the ids are {', '.join(n for n, _, _ in MUTANTS)}",
+              file=sys.stderr)
+        return 2
     source = AUDIT.read_text(encoding="utf-8")
     rc, failed, err = grid(AUDIT)
     if rc != 0:

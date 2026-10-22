@@ -1,0 +1,133 @@
+KQ35 CONTINUATION — APPEND-ONLY PROPOSAL (DocQuality seat, round 24)
+
+Owner: KamaR23-2.DocQuality (read-only seat; no production edit performed).
+Source of this text: .ufo/waves/round-24/falsify/advice/DocQuality.md (same lane, same wave).
+Purpose: give L1 one paste-ready append-only continuation for corpus/QUALITY.md that
+  (a) keeps the KQ20/KQ25 binding explicit,
+  (b) anchors the no-trade rule to AXES.md,
+  (c) records the withdrawn original expectation as withdrawn/not-achieved,
+  (d) states the twin-pairing coverage gap instead of implying it is encoded.
+Constraints honoured: no row is rewritten, no new criterion is added, no manifest cell is
+  changed, no new SOURCES row, no full suite.
+
+--------------------------------------------------------------------------------------
+PROPOSED APPEND (paste after the current end of corpus/QUALITY.md; the KQ35 row at
+line 183 is left byte-identical and no new table row is introduced):
+
+## Round24 continuation — no-trade, kill-credit and pairing scope (append-only)
+
+This continuation adds no criterion and rewrites no row. KQ35 stands as written; the
+following only fixes scope that KQ35's own wording left open, and each item is
+answerable from committed bytes.
+
+- **Kill credit is verdict-shaped, never diagnostic-shaped.** KQ20 and KQ25 remain in
+  force for the round-24 promisor contract and are not superseded here. A mutant earns
+  kill credit only from a verdict difference on a control cell it is declared to
+  discriminate: a crash, a traceback, an internal `could-not-evaluate`, a timeout or a
+  harness leak is could-not-evaluate and credits no kill, and a failure on a cell
+  outside the mutant's declared rows does not kill that mutant. Diagnostic failure and
+  verdict failure are reported separately, and the actual class rows a mutant
+  discriminates are preserved as reported.
+- **The no-trade rule is unchanged and is anchored here.** `AXES.md` §Working the axes
+  (fleet root): a round is admitted only if every claim verifies **and no axis is
+  harmed** — a trade anywhere is not an improvement. Disclosure of a trade does not
+  waive the rule. A correct runnable workflow lost and excused as a disclosed trade is
+  not an admissible round outcome.
+- **The initial expectation is withdrawn, not achieved.** The initial registration's
+  blanket unknown-citation expectation (`.ufo/waves/round-24/preregistration.json`
+  `expected_after[3]`) is withdrawn and not achieved; it is retained as the original
+  view and reported as withdrawn, never as satisfied. The prospective correction is
+  `.ufo/waves/round-24/oracle-amendment-1.json`, and the 47-cell manifest
+  `tests/report-audit/promisor-grid-expectations.json` (`d86b7bea…`) is the frozen
+  graded authority and is not rewritten.
+- **Pairing coverage is bounded, and the bound is stated rather than implied.** The
+  frozen manifest encodes a plain twin for 42 of its 47 cells; five `policy` cells carry
+  no twin inside the frozen 47 — PG21, PG43, PG46 and PG47 (exit 2) and PG48 (exit 0).
+  Those cells are graded by their own per-cell exit, kinds, defects and reason class,
+  not by a twin verdict equality. Private plain metadata-only companions for those cells
+  are exercised outside the frozen 47 as a supplement: the two opaque unavailable-state
+  companions report exit 2 with no verdict document to compare, and the clean companion
+  reports a clean 0/0. The supplement adds no primary score, changes no manifest cell
+  and no expectation byte, and does not convert the frozen 47 into a paired population.
+
+--------------------------------------------------------------------------------------
+EVIDENCE FOR EACH CLAIM (all read-only, bounded, at pinned commit
+2e254a1763a9c08aa07fc53081287f506c447d84; no full suite was run)
+
+1. Kill-credit is verdict-shaped.
+   - Committed `tests/report-audit/promisor-mutants.py:786` sets `killed = bool(bad)`
+     where `bad` is any graded row with `met == False`; `attributed` (`:793-797`) is
+     computed afterwards and never gates the kill.
+   - Bounded probe, shipped runner, stub grid where the PM03 acceptance mutant fails
+     only PG01 (a complete-state cell): `killed=1`, `status=killed`, `attributed=False`,
+     `unexpected_rows=['PG01']`, run exit 0.
+   - Bounded probe, real pinned grid + stand-in crashing auditor on PG01: row
+     `exit=1, traceback=True, met=False`; `harness_fault` (`:509-527`) returns None
+     (it inspects only harness_leaks/leaked/timed_out) and `violated_rows` (`:530-539`)
+     returns that row, so a diagnostic failure is credited a kill.
+   - Same for an internal-error auditor (`exit 2`,
+     `could-not-evaluate: internal: TypeError: …`).
+   - Against this, the shipped auditor's own selftest (62/62, exit 0) and the shipped
+     probe's selftest (11/11, exit 0) pass; and the pinned pair does discriminate every
+     unavailable-state cell: PM03/PM04/PM06 over all 14 exit-2 cells killed all three,
+     union of failed rows = 14/14, no cell left undiscriminated.
+   - L1 disposition (2026-10-21, `KamaR23-2`): F1 accepted; MutationOracle preparing V6,
+     GridOracle V3 `internal_error` full-stderr flag; actual class rows preserved and
+     diagnostic separated from verdict.
+
+2. No-trade anchor.
+   - `/home/vgpnk/Projects/shokunin/AXES.md:34-36` — "every claim verifies **and no
+     axis is harmed** — a trade anywhere is not an improvement".
+   - AXES.md last changed in `84bade0` (2026-10-16), i.e. unchanged across round 24.
+   - `corpus/QUALITY.md` cites AXES.md zero times today (grep count 0), which is why the
+     anchor is added here rather than assumed.
+
+3. Withdrawn, not achieved.
+   - `git log` order at the pinned revision: `d1b9d95` (preregistration) → `123640b`
+     (amendment) → `f66b226` (frozen 44-case snapshot + manifest) → `aacbd52`
+     (supplement) → `ed1cc3a` (candidate auditor, grid, probe, manifest). The
+     chronology is real, not asserted.
+   - The manifest is committed once and never rewritten; `original` and `amended` are
+     both present on every cell; 7 cells differ (PG22, PG23, PG24, PG28, PG30, PG34,
+     PG41).
+   - The pinned grid reports `met_original` and `met_amended` per row plus
+     `withdrawn_original_failures`; on the probed set PG22 is the sole withdrawn row
+     (`met_original=False, met_amended=True`).
+   - Cold-receipt note (L1, 2026-10-21): the pre-contract failed-pristine sensitivity
+     receipt carries no admission credit and is already dispositioned by
+     `.ufo/waves/round-24/receipt-errata.json`; this continuation does not re-open it.
+
+4. Pairing coverage bound.
+   - Measured on the frozen manifest `d86b7bea…`: 26 cells carry a `twin` pointer
+     forming 25 distinct unordered pairs; 42 of 47 cells participate in at least one
+     pair; the 5 unpaired cells are exactly the `policy` cells PG21, PG43, PG46, PG47
+     (exit 2) and PG48 (exit 0).
+   - The manifest is frozen (never rewritten, per L1): no `twin` link is added by this
+     seat and none is proposed here.
+   - PG48 is a `policy` row whose `original` and `amended` expectations are identical
+     (`exit 0, kinds [], defects []`), so it is graded by that single expectation, not
+     by a twin equality. `oracle-supplement-2.json` describes PG48's expectation as
+     "same correct clean twin verdict"; that twin is not encoded in the frozen manifest,
+     and the continuation says so rather than implying the encoding exists.
+   - Private plain metadata-only companions for PG46/PG47/PG48 live outside the frozen
+     47 and carry no primary score (L1, 2026-10-21).
+
+--------------------------------------------------------------------------------------
+WHAT THIS SEAT DID NOT DO (recorded for honesty)
+
+- Did not edit `corpus/QUALITY.md`, `corpus/lessons/round-24.md`,
+  `corpus/SOURCES.md`, `corpus/SOURCES.md` row 105/95, the manifest, the grid, the
+  probe or the auditor. The continuation above is a proposal for L1 to apply.
+- Did not run the full 47-cell grid or the full mutant inventory; every measurement is
+  single-case or small-multi-case, plus the two shipped selftests.
+- Did not change any expectation cell, add any SOURCES row, or inflate any score.
+
+--------------------------------------------------------------------------------------
+FILES WRITTEN BY THIS SEAT
+
+- `.ufo/waves/round-24/falsify/advice/DocQuality.md` (this lane's report; appended, not
+  rewritten)
+- `.ufo/waves/round-24/falsify/out/DocQuality/append.txt` (this file)
+- Scratch only: `/fast/scratch/hyaku/kama-r24/falsify/DocQuality` (clone + probe/)
+
+Report: .ufo/waves/round-24/falsify/out/DocQuality/append.txt

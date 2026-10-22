@@ -1,0 +1,143 @@
+--- a/promisor-grid.py (6d9e31b7, GridAttestation V1)
++++ b/promisor-grid.py (GridAttestationV2)
+@@ -97,6 +97,14 @@
+     """The expectation manifest is not the pinned snapshot: exit 2."""
+ 
+ 
++class Unavailable(Exception):
++    """The expectation manifest is missing or unreadable: exit 2.
++
++    Without the bytes no tampering can be asserted, so this is a separate
++    identity: snapshot_unavailable, never snapshot_tampered.
++    """
++
++
+ # The expectation manifest is pinned byte for byte.  The 47 registered cells
+ # are the ones the L1 froze (the 44-case snapshot plus the three disclosed
+ # supplement cells); any byte change - a dropped case, a weakened names
+@@ -236,13 +244,18 @@
+         write_under(root, pack.parent / (pack.stem + ".promisor"), b"")
+ 
+ 
+-def blobless_clone(root, origin, dest):
+-    """A real file:// blobless partial clone (local transport, no network)."""
++def blobless_clone(root, origin, dest, filtered=True):
++    """A real file:// blobless partial clone (local transport, no network).
++
++    `filtered=False` makes the deliberate negative control: a complete clone
++    that claims to be a blobless one.
++    """
+     git(origin, "config", "uploadpack.allowFilter", "true")
+-    p = subprocess.run(["git", "-c", "protocol.file.allow=always", "clone", "-q",
+-                        "--filter=blob:none", "--no-checkout",
+-                        f"file://{origin}", str(dest)],
+-                       capture_output=True, env=env(), cwd=str(root))
++    argv = ["git", "-c", "protocol.file.allow=always", "clone", "-q"]
++    if filtered:
++        argv.append("--filter=blob:none")
++    argv += ["--no-checkout", f"file://{origin}", str(dest)]
++    p = subprocess.run(argv, capture_output=True, env=env(), cwd=str(root))
+     if p.returncode:
+         raise Premise(f"blobless clone failed: "
+                       f"{p.stderr.decode(errors='replace').strip()}")
+@@ -484,23 +497,27 @@
+     if opt.get("blobless_lane"):
+         origin = Path(tmp, "lane-origin")
+         shutil.move(str(lane), str(origin))
+-        lane = blobless_clone(root, origin, Path(tmp, "lane"))
++        lane = blobless_clone(root, origin, Path(tmp, "lane"),
++                              filtered=not opt.get("complete_clone"))
++        # the clone must already be partial: the contract is proved on the
++        # clone itself, before any hydration, so a complete clone cannot pass
++        # as a hydrated one
++        assert_blobless_contract(lane, "refs/heads/master", hydrated=False,
++                                  expect=shas.get("f_blob"))
+         if opt.get("hydrate_lane"):
+             hydrate(lane, origin)
+-        assert_blobless_contract(lane, "refs/heads/master",
+-                                  hydrated=bool(opt.get("hydrate_lane")),
+-                                  expect=shas.get("f_blob") if not opt.get(
+-                                      "hydrate_lane") else None)
++            assert_blobless_contract(lane, "refs/heads/master",
++                                      hydrated=True)
+     if opt.get("blobless_fleet"):
+         origin = Path(tmp, "fleet-origin")
+         shutil.move(str(fleet), str(origin))
+-        fleet = blobless_clone(root, origin, Path(tmp, "fleet"))
++        fleet = blobless_clone(root, origin, Path(tmp, "fleet"),
++                               filtered=not opt.get("complete_clone"))
++        assert_blobless_contract(fleet, "HEAD", hydrated=False,
++                                  expect=shas.get("report_blob"))
+         if opt.get("hydrate_fleet"):
+             hydrate(fleet, origin)
+-        assert_blobless_contract(fleet, "HEAD",
+-                                  hydrated=bool(opt.get("hydrate_fleet")),
+-                                  expect=shas.get("report_blob") if not opt.get(
+-                                      "hydrate_fleet") else None)
++            assert_blobless_contract(fleet, "HEAD", hydrated=True)
+     if opt.get("errata"):
+         if len(shas["spliced"]) != 40:
+             raise Premise(f"the spliced token is not a 40-hex sha: "
+@@ -948,7 +965,10 @@
+ def load_manifest():
+     """Read the pinned expectation manifest, or refuse."""
+     path = Path(__file__).resolve().parent / EXPECT
+-    raw = path.read_bytes()
++    try:
++        raw = path.read_bytes()
++    except OSError as exc:
++        raise Unavailable(f"the expectation manifest is not readable: {exc}")
+     digest = hashlib.sha256(raw).hexdigest()
+     if digest != MANIFEST_SHA256:
+         raise Tampered(f"the expectation manifest bytes changed: {digest} "
+@@ -1076,6 +1096,23 @@
+                   len(broken["premise"]["lane_missing"]) == 1))
+     cases.append(("premise-fake-still-absent",
+                   broken["premise"]["fake_present"] is False))
++    # a "blobless" clone that was not filtered must be refused before the
++    # hydration: the negative fixture control
++    try:
++        build(root, Path(root, "selftest3"), lane_mark="config",
++              sources=False, blobless_lane=True, hydrate_lane=True,
++              complete_clone=True)
++        cases.append(("negative-complete-clone-refused", False))
++    except Premise:
++        cases.append(("negative-complete-clone-refused", True))
++    # the valid path: a genuine partial clone is hydrated into a complete one
++    try:
++        genuine = build(root, Path(root, "selftest4"), lane_mark="config",
++                        sources=False, blobless_lane=True, hydrate_lane=True)
++        cases.append(("genuine-partial-clone-hydrated",
++                      genuine["premise"]["lane_missing"] == []))
++    except Premise:
++        cases.append(("genuine-partial-clone-hydrated", False))
+     failed = [n for n, ok in cases if not ok]
+     for name, ok in cases:
+         print(f"{'ok' if ok else 'FAIL'} {name}")
+@@ -1125,6 +1162,16 @@
+     err = proc.stderr.decode(errors="replace")
+     results.append(("cli-unknown-selector-refused",
+                     proc.returncode == 2 and "unknown case" in err))
++    # a runner copy without its companion manifest: the external oracle is
++    # unavailable, which is a could-not-evaluate and not a tampering claim
++    bare = work / "no-manifest"
++    bare.mkdir(parents=True, exist_ok=True)
++    shutil.copy2(here, bare / here.name)
++    proc = subprocess.run([sys.executable, str(bare / here.name), "--selftest"],
++                          capture_output=True, env=env(), cwd=str(bare))
++    err = proc.stderr.decode(errors="replace")
++    results.append(("cli-missing-manifest-refused",
++                    proc.returncode == 2 and "snapshot_unavailable" in err))
+     return results
+ 
+ 
+@@ -1145,6 +1192,9 @@
+     except Tampered as exc:
+         print(f"could-not-evaluate: snapshot_tampered: {exc}", file=sys.stderr)
+         return 2
++    except Unavailable as exc:
++        print(f"could-not-evaluate: snapshot_unavailable: {exc}", file=sys.stderr)
++        return 2
+     wanted = set(args.case or [])
+     known = {c["case"] for c in table["cases"]}
+     known |= {o["case"] for o in table["open_rows"]}

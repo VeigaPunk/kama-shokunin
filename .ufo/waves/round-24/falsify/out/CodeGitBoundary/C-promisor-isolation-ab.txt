@@ -1,0 +1,72 @@
+missing blob = f719efd430d52bcfc8566a43b2eb655688d38871 (loose object deleted, repo promisor-marked, remote unreachable)
+--- C1 cat-file blob WITH production isolation ---
+fatal: git cat-file f719efd430d52bcfc8566a43b2eb655688d38871: bad file
+exit=128
+--- C2 cat-file blob WITHOUT --no-lazy-fetch (control) ---
+fatal: '/nonexistent-absent-remote.git' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+fatal: '/nonexistent-absent-remote.git' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+fatal: '/nonexistent-absent-remote.git' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+fatal: git cat-file f719efd430d52bcfc8566a43b2eb655688d38871: bad file
+exit=128
+--- C3 show HEAD:b.txt WITH production isolation ---
+fatal: bad object HEAD:b.txt
+exit=128
+--- C4 show HEAD:b.txt WITHOUT --no-lazy-fetch (control) ---
+fatal: '/nonexistent-absent-remote.git' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+fatal: '/nonexistent-absent-remote.git' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+fatal: '/nonexistent-absent-remote.git' does not appear to be a git repository
+fatal: Could not read from remote repository.
+
+Please make sure you have the correct access rights
+and the repository exists.
+fatal: bad object HEAD:b.txt
+exit=128
+--- C5 log -1 --format=%T WITH production isolation ---
+6640fb01ffae1cdd778a3fe65b469f62a5230def
+exit=0
+--- C6 ls-tree WITH production isolation ---
+100644 blob f719efd430d52bcfc8566a43b2eb655688d38871	b.txt
+exit=0
+warning: This repository uses promisor remotes. Some objects may not be loaded.
+--- C7 r24 walk1 WITH production isolation ---
+c0357a347f1beabc83cfa017844f01309eda9199
+fb54dee87766fecc7b8ddc228913434b9a9d3ec2
+20e50a07feffafe7699bf38ff4027a606f406eaa
+5626abf0f72e58d7a153368ba57db4c673c0e171
+6640fb01ffae1cdd778a3fe65b469f62a5230def
+?f719efd430d52bcfc8566a43b2eb655688d38871
+exit=0
+--- C8 r24 walk1 WITHOUT --no-lazy-fetch (control) ---
+c0357a347f1beabc83cfa017844f01309eda9199
+fb54dee87766fecc7b8ddc228913434b9a9d3ec2
+20e50a07feffafe7699bf38ff4027a606f406eaa
+5626abf0f72e58d7a153368ba57db4c673c0e171
+6640fb01ffae1cdd778a3fe65b469f62a5230def
+?f719efd430d52bcfc8566a43b2eb655688d38871
+exit=0
+--- C9 r24 walk2 (--filter=blob:none) WITH production isolation ---
+c0357a347f1beabc83cfa017844f01309eda9199
+fb54dee87766fecc7b8ddc228913434b9a9d3ec2
+20e50a07feffafe7699bf38ff4027a606f406eaa
+6640fb01ffae1cdd778a3fe65b469f62a5230def
+exit=0

@@ -1,0 +1,101 @@
+[
+ {
+  "case": "S1-baseline-clean",
+  "expect": "exit 0, no defects",
+  "observed": {
+   "observed": "rc=0 defects=[] err=''",
+   "pass_": true
+  },
+  "pass": true
+ },
+ {
+  "case": "S2-unrelated-missing-blob-does-not-block",
+  "expect": "exit 0, no defects",
+  "observed": {
+   "observed": "rc=0 defects=[] blob_in_missing=True blob_in_opaque=False",
+   "pass_": true
+  },
+  "pass": true
+ },
+ {
+  "case": "S3-blob-hole-does-not-make-unresolved-token-unknown",
+  "expect": "exit 1 unresolved-full-hash (not exit 2)",
+  "observed": {
+   "observed": "rc=1 defects=[('unresolved-full-hash', '0000000000000000000000000000000000000000')] err=''",
+   "pass_": true
+  },
+  "pass": true
+ },
+ {
+  "case": "S4-missing-tree-opaque-hole-refuses-unresolved-token",
+  "expect": "exit 2 naming the missing tree",
+  "observed": {
+   "observed": "rc=2 err='could-not-evaluate: round 1: unknown: unavailable required object: 0000000000000000000000000000000000000000 could be hidden behind the missing tree or commit 690824ded37f89eb78120f0c21d5cd49e831c831 in /fast/scratch/hyaku/kama-r24/falsify/CodeOpaqueDiagnosis/work/s4/lane' tree_in_opaque=True",
+   "pass_": true
+  },
+  "pass": true
+ },
+ {
+  "case": "S5-missing-tree-alone-is-not-a-closure-precondition",
+  "expect": "exit 0, no defects",
+  "observed": {
+   "observed": "rc=0 defects=[] err='' tree_in_opaque=True",
+   "pass_": true
+  },
+  "pass": true
+ },
+ {
+  "case": "S6-cited-missing-blob-is-unknown",
+  "expect": "exit 2 naming the blob",
+  "observed": {
+   "observed": "rc=2 err='could-not-evaluate: round 1: unknown: unavailable required object: 78981922613b2afb6025042ff6bd878ac1994e85 is referenced by the history of /fast/scratch/hyaku/kama-r24/falsify/CodeOpaqueDiagnosis/work/s6/lane but the repository cannot serve it'",
+   "pass_": true
+  },
+  "pass": true
+ },
+ {
+  "case": "S7-dangling-present-objects-are-roots",
+  "expect": "the dangling blob appears in the store-wide missing set",
+  "observed": {
+   "observed": "dangling_commit=eeb90e26ced0 blob_in_missing=True blob_in_rooted_walk=False",
+   "pass_": true
+  },
+  "pass": true
+ },
+ {
+  "case": "S8-missing-commit-is-an-opaque-hole",
+  "expect": "the missing commit appears in missing and in opaque",
+  "observed": {
+   "observed": "missing=True opaque=True",
+   "pass_": true
+  },
+  "pass": true
+ },
+ {
+  "case": "S9-promisor-metadata-keeps-the-opaque-diagnosis",
+  "expect": "exit 2 naming the tree, remote never contacted",
+  "observed": {
+   "observed": "rc=2 err='could-not-evaluate: round 1: unknown: unavailable required object: 0000000000000000000000000000000000000000 could be hidden behind the missing tree or commit 690824ded37f89eb78120f0c21d5cd49e831c831 in /fast/scratch/hyaku/kama-r24/falsify/CodeOpaqueDiagnosis/work/s9/lane' trap=False",
+   "pass_": true
+  },
+  "pass": true
+ },
+ {
+  "case": "S10-refusal-names-the-same-hole-twice",
+  "expect": "identical stderr twice",
+  "observed": {
+   "observed": "rc=2/2 same=True",
+   "pass_": true
+  },
+  "pass": true
+ },
+ {
+  "case": "S11-diagnosis-is-conditional-not-a-precondition",
+  "expect": "zero walks on a clean run, >=1 on the unresolved path",
+  "observed": {
+   "observed": "clean_walks=0 unresolved_walks=1 rc=0/2",
+   "pass_": true
+  },
+  "pass": true
+ }
+]

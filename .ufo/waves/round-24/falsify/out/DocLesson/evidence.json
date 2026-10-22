@@ -1,0 +1,104 @@
+{
+  "lane": "DocLesson",
+  "wave": "round-24",
+  "kind": "falsification",
+  "target": "corpus/lessons/round-24.md",
+  "pinned_revision": "2e254a1763a9c08aa07fc53081287f506c447d84",
+  "scratch_clone": "/fast/scratch/hyaku/kama-r24/falsify/DocLesson/repo",
+  "production_edits": "none",
+  "findings": [
+    {
+      "id": "F1",
+      "severity": "MEDIUM",
+      "class": "chronology truthfulness",
+      "location": "corpus/lessons/round-24.md:67 (Mistakes - round24 integration continuation, row 1)",
+      "claim_under_test": "Captured-by: 'independent CritScores/CritUnknown/CritNoTrade review before L1 candidate source inspection'; Fix: 'freeze the independent44 before L1 inspection'",
+      "falsified": true,
+      "observed": [
+        "commit 123640b (oracle amendment = L1 candidate-semantics ruling) authored/committed 2026-10-21 15:04:12 -0300, before freeze commit f66b226 cd=15:12:55 and before snapshot file mtime 15:12:43",
+        "build/out/CaseMissingFleetTree/audit-candidate-wip.json mtime 15:03:38 measures candidate auditor blob 5cf9c72a6c3d633df259002caf4b82451dca317fa4cb9d67c9308cc7f52bc2bd (candidate work ~9min before the snapshot file existed)",
+        "build/out/CritUnknown/candidate.patch mtime 15:08:31; build/out/CritUnknown/witness-output.txt mtime 15:09:21 (candidate measurements before the snapshot file)",
+        "build/advice/CritUnknown.md mtime 15:13:00 is LATER than the freeze commit committer time 15:12:55",
+        "CritUnknown.md:76 '| candidate (ruling v3) | 0, 9/9 | 0, 9/9 | **0, 9/9** |'; :47 'In the candidate, metadata never decides a verdict'; :152 'candidate.patch implements exactly this ruling'; :269 'Candidate updated (+73/-29)'",
+        "CritScores.md:18 and :170 and CritNoTrade.md:178 are self-declared verifiably pre-candidate"
+      ],
+      "holds_despite": [
+        "44 shared cases byte-identical to shipped manifest (rc=0)",
+        "frozen_auditor_sha256 da5041a8191e0e6ec385adc7c659ddc7544a835aff65dd45b34de623c5765af1 == sha256 of git show 0df800e:tools/report-landing-audit.py (rc=0)",
+        "supplement rows map to PG46/47/48 with amended.exit == expected_exit 2/2/0 (rc=0)",
+        "supplement probe build/out/CritUnknown/hidden_probe.py audits the FROZEN auditor (grid.FROZEN), so its expectation values are candidate-independent"
+      ],
+      "minimal_correction": "Replace the wall-clock wording: Captured-by -> 'CritScores and CritNoTrade, verifiably pre-candidate (CritScores:18/:170; CritNoTrade:178); CritUnknown's local-object contract is candidate-informed (candidate.patch 15:08:31, candidate row :76) but its expected rows are derived from source and fixture premises, not from running a candidate (:198)'. Fix -> 'freeze the independent44 with candidate-independent values (44 shared cases byte-identical to the shipped manifest, base-auditor sha da5041a8..., not the candidate ea51bc35...); the freeze file was written after candidate work existed (snapshot 15:12:43 vs candidate-wip audit 15:03:38)'. Do not weaken the value-independence claim."
+    },
+    {
+      "id": "F2",
+      "severity": "LOW",
+      "class": "citation fidelity",
+      "location": "corpus/lessons/round-24.md:95-96 and :153 (S105 gate entries)",
+      "claim_under_test": "Located quote in bytes.decode errors: \"If 'strict' (the default), a UnicodeError exception is raised.\" with .ufo/waves/round-24/sources/S105.json pinning that snapshot",
+      "falsified": true,
+      "observed": [
+        "pinned snapshot sha256 54d4532cb9073365147c168ad6cdf46dd1ecb922ca3b11f77dd867f1ec08cb80 == S105.json sha256",
+        "plain quoted form occurs 0 times in the pinned snapshot",
+        "rendered form \"If `'strict'` (the default), a [`UnicodeError`](exceptions.html#UnicodeError \"UnicodeError\") exception is raised.\" occurs 2 times",
+        "negative counts subprocess/TextIOWrapper/'text mode' = 0/0/0 (the lesson's 0/0/0 is CORRECT)",
+        "S105.json 'quote' field carries the same de-marked plain form"
+      ],
+      "minimal_correction": "Print the snapshot's own rendered form as the quote, or add one clause: 'the pinned snapshot stores it as markdown emphasis; the plain form occurs 0x and the rendered form 2x in python-bytes-decode-reader.txt'. Same wording for S105.json's quote field."
+    },
+    {
+      "id": "F3",
+      "severity": "LOW",
+      "class": "traceability",
+      "location": "corpus/lessons/round-24.md:28",
+      "claim_under_test": "S103 'Independent opening: build/advice/SrcRepoLayout.md and SrcPartial.md.'",
+      "falsified": true,
+      "observed": [
+        "SrcRepoLayout.md:77 attributes the quoted .promisor sidecar sentence to '§Design Details', contradicting the lesson's §Handling Missing Objects anchor",
+        "ConnPriorSources.md D5 (do-not-act): 'S103's anchor is right ... SrcRepoLayout's section attribution is the error. Do not \"correct\" S103 toward §Design Details.'",
+        "upstream official partial-clone page, tag-stripped: sentence occurs 1x, positioned between the '§ Handling Missing Objects' heading and the next h2 (lesson anchor correct)",
+        "SrcPartial.md:35,:51 carry the correct anchor"
+      ],
+      "minimal_correction": "Cite SrcPartial.md as the independent opening; drop SrcRepoLayout.md from that list or annotate it: 'cited for the .promisor sidecar fact only; its §Design Details attribution of that sentence is the rejected one (ConnPriorSources D5)'."
+    },
+    {
+      "id": "F4",
+      "severity": "LOW",
+      "class": "evidence status",
+      "location": "corpus/lessons/round-24.md:67 (Fix cell)",
+      "claim_under_test": "'PM02 is the negative control for the rejected blanket rule'",
+      "falsified": true,
+      "observed": [
+        "PM02 blanket-unknown-refusal is correctly defined in build/out/MutationOracle/mutation-inventory.json and MutationOracle.md over PG22-PG25, PG29, PG30, PG33, PG34, PG37, PG41, PG42, PG47",
+        "mutation-inventory grid_sha256 b034e1596746d312989b7894c0757b67859df19a476a01ccd95076424135cefa == shipped tests/report-audit/promisor-grid.py sha; candidate_auditor_sha256 ea51bc35b71ac09f4c233e21a16be49af555e1333004a0fe166234de79edd220 == shipped tools/report-landing-audit.py sha",
+        "the only PM02 kill receipt build/out/MutationOracle/sensitivity-promisor-grid.json has baseline_mode true, grid = build/out/GridOracle/promisor-grid.py (sha 5e96fa6084049550081a63ae532f6152bb56df03a7cf4c3d93364e1c1db02223, NOT the shipped b034e159), pristine_unmet_cells = 5 (PG15, PG16, PG19, PG20, PG46)",
+        "shipped runner rule promisor-mutants.py:82-84 and code :711-716: a pristine that does not meet the grid makes the whole run could-not-evaluate (exit 2) and credits NO kill",
+        "MutationOracle.md §9.1: against the integrated pair the run 'should exit 0 with nine kills and one survivor (PM07) ... This is the re-run I did not make after the repair'"
+      ],
+      "minimal_correction": "Qualify the Fix cell: 'PM02 is the designated negative control for the rejected blanket rule (role from the mutation inventory); its kill is evidenced only in the baseline-mode sensitivity run against the superseded grid copy 5e96fa60... with a failing pristine; the shipped-pair re-run was not made (MutationOracle §9.1)'. The control designation itself needs no change."
+    }
+  ],
+  "held": [
+    "round base 0df800e...; preregistration landed d1b9d956a0beda9ac32a1a2cf6ced875faeada0d (git rev-parse d1b9d95)",
+    "47 expected cells byte-identical to frozen44 + independently filed 3-cell supplement (rc=0)",
+    "original expectation bytes remain filed: manifest sha d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1 == GridOracle.md record",
+    "consumer-reconciliation table 11/11 old->new used-by values match base/ed1cc3a -> HEAD; only field index 10 changed for S001-S104; HEAD has 105 rows incl. S105",
+    "S095 teaches and anchor byte-identical base->HEAD; status rejected; S105 records the explicit rejection; S096 remains the narrowed positive replacement",
+    "S102 quote 1x under the --missing=<missing-action> heading upstream; scope caveat is a labelled lane inference",
+    "S103 quote 1x inside §Handling Missing Objects upstream (anchor holds)",
+    "S104 mark_object lines 143-149 retained copy sha d25f3b1a0b96f736bea3c77b79368501d87b1a2d23a0b1daf170b2c2e5a9ca35 == upstream v2.56.0 builtin/fsck.c; promisor early return precedes the HAS_OBJ check",
+    "S105 negative counts 0/0/0 recomputed over the pinned snapshot; snapshot sha matches S105.json",
+    "r23 lineage: lesson:178 '73 seats dispatched (68 reports; dead: ...)' ; 69 durable reports (70 advice entries minus swarm-registry.json); LOG.md:1417-1418 and :1439-1443 match 69 / 40-of-56 / 19 FIFO-tied; repo-state-grid.py:195-213 f_promisor_pack vs :596-602 t_blobless confirms the T01/F23 split",
+    "round-24 continuation rows 2-5: GridOracle.md:272 extra=[] always empty; :281 39-hex splice; Corrections 3 (:341) and 4 (:417); proxy-run-r23-grid.json lists PM05 as surviving; shipped grid computes twin_equal (:1014) before adding twin mismatches to live_fail/frozen_fail (:1020-1028); shipped runner drops opaque_tree and hidden_blob and asserts absence in both repos; shipped auditor reports raw vs uncorrected defects separately",
+    "Git>=2.45 prerequisite explicitly not approved or repaired; R23-H2 carried (CritScores S2; SCORECARD round-24 section)",
+    "calibration 7->7 is not an admission or waiver of operability harm (round-23 closure rejected-harmed, ConnClosure.md:5)",
+    "residual-debt identifiers all present in ConnClosure.md; uncommitted-draft-uses-now and inherited-GIT_DIR-untouched selftest expressions byte-identical base->HEAD"
+  ],
+  "unverified": [
+    "outside-closure MANIFEST rounds[428] is not in this repository; its content was corroborated only via build/advice/ConnClosure.md:5 (admitted false, verdict rejected-harmed); its own verification.spotcheck text not read directly",
+    "no execution of the r23 grid, mutation runner or any candidate was performed; mutant/pristine statements are read from retained receipts",
+    "intent of 'L1 inspection' (candidate source vs frozen oracle) is not decidable from the text; F1 is framed to hold under either reading",
+    "the production tree's appended 'Round24 falsification erratum' block (another lane) was not audited"
+  ],
+  "report": ".ufo/waves/round-24/falsify/advice/DocLesson.md"
+}

@@ -1,0 +1,23 @@
+--- pristine/tools/report-landing-audit.py
++++ PM03-skip-required-object-availability/tools/report-landing-audit.py
+@@ -126,7 +126,7 @@
+         but the repository cannot serve, and the subset that hides names
+         (computed at most once per store)."""
+         if self._missing is None:
+-            self._missing = missing_reachable(self.path, self.root)
++            self._missing = (set(), set())
+         return self._missing
+ 
+ 
+
+--- pristine/tools/report-landing-audit.py
++++ PM04-accept-unavailable-referenced-object/tools/report-landing-audit.py
+@@ -694,7 +694,7 @@
+     cannot hand it over, so the audit must refuse rather than report a
+     verdict about it. A missing object the citation does not name is
+     unrelated and does not block anything."""
+-    for store in stores:
++    for store in ():
+         missing, _ = store.missing()
+         for oid in missing:
+             if oid == token or oid.startswith(token):

@@ -1,0 +1,441 @@
+--- a/tests/report-audit/promisor-grid.py (b034e159, integrated)
++++ b/tests/report-audit/promisor-grid.py (proposal)
+@@ -17,6 +17,14 @@
+   amended   the live policy: .ufo/waves/round-24/oracle-amendment-1.json.
+             This is the graded view.
+ 
++Fixtures keep a blobless clone's local origin reachable on purpose: a lazy
++fetch would succeed against it and acquire objects, which the per-run
++before/after object inventory reports as `objects_acquired`.  A manual probe
++with --keep must therefore keep the origin in place, must not disable or
++delete it, and must run git with --no-lazy-fetch; removing the origin to
++avoid a flag regression would hide the very regression the tripwire exists to
++catch.
++
+ Usage:
+   promisor-grid.py [--arm frozen|current|both] [--current PATH]
+                     [--frozen-path PATH] [--case NAME]... [--json]
+@@ -34,6 +42,7 @@
+ import json
+ import os
+ from pathlib import Path
++import re
+ import shutil
+ import signal
+ import subprocess
+@@ -84,6 +93,22 @@
+     """The fixture or the harness could not be established: exit 2."""
+ 
+ 
++class Tampered(Exception):
++    """The expectation manifest is not the pinned snapshot: exit 2."""
++
++
++# The expectation manifest is pinned byte for byte.  The 47 registered cells
++# are the ones the L1 froze (the 44-case snapshot plus the three disclosed
++# supplement cells); any byte change - a dropped case, a weakened names
++# list, a rewritten expectation - is a tampered snapshot and the grid refuses
++# to run rather than report a number against it.
++MANIFEST_SHA256 = "d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1"
++# the size of the pinned table is part of the contract: a dropped case is a
++# structural change, caught by the attestation as well as by the byte pin
++EXPECTED_CASES = 47
++EXPECTED_OPEN_ROWS = 1
++
++
+ # --------------------------------------------------------------- environment
+ 
+ def env(**extra):
+@@ -237,6 +262,31 @@
+                     shutil.copy2(f, target / f.name)
+ 
+ 
++def assert_blobless_contract(repo, root, hydrated, expect=None):
++    """The blobless fixture must really be partial.
++
++    After a genuine blobless clone the promised objects are missing, and the
++    missing set is computed with lazy fetching disabled, so the absence is the
++    clone's own and never a fetch.  A hydrated clone must end with an empty
++    missing set; an unhydrated one must still miss the object the cell is
++    about.  A filter that was ignored, or a hydration that happened silently,
++    is a premise failure (exit 2), not a different fixture.
++    """
++    missing = missing_objects(repo, root)
++    if hydrated:
++        if missing:
++            raise Premise(f"{repo}: the hydrated clone still misses "
++                          f"{missing}")
++        return missing
++    if not missing:
++        raise Premise(f"{repo}: the blobless clone misses nothing: the "
++                      f"filter was ignored")
++    if expect and expect not in missing:
++        raise Premise(f"{repo}: the blobless clone does not miss {expect} "
++                      f"(missing: {missing})")
++    return missing
++
++
+ def drop_object(repo, sha):
+     obj = git_dir(repo) / "objects" / sha[:2] / sha[2:]
+     if not obj.exists():
+@@ -424,6 +474,12 @@
+         if key == "cited_blob":
+             shas["cited_blob"] = shas["f_blob"]
+         shas[key] = drop_object(target, shas[key])
++        # the removal must really hold: the probe runs with lazy fetching
++        # disabled, so a store that could serve the object again is a premise
++        # failure (exit 2), never a silently different fixture
++        if object_exists(target, shas[key]):
++            raise Premise(f"{target}: the removed object {shas[key]} is "
++                          f"still available")
+     # blobless clones
+     if opt.get("blobless_lane"):
+         origin = Path(tmp, "lane-origin")
+@@ -431,12 +487,20 @@
+         lane = blobless_clone(root, origin, Path(tmp, "lane"))
+         if opt.get("hydrate_lane"):
+             hydrate(lane, origin)
++        assert_blobless_contract(lane, "refs/heads/master",
++                                  hydrated=bool(opt.get("hydrate_lane")),
++                                  expect=shas.get("f_blob") if not opt.get(
++                                      "hydrate_lane") else None)
+     if opt.get("blobless_fleet"):
+         origin = Path(tmp, "fleet-origin")
+         shutil.move(str(fleet), str(origin))
+         fleet = blobless_clone(root, origin, Path(tmp, "fleet"))
+         if opt.get("hydrate_fleet"):
+             hydrate(fleet, origin)
++        assert_blobless_contract(fleet, "HEAD",
++                                  hydrated=bool(opt.get("hydrate_fleet")),
++                                  expect=shas.get("report_blob") if not opt.get(
++                                      "hydrate_fleet") else None)
+     if opt.get("errata"):
+         if len(shas["spliced"]) != 40:
+             raise Premise(f"the spliced token is not a 40-hex sha: "
+@@ -797,7 +861,7 @@
+         terms = REASON_CLASSES[want["reason_class"]]
+         if not any(t in err.lower() for t in terms):
+             problems.append(f"reason not in class {want['reason_class']}")
+-    if code == 2 and arm_out["arm"] == "current" and form_check:
++    if code == 2 and form_check:
+         problems += check_exit2_form(err, out, names, forbidden)
+     if arm_out["traceback"]:
+         problems.append("traceback")
+@@ -828,11 +892,21 @@
+     names = [resolve_token(n, shas) for n in expect.get("names_any_of", [])]
+     forbidden = expect.get("reason_forbidden", [])
+     live = expect.get("amended", expect["original"])
++    # the frozen column is the historical reproduction: it is scored without
++    # the exit-2 form check, so the r23 metadata refusal still counts as met
++    # and the 47/47 history stays intact
+     obs["met_frozen"] = (not grade(expect["frozen"], obs, err, out, shas, names,
+-                                    forbidden)) if arm == "frozen" else None
+-    # the frozen arm is scored against the amended view too: that score is the
+-    # historical baseline the repair is measured against, not a target
++                                    forbidden, form_check=False)) \
++        if arm == "frozen" else None
++    # the amended comparison must be identical in both arms: same exit, same
++    # defect set, same reason class, same strong names pin, same no-verdict
++    # and same acquisition rules.  The former loose exit/reason-only score is
++    # kept beside it under its own label and is never conflated with it.
+     obs["met_amended_frozen"] = (
++        not grade(live, obs, err, out, shas, names, forbidden,
++                  form_check=True)
++        if arm == "frozen" else None)
++    obs["met_amended_frozen_loose"] = (
+         not grade(live, obs, err, out, shas, [], [], form_check=False)
+         if arm == "frozen" else None)
+     obs["met_original"] = (not grade(expect["original"], obs, err, out, shas,
+@@ -871,6 +945,76 @@
+     return json.loads(text)
+ 
+ 
++def load_manifest():
++    """Read the pinned expectation manifest, or refuse."""
++    path = Path(__file__).resolve().parent / EXPECT
++    raw = path.read_bytes()
++    digest = hashlib.sha256(raw).hexdigest()
++    if digest != MANIFEST_SHA256:
++        raise Tampered(f"the expectation manifest bytes changed: {digest} "
++                       f"!= {MANIFEST_SHA256}")
++    return json.loads(raw.decode("utf-8")), digest
++
++
++CASE_ID = re.compile(r"^PG[0-9]{2}-[a-z0-9-]+$")
++TOKEN_KEYS = {"omitted", "fake", "blob", "cited_blob", "sources_blob",
++              "tip_tree", "fleet_tip_tree", "report_blob", "ancestor",
++              "hidden_blob", "missing_subtree", "spliced", "unused_blob",
++              "unused_tree", "unselected_blob", "cross_repo_token"}
++DEFECT_KINDS = {"unresolved-full-hash", "landed-unresolved", "landed-ambiguous",
++                "landed-omitted", "landed-section-missing"}
++
++
++def validate_table(table):
++    """Structural attestation of the expectation table.
++
++    Returns the list of problems; an empty list means the table is sound.
++    This is the negative capability the selftest exercises: a dropped case,
++    a weakened names list and a dangling twin link must all be reported.
++    """
++    problems = []
++    ids = [c["case"] for c in table["cases"]]
++    if len(ids) != len(set(ids)):
++        problems.append("duplicate case ids")
++    if len(ids) != EXPECTED_CASES:
++        problems.append(f"{len(ids)} graded cases, expected {EXPECTED_CASES}")
++    if len(table.get("open_rows", [])) != EXPECTED_OPEN_ROWS:
++        problems.append(f"{len(table.get('open_rows', []))} open rows, "
++                        f"expected {EXPECTED_OPEN_ROWS}")
++    known = set(ids) | {o["case"] for o in table.get("open_rows", [])}
++    for case in table["cases"]:
++        name = case["case"]
++        if not CASE_ID.fullmatch(name):
++            problems.append(f"{name}: malformed case id")
++        if case["builder"] not in BUILDERS:
++            problems.append(f"{name}: unknown builder {case['builder']}")
++        if case.get("twin") and case["twin"] not in known:
++            problems.append(f"{name}: twin {case['twin']} is not a case")
++        for want in (case["frozen"], case["original"],
++                     case.get("amended", case["original"])):
++            if want.get("reason_class") not in (None, *REASON_CLASSES):
++                problems.append(f"{name}: unknown reason class")
++            for defect in (want.get("defects") or []):
++                if defect.get("kind") not in DEFECT_KINDS:
++                    problems.append(f"{name}: unknown defect kind")
++                token = defect.get("token", "")
++                if token.startswith("$") and token[1:] not in TOKEN_KEYS:
++                    problems.append(f"{name}: unknown token key {token}")
++        for token in case.get("names_any_of", []):
++            if token.startswith("$") and token[1:] not in TOKEN_KEYS:
++                problems.append(f"{name}: unknown names key {token}")
++        live = case.get("amended", case["original"])
++        if live.get("exit") == 2 and live.get("reason_class") not in (None,
++                                                                     "metadata"):
++            if not case.get("names_any_of"):
++                problems.append(f"{name}: a content refusal without a "
++                                f"names_any_of pin")
++    for row in table.get("open_rows", []):
++        if row["builder"] not in BUILDERS:
++            problems.append(f"{row['case']}: unknown builder")
++    return problems
++
++
+ def population(table):
+     rows = []
+     for case in table["cases"]:
+@@ -881,21 +1025,43 @@
+     return hashlib.sha256(json.dumps(rows, sort_keys=True).encode()).hexdigest()
+ 
+ 
+-def selftest(table, root):
+-    """Harness self-check: the table, the builders, the premise machinery."""
++def selftest(table, root, manifest_digest):
++    """Harness self-check with a real negative capability.
++
++    The table is attested structurally, and three tampered copies of it must
++    be rejected: a dropped case, a weakened names list and a dangling twin
++    link.  The byte-level attestation is the manifest sha256 pin, exercised
++    through the command line: a tampered manifest copy must exit 2 with
++    snapshot_tampered, and an unknown --case selector must not be ignored.
++    """
+     cases = []
+-    names = [c["case"] for c in table["cases"]]
+-    cases.append(("unique-case-ids", len(names) == len(set(names))))
+-    cases.append(("builders-present",
+-                  all(c["builder"] in BUILDERS for c in table["cases"])))
+-    cases.append(("open-builders-present",
+-                  all(o["builder"] in BUILDERS for o in table["open_rows"])))
+-    cases.append(("reason-classes-known",
+-                  all(w.get("reason_class") in (None, *REASON_CLASSES)
+-                      for c in table["cases"]
+-                      for w in (c["frozen"], c["original"],
+-                                c.get("amended", c["original"])))))
+-    cases.append(("population-stable", population(table) == population(table)))
++    problems = validate_table(table)
++    cases.append(("table-valid", not problems))
++    cases.append(("manifest-pinned", manifest_digest == MANIFEST_SHA256))
++    # negative capability: a dropped case
++    dropped = dict(table, cases=table["cases"][:-1])
++    cases.append(("negative-dropped-case-rejected",
++                  bool(validate_table(dropped))))
++    # negative capability: a weakened names list
++    weakened = json.loads(json.dumps(table))
++    for case in weakened["cases"]:
++        if case.get("names_any_of"):
++            case["names_any_of"] = []
++            break
++    cases.append(("negative-weakened-names-rejected",
++                  bool(validate_table(weakened))))
++    # negative capability: a dangling twin link
++    badtwin = json.loads(json.dumps(table))
++    for case in badtwin["cases"]:
++        if case.get("twin"):
++            case["twin"] = "PG99-no-such-case"
++            break
++    cases.append(("negative-bad-twin-rejected",
++                  bool(validate_table(badtwin))))
++    # command-line controls: a tampered manifest copy and an unknown selector
++    controls = cli_controls(root)
++    for name, ok in controls:
++        cases.append((name, ok))
+     tmp = Path(root, "selftest")
+     tmp.mkdir(parents=True, exist_ok=True)
+     case = build(root, tmp, lane_mark="config")
+@@ -917,6 +1083,51 @@
+     return 0 if not failed else 1
+ 
+ 
++def cli_controls(root):
++    """Command-line controls for the attestation.
++
++    A copy of the runner with a tampered manifest must refuse to run
++    (snapshot_tampered, exit 2) - that covers a dropped case and a weakened
++    names list at the byte level - and an unknown --case selector must be
++    refused rather than ignored, also with --selftest.
++    """
++    here = Path(__file__).resolve()
++    manifest = here.parent / EXPECT
++    raw = manifest.read_bytes()
++    work = Path(root, "controls")
++    work.mkdir(parents=True, exist_ok=True)
++    results = []
++    for label, mutate in (("dropped-case", "drop"), ("weakened-names",
++                                                    "weaken")):
++        copy = work / label
++        copy.mkdir(parents=True, exist_ok=True)
++        shutil.copy2(here, copy / here.name)
++        table = json.loads(raw.decode("utf-8"))
++        if mutate == "drop":
++            table["cases"] = table["cases"][:-1]
++        else:
++            for case in table["cases"]:
++                if case.get("names_any_of"):
++                    case["names_any_of"] = []
++                    break
++        (copy / EXPECT).write_text(json.dumps(table, indent=1) + "\n",
++                                   encoding="utf-8")
++        proc = subprocess.run([sys.executable, str(copy / here.name),
++                               "--selftest"], capture_output=True, env=env(),
++                              cwd=str(copy))
++        err = proc.stderr.decode(errors="replace")
++        results.append((f"cli-{label}-refused",
++                        proc.returncode == 2 and "snapshot_tampered" in err))
++    proc = subprocess.run([sys.executable, str(here), "--selftest",
++                           "--case", "PG99-no-such-case"],
++                          capture_output=True, env=env(),
++                          cwd=str(work))
++    err = proc.stderr.decode(errors="replace")
++    results.append(("cli-unknown-selector-refused",
++                    proc.returncode == 2 and "unknown case" in err))
++    return results
++
++
+ def main(argv=None):
+     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+     ap.add_argument("--arm", choices=("frozen", "current", "both"),
+@@ -929,32 +1140,34 @@
+     ap.add_argument("--selftest", action="store_true")
+     ap.add_argument("--keep", action="store_true")
+     args = ap.parse_args(argv)
+-    table = json.loads((Path(__file__).resolve().parent / EXPECT)
+-                       .read_text(encoding="utf-8"))
+-    if args.selftest:
+-        root = make_root()
+-        try:
+-            return selftest(table, root)
+-        finally:
+-            if not args.keep:
+-                shutil.rmtree(root, ignore_errors=True)
+-    arms = ("frozen", "current") if args.arm == "both" else (args.arm,)
++    try:
++        table, manifest_digest = load_manifest()
++    except Tampered as exc:
++        print(f"could-not-evaluate: snapshot_tampered: {exc}", file=sys.stderr)
++        return 2
+     wanted = set(args.case or [])
+     known = {c["case"] for c in table["cases"]}
+     known |= {o["case"] for o in table["open_rows"]}
+     unknown = sorted(wanted - known)
+     if unknown:
++        # an invalid selector is never ignored, not even with --selftest
+         print(f"could-not-evaluate: unknown case(s): {', '.join(unknown)}",
+               file=sys.stderr)
+         return 2
++    if args.selftest:
++        root = make_root()
++        try:
++            return selftest(table, root, manifest_digest)
++        finally:
++            if not args.keep:
++                shutil.rmtree(root, ignore_errors=True)
++    arms = ("frozen", "current") if args.arm == "both" else (args.arm,)
+     cases = [c for c in table["cases"]
+              if not wanted or c["case"] in wanted]
+     opens = [o for o in table["open_rows"]
+              if not wanted or o["case"] in wanted]
+     doc = {"grid": "promisor-grid", "frozen_revision": FROZEN,
+-           "expectations_sha256": hashlib.sha256(
+-               (Path(__file__).resolve().parent / EXPECT).read_bytes()
+-           ).hexdigest(),
++           "expectations_sha256": manifest_digest,
+            "population_sha256": population(table),
+            "population_size": len(table["cases"]),
+            "timeout_seconds": TIMEOUT, "arms": {}}
+@@ -1026,10 +1239,34 @@
+                           if r.get("twin_equal") is False]
+             frozen_fail += [r for r in graded
+                             if r.get("twin_equal") is False]
+-            withdrawn = [r["case"] for r in rows
+-                         if r["arm"] == "current" and r["met_original"] is False]
++            # the amended view is scored per arm: the frozen arm against its
++            # own history (met_amended_frozen), the current arm against the
++            # live view (met_amended).  A single counter mixed both and
++            # reported 0 for the current arm.
++            amended_key = ("met_amended_frozen" if arm == "frozen"
++                           else "met_amended")
+             baseline = [r for r in graded
+-                        if r["arm"] == "frozen" and r["met_amended_frozen"]]
++                        if r["arm"] == arm and r[amended_key]]
++            amended_unmet = sorted(r["case"] for r in graded
++                                   if r["arm"] == arm and not r[amended_key])
++            loose = [r for r in graded
++                     if r["arm"] == arm
++                     and r.get("met_amended_frozen_loose")]
++            loose_unmet = sorted(
++                r["case"] for r in graded
++                if r["arm"] == arm
++                and r.get("met_amended_frozen_loose") is False)
++            # a row is withdrawn only when the amendment changed its
++            # expectation; an unmet row whose original and amended views
++            # agree is an ordinary failure, not a withdrawal
++            changed = {c["case"] for c in cases
++                       if json.dumps(c["original"], sort_keys=True)
++                       != json.dumps(c.get("amended", c["original"]),
++                                     sort_keys=True)}
++            original_unmet = [r["case"] for r in rows
++                              if r["arm"] == "current"
++                              and r["met_original"] is False]
++            withdrawn = [c for c in original_unmet if c in changed]
+             doc["arms"][arm] = {
+                 "rows": rows,
+                 "graded": len(graded),
+@@ -1037,10 +1274,16 @@
+                 "violating_cases": [r["case"] for r in live_fail + frozen_fail],
+                 "amended_view_met": len(baseline),
+                 "amended_view_total": len(graded),
+-                "amended_view_unmet": sorted(
+-                    r["case"] for r in graded
+-                    if r["arm"] == "frozen" and not r["met_amended_frozen"]),
++                "amended_view_unmet": amended_unmet,
++                "amended_view_measured_on": arm,
++                "amended_view_rules": "identical in both arms: exit, defect "
++                                      "set, reason class, strong names pin, "
++                                      "no-verdict and acquisition rules",
++                "amended_view_met_loose_exit_reason_only": len(loose),
++                "amended_view_unmet_loose_exit_reason_only": loose_unmet,
++                "original_view_unmet": original_unmet,
+                 "withdrawn_original_failures": withdrawn,
++                "amendment_changed_cases": sorted(changed),
+                 "twin_pairs_in_manifest": len(twin_links),
+                 "twin_compared": sum(r.get("twin_equal") is not None
+                                      for r in rows),

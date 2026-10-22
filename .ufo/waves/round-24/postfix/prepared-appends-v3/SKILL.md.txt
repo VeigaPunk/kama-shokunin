@@ -1,0 +1,156 @@
+
+### Round24 live cutover — local evidence, promisor metadata neutral (owner: kama)
+
+This section is the live cutover of the round-24 instrument semantics and
+describes the canonical files `tools/report-landing-audit.py` and
+`tests/report-audit/…` as they stand in the commit that carries this
+text. The present tense below describes those canonical files.
+
+**The auditor** (`tools/report-landing-audit.py`) keeps the global Git
+isolation options and the 20-second deadline, and stays metadata neutral:
+promisor metadata (`extensions.partialclone`, a true `remote.<n>.promisor`,
+a `remote.<n>.partialclonefilter`, or a `.promisor` marker paired with its
+`.pack`) never changes local-object resolution, a clean/failed verdict or
+an authorized errata match. Presence is per store and bare: each store
+reports the canonical object it holds for a token, and reconciliation is
+per canonical object, never across colliding prefixes. A selected-ledger
+lookup and invalid-row accounting ignore unselected rounds. Committed-ledger
+and open-range listing read failures take required-read identities, while a
+fatal timeout or OS cause spends no second diagnostic timeout. Known
+unavailable referenced ids are encountered from all present local
+commit/tree/tag roots, and the opaque missing-name boundary comes only from
+the pinned audit root. There is no whole-store or reachable-tree
+completeness precondition: all-resolved inputs stay runnable despite unused
+holes, and a locally sufficient marked repository receives the same
+substantive verdict as its unmarked twin. An explicitly cited missing blob
+behind a dangling present tree stays could-not-evaluate; unrelated
+unreachable opaque garbage plus an ordinary fabricated citation stays an
+ordinary failed finding.
+
+**The grid** (`tests/report-audit/promisor-grid.py`, with
+`tests/report-audit/promisor-grid-expectations.json`) grades 47 cells
+against the pinned manifest bytes `d86b7bea…`; the literal manifest byte
+pin authenticates oracle identity, not production wiring correctness, and a
+missing manifest is snapshot_unavailable2 while changed bytes are
+snapshot_tampered2. Each arm reports its own comparable score
+(`amended_view_met`, `amended_view_total`, `amended_view_unmet`,
+`amended_view_measured_on`) under identical strong
+exit/defect/reason/name/no-verdict/acquisition rules in both arms. The
+comparable frozen baseline is the strict 14/47; the older loose 16/47 stays
+filed under its own weaker-method label
+(`met_amended_frozen_loose`; PG16 and PG20 differ) and is not two extra
+product wins, and the frozen historical reproduction 47/47 is a separate
+measurement. The original view is reported separately: `original_view_unmet`
+lists every unmet original expectation, and `withdrawn_original_failures`
+is the legacy name for the unmet original expectations that the amendment
+superseded — the amendment-changed cells, PG28 and PG34 among them — not
+the literal unknown clause alone; an unmet row whose original and amended
+views agree is an ordinary live failure and is not withdrawn. The original
+unknown clause stays withdrawn and not achieved.
+
+**The grid's metadata handling and controls.** The r23 blanket refusal is
+never the reason of a current-arm refusal: the frozen-history reason class
+serves the r23 base's own refusals, the manifest's per-cell
+`reason_forbidden` pins and `check_exit2_form` keep the metadata phrasing
+forbidden for a current-arm refusal, and the dead unused
+`METADATA_REFUSAL` constant is gone. The controls are behavioural and
+specific: a blobless contract failure raises a typed contract-violation
+clause (`initial-empty`, `still-missing`, `missing-object`), and the
+stand-in controls drive real stand-in auditors through the real command
+line — a legitimate content-derived refusal must meet, an internal
+identity carrying the same reason and the same names must not meet, and a
+traceback must not meet. These paired controls distinguish the named
+identity/premise failure rather than accepting an unrelated setup error.
+
+**Fixture and evidence rules.** Real blobless absence is asserted
+immediately after the clone, before any optional hydration; a hydrated
+final-empty state alone cannot prove initial partialness. Connected local
+file origins stay acquisition tripwires: never remove or repoint an
+origin, never make a lazy forensic read. Hydration changes the input
+state; it is not a detector repair. `internal_error` is captured from the
+full stderr and is distinct from a legitimate content-derived refusal;
+tracebacks and internal errors are unmet observations and can never earn a
+mutant kill.
+
+**The mutation experiments** (`tests/report-audit/promisor-mutants.py`,
+`tests/report-audit/isolation-mutants.py`) are bounded sensitivity probes,
+not an admission gate, and a valid finite survival still completes 0. The
+grid protocol carries one canonical internal-error signal: the per-row
+boolean `internal_error`, true when the auditor's full stderr contains the
+catch-all prefix `could-not-evaluate: internal:`; the two speculative
+aliases are removed and no compatibility promise for another spelling is
+kept, the stderr checks stay diagnostics on the same catch-all message,
+and the per-row boolean remains authoritative because a long message can
+push the prefix out of the kept tail. Runtime faults — a leak, a timeout, a
+traceback, an internal error, an invalid row exit, a malformed verdict
+document — and violations outside a mutant's attribution envelope are
+could-not-evaluate with zero kill credit; the out-of-envelope rows are
+preserved and reported, and the envelope is never widened. A credited
+violation is classified from the row's own comparison fields:
+
+| expected → actual | class | credit |
+|---|---|---|
+| 0 → 0, 1 → 1 | `same-verdict-exit` | the same exit; the detail may differ — no substantive exit change and no availability claim |
+| 0 ↔ 1 | `verdict-change` | the verdict's pass/fail changed |
+| 0/1 → 2 | `refusal-2` | an over-refusal signal, not an availability credit |
+| 2 → 0/1 | `actual-verdict` | the availability credit |
+| 2 → 2 | `diagnostic-only` | the refusal stayed a refusal; only the diagnostics can differ |
+| missing or outside 0/1/2 | `unclassified` | no class credit is guessed |
+
+The `diagnostic_only` aggregate means exclusively the same 2 → 2; it never
+covers same normal exits and never covers unclassified rows, which are
+reported under their own aggregate. No availability credit is guessed from
+a `same-verdict-exit`, `diagnostic-only` or `unclassified` row. Ten
+executable operators plus one manual PM08 review note: PM08 (removing the
+`--no-lazy-fetch` gate) is settled by uncredited manual source inspection —
+it is never constructed, never executed, never credited with a kill, and no
+permanent AST, text or wiring assertion exists for it. Static anchors
+authenticate mutation applicability only; finite survival is not global
+equivalence; an allowed `expect_rows` is an attribution envelope, not a
+promise that every row discriminates; a same-exit diagnostic sensitivity is
+not an unavailable-evidence acceptance witness; the KQ35 paired obligations
+need class-specific substantive evidence, and a completed probe0 is not
+admission.
+
+**Superseded registry reading.** The round23 "Isolation mutants" registry
+row (kind `gate`, 31 single-literal mutants of the auditor) is superseded
+in kind and in count: the current kind is a bounded sensitivity `probe`,
+and `tests/report-audit/isolation-mutants.py` holds 27 retained literals
+with 4 retired ids (M14, M22, M27, M29) that are never reused, so the
+historical 31 is not the current count. An empty selection is
+could-not-evaluate, decided before the source read, the pristine and any
+grid call; the short-id selector hazard pre-existed the retirement, which
+changed the id set and exposed the stale full ids.
+
+No final candidate measurement, count, score or approval is claimed here.
+
+[Provenance footnote — prototype paths only, the canonical files are the
+ones named above: the round-24 proposals filed under
+`.ufo/waves/round-24/fixes/` supply these semantics — core
+`StoreLocalPresence/report-landing-audit-v9.py` (`b9be4f42…`), grid
+`GridAttestationV7/promisor-grid.py` (`3048383…`), mutator
+`MutationEvidenceV14/promisor-mutants.py` (`971c3ec…`) and
+`MutationEvidenceV8/isolation-mutants.py` (`eace4f5…`), and the integration
+contract `docs-contract.txt` with its mutator delivery and final-selection
+supplements.]
+
+**Interface and reproducibility cutover.** Mutation sensitivity accepts only
+the current arm: frozen/both cannot execute the supplied mutant and are
+could-not-evaluate before a pristine run, never an experiment silently
+reported as survival. Full exact case/mutant IDs are required. The grid
+honors an existing caller TMPDIR rather than a host-specific shared root;
+an unusable requested root is could-not-evaluate before fixtures in normal
+and selftest modes. Each arm counts unique violating case IDs across its
+individual view and twin constraints. Grade explanations retain their named
+view (problems, amended_problems, original_problems), and sensitivity receipts
+preserve them with actual auditor/grid/population/expectation identities.
+Paths alone are not a producer identity. These changes do not alter the
+frozen 47, its criteria or twin links, and add no admission claim.
+
+A sensitivity result needs at least one graded oracle cell in the pristine
+and mutant runs. An open-only or empty graded sample is could-not-evaluate,
+not a valid survivor; PG40 remains ungraded and no primary cell changes.
+
+The pristine must have exit0 AND no violated graded row. A mutant result
+with exit0 but a violated row is contradictory protocol, not a kill; the
+receiver refuses it just as it refuses exit1 with no identifiable failure.

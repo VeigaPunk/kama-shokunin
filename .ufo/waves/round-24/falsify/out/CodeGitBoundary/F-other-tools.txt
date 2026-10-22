@@ -1,0 +1,30 @@
+--- tools/sources-append-only.py ---
+287:        proc = subprocess.run(
+288:            ["git", "-C", repo, "show", f"{rev}:{path}"],
+--- tools/citation-provenance.py ---
+41:        raw = subprocess.run(
+42:            ["git", "-C", str(lane), "cat-file", "blob", f"{rev}:{path}"],
+44:            timeout=60).stdout
+72:    probe = subprocess.run(["git", "-C", str(lane), "rev-parse", "--git-dir"],
+105:            anc = subprocess.run(
+106:                ["git", "-C", str(lane), "merge-base", "--is-ancestor",
+132:        env = {"GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": "/dev/null",
+136:            return subprocess.run(["git", "-C", str(lane), *argv],
+178:                result = subprocess.run(
+182:                    stderr=subprocess.PIPE, text=True, timeout=30)
+249:                 child_env={"PATH": str(no_bin)}, stderr_contains="git")
+--- tools/error-verdict-census.py ---
+71:            "GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": os.devnull,
+72:            "GIT_OPTIONAL_LOCKS": "0", "PYTHONDONTWRITEBYTECODE": "1"}
+75:def child(argv, cwd, env, timeout=CELL_TIMEOUT):
+77:        proc = subprocess.Popen(argv, cwd=str(cwd), env=env, stdin=subprocess.DEVNULL,
+83:        out, err = proc.communicate(timeout=timeout)
+143:        proc = subprocess.run(["git", "-C", str(lane), "show", f"{revision}:{path}"],
+146:                              timeout=60, check=False)
+246:    cmds = (["git", "init", "-q", "--template="],
+247:            ["git", "add", "--", "evidence.txt"],
+248:            ["git", "-c", "user.name=census fixture", "-c",
+250:            ["git", "rev-parse", "HEAD"])
+252:        run = child(list(command), work, env, timeout=20)
+265:        env.update(GIT_AUTHOR_DATE="2000-01-01T00:00:00Z",
+266:                   GIT_COMMITTER_DATE="2000-01-01T00:00:00Z")

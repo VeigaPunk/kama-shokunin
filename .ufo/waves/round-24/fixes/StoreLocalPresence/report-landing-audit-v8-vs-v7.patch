@@ -1,0 +1,98 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit-v7.py	2026-10-21 17:26:11.943678036 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit-v8.py	2026-10-21 17:32:47.715332333 -0300
+@@ -122,9 +122,10 @@
+         self._missing = None
+ 
+     def missing(self):
+-        """(missing, opaque): the object ids the local history references
+-        but the repository cannot serve, and the subset that hides names
+-        (computed at most once per store)."""
++        """(missing, opaque): the object ids that present local objects
++        reference but the repository cannot serve, and the subset of them
++        that hides names behind the audited root (computed at most once per
++        store)."""
+         if self._missing is None:
+             self._missing = missing_reachable(self.path, self.root)
+         return self._missing
+@@ -500,7 +501,7 @@
+         if store is not None:
+             raise EvalError(
+                 f"round {rnd}: unknown: unavailable required object: {token} "
+-                f"is referenced by the history of {store.path} but the "
++                f"is referenced by local objects in {store.path} but the "
+                 f"repository cannot serve it")
+         hole, hole_oid = opaque_hole(stores)
+         if hole is not None:
+@@ -642,7 +643,7 @@
+             if store is not None:
+                 raise EvalError(
+                     f"errata line {e['line']}: unknown: unavailable required "
+-                    f"object: {token} is referenced by the history of "
++                    f"object: {token} is referenced by local objects in "
+                     f"{store.path} but the repository cannot serve it")
+             hole, hole_oid = opaque_hole(stores)
+             if hole is not None:
+@@ -731,8 +732,9 @@
+ 
+ 
+ def missing_reachable(repo, root):
+-    """(missing, opaque): the object ids the local history references but
+-    the repository cannot serve, and the subset of them that hides names.
++    """(missing, opaque): the object ids that present local objects
++    reference but the repository cannot serve, and the subset of them that
++    hides names behind the audited root.
+ 
+     Two walks, two root sets. The first names EVERY missing object of the
+     store: its roots are all present objects, so a dangling commit, tree
+@@ -770,8 +772,8 @@
+ 
+ 
+ def unknown_citation(stores, token):
+-    """The store whose history references the cited token but cannot serve
+-    it, or None.
++    """The store whose present local objects reference the cited token but
++    cannot serve it, or None.
+ 
+     Such a token is not a proved absence: the repository references it and
+     cannot hand it over, so the audit must refuse rather than report a
+@@ -1455,19 +1457,36 @@
+             rc, doc = run(_ns(base, report=[f"1={shared_draft}"]))
+             kinds = sorted((x["kind"], x["token"])
+                            for x in doc["results"][0]["defects"])
+-            check("same-tag-in-both-stores-is-a-known-mismatch",
++            check("same-tag-in-both-stores-known-mismatch-is-a-control",
+                   rc == 1 and ("landed-unresolved", tag) in kinds)
++            # the target is observable in the fleet only: the fleet proves
++            # the mismatch, the lane cannot serve the target
+             _obj(lane, target).unlink()
++            rc, doc = run(_ns(base, report=[f"1={shared_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("same-tag-with-the-target-only-in-the-fleet-is-a-mismatch",
++                  rc == 1 and ("landed-unresolved", tag) in kinds)
++            # the mirror: the target is observable in the lane only
++            _obj(lane, target).write_bytes(_obj(fleet, target).read_bytes())
+             _obj(fleet, target).unlink()
++            rc, doc = run(_ns(base, report=[f"1={shared_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("same-tag-with-the-target-only-in-the-lane-is-a-mismatch",
++                  rc == 1 and ("landed-unresolved", tag) in kinds)
++            # the target is observable nowhere: the content cannot be read
++            _obj(lane, target).unlink()
+             check("tag-target-missing-everywhere-is-unknown",
+                   is_error(lambda: run(_ns(base, report=[f"1={shared_draft}"]))))
+             missing, opaque = missing_reachable(
+                 lane, git(lane, "rev-parse", "HEAD").strip())
+             check("blob-hole-is-not-an-opaque-hole",
+                   hole in missing and hole not in opaque)
+-            # an unreachable MISSING BLOB is not an opaque hole: the blob
+-            # is named by the dangling tree, so the citation can be proved
+-            # absent (this is the blob positive control)
++            # an unreachable MISSING BLOB is not an opaque hole: the
++            # fabricated citation here is UNRELATED and absent, so the
++            # ordinary finding stands (the dangling blob itself is cited in
++            # the next control, which is unknown)
+             dangling_blob = git(lane, "hash-object", "-w", "--stdin",
+                                 stdin="dangling blob\n").strip()
+             blob_tree = git(lane, "mktree", stdin=f"100644 blob "

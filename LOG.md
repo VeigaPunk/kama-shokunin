@@ -1517,3 +1517,58 @@ support S105, an explicit superseding rejection record for S095's
 cross-API inference (the old immutable teaches cell stays filed).
 Source rows now extend through S105; the retained public reader snapshot
 and source receipt are under `.ufo/waves/round-24/sources/`.
+
+## Round24 — W2 corrective cutover of the local-object audit
+
+The W2 readers used pinned parent2e254a1763a9c08aa07fc53081287f506c447d84;
+canonical code and frozen expectations stayed pinned. The documentation
+hold was violated by an outside-scope 80-line append; its bytes/chronology
+are VOID incident evidence, not accepted erratum credit. This cutover
+adopts the per-store presence/same-canonical proof, selected-ledger scope,
+actual-required-read identities and selected-root-only opaque fallback.
+Known missing references still come from every present local commit/tree/tag
+root; no whole-object-store or reachable-tree completeness precondition is
+introduced. The chosen source packet is recorded in
+`.ufo/waves/round-24/postfix/integration-inputs-final.json`; exact
+pre-cutover identities are in `postfix/frozen-parent-inputs.json`.
+
+The grid now authenticates the immutable47 manifest, records per-arm
+comparable metrics, rejects unavailable/tampered oracle inputs distinctly,
+establishes genuine blobless absence before hydration, preserves connected
+local origins as acquisition controls, and distinguishes full-stderr
+internal errors from content-derived refusals. Its negative controls name
+the actual failed clause instead of accepting any setup failure.
+
+The promisor mutation observer rejects runtime faults and out-of-envelope
+failures as could-not-evaluate with no kill credit; it preserves actual exit
+classes without calling same normal exits a substantive exit change. PM08
+is manual/uncredited, not a permanent wiring assertion or executable
+mutation. The original PM07 recipe is retained, not retargeted to force a
+kill. The legacy27-operator probe rejects empty selections before any
+source/pristine/grid read. The unused metadata constant and speculative
+internal-flag aliases are removed.
+
+Four mutable source consumer cells(S093/S095/S097/S098) receive their actual
+new links and old→new log; immutable source claims and statuses are kept.
+The source-facet/quote qualification is appended without inventing S106.
+All earlier drafts/proposals/receipts remain filed, with the stale/masked
+premises and exit-only observer flags explicitly qualified. The frozen
+primary 47 and its expected bytes/twin links are unchanged.
+
+This is an adoption entry, not final verification: no final candidate
+numerator, score promotion or admission is asserted here. The original
+unknown clause remains withdrawn/not-achieved; R23-H2 remains open and
+unapproved. No tool was installed or updated in this cutover step.
+
+The final interface review additionally closes frozen-arm false sensitivity,
+unique per-arm violation accounting, retained grading explanations and
+portable requested scratch behavior; actual producer/population identities
+are preserved. The L1 primary-source re-derivation receipt supports new
+legacy-scope/historical-count corrections independently of the VOID prose.
+The legacy F28/F29 content-derived reason coverage stays open.
+
+The original W2 reader barrier is complete:64 spawned,64 settled and64
+durable reports at parent2e, with no provider death. The final reader
+qualifies oracle chronology (not universal before-L1-inspection proof);
+value preservation and original/prospective fields remain intact. See
+`postfix/w2-reader-barrier.json` and `oracle-chronology-qualification.json`.

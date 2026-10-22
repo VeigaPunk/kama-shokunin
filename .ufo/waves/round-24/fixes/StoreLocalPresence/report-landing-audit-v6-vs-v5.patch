@@ -1,0 +1,73 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit-v5.py	2026-10-21 17:18:44.521327157 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit-v6.py	2026-10-21 17:21:44.870805409 -0300
+@@ -1440,13 +1440,13 @@
+                 lane, git(lane, "rev-parse", "HEAD").strip())
+             check("blob-hole-is-not-an-opaque-hole",
+                   hole in missing and hole not in opaque)
+-            # unreachable opaque garbage must not block an ordinary audit:
+-            # a dangling tree that references a missing blob is not a
+-            # dependency of the audited root
++            # an unreachable MISSING BLOB is not an opaque hole: the blob
++            # is named by the dangling tree, so the citation can be proved
++            # absent (this is the blob positive control)
+             dangling_blob = git(lane, "hash-object", "-w", "--stdin",
+                                 stdin="dangling blob\n").strip()
+-            dangling_tree = git(lane, "mktree", stdin=f"100644 blob "
+-                                  f"{dangling_blob}\td\n").strip()
++            blob_tree = git(lane, "mktree", stdin=f"100644 blob "
++                           f"{dangling_blob}\td\n").strip()
+             Path(lane, git(lane, "rev-parse", "--git-path",
+                            "objects").strip(),
+                  dangling_blob[:2], dangling_blob[2:]).unlink()
+@@ -1459,7 +1459,7 @@
+             rc, doc = run(_ns(base, report=[f"1={garbage_draft}"]))
+             kinds = sorted((x["kind"], x["token"])
+                            for x in doc["results"][0]["defects"])
+-            check("unreachable-opaque-garbage-does-not-block",
++            check("unreachable-missing-blob-does-not-block",
+                   rc == 1 and ("unresolved-full-hash", fake) in kinds)
+             cited_draft = Path(tmp, "cited-dangling-draft.md")
+             cited_draft.write_text(
+@@ -1468,6 +1468,42 @@
+                 encoding="utf-8")
+             check("cited-missing-behind-a-dangling-tree-is-unknown",
+                   is_error(lambda: run(_ns(base, report=[f"1={cited_draft}"]))))
++            # an unreachable MISSING TREE is an opaque hole for the store
++            # but not for the audited root: a dangling commit names a tree
++            # the store cannot serve, and no ref reaches either of them
++            kept_blob = git(lane, "hash-object", "-w", "--stdin",
++                            stdin="kept blob\n").strip()
++            opaque_tree = git(lane, "mktree", stdin=f"100644 blob "
++                              f"{kept_blob}\tkeep\n").strip()
++            dangling_commit = git(lane, "commit-tree", opaque_tree, "-m",
++                                  "dangling", env=git_env(
++                                      GIT_AUTHOR_NAME="kama-shokunin",
++                                      GIT_COMMITTER_NAME="kama-shokunin",
++                                      GIT_AUTHOR_EMAIL="a@x",
++                                      GIT_COMMITTER_EMAIL="a@x")).strip()
++            Path(lane, git(lane, "rev-parse", "--git-path",
++                           "objects").strip(),
++                 opaque_tree[:2], opaque_tree[2:]).unlink()
++            missing_all, opaque_relevant = missing_reachable(
++                lane, git(lane, "rev-parse", "HEAD").strip())
++            all_roots = present_roots(lane)
++            opaque_everywhere = {
++                line[1:] for line in git(
++                    lane, "-c", "core.commitGraph=false", "rev-list",
++                    "--objects", "--missing=print", "--no-object-names",
++                    "--filter=blob:none", "--stdin",
++                    stdin="".join(f"{r}\n" for r in all_roots)
++                ).split("\n") if line.startswith("?")}
++            check("store-wide-walk-sees-the-unreachable-missing-tree",
++                  opaque_tree in missing_all
++                  and opaque_tree in opaque_everywhere
++                  and opaque_tree not in opaque_relevant
++                  and dangling_commit in all_roots)
++            rc, doc = run(_ns(base, report=[f"1={garbage_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("unreachable-opaque-garbage-does-not-block",
++                  rc == 1 and ("unresolved-full-hash", fake) in kinds)
+             tree = git(lane, "rev-parse", f"{mid}^{{tree}}").strip()
+             Path(lane, git(lane, "rev-parse", "--git-path",
+                            "objects").strip(),

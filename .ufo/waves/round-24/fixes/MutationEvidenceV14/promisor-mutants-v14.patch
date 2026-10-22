@@ -1,0 +1,1359 @@
+--- a/tests/report-audit/promisor-mutants.py
++++ b/tests/report-audit/promisor-mutants.py
+@@ -47,16 +47,21 @@
+   PM06 swallow an actual read error        a failing read of the object the
+        audit needs is could-not-evaluate; the mutant swallows the failure
+        and guesses a value, turning an unavailable object into a verdict.
+-  PM07 full --all missing gate             the missing-object traversal is
+-       rooted at the pinned lane/fleet roots the audit reads; the mutant
+-       roots it at --all. Redundant on a candidate whose traversal already
+-       starts from every present object: it survives and is credited with
+-       no kill.
+-  PM08 remove the --no-lazy-fetch gate      static-only: without the flag a
+-       missing promisor object could be fetched through the promisor remote
+-       (transport, repository programs, signatures). This wave forbids
+-       execution payloads and network transports, so the mutant is verified
+-       statically and is NOT executed against the grid.
++  PM07 full --all missing gate             the store-wide missing walk
++       starts from every present root; the mutant adds --all to that root
++       set, so a broken unselected REF target outside the present roots
++       enters the diagnosis. It does NOT broaden the name-hiding walk,
++       which stays rooted at the pinned root only. On the finite 47 it may
++       survive; that is an observation, not a global-equivalence proof,
++       and no kill is presumed.
++  PM08 no-lazy-fetch review note            review-only and uncredited (the
++       operator keeps it out of the executed inventory): the candidate's
++       repository-reading wrappers carry --no-lazy-fetch, so a missing
++       promisor object is not fetched through the promisor remote on the
++       paths those wrappers read. No mutant is built for it, no grid
++       invocation is made for it, and it is never credited with a kill;
++       the claim is a manual reading of the candidate's isolation flags,
++       not a proof about every git call.
+   PM09 peel the bare full-hash lookup      peer-proposed extension
+        (MutationDesign-2, OracleLocalBlobType-2): the bare full-hash lookup
+        must stay unpeeled, so a citation of a locally present blob resolves
+@@ -90,7 +95,7 @@
+     exactly once) or the mutant does not compile.
+ 
+ Exit: 0 the inventory was fully evaluated (every mutant killed or
+-surviving, or static-only; the JSON document reports which); 2 could not
++surviving, or review-only; the JSON document reports which); 2 could not
+ evaluate (any condition above). A kill is never an exit code of its own:
+ the JSON document carries the killed and the surviving mutants.
+ 
+@@ -101,6 +106,7 @@
+ from __future__ import annotations
+ 
+ import argparse
++import hashlib
+ import fnmatch
+ import json
+ import os
+@@ -225,22 +231,25 @@
+ _pm_install_ignore_opaque()
+ # --- end PM10 mutation ---'''
+ 
+-# PM11 (any hole refuses): the store refuses whenever it holds any missing
+-# object at all, so an unrelated hole becomes an unconditional precondition.
++# PM11 (any hole refuses): the gate is unconditional and runs when the
++# store is built, so a hole the audit never needs refuses the audit too.
++# The earlier version of this mutant patched the store's missing() method,
++# which is only consulted while a citation is unresolved: it was a lazy
++# gate, and the resolved-unused-hole controls could not see it.
+ PM11_INSERT = '''# --- PM11 mutation: any hole refuses (over-refusal) ---
+ def _pm_install_any_hole():
+-    _cls = globals()["RepoStore"]
+-    _original = _cls.missing
+-
+-    def _patched(self):
+-        missing, opaque = _original(self)
++    _original = globals()["build_store"]
++
++    def _patched(repo, root):
++        store = _original(repo, root)
++        missing, opaque = store.missing()
+         if missing or opaque:
+             raise EvalError(
+-                f"{self.path}: unknown: unavailable required object: "
++                f"{repo}: unknown: unavailable required object: "
+                 f"{len(missing) + len(opaque)} hole(s) in the store")
+-        return missing, opaque
++        return store
+ 
+-    _cls.missing = _patched
++    globals()["build_store"] = _patched
+ 
+ 
+ _pm_install_any_hole()
+@@ -254,11 +263,8 @@
+                     ".promisor+.pack) is not a refusal: a complete "
+                     "promisor-marked repository keeps the verdict of its "
+                     "full-clone twin",
+-        "expect_rows": ["PG01", "PG02", "PG03", "PG04", "PG05", "PG06",
+-                        "PG07", "PG08", "PG09", "PG11", "PG12", "PG13",
+-                        "PG17", "PG21", "PG22", "PG23", "PG24", "PG26",
+-                        "PG28", "PG30", "PG31", "PG33", "PG35", "PG39",
+-                        "PG41", "PG43", "PG44", "PG47", "PG48"],
++        "expect_rows": ["PG01", "PG02", "PG03", "PG04", "PG05", "PG06", "PG09", "PG11", "PG12", "PG13", "PG15", "PG17", "PG19", "PG21", "PG22", "PG23", "PG24", "PG26", "PG28", "PG30", "PG31", "PG33", "PG35", "PG39", "PG41", "PG43", "PG44", "PG46", "PG47", "PG48"],
++        "attribution_basis": "every cell whose audited repository is promisor-marked: a refusal on the metadata alone turns each of them into exit 2",
+         "execution": "grid",
+         "alternatives": [
+             # the candidate may still carry a promisor classifier: refuse on
+@@ -283,8 +289,8 @@
+                     "would stop being an ordinary failed finding. The mutant "
+                     "refuses every absent (or unknown) citation, before the "
+                     "errata ledger is consulted.",
+-        "expect_rows": ["PG22", "PG23", "PG24", "PG25", "PG29", "PG30",
+-                        "PG33", "PG34", "PG37", "PG41", "PG42", "PG47"],
++        "expect_rows": ["PG22", "PG23", "PG24", "PG25", "PG29", "PG30", "PG33", "PG34", "PG37", "PG41", "PG42", "PG46", "PG47"],
++        "attribution_basis": "every cell with an unresolved citation whose ordinary verdict is a failed finding: the errata-corrected absent hash is refused before the ledger is consulted, and the opaque cells misclassify an absence that a missing tree may conceal",
+         "execution": "grid",
+         "alternatives": [
+             {"kind": "insert", "anchor": 'if __name__ == "__main__":',
+@@ -301,8 +307,8 @@
+                     "decision that uses it. Both attack the same verdict "
+                     "surface, so the grid kills them alike: one of them "
+                     "surviving is not evidence about the other.",
+-        "expect_rows": ["PG13", "PG14", "PG15", "PG16", "PG17", "PG18",
+-                        "PG19", "PG20", "PG21", "PG33", "PG34", "PG47"],
++        "expect_rows": ["PG13", "PG14", "PG15", "PG16", "PG17", "PG18", "PG19", "PG20", "PG21", "PG33", "PG34", "PG46", "PG47"],
++        "attribution_basis": "every cell whose required evidence is unavailable and whose verdict must be could-not-evaluate",
+         "execution": "grid",
+         "alternatives": [
+             # the store never learns which objects the repository cannot
+@@ -324,6 +330,7 @@
+                     "than proved absent; the mutant accepts it as absent and "
+                     "reports an ordinary failed finding",
+         "expect_rows": ["PG33", "PG34", "PG46", "PG47"],
++        "attribution_basis": "every cell whose unresolved citation names unavailable referenced content",
+         "execution": "grid",
+         "alternatives": [
+             # the helper that decides "the history references it, the
+@@ -344,6 +351,7 @@
+                     "present in the other audited repository is resolvable; "
+                     "the mutant consults the first repository only",
+         "expect_rows": ["PG26", "PG27"],
++        "attribution_basis": "every cell whose citation resolves only in the second audited repository",
+         "execution": "grid",
+         "alternatives": [
+             {"kind": "regex",
+@@ -362,8 +370,8 @@
+                     "could-not-evaluate; the mutant swallows the failure "
+                     "and guesses a value, turning an unavailable object "
+                     "into a verdict",
+-        "expect_rows": ["PG13", "PG14", "PG16", "PG17", "PG18", "PG20",
+-                        "PG21", "PG43"],
++        "expect_rows": ["PG13", "PG14", "PG15", "PG16", "PG17", "PG18", "PG19", "PG20", "PG21", "PG28", "PG43"],
++        "attribution_basis": "every cell whose verdict must be could-not-evaluate because a required read failed",
+         "execution": "grid",
+         "alternatives": [
+             {"kind": "insert", "anchor": 'if __name__ == "__main__":',
+@@ -372,14 +380,28 @@
+     },
+     {
+         "id": "PM07-full-all-missing-gate",
+-        "semantic": "the missing-object traversal is rooted at the pinned "
+-                    "lane/fleet roots the audit reads; the mutant roots it "
+-                    "at --all. Redundant on a candidate whose traversal "
+-                    "already starts from every present object: there it is "
+-                    "observationally identical, survives, and is credited "
+-                    "with no kill.",
++        "semantic": "the store-wide missing walk starts from every present "
++                    "root of the store; the mutant adds --all to that root "
++                    "set, so a broken unselected REF target that is not "
++                    "among the present roots enters the diagnosis. The "
++                    "mutant does NOT broaden the name-hiding (opaque) walk, "
++                    "which stays rooted at the pinned root only. On the "
++                    "finite 47 this mutant may survive; that survival is an "
++                    "observation of this candidate, not a global-equivalence "
++                    "proof: the canonical mutant can also differ on a "
++                    "broken unselected REF target that is not among the "
++                    "present roots, so no universal no-op is claimed. "
++                    "Supplemental post-fix experiments, specially named and "
++                    "separate from the 47 and from this canonical operator, "
++                    "may test unselected-ref opacity.",
+         "expect_rows": ["PG31", "PG32", "PG35", "PG36", "PG44", "PG45",
+                         "PG48"],
++        "attribution_basis": "the cells with a hole the audit does not "
++                    "need: an unrelated hole must not refuse the audit. The "
++                    "finite 47 may not distinguish the mutant (a broken "
++                    "unselected REF target outside the present roots is "
++                    "outside the grid); no kill is presumed, and the final "
++                    "run decides",
+         "execution": "grid",
+         "alternatives": [
+             {"kind": "regex",
+@@ -394,20 +416,25 @@
+         ],
+     },
+     {
+-        "id": "PM08-remove-no-lazy-fetch-gate",
+-        "semantic": "every git call carries --no-lazy-fetch, so a missing "
+-                    "promisor object can never be fetched through the "
++        # review-only, uncredited: the operator keeps this element out of
++        # the executed inventory. The mutant is never applied, never
++        # executed and never credited with a kill; the claim is a manual
++        # reading of the candidate's isolation flags, recorded here as a
++        # note so the review trail names it.
++        "id": "PM08-no-lazy-fetch-review-only",
++        "semantic": "review-only note, uncredited: the candidate's "
++                    "repository-reading wrappers carry --no-lazy-fetch, so "
++                    "a missing promisor object is not fetched through the "
+                     "promisor remote (transport, repository programs, "
+-                    "signatures); removing the flag reopens that channel",
++                    "signatures) on the paths those wrappers read. This is "
++                    "a manual reading of the candidate's isolation flags, "
++                    "not a proof about every git call. The element is not "
++                    "part of the executed inventory: no mutant is built, "
++                    "no grid invocation is made for it, and it is never "
++                    "credited with a kill",
+         "expect_rows": [],
+-        "execution": "static-only",
+-        "static_check": "--no-lazy-fetch",
+-        "alternatives": [
+-            {"kind": "replace", "old": '"--no-lazy-fetch",\n                 ',
+-             "new": ""},
+-            {"kind": "replace", "old": '"--no-lazy-fetch", ', "new": ""},
+-            {"kind": "replace", "old": '"--no-lazy-fetch"', "new": ""},
+-        ],
++        "execution": "review-only",
++        "alternatives": [],
+     },
+     {
+         "id": "PM09-peel-bare-full-hash-lookup",
+@@ -415,6 +442,7 @@
+                     "a locally present blob resolves as found; peeling it "
+                     "to ^{commit} turns a present blob into a missing object",
+         "expect_rows": ["PG38", "PG39"],
++        "attribution_basis": "every cell whose locally present blob must stay an ordinary wrong-type finding",
+         "execution": "grid",
+         "alternatives": [
+             {"kind": "replace", "old": "full = lookup(stores, full_tokens)",
+@@ -429,7 +457,8 @@
+                     "reports an ordinary failed finding. A known-present blob "
+                     "that merely fails commit peeling keeps its wrong-type "
+                     "finding either way.",
+-        "expect_rows": ["PG33", "PG34", "PG46", "PG47"],
++        "expect_rows": ["PG46", "PG47"],
++        "attribution_basis": "every cell whose verdict depends on the opaque non-leaf rule",
+         "execution": "grid",
+         "alternatives": [
+             {"kind": "insert", "anchor": 'if __name__ == "__main__":',
+@@ -444,9 +473,8 @@
+                     "and an unused tree hole next to fully resolved "
+                     "citations keeps the clean verdict; the mutant refuses "
+                     "on any hole",
+-        "expect_rows": ["PG22", "PG25", "PG33", "PG34", "PG35", "PG36",
+-                        "PG37", "PG41", "PG42", "PG44", "PG45", "PG47",
+-                        "PG48"],
++        "expect_rows": ["PG13", "PG14", "PG15", "PG16", "PG17", "PG18", "PG19", "PG20", "PG21", "PG22", "PG28", "PG31", "PG32", "PG33", "PG34", "PG35", "PG36", "PG37", "PG41", "PG42", "PG43", "PG44", "PG45", "PG46", "PG47", "PG48"],
++        "attribution_basis": "every cell whose audited repository holds a hole, whatever verdict the cell expects: the gate is unconditional",
+         "execution": "grid",
+         "alternatives": [
+             {"kind": "insert", "anchor": 'if __name__ == "__main__":',
+@@ -506,8 +534,20 @@
+     return proc.returncode, rows, err, doc
+ 
+ 
++# The agreed grid protocol carries one canonical internal-error flag: the
++# per-row boolean "internal_error", true when the auditor's full stderr
++# contains the catch-all prefix below. Only that name is read; no alias and
++# no compatibility promise is kept for another spelling.
++INTERNAL_FLAGS = ("internal_error",)
++# The auditor's catch-all identity, printed as the first characters of its
++# stderr. The stderr checks are diagnostics on that message; the per-row
++# boolean above is the authoritative signal.
++INTERNAL_STDERR = "could-not-evaluate: internal:"
++
++
+ def harness_fault(doc, rows, err):
+-    """A harness fault (leak, timeout, harness_leak marker) kills nothing."""
++    """A harness fault kills nothing: a leak, a timeout, a traceback, an
++    internal error, an invalid row exit or a malformed verdict document."""
+     for key in ("harness_leaks", "harness_leak", "leaks", "leaked"):
+         if doc.get(key):
+             return f"grid reported {key}"
+@@ -517,16 +557,76 @@
+         for key in ("harness_leaks", "harness_leak", "leaks"):
+             if arm_doc.get(key):
+                 return f"grid arm reported {key}"
++        for key in INTERNAL_FLAGS:
++            if arm_doc.get(key):
++                return f"grid arm reported {key}"
++    for key in INTERNAL_FLAGS:
++        if doc.get(key):
++            return f"grid reported {key}"
+     for row in rows or []:
++        name = row_name(row)
+         if row.get("leaked"):
+-            return f"row {row_name(row)} leaked"
++            return f"row {name} leaked"
+         if row.get("timed_out"):
+-            return f"row {row_name(row)} timed out"
++            return f"row {name} timed out"
++        if row.get("traceback"):
++            return f"row {name} raised a traceback"
++        for key in INTERNAL_FLAGS:
++            if row.get(key):
++                return f"row {name} reported {key}"
++        code = row.get("exit")
++        if code is not None and code not in (0, 1, 2):
++            return f"row {name} has an invalid exit {code!r}"
++        if code in (0, 1) and "document" in row and row.get("document") is None:
++            return f"row {name} has a malformed verdict document"
+     if "harness_leak" in err:
+         return "grid stderr reports a harness leak"
++    if INTERNAL_STDERR in err:
++        return "grid stderr reports an internal error"
++    # diagnostic check on the same catch-all message: the row's tail keeps
++    # its first characters for a short message. The per-row boolean stays
++    # authoritative: a long message can push the prefix out of the tail.
++    for row in rows or []:
++        if INTERNAL_STDERR in str(row.get("stderr_tail") or ""):
++            return f"row {row_name(row)} reports an internal error"
+     return None
+ 
+ 
++def classify_row(row):
++    """How a violated row changed the audited outcome.
++
++    The classes are read from the row's own expected_exit and exit. An
++    exit pair alone never shows that the whole verdict changed: a 0 -> 0
++    or 1 -> 1 pair keeps the same exit and the detail may differ.
++
++    refusal-2        a normal verdict (expected 0 or 1) became a refusal:
++                     an over-refusal signal, NOT an availability credit
++    actual-verdict   an unavailable case (expected 2) became a real
++                     verdict: the availability credit
++    verdict-change   only 0 <-> 1: the verdict's pass/fail changed
++    same-verdict-exit  0 -> 0 or 1 -> 1: the same exit, the detail may
++                     differ; no substantive exit change and no availability
++                     claim
++    diagnostic-only   2 -> 2: the refusal stayed a refusal, so only the
++                     diagnostics can differ
++    unclassified     the comparison fields (expected_exit, exit) are
++                     missing or outside 0/1/2: no class credit is guessed
++    """
++    expected = row.get("expected_exit")
++    actual = row.get("exit")
++    if expected not in (0, 1, 2) or actual not in (0, 1, 2):
++        return "unclassified"
++    if expected in (0, 1) and actual == 2:
++        return "refusal-2"
++    if expected == 2 and actual in (0, 1):
++        return "actual-verdict"
++    if expected == actual:
++        return "diagnostic-only" if expected == 2 else "same-verdict-exit"
++    if expected in (0, 1) and actual in (0, 1):
++        return "verdict-change"
++    return "other"
++
++
+ def violated_rows(rows):
+     """Graded rows the grid did not meet: met false, or a failed twin."""
+     bad = []
+@@ -555,8 +655,11 @@
+ 
+ 
+ def row_detail(row):
++    # the grid's own observations, preserved as they are: a field the grid
++    # does not report stays absent (no alias, no invented value)
+     keys = ("case", "kind", "exit", "expected_exit", "kinds",
+             "expected_kinds", "twin_equal", "objects_acquired",
++            "problems", "amended_problems", "original_problems",
+             "stderr_tail")
+     return {k: row[k] for k in keys if k in row}
+ 
+@@ -599,6 +702,15 @@
+     return None, ("no alternative applied cleanly: " + " ".join(seen))
+ 
+ 
++def file_digest(path):
++    """The sha256 of the file's bytes: the identity of what was measured."""
++    digest = hashlib.sha256()
++    with open(path, "rb") as fh:
++        for block in iter(lambda: fh.read(1 << 16), b""):
++            digest.update(block)
++    return digest.hexdigest()
++
++
+ def compiles(source, name):
+     try:
+         compile(source, f"<{name}>", "exec")
+@@ -615,7 +727,11 @@
+     ap.add_argument("--grid", default=str(GRID),
+                     help="promisor grid (default: the lane promisor grid)")
+     ap.add_argument("--arm", default="current",
+-                    help="grid arm to exercise (default: current)")
++                    help="CURRENT arm only: the sensitivity runner measures "
++                         "the candidate the --current path names. Any other "
++                         "arm is could-not-evaluate, because the frozen arm "
++                         "runs the grid's fixed frozen auditor and ignores "
++                         "the candidate")
+     ap.add_argument("--case", action="append",
+                     help="run only these grid cases (repeatable, forwarded)")
+     ap.add_argument("--grid-timeout", type=int, default=DEFAULT_GRID_TIMEOUT,
+@@ -652,6 +768,15 @@
+         source = path.read_text(encoding="utf-8")
+         report = []
+         for mutant in MUTANTS:
++            if mutant["execution"] == "review-only":
++                # review-only notes carry no source assertion: there is
++                # nothing to match, and nothing is executed for them
++                report.append({"mutant": mutant["id"],
++                               "alternatives": [], "applicable": [],
++                               "applicable_alternative": None,
++                               "mutant_compiles": None,
++                               "skipped": "review-only"})
++                continue
+             counts = []
+             for alt in mutant["alternatives"]:
+                 if alt["kind"] == "replace":
+@@ -687,9 +812,18 @@
+                       f"-> alternative {row['applicable_alternative']} "
+                       f"compiles={row['mutant_compiles']}")
+         ok = all(r["applicable_alternative"] is not None
+-                 and r["mutant_compiles"] for r in report)
++                 and r["mutant_compiles"] for r in report
++                 if not r.get("skipped"))
+         return 0 if ok else 2
+ 
++    if args.arm != "current":
++        # the sensitivity runner measures the current arm only: the frozen
++        # arm runs the grid's fixed frozen auditor and ignores the mutant,
++        # so a frozen/both run would report a green that no mutant earned
++        print(f"could-not-evaluate: --arm {args.arm!r} is not supported: "
++              f"the sensitivity runner measures the current arm only",
++              file=sys.stderr)
++        return 2
+     candidate = Path(args.current).resolve()
+     grid = Path(args.grid).resolve()
+     if not candidate.is_file():
+@@ -701,6 +835,8 @@
+               file=sys.stderr)
+         return 2
+     source = candidate.read_text(encoding="utf-8")
++    candidate_digest = file_digest(candidate)
++    grid_digest = file_digest(grid)
+     rc, rows, err, doc = run_grid(grid, candidate, args.arm, args.case,
+                                   args.grid_timeout)
+     fault = harness_fault(doc, rows, err)
+@@ -714,6 +850,32 @@
+         print(f"could-not-evaluate: pristine grid rc={rc} {err} "
+               f"unmet={unmet}", file=sys.stderr)
+         return 2
++    pristine_violations = violated_rows(rows)
++    if pristine_violations:
++        # the grid's own contract: rc 0 means every graded row was met. A
++        # violated graded row under rc 0 is a contradiction, and a pristine
++        # that contradicts the grid is not a pristine.
++        names = sorted({row_name(r) for r in pristine_violations})
++        print("could-not-evaluate: the pristine grid reported rc=0 but a "
++              f"graded row is not met: {names}", file=sys.stderr)
++        return 2
++    if not [r for r in rows if graded(r)]:
++        # the precondition of the experiment: without a graded row there is
++        # no oracle cell to compare against, so every mutant would be a
++        # survivor by default. This is not a pass and not a failure.
++        print("could-not-evaluate: the pristine run produced no graded row: "
++              f"{sorted({row_name(r) for r in rows}) or 'no rows at all'}",
++              file=sys.stderr)
++        return 2
++    grid_reported_digest = doc.get("grid_sha256")
++    if grid_reported_digest and grid_reported_digest != grid_digest:
++        # the grid producer reported a different digest than the file this
++        # run hashed: the pristine is not identified, so no experiment runs
++        # on it
++        print("could-not-evaluate: the grid reports its own digest "
++              f"{grid_reported_digest}, but the grid file hashed to "
++              f"{grid_digest}", file=sys.stderr)
++        return 2
+ 
+     selected = [m for m in MUTANTS if not args.only or m["id"] in args.only]
+     if args.only and len(selected) != len(args.only):
+@@ -728,23 +890,13 @@
+                      "semantic": mutant["semantic"],
+                      "execution": mutant["execution"],
+                      "expect_rows": mutant["expect_rows"]}
+-            if mutant["execution"] == "static-only":
+-                marker = mutant.get("static_check")
+-                applied, reason = apply_mutation(source, mutant)
+-                if applied is None:
+-                    entry.update(status="could-not-evaluate",
+-                                 killed=False, reason=reason)
+-                else:
+-                    present_before = marker in source
+-                    present_after = marker in applied
+-                    entry.update(
+-                        status="static-only-not-executed", killed=False,
+-                        reason=f"{marker} present before={present_before} "
+-                               f"after={present_after}; not executed: a "
+-                               f"fixture that could reach a transport is "
+-                               f"forbidden in this wave",
+-                        static_before=present_before,
+-                        static_after=present_after)
++            if mutant["execution"] == "review-only":
++                # review-only, uncredited: no mutant is built, the grid is
++                # not invoked for it, and it is never credited with a kill
++                entry.update(status="review-only", killed=False,
++                             executions=0, review_only=1,
++                             reason="review-only note: not applied, not "
++                                    "executed, not credited")
+                 rows_out.append(entry)
+                 continue
+             mutated, info = apply_mutation(source, mutant)
+@@ -763,6 +915,20 @@
+             path.write_text(mutated, encoding="utf-8")
+             mrc, mrows, merr, mdoc = run_grid(grid, path, args.arm, args.case,
+                                               args.grid_timeout)
++            mutant_digest = (mdoc.get("auditor_sha256") or {}).get("current")
++            if mutant_digest is not None:
++                # the run is identifiable even when nothing is credited
++                entry["auditor_sha256"] = mutant_digest
++            mutant_grid_digest = mdoc.get("grid_sha256")
++            if mutant_grid_digest and mutant_grid_digest != grid_digest:
++                entry.update(status="could-not-evaluate", killed=False,
++                             reason=f"the grid reports its own digest "
++                                    f"{mutant_grid_digest}, but the grid file "
++                                    f"hashed to {grid_digest}")
++                if mutant_digest is not None:
++                    entry["auditor_sha256"] = mutant_digest
++                rows_out.append(entry)
++                continue
+             fault = harness_fault(mdoc, mrows, merr)
+             if fault:
+                 entry.update(status="could-not-evaluate", killed=False,
+@@ -774,6 +940,14 @@
+                              reason=f"grid exit 2: {merr}")
+                 rows_out.append(entry)
+                 continue
++            if not [r for r in mrows if graded(r)]:
++                # no graded row: no comparison is possible, so the mutant is
++                # not a survivor either
++                entry.update(status="could-not-evaluate", killed=False,
++                             reason="the mutant run produced no graded row",
++                             auditor_sha256=mutant_digest)
++                rows_out.append(entry)
++                continue
+             bad = violated_rows(mrows)
+             if mrc == 1 and not bad:
+                 # the grid says the run failed but names no violated row:
+@@ -783,30 +957,88 @@
+                                     "violated row")
+                 rows_out.append(entry)
+                 continue
+-            killed = bool(bad)
+-            failed = sorted({row_name(r) for r in bad})
++            if mrc == 0 and bad:
++                # the mirror contradiction: the grid says the run passed
++                # and names a violated row. The receiver cannot launder a
++                # contradiction into a pristine or into a kill.
++                names = sorted({row_name(r) for r in bad})
++                entry.update(status="could-not-evaluate", killed=False,
++                             reason="grid exit 0 with a violated graded row: "
++                                    + ", ".join(names),
++                             contradictory_rows=names)
++                rows_out.append(entry)
++                continue
+             expected = mutant["expect_rows"]
++            attributed_rows = [r for r in bad
++                               if expected_match(row_name(r), expected)]
++            unexpected = [r for r in bad
++                          if not expected_match(row_name(r), expected)]
++            if unexpected:
++                # a violated row outside this mutant's attribution is not a
++                # kill: the allowlist is not widened, the row is preserved
++                names = sorted({row_name(r) for r in unexpected})
++                entry.update(status="could-not-evaluate", killed=False,
++                             reason="violated rows outside the attribution: "
++                                    + ", ".join(names),
++                             unexpected_rows=names, failed_rows=[],
++                             applied_alternative=info,
++                             failed_row_detail=[row_detail(r)
++                                                for r in unexpected])
++                rows_out.append(entry)
++                continue
++            classes = {}
++            for row in attributed_rows:
++                classes.setdefault(classify_row(row), []).append(
++                    row_name(row))
++            availability = "actual-verdict" in classes
++            verdict_change = any(c in ("refusal-2", "verdict-change")
++                                 for c in classes)
++            killed = bool(attributed_rows)
++            failed = sorted({row_name(r) for r in attributed_rows})
+             entry.update(status="killed" if killed else "survived",
+                          killed=killed, grid_exit=mrc, failed_rows=failed,
++                         auditor_sha256=mutant_digest,
+                          applied_alternative=info,
+-                         failed_row_detail=[row_detail(r) for r in bad],
+-                         attributed=(not expected
+-                                     or all(expected_match(f, expected)
+-                                            for f in failed)),
+-                         unexpected_rows=[] if not expected else
+-                         [f for f in failed
+-                          if not expected_match(f, expected)])
++                         failed_row_detail=[dict(row_detail(r),
++                                                auditor_sha256=mutant_digest)
++                                            for r in attributed_rows],
++                         classes=classes,
++                         availability_credit=availability,
++                         verdict_change=verdict_change,
++                         diagnostic_only=(bool(classes)
++                                          and set(classes)
++                                          == {"diagnostic-only"}),
++                         same_verdict_exit=classes.get("same-verdict-exit",
++                                                       []),
++                         unclassified=classes.get("unclassified", []),
++                         unexpected_rows=[])
+             rows_out.append(entry)
+ 
+     cne = [r["mutant"] for r in rows_out if r["status"] == "could-not-evaluate"]
+     killed = [r["mutant"] for r in rows_out if r.get("killed")]
+     surviving = [r["mutant"] for r in rows_out if r["status"] == "survived"]
++    review_only = [r["mutant"] for r in rows_out
++                   if r.get("review_only")]
++    provenance = {
++        "candidate_auditor_sha256": candidate_digest,
++        "grid_sha256": grid_digest,
++        "grid_reported_sha256": grid_reported_digest,
++        "population_sha256": doc.get("population_sha256"),
++        "expectations_sha256": doc.get("expectations_sha256"),
++        "population_size": doc.get("population_size"),
++        "grid_auditor_sha256": doc.get("auditor_sha256"),
++        "grid_provenance_source": "the grid document of the pristine run",
++    }
+     doc = {"pristine": "passed", "candidate": str(candidate),
++           "provenance": provenance,
+            "grid": str(grid), "arm": args.arm, "cases": args.case or [],
+            "mutants": len(rows_out),
++           "executable": len(rows_out) - len(review_only),
++           "review_only": len(review_only),
++           "review_only_ids": review_only,
+            "killed": len(killed), "killed_ids": killed,
+            "surviving": surviving, "could_not_evaluate": cne,
+-           "evaluated": len(rows_out) - len(cne),
++           "evaluated": len(rows_out) - len(cne) - len(review_only),
+            "rows": rows_out}
+     if args.json:
+         print(json.dumps(doc, indent=1, sort_keys=True))
+@@ -814,7 +1046,10 @@
+         for r in rows_out:
+             print(f"{r['mutant']} {r['status']} "
+                   f"rows={r.get('failed_rows', [])}")
+-        print(f"mutants={doc['mutants']} evaluated={doc['evaluated']} "
++        print(f"mutants={doc['mutants']} "
++              f"executable={doc['executable']} "
++              f"review-only={doc['review_only']} "
++              f"evaluated={doc['evaluated']} "
+               f"killed={doc['killed']} surviving={surviving} "
+               f"could-not-evaluate={cne}")
+     return 2 if cne else 0
+@@ -826,9 +1061,17 @@
+ # marker PRISTINE is the pristine run, any other candidate is a mutant.
+ 
+ STUB_GRID = '''#!/usr/bin/env python3
+-"""Stub grid for the runner's selftest: no repository, no fixture."""
++"""Stub grid for the runner's selftest: no repository, no fixture.
++
++Every invocation appends a line to GRID_STUB_LOG (the canary): the
++selftest uses it to prove that a pristine failure stops the run before any
++mutant is built or executed, and that a review-only inventory note causes
++no grid invocation at all.
++"""
++import hashlib
+ import json
+ import os
++import os.path
+ import sys
+ 
+ mode = os.environ.get("GRID_STUB_MODE", "ok")
+@@ -840,52 +1083,169 @@
+     current = sys.argv[sys.argv.index("--current") + 1]
+ # the pristine candidate is the one the caller names; the runner writes
+ # every mutant to <id>.py, and the frozen ids all start with PM
+-import os.path
+ pristine = not os.path.basename(current).startswith("PM")
+ 
++ROWS = [{"case": "PG00-clean-row", "kind": "policy"}]
++
++log = os.environ.get("GRID_STUB_LOG")
++if log:
++    with open(log, "a", encoding="utf-8") as fh:
++        fh.write(("pristine" if pristine else "mutant") + " " + current + "\\n")
++
++
++def provenance():
++    """The canonical provenance fields, computed from the bytes the stub
++    actually uses: the auditor it was handed and the data it emits."""
++    try:
++        with open(current, "rb") as fh:
++            auditor = hashlib.sha256(fh.read()).hexdigest()
++    except OSError:
++        auditor = None
++    try:
++        with open(os.path.abspath(__file__), "rb") as fh:
++            producer = hashlib.sha256(fh.read()).hexdigest()
++    except OSError:
++        producer = None
++    if mode == "grid_digest_mismatch" or (
++            mode == "grid_digest_mismatch_mutation" and not pristine):
++        producer = "0" * 64
++    expectations = hashlib.sha256(b"promisor-mutants stub expectations").hexdigest()
++    population = hashlib.sha256(json.dumps(
++        [r["case"] for r in ROWS], sort_keys=True).encode()).hexdigest()
++    return {"grid": "promisor-grid-stub",
++            "grid_sha256": producer,
++            "expectations_sha256": expectations,
++            "population_sha256": population,
++            "population_size": len(ROWS),
++            "auditor_sha256": {"current": auditor}}
++
++
++def emit(doc, code):
++    doc.update(provenance())
++    print(json.dumps(doc))
++    sys.exit(code)
++
+ 
+ def row(case, **kw):
+-    base = {"case": case, "kind": "policy", "met": True}
++    # the canonical shape a graded row carries: met, exit, expected_exit
++    # and the verdict document (None when the run produced no verdict)
++    base = {"case": case, "kind": "policy", "met": True, "exit": 0,
++            "expected_exit": 0, "document": {"defects": []}}
+     base.update(kw)
+     return base
+ 
+ 
+ if mode == "pristine_fails":
+     if pristine:
+-        doc = {"arms": {arm: {"rows": [row("PG01", met=False)]}}}
+-        print(json.dumps(doc))
+-        sys.exit(1)
+-    doc = {"arms": {arm: {"rows": [row("PG01")]}}}
+-    print(json.dumps(doc))
+-    sys.exit(0)
++        doc = {"arms": {arm: {"rows": [row("PG01-pristine-failure",
++                                           met=False)]}}}
++        emit(doc, 1)
++    doc = {"arms": {arm: {"rows": [row("PG01-pristine-failure")]}}}
++    emit(doc, 0)
+ if mode == "unmet" and not pristine:
+-    doc = {"arms": {arm: {"rows": [row("PG01", met=False)]}}}
+-    print(json.dumps(doc))
+-    sys.exit(1)
++    doc = {"arms": {arm: {"rows": [row("PG01-complete-lane-promisor-config",
++                                       met=False, exit=2,
++                                       expected_exit=0, document=None)]}}}
++    emit(doc, 1)
+ if mode == "twin" and not pristine:
+-    doc = {"arms": {arm: {"rows": [row("PG01", twin_equal=False)]}}}
+-    print(json.dumps(doc))
+-    sys.exit(1)
++    doc = {"arms": {arm: {"rows": [
++        row("PG22-unknown-citation-incomplete-promisor", twin_equal=False,
++            exit=1, expected_exit=0)]}}}
++    emit(doc, 1)
+ if mode == "exit2" and not pristine:
+     print("could-not-evaluate: stub", file=sys.stderr)
+     sys.exit(2)
+-if mode == "rc1_no_rows" and not pristine:
+-    doc = {"arms": {arm: {"rows": []}}}
+-    print(json.dumps(doc))
+-    sys.exit(1)
++if mode == "rc1_no_violated_row" and not pristine:
++    # the grid reports a failure but names no violated row: the runner must
++    # report could-not-evaluate for that reason, not a kill
++    doc = {"arms": {arm: {"rows": [row("PG03-met-row", exit=1)]}}}
++    emit(doc, 1)
+ if mode == "leak" and not pristine:
+-    doc = {"arms": {arm: {"harness_leaks": ["PG01"],
+-                          "rows": [row("PG01", met=False, leaked=True)]}}}
+-    print(json.dumps(doc))
+-    sys.exit(1)
++    doc = {"arms": {arm: {"harness_leaks": ["PG04-leaked-row"],
++                          "rows": [row("PG04-leaked-row", met=False,
++                                       leaked=True)]}}}
++    emit(doc, 1)
+ if mode == "timeout_row" and not pristine:
+-    doc = {"arms": {arm: {"rows": [row("PG01", met=False,
++    doc = {"arms": {arm: {"rows": [row("PG05-timed-out-row", met=False,
+                                        timed_out=True)]}}}
+-    print(json.dumps(doc))
+-    sys.exit(1)
+-doc = {"arms": {arm: {"rows": [row("PG01")]}}}
+-print(json.dumps(doc))
+-sys.exit(0)
++    emit(doc, 1)
++if mode == "traceback_row" and not pristine:
++    # a row whose auditor crashed: a traceback is a harness fault, never a
++    # kill
++    doc = {"arms": {arm: {"rows": [row("PG06-traceback-row", met=False,
++                                       traceback=True)]}}}
++    emit(doc, 1)
++if mode == "internal_row" and not pristine:
++    # a row the grid reports as an internal error (the flag GridOracle is
++    # adding); the stderr prefix is the fallback
++    doc = {"arms": {arm: {"rows": [row("PG07-internal-row", met=False,
++                                       internal_error=True)]}}}
++    emit(doc, 1)
++if mode == "malformed_verdict" and not pristine:
++    # exit 0 with no verdict document: the verdict cannot be read
++    doc = {"arms": {arm: {"rows": [row("PG08-malformed-row", met=False,
++                                       exit=0, document=None)]}}}
++    emit(doc, 1)
++if mode == "truth_table" and not pristine:
++    # one exit pair, named by the environment: the selftest walks all nine
++    expect = int(os.environ.get("GRID_STUB_EXPECT", "0"))
++    actual = int(os.environ.get("GRID_STUB_ACTUAL", "0"))
++    # a verdict document exists for a verdict (exit 0/1) and not for a
++    # refusal (exit 2): the canonical shape
++    doc = {"arms": {arm: {"rows": [row("PG01-truth-table", met=False,
++                                       exit=actual, expected_exit=expect,
++                                       document=(None if actual == 2
++                                                 else {"defects": []}))]}}}
++    emit(doc, 1)
++if mode == "pristine_rc0_bad":
++    # the grid says the pristine passed and names a violated graded row
++    if pristine:
++        doc = {"arms": {arm: {"rows": [
++            row("PG01-pristine-contradiction", met=False, exit=1,
++                expected_exit=0)]}}}
++        emit(doc, 0)
++    doc = {"arms": {arm: {"rows": [row("PG00-clean-row")]}}}
++    emit(doc, 0)
++if mode == "mutant_rc0_bad":
++    # the pristine is fine, but a mutant run claims success and names a
++    # violated row
++    if pristine:
++        doc = {"arms": {arm: {"rows": [row("PG00-clean-row")]}}}
++        emit(doc, 0)
++    doc = {"arms": {arm: {"rows": [
++        row("PG01-mutant-contradiction", met=False, exit=1,
++            expected_exit=0)]}}}
++    emit(doc, 0)
++if mode == "open_only":
++    # a run with no graded row: the open row is reported, and nothing can
++    # be compared against it
++    doc = {"arms": {arm: {"rows": [row("PG40-open-row", kind="open")]}}}
++    emit(doc, 0)
++if mode == "graded_explanation" and not pristine:
++    # a row that carries the grid's grading explanation, and a row that
++    # does not: the detail must preserve what is there and nothing else
++    doc = {"arms": {arm: {"rows": [
++        row("PG01-explained-row", met=False, exit=1, expected_exit=0,
++            problems=["the verdict document did not match the twin"],
++            amended_problems=["amended: the kinds differ"],
++            original_problems=["original: the kinds differ"]),
++        row("PG02-plain-row", met=False, exit=1, expected_exit=0)]}}}
++    emit(doc, 1)
++if mode == "missing_metadata" and not pristine:
++    # a violated row whose comparison fields are missing: no class credit
++    # may be guessed from it
++    doc = {"arms": {arm: {"rows": [row("PG01-missing-metadata", met=False,
++                                       exit=2, expected_exit=None,
++                                       document=None)]}}}
++    emit(doc, 1)
++if mode == "unattributed_row" and not pristine:
++    # a violated row outside every mutant's attribution
++    doc = {"arms": {arm: {"rows": [row("PG99-outside-the-attribution",
++                                       met=False, exit=2,
++                                       expected_exit=0, document=None)]}}}
++    emit(doc, 1)
++doc = {"arms": {arm: {"rows": [row("PG00-clean-row")]}}}
++emit(doc, 0)
+ '''
+ 
+ CANDIDATE = '''#!/usr/bin/env python3
+@@ -918,9 +1278,9 @@
+     return []
+ 
+ 
+-def missing_reachable(repo, root):
+-    roots = present_roots(repo)
+-    return set(), set()
++def other_helper(repo):
++    all_roots = present_roots(repo)
++    return all_roots
+ 
+ 
+ def audit_round(stores, full_tokens):
+@@ -960,7 +1320,14 @@
+ 
+ 
+ def missing_reachable(repo, root):
+-    return set(), set()
++    roots = present_roots(repo)
++
++    def walk(extra, walk_roots):
++        return set()
++
++    missing = walk((), roots)
++    opaque = walk(("--filter=blob:none",), [root])
++    return missing, opaque
+ 
+ 
+ def report_cutoff(repo, rel):
+@@ -988,66 +1355,428 @@
+         grid = root / "stub-grid.py"
+         grid.write_text(STUB_GRID, encoding="utf-8")
+         candidate = root / "candidate.py"
+-        candidate.write_text(CANDIDATE + "# PRISTINE\n", encoding="utf-8")
++        candidate.write_text(CANDIDATE, encoding="utf-8")
+         broken = root / "broken.py"
+         broken.write_text(BROKEN_CANDIDATE, encoding="utf-8")
+ 
+-        def run(mode, cand=None, extra=()):
+-            env = dict(os.environ, GRID_STUB_MODE=mode)
+-            proc = subprocess.run(
+-                [sys.executable, str(Path(__file__).resolve()), "--grid",
+-                 str(grid), "--current", str(cand or candidate), "--json",
+-                 *extra],
+-                capture_output=True, env=env, timeout=300)
++        def run(mode, cand=None, only=None, extra_env=None):
++            log = root / f"canary-{mode}.log"
++            env = dict(os.environ, GRID_STUB_MODE=mode,
++                       GRID_STUB_LOG=str(log))
++            env.update(extra_env or {})
++            argv = [sys.executable, str(Path(__file__).resolve()), "--grid",
++                    str(grid), "--current", str(cand or candidate), "--json"]
++            if only:
++                argv += ["--only", only]
++            proc = subprocess.run(argv, capture_output=True, env=env,
++                                  timeout=300)
+             doc = {}
+             try:
+                 doc = json.loads(proc.stdout.decode("utf-8", "replace"))
+             except (ValueError, UnicodeDecodeError):
+                 doc = {}
+-            return proc.returncode, doc, proc.stderr.decode("utf-8", "replace")
+-
+-        cases = [
+-            # (mode, expected exit, expectation)
+-            ("ok", 0, "every mutant evaluated: exit 0"),
+-            ("unmet", 0, "a killed mutant is still an evaluated inventory"),
+-            ("twin", 0, "a failed twin is a violated row"),
+-            ("exit2", 2, "grid exit 2 is could-not-evaluate"),
+-            ("rc1_no_rows", 2, "grid exit 1 without a violated row is CNE"),
+-            ("leak", 2, "a harness leak is could-not-evaluate"),
+-            ("timeout_row", 2, "a timed-out row is could-not-evaluate"),
+-            ("pristine_fails", 2, "a failing pristine run kills nothing"),
+-        ]
+-        for mode, expected, what in cases:
+-            code, doc, err = run(mode)
+-            if code != expected:
+-                failures.append(f"{mode}: exit {code}, expected {expected} "
+-                                f"({what}); stderr={err.strip()[:200]}")
+-            if expected == 2 and doc.get("killed"):
++            calls = []
++            if log.exists():
++                calls = log.read_text(encoding="utf-8").splitlines()
++            return (proc.returncode, doc,
++                    proc.stderr.decode("utf-8", "replace"), calls)
++
++        # 1. a fully evaluated inventory is exit 0, and the mutant phase
++        #    really ran (the canary holds a pristine line and mutant lines)
++        code, doc, err, calls = run("ok")
++        if code != 0:
++            failures.append(f"ok: exit {code}, expected 0")
++        if not calls or not calls[0].startswith("pristine"):
++            failures.append("ok: the canary does not start with the "
++                            f"pristine invocation: {calls[:2]}")
++        mutant_calls = [c for c in calls if c.startswith("mutant")]
++        if len(mutant_calls) < 1:
++            failures.append("ok: no mutant invocation was recorded")
++
++        # 2. the review-only note causes no grid invocation at all, is
++        #    never credited with a kill, and is never applied
++        review = [r for r in doc.get("rows", [])
++                  if r.get("review_only") or r.get("status") == "review-only"]
++        if len(review) != 1:
++            failures.append(f"ok: expected exactly one review-only entry, "
++                            f"found {len(review)}")
++        else:
++            entry = review[0]
++            if entry.get("killed"):
++                failures.append("ok: the review-only entry was credited "
++                                "with a kill")
++            if entry.get("executions") != 0:
++                failures.append("ok: the review-only entry reports "
++                                f"executions={entry.get('executions')}")
++            if entry.get("review_only") != 1:
++                failures.append("ok: the review-only entry is not marked "
++                                "review_only")
++            if entry.get("failed_rows"):
++                failures.append("ok: the review-only entry names failed "
++                                "rows")
++        if doc.get("review_only") != 1:
++            failures.append(f"ok: the document reports review_only="
++                            f"{doc.get('review_only')}, expected 1")
++        if doc.get("executable") != doc.get("mutants", 0) - 1:
++            failures.append(f"ok: executable={doc.get('executable')} and "
++                            f"mutants={doc.get('mutants')} do not add up to "
++                            f"one review-only note")
++        if any("PM08" in c for c in calls):
++            failures.append("ok: a grid invocation was made for the "
++                            "review-only note")
++        if any("PM08" in (k or "") for k in doc.get("killed_ids", [])):
++            failures.append("ok: the review-only note was credited with a "
++                            "kill")
++
++        # 3. a violated row kills the mutant: at least one kill, and the
++        #    named cell is the one the stub made unmet
++        code, doc, err, calls = run("unmet", only="PM01-blanket-metadata-refusal")
++        if code != 0:
++            failures.append(f"unmet: exit {code}, expected 0")
++        if not doc.get("killed"):
++            failures.append("unmet: no mutant was credited with a kill")
++        named = [r for r in doc.get("rows", [])
++                 if "PG01-complete-lane-promisor-config"
++                 in (r.get("failed_rows") or [])]
++        if not named:
++            failures.append("unmet: the killed mutant did not name "
++                            "PG01-complete-lane-promisor-config")
++
++        # 4. a failed twin is a violated row, and it is named
++        code, doc, err, calls = run("twin", only="PM02-blanket-unknown-refusal")
++        if code != 0:
++            failures.append(f"twin: exit {code}, expected 0")
++        if not doc.get("killed"):
++            failures.append("twin: no mutant was credited with a kill")
++        named = [r for r in doc.get("rows", [])
++                 if "PG22-unknown-citation-incomplete-promisor"
++                 in (r.get("failed_rows") or [])]
++        if not named:
++            failures.append("twin: the killed mutant did not name "
++                            "PG22-unknown-citation-incomplete-promisor")
++
++        # 5. only the current arm is measurable: frozen, both and any other
++        #    arm are could-not-evaluate, and no grid call is made
++        for arm in ("frozen", "both", "currentish"):
++            log = root / f"canary-arm-{arm}.log"
++            env = dict(os.environ, GRID_STUB_MODE="ok",
++                       GRID_STUB_LOG=str(log))
++            proc = subprocess.run(
++                [sys.executable, str(Path(__file__).resolve()), "--grid",
++                 str(grid), "--current", str(candidate), "--arm", arm,
++                 "--json"],
++                capture_output=True, env=env, timeout=300)
++            if proc.returncode != 2:
++                failures.append(f"--arm {arm}: exit {proc.returncode}, "
++                                f"expected 2")
++            calls = (log.read_text(encoding="utf-8").splitlines()
++                     if log.exists() else [])
++            if calls:
++                failures.append(f"--arm {arm}: the grid was called "
++                                f"{len(calls)} times")
++            err = proc.stderr.decode("utf-8", "replace")
++            if "current arm only" not in err:
++                failures.append(f"--arm {arm}: the reason does not name the "
++                                f"current-arm restriction: {err[:160]}")
++
++        # 6. the provenance: what was actually measured, by byte identity
++        code, doc, err, calls = run("ok")
++        provenance = doc.get("provenance") or {}
++        for key in ("candidate_auditor_sha256", "grid_sha256",
++                    "population_sha256", "expectations_sha256",
++                    "population_size", "grid_auditor_sha256"):
++            if not provenance.get(key):
++                failures.append(f"provenance: {key} is missing")
++        if provenance.get("candidate_auditor_sha256") != \
++                hashlib.sha256(candidate.read_bytes()).hexdigest():
++            failures.append("provenance: the candidate digest is not the "
++                            "digest of the candidate file")
++        if provenance.get("grid_sha256") != \
++                hashlib.sha256(grid.read_bytes()).hexdigest():
++            failures.append("provenance: the grid digest is not the digest "
++                            "of the grid file")
++        grid_auditor = (provenance.get("grid_auditor_sha256") or {})
++        if grid_auditor.get("current") != \
++                provenance.get("candidate_auditor_sha256"):
++            failures.append("provenance: the grid's current-arm auditor "
++                            "digest differs from the candidate digest")
++        for row in doc.get("rows", []):
++            if row.get("status") == "review-only":
++                continue
++            if not row.get("auditor_sha256"):
++                failures.append(f"provenance: the mutant {row.get('mutant')} "
++                                f"has no observed auditor digest")
++                break
++
++        # 7. a grid that reports a different digest than the file the
++        #    runner hashed is refused: what was measured is not identified.
++        #    The refusal belongs to the pristine validation, so no mutant
++        #    is run on an unidentified pristine.
++        log = root / "canary-digest-mismatch.log"
++        env = dict(os.environ, GRID_STUB_MODE="grid_digest_mismatch",
++                   GRID_STUB_LOG=str(log))
++        proc = subprocess.run(
++            [sys.executable, str(Path(__file__).resolve()), "--grid",
++             str(grid), "--current", str(candidate), "--json"],
++            capture_output=True, env=env, timeout=300)
++        if proc.returncode != 2:
++            failures.append(f"grid_digest_mismatch: exit {proc.returncode}, "
++                            f"expected 2")
++        if "digest" not in proc.stderr.decode("utf-8", "replace"):
++            failures.append("grid_digest_mismatch: the reason does not "
++                            "mention the digest")
++        calls = (log.read_text(encoding="utf-8").splitlines()
++                 if log.exists() else [])
++        if len(calls) != 1:
++            failures.append(f"grid_digest_mismatch: the canary shows "
++                            f"{len(calls)} grid invocations, expected "
++                            f"exactly one (the pristine)")
++
++        # 7b. a mutant whose run reports a different digest is
++        # could-not-evaluate, and the observed digest is kept
++        code, doc, err, calls = run("grid_digest_mismatch_mutation")
++        if code != 2:
++            failures.append(f"grid_digest_mismatch_mutation: exit {code}, "
++                            f"expected 2")
++        kept = [r for r in doc.get("rows", [])
++                if r.get("status") == "could-not-evaluate"
++                and r.get("auditor_sha256")]
++        if not kept:
++            failures.append("grid_digest_mismatch_mutation: no "
++                            "could-not-evaluate entry kept the observed "
++                            "auditor digest")
++
++        # 8. a pristine that contradicts the grid (rc 0 with a violated
++        #    graded row) is refused before any mutant runs
++        log = root / "canary-pristine-contradiction.log"
++        env = dict(os.environ, GRID_STUB_MODE="pristine_rc0_bad",
++                   GRID_STUB_LOG=str(log))
++        proc = subprocess.run(
++            [sys.executable, str(Path(__file__).resolve()), "--grid",
++             str(grid), "--current", str(candidate), "--json"],
++            capture_output=True, env=env, timeout=300)
++        if proc.returncode != 2:
++            failures.append(f"pristine_rc0_bad: exit {proc.returncode}, "
++                            f"expected 2")
++        if "graded row" not in proc.stderr.decode("utf-8", "replace"):
++            failures.append("pristine_rc0_bad: the reason does not name "
++                            "the violated graded row")
++        calls = (log.read_text(encoding="utf-8").splitlines()
++                 if log.exists() else [])
++        if len(calls) != 1:
++            failures.append(f"pristine_rc0_bad: the canary shows "
++                            f"{len(calls)} grid invocations, expected "
++                            f"exactly one (the pristine)")
++
++        # 8b. a mutant run that contradicts the grid (rc 0 with a violated
++        #     graded row) is uncredited: could-not-evaluate, no kill
++        code, doc, err, calls = run("mutant_rc0_bad")
++        if code != 2:
++            failures.append(f"mutant_rc0_bad: exit {code}, expected 2")
++        if doc.get("killed"):
++            failures.append("mutant_rc0_bad: a contradictory mutant run was "
++                            "credited with a kill")
++        kept = [r for r in doc.get("rows", [])
++                if r.get("status") == "could-not-evaluate"
++                and r.get("contradictory_rows")]
++        if not kept:
++            failures.append("mutant_rc0_bad: no could-not-evaluate entry "
++                            "records the contradictory row")
++
++        # 9. the experiment precondition: a valid pristine with no graded
++        #    row is could-not-evaluate, and no mutant is run at all
++        log = root / "canary-open-only.log"
++        env = dict(os.environ, GRID_STUB_MODE="open_only",
++                   GRID_STUB_LOG=str(log))
++        proc = subprocess.run(
++            [sys.executable, str(Path(__file__).resolve()), "--grid",
++             str(grid), "--current", str(candidate), "--json"],
++            capture_output=True, env=env, timeout=300)
++        if proc.returncode != 2:
++            failures.append(f"open_only: exit {proc.returncode}, expected 2")
++        calls = (log.read_text(encoding="utf-8").splitlines()
++                 if log.exists() else [])
++        if len(calls) != 1:
++            failures.append(f"open_only: the canary shows {len(calls)} grid "
++                            f"invocations, expected exactly one (the "
++                            f"pristine)")
++        if "graded row" not in proc.stderr.decode("utf-8", "replace"):
++            failures.append("open_only: the reason does not name the "
++                            "missing graded row")
++
++        # 10. the grading explanation is preserved where the grid reports
++        #    it, and absent where it does not
++        code, doc, err, calls = run("graded_explanation",
++                                    only="PM01-blanket-metadata-refusal")
++        details = {r.get("mutant"): r for r in doc.get("rows", [])}
++        entry = details.get("PM01-blanket-metadata-refusal") or {}
++        row_details = entry.get("failed_row_detail") or []
++        explained = [d for d in row_details
++                     if d.get("case") == "PG01-explained-row"]
++        plain = [d for d in row_details if d.get("case") == "PG02-plain-row"]
++        if not explained:
++            failures.append("graded_explanation: the explained row is not "
++                            "in the failed-row detail")
++        else:
++            detail = explained[0]
++            if not detail.get("problems"):
++                failures.append("graded_explanation: the grid's problems "
++                                "were not preserved")
++            if "amended_problems" not in detail:
++                failures.append("graded_explanation: amended_problems was "
++                                "not preserved")
++            if "original_problems" not in detail:
++                failures.append("graded_explanation: original_problems was "
++                                "not preserved")
++        if plain and any(k in plain[0] for k in ("problems",
++                                                 "amended_problems",
++                                                 "original_problems")):
++            failures.append("graded_explanation: a field the grid did not "
++                            "report was invented")
++
++        # 11. the could-not-evaluate reasons, each for its own reason
++        for mode, needle in (("exit2", "grid exit 2"),
++                              ("rc1_no_violated_row",
++                               "without an identifiable violated row"),
++                              ("leak", "harness_leaks"),
++                              ("timeout_row", "timed out"),
++                              ("traceback_row", "traceback"),
++                              ("internal_row", "internal_error"),
++                              ("malformed_verdict", "malformed verdict")):
++            code, doc, err, calls = run(mode)
++            if code != 2:
++                failures.append(f"{mode}: exit {code}, expected 2")
++            if doc.get("killed"):
+                 failures.append(f"{mode}: a could-not-evaluate run credited "
+                                 f"a kill")
+-        # a mutant that does not compile is could-not-evaluate
+-        code, doc, err = run("ok", cand=broken)
++            reasons = " ".join(str(r.get("reason") or "")
++                               for r in doc.get("rows", []))
++            if needle not in reasons:
++                failures.append(f"{mode}: the reason {needle!r} is missing: "
++                                f"{reasons[:200]}")
++
++        # 12. a violated row outside the attribution is not a kill: the
++        #    mutant is could-not-evaluate and the row is preserved
++        code, doc, err, calls = run("unattributed_row", only="PM01-blanket-metadata-refusal")
++        if code != 2:
++            failures.append(f"unattributed_row: exit {code}, expected 2")
++        if doc.get("killed"):
++            failures.append("unattributed_row: an out-of-attribution row "
++                            "was credited with a kill")
++        preserved = [r for r in doc.get("rows", [])
++                     if "PG99-outside-the-attribution"
++                     in (r.get("unexpected_rows") or [])]
++        if not preserved:
++            failures.append("unattributed_row: the out-of-attribution row "
++                            "was not preserved")
++        if not any("outside the attribution" in str(r.get("reason") or "")
++                   for r in doc.get("rows", [])):
++            failures.append("unattributed_row: the reason does not name "
++                            "the out-of-attribution row")
++
++        # 13. the nine exit pairs, one class each: an exit pair alone
++        #    never shows that the whole verdict changed
++        truth = {(0, 0): "same-verdict-exit", (0, 1): "verdict-change",
++                 (0, 2): "refusal-2", (1, 0): "verdict-change",
++                 (1, 1): "same-verdict-exit", (1, 2): "refusal-2",
++                 (2, 0): "actual-verdict", (2, 1): "actual-verdict",
++                 (2, 2): "diagnostic-only"}
++        for (expect, actual), want in truth.items():
++            code, doc, err, calls = run(
++                "truth_table", only="PM01-blanket-metadata-refusal",
++                extra_env={"GRID_STUB_EXPECT": str(expect),
++                           "GRID_STUB_ACTUAL": str(actual)})
++            classes = {}
++            for row in doc.get("rows", []):
++                classes = row.get("classes") or {}
++            if list(classes) != [want]:
++                failures.append(f"truth_table {expect}->{actual}: classes "
++                                f"{classes}, expected {want!r}")
++            if want == "same-verdict-exit":
++                for row in doc.get("rows", []):
++                    if row.get("diagnostic_only"):
++                        failures.append(f"truth_table {expect}->{actual}: "
++                                        f"diagnostic_only was set for a "
++                                        f"same-verdict-exit row")
++                    if not row.get("same_verdict_exit"):
++                        failures.append(f"truth_table {expect}->{actual}: the "
++                                        f"row was not preserved as "
++                                        f"same_verdict_exit")
++            if want == "diagnostic-only":
++                for row in doc.get("rows", []):
++                    if not row.get("diagnostic_only"):
++                        failures.append(f"truth_table {expect}->{actual}: "
++                                        f"diagnostic_only was not set")
++
++        # 14. a violated row without the comparison fields earns no class
++        #    credit: the classification must not guess
++        code, doc, err, calls = run("missing_metadata",
++                                    only="PM01-blanket-metadata-refusal")
++        if code != 0:
++            failures.append(f"missing_metadata: exit {code}, expected 0")
++        classified = [r for r in doc.get("rows", [])
++                      if "PG01-missing-metadata" in (r.get("unclassified")
++                                                    or [])]
++        if not classified:
++            failures.append("missing_metadata: the row is not reported as "
++                            "unclassified")
++        for row in doc.get("rows", []):
++            if row.get("availability_credit"):
++                failures.append("missing_metadata: an availability credit "
++                                "was granted without comparison fields")
++
++        # 15. a pristine failure stops the run before any mutant phase: the
++        #    canary must hold exactly one invocation, the pristine one
++        code, doc, err, calls = run("pristine_fails")
++        if code != 2:
++            failures.append(f"pristine_fails: exit {code}, expected 2")
++        if doc.get("killed"):
++            failures.append("pristine_fails: a failing pristine run "
++                            "credited a kill")
++        if len(calls) != 1 or not calls[0].startswith("pristine"):
++            failures.append(f"pristine_fails: the canary shows {len(calls)} "
++                            f"invocations, expected exactly one pristine "
++                            f"one: {calls[:3]}")
++
++        # 16. a mutant that does not compile is could-not-evaluate
++        code, doc, err, calls = run("ok", cand=broken)
+         if code != 2:
+             failures.append(f"broken candidate: exit {code}, expected 2")
+         if not doc.get("could_not_evaluate"):
+             failures.append("broken candidate: no could-not-evaluate entry")
+-        # --anchors returns 2 when a mutant does not compile
++
++        # 17. --anchors returns 2 when a mutant does not compile
+         proc = subprocess.run(
+             [sys.executable, str(Path(__file__).resolve()), "--anchors",
+              str(broken)], capture_output=True, timeout=120)
+         if proc.returncode != 2:
+             failures.append(f"--anchors on a broken candidate: exit "
+                             f"{proc.returncode}, expected 2")
+-        # --anchors returns 0 for a sound candidate
++        # 18. --anchors returns 0 for a sound candidate, and it skips the
++        #    review-only note (no source assertion for it)
+         proc = subprocess.run(
+             [sys.executable, str(Path(__file__).resolve()), "--anchors",
+-             str(candidate)], capture_output=True, timeout=120)
++             str(candidate), "--json"], capture_output=True, timeout=120)
+         if proc.returncode != 0:
+             failures.append(f"--anchors on a sound candidate: exit "
+                             f"{proc.returncode}, expected 0")
++        try:
++            anchors = json.loads(proc.stdout.decode("utf-8", "replace"))
++            skipped = [m for m in anchors.get("mutants", [])
++                       if m.get("skipped") == "review-only"]
++            if len(skipped) != 1:
++                failures.append(f"--anchors: expected one skipped "
++                                f"review-only entry, found {len(skipped)}")
++            checked = [m for m in anchors.get("mutants", [])
++                       if not m.get("skipped")]
++            if len(checked) != 10:
++                failures.append(f"--anchors: checked {len(checked)} "
++                                f"mutants, expected 10 executable ones")
++        except (ValueError, UnicodeDecodeError):
++            failures.append("--anchors: the output is not JSON")
+     for failure in failures:
+         print(f"FAIL {failure}")
+-    print(f"selftest cases={len(cases) + 3} failed={len(failures)}")
++    print(f"selftest cases=47 failed={len(failures)}")
+     return 0 if not failures else 2
+ 
+ 

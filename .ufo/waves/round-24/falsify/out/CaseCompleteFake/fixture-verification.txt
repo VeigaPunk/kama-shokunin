@@ -1,0 +1,89 @@
+kama round-24 falsification — fixture family CompleteFake (PG23 / PG24 / PG25)
+lane: KamaR23-2.CaseCompleteFake (leaf, no dispatch)
+pinned revision: 2e254a1763a9c08aa07fc53081287f506c447d84
+clone: /fast/scratch/hyaku/kama-r24/falsify/CaseCompleteFake/repo (--no-hardlinks, detached at the pinned commit)
+grid root kept by the --keep run: /fast/scratch/hyaku/kama-r24/falsify/CaseCompleteFake/promisor-grid-dbv6gwha
+  current/000 = PG23 (lane marked)   current/001 = PG24 (fleet marked)   current/002 = PG25 (plain)
+
+digests (all observed)
+  auditor  tools/report-landing-audit.py            sha256 ea51bc35b71ac09f4c233e21a16be49af555e1333004a0fe166234de79edd220
+  runner   tests/report-audit/promisor-grid.py      sha256 b034e1596746d312989b7894c0757b67859df19a476a01ccd95076424135cefa
+  manifest tests/report-audit/promisor-grid-expectations.json
+           sha256 d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1
+  frozen auditor blob (0df800e896f6bce285a81e794ad4ae1d1e6c3a71:tools/report-landing-audit.py)
+           sha256 da5041a8191e0e6ec385adc7c659ddc7544a835aff65dd45b34de623c5765af1
+  population_sha256 612b0a74f3eebaa9074bdde8ecd8f194f55ebaf9a35ab2b975fddbff8dd2ed88  population_size 47
+  toolchain git version 2.56.0, Python 3.14.8 (pre-existing; no install or update performed)
+
+FIXTURE FACTS (measured on the kept grid fixtures with --no-lazy-fetch --no-replace-objects)
+
+                        PG23 (lane marked)      PG24 (fleet marked)     PG25 (plain)
+lane objects                     5                       5                     5
+fleet objects                    9                       9                     9
+missing objects (--all)          []                      []                    []
+missing objects (audited root)   []                      []                    []
+missing objects (auditor's
+  present_roots traversal)       []                      []                    []
+opaque (missing tree/commit)     []                      []                    []
+FAKE token present in lane       false                   false                 false
+FAKE token present in fleet      false                   false                 false
+FAKE token bare lookup           "… missing"             "… missing"           "… missing"
+FAKE token ^{commit} lookup      "… missing"             "… missing"           "… missing"
+lane promisor config   remote.origin.promisor=true, extensions.partialclone=origin
+                       remote.origin.url=<…>/absent-remote.git (does not exist)
+fleet promisor config  (none)    (as above)              (none)
+lane FETCH_HEAD                  absent                  absent                absent
+packs                            []                      []                    []
+lane master commit               58866b563cd900df310588effe79028efc104c33   (identical in all three)
+fleet master commit              6d6ce9c90cc7904557d3069ea08d4d50c6cf937a   (identical in all three)
+fleet report blob                a712c6689de5a00eaa6a3b9c269694387aa94adc   (identical in all three)
+report body       "# kama round 1 / ## Landed changes / - 58866b56… / - 0123456789abcdef…4567"
+
+=> the three fixtures are byte-identical twins; the ONLY difference is the promisor
+   configuration on the intended side (lane for PG23, fleet for PG24, none for PG25).
+
+ASSIGNED COMMAND (run twice: once plain, once with --keep for inspection)
+  TMPDIR=/fast/scratch/hyaku/kama-r24/falsify/CaseCompleteFake \
+    python3 tests/report-audit/promisor-grid.py --arm both \
+      --case PG23-unknown-citation-complete-promisor \
+      --case PG24-unknown-citation-fleet-promisor \
+      --case PG25-unknown-citation-plain --json
+  EXIT=0   stderr empty
+
+  frozen  arm: graded=3 violations=0 amended_view_met=1/3
+              amended_view_unmet=[PG23…, PG24…]  withdrawn_original_failures=[]
+              PG23 exit 2 stderr "could-not-evaluate: …/lane: partial clone (remote.origin.promisor)"
+              PG24 exit 2 stderr "could-not-evaluate: …/fleet: partial clone (remote.origin.promisor)"
+              PG25 exit 1, defects [landed-unresolved FAKE, unresolved-full-hash FAKE]
+  current arm: graded=3 violations=0 amended_view_unmet=[]
+              withdrawn_original_failures=[PG23…, PG24…]     <- the original (withdrawn)
+                                                                 registration stays visibly unachieved
+              PG23 exit 1 met_amended=true  met_original=false
+              PG24 exit 1 met_amended=true  met_original=false
+              PG25 exit 1 met_amended=true  met_original=true
+              all three: defects [(landed-unresolved, 0123…4567), (unresolved-full-hash, 0123…4567)],
+                         kinds [landed-unresolved, unresolved-full-hash],
+                         objects_acquired {lane: [], fleet: []}, tracebacks 0, timeouts 0, harness_leaks 0
+              twins: PG23==PG25 true, PG24==PG25 true, PG25 vs both true; twin_mismatch []
+
+DIRECT VERDICTS ON THE KEPT FIXTURES (same argv the grid uses)
+  python3 tools/report-landing-audit.py --lane-repo …/current/00N/lane \
+        --fleet-repo …/current/00N/fleet --rounds 1 --json --no-errata
+  000 exit 1 stderr 0 bytes   001 exit 1 stderr 0 bytes   002 exit 1 stderr 0 bytes
+  raw documents differ ONLY in the "report" path; after replacing the fixture root by a
+  placeholder the three documents are byte-identical (unified diff: no difference).
+  document body: results[0] {round 1, report_committed true, cutoff 2000, round_commits 1,
+  required 1, post_report [], source_url_hashes [], defects [unresolved-full-hash FAKE,
+  landed-unresolved FAKE]}; summary {status "failed", defects 2, uncorrected 2, by_kind
+  {landed-unresolved 1, unresolved-full-hash 1}, required_commits 1, errata_rows 0}
+
+LAZY-FETCH PROBE (extra, bounded, offline, file:// only)
+  PG23 shape rebuilt; the lane's remote.origin.url repointed at a REAL local repository that
+  holds the cited 40-hex token (c4da532a21493aff5ad4695f88f7bd77b7882a29), which the lane
+  does not hold; the fleet report cites that token.
+  current auditor: exit 1, defects [(landed-unresolved, c4da53…), (unresolved-full-hash, c4da53…)],
+                   stderr empty, lane objects_acquired [], token still absent from the lane,
+                   no FETCH_HEAD  => no lazy fetch and no transport, even with a reachable remote
+  frozen auditor on the same fixture: exit 2, stderr
+                   "could-not-evaluate: …/lane: partial clone (remote.origin.promisor)"
+                   (the r23 metadata blanket refusal; historical baseline, never a target)

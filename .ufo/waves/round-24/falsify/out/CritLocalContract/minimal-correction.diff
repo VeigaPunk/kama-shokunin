@@ -1,0 +1,14 @@
+243,245c243,245
+<                       stdin="".join(f"{t}^{{}}\n" for t in unresolved))
+<             lines = out.split("\n")[:len(unresolved)]
+<             if len(lines) != len(unresolved):
+---
+>                       stdin="".join(f"{t}\n{t}^{{}}\n" for t in unresolved))
+>             lines = out.split("\n")[:2 * len(unresolved)]
+>             if len(lines) != 2 * len(unresolved):
+248c248,250
+<             for token, line in zip(unresolved, lines):
+---
+>             for token, here, line in zip(unresolved, lines[::2], lines[1::2]):
+>                 if here.endswith(" missing"):
+>                     continue

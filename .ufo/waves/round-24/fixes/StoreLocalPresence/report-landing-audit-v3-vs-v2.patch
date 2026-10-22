@@ -1,0 +1,47 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit-v2.py	2026-10-21 17:04:59.176856227 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit-v3.py	2026-10-21 17:07:46.207568538 -0300
+@@ -1263,6 +1263,44 @@
+                            for x in doc["results"][0]["defects"])
+             check("lane-only-blob-citation-is-a-failed-finding",
+                   rc == 1 and ("landed-unresolved", lane_blob) in kinds)
++            fleet_tree = git(fleet, "mktree",
++                             stdin=f"100644 blob {fleet_blob}\tf\n").strip()
++            tree_draft = Path(tmp, "fleet-tree-draft.md")
++            tree_draft.write_text(
++                "## Landed changes\n- `" + fleet_tree + "` fleet tree\n",
++                encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={tree_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("fleet-only-tree-citation-is-a-failed-finding",
++                  rc == 1 and ("landed-unresolved", fleet_tree) in kinds)
++            tag_target = git(fleet, "hash-object", "-w", "--stdin",
++                             stdin="fleet tag target\n").strip()
++            fleet_tag = git(fleet, "mktag",
++                            stdin=f"object {tag_target}\ntype blob\ntag t\n"
++                                  f"tagger k <a@x> 1000 +0000\n\ntag\n",
++                            env=git_env(GIT_AUTHOR_NAME="k",
++                                        GIT_COMMITTER_NAME="k",
++                                        GIT_AUTHOR_EMAIL="a@x",
++                                        GIT_COMMITTER_EMAIL="a@x")).strip()
++            tag_only_draft = Path(tmp, "fleet-tag-draft.md")
++            tag_only_draft.write_text(
++                "## Landed changes\n- `" + fleet_tag + "` fleet tag\n",
++                encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={tag_only_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("fleet-only-tag-citation-is-a-failed-finding",
++                  rc == 1 and ("landed-unresolved", fleet_tag) in kinds)
++            errata_blob = Path(tmp, "errata-fleet-blob.tsv")
++            errata_blob.write_text(
++                "1\tlanded-unresolved\t" + fleet_blob + "\t" + fleet_blob
++                + "\tevidence\n", encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={fleet_draft}"],
++                               no_errata=False, errata=str(errata_blob)))
++            check("errata-correction-naming-a-fleet-only-blob-is-invalid",
++                  rc == 1 and doc["summary"]["errata_invalid"] == 1
++                  and doc["summary"]["errata_unmatched"] == 0)
+             git(lane, "repack", "-ad")
+             pack_dir = Path(lane, git(lane, "rev-parse", "--git-path",
+                                       "objects/pack").strip())

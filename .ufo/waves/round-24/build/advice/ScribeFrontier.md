@@ -257,3 +257,85 @@ None. No install, upgrade or package transaction was performed in this lane.
 - Policy matrix: `.ufo/waves/round-24/build/out/ScribeFrontier/promisor-policy-matrix.md`
 - Append-ready text: `.ufo/waves/round-24/build/out/ScribeFrontier/corpus-README-round24-append-text.md`
 - This report: `.ufo/waves/round-24/build/advice/ScribeFrontier.md`
+
+---
+
+## Append — round-24 frontier continuation (W1 doc cutover)
+
+Seat: ScribeFrontier. Append-only draft text only; production untouched
+(production pinned at `2e254a1763a9c08aa07fc53081287f506c447d84` per
+`.ufo/waves/round-24/fixes/docs-contract.txt`).
+
+### What was drafted
+
+`.ufo/waves/round-24/fixes/doc/ScribeFrontier/append.txt` — 31 lines, 250
+words, sha256 `503789fa69c7ce21dce28bf921b7256e80e588987efd424f68d738b4fc296e31`.
+A short, paste-ready continuation of the lane README frontier disposition,
+meant to follow the landed `## Frontier correction — round24` section
+(`corpus/README.md:337-357`). No placeholder, no numeric claim, no source
+row.
+
+### Required elements, and where each is satisfied
+
+1. **The rejected round-23 declared-trade claim is named explicitly**, not as
+   "the previous paragraph": the text quotes the round-23 section's own
+   sentence — "Declared trade: a complete blobless partial clone or paired
+   promisor pack is refused where frozen gave a verdict."
+   (`corpus/README.md:330-332`) — and states the trade is rejected, not
+   carried, because a disclosed loss of a correct runnable verdict is not an
+   admissible trade. It also states that the F23 sentence above corrects
+   *which fixture witnesses* the trade, not whether the trade is admissible.
+   Observation: the landed round-24 section reaches the same conclusion
+   through a vaguer route — "Correction to the previous paragraph's
+   paired-marker wording" (`corpus/README.md:351-352`) names no claim —
+   so the round-23 trade sentence otherwise stands un-rejected in the file.
+2. **Local required availability, no whole-completeness precondition:**
+   promisor metadata alone does not refuse a complete or locally sufficient
+   repository; only evidence the audit actually reads and cannot read
+   locally is could-not-evaluate, with a content-derived reason and never a
+   guessed absence; availability is judged per required read, not over the
+   whole store; no whole-store or reachable-tree completeness precondition is
+   introduced; an unrelated historical blob, an unselected branch or an
+   unused file that is missing is not a completeness gate; a missing cited
+   object already referenced locally, or hidden behind an opaque dependency,
+   is not a proved absence. (Consistent with the landed section
+   `corpus/README.md:341-347` and with the contract's "No whole-store or
+   reachable-tree completeness precondition".)
+3. **The H2 floor is still open:** "The Git>=2.45 prerequisite remains open
+   to operator disposition (R23-H2); it is not closed here, no older-Git
+   support is restored, and no approval of the floor is claimed." Ground:
+   `corpus/README.md:353-354`, `SCORECARD.md:1212-1213` ("remains an
+   unresolved R23-H2 operator decision, not older-Git restoration").
+4. **No new frontier capability, score or admission:** "No new frontier
+   capability, no score promotion and no admission claim are made here; no
+   endpoint sample, service restoration or new knowledge entry is asserted."
+   plus the unchanged other-frontier list, matching the landed section's own
+   closing paragraph (`corpus/README.md:354-357`).
+
+### Boundaries honored in this step
+
+- No production edit; no tracked file changed by this seat in this step
+  (the file is a draft under `fixes/doc/ScribeFrontier/`).
+- No final metrics, counts, grid results, cell tallies or landed hash
+  claimed; the text contains no numbers and no placeholders.
+- No new source row and no new quotation of external material; the only
+  quoted sentence is the repository's own already-filed round-23 trade
+  claim.
+- No test, no grid, no full-suite run, no install in this step.
+- No self-admission: the continuation withdraws a *reading* and states
+  boundaries; it claims no new capability, no score and no admission.
+
+### Observation for the integrator
+
+Append-only discipline is preserved: the round-23 trade sentence stays in
+the file as filed, and the continuation withdraws its reading the same way
+the landed round-24 section withdraws the round-23 refusal wording. The
+continuation is narrower than the landed section — it names the rejected
+claim and restates the per-required-read boundary — so it adds no new
+reading, only the missing name and the explicit absence of a
+whole-completeness precondition.
+
+### Artifacts for this step
+
+- Append text: `.ufo/waves/round-24/fixes/doc/ScribeFrontier/append.txt`
+- This advice append: `.ufo/waves/round-24/build/advice/ScribeFrontier.md`

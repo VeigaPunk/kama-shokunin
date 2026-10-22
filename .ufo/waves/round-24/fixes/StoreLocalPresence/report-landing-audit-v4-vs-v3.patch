@@ -1,0 +1,109 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit-v3.py	2026-10-21 17:07:46.207568538 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit-v4.py	2026-10-21 17:11:14.770542509 -0300
+@@ -166,10 +166,16 @@
+     except subprocess.TimeoutExpired as exc:
+         # e.g. a FIFO at .git/config, an include target, .git/shallow or a
+         # ref file blocks git's read: a hang is never a verdict
+-        raise EvalError(f"git {' '.join(args)} in {repo}: timed out after "
+-                        f"{GIT_TIMEOUT}s") from exc
++        error = EvalError(f"git {' '.join(args)} in {repo}: timed out after "
++                          f"{GIT_TIMEOUT}s")
++        # a timeout (or a broken git) is not a missing object: a follow-up
++        # diagnostic call would only risk a second timeout
++        error.fatal = True
++        raise error from exc
+     except OSError as exc:
+-        raise EvalError(f"cannot run git: {exc}") from exc
++        error = EvalError(f"cannot run git: {exc}")
++        error.fatal = True
++        raise error from exc
+     if proc.returncode != 0:
+         raise EvalError(f"git {' '.join(args)} in {repo}: rc={proc.returncode} "
+                         f"{proc.stderr.decode(errors='replace').strip()}")
+@@ -317,13 +323,16 @@
+                                 and re.search(r"[a-f]", token) is not None)
+ 
+ 
+-def root_tree(repo, root):
++def root_tree(repo, root, cause=None):
+     """The tree id the root commit names, or None.
+ 
+     The id is in the commit header, so it is readable even when the tree
+     object itself is absent: a refusal about a missing tree can then name
+     that tree. When the commit cannot be read either, None is returned and
+-    the caller keeps its own reason."""
++    the caller keeps its own reason. A fatal cause (a timeout or a broken
++    git) skips the call: another 20 s would only be spent again."""
++    if cause is not None and getattr(cause, "fatal", False):
++        return None
+     try:
+         tree = git(repo, "log", "-1", "--format=%T", root).strip()
+     except EvalError:
+@@ -372,7 +381,7 @@
+         out = git(fleet_repo, "log", "--diff-filter=A", "--format=%at", "--",
+                   rel).split()
+     except EvalError as exc:
+-        tree = root_tree(fleet_repo, "HEAD")
++        tree = root_tree(fleet_repo, "HEAD", exc)
+         what = (f"the first add of {rel} in {fleet_repo} (tip tree {tree})"
+                 if tree else f"the first add of {rel} in {fleet_repo}")
+         raise required_read(what, exc) from exc
+@@ -421,7 +430,7 @@
+     try:
+         entry = git(lane_repo, "ls-tree", branch, "--", SOURCES).rstrip("\n")
+     except EvalError as exc:
+-        tree = root_tree(lane_repo, branch)
++        tree = root_tree(lane_repo, branch, exc)
+         what = (f"{branch}:{SOURCES} (tip tree {tree}) in {lane_repo}" if tree
+                 else f"{branch}:{SOURCES} in {lane_repo}")
+         raise required_read(what, exc) from exc
+@@ -512,7 +521,7 @@
+         try:
+             text = git(fleet_repo, "show", f"HEAD:{rel}")
+         except EvalError as exc:
+-            tree = root_tree(fleet_repo, "HEAD")
++            tree = root_tree(fleet_repo, "HEAD", exc)
+             what = (f"{rel} at fleet HEAD (tip tree {tree}, {fleet_repo})"
+                     if tree else f"{rel} at fleet HEAD ({fleet_repo})")
+             raise required_read(what, exc) from exc
+@@ -668,8 +677,17 @@
+             rounds.update(range(lo, hi + 1))
+         else:
+             # committed fleet reports only, never working-tree drafts
+-            listed = git(fleet_repo, "ls-tree", "-r", "--name-only", "HEAD",
+-                         "--", ".ufo/reports", errors="surrogateescape")
++            try:
++                listed = git(fleet_repo, "ls-tree", "-r", "--name-only",
++                             "HEAD", "--", ".ufo/reports",
++                             errors="surrogateescape")
++            except EvalError as exc:
++                # the listing is evidence the audit needs
++                tree = root_tree(fleet_repo, "HEAD", exc)
++                what = (f".ufo/reports at fleet HEAD (tip tree {tree}, "
++                        f"{fleet_repo})" if tree else
++                        f".ufo/reports at fleet HEAD ({fleet_repo})")
++                raise required_read(what, exc) from exc
+             pat = re.compile(rf"\.ufo/reports/round-([0-9]+)/{re.escape(lane)}\.md")
+             present = [int(m.group(1)) for m in map(pat.fullmatch,
+                                                     listed.split("\n")) if m]
+@@ -1438,6 +1456,20 @@
+                   rc == 0 and doc["results"][0]["defects"] == [])
+             check("opaque-hole-makes-an-unresolved-token-unknown",
+                   is_error(lambda: run(base)))
++            # the open range lists the fleet reports: a missing fleet tip
++            # tree must be refused with the tree named
++            fleet_tree = git(fleet, "rev-parse", "HEAD^{tree}").strip()
++            Path(fleet, git(fleet, "rev-parse", "--git-path",
++                            "objects").strip(),
++                 fleet_tree[:2], fleet_tree[2:]).unlink()
++            message = ""
++            try:
++                run(_ns(base, rounds="10-"))
++            except EvalError as exc:
++                message = str(exc)
++            check("open-range-listing-names-the-missing-fleet-tree",
++                  fleet_tree in message
++                  and "unavailable required object" in message)
+         finally:
+             if saved is None:
+                 os.environ.pop("GIT_DIR", None)

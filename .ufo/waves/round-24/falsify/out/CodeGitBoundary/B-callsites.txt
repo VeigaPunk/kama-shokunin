@@ -1,0 +1,73 @@
+--- direct subprocess use ---
+162:        proc = subprocess.run(["git", *GIT_ISOLATION, "-C", str(repo), *args],
+166:    except subprocess.TimeoutExpired as exc:
+--- git() argv construction ---
+def git(repo, *args, stdin=None, env=None, errors="strict"):
+    """stdout as UTF-8 text with universal newlines (as text mode did).
+    Strict by default: undecodable output is an EvalError, never a
+    traceback verdict. Callers that only match ASCII fields and never emit
+    the text (lane log records, report path listing) pass surrogateescape."""
+    try:
+        proc = subprocess.run(["git", *GIT_ISOLATION, "-C", str(repo), *args],
+                              input=None if stdin is None else stdin.encode(),
+                              capture_output=True, env=env or git_env(),
+                              timeout=GIT_TIMEOUT)
+    except subprocess.TimeoutExpired as exc:
+        # e.g. a FIFO at .git/config, an include target, .git/shallow or a
+        # ref file blocks git's read: a hang is never a verdict
+        raise EvalError(f"git {' '.join(args)} in {repo}: timed out after "
+                        f"{GIT_TIMEOUT}s") from exc
+--- r24-new callsites (present_roots / missing_reachable / root_tree / lookup-2nd) ---
+            offer(token, "found")
+        if unresolved:
+            # the object is here; ask whether what it dereferences to is
+            # here too: a tag whose target is unavailable is unknown, a
+            # tag or blob that dereferences to a known object is a proved
+            # mismatch
+            out = git(store.path, "cat-file", "--batch-check",
+                      stdin="".join(f"{t}^{{}}\n" for t in unresolved))
+            lines = out.split("\n")[:len(unresolved)]
+            if len(lines) != len(unresolved):
+                raise EvalError(f"cat-file --batch-check in {store.path}: "
+                                f"short output")
+            for token, line in zip(unresolved, lines):
+                offer(token, "unknown" if line.endswith(" missing")
+                      else "wrongtype")
+def root_tree(repo, root):
+    """The tree id the root commit names, or None.
+
+    The id is in the commit header, so it is readable even when the tree
+    object itself is absent: a refusal about a missing tree can then name
+    that tree. When the commit cannot be read either, None is returned and
+    the caller keeps its own reason."""
+    try:
+        tree = git(repo, "log", "-1", "--format=%T", root).strip()
+    except EvalError:
+        return None
+def present_roots(repo):
+    """Every present object that can root a traversal: the commits, trees
+    and tags the local object database holds, reachable or not. A dangling
+    commit, tree or tag can reference an object the repository cannot
+    serve, and no ref reaches it."""
+    out = git(repo, "cat-file", "--batch-all-objects",
+              "--batch-check=%(objectname) %(objecttype)")
+    roots = []
+    for line in out.split("\n"):
+        name, _, kind = line.partition(" ")
+        if kind in ("commit", "tree", "tag") and \
+                re.fullmatch(r"[0-9a-f]{40}", name):
+            roots.append(name)
+    return roots
+
+
+    roots = present_roots(repo)
+    if root not in roots:
+        roots.append(root)
+    stdin = "".join(f"{r}\n" for r in roots)
+
+    def walk(extra):
+        out = git(repo, "-c", "core.commitGraph=false", "rev-list",
+                  "--objects", "--missing=print", "--no-object-names", *extra,
+                  "--stdin", stdin=stdin)
+        return {line[1:] for line in out.split("\n") if line.startswith("?")}
+

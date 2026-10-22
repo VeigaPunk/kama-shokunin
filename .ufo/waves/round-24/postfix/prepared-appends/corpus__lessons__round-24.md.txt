@@ -1,0 +1,238 @@
+
+## Gate consumer reconciliation — completion annex (falsify ConnSources)
+
+The table above was written in commit `f1e755e`, which also added three
+citations in the same commit without listing the citing file in the affected
+`used-by` cells. This annex completes the log; only mutable `used-by` cells
+change, and no immutable row data, status or recheck value moves.
+
+| ID | used-by old | used-by new | citing path added |
+|---|---|---|---|
+| S095 | corpus/lessons/round-23.md, corpus/lessons/round-24.md | corpus/lessons/round-23.md, corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md | corpus/knowledge/error-is-not-a-verdict.md:124 |
+| S097 | corpus/lessons/round-23.md, corpus/knowledge/error-is-not-a-verdict.md | corpus/lessons/round-23.md, corpus/knowledge/error-is-not-a-verdict.md, corpus/lessons/round-24.md | corpus/lessons/round-24.md:101 |
+| S098 | corpus/lessons/round-23.md, corpus/knowledge/error-is-not-a-verdict.md | corpus/lessons/round-23.md, corpus/knowledge/error-is-not-a-verdict.md, corpus/lessons/round-24.md | corpus/lessons/round-24.md:101 |
+
+Citations: `corpus/knowledge/error-is-not-a-verdict.md:124` names S095 ("S105
+records the explicit rejection rationale for S095's cross-API inference without
+rewriting that filed row"); `corpus/lessons/round-24.md:101` names S097 and
+S098 ("This page cannot document those different APIs; S097/S098 anchor them.").
+Both citations are new in `f1e755e` — `git log -S` on each string returns that
+commit alone.
+
+### S105 quote rendering qualification (falsify ConnSources)
+
+The S105 quote as recorded in `corpus/SOURCES.md:117` and
+`.ufo/waves/round-24/sources/S105.json:8` is the **rendered** form of the
+sentence. The pinned reader snapshot
+`.ufo/waves/round-24/sources/python-bytes-decode-reader.txt`
+(sha256 `54d4532cb9073365147c168ad6cdf46dd1ecb922ca3b11f77dd867f1ec08cb80`)
+stores it in Markdown markup, at **two** raw lines:
+
+```
+1397: If `'strict'` (the default), a [`UnicodeError`](exceptions.html#UnicodeError "UnicodeError") exception is raised.
+2943: If `'strict'` (the default), a [`UnicodeError`](exceptions.html#UnicodeError "UnicodeError") exception is raised.
+```
+
+Raw occurrence counts over the whole pinned file: the Markdown form **2**, the
+recorded plain form **0**, the display-equivalent plain form (markup stripped)
+**2**. Line 2943 sits in the `bytes.decode` / `bytearray.decode` errors
+paragraph (heading `bytes.decode(*encoding='utf-8'*, *errors='strict'*)` at
+:2933, `bytearray.decode(...)` at :2935); line 1397 is the same sentence in the
+`bytes.encode` errors paragraph. The recorded quote is the reader-visible
+sentence and is byte-accurate against the live page's visible text
+(`https://docs.python.org/3.14/builtins/stdtypes.html`, plain form 2x), so the
+row's teaching is unchanged; only the byte-locatability of the quote inside the
+pinned artifact differs. The row's evidentiary load is unchanged and does
+reproduce exactly: case-insensitive counts over the same pinned file give
+subprocess 0, TextIOWrapper 0, "text mode" 0, "text-mode" 0, text_mode 0.
+
+### S096/S105 authority split — facet qualification (falsify ConnSources)
+
+Two rows open `supersedes S095 —` and they are **distinct facets of one filed
+row**, not rival corrections:
+
+- **S096** (`corpus/SOURCES.md:108`, mined) carries the **positive** fact that
+  survives: its scope is "Python 3.14-series `bytes.decode` default error
+  handler only; a series URL", and its teaching is that `bytes.decode` with the
+  default `strict` handler raises `UnicodeError` on invalid bytes — which the
+  current auditor's bytes-mode `git()` decode relies on.
+- **S105** (`corpus/SOURCES.md:117`, rejected) is the **explicit rejection
+  record** for the cross-API inference S095 filed: its scope says "not a new
+  decoder fact", and its teaching rejects the claim that `bytes.decode`'s
+  strict-default documentation establishes subprocess text-mode or
+  `TextIOWrapper` defaults, flipping to the separately opened S097/S098 anchors.
+
+So the authority for the positive decoder fact is S096 alone; S105 records only
+the rejection and points at S097/S098 for the different APIs. `CORPUS.md` rule 2
+(`/home/vgpnk/Projects/shokunin/CORPUS.md:116–118`) requires a correction to be a
+new row whose `teaches` opens `supersedes S0NN —`; it states no single-successor
+rule, and rule 4 sets no row quota. The census agrees: the S096/S105 same-URL
+pair is a `W04` "duplicate url … across scopes" notice
+(`scripts/sources-census.sh:644–649`), not an `E04` "within scope" error, and
+validate exits 0 with no E-codes. Both immutable claims are preserved as filed;
+this paragraph records which facet each row carries so a reader does not treat
+the two `supersedes S095 —` openings as a contradiction.
+
+## Mistakes — round24 falsify-wave continuation
+
+| Class | Evidence | Captured-by | Fix / demonstrated boundary |
+|---|---|---|---|
+| cross-store presence: the "this store holds the object" fact was taken from the merge of every audited store while the classification was per store, so an object living in the fleet only looked present in the lane and the lane's own probe turned it into `unknown` (exit 2 `unknown: unavailable required object: 28d34a63…`) where the contract wants the proved mismatch (exit 1 `landed-unresolved`) | StoreLocalPresence README §"The defect"; CodeLookupMerge | falsify wave at parent 2e254a1, before the repair cutover | presence is the store's own bare answer, never the merge of all stores; no reverse-order workaround, no metadata classifier, no completeness gate, no weakening of the unreadable-tag case |
+| unknown outranked a known wrongtype for the same canonical object: a tag present in both stores whose target only one store can serve merged to `unknown` (exit 2) although another store had proved the mismatch | StoreLocalPresence README §"Second defect" (target in the fleet only / lane only → `wrongtype`, exit 1; in neither → `unknown`, exit 2) | falsify wave | reconciliation is per canonical object id; objects behind one abbreviated name are not reconciled, so the round-23 ambiguity behaviour stands |
+| an unselected round's ledger row could decide the verdict: every hex correction was read and every unresolvable row counted, so a row of an unaudited round made a clean selected-round audit fail (exit 1) | StoreLocalPresence README §"Third proposal" §1 (CodeErrataBoundary F1) | falsify wave | the correction lookup inputs and the invalid-row comprehension are both restricted to the selected rounds; no object of an unselected round is read at all |
+| required reads failed as bare git errors: the committed errata read and the open-range fleet listing returned a raw git message instead of the required-read class | StoreLocalPresence README §"Third proposal" §2 (CodeRequiredReads) and §"Fifth proposal" (CaseFleetTree M1) | falsify wave | required reads carry the cause and the path inside the message and add the `unavailable required object:` class; a fatal cause (timeout/OS) does not spend a second diagnostic timeout; the 20 s per-call deadline is unchanged |
+| the opaque (name-hiding) fallback was computed over the whole store, so unrelated unreachable garbage in a repository made an ordinary audit refuse where the original local contract wants the ordinary finding (the reported 1 → 2 → 1) | StoreLocalPresence README §"Seventh artifact" (CodePerRunCache F2) | falsify wave | two root sets: known unavailable referenced ids are encountered from all present local commit/tree/tag roots, while opaque missing-name boundaries come only from the pinned audit root; no whole-store or reachable-tree completeness precondition; all-resolved inputs stay runnable despite unused holes |
+| a harness fault could be scored as a legitimate refusal: the grid kept only a 300-character stderr tail, so an internal-error identity could be truncated away and an exit 2 could earn a mutant kill | GridAttestationV3 README §"The gap" (DocQualityF1) | falsify wave | the internal-error identity is captured from the full stderr as the boolean row field `internal_error`; such a row is never met — an internal error or traceback is an unmet observation and cannot earn a kill |
+| a crash was credited as a kill: the mutator ignored `row.traceback` and any internal-error marker, and a violated row outside the mutant's attribution could be credited | MutationEvidenceV6 rationale §1–§2 | falsify wave | a harness fault is could-not-evaluate (exit 2, zero kills) for a traceback, an internal error, an exit outside 0/1/2 or a malformed verdict; a violated row outside `expect_rows` is preserved and reported, earns no kill, and the allowlist is not widened; credited violations are classified from the row's own fields, and a reason-only change is never an acceptance or availability credit |
+
+## Masked and stale premises: three distinctions that are not red regressions
+
+1. The v5 "opaque" fixture deleted a **blob**, not a non-leaf tree or commit, and
+   that shape already passed on the pinned tool: it proved nothing about the
+   fallback scoping. It is retained, renamed, as an unrelated-blob positive
+   control; the real deleted-tree / dangling-commit regression starts at v6
+   (a dangling **present** commit naming a real tree the store cannot serve,
+   with its blob present).
+2. The replay-v1 errata case cited the **same** fleet blob in the report body
+   and in the ledger, so the pinned tool aborted at the report lookup: that red
+   was evidence of the report-lookup defect, not of the correction consumer.
+   v7 and the v2 replay driver isolate it — the report cites a known **lane**
+   blob A and the ledger corrects A with a distinct **fleet-only** blob B, with
+   an explicit no-errata control showing the body's own ordinary finding.
+3. The embedded v7 same-tag test put the target in **both** stores, so the case
+   was already green on the pinned tool: it is retained as a positive control.
+   v8 adds the actual target-only-in-fleet regression, its lane mirror and the
+   both-missing control.
+
+Rule carried into the lesson: every older file and receipt is kept, and a stale
+premise is not a red regression; a masked red is evidence for the masking defect
+only. A fixture's premise must be asserted where it is established (for the
+blobless contract: immediately after the clone, before any optional hydration),
+and hydration changes the input state — it is not a detector repair.
+
+## Method correction: the strict comparable baseline is 14/47; the loose 16/47 is retained under its own label
+
+The amended-view comparison was not comparable between the arms: the frozen arm
+had been scored with `form_check=False` and without the names pin, the current
+arm with the strict rules. Graded with identical strong rules in both arms
+(same exit, defect set, reason class, `names_any_of` pin, no-verdict rule and
+acquisition rule), the strict comparable frozen baseline is **14/47**; the
+earlier **16/47** is the weaker exit/reason-only score, kept under its own
+label and never conflated with the strict one. The two cells that differ are
+PG16-missing-lane-tree-plain and PG20-missing-fleet-tree-plain, where the r23
+base names the required path rather than the tree object id that the strict
+names pin rejects. This is a method correction, **not** two additional product
+wins. The frozen historical reproduction (47/47) is a separate measurement,
+and the final candidate numerator is for the L1 to measure.
+
+## Mutation-contract corrections: PM08 carries no assertion; PM07's V4 retarget is declined
+
+- **PM08** — the static/AST/source-text/wiring assertion proposal is
+  **declined, not repinned**. PM08 remains a manual review-only note: no
+  alternatives, no assertion of any kind, no construction, no execution, no
+  kill credit, skipped by the anchor check (which covers the ten executable
+  mutants only); the inventory reads 11 = 10 executable + 1 manual note. Its
+  wording is scoped to the candidate's repository-reading wrappers and states
+  that it is a manual reading of the isolation flags, not a proof about every
+  git call.
+- **PM07** — the canonical operator is the restored V3 recipe (the recipe that appends `--all` to the store-wide missing-ID roots).
+  It does not broaden the selected-root opaque walk, and no global
+  equivalence is presumed.
+  The V4 retarget that rooted the opaque, name-hiding walk at every present
+  root is **declined** and is not the canonical operator. No kill is presumed
+  for PM07; static anchors authenticate mutation applicability only; a valid
+  finite survival stays a completed run (exit 0) and is not global equivalence;
+  `expect_rows` is an attribution envelope, not a promise that every row
+  discriminates; a same-exit diagnostic sensitivity is not an
+  unavailable-evidence acceptance witness.
+- The legacy empty-selection guard is unchanged; only its attribution is
+  corrected — the short-id selector hazard pre-existed the round-24
+  retirement, which changed the id set and exposed the staleness of a
+  hard-coded short id.
+
+## Disclosure and terminology: the original view, the encoded cells and the withdrawn bucket
+
+**Three different objects are named here and must not be conflated.**
+
+1. **The encoded original cell view** — the expectation manifest's per-case
+   `original` column (sha256
+   `d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1`, 47 cases,
+   population sha256 `612b0a74…2ed88`). Exactly **seven** cases carry an
+   original expectation that differs from the amended one:
+   **PG22, PG23, PG24, PG28, PG30, PG34, PG41**. Two falsify-wave receipts
+   confirm the set: `m3-frozen-as-current-amended7.json` runs the frozen
+   producer (`0df800e`, auditor `da5041a81…65af1`) over exactly those seven
+   cases, and `m1-current-amended-subset.json` runs the integrated producer at
+   `2e254a1` (auditor `ea51bc35…dd220`) over a ten-case subset and reports
+   `met_original: false` on exactly those seven (PG13, PG25, PG37 are
+   `met_original: true`).
+2. **The literal original clause** — the rule in `preregistration.json`
+   `expected_after[3]` (an unknown citation in a promisor-backed repository is
+   unknown). Among the graded cases it is the registered reading of **five**:
+   PG22, PG23, PG24, PG30, PG41. PG28 and PG34 are amendment-changed but are
+   **not** literal-clause cases (PG28's amended expectation comes from the
+   amendment's prospective expectation for the unhydrated blobless lane; PG34
+   is a non-promisor no-harm twin whose amended expectation differs from its
+   original one — an expectation change, not a withdrawal).
+   Two counterexamples to the clause live outside the graded matrix and are
+   kept separate from it: **PG40**, an *open row* (the runner's `open_rows`,
+   not one of the 47 graded cases; `m4-open-PG40.json` records exit 1,
+   `met_original: false`, `met_amended: true` under the integrated producer),
+   and **F06**, a row of the *retained r23 legacy grid*
+   (`tests/report-audit/repo-state-grid.py`, `f_lazy_fetch`), a table the
+   `d86b7bea…` manifest does not contain, whose exit-1 observation is
+   **inferred** from `build/advice/ConnClosure.md:179` and was not executed.
+   The historical "nine" is therefore **7 encoded graded cases + 1 open row +
+   1 legacy-grid row (inferred)** — a mixed-method total. It is not nine
+   encoded matrix failures and must never be quoted as such.
+3. **The withdrawn bucket in the current runner** — `GridAttestationV4/
+   promisor-grid.py:1381-1391`: `changed` is the set of cases whose `original`
+   differs from their `amended` expectation; `original_view_unmet` lists **all**
+   original-view failures of the current arm; `withdrawn_original_failures` is
+   that list restricted to `changed`, and `amendment_changed_cases` names the
+   restricted set. So the bucket means **unmet superseded original
+   expectations** — all seven amendment-changed cases, PG28 and PG34 included,
+   not only the literal unknown clause — and it **excludes** ordinary
+   unchanged live or amended failures, which stay ordinary failures. The
+   runner's own header states the original view is "Reported; withdrawn for the
+   rows the L1 amendment changes; never counted as achieved". The behaviour
+   that listed every current-arm original-view failure under the withdrawn name
+   was the 2e-era bucket and is fixed in the current runner; this lesson does
+   **not** describe the current runner as labelling live failures withdrawn.
+
+**Status.** The original blanket unknown requirement stays
+**withdrawn / not-achieved**, with its original cells and history retained;
+the prospective amendment is graded separately. If the amended view is met on all 47 graded cases, the encoded original-view
+failures number seven; that arithmetic is stated as a **conditional on the L1's actual
+measurement**, which this text does not claim. No summary may present a live
+failure as a withdrawal, and no live failure is renamed here.
+
+**R23-H2** — the git ≥ 2.45 prerequisite is explicitly not approved or
+repaired; it is carried as the round-24 L0 question, pending the operator
+ruling. The floor itself was checked statically (CritGitFloor, HOLDS): the
+new commands do not raise it above 2.45, and the forbidden newer flags
+(`--missing=print-info`, `--missing-only`) appear nowhere in `tools/` or
+`tests/` except in the prohibition text. No score promotion, no new frontier
+capability, no self-admission, and no final count is claimed in this
+continuation.
+
+## Observer qualification — full expectations, not an exit-only green
+
+The filed replay-v1/v2 match flags compared only exits even though their
+expectations named kinds and errata-invalid counts. Their first five drafts
+also omitted the valid work commit, allowing an unrelated landed-omitted
+finding to keep exit1 when the finding under test was lost. Those raw
+receipts remain evidence, not complete expectation credit. The selected
+replay-v3 cites the valid work commit, compares every declared field,
+keeps separate no-ledger expectations, binds the full2e parent/source hash,
+and requires an explicit after-tool. The selected opaque-garbage-proof-v2
+likewise compares its full declared expectation on the genuine non-leaf
+fixture; its earlier exit-only observer remains filed and qualified.
+Observer exit0 means measurement completed, not that the measured facts met
+the expectation or that this round is admitted. No primary47 byte changed.
+
+The mutation observer also separates unchanged normal exits from0↔1: a
+same normal exit may hide different detail and is not, by itself, a
+substantive exit change. Same2→2 reason sensitivity is not acceptance of
+unavailable evidence. The only agreed internal-error field is
+internal_error; speculative alternative spellings are not an interface.

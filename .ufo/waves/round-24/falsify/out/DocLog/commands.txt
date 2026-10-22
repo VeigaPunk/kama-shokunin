@@ -1,0 +1,260 @@
+# DocLog — exact bounded checks (read-only), pinned revision 2e254a1763a9c08aa07fc53081287f506c447d84
+# scratch clone: /fast/scratch/hyaku/kama-r24/falsify/DocLog/repo (own clone, --no-hardlinks, detached)
+# TMPDIR=/fast/scratch/hyaku/kama-r24/falsify/DocLog for every subprocess
+
+$ git rev-parse HEAD
+  # head
+  exit=0
+  | 2e254a1763a9c08aa07fc53081287f506c447d84
+
+$ ls .ufo/waves/round-23/falsify/advice/*.md | wc -l
+  # ls r23 falsify advice md count
+  exit=0
+  | 69
+
+$ python3 -c "import json,os,glob;d=json.load(open('.ufo/waves/round-23/falsify/spec.json'));n=[i if isinstance(i,str) else (i.get('name') or i.get('id')) for i in d['items']];a={os.path.basename(p)[:-3] for p in glob.glob('.ufo/waves/round-23/falsify/advice/*.md')};print('spec',len(n),'advice',len(a));print('no_report',sorted(set(n)-a));print('extra',sorted(a-set(n)))"
+  # r23 spec vs advice
+  exit=0
+  | spec 73 advice 69
+  | no_report ['CritOpenHonesty', 'RowC01Clean', 'RowF07LogFollow', 'RowF09SignatureProgram']
+  | extra []
+
+$ stat -c '%s bytes' .ufo/waves/round-23/falsify/advice/RowC03FabricatedFull.md && sha256sum .ufo/waves/round-23/falsify/advice/RowC03FabricatedFull.md
+  # RowC03 stat+sha
+  exit=0
+  | 6618 bytes
+  | 0ef4878b76073534340bb088c7c583648248e68d31635e6685937dfd93c72f95  .ufo/waves/round-23/falsify/advice/RowC03FabricatedFull.md
+
+$ ls .ufo/reports/
+  # lane reports dir
+  exit=0
+  | round-5
+
+$ sed -n '178p' corpus/lessons/round-23.md
+  # lesson line 178
+  exit=0
+  | 73 seats dispatched (68 reports; dead: RowC01Clean, RowF07LogFollow,
+
+$ sed -n '174p' corpus/lessons/round-23.md
+  # lesson line 174 (M7)
+  exit=0
+  | | M7 | Harness leak: the grid's timeout killed only the auditor, leaving git children blocked on fixture FIFOs | 56 blocked `git` processes under `/tmp/repo-state-grid-*` / `/tmp/kama-r23w2/` (12:18–13:29 -03) | none | `run_case` starts each auditor in its own session and kills the session on timeout; after the final grid run 0 such processes remained |
+
+$ sed -n '109,110p' corpus/lessons/round-23.md
+  # lesson lines 109-110
+  exit=0
+  | session (frozen-arm FIFO rows had left blocked git grandchildren running —
+  | 56 such processes from this round were killed).
+
+$ git diff --stat 0df800e896f6bce285a81e794ad4ae1d1e6c3a71 2e254a1763a9c08aa07fc53081287f506c447d84 -- .ufo/reports/ .ufo/waves/round-23/ corpus/lessons/round-23.md
+  # r23 immutability diff (empty=immutable)
+  exit=0
+
+$ git log --format='%h %ad %s' --date=iso 0df800e896f6bce285a81e794ad4ae1d1e6c3a71..2e254a1763a9c08aa07fc53081287f506c447d84 -- .ufo/reports/ .ufo/waves/round-23/ corpus/lessons/round-23.md
+  # r23 immutability log (empty=untouched)
+  exit=0
+
+$ git --no-optional-locks -C /home/vgpnk/Projects/shokunin log --format='%h %ad %s' --date=iso -1 -- .ufo/reports/round-23/kama.md
+  # fleet report identity (read-only)
+  exit=0
+  | 410b511 2026-10-21 14:20:43 -0300 round-23: kama report
+
+$ git --no-optional-locks -C /home/vgpnk/Projects/shokunin diff --stat 410b511 -- .ufo/reports/round-23/kama.md
+  # fleet report worktree vs 410b511 (empty=identical)
+  exit=0
+
+$ sed -n '33,34p;143p;148p;151p' /home/vgpnk/Projects/shokunin/.ufo/reports/round-23/kama.md
+  # fleet report lines 33-34 / 143 / 148 / 151
+  exit=0
+  |   (`.ufo/waves/round-23/final/refusal-results.json`); grid timeout now kills
+  |   the auditor's whole session (56 orphaned FIFO-blocked git processes from
+  | - Wave 1 build: 68 seats (scout 15, reviewer 14, executor 10, scribe 10,
+  | - Wave 2 falsify: 73 seats (scout 24, reviewer 17, critic 8, executor 6,
+  |   same payload spawned 15:46Z. Dead: 4, aborted by the host kill with no
+
+$ for c in d1b9d95 123640b f66b226 aacbd52 ed1cc3a f1e755e 2e254a1; do printf '%s ' $c; git show --numstat --format='' $c -- LOG.md | tr '\n' ' '; echo; done
+  # LOG.md numstat per round-24 commit
+  exit=0
+  | d1b9d95 21	0	LOG.md 
+  | 123640b 34	0	LOG.md 
+  | f66b226 8	0	LOG.md 
+  | aacbd52 9	0	LOG.md 
+  | ed1cc3a 27	0	LOG.md 
+  | f1e755e 11	0	LOG.md 
+  | 2e254a1
+
+$ for c in d1b9d95 123640b f66b226 aacbd52 ed1cc3a f1e755e 2e254a1; do echo "-- $c"; git ls-tree -r --name-only $c -- .ufo/waves/round-24/ | grep -v '^$' | head -5; done
+  # wave-24 tree per commit
+  exit=0
+  | -- d1b9d95
+  | .ufo/waves/round-24/preregistration.json
+  | -- 123640b
+  | .ufo/waves/round-24/oracle-amendment-1.json
+  | .ufo/waves/round-24/preregistration.json
+  | -- f66b226
+  | .ufo/waves/round-24/oracle-amendment-1.json
+  | .ufo/waves/round-24/oracle-snapshot-before-inspection.json
+  | .ufo/waves/round-24/preregistration.json
+  | -- aacbd52
+  | .ufo/waves/round-24/oracle-amendment-1.json
+  | .ufo/waves/round-24/oracle-snapshot-before-inspection.json
+  | .ufo/waves/round-24/oracle-supplement-2.json
+  | .ufo/waves/round-24/preregistration.json
+  | -- ed1cc3a
+  | .ufo/waves/round-24/oracle-amendment-1.json
+  | .ufo/waves/round-24/oracle-snapshot-before-inspection.json
+  | .ufo/waves/round-24/oracle-supplement-2.json
+  | .ufo/waves/round-24/preregistration.json
+  | -- f1e755e
+  | .ufo/waves/round-24/oracle-amendment-1.json
+  | .ufo/waves/round-24/oracle-snapshot-before-inspection.json
+  | .ufo/waves/round-24/oracle-supplement-2.json
+  | .ufo/waves/round-24/preregistration.json
+  | .ufo/waves/round-24/sources/S105.json
+  | -- 2e254a1
+  | .ufo/waves/round-24/build/advice/AuditRepair.md
+  | .ufo/waves/round-24/build/advice/CaseAlternatesComplete.md
+  | .ufo/waves/round-24/build/advice/CaseCompleteFleet.md
+  | .ufo/waves/round-24/build/advice/CaseCompleteLane.md
+  | .ufo/waves/round-24/build/advice/CaseCrossRepoFound.md
+
+$ for p in d1b9d95:.ufo/waves/round-24/preregistration.json 123640b:.ufo/waves/round-24/oracle-amendment-1.json f66b226:.ufo/waves/round-24/oracle-snapshot-before-inspection.json aacbd52:.ufo/waves/round-24/oracle-supplement-2.json; do c=${p%%:*}; f=${p#*:}; a=$(git rev-parse $c:$f); b=$(git rev-parse 2e254a1763a9c08aa07fc53081287f506c447d84:$f); [ "$a" = "$b" ] && echo "IMMUTABLE $f $a" || echo "CHANGED $f $a $b"; done
+  # oracle artifact blob identity
+  exit=0
+  | IMMUTABLE .ufo/waves/round-24/preregistration.json 5be9998b664550389531ef57fb06825a25210588
+  | IMMUTABLE .ufo/waves/round-24/oracle-amendment-1.json 29c73635ac82d005abdad445ef5e0b4041dd7425
+  | IMMUTABLE .ufo/waves/round-24/oracle-snapshot-before-inspection.json 8939cf494c1085f5ea7ad4c41bd9c5f3866d652c
+  | IMMUTABLE .ufo/waves/round-24/oracle-supplement-2.json 8fa1f95ec43631bf321bad7ef66056c97f7a5f71
+
+$ grep -n '56\|68\|69\|FIFO\|killed' tests/report-audit/promisor-grid-expectations.json
+  # expectations file: no r23-count row
+  exit=0
+  | 9:  "frozen_auditor_sha256": "da5041a8191e0e6ec385adc7c659ddc7544a835aff65dd45b34de623c5765af1",
+  | 922:   "policy_ref": "historical witness: registry/report-landing-errata.tsv row 20, unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c",
+
+$ git log --format='%h %ad %s' --date=iso -- tests/report-audit/promisor-grid-expectations.json
+  # expectations file history
+  exit=0
+  | ed1cc3a 2026-10-21 15:14:18 -0300 round-24: restore local promisor verdicts with required-object diagnosis, independent oracle, mutation contract, and no-trade learning
+
+$ python3 -c "import json;print(len(json.load(open('tests/report-audit/promisor-grid-expectations.json'))['cases']))"
+  # expectations case count
+  exit=0
+  | 47
+
+$ cat .ufo/waves/round-24/build/dispatch-attempts.json
+  # build dispatch attempts
+  exit=0
+  | [
+  |   {
+  |     "utc": "2026-10-21T17:50:07.442257+00:00",
+  |     "spawned": 0,
+  |     "error": "Background job limit reached (100)"
+  |   },
+  |   {
+  |     "utc": "2026-10-21T17:53:07.855854+00:00",
+  |     "spawned": 64,
+  |     "error": null
+  |   }
+  | ]
+
+$ ls .ufo/waves/round-24/build/advice/*.md | wc -l
+  # build advice count
+  exit=0
+  | 64
+
+$ python3 -c "import json;print(len(json.load(open('.ufo/waves/round-24/build/spec.json'))['items']))"
+  # build spec items
+  exit=0
+  | 64
+
+$ sha256sum .ufo/waves/round-24/build/out/CritEvidence/*
+  # crit evidence artifacts sha
+  exit=0
+  | 9c7523a9f073356548f99fef86102afa1761addca3133848c19edf0786798130  .ufo/waves/round-24/build/out/CritEvidence/provenance.txt
+  | 9c04287ef834c8cd0d8234d3f2e0d30464a31a9ec4e8a88a134c545e7ec44908  .ufo/waves/round-24/build/out/CritEvidence/r23-corrections-append.md
+  | a9e6db4c99127c7d623a9ad22883f5764534341bf9ff10d03d1434ee9936d4e4  .ufo/waves/round-24/build/out/CritEvidence/r23-ps-classification.txt
+  | 96c21f6f793f5c3c8901eb4a8d6a735dd27a3f98a1d2b058ee4886e1ba7115bc  .ufo/waves/round-24/build/out/CritEvidence/r23-ps-listing-line156.txt
+
+$ grep -nE '^[[:space:]]*56[[:space:]]*$' .ufo/waves/round-24/build/out/CritEvidence/r23-ps-listing-line156.txt
+  # listing standalone count 56
+  exit=0
+  | 41:56
+
+$ cat .ufo/waves/round-24/build/out/CritEvidence/r23-ps-classification.txt
+  # ps classification
+  exit=0
+  | NOT-IN-COUNT-PATTERN  879372 Wed Oct 21 12:54:08 2026 git --no-replace-objects --no-lazy-fetch -c i18n.logOutputEncoding=UTF-8 -c log.follow=false -c log.showRoot=true -c log.showSi
+  | NOT-IN-COUNT-PATTERN 1901841 Wed Oct 21 12:21:40 2026 git --no-replace-objects --no-lazy-fetch -c i18n.logOutputEncoding=UTF-8 -c log.follow=false -c log.showRoot=true -c log.showSi
+  | NOT-IN-COUNT-PATTERN 2983857 Wed Oct 21 13:02:58 2026 git --no-replace-objects --no-lazy-fetch -c i18n.logOutputEncoding=UTF-8 -c log.follow=false -c log.showRoot=true -c log.showSi
+  | rows 40
+  | by program {'git': 38, 'gpg-agent': 1, 'scdaemon': 1}
+  | ('git', 'current/21') 2
+  | ('git', 'frozen/00') 1
+  | ('git', 'frozen/20') 4
+  | ('git', 'frozen/21') 15
+  | ('git', 'frozen/37') 1
+  | ('git', 'kama-r23w2') 1
+  | ('git', 'truncated-path') 14
+  | ('gpg-agent', 'kama-r23w2') 1
+  | ('scdaemon', 'kama-r23w2') 1
+  | start min/max Wed Oct 21 12:18:54 2026 Wed Oct 21 13:29:37 2026
+
+$ cat .ufo/waves/round-24/build/out/CritEvidence/provenance.txt
+  # provenance
+  exit=0
+  | CritEvidence r24 — provenance of retained copies (append-only)
+  | 
+  | transcript: /home/vgpnk/.omp/agent/sessions/-Projects-shokunin/2026-10-21T16-10-39-768Z_01a15f3a-9f17-7238-ae23-4fe77ffa6530/KamaR23-2.jsonl
+  | transcript sha256 at read (2026-10-21 ~17:58Z): 114ffef5714e88e39fe4e3b80155d4f9c036dea99634c7ab5099821f9f1860db
+  |   line 154 (16:33:38.654Z) call: ps -eo pid,lstart,args | grep -E 'repo-state-grid-|kama-r23|refusal' | grep -v grep | cut -c1-200 | head -40; ps -eo pid,args | grep -E 'repo-state-grid-|/tmp/kama-r23' | grep -v grep | wc -l
+  |   line 156 (16:33:38.846Z) result: 40 rows + count "56"  -> r23-ps-listing-line156.txt (text field, verbatim)
+  |   line 157 (16:33:46.577Z) call: pkill -f -- '-C /tmp/repo-state-grid-' ; pkill -f -- '/tmp/kama-r23w2/' ; sleep 1; ps ... | wc -l
+  |   line 159 (16:33:47.911Z) result: count 0
+  |   line 145/147 (16:33:13Z-16:33:14.938Z): L1 refusal probe started and finished before the count (no overlap)
+  | 
+  | r23-ps-listing-line156.txt sha256 96c21f6f793f5c3c8901eb4a8d6a735dd27a3f98a1d2b058ee4886e1ba7115bc
+  | r23-ps-classification.txt: derived by python over r23-ps-listing-line156.txt (see CritEvidence.md)
+
+$ sed -n '51,52p' corpus/lessons/round-24.md
+  # r24 lesson correction rows
+  exit=0
+  | | number-drift / attribution | r23 lesson:178 says68 reports; actual69 durable reports; filed fleet report itself gives73 seats/4 missing | CritEvidence and ScribeLog | named appended correction in LOG; do not rewrite filed r23 bytes or attribute the erroneous literal to the wrong file |
+  | | scope: process evidence overstated | r23 process-count56 came from a different pattern than the40 truncated identity rows; only19 retained rows tied to FIFO fixtures | CritEvidence | appended provenance qualification in LOG; do not call all56 independently identified FIFO-blocked git processes |
+
+$ grep -c '^| S[0-9]' corpus/SOURCES.md && grep -n '^| S105' corpus/SOURCES.md
+  # SOURCES rows / S105
+  exit=0
+  | 105
+  | 117:| S105 | Python bytes.decode scope: rejected subprocess inference — https://docs.python.org/3.14/builtins/stdtypes.html#bytes.decode | docs | A | explicit rejection record for the cross-API inference in S095; not a new decoder fact | bytes.decode errors paragraph, opening title Python3.14.9 (series URL), opened2026-10-21; retained reader snapshot under .ufo/waves/round-24/sources/ | supersedes S095 — REJECTED: bytes.decode strict-default documentation does not establish subprocess text-mode or TextIOWrapper defaults; flip: cite the separately opened subprocess/io anchors (S097/S098). S096 remains the narrowed positive decoder fact. | rejected | 2026-10-21 | on-release | corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md |
+
+$ git show 0df800e896f6bce285a81e794ad4ae1d1e6c3a71:tools/report-landing-audit.py | sed -n '12,19p'
+  # auditor base vs pinned lines 12-19
+  exit=0
+  |   unresolved-full-hash  a 40-hex token in the report that is no git object in
+  |                         the lane or fleet repo, except an occurrence inside
+  |                         an exact Registry source URL from the committed
+  |                         `corpus/SOURCES.md` blob, outside `## Landed changes`;
+  |                         URL classification is not source-validity proof
+  |   landed-unresolved     a 7..40-hex token inside `## Landed changes` that
+  |                         contains a digit and a letter (40-hex always) and is
+  |                         no commit in either repo
+
+$ sed -n '12,19p' tools/report-landing-audit.py
+  # auditor pinned lines 12-19
+  exit=0
+  |   unresolved-full-hash  a 40-hex token in the report that is no git object in
+  |                         the lane or fleet repo, except an occurrence inside
+  |                         an exact Registry source URL from the committed
+  |                         `corpus/SOURCES.md` blob, outside `## Landed changes`;
+  |                         URL classification is not source-validity proof
+  |   landed-unresolved     a 7..40-hex token inside `## Landed changes` that
+  |                         contains a digit and a letter (40-hex always) and is
+  |                         no commit in either repo
+
+$ git show 0df800e896f6bce285a81e794ad4ae1d1e6c3a71:tools/report-landing-audit.py | sha256sum && sha256sum tools/report-landing-audit.py
+  # auditor shas
+  exit=0
+  | da5041a8191e0e6ec385adc7c659ddc7544a835aff65dd45b34de623c5765af1  -
+  | ea51bc35b71ac09f4c233e21a16be49af555e1333004a0fe166234de79edd220  tools/report-landing-audit.py
+

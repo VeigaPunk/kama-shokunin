@@ -290,6 +290,126 @@ be silently fixed — but it should be *named*.
 
 ---
 
+## 5b. Fixture hazard confirmed and bounded (peer `KamaR23-2.CaseFleetBlobless`)
+
+`CaseFleetBlobless` reported that the r24 grid's blobless clone keeps
+`remote.origin.url` pointing at a **reachable** local `file://` origin, so any
+probe **without** `--no-lazy-fetch` lazy-fetches, materialises the missing blob
+and silently evaporates the fixture premise. **Reproduced here, independently
+and exactly**, using the grid's own `blobless_clone` helper
+(`tests/report-audit/promisor-grid.py:214-224`):
+
+| step | observation |
+|---|---|
+| clone's `remote.origin.url` | `file:///…/peergate-…/origin` — reachable, on disk |
+| before any stray probe | grid `object_exists` → **False**; grid `missing_objects` → `['c2981a99…']` |
+| one stray `git cat-file -e <oid>` **without** `--no-lazy-fetch` | rc **0**; blob now present; `missing_objects` → `[]` |
+| auditor on the fleet-blobless fixture, run twice, no stray probe | **exit 2** both times; premise survives (blob still absent) |
+| auditor after the stray probe | **exit 1** with `landed-unresolved deadbee1` — the refusal became a *failed verdict* |
+
+**On a voided premise the verdict is undetermined — not "the auditor produces a
+clean".** My fixture's report body cites an unresolvable token, so the wrong
+verdict was a *failed* one (exit 1, `landed-unresolved deadbee1`); the peer's
+PG43 report body cites a resolvable lane commit, so the same voided premise
+produced a *false clean* (exit 0, no findings). Both are one mechanism, and the
+two symptoms must not be read as different auditor biases: the auditor is
+neither clean-biased nor failed-biased, it is answering a question about a store
+whose contents changed under it. The auditor alone stays stable (exit 2 on
+repeated runs). Recorded so neither seat's number is later read as a property
+of the auditor. (Agreed wording, A15.)
+
+**The auditor itself is safe**: it carries `--no-lazy-fetch` in `GIT_ISOLATION`
+(`tools/report-landing-audit.py:91-95`), so it cannot materialise a missing
+object; two consecutive runs left the premise intact. The hazard is confined to
+an **unprotected probe by hand**, which is why the grid's own helpers
+(`missing_objects`, `object_exists`, `object_inventory` —
+`promisor-grid.py:293-317`) are all `--no-lazy-fetch` and are safe.
+
+**Two precision points the peer's report leaves open, now measured.**
+
+1. *Which probe form materialises.* Both the **path** form
+   (`cat-file -e HEAD:f`) and the **raw-OID** form (`cat-file -e <oid>`)
+   materialise the blob without `--no-lazy-fetch` (rc 0, blob present, M empty
+   afterwards). The **peeled path** form (`HEAD:f^{blob}`) does **not**
+   materialise (rc 128, `fatal: path 'f^{blob}' does not exist in 'HEAD'`).
+   With `--no-lazy-fetch` every form correctly reports absence (rc 1).
+2. *The path form is not an honest existence test even when it succeeds.*
+   `cat-file -e HEAD:f` **with** `--no-lazy-fetch` returns rc 1 here (correct),
+   but a path-form probe resolves the *path* without the blob and can report
+   existence for an absent blob in other shapes. The grid's `object_exists`
+   uses the raw `<oid>^{object}` peel, which is the honest form; that choice
+   is correct and should not be relaxed.
+
+   Consequently the mitigation is **two** rules, not one: the isolation flags
+   (`--no-lazy-fetch` **and** `--no-replace-objects`, what the auditor uses)
+   *and* the choice of probe form (raw `<oid>^{object}`, not a path form).
+   The peeled-path form `HEAD:f^{blob}` happens not to materialise (rc 128),
+   but only because the path does not resolve — it is safe by accident and
+   must not be relied on.
+
+**Blast radius, checked.** The r24 grid is not itself exposed: every
+post-clone call inside `build()` is `object_exists` / `missing_objects` /
+`object_inventory` (all `--no-lazy-fetch`), and the grid removes its temp
+root in a `finally` (`promisor-grid.py:1082-1085`) unless `--keep` is passed.
+No promisor marker exists in the lane or the fleet, and no `promisor-grid-*`
+temp root survives.
+
+**The grid's exposure is *latent*, not absent**, and the peer's A12 wording is
+the accurate one. `promisor-grid.py:99-106`'s plain `git()` helper carries
+**no** `--no-lazy-fetch` — it is fetch-capable — while the dedicated
+`git_nofetch()` (`:109-111`) is the safe one. A scan of every call site shows
+the fetch-capable helper is currently never invoked on a blobless clone
+(no plain `git(` call within the 45 lines following either `blobless_clone`
+site at `:431`/`:437`). So the hazard is one line of future fixture code away,
+and the mitigation is a rule, not a proof: **any probe against a blobless
+clone must use `git_nofetch` / `object_exists` / `missing_objects`, never the
+plain `git()` helper.**
+
+**One live instance of the hazard is on this host, however**, and it is worth
+the falsify wave knowing: a leftover r23-grid temp root
+`/tmp/repo-state-grid-4eddb0bx/current/30/` (mtime 2026-10-21 15:35) holds a
+blobless clone whose `remote.origin.url` is
+`file:///tmp/repo-state-grid-4eddb0bx/current/30/lane` — **the origin is still
+on disk**, and the clone's missing blob `6e98d181…` is still absent (premise
+alive). A stray probe there would materialise it and turn a correct exit 2
+into a false clean. It is a `--keep`-style leftover, outside the lane and the
+fleet; removing it is an operator-hygiene action, not a lane edit, and this
+seat did not touch it.
+
+**The cheap, general mitigation** (L1's call; not applied by this seat): any
+manual probe against a promisor-marked store should carry `--no-lazy-fetch`
+*and* `--no-replace-objects`, exactly as the auditor does, and should use the
+raw-`<oid>^{object}` form rather than a path form. If the falsify wave
+inspects a kept fixture, it should use the grid's own
+`object_exists` / `missing_objects` helpers rather than a bare `git` call.
+
+**Reciprocal exchange with the reporting seat.** `CaseFleetBlobless` has
+folded this seat's §5b corrections into its own record (A14,
+`.ufo/waves/round-24/falsify/advice/CaseFleetBlobless.md`) and sharpened two
+points reciprocally: that on a voided premise the verdict is undetermined
+(A15, folded above), and that the mitigation is the two rules stated here.
+Its PG43 verdict is unchanged (HOLDS) and it has forwarded the `/tmp` leftover
+to L1 as a hygiene flag only. Both seats agree the grid and the auditor are
+not exposed, and both agree the risk is confined to manual inspection.
+
+**One corroborating observation this seat can add on the naming gap (peer
+F2/A1).** The candidate's refusal for the fleet-blobless case names the
+**path** and the **tip tree** but not the missing blob's own id:
+
+```
+could-not-evaluate: unavailable required object: .ufo/reports/round-1/kama.md
+  at fleet HEAD (tip tree e01cd688018977a54093868f9906845a4d6d6eeb, …)
+```
+
+The missing blob `0dd809a7…` appears nowhere in the message, even though it is
+fetch-free derivable from the store. That is a naming gap, not a declined
+loosening, and it is consistent with the peer's F2: the refusal identifies
+*what was required* but not *which object is unavailable*. The peer has since
+reproduced the same gap on a second report body (their A16), so it is not an
+artefact of one fixture. It is low severity and out of r24's preregistered
+scope (`preregistration.json:17`), so it is recorded here rather than proposed
+for this round.
+
 ## 6. Artifacts written by this seat
 
 All under `.ufo/waves/round-24/build/out/ConnClosure/` (relative to the lane):

@@ -1,0 +1,46 @@
+{
+  "purpose": "Static scoped mutation fingerprints only; no grid or mutant execution",
+  "cwd": "/fast/scratch/hyaku/kama-r24/falsify/MutResolution",
+  "command": [
+    "python3",
+    "-c",
+    "import hashlib, importlib.util, json, re\nfrom pathlib import Path\nroot = Path.cwd()\nspec = importlib.util.spec_from_file_location(\"registered_promisor_mutants\", root / \"tests/report-audit/promisor-mutants.py\")\nmod = importlib.util.module_from_spec(spec)\nspec.loader.exec_module(mod)\nsource = (root / \"tools/report-landing-audit.py\").read_text(encoding=\"utf-8\")\nsource_digest = hashlib.sha256(source.encode(\"utf-8\")).hexdigest()\nids = {\"PM05-ignore-second-repo\", \"PM09-peel-bare-full-hash-lookup\"}\nrows = []\nfor mutant in mod.MUTANTS:\n    if mutant[\"id\"] not in ids:\n        continue\n    mutated, alternative = mod.apply_mutation(source, mutant)\n    alt = mutant[\"alternatives\"][alternative]\n    count = source.count(alt[\"old\"]) if alt[\"kind\"] == \"replace\" else len(re.findall(alt[\"pattern\"], source, re.DOTALL))\n    rows.append({\"mutant\": mutant[\"id\"], \"applied_alternative\": alternative, \"selected_pattern_matches\": count, \"mutant_compiles\": mod.compiles(mutated, mutant[\"id\"]), \"source_sha256\": source_digest, \"reconstructed_mutant_sha256\": hashlib.sha256(mutated.encode(\"utf-8\")).hexdigest(), \"note\": \"Static deterministic reproduction using pinned apply_mutation; ephemeral executed mutant file was not separately hashed.\"})\nprint(json.dumps({\"static_only\": True, \"rows\": rows}, indent=2))\n"
+  ],
+  "environment_overrides": {
+    "TMPDIR": "/fast/scratch/hyaku/kama-r24/falsify/MutResolution",
+    "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "exit": 0,
+  "stdout": "{\n  \"static_only\": true,\n  \"rows\": [\n    {\n      \"mutant\": \"PM05-ignore-second-repo\",\n      \"applied_alternative\": 0,\n      \"selected_pattern_matches\": 1,\n      \"mutant_compiles\": true,\n      \"source_sha256\": \"ea51bc35b71ac09f4c233e21a16be49af555e1333004a0fe166234de79edd220\",\n      \"reconstructed_mutant_sha256\": \"7d72089f721d7fae723dbe8ee25ce0fce29b869dc9c56439b2734ac3a851b537\",\n      \"note\": \"Static deterministic reproduction using pinned apply_mutation; ephemeral executed mutant file was not separately hashed.\"\n    },\n    {\n      \"mutant\": \"PM09-peel-bare-full-hash-lookup\",\n      \"applied_alternative\": 0,\n      \"selected_pattern_matches\": 1,\n      \"mutant_compiles\": true,\n      \"source_sha256\": \"ea51bc35b71ac09f4c233e21a16be49af555e1333004a0fe166234de79edd220\",\n      \"reconstructed_mutant_sha256\": \"7ae25010bac4705aa987b296d26b5aa91e3647f7e7ae68f9879f782f8d3428bc\",\n      \"note\": \"Static deterministic reproduction using pinned apply_mutation; ephemeral executed mutant file was not separately hashed.\"\n    }\n  ]\n}\n",
+  "stderr": "",
+  "parsed_stdout": {
+    "static_only": true,
+    "rows": [
+      {
+        "mutant": "PM05-ignore-second-repo",
+        "applied_alternative": 0,
+        "selected_pattern_matches": 1,
+        "mutant_compiles": true,
+        "source_sha256": "ea51bc35b71ac09f4c233e21a16be49af555e1333004a0fe166234de79edd220",
+        "reconstructed_mutant_sha256": "7d72089f721d7fae723dbe8ee25ce0fce29b869dc9c56439b2734ac3a851b537",
+        "note": "Static deterministic reproduction using pinned apply_mutation; ephemeral executed mutant file was not separately hashed."
+      },
+      {
+        "mutant": "PM09-peel-bare-full-hash-lookup",
+        "applied_alternative": 0,
+        "selected_pattern_matches": 1,
+        "mutant_compiles": true,
+        "source_sha256": "ea51bc35b71ac09f4c233e21a16be49af555e1333004a0fe166234de79edd220",
+        "reconstructed_mutant_sha256": "7ae25010bac4705aa987b296d26b5aa91e3647f7e7ae68f9879f782f8d3428bc",
+        "note": "Static deterministic reproduction using pinned apply_mutation; ephemeral executed mutant file was not separately hashed."
+      }
+    ]
+  },
+  "fixture_token_derivation": {
+    "status": "static derivation, not direct capture of deleted mutant fixtures",
+    "notes_blob": "bfa655111293037a5564088d1a9bbca4cbcf446b",
+    "notes_tree": "d184003c45e7e16dffd8be2c94ba48f842a945d8",
+    "fleet_initial_commit_bytes": "tree d184003c45e7e16dffd8be2c94ba48f842a945d8\nauthor fleet <a@x> 1900 +0000\ncommitter fleet <a@x> 1900 +0000\n\nfleet: init\n",
+    "fleet_commit_token": "f723c76c41609df00704d93c29bd44408dcbdd2e"
+  }
+}

@@ -1,0 +1,151 @@
+ConnSources — verification transcript (scratch only; production untouched)
+scratch: /fast/scratch/hyaku/kama-r24/falsify/ConnSources/{clone,m1,m2,m3,m4,integ,R,R2,R3}
+observed production HEAD: 2e254a1763a9c08aa07fc53081287f506c447d84
+base: 0df800e896f6bce285a81e794ad4ae1d1e6c3a71  (intermediate: ed1cc3a, ledger-repair commit f1e755e)
+
+== [1] F1+F2+F3 integrated candidate (integ): append-only guard, base -> HEAD ==
+added S102 (allowed)
+added S103 (allowed)
+added S104 (allowed)
+added S105 (allowed)
+no append-only violations
+exit=0
+
+== [2] census validate (E-codes) ==
+integ	ok	/fast/scratch/hyaku/kama-r24/falsify/ConnSources/integ/corpus/SOURCES.md
+exit=0
+W04 count: 25  (HEAD baseline 25; base 0df800e8 23)
+
+== [3] census totals (integrated candidate) ==
+integ	rows	105
+integ	tier.A	100
+integ	tier.B	2
+integ	tier.C	3
+integ	status.mined	86
+integ	status.queued	8
+integ	status.rejected	11
+FLEET	rows	105
+FLEET	tier.A	100
+FLEET	tier.B	2
+FLEET	tier.C	3
+FLEET	tier.invalid	0
+FLEET	status.queued	8
+FLEET	status.mined	86
+FLEET	status.rejected	11
+FLEET	status.invalid	0
+FLEET	missing	0
+exit=0
+
+== [4] append-only check of the two prose files ==
+  corpus/lessons/round-24.md: old content is a prefix of new = True; old lines removed = 0
+  corpus/knowledge/error-is-not-a-verdict.md: old content is a prefix of new = True; old lines removed = 0
+
+== [5] ledger cells changed (mutable used-by only) ==
+ corpus/SOURCES.md | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+    - S095 -> corpus/lessons/round-23.md, corpus/lessons/round-24.md
+    + S095 -> corpus/lessons/round-23.md, corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md
+    - S097 -> corpus/lessons/round-23.md, corpus/knowledge/error-is-not-a-verdict.md
+    - S098 -> corpus/lessons/round-23.md, corpus/knowledge/error-is-not-a-verdict.md
+    + S097 -> corpus/lessons/round-23.md, corpus/knowledge/error-is-not-a-verdict.md, corpus/lessons/round-24.md
+    + S098 -> corpus/lessons/round-23.md, corpus/knowledge/error-is-not-a-verdict.md, corpus/lessons/round-24.md
+
+== [6] F3 raw witness: pinned snapshot occurrences ==
+   raw Markdown form count : 2
+   recorded plain form count: 0
+   display-equivalent count : 2
+   line 1397: If `'strict'` (the default), a [`UnicodeError`](exceptions.html#UnicodeError "UnicodeError") exception is raised.
+   line 2943: If `'strict'` (the default), a [`UnicodeError`](exceptions.html#UnicodeError "UnicodeError") exception is raised.
+
+== [7] F3 negative-search evidence (the row's actual evidentiary load) ==
+   subprocess     -> 0
+   TextIOWrapper  -> 0
+   text mode      -> 0
+   text-mode      -> 0
+   text_mode      -> 0
+
+== [8] upstream live page: recorded plain form in VISIBLE text ==
+   visible-text plain-quote count: 2
+
+awk: cmd. line:1: {print \$3}
+awk: cmd. line:1:        ^ backslash not last character on line
+== [9] offline fixture: git  actual '?' diagnostic format ==
+-- missing BLOB (R3) --
+walk1 (--objects --missing=print --no-object-names):
+?61780798228d17af2d34fce4cfbdf35556832472
+walk2 (+ --filter=blob:none):
+   (no '?' lines: the missing blob is filtered out by blob:none)
+-- missing TREE (R2) --
+walk1:
+?f4b354863caa9cea99b95422c9dab70465757d87
+walk2:
+?f4b354863caa9cea99b95422c9dab70465757d87
+
+== [10] CORPUS.md authority: full path + rule 2 verbatim ==
+   /home/vgpnk/Projects/shokunin/CORPUS.md (sha256 88556402940e7a0f1dbbed3abef9e00c87a90db6f80eaed03269e371f50050b8)
+   116:2. **Append-only.** Only `status`, `recheck` and `used-by` change in place, and each change
+   117:   is logged old→new in the round lesson. A correction is a new row whose `teaches` opens
+   118:   `supersedes S0NN —`.
+   single-successor rule in CORPUS.md: 0 matches (0 = no such rule)
+
+== [11] S093 packet (L1 acceptance: 4th mutable link, current-doc reason) ==
+patch files: s093-packet-relative-to-3cell.diff (applies on top of the 3-cell state)
+            integration-packet-4cell-combined.diff (single-shot on pristine HEAD)
+git apply --check on pristine HEAD, combined:
+   (see below: combined applied cleanly to a pristine HEAD clone, exit 0)
+
+== [12] combined 4-cell tree: immutable-cell check (base -> combined) ==
+   immutable cells changed: []
+   status changed: [] | recheck changed: []
+   rows added: ['S102', 'S103', 'S104', 'S105'] | removed: []
+
+   four consumer transitions (base -> combined):
+     S093:
+        old: corpus/lessons/round-23.md
+        new: corpus/lessons/round-23.md, corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md
+     S095:
+        old: corpus/lessons/round-23.md, tools/report-landing-audit.py
+        new: corpus/lessons/round-23.md, corpus/lessons/round-24.md, corpus/knowledge/error-is-not-a-verdict.md
+     S097:
+        old: corpus/lessons/round-23.md, corpus/knowledge/error-is-not-a-verdict.md
+        new: corpus/lessons/round-23.md, corpus/knowledge/error-is-not-a-verdict.md, corpus/lessons/round-24.md
+     S098:
+        old: corpus/lessons/round-23.md, corpus/knowledge/error-is-not-a-verdict.md
+        new: corpus/lessons/round-23.md, corpus/knowledge/error-is-not-a-verdict.md, corpus/lessons/round-24.md
+
+   knowledge doc: cites 18 ids; still missing from used-by: []
+   round-24 lesson: cites 16 ids; still missing from used-by: ['S001']
+   corpus/lessons/round-24.md: append-only = True
+   corpus/knowledge/error-is-not-a-verdict.md: append-only = True
+
+== [13] static guard on the combined tree (blob diff; no census/test rerun per L1) ==
+added S102 (allowed)
+added S103 (allowed)
+added S104 (allowed)
+added S105 (allowed)
+no append-only violations
+   exit=0
+
+== [14] §11 append-only correction of this seat's own evidence trail ==
+violation: deleted artifact used-by-reconciliation-plus-S093-adjacent.patch + rewrote report §8 file list in place
+
+-- [14a] restored artifact (byte-exact from scratch clone m4) --
+   source of truth: /fast/scratch/hyaku/kama-r24/falsify/ConnSources/m4 working tree (still held the 4-cell diff)
+   m4 git status --porcelain :  M corpus/SOURCES.md 
+   m4 git diff --stat      :  1 file changed, 4 insertions(+), 4 deletions(-)
+   regenerated sha256       : a9ab3f6b084ebb1b603b60a8459fcd2c9b8b061dbbe0af55121a81e0aac1d6f5
+   recorded at creation     : a9ab3f6b084ebb1b603b60a8459fcd2c9b8b061dbbe0af55121a81e0aac1d6f5  (equal)
+   cmp restored vs regenerated: identical (exit 0)
+   restored file sha256     : a9ab3f6b084ebb1b603b60a8459fcd2c9b8b061dbbe0af55121a81e0aac1d6f5
+
+-- [14b] report snapshot preserved BEFORE the §8 restoration --
+   report-pre-restore-snapshot-2026-10-21.md sha256: ea9ec78afdc69ec04998668502adba8b66f11bfdecee36f68d829712fc7e1706
+   equals the then-current report sha256 (ea9ec78a...): yes
+
+-- [14c] §8 restored to its filed text; corrected index lives in report §11.3 --
+   report §8 now lists 5 artifacts again, including the restored 4-cell variant
+   report §11.3 carries the current index with per-file sha256
+
+-- [14d] scope --
+   no test suite, no census rerun, no production file written by this seat
+   production HEAD: 2e254a1763a9c08aa07fc53081287f506c447d84

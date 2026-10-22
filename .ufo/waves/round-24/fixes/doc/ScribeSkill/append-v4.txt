@@ -1,0 +1,52 @@
+### Round24 mutation taxonomy correction — same-verdict-exit (owner: kama)
+
+Append-only; this section supersedes the mutator-source and
+classification sentences of the round24 continuation above. It applies
+only if the L1 adopts these exact semantics in the canonical
+`tools/report-landing-audit.py` and `tests/report-audit/…` files in the
+same commit that carries this text; otherwise the round24 sections above
+stand unchanged and this section does not apply. The present tense below
+describes those canonical files.
+
+**Canonical mutator source.** `tests/report-audit/promisor-mutants.py`
+carries the V7 contract. V7 replaces V6, whose classification tested the
+normal/normal branch before the equality branch and so mislabelled a
+violated row whose exit was unchanged (0 → 0 or 1 → 1) as
+`verdict-change`: an exit pair alone never shows that the whole verdict
+changed, because the same exit can hide a different document. The grid
+side is the delivered test-fidelity variant, with the same grid API and
+the immutable 47 cells unchanged.
+
+**Classification taxonomy**, read from the row's own `expected_exit` and
+`exit`:
+
+| expected → actual | class | credit |
+|---|---|---|
+| 0 → 0, 1 → 1 | `same-verdict-exit` | the same exit; the detail may differ — no substantive exit change and no availability claim |
+| 0 ↔ 1 | `verdict-change` | the verdict's pass/fail changed |
+| 0/1 → 2 | `refusal-2` | an over-refusal signal, not an availability credit |
+| 2 → 0/1 | `actual-verdict` | the availability credit |
+| 2 → 2 | `diagnostic-only` | the refusal stayed a refusal; only the diagnostics can differ |
+| missing or outside 0/1/2 | `unclassified` | no class credit is guessed |
+
+The `diagnostic_only` aggregate means exclusively the same 2 → 2; it never
+covers same normal exits and never covers unclassified rows, which are
+reported under their own aggregate. No availability credit is guessed from
+a `same-verdict-exit`, `diagnostic-only` or `unclassified` row. Runtime
+faults — a leak, a timeout, a traceback, an internal error, an invalid row
+exit, a malformed verdict document — and violations outside a mutant's
+attribution envelope remain could-not-evaluate with zero kill credit; the
+out-of-envelope rows are preserved and reported, and the envelope is never
+widened. A valid finite survival still completes 0. The primary 47
+expectations and the operator recipes are unchanged, PM08 stays one manual
+review note settled by uncredited manual source inspection, and the legacy
+isolation probe keeps its 27 retained literals and 4 retired ids. No final
+candidate measurement, count or landed hash is claimed here.
+
+[Provenance footnote — prototype paths only, the canonical files are the
+ones named above: `fixes/MutationEvidenceV7/promisor-mutants.py`
+(`7ba30ccc…`) and `fixes/MutationEvidenceV7/isolation-mutants.py`
+(`eace4f5…`, unchanged), the delivered test-fidelity grid
+`fixes/GridAttestationV4/promisor-grid.py` (`8e0d5c54…`), and the
+integration contract `docs-contract.txt` with its mutator delivery and
+final-selection supplements.]

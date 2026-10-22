@@ -1,0 +1,117 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/build/out/GridOracle/promisor-grid.py	2026-10-21 15:33:20.518931608 -0300
++++ repo/tests/report-audit/promisor-grid.py	2026-10-21 16:46:28.463441074 -0300
+@@ -34,7 +34,6 @@
+ import json
+ import os
+ from pathlib import Path
+-import re
+ import shutil
+ import signal
+ import subprocess
+@@ -446,8 +445,8 @@
+                 object_exists(fleet, shas["spliced"]):
+             raise Premise("the spliced token exists in an audited repository")
+     if opt.get("cited_hidden_blob"):
+-        # the cited blob under the missing subtree must be absent as well
+-        # (the supplement's fixture), probed with lazy fetching disabled
++        # Match the supplement: both the subtree and its cited blob are
++        # absent; a locally present blob would correctly resolve.
+         if object_exists(lane, shas["hidden_blob"]) or \
+                 object_exists(fleet, shas["hidden_blob"]):
+             raise Premise("the cited hidden blob is still present")
+@@ -465,11 +464,8 @@
+         "fleet_missing": missing_objects(fleet, "HEAD"),
+         "fake_present": object_exists(lane, FAKE) or object_exists(fleet, FAKE),
+     }
+-    paths = [p for p, _ in files] + [REL]
+-    if opt.get("cited_hidden_blob"):
+-        paths.append("d/f")
+     return {"lane": lane, "fleet": fleet, "shas": shas, "premise": premise,
+-            "paths": paths, "errata": bool(opt.get("errata"))}
++            "errata": bool(opt.get("errata"))}
+ 
+ 
+ def c_complete_lane_config(root, tmp):
+@@ -662,8 +658,6 @@
+ 
+ 
+ def c_opaque_tree_hides_cited_blob(root, tmp):
+-    # the supplement's fixture: the cited blob under the missing subtree is
+-    # absent as well, so its OID is hidden behind the missing subtree
+     return build(root, tmp, lane_mark="config", opaque_tree=True,
+                  cited_hidden_blob=True, drop=("opaque_tree", "hidden_blob"))
+ 
+@@ -762,20 +756,7 @@
+     return sorted(uncorrected), sorted(raw)
+ 
+ 
+-PATH_EXPR = re.compile(r"(?:[0-9a-f]{40}|HEAD):([^\s'\"]+)")
+-
+-
+-def names_unavailable(err, names, paths):
+-    """The refusal must identify the unavailable content: the object id, or
+-    the required path whose object is unavailable (a "<oid>:<path>" or
+-    "HEAD:<path>" expression naming a real fixture path)."""
+-    if any(n and n in err for n in names):
+-        return True
+-    known = set(paths or ())
+-    return any(m in known for m in PATH_EXPR.findall(err))
+-
+-
+-def check_exit2_form(err, out, names, forbidden, paths=()):
++def check_exit2_form(err, out, names, forbidden):
+     """Every current-arm refusal: typed could-not-evaluate, no verdict
+     document, a content-derived reason, and never the r23 metadata refusal."""
+     problems = []
+@@ -790,13 +771,12 @@
+     low = err.lower()
+     if any(f in err for f in forbidden):
+         problems.append("reason is the r23 metadata refusal")
+-    if not names_unavailable(err, names, paths):
++    if not any(n and n in err for n in names):
+         problems.append("reason does not name the unavailable object")
+     return problems
+ 
+ 
+-def grade(view, arm_out, err, out, shas, names, forbidden, form_check=True,
+-          paths=()):
++def grade(view, arm_out, err, out, shas, names, forbidden, form_check=True):
+     """Compare one observation with one expectation."""
+     want = view
+     problems = []
+@@ -818,7 +798,7 @@
+         if not any(t in err.lower() for t in terms):
+             problems.append(f"reason not in class {want['reason_class']}")
+     if code == 2 and arm_out["arm"] == "current" and form_check:
+-        problems += check_exit2_form(err, out, names, forbidden, paths)
++        problems += check_exit2_form(err, out, names, forbidden)
+     if arm_out["traceback"]:
+         problems.append("traceback")
+     if arm_out["timed_out"]:
+@@ -846,23 +826,19 @@
+            "objects_acquired": acquired,
+            "stderr_tail": err.strip()[-300:]}
+     names = [resolve_token(n, shas) for n in expect.get("names_any_of", [])]
+-    paths = built.get("paths", [])
+     forbidden = expect.get("reason_forbidden", [])
+     live = expect.get("amended", expect["original"])
+     obs["met_frozen"] = (not grade(expect["frozen"], obs, err, out, shas, names,
+-                                    forbidden, paths=paths)) \
+-        if arm == "frozen" else None
++                                    forbidden)) if arm == "frozen" else None
+     # the frozen arm is scored against the amended view too: that score is the
+     # historical baseline the repair is measured against, not a target
+     obs["met_amended_frozen"] = (
+         not grade(live, obs, err, out, shas, [], [], form_check=False)
+         if arm == "frozen" else None)
+     obs["met_original"] = (not grade(expect["original"], obs, err, out, shas,
+-                                     names, forbidden, paths=paths)) \
+-        if arm == "current" else None
++                                     names, forbidden)) if arm == "current" else None
+     obs["met_amended"] = (not grade(live, obs, err, out, shas, names,
+-                                    forbidden, paths=paths)) \
+-        if arm == "current" else None
++                                    forbidden)) if arm == "current" else None
+     obs["defects"], obs["raw_defects"] = observed_defects(out)
+     obs["kinds"] = (sorted({k for k, _ in obs["defects"]})
+                     if obs["defects"] is not None else None)

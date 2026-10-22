@@ -1,0 +1,243 @@
+--- a/promisor-grid.py (d2aca34a, GridAttestationV5)
++++ b/promisor-grid.py (GridAttestationV6)
+@@ -60,7 +60,8 @@
+ # 0957ce619789d13d894ef21bc863486bcb35b56c is 40 hex, the first 15 hex
+ # are the real commit and the remaining 25 are the spliced part
+ HIST_TAIL = "d894ef21bc863486bcb35b56c"
+-SCRATCH = Path("/fast/scratch/hyaku/kama-r24")
++# The fixture root follows the caller's TMPDIR.  There is no baked-in
++# scratch path: parallel seats must not share one.
+ TIMEOUT = 30
+ 
+ REASON_CLASSES = {
+@@ -935,32 +936,40 @@
+     # the frozen column is the historical reproduction: it is scored without
+     # the exit-2 form check, so the r23 metadata refusal still counts as met
+     # and the 47/47 history stays intact
+-    obs["met_frozen"] = (not grade(expect["frozen"], obs, err, out, shas, names,
+-                                    forbidden, form_check=False)) \
+-        if arm == "frozen" else None
++    # the actual grade problems are kept per named view: the graded view
++    # (the historical frozen column for the frozen arm, the amended view for
++    # the current arm) and the strict comparable amended target in both arms
++    problems_frozen = (grade(expect["frozen"], obs, err, out, shas, names,
++                             forbidden, form_check=False)
++                       if arm == "frozen" else None)
++    problems_amended = grade(live, obs, err, out, shas, names, forbidden,
++                             form_check=True)
++    problems_original = (grade(expect["original"], obs, err, out, shas, names,
++                               forbidden)
++                         if arm == "current" else None)
++    obs["problems"] = (problems_frozen if arm == "frozen"
++                       else problems_amended)
++    obs["amended_problems"] = problems_amended
++    obs["original_problems"] = problems_original
++    obs["met_frozen"] = (not problems_frozen) if arm == "frozen" else None
+     # the amended comparison must be identical in both arms: same exit, same
+     # defect set, same reason class, same strong names pin, same no-verdict
+     # and same acquisition rules.  The former loose exit/reason-only score is
+     # kept beside it under its own label and is never conflated with it.
+-    obs["met_amended_frozen"] = (
+-        not grade(live, obs, err, out, shas, names, forbidden,
+-                  form_check=True)
+-        if arm == "frozen" else None)
++    obs["met_amended_frozen"] = ((not problems_amended)
++                                 if arm == "frozen" else None)
+     obs["met_amended_frozen_loose"] = (
+         not grade(live, obs, err, out, shas, [], [], form_check=False)
+         if arm == "frozen" else None)
+-    obs["met_original"] = (not grade(expect["original"], obs, err, out, shas,
+-                                     names, forbidden)) if arm == "current" else None
+-    obs["met_amended"] = (not grade(live, obs, err, out, shas, names,
+-                                    forbidden)) if arm == "current" else None
++    obs["met_original"] = ((not problems_original)
++                           if arm == "current" else None)
++    obs["met_amended"] = ((not problems_amended)
++                          if arm == "current" else None)
+     obs["defects"], obs["raw_defects"] = observed_defects(out)
+     obs["kinds"] = (sorted({k for k, _ in obs["defects"]})
+                     if obs["defects"] is not None else None)
+     obs["raw_kinds"] = (sorted({k for k, _ in obs["raw_defects"]})
+                         if obs["raw_defects"] is not None else None)
+-    # the mutation runner grades rows by kind: the manifest's "policy" rows
+-    # are declared behaviour contracts, the "control" rows are no-harm twins
+-    obs["kind"] = "contract" if expect.get("kind") == "policy" else "control"
+     obs["row_class"] = expect.get("kind")
+     obs["met"] = (obs["met_amended"] if arm == "current" else obs["met_frozen"])
+     obs["expected_exit"] = live.get("exit")
+@@ -1058,6 +1067,24 @@
+     return problems
+ 
+ 
++def collect_failures(rows, graded, arm):
++    """The unique graded cases that fail their graded view or the twin
++    constraint, for the selected arm only.
++
++    The graded view is the amended view for the current arm and the
++    historical frozen column for the frozen arm.  A case that misses its own
++    view and also breaks a twin is counted once.
++    """
++    key = "met_amended" if arm == "current" else "met_frozen"
++    failed = set()
++    for row in graded:
++        if row.get("arm") != arm:
++            continue
++        if not row.get(key) or row.get("twin_equal") is False:
++            failed.add(row["case"])
++    return sorted(failed)
++
++
+ def population(table):
+     rows = []
+     for case in table["cases"]:
+@@ -1139,6 +1166,19 @@
+                       genuine["premise"]["lane_missing"] == []))
+     except Premise:
+         cases.append(("genuine-partial-clone-hydrated", False))
++    # an asymmetric two-cell twin example must report two unique violating
++    # cases, never five
++    synthetic = [
++        {"case": "PG23-x", "kind": "policy", "arm": "current",
++         "met_amended": True, "met_frozen": None, "twin_equal": False},
++        {"case": "PG24-y", "kind": "policy", "arm": "current",
++         "met_amended": False, "met_frozen": None, "twin_equal": True},
++        {"case": "PG01-z", "kind": "policy", "arm": "frozen",
++         "met_amended": None, "met_frozen": False, "twin_equal": False},
++    ]
++    graded_syn = [r for r in synthetic if r["kind"] in ("policy", "control")]
++    unique = collect_failures(synthetic, graded_syn, "current")
++    cases.append(("unique-violations-per-arm", unique == ["PG23-x", "PG24-y"]))
+     failed = [n for n, ok in cases if not ok]
+     for name, ok in cases:
+         print(f"{'ok' if ok else 'FAIL'} {name}")
+@@ -1232,6 +1272,27 @@
+         except (ValueError, KeyError, IndexError):
+             row = {}
+         results.append((f"stand-in-{label}", check(row)))
++    # the caller's TMPDIR is honoured, and an unavailable requested scratch is
++    # a could-not-evaluate in both the normal and the selftest mode
++    asked = work / "asked-scratch"
++    asked.mkdir(parents=True, exist_ok=True)
++    proc = subprocess.run([sys.executable, str(here), "--arm", "current",
++                           "--case", "PG07-complete-lane-plain", "--keep"],
++                          capture_output=True, env=env(TMPDIR=str(asked)),
++                          cwd=str(work))
++    honoured = any(p.name.startswith("promisor-grid-")
++                   for p in asked.iterdir())
++    results.append(("requested-root-honoured",
++                    proc.returncode in (0, 1) and honoured))
++    for mode, extra in (("normal", []), ("selftest", ["--selftest"])):
++        absent = work / f"absent-scratch-{mode}"
++        proc = subprocess.run([sys.executable, str(here), *extra],
++                              capture_output=True,
++                              env=env(TMPDIR=str(absent)), cwd=str(work))
++        err = proc.stderr.decode(errors="replace")
++        results.append((f"unavailable-root-{mode}-refused",
++                        proc.returncode == 2
++                        and "could-not-evaluate" in err))
+     # a runner copy without its companion manifest: the external oracle is
+     # unavailable, which is a could-not-evaluate and not a tampering claim
+     bare = work / "no-manifest"
+@@ -1275,8 +1336,12 @@
+               file=sys.stderr)
+         return 2
+     if args.selftest:
+-        root = make_root()
+         try:
++            root = make_root()
++        except Premise as exc:
++            print(f"could-not-evaluate: {exc}", file=sys.stderr)
++            return 2
++        try:
+             return selftest(table, root, manifest_digest)
+         finally:
+             if not args.keep:
+@@ -1287,12 +1352,18 @@
+     opens = [o for o in table["open_rows"]
+              if not wanted or o["case"] in wanted]
+     doc = {"grid": "promisor-grid", "frozen_revision": FROZEN,
++           "grid_sha256": hashlib.sha256(
++               Path(__file__).resolve().read_bytes()).hexdigest(),
+            "expectations_sha256": manifest_digest,
+            "population_sha256": population(table),
+            "population_size": len(table["cases"]),
+            "timeout_seconds": TIMEOUT, "arms": {}}
+-    root = make_root()
+     try:
++        root = make_root()
++    except Premise as exc:
++        print(f"could-not-evaluate: {exc}", file=sys.stderr)
++        return 2
++    try:
+         auditors = {}
+         if "frozen" in arms:
+             auditors["frozen"] = frozen_auditor(root, args.frozen_path)
+@@ -1350,15 +1421,11 @@
+                                               for v in results.values())
+                                        else None)
+             graded = [r for r in rows if r["kind"] in ("policy", "control")]
+-            live_fail = [r for r in graded
+-                         if not r["met_amended"] if r["arm"] == "current"]
+-            frozen_fail = [r for r in graded
+-                           if not r["met_frozen"] if r["arm"] == "frozen"]
+-            # the twin comparison is computed above: a mismatch is a failure
+-            live_fail += [r for r in graded
+-                          if r.get("twin_equal") is False]
+-            frozen_fail += [r for r in graded
+-                            if r.get("twin_equal") is False]
++            # unique graded cases that fail their graded view OR the twin
++            # constraint, for the selected arm only: a twin mismatch and an
++            # individual miss in the same cell count once, and the other
++            # arm's failures never leak in
++            failed = collect_failures(rows, graded, arm)
+             # the amended view is scored per arm: the frozen arm against its
+             # own history (met_amended_frozen), the current arm against the
+             # live view (met_amended).  A single counter mixed both and
+@@ -1390,8 +1457,8 @@
+             doc["arms"][arm] = {
+                 "rows": rows,
+                 "graded": len(graded),
+-                "violations": len(live_fail) + len(frozen_fail),
+-                "violating_cases": [r["case"] for r in live_fail + frozen_fail],
++                "violations": len(failed),
++                "violating_cases": failed,
+                 "amended_view_met": len(baseline),
+                 "amended_view_total": len(graded),
+                 "amended_view_unmet": amended_unmet,
+@@ -1475,17 +1542,27 @@
+ 
+ 
+ def make_root():
+-    """One grid-owned root per run, under /fast/scratch (never /tmp)."""
++    """One grid-owned root per run.
++
++    The caller's TMPDIR is honoured.  An explicitly requested scratch that is
++    not usable is a could-not-evaluate (exit 2) before any fixture or
++    auditor exists - never a silent fallback elsewhere and never a traceback.
++    With no TMPDIR the standard temporary-directory selection is used.
++    """
+     base = os.environ.get("TMPDIR")
+     if base:
+-        candidate = Path(base).resolve()
+-        if SCRATCH not in candidate.parents and candidate != SCRATCH:
+-            base = None
+-    else:
+-        base = None
+-    root = Path(tempfile.mkdtemp(prefix="promisor-grid-",
+-                                 dir=str(base or SCRATCH)))
+-    return root
++        root_dir = Path(base)
++        if not root_dir.is_dir() or not os.access(root_dir, os.W_OK):
++            raise Premise(f"the requested scratch {base} is unavailable")
++        try:
++            return Path(tempfile.mkdtemp(prefix="promisor-grid-", dir=base))
++        except OSError as exc:
++            raise Premise(f"the requested scratch {base} is unavailable: "
++                          f"{exc}")
++    try:
++        return Path(tempfile.mkdtemp(prefix="promisor-grid-"))
++    except OSError as exc:
++        raise Premise(f"no temporary directory is available: {exc}")
+ 
+ 
+ def frozen_auditor(root, explicit):

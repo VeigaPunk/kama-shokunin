@@ -274,3 +274,257 @@ what this report stated earlier in the wave.
   `…/ScribeSkill/make-no-promisor-refusal-candidate.py`
 - Scratch (outside the lane): `/fast/scratch/hyaku/kama-r24/ScribeSkill/`
   (probe runs, candidate copy, patch build tree)
+
+## Appended — round-24 instrument semantics continuation (W1 resumption)
+
+Append-only; nothing above this section was changed. Production is pinned
+at `2e254a17…` and `SKILL.md` now ends with the integrated
+"## Round24 correction — local evidence, not promisor declarations"
+section (lines 816–871), so this continuation is additive and states only
+what that section does not: the core/grid/mutator semantics, the
+supersession of the old 31-mutant gate reading, the PM08 manual no-assert
+rule, the per-arm strict/loose method, and the withdrawal of the original
+view.
+
+**Draft**: `.ufo/waves/round-24/fixes/doc/ScribeSkill/append.txt` (draft
+text only; no production edit, no patch applied).
+
+**Sources read** (proposals, not assumptions): `fixes/docs-contract.txt`;
+`fixes/StoreLocalPresence/README.md` and the selected v9 core
+(sha256 `b9be4f42…`); `fixes/GridAttestation/README.md` and
+`fixes/GridAttestationV3/README.md` (grid proposal sha256 `437128b8…`);
+`fixes/MutationEvidenceV5/` and `fixes/MutationEvidenceV6/rationale-v6.md`;
+production `SKILL.md:803,850,870,871`, `tests/report-audit/isolation-mutants.py`
+(27 retained literals, retired M14/M22/M27/M29),
+`tests/report-audit/promisor-grid.py` (sha256 `b034e159…`) and
+`tests/report-audit/promisor-grid-expectations.json` (sha256
+`d86b7bea…`, unchanged). The ConnSources source-curation packet was not
+read or duplicated.
+
+**Facts carried into the draft**
+- Superseded registry reading: `SKILL.md:803` still reads kind `gate`
+  with 31 single-literal mutants; the draft supersedes it in kind (now a
+  bounded sensitivity `probe`) and in count (27 retained literals + 4
+  retired ids, never reused; the historical 31 is not the current count),
+  and records that the short-id selector hazard pre-existed the
+  retirement.
+- Per-arm method: the comparable frozen baseline is the strict 14/47
+  (identical strong exit/defect/reason/name/no-verdict/acquisition rules
+  in both arms); the older loose 16/47 stays filed under its own
+  weaker-method label (`met_amended_frozen_loose`; PG16 and PG20 differ)
+  and is not two extra product wins; the frozen historical reproduction
+  47/47 is a separate measurement; the original unknown clause stays
+  withdrawn and not achieved.
+- PM08: one manual review note among ten executable operators — verified
+  statically, never constructed, never executed, never killed; no
+  permanent AST/text/wiring assertion.
+- Fixture rules: blobless absence asserted immediately after the clone
+  before any hydration; connected local file origins stay acquisition
+  tripwires (no origin removal or repointing, no lazy forensic read);
+  hydration changes input state and is not a detector repair;
+  `internal_error` is captured from the full stderr, distinct from a
+  content-derived refusal, and tracebacks/internal errors are unmet
+  observations that cannot earn mutant kills.
+
+**Not claimed**: no final candidate measurement, numerator, count or
+landed hash; the V6 mutator's pending output-field names; the source
+curation packet; any Git floor approval, score promotion or new frontier
+capability.
+
+**Unrun**: no test, grid, mutant sweep or full suite was executed in this
+resumption — the draft states semantics from the proposals and the
+production sources only.
+
+## Appended again — continuation v2 (mutator delivery supplement)
+
+Append-only; v1 (`fixes/doc/ScribeSkill/append.txt`, sha256
+`804436de…`) is preserved unchanged and v2 is a minimal delta of it:
+`fixes/doc/ScribeSkill/append-v2.txt` (sha256 `c494eff7…`).
+
+What changed, and why
+- **Mutator source is final.** The contract's EOF supplement names
+  `fixes/MutationEvidenceV6/promisor-mutants.py` sha256 `24549daa…` as
+  delivered (verified in the file). v2 drops the "V6 in preparation" and
+  "pending output-field names" wording and states the delivered
+  behaviour read from the source: `harness_fault()` turns a leak,
+  timeout, traceback, internal error (row, arm or document boolean, with
+  the `could-not-evaluate: internal:` stderr prefix as fallback), an
+  invalid row exit or a malformed verdict document into
+  could-not-evaluate with zero kill credit; a violation outside a
+  mutant's attribution envelope is likewise could-not-evaluate, the
+  out-of-envelope rows are preserved and reported, and the envelope is
+  never widened; `classify_row()` classifies a credited violation from
+  the row's own `expected_exit`/`exit` as `refusal-2` (over-refusal
+  signal, not an availability credit), `actual-verdict` (the availability
+  credit), `verdict-change` (substantive, reported separately),
+  `diagnostic-only` and `unclassified` (no acceptance or availability
+  credit, no class credit guessed).
+- **PM08 wording.** v1 said PM08 is "verified statically"; v2 says it is
+  settled by *uncredited manual source inspection* — never constructed,
+  never executed, never credited with a kill, no permanent AST, text or
+  wiring assertion — so no automated-looking guarantee is shipped.
+- **Grid paragraph.** The V3 field names (`snapshot_unavailable2`,
+  `snapshot_tampered2`, `amended_view_measured_on`) are now marked as the
+  proposal's own names, not a pinned production interface.
+  `fixes/GridAttestationV4/` (sha256 `8e0d5c54…`) is recorded as a
+  test-fidelity proposal only and pending, keeping the V3 API and the
+  47-cell manifest unchanged; it tightens the controls (a typed
+  contract-violation clause instead of any setup failure, and behavioural
+  stand-in controls that must and must not meet).
+
+Unchanged in v2: the core (v9) semantics, the fixture and evidence rules,
+the strict 14/loose 16 per-arm method with the original view withdrawn and
+not achieved, the supersession of the old kind=`gate`/31-mutant reading by
+the 27-literal probe with 4 retired ids, and the no-final-measurement
+rule.
+
+Not claimed: no final candidate number, count, verdict or landed hash; no
+production write; no test or sweep was run.
+
+## Appended again — live cutover draft (v3)
+
+Append-only; v1 (`804436de…`) and v2 (`c494eff7…`) are preserved
+unchanged and v3 is a new file: `fixes/doc/ScribeSkill/append-v3.txt`
+(sha256 `08fa3752…`, 116 lines).
+
+**Cutover form.** v3 names the canonical `tools/report-landing-audit.py`
+and `tests/report-audit/…` files in the present tense, under one explicit
+condition: it applies only if the L1 adopts these exact semantics in those
+canonical files in the same commit that carries the text; otherwise the
+round-24 sections above stand unchanged and it does not apply. Prototype
+paths (`.ufo/waves/round-24/fixes/…`) appear only in a closing provenance
+footnote.
+
+**Delivered, not pending.** The grid's test-fidelity variant
+(`8e0d5c54…`, same grid API) and the mutator source (`24549daa…`) are
+described as delivered; no "proposed interface", "pending" or
+after-metric wording survives in v3 (checked by grep: no `pending`,
+`proposed`, `in preparation`, `will be`).
+
+**`withdrawn_original_failures` clarified.** The grid's own computation
+(`GridAttestationV3/promisor-grid.py`: `changed` = cells whose original
+and amended expectations differ; `withdrawn = original_unmet ∩ changed`)
+makes the name a legacy label for every unmet original expectation that
+the amendment superseded — the amendment-changed cells, PG28 and PG34
+among them — and not the literal unknown clause alone. An unmet row whose
+original and amended views agree is an ordinary live failure and is not
+withdrawn. v3 states exactly that, alongside `original_view_unmet`
+carrying all original failures and the original unknown clause staying
+withdrawn and not achieved.
+
+**Kept from v2** (restated in the live form): the per-arm comparable
+score with identical strong rules in both arms, the strict 14/47 frozen
+baseline, the older loose 16/47 under its own weaker-method label
+(`met_amended_frozen_loose`; PG16/PG20 differ, not two extra product
+wins), the 47/47 frozen historical reproduction as a separate measurement,
+the core's per-store bare presence and required-read identities, the
+fixture and evidence rules, PM08 as an uncredited manual source
+inspection, the mutator's fault and class semantics, and the supersession
+of the old kind=`gate`/31-mutant row by the 27-literal probe with 4
+retired ids.
+
+Not claimed: no final candidate measurement, count, verdict or landed hash;
+no code or policy change; no test, grid or sweep was run; production
+`SKILL.md`, `tests/`, `tools/` and `corpus/` are untouched by this seat.
+
+## Appended again — mutation taxonomy correction (v4)
+
+Append-only; v1 (`804436de…`), v2 (`c494eff7…`) and v3 (`08fa3752…`) are
+byte-preserved, and v4 is a new minimal file:
+`fixes/doc/ScribeSkill/append-v4.txt` (52 lines, sha256 `3509cbf4…`).
+
+**Selected source.** The canonical mutator source is now V7 —
+`fixes/MutationEvidenceV7/promisor-mutants.py`, sha256 `7ba30ccc…`
+(verified in the file), which replaces V6; the legacy isolation probe is
+unchanged (`eace4f5…`), and the delivered test-fidelity grid is
+`8e0d5c54…` with the same grid API and the immutable 47.
+
+**The bug V7 fixes, as stated in the source and rationale.** V6's
+`classify_row` tested the normal/normal branch before the equality branch,
+so a violated row whose exit was unchanged (0 → 0, 1 → 1) was labelled
+`verdict-change`. V7 compares the exits first: an exit pair alone never
+shows that the whole verdict changed, because the same exit can hide a
+different document.
+
+**Taxonomy now shipped** (read from the row's own `expected_exit`/`exit`):
+0→0 or 1→1 = `same-verdict-exit` (same exit; the detail may differ; no
+substantive exit change and no availability claim); 0↔1 =
+`verdict-change`; 0/1→2 = `refusal-2` (over-refusal signal, not an
+availability credit); 2→0/1 = `actual-verdict` (the availability credit);
+2→2 = `diagnostic-only` (the refusal stayed a refusal); missing or
+outside 0/1/2 = `unclassified` (no class credit guessed). The
+`diagnostic_only` aggregate means exclusively the same 2→2 — never same
+normal exits, never unclassified — and `same-verdict-exit` rows are
+reported under their own aggregate; no availability credit is guessed from
+a `same-verdict-exit`, `diagnostic-only` or `unclassified` row. Runtime
+faults and out-of-envelope violations stay could-not-evaluate with zero
+kill credit, out-of-envelope rows are preserved and reported, the
+attribution envelope is never widened, and a valid finite survival still
+completes 0.
+
+**Scope discipline.** v4 touches only the mutator provenance and the
+taxonomy; it does not restate the core, grid, fixture or registry
+readings, which stay as drafted in v3, and it carries the same live
+condition (the L1 adopts these exact semantics in the canonical files in
+the same commit that carries the text). No broader docs rewrite, no code
+or policy change, no test or sweep, and no final candidate count.
+
+## Appended again — unified final append (v5)
+
+Append-only; v1 (`804436de…`), v2 (`c494eff7…`), v3 (`08fa3752…`) and v4
+(`3509cbf4…`) are byte-preserved. v5 is one new unified file —
+`fixes/doc/ScribeSkill/append-v5.txt` (133 lines, sha256 `20b2cae3…`) —
+that merges v3's core/grid/fixture/registry readings with v4's corrected
+taxonomy, so the two overlapping readings are never pasted together.
+
+**Selected code now cited** (verified in the filed proposals): core v9
+`b9be4f42…`; grid V5 `d2aca34a4031b332fc1d558083d27aa098768fa3a0623cfb9ae8e7cf83652469`
+— V5 is V4 plus the deletion of the dead, never-referenced
+`METADATA_REFUSAL` constant, with the active metadata-refusal handling
+untouched (the frozen-history reason class, the manifest's per-cell
+`reason_forbidden` pins and `check_exit2_form`); mutator V8
+`b04c3812186e1a6c72f39f1a6a79adb632ee1efecaab687aa0d3c1fee7eed757` — V8
+is V7 plus the removal of the two speculative internal-error flag aliases,
+keeping only the canonical per-row `internal_error` boolean, with the V7
+taxonomy, aggregates, attribution rule, harness-fault set and the
+review-only PM08 note unchanged; legacy isolation probe `eace4f5…`
+unchanged.
+
+**Body form.** Present tense on the canonical files, same-commit cutover,
+no conditional or unfinished "draft" prose in the body (grep for
+`pending`, `proposed`, `in preparation`, `draft`, `applies only if`,
+`would be` returns nothing); prototype paths appear only in the closing
+provenance footnote. The single taxonomy table carries the V7 classes
+(`same-verdict-exit`, `verdict-change`, `refusal-2`, `actual-verdict`,
+`diagnostic-only`, `unclassified`) with the aggregates stated: the
+`diagnostic_only` aggregate means exclusively the same 2 → 2, and
+`same-verdict-exit` rows are reported under their own aggregate, with no
+availability credit guessed from `same-verdict-exit`, `diagnostic-only` or
+`unclassified` rows.
+
+**Retained from v3 in the unified text**: the auditor's metadata
+neutrality, per-store bare presence and same-canonical-object
+reconciliation, selected-ledger and unselected-round handling,
+required-read identities without a second diagnostic timeout on a fatal
+timeout/OS cause, known-unavailable ids from all present local
+commit/tree/tag roots, the opaque boundary only from the pinned audit
+root, the absence of any whole-store completeness precondition, the
+locally-sufficient marked repository keeping its unmarked twin's verdict,
+the cited missing blob behind a dangling present tree staying
+could-not-evaluate and unrelated opaque garbage plus an ordinary fake
+staying an ordinary failed finding; the grid's 47 cells against the pinned
+manifest bytes, the byte pin authenticating oracle identity only, the
+per-arm comparable score under identical strong rules, the strict 14/47
+frozen baseline, the older loose 16/47 under its own weaker-method label
+(PG16/PG20 differ, not two extra product wins), the separate 47/47 frozen
+historical reproduction, and `withdrawn_original_failures` as the legacy
+name for the unmet original expectations the amendment superseded
+(amendment-changed cells, PG28 and PG34 among them), excluding unchanged
+live failures; the behavioural grid controls; the fixture and evidence
+rules; and the supersession of the old kind=`gate`/31-mutant row by the
+27-literal probe with 4 retired ids.
+
+Not claimed: no final candidate measurement, count, verdict, score or
+approval; no code or policy change; no new research, test, grid run or
+sweep; production `SKILL.md`, `tests/`, `tools/` and `corpus/` are
+untouched by this seat.

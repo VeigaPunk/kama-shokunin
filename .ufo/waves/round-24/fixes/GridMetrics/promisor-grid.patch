@@ -1,0 +1,76 @@
+--- a/tests/report-audit/promisor-grid.py (b034e159, integrated)
++++ b/tests/report-audit/promisor-grid.py (bc2b03db, proposal)
+@@ -17,6 +17,14 @@
+   amended   the live policy: .ufo/waves/round-24/oracle-amendment-1.json.
+             This is the graded view.
+ 
++Fixtures keep a blobless clone's local origin reachable on purpose: a lazy
++fetch would succeed against it and acquire objects, which the per-run
++before/after object inventory reports as `objects_acquired`.  A manual probe
++with --keep must therefore keep the origin in place, must not disable or
++delete it, and must run git with --no-lazy-fetch; removing the origin to
++avoid a flag regression would hide the very regression the tripwire exists to
++catch.
++
+ Usage:
+   promisor-grid.py [--arm frozen|current|both] [--current PATH]
+                     [--frozen-path PATH] [--case NAME]... [--json]
+@@ -424,6 +432,12 @@
+         if key == "cited_blob":
+             shas["cited_blob"] = shas["f_blob"]
+         shas[key] = drop_object(target, shas[key])
++        # the removal must really hold: the probe runs with lazy fetching
++        # disabled, so a store that could serve the object again is a premise
++        # failure (exit 2), never a silently different fixture
++        if object_exists(target, shas[key]):
++            raise Premise(f"{target}: the removed object {shas[key]} is "
++                          f"still available")
+     # blobless clones
+     if opt.get("blobless_lane"):
+         origin = Path(tmp, "lane-origin")
+@@ -1026,10 +1040,27 @@
+                           if r.get("twin_equal") is False]
+             frozen_fail += [r for r in graded
+                             if r.get("twin_equal") is False]
+-            withdrawn = [r["case"] for r in rows
+-                         if r["arm"] == "current" and r["met_original"] is False]
++            # the amended view is scored per arm: the frozen arm against its
++            # own history (met_amended_frozen), the current arm against the
++            # live view (met_amended).  A single counter mixed both and
++            # reported 0 for the current arm.
++            amended_key = ("met_amended_frozen" if arm == "frozen"
++                           else "met_amended")
+             baseline = [r for r in graded
+-                        if r["arm"] == "frozen" and r["met_amended_frozen"]]
++                        if r["arm"] == arm and r[amended_key]]
++            amended_unmet = sorted(r["case"] for r in graded
++                                   if r["arm"] == arm and not r[amended_key])
++            # a row is withdrawn only when the amendment changed its
++            # expectation; an unmet row whose original and amended views
++            # agree is an ordinary failure, not a withdrawal
++            changed = {c["case"] for c in cases
++                       if json.dumps(c["original"], sort_keys=True)
++                       != json.dumps(c.get("amended", c["original"]),
++                                     sort_keys=True)}
++            original_unmet = [r["case"] for r in rows
++                              if r["arm"] == "current"
++                              and r["met_original"] is False]
++            withdrawn = [c for c in original_unmet if c in changed]
+             doc["arms"][arm] = {
+                 "rows": rows,
+                 "graded": len(graded),
+@@ -1037,10 +1068,11 @@
+                 "violating_cases": [r["case"] for r in live_fail + frozen_fail],
+                 "amended_view_met": len(baseline),
+                 "amended_view_total": len(graded),
+-                "amended_view_unmet": sorted(
+-                    r["case"] for r in graded
+-                    if r["arm"] == "frozen" and not r["met_amended_frozen"]),
++                "amended_view_unmet": amended_unmet,
++                "amended_view_measured_on": arm,
++                "original_view_unmet": original_unmet,
+                 "withdrawn_original_failures": withdrawn,
++                "amendment_changed_cases": sorted(changed),
+                 "twin_pairs_in_manifest": len(twin_links),
+                 "twin_compared": sum(r.get("twin_equal") is not None
+                                      for r in rows),

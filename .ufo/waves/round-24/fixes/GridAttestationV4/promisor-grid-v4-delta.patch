@@ -1,0 +1,121 @@
+--- a/promisor-grid.py (437128b8, GridAttestationV3)
++++ b/promisor-grid.py (GridAttestationV4)
+@@ -97,6 +97,19 @@
+     """The expectation manifest is not the pinned snapshot: exit 2."""
+ 
+ 
++class ContractViolation(Premise):
++    """A fixture contract was not established.
++
++    The `reason` attribute names the violated clause ("initial-empty",
++    "still-missing", "missing-object"), so a control can require the
++    specific clause instead of accepting any failure.
++    """
++
++    def __init__(self, reason, message):
++        super().__init__(message)
++        self.reason = reason
++
++
+ class Unavailable(Exception):
+     """The expectation manifest is missing or unreadable: exit 2.
+ 
+@@ -288,15 +301,20 @@
+     missing = missing_objects(repo, root)
+     if hydrated:
+         if missing:
+-            raise Premise(f"{repo}: the hydrated clone still misses "
+-                          f"{missing}")
++            raise ContractViolation(
++                "still-missing",
++                f"{repo}: the hydrated clone still misses {missing}")
+         return missing
+     if not missing:
+-        raise Premise(f"{repo}: the blobless clone misses nothing: the "
+-                      f"filter was ignored")
++        raise ContractViolation(
++            "initial-empty",
++            f"{repo}: the blobless clone misses nothing: the filter was "
++            f"ignored")
+     if expect and expect not in missing:
+-        raise Premise(f"{repo}: the blobless clone does not miss {expect} "
+-                      f"(missing: {missing})")
++        raise ContractViolation(
++            "missing-object",
++            f"{repo}: the blobless clone does not miss {expect} "
++            f"(missing: {missing})")
+     return missing
+ 
+ 
+@@ -1110,8 +1128,11 @@
+               sources=False, blobless_lane=True, hydrate_lane=True,
+               complete_clone=True)
+         cases.append(("negative-complete-clone-refused", False))
+-    except Premise:
+-        cases.append(("negative-complete-clone-refused", True))
++    except ContractViolation as exc:
++        # the specific clause, not any failure: an unrelated setup error
++        # must not green this control
++        cases.append(("negative-complete-clone-refused",
++                      exc.reason == "initial-empty"))
+     # the valid path: a genuine partial clone is hydrated into a complete one
+     try:
+         genuine = build(root, Path(root, "selftest4"), lane_mark="config",
+@@ -1169,15 +1190,38 @@
+     err = proc.stderr.decode(errors="replace")
+     results.append(("cli-unknown-selector-refused",
+                     proc.returncode == 2 and "unknown case" in err))
+-    # stand-in auditors: the internal-error identity and a traceback must be
+-    # detected and must not be scored as legitimate refusals
+-    for label, body, field in (
+-            ("internal", "import sys\n"
+-             "sys.stderr.write('could-not-evaluate: internal: ValueError: "
+-             "boom\\n')\nsys.exit(2)\n", "internal_error"),
+-            ("traceback", "import sys\n"
+-             "sys.stderr.write('Traceback (most recent call last):\\n  "
+-             "boom\\nValueError: boom\\n')\nsys.exit(2)\n", "traceback")):
++    # stand-in auditors, driven behaviourally: a legitimate content-derived
++    # refusal must MEET, the same refusal carrying the internal identity must
++    # NOT meet, and the identity must be read from the full stderr even when
++    # the 300 character tail no longer holds the prefix.
++    valid = ("could-not-evaluate: unavailable required object: "
++             "corpus/SOURCES.md is missing")
++    filler = "x" * 400
++    stand_ins = (
++        # a legitimate refusal: the correct reason class and the correct
++        # names, no internal identity -> it must meet
++        ("content-refusal-meets", "import sys\n"
++         "sys.stderr.write('" + valid + "\\n')\nsys.exit(2)\n",
++         lambda row: row.get("met") is True
++         and row.get("internal_error") is False),
++        # the same valid reason and names, plus the internal identity, with a
++        # body long enough to push the prefix out of the tail -> it must not
++        # meet, and the identity must still be seen
++        ("internal-same-reason-does-not-meet", "import sys\n"
++         "sys.stderr.write('could-not-evaluate: internal: ValueError: "
++         "boom\\n" + filler + "\\n" + valid + "\\n')\nsys.exit(2)\n",
++         lambda row: row.get("met") is False
++         and row.get("internal_error") is True
++         and "could-not-evaluate: internal:" not in (row.get("stderr_tail")
++                                                      or "")),
++        # a traceback is an error too
++        ("traceback-detected", "import sys\n"
++         "sys.stderr.write('Traceback (most recent call last):\\n  "
++         "boom\\nValueError: boom\\n')\nsys.exit(2)\n",
++         lambda row: row.get("traceback") is True
++         and row.get("met") is False),
++    )
++    for label, body, check in stand_ins:
+         stand_in = work / f"stand-in-{label}.py"
+         stand_in.write_text(body, encoding="utf-8")
+         proc = subprocess.run([sys.executable, str(here), "--arm", "current",
+@@ -1189,8 +1233,7 @@
+             row = doc["arms"]["current"]["rows"][0]
+         except (ValueError, KeyError, IndexError):
+             row = {}
+-        results.append((f"stand-in-{label}-detected",
+-                        row.get(field) is True and row.get("met") is False))
++        results.append((f"stand-in-{label}", check(row)))
+     # a runner copy without its companion manifest: the external oracle is
+     # unavailable, which is a could-not-evaluate and not a tampering claim
+     bare = work / "no-manifest"

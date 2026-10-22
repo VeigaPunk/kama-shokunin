@@ -1,0 +1,56 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit-v8.py	2026-10-21 17:32:47.715332333 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/fixes/StoreLocalPresence/report-landing-audit-v9.py	2026-10-21 17:33:52.265014652 -0300
+@@ -122,10 +122,9 @@
+         self._missing = None
+ 
+     def missing(self):
+-        """(missing, opaque): the object ids that present local objects
+-        reference but the repository cannot serve, and the subset of them
+-        that hides names behind the audited root (computed at most once per
+-        store)."""
++        """(missing, opaque): the known unavailable object ids that
++        present local objects reference, and the subset of them that hides
++        names behind the audited root (computed at most once per store)."""
+         if self._missing is None:
+             self._missing = missing_reachable(self.path, self.root)
+         return self._missing
+@@ -732,21 +731,24 @@
+ 
+ 
+ def missing_reachable(repo, root):
+-    """(missing, opaque): the object ids that present local objects
+-    reference but the repository cannot serve, and the subset of them that
+-    hides names behind the audited root.
+-
+-    Two walks, two root sets. The first names EVERY missing object of the
+-    store: its roots are all present objects, so a dangling commit, tree
+-    or tag that references a missing object is seen too, and a citation
+-    of that object is still unknown. The second walk names the missing
+-    objects that hide names (a missing tree or commit), and its roots are
+-    the pinned root ONLY: a hole behind the audit's own root is relevant,
+-    unreachable garbage in the store is not. `rev-list --missing=print`
+-    names the missing ids with a `?` prefix instead of failing; the
+-    --no-lazy-fetch isolation keeps a promisor remote untouched. The
+-    commit graph is switched off for the walks so that it cannot hide an
+-    unavailable object."""
++    """(missing, opaque): the known unavailable object ids that present
++    local objects reference, and the subset of them that hides names
++    behind the audited root.
++
++    Two walks, two root sets. The first walks from every present object
++    of the store, so a dangling commit, tree or tag that references a
++    missing object is seen too, and a citation of such an object is still
++    unknown. It names the unavailable ids it ENCOUNTERS: the descendants
++    hidden behind a missing tree cannot be enumerated, which is exactly
++    why the second walk exists. That one identifies the opaque
++    boundaries of the pinned root - the missing trees and commits behind
++    the audit's own root, whose names are hidden - and its roots are the
++    pinned root ONLY, so unreachable garbage in the store is not a
++    dependency of the audit. `rev-list --missing=print` names the missing
++    ids with a `?` prefix instead of failing; the --no-lazy-fetch
++    isolation keeps a promisor remote untouched. The commit graph is
++    switched off for the walks so that it cannot hide an unavailable
++    object."""
+     roots = present_roots(repo)
+     if root not in roots:
+         roots.append(root)

@@ -1,0 +1,93 @@
+lane_commit=16fc48b75a999ed3ef602c49dcf61d992324fa81
+blob=0219228bc6f98b3128c2edcb6ac2be22a328ab29 (present in repoX only)
+report sha in repoX=8c123d231897413d12cd8d9a6bfce40e522fd138
+
+--- arm1 blob in FIRST store (lane=repoX)
+    cmd: /usr/bin/python3 /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/repo/tools/report-landing-audit.py --lane-repo /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/repoX --fleet-repo /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/repoY --branch master --lane kama --rounds 1 --no-errata --json
+    exit=1
+    stdout: {
+ "errata_invalid": [],
+ "errata_unmatched": [],
+ "results": [
+  {
+   "cutoff": 2000,
+   "defects": [
+    {
+     "corrected_by": [],
+     "kind": "landed-unresolved",
+     "token": "0219228bc6f98b3128c2edcb6ac2be22a328ab29"
+    }
+   ],
+   "post_report": [],
+   "report": "/fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/repoY/.ufo/reports/round-1/kama.md",
+   "report_committed": true,
+   "required": 1,
+   "round": 1,
+   "round_commits": 1,
+   "source_url_hashes": []
+  }
+ ],
+ "summary": {
+  "by_kind": {
+   "landed-ambiguous": 0,
+   "landed-omitted": 0,
+   "landed-section-missing": 0,
+   "landed-unresolved": 1,
+   "unresolved-full-hash": 0
+  },
+  "corrected": 0,
+  "defects": 1,
+  "errata_invalid": 0,
+  "errata_rows": 0,
+  "errata_unmatched": 0,
+  "post_report_commits": 0,
+  "reports": 1,
+  "required_commits": 1,
+  "rounds": [
+   1
+  ],
+  "status": "failed",
+  "uncorrected": 1
+ }
+}
+    stderr: <empty>
+
+--- arm2 blob in SECOND store (lane=repoY)
+    cmd: /usr/bin/python3 /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/repo/tools/report-landing-audit.py --lane-repo /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/repoY --fleet-repo /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/repoX --branch master --lane kama --rounds 1 --no-errata --json
+    exit=2
+    stdout: <empty>
+    stderr: could-not-evaluate: round 1: unknown: unavailable required object: 0219228bc6f98b3128c2edcb6ac2be22a328ab29 is present but its content cannot be served
+
+=== errata arm (correction = the blob, /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/errata.tsv) ===
+
+--- arm1 blob in FIRST store
+    cmd: /usr/bin/python3 /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/repo/tools/report-landing-audit.py --lane-repo /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/repoX --fleet-repo /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/repoY --branch master --lane kama --rounds 1 --errata /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/errata.tsv
+    exit=1
+    stdout: round=1 required=1 post_report=0 defects=1
+  corrected landed-unresolved 0219228bc6f98b3128c2edcb6ac2be22a328ab29
+errata-invalid line=1 correction=0219228bc6f98b3128c2edcb6ac2be22a328ab29
+summary reports=1 defects=1 corrected=1 uncorrected=0 errata_unmatched=0 errata_invalid=1 status=failed
+    stderr: <empty>
+
+--- arm2 blob in SECOND store
+    cmd: /usr/bin/python3 /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/repo/tools/report-landing-audit.py --lane-repo /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/repoY --fleet-repo /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/repoX --branch master --lane kama --rounds 1 --errata /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/errata.tsv
+    exit=2
+    stdout: <empty>
+    stderr: could-not-evaluate: round 1: unknown: unavailable required object: 0219228bc6f98b3128c2edcb6ac2be22a328ab29 is present but its content cannot be served
+
+=== errata-only arm (draft without the blob, correction = the blob) ===
+
+--- arm1 blob in FIRST store
+    cmd: /usr/bin/python3 /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/repo/tools/report-landing-audit.py --lane-repo /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/repoX --fleet-repo /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/repoY --branch master --lane kama --rounds 1 --report 1=/fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/draft-no-blob.md --errata /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/errata2.tsv
+    exit=1
+    stdout: round=1 required=1 post_report=0 defects=0
+errata-unmatched line=1 unresolved-full-hash deadbee1
+errata-invalid line=1 correction=0219228bc6f98b3128c2edcb6ac2be22a328ab29
+summary reports=1 defects=0 corrected=0 uncorrected=0 errata_unmatched=1 errata_invalid=1 status=failed
+    stderr: <empty>
+
+--- arm2 blob in SECOND store
+    cmd: /usr/bin/python3 /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/repo/tools/report-landing-audit.py --lane-repo /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/repoY --fleet-repo /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/repoX --branch master --lane kama --rounds 1 --report 1=/fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/draft-no-blob.md --errata /fast/scratch/hyaku/kama-r24/falsify/CodeLookupMerge/fixture/errata2.tsv
+    exit=2
+    stdout: <empty>
+    stderr: could-not-evaluate: errata line 1: unknown: unavailable required object: 0219228bc6f98b3128c2edcb6ac2be22a328ab29 is present but its content cannot be served
