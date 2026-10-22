@@ -1,0 +1,89 @@
+rc=0
+COMMIT 92063cf 2026-10-21 round-24: correct local object scope and measurement provenance
+
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index 91518a9..c05c177 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -184,1 +190,30 @@ RESOLVABLE = ("unresolved-full-hash", "landed-unresolved", "landed-ambiguous",
++def bare_objects(store, tokens):
++    """{token: (state, object id)} for one store: what the bare name
++    resolves to there. The id is the canonical object the name stands for,
++    so the same object in two stores is recognised as the same object."""
++    out = git(store.path, "cat-file", "--batch-check",
++              stdin="".join(f"{t}\n" for t in tokens))
++    lines = out.split("\n")[:len(tokens)]
++    if len(lines) != len(tokens):
++        raise EvalError(f"cat-file --batch-check in {store.path}: "
++                        f"short output")
++    result = {}
++    for token, line in zip(tokens, lines):
++        if line.endswith(" missing"):
++            result[token] = ("absent", None)
++        elif line.endswith(" ambiguous"):
++            result[token] = ("ambiguous", None)
++        elif line.endswith(" excluded") or line.endswith(" dangling"):
++            result[token] = ("excluded", None)
++        else:
++            parts = line.split(" ")
++            if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}", parts[0]):
++                raise EvalError(f"cat-file in {store.path}: unexpected {line!r}")
++            if not parts[0].startswith(token):
++                # git resolved a same-named ref before the object prefix
++                raise EvalError(f"{store.path}: citation {token} names a ref")
++            result[token] = ("found", parts[0])
++    return result
++
++
+ def lookup(stores, tokens, peel=""):
+COMMIT ed1cc3a 2026-10-21 round-24: restore local promisor verdicts with required-object diagnosis, independent oracle, mutation contract, and no-trade learning
+
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index cf706c5..91518a9 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -139,5 +184,1 @@ def git(repo, *args, stdin=None, env=None, errors="strict"):
+-def lookup(repos, tokens, peel=""):
+-    """{token: 'found'|'ambiguous'|'missing'} across repos, via
+-    `cat-file --batch-check` per repo; a git failure is EvalError. With a
+-    peel, git answers `missing` for an ambiguous short name, so the bare
+-    name is asked first to keep ambiguity visible."""
++def lookup(stores, tokens, peel=""):
+COMMIT 7054dba 2026-10-21 round-21: integrate falsify-wave findings (committed report bytes, ambiguity, narrowed fail-closed, unpinnable e2e, gate key/orphan checks), corrections, final recipe, wave evidence
+
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index 62bef09..d8af6b3 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -93,3 +93,5 @@ def git(repo, *args, stdin=None, env=None):
+ def lookup(repos, tokens, peel=""):
+-    """{token: 'found'|'ambiguous'|'missing'} across repos, via one
+-    `cat-file --batch-check` per repo; a git failure is EvalError."""
++    """{token: 'found'|'ambiguous'|'missing'} across repos, via
++    `cat-file --batch-check` per repo; a git failure is EvalError. With a
++    peel, git answers `missing` for an ambiguous short name, so the bare
++    name is asked first to keep ambiguity visible."""
+COMMIT 1471344 2026-10-21 round-21: integrate build-wave findings into report audit and install-links pin; sources S066-S074, KQ28-29, SKILL rows, lesson; build wave evidence
+
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index 728ebe1..62bef09 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -70,2 +93,3 @@ import json
+-def is_object(repos, token, kind=""):
+-    spec = f"{token}^{{{kind}}}" if kind else token
++def lookup(repos, tokens, peel=""):
++    """{token: 'found'|'ambiguous'|'missing'} across repos, via one
++    `cat-file --batch-check` per repo; a git failure is EvalError."""
+COMMIT a29bb84 2026-10-21 round-21: report landing audit with errata ledger; symlink-aware install-links pin, gate checks and grid
+
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+new file mode 100755
+index 0000000..728ebe1
+--- /dev/null
++++ b/tools/report-landing-audit.py
+@@ -0,0 +70,2 @@
++def is_object(repos, token, kind=""):
++    spec = f"{token}^{{{kind}}}" if kind else token
+
+--- stderr ---

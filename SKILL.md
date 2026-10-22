@@ -186,7 +186,8 @@ a paraphrase — every quoted fragment is byte-for-byte from the live response.
 
 Also-normal, not faults: `# HELP llamacpp:prompt_tokens_total …` from `/metrics`,
 and `[{"id":0,"n_ctx":16384,…},{"id":1,…}]` from `/slots` (matches `--parallel 2`,
-`--ctx-size 16384`).
+`--ctx-size 16384` only because that launch also set `--kv-unified`: both slots
+share one 16384-cell pool; see `corpus/knowledge/context-capacity.md`).
 
 ## Checklist — current registered-endpoint workflow
 
@@ -664,12 +665,28 @@ Read a local regular model file without loading weights or contacting a server.
 Compare its byte hash and declared context metadata with an already captured
 receipt; the latter remains historical self-report. `/props` per-slot `n_ctx`
 is not training context and must not be computed as `ctx / total_slots`
-unconditionally (S060). Never interpret a CI fixture's header as model quality.
+unconditionally (S060); the round-25 entry `corpus/knowledge/context-capacity.md`
+holds the rule and its observed cells. Never interpret a CI fixture's header as model quality.
 
 The capability command and measured controls are recorded in the round-20
 capabilities appendix of SCORECARD; source mechanisms and limits are in
 `corpus/knowledge/gguf-declared-identity.md`. Existing consumer routes,
 registered endpoints, model downloads and persistent servers remain operator-owned.
+
+### Round-25 decision rows: declared versus served context capacity
+
+Grounded in `corpus/knowledge/context-capacity.md` (S106-S113, S060) and the
+receipt `.ufo/waves/round-25/final/context-capacity-receipt.json`. Scope:
+build 11755 (704366d76), fixture `stories260K.gguf` sha256 `270cba1b…256d`,
+training context 2048, no sliding-window or rope-scaling keys, fit never
+lowers a context on this fixture. Other builds and large models: re-observe.
+
+| Symptom | First check | Verdict | Action |
+|---|---|---|---|
+| A consumer needs the served context; `/props` reports `n_ctx` | `/props` `default_generation_settings.n_ctx` and `total_slots`, `/slots` `n_ctx`, `/v1/models` `meta.n_ctx_train` | `n_ctx` is the per-slot ceiling, not the KV pool; the three endpoints read one function, so agreement is not independent evidence (S060; cells K1-K8) | Report it as a single-request ceiling. Never derive the pool from it. |
+| `-c` unset, `-np` given, split cache | The launch flags and the verbose startup log (`llama_context: n_ctx = N`) | With `--fit` on (default) the pool becomes training context × slots and each slot gets the full training context (S106; X1: 8192 pool, 2048 per slot). With `--fit off` the training context is split (X3: 2048, 512) | Do not use the round-20 `nctx-crosscheck.py` value for this case; it gives 512 and is superseded. |
+| Several requests must run at once on one server | Is the cache unified (`kv_unified = 'true'` in the startup log) and how large is the pool | Concurrent requests are bounded by the pool total, not by the per-slot number: on a shared pool, when the requests together need more cells than the pool holds, every processing request fails with HTTP 500 `Context size has been exceeded.` (S109; L1 both failed at 1025 tokens each of a 2048 pool; L2 and L3 both 200). Tested only with two 1000 + 600 token requests | Size concurrent use from the pool and the request sizes, never from `total_slots` alone. Escalate a consumer that assumes more. |
+| A claim needs the KV pool size | The startup log at `-lv 4` or `-v` | None of `/props`, `/slots` and `/v1/models` carries the pool or the layout at these flags (S112; K1 and X2 report identical values with pools 2048 and 8192); `/metrics` was not read | Require the verbose log line or the launch flags as evidence; without them the pool is unknown. |
 
 ## Round-21 instrument registry: report landing audit and install links (owner: kama)
 
@@ -867,8 +884,8 @@ Survival alone does not establish defensive-only status.
 
 | Name | Kind / entry command | Verdict map | Self-test | Pinned values | Write scope | Owner |
 |---|---|---|---|---|---|---|
-| Promisor mutation experiment | probe: `python3 tests/report-audit/promisor-mutants.py --json` | 0 inventory evaluated (kills and survivors listed, not universal green); 2 could-not-evaluate. Pristine failure, grid errors, leaks, timeouts, uncompiled/unapplied mutants and unidentifiable failures kill nothing. | `--selftest`, isolated CLI verdict fixtures; `--anchors PATH --json` checks unique applicable/compiling mutations without executing the grid |11 named mutations with declared target cells; PM08 no-lazy-fetch removal static-only and never executed; original/amended expectation manifest in the grid | removed temporary auditor copies; grid-owned scratch fixtures | kama |
-| Retained isolation mutation experiment | probe: `python3 tests/report-audit/isolation-mutants.py [--only NAME] [--json]` | 0 pristine passed and selected inventory evaluated, survivors reported; 2 fail-fast could-not-evaluate | pristine grid positive control; existing literal inventory and retirement output |27 retained literals,4 retired IDs without reuse; `RETIRED` explains their removed component; unchanged isolation elements remain explicit | temporary source copies and grid fixtures | kama |
+| Promisor mutation experiment | probe: `python3 tests/report-audit/promisor-mutants.py --json` | 0 inventory evaluated (kills and survivors listed, not universal green); 2 could-not-evaluate. Pristine failure, grid errors, leaks, timeouts, uncompiled/unapplied mutants and unidentifiable failures kill nothing. | `--selftest`, isolated CLI verdict fixtures; `--anchors PATH --json` checks unique applicable/compiling mutations without executing the grid |11 named mutations: ten executable with declared target cells; PM08 is a manual review-only note, unexecuted, uncredited, with no assertion of any kind (wording corrected in round 25); original/amended expectation manifest in the grid | removed temporary auditor copies; grid-owned scratch fixtures | kama |
+| Retained isolation mutation experiment | probe: `python3 tests/report-audit/isolation-mutants.py [--only NAME] [--json]` | 0 pristine passed and selected inventory evaluated, survivors reported; 2 fail-fast could-not-evaluate | pristine grid positive control; existing literal inventory and retirement output |28 retained literals since round 25 (M11 and M17 re-anchored; M33 is the second call site of the M17 refusal), 4 retired IDs without reuse; `RETIRED` explains their removed component; unchanged isolation elements remain explicit | temporary source copies and grid fixtures | kama |
 
 ### Round24 live cutover — local evidence, promisor metadata neutral (owner: kama)
 
@@ -972,8 +989,8 @@ The `diagnostic_only` aggregate means exclusively the same 2 → 2; it never
 covers same normal exits and never covers unclassified rows, which are
 reported under their own aggregate. No availability credit is guessed from
 a `same-verdict-exit`, `diagnostic-only` or `unclassified` row. Ten
-executable operators plus one manual PM08 review note: PM08 (removing the
-`--no-lazy-fetch` gate) is settled by uncredited manual source inspection —
+executable operators plus one manual PM08 review note: PM08 rests on
+uncredited manual source inspection (not settled evidence; corrected in round 25) —
 it is never constructed, never executed, never credited with a kill, and no
 permanent AST, text or wiring assertion exists for it. Static anchors
 authenticate mutation applicability only; finite survival is not global
@@ -986,7 +1003,7 @@ admission.
 **Superseded registry reading.** The round23 "Isolation mutants" registry
 row (kind `gate`, 31 single-literal mutants of the auditor) is superseded
 in kind and in count: the current kind is a bounded sensitivity `probe`,
-and `tests/report-audit/isolation-mutants.py` holds 27 retained literals
+and `tests/report-audit/isolation-mutants.py` held 27 retained literals at round 24 (28 since the round-25 re-anchor added M33)
 with 4 retired ids (M14, M22, M27, M29) that are never reused, so the
 historical 31 is not the current count. An empty selection is
 could-not-evaluate, decided before the source read, the pristine and any

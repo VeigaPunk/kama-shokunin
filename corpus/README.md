@@ -387,3 +387,14 @@ new knowledge entry is asserted. Other frontier unchanged:
 external-system-library identity, receipt-header minimization, historical
 crash-as-kill leaves, K05/other-engine serving and real registered-consumer
 reconciliation.
+
+## Frontier advanced — round 25 (K05 declared versus served context)
+
+| Entry | What it holds | Sources and evidence |
+|---|---|---|
+| `knowledge/context-capacity.md` | the KV pool versus the per-slot ceiling, fit raising an unset split context, the pool total bounding concurrent requests, and what the three endpoints cannot show, on the lane fixture (b11755, stories260K.gguf) | mined S106-S113 and S060; receipt `.ufo/waves/round-25/final/context-capacity-receipt.json`; `tools/kama-context-capacity.py` |
+
+K05 is advanced on the lane-owned fixture only. Registered consumers, large
+models (where free memory decides fit), other builds and other engines stay
+open. The round-16 fixture scope is still pending L0 ratification; the L
+cells used POST `/completion`, beyond the GET-only round-16 admission.

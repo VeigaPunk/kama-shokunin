@@ -1,0 +1,109 @@
+## 1. registered counting command, registry (rows) x auditor (columns)
+registry=r23-e876b95  auditor=r23-e876b95  registered=31 stale=0 []
+registry=r23-e876b95  auditor=ed1cc3a      registered=31 stale=5 ['M14-promisor-config', 'M17-ref-shadow', 'M22-promisor-pack', 'M27-promisor-boolean', 'M29-promisor-pack-pairing']
+registry=r23-e876b95  auditor=92063cf      registered=31 stale=6 ['M11-listing-surrogates', 'M14-promisor-config', 'M17-ref-shadow', 'M22-promisor-pack', 'M27-promisor-boolean', 'M29-promisor-pack-pairing']
+registry=r23-e876b95  auditor=efe58e9      registered=31 stale=6 ['M11-listing-surrogates', 'M14-promisor-config', 'M17-ref-shadow', 'M22-promisor-pack', 'M27-promisor-boolean', 'M29-promisor-pack-pairing']
+registry=r23-e876b95  auditor=tip-1fc41e3  registered=31 stale=6 ['M11-listing-surrogates', 'M14-promisor-config', 'M17-ref-shadow', 'M22-promisor-pack', 'M27-promisor-boolean', 'M29-promisor-pack-pairing']
+registry=ed1cc3a      auditor=r23-e876b95  registered=27 stale=1 ['M17-ref-shadow']
+registry=ed1cc3a      auditor=ed1cc3a      registered=27 stale=0 []
+registry=ed1cc3a      auditor=92063cf      registered=27 stale=2 ['M11-listing-surrogates', 'M17-ref-shadow']
+registry=ed1cc3a      auditor=efe58e9      registered=27 stale=2 ['M11-listing-surrogates', 'M17-ref-shadow']
+registry=ed1cc3a      auditor=tip-1fc41e3  registered=27 stale=2 ['M11-listing-surrogates', 'M17-ref-shadow']
+registry=92063cf      auditor=r23-e876b95  registered=27 stale=1 ['M17-ref-shadow']
+registry=92063cf      auditor=ed1cc3a      registered=27 stale=0 []
+registry=92063cf      auditor=92063cf      registered=27 stale=2 ['M11-listing-surrogates', 'M17-ref-shadow']
+registry=92063cf      auditor=efe58e9      registered=27 stale=2 ['M11-listing-surrogates', 'M17-ref-shadow']
+registry=92063cf      auditor=tip-1fc41e3  registered=27 stale=2 ['M11-listing-surrogates', 'M17-ref-shadow']
+registry=efe58e9      auditor=r23-e876b95  registered=27 stale=1 ['M17-ref-shadow']
+registry=efe58e9      auditor=ed1cc3a      registered=27 stale=0 []
+registry=efe58e9      auditor=92063cf      registered=27 stale=2 ['M11-listing-surrogates', 'M17-ref-shadow']
+registry=efe58e9      auditor=efe58e9      registered=27 stale=2 ['M11-listing-surrogates', 'M17-ref-shadow']
+registry=efe58e9      auditor=tip-1fc41e3  registered=27 stale=2 ['M11-listing-surrogates', 'M17-ref-shadow']
+registry=tip-1fc41e3  auditor=r23-e876b95  registered=28 stale=3 ['M11-listing-surrogates', 'M17-ref-shadow', 'M33-ref-shadow-bare-objects']
+registry=tip-1fc41e3  auditor=ed1cc3a      registered=28 stale=2 ['M11-listing-surrogates', 'M33-ref-shadow-bare-objects']
+registry=tip-1fc41e3  auditor=92063cf      registered=28 stale=0 []
+registry=tip-1fc41e3  auditor=efe58e9      registered=28 stale=0 []
+registry=tip-1fc41e3  auditor=tip-1fc41e3  registered=28 stale=0 []
+
+## 2. anchor literal positions per auditor
+## r23 M17 (registry e876b95): id=M17-ref-shadow anchor='raise EvalError(f"{repo}: citation {token} names a ref")' replacement='pass'
+    auditor=r23-e876b95  count=1 lines=[172]
+    auditor=ed1cc3a      count=0 lines=[]
+    auditor=92063cf      count=0 lines=[]
+    auditor=efe58e9      count=0 lines=[]
+    auditor=tip-1fc41e3  count=0 lines=[]
+## efe58e9 M17 (pre-repair): id=M17-ref-shadow anchor='raise EvalError(f"{store.path}: citation {token} names a ref")' replacement='pass'
+    auditor=r23-e876b95  count=0 lines=[]
+    auditor=ed1cc3a      count=1 lines=[235]
+    auditor=92063cf      count=2 lines=[214, 277]
+    auditor=efe58e9      count=2 lines=[214, 277]
+    auditor=tip-1fc41e3  count=2 lines=[214, 277]
+## tip M17 (C1 repair): id=M17-ref-shadow anchor='if not peel and not parts[0].startswith(token):\n                # git resolved a same-named ref before the object prefix\n                raise EvalError(f"{store.path}: citation {token} names a ref")' replacement='if not peel and not parts[0].startswith(token):\n                # git resolved a same-named ref before the object prefix\n                pass'
+    auditor=r23-e876b95  count=0 lines=[]
+    auditor=ed1cc3a      count=1 lines=[233]
+    auditor=92063cf      count=1 lines=[275]
+    auditor=efe58e9      count=1 lines=[275]
+    auditor=tip-1fc41e3  count=1 lines=[275]
+## tip M33 (C1 repair): id=M33-ref-shadow-bare-objects anchor='if not parts[0].startswith(token):\n                # git resolved a same-named ref before the object prefix\n                raise EvalError(f"{store.path}: citation {token} names a ref")' replacement='if not parts[0].startswith(token):\n                # git resolved a same-named ref before the object prefix\n                pass'
+    auditor=r23-e876b95  count=0 lines=[]
+    auditor=ed1cc3a      count=0 lines=[]
+    auditor=92063cf      count=1 lines=[212]
+    auditor=efe58e9      count=1 lines=[212]
+    auditor=tip-1fc41e3  count=1 lines=[212]
+
+## 3. refusal sites ('names a ref') with enclosing def
+    auditor=r23-e876b95  line 172 in def lookup: raise EvalError(f"{repo}: citation {token} names a ref")
+    auditor=ed1cc3a      line 235 in def lookup: raise EvalError(f"{store.path}: citation {token} names a ref")
+    auditor=92063cf      line 214 in def bare_objects: raise EvalError(f"{store.path}: citation {token} names a ref")
+    auditor=92063cf      line 277 in def lookup: raise EvalError(f"{store.path}: citation {token} names a ref")
+    auditor=efe58e9      line 214 in def bare_objects: raise EvalError(f"{store.path}: citation {token} names a ref")
+    auditor=efe58e9      line 277 in def lookup: raise EvalError(f"{store.path}: citation {token} names a ref")
+    auditor=tip-1fc41e3  line 214 in def bare_objects: raise EvalError(f"{store.path}: citation {token} names a ref")
+    auditor=tip-1fc41e3  line 277 in def lookup: raise EvalError(f"{store.path}: citation {token} names a ref")
+
+## 4. call sites of lookup() and bare_objects(), with the peel argument
+    auditor=r23-e876b95
+      149: peel=False bare = lookup(repos, tokens)
+      325: peel=False full = lookup(repos, full_tokens)
+      336: peel=True  status = lookup(repos, [t for t in cited if checkable_abbrev(t)],
+      404: peel=True  status = lookup(repos, list(hexed.values()), "^{commit}")
+      832: peel=True  and lookup((lane,), [short]) == {short: "ambiguous"}
+      833: peel=True  and lookup((lane,), [short], "^{commit}")
+      835: peel=False and lookup((lane,), [oids[0]]) == {oids[0]: "found"}
+      836: peel=False and lookup((lane,), ["0" * 40]) == {"0" * 40: "missing"})
+    auditor=ed1cc3a
+      204: peel=False bare = lookup(stores, tokens) if peel else None
+      475: peel=False full = lookup(stores, full_tokens)
+      487: peel=True  status = lookup(stores, [t for t in cited if checkable_abbrev(t)],
+      560: peel=True  status = lookup(stores, list(hexed.values()), "^{commit}")
+      1083: peel=True  and lookup((store,), [short]) == {short: "ambiguous"}
+      1084: peel=True  and lookup((store,), [short], "^{commit}")
+      1086: peel=False and lookup((store,), [oids[0]]) == {oids[0]: "found"}
+      1087: peel=False and lookup((store,), ["0" * 40]) == {"0" * 40: "absent"})
+    auditor=92063cf
+      246: peel=False here = bare_objects(store, tokens) if peel else None
+      538: peel=False full = lookup(stores, full_tokens)
+      550: peel=True  status = lookup(stores, [t for t in cited if checkable_abbrev(t)],
+      630: peel=True  status = lookup(stores, list(hexed.values()), "^{commit}")
+      1170: peel=True  and lookup((store,), [short]) == {short: "ambiguous"}
+      1171: peel=True  and lookup((store,), [short], "^{commit}")
+      1173: peel=False and lookup((store,), [oids[0]]) == {oids[0]: "found"}
+      1174: peel=False and lookup((store,), ["0" * 40]) == {"0" * 40: "absent"})
+    auditor=efe58e9
+      246: peel=False here = bare_objects(store, tokens) if peel else None
+      538: peel=False full = lookup(stores, full_tokens)
+      550: peel=True  status = lookup(stores, [t for t in cited if checkable_abbrev(t)],
+      630: peel=True  status = lookup(stores, list(hexed.values()), "^{commit}")
+      1170: peel=True  and lookup((store,), [short]) == {short: "ambiguous"}
+      1171: peel=True  and lookup((store,), [short], "^{commit}")
+      1173: peel=False and lookup((store,), [oids[0]]) == {oids[0]: "found"}
+      1174: peel=False and lookup((store,), ["0" * 40]) == {"0" * 40: "absent"})
+    auditor=tip-1fc41e3
+      246: peel=False here = bare_objects(store, tokens) if peel else None
+      538: peel=False full = lookup(stores, full_tokens)
+      550: peel=True  status = lookup(stores, [t for t in cited if checkable_abbrev(t)],
+      630: peel=True  status = lookup(stores, list(hexed.values()), "^{commit}")
+      1170: peel=True  and lookup((store,), [short]) == {short: "ambiguous"}
+      1171: peel=True  and lookup((store,), [short], "^{commit}")
+      1173: peel=False and lookup((store,), [oids[0]]) == {oids[0]: "found"}
+      1174: peel=False and lookup((store,), ["0" * 40]) == {"0" * 40: "absent"})

@@ -1,0 +1,210 @@
+ScoutConsumerCtx — raw evidence (round 25 attempt 2, C2 consumer scope)
+Access date 2026-10-22. Read-only. No endpoint contacted, no llama-server started.
+
+Lane tip: 1fc41e346853afd98cbd7010af5db4e54dc877f7 ("git rev-parse HEAD", exit 0).
+
+============================================================
+1. Registry rows (committed lane file)
+============================================================
+$ LC_ALL=C grep -n '^omp-llama-cpp-default\|^ufo-fsd-thetick\|^ufo-fsd-local-helper' registry/endpoint-consumers.tsv
+35:omp-llama-cpp-default	~/.local/bin/omp	grep:LLAMA_CPP_BASE_URL	http://127.0.0.1:8080	-	code-level fallback pin, ...
+36:ufo-fsd-thetick	$UFO_SRC/config/the-tick.machine.json	grep:http://127\.0\.0\.1:34113[^"]*	http://127.0.0.1:34113/v1/chat/completions	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	surviving explicit pin; ...
+37:ufo-fsd-local-helper	$UFO_SRC/scripts/local-helper.mjs	grep:http://127\.0\.0\.1:[0-9]+	http://127.0.0.1:34113	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	surviving explicit DEFAULT_URL pin; ...
+exit=0
+
+Registry columns are id, consumer_path, json_pointer_or_grep, declared_baseurl,
+expected_model_id, notes (registry/endpoint-consumers.tsv:13). No column can carry a
+context size or a slot count.
+
+$ cat registry/history/latest.tsv
+#@snapshot_id 20261014T124232Z	# columns: id	verdict	reason	served_model	port	file_match
+omp-llama-cpp-default	DEAD	connection-refused	-	8080	inherited
+ufo-fsd-thetick	DEAD	connection-refused	-	34113	yes
+ufo-fsd-local-helper	DEAD	connection-refused	-	34113	yes
+exit=0
+
+============================================================
+2. Consumer file presence and bytes actually read
+============================================================
+$ for p in ~/.local/bin/omp ~/Projects/ufo-fsd-alpha/config/the-tick.machine.json \
+           ~/Projects/ufo-fsd-alpha/scripts/local-helper.mjs \
+           ~/.config/systemd/user/qwen-coder.service \
+           ~/.config/systemd/user/qwen-coder.ctx32k-q4.service; do test -e "$p" ...; done
+present /home/vgpnk/.local/bin/omp bytes=256702432 lines=2128894
+present /home/vgpnk/Projects/ufo-fsd-alpha/config/the-tick.machine.json bytes=1756 lines=56
+present /home/vgpnk/Projects/ufo-fsd-alpha/scripts/local-helper.mjs bytes=13983 lines=360
+absent /home/vgpnk/.config/systemd/user/qwen-coder.service
+absent /home/vgpnk/.config/systemd/user/qwen-coder.ctx32k-q4.service
+exit=0
+UFO_SRC=<unset>   (registry default resolves to /home/vgpnk/Projects/ufo-fsd-alpha)
+
+$ git -C ~/Projects/ufo-fsd-alpha rev-parse HEAD
+093edb979559443bca65245fbdd94ac3621446fb
+exit=0
+$ git -C ~/Projects/ufo-fsd-alpha ls-files --error-unmatch config/the-tick.machine.json scripts/local-helper.mjs
+exit=0   (both tracked in the consumer repo at that HEAD)
+
+$ sha256sum of the files read
+c0f35a292c97c9ec0d0608f3ae6a6ca3e6319056c60cbf3259d5b65a419e87f5  config/the-tick.machine.json
+07801abc62c3c7aa3f7df84a55f35ecde64d78b707c21b680cce7553a90deb6b  scripts/local-helper.mjs
+77c61a2df866305ed48a73ef3f12e5fe8529d40b621d2dd4c30671c03c622482  scripts/the-tick-config.mjs
+017c0d585e1adb7c8e07f8d7673c65b0afbc53ad73d7735947bb88944b1d7f86  scripts/the-tick-ping.mjs
+85d9daf3a05fc76e8cd425ae1904eb576af8d21cc85fcf4690742626e07ccfa4  /home/vgpnk/.local/bin/omp
+exit=0
+
+============================================================
+3. Declared fields per consumer
+============================================================
+--- ufo-fsd-thetick: config/the-tick.machine.json (read in full, 56 lines) ---
+  6:  "contextTokensPerRunner": 8192,
+ 16:    "endpoint": "http://127.0.0.1:34113/v1/chat/completions",
+ 17:    "parallelSlots": 2,
+ 18:    "contextTokens": 16384
+No max_tokens / n_ctx / num_ctx / maxOutputTokens key in the file.
+
+Validator (scripts/the-tick-config.mjs):
+189:  requireIntegerRange(value.contextTokensPerRunner, { min: 1_024, max: 1_048_576 }, "contextTokensPerRunner");
+214:  requireIntegerRange(value.backend.parallelSlots, { min: 1, max: 64 }, "backend.parallelSlots");
+215:  requireIntegerRange(value.backend.contextTokens, { min: 1_024, max: 67_108_864 }, "backend.contextTokens");
+216:  if (value.backend.contextTokens !== value.backend.parallelSlots * value.contextTokensPerRunner) {
+217:    fail("backend context must equal slots times contextTokensPerRunner");
+220:  if (!Array.isArray(value.runners) || value.runners.length !== value.backend.parallelSlots) {
+221:    fail("runners count must equal backend.parallelSlots");
+So 16384 == 2 * 8192 is enforced, and the runners array has 2 entries.
+
+Topology identity (scripts/the-tick-ping.mjs):
+121:  topology: Object.freeze(["endpoint", "parallelSlots", "contextTokensPerRunner"]),
+(scripts/the-tick-config.mjs:448-458 tickProvenance() emits the same three fields;
+ the pool value contextTokens is NOT part of the identity tuple.)
+
+Request-level cap: none.
+$ grep -rn 'max_tokens\|maxTokens\|n_predict\|num_predict\|maxOutputTokens\|num_ctx\|n_ctx' \
+    scripts/the-tick-*.mjs config/the-tick.machine.json
+no output, exit 1
+$ grep -rn '/props|n_ctx|num_ctx' over ~/Projects/ufo-fsd-alpha (specialized grep)
+No matches found
+So the consumer never reads served capacity and never bounds a request by its
+declared per-runner value.
+
+--- ufo-fsd-local-helper: scripts/local-helper.mjs (13983 bytes, 360 lines) ---
+   8: const DEFAULT_URL = "http://127.0.0.1:34113";
+   9: const DEFAULT_MODEL = "Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS";
+  10: const MAX_INPUT_BYTES = 12 * 1024;
+  11: const MAX_N_PREDICT = 512;
+  12: const DEFAULT_N_PREDICT = 256;
+ 128: if (size > MAX_INPUT_BYTES) fail("input_too_large", ...)
+ 224: model: DEFAULT_MODEL,
+ 228: max_tokens: nPredict,
+ 229: stream: false,
+ 238: if (!response.ok) fail("backend_http_error", `local model returned HTTP ${response.status}`);
+No context size and no slot count. The only "context" hits are the dedupe input
+array at :175 and :337, not a model context field.
+
+--- omp-llama-cpp-default: ~/.local/bin/omp (ELF, 256702432 bytes) ---
+The specialized grep tool reports "No matches found" for LLAMA_CPP_BASE_URL in this
+binary; byte-level `grep -a` finds 5 occurrences. Recorded as a tool limitation.
+Embedded-JS newline offsets, bound to binary sha256 85d9daf3...:
+
+$ LC_ALL=C grep -a -n -F 'LLAMA_CPP_BASE_URL' ~/.local/bin/omp
+1174146, 1174148, 1174154, 1174155 (plus one binary-blob hit at 327189)
+$ LC_ALL=C sed -n '1174142,1174149p' ~/.local/bin/omp
+    if (!u.has("llama.cpp") && !p.has("llama.cpp")) {
+      this.#m.push({
+        provider: "llama.cpp",
+        api: "openai-responses",
+        baseUrl: Bun.env.LLAMA_CPP_BASE_URL || "http://127.0.0.1:8080",
+        discovery: { type: "llama.cpp" },
+        optional: !Bun.env.LLAMA_CPP_BASE_URL
+      });
+No context size and no slot count in the provider object.
+
+Served-capacity reader (model discovery), same binary:
+1123091: function vY(u) {              // /props -> context window
+1123094:     const R = ts(p.n_ctx);        // p = u.default_generation_settings
+1123099:   return ts(u.n_ctx);
+1123101: function SY(u) {              // /v1/models meta -> context windows
+1123106:     runtimeContextWindow: ts(p.n_ctx),
+1123108:     trainingContextWindow: ts(p.n_ctx_train)
+1123368:   const pe = oe.runtimeContextWindow ?? oe.configuredContextWindow ?? Y?.contextWindow ?? oe.trainingContextWindow ?? wde;
+1123379:       contextWindow: pe,
+1123380:       maxTokens: iL(pe, Y?.maxTokens),
+1123062: function iL(u, p) {
+1123063:   return p === "contextWindow" ? u : Math.min(u, p ?? jK);
+1123064: }
+ 907533: var ure = 128000;
+ 907534: var pre = 32768;
+(1122946-1122947 alias wde = ure and jK = pre.)
+
+============================================================
+4. C2 findings in the form used here (wave build output; not committed at the tip)
+============================================================
+Raw artifacts I opened directly this session (not re-run):
+
+$ read .../out/ExecRawReplicate/K1/props.json?q={n_ctx,total_slots}
+{"n_ctx": 2048, "total_slots": 4}
+$ read .../out/ExecRawReplicate/X1/props.json?q={n_ctx,total_slots}
+{"n_ctx": 2048, "total_slots": 4}          <- identical to K1 on both HTTP fields
+$ read .../out/ExecRawReplicate/K5/props.json?q={n_ctx,total_slots}
+{"n_ctx": 2048, "total_slots": 1}
+
+$ LC_ALL=C grep -nE 'llama_context: n_ctx|n_ctx_slot' .../ExecRawReplicate/K1/server.log
+284: I llama_context: n_ctx = 2048
+285: I llama_context: n_ctx_seq = 2048
+1082: I srv load_model: initializing, n_slots = 4, n_ctx_slot = 2048, kv_unified = 'true'
+
+$ ... X1/server.log
+283: I llama_context: n_ctx = 2048
+284: I llama_context: n_ctx_seq = 512
+812: I llama_context: n_ctx = 8192
+813: I llama_context: n_ctx_seq = 2048
+1344/1345: same 8192 / 2048 block
+1610: I srv load_model: initializing, n_slots = 4, n_ctx_slot = 2048, kv_unified = 'false'
+
+$ ... K5/server.log
+283: I llama_context: n_ctx = 4096
+284: I llama_context: n_ctx_seq = 4096
+295: W llama_context: n_ctx_seq (4096) > n_ctx_train (2048) -- possible training context overflow
+1084: I srv load_model: initializing, n_slots = 1, n_ctx_slot = 2048, kv_unified = 'false'
+
+$ LC_ALL=C grep -oE '"(cell|status|request_mode)": *[^,]*' .../ExecLoadReplicate/l-cells-receipt.json
+L1 concurrent: 500, 500, 500, 500, 500, 500   (3 reps x 2 requests)
+L2 concurrent: 200 x 6
+L3 sequential: 200 x 6
+exit=0
+
+Prose reports read (peer output, not re-executed by this seat):
+  .ufo/waves/round-25/a2-build/advice/ExecRawReplicate.md   (11 config cells)
+  .ufo/waves/round-25/a2-build/advice/ExecLoadReplicate.md  (3 load cells, 3 reps each)
+  .ufo/waves/round-25/a2-build/out/ScribeEntryDraft/context-capacity.md
+  .ufo/waves/round-25/pilot.md                              (committed planning walk)
+
+============================================================
+5. Committed launch-flag record for the consumer target port
+============================================================
+$ test -e ~/.config/systemd/user/qwen-coder.service   -> absent
+The only committed record of that unit's flags is prose:
+corpus/knowledge/drift-timeline.md:14 (2026-09-08 20:43:13 -0300):
+  "New unit changed the listener to `--port 34113`, reduced ctx to 16384, changed
+   parallelism to 2, added `--alias <full GGUF path>`, `--cors-origins
+   http://127.0.0.1:8080`, and added/reshaped serving flags including `--no-webui`,
+   `--no-agent`, and an explicit `--model`."
+corpus/knowledge/drift-timeline.md:13 records the superseded 8080 unit as
+  "--ctx-size 32768 ... --parallel 64" (archival, not the consumer target).
+
+Committed doc that quotes the-tick numbers, with the pool/slot wording left loose:
+corpus/knowledge/consumer-registry.md:41  "`parallelSlots`/`contextTokens` at `:17-18`"
+corpus/knowledge/consumer-registry.md:106 "... `:17-18` (2 slots / 16384 ctx)"
+
+============================================================
+6. What kama's probe reads today
+============================================================
+$ LC_ALL=C grep -nE 'props|slots|n_ctx|total_slots|context' tools/kama-probe.sh
+No matches found
+$ LC_ALL=C grep -nE 'v1/models|/health|curl' tools/kama-probe.sh
+456:  fetch "$port" "/v1/models" "m$port"
+508/545: /health used as supporting evidence for MODEL_LOADING / DEAD detail
+tools/kama-probe.sh:5-7 header: "Answers exactly one question: 'is the thing at this
+baseURL the model this config believes it is, right now'".
+exit=0
+So the probe reads /v1/models and /health only; it never reads /props or /slots and
+has no capacity verdict.

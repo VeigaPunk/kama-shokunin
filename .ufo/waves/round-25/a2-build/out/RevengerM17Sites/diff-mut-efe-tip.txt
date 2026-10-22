@@ -1,0 +1,67 @@
+diff --git a/tests/report-audit/isolation-mutants.py b/tests/report-audit/isolation-mutants.py
+index a16e7e9..a49871e 100755
+--- a/tests/report-audit/isolation-mutants.py
++++ b/tests/report-audit/isolation-mutants.py
+@@ -24,6 +24,13 @@ Round 24 migration (the promisor repair removed the metadata classifier):
+   registered exit contract (0 = pristine passed and every mutant ran;
+   2 = could not evaluate) is unchanged.
+ 
++Round 25 re-anchor (the round-24 auditor drifted from two literals):
++
++* M11 keeps its element; its literal now spans the wrapped call.
++* M17 keeps its round-23 element, the peel-guarded check in lookup(); the
++  same refusal also exists in bare_objects() since round 24, and that second
++  call site is the new mutant M33. No id is reused or retired.
++
+ Exit: 0 pristine passed and every mutant ran (killed or surviving, as
+ listed); 2 could not evaluate (pristine failed, a replacement did not match
+ exactly once, or the grid could not evaluate a mutant). The exit contract
+@@ -53,8 +60,11 @@ MUTANTS = [
+     ("M09-strict-default", 'env=None, errors="strict"', 'env=None, errors="replace"'),
+     ("M10-log-surrogates",
+      'branch, errors="surrogateescape"', 'branch'),
++    # round 25: the call now wraps before errors=; the element (surrogate-
++    # escape decoding of the fleet report listing) is unchanged
+     ("M11-listing-surrogates",
+-     '"--", ".ufo/reports", errors="surrogateescape"', '"--", ".ufo/reports"'),
++     '"--", ".ufo/reports",\n                             errors="surrogateescape"',
++     '"--", ".ufo/reports"'),
+     ("M12-shallow-check",
+      'raise EvalError(f"{repo}: shallow repository")', 'pass'),
+     ("M13-grafts-check",
+@@ -64,9 +74,17 @@ MUTANTS = [
+     ("M16-top-level",
+      'raise EvalError(f"{repo}: not a repository top level")', 'pass'),
+     # round 24: the auditor names the store, not the repository, in this
+-    # message; the element (a ref-named citation is refused) is unchanged
++    # message; the element (a ref-named citation is refused) is unchanged.
++    # round 25: the message now occurs at two call sites. M17 keeps the
++    # round-23 site, the peel-guarded check in lookup(); the second site,
++    # added in round 24 to bare_objects(), is the new mutant M33.
+     ("M17-ref-shadow",
+-     'raise EvalError(f"{store.path}: citation {token} names a ref")', 'pass'),
++     'if not peel and not parts[0].startswith(token):\n'
++     '                # git resolved a same-named ref before the object prefix\n'
++     '                raise EvalError(f"{store.path}: citation {token} names a ref")',
++     'if not peel and not parts[0].startswith(token):\n'
++     '                # git resolved a same-named ref before the object prefix\n'
++     '                pass'),
+     ("M18-branch-heads",
+      'if git(lane_repo, "for-each-ref", "--format=%(refname)", head).strip():',
+      'if False:'),
+@@ -94,6 +112,15 @@ MUTANTS = [
+     ("M32-grafts-content",
+      'return any(line.strip() and not line.startswith(b"#")',
+      'return True or any(line.strip() and not line.startswith(b"#")'),
++    # round 25: second call site of the M17 element (see M17); new id, the
++    # same weakening (the ref-named citation is no longer refused)
++    ("M33-ref-shadow-bare-objects",
++     'if not parts[0].startswith(token):\n'
++     '                # git resolved a same-named ref before the object prefix\n'
++     '                raise EvalError(f"{store.path}: citation {token} names a ref")',
++     'if not parts[0].startswith(token):\n'
++     '                # git resolved a same-named ref before the object prefix\n'
++     '                pass'),
+ ]
+ 
+ 

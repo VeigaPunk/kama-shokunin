@@ -1,0 +1,242 @@
+== tools_server_server-context.cpp:1724,1726
+                if (slot.is_processing()) {
+                    SLT_TRC(slot, " - skipping, is_processing = %d\n", slot.is_processing());
+                    continue;
+== tools_server_server-context.cpp:1766,1776
+        // find an empty slot, or the one that has been least recently used
+        if (ret == nullptr) {
+            const auto free_slots = get_free_slots(1, -1);
+
+            if (!free_slots.empty()) {
+                ret = free_slots[0];
+
+                SLT_INF(*ret, "selected slot by LRU, n_tokens = %d, t_last = %" PRId64 "\n", ret->prompt.n_tokens(), ret->t_last_used);
+
+                update_cache = true;
+            }
+== tools_server_server-context.cpp:1810,1815
+    bool try_clear_idle_slots() {
+        bool res = false;
+
+        if (!params_base.kv_unified) {
+            return res;
+        }
+== tools_server_server-context.cpp:2026,2030
+        // if context shifting is disabled, make sure that we don't run out of context
+        if (!params_base.ctx_shift && slot.prompt.n_tokens() + 1 >= slot.n_ctx) {
+            slot.truncated      = true;
+            slot.stop           = STOP_TYPE_LIMIT;
+            slot.has_next_token = false;
+== tools_server_server-context.cpp:2851,2855
+                    if (slot == nullptr) {
+                        // if no slot is available, we defer this task for processing later
+                        SRV_DBG("no slot is available, defer task, id_task = %d\n", id_task);
+                        queue_tasks.defer(std::move(task));
+                        break;
+== tools_server_server-context.cpp:2883,2896
+                    if (params_base.cache_idle_slots) {
+                        for (auto & slot : slots) {
+                            if (!slot.is_processing()) {
+                                SLT_TRC(slot, "%s", "saving idle slot to prompt cache\n");
+
+                                if (slot.prompt_save(*prompt_cache)) {
+                                    SLT_DBG(slot, "%s", "__TEST_TAG_CACHE_IDLE_SLOT__\n");
+                                    prompt_cache->update();
+                                }
+
+                                if (params_base.kv_unified) {
+                                    // [TAG_IDLE_SLOT_CLEAR]
+                                    slot.prompt_clear();
+                                }
+== tools_server_server-context.cpp:3374,3378
+            if (slot.state == SLOT_STATE_GENERATING && slot.prompt.n_tokens() + 1 >= slot.n_ctx) {
+                if (!params_base.ctx_shift) {
+                    // this check is redundant (for good)
+                    // we should never get here, because generation should already stopped in process_token()
+                    send_error(slot, "context shift is disabled", ERROR_TYPE_SERVER);
+== tools_server_server-context.cpp:3676,3681
+                            if (slot.task->n_tokens() >= slot.n_ctx) {
+                                send_error(slot,
+                                           string_format("request (%d tokens) exceeds the available context size (%d "
+                                                         "tokens), try increasing it",
+                                                         slot.task->n_tokens(), slot.n_ctx),
+                                           ERROR_TYPE_EXCEED_CONTEXT_SIZE);
+== tools_server_server-context.cpp:3777,3779
+                            } else {
+                                // if we don't cache the prompt, we have to remove all previous tokens
+                                n_past = 0;
+== tools_server_server-context.cpp:4294,4302
+        if (ret != 0) {
+            {
+                std::string err;
+
+                if (n_batch == 1 && ret == 1) {
+                    // TODO: try to terminate only the largest active slot/sequence and continue with the rest
+                    //       need to remove the tokens from the current batch too
+                    err = "Context size has been exceeded.";
+                }
+== tools_server_server-context.cpp:4315,4330
+                if (!err.empty()) {
+                    SRV_ERR("%s off = %d, n_batch = %d, ret = %d\n", err.c_str(), off, n_batch, ret);
+
+                    for (auto & slot : slots) {
+                        if (slot.is_processing()) {
+                            send_error(slot, err);
+                            slot.release();
+
+                            // note: it's complicated to keep track of how much of the current batch has been
+                            //       processed before the error occurred, so we simply clear the entire context
+                            slot.prompt_clear();
+                        }
+                    }
+
+                    // stop, do not retry with smaller batch size
+                    throw std::runtime_error(err);
+== tools_server_server-context.cpp:4334,4339
+            // retry with half the batch size to try to find a free slot in the KV cache
+            if (!try_clear_idle_slots()) {
+                n_batch /= 2;
+            }
+
+            SRV_WRN("failed to find free space in the KV cache, retrying with smaller batch size, off = %d, n_batch = %d, ret = %d\n", off, n_batch, ret);
+== tools_server_server-context.cpp:4655,4662
+    int n_ctx_slot() const {
+        int res = llama_n_ctx_seq(ctx_tgt);
+
+        if (params_base.kv_unified_per_slot > 0) {
+            res = std::min(res, params_base.kv_unified_per_slot);
+        }
+
+        return std::min(res, llama_model_n_ctx_train(model_tgt));
+== tools_server_server-context.cpp:4957,4961
+            if (task.params.n_cmpl > 1) {
+                int n_children = task.params.n_cmpl - 1;
+                for (int j = 0; j < n_children; j++) {
+                    task.add_child(task.id, rd.get_new_id());
+                }
+== tools_server_server-context.cpp:4973,4981
+    bool stream = json_value(data, "stream", false);
+
+    if (!stream) {
+        // non-stream, wait for the results
+        auto all_results = rd.wait_for_all(req.should_stop);
+        if (all_results.is_terminated) {
+            return res; // connection is closed
+        } else if (all_results.error) {
+            res->error(all_results.error->to_json());
+== tools_server_server-context.cpp:5005,5017
+    } else {
+        // in streaming mode, the first error must be treated as non-stream response
+        // this is to match the OAI API behavior
+        // ref: https://github.com/ggml-org/llama.cpp/pull/16486#discussion_r2419657309
+        auto first_result = rd.next(req.should_stop);
+        if (first_result == nullptr) {
+            GGML_ASSERT(req.should_stop());
+            return res; // connection is closed
+        }
+
+        if (first_result->is_error()) {
+            res->error(first_result->to_json());
+            return res;
+== tools_server_server-context.cpp:2170,2171
+    void send_error(const int id_task, const std::string & error, const enum error_type type = ERROR_TYPE_SERVER, const int32_t n_prompt_tokens = 0, const int32_t n_ctx = 0) {
+        SRV_ERR("task id = %d, error: %s\n", id_task, error.c_str());
+== tools_server_server-common.cpp:107,109
+        case ERROR_TYPE_SERVER:
+            type_str = "server_error";
+            code = 500;
+== tools_server_server-common.cpp:970,996
+llama_tokens tokenize_mixed(const llama_vocab * vocab, const json & json_prompt, bool add_special, bool parse_special) {
+    // If `add_bos` is true, we only add BOS, when json_prompt is a string,
+    // or the first element of the json_prompt array is a string.
+    llama_tokens prompt_tokens;
+
+    if (json_prompt.is_array()) {
+        bool first = true;
+        for (const auto & p : json_prompt) {
+            if (p.is_string()) {
+                auto s = p.template get<std::string>();
+
+                llama_tokens p;
+                if (first) {
+                    p = common_tokenize(vocab, s, add_special, parse_special);
+                    first = false;
+                } else {
+                    p = common_tokenize(vocab, s, false, parse_special);
+                }
+
+                prompt_tokens.insert(prompt_tokens.end(), p.begin(), p.end());
+            } else {
+                if (first) {
+                    first = false;
+                }
+
+                prompt_tokens.push_back(p.template get<llama_token>());
+            }
+== tools_server_server-http.cpp:150,152
+    if (pimpl->n_threads_http < 1) {
+        // +4 threads for monitoring, health and MCP.
+        pimpl->n_threads_http = std::max(params.n_parallel + 4, static_cast<int32_t>(std::thread::hardware_concurrency() - 1));
+== tools_server_server.cpp:169,173
+        if (params.n_parallel < 0) {
+            SRV_TRC("%s", "n_parallel is set to auto, using n_parallel = 4 and kv_unified = true\n");
+
+            params.n_parallel = 4;
+            params.kv_unified = true;
+== common_common.h:458,459
+    int32_t n_batch               =  2048; // logical batch size for prompt processing (must be >=32 to use BLAS)
+    int32_t n_ubatch              =   512; // physical batch size for prompt processing (must be >=32 to use BLAS)
+== common_common.h:578,578
+    bool ctx_shift         = false; // context shift on infinite text generation
+== common_common.h:636,642
+    int32_t n_cache_reuse       = 0;     // min chunk size to reuse from the cache via KV shifting
+    bool    cache_prompt        = true;  // whether to enable prompt caching
+    bool    cache_idle_slots    = true;  // save and clear idle slots upon starting a new task
+    int32_t n_ctx_checkpoints   = 32;    // max number of context checkpoints per slot
+    int32_t kv_unified_per_slot = 0;     // max context per parallel slot; 0 = unset
+    int32_t checkpoint_min_step = 8192;  // minimum spacing between context checkpoints
+    int32_t cache_ram_mib       = 8192;  // -1 = no limit, 0 - disable, 1 = 1 MiB, etc.
+== src_llama-context.cpp:1940,1954
+            case LLAMA_MEMORY_STATUS_FAILED_PREPARE:
+                {
+                    if (!did_optimize) {
+                        did_optimize = true;
+
+                        if (memory_update(true)) {
+                            LLAMA_LOG_DEBUG("%s: retrying batch size %d after cache optimization\n", __func__, balloc->get_n_tokens());
+
+                            continue;
+                        }
+                    }
+
+                    LLAMA_LOG_WARN("%s: failed to find a memory slot for batch of size %d\n", __func__, balloc->get_n_tokens());
+
+                    return 1;
+== src_llama-kv-cache.cpp:1036,1062
+        // for continuous slots, we test that all tokens in the ubatch fit, starting from the current head
+        // for non-continuous slots, we test the tokens one by one
+        const uint32_t n_test = cont ? n_tokens : 1;
+
+        while (true) {
+            if (head_cur + n_test > cells.size()) {
+                n_tested += cells.size() - head_cur;
+                head_cur = 0;
+                continue;
+            }
+
+            for (uint32_t i = 0; i < n_test; i++) {
+                const auto idx = head_cur;
+
+                head_cur++;
+                n_tested++;
+
+                //const llama_pos    pos    = ubatch.pos[i];
+                //const llama_seq_id seq_id = ubatch.seq_id[i][0];
+
+                // can we use this cell? either:
+                //  - the cell is empty
+                //  - the cell is occupied only by one sequence:
+                //    - (disabled) mask causally, if the sequence is the same as the one we are inserting
+                //    - mask SWA, using current max pos for that sequence in the cache
+                //                always insert in the cell with minimum pos
+                bool can_use = cells.is_empty(idx);

@@ -1248,3 +1248,48 @@ universal pre-inspection chronology is not proved. Final author trends:
 expansion unchanged; quality harmed by the provenance/conformance breach
 despite bounded functional recovery; discernment unchanged at the held7.
 Only fresh outside closure may decide admission.
+
+## Round 25 — registered instrument re-anchor and declared versus served context capacity (2026-10-22, attempt 2)
+
+Two declared claims (preregistration `.ufo/waves/round-25/preregistration.json`,
+amendments 1-4). Attempt 1 was stood down for capacity; attempt 2 is a fresh
+author. Measured commits are lane branch tips named per row.
+
+| Claim | Axis, score | Before → after | Counting command | Measured commit | Evidence |
+|---|---|---|---|---|---|
+| C1 (repair-first) | calibration 7 → 7 (no promotion) | `registered 27 stale 2 ['M11-listing-surrogates', 'M17-ref-shadow']` at efe58e96 → `registered 28 stale 0 []` | preregistration.json C1.command (enumerates the whole MUTANTS list) | 1fc41e346853afd98cbd7010af5db4e54dc877f7 (instrument unchanged since, except its docstring) | supporting full run `.ufo/waves/round-25/final/c1/c1-tip-mutants.json`: exit 0, pristine passed, 28 mutants, 26 killed, survivors M17 and M20; lesson `corpus/lessons/round-25.md` §C1 |
+| C2 (learning claim, frontier K05) | coverage 9 → 9 (no promotion) | no receipt (counter exits 2, prints no count) → `registered 14 observed 14 bound True missing []` | `python3 .ufo/waves/round-25/count-c2.py` (amendment-4 bytes) | receipt 5c95c8f111a981e316cd4933e38fc363e51f8604 | `.ufo/waves/round-25/final/context-capacity-receipt.json` with 70 raw files; entry `corpus/knowledge/context-capacity.md`; SKILL.md §Round-25 decision rows |
+
+Erratum: the preregistration wrote C2's axis as "coverage 8 -> 8"; the
+lane's current coverage reading is 9 (SCORECARD lines 562 and 1019). The
+claim makes no numeric move either way.
+
+C1 axis fit, filed verbatim from non-author critic seat KamaR25a2.CriticC1Calibration
+(`.ufo/waves/round-25/a2-build/advice/CriticC1Calibration.md`):
+
+> C1's measured instrument repair is registered 27 stale 2 → registered 28 stale 0, with no removed or reused ids; M33 separately covers the second call site of the existing ref-shadow refusal. This counts instrument-to-auditor anchor mismatches, not demonstrated SCORECARD/SHONEN self-assessment mismatches. SCORECARD line 1166 is a historical round-23 measurement and remains historical. Calibration-axis fit is therefore not established; no calibration claim success or promotion is asserted. The before command aborts on reaching M11, after earlier mutants have run, and emits no completed JSON report. This repairs only the M-series portion of routed defect 2; PM08 remains outside the claim.
+
+The author's position: the SCORECARD row registers that command as the
+lane's re-derivation path, and the lane's live SKILL registry row
+(`SKILL.md` "Retained isolation mutation experiment") promised an evaluated
+inventory the command could not deliver. That is a reading, not a proof; the
+closure decides the axis fit. The author does not relabel the axis.
+
+M17 survival: since round-24 commit 92063cf no caller reaches the
+`lookup()` refusal, so M17 survives and grid row F13 now kills M33
+(`.ufo/waves/round-25/a2-build/advice/RevengerM17Sites.md`, causal run on
+ed1cc3a). This is reported, not hidden (KQ36).
+
+### capabilities: append — first working round 25
+
+| Name | What it can do | Demonstration | First-working round |
+|---|---|---|---|
+| context-capacity-receipt | run the 14 registered context-capacity cells on the lane-owned llama.cpp fixture (b11755, stories260K.gguf), one child at a time on unregistered loopback ports, and write a receipt with per-slot value, slot count, KV pool from the verbose log, request outcomes and the sha256 of every raw response and log; a cell counts only after its child is reaped and its port closed | `python3 tools/kama-context-capacity.py --out .ufo/waves/round-25/final/context-capacity-receipt.json` exit 0 (2026-10-22T09:42:42Z to 09:42:50Z), then `python3 .ufo/waves/round-25/count-c2.py` → `registered 14 observed 14 bound True missing []`; not registered-consumer serving | 25 |
+
+Other scores held: operability 8, freshness 8, depth 7, adjacency 7.
+Sources: census rows 105 → 113 (A 100 → 108; mined 86 → 94), validate exit 0.
+Trend reading by the author: expansion improved (one entry on uncovered
+ground, one capability), quality unchanged-to-improved (routed wording and
+count corrections, KQ36), discernment improved (five attack findings turned
+into stricter counters, scoped claims and a filed axis dispute). Outside
+closure alone decides admission.

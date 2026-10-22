@@ -1,0 +1,328 @@
+{
+  "schema": "kama-scout-passage-inventory/v1",
+  "seat": "KamaR25a2.ScoutR20Entry",
+  "round": 25,
+  "attempt": 2,
+  "written_utc": "2026-10-22T09:40:48Z",
+  "question": "Every lane passage that states the round-20 context rule or a part of it; does X1 serving per-slot 2048 contradict it; which K05 frontier lines does the round advance.",
+  "lane_tip_read": "c808ba07f09c4be55413d3d6516c542ab69b64f8",
+  "tip_note": "The assignment named tip 1fc41e346853afd98cbd7010af5db4e54dc877f7. `git diff --stat 1fc41e3 -- <all measured files>` was empty (exit 0), so the measured passage bytes are unchanged; c808ba0 adds amendment 3 and the committed C2 receipt.",
+  "x1_observed": {
+    "source": ".ufo/waves/round-25/final/context-capacity-receipt.json",
+    "receipt_sha256": "fe378502e84a379badf94423ca7a34586503b410672450eaf5fb9fe3fe3c158b",
+    "observed": true,
+    "args": "-np 4 --no-kv-unified",
+    "props_n_ctx": 2048,
+    "total_slots": 4,
+    "slots_n_ctx": [2048, 2048, 2048, 2048],
+    "models_n_ctx_train": 2048,
+    "kv_pool_n_ctx": 8192,
+    "kv_pool_candidates": [2048, 8192, 8192],
+    "provenance": "committed by the L1 at 5ea4fc44; read by this seat, not produced by it; no server was launched by this seat"
+  },
+  "x3_observed": {
+    "source": "same receipt",
+    "observed": true,
+    "args": "-np 4 --no-kv-unified --fit off",
+    "props_n_ctx": 512,
+    "slots_n_ctx": [512, 512, 512, 512],
+    "kv_pool_n_ctx": 2048
+  },
+  "k1_observed": {
+    "source": "same receipt",
+    "observed": true,
+    "args": "-c 0",
+    "props_n_ctx": 2048,
+    "slots_n_ctx": [2048, 2048, 2048, 2048],
+    "kv_pool_n_ctx": 2048
+  },
+  "round20_predictor_on_x1": {
+    "command": "python3 -c \"... nctx-crosscheck.predict(0,2048,4,False,0) ...\"",
+    "exit": 0,
+    "result": [512, 4, false]
+  },
+  "passages": [
+    {
+      "id": "L1",
+      "path": "corpus/knowledge/gguf-declared-identity.md",
+      "line": "27-30",
+      "quote": "per-slot context is capped by --kv-unified-per-slot and the effective training context",
+      "class": "landed rule",
+      "x1_contradicts": false,
+      "why": "X1 /props 2048 is the capped per-slot value; the cap at training context 2048 holds."
+    },
+    {
+      "id": "L2",
+      "path": "corpus/knowledge/gguf-declared-identity.md",
+      "line": "31-32",
+      "quote": "Do not divide ctx by total_slots blindly: KV-unified and padding affect that relationship",
+      "class": "landed rule",
+      "x1_contradicts": false,
+      "why": "Still true: X1 would be wrong if props 2048 were divided by 4. The warning forbids that inference."
+    },
+    {
+      "id": "L3",
+      "path": "corpus/knowledge/gguf-declared-identity.md",
+      "line": "34-36",
+      "quote": "served n_ctx=256, training n_ctx_train=2048, and a GGUF declaration of 2048",
+      "class": "landed fixture observation",
+      "x1_contradicts": false,
+      "why": "Different argv (-c 256, auto slots); no general rule is stated."
+    },
+    {
+      "id": "L4",
+      "path": "SKILL.md",
+      "line": "658",
+      "quote": "declared context versus meta.n_ctx_train, not props.n_ctx equality",
+      "class": "landed comparison rule",
+      "x1_contradicts": false,
+      "why": "X1 props 2048 equals training 2048, but the rule is about which comparison is load-bearing, not that they must differ."
+    },
+    {
+      "id": "L5",
+      "path": "SKILL.md",
+      "line": "665-667",
+      "quote": "must not be computed as ctx / total_slots unconditionally",
+      "class": "landed rule",
+      "x1_contradicts": false,
+      "why": "Same caution as L2; X1 props/total coinciding with the per-slot value does not make the division safe in general."
+    },
+    {
+      "id": "L6",
+      "path": "corpus/SOURCES.md",
+      "line": "72",
+      "quote": "single-model b11755 per-slot served context versus training-context metadata",
+      "class": "source row scope",
+      "x1_contradicts": false,
+      "why": "Scope statement only."
+    },
+    {
+      "id": "L7",
+      "path": "corpus/lessons/round-20.md",
+      "line": "53",
+      "quote": "context size of a single slot, capped by --kv-unified-per-slot and by the training context of the model",
+      "class": "admitted finding",
+      "x1_contradicts": false,
+      "why": "X1 per-slot 2048 equals the cap (training context 2048)."
+    },
+    {
+      "id": "L8",
+      "path": "corpus/lessons/round-20.md",
+      "line": "148-150",
+      "quote": "Props256/slots4 remain informational with no division.",
+      "class": "round-20 measurement note",
+      "x1_contradicts": false,
+      "why": "A dated statement about the -c 256 receipt; no general sizing formula."
+    },
+    {
+      "id": "L9",
+      "path": "SCORECARD.md",
+      "line": "901",
+      "quote": "props256 informational",
+      "class": "round-20 evidence row",
+      "x1_contradicts": false,
+      "why": "Dated evidence for the round-20 receipt; unaffected."
+    },
+    {
+      "id": "L10",
+      "path": "corpus/README.md",
+      "line": "295-298",
+      "quote": "usable for historical comparison, not a new live endpoint sample",
+      "class": "frontier disposition",
+      "x1_contradicts": false,
+      "why": "No contradiction. This is the line the round advances: the committed receipt is a new live lane-owned sample."
+    },
+    {
+      "id": "R1",
+      "path": ".ufo/waves/round-20/build/out/SrcServerNctx/nctx-crosscheck.py",
+      "line": "41-42",
+      "quote": "n_ctx_seq = n_ctx if kv_unified else pad256(n_ctx // n_parallel)",
+      "class": "round-20 executable formula",
+      "x1_contradicts": true,
+      "why": "predict(0,2048,4,False,0) returns 512 (executed, exit 0); X1 observed 2048."
+    },
+    {
+      "id": "R2",
+      "path": ".ufo/waves/round-20/build/out/SrcServerNctx/nctx-crosscheck.py",
+      "line": "13-14",
+      "quote": "The model assumes that no --fit run lowered n_ctx",
+      "class": "round-20 stated assumption",
+      "x1_contradicts": true,
+      "why": "Fit does not only lower: with unset -c and split KV it raises n_ctx to training x streams (fit.cpp:195-198, 266-273). X1 log candidates [2048, 8192, 8192]."
+    },
+    {
+      "id": "R3",
+      "path": ".ufo/waves/round-20/build/out/SrcServerNctx/nctx-crosscheck.py",
+      "line": "10-11",
+      "quote": "otherwise GGML_PAD(n_ctx / n_seq_max, 256)",
+      "class": "round-20 source formula",
+      "x1_contradicts": false,
+      "why": "The division is correct; the input differs (8192, not 2048). 8192/4 = 2048."
+    },
+    {
+      "id": "R4",
+      "path": ".ufo/waves/round-20/build/out/SrcServerNctx/nctx-crosscheck.py",
+      "line": "120-122",
+      "quote": "(0, 2048, 4, False)",
+      "class": "round-20 printed table case",
+      "x1_contradicts": true,
+      "why": "The --table run prints 512 for this tuple; X1 is that tuple and observed 2048."
+    },
+    {
+      "id": "R5",
+      "path": ".ufo/waves/round-20/build/advice/SrcServerNctx.md",
+      "line": "4",
+      "quote": "/props is per-slot effective context, not ... an unconditional --ctx-size / --parallel quotient",
+      "class": "round-20 advice",
+      "x1_contradicts": false,
+      "why": "X1 props 2048 is the effective per-slot value."
+    },
+    {
+      "id": "R6",
+      "path": ".ufo/waves/round-20/build/advice/SrcServerNctx.md",
+      "line": "6",
+      "quote": "n_ctx starts from explicit context size, or training context when zero",
+      "class": "round-20 advice",
+      "x1_contradicts": true,
+      "why": "True inside llama-context.cpp:219, false as a description of the server launch path with fit on: common/fit.cpp:271-272 rewrites n_ctx 0 to 8192 before the context is built."
+    },
+    {
+      "id": "R7",
+      "path": ".ufo/waves/round-20/build/advice/SrcServerNctx.md",
+      "line": "6",
+      "quote": "split KV uses GGML_PAD(n_ctx / n_seq_max, 256)",
+      "class": "round-20 advice",
+      "x1_contradicts": false,
+      "why": "Formula holds for total 8192."
+    },
+    {
+      "id": "R8",
+      "path": ".ufo/waves/round-20/build/advice/SrcServerNctx.md",
+      "line": "21-22",
+      "quote": "predicted=256 ... slots(naive ctx/slots=64)=no-match",
+      "class": "round-20 receipt replay",
+      "x1_contradicts": false,
+      "why": "That receipt has -c 256; its replay is unaffected. The predictor that produced it is R1."
+    },
+    {
+      "id": "R9",
+      "path": ".ufo/waves/round-20/build/advice/SrcCtxTrainWarning.md",
+      "line": "29",
+      "quote": "The effective per-slot size must reach D; -c 0 ... does not guarantee this when contexts are split across slots",
+      "class": "round-20 advice",
+      "x1_contradicts": false,
+      "why": "A non-guarantee, not a universal negation. X1 is a case where fit does reach D with split KV; the caveat should be scoped to --fit off (X3 512)."
+    },
+    {
+      "id": "R10",
+      "path": ".ufo/waves/round-20/build/advice/SrcCtxTrainWarning.md",
+      "line": "30",
+      "quote": "Argv -c is not S, because padding can raise it",
+      "class": "round-20 advice",
+      "x1_contradicts": false,
+      "why": "Still true; incomplete. It names padding as the only gap; fit is a second gap (X1 has no -c at all)."
+    },
+    {
+      "id": "R11",
+      "path": ".ufo/waves/round-20/build/advice/SrcCtxTrainWarning.md",
+      "line": "36",
+      "quote": "-fit ... may lower an unset context to no less than 4096",
+      "class": "round-20 advice unknown",
+      "x1_contradicts": true,
+      "why": "Direction and floor are wrong for this case: fit raises unset n_ctx to training x streams (8192 observed) when memory allows; the 4096 floor is per-stream and only in the reduce branch (fit.cpp:268, 394)."
+    },
+    {
+      "id": "R12",
+      "path": ".ufo/waves/round-20/build/advice/KnowGguf.md",
+      "line": "23",
+      "quote": "Served per-slot n_ctx is not train/slots.",
+      "class": "round-20 advice",
+      "x1_contradicts": false,
+      "why": "X1 served 2048, train/slots 512; still unequal."
+    },
+    {
+      "id": "R13",
+      "path": ".ufo/waves/round-20/build/out/KnowGguf/gguf-declared-identity.md",
+      "line": "42",
+      "quote": "n_ctx 0 means 'use the train context'",
+      "class": "round-20 draft (not landed)",
+      "x1_contradicts": true,
+      "why": "True at llama-context.cpp:219, false at the server parameter layer with fit on: fit sets training x streams. The landed entry dropped this sentence."
+    },
+    {
+      "id": "R14",
+      "path": ".ufo/waves/round-20/build/out/KnowGguf/gguf-declared-identity.md",
+      "line": "43",
+      "quote": "With kv_unified, n_ctx_seq = n_ctx; otherwise n_ctx / n_seq_max, padded to 256",
+      "class": "round-20 draft",
+      "x1_contradicts": false,
+      "why": "Same as R3."
+    },
+    {
+      "id": "R15",
+      "path": ".ufo/waves/round-20/build/advice/RevPropsNctx.md",
+      "line": "18",
+      "quote": "every receipt has root ctx = 256, argv -c 256, and /props default_generation_settings.n_ctx = 256",
+      "class": "round-20 observation",
+      "x1_contradicts": false,
+      "why": "Explicitly not a scaling rule; X1 uses different argv."
+    },
+    {
+      "id": "R16",
+      "path": ".ufo/waves/round-20/build/advice/ConnectKengaku.md",
+      "line": "21",
+      "quote": "every committed receipt and every kengaku capture has per-slot == total (O4/O6)",
+      "class": "round-20 evidence-boundary premise",
+      "x1_contradicts": true,
+      "why": "X1 has per-slot 2048 and total pool 8192, so the 'unfalsifiable on this population' premise no longer holds."
+    },
+    {
+      "id": "R17",
+      "path": ".ufo/waves/round-20/build/advice/GgufTool.md",
+      "line": "14",
+      "quote": "props.n_ctx=256 is displayed as informational and is not compared to training context 2048",
+      "class": "tool behavior",
+      "x1_contradicts": false,
+      "why": "Describes gguf-identity.py behavior, unchanged."
+    },
+    {
+      "id": "R18",
+      "path": ".ufo/waves/round-20/c2/measure-reference.json",
+      "line": "117",
+      "quote": "informational-only; not compared with training context",
+      "class": "measurement expectation",
+      "x1_contradicts": false,
+      "why": "Same as R17; also tools/gguf-identity.py:618."
+    },
+    {
+      "id": "R19",
+      "path": ".ufo/waves/round-20/build/advice/GgufReconcile.md",
+      "line": "6",
+      "quote": "Classification is based on served n_ctx versus training context",
+      "class": "round-20 advice",
+      "x1_contradicts": false,
+      "why": "X1 served 2048 versus training 2048 is 'within'; the advice also says neither ctx nor total_slots is multiplied or divided into that comparison."
+    },
+    {
+      "id": "R20",
+      "path": ".ufo/waves/round-20/build/out/SrcServerNctx/row-draft.md",
+      "line": "7",
+      "quote": "context size of a single slot, capped by --kv-unified-per-slot and by the training context of the model",
+      "class": "source row draft",
+      "x1_contradicts": false,
+      "why": "Cap statement only."
+    }
+  ],
+  "summary": {
+    "passages": 30,
+    "contradicted_by_x1": ["R1", "R2", "R4", "R6", "R11", "R13", "R16"],
+    "landed_passages_contradicted": 0,
+    "production_correction_needed": false,
+    "supersession_note_targets": [
+      ".ufo/waves/round-20/build/out/SrcServerNctx/nctx-crosscheck.py:13-14,41-44,120-122",
+      ".ufo/waves/round-20/build/advice/SrcServerNctx.md:6",
+      ".ufo/waves/round-20/build/advice/SrcCtxTrainWarning.md:36",
+      ".ufo/waves/round-20/build/out/KnowGguf/gguf-declared-identity.md:42"
+    ]
+  }
+}

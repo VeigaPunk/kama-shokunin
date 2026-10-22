@@ -1,0 +1,72 @@
+e0f0434  28  52) MUTANTS = [
+e0f0434  29  53)     ("M01-replace-objects", '"--no-replace-objects", ', ""),
+e0f0434  30  54)     ("M02-lazy-fetch", '"--no-lazy-fetch",\n', "\n"),
+e0f0434  31  55)     ("M03-log-encoding", '"-c", "i18n.logOutputEncoding=UTF-8",\n', "\n"),
+e0f0434  32  56)     ("M04-log-follow", '"-c", "log.follow=false", ', ""),
+e0f0434  33  57)     ("M05-log-showroot", ', "-c", "log.showRoot=true"', ""),
+e0f0434  34  58)     ("M06-log-signature", '"-c", "log.showSignature=false", ', ""),
+e0f0434  35  59)     ("M07-log-mailmap", ', "-c", "log.mailmap=false"', ""),
+e0f0434  36  60)     ("M09-strict-default", 'env=None, errors="strict"', 'env=None, errors="replace"'),
+e0f0434  37  61)     ("M10-log-surrogates",
+e0f0434  38  62)      'branch, errors="surrogateescape"', 'branch'),
+1fc41e3  63  63)     # round 25: the call now wraps before errors=; the element (surrogate-
+1fc41e3  64  64)     # escape decoding of the fleet report listing) is unchanged
+e0f0434  39  65)     ("M11-listing-surrogates",
+1fc41e3  66  66)      '"--", ".ufo/reports",\n                             errors="surrogateescape"',
+1fc41e3  67  67)      '"--", ".ufo/reports"'),
+e0f0434  41  68)     ("M12-shallow-check",
+e0f0434  42  69)      'raise EvalError(f"{repo}: shallow repository")', 'pass'),
+e0f0434  43  70)     ("M13-grafts-check",
+e0f0434  44  71)      'raise EvalError(f"{repo}: {path} rewrites history")', 'pass'),
+e0f0434  47  72)     ("M15-object-format",
+e0f0434  48  73)      'raise EvalError(f"{repo}: object format {fmt!r}, not sha1")', 'pass'),
+e0f0434  49  74)     ("M16-top-level",
+e0f0434  50  75)      'raise EvalError(f"{repo}: not a repository top level")', 'pass'),
+ed1cc3a  66  76)     # round 24: the auditor names the store, not the repository, in this
+1fc41e3  77  77)     # message; the element (a ref-named citation is refused) is unchanged.
+1fc41e3  78  78)     # round 25: the message now occurs at two call sites. M17 keeps the
+1fc41e3  79  79)     # round-23 site, the peel-guarded check in lookup(); the second site,
+1fc41e3  80  80)     # added in round 24 to bare_objects(), is the new mutant M33.
+e0f0434  51  81)     ("M17-ref-shadow",
+1fc41e3  82  82)      'if not peel and not parts[0].startswith(token):\n'
+1fc41e3  83  83)      '                # git resolved a same-named ref before the object prefix\n'
+1fc41e3  84  84)      '                raise EvalError(f"{store.path}: citation {token} names a ref")',
+1fc41e3  85  85)      'if not peel and not parts[0].startswith(token):\n'
+1fc41e3  86  86)      '                # git resolved a same-named ref before the object prefix\n'
+1fc41e3  87  87)      '                pass'),
+e876b95  54  88)     ("M18-branch-heads",
+e876b95  55  89)      'if git(lane_repo, "for-each-ref", "--format=%(refname)", head).strip():',
+e876b95  56  90)      'if False:'),
+e876b95  57  91)     ("M19-errata-hex",
+e876b95  58  92)      '\n             and re.fullmatch(r"[0-9a-fA-F]{7,40}", e["correction"])}',
+e876b95  59  93)      '}'),
+e0f0434  58  94)     ("M20-log-sha-shape",
+e876b95  61  95)      'if not re.fullmatch(r"[0-9a-f]{40}", sha):', 'if False:'),
+e0f0434  60  96)     ("M21-newlines", 'return out.replace("\\r\\n", "\\n").replace("\\r", "\\n")',
+e0f0434  61  97)      'return out'),
+e0f0434  64  98)     ("M23-strict-decode-catch",
+e0f0434  65  99)      'out = proc.stdout.decode("utf-8", errors)',
+e0f0434  66 100)      'out = proc.stdout.decode("utf-8", "replace")'),
+34b2376  67 101)     ("M24-catch-all", "except Exception as exc:  # an unanticipated error "
+34b2376  68 102)      "is never a verdict", "except ZeroDivisionError as exc:"),
+e876b95  71 103)     ("M25-timestamp-shape", 're.fullmatch(r"[0-9]{1,18}", atime)',
+34b2376  70 104)      're.fullmatch(r"[0-9]+", atime)'),
+e876b95  73 105)     ("M26-record-separators", 'fields = out.split("\\0")',
+e876b95  74 106)      'fields = re.split("[\\0\\x1e\\x1f]", out)'),
+e876b95  76 107)     ("M28-correction-casefold", 'e["correction"].lower() for e in errata',
+e876b95  77 108)      'e["correction"] for e in errata'),
+e876b95  80 109)     ("M30-fleet-history-check", 'for repo in (lane_repo, fleet_repo):',
+e876b95  81 110)      'for repo in (lane_repo,):'),
+e876b95  82 111)     ("M31-git-timeout", ',\n                              timeout=GIT_TIMEOUT)', ')'),
+e876b95  83 112)     ("M32-grafts-content",
+e876b95  84 113)      'return any(line.strip() and not line.startswith(b"#")',
+e876b95  85 114)      'return True or any(line.strip() and not line.startswith(b"#")'),
+1fc41e3 115 115)     # round 25: second call site of the M17 element (see M17); new id, the
+1fc41e3 116 116)     # same weakening (the ref-named citation is no longer refused)
+1fc41e3 117 117)     ("M33-ref-shadow-bare-objects",
+1fc41e3 118 118)      'if not parts[0].startswith(token):\n'
+1fc41e3 119 119)      '                # git resolved a same-named ref before the object prefix\n'
+1fc41e3 120 120)      '                raise EvalError(f"{store.path}: citation {token} names a ref")',
+1fc41e3 121 121)      'if not parts[0].startswith(token):\n'
+1fc41e3 122 122)      '                # git resolved a same-named ref before the object prefix\n'
+1fc41e3 123 123)      '                pass'),

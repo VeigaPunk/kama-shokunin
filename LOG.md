@@ -1631,3 +1631,48 @@ source-byte measurement epoch. VOID80 remains excluded incident evidence,
 not accepted erratum credit. Historical private-report amendments and
 their custody limits remain disclosed. Fresh outside Main closure alone
 may judge this landed negative/unprovable original claim.
+
+## Round 25 — registered instrument re-anchor; declared versus served context capacity (2026-10-22, attempt 2)
+
+Attempt 1 was stood down by the orchestrator for capacity. Attempt 2 is a
+fresh author; it committed the attempt-1 build wave as a record only
+(5388b7cf, `build/ATTEMPT-1-DISPOSITION.md`, corrected by
+`errata-attempt-2.json`).
+
+- Motivating evidence (C1): the outside round-24 spot-check found the
+  registered isolation mutant instrument stale (M11 zero matches, M17 two).
+  Re-verified at efe58e96: `registered 27 stale 2`; the full instrument
+  exits 2 on reaching M11 after M01-M10 ran.
+- C1 landed at 1fc41e34: M11 re-anchored, M17 kept on its round-23 line,
+  M33 registered for the second call site. `registered 28 stale 0 []`.
+  Full run: exit 0, 26 of 28 killed, survivors M17 and M20. M17 survives
+  because round-24 commit 92063cf moved the reachable path to
+  `bare_objects()`; F13 now kills M33. The instrument docstring says so.
+- Motivating evidence (C2): K05 (declared versus served context) had been
+  deferred since round 10; the attempt-1 critic CriticLearningBar showed
+  the round-20 rule already predicted every per-slot K-cell value, so new
+  cells X1-X3 (fit) and L1-L3 (concurrency) were registered in amendment 2.
+- C2 landed: tool `tools/kama-context-capacity.py` (5ea4fc44, request
+  timing added at 46fb04bd), counter tightened by amendments 3 (c808ba07)
+  and 4 (46fb04bd), final receipt re-run after amendment 4 (5c95c8f1):
+  `registered 14 observed 14 bound True missing []`. Entry
+  `corpus/knowledge/context-capacity.md`, SKILL.md round-25 decision rows,
+  sources S106-S113.
+- Findings: X1 (`-np 4 --no-kv-unified`, no `-c`) serves 2048 per slot
+  from an 8192 pool, where the round-20 wave rule gives 512; X3 (fit off)
+  gives 512. L1: two concurrent 1000 + 600 token requests on a shared 2048
+  pool both fail with HTTP 500 `Context size has been exceeded.` at 1025
+  tokens each; L2 (split, pool 8192) and L3 (sequential) pass. K1 and X2
+  return identical endpoint values with pools 2048 and 8192.
+- Routed repairs: PM08 wording in `SKILL.md` corrected (manual, review-only,
+  unexecuted, uncredited). Correction to the historical line
+  `LOG.md:1501-1502` ("PM08 remains static-only"): read it as "PM08 remains
+  a manual review-only note, unexecuted and uncredited"; the old bytes stay.
+  SKILL registry counts 27 → 28. `SKILL.md:188-190` now states the
+  `--kv-unified` premise. Round-24 locator erratum in the round-25 lesson.
+- New criterion KQ36 (registered instruments re-run at the landed tip).
+- Evidence handling: seat file `a2-build/out/ExecLoadReplicate/runs.json`
+  (11141804 bytes, sha256 38e4ab053e5cc7bfc53bdd8d9479a206d29dd37ccbc36f7f352582f42d766a09)
+  is committed gzip-compressed as `runs.json.gz`; `zcat | cmp` matched
+  before the original was removed.
+- Tool installs: none by the author; no seat reported an install.

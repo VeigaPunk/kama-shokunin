@@ -1,0 +1,9 @@
+92063cf 208 208)         else:
+92063cf 209 209)             parts = line.split(" ")
+92063cf 210 210)             if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}", parts[0]):
+92063cf 211 211)                 raise EvalError(f"cat-file in {store.path}: unexpected {line!r}")
+92063cf 212 212)             if not parts[0].startswith(token):
+92063cf 213 213)                 # git resolved a same-named ref before the object prefix
+92063cf 214 214)                 raise EvalError(f"{store.path}: citation {token} names a ref")
+92063cf 215 215)             result[token] = ("found", parts[0])
+92063cf 216 216)     return result

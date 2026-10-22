@@ -1,0 +1,31 @@
+Probe: can `git cat-file --batch-check` resolve a full 40-hex citation to a same-named ref?
+Run 2026-10-22 about 09:36Z, git version 2.56.0, scratch repo /fast/scratch/hyaku/kama-r25a2/CriticC1NoHarm/probe/r
+(two empty commits C and D; the wrapper flags the auditor uses were passed).
+
+Setup:
+  C=e4752d45cdc2f5fe072cf049c4e79a22932f703a  D=d3b9510181c5acc210f53bb441d72b9300a934da
+  git tag deadbeefdeadbeefdeadbeefdeadbeefdeadbeef $C   (a 40-hex ref name with no such object)
+  git tag $D $C                                          (a 40-hex ref name equal to another object id)
+  git tag deadbee1 $C                                    (the F13-style abbreviation ref)
+
+Command and output:
+  printf '%s\n%s\n%s^{commit}\n' $X $D $X | git --no-replace-objects --no-lazy-fetch cat-file --batch-check
+    deadbeefdeadbeefdeadbeefdeadbeefdeadbeef missing
+    d3b9510181c5acc210f53bb441d72b9300a934da commit 166
+    deadbeefdeadbeefdeadbeefdeadbeefdeadbeef^{commit} missing
+  exit 0
+
+  printf 'deadbee1\n' | git --no-replace-objects --no-lazy-fetch cat-file --batch-check
+    e4752d45cdc2f5fe072cf049c4e79a22932f703a commit 118
+  exit 0
+
+Reading: a full 40-hex name is always taken as an object id (never the ref), so the
+answered id equals the token; only an abbreviation can be answered through a ref.
+
+Sources (fetched 2026-10-22 with curl, exit 0):
+  https://raw.githubusercontent.com/git/git/v2.56.0/object-name.c
+    sha256 6dc003f31ebf2b5982196a01daf265ab12bab02d1585c54324451f550f3f5625
+    line 688: "if (len == r->hash_algo->hexsz && !get_oid_hex(str, oid)) {"  ... line 700: "return 0;"
+  https://raw.githubusercontent.com/git/git/v2.56.0/builtin/cat-file.c
+    sha256 18203b7ccfe10bd0389474d56b8c4b01fe3df2f96a073cda41e788e73cdea671
+    lines 1111-1112: "save_warning = cfg->warn_on_object_refname_ambiguity; cfg->warn_on_object_refname_ambiguity = 0;"

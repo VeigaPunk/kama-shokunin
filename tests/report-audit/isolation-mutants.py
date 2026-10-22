@@ -30,6 +30,13 @@ Round 25 re-anchor (the round-24 auditor drifted from two literals):
 * M17 keeps its round-23 element, the peel-guarded check in lookup(); the
   same refusal also exists in bare_objects() since round 24, and that second
   call site is the new mutant M33. No id is reused or retired.
+* M17 keeps its round-23 line, not its round-23 kill: since round 24 the
+  ref-named abbreviation path (grid row F13, which killed M17 at round 23)
+  runs through bare_objects(), so F13 now kills M33 and M17 survives the
+  grid (full run at 1fc41e34: 28 mutants, 26 killed, survivors M17 and M20).
+  [INFERENCE from source and a probe] the lookup() check is reached only by
+  full 40-hex tokens, which git does not resolve through a ref, so M17 may be
+  unkillable; no defensive-only claim is made.
 
 Exit: 0 pristine passed and every mutant ran (killed or surviving, as
 listed); 2 could not evaluate (pristine failed, a replacement did not match

@@ -1,0 +1,40 @@
+Verdict: High risk — attempt-1 runner can accept another process’s loopback responses as fixture data and can finish successfully without proving the server was reaped or the port closed.
+
+Axes: port isolation; child lifecycle; scratch containment; network boundary.
+
+Static review only. No `llama-server` child was started; no live port was probed and no checks were run. Findings are based on the opened local files below. No tool was installed or updated. External sources were not needed or fetched.
+
+## Risks for the attempt-2 tool
+
+1. **HIGH — A competing listener can supply false observations.**
+   - **Exploit path:** A local process binds the selected port after the preflight checks (or a free-port check errors ambiguously); the fixture child has not yet exited after failing to bind. The runner accepts successful `/props`, `/slots`, and `/v1/models` responses without proving the listener belongs to its child. Those responses can be recorded as observations from the fixture.
+   - **Evidence:** The partial runner selects through `live.pick_port()` at `build/out/ExecCapacityTool/kama-context-capacity.py:195-207`, then checks `ss` at `:210-219` and `:803-813`; it starts the child and accepts HTTP responses at `:326-367`, setting observation from read booleans at `:370-406`. The imported helper has a child-ownership check at `tools/kama-llamacpp-live.py:719-731` and verifies ownership on the first HTTP response at `:637-644`, but the partial runner does not call it. In the helper, `pick_port()` also treats every `OSError` other than `ConnectionRefusedError` as a free explicit port (`tools/kama-llamacpp-live.py:353-365`); the partial runner’s `ss` wrapper ignores `CompletedProcess.returncode` (`build/out/ExecCapacityTool/kama-context-capacity.py:212-219`).
+   - **Impact:** A false-positive context receipt; requests may also reach a local listener that was not the fixture.
+   - **Smallest remediation:** Before accepting any response, require `live.port_owned_by(proc.pid, port) is True`; fail closed for unknown ownership. Reject ambiguous connect errors and nonzero `ss` status. Keep the ownership check after reads as well as before them.
+
+2. **HIGH — Child cleanup is not guaranteed on all exits.**
+   - **Exploit path:** The partial runner launches with `start_new_session=True` at `build/out/ExecCapacityTool/kama-context-capacity.py:326-334`, but does not install termination handlers or parent-death handling. A SIGTERM to the wrapper does not reach the new session, so the server can outlive the wrapper. A `KeyboardInterrupt` during `_teardown()` can itself interrupt its signal/wait sequence (`:426-466`); the main handler catches `BaseException` but has no process handle or cleanup fallback (`:831-836`). There is also a small unprotected interval after `Popen` returns and before the `try/finally` begins (`:347-348`).
+   - **Impact:** Orphaned server process/group and a listener left running after the tool exits.
+   - **Smallest remediation:** Install termination handling before launch, make cleanup interruption-resistant, and retain an outer `finally` safety-net kill/reap. Use Linux parent-death signaling as a secondary safeguard and treat failure to reap as a failed run. The existing live helper demonstrates signal suppression during teardown (`tools/kama-llamacpp-live.py:959-980,1613-1658`), but its parent-death signal is explicitly best-effort (`:456-467`), so it should not be represented as guaranteed.
+
+3. **HIGH — Teardown failure can still yield exit 0 or permit another run.**
+   - **Exploit path:** If SIGTERM/SIGKILL or wait fails, `_teardown()` records an error and may return `port_closed: false` (`build/out/ExecCapacityTool/kama-context-capacity.py:434-466`). The cell can nevertheless remain `observed`; the final exit code is based only on observed-cell count (`:816-830`), not child return status or port closure. Before the next cell, `wait_for_host_idle()` treats `pgrep` failure (`None`) as idle (`:234-271`), so a still-running child can be followed by another launch. `ss_listen_lines()` likewise does not fail on a nonzero `ss` exit status (`:212-219`).
+   - **Impact:** A success-shaped receipt despite an unclosed fixture, and possible overlap of server children when process detection fails.
+   - **Smallest remediation:** Make teardown success a hard gate: child reaped and port closure positively established, otherwise nonzero and stop. Distinguish `pgrep` exit 1 (no matches) from execution/error statuses and fail closed when host-idle state is unknown; check `ss` status.
+
+4. **MEDIUM — Log paths are not constrained to attempt-2 scratch.**
+   - **Exploit path:** The partial runner defaults to the attempt-1 directory (`build/out/ExecCapacityTool/kama-context-capacity.py:61-62`), accepts arbitrary `--scratch` (`:667-669`), creates it without containment checks (`:780-786`), and opens predictable log paths with `open(..., 'wb')` (`:322-334`). A symlink at a log filename can therefore redirect/truncate its target. Its `--out` similarly writes to an arbitrary path (`:854-858`). The live helper creates its server log with `tempfile.mkstemp()` without an explicit scratch directory (`tools/kama-llamacpp-live.py:1476-1479`), so it follows the harness process’s temp-directory configuration rather than enforcing the lane scratch root.
+   - **Impact:** Logs outside the authorized attempt-2 scratch area; accidental or intentional truncation of a file reached through a symlink or caller-supplied path.
+   - **Smallest remediation:** Use the exact attempt-2 scratch root by default and reject resolved paths outside it; create unique files with exclusive/no-follow semantics. Keep receipt output on stdout or constrain `--out` to the permitted output directory. Give the live helper an explicit, validated scratch directory for its log.
+
+5. **MEDIUM — `--offline` and loopback flags are not a boundary if the executable is caller-selected.**
+   - **Exploit path:** The partial runner accepts any existing `--server` file and executes its real path (`build/out/ExecCapacityTool/kama-context-capacity.py:657-660,750-765,315-334`). The live helper accepts a caller-selected executable after only file/executable checks (`tools/kama-llamacpp-live.py:1399-1404`) and passes `--host 127.0.0.1` and `--offline` to it (`:1451-1460`). **[INFERENCE]** A substituted executable can ignore those flags, bind a non-loopback interface, or make outbound connections; the argument list alone cannot enforce the network boundary.
+   - **Impact:** The stated network restriction depends on trusting whichever binary the caller supplies.
+   - **Smallest remediation:** For this claim, remove arbitrary executable overrides or require the exact approved realpath and digest/version before launch. If a hard network boundary is required beyond a trusted llama-server build’s flags, enforce it at the OS/network namespace layer.
+
+## Checks that appear correctly wired (static evidence)
+
+- The live helper’s `HARD_REFUSED_PORTS` includes 8080 and 34113 (`tools/kama-llamacpp-live.py:66-69`); `refused_ports()` adds those and registry ports (`:311-336`). The partial runner verifies both hard pins are present before picking a port (`build/out/ExecCapacityTool/kama-context-capacity.py:774-807`). I found no bypass of those hard refusals in the examined selection path.
+- Both launch argument lists include `--host 127.0.0.1` and `--offline` (`build/out/ExecCapacityTool/kama-context-capacity.py:315-319`; `tools/kama-llamacpp-live.py:1451-1460`). The helper’s HTTP client targets `127.0.0.1` (`tools/kama-llamacpp-live.py:483-490`), and its probe uses `curl --noproxy '*'` against `http://127.0.0.1:$port` (`tools/kama-probe.sh:288-297`). This confirms the configured request paths are loopback-only, not that a caller-substituted server binary is contained.
+
+Files written: `.ufo/waves/round-25/a2-build/advice/SentinelFixtureScope.md`.

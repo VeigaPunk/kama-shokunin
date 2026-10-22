@@ -1,0 +1,72 @@
+e0f0434  51  52)     ("M17-ref-shadow",
+e0f0434  52  53)      'raise EvalError(f"{repo}: citation {token} names a ref")', 'pass'),
+e876b95  54  54)     ("M18-branch-heads",
+e876b95  55  55)      'if git(lane_repo, "for-each-ref", "--format=%(refname)", head).strip():',
+e876b95  56  56)      'if False:'),
+e876b95  57  57)     ("M19-errata-hex",
+e876b95  58  58)      '\n             and re.fullmatch(r"[0-9a-fA-F]{7,40}", e["correction"])}',
+e876b95  59  59)      '}'),
+e0f0434  58  60)     ("M20-log-sha-shape",
+e876b95  61  61)      'if not re.fullmatch(r"[0-9a-f]{40}", sha):', 'if False:'),
+e0f0434  60  62)     ("M21-newlines", 'return out.replace("\\r\\n", "\\n").replace("\\r", "\\n")',
+e0f0434  61  63)      'return out'),
+e0f0434  62  64)     ("M22-promisor-pack",
+e0f0434  63  65)      'raise EvalError(f"{repo}: partial clone (promisor pack)")', 'pass'),
+e0f0434  64  66)     ("M23-strict-decode-catch",
+e0f0434  65  67)      'out = proc.stdout.decode("utf-8", errors)',
+e0f0434  66  68)      'out = proc.stdout.decode("utf-8", "replace")'),
+34b2376  67  69)     ("M24-catch-all", "except Exception as exc:  # an unanticipated error "
+34b2376  68  70)      "is never a verdict", "except ZeroDivisionError as exc:"),
+e876b95  71  71)     ("M25-timestamp-shape", 're.fullmatch(r"[0-9]{1,18}", atime)',
+34b2376  70  72)      're.fullmatch(r"[0-9]+", atime)'),
+e876b95  73  73)     ("M26-record-separators", 'fields = out.split("\\0")',
+e876b95  74  74)      'fields = re.split("[\\0\\x1e\\x1f]", out)'),
+e876b95  75  75)     ("M27-promisor-boolean", '\n                and git_bool(value)):', '):'),
+e876b95  76  76)     ("M28-correction-casefold", 'e["correction"].lower() for e in errata',
+e876b95  77  77)      'e["correction"] for e in errata'),
+e876b95  78  78)     ("M29-promisor-pack-pairing",
+e876b95  79  79)      ' and p.with_suffix(".pack").exists()', ''),
+e876b95  80  80)     ("M30-fleet-history-check", 'for repo in (lane_repo, fleet_repo):',
+e876b95  81  81)      'for repo in (lane_repo,):'),
+e876b95  82  82)     ("M31-git-timeout", ',\n                              timeout=GIT_TIMEOUT)', ')'),
+e876b95  83  83)     ("M32-grafts-content",
+e876b95  84  84)      'return any(line.strip() and not line.startswith(b"#")',
+e876b95  85  85)      'return True or any(line.strip() and not line.startswith(b"#")'),
+e0f0434  67  86) ]
+e0f0434  68  87) 
+e0f0434  69  88) 
+e0f0434  70  89) def grid(auditor):
+e0f0434  71  90)     p = subprocess.run([sys.executable, str(GRID), "--arm", "current",
+e0f0434  72  91)                         "--current", str(auditor), "--json"],
+e0f0434  73  92)                        capture_output=True)
+e0f0434  74  93)     if p.returncode == 2:
+e0f0434  75  94)         return 2, None, p.stderr.decode(errors="replace").strip()[-300:]
+e0f0434  76  95)     doc = json.loads(p.stdout)
+e0f0434  77  96)     arm = doc["arms"]["current"]
+e0f0434  78  97)     failed = [r["case"] for r in arm["rows"]
+e876b95  98  98)               if r["kind"] in ("fault", "contract", "control")
+e876b95  99  99)               and not r["met"]]
+e0f0434  80 100)     return p.returncode, failed, None
+e0f0434  81 101) 
+e0f0434  82 102) 
+e0f0434  83 103) def main(argv=None):
+e0f0434  84 104)     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+e0f0434  85 105)     ap.add_argument("--json", action="store_true")
+e0f0434  86 106)     ap.add_argument("--only", action="append")
+e0f0434  87 107)     args = ap.parse_args(argv)
+e0f0434  88 108)     source = AUDIT.read_text(encoding="utf-8")
+e0f0434  89 109)     rc, failed, err = grid(AUDIT)
+e0f0434  90 110)     if rc != 0:
+e0f0434  91 111)         print(f"could-not-evaluate: pristine grid rc={rc} {failed} {err}",
+e0f0434  92 112)               file=sys.stderr)
+e0f0434  93 113)         return 2
+e0f0434  94 114)     rows = []
+e0f0434  95 115)     with tempfile.TemporaryDirectory(prefix="isolation-mutants-") as tmp:
+e0f0434  96 116)         for name, old, new in MUTANTS:
+e0f0434  97 117)             if args.only and name not in args.only:
+e0f0434  98 118)                 continue
+e0f0434  99 119)             if source.count(old) != 1:
+e0f0434 100 120)                 print(f"could-not-evaluate: {name}: pattern matches "
+e0f0434 101 121)                       f"{source.count(old)} times", file=sys.stderr)
+e0f0434 102 122)                 return 2
+e0f0434 103 123)             path = Path(tmp, f"{name}.py")

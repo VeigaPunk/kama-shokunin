@@ -1,0 +1,861 @@
+92063cfc60e217fa7e2098c568578119b16a1b95
+kama-shokunin
+2026-10-21 21:50:32 -0300
+round-24: correct local object scope and measurement provenance
+
+ .ufo/waves/round-24/build/advice/ConnClosure.md    |   120 +
+ .ufo/waves/round-24/build/advice/GridOracle.md     |   462 +
+ .ufo/waves/round-24/build/advice/MutationOracle.md |   691 +
+ .ufo/waves/round-24/build/advice/ScribeFrontier.md |    82 +
+ .../waves/round-24/build/advice/ScribeKnowledge.md |   238 +
+ .ufo/waves/round-24/build/advice/ScribeLesson.md   |   393 +
+ .ufo/waves/round-24/build/advice/ScribeSkill.md    |   254 +
+ .../ConnClosure/probe_fixture_hazard-result.json   |    77 +
+ .../build/out/ConnClosure/probe_fixture_hazard.py  |   181 +
+ .ufo/waves/round-24/falsify/advice/CaseAncestor.md |   371 +
+ .../waves/round-24/falsify/advice/CaseCitedHole.md |   210 +
+ .../round-24/falsify/advice/CaseCompleteFake.md    |   349 +
+ .../round-24/falsify/advice/CaseConfigTwins.md     |   395 +
+ .../waves/round-24/falsify/advice/CaseCrossRepo.md |   305 +
+ .../round-24/falsify/advice/CaseErrataSplice.md    |   334 +
+ .../round-24/falsify/advice/CaseFleetBlobless.md   |   503 +
+ .../waves/round-24/falsify/advice/CaseFleetTree.md |   449 +
+ .../round-24/falsify/advice/CaseHydratedTwins.md   |   331 +
+ .ufo/waves/round-24/falsify/advice/CaseLaneTree.md |   361 +
+ .../round-24/falsify/advice/CaseMarkerTwins.md     |   334 +
+ .../round-24/falsify/advice/CaseOmissionTwins.md   |   416 +
+ .../round-24/falsify/advice/CaseOpaqueCited.md     |   205 +
+ .../round-24/falsify/advice/CaseOpaqueFake.md      |   278 +
+ .../round-24/falsify/advice/CaseOpaquePositive.md  |   420 +
+ .../round-24/falsify/advice/CaseReportBlob.md      |   339 +
+ .../round-24/falsify/advice/CaseSourceBlob.md      |   368 +
+ .../falsify/advice/CaseUnrelatedFakeLanded.md      |   259 +
+ .../falsify/advice/CaseUnrelatedFakeNotes.md       |   143 +
+ .../falsify/advice/CaseUnselectedBranch.md         |   326 +
+ .../round-24/falsify/advice/CaseUnusedBlob.md      |   322 +
+ .../round-24/falsify/advice/CaseUnusedBlobless.md  |   200 +
+ .../round-24/falsify/advice/CaseUnusedTree.md      |   258 +
+ .../waves/round-24/falsify/advice/CaseWrongType.md |   334 +
+ .../round-24/falsify/advice/CodeErrataBoundary.md  |   307 +
+ .../round-24/falsify/advice/CodeGitBoundary.md     |   394 +
+ .../round-24/falsify/advice/CodeLocalScope.md      |   256 +
+ .../round-24/falsify/advice/CodeLookupMerge.md     |   284 +
+ .../round-24/falsify/advice/CodeOpaqueDiagnosis.md |   210 +
+ .../round-24/falsify/advice/CodePerRunCache.md     |   336 +
+ .../round-24/falsify/advice/CodeRequiredReads.md   |   362 +
+ .../round-24/falsify/advice/CodeStatusPriority.md  |   219 +
+ .../round-24/falsify/advice/ConnInterfaces.md      |   505 +
+ .ufo/waves/round-24/falsify/advice/ConnMetrics.md  |   328 +
+ .ufo/waves/round-24/falsify/advice/ConnReceipts.md |   360 +
+ .ufo/waves/round-24/falsify/advice/ConnSources.md  |   749 +
+ .ufo/waves/round-24/falsify/advice/CritGitFloor.md |   111 +
+ .../round-24/falsify/advice/CritLocalContract.md   |   124 +
+ .../round-24/falsify/advice/CritNoExtraScope.md    |    80 +
+ .ufo/waves/round-24/falsify/advice/CritNoTrade.md  |   196 +
+ .../falsify/advice/CritOriginalWithdrawn.md        |   317 +
+ .../round-24/falsify/advice/CritStorageSafety.md   |   124 +
+ .../falsify/advice/DocExpectationBinding.md        |   284 +
+ .ufo/waves/round-24/falsify/advice/DocFrontier.md  |   276 +
+ .ufo/waves/round-24/falsify/advice/DocKnowledge.md |   538 +
+ .ufo/waves/round-24/falsify/advice/DocLesson.md    |   268 +
+ .ufo/waves/round-24/falsify/advice/DocLog.md       |   202 +
+ .ufo/waves/round-24/falsify/advice/DocQuality.md   |   667 +
+ .../falsify/advice/DocScorecardAuthority.md        |   406 +
+ .ufo/waves/round-24/falsify/advice/DocSkill.md     |   544 +
+ .../round-24/falsify/advice/GateAuditSelftest.md   |   224 +
+ .../round-24/falsify/advice/GateCitationNoHarm.md  |   228 +
+ .../round-24/falsify/advice/GateGridSelftest.md    |   236 +
+ .../round-24/falsify/advice/GateHistoryParity.md   |   377 +
+ .../falsify/advice/GateMutationSelftest.md         |   271 +
+ .ufo/waves/round-24/falsify/advice/MutOpaque.md    |   146 +
+ .../round-24/falsify/advice/MutOverRefusal.md      |   141 +
+ .../round-24/falsify/advice/MutRedundantAll.md     |   122 +
+ .../waves/round-24/falsify/advice/MutResolution.md |   133 +
+ .../round-24/falsify/advice/MutStaticNoFetch.md    |   134 +
+ .../round-24/falsify/advice/MutUnavailable.md      |   173 +
+ .../waves/round-24/falsify/advice/SrcFsckReject.md |   193 +
+ .ufo/waves/round-24/falsify/advice/SrcMarker.md    |   353 +
+ .ufo/waves/round-24/falsify/advice/SrcRevList.md   |   156 +
+ .../round-24/falsify/advice/swarm-registry.json    |   393 +
+ .../round-24/falsify/assignment-recording.json     |     7 +
+ .../round-24/falsify/assignments-recorded.json     |    66 +
+ .ufo/waves/round-24/falsify/assignments.json       |    66 +
+ .ufo/waves/round-24/falsify/dispatch-attempts.json |     7 +
+ .../round-24/falsify/dispatch-pinned-2e254a17.json |   747 +
+ .../round-24/falsify/dispatch-pinned-f1e755e0.json |   747 +
+ .ufo/waves/round-24/falsify/dispatch.json          |   747 +
+ .../round-24/falsify/out/CaseAncestor/deep.json    |    66 +
+ .../falsify/out/CaseAncestor/deep_probe.py         |   119 +
+ .../falsify/out/CaseAncestor/direct.stderr         |     2 +
+ .../falsify/out/CaseAncestor/direct.stdout         |     0
+ .../round-24/falsify/out/CaseAncestor/frozen.json  |    50 +
+ .../falsify/out/CaseAncestor/frozen_probe.py       |    59 +
+ .../round-24/falsify/out/CaseAncestor/keep.json    |    80 +
+ .../falsify/out/CaseAncestor/mut_pg21.json         |   315 +
+ .../round-24/falsify/out/CaseAncestor/pg21.json    |   148 +
+ .../round-24/falsify/out/CaseAncestor/pg21.stderr  |     0
+ .../falsify/out/CaseAncestor/twin_doc.json         |   302 +
+ .../falsify/out/CaseAncestor/twin_doc_probe.py     |    71 +
+ .../falsify/out/CaseAncestor/twin_probe.json       |   148 +
+ .../falsify/out/CaseAncestor/twin_probe.py         |    76 +
+ .../out/CaseCitedHole/acquisition-and-mutants.json |    53 +
+ .../CaseCitedHole/check_acquisition_and_mutants.py |   127 +
+ .../falsify/out/CaseCitedHole/grid-PG33-PG34.json  |   329 +
+ .../out/CaseCitedHole/grid-PG33-PG34.stderr.txt    |     0
+ .../falsify/out/CaseCitedHole/premises.json        |   203 +
+ .../falsify/out/CaseCitedHole/verify_cited_hole.py |   202 +
+ .../out/CaseCompleteFake/fixture-verification.txt  |    89 +
+ .../out/CaseCompleteFake/grid-PG23-PG24-PG25.json  |   804 ++
+ .../grid-PG23-PG24-PG25.stderr.txt                 |     0
+ .../falsify/out/CaseCompleteFake/grid-keep.json    |   805 ++
+ .../out/CaseCompleteFake/grid-keep.stderr.txt      |     0
+ .../CaseCompleteFake/independent-verification.json |   283 +
+ .../out/CaseCompleteFake/lazy-fetch-probe.json     |    48 +
+ .../out/CaseCompleteFake/verdict-PG23-direct.json  |    50 +
+ .../verdict-PG23-direct.stderr.txt                 |     0
+ .../out/CaseCompleteFake/verdict-PG24-direct.json  |    50 +
+ .../verdict-PG24-direct.stderr.txt                 |     0
+ .../out/CaseCompleteFake/verdict-PG25-direct.json  |    50 +
+ .../verdict-PG25-direct.stderr.txt                 |     0
+ .../out/CaseConfigTwins/direct/audit.stderr        |     0
+ .../out/CaseConfigTwins/direct/audit.stdout        |    39 +
+ .../falsify/out/CaseConfigTwins/direct/check.sh    |    65 +
+ .../out/CaseConfigTwins/direct/fleet-objs.after    |     9 +
+ .../out/CaseConfigTwins/direct/fleet-objs.before   |     9 +
+ .../out/CaseConfigTwins/direct/git-calls.log       |    22 +
+ .../out/CaseConfigTwins/direct/lane-objs.after     |     5 +
+ .../out/CaseConfigTwins/direct/lane-objs.before    |     5 +
+ .../out/CaseConfigTwins/direct/premise-dump.txt    |    39 +
+ .../falsify/out/CaseConfigTwins/grid-keep.json     |   703 +
+ .../falsify/out/CaseConfigTwins/grid-keep.stderr   |     0
+ .../round-24/falsify/out/CaseConfigTwins/grid.json |   702 +
+ .../falsify/out/CaseConfigTwins/grid.stderr        |     0
+ .../out/CaseCrossRepo/fixture-verification.txt     |    70 +
+ .../grid-both-arms-pg26-pg27-keep.json             |   378 +
+ .../CaseCrossRepo/grid-both-arms-pg26-pg27.json    |   377 +
+ .../CaseCrossRepo/independent-pg26-verdict.json    |    39 +
+ .../CaseCrossRepo/independent-pg27-verdict.json    |    39 +
+ .../out/CaseCrossRepo/pm05-mutant-pg26.json        |    50 +
+ .../out/CaseCrossRepo/pm05-mutant-pg27.json        |    50 +
+ .../CaseErrataSplice/counterfactual-no-errata.json |    92 +
+ .../counterfactual-no-errata.stderr                |     0
+ .../out/CaseErrataSplice/grid-erratasplice.json    |   424 +
+ .../out/CaseErrataSplice/grid-erratasplice.stderr  |     0
+ .../out/CaseErrataSplice/verify-independent.json   |   459 +
+ .../out/CaseErrataSplice/verify-independent.py     |   177 +
+ .../falsify/out/CaseFleetBlobless/PG43-grid.json   |   148 +
+ .../contaminated-fixture-direct.stderr.txt         |     0
+ .../contaminated-fixture-direct.stdout.txt         |    39 +
+ .../CaseFleetBlobless/direct-PG43-clean.stderr.txt |     1 +
+ .../CaseFleetBlobless/direct-PG43-clean.stdout.txt |     0
+ .../falsify/out/CaseFleetBlobless/fleet-config.txt |    10 +
+ .../CaseFleetBlobless/fleet-missing-objects.txt    |     9 +
+ .../out/CaseFleetBlobless/lane-missing-objects.txt |     5 +
+ .../falsify/out/CaseFleetTree/grid-pg19-pg20.err   |     0
+ .../falsify/out/CaseFleetTree/grid-pg19-pg20.json  |   260 +
+ .../out/CaseFleetTree/verify-ab-nolazyfetch.json   |    30 +
+ .../out/CaseFleetTree/verify-cause-isolation.json  |    20 +
+ .../out/CaseFleetTree/verify-default-rounds.json   |    15 +
+ .../out/CaseFleetTree/verify-fixture-diff.json     |   125 +
+ .../out/CaseFleetTree/verify-fleet-tree.json       |   152 +
+ .../CaseFleetTree/verify-minimal-correction.json   |    58 +
+ .../verify-nolazyfetch-fleet-tree.json             |    28 +
+ .../out/CaseFleetTree/verify-range-rounds.json     |    29 +
+ .../verify-round-selection-frozen-vs-current.json  |    38 +
+ .../out/CaseFleetTree/verify-tree-message.json     |    14 +
+ .../falsify/out/CaseHydratedTwins/candidate.json   |   702 +
+ .../falsify/out/CaseHydratedTwins/grid.json        |   702 +
+ .../falsify/out/CaseHydratedTwins/population.json  |  1367 ++
+ .../falsify/out/CaseHydratedTwins/probe.json       |   183 +
+ .../falsify/out/CaseHydratedTwins/probe.py         |   141 +
+ .../falsify/out/CaseLaneTree/grid-pg15-pg16.json   |   260 +
+ .../CaseLaneTree/probe-census-and-verdicts.json    |   247 +
+ .../probe-transport-and-git-calls.json             |    54 +
+ .../falsify/out/CaseLaneTree/probe2_transport.py   |   148 +
+ .../probe3-grid-premise-live-origin.json           |    21 +
+ .../out/CaseLaneTree/probe3_grid_premise.py        |   102 +
+ .../falsify/out/CaseLaneTree/probe_lanetree.py     |   215 +
+ .../falsify/out/CaseMarkerTwins/assigned.err       |     0
+ .../falsify/out/CaseMarkerTwins/assigned.json      |   702 +
+ .../falsify/out/CaseMarkerTwins/frozen-audit.py    |   967 ++
+ .../out/CaseMarkerTwins/grid-out/candidate.json    |   702 +
+ .../out/CaseMarkerTwins/grid-out/population.json   |  1367 ++
+ .../out/CaseMarkerTwins/probe_marker_holes.out     |    14 +
+ .../out/CaseMarkerTwins/probe_marker_holes.py      |   107 +
+ .../out/CaseMarkerTwins/probe_nonvacuity.out       |     9 +
+ .../out/CaseMarkerTwins/probe_nonvacuity.py        |    88 +
+ .../falsify/out/CaseMarkerTwins/verify.err         |     0
+ .../falsify/out/CaseMarkerTwins/verify.out         |   128 +
+ .../out/CaseMarkerTwins/verify_marker_twins.py     |   258 +
+ .../falsify/out/CaseOmissionTwins/assigned.err     |     0
+ .../falsify/out/CaseOmissionTwins/assigned.json    |   916 ++
+ .../out/CaseOmissionTwins/audit-result.json        |   383 +
+ .../falsify/out/CaseOmissionTwins/audit.err        |     0
+ .../out/CaseOmissionTwins/build_omission.py        |   150 +
+ .../out/CaseOmissionTwins/combinations.json        |   173 +
+ .../out/CaseOmissionTwins/fixture-facts.json       |    82 +
+ .../out/CaseOmissionTwins/grid-out/candidate.json  |   916 ++
+ .../out/CaseOmissionTwins/grid-out/population.json |  1367 ++
+ .../out/CaseOmissionTwins/probe_combinations.py    |   111 +
+ .../falsify/out/CaseOmissionTwins/run_audit.py     |   129 +
+ .../out/CaseOpaqueCited/grid-assigned-run-2.json   |   148 +
+ .../out/CaseOpaqueCited/grid-assigned-run.json     |   148 +
+ .../falsify/out/CaseOpaqueCited/probe-pg46.json    |   238 +
+ .../falsify/out/CaseOpaqueCited/probe_pg46.py      |   337 +
+ .../out/CaseOpaqueFake/grid-bounded-PG47.json      |   148 +
+ .../probe_no_acquisition_fingerprint.py            |   117 +
+ .../out/CaseOpaqueFake/probe_opaque_family.py      |   179 +
+ .../out/CaseOpaqueFake/probe_variant_D.json        |    23 +
+ .../out/CaseOpaqueFake/probe_variant_E.json        |    24 +
+ .../out/CaseOpaqueFake/probe_variants_ABC.json     |    81 +
+ .../CaseOpaqueFake/probe_wrongtype_with_hole.py    |   110 +
+ .../out/CaseOpaquePositive/auditor-machinery.json  |    24 +
+ .../CaseOpaquePositive/control-trace-negctl.json   |    72 +
+ .../falsify/out/CaseOpaquePositive/control_pg48.py |   114 +
+ .../CaseOpaquePositive/eager-blanket-probe.json    |    14 +
+ .../falsify/out/CaseOpaquePositive/eager_pg48.py   |    83 +
+ .../falsify/out/CaseOpaquePositive/grade_pg48.py   |    92 +
+ .../out/CaseOpaquePositive/grader-verdict.json     |    37 +
+ .../falsify/out/CaseOpaquePositive/grid-pg48.json  |   186 +
+ .../falsify/out/CaseOpaquePositive/haz_pg48.py     |    82 +
+ .../out/CaseOpaquePositive/lazy-fetch-hazard.json  |    14 +
+ .../falsify/out/CaseOpaquePositive/mach_pg48.py    |    69 +
+ .../falsify/out/CaseOpaquePositive/pm11-pg48.json  |    13 +
+ .../falsify/out/CaseOpaquePositive/pm11_pg48.py    |    74 +
+ .../falsify/out/CaseOpaquePositive/probe-pg48.json |   170 +
+ .../falsify/out/CaseOpaquePositive/probe_pg48.py   |   213 +
+ .../falsify/out/CaseOpaquePositive/sens_pg48.py    |   143 +
+ .../sensitivity-required-hole.json                 |    40 +
+ .../falsify/out/CaseReportBlob/grid-pg17-pg18.err  |     0
+ .../falsify/out/CaseReportBlob/grid-pg17-pg18.json |   260 +
+ .../falsify/out/CaseReportBlob/verify-out.json     |   143 +
+ .../falsify/out/CaseReportBlob/verify_pg17_pg18.py |   117 +
+ .../out/CaseSourceBlob/expectation-integrity.json  |    87 +
+ .../CaseSourceBlob/grid-both-arms-pg13-pg14.json   |   260 +
+ .../CaseSourceBlob/independent-premise-probe.json  |   414 +
+ .../round-24/falsify/out/CaseSourceBlob/probe.py   |   180 +
+ .../out/CaseUnrelatedFakeLanded/git-calls-PG22.log |    28 +
+ .../out/CaseUnrelatedFakeLanded/git-calls-PG37.log |    28 +
+ .../out/CaseUnrelatedFakeLanded/grid-run.json      |   592 +
+ .../out/CaseUnrelatedFakeLanded/grid-run.stderr    |     0
+ .../independent-verify.json                        |   265 +
+ .../verify_unrelated_fake.py                       |   201 +
+ .../CaseUnrelatedFakeNotes/differential-probe.json |   103 +
+ .../CaseUnrelatedFakeNotes/differential_probe.py   |   102 +
+ .../grid-bounded-PG41-PG42.json                    |   503 +
+ .../grid-bounded-PG41-PG42.stderr.txt              |     0
+ .../peer-hazard-reachability-check.txt             |    19 +
+ .../out/CaseUnrelatedFakeNotes/premise-probe.json  |   270 +
+ .../out/CaseUnrelatedFakeNotes/premise_probe.py    |   131 +
+ .../CaseUnselectedBranch/grid-PG31-PG32-keep.json  |   378 +
+ .../out/CaseUnselectedBranch/grid-PG31-PG32.json   |   377 +
+ .../CaseUnselectedBranch/grid-PG31-PG32.stderr.txt |     0
+ .../out/CaseUnselectedBranch/grid/candidate.json   |   377 +
+ .../out/CaseUnselectedBranch/grid/population.json  |  1367 ++
+ .../CaseUnselectedBranch/verdict-PG31-direct.json  |    39 +
+ .../verdict-PG31-direct.stderr.txt                 |     0
+ .../CaseUnselectedBranch/verdict-PG32-direct.json  |    39 +
+ .../verdict-PG32-direct.stderr.txt                 |     0
+ .../falsify/out/CaseUnusedBlob/candidate.json      |   378 +
+ .../out/CaseUnusedBlob/grid-PG35-PG36-keep.json    |   378 +
+ .../falsify/out/CaseUnusedBlob/grid-PG35-PG36.json |   377 +
+ .../out/CaseUnusedBlob/grid-PG35-PG36.stderr.txt   |     0
+ .../out/CaseUnusedBlob/independent-assertions.json |   283 +
+ .../falsify/out/CaseUnusedBlob/population.json     |  1367 ++
+ .../falsify/out/CaseUnusedBlobless/candidate.json  |   379 +
+ .../out/CaseUnusedBlobless/grid-exact-repeat.json  |   379 +
+ .../falsify/out/CaseUnusedBlobless/grid-exact.err  |     0
+ .../falsify/out/CaseUnusedBlobless/grid-exact.json |   379 +
+ .../falsify/out/CaseUnusedBlobless/population.json |  1367 ++
+ .../falsify/out/CaseUnusedBlobless/probe.err       |     0
+ .../falsify/out/CaseUnusedBlobless/probe.out       |    46 +
+ .../CaseUnusedBlobless/probe_unused_blobless.py    |   267 +
+ .../falsify/out/CaseUnusedTree/grid-pg44-pg45.json |   377 +
+ .../out/CaseUnusedTree/grid-pg44-pg45.stderr       |     0
+ .../falsify/out/CaseUnusedTree/mutants-myrows.err  |     0
+ .../falsify/out/CaseUnusedTree/mutants-myrows.json |   134 +
+ .../out/CaseUnusedTree/probe-eager-refusal.err     |     0
+ .../out/CaseUnusedTree/probe-eager-refusal.json    |   141 +
+ .../out/CaseUnusedTree/verify-unused-tree.json     |   230 +
+ .../out/CaseUnusedTree/verify2-git-calls.json      |   194 +
+ .../falsify/out/CaseWrongType/candidate.json       |   515 +
+ .../falsify/out/CaseWrongType/mutant-diffs.txt     |    21 +
+ .../falsify/out/CaseWrongType/population.json      |  1367 ++
+ .../falsify/out/CaseWrongType/probe-out.json       |   486 +
+ .../CodeErrataBoundary/A1_control_pg34_plain.json  |    24 +
+ ...unterexample_unavailable_rescued.errata-row.tsv |     1 +
+ .../A2_counterexample_unavailable_rescued.json     |    26 +
+ .../A3_pg29_errata_corrected_plain.json            |    48 +
+ .../A4_pg30_errata_corrected_promisor.json         |    48 +
+ ...5_unselected_round_unresolvable_correction.json |    45 +
+ ...able_correction_unselected_round.errata-row.tsv |     1 +
+ ...A6_unavailable_correction_unselected_round.json |    47 +
+ ...ilable_correction_selected_round.errata-row.tsv |     1 +
+ .../A7_unavailable_correction_selected_round.json  |    26 +
+ .../CodeErrataBoundary/A8_ledger_blob_missing.json |     8 +
+ .../CodeErrataBoundary/ab_pinned_vs_scoped.json    |   283 +
+ .../out/CodeErrataBoundary/ab_pinned_vs_scoped.py  |    50 +
+ .../out/CodeErrataBoundary/audit.errata-scoped.py  |  1334 ++
+ .../falsify/out/CodeErrataBoundary/exit2_form.json |    26 +
+ .../falsify/out/CodeErrataBoundary/exit2_form.py   |    27 +
+ .../CodeErrataBoundary/probe_errata_boundary.py    |   206 +
+ .../out/CodeErrataBoundary/probe_ledger_read.py    |    40 +
+ .../out/CodeErrataBoundary/real_no_harm.json       |    79 +
+ .../falsify/out/CodeErrataBoundary/real_no_harm.py |    40 +
+ .../falsify/out/CodeErrataBoundary/summary.json    |   117 +
+ .../out/CodeGitBoundary/A-isolation-identity.txt   |    28 +
+ .../falsify/out/CodeGitBoundary/B-callsites.txt    |    73 +
+ .../CodeGitBoundary/C-promisor-isolation-ab.txt    |    72 +
+ .../out/CodeGitBoundary/D-scale-deadline.txt       |    10 +
+ .../falsify/out/CodeGitBoundary/E-git-floor.txt    |    11 +
+ .../falsify/out/CodeGitBoundary/F-other-tools.txt  |    30 +
+ .../out/CodeLocalScope/counterfactual-result.json  |    67 +
+ .../falsify/out/CodeLocalScope/probe-result.json   |   225 +
+ .../round-24/falsify/out/CodeLocalScope/probe.py   |   242 +
+ .../round-24/falsify/out/CodeLocalScope/probe2.py  |   123 +
+ .../out/CodeLookupMerge/e2e-order-probe.txt        |    93 +
+ .../round-24/falsify/out/CodeLookupMerge/e2e.py    |   137 +
+ .../round-24/falsify/out/CodeLookupMerge/probe.py  |   165 +
+ .../out/CodeLookupMerge/unit-lookup-probe.txt      |   105 +
+ .../out/CodeOpaqueDiagnosis/probe-results.json     |   101 +
+ .../falsify/out/CodeOpaqueDiagnosis/probe.py       |   448 +
+ .../out/CodeOpaqueDiagnosis/probe2-results.json    |    44 +
+ .../falsify/out/CodeOpaqueDiagnosis/probe2.py      |   186 +
+ .../out/CodeOpaqueDiagnosis/probe3-results.json    |    26 +
+ .../falsify/out/CodeOpaqueDiagnosis/probe3.py      |   170 +
+ .../out/CodeOpaqueDiagnosis/probe4-results.json    |    20 +
+ .../falsify/out/CodeOpaqueDiagnosis/probe4.py      |   164 +
+ .../CodeOpaqueDiagnosis/s23-tag-dereference.txt    |     2 +
+ .../falsify/out/CodeOpaqueDiagnosis/s23.py         |    30 +
+ .../s23b-tag-in-landed-section.txt                 |     2 +
+ .../falsify/out/CodeOpaqueDiagnosis/s23b.py        |    31 +
+ .../falsify/out/CodePerRunCache/diffprobe.py       |   195 +
+ .../falsify/out/CodePerRunCache/fixed-auditor.py   |  1347 ++
+ .../CodePerRunCache/frozen-report-landing-audit.py |   967 ++
+ .../round-24/falsify/out/CodePerRunCache/git-shim  |     6 +
+ .../falsify/out/CodePerRunCache/git-shim-log.txt   |    22 +
+ .../out/CodePerRunCache/grid-fixed-subset13.json   |  1189 ++
+ .../round-24/falsify/out/CodePerRunCache/mkfix.py  |    52 +
+ .../round-24/falsify/out/CodePerRunCache/probe.py  |   264 +
+ .../round-24/falsify/out/CodePerRunCache/probe2.py |   286 +
+ .../round-24/falsify/out/CodePerRunCache/probe3.py |   212 +
+ .../round-24/falsify/out/CodePerRunCache/probe4.py |   255 +
+ .../round-24/falsify/out/CodePerRunCache/probe5.py |   192 +
+ .../round-24/falsify/out/CodePerRunCache/probe6.py |   181 +
+ .../round-24/falsify/out/CodePerRunCache/probe7.py |   183 +
+ .../round-24/falsify/out/CodePerRunCache/probe8.py |   162 +
+ .../round-24/falsify/out/CodePerRunCache/probe9.py |   188 +
+ .../falsify/out/CodeRequiredReads/cells.md         |    19 +
+ .../out/CodeRequiredReads/errata_scope_probe.json  |   110 +
+ .../CodeRequiredReads/required_reads_probe.json    |   394 +
+ .../out/CodeRequiredReads/required_reads_probe.py  |   129 +
+ .../out/CodeStatusPriority/probe-results.json      |   231 +
+ .../falsify/out/CodeStatusPriority/probe.py        |   378 +
+ .../falsify/out/CodeStatusPriority/transcript.sh   |    49 +
+ .../falsify/out/CodeStatusPriority/transcript.txt  |    59 +
+ .../out/ConnInterfaces/anchors-shipped.json        |   194 +
+ .../round-24/falsify/out/ConnInterfaces/g-a.err    |    15 +
+ .../round-24/falsify/out/ConnInterfaces/g-b.err    |     0
+ .../round-24/falsify/out/ConnInterfaces/g-c.err    |    14 +
+ .../out/ConnInterfaces/grid-prefix-vs-shipped.diff |   117 +
+ .../ConnInterfaces/grid-r23-current-subset.json    |   410 +
+ .../falsify/out/ConnInterfaces/grid-twin-asym.json |   245 +
+ .../round-24/falsify/out/ConnInterfaces/m-nope.err |    15 +
+ .../falsify/out/ConnInterfaces/mut-PM01.json       |   113 +
+ .../falsify/out/ConnInterfaces/mut-PM02.json       |    64 +
+ .../falsify/out/ConnInterfaces/mut-PM03.json       |    66 +
+ .../falsify/out/ConnInterfaces/mut-PM04.json       |    38 +
+ .../falsify/out/ConnInterfaces/mut-PM04b.json      |    75 +
+ .../falsify/out/ConnInterfaces/mut-PM07.json       |    41 +
+ .../falsify/out/ConnInterfaces/mut-PM08.json       |    28 +
+ .../falsify/out/ConnInterfaces/mut-PM10.json       |    56 +
+ .../falsify/out/ConnInterfaces/mut-PM11.json       |    65 +
+ .../falsify/out/ConnInterfaces/mut-frozen.err      |     0
+ .../falsify/out/ConnInterfaces/mut-frozen.json     |    63 +
+ .../out/ConnInterfaces/mut-shortid-PM01.err        |     1 +
+ .../out/ConnInterfaces/mut-shortid-PM02.err        |     1 +
+ .../out/ConnInterfaces/mut-shortid-PM03.err        |     1 +
+ .../out/ConnInterfaces/mut-shortid-PM11.err        |     1 +
+ .../ConnInterfaces/mutants-prefix-vs-shipped.diff  |     0
+ .../out/ConnInterfaces/probe-twin-asym-auditor.py  |  1343 ++
+ .../round-24/falsify/out/ConnMetrics/cells.tsv     |    48 +
+ .../falsify/out/ConnMetrics/promisor-grid-count.py |   546 +
+ .../out/ConnMetrics/report-A-before-after.json     |  1139 ++
+ .../out/ConnMetrics/report-B-selfcheck.json        |  1220 ++
+ .../out/ConnMetrics/report-C-cross-artifact.json   |  1139 ++
+ .../falsify/out/ConnReceipts/receipts-audit.json   |   305 +
+ .../integration-packet-4cell-combined.diff         |   184 +
+ ...-patch-3cell-ledger-plus-3-appendix-blocks.diff |   152 +
+ .../report-pre-restore-snapshot-2026-10-21.md      |   689 +
+ .../ConnSources/s093-packet-relative-to-3cell.diff |    50 +
+ ...used-by-reconciliation-plus-S093-adjacent.patch |    21 +
+ .../out/ConnSources/used-by-reconciliation.patch   |    18 +
+ .../round-24/falsify/out/ConnSources/verify.txt    |   151 +
+ .../CritGitFloor/official-git-source-excerpts.txt  |    48 +
+ .../fleet_only_wrongtype.arms.txt                  |    51 +
+ .../CritLocalContract/fleet_only_wrongtype.out.txt |    30 +
+ .../out/CritLocalContract/fleet_only_wrongtype.sh  |    52 +
+ .../CritLocalContract/grid-subset-candidate.err    |     0
+ .../CritLocalContract/grid-subset-candidate.json   |   869 ++
+ .../out/CritLocalContract/grid-subset-patched.err  |     0
+ .../out/CritLocalContract/grid-subset-patched.json |   869 ++
+ .../out/CritLocalContract/minimal-correction.diff  |    14 +
+ .../out/CritLocalContract/walk_timing.out.txt      |     5 +
+ .../out/CritLocalContract/xstore_tag.out.txt       |     3 +
+ .../round-24/falsify/out/CritNoTrade/matrix.json   |   452 +
+ .../round-24/falsify/out/CritNoTrade/matrix.py     |    26 +
+ .../falsify/out/CritNoTrade/run-outputs.tgz        |   Bin 0 -> 5272 bytes
+ .../waves/round-24/falsify/out/CritNoTrade/trap.sh |     3 +
+ .../m1-current-amended-subset.json                 |  1196 ++
+ .../falsify/out/CritOriginalWithdrawn/m1.stderr    |     0
+ .../m2-frozen-as-current.json                      |   198 +
+ .../falsify/out/CritOriginalWithdrawn/m2.stderr    |     0
+ .../m3-frozen-as-current-amended7.json             |   498 +
+ .../falsify/out/CritOriginalWithdrawn/m3.stderr    |     0
+ .../out/CritOriginalWithdrawn/m4-open-PG40.json    |   153 +
+ .../falsify/out/CritOriginalWithdrawn/m4.stderr    |     0
+ .../out/CritStorageSafety/fixture-facts.txt        |     9 +
+ .../grid-3case-population.json                     |  1367 ++
+ .../grid-3case-supplement.json                     |   380 +
+ .../out/DocFrontier/grid-T01-F23-both-arms.json    |    93 +
+ .../out/DocFrontier/grid-T01-F23-current-arm.json  |    50 +
+ .../DocFrontier/official-git-floor-readings.txt    |    10 +
+ .../round-24/falsify/out/DocKnowledge/X2_grid.json |   695 +
+ .../append-knowledge-error-is-not-a-verdict.md     |    42 +
+ .../out/DocKnowledge/append-lessons-round-24.md    |    38 +
+ .../out/DocKnowledge/canonical-appends.patch       |    96 +
+ .../falsify/out/DocKnowledge/census_both.json      |   178 +
+ .../falsify/out/DocKnowledge/census_both2.json     |   178 +
+ .../falsify/out/DocKnowledge/current9.json         |   145 +
+ .../falsify/out/DocKnowledge/current_iso.json      |   174 +
+ .../round-24/falsify/out/DocKnowledge/frozen9.json |   143 +
+ .../falsify/out/DocKnowledge/frozen_ctrl.json      |   263 +
+ .../falsify/out/DocKnowledge/frozen_rest.json      |   337 +
+ .../falsify/out/DocKnowledge/grid-both.json        |  1381 ++
+ .../round-24/falsify/out/DocKnowledge/pg47_48.json |   165 +
+ .../falsify/out/DocKnowledge/pg_subset.json        |   630 +
+ .../round-24/falsify/out/DocKnowledge/selftest.out |    63 +
+ .../falsify/out/DocKnowledge/stub_all_exit2.json   |   661 +
+ .../falsify/out/DocKnowledge/stub_unrelated.json   |    76 +
+ .../falsify/out/DocKnowledge/unrelated_exit2.py    |     6 +
+ .../falsify/out/DocKnowledge/valueerror_exit2.py   |     6 +
+ .../round-24/falsify/out/DocLesson/evidence.json   |   104 +
+ .../falsify/out/DocLesson/verify_lesson.sh         |   120 +
+ .ufo/waves/round-24/falsify/out/DocLog/claims.tsv  |    10 +
+ .../waves/round-24/falsify/out/DocLog/commands.txt |   260 +
+ .../round-24/falsify/out/DocLog/log-chronology.txt |   619 +
+ .../round-24/falsify/out/DocQuality/append-v2.txt  |   167 +
+ .../round-24/falsify/out/DocQuality/append-v3.txt  |    79 +
+ .../round-24/falsify/out/DocQuality/append.txt     |   133 +
+ .../out/DocScorecardAuthority/checks-transcript.md |   102 +
+ .../round-24/falsify/out/DocSkill/anchors.json     |   194 +
+ .ufo/waves/round-24/falsify/out/DocSkill/conf.json |   121 +
+ .../round-24/falsify/out/DocSkill/iso-bogus.json   |    39 +
+ .../round-24/falsify/out/DocSkill/iso-m01.json     |    39 +
+ .../round-24/falsify/out/DocSkill/iso-m01full.json |    51 +
+ .ufo/waves/round-24/falsify/out/DocSkill/pg3.json  |   426 +
+ .ufo/waves/round-24/falsify/out/DocSkill/pg48.json |   186 +
+ .../round-24/falsify/out/DocSkill/pgplain.json     |   802 ++
+ .../round-24/falsify/out/DocSkill/r23ascur.json    |   184 +
+ .../mutated-audit.py.scratch-copy                  |  1333 ++
+ .../out/GateAuditSelftest/negative-control.txt     |   125 +
+ .../out/GateAuditSelftest/selftest-run3.txt        |    63 +
+ .../noref-origin-master-absent.json                |   217 +
+ .../pinned-citation-provenance.json                |   217 +
+ .../pinned-citation-provenance.stderr.txt          |     0
+ .../falsify/out/GateCitationNoHarm/pinned-run.txt  |   223 +
+ .../falsify/out/GateGridSelftest/exit-codes.txt    |     6 +
+ .../GateGridSelftest/negativecontrol.stderr.txt    |     1 +
+ .../GateGridSelftest/negativecontrol.stdout.txt    |     0
+ .../falsify/out/GateGridSelftest/pinned-hashes.txt |     3 +
+ .../selftest-plus-unknown.stderr.txt               |     0
+ .../selftest-plus-unknown.stdout.txt               |    12 +
+ .../out/GateGridSelftest/selftest.stderr.txt       |     0
+ .../out/GateGridSelftest/selftest.stdout.txt       |    12 +
+ .../GateGridSelftest/variants/m1-expectations.json |  1478 ++
+ .../out/GateGridSelftest/variants/m1.stdout.txt    |    12 +
+ .../GateGridSelftest/variants/m2-expectations.json |  1507 ++
+ .../out/GateGridSelftest/variants/m2.stdout.txt    |    12 +
+ .../GateGridSelftest/variants/m3-expectations.json |  1508 ++
+ .../out/GateGridSelftest/variants/m3.stdout.txt    |    12 +
+ .../out/GateHistoryParity/all_cur_errata.rc        |     1 +
+ .../out/GateHistoryParity/all_cur_errata.stderr    |     0
+ .../out/GateHistoryParity/all_cur_errata.stdout    |    24 +
+ .../out/GateHistoryParity/all_cur_noerrata.rc      |     1 +
+ .../out/GateHistoryParity/all_cur_noerrata.stderr  |     0
+ .../out/GateHistoryParity/all_cur_noerrata.stdout  |    24 +
+ .../out/GateHistoryParity/all_r23_errata.rc        |     1 +
+ .../out/GateHistoryParity/all_r23_errata.stderr    |     0
+ .../out/GateHistoryParity/all_r23_errata.stdout    |    24 +
+ .../out/GateHistoryParity/all_r23_noerrata.rc      |     1 +
+ .../out/GateHistoryParity/all_r23_noerrata.stderr  |     0
+ .../out/GateHistoryParity/all_r23_noerrata.stdout  |    24 +
+ .../out/GateHistoryParity/base_cur_errata.rc       |     1 +
+ .../out/GateHistoryParity/base_cur_errata.stderr   |     0
+ .../out/GateHistoryParity/base_cur_errata.stdout   |    24 +
+ .../out/GateHistoryParity/base_cur_noerrata.rc     |     1 +
+ .../out/GateHistoryParity/base_cur_noerrata.stderr |     0
+ .../out/GateHistoryParity/base_cur_noerrata.stdout |    24 +
+ .../out/GateHistoryParity/base_r23_errata.rc       |     1 +
+ .../out/GateHistoryParity/base_r23_errata.stderr   |     0
+ .../out/GateHistoryParity/base_r23_errata.stdout   |    24 +
+ .../out/GateHistoryParity/base_r23_noerrata.rc     |     1 +
+ .../out/GateHistoryParity/base_r23_noerrata.stderr |     0
+ .../out/GateHistoryParity/base_r23_noerrata.stdout |    24 +
+ .../falsify/out/GateHistoryParity/cl_cur_errata.rc |     1 +
+ .../out/GateHistoryParity/cl_cur_errata.stderr     |     0
+ .../out/GateHistoryParity/cl_cur_errata.stdout     |    24 +
+ .../out/GateHistoryParity/cl_cur_noerrata.rc       |     1 +
+ .../out/GateHistoryParity/cl_cur_noerrata.stderr   |     0
+ .../out/GateHistoryParity/cl_cur_noerrata.stdout   |    24 +
+ .../falsify/out/GateHistoryParity/cl_r23_errata.rc |     1 +
+ .../out/GateHistoryParity/cl_r23_errata.stderr     |     0
+ .../out/GateHistoryParity/cl_r23_errata.stdout     |    24 +
+ .../out/GateHistoryParity/cl_r23_noerrata.rc       |     1 +
+ .../out/GateHistoryParity/cl_r23_noerrata.stderr   |     0
+ .../out/GateHistoryParity/cl_r23_noerrata.stdout   |    24 +
+ .../falsify/out/GateHistoryParity/cur_errata.json  |   278 +
+ .../falsify/out/GateHistoryParity/cur_errata.rc    |     1 +
+ .../out/GateHistoryParity/cur_errata.stderr        |     0
+ .../out/GateHistoryParity/cur_errata.stdout        |    24 +
+ .../out/GateHistoryParity/cur_noerrata.json        |   260 +
+ .../falsify/out/GateHistoryParity/cur_noerrata.rc  |     1 +
+ .../out/GateHistoryParity/cur_noerrata.stderr      |     0
+ .../out/GateHistoryParity/cur_noerrata.stdout      |    24 +
+ .../falsify/out/GateHistoryParity/current-audit.py |  1332 ++
+ .../out/GateHistoryParity/fin_cur_errata.rc        |     1 +
+ .../out/GateHistoryParity/fin_cur_errata.stderr    |     0
+ .../out/GateHistoryParity/fin_cur_errata.stdout    |    24 +
+ .../out/GateHistoryParity/fin_cur_noerrata.rc      |     1 +
+ .../out/GateHistoryParity/fin_cur_noerrata.stderr  |     0
+ .../out/GateHistoryParity/fin_cur_noerrata.stdout  |    24 +
+ .../out/GateHistoryParity/fin_r23_errata.rc        |     1 +
+ .../out/GateHistoryParity/fin_r23_errata.stderr    |     0
+ .../out/GateHistoryParity/fin_r23_errata.stdout    |    24 +
+ .../out/GateHistoryParity/fin_r23_noerrata.rc      |     1 +
+ .../out/GateHistoryParity/fin_r23_noerrata.stderr  |     0
+ .../out/GateHistoryParity/fin_r23_noerrata.stdout  |    24 +
+ .../falsify/out/GateHistoryParity/link_cur.rc      |     1 +
+ .../falsify/out/GateHistoryParity/link_cur.stderr  |     0
+ .../falsify/out/GateHistoryParity/link_cur.stdout  |    24 +
+ .../falsify/out/GateHistoryParity/link_r23.rc      |     1 +
+ .../falsify/out/GateHistoryParity/link_r23.stderr  |     0
+ .../falsify/out/GateHistoryParity/link_r23.stdout  |    24 +
+ .../out/GateHistoryParity/parity-summary.json      |    67 +
+ .../falsify/out/GateHistoryParity/r23-audit.py     |   967 ++
+ .../falsify/out/GateHistoryParity/r23_errata.json  |   278 +
+ .../falsify/out/GateHistoryParity/r23_errata.rc    |     1 +
+ .../out/GateHistoryParity/r23_errata.stderr        |     0
+ .../out/GateHistoryParity/r23_errata.stdout        |    24 +
+ .../out/GateHistoryParity/r23_noerrata.json        |   260 +
+ .../falsify/out/GateHistoryParity/r23_noerrata.rc  |     1 +
+ .../out/GateHistoryParity/r23_noerrata.stderr      |     0
+ .../out/GateHistoryParity/r23_noerrata.stdout      |    24 +
+ .../falsify/out/GateHistoryParity/trace_current.py |    56 +
+ .../out/GateHistoryParity/trace_errata.stderr      |    33 +
+ .../out/GateHistoryParity/trace_noerrata.stderr    |    33 +
+ .../falsify/out/GateMutationSelftest/observe.py    |    93 +
+ .../selftest-cli-status-observation.txt            |   156 +
+ .../falsify/out/MutOpaque/PM10/mutated-grid.json   |  1846 +++
+ .../falsify/out/MutOpaque/PM10/pristine-grid.json  |  1722 +++
+ .../falsify/out/MutOpaque/PM10/probe-state.json    |   106 +
+ .../falsify/out/MutOpaque/PM10/restored-grid.json  |  1722 +++
+ .../falsify/out/MutOpaque/PM11/mutated-grid.json   |  1479 ++
+ .../falsify/out/MutOpaque/PM11/pristine-grid.json  |  1722 +++
+ .../falsify/out/MutOpaque/PM11/probe-state.json    |   112 +
+ .../falsify/out/MutOpaque/PM11/restored-grid.json  |  1722 +++
+ .../out/MutOpaque/observed-runner-results.json     |    54 +
+ .../round-24/falsify/out/MutOpaque/opaque-probe.py |   139 +
+ .../PM01-blanket-metadata-refusal.command.json     |    52 +
+ .../PM01-blanket-metadata-refusal.grid.json        |  3447 +++++
+ .../PM01-blanket-metadata-refusal.stderr.txt       |     0
+ .../PM02-blanket-unknown-refusal.command.json      |    35 +
+ .../PM02-blanket-unknown-refusal.grid.json         |  3871 ++++++
+ .../PM02-blanket-unknown-refusal.stderr.txt        |     0
+ .../falsify/out/MutOverRefusal/hashes-after.json   |     6 +
+ .../falsify/out/MutOverRefusal/hashes-before.json  |     6 +
+ .../falsify/out/MutOverRefusal/native.stderr.txt   |     0
+ .../falsify/out/MutOverRefusal/native.stdout.json  |   775 ++
+ .../out/MutOverRefusal/pristine.command.json       |    21 +
+ .../falsify/out/MutOverRefusal/pristine.grid.json  |  4519 ++++++
+ .../falsify/out/MutOverRefusal/pristine.stderr.txt |     0
+ .../falsify/out/MutOverRefusal/probe-result.json   |   151 +
+ .../out/MutOverRefusal/restored.command.json       |    21 +
+ .../falsify/out/MutOverRefusal/restored.grid.json  |  4519 ++++++
+ .../falsify/out/MutOverRefusal/restored.stderr.txt |     0
+ .../falsify/out/MutOverRefusal/run-probe.py        |   132 +
+ .../out/MutOverRefusal/selected-patterns.json      |    32 +
+ .../out/MutRedundantAll/measurement-summary.json   |   396 +
+ .../falsify/out/MutRedundantAll/mutated.grid.json  |  4519 ++++++
+ .../out/MutRedundantAll/mutated.grid.stderr        |     0
+ .../falsify/out/MutRedundantAll/pristine.grid.json |  4519 ++++++
+ .../out/MutRedundantAll/pristine.grid.stderr       |     0
+ .../out/MutRedundantAll/probe-evidence.json        | 13724 +++++++++++++++++++
+ .../falsify/out/MutRedundantAll/restored.grid.json |  4519 ++++++
+ .../out/MutRedundantAll/restored.grid.stderr       |     0
+ .../falsify/out/MutRedundantAll/runner.stderr      |     0
+ .../falsify/out/MutRedundantAll/runner.stdout.json |    39 +
+ .../falsify/out/MutResolution/mutants-output.json  |   132 +
+ .../out/MutResolution/restored-grid/candidate.json |  4519 ++++++
+ .../MutResolution/restored-grid/population.json    |  1367 ++
+ .../falsify/out/MutResolution/static-evidence.json |    46 +
+ .../out/MutStaticNoFetch/pm08-static-probe.py      |   123 +
+ .../MutStaticNoFetch/static-probe-evidence.json    |    51 +
+ .../out/MutUnavailable/anchors-and-before.json     |    67 +
+ .../falsify/out/MutUnavailable/assigned-PM06.diff  |    25 +
+ .../out/MutUnavailable/assigned-mutations.diff     |    23 +
+ .../falsify/out/MutUnavailable/capture-mutants.py  |   104 +
+ .../falsify/out/MutUnavailable/capture-pm06.py     |   119 +
+ .../MutUnavailable/final-measurement-summary.json  |   365 +
+ .../out/MutUnavailable/grid-00-pristine.json       |  4536 ++++++
+ ...-01-PM03-skip-required-object-availability.json |  4782 +++++++
+ ...-PM04-accept-unavailable-referenced-object.json |  4660 +++++++
+ .../out/MutUnavailable/measurement-summary.json    |   218 +
+ .../falsify/out/MutUnavailable/oracle-digests.json |     6 +
+ .../MutUnavailable/pm06-anchors-and-before.json    |    27 +
+ .../pm06-command-and-restoration.json              |    73 +
+ .../out/MutUnavailable/pm06-grid-00-pristine.json  |  4536 ++++++
+ ...m06-grid-01-PM06-swallow-actual-read-error.json |  4986 +++++++
+ .../out/MutUnavailable/pm06-grid-02-restored.json  |  4536 ++++++
+ .../out/MutUnavailable/pm06-runner.stderr.txt      |     0
+ .../out/MutUnavailable/pm06-runner.stdout.json     |   202 +
+ .../falsify/out/MutUnavailable/restoration.json    |    90 +
+ .../falsify/out/MutUnavailable/restored.stderr.txt |     0
+ .../out/MutUnavailable/restored.stdout.json        |  4519 ++++++
+ .../MutUnavailable/runner-command-and-hashes.json  |    71 +
+ .../falsify/out/MutUnavailable/runner.stderr.txt   |     0
+ .../falsify/out/MutUnavailable/runner.stdout.json  |   170 +
+ .../falsify/out/SrcFsckReject/evidence.json        |   130 +
+ .../round-24/falsify/out/SrcMarker/alloc-v2.56.0.c |   129 +
+ .../round-24/falsify/out/SrcMarker/blob-v2.56.0.c  |    18 +
+ .../falsify/out/SrcMarker/commit-v2.56.0.c         |  2037 +++
+ .../falsify/out/SrcMarker/fsck-lib-v2.56.0.c       |  1488 ++
+ .../round-24/falsify/out/SrcMarker/fsck-v2.56.0.c  |  1004 ++
+ .../falsify/out/SrcMarker/packfile-v2.56.0.c       |  2223 +++
+ .../out/SrcMarker/partial-clone-2.56.0.html        |  2311 ++++
+ .../out/SrcMarker/partial-clone-v2.56.0.adoc       |   367 +
+ .../falsify/out/SrcMarker/partial-clone.html       |  2311 ++++
+ .../waves/round-24/falsify/out/SrcMarker/pins.json |   105 +
+ .../round-24/falsify/out/SrcMarker/tree-v2.56.0.c  |   220 +
+ .../round-24/falsify/out/SrcRevList/evidence.txt   |   128 +
+ .ufo/waves/round-24/falsify/payload-selection.json |    20 +
+ .ufo/waves/round-24/falsify/payload-versions.json  |    22 +
+ .ufo/waves/round-24/falsify/spawn-result.json      |  1106 ++
+ .../round-24/falsify/spec-pinned-2e254a17.json     |   327 +
+ .../round-24/falsify/spec-pinned-f1e755e0.json     |   327 +
+ .ufo/waves/round-24/falsify/spec.json              |   327 +
+ .../waves/round-24/fixes/GridAttestation/README.md |   108 +
+ .../fixes/GridAttestation/promisor-grid.patch      |   441 +
+ .../fixes/GridAttestation/promisor-grid.py         |  1385 ++
+ .../round-24/fixes/GridAttestationV2/README.md     |    71 +
+ .../GridAttestationV2/promisor-grid-v2-delta.patch |   143 +
+ .../fixes/GridAttestationV2/promisor-grid.patch    |   520 +
+ .../fixes/GridAttestationV2/promisor-grid.py       |  1435 ++
+ .../round-24/fixes/GridAttestationV3/README.md     |    63 +
+ .../GridAttestationV3/promisor-grid-v3-delta.patch |    52 +
+ .../fixes/GridAttestationV3/promisor-grid.patch    |   558 +
+ .../fixes/GridAttestationV3/promisor-grid.py       |  1464 ++
+ .../round-24/fixes/GridAttestationV4/README.md     |    64 +
+ .../GridAttestationV4/promisor-grid-v4-delta.patch |   121 +
+ .../fixes/GridAttestationV4/promisor-grid.patch    |   601 +
+ .../fixes/GridAttestationV4/promisor-grid.py       |  1507 ++
+ .../round-24/fixes/GridAttestationV5/README.md     |    45 +
+ .../GridAttestationV5/promisor-grid-v5-delta.patch |    11 +
+ .../fixes/GridAttestationV5/promisor-grid.patch    |   610 +
+ .../fixes/GridAttestationV5/promisor-grid.py       |  1505 ++
+ .../round-24/fixes/GridAttestationV6/README.md     |   106 +
+ .../GridAttestationV6/promisor-grid-v6-delta.patch |   243 +
+ .../fixes/GridAttestationV6/promisor-grid.patch    |   829 ++
+ .../fixes/GridAttestationV6/promisor-grid.py       |  1582 +++
+ .../round-24/fixes/GridAttestationV7/README.md     |    51 +
+ .../GridAttestationV7/promisor-grid-v7-delta.patch |    46 +
+ .../fixes/GridAttestationV7/promisor-grid.patch    |   835 ++
+ .../fixes/GridAttestationV7/promisor-grid.py       |  1588 +++
+ .ufo/waves/round-24/fixes/GridMetrics/README.md    |    77 +
+ .../round-24/fixes/GridMetrics/promisor-grid.patch |    76 +
+ .../round-24/fixes/GridMetrics/promisor-grid.py    |  1174 ++
+ .../fixes/MutationEvidence/inventory-v2.json       |   545 +
+ .../preliminary-receipt-provenance.md              |    58 +
+ .../MutationEvidence/promisor-mutants-v2.patch     |   492 +
+ .../fixes/MutationEvidence/promisor-mutants.py     |  1181 ++
+ .../round-24/fixes/MutationEvidence/rationale.md   |   157 +
+ .../fixes/MutationEvidence/selftest-receipt.txt    |     2 +
+ .../MutationEvidenceV10/isolation-mutants.patch    |    19 +
+ .../fixes/MutationEvidenceV10/isolation-mutants.py |   207 +
+ .../MutationEvidenceV10/promisor-mutants-v10.patch |  1137 ++
+ .../fixes/MutationEvidenceV10/promisor-mutants.py  |  1587 +++
+ .../fixes/MutationEvidenceV10/rationale-v10.md     |    77 +
+ .../fixes/MutationEvidenceV10/selftest-receipt.txt |     2 +
+ .../MutationEvidenceV11/isolation-mutants.patch    |    19 +
+ .../fixes/MutationEvidenceV11/isolation-mutants.py |   207 +
+ .../MutationEvidenceV11/promisor-mutants-v11.patch |  1194 ++
+ .../fixes/MutationEvidenceV11/promisor-mutants.py  |  1633 +++
+ .../fixes/MutationEvidenceV11/rationale-v11.md     |    73 +
+ .../fixes/MutationEvidenceV11/selftest-receipt.txt |     2 +
+ .../MutationEvidenceV12/isolation-mutants.patch    |    19 +
+ .../fixes/MutationEvidenceV12/isolation-mutants.py |   207 +
+ .../MutationEvidenceV12/promisor-mutants-v12.patch |  1250 ++
+ .../fixes/MutationEvidenceV12/promisor-mutants.py  |  1675 +++
+ .../fixes/MutationEvidenceV12/rationale-v12.md     |    74 +
+ .../fixes/MutationEvidenceV12/selftest-receipt.txt |     2 +
+ .../MutationEvidenceV13/isolation-mutants.patch    |    19 +
+ .../fixes/MutationEvidenceV13/isolation-mutants.py |   207 +
+ .../MutationEvidenceV13/promisor-mutants-v13.patch |  1283 ++
+ .../fixes/MutationEvidenceV13/promisor-mutants.py  |  1708 +++
+ .../fixes/MutationEvidenceV13/rationale-v13.md     |    72 +
+ .../fixes/MutationEvidenceV13/selftest-receipt.txt |     2 +
+ .../MutationEvidenceV14/isolation-mutants.patch    |    19 +
+ .../fixes/MutationEvidenceV14/isolation-mutants.py |   207 +
+ .../MutationEvidenceV14/promisor-mutants-v14.patch |  1359 ++
+ .../fixes/MutationEvidenceV14/promisor-mutants.py  |  1784 +++
+ .../fixes/MutationEvidenceV14/rationale-v14.md     |    84 +
+ .../fixes/MutationEvidenceV14/selftest-receipt.txt |     2 +
+ .../fixes/MutationEvidenceV3/inventory-v3.json     |   847 ++
+ .../MutationEvidenceV3/promisor-mutants-v3.patch   |   573 +
+ .../fixes/MutationEvidenceV3/promisor-mutants.py   |  1190 ++
+ .../fixes/MutationEvidenceV3/rationale-v3.md       |   119 +
+ .../fixes/MutationEvidenceV3/selftest-receipt.txt  |     2 +
+ .../fixes/MutationEvidenceV4/inventory-v4.json     |   517 +
+ .../MutationEvidenceV4/isolation-mutants.patch     |    19 +
+ .../fixes/MutationEvidenceV4/isolation-mutants.py  |   207 +
+ .../legacy-empty-selection-proof.txt               |    13 +
+ .../MutationEvidenceV4/promisor-mutants-v4.patch   |   644 +
+ .../fixes/MutationEvidenceV4/promisor-mutants.py   |  1215 ++
+ .../fixes/MutationEvidenceV4/rationale-v4.md       |   129 +
+ .../fixes/MutationEvidenceV4/selftest-receipt.txt  |     2 +
+ .../fixes/MutationEvidenceV5/inventory-v5.json     |   544 +
+ .../MutationEvidenceV5/isolation-mutants.patch     |    19 +
+ .../fixes/MutationEvidenceV5/isolation-mutants.py  |   207 +
+ .../MutationEvidenceV5/promisor-mutants-v5.patch   |   650 +
+ .../fixes/MutationEvidenceV5/promisor-mutants.py   |  1217 ++
+ .../fixes/MutationEvidenceV5/rationale-v5.md       |    90 +
+ .../fixes/MutationEvidenceV5/selftest-receipt.txt  |     2 +
+ .../fixes/MutationEvidenceV6/inventory-v6.json     |   236 +
+ .../MutationEvidenceV6/isolation-mutants.patch     |    19 +
+ .../fixes/MutationEvidenceV6/isolation-mutants.py  |   207 +
+ .../MutationEvidenceV6/promisor-mutants-v6.patch   |   889 ++
+ .../fixes/MutationEvidenceV6/promisor-mutants.py   |  1394 ++
+ .../fixes/MutationEvidenceV6/rationale-v6.md       |   113 +
+ .../fixes/MutationEvidenceV6/selftest-receipt.txt  |     2 +
+ .../fixes/MutationEvidenceV7/inventory-v7.json     |   238 +
+ .../MutationEvidenceV7/isolation-mutants.patch     |    19 +
+ .../fixes/MutationEvidenceV7/isolation-mutants.py  |   207 +
+ .../MutationEvidenceV7/promisor-mutants-v7.patch   |   943 ++
+ .../fixes/MutationEvidenceV7/promisor-mutants.py   |  1448 ++
+ .../fixes/MutationEvidenceV7/rationale-v7.md       |    71 +
+ .../fixes/MutationEvidenceV7/selftest-receipt.txt  |     2 +
+ .../MutationEvidenceV8/isolation-mutants.patch     |    19 +
+ .../fixes/MutationEvidenceV8/isolation-mutants.py  |   207 +
+ .../MutationEvidenceV8/promisor-mutants-v8.patch   |   945 ++
+ .../fixes/MutationEvidenceV8/promisor-mutants.py   |  1450 ++
+ .../fixes/MutationEvidenceV8/rationale-v8.md       |    51 +
+ .../MutationEvidenceV9/isolation-mutants.patch     |    19 +
+ .../fixes/MutationEvidenceV9/isolation-mutants.py  |   207 +
+ .../MutationEvidenceV9/promisor-mutants-v9.patch   |  1092 ++
+ .../fixes/MutationEvidenceV9/promisor-mutants.py   |  1549 +++
+ .../fixes/MutationEvidenceV9/rationale-v9.md       |    82 +
+ .../fixes/MutationEvidenceV9/selftest-receipt.txt  |     2 +
+ .../round-24/fixes/StoreLocalPresence/README.md    |   656 +
+ .../StoreLocalPresence/opaque-garbage-proof-v2.py  |   178 +
+ .../StoreLocalPresence/opaque-garbage-proof.py     |   145 +
+ .../StoreLocalPresence/proof-driver-replay-v2.py   |   281 +
+ .../StoreLocalPresence/proof-driver-replay-v3.py   |   303 +
+ .../StoreLocalPresence/proof-driver-replay.py      |   251 +
+ .../fixes/StoreLocalPresence/proof-driver.py       |   182 +
+ .../report-landing-audit-v2-vs-ca162.patch         |    61 +
+ .../report-landing-audit-v2.patch                  |   239 +
+ .../StoreLocalPresence/report-landing-audit-v2.py  |  1458 ++
+ .../report-landing-audit-v3-vs-v2.patch            |    47 +
+ .../report-landing-audit-v3.patch                  |   277 +
+ .../StoreLocalPresence/report-landing-audit-v3.py  |  1496 ++
+ .../report-landing-audit-v4-vs-v3.patch            |   109 +
+ .../report-landing-audit-v4.patch                  |   384 +
+ .../StoreLocalPresence/report-landing-audit-v4.py  |  1528 +++
+ .../report-landing-audit-v5-vs-v4.patch            |    83 +
+ .../report-landing-audit-v5.patch                  |   462 +
+ .../StoreLocalPresence/report-landing-audit-v5.py  |  1557 +++
+ .../report-landing-audit-v6-vs-v5.patch            |    73 +
+ .../report-landing-audit-v6.patch                  |   498 +
+ .../StoreLocalPresence/report-landing-audit-v6.py  |  1593 +++
+ .../report-landing-audit-v7-vs-v6.patch            |    34 +
+ .../report-landing-audit-v7.patch                  |   523 +
+ .../StoreLocalPresence/report-landing-audit-v7.py  |  1618 +++
+ .../report-landing-audit-v8-vs-v7.patch            |    98 +
+ .../report-landing-audit-v8.patch                  |   589 +
+ .../StoreLocalPresence/report-landing-audit-v8.py  |  1637 +++
+ .../report-landing-audit-v9-vs-v8.patch            |    56 +
+ .../report-landing-audit-v9.patch                  |   591 +
+ .../StoreLocalPresence/report-landing-audit-v9.py  |  1639 +++
+ .../StoreLocalPresence/report-landing-audit.patch  |   180 +
+ .../StoreLocalPresence/report-landing-audit.py     |  1443 ++
+ .../round-24/fixes/doc/QualityCutover/append.txt   |    13 +
+ .../round-24/fixes/doc/ScribeFrontier/append.txt   |    31 +
+ .../fixes/doc/ScribeKnowledge/append-v2.txt        |    92 +
+ .../fixes/doc/ScribeKnowledge/append-v3.txt        |   103 +
+ .../round-24/fixes/doc/ScribeKnowledge/append.txt  |    85 +
+ .../round-24/fixes/doc/ScribeSkill/append-v2.txt   |    96 +
+ .../round-24/fixes/doc/ScribeSkill/append-v3.txt   |   116 +
+ .../round-24/fixes/doc/ScribeSkill/append-v4.txt   |    52 +
+ .../round-24/fixes/doc/ScribeSkill/append-v5.txt   |   133 +
+ .../round-24/fixes/doc/ScribeSkill/append.txt      |    76 +
+ .ufo/waves/round-24/fixes/docs-contract.txt        |    23 +
+ .../fixes/docs/ScribeLesson/append-v1-labelled.txt |   119 +
+ .../fixes/docs/ScribeLesson/append-v2-labelled.txt |   100 +
+ .../round-24/fixes/docs/ScribeLesson/append-v2.txt |    96 +
+ .../round-24/fixes/docs/ScribeLesson/append-v3.txt |   161 +
+ .../round-24/fixes/docs/ScribeLesson/append.txt    |   115 +
+ .../docs/ScribeLesson/supersession-index.json      |    52 +
+ .ufo/waves/round-24/postfix/doc-hold-incident.json |    23 +
+ .../postfix/doc-hold-void-disposition.json         |    11 +
+ .../round-24/postfix/frozen-parent-inputs.json     |    32 +
+ .../round-24/postfix/integration-inputs-final.json |    79 +
+ .../postfix/interface-findings-contract.txt        |    19 +
+ .../postfix/oracle-chronology-qualification.json   |    25 +
+ .../postfix/prepared-appends-v2/LOG.md.txt         |    49 +
+ .../postfix/prepared-appends-v2/SKILL.md.txt       |   152 +
+ .../prepared-appends-v2/corpus__QUALITY.md.txt     |    14 +
+ .../prepared-appends-v2/corpus__README.md.txt      |    32 +
+ ...orpus__knowledge__error-is-not-a-verdict.md.txt |   158 +
+ .../corpus__lessons__round-24.md.txt               |   310 +
+ .../postfix/prepared-appends-v3/LOG.md.txt         |    49 +
+ .../postfix/prepared-appends-v3/SKILL.md.txt       |   156 +
+ .../prepared-appends-v3/corpus__QUALITY.md.txt     |    14 +
+ .../prepared-appends-v3/corpus__README.md.txt      |    32 +
+ ...orpus__knowledge__error-is-not-a-verdict.md.txt |   158 +
+ .../corpus__lessons__round-24.md.txt               |   316 +
+ .../round-24/postfix/prepared-appends/LOG.md.txt   |    40 +
+ .../round-24/postfix/prepared-appends/SKILL.md.txt |   135 +
+ .../prepared-appends/corpus__QUALITY.md.txt        |    14 +
+ .../postfix/prepared-appends/corpus__README.md.txt |    32 +
+ ...orpus__knowledge__error-is-not-a-verdict.md.txt |   146 +
+ .../corpus__lessons__round-24.md.txt               |   238 +
+ .../round-24/postfix/prepared-integration-v2.json  |   134 +
+ .../round-24/postfix/prepared-integration-v3.json  |   147 +
+ .../round-24/postfix/prepared-integration.json     |    92 +
+ .../postfix/primary-rederivation/grid-at-245.py    |   714 +
+ .../postfix/primary-rederivation/grid-at-2e.py     |   844 ++
+ .../knowledge-authorized-append.txt                |    11 +
+ .../knowledge-prefix-at-2e.txt                     |   127 +
+ .../lesson-authorized-append.txt                   |     9 +
+ .../primary-rederivation/lesson-prefix-at-2e.txt   |   161 +
+ .../postfix/primary-rederivation/receipt.json      |   245 +
+ .ufo/waves/round-24/postfix/read-transport.json    |    26 +
+ .../postfix/selection-02-interface-hold.json       |    19 +
+ .../postfix/selection-before-integration.json      |    80 +
+ ...__knowledge__error-is-not-a-verdict.md.VOID.txt |    42 +
+ .../corpus__lessons__round-24.md.VOID.txt          |    38 +
+ .ufo/waves/round-24/postfix/w2-reader-barrier.json |    76 +
+ .../round-24/proposal-evidence-dispositions.json   |    45 +
+ .ufo/waves/round-24/receipt-errata.json            |    40 +
+ LOG.md                                             |    55 +
+ SKILL.md                                           |   156 +
+ corpus/QUALITY.md                                  |    14 +
+ corpus/README.md                                   |    32 +
+ corpus/SOURCES.md                                  |     8 +-
+ corpus/knowledge/error-is-not-a-verdict.md         |   158 +
+ corpus/lessons/round-24.md                         |   343 +
+ tests/report-audit/isolation-mutants.py            |    10 +
+ tests/report-audit/promisor-grid.py                |   602 +-
+ tests/report-audit/promisor-mutants.py             |  1031 +-
+ tools/report-landing-audit.py                      |   411 +-
+ 855 files changed, 307631 insertions(+), 285 deletions(-)

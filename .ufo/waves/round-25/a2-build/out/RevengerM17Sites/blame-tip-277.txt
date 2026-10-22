@@ -1,0 +1,9 @@
+7054dba 119 270)             if line.endswith(" excluded") or line.endswith(" dangling"):
+7054dba 120 271)                 continue
+1471344 113 272)             parts = line.split(" ")
+1471344 114 273)             if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}", parts[0]):
+ed1cc3a 232 274)                 raise EvalError(f"cat-file in {store.path}: unexpected {line!r}")
+e0f0434 162 275)             if not peel and not parts[0].startswith(token):
+e0f0434 163 276)                 # git resolved a same-named ref before the object prefix
+ed1cc3a 235 277)                 raise EvalError(f"{store.path}: citation {token} names a ref")
+ed1cc3a 236 278)             offer(token, "found")

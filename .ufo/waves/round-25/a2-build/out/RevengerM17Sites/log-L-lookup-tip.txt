@@ -1,0 +1,403 @@
+rc=0
+COMMIT 92063cf 2026-10-21 round-24: correct local object scope and measurement provenance
+
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index 91518a9..c05c177 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -184,71 +219,96 @@ Author time is used because rebases (jj-lane.sh recovery) rewrite committer
+ def lookup(stores, tokens, peel=""):
+     """{token: 'found'|'ambiguous'|'unknown'|'wrongtype'|'absent'} across
+     stores, via `cat-file --batch-check` per store; a git failure is
+     EvalError. With a peel, git answers `missing' for an ambiguous short
+     name, so the bare name is asked first to keep ambiguity visible.
+ 
+     'wrongtype' names an object that exists locally but is not a commit:
+     a proved local mismatch. 'unknown' names an object that exists but
+     whose peeled target the repository cannot serve (a tag whose target
+     is unavailable): its content cannot be read, so it is no verdict.
+     With no peel, any object type is a found token."""
+     tokens = sorted(set(tokens))
+     status = {t: "absent" for t in tokens}
+     if not tokens:
+         return status
+ 
+     def offer(token, state):
+         if RANK[state] > RANK[status[token]]:
+             status[token] = state
+ 
+-    bare = lookup(stores, tokens) if peel else None
+-    if bare is not None:
+-        # git answers 'missing' for an ambiguous short name under a peel,
+-        # so the bare answer keeps the ambiguity visible
+-        for token, state in bare.items():
+-            if state == "ambiguous":
+-                offer(token, "ambiguous")
++    # token -> {canonical object id: {what the stores proved about it}}
++    proved = {}
+     for store in stores:
++        # what THIS store holds under the bare name: the presence must be
++        # the store's own, never the merge of every store, or an object
++        # that lives in one repository would make it look present (and
++        # unreadable) in the other
++        here = bare_objects(store, tokens) if peel else None
++        if here is not None:
++            for token, (state, _) in here.items():
++                if state == "ambiguous":
++                    # git answers 'missing' for an ambiguous short name
++                    # under a peel, so the bare answer keeps the
++                    # ambiguity visible
++                    offer(token, "ambiguous")
+         out = git(store.path, "cat-file", "--batch-check",
+                   stdin="".join(f"{t}{peel}\n" for t in tokens))
+         lines = out.split("\n")[:len(tokens)]
+         if len(lines) != len(tokens):
+             raise EvalError(f"cat-file --batch-check in {store.path}: "
+                             f"short output")
+         unresolved = []
+         for token, line in zip(tokens, lines):
+             if line.endswith(" missing"):
+-                if (bare is not None and bare[token] == "found"
+-                        and status[token] == "absent"):
++                if (here is not None and here[token][0] == "found"
++                        and status[token] != "found"):
+                     unresolved.append(token)
+                 continue
+             if line.endswith(" ambiguous"):
+                 offer(token, "ambiguous")
+                 continue
+             if line.endswith(" excluded") or line.endswith(" dangling"):
+                 continue
+             parts = line.split(" ")
+             if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}", parts[0]):
+                 raise EvalError(f"cat-file in {store.path}: unexpected {line!r}")
+             if not peel and not parts[0].startswith(token):
+                 # git resolved a same-named ref before the object prefix
+                 raise EvalError(f"{store.path}: citation {token} names a ref")
+             offer(token, "found")
+         if unresolved:
+             # the object is here; ask whether what it dereferences to is
+             # here too: a tag whose target is unavailable is unknown, a
+             # tag or blob that dereferences to a known object is a proved
+             # mismatch
+             out = git(store.path, "cat-file", "--batch-check",
+                       stdin="".join(f"{t}^{{}}\n" for t in unresolved))
+             lines = out.split("\n")[:len(unresolved)]
+             if len(lines) != len(unresolved):
+                 raise EvalError(f"cat-file --batch-check in {store.path}: "
+                                 f"short output")
+             for token, line in zip(unresolved, lines):
+-                offer(token, "unknown" if line.endswith(" missing")
+-                      else "wrongtype")
++                state = "unknown" if line.endswith(" missing") else "wrongtype"
++                oid = here[token][1]
++                proved.setdefault(token, {}).setdefault(oid, set()).add(state)
++    # Reconcile per canonical object: a store that proves the object is a
++    # known non-commit has proved the mismatch, so another store's
++    # inability to serve that object does not make the citation unknown.
++    # Different objects behind one abbreviated name are not reconciled:
++    # there the uncertainty stands.
++    for token, per_object in proved.items():
++        conclusive = False
++        unsure = False
++        for states in per_object.values():
++            if "wrongtype" in states:
++                conclusive = True
++            else:
++                unsure = True
++        if conclusive and not unsure:
++            offer(token, "wrongtype")
++        elif unsure:
++            offer(token, "unknown")
+     return status
+ 
+ 
+ def landed_match(text):
+COMMIT ed1cc3a 2026-10-21 round-24: restore local promisor verdicts with required-object diagnosis, independent oracle, mutation contract, and no-trade learning
+
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index cf706c5..91518a9 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -139,39 +184,71 @@
+-def lookup(repos, tokens, peel=""):
+-    """{token: 'found'|'ambiguous'|'missing'} across repos, via
+-    `cat-file --batch-check` per repo; a git failure is EvalError. With a
+-    peel, git answers `missing` for an ambiguous short name, so the bare
+-    name is asked first to keep ambiguity visible."""
++def lookup(stores, tokens, peel=""):
++    """{token: 'found'|'ambiguous'|'unknown'|'wrongtype'|'absent'} across
++    stores, via `cat-file --batch-check` per store; a git failure is
++    EvalError. With a peel, git answers `missing' for an ambiguous short
++    name, so the bare name is asked first to keep ambiguity visible.
++
++    'wrongtype' names an object that exists locally but is not a commit:
++    a proved local mismatch. 'unknown' names an object that exists but
++    whose peeled target the repository cannot serve (a tag whose target
++    is unavailable): its content cannot be read, so it is no verdict.
++    With no peel, any object type is a found token."""
+     tokens = sorted(set(tokens))
+-    status = {t: "missing" for t in tokens}
++    status = {t: "absent" for t in tokens}
+     if not tokens:
+         return status
+-    if peel:
+-        bare = lookup(repos, tokens)
+-        status.update({t: "ambiguous" for t, s in bare.items()
+-                       if s == "ambiguous"})
+-    for repo in repos:
+-        out = git(repo, "cat-file", "--batch-check",
++
++    def offer(token, state):
++        if RANK[state] > RANK[status[token]]:
++            status[token] = state
++
++    bare = lookup(stores, tokens) if peel else None
++    if bare is not None:
++        # git answers 'missing' for an ambiguous short name under a peel,
++        # so the bare answer keeps the ambiguity visible
++        for token, state in bare.items():
++            if state == "ambiguous":
++                offer(token, "ambiguous")
++    for store in stores:
++        out = git(store.path, "cat-file", "--batch-check",
+                   stdin="".join(f"{t}{peel}\n" for t in tokens))
+         lines = out.split("\n")[:len(tokens)]
+         if len(lines) != len(tokens):
+-            raise EvalError(f"cat-file --batch-check in {repo}: short output")
++            raise EvalError(f"cat-file --batch-check in {store.path}: "
++                            f"short output")
++        unresolved = []
+         for token, line in zip(tokens, lines):
+             if line.endswith(" missing"):
++                if (bare is not None and bare[token] == "found"
++                        and status[token] == "absent"):
++                    unresolved.append(token)
+                 continue
+             if line.endswith(" ambiguous"):
+-                if status[token] != "found":
+-                    status[token] = "ambiguous"
++                offer(token, "ambiguous")
+                 continue
+             if line.endswith(" excluded") or line.endswith(" dangling"):
+                 continue
+             parts = line.split(" ")
+             if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}", parts[0]):
+-                raise EvalError(f"cat-file in {repo}: unexpected {line!r}")
++                raise EvalError(f"cat-file in {store.path}: unexpected {line!r}")
+             if not peel and not parts[0].startswith(token):
+                 # git resolved a same-named ref before the object prefix
+-                raise EvalError(f"{repo}: citation {token} names a ref")
+-            status[token] = "found"
++                raise EvalError(f"{store.path}: citation {token} names a ref")
++            offer(token, "found")
++        if unresolved:
++            # the object is here; ask whether what it dereferences to is
++            # here too: a tag whose target is unavailable is unknown, a
++            # tag or blob that dereferences to a known object is a proved
++            # mismatch
++            out = git(store.path, "cat-file", "--batch-check",
++                      stdin="".join(f"{t}^{{}}\n" for t in unresolved))
++            lines = out.split("\n")[:len(unresolved)]
++            if len(lines) != len(unresolved):
++                raise EvalError(f"cat-file --batch-check in {store.path}: "
++                                f"short output")
++            for token, line in zip(unresolved, lines):
++                offer(token, "unknown" if line.endswith(" missing")
++                      else "wrongtype")
+     return status
+ 
+ 
+ def landed_match(text):
+COMMIT e0f0434 2026-10-21 round-23: neutralize repository-local git state in report-landing-audit; fault grid and isolation mutants
+
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index fcc255c..76fbf44 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -100,36 +131,39 @@ Usage: report-landing-audit.py [--rounds 10-20 | --rounds 10-] [--report N=PATH
+ def lookup(repos, tokens, peel=""):
+     """{token: 'found'|'ambiguous'|'missing'} across repos, via
+     `cat-file --batch-check` per repo; a git failure is EvalError. With a
+     peel, git answers `missing` for an ambiguous short name, so the bare
+     name is asked first to keep ambiguity visible."""
+     tokens = sorted(set(tokens))
+     status = {t: "missing" for t in tokens}
+     if not tokens:
+         return status
+     if peel:
+         bare = lookup(repos, tokens)
+         status.update({t: "ambiguous" for t, s in bare.items()
+                        if s == "ambiguous"})
+     for repo in repos:
+         out = git(repo, "cat-file", "--batch-check",
+                   stdin="".join(f"{t}{peel}\n" for t in tokens))
+         lines = out.split("\n")[:len(tokens)]
+         if len(lines) != len(tokens):
+             raise EvalError(f"cat-file --batch-check in {repo}: short output")
+         for token, line in zip(tokens, lines):
+             if line.endswith(" missing"):
+                 continue
+             if line.endswith(" ambiguous"):
+                 if status[token] != "found":
+                     status[token] = "ambiguous"
+                 continue
+             if line.endswith(" excluded") or line.endswith(" dangling"):
+                 continue
+             parts = line.split(" ")
+             if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}", parts[0]):
+                 raise EvalError(f"cat-file in {repo}: unexpected {line!r}")
++            if not peel and not parts[0].startswith(token):
++                # git resolved a same-named ref before the object prefix
++                raise EvalError(f"{repo}: citation {token} names a ref")
+             status[token] = "found"
+     return status
+ 
+ 
+ def landed_match(text):
+COMMIT 6c9f58c 2026-10-21 wip: mid-round checkpoint (parent-requested snapshot)
+
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index d8af6b3..f1b2722 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -93,35 +100,36 @@
+ def lookup(repos, tokens, peel=""):
+     """{token: 'found'|'ambiguous'|'missing'} across repos, via
+     `cat-file --batch-check` per repo; a git failure is EvalError. With a
+     peel, git answers `missing` for an ambiguous short name, so the bare
+     name is asked first to keep ambiguity visible."""
+     tokens = sorted(set(tokens))
+     status = {t: "missing" for t in tokens}
+     if not tokens:
+         return status
+     if peel:
+         bare = lookup(repos, tokens)
+         status.update({t: "ambiguous" for t, s in bare.items()
+                        if s == "ambiguous"})
+     for repo in repos:
+         out = git(repo, "cat-file", "--batch-check",
+                   stdin="".join(f"{t}{peel}\n" for t in tokens))
+         lines = out.split("\n")[:len(tokens)]
+         if len(lines) != len(tokens):
+             raise EvalError(f"cat-file --batch-check in {repo}: short output")
+         for token, line in zip(tokens, lines):
+             if line.endswith(" missing"):
+                 continue
+             if line.endswith(" ambiguous"):
+                 if status[token] != "found":
+                     status[token] = "ambiguous"
+                 continue
+             if line.endswith(" excluded") or line.endswith(" dangling"):
+                 continue
+             parts = line.split(" ")
+             if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}", parts[0]):
+                 raise EvalError(f"cat-file in {repo}: unexpected {line!r}")
+             status[token] = "found"
+     return status
+ 
+ 
++def landed_match(text):
+COMMIT 7054dba 2026-10-21 round-21: integrate falsify-wave findings (committed report bytes, ambiguity, narrowed fail-closed, unpinnable e2e, gate key/orphan checks), corrections, final recipe, wave evidence
+
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index 62bef09..d8af6b3 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -93,27 +93,35 @@ ERRATA = "registry/report-landing-errata.tsv"
+ def lookup(repos, tokens, peel=""):
+-    """{token: 'found'|'ambiguous'|'missing'} across repos, via one
+-    `cat-file --batch-check` per repo; a git failure is EvalError."""
++    """{token: 'found'|'ambiguous'|'missing'} across repos, via
++    `cat-file --batch-check` per repo; a git failure is EvalError. With a
++    peel, git answers `missing` for an ambiguous short name, so the bare
++    name is asked first to keep ambiguity visible."""
+     tokens = sorted(set(tokens))
+     status = {t: "missing" for t in tokens}
+     if not tokens:
+         return status
++    if peel:
++        bare = lookup(repos, tokens)
++        status.update({t: "ambiguous" for t, s in bare.items()
++                       if s == "ambiguous"})
+     for repo in repos:
+         out = git(repo, "cat-file", "--batch-check",
+                   stdin="".join(f"{t}{peel}\n" for t in tokens))
+         lines = out.split("\n")[:len(tokens)]
+         if len(lines) != len(tokens):
+             raise EvalError(f"cat-file --batch-check in {repo}: short output")
+         for token, line in zip(tokens, lines):
+             if line.endswith(" missing"):
+                 continue
+             if line.endswith(" ambiguous"):
+                 if status[token] != "found":
+                     status[token] = "ambiguous"
+                 continue
++            if line.endswith(" excluded") or line.endswith(" dangling"):
++                continue
+             parts = line.split(" ")
+             if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}", parts[0]):
+                 raise EvalError(f"cat-file in {repo}: unexpected {line!r}")
+             status[token] = "found"
+     return status
+ 
+ 
+COMMIT 1471344 2026-10-21 round-21: integrate build-wave findings into report audit and install-links pin; sources S066-S074, KQ28-29, SKILL rows, lesson; build wave evidence
+
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index 728ebe1..62bef09 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -70,9 +93,27 @@
+-def is_object(repos, token, kind=""):
+-    spec = f"{token}^{{{kind}}}" if kind else token
++def lookup(repos, tokens, peel=""):
++    """{token: 'found'|'ambiguous'|'missing'} across repos, via one
++    `cat-file --batch-check` per repo; a git failure is EvalError."""
++    tokens = sorted(set(tokens))
++    status = {t: "missing" for t in tokens}
++    if not tokens:
++        return status
+     for repo in repos:
+-        proc = git(repo, "cat-file", "-e", spec, check=False)
+-        if proc.returncode == 0:
+-            return True
+-    return False
++        out = git(repo, "cat-file", "--batch-check",
++                  stdin="".join(f"{t}{peel}\n" for t in tokens))
++        lines = out.split("\n")[:len(tokens)]
++        if len(lines) != len(tokens):
++            raise EvalError(f"cat-file --batch-check in {repo}: short output")
++        for token, line in zip(tokens, lines):
++            if line.endswith(" missing"):
++                continue
++            if line.endswith(" ambiguous"):
++                if status[token] != "found":
++                    status[token] = "ambiguous"
++                continue
++            parts = line.split(" ")
++            if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}", parts[0]):
++                raise EvalError(f"cat-file in {repo}: unexpected {line!r}")
++            status[token] = "found"
++    return status
+ 
+ 
+COMMIT a29bb84 2026-10-21 round-21: report landing audit with errata ledger; symlink-aware install-links pin, gate checks and grid
+
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+new file mode 100755
+index 0000000..728ebe1
+--- /dev/null
++++ b/tools/report-landing-audit.py
+@@ -0,0 +70,9 @@
++def is_object(repos, token, kind=""):
++    spec = f"{token}^{{{kind}}}" if kind else token
++    for repo in repos:
++        proc = git(repo, "cat-file", "-e", spec, check=False)
++        if proc.returncode == 0:
++            return True
++    return False
++
++
+
+--- stderr ---

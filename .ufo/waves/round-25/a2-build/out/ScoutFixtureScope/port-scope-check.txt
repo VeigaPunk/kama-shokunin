@@ -1,0 +1,92 @@
+# Round 25 attempt 2 — C2 fixture scope / port scope check
+# Seat: ScoutFixtureScope. Date 2026-10-22. Reads only; no server started.
+
+## 1. Registered consumer ports (the only ports the registry declares)
+$ grep -vE '^#|^$' registry/endpoint-consumers.tsv | cut -f1,4
+id	declared_baseurl
+omp-llama-cpp-default	http://127.0.0.1:8080
+ufo-fsd-thetick	http://127.0.0.1:34113/v1/chat/completions
+ufo-fsd-local-helper	http://127.0.0.1:34113
+exit=0
+
+Distinct registered ports: 8080, 34113. Three consumer rows, as the wave contract says.
+
+## 2. Lane tool refusal set (committed)
+tools/kama-llamacpp-live.py:68     HARD_REFUSED_PORTS = {8080, 34113}
+tools/kama-llamacpp-live.py:311-336 refused_ports() adds every port parsed from
+                                    registry/endpoint-consumers.tsv
+tools/kama-llamacpp-live.py:356-357 explicit --port in refused -> SetupError('port-refused-registered')
+tools/kama-llamacpp-live.py:371    otherwise connect-test, pick only a port that refuses
+SKILL.md:535                       "refused ports 8080, 34113, every registry port and every listening port"
+
+## 3. Listeners observed (read-only, ss)
+$ ss -ltnH | awk '{print $4}' | sed 's/.*://' | sort -n | uniq
+53 631 5355 8787 8788 8789 8790 8791 8793 8795 8796 41583 46433
+exit=0
+
+$ ss -ltnH | grep -E ':(474[0-9]{2}|8080|34113)$'
+(no output) — no listener on 47400-47469, none on 8080, none on 34113
+exit=1
+
+## 4. Ephemeral client-port range includes the whole C2 block
+$ cat /proc/sys/net/ipv4/ip_local_port_range
+32768	60999
+exit=0
+47400-47469 lies inside 32768-60999.
+
+## 5. The block was observed carrying live sockets (transient)
+$ ss -tan | grep -E ':474[0-9]{2}\b'
+~140 sockets at first observation (sum of per-port counts below: TIME-WAIT on
+127.0.0.1:47400-47413, one ESTAB [2804:...]:47426 -> [2607:6bc0::10]:443)
+$ ss -tanH | grep -cE ':474[0-9]{2}\b'   (about one minute later)
+1
+exit=0
+The TIME-WAIT set aged out, so the sockets were recent. Per-port counts:
+17 x 47411,47412,47413; 8 x 47400..47410; 1 x 47426.
+These are connection tuples, not listeners: nothing accepted new connections
+when the listener check above ran.
+
+## 6. Fleet-wide search for a 474xx reservation in committed files
+$ grep -rn -E '\b474[0-9]{2}\b' --include='*.md' --include='*.json' \
+    --include='*.tsv' --include='*.py' --include='*.sh' \
+    --include='*.yml' --include='*.yaml' /home/vgpnk/Projects/shokunin
+exit=0
+Hits and their nature:
+- kaidoku-shokunin/.ufo/waves/arc3-loop1-round4/tools/vyper-venv/.../Crypto/Util/number.py:1012-1013
+  prime-number tables (47407, 47417, 47419, 47431, ...) — not ports.
+- audio-shokunin/corpus/live/runs/20261016T.../measurements.json — PulseAudio
+  source/sink indices (47414, 47425, 47462, ...) — not ports.
+No committed file in any lane reserves a TCP port in 47400-47469.
+
+## 7. Wave port assignment (attempt 2 dispatch)
+$ python3 - (walk .ufo/waves/round-25/a2-build/spec.json)
+ExecCapacityTool   -> 47400-47419
+ExecLoadReplicate  -> 47420-47439
+ExecRawReplicate   -> 47440-47459
+ExecVerbosityControl -> 47460-47469
+exit=0
+Ranges are disjoint; union is the 47400-47469 block named in the seat contract.
+
+## 8. Pilot precedent
+.ufo/waves/round-25/pilot.md:6 "Port 47311 on 127.0.0.1"
+47311 is outside 47400-47469 and outside every registered port; pilot.md:3
+declares the walk "not claim evidence".
+
+## 9. Round-16 fixture receipts used ephemeral ports, not a block
+.ufo/waves/round-16/live/receipt-frozen-probe.json  "port": 43229
+.ufo/waves/round-16/live/receipt.json               "port": 37527
+receipt also records:
+  "port_refusal_set": [8080, 34113]
+  "port_pick_note": "port released after bind(:0) and re-bound by the server; a sub-second collision race is possible"
+
+## 10. L0 status
+$ grep -n '^kama |' /home/vgpnk/Projects/shokunin/.ufo/l0-questions.md | cut -c1-80
+13,15,17,21,31,41,48,52,58,68,87
+Only line 58 is the fixture ratification question; line 68 is the separate
+retained-archive addendum. No "L0 ANSWER" text appears on line 58.
+$ awk 'NR==58' .ufo/l0-questions.md | grep -o 'L0 ANSWER[^|]*'
+(no output, exit=1)
+$ grep -n -i -E 'lane-owned|fixture exception|round-16 fixture' .ufo/MANIFEST.json
+(no output, exit=1)
+State files .ufo/state/kama.round (=1) and .ufo/state/kama.mission (=2684953)
+carry no ruling text.

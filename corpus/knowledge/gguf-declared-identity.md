@@ -30,6 +30,8 @@ At b11755 `server-context.cpp:4654–4663`, per-slot context is capped by
 `/v1/models` separately supplies `meta.n_ctx_train` (`:5183–5188`).
 Do not divide `ctx` by `total_slots` blindly: KV-unified and padding affect
 that relationship. Do not require served context to equal training context.
+Round 25: the rule, the KV pool and the fit step are in
+`corpus/knowledge/context-capacity.md`, with observed cells.
 
 The retained round-18 fixture (`live-recovery/receipt-1.json`) has served
 `n_ctx=256`, training `n_ctx_train=2048`, and a GGUF declaration of 2048.

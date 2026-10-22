@@ -1,0 +1,45 @@
+== lifetimes / context-shift / defer / exceeded counts per scratch log
+L1-rep1.log lifetimes=2 ctxshift=0 defer=0 exceeded=8
+L1-rep2.log lifetimes=2 ctxshift=0 defer=0 exceeded=8
+L1-rep3.log lifetimes=2 ctxshift=0 defer=0 exceeded=8
+L2-rep1.log lifetimes=2 ctxshift=0 defer=0 exceeded=0
+L2-rep2.log lifetimes=2 ctxshift=0 defer=0 exceeded=0
+L2-rep3.log lifetimes=2 ctxshift=0 defer=0 exceeded=0
+L3-rep1.log lifetimes=2 ctxshift=0 defer=0 exceeded=0
+L3-rep2.log lifetimes=2 ctxshift=0 defer=0 exceeded=0
+L3-rep3.log lifetimes=2 ctxshift=0 defer=0 exceeded=0
+== L1-rep1 launches, slot choice, release (both lifetimes)
+284:0.00.013.498 I llama_context: n_ctx                 = 2048
+549:0.00.014.231 I common_fit_params: successfully fit params to free device memory
+816:0.00.014.990 I llama_context: n_ctx                 = 2048
+1082:0.00.016.778 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 2048, kv_unified = 'true'
+1201:0.00.273.124 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 0, t_last = -1
+1213:0.00.273.180 I slot launch_slot_: id  0 | task 2 | processing task, is_child = 0
+1225:0.00.273.189 I slot get_availabl: id  1 | task -1 | selected slot by LRU, n_tokens = 0, t_last = -1
+1237:0.00.273.212 I slot launch_slot_: id  1 | task 1 | processing task, is_child = 0
+1831:0.00.297.996 I slot      release: id  0 | task 2 | stop processing: n_tokens = 1025, truncated = 0
+1837:0.00.298.075 I slot      release: id  1 | task 1 | stop processing: n_tokens = 1025, truncated = 0
+2162:0.00.005.663 I llama_context: n_ctx                 = 2048
+2427:0.00.006.291 I common_fit_params: successfully fit params to free device memory
+2694:0.00.007.004 I llama_context: n_ctx                 = 2048
+2960:0.00.008.928 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 2048, kv_unified = 'true'
+3077:0.00.275.909 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 0, t_last = -1
+3091:0.00.275.985 I slot launch_slot_: id  0 | task 1 | processing task, is_child = 0
+3103:0.00.275.996 I slot get_availabl: id  1 | task -1 | selected slot by LRU, n_tokens = 0, t_last = -1
+3115:0.00.276.087 I slot launch_slot_: id  1 | task 2 | processing task, is_child = 0
+3708:0.00.303.701 I slot      release: id  0 | task 1 | stop processing: n_tokens = 1025, truncated = 0
+3722:0.00.303.810 I slot      release: id  1 | task 2 | stop processing: n_tokens = 1025, truncated = 0
+== L3-rep1 slot choice for second request
+1197:0.00.270.302 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 0, t_last = -1
+11428:0.00.411.152 I slot      release: id  0 | task 1 | stop processing: n_tokens = 1599, truncated = 0
+11450:0.00.412.237 I slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, f_sim_best = 1.000 (> 0.100 thold), f_keep = 0.625
+21678:0.00.547.525 I slot      release: id  0 | task 602 | stop processing: n_tokens = 1599, truncated = 0
+22892:0.00.270.161 I slot get_availabl: id  0 | task -1 | selected slot by LRU, n_tokens = 0, t_last = -1
+33124:0.00.400.054 I slot      release: id  0 | task 1 | stop processing: n_tokens = 1599, truncated = 0
+33146:0.00.401.019 I slot get_availabl: id  0 | task -1 | selected slot by LCP similarity, f_sim_best = 1.000 (> 0.100 thold), f_keep = 0.625
+43372:0.00.530.193 I slot      release: id  0 | task 602 | stop processing: n_tokens = 1599, truncated = 0
+== harness log open mode
+94:    logf = open(logpath, "ab", buffering=0)
+161:    with open(logpath, "r", encoding="utf-8", errors="replace") as f:
+== receipt request fields (L1 first row)
+['elapsed_s', 'error_text', 'finished_reason', 'n_predict', 'prompt_tokens', 'rep', 'req_no', 'status', 'timings', 'tokens_predicted']

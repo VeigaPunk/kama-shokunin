@@ -1,0 +1,5 @@
+## Mistakes
+
+| Class | Evidence | Captured-by | Fix / demonstrated boundary |
+|---|---|---|---|
+| stale-anchor: registered counting instrument drifted from the source it measures | `corpus/lessons/round-24-verifier-spotcheck.md:80–82` (M11 has zero anchor occurrences, M17 has two; its own unique-match guard would abort), routed defect at `:151–152`; before output at efe58e96 (`efe58e96e6cfbef88a0fba9d64505e18b7ad7356`): `registered 27 stale 2 ['M11-listing-surrogates', 'M17-ref-shadow']` (exit 0) | none — KQ28–KQ35 reviewed (KQ28 landed-hash audit, KQ34 isolation crosswalk, KQ35 metadata controls; none demands re-running the registered count when the measured auditor changes); nearest adjacent is KQ27 (round 20), which ties quoted counts to a measured revision but never fired here | the landing gate re-runs the registered counting command (`.ufo/waves/round-25/preregistration.json` C1.command) against the landed source, so instrument drift fails the gate; shown able to fail: the same command prints the stale 2 above at efe58e96 and `registered 28 stale 0` at 1fc41e346853afd98cbd7010af5db4e54dc877f7 (exit 0), both observed in a sandbox clone |

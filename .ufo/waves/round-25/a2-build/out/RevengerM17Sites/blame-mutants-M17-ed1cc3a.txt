@@ -1,0 +1,72 @@
+e0f0434  35  52)     ("M07-log-mailmap", ', "-c", "log.mailmap=false"', ""),
+e0f0434  36  53)     ("M09-strict-default", 'env=None, errors="strict"', 'env=None, errors="replace"'),
+e0f0434  37  54)     ("M10-log-surrogates",
+e0f0434  38  55)      'branch, errors="surrogateescape"', 'branch'),
+e0f0434  39  56)     ("M11-listing-surrogates",
+e0f0434  40  57)      '"--", ".ufo/reports", errors="surrogateescape"', '"--", ".ufo/reports"'),
+e0f0434  41  58)     ("M12-shallow-check",
+e0f0434  42  59)      'raise EvalError(f"{repo}: shallow repository")', 'pass'),
+e0f0434  43  60)     ("M13-grafts-check",
+e0f0434  44  61)      'raise EvalError(f"{repo}: {path} rewrites history")', 'pass'),
+e0f0434  47  62)     ("M15-object-format",
+e0f0434  48  63)      'raise EvalError(f"{repo}: object format {fmt!r}, not sha1")', 'pass'),
+e0f0434  49  64)     ("M16-top-level",
+e0f0434  50  65)      'raise EvalError(f"{repo}: not a repository top level")', 'pass'),
+ed1cc3a  66  66)     # round 24: the auditor names the store, not the repository, in this
+ed1cc3a  67  67)     # message; the element (a ref-named citation is refused) is unchanged
+e0f0434  51  68)     ("M17-ref-shadow",
+ed1cc3a  69  69)      'raise EvalError(f"{store.path}: citation {token} names a ref")', 'pass'),
+e876b95  54  70)     ("M18-branch-heads",
+e876b95  55  71)      'if git(lane_repo, "for-each-ref", "--format=%(refname)", head).strip():',
+e876b95  56  72)      'if False:'),
+e876b95  57  73)     ("M19-errata-hex",
+e876b95  58  74)      '\n             and re.fullmatch(r"[0-9a-fA-F]{7,40}", e["correction"])}',
+e876b95  59  75)      '}'),
+e0f0434  58  76)     ("M20-log-sha-shape",
+e876b95  61  77)      'if not re.fullmatch(r"[0-9a-f]{40}", sha):', 'if False:'),
+e0f0434  60  78)     ("M21-newlines", 'return out.replace("\\r\\n", "\\n").replace("\\r", "\\n")',
+e0f0434  61  79)      'return out'),
+e0f0434  64  80)     ("M23-strict-decode-catch",
+e0f0434  65  81)      'out = proc.stdout.decode("utf-8", errors)',
+e0f0434  66  82)      'out = proc.stdout.decode("utf-8", "replace")'),
+34b2376  67  83)     ("M24-catch-all", "except Exception as exc:  # an unanticipated error "
+34b2376  68  84)      "is never a verdict", "except ZeroDivisionError as exc:"),
+e876b95  71  85)     ("M25-timestamp-shape", 're.fullmatch(r"[0-9]{1,18}", atime)',
+34b2376  70  86)      're.fullmatch(r"[0-9]+", atime)'),
+e876b95  73  87)     ("M26-record-separators", 'fields = out.split("\\0")',
+e876b95  74  88)      'fields = re.split("[\\0\\x1e\\x1f]", out)'),
+e876b95  76  89)     ("M28-correction-casefold", 'e["correction"].lower() for e in errata',
+e876b95  77  90)      'e["correction"] for e in errata'),
+e876b95  80  91)     ("M30-fleet-history-check", 'for repo in (lane_repo, fleet_repo):',
+e876b95  81  92)      'for repo in (lane_repo,):'),
+e876b95  82  93)     ("M31-git-timeout", ',\n                              timeout=GIT_TIMEOUT)', ')'),
+e876b95  83  94)     ("M32-grafts-content",
+e876b95  84  95)      'return any(line.strip() and not line.startswith(b"#")',
+e876b95  85  96)      'return True or any(line.strip() and not line.startswith(b"#")'),
+e0f0434  67  97) ]
+e0f0434  68  98) 
+e0f0434  69  99) 
+ed1cc3a 100 100) # Round 24: the metadata-classifier mutants are retired, not reused and not
+ed1cc3a 101 101) # replaced by placeholders. The auditor no longer classifies promisor
+ed1cc3a 102 102) # metadata, so the literals these mutants removed are gone from the
+ed1cc3a 103 103) # source; the semantic checks they carried are now carried by the round-24
+ed1cc3a 104 104) # promisor mutants (tests/report-audit/promisor-mutants.py), attributed
+ed1cc3a 105 105) # one to one below.
+ed1cc3a 106 106) RETIRED = [
+ed1cc3a 107 107)     ("M14-promisor-config",
+ed1cc3a 108 108)      'raise EvalError(f"{repo}: partial clone ({key})")',
+ed1cc3a 109 109)      "the metadata refusal is gone from the auditor",
+ed1cc3a 110 110)      "PM01-blanket-metadata-refusal: the mutant reintroduces the blanket "
+ed1cc3a 111 111)      "refusal and is killed by the complete/marker/hydrated rows"),
+ed1cc3a 112 112)     ("M22-promisor-pack",
+ed1cc3a 113 113)      'raise EvalError(f"{repo}: partial clone (promisor pack)")',
+ed1cc3a 114 114)      "the metadata refusal is gone from the auditor",
+ed1cc3a 115 115)      "PM01-blanket-metadata-refusal: the same blanket refusal, reached "
+ed1cc3a 116 116)      "through the paired .promisor marker"),
+ed1cc3a 117 117)     ("M27-promisor-boolean",
+ed1cc3a 118 118)      "and git_bool(value)",
+ed1cc3a 119 119)      "no promisor boolean is classified any more",
+ed1cc3a 120 120)      "PM01-blanket-metadata-refusal: a remote.*.promisor=true repository "
+ed1cc3a 121 121)      "must keep the verdict of its full-clone twin"),
+ed1cc3a 122 122)     ("M29-promisor-pack-pairing",
+ed1cc3a 123 123)      'p.with_suffix(".pack").exists()',
