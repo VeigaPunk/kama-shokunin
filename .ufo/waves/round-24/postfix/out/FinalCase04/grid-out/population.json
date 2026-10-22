@@ -1,0 +1,1367 @@
+{
+ "population_sha256": "612b0a74f3eebaa9074bdde8ecd8f194f55ebaf9a35ab2b975fddbff8dd2ed88",
+ "expectations_sha256": "d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1",
+ "population_size": 47,
+ "cases": [
+  {
+   "case": "PG01-complete-lane-promisor-config",
+   "kind": "policy",
+   "builder": "c_complete_lane_config",
+   "policy_ref": "expected_after[0]",
+   "notes": "Complete lane, promisor config only (remote.origin.promisor=true, extensions.partialclone=origin, no marker files, no filter remote), every reachable object local. Must audit exactly like the otherwise identical full clone: exit 0, no findings.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": "PG07-complete-lane-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG02-complete-fleet-promisor-config",
+   "kind": "policy",
+   "builder": "c_complete_fleet_config",
+   "policy_ref": "expected_after[0]",
+   "notes": "Fleet side of PG01: the fleet carries the report and the cutoff, so the fleet must not be refused on metadata either.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": "PG08-complete-fleet-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG03-complete-lane-promisor-marker",
+   "kind": "policy",
+   "builder": "c_complete_lane_marker",
+   "policy_ref": "expected_after[0], expected_after[5]",
+   "notes": "Paired objects/pack/pack-<sha>.promisor next to its real .pack, no promisor config, every object local. Marker metadata alone must not refuse a complete repository.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": "PG07-complete-lane-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG04-complete-fleet-promisor-marker",
+   "kind": "policy",
+   "builder": "c_complete_fleet_marker",
+   "policy_ref": "expected_after[0], expected_after[5]",
+   "notes": "Fleet side of PG03.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": "PG08-complete-fleet-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG05-hydrated-blobless-lane",
+   "kind": "policy",
+   "builder": "c_hydrated_blobless_lane",
+   "policy_ref": "expected_after[0], expected_after[5]",
+   "notes": "Real file:// blobless partial clone (git clone --filter=blob:none --no-checkout) whose promised objects are hydrated offline by copying the origin's object files, so the reachable closure is complete. Must audit like a full clone.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": "PG07-complete-lane-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG06-hydrated-blobless-fleet",
+   "kind": "policy",
+   "builder": "c_hydrated_blobless_fleet",
+   "policy_ref": "expected_after[0], expected_after[5]",
+   "notes": "Fleet side of PG05: the report blob and its trees are hydrated offline in a real blobless clone.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": "PG08-complete-fleet-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG07-complete-lane-plain",
+   "kind": "control",
+   "builder": "c_complete_lane_plain",
+   "policy_ref": "no-harm twin of PG01",
+   "notes": "Same fixture as PG01 without any promisor metadata. Both arms must keep the ordinary clean verdict.",
+   "frozen": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": null
+  },
+  {
+   "case": "PG08-complete-fleet-plain",
+   "kind": "control",
+   "builder": "c_complete_fleet_plain",
+   "policy_ref": "no-harm twin of PG02",
+   "notes": "Same fixture as PG02 without any promisor metadata.",
+   "frozen": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": null
+  },
+  {
+   "case": "PG09-omission-lane-promisor",
+   "kind": "policy",
+   "builder": "c_omission_lane_promisor",
+   "policy_ref": "expected_after[1]",
+   "notes": "Complete promisor-marked lane with a genuine omitted pre-cutoff round-1 commit (author time before the fleet report's first add). The omission is a finding, not a refusal: exit 1, landed-omitted with the full lane sha as token.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 1,
+    "kinds": [
+     "landed-omitted"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "landed-omitted",
+      "token": "$omitted"
+     }
+    ]
+   },
+   "twin": "PG10-omission-lane-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG10-omission-lane-plain",
+   "kind": "control",
+   "builder": "c_omission_lane_plain",
+   "policy_ref": "no-harm twin of PG09",
+   "notes": "Same fixture as PG09 without promisor metadata: the ordinary failed verdict must be unchanged.",
+   "frozen": {
+    "exit": 1,
+    "kinds": [
+     "landed-omitted"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "landed-omitted",
+      "token": "$omitted"
+     }
+    ]
+   },
+   "original": {
+    "exit": 1,
+    "kinds": [
+     "landed-omitted"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "landed-omitted",
+      "token": "$omitted"
+     }
+    ]
+   },
+   "twin": null
+  },
+  {
+   "case": "PG11-omission-fleet-promisor",
+   "kind": "policy",
+   "builder": "c_omission_fleet_promisor",
+   "policy_ref": "expected_after[1]",
+   "notes": "The omission lives in the lane, the promisor metadata on the fleet: a promisor-marked fleet must not hide a lane omission.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 1,
+    "kinds": [
+     "landed-omitted"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "landed-omitted",
+      "token": "$omitted"
+     }
+    ]
+   },
+   "twin": "PG10-omission-lane-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG12-omission-marker-lane",
+   "kind": "policy",
+   "builder": "c_omission_marker_lane",
+   "policy_ref": "expected_after[1], expected_after[5]",
+   "notes": "PG09 with paired .promisor/.pack markers instead of config keys.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 1,
+    "kinds": [
+     "landed-omitted"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "landed-omitted",
+      "token": "$omitted"
+     }
+    ]
+   },
+   "twin": "PG10-omission-lane-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG13-missing-lane-blob-promisor",
+   "kind": "policy",
+   "builder": "c_missing_lane_blob_promisor",
+   "policy_ref": "expected_after[2]",
+   "notes": "The lane's required corpus/SOURCES.md blob object is removed; the lane is promisor-marked and its closure reports the blob as missing. Unavailable required evidence: exit 2, never a clean or failed verdict.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "twin": "PG14-missing-lane-blob-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ],
+   "names_any_of": [
+    "$sources_blob",
+    "corpus/SOURCES.md"
+   ]
+  },
+  {
+   "case": "PG14-missing-lane-blob-plain",
+   "kind": "control",
+   "builder": "c_missing_lane_blob_plain",
+   "policy_ref": "no-harm twin of PG13",
+   "notes": "Same removal without promisor metadata: the ordinary could-not-evaluate must be unchanged.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "twin": null,
+   "names_any_of": [
+    "$sources_blob",
+    "corpus/SOURCES.md"
+   ]
+  },
+  {
+   "case": "PG15-missing-lane-tree-promisor",
+   "kind": "policy",
+   "builder": "c_missing_lane_tree_promisor",
+   "policy_ref": "expected_after[2]",
+   "notes": "The lane tip's root tree object is removed from a promisor-marked lane. The tip root tree is on the audit's read path.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "twin": "PG16-missing-lane-tree-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ],
+   "names_any_of": [
+    "$tip_tree"
+   ]
+  },
+  {
+   "case": "PG16-missing-lane-tree-plain",
+   "kind": "control",
+   "builder": "c_missing_lane_tree_plain",
+   "policy_ref": "no-harm twin of PG15",
+   "notes": "Same removal without promisor metadata.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "twin": null,
+   "names_any_of": [
+    "$tip_tree"
+   ]
+  },
+  {
+   "case": "PG17-missing-fleet-report-promisor",
+   "kind": "policy",
+   "builder": "c_missing_fleet_report_promisor",
+   "policy_ref": "expected_after[2]",
+   "notes": "The fleet report blob is removed from a promisor-marked fleet: the required report evidence is unavailable.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "twin": "PG18-missing-fleet-report-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ],
+   "names_any_of": [
+    "$report_blob",
+    ".ufo/reports/round-1/kama.md"
+   ]
+  },
+  {
+   "case": "PG18-missing-fleet-report-plain",
+   "kind": "control",
+   "builder": "c_missing_fleet_report_plain",
+   "policy_ref": "no-harm twin of PG17",
+   "notes": "Same removal without promisor metadata.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "twin": null,
+   "names_any_of": [
+    "$report_blob",
+    ".ufo/reports/round-1/kama.md"
+   ]
+  },
+  {
+   "case": "PG19-missing-fleet-tree-promisor",
+   "kind": "policy",
+   "builder": "c_missing_fleet_tree_promisor",
+   "policy_ref": "expected_after[2]",
+   "notes": "The fleet tip's root tree object is removed from a promisor-marked fleet.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "twin": "PG20-missing-fleet-tree-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ],
+   "names_any_of": [
+    "$fleet_tip_tree"
+   ]
+  },
+  {
+   "case": "PG20-missing-fleet-tree-plain",
+   "kind": "control",
+   "builder": "c_missing_fleet_tree_plain",
+   "policy_ref": "no-harm twin of PG19",
+   "notes": "Same removal without promisor metadata.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "twin": null,
+   "names_any_of": [
+    "$fleet_tip_tree"
+   ]
+  },
+  {
+   "case": "PG21-missing-ancestor-promisor",
+   "kind": "policy",
+   "builder": "c_missing_ancestor_promisor",
+   "policy_ref": "expected_after[2]",
+   "notes": "An ancestor commit of the audited lane tip (itself a round-1 commit) is removed from a promisor-marked lane: the omission question cannot be decided, so exit 2 and never exit 0 or exit 1.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "twin": null,
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ],
+   "names_any_of": [
+    "$ancestor"
+   ]
+  },
+  {
+   "case": "PG22-unknown-citation-incomplete-promisor",
+   "kind": "policy",
+   "builder": "c_unknown_citation_incomplete",
+   "policy_ref": "expected_after[3] (original, withdrawn) vs oracle-amendment-1.json prospective_expected[2]",
+   "notes": "Promisor-marked lane with one unread missing blob (an unrelated hole) and a fabricated citation inside the Landed section. The fabricated token is NOT in the bounded missing set, so it is not known to name unavailable referenced content: the amended policy gives the ordinary local verdict, identical to the plain twin PG37. The original registration (exit 2, unknown citation) is kept in the original view and is withdrawn, not counted as achieved.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable-or-unknown",
+    "defects": null
+   },
+   "twin": "PG37-unused-missing-blob-with-fabricated-citation-plain",
+   "amended": {
+    "exit": 1,
+    "kinds": [
+     "landed-unresolved",
+     "unresolved-full-hash"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "landed-unresolved",
+      "token": "$fake"
+     },
+     {
+      "kind": "unresolved-full-hash",
+      "token": "$fake"
+     }
+    ]
+   },
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG23-unknown-citation-complete-promisor",
+   "kind": "policy",
+   "builder": "c_unknown_citation_complete",
+   "policy_ref": "expected_after[3] (original, withdrawn) vs oracle-amendment-1.json prospective_expected[0] and [3]",
+   "notes": "A citation that exists in no audited repository, in a promisor-marked lane whose reachable closure is complete. Amended: promisor metadata alone never changes the verdict, so the ordinary local failed verdict applies, identical to the plain twin PG25.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unknown-citation",
+    "defects": null
+   },
+   "twin": "PG25-unknown-citation-plain",
+   "amended": {
+    "exit": 1,
+    "kinds": [
+     "landed-unresolved",
+     "unresolved-full-hash"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "landed-unresolved",
+      "token": "$fake"
+     },
+     {
+      "kind": "unresolved-full-hash",
+      "token": "$fake"
+     }
+    ]
+   },
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG24-unknown-citation-fleet-promisor",
+   "kind": "policy",
+   "builder": "c_unknown_citation_fleet_promisor",
+   "policy_ref": "expected_after[3] (original, withdrawn) vs oracle-amendment-1.json prospective_expected[0] and [3]",
+   "notes": "Same as PG23 with the promisor marking on the fleet instead of the lane: the marking side does not change local resolution.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unknown-citation",
+    "defects": null
+   },
+   "twin": "PG25-unknown-citation-plain",
+   "amended": {
+    "exit": 1,
+    "kinds": [
+     "landed-unresolved",
+     "unresolved-full-hash"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "landed-unresolved",
+      "token": "$fake"
+     },
+     {
+      "kind": "unresolved-full-hash",
+      "token": "$fake"
+     }
+    ]
+   },
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG25-unknown-citation-plain",
+   "kind": "control",
+   "builder": "c_unknown_citation_plain",
+   "policy_ref": "no-harm twin of PG23",
+   "notes": "Same fixture as PG23 without any promisor metadata: absence is provable, so the ordinary failed verdict stands (the fabricated token is cited as the hex string in the report, lower case).",
+   "frozen": {
+    "exit": 1,
+    "kinds": [
+     "landed-unresolved",
+     "unresolved-full-hash"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "landed-unresolved",
+      "token": "$fake"
+     },
+     {
+      "kind": "unresolved-full-hash",
+      "token": "$fake"
+     }
+    ]
+   },
+   "original": {
+    "exit": 1,
+    "kinds": [
+     "landed-unresolved",
+     "unresolved-full-hash"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "landed-unresolved",
+      "token": "$fake"
+     },
+     {
+      "kind": "unresolved-full-hash",
+      "token": "$fake"
+     }
+    ]
+   },
+   "twin": null
+  },
+  {
+   "case": "PG26-cross-repo-found-promisor",
+   "kind": "policy",
+   "builder": "c_cross_repo_found_promisor",
+   "policy_ref": "expected_after[3] (exception clause), oracle-amendment-1.json prospective_expected[0]",
+   "notes": "The report cites a commit that exists only in the fleet; the lane is promisor-marked and lacks it. The citation is resolved by another audited repository, so it is not unknown: exit 0, no findings.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": "PG27-cross-repo-found-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG27-cross-repo-found-plain",
+   "kind": "control",
+   "builder": "c_cross_repo_found_plain",
+   "policy_ref": "no-harm twin of PG26",
+   "notes": "Same fixture as PG26 without promisor metadata.",
+   "frozen": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": null
+  },
+  {
+   "case": "PG28-unhydrated-blobless-lane",
+   "kind": "policy",
+   "builder": "c_unhydrated_blobless_lane",
+   "policy_ref": "L1 crosswalk: 'CaseHydratedLane lane unhydrated UNUSED f blobs must not CNE'",
+   "notes": "Real file:// blobless partial clone that was never hydrated. Fixture refined by the L1 crosswalk so that every missing blob is one the audit never reads (the lane carries no corpus/SOURCES.md): an incomplete but locally sufficient repository is not refused, so the amended verdict is the twin verdict, exit 0. The original registration (exit 2, unavailable required object) is kept in the original view and is withdrawn for this row; the required-blob shape is preserved by PG13 (lane) and PG43 (fleet report).",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "twin": "PG36-unused-missing-blob-plain",
+   "amended": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG29-errata-corrected-missing-sha-plain",
+   "kind": "control",
+   "builder": "c_errata_corrected_missing_sha_plain",
+   "policy_ref": "historical witness: registry/report-landing-errata.tsv row 20, unresolved-full-hash 0957ce619789d13d894ef21bc863486bcb35b56c",
+   "notes": "Exact historical shape of the errata-corrected missing SHA: the report cites a spliced 40-hex that is no object in any audited repository (the first 15 hex of the real commit plus the historical spliced tail) outside the Landed section, and the lane's registry/report-landing-errata.tsv carries the correcting row (round 1, unresolved-full-hash, token=<spliced sha>, correction=<real lane commit>). The defect is corrected, so the audit is clean: the original required workflow.",
+   "frozen": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": null
+  },
+  {
+   "case": "PG30-errata-corrected-missing-sha-promisor",
+   "kind": "policy",
+   "builder": "c_errata_corrected_missing_sha_promisor",
+   "policy_ref": "preregistration expected_after[3] (original, withdrawn) vs oracle-amendment-1.json prospective_expected[0] and [3]",
+   "notes": "Same fixture as PG29 with a promisor-marked, content-complete lane. The original reading aborts before the errata can correct the unresolved citation and so refuses the original required workflow. The amended reading keeps the authorized errata matching: the defect is corrected and the audit is clean, exactly like the plain twin.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unknown-citation",
+    "defects": null
+   },
+   "twin": "PG29-errata-corrected-missing-sha-plain",
+   "amended": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG31-missing-object-unselected-branch-promisor",
+   "kind": "policy",
+   "builder": "c_missing_unselected_branch_promisor",
+   "policy_ref": "oracle-amendment-1.json prospective_expected[4]",
+   "notes": "Promisor-marked lane whose audited root closure is complete, while a blob reachable only from an unselected side branch is absent. An unrelated unavailable object must not become a blanket precondition: the verdict is decided normally and equals the plain twin.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": "PG32-missing-object-unselected-branch-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG32-missing-object-unselected-branch-plain",
+   "kind": "control",
+   "builder": "c_missing_unselected_branch_plain",
+   "policy_ref": "no-harm twin of PG31",
+   "notes": "Same fixture as PG31 without promisor metadata: the ordinary clean verdict must be unchanged and identical to PG31's document.",
+   "frozen": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": null
+  },
+  {
+   "case": "PG33-missing-cited-blob-promisor",
+   "kind": "policy",
+   "builder": "c_missing_cited_blob_promisor",
+   "policy_ref": "oracle-amendment-1.json prospective_expected[2]; L1: 'missing referenced cited blob F23=>CNE'",
+   "notes": "Promisor-marked lane whose report cites a blob that the store is missing; the blob is referenced by a present tree, so the store claims it and lacks it. A locally unresolved citation known to name unavailable referenced local content is could-not-evaluate, not proved absence. The refusal reason must be content-derived and must name the unavailable object id, never the r23 metadata refusal.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "twin": "PG34-missing-cited-blob-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ],
+   "names_any_of": [
+    "$cited_blob"
+   ]
+  },
+  {
+   "case": "PG34-missing-cited-blob-plain",
+   "kind": "control",
+   "builder": "c_missing_cited_blob_plain",
+   "policy_ref": "oracle-amendment-1.json prospective_expected[2] applied to every store (token-scoped rule, not conditioned on metadata)",
+   "notes": "Same fixture as PG33 without promisor metadata. The token-scoped rule applies to every store: the citation names referenced content the store lacks, so its absence is not proved and the verdict is could-not-evaluate. This deliberately leaves the r23 exit 1 behind (never guessed absence); it is the declared non-promisor policy row.",
+   "frozen": {
+    "exit": 1,
+    "kinds": [
+     "unresolved-full-hash"
+    ],
+    "reason_class": null,
+    "defects": null
+   },
+   "original": {
+    "exit": 1,
+    "kinds": [
+     "unresolved-full-hash"
+    ],
+    "reason_class": null,
+    "defects": null
+   },
+   "twin": "PG33-missing-cited-blob-promisor",
+   "amended": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "names_any_of": [
+    "$cited_blob"
+   ]
+  },
+  {
+   "case": "PG35-unused-missing-blob-promisor",
+   "kind": "policy",
+   "builder": "c_unused_missing_blob_promisor",
+   "policy_ref": "oracle-amendment-1.json prospective_expected[4]; L1: 'unused historical/unselected blob alone must not refuse'",
+   "notes": "Promisor-marked, otherwise complete lane with one missing blob that the audit never reads (an unused file). The verdict is decided normally: exit 0, no findings, identical to the plain twin.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": "PG36-unused-missing-blob-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG36-unused-missing-blob-plain",
+   "kind": "control",
+   "builder": "c_unused_missing_blob_plain",
+   "policy_ref": "no-harm twin of PG35",
+   "notes": "Same fixture as PG35 without promisor metadata.",
+   "frozen": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": null
+  },
+  {
+   "case": "PG37-unused-missing-blob-with-fabricated-citation-plain",
+   "kind": "control",
+   "builder": "c_unused_missing_blob_fabricated_plain",
+   "policy_ref": "no-harm twin of PG22 (the P08b shape of the L1 crosswalk)",
+   "notes": "Same fixture as PG22 without promisor metadata: the uniform rule, not conditioned on metadata. The unrelated hole does not change the verdict.",
+   "frozen": {
+    "exit": 1,
+    "kinds": [
+     "landed-unresolved",
+     "unresolved-full-hash"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "landed-unresolved",
+      "token": "$fake"
+     },
+     {
+      "kind": "unresolved-full-hash",
+      "token": "$fake"
+     }
+    ]
+   },
+   "original": {
+    "exit": 1,
+    "kinds": [
+     "landed-unresolved",
+     "unresolved-full-hash"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "landed-unresolved",
+      "token": "$fake"
+     },
+     {
+      "kind": "unresolved-full-hash",
+      "token": "$fake"
+     }
+    ]
+   },
+   "twin": null
+  },
+  {
+   "case": "PG38-wrong-type-citation-plain",
+   "kind": "control",
+   "builder": "c_wrong_type_citation_plain",
+   "policy_ref": "no-harm twin of PG39",
+   "notes": "The report's Landed section cites a locally present blob sha. The object is found, so its type is decisive: exactly one landed-unresolved defect with that token and no unresolved-full-hash.",
+   "frozen": {
+    "exit": 1,
+    "kinds": [
+     "landed-unresolved"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "landed-unresolved",
+      "token": "$blob"
+     }
+    ]
+   },
+   "original": {
+    "exit": 1,
+    "kinds": [
+     "landed-unresolved"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "landed-unresolved",
+      "token": "$blob"
+     }
+    ]
+   },
+   "twin": null
+  },
+  {
+   "case": "PG39-wrong-type-citation-promisor",
+   "kind": "policy",
+   "builder": "c_wrong_type_citation_promisor",
+   "policy_ref": "oracle-amendment-1.json prospective_expected[3]",
+   "notes": "Same fixture as PG38 with promisor metadata on the lane and the fleet. A locally present object fixes its own type, so the verdict must stay identical to the plain twin.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 1,
+    "kinds": [
+     "landed-unresolved"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "landed-unresolved",
+      "token": "$blob"
+     }
+    ]
+   },
+   "twin": "PG38-wrong-type-citation-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG41-unused-missing-blob-fabricated-in-notes-promisor",
+   "kind": "policy",
+   "builder": "c_unused_missing_blob_fabricated_notes_promisor",
+   "policy_ref": "oracle-amendment-1.json prospective_expected[0], [2], [3]",
+   "notes": "As PG22 but the fabricated citation sits outside the Landed section, so exactly one defect (unresolved-full-hash) is expected. Kills an over-broad 'any hole makes every citation unknown' rule.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unknown-citation",
+    "defects": null
+   },
+   "twin": "PG42-unused-missing-blob-fabricated-in-notes-plain",
+   "amended": {
+    "exit": 1,
+    "kinds": [
+     "unresolved-full-hash"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "unresolved-full-hash",
+      "token": "$fake"
+     }
+    ]
+   },
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG42-unused-missing-blob-fabricated-in-notes-plain",
+   "kind": "control",
+   "builder": "c_unused_missing_blob_fabricated_notes_plain",
+   "policy_ref": "no-harm twin of PG41",
+   "notes": "Same fixture as PG41 without promisor metadata: the uniform rule, not conditioned on metadata.",
+   "frozen": {
+    "exit": 1,
+    "kinds": [
+     "unresolved-full-hash"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "unresolved-full-hash",
+      "token": "$fake"
+     }
+    ]
+   },
+   "original": {
+    "exit": 1,
+    "kinds": [
+     "unresolved-full-hash"
+    ],
+    "reason_class": null,
+    "defects": [
+     {
+      "kind": "unresolved-full-hash",
+      "token": "$fake"
+     }
+    ]
+   },
+   "twin": null
+  },
+  {
+   "case": "PG43-fleet-unhydrated-blobless-report-required",
+   "kind": "policy",
+   "builder": "c_fleet_unhydrated_blobless",
+   "policy_ref": "L1 crosswalk: 'fleet-unhydrated reportrequired2'",
+   "notes": "Real file:// blobless partial clone used as the fleet: the report blob is missing, so the required report evidence is unavailable: exit 2, never a clean or failed verdict.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "twin": null,
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ],
+   "names_any_of": [
+    "$report_blob",
+    ".ufo/reports/round-1/kama.md"
+   ]
+  },
+  {
+   "case": "PG44-missing-unused-tree-promisor",
+   "kind": "policy",
+   "builder": "c_missing_unused_tree_promisor",
+   "policy_ref": "L1 crosswalk: 'PG15/16 the tree must be on the tip path'",
+   "notes": "Promisor-marked lane whose unused subtree (not on the audit's read path) is missing. An unavailable object the audit does not read must not refuse the audit: the verdict is the twin verdict.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": "PG45-missing-unused-tree-plain",
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  },
+  {
+   "case": "PG45-missing-unused-tree-plain",
+   "kind": "control",
+   "builder": "c_missing_unused_tree_plain",
+   "policy_ref": "no-harm twin of PG44",
+   "notes": "Same fixture as PG44 without promisor metadata.",
+   "frozen": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": null
+  },
+  {
+   "case": "PG46-opaque-tree-hides-cited-blob",
+   "kind": "policy",
+   "builder": "c_opaque_tree_hides_cited_blob",
+   "policy_ref": "oracle-supplement-2.json (landed aacbd520, before L1 candidate inspection); rule: only when a citation is unresolved, a missing tree/commit may conceal the dependency names and makes that unresolved citation unevaluable; blob-only unrelated holes do not; never a blanket precondition.",
+   "notes": "A present lane commit refers to a missing non-leaf subtree; the blob under it is absent and its OID is hidden behind that missing subtree, and the report cites exactly that blob. The complete twin resolves the blob. The hidden dependency names cannot be ruled out locally, so the unresolved citation is unevaluable: content-derived could-not-evaluate, no JSON verdict. Registered after the amendment; there is no separate original reading.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "amended": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "twin": null,
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ],
+   "names_any_of": [
+    "$hidden_blob",
+    "$missing_subtree"
+   ]
+  },
+  {
+   "case": "PG47-opaque-tree-with-unresolved-fabricated-token",
+   "kind": "policy",
+   "builder": "c_opaque_tree_fabricated_token",
+   "policy_ref": "oracle-supplement-2.json (landed aacbd520, before L1 candidate inspection); rule: only when a citation is unresolved, a missing tree/commit may conceal the dependency names and makes that unresolved citation unevaluable; blob-only unrelated holes do not; never a blanket precondition.",
+   "notes": "The same missing non-leaf subtree with an unresolved fabricated token instead of a known existing blob: the hidden dependency names cannot be ruled out locally, so the unresolved citation is unevaluable. The refusal is content-derived and happens only on the unresolved-token path.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "amended": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unavailable",
+    "defects": null
+   },
+   "twin": null,
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ],
+   "names_any_of": [
+    "$fake",
+    "$missing_subtree"
+   ]
+  },
+  {
+   "case": "PG48-opaque-unused-tree-no-unresolved-token",
+   "kind": "policy",
+   "builder": "c_opaque_unused_tree_clean",
+   "policy_ref": "oracle-supplement-2.json (landed aacbd520, before L1 candidate inspection); rule: only when a citation is unresolved, a missing tree/commit may conceal the dependency names and makes that unresolved citation unevaluable; blob-only unrelated holes do not; never a blanket precondition.",
+   "notes": "An unused missing subtree that no required read traverses, with every cited token resolving locally: the correct clean verdict, exit 0, no blanket closure precondition.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "amended": {
+    "exit": 0,
+    "kinds": [],
+    "reason_class": null,
+    "defects": []
+   },
+   "twin": null,
+   "reason_forbidden": [
+    "partial clone (",
+    "promisor pack"
+   ]
+  }
+ ],
+ "open_rows": [
+  {
+   "case": "PG40-missing-cited-unselected-branch-object-promisor",
+   "kind": "open",
+   "builder": "c_missing_cited_unselected_branch_promisor",
+   "not_graded_because": "The traversal scope for diagnosing an unresolved token is contested: closure over all refs would find the token as a hole (exit 2), a selected-root traversal would treat it as proved absent (exit 1). The L1 forbids a broad completeness precondition, so the row is reported, not graded.",
+   "frozen": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "metadata",
+    "defects": null
+   },
+   "original": {
+    "exit": 2,
+    "kinds": null,
+    "reason_class": "unknown-citation",
+    "defects": null
+   },
+   "amended": {
+    "exit": null,
+    "kinds": null,
+    "reason_class": null,
+    "defects": null
+   }
+  }
+ ]
+}

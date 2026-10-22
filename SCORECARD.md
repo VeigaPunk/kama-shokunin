@@ -1211,3 +1211,40 @@ committed-tree evidence after fresh falsification; this declaration does
 not claim that those runs have occurred. No numeric promotion or new
 capability. The Git>=2.45 prerequisite remains an unresolved R23-H2
 operator decision, not older-Git restoration.
+
+### Round24 final author record — original claim not achieved
+
+The fixed algorithm epoch is `92063cfc60e217fa7e2098c568578119b16a1b95`.
+This append is a later documentation/record correction, not a repaired
+algorithm or a new measurement at that epoch. C1 remains calibration
+**7 → 7**, with no promotion or author admission. The full original after
+claim is **NOT ACHIEVED / unprovable in full**; the withdrawn unknown-citation
+clause remains false, not relabelled as success.
+
+| Record | Before → after / actual scope | Counting evidence and limitation |
+|---|---|---|
+| Primary amended oracle | Earlier loose16/47 and stricter14/47 are distinct prior-producer observations; final recorded cohort covers47/47 amended cells | `final/distributed-primary-count-v2.json` reads existing W3 captures bound to the fixed auditor/grid/oracle identities. It is NOT a new single full paired grid run, a common-producer before/after measurement, or fulfillment of the promised full measurement plan. |
+| Original view | Seven primary expectations remain unmet: PG22/23/24/28/30/34/41 | Original fields, immutable47 expected bytes and twin links remain unchanged. Five concern the literal unknown clause; the other two are disclosed prospective corrections, not extra evidence for that clause. |
+| Six generic consumers | 0/6 strict declared-field matches at2e → 6/6 at92063; all six retain red-before evidence | `final/recorded-consumers.json` independently counts existing replay-v3 records, comparing exit AND exact kinds AND errata_invalid, with no-ledger controls separate. Supplemental, not six additional primary cells or a full-domain execution. |
+| Bounded mutation observations | Nine of ten sampled executable operators have a named failed graded row; canonical PM07 survives its finite sample | `final/bounded-mutation-record.json`; not a full ten-operator ×47 sensitivity run. PM08 is manual/unexecuted/uncredited, and same2→2 diagnostic loss is not acceptance. |
+| Source census | 101→105 rows; A96→100/B2→2/C3→3; mined84→86, queued8→8, rejected9→11 | Actual current census/validate exit0 in `final/sources-census.json`; four new A rows, eleven old used-by-only edits, no immutable old-cell change in `final/source-transitions.json`. |
+
+Every original clause is judged in
+`.ufo/waves/round-24/final/full-original-after-judgment.json` and the final
+lesson: finite metadata/omission/required-object/local-policy controls
+support bounded statements; the global acquisition/isolation/deadline
+clause is unprovable; r23 corrections do not certify all40 retained process
+rows as FIFO-tied identities. No fresh final-epoch full both-arm grid,
+legacy population, selftest/parity or default sensitivity confirmation was
+performed. Prior preliminary runs are not promoted into those missing runs.
+
+W1/W2/W3 each actually spawned64, all192 returned durable reports; none
+died. W3's captured bindings are m_mim61/m_auto3, retained as observed.
+Grants and terminal counts are not continuous active-floor, whole-host
+no-effects or absence-of-chain certificates. The VOID80 canonical-write
+incident, private evidence edits, out-of-scope samples, hydration changes
+and oracle chronology limits remain disclosed. H2 is unresolved/unapproved;
+universal pre-inspection chronology is not proved. Final author trends:
+expansion unchanged; quality harmed by the provenance/conformance breach
+despite bounded functional recovery; discernment unchanged at the held7.
+Only fresh outside closure may decide admission.

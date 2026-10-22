@@ -1,0 +1,198 @@
+{
+ "grid_sha256": "30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270",
+ "mutant_diffs": {
+  "M1-merged-bare": "--- pinned/tools/report-landing-audit.py\n+++ scratch/M1-merged-bare\n@@ -238,6 +238,7 @@\n \n     # token -> {canonical object id: {what the stores proved about it}}\n     proved = {}\n+    merged_bare = lookup(stores, tokens) if peel else None\n     for store in stores:\n         # what THIS store holds under the bare name: the presence must be\n         # the store's own, never the merge of every store, or an object\n@@ -260,8 +261,9 @@\n         unresolved = []\n         for token, line in zip(tokens, lines):\n             if line.endswith(\" missing\"):\n-                if (here is not None and here[token][0] == \"found\"\n-                        and status[token] != \"found\"):\n+                if (merged_bare is not None\n+                        and merged_bare[token] == \"found\"\n+                        and status[token] == \"absent\"):\n                     unresolved.append(token)\n                 continue\n             if line.endswith(\" ambiguous\"):\n",
+  "M2-no-canonical-merge": "--- pinned/tools/report-landing-audit.py\n+++ scratch/M2-no-canonical-merge\n@@ -297,17 +297,11 @@\n     # Different objects behind one abbreviated name are not reconciled:\n     # there the uncertainty stands.\n     for token, per_object in proved.items():\n-        conclusive = False\n-        unsure = False\n         for states in per_object.values():\n             if \"wrongtype\" in states:\n-                conclusive = True\n+                offer(token, \"wrongtype\")\n             else:\n-                unsure = True\n-        if conclusive and not unsure:\n-            offer(token, \"wrongtype\")\n-        elif unsure:\n-            offer(token, \"unknown\")\n+                offer(token, \"unknown\")\n     return status\n \n \n"
+ },
+ "mutant_sha256": {
+  "M1-merged-bare": "bd1ca9b294962e79b99dffdb67688586fc95efe2a3c8cef8a91d3fee005f383b",
+  "M2-no-canonical-merge": "56928b9cc89c827a81fe1e5b7d112300ccf9069b9a0f9efdb6b2421fba924d15"
+ },
+ "pinned_auditor_sha256": "b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f",
+ "results": {
+  "PG10-omission-lane-plain": {
+   "M1-merged-bare": {
+    "argv": [
+     "/usr/bin/python3",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/m1-merged-bare-audit.py",
+     "--lane-repo",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/pg10/current/000/lane",
+     "--fleet-repo",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/pg10/current/000/fleet",
+     "--rounds",
+     "1",
+     "--json",
+     "--no-errata"
+    ],
+    "defects": [
+     [
+      "landed-omitted",
+      "1acb5ebb06054bf52d84ffdacd8727b95287f34b"
+     ]
+    ],
+    "exit": 1,
+    "objects_acquired": {
+     "fleet": [],
+     "lane": []
+    },
+    "status": "failed",
+    "stderr": ""
+   },
+   "M2-no-canonical-merge": {
+    "argv": [
+     "/usr/bin/python3",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/m2-no-canonical-merge-audit.py",
+     "--lane-repo",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/pg10/current/000/lane",
+     "--fleet-repo",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/pg10/current/000/fleet",
+     "--rounds",
+     "1",
+     "--json",
+     "--no-errata"
+    ],
+    "defects": [
+     [
+      "landed-omitted",
+      "1acb5ebb06054bf52d84ffdacd8727b95287f34b"
+     ]
+    ],
+    "exit": 1,
+    "objects_acquired": {
+     "fleet": [],
+     "lane": []
+    },
+    "status": "failed",
+    "stderr": ""
+   },
+   "pinned": {
+    "argv": [
+     "/usr/bin/python3",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/clone/tools/report-landing-audit.py",
+     "--lane-repo",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/pg10/current/000/lane",
+     "--fleet-repo",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/pg10/current/000/fleet",
+     "--rounds",
+     "1",
+     "--json",
+     "--no-errata"
+    ],
+    "defects": [
+     [
+      "landed-omitted",
+      "1acb5ebb06054bf52d84ffdacd8727b95287f34b"
+     ]
+    ],
+    "exit": 1,
+    "objects_acquired": {
+     "fleet": [],
+     "lane": []
+    },
+    "status": "failed",
+    "stderr": ""
+   },
+   "premise": {
+    "cross_repo_token": null,
+    "errata": false,
+    "fake_present": false,
+    "fleet_missing": [],
+    "fleet_promisor": false,
+    "lane_missing": [],
+    "lane_promisor": false
+   }
+  },
+  "PG11-omission-fleet-promisor": {
+   "M1-merged-bare": {
+    "argv": [
+     "/usr/bin/python3",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/m1-merged-bare-audit.py",
+     "--lane-repo",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/pg11/current/000/lane",
+     "--fleet-repo",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/pg11/current/000/fleet",
+     "--rounds",
+     "1",
+     "--json",
+     "--no-errata"
+    ],
+    "defects": [
+     [
+      "landed-omitted",
+      "1acb5ebb06054bf52d84ffdacd8727b95287f34b"
+     ]
+    ],
+    "exit": 1,
+    "objects_acquired": {
+     "fleet": [],
+     "lane": []
+    },
+    "status": "failed",
+    "stderr": ""
+   },
+   "M2-no-canonical-merge": {
+    "argv": [
+     "/usr/bin/python3",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/m2-no-canonical-merge-audit.py",
+     "--lane-repo",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/pg11/current/000/lane",
+     "--fleet-repo",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/pg11/current/000/fleet",
+     "--rounds",
+     "1",
+     "--json",
+     "--no-errata"
+    ],
+    "defects": [
+     [
+      "landed-omitted",
+      "1acb5ebb06054bf52d84ffdacd8727b95287f34b"
+     ]
+    ],
+    "exit": 1,
+    "objects_acquired": {
+     "fleet": [],
+     "lane": []
+    },
+    "status": "failed",
+    "stderr": ""
+   },
+   "pinned": {
+    "argv": [
+     "/usr/bin/python3",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/clone/tools/report-landing-audit.py",
+     "--lane-repo",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/pg11/current/000/lane",
+     "--fleet-repo",
+     "/fast/scratch/hyaku/kama-r24/postfix/FinalCase11/tmp/mut/pg11/current/000/fleet",
+     "--rounds",
+     "1",
+     "--json",
+     "--no-errata"
+    ],
+    "defects": [
+     [
+      "landed-omitted",
+      "1acb5ebb06054bf52d84ffdacd8727b95287f34b"
+     ]
+    ],
+    "exit": 1,
+    "objects_acquired": {
+     "fleet": [],
+     "lane": []
+    },
+    "status": "failed",
+    "stderr": ""
+   },
+   "premise": {
+    "cross_repo_token": null,
+    "errata": false,
+    "fake_present": false,
+    "fleet_missing": [],
+    "fleet_promisor": true,
+    "lane_missing": [],
+    "lane_promisor": false
+   }
+  }
+ }
+}

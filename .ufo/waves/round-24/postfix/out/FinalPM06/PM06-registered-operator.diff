@@ -1,0 +1,25 @@
+--- pristine/tools/report-landing-audit.py
++++ PM06-swallow-actual-read-error/tools/report-landing-audit.py
+@@ -1635,5 +1635,22 @@
+         return 2
+ 
+ 
++# --- PM06 mutation: an actual read error is swallowed ---
++def _pm_install_swallowed_read():
++    _original = globals()["git"]
++
++    def _patched(repo, *args, **kw):
++        try:
++            return _original(repo, *args, **kw)
++        except EvalError as exc:
++            if "timed out" in str(exc):
++                raise
++            return ""
++
++    globals()["git"] = _patched
++
++
++_pm_install_swallowed_read()
++# --- end PM06 mutation ---
+ if __name__ == "__main__":
+     sys.exit(main())

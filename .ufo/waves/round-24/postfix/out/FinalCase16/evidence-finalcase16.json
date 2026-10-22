@@ -1,0 +1,82 @@
+{
+  "seat": "FinalCase16",
+  "case": "PG16-missing-lane-tree-plain",
+  "verdict": "HOLDS (current arm): the unavailable-object refusal is preserved with its strong identity; no candidate defect found in this cell",
+  "pin": {
+    "commit": "92063cfc60e217fa7e2098c568578119b16a1b95",
+    "clone": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase16/clone (git clone --no-hardlinks --no-checkout, detached)",
+    "tmpdir": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase16/tmp",
+    "git": "2.56.0",
+    "python": "3.14.8"
+  },
+  "digests": {
+    "tools/report-landing-audit.py": "b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f",
+    "tests/report-audit/promisor-grid.py": "30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270",
+    "tests/report-audit/promisor-grid-expectations.json": "d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1",
+    "population_sha256": "612b0a74f3eebaa9074bdde8ecd8f194f55ebaf9a35ab2b975fddbff8dd2ed88"
+  },
+  "executions": [
+    {
+      "argv": ["python3", "tests/report-audit/promisor-grid.py", "--arm", "current", "--case", "PG16-missing-lane-tree-plain", "--json", "--out", "<out>/grid-PG16"],
+      "exit": 0,
+      "stdout": "<out>/grid-PG16.json",
+      "stderr": "<out>/grid-PG16.stderr (0 bytes)",
+      "result": {"exit": 2, "met": true, "problems": [], "amended_problems": [], "original_problems": [], "objects_acquired": {"lane": [], "fleet": []}, "document": null, "defects": null, "kinds": null, "traceback": false, "internal_error": false, "timed_out": false, "leaked": false, "violations": 0, "amended_view_met": "1/1", "twin_compared": 0}
+    },
+    {
+      "argv": ["python3", "tests/report-audit/promisor-grid.py", "--arm", "current", "--case", "PG16-missing-lane-tree-plain", "--case", "PG15-missing-lane-tree-promisor", "--json", "--keep", "--out", "<out>/grid-P15P16"],
+      "exit": 0,
+      "stdout": "<out>/grid-P15P16.json",
+      "stderr": "<out>/grid-P15P16.stderr (0 bytes)",
+      "result": {"graded": 2, "violations": 0, "PG16": {"exit": 2, "met": true, "problems": []}, "PG15": {"exit": 2, "met": true, "problems": []}, "twin_compared": 0, "twin_pairs_compared": [], "twin_mismatch": []},
+      "grid_root": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase16/tmp/promisor-grid-el79b5wt"
+    },
+    {
+      "argv": ["python3", "<clone>/tools/report-landing-audit.py", "--lane-repo", "<root>/current/001/lane", "--fleet-repo", "<root>/current/001/fleet", "--rounds", "1", "--json", "--no-errata"],
+      "cwd": "<root>/current/001",
+      "exit": 2,
+      "stdout": "<out>/pg16-manual.stdout (0 bytes)",
+      "stderr": "<out>/pg16-manual.stderr",
+      "stderr_text": "could-not-evaluate: unavailable required object: 58866b563cd900df310588effe79028efc104c33:corpus/SOURCES.md (tip tree 1c13e47ce9f8088dc933a80123cf6a8ee2fa701d) in <CASE>/lane: git ls-tree 58866b563cd900df310588effe79028efc104c33 -- corpus/SOURCES.md in <CASE>/lane: rc=128 fatal: not a tree object"
+    },
+    {
+      "argv": ["python3", "<clone>/tools/report-landing-audit.py", "--lane-repo", "<root>/current/000/lane", "--fleet-repo", "<root>/current/000/fleet", "--rounds", "1", "--json", "--no-errata"],
+      "cwd": "<root>/current/000",
+      "exit": 2,
+      "stdout": "<out>/pg15-manual.stdout (0 bytes)",
+      "stderr": "<out>/pg15-manual.stderr"
+    }
+  ],
+  "premise_verified": {
+    "lane_tip_commit": "58866b563cd900df310588effe79028efc104c33 (present)",
+    "lane_tip_tree": "1c13e47ce9f8088dc933a80123cf6a8ee2fa701d (ABSENT; the only missing object reported by rev-list --missing=print)",
+    "PG16_lane_promisor_config": "none (remote.origin.promisor unset, extensions.partialclone unset, no remote)",
+    "PG15_lane_promisor_config": "remote.origin.promisor=true, extensions.partialclone=origin, remote origin -> <tmp>/absent-remote.git",
+    "fleet": "no remote, no promisor, no missing object",
+    "probe": "git --no-lazy-fetch --no-replace-objects cat-file -e <oid>^{object}; no fetch, no hydration, origin left in place"
+  },
+  "identity_checks": {
+    "typed_prefix_could_not_evaluate": true,
+    "stdout_bytes": 0,
+    "verdict_document": null,
+    "names_tip_tree_oid_present_in_reason": true,
+    "git_fatal_cause_carried": "rc=128 fatal: not a tree object",
+    "metadata_wording_present": false,
+    "internal_error_identity_present": false,
+    "objects_acquired": {"lane": [], "fleet": []},
+    "pg15_pg16_stderr_equal_after_path_normalisation": true
+  },
+  "source_paths_exercised": {
+    "required_read_wrapper": "tools/report-landing-audit.py:343-347",
+    "fatal_cause_diagnostic_root_tree": "tools/report-landing-audit.py:326-340",
+    "ls_tree_required_read_site": "tools/report-landing-audit.py:428-441",
+    "call_order": "tools/report-landing-audit.py:854 (load_source_urls) precedes :855-857 (audit_round / citation paths), so PG16 does not reach the scoped missing cache (RepoStore.missing, :124-130)"
+  },
+  "not_exercised": [
+    "frozen arm (not requested; current arm only)",
+    "the scoped missing cache / opaque-hole path (PG33/PG34/PG46/PG47 family)",
+    "the withdrawn original unknown-citation clause (PG16 has no 'amended' entry; the withdrawal is not exercised here)"
+  ],
+  "installs": "none",
+  "network": "none"
+}

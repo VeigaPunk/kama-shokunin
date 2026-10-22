@@ -1,0 +1,779 @@
+diff --git a/tests/report-audit/promisor-grid.py b/tests/report-audit/promisor-grid.py
+index 973a21b..f0650a1 100755
+--- a/tests/report-audit/promisor-grid.py
++++ b/tests/report-audit/promisor-grid.py
+@@ -17,6 +17,14 @@ Views (see tests/report-audit/promisor-grid-expectations.json):
+   amended   the live policy: .ufo/waves/round-24/oracle-amendment-1.json.
+             This is the graded view.
+ 
++Fixtures keep a blobless clone's local origin reachable on purpose: a lazy
++fetch would succeed against it and acquire objects, which the per-run
++before/after object inventory reports as `objects_acquired`.  A manual probe
++with --keep must therefore keep the origin in place, must not disable or
++delete it, and must run git with --no-lazy-fetch; removing the origin to
++avoid a flag regression would hide the very regression the tripwire exists to
++catch.
++
+ Usage:
+   promisor-grid.py [--arm frozen|current|both] [--current PATH]
+                     [--frozen-path PATH] [--case NAME]... [--json]
+@@ -34,6 +42,7 @@ import hashlib
+ import json
+ import os
+ from pathlib import Path
++import re
+ import shutil
+ import signal
+ import subprocess
+@@ -51,7 +60,8 @@ FAKE = "0123456789abcdef0123456789abcdef01234567"
+ # 0957ce619789d13d894ef21bc863486bcb35b56c is 40 hex, the first 15 hex
+ # are the real commit and the remaining 25 are the spliced part
+ HIST_TAIL = "d894ef21bc863486bcb35b56c"
+-SCRATCH = Path("/fast/scratch/hyaku/kama-r24")
++# The fixture root follows the caller's TMPDIR.  There is no baked-in
++# scratch path: parallel seats must not share one.
+ TIMEOUT = 30
+ 
+ REASON_CLASSES = {
+@@ -75,8 +85,6 @@ REASON_CLASSES = {
+                                "unresolv", "not prov", "cannot", "unproven",
+                                "indetermin"),
+ }
+-# the r23 blanket refusal must never be the reason of a current-arm refusal
+-METADATA_REFUSAL = ("partial clone (", "promisor pack")
+ CNE_PREFIX = "could-not-evaluate:"
+ 
+ 
+@@ -84,6 +92,43 @@ class Premise(Exception):
+     """The fixture or the harness could not be established: exit 2."""
+ 
+ 
++class Tampered(Exception):
++    """The expectation manifest is not the pinned snapshot: exit 2."""
++
++
++class ContractViolation(Premise):
++    """A fixture contract was not established.
++
++    The `reason` attribute names the violated clause ("initial-empty",
++    "still-missing", "missing-object"), so a control can require the
++    specific clause instead of accepting any failure.
++    """
++
++    def __init__(self, reason, message):
++        super().__init__(message)
++        self.reason = reason
++
++
++class Unavailable(Exception):
++    """The expectation manifest is missing or unreadable: exit 2.
++
++    Without the bytes no tampering can be asserted, so this is a separate
++    identity: snapshot_unavailable, never snapshot_tampered.
++    """
++
++
++# The expectation manifest is pinned byte for byte.  The 47 registered cells
++# are the ones the L1 froze (the 44-case snapshot plus the three disclosed
++# supplement cells); any byte change - a dropped case, a weakened names
++# list, a rewritten expectation - is a tampered snapshot and the grid refuses
++# to run rather than report a number against it.
++MANIFEST_SHA256 = "d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1"
++# the size of the pinned table is part of the contract: a dropped case is a
++# structural change, caught by the attestation as well as by the byte pin
++EXPECTED_CASES = 47
++EXPECTED_OPEN_ROWS = 1
++
++
+ # --------------------------------------------------------------- environment
+ 
+ def env(**extra):
+@@ -211,13 +256,18 @@ def mark_markers(root, repo):
+         write_under(root, pack.parent / (pack.stem + ".promisor"), b"")
+ 
+ 
+-def blobless_clone(root, origin, dest):
+-    """A real file:// blobless partial clone (local transport, no network)."""
++def blobless_clone(root, origin, dest, filtered=True):
++    """A real file:// blobless partial clone (local transport, no network).
++
++    `filtered=False` makes the deliberate negative control: a complete clone
++    that claims to be a blobless one.
++    """
+     git(origin, "config", "uploadpack.allowFilter", "true")
+-    p = subprocess.run(["git", "-c", "protocol.file.allow=always", "clone", "-q",
+-                        "--filter=blob:none", "--no-checkout",
+-                        f"file://{origin}", str(dest)],
+-                       capture_output=True, env=env(), cwd=str(root))
++    argv = ["git", "-c", "protocol.file.allow=always", "clone", "-q"]
++    if filtered:
++        argv.append("--filter=blob:none")
++    argv += ["--no-checkout", f"file://{origin}", str(dest)]
++    p = subprocess.run(argv, capture_output=True, env=env(), cwd=str(root))
+     if p.returncode:
+         raise Premise(f"blobless clone failed: "
+                       f"{p.stderr.decode(errors='replace').strip()}")
+@@ -237,6 +287,36 @@ def hydrate(clone, origin):
+                     shutil.copy2(f, target / f.name)
+ 
+ 
++def assert_blobless_contract(repo, root, hydrated, expect=None):
++    """The blobless fixture must really be partial.
++
++    After a genuine blobless clone the promised objects are missing, and the
++    missing set is computed with lazy fetching disabled, so the absence is the
++    clone's own and never a fetch.  A hydrated clone must end with an empty
++    missing set; an unhydrated one must still miss the object the cell is
++    about.  A filter that was ignored, or a hydration that happened silently,
++    is a premise failure (exit 2), not a different fixture.
++    """
++    missing = missing_objects(repo, root)
++    if hydrated:
++        if missing:
++            raise ContractViolation(
++                "still-missing",
++                f"{repo}: the hydrated clone still misses {missing}")
++        return missing
++    if not missing:
++        raise ContractViolation(
++            "initial-empty",
++            f"{repo}: the blobless clone misses nothing: the filter was "
++            f"ignored")
++    if expect and expect not in missing:
++        raise ContractViolation(
++            "missing-object",
++            f"{repo}: the blobless clone does not miss {expect} "
++            f"(missing: {missing})")
++    return missing
++
++
+ def drop_object(repo, sha):
+     obj = git_dir(repo) / "objects" / sha[:2] / sha[2:]
+     if not obj.exists():
+@@ -424,19 +504,37 @@ def build(root, tmp, **opt):
+         if key == "cited_blob":
+             shas["cited_blob"] = shas["f_blob"]
+         shas[key] = drop_object(target, shas[key])
++        # the removal must really hold: the probe runs with lazy fetching
++        # disabled, so a store that could serve the object again is a premise
++        # failure (exit 2), never a silently different fixture
++        if object_exists(target, shas[key]):
++            raise Premise(f"{target}: the removed object {shas[key]} is "
++                          f"still available")
+     # blobless clones
+     if opt.get("blobless_lane"):
+         origin = Path(tmp, "lane-origin")
+         shutil.move(str(lane), str(origin))
+-        lane = blobless_clone(root, origin, Path(tmp, "lane"))
++        lane = blobless_clone(root, origin, Path(tmp, "lane"),
++                              filtered=not opt.get("complete_clone"))
++        # the clone must already be partial: the contract is proved on the
++        # clone itself, before any hydration, so a complete clone cannot pass
++        # as a hydrated one
++        assert_blobless_contract(lane, "refs/heads/master", hydrated=False,
++                                  expect=shas.get("f_blob"))
+         if opt.get("hydrate_lane"):
+             hydrate(lane, origin)
++            assert_blobless_contract(lane, "refs/heads/master",
++                                      hydrated=True)
+     if opt.get("blobless_fleet"):
+         origin = Path(tmp, "fleet-origin")
+         shutil.move(str(fleet), str(origin))
+-        fleet = blobless_clone(root, origin, Path(tmp, "fleet"))
++        fleet = blobless_clone(root, origin, Path(tmp, "fleet"),
++                               filtered=not opt.get("complete_clone"))
++        assert_blobless_contract(fleet, "HEAD", hydrated=False,
++                                  expect=shas.get("report_blob"))
+         if opt.get("hydrate_fleet"):
+             hydrate(fleet, origin)
++            assert_blobless_contract(fleet, "HEAD", hydrated=True)
+     if opt.get("errata"):
+         if len(shas["spliced"]) != 40:
+             raise Premise(f"the spliced token is not a 40-hex sha: "
+@@ -797,10 +895,13 @@ def grade(view, arm_out, err, out, shas, names, forbidden, form_check=True):
+         terms = REASON_CLASSES[want["reason_class"]]
+         if not any(t in err.lower() for t in terms):
+             problems.append(f"reason not in class {want['reason_class']}")
+-    if code == 2 and arm_out["arm"] == "current" and form_check:
++    if code == 2 and form_check:
+         problems += check_exit2_form(err, out, names, forbidden)
+     if arm_out["traceback"]:
+         problems.append("traceback")
++    if arm_out.get("internal_error"):
++        problems.append("the auditor reported an internal error, which is "
++                        "not a refusal")
+     if arm_out["timed_out"]:
+         problems.append("timeout")
+     if arm_out["leaked"]:
+@@ -822,31 +923,53 @@ def run_case(auditor, built, expect, tmp, arm, shas):
+     acquired = {k: sorted(after[k] - before[k]) for k in after}
+     obs = {"arm": arm, "exit": code,
+            "traceback": "Traceback (most recent call last)" in err,
++           # the auditor's catch-all ("could-not-evaluate: internal: ...") is
++           # an error, not a refusal: it is read from the FULL stderr, because
++           # the 300 character tail can truncate the identity
++           "internal_error": "could-not-evaluate: internal:" in err,
+            "timed_out": timed_out, "leaked": bool(survivors(tmp)),
+            "objects_acquired": acquired,
+            "stderr_tail": err.strip()[-300:]}
+     names = [resolve_token(n, shas) for n in expect.get("names_any_of", [])]
+     forbidden = expect.get("reason_forbidden", [])
+     live = expect.get("amended", expect["original"])
+-    obs["met_frozen"] = (not grade(expect["frozen"], obs, err, out, shas, names,
+-                                    forbidden)) if arm == "frozen" else None
+-    # the frozen arm is scored against the amended view too: that score is the
+-    # historical baseline the repair is measured against, not a target
+-    obs["met_amended_frozen"] = (
++    # the frozen column is the historical reproduction: it is scored without
++    # the exit-2 form check, so the r23 metadata refusal still counts as met
++    # and the 47/47 history stays intact
++    # the actual grade problems are kept per named view: the graded view
++    # (the historical frozen column for the frozen arm, the amended view for
++    # the current arm) and the strict comparable amended target in both arms
++    problems_frozen = (grade(expect["frozen"], obs, err, out, shas, names,
++                             forbidden, form_check=False)
++                       if arm == "frozen" else None)
++    problems_amended = grade(live, obs, err, out, shas, names, forbidden,
++                             form_check=True)
++    problems_original = (grade(expect["original"], obs, err, out, shas, names,
++                               forbidden)
++                         if arm == "current" else None)
++    obs["problems"] = (problems_frozen if arm == "frozen"
++                       else problems_amended)
++    obs["amended_problems"] = problems_amended
++    obs["original_problems"] = problems_original
++    obs["met_frozen"] = (not problems_frozen) if arm == "frozen" else None
++    # the amended comparison must be identical in both arms: same exit, same
++    # defect set, same reason class, same strong names pin, same no-verdict
++    # and same acquisition rules.  The former loose exit/reason-only score is
++    # kept beside it under its own label and is never conflated with it.
++    obs["met_amended_frozen"] = ((not problems_amended)
++                                 if arm == "frozen" else None)
++    obs["met_amended_frozen_loose"] = (
+         not grade(live, obs, err, out, shas, [], [], form_check=False)
+         if arm == "frozen" else None)
+-    obs["met_original"] = (not grade(expect["original"], obs, err, out, shas,
+-                                     names, forbidden)) if arm == "current" else None
+-    obs["met_amended"] = (not grade(live, obs, err, out, shas, names,
+-                                    forbidden)) if arm == "current" else None
++    obs["met_original"] = ((not problems_original)
++                           if arm == "current" else None)
++    obs["met_amended"] = ((not problems_amended)
++                          if arm == "current" else None)
+     obs["defects"], obs["raw_defects"] = observed_defects(out)
+     obs["kinds"] = (sorted({k for k, _ in obs["defects"]})
+                     if obs["defects"] is not None else None)
+     obs["raw_kinds"] = (sorted({k for k, _ in obs["raw_defects"]})
+                         if obs["raw_defects"] is not None else None)
+-    # the mutation runner grades rows by kind: the manifest's "policy" rows
+-    # are declared behaviour contracts, the "control" rows are no-harm twins
+-    obs["kind"] = "contract" if expect.get("kind") == "policy" else "control"
+     obs["row_class"] = expect.get("kind")
+     obs["met"] = (obs["met_amended"] if arm == "current" else obs["met_frozen"])
+     obs["expected_exit"] = live.get("exit")
+@@ -871,6 +994,97 @@ def normalise_document(out, built):
+     return json.loads(text)
+ 
+ 
++def load_manifest():
++    """Read the pinned expectation manifest, or refuse."""
++    path = Path(__file__).resolve().parent / EXPECT
++    try:
++        raw = path.read_bytes()
++    except OSError as exc:
++        raise Unavailable(f"the expectation manifest is not readable: {exc}")
++    digest = hashlib.sha256(raw).hexdigest()
++    if digest != MANIFEST_SHA256:
++        raise Tampered(f"the expectation manifest bytes changed: {digest} "
++                       f"!= {MANIFEST_SHA256}")
++    return json.loads(raw.decode("utf-8")), digest
++
++
++CASE_ID = re.compile(r"^PG[0-9]{2}-[a-z0-9-]+$")
++TOKEN_KEYS = {"omitted", "fake", "blob", "cited_blob", "sources_blob",
++              "tip_tree", "fleet_tip_tree", "report_blob", "ancestor",
++              "hidden_blob", "missing_subtree", "spliced", "unused_blob",
++              "unused_tree", "unselected_blob", "cross_repo_token"}
++DEFECT_KINDS = {"unresolved-full-hash", "landed-unresolved", "landed-ambiguous",
++                "landed-omitted", "landed-section-missing"}
++
++
++def validate_table(table):
++    """Structural attestation of the expectation table.
++
++    Returns the list of problems; an empty list means the table is sound.
++    This is the negative capability the selftest exercises: a dropped case,
++    a weakened names list and a dangling twin link must all be reported.
++    """
++    problems = []
++    ids = [c["case"] for c in table["cases"]]
++    if len(ids) != len(set(ids)):
++        problems.append("duplicate case ids")
++    if len(ids) != EXPECTED_CASES:
++        problems.append(f"{len(ids)} graded cases, expected {EXPECTED_CASES}")
++    if len(table.get("open_rows", [])) != EXPECTED_OPEN_ROWS:
++        problems.append(f"{len(table.get('open_rows', []))} open rows, "
++                        f"expected {EXPECTED_OPEN_ROWS}")
++    known = set(ids) | {o["case"] for o in table.get("open_rows", [])}
++    for case in table["cases"]:
++        name = case["case"]
++        if not CASE_ID.fullmatch(name):
++            problems.append(f"{name}: malformed case id")
++        if case["builder"] not in BUILDERS:
++            problems.append(f"{name}: unknown builder {case['builder']}")
++        if case.get("twin") and case["twin"] not in known:
++            problems.append(f"{name}: twin {case['twin']} is not a case")
++        for want in (case["frozen"], case["original"],
++                     case.get("amended", case["original"])):
++            if want.get("reason_class") not in (None, *REASON_CLASSES):
++                problems.append(f"{name}: unknown reason class")
++            for defect in (want.get("defects") or []):
++                if defect.get("kind") not in DEFECT_KINDS:
++                    problems.append(f"{name}: unknown defect kind")
++                token = defect.get("token", "")
++                if token.startswith("$") and token[1:] not in TOKEN_KEYS:
++                    problems.append(f"{name}: unknown token key {token}")
++        for token in case.get("names_any_of", []):
++            if token.startswith("$") and token[1:] not in TOKEN_KEYS:
++                problems.append(f"{name}: unknown names key {token}")
++        live = case.get("amended", case["original"])
++        if live.get("exit") == 2 and live.get("reason_class") not in (None,
++                                                                     "metadata"):
++            if not case.get("names_any_of"):
++                problems.append(f"{name}: a content refusal without a "
++                                f"names_any_of pin")
++    for row in table.get("open_rows", []):
++        if row["builder"] not in BUILDERS:
++            problems.append(f"{row['case']}: unknown builder")
++    return problems
++
++
++def collect_failures(graded, arm):
++    """The unique graded cases that fail their graded view or the twin
++    constraint, for the selected arm only.
++
++    The graded view is the amended view for the current arm and the
++    historical frozen column for the frozen arm.  A case that misses its own
++    view and also breaks a twin is counted once.
++    """
++    key = "met_amended" if arm == "current" else "met_frozen"
++    failed = set()
++    for row in graded:
++        if row.get("arm") != arm:
++            continue
++        if not row.get(key) or row.get("twin_equal") is False:
++            failed.add(row["case"])
++    return sorted(failed)
++
++
+ def population(table):
+     rows = []
+     for case in table["cases"]:
+@@ -881,21 +1095,43 @@ def population(table):
+     return hashlib.sha256(json.dumps(rows, sort_keys=True).encode()).hexdigest()
+ 
+ 
+-def selftest(table, root):
+-    """Harness self-check: the table, the builders, the premise machinery."""
++def selftest(table, root, manifest_digest):
++    """Harness self-check with a real negative capability.
++
++    The table is attested structurally, and three tampered copies of it must
++    be rejected: a dropped case, a weakened names list and a dangling twin
++    link.  The byte-level attestation is the manifest sha256 pin, exercised
++    through the command line: a tampered manifest copy must exit 2 with
++    snapshot_tampered, and an unknown --case selector must not be ignored.
++    """
+     cases = []
+-    names = [c["case"] for c in table["cases"]]
+-    cases.append(("unique-case-ids", len(names) == len(set(names))))
+-    cases.append(("builders-present",
+-                  all(c["builder"] in BUILDERS for c in table["cases"])))
+-    cases.append(("open-builders-present",
+-                  all(o["builder"] in BUILDERS for o in table["open_rows"])))
+-    cases.append(("reason-classes-known",
+-                  all(w.get("reason_class") in (None, *REASON_CLASSES)
+-                      for c in table["cases"]
+-                      for w in (c["frozen"], c["original"],
+-                                c.get("amended", c["original"])))))
+-    cases.append(("population-stable", population(table) == population(table)))
++    problems = validate_table(table)
++    cases.append(("table-valid", not problems))
++    cases.append(("manifest-pinned", manifest_digest == MANIFEST_SHA256))
++    # negative capability: a dropped case
++    dropped = dict(table, cases=table["cases"][:-1])
++    cases.append(("negative-dropped-case-rejected",
++                  bool(validate_table(dropped))))
++    # negative capability: a weakened names list
++    weakened = json.loads(json.dumps(table))
++    for case in weakened["cases"]:
++        if case.get("names_any_of"):
++            case["names_any_of"] = []
++            break
++    cases.append(("negative-weakened-names-rejected",
++                  bool(validate_table(weakened))))
++    # negative capability: a dangling twin link
++    badtwin = json.loads(json.dumps(table))
++    for case in badtwin["cases"]:
++        if case.get("twin"):
++            case["twin"] = "PG99-no-such-case"
++            break
++    cases.append(("negative-bad-twin-rejected",
++                  bool(validate_table(badtwin))))
++    # command-line controls: a tampered manifest copy and an unknown selector
++    controls = cli_controls(root)
++    for name, ok in controls:
++        cases.append((name, ok))
+     tmp = Path(root, "selftest")
+     tmp.mkdir(parents=True, exist_ok=True)
+     case = build(root, tmp, lane_mark="config")
+@@ -910,6 +1146,39 @@ def selftest(table, root):
+                   len(broken["premise"]["lane_missing"]) == 1))
+     cases.append(("premise-fake-still-absent",
+                   broken["premise"]["fake_present"] is False))
++    # a "blobless" clone that was not filtered must be refused before the
++    # hydration: the negative fixture control
++    try:
++        build(root, Path(root, "selftest3"), lane_mark="config",
++              sources=False, blobless_lane=True, hydrate_lane=True,
++              complete_clone=True)
++        cases.append(("negative-complete-clone-refused", False))
++    except ContractViolation as exc:
++        # the specific clause, not any failure: an unrelated setup error
++        # must not green this control
++        cases.append(("negative-complete-clone-refused",
++                      exc.reason == "initial-empty"))
++    # the valid path: a genuine partial clone is hydrated into a complete one
++    try:
++        genuine = build(root, Path(root, "selftest4"), lane_mark="config",
++                        sources=False, blobless_lane=True, hydrate_lane=True)
++        cases.append(("genuine-partial-clone-hydrated",
++                      genuine["premise"]["lane_missing"] == []))
++    except Premise:
++        cases.append(("genuine-partial-clone-hydrated", False))
++    # an asymmetric two-cell twin example must report two unique violating
++    # cases, never five
++    synthetic = [
++        {"case": "PG23-x", "kind": "policy", "arm": "current",
++         "met_amended": True, "met_frozen": None, "twin_equal": False},
++        {"case": "PG24-y", "kind": "policy", "arm": "current",
++         "met_amended": False, "met_frozen": None, "twin_equal": True},
++        {"case": "PG01-z", "kind": "policy", "arm": "frozen",
++         "met_amended": None, "met_frozen": False, "twin_equal": False},
++    ]
++    graded_syn = [r for r in synthetic if r["kind"] in ("policy", "control")]
++    unique = collect_failures(graded_syn, "current")
++    cases.append(("unique-violations-per-arm", unique == ["PG23-x", "PG24-y"]))
+     failed = [n for n, ok in cases if not ok]
+     for name, ok in cases:
+         print(f"{'ok' if ok else 'FAIL'} {name}")
+@@ -917,6 +1186,132 @@ def selftest(table, root):
+     return 0 if not failed else 1
+ 
+ 
++def cli_controls(root):
++    """Command-line controls for the attestation.
++
++    A copy of the runner with a tampered manifest must refuse to run
++    (snapshot_tampered, exit 2) - that covers a dropped case and a weakened
++    names list at the byte level - and an unknown --case selector must be
++    refused rather than ignored, also with --selftest.
++    """
++    here = Path(__file__).resolve()
++    manifest = here.parent / EXPECT
++    raw = manifest.read_bytes()
++    work = Path(root, "controls")
++    work.mkdir(parents=True, exist_ok=True)
++    results = []
++    for label, mutate in (("dropped-case", "drop"), ("weakened-names",
++                                                    "weaken")):
++        copy = work / label
++        copy.mkdir(parents=True, exist_ok=True)
++        shutil.copy2(here, copy / here.name)
++        table = json.loads(raw.decode("utf-8"))
++        if mutate == "drop":
++            table["cases"] = table["cases"][:-1]
++        else:
++            for case in table["cases"]:
++                if case.get("names_any_of"):
++                    case["names_any_of"] = []
++                    break
++        (copy / EXPECT).write_text(json.dumps(table, indent=1) + "\n",
++                                   encoding="utf-8")
++        proc = subprocess.run([sys.executable, str(copy / here.name),
++                               "--selftest"], capture_output=True, env=env(),
++                              cwd=str(copy))
++        err = proc.stderr.decode(errors="replace")
++        results.append((f"cli-{label}-refused",
++                        proc.returncode == 2 and "snapshot_tampered" in err))
++    proc = subprocess.run([sys.executable, str(here), "--selftest",
++                           "--case", "PG99-no-such-case"],
++                          capture_output=True, env=env(),
++                          cwd=str(work))
++    err = proc.stderr.decode(errors="replace")
++    results.append(("cli-unknown-selector-refused",
++                    proc.returncode == 2 and "unknown case" in err))
++    # stand-in auditors, driven behaviourally: a legitimate content-derived
++    # refusal must MEET, the same refusal carrying the internal identity must
++    # NOT meet, and the identity must be read from the full stderr even when
++    # the 300 character tail no longer holds the prefix.
++    valid = ("could-not-evaluate: unavailable required object: "
++             "corpus/SOURCES.md is missing")
++    filler = "x" * 400
++    stand_ins = (
++        # a legitimate refusal: the correct reason class and the correct
++        # names, no internal identity -> it must meet
++        ("content-refusal-meets", "import sys\n"
++         "sys.stderr.write('" + valid + "\\n')\nsys.exit(2)\n",
++         lambda row: row.get("met") is True
++         and row.get("internal_error") is False),
++        # the same valid reason and names, plus the internal identity, with a
++        # body long enough to push the prefix out of the tail -> it must not
++        # meet, and the identity must still be seen
++        ("internal-same-reason-does-not-meet", "import sys\n"
++         "sys.stderr.write('could-not-evaluate: internal: ValueError: "
++         "boom\\n" + filler + "\\n" + valid + "\\n')\nsys.exit(2)\n",
++         lambda row: row.get("met") is False
++         and row.get("internal_error") is True
++         and "could-not-evaluate: internal:" not in (row.get("stderr_tail")
++                                                      or "")),
++        # a traceback is an error too
++        ("traceback-detected", "import sys\n"
++         "sys.stderr.write('Traceback (most recent call last):\\n  "
++         "boom\\nValueError: boom\\n')\nsys.exit(2)\n",
++         lambda row: row.get("traceback") is True
++         and row.get("met") is False),
++    )
++    for label, body, check in stand_ins:
++        stand_in = work / f"stand-in-{label}.py"
++        stand_in.write_text(body, encoding="utf-8")
++        proc = subprocess.run([sys.executable, str(here), "--arm", "current",
++                               "--current", str(stand_in), "--json",
++                               "--case", "PG13-missing-lane-blob-promisor"],
++                              capture_output=True, env=env(), cwd=str(work))
++        try:
++            doc = json.loads(proc.stdout.decode(errors="replace"))
++            row = doc["arms"]["current"]["rows"][0]
++        except (ValueError, KeyError, IndexError):
++            row = {}
++        results.append((f"stand-in-{label}", check(row)))
++    # the caller's TMPDIR is honoured, and an unavailable requested scratch is
++    # a could-not-evaluate in both the normal and the selftest mode
++    asked = work / "asked-scratch"
++    asked.mkdir(parents=True, exist_ok=True)
++    proc = subprocess.run([sys.executable, str(here), "--arm", "current",
++                           "--case", "PG07-complete-lane-plain", "--keep"],
++                          capture_output=True, env=env(TMPDIR=str(asked)),
++                          cwd=str(work))
++    honoured = any(p.name.startswith("promisor-grid-")
++                   for p in asked.iterdir())
++    results.append(("requested-root-honoured",
++                    proc.returncode in (0, 1) and honoured))
++    for mode, extra in (("normal", []), ("selftest", ["--selftest"])):
++        absent = work / f"absent-scratch-{mode}"
++        proc = subprocess.run([sys.executable, str(here), *extra],
++                              capture_output=True,
++                              env=env(TMPDIR=str(absent)), cwd=str(work))
++        err = proc.stderr.decode(errors="replace")
++        # the refusal must name the requested root and the reason, and must
++        # not be a traceback: an unrelated input failure cannot green it
++        results.append((f"unavailable-root-{mode}-refused",
++                        proc.returncode == 2
++                        and "could-not-evaluate" in err
++                        and str(absent) in err
++                        and "requested scratch" in err
++                        and "unavailable" in err
++                        and "Traceback" not in err))
++    # a runner copy without its companion manifest: the external oracle is
++    # unavailable, which is a could-not-evaluate and not a tampering claim
++    bare = work / "no-manifest"
++    bare.mkdir(parents=True, exist_ok=True)
++    shutil.copy2(here, bare / here.name)
++    proc = subprocess.run([sys.executable, str(bare / here.name), "--selftest"],
++                          capture_output=True, env=env(), cwd=str(bare))
++    err = proc.stderr.decode(errors="replace")
++    results.append(("cli-missing-manifest-refused",
++                    proc.returncode == 2 and "snapshot_unavailable" in err))
++    return results
++
++
+ def main(argv=None):
+     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+     ap.add_argument("--arm", choices=("frozen", "current", "both"),
+@@ -929,36 +1324,51 @@ def main(argv=None):
+     ap.add_argument("--selftest", action="store_true")
+     ap.add_argument("--keep", action="store_true")
+     args = ap.parse_args(argv)
+-    table = json.loads((Path(__file__).resolve().parent / EXPECT)
+-                       .read_text(encoding="utf-8"))
+-    if args.selftest:
+-        root = make_root()
+-        try:
+-            return selftest(table, root)
+-        finally:
+-            if not args.keep:
+-                shutil.rmtree(root, ignore_errors=True)
+-    arms = ("frozen", "current") if args.arm == "both" else (args.arm,)
++    try:
++        table, manifest_digest = load_manifest()
++    except Tampered as exc:
++        print(f"could-not-evaluate: snapshot_tampered: {exc}", file=sys.stderr)
++        return 2
++    except Unavailable as exc:
++        print(f"could-not-evaluate: snapshot_unavailable: {exc}", file=sys.stderr)
++        return 2
+     wanted = set(args.case or [])
+     known = {c["case"] for c in table["cases"]}
+     known |= {o["case"] for o in table["open_rows"]}
+     unknown = sorted(wanted - known)
+     if unknown:
++        # an invalid selector is never ignored, not even with --selftest
+         print(f"could-not-evaluate: unknown case(s): {', '.join(unknown)}",
+               file=sys.stderr)
+         return 2
++    if args.selftest:
++        try:
++            root = make_root()
++        except Premise as exc:
++            print(f"could-not-evaluate: {exc}", file=sys.stderr)
++            return 2
++        try:
++            return selftest(table, root, manifest_digest)
++        finally:
++            if not args.keep:
++                shutil.rmtree(root, ignore_errors=True)
++    arms = ("frozen", "current") if args.arm == "both" else (args.arm,)
+     cases = [c for c in table["cases"]
+              if not wanted or c["case"] in wanted]
+     opens = [o for o in table["open_rows"]
+              if not wanted or o["case"] in wanted]
+     doc = {"grid": "promisor-grid", "frozen_revision": FROZEN,
+-           "expectations_sha256": hashlib.sha256(
+-               (Path(__file__).resolve().parent / EXPECT).read_bytes()
+-           ).hexdigest(),
++           "grid_sha256": hashlib.sha256(
++               Path(__file__).resolve().read_bytes()).hexdigest(),
++           "expectations_sha256": manifest_digest,
+            "population_sha256": population(table),
+            "population_size": len(table["cases"]),
+            "timeout_seconds": TIMEOUT, "arms": {}}
+-    root = make_root()
++    try:
++        root = make_root()
++    except Premise as exc:
++        print(f"could-not-evaluate: {exc}", file=sys.stderr)
++        return 2
+     try:
+         auditors = {}
+         if "frozen" in arms:
+@@ -1017,30 +1427,56 @@ def main(argv=None):
+                                               for v in results.values())
+                                        else None)
+             graded = [r for r in rows if r["kind"] in ("policy", "control")]
+-            live_fail = [r for r in graded
+-                         if not r["met_amended"] if r["arm"] == "current"]
+-            frozen_fail = [r for r in graded
+-                           if not r["met_frozen"] if r["arm"] == "frozen"]
+-            # the twin comparison is computed above: a mismatch is a failure
+-            live_fail += [r for r in graded
+-                          if r.get("twin_equal") is False]
+-            frozen_fail += [r for r in graded
+-                            if r.get("twin_equal") is False]
+-            withdrawn = [r["case"] for r in rows
+-                         if r["arm"] == "current" and r["met_original"] is False]
++            # unique graded cases that fail their graded view OR the twin
++            # constraint, for the selected arm only: a twin mismatch and an
++            # individual miss in the same cell count once, and the other
++            # arm's failures never leak in
++            failed = collect_failures(graded, arm)
++            # the amended view is scored per arm: the frozen arm against its
++            # own history (met_amended_frozen), the current arm against the
++            # live view (met_amended).  A single counter mixed both and
++            # reported 0 for the current arm.
++            amended_key = ("met_amended_frozen" if arm == "frozen"
++                           else "met_amended")
+             baseline = [r for r in graded
+-                        if r["arm"] == "frozen" and r["met_amended_frozen"]]
++                        if r["arm"] == arm and r[amended_key]]
++            amended_unmet = sorted(r["case"] for r in graded
++                                   if r["arm"] == arm and not r[amended_key])
++            loose = [r for r in graded
++                     if r["arm"] == arm
++                     and r.get("met_amended_frozen_loose")]
++            loose_unmet = sorted(
++                r["case"] for r in graded
++                if r["arm"] == arm
++                and r.get("met_amended_frozen_loose") is False)
++            # a row is withdrawn only when the amendment changed its
++            # expectation; an unmet row whose original and amended views
++            # agree is an ordinary failure, not a withdrawal
++            changed = {c["case"] for c in cases
++                       if json.dumps(c["original"], sort_keys=True)
++                       != json.dumps(c.get("amended", c["original"]),
++                                     sort_keys=True)}
++            original_unmet = [r["case"] for r in rows
++                              if r["arm"] == "current"
++                              and r["met_original"] is False]
++            withdrawn = [c for c in original_unmet if c in changed]
+             doc["arms"][arm] = {
+                 "rows": rows,
+                 "graded": len(graded),
+-                "violations": len(live_fail) + len(frozen_fail),
+-                "violating_cases": [r["case"] for r in live_fail + frozen_fail],
++                "violations": len(failed),
++                "violating_cases": failed,
+                 "amended_view_met": len(baseline),
+                 "amended_view_total": len(graded),
+-                "amended_view_unmet": sorted(
+-                    r["case"] for r in graded
+-                    if r["arm"] == "frozen" and not r["met_amended_frozen"]),
++                "amended_view_unmet": amended_unmet,
++                "amended_view_measured_on": arm,
++                "amended_view_rules": "identical in both arms: exit, defect "
++                                      "set, reason class, strong names pin, "
++                                      "no-verdict and acquisition rules",
++                "amended_view_met_loose_exit_reason_only": len(loose),
++                "amended_view_unmet_loose_exit_reason_only": loose_unmet,
++                "original_view_unmet": original_unmet,
+                 "withdrawn_original_failures": withdrawn,
++                "amendment_changed_cases": sorted(changed),
+                 "twin_pairs_in_manifest": len(twin_links),
+                 "twin_compared": sum(r.get("twin_equal") is not None
+                                      for r in rows),
+@@ -1112,17 +1548,27 @@ def main(argv=None):
+ 
+ 
+ def make_root():
+-    """One grid-owned root per run, under /fast/scratch (never /tmp)."""
++    """One grid-owned root per run.
++
++    The caller's TMPDIR is honoured.  An explicitly requested scratch that is
++    not usable is a could-not-evaluate (exit 2) before any fixture or
++    auditor exists - never a silent fallback elsewhere and never a traceback.
++    With no TMPDIR the standard temporary-directory selection is used.
++    """
+     base = os.environ.get("TMPDIR")
+     if base:
+-        candidate = Path(base).resolve()
+-        if SCRATCH not in candidate.parents and candidate != SCRATCH:
+-            base = None
+-    else:
+-        base = None
+-    root = Path(tempfile.mkdtemp(prefix="promisor-grid-",
+-                                 dir=str(base or SCRATCH)))
+-    return root
++        root_dir = Path(base)
++        if not root_dir.is_dir() or not os.access(root_dir, os.W_OK):
++            raise Premise(f"the requested scratch {base} is unavailable")
++        try:
++            return Path(tempfile.mkdtemp(prefix="promisor-grid-", dir=base))
++        except OSError as exc:
++            raise Premise(f"the requested scratch {base} is unavailable: "
++                          f"{exc}")
++    try:
++        return Path(tempfile.mkdtemp(prefix="promisor-grid-"))
++    except OSError as exc:
++        raise Premise(f"no temporary directory is available: {exc}")
+ 
+ 
+ def frozen_auditor(root, explicit):

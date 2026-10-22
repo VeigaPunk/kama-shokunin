@@ -1,0 +1,54 @@
+{
+  "case": "PG36-unused-missing-blob-plain",
+  "fixture_root": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase36/tmp-keep/promisor-grid-t3hcfqlh/current/001",
+  "grid_keep_run": "grid-keep-PG36-PG35.json",
+  "reads": "git --no-lazy-fetch (no fetch, no origin removed or repointed)",
+  "lane": {
+    "config": ["core.repositoryformatversion=0", "core.bare=false"],
+    "promisor_marked": false,
+    "commits": ["9bad795e8e7cbabfa1b3e699c5b461ad62271391 round-1: work"],
+    "tree_entries": [
+      "100644 blob 051975b0ced83169116c235e7691c0a1a8313300 corpus/SOURCES.md",
+      "100644 blob 56d7b323865c731da81e0225cf109d66f0480919 f",
+      "100644 blob b2c475fedd466685003f05a02c7bd772186c0429 notes/unused.txt"
+    ],
+    "unused_blob_present": false,
+    "unused_blob_probe": "git --no-lazy-fetch cat-file -e b2c475fedd466685003f05a02c7bd772186c0429 -> exit 1 (absent)",
+    "cited_blobs_present": ["051975b0ced83169116c235e7691c0a1a8313300", "56d7b323865c731da81e0225cf109d66f0480919"],
+    "object_count": 6
+  },
+  "fleet": {
+    "config": ["core.repositoryformatversion=0", "core.bare=false"],
+    "promisor_marked": false,
+    "report": ".ufo/reports/round-1/kama.md",
+    "report_citations": ["9bad795e8e7cbabfa1b3e699c5b461ad62271391"],
+    "errata_rows": 0,
+    "missing_objects": [],
+    "object_count": 9
+  },
+  "two_root_diagnosis_replicated_manually": {
+    "walk1_store_wide_all_present_objects": {
+      "cmd": "git --no-lazy-fetch -c core.commitGraph=false rev-list --objects --missing=print --no-object-names --stdin <present commit/tree/tag ids>",
+      "missing": ["b2c475fedd466685003f05a02c7bd772186c0429"],
+      "note": "the unused blob IS visible to the store-wide walk"
+    },
+    "walk2_opaque_root_pinned_blob_none": {
+      "cmd": "git --no-lazy-fetch -c core.commitGraph=false rev-list --objects --missing=print --no-object-names --filter=blob:none --stdin <lane tip>",
+      "missing": [],
+      "note": "no opaque tree/commit hole; a missing blob is not an opaque boundary"
+    }
+  },
+  "observed_verdict": {
+    "exit": 0,
+    "reason_class": null,
+    "defects": [],
+    "kinds": [],
+    "document_summary_status": "clean",
+    "document_results": [{"round": 1, "required": 1, "round_commits": 1, "defects": [], "post_report": [], "report_committed": true, "source_url_hashes": []}],
+    "objects_acquired": {"lane": [], "fleet": []},
+    "twin": {"partner": "PG35-unused-missing-blob-promisor", "twin_equal": true, "twin_mismatch": []},
+    "graded_met": {"met_amended": true, "met_original": true, "met_frozen": null},
+    "expected_registered": {"defects": [], "exit": 0, "kinds": [], "reason_class": null},
+    "exit_class_vs_expected": "same-verdict-exit (0 -> 0)"
+  }
+}

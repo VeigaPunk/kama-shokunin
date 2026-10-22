@@ -1,0 +1,142 @@
+{
+  "seat": "FinalCase22",
+  "role": "reviewer",
+  "pinned_commit": "92063cfc60e217fa7e2098c568578119b16a1b95",
+  "clone": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase22/clone",
+  "clone_cmd": "git clone --no-hardlinks /home/vgpnk/Projects/shokunin/kama-shokunin clone && git checkout --detach 92063cfc60e217fa7e2098c568578119b16a1b95",
+  "clone_worktree_clean_after_run": true,
+  "tmpdir": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase22/tmp",
+  "digests": {
+    "tools/report-landing-audit.py": "b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f",
+    "tests/report-audit/promisor-grid.py": "30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270",
+    "tests/report-audit/promisor-grid-expectations.json": "d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1",
+    "grid_observed_sha256": "30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270",
+    "expectations_observed_sha256": "d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1",
+    "auditor_observed_sha256": "b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f",
+    "population_sha256": "612b0a74f3eebaa9074bdde8ecd8f194f55ebaf9a35ab2b975fddbff8dd2ed88"
+  },
+  "runs": [
+    {
+      "name": "grid-current",
+      "argv": [
+        "python3", "tests/report-audit/promisor-grid.py",
+        "--arm", "current",
+        "--case", "PG22-unknown-citation-incomplete-promisor",
+        "--case", "PG37-unused-missing-blob-with-fabricated-citation-plain",
+        "--json", "--out",
+        "/fast/scratch/hyaku/kama-r24/postfix/FinalCase22/out"
+      ],
+      "exit": 0,
+      "stderr": "",
+      "cells_executed": 2,
+      "raw": "grid-current-PG22-PG37.json"
+    },
+    {
+      "name": "premise-capture",
+      "argv": ["python3", "out/premise_capture.py"],
+      "exit": 0,
+      "note": "builder invocation only, no auditor execution; captures the fixture premise",
+      "raw": "premise-capture.txt"
+    },
+    {
+      "name": "opacity-probe",
+      "argv": ["python3", "out/opacity_probe.py"],
+      "exit": 0,
+      "note": "read-only probe of the pinned auditor's missing_reachable() on a rebuilt PG22 fixture; no auditor verdict run",
+      "raw": "opacity-probe.txt"
+    }
+  ],
+  "rows": [
+    {
+      "case": "PG22-unknown-citation-incomplete-promisor",
+      "kind": "policy",
+      "expected_exit_amended": 1,
+      "exit": 1,
+      "exit_class": "same-verdict-exit (amended/live view)",
+      "met_amended": true,
+      "problems": [],
+      "amended_problems": [],
+      "original_problems": ["exit 1 != 2"],
+      "met_original": false,
+      "defects": [
+        ["landed-unresolved", "0123456789abcdef0123456789abcdef01234567"],
+        ["unresolved-full-hash", "0123456789abcdef0123456789abcdef01234567"]
+      ],
+      "expected_defects": [
+        ["landed-unresolved", "0123456789abcdef0123456789abcdef01234567"],
+        ["unresolved-full-hash", "0123456789abcdef0123456789abcdef01234567"]
+      ],
+      "raw_defects_equal_defects": true,
+      "objects_acquired": {"lane": [], "fleet": []},
+      "traceback": false, "internal_error": false, "timed_out": false, "leaked": false,
+      "stderr_tail": "",
+      "twin": "PG37-unused-missing-blob-with-fabricated-citation-plain",
+      "twin_equal": true,
+      "verdict_document_status": "failed"
+    },
+    {
+      "case": "PG37-unused-missing-blob-with-fabricated-citation-plain",
+      "kind": "control",
+      "expected_exit_amended": 1,
+      "exit": 1,
+      "exit_class": "same-verdict-exit (amended/live view)",
+      "met_amended": true,
+      "problems": [],
+      "amended_problems": [],
+      "original_problems": [],
+      "met_original": true,
+      "defects": [
+        ["landed-unresolved", "0123456789abcdef0123456789abcdef01234567"],
+        ["unresolved-full-hash", "0123456789abcdef0123456789abcdef01234567"]
+      ],
+      "objects_acquired": {"lane": [], "fleet": []},
+      "traceback": false, "internal_error": false, "timed_out": false, "leaked": false,
+      "stderr_tail": "",
+      "twin_equal": true,
+      "verdict_document_status": "failed"
+    }
+  ],
+  "grid_aggregate": {
+    "graded": 2, "violations": 0, "violating_cases": [],
+    "amended_view_met": 2, "amended_view_total": 2, "amended_view_unmet": [],
+    "twin_pairs_compared": [
+      "PG22-unknown-citation-incomplete-promisor",
+      "PG37-unused-missing-blob-with-fabricated-citation-plain"
+    ],
+    "twin_mismatch": [],
+    "tracebacks": 0, "timeouts": 0, "harness_leaks": 0,
+    "original_view_unmet": ["PG22-unknown-citation-incomplete-promisor"],
+    "withdrawn_original_failures": ["PG22-unknown-citation-incomplete-promisor"]
+  },
+  "premise": {
+    "PG22": {
+      "lane_promisor_backed": true,
+      "lane_local_config": [
+        "remote.origin.promisor=true",
+        "remote.origin.url=<fixture>/absent-remote.git",
+        "extensions.partialclone=origin"
+      ],
+      "lane_missing": ["b2c475fedd466685003f05a02c7bd772186c0429"],
+      "missing_object_is": "notes/unused.txt blob (unrelated to every citation)",
+      "lane_opaque_set": [],
+      "fleet_promisor_backed": false,
+      "fleet_missing": [],
+      "fabricated_token_present": false,
+      "cited_lane_commit_present": true,
+      "tip_tree_present": true
+    },
+    "PG37": {
+      "lane_promisor_backed": false,
+      "lane_missing": ["b2c475fedd466685003f05a02c7bd772186c0429"],
+      "fleet_missing": []
+    },
+    "twin_identity": "PG22 and PG37 fixtures share identical object ids (lane_commit 9bad795e8e7cbabfa1b3e699c5b461ad62271391, f_blob 56d7b323865c731da81e0225cf109d66f0480919, unused_blob b2c475fedd466685003f05a02c7bd772186c0429, report_blob 2d90c1fcdcbe3a7c3bc6c7fed586ebf341f587b6); they differ only by the lane promisor config"
+  },
+  "not_measured": [
+    "frozen arm (--arm frozen) for PG22/PG37: not executed in this seat",
+    "any other cell; no full grid, no selftest, no mutant driver",
+    "errata/authorized-correction path: both cells ran with --no-errata and carry zero errata rows",
+    "opaque tree/commit refusal path (blob-only hole only)"
+  ],
+  "installs": "none"
+}

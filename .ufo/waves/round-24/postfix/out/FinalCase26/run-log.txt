@@ -1,0 +1,97 @@
+FinalCase26 — PG26-cross-repo-found-promisor (current arm) + graded twin PG27
+Seat scope: lane bounds only; leaf; no dispatch.
+
+ENV
+  git version 2.56.0 ; python3 3.14.8 ; TMPDIR per-run unique under own scratch
+  scratch: /fast/scratch/hyaku/kama-r24/postfix/FinalCase26/
+  clone:   /fast/scratch/hyaku/kama-r24/postfix/FinalCase26/clone
+           git clone --no-hardlinks --no-local /home/vgpnk/Projects/shokunin/kama-shokunin clone
+           git checkout --detach 92063cfc60e217fa7e2098c568578119b16a1b95
+
+PINS (sha256, verified in the clone)
+  commit              92063cfc60e217fa7e2098c568578119b16a1b95
+  tools/report-landing-audit.py            b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f
+  tests/report-audit/promisor-grid.py      30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270
+  tests/report-audit/promisor-grid-expectations.json
+                                            d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1
+  population_sha256 (grid-computed)        612b0a74f3eebaa9074bdde8ecd8f194f55ebaf9a35ab2b975fddbff8dd2ed88
+  population_size                          47
+
+RUN 1 (measurement; current arm only; 2 cells)
+  argv: TMPDIR=<scratch>/tmp-pg26 python3 tests/report-audit/promisor-grid.py \
+        --arm current --current tools/report-landing-audit.py \
+        --case PG26-cross-repo-found-promisor \
+        --case PG27-cross-repo-found-plain \
+        --json --out <scratch>/out --keep
+  cwd: <scratch>/clone
+  exit: 0     stderr: empty
+  stdout: grid-stdout.json (5743 B)  --out artifacts: candidate.json, population.json
+  arm=current: graded=2 violations=0 violating_cases=[]
+               amended_view_met=2/2  unmet=[]  original_view_unmet=[]
+               withdrawn_original_failures=[]  twin_compared=2
+               twin_pairs_compared=[PG26-cross-repo-found-promisor,PG27-cross-repo-found-plain]
+               twin_mismatch=[]  tracebacks=0 timeouts=0 harness_leaks=0
+  PG26-cross-repo-found-promisor (kind=policy):
+     exit=0 expected_exit=0 met=True met_amended=True met_original=True
+     defects=[] raw_defects=[] kinds=[] raw_kinds=[] expected_kinds=[]
+     traceback=False internal_error=False timed_out=False leaked=False
+     objects_acquired={"lane":[],"fleet":[]}  stderr_tail=""
+     twin=PG27-cross-repo-found-plain  twins={PG27: true}  twin_equal=True
+     document: {"results":[{"round":1,"defects":[],"cutoff":2000,"required":1,
+                "round_commits":1,"report_committed":true,"post_report":[],
+                "source_url_hashes":[]}],
+                "summary":{"status":"clean","defects":0,"by_kind":{all 0},...}}
+  PG27-cross-repo-found-plain (kind=control):
+     exit=0 expected_exit=0 met=True met_amended=True met_original=True
+     defects=[] kinds=[] objects_acquired={"lane":[],"fleet":[]}  stderr_tail=""
+     twins={PG26: true}  twin_equal=True   (identical normalised document)
+
+PREMISE PROBE (kept fixture root <scratch>/tmp-pg26/promisor-grid-*/current/000)
+  lane promisor config: remote.origin.promisor=true, extensions.partialclone=origin,
+    remote.origin.url=<fixture>/absent-remote.git  (that path does not exist)
+  fleet promisor config: none
+  lane objects: 5 (1 commit, 2 trees, 2 blobs); rev-list --missing=print -> no ? holes
+  lane log:  58866b563cd900df310588effe79028efc104c33 1000 round-1: work
+  fleet log: 42153ed93c86c66dcb1d0a38fcdbde1cb9a5cfd6 2000 round-1: report
+             f723c76c41609df00704d93c29bd44408dcbdd2e 1900 fleet: init
+  cross-repo token f723c76c41609df00704d93c29bd44408dcbdd2e:
+     lane  cat-file --batch-check -> missing   (absent from the FIRST store)
+     fleet cat-file --batch-check -> commit 122 (present in the SECOND store)
+  report (fleet HEAD:.ufo/reports/round-1/kama.md) cites 58866b5... and f723c76...
+
+RUN 2 (direct re-run of the pinned auditor on the kept PG26 fixture)
+  argv: python3 <scratch>/clone/tools/report-landing-audit.py --lane-repo <lane> \
+        --fleet-repo <fleet> --rounds 1 --json --no-errata
+  exit: 0   stderr: empty   stdout: auditor-pg26-direct.json (status clean, defects 0)
+
+RUN 3 (discrimination control; NOT a candidate measurement)
+  control source: mutant-PM05-audit.py (copy of the pinned auditor, sha256
+     83a650f7b7123950d928db2b994eddd838db826c6fccb4d6951eb0c11a40bca1)
+     single edit: lookup() "for store in stores:" -> "for store in stores[:1]:"
+     (mirrors tests/report-audit/promisor-mutants.py PM05-ignore-second-repo)
+  argv: TMPDIR=<scratch>/tmp-pm05 python3 tests/report-audit/promisor-grid.py \
+        --arm current --current <scratch>/mutant-PM05-audit.py \
+        --case PG26-cross-repo-found-promisor \
+        --case PG27-cross-repo-found-plain --json --out <scratch>/out/PM05-control
+  exit: 1   stderr: empty
+  violations=2 ['PG26-cross-repo-found-promisor','PG27-cross-repo-found-plain']
+  PG26: exit=1 met=False defects=[landed-unresolved f723c76...,unresolved-full-hash f723c76...]
+  PG27: exit=1 met=False defects=[landed-unresolved f723c76...,unresolved-full-hash f723c76...]
+  => the two cells discriminate a store-local-only lookup; they are not vacuous.
+
+SOURCE READ (pinned tools/report-landing-audit.py)
+  RANK = {"absent":0,"wrongtype":1,"unknown":2,"ambiguous":3,"found":4}
+  offer() only raises a status (RANK[state] > RANK[current]); "found" is the top
+  rank, so a resolution in the second store is not downgraded by absence
+  (0) or uncertainty (unknown=2) in the first store.
+  lookup() iterates every store (lane first, fleet second); the per-canonical-
+  object reconciliation ("proved") maps token -> canonical oid -> states, so
+  reconciliation is per object id, not per name.
+  refuse_unknown() runs only for tokens no store resolved; PG26 leaves no such
+  token, so no refusal and no could-not-evaluate identity.
+
+WRITES (only the two allowed durable paths)
+  advice: .ufo/waves/round-24/postfix/advice/FinalCase26.md
+  out:    .ufo/waves/round-24/postfix/out/FinalCase26/
+  no production file, config, routing, claims, score or commit was touched;
+  no tool was installed or upgraded.

@@ -1,0 +1,31 @@
+seat: FinalCase28 (reviewer, leaf)
+date: 2026-10-21
+clone: /fast/scratch/hyaku/kama-r24/postfix/FinalCase28/clone
+clone_method: git clone --no-hardlinks --no-local /home/vgpnk/Projects/shokunin/kama-shokunin <clone> ; git checkout --detach 92063cfc60e217fa7e2098c568578119b16a1b95
+pinned_commit: 92063cfc60e217fa7e2098c568578119b16a1b95  (round-24: correct local object scope and measurement provenance)
+producer identities verified in the clone (all match the seat contract):
+  tools/report-landing-audit.py                    b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f
+  tests/report-audit/promisor-grid.py             30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270
+  tests/report-audit/promisor-mutants.py          971c3ecbc1af05d4e6806ed06e8d3c7499ff55caf09e7bbc2c5ae2992204f200
+  tests/report-audit/isolation-mutants.py         eace4f56e225f33e96676c0fb6c58d657256c9e37cf06130d487155d343e2a00
+  .ufo/waves/round-24/fixes/StoreLocalPresence/opaque-garbage-proof-v2.py   8478d1bca0f11e616ded96bb800f9be78fcd942400f52b1a416447d0dbed79f4
+  .ufo/waves/round-24/fixes/StoreLocalPresence/proof-driver-replay-v3.py     5a570882189f7255b45c44d2a4c5ca844a0a8152656498de300c464e83d65a62
+  expectations manifest (tests/report-audit/promisor-grid-expectations.json) d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1  (== grid MANIFEST_SHA256)
+grid population_sha256 observed: 612b0a74f3eebaa9074bdde8ecd8f194f55ebaf9a35ab2b975fddbff8dd2ed88 ; population_size 47 (untouched)
+
+argv[1] (graded run, CURRENT arm only, 2 cells):
+  cd /fast/scratch/hyaku/kama-r24/postfix/FinalCase28/clone && \
+  TMPDIR=/fast/scratch/hyaku/kama-r24/postfix/FinalCase28/tmp \
+  python3 tests/report-audit/promisor-grid.py --arm current \
+    --case PG28-unhydrated-blobless-lane --case PG36-unused-missing-blob-plain \
+    --json --keep
+  exit 0 ; stdout -> grid-pg28-pg36-current.json ; stderr empty
+  default --current resolved to the pinned clone tools/report-landing-audit.py (auditor_sha256 b9be4f42...)
+argv[2..4] (bounded probes, own scratch only):
+  TMPDIR=/fast/scratch/hyaku/kama-r24/postfix/FinalCase28/tmp2  python3 out/probe_finalcase28.py   (exit 0)
+  TMPDIR=/fast/scratch/hyaku/kama-r24/postfix/FinalCase28/tmp3  python3 out/probe2_finalcase28.py (exit 0)
+  TMPDIR=/fast/scratch/hyaku/kama-r24/postfix/FinalCase28/tmp4  python3 out/probe3_finalcase28.py (exit 0)
+  every git read that could reach a promisor remote carried --no-lazy-fetch --no-replace-objects
+  the fixture origin (lane-origin, file://) was never deleted, disabled or repointed
+
+no production writes; no tool installs (python3 + git only, both pre-existing); no network.

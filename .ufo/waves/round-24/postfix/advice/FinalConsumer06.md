@@ -1,0 +1,21 @@
+# FinalConsumer06 — generic consumer `unselected-invalid-correction` (new; not among the frozen 47)
+
+**VERDICT** Discrimination confirmed and the repair confirmed on the current arm only. This is
+discrimination/repair evidence, not an admission gate: no promotion, no self-admission; the original
+unknown clause stays WITHDRAWN/NOT-ACHIEVED and Gitfloor H2 stays open.
+
+**Pins / sources (observed sha256)** driver `clone/.ufo/waves/round-24/fixes/StoreLocalPresence/proof-driver-replay-v3.py` = 5a570882…d65a62 (worktree == blob at 92063cfc60e217fa7e2098c568578119b16a1b95); after `clone/tools/report-landing-audit.py` = b9be4f42…3b26f (worktree == blob at 92063cf, **not** the v7 proposal c1956854…0d37; byte-identical to the v9 proposal); before = git blob 2e254a1763a9c08aa07fc53081287f506c447d84:tools/report-landing-audit.py = ea51bc35…edd220 (driver-extracted from the pin; the mutable production working tree was never read); frozen manifest tests/report-audit/promisor-grid-expectations.json = d86b7bea…f14cd1, 47 graded cells, untouched.
+
+**argv / exits** (own `--no-hardlinks` clone, detached 92063cf, TMPDIR=/fast/scratch/hyaku/kama-r24/postfix/FinalConsumer06/tmp)
+`python3 clone/.ufo/waves/round-24/fixes/StoreLocalPresence/proof-driver-replay-v3.py --only unselected-invalid-correction --after /fast/scratch/hyaku/kama-r24/postfix/FinalConsumer06/clone/tools/report-landing-audit.py --json` → driver exit 0; before exit 1, kinds [], errata_invalid 1, matches_expectation false (0→1 verdict-change, red); after exit 0, kinds [], errata_invalid 0, matches_expectation true (0→0 same-verdict-exit); no-ledger control before 0/[]/0 and after 0/[]/0, both match. Raw: out/FinalConsumer06/replay-v3-unselected-invalid-correction.json (stderr empty), run-log.json.
+
+**Fixture facts (observed)** lane holds exactly one commit 5aba52e0… (type `commit`, ancestor of lane HEAD) plus one tree and one blob; the draft cites only that valid commit, so the selected round has 0 defects and no landed-omitted finding can mask the row; the row's token and correction are the null OID 0*40, ABSENT in both stores (cat-file rc=128, rev-parse --verify rc=128) — the row is genuinely invalid when selected; the after reports errata_rows 1 (ledger read) with errata_invalid 0 and errata_unmatched 0.
+
+**Decisive observations (single-case, own fixtures; raw out/FinalConsumer06/experiments-E1-E2.json, experiments-E3-E4.json)**
+- E1 the same invalid row moved into the SELECTED round 1: after exit 1, errata_invalid 1, errata_unmatched 1 (before identical) → selected-row validity is not weakened; the difference is the selection, not a laxer check.
+- E2 unselected row whose correction is a tag whose target commit was deleted (classified `unknown` when read): before exit 1 (invalid counted), after exit 0 → the after does not read an unselected correction.
+- E3 decisive: unselected row whose correction `abcdef1` is shadowed by `refs/heads/abcdef1` in the lane store → before exit 2 could-not-evaluate "citation abcdef1 names a ref", i.e. the unselected row caused a REQUIRED READ that failed the whole selected audit; after exit 0 clean; both no-ledger controls exit 0.
+- E4 the same row in the SELECTED round → before AND after exit 2 "citation abcdef1 names a ref": the lookup still happens for selected rows on both sides.
+- E5 malformed UNSELECTED row (kind `not-a-kind`) → before and after exit 2 "malformed row": the ledger file is still fully parsed; the scoping covers accounting, not ledger syntax.
+
+**Residuals / limits** the driver's no-ledger CONTROL for THIS consumer is degenerate (identical to EXPECTED 0/[]/0); the distinct invalid-count pair (1 vs 0) exists only for `errata-fleet-only-blob`, so control agreement carries no discriminating weight here — the red-before plus E1/E3/E4 do. The before's failure is pure accounting (errata_invalid 1, defects 0): no kind-level difference exists for this consumer. Not run (lane bounds): promisor-grid any arm, tool `--selftest`, mutant drivers, historical suites; no 47-cell, expectation or data change. [INFERENCE] the change is ledger-accounting scope, not a local-object-contract change, so it neither restores nor bears on the withdrawn unknown clause.

@@ -1,0 +1,105 @@
+[
+ {
+  "step": "apply PM03 via the pinned apply_mutation API",
+  "argv": [
+   "python3",
+   "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03/apply_pm03.py"
+  ],
+  "cwd": "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03",
+  "env": {
+   "TMPDIR": "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03/tmp",
+   "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "exit": 0,
+  "note": "pristine auditor sha256 b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f -> mutant 4085069e0fea2a6818c7f85fffd5ba6b5367d293a0c400e2a3956f0687f46154; applied alternative 1; compiles True"
+ },
+ {
+  "step": "extract the pinned runner's STUB_GRID and CANDIDATE",
+  "argv": [
+   "python3",
+   "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03/extract_stubs.py"
+  ],
+  "cwd": "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03",
+  "env": {
+   "TMPDIR": "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03/tmp",
+   "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "exit": 0
+ },
+ {
+  "step": "pristine grid, current arm, 2 cells",
+  "argv": [
+   "python3",
+   "tests/report-audit/promisor-grid.py",
+   "--arm",
+   "current",
+   "--current",
+   "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03/clone/tools/report-landing-audit.py",
+   "--case",
+   "PG46-opaque-tree-hides-cited-blob",
+   "--case",
+   "PG47-opaque-tree-with-unresolved-fabricated-token",
+   "--json"
+  ],
+  "cwd": "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03/clone",
+  "env": {
+   "TMPDIR": "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03/tmp/pristine",
+   "PYTHONDONTWRITEBYTECODE": "1",
+   "GIT_CONFIG_GLOBAL": "/dev/null",
+   "GIT_CONFIG_NOSYSTEM": "1",
+   "GIT_NO_LAZY_FETCH": "1",
+   "GIT_NO_REPLACE_OBJECTS": "1",
+   "GIT_TERMINAL_PROMPT": "0"
+  },
+  "exit": 0
+ },
+ {
+  "step": "mutant grid, current arm, 2 cells",
+  "argv": [
+   "python3",
+   "tests/report-audit/promisor-grid.py",
+   "--arm",
+   "current",
+   "--current",
+   "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03/mutant/PM03-skip-required-object-availability.py",
+   "--case",
+   "PG46-opaque-tree-hides-cited-blob",
+   "--case",
+   "PG47-opaque-tree-with-unresolved-fabricated-token",
+   "--json"
+  ],
+  "cwd": "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03/clone",
+  "env": {
+   "TMPDIR": "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03/tmp/mutant",
+   "PYTHONDONTWRITEBYTECODE": "1",
+   "GIT_CONFIG_GLOBAL": "/dev/null",
+   "GIT_CONFIG_NOSYSTEM": "1",
+   "GIT_NO_LAZY_FETCH": "1",
+   "GIT_NO_REPLACE_OBJECTS": "1",
+   "GIT_TERMINAL_PROMPT": "0"
+  },
+  "exit": 1
+ },
+ {
+  "step": "negative control: pinned runner main(argv) on the runner's own stub fixtures",
+  "argv": [
+   "python3",
+   "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03/clone/tests/report-audit/promisor-mutants.py",
+   "--grid",
+   "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03/stub/stub-grid.py",
+   "--current",
+   "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03/stub/candidate.py",
+   "--only",
+   "PM03-skip-required-object-availability",
+   "--json"
+  ],
+  "cwd": "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03",
+  "env": {
+   "TMPDIR": "/fast/scratch/hyaku/kama-r24/postfix/FinalPM03/tmp/stub",
+   "GRID_STUB_MODE": "unmet|traceback_row|internal_row|missing_metadata",
+   "PYTHONDONTWRITEBYTECODE": "1"
+  },
+  "exit": "2 (each of the four modes)",
+  "note": "driver 'python3 negative_control.py' exit 0"
+ }
+]

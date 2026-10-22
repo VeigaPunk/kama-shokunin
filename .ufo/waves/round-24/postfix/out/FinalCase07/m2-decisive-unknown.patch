@@ -1,0 +1,14 @@
+--- clone/tools/report-landing-audit.py	2026-10-21 21:52:16.806781814 -0300
++++ mutants/m2-decisive-unknown.py	2026-10-21 21:55:40.225248461 -0300
+@@ -307,7 +307,10 @@
+         if conclusive and not unsure:
+             offer(token, "wrongtype")
+         elif unsure:
+-            offer(token, "unknown")
++            # MUTANT M2: the "unreadable" answer is decisive: it overrides a
++            # name another store proved present (absence from the other store
++            # becomes unreadability).
++            status[token] = "unknown"
+     return status
+ 
+ 

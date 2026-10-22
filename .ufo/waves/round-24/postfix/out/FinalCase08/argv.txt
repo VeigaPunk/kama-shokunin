@@ -1,0 +1,13 @@
+seat=FinalCase08 case=PG08-complete-fleet-plain round=24 wave=3
+pin=92063cfc60e217fa7e2098c568578119b16a1b95 clone=/fast/scratch/hyaku/kama-r24/postfix/FinalCase08/clone (git clone --no-hardlinks /home/vgpnk/Projects/shokunin/kama-shokunin, detached at the pin, status clean)
+G=/fast/scratch/hyaku/kama-r24/postfix/FinalCase08/clone/tests/report-audit/promisor-grid.py sha256=30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270
+A=/fast/scratch/hyaku/kama-r24/postfix/FinalCase08/clone/tools/report-landing-audit.py sha256=b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f
+manifest=clone/tests/report-audit/promisor-grid-expectations.json sha256=d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1 (grid MANIFEST_SHA256 match) population_sha256=612b0a74f3eebaa9074bdde8ecd8f194f55ebaf9a35ab2b975fddbff8dd2ed88 population_size=47
+TMPDIR=/fast/scratch/hyaku/kama-r24/postfix/FinalCase08/tmp (pre-existing, owned, unique)
+primary-single: cd clone && TMPDIR=.../tmp python3 $G --arm current --case PG08-complete-fleet-plain --json --out .../out/grid -> exit 0
+primary-twin:   cd clone && TMPDIR=.../tmp python3 $G --arm current --case PG08-complete-fleet-plain --case PG02-complete-fleet-promisor-config --json --out .../out/grid2 -> exit 0
+premise:        TMPDIR=.../tmp python3 .../out/premise-probe.py (imports the pinned grid module, builds c_complete_fleet_plain, no auditor run) -> exit 0
+discrimination-m1: cd clone && TMPDIR=.../tmp python3 $G --arm current --current .../mutants/m1-one-store.py --case PG08-complete-fleet-plain --json -> exit 1 (mutant sha f49a734ed7f1caf59ca067ba8b6bb670e4c4f7cbce6e30d3fac1059b841a38e0)
+discrimination-m2: cd clone && TMPDIR=.../tmp python3 $G --arm current --current .../mutants/m2-no-perstore-gate.py --case PG08-complete-fleet-plain --json -> exit 0 (mutant sha c35d15a17d493a3d804bd6f206a14fd125b91e336d63ef7c04a75d5f4fe4b051)
+discrimination-m3: cd clone && TMPDIR=.../tmp python3 $G --arm current --current .../mutants/m3-absence-dominates.py --case PG08-complete-fleet-plain --json -> exit 1 (mutant sha 91b57dd33ece213677350bf5cfad442bc60defb06b54c7b8e3506101fbee78e4)
+no full grid, no --selftest, no historical suite, no mutant driver, no frozen arm, no public network, no tool install

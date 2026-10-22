@@ -1,0 +1,51 @@
+--- work/auditor-pristine.py	2026-10-21 21:53:36.427946302 -0300
++++ work/auditor-mutant.py	2026-10-21 21:54:25.176553792 -0300
+@@ -1635,5 +1635,48 @@
+         return 2
+ 
+ 
++# --- PM01 mutation: blanket promisor-metadata refusal (over-refusal) ---
++def _pm_promisor_metadata(repo):
++    import subprocess as _sp
++    try:
++        listing = _sp.run(
++            ["git", "-C", str(repo), "config", "--null", "--list"],
++            capture_output=True, timeout=20).stdout.decode("utf-8", "replace")
++    except Exception:
++        return
++    for entry in filter(None, listing.split("\0")):
++        key, _, value = entry.partition("\n")
++        if key == "extensions.partialclone" or (
++                re.fullmatch(r"remote\..+\.promisor", key)
++                and value.strip().lower() in ("", "true", "yes", "on", "1")):
++            raise EvalError(f"{repo}: partial clone ({key})")
++    try:
++        gp = _sp.run(
++            ["git", "-C", str(repo), "rev-parse", "--git-path", "objects/pack"],
++            capture_output=True, timeout=20).stdout.decode(
++                "utf-8", "replace").strip()
++    except Exception:
++        return
++    if not gp:
++        return
++    pack = Path(gp) if Path(gp).is_absolute() else Path(repo, gp)
++    if pack.is_dir() and any(p.suffix == ".promisor"
++                              and p.with_suffix(".pack").exists()
++                              for p in pack.iterdir()):
++        raise EvalError(f"{repo}: partial clone (promisor pack)")
++
++
++def _pm_install_promisor_refusal():
++    _original = globals()["git"]
++
++    def _patched(repo, *args, **kw):
++        _pm_promisor_metadata(repo)
++        return _original(repo, *args, **kw)
++
++    globals()["git"] = _patched
++
++
++_pm_install_promisor_refusal()
++# --- end PM01 mutation ---
+ if __name__ == "__main__":
+     sys.exit(main())

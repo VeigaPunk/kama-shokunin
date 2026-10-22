@@ -1,0 +1,53 @@
+{
+ "alternative_applied_index": 0,
+ "alternatives": [
+  {
+   "anchor": "if __name__ == \"__main__\":",
+   "kind": "insert",
+   "text": "# --- PM11 mutation: any hole refuses (over-refusal) ---\ndef _pm_install_any_hole():\n    _original = globals()[\"build_store\"]\n\n    def _patched(repo, root):\n        store = _original(repo, root)\n        missing, opaque = store.missing()\n        if missing or opaque:\n            raise EvalError(\n                f\"{repo}: unknown: unavailable required object: \"\n                f\"{len(missing) + len(opaque)} hole(s) in the store\")\n        return store\n\n    globals()[\"build_store\"] = _patched\n\n\n_pm_install_any_hole()\n# --- end PM11 mutation ---"
+  }
+ ],
+ "anchor": "if __name__ == \"__main__\":",
+ "anchor_occurrences_in_pristine": 1,
+ "mutant_attribution_basis": "every cell whose audited repository holds a hole, whatever verdict the cell expects: the gate is unconditional",
+ "mutant_compiles": true,
+ "mutant_execution": "grid",
+ "mutant_expect_rows": [
+  "PG13",
+  "PG14",
+  "PG15",
+  "PG16",
+  "PG17",
+  "PG18",
+  "PG19",
+  "PG20",
+  "PG21",
+  "PG22",
+  "PG28",
+  "PG31",
+  "PG32",
+  "PG33",
+  "PG34",
+  "PG35",
+  "PG36",
+  "PG37",
+  "PG41",
+  "PG42",
+  "PG43",
+  "PG44",
+  "PG45",
+  "PG46",
+  "PG47",
+  "PG48"
+ ],
+ "mutant_id": "PM11-any-hole-refusal",
+ "mutated_bytes": 82835,
+ "mutated_file_sha256": "37dcf63bd5e4faedde78ab28589886c77dd5f9e11221bb74a28ae1a16777502d",
+ "mutated_sha256": "37dcf63bd5e4faedde78ab28589886c77dd5f9e11221bb74a28ae1a16777502d",
+ "mutated_written_to": "/fast/scratch/hyaku/kama-r24/postfix/FinalPM11/work/auditor-pm11.py",
+ "mutator_path": "/fast/scratch/hyaku/kama-r24/postfix/FinalPM11/clone/tests/report-audit/promisor-mutants.py",
+ "mutator_sha256": "971c3ecbc1af05d4e6806ed06e8d3c7499ff55caf09e7bbc2c5ae2992204f200",
+ "pristine_bytes": 82288,
+ "pristine_sha256": "b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f",
+ "unique_applicability": true
+}

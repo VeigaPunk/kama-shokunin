@@ -1,0 +1,51 @@
+FinalPM07 — commands, argv, exits, identities
+============================================
+seat scratch: /fast/scratch/hyaku/kama-r24/postfix/FinalPM07/
+clone:        /fast/scratch/hyaku/kama-r24/postfix/FinalPM07/clone
+              (git clone --no-hardlinks /home/vgpnk/Projects/shokunin/kama-shokunin <clone>)
+              git checkout --detach 92063cfc60e217fa7e2098c568578119b16a1b95   [exit 0]
+              git rev-parse HEAD -> 92063cfc60e217fa7e2098c568578119b16a1b95
+tools:        python3 3.14.8, git 2.56.0; no tool installed or updated by this seat.
+
+pinned identities (clone @ 92063cf)
+  tools/report-landing-audit.py                      b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f
+  tests/report-audit/promisor-mutants.py            971c3ecbc1af05d4e6806ed06e8d3c7499ff55caf09e7bbc2c5ae2992204f200
+  tests/report-audit/promisor-grid.py               30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270
+  tests/report-audit/promisor-grid-expectations.json d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1  (47 cells, bytes unchanged)
+
+1) operator application (pinned mutator's own apply_mutation API, imported, not its main path)
+   python3 work/apply_pm07.py                       [exit 0]
+   -> PM07-full-all-missing-gate, alternative counts [1, 0, 0], applied alternative 0,
+      canonical mutant work/auditor-PM07-canonical.py
+      2e7d8a95373328b679e33d257733d9d98b7c548284be29d1bec05c8fdc2d5ef4, compiles=True
+   -> SUPPLEMENT-OPAQUE-ALLREFS (separately named, NOT canonical)
+      work/auditor-SUPPLEMENT-OPAQUE-ALLREFS.py
+      20b8590f7643879d690af5c3e3919d7cba5e26ef9a07ca220da1d2eea0a7091f, compiles=True
+   json: out/apply_pm07.json
+
+2) primary grid runs (current arm only; 2 cells per tool)
+   TMPDIR=<scratch>/tmp/pristine
+   python3 tests/report-audit/promisor-grid.py --arm current \
+     --current <clone>/tools/report-landing-audit.py \
+     --case PG31-missing-object-unselected-branch-promisor \
+     --case PG32-missing-object-unselected-branch-plain --json      [exit 0]
+   TMPDIR=<scratch>/tmp/mutant
+   python3 tests/report-audit/promisor-grid.py --arm current \
+     --current <scratch>/work/auditor-PM07-canonical.py \
+     --case PG31-missing-object-unselected-branch-promisor \
+     --case PG32-missing-object-unselected-branch-plain --json      [exit 0]
+   json: out/grid-pristine-PG31-PG32.json, out/grid-mutant-PM07-PG31-PG32.json
+   comparison: python3 work/summarise_grid.py -> out/grid-compare-summary.txt
+
+3) supplementary PRIVATE fixture (outside the frozen 47; manifest bytes untouched)
+   TMPDIR=<scratch>/tmp/supp
+   python3 work/supp_fixture.py                     [exit 0]
+   json: out/supp-summary.json, out/supp-pristine.json, out/supp-PM07-canonical.json,
+         out/supp-SUPPLEMENT-OPAQUE-ALLREFS.json, log out/supp-run.log
+   builder: work/supp_fixture.py (deterministic; fixture rebuilt from scratch each run)
+
+4) mechanism probe (throwaway local repo, no network, no promisor)
+   python3 work/probe_stdin_order.py                [exit 0] -> out/probe-stdin-order.txt
+   python3 work/probe_git_stdin.py / probe_git_stdin2.py  [exit 0] (earlier throwaway probes)
+
+diffs: out/mutant-PM07-canonical.diff, out/mutant-SUPPLEMENT-OPAQUE-ALLREFS.diff

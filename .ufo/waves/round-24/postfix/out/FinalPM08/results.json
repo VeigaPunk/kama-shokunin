@@ -1,0 +1,148 @@
+{
+ "c1_inventory": {
+  "auditor_git_wrapper_subcommands": [
+   "-c",
+   "add",
+   "cat-file",
+   "commit-tree",
+   "config",
+   "for-each-ref",
+   "hash-object",
+   "init",
+   "log",
+   "ls-tree",
+   "mktag",
+   "mktree",
+   "repack",
+   "rev-parse",
+   "rm",
+   "show",
+   "tag"
+  ],
+  "auditor_subprocess_call_sites": 1,
+  "executable_ids": [
+   "PM01-blanket-metadata-refusal",
+   "PM02-blanket-unknown-refusal",
+   "PM03-skip-required-object-availability",
+   "PM04-accept-unavailable-referenced-object",
+   "PM05-ignore-second-repo",
+   "PM06-swallow-actual-read-error",
+   "PM07-full-all-missing-gate",
+   "PM09-peel-bare-full-hash-lookup",
+   "PM10-ignore-opaque-nonleaf-missing",
+   "PM11-any-hole-refusal"
+  ],
+  "inventory_size": 11,
+  "list_opened_auditor": [],
+  "list_opened_grid": [],
+  "list_pm08_block": [
+   "08-no-lazy-fetch-review-only\n  semantic: review-only note, uncredited: the candidate's repository-reading wrappers carry --no-lazy-fetch, so a missing promisor object is not fetched through the promisor remote (transport, repository programs, signatures) on the paths those wrappers read. This is a manual reading of the candidate's isolation flags, not a proof about every git call. The element is not part of the executed inventory: no mutant is built, no grid invocation is made for it, and it is never credited with a kill\n  expects unmet rows: -\n  execution: review-only"
+  ],
+  "list_run": {
+   "argv": [
+    "/usr/bin/python3",
+    "/fast/scratch/hyaku/kama-r24/postfix/FinalPM08/clone/tests/report-audit/promisor-mutants.py",
+    "--list"
+   ],
+   "exit": 0,
+   "stderr": "",
+   "stdout": "PM01-blanket-metadata-refusal\n  semantic: promisor metadata alone (extensions.partialClone, remote.*.promisor, partialclonefilter, paired .promisor+.pack) is not a refusal: a complete promisor-marked repository keeps the verdict of its full-clone twin\n  expects unmet rows: ['PG01', 'PG02', 'PG03', 'PG04', 'PG05', 'PG06', 'PG09', 'PG11', 'PG12', 'PG13', 'PG15', 'PG17', 'PG19', 'PG21', 'PG22', 'PG23', 'PG24', 'PG26', 'PG28', 'PG30', 'PG31', 'PG33', 'PG35', 'PG39', 'PG41', 'PG43', 'PG44', 'PG46', 'PG47', 'PG48']\n  execution: grid\nPM02-blanket-unknown-refusal\n  semantic: the unknown rule covers a locally unresolved citation that names unavailable referenced content; it must not cover every absent citation, or the historical errata-marked clone (absent hash corrected by errata) would stop being an ordinary failed finding. The mutant refuses every absent (or unknown) citation, before the errata ledger is consulted.\n  expects unmet rows: ['PG22', 'PG23', 'PG24', 'PG25', 'PG29', 'PG30', 'PG33', 'PG34', 'PG37', 'PG41', 'PG42', 'PG46', 'PG47']\n  execution: grid\nPM03-skip-required-object-availability\n  semantic: objects the audit actually reads must be available: a missing required commit/tree/blob/report object is could-not-evaluate (exit 2), never a clean or failed verdict. This mutant removes the store's missing-object computation (the completeness element); PM04 removes the decision that uses it. Both attack the same verdict surface, so the grid kills them alike: one of them surviving is not evidence about the other.\n  expects unmet rows: ['PG13', 'PG14', 'PG15', 'PG16', 'PG17', 'PG18', 'PG19', 'PG20', 'PG21', 'PG33', 'PG34', 'PG46', 'PG47']\n  execution: grid\nPM04-accept-unavailable-referenced-object\n  semantic: a locally unresolved citation that names unavailable referenced local content is could-not-evaluate rather than proved absent; the mutant accepts it as absent and reports an ordinary failed finding\n  expects unmet rows: ['PG33', 'PG34', 'PG46', 'PG47']\n  execution: grid\nPM05-ignore-second-repo\n  semantic: a citation missing in one audited repository but present in the other audited repository is resolvable; the mutant consults the first repository only\n  expects unmet rows: ['PG26', 'PG27']\n  execution: grid\nPM06-swallow-actual-read-error\n  semantic: a failing read of the object the audit needs is could-not-evaluate; the mutant swallows the failure and guesses a value, turning an unavailable object into a verdict\n  expects unmet rows: ['PG13', 'PG14', 'PG15', 'PG16', 'PG17', 'PG18', 'PG19', 'PG20', 'PG21', 'PG28', 'PG43']\n  execution: grid\nPM07-full-all-missing-gate\n  semantic: the store-wide missing walk starts from every present root of the store; the mutant adds --all to that root set, so a broken unselected REF target that is not among the present roots enters the diagnosis. The mutant does NOT broaden the name-hiding (opaque) walk, which stays rooted at the pinned root only. On the finite 47 this mutant may survive; that survival is an observation of this candidate, not a global-equivalence proof: the canonical mutant can also differ on a broken unselected REF target that is not among the present roots, so no universal no-op is claimed. Supplemental post-fix experiments, specially named and separate from the 47 and from this canonical operator, may test unselected-ref opacity.\n  expects unmet rows: ['PG31', 'PG32', 'PG35', 'PG36', 'PG44', 'PG45', 'PG48']\n  execution: grid\nPM08-no-lazy-fetch-review-only\n  semantic: review-only note, uncredited: the candidate's repository-reading wrappers carry --no-lazy-fetch, so a missing promisor object is not fetched through the promisor remote (transport, repository programs, signatures) on the paths those wrappers read. This is a manual reading of the candidate's isolation flags, not a proof about every git call. The element is not part of the executed inventory: no mutant is built, no grid invocation is made for it, and it is never credited with a kill\n  expects unmet rows: -\n  execution: review-only\nPM09-peel-bare-full-hash-lookup\n  semantic: the bare full-hash lookup stays unpeeled: a citation of a locally present blob resolves as found; peeling it to ^{commit} turns a present blob into a missing object\n  expects unmet rows: ['PG38', 'PG39']\n  execution: grid\nPM10-ignore-opaque-nonleaf-missing\n  semantic: when a citation is unresolved, a missing tree or commit may conceal the dependency names, so the citation is unevaluable (exit 2); the mutant ignores that hole and reports an ordinary failed finding. A known-present blob that merely fails commit peeling keeps its wrong-type finding either way.\n  expects unmet rows: ['PG46', 'PG47']\n  execution: grid\nPM11-any-hole-refusal\n  semantic: no missing-object state may be an unconditional audit precondition: an unrelated blob hole next to a fabricated citation keeps the ordinary failed finding, and an unused tree hole next to fully resolved citations keeps the clean verdict; the mutant refuses on any hole\n  expects unmet rows: ['PG13', 'PG14', 'PG15', 'PG16', 'PG17', 'PG18', 'PG19', 'PG20', 'PG21', 'PG22', 'PG28', 'PG31', 'PG32', 'PG33', 'PG34', 'PG35', 'PG36', 'PG37', 'PG41', 'PG42', 'PG43', 'PG44', 'PG45', 'PG46', 'PG47', 'PG48']\n  execution: grid\n",
+   "strace": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/postfix/out/FinalPM08/c1-list.strace",
+   "successful_execve": [
+    "3202512 execve(\"/usr/bin/python3\", [\"/usr/bin/python3\", \"/fast/scratch/hyaku/kama-r24/pos\"..., \"--list\"], 0x7ffdd5390f50 /* 264 vars */) = 0"
+   ],
+   "tmpdir": "/fast/scratch/hyaku/kama-r24/postfix/FinalPM08/tmp/c1-list",
+   "tmpdir_entries_after": []
+  },
+  "pm08_entry": [
+   {
+    "alternatives": [],
+    "execution": "review-only",
+    "expect_rows": [],
+    "id": "PM08-no-lazy-fetch-review-only",
+    "semantic": "review-only note, uncredited: the candidate's repository-reading wrappers carry --no-lazy-fetch, so a missing promisor object is not fetched through the promisor remote (transport, repository programs, signatures) on the paths those wrappers read. This is a manual reading of the candidate's isolation flags, not a proof about every git call. The element is not part of the executed inventory: no mutant is built, no grid invocation is made for it, and it is never credited with a kill"
+   }
+  ],
+  "pm08_has_static_check_key": false,
+  "pm08_keys": [
+   "alternatives",
+   "execution",
+   "expect_rows",
+   "id",
+   "semantic"
+  ],
+  "review_only_ids": [
+   "PM08-no-lazy-fetch-review-only"
+  ]
+ },
+ "c2_legacy_guard": {
+  "argv": [
+   "/usr/bin/python3",
+   "/fast/scratch/hyaku/kama-r24/postfix/FinalPM08/clone/tests/report-audit/isolation-mutants.py",
+   "--only",
+   "M08-invalid-selector",
+   "--json"
+  ],
+  "exec_legacy_grid": [],
+  "exit": 2,
+  "opened_auditor": [],
+  "opened_legacy_grid": [],
+  "selector": "M08-invalid-selector",
+  "selector_in_population": false,
+  "stderr": "could-not-evaluate: --only selected no mutant: ['M08-invalid-selector']; the ids are M01-replace-objects, M02-lazy-fetch, M03-log-encoding, M04-log-follow, M05-log-showroot, M06-log-signature, M07-log-mailmap, M09-strict-default, M10-log-surrogates, M11-listing-surrogates, M12-shallow-check, M13-grafts-check, M15-object-format, M16-top-level, M17-ref-shadow, M18-branch-heads, M19-errata-hex, M20-log-sha-shape, M21-newlines, M23-strict-decode-catch, M24-catch-all, M25-timestamp-shape, M26-record-separators, M28-correction-casefold, M30-fleet-history-check, M31-git-timeout, M32-grafts-content\n",
+  "stdout": "",
+  "strace": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/postfix/out/FinalPM08/c2-legacy-invalid-only.strace",
+  "successful_execve": [
+   "3202538 execve(\"/usr/bin/python3\", [\"/usr/bin/python3\", \"/fast/scratch/hyaku/kama-r24/pos\"..., \"--only\", \"M08-invalid-selector\", \"--json\"], 0x7fff77e22e80 /* 264 vars */) = 0"
+  ],
+  "tmpdir": "/fast/scratch/hyaku/kama-r24/postfix/FinalPM08/tmp/c2-legacy-invalid-only",
+  "tmpdir_entries_after": []
+ },
+ "c3_current_arm_canary": {
+  "argv": [
+   "/usr/bin/python3",
+   "/fast/scratch/hyaku/kama-r24/postfix/FinalPM08/clone/tests/report-audit/promisor-mutants.py",
+   "--grid",
+   "/fast/scratch/hyaku/kama-r24/postfix/FinalPM08/canary-grid.py",
+   "--arm",
+   "frozen",
+   "--current",
+   "/fast/scratch/hyaku/kama-r24/postfix/FinalPM08/clone/tools/report-landing-audit.py",
+   "--only",
+   "PM01-blanket-metadata-refusal",
+   "--case",
+   "PG01-complete-lane-promisor-config",
+   "--json"
+  ],
+  "canary_log_exists": false,
+  "exec_canary": [],
+  "exec_real_grid": [],
+  "exit": 2,
+  "names_current_only": true,
+  "opened_auditor": [],
+  "stderr": "could-not-evaluate: --arm 'frozen' is not supported: the sensitivity runner measures the current arm only\n",
+  "stdout": "",
+  "strace": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-24/postfix/out/FinalPM08/c3-frozen-arm-canary.strace",
+  "successful_execve": [
+   "3202572 execve(\"/usr/bin/python3\", [\"/usr/bin/python3\", \"/fast/scratch/hyaku/kama-r24/pos\"..., \"--grid\", \"/fast/scratch/hyaku/kama-r24/pos\"..., \"--arm\", \"frozen\", \"--current\", \"/fast/scratch/hyaku/kama-r24/pos\"..., \"--only\", \"PM01-blanket-metadata-refusal\", \"--case\", \"PG01-complete-lane-promisor-conf\"..., \"--json\"], 0x7ffe866eda40 /* 265 vars */) = 0"
+  ],
+  "tmpdir": "/fast/scratch/hyaku/kama-r24/postfix/FinalPM08/tmp/c3-frozen-arm-canary",
+  "tmpdir_entries_after": []
+ },
+ "identity": {
+  "canary_sha256": "0f2ce3f38a67957eeddc2d9b08443cd00f9c27202464fd14961ff0cebdec7c30",
+  "clone_dirty": "",
+  "clone_head": "92063cfc60e217fa7e2098c568578119b16a1b95",
+  "driver_sha256": "ddb70ee17fcb052af504dd470f08e929273e8ca202ec5d0c85d36474b704c869",
+  "pin": "92063cfc60e217fa7e2098c568578119b16a1b95",
+  "python": "3.14.8",
+  "sha256": {
+   "tests/report-audit/isolation-mutants.py": "eace4f56e225f33e96676c0fb6c58d657256c9e37cf06130d487155d343e2a00",
+   "tests/report-audit/promisor-grid-expectations.json": "d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1",
+   "tests/report-audit/promisor-grid.py": "30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270",
+   "tests/report-audit/promisor-mutants.py": "971c3ecbc1af05d4e6806ed06e8d3c7499ff55caf09e7bbc2c5ae2992204f200",
+   "tests/report-audit/repo-state-grid.py": "994186952c5d720bd8494a00b930fd6edcec4951ba1e942ed409c510fc23d604",
+   "tools/report-landing-audit.py": "b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f"
+  }
+ }
+}

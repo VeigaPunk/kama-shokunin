@@ -1,0 +1,22 @@
+--- pinned/tools/report-landing-audit.py
++++ scratch/M1-merged-bare
+@@ -238,6 +238,7 @@
+ 
+     # token -> {canonical object id: {what the stores proved about it}}
+     proved = {}
++    merged_bare = lookup(stores, tokens) if peel else None
+     for store in stores:
+         # what THIS store holds under the bare name: the presence must be
+         # the store's own, never the merge of every store, or an object
+@@ -260,8 +261,9 @@
+         unresolved = []
+         for token, line in zip(tokens, lines):
+             if line.endswith(" missing"):
+-                if (here is not None and here[token][0] == "found"
+-                        and status[token] != "found"):
++                if (merged_bare is not None
++                        and merged_bare[token] == "found"
++                        and status[token] == "absent"):
+                     unresolved.append(token)
+                 continue
+             if line.endswith(" ambiguous"):

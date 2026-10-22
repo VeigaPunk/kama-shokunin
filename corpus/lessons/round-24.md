@@ -502,3 +502,91 @@ rendered/raw qualification above. PM02 remains a designated negative
 control, not a credited measured kill from the old relaxed-grid,
 failed-pristine baseline receipt; only a later actual pinned-pair
 measurement may support its sensitivity claim.
+
+## Final fixed-epoch record — judge the whole original claim
+
+The actual fixed source epoch is
+`92063cfc60e217fa7e2098c568578119b16a1b95`. This later documentation append
+does not repair its algorithm, alter expected bytes, or retroactively
+measure it. The one held C1 remains calibration7→7, with no author
+admission. The entire original after claim is NOT ACHIEVED / unprovable in
+full; a corrected policy is not permission to narrow that claim.
+
+| Original after obligation | Final bounded judgment |
+|---|---|
+| Complete local promisor-marked lane/fleet clones retain the full-clone clean/failed findings, not2 | Supported only on recorded finite metadata/complete-control comparisons, not universally. |
+| Genuine omitted pre-cutoff commits remain landed-omitted1 | Supported on recorded PG09/10/11/12 controls. |
+| Unavailable required commit/tree/blob/report evidence returns CNE2, never a verdict | Supported on14 registered primary unavailable cells, without a broader generalization certificate. |
+| Any missing citation in a promisor-backed repo is unknown2 unless another audited repo resolves it | NOT ACHIEVED, expressly withdrawn. PG22/23/24/30/41 contradict the literal clause; no original field is rewritten. |
+| No lazy fetching, transport, signature/replace/config side effects or hangs, preserving global isolation/deadlines | FULL CLAUSE UNPROVABLE. Finite flags/options/deadlines are not global no-effects or absence-of-chain proof; manual PM08 earns no behavioral credit, and legacy/parser/redirect/size/deadline residuals remain open. |
+| Metadata alone is not incompleteness; audit-required local evidence determines outcome | Supported on finite sufficient/unused/unselected-hole and genuine non-leaf controls. No all-reachable-tree precondition was added. |
+| Preserve r23 evidence and append the69-not68 and40-of56 identity corrections | Filed history retained and corrections appended. Forty is the retained process-row count, not proof all40 are FIFO-tied; only19 are explicitly tied, and16 identities remain missing. R24's own conformance incidents are separate, not erased. |
+
+### What was counted, and what was not executed
+
+`final/distributed-primary-count-v2.json` inventories existing raw W3
+captures for47 assigned primary cells bound to the fixed auditor, grid and
+manifest identities. All amended cells match; seven original expectations
+do not (PG22/23/24/28/30/34/41). PG28/34 are separate prospective corrections,
+not additional literal-unknown-clause cases. The primary47, open PG40,
+supplements and legacy cells are never mixed into a larger success count.
+Earlier loose16/47 and strict14/47 used different prior producers; their
+two-cell difference is not two additional algorithm wins. The distributed
+record inventory is not a fresh whole both-arm grid, an identical-producer
+before/after comparison, the full registered measurement plan or admission.
+
+`final/recorded-consumers.json` counts six existing replay-v3 consumers:
+all six are red before at2e and match every declared exit/kinds/invalid
+field after at92063, with no-ledger controls separate. They exercise the
+generic fixes without reclassifying them as extra primary cases.
+`final/bounded-mutation-record.json` records named graded failures for nine
+of ten sampled executable operators, not a full10×47 sweep. PM07's
+canonical finite sample survives; a changed missing-object set disproves
+“universally no-op,” while the separate opacity-allrefs recipe is not a
+canonical PM07 primary kill. PM08 is merely a FILED, manual, unexecuted,
+uncredited note, not “settled” behavioral evidence. No permanent source/
+AST/text/wiring assertion remains; historical static notes and legacy M02
+cannot be promoted into a present PM08 kill.
+
+Manual-only inventory completion with explicit executable/evaluated0 and
+killfalse is not a behavioral pass or valid survivor. An unexecuted static
+prediction of vacuous success is not an observed algorithm failure.
+Unknown-ID inefficient ordering is not a false-green outcome. The grid's
+frozen/both arms remain legitimate; current-only is the mutation runner's
+restriction, not a grid restriction.
+
+### Preserve the input state and the evidence's actual strength
+
+- Raw PM04 pristine twin/document fields are null, despite its report's
+  “true” table. Its graded2→1 failure remains evidence, but two null
+  documents are not equality proof. Case18/19's2→2 outcomes are preserved
+  refusals, not normal0/1→2 over-refusal. PM09's1→1 changed defect set is
+  same-verdict-exit; PM11's2→2 reason loss is diagnostic-only.
+- Case42's later clean observation came after a stray forensic Git read
+  hydrated the missing blob. This is a changed-input verdict, not an
+  unchanged-fixture false clean or repair. Prehydration graded2 remains
+  the recorded observation. Connected-origin controls stay connected;
+  missing-object forensics must use fresh isolated states/no-lazy-fetch.
+- Five new outside47 plain-metadata companions do not expand the primary
+  population: PG21/43/46/47 compare2/2 without verdict documents; PG48's
+  normal0/0 documents compare. The26 manifest pointers are25 unordered
+  links covering42 cases, not47 independent comparable document pairs.
+- Case31 exceeded its primary-plus-one-supplement bound; Case11 also ran
+  a frozen program outside the current-arm request. Other recorded extra
+  probes/repeats and unisolated forensic reads remain deviations, not a
+  certificate that every completed seat complied.
+- The canonical VOID80 append, private evidence-edit/restoration limits,
+  source/quote facets, legacy reason-pin gaps and oracle chronology limits
+  remain as filed above. No retroactive freeze or pre-observation authority
+  is manufactured. FinalCase15's scratch-only raw files were copied and
+  compared into durable custody; no target was replayed to fill them.
+
+All192 author seats completed, but terminal counts/grants are not a
+continuous concurrency-floor or global no-effects certificate. No fresh
+final-epoch full grid/legacy/selftest/parity/default sensitivity replay
+was performed; an attempted old full isolation run timed out and produced
+no usable JSON, rather than never being attempted. Current source census
+is105 rows (A100/B2/C3; mined86/queued8/rejected11), with four new A rows,
+eleven old used-by-only edits and no immutable old-cell change. H2 remains
+unapproved, no serving readiness is claimed, and only fresh outside Main
+closure may admit or reject the full original claim.

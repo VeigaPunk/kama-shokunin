@@ -1,0 +1,89 @@
+{
+  "seat": "FinalCase07",
+  "case": "PG07-complete-lane-plain",
+  "round": 24,
+  "wave": "postfix wave3",
+  "verdict": "HOLDS for the assigned slice; PG07 is a non-vacuous no-harm control that cannot discriminate the new per-store bare lookup / canonical merge. No defect attributed to the pinned candidate.",
+  "pin": {
+    "commit": "92063cfc60e217fa7e2098c568578119b16a1b95",
+    "clone": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase07/clone",
+    "clone_method": "git clone --no-hardlinks --no-local /home/vgpnk/Projects/shokunin/kama-shokunin clone; git checkout --detach <commit>",
+    "auditor_sha256": "b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f",
+    "grid_sha256": "30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270",
+    "manifest_sha256": "d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1",
+    "other_registered_producers_verified": [
+      ".ufo/waves/round-24/fixes/StoreLocalPresence/opaque-garbage-proof-v2.py 8478d1bca0f11e616ded96bb800f9be78fcd942400f52b1a416447d0dbed79f4",
+      ".ufo/waves/round-24/fixes/StoreLocalPresence/proof-driver-replay-v3.py 5a570882189f7255b45c44d2a4c5ca844a0a8152656498de300c464e83d65a62",
+      "tests/report-audit/isolation-mutants.py eace4f56e225f33e96676c0fb6c58d657256c9e37cf06130d487155d343e2a00",
+      "tests/report-audit/promisor-mutants.py 971c3ecbc1af05d4e6806ed06e8d3c7499ff55caf09e7bbc2c5ae2992204f200"
+    ],
+    "registered_live_expectation": {"exit": 0, "kinds": [], "defects": [], "reason_class": null},
+    "manifest_rows": {
+      "PG07-complete-lane-plain": {"kind": "control", "builder": "c_complete_lane_plain", "twin": null, "names_any_of": null, "reason_forbidden": null, "frozen": "exit 0", "original": "exit 0", "amended": "exit 0"},
+      "PG01-complete-lane-promisor-config": {"kind": "policy", "builder": "c_complete_lane_config", "twin": "PG07-complete-lane-plain", "names_any_of": null, "reason_forbidden": ["partial clone (", "promisor pack"], "frozen": "exit 2 / metadata", "original": "exit 0", "amended": "exit 0"}
+    }
+  },
+  "executions": [
+    {
+      "id": "E1-grid-current-2cells",
+      "argv": "TMPDIR=/fast/scratch/hyaku/kama-r24/postfix/FinalCase07/tmp python3 tests/report-audit/promisor-grid.py --arm current --case PG07-complete-lane-plain --case PG01-complete-lane-promisor-config --json --keep --out /fast/scratch/hyaku/kama-r24/postfix/FinalCase07/out",
+      "exit": 0,
+      "stderr_bytes": 0,
+      "evidence": "grid-pg07-pg01.json",
+      "grid_root": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase07/tmp/promisor-grid-3c76zgvo",
+      "rows": {
+        "PG07-complete-lane-plain": {"exit": 0, "graded_met": true, "met_amended": true, "met_original": true, "kinds": [], "defects": [], "document_status": "clean", "document_summary": {"defects": 0, "reports": 1, "required_commits": 1, "round_commits": 1, "uncorrected": 0}, "stderr_tail": "", "objects_acquired": {"lane": [], "fleet": []}, "internal_error": false, "traceback": false, "timed_out": false, "leaked": false, "twin": null, "twins": {"PG01-complete-lane-promisor-config": true}, "twin_equal": true, "document_sha256_16": "6c1b0b68e010f504"},
+        "PG01-complete-lane-promisor-config": {"exit": 0, "graded_met": true, "met_amended": true, "met_original": true, "kinds": [], "defects": [], "document_status": "clean", "stderr_tail": "", "objects_acquired": {"lane": [], "fleet": []}, "twin": "PG07-complete-lane-plain", "twin_equal": true, "document_sha256_16": "6c1b0b68e010f504"}
+      },
+      "documents_byte_identical": true,
+      "arm_summary": {"graded": 2, "violations": 0, "violating_cases": [], "twin_pairs_in_manifest": 1, "twin_compared": 2, "twin_mismatch": [], "tracebacks": 0, "timeouts": 0, "harness_leaks": 0, "withdrawn_original_failures": []}
+    },
+    {
+      "id": "E2-direct-auditor-pg07",
+      "argv": "SHIMLOG=.../out/git-shim2.log PATH=.../shim:$PATH python3 clone/tools/report-landing-audit.py --lane-repo direct/pg07/lane --fleet-repo direct/pg07/fleet --rounds 1 --json --no-errata",
+      "exit": 0,
+      "stderr_bytes": 0,
+      "verdict_document": "pg07-direct.json",
+      "evidence": "git-shim2.log",
+      "object_inventory_before_after": "identical (lane 5 objects, fleet 9 objects; inv-before-*.txt == inv-after-*.txt)"
+    },
+    {
+      "id": "E3-direct-auditor-pg01",
+      "argv": "SHIMLOG=.../out/git-shim-pg01.log PATH=.../shim:$PATH python3 clone/tools/report-landing-audit.py --lane-repo direct/pg01/lane --fleet-repo direct/pg01/fleet --rounds 1 --json --no-errata",
+      "exit": 0,
+      "stderr_bytes": 0,
+      "verdict_document": "pg01-direct.json",
+      "evidence": "git-shim-pg01.log",
+      "note": "no fetch/transport/promisor call against the absent remote url"
+    },
+    {
+      "id": "E4-mutants-pg07-only",
+      "argv": "TMPDIR=<unique per mutant> python3 tests/report-audit/promisor-grid.py --arm current --case PG07-complete-lane-plain --current <mutant> --json",
+      "cells": 1,
+      "mutants": [
+        {"id": "M1-merged-presence", "change": "per-store bare presence replaced by presence merged over all stores (pre-candidate semantics)", "pg07_exit": 0, "graded_met": true, "objects_acquired": {"lane": [], "fleet": []}, "grid_exit": 0, "evidence": "m1-pg07.json, m1-merged-presence.patch", "direct_exit": 0, "shim_batch_check_calls": 8, "note": "M1 adds 2 redundant bare calls; the unresolved path is still blocked because the lane store already proved the token found"},
+        {"id": "M2-decisive-unknown", "change": "the reconciled 'unknown' state overrides a proved 'found'", "pg07_exit": 0, "graded_met": true, "grid_exit": 0, "evidence": "m2-pg07.json, m2-decisive-unknown.patch", "note": "never fires on PG07: no token enters the unresolved path"},
+        {"id": "M3-cross-oid-merge", "change": "different canonical objects behind one name reconcile with each other", "pg07_exit": 0, "graded_met": true, "grid_exit": 0, "evidence": "m3-pg07.json, m3-cross-oid-merge.patch"},
+        {"id": "M4-all-unknown", "change": "every citation is treated as unreadable (non-vacuity control)", "pg07_exit": 2, "graded_met": false, "grid_exit": 1, "violating_cases": ["PG07-complete-lane-plain"], "kinds": null, "defects": null, "objects_acquired": {"lane": [], "fleet": []}, "refusal_identity": "could-not-evaluate: round 1: unknown: unavailable required object: 58866b563cd900df310588effe79028efc104c33 is present but its content cannot be served", "problems": ["exit 2 != 0", "reason does not name the unavailable object"], "evidence": "m4-pg07.json, m4-all-unknown.patch"}
+      ]
+    }
+  ],
+  "fixture_premise_pg07": {
+    "lane": {"metadata": "none (plain; config has only core.*; not shallow)", "objects": 5, "branch": "refs/heads/master -> 58866b563cd900df310588effe79028efc104c33", "author_time": 1000, "subject": "round-1: work"},
+    "fleet": {"metadata": "none (plain)", "objects": 9, "head": "18f93ab89cc2c01b191efa72b0721eb6e023be6b", "report": ".ufo/reports/round-1/kama.md (committed, cutoff 2000)"},
+    "report_citations": ["58866b563cd900df310588effe79028efc104c33"],
+    "citation_presence": "present in lane, absent in fleet",
+    "missing_objects": "none in either store"
+  },
+  "observations": [
+    "The peel round queries the lane bare name (found), the lane peel 58866b56...^{commit} (found), the fleet bare name (missing) and the fleet peel (missing); no ^{} unresolved probe is issued, so the fleet's absence of the lane commit never becomes 'unreadable'.",
+    "Under M1 (merged presence) the fleet store would hold a 'found' bare answer for the lane commit; the guard 'status[token] != found' still keeps it out of the unresolved path, so PG07's verdict is identical to the candidate's. The rank table (found > unknown) is the operative protection on this cell, not the per-store answer alone.",
+    "PG07 is killed by M4, so its green is meaningful for 'the ordinary clean verdict is preserved' and for 'nothing was acquired'; it is not sensitive to the per-store bare lookup or to the canonical merge."
+  ],
+  "not_executed": [
+    "the frozen (r23) arm for PG07 (assignment bounds: current arm only)",
+    "PG26/PG27 (cross-repo citation), PG34/PG46/PG47 (tag peel, opacity) - out of the assigned 2-cell budget; the rows that would discriminate the new logic stay open on my evidence",
+    "the full 47-cell grid, any full selftest, historical suites and the default mutant driver"
+  ],
+  "scoring": "no score promotion, no self-admission; the original unknown clause remains WITHDRAWN/NOT-ACHIEVED"
+}

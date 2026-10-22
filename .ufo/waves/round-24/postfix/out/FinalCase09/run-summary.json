@@ -1,0 +1,176 @@
+{
+ "seat": "FinalCase09",
+ "target": "PG09-omission-lane-promisor (+ graded twin PG10-omission-lane-plain)",
+ "pin_commit": "92063cfc60e217fa7e2098c568578119b16a1b95",
+ "clone": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase09/clone (git clone --no-hardlinks, detached at the pin)",
+ "tmpdir": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase09/tmp (existing, owned)",
+ "digests": {
+  "candidate_auditor_tools/report-landing-audit.py": "b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f",
+  "grid_tests/report-audit/promisor-grid.py": "30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270",
+  "expectations_tests/report-audit/promisor-grid-expectations.json": "d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1",
+  "population_sha256_reported_by_grid": "612b0a74f3eebaa9074bdde8ecd8f194f55ebaf9a35ab2b975fddbff8dd2ed88"
+ },
+ "runs": [
+  {
+   "id": "pristine-current-1",
+   "argv": [
+    "python3",
+    "tests/report-audit/promisor-grid.py",
+    "--arm",
+    "current",
+    "--case",
+    "PG09-omission-lane-promisor",
+    "--case",
+    "PG10-omission-lane-plain",
+    "--json",
+    "--out",
+    "<scratch>/out/gridrun"
+   ],
+   "exit": 0,
+   "cells": [
+    "PG09-omission-lane-promisor",
+    "PG10-omission-lane-plain"
+   ],
+   "arm": "current"
+  },
+  {
+   "id": "pristine-current-2 (repeat, determinism)",
+   "argv": [
+    "python3",
+    "tests/report-audit/promisor-grid.py",
+    "--arm",
+    "current",
+    "--case",
+    "PG09-omission-lane-promisor",
+    "--case",
+    "PG10-omission-lane-plain",
+    "--json",
+    "--out",
+    "<scratch>/out/gridrun2"
+   ],
+   "exit": 0
+  },
+  {
+   "id": "control-C1-metadata-refusal",
+   "argv": [
+    "python3",
+    "tests/report-audit/promisor-grid.py",
+    "--arm",
+    "current",
+    "--current",
+    "<scratch>/out/control-C1-metadata-refusal.py",
+    "--case",
+    "PG09-omission-lane-promisor",
+    "--case",
+    "PG10-omission-lane-plain",
+    "--json",
+    "--out",
+    "<scratch>/out/grid-C1"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "control-C2-cross-store-unreadable",
+   "argv": [
+    "python3",
+    "tests/report-audit/promisor-grid.py",
+    "--arm",
+    "current",
+    "--current",
+    "<scratch>/out/control-C2-cross-store-unreadable.py",
+    "--case",
+    "PG09-omission-lane-promisor",
+    "--case",
+    "PG10-omission-lane-plain",
+    "--json",
+    "--out",
+    "<scratch>/out/grid-C2"
+   ],
+   "exit": 1
+  },
+  {
+   "id": "manual-probe",
+   "argv": [
+    "python3",
+    "probe_pg09.py"
+   ],
+   "auditor_argv": [
+    "/usr/bin/python3",
+    "<clone>/tools/report-landing-audit.py",
+    "--lane-repo",
+    "<probe>/lane",
+    "--fleet-repo",
+    "<probe>/fleet",
+    "--rounds",
+    "1",
+    "--json",
+    "--no-errata"
+   ],
+   "auditor_exit": 1
+  },
+  {
+   "id": "control-C3-cross-store-masked",
+   "argv": [
+    "python3",
+    "tests/report-audit/promisor-grid.py",
+    "--arm",
+    "current",
+    "--current",
+    "<scratch>/out/control-C3-cross-store-masked.py",
+    "--case",
+    "PG09-omission-lane-promisor",
+    "--case",
+    "PG10-omission-lane-plain",
+    "--json",
+    "--out",
+    "<scratch>/out/grid-C3"
+   ],
+   "exit": 1
+  }
+ ],
+ "not_run": [
+  "frozen arm (CNE2 before a pristine run; interface cutover: sensitivity measures CURRENT arm only)",
+  "full grid / 47 cells",
+  "grid --selftest",
+  "mutant driver in default mode",
+  "historical suites"
+ ],
+ "controls": {
+  "C1": {
+   "id": "C1-metadata-refusal",
+   "auditor_sha256": "31ea6979d2fee47a1dca3f62d16fc6a8cc3c1894f6b49723daff0df778b8fe6d",
+   "change": "refuse a repository that declares promisor metadata (r23 behaviour)",
+   "PG09": "exit 2, 'partial clone (remote.origin.promisor)', problems: exit 2 != 1 / reason is the r23 metadata refusal / reason does not name the unavailable object",
+   "PG10": "exit 1, still met (plain twin cannot see promisor metadata)"
+  },
+  "C2": {
+   "id": "C2-cross-store-unreadable",
+   "auditor_sha256": "f9a7d39534617bca06083f7aeee667b5fadc067fba42a54787c33bd55725bfee",
+   "change": "a citation one audited store holds and the other does not is scored 'unknown' (content that cannot be read)",
+   "PG09": "exit 2, 'round 1: unknown: unavailable required object: 58866b563cd900df310588effe79028efc104c33 is present but its content cannot be served'",
+   "PG10": "exit 2, same reason"
+  },
+  "C3": {
+   "id": "C3-cross-store-masked",
+   "auditor_sha256": "167f3303a3710439c00f30234894ecd5797279400bf6f01e8b923e6b6b69f489",
+   "change": "a citation one audited store holds and the other does not is scored 'absent' (the other store's absence masks the presence)",
+   "PG09": "exit 1 but defect set {landed-omitted, landed-unresolved, unresolved-full-hash} != expected {landed-omitted}: caught by the manifest defect-set comparison, NOT by the exit code",
+   "PG10": "same, exit 1 with the wrong defect set"
+  }
+ },
+ "file_sha256": {
+  "control-C1-metadata-refusal.candidate.json": "6c3f2e790405098524c000a5b2a148f34cf8a168e7683659cd5de208a5d94b65",
+  "control-C1-metadata-refusal.py": "31ea6979d2fee47a1dca3f62d16fc6a8cc3c1894f6b49723daff0df778b8fe6d",
+  "control-C2-cross-store-unreadable.candidate.json": "cdb52f3f8cc892aa41f482145473ea224f7bb9cb089b11d94573c1029240ee35",
+  "control-C2-cross-store-unreadable.py": "f9a7d39534617bca06083f7aeee667b5fadc067fba42a54787c33bd55725bfee",
+  "control-C3-cross-store-masked.candidate.json": "83f7ff610a4a16015e724f9669fbb6a580a15d0752b65d92d8875b14bd4d1b1c",
+  "control-C3-cross-store-masked.py": "167f3303a3710439c00f30234894ecd5797279400bf6f01e8b923e6b6b69f489",
+  "pristine-current-PG09-PG10.candidate.json": "72950c541b5e074a1147279d63f2a1d632e5b7e776620a53d82066639633a51f",
+  "pristine-current-PG09-PG10.population.json": "bf3b55ab5b5e1498d4fa5e75eb3cd803392e14e026f2650db807e38b74d113ed",
+  "pristine-repeat.current-PG09-PG10.candidate.json": "72950c541b5e074a1147279d63f2a1d632e5b7e776620a53d82066639633a51f",
+  "pristine.stderr.txt": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "pristine.stdout.txt": "72950c541b5e074a1147279d63f2a1d632e5b7e776620a53d82066639633a51f",
+  "probe-pg09.json": "5fbf2c1c589a3a61df17c306808291da5583f903acd50b73c0db899592fc5b7b",
+  "run-summary.json": "4eac7a910ae89955c0a14b7da00ff7eafb966a214634c2e22b35967a1907dfa4"
+ }
+}

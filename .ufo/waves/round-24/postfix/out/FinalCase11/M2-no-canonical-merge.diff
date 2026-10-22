@@ -1,0 +1,22 @@
+--- pinned/tools/report-landing-audit.py
++++ scratch/M2-no-canonical-merge
+@@ -297,17 +297,11 @@
+     # Different objects behind one abbreviated name are not reconciled:
+     # there the uncertainty stands.
+     for token, per_object in proved.items():
+-        conclusive = False
+-        unsure = False
+         for states in per_object.values():
+             if "wrongtype" in states:
+-                conclusive = True
++                offer(token, "wrongtype")
+             else:
+-                unsure = True
+-        if conclusive and not unsure:
+-            offer(token, "wrongtype")
+-        elif unsure:
+-            offer(token, "unknown")
++                offer(token, "unknown")
+     return status
+ 
+ 

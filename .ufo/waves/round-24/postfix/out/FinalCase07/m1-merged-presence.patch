@@ -1,0 +1,20 @@
+--- clone/tools/report-landing-audit.py	2026-10-21 21:52:16.806781814 -0300
++++ mutants/m1-merged-presence.py	2026-10-21 21:55:37.197240871 -0300
+@@ -243,7 +243,16 @@
+         # the store's own, never the merge of every store, or an object
+         # that lives in one repository would make it look present (and
+         # unreadable) in the other
+-        here = bare_objects(store, tokens) if peel else None
++        # MUTANT M1: presence is merged over every store (the pre-candidate
++        # semantics): an object that lives in one repository looks present
++        # in the other one as well.
++        here = None
++        if peel:
++            here = {t: ("absent", None) for t in tokens}
++            for other in stores:
++                for t, (st, oid) in bare_objects(other, tokens).items():
++                    if st == "found":
++                        here[t] = ("found", oid)
+         if here is not None:
+             for token, (state, _) in here.items():
+                 if state == "ambiguous":

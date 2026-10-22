@@ -1,0 +1,33 @@
+# FinalCase17 argv / identity record
+host: Linux 7.2.11-arch1-1 x86_64
+git: git version 2.56.0
+python: Python 3.14.8
+
+[clone] cwd=/fast/scratch/hyaku/kama-r24/postfix/FinalCase17/clone
+git clone --no-hardlinks /home/vgpnk/Projects/shokunin/kama-shokunin clone
+git checkout --detach 92063cfc60e217fa7e2098c568578119b16a1b95
+HEAD=92063cfc60e217fa7e2098c568578119b16a1b95
+status=0 modified files
+
+[sha256] source identities (pinned clone)
+b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f  /fast/scratch/hyaku/kama-r24/postfix/FinalCase17/clone/tools/report-landing-audit.py
+30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270  /fast/scratch/hyaku/kama-r24/postfix/FinalCase17/clone/tests/report-audit/promisor-grid.py
+d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1  /fast/scratch/hyaku/kama-r24/postfix/FinalCase17/clone/tests/report-audit/promisor-grid-expectations.json
+971c3ecbc1af05d4e6806ed06e8d3c7499ff55caf09e7bbc2c5ae2992204f200  /fast/scratch/hyaku/kama-r24/postfix/FinalCase17/clone/tests/report-audit/promisor-mutants.py
+eace4f56e225f33e96676c0fb6c58d657256c9e37cf06130d487155d343e2a00  /fast/scratch/hyaku/kama-r24/postfix/FinalCase17/clone/tests/report-audit/isolation-mutants.py
+8478d1bca0f11e616ded96bb800f9be78fcd942400f52b1a416447d0dbed79f4  /fast/scratch/hyaku/kama-r24/postfix/FinalCase17/clone/.ufo/waves/round-24/fixes/StoreLocalPresence/opaque-garbage-proof-v2.py
+5a570882189f7255b45c44d2a4c5ca844a0a8152656498de300c464e83d65a62  /fast/scratch/hyaku/kama-r24/postfix/FinalCase17/clone/.ufo/waves/round-24/fixes/StoreLocalPresence/proof-driver-replay-v3.py
+
+[grid run] cwd=/fast/scratch/hyaku/kama-r24/postfix/FinalCase17/clone TMPDIR=/fast/scratch/hyaku/kama-r24/postfix/FinalCase17/tmp
+python3 tests/report-audit/promisor-grid.py --arm current --case PG17-missing-fleet-report-promisor --case PG18-missing-fleet-report-plain --json --out /fast/scratch/hyaku/kama-r24/postfix/FinalCase17/out
+grid exit=0 (stderr empty)
+
+[probe 1] cwd=/fast/scratch/hyaku/kama-r24/postfix/FinalCase17 TMPDIR=/fast/scratch/hyaku/kama-r24/postfix/FinalCase17/tmp
+python3 probe-pg17.py  # exit 0 -> out/probe-pg17.json
+  inner argv per case: /usr/bin/python3 <clone>/tools/report-landing-audit.py --lane-repo <tmp>/PG17|lane --fleet-repo <tmp>/PG17|fleet --rounds 1 --json --no-errata
+
+[probe 2] same TMPDIR
+python3 probe-control.py  # exit 0 -> out/probe-control.json
+  inner argv per case: /usr/bin/python3 <clone>/tools/report-landing-audit.py --lane-repo <tmp>/<case>/lane --fleet-repo <tmp>/<case>/fleet --rounds 1 --json --no-errata
+
+[read-only plumbing] git --no-lazy-fetch -C <PG17 fleet> ls-tree HEAD -- .ufo/reports/round-1/kama.md (rc=0) ; git --no-lazy-fetch -C <PG17 fleet> cat-file -t 0cf7ed5cd6dec335553d165dc587baa224ab302b (rc=128)

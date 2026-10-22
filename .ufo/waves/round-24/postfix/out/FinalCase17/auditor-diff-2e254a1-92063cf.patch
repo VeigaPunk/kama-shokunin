@@ -1,0 +1,591 @@
+diff --git a/tools/report-landing-audit.py b/tools/report-landing-audit.py
+index 91518a9..c05c177 100755
+--- a/tools/report-landing-audit.py
++++ b/tools/report-landing-audit.py
+@@ -122,9 +122,9 @@ class RepoStore:
+         self._missing = None
+ 
+     def missing(self):
+-        """(missing, opaque): the object ids the local history references
+-        but the repository cannot serve, and the subset that hides names
+-        (computed at most once per store)."""
++        """(missing, opaque): the known unavailable object ids that
++        present local objects reference, and the subset of them that hides
++        names behind the audited root (computed at most once per store)."""
+         if self._missing is None:
+             self._missing = missing_reachable(self.path, self.root)
+         return self._missing
+@@ -166,10 +166,16 @@ def git(repo, *args, stdin=None, env=None, errors="strict"):
+     except subprocess.TimeoutExpired as exc:
+         # e.g. a FIFO at .git/config, an include target, .git/shallow or a
+         # ref file blocks git's read: a hang is never a verdict
+-        raise EvalError(f"git {' '.join(args)} in {repo}: timed out after "
+-                        f"{GIT_TIMEOUT}s") from exc
++        error = EvalError(f"git {' '.join(args)} in {repo}: timed out after "
++                          f"{GIT_TIMEOUT}s")
++        # a timeout (or a broken git) is not a missing object: a follow-up
++        # diagnostic call would only risk a second timeout
++        error.fatal = True
++        raise error from exc
+     except OSError as exc:
+-        raise EvalError(f"cannot run git: {exc}") from exc
++        error = EvalError(f"cannot run git: {exc}")
++        error.fatal = True
++        raise error from exc
+     if proc.returncode != 0:
+         raise EvalError(f"git {' '.join(args)} in {repo}: rc={proc.returncode} "
+                         f"{proc.stderr.decode(errors='replace').strip()}")
+@@ -181,6 +187,35 @@ def git(repo, *args, stdin=None, env=None, errors="strict"):
+     return out.replace("\r\n", "\n").replace("\r", "\n")
+ 
+ 
++def bare_objects(store, tokens):
++    """{token: (state, object id)} for one store: what the bare name
++    resolves to there. The id is the canonical object the name stands for,
++    so the same object in two stores is recognised as the same object."""
++    out = git(store.path, "cat-file", "--batch-check",
++              stdin="".join(f"{t}\n" for t in tokens))
++    lines = out.split("\n")[:len(tokens)]
++    if len(lines) != len(tokens):
++        raise EvalError(f"cat-file --batch-check in {store.path}: "
++                        f"short output")
++    result = {}
++    for token, line in zip(tokens, lines):
++        if line.endswith(" missing"):
++            result[token] = ("absent", None)
++        elif line.endswith(" ambiguous"):
++            result[token] = ("ambiguous", None)
++        elif line.endswith(" excluded") or line.endswith(" dangling"):
++            result[token] = ("excluded", None)
++        else:
++            parts = line.split(" ")
++            if len(parts) != 3 or not re.fullmatch(r"[0-9a-f]{40}", parts[0]):
++                raise EvalError(f"cat-file in {store.path}: unexpected {line!r}")
++            if not parts[0].startswith(token):
++                # git resolved a same-named ref before the object prefix
++                raise EvalError(f"{store.path}: citation {token} names a ref")
++            result[token] = ("found", parts[0])
++    return result
++
++
+ def lookup(stores, tokens, peel=""):
+     """{token: 'found'|'ambiguous'|'unknown'|'wrongtype'|'absent'} across
+     stores, via `cat-file --batch-check` per store; a git failure is
+@@ -201,14 +236,21 @@ def lookup(stores, tokens, peel=""):
+         if RANK[state] > RANK[status[token]]:
+             status[token] = state
+ 
+-    bare = lookup(stores, tokens) if peel else None
+-    if bare is not None:
+-        # git answers 'missing' for an ambiguous short name under a peel,
+-        # so the bare answer keeps the ambiguity visible
+-        for token, state in bare.items():
+-            if state == "ambiguous":
+-                offer(token, "ambiguous")
++    # token -> {canonical object id: {what the stores proved about it}}
++    proved = {}
+     for store in stores:
++        # what THIS store holds under the bare name: the presence must be
++        # the store's own, never the merge of every store, or an object
++        # that lives in one repository would make it look present (and
++        # unreadable) in the other
++        here = bare_objects(store, tokens) if peel else None
++        if here is not None:
++            for token, (state, _) in here.items():
++                if state == "ambiguous":
++                    # git answers 'missing' for an ambiguous short name
++                    # under a peel, so the bare answer keeps the
++                    # ambiguity visible
++                    offer(token, "ambiguous")
+         out = git(store.path, "cat-file", "--batch-check",
+                   stdin="".join(f"{t}{peel}\n" for t in tokens))
+         lines = out.split("\n")[:len(tokens)]
+@@ -218,8 +260,8 @@ def lookup(stores, tokens, peel=""):
+         unresolved = []
+         for token, line in zip(tokens, lines):
+             if line.endswith(" missing"):
+-                if (bare is not None and bare[token] == "found"
+-                        and status[token] == "absent"):
++                if (here is not None and here[token][0] == "found"
++                        and status[token] != "found"):
+                     unresolved.append(token)
+                 continue
+             if line.endswith(" ambiguous"):
+@@ -246,8 +288,26 @@ def lookup(stores, tokens, peel=""):
+                 raise EvalError(f"cat-file --batch-check in {store.path}: "
+                                 f"short output")
+             for token, line in zip(unresolved, lines):
+-                offer(token, "unknown" if line.endswith(" missing")
+-                      else "wrongtype")
++                state = "unknown" if line.endswith(" missing") else "wrongtype"
++                oid = here[token][1]
++                proved.setdefault(token, {}).setdefault(oid, set()).add(state)
++    # Reconcile per canonical object: a store that proves the object is a
++    # known non-commit has proved the mismatch, so another store's
++    # inability to serve that object does not make the citation unknown.
++    # Different objects behind one abbreviated name are not reconciled:
++    # there the uncertainty stands.
++    for token, per_object in proved.items():
++        conclusive = False
++        unsure = False
++        for states in per_object.values():
++            if "wrongtype" in states:
++                conclusive = True
++            else:
++                unsure = True
++        if conclusive and not unsure:
++            offer(token, "wrongtype")
++        elif unsure:
++            offer(token, "unknown")
+     return status
+ 
+ 
+@@ -263,13 +323,16 @@ def checkable_abbrev(token):
+                                 and re.search(r"[a-f]", token) is not None)
+ 
+ 
+-def root_tree(repo, root):
++def root_tree(repo, root, cause=None):
+     """The tree id the root commit names, or None.
+ 
+     The id is in the commit header, so it is readable even when the tree
+     object itself is absent: a refusal about a missing tree can then name
+     that tree. When the commit cannot be read either, None is returned and
+-    the caller keeps its own reason."""
++    the caller keeps its own reason. A fatal cause (a timeout or a broken
++    git) skips the call: another 20 s would only be spent again."""
++    if cause is not None and getattr(cause, "fatal", False):
++        return None
+     try:
+         tree = git(repo, "log", "-1", "--format=%T", root).strip()
+     except EvalError:
+@@ -318,7 +381,7 @@ def report_cutoff(fleet_repo, rel):
+         out = git(fleet_repo, "log", "--diff-filter=A", "--format=%at", "--",
+                   rel).split()
+     except EvalError as exc:
+-        tree = root_tree(fleet_repo, "HEAD")
++        tree = root_tree(fleet_repo, "HEAD", exc)
+         what = (f"the first add of {rel} in {fleet_repo} (tip tree {tree})"
+                 if tree else f"the first add of {rel} in {fleet_repo}")
+         raise required_read(what, exc) from exc
+@@ -367,7 +430,7 @@ def load_source_urls(lane_repo, branch):
+     try:
+         entry = git(lane_repo, "ls-tree", branch, "--", SOURCES).rstrip("\n")
+     except EvalError as exc:
+-        tree = root_tree(lane_repo, branch)
++        tree = root_tree(lane_repo, branch, exc)
+         what = (f"{branch}:{SOURCES} (tip tree {tree}) in {lane_repo}" if tree
+                 else f"{branch}:{SOURCES} in {lane_repo}")
+         raise required_read(what, exc) from exc
+@@ -437,7 +500,7 @@ def refuse_unknown(rnd, status, stores):
+         if store is not None:
+             raise EvalError(
+                 f"round {rnd}: unknown: unavailable required object: {token} "
+-                f"is referenced by the history of {store.path} but the "
++                f"is referenced by local objects in {store.path} but the "
+                 f"repository cannot serve it")
+         hole, hole_oid = opaque_hole(stores)
+         if hole is not None:
+@@ -458,7 +521,7 @@ def audit_round(lane_repo, fleet_repo, branch, lane, rnd, path, source_urls,
+         try:
+             text = git(fleet_repo, "show", f"HEAD:{rel}")
+         except EvalError as exc:
+-            tree = root_tree(fleet_repo, "HEAD")
++            tree = root_tree(fleet_repo, "HEAD", exc)
+             what = (f"{rel} at fleet HEAD (tip tree {tree}, {fleet_repo})"
+                     if tree else f"{rel} at fleet HEAD ({fleet_repo})")
+             raise required_read(what, exc) from exc
+@@ -536,8 +599,12 @@ def load_errata(args, lane_repo, tip):
+                                 args.errata)
+         except (OSError, UnicodeDecodeError) as exc:
+             raise EvalError(f"cannot read errata {args.errata}: {exc}") from exc
+-    return parse_errata(git(lane_repo, "show", f"{tip}:{ERRATA}"),
+-                        f"{args.branch}:{ERRATA}")
++    try:
++        text = git(lane_repo, "show", f"{tip}:{ERRATA}")
++    except EvalError as exc:
++        # the committed ledger is evidence the audit needs
++        raise required_read(f"{tip}:{ERRATA} in {lane_repo}", exc) from exc
++    return parse_errata(text, f"{args.branch}:{ERRATA}")
+ 
+ 
+ def apply_errata(results, errata, stores):
+@@ -552,10 +619,13 @@ def apply_errata(results, errata, stores):
+             used.update(e["line"] for e in match)
+     unmatched = [e for e in errata
+                  if e["round"] in selected and e["line"] not in used]
+-    # only hex corrections are looked up (case-folded, as git does): a
+-    # revision expression such as HEAD or :/text is never a correction
++    # only hex corrections of the SELECTED rounds are looked up (case-
++    # folded, as git does): a revision expression such as HEAD or :/text is
++    # never a correction, and a row of a round that was not audited is not
++    # this audit's business -- reading its object would be a guess
+     hexed = {e["line"]: e["correction"].lower() for e in errata
+              if e["kind"] in RESOLVABLE
++             and e["round"] in selected
+              and re.fullmatch(r"[0-9a-fA-F]{7,40}", e["correction"])}
+     status = lookup(stores, list(hexed.values()), "^{commit}")
+     for e in errata:
+@@ -572,7 +642,7 @@ def apply_errata(results, errata, stores):
+             if store is not None:
+                 raise EvalError(
+                     f"errata line {e['line']}: unknown: unavailable required "
+-                    f"object: {token} is referenced by the history of "
++                    f"object: {token} is referenced by local objects in "
+                     f"{store.path} but the repository cannot serve it")
+             hole, hole_oid = opaque_hole(stores)
+             if hole is not None:
+@@ -580,9 +650,12 @@ def apply_errata(results, errata, stores):
+                     f"errata line {e['line']}: unknown: unavailable required "
+                     f"object: {token} could be hidden behind the missing tree "
+                     f"or commit {hole_oid} in {hole.path}")
+-    invalid = [e for e in errata if e["kind"] in RESOLVABLE and (
+-        status.get(hexed.get(e["line"])) != "found"
+-        or (e["kind"] == "landed-omitted" and e["correction"] != e["token"]))]
++    # a row of a round that was not audited cannot make this audit fail
++    invalid = [e for e in errata if e["round"] in selected
++               and e["kind"] in RESOLVABLE and (
++                   status.get(hexed.get(e["line"])) != "found"
++                   or (e["kind"] == "landed-omitted"
++                       and e["correction"] != e["token"]))]
+     return unmatched, invalid
+ 
+ 
+@@ -604,8 +677,17 @@ def parse_rounds(spec, fleet_repo, lane):
+             rounds.update(range(lo, hi + 1))
+         else:
+             # committed fleet reports only, never working-tree drafts
+-            listed = git(fleet_repo, "ls-tree", "-r", "--name-only", "HEAD",
+-                         "--", ".ufo/reports", errors="surrogateescape")
++            try:
++                listed = git(fleet_repo, "ls-tree", "-r", "--name-only",
++                             "HEAD", "--", ".ufo/reports",
++                             errors="surrogateescape")
++            except EvalError as exc:
++                # the listing is evidence the audit needs
++                tree = root_tree(fleet_repo, "HEAD", exc)
++                what = (f".ufo/reports at fleet HEAD (tip tree {tree}, "
++                        f"{fleet_repo})" if tree else
++                        f".ufo/reports at fleet HEAD ({fleet_repo})")
++                raise required_read(what, exc) from exc
+             pat = re.compile(rf"\.ufo/reports/round-([0-9]+)/{re.escape(lane)}\.md")
+             present = [int(m.group(1)) for m in map(pat.fullmatch,
+                                                     listed.split("\n")) if m]
+@@ -649,32 +731,37 @@ def present_roots(repo):
+ 
+ 
+ def missing_reachable(repo, root):
+-    """(missing, opaque): the object ids the local history references but
+-    the repository cannot serve, and the subset of them that hides names.
++    """(missing, opaque): the known unavailable object ids that present
++    local objects reference, and the subset of them that hides names
++    behind the audited root.
+ 
+-    Two walks over the same roots: one with `--objects` (every missing id,
+-    blobs included) and one with `--filter=blob:none` (the missing ids
+-    that are not blobs, so a missing tree or commit is visible: the names
+-    of the objects below it are not known at all). `rev-list
+-    --missing=print` names the missing ids with a `?` prefix instead of
+-    failing; the --no-lazy-fetch isolation keeps a promisor remote
+-    untouched. The roots are every present object of the store, so a
+-    dangling commit, tree or tag that references a missing object is seen
+-    too; this is a diagnosis of what the store cannot serve, never a
+-    precondition on the audit. The commit graph is switched off for the
+-    walks so that it cannot hide an unavailable object."""
++    Two walks, two root sets. The first walks from every present object
++    of the store, so a dangling commit, tree or tag that references a
++    missing object is seen too, and a citation of such an object is still
++    unknown. It names the unavailable ids it ENCOUNTERS: the descendants
++    hidden behind a missing tree cannot be enumerated, which is exactly
++    why the second walk exists. That one identifies the opaque
++    boundaries of the pinned root - the missing trees and commits behind
++    the audit's own root, whose names are hidden - and its roots are the
++    pinned root ONLY, so unreachable garbage in the store is not a
++    dependency of the audit. `rev-list --missing=print` names the missing
++    ids with a `?` prefix instead of failing; the --no-lazy-fetch
++    isolation keeps a promisor remote untouched. The commit graph is
++    switched off for the walks so that it cannot hide an unavailable
++    object."""
+     roots = present_roots(repo)
+     if root not in roots:
+         roots.append(root)
+-    stdin = "".join(f"{r}\n" for r in roots)
+ 
+-    def walk(extra):
++    def walk(extra, walk_roots):
+         out = git(repo, "-c", "core.commitGraph=false", "rev-list",
+                   "--objects", "--missing=print", "--no-object-names", *extra,
+-                  "--stdin", stdin=stdin)
++                  "--stdin", stdin="".join(f"{r}\n" for r in walk_roots))
+         return {line[1:] for line in out.split("\n") if line.startswith("?")}
+ 
+-    return walk(()), walk(("--filter=blob:none",))
++    missing = walk((), roots)
++    opaque = walk(("--filter=blob:none",), [root])
++    return missing, opaque
+ 
+ 
+ def build_store(repo, root):
+@@ -687,8 +774,8 @@ def build_store(repo, root):
+ 
+ 
+ def unknown_citation(stores, token):
+-    """The store whose history references the cited token but cannot serve
+-    it, or None.
++    """The store whose present local objects reference the cited token but
++    cannot serve it, or None.
+ 
+     Such a token is not a proved absence: the repository references it and
+     cannot hand it over, so the audit must refuse rather than report a
+@@ -1102,6 +1189,11 @@ def selftest():
+                   and doc["summary"]["errata_unmatched"] == 1)
+             rc, doc = with_rows(*good, (2, "landed-omitted", c, c, "x"))
+             check("unselected-round-row-ignored", rc == 0)
++            rc, doc = with_rows(*good, (2, "unresolved-full-hash", "0" * 40,
++                                        "0" * 40, "x"))
++            check("unselected-invalid-correction-is-ignored",
++                  rc == 0 and doc["summary"]["errata_invalid"] == 0
++                  and doc["summary"]["errata_unmatched"] == 0)
+             for label, row in (
+                     ("round-must-equal", (2, "landed-omitted", c, c, "t")),
+                     ("kind-must-equal", (1, "landed-unresolved", c, c, "t")),
+@@ -1170,6 +1262,93 @@ def selftest():
+                            for x in doc["results"][0]["defects"])
+             check("wrongtype-citation-is-a-failed-finding",
+                   rc == 1 and ("landed-unresolved", blob) in kinds)
++            # a blob that lives in one audited repository only: its absence
++            # from the other is not an unreadable object
++            fleet_blob = git(fleet, "hash-object", "-w", "--stdin",
++                             stdin="fleet only blob\n").strip()
++            fleet_draft = Path(tmp, "fleet-blob-draft.md")
++            fleet_draft.write_text(
++                "## Landed changes\n- `" + fleet_blob + "` fleet blob\n",
++                encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={fleet_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("fleet-only-blob-citation-is-a-failed-finding",
++                  rc == 1 and ("landed-unresolved", fleet_blob) in kinds)
++            lane_blob = git(lane, "hash-object", "-w", "--stdin",
++                            stdin="lane only blob\n").strip()
++            lane_draft = Path(tmp, "lane-blob-draft.md")
++            lane_draft.write_text(
++                "## Landed changes\n- `" + lane_blob + "` lane blob\n",
++                encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={lane_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("lane-only-blob-citation-is-a-failed-finding",
++                  rc == 1 and ("landed-unresolved", lane_blob) in kinds)
++            fleet_tree = git(fleet, "mktree",
++                             stdin=f"100644 blob {fleet_blob}\tf\n").strip()
++            tree_draft = Path(tmp, "fleet-tree-draft.md")
++            tree_draft.write_text(
++                "## Landed changes\n- `" + fleet_tree + "` fleet tree\n",
++                encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={tree_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("fleet-only-tree-citation-is-a-failed-finding",
++                  rc == 1 and ("landed-unresolved", fleet_tree) in kinds)
++            tag_target = git(fleet, "hash-object", "-w", "--stdin",
++                             stdin="fleet tag target\n").strip()
++            fleet_tag = git(fleet, "mktag",
++                            stdin=f"object {tag_target}\ntype blob\ntag t\n"
++                                  f"tagger k <a@x> 1000 +0000\n\ntag\n",
++                            env=git_env(GIT_AUTHOR_NAME="k",
++                                        GIT_COMMITTER_NAME="k",
++                                        GIT_AUTHOR_EMAIL="a@x",
++                                        GIT_COMMITTER_EMAIL="a@x")).strip()
++            tag_only_draft = Path(tmp, "fleet-tag-draft.md")
++            tag_only_draft.write_text(
++                "## Landed changes\n- `" + fleet_tag + "` fleet tag\n",
++                encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={tag_only_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("fleet-only-tag-citation-is-a-failed-finding",
++                  rc == 1 and ("landed-unresolved", fleet_tag) in kinds)
++            errata_blob = Path(tmp, "errata-fleet-blob.tsv")
++            errata_blob.write_text(
++                "1\tlanded-unresolved\t" + fleet_blob + "\t" + fleet_blob
++                + "\tevidence\n", encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={fleet_draft}"],
++                               no_errata=False, errata=str(errata_blob)))
++            check("errata-correction-naming-the-cited-fleet-only-blob-is-invalid",
++                  rc == 1 and doc["summary"]["errata_invalid"] == 1
++                  and doc["summary"]["errata_unmatched"] == 0)
++            # the errata correction consumer, ISOLATED: the report cites a
++            # known lane blob (an ordinary finding on its own) and the
++            # ledger corrects that token with a fleet-only blob
++            lane_blob_a = git(lane, "hash-object", "-w", "--stdin",
++                              stdin="known lane blob\n").strip()
++            fleet_blob_b = git(fleet, "hash-object", "-w", "--stdin",
++                               stdin="other fleet blob\n").strip()
++            isolated_draft = Path(tmp, "isolated-errata-draft.md")
++            isolated_draft.write_text(
++                "## Landed changes\n- `" + lane_blob_a + "` lane blob\n",
++                encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={isolated_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("known-lane-blob-citation-is-an-ordinary-finding",
++                  rc == 1 and ("landed-unresolved", lane_blob_a) in kinds)
++            isolated_errata = Path(tmp, "isolated-errata.tsv")
++            isolated_errata.write_text(
++                "1\tlanded-unresolved\t" + lane_blob_a + "\t" + fleet_blob_b
++                + "\tevidence\n", encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={isolated_draft}"],
++                              no_errata=False, errata=str(isolated_errata)))
++            check("errata-correction-naming-a-fleet-only-blob-is-invalid",
++                  rc == 1 and doc["summary"]["errata_invalid"] == 1
++                  and doc["summary"]["errata_unmatched"] == 0)
+             git(lane, "repack", "-ad")
+             pack_dir = Path(lane, git(lane, "rev-parse", "--git-path",
+                                       "objects/pack").strip())
+@@ -1253,10 +1432,124 @@ def selftest():
+                 encoding="utf-8")
+             check("known-tag-with-unavailable-target-is-unknown",
+                   is_error(lambda: run(_ns(base, report=[f"1={tag_draft}"]))))
++            # the same tag in both audited repositories: one of them can
++            # serve what the tag points at, so the citation is a known
++            # mismatch, not an unknown
++            target = git(fleet, "hash-object", "-w", "--stdin",
++                         stdin="tag target\n").strip()
++            identity = git_env(GIT_AUTHOR_NAME="k", GIT_COMMITTER_NAME="k",
++                               GIT_AUTHOR_EMAIL="a@x",
++                               GIT_COMMITTER_EMAIL="a@x")
++            tag = git(fleet, "mktag",
++                      stdin=f"object {target}\ntype blob\ntag t\n"
++                            f"tagger k <a@x> 1000 +0000\n\ntag\n",
++                      env=identity).strip()
++
++            def _obj(repo, oid):
++                path = Path(repo, git(repo, "rev-parse", "--git-path",
++                                      "objects").strip(), oid[:2], oid[2:])
++                path.parent.mkdir(parents=True, exist_ok=True)
++                return path
++
++            _obj(lane, tag).write_bytes(_obj(fleet, tag).read_bytes())
++            _obj(lane, target).write_bytes(_obj(fleet, target).read_bytes())
++            shared_draft = Path(tmp, "shared-tag-draft.md")
++            shared_draft.write_text(
++                "## Landed changes\n- `" + tag + "` tag\n", encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={shared_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("same-tag-in-both-stores-known-mismatch-is-a-control",
++                  rc == 1 and ("landed-unresolved", tag) in kinds)
++            # the target is observable in the fleet only: the fleet proves
++            # the mismatch, the lane cannot serve the target
++            _obj(lane, target).unlink()
++            rc, doc = run(_ns(base, report=[f"1={shared_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("same-tag-with-the-target-only-in-the-fleet-is-a-mismatch",
++                  rc == 1 and ("landed-unresolved", tag) in kinds)
++            # the mirror: the target is observable in the lane only
++            _obj(lane, target).write_bytes(_obj(fleet, target).read_bytes())
++            _obj(fleet, target).unlink()
++            rc, doc = run(_ns(base, report=[f"1={shared_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("same-tag-with-the-target-only-in-the-lane-is-a-mismatch",
++                  rc == 1 and ("landed-unresolved", tag) in kinds)
++            # the target is observable nowhere: the content cannot be read
++            _obj(lane, target).unlink()
++            check("tag-target-missing-everywhere-is-unknown",
++                  is_error(lambda: run(_ns(base, report=[f"1={shared_draft}"]))))
+             missing, opaque = missing_reachable(
+                 lane, git(lane, "rev-parse", "HEAD").strip())
+             check("blob-hole-is-not-an-opaque-hole",
+                   hole in missing and hole not in opaque)
++            # an unreachable MISSING BLOB is not an opaque hole: the
++            # fabricated citation here is UNRELATED and absent, so the
++            # ordinary finding stands (the dangling blob itself is cited in
++            # the next control, which is unknown)
++            dangling_blob = git(lane, "hash-object", "-w", "--stdin",
++                                stdin="dangling blob\n").strip()
++            blob_tree = git(lane, "mktree", stdin=f"100644 blob "
++                           f"{dangling_blob}\td\n").strip()
++            Path(lane, git(lane, "rev-parse", "--git-path",
++                           "objects").strip(),
++                 dangling_blob[:2], dangling_blob[2:]).unlink()
++            fake = "1234567890abcdef1234567890abcdef12345678"
++            garbage_draft = Path(tmp, "garbage-draft.md")
++            garbage_draft.write_text(
++                "## Work performed\n" + fake + "\n"
++                "## Landed changes\n- `" + a[:9] + "` work\n",
++                encoding="utf-8")
++            rc, doc = run(_ns(base, report=[f"1={garbage_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("unreachable-missing-blob-does-not-block",
++                  rc == 1 and ("unresolved-full-hash", fake) in kinds)
++            cited_draft = Path(tmp, "cited-dangling-draft.md")
++            cited_draft.write_text(
++                "## Work performed\n" + dangling_blob + "\n"
++                "## Landed changes\n- `" + a[:9] + "` work\n",
++                encoding="utf-8")
++            check("cited-missing-behind-a-dangling-tree-is-unknown",
++                  is_error(lambda: run(_ns(base, report=[f"1={cited_draft}"]))))
++            # an unreachable MISSING TREE is an opaque hole for the store
++            # but not for the audited root: a dangling commit names a tree
++            # the store cannot serve, and no ref reaches either of them
++            kept_blob = git(lane, "hash-object", "-w", "--stdin",
++                            stdin="kept blob\n").strip()
++            opaque_tree = git(lane, "mktree", stdin=f"100644 blob "
++                              f"{kept_blob}\tkeep\n").strip()
++            dangling_commit = git(lane, "commit-tree", opaque_tree, "-m",
++                                  "dangling", env=git_env(
++                                      GIT_AUTHOR_NAME="kama-shokunin",
++                                      GIT_COMMITTER_NAME="kama-shokunin",
++                                      GIT_AUTHOR_EMAIL="a@x",
++                                      GIT_COMMITTER_EMAIL="a@x")).strip()
++            Path(lane, git(lane, "rev-parse", "--git-path",
++                           "objects").strip(),
++                 opaque_tree[:2], opaque_tree[2:]).unlink()
++            missing_all, opaque_relevant = missing_reachable(
++                lane, git(lane, "rev-parse", "HEAD").strip())
++            all_roots = present_roots(lane)
++            opaque_everywhere = {
++                line[1:] for line in git(
++                    lane, "-c", "core.commitGraph=false", "rev-list",
++                    "--objects", "--missing=print", "--no-object-names",
++                    "--filter=blob:none", "--stdin",
++                    stdin="".join(f"{r}\n" for r in all_roots)
++                ).split("\n") if line.startswith("?")}
++            check("store-wide-walk-sees-the-unreachable-missing-tree",
++                  opaque_tree in missing_all
++                  and opaque_tree in opaque_everywhere
++                  and opaque_tree not in opaque_relevant
++                  and dangling_commit in all_roots)
++            rc, doc = run(_ns(base, report=[f"1={garbage_draft}"]))
++            kinds = sorted((x["kind"], x["token"])
++                           for x in doc["results"][0]["defects"])
++            check("unreachable-opaque-garbage-does-not-block",
++                  rc == 1 and ("unresolved-full-hash", fake) in kinds)
+             tree = git(lane, "rev-parse", f"{mid}^{{tree}}").strip()
+             Path(lane, git(lane, "rev-parse", "--git-path",
+                            "objects").strip(),
+@@ -1274,6 +1567,20 @@ def selftest():
+                   rc == 0 and doc["results"][0]["defects"] == [])
+             check("opaque-hole-makes-an-unresolved-token-unknown",
+                   is_error(lambda: run(base)))
++            # the open range lists the fleet reports: a missing fleet tip
++            # tree must be refused with the tree named
++            fleet_tree = git(fleet, "rev-parse", "HEAD^{tree}").strip()
++            Path(fleet, git(fleet, "rev-parse", "--git-path",
++                            "objects").strip(),
++                 fleet_tree[:2], fleet_tree[2:]).unlink()
++            message = ""
++            try:
++                run(_ns(base, rounds="10-"))
++            except EvalError as exc:
++                message = str(exc)
++            check("open-range-listing-names-the-missing-fleet-tree",
++                  fleet_tree in message
++                  and "unavailable required object" in message)
+         finally:
+             if saved is None:
+                 os.environ.pop("GIT_DIR", None)

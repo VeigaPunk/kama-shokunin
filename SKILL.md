@@ -1025,3 +1025,18 @@ not a valid survivor; PG40 remains ungraded and no primary cell changes.
 The pristine must have exit0 AND no violated graded row. A mutant result
 with exit0 but a violated row is contradictory protocol, not a kill; the
 receiver refuses it just as it refuses exit1 with no identifiable failure.
+
+**Manual note versus experiment.** A manual-only inventory enumeration may
+complete with executable0/evaluated0 and killfalse; that is not behavioral
+success, a valid survivor, an applicability assertion or an admission gate.
+PM08 stays filed/manual/unexecuted/uncredited, with no permanent AST/text/
+wiring assertion. Historical static review notes and a legacy M02 result
+do not establish present PM08 behavior. The graded-pristine requirement
+above applies to executable sensitivity experiments, not note enumeration.
+
+The current-only restriction belongs to the sensitivity runner. The grid
+still supports frozen/current/both; do not reject a valid historical
+comparison by copying the mutation runner's restriction into its contract.
+Final r24 evidence is bounded, distributed and qualified in
+`corpus/lessons/round-24.md`; it does not achieve the full original claim,
+prove global no-effects/absence of chains, resolve H2 or grant admission.

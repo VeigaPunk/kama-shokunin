@@ -1,0 +1,34 @@
+{
+ "seat": "FinalCase12",
+ "target": "PG12-omission-marker-lane",
+ "clone": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase12/clone",
+ "clone_head": "92063cfc60e217fa7e2098c568578119b16a1b95",
+ "clone_method": "git clone --no-hardlinks (local) + git checkout --detach",
+ "scratch": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase12",
+ "tmpdir_used": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase12/tmp",
+ "tools": {"git": "2.56.0", "python3": "3.14.8", "installs": "none"},
+ "digests": {
+  "tools/report-landing-audit.py": "b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f",
+  "tests/report-audit/promisor-grid.py": "30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270",
+  "tests/report-audit/promisor-grid-expectations.json": "d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1",
+  "mutant-M1-precommit-lookup.py": "584b21c4c0a3e4ebfecab47ed0b073678db0de57d67e4d22a740e8f9acc4baa5",
+  "pre-commit auditor (ed1cc3a blob)": "ea51bc35b71ac09f4c233e21a16be49af555e1333004a0fe166234de79edd220",
+  "frozen auditor (0df800e8 blob)": "da5041a8191e0e6ec385adc7c659ddc7544a835aff65dd45b34de623c5765af1"
+ },
+ "grid_population_sha256": "612b0a74f3eebaa9074bdde8ecd8f194f55ebaf9a35ab2b975fddbff8dd2ed88",
+ "runs": [
+  {"name": "grid-pinned", "argv": ["python3", "tests/report-audit/promisor-grid.py", "--arm", "current", "--case", "PG12-omission-marker-lane", "--case", "PG10-omission-lane-plain", "--json", "--out", "<scratch>/out"], "cwd": "<clone>", "env": {"TMPDIR": "<scratch>/tmp"}, "exit": 0, "cells": ["PG12-omission-marker-lane", "PG10-omission-lane-plain"], "stdout": "grid-pinned-PG12-PG10.stdout", "stderr": "grid-pinned-PG12-PG10.stderr (0 bytes)"},
+  {"name": "grid-M1-control", "argv": ["python3", "tests/report-audit/promisor-grid.py", "--arm", "current", "--current", "<scratch>/mutant-M1-precommit-lookup.py", "--case", "PG12-omission-marker-lane", "--case", "PG10-omission-lane-plain", "--json", "--out", "<scratch>/out/m1"], "cwd": "<clone>", "env": {"TMPDIR": "<scratch>/tmp"}, "exit": 0, "cells": ["PG12-omission-marker-lane", "PG10-omission-lane-plain"], "stdout": "grid-M1-precommit-lookup-PG12-PG10.stdout", "stderr": "grid-M1-precommit-lookup-PG12-PG10.stderr(0 bytes)"},
+  {"name": "direct-probe", "argv": ["python3", "<scratch>/probe_pg12.py"], "exit": 0, "artifacts": ["direct-probe.json"]},
+  {"name": "lookup-unit", "argv": ["python3", "<scratch>/probe_lookup.py"], "exit": 0, "artifacts": ["lookup-unit.json"]},
+  {"name": "cross-store-control", "argv": ["python3", "<scratch>/probe_cross_store.py"], "exit": 0, "artifacts": ["cross-store-control.json"]}
+ ],
+ "observations": {
+  "PG12_pinned": {"exit": 1, "defects": [["landed-omitted", "1acb5ebb06054bf52d84ffdacd8727b95287f34b"]], "met_amended": true, "met_original": true, "problems": [], "twin_equal_vs_PG10": true, "objects_acquired": {"lane": [], "fleet": []}, "stderr": "", "refusal": false},
+  "PG10_pinned": {"exit": 1, "defects": [["landed-omitted", "1acb5ebb06054bf52d84ffdacd8727b95287f34b"]], "met_amended": true, "objects_acquired": {"lane": [], "fleet": []}},
+  "PG12_M1": {"exit": 1, "defects": [["landed-omitted", "1acb5ebb06054bf52d84ffdacd8727b95287f34b"]], "met_amended": true, "twin_equal_vs_PG10": true},
+  "lookup_PG12_stores": {"lane_bare": "found", "fleet_bare": "absent", "pinned_merged": "found", "M1_merged": "found"},
+  "fleet_only_blob": {"pinned": "wrongtype", "M1": "unknown"},
+  "cross_store_end_to_end": {"pinned": {"exit": 1, "verdict_document": true}, "M1": {"exit": 2, "verdict_document": false, "stderr": "could-not-evaluate: round 1: unknown: unavailable required object: 28d34a63cab159d42ef2530f59fc28021c2bb7aa is present but its content cannot be served"}}
+ }
+}

@@ -1,0 +1,14 @@
+--- clone/tools/report-landing-audit.py	2026-10-21 21:52:16.806781814 -0300
++++ mutants/m3-cross-oid-merge.py	2026-10-21 21:55:43.489256653 -0300
+@@ -290,7 +290,10 @@
+             for token, line in zip(unresolved, lines):
+                 state = "unknown" if line.endswith(" missing") else "wrongtype"
+                 oid = here[token][1]
+-                proved.setdefault(token, {}).setdefault(oid, set()).add(state)
++                # MUTANT M3: different canonical objects behind one name are
++                # merged into a single bucket, so they reconcile with each
++                # other (the candidate refuses to reconcile them).
++                proved.setdefault(token, {}).setdefault("merged", set()).add(state)
+     # Reconcile per canonical object: a store that proves the object is a
+     # known non-commit has proved the mismatch, so another store's
+     # inability to serve that object does not make the citation unknown.

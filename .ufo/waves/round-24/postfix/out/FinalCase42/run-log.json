@@ -1,0 +1,50 @@
+{
+ "seat": "FinalCase42",
+ "cell": "PG43-fleet-unhydrated-blobless-report-required",
+ "pinned_commit": "92063cfc60e217fa7e2098c568578119b16a1b95",
+ "clone": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase42/clone (git clone --no-hardlinks, detached at the pin)",
+ "git_version": "git version 2.56.0",
+ "python": "3.14.8",
+ "digests": {
+  "tools/report-landing-audit.py": "b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f",
+  "tests/report-audit/promisor-grid.py": "30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270",
+  "tests/report-audit/promisor-grid-expectations.json": "d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1",
+  "tests/report-audit/isolation-mutants.py": "eace4f56e225f33e96676c0fb6c58d657256c9e37cf06130d487155d343e2a00",
+  "tests/report-audit/promisor-mutants.py": "971c3ecbc1af05d4e6806ed06e8d3c7499ff55caf09e7bbc2c5ae2992204f200"
+ },
+ "population_sha256": "612b0a74f3eebaa9074bdde8ecd8f194f55ebaf9a35ab2b975fddbff8dd2ed88",
+ "commands": [
+  {
+   "id": "1-graded-cell",
+   "argv": "TMPDIR=/fast/scratch/hyaku/kama-r24/postfix/FinalCase42/tmp python3 tests/report-audit/promisor-grid.py --arm current --case PG43-fleet-unhydrated-blobless-report-required --json --keep --out /fast/scratch/hyaku/kama-r24/postfix/FinalCase42/out/grid-current",
+   "cwd": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase42/clone",
+   "exit": 0,
+   "stderr_bytes": 0,
+   "evidence": "out/FinalCase42/grid-current-PG43.json"
+  },
+  {
+   "id": "2-direct-auditor-on-kept-fixture",
+   "argv": "python3 /fast/scratch/hyaku/kama-r24/postfix/FinalCase42/clone/tools/report-landing-audit.py --lane-repo <case>/lane --fleet-repo <case>/fleet --rounds 1 --json --no-errata",
+   "exit": 2,
+   "stdout_bytes": 0,
+   "evidence": "out/FinalCase42/auditor-direct-refusal.json"
+  },
+  {
+   "id": "3-hazard-demo-auditor-on-hydrated-fixture",
+   "argv": "same as 2, on the fixture after a stray probe hydrated it",
+   "exit": 0,
+   "stdout_bytes": 700,
+   "note": "false clean verdict document (defects 0)",
+   "evidence": "out/FinalCase42/lazy-fetch-mechanism-and-hazard.json"
+  },
+  {
+   "id": "4-supplemental-fresh-build+companion+both-auditor-runs",
+   "argv": "pinned builder c_fleet_unhydrated_blobless via importlib on the pinned grid module; cp -a copy; git config --unset-all remote.origin.promisor|remote.origin.partialclonefilter; rm paired *.promisor; python3 <pinned auditor> --lane-repo <lane> --fleet-repo <fleet|companion> --rounds 1 --json --no-errata",
+   "exits": {"marked": 2, "companion": 2},
+   "stdout_bytes": {"marked": 0, "companion": 0},
+   "evidence": "out/FinalCase42/supp/state1..state4.json"
+  }
+ ],
+ "installs": "none",
+ "production_writes": "none (only .ufo/waves/round-24/postfix/advice/FinalCase42.md and out/FinalCase42/)"
+}

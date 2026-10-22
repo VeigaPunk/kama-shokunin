@@ -1572,3 +1572,62 @@ durable reports at parent2e, with no provider death. The final reader
 qualifies oracle chronology (not universal before-L1-inspection proof);
 value preservation and original/prospective fields remain intact. See
 `postfix/w2-reader-barrier.json` and `oracle-chronology-qualification.json`.
+
+## Round24 — fixed-epoch cohort and final negative original judgment
+
+- Fixed source epoch: `92063cfc60e217fa7e2098c568578119b16a1b95`.
+  The genuine fresh postfix W3 dispatched64 new identities after the true
+  W2 barrier; W1/W2/W3 author spend is192/200. No replacement, backfill,
+  extra wave, new mission or next round was dispatched. W3 roles were
+  reviewer50/mutation-tester10/critic3/connector1; actual captured model
+  bindings were m_mim61/m_auto3, not retroactively retagged.
+- W3's true terminal barrier is64/64 completed with64 reports, zero failed
+  seats/provider deaths and zero running/pending for that wave at the
+  recorded barrier. Slot acquire/release, validation and assignment
+  recording exited0. These are finite grant/barrier observations, not a
+  whole-host or continuous concurrency-floor certificate. W1 and W2 also
+  completed64/64; their original bindings/receipts remain filed.
+- Counted already-recorded raw primary captures, not a target replay:
+  `final/distributed-primary-count-v2.json` covers all47 assigned cells
+  bound to auditor b9be4f42, grid30483830 and immutable manifest d86b7bea.
+  All recorded amended cells match; seven original expectations remain
+  unmet. The first filename-only inventory missed PG12's extensionless
+  JSON stdout; v2 corrects that inventory without rerunning or selecting a
+  more favorable verdict.
+- Counted existing replay-v3 consumer captures: six red-before strict
+  comparisons at2e and six exact after matches at92063, including separate
+  no-ledger controls. Nine executable mutation samples have named failed
+  graded rows; PM07 finite survival and PM08 manual/uncredited status
+  remain explicit. Neither record is a new full population sweep.
+- Recorded raw PM04 null twin metadata overrides its narrative true;
+  Case18/19's unchanged2→2 is not normal-verdict over-refusal. Case42's
+  later clean result followed an external hydrating read: changed input,
+  not an unchanged-fixture false clean or detector repair. Grid frozen/both
+  remains valid; only sensitivity is current-only. Case31's extra sample,
+  Case11's extra frozen-program execution and other recorded probe-bound/
+  forensic-read deviations are not certified conformant.
+- Preserved FinalCase15's scratch-only raw output byte-for-byte in its
+  durable out directory with diff-qr exit0. Preserved the existing r23
+  outside-closure JSON before removing165 owned scratch children, including
+  unused author-verification clones. The unattributed
+  `/fast/scratch/hyaku/kama-r24/promisor-grid-pvnuiemp` was deliberately
+  retained; unrelated `/tmp/repo-state-grid-4eddb0bx` was not touched.
+  A scoped command-line-reference scan found no match for the own scratch
+  prefix at cleanup, not absence of all processes/effects.
+- Actual current source validate/census exited0:105 rows, A100/B2/C3,
+  mined86/queued8/rejected11, zero invalid/missing. Committed-source
+  transition counting found four new A rows and eleven old used-by-only
+  edits, with no immutable old-cell change. No tool was installed/updated.
+- Full original after-clause judgment is NOT ACHIEVED/unprovable in full;
+  C1 stays7→7. The initial unknown clause stays withdrawn/not-achieved,
+  full global isolation/deadline claims remain unproved, H2 remains open,
+  and oracle value preservation does not prove universal before-L1/
+  before-any-candidate chronology. No new full final-epoch target/grid/
+  legacy/selftest/parity/default-mutation confirmation was run.
+
+These post-barrier documentation/record corrections do not change the
+four frozen source programs, original47 oracle, expectations, cohort or
+source-byte measurement epoch. VOID80 remains excluded incident evidence,
+not accepted erratum credit. Historical private-report amendments and
+their custody limits remain disclosed. Fresh outside Main closure alone
+may judge this landed negative/unprovable original claim.

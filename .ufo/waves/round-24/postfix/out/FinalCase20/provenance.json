@@ -1,0 +1,103 @@
+{
+ "seat": "FinalCase20",
+ "case": "PG20-missing-fleet-tree-plain",
+ "clone": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase20/clone",
+ "clone_method": "git clone --no-hardlinks /home/vgpnk/Projects/shokunin/kama-shokunin clone; git checkout --detach 92063cfc60e217fa7e2098c568578119b16a1b95",
+ "pinned_commit": "92063cfc60e217fa7e2098c568578119b16a1b95",
+ "auditor": "tools/report-landing-audit.py",
+ "auditor_sha256": "b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f",
+ "grid": "tests/report-audit/promisor-grid.py",
+ "grid_sha256": "30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270",
+ "expectations_manifest_sha256": "d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1",
+ "population_sha256": "612b0a74f3eebaa9074bdde8ecd8f194f55ebaf9a35ab2b975fddbff8dd2ed88",
+ "tmpdir": "/fast/scratch/hyaku/kama-r24/postfix/FinalCase20/tmp",
+ "runs": [
+  {
+   "argv": [
+    "python3",
+    "tests/report-audit/promisor-grid.py",
+    "--arm",
+    "current",
+    "--case",
+    "PG20-missing-fleet-tree-plain",
+    "--json"
+   ],
+   "exit": 0,
+   "stdout_artifact": "pg20-current.json",
+   "sha256": "d957e2d9f32cbc3bfe6c74c7872bb738aa4921f8a0d770d4f2be4636e191f486"
+  },
+  {
+   "argv": [
+    "python3",
+    "tests/report-audit/promisor-grid.py",
+    "--arm",
+    "current",
+    "--case",
+    "PG19-missing-fleet-tree-promisor",
+    "--case",
+    "PG20-missing-fleet-tree-plain",
+    "--json"
+   ],
+   "exit": 0,
+   "stdout_artifact": "pg19-pg20-current.stdout",
+   "sha256": "7d09688c56803561bc9dba8100afefa506999c5fd07534a0a33b03f04edfd0d1"
+  },
+  {
+   "argv": [
+    "python3",
+    "/fast/scratch/hyaku/kama-r24/postfix/FinalCase20/rederive.py"
+   ],
+   "exit": 0,
+   "stdout_artifact": "rederivation.json",
+   "sha256": "4816a3f8e9b4da66e989d60daaf39817d4e3f1280f89596eddfc490e107c2c65",
+   "note": "independent re-derivation: pinned grid module used as a library to rebuild the pinned PG20 fixture, pinned auditor run with the grid's own argv to capture full stderr/stdout"
+  }
+ ],
+ "observed_pg20_current": {
+  "exit": 2,
+  "met": true,
+  "defects": null,
+  "kinds": null,
+  "document": null,
+  "objects_acquired": {
+   "lane": [],
+   "fleet": []
+  },
+  "stderr_full": "could-not-evaluate: unavailable required object: .ufo/reports/round-1/kama.md at fleet HEAD (tip tree b1e11739fedfb736f2936bd9addf7e4a286d462e, <fleet>): git show HEAD:.ufo/reports/round-1/kama.md in <fleet>: rc=128 fatal: path '.ufo/reports/round-1/kama.md' exists on disk, but not in 'HEAD'",
+  "stdout_len": 0,
+  "premise_fleet_missing": [
+   "b1e11739fedfb736f2936bd9addf7e4a286d462e"
+  ],
+  "premise_fleet_promisor": false,
+  "mentions_partial_clone": false,
+  "mentions_promisor": false
+ },
+ "controls": {
+  "same_fixture_without_drop": {
+   "exit": 0,
+   "stdout_json_document": true
+  },
+  "unrelated_lane_subtree_hole": {
+   "exit": 0,
+   "stdout_json_document": true
+  }
+ },
+ "twin": {
+  "declared_twin_of_PG20": null,
+  "manifest_link_PG19_to_PG20": true,
+  "executed_twin_equal": null,
+  "twin_compared": 0,
+  "twin_pairs_compared": [],
+  "note": "both rows are refusals with no verdict document; two missing documents are not twin equality"
+ },
+ "artifacts": [
+  "candidate.json",
+  "pg19-pg20-current-artifacts",
+  "pg19-pg20-current.stderr",
+  "pg19-pg20-current.stdout",
+  "pg20-current.json",
+  "pg20-current.stderr",
+  "population.json",
+  "rederivation.json"
+ ]
+}

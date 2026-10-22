@@ -1,0 +1,21 @@
+EXPECTED['fleet-only-tag'] = {'exit': 1, 'kinds': ['landed-unresolved'], 'errata_invalid': 0}
+CONTROL['fleet-only-tag']  = {'exit': 1, 'kinds': ['landed-unresolved'], 'errata_invalid': 0}
+with-ledger expectation == no-ledger control expectation: True
+
+[1] declared-field coverage of strict_match
+  perturb exit            -> matches_expectation = False
+  perturb kinds           -> matches_expectation = False
+  perturb errata_invalid  -> matches_expectation = False
+  baseline               -> matches_expectation = True
+
+[2] ceiling: kind-set granularity (token identity not declared)
+  synthetic observation, right kind, arbitrary token -> match = True
+  NOTE: the driver's EXPECTED declares kinds only; the token is
+        not part of the declared expectation.
+
+[3] git-floor check on the after source
+  --missing=print-info       present = False
+  --missing-only             present = False
+  --filter=blob:none         present = True
+  installed git: git version 2.56.0
+  documented floor in source: 2.45

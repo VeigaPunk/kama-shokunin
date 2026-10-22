@@ -1,0 +1,6 @@
+grid stderr bytes: 0
+clone HEAD: 92063cfc60e217fa7e2098c568578119b16a1b95
+clone auditor sha256: b9be4f428cd70842320c698794faffaa95571a60fc530df6a84d7d8cade3b26f
+clone grid sha256: 30483830e0461898bd9b710603e755b08cf58e2a2a215a747098ebbe0383f270
+manifest sha256: d86b7bea9c49c3d2fcd026a3a1ffb502871d15a2c8db624eba9745e664f14cd1
+TMPDIR used: /fast/scratch/hyaku/kama-r24/postfix/FinalCase02/tmp

@@ -1,0 +1,41 @@
+# FinalCase30 — argv, env, exits.  All paths below are real.
+# clone: /fast/scratch/hyaku/kama-r24/postfix/FinalCase30/clone
+#   git clone --no-hardlinks --no-local /home/vgpnk/Projects/shokunin/kama-shokunin clone
+#   git checkout --detach 92063cfc60e217fa7e2098c568578119b16a1b95
+# TMPDIR (grid + controls): /fast/scratch/hyaku/kama-r24/postfix/FinalCase30/tmp  (pre-existing, owned)
+
+# 1. pinned grid, CURRENT arm only, exactly the two named cells
+TMPDIR=/fast/scratch/hyaku/kama-r24/postfix/FinalCase30/tmp \
+python3 tests/report-audit/promisor-grid.py \
+  --arm current \
+  --case PG30-errata-corrected-missing-sha-promisor \
+  --case PG29-errata-corrected-missing-sha-plain \
+  --json \
+  --out /fast/scratch/hyaku/kama-r24/postfix/FinalCase30/out/grid \
+  --keep
+# argv[0]=python3 cwd=clone  -> exit 0
+# stdout = out/FinalCase30/grid-current-PG29-PG30.json (== grid-candidate.json)
+# stderr = out/FinalCase30/grid-stderr.txt (empty, 0 bytes)
+# kept grid root: /fast/scratch/hyaku/kama-r24/postfix/FinalCase30/tmp/promisor-grid-wbhrkata
+#   current/000 = PG29 (plain lane), current/001 = PG30 (promisor-marked lane)
+
+# 2. direct auditor runs on the SAME two kept fixtures (no fixture mutation).
+#    cwd = <grid root>/current/<000|001>, auditor = clone/tools/report-landing-audit.py (sha b9be4f42…)
+python3 /fast/scratch/hyaku/kama-r24/postfix/FinalCase30/clone/tools/report-landing-audit.py \
+  --lane-repo lane --fleet-repo fleet --rounds 1 --json            -> exit 0   (000-with-errata, 001-with-errata)
+python3 /fast/scratch/hyaku/kama-r24/postfix/FinalCase30/clone/tools/report-landing-audit.py \
+  --lane-repo lane --fleet-repo fleet --rounds 1 --json --no-errata -> exit 1   (000-no-errata, 001-no-errata)
+python3 /fast/scratch/hyaku/kama-r24/postfix/FinalCase30/clone/tools/report-landing-audit.py \
+  --lane-repo lane --fleet-repo fleet --rounds 1 --json \
+  --errata /fast/scratch/hyaku/kama-r24/postfix/FinalCase30/out/controls/00{0,1}-badcorrection-errata.tsv \
+                                                                       -> exit 1   (000/001-badcorrection)
+# all six stderr files are 0 bytes (e3b0c442…); stdout JSONs are in out/FinalCase30/controls/
+
+# 3. premise probes (git, --no-lazy-fetch where a missing object must stay missing)
+git -C <fixture>/lane cat-file --batch-check <<< "58866b563cd900dd894ef21bc863486bcb35b56c"   # missing
+git -C <fixture>/fleet cat-file --batch-check <<< "58866b563cd900dd894ef21bc863486bcb35b56c"  # missing
+git -C <fixture>/lane rev-list --objects --missing=print --no-object-names refs/heads/master      # 9 objects, no "?" lines
+git -C <fixture>/fleet rev-list --objects --missing=print --no-object-names HEAD                 # 9 objects, no "?" lines
+git -C <fixture>/lane cat-file --batch-all-objects --batch-check='%(objectname)' | wc -l         # 9 before and after every run
+ls <fixture>/lane/.git/objects/pack/     # empty
+ls <fixture>/lane/.git/FETCH_HEAD        # absent (no fetch happened)
