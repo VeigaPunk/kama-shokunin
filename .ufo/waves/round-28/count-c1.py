@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Round-28 C1 counter (depth): llama-server b11755 request-field outcomes in SKILL.md.
 
-Frozen predicate (the same sentence as preregistration.json C1.predicate and the
+Frozen predicate, amendment A1 (the same sentence as preregistration.json C1.predicate and the
 label `counted` in the receipt):
 
   A registry row is COUNTED iff
@@ -31,8 +31,12 @@ label `counted` in the receipt):
       kind `effective` -> status 200 and `generation_settings[<key>]` equal
       (float32 tolerance for numbers, exact otherwise) to the row's value;
   (e) source-blind outcomes are not counted: for an `effective` row the live
-      value differs from the requested value and from the live value of the
-      same key when the field is omitted (the counter's own base request).
+      value differs from the requested value, from the live value of the
+      same key when the field is omitted (the counter's own base request),
+      and from every generic conversion of the requested value (amendment
+      A1): float32 rounding, float32 saturation to +-3.4028234663852886e38 or
+      +-infinity, truncation toward zero, wrap modulo 2^32 or 2^64 (signed or
+      unsigned) and truthiness.
 
 Claim met iff counted >= 18 (preregistration.json C1.target).
 
@@ -53,6 +57,7 @@ import os
 import re
 import signal
 import socket
+import struct
 import subprocess
 import sys
 import tempfile
@@ -272,6 +277,32 @@ def outcome_text(o) -> str | None:
     return None
 
 
+FLT_MAX = 3.4028234663852886e38
+
+
+def conversions(sent) -> list:
+    """Generic conversions a typed field applies to any value (A1): never field knowledge."""
+    if isinstance(sent, bool) or not is_num(sent):
+        return []
+    out = [bool(sent)]
+    if math.isnan(sent):
+        return out
+    if math.isinf(sent) or abs(sent) > FLT_MAX:
+        out += [math.copysign(FLT_MAX, sent), math.copysign(math.inf, sent)]
+    if math.isinf(sent):
+        return out
+    try:
+        out.append(struct.unpack("f", struct.pack("f", sent))[0])
+    except (OverflowError, struct.error):
+        pass
+    t = int(sent)
+    out.append(t)
+    for bits in (32, 64):
+        m = 1 << bits
+        out += [t % m, (t + (m >> 1)) % m - (m >> 1)]
+    return out
+
+
 def lookup(gs, key: str):
     """generation_settings[key]: the flat key, else a dotted path."""
     if not isinstance(gs, dict):
@@ -476,7 +507,7 @@ def main() -> int:
     a = ap.parse_args()
     lane = Path(a.lane).resolve()
     repo = a.repo or str(lane)
-    receipt: dict = {"schema": "kama-r28-c1-receipt/v1", "counter_sha256": sha256_file(here),
+    receipt: dict = {"schema": "kama-r28-c1-receipt/v1-A1", "counter_sha256": sha256_file(here),
                      "lane": str(lane), "base": BASE, "target": TARGET}
     try:
         if dict(os.environ) != clean_env():
@@ -586,8 +617,11 @@ def main() -> int:
                         else:
                             bfound, bval = lookup(base_gs, o["key"])
                             lv["base_effective"] = bval if bfound else None
-                            if same(val, e["set"][e["field"]]):
+                            sent = e["set"][e["field"]]
+                            if same(val, sent):
                                 r["why"].append("e:identity")
+                            elif any(same(val, c) for c in conversions(sent)):
+                                r["why"].append("e:generic-conversion")
                             if bfound and same(val, bval):
                                 r["why"].append("e:default")
                     r["live"] = lv
