@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Round-27 C1 counter (depth): live request-validation error signatures in SKILL.md.
 
-Frozen predicate, amendment A1 (the same sentence as preregistration.json
+Frozen predicate, amendments A1 and A2 (the same sentence as preregistration.json
 C1.predicate and the label `counted` in the receipt):
 
   A registry row is COUNTED iff
@@ -13,9 +13,11 @@ C1.predicate and the label `counted` in the receipt):
       holding the request path verbatim; meaning and next-action cells of at
       least six words each; the source cell holding the registry S### token;
   (b) the signature is at least 20 UTF-8 bytes, holds no "|" and no newline, and
-      does not occur in SKILL.md, corpus/knowledge/ or registry/ at base
-      a720399e, neither case-insensitively on one line nor with all whitespace
-      removed and case folded across the whole of those files;
+      it is new to the lane: neither it nor its JSON-escaped form occurs,
+      case-folded, verbatim or with all whitespace removed, in ANY tracked file
+      of the lane at base a720399e except the pinned source snapshots (paths
+      holding "/sources/") -- so knowledge already in SKILL.md, corpus/, the
+      registry or any earlier round's wave evidence never counts;
   (c) its S### row exists in corpus/SOURCES.md of the measured tree, does not
       exist at base, and names the registry source file, the registry line
       (as "L<line>" or "line <line>") and commit 704366d;
@@ -160,31 +162,39 @@ def git_show(repo: str, rev: str, path: str) -> str | None:
     return r.stdout.decode("utf-8", "replace") if r.returncode == 0 else None
 
 
-def present_at_base(repo: str, sig: str) -> bool:
-    r = subprocess.run(["git", "-C", repo, "grep", "-F", "-i", "-q", "-e", sig, BASE,
-                        "--", "SKILL.md", "corpus/knowledge", "registry"],
-                       capture_output=True, timeout=60)
-    if r.returncode not in (0, 1):
-        raise CannotEvaluate(f"git grep at base failed: {r.stderr.decode()[:200]}")
-    return r.returncode == 0
+_BASE_TEXT: dict[str, tuple[str, str]] = {}
 
 
-_BASE_FOLDED: dict[str, str] = {}
-
-
-def base_folded(repo: str) -> str:
-    """All of SKILL.md, corpus/knowledge/ and registry/ at BASE, whitespace removed, lowercased."""
-    if repo not in _BASE_FOLDED:
-        r = subprocess.run(["git", "-C", repo, "ls-tree", "-r", "--name-only", BASE, "--",
-                            "SKILL.md", "corpus/knowledge", "registry"],
-                           capture_output=True, timeout=60)
+def base_text(repo: str) -> tuple[str, str]:
+    """Every tracked file at BASE except pinned source snapshots (paths holding
+    '/sources/'), concatenated: (lowercased text, whitespace-removed lowercased text)."""
+    if repo not in _BASE_TEXT:
+        r = subprocess.run(["git", "-C", repo, "ls-tree", "-r", "-z", BASE],
+                           capture_output=True, timeout=120)
         if r.returncode != 0:
             raise CannotEvaluate("git ls-tree at base failed")
-        parts = []
-        for name in r.stdout.decode().splitlines():
-            parts.append(squash(git_show(repo, BASE, name) or ""))
-        _BASE_FOLDED[repo] = "\n".join(parts)
-    return _BASE_FOLDED[repo]
+        oids = []
+        for rec in r.stdout.split(b"\0"):
+            if not rec:
+                continue
+            meta, name = rec.split(b"\t", 1)
+            mode, typ, oid = meta.split()
+            if typ == b"blob" and b"/sources/" not in name:
+                oids.append(oid)
+        p = subprocess.run(["git", "-C", repo, "cat-file", "--batch"],
+                           input=b"\n".join(oids) + b"\n", capture_output=True, timeout=600)
+        if p.returncode != 0:
+            raise CannotEvaluate("git cat-file at base failed")
+        text = p.stdout.decode("utf-8", "replace").lower()
+        _BASE_TEXT[repo] = (text, re.sub(r"\s+", "", text))
+    return _BASE_TEXT[repo]
+
+
+def held_at_base(repo: str, sig: str) -> bool:
+    text, folded = base_text(repo)
+    forms = {sig.lower(), json.dumps(sig)[1:-1].lower(),
+             json.dumps(sig, ensure_ascii=False)[1:-1].lower()}
+    return any(f in text for f in forms) or any(squash(f) in folded for f in forms)
 
 
 _LITERALS: dict[str, list[tuple[str, int, list[str]]]] = {}
@@ -435,7 +445,7 @@ def static_checks(e: dict, lane: Path, repo: str, skill: list[str],
     if len(sig.encode()) < MIN_BYTES or "|" in sig or "\n" in sig:
         why.append("b:short-or-bad-char")
     elif sig not in base_seen:
-        base_seen[sig] = present_at_base(repo, sig) or squash(sig) in base_folded(repo)
+        base_seen[sig] = held_at_base(repo, sig)
     if base_seen.get(sig):
         why.append("b:held-at-base")
     src = e.get("source") or {}

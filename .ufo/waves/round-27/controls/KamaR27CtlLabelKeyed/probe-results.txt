@@ -1,0 +1,16 @@
+[default] ctl-chat                                             POST /v1/chat/completions         -> 200 None
+[default] ctl-completion                                       POST /completion                  -> 200 None
+[default] prompt-empty-array                                   POST /completion                  -> 400 '"prompt" must not be empty'
+[default] prompt-object                                        POST /completion                  -> 400 '"prompt" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.'
+[default] prompt-long                                          POST /completion                  -> 400 'request (120002 tokens) exceeds the available context size (2048 tokens), try increasing it'
+[default] control-missing-id                                   POST /v1/chat/completions/control -> 400 'missing completion id'
+[no-jinja] ctl-chat                                             POST /v1/chat/completions         -> 200 None
+[no-jinja] tools                                                POST /v1/chat/completions         -> 500 'tools param requires --jinja flag'
+[no-jinja] tool-choice                                          POST /v1/chat/completions         -> 500 'tool_choice param requires --jinja flag'
+[embeddings] embedding-empty                                      POST /embedding                   -> 400 '"input" or "content" must be provided'
+[embeddings] ctl-embedding-content                                POST /embedding                   -> 200 None
+[embeddings] embedding-input-empty-array                          POST /embedding                   -> 400 '"input" must not be empty'
+[embeddings] embedding-input-empty-str                            POST /embedding                   -> 200 None
+[embeddings] ctl-embedding-input                                  POST /embedding                   -> 200 None
+[embeddings] oai-embeddings-input                                 POST /v1/embeddings               -> 400 "Pooling type 'none' is not OAI compatible. Please use a different pooling type"
+[embeddings] oai-embeddings-empty                                 POST /v1/embeddings               -> 400 "Pooling type 'none' is not OAI compatible. Please use a different pooling type"
