@@ -1,0 +1,56 @@
+## Round-28 request-field outcomes
+
+| id | field | value | outcome | meaning | source |
+|---|---|---|---|---|---|
+| F28-00 | verbose | 1 | 200, verbose = true | Generic truthiness predicts a declared bool field stores JSON true | S9000 |
+| F28-01 | timings_per_token | 1 | 200, timings_per_token = true | Generic truthiness predicts a declared bool field stores JSON true | S9001 |
+| F28-02 | stream | 1 | 200, stream = true | Generic truthiness predicts a declared bool field stores JSON true | S9002 |
+| F28-03 | include_usage | 1 | 200, include_usage = true | Generic truthiness predicts a declared bool field stores JSON true | S9003 |
+| F28-04 | cache_prompt | 1 | 200, cache_prompt = true | Generic truthiness predicts a declared bool field stores JSON true | S9004 |
+| F28-05 | return_tokens | 1 | 200, return_tokens = true | Generic truthiness predicts a declared bool field stores JSON true | S9005 |
+| F28-06 | return_progress | 1 | 200, return_progress = true | Generic truthiness predicts a declared bool field stores JSON true | S9006 |
+| F28-07 | sse_ping_interval | 2.5 | 200, sse_ping_interval = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9007 |
+| F28-08 | n_predict | 2.5 | 200, n_predict = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9008 |
+| F28-09 | n_indent | 2.5 | 200, n_indent = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9009 |
+| F28-10 | n_keep | 2.5 | 200, n_keep = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9010 |
+| F28-11 | n_discard | 2.5 | 200, n_discard = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9011 |
+| F28-12 | n_cmpl | 2.5 | 200, n_cmpl = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9012 |
+| F28-13 | t_max_prompt_ms | 2.5 | 200, t_max_prompt_ms = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9013 |
+| F28-14 | t_max_predict_ms | 2.5 | 200, t_max_predict_ms = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9014 |
+| F28-15 | top_k | 2.5 | 200, top_k = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9015 |
+| F28-16 | top_p | 1e+39 | 200, top_p = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9016 |
+| F28-17 | min_p | 1e+39 | 200, min_p = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9017 |
+| F28-18 | top_n_sigma | 1e+39 | 200, top_n_sigma = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9018 |
+| F28-19 | xtc_probability | 1e+39 | 200, xtc_probability = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9019 |
+| F28-20 | typical_p | 1e+39 | 200, typical_p = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9020 |
+| F28-21 | temperature | 1e+39 | 200, temperature = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9021 |
+| F28-22 | dynatemp_range | 1e+39 | 200, dynatemp_range = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9022 |
+| F28-23 | dynatemp_exponent | 1e+39 | 200, dynatemp_exponent = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9023 |
+| F28-24 | repeat_last_n | 2.5 | 200, repeat_last_n = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9024 |
+| F28-25 | repeat_penalty | 1e+39 | 200, repeat_penalty = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9025 |
+| F28-26 | frequency_penalty | 1e+39 | 200, frequency_penalty = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9026 |
+| F28-27 | presence_penalty | 1e+39 | 200, presence_penalty = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9027 |
+| F28-28 | dry_multiplier | 1e+39 | 200, dry_multiplier = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9028 |
+| F28-29 | dry_base | 1e+39 | 200, dry_base = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9029 |
+| F28-30 | dry_allowed_length | 2.5 | 200, dry_allowed_length = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9030 |
+| F28-31 | dry_penalty_last_n | 2.5 | 200, dry_penalty_last_n = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9031 |
+| F28-32 | mirostat | 2.5 | 200, mirostat = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9032 |
+| F28-33 | mirostat_tau | 1e+39 | 200, mirostat_tau = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9033 |
+| F28-34 | mirostat_eta | 1e+39 | 200, mirostat_eta = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9034 |
+| F28-35 | adaptive_target | 1e+39 | 200, adaptive_target = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9035 |
+| F28-36 | adaptive_decay | 1e+39 | 200, adaptive_decay = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9036 |
+| F28-37 | seed | 4294967296 | 200, seed = 0 | Generic unsigned 32-bit wrap predicts the seed stores zero | S9037 |
+| F28-38 | n_probs | 2.5 | 200, n_probs = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9038 |
+| F28-39 | min_keep | 2.5 | 200, min_keep = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9039 |
+| F28-40 | backend_sampling | 1 | 200, backend_sampling = true | Generic truthiness predicts a declared bool field stores JSON true | S9040 |
+| F28-41 | post_sampling_probs | 1 | 200, post_sampling_probs = true | Generic truthiness predicts a declared bool field stores JSON true | S9041 |
+| F28-42 | speculative.n_max | 2.5 | 200, speculative.n_max = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9042 |
+| F28-43 | speculative.n_min | 2.5 | 200, speculative.n_min = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9043 |
+| F28-44 | speculative.p_min | 1e+39 | 200, speculative.p_min = 3.4028234663852886e+38 | Generic float32 saturation predicts a declared float field stores float maximum | S9044 |
+| F28-45 | speculative.ngram_size_n | 2.5 | 200, speculative.ngram_size_n = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9045 |
+| F28-46 | speculative.ngram_size_m | 2.5 | 200, speculative.ngram_size_m = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9046 |
+| F28-47 | speculative.ngram_min_hits | 2.5 | 200, speculative.ngram_min_hits = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9047 |
+| F28-48 | grammar_lazy | 1 | 200, grammar_lazy = true | Generic truthiness predicts a declared bool field stores JSON true | S9048 |
+| F28-49 | reasoning_control | 1 | 200, reasoning_control = true | Generic truthiness predicts a declared bool field stores JSON true | S9049 |
+| F28-50 | reasoning_budget_tokens | 2.5 | 200, reasoning_budget_tokens = 2 | Generic truncation toward zero predicts a declared integer field stores two | S9050 |
+| F28-51 | ignore_eos | 1 | 200, ignore_eos = true | Generic truthiness predicts a declared bool field stores JSON true | S9051 |
