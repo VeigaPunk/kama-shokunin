@@ -36,7 +36,10 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-TIME_RE = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?Z")
+# Round 29 (mined mistake): round-28 A1 text "Written 2026-10-23 ~08:45Z" (75b78bb4, committed
+# 08:38:16Z) used a space/tilde form this regex missed, so the tool passed a false time. The date
+# may now be followed by "T", " " or " ~" (approximate) before HH:MM[:SS]Z.
+TIME_RE = re.compile(r"\d{4}-\d{2}-\d{2}(?:T| ~| )\d{2}:\d{2}(?::\d{2})?Z")
 DEFAULT_SCRATCH = "/fast/scratch/hyaku/kama-r26/ExecPreregTimeCheck"
 DEFAULT_MAX_FUTURE = 86400  # seconds; a guessed 'now' is minutes, not days, ahead
 
@@ -66,8 +69,8 @@ def run_git(repo: str, args: list[str]) -> tuple[int, str, str]:
 
 
 def parse_iso(text: str) -> datetime | None:
-    """Parse YYYY-MM-DDTHH:MM[:SS]Z strictly; None if out of range/invalid."""
-    m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?Z", text)
+    """Parse YYYY-MM-DD(T| | ~)HH:MM[:SS]Z strictly; None if out of range/invalid."""
+    m = re.fullmatch(r"(\d{4})-(\d{2})-(\d{2})(?:T| ~| )(\d{2}):(\d{2})(?::(\d{2}))?Z", text)
     if not m:
         return None
     y, mo, d, h, mi, s = (int(g) if g else 0 for g in m.groups())
@@ -199,6 +202,10 @@ def selftest(scratch: str) -> int:
          '{"a": "2026-10-23T03:19:43Z", "b": "2026-10-23T03:00:00Z"}\n',
          EXIT_CLEAN)
     case("clean: no timestamps at all", '{"note": "no times here"}\n', EXIT_CLEAN)
+    case("flag: space-tilde approximate time after commit (round-28 A1 form)",
+         '{"note": "Written 2026-10-23 ~03:45Z by the L1"}\n', EXIT_FLAGGED)
+    case("clean: space-separated time before commit",
+         '{"note": "frozen 2026-10-23 03:10Z"}\n', EXIT_CLEAN)
     case("clean: malformed Z-suffix lookalike is skipped",
          '{"x": "2026-13-40T03:45Z"}\n', EXIT_CLEAN)
 

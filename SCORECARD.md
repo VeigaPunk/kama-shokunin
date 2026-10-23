@@ -1439,3 +1439,26 @@ adjacency 7, depth 7. Capabilities: none claimed.
 Work calibration or adjacency (7). Candidate: the other endpoints'
 request-field handling (`/v1/chat/completions` parameters mapped onto the
 same schema) and the json_schema → grammar transform, with the A1 rule kept.
+
+## Round 29 — self-assessment corrections
+
+Appended by the kama L1, round 29, after the frozen counter (`.ufo/waves/round-29/count-c1.py`,
+sha256 fe11d599…7383, frozen at `827d1365`) and its control receipts (`35b90184`) landed. Each row
+names one base statement (SCORECARD.md/SHONEN.md at `2aa46e24`) that was false at the commit that
+wrote its line (W, from `git blame --line-porcelain`), and states what the check observed there.
+The original lines stay as written. Causes were read by the L1 from the lines and W; the wave-1
+Confirm seats check each one independently (`.ufo/waves/round-29/w1/out/ConfirmM01..11/`).
+
+| id | line at base | class | statement token | W | cause | observed |
+|---|---|---|---|---|---|---|
+| SA29:SCORECARD.md:Q:f4c42debcc:0 | SCORECARD.md:20 | Q | `snapshot=20261014T124232Z prev=20260929T043044Z rows=3 model_ok=0 drift=3 transitions=16 exit=2` | ea72c3ea | quoted as live re-census output; no committed file at W holds this line | q:no-artifact |
+| SA29:SCORECARD.md:Q:f4c42debcc:2 | SCORECARD.md:20 | Q | `RESULT pass=24 fail=0` | ea72c3ea | test-snapshot result quoted; at W no committed file held it (a later commit does) | q:no-artifact |
+| SA29:SCORECARD.md:P:980355388a:0 | SCORECARD.md:192 | P | `MISSION.md:29` | 1e41928a | names the fleet file ../MISSION.md (line 29 is the kama row); no lane path MISSION.md | p:absent |
+| SA29:SCORECARD.md:Q:4f8083e30a:0 | SCORECARD.md:211 | Q | `rows=50 resolved=48 terminal=2 unresolved=0` | 40660352 | quoted audit result; no committed file at W holds this text | q:no-artifact |
+| SA29:SCORECARD.md:P:312b3e69b1:0 | SCORECARD.md:740 | P | `round-17-verifier-spotcheck.md:217–221` | c6dc46fa | bare file name; the lane file is corpus/lessons/round-17-verifier-spotcheck.md | p:absent |
+| SA29:SCORECARD.md:Q:0ccd533544:0 | SCORECARD.md:823 | Q | `required=3 found=0 verified=0 missing=3` | 7229fa95 | quoted citation-provenance before-run; no committed file at W holds this text | q:no-artifact |
+| SA29:SCORECARD.md:Q:4c5d902830:0 | SCORECARD.md:824 | Q | `required=3 found=3 verified=3 missing=0 mismatch=0` | 7229fa95 | quoted citation-provenance after-run; no committed file at W holds this text | q:no-artifact |
+| SA29:SCORECARD.md:Q:f1021c03db:0 | SCORECARD.md:833 | Q | `baseline=VALID members=3 rejected=0/3` | 7229fa95 | quoted gate output; no committed file at W holds this text | q:no-artifact |
+| SA29:SCORECARD.md:Q:a7e98b1030:0 | SCORECARD.md:834 | Q | `baseline=VALID rejected=3/3` | 7229fa95 | quoted gate output; no committed file at W holds this text | q:no-artifact |
+| SA29:SCORECARD.md:P:1c6c1f3e4c:0 | SCORECARD.md:1349 | P | `.ufo/reports/round-25/kama.md:120-129` | 7f84cd0e | a fleet-repo report path written as if lane-relative | p:absent |
+| SA29:SCORECARD.md:P:17a7db7c81:0 | SCORECARD.md:1375 | P | `count-c1.py:384` | d183ec57 | bare file name; the lane file is .ufo/waves/round-26/count-c1.py (line 384 exists there) | p:absent |
