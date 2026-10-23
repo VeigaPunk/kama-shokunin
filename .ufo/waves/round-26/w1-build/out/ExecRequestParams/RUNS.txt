@@ -1,0 +1,63 @@
+Round-26 request-parameter probes — ExecRequestParams
+Date: 2026-10-23
+
+Fixture identity
+- `sha256sum ~/.local/bin/llama-server ~/.cache/kama-shokunin/models/stories260K.gguf` exited 0:
+  - server: `b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804`
+  - model: `270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d`
+- Ports 47660–47663 were checked with `ss -ltn 'sport = :47660 or sport = :47661 or sport = :47662 or sport = :47663'`; exit 0, header only, no listeners.
+
+Pinned source retrieval
+- Fetched fresh from commit `704366d76f8748cf9ad3df62a464bfcc8d1ae6ad`:
+  - `curl --fail --location --silent --show-error 'https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-common.cpp' -o /fast/scratch/hyaku/kama-r26/ExecRequestParams/server-common.cpp`
+  - same command for `.../tools/server/server-context.cpp` to `server-context.cpp`.
+  - chained fetch and `sha256sum` exited 0. Fresh and pinned-snapshot hashes matched: server-common `b4f4aae7eed919f914d132ae64416a0e7cfb23442161af6f63ba8d902954d442`; server-context `dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329`.
+- Fetched `server-task.cpp` from the same raw URL pattern and commit to `/fast/scratch/hyaku/kama-r26/ExecRequestParams/server-task.cpp`; `curl ... && sha256sum ...` exited 0. Fresh and snapshot hashes matched: `4c3f413b9b54d4cc0e7b5998e6979a2389f5ff716e20cb1510ca7745fa233495`.
+- The exact GitHub source URLs with line anchors and the source quotes are in `../advice/ExecRequestParams.md`.
+
+Base novelty checks (final signatures include literal backslashes before the quotes)
+- `git grep -F -q -e '"prompt" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.' 1560e4d83f42b04f40336357de6f9637eafa0f4b -- SKILL.md corpus` -> exit 1 (absent).
+- `git grep -F -q -e '"prompt" must not be empty' 1560e4d83f42b04f40336357de6f9637eafa0f4b -- SKILL.md corpus` -> exit 1 (absent).
+
+Informational output checks
+- `/home/vgpnk/.local/bin/llama-server --help` exited 0; captured 60,469 bytes, sha256 `bcb795d4736d9bf3209492e0a10058adc6015ac5f8eeadb9abe9182bb9722f6b`; neither final signature occurred. Exact capture: `/fast/scratch/hyaku/kama-r26/ExecRequestParams/help.out`.
+- `/home/vgpnk/.local/bin/llama-server --version` exited 0; captured 90 bytes, sha256 `741785a8bef8e1d72733be64f62ee12584d39779039812d8685e9abe872c07b2`; neither final signature occurred. Exact capture: `/fast/scratch/hyaku/kama-r26/ExecRequestParams/version.out`.
+
+Probe launches
+Each server argv was run via `subprocess.Popen` with stdout and stderr merged to the named log. Before each launch the chosen port had no `ss -ltn` listener. Readiness polling used `GET /health`; each launch became healthy. After requests, the launch process group received SIGTERM; the wrapper exited 1 after that explicit stop (not a server fault). Each port was closed after teardown.
+
+1. Port 47660, log `probe1-server.log`, process exit 1 after explicit stop:
+`/usr/bin/timeout --signal=TERM --kill-after=5s 60s /home/vgpnk/.local/bin/llama-server -m /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47660 -t 2`
+- `GET /health` -> 200; healthy `POST /completion` body `{"prompt":"Once upon a time","n_predict":1}` -> 200.
+- `POST /completion` body `{"prompt":{"not_prompt":true}}` -> 400; same body to `POST /v1/completions` -> 400.
+- `POST /completion` body `{"prompt":"hello","n_predict":1,"samplers":["not-a-real-sampler"]}` -> 200; same bad sampler through `/v1/completions` with `max_tokens:1` -> 200.
+- `POST /v1/chat/completions` with `messages:[{"role":"user","content":"hello"}]`, `grammar:"root ::= \"hello\""`, and `json_schema:{"type":"object"}` -> 500.
+- `POST /completion` with prompt `hello`, grammar `root ::= "hello"`, and `json_schema:{"type":"object"}` -> 200.
+- `POST /completion` body `{"prompt":"hello","n_probs":"bad"}` -> 400.
+- `POST /completion` body `{"prompt":"hello","logit_bias":"bad"}` -> 200.
+- `POST /tokenize` body `{"content":{"bad":true}}` -> 400; `POST /detokenize` body `{"tokens":"bad"}` -> 400.
+- Every request body and full response body/status is in `probe1.json`; full server output is in `probe1-server.log`.
+
+2. Port 47661, log `probe2-server.log`, process exit 1 after explicit stop:
+`/usr/bin/timeout --signal=TERM --kill-after=5s 45s /home/vgpnk/.local/bin/llama-server -m /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47661 -t 2`
+- Healthy `GET /health` and `POST /completion` body `{"prompt":"Once upon a time","n_predict":1}` -> 200.
+- Prompt-type fault body `{"prompt":{"not_prompt":true}}`: `POST /completion` -> 400; `POST /v1/completions` -> 400.
+- Empty-prompt body `{"prompt":[]}`: `POST /completion` -> 400; `POST /v1/completions` -> 400.
+- Complete request and response data is in `probe2.json`; server log is `probe2-server.log`.
+
+3. Port 47662, log `probe3-server.log`, process exit 1 after explicit stop:
+`/usr/bin/timeout --signal=TERM --kill-after=5s 45s /home/vgpnk/.local/bin/llama-server -m /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47662 -t 2`
+- Same healthy requests and same four malformed requests as run 2; healthy status 200, both prompt-type requests 400, both empty-prompt requests 400.
+- Complete request and response data is in `probe3.json`; server log is `probe3-server.log`.
+
+Baseline and cleanup observations
+- For runs 1–3, both candidate strings were absent from the recorded healthy `/health` and one-token `/completion` bodies and from each launch log. Both strings were also absent from the separately captured `--help` and `--version` output above.
+- After launches, `ss -ltn 'sport = :47660 or sport = :47661 or sport = :47662 or sport = :47663'` exited 0 and printed only the header.
+- A `pgrep -af '/home/vgpnk/.local/bin/llama-server|llama-server'` observation during the probe period showed processes on port 47654 (PIDs 3778099/3778102), not one of this seat's ports; they were not touched. The final `pgrep -af 'count-c1.py|llama-server'` produced no output, exit 1.
+
+Frozen counter in the scratch `git archive a23c0e042114016a909eb15173aa6df74b5b7eb0` extract
+- Archived counter sha256 matched preregistration: `6501737c749926be9d6b37761175d76f89876976c46bd5951fc1a3520c796588`.
+- First scratch attempt used unescaped quote characters in the candidate strings. Command exited 0 and printed `registered 2 counted 0 target 12 met False not-counted ['R26RP01:d_in_source', 'R26RP02:d_in_source']`; saved as `counter-first-output.txt`. This falsified the first string encoding; the final signatures include the literal source/HTTP JSON backslashes.
+- Corrected command (lock held; 8 GiB address-space cap, 4096-process cap, 900-second timeout) exited 0:
+`flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 prlimit --as=8589934592:8589934592 --nproc=4096:4096 python3 .ufo/waves/round-26/count-c1.py --out /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-26/w1-build/out/ExecRequestParams/counter-receipt.json`
+- Exact final stdout: `registered 2 counted 2 target 12 met False not-counted []` (`counter-output.txt`). Receipt `counter-receipt.json` has all checks true for both scratch rows; target remains 12, so this two-row scoped result does not meet the global target.

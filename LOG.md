@@ -1688,9 +1688,10 @@ fixture, verbatim in a pinned 704366d source line, cited by a new SOURCES row
 run and from `--help`/`--version`. Freeze, controls and amendments:
 `.ufo/waves/round-26/preregistration.json`, `.ufo/waves/round-26/controls/`.
 Pre-freeze control wave: KamaR26CtlAllFalse met the A0 counter with help text
-(12/14); A1 closed it before data (0/14). Wave 1 (36 seats) found 58
-candidates; 17 registered, the rest rejected or held back with reasons in
-`corpus/lessons/round-26.md` §Gate.
+(12/14); A1 closed it before data (0/14). Wave 1 (36 seats): executors filed
+57 candidate entries (`w1-build/out/*/candidates.json`), and the fault-survey
+scout listed 8 more, 3 of them not found by an executor; 17 registered, the
+rest rejected or held back with reasons in `corpus/lessons/round-26.md` §Gate.
 
 **Motivating evidence.** `round-25-verifier-spotcheck.md` routed defect 8
 (work a lowest axis); the anti-loop note (leave calibration and the
