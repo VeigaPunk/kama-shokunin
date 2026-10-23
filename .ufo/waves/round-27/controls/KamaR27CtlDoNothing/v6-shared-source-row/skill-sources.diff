@@ -1,0 +1,24 @@
+diff --git i/SKILL.md w/SKILL.md
+index 1869064..8f58a10 100644
+--- i/SKILL.md
++++ w/SKILL.md
+@@ -1131,3 +1131,10 @@ server launched with `--embeddings` crashed with SIGSEGV while serving a
+ `POST /completion` (`.ufo/waves/round-26/w1-build/out/ExecEmbeddingsInput/RUNS.txt`).
+ It is not registered: the crash needs a request to a healthy server, which only
+ the http channel sends, and that channel needs an HTTP status.
++
++## Round-27 request-validation signatures
++
++| id | signature | trigger | next action | source |
++|---|---|---|---|---|
++| E27-90 | 'messages' is required | POST /v1/chat/completions without messages | add a messages array to the chat request body | S136 |
++| E27-91 | "prompt" must not be empty | POST /completion with an empty prompt array | send a non-empty prompt string in the request body | S136 |
+diff --git i/corpus/SOURCES.md w/corpus/SOURCES.md
+index 5a3bd2a..e93591a 100644
+--- i/corpus/SOURCES.md
++++ w/corpus/SOURCES.md
+@@ -363,3 +363,4 @@ Identified/screened/included2 correction candidates, excluded0; Gate quotes
+ and used-by old→new changes for S075–S080 are in `lessons/round-22.md`.
+ Status/recheck unchanged. Final additions14, superseding the earlier12-row
+ population. No source-row growth is called new knowledge.
++| S136 | llama.cpp tools/server/server-common.cpp @ 704366d76 — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-common.cpp | code | A | chat-completions messages guard and completion prompt guard at this commit; shared row probe | line 1386 and line 1129; raw sha256 b4f4aae7eed919f914d132ae64416a0e7cfb23442161af6f63ba8d902954d442 | two live request-validation messages from one file; triggers POST /v1/chat/completions without messages and POST /completion with an empty prompt. | mined | 2026-10-23 | on-release | SKILL.md, registry/error-signatures-r27.json |

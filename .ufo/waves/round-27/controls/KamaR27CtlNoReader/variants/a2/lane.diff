@@ -1,0 +1,56 @@
+diff --git i/SKILL.md w/SKILL.md
+index 1869064..614e4a1 100644
+--- i/SKILL.md
++++ w/SKILL.md
+@@ -1131,3 +1131,23 @@ server launched with `--embeddings` crashed with SIGSEGV while serving a
+ `POST /completion` (`.ufo/waves/round-26/w1-build/out/ExecEmbeddingsInput/RUNS.txt`).
+ It is not registered: the crash needs a request to a healthy server, which only
+ the http channel sends, and that channel needs an HTTP status.
++
++## Round-27 request-validation signatures
++
++| id | signature | trigger | meaning | next action | source |
++|---|---|---|---|---|---|
++| E27-01 | `the 'top_p' field must be a number between zero and one` | POST /v1/chat/completions with a malformed top_p field returns this error | the handler rejects the request when the named field does not match the expected shape and the error names the offending field | Check the top_p field in the request body against the documented key and resend the request with the value the handler expects | S901 |
++| E27-02 | `the request body is missing the required 'stop' field` | POST /v1/chat/completions with a malformed stop field returns this error | the handler rejects the request when the named field does not match the expected shape and the error names the offending field | Check the stop field in the request body against the documented key and resend the request with the value the handler expects | S902 |
++| E27-03 | `chat completions require a non-empty 'messages' array value` | POST /v1/chat/completions with a malformed messages field returns this error | the handler rejects the request when the named field does not match the expected shape and the error names the offending field | Check the messages field in the request body against the documented key and resend the request with the value the handler expects | S903 |
++| E27-04 | `the 'seed' parameter must be a signed 32-bit integer value` | POST /v1/chat/completions with a malformed seed field returns this error | the handler rejects the request when the named field does not match the expected shape and the error names the offending field | Check the seed field in the request body against the documented key and resend the request with the value the handler expects | S904 |
++| E27-05 | `the 'n_probs' parameter must be a positive integer count` | POST /v1/chat/completions with a malformed n_probs field returns this error | the handler rejects the request when the named field does not match the expected shape and the error names the offending field | Check the n_probs field in the request body against the documented key and resend the request with the value the handler expects | S905 |
++| E27-06 | `streaming responses require the 'stream_options' object field` | POST /v1/chat/completions with a malformed stream_options field returns this error | the handler rejects the request when the named field does not match the expected shape and the error names the offending field | Check the stream_options field in the request body against the documented key and resend the request with the value the handler expects | S906 |
++| E27-07 | `the 'logit_bias' map must contain integer token id keys` | POST /v1/chat/completions with a malformed logit_bias field returns this error | the handler rejects the request when the named field does not match the expected shape and the error names the offending field | Check the logit_bias field in the request body against the documented key and resend the request with the value the handler expects | S907 |
++| E27-08 | `the 'grammar' field must be a non-empty string expression` | POST /v1/chat/completions with a malformed grammar field returns this error | the handler rejects the request when the named field does not match the expected shape and the error names the offending field | Check the grammar field in the request body against the documented key and resend the request with the value the handler expects | S908 |
++| E27-09 | `the 'cache_prompt' field must be a boolean true or false` | POST /v1/chat/completions with a malformed cache_prompt field returns this error | the handler rejects the request when the named field does not match the expected shape and the error names the offending field | Check the cache_prompt field in the request body against the documented key and resend the request with the value the handler expects | S909 |
++| E27-10 | `the 'frequency_penalty' field must be a number in range` | POST /v1/chat/completions with a malformed frequency_penalty field returns this error | the handler rejects the request when the named field does not match the expected shape and the error names the offending field | Check the frequency_penalty field in the request body against the documented key and resend the request with the value the handler expects | S910 |
++| E27-11 | `the 'presence_penalty' field must be a number in range` | POST /v1/chat/completions with a malformed presence_penalty field returns this error | the handler rejects the request when the named field does not match the expected shape and the error names the offending field | Check the presence_penalty field in the request body against the documented key and resend the request with the value the handler expects | S911 |
++| E27-12 | `the 'mirostat_tau' field must be a number greater than zero` | POST /v1/chat/completions with a malformed mirostat_tau field returns this error | the handler rejects the request when the named field does not match the expected shape and the error names the offending field | Check the mirostat_tau field in the request body against the documented key and resend the request with the value the handler expects | S912 |
++| E27-13 | `the 'ignore_eos' field must be a boolean true or false` | POST /v1/chat/completions with a malformed ignore_eos field returns this error | the handler rejects the request when the named field does not match the expected shape and the error names the offending field | Check the ignore_eos field in the request body against the documented key and resend the request with the value the handler expects | S913 |
++| E27-14 | `the 'max_probs' value must not exceed the server limit` | POST /v1/chat/completions with a malformed max_probs field returns this error | the handler rejects the request when the named field does not match the expected shape and the error names the offending field | Check the max_probs field in the request body against the documented key and resend the request with the value the handler expects | S914 |
++| E27-15 | `the 'samplers' field must be a list of sampler names` | POST /v1/chat/completions with a malformed samplers field returns this error | the handler rejects the request when the named field does not match the expected shape and the error names the offending field | Check the samplers field in the request body against the documented key and resend the request with the value the handler expects | S915 |
+diff --git i/corpus/SOURCES.md w/corpus/SOURCES.md
+index 5a3bd2a..0fc073d 100644
+--- i/corpus/SOURCES.md
++++ w/corpus/SOURCES.md
+@@ -363,3 +363,23 @@ Identified/screened/included2 correction candidates, excluded0; Gate quotes
+ and used-by old→new changes for S075–S080 are in `lessons/round-22.md`.
+ Status/recheck unchanged. Final additions14, superseding the earlier12-row
+ population. No source-row growth is called new knowledge.
++
++## Round-27 control rows (no-reader seat, not claim data)
++
++| id | source | kind |
++|---|---|---|
++| S901 | server-fabricated.cpp#L4 704366d | control row, round-27 no-reader probe (not claim data) |
++| S902 | server-fabricated.cpp#L5 704366d | control row, round-27 no-reader probe (not claim data) |
++| S903 | server-fabricated.cpp#L6 704366d | control row, round-27 no-reader probe (not claim data) |
++| S904 | server-fabricated.cpp#L7 704366d | control row, round-27 no-reader probe (not claim data) |
++| S905 | server-fabricated.cpp#L8 704366d | control row, round-27 no-reader probe (not claim data) |
++| S906 | server-fabricated.cpp#L9 704366d | control row, round-27 no-reader probe (not claim data) |
++| S907 | server-fabricated.cpp#L10 704366d | control row, round-27 no-reader probe (not claim data) |
++| S908 | server-fabricated.cpp#L11 704366d | control row, round-27 no-reader probe (not claim data) |
++| S909 | server-fabricated.cpp#L12 704366d | control row, round-27 no-reader probe (not claim data) |
++| S910 | server-fabricated.cpp#L13 704366d | control row, round-27 no-reader probe (not claim data) |
++| S911 | server-fabricated.cpp#L14 704366d | control row, round-27 no-reader probe (not claim data) |
++| S912 | server-fabricated.cpp#L15 704366d | control row, round-27 no-reader probe (not claim data) |
++| S913 | server-fabricated.cpp#L16 704366d | control row, round-27 no-reader probe (not claim data) |
++| S914 | server-fabricated.cpp#L17 704366d | control row, round-27 no-reader probe (not claim data) |
++| S915 | server-fabricated.cpp#L18 704366d | control row, round-27 no-reader probe (not claim data) |

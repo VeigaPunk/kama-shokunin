@@ -1,0 +1,55 @@
+--- /fast/scratch/hyaku/kama-r27/KamaR27CtlNoReader/.ufo/waves/round-27/count-c1.py	2026-10-23 01:57:20.283545280 -0300
++++ /fast/scratch/hyaku/kama-r27/KamaR27CtlNoReader/.ufo/waves/round-27/count-c1.MUTANT-fake-server.py	2026-10-23 02:09:25.368957705 -0300
+@@ -1,5 +1,11 @@
+ #!/usr/bin/env python3
+-"""Round-27 C1 counter (depth): live request-validation error signatures in SKILL.md.
++"""MUTANT COPY of the round-27 C1 counter (control probe, NOT the frozen counter).
++
++Diffs vs the frozen counter: SERVER -> a fake llama-server script, PINS rewritten to
++the fake server and to the fabricated snapshot file, PORTS moved to 47700-47719.
++
++Original docstring follows.
++Round-27 C1 counter (depth): live request-validation error signatures in SKILL.md.
+ 
+ Frozen predicate (the same sentence as preregistration.json C1.predicate and the
+ label `counted` in the receipt):
+@@ -68,10 +74,9 @@
+ TARGET = 15
+ MIN_BYTES = 20
+ OPT = Path.home() / ".local/opt/llama-b11755"
+-SERVER = OPT / "llama-server"
++SERVER = Path("/tmp/kama-r27-noreader/fake-llama-server.py")  # MUTANT: fake llama-server
+ PINS = {
+-    SERVER: "b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804",
+-    OPT / "libllama-server-impl.so": "e404b91a81c9ab65756b6a57b97b42115a5f429c5060c4b7f0d717ca595b59ed",
++    SERVER: "a83ad12dbd30356acc00b65e6f3c5ec62780dc63b01ca26b2db1814fdc1b0315",  # MUTANT: pin on the fake server
+ }
+ MODEL = Path.home() / ".cache/kama-shokunin/models/stories260K.gguf"
+ MODEL_SHA256 = "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+@@ -87,7 +92,7 @@
+     "llama-grammar.cpp": "97d76071a2ed1b0c4ce827f002f554b12a25593776adb525dde33ac4cb1eb1e9",
+     "llama-vocab.cpp": "75b8bcb686b9df653d9f3d69d8030da7da3db33a58bee127382cfc7ac05453a7",
+     "sampling.cpp": "e88c45dfdc58ef2e86b5519aac68c83ced333952ade7d4bd8fca5f1ce5bbea02",
+-    "server-common.cpp": "b4f4aae7eed919f914d132ae64416a0e7cfb23442161af6f63ba8d902954d442",
++    "server-common.cpp": "1129596ce68edb8bf2f68252f88c50cabc0db6dcb125d311418373f53016b330",  # MUTANT: pin on the fabricated snapshot,
+     "server-context.cpp": "dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329",
+     "server-http.cpp": "24ede172e526763567dbe929da5b16250693d7a2e44334ef0126649b6d3f5fdb",
+     "server-models.cpp": "9c5a6f2cc7997a3a409482c53119a2462e8c409ddf001cc568a9a8740e708b4a",
+@@ -110,7 +115,7 @@
+     "embeddings-pooling-none": ["--embeddings", "--pooling", "none"],
+ }
+ HOST = "127.0.0.1"
+-PORTS = range(47600, 47620)
++PORTS = range(47700, 47720)  # MUTANT: seat port range
+ READY_WAIT = 60.0
+ REQUEST_TIMEOUT = 30.0
+ BASELINE_REQUESTS = [
+@@ -238,7 +243,7 @@
+     for p in PORTS:
+         if port_free(p):
+             return p
+-    raise CannotEvaluate("no free port in 47600-47619")
++    raise CannotEvaluate("no free port in 47700-47719")  # MUTANT
+ 
+ 
+ def http(port: int, method: str, path: str, body) -> tuple[int, bytes]:

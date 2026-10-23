@@ -1,0 +1,899 @@
+[
+ {
+  "id": "E27-00",
+  "mode": "different-error-shared-words",
+  "source_file": "chat.cpp",
+  "source_line": 857,
+  "source_text": "throw std::runtime_error(\"Unknown reasoning format\");",
+  "full_literal": true,
+  "cited_branch_claim": "The enum-to-name formatter received an invalid internal reasoning enum; request instead rejects a string at chat.cpp L874.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1,
+    "reasoning_format": "all-false-unknown"
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-01",
+  "mode": "different-error-shared-words",
+  "source_file": "sampling.cpp",
+  "source_line": 279,
+  "source_text": "throw std::runtime_error(\"failed to parse grammar\");",
+  "full_literal": true,
+  "cited_branch_claim": "Ordinary GBNF initialization returned no grammar; request instead selects unavailable llguidance at sampling.cpp L221.",
+  "request": {
+   "method": "POST",
+   "path": "/completion",
+   "body": {
+    "prompt": "Hi",
+    "n_predict": 1,
+    "grammar": "%llguidance\nstart: \"a\""
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-02",
+  "mode": "different-error-shared-words",
+  "source_file": "json-schema-to-grammar.cpp",
+  "source_line": 492,
+  "source_text": "throw invalid_pattern(\"unbalanced parentheses\");",
+  "full_literal": true,
+  "cited_branch_claim": "A closing parenthesis underflowed parser depth; request instead leaves an opening parenthesis unmatched at L627.",
+  "request": {
+   "method": "POST",
+   "path": "/completion",
+   "body": {
+    "prompt": "Hi",
+    "n_predict": 1,
+    "json_schema": {
+     "type": "string",
+     "pattern": "^($"
+    }
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-03",
+  "mode": "different-error-shared-words",
+  "source_file": "chat.cpp",
+  "source_line": 347,
+  "source_text": "throw std::invalid_argument(\"Expected 'messages' to be an array, got \" + messages.dump());",
+  "full_literal": false,
+  "cited_branch_claim": "The lower-level message parser rejected its input; request instead stops at the earlier server-common.cpp L1390 guard.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": {},
+    "max_tokens": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-04",
+  "mode": "different-error-shared-words",
+  "source_file": "server-common.cpp",
+  "source_line": 1343,
+  "source_text": "throw std::runtime_error(\"tools param requires --jinja flag\");",
+  "full_literal": false,
+  "cited_branch_claim": "A nonempty tools array requires Jinja; request has no tools and instead fails tool_choice at L1346.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1,
+    "tool_choice": "required"
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-05",
+  "mode": "different-error-shared-words",
+  "source_file": "arg.cpp",
+  "source_line": 2101,
+  "source_text": "throw std::runtime_error(\"error: repeat-penalty must be finite and greater than 0\\n\");",
+  "full_literal": false,
+  "cited_branch_claim": "The CLI repeat-penalty argument is invalid; request changes no argv and instead fails sampling.cpp L197.",
+  "request": {
+   "method": "POST",
+   "path": "/completion",
+   "body": {
+    "prompt": "Hi",
+    "n_predict": 1,
+    "repeat_penalty": 0
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-06",
+  "mode": "different-error-shared-words",
+  "source_file": "chat.cpp",
+  "source_line": 607,
+  "source_text": "throw std::invalid_argument(\"Invalid continue_final_message: expected a boolean, \\\"content\\\" or \\\"reasoning_content\\\"\");",
+  "full_literal": false,
+  "cited_branch_claim": "The continuation value has invalid type or spelling; request sends a valid boolean and instead violates mutual exclusion at server-common.cpp L1440.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1,
+    "continue_final_message": true,
+    "add_generation_prompt": true
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-07",
+  "mode": "different-error-shared-words",
+  "source_file": "chat.cpp",
+  "source_line": 1037,
+  "source_text": "throw std::runtime_error(\"Failed to parse tool call arguments as JSON: \" + std::string(e.what()));",
+  "full_literal": false,
+  "cited_branch_claim": "Returned tool-call arguments are invalid JSON; request instead rejects the tools container at L562 and wraps it at L585.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1,
+    "tools": {
+     "not": "an-array"
+    }
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-08",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1100,
+  "source_text": "throw std::runtime_error(\"Multimodal data provided, but model does not support multimodal requests.\");",
+  "full_literal": true,
+  "cited_branch_claim": "The model cannot process supplied multimodal data; request supplies plain text only.",
+  "request": {
+   "method": "POST",
+   "path": "/completion",
+   "body": {
+    "prompt": "Hi",
+    "n_predict": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-09",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1129,
+  "source_text": "throw std::invalid_argument(\"\\\"prompt\\\" must not be empty\");",
+  "full_literal": true,
+  "cited_branch_claim": "The prompt batch is empty; request supplies a nonempty string prompt.",
+  "request": {
+   "method": "POST",
+   "path": "/completion",
+   "body": {
+    "prompt": "Hi",
+    "n_predict": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-10",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1155,
+  "source_text": "throw std::runtime_error(\"Only no echo is supported\");",
+  "full_literal": true,
+  "cited_branch_claim": "OAI completions refuses echo mode; request explicitly disables echo.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/completions",
+   "body": {
+    "prompt": "Hi",
+    "max_tokens": 1,
+    "echo": false
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-11",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1210,
+  "source_text": "throw std::invalid_argument(\"file:// URLs are not allowed unless --media-path is specified\");",
+  "full_literal": true,
+  "cited_branch_claim": "Media file URLs require a configured media path; request contains no media URL.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-12",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1230,
+  "source_text": "throw std::invalid_argument(\"Invalid uri-encoded base64 value\");",
+  "full_literal": true,
+  "cited_branch_claim": "A data URI lacks its separator; request has a separator and instead hits the earlier image capability guard.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": [
+       {
+        "type": "image_url",
+        "image_url": {
+         "url": "data:image/png;base64,"
+        }
+       }
+      ]
+     }
+    ],
+    "max_tokens": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-13",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1236,
+  "source_text": "throw std::invalid_argument(\"uri must be base64 encoded\");",
+  "full_literal": true,
+  "cited_branch_claim": "A media data URI is not base64 encoded; request uses the text tokenization endpoint.",
+  "request": {
+   "method": "POST",
+   "path": "/tokenize",
+   "body": {
+    "content": "Hi"
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-14",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1259,
+  "source_text": "throw std::runtime_error(\"image input is not supported - hint: if this is unexpected, you may need to provide the mmproj\");",
+  "full_literal": true,
+  "cited_branch_claim": "Image input capability is unavailable; request supplies video rather than image input.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": [
+       {
+        "type": "input_video",
+        "input_video": {
+         "data": ""
+        }
+       }
+      ]
+     }
+    ],
+    "max_tokens": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-15",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1287,
+  "source_text": "throw std::runtime_error(\"video input is not supported - hint: if this is unexpected, you may need to provide the mmproj\");",
+  "full_literal": true,
+  "cited_branch_claim": "Video input capability is unavailable; request supplies an image rather than video input.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": [
+       {
+        "type": "image_url",
+        "image_url": {
+         "url": ""
+        }
+       }
+      ]
+     }
+    ],
+    "max_tokens": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-16",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1302,
+  "source_text": "throw std::invalid_argument(\"unsupported content[].type\");",
+  "full_literal": true,
+  "cited_branch_claim": "A content part has an unsupported type; request supplies the supported text type.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": [
+       {
+        "type": "text",
+        "text": "Hi"
+       }
+      ]
+     }
+    ],
+    "max_tokens": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-17",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1309,
+  "source_text": "throw std::invalid_argument(\"\\\"content\\\" must be an array\");",
+  "full_literal": true,
+  "cited_branch_claim": "Embedding OAI content must be an array; request instead fails the earlier chat content shape guard at L1411.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": {}
+     }
+    ],
+    "max_tokens": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-18",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1343,
+  "source_text": "throw std::runtime_error(\"tools param requires --jinja flag\");",
+  "full_literal": true,
+  "cited_branch_claim": "Legacy rendering refuses a nonempty tools array; request has an empty tools list and default Jinja.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1,
+    "tools": []
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-19",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1346,
+  "source_text": "throw std::runtime_error(\"tool_choice param requires --jinja flag\");",
+  "full_literal": true,
+  "cited_branch_claim": "Legacy rendering refuses custom tool choice; request uses the default Jinja profile.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1,
+    "tool_choice": "none"
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-20",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1360,
+  "source_text": "throw std::runtime_error(\"Cannot use both json_schema and grammar\");",
+  "full_literal": true,
+  "cited_branch_claim": "Chat requests cannot set schema and grammar together; request sets neither and uses native completion.",
+  "request": {
+   "method": "POST",
+   "path": "/completion",
+   "body": {
+    "prompt": "Hi",
+    "n_predict": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-21",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1375,
+  "source_text": "throw std::invalid_argument(\"response_format type must be one of \\\"text\\\" or \\\"json_object\\\", but got: \" + response_type);",
+  "full_literal": true,
+  "cited_branch_claim": "The response format type is unsupported; request selects the supported text format.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1,
+    "response_format": {
+     "type": "text"
+    }
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-22",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1386,
+  "source_text": "throw std::invalid_argument(\"'messages' is required\");",
+  "full_literal": true,
+  "cited_branch_claim": "Chat requires messages; request uses the native prompt completion endpoint instead.",
+  "request": {
+   "method": "POST",
+   "path": "/completion",
+   "body": {
+    "prompt": "Hi",
+    "n_predict": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-23",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1390,
+  "source_text": "throw std::invalid_argument(\"Expected 'messages' to be an array\");",
+  "full_literal": true,
+  "cited_branch_claim": "Chat messages is not an array; request supplies a valid messages array.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-24",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1395,
+  "source_text": "throw std::invalid_argument(\"All non-assistant messages must contain 'content'\");",
+  "full_literal": true,
+  "cited_branch_claim": "A nonassistant message has no content; request instead contains an assistant message and hits L1399.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "assistant"
+     }
+    ],
+    "max_tokens": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-25",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1399,
+  "source_text": "throw std::invalid_argument(\"Assistant message must contain either 'content' or 'tool_calls'!\");",
+  "full_literal": true,
+  "cited_branch_claim": "An assistant message lacks content and tools; request instead lacks user content and hits L1395.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user"
+     }
+    ],
+    "max_tokens": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-26",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1411,
+  "source_text": "throw std::invalid_argument(\"Expected 'content' to be a string or an array\");",
+  "full_literal": true,
+  "cited_branch_claim": "Chat content has an unsupported scalar shape; request contains ordinary string content.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-27",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1434,
+  "source_text": "throw std::invalid_argument(\"Cannot have 2 or more assistant messages at the end of the list.\");",
+  "full_literal": true,
+  "cited_branch_claim": "Multiple trailing assistant messages cannot be prefilled; request contains only a user message.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-28",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1440,
+  "source_text": "throw std::invalid_argument(\"Cannot set both add_generation_prompt and continue_final_message to true.\");",
+  "full_literal": true,
+  "cited_branch_claim": "Continuation conflicts with a generation prompt; request explicitly disables continuation.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1,
+    "continue_final_message": false,
+    "add_generation_prompt": true
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-29",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1446,
+  "source_text": "throw std::invalid_argument(\"Cannot continue an assistant message that contains tool calls.\");",
+  "full_literal": true,
+  "cited_branch_claim": "An assistant tool call cannot be continued; request contains no assistant tool calls and fails mutual exclusion first.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1,
+    "continue_final_message": true,
+    "add_generation_prompt": true
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-30",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1455,
+  "source_text": "throw std::invalid_argument(\"Cannot use custom grammar constraints with tools.\");",
+  "full_literal": true,
+  "cited_branch_claim": "Tool requests cannot also use custom grammar constraints; request contains neither tools nor grammar.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-31",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1473,
+  "source_text": "throw std::invalid_argument(\"invalid type for \\\"enable_thinking\\\" (expected boolean, got string)\");",
+  "full_literal": true,
+  "cited_branch_claim": "The thinking template argument is a string; request supplies a valid boolean.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1,
+    "chat_template_kwargs": {
+     "enable_thinking": false
+    }
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-32",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1517,
+  "source_text": "throw std::invalid_argument(\"logprobs is not supported with tools + stream\");",
+  "full_literal": true,
+  "cited_branch_claim": "Tools plus streaming cannot return logprobs; request disables streaming and declares no tools.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1,
+    "logprobs": true,
+    "stream": false
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-33",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 1521,
+  "source_text": "throw std::invalid_argument(\"top_logprobs requires logprobs to be set to true\");",
+  "full_literal": true,
+  "cited_branch_claim": "Top logprobs requires enabled logprobs; request already enables that field.",
+  "request": {
+   "method": "POST",
+   "path": "/v1/chat/completions",
+   "body": {
+    "messages": [
+     {
+      "role": "user",
+      "content": "Hi"
+     }
+    ],
+    "max_tokens": 1,
+    "logprobs": true,
+    "top_logprobs": 2
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-34",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "json-schema-to-grammar.cpp",
+  "source_line": 515,
+  "source_text": "throw invalid_pattern(\"unterminated character class\");",
+  "full_literal": true,
+  "cited_branch_claim": "A regex character class is unclosed; request contains no character class and instead leaves a parenthesis unmatched.",
+  "request": {
+   "method": "POST",
+   "path": "/completion",
+   "body": {
+    "prompt": "Hi",
+    "n_predict": 1,
+    "json_schema": {
+     "type": "string",
+     "pattern": "^($"
+    }
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-35",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-context.cpp",
+  "source_line": 6161,
+  "source_text": "res->error(format_error_response(\"The format to return the embeddings in. Can be either float or base64\", ERROR_TYPE_INVALID_REQUEST));",
+  "full_literal": true,
+  "cited_branch_claim": "Embedding output encoding is unsupported; request instead tokenizes plain text on a different endpoint.",
+  "request": {
+   "method": "POST",
+   "path": "/tokenize",
+   "body": {
+    "content": "Hi"
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-36",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-context.cpp",
+  "source_line": 5484,
+  "source_text": "res->error(format_error_response(\"\\\"prompt\\\" must be a string\", ERROR_TYPE_INVALID_REQUEST));",
+  "full_literal": true,
+  "cited_branch_claim": "Infill validates prompt string type; request instead uses native completion and hits empty prompt validation.",
+  "request": {
+   "method": "POST",
+   "path": "/completion",
+   "body": {
+    "prompt": [],
+    "n_predict": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-37",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-context.cpp",
+  "source_line": 5497,
+  "source_text": "res->error(format_error_response(\"\\\"input_extra\\\" must be an array of {\\\"filename\\\": string, \\\"text\\\": string}\", ERROR_TYPE_INVALID_REQUEST));",
+  "full_literal": true,
+  "cited_branch_claim": "Infill extra input must be an array; request uses native completion where this field is irrelevant.",
+  "request": {
+   "method": "POST",
+   "path": "/completion",
+   "body": {
+    "prompt": "Hi",
+    "n_predict": 1,
+    "input_extra": {}
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-38",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-context.cpp",
+  "source_line": 5510,
+  "source_text": "res->error(format_error_response(\"extra_context chunk's \\\"filename\\\" field must be a string\", ERROR_TYPE_INVALID_REQUEST));",
+  "full_literal": true,
+  "cited_branch_claim": "An infill extra chunk filename has invalid type; request has no infill extra chunks.",
+  "request": {
+   "method": "POST",
+   "path": "/completion",
+   "body": {
+    "prompt": "Hi",
+    "n_predict": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ },
+ {
+  "id": "E27-39",
+  "mode": "healthy-or-wrong-error",
+  "source_file": "server-common.cpp",
+  "source_line": 393,
+  "source_text": "throw std::runtime_error(\"Server tokens state is too large\");",
+  "full_literal": true,
+  "cited_branch_claim": "Serialized server token state exceeds uint32 bounds; request is a tiny plain text completion.",
+  "request": {
+   "method": "POST",
+   "path": "/completion",
+   "body": {
+    "prompt": "Hi",
+    "n_predict": 1
+   }
+  },
+  "expected_detector": "reject all false claims; any counted row is a coverage finding"
+ }
+]

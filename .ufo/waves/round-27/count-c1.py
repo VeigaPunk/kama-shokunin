@@ -1,31 +1,38 @@
 #!/usr/bin/env python3
 """Round-27 C1 counter (depth): live request-validation error signatures in SKILL.md.
 
-Frozen predicate (the same sentence as preregistration.json C1.predicate and the
-label `counted` in the receipt):
+Frozen predicate, amendment A1 (the same sentence as preregistration.json
+C1.predicate and the label `counted` in the receipt):
 
   A registry row is COUNTED iff
-  (a) a table row of the SKILL.md section whose heading starts with
-      "## Round-27 request-validation signatures" begins with "| <id> |",
-      contains the registry signature verbatim and the registry S### token,
-      has at least five non-empty cells, one cell holding the request path
-      verbatim, and a next-action cell (the cell before the last) of at least
-      six words;
+  (a) the first table of the SKILL.md section whose heading starts with
+      "## Round-27 request-validation signatures" has the header
+      `| id | signature | trigger | meaning | next action | source |`, and one
+      of its rows has exactly these six cells with: id = the registry id; the
+      signature cell holding the registry signature verbatim; the trigger cell
+      holding the request path verbatim; meaning and next-action cells of at
+      least six words each; the source cell holding the registry S### token;
   (b) the signature is at least 20 UTF-8 bytes, holds no "|" and no newline, and
-      does not occur (case-insensitive) in SKILL.md, corpus/knowledge/ or
-      registry/ at base a720399e;
+      does not occur in SKILL.md, corpus/knowledge/ or registry/ at base
+      a720399e, neither case-insensitively on one line nor with all whitespace
+      removed and case folded across the whole of those files;
   (c) its S### row exists in corpus/SOURCES.md of the measured tree, does not
       exist at base, and names the registry source file, the registry line
       (as "L<line>" or "line <line>") and commit 704366d;
   (d) the cited file is in the sha256-pinned 704366d snapshot, the signature is
       a substring of a C string literal on the cited line (escapes decoded; one
-      literal or the line's literals joined), and the cited line or one of the
-      three lines above it holds an error-raising token (ERROR_TOKENS);
+      literal or the line's literals joined), the cited line or one of the
+      three lines above it holds an error-raising token (ERROR_TOKENS), and the
+      signature is a substring of no string literal on any other line of any
+      pinned snapshot file (it names its source line uniquely);
   (e) the row's profile is one of PROFILES (the counter owns every argv; rows
       set none), its request is GET or POST to a plain path with a JSON body or
-      none and no headers, and the counter's own run against the sha256-pinned
-      llama-server, libllama-server-impl.so and fixture model returns status
-      >= 400 whose JSON-decoded error message contains the signature;
+      none and no headers, and the counter's own run returns status >= 400
+      whose JSON-decoded error message contains the signature. The run is the
+      pinned llama-server process the counter launched: its /proc exe is the
+      sha256-pinned binary, the pinned libllama-server-impl.so is mapped, and
+      /props reports the pinned fixture model path; the counter re-executes
+      itself under `python3 -I -S` before reading anything;
   (f) the signature does not occur (case-insensitive, verbatim or with all
       whitespace removed) in the request path, in any JSON-decoded string key
       or value of the request body, in either JSON serialisation of the body,
@@ -37,15 +44,19 @@ label `counted` in the receipt):
       row, the signature is neither a substring nor a superstring of an earlier
       counted signature, no earlier counted signature occurs in its error
       message and it occurs in no earlier counted row's error message, its
-      request differs from every earlier counted request, and its next-action
+      request differs from every earlier counted request, its next-action
       cell (case and whitespace folded) differs from every earlier counted
-      row's next-action cell.
+      row's next-action cell, and its S### differs from every earlier counted
+      row's S###.
+
+Not checked by this counter (reviewed per row, never counted): whether the
+trigger, meaning and next-action prose is correct (KamaR27CtlContentFree).
 
 Claim met iff counted >= 15 (preregistration.json C1.target).
 
 Usage: count-c1.py [--lane DIR] [--repo GITDIR] [--out FILE]
-Exit: 0 ran (whatever the count), 2 could not evaluate (pins, unsafe port,
-baseline failed).
+Exit: 0 ran (whatever the count), 2 could not evaluate (pins, process
+identity, unsafe port, baseline failed).
 """
 from __future__ import annotations
 
@@ -97,6 +108,7 @@ SOURCE_SHA256 = {
 }
 REGISTRY = "registry/error-signatures-r27.json"
 HEADING = "## Round-27 request-validation signatures"
+COLUMNS = ["id", "signature", "trigger", "meaning", "next action", "source"]
 ID_RE = re.compile(r"^E27-\d{2}$")
 PATH_RE = re.compile(r"^/[A-Za-z0-9/_.-]*$")
 ERROR_TOKENS = re.compile(
@@ -157,6 +169,46 @@ def present_at_base(repo: str, sig: str) -> bool:
     return r.returncode == 0
 
 
+_BASE_FOLDED: dict[str, str] = {}
+
+
+def base_folded(repo: str) -> str:
+    """All of SKILL.md, corpus/knowledge/ and registry/ at BASE, whitespace removed, lowercased."""
+    if repo not in _BASE_FOLDED:
+        r = subprocess.run(["git", "-C", repo, "ls-tree", "-r", "--name-only", BASE, "--",
+                            "SKILL.md", "corpus/knowledge", "registry"],
+                           capture_output=True, timeout=60)
+        if r.returncode != 0:
+            raise CannotEvaluate("git ls-tree at base failed")
+        parts = []
+        for name in r.stdout.decode().splitlines():
+            parts.append(squash(git_show(repo, BASE, name) or ""))
+        _BASE_FOLDED[repo] = "\n".join(parts)
+    return _BASE_FOLDED[repo]
+
+
+_LITERALS: dict[str, list[tuple[str, int, list[str]]]] = {}
+
+
+def literal_elsewhere(lane: Path, sig: str, fname: str, line: int) -> str | None:
+    """First other (file:line) of the pinned snapshot whose string literals contain sig."""
+    key = str(lane)
+    if key not in _LITERALS:
+        idx = []
+        for f in sorted(SOURCE_SHA256):
+            text = (lane / SOURCE_DIR / f).read_text("utf-8", "replace").splitlines()
+            for n, l in enumerate(text, 1):
+                if '"' in l:
+                    lits = literal_texts(l)
+                    if lits:
+                        idx.append((f, n, lits))
+        _LITERALS[key] = idx
+    for f, n, lits in _LITERALS[key]:
+        if (f, n) != (fname, line) and any(sig in t for t in lits):
+            return f"{f}:{n}"
+    return None
+
+
 def sources_rows(text: str) -> dict[str, str]:
     rows = {}
     for line in text.splitlines():
@@ -167,12 +219,19 @@ def sources_rows(text: str) -> dict[str, str]:
 
 
 def skill_rows(text: str) -> list[str]:
-    rows, inside = [], False
+    """Data rows of the first table under HEADING whose header row is exactly COLUMNS."""
+    rows, inside, header_ok = [], False, None
     for line in text.splitlines():
         if line.startswith("#"):
             inside = line.startswith(HEADING)
             continue
-        if inside and line.startswith("|"):
+        if not inside or not line.startswith("|"):
+            continue
+        cells = [" ".join(c.split()).lower() for c in line.strip().strip("|").split("|")]
+        if header_ok is None:
+            header_ok = cells == COLUMNS
+            continue
+        if header_ok and not all(set(c) <= set("-: ") for c in cells):
             rows.append(line)
     return rows
 
@@ -273,9 +332,31 @@ class Server:
                 return False
             status, _ = http(self.port, "GET", "/health", None)
             if status == 200:
+                try:
+                    self.check_identity()
+                except CannotEvaluate:
+                    self.stop()
+                    raise
                 return True
             time.sleep(0.25)
         return False
+
+    def check_identity(self) -> None:
+        """The process answering is the one we launched, running the pinned files."""
+        exe = os.path.realpath(f"/proc/{self.proc.pid}/exe")
+        if exe != os.path.realpath(SERVER) or sha256_file(Path(exe)) != PINS[SERVER]:
+            raise CannotEvaluate(f"launched process exe {exe} is not the pinned server")
+        impl = os.path.realpath(OPT / "libllama-server-impl.so")
+        maps = Path(f"/proc/{self.proc.pid}/maps").read_text("utf-8", "replace")
+        if impl not in maps:
+            raise CannotEvaluate("pinned libllama-server-impl.so is not mapped")
+        status, data = http(self.port, "GET", "/props", None)
+        try:
+            mp = json.loads(data.decode("utf-8")).get("model_path")
+        except (UnicodeDecodeError, json.JSONDecodeError, AttributeError):
+            mp = None
+        if status != 200 or mp != str(MODEL):
+            raise CannotEvaluate(f"/props model_path {mp!r} is not the pinned model")
 
     def alive(self) -> bool:
         return self.proc.poll() is None
@@ -354,7 +435,7 @@ def static_checks(e: dict, lane: Path, repo: str, skill: list[str],
     if len(sig.encode()) < MIN_BYTES or "|" in sig or "\n" in sig:
         why.append("b:short-or-bad-char")
     elif sig not in base_seen:
-        base_seen[sig] = present_at_base(repo, sig)
+        base_seen[sig] = present_at_base(repo, sig) or squash(sig) in base_folded(repo)
     if base_seen.get(sig):
         why.append("b:held-at-base")
     src = e.get("source") or {}
@@ -363,17 +444,18 @@ def static_checks(e: dict, lane: Path, repo: str, skill: list[str],
     match = None
     for r in skill:
         cells = [c.strip() for c in r.strip().strip("|").split("|")]
-        if (r.startswith(f"| {rid} |") and sig in r and isinstance(row, str)
-                and re.search(rf"\b{re.escape(row)}\b", r) and len(cells) >= 5
-                and all(cells) and isinstance(req0.get("path"), str)
-                and any(req0["path"] in c for c in cells)
-                and len(cells[-2].split()) >= 6):
+        if len(cells) != len(COLUMNS) or cells[0] != rid:
+            continue
+        if (sig in cells[1] and isinstance(row, str)
+                and re.search(rf"\b{re.escape(row)}\b", cells[5])
+                and isinstance(req0.get("path"), str) and req0["path"] in cells[2]
+                and len(cells[3].split()) >= 6 and len(cells[4].split()) >= 6):
             match = cells
             break
     if match is None:
         why.append("a:no-skill-row")
     else:
-        e["_next"] = " ".join(match[-2].lower().split())
+        e["_next"] = " ".join(match[4].lower().split())
     srow = src_now.get(row) if isinstance(row, str) else None
     if (srow is None or row in src_base or not isinstance(fname, str)
             or fname not in srow or COMMIT not in srow or not isinstance(line, int)
@@ -390,6 +472,9 @@ def static_checks(e: dict, lane: Path, repo: str, skill: list[str],
                 why.append("d:not-a-literal-on-line")
             if not any(ERROR_TOKENS.search(lines[i]) for i in range(max(0, line - 4), line)):
                 why.append("d:no-error-token")
+            elsewhere = literal_elsewhere(lane, sig, fname, line)
+            if elsewhere:
+                why.append(f"d:literal-not-unique:{elsewhere}")
     prof, req = e.get("profile"), e.get("request")
     ctl = e.get("control")
     if prof not in PROFILES:
@@ -410,6 +495,10 @@ def static_checks(e: dict, lane: Path, repo: str, skill: list[str],
 
 
 def main() -> int:
+    if not (sys.flags.isolated and sys.flags.no_site):
+        # run only on the interpreter's own stdlib: no PYTHONPATH, user site or sitecustomize
+        os.execv(sys.executable, [sys.executable, "-I", "-S", os.path.abspath(__file__)]
+                 + sys.argv[1:])
     here = Path(__file__).resolve()
     ap = argparse.ArgumentParser()
     ap.add_argument("--lane", default=str(here.parents[3]))
@@ -519,6 +608,8 @@ def main() -> int:
                     clash = "h:same-request"
                 elif e["_next"] == oe["_next"]:
                     clash = "h:same-next-action"
+                elif e["source"]["row"] == oe["source"]["row"]:
+                    clash = "h:same-sources-row"
                 if clash:
                     break
             if clash:
