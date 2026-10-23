@@ -187,6 +187,8 @@ global. Every row was opened in round 10 (2026-10-19); the round lesson
 | S175 | Git git-merge-base manual — https://git-scm.com/docs/git-merge-base | docs | A | `git merge-base --is-ancestor` exit-status semantics used by round-29 C1's strict-ancestor check; C1 separately rejects equality | §OPTIONS `--is-ancestor`; online manual last updated in Git 2.43.0; same semantics in installed Git 2.56.0 manual, opened 2026-10-23 | For the ordered commits, status 0 means the first is an ancestor of the second, 1 means it is not, and errors use a nonzero status other than 1. | mined | 2026-10-23 | on-release | corpus/knowledge/self-assessment-at-writing.md, .ufo/waves/round-29/count-c1.py |
 | S176 | Git git-grep manual — https://git-scm.com/docs/git-grep; Git gitglossary manual — https://git-scm.com/docs/gitglossary | docs | A | Git's documented tree-object blob search, fixed-string and quiet modes, and pathspec exclusion used by C1's quoted-output check; not blame attribution, ancestry, or counter correctness | git-grep DESCRIPTION and OPTIONS (`-F`, `-q`, `<tree>`, `<pathspec>`); page last updated in 2.55.0 with 2.56.0 no changes; gitglossary Pathspec magic long form and `exclude`; page last updated in 2.56.0; opened 2026-10-23 | `git grep -F -q -e <span> <tree> -- . :(exclude)...` searches blobs in the given tree for a literal span, reports a match through exit status, and omits paths matched by exclusion pathspecs. | mined | 2026-10-23 | on-release | corpus/knowledge/self-assessment-at-writing.md, .ufo/waves/round-29/count-c1.py |
 | S177 | Git pretty-formats documentation — https://git-scm.com/docs/pretty-formats | docs | A | Git pretty-format committer-date placeholders `%ct` and `%cI` used to interpret the round-29 C1 time check; not a claim that a timestamp is correct | §PRETTY FORMATS, placeholders `%ct` and `%cI`; live page accessed 2026-10-23; local Git 2.56.0 | The C1 counter uses `git show -s --format=%ct` to read W's committer date as a UNIX timestamp; `%cI` denotes the strict ISO 8601 committer-date form, unlike `%ci`'s ISO 8601-like form. | mined | 2026-10-23 | on-release | corpus/knowledge/self-assessment-at-writing.md, .ufo/waves/round-29/count-c1.py |
+| S178 | kumitate r48 counter-rerun instrument — kumitate-shokunin/scripts/counter-rerun.mjs @ ce9aee5; decision note kumitate-shokunin/.ufo/waves/round-48/r48/ReviewQualityDraft.md:123-125 @ 4e4f471 | code | A | what a run-agreement counter mechanizes: rerun-and-compare of one instrument's output, kept separate from parse completeness | scripts/counter-rerun.mjs at revision ce9aee5 (2026-10-23T15:52:45-03:00); ReviewQualityDraft.md:123-125 at 4e4f471 (2026-10-23T16:08:15-03:00) | "the round-48 C2 instrument (scripts/counter-rerun.mjs, plan :107-109) mechanizes the run-agreement half" (ReviewQualityDraft.md:123-125) | mined | 2026-10-23 | on-release | corpus/knowledge/instrument-run-agreement.md |
+| S179 | mori r36 source-drift byte sweep — mori-shokunin/tools/mori-source-drift.py @ e57c58b; entry mori-shokunin/corpus/knowledge/source-drift-r36.md:21 @ 6827d6e | tool | A | what a byte comparison of a committed copy against a re-fetched body proves, and what it leaves to the row's teaches cell | tools/mori-source-drift.py docstring at e57c58b (2026-10-23T16:58:19-03:00); source-drift-r36.md:21 at 6827d6e (2026-10-23T16:00:47-03:00) | "`fresh` proves only byte identity with the committed copy, never that the row's `teaches` is right." (source-drift-r36.md:21) | mined | 2026-10-23 | on-release | corpus/knowledge/instrument-run-agreement.md |
 
 ## Paths
 
@@ -407,3 +409,18 @@ Identified/screened/included2 correction candidates, excluded0; Gate quotes
 and used-by old→new changes for S075–S080 are in `lessons/round-22.md`.
 Status/recheck unchanged. Final additions14, superseding the earlier12-row
 population. No source-row growth is called new knowledge.
+
+## Round-30 source correction — S174 and S176 (append-only decision record)
+
+Routed by `corpus/lessons/round-29-verifier-spotcheck.md` §4 and §6 items 3–4; the rows stay as
+landed (append-only), and this record corrects what their `teaches` cells say.
+
+1. **S174.** The row's `teaches` cell is labelled "(§DESCRIPTION, verbatim)" but drops the manual's
+   word "given": the page reads "Annotates each line in the given file with information from the
+   revision which last modified the line". The fragment points at the right sentence; the verbatim
+   label with the omission is false. Read the cell's first phrase as a paraphrase, not a quote.
+2. **S176.** The wave-2 decision record said the `teaches` cell's "tree" would be fixed to "trees"
+   before landing; the landed cell still says "given tree" and composes the `:(exclude)` example
+   with the `<tree>` form. The landed cell is a composition, not a verbatim quote; the row's
+   `anchor` (git-grep `<tree>` form and gitglossary `exclude`) is the part grounded in the pages.
+   The decision record's "fixed pre-landing" claim is superseded by this note.

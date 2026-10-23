@@ -1898,3 +1898,31 @@ Prospective citation disclosed (RevengerPrereg F1): `513eba3b`'s prose cites w1 
 created minutes after the commit; the artifacts materialized and reproduce. Origin/master moved
 to `49f849f292c3` (operator daily-reflection commit, descendant of `513eba3b`); the integration
 commit rebases over it. Census end: 177 rows, exit 0 (receipt `.ufo/waves/round-29/final/census-end.out`).
+
+## Round 30 — calibration census over its recall population; run-agreement capability (2026-10-23)
+
+Two claims, both frozen at `fdf8cda1` before any seat (`.ufo/waves/round-30/preregistration.json`).
+C1 (calibration, measured): the round-29 census now classifies its declared recall population — the
+72 statements two independent round-29 sweeps enumerated at `6de225c2` — at their writing revisions;
+the two that do not hold carry appended observed values (SCORECARD.md §Round 30 — self-assessment
+corrections). Base receipt `.ufo/waves/round-30/c1/before/c1-base.out`; the rows-only arm at the
+round-29 tip reads `valid_corrections 11 unresolved 2 met False`. C2 (operability, capability):
+`tools/instrument-agreement.py` runs a lane instrument N times over one tree, normalizes only
+declared volatile fields, and reports `IA runs=N agree=A disagree=D`; selftest `IA_SELFTEST
+pass=4 fail=0` with a nondeterministic arm refused, and receipts `c2/receipt-a.json` and
+`c2/receipt-b.json` read `agree=3 disagree=0`. Pre-data control call: 14 arms, one row per arm in
+`.ufo/waves/round-30/controls/SUMMARY.md`, committed `14bb1a32` before any correction row; no
+shortcut meets the target, the reference policy does by design.
+
+Landed hashes this round: freeze `fdf8cda1` (counter, preregistration, base receipt, census start);
+C2 instrument and wave/control calls `1d3e8ba4`; control receipts `14bb1a32`. Round-29 attempt-2
+hashes named for the closure's routed defect 2: `6de225c289b7682bf280cffb4a07de3fb7d1275c`
+(verification wave w2 integration and landing) and `227dd1eeff95` (final tip receipts: frozen
+counter met True and sources census exit 0 at pushed tip `6de225c2`). The round-29 w2 files
+`VerifyLogFreshness.md` and `out/VerifyLogFreshness/report.md` were already tracked at `40b122d`
+before this round; no new write was needed.
+
+Sources: S178 (kumitate r48 counter-rerun, own-work `ce9aee5`) and S179 (mori r36 source-drift,
+own-work `e57c58b`/`6827d6e`) opened this round; census 177 → 179 rows, validate exit 0
+(`.ufo/waves/round-30/census-end.out`). QUALITY KQ40 added (census population declares its recall
+gap). No endpoint was sampled; K05 remains operator-runtime dependent.

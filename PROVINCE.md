@@ -113,3 +113,14 @@ held ground for the lane-owned b11755 fixture via SKILL.md "## Round-28
 request-field outcomes" (S140-S173). It describes what the server accepts and
 stores for one request, not sampling quality, model identity or registered
 endpoint health. Other endpoints, builds and engines remain frontier.
+
+
+**Round-30 frontier→core: run agreement for lane instruments; recall population
+for the self-assessment census.** `tools/instrument-agreement.py` (S178/S179
+import; see `corpus/knowledge/instrument-run-agreement.md`) and the round-30
+counter's declared recall population (S174–S177 plus round-29 RecallA/B) enter
+held ground as lane-internal methods. Not held: the siblings' implementations
+(kumitate's counter rerun, mori's network re-fetch of source rows), any claim
+that agreement implies correctness, and any live endpoint or model-quality
+surface. K05 and registered-consumer reconciliation remain frontier; no endpoint
+was sampled this round.

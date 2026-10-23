@@ -1504,3 +1504,23 @@ coverage 9, depth 7, adjacency 7. Capabilities: none claimed.
 Work depth or adjacency (7). A depth re-claim meets KQ38 (credit only outcomes not predictable from
 declared bounds or type rules; both shortcuts scored before any seat). The 72 extractor misses and
 the line-824 "5 cases" prose mismatch are open calibration ground.
+
+## Round 30 — self-assessment corrections (recall population)
+
+Appended by the kama L1, round 30, after the frozen counter (`.ufo/waves/round-30/count-c1.py`,
+sha256 `c3f16ef1…9ce40d`, frozen at `fdf8cda1`) and its pre-data control receipts
+(`.ufo/waves/round-30/controls/SUMMARY.md`, committed `14bb1a32`) landed. Each row names one base
+statement the round-29 recall sweeps enumerated but the round-29 counter could not see; the round-30
+counter re-derived its class check at the writing revision W. The original lines stay as written.
+
+| id | line at base | class | statement token | W | cause | observed |
+|---|---|---|---|---|---|---|
+| SA30:SCORECARD.md:Q:4a6f7c911e:o0 | SCORECARD.md:41 | Q | `file=yes` | ea72c3ea | the round-29 extractor's Q rule required a digit; this span has `=` and no digit | q:no-artifact |
+| SA30:SCORECARD.md:Q:422b431349:o0 | SCORECARD.md:901 | Q | declared2048 = captured training2048 | 92b14625 | not backticked at W; outside the frozen quoted-span rule | q:no-artifact |
+
+Both spans were re-checked with `git grep -F` at W under the counter's four exclusions (exit 1 for
+both): the quoted values are not retained in any committed lane file outside the self-report files.
+This is the same bounded reading as round 29 — an evidence-resolution defect recorded, not proof
+that the judgments behind the statements were wrong. Round-29 record correction (routed defect 5):
+the round-29 appended note at SCORECARD.md:1490-1493 omits that the M02 span also sat at
+`corpus/lessons/round-2.md:49`; the note's point stands.

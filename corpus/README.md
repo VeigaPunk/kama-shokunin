@@ -448,3 +448,16 @@ calibration claim; the serving frontier stays as round 28 left it (chat
 endpoint, json_schema → grammar, other argv/builds). Open calibration ground
 named for round 30: the 72 extractor recall misses (2 false at W) and the
 SCORECARD line-824 "5 cases" prose mismatch.
+
+## Round-30 coverage — run agreement and the recall population
+
+| Entry | New held ground | Evidence |
+|---|---|---|
+| `knowledge/instrument-run-agreement.md` | a lane capability: run one instrument N times over one tree, normalize only declared volatile fields, and report an agreement counter; the corpus guard refused as an agreement subject because its output embeds its own staging digest | `tools/instrument-agreement.py`; `.ufo/waves/round-30/c2/selftest.out` (`IA_SELFTEST pass=4 fail=0`), `receipt-a.json`, `receipt-b.json`; S178, S179 |
+| SCORECARD §Round 30 | the round-29 census over its declared recall population: 72 previously-unseen statements classified at their writing revisions, the 2 that do not hold now carry observed values | `.ufo/waves/round-30/count-c1.py`; `c1/before/c1-base.out`; `final/c1-tip.out` |
+
+Frontier disposition: round 29's disclosed recall gap (72 statements) is now a pinned population
+with a per-item check, so the census's population is explicit rather than implied by the extractor.
+Still open: the counter's extractor is unchanged (it still finds only 69 of the 141 by itself), so
+a future statement outside both populations is invisible; the context-capacity frontier (K05)
+remains operator-runtime dependent. No live endpoint was sampled this round.
