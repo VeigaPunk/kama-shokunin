@@ -1,0 +1,70 @@
+diff --git a/SCORECARD.md b/SCORECARD.md
+index 24882de..a650998 100644
+--- a/SCORECARD.md
++++ b/SCORECARD.md
+@@ -17,7 +17,6 @@ verified completed round. This attempt adds **zero** verified completed rounds.
+ | Axis | Before → After | Evidence pointer | Last change |
+ |---|---|---|---|
+ | **operability** (worked round 1) | **0 → 8** | `tools/kama-probe.sh` md5 `1f81e859c2d7f43f87d1f7e01327b2cf` (1092 lines, 0755) + `registry/endpoint-consumers.tsv` (3 rows); live `check` → `registry_rows_evaluated=3 model_ok=0 drift=3 exit=2`; `--ufo-src` derives the ufo-fsd checkout (`$UFO_SRC` env → `~/Projects/ufo-fsd-alpha` → `~/Projects/origin-work/ufo-fsd-alpha` → fail-closed `file=missing`); `bash -n` clean (shellcheck absent on this box) | round 3 |
+-| **freshness** (worked round 2) | **6 → 7** | `snapshot` writes dated `kama-probe/v2` JSON and diffs tracked `registry/history/latest.tsv` into append-only `DELTA.md`; live re-census run: `snapshot=20261014T124232Z prev=20260929T043044Z rows=3 model_ok=0 drift=3 transitions=16 exit=2` — the 16 transitions are the honest record of 8 consumer files deleted from the box plus MODEL_OK→DEAD on the dead ports; stable re-run `transitions=0`; `tools/test-snapshot.sh` md5 `860f26ac05938cdfc1a8816eff1570b4` → `RESULT pass=24 fail=0` | round 3 |
+ | depth | 1 → 7 | `SKILL.md` (323 lines: 12-row decision table, 11 verbatim error signatures, 11 anti-patterns, 14-step checklist); `corpus/knowledge/endpoint-identity.md` (7 rule rows); `snapshot-history.md` | round 1 |
+ | coverage | 1 → 8 | `listener-census.md` (23-row round-1 sample; 20 listeners on round-2 refresh), `consumer-registry.md` (38 rows), `alias-endpoint-normalization.md`; registry covers all 6 consumer pin classes incl. the binary default | round 1 |
+ | calibration | 1 → 7 | round-1 audit records the wrong F11 route; round-2 critic rejected “periodic” for unscheduled invocation history; runtime fixtures are explicitly parser evidence, not vLLM/Ollama integration; corpus keeps open gaps | round 1 |
+@@ -189,7 +188,6 @@ Evidence: `.ufo/round-9/telemetry.json`; report at fleet root
+ 
+ ## Round 10 — sources registry + cross-engine entries; stale anchors re-anchored (2026-10-19)
+ 
+-Steered round 10 (the 2026-10-18 plan `.ufo/round-10/plan.json`, never dispatched, finished here). Axis authority: `MISSION.md:29` — operability + freshness; the round prompt's "operability + calibration" is overridden by the mission file (the G5 recurrence). Measured at this round's commit on branch `kaika/round` (hash cited in the fleet report). Scores are self-assessed and pending non-author verification.
+ 
+ | Claim | Axis | Before → after (measured) | Score | Counting command | Evidence |
+ |---|---|---|---|---|---|
+@@ -208,7 +206,6 @@ The §Axes table at the top of this file (rows `freshness 6 → 7`, `coverage 1
+ 
+ | Axis | Before → After | Evidence pointer | Last change |
+ |---|---|---|---|
+-| **freshness** (LIVE) | **7 → 8** | C1: 50 stale anchors corrected by appended entries (uncorrected 50 → 0); new-pointer validation `bash .ufo/round-10/audit/validate-new-pointers.sh` → `rows=50 resolved=48 terminal=2 unresolved=0` (A17 dead surface, A51 UNDECIDABLE — corrected, not re-anchored) | round 10 |
+ | coverage | **8 → 9** | C3, restated on knowledge entries only: `ls corpus/knowledge/*.md \| wc -l` 9 → 12; `grep -lE '^source: S[0-9]{3}' corpus/knowledge/*.md \| wc -l` 0 → 3 | round 10 |
+ | operability, depth, calibration, adjacency | unchanged (8, 7, 7, 7) | §Round 10 above | — |
+ 
+@@ -737,7 +734,6 @@ every 503 in `transitions`; (3) frozen-manifest prior-exposure field; then K05.
+ ## Round 18 — outcome classification and detector self-calibration (2026-10-20)
+ 
+ Round-17 outside review admitted the two bounded claims and judged **discernment
+-improved** (`round-17-verifier-spotcheck.md:217–221`), superseding the pending
+ author reading at line 702. R1–R7 dispositions are in `lessons/round-18.md`.
+ Assignment remains operability + calibration; calibration 7 is lowest, no waiver.
+ 
+@@ -820,8 +816,6 @@ assigned axis**. The four routed round-18 defects are corrected first
+ 
+ **C1 calibration, 7 → 8, sourced:** revision-qualified citations become
+ machine-checkable. Counting command `python3 tools/citation-provenance.py`:
+-before `required=3 found=0 verified=0 missing=3` exit 1; after
+-`required=3 found=3 verified=3 missing=0 mismatch=0` exit 0, selftest 5 cases.
+ Evidence: `registry/required-citations.json`, the `cite(...)` tokens in
+ `corpus/lessons/round-18.md`, S057's admission of the identity-boundary limit.
+ 
+@@ -830,8 +824,6 @@ Evidence: `registry/required-citations.json`, the `cite(...)` tokens in
+ `python3 tests/llamacpp-live/install-tree-grid.py … --gate
+ tests/llamacpp-live/check-receipt.py --receipt
+ .ufo/waves/round-18/live-recovery/receipt-1.json …` — without the pin
+-`baseline=VALID members=3 rejected=0/3` exit 1, with `--tree-sha`
+-`baseline=VALID rejected=3/3` exit 0. The pin binds observed bytes, not an
+ upstream constant, and does not authenticate execution.
+ 
+ Other axes unchanged: freshness 8, coverage 9, depth 7, adjacency 7.
+@@ -1346,7 +1338,6 @@ hashes; KQ36 re-run at the landed tip is in the round report.
+ 
+ The round-25 trend line above ("quality unchanged-to-improved",
+ "discernment improved") conflicts with the round-25 report
+-(`.ufo/reports/round-25/kama.md:120-129`: quality unchanged, discernment
+ unchanged) and the outside closure (`corpus/lessons/round-25-verifier-spotcheck.md:187,194`).
+ Corrected round-25 trend verdicts: expansion improved, quality unchanged,
+ discernment unchanged. The earlier bytes stay as written.
+@@ -1372,7 +1363,6 @@ table). Work calibration or adjacency (7) if depth moves.
+ Surface moved by X1: the lane's claim-measurement method for error-signature
+ counters (a knowledge entry and an admission criterion), not a new server
+ error signature. Prior state: the round-26 counter's echo test read stored
+-request text (round-26 `count-c1.py:384`), a base-tree shortcut met it 12/12,
+ and QUALITY.md held no echo rule; the round-26 preregistration and spot-check
+ named the echo and split-message classes as round evidence only.
+ 

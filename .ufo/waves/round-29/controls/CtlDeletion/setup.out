@@ -1,0 +1,8 @@
+Initial prescribed git commit -qam attempt inherited RLIMIT_FSIZE=1048575:
+timeout: the monitored command dumped core
+commit_exit=-25
+The sandbox's existing .git/index was 1925930 bytes; interrupted .git/index.lock was exactly 1048575 bytes. Removed only that newly created lock. No source bytes changed during the failed commit.
+To retain the <1 MiB per-write cap, committed the edited SCORECARD.md with git hash-object -w, replaced only its root-tree entry via git mktree, created a parented commit via git commit-tree, and advanced refs/heads/ctl via git update-ref. GIT_DIR, GIT_WORK_TREE, GIT_INDEX_FILE and object-store override variables were unset. Subsequent subprocesses also set RLIMIT_CORE=0. All commands used /usr/bin/timeout.
+Mutant commit: 1c2a351f851905f6a33a4446725f417036aba699
+Exact-byte restoration used the edit tool's saved deleted-line registers. Restored tree commit: f9d5889b621d7f88aae2708c8b72867bbe1991dc
+Mutant preserved at refs/heads/ctl-deletion-mutant; refs/heads/ctl now identifies the restored tree. No lane or fleet git/jj writes occurred. No tools installed or updated.
