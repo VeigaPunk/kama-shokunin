@@ -1244,7 +1244,7 @@ The pinned llama.cpp snapshot is commit `704366d76f8748cf9ad3df62a464bfcc8d1ae6a
 
 | id | param | sent | outcome | meaning | source |
 |---|---|---|---|---|---|
-| K31-01 | max_tokens | 3 | 200, max_tokens = 3, n_predict = 3 | Set max_tokens to bound output; do not assume this stored alias proves sampler use. | S191 |
+| K31-01 | max_tokens | 3 | 200, max_tokens = 3, n_predict = 3 | Set max_tokens to bound output; do not assume this stored alias proves sampler use. | S190 |
 | K31-02 | max_completion_tokens | 3 | 200, max_tokens = 3, n_predict = 3 | With both keys present, max_completion_tokens determines stored max_tokens and n_predict; clients should send a consistent limit and inspect stored settings when precedence matters. | S189 |
 | K31-03 | logprobs | true | 200, n_probs = 20 | On b11755, `logprobs:true` sets `n_probs` to 20 when `top_logprobs` is omitted; explicitly send `top_logprobs` when you need a different count. | S187 |
 | K31-04 | top_logprobs | 3 | 200, n_probs = 3 | When requesting token logprobs, set `logprobs` true; the server maps `top_logprobs` to stored `n_probs`. | S187 |
@@ -1258,30 +1258,11 @@ The pinned llama.cpp snapshot is commit `704366d76f8748cf9ad3df62a464bfcc8d1ae6a
 | K31-12 | logprobs | true | reject 400 invalid_request_error: logprobs is not supported with tools + stream | When tools and streaming are both enabled, clients must omit logprobs to avoid HTTP 400. | S186 |
 | K31-13 | user | "probe-user" | 200, no slot-parameter or response change | This request produced no stored user field; clients must not assume user is persisted in slot parameters. | S189 |
 | K31-14 | parallel_tool_calls | false | 200, no slot-parameter or response change | In this no-tools sample, no slot or normalized-response fields changed; callers must not infer tool-call concurrency from it. | S189 |
-| K31-14 | parallel_tool_calls | false | 200, no slot-parameter or response change | In this no-tools sample, no slot or normalized-response fields changed; callers must not infer tool-call concurrency from it. | S190 |
 | K31-15 | tools | [{"function":{"name":"f","parameters":{"type":"object"}},"type":"function"}] | 200, no slot-parameter or response change | Do not assume advertised tools run; inspect returned messages before relying on function-call behavior. | S189 |
-| K31-16 | n | 2 | 200, n_choices = 2 | This b11755 request returned two choices; callers must not assume other builds match. | S192 |
+| K31-16 | n | 2 | 200, n_choices = 2 | This b11755 request returned two choices; callers must not assume other builds match. | S191 |
 | K31-17 | stream | true | 200, sse = true | Streaming clients must parse data frames until the server's [DONE] marker. | S189 |
 | K31-18 | stream_options | {"include_usage":true} | 200, sse_usage = true | A client must enable streaming explicitly before expecting include_usage to add a usage frame. | S189 |
 
-Outcome cells are rendered by the counter as follows:
-
-- `reject` means the response status equals the recorded status and the error object has exactly `{code,message,type}`; `code` equals the status, `type` equals the recorded type, and `message` matches byte for byte. The cell form is `reject <status> <type>: <message>`.
-- `slot` means HTTP 200 and every recorded `outcome.set` key/value is present in the newest slot's `params` from `/slots` (numeric values use float32 tolerance). This says what the server stored for that task; it does not prove the sampler used it. The cell form is `200, <sorted key> = <JSON value>, ...`.
-- `ignored` means HTTP 200, the newest slot's entire `params` object matches the base request (same key set, float32 tolerance), and the normalized response is unchanged. Normalization compares `top_keys`, `n_choices`, `choice_keys`, `has_logprobs`, `usage_keys`, and `prompt_tokens`; it does not establish the absence of effects invisible to those observations. The cell form is `200, no slot-parameter or response change`.
-- `response` means HTTP 200 and the named OpenAI-compatible response check holds. The cell form is `200, <check> = <JSON value>`.
-
-The four response checks are `n_choices` (the length of `choices`), `has_logprobs` (`choices[0].logprobs` is not null), `sse` (the body contains at least one `data: ` line, a `data: [DONE]` line, and at least one non-DONE JSON frame), and `sse_usage` (some non-DONE frame carries a non-empty `usage` object).
-
-Only adapter-layer outcomes that require the live measurement count; outcomes predictable from the pinned native schema's declared type or bounds are excluded. A `reject` counts only when its message occurs verbatim in pinned `server-common.cpp` (an adapter-authored message, not schema bounds text). A `slot` counts only if at least one stored key differs from the request parameter name, a mapping not declared by the schema. A `response` counts only for one of the four response-contract checks above. An `ignored` counts only when the parameter is absent from every `field_*(` and `add_alias(` declaration in pinned `server-schema.cpp` and is in the counter's frozen `OAI_STANDARD` list.
-
-Re-derive with the frozen counter:
-
-```sh
-/usr/bin/python3 .ufo/waves/round-31/count-c1.py --lane <lane> --repo <scratch clone> --tip <full commit> --out <receipt.json>
-```
-
-The counter starts its own pinned server, sends the base and row requests, checks the live outcomes, and stops its server. These results are limited to one request per parameter on one build, model, and default argv, with `n_slots` 4: each row is one observed point, not the parameter's full response function.
 
 Limits, in the words of the limits seat (appended, not a counter input):
 

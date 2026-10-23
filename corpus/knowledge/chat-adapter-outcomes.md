@@ -1,6 +1,6 @@
 # The chat-completions adapter: what it maps, refuses, and drops
 
-source: S180-S192 (llama.cpp b11755 `tools/server/server-common.cpp` and `server-schema.cpp` @ 704366d76, opened 2026-10-23)
+source: S180-S191 (llama.cpp b11755 `tools/server/server-common.cpp` and `server-schema.cpp` @ 704366d76, opened 2026-10-23)
 verified-at: 2026-10-23, lane fixture (llama-server `b6a31a8e…d804`, `stories260K.gguf` `270cba1b…256d`, default argv, `n_slots` 4), live rows in `registry/chat-param-outcomes-r31.json`
 recheck: on release (a new llama.cpp build; the pinned lines are the recheck anchor)
 
