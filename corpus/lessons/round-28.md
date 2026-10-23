@@ -29,13 +29,13 @@ Order of events (all commits by `jj-lane.sh`):
 1. `d8bf1804` freeze A0: counter, preregistration, base receipt
    (`before/c1-base.out`: registered 0 counted 0), pilot receipt (2 scratch
    rows counted 2; fields n_cache_reuse and xtc_threshold then excluded).
-2. Pre-freeze control call (10 seats, 08:14Z): `5ebe7b1b`
+2. Pre-freeze control call (10 seats, dispatched 08:14:5xZ, after the A0 freeze commit and before any data seat): `5ebe7b1b`
    (`controls/HOLDS.md`). Evidential: do-nothing 0, junk 0/30, label-keyed
    12/41, source-blind 14/38, duplicate-field 0/26. Holds: CtlNoReader,
    CtlObjectStore, CtlAllFalse (provider cyber refusals), CtlEcho and
    CtlSourceMisuse (automatic model switch after a safety filter). No control
    met 18; the counter was not changed.
-3. Wave 1 (32 seats, 08:31-08:34Z): 17 data seats measured every declared
+3. Wave 1 (32 seats, dispatched in chunks 08:31:50Z-08:33:50Z): 17 data seats measured every declared
    field live on their own ports and returned uncommitted row drafts.
 4. Amendment A1 (`75b78bb4`, written about 08:37:23Z, committed 08:38:16Z,
    before any data row was committed, but NOT before data was scored: wave-2
@@ -192,7 +192,7 @@ source-blind controls (README and names only) reached 14 (A0) and 11 (A1).
 | Treat ExecShortcutPostData (20/20 from declared limits) as a source-blind control meeting A1 | **reject** | it reads each field's declared bounds, the source knowledge the table teaches; recorded as a counter limit (writer need not run the server; clause (c) is text-only) |
 | ScribeSkillRegistryRows: keep "withdrawn before data" as the round-27 disposition | **reject** | the round-27 closure ruled C1 a miss; the registry row says retired with C1 (miss, never run on data) |
 | A1 timing wording "before the counter scored any data row" (CriticA1Legitimacy) | **admit** | corrected above; preregistration bytes unchanged |
-| Meaning-cell defects F28-03/04/05/07/08/09/11/14/16/17/19/20/21/22/25/27/33/34 and two intro/no-row sentences (RowReview04/06/09/10/11/13/17, CriticDepthAxisPostData, ReviewSkillSectionIntro, ScoutSkillContradictions) | **admit** | corrected in SKILL.md; counted cells unchanged |
+| Meaning-cell defects F28-03/04/05/07/08/09/11/17/19/20/21/22/25/27/33/34 and intro/no-row sentences (RowReview04/06/09/10/11/13/17, CriticDepthAxisPostData, ReviewSkillSectionIntro, ScoutSkillContradictions, ResNoHarm) | **admit** | corrected in SKILL.md; counted cells unchanged. F28-14 and F28-16 were ruled "hold" by RowReview07/08; their cells were rewritten by the L1 only to match the other float32-saturation rows (not a seat finding). RowReview01/02/03/05/08/12/14/15/16 found no defect in their rows |
 | Gate-registry check is occurrence-only (ReviewGateRegistryCheck) | **admit** | stated in the registry row and the mistake row |
 | Echo-recheck write scope and counter exit 1 path (ReviewInstrumentRegistry) | **admit** | registry rows corrected |
 | Mistake row fixes lacked committed receipts (ReviewLessonMistakes) | **admit** | `final/quote-check.out`, `final/r27-8057282c-stat.out` |

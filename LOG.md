@@ -1817,3 +1817,17 @@ cells, counted cells unchanged). CriticA1Legitimacy: A1 was written after a
 data seat had checked drafts with A0 counter functions (08:35:54Z), and a
 type-only control meets A0 (20/52); the author does not promote depth (7 → 7)
 and reports both rules (lesson §Claim verdict).
+
+Round-28 source-digest correction: the server-schema.cpp SHA-256 is
+`1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050`
+(`1f9d7b73…4050`); the abbreviation `1f9d7b73…0050` in the round-28 entry
+above is a transcription error (residual seat ResNoHarm).
+
+Round-28 count corrections (residual seat ResSelfAssessment, 3 mismatches in
+46 checkable round-28 statements): the 34 landed rows come from 13 data seats
+(DataG01-09, DataG11, DataG13-15), not 17 — 17 data seats measured fields and
+DataG10/12/16/17 landed no row; the pinned server-schema.cpp was re-fetched by
+14 data seats (the 13 SOURCES-row openers plus DataG10), not 13. The third
+mismatch, SHONEN.md box 2's round-17 "8 bad fake-server shapes ... accepted 6"
+wording, is inherited from round 17 and left for a round that re-reads the
+round-17 receipts.
