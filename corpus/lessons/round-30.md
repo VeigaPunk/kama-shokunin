@@ -101,3 +101,18 @@ wave settles and reports any seat that dies in the round report.
 | 3 | S174 teaches verbatim mislabel | appended a decision-record correction (append-only) | `SOURCES.md` §Round-30 source correction |
 | 4 | S176 teaches vs decision-record mismatch | appended a decision-record correction naming the landed cell | same section |
 | 5 | SCORECARD note omits `corpus/lessons/round-2.md:49` | appended the missing location in the round-30 section | `SCORECARD.md` §Round 30 |
+
+## Appended seat findings (round 30, after the control call)
+
+- **CtlTamper** proved its tamper live: an unshielded counter copy on the tampered repo reads
+  `mismatched_at_base 11 unresolved 0`, while the frozen counter reads `13 / 11 / 2` unchanged. The
+  replacement-object shield is load-bearing; the pinned `mismatched_at_base == 13` independently
+  blocks the "make the two lines true" route (it moves the count away from 13). No `refs/replace` or
+  `refs/tamper/` remained in the lane after the arm.
+- **CtlDoNothing** separated two readings the table conflated: an empty tip reads `unresolved 13`;
+  the lane tip with the 11 round-29 rows reads `unresolved 2`. The summary's appended correction
+  records both.
+- **C2**: `tests/ollama-corpus-guard/check.py` is refused as an agreement subject — its output embeds
+  its staging path and a digest over the patched wrapper, so `agree=1 disagree=2`
+  (`c2/receipt-b-corpusguard-refused.json`). This is the entry's worked refusal, not a normalization
+  gap to paper over.

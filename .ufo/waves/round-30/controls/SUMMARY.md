@@ -41,3 +41,17 @@ What these receipts show and do not show:
 - Two arms (CtlEditInPlace, and the CtlBaseTree variant's own receipt line) are weaker than planned:
   CtlEditInPlace did not return, and CtlBaseTree's seat filed the lane-copy receipt as its scored line.
   Both are recorded as seat-level limits, not as counter findings.
+
+## Appended corrections (after the arms returned)
+
+1. **CtlDoNothing row.** The table's "unresolved 13" is the arm's *base-tree* reading (Arm B). On the
+   lane tip with the 11 round-29 rows present (Arm A/C) the same arm reads `valid 11 unresolved 2
+   met False`: the trip itself is not row-free. Both readings are receipts in that seat's dir; the
+   row's "no correction rows" describes Arm B only.
+2. **CtlTamper row.** The seat proved the tamper live (an unshielded counter copy reads `mismatched
+   11 unresolved 0` on the same repo) and the lane counter unchanged (`valid 11 unresolved 2`) because
+   of its `--no-replace-objects` + env filter. Making the two false lines true moves
+   `mismatched_at_base` 13 → 11, away from the frozen 13, so the tamper cannot reach the claim on
+   either reading. `refs/replace` and `refs/tamper/` were absent from the lane after the arm.
+3. **CtlBaseTree arm.** The seat's own variant receipt is under its directory; the table's line is the
+   lane copy on the same tree, not a variant result. Recorded as a seat-level limit.
