@@ -37,7 +37,13 @@ Order of events (all commits by `jj-lane.sh`):
    met 18; the counter was not changed.
 3. Wave 1 (32 seats, 08:31-08:34Z): 17 data seats measured every declared
    field live on their own ports and returned uncommitted row drafts.
-4. Amendment A1 (`75b78bb4`, before any data row was committed or scored):
+4. Amendment A1 (`75b78bb4`, written about 08:37:23Z, committed 08:38:16Z,
+   before any data row was committed, but NOT before data was scored: wave-2
+   critic CriticA1Legitimacy found that data seat DataG01 had already checked
+   its four live row drafts with the A0 counter's own functions (REJECT_RE,
+   same(), outcome_text()) at 08:35:54Z, and the L1 had read data-seat drafts.
+   The preregistration's A1 text "before the counter scored any data row" is
+   therefore incomplete; it is corrected here, not edited):
    data seats DataG03/05/07/08 returned rows whose stored value is only a
    generic type conversion (float32 saturation 1e39 -> 3.4028e38, uint32 wrap,
    truncation). Under A0 those count, so a type-only policy needs no field
@@ -57,11 +63,11 @@ Order of events (all commits by `jj-lane.sh`):
 |---|---|---|---|
 | 1 | `count-c2.py` trusts receipt cells | repaired: every per-cell value is recomputed from the sha256-bound raw bodies/log; a receipt cell that disagrees makes the cell unobserved | `.ufo/waves/round-25/count-c2.py` (sha256 5aa64a37…); ExecCountC2Fix: committed receipt `registered 14 observed 14 bound True missing []` before and after; forged cells with raw untouched: before `observed 14 bound True`, after `observed 11 bound False missing ['K2','K4','L1']`; forged raw with re-bound hash: before `bound True`, after `bound False` (`w1/out/ExecCountC2Fix/`) |
 | 2 | F3 file-content echo leg; per-class receipts | closed as a criterion, not code: the round-27 counter is retired without data; KQ37 now requires an F3 leg of any future signature counter (QUALITY.md round-28 qualification 4). This round's counter is not a signature counter; its per-class receipts are non-vacuous (`controls/`, `controls-A1/`); five classes are holds | QUALITY.md; `controls/HOLDS.md` |
-| 3 | round-27 counter not registered | repaired: SKILL.md registry rows retire `.ufo/waves/round-27/count-c1.py` and register this round's counter, `tools/gate-registry-check.py` and `tools/echo-recheck.py`; the check itself is the mined-mistake fix below | SKILL.md `## Local gate/probe registry — round-28 rows` |
+| 3 | round-27 counter not registered | repaired: SKILL.md registry rows retire `.ufo/waves/round-27/count-c1.py` and register this round's counter, `tools/gate-registry-check.py` and `tools/echo-recheck.py`; the check itself is the mined-mistake fix below | SKILL.md `## Round-28 instrument registry (owner: kama)`; the check is occurrence-only (a prose mention of the path satisfies it; ReviewGateRegistryCheck), so it proves a path is named, not that a full registry row exists |
 | 4 | KQ37 S136 wording; clause (d) overstated | repaired: QUALITY.md `## Round 28 qualification -- KQ37` items 1-2 | ScribeKQ37Qualification line checks |
 | 5 | boundary probe scope; E26-14 | repaired: QUALITY item 3 and the entry's boundary-cost text now state exact, case-sensitive decoded strings of length >= 4 (`boundary-leg.receipt.json:10-14`); E26-14 is named as the open boundary-design question | `corpus/knowledge/echo-discriminating-counters.md` |
 | 6 | entry `recheck:` not runnable | repaired: `tools/echo-recheck.py --out <fresh path>` (refuses an existing path); ExecEchoRecheck runs: `echo-recheck same 6/6` exit 0 twice, existing path exit 2, mutated baseline `drift req1-plain` exit 1 | `w1/out/ExecEchoRecheck/` |
-| 7 | round-27 report imprecisions | corrected here and in the round-28 report: the residual call spawned at 07:23:39Z (`.ufo/waves/round-27/residual/spawn-result.txt`), and `8057282c` also added `census-final.out` and `sources-append-only-final.out` | `git show --stat 8057282c` |
+| 7 | round-27 report imprecisions | corrected here and in the round-28 report: the residual call spawned at 07:23:39Z (`.ufo/waves/round-27/residual/spawn-result.txt`), and `8057282c` also added `census-final.out` and `sources-append-only-final.out` | `git show --stat 8057282c` (committed output `.ufo/waves/round-28/final/r27-8057282c-stat.out`) |
 
 ## Gate
 
@@ -109,3 +115,84 @@ words (L1 check: each occurs in the whitespace-normalised snapshot).
 | S171 | `ignore_eos` (L423) | https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp#L423 | 2026-10-23T08:34:29Z | `add((new field_bool("ignore_eos", params.sampling.ignore_eos)) ->set_desc("Ignore the end-of-sequence token and continue generating")` (10 words) | DataG15 (sha256 of own fetch 1f9d7b73b436…) | 1f9d7b73b436… |
 | S172 | `stop` (L435) | https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp#L435 | 2026-10-23T08:34:29Z | `add((new field_json("stop")) ->set_desc("Specify stopping strings. Generation stops when one is produced, and the string is not included in the output")` (20 words) | DataG15 (sha256 of own fetch 1f9d7b73b436…) | 1f9d7b73b436… |
 | S173 | `samplers` (L453) | https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp#L453 | 2026-10-23T08:34:29Z | `add((new field_json("samplers")) ->set_desc("The order in which samplers are applied. An array of sampler type names, or a single string of sampler chars")` (22 words) | DataG15 (sha256 of own fetch 1f9d7b73b436…) | 1f9d7b73b436… |
+
+## Mistakes
+
+| class | evidence pointer | captured-by | fix |
+|---|---|---|---|
+| A0 counter credited generic type conversions as field knowledge (this round). The frozen A0 clause (e) refused only identity and the field-omitted default, so a stored value that is merely a float32 saturation, truncation or 2^32 wrap of the value sent counted. | `.ufo/waves/round-28/w1/out/DataG05/rows.json`, `DataG07/rows.json`, `DataG08/rows.json`, `DataG03/rows.json` (rows with 3.4028234663852886e+38, 0, 2); `.ufo/waves/round-28/controls-A1/CtlA1Conversion/receipt-A0.json` | none: no pre-freeze control tried a type-only policy (`controls/HOLDS.md`); found by data seats before any data row landed | Amendment A1 (`75b78bb4`): clause (e) refuses an effective value equal to any generic conversion of the value sent. Shown able to fail: the same type-only fixture counts 20/52 (meets) under A0 and 0/52 under A1 (`controls-A1/CtlA1Conversion/receipt.json`), and at the landed tip A1 refuses exactly the 8 conversion rows (`final/c1-e49b4cf7-receipt.json`). |
+| Seat-supplied source quotes were not verbatim (this round). Eight of 34 data-seat quotes do not occur in the pinned file as written (four paraphrase or drop characters: lora, xtc_probability, temperature, logit_bias; four join fragments with "..." : preserved_tokens, ignore_eos, stop, samplers). | `.ufo/waves/round-28/final/quote-check.out` (`seat quotes 34 not-verbatim 8`) | CORPUS.md SOURCES contract (located quote); caught by the L1 before landing | Every Gate quote is taken mechanically from the pinned file (`integrate.py`: lines L and L+1, whitespace-joined, first 25 words). Shown able to fail: `.ufo/waves/round-28/quote-check.py` flags the 8 seat quotes and passes the 34 Gate quotes (`gate quotes 34 not-verbatim 0`, exit 0); it exits 1 when any Gate quote fails. |
+| Pre-data depth feasibility and counter controls were not established before freeze. The chronology is narrower than “rounds 24–27”: SCORECARD records round 24 as calibration and round 25 as calibration/coverage; the relevant depth failures are rounds 26–27. | `SCORECARD.md:1197-1239,1252-1304` (rounds 24–25 axes); `SCORECARD.md:1312-1339` (round-26 shortcut control refused before data, then 12/12 echoed literals met the frozen counter after data); `SCORECARD.md:1365-1370` (round-27 C1 counted 0, with no data seat); `.ufo/waves/round-28/preregistration.json:11,20`; `.ufo/waves/round-28/before/pilot-receipt.json` | none before round 28 | The round-28 preregistration adds a feasibility scan (55 new literals, only 2–3 HTTP-reachable) and a pre-control pilot receipt counting two genuine scratch rows (2/2; target 18 not met). The pilot fields are excluded from claim data. This is positive counter-validity evidence, not a fail-closed feasibility test: no infeasible/negative case is shown rejected, so this fix is **not demonstrated able to fail**. |
+| Frozen round-27 counter omitted from SKILL.md gate registry. | `corpus/lessons/round-27-verifier-spotcheck.md:266-269`; `.ufo/waves/round-28/w1/out/ExecGateRegistryCheck/base-4179301.out`; `.ufo/waves/round-28/w1/out/ExecGateRegistryCheck/base-4179301.exit` | PROTOCOL §Gate standard, Registry | `tools/gate-registry-check.py` run at base `4179301` reported `unregistered .ufo/waves/round-25/count-c2.py`, `unregistered .ufo/waves/round-27/count-c1.py`, `registered 2 unregistered 2`; exit 1. The proposed registry check is demonstrated able to fail at base. |
+| Round-27 report facts were stated imprecisely rather than checked against the source artifacts. | `corpus/lessons/round-27-verifier-spotcheck.md:284-287`; `.ufo/waves/round-27/residual/spawn-result.txt:10-11`; output of `timeout 20s git -C /home/vgpnk/Projects/shokunin/kama-shokunin show --stat 8057282c` (committed as `.ufo/waves/round-28/final/r27-8057282c-stat.out`) | Round-27 non-author verifier spot-check, routed defect 7 | Check the source timestamp and exact commit file list before reporting. The check exposes both errors: spawn succeeded at `07:23:39.921107+00:00` (not about 07:27Z), and `8057282c` changed four files, including `census-final.out` and `sources-append-only-final.out`, not only receipt files. Demonstrated able to fail for this pair of assertions; no general report-audit gate is claimed. |
+
+## Measurement
+
+- Base `4179301f` (`.ufo/waves/round-28/before/c1-base.out`, A0 counter):
+  `registered 0 counted 0 target 18 met False not-counted []`.
+- Landed data tip `e49b4cf7`, fresh clone of the lane remote, A1 counter
+  (sha256 a38faefe…49a5; `.ufo/waves/round-28/final/c1-e49b4cf7.out`):
+  `registered 34 counted 26 target 18 met True not-counted ['F28-11', 'F28-14',
+  'F28-16', 'F28-17', 'F28-21', 'F28-22', 'F28-25', 'F28-26']` (all eight
+  `e:generic-conversion`). Same tree, A0 counter (`final/c1-A0-e49b4cf7.out`):
+  `registered 34 counted 34 target 18 met True`. Reproduced by wave-2 seat
+  RecountFreshClone (both numbers, ids unique, no excluded field, one SKILL row
+  per counted id).
+- Wave-2 corrections after `e49b4cf7` changed only meaning cells and prose
+  outside the table (list below); the counted cells (id, field, value,
+  outcome, source) are byte-unchanged and the report cites the re-measurement
+  at the final tip.
+
+## Claim verdict as the author reports it
+
+C1 reaches the numerical target at `e49b4cf7` under both rules: A0 counts
+34/34 and A1 counts 26/34 against 18. A1 is a post-data-informed counter
+repair, not the rule frozen before data: data seat DataG01 had already
+evaluated four live row drafts with the A0 counter's own functions at
+08:35:54Z, before A1 was written (about 08:37:23Z) and committed (08:38:16Z).
+A1 preceded the first committed data table and registry, not all data
+observation or scoring; min_p was re-probed afterwards (-0.25 → -1.5) so that
+its clamp result differs from truncation. A1 only removes rows and does not
+change the met result. But a declaration/type-only control meets A0 at 20/52
+and falls to 0/52 under A1, so under the rule frozen before data the counter
+did not discriminate that shortcut (wording from wave-2 critic
+CriticA1Legitimacy, adopted). The author therefore does not promote depth
+(SCORECARD round-28 row: 7 → 7) and leaves the disposition to the non-author
+closure.
+
+A second post-data attack (ExecShortcutPostData) met the A1 counter, 20/20,
+with rows derived from server-schema.cpp's declared limits and no server run
+by the writer. That writer read the field's declared bounds, which is the
+source half of the claimed work; it shows the counter, not the writer,
+performs the live check, and that clause (c) checks SOURCES text without a
+fetch. It is recorded as a limit, not as a source-blind control: the
+source-blind controls (README and names only) reached 14 (A0) and 11 (A1).
+
+## Wave records
+
+- Control call: 10 seats (executor 6, mutation-tester 4), `controls/`; 5 holds.
+- Wave 1 (`w1/spec.json`, validated v1, 32 seats: executor 21, scribe 4,
+  reviewer 3, scout 2, connector 1, critic 1), first send refused at 08:30Z
+  (`Background job limit reached (100)` for all 32), resent unchanged in
+  chunks of 12/12/8 at 08:31:50Z, 08:32:50Z, 08:33:50Z (`w1/spawn-result.txt`).
+- A1 control call: 3 executor seats, `controls-A1/`.
+- Wave 2 (`w2/spec.json`, validated v1, 32 seats: reviewer 28, critic 2,
+  executor 1, scout 1), dispatched 08:58Z in one call.
+- Dead seats: none. Holds: CtlNoReader, CtlObjectStore, CtlAllFalse (provider
+  cyber refusals), CtlEcho, CtlSourceMisuse (automatic model switch after a
+  safety filter); never re-sent.
+
+## Gate — decisions on seat findings
+
+| Finding (seat) | Decision | Reason |
+|---|---|---|
+| Amend the counter again: exact-cell match, duplicate-id rule, int64 tolerance (ReviewerCounterCode) | **reject** | A1 is declared the last amendment; the landed rows use exact cells and unique ids (RecountFreshClone), so these are recorded limits, not changes |
+| Count the six float32-saturation rows and seed/n_probs as field knowledge (DataG03/05/07/08 drafts) | **reject** | generic conversions of the value sent, not field bounds; registered, shown, not counted (A1) |
+| Add json_schema → grammar as a row (DataG12) | **reject** | the stored GBNF contains `|`, which the frozen table parser cannot hold; disclosed in the no-row paragraph |
+| Treat ExecShortcutPostData (20/20 from declared limits) as a source-blind control meeting A1 | **reject** | it reads each field's declared bounds, the source knowledge the table teaches; recorded as a counter limit (writer need not run the server; clause (c) is text-only) |
+| ScribeSkillRegistryRows: keep "withdrawn before data" as the round-27 disposition | **reject** | the round-27 closure ruled C1 a miss; the registry row says retired with C1 (miss, never run on data) |
+| A1 timing wording "before the counter scored any data row" (CriticA1Legitimacy) | **admit** | corrected above; preregistration bytes unchanged |
+| Meaning-cell defects F28-03/04/05/07/08/09/11/14/16/17/19/20/21/22/25/27/33/34 and two intro/no-row sentences (RowReview04/06/09/10/11/13/17, CriticDepthAxisPostData, ReviewSkillSectionIntro, ScoutSkillContradictions) | **admit** | corrected in SKILL.md; counted cells unchanged |
+| Gate-registry check is occurrence-only (ReviewGateRegistryCheck) | **admit** | stated in the registry row and the mistake row |
+| Echo-recheck write scope and counter exit 1 path (ReviewInstrumentRegistry) | **admit** | registry rows corrected |
+| Mistake row fixes lacked committed receipts (ReviewLessonMistakes) | **admit** | `final/quote-check.out`, `final/r27-8057282c-stat.out` |

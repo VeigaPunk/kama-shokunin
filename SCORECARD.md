@@ -1400,3 +1400,42 @@ Repair defect 8 (`count-c2.py` cell trust). If depth is worked again, the
 counter must meet KQ37 with its round-27 qualification (boundary leg, Unicode
 case folding) and carry committed non-author control receipts per class
 before any data seat.
+
+## Round 28 — request-field outcomes on the serving runtime (depth); round-27 repairs (2026-10-23, attempt 1)
+
+One measured claim. Lowest axes at the start: depth, calibration and adjacency,
+all 7 (round-27 section). Preregistration
+`.ufo/waves/round-28/preregistration.json` (A0 frozen `d8bf1804`, amendment A1
+`75b78bb4` before any data row landed but after data seat DataG01 had checked
+its drafts with A0 counter functions at 08:35:54Z; reasons and the correction
+in the lesson).
+
+| Claim | Axis, score | Before → after | Counting command | Measured commit | Evidence |
+|---|---|---|---|---|---|
+| C1 (measured) | depth 7 → 7 (no promotion by the author: under the rule frozen before data, A0, a type-only control also meets the counter, 20/52; A1, which refuses it, was written after a data seat had checked drafts with counter functions; closure rules) | `registered 0 counted 0 target 18 met False` at base 4179301f (`before/c1-base.out`) → `registered 34 counted 26 target 18 met True` (8 rows not counted: `e:generic-conversion`) | `/usr/bin/python3 .ufo/waves/round-28/count-c1.py --out <receipt.json>` from a fresh clone of the lane remote (counter sha256 a38faefe…49a5, A1) | `e49b4cf7` (`.ufo/waves/round-28/final/c1-e49b4cf7.out`; A0 counter on the same tree: 34/34, `final/c1-A0-e49b4cf7.out`) | SKILL.md "## Round-28 request-field outcomes" (F28-01..F28-34), `registry/request-field-outcomes-r28.json`, SOURCES S140-S173, lesson `corpus/lessons/round-28.md` |
+
+Surface moved: SKILL.md gains a decision table for llama-server's request-field
+schema (`tools/server/server-schema.cpp` @704366d76) on the lane fixture:
+which fields reject an out-of-range value with HTTP 400 and their hard bounds,
+which clamp silently and to what, and which handlers transform the value
+(`lora`, `logit_bias`, `ignore_eos`, `stop`, `samplers`, `preserved_tokens`).
+Before this round no lane document named server-schema.cpp, `set_hard_limits`
+or the bounds message (`.ufo/waves/round-28/w1/out/ScoutProvince/grep-hits.txt`).
+The command that shows it unmoved is the same counter at base (counted 0).
+Controls: pre-freeze evidential maximum 14 (source-blind, A0); the type-only
+conversion policy built after data meets A0 (20/52) and not A1 (0/52); re-scored pre-freeze fixtures at most 9, a fixed
+README-and-names policy 11/38 (`controls/`, `controls-A1/`). Five pre-freeze
+control seats are holds (`controls/HOLDS.md`). Limits: one fixture build,
+model and argv; one request per field; "200, key = value" is the stored
+setting, not sampler effect; `n_cmpl`'s bound depends on `n_parallel`.
+
+Repairs (routed by `corpus/lessons/round-27-verifier-spotcheck.md`, not
+claims): defects 1-7, lesson §Repairs. Mined mistake: lesson §Mistakes.
+Other scores held: operability 8, freshness 8, coverage 9, calibration 7,
+adjacency 7, depth 7. Capabilities: none claimed.
+
+### Planned (round 29)
+
+Work calibration or adjacency (7). Candidate: the other endpoints'
+request-field handling (`/v1/chat/completions` parameters mapped onto the
+same schema) and the json_schema → grammar transform, with the A1 rule kept.

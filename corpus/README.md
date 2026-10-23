@@ -419,3 +419,16 @@ C1 (depth, new request-validation signatures) was not run on data and is a
 miss. K05 beyond the lane fixture, router-mode model errors, other engines and
 registered-consumer reconciliation remain open. X1 is exploratory; no
 admission is claimed here.
+
+## Frontier disposition — round 28 (2026-10-23)
+
+New core surface: SKILL.md "## Round-28 request-field outcomes" — llama-server
+b11755's request-field schema (`tools/server/server-schema.cpp` @704366d76) on
+the lane fixture: hard-bound rejects, silent clamps and handler transforms for
+`POST /completion` (registry `registry/request-field-outcomes-r28.json`,
+sources S140-S173, counter `.ufo/waves/round-28/count-c1.py`). Before round 28
+the surface was absent from PROVINCE.md and from every frontier list. Open:
+the same fields through `/v1/chat/completions` and other endpoints, the
+json_schema → grammar transform, launch-dependent bounds under other argv
+(`n_parallel`), other builds and engines; K05 beyond the fixture and
+registered-consumer reconciliation stay open.

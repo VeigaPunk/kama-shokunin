@@ -1786,3 +1786,34 @@ ReviewCensusStart; S133's source re-fetched (sha256 unchanged) for S138.
 (`/fast/scratch/hyaku/kama-r27/attempt2-untracked-w1-scratch/`); three
 orphan llama-server processes left by attempt-2 seats (ports 47636, 47637,
 47644) killed at 07:18Z.
+
+## Round 28 — request-field outcomes (depth); round-27 routed repairs (2026-10-23)
+
+**Claim C1 (depth), measured.** SKILL.md "## Round-28 request-field outcomes":
+34 rows from 17 data seats that each measured their assigned fields live on
+the pinned b11755 fixture (own ports 48201-48217) and cited the declaring line
+of `tools/server/server-schema.cpp` @704366d76 (S140-S173). Frozen counter
+from a fresh clone at `e49b4cf7`: `registered 34 counted 26 target 18 met
+True` (`.ufo/waves/round-28/final/c1-e49b4cf7.out`). Order of events, controls
+and amendment A1: `corpus/lessons/round-28.md` §Claims.
+
+**Evidence that motivated A1.** Data seats DataG03, DataG05, DataG07 and
+DataG08 returned rows whose stored value was only a type conversion (1e39 →
+3.4028234663852886e38; 4294967296 → 0; 2.5 → 2). CtlA1Conversion then showed
+a type-only policy meets the A0 counter (20/52) and not A1 (0/52).
+
+**Repairs.** Round-27 spot-check defects 1-7 (lesson §Repairs): `count-c2.py`
+recomputes cells from raw bytes; KQ37 round-28 qualification; entry recheck
+line and `tools/echo-recheck.py`; SKILL instrument registry rows;
+`tools/gate-registry-check.py` (base exit 1, tip exit 0).
+
+**Re-verification (freshness).** The pinned snapshot server-schema.cpp was
+re-fetched by 13 data seats (sha256 1f9d7b73…0050 each time); round-27 live
+echo probe re-run by ExecEchoRecheck: `echo-recheck same 6/6`.
+
+**Wave 2 (falsify, 32 seats).** Every row re-measured live by a second seat;
+all 34 outcomes reproduced. Meaning-cell over-generalisations corrected (18
+cells, counted cells unchanged). CriticA1Legitimacy: A1 was written after a
+data seat had checked drafts with A0 counter functions (08:35:54Z), and a
+type-only control meets A0 (20/52); the author does not promote depth (7 → 7)
+and reports both rules (lesson §Claim verdict).

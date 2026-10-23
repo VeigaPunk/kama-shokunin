@@ -1,0 +1,8 @@
+# Round-28 Mistakes review
+Verdict: partly holds. Axes: evidence-pointer accuracy, capture attribution, fix falsifiability/receipt quality.
+- Row 1 holds: cited drafts show generic conversions; A0/A1 control receipts count 20/52 vs 0/52, and final A1 rejects the eight conversion rows (`controls-A1/CtlA1Conversion/receipt-A0.json`, `receipt.json`, `final/c1-e49b4cf7-receipt.json`).
+- Row 2: the four bad quotes are evidenced by `w1/out/DataG04/rows.json`, `DataG11/rows.json`, `DataG15/rows.json` against the pinned schema; `CORPUS.md` rule 1 is the right attribution. But `integrate.py:63-64` constructs quotes from the snapshot; it never reads the seat quote or asserts, and no committed failure receipt shows those four drafts rejected. Current Gate quote content is source-derived; the assertion/failure claim is overstated.
+- Row 3 holds with its stated caveat: SCORECARD/prereg/pilot pointers support the chronology; the pilot's 2/2 positive count is not a negative feasibility test, explicitly disclosed as not demonstrated able to fail (`before/pilot-receipt.json`).
+- Row 4 holds: `PROTOCOL.md` §Gate standard/Registry matches the omission; committed base output/exit show two unregistered counters and exit 1 (`w1/out/ExecGateRegistryCheck/base-4179301.{out,exit}`); checker scope is occurrence-only.
+- Row 5 facts hold: spawn timestamp is in `round-27/residual/spawn-result.txt`; read-only `git show --stat 8057282c` confirms four files, but the lesson cites command output rather than a committed raw receipt (`w1/advice/ScribeLessonMistakes.md:12`). Fix remains manual, not a fail-gated check.
+- Verification gap: no LSP device/server was available in this seat; document/artifact review only, no installs or runtime checks.

@@ -1,0 +1,5 @@
+Verdict: partly.
+P2 — `SKILL.md:1222` says Echo recheck writes only `--out`; `tools/echo-recheck.py:335-338` creates `<out>.server.log`, opened at `:187-190`. The sidecar exists as `.ufo/waves/round-28/w1/out/ExecEchoRecheck/run1.json.server.log`; write scope is understated.
+P2 — `SKILL.md:1218` omits C1 exit 1: malformed registry JSON (`count-c1.py:531`) and a failed `--out` write (`:648-649`) escape the only `CannotEvaluate` handler (`:639-643`). [INFERENCE] These uncaught exceptions yield Python exit 1, despite the row mapping only 0/2.
+Holds — A1/A0, snapshot, server/library/model, round-27 and round-25 counter SHA-256 values match their files; parsed CLI options and cited evidence paths match the inspected sources/artifacts.
+Verification gaps: no counter runs (lane bound); LSP unavailable (`xd://lsp` is not mounted).

@@ -105,3 +105,11 @@ capacity is not model quality. Kengaku's technique overlap is acknowledged,
 not absorbed. K05 across real consumers and other engines remains frontier.
 Do not traverse Kagi no-enumerate/config roots to discover models.
 
+
+**Round-28 core note — request-field schema.** llama-server's per-request
+field schema (`tools/server/server-schema.cpp` @704366d76: hard-bound rejects,
+silent clamps, handler transforms, as stored in `generation_settings`) enters
+held ground for the lane-owned b11755 fixture via SKILL.md "## Round-28
+request-field outcomes" (S140-S173). It describes what the server accepts and
+stores for one request, not sampling quality, model identity or registered
+endpoint health. Other endpoints, builds and engines remain frontier.

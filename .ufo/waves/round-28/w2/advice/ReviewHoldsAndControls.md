@@ -1,0 +1,6 @@
+VERDICT: partly — all examined controls-A1 receipt hashes, scores, and verdicts match; no numeric contradiction found.
+Counter pins: all A1 receipts use a38faefe…222749a5 (also actual landed count-c1.py SHA-256); Conversion A0 receipt uses e6a706bb…565c0540c (also A0 at d8bf1804).
+Receipt-backed lesson numbers: Conversion A0 20/52 met=true; A1 0/52 met=false. Rescore receipts: source-blind 9/38, label-keyed 7/41, junk 0/30, duplicate-field 0/26, do-nothing 0/0; max=9. Blind-plus 11/38. All corresponding REPORT verdicts say does-not-meet, consistent with target 18 and receipt met=false.
+Residual required-control gaps (HOLDS explicitly excludes them as evidence): no-reader, object-store, all-false (provider refusals); echo and source-misuse (automatic model switch). These five classes still lack evidential receipts.
+Evidence: `.ufo/waves/round-28/controls-A1/{CtlA1Conversion,CtlA1Rescore,CtlA1BlindPlus}/`; `.ufo/waves/round-28/controls/HOLDS.md`; `preregistration.json`; `corpus/lessons/round-28.md:46-50`.
+Verification: inspected all controls-A1 receipt metadata and compared A1/A0 SHA-256 values to their actual counter versions; no tools installed.
