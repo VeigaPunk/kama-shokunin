@@ -1505,7 +1505,7 @@ Work depth or adjacency (7). A depth re-claim meets KQ38 (credit only outcomes n
 declared bounds or type rules; both shortcuts scored before any seat). The 72 extractor misses and
 the line-824 "5 cases" prose mismatch are open calibration ground.
 
-## Round 30 — self-assessment corrections (recall population)
+## Round 30 — self-assessment corrections
 
 Appended by the kama L1, round 30, after the frozen counter (`.ufo/waves/round-30/count-c1.py`,
 sha256 `c3f16ef1…9ce40d`, frozen at `fdf8cda1`) and its pre-data control receipts
@@ -1524,3 +1524,47 @@ This is the same bounded reading as round 29 — an evidence-resolution defect r
 that the judgments behind the statements were wrong. Round-29 record correction (routed defect 5):
 the round-29 appended note at SCORECARD.md:1490-1493 omits that the M02 span also sat at
 `corpus/lessons/round-2.md:49`; the note's point stands.
+
+## Round 30 — recall-population census (calibration) and run-agreement capability (operability)
+
+Authority: assigned axes operability + calibration (`../shokunin.conf` kama row). Lowest axes at the
+start: depth, calibration and adjacency all 7; C1 works calibration. Stagnation nudge inactive.
+Preregistration `.ufo/waves/round-30/preregistration.json`, frozen at `fdf8cda1` before any seat;
+pre-data control receipts committed at `14bb1a32`; data (the two SA30 rows above) at `4d498001`.
+
+| Claim | Axis, score | Before → after (measured) | Counting command | Measured commit | Evidence |
+|---|---|---|---|---|---|
+| C1 (measured) | calibration 7 → 7 (no promotion by the author; closure rules) | `statements 141 extracted 69 oracle 72 bound 72 unbound 0 mismatched_at_base 13 append_only True valid_corrections 0 false_corrections 0 unresolved 13 met False` at base → `… valid_corrections 13 false_corrections 0 unresolved 0 met True` at the landing tip | `/usr/bin/python3 .ufo/waves/round-30/count-c1.py --repo <fresh clone> --tip <commit> --out <receipt>` (counter sha256 `c3f16ef1…9ce40d`, frozen at `fdf8cda1`) | the tip recorded in `final/c1-tip.json` (the round-30 landing commit) | `c1/before/c1-base.out`; `c1/before/c1-r29-tip.json` (rows-only arm: valid 11, unresolved 2); `final/c1-tip.out`; the two SA30 rows above; lesson `corpus/lessons/round-30.md` |
+| C2 (capability acquisition) | operability 8 → 8, **new capability row** | tool absent at base (`git cat-file -e 2aa46e24:tools/instrument-agreement.py` exit 128) → selftest `IA_SELFTEST pass=4 fail=0` exit 0 with the nondeterministic arm `agree=2 disagree=1`, two receipts `IA runs=3 agree=3 disagree=0` | `python3 tools/instrument-agreement.py --selftest; echo SELFTEST_EXIT=$?` and `python3 tools/instrument-agreement.py --runs 3 --out <receipt> -- <instrument>` | `1d3e8ba4` (tool + selftest + first receipt) | `c2/selftest.out`; `c2/receipt-a.json` (`error-verdict-census.py --json`); `c2/receipt-b.json` (`sources-append-only.py --from 2aa46e24 --to 52ac3af --json`); `c2/receipt-b-corpusguard-refused.json` (the guard refused as a subject: staging-path digest) |
+
+Surface moved by C1: the lane's self-assessment census. Before, its population was whatever its
+extractor found (69 statements) and 72 further checkable statements were disclosed as invisible; now
+the population is explicit (141), each of the 72 is classified at its writing revision by committed
+instrument bytes, and the 2 that do not hold carry observed values. What it does not show: that the
+extractor generalizes (its bytes are unchanged and still find 69 alone), or that any past judgment was
+wrong. The command that shows it unmoved is the same counter at base (`oracle 0`, `unresolved 13`).
+
+Surface moved by C2: the lane's instrument-reproducibility repertoire. Before, no lane tool could
+state whether an instrument's output is reproducible across runs; now one can, with a fail-capable
+selftest and receipts. What it does not show: that any instrument is correct.
+
+### capabilities: append — first working round 30
+
+| Name | What it can do | Demonstration | First-working round |
+|---|---|---|---|
+| instrument-agreement | run a lane instrument N times over one tree in isolated temp dirs, normalize only declared volatile fields, and emit a receipt with per-run exit/normalized-output digests and an `IA runs=N agree=A disagree=D` counter; refuse a stub that always agrees and an instrument whose deviations are undeclared | `python3 tools/instrument-agreement.py --selftest` → `IA_SELFTEST pass=4 fail=0` exit 0; `python3 tools/instrument-agreement.py --runs 3 --out .ufo/waves/round-30/c2/receipt-a.json -- python3 tools/error-verdict-census.py --json` → `IA runs=3 agree=3 disagree=0`; the corpus guard as a refused subject | 30 |
+
+Other scores held: operability 8, freshness 8, depth 7, coverage 9, adjacency 7.
+Sources: census rows 177 → 179 (S178, S179 opened this round, both own-work tier A), validate exit 0.
+Trend reading by the author: expansion improved (one admitted knowledge entry on new ground, one
+capability, two sourced rows); quality improved (KQ40; the corpus guard's path-dependent digest
+refused rather than normalized away; three instrument defects found and fixed by their own receipts);
+discernment unchanged-to-improved (14 control arms, no shortcut meets; the predicate's weakest term
+named by an arm). Outside closure alone decides admission.
+
+### Planned (round 31)
+
+Work depth or adjacency (7). A depth re-claim still meets KQ38. Open calibration ground: the
+extractor still finds only 69 of the 141 by itself (see the README frontier note); any statement
+outside both populations remains invisible. C2's next step, if claimed, must name an instrument whose
+volatile fields are declared in advance, never normalized after a disagreement.
