@@ -1,0 +1,144 @@
+REV=a23c0e042114016a909eb15173aa6df74b5b7eb0
+
+### D1a
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin status --porcelain -- .ufo/waves/round-25
+?? .ufo/waves/round-25/a2-falsify/out/ReplicateReceipt/replication-run3/raw/L3.server.log
+exit=0
+
+### D1b
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin ls-files .ufo/waves/round-25/a2-falsify/out/ReplicateReceipt/replication-run3/raw | wc -l
+69
+exit=0
+
+### D2a
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff --numstat 1560e4d83f42b04f40336357de6f9637eafa0f4b a23c0e042114016a909eb15173aa6df74b5b7eb0 -- corpus/QUALITY.md
+exit=0
+
+### D2b
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff 1560e4d83f42b04f40336357de6f9637eafa0f4b a23c0e042114016a909eb15173aa6df74b5b7eb0 -- corpus/QUALITY.md | grep -E '^\+' | grep -v '^+++' | grep -c -i 'landed tip'
+0
+exit=1
+
+### D2c
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff --numstat 1560e4d83f42b04f40336357de6f9637eafa0f4b a23c0e042114016a909eb15173aa6df74b5b7eb0 -- corpus/lessons/round-25.md SKILL.md
+exit=0
+
+### D2d
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff 1560e4d83f42b04f40336357de6f9637eafa0f4b a23c0e042114016a909eb15173aa6df74b5b7eb0 -- corpus/lessons/round-25.md SKILL.md | grep -E '^\+' | grep -v '^+++' | grep -c 'M17'
+0
+exit=1
+
+### D2e
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show a23c0e042114016a909eb15173aa6df74b5b7eb0:SKILL.md | grep -n -i -E 'M17[^|]*surviv'
+exit=1
+
+### D3a
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show a23c0e042114016a909eb15173aa6df74b5b7eb0:corpus/SOURCES.md | grep -oE '\| supersedes S1(06|09|13) —' | sort | uniq -c
+exit=0
+
+### D3b
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff 1560e4d83f42b04f40336357de6f9637eafa0f4b a23c0e042114016a909eb15173aa6df74b5b7eb0 -- corpus/SOURCES.md | grep -cE '^-\|[[:space:]]*S[0-9]{3}[[:space:]]*\|'
+0
+exit=1
+
+### D3c
+$ cd /home/vgpnk/Projects/shokunin && bash scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama | tail -1
+kama	ok	/home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md
+exit=0
+
+### D4a
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show a23c0e042114016a909eb15173aa6df74b5b7eb0:corpus/knowledge/context-capacity.md | grep -n 'the only trace'
+55:  the pool is 4096 (`-c 4096`), the served ceiling is 2048, and the only trace
+exit=0
+
+### D4b
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show a23c0e042114016a909eb15173aa6df74b5b7eb0:corpus/knowledge/context-capacity.md | grep -n -c 'exceeds the training context'
+0
+exit=1
+
+### D4c
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show a23c0e042114016a909eb15173aa6df74b5b7eb0:corpus/knowledge/context-capacity.md | grep -n -E '1024 cells|held 1024'
+exit=1
+
+### D4d
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show a23c0e042114016a909eb15173aa6df74b5b7eb0:.ufo/waves/round-25/final/raw/K5.server.log | sed -n 1083p
+0.00.008.336 W srv    load_model: the slot context (4096) exceeds the training context of the model (2048) - capping
+exit=0
+
+### D5a
+$ cd /fast/scratch/hyaku/kama-r26/ReviewerRoutedChecklist/checks/tip && timeout 60 python3 .ufo/waves/round-25/count-c2.py
+registered 14 observed 14 bound True missing []
+exit=0
+
+### D5b
+$ cd /fast/scratch/hyaku/kama-r26/ReviewerRoutedChecklist/checks/mut && timeout 60 python3 .ufo/waves/round-25/count-c2.py
+registered 14 observed 14 bound True missing []
+exit=0
+
+### D5c
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show a23c0e042114016a909eb15173aa6df74b5b7eb0:.ufo/waves/round-25/count-c2.py | grep -n -i -E 'hashlib|raw hash|not check'
+exit=1
+
+### D6a
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff --numstat 1560e4d83f42b04f40336357de6f9637eafa0f4b a23c0e042114016a909eb15173aa6df74b5b7eb0 -- SCORECARD.md
+exit=0
+
+### D6b
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show a23c0e042114016a909eb15173aa6df74b5b7eb0:SCORECARD.md | sed -n '1306,1310p'
+Trend reading by the author: expansion improved (one entry on uncovered
+ground, one capability), quality unchanged-to-improved (routed wording and
+count corrections, KQ36), discernment improved (five attack findings turned
+into stricter counters, scoped claims and a filed axis dispute). Outside
+closure alone decides admission.
+exit=0
+
+### D6c
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff 1560e4d83f42b04f40336357de6f9637eafa0f4b a23c0e042114016a909eb15173aa6df74b5b7eb0 -- SCORECARD.md | grep -E '^\+' | grep -v '^+++' | grep -n -i -E 'discernment|quality' | grep -i unchanged
+exit=1
+
+### D7a
+$ grep -n 'kama kama-r26' $HOME/.local/state/shokunin-hyaku/wave-slots
+23:1792726390 36 kama kama-r26-w1-build
+exit=0
+
+### D7b
+$ python3 -c "import json;print(len(json.load(open('/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-26/w1-build/spec.json'))['items']))"
+36
+exit=0
+
+### D7c
+$ ls /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-26/w1-build/advice | grep -c '\.md$'
+7
+exit=0
+
+### D8a
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show a23c0e042114016a909eb15173aa6df74b5b7eb0:.ufo/waves/round-26/preregistration.json | python3 -c "import json,sys;d=json.load(sys.stdin);print(d['claims']['C1']['axis'])"
+depth
+exit=0
+
+### D8b
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show a23c0e042114016a909eb15173aa6df74b5b7eb0:SCORECARD.md | grep -n 'Other scores held'
+916:Other scores held (freshness8, coverage9, depth7, adjacency7); score changes and
+1019:exits. Other scores held: freshness 8, coverage 9, depth 7, adjacency 7.
+1304:Other scores held: operability 8, freshness 8, depth 7, adjacency 7.
+exit=0
+
+### R24-1
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff --stat 5cb46efcfeb55382ce44fb23f247300e5b1a2abb a23c0e042114016a909eb15173aa6df74b5b7eb0 -- .ufo/waves/round-24 corpus/lessons/round-24.md
+exit=0
+
+### R24-2
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show a23c0e042114016a909eb15173aa6df74b5b7eb0:SKILL.md | grep -n -o 'PM08 is a manual review-only note, unexecuted, uncredited'
+888:PM08 is a manual review-only note, unexecuted, uncredited
+exit=0
+
+### R24-3
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show a23c0e042114016a909eb15173aa6df74b5b7eb0:corpus/lessons/round-25.md | grep -n 'append lineage stays unresolved'
+74:   prepared-versus-landed append lineage stays unresolved, as routed.
+exit=0
+
+### R24-5
+$ git --version
+git version 2.56.0
+exit=0
+

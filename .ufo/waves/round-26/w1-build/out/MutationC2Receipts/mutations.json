@@ -1,0 +1,33 @@
+{
+  "axes": ["raw-evidence binding", "cell-to-evidence identity", "reproducibility and exact restoration"],
+  "frozen_commit": "a23c0e042114016a909eb15173aa6df74b5b7eb0",
+  "expected_detector": "Reject an inconsistent or absent raw-evidence binding: do not retain observed 14 with bound True and missing []. Exit 0 alone is not acceptance because the frozen counter always exits 0 for parsed receipts.",
+  "cases": [
+    {
+      "id": "raw-bytes",
+      "change": "Change K1.health.body status from ok to no; leave every receipt field and stored digest unchanged.",
+      "target": ".ufo/waves/round-25/final/raw/K1.health.body:1"
+    },
+    {
+      "id": "raw-sha",
+      "change": "Change cells[0].raw.raw_health first hexadecimal digit from a to b, retaining a 64-character hexadecimal digest and unchanged raw bytes.",
+      "target": ".ufo/waves/round-25/final/context-capacity-receipt.json:71"
+    },
+    {
+      "id": "raw-deleted",
+      "change": "Delete K1.health.body, retaining its digest in the receipt.",
+      "target": ".ufo/waves/round-25/final/raw/K1.health.body"
+    },
+    {
+      "id": "raw-empty",
+      "change": "Replace cells[0].raw with []. The committed raw field is a five-key object, not a list; this explicitly exercises the requested empty-list variant.",
+      "target": ".ufo/waves/round-25/final/context-capacity-receipt.json:70-76"
+    },
+    {
+      "id": "raw-cross-cell",
+      "change": "Duplicate K2's entire raw digest object onto K1. Keep all 14 distinct cell ids and K1's recorded measurements, args, argv and log_lines unchanged. This exercises another cell's raw evidence without the separate duplicate-id rejection.",
+      "target": ".ufo/waves/round-25/final/context-capacity-receipt.json:72-75",
+      "donor": ".ufo/waves/round-25/final/context-capacity-receipt.json:167-173"
+    }
+  ]
+}

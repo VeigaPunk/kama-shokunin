@@ -1,0 +1,46 @@
+Raw-hash binding falsifiers and pristine receipt
+
+Scratch source: lane tip a23c0e042114016a909eb15173aa6df74b5b7eb0, extracted with:
+  cd /home/vgpnk/Projects/shokunin/kama-shokunin && git archive a23c0e042114016a909eb15173aa6df74b5b7eb0 | tar -x -C /fast/scratch/hyaku/kama-r26/ExecC2RawBinding/extract
+The command was in a successful `&&` chain; the extracted final/raw directory contained 70 files and its unpatched counter ran successfully.
+
+Pristine unpatched baseline:
+  cd /fast/scratch/hyaku/kama-r26/ExecC2RawBinding/extract && python3 .ufo/waves/round-25/count-c2.py
+stdout: registered 14 observed 14 bound True missing []
+exit: 0
+
+Two mutants were constructed under separate scratch trees, each with an unpatched and patched counter copy and the receipt/raw evidence copied from the extract:
+1. `file-altered`: appended the bytes `\nMUTATED BY ExecC2RawBinding\n` to `final/raw/K1.health.body`, leaving the receipt digest unchanged.
+2. `receipt-hash-changed`: changed `cells[id=K1].raw.raw_health` to 64 zeroes, leaving all raw files unchanged.
+
+Mutant 1, unpatched accepts altered raw file:
+  python3 /fast/scratch/hyaku/kama-r26/ExecC2RawBinding/file-altered/.ufo/waves/round-25/count-c2.py /fast/scratch/hyaku/kama-r26/ExecC2RawBinding/file-altered/.ufo/waves/round-25/final/context-capacity-receipt.json
+stdout: registered 14 observed 14 bound True missing []
+stderr: (empty)
+exit: 0
+
+Mutant 1, patched refuses binding:
+  python3 /fast/scratch/hyaku/kama-r26/ExecC2RawBinding/file-altered/.ufo/waves/round-25/count-c2-patched.py /fast/scratch/hyaku/kama-r26/ExecC2RawBinding/file-altered/.ufo/waves/round-25/final/context-capacity-receipt.json
+stdout: registered 14 observed 14 bound False missing []
+stderr: (empty)
+exit: 0
+
+Mutant 2, unpatched accepts changed receipt hash:
+  python3 /fast/scratch/hyaku/kama-r26/ExecC2RawBinding/receipt-hash-changed/.ufo/waves/round-25/count-c2.py /fast/scratch/hyaku/kama-r26/ExecC2RawBinding/receipt-hash-changed/.ufo/waves/round-25/final/context-capacity-receipt.json
+stdout: registered 14 observed 14 bound True missing []
+stderr: (empty)
+exit: 0
+
+Mutant 2, patched refuses binding:
+  python3 /fast/scratch/hyaku/kama-r26/ExecC2RawBinding/receipt-hash-changed/.ufo/waves/round-25/count-c2-patched.py /fast/scratch/hyaku/kama-r26/ExecC2RawBinding/receipt-hash-changed/.ufo/waves/round-25/final/context-capacity-receipt.json
+stdout: registered 14 observed 14 bound False missing []
+stderr: (empty)
+exit: 0
+
+Pristine committed receipt at the same lane-tip extract, final patched copy:
+  python3 /fast/scratch/hyaku/kama-r26/ExecC2RawBinding/extract/.ufo/waves/round-25/count-c2-patched.py /fast/scratch/hyaku/kama-r26/ExecC2RawBinding/extract/.ufo/waves/round-25/final/context-capacity-receipt.json
+stdout: registered 14 observed 14 bound True missing []
+stderr: (empty)
+exit: 0
+
+Intermediate-edit note: a rerun immediately after adding the OSError handler failed because that edit had accidentally removed `files = {}`. Command was the pristine patched command above; stderr ended `NameError: name 'files' is not defined. Did you mean: 'filter'?`; exit 1. The initialization was restored, then all final outputs recorded above were rerun successfully. The intermediate failure was in a scratch copy of the candidate, not the unpatched counter or lane production files.

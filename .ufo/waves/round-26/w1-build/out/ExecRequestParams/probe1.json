@@ -1,0 +1,167 @@
+{
+  "argv": [
+    "/usr/bin/timeout",
+    "--signal=TERM",
+    "--kill-after=5s",
+    "60s",
+    "/home/vgpnk/.local/bin/llama-server",
+    "-m",
+    "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "47660",
+    "-t",
+    "2"
+  ],
+  "responses": [
+    {
+      "name": "baseline-health",
+      "method": "GET",
+      "path": "/health",
+      "request": null,
+      "status": 200,
+      "response_body": "{\"status\":\"ok\"}"
+    },
+    {
+      "name": "baseline-completion",
+      "method": "POST",
+      "path": "/completion",
+      "request": {
+        "prompt": "Once upon a time",
+        "n_predict": 1
+      },
+      "status": 200,
+      "response_body": "{\"index\":0,\"content\":\",\",\"tokens\":[],\"id_slot\":0,\"stop\":true,\"model\":\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\"tokens_predicted\":1,\"tokens_evaluated\":5,\"generation_settings\":{\"seed\":4294967295,\"temperature\":0.800000011920929,\"dynatemp_range\":0.0,\"dynatemp_exponent\":1.0,\"top_k\":40,\"top_p\":0.949999988079071,\"min_p\":0.05000000074505806,\"top_n_sigma\":-1.0,\"xtc_probability\":0.0,\"xtc_threshold\":0.10000000149011612,\"typical_p\":1.0,\"repeat_last_n\":64,\"repeat_penalty\":1.0,\"presence_penalty\":0.0,\"frequency_penalty\":0.0,\"dry_multiplier\":0.0,\"dry_base\":1.75,\"dry_allowed_length\":2,\"dry_penalty_last_n\":64,\"dry_sequence_breakers\":[\"\\n\",\":\",\"\\\"\",\"*\"],\"mirostat\":0,\"mirostat_tau\":5.0,\"mirostat_eta\":0.10000000149011612,\"adaptive_target\":-1.0,\"adaptive_decay\":0.8999999761581421,\"stop\":[],\"max_tokens\":1,\"n_predict\":1,\"n_keep\":0,\"n_discard\":0,\"ignore_eos\":false,\"stream\":false,\"logit_bias\":[],\"n_probs\":0,\"min_keep\":0,\"grammar\":\"\",\"grammar_lazy\":false,\"grammar_triggers\":[],\"preserved_tokens\":[],\"chat_format\":\"Content-only\",\"reasoning_format\":\"deepseek\",\"reasoning_in_content\":false,\"generation_prompt\":\"\",\"samplers\":[\"penalties\",\"dry\",\"top_n_sigma\",\"top_k\",\"typ_p\",\"top_p\",\"min_p\",\"xtc\",\"temperature\"],\"speculative.types\":\"none\",\"timings_per_token\":false,\"post_sampling_probs\":false,\"backend_sampling\":false,\"lora\":[]},\"prompt\":\"<s> Once upon a time\",\"has_new_line\":false,\"truncated\":false,\"stop_type\":\"limit\",\"stopping_word\":\"\",\"tokens_cached\":5,\"timings\":{\"cache_n\":0,\"prompt_n\":5,\"prompt_ms\":0.344,\"prompt_per_token_ms\":0.0688,\"prompt_per_second\":14534.883720930233,\"predicted_n\":1,\"predicted_ms\":0.001,\"predicted_per_token_ms\":0.0,\"predicted_per_second\":0.0}}"
+    },
+    {
+      "name": "bad-prompt-completion",
+      "method": "POST",
+      "path": "/completion",
+      "request": {
+        "prompt": {
+          "not_prompt": true
+        }
+      },
+      "status": 400,
+      "response_body": "{\"error\":{\"code\":400,\"message\":\"\\\"prompt\\\" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.\",\"type\":\"invalid_request_error\"}}"
+    },
+    {
+      "name": "bad-prompt-v1-completions",
+      "method": "POST",
+      "path": "/v1/completions",
+      "request": {
+        "prompt": {
+          "not_prompt": true
+        }
+      },
+      "status": 400,
+      "response_body": "{\"error\":{\"code\":400,\"message\":\"\\\"prompt\\\" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.\",\"type\":\"invalid_request_error\"}}"
+    },
+    {
+      "name": "bad-sampler-completion",
+      "method": "POST",
+      "path": "/completion",
+      "request": {
+        "prompt": "hello",
+        "n_predict": 1,
+        "samplers": [
+          "not-a-real-sampler"
+        ]
+      },
+      "status": 200,
+      "response_body": "{\"index\":0,\"content\":\" \",\"tokens\":[],\"id_slot\":0,\"stop\":true,\"model\":\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\"tokens_predicted\":1,\"tokens_evaluated\":4,\"generation_settings\":{\"seed\":4294967295,\"temperature\":0.800000011920929,\"dynatemp_range\":0.0,\"dynatemp_exponent\":1.0,\"top_k\":40,\"top_p\":0.949999988079071,\"min_p\":0.05000000074505806,\"top_n_sigma\":-1.0,\"xtc_probability\":0.0,\"xtc_threshold\":0.10000000149011612,\"typical_p\":1.0,\"repeat_last_n\":64,\"repeat_penalty\":1.0,\"presence_penalty\":0.0,\"frequency_penalty\":0.0,\"dry_multiplier\":0.0,\"dry_base\":1.75,\"dry_allowed_length\":2,\"dry_penalty_last_n\":64,\"dry_sequence_breakers\":[\"\\n\",\":\",\"\\\"\",\"*\"],\"mirostat\":0,\"mirostat_tau\":5.0,\"mirostat_eta\":0.10000000149011612,\"adaptive_target\":-1.0,\"adaptive_decay\":0.8999999761581421,\"stop\":[],\"max_tokens\":1,\"n_predict\":1,\"n_keep\":0,\"n_discard\":0,\"ignore_eos\":false,\"stream\":false,\"logit_bias\":[],\"n_probs\":0,\"min_keep\":0,\"grammar\":\"\",\"grammar_lazy\":false,\"grammar_triggers\":[],\"preserved_tokens\":[],\"chat_format\":\"Content-only\",\"reasoning_format\":\"deepseek\",\"reasoning_in_content\":false,\"generation_prompt\":\"\",\"samplers\":[],\"speculative.types\":\"none\",\"timings_per_token\":false,\"post_sampling_probs\":false,\"backend_sampling\":false,\"lora\":[]},\"prompt\":\"<s> hello\",\"has_new_line\":false,\"truncated\":false,\"stop_type\":\"limit\",\"stopping_word\":\"\",\"tokens_cached\":4,\"timings\":{\"cache_n\":1,\"prompt_n\":3,\"prompt_ms\":0.259,\"prompt_per_token_ms\":0.08633333333333333,\"prompt_per_second\":11583.011583011583,\"predicted_n\":1,\"predicted_ms\":0.001,\"predicted_per_token_ms\":0.0,\"predicted_per_second\":0.0}}"
+    },
+    {
+      "name": "bad-sampler-v1-completions",
+      "method": "POST",
+      "path": "/v1/completions",
+      "request": {
+        "prompt": "hello",
+        "max_tokens": 1,
+        "samplers": [
+          "not-a-real-sampler"
+        ]
+      },
+      "status": 200,
+      "response_body": "{\"choices\":[{\"text\":\" \",\"index\":0,\"logprobs\":null,\"finish_reason\":\"length\"}],\"created\":1792726689,\"model\":\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\"system_fingerprint\":\"b11755-704366d76\",\"object\":\"text_completion\",\"usage\":{\"completion_tokens\":1,\"prompt_tokens\":4,\"total_tokens\":5,\"prompt_tokens_details\":{\"cached_tokens\":3}},\"id\":\"chatcmpl-qAlxqORPblKBp1xyAWoqemDEkEKppzlG\",\"timings\":{\"cache_n\":3,\"prompt_n\":1,\"prompt_ms\":0.207,\"prompt_per_token_ms\":0.207,\"prompt_per_second\":4830.917874396136,\"predicted_n\":1,\"predicted_ms\":0.001,\"predicted_per_token_ms\":0.0,\"predicted_per_second\":0.0}}"
+    },
+    {
+      "name": "grammar-conflict-v1-chat",
+      "method": "POST",
+      "path": "/v1/chat/completions",
+      "request": {
+        "messages": [
+          {
+            "role": "user",
+            "content": "hello"
+          }
+        ],
+        "grammar": "root ::= \"hello\"",
+        "json_schema": {
+          "type": "object"
+        }
+      },
+      "status": 500,
+      "response_body": "{\"error\":{\"code\":500,\"message\":\"Cannot use both json_schema and grammar\",\"type\":\"server_error\"}}"
+    },
+    {
+      "name": "grammar-conflict-completion",
+      "method": "POST",
+      "path": "/completion",
+      "request": {
+        "prompt": "hello",
+        "grammar": "root ::= \"hello\"",
+        "json_schema": {
+          "type": "object"
+        }
+      },
+      "status": 200,
+      "response_body": "{\"index\":0,\"content\":\"hello\",\"tokens\":[],\"id_slot\":0,\"stop\":true,\"model\":\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\"tokens_predicted\":6,\"tokens_evaluated\":4,\"generation_settings\":{\"seed\":4294967295,\"temperature\":0.800000011920929,\"dynatemp_range\":0.0,\"dynatemp_exponent\":1.0,\"top_k\":40,\"top_p\":0.949999988079071,\"min_p\":0.05000000074505806,\"top_n_sigma\":-1.0,\"xtc_probability\":0.0,\"xtc_threshold\":0.10000000149011612,\"typical_p\":1.0,\"repeat_last_n\":64,\"repeat_penalty\":1.0,\"presence_penalty\":0.0,\"frequency_penalty\":0.0,\"dry_multiplier\":0.0,\"dry_base\":1.75,\"dry_allowed_length\":2,\"dry_penalty_last_n\":64,\"dry_sequence_breakers\":[\"\\n\",\":\",\"\\\"\",\"*\"],\"mirostat\":0,\"mirostat_tau\":5.0,\"mirostat_eta\":0.10000000149011612,\"adaptive_target\":-1.0,\"adaptive_decay\":0.8999999761581421,\"stop\":[],\"max_tokens\":-1,\"n_predict\":-1,\"n_keep\":0,\"n_discard\":0,\"ignore_eos\":false,\"stream\":false,\"logit_bias\":[],\"n_probs\":0,\"min_keep\":0,\"grammar\":\"root ::= \\\"hello\\\"\",\"grammar_lazy\":false,\"grammar_triggers\":[],\"preserved_tokens\":[],\"chat_format\":\"Content-only\",\"reasoning_format\":\"deepseek\",\"reasoning_in_content\":false,\"generation_prompt\":\"\",\"samplers\":[\"penalties\",\"dry\",\"top_n_sigma\",\"top_k\",\"typ_p\",\"top_p\",\"min_p\",\"xtc\",\"temperature\"],\"speculative.types\":\"none\",\"timings_per_token\":false,\"post_sampling_probs\":false,\"backend_sampling\":false,\"lora\":[]},\"prompt\":\"<s> hello\",\"has_new_line\":false,\"truncated\":false,\"stop_type\":\"eos\",\"stopping_word\":\"\",\"tokens_cached\":9,\"timings\":{\"cache_n\":3,\"prompt_n\":1,\"prompt_ms\":0.15,\"prompt_per_token_ms\":0.15,\"prompt_per_second\":6666.666666666667,\"predicted_n\":6,\"predicted_ms\":0.476,\"predicted_per_token_ms\":0.09519999999999999,\"predicted_per_second\":10504.20168067227}}"
+    },
+    {
+      "name": "bad-n_probs",
+      "method": "POST",
+      "path": "/completion",
+      "request": {
+        "prompt": "hello",
+        "n_probs": "bad"
+      },
+      "status": 400,
+      "response_body": "{\"error\":{\"code\":400,\"message\":\"Field 'n_probs': [json.exception.type_error.302] type must be number, but is string\",\"type\":\"invalid_request_error\"}}"
+    },
+    {
+      "name": "bad-logit_bias",
+      "method": "POST",
+      "path": "/completion",
+      "request": {
+        "prompt": "hello",
+        "logit_bias": "bad"
+      },
+      "status": 200,
+      "response_body": "{\"index\":0,\"content\":\" was very smart. He did not like the dress. He liked to drive from the freezer and buy a new dress. One day, he met a kind man. The dress looked at his dress, but he did not know how to be free.\\n\\\"Let's find an adventure together,\\\" he said. \\\"It's a pretty dress!\\\"\\nThe dress showed it to the family. They had a lot of fun. \\nThe next day, the dream flew away. The dream vanished and made a new friend. The dream made everyone happy. The dream had fun together. Once upon a time, there was a big, round truck. The truck wanted to draw on the truck. He dreamed of the truck, and the truck was excited. The truck drew a big truck with a big attic. The truck was happy and clapped.\\nOne day, a little boy named Tim came to the truck. He saw a big truck coming from the truck. The truck started to cry. Tim felt sad and knew it was too big for the truck. He thought he could help the truck.\\nThe truck started to give him the truck. Tim was scared, but he also wanted to help. He took his truck and put the truck back to the truck. Tim felt sad and angry.\\nTim ran to the truck and said, \\\"I wish you will be good at crying. You didn't see that you can make the truck. You can help you.\\\"\\nTimmy thought about it and gave him his faces. He hugged his dad. He knew he wanted to help. He pushed the brush and felt bad. He didn't want to fix it.\\nTim went to the store, but he was difficult. He was always glowing all around the garden. The brushes was getting so cold and round. They slipped and laughed.\\nThe girl and her dad were so happy. They all played and had lots of fun, and they lived happily ever after. The moral of the story is that even if it's important to make proper than asking and never look at his dream, but he didn't know where the box was, but he did not want to go away. The prince was sad.\\nOne day, the boy remembered to race, and the boy was relieved. He was very sad and wanted to celebrate his own trimkey. He wondered why the boy was very bad. So, he grabbed the truck too. He grabbed the trash and helped it hop.\\nOne day, Tim's mom gave him a big box of pictures. Lily and the boy smiled and had an idea. They all played with their friends and sing all day long. Tim and his mom were happy that they all had fun.\\nAfter the truck, Tim and his dad went to the park to find the picture. They were surprised and happy. They played with their picnic around the picnic. Finally, they found a box of shiny rocks with the small box. The door was very hungry.\\nThe shower was the ship felt better. He wanted to play with his diamond on the line. But when he reached a stick. He was very pretty and didn't share it.\\nBut then, something unexpected happened. The kite was still disturbed. Suddenly, the boy was scared of the window in the ship. \\\"Let's put one dragons under a bright fridge.\\\" Max cried.\\nThe little dog saw Max, again and kind things like the dry picture, and it started to feel better to help him, but it was very cute and scary, and animals looked up, and the water was a big purple fruit, and had a lot of fun, and then they ate their fruit and became best friends, and they both loved their pictures of their house, people in the park, and the boy and Sarah had a surprise for them to go and played together, laughing and playing and laughing, and they were always happy and learned that it's important to be fun together and play, but they also ever today. Once upon a time, there was a little girl named Lily. She loved to play and explore the world, even though sunny day, while she was playing, she saw a big truck spinning, and the truck started to crawl and called the bracelet.\\nOne day, Lily was playing with the brave brave brave trake. She felt very guilty, but then she kept an unap around. It was always happy. One day, a brave dog did not go by it. The duck was cookies. It was a long dresse. The humbles were happy to agar destroy his dress. One day, Max found a big isler and ancient and delicious, and floors. After a great time. He didn't want to brump away. Tim was glad he found his dream around on the harder floors and made them strawbye fill, like beauties, end when he kept because, while, there was a horn, angel said,\",\"tokens\":[],\"id_slot\":0,\"stop\":true,\"model\":\"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf\",\"tokens_predicted\":2044,\"tokens_evaluated\":4,\"generation_settings\":{\"seed\":4294967295,\"temperature\":0.800000011920929,\"dynatemp_range\":0.0,\"dynatemp_exponent\":1.0,\"top_k\":40,\"top_p\":0.949999988079071,\"min_p\":0.05000000074505806,\"top_n_sigma\":-1.0,\"xtc_probability\":0.0,\"xtc_threshold\":0.10000000149011612,\"typical_p\":1.0,\"repeat_last_n\":64,\"repeat_penalty\":1.0,\"presence_penalty\":0.0,\"frequency_penalty\":0.0,\"dry_multiplier\":0.0,\"dry_base\":1.75,\"dry_allowed_length\":2,\"dry_penalty_last_n\":64,\"dry_sequence_breakers\":[\"\\n\",\":\",\"\\\"\",\"*\"],\"mirostat\":0,\"mirostat_tau\":5.0,\"mirostat_eta\":0.10000000149011612,\"adaptive_target\":-1.0,\"adaptive_decay\":0.8999999761581421,\"stop\":[],\"max_tokens\":-1,\"n_predict\":-1,\"n_keep\":0,\"n_discard\":0,\"ignore_eos\":false,\"stream\":false,\"logit_bias\":[],\"n_probs\":0,\"min_keep\":0,\"grammar\":\"\",\"grammar_lazy\":false,\"grammar_triggers\":[],\"preserved_tokens\":[],\"chat_format\":\"Content-only\",\"reasoning_format\":\"deepseek\",\"reasoning_in_content\":false,\"generation_prompt\":\"\",\"samplers\":[\"penalties\",\"dry\",\"top_n_sigma\",\"top_k\",\"typ_p\",\"top_p\",\"min_p\",\"xtc\",\"temperature\"],\"speculative.types\":\"none\",\"timings_per_token\":false,\"post_sampling_probs\":false,\"backend_sampling\":false,\"lora\":[]},\"prompt\":\"<s> hello\",\"has_new_line\":true,\"truncated\":true,\"stop_type\":\"limit\",\"stopping_word\":\"\",\"tokens_cached\":2047,\"timings\":{\"cache_n\":3,\"prompt_n\":1,\"prompt_ms\":0.118,\"prompt_per_token_ms\":0.118,\"prompt_per_second\":8474.57627118644,\"predicted_n\":2044,\"predicted_ms\":731.306,\"predicted_per_token_ms\":0.3579569260890847,\"predicted_per_second\":2793.6322141483865}}"
+    },
+    {
+      "name": "bad-tokenize",
+      "method": "POST",
+      "path": "/tokenize",
+      "request": {
+        "content": {
+          "bad": true
+        }
+      },
+      "status": 400,
+      "response_body": "{\"error\":{\"code\":400,\"message\":\"[json.exception.type_error.302] type must be string, but is object\",\"type\":\"invalid_request_error\"}}"
+    },
+    {
+      "name": "bad-detokenize",
+      "method": "POST",
+      "path": "/detokenize",
+      "request": {
+        "tokens": "bad"
+      },
+      "status": 400,
+      "response_body": "{\"error\":{\"code\":400,\"message\":\"[json.exception.type_error.302] type must be array, but is string\",\"type\":\"invalid_request_error\"}}"
+    }
+  ]
+}

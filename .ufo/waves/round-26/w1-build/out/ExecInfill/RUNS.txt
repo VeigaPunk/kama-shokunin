@@ -1,0 +1,54 @@
+C1 /infill missing-FIM-token candidate — 2026-10-23
+
+Fixture and server
+------------------
+- Server: ~/.local/bin/llama-server, build 11755 commit 704366d76.
+  `sha256sum ~/.local/bin/llama-server` -> b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804; exit 0.
+- Fixture: ~/.cache/kama-shokunin/models/stories260K.gguf. Frozen counter verified its pinned SHA-256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d.
+- Before either launch, `ss -ltn | grep -E '4762[89]|4763[01]'` printed no matches; grep/command status 1 (all assigned ports free).
+
+Live reproductions
+------------------
+Exact launch command for each PORT=47628, then PORT=47629:
+`timeout 90 "$HOME/.local/bin/llama-server" -m "$HOME/.cache/kama-shokunin/models/stories260K.gguf" --host 127.0.0.1 --port $PORT -t 2 > /fast/scratch/hyaku/kama-r26/ExecInfill/server-$PORT.log 2>&1 &`
+The shell's `wait` reported `server exit=0` for each launch after the requests. The log records the server listening on 127.0.0.1 at the assigned port and cleanup.
+
+For each launch, the exact request command (PORT expanded to 47628 and 47629) was:
+`curl -s -m 30 -D /fast/scratch/hyaku/kama-r26/ExecInfill/infill-with-$PORT.headers -o /fast/scratch/hyaku/kama-r26/ExecInfill/infill-with-$PORT.body -w 'http_status=%{http_code}\n' -H 'Content-Type: application/json' -d '{"input_prefix":"int add(int a, int b) {\n    return ","input_suffix":";\n}","prompt":"a + b"}' http://127.0.0.1:$PORT/infill`
+Exit 0 for each curl; HTTP status 501 for both. Raw bodies are `infill-with-47628.body`, `infill-with-47629.body`; corresponding raw headers are `infill-with-47628.headers`, `infill-with-47629.headers`.
+
+For each launch, the request without input_prefix/input_suffix was:
+`curl -s -m 30 -D /fast/scratch/hyaku/kama-r26/ExecInfill/infill-without-$PORT.headers -o /fast/scratch/hyaku/kama-r26/ExecInfill/infill-without-$PORT.body -w 'http_status=%{http_code}\n' -H 'Content-Type: application/json' -d '{}' http://127.0.0.1:$PORT/infill`
+Exit 0 for each curl; HTTP status 501 for both. Raw bodies are `infill-without-47628.body`, `infill-without-47629.body`; corresponding raw headers are `infill-without-47628.headers`, `infill-without-47629.headers`.
+
+All four response bodies are exactly:
+`{"error":{"code":501,"message":"Infill is not supported by this model: prefix token is missing. suffix token is missing. middle token is missing. ","type":"not_supported_error"}}`
+The verbatim, source-backed 37-byte candidate is `Infill is not supported by this model`.
+
+Healthy contrast in each launch:
+`curl -s -m 30 -o /fast/scratch/hyaku/kama-r26/ExecInfill/completion-$PORT.body -w 'http_status=%{http_code}\n' -H 'Content-Type: application/json' -d '{"prompt":"Once upon a time","n_predict":4}' http://127.0.0.1:$PORT/completion`
+Exit 0; HTTP status 200 for each. Response bodies are `completion-47628.body` and `completion-47629.body`.
+
+After each launch, `ss -ltn | grep ":$PORT "` had no match (grep status 1) and the script printed `port $PORT closed`. My launch PIDs/ports were closed. `pgrep -af llama-server` exited 0 and showed only other sessions on ports 47604, 47646, 47624, 47616, and 47612; none were mine.
+
+Base and help/version checks
+----------------------------
+From the lane, `git grep -F -q -e 'Infill is not supported by this model' 1560e4d8 -- SKILL.md corpus; echo "base-grep-exit=$?"` printed `base-grep-exit=1` (absent at base).
+`~/.local/bin/llama-server --help 2>&1 | grep -c 'Infill is not supported'` printed 0; grep/pipeline status 1 (no match). `~/.local/bin/llama-server --version 2>&1 | grep -c 'Infill is not supported'` printed 0; grep/pipeline status 1 (no match). Searching both healthy launch logs for the candidate printed zero matches in each (grep status 1). Candidate byte length: 37.
+
+Pinned-source fetch
+-------------------
+Fresh fetch on 2026-10-23:
+`curl --fail --location --silent --show-error 'https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp' -o /fast/scratch/hyaku/kama-r26/ExecInfill/fresh-server-context.cpp`
+Exit 0. Fresh file SHA-256 and pinned snapshot SHA-256 both `dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329`; `cmp -s` exit 0. Source location: `tools/server/server-context.cpp:5476` (`server-context.cpp:5476` in the pinned snapshot). Located quote (8 words): `Infill is not supported by this model: %s`.
+
+Scratch frozen-counter check
+----------------------------
+Created a `git archive` extract of frozen tip a23c0e042114016a909eb15173aa6df74b5b7eb0 under `/fast/scratch/hyaku/kama-r26/ExecInfill/counter-tree` (archive/extract pipeline exit 0). In that extract only, added a temporary skill row and `S901` source row and set the temporary registry source row to `S901`; no lane production files were edited. The scratch registry retains candidate id `TBD`.
+
+Exact counter command (run from that extract):
+`flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 python3 .ufo/waves/round-26/count-c1.py --out /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-26/w1-build/out/ExecInfill/scratch-counter-receipt.json`
+Exit 0; exact stdout: `registered 1 counted 1 target 12 met False not-counted []`.
+Receipt: `scratch-counter-receipt.json`; all checks a-g are true for this one candidate. This is a scoped one-entry falsifier, not the 12-signature target.
+
+Final cleanup after the counter: `pgrep -af llama-server` exit 0 showed a sibling server/timeout on port 47654 only; neither of my server ports appeared. `ss -ltn` exit 0 likewise showed no listener on 47628-47631. I did not signal or change sibling processes.

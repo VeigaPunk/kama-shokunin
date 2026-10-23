@@ -1,0 +1,10 @@
+### REPRO port 47656 ###
+--- [1] POST /lora-adapters non-array body ---
+{"error":{"code":400,"message":"Request body must be an array","type":"invalid_request_error"}}
+HTTP_STATUS=400
+--- [2] POST /v1/audio/transcriptions on text-only model ---
+{"error":{"code":501,"message":"The current model does not support audio input.","type":"not_supported_error"}}
+HTTP_STATUS=501
+--- [3] POST /v1/chat/completions with input_audio content ---
+{"error":{"code":500,"message":"audio input is not supported - hint: if this is unexpected, you may need to provide the mmproj","type":"server_error"}}
+HTTP_STATUS=500

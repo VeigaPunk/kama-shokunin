@@ -1058,3 +1058,54 @@ comparison by copying the mutation runner's restriction into its contract.
 Final r24 evidence is bounded, distributed and qualified in
 `corpus/lessons/round-24.md`; it does not achieve the full original claim,
 prove global no-effects/absence of chains, resolve H2 or grant admission.
+
+## Round-26 live error signatures (b11755 fixture, owner: kama)
+
+Each row is an error that llama-server build 11755 (commit 704366d76) emits on
+the lane fixture (`stories260K.gguf`, loopback, one child at a time), with the
+trigger that produces it, what the code checks, and what to do. The signature
+is a verbatim substring of both the observed output and the pinned source line
+named by the row's SOURCES entry. Inside `http body` signatures, `\"` is the
+JSON escape the server sends, byte for byte as in the C++ source. The
+re-derivation command is `python3 .ufo/waves/round-26/count-c1.py --out
+<receipt.json>`; it relaunches every trigger against the sha256-pinned binary
+and model and prints `counted N` (frozen predicate:
+`.ufo/waves/round-26/preregistration.json`). Registry:
+`registry/error-signatures-r26.json`. Other builds: re-observe before relying
+on a row. Status codes and exit statuses were observed on this build only.
+
+Cited, not absorbed: API-key and authentication errors are kagi's (the lane
+already holds `Invalid API Key`, SKILL.md "Historical error signatures");
+served-model quality is kengaku's; OS and service-manager errors are
+tsukuroi's (wave-1 connector `.ufo/waves/round-26/w1-build/advice/ConnectorSiblingOverlap.md`).
+
+| id | signature (channel) | trigger | meaning (code) | next action | source |
+|---|---|---|---|---|---|
+| E26-01 | `` This server does not support slots endpoint. Start it with `--slots` `` (http body) | `--no-slots`; `GET /slots` → 501 | `get_slots` refuses when `params.endpoint_slots` is false (`server-context.cpp:5365-5367`); the launch turned slot monitoring off | Slot monitoring is off on this server, not a dead server. Re-launch with `--slots` only if a consumer needs `/slots`; otherwise stop polling it. | S114 |
+| E26-02 | `` This server does not support slots action. Start it with `--slot-save-path` `` (http body) | no `--slot-save-path`; `POST /slots/0?action=save` → 501 | `post_slots` refuses every save/restore/erase action before reading it when `params.slot_save_path` is empty (`server-context.cpp:5407-5409`) | Slot persistence is not configured. Set `--slot-save-path` to a writable directory, or stop sending slot actions. | S115 |
+| E26-03 | `No available space in KV cache or invalid slot save file` (http body) | `--slot-save-path /tmp`; `POST /slots/0?action=restore` with a file that does not exist → 400 | `llama_state_seq_load_file` returned 0 bytes, so restore throws (`server-context.cpp:3078-3085`); the same text covers a missing file, an unreadable file and a cache too small for the saved state | The message does not tell which cause applies. Check that the file exists under the save path first; only then suspect cache size or a file saved by another model or build. | S116 |
+| E26-04 | `` This server does not support changing global properties. Start it with `--props` `` (http body) | no `--props`; `POST /props` → 501 | `post_props` refuses when `params.endpoint_props` is false (`server-context.cpp:5452-5454`); `GET /props` still answers | Changing global properties is off; reading them is not. Re-launch with `--props` only if a consumer must change them. | S117 |
+| E26-05 | `` This server does not support embeddings. Start it with `--embeddings` `` (http body) | no `--embeddings`; `POST /v1/embeddings` → 501 | the embeddings handler refuses before parsing when `params.embedding` is false (`server-context.cpp:6131-6133`) | This server is a generation server. Point embedding consumers at a server launched with `--embeddings` (ideally an embedding model). | S118 |
+| E26-06 | `Pooling type 'none' is not OAI compatible. Please use a different pooling type` (http body) | `--embeddings` with the fixture's default pooling; `POST /v1/embeddings` → 400 | the OpenAI-style route needs pooled output; it refuses when the model's pooling type is `none` (`server-context.cpp:6136-6138`) | Launch with `--pooling mean` (or the model's intended pooling), or use the non-OpenAI `/embedding` route with `content`, which returns per-token output. | S119 |
+| E26-07 | `\"input\" or \"content\" must be provided` (http body) | `--embeddings --pooling mean`; `POST /v1/embeddings` with neither `input` nor `content` → 400 | the handler accepts `input` (OpenAI) or `content` (native) and refuses when both are absent (`server-context.cpp:6145-6152`) | Client bug: the request body lacks the text field. Fix the client to send `input`. | S120 |
+| E26-08 | `` This server does not support reranking. Start it with `--reranking` `` (http body) | no `--reranking`; `POST /v1/rerank` → 501 | rerank needs embedding mode and rank pooling; it refuses otherwise (`server-context.cpp:5800-5805`) | Reranking needs a reranker model launched with `--reranking`; a generation server cannot serve it. | S121 |
+| E26-09 | `Infill is not supported by this model` (http body) | fixture model; `POST /infill` → 501 | the handler checks the vocabulary for the prefix, suffix and middle fill-in-the-middle tokens and refuses when any is missing (`server-context.cpp:5462-5478`); the message lists which tokens are missing | Model capability, not server configuration. Use a code model with fill-in-the-middle tokens, or send the task to `/completion`. | S122 |
+| E26-10 | `is too large to process. increase the physical batch ` (http body) | `-c 64 --embedding`; `POST /embedding` with a 4352-token `content` → 500 | embedding inputs cannot be split across batches; a prompt longer than the physical batch (`n_ubatch`) is refused (`server-context.cpp:3652-3658`). Status 500, not 400 | Raise `-ub`/`-b` to cover the longest input, or chunk the input on the client. Do not read the 500 as a crashed server. | S123 |
+| E26-11 | `Request body must be an array` (http body) | fixture model; `POST /lora-adapters` with a JSON object body → 400 | the LoRA route requires a JSON array of `{id, scale}` entries (`server-context.cpp:5994-5999`) | Client bug: wrap the entries in an array; read valid ids from `GET /lora-adapters`. | S124 |
+| E26-12 | `The current model does not support audio input.` (http body) | fixture model; `POST /v1/audio/transcriptions` → 501 | the transcription handler refuses when the model has no multimodal projector or audio is not allowed (`server-context.cpp:5651-5657`) | Model capability. Route audio to a model launched with an audio-capable `--mmproj`. | S125 |
+| E26-13 | `audio input is not supported - hint: if this is unexpected, you may need to provide the mmproj` (http body) | fixture model; `POST /v1/chat/completions` with an `input_audio` content part → 500 | chat message parsing throws when audio is not allowed (`server-common.cpp:1270-1273`); the exception surfaces as status 500 | A client-side capability mismatch reported as a server error. Do not treat this 500 as an outage; remove audio parts or route to an audio-capable model. | S126 |
+| E26-14 | `\"prompt\" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.` (http body) | fixture model; `POST /completion` with `prompt` as a JSON object without a prompt string → 400 | prompt parsing accepts a string, token list, object with a prompt string, or mixed list, and throws for anything else (`server-common.cpp:1108-1115`) | Client bug: send `prompt` in one of the four accepted shapes. | S127 |
+| E26-15 | `failed to open GGUF file` (startup log) | startup with a model path that does not exist → exit 1 | `gguf_init_from_file` cannot open the file and logs the path and the system error (`gguf.cpp:1017-1022`); model loading fails and the process exits | Fix the `-m` path or the mount; the system error at the end of the line (for example `No such file or directory`) names the cause. Not a model-format problem. | S128 |
+| E26-16 | `invalid magic characters: '` (startup log) | startup with a file that is not GGUF → exit 1 | the first four bytes are not `GGUF` (`gguf.cpp:476-483`); the line prints the bytes it found | The path points at a wrong or partial file (a download page, an unfinished download, another format). Re-download or convert; compare the file's sha256 with the published one. | S129 |
+| E26-17 | `GGML_ASSERT(n_outputs >= 1)` (startup log) | startup with `--ctx-size -5` → process aborts (exit status 134, SIGABRT, observed) | on this build a negative context passes argument parsing; graph reservation then asserts `n_outputs >= 1` (`llama-context.cpp:2620-2624`) and aborts with a backtrace | A supervisor sees a crash (signal 6), not a usage error. Check the launch flags for a negative or non-numeric context before suspecting the build. | S130 |
+
+Observed but not registered this round (reasons in `corpus/lessons/round-26.md`
+§Gate): signatures the lane already held in earlier wave evidence (`This server
+does not support metrics endpoint...`, `exceeds the available context size (`,
+`couldn't bind HTTP server socket`, `error: invalid argument: `), error-type
+labels (`authentication_error`, `invalid_request_error`), router-only model
+errors that a single-model launch cannot reach, and per-flag argument
+validation messages beyond one example. Also observed on this build: a server
+launched with `--embeddings` and no pooling override crashed with SIGSEGV while
+serving `/completion` (wave-1 seat ExecEmbeddingsInput, `RUNS.txt`); not
+registered, because the counter needs a status or a clean non-zero exit.

@@ -1,0 +1,64 @@
+{
+  "signatures": [
+    {
+      "id": "TBD",
+      "channel": "http",
+      "signature": "This server does not support reranking. Start it with `--reranking`",
+      "args": [],
+      "model": "fixture",
+      "occupy_port": false,
+      "request": {
+        "method": "POST",
+        "path": "/v1/rerank",
+        "headers": {"Content-Type": "application/json"},
+        "body": {"query": "test", "documents": ["a", "b"]}
+      },
+      "source": {
+        "row": "TBD",
+        "file": "server-context.cpp"
+      },
+      "fault": "reranking requested without --reranking (POST /v1/rerank); HTTP 501 not_supported_error",
+      "source_loc": "server-context.cpp:5803"
+    },
+    {
+      "id": "TBD",
+      "channel": "http",
+      "signature": "\"query\" must be provided",
+      "args": ["--reranking"],
+      "model": "fixture",
+      "occupy_port": false,
+      "request": {
+        "method": "POST",
+        "path": "/v1/rerank",
+        "headers": {"Content-Type": "application/json"},
+        "body": {"documents": ["a", "b"]}
+      },
+      "source": {
+        "row": "TBD",
+        "file": "server-context.cpp"
+      },
+      "fault": "reranking enabled but query missing; HTTP 400 invalid_request_error",
+      "source_loc": "server-context.cpp:5822"
+    },
+    {
+      "id": "TBD",
+      "channel": "http",
+      "signature": "\"documents\" must be a non-empty string array",
+      "args": ["--reranking"],
+      "model": "fixture",
+      "occupy_port": false,
+      "request": {
+        "method": "POST",
+        "path": "/v1/rerank",
+        "headers": {"Content-Type": "application/json"},
+        "body": {"query": "test", "documents": []}
+      },
+      "source": {
+        "row": "TBD",
+        "file": "server-context.cpp"
+      },
+      "fault": "reranking enabled but documents empty; HTTP 400 invalid_request_error",
+      "source_loc": "server-context.cpp:5829"
+    }
+  ]
+}

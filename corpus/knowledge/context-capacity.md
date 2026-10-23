@@ -241,3 +241,22 @@ per-slot ceiling of 16384 on, read with b11755 semantics, one shared
 16384-cell pool, the L1 shape [INFERENCE: no pool log exists for that build]. It is
 historical, other-build evidence, not a kama observation. The X1 supersession
 does not apply to it: `-c` is explicit, fit is off and the cache is unified.
+
+## Errata — round 26 (2026-10-23)
+
+Routed by `lessons/round-25-verifier-spotcheck.md` defect 4. The round-25
+wording above stays; these lines qualify it.
+
+- **Lines 55-56, additional cap trace.** The `n_ctx_seq (4096) > n_ctx_train
+  (2048)` warning is not the only log trace of the cap.
+  `.ufo/waves/round-25/final/raw/K5.server.log:1083` also says `the slot
+  context (4096) exceeds the training context of the model (2048) - capping`.
+- **Line 137, attempted token versus occupied cells.** Each L1 slot held 1024
+  cells. The logged `n_tokens = 1025` (`L1.server.log:1852`, `:1866`) includes
+  the token that could not be placed; two slots of 1024 placed cells filled the
+  2048-cell pool. Both requests failed.
+- **Source corrections (KQ31).** Rows S131, S132, S133, S134 and S135 in
+  `corpus/SOURCES.md` supersede S106, S107, S109, S112 and S113: they correct
+  the measurement order in fit (S106), the idle-slot clearing precondition
+  (S109), the per-layer wording of the size log (S113) and the scope of S107
+  and S112. The old rows stay as written.

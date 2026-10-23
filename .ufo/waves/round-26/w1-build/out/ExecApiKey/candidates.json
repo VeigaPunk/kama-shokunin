@@ -1,0 +1,23 @@
+{
+  "signatures": [
+    {
+      "id": "TBD",
+      "channel": "http",
+      "signature": "\"authentication_error\"",
+      "args": ["--api-key", "kama-r26-test-key"],
+      "model": "fixture",
+      "occupy_port": false,
+      "request": {"method": "GET", "path": "/props", "headers": {}, "body": null},
+      "source": {"row": "TBD", "file": "server-http.cpp"}
+    }
+  ],
+  "notes": [
+    "One distinct fault confirmed: 401 body from middleware_validate_api_key (server-http.cpp:290-300).",
+    "Signature is the 22-byte verbatim constant \"authentication_error\" (server-http.cpp:295).",
+    "Both reproductions (GET /props no key, POST /completion wrong Bearer key) emit byte-identical 401 body.",
+    "Healthy baseline (correct key) returns 200 on /health, /props, /completion; signature absent.",
+    "Signature absent from base 1560e4d8 SKILL.md/corpus (git grep -F -q ... -> 1).",
+    "Signature absent from --help/--version output (grep count 0).",
+    "Clause-g adjacency: one counted row only; the 401 body embeds the signature, so a second row with the same body/string cannot count."
+  ]
+}

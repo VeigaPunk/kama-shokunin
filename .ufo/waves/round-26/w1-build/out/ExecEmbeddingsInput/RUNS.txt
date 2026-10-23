@@ -1,0 +1,72 @@
+# ExecEmbeddingsInput — RUNS.txt
+# Lane: kama round 26 wave 1; seat: ExecEmbeddingsInput; port block 47620-47623.
+# Server: /home/vgpnk/.local/bin/llama-server -> ~/.local/opt/llama-b11755/llama-server
+#   sha256 b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804
+# Model: ~/.cache/kama-shokunin/models/stories260K.gguf
+#   sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d
+# All commands run from /fast/scratch/hyaku/kama-r26/ExecEmbeddingsInput unless noted.
+
+## Env / preflight (2026-10-23)
+$ for p in 47620 47621 47622 47623; do ss -ltn | awk '{print $4}' | grep -q ":${p}$" && echo BUSY || echo free; done
+free free free free
+$ sha256sum ~/.local/bin/llama-server ~/.cache/kama-shokunin/models/stories260K.gguf
+b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804  /home/vgpnk/.local/bin/llama-server
+270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d  /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf
+
+## Probe 1 (probe1_default_pooling.sh): port 47620, --embeddings only
+$ timeout 180 ~/.local/bin/llama-server -m <model> --host 127.0.0.1 --port 47620 --embeddings -t 2 > server_probe1.log 2>&1 &
+GET /health -> 200 (healthy after ~2 s)
+POST /completion -> 000   <- server SIGSEGV while handling completion (timeout: the monitored command dumped core)
+Then all requests -> 000 (server dead). server_probe1.log: clean startup, then "timeout: the monitored command dumped core"
+coredumpctl: SIGSEGV for /home/vgpnk/.local/opt/llama-b11755/llama-server (2026-10-23 00:36:17 -03, pid 3310053)
+Note: this crash is NOT used for any candidate entry (no HTTP status; counter needs status >= 400 on a live server).
+
+## Probe 2 (probe2_pooling_mean.sh): port 47621, --embeddings --pooling mean
+$ timeout 180 ~/.local/bin/llama-server -m <model> --host 127.0.0.1 --port 47621 --embeddings --pooling mean -t 2 > server_probe2.log 2>&1 &
+POST /v1/embeddings {"model":"stories260K"}                    -> 400  ("input" or "content" must be provided)
+POST /v1/embeddings {"input":[],"model":"stories260K"}         -> 400  ("input" must not be empty)
+POST /v1/embeddings {"input":"","model":"stories260K"}         -> 200  (no fault; empty string tokenizes to BOS only)
+POST /v1/embeddings {"input":[[]],"model":"stories260K"}      -> 400  (Input content cannot be empty)
+POST /v1/embeddings {"input":"hello","encoding_format":"binary"} -> 400 (The format to return the embeddings in...)
+POST /v1/embeddings {"input":"hello world","model":"stories260K"} -> 200 (healthy control)
+Server stopped by SIGTERM; port closed (~1 s).
+
+## Probe 3 (probe3_repro_batch.sh): ports 47622 (pooled) and 47623 (default-NONE)
+[pooled] healthy; POST /v1/embeddings missing-input -> 400, empty-input -> 400, bad-format -> 400, nested-empty -> 400
+[defaultnone] healthy; POST /v1/embeddings missing-input -> 400, empty-input -> 400, bad-format -> 400, nested-empty -> 400
+  all four bodies: "Pooling type 'none' is not OAI compatible. Please use a different pooling type" (status 400)
+Both servers stopped by SIGTERM; ports closed.
+
+## Probe 4 (probe4_final_repro.sh): ports 47620 (pooled) and 47621 (default-NONE) — final reproduction
+[pooled] healthy; POST /v1/embeddings missing-input -> 400, empty-input -> 400, bad-format -> 400, nested-empty -> 400
+  bodies match probe2 byte-for-byte (probe4_pooled_req_emb_*.body)
+[defaultnone] healthy; POST /v1/embeddings missing-input -> 400, empty-input -> 400, bad-format -> 400, nested-empty -> 400
+  all bodies = "Pooling type 'none' is not OAI compatible. Please use a different pooling type" (status 400)
+Both servers stopped by SIGTERM; ports closed (server_probe4_*.log end with cleanup).
+probe4_exit=0
+
+## Source presence (server-context.cpp sha256 dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329)
+line  6137  "Pooling type 'none' is not OAI compatible. Please use a different pooling type"
+line  6151  "\"input\" or \"content\" must be provided"
+line  6161  "The format to return the embeddings in. Can be either float or base64"
+line  6183  "\"input\" must not be empty"
+line  6190  "Input content cannot be empty"
+
+## Base absence (from lane repo, base 1560e4d8)
+$ for s in <5 signatures>; do git grep -F -q -e "$s" 1560e4d8 -- SKILL.md corpus; echo $?; done
+1 1 1 1 1   (1 = absent)
+
+## Frozen counter (scratch extract of a23c0e042114016a909eb15173aa6df74b5b7eb0)
+$ git -C <lane> archive a23c0e042114016a909eb15173aa6df74b5b7eb0 | tar -x    (into scratch-archive/)
+$ cp candidates.json scratch-archive/registry/error-signatures-r26.json
+(registry id -> KAMA-R26-E001..E005, source.row -> S901..S905; scratch SKILL.md + corpus/SOURCES.md placeholders added)
+$ flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 python3 .ufo/waves/round-26/count-c1.py \
+    --out /fast/scratch/hyaku/kama-r26/ExecEmbeddingsInput/counter-receipt.json
+registered 5 counted 5 target 12 met False not-counted []
+counter_exit=0
+Receipt rows: all 5 rows counted=true; all checks true; observed.status 400 for each;
+baseline_sha256 bcd899fe74ac4d55d6116ca72d604c43a53c0b8ff56b5e94aa28ab09f89dd991.
+
+## Teardown check
+$ pgrep -af llama-server   -> none
+$ ss -ltn | grep -E '4762[0-3]' -> none

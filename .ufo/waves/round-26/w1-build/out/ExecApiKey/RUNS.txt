@@ -1,0 +1,71 @@
+ExecApiKey — run record (all commands, exit codes)
+Date: 2026-10-23
+Fixture: llama-server b11755 (sha256 b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804)
+  -> /home/vgpnk/.local/bin/llama-server (symlink to ~/.local/opt/llama-b11755/llama-server)
+Model: ~/.cache/kama-shokunin/models/stories260K.gguf (sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d)
+
+------------------------------------------------------------
+1. Port-block precheck: ss -ltn | grep -E '4766[4-7]'
+   output: (none) -> exit 1 (no listener in 47664-47667) OK
+
+2. Reproduction 1 (no API key on protected route):
+   ./run1.sh
+   command: timeout 120 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf \
+            --host 127.0.0.1 --port 47664 --api-key kama-r26-test-key -t 2
+   request: GET http://127.0.0.1:47664/props (no Authorization header)
+   curl -s -i -o run1-body.txt -w 'HTTP_STATUS=%{http_code}\n' ...
+   -> HTTP_STATUS=401, curl rc 0, script exit 0
+   body (run1-body.txt):
+     HTTP/1.1 401 Unauthorized
+     Server: llama.cpp
+     Access-Control-Allow-Origin:
+     Content-Type: application/json; charset=utf-8
+     Connection: close
+     Content-Length: 80
+     {"error":{"message":"Invalid API Key","type":"authentication_error","code":401}}
+   server log tail (run1-server.log):
+     0.06.000.433 W srv operator(): unauthorized: Invalid API Key
+   server killed; port 47664 closed.
+
+3. Reproduction 2 (wrong Bearer key on POST route):
+   ./run2.sh
+   command: timeout 120 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf \
+            --host 127.0.0.1 --port 47665 --api-key kama-r26-test-key -t 2
+   request: POST http://127.0.0.1:47665/completion
+            headers: Content-Type: application/json; Authorization: Bearer wrong-key-here
+            body: {"prompt":"Once upon a time","n_predict":2}
+   curl -s -i -X POST ... -w 'HTTP_STATUS=%{http_code}\n' ...
+   -> HTTP_STATUS=401, curl rc 0, script exit 0
+   body (run2-body.txt): byte-identical to run1-body.txt
+     {"error":{"message":"Invalid API Key","type":"authentication_error","code":401}}
+   server log tail (run2-server.log):
+     0.06.002.507 W srv operator(): unauthorized: Invalid API Key
+   server killed; port 47665 closed.
+
+4. Healthy baseline (correct key):
+   ./run3-healthy.sh
+   command: timeout 120 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf \
+            --host 127.0.0.1 --port 47666 --api-key kama-r26-test-key -t 2
+   GET  /health (public, no key)        -> status=200
+   GET  /props (Authorization: Bearer kama-r26-test-key) -> status=200
+   POST /completion (Bearer correct key) -> status=200
+   server log (run3-server.log) contains no "authentication_error".
+   server killed; port 47666 closed.
+
+5. Signature checks:
+   - len("\"authentication_error\"".encode()) = 22 >= 20
+   - git grep -F -q -e '"authentication_error"' 1560e4d8 -- SKILL.md corpus -> exit 1 (absent)
+   - git grep -F -q -e 'authentication_error' 1560e4d8 -- SKILL.md corpus -> exit 1 (absent)
+   - ~/.local/bin/llama-server --help 2>&1 | grep -c 'authentication_error' -> 0
+   - ~/.local/bin/llama-server --version 2>&1 | grep -c 'authentication_error' -> 0
+   - source: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-26/sources/llama.cpp-704366d/server-http.cpp
+     line 295: {"type", "authentication_error"},
+     (verbatim in file, confirmed with cat -A of lines 290-300)
+   - sha256 of pinned server-http.cpp = 24ede172e526763567dbe929da5b16250693d7a2e44334ef0126649b6d3f5fdb
+     (matches counter SOURCE_SHA256)
+
+6. Help/version informational runs: exit codes 0, outputs captured (no signature match).
+
+7. Counter run (scratch git archive extract a23c0e0, flock-protected):
+   flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 python3 .ufo/waves/round-26/count-c1.py --out counter-receipt.json
+   (result appended below in the report; see counter-receipt.json in out/)

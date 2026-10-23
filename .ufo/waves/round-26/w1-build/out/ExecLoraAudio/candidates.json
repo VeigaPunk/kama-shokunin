@@ -1,0 +1,50 @@
+{
+  "schema": "kama-r26-error-signatures/v1",
+  "signatures": [
+    {
+      "id": "EXECLORAAUDIO-LORA1",
+      "channel": "http",
+      "signature": "Request body must be an array",
+      "args": [],
+      "model": "fixture",
+      "occupy_port": false,
+      "request": {
+        "method": "POST",
+        "path": "/lora-adapters",
+        "headers": {"Content-Type": "application/json"},
+        "body": {"id": 0, "scale": 1.0}
+      },
+      "source": {"row": "S901", "file": "server-context.cpp"}
+    },
+    {
+      "id": "EXECLORAAUDIO-TRN1",
+      "channel": "http",
+      "signature": "The current model does not support audio input.",
+      "args": [],
+      "model": "fixture",
+      "occupy_port": false,
+      "request": {
+        "method": "POST",
+        "path": "/v1/audio/transcriptions",
+        "headers": {"Content-Type": "application/json"},
+        "body": {}
+      },
+      "source": {"row": "S902", "file": "server-context.cpp"}
+    },
+    {
+      "id": "EXECLORAAUDIO-CHAT1",
+      "channel": "http",
+      "signature": "audio input is not supported - hint: if this is unexpected, you may need to provide the mmproj",
+      "args": [],
+      "model": "fixture",
+      "occupy_port": false,
+      "request": {
+        "method": "POST",
+        "path": "/v1/chat/completions",
+        "headers": {"Content-Type": "application/json"},
+        "body": {"messages": [{"role": "user", "content": [{"type": "input_audio", "input_audio": {"data": "data:audio/wav;base64,UklGRg==", "format": "wav"}}]}]}
+      },
+      "source": {"row": "S903", "file": "server-common.cpp"}
+    }
+  ]
+}

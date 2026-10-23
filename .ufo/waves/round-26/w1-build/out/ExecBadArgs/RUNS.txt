@@ -1,0 +1,83 @@
+ExecBadArgs RUNS — kama round 26 wave 1 (C1 candidate rows, startup channel)
+Fixture: /home/vgpnk/.local/bin/llama-server (sha256 b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804, build 11755 commit 704366d)
+Model: /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf (sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d)
+Port block: 47640-47643 (checked free with `ss -ltn` before each launch; no listeners in block at start)
+All launches: timeout 30, -t 2, --host 127.0.0.1, fixture model. All logs under raw/ (rep1/rep2 per candidate).
+
+2026-10-23
+
+Informational capture (clause f baselines):
+  timeout 30 ~/.local/bin/llama-server --help > help.txt 2>&1        exit 0
+  timeout 30 ~/.local/bin/llama-server --version > version.txt 2>&1  exit 0
+  (version.txt: "version: 0.7.0-dev (build 11755, commit 704366d76)")
+
+Candidate 1 (unknown flag) --definitely-unknown-flag:
+  rep1 port 47640 exit 1 ; rep2 port 47641 exit 1
+  log candidate: "error: invalid argument: --definitely-unknown-flag" (first line, before usage block)
+Candidate 2 (invalid value) --parallel 0:
+  rep1 port 47641 exit 1 ; rep2 port 47640 exit 1
+  log candidate: "error while handling argument \"--parallel\": error: invalid value for n_parallel"
+Candidate 3 (invalid value) --flash-attn bogus:
+  rep1 port 47640 exit 1 ; rep2 port 47642 exit 1
+  log candidate: "error while handling argument \"--flash-attn\": error: unknown value for --flash-attn: 'bogus'"
+Candidate 4 (invalid value) --repeat-penalty 0:
+  rep1 port 47641 exit 1 ; rep2 port 47642 exit 1
+  log candidate: "error while handling argument \"--repeat-penalty\": error: repeat-penalty must be finite and greater than 0"
+Candidate 5 (invalid value) --sleep-idle-seconds 0:
+  rep1 port 47642 exit 1 ; rep2 port 47643 exit 1
+  log candidate: "error while handling argument \"--sleep-idle-seconds\": invalid value: cannot be 0 or less than -1"
+Candidate 6 (invalid value) --cache-type-k bogus:
+  rep1 port 47643 exit 1 ; rep2 port 47640 exit 1
+  log candidate: "error while handling argument \"--cache-type-k\": Unsupported cache type: bogus"
+Candidate 7 (invalid value) --log-colors bogus:
+  rep1 port 47640 exit 1 ; rep2 port 47641 exit 1
+  log candidate: "error while handling argument \"--log-colors\": error: unknown value for --log-colors: 'bogus'"
+Candidate 8 (invalid value) --reasoning bogus:
+  rep1 port 47641 exit 1 ; rep2 port 47642 exit 1
+  log candidate: "error while handling argument \"--reasoning\": error: unknown value for --reasoning: 'bogus'"
+Candidate 9 (invalid value) --presence-penalty nan:
+  rep1 port 47642 exit 1 ; rep2 port 47643 exit 1
+  log candidate: "error while handling argument \"--presence-penalty\": error: presence-penalty must be finite"
+Candidate 10 (invalid value) --frequency-penalty inf:
+  rep1 port 47643 exit 1 ; rep2 port 47640 exit 1
+  log candidate: "error while handling argument \"--frequency-penalty\": error: frequency-penalty must be finite"
+Candidate 11 (invalid value) --checkpoint-min-step -1:
+  rep1 port 47640 exit 1 ; rep2 port 47641 exit 1
+  log candidate: "error while handling argument \"--checkpoint-min-step\": checkpoint-min-step must be non-negative"
+Candidate 12 (invalid value) --ctx-size -5 (SIGABRT, exit 134):
+  rep1 port 47641 exit 134 ; rep2 port 47642 exit 134
+  log candidate: "llama-context.cpp:2624: GGML_ASSERT(n_outputs >= 1) failed"
+Candidate 13 (removed argument) --draft 5:
+  rep1 port 47642 exit 1 ; rep2 port 47643 exit 1
+  log candidate: "error while handling argument \"--draft\": the argument has been removed. use --spec-draft-n-max or --spec-ngram-mod-n-max"
+
+Post-run port check: ss -ltn showed no listeners in 47640-47643 after the batch; pgrep -af llama-server showed no processes owned by this seat (sibling servers on other blocks left untouched).
+
+Source verification (pinned copy /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-26/sources/llama.cpp-704366d/):
+  sha256sum arg.cpp            = bf4c58c189a774f2308acfe88e4ec5cebb0c43f60cf05cef4c5b2b9affd5822d (matches pin)
+  sha256sum llama-context.cpp  = 2a25e556cb0d16725e01ce853fb1b76da91dcb41b803ce1a6bacec89bfb94aa5 (matches pin)
+  Each chosen signature found verbatim via grep -F in the pinned source (see advice report for line numbers).
+  None of the 13 signatures occurs in help.txt or version.txt (grep -F, exact bytes).
+  Base absence: `git -C /home/vgpnk/Projects/shokunin/kama-shokunin grep -F -q -e '<sig>' 1560e4d8 -- SKILL.md corpus` returned 1 for all 13 signatures.
+
+--- Revision (after first counter run) ---
+First scratch counter run (13 rows incl. --draft 5 / S992): registered 13 counted 12 met True,
+not-counted ['R26-C1-STARTUP-DRAFT-REMOVED:f_absent_from_baseline'].
+Reason: clause (f) squash comparison — help text wraps "the argument has been removed. use
+--spec-draft-n-max or --spec-ngram-mod-n-max" across lines, so with all whitespace removed it
+equals the signature with whitespace removed. Row dropped; not a clean signature.
+
+Final scratch counter run (12 rows, S980-S991):
+  command (in git archive a23c0e0 extract):
+    flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 python3 .ufo/waves/round-26/count-c1.py --out counter-receipt2.json
+  exit 0, output: "registered 12 counted 12 target 12 met True not-counted []"
+  baseline_sha256 7d5e2e9f7e9405c5b609855e19165e073db35fe6cf9a534e1275e65df42e7516
+  every row: counted True, all checks true; observed exits: 11 rows exit 1, ctx-size row exit -6 (SIGABRT)
+
+--- Revision 2 (registry args now match live launches) ---
+Per ScribeSkillsRowsStartup coordination, every registry args list now begins with
+`-t`, `2` (matches the live launches; the frozen counter's base argv adds -m/--host/--port).
+Rebuilt scratch extract (a23c0e0) with the patched registry and reran the counter:
+  flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 python3 .ufo/waves/round-26/count-c1.py --out counter-receipt3.json
+  output: "registered 12 counted 12 target 12 met True not-counted []", exit 0.
+  Receipt: counter-receipt3.json.

@@ -1,0 +1,76 @@
+ExecChatFormat RUNS (kama round-26 wave-1, C1 candidate rows)
+Fixture: ~/.local/bin/llama-server sha256 b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804
+        ~/.cache/kama-shokunin/models/stories260K.gguf sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d
+Source file pinned: .ufo/waves/round-26/sources/llama.cpp-704366d/server-common.cpp sha256 b4f4aae7eed919f914d132ae64416a0e7cfb23442161af6f63ba8d902954d442
+All requests: POST on 127.0.0.1:<port> with -H 'Content-Type: application/json', body from out/raw/repro/passN/<fault>/req.json
+Server launch template: timeout 120 llama-server -m <model> --host 127.0.0.1 --port <port> -t 2 [extra args]
+
+1. Port pre-check (2026-10-23):
+   command: ss -ltn | grep -E '4765[2-5]'
+   exit: 1 (no listeners; ports 47652-47655 free)
+
+2. Pin check:
+   command: sha256sum ~/.local/bin/llama-server ~/.cache/kama-shokunin/models/stories260K.gguf
+   exit: 0; both hashes match the counter pins (above).
+
+3. Smoke repro (first server launch, port 47652):
+   POST /v1/chat/completions {"messages":[{"role":"user"}]} -> HTTP 400
+     {"error":{"code":400,"message":"All non-assistant messages must contain 'content'","type":"invalid_request_error"}}
+   POST /v1/chat/completions {"messages":[123]} -> HTTP 400 (same message)
+   Server terminated (kill 3260577); confirmed no listener on 47652-47655 afterwards.
+
+4. repro.sh v1 (health probe used body grep '"true"', which never matched; run aborted by
+   600s timeout after 12 faults; the server requests themselves all succeeded). Superseded by v2.
+
+5. repro.sh v2 pass1 (17 faults, one server child at a time, ports 47652-47655):
+   all exits 0. Results:
+   A-missing-msg           400 "'messages' is required"
+   B-messages-not-array    400 "Expected 'messages' to be an array"
+   C-msg-no-content        400 "All non-assistant messages must contain 'content'"
+   D-assistant-empty       400 "Assistant message must contain either 'content' or 'tool_calls'!"
+   E-content-wrong-type    400 "Expected 'content' to be a string or an array"
+   F-content-item-unsupported 400 "unsupported content[].type"
+   H-response-format       400 "response_format type must be one of \"text\" or \"json_object\", but got: xml"
+   K-schema-grammar        500 "Cannot use both json_schema and grammar"
+   L-enable-thinking       400 "invalid type for \"enable_thinking\" (expected boolean, got string)"
+   M-two-assistant-end     400 "Cannot have 2 or more assistant messages at the end of the list."
+   N-genprompt-continue    400 "Cannot set both add_generation_prompt and continue_final_message to true."
+   O-continue-toolcalls    400 "Cannot set both add_generation_prompt and continue_final_message to true." (same as N; superseded by O2)
+   P-top-logprobs          400 "top_logprobs requires logprobs to be set to true"
+   I-tools-no-jinja (args --no-jinja) 500 "tools param requires --jinja flag"
+   J-tool-choice-no-jinja (args --no-jinja) 200 (object tool_choice silently defaulted to auto; superseded by J2)
+   T-grammar-tools         400 "Cannot use custom grammar constraints with tools."
+   U-logprobs-tools-stream 400 "logprobs is not supported with tools + stream"
+
+6. repro2.sh pass1:
+   J2-tool-choice-string-no-jinja (args --no-jinja) 500 "tool_choice param requires --jinja flag"
+   O2-continue-toolcalls-no-genprompt 400 "Cannot continue an assistant message that contains tool calls."
+   APPLY-C-msg-no-content (/apply-template) 400 "All non-assistant messages must contain 'content'" (same signature as C on /apply-template)
+
+7. repro.sh v2 pass2: identical status set to run 5 (17/17 same).
+8. repro2-pass2.sh: identical status set to run 6 (3/3 same).
+   => every registered fault reproduced twice with independent launches.
+
+9. Verification (verify.py): server-common.cpp sha256 equals pin; every chosen signature
+   (17/17) is >=20 bytes, verbatim in server-common.cpp, on the cited line, and absent at
+   base 1560e4d8 per `git grep -F -q -e <sig> 1560e4d8 -- SKILL.md corpus` (exit 1 = absent).
+   Output: ALL_CHECKS_PASS.
+
+10. Informational baselines:
+    command: ~/.local/bin/llama-server --help; echo help_exit=$? -> help_exit=0
+    command: ~/.local/bin/llama-server --version; echo version_exit=$? -> version_exit=0
+    No chosen signature occurs in help+version text (checked by script; 0 matches).
+
+11. Frozen-counter check (scratch git-archive extract of a23c0e042114016a909eb15173aa6df74b5b7eb0,
+    placeholder SKILL rows + SOURCES rows S901-S917 + registry copy added in the scratch extract only):
+    command (from /fast/scratch/hyaku/kama-r26/extract):
+      flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 \
+        python3 .ufo/waves/round-26/count-c1.py --lane /fast/scratch/hyaku/kama-r26/extract --out <receipt>
+    see receipts below / appended at the end of this file.
+    frozen counter run (2026-10-23):
+    command (inside extract): flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900
+      python3 .ufo/waves/round-26/count-c1.py --lane /fast/scratch/hyaku/kama-r26/extract
+      --out /fast/scratch/hyaku/kama-r26/ExecChatFormat/counter-receipt.json
+    exit: 0
+    stdout: registered 17 counted 17 target 12 met True not-counted []
+    receipt copied to counter-receipt.json in this directory.

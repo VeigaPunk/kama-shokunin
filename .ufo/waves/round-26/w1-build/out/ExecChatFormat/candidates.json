@@ -1,0 +1,532 @@
+{
+ "signatures": [
+  {
+   "id": "CHATFMT-01",
+   "channel": "http",
+   "signature": "'messages' is required",
+   "args": [],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "model": "gpt-3.5-turbo"
+    }
+   },
+   "source": {
+    "row": "S901",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-02",
+   "channel": "http",
+   "signature": "Expected 'messages' to be an array",
+   "args": [],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": "hi"
+    }
+   },
+   "source": {
+    "row": "S902",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-03",
+   "channel": "http",
+   "signature": "All non-assistant messages must contain 'content'",
+   "args": [],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "user"
+      }
+     ]
+    }
+   },
+   "source": {
+    "row": "S903",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-04",
+   "channel": "http",
+   "signature": "Assistant message must contain either 'content' or 'tool_calls'!",
+   "args": [],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "assistant"
+      }
+     ]
+    }
+   },
+   "source": {
+    "row": "S904",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-05",
+   "channel": "http",
+   "signature": "Expected 'content' to be a string or an array",
+   "args": [],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "user",
+       "content": 123
+      }
+     ]
+    }
+   },
+   "source": {
+    "row": "S905",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-06",
+   "channel": "http",
+   "signature": "unsupported content[].type",
+   "args": [],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "user",
+       "content": [
+        {
+         "type": "weird",
+         "text": "x"
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "source": {
+    "row": "S906",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-07",
+   "channel": "http",
+   "signature": "response_format type must be one of ",
+   "args": [],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "user",
+       "content": "hi"
+      }
+     ],
+     "response_format": {
+      "type": "xml"
+     }
+    }
+   },
+   "source": {
+    "row": "S907",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-08",
+   "channel": "http",
+   "signature": "tools param requires --jinja flag",
+   "args": [
+    "--no-jinja"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "user",
+       "content": "hi"
+      }
+     ],
+     "tools": [
+      {
+       "type": "function",
+       "function": {
+        "name": "get_weather",
+        "description": "get weather",
+        "parameters": {
+         "type": "object",
+         "properties": {}
+        }
+       }
+      }
+     ]
+    }
+   },
+   "source": {
+    "row": "S908",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-09",
+   "channel": "http",
+   "signature": "tool_choice param requires --jinja flag",
+   "args": [
+    "--no-jinja"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "user",
+       "content": "hi"
+      }
+     ],
+     "tool_choice": "required"
+    }
+   },
+   "source": {
+    "row": "S909",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-10",
+   "channel": "http",
+   "signature": "Cannot use both json_schema and grammar",
+   "args": [],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "user",
+       "content": "hi"
+      }
+     ],
+     "json_schema": {
+      "type": "object"
+     },
+     "grammar": "root ::= \"a\""
+    }
+   },
+   "source": {
+    "row": "S910",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-11",
+   "channel": "http",
+   "signature": "(expected boolean, got string)",
+   "args": [],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "user",
+       "content": "hi"
+      }
+     ],
+     "chat_template_kwargs": {
+      "enable_thinking": "maybe"
+     }
+    }
+   },
+   "source": {
+    "row": "S911",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-12",
+   "channel": "http",
+   "signature": "Cannot have 2 or more assistant messages at the end of the list.",
+   "args": [],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "assistant",
+       "content": "a"
+      },
+      {
+       "role": "assistant",
+       "content": "b"
+      }
+     ]
+    }
+   },
+   "source": {
+    "row": "S912",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-13",
+   "channel": "http",
+   "signature": "Cannot set both add_generation_prompt and continue_final_message to true.",
+   "args": [],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "user",
+       "content": "hi"
+      }
+     ],
+     "add_generation_prompt": true,
+     "continue_final_message": true
+    }
+   },
+   "source": {
+    "row": "S913",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-14",
+   "channel": "http",
+   "signature": "Cannot continue an assistant message that contains tool calls.",
+   "args": [],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "assistant",
+       "content": null,
+       "tool_calls": [
+        {
+         "id": "call_0",
+         "type": "function",
+         "function": {
+          "name": "get_weather",
+          "arguments": "{}"
+         }
+        }
+       ]
+      }
+     ],
+     "continue_final_message": true,
+     "add_generation_prompt": false
+    }
+   },
+   "source": {
+    "row": "S914",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-15",
+   "channel": "http",
+   "signature": "top_logprobs requires logprobs to be set to true",
+   "args": [],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "user",
+       "content": "hi"
+      }
+     ],
+     "top_logprobs": 5
+    }
+   },
+   "source": {
+    "row": "S915",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-16",
+   "channel": "http",
+   "signature": "Cannot use custom grammar constraints with tools.",
+   "args": [],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "user",
+       "content": "hi"
+      }
+     ],
+     "tools": [
+      {
+       "type": "function",
+       "function": {
+        "name": "get_weather",
+        "description": "get weather",
+        "parameters": {
+         "type": "object",
+         "properties": {}
+        }
+       }
+      }
+     ],
+     "grammar": "root ::= \"a\""
+    }
+   },
+   "source": {
+    "row": "S916",
+    "file": "server-common.cpp"
+   }
+  },
+  {
+   "id": "CHATFMT-17",
+   "channel": "http",
+   "signature": "logprobs is not supported with tools + stream",
+   "args": [],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "user",
+       "content": "hi"
+      }
+     ],
+     "tools": [
+      {
+       "type": "function",
+       "function": {
+        "name": "get_weather",
+        "description": "get weather",
+        "parameters": {
+         "type": "object",
+         "properties": {}
+        }
+       }
+      }
+     ],
+     "stream": true,
+     "logprobs": true
+    }
+   },
+   "source": {
+    "row": "S917",
+    "file": "server-common.cpp"
+   }
+  }
+ ]
+}

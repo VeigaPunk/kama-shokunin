@@ -1,0 +1,128 @@
+# prereg-time-check run log — 2026-10-23T03:36:14Z
+
+== selftest ==
+[PASS] clean: timestamp before commit: expect 0, got 0
+        rev=a1ca440e2e61fc14eb2b50b6c2119033a3328b90 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+          ok   line 1: 2026-10-23T03:18:51Z (at/before commit)
+        RESULT pass: no timestamp later than the committer time
+[PASS] flag: minute-precision guess after commit: expect 1, got 1
+        rev=9999f8ecfad4bd20c2cf001045b99782430302b8 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+          FLAG line 1: 2026-10-23T03:45Z (later than commit by 1517s)
+        RESULT fail: 1 timestamp(s) later than the committer time
+[PASS] flag: seconds-precision guess after commit: expect 1, got 1
+        rev=22f9b448ae1971deafac03e7e5ad2ce525e538a3 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+          FLAG line 1: 2026-10-23T03:25:00Z (later than commit by 317s)
+        RESULT fail: 1 timestamp(s) later than the committer time
+[PASS] clean: legitimate far-future data beyond horizon: expect 0, got 0
+        rev=57c6e44225138d348ffa0d512759b5f1c900c681 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+          ok   line 1: 2026-10-25T14:27:28Z (future beyond horizon (+212865s))
+        RESULT pass: no timestamp later than the committer time
+[PASS] flag: strict mode flags far-future too: expect 1, got 1
+        rev=aa37f8c301ceb83cc7fd1c01d3b2a744b3930dd6 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=-1
+          FLAG line 1: 2026-10-25T14:27:28Z (later than commit by 212865s)
+        RESULT fail: 1 timestamp(s) later than the committer time
+[PASS] clean: mixed past and present-boundary times: expect 0, got 0
+        rev=15ab225b7380117ed1da7aa50b25e9ad77caf2d7 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+          ok   line 1: 2026-10-23T03:19:43Z (at/before commit)
+          ok   line 1: 2026-10-23T03:00:00Z (at/before commit)
+        RESULT pass: no timestamp later than the committer time
+[PASS] clean: no timestamps at all: expect 0, got 0
+        rev=86166bcffa3b684f745f52152219bea6d86adbd2 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+          no ISO-8601 UTC timestamps found
+        RESULT pass: no timestamp later than the committer time
+[PASS] clean: malformed Z-suffix lookalike is skipped: expect 0, got 0
+        rev=05988702cc4fa146a5fc69fa6d76fa42f563de55 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+          no ISO-8601 UTC timestamps found
+        RESULT pass: no timestamp later than the committer time
+[PASS] missing path: expect 2, got 2 (ERROR could not evaluate: no commit touches missing.json at HEAD)
+[PASS] bad revision: expect 2, got 2 (ERROR could not evaluate: git log failed rc=128: fatal: bad object deadbeefdeadbeefdeadbeefdeadbeefdeadbeef)
+selftest repo: /fast/scratch/hyaku/kama-r26/ExecPreregTimeCheck/ptc-selftest-btkilz7s
+SELFTEST PASS
+selftest rc=0
+== round-26 preregistration.json @ a4a159c39967e88a89b0808dcd201c79c474efd1 ==
+rev=a4a159c39967e88a89b0808dcd201c79c474efd1 path=.ufo/waves/round-26/preregistration.json
+committer_time=2026-10-23T00:18:51-03:00 max_future=86400
+  FLAG line 6: 2026-10-23T03:45Z (later than commit by 1569s)
+RESULT fail: 1 timestamp(s) later than the committer time
+rc=1
+== round-26 preregistration.json @ a12850c5cbc1013e60cc5bba2d6800d1cd634499 ==
+rev=a12850c5cbc1013e60cc5bba2d6800d1cd634499 path=.ufo/waves/round-26/preregistration.json
+committer_time=2026-10-23T00:19:43-03:00 max_future=86400
+  FLAG line 6: 2026-10-23T03:45Z (later than commit by 1517s)
+  FLAG line 29: 2026-10-23T03:55Z (later than commit by 2117s)
+RESULT fail: 2 timestamp(s) later than the committer time
+rc=1
+== round-26 preregistration.json @ f071209a0f956680b5722e09242e784a1644e216 ==
+rev=f071209a0f956680b5722e09242e784a1644e216 path=.ufo/waves/round-26/preregistration.json
+committer_time=2026-10-23T00:20:14-03:00 max_future=86400
+  ok   line 6: 2026-10-23T03:18:51Z (at/before commit)
+  ok   line 29: 2026-10-23T03:19:43Z (at/before commit)
+RESULT pass: no timestamp later than the committer time
+rc=0
+== round-26 preregistration.json @ a23c0e042114016a909eb15173aa6df74b5b7eb0 ==
+rev=a23c0e042114016a909eb15173aa6df74b5b7eb0 path=.ufo/waves/round-26/preregistration.json
+committer_time=2026-10-23T00:32:54-03:00 max_future=86400
+  ok   line 6: 2026-10-23T03:18:51Z (at/before commit)
+  ok   line 29: 2026-10-23T03:19:43Z (at/before commit)
+  ok   line 33: 2026-10-25T14:27:28Z (future beyond horizon (+212074s))
+RESULT pass: no timestamp later than the committer time
+rc=0
+
+== round-25 files at introducing revisions ==
+== round-25 preregistration.json @ efe58e96e6cfbef88a0fba9d64505e18b7ad7356 ==
+rev=efe58e96e6cfbef88a0fba9d64505e18b7ad7356 path=.ufo/waves/round-25/preregistration.json
+committer_time=2026-10-22T05:29:44-03:00 max_future=86400
+  FLAG line 5: 2026-10-22T08:31:00Z (later than commit by 76s)
+RESULT fail: 1 timestamp(s) later than the committer time
+rc=1
+== round-25 preregistration-amendment-1.json @ efe58e96e6cfbef88a0fba9d64505e18b7ad7356 ==
+rev=efe58e96e6cfbef88a0fba9d64505e18b7ad7356 path=.ufo/waves/round-25/preregistration-amendment-1.json
+committer_time=2026-10-22T05:29:44-03:00 max_future=86400
+  FLAG line 5: 2026-10-22T08:30Z (later than commit by 16s)
+  FLAG line 10: 2026-10-22T08:31:00Z (later than commit by 76s)
+RESULT fail: 2 timestamp(s) later than the committer time
+rc=1
+== round-25 preregistration-amendment-2.json @ 5388b7cf1d5bad9c228da6f95c40f323414be2f1 ==
+rev=5388b7cf1d5bad9c228da6f95c40f323414be2f1 path=.ufo/waves/round-25/preregistration-amendment-2.json
+committer_time=2026-10-22T06:28:44-03:00 max_future=86400
+  FLAG line 6: 2026-10-22T09:30Z (later than commit by 76s)
+  ok   line 16: 2026-10-22T09:24Z (at/before commit)
+RESULT fail: 1 timestamp(s) later than the committer time
+rc=1
+== round-25 preregistration-amendment-3.json @ c808ba07f09c4be55413d3d6516c542ab69b64f8 ==
+rev=c808ba07f09c4be55413d3d6516c542ab69b64f8 path=.ufo/waves/round-25/preregistration-amendment-3.json
+committer_time=2026-10-22T06:38:45-03:00 max_future=86400
+  FLAG line 6: 2026-10-22T09:40Z (later than commit by 75s)
+RESULT fail: 1 timestamp(s) later than the committer time
+rc=1
+== round-25 preregistration-amendment-4.json @ 46fb04bd54978a2a3c47b3da098a2526804014e0 ==
+rev=46fb04bd54978a2a3c47b3da098a2526804014e0 path=.ufo/waves/round-25/preregistration-amendment-4.json
+committer_time=2026-10-22T06:42:31-03:00 max_future=86400
+  ok   line 6: 2026-10-22T09:38:47Z (at/before commit)
+  ok   line 19: 2026-10-22T09:28:44Z (at/before commit)
+RESULT pass: no timestamp later than the committer time
+rc=0
+
+== round-25 errata-attempt-2.json @ fa3b62ae ==
+rev=fa3b62ae6475d111eb466d79af616aeebb08bbb9 path=.ufo/waves/round-25/errata-attempt-2.json
+committer_time=2026-10-22T06:54:34-03:00 max_future=86400
+  ok   line 11: 2026-10-22T09:38:45Z (at/before commit)
+RESULT pass: no timestamp later than the committer time
+rc=0
+
+== strict mode (literal predicate) at tip a23c0e04 ==
+rev=a23c0e042114016a909eb15173aa6df74b5b7eb0 path=.ufo/waves/round-26/preregistration.json
+committer_time=2026-10-23T00:32:54-03:00 max_future=-1
+  ok   line 6: 2026-10-23T03:18:51Z (at/before commit)
+  ok   line 29: 2026-10-23T03:19:43Z (at/before commit)
+  FLAG line 33: 2026-10-25T14:27:28Z (later than commit by 212074s)
+RESULT fail: 1 timestamp(s) later than the committer time
+rc=1

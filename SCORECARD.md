@@ -1308,3 +1308,44 @@ ground, one capability), quality unchanged-to-improved (routed wording and
 count corrections, KQ36), discernment improved (five attack findings turned
 into stricter counters, scoped claims and a filed axis dispute). Outside
 closure alone decides admission.
+
+## Round 26 — live error signatures on the serving runtime (2026-10-23)
+
+One declared claim (preregistration `.ufo/waves/round-26/preregistration.json`,
+pre-data amendments A0 and A1). Lowest axes at the start: depth, calibration
+and adjacency, all 7. The rejected streak (rounds 23-25) worked calibration and
+the report-landing auditor; this round works depth on the serving runtime.
+
+| Claim | Axis, score | Before → after | Counting command | Measured commit | Evidence |
+|---|---|---|---|---|---|
+| C1 | depth 7 → 8 (author reading; the closure decides) | `registered 0 counted 0 target 12 met False` at base 1560e4d8 → `registered 17 counted 17 target 12 met True` | `python3 .ufo/waves/round-26/count-c1.py --out <receipt.json>` (counter sha256 6501737c…6588, unchanged since a23c0e04) | the landed lane tip named in the round report (receipt `.ufo/waves/round-26/final/c1-tip-receipt.json`) | SKILL.md "## Round-26 live error signatures" (E26-01 to E26-17), `registry/error-signatures-r26.json`, SOURCES S114-S130, lesson `corpus/lessons/round-26.md` |
+
+Surface moved: the SKILL.md error-signature table for the live b11755
+runtime; before this round SKILL.md held only the September sample from dead
+ports ("Historical error signatures"). The command that would show it unmoved
+is the same counter at base (counted 0). Known counter limits found after data
+(warning lines, decoded echoes, file-content echoes, the 19-row port limit)
+are listed in the lesson and were not repaired this round.
+
+Repairs (routed by the round-25 outside spot-check, not claims): defects 1-7,
+lesson §Routed defects. `.ufo/waves/round-25/count-c2.py` now binds raw
+hashes; KQ36 re-run at the landed tip is in the round report.
+
+### Round 26 correction — round-25 trend verdicts (routed defect 6)
+
+The round-25 trend line above ("quality unchanged-to-improved",
+"discernment improved") conflicts with the round-25 report
+(`.ufo/reports/round-25/kama.md:120-129`: quality unchanged, discernment
+unchanged) and the outside closure (`corpus/lessons/round-25-verifier-spotcheck.md:187,194`).
+Corrected round-25 trend verdicts: expansion improved, quality unchanged,
+discernment unchanged. The earlier bytes stay as written.
+
+Other scores held: operability 8, freshness 8, coverage 9, calibration 7,
+adjacency 7. Capabilities: none added.
+
+### Planned (round 27)
+
+Register a stricter error-signature counter (per-row healthy control with the
+same argv, decoded-request and file-content echo checks, port reuse) before
+data, then land the held-back confirmed signatures (lesson §Gate, rejected
+table). Work calibration or adjacency (7) if depth moves.

@@ -1,0 +1,131 @@
+RUNS — KamaR26.ExecRouterModels, wave 1 (fault family: model-name and router errors)
+Host: linux 7.2.11-arch1-1 x64; date 2026-10-23.
+All commands below ran from /home/vgpnk/Projects/shokunin unless noted.
+
+------------------------------------------------------------------------
+0. Pin checks
+------------------------------------------------------------------------
+$ sha256sum ~/.local/bin/llama-server
+b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804  /home/vgpnk/.local/bin/llama-server
+  -> equals SERVER_SHA256 in count-c1.py. exit 0
+
+$ sha256sum ~/.cache/kama-shokunin/models/stories260K.gguf
+270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d  /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf
+  -> equals MODEL_SHA256 in count-c1.py. exit 0
+
+$ sha256sum .ufo/waves/round-26/count-c1.py (extracted from a23c0e04 archive)
+6501737c749926be9d6b37761175d76f89876976c46bd5951fc1a3520c796588
+  -> equals counter_sha256 in preregistration.json. exit 0
+
+------------------------------------------------------------------------
+1. Port block pre-checks and server launches
+------------------------------------------------------------------------
+$ ss -ltn | grep -E ':4766[89]|:4767[01]'
+  -> no output (ports 47668-47671 free). exit 1 (grep no match)
+
+$ pgrep -af llama-server   # before my runs: only other seats' children
+  -> no llama-server on 47668-47671. (list of other ports omitted)
+
+Run P1 (probe1, port 47668):
+$ PORT=47668 /fast/scratch/hyaku/kama-r26/ExecRouterModels/probe.sh probe1 \
+    > /fast/scratch/hyaku/kama-r26/ExecRouterModels/probe1/raw.txt 2>&1
+  -> exit 0. Server: timeout 120 ~/.local/bin/llama-server -m stories260K.gguf
+     --host 127.0.0.1 --port 47668 -t 2, started, polled /health to 200,
+     requests issued, SIGTERM, wait. PID 3417514.
+
+Run P2 (probe2, port 47669):
+$ mkdir -p .../probe2 && PORT=47669 .../probe2.sh probe2 > .../probe2/raw.txt 2>&1
+  -> exit 0. PID 3472037.
+
+Run P3 (probe3, port 47670):
+$ mkdir -p .../probe3 && PORT=47670 .../probe.sh probe3 > .../probe3/raw.txt 2>&1
+  -> exit 0.
+
+Run P4 (probe4, port 47671):
+$ mkdir -p .../probe4 && PORT=47671 ./probe4.sh > probe4/raw.txt 2>&1
+  -> exit 0.
+
+Post-run cleanup check:
+$ pgrep -af 'llama-server' | grep -E '4766[89]|4767[01]'
+  -> no output (none of mine). exit 1
+$ ss -ltn | grep -E ':4766[89]|:4767[01]'
+  -> no output (all four ports closed). exit 1
+
+------------------------------------------------------------------------
+2. Base-presence checks (clause b), lane repo
+------------------------------------------------------------------------
+$ git -C kama-shokunin grep -F -q -e 'File Not Found' 1560e4d8 -- SKILL.md corpus; echo $?
+0   # PRESENT at base -> clause b fails for any substring of the 404 body
+$ git -C kama-shokunin grep -F -q -e 'This server does not support embeddings' 1560e4d8 -- SKILL.md corpus; echo $?
+1   # absent (informational)
+$ git -C kama-shokunin grep -F -q -e 'model is already running' 1560e4d8 -- SKILL.md corpus; echo $?
+1   # absent
+$ git -C kama-shokunin grep -F -q -e 'model must be a non-empty string' 1560e4d8 -- SKILL.md corpus; echo $?
+1   # absent
+$ git -C kama-shokunin grep -F -e 'File Not Found' 1560e4d8 -- SKILL.md corpus
+1560e4d8:SKILL.md:| `{"error":{"message":"File Not Found","type":"not_found_error","code":404}}` (`application/json`) | `GET :34113/` | llama.cpp's normal root 404 | Probe `/health` / `/v1/models` instead; do not classify a fault |
+1560e4d8:corpus/knowledge/listener-census.md:... `GET /v1/models/<bare-id>` → `404 {"error":{"message":"File Not Found","type":"not_found_error"}}` ...
+$ git -C kama-shokunin grep -F -e 'Loading model' 1560e4d8 -- SKILL.md corpus
+  -> multiple hits (SKILL.md MODEL_LOADING row, QUALITY.md KQ19, SOURCES S035/S036, corpus knowledge). exit 0
+
+------------------------------------------------------------------------
+3. Frozen counter runs (scratch git archive extract)
+------------------------------------------------------------------------
+Extract: $ git archive a23c0e042114016a909eb15173aa6df74b5b7eb0 | tar -x -C /fast/scratch/hyaku/kama-r26/ExecRouterModels/extract/
+  -> exit 0.
+All counter runs: cwd = extract root; locked with flock /fast/scratch/hyaku/kama-r26/counter.lock;
+--repo points at the lane git repo for base reads only.
+
+Run A (empty registry):
+$ echo '{"signatures": []}' > extract/registry/error-signatures-r26.json
+$ flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 python3 .ufo/waves/round-26/count-c1.py \
+    --lane /fast/scratch/hyaku/kama-r26/ExecRouterModels/extract \
+    --repo /home/vgpnk/Projects/shokunin/kama-shokunin \
+    --out /fast/scratch/hyaku/kama-r26/ExecRouterModels/counter-A.json
+  printed: registered 0 counted 0 target 12 met False not-counted []
+  exit 0
+
+Run B (one row: signature = File-Not-Found 404 body; trigger POST /models/load; source S901 server-http.cpp):
+$ cat > extract/registry/error-signatures-r26.json <<'EOF'
+{"signatures": [{"id": "R26TestFNF404", "channel": "http", "signature": "{\"error\":{\"message\":\"File Not Found\",\"type\":\"not_found_error\",\"code\":404}}", "args": [], "model": "fixture", "occupy_port": false, "request": {"method": "POST", "path": "/models/load", "headers": {}, "body": {"model": "nope-model-xyz"}}, "source": {"row": "S901", "file": "server-http.cpp"}}]}
+EOF
+  + scratch SKILL.md section row and SOURCES S901 row appended (extract only)
+$ flock ... python3 .ufo/waves/round-26/count-c1.py --lane ... --repo ... --out counter-B.json
+  printed: registered 1 counted 0 target 12 met False not-counted ['R26TestFNF404:b_new_at_base,d_in_source']
+  exit 0
+
+Run C (one row: signature = "model is already running" (server-models.cpp:2321 literal); trigger POST /models/load; source S902 server-models.cpp):
+$ cat > extract/registry/error-signatures-r26.json <<'EOF'
+{"signatures": [{"id": "R26TestRouterNF", "channel": "http", "signature": "model is already running", "args": [], "model": "fixture", "occupy_port": false, "request": {"method": "POST", "path": "/models/load", "headers": {}, "body": {"model": "nope-model-xyz"}}, "source": {"row": "S902", "file": "server-models.cpp"}}]}
+EOF
+  + SKILL.md row replaced with R26TestRouterNF / S902
+$ flock ... python3 .ufo/waves/round-26/count-c1.py --lane ... --repo ... --out counter-C.json
+  printed: registered 1 counted 0 target 12 met False not-counted ['R26TestRouterNF:e_signature_seen']
+  exit 0
+  receipt row: all static checks true; observed {"status": 404, "channel_sha256": "0c6c6e...",
+  "channel_excerpt": '{"error":{"message":"File Not Found","type":"not_found_error","code":404}}'}
+
+------------------------------------------------------------------------
+4. Source-literal anchoring (pinned commit 704366d, lane snapshot)
+------------------------------------------------------------------------
+$ grep -n '"model is already running"\|"model is not loaded"\|"model is not found"\|"model is not running"\|"model must be a non-empty string"\|"model '\''%s'\'' not found"\|"request cancelled by a stop while the model was loading"' \
+    .ufo/waves/round-26/sources/llama.cpp-704366d/server-models.cpp
+2170:        res_err(res, format_error_response(string_format("model '%s' not found", name.c_str()), ERROR_TYPE_INVALID_REQUEST));
+2176:        res_err(res, format_error_response("model is not loaded", ERROR_TYPE_INVALID_REQUEST));
+2302:                    "request cancelled by a stop while the model was loading", ERROR_TYPE_INVALID_REQUEST));
+2317:            res_err(res, format_error_response("model is not found", ERROR_TYPE_NOT_FOUND));
+2321:            res_err(res, format_error_response("model is already running", ERROR_TYPE_INVALID_REQUEST));
+2461:            res_err(res, format_error_response("model is not found", ERROR_TYPE_INVALID_REQUEST));
+2465:            res_err(res, format_error_response("model is not running", ERROR_TYPE_INVALID_REQUEST));
+2497:            throw std::invalid_argument("model must be a non-empty string");
+2541:            throw std::invalid_argument("model must be a non-empty string");
+
+$ grep -n '"File Not Found"\|"Loading model"' .ufo/waves/round-26/sources/llama.cpp-704366d/server-http.cpp
+204:                        {"message", "File Not Found"},
+318:                        {"message", "Loading model"},
+
+Source fetch (2026-10-23): pinned tree is the lane's committed snapshot
+.ufo/waves/round-26/sources/llama.cpp-704366d/ (13 files, sha256 per
+count-c1.py SOURCE_SHA256); no re-fetch needed for byte-identical comparison —
+the snapshot hashes equal the counter's pinned values (verified by d_source_pinned
+in counter-C.json).

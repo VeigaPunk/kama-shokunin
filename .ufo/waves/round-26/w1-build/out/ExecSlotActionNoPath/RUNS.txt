@@ -1,0 +1,70 @@
+RUNS.txt — ExecSlotActionNoPath (KamaR26.ExecSlotActionNoPath), 2026-10-23
+Frozen counter: .ufo/waves/round-26/count-c1.py (never edited in the lane). Seat port block 47608-47611.
+
+Environment pins, verified before any launch:
+  ~/.local/bin/llama-server sha256 = b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804
+    (build 11755, commit 704366d — matches counter pin SERVER_SHA256)
+  ~/.cache/kama-shokunin/models/stories260K.gguf sha256 = 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d (matches counter pin)
+Port scan before and after every run: `ss -ltn | grep -E '4760[89]|4761[01]'` -> no output (ports free before; all closed after). Final `pgrep -af llama-server` shows only sibling seats' servers on other ports (47605, 47613, 47625, 47652, 47656, 47657); none on this seat's block.
+
+--- Run 1 (first reproduction): all 7 planned triggers, ports 47608-47611.
+script: /fast/scratch/hyaku/kama-r26/ExecSlotActionNoPath/run-triggers.py
+command: cd /fast/scratch/hyaku/kama-r26/ExecSlotActionNoPath && python3 run-triggers.py
+exit: 1 — the initial port list held 4 ports for 7 triggers; IndexError after the 4th launch. All 4 launches that ran completed and closed their ports; no server leaked. Recorded honestly; rerun with an extended list.
+stdout:
+  no-path-save: status=501 exit=None ready=True port_closed=True
+  no-path-restore: status=501 exit=None ready=True port_closed=True
+  no-path-erase: status=501 exit=None ready=True port_closed=True
+  invalid-slot-id-nonnum: status=400 exit=None ready=True port_closed=True
+
+--- Run 2 (all 7 triggers, full reproduction): ports 47608-47611 (reused after close).
+command: sed -i 's/^PORTS = \[47608, 47609, 47610, 47611\]/PORTS = [47608, 47609, 47610, 47611, 47608, 47609, 47610]/' run-triggers.py && python3 run-triggers.py
+exit: 0
+stdout:
+  no-path-save: status=501 exit=None ready=True port_closed=True
+  no-path-restore: status=501 exit=None ready=True port_closed=True
+  no-path-erase: status=501 exit=None ready=True port_closed=True
+  invalid-slot-id-nonnum: status=400 exit=None ready=True port_closed=True
+  invalid-slot-id-999: status=200 exit=None ready=True port_closed=True   (slot 999 does not exist; save succeeds on a fresh slot -> 200; NOT an error)
+  invalid-action: status=400 exit=None ready=True port_closed=True
+  restore-missing-file: status=400 exit=None ready=True port_closed=True
+Every launch: `timeout 90 llama-server -m <fixture> --host 127.0.0.1 --port <47608..47611> -t 2 [extra args]`; stdout+stderr captured to per-trigger log under the scratch dir. Raw bodies/logs copied to out/ExecSlotActionNoPath/raw/.
+
+Observed bodies (verbatim):
+  no-path-save/restore/erase (501):
+    {"error":{"code":501,"message":"This server does not support slots action. Start it with `--slot-save-path`","type":"not_supported_error"}}
+  invalid-slot-id-nonnum (400):
+    {"error":{"code":400,"message":"Invalid slot ID","type":"invalid_request_error"}}
+  invalid-action (400):
+    {"error":{"code":400,"message":"Invalid action","type":"invalid_request_error"}}
+  restore-missing-file (400):
+    {"error":{"code":400,"message":"Unable to restore slot: No available space in KV cache or invalid slot save file","type":"invalid_request_error"}}
+
+--- Static candidate checks (candidates-check.py, exit 0): signature >= 20 bytes, absent at base, verbatim in the pinned source with matching sha256.
+  "This server does not support slots action. Start it with `--slot-save-path`" — 75 bytes; absent at base (git grep rc=1); server-context.cpp:5408; file sha matches pin.
+  "invalid_request_error" — 21 bytes; absent at base (rc=1); server-common.cpp:96; file sha matches pin.
+  "No available space in KV cache or invalid slot save file" — 56 bytes; absent at base (rc=1); server-context.cpp:3084; file sha matches pin.
+Base-absence command per signature (1 = absent, all returned 1):
+  git -C /home/vgpnk/Projects/shokunin/kama-shokunin grep -F -q -e '<sig>' 1560e4d83f42b04f40336357de6f9637eafa0f4b -- SKILL.md corpus; echo $?
+
+--- Run 3 (second reproduction, independent rerun of the 4 confirmed triggers): run2.py, ports 47608-47611.
+command: cd /fast/scratch/hyaku/kama-r26/ExecSlotActionNoPath && python3 run2.py
+exit: 0
+stdout:
+  no-path-save: status=501 ready=True port_closed=True body_sha=93b83e653dfd
+  invalid-slot-id-nonnum: status=400 ready=True port_closed=True body_sha=d4928b601943
+  invalid-action: status=400 ready=True port_closed=True body_sha=05cfb9478bc9
+  restore-missing-file: status=400 ready=True port_closed=True body_sha=b7d816d8b7dc
+Body sha256 identical to run 2 for each trigger (reproducible). Evidence in out/ExecSlotActionNoPath/raw/run2/.
+
+--- Frozen counter on a scratch git-archive extract of the frozen tip a23c0e042114016a909eb15173aa6df74b5b7eb0 (placeholder SKILL rows, SOURCES S901-S904, and registry/error-signatures-r26.json added in the extract only; the lane itself untouched).
+command: cd /fast/scratch/hyaku/kama-r26/ExecSlotActionNoPath/extract && flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 python3 .ufo/waves/round-26/count-c1.py --out count-receipt.json
+exit: 0
+stdout (registry order: save, invalid-id, restore-missing, invalid-action):
+  registered 4 counted 2 target 12 met False not-counted ['exec-slot-action-no-path-restore-missing:g_distinct', 'exec-slot-action-no-path-invalid-action:g_distinct']
+Receipt: out/ExecSlotActionNoPath/count-receipt.json
+
+Rerun with registry order: save, restore-missing, invalid-id, invalid-action (count-receipt2.json):
+  registered 4 counted 2 target 12 met False not-counted ['exec-slot-action-no-path-invalid-id:g_distinct', 'exec-slot-action-no-path-invalid-action:g_distinct']
+
+Clause-(g) finding: all three of invalid-slot-id, invalid-action and restore-missing-file emit the shared error token "invalid_request_error" in their channel text; the first of them to count blocks the other two (substring of earlier counted channel text / duplicate signature). At most 2 of the 4 candidates can count in any order: the 501 save-no-path row plus exactly one of the three invalid-request rows. Recommended counted pair: save-no-path (S901) + restore-missing-file (S903) — the distinctive long literal is collision-safe, unlike the generic "invalid_request_error" token which any 400 row in the round may claim first.

@@ -1676,3 +1676,33 @@ fresh author; it committed the attempt-1 build wave as a record only
   is committed gzip-compressed as `runs.json.gz`; `zcat | cmp` matched
   before the original was removed.
 - Tool installs: none by the author; no seat reported an install.
+
+## Round 26 — live llama-server error signatures (depth); round-25 routed repairs (2026-10-23)
+
+**Claim C1 (depth).** Before: SKILL.md held no live error signature for the
+b11755 runtime; the counter `python3 .ufo/waves/round-26/count-c1.py` printed
+`registered 0 counted 0 target 12 met False` at base 1560e4d8. After: 17
+signatures, each reproduced by the counter against the pinned binary and
+fixture, verbatim in a pinned 704366d source line, cited by a new SOURCES row
+(S114-S130), absent from SKILL.md and corpus/ at base, absent from a healthy
+run and from `--help`/`--version`. Freeze, controls and amendments:
+`.ufo/waves/round-26/preregistration.json`, `.ufo/waves/round-26/controls/`.
+Pre-freeze control wave: KamaR26CtlAllFalse met the A0 counter with help text
+(12/14); A1 closed it before data (0/14). Wave 1 (36 seats) found 58
+candidates; 17 registered, the rest rejected or held back with reasons in
+`corpus/lessons/round-26.md` §Gate.
+
+**Motivating evidence.** `round-25-verifier-spotcheck.md` routed defect 8
+(work a lowest axis); the anti-loop note (leave calibration and the
+report-landing auditor); SKILL.md "Historical error signatures" is a September
+sample from ports that are now dead.
+
+**Re-verification (freshness).** The historical llama.cpp rows still match
+704366d source (wave-1 ScoutBaseOverlap). KQ36: the registered round-25 C2
+command re-run at the round-26 landed tip (round report).
+
+**Repairs.** Defects 1-7 of the round-25 spot-check (lesson §Routed defects):
+42 late paths committed (a4a159c3), KQ36 qualification, round-25 erratum,
+S131-S135 supersession rows, context-capacity errata, count-c2.py raw-hash
+binding, SCORECARD trend correction. Mined mistake: false timestamps, now
+checked by `tools/prereg-time-check.py` (exit 1 at a4a159c3).

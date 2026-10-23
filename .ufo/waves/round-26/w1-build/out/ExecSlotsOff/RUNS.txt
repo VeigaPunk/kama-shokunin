@@ -1,0 +1,36 @@
+Wave 1 build + first falsifiers — ExecSlotsOff (fault family: slots endpoint queried on server started with --no-slots, GET /slots)
+Port block: 47604-47607. Model fixture: ~/.cache/kama-shokunin/models/stories260K.gguf (sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d). Server: ~/.local/bin/llama-server, version 0.7.0-dev (build 11755, commit 704366d76).
+
+RUN 1 (reproduce, port 47604):
+  Command: timeout 90 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47604 --no-slots -t 2 > logs/run_47604.log 2>&1 & (background)
+  Wait for health (curl http://127.0.0.1:47604/health, up to 60s)
+  Command: curl -s -w '\nHTTP_STATUS=%{http_code}\n' http://127.0.0.1:47604/slots | tee logs/slots_body_47604.txt
+  Output: {"error":{"code":501,"message":"This server does not support slots endpoint. Start it with `--slots`","type":"not_supported_error"}}
+  HTTP_STATUS=501
+  Exit code of curl: 0
+  Server killed (kill $SRV), wait, then ss -ltn check: port 47604 closed.
+
+RUN 2 (reproduce, port 47605):
+  Command: timeout 90 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47605 --no-slots -t 2 > logs/run_47605.log 2>&1 & (background)
+  Wait for health.
+  Command: curl -s -w '\nHTTP_STATUS=%{http_code}\n' http://127.0.0.1:47605/slots | tee logs/slots_body_47605.txt
+  Output: {"error":{"code":501,"message":"This server does not support slots endpoint. Start it with `--slots`","type":"not_supported_error"}}
+  HTTP_STATUS=501
+  Exit code of curl: 0
+  Server killed, port 47605 closed.
+
+RUN 3 (healthy baseline, port 47606):
+  Command: timeout 90 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47606 -t 2 > logs/baseline_healthy.log 2>&1 & (background)
+  Wait for health.
+  Command: curl -s -w '\nHTTP_STATUS=%{http_code}\n' http://127.0.0.1:47606/slots | tee logs/healthy_slots.txt
+  Output: [{"id":0,"n_ctx":2048,"speculative":false,"is_processing":false},{"id":1,"n_ctx":2048,"speculative":false,"is_processing":false},{"id":2,"n_ctx":2048,"speculative":false,"is_processing":false},{"id":3,"n_ctx":2048,"speculative":false,"is_processing":false}]
+  HTTP_STATUS=200
+  Signature absent from healthy run: grep -c -F 'does not support slots endpoint' logs/baseline_healthy.log -> 0 (grep exit 1)
+
+Verification of signature properties:
+  - Verbatim in pinned source: grep -n -F 'This server does not support slots endpoint. Start it with `--slots`' .ufo/waves/round-26/sources/llama.cpp-704366d/server-context.cpp -> line 5366.
+  - Absent at base (1560e4d8): cd kama-shokunin && git grep -F -q -e 'This server does not support slots endpoint. Start it with `--slots`' 1560e4d8 -- SKILL.md corpus; exit 1 (absent).
+  - Not in request bytes (GET /slots, empty body).
+  - Signature length: 66 bytes (>= 20).
+
+Source access record: file opened this round from the lane-committed snapshot /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-26/sources/llama.cpp-704366d/server-context.cpp (source tree pinned at commit 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad). Located quote at line 5366: "This server does not support slots endpoint. Start it with `--slots`" (24 words, inside format_error_response call). The lane's committed snapshot is the round's canonical pinned copy; source sha256 values are pinned in count-c1.py (SOURCE_SHA256). Access date 2026-10-23.

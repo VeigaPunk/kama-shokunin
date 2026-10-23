@@ -1,0 +1,65 @@
+Round-26 embeddings-off reproductions
+Date: 2026-10-23
+Scratch: /fast/scratch/hyaku/kama-r26/ExecEmbeddingsOff
+All launches used loopback, -t 2, timeout 90, and the fixture model. No extra llama-server arguments were used.
+
+Pins / preflight
+$ sha256sum ~/.local/bin/llama-server ~/.cache/kama-shokunin/models/stories260K.gguf; ~/.local/bin/llama-server --version 2>&1 | head -5
+b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804  /home/vgpnk/.local/bin/llama-server
+270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d  /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf
+version: 0.7.0-dev (build 11755, commit 704366d76)
+built with GNU 11.4.0 for Linux x86_64
+exit 0.
+$ ss -ltn | grep -E '4761[6-9]|475[6-7][0-9]' ; echo "rc=$?"; pgrep -af llama-server; echo "pgrep rc=$?"
+No matching listener or server process; rc=1, pgrep rc=1 (both are expected no-match statuses).
+
+Run 1 — port 47616
+Launch command:
+$ mkdir -p /fast/scratch/hyaku/kama-r26/ExecEmbeddingsOff /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-26/w1-build/out/ExecEmbeddingsOff && cd /fast/scratch/hyaku/kama-r26/ExecEmbeddingsOff && timeout 90 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47616 -t 2 >run1-server.log 2>&1 & echo "launched pid=$!"
+Output: launched pid= (the async wrapper printed no pid). The running server PID 3052462 was later observed by pgrep; server log is run1-server.log. Readiness poll returned health=200.
+$ curl -s -w '\nHTTP_STATUS=%{http_code}\n' --max-time 10 -X POST http://127.0.0.1:47616/v1/embeddings -H 'Content-Type: application/json' -d '{"model":"stories260K","input":"hello"}' | tee run1-v1embeddings.out
+Output: {"error":{"code":501,"message":"This server does not support embeddings. Start it with `--embeddings`","type":"not_supported_error"}} then HTTP_STATUS=501. curl/tee pipeline exit 0 (curl did not use --fail).
+$ curl -s -w '\nHTTP_STATUS=%{http_code}\n' --max-time 10 -X POST http://127.0.0.1:47616/embedding -H 'Content-Type: application/json' -d '{"content":"hello"}' | tee run1-embedding.out
+Output: {"error":{"code":501,"message":"This server does not support embeddings. Start it with `--embeddings`","type":"not_supported_error"}} then HTTP_STATUS=501. curl/tee pipeline exit 0 (curl did not use --fail).
+$ kill 3052462; for i in $(seq 1 20); do ss -ltn | grep -q ':47616 ' || break; sleep 0.25; done; ss -ltn | grep 47616; echo "port-check rc=$?"; pgrep -af 'llama-server.*47616'; echo "pgrep rc=$?"
+No listener/process remained; port-check rc=1, pgrep rc=1. Shell command ended 0 after printing the statuses. Server process exit status was not separately captured.
+
+Run 2 — port 47617
+Launch command:
+$ cd /fast/scratch/hyaku/kama-r26/ExecEmbeddingsOff && timeout 90 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47617 -t 2 >run2-server.log 2>&1 & SPID=$!
+Readiness poll returned health=200.
+$ curl -s -w '\nHTTP_STATUS=%{http_code}\n' --max-time 10 -X POST http://127.0.0.1:47617/v1/embeddings -H 'Content-Type: application/json' -d '{"model":"stories260K","input":"hello"}' | tee run2-v1embeddings.out
+Output: {"error":{"code":501,"message":"This server does not support embeddings. Start it with `--embeddings`","type":"not_supported_error"}} then HTTP_STATUS=501. curl/tee pipeline exit 0 (curl did not use --fail).
+The launch wrapper's $SPID was blank; its initial `kill $SPID` printed `kill: invalid usage`. pgrep identified PID 3215165. `$ kill 3215165 2>/dev/null; sleep 1; ...` then showed port-check rc=1 and pgrep rc=1; no server remained. Server process exit status was not separately captured.
+
+Healthy baseline — port 47618, no --embeddings
+Launch used the same fixture, host and thread count. Readiness returned health=200. Each command below returned HTTP 200 and curl exit 0:
+$ curl -s -o /dev/null -w 'health %{http_code}\n' http://127.0.0.1:47618/health -> health 200
+$ curl -s -o /dev/null -w 'models %{http_code}\n' http://127.0.0.1:47618/v1/models -> models 200
+$ curl -s -o /dev/null -w 'props %{http_code}\n' http://127.0.0.1:47618/props -> props 200
+$ curl -s -o /dev/null -w 'slots %{http_code}\n' http://127.0.0.1:47618/slots -> slots 200
+$ curl -s -o /dev/null -w 'completion %{http_code}\n' -X POST http://127.0.0.1:47618/completion -H 'Content-Type: application/json' -d '{"prompt":"Once upon a time","n_predict":8}' -> completion 200
+$ curl -s -o /dev/null -w 'chat %{http_code}\n' -X POST http://127.0.0.1:47618/v1/chat/completions -H 'Content-Type: application/json' -d '{"messages":[{"role":"user","content":"Hi"}],"max_tokens":8}' -> chat 200
+$ curl -s -o /dev/null -w 'tokenize %{http_code}\n' -X POST http://127.0.0.1:47618/tokenize -H 'Content-Type: application/json' -d '{"content":"Once upon a time"}' -> tokenize 200
+The first async $BPID cleanup attempt left the listener open; pgrep found PID 3252945. After `kill 3252945`, the final port check and pgrep both returned 1 (no listener/process). Server process exit status was not separately captured. Exact baseline launch log: healthy-baseline-server.log.
+
+Base absence / baseline text checks
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin grep -F -q -e 'Start it with `--embeddings`' 1560e4d8 -- SKILL.md corpus; rc=$?; echo "base-grep rc=$rc"; exit 0
+Output: base-grep rc=1; git grep's 1 means no match.
+$ cd /fast/scratch/hyaku/kama-r26/ExecEmbeddingsOff && grep -c 'This server does not support embeddings' baseline-server.log; echo "baseline-log-grep rc=$?"; ~/.local/bin/llama-server --help 2>&1 | grep -c 'This server does not support embeddings'; echo "help-grep rc=$?"; ~/.local/bin/llama-server --version 2>&1 | grep -c 'This server does not support embeddings'; echo "version-grep rc=$?"
+Output: 0, baseline-log-grep rc=1; 0, help-grep rc=1; 0, version-grep rc=1. The frozen counter independently checked the selected substring against its complete baseline and reports f_absent_from_baseline=true.
+
+Pinned source fetch
+$ sha256sum /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-26/sources/llama.cpp-704366d/server-context.cpp
+Output: dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329; exit 0.
+$ wget -qO- 'https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp' | sha256sum
+Output: dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329  -; exit 0. This equals the pinned snapshot.
+
+Frozen counter (scratch git-archive extract only)
+$ flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 python3 .ufo/waves/round-26/count-c1.py --out /fast/scratch/hyaku/kama-r26/ExecEmbeddingsOff/counter-receipt.json
+Stdout: registered 1 counted 1 target 12 met False not-counted []
+Exit status 0: the normal completion path prints this summary and returns 0 (`.ufo/waves/round-26/count-c1.py:419`). The receipt records all checks true and counted=true.
+
+Final cleanup
+$ pgrep -af 'llama-server.*4761[6-9]'; echo "pgrep rc=$?"; ss -ltn | grep -E '4761[6-9]'; echo "ss rc=$?"
+No output; pgrep rc=1, ss rc=1. No server from this run remained on 47616-47619.

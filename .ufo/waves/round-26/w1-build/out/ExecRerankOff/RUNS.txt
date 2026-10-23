@@ -1,0 +1,88 @@
+ExecRerankOff RUNS — all commands run 2026-10-23 on host linux 7.2.11-arch1-1 (x64).
+Port block 47624-47627. All servers: ~/.local/bin/llama-server (build 11755, commit 704366d, sha256 b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804), model ~/.cache/kama-shokunin/models/stories260K.gguf (sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d), all launches with -t 2, wrapped in timeout 90, killed and port confirmed closed after each.
+Raw outputs live in the scratch logs dir /fast/scratch/hyaku/kama-r26/ExecRerankOff/logs/:
+r1-off.body, r1b-off.body (fault A runs 1-2), r2-noquery.body, r2b-noquery.body (fault B runs 1-2),
+r3-emptydoc.body, r3b-emptydoc.body (fault C runs 1-2), plus server logs r1-off.log, r1b-off.log,
+r2-noquery.log, r2b-noquery.log, r3-emptydoc.log, r3b-emptydoc.log, baseline.log, baseline-props.txt,
+baseline-models.txt, baseline-chat.txt, baseline-tokenize.txt, baseline-all.txt, ls-help.txt, ls-version.txt.
+
+1) Environment pins
+   $ sha256sum ~/.local/bin/llama-server ~/.cache/kama-shokunin/models/stories260K.gguf
+   b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804  .../llama-server
+   270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d  .../stories260K.gguf
+   $ ~/.local/bin/llama-server --version ; rc=0, output: "version: 0.7.0-dev (build 11755, commit 704366d76) built with GNU 11.4.0 for Linux x86_64"
+   $ ss -ltn | grep -E ':(47624|47625|47626|47627)$' ; no output before any launch (ports free)
+
+2) Fault A: reranking requested without --reranking, POST /v1/rerank
+   Launch (run 1, port 47624):
+     timeout 90 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47624 -t 2 > r1-off.log 2>&1 &
+   Request:
+     curl -sS -w '\nHTTP_STATUS=%{http_code}\n' -X POST http://127.0.0.1:47624/v1/rerank -H 'Content-Type: application/json' -d '{"query":"test","documents":["a","b"]}'
+   Output (HTTP_STATUS=501): {"error":{"code":501,"message":"This server does not support reranking. Start it with `--reranking`","type":"not_supported_error"}}
+   Server kill: kill $SRV; wait; rc=0. Port 47624 closed (ss grep count 0).
+   Launch (run 2, port 47625): same command except --port 47625; same request; identical response, HTTP_STATUS=501.
+   Server kill: kill $SRV; rc=0. Port 47625 closed.
+
+3) Fault B: --reranking enabled, query missing, POST /v1/rerank
+   Launch (run 1, port 47624):
+     timeout 90 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47624 --reranking -t 2 > r2-noquery.log 2>&1 &
+   Request:
+     curl -sS -w '\nHTTP_STATUS=%{http_code}\n' -X POST http://127.0.0.1:47624/v1/rerank -H 'Content-Type: application/json' -d '{"documents":["a","b"]}'
+   Output (HTTP_STATUS=400): {"error":{"code":400,"message":"\"query\" must be provided","type":"invalid_request_error"}}
+   Server kill: kill $SRV, then pid of --port 47624; port closed.
+   Launch (run 2, port 47625): same command except --port 47625; same request; identical response, HTTP_STATUS=400.
+   Server kill: kill $SRV; port 47625 closed.
+
+4) Fault C: --reranking enabled, empty documents, POST /v1/rerank
+   Launch (run 1, port 47626):
+     timeout 90 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47626 --reranking -t 2 > r3-emptydoc.log 2>&1 &
+   Request:
+     curl -sS -w '\nHTTP_STATUS=%{http_code}\n' -X POST http://127.0.0.1:47626/v1/rerank -H 'Content-Type: application/json' -d '{"query":"test","documents":[]}'
+   Output (HTTP_STATUS=400): {"error":{"code":400,"message":"\"documents\" must be a non-empty string array","type":"invalid_request_error"}}
+   Server kill: kill $SRV; port 47626 closed.
+   Launch (run 2, port 47627): same command except --port 47627; same request; identical response, HTTP_STATUS=400.
+   Server kill: kill $SRV; port 47627 closed.
+
+5) Healthy baseline (no --reranking, port 47626)
+   timeout 90 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47626 -t 2 > baseline.log 2>&1 &
+   GET /props -> baseline-props.txt (200); GET /v1/models -> baseline-models.txt (200);
+   POST /v1/chat/completions {"messages":[{"role":"user","content":"Hi"}],"max_tokens":8} -> baseline-chat.txt (200);
+   POST /tokenize {"content":"Once upon a time"} -> baseline-tokenize.txt (200).
+   All three signatures absent from baseline-all.txt (=cat of the five baseline files): grep -F -q rc=1 for each.
+   Server killed; port 47626 closed.
+
+6) --help / --version signature check
+   $ ~/.local/bin/llama-server --help > ls-help.txt 2>&1 ; rc=0
+   $ ~/.local/bin/llama-server --version > ls-version.txt 2>&1 ; rc=0
+   All three signatures absent from both: grep -F -q rc=1 for each.
+
+7) Signature source locations (pinned tree .ufo/waves/round-26/sources/llama.cpp-704366d/)
+   "This server does not support reranking. Start it with `--reranking`" -> server-context.cpp:5803
+   "\"query\" must be provided" -> server-context.cpp:5822 (source bytes `\"query\"`, escaped)
+   "\"documents\" must be a non-empty string array" -> server-context.cpp:5829 (source bytes `\"documents\"`)
+   All absent at base 1560e4d8: git grep -F -q -e '<sig>' 1560e4d8 -- SKILL.md corpus; rc=1 for each.
+
+8) Counter check (scratch git archive extract of frozen a23c0e042114016a909eb15173aa6df74b5b7eb0,
+   extracted under /fast/scratch/hyaku/kama-r26/ExecRerankOff/, with placeholder SKILL rows X1-X3 under
+   "## Round-26 live error signatures", SOURCES rows S114-S116, and registry/error-signatures-r26.json
+   added only in the scratch extract)
+   $ flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 python3 .ufo/waves/round-26/count-c1.py --lane /fast/scratch/hyaku/kama-r26/ExecRerankOff --repo /home/vgpnk/Projects/shokunin/kama-shokunin --out /fast/scratch/hyaku/kama-r26/ExecRerankOff/counter-receipt.json
+   Output: "registered 3 counted 1 target 12 met False not-counted ['X2:d_in_source', 'X3:d_in_source']", rc=0
+   Receipt (counter-receipt.json): rows X1 all checks true (id_unique, a_skill_row, b_long, b_new_at_base,
+   c_source_row, d_source_pinned, d_in_source, e_error_shown, e_signature_seen, e_not_echoed,
+   f_absent_from_baseline, g_distinct), counted true; observed status 501, channel_sha256
+   87162b95d2fb9ce1691b02e242fd20fefa99517c279342cbf1ab45e28aefb0f1, body "This server does not support
+   reranking. Start it with `--reranking`". X2/X3: all checks true except d_in_source (false), run skipped,
+   counted false. baseline_sha256 72ec854b9b863126f848b319bf021a73361a579f4f50ffe011d767ae8146edfb.
+   registered 3, counted 1, met false.
+
+   Why X2/X3 d_in_source is false: the pinned source stores the message constants with C++ string-literal
+   escapes, e.g. `format_error_response("\"query\" must be provided", ...)` at server-context.cpp:5822
+   (raw bytes `\"query\"`), while the HTTP body renders plain quotes `"query" must be provided`. The counter
+   reads pinned-source bytes verbatim (clause d) and the registered channel bytes verbatim (clause e);
+   no >=20-byte signature of these quoted message constants exists in both byte streams. Verified by byte
+   search: `"query" must be provided` not found in server-context.cpp bytes; `query\" must be provided` is
+   found in source (but not in the HTTP body). The registered signatures (plain form, matching the SKILL
+   rows and the reproduced HTTP bodies) therefore fail d_in_source.
+
+9) Final state: pgrep -af llama-server shows none of mine (no llama-server on 47624-47627); ports closed.

@@ -398,3 +398,13 @@ K05 is advanced on the lane-owned fixture only. Registered consumers, large
 models (where free memory decides fit), other builds and other engines stay
 open. The round-16 fixture scope is still pending L0 ratification; the L
 cells used POST `/completion`, beyond the GET-only round-16 admission.
+
+## Frontier disposition — round 26 (2026-10-23)
+
+New core surface: SKILL.md "## Round-26 live error signatures" holds 17 live
+llama-server b11755 error signatures with triggers, code meaning, next action
+and sources S114-S130 (`registry/error-signatures-r26.json`; counter
+`.ufo/waves/round-26/count-c1.py`). Frontier left open: router-mode model
+errors (need a router launch), the confirmed but held-back signatures in
+`lessons/round-26.md` §Gate, and the `--embeddings` server crash on
+`/completion` seen once by a wave-1 seat (not yet reproduced by the lane).

@@ -1,0 +1,42 @@
+RUNS — ExecJunkModel — 2026-10-23
+
+Fixture and port setup
+- Command: `~/.local/bin/llama-server --version`
+  Output: `version: 0.7.0-dev (build 11755, commit 704366d76)`; `built with GNU 11.4.0 for Linux x86_64`.
+  Exit: 0.
+- Before either launch: `ss -ltn | grep -E '4763[6-9]'`
+  Output: no matching listeners. Pipeline exit: 1 (no match).
+- Junk file command: `printf 'this is not a gguf model file, kama round 26 junk control\n' > /fast/scratch/hyaku/kama-r26/ExecJunkModel/junk.gguf && wc -c /fast/scratch/hyaku/kama-r26/ExecJunkModel/junk.gguf`
+  Output: `58 /fast/scratch/hyaku/kama-r26/ExecJunkModel/junk.gguf`; exit: 0.
+
+Live startup reproductions (each used only 127.0.0.1, -t 2, and a port in my assigned block)
+- Run 1 command: `cd /fast/scratch/hyaku/kama-r26/ExecJunkModel && timeout 30 ~/.local/bin/llama-server -m /fast/scratch/hyaku/kama-r26/ExecJunkModel/junk.gguf --host 127.0.0.1 --port 47636 -t 2 > junk-run1.log 2>&1; echo "exit:$?"`
+  Output: `exit:1`; full stdout/stderr is in `junk-run1.log`.
+- Run 2 command: `cd /fast/scratch/hyaku/kama-r26/ExecJunkModel && timeout 30 ~/.local/bin/llama-server -m /fast/scratch/hyaku/kama-r26/ExecJunkModel/junk.gguf --host 127.0.0.1 --port 47637 -t 2 > junk-run2.log 2>&1; echo "exit:$?"`
+  Output: `exit:1`; full stdout/stderr is in `junk-run2.log`.
+- Both outputs contain `invalid magic characters: 'this', expected 'GGUF'` (twice per launch); both exited non-zero promptly. Logs differ in timing fields only; the later `diff junk-run1.log junk-run2.log` returned 1 because those timestamps differ.
+- Log-suppression exploration: the `-lv 0` and `--log-disable` launches on 47638 and 47639 both returned exit 1 and emitted empty logs. These do not create another signature.
+
+Static signature checks
+- Command: `cd /home/vgpnk/Projects/shokunin/kama-shokunin && git grep -F -q -e "invalid magic characters: '" 1560e4d8 -- SKILL.md corpus; echo "base-grep-exit:$?"`
+  Output: `base-grep-exit:1` (absent at base).
+- `~/.local/bin/llama-server --help 2>&1 | grep -c "invalid magic"` -> output `0`, grep exit 1. `~/.local/bin/llama-server --version 2>&1 | grep -c "invalid magic"` -> output `0`, grep exit 1.
+- Whitespace-stripped checks: `~/.local/bin/llama-server --help 2>&1 | tr -d ' \t\n' | grep -c "invalidmagiccharacters"` -> output `0`, grep exit 1; same command with `--version` -> output `0`, grep exit 1.
+- Signature length: `echo -n "invalid magic characters: '" | wc -c` -> output `27`; exit 0.
+
+Pinned source fetch
+- Initial attempted URL ending `/src/gguf.cpp`: curl returned HTTP 404, exit 22. Corrected to the upstream path below.
+- Command: `curl --fail --silent --show-error --location --output /fast/scratch/hyaku/kama-r26/ExecJunkModel/gguf.cpp https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/ggml/src/gguf.cpp`
+  Output: none; exit 0.
+- `sha256sum` of fetched file and lane snapshot both returned `7505d6a434dc740941a682fd3b476ef9bd9893ab76adf18c9969daa528bd5be5`.
+- `cmp -s /fast/scratch/hyaku/kama-r26/ExecJunkModel/gguf.cpp /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-26/sources/llama.cpp-704366d/gguf.cpp` -> `cmp-exit:0`.
+
+Scratch counter
+- Scratch extract checked out commit `a23c0e042114016a909eb15173aa6df74b5b7eb0`; only the scratch tree received a registry entry, a Round-26 SKILL row and S900 SOURCES row. The counter used placeholder id `kama-r26-sig-junk-magic` and S900.
+- First required run, before correcting the scratch SOURCES URL path: `cd /fast/scratch/hyaku/kama-r26/ExecJunkModel/scratch/ln && flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 python3 .ufo/waves/round-26/count-c1.py --out /fast/scratch/hyaku/kama-r26/ExecJunkModel/scratch/count-receipt.json 2>&1; echo "counter-exit:$?"`
+  Output: `registered 1 counted 1 target 12 met False not-counted []`; exit 0.
+- Final run after correcting the scratch SOURCES URL and quote: `cd /fast/scratch/hyaku/kama-r26/ExecJunkModel/scratch/ln && flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 python3 .ufo/waves/round-26/count-c1.py --out /fast/scratch/hyaku/kama-r26/ExecJunkModel/scratch/count-receipt-final.json 2>&1; echo "counter-exit:$?"`
+  Output: `registered 1 counted 1 target 12 met False not-counted []`; exit 0. All static/live checks in the final receipt are true, including baseline/help/version absence, pinned source and live reproduction.
+
+Cleanup observation
+- `pgrep -af llama-server` listed other servers on ports 47652, 47605, 47625 and 47613; none were my launches/ports. The accompanying `ss -ltn` listing showed no listeners on 47636-47639. No process from these runs remained on my assigned ports.

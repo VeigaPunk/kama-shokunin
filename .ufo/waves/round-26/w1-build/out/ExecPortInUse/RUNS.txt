@@ -1,0 +1,74 @@
+ExecPortInUse — port-already-bound startup fault
+Date: 2026-10-23
+
+Pinned fixture:
+  sha256sum /home/vgpnk/.local/bin/llama-server
+  -> b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804 (exit 0; matches b11755/704366d counter pin)
+  sha256sum /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf
+  -> 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d (exit 0; fixture pin)
+
+Ports:
+  ss -ltn | grep -E "4764[4-7]"
+  -> no output, grep exit 1 (free before test)
+
+Live reproduction command (ran twice; outer Python commands exited 0; each llama-server exited 1 within 30 s):
+  for i in 1 2; do
+    port=$((47643+i))
+    python3 - "$port" "$i" <<'EOF'
+import socket, subprocess, sys
+port, i = int(sys.argv[1]), sys.argv[2]
+b = socket.socket(); b.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+b.bind(("127.0.0.1", port)); b.listen(1)
+log = open(f"run{i}.log", "wb")
+p = subprocess.Popen(["/home/vgpnk/.local/bin/llama-server","-m","/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf","--host","127.0.0.1","--port",str(port),"-t","2"], stdout=log, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL)
+try: rc = p.wait(timeout=30)
+except subprocess.TimeoutExpired: rc = "TIMEOUT"; p.kill()
+log.close(); b.close()
+print(f"run{i} port={port} exit={rc}")
+EOF
+  done
+  -> run1 port=47644 exit=1; run2 port=47645 exit=1; both blockers were bound/listening on 127.0.0.1 before their launches.
+  Raw complete logs: run1.log, run2.log. Both contain the signature and the follow-on `exiting due to HTTP server error` line.
+
+Signature checks:
+  cd /home/vgpnk/Projects/shokunin/kama-shokunin
+  git grep -F -q -e "couldn't bind HTTP server socket, hostname" 1560e4d8 -- SKILL.md corpus
+  -> exit 1 (absent at base)
+  grep -F -c "couldn't bind HTTP server socket, hostname" .ufo/waves/round-26/sources/llama.cpp-704366d/server-http.cpp
+  -> 1 (exit 0); candidate length 42 bytes.
+
+Healthy / informational checks:
+  timeout 60 /home/vgpnk/.local/bin/llama-server -m /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47646 -t 2 >healthy.log 2>&1 &
+  HPID=$!
+  for i in $(seq 1 60); do curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:47646/health 2>/dev/null | grep -q 200 && break; sleep 1; done
+  -> polling predicate matched 200; curl -s http://127.0.0.1:47646/health printed {"status":"ok"}; saved response record: healthy-response.txt.
+  grep -F -c "couldn't bind HTTP server socket, hostname" healthy.log
+  -> 0 (exit 1; zero matches). healthy.log shows model loaded and listening at 127.0.0.1:47646, with no signature.
+  kill $HPID; wait $HPID; echo "healthy exit=$?"
+  -> healthy exit=0; cleanup command returned 0.
+  timeout 30 /home/vgpnk/.local/bin/llama-server --help >help.txt 2>&1; echo "help rc=$?"
+  -> help rc=0; grep -F -c candidate help.txt -> 0 (no match).
+  timeout 30 /home/vgpnk/.local/bin/llama-server --version >version.txt 2>&1; echo "ver rc=$?"
+  -> ver rc=0; grep -F -c candidate version.txt -> 0 (no match).
+  Full captured outputs: healthy.log, help.txt, version.txt.
+
+Pinned source:
+  curl -fsSL -o /fast/scratch/hyaku/kama-r26/ExecPortInUse/server-http-fetched.cpp "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-http.cpp"
+  -> exit 0
+  sha256sum server-http-fetched.cpp
+  -> 24ede172e526763567dbe929da5b16250693d7a2e44334ef0126649b6d3f5fdb (exit 0; identical to pinned lane snapshot)
+  grep -n "couldn't bind HTTP server socket" server-http-fetched.cpp
+  -> line 517: SRV_ERR("couldn't bind HTTP server socket, hostname: %s, port: %d\n", host.c_str(), port); (exit 0).
+  Pinned URL: https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-http.cpp#L517 (fetched 2026-10-23).
+
+Scratch counter (only in `/fast/scratch/hyaku/kama-r26/ExecPortInUse/counter-check`, a `git archive a23c0e042114016a909eb15173aa6df74b5b7eb0` extract):
+  First archive attempt from scratch cwd without `git -C <lane>` failed: `fatal: not a git repository`; tar exit 2. Corrected command:
+  cd /fast/scratch/hyaku/kama-r26/ExecPortInUse/counter-check && env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE git -C /home/vgpnk/Projects/shokunin/kama-shokunin archive a23c0e042114016a909eb15173aa6df74b5b7eb0 | tar -x
+  -> exit 0. Added scratch-only SKILL row and SOURCES row S902, plus registry id KAMA-R26-PORTINUSE. Candidate args are ["-t", "2"] to match the live launches and cap threads.
+  ss -ltn | grep -E '475[6-7][0-9]'
+  -> no output, exit 1 (counter ports free).
+  flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 python3 .ufo/waves/round-26/count-c1.py --out receipt.json
+  -> `registered 1 counted 1 target 12 met False not-counted []`; exit 0. Final complete receipt is scratch-counter-receipt.json. All checks are true, including source pin, live startup exit/error, healthy absence, and distinctness. Scratch row S902 is not a lane edit.
+
+Cleanup:
+  Initial cleanup check found peer processes on ports 47604, 47624 and 47612. Final command `ss -ltn | grep -E '4764[4-7]|475[6-7][0-9]'; echo "port grep rc=$?"; pgrep -af '/home/vgpnk/.local/bin/llama-server'` -> port grep had no output (grep exit 1); pgrep exit 0 and showed only peer processes on port 47655 (PIDs 3608091 timeout, 3608097 llama-server). None of my processes remained.

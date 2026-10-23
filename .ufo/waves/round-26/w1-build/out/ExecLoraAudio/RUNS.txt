@@ -1,0 +1,60 @@
+ExecLoraAudio — RUNS.txt (round-26 wave 1, C1 candidate fault family: LoRA adapter endpoint misuse + audio/multimodal input to text-only model)
+Port block: 127.0.0.1:47656-47659 (all free at start via `ss -ltn`; checked before each launch).
+
+Server under test:
+  ~/.local/bin/llama-server — sha256 b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804 (matches counter pin SERVER_SHA256)
+  model ~/.cache/kama-shokunin/models/stories260K.gguf — sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d (matches counter pin MODEL_SHA256)
+  every launch: -m <fixture> --host 127.0.0.1 --port <mine> -t 2, wrapped in timeout 60/90/120, logs in scratch.
+
+=== Repro run 1 (port 47656) — 2026-10-23 ===
+Command (bash):
+  timeout 60 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47656 -t 2 > /fast/scratch/hyaku/kama-r26/ExecLoraAudio/server1.log 2>&1 &
+  sleep 4; curl -s -o /dev/null -w "health_status=%{http_code}\n" http://127.0.0.1:47656/health  -> health_status=200
+  curl -s -w "\nhttp_status=%{http_code}\n" -X POST http://127.0.0.1:47656/lora-adapters -H 'Content-Type: application/json' -d '{"id":0,"scale":1.0}'
+    -> {"error":{"code":400,"message":"Request body must be an array","type":"invalid_request_error"}} http_status=400
+  curl -s -w "\nhttp_status=%{http_code}\n" -X POST http://127.0.0.1:47656/v1/audio/transcriptions -H 'Content-Type: application/json' -d '{}'
+    -> {"error":{"code":501,"message":"The current model does not support audio input.","type":"not_supported_error"}} http_status=501
+  curl -s -w "\nhttp_status=%{http_code}\n" -X POST http://127.0.0.1:47656/v1/chat/completions -H 'Content-Type: application/json' -d '{"messages":[{"role":"user","content":[{"type":"input_audio","input_audio":{"data":"data:audio/wav;base64,UklGRg==","format":"wav"}}]}]}'
+    -> {"error":{"code":500,"message":"audio input is not supported - hint: if this is unexpected, you may need to provide the mmproj","type":"server_error"}} http_status=500
+  exit code of the curl commands: 0.
+  Server terminated afterwards with kill <pid>; port confirmed closed via `ss -ltn`.
+
+=== Repro run 2 (ports 47656 and 47657) — 2026-10-23 ===
+Servers:
+  nohup timeout 120 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47656 -t 2 > server2.log 2>&1 & disown
+  nohup timeout 120 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47657 -t 2 > server3.log 2>&1 & disown
+  health: curl -s -o /dev/null -w "health=%{http_code}\n" http://127.0.0.1:47656/health -> health=200
+          curl -s -o /dev/null -w "health47657=%{http_code}\n" http://127.0.0.1:47657/health -> health47657=200
+Requests (identical on both ports; raw outputs in repro_port47656.out and repro_port47657.out):
+  [1] POST /lora-adapters, Content-Type application/json, body {"id":0,"scale":1.0}
+      -> 400 {"error":{"code":400,"message":"Request body must be an array","type":"invalid_request_error"}}
+  [2] POST /v1/audio/transcriptions, Content-Type application/json, body {}
+      -> 501 {"error":{"code":501,"message":"The current model does not support audio input.","type":"not_supported_error"}}
+  [3] POST /v1/chat/completions, Content-Type application/json, body {"messages":[{"role":"user","content":[{"type":"input_audio","input_audio":{"data":"data:audio/wav;base64,UklGRg==","format":"wav"}}]}]}
+      -> 500 {"error":{"code":500,"message":"audio input is not supported - hint: if this is unexpected, you may need to provide the mmproj","type":"server_error"}}
+  All curl commands exited 0. Both servers terminated with kill <pid>; ports confirmed closed via `ss -ltn`.
+
+=== Informational baselines (clause f) ===
+  timeout 30 ~/.local/bin/llama-server --help > /tmp/llama_help.txt 2>&1; rc=0; 60469 bytes.
+  timeout 30 ~/.local/bin/llama-server --version > /tmp/llama_ver.txt 2>&1; rc=0; 90 bytes.
+  grep -F for each of the three candidate signatures in help/version: all absent (rc=1 each).
+
+=== Base-absence check (clause b) — git grep at base 1560e4d8 ===
+  git -C /home/vgpnk/Projects/shokunin/kama-shokunin grep -F -q -e '<sig>' 1560e4d83f42b04f40336357de6f9637eafa0f4b -- SKILL.md corpus ; echo $? -> 1 (absent) for each of the three signatures.
+
+=== Frozen counter run on scratch extract (2026-10-23) ===
+  Extract: /fast/scratch/hyaku/kama-r26/ExecLoraAudio/counter_extract (git archive a23c0e042114016a909eb15173aa6df74b5b7eb0, env GIT_DIR/GIT_WORK_TREE/GIT_INDEX_FILE unset).
+  Placeholder edits (scratch extract only): registry/error-signatures-r26.json written (3 entries); SKILL.md section "## Round-26 live error signatures" + 3 table rows appended; corpus/SOURCES.md rows S901-S903 appended.
+  Command:
+    cd /fast/scratch/hyaku/kama-r26/ExecLoraAudio/counter_extract && flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 python3 .ufo/waves/round-26/count-c1.py --out /fast/scratch/hyaku/kama-r26/ExecLoraAudio/counter_receipt.json
+  Output: "registered 3 counted 3 target 12 met False not-counted []" ; exit code 0.
+  Receipt: /fast/scratch/hyaku/kama-r26/ExecLoraAudio/counter_receipt.json (copied to output dir) — all 12 checks true for all three rows; observed statuses 400/501/500; channel excerpts contain the signatures verbatim; baseline_sha256 4c74acb8ce831335a9d706ab20a92afc1f4b8712ea6adcdb6d104d35d52a7131.
+
+=== Source verification ===
+  Pinned snapshot files byte-identical to counter pins:
+    .ufo/waves/round-26/sources/llama.cpp-704366d/server-context.cpp sha256 dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329 (matches counter SOURCE_SHA256)
+    .ufo/waves/round-26/sources/llama.cpp-704366d/server-common.cpp sha256 b4f4aae7eed919f914d132ae64416a0e7cfb23442161af6f63ba8d902954d442 (matches counter SOURCE_SHA256)
+  Signatures located verbatim at:
+    server-context.cpp:5998  "Request body must be an array" (post_lora_adapters, non-array body)
+    server-context.cpp:5655  "The current model does not support audio input." (post_transcriptions_oai, text-only model)
+    server-common.cpp:1272   "audio input is not supported - hint: if this is unexpected, you may need to provide the mmproj" (oaicompat_content_load_media, input_audio content)

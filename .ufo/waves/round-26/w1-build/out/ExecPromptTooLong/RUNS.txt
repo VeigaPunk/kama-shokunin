@@ -1,0 +1,45 @@
+ExecPromptTooLong — RUNS.txt (every command + exit code)
+Round-26 wave-1, lane kama-shokunin @ a23c0e04 (frozen), llama-server b11755 (commit 704366d, sha256 b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804), model stories260K.gguf (sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d).
+
+Helper script used for entries: /fast/scratch/hyaku/kama-r26/ExecPromptTooLong/repro.sh
+(runs: timeout 90 llama-server -m <fixture> --host 127.0.0.1 --port P -t 2 <ARGS>; waits /health; POSTs payload; records status/body; SIGTERM + verify close.)
+
+RUN 1 (fault A first reproduction; default context shift):
+  bash repro.sh 47648 "" completion prompt_long.txt /fast/scratch/hyaku/kama-r26/ExecPromptTooLong
+  -> STATUS=400 (exit 0)
+  body: {"error":{"code":400,"message":"request (4352 tokens) exceeds the available context size (2048 tokens), try increasing it","type":"exceed_context_size_error","n_prompt_tokens":4352,"n_ctx":2048}}
+
+RUN 1b (fault A second reproduction, with -c 64 as in registry args):
+  bash repro.sh 47648 "-c 64" completion prompt_long.txt /fast/scratch/hyaku/kama-r26/ExecPromptTooLong
+  -> STATUS=400 (exit 0)
+  body: {"error":{"code":400,"message":"request (4352 tokens) exceeds the available context size (256 tokens), try increasing it","type":"exceed_context_size_error","n_prompt_tokens":4352,"n_ctx":256}}
+
+RUN 2 (fault A with --no-context-shift):
+  bash repro.sh 47649 "-c 64 --no-context-shift" completion prompt_long.txt /fast/scratch/hyaku/kama-r26/ExecPromptTooLong
+  -> STATUS=400 (exit 0); same error message as RUN 1b (not a distinct signature).
+
+RUN 3 (fault B first reproduction: oversized prompt on /embedding):
+  bash repro.sh 47650 "-c 64 --embedding" embedding prompt_35.txt /fast/scratch/hyaku/kama-r26/ExecPromptTooLong
+  -> STATUS=500 (exit 0)
+  body: {"error":{"code":500,"message":"input (1017 tokens) is too large to process. increase the physical batch size (current batch size: 64)","type":"server_error"}}
+
+RUN 4 (fault B second reproduction with prompt_long; --ubatch-size 2048 does not lift the 64 limit):
+  bash repro.sh 47651 "-c 64 --embedding --ubatch-size 2048" embedding prompt_long.txt /fast/scratch/hyaku/kama-r26/ExecPromptTooLong
+  -> STATUS=500 (exit 0)
+  body: {"error":{"code":500,"message":"input (4352 tokens) is too large to process. increase the physical batch size (current batch size: 64)","type":"server_error"}}
+
+HEALTHY baseline runs (clause f evidence):
+  -c 64, POST /completion {"prompt":"Once upon a time","n_predict":8} -> 200 (healthy1-*, exit 0)
+  -c 64 --no-context-shift, POST /completion {"prompt":"Once upon","n_predict":512} -> 200 (healthy2-*, exit 0)
+  Note: generation running past the context with --no-context-shift is NOT an HTTP error: response is 200 with stop=limit/truncation ("Context size has been exceeded." path and "context shift is disabled" 500 path are not reachable in the single-request flow; see advice report).
+
+Static checks (all passed):
+  server-context.cpp sha256 == dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329 (matches counter SOURCE_SHA256)
+  "exceeds the available context size (" in pinned server-context.cpp bytes: yes (format at lines 3678-3679)
+  "is too large to process. increase the physical batch " in pinned server-context.cpp bytes: yes (literal at line 3657)
+  git grep -F -q -e '<sig1>' 1560e4d8 -- SKILL.md corpus -> exit 1 (absent at base)
+  git grep -F -q -e '<sig2>' 1560e4d8 -- SKILL.md corpus -> exit 1 (absent at base)
+  sig1/sig2 absent from healthy1/healthy2 bodies and server logs (checked)
+  sig1/sig2 absent from `llama-server --help` / `--version` output (exit 0 both)
+  sig1/sig2 absent from the request bytes (checked)
+  sig1/sig2 not substrings of each other

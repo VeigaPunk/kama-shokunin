@@ -201,3 +201,13 @@ Integration basis: DocQuality's filed v2/v3 proposals, with L1's explicit separa
 | ID | Admit only when | Reject or limit when | Motivating lesson |
 |---|---|---|---|
 | KQ36 | A round that changes a source measured by a registered counting command (one cited by a SCORECARD row, or a claim's registered command) re-runs that command at the round's landed tip and pastes the output. An instrument that cannot evaluate there (its unique-match guard fails, exit 2) is reported as stale, and the value it supports is unverified at that tip. A re-anchor names, per mutant, whether its last recorded kill still holds, so a survivor caused by a moved code path is not hidden by a same-line literal. | A registered command is left stale after its source changes; a could-not-evaluate run is recorded as a pass, hidden, or counted as zero defects; the re-run uses a revision other than the landed tip; a re-anchored mutant's change from killed to surviving is not reported. | `lessons/round-25.md` §Mistakes rows 1-2; `round-24-verifier-spotcheck.md:80-82`. Shown able to fail: the C1 command prints `registered 27 stale 2` at efe58e96 and `registered 28 stale 0` at 1fc41e34; the full instrument exits 2 at efe58e96 (after ten mutants) and 0 at 1fc41e34 with survivors M17 and M20 (`.ufo/waves/round-25/a2-build/advice/ExecC1BaseRun.md`, `.ufo/waves/round-25/final/c1/`). |
+
+## Round 26 qualification — KQ36 "landed tip" (2026-10-23)
+
+Routed by `lessons/round-25-verifier-spotcheck.md` defect 2 (F1). For KQ36,
+"landed tip" means: the measured source bytes and the instrument bytes each
+match the corresponding bytes in the landing commit. A run recorded before the
+landing commit counts as a landed-tip measurement only when those bytes are
+identical at the landing commit; any later change to either is disclosed with
+the revision it first appears in. A run against different bytes is not a
+landed-tip measurement.

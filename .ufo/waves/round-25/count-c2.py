@@ -19,15 +19,30 @@ the required type. Truthy strings, duplicate ids and extra cells never count.
 The receipt-level binding (llama-server build 11755, fixture sha256) is
 printed separately and must be True for the claim value to stand.
 
+Round-26 repair (routed defect 5): binding also requires every cell's `raw`
+to be a non-empty object whose values each equal the sha256 of the file the
+receipt schema assigns it under .ufo/waves/round-25/final/raw/
+(`<id>.health.body`, `<id>.models.body`, `<id>.props.body`, `<id>.slots.body`
+and `<id>.server.log`, per tools/kama-context-capacity.py). A missing file,
+a hash that matches no such file, a hash that matches a different cell's
+file, a missing or empty `raw`, or a non-string value never binds. An
+unregistered `raw` key binds only when its value equals some file's sha256.
+
 Usage: python3 .ufo/waves/round-25/count-c2.py [receipt.json]
 Prints: registered N observed M bound B
 Exit 0 always when the receipt parses; exit 2 when it cannot be read.
 """
+import hashlib
 import json
 import re
 import sys
+from pathlib import Path
 
 RECEIPT = ".ufo/waves/round-25/final/context-capacity-receipt.json"
+RAW_DIR = Path(__file__).resolve().parent / "final" / "raw"
+RAW_FILES = {"raw_health": "health.body", "raw_models": "models.body",
+             "raw_props": "props.body", "raw_slots": "slots.body",
+             "server_log": "server.log"}
 MODEL_SHA = "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
 LOAD_REQUEST = {"prompt_tokens": 1000, "n_predict": 600}
 CELLS = {
@@ -64,6 +79,39 @@ def pos(v):
 
 def is_num(v):
     return isinstance(v, (int, float)) and not isinstance(v, bool)
+
+
+def raw_bound(cells):
+    """True iff every cell's raw sha256 values match files in RAW_DIR.
+
+    Each known raw key must equal the sha256 of its own file
+    (`<id>.<suffix>`); any other key must equal some file's sha256.
+    """
+    files = {}
+    try:
+        if RAW_DIR.is_dir():
+            for p in RAW_DIR.iterdir():
+                if p.is_file():
+                    files[p.name] = hashlib.sha256(p.read_bytes()).hexdigest()
+    except OSError:
+        return False
+    by_hash = set(files.values())
+    for c in cells:
+        if not isinstance(c, dict):
+            continue
+        raw = c.get("raw")
+        if not isinstance(raw, dict) or not raw:
+            return False
+        for key, val in raw.items():
+            if not isinstance(val, str):
+                return False
+            suffix = RAW_FILES.get(key)
+            if suffix is not None:
+                if val != files.get(f"{c.get('id')}.{suffix}"):
+                    return False
+            elif val not in by_hash:
+                return False
+    return True
 
 
 def cell_ok(c, kind):
@@ -137,7 +185,8 @@ def main():
     bound = (isinstance(ver, str) and bool(BUILD.search(ver)) and sha == MODEL_SHA
              and all(c.get(k, v) == v for c in cells if isinstance(c, dict)
                      for k, v in (("server_version", ver),
-                                  ("model_sha256", sha))))
+                                  ("model_sha256", sha)))
+             and raw_bound(cells))
     missing = [k for k in CELLS if k not in observed]
     print("registered", len(CELLS), "observed", len(observed), "bound", bound,
           "missing", missing)

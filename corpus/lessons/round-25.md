@@ -131,3 +131,16 @@ X2 and X3 replicate round 20.
 - ConnectorSiblingOverlap: `SKILL.md:188-190` now states the `--kv-unified`
   premise of the 16384 example; kengaku's production capture is cited as
   other-build evidence in the entry.
+
+## Erratum — round 26 (2026-10-23): §Mistakes row 2
+
+Routed by `round-25-verifier-spotcheck.md` defect 2 (F2). The Fix cell's
+clause "the instrument docstring and SKILL registry row now say M17 survives
+and why" is false for the SKILL registry row. At lane commit
+`a23c0e042114016a909eb15173aa6df74b5b7eb0`, `SKILL.md` mentions M17 only at
+line 883 ("M17 follows the current local-store spelling") and line 889 (the
+M17 re-anchor and M33 as its second call site); neither says M17 survives.
+Correct attribution: the full-run receipt `final/c1/c1-tip-mutants.json` lists
+M17 and M20 as survivors; the SKILL registry row records the re-anchor and the
+second call site only. Draft and check: round-26 wave-1 scribe
+`.ufo/waves/round-26/w1-build/out/ScribeRoutedRepairs/Defect2-KQ36-and-lesson.md`.

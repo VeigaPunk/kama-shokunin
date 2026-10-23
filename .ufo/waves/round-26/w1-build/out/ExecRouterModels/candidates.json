@@ -1,0 +1,57 @@
+{
+  "schema": "kama-r26-c1-candidates/v1",
+  "seat": "KamaR26.ExecRouterModels",
+  "fault_family": "model-name and router errors: requests naming an unknown model; /models load/unload routes on a single-model server (server-models.cpp); 'Loading model' 503 window if catchable",
+  "signatures": [],
+  "reason_empty": [
+    "unknown model in request: llama-server b11755 single-model mode ignores the request 'model' field entirely and answers 200 on every endpoint probed (/v1/chat/completions, /v1/completions, /completion, /completions, /v1/responses, /responses, /v1/messages, /apply-template, /detokenize, /v1/chat/completions/input_tokens, /responses/input_tokens, /v1/messages/count_tokens, /tokenize; also model field given as number/null/array/absent). There is no error body to sign: the fault is silent success (predicate clause e requires status >= 400).",
+    "/models load/unload on single-model server: POST /models/load, POST /models/unload, POST /models, GET /models/<id> all answer the generic 404 body {\"error\":{\"message\":\"File Not Found\",\"type\":\"not_found_error\",\"code\":404}} (server-http.cpp:199-207). That whole body occurs verbatim in SKILL.md at base 1560e4d8 (row 'llama.cpp's normal root 404'), so any substring also occurs at base: clause b fails (scratch counter run B confirms: R26TestFNF404 -> b_new_at_base).",
+    "router-mode literals in server-models.cpp (\"model is already running\", \"model is not found\", \"model is not loaded\", \"model is not running\", \"model must be a non-empty string\", \"request cancelled by a stop while the model was loading\"): all lives inside router-only handlers (server.cpp:231-275 register them only when is_router_server). The counter's launches always pass -m <model> (fixture/missing/junk), which forces single-model mode; the counter can never exercise router mode, so the channel text for any trigger is the 404 envelope and never contains these literals (scratch counter run C confirms: R26TestRouterNF passes all static checks including d_in_source, live run shows 404, e_signature_seen false).",
+    "'Loading model' 503 window: the body {\"error\":{\"message\":\"Loading model\",\"type\":\"unavailable_error\",\"code\":503}} is already documented at base (SKILL.md S035/S036 rows, corpus/knowledge/llamacpp-loading-lifecycle.md) so clause b fails; additionally the counter's http channel calls wait_ready (polls /health until 200) before sending the trigger request, so a trigger can never observe the pre-ready 503 window (startup channel requires non-zero exit, which a successful launch does not produce)."
+  ],
+  "observed_family_evidence": {
+    "reproductions": 3,
+    "runs": [
+      {"run": "probe1", "port": 47668, "raw": "probe1/raw.txt", "server_log": "probe1/server.log"},
+      {"run": "probe2", "port": 47669, "raw": "probe2/raw.txt", "server_log": "probe2/server.log"},
+      {"run": "probe3", "port": 47670, "raw": "probe3/raw.txt", "server_log": "probe3/server.log"}
+    ],
+    "unknown_model_counts": {
+      "POST /v1/chat/completions {\"model\":\"nope-model-xyz\"}": {"status": 200, "body_contains_error": false},
+      "POST /v1/completions {\"model\":\"nope-model-xyz\"}": {"status": 200, "body_contains_error": false},
+      "POST /completion {\"model\":\"nope-model-xyz\"}": {"status": 200, "body_contains_error": false},
+      "POST /v1/responses {\"model\":\"nope-model-xyz\"}": {"status": 200, "body_contains_error": false},
+      "POST /v1/messages {\"model\":\"nope-model-xyz\"}": {"status": 200, "body_contains_error": false},
+      "POST /v1/chat/completions {\"model\":123}": {"status": 200, "body_contains_error": false},
+      "POST /v1/chat/completions {\"model\":null}": {"status": 200, "body_contains_error": false},
+      "POST /v1/chat/completions {\"model\":[1,2]}": {"status": 200, "body_contains_error": false},
+      "POST /v1/chat/completions (no model)": {"status": 200, "body_contains_error": false}
+    },
+    "models_routes": {
+      "POST /models/load {\"model\":\"nope-model-xyz\"}": {"status": 404, "body": "{\"error\":{\"message\":\"File Not Found\",\"type\":\"not_found_error\",\"code\":404}}"},
+      "POST /models/unload {\"model\":\"nope-model-xyz\"}": {"status": 404, "body": "{\"error\":{\"message\":\"File Not Found\",\"type\":\"not_found_error\",\"code\":404}}"},
+      "POST /models {\"model\":\"nope-model-xyz\"}": {"status": 404, "body": "{\"error\":{\"message\":\"File Not Found\",\"type\":\"not_found_error\",\"code\":404}}"},
+      "POST /models/load {}": {"status": 404, "body": "{\"error\":{\"message\":\"File Not Found\",\"type\":\"not_found_error\",\"code\":404}}"},
+      "POST /models/load '{bad json'": {"status": 404, "body": "{\"error\":{\"message\":\"File Not Found\",\"type\":\"not_found_error\",\"code\":404}}"},
+      "GET /v1/models/nope-model-xyz": {"status": 404, "body": "{\"error\":{\"message\":\"File Not Found\",\"type\":\"not_found_error\",\"code\":404}}"}
+    }
+  },
+  "scratch_counter_runs": [
+    {"run": "A", "registry": "empty", "output": "echo-A.json", "printed": "registered 0 counted 0 target 12 met False not-counted []", "exit": 0},
+    {"run": "B", "registry": "one row, signature=File-Not-Found 404 body, trigger=POST /models/load, source=S901 server-http.cpp",
+     "output": "counter-B.json", "printed": "registered 1 counted 0 target 12 met False not-counted ['R26TestFNF404:b_new_at_base,d_in_source']", "exit": 0,
+     "failed_checks": ["b_new_at_base", "d_in_source"]},
+    {"run": "C", "registry": "one row, signature='model is already running' (server-models.cpp literal), trigger=POST /models/load, source=S902 server-models.cpp",
+     "output": "counter-C.json", "printed": "registered 1 counted 0 target 12 met False not-counted ['R26TestRouterNF:e_signature_seen']", "exit": 0,
+     "failed_checks": ["e_signature_seen"], "observed": {"status": 404, "channel_sha256": "0c6c6e38a39d63e03e351569932ac72af40221ea653c1a11f6542885a5e7e08c"}}
+  ],
+  "pinned_source_literals_for_family": {
+    "server-http.cpp:204": "\"message\", \"File Not Found\"",
+    "server-http.cpp:318": "\"message\", \"Loading model\"",
+    "server-models.cpp:2321": "\"model is already running\"",
+    "server-models.cpp:2317": "\"model is not found\"",
+    "server-models.cpp:2461": "\"model is not found\"",
+    "server-models.cpp:2465": "\"model is not running\"",
+    "server-models.cpp:2190": "\"model '%s' not found\""
+  }
+}

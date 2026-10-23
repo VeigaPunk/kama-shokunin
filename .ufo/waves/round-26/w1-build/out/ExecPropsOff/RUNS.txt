@@ -1,0 +1,59 @@
+ExecPropsOff RUNS — round-26 C1 w1-build
+Fault family: global properties change requested without --props (POST /props)
+Port block: 47612-47615 (only 47612 and 47613 used; both closed after each run)
+Fixture: ~/.local/bin/llama-server (symlink -> ~/.local/opt/llama-b11755/llama-server), sha256 b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804
+Model: ~/.cache/kama-shokunin/models/stories260K.gguf, sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d
+
+1. Port block precheck (no listeners on 47612-47615):
+   command: ss -ltn | grep -E ':4761[2-5]'
+   output: (none)
+   exit code: 1 (grep found no matches)
+
+2. Reproduction 1 (launch + POST /props), port 47612:
+   command: timeout 40 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47612 -t 2 > run1.log 2>&1 &
+   health poll: curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:47612/health -> 200 at first poll (i=1)
+   request: curl -s -w '\nHTTP_STATUS=%{http_code}\n' -X POST http://127.0.0.1:47612/props -H 'Content-Type: application/json' -d '{"chat_template":"x"}'
+   response body: {"error":{"code":501,"message":"This server does not support changing global properties. Start it with `--props`","type":"not_supported_error"}}
+   HTTP status: 501
+   server killed (kill $pid; wait): server_rc=0
+   port check: ss -ltn | grep 47612 -> no match, PORT CLOSED
+
+3. Reproduction 2 (identical), port 47612:
+   same commands as #2; health 200 at i=1; response identical (status 501)
+   server_rc=0; PORT CLOSED
+
+4. Healthy-baseline check, port 47613:
+   command: timeout 40 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47613 -t 2 > baseline_launch.log 2>&1 &
+   health poll: 200 at i=1
+   request: curl -s -w '\nHTTP_STATUS=%{http_code}\n' http://127.0.0.1:47613/props
+   HTTP status: 200 (body in raw/baseline_props.resp; signature string absent)
+   server_rc=0; PORT CLOSED
+   informational outputs: ~/.local/bin/llama-server --help > help.txt 2>&1 (exit 0); --version > version.txt 2>&1 (exit 0)
+
+5. Absence checks (grep -c returns count of matches; 0 = absent):
+   signature 'changing global properties. Start it with `--props`':
+     - baseline_props.resp: 0
+     - help.txt: 0
+     - version.txt: 0
+     - baseline_launch.log: 0
+     - squashed help (tr -d '[:space:]' < help.txt) vs squashed signature: 0
+
+6. Base absence (from lane repo /home/vgpnk/Projects/shokunin/kama-shokunin):
+   command: git grep -F -q -e 'changing global properties. Start it with `--props`' 1560e4d8 -- SKILL.md corpus
+   exit code: 1 (absent at base)
+   full message variant: git grep -F -q -e 'This server does not support changing global properties. Start it with `--props`' 1560e4d8 -- SKILL.md corpus -> rc 1 (absent)
+   section heading: git grep -F -q -e '## Round-26 live error signatures' 1560e4d8 -- SKILL.md -> rc 1 (absent)
+
+7. Source pin check (snapshot vs fresh fetch, commit 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad):
+   command: sha256sum .ufo/waves/round-26/sources/llama.cpp-704366d/server-context.cpp
+   output: dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329
+   command: curl -fsSL https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp | sha256sum
+   output: dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329 (identical)
+   string locus: tools/server/server-context.cpp line 5453, literal inside format_error_response(...) in post_props handler
+
+8. Frozen counter on scratch extract (git archive a23c0e042114016a909eb15173aa6df74b5b7eb0 at /fast/scratch/hyaku/kama-r26/ExecPropsOff/scratch; registry + SKILL row + SOURCES row S900 added in scratch only):
+   cwd: /fast/scratch/hyaku/kama-r26/ExecPropsOff/scratch
+   command: flock /fast/scratch/hyaku/kama-r26/counter.lock timeout 900 python3 .ufo/waves/round-26/count-c1.py --out receipt.json
+   output: registered 1 counted 1 target 12 met False not-counted []
+   exit code: 0
+   receipt: raw/counter-receipt.json (all checks true; observed status 501; counted true)
