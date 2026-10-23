@@ -55,3 +55,6 @@ What these receipts show and do not show:
    either reading. `refs/replace` and `refs/tamper/` were absent from the lane after the arm.
 3. **CtlBaseTree arm.** The seat's own variant receipt is under its directory; the table's line is the
    lane copy on the same tree, not a variant result. Recorded as a seat-level limit.
+4. **CtlEditInPlace (late).** Returned after the summary was written: `append_only False …
+   unresolved 141 met False` (candidate `98544b06`). The in-place rewrite of the base lines is
+   refused by the byte-prefix append-only test. No dead arm remains in this call.
