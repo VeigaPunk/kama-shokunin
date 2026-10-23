@@ -16,8 +16,9 @@ label `counted` in the receipt):
   fixture model shows the error (http: status >= 400; startup: the process
   exits non-zero within 30 s) and contains the signature in the registered
   channel (http: response body; startup: stdout+stderr), and the signature does
-  not occur in the trigger's own request bytes; (f) the signature does not occur
-  in the counter's healthy baseline run; (g) the signature is neither a
+  not occur in the trigger's own request bytes; (f) the signature does not occur,
+  verbatim or with all whitespace removed on both sides, in the counter's healthy
+  baseline run or in the output of `llama-server --help` and `--version`; (g) the signature is neither a
   substring nor a superstring of an earlier counted signature, it does not
   occur in the channel text of an earlier counted row, no earlier counted
   signature occurs in its own channel text, and its trigger differs from
@@ -243,7 +244,18 @@ def run_baseline(tmp: Path, used: set[int]) -> str:
     if not closed:
         raise CannotEvaluate("baseline port did not close")
     parts.append(log.read_text("utf-8", "replace"))
+    for flag in ("--help", "--version"):
+        r = subprocess.run([str(SERVER), flag], capture_output=True, timeout=30,
+                           stdin=subprocess.DEVNULL)
+        text = (r.stdout + r.stderr).decode("utf-8", "replace")
+        if r.returncode != 0 or not text.strip():
+            raise CannotEvaluate(f"informational baseline {flag} exit {r.returncode}")
+        parts.append(text)
     return "\n".join(parts)
+
+
+def squash(text: str) -> str:
+    return re.sub(r"\s+", "", text)
 
 
 def run_trigger(entry: dict, tmp: Path, used: set[int]) -> dict:
@@ -370,7 +382,8 @@ def main() -> int:
                     c["e_error_shown"] = bool(run.get("error_shown"))
                     c["e_signature_seen"] = sig in channel_text
                     c["e_not_echoed"] = sig not in req_bytes
-                    c["f_absent_from_baseline"] = sig not in baseline
+                    c["f_absent_from_baseline"] = (sig not in baseline
+                                                   and squash(sig) not in squash(baseline))
                     r["observed"] = {k: run.get(k) for k in ("status", "exit", "ready")}
                     r["observed"]["channel_sha256"] = hashlib.sha256(channel_text.encode()).hexdigest()
                     r["observed"]["channel_excerpt"] = channel_text[:400]

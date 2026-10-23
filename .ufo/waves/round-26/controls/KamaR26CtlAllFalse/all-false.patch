@@ -1,0 +1,404 @@
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -1058,3 +1058,26 @@
+ Final r24 evidence is bounded, distributed and qualified in
+ `corpus/lessons/round-24.md`; it does not achieve the full original claim,
+ prove global no-effects/absence of chains, resolve H2 or grant admission.
++
++
++## Round-26 live error signatures
++
++Adversarial all-false control only; these rows deliberately do not establish live error signatures.
++
++| id | signature | trigger | meaning | next action | source |
++|---|---|---|---|---|---|
++| AF01 | Cannot run multiple aLoRAs in a single request | http: --threads 2 --threads-batch 2 ; {"method":"GET","path":"/health"} | Healthy health request; no aLoRA fault | Do not diagnose this signature; the registered control does not reproduce it. | S941 |
++| AF02 | Prompt contains invalid tokens | http: --threads 2 --threads-batch 2 ; {"method":"GET","path":"/v1/models"} | Healthy model-list request; no prompt tokens | Do not diagnose this signature; the registered control does not reproduce it. | S942 |
++| AF03 | failed to get embeddings | http: --threads 2 --threads-batch 2 ; {"method":"POST","path":"/completion","body":{"prompt":"Once upon a time","n_predict":8}} | Healthy completion; no embeddings request | Do not diagnose this signature; the registered control does not reproduce it. | S943 |
++| AF04 | This server does not support embeddings. Start it with `--embeddings` | http: --threads 2 --threads-batch 2 ; {"method":"GET","path":"/metrics"} | Wrong endpoint: metrics failure is not an embeddings failure | Do not diagnose this signature; the registered control does not reproduce it. | S944 |
++| AF05 | This server does not support reranking. Start it with `--reranking` | http: --threads 2 --threads-batch 2 ; {"method":"POST","path":"/embedding","body":{"content":"Hello"}} | Wrong endpoint: embedding failure is not reranking | Do not diagnose this signature; the registered control does not reproduce it. | S945 |
++| AF06 | This server does not support metrics endpoint. Start it with `--metrics` | http: --threads 2 --threads-batch 2 ; {"method":"GET","path":"/not-a-r26-route"} | Wrong endpoint: route-not-found is not metrics-disabled | Do not diagnose this signature; the registered control does not reproduce it. | S946 |
++| AF07 | Request body must be an array | http: --threads 2 --threads-batch 2 ; {"method":"GET","path":"/also-not-a-r26-route"} | Wrong endpoint: route-not-found is not array validation | Do not diagnose this signature; the registered control does not reproduce it. | S947 |
++| AF08 | checkpoint-min-step must be non-negative | http: --threads 2 --threads-batch 2 ; {"method":"POST","path":"/completion","body":{"prompt":"Hello","n_predict":1}} | HTTP channel for argument-parse startup-only error | Do not diagnose this signature; the registered control does not reproduce it. | S948 |
++| AF09 | Failed to find $HOME directory | http: --threads 2 --threads-batch 2 ; {"method":"GET","path":"/health"} | HTTP channel for local home-directory exception | Do not diagnose this signature; the registered control does not reproduce it. | S949 |
++| AF10 | Tokenization failed: input text too large, tokenization result exceeds int32_t limit | http: --threads 2 --threads-batch 2 ; {"method":"POST","path":"/completion","body":{"prompt":"Good input","n_predict":1}} | Tiny valid completion cannot overflow int32 tokenization | Do not diagnose this signature; the registered control does not reproduce it. | S950 |
++| AF11 | Error: gzip is not supported by this browser | http: --threads 2 --threads-batch 2 ; {"method":"GET","path":"/v1/models"} | Model-list endpoint does not exercise UI gzip negotiation | Do not diagnose this signature; the registered control does not reproduce it. | S951 |
++| AF12 | Unable to save slot: incomplete draft state | startup: --threads 2 --threads-batch 2 | Healthy fixture launch; no slot save; should stay alive | Do not diagnose this signature; the registered control does not reproduce it. | S952 |
++| AF13 | context shift cannot be used for shared prompt | startup: --threads 2 --threads-batch 2 | Healthy fixture launch; no shared-prompt generation; should stay alive | Do not diagnose this signature; the registered control does not reproduce it. | S953 |
++| AF14 | Invalid tokens in slot save file | startup: --threads 2 --threads-batch 2 | Healthy fixture launch; no slot restore; should stay alive | Do not diagnose this signature; the registered control does not reproduce it. | S954 |
++
+--- a/corpus/SOURCES.md
++++ b/corpus/SOURCES.md
+@@ -341,3 +341,24 @@
+ and used-by old→new changes for S075–S080 are in `lessons/round-22.md`.
+ Status/recheck unchanged. Final additions14, superseding the earlier12-row
+ population. No source-row growth is called new knowledge.
++
++
++## Round-26 all-false control sources
++
++| id | source | kind | tier | scope | anchor | teaches | status | opened | recheck | used-by |
++|---|---|---|---|---|---|---|---|---|---|---|
++| S941 | llama.cpp server-context.cpp — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp | code | A | Adversarial control source literal, not accepted live-error knowledge | server-context.cpp:1877 at 704366d; pinned extract | Literal: Cannot run multiple aLoRAs in a single request | queued | 2026-10-23 | on-release | SKILL.md control AF01 |
++| S942 | llama.cpp server-context.cpp — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp | code | A | Adversarial control source literal, not accepted live-error knowledge | server-context.cpp:1917 at 704366d; pinned extract | Literal: Prompt contains invalid tokens | queued | 2026-10-23 | on-release | SKILL.md control AF02 |
++| S943 | llama.cpp server-context.cpp — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp | code | A | Adversarial control source literal, not accepted live-error knowledge | server-context.cpp:2385 at 704366d; pinned extract | Literal: failed to get embeddings | queued | 2026-10-23 | on-release | SKILL.md control AF03 |
++| S944 | llama.cpp server-context.cpp — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp | code | A | Adversarial control source literal, not accepted live-error knowledge | server-context.cpp:6132 at 704366d; pinned extract | Literal: This server does not support embeddings. Start it with `--embeddings` | queued | 2026-10-23 | on-release | SKILL.md control AF04 |
++| S945 | llama.cpp server-context.cpp — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp | code | A | Adversarial control source literal, not accepted live-error knowledge | server-context.cpp:5803 at 704366d; pinned extract | Literal: This server does not support reranking. Start it with `--reranking` | queued | 2026-10-23 | on-release | SKILL.md control AF05 |
++| S946 | llama.cpp server-context.cpp — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp | code | A | Adversarial control source literal, not accepted live-error knowledge | server-context.cpp:5304 at 704366d; pinned extract | Literal: This server does not support metrics endpoint. Start it with `--metrics` | queued | 2026-10-23 | on-release | SKILL.md control AF06 |
++| S947 | llama.cpp server-context.cpp — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp | code | A | Adversarial control source literal, not accepted live-error knowledge | server-context.cpp:5998 at 704366d; pinned extract | Literal: Request body must be an array | queued | 2026-10-23 | on-release | SKILL.md control AF07 |
++| S948 | llama.cpp arg.cpp — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/common/arg.cpp | code | A | Adversarial control source literal, not accepted live-error knowledge | arg.cpp:1713 at 704366d; pinned extract | Literal: checkpoint-min-step must be non-negative | queued | 2026-10-23 | on-release | SKILL.md control AF08 |
++| S949 | llama.cpp common.cpp — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/common/common.cpp | code | A | Adversarial control source literal, not accepted live-error knowledge | common.cpp:983 at 704366d; pinned extract | Literal: Failed to find $HOME directory | queued | 2026-10-23 | on-release | SKILL.md control AF09 |
++| S950 | llama.cpp common.cpp — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/common/common.cpp | code | A | Adversarial control source literal, not accepted live-error knowledge | common.cpp:1848 at 704366d; pinned extract | Literal: Tokenization failed: input text too large, tokenization result exceeds int32_t limit | queued | 2026-10-23 | on-release | SKILL.md control AF10 |
++| S951 | llama.cpp server-http.cpp — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-http.cpp | code | A | Adversarial control source literal, not accepted live-error knowledge | server-http.cpp:392 at 704366d; pinned extract | Literal: Error: gzip is not supported by this browser | queued | 2026-10-23 | on-release | SKILL.md control AF11 |
++| S952 | llama.cpp server-context.cpp — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp | code | A | Adversarial control source literal, not accepted live-error knowledge | server-context.cpp:3037 at 704366d; pinned extract | Literal: Unable to save slot: incomplete draft state | queued | 2026-10-23 | on-release | SKILL.md control AF12 |
++| S953 | llama.cpp server-context.cpp — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp | code | A | Adversarial control source literal, not accepted live-error knowledge | server-context.cpp:3390 at 704366d; pinned extract | Literal: context shift cannot be used for shared prompt | queued | 2026-10-23 | on-release | SKILL.md control AF13 |
++| S954 | llama.cpp server-context.cpp — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp | code | A | Adversarial control source literal, not accepted live-error knowledge | server-context.cpp:3095 at 704366d; pinned extract | Literal: Invalid tokens in slot save file | queued | 2026-10-23 | on-release | SKILL.md control AF14 |
++
+--- /dev/null
++++ b/registry/error-signatures-r26.json
+@@ -0,0 +1,345 @@
++{
++  "schema": "kama-r26-all-false-control/v1",
++  "control": "all-false",
++  "signatures": [
++    {
++      "id": "AF01",
++      "signature": "Cannot run multiple aLoRAs in a single request",
++      "channel": "http",
++      "args": [
++        "--threads",
++        "2",
++        "--threads-batch",
++        "2"
++      ],
++      "model": "fixture",
++      "source": {
++        "row": "S941",
++        "file": "server-context.cpp",
++        "commit": "704366d",
++        "line": 1877
++      },
++      "meaning": "Healthy health request; no aLoRA fault",
++      "next_action": "Do not diagnose this signature; the registered control does not reproduce it.",
++      "request": {
++        "method": "GET",
++        "path": "/health"
++      }
++    },
++    {
++      "id": "AF02",
++      "signature": "Prompt contains invalid tokens",
++      "channel": "http",
++      "args": [
++        "--threads",
++        "2",
++        "--threads-batch",
++        "2"
++      ],
++      "model": "fixture",
++      "source": {
++        "row": "S942",
++        "file": "server-context.cpp",
++        "commit": "704366d",
++        "line": 1917
++      },
++      "meaning": "Healthy model-list request; no prompt tokens",
++      "next_action": "Do not diagnose this signature; the registered control does not reproduce it.",
++      "request": {
++        "method": "GET",
++        "path": "/v1/models"
++      }
++    },
++    {
++      "id": "AF03",
++      "signature": "failed to get embeddings",
++      "channel": "http",
++      "args": [
++        "--threads",
++        "2",
++        "--threads-batch",
++        "2"
++      ],
++      "model": "fixture",
++      "source": {
++        "row": "S943",
++        "file": "server-context.cpp",
++        "commit": "704366d",
++        "line": 2385
++      },
++      "meaning": "Healthy completion; no embeddings request",
++      "next_action": "Do not diagnose this signature; the registered control does not reproduce it.",
++      "request": {
++        "method": "POST",
++        "path": "/completion",
++        "body": {
++          "prompt": "Once upon a time",
++          "n_predict": 8
++        }
++      }
++    },
++    {
++      "id": "AF04",
++      "signature": "This server does not support embeddings. Start it with `--embeddings`",
++      "channel": "http",
++      "args": [
++        "--threads",
++        "2",
++        "--threads-batch",
++        "2"
++      ],
++      "model": "fixture",
++      "source": {
++        "row": "S944",
++        "file": "server-context.cpp",
++        "commit": "704366d",
++        "line": 6132
++      },
++      "meaning": "Wrong endpoint: metrics failure is not an embeddings failure",
++      "next_action": "Do not diagnose this signature; the registered control does not reproduce it.",
++      "request": {
++        "method": "GET",
++        "path": "/metrics"
++      }
++    },
++    {
++      "id": "AF05",
++      "signature": "This server does not support reranking. Start it with `--reranking`",
++      "channel": "http",
++      "args": [
++        "--threads",
++        "2",
++        "--threads-batch",
++        "2"
++      ],
++      "model": "fixture",
++      "source": {
++        "row": "S945",
++        "file": "server-context.cpp",
++        "commit": "704366d",
++        "line": 5803
++      },
++      "meaning": "Wrong endpoint: embedding failure is not reranking",
++      "next_action": "Do not diagnose this signature; the registered control does not reproduce it.",
++      "request": {
++        "method": "POST",
++        "path": "/embedding",
++        "body": {
++          "content": "Hello"
++        }
++      }
++    },
++    {
++      "id": "AF06",
++      "signature": "This server does not support metrics endpoint. Start it with `--metrics`",
++      "channel": "http",
++      "args": [
++        "--threads",
++        "2",
++        "--threads-batch",
++        "2"
++      ],
++      "model": "fixture",
++      "source": {
++        "row": "S946",
++        "file": "server-context.cpp",
++        "commit": "704366d",
++        "line": 5304
++      },
++      "meaning": "Wrong endpoint: route-not-found is not metrics-disabled",
++      "next_action": "Do not diagnose this signature; the registered control does not reproduce it.",
++      "request": {
++        "method": "GET",
++        "path": "/not-a-r26-route"
++      }
++    },
++    {
++      "id": "AF07",
++      "signature": "Request body must be an array",
++      "channel": "http",
++      "args": [
++        "--threads",
++        "2",
++        "--threads-batch",
++        "2"
++      ],
++      "model": "fixture",
++      "source": {
++        "row": "S947",
++        "file": "server-context.cpp",
++        "commit": "704366d",
++        "line": 5998
++      },
++      "meaning": "Wrong endpoint: route-not-found is not array validation",
++      "next_action": "Do not diagnose this signature; the registered control does not reproduce it.",
++      "request": {
++        "method": "GET",
++        "path": "/also-not-a-r26-route"
++      }
++    },
++    {
++      "id": "AF08",
++      "signature": "checkpoint-min-step must be non-negative",
++      "channel": "http",
++      "args": [
++        "--threads",
++        "2",
++        "--threads-batch",
++        "2"
++      ],
++      "model": "fixture",
++      "source": {
++        "row": "S948",
++        "file": "arg.cpp",
++        "commit": "704366d",
++        "line": 1713
++      },
++      "meaning": "HTTP channel for argument-parse startup-only error",
++      "next_action": "Do not diagnose this signature; the registered control does not reproduce it.",
++      "request": {
++        "method": "POST",
++        "path": "/completion",
++        "body": {
++          "prompt": "Hello",
++          "n_predict": 1
++        }
++      }
++    },
++    {
++      "id": "AF09",
++      "signature": "Failed to find $HOME directory",
++      "channel": "http",
++      "args": [
++        "--threads",
++        "2",
++        "--threads-batch",
++        "2"
++      ],
++      "model": "fixture",
++      "source": {
++        "row": "S949",
++        "file": "common.cpp",
++        "commit": "704366d",
++        "line": 983
++      },
++      "meaning": "HTTP channel for local home-directory exception",
++      "next_action": "Do not diagnose this signature; the registered control does not reproduce it.",
++      "request": {
++        "method": "GET",
++        "path": "/health"
++      }
++    },
++    {
++      "id": "AF10",
++      "signature": "Tokenization failed: input text too large, tokenization result exceeds int32_t limit",
++      "channel": "http",
++      "args": [
++        "--threads",
++        "2",
++        "--threads-batch",
++        "2"
++      ],
++      "model": "fixture",
++      "source": {
++        "row": "S950",
++        "file": "common.cpp",
++        "commit": "704366d",
++        "line": 1848
++      },
++      "meaning": "Tiny valid completion cannot overflow int32 tokenization",
++      "next_action": "Do not diagnose this signature; the registered control does not reproduce it.",
++      "request": {
++        "method": "POST",
++        "path": "/completion",
++        "body": {
++          "prompt": "Good input",
++          "n_predict": 1
++        }
++      }
++    },
++    {
++      "id": "AF11",
++      "signature": "Error: gzip is not supported by this browser",
++      "channel": "http",
++      "args": [
++        "--threads",
++        "2",
++        "--threads-batch",
++        "2"
++      ],
++      "model": "fixture",
++      "source": {
++        "row": "S951",
++        "file": "server-http.cpp",
++        "commit": "704366d",
++        "line": 392
++      },
++      "meaning": "Model-list endpoint does not exercise UI gzip negotiation",
++      "next_action": "Do not diagnose this signature; the registered control does not reproduce it.",
++      "request": {
++        "method": "GET",
++        "path": "/v1/models"
++      }
++    },
++    {
++      "id": "AF12",
++      "signature": "Unable to save slot: incomplete draft state",
++      "channel": "startup",
++      "args": [
++        "--threads",
++        "2",
++        "--threads-batch",
++        "2"
++      ],
++      "model": "fixture",
++      "source": {
++        "row": "S952",
++        "file": "server-context.cpp",
++        "commit": "704366d",
++        "line": 3037
++      },
++      "meaning": "Healthy fixture launch; no slot save; should stay alive",
++      "next_action": "Do not diagnose this signature; the registered control does not reproduce it."
++    },
++    {
++      "id": "AF13",
++      "signature": "context shift cannot be used for shared prompt",
++      "channel": "startup",
++      "args": [
++        "--threads",
++        "2",
++        "--threads-batch",
++        "2"
++      ],
++      "model": "fixture",
++      "source": {
++        "row": "S953",
++        "file": "server-context.cpp",
++        "commit": "704366d",
++        "line": 3390
++      },
++      "meaning": "Healthy fixture launch; no shared-prompt generation; should stay alive",
++      "next_action": "Do not diagnose this signature; the registered control does not reproduce it."
++    },
++    {
++      "id": "AF14",
++      "signature": "Invalid tokens in slot save file",
++      "channel": "startup",
++      "args": [
++        "--threads",
++        "2",
++        "--threads-batch",
++        "2"
++      ],
++      "model": "fixture",
++      "source": {
++        "row": "S954",
++        "file": "server-context.cpp",
++        "commit": "704366d",
++        "line": 3095
++      },
++      "meaning": "Healthy fixture launch; no slot restore; should stay alive",
++      "next_action": "Do not diagnose this signature; the registered control does not reproduce it."
++    }
++  ]
++}
