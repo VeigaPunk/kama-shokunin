@@ -240,3 +240,23 @@ seats under `.ufo/waves/round-27/w1a3/` found three gaps in its wording:
 3. **Case folding.** "Case-folded" means Unicode case folding. The round-27
    counter lowercases (`count-c1.py:343-348`, 707-708), which meets KQ37 for
    ASCII signatures only (`w1a3/advice/CriticEntryRuleVsCode.md`).
+
+## Round 27 qualification — KQ37 after the residual review (2026-10-23)
+
+Appended before any judgment; earlier text unchanged. Residual seats under
+`.ufo/waves/round-27/residual/`:
+
+4. **Frame by emitting site.** A frame defined as "message minus the
+   submitted signature" depends on where the signature boundary is drawn:
+   twelve distinct substrings of the one S137 literal pass the boundary leg
+   and give twelve different remainders (`residual/advice/CriticKQ37Qualification.md`).
+   KQ37 also requires one credited row per emitting source line; the
+   round-27 counter has this as `h:same-source-line`.
+5. **Case folding, restated.** Point 3 above is replaced: `lower()` agrees
+   with Unicode case folding only when all compared text (request, message
+   and signature) is ASCII, not when the signature alone is.
+6. **Cost of the boundary leg.** As a stand-alone predicate it refuses the
+   12 frame-tail variants and the 12 round-26 rows, and 3 of the 17 genuine
+   round-26 E26 rows (`residual/out/CriticBoundaryLegProbe/`). It is a
+   conservative exclusion; its coverage cost is disclosed, not shown
+   harmless.

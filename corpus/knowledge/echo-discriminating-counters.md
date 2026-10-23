@@ -78,7 +78,9 @@ holds:
   refused or decoded before the comparison.
 - **Shared frame.** With the signature cut out of the message, the
   remainder (case-folded, not blank) equals the remainder of a row already
-  credited. One message frame earns one row, whatever is spliced into it.
+  credited, or the row cites the same emitting source line as a credited
+  row. One message frame earns one row, whatever is spliced into it or
+  wherever inside the frame the signature boundary is drawn.
 - **Boundary.** The signature is not wholly inside text the server owns:
   it is not a substring of one string literal on its cited source line, or
   it overlaps a span of the message that a decoded request string occupies.
@@ -97,28 +99,46 @@ server echoed it.
   lines 343-372, check at 585-587) walks decoded keys and string values of a
   dict or list body and adds both `json.dumps` serialisations; scalars other
   than strings are covered only through the serialisations. It does not
-  parse a string body. Such bodies never reach it: the request-shape check
-  (lines 576-581, `e:bad-*`) refuses any body that is not a dict, list or
-  none, and the counter serialises accepted bodies itself. On the 12 round-26
+  parse a string body: a stored string body still reaches clause (f), which
+  sees only its undecoded text, but the request-shape check (lines 576-581,
+  `e:bad-*`) makes such a row ineligible and keeps it from any live run; the
+  counter serialises accepted (dict, list or none) bodies itself. On the 12 round-26
   rows, clause (f) as written flags 0/12, the shape check refuses 12/12, and
   clause (f) on the decoded bodies flags 12/12
   (`w1a3/out/ExecOfflineEchoReplay/`). On the five live-probe requests it
   refuses 5/5, where the round-26 test would credit 3/5
   (`w1a3/out/ExecLiveEchoProbe/replay-function-level.json`).
 - Shared frame: clause (h) `h:same-message-frame` (lines 707-709) replaces
-  the signature with a NUL placeholder and lowercases. On the 12 round-26
-  rows it leaves 1 row; with the frame check removed, 12 rows survive the
-  other clause-(h) checks (`w1a3/out/MutFrameLoadBearing/`).
-- Boundary: clause (d) requires the signature to be a substring of a C
-  string literal on the cited line and of no literal on any other line
-  (lines 565-571), which the frame-tail signatures above are not shown to
-  meet; no clause checks overlap with request-supplied spans of the message.
+  the signature with a NUL placeholder and lowercases; clause (h) also allows
+  one row per (file, line) (`h:same-source-line`, lines 701-702). The
+  verbatim clause on the 12 captured round-26 messages leaves 1 row and
+  collapses none of the 17 genuine E26 rows (0 collisions; for 9 of them the
+  message equals the signature, so the frame test is vacuous;
+  `w1a3/out/ExecOfflineFrameReplay/`). An isolated clause-(h) replay of the
+  12 captured messages with synthetic distinct source lines, rows and next
+  actions keeps 1 row, and 12 with the frame branch removed
+  (`w1a3/out/MutFrameLoadBearing/`).
+- Boundary: clause (d) requires the signature to be a substring of a
+  regex-extracted literal on the cited line or of the concatenation of all
+  literals on that line, and of no such candidate on any other line (lines
+  278-293, 338-340, 565-571). That is weaker than the boundary leg's
+  one-literal condition; the frame-tail signatures above are not shown to
+  meet it, and no clause checks overlap with request-supplied spans of the
+  message. As a stand-alone predicate the boundary leg refuses the 12
+  frame-tail variants and the 12 round-26 rows but also 3 of the 17 genuine
+  E26 rows (E26-07 and E26-14 stored in escaped spelling, E26-14 also
+  overlapping the request key `prompt`; E26-17 has no single source
+  literal): a conservative exclusion with a coverage cost
+  (`residual/out/CriticBoundaryLegProbe/`).
 - Shortfalls against the rule's wording (`w1a3/advice/CriticEntryRuleVsCode.md`):
   `lower()` is not Unicode case folding (`straße`/`strasse` are not matched);
   the placeholder keeps the cut position, so two messages whose remainders
   agree after deletion but differ in position count as two frames; a
-  remainder of only tabs is not treated as blank. The counter therefore
-  meets the rule for ASCII signatures and positional frames only.
+  remainder of only tabs is not treated as blank. The implementation uses
+  lowercasing, positional NUL placeholders and NUL/space blankness; it does
+  not fully implement the rule as stated. `lower()` agrees with Unicode case
+  folding only when all compared text (request, message and signature) is
+  ASCII (`residual/advice/CriticKQ37Qualification.md`).
 
 ## What this does not establish
 
@@ -136,5 +156,5 @@ server echoed it.
   warning paths that only other profiles or requests reach are unsampled.
 - The round-27 measured claim C1 was not run on data, so no count here shows
   that the rule discriminates genuine faults from shortcuts on real rows.
-- Other servers and other llama.cpp builds may echo at other sites; S137 and
-  the live probe are scoped to 704366d76 and ASCII signatures.
+- Other servers and other llama.cpp builds may echo at other sites. S137 is
+  pinned to 704366d76; the live probe tested ASCII signatures only.

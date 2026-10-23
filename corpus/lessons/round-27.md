@@ -5,7 +5,8 @@ Author: kama L1 round 27 attempt 3 (KamaR27A3). Attempts 1 (KamaR27, died
 process. Their landed commits `530eaa99`..`0ec32cac` are part of this round's
 history; their uncommitted lane files (1846 files under
 `.ufo/waves/round-27/w1-controls/advice/` and `out/`; the 1853 first written
-here also counted 7 attempt-3 repair files) were moved unread to
+here was the L1's `git status --porcelain --untracked-files=all | wc -l`,
+taken while the 7 attempt-3 repair files were also untracked: 1846 + 7) were moved unread to
 `/fast/scratch/hyaku/kama-r27/attempt2-untracked-w1-scratch/` and are not
 cited.
 
@@ -33,7 +34,8 @@ cited.
   held no echo rule (the round-26 preregistration named the echo and
   split-message classes as intents, and the spot-check prescribed decoded
   comparison; neither was lane knowledge or a criterion). Sources opened this
-  round: S136, S137, S139 (supersedes S136). Verdict: only a
+  round: S136, S137, S139 (supersedes S136); S138 is the round's anchor
+  correction row. Verdict: only a
   named non-author reviewer can make it `unprovable-but-better`; wave seats
   supply evidence, not the verdict.
 
@@ -89,8 +91,11 @@ cited.
 | round-26 test vs A3 on the 12 round-26 rows (offline) | ExecOfflineEchoReplay | round-26 flags 0/12; A3 (f) as written 0/12 (string bodies); A3 shape check refuses 12/12; A3 (f) on decoded bodies 12/12 |
 | is the decoded part load-bearing? | MutEchoDecodedLoadBearing | raw-body-only mutant 0/12 (killed); other single-guard mutants survive because guards overlap |
 | is the frame check load-bearing? | MutFrameLoadBearing | frame on 1/12 survivors, off 12/12 (killed) |
+| does the frame rule collapse distinct genuine faults? | ExecOfflineFrameReplay | clause (h) verbatim: round-26 shortcut 1/12 survive (11 collisions); E26 17/17 survive, 0 collisions (9 rows have message = signature, so the frame test is vacuous there; 3 process rows are outside its reach) |
 | other echo sites in the snapshot | ScoutEchoSitesSnapshot | 12 request-string frames (S137 one of them) + 14 request-JSON dumps |
 | other raw echo tests in the lane | ScoutRawEchoInLaneTools | only round-26 `count-c1.py:384` |
+| does the boundary leg cost genuine rows? | CriticBoundaryLegProbe (residual) | refuses 12/12 frame-tail variants, 12/12 round-26 rows, and 3/17 genuine E26 rows |
+| does the revised entry overclaim? | CriticRevisedEntry (residual) | four overclaims (string-body reachability, literal binding, ASCII conformance, frame-replay provenance), fixed |
 | does a sibling already hold KQ37? | ScoutSiblingEchoRules | no equivalent; two siblings name "server echo" as a control shape only |
 
 ## Gate
@@ -109,8 +114,9 @@ landed; S139 supersedes its escape-length wording (S136 said six characters
 for any character; CriticEntryFactsSources) and its STD 90 attribution (the
 RFC text does not carry it; the RFC Editor and Datatracker indexes do,
 ScoutReopenS136). The three new rows were re-opened by non-author seats:
-ScoutReopenS136, ScoutReopenS137, ReviewLessonGate (all `holds`; reports in
-`.ufo/waves/round-27/w1a3/advice/`).
+ScoutReopenS136, ScoutReopenS137, ReviewLessonGate (S136-S138) and the
+residual seat ReviewS139Row (S139), all `holds` (reports in
+`.ufo/waves/round-27/w1a3/advice/` and `residual/advice/`).
 
 Wave findings, admitted or rejected by the L1:
 
@@ -128,13 +134,20 @@ Wave findings, admitted or rejected by the L1:
 | X1 novelty: decoded comparison was prescribed at base (CriticNoveltyAtBase) | admit | entry "What is new here and what is not" |
 | LOG correction miscounts sentences and omits f4066979 (ReviewRepairD1Log) | admit | second appended LOG correction |
 | "1853 paths" is not the moved count (ReviewUntrackedDisposal) | admit | header now 1846 files |
+| mistake row 1: mechanism not established; "every round-27 wave context" false; the cap does not stop the process (CriticMistakeRow) | admit | row 1 narrowed |
+| clause (f) still sees stored string bodies; clause (d) literal binding weaker than one literal; ASCII conformance overstated; frame replay used synthetic metadata (CriticRevisedEntry, residual) | admit | entry §How the round-27 counter implements it rewritten |
+| frame by "message minus signature" lets one literal give many frames; folding needs all compared text ASCII (CriticKQ37Qualification, residual) | admit | KQ37 qualification points 4-5 |
+| boundary leg refuses 3/17 genuine E26 rows (CriticBoundaryLegProbe, residual) | admit as a disclosed cost | KQ37 qualification point 6; entry §boundary |
+| replace the boundary leg with template-provenance spans (CriticKQ37Qualification, residual) | **reject** for this round | it needs per-site template knowledge the lane does not hold for the 26 echo sites; recorded as the round-28 counter design question, not as a criterion change after review |
+| SCORECARD C1 "measured commit" pointed at a report not yet written (ReviewSelfAssessment: 1 mismatch in 57) | admit | cell now names `d183ec57` and its receipt |
+| lesson F3-F5 (S139 re-open, 1853 composition, S138 omitted) (ReviewLessonFinal) | admit | fixed in this lesson |
 
 
 ## Mistakes
 
 | class | evidence pointer | captured-by | fix |
 |---|---|---|---|
-| unbounded self-referential fixture write: a seat's preload fixture was appended to itself until it filled /fast | attempt-2 seat ReviewA3Diff: `sitecustomize.py` reached 262699483136 bytes of a repeated two-line MARKER snippet; copies of Main's removal note and the first 4096 bytes: `.ufo/waves/round-27/a3/mistake-runaway/` | none — the wave contexts capped processes, memory and wall time, never file size, and never forbade a MARKER or log path that is also the fixture | every round-27 wave context requires `ulimit -f` on fixture-writing commands and a MARKER file separate from any file Python imports; shown able to fail by the wave seat ExecFixtureBoundDemo (§Fix receipt) |
+| unbounded repeated fixture growth: a seat's preload fixture grew until it filled /fast (mechanism not established: the retained prefix repeats the two hook source lines, which the hook itself does not write; Main's note says MARKER "evidently" pointed back) | attempt-2 seat ReviewA3Diff: `sitecustomize.py` reported at 262699483136 bytes; copies of Main's removal note and the first 4096 bytes: `.ufo/waves/round-27/a3/mistake-runaway/` | none — the attempt-2 wave context capped processes, memory and wall time, never file size, and had no rule keeping a MARKER, log or redirect off a file that is imported or read as input (`w1-controls/spec.json` context; CriticMistakeRow) | the attempt-3 wave and residual contexts require `ulimit -f` on fixture-writing commands and a MARKER/log path disjoint from imported or input files; the cap bounds each file's size, it does not stop the process; shown able to fail by ExecFixtureBoundDemo (§Fix receipt) |
 | correction written from memory instead of from the diff: the appended round-26 LOG correction said "three sentences" (four changed) and omitted the in-place edit at `f4066979` | LOG.md first round-27 correction entry; `w1a3/advice/ReviewRepairD1Log.md` | the round's own review seat (ReviewRepairD1Log) | second appended LOG correction; a correction's statement list is re-derived from `git diff`/`git log -- <file>` before landing |
 | source paraphrase broader than the source: S136 said every character has a six-character escape | S136 `teaches`; `w1a3/advice/CriticEntryFactsSources.md` | the round's critic seat | S139 supersedes S136 |
 | count over a mixed set: "1853 paths" counted 7 attempt-3 files with the 1846 moved files | lesson header (first landed text); `w1a3/advice/ReviewUntrackedDisposal.md` | the round's review seat | header corrected; counts are taken over the exact set named |

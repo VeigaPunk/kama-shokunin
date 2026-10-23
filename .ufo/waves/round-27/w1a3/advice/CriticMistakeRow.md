@@ -134,3 +134,41 @@ EXIT=0
 ```
 
 The Bash `help ulimit` read also completed with exit 0: `-f` limits the maximum size of files written by the shell and its children; this Bash uses 1024-byte increments, or 512 in POSIX mode. No tool was installed or updated. No processes were left running by this seat. Only this report was written.
+
+## Evidence update — strict file-bound red-before gap resolved
+
+After the initial review, ExecFixtureBoundDemo supplied a separate gate-shaped pair captured at **2026-10-23T07:19:52Z**. This update supersedes the **outstanding formal size-detector proof gap** in the fix-cell finding and §3 above; those paragraphs describe the earlier receipt snapshot. The report's overall **partial** disposition is unchanged because the unsupported incident mechanism, historical “every context” scope, and process-termination overreach remain.
+
+Read, not run by this critic:
+
+- `w1a3/out/ExecFixtureBoundDemo/redbefore-cap.sh:21-36`: one detector copies the same fixture, runs the same writer under `timeout 5`, and returns **3** when the final file exceeds 2 MiB or **0** when it does not. The cap is its sole experimental parameter. Unlike the original echo-only detector, its failure branch actually returns nonzero.
+- `redbefore-cap.log:1-12`: the fixture digest is unchanged (`93af1869…3df8e4`); the 20 MiB safety-bounded red arm returns detector **3** with the named failure and the 2 MiB fixed arm returns **0**:
+
+```text
+detector cap_blocks=20480 writer_exit=153 writer_exit_is_sigxfsz=YES final_size=20971520 bound=2097152
+detector cap_blocks=20480 RESULT=NON-CLEAN reason=file_exceeded_2MiB_bound size=20971520 bound=2097152
+RED_EXIT=3
+detector cap_blocks=2048 writer_exit=153 writer_exit_is_sigxfsz=YES final_size=2097152 bound=2097152
+detector cap_blocks=2048 RESULT=clean
+FIX_EXIT=0
+pair_verdict=RED_NONCLEAN_FIX_CLEAN
+```
+
+This is now retained discriminating red-before/fixed evidence for **file boundedness**. It does not reconstruct the incident writer, establish its MARKER alias, demonstrate the MARKER-separation half as a separate guard, or make timeout-owned termination into cap-owned termination. The counterexamples in §1–2 remain applicable.
+
+Read-only fingerprint command executed by this critic, exit **0**:
+
+```sh
+timeout 10s sha256sum .ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/redbefore-cap.sh .ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/redbefore-cap.log .ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/receipt.json && printf 'EXIT=0\n'
+```
+
+Observed SHA-256 values, in that order:
+
+```text
+81729394028123802b07a6deac7296b4bb7b22c1b0d5f3d307ddb292187c53a8
+c8f2a763d14b1369a3572e41940ad115891a235d4e14745c239eddb8d609a423
+ef27872a1b906441188629005244e86f2f8497286b7d64d0d014944d7a15d792
+EXIT=0
+```
+
+The earlier `receipt.json` digest in this report pins the earlier snapshot, not the expanded receipt. The retained fixture and original logs retain the previously recorded digests. No additional runtime, fixture experiment or server was invoked by this critic.

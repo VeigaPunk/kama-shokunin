@@ -1366,7 +1366,7 @@ table). Work calibration or adjacency (7) if depth moves.
 
 | Claim | Axis | Before → after | Verdict | Evidence pointer | Counting command | Measured commit |
 |---|---|---|---|---|---|---|
-| C1 (measured) | depth | 7 → 7 | **miss** (honest stop): withdrawn before data, no data seat dispatched; under the frozen kill rule counted < 15 at the landed tip is a miss | `.ufo/waves/round-27/a3/plan.json`; lesson `corpus/lessons/round-27.md` §Claims; tip receipt `.ufo/waves/round-27/a3/c1-tip.out` | `/usr/bin/python3 .ufo/waves/round-27/count-c1.py --out <receipt.json>` (preregistration.json C1.command) | lane tip at report time (see the report) |
+| C1 (measured) | depth | 7 → 7 | **miss** (honest stop): withdrawn before data, no data seat dispatched; under the frozen kill rule counted < 15 at the landed tip is a miss | `.ufo/waves/round-27/a3/plan.json`; lesson `corpus/lessons/round-27.md` §Claims; tip receipt `.ufo/waves/round-27/a3/c1-tip.out` | `/usr/bin/python3 .ufo/waves/round-27/count-c1.py --out <receipt.json>` (preregistration.json C1.command) | `d183ec57` (receipt `.ufo/waves/round-27/a3/c1-tip.out`: registered 0 counted 0 target 15 met False; later round-27 commits change no file the counter reads for C1 rows) |
 | X1 (exploratory) | calibration | 7 → 7 (no number) | `unprovable` until a named non-author reviewer rules; wave seats are evidence only | `corpus/knowledge/echo-discriminating-counters.md`; `corpus/QUALITY.md` KQ37 and its round-27 qualification; lesson §X1 evidence | none (exploratory) | — |
 
 Surface moved by X1: the lane's claim-measurement method for error-signature
@@ -1378,13 +1378,18 @@ named the echo and split-message classes as round evidence only.
 
 Repairs (routed by `corpus/lessons/round-26-verifier-spotcheck.md`, not
 claims): defects 1, 3, 4, 5, 6, 7 repaired; defect 2 met by the A3 counter and
-KQ37 with the shortfalls recorded in the entry; defect 8 (`count-c2.py` reads
+KQ37 with the shortfalls recorded in the entry (its "receipt per class before
+data" leg only vacuously: no data seat ran); defect 8 (`count-c2.py` reads
 cell values from the receipt) open. Details: lesson §Repairs.
 
 Calibration note: this round's own first landed texts carried four errors
 that wave seats caught (LOG correction miscount, S136 escape wording,
-"neither meets nor misses", 1853 vs 1846); each is corrected by an appended
-entry or a superseding row (lesson §Mistakes).
+"neither meets nor misses", 1853 vs 1846). LOG.md and SOURCES.md were
+corrected by appended entries and a superseding row; the round's own lesson,
+knowledge entry and this section were revised in place before the report
+(lesson §Mistakes and §Gate list each change). A non-author self-assessment
+check at `52632caa` found 1 mismatch in 57 statements (this row's measured
+commit, now fixed; `residual/advice/ReviewSelfAssessment.md`).
 
 Other scores held: operability 8, freshness 8, coverage 9, adjacency 7.
 Capabilities: none claimed.

@@ -1,0 +1,349 @@
+URL https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-common.cpp
+HTTP 200; sha256 b4f4aae7eed919f914d132ae64416a0e7cfb23442161af6f63ba8d902954d442
+server-common.cpp:95:         case ERROR_TYPE_INVALID_REQUEST:
+server-common.cpp:96:             type_str = "invalid_request_error";
+server-common.cpp:97:             code = 400;
+server-common.cpp:98:             break;
+server-common.cpp:99:         case ERROR_TYPE_AUTHENTICATION:
+server-common.cpp:100:             type_str = "authentication_error";
+server-common.cpp:101:             code = 401;
+server-common.cpp:102:             break;
+server-common.cpp:103:         case ERROR_TYPE_NOT_FOUND:
+server-common.cpp:104:             type_str = "not_found_error";
+server-common.cpp:1210:             throw std::invalid_argument("file:// URLs are not allowed unless --media-path is specified");
+server-common.cpp:1211:         }
+server-common.cpp:1212:         // load local image file
+server-common.cpp:1213:         std::string file_path = url.substr(7); // remove "file://"
+server-common.cpp:1214:         raw_buffer data;
+server-common.cpp:1215:         if (!fs_validate_filename(file_path, true)) {
+server-common.cpp:1216:             throw std::invalid_argument("file path is not allowed: " + file_path);
+server-common.cpp:1217:         }
+server-common.cpp:1218:         SRV_INF("loading image from local file '%s'\n", (media_path + file_path).c_str());
+server-common.cpp:1219:         std::ifstream file(media_path + file_path, std::ios::binary);
+server-common.cpp:1220:         if (!file) {
+server-common.cpp:1221:             throw std::invalid_argument("file does not exist or cannot be opened: " + file_path);
+server-common.cpp:1222:         }
+server-common.cpp:1223:         data.assign((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+server-common.cpp:1224:         out_files.push_back(data);
+server-common.cpp:1225: 
+server-common.cpp:1226:     } else if (string_starts_with(url, "data:")) {
+server-common.cpp:1227:         // try to decode base64 image, video, or audio
+server-common.cpp:1228:         std::vector<std::string> parts = string_split<std::string>(url, /*separator*/ ',');
+server-common.cpp:1229:         if (parts.size() != 2) {
+server-common.cpp:1230:             throw std::invalid_argument("Invalid uri-encoded base64 value");
+server-common.cpp:1231:         } else if (!string_starts_with(parts[0], "data:image/")
+server-common.cpp:1232:                 && !string_starts_with(parts[0], "data:video/")
+server-common.cpp:1233:                 && !string_starts_with(parts[0], "data:audio/")) {
+server-common.cpp:1234:             throw std::invalid_argument("Invalid uri format: " + parts[0]);
+server-common.cpp:1235:         } else if (!string_ends_with(parts[0], "base64")) {
+server-common.cpp:1236:             throw std::invalid_argument("uri must be base64 encoded");
+server-common.cpp:1363:     // Handle "response_format" field
+server-common.cpp:1364:     if (body.contains("response_format")) {
+server-common.cpp:1365:         json response_format      = json_value(body, "response_format", json::object());
+server-common.cpp:1366:         std::string response_type = json_value(response_format, "type", std::string());
+server-common.cpp:1367:         if (response_type == "json_object") {
+server-common.cpp:1368:             if (response_format.contains("schema") || json_schema.empty()) {
+server-common.cpp:1369:                 json_schema = json_value(response_format, "schema", json::object());
+server-common.cpp:1370:             }
+server-common.cpp:1371:         } else if (response_type == "json_schema") {
+server-common.cpp:1372:             auto schema_wrapper = json_value(response_format, "json_schema", json::object());
+server-common.cpp:1373:             json_schema = json_value(schema_wrapper, "schema", json::object());
+server-common.cpp:1374:         } else if (!response_type.empty() && response_type != "text") {
+server-common.cpp:1375:             throw std::invalid_argument("response_format type must be one of \"text\" or \"json_object\", but got: " + response_type);
+server-common.cpp:1376:         }
+server-common.cpp:1377:     }
+
+URL https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-common.h
+HTTP 200; sha256 ee401cf81ed0fb515f9870b018c762074903e72712dcb81a652e49761fe1577b
+server-common.h:43: template <typename T>
+server-common.h:44: static T json_value(const json & body, const std::string & key, const T & default_value) {
+server-common.h:45:     // Fallback null to default value
+server-common.h:46:     if (body.contains(key) && !body.at(key).is_null()) {
+server-common.h:47:         try {
+server-common.h:48:             return body.at(key).get<T>();
+server-common.h:49:         } catch (const common_json_error & err) {
+server-common.h:50:             LOG_WRN("Wrong type supplied for parameter '%s', using default value: %s\n", key.c_str(), err.what());
+server-common.h:51:             return default_value;
+server-common.h:52:         }
+server-common.h:53:     } else {
+server-common.h:54:         return default_value;
+server-common.h:55:     }
+server-common.h:56: }
+server-common.h:57: 
+server-common.h:58: // https://community.openai.com/t/openai-chat-list-of-error-codes-and-types/357791/11
+server-common.h:59: enum error_type {
+server-common.h:60:     ERROR_TYPE_INVALID_REQUEST,
+
+URL https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server.cpp
+HTTP 200; sha256 2143962217e9d6275f28c42d599139bb702e2f880dccbad01ab9d8b094f5aef4
+server.cpp:56: static server_http_context::handler_t ex_wrapper(server_http_context::handler_t func) {
+server.cpp:57:     return [func = std::move(func)](const server_http_req & req) -> server_http_res_ptr {
+server.cpp:58:         std::string message;
+server.cpp:59:         error_type error;
+server.cpp:60:         try {
+server.cpp:61:             return func(req);
+server.cpp:62:         } catch (const std::invalid_argument & e) {
+server.cpp:63:             // treat invalid_argument as invalid request (400)
+server.cpp:64:             error = ERROR_TYPE_INVALID_REQUEST;
+server.cpp:65:             message = e.what();
+server.cpp:66:         } catch (const common_json_error & e) {
+server.cpp:67:             // JSON parse and type errors are invalid requests (400)
+server.cpp:68:             error = ERROR_TYPE_INVALID_REQUEST;
+server.cpp:69:             message = e.what();
+server.cpp:70:         } catch (const std::exception & e) {
+server.cpp:71:             // treat other exceptions as server error (500)
+server.cpp:72:             error = ERROR_TYPE_SERVER;
+server.cpp:73:             message = e.what();
+server.cpp:74:         } catch (...) {
+server.cpp:75:             error = ERROR_TYPE_SERVER;
+server.cpp:76:             message = "unknown error";
+server.cpp:77:         }
+server.cpp:78: 
+server.cpp:79:         auto res = std::make_unique<server_http_res>();
+server.cpp:80:         res->status = 500;
+server.cpp:81:         try {
+server.cpp:82:             json error_data = format_error_response(message, error);
+server.cpp:83:             res->status = json_value(error_data, "code", 500);
+server.cpp:84:             res->data = safe_json_to_str({{ "error", error_data }});
+server.cpp:85:             SRV_WRN("got exception: %s\n", res->data.c_str());
+server.cpp:86:         } catch (const std::exception & e) {
+server.cpp:87:             SRV_ERR("got another exception: %s | while handling exception: %s\n", e.what(), message.c_str());
+server.cpp:88:             res->data = "Internal Server Error";
+server.cpp:89:         }
+server.cpp:90:         return res;
+
+URL https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/common/chat.cpp
+HTTP 200; sha256 3793510ff80015d575777f01f9edcf8a58d859188d4f988190a02c50763bab49
+chat.cpp:316:         return COMMON_CHAT_TOOL_CHOICE_AUTO;
+chat.cpp:317:     }
+chat.cpp:318:     if (tool_choice == "none") {
+chat.cpp:319:         return COMMON_CHAT_TOOL_CHOICE_NONE;
+chat.cpp:320:     }
+chat.cpp:321:     if (tool_choice == "required") {
+chat.cpp:322:         return COMMON_CHAT_TOOL_CHOICE_REQUIRED;
+chat.cpp:323:     }
+chat.cpp:324:     throw std::invalid_argument("Invalid tool_choice: " + tool_choice);
+chat.cpp:325: }
+chat.cpp:326: 
+chat.cpp:327: bool common_chat_templates_support_enable_thinking(const common_chat_templates * chat_templates) {
+chat.cpp:328:     common_chat_templates_inputs inputs;
+chat.cpp:340: }
+chat.cpp:341: 
+chat.cpp:342: std::vector<common_chat_msg> common_chat_msgs_parse_oaicompat(const json & messages) {
+chat.cpp:343:     std::vector<common_chat_msg> msgs;
+chat.cpp:344: 
+chat.cpp:345:     try {
+chat.cpp:346:         if (!messages.is_array()) {
+chat.cpp:347:             throw std::invalid_argument("Expected 'messages' to be an array, got " + messages.dump());
+chat.cpp:348:         }
+chat.cpp:349: 
+chat.cpp:350:         for (const auto & message : messages) {
+chat.cpp:351:             if (!message.is_object()) {
+chat.cpp:352:                 throw std::invalid_argument("Expected 'message' to be an object, got " + message.dump());
+chat.cpp:353:             }
+chat.cpp:354: 
+chat.cpp:355:             common_chat_msg msg;
+chat.cpp:356:             if (!message.contains("role")) {
+chat.cpp:357:                 throw std::invalid_argument("Missing 'role' in message: " + message.dump());
+chat.cpp:358:             }
+chat.cpp:359:             msg.role = message.at("role");
+chat.cpp:360: 
+chat.cpp:361:             auto has_content    = message.contains("content");
+chat.cpp:362:             auto has_tool_calls = message.contains("tool_calls");
+chat.cpp:363:             if (has_content) {
+chat.cpp:364:                 const auto & content = message.at("content");
+chat.cpp:365:                 if (content.is_string()) {
+chat.cpp:366:                     msg.content = content;
+chat.cpp:367:                 } else if (content.is_array()) {
+chat.cpp:368:                     for (const auto & part : content) {
+chat.cpp:369:                         if (!part.contains("type")) {
+chat.cpp:370:                             throw std::invalid_argument("Missing content part type: " + part.dump());
+chat.cpp:371:                         }
+chat.cpp:372:                         const auto & type = part.at("type");
+chat.cpp:373:                         if (type != "text" && type != "media_marker") {
+chat.cpp:374:                             throw std::invalid_argument("Unsupported content part type: " + type.dump());
+chat.cpp:375:                         }
+chat.cpp:376:                         common_chat_msg_content_part msg_part;
+chat.cpp:377:                         msg_part.type = type;
+chat.cpp:378:                         msg_part.text = part.at("text");
+chat.cpp:379:                         msg.content_parts.push_back(msg_part);
+chat.cpp:380:                     }
+chat.cpp:381:                 } else if (!content.is_null()) {
+chat.cpp:382:                     throw std::invalid_argument("Invalid 'content' type: expected string or array, got " +
+chat.cpp:383:                                                 content.dump() +
+chat.cpp:384:                                                 " (ref: https://github.com/ggml-org/llama.cpp/issues/8367)");
+chat.cpp:385:                 }
+chat.cpp:386:             }
+chat.cpp:387:             if (has_tool_calls) {
+chat.cpp:388:                 for (const auto & tool_call : message.at("tool_calls")) {
+chat.cpp:389:                     common_chat_tool_call tc;
+chat.cpp:390:                     if (!tool_call.contains("type")) {
+chat.cpp:391:                         throw std::invalid_argument("Missing tool call type: " + tool_call.dump());
+chat.cpp:392:                     }
+chat.cpp:393:                     const auto & type = tool_call.at("type");
+chat.cpp:394:                     if (type != "function") {
+chat.cpp:395:                         throw std::invalid_argument("Unsupported tool call type: " + tool_call.dump());
+chat.cpp:396:                     }
+chat.cpp:397:                     if (!tool_call.contains("function")) {
+chat.cpp:398:                         throw std::invalid_argument("Missing tool call function: " + tool_call.dump());
+chat.cpp:399:                     }
+chat.cpp:400:                     const auto & fc = tool_call.at("function");
+chat.cpp:401:                     if (!fc.contains("name")) {
+chat.cpp:402:                         throw std::invalid_argument("Missing tool call name: " + tool_call.dump());
+chat.cpp:403:                     }
+chat.cpp:404:                     tc.name           = fc.at("name");
+chat.cpp:405:                     const auto & args = fc.at("arguments");
+chat.cpp:428:             if (message.contains("tool_call_id")) {
+chat.cpp:429:                 msg.tool_call_id = message.at("tool_call_id");
+chat.cpp:430:             }
+chat.cpp:431: 
+chat.cpp:432:             msgs.push_back(msg);
+chat.cpp:433:         }
+chat.cpp:434:     } catch (const std::exception & e) {
+chat.cpp:435:         // @ngxson : disable otherwise it's bloating the API response
+chat.cpp:436:         // printf("%s\n", std::string("; messages = ") + messages.dump(2));
+chat.cpp:437:         throw std::runtime_error("Failed to parse messages: " + std::string(e.what()));
+chat.cpp:438:     }
+chat.cpp:439: 
+chat.cpp:440:     return msgs;
+chat.cpp:556: std::vector<common_chat_tool> common_chat_tools_parse_oaicompat(const json & tools) {
+chat.cpp:557:     std::vector<common_chat_tool> result;
+chat.cpp:558: 
+chat.cpp:559:     try {
+chat.cpp:560:         if (!tools.is_null()) {
+chat.cpp:561:             if (!tools.is_array()) {
+chat.cpp:562:                 throw std::invalid_argument("Expected 'tools' to be an array, got " + tools.dump());
+chat.cpp:563:             }
+chat.cpp:564:             for (const auto & tool : tools) {
+chat.cpp:565:                 if (!tool.contains("type")) {
+chat.cpp:566:                     throw std::invalid_argument("Missing tool type: " + tool.dump());
+chat.cpp:567:                 }
+chat.cpp:568:                 const auto & type = tool.at("type");
+chat.cpp:569:                 if (!type.is_string() || type != "function") {
+chat.cpp:570:                     throw std::invalid_argument("Unsupported tool type: " + tool.dump());
+chat.cpp:571:                 }
+chat.cpp:572:                 if (!tool.contains("function")) {
+chat.cpp:573:                     throw std::invalid_argument("Missing tool function: " + tool.dump());
+chat.cpp:574:                 }
+chat.cpp:575: 
+chat.cpp:576:                 const auto & function = tool.at("function");
+chat.cpp:577:                 result.push_back({
+chat.cpp:578:                     /* .name = */ function.at("name"),
+chat.cpp:579:                     /* .description = */ function.value("description", ""),
+chat.cpp:580:                     /* .parameters = */ function.value("parameters", json::object()).dump(),
+chat.cpp:581:                 });
+chat.cpp:582:             }
+chat.cpp:583:         }
+chat.cpp:584:     } catch (const std::exception & e) {
+chat.cpp:585:         throw std::runtime_error("Failed to parse tools: " + std::string(e.what()) + "; tools = " + tools.dump(2));
+chat.cpp:586:     }
+chat.cpp:587: 
+chat.cpp:588:     return result;
+chat.cpp:868:     if (format == "deepseek") {
+chat.cpp:869:         return COMMON_REASONING_FORMAT_DEEPSEEK;
+chat.cpp:870:     }
+chat.cpp:871:     if (format == "deepseek-legacy") {
+chat.cpp:872:         return COMMON_REASONING_FORMAT_DEEPSEEK_LEGACY;
+chat.cpp:873:     }
+chat.cpp:874:     throw std::runtime_error("Unknown reasoning format: " + format);
+chat.cpp:875: }
+chat.cpp:876: 
+chat.cpp:877: common_chat_prompt common_chat_template_direct_apply_impl(
+chat.cpp:878:     const common_chat_template & tmpl,
+
+URL https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-models.cpp
+HTTP 200; sha256 9c5a6f2cc7997a3a409482c53119a2462e8c409ddf001cc568a9a8740e708b4a
+server-models.cpp:651: static void check_sidecar(const std::string & kind) {
+server-models.cpp:652:     std::vector<std::string> kinds;
+server-models.cpp:653:     for (const auto & s : common_download_sidecars()) {
+server-models.cpp:654:         kinds.emplace_back(s.name);
+server-models.cpp:655:     }
+server-models.cpp:656:     if (!has_sidecar(kinds, kind)) {
+server-models.cpp:657:         throw std::invalid_argument("unknown sidecar '" + kind + "', expected one of " + string_join(kinds, ", "));
+server-models.cpp:658:     }
+server-models.cpp:659: }
+server-models.cpp:660: 
+server-models.cpp:850:         throw std::invalid_argument("model '" + name + "' is downloading");
+server-models.cpp:851:     }
+server-models.cpp:852:     // a name with no record is no model: its files belong to the cached tags of the repo
+server-models.cpp:853:     if (!unfinished_downloads.remove(name)) {
+server-models.cpp:854:         throw std::runtime_error("model name=" + name + " is not found");
+server-models.cpp:855:     }
+server-models.cpp:856:     bool ok = common_download_remove(name);
+server-models.cpp:857:     SRV_INF("removing unfinished download name=%s (%s)\n", name.c_str(), ok ? "succeeded" : "nothing cached");
+server-models.cpp:2165:         res_err(res, format_error_response("model name is missing from the request", ERROR_TYPE_INVALID_REQUEST));
+server-models.cpp:2166:         return false;
+server-models.cpp:2167:     }
+server-models.cpp:2168:     auto meta = models.get_meta(name);
+server-models.cpp:2169:     if (!meta.has_value()) {
+server-models.cpp:2170:         res_err(res, format_error_response(string_format("model '%s' not found", name.c_str()), ERROR_TYPE_INVALID_REQUEST));
+server-models.cpp:2171:         return false;
+server-models.cpp:2172:     }
+server-models.cpp:2173:     // resolve alias to canonical model name
+server-models.cpp:2174:     name = meta->name;
+server-models.cpp:2175:     if (!models_autoload && !meta->is_running()) {
+server-models.cpp:2176:         res_err(res, format_error_response("model is not loaded", ERROR_TYPE_INVALID_REQUEST));
+server-models.cpp:2492:         auto res = std::make_unique<server_http_res>();
+server-models.cpp:2493: 
+server-models.cpp:2494:         json body = json::parse(req.body);
+server-models.cpp:2495:         std::string name = json_value(body, "model", std::string());
+server-models.cpp:2496:         if (name.empty()) {
+server-models.cpp:2497:             throw std::invalid_argument("model must be a non-empty string");
+server-models.cpp:2498:         }
+server-models.cpp:2499:         const auto sidecars = parse_sidecars(body);
+server-models.cpp:2500: 
+server-models.cpp:2501:         common_params_model model;
+server-models.cpp:2502:         model.hf_repo = name;
+server-models.cpp:2503: 
+server-models.cpp:2504:         // validate by fetching metadata, through the plan the download follows
+server-models.cpp:2505:         common_download_hf_plan plan;
+server-models.cpp:2506:         try {
+server-models.cpp:2507:             plan = common_download_get_hf_plan(model, sidecar_download_opts(params, sidecars));
+server-models.cpp:2508:         } catch (...) {
+server-models.cpp:2509:             SRV_ERR("unknown error while validating model '%s'\n", name.c_str());
+server-models.cpp:2510:             // other exceptions will be handled by the outer ex_wrapper()
+server-models.cpp:2511:             throw;
+server-models.cpp:2512:         }
+server-models.cpp:2513: 
+server-models.cpp:2514:         // a tag that resolves no file has nothing to download
+server-models.cpp:2515:         if (plan.preset.path.empty() && plan.primary.path.empty() && common_download_plan_sidecars(plan).empty()) {
+server-models.cpp:2516:             throw std::invalid_argument("model '" + name + "' resolves no file to download");
+server-models.cpp:2517:         }
+server-models.cpp:2518: 
+server-models.cpp:2519:         // then, proceed with the actual download; load() decides over an existing entry
+
+URL https://www.rfc-editor.org/rfc/rfc8259.txt
+HTTP 200; sha256 61a5378f4255c720beb2a4b4a63b29540147c140f36988bf086291989b4cd2d7
+rfc8259.txt:430:    quotation mark, reverse solidus, and the control characters (U+0000
+rfc8259.txt:431:    through U+001F).
+rfc8259.txt:432: 
+rfc8259.txt:433:    Any character may be escaped.  If the character is in the Basic
+rfc8259.txt:434:    Multilingual Plane (U+0000 through U+FFFF), then it may be
+rfc8259.txt:435:    represented as a six-character sequence: a reverse solidus, followed
+rfc8259.txt:436:    by the lowercase letter u, followed by four hexadecimal digits that
+rfc8259.txt:437:    encode the character's code point.  The hexadecimal letters A through
+rfc8259.txt:438:    F can be uppercase or lowercase.  So, for example, a string
+rfc8259.txt:439:    containing only a single reverse solidus character may be represented
+rfc8259.txt:440:    as "\u005C".
+rfc8259.txt:441: 
+rfc8259.txt:442:    Alternatively, there are two-character sequence escape
+rfc8259.txt:443:    representations of some popular characters.  So, for example, a
+rfc8259.txt:444:    string containing only a single reverse solidus character may be
+rfc8259.txt:445:    represented more compactly as "\\".
+rfc8259.txt:446: 
+rfc8259.txt:447: 
+rfc8259.txt:448: 
+rfc8259.txt:449: 
+rfc8259.txt:450: Bray                         Standards Track                    [Page 8]
+rfc8259.txt:451: 
+rfc8259.txt:452: RFC 8259                          JSON                     December 2017
+rfc8259.txt:453: 
+rfc8259.txt:454: 
+rfc8259.txt:455:    To escape an extended character that is not in the Basic Multilingual
+rfc8259.txt:456:    Plane, the character is represented as a 12-character sequence,
+rfc8259.txt:457:    encoding the UTF-16 surrogate pair.  So, for example, a string
+rfc8259.txt:458:    containing only the G clef character (U+1D11E) may be represented as
+rfc8259.txt:459:    "\uD834\uDD1E".
+rfc8259.txt:460: 
+rfc8259.txt:461:       string = quotation-mark *char quotation-mark
+

@@ -331,6 +331,7 @@ def main() -> int:
             "pinned_sha256": COUNTER_SHA,
             "sha_match": counter_sha == COUNTER_SHA,
             "frame_clause_lines": frame_lines,
+            "frame_clause_raw_lines": src.splitlines()[frame_lines[0] - 1:frame_lines[1]],
             "frame_clause_source": "elif " + expr + ":",
             "frame_clause_note": ("fr holds msg.replace(sig,NUL).lower(); the "
                                   ".strip(\"\\0 \") is a truthiness guard only; "

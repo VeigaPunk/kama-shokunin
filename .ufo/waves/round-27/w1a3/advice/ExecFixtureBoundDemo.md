@@ -81,11 +81,11 @@ These delimit the guarantee: `ulimit -f` bounds the **file** unconditionally; it
 `redbefore-cap.sh` (retained, sha256 `81729394…c53a8`; log `redbefore-cap.log`, `c8f2a763…09a423`) is one detector command, the same fixture bytes (`93af1869…3df8e4`) and the same `timeout 5` in both arms, with **only `ulimit -f` as the fix delta**:
 
 ```
-## red-before: cap 20480 (20 MiB), 2 MiB bound absent
+== red-before: cap 20480 (20 MiB), 2 MiB bound absent ==
 detector cap_blocks=20480 writer_exit=153 writer_exit_is_sigxfsz=YES final_size=20971520 bound=2097152 writer_stderr_first=[timeout: the monitored command dumped core]
 detector cap_blocks=20480 RESULT=NON-CLEAN reason=file_exceeded_2MiB_bound size=20971520 bound=2097152
 RED_EXIT=3
-## fixed: cap 2048 (2 MiB), same detector command, only the cap changed
+== fixed: cap 2048 (2 MiB), same detector command, only the cap changed ==
 detector cap_blocks=2048 writer_exit=153 writer_exit_is_sigxfsz=YES final_size=2097152 bound=2097152 writer_stderr_first=[timeout: the monitored command dumped core]
 detector cap_blocks=2048 RESULT=clean
 FIX_EXIT=0

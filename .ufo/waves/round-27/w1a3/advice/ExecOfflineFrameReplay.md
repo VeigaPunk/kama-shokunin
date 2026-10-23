@@ -79,7 +79,7 @@ No genuine collision: 0 colliding pairs, 0 all-pairwise. Composition:
 
 ### Two reach defects found while replaying (outside clause (h), relevant to the reviewer)
 
-1. **Escaped registry spelling defeats the cut and the counter's own `e:not-shown`.** E26-07 and E26-14 store the raw-body spelling with literal backslash-quote (`registry/error-signatures-r26.json:159,359`); the decoded `error.message` has plain quotes, so `signature in msg` is false. Clause (h)'s `replace` is a no-op for them, and the frozen counter would refuse both at `e:not-shown` (`count-c1.py:686-687`) before clause (h). Re-spelling those two signatures in decoded form changes nothing for the frame rule (17/17, 0 pairs, guard class 11), so the no-collapse result does not depend on this defect — but as the registry is spelled, the counter cannot reach clause (h) for those rows.
+1. **Escaped registry spelling defeats the cut and the counter's own `e:not-shown`.** E26-07 and E26-14 store the raw-body spelling with literal backslash-quote (`registry/error-signatures-r26.json:159,359`); the decoded `error.message` has plain quotes, so `signature in msg` is false. Clause (h)'s `replace` is a no-op for them, and were this registry fed to the frozen counter, both rows would be refused at `e:not-shown` (`count-c1.py:686-687`) before clause (h). Re-spelling those two signatures in decoded form changes nothing for the frame rule (17/17, 0 pairs, guard class 11), so the no-collapse result does not depend on this defect — but as the registry is spelled, the counter cannot reach clause (h) for those rows.
 2. **Non-HTTP rows are unreachable.** Clause (h) is fed only by `error_message()`; the counter has no channel branch and sends every row through `http()` (`count-c1.py:676-680`). 3/17 of the E26 corpus (18%) therefore lies outside the clause's reach, and their 17/17 "survival" is not evidence about discrimination.
 
 ## Sensitivity cost (reported plainly)
@@ -98,9 +98,9 @@ No genuine collision: 0 colliding pairs, 0 all-pairwise. Composition:
 
 ## Files, hashes, hygiene
 
-- Harness: `.ufo/waves/round-27/w1a3/out/ExecOfflineFrameReplay/harness.py`, sha256 `2a45fc9fd2c11a6f22fcb4fac7d30300a05c7e408e48fa019f9c690a570d8250` (429 lines).
-- Receipt: `.ufo/waves/round-27/w1a3/out/ExecOfflineFrameReplay/frame-replay.receipt.json`, sha256 `e96bbbce55aa59c95615ac79220b380c24eacde03ac67fd16ed048f984e2e35d`; contains extracted clause source, `error_message` source, per-row frames, all 11 shortcut collapse pairs, all 66 pairwise shortcut collisions, E26 classes, controls, and the two variants.
+- Harness: `.ufo/waves/round-27/w1a3/out/ExecOfflineFrameReplay/harness.py`, sha256 `d3c36c3ceb90ae06ddb19eb61317c48c6ac0aeb2b69c3b0fb2c94d73829c1cc5` (429 lines).
+- Receipt: `.ufo/waves/round-27/w1a3/out/ExecOfflineFrameReplay/frame-replay.receipt.json`, sha256 `e4ac9b7cb7836f6e541da4962bec7790db0f58b4af4f6977772869cf584a7147`; contains extracted clause source, `error_message` source, per-row frames, all 11 shortcut collapse pairs, all 66 pairwise shortcut collisions, E26 classes, controls, and the two variants.
 - stdout/stderr: `run.stdout.txt` sha256 `0490067e5a4c6b93365bd6261b87e97a49f4a9c6bd3f8b5df5cd23bb711e090f`, `run.stderr.txt` 0 bytes; run exit 0.
 - Counter byte pins checked at run time: round-27 `49491b80…2765` (pinned), round-26 `6501737c…6588` (`git show eb09e742:.ufo/waves/round-26/count-c1.py | sha256sum`; copy at `/fast/scratch/hyaku/kama-r27c/ExecOfflineFrameReplay/count-c1-r26.py`).
-- No server started, no port used, no model loaded. `pgrep -af llama-server` at return shows three servers on 47636/47637/47644 owned by other seats; none is this seat's (this item has no port block).
+- No server started, no port used, no model loaded. `pgrep -af llama-server` at return shows three servers on 47636/47637/47644 (ports this item was not assigned); this seat launched none, and its commands started no server.
 - No tool installs or updates. No git/jj writes; only read-only `git show`/`git rev-parse`. Writes were confined to the out directory above and the /fast scratch copy.
