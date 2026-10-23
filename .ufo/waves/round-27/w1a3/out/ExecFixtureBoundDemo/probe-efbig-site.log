@@ -1,0 +1,38 @@
+utc=2026-10-23T07:16:50Z
+pre_size=2097152
+-- open('ab') only, file already at the cap --
+open_only_exit=0
+-- open('ab'); write(10); close() --
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    f=open("cap.bin","ab"); f.write(b"y"*10); f.close()
+                                              ~~~~~~~^^
+OSError: [Errno 27] File too large
+write10_close_exit=1
+post_size=2097152
+-- open('ab').write(10), no explicit close (finalizer) --
+Exception ignored while finalizing file <_io.BufferedWriter name='cap.bin'>:
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+OSError: [Errno 27] File too large
+open_write_no_close_exit=0
+post2_size=2097152
+-- one clamped write under the cap, then close (partial-write path) --
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    f=open("cap2.bin","wb"); f.write(b"z"*(2097152+100)); f.close()
+                                                          ~~~~~~~^^
+OSError: [Errno 27] File too large
+clamped_write_exit=1
+clamped_size=2097152
+clamped_size<=2097152=YES
+remaining:
+total 40
+drwxr-xr-x  2 vgpnk vgpnk  134 Oct 23 04:16 .
+drwxr-xr-x 18 vgpnk vgpnk 4096 Oct 23 04:15 ..
+-rwxr-xr-x  1 vgpnk vgpnk  694 Oct 23 04:13 capture.sh
+-rwxr-xr-x  1 vgpnk vgpnk 8385 Oct 23 04:11 fixture.template.py
+-rwxr-xr-x  1 vgpnk vgpnk 1482 Oct 23 04:16 probe-efbig-site.sh
+-rwxr-xr-x  1 vgpnk vgpnk 1160 Oct 23 04:12 run-d3.sh
+-rwxr-xr-x  1 vgpnk vgpnk 5912 Oct 23 04:11 run-demo.sh
+-rwxr-xr-x  1 vgpnk vgpnk 2441 Oct 23 04:12 run-extra.sh

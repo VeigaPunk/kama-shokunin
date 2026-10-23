@@ -1743,3 +1743,46 @@ one; the original "Before" sentence was false (base SKILL.md held the
 `Loading model` 503 and the `Context size has been exceeded.` 500). Routed by
 `corpus/lessons/round-26-verifier-spotcheck.md` defect 1. From this round on a
 LOG correction is a new appended entry like this one, never an in-place edit.
+
+## Correction (appended round 27, 2026-10-23) — to the correction entry above
+
+The correction entry immediately above (landed `324d5d62`) has two errors,
+found by wave seat ReviewRepairD1Log (`.ufo/waves/round-27/w1a3/advice/ReviewRepairD1Log.md`).
+It says the rewrite "changed three sentences"; the diff changes four (the
+Before, candidate-count, ports and repairs sentences), as its own list
+shows. And it presents a two-step history: the round-26 entry was also
+rewritten in place at `f4066979` (00:56:41 -0300, "LOG candidate count
+corrected") between `7f84cd0e` and `fd48f9a3`, so the candidate sentence
+reached its final form in two steps (`git log --format='%h %ci %s' 7f84cd0e..fd48f9a3 -- LOG.md`).
+The "Counter discrimination" paragraph was inserted mid-entry, not appended.
+The entry above is not edited.
+
+## Round 27 — echo-discriminating counters (exploratory, calibration); C1 miss; round-26 repairs (2026-10-23, attempt 3)
+
+**C1 (measured, depth) — miss.** Preregistered by attempt 1 (`530eaa99`,
+amendments A1-A3 to `1471f676`), target `counted >= 15`. The attempt-2
+control wave (37 seats, 05:41:33Z) died with the orchestrator at 06:19:06Z
+without committed receipts; a dead seat's task is not resent and no data seat
+was dispatched. Attempt 3 withdrew C1 before data (`a3/plan.json`); under the
+frozen kill rule the landed tip's count is a miss.
+
+**X1 (exploratory, calibration).** `corpus/knowledge/echo-discriminating-counters.md`
+and QUALITY KQ37 (+ round-27 qualification): refuse decoded-request echoes,
+one row per message frame, signature inside server-owned text. Motivating
+evidence: the round-26 shortcut (`lessons/round-26-verifier-spotcheck.md:98-116`);
+RFC 8259 §7 (S136, S139); `server-common.cpp:1375` (S137); live probe
+`w1a3/out/ExecLiveEchoProbe/receipt.json`; offline replay and mutation
+receipts under `w1a3/out/`. Verdict pending a named non-author reviewer.
+
+**Repairs.** Round-26 spot-check defects 1 (LOG correction entries above), 3
+(`repairs/d3-r26-shortcut-pins/`), 4 (`repairs/d4-r26-dead-seat-errors/`),
+5 and 6 (lesson §Repairs), 7 (S138); 2 via A3 + KQ37; 8 open.
+
+**Re-verification (freshness).** Round-start census re-run on a clone at
+`0ec32cac` (`a3/census-start-0ec32cac.out`, exit 0) and reproduced by
+ReviewCensusStart; S133's source re-fetched (sha256 unchanged) for S138.
+
+**Housekeeping.** 1846 untrusted attempt-2 files moved out of the lane unread
+(`/fast/scratch/hyaku/kama-r27/attempt2-untracked-w1-scratch/`); three
+orphan llama-server processes left by attempt-2 seats (ports 47636, 47637,
+47644) killed at 07:18Z.

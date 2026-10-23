@@ -1,0 +1,73 @@
+ReviewUntrackedDisposal — command transcript (kama round 27 a3, claim: inherited-state handling)
+Lane: /home/vgpnk/Projects/shokunin/kama-shokunin @ 324d5d62e61276af312c8eb42f678004aec245d1 (verified: `git rev-parse HEAD` → same)
+Local TZ -03:00; orchestrator death 06:19:06Z = 03:19:06 local. All times below stated in UTC unless marked local.
+
+=== 1. Lane tip ===
+$ git rev-parse HEAD
+324d5d62e61276af312c8eb42f678004aec245d1
+$ git log -1 --format='%H %s'
+324d5d62e61276af312c8eb42f678004aec245d1 round-27: attempt 3 — C1 withdrawn before data (no A3 control receipts; dead control wave), X1 exploratory echo-discrimination entry + KQ37, S136-S138, routed r26 repairs 1,3,4,5,6,7 (LOG correction pointer, shortcut pins, dead-seat 429 bytes), lesson draft, round-start census re-run
+
+=== 2. Lane cleanliness under .ufo/waves/round-27/w1-controls/ ===
+$ git --no-optional-locks status --porcelain -- .ufo/waves/round-27/w1-controls/
+(no output)  exit 0
+$ git --no-optional-locks status --porcelain --ignored -- .ufo/waves/round-27/w1-controls/
+(no output)  exit 0
+Supplementary (out of scope, context): `git status --porcelain -- .ufo/waves/round-27/` → `?? .ufo/waves/round-27/w1a3/` only — the live attempt-3 wave dir holding this review's sanctioned outputs; unrelated to the disposed attempt-2 tree.
+$ ls -la .ufo/waves/round-27/w1-controls/
+drwxr-xr-x . .. dispatch.json dispatched-payload.json solution-spaces.json spawn-result.txt spec.json validate.err
+— only the 6 committed metadata files; no advice/ or out/ directories on disk.
+$ git ls-tree -r --name-only 324d5d62 -- .ufo/waves/round-27/w1-controls/ | wc -l
+6   (dispatch.json, dispatched-payload.json, solution-spaces.json, spawn-result.txt, spec.json, validate.err)
+
+=== 3. Committed citations of w1-controls/advice|out paths at 324d5d62 ===
+$ git grep -l -E 'w1-controls/(advice|out)' 324d5d62e61276af312c8eb42f678004aec245d1
+.ufo/waves/round-27/w1-controls/dispatch.json
+.ufo/waves/round-27/w1-controls/dispatched-payload.json
+.ufo/waves/round-27/w1-controls/spawn-result.txt
+.ufo/waves/round-27/w1-controls/spec.json
+corpus/lessons/round-27.md
+$ git grep -o -E 'w1-controls/(advice|out)[A-Za-z0-9_./-]*' 324d5d62 | sort | uniq -c | sort -rn   (summary)
+ 68 w1-controls/out/                          (per-seat "Put other output files only under .../out/<YourName>/" destination strings)
+  5 each: w1-controls/out/<SeatName>/  (37 seat names — report-destination strings inside dispatch.json/spec.json prompts)
+  4 each: w1-controls/advice/<SeatName>.md (37 seats — "Report: write ... to" destination strings)
+  2 w1-controls/advice   (reportDir fields: dispatch.json:24, spec.json:2)
+  1 w1-controls/advice/swarm-registry.json  (dispatch.json:23 "path" field)
+  1 w1-controls/advice/   (corpus/lessons/round-27.md:7 — the disposal note itself)
+Classification: every hit is (a) a report/out DESTINATION declared to the dead attempt-2 seats inside committed dispatch metadata, or (b) the lesson's disposal note. No committed file cites any w1-controls/advice|out FILE as evidence.
+Cross-check outside dispatch metadata:
+$ git grep -n 'w1-controls' 324d5d62 -- 'corpus/*' '.ufo/waves/round-27/a3/*' '.ufo/waves/round-27/repairs/*'
+.ufo/waves/round-27/a3/plan.json:8  — "its uncommitted outputs are untrusted scratch" (names dir only, cites nothing)
+corpus/knowledge/echo-discriminating-counters.md:64 — "seats died with the orchestrator, `.ufo/waves/round-27/w1-controls/`" (dir name only)
+corpus/lessons/round-27.md:7 — disposal note
+Bare seat-name probe (citations without the w1-controls prefix):
+$ git grep -l -E '(CtlDoNothing|CtlJunk|CtlEchoDecoded|ReviewA3Diff|CtlMessageFrame|ScribeMineMistake)' 324d5d62 -- . ':!.ufo/waves/round-27/w1-controls/*'
+round-26/preregistration.json; round-27/controls/KamaR27CtlDoNothing/* (committed attempt-1 control files, a different tracked path); round-27/preregistration.json; repairs/d4-r26-dead-seat-errors/README.json (names r26 dead seats); lessons/round-26-verifier-spotcheck.md; lessons/round-27.md — none cites moved w1-controls content.
+
+=== 4. Scratch-dir counts (/fast/scratch/hyaku/kama-r27/attempt2-untracked-w1-scratch/) ===
+$ /usr/bin/find <dir> -type f | wc -l
+1846
+$ /usr/bin/find <dir> -mindepth 1 -type d | wc -l
+411
+$ /usr/bin/find <dir> -mindepth 1 ! -type f ! -type d | wc -l
+0   (no symlinks/fifos/etc.)
+$ /usr/bin/find <dir> -mindepth 1 | wc -l
+2257  (total paths)
+Per subdir: advice/ = 24 files (23 seat *.md + swarm-registry.json), out/ = 1822 files across 25 seat dirs.
+$ /usr/bin/du -sh advice out
+216K advice   25M out
+$ stat -c '%y %n' . advice out
+2026-10-23 06:50:56Z .          (scratch root — last top-level change = end of move)
+2026-10-23 06:14:10Z advice/   (local 03:14)
+2026-10-23 06:10:43Z out/      (local 03:10)
+$ /usr/bin/find . -type f -newermt '2026-10-23 06:19:06 +0000' | wc -l
+0   — every moved file's mtime precedes the 06:19:06Z orchestrator death; nothing written after.
+$ /usr/bin/find . -type d -newermt '2026-10-23 06:51:00 +0000' | wc -l
+0   — no directory-level churn after the move completed (~06:50:56Z); tree untouched since.
+Filenames only (contents never opened — instruction honored): advice lists 23 *.md seat reports + swarm-registry.json of the 37 dispatched seats; out/ has 25 seat dirs. 12+ of 37 seats left no report file (consistent with dying mid-run).
+No sitecustomize*/​*.pyc anywhere in the moved tree; largest file 1.49 MB (out/MutA3Env/scratch-files-written.txt). The 262 GiB runaway sitecustomize.py (a3/mistake-runaway/REMOVED-RUNAWAY.txt: truncated by Main 06:38:29Z) is NOT under this scratch dir and left no remnant here.
+
+=== 5. Count reconciliation (1853 vs 1846) ===
+Committed lesson (round-27.md:6-7) claims "1853 paths under .ufo/waves/round-27/w1-controls/advice/ and out/".
+Observed: 1846 regular files; 2257 total paths incl. dirs. Delta = -7 files vs the file-count reading.
+Post-move deletion is contradicted by zero dir mtime churn after 06:50:56Z and zero post-death file mtimes. No mover manifest exists in the committed tree or scratch root (top level holds only advice/ and out/). [INFERENCE] The 1853 was most likely a lane-side count taken before the move (e.g. `git status --porcelain -uall` repo-wide or a pre-move `find` including now-deleted files such as ENOSPC cleanup), not a count of what currently sits in scratch.

@@ -217,3 +217,26 @@ landed-tip measurement.
 | ID | Admit only when | Reject or limit when | Motivating lesson |
 |---|---|---|---|
 | KQ37 | A counter that credits a live server error signature as lane knowledge refuses the signature when it occurs (case-folded, or with all whitespace removed) in the request path, in any JSON-decoded key or value of the request body at any depth, or in either serialisation of the decoded body; and credits at most one row per message frame (the message with the signature cut out, case-folded, not blank). A non-author shortcut-control receipt for each echo class the counter names is committed before any data seat. | The echo test reads raw request bytes only (RFC 8259 §7 lets any character be a `\uXXXX` escape, S136); one message frame credits several rows (llama.cpp `server-common.cpp:1375` splices the decoded request value into one fixed frame, S137); or a control seat for a named class was refused or died, in which case that class is unscored and the claim is exploratory or waits. | `lessons/round-26-verifier-spotcheck.md` routed defect 2 (round-26 counter line 384 compared raw bytes; a base-tree shortcut met it 12/12); `lessons/round-27.md`; `knowledge/echo-discriminating-counters.md` |
+
+## Round 27 qualification — KQ37 after the round-27 attack wave (2026-10-23)
+
+Appended before any judgment of KQ37; the KQ37 row above is unchanged. Wave
+seats under `.ufo/waves/round-27/w1a3/` found three gaps in its wording:
+
+1. **Boundary shift.** The echo and frame legs alone admit a signature that
+   spans the fixed frame and the caller-supplied text: with one captured
+   S137 message per row, signatures made of the frame's last few characters
+   plus the caller value pass both legs 12/12 (`w1a3/advice/CriticKQ37Wording.md`,
+   `w1a3/out/CriticKQ37Wording/frame_boundary_probe.json`). KQ37 therefore
+   also requires that the signature lies wholly inside text the server owns:
+   it is a substring of one string literal on the cited source line, and it
+   does not overlap any span of the message that a decoded request string
+   occupies. The round-27 counter's clause (d) covers the first part; no lane
+   counter checks the second.
+2. **Body form.** A request body the counter does not serialise itself (a
+   stored string) is refused or JSON-decoded before the echo comparison. The
+   round-27 counter refuses it (`count-c1.py:576-581`); its clause (f) alone
+   does not decode a string body (`w1a3/advice/ExecOfflineEchoReplay.md`).
+3. **Case folding.** "Case-folded" means Unicode case folding. The round-27
+   counter lowercases (`count-c1.py:343-348`, 707-708), which meets KQ37 for
+   ASCII signatures only (`w1a3/advice/CriticEntryRuleVsCode.md`).

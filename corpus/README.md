@@ -408,3 +408,14 @@ and sources S114-S130 (`registry/error-signatures-r26.json`; counter
 errors (need a router launch), the confirmed but held-back signatures in
 `lessons/round-26.md` §Gate, and the `--embeddings` server crash on
 `/completion` seen once by a wave-1 seat (not yet reproduced by the lane).
+
+## Frontier disposition — round 27 (2026-10-23)
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/echo-discriminating-counters.md` | method: an error-signature counter refuses JSON-decoded request echoes, credits one row per message frame and keeps the signature inside server-owned text; live b11755 echo at `server-common.cpp:1375` (S137), RFC 8259 §7 escapes (S136, S139) — not a new server error signature | 27 |
+
+C1 (depth, new request-validation signatures) was not run on data and is a
+miss. K05 beyond the lane fixture, router-mode model errors, other engines and
+registered-consumer reconciliation remain open. X1 is exploratory; no
+admission is claimed here.

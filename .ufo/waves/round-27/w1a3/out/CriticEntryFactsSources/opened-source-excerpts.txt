@@ -1,0 +1,54 @@
+Opened primary-source excerpts — CriticEntryFactsSources
+These are verbatim selected excerpts returned by the read tool, not full raw-byte snapshots. No raw-fetch hash is asserted. Section labels and blank separators are editorial.
+
+[RFC 8259 §7; read https://www.rfc-editor.org/rfc/rfc8259.txt:355-389:raw]
+https://www.rfc-editor.org/rfc/rfc8259.txt
+   Any character may be escaped.  If the character is in the Basic
+   Multilingual Plane (U+0000 through U+FFFF), then it may be
+   represented as a six-character sequence: a reverse solidus, followed
+   by the lowercase letter u, followed by four hexadecimal digits that
+   encode the character's code point.  The hexadecimal letters A through
+   F can be uppercase or lowercase.  So, for example, a string
+   containing only a single reverse solidus character may be represented
+   as "\u005C".
+
+   To escape an extended character that is not in the Basic Multilingual
+   Plane, the character is represented as a 12-character sequence,
+   encoding the UTF-16 surrogate pair.  So, for example, a string
+   containing only the G clef character (U+1D11E) may be represented as
+   "\uD834\uDD1E".
+
+[server-common.h @704366d76; read pinned upstream :1-60:raw; also local round-16 snapshot lines 43-56]
+https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-common.h#L43-L56
+template <typename T>
+static T json_value(const json & body, const std::string & key, const T & default_value) {
+    // Fallback null to default value
+    if (body.contains(key) && !body.at(key).is_null()) {
+        try {
+            return body.at(key).get<T>();
+        } catch (const common_json_error & err) {
+            LOG_WRN("Wrong type supplied for parameter '%s', using default value: %s\n", key.c_str(), err.what());
+            return default_value;
+        }
+    } else {
+        return default_value;
+    }
+}
+
+[common/json.cpp @704366d76; read pinned upstream :195-228:raw]
+https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/common/json.cpp
+common_json common_json::parse(const std::string & text) {
+    try {
+        // the assignment moves the parsed tree in, it does not copy
+        common_json out;
+        as_json(&out) = ordered_json::parse(text);
+        return out;
+    } catch (const std::exception & e) {
+        throw common_json_error(e.what());
+    }
+}
+
+[common/json.cpp @704366d76; read pinned upstream :390-475:raw; nonadjacent selected lines]
+#define COMMON_JSON_GET(...) template <> __VA_ARGS__ common_json::get<__VA_ARGS__>() const { return guard([&] { return as_json(this).get<__VA_ARGS__>(); }); }
+
+COMMON_JSON_GET(std::string)

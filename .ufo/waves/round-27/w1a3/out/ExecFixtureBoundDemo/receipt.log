@@ -1,0 +1,162 @@
+### canonical captured run 2026-10-23T07:13:43Z
+host=plazir27 utc=2026-10-23T07:13:43Z bash=5.3.20(1)-release
+python=Python 3.14.8 (main, Oct  2 2026, 10:23:31) [GCC 16.2.1 20260810]
+core_pattern=|/usr/lib/systemd/systemd-coredump %P %u %g %s %t %c %h %d %F %I
+outer ulimit -f=1048576 ulimit -c=0
+df_fast_before=/dev/nvme1n1p2  804G  581G  224G  73% /fast
+
+== disposition probe: SIGXFSZ (25) before any run ==
+bash self: SigBlk:	0000000000000000 SigIgn:	0000000001000000 
+python inherits SIGXFSZ handler=<Handlers.SIG_IGN: 1> RLIMIT_FSIZE=(1073741824, 1073741824)
+trap - SIGXFSZ in bash then child python:
+SigIgn:	0000000001000000
+  child handler=<Handlers.SIG_IGN: 1>
+
+== units check: ulimit -f 2048 ==
+RLIMIT_FSIZE soft=2097152 hard=2097152
+
+== A0: assignment (a) exact writer, cap 2048 (2 MiB), timeout 60, no signal reset ==
+A0_exit=1
+A0_wall_ms=28 timeout_s=60 ulimit_f=2048
+A0_final_size=2097152
+A0_stdout_bytes=0
+A0_stderr=Traceback (most recent call last):|  File "/fast/scratch/hyaku/kama-r27c/ExecFixtureBoundDemo/fixture.py", line 127, in <module>|    with open(_P, "ab") as f:      # self-append: the runaway|         ~~~~^^^^^^^^^^|OSError: [Errno 27] File too large|
+A0_progress_head=start blob=8385 pid=4145368 sigxfsz=1 swallow=False
+A0_progress_maxmib=1
+A0_progress_tail=crossed mib=1 size=1056510
+A0_leftover_writer=0
+A0_size<=2097152=YES (2097152)
+
+== A1: assignment (a) death path, cap 2048 (2 MiB), timeout 60, SIGXFSZ=SIG_DFL ==
+run-demo.sh: line 46: 4145429 File size limit exceeded   ( ulimit -f "$lim"; export PROGRESS_LOG="$label.log"; [ $# -gt 0 ] && export "$@"; exec timeout "$tmo" python3 fixture.py ) > "$label.stdout" 2> "$label.stderr"
+A1_exit=153
+A1_wall_ms=57 timeout_s=60 ulimit_f=2048
+A1_final_size=2097152
+A1_stdout_bytes=0
+A1_stderr=timeout: the monitored command dumped core|
+A1_progress_head=start blob=8385 pid=4145430 sigxfsz=0 swallow=False
+A1_progress_maxmib=1
+A1_progress_tail=crossed mib=1 size=1056510
+A1_leftover_writer=0
+A1_size<=2097152=YES (2097152)
+
+(a) showed the cap: exit 153 = SIGXFSZ, final size == 2097152; running (b)
+== B1: assignment (b) same loop, cap 20480 (20 MiB), timeout 5, SIGXFSZ=SIG_DFL ==
+run-demo.sh: line 46: 4145532 File size limit exceeded   ( ulimit -f "$lim"; export PROGRESS_LOG="$label.log"; [ $# -gt 0 ] && export "$@"; exec timeout "$tmo" python3 fixture.py ) > "$label.stdout" 2> "$label.stderr"
+B1_exit=153
+B1_wall_ms=58 timeout_s=5 ulimit_f=20480
+B1_final_size=20971520
+B1_stdout_bytes=0
+B1_stderr=timeout: the monitored command dumped core|
+B1_progress_head=start blob=8385 pid=4145533 sigxfsz=0 swallow=False
+B1_progress_maxmib=19
+B1_progress_tail=crossed mib=19 size=19931145
+B1_leftover_writer=0
+B1_size<=2097152=NO (20971520)
+B1_size<=20971520=YES (20971520)
+
+== C0: identical-timeout control, cap 2048 (2 MiB), timeout 5, SIGXFSZ=SIG_DFL ==
+run-demo.sh: line 46: 4145637 File size limit exceeded   ( ulimit -f "$lim"; export PROGRESS_LOG="$label.log"; [ $# -gt 0 ] && export "$@"; exec timeout "$tmo" python3 fixture.py ) > "$label.stdout" 2> "$label.stderr"
+C0_exit=153
+C0_wall_ms=44 timeout_s=5 ulimit_f=2048
+C0_final_size=2097152
+C0_stdout_bytes=0
+C0_stderr=timeout: the monitored command dumped core|
+C0_progress_head=start blob=8385 pid=4145640 sigxfsz=0 swallow=False
+C0_progress_maxmib=1
+C0_progress_tail=crossed mib=1 size=1056510
+C0_leftover_writer=0
+C0_size<=2097152=YES (2097152)
+
+== D: shell self-append loop, cap 2048, timeout 3 ==
+D_exit=124
+D_final_size=60
+D_iterations=7567
+D_stderr=cat: grow.txt: input file is output file|cat: grow.txt: input file is output file|cat: grow.txt: input file is output file|cat: grow.txt: input file is output file|cat: grow.txt: input file is output 
+D_size<=2097152=YES (60)
+
+== E: cap 2048, timeout 3, writer swallows OSError ==
+run-demo.sh: line 46: 4159738 File size limit exceeded   ( ulimit -f "$lim"; export PROGRESS_LOG="$label.log"; [ $# -gt 0 ] && export "$@"; exec timeout "$tmo" python3 fixture.py ) > "$label.stdout" 2> "$label.stderr"
+E_exit=153
+E_wall_ms=44 timeout_s=3 ulimit_f=2048
+E_final_size=2097152
+E_stdout_bytes=0
+E_stderr=timeout: the monitored command dumped core|
+E_progress_head=start blob=8385 pid=4159739 sigxfsz=0 swallow=True
+E_progress_maxmib=1
+E_progress_tail=crossed mib=1 size=1056510
+E_leftover_writer=0
+E_size<=2097152=YES (2097152)
+E_swallowed_lines=0
+0
+
+== leftover / cores ==
+leftover_writers=none
+1238214 /home/vgpnk/.local/opt/llama-b11755/llama-server -m /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47637 -t 2
+2205681 /home/vgpnk/.local/opt/llama-b11755/llama-server -m /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47636 --embeddings -t 2
+3200589 /home/vgpnk/.local/opt/llama-b11755/llama-server -m /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47644 -t 2
+core_files=none
+
+== cleanup: runaway fixtures and per-run logs removed ==
+remaining_in_scratch:
+total 36
+drwxr-xr-x  2 vgpnk vgpnk  107 Oct 23 04:13 .
+drwxr-xr-x 17 vgpnk vgpnk 4096 Oct 23 04:11 ..
+-rwxr-xr-x  1 vgpnk vgpnk  694 Oct 23 04:13 capture.sh
+-rwxr-xr-x  1 vgpnk vgpnk 8385 Oct 23 04:11 fixture.template.py
+-rwxr-xr-x  1 vgpnk vgpnk 1160 Oct 23 04:12 run-d3.sh
+-rwxr-xr-x  1 vgpnk vgpnk 5912 Oct 23 04:11 run-demo.sh
+-rwxr-xr-x  1 vgpnk vgpnk 2441 Oct 23 04:12 run-extra.sh
+du=32K
+df_fast_after=/dev/nvme1n1p2  804G  581G  224G  73% /fast
+RUN_DEMO_EXIT=0
+utc=2026-10-23T07:13:46Z df_fast=/dev/nvme1n1p2  804G  581G  224G  73% /fast
+== D2: shell loop, separate seed, cap 2048 (2 MiB), timeout 3 ==
+D2_exit=124
+D2_final_size=486960
+D2_iterations=8116
+D2_stderr_first=
+D2_stderr_lines=0
+D2_size<=2097152=YES
+D2_leftover=0
+
+== E2: Python writer, OSError swallowed, SIGXFSZ ignored (bash inherited), cap 2048, timeout 3 ==
+E2_exit=124
+E2_final_size=2097152
+E2_progress_head=start blob=8385 pid=4173403 sigxfsz=1 swallow=True
+E2_swallowed_lines=892
+E2_last_swallow=swallowed errno=27 count=889000 size=2097152
+E2_stderr=
+E2_size<=2097152=YES
+E2_leftover=0
+
+== cleanup ==
+total 36
+drwxr-xr-x  2 vgpnk vgpnk  107 Oct 23 04:13 .
+drwxr-xr-x 17 vgpnk vgpnk 4096 Oct 23 04:11 ..
+-rwxr-xr-x  1 vgpnk vgpnk  694 Oct 23 04:13 capture.sh
+-rwxr-xr-x  1 vgpnk vgpnk 8385 Oct 23 04:11 fixture.template.py
+-rwxr-xr-x  1 vgpnk vgpnk 1160 Oct 23 04:12 run-d3.sh
+-rwxr-xr-x  1 vgpnk vgpnk 5912 Oct 23 04:11 run-demo.sh
+-rwxr-xr-x  1 vgpnk vgpnk 2441 Oct 23 04:12 run-extra.sh
+du=32K
+df_fast_after=/dev/nvme1n1p2  804G  581G  223G  73% /fast
+RUN_EXTRA_EXIT=0
+D3_seed_size=7980
+D3_exit=124
+D3_final_size=2097152
+D3_iterations=7181
+D3_stderr_lines=6919
+D3_stderr_first=cat: write error: File too large
+D3_size<=2097152=YES
+D3_leftover=0
+D3_cleanup_remaining:
+total 36
+drwxr-xr-x  2 vgpnk vgpnk  107 Oct 23 04:13 .
+drwxr-xr-x 17 vgpnk vgpnk 4096 Oct 23 04:11 ..
+-rwxr-xr-x  1 vgpnk vgpnk  694 Oct 23 04:13 capture.sh
+-rwxr-xr-x  1 vgpnk vgpnk 8385 Oct 23 04:11 fixture.template.py
+-rwxr-xr-x  1 vgpnk vgpnk 1160 Oct 23 04:12 run-d3.sh
+-rwxr-xr-x  1 vgpnk vgpnk 5912 Oct 23 04:11 run-demo.sh
+-rwxr-xr-x  1 vgpnk vgpnk 2441 Oct 23 04:12 run-extra.sh
+RUN_D3_EXIT=0

@@ -1,0 +1,249 @@
+{
+  "schema": "kama-r27-a3/fixture-bound-demo-receipt/v1",
+  "seat": "KamaR27A3.ExecFixtureBoundDemo",
+  "lane": "kama round 27 attempt 3, w1a3 evidence seats",
+  "claim_served": "Mined mistake fix (corpus/lessons/round-27.md:92, Mistakes row 1): show the file-size cap (ulimit -f, i.e. RLIMIT_FSIZE) is able to fail a runaway self-appending fixture.",
+  "captured_run_utc": "2026-10-23T07:13:43Z",
+  "host": "plazir27",
+  "environment": {
+    "bash": "GNU bash, version 5.3.20(1)-release (x86_64-pc-linux-gnu)",
+    "python": "Python 3.14.8 (main, Oct  2 2026, 10:23:31) [GCC 16.2.1 20260810]",
+    "core_pattern": "|/usr/lib/systemd/systemd-coredump %P %u %g %s %t %c %h %d %F %I",
+    "kernel_uname_note": "linux 7.2.11-arch1-1 per project context"
+  },
+  "guard": {
+    "outer_ulimit_f_blocks": 1048576,
+    "outer_ulimit_f_bytes": 1073741824,
+    "outer_ulimit_c": 0,
+    "note": "every harness and the capture wrapper set ulimit -f 1048576 (1 GiB per file) and ulimit -c 0 before any fixture write; harnesses run under timeout (300 s / 120 s)"
+  },
+  "disk": {
+    "df_fast_before": "/dev/nvme1n1p2  804G  581G  224G  73% /fast",
+    "df_fast_after": "/dev/nvme1n1p2  804G  581G  223G  73% /fast",
+    "scratch_du_after": "32K"
+  },
+  "units": {
+    "ulimit_f_2048_rlimit_fsize_bytes": 2097152,
+    "command": "( ulimit -f 2048; python3 -c 'import resource; s,h=resource.getrlimit(resource.RLIMIT_FSIZE); print(s,h)' )",
+    "output": "RLIMIT_FSIZE soft=2097152 hard=2097152",
+    "meaning": "bash's ulimit -f is in 1024-byte blocks; 2048 -> 2 MiB, 20480 -> 20 MiB"
+  },
+  "fixture": {
+    "template_path": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/fixture.template.py",
+    "sha256": "93af186904dbcb0e030b6a41789c5a4ba97da245a191b648be1b4cb72a3df8e4",
+    "bytes": 8385,
+    "loop": "BLOB = open(__file__,'rb').read(); while True: open(__file__,'ab').write(BLOB)  (linear self-append of the file's own bytes)",
+    "marker": "two-line MARKER-A3-FIXTURE-BOUND-DEMO snippet at the file head, mirroring the incident's repeated two-line MARKER",
+    "separate_log": "MiB crossings are written to $PROGRESS_LOG, a file Python never imports and never reads back; the fixture is not on any sys.path and nothing appends to it except the loop",
+    "switches": {
+      "A3_SIG_DFL=1": "signal.signal(SIGXFSZ, SIG_DFL) before the loop; changes signal disposition only, not the loop",
+      "A3_SWALLOW=1": "catch OSError around the self-append and keep looping (loop body otherwise identical)"
+    },
+    "copy_command_per_run": "cp fixture.template.py fixture.py"
+  },
+  "signal_disposition": {
+    "bash_self_SigIgn": "0000000001000000",
+    "decoded": "bit 24 set = signal 25 = SIGXFSZ ignored by bash 5.3.20; children inherit SIG_IGN across exec",
+    "python_inherited_handler": "<Handlers.SIG_IGN: 1>",
+    "trap_dash_SIGXFSZ": "SigIgn still 0000000001000000; child python handler still SIG_IGN",
+    "consequence": "a plain `( ulimit -f N; timeout t python3 fixture.py )` under bash does NOT kill the writer by SIGXFSZ; the kernel clamps the crossing write and Python raises OSError(EFBIG, errno 27). Exit 153 requires the writer to restore SIG_DFL (or a writer that does not inherit the ignore)."
+  },
+  "runs": [
+    {
+      "label": "A0",
+      "role": "assignment (a), exact literal writer (no signal reset)",
+      "command": "( ulimit -f 2048; export PROGRESS_LOG=A0.log A3_SIG_DFL=0; exec timeout 60 python3 fixture.py ) >A0.stdout 2>A0.stderr",
+      "ulimit_f_blocks": 2048,
+      "cap_bytes": 2097152,
+      "timeout_s": 60,
+      "exit_code": 1,
+      "exit_meaning": "uncaught OSError [Errno 27] File too large (EFBIG); SIGXFSZ ignored so no signal death",
+      "final_size_bytes": 2097152,
+      "size_within_cap": true,
+      "wall_ms": 28,
+      "progress_maxmib": 1,
+      "leftover_writer": 0,
+      "stderr_excerpt": "Traceback ... File \"fixture.py\", line 127 ... OSError: [Errno 27] File too large",
+      "conclusion": "the run loop stopped at exactly the cap and the process exited"
+    },
+    {
+      "label": "A1",
+      "role": "assignment (a), death path (SIGXFSZ restored to default)",
+      "command": "( ulimit -f 2048; export PROGRESS_LOG=A1.log A3_SIG_DFL=1; exec timeout 60 python3 fixture.py ) >A1.stdout 2>A1.stderr",
+      "ulimit_f_blocks": 2048,
+      "cap_bytes": 2097152,
+      "timeout_s": 60,
+      "exit_code": 153,
+      "exit_meaning": "128 + 25 = SIGXFSZ (File size limit exceeded); writer terminated by the kernel",
+      "final_size_bytes": 2097152,
+      "size_within_cap": true,
+      "wall_ms": 57,
+      "progress_maxmib": 1,
+      "leftover_writer": 0,
+      "stderr_excerpt": "timeout: the monitored command dumped core (RLIMIT_CORE=0, no core file written)",
+      "conclusion": "(a) shows the cap: exit 153 with final size == cap"
+    },
+    {
+      "label": "B1",
+      "role": "assignment (b), same loop, outer safety bound 20 MiB",
+      "command": "( ulimit -f 20480; export PROGRESS_LOG=B1.log A3_SIG_DFL=1; exec timeout 5 python3 fixture.py ) >B1.stdout 2>B1.stderr",
+      "ulimit_f_blocks": 20480,
+      "cap_bytes": 20971520,
+      "timeout_s": 5,
+      "exit_code": 153,
+      "exit_meaning": "SIGXFSZ at the 20 MiB bound",
+      "final_size_bytes": 20971520,
+      "size_within_cap": true,
+      "grew_past_2mib": true,
+      "wall_ms": 58,
+      "progress_maxmib": 19,
+      "progress_tail": "crossed mib=19 size=19931145",
+      "leftover_writer": 0,
+      "conclusion": "same loop grew past 2 MiB and stopped only at the 20 MiB cap; the 2 MiB stop in (a) was the cap, not the loop or the clock"
+    },
+    {
+      "label": "C0",
+      "role": "identical-timeout control: same loop, same timeout 5, only the cap differs from B1",
+      "command": "( ulimit -f 2048; export PROGRESS_LOG=C0.log A3_SIG_DFL=1; exec timeout 5 python3 fixture.py ) >C0.stdout 2>C0.stderr",
+      "ulimit_f_blocks": 2048,
+      "cap_bytes": 2097152,
+      "timeout_s": 5,
+      "exit_code": 153,
+      "exit_meaning": "SIGXFSZ",
+      "final_size_bytes": 2097152,
+      "size_within_cap": true,
+      "wall_ms": 44,
+      "progress_maxmib": 1,
+      "leftover_writer": 0,
+      "conclusion": "at equal timeout (5 s) the 2 MiB cap still stops the file at 2,097,152 while B1 reaches 20,971,520; the timeout is not the confound"
+    },
+    {
+      "label": "E",
+      "role": "supplementary: swallowing writer with SIGXFSZ at default",
+      "command": "( ulimit -f 2048; export PROGRESS_LOG=E.log A3_SIG_DFL=1 A3_SWALLOW=1; exec timeout 3 python3 fixture.py ) >E.stdout 2>E.stderr",
+      "ulimit_f_blocks": 2048,
+      "timeout_s": 3,
+      "exit_code": 153,
+      "final_size_bytes": 2097152,
+      "swallowed_errors_logged": 0,
+      "wall_ms": 44,
+      "conclusion": "with SIG_DFL the signal terminates during the write, so the except never runs; the cap wins before Python can swallow it"
+    },
+    {
+      "label": "E2",
+      "role": "supplementary: swallowing writer with bash's inherited SIG_IGN",
+      "command": "( ulimit -f 2048; export PROGRESS_LOG=E2.log A3_SIG_DFL=0 A3_SWALLOW=1; exec timeout 3 python3 fixture.py ) >E2.stdout 2>E2.stderr",
+      "ulimit_f_blocks": 2048,
+      "timeout_s": 3,
+      "exit_code": 124,
+      "exit_meaning": "timeout killed the still-looping writer",
+      "final_size_bytes": 2097152,
+      "size_within_cap": true,
+      "last_swallow": "swallowed errno=27 count=889000 size=2097152",
+      "swallowed_log_lines": 892,
+      "conclusion": "writer survived and logged 889,000 EFBIG errors in 3 s; the file stayed pinned at exactly the cap; timeout, not ulimit, stopped the loop"
+    }
+  ],
+  "supplementary_shell_writers": [
+    {
+      "label": "D",
+      "command": "( ulimit -f 2048; export D_LOG=D.log; exec timeout 3 bash -c 'i=0; while :; do i=$((i+1)); echo \"iter=$i\" >> \"$D_LOG\"; cat grow.txt >> grow.txt; done' )",
+      "exit_code": 124,
+      "final_size_bytes": 60,
+      "iterations": 7567,
+      "observation": "GNU cat refuses `f >> f` ('cat: grow.txt: input file is output file'), so this shape never exercises the cap; it only shows the timeout bounding the loop"
+    },
+    {
+      "label": "D2",
+      "command": "( ulimit -f 2048; export D2_LOG=D2.log; exec timeout 3 bash -c '...; cat seed.txt >> grow.txt' )  [60-byte seed]",
+      "exit_code": 124,
+      "final_size_bytes": 486960,
+      "iterations": 8116,
+      "observation": "loop too slow to reach the 2 MiB cap in 3 s; not cap evidence (size varies run to run: 205740 on the discovery run)"
+    },
+    {
+      "label": "D3",
+      "command": "( ulimit -f 2048; exec timeout 3 bash -c 'i=0; while :; do i=$((i+1)); echo \"iter=$i\" >> D3.log; cat seed8.txt >> grow3.txt; done' )  [seed8.txt = 7980 bytes]",
+      "exit_code": 124,
+      "final_size_bytes": 2097152,
+      "iterations": 7181,
+      "stderr_lines": 6919,
+      "stderr_first": "cat: write error: File too large",
+      "observation": "with a seed large enough to reach the cap, every later cat write fails EFBIG; the file is pinned at exactly the cap while the loop spins until timeout"
+    }
+  ],
+  "efbig_site_probe": {
+    "retained_log": ".ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/probe-efbig-site.log",
+    "command": "bash probe-efbig-site.sh  (inside `ulimit -f 1048576; ulimit -c 0` and timeout 120)",
+    "utc": "2026-10-23T07:16:50Z",
+    "cases": [
+      {"case": "open('cap.bin','ab') on a file already at exactly 2097152, no write", "exit": 0, "size_after": 2097152, "note": "open itself never raises at the cap"},
+      {"case": "open('ab'); write(b'y'*10); close()", "exit": 1, "size_after": 2097152, "note": "OSError [Errno 27] raises from close(), not from write(): the 10 bytes were buffered"},
+      {"case": "open('ab').write(b'y'*10) with no explicit close", "exit": 0, "size_after": 2097152, "note": "'Exception ignored while finalizing file' OSError EFBIG; an unflushed first failure can be dropped at interpreter exit"},
+      {"case": "open('cap2.bin','wb'); write(b'z'*(2097152+100)); close()", "exit": 1, "size_after": 2097152, "note": "the crossing write is clamped to exactly the cap; the remainder raises EFBIG at close"}
+    ],
+    "conclusion": "the cap clamps the crossing write to exactly the limit and surfaces the error at flush/close; with buffered io the first EFBIG may appear one flush later than the write that caused it, and the file is bounded regardless"
+  },
+  "strict_red_before_pair": {
+    "rule": "fleet /home/vgpnk/Projects/shokunin/CORPUS.md:179-183 — a fix is shown able to fail: one red-before state where the same command exits non-clean for the named reason, fix as the only delta, observed failure text committed",
+    "artifact": ".ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/redbefore-cap.sh",
+    "log": ".ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/redbefore-cap.log",
+    "same_command": "detector <cap_blocks>: cp fixture.template.py rb-fixture.py; ( ulimit -f <cap_blocks>; export PROGRESS_LOG=rb.log A3_SIG_DFL=1; exec timeout 5 python3 rb-fixture.py ); size=$(stat -c %s rb-fixture.py); exit 3 + named reason if size > 2097152, exit 0 otherwise",
+    "only_delta": "ulimit -f 20480 (red) -> ulimit -f 2048 (fixed); fixture sha256 93af1869... and timeout 5 identical in both arms",
+    "red": {
+      "cap_blocks": 20480,
+      "writer_exit": 153,
+      "writer_exit_is_sigxfsz": true,
+      "final_size_bytes": 20971520,
+      "detector_exit": 3,
+      "observed_failure_text": "detector cap_blocks=20480 RESULT=NON-CLEAN reason=file_exceeded_2MiB_bound size=20971520 bound=2097152"
+    },
+    "fixed": {
+      "cap_blocks": 2048,
+      "writer_exit": 153,
+      "writer_exit_is_sigxfsz": true,
+      "final_size_bytes": 2097152,
+      "detector_exit": 0,
+      "observed_text": "detector cap_blocks=2048 RESULT=clean"
+    },
+    "pair_verdict": "RED_NONCLEAN_FIX_CLEAN",
+    "note": "the writer exits 153 in both arms because SIGXFSZ is the expected stop; the detector scores the fixture's final size against the 2 MiB bound, so the cap is the only thing under test",
+    "not_covered": "the MARKER-separation half of the lesson fix (a MARKER/log separate from any file Python imports) has no red-before pair; reproducing the incident's import-time self-append was scoped out by this seat and the critic, so that half remains inference from REMOVED-RUNAWAY.txt:1"
+  },
+  "verification_of_deletion": {
+    "deleted": ["fixture.py", "grow.txt", "seed.txt", "seed8.txt", "grow3.txt", "a.log", "a.stdout", "a.stderr", "A0/A1/B1/C0/D/E/D2/D3/E2 .log/.stdout/.stderr (per-run, deleted by the harnesses)"],
+    "residual_scratch": ["capture.sh", "fixture.template.py", "run-demo.sh", "run-extra.sh", "run-d3.sh", "probe-efbig-site.sh", "redbefore-cap.sh"],
+    "residual_scratch_du": "40K (32K at the canonical capture, before probe-efbig-site.sh and redbefore-cap.sh were added)",
+    "post_cleanup_ls_verified": true,
+    "leftover_fixture_or_grow_processes": "none (pgrep -af 'fixture\\.py|grow\\.txt|grow3\\.txt' -> none)",
+    "core_files": "none (ulimit -c 0 in every harness)"
+  },
+  "live_server": {
+    "llama_server_started_by_this_seat": false,
+    "note": "no port block assigned to this item and none needed; three llama-server processes from other seats were visible in the global pgrep (ports 47636, 47637, 47644) and are not mine"
+  },
+  "determinism": {
+    "discovery_run_utc": "2026-10-23T07:12:02Z",
+    "discovery_vs_canonical": "identical on every primary row: A0 exit 1 / 2097152; A1 exit 153 / 2097152; B1 exit 153 / 20971520; C0 exit 153 / 2097152; E exit 153 / 2097152; E2 exit 124 / 2097152; D3 exit 124 / 2097152. D2's final size differed (205740 vs 486960) because it never reached the cap.",
+    "note": "the discovery run used harness v2 with the same fixture bytes (sha256 93af1869...); its console output was not persisted, the canonical capture at 07:13:43Z is the retained record"
+  },
+  "retained": [
+    {"path": ".ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/receipt.log", "sha256": "655a2ca3020add97df7d7d246fa435d1282d2871189f690b9d3dfb6134abe3b1", "bytes": 7092, "content": "full console log of the canonical run (162 lines)"},
+    {"path": ".ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/fixture.template.py", "sha256": "93af186904dbcb0e030b6a41789c5a4ba97da245a191b648be1b4cb72a3df8e4", "bytes": 8385},
+    {"path": ".ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/run-demo.sh", "sha256": "ad1771c5ae266eeb829c086dadc7f35811f01de1b6a33a3b607142a566284a01", "bytes": 5912},
+    {"path": ".ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/run-extra.sh", "sha256": "b68cee60844678e8251c3a9235feba5edebc663489f714137fb88a5e1ad85c40", "bytes": 2441},
+    {"path": ".ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/run-d3.sh", "sha256": "0022f7872501ec293cb34cc16e3d6660759b69a64b7f2f3f013fa450cb495edc", "bytes": 1160},
+    {"path": ".ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/capture.sh", "sha256": "1d6cc65894953859aee27498d891548cc42223413b883ce79691662569666d8a", "bytes": 694},
+    {"path": ".ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/probe-efbig-site.sh", "sha256": "7ae3e55bf512afe410933ab4f2af32cf269ee787e4e8dd4d0e7401f425a718f8", "bytes": 1482},
+    {"path": ".ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/probe-efbig-site.log", "sha256": "a218d11ef6b6ef854906cea5e3b38ac68f682ad9c37b3f0e55f5d72e455509a7", "bytes": 1540},
+    {"path": ".ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/redbefore-cap.sh", "sha256": "81729394028123802b07a6deac7296b4bb7b22c1b0d5f3d307ddb292187c53a8", "bytes": 2165},
+    {"path": ".ufo/waves/round-27/w1a3/out/ExecFixtureBoundDemo/redbefore-cap.log", "sha256": "c8f2a763d14b1369a3572e41940ad115891a235d4e14745c239eddb8d609a423", "bytes": 1644}
+  ],
+  "scope_limits": [
+    "Establishes RLIMIT_FSIZE effectiveness on a generic linear self-append writer; it does not reconstruct the incident's exact writer or the MARKER alias (the critic's point is accepted).",
+    "The detector() helper in run-demo.sh:42-43 only echoes <label>_size<=<bound>=YES/NO and always exits 0, so the printed B1_size<=2097152=NO is a reporting aid, not the CORPUS.md:179-183 red-before command; the gate-shaped artifact is strict_red_before_pair (red detector exit 3 with committed failure text, fixed detector exit 0, only ulimit -f differs).",
+    "No uncapped (red) arm was run: the uncapped behavior is the incident itself (262,699,483,136 bytes, /fast full). The 20 MiB row stands in for the red arm under an outer safety bound; the C0/B1 pair holds the timeout constant so the only delta is the cap.",
+    "A soft RLIMIT_FSIZE is inherited by children and can be raised by a child up to the hard limit; with both limits at the cap (as set here) the child cannot raise it. Evidence here measures soft=hard=cap.",
+    "bash 5.3.20 leaves SIGXFSZ ignored in children, so 153 is the expected exit only when the writer restores SIG_DFL; otherwise the cap surfaces as OSError EFBIG (exit 1) or, if the writer swallows it, as a bounded file plus a spinning process."
+  ]
+}

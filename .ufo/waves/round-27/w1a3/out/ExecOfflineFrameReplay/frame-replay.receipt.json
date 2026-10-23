@@ -1,0 +1,1766 @@
+{
+ "controls": [
+  {
+   "args": [
+    {
+     "signature": "AAA"
+    },
+    "generic text, but got: AAA",
+    {
+     "signature": "BBB"
+    },
+    "generic text, but got: BBB"
+   ],
+   "expect": true,
+   "name": "trailing-splice echo frame collides",
+   "observed": true,
+   "pass": true
+  },
+  {
+   "args": [
+    {
+     "signature": "AAA"
+    },
+    "Generic Text, but got: AAA",
+    {
+     "signature": "BBB"
+    },
+    "generic text, but got: BBB"
+   ],
+   "expect": true,
+   "name": "case-differing frame collides",
+   "observed": true,
+   "pass": true
+  },
+  {
+   "args": [
+    {
+     "signature": "AAA"
+    },
+    "one frame: AAA",
+    {
+     "signature": "BBB"
+    },
+    "other frame: BBB"
+   ],
+   "expect": false,
+   "name": "distinct frames do not collide",
+   "observed": false,
+   "pass": true
+  },
+  {
+   "args": [
+    {
+     "signature": "AAA"
+    },
+    "AAA",
+    {
+     "signature": "BBB"
+    },
+    "BBB"
+   ],
+   "expect": false,
+   "name": "message==signature guard suppresses",
+   "observed": false,
+   "pass": true
+  },
+  {
+   "args": [
+    {
+     "signature": "AAA"
+    },
+    "AAA and AAA",
+    {
+     "signature": "BBB"
+    },
+    "BBB and BBB"
+   ],
+   "expect": true,
+   "name": "repeat occurrence replaced on both sides",
+   "observed": true,
+   "pass": true
+  },
+  {
+   "args": [
+    {
+     "signature": "AAA"
+    },
+    "  AAA  ",
+    {
+     "signature": "BBB"
+    },
+    "  BBB  "
+   ],
+   "expect": false,
+   "name": "whitespace-only frame suppressed",
+   "observed": false,
+   "pass": true
+  }
+ ],
+ "controls_all_pass": true,
+ "counter": {
+  "error_message_lines": [
+   506,
+   520
+  ],
+  "error_message_sha256": "727d7e1f9f0e30b5b140c73850b01797657c662ae3ce04c1b36ac1c151147e2d",
+  "error_message_slice_note": "start line 506; end boundary 520 is the next top-level def; the function body ends at line 518",
+  "error_message_source": "def error_message(data: bytes) -> str | None:\n    try:\n        doc = json.loads(data.decode(\"utf-8\"))\n    except (UnicodeDecodeError, json.JSONDecodeError):\n        return None\n    if not isinstance(doc, dict):\n        return None\n    err = doc.get(\"error\")\n    if isinstance(err, dict) and isinstance(err.get(\"message\"), str):\n        return err[\"message\"]\n    if isinstance(err, str):\n        return err\n    return None",
+  "frame_clause_lines": [
+   707,
+   708
+  ],
+  "frame_clause_note": "fr holds msg.replace(sig,NUL).lower(); the .strip(\"\\0 \") is a truthiness guard only; equality uses the unstripped fr",
+  "frame_clause_source": "elif (fr := msg.replace(e[\"signature\"], \"\\0\").lower()).strip(\"\\0 \") and  fr == om.replace(oe[\"signature\"], \"\\0\").lower():",
+  "path": ".ufo/waves/round-27/count-c1.py",
+  "pinned_sha256": "49491b80e4f4ed2a85ab822a52f0b1a0fdb1dee53423e3d43b60ee25d1bf2765",
+  "sha256": "49491b80e4f4ed2a85ab822a52f0b1a0fdb1dee53423e3d43b60ee25d1bf2765",
+  "sha_match": true
+ },
+ "counterfactual_raw_text": {
+  "e26": {
+   "all_pairwise_frame_collision_pairs": [
+    [
+     "E26-01",
+     "E26-02"
+    ],
+    [
+     "E26-01",
+     "E26-04"
+    ],
+    [
+     "E26-01",
+     "E26-05"
+    ],
+    [
+     "E26-01",
+     "E26-08"
+    ],
+    [
+     "E26-01",
+     "E26-12"
+    ],
+    [
+     "E26-02",
+     "E26-04"
+    ],
+    [
+     "E26-02",
+     "E26-05"
+    ],
+    [
+     "E26-02",
+     "E26-08"
+    ],
+    [
+     "E26-02",
+     "E26-12"
+    ],
+    [
+     "E26-04",
+     "E26-05"
+    ],
+    [
+     "E26-04",
+     "E26-08"
+    ],
+    [
+     "E26-04",
+     "E26-12"
+    ],
+    [
+     "E26-05",
+     "E26-08"
+    ],
+    [
+     "E26-05",
+     "E26-12"
+    ],
+    [
+     "E26-06",
+     "E26-07"
+    ],
+    [
+     "E26-06",
+     "E26-11"
+    ],
+    [
+     "E26-06",
+     "E26-14"
+    ],
+    [
+     "E26-07",
+     "E26-11"
+    ],
+    [
+     "E26-07",
+     "E26-14"
+    ],
+    [
+     "E26-08",
+     "E26-12"
+    ],
+    [
+     "E26-11",
+     "E26-14"
+    ]
+   ],
+   "all_pairwise_frame_collisions": 21,
+   "collapsed": [
+    "E26-02",
+    "E26-04",
+    "E26-05",
+    "E26-07",
+    "E26-08",
+    "E26-11",
+    "E26-12",
+    "E26-14"
+   ],
+   "colliding_pairs": [
+    {
+     "earlier": "E26-01",
+     "frame_sha256": "4fb0d91c1412eebe30a9fbe67506c656c0adb58d36ddd8b890b891b557544251",
+     "later": "E26-02"
+    },
+    {
+     "earlier": "E26-01",
+     "frame_sha256": "4fb0d91c1412eebe30a9fbe67506c656c0adb58d36ddd8b890b891b557544251",
+     "later": "E26-04"
+    },
+    {
+     "earlier": "E26-01",
+     "frame_sha256": "4fb0d91c1412eebe30a9fbe67506c656c0adb58d36ddd8b890b891b557544251",
+     "later": "E26-05"
+    },
+    {
+     "earlier": "E26-06",
+     "frame_sha256": "c4d726a27088b76903bbd8ef686f0f50b3dea9343d15869c2bfc1e9ff32b63c0",
+     "later": "E26-07"
+    },
+    {
+     "earlier": "E26-01",
+     "frame_sha256": "4fb0d91c1412eebe30a9fbe67506c656c0adb58d36ddd8b890b891b557544251",
+     "later": "E26-08"
+    },
+    {
+     "earlier": "E26-06",
+     "frame_sha256": "c4d726a27088b76903bbd8ef686f0f50b3dea9343d15869c2bfc1e9ff32b63c0",
+     "later": "E26-11"
+    },
+    {
+     "earlier": "E26-01",
+     "frame_sha256": "4fb0d91c1412eebe30a9fbe67506c656c0adb58d36ddd8b890b891b557544251",
+     "later": "E26-12"
+    },
+    {
+     "earlier": "E26-06",
+     "frame_sha256": "c4d726a27088b76903bbd8ef686f0f50b3dea9343d15869c2bfc1e9ff32b63c0",
+     "later": "E26-14"
+    }
+   ],
+   "frame_class_sizes": [
+    6,
+    4,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "frame_classes": [
+    [
+     "E26-01",
+     "E26-02",
+     "E26-04",
+     "E26-05",
+     "E26-08",
+     "E26-12"
+    ],
+    [
+     "E26-06",
+     "E26-07",
+     "E26-11",
+     "E26-14"
+    ]
+   ],
+   "frame_not_applicable": [],
+   "frame_tested": 17,
+   "label": "counterfactual raw-excerpt text, not the frozen clause",
+   "order": [
+    "E26-01",
+    "E26-02",
+    "E26-03",
+    "E26-04",
+    "E26-05",
+    "E26-06",
+    "E26-07",
+    "E26-08",
+    "E26-09",
+    "E26-10",
+    "E26-11",
+    "E26-12",
+    "E26-13",
+    "E26-14",
+    "E26-15",
+    "E26-16",
+    "E26-17"
+   ],
+   "registered": 17,
+   "survivor_ids": [
+    "E26-01",
+    "E26-03",
+    "E26-06",
+    "E26-09",
+    "E26-10",
+    "E26-13",
+    "E26-15",
+    "E26-16",
+    "E26-17"
+   ],
+   "survivors": 9
+  },
+  "label": "raw recorded excerpt treated as the message; NOT the frozen clause",
+  "shortcut": {
+   "all_pairwise_frame_collision_pairs": [
+    [
+     "X26-01",
+     "X26-02"
+    ],
+    [
+     "X26-01",
+     "X26-03"
+    ],
+    [
+     "X26-01",
+     "X26-04"
+    ],
+    [
+     "X26-01",
+     "X26-05"
+    ],
+    [
+     "X26-01",
+     "X26-06"
+    ],
+    [
+     "X26-01",
+     "X26-07"
+    ],
+    [
+     "X26-01",
+     "X26-08"
+    ],
+    [
+     "X26-01",
+     "X26-09"
+    ],
+    [
+     "X26-01",
+     "X26-10"
+    ],
+    [
+     "X26-01",
+     "X26-11"
+    ],
+    [
+     "X26-01",
+     "X26-12"
+    ],
+    [
+     "X26-02",
+     "X26-03"
+    ],
+    [
+     "X26-02",
+     "X26-04"
+    ],
+    [
+     "X26-02",
+     "X26-05"
+    ],
+    [
+     "X26-02",
+     "X26-06"
+    ],
+    [
+     "X26-02",
+     "X26-07"
+    ],
+    [
+     "X26-02",
+     "X26-08"
+    ],
+    [
+     "X26-02",
+     "X26-09"
+    ],
+    [
+     "X26-02",
+     "X26-10"
+    ],
+    [
+     "X26-02",
+     "X26-11"
+    ],
+    [
+     "X26-02",
+     "X26-12"
+    ],
+    [
+     "X26-03",
+     "X26-04"
+    ],
+    [
+     "X26-03",
+     "X26-05"
+    ],
+    [
+     "X26-03",
+     "X26-06"
+    ],
+    [
+     "X26-03",
+     "X26-07"
+    ],
+    [
+     "X26-03",
+     "X26-08"
+    ],
+    [
+     "X26-03",
+     "X26-09"
+    ],
+    [
+     "X26-03",
+     "X26-10"
+    ],
+    [
+     "X26-03",
+     "X26-11"
+    ],
+    [
+     "X26-03",
+     "X26-12"
+    ],
+    [
+     "X26-04",
+     "X26-05"
+    ],
+    [
+     "X26-04",
+     "X26-06"
+    ],
+    [
+     "X26-04",
+     "X26-07"
+    ],
+    [
+     "X26-04",
+     "X26-08"
+    ],
+    [
+     "X26-04",
+     "X26-09"
+    ],
+    [
+     "X26-04",
+     "X26-10"
+    ],
+    [
+     "X26-04",
+     "X26-11"
+    ],
+    [
+     "X26-04",
+     "X26-12"
+    ],
+    [
+     "X26-05",
+     "X26-06"
+    ],
+    [
+     "X26-05",
+     "X26-07"
+    ],
+    [
+     "X26-05",
+     "X26-08"
+    ],
+    [
+     "X26-05",
+     "X26-09"
+    ],
+    [
+     "X26-05",
+     "X26-10"
+    ],
+    [
+     "X26-05",
+     "X26-11"
+    ],
+    [
+     "X26-05",
+     "X26-12"
+    ],
+    [
+     "X26-06",
+     "X26-07"
+    ],
+    [
+     "X26-06",
+     "X26-08"
+    ],
+    [
+     "X26-06",
+     "X26-09"
+    ],
+    [
+     "X26-06",
+     "X26-10"
+    ],
+    [
+     "X26-06",
+     "X26-11"
+    ],
+    [
+     "X26-06",
+     "X26-12"
+    ],
+    [
+     "X26-07",
+     "X26-08"
+    ],
+    [
+     "X26-07",
+     "X26-09"
+    ],
+    [
+     "X26-07",
+     "X26-10"
+    ],
+    [
+     "X26-07",
+     "X26-11"
+    ],
+    [
+     "X26-07",
+     "X26-12"
+    ],
+    [
+     "X26-08",
+     "X26-09"
+    ],
+    [
+     "X26-08",
+     "X26-10"
+    ],
+    [
+     "X26-08",
+     "X26-11"
+    ],
+    [
+     "X26-08",
+     "X26-12"
+    ],
+    [
+     "X26-09",
+     "X26-10"
+    ],
+    [
+     "X26-09",
+     "X26-11"
+    ],
+    [
+     "X26-09",
+     "X26-12"
+    ],
+    [
+     "X26-10",
+     "X26-11"
+    ],
+    [
+     "X26-10",
+     "X26-12"
+    ],
+    [
+     "X26-11",
+     "X26-12"
+    ]
+   ],
+   "all_pairwise_frame_collisions": 66,
+   "collapsed": [
+    "X26-02",
+    "X26-03",
+    "X26-04",
+    "X26-05",
+    "X26-06",
+    "X26-07",
+    "X26-08",
+    "X26-09",
+    "X26-10",
+    "X26-11",
+    "X26-12"
+   ],
+   "colliding_pairs": [
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "aed0b0990b47098942d8cef663c10f822861eecb4dc5296bed2773a2d4e6a672",
+     "later": "X26-02"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "aed0b0990b47098942d8cef663c10f822861eecb4dc5296bed2773a2d4e6a672",
+     "later": "X26-03"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "aed0b0990b47098942d8cef663c10f822861eecb4dc5296bed2773a2d4e6a672",
+     "later": "X26-04"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "aed0b0990b47098942d8cef663c10f822861eecb4dc5296bed2773a2d4e6a672",
+     "later": "X26-05"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "aed0b0990b47098942d8cef663c10f822861eecb4dc5296bed2773a2d4e6a672",
+     "later": "X26-06"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "aed0b0990b47098942d8cef663c10f822861eecb4dc5296bed2773a2d4e6a672",
+     "later": "X26-07"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "aed0b0990b47098942d8cef663c10f822861eecb4dc5296bed2773a2d4e6a672",
+     "later": "X26-08"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "aed0b0990b47098942d8cef663c10f822861eecb4dc5296bed2773a2d4e6a672",
+     "later": "X26-09"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "aed0b0990b47098942d8cef663c10f822861eecb4dc5296bed2773a2d4e6a672",
+     "later": "X26-10"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "aed0b0990b47098942d8cef663c10f822861eecb4dc5296bed2773a2d4e6a672",
+     "later": "X26-11"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "aed0b0990b47098942d8cef663c10f822861eecb4dc5296bed2773a2d4e6a672",
+     "later": "X26-12"
+    }
+   ],
+   "frame_class_sizes": [
+    12
+   ],
+   "frame_classes": [
+    [
+     "X26-01",
+     "X26-02",
+     "X26-03",
+     "X26-04",
+     "X26-05",
+     "X26-06",
+     "X26-07",
+     "X26-08",
+     "X26-09",
+     "X26-10",
+     "X26-11",
+     "X26-12"
+    ]
+   ],
+   "frame_not_applicable": [],
+   "frame_tested": 12,
+   "label": "counterfactual raw-excerpt text, not the frozen clause",
+   "order": [
+    "X26-01",
+    "X26-02",
+    "X26-03",
+    "X26-04",
+    "X26-05",
+    "X26-06",
+    "X26-07",
+    "X26-08",
+    "X26-09",
+    "X26-10",
+    "X26-11",
+    "X26-12"
+   ],
+   "registered": 12,
+   "survivor_ids": [
+    "X26-01"
+   ],
+   "survivors": 1
+  }
+ },
+ "diagnostics": {
+  "e26_equal_frame_classes_ignoring_guard": {
+   "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d": [
+    "E26-01",
+    "E26-02",
+    "E26-04",
+    "E26-05",
+    "E26-06",
+    "E26-08",
+    "E26-11",
+    "E26-12",
+    "E26-13"
+   ]
+  },
+  "e26_guard_suppressed_pairs": 36,
+  "e26_process_rows_no_decodable_message": [
+   "E26-15",
+   "E26-16",
+   "E26-17"
+  ],
+  "e26_signature_not_in_decoded_message": [
+   "E26-07",
+   "E26-14"
+  ]
+ },
+ "duplicate_receipt_check": {
+  "colliding_pairs": [],
+  "message_sha_equal_to_final_tip": {
+   "E26-01": true,
+   "E26-02": true,
+   "E26-03": true,
+   "E26-04": true,
+   "E26-05": true,
+   "E26-06": true,
+   "E26-07": true,
+   "E26-08": true,
+   "E26-09": true,
+   "E26-10": true,
+   "E26-11": true,
+   "E26-12": true,
+   "E26-13": true,
+   "E26-14": true,
+   "E26-15": null,
+   "E26-16": null,
+   "E26-17": null
+  },
+  "source": ".ufo/waves/round-26/final/c1-tip-receipt.json",
+  "survivors": 17
+ },
+ "exit": 0,
+ "generated_utc": "2026-10-23T07:20:47Z",
+ "inputs": {
+  "e26_receipt": ".ufo/waves/round-26/final/c1-final-tip-receipt.json",
+  "e26_registry": "registry/error-signatures-r26.json",
+  "shortcut_receipt": ".ufo/waves/round-26/w2-falsify/out/CriticShortcutRows/shortcut.receipt.json",
+  "shortcut_registry": ".ufo/waves/round-26/w2-falsify/out/CriticShortcutRows/shortcut.registry.json"
+ },
+ "lane": "/home/vgpnk/Projects/shokunin/kama-shokunin",
+ "schema": "kama-r27-x1-frame-offline-replay/v1",
+ "sets": {
+  "e26": {
+   "all_pairwise_frame_collision_pairs": [],
+   "all_pairwise_frame_collisions": 0,
+   "collapsed": [],
+   "colliding_pairs": [],
+   "frame_class_sizes": [
+    9,
+    1,
+    1,
+    1,
+    1,
+    1
+   ],
+   "frame_classes": [
+    [
+     "E26-01",
+     "E26-02",
+     "E26-04",
+     "E26-05",
+     "E26-06",
+     "E26-08",
+     "E26-11",
+     "E26-12",
+     "E26-13"
+    ]
+   ],
+   "frame_not_applicable": [
+    "E26-15",
+    "E26-16",
+    "E26-17"
+   ],
+   "frame_tested": 14,
+   "order": [
+    "E26-01",
+    "E26-02",
+    "E26-03",
+    "E26-04",
+    "E26-05",
+    "E26-06",
+    "E26-07",
+    "E26-08",
+    "E26-09",
+    "E26-10",
+    "E26-11",
+    "E26-12",
+    "E26-13",
+    "E26-14",
+    "E26-15",
+    "E26-16",
+    "E26-17"
+   ],
+   "registered": 17,
+   "rows": [
+    {
+     "channel_exit": null,
+     "channel_status": 501,
+     "collides_with": [],
+     "excerpt_len": 132,
+     "excerpt_sha256": "9c08c13405b685a8cc7a7f105ed0710a0ace945566df1940aa7c1ac057561b23",
+     "frame_excerpt": "\u0000",
+     "frame_len": 1,
+     "frame_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+     "frame_stripped_empty": true,
+     "id": "E26-01",
+     "message_len": 68,
+     "message_sha256": "5cb3ae517de73b650d2891b9304172eb21e2d81b1a259627975f8c53c403e424",
+     "signature": "This server does not support slots endpoint. Start it with `--slots`",
+     "signature_in_message": true,
+     "status": "survives"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 501,
+     "collides_with": [],
+     "excerpt_len": 139,
+     "excerpt_sha256": "93b83e653dfde42dc8221925d50c368e7d31465cc2fb7a2298f970658338ad93",
+     "frame_excerpt": "\u0000",
+     "frame_len": 1,
+     "frame_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+     "frame_stripped_empty": true,
+     "id": "E26-02",
+     "message_len": 75,
+     "message_sha256": "3de049f6cbb45a6c0649dd432af841ec80bf89f5b351f46742f09206d96f545f",
+     "signature": "This server does not support slots action. Start it with `--slot-save-path`",
+     "signature_in_message": true,
+     "status": "survives"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [],
+     "excerpt_len": 146,
+     "excerpt_sha256": "b7d816d8b7dc353728e50004d99673a5696994f76a2b2c53042324eadde33966",
+     "frame_excerpt": "unable to restore slot: \u0000",
+     "frame_len": 25,
+     "frame_sha256": "a8fa280fbd4834d19837c945166d96615ed885d7e96f4a0507070b58e973fb18",
+     "frame_stripped_empty": false,
+     "id": "E26-03",
+     "message_len": 80,
+     "message_sha256": "94e801286441a54a1c9ca74a984ed0086db6b666456592987ce97b48124d4346",
+     "signature": "No available space in KV cache or invalid slot save file",
+     "signature_in_message": true,
+     "status": "survives"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 501,
+     "collides_with": [],
+     "excerpt_len": 144,
+     "excerpt_sha256": "cb686d2d2940d1d40af99cdcf32bfef3f0d01edd0307a61e88145ffb67e8caa8",
+     "frame_excerpt": "\u0000",
+     "frame_len": 1,
+     "frame_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+     "frame_stripped_empty": true,
+     "id": "E26-04",
+     "message_len": 80,
+     "message_sha256": "7322ac9f0ca11aaf42642768f3115642892b44c5a1d90c587684c9f17cc31cda",
+     "signature": "This server does not support changing global properties. Start it with `--props`",
+     "signature_in_message": true,
+     "status": "survives"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 501,
+     "collides_with": [],
+     "excerpt_len": 133,
+     "excerpt_sha256": "168b1bb696c89efa3807113eae390c8dca4eaa6a89c11fc288b5a9324a45e915",
+     "frame_excerpt": "\u0000",
+     "frame_len": 1,
+     "frame_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+     "frame_stripped_empty": true,
+     "id": "E26-05",
+     "message_len": 69,
+     "message_sha256": "4a3b56eb5021cbeab71e6b2f29ab027d20e013ec581a5b0cff816f65bf0538ae",
+     "signature": "This server does not support embeddings. Start it with `--embeddings`",
+     "signature_in_message": true,
+     "status": "survives"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [],
+     "excerpt_len": 144,
+     "excerpt_sha256": "f0651c4c66a1c7f54d3b38cd7b7aeefbb54a63addbb85749f73bd9fb0455f54d",
+     "frame_excerpt": "\u0000",
+     "frame_len": 1,
+     "frame_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+     "frame_stripped_empty": true,
+     "id": "E26-06",
+     "message_len": 78,
+     "message_sha256": "8e67a83c3a9c2f72e7a6df4ea6a293d4db171a8b2a26d3452af07886e4f21362",
+     "signature": "Pooling type 'none' is not OAI compatible. Please use a different pooling type",
+     "signature_in_message": true,
+     "status": "survives"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [],
+     "excerpt_len": 107,
+     "excerpt_sha256": "a3c4df8524fa757c409094d53734bb3679f0029fa6b0f455fde78b825926f14c",
+     "frame_excerpt": "\"input\" or \"content\" must be provided",
+     "frame_len": 37,
+     "frame_sha256": "e5f54f0275163ebef8837999893fc543c69ab66e17d32e2a4b4ee3cbb0c41d41",
+     "frame_stripped_empty": false,
+     "id": "E26-07",
+     "message_len": 37,
+     "message_sha256": "e5f54f0275163ebef8837999893fc543c69ab66e17d32e2a4b4ee3cbb0c41d41",
+     "signature": "\\\"input\\\" or \\\"content\\\" must be provided",
+     "signature_in_message": false,
+     "status": "survives"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 501,
+     "collides_with": [],
+     "excerpt_len": 131,
+     "excerpt_sha256": "87162b95d2fb9ce1691b02e242fd20fefa99517c279342cbf1ab45e28aefb0f1",
+     "frame_excerpt": "\u0000",
+     "frame_len": 1,
+     "frame_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+     "frame_stripped_empty": true,
+     "id": "E26-08",
+     "message_len": 67,
+     "message_sha256": "68ff9d773d7e6726b5b05d68137390e5078486b8f4e96a90bb148d052b490056",
+     "signature": "This server does not support reranking. Start it with `--reranking`",
+     "signature_in_message": true,
+     "status": "survives"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 501,
+     "collides_with": [],
+     "excerpt_len": 178,
+     "excerpt_sha256": "c4b4262428220533f0e740030879a9b7a8f2ca9141e54429cd6e83900c641785",
+     "frame_excerpt": "\u0000: prefix token is missing. suffix token is missing. middle token is missing. ",
+     "frame_len": 78,
+     "frame_sha256": "b815e7beed1f443ad95dbf7f79bfc933616f1f384b170165b9e961aad3af734b",
+     "frame_stripped_empty": false,
+     "id": "E26-09",
+     "message_len": 114,
+     "message_sha256": "84f0e4242c2f2e07d1ac70f795fa1f011fb0d866f7389224bf5e33e3fd30faaa",
+     "signature": "Infill is not supported by this model",
+     "signature_in_message": true,
+     "status": "survives"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 500,
+     "collides_with": [],
+     "excerpt_len": 159,
+     "excerpt_sha256": "1ae7049d8fc3b4a0de95f847c2a2495c13a81a845ded4c74b28404df4f1aa4ec",
+     "frame_excerpt": "input (4352 tokens) \u0000size (current batch size: 64)",
+     "frame_len": 50,
+     "frame_sha256": "050fb6e249fa8f83cf8fda712332496a9a47e408a6dbb4e0bf9b9473192d6b62",
+     "frame_stripped_empty": false,
+     "id": "E26-10",
+     "message_len": 102,
+     "message_sha256": "94ea4a2bad19c4e8751cf412dc4b9290605e0e63817ea6fd5df3c1321a7c8efb",
+     "signature": "is too large to process. increase the physical batch ",
+     "signature_in_message": true,
+     "status": "survives"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [],
+     "excerpt_len": 95,
+     "excerpt_sha256": "f2534c039e50900296cc8da426caddfe4b65267460f94546ee4546adc93dfb50",
+     "frame_excerpt": "\u0000",
+     "frame_len": 1,
+     "frame_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+     "frame_stripped_empty": true,
+     "id": "E26-11",
+     "message_len": 29,
+     "message_sha256": "27d12dce9875a2c060373835ad127d06a3ffde7ce8bda4b48f462cdaa6ddeea6",
+     "signature": "Request body must be an array",
+     "signature_in_message": true,
+     "status": "survives"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 501,
+     "collides_with": [],
+     "excerpt_len": 111,
+     "excerpt_sha256": "7e1665fa588d3383ea04823856aefed0314b0fa6544b89f4a1c6219064443f66",
+     "frame_excerpt": "\u0000",
+     "frame_len": 1,
+     "frame_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+     "frame_stripped_empty": true,
+     "id": "E26-12",
+     "message_len": 47,
+     "message_sha256": "739a234149d1c2251e9155870067e0bde9aff25d5da859b54262120bb4c45a47",
+     "signature": "The current model does not support audio input.",
+     "signature_in_message": true,
+     "status": "survives"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 500,
+     "collides_with": [],
+     "excerpt_len": 151,
+     "excerpt_sha256": "95c4ed164f836bc1b6b4f62372585348a0c77288909461edbb4f29df3301433a",
+     "frame_excerpt": "\u0000",
+     "frame_len": 1,
+     "frame_sha256": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+     "frame_stripped_empty": true,
+     "id": "E26-13",
+     "message_len": 94,
+     "message_sha256": "a049c0984aeea1d3fef176c12019bee623a0d39f7194678f258a70c1f1da960a",
+     "signature": "audio input is not supported - hint: if this is unexpected, you may need to provide the mmproj",
+     "signature_in_message": true,
+     "status": "survives"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [],
+     "excerpt_len": 200,
+     "excerpt_sha256": "0c47e832faed0a6ab7b38f4f777ad85434b0486358977f37853bae6a40f827ff",
+     "frame_excerpt": "\"prompt\" elements must be a string, a list of tokens, a json object containing a prompt string, or a list of mixed strings & tokens.",
+     "frame_len": 132,
+     "frame_sha256": "2765aafb4a79e7d001060254a526743cc081501ab72f67cb2e5325bc3abeb0fd",
+     "frame_stripped_empty": false,
+     "id": "E26-14",
+     "message_len": 132,
+     "message_sha256": "879294265ef2baae8aba82ec473eec5c8607e46aba70117ab0cfabec0af39a43",
+     "signature": "\\\"prompt\\\" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.",
+     "signature_in_message": false,
+     "status": "survives"
+    },
+    {
+     "channel_exit": 1,
+     "channel_status": null,
+     "excerpt_len": 400,
+     "excerpt_sha256": "d38a1b2b87c37fe66b2810e3494fd9b2a93d3e92958aed9800315959b8ded5bf",
+     "id": "E26-15",
+     "message_len": null,
+     "message_sha256": null,
+     "signature": "failed to open GGUF file",
+     "status": "frame-not-applicable",
+     "why": "error_message() returned None; clause (h) unreachable (counter reaches e:not-shown first)"
+    },
+    {
+     "channel_exit": 1,
+     "channel_status": null,
+     "excerpt_len": 400,
+     "excerpt_sha256": "95c8ec504bd472099ae0170f7cca2a0f1d9491315212666b4845b2d94b3dbb68",
+     "id": "E26-16",
+     "message_len": null,
+     "message_sha256": null,
+     "signature": "invalid magic characters: '",
+     "status": "frame-not-applicable",
+     "why": "error_message() returned None; clause (h) unreachable (counter reaches e:not-shown first)"
+    },
+    {
+     "channel_exit": -6,
+     "channel_status": null,
+     "excerpt_len": 400,
+     "excerpt_sha256": "5bebdf29950dcb411a6437cd4e9f2f77a1e2c8f9a19aa34edc3da3f654003049",
+     "id": "E26-17",
+     "message_len": null,
+     "message_sha256": null,
+     "signature": "GGML_ASSERT(n_outputs >= 1)",
+     "status": "frame-not-applicable",
+     "why": "error_message() returned None; clause (h) unreachable (counter reaches e:not-shown first)"
+    }
+   ],
+   "survivor_ids": [
+    "E26-01",
+    "E26-02",
+    "E26-03",
+    "E26-04",
+    "E26-05",
+    "E26-06",
+    "E26-07",
+    "E26-08",
+    "E26-09",
+    "E26-10",
+    "E26-11",
+    "E26-12",
+    "E26-13",
+    "E26-14",
+    "E26-15",
+    "E26-16",
+    "E26-17"
+   ],
+   "survivors": 17
+  },
+  "shortcut": {
+   "all_pairwise_frame_collision_pairs": [
+    [
+     "X26-01",
+     "X26-02"
+    ],
+    [
+     "X26-01",
+     "X26-03"
+    ],
+    [
+     "X26-01",
+     "X26-04"
+    ],
+    [
+     "X26-01",
+     "X26-05"
+    ],
+    [
+     "X26-01",
+     "X26-06"
+    ],
+    [
+     "X26-01",
+     "X26-07"
+    ],
+    [
+     "X26-01",
+     "X26-08"
+    ],
+    [
+     "X26-01",
+     "X26-09"
+    ],
+    [
+     "X26-01",
+     "X26-10"
+    ],
+    [
+     "X26-01",
+     "X26-11"
+    ],
+    [
+     "X26-01",
+     "X26-12"
+    ],
+    [
+     "X26-02",
+     "X26-03"
+    ],
+    [
+     "X26-02",
+     "X26-04"
+    ],
+    [
+     "X26-02",
+     "X26-05"
+    ],
+    [
+     "X26-02",
+     "X26-06"
+    ],
+    [
+     "X26-02",
+     "X26-07"
+    ],
+    [
+     "X26-02",
+     "X26-08"
+    ],
+    [
+     "X26-02",
+     "X26-09"
+    ],
+    [
+     "X26-02",
+     "X26-10"
+    ],
+    [
+     "X26-02",
+     "X26-11"
+    ],
+    [
+     "X26-02",
+     "X26-12"
+    ],
+    [
+     "X26-03",
+     "X26-04"
+    ],
+    [
+     "X26-03",
+     "X26-05"
+    ],
+    [
+     "X26-03",
+     "X26-06"
+    ],
+    [
+     "X26-03",
+     "X26-07"
+    ],
+    [
+     "X26-03",
+     "X26-08"
+    ],
+    [
+     "X26-03",
+     "X26-09"
+    ],
+    [
+     "X26-03",
+     "X26-10"
+    ],
+    [
+     "X26-03",
+     "X26-11"
+    ],
+    [
+     "X26-03",
+     "X26-12"
+    ],
+    [
+     "X26-04",
+     "X26-05"
+    ],
+    [
+     "X26-04",
+     "X26-06"
+    ],
+    [
+     "X26-04",
+     "X26-07"
+    ],
+    [
+     "X26-04",
+     "X26-08"
+    ],
+    [
+     "X26-04",
+     "X26-09"
+    ],
+    [
+     "X26-04",
+     "X26-10"
+    ],
+    [
+     "X26-04",
+     "X26-11"
+    ],
+    [
+     "X26-04",
+     "X26-12"
+    ],
+    [
+     "X26-05",
+     "X26-06"
+    ],
+    [
+     "X26-05",
+     "X26-07"
+    ],
+    [
+     "X26-05",
+     "X26-08"
+    ],
+    [
+     "X26-05",
+     "X26-09"
+    ],
+    [
+     "X26-05",
+     "X26-10"
+    ],
+    [
+     "X26-05",
+     "X26-11"
+    ],
+    [
+     "X26-05",
+     "X26-12"
+    ],
+    [
+     "X26-06",
+     "X26-07"
+    ],
+    [
+     "X26-06",
+     "X26-08"
+    ],
+    [
+     "X26-06",
+     "X26-09"
+    ],
+    [
+     "X26-06",
+     "X26-10"
+    ],
+    [
+     "X26-06",
+     "X26-11"
+    ],
+    [
+     "X26-06",
+     "X26-12"
+    ],
+    [
+     "X26-07",
+     "X26-08"
+    ],
+    [
+     "X26-07",
+     "X26-09"
+    ],
+    [
+     "X26-07",
+     "X26-10"
+    ],
+    [
+     "X26-07",
+     "X26-11"
+    ],
+    [
+     "X26-07",
+     "X26-12"
+    ],
+    [
+     "X26-08",
+     "X26-09"
+    ],
+    [
+     "X26-08",
+     "X26-10"
+    ],
+    [
+     "X26-08",
+     "X26-11"
+    ],
+    [
+     "X26-08",
+     "X26-12"
+    ],
+    [
+     "X26-09",
+     "X26-10"
+    ],
+    [
+     "X26-09",
+     "X26-11"
+    ],
+    [
+     "X26-09",
+     "X26-12"
+    ],
+    [
+     "X26-10",
+     "X26-11"
+    ],
+    [
+     "X26-10",
+     "X26-12"
+    ],
+    [
+     "X26-11",
+     "X26-12"
+    ]
+   ],
+   "all_pairwise_frame_collisions": 66,
+   "collapsed": [
+    "X26-02",
+    "X26-03",
+    "X26-04",
+    "X26-05",
+    "X26-06",
+    "X26-07",
+    "X26-08",
+    "X26-09",
+    "X26-10",
+    "X26-11",
+    "X26-12"
+   ],
+   "colliding_pairs": [
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "later": "X26-02"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "later": "X26-03"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "later": "X26-04"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "later": "X26-05"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "later": "X26-06"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "later": "X26-07"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "later": "X26-08"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "later": "X26-09"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "later": "X26-10"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "later": "X26-11"
+    },
+    {
+     "earlier": "X26-01",
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "later": "X26-12"
+    }
+   ],
+   "frame_class_sizes": [
+    12
+   ],
+   "frame_classes": [
+    [
+     "X26-01",
+     "X26-02",
+     "X26-03",
+     "X26-04",
+     "X26-05",
+     "X26-06",
+     "X26-07",
+     "X26-08",
+     "X26-09",
+     "X26-10",
+     "X26-11",
+     "X26-12"
+    ]
+   ],
+   "frame_not_applicable": [],
+   "frame_tested": 12,
+   "order": [
+    "X26-01",
+    "X26-02",
+    "X26-03",
+    "X26-04",
+    "X26-05",
+    "X26-06",
+    "X26-07",
+    "X26-08",
+    "X26-09",
+    "X26-10",
+    "X26-11",
+    "X26-12"
+   ],
+   "registered": 12,
+   "rows": [
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [],
+     "excerpt_len": 187,
+     "excerpt_sha256": "79c82d2ea4fd34f7fc97b16c39ee2bf43f27dd465d9c004d7bb509dda1bd1cc1",
+     "frame_excerpt": "response_format type must be one of \"text\" or \"json_object\", but got: \u0000",
+     "frame_len": 71,
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "frame_stripped_empty": false,
+     "id": "X26-01",
+     "message_len": 117,
+     "message_sha256": "49464423c305b1e7e34186345f0c464ed9cc43114e432fc49c5a614df1a42122",
+     "signature": "_NSGetExecutablePath failed after buffer resize",
+     "signature_in_message": true,
+     "status": "survives"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [
+      "X26-01"
+     ],
+     "excerpt_len": 182,
+     "excerpt_sha256": "5534fe6374aa79b043ee5c75733e4cf6d54819f62ab58d9a649edd7a36cae498",
+     "frame_excerpt": "response_format type must be one of \"text\" or \"json_object\", but got: \u0000",
+     "frame_len": 71,
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "frame_stripped_empty": false,
+     "id": "X26-02",
+     "message_len": 112,
+     "message_sha256": "3f9ec9e4ec8bd7edb431b8110596c9496fe03fdc09f1ad4dcba3fc45d8767e81",
+     "signature": "GetModuleFileNameW failed or path too long",
+     "signature_in_message": true,
+     "status": "collapsed"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [
+      "X26-01"
+     ],
+     "excerpt_len": 171,
+     "excerpt_sha256": "77353842f6bc3085e867925dd0815c8401e214d48905813dc2c63ac66eb0300a",
+     "frame_excerpt": "response_format type must be one of \"text\" or \"json_object\", but got: \u0000",
+     "frame_len": 71,
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "frame_stripped_empty": false,
+     "id": "X26-03",
+     "message_len": 101,
+     "message_sha256": "febcc4a65d9353dbd80e00be0f1ad942b0ffdf84563554f49f54e560bfad3182",
+     "signature": "RPC not supported in this build",
+     "signature_in_message": true,
+     "status": "collapsed"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [
+      "X26-01"
+     ],
+     "excerpt_len": 168,
+     "excerpt_sha256": "4bfe95b1d2f753664dfac14ef57469368c121a43223730b838a27af517b3a3c8",
+     "frame_excerpt": "response_format type must be one of \"text\" or \"json_object\", but got: \u0000",
+     "frame_len": 71,
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "frame_stripped_empty": false,
+     "id": "X26-04",
+     "message_len": 98,
+     "message_sha256": "d47c9fbd9b696bf320cd8a07b597948486a9a807b2145df8917e42d3bab389ff",
+     "signature": "T must be trivially copyable",
+     "signature_in_message": true,
+     "status": "collapsed"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [
+      "X26-01"
+     ],
+     "excerpt_len": 173,
+     "excerpt_sha256": "297b811e9102a3ffef3658fcb57c8056df208c9a80cca70fd8c9a24e6fdfcfbb",
+     "frame_excerpt": "response_format type must be one of \"text\" or \"json_object\", but got: \u0000",
+     "frame_len": 71,
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "frame_stripped_empty": false,
+     "id": "X26-05",
+     "message_len": 103,
+     "message_sha256": "7717b55023fc5228452bcd9ad102dfe05e441417ced9fb7f423a7d86bb1dfbee",
+     "signature": "yield_to_queue() cannot be nested",
+     "signature_in_message": true,
+     "status": "collapsed"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [
+      "X26-01"
+     ],
+     "excerpt_len": 180,
+     "excerpt_sha256": "e5c972bf91f94411a9dee65485b029e6ff1d5fb640b33ece967039597e382b8d",
+     "frame_excerpt": "response_format type must be one of \"text\" or \"json_object\", but got: \u0000",
+     "frame_len": 71,
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "frame_stripped_empty": false,
+     "id": "X26-06",
+     "message_len": 110,
+     "message_sha256": "08c83862db466c3650faa99d68612ed6b021a36dea8bfb2a6685c87dda7d729d",
+     "signature": "update() must be called before to_json()",
+     "signature_in_message": true,
+     "status": "collapsed"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [
+      "X26-01"
+     ],
+     "excerpt_len": 166,
+     "excerpt_sha256": "cd22b5de39162c2b71c7dfb4fa48d16ed4ea2482be4191730f5f137e0515dd8f",
+     "frame_excerpt": "response_format type must be one of \"text\" or \"json_object\", but got: \u0000",
+     "frame_len": 71,
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "frame_stripped_empty": false,
+     "id": "X26-07",
+     "message_len": 96,
+     "message_sha256": "84bb701116924000822315f91921cc631eef316f3af42cd639313d33d8805c9d",
+     "signature": "Invalid task_response_type",
+     "signature_in_message": true,
+     "status": "collapsed"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [
+      "X26-01"
+     ],
+     "excerpt_len": 178,
+     "excerpt_sha256": "05ea61f051bcd7e880018634eb6c2018f625e3e6191e02bd94354bc5ddddf112",
+     "frame_excerpt": "response_format type must be one of \"text\" or \"json_object\", but got: \u0000",
+     "frame_len": 71,
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "frame_stripped_empty": false,
+     "id": "X26-08",
+     "message_len": 108,
+     "message_sha256": "0eff7a2fb80e976c5882e8fa7c85778a8cfb7f62da35647e17d9fc8c29c3ec68",
+     "signature": "unsupported batch.has_embd + spec case",
+     "signature_in_message": true,
+     "status": "collapsed"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [
+      "X26-01"
+     ],
+     "excerpt_len": 184,
+     "excerpt_sha256": "ab64b844cc9bc55dd32b6f75c8443513f4cd070ffbdb75bf7931d676e92277cc",
+     "frame_excerpt": "response_format type must be one of \"text\" or \"json_object\", but got: \u0000",
+     "frame_len": 71,
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "frame_stripped_empty": false,
+     "id": "X26-09",
+     "message_len": 114,
+     "message_sha256": "c1b1cc945e5c30bbcbb6e984312b67eff19df6622b089dc813a6dccc4acb3859",
+     "signature": "Error: gzip is not supported by this browser",
+     "signature_in_message": true,
+     "status": "collapsed"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [
+      "X26-01"
+     ],
+     "excerpt_len": 203,
+     "excerpt_sha256": "38ea13187aff76a62ee5a801108d2d0f1ddb40af3e4b6758e519db8f1a2f183a",
+     "frame_excerpt": "response_format type must be one of \"text\" or \"json_object\", but got: \u0000",
+     "frame_len": 71,
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "frame_stripped_empty": false,
+     "id": "X26-10",
+     "message_len": 133,
+     "message_sha256": "4774b8c56d2cc3f72c96d9e50d843a35f1bca5df053504ce274fdc47eb4c51c4",
+     "signature": "CLIP cannot be used as main model, use it with --mmproj instead",
+     "signature_in_message": true,
+     "status": "collapsed"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [
+      "X26-01"
+     ],
+     "excerpt_len": 185,
+     "excerpt_sha256": "0b53432bdd0185955c75c31a8c4729e8a35bd8c913395f4332745f71b870e209",
+     "frame_excerpt": "response_format type must be one of \"text\" or \"json_object\", but got: \u0000",
+     "frame_len": 71,
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "frame_stripped_empty": false,
+     "id": "X26-11",
+     "message_len": 115,
+     "message_sha256": "effc0e8957f0a407bdca1ae7a660a0df2a4920e5f889f81a08705add38828de2",
+     "signature": "Cannot restore media tokens without an mmproj",
+     "signature_in_message": true,
+     "status": "collapsed"
+    },
+    {
+     "channel_exit": null,
+     "channel_status": 400,
+     "collides_with": [
+      "X26-01"
+     ],
+     "excerpt_len": 189,
+     "excerpt_sha256": "24a3bc2e554569bca1e07876c2b5fbd5e13433bdb632265204e38d8275555b03",
+     "frame_excerpt": "response_format type must be one of \"text\" or \"json_object\", but got: \u0000",
+     "frame_len": 71,
+     "frame_sha256": "0776bc50464794bef8d3644fd1e446f229b9e25d8fe85b19e6bce86be82fcaea",
+     "frame_stripped_empty": false,
+     "id": "X26-12",
+     "message_len": 119,
+     "message_sha256": "6f37664dc09155f9ed054e2746464df439d464eba35d3c243ae0c3f0a12c2d35",
+     "signature": "sampling tensor must be contiguous for async copy",
+     "signature_in_message": true,
+     "status": "collapsed"
+    }
+   ],
+   "survivor_ids": [
+    "X26-01"
+   ],
+   "survivors": 1
+  }
+ },
+ "totals": {
+  "e26_all_pairwise_frame_collisions": 0,
+  "e26_colliding_pairs": 0,
+  "e26_frame_not_applicable": [
+   "E26-15",
+   "E26-16",
+   "E26-17"
+  ],
+  "e26_frame_tested_survivors": "14/14",
+  "e26_guard_suppressed_pairs": 36,
+  "e26_survivors": "17/17",
+  "shortcut_all_pairwise_frame_collisions": 66,
+  "shortcut_colliding_pairs": 11,
+  "shortcut_survivors": "1/12"
+ },
+ "variant_e26_decoded_signature_spelling": {
+  "colliding_pairs": [],
+  "frame_class_sizes": [
+   11,
+   1,
+   1,
+   1
+  ],
+  "frame_classes": [
+   [
+    "E26-01",
+    "E26-02",
+    "E26-04",
+    "E26-05",
+    "E26-06",
+    "E26-07",
+    "E26-08",
+    "E26-11",
+    "E26-12",
+    "E26-13",
+    "E26-14"
+   ]
+  ],
+  "label": "E26-07/E26-14 signatures re-spelled with decoded quotes; same frame expression",
+  "registered": 17,
+  "signatures_absent_from_message": [],
+  "survivors": 17
+ }
+}
