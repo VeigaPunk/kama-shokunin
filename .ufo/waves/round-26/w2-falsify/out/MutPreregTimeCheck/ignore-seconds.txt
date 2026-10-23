@@ -1,0 +1,162 @@
+phase=ignore-seconds
+checker_sha256=eafcae88c3ed63fe78b18cf6590dde35bed24975841d0ed8ba01beea13cd4272
+detector_sha256=c8f3465f77d058dbae6ba516f855cd2b1f0068c7fca9b20d6ca42a54061255b3
+
+== shipped-selftest ==
+$ timeout --kill-after=2 45 python3 /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/work/tools/prereg-time-check.py --selftest --scratch /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/selftests
+expected_exit=0 exit=0 detector_pass=True
+[PASS] clean: timestamp before commit: expect 0, got 0
+        rev=a1ca440e2e61fc14eb2b50b6c2119033a3328b90 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+          ok   line 1: 2026-10-23T03:18:51Z (at/before commit)
+        RESULT pass: no timestamp later than the committer time
+[PASS] flag: minute-precision guess after commit: expect 1, got 1
+        rev=9999f8ecfad4bd20c2cf001045b99782430302b8 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+          FLAG line 1: 2026-10-23T03:45Z (later than commit by 1517s)
+        RESULT fail: 1 timestamp(s) later than the committer time
+[PASS] flag: seconds-precision guess after commit: expect 1, got 1
+        rev=22f9b448ae1971deafac03e7e5ad2ce525e538a3 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+          FLAG line 1: 2026-10-23T03:25:00Z (later than commit by 317s)
+        RESULT fail: 1 timestamp(s) later than the committer time
+[PASS] clean: legitimate far-future data beyond horizon: expect 0, got 0
+        rev=57c6e44225138d348ffa0d512759b5f1c900c681 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+          ok   line 1: 2026-10-25T14:27:28Z (future beyond horizon (+212837s))
+        RESULT pass: no timestamp later than the committer time
+[PASS] flag: strict mode flags far-future too: expect 1, got 1
+        rev=aa37f8c301ceb83cc7fd1c01d3b2a744b3930dd6 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=-1
+          FLAG line 1: 2026-10-25T14:27:28Z (later than commit by 212837s)
+        RESULT fail: 1 timestamp(s) later than the committer time
+[PASS] clean: mixed past and present-boundary times: expect 0, got 0
+        rev=15ab225b7380117ed1da7aa50b25e9ad77caf2d7 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+          ok   line 1: 2026-10-23T03:19:43Z (at/before commit)
+          ok   line 1: 2026-10-23T03:00:00Z (at/before commit)
+        RESULT pass: no timestamp later than the committer time
+[PASS] clean: no timestamps at all: expect 0, got 0
+        rev=86166bcffa3b684f745f52152219bea6d86adbd2 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+          no ISO-8601 UTC timestamps found
+        RESULT pass: no timestamp later than the committer time
+[PASS] clean: malformed Z-suffix lookalike is skipped: expect 0, got 0
+        rev=05988702cc4fa146a5fc69fa6d76fa42f563de55 path=f.json
+        committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+          no ISO-8601 UTC timestamps found
+        RESULT pass: no timestamp later than the committer time
+[PASS] missing path: expect 2, got 2 (ERROR could not evaluate: no commit touches missing.json at HEAD)
+[PASS] bad revision: expect 2, got 2 (ERROR could not evaluate: git log failed rc=128: fatal: bad object deadbeefdeadbeefdeadbeefdeadbeefdeadbeef)
+selftest repo: /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/selftests/ptc-selftest-jf_44ix4
+SELFTEST PASS
+stderr: 
+
+== r26-freeze ==
+$ timeout --kill-after=2 45 python3 /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/work/tools/prereg-time-check.py --repo /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/history.git --path .ufo/waves/round-26/preregistration.json --rev a4a159c39967e88a89b0808dcd201c79c474efd1
+expected_exit=1 exit=1 detector_pass=True
+rev=a4a159c39967e88a89b0808dcd201c79c474efd1 path=.ufo/waves/round-26/preregistration.json
+committer_time=2026-10-23T00:18:51-03:00 max_future=86400
+  FLAG line 6: 2026-10-23T03:45Z (later than commit by 1569s)
+RESULT fail: 1 timestamp(s) later than the committer time
+stderr: 
+
+== r26-A0 ==
+$ timeout --kill-after=2 45 python3 /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/work/tools/prereg-time-check.py --repo /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/history.git --path .ufo/waves/round-26/preregistration.json --rev a12850c5cbc1013e60cc5bba2d6800d1cd634499
+expected_exit=1 exit=1 detector_pass=True
+rev=a12850c5cbc1013e60cc5bba2d6800d1cd634499 path=.ufo/waves/round-26/preregistration.json
+committer_time=2026-10-23T00:19:43-03:00 max_future=86400
+  FLAG line 6: 2026-10-23T03:45Z (later than commit by 1517s)
+  FLAG line 29: 2026-10-23T03:55Z (later than commit by 2117s)
+RESULT fail: 2 timestamp(s) later than the committer time
+stderr: 
+
+== r26-corrected ==
+$ timeout --kill-after=2 45 python3 /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/work/tools/prereg-time-check.py --repo /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/history.git --path .ufo/waves/round-26/preregistration.json --rev f071209a0f956680b5722e09242e784a1644e216
+expected_exit=0 exit=0 detector_pass=True
+rev=f071209a0f956680b5722e09242e784a1644e216 path=.ufo/waves/round-26/preregistration.json
+committer_time=2026-10-23T00:20:14-03:00 max_future=86400
+  ok   line 6: 2026-10-23T03:18:51Z (at/before commit)
+  ok   line 29: 2026-10-23T03:19:43Z (at/before commit)
+RESULT pass: no timestamp later than the committer time
+stderr: 
+
+== r26-tip ==
+$ timeout --kill-after=2 45 python3 /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/work/tools/prereg-time-check.py --repo /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/history.git --path .ufo/waves/round-26/preregistration.json --rev f4066979096e3452ae731c0e09e50155c6d8258a
+expected_exit=0 exit=0 detector_pass=True
+rev=f4066979096e3452ae731c0e09e50155c6d8258a path=.ufo/waves/round-26/preregistration.json
+committer_time=2026-10-23T00:32:54-03:00 max_future=86400
+  ok   line 6: 2026-10-23T03:18:51Z (at/before commit)
+  ok   line 29: 2026-10-23T03:19:43Z (at/before commit)
+  ok   line 33: 2026-10-25T14:27:28Z (future beyond horizon (+212046s))
+RESULT pass: no timestamp later than the committer time
+stderr: 
+
+== r25-original ==
+$ timeout --kill-after=2 45 python3 /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/work/tools/prereg-time-check.py --repo /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/history.git --path .ufo/waves/round-25/preregistration.json --rev efe58e96e6cfbef88a0fba9d64505e18b7ad7356
+expected_exit=1 exit=1 detector_pass=True
+rev=efe58e96e6cfbef88a0fba9d64505e18b7ad7356 path=.ufo/waves/round-25/preregistration.json
+committer_time=2026-10-22T05:29:44-03:00 max_future=86400
+  FLAG line 5: 2026-10-22T08:31:00Z (later than commit by 76s)
+RESULT fail: 1 timestamp(s) later than the committer time
+stderr: 
+
+== r25-amendment-1 ==
+$ timeout --kill-after=2 45 python3 /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/work/tools/prereg-time-check.py --repo /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/history.git --path .ufo/waves/round-25/preregistration-amendment-1.json --rev efe58e96e6cfbef88a0fba9d64505e18b7ad7356
+expected_exit=1 exit=1 detector_pass=True
+rev=efe58e96e6cfbef88a0fba9d64505e18b7ad7356 path=.ufo/waves/round-25/preregistration-amendment-1.json
+committer_time=2026-10-22T05:29:44-03:00 max_future=86400
+  FLAG line 5: 2026-10-22T08:30Z (later than commit by 16s)
+  FLAG line 10: 2026-10-22T08:31:00Z (later than commit by 76s)
+RESULT fail: 2 timestamp(s) later than the committer time
+stderr: 
+
+== r25-amendment-2 ==
+$ timeout --kill-after=2 45 python3 /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/work/tools/prereg-time-check.py --repo /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/history.git --path .ufo/waves/round-25/preregistration-amendment-2.json --rev 5388b7cf1d5bad9c228da6f95c40f323414be2f1
+expected_exit=1 exit=1 detector_pass=True
+rev=5388b7cf1d5bad9c228da6f95c40f323414be2f1 path=.ufo/waves/round-25/preregistration-amendment-2.json
+committer_time=2026-10-22T06:28:44-03:00 max_future=86400
+  FLAG line 6: 2026-10-22T09:30Z (later than commit by 76s)
+  ok   line 16: 2026-10-22T09:24Z (at/before commit)
+RESULT fail: 1 timestamp(s) later than the committer time
+stderr: 
+
+== r25-amendment-3 ==
+$ timeout --kill-after=2 45 python3 /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/work/tools/prereg-time-check.py --repo /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/history.git --path .ufo/waves/round-25/preregistration-amendment-3.json --rev c808ba07f09c4be55413d3d6516c542ab69b64f8
+expected_exit=1 exit=1 detector_pass=True
+rev=c808ba07f09c4be55413d3d6516c542ab69b64f8 path=.ufo/waves/round-25/preregistration-amendment-3.json
+committer_time=2026-10-22T06:38:45-03:00 max_future=86400
+  FLAG line 6: 2026-10-22T09:40Z (later than commit by 75s)
+RESULT fail: 1 timestamp(s) later than the committer time
+stderr: 
+
+== r25-amendment-4 ==
+$ timeout --kill-after=2 45 python3 /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/work/tools/prereg-time-check.py --repo /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/history.git --path .ufo/waves/round-25/preregistration-amendment-4.json --rev 46fb04bd54978a2a3c47b3da098a2526804014e0
+expected_exit=0 exit=0 detector_pass=True
+rev=46fb04bd54978a2a3c47b3da098a2526804014e0 path=.ufo/waves/round-25/preregistration-amendment-4.json
+committer_time=2026-10-22T06:42:31-03:00 max_future=86400
+  ok   line 6: 2026-10-22T09:38:47Z (at/before commit)
+  ok   line 19: 2026-10-22T09:28:44Z (at/before commit)
+RESULT pass: no timestamp later than the committer time
+stderr: 
+
+== supplement-author-skew ==
+$ timeout --kill-after=2 45 python3 /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/work/tools/prereg-time-check.py --repo /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/boundary-fixtures --path f.json --rev da1103251e85a74b71eaa5888852e3ed10957820
+expected_exit=0 exit=0 detector_pass=True
+rev=da1103251e85a74b71eaa5888852e3ed10957820 path=f.json
+committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+  ok   line 1: 2026-10-23T03:18:51Z (at/before commit)
+RESULT pass: no timestamp later than the committer time
+stderr: 
+
+== supplement-subminute-future ==
+$ timeout --kill-after=2 45 python3 /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/work/tools/prereg-time-check.py --repo /fast/scratch/hyaku/kama-r26w2/MutPreregTimeCheck/boundary-fixtures --path f.json --rev c4df5732c81102023ecfc25c5defeb882b54a113
+expected_exit=1 exit=0 detector_pass=False
+rev=c4df5732c81102023ecfc25c5defeb882b54a113 path=f.json
+committer_time=2026-10-23T03:19:43+00:00 max_future=86400
+  ok   line 1: 2026-10-23T03:19:59Z (at/before commit)
+RESULT pass: no timestamp later than the committer time
+stderr: 
+
+failed_cases=['supplement-subminute-future']
+detector_exit=1

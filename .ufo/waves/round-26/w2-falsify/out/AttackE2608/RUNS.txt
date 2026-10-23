@@ -1,0 +1,144 @@
+# KamaR26.AttackE2608 — E26-08 run evidence (2026-10-23)
+
+All commands run from the lane root unless a cd is shown. Port block 47728-47731.
+One llama-server child at a time, each wrapped in `timeout`, `-t 2`, killed and port checked after each.
+
+## Pins
+
+$ sha256sum ~/.local/bin/llama-server
+b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804  /home/vgpnk/.local/bin/llama-server
+$ ~/.local/bin/llama-server --version
+version: 0.7.0-dev (build 11755, commit 704366d76)
+built with GNU 11.4.0 for Linux x86_64
+$ sha256sum ~/.cache/kama-shokunin/models/stories260K.gguf
+270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d  /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf
+
+$ ss -ltn | grep -E '4772[89]|4773[01]' ; echo ss_exit=$?
+ss_exit=1   (block free before any run)
+
+## Fresh source fetch (access date 2026-10-23)
+
+$ curl -fsSL --max-time 120 -o server-context.fresh.cpp \
+    https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp
+$ sha256sum server-context.fresh.cpp
+dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329  server-context.fresh.cpp   (rc=0)
+
+$ timeout 240 curl -fsSL -o llama-tar.tgz https://codeload.github.com/ggml-org/llama.cpp/tar.gz/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad
+$ tar -xzf llama-tar.tgz
+$ sha256sum llama.cpp-704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp
+dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329  (rc=0)
+
+Lane snapshot:
+$ sha256sum .ufo/waves/round-26/sources/llama.cpp-704366d/server-context.cpp
+dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329
+=> fresh raw file, full-tree tarball file and lane snapshot are byte-identical.
+
+$ grep -rn "does not support reranking" llama.cpp-704366d76f8748cf9ad3df62a464bfcc8d1ae6ad | wc -l
+1
+llama.cpp-704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp:5803:            res->error(format_error_response("This server does not support reranking. Start it with `--reranking`", ERROR_TYPE_NOT_SUPPORTED));
+=> one emitter in the whole tree at 704366d.
+
+## (1) Registered trigger, re-run on my ports
+
+Registry fields (registry/error-signatures-r26.json:184-213): channel http, args ["-t","2"], model fixture,
+POST /v1/rerank, Content-Type: application/json, body {"query":"test","documents":["a","b"]}.
+The counter adds -m <model> --host 127.0.0.1 --port P (count-c1.py base_argv()).
+
+Run 1 — out/AttackE2608/run1.sh 47728 r1  (script starts:
+  timeout 120 ~/.local/bin/llama-server -m ~/.cache/kama-shokunin/models/stories260K.gguf --host 127.0.0.1 --port 47728 -t 2)
+=== POST /v1/rerank (port 47728) ===
+{"error":{"code":501,"message":"This server does not support reranking. Start it with `--reranking`","type":"not_supported_error"}}
+HTTP_STATUS=501
+curl_rc=0
+signature lines in startup log: grep -c -F 'This server does not support reranking' run-r1.log -> 0 (rc=1)
+server killed, "PORT_<n>_CLOSED" path taken; ss after run: no listener on 47728.
+
+Run 2 — out/AttackE2608/run1.sh 47729 r2
+=== POST /v1/rerank (port 47729) ===
+{"error":{"code":501,"message":"This server does not support reranking. Start it with `--reranking`","type":"not_supported_error"}}
+HTTP_STATUS=501
+curl_rc=0 ; sig_in_log 0 ; killed ; no listener on 47729
+(note: run-r2.log was 0 bytes — the redirect did not capture the child's startup lines before SIGTERM;
+the HTTP body above is the run's evidence. A third no-flag run, below, has a full startup log.)
+
+Run 3 (control, same flags, full log) — out/AttackE2608/run3.sh 47730 noflag
+READY=1 log_bytes=990
+{"error":{"code":501,...}}  HTTP_STATUS=501 ; sig_in_log_lines=0 ; PORT_47730_CLOSED
+run3-noflag.log = llama_server listening on http://127.0.0.1:47730, no mention of reranking.
+
+## (4) Next-action probe: same binary/model, launch flags changed
+
+Run 4 — out/AttackE2608/run3.sh 47731 rerankflag --reranking
+=== POST /v1/rerank port 47731 args:[--reranking] ===
+{"model":"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf","object":"list","usage":{"prompt_tokens":10,"total_tokens":10},"results":[{"index":1,"relevance_score":1.4062021970748901},{"index":0,"relevance_score":-0.9240114688873291}]}
+HTTP_STATUS=200
+sig_in_log_lines=0 ; PORT_47731_CLOSED
+
+Run 5 — out/AttackE2608/run3.sh 47730 embrank --embeddings --pooling rank
+=== POST /v1/rerank port 47730 args:[--embeddings --pooling rank] ===
+{"model":"/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf","object":"list","usage":{"prompt_tokens":10,"total_tokens":10},"results":[{"index":1,"relevance_score":1.4062021970748901},{"index":0,"relevance_score":-0.9240114688873291}]}
+HTTP_STATUS=200
+PORT_47730_CLOSED
+=> the fixture generation model serves /v1/rerank (200, scores) with --reranking, and also with
+   --embeddings --pooling rank (no --reranking). The 501 gate is launch parameters only.
+
+## (2) Echo controls (F2/F3)
+
+Run 6 — out/AttackE2608/echoctl.sh (port 47728, no --reranking)
+body carries the signature text:
+{"query":"This server does not support reranking. Start it with `--reranking`","documents":["a"]}
+-> {"error":{"code":501,"message":"This server does not support reranking. Start it with `--reranking`","type":"not_supported_error"}}  HTTP_STATUS=501
+query string carries the signature text (?msg=This%20server%20does%20not%20support%20reranking.):
+-> same 501 body, HTTP_STATUS=501
+sig_in_log=0 ; PORT_CLOSED
+Static proof of no echo: the guard at 5803 runs before `const json body = json::parse(req.body)` at 5807,
+and the message is a C++ string literal (single occurrence in the tree).
+
+## Help/version and base absence
+
+$ ~/.local/bin/llama-server --help 2>&1 | grep -F 'does not support reranking' ; echo $?
+1
+$ ~/.local/bin/llama-server --version 2>&1 | grep -F 'does not support reranking' ; echo $?
+1
+$ ~/.local/bin/llama-server --help 2>&1 | grep -n rerank
+597:--rerank, --reranking  enable reranking endpoint on server (default: disabled)   (rc=0; help line only, not the signature)
+
+$ git show 1560e4d83f42b04f40336357de6f9637eafa0f4b:corpus/SOURCES.md | grep -n 'S121'
+(nothing) rc=1
+$ git grep -F -q -e 'This server does not support reranking. Start it with `--reranking`' 1560e4d83f42b04f40336357de6f9637eafa0f4b -- SKILL.md corpus ; echo $?
+1
+
+## Source line and status mapping
+
+snapshot server-context.cpp:5800-5805
+5800    this->post_rerank = [this](const server_http_req & req) {
+5801        auto res = create_response();
+5802        if (!params.embedding || params.pooling_type != LLAMA_POOLING_TYPE_RANK) {
+5803            res->error(format_error_response("This server does not support reranking. Start it with `--reranking`", ERROR_TYPE_NOT_SUPPORTED));
+5804            return res;
+5805        }
+
+server-common.cpp:115-117
+        case ERROR_TYPE_NOT_SUPPORTED:
+            type_str = "not_supported_error";
+            code = 501;
+
+arg.cpp:3524-3531
+    {"--rerank", "--reranking"}, ... [](common_params & params) { params.embedding = true; params.pooling_type = LLAMA_POOLING_TYPE_RANK; }
+
+server.cpp:300-303 — POST /rerank, /reranking, /v1/rerank, /v1/reranking all map to routes.post_rerank (one authority).
+
+## Counter's own row (not re-run by me)
+
+.ufo/waves/round-26/final/c1-tip-receipt.json, row E26-08: every check true; observed status 501;
+channel_excerpt = {"error":{"code":501,"message":"This server does not support reranking. Start it with `--reranking`","type":"not_supported_error"}}.
+c1-tip.out: registered 17 counted 17 target 12 met True not-counted [].
+
+## Port / process hygiene at return
+
+$ ss -ltn | grep -E ':(47728|47729|47730|47731) ' ; echo $?
+1
+$ pgrep -af "llama-server.*--port 477(28|29|30|31)" ; echo $?
+1
+Other llama-server processes visible on the host (ports 47720, 47734, 47740, ...) belong to other seats and were not touched.
+No tools installed or updated.

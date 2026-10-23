@@ -1,0 +1,17 @@
+{
+  "axes": ["raw-byte and digest binding", "cell-to-file identity", "behavioral sensitivity and exact restoration"],
+  "frozen_commit": "f4066979096e3452ae731c0e09e50155c6d8258a",
+  "expected_detector": "The pristine receipt must retain registered 14 observed 14 bound True missing []; each of the five invalid raw-evidence inputs must instead print bound False. Parsed receipts still exit 0. A binding-code mutant is killed only when this passing landed behavioral suite changes on at least one receipt input; restoration must recover the same output and exact bytes.",
+  "receipt_mutants": [
+    {"id": "raw-bytes", "target": ".ufo/waves/round-25/final/raw/K1.health.body:1", "before": "{\"status\":\"ok\"}", "after": "{\"status\":\"no\"}", "receipt_unchanged": true},
+    {"id": "raw-sha", "target": ".ufo/waves/round-25/final/context-capacity-receipt.json:71", "change": "K1 raw_health first digest digit a -> b; remains 64 hexadecimal characters; raw file unchanged"},
+    {"id": "raw-deleted", "target": ".ufo/waves/round-25/final/raw/K1.health.body", "change": "Delete file; retain receipt digest"},
+    {"id": "raw-empty", "target": ".ufo/waves/round-25/final/context-capacity-receipt.json:70-76", "change": "K1 raw object -> []"},
+    {"id": "raw-cross-cell", "target": ".ufo/waves/round-25/final/context-capacity-receipt.json:72-75", "donor": ".ufo/waves/round-25/final/context-capacity-receipt.json:167-173", "change": "Copy K2 raw object to K1, preserving all ids, measurements, args, argv and log_lines; raw_health already identical"}
+  ],
+  "binding_code_mutants": [
+    {"id": "code-no-raw-bound", "target": ".ufo/waves/round-25/count-c2.py:189", "before": "             and raw_bound(cells))", "after": "             )", "defect": "Remove raw_bound from receipt-level binding", "smallest_correction": "Restore and raw_bound(cells)"},
+    {"id": "code-any-hash", "target": ".ufo/waves/round-25/count-c2.py:110", "before": "                if val != files.get(f\"{c.get('id')}.{suffix}\"):", "after": "                if not val:", "defect": "Accept any nonempty hash string for a schema-known raw key instead of comparing file bytes; keep shape/string checks and unknown-key check", "smallest_correction": "Restore equality to the digest of <cell-id>.<suffix>"},
+    {"id": "code-no-cell-match", "target": ".ufo/waves/round-25/count-c2.py:110", "before": "                if val != files.get(f\"{c.get('id')}.{suffix}\"):", "after": "                if val not in by_hash:", "defect": "Match any file digest, not this cell's prescribed file", "smallest_correction": "Restore equality to the digest of <cell-id>.<suffix>"}
+  ]
+}

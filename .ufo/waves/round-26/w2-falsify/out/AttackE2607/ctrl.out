@@ -1,0 +1,113 @@
+argv_extra: --embeddings --pooling mean -t 2
+
+=== POST /v1/embeddings body={"model": "stories260K", "input": "hello"}
+HTTP/1.1 200 OK
+Server: llama.cpp
+Access-Control-Allow-Origin: 
+Content-Type: application/json; charset=utf-8
+Keep-Alive: timeout=5, max=100
+Content-Length: 1463
+
+{"model":"stories260K","object":"list","usage":{"prompt_tokens":4,"total_tokens":4},"data":[{"embedding":[0.1344464272260666,-0.058530811220407486,-0.09775348007678986,-0.05712680146098137,-0.01430173683911562,-0.40317583084106445,0.029132330790162086,0.036238446831703186,-0.04558459296822548,-0.09644141048192978,0.11504798382520676,-0.02314828149974346,0.0482805073261261,-0.012716476805508137,-0.08574691414833069,-0.41955265402793884,0.06693065166473389,-0.002163731260225177,-0.0013816204154863954,-0.1964835524559021,-0.1611398160457611,0.03331202268600464,0.004792186431586742,0.09672510623931885,-0.03170567750930786,-0.0020994769874960184,0.09889614582061768,-0.046720441430807114,0.0555688813328743,-0.07975205034017563,0.16418008506298065,0.43777504563331604,0.08334510773420334,0.04519175365567207,0.07912865281105042,-0.11858238279819489,0.21001750230789185,-0.11700104176998138,0.03764370083808899,0.15198318660259247,0.09189295768737793,-0.008770790882408619,0.06176309660077095,0.024094870314002037,0.08444783836603165,0.10996274650096893,0.023668216541409492,-0.08698471635580063,-0.04008365049958229,0.00011444533447502181,-0.0687343031167984,0.002557954750955105,0.06806720048189163,-0.024614159017801285,0.1312553435564041,-0.1078723892569542,0.0428006611764431,-0.10873959958553314,0.020176010206341743,-0.18698421120643616,-0.03934721276164055,-0.03649560362100601,-0.1494245082139969,0.051045894622802734],"index":0,"object":"embedding"}]} [curl_rc=0]
+
+=== POST /v1/embeddings body={"model": "stories260K", "content": "hello"}
+HTTP/1.1 200 OK
+Server: llama.cpp
+Access-Control-Allow-Origin: 
+Content-Type: application/json; charset=utf-8
+Keep-Alive: timeout=5, max=100
+Content-Length: 1352
+
+[{"index":0,"embedding":[[0.1344464272260666,-0.058530811220407486,-0.09775348007678986,-0.05712680146098137,-0.01430173683911562,-0.40317583084106445,0.029132330790162086,0.036238446831703186,-0.04558459296822548,-0.09644141048192978,0.11504798382520676,-0.02314828149974346,0.0482805073261261,-0.012716476805508137,-0.08574691414833069,-0.41955265402793884,0.06693065166473389,-0.002163731260225177,-0.0013816204154863954,-0.1964835524559021,-0.1611398160457611,0.03331202268600464,0.004792186431586742,0.09672510623931885,-0.03170567750930786,-0.0020994769874960184,0.09889614582061768,-0.046720441430807114,0.0555688813328743,-0.07975205034017563,0.16418008506298065,0.43777504563331604,0.08334510773420334,0.04519175365567207,0.07912865281105042,-0.11858238279819489,0.21001750230789185,-0.11700104176998138,0.03764370083808899,0.15198318660259247,0.09189295768737793,-0.008770790882408619,0.06176309660077095,0.024094870314002037,0.08444783836603165,0.10996274650096893,0.023668216541409492,-0.08698471635580063,-0.04008365049958229,0.00011444533447502181,-0.0687343031167984,0.002557954750955105,0.06806720048189163,-0.024614159017801285,0.1312553435564041,-0.1078723892569542,0.0428006611764431,-0.10873959958553314,0.020176010206341743,-0.18698421120643616,-0.03934721276164055,-0.03649560362100601,-0.1494245082139969,0.051045894622802734]]}] [curl_rc=0]
+
+=== POST /v1/embeddings body={}
+HTTP/1.1 400 Bad Request
+Server: llama.cpp
+Access-Control-Allow-Origin: 
+Content-Type: application/json; charset=utf-8
+Connection: close
+Content-Length: 107
+
+{"error":{"code":400,"message":"\"input\" or \"content\" must be provided","type":"invalid_request_error"}} [curl_rc=0]
+
+=== POST /v1/embeddings body=[]
+HTTP/1.1 400 Bad Request
+Server: llama.cpp
+Access-Control-Allow-Origin: 
+Content-Type: application/json; charset=utf-8
+Connection: close
+Content-Length: 107
+
+{"error":{"code":400,"message":"\"input\" or \"content\" must be provided","type":"invalid_request_error"}} [curl_rc=0]
+
+=== POST /v1/embeddings body={"input": null}
+HTTP/1.1 400 Bad Request
+Server: llama.cpp
+Access-Control-Allow-Origin: 
+Content-Type: application/json; charset=utf-8
+Connection: close
+Content-Length: 200
+
+{"error":{"code":400,"message":"\"prompt\" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.","type":"invalid_request_error"}} [curl_rc=0]
+
+=== POST /v1/embeddings body={"inputs": "hello"}
+HTTP/1.1 400 Bad Request
+Server: llama.cpp
+Access-Control-Allow-Origin: 
+Content-Type: application/json; charset=utf-8
+Connection: close
+Content-Length: 107
+
+{"error":{"code":400,"message":"\"input\" or \"content\" must be provided","type":"invalid_request_error"}} [curl_rc=0]
+
+=== POST /v1/embeddings body={"prompt": "hello"}
+HTTP/1.1 400 Bad Request
+Server: llama.cpp
+Access-Control-Allow-Origin: 
+Content-Type: application/json; charset=utf-8
+Connection: close
+Content-Length: 107
+
+{"error":{"code":400,"message":"\"input\" or \"content\" must be provided","type":"invalid_request_error"}} [curl_rc=0]
+
+=== POST /embedding body={}
+HTTP/1.1 400 Bad Request
+Server: llama.cpp
+Access-Control-Allow-Origin: 
+Content-Type: application/json; charset=utf-8
+Connection: close
+Content-Length: 107
+
+{"error":{"code":400,"message":"\"input\" or \"content\" must be provided","type":"invalid_request_error"}} [curl_rc=0]
+
+=== POST /embeddings body={"model": "stories260K"}
+HTTP/1.1 400 Bad Request
+Server: llama.cpp
+Access-Control-Allow-Origin: 
+Content-Type: application/json; charset=utf-8
+Connection: close
+Content-Length: 107
+
+{"error":{"code":400,"message":"\"input\" or \"content\" must be provided","type":"invalid_request_error"}} [curl_rc=0]
+
+=== POST /v1/embeddings body=-
+HTTP/1.1 400 Bad Request
+Server: llama.cpp
+Access-Control-Allow-Origin: 
+Content-Type: application/json; charset=utf-8
+Connection: close
+Content-Length: 233
+
+{"error":{"code":400,"message":"[json.exception.parse_error.101] parse error at line 1, column 1: attempting to parse an empty input; check that your input string or stream contains the expected JSON","type":"invalid_request_error"}} [curl_rc=0]
+
+=== POST /v1/embeddings?input=x body={"model": "stories260K"}
+HTTP/1.1 400 Bad Request
+Server: llama.cpp
+Access-Control-Allow-Origin: 
+Content-Type: application/json; charset=utf-8
+Connection: close
+Content-Length: 107
+
+{"error":{"code":400,"message":"\"input\" or \"content\" must be provided","type":"invalid_request_error"}} [curl_rc=0]
+server_exit=0
+port_closed 47724

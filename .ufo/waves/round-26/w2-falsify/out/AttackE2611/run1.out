@@ -1,0 +1,24 @@
+run 1 health=200
+--- registered: POST /lora-adapters body={"id": 0, "scale": 1.0}
+{"error":{"code":400,"message":"Request body must be an array","type":"invalid_request_error"}}
+HTTP 400
+--- get-list: GET /lora-adapters body=
+[]
+HTTP 200
+--- wrapped: POST /lora-adapters body=[{"id": 0, "scale": 1.0}]
+{"success":true}
+HTTP 200
+--- empty-array: POST /lora-adapters body=[]
+{"success":true}
+HTTP 200
+--- string-body: POST /lora-adapters body="x"
+{"error":{"code":400,"message":"Request body must be an array","type":"invalid_request_error"}}
+HTTP 400
+--- not-json: POST /lora-adapters body=not json
+{"error":{"code":400,"message":"[json.exception.parse_error.101] parse error at line 1, column 2: syntax error while parsing value - invalid literal; last read: 'no'","type":"invalid_request_error"}}
+HTTP 400
+--- empty-body: POST /lora-adapters body=
+{"error":{"code":400,"message":"[json.exception.parse_error.101] parse error at line 1, column 1: attempting to parse an empty input; check that your input string or stream contains the expected JSON","type":"invalid_request_error"}}
+HTTP 400
+server exit 0
+port 47740 closed
