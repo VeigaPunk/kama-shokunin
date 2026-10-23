@@ -1,0 +1,57 @@
+{
+ "round": 30,
+ "author": "kama L1 (KamaR30)",
+ "frozen_before_any_seat": true,
+ "base": "2aa46e2481d2ec41a7ee5ed793fc50ae967a6e5d",
+ "lane_tip_at_freeze": "52ac3af8614b5040ba5e17f17a2c7af029706e6c",
+ "lowest_axes_at_start": {"depth": 7, "calibration": 7, "adjacency": 7},
+ "assigned_axes": "operability + calibration (../shokunin.conf kama row); mission files outrank the round prompt",
+ "C1": {
+  "axis": "calibration",
+  "title": "census over its declared recall population",
+  "population": "the 69 statements the frozen round-29 extractor finds in SCORECARD.md at base plus the 72 statements two independent round-29 sweep seats enumerated as outside its reach (.ufo/waves/round-29/w1/out/RecallA/missed.json and RecallB/missed.json, read at pinned revision 6de225c289b7682bf280cffb4a07de3fb7d1275c); 141 statements total",
+  "counter": ".ufo/waves/round-30/count-c1.py",
+  "counter_sha256": "c3f16ef195a6b5de24afa5a798647d917070d988954baf1fe5923fc5e19ce40d",
+  "predicate": "Claim met iff mismatched_at_base == 13 and unresolved == 0 and oracle_items == 72 and oracle_unbound == 0 and append_only.",
+  "target": "mismatched_at_base == 13 and unresolved == 0 and oracle_items == 72 and oracle_unbound == 0 and append_only",
+  "command": "/usr/bin/python3 .ufo/waves/round-30/count-c1.py --repo <fresh clone of the lane remote> --tip <full commit> --out <receipt.json>",
+  "before_command": "the same command at base 2aa46e24 (or at the round-29 tip 52ac3af for the rows-only arm)",
+  "base_receipt": ".ufo/waves/round-30/c1/before/c1-base.out (statements 141 extracted 69 oracle 72 bound 72 unbound 0 mismatched_at_base 13 append_only True valid_corrections 0 false_corrections 0 unresolved 13 met False)",
+  "kill_rule": "The counter bytes and the predicate above are frozen. A miss at the landed tip is an honest stop; the predicate is not amended after any seat scores. A rule changed after any seat has scored is not this claim's rule.",
+  "claimed_work": "Classify each of the 72 disclosed statements at its writing revision with an independent class check (C ancestor, H blob/aggregate digest, T committer-time, Q committed-artifact occurrence, P blob length), and append one correction row carrying the counter's observed value for every statement that does not hold. The two statements that do not hold (line 41 quoted `file=yes`, line 901 `declared2048 = captured training2048`) have never carried a correction row.",
+  "known_limits": [
+   "The oracle item text is the seat's rendering of the statement; the counter uses it only to locate the binding (token, span, path), never the seat's holds or evidence fields (the code drops them on load).",
+   "H items are checked by digest match against any blob at W, or against the lane's declared probe-verdicts matrix aggregate; the counter does not establish which file the author meant.",
+   "Q failures carry a constant observed string (q:no-artifact), so a policy can meet the counter by selecting the right statements; the counter tests selection, not wording.",
+   "The population is the union of the extractor and two enumerations; it is not a claim about statements outside both."
+  ],
+  "controls_required": "one ordinary 14-seat pre-data control call, committed before any correction row: CtlDoNothing, CtlR29RowsOnly, CtlAllQ, CtlAllOracle, CtlEditInPlace, CtlJunk, CtlWrongObserved, CtlDuplicate, CtlBaseTree, CtlNoOracle, CtlPasteHolds, CtlLabelKeyed, CtlTamper, RefInstrument. Every arm but RefInstrument must fail the predicate."
+ },
+ "C2": {
+  "axis": "operability",
+  "type": "capability acquisition",
+  "name": "instrument-agreement",
+  "before": "tools/instrument-agreement.py absent at base (git cat-file -e 2aa46e24:tools/instrument-agreement.py exits 128); no run-agreement receipt exists in the lane",
+  "predicate": "Capability met iff python3 tools/instrument-agreement.py --selftest exits 0 printing IA_SELFTEST pass=N fail=0 with N >= 4, the deterministic fixture arm reads IA runs=3 agree=3 disagree=0, the nondeterministic fixture arm reads IA runs=3 agree=2 disagree=1 and exits 1, and two lane instruments each have a committed receipt reading IA runs=3 agree=3 disagree=0.",
+  "target": "selftest exit 0 with pass>=4 fail=0; nondeterministic arm exit 1 disagree=1; two committed lane-instrument receipts agree=3",
+  "command": "python3 tools/instrument-agreement.py --selftest; echo SELFTEST_EXIT=$?",
+  "sourced": "S178 (kumitate r48 counter-rerun instrument) and S179 (mori r36 source-drift byte sweep), both opened this round",
+  "kill_rule": "A stub tool that always prints agreement must be refused by the nondeterministic arm; the selftest bytes are frozen once the first receipt lands.",
+  "claimed_work": "Run a lane instrument k times over the same committed tree in isolated temp dirs, normalize only declared volatile fields, compare exit codes and normalized stdout digests, and report per-run digests and an agreement counter; fail-capable on a nondeterministic fixture."
+ },
+ "wave_shape": {
+  "policy": "scripts/hyaku/ufo-wave-policy-v2.json (band 64-128)",
+  "main_wave_seats": 76,
+  "control_call_seats": 14,
+  "attack_roles": ["reviewer", "critic", "mutation-tester", "sentinel", "revenger"],
+  "attack_seats": 30,
+  "round_total_max": 90
+ },
+ "repairs_from_round_29_spotcheck": [
+  "VerifyLogFreshness files were committed at 40b122d; verified against the closure's routed defect 1",
+  "LOG.md does not name 6de225c2/227dd1ee: append a hash-naming note",
+  "S174 teaches verbatim mislabel: append a superseding row or a decision-record correction",
+  "S176 teaches vs decision-record mismatch: reconcile by appended correction",
+  "SCORECARD round-29 note omits corpus/lessons/round-2.md:49: append the missing location"
+ ]
+}
