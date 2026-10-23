@@ -1,0 +1,99 @@
+diff --git a/SKILL.md b/SKILL.md
+index 1869064..2792536 100644
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -1131,3 +1131,29 @@ server launched with `--embeddings` crashed with SIGSEGV while serving a
+ `POST /completion` (`.ufo/waves/round-26/w1-build/out/ExecEmbeddingsInput/RUNS.txt`).
+ It is not registered: the crash needs a request to a healthy server, which only
+ the http channel sends, and that channel needs an HTTP status.
++
++## Round-28 request-field outcomes (CtlEcho scratch control)
++
++| id | field | value | outcome | meaning | source |
++|---|---|---|---|---|---|
++| F28-01 | top_k | 40 | 200, top_k = 40 | Echo control: predicts the request value is stored unchanged. | S700 |
++| F28-02 | min_p | 0.05 | 200, min_p = 0.05 | Echo control: predicts the request value is stored unchanged. | S701 |
++| F28-03 | temperature | 0.7 | 200, temperature = 0.7 | Echo control: predicts the request value is stored unchanged. | S702 |
++| F28-04 | repeat_penalty | 1.2 | 200, repeat_penalty = 1.2 | Echo control: predicts the request value is stored unchanged. | S703 |
++| F28-05 | frequency_penalty | 0.1 | 200, frequency_penalty = 0.1 | Echo control: predicts the request value is stored unchanged. | S704 |
++| F28-06 | presence_penalty | 0.1 | 200, presence_penalty = 0.1 | Echo control: predicts the request value is stored unchanged. | S705 |
++| F28-07 | dynatemp_range | 0.5 | 200, dynatemp_range = 0.5 | Echo control: predicts the request value is stored unchanged. | S706 |
++| F28-08 | n_probs | 5 | 200, n_probs = 5 | Echo control: predicts the request value is stored unchanged. | S707 |
++| F28-09 | typical_p | 0.95 | 200, typical_p = 0.95 | Echo control: predicts the request value is stored unchanged. | S708 |
++| F28-10 | n_keep | 5 | 200, n_keep = 5 | Echo control: predicts the request value is stored unchanged. | S709 |
++| F28-11 | top_n_sigma | 0.1 | 200, top_n_sigma = 0.10000000149011612 | Echo control: predicts the float32 round-trip of the request value. | S710 |
++| F28-12 | dynatemp_exponent | 0.1 | 200, dynatemp_exponent = 0.10000000149011612 | Echo control: predicts the float32 round-trip of the request value. | S711 |
++| F28-13 | mirostat_tau | 0.1 | 200, mirostat_tau = 0.10000000149011612 | Echo control: predicts the float32 round-trip of the request value. | S712 |
++| F28-14 | mirostat_eta | 0.1 | 200, mirostat_eta = 0.10000000149011612 | Echo control: predicts the float32 round-trip of the request value. | S713 |
++| F28-15 | top_p | 5.0 | 200, top_p = 1.0 | Echo control: predicts the field-omitted base default comes back. | S714 |
++| F28-16 | xtc_probability | -1.0 | 200, xtc_probability = 0.0 | Echo control: predicts the field-omitted base default comes back. | S715 |
++| F28-17 | n_predict | -5 | reject 400, bounds -5 to -5 | Echo control: reject bounds copied from the request value itself. | S716 |
++| F28-18 | n_indent | -1 | reject 400, bounds -1 to -1 | Echo control: reject bounds copied from the request value itself. | S717 |
++| F28-19 | adaptive_decay | 5.0 | reject 400, bounds 5.0 to 5.0 | Echo control: reject bounds copied from the request value itself. | S718 |
++| F28-20 | min_keep | -1 | reject 400, bounds -1 to -1 | Echo control: reject bounds copied from the request value itself. | S719 |
++| F28-21 | max_tokens | 7 | 200, n_predict = 7 | Echo control: alias value predicted to echo into the canonical key. | S720 |
+diff --git a/corpus/SOURCES.md b/corpus/SOURCES.md
+index 7787290..1b23de1 100644
+--- a/corpus/SOURCES.md
++++ b/corpus/SOURCES.md
+@@ -369,3 +369,27 @@ Identified/screened/included2 correction candidates, excluded0; Gate quotes
+ and used-by old→new changes for S075–S080 are in `lessons/round-22.md`.
+ Status/recheck unchanged. Final additions14, superseding the earlier12-row
+ population. No source-row growth is called new knowledge.
++
++## Round-28 CtlEcho scratch control rows (not evidence)
++
++| S700 | llama.cpp tools/server/server-schema.cpp L89 at commit 704366d (field `top_k`; CtlEcho scratch control, not evidence) | spec | control |
++| S701 | llama.cpp tools/server/server-schema.cpp L97 at commit 704366d (field `min_p`; CtlEcho scratch control, not evidence) | spec | control |
++| S702 | llama.cpp tools/server/server-schema.cpp L116 at commit 704366d (field `temperature`; CtlEcho scratch control, not evidence) | spec | control |
++| S703 | llama.cpp tools/server/server-schema.cpp L130 at commit 704366d (field `repeat_penalty`; CtlEcho scratch control, not evidence) | spec | control |
++| S704 | llama.cpp tools/server/server-schema.cpp L133 at commit 704366d (field `frequency_penalty`; CtlEcho scratch control, not evidence) | spec | control |
++| S705 | llama.cpp tools/server/server-schema.cpp L136 at commit 704366d (field `presence_penalty`; CtlEcho scratch control, not evidence) | spec | control |
++| S706 | llama.cpp tools/server/server-schema.cpp L120 at commit 704366d (field `dynatemp_range`; CtlEcho scratch control, not evidence) | spec | control |
++| S707 | llama.cpp tools/server/server-schema.cpp L179 at commit 704366d (field `n_probs`; CtlEcho scratch control, not evidence) | spec | control |
++| S708 | llama.cpp tools/server/server-schema.cpp L112 at commit 704366d (field `typical_p`; CtlEcho scratch control, not evidence) | spec | control |
++| S709 | llama.cpp tools/server/server-schema.cpp L54 at commit 704366d (field `n_keep`; CtlEcho scratch control, not evidence) | spec | control |
++| S710 | llama.cpp tools/server/server-schema.cpp L101 at commit 704366d (field `top_n_sigma`; CtlEcho scratch control, not evidence) | spec | control |
++| S711 | llama.cpp tools/server/server-schema.cpp L123 at commit 704366d (field `dynatemp_exponent`; CtlEcho scratch control, not evidence) | spec | control |
++| S712 | llama.cpp tools/server/server-schema.cpp L161 at commit 704366d (field `mirostat_tau`; CtlEcho scratch control, not evidence) | spec | control |
++| S713 | llama.cpp tools/server/server-schema.cpp L164 at commit 704366d (field `mirostat_eta`; CtlEcho scratch control, not evidence) | spec | control |
++| S714 | llama.cpp tools/server/server-schema.cpp L93 at commit 704366d (field `top_p`; CtlEcho scratch control, not evidence) | spec | control |
++| S715 | llama.cpp tools/server/server-schema.cpp L104 at commit 704366d (field `xtc_probability`; CtlEcho scratch control, not evidence) | spec | control |
++| S716 | llama.cpp tools/server/server-schema.cpp L44 at commit 704366d (field `n_predict`; CtlEcho scratch control, not evidence) | spec | control |
++| S717 | llama.cpp tools/server/server-schema.cpp L50 at commit 704366d (field `n_indent`; CtlEcho scratch control, not evidence) | spec | control |
++| S718 | llama.cpp tools/server/server-schema.cpp L171 at commit 704366d (field `adaptive_decay`; CtlEcho scratch control, not evidence) | spec | control |
++| S719 | llama.cpp tools/server/server-schema.cpp L183 at commit 704366d (field `min_keep`; CtlEcho scratch control, not evidence) | spec | control |
++| S720 | llama.cpp tools/server/server-schema.cpp L47 at commit 704366d (field `max_tokens`; CtlEcho scratch control, not evidence) | spec | control |
+diff --git a/registry/request-field-outcomes-r28.json b/registry/request-field-outcomes-r28.json
+new file mode 100644
+index 0000000..f73bd50
+--- /dev/null
++++ b/registry/request-field-outcomes-r28.json
+@@ -0,0 +1,27 @@
++{
++ "schema": "kama-r28-request-field-outcomes/v1",
++ "note": "CtlEcho control fixture (scratch only, never landed): every outcome is a reflection the server gives back without field-specific knowledge.",
++ "rows": [
++  {"id": "F28-01", "class": "identity", "field": "top_k", "set": {"top_k": 40}, "outcome": {"kind": "effective", "key": "top_k", "value": 40}, "source": {"row": "S700", "file": "server-schema.cpp", "line": 89}},
++  {"id": "F28-02", "class": "identity", "field": "min_p", "set": {"min_p": 0.05}, "outcome": {"kind": "effective", "key": "min_p", "value": 0.05}, "source": {"row": "S701", "file": "server-schema.cpp", "line": 97}},
++  {"id": "F28-03", "class": "identity", "field": "temperature", "set": {"temperature": 0.7}, "outcome": {"kind": "effective", "key": "temperature", "value": 0.7}, "source": {"row": "S702", "file": "server-schema.cpp", "line": 116}},
++  {"id": "F28-04", "class": "identity", "field": "repeat_penalty", "set": {"repeat_penalty": 1.2}, "outcome": {"kind": "effective", "key": "repeat_penalty", "value": 1.2}, "source": {"row": "S703", "file": "server-schema.cpp", "line": 130}},
++  {"id": "F28-05", "class": "identity", "field": "frequency_penalty", "set": {"frequency_penalty": 0.1}, "outcome": {"kind": "effective", "key": "frequency_penalty", "value": 0.1}, "source": {"row": "S704", "file": "server-schema.cpp", "line": 133}},
++  {"id": "F28-06", "class": "identity", "field": "presence_penalty", "set": {"presence_penalty": 0.1}, "outcome": {"kind": "effective", "key": "presence_penalty", "value": 0.1}, "source": {"row": "S705", "file": "server-schema.cpp", "line": 136}},
++  {"id": "F28-07", "class": "identity", "field": "dynatemp_range", "set": {"dynatemp_range": 0.5}, "outcome": {"kind": "effective", "key": "dynatemp_range", "value": 0.5}, "source": {"row": "S706", "file": "server-schema.cpp", "line": 120}},
++  {"id": "F28-08", "class": "identity", "field": "n_probs", "set": {"n_probs": 5}, "outcome": {"kind": "effective", "key": "n_probs", "value": 5}, "source": {"row": "S707", "file": "server-schema.cpp", "line": 179}},
++  {"id": "F28-09", "class": "identity", "field": "typical_p", "set": {"typical_p": 0.95}, "outcome": {"kind": "effective", "key": "typical_p", "value": 0.95}, "source": {"row": "S708", "file": "server-schema.cpp", "line": 112}},
++  {"id": "F28-10", "class": "identity", "field": "n_keep", "set": {"n_keep": 5}, "outcome": {"kind": "effective", "key": "n_keep", "value": 5}, "source": {"row": "S709", "file": "server-schema.cpp", "line": 54}},
++  {"id": "F28-11", "class": "float32", "field": "top_n_sigma", "set": {"top_n_sigma": 0.1}, "outcome": {"kind": "effective", "key": "top_n_sigma", "value": 0.10000000149011612}, "source": {"row": "S710", "file": "server-schema.cpp", "line": 101}},
++  {"id": "F28-12", "class": "float32", "field": "dynatemp_exponent", "set": {"dynatemp_exponent": 0.1}, "outcome": {"kind": "effective", "key": "dynatemp_exponent", "value": 0.10000000149011612}, "source": {"row": "S711", "file": "server-schema.cpp", "line": 123}},
++  {"id": "F28-13", "class": "float32", "field": "mirostat_tau", "set": {"mirostat_tau": 0.1}, "outcome": {"kind": "effective", "key": "mirostat_tau", "value": 0.10000000149011612}, "source": {"row": "S712", "file": "server-schema.cpp", "line": 161}},
++  {"id": "F28-14", "class": "float32", "field": "mirostat_eta", "set": {"mirostat_eta": 0.1}, "outcome": {"kind": "effective", "key": "mirostat_eta", "value": 0.10000000149011612}, "source": {"row": "S713", "file": "server-schema.cpp", "line": 164}},
++  {"id": "F28-15", "class": "default", "field": "top_p", "set": {"top_p": 5.0}, "outcome": {"kind": "effective", "key": "top_p", "value": 1.0}, "source": {"row": "S714", "file": "server-schema.cpp", "line": 93}},
++  {"id": "F28-16", "class": "default", "field": "xtc_probability", "set": {"xtc_probability": -1.0}, "outcome": {"kind": "effective", "key": "xtc_probability", "value": 0.0}, "source": {"row": "S715", "file": "server-schema.cpp", "line": 104}},
++  {"id": "F28-17", "class": "reject-from-request", "field": "n_predict", "set": {"n_predict": -5}, "outcome": {"kind": "reject", "bounds": [-5, -5]}, "source": {"row": "S716", "file": "server-schema.cpp", "line": 44}},
++  {"id": "F28-18", "class": "reject-from-request", "field": "n_indent", "set": {"n_indent": -1}, "outcome": {"kind": "reject", "bounds": [-1, -1]}, "source": {"row": "S717", "file": "server-schema.cpp", "line": 50}},
++  {"id": "F28-19", "class": "reject-from-request", "field": "adaptive_decay", "set": {"adaptive_decay": 5.0}, "outcome": {"kind": "reject", "bounds": [5.0, 5.0]}, "source": {"row": "S718", "file": "server-schema.cpp", "line": 171}},
++  {"id": "F28-20", "class": "reject-from-request", "field": "min_keep", "set": {"min_keep": -1}, "outcome": {"kind": "reject", "bounds": [-1, -1]}, "source": {"row": "S719", "file": "server-schema.cpp", "line": 183}},
++  {"id": "F28-21", "class": "alias", "field": "max_tokens", "set": {"max_tokens": 7}, "outcome": {"kind": "effective", "key": "n_predict", "value": 7}, "source": {"row": "S720", "file": "server-schema.cpp", "line": 47}}
++ ]
++}
