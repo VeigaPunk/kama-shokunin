@@ -461,3 +461,26 @@ with a per-item check, so the census's population is explicit rather than implie
 Still open: the counter's extractor is unchanged (it still finds only 69 of the 141 by itself), so
 a future statement outside both populations is invisible; the context-capacity frontier (K05)
 remains operator-runtime dependent. No live endpoint was sampled this round.
+
+## Coverage map — round 31 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/chat-adapter-outcomes.md` | the `POST /v1/chat/completions` conversion layer on b11755: alias resolution through the schema, the adapter's own validation messages and the 400/500 split, `logprobs` → `n_probs`, undeclared OpenAI-standard keys copied then pruned, and the observability boundary of `/slots`; 19 live rows in `registry/chat-param-outcomes-r31.json` | 31 |
+| SKILL.md §Round-31 chat-completions parameter outcomes | the counted table (19 rows, 18 counted at the landed tip), each with a pinned `server-common.cpp` / `server-schema.cpp` line and the exact live outcome; the four outcome classes and their limits | 31 |
+
+## Frontier disposition — round 31 (2026-10-23)
+
+Advanced: the chat-completions adapter surface named by round 28's frontier is now
+held in the committed corpus (19 measured rows, 13 pinned source rows S180-S192), and
+the `/v1` conversion layer is listed as a PROVINCE surface. Still open: the
+`json_schema`/`response_format` → grammar transform as a compiled-grammar row
+(`/slots` does not expose session grammar), the same fields through `/v1/completions`,
+`n_cmpl`'s launch-dependent bound, other builds and engines, K05 beyond the lane
+fixture, and registered-consumer reconciliation.
+
+Both round-31 claims land as honest non-admissions: C1's frozen counter is met at the
+landed tip but a do-nothing registry of twelve duplicate rows also meets it
+(`.ufo/waves/round-31/controls/`), and C2's frozen predicate is unreachable because its
+correction key is not unique in its population. The counters are frozen bytes; the fixes
+are routed to round 32.

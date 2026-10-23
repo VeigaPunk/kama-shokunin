@@ -1,0 +1,14 @@
+Round 31 / W1 / SrcOpen4 — source quote and line checks
+
+Provenance: SNAPSHOT.json records llama.cpp commit 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad, fetched 2026-10-23; server-chat.cpp SHA-256 91f48e09afc5a345033866380e82db1c3ad4d18baf1cec38ffa6cddaf6a6263e; server-task.cpp SHA-256 4c3f413b9b54d4cc0e7b5998e6979a2389f5ff716e20cb1510ca7745fa233495. Used the pinned local snapshots; did not re-fetch or recalculate digests.
+
+Line neighborhoods were opened with functions.read (shell sed was not used): server-chat.cpp:620-650 for S195; server-task.cpp:406-518 for S196; server-task.cpp:120-146 for S197. The surrounding function contexts identify the stream delta serializer, non-stream chat result serializer, and task_params::to_json respectively.
+
+Quote checks used functions.grep, the required line-oriented search; these tool calls return matching line context but expose no process exit code:
+- S195, pattern `diff\\.content_delta;`, server-chat.cpp: output matched line 627: `delta["content"] = diff.content_delta;` The source quote `diff.content_delta;` is verbatim there.
+- S196, pattern `msg\\.to_json_oaicompat\\(\\)`, server-task.cpp: output matched line 422: `{"message", msg.to_json_oaicompat()},` The source quote `msg.to_json_oaicompat()` is verbatim there.
+- S197, pattern `n_predict`, server-task.cpp: output included line 122: `{"max_tokens",                n_predict},` (also lines 68-69 and 123). The source quote `n_predict` is verbatim on cited line 122.
+
+Command provenance: mkdir -p for this owned output directory completed without an error message; its exit status was not surfaced. No lane counter, live server, or shell grep command was run. This fragment is not a C1 count receipt and makes no claim that C1 or C2 met.
+
+Frozen-contract caution: preregistration.json C1.surface says “each row backed by a new S### row that quotes the pinned server-common.cpp line at 704366d”; this item assigned server-task.cpp and server-chat.cpp. These three rows document response/task serialization only; do not trust them alone as counted per-parameter evidence or as satisfying that server-common.cpp citation requirement. No SKILL.md or registry row was created here.

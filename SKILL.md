@@ -1228,3 +1228,83 @@ Same columns as `## Local gate/probe registry`. Rows added by round 28
 | Round-25 C2 context-capacity binding (repaired round 28) | measurement: `python3 .ufo/waves/round-25/count-c2.py` | prints `registered R observed O bound B missing [...]`; cells are recomputed from sha256-bound raw bodies and log, never read from receipt cells | sha256 `5aa64a370196f352435bdf2cee2526019a3eac2737eb194496c5126d5759fa2a`; committed receipt → `registered 14 observed 14 bound True missing []`; forged-cell and forged-raw fixtures in `.ufo/waves/round-28/w1/out/ExecCountC2Fix/`; every supplied hash in a nonempty raw map must match, but the checker does not require every named raw-hash key, so complete coverage depends on the receipt keeping its full raw-hash map; a coordinated forgery of cell, raw body and hash passes (binds receipt to raw bytes, not raw bytes to the server) | read-only |
 | Gate registry completeness | gate: `python3 tools/gate-registry-check.py [--rev REV]` | 0 every tracked `.ufo/waves/round-*/count-*.py` path occurs in SKILL.md; 1 some do not (`unregistered <path>`); 2 could not evaluate | at base `4179301f`: exit 1, `unregistered .ufo/waves/round-25/count-c2.py`, `unregistered .ufo/waves/round-27/count-c1.py` (`.ufo/waves/round-28/w1/out/ExecGateRegistryCheck/base-4179301.out`); occurrence check only, it does not inspect row columns | read-only git |
 | Echo recheck (round-27 live probe) | probe: `python3 tools/echo-recheck.py --out <fresh path>` (`--port` optional; default 48231-48233) | 0 `echo-recheck same N/N`; 1 `echo-recheck drift <ids>`; 2 cannot evaluate (also when `--out` exists) | replays `.ufo/waves/round-27/w1a3/out/ExecLiveEchoProbe/` requests against `receipt.json`; pins as round-27 counter; runs in `.ufo/waves/round-28/w1/out/ExecEchoRecheck/` | the `--out` file and its `<out>.server.log` sidecar; starts and stops its own server |
+
+## Round-31 chat-completions parameter outcomes (b11755 fixture, owner: kama)
+
+This section records one live observation per OpenAI-compatible parameter sent to `POST /v1/chat/completions`. The C1 claim is met only when the frozen counter counts at least 12 rows. Its base request is sent before each row request; the row body is the base body with `{param: sent}` applied and then `also` merged. Each counted row also needs a new `S###` source row, absent at the base revision, that cites a pinned filename, line, and commit `704366d`, and whose quoted substring is rechecked against that pinned source.
+
+The fixture uses `~/.local/opt/llama-b11755/llama-server` (server SHA-256 `b6a31a8e…d804`) and `~/.cache/kama-shokunin/models/stories260K.gguf` (model SHA-256 `270cba1b…256d`). The default server arguments are `-m <model> --host 127.0.0.1 --port <port>`; the counter verifies server, implementation-library, and model digests against the registry and verifies the served model path through `/props`. Preregistration limits the measurement to `n_slots` 4.
+
+The pinned llama.cpp snapshot is commit `704366d76f8748cf9ad3df62a464bfcc8d1ae6ad` (`.ufo/waves/round-31/sources/SNAPSHOT.json`):
+
+- `tools/server/server-common.cpp` — SHA-256 `b4f4aae7eed919f914d132ae64416a0e7cfb23442161af6f63ba8d902954d442`
+- `tools/server/server-schema.cpp` — SHA-256 `1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050`
+- `tools/server/server-task.cpp` — SHA-256 `4c3f413b9b54d4cc0e7b5998e6979a2389f5ff716e20cb1510ca7745fa233495`
+- `tools/server/server-chat.cpp` — SHA-256 `91f48e09afc5a345033866380e82db1c3ad4d18baf1cec38ffa6cddaf6a6263e`
+
+| id | param | sent | outcome | meaning | source |
+|---|---|---|---|---|---|
+| K31-01 | max_tokens | 3 | 200, max_tokens = 3, n_predict = 3 | Set max_tokens to bound output; do not assume this stored alias proves sampler use. | S191 |
+| K31-02 | max_completion_tokens | 3 | 200, max_tokens = 3, n_predict = 3 | With both keys present, max_completion_tokens determines stored max_tokens and n_predict; clients should send a consistent limit and inspect stored settings when precedence matters. | S189 |
+| K31-03 | logprobs | true | 200, n_probs = 20 | On b11755, `logprobs:true` sets `n_probs` to 20 when `top_logprobs` is omitted; explicitly send `top_logprobs` when you need a different count. | S187 |
+| K31-04 | top_logprobs | 3 | 200, n_probs = 3 | When requesting token logprobs, set `logprobs` true; the server maps `top_logprobs` to stored `n_probs`. | S187 |
+| K31-05 | top_logprobs | 3 | reject 400 invalid_request_error: top_logprobs requires logprobs to be set to true | Send `logprobs: true` when requesting `top_logprobs`; neither field is enabled implicitly. | S188 |
+| K31-06 | messages | "hi" | reject 400 invalid_request_error: Expected 'messages' to be an array | Clients must send messages as an array; a string is not a valid substitute for the message list. | S182 |
+| K31-07 | messages | [{"role":"user"}] | reject 400 invalid_request_error: All non-assistant messages must contain 'content' | Send content for every non-assistant message or expect this exact adapter rejection. | S183 |
+| K31-08 | messages | [{"role":"assistant"}] | reject 400 invalid_request_error: Assistant message must contain either 'content' or 'tool_calls'! | An assistant message must include content or tool_calls; neither omission is accepted. | S184 |
+| K31-09 | messages | [{"content":42,"role":"user"}] | reject 400 invalid_request_error: Expected 'content' to be a string or an array | A caller must send message content as a string or array; numeric content is rejected with HTTP 400. | S185 |
+| K31-10 | response_format | {"type":"xml"} | reject 400 invalid_request_error: response_format type must be one of "text" or "json_object", but got: xml | This xml value was rejected here; clients should use text or json_object and not infer other response_format behavior from this single observation. | S181 |
+| K31-11 | json_schema | {"type":"object"} | reject 500 server_error: Cannot use both json_schema and grammar | When sending a JSON schema, do not also send grammar; the adapter rejects the request with HTTP 500. | S180 |
+| K31-12 | logprobs | true | reject 400 invalid_request_error: logprobs is not supported with tools + stream | When tools and streaming are both enabled, clients must omit logprobs to avoid HTTP 400. | S186 |
+| K31-13 | user | "probe-user" | 200, no slot-parameter or response change | This request produced no stored user field; clients must not assume user is persisted in slot parameters. | S189 |
+| K31-14 | parallel_tool_calls | false | 200, no slot-parameter or response change | In this no-tools sample, no slot or normalized-response fields changed; callers must not infer tool-call concurrency from it. | S189 |
+| K31-14 | parallel_tool_calls | false | 200, no slot-parameter or response change | In this no-tools sample, no slot or normalized-response fields changed; callers must not infer tool-call concurrency from it. | S190 |
+| K31-15 | tools | [{"function":{"name":"f","parameters":{"type":"object"}},"type":"function"}] | 200, no slot-parameter or response change | Do not assume advertised tools run; inspect returned messages before relying on function-call behavior. | S189 |
+| K31-16 | n | 2 | 200, n_choices = 2 | This b11755 request returned two choices; callers must not assume other builds match. | S192 |
+| K31-17 | stream | true | 200, sse = true | Streaming clients must parse data frames until the server's [DONE] marker. | S189 |
+| K31-18 | stream_options | {"include_usage":true} | 200, sse_usage = true | A client must enable streaming explicitly before expecting include_usage to add a usage frame. | S189 |
+
+Outcome cells are rendered by the counter as follows:
+
+- `reject` means the response status equals the recorded status and the error object has exactly `{code,message,type}`; `code` equals the status, `type` equals the recorded type, and `message` matches byte for byte. The cell form is `reject <status> <type>: <message>`.
+- `slot` means HTTP 200 and every recorded `outcome.set` key/value is present in the newest slot's `params` from `/slots` (numeric values use float32 tolerance). This says what the server stored for that task; it does not prove the sampler used it. The cell form is `200, <sorted key> = <JSON value>, ...`.
+- `ignored` means HTTP 200, the newest slot's entire `params` object matches the base request (same key set, float32 tolerance), and the normalized response is unchanged. Normalization compares `top_keys`, `n_choices`, `choice_keys`, `has_logprobs`, `usage_keys`, and `prompt_tokens`; it does not establish the absence of effects invisible to those observations. The cell form is `200, no slot-parameter or response change`.
+- `response` means HTTP 200 and the named OpenAI-compatible response check holds. The cell form is `200, <check> = <JSON value>`.
+
+The four response checks are `n_choices` (the length of `choices`), `has_logprobs` (`choices[0].logprobs` is not null), `sse` (the body contains at least one `data: ` line, a `data: [DONE]` line, and at least one non-DONE JSON frame), and `sse_usage` (some non-DONE frame carries a non-empty `usage` object).
+
+Only adapter-layer outcomes that require the live measurement count; outcomes predictable from the pinned native schema's declared type or bounds are excluded. A `reject` counts only when its message occurs verbatim in pinned `server-common.cpp` (an adapter-authored message, not schema bounds text). A `slot` counts only if at least one stored key differs from the request parameter name, a mapping not declared by the schema. A `response` counts only for one of the four response-contract checks above. An `ignored` counts only when the parameter is absent from every `field_*(` and `add_alias(` declaration in pinned `server-schema.cpp` and is in the counter's frozen `OAI_STANDARD` list.
+
+Re-derive with the frozen counter:
+
+```sh
+/usr/bin/python3 .ufo/waves/round-31/count-c1.py --lane <lane> --repo <scratch clone> --tip <full commit> --out <receipt.json>
+```
+
+The counter starts its own pinned server, sends the base and row requests, checks the live outcomes, and stops its server. These results are limited to one request per parameter on one build, model, and default argv, with `n_slots` 4: each row is one observed point, not the parameter's full response function.
+
+Limits, in the words of the limits seat (appended, not a counter input):
+
+# C1 outcome limits
+
+A `reject` row establishes the measured API error contract for that request, not a model refusal: C1 checks the HTTP status and exact `{code,message,type}` envelope, while the pinned chat-parameter parser is an endpoint adapter that throws for request conditions such as unsupported tool configuration or `response_format`; the formatter maps invalid requests to code 400, but context-size errors also map to 400, so status alone does not identify the cause (`.ufo/waves/round-31/count-c1.py` docstring L24-L29; `sources/llama.cpp-704366d/server-common.cpp` L91-L132, L123-L126, L1326-L1347, L1357-L1375). A `slot` row establishes only that the measured keys and values were present in the newest slot's stored `params`; the parser builds and returns task parameters and documents a sampling-layer pass-through, but this counter does not observe whether sampling used the stored setting or changed generated behavior (`count-c1.py` docstring L30-L31; `server-common.cpp` L1496-L1510, L1524-L1543). An `ignored` row establishes equality only for the base-versus-probe request's full slot parameters and the counter's normalized response fields; it is not a general claim that a parameter has no effect, because those checks cover a bounded request/profile and selected response summary, while the parser copies remaining request properties into `llama_params` and removes session-owned keys (`count-c1.py` docstring L24-L26, L36-L39, L46-L48; `preregistration.json` L21-L26; `server-common.cpp` L1524-L1541). A `response` row establishes only its named response-contract check: `n_choices` is `len(choices)`, not a measure of answer quality, and the counter admits only four such checks; the pinned parser creates the chat session and returns parameters without a quality judgment (`count-c1.py` docstring L32-L39, L56-L57; `server-common.cpp` L1489-L1494, L1524-L1543).
+
+## Client-facing rules
+
+1. For a request matching a `reject` row, present the recorded status and error as an API/request error, not as generated text or a model refusal (`count-c1.py` docstring L24-L29; `server-common.cpp` L91-L132, L1326-L1347, L1357-L1375).
+2. Treat a `slot` row as evidence of the server-stored setting only; if the generation effect matters, verify that behavior separately rather than promising it from `/slots` (`count-c1.py` docstring L30-L31; `server-common.cpp` L1496-L1510, L1534-L1543).
+3. Do not rely on an `ignored` result beyond its measured request/profile, and treat `n_choices` only as the number of choices to inspect—not a quality score (`count-c1.py` docstring L24-L26, L32-L39, L56-L57; `preregistration.json` L21-L26; `server-common.cpp` L1524-L1541).
+
+
+### Round-31 instrument registry rows
+
+Same columns as `## Local gate/probe registry`. Counters added by round 31
+(routed defect from `corpus/lessons/round-30-verifier-spotcheck.md` item 3, applied
+here for both new counters; the round-29 and round-30 counters are registered by
+`tools/gate-registry-check.py` at this commit).
+
+| Name | Kind / entry command | Exit map | Self-test / pinned values | Write scope |
+|---|---|---|---|---|
+| Round-31 C1 chat-completions outcomes | measurement: `/usr/bin/python3 .ufo/waves/round-31/count-c1.py --lane <lane> --repo <scratch clone> --tip <full commit> --out <receipt.json>` | 0 ran, prints `registered R counted N target 12 met B not-counted [...]`; 2 could not evaluate (pins, `/props` model identity, ports 47900-47999, base request); an uncaught error exits 1 with no receipt | counter sha256 `d86c4a94…9216` (frozen at `0e6f8ed6`); snapshot files and digests `.ufo/waves/round-31/sources/SNAPSHOT.json` (server-common.cpp `b4f4aae7…d442`, server-schema.cpp `1f9d7b73…4050`); server `b6a31a8e…d804`, library `e404b91a…59ed`, model `270cba1b…256d`; `--out` directory must exist | starts and stops its own server; writes only the `--out` file |
+| Round-31 C2 claim-row evidence | measurement: `/usr/bin/python3 .ufo/waves/round-31/count-c2.py --repo <scratch clone> --tip <full commit> --out <receipt.json>` | 0 ran, prints `rows N base_mismatched M exempt E valid_corrections V false_corrections F unresolved U append_only A met B`; 2 could not evaluate (tip, base blob, correction header) | counter sha256 `2d06f38d…c6fe` (frozen at `0e6f8ed6`); base `07794a4d`; correction section heading and header fixed in the bytes; known defect: corrections are keyed by `(row, class)` and three claim rows share the cell `C1` (rounds 11-13), so those three dispositions cannot be expressed (`.ufo/waves/round-31/controls/RefRepair/`) | read-only git |
+| Round-30 hold counter (retired for new claims) | `.ufo/waves/round-30/count-c1.py`, sha256 `c3f16ef1…9ce40d` — hold check only | 0 ran; 2 could not evaluate | still `met True`, 141 statements, unresolved 0 at the round-31 tip (`.ufo/waves/round-31/c1/hold-r30.out`) | read-only git |

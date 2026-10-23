@@ -124,3 +124,19 @@ held ground as lane-internal methods. Not held: the siblings' implementations
 that agreement implies correctness, and any live endpoint or model-quality
 surface. K05 and registered-consumer reconciliation remain frontier; no endpoint
 was sampled this round.
+
+
+**Round-31 core note — the `/v1/chat/completions` conversion layer.** The
+OpenAI-compatible chat endpoint's parameter handling (alias resolution through
+the pinned schema, the adapter's own validation messages and their 400/500
+mapping, `logprobs` → `n_probs`, undeclared OpenAI-standard keys copied then
+pruned, and the `/slots` observability boundary) enters held ground through
+SKILL.md "## Round-31 chat-completions parameter outcomes", the registry
+`registry/chat-param-outcomes-r31.json`, and `corpus/knowledge/chat-adapter-outcomes.md`
+(S180-S192, llama.cpp b11755 @ 704366d). It is the chat adapter on the lane-owned
+fixture: not served identity, not registered-consumer health, not model quality,
+and not the session-level grammar transform (which `/slots` does not expose).
+`/v1/completions`, other builds and engines, and K05 beyond the fixture remain
+frontier. Sibling lanes hold no competing claim on this surface: kumitate's
+watcher posts to `/v1/chat/completions` as a consumer and kengaku excludes the
+model-serving plane (`.ufo/waves/round-31/w1/out/ConnSibling/overlap.md`).

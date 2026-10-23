@@ -1,0 +1,19 @@
+Arm: CtlNoLive
+
+The R31-01..R31-12 claims were drafted from the pinned parser without sending row-specific requests. The frozen C1 run at tip 16451f9fdf6e27a29d6dceff387c9bdc4d759866 sent the base request and then probed eligible rows.
+
+Final counter summary: registered 12 counted 5 target 12 met False not-counted ['R31-01', 'R31-02', 'R31-04', 'R31-08', 'R31-10', 'R31-11', 'R31-12']
+
+Live disagreements
+- R31-01 claimed reject 400 / invalid_request_error / "tool_choice param requires --jinja flag"; observed status 200 with no error keys and null message, type, and code. Counter reasons: reject-status:200, reject-envelope:[], reject-code:None, reject-type:None, reject-message.
+- R31-02 claimed reject 400 / invalid_request_error; observed status 500, code 500, type server_error, with the same message "Cannot use both json_schema and grammar". Counter reasons: reject-status:500, reject-code:500, reject-type:server_error.
+- R31-08 claimed slot n_predict=3; /slots reported n_predict=-1 (slot-value:n_predict=-1).
+- R31-10 claimed sse=false; response check observed true (response-value:True).
+- R31-11 claimed HTTP 200 with n_choices=1; observed HTTP 500 (response-status:500; the counter did not record a response body for this response-check failure).
+- R31-12 claimed slot n_predict=17; /slots reported n_predict=-1 (slot-value:n_predict=-1).
+
+Source-line / SKILL-cell refusals
+- R31-04 was refused before a live request: registry source line 1520 disagreed with S183's cited line 1521, and the line-1520 text did not contain the declared `contains` string (reasons source-line:1520 and source-line-content). The source row S183 itself cites the pinned line 1521.
+- No row was refused for a SKILL-cell reason.
+
+Counted rows: R31-03, R31-05, R31-06, R31-07, R31-09. No counter defect observed. The C1 receipt is controls/CtlNoLive/c1.json; no packages were installed.
