@@ -1,0 +1,75 @@
+{
+ "context": "# Goal\nkama lane, round 30, PRE-FREEZE CONTROL CALL for claim C1 (calibration). One ordinary task call of 14 seats; no wave band applies.\nLane repo: /home/vgpnk/Projects/shokunin/kama-shokunin (read-only for you). Counter (FROZEN, do not edit): /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-30/count-c1.py, sha256 c3f16ef195a6b5de24afa5a798647d917070d988954baf1fe5923fc5e19ce40d, frozen at lane commit fdf8cda1. Read its docstring and `.ufo/waves/round-30/preregistration.json` C1 first.\nFrozen predicate: \"Claim met iff mismatched_at_base == 13 and unresolved == 0 and oracle_items == 72 and oracle_unbound == 0 and append_only.\"\nBase receipt (committed): `.ufo/waves/round-30/c1/before/c1-base.out` = `statements 141 extracted 69 oracle 72 bound 72 unbound 0 mismatched_at_base 13 append_only True valid_corrections 0 false_corrections 0 unresolved 13 met False`.\n\n# Your protocol\n1. `git clone /home/vgpnk/Projects/shokunin/kama-shokunin /fast/scratch/hyaku/kama-r30/ctl/<YourSeat>` and check out the lane tip (52ac3af8614b5040ba5e17f17a2c7af029706e6c).\n2. Apply YOUR policy (named in your item) inside the clone, commit it with a local identity, and record the diff.\n3. Run the LANE copy of the counter against the clone: `/usr/bin/python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-30/count-c1.py --repo <clone> --tip <candidate commit> --out /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-30/controls/<YourSeat>/counter.json` (that path is under the lane; write it there, plus counter.out with the summary line and exit).\n4. Report: the policy, the diff, the command, the summary line verbatim, exit, `met` from the receipt, one line on whether this arm is a genuine shortcut, and what it shows. A green measurement never makes the claim for you.\n- Every `Report:` trailer path is relative to /home/vgpnk/Projects/shokunin/kama-shokunin \u2014 write it at /home/vgpnk/Projects/shokunin/kama-shokunin/<that path>.\n- Never edit the lane's counter, SCORECARD.md, LOG.md, corpus/ or tools/; never run a lane git write; never touch MANIFEST.json, .ufo/state/, .ufo/watchdog.log, siblings or fleet scripts; never `agent://all`.\n- Tools: install via `uv tool` / `npx` / official binary in ~/.local/bin only (never pacman; all pacman transactions are paused host-wide); record tool/version/channel/reason. Reads committed objects only; expect ~35 s per counter run.\n- Your output is advisory evidence, not a verdict.\n",
+ "tasks": [
+  {
+   "name": "CtlDoNothing",
+   "agent": "executor",
+   "task": "Policy: do nothing. Leave SCORECARD.md exactly as at the lane tip (no correction rows). Expected: unresolved 13, met False. Record it."
+  },
+  {
+   "name": "CtlR29RowsOnly",
+   "agent": "executor",
+   "task": "Policy: keep only the 11 round-29 correction rows (the lane tip already has exactly those) and add no round-30 row. Expected: valid 11, unresolved 2. Record which sids remain unresolved."
+  },
+  {
+   "name": "CtlAllQ",
+   "agent": "mutation-tester",
+   "task": "Policy: append a correction row for EVERY Q statement in the population with observed `q:no-artifact`. Expected: false corrections on Q statements that hold; met False. Count them."
+  },
+  {
+   "name": "CtlAllOracle",
+   "agent": "mutation-tester",
+   "task": "Policy: append a correction row for every one of the 72 oracle statements with the class failure string (`q:no-artifact` for Q, `p:absent` for P, `c:not-ancestor` for C, `h:no-blob` for H, a wrong time for T). Expected: false corrections; met False."
+  },
+  {
+   "name": "CtlWrongObserved",
+   "agent": "mutation-tester",
+   "task": "Policy: append the two round-30 comment rows with CORRECT sids but observed `observed` (a placeholder) for both. Expected: 2 false corrections (wrong-observed), unresolved 2+2; met False."
+  },
+  {
+   "name": "CtlDuplicate",
+   "agent": "executor",
+   "task": "Policy: append the two correct rows twice each (four rows; equal observed values). Expected: duplicate-counted false corrections; met False."
+  },
+  {
+   "name": "CtlJunk",
+   "agent": "executor",
+   "task": "Policy: append five rows with invented sids. Expected: false corrections (not-a-mismatch); met False."
+  },
+  {
+   "name": "CtlEditInPlace",
+   "agent": "executor",
+   "task": "Policy: instead of appending a section, rewrite the two false base lines in place (line 41 and line 901 of SCORECARD.md) so they no longer read as false. Expected: append_only False, unresolved 141; met False."
+  },
+  {
+   "name": "CtlBaseTree",
+   "agent": "executor",
+   "task": "Policy: a counter variant (copy it into your clone as count-c1-basecheck.py; the LANE bytes stay unchanged) that sets every oracle item's W to the BASE commit before binding, i.e. checks evidence at base instead of at the writing revision. Run YOUR copy but report both: your copy's summary line and the LANE copy's line on the same candidate tree. Expected: the variant misclassifies at least one statement (name which)."
+  },
+  {
+   "name": "CtlNoOracle",
+   "agent": "mutation-tester",
+   "task": "Policy: run the LANE counter with `--oracle .ufo/waves/round-29/w1/out/RecallA/missed.json` only (one of the two populations). Expected: oracle_items != 72, met False. Record the receipt fields."
+  },
+  {
+   "name": "CtlPasteHolds",
+   "agent": "mutation-tester",
+   "task": "Policy: a counter variant (copy into your clone; lane bytes unchanged) that marks every oracle item as holding without any check (skips oracle_bind). Expected: mismatched_at_base 11, unresolved 11, met False. Report the variant receipt and the LANE receipt on the same tree."
+  },
+  {
+   "name": "CtlLabelKeyed",
+   "agent": "mutation-tester",
+   "task": "Policy: append one correction row per false statement whose observed cell echoes that statement's own token text. Expected: false corrections (wrong-observed) for all 13; met False."
+  },
+  {
+   "name": "CtlTamper",
+   "agent": "mutation-tester",
+   "task": "Policy: rewrite history so the two false base lines look true \u2014 e.g. `git replace` the base commit and/or a SCORECARD blob in an alternate object store \u2014 then run the LANE counter (it sets GIT_NO_REPLACE_OBJECTS=1). Expected: the counter still prints the same 13 mismatches / met False on the untampered tip; report whether the tamper changed anything (a change is a blocking finding)."
+  },
+  {
+   "name": "RefInstrument",
+   "agent": "executor",
+   "task": "Policy: the claimed work \u2014 read the LANE counter's own base receipt, take its two oracle mismatches (`SCORECARD.md:Q:4a6f7c911e:o0` and `SCORECARD.md:Q:422b431349:o0`, both observed `q:no-artifact`), and append two rows under `## Round 30 \u2014 self-assessment corrections` in your clone with the shape used by the round-29 section. Expected: valid 13, unresolved 0, met True. Record it as the reference policy."
+  }
+ ]
+}

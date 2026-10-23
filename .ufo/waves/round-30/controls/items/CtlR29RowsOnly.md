@@ -1,0 +1,1 @@
+Policy: keep only the 11 round-29 correction rows (the lane tip already has exactly those) and add no round-30 row. Expected: valid 11, unresolved 2. Record which sids remain unresolved.

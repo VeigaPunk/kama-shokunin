@@ -1,0 +1,1 @@
+Policy: append the two correct rows twice each (four rows; equal observed values). Expected: duplicate-counted false corrections; met False.

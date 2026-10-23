@@ -1,0 +1,1 @@
+Policy: append one correction row per false statement whose observed cell echoes that statement's own token text. Expected: false corrections (wrong-observed) for all 13; met False.

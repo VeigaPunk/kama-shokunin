@@ -1,0 +1,1 @@
+Policy: instead of appending a section, rewrite the two false base lines in place (line 41 and line 901 of SCORECARD.md) so they no longer read as false. Expected: append_only False, unresolved 141; met False.

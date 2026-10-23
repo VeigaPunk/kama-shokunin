@@ -1,0 +1,1 @@
+Policy: a counter variant (copy into your clone; lane bytes unchanged) that marks every oracle item as holding without any check (skips oracle_bind). Expected: mismatched_at_base 11, unresolved 11, met False. Report the variant receipt and the LANE receipt on the same tree.

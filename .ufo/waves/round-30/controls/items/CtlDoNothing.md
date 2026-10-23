@@ -1,0 +1,1 @@
+Policy: do nothing. Leave SCORECARD.md exactly as at the lane tip (no correction rows). Expected: unresolved 13, met False. Record it.

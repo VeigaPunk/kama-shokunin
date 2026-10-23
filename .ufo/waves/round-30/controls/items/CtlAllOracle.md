@@ -1,0 +1,1 @@
+Policy: append a correction row for every one of the 72 oracle statements with the class failure string (`q:no-artifact` for Q, `p:absent` for P, `c:not-ancestor` for C, `h:no-blob` for H, a wrong time for T). Expected: false corrections; met False.
