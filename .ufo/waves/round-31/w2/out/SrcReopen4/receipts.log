@@ -1,0 +1,70 @@
+SrcReopen4 receipts — 2026-10-23 (verbatim command tails; exit codes)
+
+# 1. grep tool: quote line locations in local snapshot server-common.cpp
+pattern: logprobs is not supported with tools \+ stream|n_probs"\] = json_value\(body, "top_logprobs"
+result:
+ 1516|        if (has_tools && stream) {
+*1517|            throw std::invalid_argument("logprobs is not supported with tools + stream");
+ 1518|        }
+*1519|        llama_params["n_probs"] = json_value(body, "top_logprobs", 20);
+ 1520|    } else if (body.contains("top_logprobs") && !body.at("top_logprobs").is_null()) {
+ 1521|        throw std::invalid_argument("top_logprobs requires logprobs to be set to true");
+ 1522|    }
+
+# 2. sed -n '1517p'  (mandated exact-line print, local snapshot)
+exit 0
+stdout:
+            throw std::invalid_argument("logprobs is not supported with tools + stream");
+
+# 3. sed -n '1519p'  (mandated exact-line print, local snapshot)
+exit 0
+stdout:
+        llama_params["n_probs"] = json_value(body, "top_logprobs", 20);
+
+# 4. awk numbered context 1515-1522 (local snapshot)
+exit 0
+stdout:
+1515|    if (json_value(body, "logprobs", false)) {
+1516|        if (has_tools && stream) {
+1517|            throw std::invalid_argument("logprobs is not supported with tools + stream");
+1518|        }
+1519|        llama_params["n_probs"] = json_value(body, "top_logprobs", 20);
+1520|    } else if (body.contains("top_logprobs") && !body.at("top_logprobs").is_null()) {
+1521|        throw std::invalid_argument("top_logprobs requires logprobs to be set to true");
+1522|    }
+
+# 5. sha256sum + wc -l of local snapshot server-common.cpp
+exit 0
+stdout:
+b4f4aae7eed919f914d132ae64416a0e7cfb23442161af6f63ba8d902954d442  .../sources/llama.cpp-704366d/server-common.cpp
+2147 .../sources/llama.cpp-704366d/server-common.cpp
+
+# 6. SNAPSHOT.json (read) — pins commit 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad,
+#    fetched 2026-10-23, server-common.cpp path tools/server/server-common.cpp
+#    sha256 b4f4aae7eed919f914d132ae64416a0e7cfb23442161af6f63ba8d902954d442 (matches #5).
+
+# 7. awk quote-spans + word counts from SOURCES.md rows 198/199
+exit 0
+stdout:
+SOURCES.md:198 span: [throw std::invalid_argument("logprobs is not supported with tools + stream");] words=9
+SOURCES.md:199 span: [llama_params["n_probs"] = json_value(body, "top_logprobs", 20);] words=5
+
+# 8. glob: used-by path corpus/knowledge/chat-adapter-outcomes.md -> exists
+# 9. glob: used-by path registry/chat-param-outcomes-r31.json -> exists
+
+# 10. upstream cross-check (curl: raw.githubusercontent.com ggml-org/llama.cpp
+#      704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-common.cpp)
+curl-exit=0
+stdout:
+b4f4aae7eed919f914d132ae64416a0e7cfb23442161af6f63ba8d902954d442  /tmp/kama-r31w2/SrcReopen4/upstream-server-common.cpp
+            throw std::invalid_argument("logprobs is not supported with tools + stream");
+        llama_params["n_probs"] = json_value(body, "top_logprobs", 20);
+
+# 11. byte-verbatim hash comparison with aligned trailing newline
+#     S186 quote vs trimmed sed 1517:
+#       3208e3ad13f91e018047834fda8f83547eda006f8afba31f71b58d280ea25b35  -   (printf)
+#       3208e3ad13f91e018047834fda8f83547eda006f8afba31f71b58d280ea25b35  -   (sed)
+#     S187 quote vs trimmed sed 1519:
+#       b4bca0d347501e7614ed551c515a26c056cac8821d3809afd6572a40ec0ac63b  -   (printf)
+#       b4bca0d347501e7614ed551c515a26c056cac8821d3809afd6572a40ec0ac63b  -   (sed)
+#     od -c head of both pairs identical (leading whitespace only difference, trimmed).

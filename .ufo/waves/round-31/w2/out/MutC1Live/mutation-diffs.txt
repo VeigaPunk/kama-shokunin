@@ -1,0 +1,121 @@
+# mutation commit chain (base 382d11b2)
+309cf73 restore exact 382d11b2 bytes after M2
+0d566a3 mutant M2: K31-01 SKILL meaning cell three words
+d4533cc restore exact 382d11b2 bytes after M1
+921caab mutant M1b: SKILL K31-05 outcome cell matches 422 mutant
+e60fe10 mutant M1a: K31-05 expected status 422 (registry only)
+
+commit e60fe105554877869d60e66ee3dccc93a02c72e8
+mutant M1a: K31-05 expected status 422 (registry only)
+---
+ registry/chat-param-outcomes-r31.json | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/registry/chat-param-outcomes-r31.json b/registry/chat-param-outcomes-r31.json
+index 61a3d9d..df4e420 100644
+--- a/registry/chat-param-outcomes-r31.json
++++ b/registry/chat-param-outcomes-r31.json
+@@ -94,7 +94,7 @@
+    "sent": 3,
+    "outcome": {
+     "kind": "reject",
+-    "status": 400,
++    "status": 422,
+     "type": "invalid_request_error",
+     "message": "top_logprobs requires logprobs to be set to true"
+    },
+
+commit 921caab51f10cbad5733f4229fe3a9ce313d9010
+mutant M1b: SKILL K31-05 outcome cell matches 422 mutant
+---
+ SKILL.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/SKILL.md b/SKILL.md
+index 7073058..09e3ee3 100644
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -1248,7 +1248,7 @@ The pinned llama.cpp snapshot is commit `704366d76f8748cf9ad3df62a464bfcc8d1ae6a
+ | K31-02 | max_completion_tokens | 3 | 200, max_tokens = 3, n_predict = 3 | With both keys present, max_completion_tokens determines stored max_tokens and n_predict; clients should send a consistent limit and inspect stored settings when precedence matters. | S189 |
+ | K31-03 | logprobs | true | 200, n_probs = 20 | On b11755, `logprobs:true` sets `n_probs` to 20 when `top_logprobs` is omitted; explicitly send `top_logprobs` when you need a different count. | S187 |
+ | K31-04 | top_logprobs | 3 | 200, n_probs = 3 | When requesting token logprobs, set `logprobs` true; the server maps `top_logprobs` to stored `n_probs`. | S187 |
+-| K31-05 | top_logprobs | 3 | reject 400 invalid_request_error: top_logprobs requires logprobs to be set to true | Send `logprobs: true` when requesting `top_logprobs`; neither field is enabled implicitly. | S188 |
++| K31-05 | top_logprobs | 3 | reject 422 invalid_request_error: top_logprobs requires logprobs to be set to true | Send `logprobs: true` when requesting `top_logprobs`; neither field is enabled implicitly. | S188 |
+ | K31-06 | messages | "hi" | reject 400 invalid_request_error: Expected 'messages' to be an array | Clients must send messages as an array; a string is not a valid substitute for the message list. | S182 |
+ | K31-07 | messages | [{"role":"user"}] | reject 400 invalid_request_error: All non-assistant messages must contain 'content' | Send content for every non-assistant message or expect this exact adapter rejection. | S183 |
+ | K31-08 | messages | [{"role":"assistant"}] | reject 400 invalid_request_error: Assistant message must contain either 'content' or 'tool_calls'! | An assistant message must include content or tool_calls; neither omission is accepted. | S184 |
+
+commit 0d566a3875f7451a8956ee2823476bbe37907095
+mutant M2: K31-01 SKILL meaning cell three words
+---
+ SKILL.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/SKILL.md b/SKILL.md
+index 7073058..106ffd8 100644
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -1244,7 +1244,7 @@ The pinned llama.cpp snapshot is commit `704366d76f8748cf9ad3df62a464bfcc8d1ae6a
+ 
+ | id | param | sent | outcome | meaning | source |
+ |---|---|---|---|---|---|
+-| K31-01 | max_tokens | 3 | 200, max_tokens = 3, n_predict = 3 | Set max_tokens to bound output; do not assume this stored alias proves sampler use. | S190 |
++| K31-01 | max_tokens | 3 | 200, max_tokens = 3, n_predict = 3 | Set max tokens. | S190 |
+ | K31-02 | max_completion_tokens | 3 | 200, max_tokens = 3, n_predict = 3 | With both keys present, max_completion_tokens determines stored max_tokens and n_predict; clients should send a consistent limit and inspect stored settings when precedence matters. | S189 |
+ | K31-03 | logprobs | true | 200, n_probs = 20 | On b11755, `logprobs:true` sets `n_probs` to 20 when `top_logprobs` is omitted; explicitly send `top_logprobs` when you need a different count. | S187 |
+ | K31-04 | top_logprobs | 3 | 200, n_probs = 3 | When requesting token logprobs, set `logprobs` true; the server maps `top_logprobs` to stored `n_probs`. | S187 |
+
+commit d4533cc272c03cada4061f231062def6e007f51b
+restore exact 382d11b2 bytes after M1
+---
+ SKILL.md                              | 2 +-
+ registry/chat-param-outcomes-r31.json | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/SKILL.md b/SKILL.md
+index 09e3ee3..7073058 100644
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -1248,7 +1248,7 @@ The pinned llama.cpp snapshot is commit `704366d76f8748cf9ad3df62a464bfcc8d1ae6a
+ | K31-02 | max_completion_tokens | 3 | 200, max_tokens = 3, n_predict = 3 | With both keys present, max_completion_tokens determines stored max_tokens and n_predict; clients should send a consistent limit and inspect stored settings when precedence matters. | S189 |
+ | K31-03 | logprobs | true | 200, n_probs = 20 | On b11755, `logprobs:true` sets `n_probs` to 20 when `top_logprobs` is omitted; explicitly send `top_logprobs` when you need a different count. | S187 |
+ | K31-04 | top_logprobs | 3 | 200, n_probs = 3 | When requesting token logprobs, set `logprobs` true; the server maps `top_logprobs` to stored `n_probs`. | S187 |
+-| K31-05 | top_logprobs | 3 | reject 422 invalid_request_error: top_logprobs requires logprobs to be set to true | Send `logprobs: true` when requesting `top_logprobs`; neither field is enabled implicitly. | S188 |
++| K31-05 | top_logprobs | 3 | reject 400 invalid_request_error: top_logprobs requires logprobs to be set to true | Send `logprobs: true` when requesting `top_logprobs`; neither field is enabled implicitly. | S188 |
+ | K31-06 | messages | "hi" | reject 400 invalid_request_error: Expected 'messages' to be an array | Clients must send messages as an array; a string is not a valid substitute for the message list. | S182 |
+ | K31-07 | messages | [{"role":"user"}] | reject 400 invalid_request_error: All non-assistant messages must contain 'content' | Send content for every non-assistant message or expect this exact adapter rejection. | S183 |
+ | K31-08 | messages | [{"role":"assistant"}] | reject 400 invalid_request_error: Assistant message must contain either 'content' or 'tool_calls'! | An assistant message must include content or tool_calls; neither omission is accepted. | S184 |
+diff --git a/registry/chat-param-outcomes-r31.json b/registry/chat-param-outcomes-r31.json
+index df4e420..61a3d9d 100644
+--- a/registry/chat-param-outcomes-r31.json
++++ b/registry/chat-param-outcomes-r31.json
+@@ -94,7 +94,7 @@
+    "sent": 3,
+    "outcome": {
+     "kind": "reject",
+-    "status": 422,
++    "status": 400,
+     "type": "invalid_request_error",
+     "message": "top_logprobs requires logprobs to be set to true"
+    },
+
+commit 309cf738e42ba19a46f765736fc82988fbef312a
+restore exact 382d11b2 bytes after M2
+---
+ SKILL.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/SKILL.md b/SKILL.md
+index 106ffd8..7073058 100644
+--- a/SKILL.md
++++ b/SKILL.md
+@@ -1244,7 +1244,7 @@ The pinned llama.cpp snapshot is commit `704366d76f8748cf9ad3df62a464bfcc8d1ae6a
+ 
+ | id | param | sent | outcome | meaning | source |
+ |---|---|---|---|---|---|
+-| K31-01 | max_tokens | 3 | 200, max_tokens = 3, n_predict = 3 | Set max tokens. | S190 |
++| K31-01 | max_tokens | 3 | 200, max_tokens = 3, n_predict = 3 | Set max_tokens to bound output; do not assume this stored alias proves sampler use. | S190 |
+ | K31-02 | max_completion_tokens | 3 | 200, max_tokens = 3, n_predict = 3 | With both keys present, max_completion_tokens determines stored max_tokens and n_predict; clients should send a consistent limit and inspect stored settings when precedence matters. | S189 |
+ | K31-03 | logprobs | true | 200, n_probs = 20 | On b11755, `logprobs:true` sets `n_probs` to 20 when `top_logprobs` is omitted; explicitly send `top_logprobs` when you need a different count. | S187 |
+ | K31-04 | top_logprobs | 3 | 200, n_probs = 3 | When requesting token logprobs, set `logprobs` true; the server maps `top_logprobs` to stored `n_probs`. | S187 |
+

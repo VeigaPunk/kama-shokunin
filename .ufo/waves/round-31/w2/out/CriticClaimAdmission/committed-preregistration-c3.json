@@ -1,0 +1,31 @@
+{
+ "round": 31,
+ "attempt": 2,
+ "author": "kama L1 (KamaR31)",
+ "frozen_before_any_seat": true,
+ "frozen_at": "2026-10-23T20:06:00-03:00",
+ "lane_tip_at_freeze": "382d11b2107d335705875da1a4d889b074bd6fa6",
+ "inherited_from_attempt_1": "C1 and C2 were frozen at 0e6f8ed6 (preregistration.json) with base 07794a4d and landed at 3b1e84f8/54c6f4fe/b4f3edc0/d45f947e/382d11b2. This file freezes ONLY the third claim; it amends neither C1 nor C2 and re-scores neither.",
+ "C3": {
+  "type": "capability acquisition (operability)",
+  "axis": "operability",
+  "title": "the instrument-registry gate covers every tracked counter",
+  "surface": "tools/gate-registry-check.py reads every tracked .ufo/waves/round-*/count-*.py path at the measured revision and requires each to occur in SKILL.md. At the freeze tip it reports `unregistered .ufo/waves/round-29/count-c1.py`, `registered 8 unregistered 1`, exit 1. The after-state is one SKILL.md instrument-registry row for the round-29 counter (kind/entry command, exit map, self-test/pins, write scope), derived from the counter's own docstring and a run of this round, so the same gate reads `registered 9 unregistered 0`, exit 0.",
+  "gate": "python3 tools/gate-registry-check.py",
+  "predicate": "Claim met iff, at the measured commit, `python3 tools/gate-registry-check.py` prints `unregistered 0` and exits 0, and the SKILL.md row for `.ufo/waves/round-29/count-c1.py` carries that file's sha256 re-derived with sha256sum at the tip, and a round-31 receipt of that counter exists under .ufo/waves/round-31/c3/.",
+  "target": "unregistered 0; exit 0",
+  "before_receipt": ".ufo/waves/round-31/c3/gate-before.out (to be written by the L1 at the freeze tip; the freeze command is the same gate)",
+  "kill_rule": "The gate path, the predicate and the target are frozen at this file's commit. A miss at the measured tip is an honest stop; no post-data narrowing.",
+  "do_nothing_control": "A control that appends no row leaves the gate reading `unregistered 1`, exit 1 (the pre-data gate run is the control's receipt).",
+  "mutation_control": "Deleting the new row from a scratch copy of SKILL.md must return the gate to exit 1 with `unregistered .ufo/waves/round-29/count-c1.py`; the row is load-bearing.",
+  "known_limits": [
+   "The gate checks occurrence of the path, not the accuracy of the row's columns; a wrong exit map in a registered row still passes.",
+   "One row, one counter: the claim measures registry coverage of tracked counters, not instrument quality."
+  ]
+ },
+ "wave_shape": {
+  "policy": "scripts/hyaku/ufo-wave-policy.json (v1, band 32-64)",
+  "wave2_seats": 44,
+  "round_total": "12 control (attempt 1) + 52 wave 1 (attempt 1) + 44 wave 2 (this attempt) = 108"
+ }
+}

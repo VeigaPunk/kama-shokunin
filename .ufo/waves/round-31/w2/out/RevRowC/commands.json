@@ -1,0 +1,78 @@
+[
+  {
+    "label": "02-lane-counter-pin",
+    "command": "/usr/bin/sha256sum .ufo/waves/round-31/count-c1.py",
+    "cwd": "/home/vgpnk/Projects/shokunin/kama-shokunin",
+    "exit_code": 0,
+    "tail": "d86c4a94b9a464a9aa6212b2958c72229b7134eb440f64edab70de090d924216  .ufo/waves/round-31/count-c1.py\n",
+    "raw_log": "02-lane-counter-pin.log",
+    "environment_overrides": {}
+  },
+  {
+    "label": "01-clone",
+    "command": "/usr/bin/git clone --no-hardlinks /home/vgpnk/Projects/shokunin/kama-shokunin /tmp/kama-r31w2/RevRowC/lane",
+    "cwd": "/tmp/kama-r31w2/RevRowC",
+    "exit_code": 0,
+    "tail": "Cloning into '/tmp/kama-r31w2/RevRowC/lane'...\ndone.\n",
+    "raw_log": "01-clone.log",
+    "environment_overrides": {}
+  },
+  {
+    "label": "03-checkout",
+    "command": "/usr/bin/git -C /tmp/kama-r31w2/RevRowC/lane checkout -q 382d11b2107d335705875da1a4d889b074bd6fa6",
+    "cwd": "/tmp/kama-r31w2/RevRowC",
+    "exit_code": 0,
+    "tail": "",
+    "raw_log": "03-checkout.log",
+    "environment_overrides": {}
+  },
+  {
+    "label": "05-clone-revision",
+    "command": "/usr/bin/git -C /tmp/kama-r31w2/RevRowC/lane rev-parse HEAD",
+    "cwd": "/tmp/kama-r31w2/RevRowC",
+    "exit_code": 0,
+    "tail": "382d11b2107d335705875da1a4d889b074bd6fa6\n",
+    "raw_log": "05-clone-revision.log",
+    "environment_overrides": {}
+  },
+  {
+    "label": "04-frozen-counter-pin",
+    "command": "/usr/bin/sha256sum .ufo/waves/round-31/count-c1.py",
+    "cwd": "/tmp/kama-r31w2/RevRowC/lane",
+    "exit_code": 0,
+    "tail": "d86c4a94b9a464a9aa6212b2958c72229b7134eb440f64edab70de090d924216  .ufo/waves/round-31/count-c1.py\n",
+    "raw_log": "04-frozen-counter-pin.log",
+    "environment_overrides": {}
+  },
+  {
+    "label": "06-frozen-c1-live",
+    "command": "/usr/bin/python3 .ufo/waves/round-31/count-c1.py --lane /tmp/kama-r31w2/RevRowC/lane --repo /tmp/kama-r31w2/RevRowC/lane --tip 382d11b2107d335705875da1a4d889b074bd6fa6 --out /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-31/w2/out/RevRowC/c1.json",
+    "cwd": "/tmp/kama-r31w2/RevRowC/lane",
+    "exit_code": 0,
+    "tail": "registered 18 counted 17 target 12 met True not-counted ['K31-10']\n",
+    "raw_log": "06-frozen-c1-live.log",
+    "environment_overrides": {
+      "TMPDIR": "/tmp/kama-r31w2/RevRowC"
+    }
+  },
+  {
+    "label": "07-manual-render-compare",
+    "command": "/usr/bin/python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-31/w2/out/RevRowC/compare-hand-render.py",
+    "cwd": "/tmp/kama-r31w2/RevRowC/lane",
+    "exit_code": 0,
+    "tail": "K31-07 | committed-cell==rendered yes | live-status 400\n  committed=reject 400 invalid_request_error: All non-assistant messages must contain 'content'\n  hand-render=reject 400 invalid_request_error: All non-assistant messages must contain 'content'\n  live={\"code\": 400, \"error_keys\": [\"code\", \"message\", \"type\"], \"message\": \"All non-assistant messages must contain 'content'\", \"status\": 400, \"type\": \"invalid_request_error\"}\nK31-08 | committed-cell==rendered yes | live-status 400\n  committed=reject 400 invalid_request_error: Assistant message must contain either 'content' or 'tool_calls'!\n  hand-render=reject 400 invalid_request_error: Assistant message must contain either 'content' or 'tool_calls'!\n  live={\"code\": 400, \"error_keys\": [\"code\", \"message\", \"type\"], \"message\": \"Assistant message must contain either 'content' or 'tool_calls'!\", \"status\": 400, \"type\": \"invalid_request_error\"}\nK31-09 | committed-cell==rendered yes | live-status 400\n  committed=reject 400 invalid_request_error: Expected 'content' to be a string or an array\n  hand-render=reject 400 invalid_request_error: Expected 'content' to be a string or an array\n  live={\"code\": 400, \"error_keys\": [\"code\", \"message\", \"type\"], \"message\": \"Expected 'content' to be a string or an array\", \"status\": 400, \"type\": \"invalid_request_error\"}\n",
+    "raw_log": "07-manual-render-compare.log",
+    "environment_overrides": {}
+  },
+  {
+    "label": "08-meaning-counterexamples",
+    "command": "/usr/bin/python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-31/w2/out/RevRowC/probe-meaning.py",
+    "cwd": "/tmp/kama-r31w2/RevRowC/lane",
+    "exit_code": 0,
+    "tail": "owned-server-port 47945\nbase-user-string status=200 error=null\nuser-null status=200 error=null\nuser-number status=400 error={\"code\": 400, \"message\": \"Expected 'content' to be a string or an array\", \"type\": \"invalid_request_error\"}\nassistant-content-only status=200 error=null\nassistant-neither status=400 error={\"code\": 400, \"message\": \"Assistant message must contain either 'content' or 'tool_calls'!\", \"type\": \"invalid_request_error\"}\nassistant-tool-calls-only status=400 error={\"code\": 400, \"message\": \"Cannot continue an assistant message that contains tool calls.\", \"type\": \"invalid_request_error\"}\n",
+    "raw_log": "08-meaning-counterexamples.log",
+    "environment_overrides": {
+      "TMPDIR": "/tmp/kama-r31w2/RevRowC"
+    }
+  }
+]

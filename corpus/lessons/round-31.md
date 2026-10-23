@@ -102,3 +102,40 @@ evidence, not of sources.
   to the message, so no verbatim pinned quote exists for it.
 - The round's depth claim is measured on a counter that a no-op registry meets; the closure should
   read the count together with `w1/out/CriticClaimSize/c1-noop.json`.
+
+## Attempt 2 (2026-10-23) — inherited state re-measured, wave-2 falsification
+
+Attempt 1's claims, data and lesson are inherited unchanged. This section records what attempt 2
+measured, what its 44-seat wave falsified, and the mistakes this attempt mined.
+
+### Gate
+
+No source row was opened for the first time this attempt; all twelve round-31 rows S180-S191 were
+re-opened against the pinned snapshot by six seats (two rows each), each re-checking the URL line
+anchor, the access date (2026-10-23), the ≤25-word quote at its `sed -n '<line>p'` line, and the
+`used-by` target's existence: twelve `quote-verbatim yes`, twelve `line match yes`, zero
+disagreements (`.ufo/waves/round-31/w2/out/SrcReopen{1..6}/report.md`). Zero rows added, zero
+rejected, zero cells changed. Rejections recorded this attempt are claim-evidence rejections, not
+source rejections: the C1 no-op registry (counted but meaningless), the C3 bogus registry row
+(passes the gate), and the six meaning cells whose prose the probe falsified.
+
+### Mistakes
+
+| # | class | evidence | captured-by | fix (shown able to fail) |
+|---|---|---|---|---|
+| 5 | two measurement receipts (`c1/c1-382d11b2.json`, `c2/c2-382d11b2.json`) were written into the lane but never committed, so the round's only measurements at its landing tip were untracked when the session died | `git -C … status --porcelain .ufo/waves/round-31` at the start of attempt 2 printed exactly those two `??` lines; the committed tree at `382d11b2` held neither | none — the report cites landed hashes, and an untracked receipt cannot be cited, but nothing ran that check before the loss | a report-time gate: `test "$(git -C <lane> status --porcelain .ufo/waves/round-N | grep -c '^??')" -eq 0`; it fails (prints 2, exit 1) on the inherited tree and passes after the receipts are committed (attempt-2 commit `bda324bb` plus the wave-2 artifact commit) |
+| 6 | a committed source snapshot carried a failed fetch as if it were a source: `sources/llama.cpp-704366d/utils.hpp` is the 14-byte body `404: Not Found`, and two unpinned 37 KB duplicates (`server-http.cpp`, `server-models.cpp`) sat beside it | `head -1 .ufo/waves/round-31/sources/llama.cpp-704366d/utils.hpp`; `SNAPSHOT.json` pins only `server-common.cpp`, `server-schema.cpp`, `server-task.cpp`, `server-chat.cpp` | none — the counter verifies only the files the manifest names, so extra files were never inspected | the snapshot dir must equal the pinned set: `comm -23 <(ls …/llama.cpp-704366d | sort) <(jq -r '.files|keys[]' …/SNAPSHOT.json | sort)` prints 3 lines at `382d11b2` and nothing after `a9181096` (removal) |
+| 7 | six of eighteen graded `meaning` cells asserted behaviour the fixture contradicts (K31-02, -05, -08, -09, -11, -12) | `w2/out/RevRow{A,B,C,D}/` counterexample probes: `content:null` → 200, `logprobs:true` alone → `n_probs: 20`, `grammar:""` → 200, `logprobs:false` with tools+stream → 200, native `n_predict` overrides the OpenAI aliases, assistant `content` without `tool_calls` → 200 | none — the frozen counter requires eight words, not truth (`count-c1.py` docstring L47-48 "Not checked … meaning prose") | **KQ42**: a graded prose cell is admitted only after a counterexample search on the pinned fixture with its probe receipt committed; applied to the round-31 table it fails 6 of 18 rows, and the appended SKILL block carries the measured counterexample for each |
+| 8 | C3 was frozen as a "capability acquisition" whose target the instrument's own docstring says it cannot discriminate: the gate checks path occurrence only, so a row with an empty exit map meets `unregistered 0` | `preregistration-c3.json` C3.known_limits names the limit, yet the frozen predicate still stopped at the gate's output; `w2/out/ExecC3Control/` (empty-exit-map row → exit 0) and `w2/out/CriticC3Control/` (nonexistent metadata path → exit 0) | none — the freeze-time rule says to run the cheapest shortcut control before freezing, and no seat had run it; the wave found it after the freeze, which is why the claim is reported met-on-predicate and not admitted | a claim resting on a gate must put in its target one condition the gate cannot check and the L1 can re-derive (here: the row's five cells re-read against the counter's argparse and exit paths); that condition fails on the bogus-row receipt and passes on the delivered row |
+
+### Limits added by the wave
+
+- `count-c1.py` reads pins from the tip blob and checks only `sha256` fields: a working-tree pin edit
+  and the declared `bytes` field are silently ignored (`w2/out/MutC1Pin/`, three surviving mutants).
+- `count-c2.py`'s `append_only` is a base-prefix check: deleting the correction suffix passes it
+  (`w2/out/MutC2Append/`, mutant D).
+- The C1 counter's live reading is deterministic across runs (`w2/out/RevLiveRepeat/`,
+  `IA runs=3 agree=3 disagree=0`, three byte-identical receipts) — determinism is not correctness.
+- The round-30 hold still reads `statements 141 … unresolved 0 met True` at the round-31 tip
+  (`w2/out/ReRunHold/`, `w2/out/ExecHoldRepro/`); only the `tip` field differs from the committed
+  receipt.

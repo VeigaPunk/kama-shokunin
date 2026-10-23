@@ -1,0 +1,142 @@
+ 1| # kama-shokunin — Province
+ 2| 
+ 3| **Domain:** local model serving & endpoint health — local LLM endpoints, baseURL
+ 4| drift, served-model reconciliation, probe conventions.
+ 5| 
+ 6| **Owns (surfaces):**
+ 7| 
+ 8| | Surface | Concrete artifact on this box |
+ 9| |---|---|
+10| | producer discovery & read-only service inspection of local serving ports | `tools/kama-probe.sh listeners` (`ss -ltn` loopback enumeration + per-listener classification). The serving unit formerly pinned here — `~/.config/systemd/user/qwen-coder.service` (llama-server, `127.0.0.1:34113`) — is deleted; row-absent since snapshot `20261014T124232Z` (`registry/history/DELTA.md:20`). kama governs discovering whatever serves these ports and never claims an installed server |
+11| | baseURL pins in surviving/loadable consumers | the three surviving registry rows in `registry/endpoint-consumers.tsv`: `~/.local/bin/omp` (`LLAMA_CPP_BASE_URL` fallback → `http://127.0.0.1:8080`, `file_match=inherited`, not proof of an effective environment-selected endpoint), `$UFO_SRC/config/the-tick.machine.json:16`, `$UFO_SRC/scripts/local-helper.mjs:8`. Historical, no longer live pins: `~/.config/opencode/opencode.json:158` (the provider block was removed; the file is now 5 lines holding `$schema`/`theme`/`autoupdate` only) and `~/.config/opencode/agents/janitor.md:21` (file deleted); both verified by read-only host inspection, never rewritten |
+12| | served-model-id reconciliation | `GET /v1/models` vs `--alias` vs the configured model id |
+13| | liveness/readiness probe conventions | `/health`, `/props`, `/slots` |
+14| | endpoint-drift detection + invocation history | `tools/kama-probe.sh snapshot`, `registry/endpoint-consumers.tsv`, `registry/history/{latest.tsv,DELTA.md}` |
+15| | endpoint-consumers cross-lane registry | `corpus/knowledge/consumer-registry.md`, `cross-lane-scope.md` |
+16| 
+17| **Observed state (lane baseline `c390918`, tracked snapshot `20261014T124232Z`):**
+18| `bash tools/kama-probe.sh check` evaluates 3 registry rows — `model_ok=0`, `drift=3`,
+19| exit 2; every row in `registry/history/latest.tsv` is `DEAD` connection-refused
+20| (`8080` and `34113`). `ufo-fsd-thetick` and `ufo-fsd-local-helper` are
+21| correct-pin/dead-endpoint: `file_match=yes` attests the pin, NOT a live `MODEL_OK` —
+22| this lane reports pin correctness and serving liveness separately and never asserts
+23| `MODEL_OK` from retired samples (`registry/history/DELTA.md:9,:12,:20` keep the former
+24| `MODEL_OK`/`systemd-qwen-coder` state as history). Serving runtime is explicitly
+25| unavailable on the concrete surfaces — nothing listens on `8080` or `34113` (probe
+26| connection-refused verdicts; `systemctl --user status qwen-coder` → "Unit
+27| qwen-coder.service could not be found"); restoring a unit is operator-owned work under the
+28| boundary below. The outage retires nothing in this domain: server/health discovery and
+29| drift reconciliation remain governed here — province contraction is an L0 decision.
+30| 
+31| **Actual round-5 sample (2026-10-15):** the same three rows still sample
+32| `DEAD` / connection-refused, exit 2. Explicit UFO pins resolve `file_match=yes`;
+33| the builtin fallback is `inherited`/`raw`, not proof of an effective runtime
+34| URL or active traffic. Bounded service/socket metadata agrees with the
+35| not-found producer and unserved registered ports. Full command evidence:
+36| `.ufo/round-5/{before-check,host-shape,acceptance}.json`. This supersedes a
+37| current-readiness reading of older successful examples without retiring the
+38| producer-discovery domain or authorizing service restoration.
+39| 
+40| **Refuses:** model quality/eval (kengaku), credential material & auth flows (kagi),
+41| dispatch/route mechanism (kumitate), remote web surfaces (kake). Boundary rule: kama
+42| answers *"is the thing at this baseURL the model this config believes it is, right
+43| now"* — never *"is the model good"* or *"is the request safe"*.
+44| 
+45| **Write boundary (hard):** kama never writes to `~/.config`, `~/.omp`, or systemd
+46| units. Those are operator-owned; kama *detects and reports* stale pins, and the
+47| operator repoints them. Rationale: a lane that silently repoints a credential-bearing
+48| consumer config would be acting outside its authority (see
+49| `corpus/lessons/round-1-safety.md`).
+50| 
+51| **Out of province → report, never absorb.** Anything found outside the domain is
+52| named in the round report for the owning lane (see
+53| `corpus/knowledge/cross-lane-scope.md`).
+54| 
+55| **Round-16 note — lane-owned live fixture (2026-10-20).** `tools/kama-llamacpp-live.py`
+56| starts one llama-server child (official release b11755, installed by the
+57| operator-authorized tooling directive at `~/.local/opt/llama-b11755`, linked
+58| `~/.local/bin/llama-server`) with a pinned 1.2 MB GGUF kept in the lane-owned
+59| cache `~/.cache/kama-shokunin/`, on a free loopback port that is never a
+60| registered consumer port or a listening port, and tears it down in the same run.
+61| This proposes narrowing round 1's "L0 must approve any endpoint outside the
+62| declared local model registry" only for the process this tool started, **pending
+63| L0 ratification** (`.ufo/l0-questions.md`, kama round-16); any other unregistered
+64| endpoint still needs L0. It is not service restoration, starts no unit, writes
+65| nothing under `~/.config`, `~/.omp` or systemd, and changes no registered row:
+66| the three consumers stay `DEAD`. The release is a GitHub Pre-release; the
+67| install is identified by its asset digest (S038), not the tag. The install tree,
+68| its `~/.local/bin/llama-server` link (which now precedes `/usr/bin` on PATH) and
+69| the cache persist on the host; removal is the operator's call.
+70| **Round-17 note — the same fixture, stricter receipt (2026-10-20).** The lane-owned
+71| child is unchanged in scope (same install, same pinned GGUF, unregistered
+72| loopback ports, torn down in the run) and still **pending L0 ratification**. The
+73| tool now emits `kama-llamacpp-live/v2`: exact ready body, harness-SIGTERM
+74| graceful teardown with returncode 0, ownership-gated port closure, every loading
+75| 503 graded, a receipt on internal faults, and loopback-only listener ownership.
+76| Fake-server controls run only `/tmp` fakes on ephemeral loopback ports. No
+77| `/usr/bin/llama-server` exists, so the `~/.local/bin` link shadows nothing; the
+78| "precedes `/usr/bin` on PATH" wording above is shell-local. The retained release
+79| archive `~/.local/opt/llama-b11755-bin-ubuntu-x64.tar.gz` (sha256 `753bfa73…e226`)
+80| is part of the operator-owned footprint.
+81| 
+82| **Round-18 note — v3 and listener ownership.** Same pending-ratification fixture,
+83| same binary/model and registered-port refusal. V3 distinguishes a missed loading
+84| observation (tool 2 / gate 3 NOT-EVALUATED) from a failed observed property; a green
+85| receipt still proves no registered-consumer health. Linux child-owned listener
+86| recognition now covers native ::1 and mapped 127/8 using sourced procfs decoding
+87| (S048/S050). Wildcards remain refused. The mechanism enters core via
+88| `corpus/knowledge/loopback-listener-ownership.md`; other engines and K05 stay frontier.
+89| Internal BaseException faults are contained into setup-error receipts; install
+90| retention and the llama-b11755 archive remain the operator's decisions.
+91| 
+92| Current-emitter clarification (round-18 falsify): the tool **now emits v3**;
+93| this explicitly supersedes the round-17 “now emits v2” sentence at line73.
+94| Internal-fault receipt promises refer to guarded lifecycle paths with writable
+95| output, not help/usage, an unwritable output file or an unconditional guarantee
+96| against interruption between every Python instruction.
+97| 
+98| **Round-20 frontier note — offline declarations.** GGUF header inspection and
+99| comparison with an existing byte-pinned fixture receipt enter held ground via
+100| `corpus/knowledge/gguf-declared-identity.md` (S058/S060). This reads the one
+101| explicitly named local CI file and metadata only; it loads no weights and
+102| starts no server. It is not a host-wide model inventory or proof of current
+103| serving/loaded-weight identity. Context declaration versus effective per-slot
+104| capacity is not model quality. Kengaku's technique overlap is acknowledged,
+105| not absorbed. K05 across real consumers and other engines remains frontier.
+106| Do not traverse Kagi no-enumerate/config roots to discover models.
+107| 
+108| 
+109| **Round-28 core note — request-field schema.** llama-server's per-request
+110| field schema (`tools/server/server-schema.cpp` @704366d76: hard-bound rejects,
+111| silent clamps, handler transforms, as stored in `generation_settings`) enters
+112| held ground for the lane-owned b11755 fixture via SKILL.md "## Round-28
+113| request-field outcomes" (S140-S173). It describes what the server accepts and
+114| stores for one request, not sampling quality, model identity or registered
+115| endpoint health. Other endpoints, builds and engines remain frontier.
+116| 
+117| 
+118| **Round-30 frontier→core: run agreement for lane instruments; recall population
+119| for the self-assessment census.** `tools/instrument-agreement.py` (S178/S179
+120| import; see `corpus/knowledge/instrument-run-agreement.md`) and the round-30
+121| counter's declared recall population (S174–S177 plus round-29 RecallA/B) enter
+122| held ground as lane-internal methods. Not held: the siblings' implementations
+123| (kumitate's counter rerun, mori's network re-fetch of source rows), any claim
+124| that agreement implies correctness, and any live endpoint or model-quality
+125| surface. K05 and registered-consumer reconciliation remain frontier; no endpoint
+126| was sampled this round.
+127| 
+128| 
+129| **Round-31 core note — the `/v1/chat/completions` conversion layer.** The
+130| OpenAI-compatible chat endpoint's parameter handling (alias resolution through
+131| the pinned schema, the adapter's own validation messages and their 400/500
+132| mapping, `logprobs` → `n_probs`, undeclared OpenAI-standard keys copied then
+133| pruned, and the `/slots` observability boundary) enters held ground through
+134| SKILL.md "## Round-31 chat-completions parameter outcomes", the registry
+135| `registry/chat-param-outcomes-r31.json`, and `corpus/knowledge/chat-adapter-outcomes.md`
+136| (S180-S192, llama.cpp b11755 @ 704366d). It is the chat adapter on the lane-owned
+137| fixture: not served identity, not registered-consumer health, not model quality,
+138| and not the session-level grammar transform (which `/slots` does not expose).
+139| `/v1/completions`, other builds and engines, and K05 beyond the fixture remain
+140| frontier. Sibling lanes hold no competing claim on this surface: kumitate's
+141| watcher posts to `/v1/chat/completions` as a consumer and kengaku excludes the
+142| model-serving plane (`.ufo/waves/round-31/w1/out/ConnSibling/overlap.md`).

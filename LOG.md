@@ -1964,3 +1964,56 @@ Both counters are frozen bytes; fixes are routed to round 32 (KQ41).
 
 **Hold.** The round-30 frozen counter still reads `met True`, 141 statements, unresolved 0
 at the round-31 tip (`.ufo/waves/round-31/c1/hold-r30.out`).
+
+## Round 31 attempt 2 — inherited claims re-measured, C3 registry coverage, meaning-cell corrections (2026-10-23)
+
+Attempt 1 of round 31 froze C1/C2 at `0e6f8ed6` (base `07794a4d`), landed the chat-adapter surface and
+both counters through `382d11b2`, and died before the fleet report. This attempt inherited that state
+rather than restarting the round: it re-measured both frozen counters at the inherited tip, froze one
+further claim (C3, `.ufo/waves/round-31/preregistration-c3.json` at `bda324bb`, before its row
+existed), dispatched a 44-seat falsification wave (wave 2) under policy v1
+(`.ufo/waves/round-31/w2/{spec,plan,taskCall}.json`, validator exit 0, 44/44 spawn), and lands the
+round report. No inherited predicate was amended; no counted row was rewritten.
+
+**Landed hashes, in order.**
+- `bda324bb` — C3 freeze, C3 before receipt (`registered 8 unregistered 1`, exit 1), wave-2 spec /
+  plan / taskCall, round-start census (`validate`, exit 0).
+- `addeb57c` — SKILL instrument-registry row for `.ufo/waves/round-29/count-c1.py`; gate reads
+  `registered 9 unregistered 0`, exit 0; round-31 re-run of that counter
+  (`statements 69 mismatched_at_base 11 valid_corrections 11 unresolved 0 met True`).
+- `a9181096` — SKILL §Round-31 attempt-2 meaning-cell corrections (six rows, each with its measured
+  counterexample), `PROVINCE.md` and `corpus/README.md` count corrections (S180-S191, 18 rows/17
+  counted), removal of the committed 404 body `utils.hpp`, two unpinned duplicate snapshot files and
+  the duplicate `c1/c1-remap.json`.
+- the integration commit carrying this entry, `SCORECARD.md` §Round 31 attempt 2, KQ42, the
+  attempt-2 lesson section and the wave-2 evidence (`.ufo/waves/round-31/w2/**`);
+- the receipt-only commit that follows it: C1/C2 at the final tip, C3 at the final tip, census end.
+  This entry is appended before those two commits exist, so their hashes are recorded in the fleet
+  report and in the receipt files they carry, not here; every hash above was produced by
+  `scripts/hyaku/jj-lane.sh`'s `landed` line.
+
+**Measurements.** C1 at `bda324bb`: base `07794a4d` exits 2 (`SNAPSHOT.json missing at tip`) → tip
+`registered 18 counted 17 target 12 met True not-counted ['K31-10']`, exit 0
+(`.ufo/waves/round-31/c1/c1-bda324bb.json`). C2 at `bda324bb`: base `rows 28 base_mismatched 13
+unresolved 13` → tip `rows 30 base_mismatched 13 exempt 1 valid_corrections 10 false_corrections 0
+unresolved 3 append_only True met False` (`.ufo/waves/round-31/c2/c2-bda324bb.json`). C3: `registered
+8 unregistered 1` exit 1 at `bda324bb` → `registered 9 unregistered 0` exit 0 at `addeb57c`;
+dropping the row from a scratch SKILL returns exit 1 (`.ufo/waves/round-31/c3/`). Round-30 hold:
+`statements 141 … unresolved 0 met True` at the round-31 tip, only the `tip` field differs from the
+committed receipt (`w2/out/ReRunHold/`, `w2/out/ExecHoldRepro/`).
+
+**Verdicts.** C1 met on its frozen counter, not admitted (independent no-op counts 12/12,
+`w2/out/CriticNoop/`); C2 not met and its key non-injective (one collapsed correction flips `met`
+True while two dispositions stay uncorrected, `w2/out/MutC2Key/`); C3 met on its frozen predicate, not
+admitted (the gate is an occurrence check; an empty-exit-map row passes, `w2/out/ExecC3Control/`). No
+axis score moved; no capability row entered.
+
+**Wave.** 44 seats in one batched call: reviewer 13, critic 10, mutation-tester 5, executor 5, scribe
+4, connector 2, scout 2, sentinel 2, simplifier 1 (attack roles 28/44 = 64%). Findings that changed the
+record: six meaning cells falsified by probe; three surviving C1 pin mutants; C2 suffix deletion passes
+`append_only`; the committed 404 snapshot body; the README/PROVINCE count drift; the 1.2 MB
+`CriticIgnoredClass/raw.json` kept as evidence with its size disclosed.
+
+**Census.** Round start `validate` exit 0 (`.ufo/waves/round-31/w2/census-validate-start.out`); a
+wave seat's `census` run reports 191 rows, 0 missing (`w2/out/ExecCensusRows/`); round end receipts are
+in the receipt-only commit.

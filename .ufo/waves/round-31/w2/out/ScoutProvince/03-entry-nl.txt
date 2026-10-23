@@ -1,0 +1,65 @@
+     1	# The chat-completions adapter: what it maps, refuses, and drops
+     2	
+     3	source: S180-S191 (llama.cpp b11755 `tools/server/server-common.cpp` and `server-schema.cpp` @ 704366d76, opened 2026-10-23)
+     4	verified-at: 2026-10-23, lane fixture (llama-server `b6a31a8e…d804`, `stories260K.gguf` `270cba1b…256d`, default argv, `n_slots` 4), live rows in `registry/chat-param-outcomes-r31.json`
+     5	recheck: on release (a new llama.cpp build; the pinned lines are the recheck anchor)
+     6	
+     7	`POST /v1/chat/completions` is a conversion layer over the same task parameters
+     8	the native `/completion` endpoint uses, so the question a client faces is not
+     9	"which fields exist" but "what did the adapter do with the field I sent".
+    10	That question has four answerable forms on this fixture, each measured once per
+    11	parameter and re-derived by `.ufo/waves/round-31/count-c1.py`:
+    12	
+    13	| Form | What it means | How it was observed |
+    14	|---|---|---|
+    15	| reject | the request is refused before inference | HTTP status plus an `error` object with exactly `code`, `message`, `type` |
+    16	| slot | the value reaches the stored task parameters, sometimes under another key | the newest `/slots` entry's `params` |
+    17	| ignored | no observable change | zero delta on the full `params` object and an unchanged normalized response |
+    18	| response | the OpenAI-compatible response contract changes | `choices` length, `logprobs` presence, SSE framing, SSE usage frame |
+    19	
+    20	## What the layer does
+    21	
+    22	- **Aliases resolve through the schema, not the adapter.** `max_tokens` is
+    23	  declared as an alias of `n_predict` (`server-schema.cpp:47`) and `n` as the
+    24	  fallback alias of the multiple-completion count (`server-schema.cpp:64`). A
+    25	  chat body that sends `max_tokens: 3` is stored as both `max_tokens = 3` and
+    26	  `n_predict = 3`; `max_completion_tokens: 3` reaches the same pair through the
+    27	  adapter's property copy (`server-common.cpp:1530`). Treat the two stored keys
+    28	  as one budget, not two.
+    29	- **`logprobs` is a mapping, not a boolean effect.** With `logprobs: true` the
+    30	  adapter sets `n_probs` to `top_logprobs` or 20 when that field is absent
+    31	  (`server-common.cpp:1519`). `top_logprobs` alone is refused
+    32	  (`server-common.cpp:1521`).
+    33	- **Validation lives in the adapter and the messages are its own.**
+    34	  `messages` must be an array (`:1390`); every non-assistant message needs
+    35	  `content` (`:1395`); an assistant message needs `content` or `tool_calls`
+    36	  (`:1399`); `content` must be a string or an array (`:1411`);
+    37	  `response_format.type` must be `text` or `json_object` (`:1375`); a request
+    38	  carrying both `json_schema` and `grammar` raises a **500 `server_error`**, not
+    39	  a 400 (`:1360`). The status and the error `type` are decided by the HTTP
+    40	  layer's exception mapping, so the same adapter exception class can surface as
+    41	  either code: read the message and type together, never the status alone.
+    42	- **Undeclared OpenAI-standard keys are copied and then pruned.** The adapter
+    43	  copies every remaining key into the task parameters (`:1530`); the schema then
+    44	  keeps only what it declares. `user`, `parallel_tool_calls` and `tools` (with
+    45	  the lane's default argv and no tool-capable template effect) produced no
+    46	  stored change and no response change, while `stream` and `stream_options` did
+    47	  change the response contract. Absence from the schema predicts "no generation
+    48	  effect" but does not by itself prove it: the adapter reads several keys
+    49	  (`parallel_tool_calls`, `add_generation_prompt`, `chat_template_kwargs`)
+    50	  before the copy loop, so a no-op needs the live observation.
+    51	
+    52	## Limits
+    53	
+    54	- One request per parameter on one build, model and argv: a row is one observed
+    55	  point, not the parameter's response function.
+    56	- A `slot` value is what the server stored for that task, not proof the sampler
+    57	  used it; a grammar carried in the chat session never appears in `/slots`, so
+    58	  "no slot delta" does not exclude a template or grammar effect.
+    59	- The counter's normalization (`top_keys`, `n_choices`, `choice_keys`,
+    60	  `has_logprobs`, `usage_keys`, `prompt_tokens`) cannot see effects outside
+    61	  those fields; the round-31 falsify wave demonstrated two ways a row can be
+    62	  counted while proving nothing (a mapping whose stored value equals the base's,
+    63	  and an `ignored` claim on a field the session layer consumes). Those are
+    64	  counter defects recorded in `corpus/lessons/round-31.md`, not evidence for the
+    65	  rows involved.

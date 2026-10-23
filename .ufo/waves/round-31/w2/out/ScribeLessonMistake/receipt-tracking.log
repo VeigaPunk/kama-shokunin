@@ -1,0 +1,33 @@
+Round-31 attempt-2 receipt tracking evidence
+
+Command: git status --short --untracked-files=all -- .ufo/waves/round-31/c1/c1-382d11b2.json .ufo/waves/round-31/c2/c2-382d11b2.json
+Exit: 0
+Output:
+?? .ufo/waves/round-31/c1/c1-382d11b2.json
+?? .ufo/waves/round-31/c2/c2-382d11b2.json
+
+Command: git ls-tree --name-only 382d11b2107d335705875da1a4d889b074bd6fa6 -- .ufo/waves/round-31/c1/c1-382d11b2.json .ufo/waves/round-31/c2/c2-382d11b2.json
+Exit: 0
+Output: [empty]
+
+Command: sh /tmp/kama-r31w2/ScribeLessonMistake/receipt-gate.sh /home/vgpnk/Projects/shokunin/kama-shokunin 382d11b2107d335705875da1a4d889b074bd6fa6; rc=$?; printf 'gate_exit=%s\n' "$rc"; exit 0
+Exit: 0 (probe exit 1)
+Output:
+missing .ufo/waves/round-31/c1/c1-382d11b2.json
+missing .ufo/waves/round-31/c2/c2-382d11b2.json
+gate_exit=1
+
+Command: git -C /tmp/kama-r31w2/ScribeLessonMistake/repo add -- .ufo/waves/round-31/c1/c1-382d11b2.json .ufo/waves/round-31/c2/c2-382d11b2.json && git -C /tmp/kama-r31w2/ScribeLessonMistake/repo commit -qm fixture-receipts && sh /tmp/kama-r31w2/ScribeLessonMistake/receipt-gate.sh /tmp/kama-r31w2/ScribeLessonMistake/repo "$(git -C /tmp/kama-r31w2/ScribeLessonMistake/repo rev-parse HEAD)"; rc=$?; printf 'gate_exit=%s\n' "$rc"; exit 0
+Exit: 0 (probe exit 0)
+Output:
+present .ufo/waves/round-31/c1/c1-382d11b2.json
+present .ufo/waves/round-31/c2/c2-382d11b2.json
+gate_exit=0
+
+Command: sha256sum .ufo/waves/round-31/c1/c1-382d11b2.json .ufo/waves/round-31/c2/c2-382d11b2.json .ufo/waves/round-31/w2/out/ScribeLessonMistake/c1-c1-382d11b2.json .ufo/waves/round-31/w2/out/ScribeLessonMistake/c2-c2-382d11b2.json
+Exit: 0
+Output:
+6b58b4340886f602fd5e2a2f2795d4e7abf50dad9252d033c41050beba80331e  .ufo/waves/round-31/c1/c1-382d11b2.json
+a8060b93233f305838986b7e99941687fbab7614b0e3dafa0b038252fec8d4dd  .ufo/waves/round-31/c2/c2-382d11b2.json
+6b58b4340886f602fd5e2a2f2795d4e7abf50dad9252d033c41050beba80331e  .ufo/waves/round-31/w2/out/ScribeLessonMistake/c1-c1-382d11b2.json
+a8060b93233f305838986b7e99941687fbab7614b0e3dafa0b038252fec8d4dd  .ufo/waves/round-31/w2/out/ScribeLessonMistake/c2-c2-382d11b2.json

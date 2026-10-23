@@ -1,0 +1,43 @@
+# Exact shell commands executed by KamaR31.MutC1Pin (cwd in parentheses)
+# Exploratory clone (discarded, jj-colocated):
+(cwd=/tmp/kama-r31w2/MutC1Pin) mkdir -p /tmp/kama-r31w2/MutC1Pin /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-31/w2/out/MutC1Pin && cd /tmp/kama-r31w2/MutC1Pin && rm -rf clone && jj git clone --colocate /home/vgpnk/Projects/shokunin/kama-shokunin clone 2>&1 | tail -5; ls clone | head
+# Lane inspection (read-only):
+(cwd=lane) git rev-parse master; git log --oneline -1; jj log -r 'master@origin | @' --no-graph -T 'commit_id ++ " " ++ description.first_line() ++ "\n"' | head -5; cat .ufo/waves/round-31/sources/SNAPSHOT.json | head -60
+(cwd=lane) git cat-file -t 382d11b2107d335705875da1a4d889b074bd6fa6; git ls-tree -r --name-only master | grep -E 'SNAPSHOT.json|chat-param-outcomes-r31|sources/llama.cpp-704366d/' | head; git show master:registry/chat-param-outcomes-r31.json | python3 -c '...'  # build block + row count
+(cwd=lane) ls -la .ufo/waves/round-31/sources/; ls -la .ufo/waves/round-31/sources/llama.cpp-704366d/
+(cwd=lane) git log --oneline -3 382d11b2107d335705875da1a4d889b074bd6fa6; git merge-base --is-ancestor 382d11b2 master && echo "382d11b2 ancestor of master"; git rev-list --count 382d11b2..master; git ls-tree -r --name-only master | grep -E 'round-31/(sources|registry|chat-param)' | head -20
+# Scratch clone at dispatch tip + frozen counter copy:
+(cwd=/tmp/kama-r31w2/MutC1Pin) rm -rf clone && git clone --quiet --no-hardlinks /home/vgpnk/Projects/shokunin/kama-shokunin clone && cd clone && git reset --hard --quiet 382d11b2107d335705875da1a4d889b074bd6fa6 && git rev-parse HEAD && sha256sum .ufo/waves/round-31/sources/SNAPSHOT.json registry/chat-param-outcomes-r31.json SKILL.md > /tmp/kama-r31w2/MutC1Pin/pristine-hashes.txt && cat /tmp/kama-r31w2/MutC1Pin/pristine-hashes.txt && cp /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-31/count-c1.py /tmp/kama-r31w2/MutC1Pin/count-c1.py && sha256sum /tmp/kama-r31w2/MutC1Pin/count-c1.py
+# Fixture digests:
+(cwd=/tmp/kama-r31w2/MutC1Pin) ls -l ~/.local/opt/llama-b11755/llama-server ~/.local/opt/llama-b11755/libllama-server-impl.so ~/.cache/kama-shokunin/models/stories260K.gguf && sha256sum ~/.local/opt/llama-b11755/llama-server ~/.local/opt/llama-b11755/libllama-server-impl.so ~/.cache/kama-shokunin/models/stories260K.gguf
+# M0 baseline:
+(cwd=/tmp/kama-r31w2/MutC1Pin) rm -f baseline-receipt.json baseline.stdout baseline.stderr && ( time python3 count-c1.py --repo clone --lane clone --out baseline-receipt.json ) > baseline.stdout 2> baseline.stderr; echo "EXIT=$?"; cat baseline.stdout; cat baseline.stderr; ls -l baseline-receipt.json
+# M1a working-tree-only SNAPSHOT digest tamper:
+(cwd=/tmp/kama-r31w2/MutC1Pin/clone) python3 - <<'EOF'  # json-load SNAPSHOT.json, files["server-common.cpp"]["sha256"] = "a"+old[1:], write indent=1
+EOF
+(cwd=/tmp/kama-r31w2/MutC1Pin/clone) git status --porcelain; sha256sum .ufo/waves/round-31/sources/SNAPSHOT.json
+(cwd=/tmp/kama-r31w2/MutC1Pin) rm -f m1a-receipt.json && ( python3 count-c1.py --repo clone --lane clone --out m1a-receipt.json ) > m1a.stdout 2> m1a.stderr; echo "EXIT=$?"; cat m1a.stdout; cat m1a.stderr; ls -l m1a-receipt.json; cd clone && git rev-parse HEAD
+# M1b committed:
+(cwd=/tmp/kama-r31w2/MutC1Pin/clone) git -c user.name=mut -c user.email=mut@local commit -q -am 'M1: tamper SNAPSHOT server-common.cpp digest' && git rev-parse HEAD && cd .. && rm -f m1b-receipt.json && ( python3 count-c1.py --repo clone --lane clone --out m1b-receipt.json ) > m1b.stdout 2> m1b.stderr; echo "EXIT=$?"; cat m1b.stdout; cat m1b.stderr; ls -l m1b-receipt.json
+# Restore + M0':
+(cwd=/tmp/kama-r31w2/MutC1Pin/clone) git reset --hard --quiet 382d11b2107d335705875da1a4d889b074bd6fa6 && git rev-parse HEAD && sha256sum .ufo/waves/round-31/sources/SNAPSHOT.json registry/chat-param-outcomes-r31.json && diff <(sha256sum .ufo/waves/round-31/sources/SNAPSHOT.json registry/chat-param-outcomes-r31.json SKILL.md) /tmp/kama-r31w2/MutC1Pin/pristine-hashes.txt && echo RESTORED-IDENTICAL && cd .. && rm -f restored-receipt.json && ( python3 count-c1.py --repo clone --lane clone --out restored-receipt.json ) > restored.stdout 2> restored.stderr; echo "EXIT=$?"; cat restored.stdout; cat restored.stderr; ls -l restored-receipt.json
+# M2 committed registry model pin tamper:
+(cwd=/tmp/kama-r31w2/MutC1Pin/clone) python3 - <<'EOF'  # build.model_sha256 last char d -> e
+EOF
+(cwd=/tmp/kama-r31w2/MutC1Pin/clone) git -c user.name=mut -c user.email=mut@local commit -q -am 'M2: tamper registry build.model_sha256' && git rev-parse HEAD && sha256sum registry/chat-param-outcomes-r31.json && cd .. && rm -f m2-receipt.json && ( python3 count-c1.py --repo clone --lane clone --out m2-receipt.json ) > m2.stdout 2> m2.stderr; echo "EXIT=$?"; cat m2.stdout; cat m2.stderr; ls -l m2-receipt.json
+# Restore + M3 disk snapshot tamper:
+(cwd=/tmp/kama-r31w2/MutC1Pin/clone) git reset --hard --quiet 382d11b2... && diff <(sha256sum .ufo/waves/round-31/sources/SNAPSHOT.json registry/chat-param-outcomes-r31.json SKILL.md) /tmp/kama-r31w2/MutC1Pin/pristine-hashes.txt && echo RESTORED-IDENTICAL-M2; cp .ufo/waves/round-31/sources/llama.cpp-704366d/server-common.cpp /tmp/kama-r31w2/MutC1Pin/server-common.cpp.pristine && printf '\n// mutant byte\n' >> .ufo/waves/round-31/sources/llama.cpp-704366d/server-common.cpp && sha256sum .ufo/waves/round-31/sources/llama.cpp-704366d/server-common.cpp && cd .. && rm -f m3-receipt.json && ( python3 count-c1.py --repo clone --lane clone --out m3-receipt.json ) > m3.stdout 2> m3.stderr; echo "EXIT=$?"; cat m3.stdout; cat m3.stderr; ls -l m3-receipt.json
+# Restore all + final baseline:
+(cwd=/tmp/kama-r31w2/MutC1Pin/clone) cp /tmp/kama-r31w2/MutC1Pin/server-common.cpp.pristine .ufo/waves/round-31/sources/llama.cpp-704366d/server-common.cpp && sha256sum ... && diff ... && echo RESTORED-ALL-IDENTICAL && git status --porcelain | head; git show --stat --format='%H %s' af2752df75f7fd515493c0827a6a2ca5108ba913 > /tmp/kama-r31w2/MutC1Pin/m1-commit.patch; git show af2752df75f7fd515493c0827a6a2ca5108ba913 >> /tmp/kama-r31w2/MutC1Pin/m1-commit.patch; git show --stat --format='%H %s' a4747cf70afa929344ed91aec3a4d3dd1db45242 > /tmp/kama-r31w2/MutC1Pin/m2-commit.patch; git show a4747cf70afa929344ed91aec3a4d3dd1db45242 >> /tmp/kama-r31w2/MutC1Pin/m2-commit.patch; cd .. && rm -f final-receipt.json && ( python3 count-c1.py --repo clone --lane clone --out final-receipt.json ) > final.stdout 2> final.stderr; echo "EXIT=$?"; cat final.stdout; cat final.stderr; ls -l final-receipt.json; diff baseline-receipt.json final-receipt.json >/dev/null && echo RECEIPTS-IDENTICAL
+# M2a uncommitted registry tamper + restore:
+(cwd=/tmp/kama-r31w2/MutC1Pin/clone) python3 - <<'EOF'  # build.model_sha256 = "0"*64
+EOF
+(cwd=/tmp/kama-r31w2/MutC1Pin/clone) git status --porcelain; cd .. && rm -f m2a-receipt.json && ( python3 count-c1.py --repo clone --lane clone --out m2a-receipt.json ) > m2a.stdout 2> m2a.stderr; echo "EXIT=$?"; cat m2a.stdout; cat m2a.stderr; ls -l m2a-receipt.json; cd clone && git checkout -- registry/chat-param-outcomes-r31.json && sha256sum registry/chat-param-outcomes-r31.json && git status --porcelain | wc -l
+# M4 committed `bytes` pin tamper + restore:
+(cwd=/tmp/kama-r31w2/MutC1Pin/clone) python3 - <<'EOF'  # files["server-common.cpp"]["bytes"] = 1
+EOF
+(cwd=/tmp/kama-r31w2/MutC1Pin/clone) git -c user.name=mut -c user.email=mut@local commit -q -am 'M4: tamper SNAPSHOT bytes field only' && git rev-parse HEAD && sha256sum .ufo/waves/round-31/sources/SNAPSHOT.json && cd .. && rm -f m4-receipt.json && ( python3 count-c1.py --repo clone --lane clone --out m4-receipt.json ) > m4.stdout 2> m4.stderr; echo "EXIT=$?"; cat m4.stdout; cat m4.stderr; ls -l m4-receipt.json; cd clone && git reset --hard --quiet 382d11b2... && diff ... && echo RESTORED-IDENTICAL-M4
+# Cleanup checks:
+pgrep -af llama-server | head; ls -d /tmp/kama-r31c1-* 2>/dev/null | head; ss -ltn | grep -E '479[0-9]{2}' | head
+(cwd=/tmp/kama-r31w2/MutC1Pin) cp m4.* out/; cp clone/.ufo/waves/round-31/sources/SNAPSHOT.json out/restored-SNAPSHOT-after-all.json; sha256sum clone/... > out/final-hashes.txt; cd clone && git rev-parse HEAD && git status --porcelain | wc -l && ls /tmp/kama-r31w2/MutC1Pin/out
+(cwd=lane) cp -f /tmp/kama-r31w2/MutC1Pin/out/* "$OUT"/ && cp -f "$OUT/report.md" .ufo/waves/round-31/w2/out/MutC1Pin.md && ... git status --porcelain | head; echo "lane-status-lines=$(git status --porcelain | wc -l)"

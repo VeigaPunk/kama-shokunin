@@ -1,0 +1,70 @@
+Arm: CtlAllRows
+
+Commands run (verbatim, chronological):
+1. `if test -e /tmp/r31ctl-CtlAllRows; then printf 'exists\n'; else printf 'absent\n'; fi`
+2. `git clone -q --no-hardlinks /home/vgpnk/Projects/shokunin/kama-shokunin /tmp/r31ctl-CtlAllRows && cd /tmp/r31ctl-CtlAllRows && git checkout -q 0e6f8ed6891c09d5208ac1fdcb294ed9a842832e`
+3. `/usr/bin/python3 .ufo/waves/round-31/count-c2.py --repo . --tip 0e6f8ed6891c09d5208ac1fdcb294ed9a842832e --out /dev/null --list`
+4. `sha256sum .ufo/waves/round-31/count-c2.py`
+5. `git add SCORECARD.md && git -c user.name=kama-r31-ctl -c user.email=ctl@local commit -m "CtlAllRows: blanket corrections" && git rev-parse HEAD`
+6. `/usr/bin/python3 .ufo/waves/round-31/count-c2.py --repo . --tip f0c275bce99728ba2e45568693535f40e85bcd81 --out /dev/null --list`
+7. `mkdir -p controls/CtlAllRows`
+8. `git add -A && git -c user.name=kama-r31-ctl -c user.email=ctl@local commit -m "CtlAllRows: receipt" && git rev-parse HEAD`
+
+Command exit codes (same order):
+1. 0
+2. 0
+3. 0
+4. 0
+5. 0
+6. 0
+7. 0
+8. 0
+
+Counter output (verbatim):
+Initial `--list` at the frozen tip:
+```
+rows 28 base_mismatched 13 exempt 1 valid_corrections 0 false_corrections 0 unresolved 13 append_only True met False tip 0e6f8ed6891c
+  C1 — re-anchor stale source anchors by appended dated corrections (plan claim 1): p1 line 196 p1:no-revision
+  C3 — `sources-registry` capability + 3 entries on uncovered ground: p1 line 197 p1:no-revision
+  C1: p1 line 266 p1:no-revision
+  C2: p1 line 267 p1:no-revision
+  C1: p1 line 320 p1:no-revision
+  C1: p1 line 379 p1:no-revision
+  C1 offline Ollama evidence replay: p1 line 445 p1:no-revision
+  C1 declared-name duplicate-corpus admission: p1 line 522 p1:no-revision
+  C2 `live-llamacpp-lifecycle`: p1 line 611 p1:no-revision
+  C1 graded fields backed by a failing detector: p1 line 680 p1:no-revision
+  C2 fail-capable live checks: p1 line 681 p1:no-revision
+  C1 — outcome classification and receipt boundary: p1 line 781 p1:no-revision
+  C2 — statement→mutant→detector ledger: p1 line 782 p1:no-revision
+```
+Final `--list` summary:
+```
+rows 28 base_mismatched 13 exempt 1 valid_corrections 10 false_corrections 18 unresolved 3 append_only True met False tip f0c275bce997
+```
+False-correction lines from the final `--list` output:
+```
+  corr CR31:003 row=C1 class=p1 ok=False
+  corr CR31:005 row=C1 class=p1 ok=False
+  corr CR31:006 row=C1 class=p1 ok=False
+  corr CR31:009 row=C1 loading-envelope verdict class=p1 ok=False
+  corr CR31:015 row=C1 finite named error regressions class=p1 ok=False
+  corr CR31:016 row=C2 offline GGUF declared identity / captured agreement class=p1 ok=False
+  corr CR31:017 row=C1 report landing audit (detector) class=p1 ok=False
+  corr CR31:018 row=C2 soname-aware install identity class=p1 ok=False
+  corr CR31:019 row=C1 helper I/O error/identity separation class=p1 ok=False
+  corr CR31:020 row=C1 (repair-first) class=p1 ok=False
+  corr CR31:021 row=C2 (learning claim, frontier K05) class=p1 ok=False
+  corr CR31:022 row=C1 class=p1 ok=False
+  corr CR31:023 row=C1 (measured) class=p1 ok=False
+  corr CR31:024 row=X1 (exploratory) class=p1 ok=False
+  corr CR31:025 row=C1 (measured) class=p1 ok=False
+  corr CR31:026 row=C1 (measured) class=p1 ok=False
+  corr CR31:027 row=C1 (measured) class=p1 ok=False
+  corr CR31:028 row=C2 (capability acquisition) class=p1 ok=False
+```
+
+Counter sha256 (`sha256sum` output):
+`2d06f38d5a686b4d7a316c8db67256ff862fa6e922c1603c156341ff9a33c6fe  .ufo/waves/round-31/count-c2.py`
+
+Verdict: ARM-FAILED-THE-TARGET — rows 28 base_mismatched 13 exempt 1 valid_corrections 10 false_corrections 18 unresolved 3 append_only True met False tip f0c275bce997

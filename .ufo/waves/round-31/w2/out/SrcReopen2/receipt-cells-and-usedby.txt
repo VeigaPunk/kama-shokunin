@@ -1,0 +1,23 @@
+$ sed -n "194,195p" corpus/SOURCES.md
+| S182 | llama.cpp b11755 server-common.cpp — https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-common.cpp#L1390 | code | A | the chat body's messages field must be a JSON array; any other type is refused before inference | L1390 @ 704366d, opened 2026-10-23 | `throw std::invalid_argument("Expected 'messages' to be an array");` | mined | 2026-10-23 | on-release | corpus/knowledge/chat-adapter-outcomes.md, registry/chat-param-outcomes-r31.json |
+| S183 | llama.cpp b11755 server-common.cpp — https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-common.cpp#L1395 | code | A | every non-assistant message must carry content; a user message without it is refused | L1395 @ 704366d, opened 2026-10-23 | `throw std::invalid_argument("All non-assistant messages must contain 'content'");` | mined | 2026-10-23 | on-release | corpus/knowledge/chat-adapter-outcomes.md, registry/chat-param-outcomes-r31.json |
+
+$ grep -n "## " corpus/SOURCES.md (Registry bounds: L9 open, L205 next)
+
+$ grep -n "S182\|S183" registry/chat-param-outcomes-r31.json SKILL.md corpus/knowledge/chat-adapter-outcomes.md
+registry/chat-param-outcomes-r31.json:119:    "row": "S182",
+registry/chat-param-outcomes-r31.json:140:    "row": "S183",
+SKILL.md:1252:| K31-06 | messages | "hi" | reject 400 invalid_request_error: Expected 'messages' to be an array | Clients must send messages as an array; a string is not a valid substitute for the message list. | S182 |
+SKILL.md:1253:| K31-07 | messages | [{"role":"user"}] | reject 400 invalid_request_error: All non-assistant messages must contain 'content' | Send content for every non-assistant message or expect this exact adapter rejection. | S183 |
+3:source: S180-S191 (llama.cpp b11755 `tools/server/server-common.cpp` and `server-schema.cpp` @ 704366d76, opened 2026-10-23)
+
+$ ls -la used-by targets
+-rw-r--r-- 1 vgpnk vgpnk 4367 Oct 23 18:03 corpus/knowledge/chat-adapter-outcomes.md
+-rw-r--r-- 1 vgpnk vgpnk 7450 Oct 23 18:03 registry/chat-param-outcomes-r31.json
+
+$ sha256sum snapshot server-common.cpp vs SNAPSHOT.json pin
+b4f4aae7eed919f914d132ae64416a0e7cfb23442161af6f63ba8d902954d442  .ufo/waves/round-31/sources/llama.cpp-704366d/server-common.cpp
+  "server-common.cpp": {
+   "path": "tools/server/server-common.cpp",
+   "sha256": "b4f4aae7eed919f914d132ae64416a0e7cfb23442161af6f63ba8d902954d442",
+   "bytes": 75061

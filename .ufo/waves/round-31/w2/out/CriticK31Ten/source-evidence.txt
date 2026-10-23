@@ -1,0 +1,96 @@
+SCOPED READ/GREP RECEIPTS
+Repository-relative paths below are under /home/vgpnk/Projects/shokunin/kama-shokunin. These are excerpts returned by the read/grep tools, not new server observations.
+
+SOURCE: .ufo/waves/round-31/sources/llama.cpp-704366d/server-common.cpp:1363-1376:raw
+    // Handle "response_format" field
+    if (body.contains("response_format")) {
+        json response_format      = json_value(body, "response_format", json::object());
+        std::string response_type = json_value(response_format, "type", std::string());
+        if (response_type == "json_object") {
+            if (response_format.contains("schema") || json_schema.empty()) {
+                json_schema = json_value(response_format, "schema", json::object());
+            }
+        } else if (response_type == "json_schema") {
+            auto schema_wrapper = json_value(response_format, "json_schema", json::object());
+            json_schema = json_value(schema_wrapper, "schema", json::object());
+        } else if (!response_type.empty() && response_type != "text") {
+            throw std::invalid_argument("response_format type must be one of \"text\" or \"json_object\", but got: " + response_type);
+        }
+
+SOURCE: registry/chat-param-outcomes-r31.json:189-207
+  {
+   "id": "K31-10",
+   "param": "response_format",
+   "sent": {
+    "type": "xml"
+   },
+   "outcome": {
+    "kind": "reject",
+    "status": 400,
+    "type": "invalid_request_error",
+    "message": "response_format type must be one of \"text\" or \"json_object\", but got: xml"
+   },
+   "source": {
+    "row": "S181",
+    "file": "server-common.cpp",
+    "line": 1375,
+    "contains": "response_format type must be one of"
+   }
+  },
+
+SOURCE: SKILL.md:1256
+| K31-10 | response_format | {"type":"xml"} | reject 400 invalid_request_error: response_format type must be one of "text" or "json_object", but got: xml | This xml value was rejected here; clients should use text or json_object and not infer other response_format behavior from this single observation. | S181 |
+
+SOURCE: corpus/SOURCES.md:193:raw
+| S181 | llama.cpp b11755 server-common.cpp — https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-common.cpp#L1375 | code | A | the adapter validates response_format.type against text/json_object and appends the offending value to the message | L1375 @ 704366d, opened 2026-10-23 | `throw std::invalid_argument("response_format type must be one of \"text\" or \"json_object\", but got: " + response_type);` | mined | 2026-10-23 | on-release | corpus/knowledge/chat-adapter-outcomes.md, registry/chat-param-outcomes-r31.json |
+
+SOURCE: .ufo/waves/round-31/count-c1.py:40-43
+(e) discrimination (KQ38; a row predictable from the native schema's declared bounds or type
+    rules is not counted):
+      reject rows count only when outcome.message occurs verbatim in the pinned
+      server-common.cpp snapshot (an adapter-authored message, not the schema's bounds text);
+
+SOURCE: .ufo/waves/round-31/count-c1.py:463-466
+            # (e) discrimination rules that do not need the live run
+            kind = out.get("kind")
+            if kind == "reject" and str(out.get("message", "")) not in common_snap:
+                reasons.append("reject-message-not-adapter")
+
+SOURCE: .ufo/waves/round-31/count-c1.py:476-478
+            # (d) live
+            live = {}
+            if not reasons:
+
+SOURCE: .ufo/waves/round-31/count-c1.py:505-506
+                        if err.get("message") != out.get("message"):
+                            reasons.append("reject-message")
+
+SOURCE: .ufo/waves/round-31/w1/out/DataA10/row.json:134-141:raw
+  "response_excerpt": "{\"error\":{\"code\":400,\"message\":\"response_format type must be one of \\\"text\\\" or \\\"json_object\\\", but got: xml\",\"type\":\"invalid_request_error\"}}",
+  "prompt_tokens": 42,
+  "server_log_tail": [
+   "0.00.153.033 I slot print_timing: id  0 | task 0 |    graphs reused =          1",
+   "0.00.153.034 I slot print_timing: id  0 | task 0 |   graph reallocs =          0    /     0        (same size) / (changed size)",
+   "0.00.153.049 I slot      release: id  0 | task 0 | stop processing: n_tokens = 42, truncated = 0",
+   "0.00.153.939 W srv    operator(): got exception: {\"error\":{\"code\":400,\"message\":\"response_format type must be one of \\\"text\\\" or \\\"json_object\\\", but got: xml\",\"type\":\"invalid_request_error\"}}",
+   "0.00.154.439 I srv    operator(): operator(): cleaning up before exit..."
+
+SOURCE: corpus/lessons/round-31.md:101-102
+- `K31-10` is a true observation the counter cannot count: the adapter appends the offending value
+  to the message, so no verbatim pinned quote exists for it.
+
+TOOL PROBE 1: functions.grep
+path: .ufo/waves/round-31/sources/llama.cpp-704366d/server-common.cpp
+pattern: response_format type must be one of "text" or "json_object", but got: xml
+case: true; gitignore: false
+verbatim result: No matches found
+OS exit code: not exposed/applicable to this tool operation.
+
+TOOL PROBE 2: functions.grep
+path: .ufo/waves/round-31/sources/llama.cpp-704366d/server-common.cpp
+pattern: response_format type must be one of "text" or "json_object", but got: 
+case: true; gitignore: false
+verbatim result: No matches found
+OS exit code: not exposed/applicable to this tool operation.
+
+PIN: .ufo/waves/round-31/sources/SNAPSHOT.json records commit 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad and server-common.cpp SHA-256 b4f4aae7eed919f914d132ae64416a0e7cfb23442161af6f63ba8d902954d442. The sha256sum command independently returned that digest. The counter digest independently matches preregistration.json: d86c4a94b9a464a9aa6212b2958c72229b7134eb440f64edab70de090d924216.

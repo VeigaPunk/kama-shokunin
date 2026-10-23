@@ -1646,3 +1646,62 @@ under a repaired counter, or take the next frontier item: the `response_format`/
 grammar transform (`/slots` does not expose it) or `/v1/completions`. Open calibration ground: the
 P2-first-failure masking the mutation arm found (a `p1` correction resolves a row that also lacks an
 evidence path) and the duplicate-id case the counter does not count.
+
+## Round 31 attempt 2 — inherited claims re-measured, registry coverage, meaning-cell corrections (2026-10-23)
+
+Authority unchanged: assigned axes operability + calibration (`../shokunin.conf` kama row); lowest
+axes at round start were depth, calibration and adjacency at 7; the stagnation nudge is inactive
+(operability 8 is above the 8/10 saturation line but the window is not exhausted). Attempt 1 of this
+round froze C1/C2 at `0e6f8ed6` (base `07794a4d`) and landed their data through `382d11b2`, then the
+session died without a fleet report. This attempt inherits that state, re-measures it, freezes one
+further claim (**C3**, `preregistration-c3.json` at `bda324bb`, before its row existed), dispatches a
+44-seat falsification wave (wave 2), and lands the report. No inherited predicate was amended and no
+row was rewritten.
+
+| Claim | Axis, score | Before → after (measured) | Counting command | Measured commit | Verdict |
+|---|---|---|---|---|---|
+| C1 (depth; frozen attempt 1) | depth 7 → 7 | base `07794a4d`: `cannot evaluate: .ufo/waves/round-31/sources/SNAPSHOT.json missing at tip`, exit 2 → tip: `registered 18 counted 17 target 12 met True not-counted ['K31-10']`, exit 0 | `/usr/bin/python3 .ufo/waves/round-31/count-c1.py --repo <clone> --tip <full commit> --out <receipt>` (sha256 `d86c4a94…9216`) | `bda324bbc5c1d7db93553adb13c5f380492c3c93` | **met on the frozen counter; not admitted** — a twelve-row no-op registry padded with a matching SKILL table counts 12/12 (`w2/out/CriticNoop/`: `registered 12 counted 12 target 12 met True`), so the counter cannot separate depth from a no-op; three further mutants survive (`w2/out/MutC1Pin`) |
+| C2 (calibration; frozen attempt 1) | calibration 7 → 7 | base: `rows 28 base_mismatched 13 valid_corrections 0 unresolved 13 append_only True met False` → tip: `rows 30 base_mismatched 13 exempt 1 valid_corrections 10 false_corrections 0 unresolved 3 append_only True met False` | `/usr/bin/python3 .ufo/waves/round-31/count-c2.py --repo <clone> --tip <full commit> --out <receipt>` (sha256 `2d06f38d…c6fe`) | `bda324bbc5c1d7db93553adb13c5f380492c3c93` | **not met** — three failing rows share the Claim cell `C1` (rounds 11–13) and the `(row, class)` key is non-injective: one collapsed correction flips `met` True while two dispositions stay uncorrected, and three honest corrections are counted false (`w2/out/MutC2Key/`) |
+| C3 (operability; frozen this attempt) | operability 8 → 8 | `unregistered .ufo/waves/round-29/count-c1.py` / `registered 8 unregistered 1`, exit 1 → `registered 9 unregistered 0`, exit 0 | `/usr/bin/python3 tools/gate-registry-check.py [--rev <commit>]` | `addeb57c5d717785a94105a2e36cc8a76940fb6c` | **met on the frozen predicate; not admitted as an improvement** — the gate is an occurrence check: a row with an empty exit map and even a nonexistent metadata path also reads `registered 9 unregistered 0` (`w2/out/ExecC3Control/`, `w2/out/CriticC3Control/`) |
+
+Wave 2 also re-measured the round's own evidence and found six overclaiming `meaning` cells (K31-02,
+K31-05, K31-08, K31-09, K31-11, K31-12); all eighteen `outcome` cells rendered byte-identically and
+reproduced live (`w2/out/RevRow{A..E}/`). They are corrected by an appended block in `SKILL.md`, not
+by rewriting the counted rows.
+
+### capabilities: append — none
+
+C3 registers an existing instrument, it does not add one; no capability row enters. The round-30
+`instrument-agreement` row is unchanged.
+
+### round-31 record corrections (appended, attempt 2)
+
+- §Round 31 C2 row cites `.ufo/waves/round-31/c2/c2-tip.json`, which does not exist; the receipts are
+  `c2/c2-b4f3edc0.json` and `c2/c2-bda324bb.json`.
+- The same row's Before column reads `rows 28` at base and tip; the counter's population is 30 rows at
+  both (`rows 30` in `c2-bda324bb.json`); 28 is the count at base only because two round-31 rows did
+  not exist yet — the base receipt itself prints `rows 28`.
+- `corpus/README.md` §Frontier disposition said `19 rows`, `19 live rows` and `13 pinned source rows
+  S180–S192`; the measured counts are 18 registry rows, 18 SKILL rows (17 counted) and 12 source rows
+  S180–S191 (appended correction in README).
+- `PROVINCE.md` round-31 note said `S180–S192`; corrected by appended record to S180–S191.
+- `.ufo/waves/round-31/sources/llama.cpp-704366d/utils.hpp` was a committed `404: Not Found` body;
+  `server-http.cpp` and `server-models.cpp` were unpinned byte-identical duplicates of earlier
+  rounds' snapshots and `c1/c1-remap.json` duplicated `c1-54c6f4fe.json`; all four were removed at
+  `a9181096` (wave 1 evidence retained; the 1.2 MB `CriticIgnoredClass/raw.json` is kept because it
+  backs a wave-1 counter-defect finding, and its size is disclosed in the report).
+
+### Planned (round 32) — supersedes the round-31 Planned
+
+1. **C2 repair as a new instrument**: adopt a round-qualified correction key with a declared
+   uniqueness precondition. The three-hunk working candidate is committed as evidence at
+   `w2/out/MutC2Key/counter-roundkey.py` (one correction → `valid 11 unresolved 2`;
+   three corrections → `valid 13 unresolved 0 met True`; pristine counts unchanged).
+2. **C1 eligibility rules**: a counted row must name a parameter and value the base request does not
+   already carry, and the `ignored` class must exclude keys the chat session consumes. Then re-earn
+   depth or take the `response_format`/`json_schema` → grammar transform.
+3. **Meaning cells gated by a probe, not a word count** (KQ42): a graded prose cell is admitted only
+   after a counterexample search on the pinned fixture, with the probe receipt committed.
+4. Pin verification: `count-c1.py` verifies only sha256 fields read from the tip blob; working-tree pin
+   edits and the declared `bytes` field are ignored (`w2/out/MutC1Pin/`), and C2's append-only check is
+   a base-prefix check only (`w2/out/MutC2Append/`).
