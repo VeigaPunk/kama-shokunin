@@ -18,8 +18,10 @@ label `counted` in the receipt):
   channel (http: response body; startup: stdout+stderr), and the signature does
   not occur in the trigger's own request bytes; (f) the signature does not occur
   in the counter's healthy baseline run; (g) the signature is neither a
-  substring nor a superstring of an earlier counted signature, and the trigger
-  differs from every earlier counted trigger.
+  substring nor a superstring of an earlier counted signature, it does not
+  occur in the channel text of an earlier counted row, no earlier counted
+  signature occurs in its own channel text, and its trigger differs from
+  every earlier counted trigger (one fault, one counted row).
 
 Claim met iff counted >= 12 (preregistration.json C1.target).
 
@@ -324,6 +326,7 @@ def main() -> int:
             baseline = run_baseline(tmp, used) if entries else ""
             receipt["baseline_sha256"] = hashlib.sha256(baseline.encode()).hexdigest()
             counted_sigs: list[str] = []
+            counted_texts: list[str] = []
             counted_triggers: list[str] = []
             seen_ids: set[str] = set()
             for e in entries:
@@ -358,6 +361,7 @@ def main() -> int:
                                        str(req.get("path", "")), json.dumps(req.get("headers")),
                                        body_text or ""])
                 prior_ok = all(c.values())
+                channel_text = ""
                 if prior_ok:
                     run = run_trigger(e, tmp, used)
                     if not run.get("port_closed"):
@@ -373,10 +377,13 @@ def main() -> int:
                 else:
                     r["skipped_run"] = "a static check failed"
                 c["g_distinct"] = (all(sig not in s and s not in sig for s in counted_sigs)
+                                   and all(sig not in t for t in counted_texts)
+                                   and all(s not in channel_text for s in counted_sigs)
                                    and trig_key not in counted_triggers)
                 r["counted"] = all(c.values()) and "e_error_shown" in c
                 if r["counted"]:
                     counted_sigs.append(sig)
+                    counted_texts.append(channel_text)
                     counted_triggers.append(trig_key)
                 receipt["rows"].append(r)
         receipt["registered"] = len(entries)
