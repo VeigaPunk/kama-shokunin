@@ -211,3 +211,9 @@ landing commit counts as a landed-tip measurement only when those bytes are
 identical at the landing commit; any later change to either is disclosed with
 the revision it first appears in. A run against different bytes is not a
 landed-tip measurement.
+
+## Criterion added — round27 error-signature counters refuse decoded echoes and shared frames
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ37 | A counter that credits a live server error signature as lane knowledge refuses the signature when it occurs (case-folded, or with all whitespace removed) in the request path, in any JSON-decoded key or value of the request body at any depth, or in either serialisation of the decoded body; and credits at most one row per message frame (the message with the signature cut out, case-folded, not blank). A non-author shortcut-control receipt for each echo class the counter names is committed before any data seat. | The echo test reads raw request bytes only (RFC 8259 §7 lets any character be a `\uXXXX` escape, S136); one message frame credits several rows (llama.cpp `server-common.cpp:1375` splices the decoded request value into one fixed frame, S137); or a control seat for a named class was refused or died, in which case that class is unscored and the claim is exploratory or waits. | `lessons/round-26-verifier-spotcheck.md` routed defect 2 (round-26 counter line 384 compared raw bytes; a base-tree shortcut met it 12/12); `lessons/round-27.md`; `knowledge/echo-discriminating-counters.md` |

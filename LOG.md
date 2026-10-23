@@ -1724,3 +1724,22 @@ kengaku boundaries), the lesson Gate (verbatim quotes, routing of S131-S135,
 three source files added to the snapshot) and the round's own SCORECARD/LOG
 "before" statement. Signature, id and source cells did not change. The final
 counter receipt is `.ufo/waves/round-26/final/c1-final-tip.out`.
+
+## Correction (appended round 27, 2026-10-23) — the round-26 entry was rewritten in place
+
+The `## Round 26 — live llama-server error signatures` entry above (it starts
+at LOG.md line 1680) is not the text first landed. It landed at `7f84cd0e`
+(2026-10-23 00:50:35 -0300) and was rewritten in place at `fd48f9a3`
+(01:09:37 -0300). The rewrite changed three sentences and appended two
+paragraphs: the false "Before: SKILL.md held no live error signature for the
+b11755 runtime" became "held two live b11755 error signatures"; the
+"58 candidates" sentence became the 57 + 8 candidate account; the motivating
+"ports that are now dead" became "registered ports; 34113 does not listen
+today"; the repairs sentence gained the 220/2/1 file account and 7e5ff9b5;
+and the "Counter discrimination (found after data)" and "Falsify wave"
+paragraphs were added. Original text: `git show 7f84cd0e:LOG.md`; full change:
+`git diff 7f84cd0e fd48f9a3 -- LOG.md`. The current text is the corrected
+one; the original "Before" sentence was false (base SKILL.md held the
+`Loading model` 503 and the `Context size has been exceeded.` 500). Routed by
+`corpus/lessons/round-26-verifier-spotcheck.md` defect 1. From this round on a
+LOG correction is a new appended entry like this one, never an in-place edit.
