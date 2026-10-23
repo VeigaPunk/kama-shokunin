@@ -116,3 +116,14 @@ wave settles and reports any seat that dies in the round report.
   its staging path and a digest over the patched wrapper, so `agree=1 disagree=2`
   (`c2/receipt-b-corpusguard-refused.json`). This is the entry's worked refusal, not a normalization
   gap to paper over.
+
+## Appended calibration note — what carries the append-only rejection
+
+The `CtlEditInPlace` arm (late) reported `append_only False … unresolved 141` for a mid-file rewrite
+of the two false lines that cites real retained evidence. Its caveat is recorded here verbatim in
+substance: the two oracle mismatches survive the rewrite *because* the counter reads its population
+from the base blob (`extract`/`oracle_bind` read `BASE`), so the rejection of that arm rests on the
+append-only byte-prefix rule; a future counter that read the tip blob for its population would let
+the rewrite flip both oracle items to holding while `append_only` stayed False. Any amendment that
+changes the population anchor must re-run this arm; the honest reading is that append-only, not
+base-anchoring, is the load-bearing rule against in-place repair.
