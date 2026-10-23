@@ -178,3 +178,16 @@ after the loop (stricter than the docstring's "exactly one" phrase). Spec text: 
 table. Integration edits applied to this lesson: timestamps aligned to git metadata (freeze
 10:55:43Z, controls 11:11:28Z, w1 dispatch 12:02:03.361941Z, data 12:02:52Z); mistakes-row
 mutant count 3 → 2 per `mined/survivor-recheck.out`.
+
+### Late seat record (VerifyLogFreshness, relayed after landing)
+
+PASS on all exit codes at the final lane tip; independent attacks confirmed: the patched tool
+detects the round-28 A1 text at 75b78bb4 (`--strict` flags line 41, exit 1; pre-patch exit 0;
+control d8bf1804 clean — no overflagging); the 7-second selftest case is load-bearing (4 mutants
+rebuilt against the landed tool, all killed on that case); the C1 receipt is fresh at the pushed
+tip (frozen counter, met True); mined receipts reproduce byte-for-byte. Disclosures: a
+whole-history `report-landing-audit` run is red on a PRE-EXISTING round-27 defect (49491b80
+uncorrected; `--rounds 29` clean) — open ground for the round that owns that tool; sixteen
+ptc-selftest scratch dirs accumulated under the r26 default scratch path across waves (mixed
+attribution after the mid-flight steer; scratch space only). LOG.md's freshness line was re-worded
+after the tool landed (stale "working-tree" qualifier).

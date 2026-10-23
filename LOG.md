@@ -1857,7 +1857,7 @@ Mined mistake: `tools/prereg-time-check.py` now reads `YYYY-MM-DD ~HH:MMZ` / `YY
 Sources S174-S177 (git-blame, git-merge-base, git-grep + gitglossary, pretty-formats) opened this
 round; census 173 → 177 rows, exit 0.
 Re-verification (freshness): `tools/prereg-time-check.py --selftest` 13 cases PASS plus the
-SELFTEST PASS aggregate line, exit 0 (working-tree tool, seat-unique /tmp scratch);
+SELFTEST PASS aggregate line, exit 0 (landed tool at the round's tip, seat-unique /tmp scratch);
 ScoutHeldRules re-ran citation-provenance, report-landing-audit and sources-append-only self-tests,
 all exit 0.
 
