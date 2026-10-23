@@ -1568,3 +1568,81 @@ Work depth or adjacency (7). A depth re-claim still meets KQ38. Open calibration
 extractor still finds only 69 of the 141 by itself (see the README frontier note); any statement
 outside both populations remains invisible. C2's next step, if claimed, must name an instrument whose
 volatile fields are declared in advance, never normalized after a disagreement.
+
+## Round 31 — the chat-completions adapter (depth) and claim-row evidence (calibration)
+
+Authority: assigned axes operability + calibration (`../shokunin.conf` kama row); lowest axes at the
+start: depth, calibration and adjacency all 7. Stagnation nudge inactive. Preregistration
+`.ufo/waves/round-31/preregistration.json`, frozen at `0e6f8ed6` before any seat; pre-data control
+call (12 seats) committed at `3b1e84f8`; data in `54c6f4fe`.
+
+| Claim | Axis, score | Before → after | Counting command | Measured commit | Evidence |
+|---|---|---|---|---|---|
+| C1 (measured; **not admissible**) | depth 7 → 7 (no promotion: the frozen counter is met at the landed tip, but a do-nothing registry of twelve duplicate rows also meets it, so the counter cannot separate depth from a no-op) | registry and SKILL table absent at base (`count-c1.py` exits 2: no table) → `registered 18 counted 17 target 12 met True not-counted ['K31-10']` | `/usr/bin/python3 .ufo/waves/round-31/count-c1.py --lane . --repo <scratch clone> --tip <full commit> --out <receipt>` (counter sha256 `d86c4a94…9216`, frozen at `0e6f8ed6`) | `54c6f4fe` (`.ufo/waves/round-31/c1/c1-54c6f4fe.json`) | SKILL.md "## Round-31 chat-completions parameter outcomes" (K31-01..K31-18); `registry/chat-param-outcomes-r31.json`; S180-S191; `corpus/knowledge/chat-adapter-outcomes.md`; lesson `corpus/lessons/round-31.md` |
+| C2 (measured; **not met — counter defect**) | calibration 7 → 7 (no promotion) | `rows 28 base_mismatched 13 exempt 1 valid_corrections 0 false_corrections 0 unresolved 13 append_only True met False` at base → `rows 28 base_mismatched 13 exempt 1 valid_corrections 10 false_corrections 0 unresolved 3 append_only True met False` at the landed tip | `/usr/bin/python3 .ufo/waves/round-31/count-c2.py --repo <scratch clone> --tip <full commit> --out <receipt>` (counter sha256 `2d06f38d…c6fe`, frozen at `0e6f8ed6`) | the tip recorded in `.ufo/waves/round-31/c2/c2-tip.json` | the corrections section below; `.ufo/waves/round-31/before/c2-base.out`; `.ufo/waves/round-31/controls/RefRepair/` (the reference repair also fails: valid 10 / false 3 / unresolved 3) |
+
+Surface moved by C1: the committed corpus now holds the chat-completions adapter on the lane
+fixture — 18 measured rows in four outcome classes (reject with the exact `{code,message,type}`
+envelope, slot with the stored key/value from `/slots`, ignored with a zero slot delta and an
+unchanged normalized response, response with one of four response-contract facts), each bound to a
+pinned `server-common.cpp`/`server-schema.cpp` line at 704366d, plus the knowledge entry that states
+the mapping and the observability boundary. What it does not show: that the counter measures depth.
+The control call's two KQ38 policies failed (`CtlTypeGuess` 1/12, `CtlSchemaProjection` 0/12) but a
+cheaper shortcut found after the freeze meets the target: twelve duplicate rows asserting the base
+request's own `n_predict = 1` count 12/12 (`w1/out/CriticClaimSize/c1-noop.json`), and a mapping row
+whose stored value equals the base's own value counts as well
+(`w1/out/RevCounterFair/f2-receipt.json`). The counter's uniqueness test is per id, not per
+parameter or per value, and its `ignored` class accepts a field the session layer consumes
+(`f1-receipt.json`). Those are frozen-counter defects routed to round 32; the claim is reported met
+on the counter and not admitted as an improvement.
+
+Surface moved by C2 (partially): ten claim rows of rounds 10-18 that recorded no measured revision
+now carry an appended correction row with the counter's observed value (`p1:no-revision`). Three
+more failing rows (`C1` in rounds 11, 12 and 13) share the Claim cell `C1`, so the counter's
+`(row, class)` correction key cannot express their three dispositions: the reference repair arm
+appends all thirteen and reads `valid 10 false 3 unresolved 3` — the frozen predicate is unreachable
+for this population. The three rows are named below without being expressed as corrections, so the
+tree carries no knowingly-false row; the defect and its receipts are the round's calibration finding.
+
+### capabilities: append — none
+
+No new capability row. The two counters are instruments, not capabilities under the `AXES.md`
+table; `instrument-agreement` (round 30) is unchanged.
+
+## Round 31 — claim-row evidence corrections
+
+Appended by the kama L1, round 31, after the frozen counter
+(`.ufo/waves/round-31/count-c2.py`, sha256 `2d06f38d5a686b4d7a316c8db67256ff862fa6e922c1603c156341ff9a33c6fe`)
+landed its observations at the freeze tip `0e6f8ed6`. Each row names one base claim row that records
+no measured revision; the original lines stay as written.
+
+| id | row | class | observed |
+|---|---|---|---|
+| CR31:10:C1 re-anchor stale source anchors:p1 | C1 — re-anchor stale source anchors by appended dated corrections (plan claim 1) | p1 | p1:no-revision |
+| CR31:10:C3 sources-registry:p1 | C3 — `sources-registry` capability + 3 entries on uncovered ground | p1 | p1:no-revision |
+| CR31:11:C2:p1 | C2 | p1 | p1:no-revision |
+| CR31:14:C1 Ollama replay:p1 | C1 offline Ollama evidence replay | p1 | p1:no-revision |
+| CR31:15:C1 duplicate-corpus:p1 | C1 declared-name duplicate-corpus admission | p1 | p1:no-revision |
+| CR31:16:C2 lifecycle:p1 | C2 `live-llamacpp-lifecycle` | p1 | p1:no-revision |
+| CR31:17:C1 graded fields:p1 | C1 graded fields backed by a failing detector | p1 | p1:no-revision |
+| CR31:17:C2 fail-capable checks:p1 | C2 fail-capable live checks | p1 | p1:no-revision |
+| CR31:18:C1 outcome classification:p1 | C1 — outcome classification and receipt boundary | p1 | p1:no-revision |
+| CR31:18:C2 ledger:p1 | C2 — statement→mutant→detector ledger | p1 | p1:no-revision |
+
+Not expressible under the frozen key (three failing rows share the Claim cell `C1`): round 11 `C1`
+(SCORECARD.md:266), round 12 `C1` (SCORECARD.md:320) and round 13 `C1` (SCORECARD.md:379), all class
+`p1`, observed `p1:no-revision`. The counter's `(row, class)` key collapses them, so one correction
+row would silently resolve three distinct dispositions; the reference repair receipt
+(`.ufo/waves/round-31/controls/RefRepair/`) records `valid 10 false 3 unresolved 3` when all thirteen
+are appended. Fix routed to round 32 (round-qualified composite key or a declared uniqueness
+precondition); no re-keying of history here.
+
+### Planned (round 32)
+
+Repair the two frozen-counter defects as instruments (uniqueness precondition for C2's correction key;
+C1's counted row must name a parameter and value the base request does not already carry, and the
+`ignored` class must exclude keys the session layer consumes). Then either re-earn the depth claim
+under a repaired counter, or take the next frontier item: the `response_format`/`json_schema` →
+grammar transform (`/slots` does not expose it) or `/v1/completions`. Open calibration ground: the
+P2-first-failure masking the mutation arm found (a `p1` correction resolves a row that also lacks an
+evidence path) and the duplicate-id case the counter does not count.
