@@ -1277,6 +1277,27 @@ A `reject` row establishes the measured API error contract for that request, not
 3. Do not rely on an `ignored` result beyond its measured request/profile, and treat `n_choices` only as the number of choices to inspect—not a quality score (`count-c1.py` docstring L24-L26, L32-L39, L56-L57; `preregistration.json` L21-L26; `server-common.cpp` L1524-L1541).
 
 
+### Round-31 attempt-2 meaning-cell corrections (appended 2026-10-23; frozen rows unchanged)
+
+The round-31 attempt-2 falsification wave re-ran every registered outcome live and re-rendered each
+`outcome` cell by hand: all eighteen cells matched byte for byte
+(`.ufo/waves/round-31/w2/out/RevRow{A,B,C,D,E}/report.md`). The `meaning` cells are prose the frozen
+counter does not check (it requires eight words); six of them overclaim the measured behaviour. The
+corrections below are appended, not substituted, so the counted rows keep their measured bytes.
+
+| id | committed meaning overclaims | measured counterexample (b11755, stories260K, default argv) | corrected reading |
+|---|---|---|---|
+| K31-02 | presents the two OpenAI limit aliases without saying a native `n_predict` wins | adding native `n_predict: 5` alongside `max_tokens`/`max_completion_tokens` stores 5, not the OpenAI value (`w2/out/RevRowA/meaning-probe.json`) | the two-key sample is correct; when a native `n_predict` is also present it takes precedence |
+| K31-05 | says neither `logprobs` nor `top_logprobs` is enabled implicitly | `logprobs: true` alone stores `n_probs: 20`; the default comes from `server-common.cpp` L1519 (`w2/out/RevRowB/report.md`) | `top_logprobs` alone does not enable logprobs; `logprobs` alone enables a default of 20 top alternatives |
+| K31-08 | reads "neither omission is accepted" as forbidding either omission | an assistant message with `content` and no `tool_calls` returns 200 (`w2/out/RevRowC/meaning-probe.json`) | only an assistant message carrying neither `content` nor `tool_calls` is rejected |
+| K31-09 | says message content must be a string or an array | `{"role":"user","content":null}` returns 200 (`w2/out/RevRowC/meaning-probe.json`) | non-string/non-array/non-null content is rejected; `null` is accepted |
+| K31-11 | reads as a blanket prohibition on `json_schema` with `grammar` | the same schema with `grammar: ""` returns 200 (`w2/out/RevRowD/`) | the rejection needs a non-empty `grammar`; an empty string does not trigger it |
+| K31-12 | says the client must omit `logprobs` with tools and streaming | explicit `logprobs: false` with unchanged `tools` + `stream` returns 200 (`w2/out/RevRowD/`) | `logprobs: true` is what is unsupported with tools + stream; an explicit false is accepted |
+
+One further boundary, from `w2/out/RevRowE/`: an `ignored` row is scoped to slot-parameter and
+normalized-response equality at the measured request; `tools` demonstrably changes the response of
+a grammar request (200 → 400), so `ignored` never means "no effect on any other request".
+
 ### Round-31 instrument registry rows
 
 Same columns as `## Local gate/probe registry`. Counters added by round 31

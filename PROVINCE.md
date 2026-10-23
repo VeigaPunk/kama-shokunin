@@ -140,3 +140,9 @@ and not the session-level grammar transform (which `/slots` does not expose).
 frontier. Sibling lanes hold no competing claim on this surface: kumitate's
 watcher posts to `/v1/chat/completions` as a consumer and kengaku excludes the
 model-serving plane (`.ufo/waves/round-31/w1/out/ConnSibling/overlap.md`).
+
+*Appended correction, round 31 attempt 2:* the row range above reads `S180-S192`;
+the actual opened rows are **S180-S191** and no `S192` exists in `corpus/SOURCES.md`
+(`grep -c '^| S192' corpus/SOURCES.md` → 0; route: `.ufo/waves/round-31/w2/out/ScoutProvince/`).
+The entry and the registry are correct at S180-S191; only this note's range was
+written one row long.

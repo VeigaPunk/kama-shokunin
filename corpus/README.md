@@ -484,3 +484,19 @@ landed tip but a do-nothing registry of twelve duplicate rows also meets it
 (`.ufo/waves/round-31/controls/`), and C2's frozen predicate is unreachable because its
 correction key is not unique in its population. The counters are frozen bytes; the fixes
 are routed to round 32.
+
+*Appended correction, round 31 attempt 2 (2026-10-23).* Three counts in the paragraphs
+above are wrong and the no-op citation points at the wrong directory. Measured at tip
+`addeb57c`: `registry/chat-param-outcomes-r31.json` holds **18** rows (not 19; K31-14 was
+dropped by the remap at `54c6f4fe`), the SKILL table has **18** rows of which **17** count
+(`count-c1.py` → `registered 18 counted 17`), and the opened source rows are **S180-S191**
+(12 rows, not 13, and no S192 exists). The no-op shortcut evidence is
+`.ufo/waves/round-31/w1/out/CriticClaimSize/c1-noop.json` and, independently reproduced,
+`.ufo/waves/round-31/w2/out/CriticNoop/` (`registered 12 counted 12 target 12 met True`);
+the `controls/` directory holds the twelve-arm pre-data control call, not the no-op.
+C2's predicate is better described as non-injective than unreachable: one collapsed
+correction flips `met` False→True while two dispositions stay uncorrected
+(`w2/out/MutC2Key/`), which is worse than unreachable. `rows 30` is the counter's correct
+population; attempt 1's SCORECARD C2 cell says 28 and cites an absent
+`.ufo/waves/round-31/c2/c2-tip.json` (the receipts are `c2-b4f3edc0.json` and
+`c2-bda324bb.json`).
