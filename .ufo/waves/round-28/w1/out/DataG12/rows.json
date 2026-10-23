@@ -1,0 +1,53 @@
+{
+  "rows": [],
+  "no_rows": [
+    {
+      "field": "json_schema",
+      "line": 252,
+      "reason": "Real transform exists but it is not countable: the schema is compiled to a GBNF string stored under generation_settings.grammar, and that string always contains literal '|' alternation characters (the converter appends 'space ::= | \" \" | ...' unconditionally); the canonical outcome text '200, grammar = \"...\"' cannot occupy a single cell of the 6-column SKILL table that count-c1.py parses by naive '|' split, so any row would be skipped as unparseable. Invalid schemas give a plain 400 'Field json_schema: \"json_schema\": JSON schema conversion failed: ...', not the bounds message.",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": "root ::= (\"true\" | \"false\")\nspace ::= | \" \" | \"\\n\"{1,2} [ \\t]{0,20}\n",
+        "base_effective": "",
+        "response_sha256": "0936155731f0885ea32a1923be58ae7ad1cce17c22ad08155060697583ba1927"
+      }
+    },
+    {
+      "field": "grammar_lazy",
+      "line": 287,
+      "reason": "Identity only: field_bool stores data.at('grammar_lazy').get<bool>() verbatim; true -> 200 with generation_settings.grammar_lazy true (equals sent), false -> false. Any non-boolean (number, string) is rejected with 'Field 'grammar_lazy': [json.exception.type_error.302] type must be boolean, but is number|string', not the bounds message.",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": true,
+        "base_effective": false,
+        "response_sha256": "94851b4324c3c79cc75252124884af07dfc9d1979a34dcc29062b1f0db3e899c"
+      }
+    },
+    {
+      "field": "reasoning_format",
+      "line": 294,
+      "reason": "Identity only: the binary's common_reasoning_format_from_name accepts exactly 'none', 'auto', 'deepseek', 'deepseek-legacy' (confirmed by disassembly of libllama-common and live probes) and generation_settings.reasoning_format echoes each name verbatim; server default is 'deepseek'. Unknown names are rejected with 'Field 'reasoning_format': Unknown reasoning format: X', not the bounds message.",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": "none",
+        "base_effective": "deepseek",
+        "response_sha256": "3a4710a85fbfb8011ad72857e6f9033f22ba256931ed6ac1bb33843e25e87562"
+      }
+    },
+    {
+      "field": "continue_final_message",
+      "line": 300,
+      "reason": "Parsed and discarded: the handler calls common_chat_continuation_parse on the value and stores nothing; /completion returns 200 with no continue_final_message (or related) key in generation_settings for valid values true, false, 'content', 'reasoning_content'. Invalid values give 400 'Field 'continue_final_message': Invalid continue_final_message: expected a boolean, \"content\" or \"reasoning_content\"', not the bounds message.",
+      "live": {
+        "status": 400,
+        "message": "Field 'continue_final_message': Invalid continue_final_message: expected a boolean, \"content\" or \"reasoning_content\"",
+        "effective": null,
+        "base_effective": null,
+        "response_sha256": "8e33dfa2e6e5d24e2594d7e900975a6b46b44639d684f7dfd5d6bbc33dcc2aba"
+      }
+    }
+  ]
+}

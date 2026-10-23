@@ -1,0 +1,15 @@
+--- count-c1.py-A1
++++ m_d_bounds.py
+@@ -600,11 +600,5 @@
+                         lv["message"] = msg
+                         m = REJECT_RE.search(msg or "")
+-                        ok = False
+-                        if qs == 400 and m and m.group(1) == e["field"]:
+-                            try:
+-                                lo, hi = float(m.group(2)), float(m.group(3))
+-                                ok = same(lo, o["bounds"][0]) and same(hi, o["bounds"][1])
+-                            except ValueError:
+-                                ok = False
++                        ok = qs == 400  # mutant: status-only, bounds unchecked
+                         if not ok:
+                             r["why"].append("d:not-shown")

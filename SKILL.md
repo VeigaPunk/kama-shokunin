@@ -1131,3 +1131,92 @@ server launched with `--embeddings` crashed with SIGSEGV while serving a
 `POST /completion` (`.ufo/waves/round-26/w1-build/out/ExecEmbeddingsInput/RUNS.txt`).
 It is not registered: the crash needs a request to a healthy server, which only
 the http channel sends, and that channel needs an HTTP status.
+
+## Round-28 request-field outcomes (b11755 fixture, owner: kama)
+
+What llama-server does with one out-of-range or transformed value of a single
+request field, measured on the lane-owned fixture only: llama.cpp b11755
+(commit 704366d76, `~/.local/opt/llama-b11755/llama-server`, sha256
+`b6a31a8e…d804`), model `stories260K.gguf` (sha256 `270cba1b…256d`), default
+argv `-m <model> --host 127.0.0.1 --port <port>` (so `n_parallel` is 4), native
+`POST /completion` with body `{"prompt": "Once upon a time", "n_predict": 1}`
+plus the one field shown. Fields are declared in `tools/server/server-schema.cpp`
+(pinned snapshot `.ufo/waves/round-28/sources/llama.cpp-704366d/server-schema.cpp`,
+sha256 `1f9d7b73…0050`): `set_hard_limits` rejects with HTTP 400
+`Field '<name>': Value must be between A <= value <= B, but got V`;
+`set_limits` clamps silently; handlers transform. "200, key = value" means the
+value stored in the response's `generation_settings` (not proof that sampling
+used it, not model quality, not endpoint health or served identity).
+Launch-dependent bounds are marked: `n_cmpl`'s upper bound is `n_parallel`.
+Re-derive: `/usr/bin/python3 .ufo/waves/round-28/count-c1.py --out <receipt.json>`
+(registry `registry/request-field-outcomes-r28.json`; the counter re-runs every
+row on its own pinned server). Rows whose stored value is only a generic type
+conversion (float32 saturation, truncation, 2^32 wrap) are true but not counted
+as field knowledge (amendment A1). One request per field: a row is one observed
+point, not the field's whole response function.
+
+| id | field | value | outcome | meaning | source |
+|---|---|---|---|---|---|
+| F28-01 | sse_ping_interval | -2 | reject 400, bounds -1 to 2147483647 | A negative value below -1 is refused outright with HTTP 400 instead of being clamped, so clients must send -1 to disable SSE pings or a non-negative interval. | S140 |
+| F28-02 | n_predict | -2 | reject 400, bounds -1 to 2147483647 | n_predict below -1 is rejected with HTTP 400 and not clamped, so clients asking for unbounded generation must send exactly -1 and never a smaller integer. | S141 |
+| F28-03 | n_indent | -1 | reject 400, bounds 0 to 2147483647 | A negative n_indent is a hard HTTP 400 rejection rather than a clamp to zero, so code-completion clients must send 0 to disable indentation and never a negative number. | S142 |
+| F28-04 | n_keep | -2 | reject 400, bounds -1 to 2147483647 | n_keep accepts -1 to retain the whole prompt but rejects anything smaller with HTTP 400, so clients must use -1 rather than -2 and cannot rely on clamping. | S143 |
+| F28-05 | n_discard | -1 | reject 400, bounds 0 to 2147483647 | The server rejects any n_discard below zero with HTTP 400 instead of clamping, so clients must send 0 or a positive discard count. | S144 |
+| F28-06 | n_cmpl | 0 | reject 400, bounds 1 to 4 | The server rejects n_cmpl outside one through n_parallel (four here) with HTTP 400, so clients must ask for no more completions than server slots. | S145 |
+| F28-07 | t_max_predict_ms | -2 | reject 400, bounds -1 to 9223372036854775807 | The server rejects any t_max_predict_ms below minus one with HTTP 400, so clients must send -1 when they want no prediction time limit. | S146 |
+| F28-08 | top_k | -5 | 200, top_k = 0 | top_k has only soft limits, so llama-server silently clamps a negative request to 0 (top-k disabled) instead of rejecting it; clients must validate the range 0..INT32_MAX themselves. | S147 |
+| F28-09 | top_p | 2.5 | 200, top_p = 1.0 | top_p is clamped silently to its soft maximum, so a request above 1.0 is served with top_p = 1.0 (sampling disabled) rather than rejected; clients must check 0.0..1.0 before sending. | S148 |
+| F28-10 | min_p | -1.5 | 200, min_p = 0.0 | min_p is clamped silently to its soft minimum: sent -1.5 it is served as min_p = 0.0 (disabled), a value no truncation of the request yields, so clients must validate 0.0..1.0 themselves. | S149 |
+| F28-11 | top_n_sigma | 3.5e+38 | 200, top_n_sigma = 3.4028234663852886e+38 | top_n_sigma declares no explicit bounds, so a value above the float32 maximum is accepted and saturated to 3.4028e38 instead of being rejected; clients must keep it finite. | S150 |
+| F28-12 | xtc_probability | 5.0 | 200, xtc_probability = 1.0 | llama-server silently clamps an out-of-range xtc_probability to 1.0 and still returns HTTP 200, so clients must validate the 0..1 range themselves instead of expecting an error. | S151 |
+| F28-13 | temperature | -1.0 | 200, temperature = 0.0 | llama-server silently clamps a negative temperature to 0.0 (greedy decoding) with HTTP 200, so clients should reject negative values before sending them. | S152 |
+| F28-14 | dynatemp_exponent | 1e+39 | 200, dynatemp_exponent = 3.4028234663852886e+38 | A dynatemp_exponent beyond the float range is silently saturated to 3.4028234663852886e+38 in generation_settings instead of being rejected, so clients must read the echoed value rather than assume the sent number took effect. | S153 |
+| F28-15 | repeat_last_n | -1 | reject 400, bounds 0 to 2147483647 | A negative repeat_last_n is rejected with HTTP 400 naming the inclusive hard bounds 0 to 2147483647, so clients must validate this count before sending instead of expecting a clamp. | S154 |
+| F28-16 | repeat_penalty | 1e+39 | 200, repeat_penalty = 3.4028234663852886e+38 | A repeat_penalty above the float range is silently saturated to 3.4028234663852886e+38 in generation_settings, so operators should verify the echoed value and keep penalties near the 1.0 default. | S155 |
+| F28-17 | frequency_penalty | 1e+39 | 200, frequency_penalty = 3.4028234663852886e+38 | A frequency_penalty beyond the float range is silently saturated to 3.4028234663852886e+38 in generation_settings rather than refused, so clients should clamp their own values and read the echoed settings. | S156 |
+| F28-18 | dry_allowed_length | -1 | reject 400, bounds 0 to 2147483647 | llama-server rejects a negative dry_allowed_length with HTTP 400 and the exact integer bounds, so clients must clamp the DRY window length to 0..2147483647 before sending. | S157 |
+| F28-19 | dry_penalty_last_n | -1 | reject 400, bounds 0 to 2147483647 | A negative dry_penalty_last_n is rejected with HTTP 400 naming the inclusive int32 bounds 0..2147483647, so clients must clamp before sending and operators should treat the 400 as final. | S158 |
+| F28-20 | mirostat | 5 | 200, mirostat = 2 | An out-of-range mirostat value is silently clamped to the 0..2 soft limits instead of rejected, so a client asking for 5 gets mode 2 and must read generation_settings to learn the mode actually used. | S159 |
+| F28-21 | mirostat_tau | 1e+39 | 200, mirostat_tau = 3.4028234663852886e+38 | A mirostat_tau beyond the float range is silently clamped to the largest finite float 3.4028235e38, not rejected, so clients must bound tau themselves and verify it in generation_settings. | S160 |
+| F28-22 | mirostat_eta | 1e+39 | 200, mirostat_eta = 3.4028234663852886e+38 | A mirostat_eta beyond the float range is silently clamped to the largest finite float 3.4028235e38, not rejected, so clients must bound eta themselves and verify it in generation_settings. | S161 |
+| F28-23 | adaptive_target | 5.0 | 200, adaptive_target = 1.0 | Values above the soft maximum are silently clamped to 1.0, so clients must expect 200 and read generation_settings instead of a validation error. | S162 |
+| F28-24 | adaptive_decay | 1.5 | reject 400, bounds 0.0 to 0.99 | Values above 0.99 are rejected with HTTP 400, so clients must keep adaptive_decay within 0.0 through 0.99 before sending. | S163 |
+| F28-25 | seed | 4294967296 | 200, seed = 0 | Seeds above 4294967295 wrap to 0 through uint32 truncation, so clients must send only uint32-range values and verify generation_settings. | S164 |
+| F28-26 | n_probs | 2.5 | 200, n_probs = 2 | A fractional n_probs is truncated to its integer part, so clients must send integers and confirm the stored value in generation_settings. | S165 |
+| F28-27 | min_keep | -1 | reject 400, bounds 0 to 2147483647 | A min_keep outside 0..2147483647 is refused with HTTP 400 naming the hard bounds, so clients must send an in-range integer and treat the 400 as their own request error. | S166 |
+| F28-28 | lora | [{"id": 0, "scale": 1.0}, {"id": 0, "scale": 0.5}] | 200, lora = [{"id": 0, "scale": 0.5}] | Duplicate adapter ids collapse to one id-keyed entry and the last scale wins, so clients must send at most one lora entry per adapter id. | S167 |
+| F28-29 | preserved_tokens | ["upon", "upon", "a"] | 200, preserved_tokens = [261, 407] | Only strings that tokenize to exactly one token are kept, as ascending llama_token ids de-duplicated in a set, so send one-token strings and read preserved_tokens back to see what was kept. | S168 |
+| F28-30 | reasoning_budget_tokens | -2 | reject 400, bounds -1 to 2147483647 | A reasoning_budget_tokens value below -1 is rejected with HTTP 400 by the hard limit, so clients must send -1 to disable the budget and never rely on a silent clamp. | S169 |
+| F28-31 | logit_bias | {"12": 5} | 200, logit_bias = [{"bias": 5.0, "token": 12}] | Sending logit_bias as a JSON object returns 200 but generation_settings.logit_bias is normalized to an array of {"bias", "token"} objects, keeping only tokens in [0, n_vocab), so a client must read back the array form and may not assume an out-of-vocabulary token was applied. | S170 |
+| F28-32 | ignore_eos | true | 200, logit_bias = [{"bias": null, "token": 2}] | Setting ignore_eos true returns 200 with generation_settings.ignore_eos true and, because the handler appends the precomputed EOG biases, injects token 2 into generation_settings.logit_bias with a null (minus-infinity) bias that the client never sent. | S171 |
+| F28-33 | stop | "\n" | 200, stop = ["\n"] | Sending stop as a bare string returns 200 with generation_settings.stop wrapped into a one-element array, while an empty string is echoed as a [""] stopping entry and an empty array clears it, so a client should read back the echoed array instead of assuming rejection or clearing. | S172 |
+| F28-34 | samplers | "kp" | 200, samplers = ["top_k", "top_p"] | Sending samplers as the string "kp" returns 200 with generation_settings.samplers resolved to ["top_k", "top_p"], while unknown sampler names are silently dropped (an all-unknown array becomes []), so a client must read back the array and cannot assume the requested chain applied. | S173 |
+
+Fields measured with no countable row (wave-1 seats, `.ufo/waves/round-28/w1/out/DataG*/rows.json` `no_rows`):
+`field_bool` fields (`verbose`, `timings_per_token`, `stream`, `include_usage`,
+`cache_prompt`, `return_tokens`, `return_progress`, `backend_sampling`,
+`post_sampling_probs`, `grammar_lazy`, `echo`, `reasoning_control`) store the
+boolean sent or are not reported, and a non-boolean value is a 400 JSON type
+error with no bounds; the `speculative.*` declarations at lines 198-227 sit in
+an `#if 0` block and are silently ignored on b11755; `typical_p`,
+`dynatemp_range`, `presence_penalty`, `dry_multiplier`, `n_keep`/`n_predict`
+in range echo the value sent; `dry_base` below 1.0 falls back to the default
+1.75; `json_schema` is compiled into `generation_settings.grammar` (GBNF text
+with `|`, not representable in this table); `reasoning_format`,
+`continue_final_message`, `grammar_triggers`, `dry_sequence_breakers`,
+`response_fields` and the `reasoning_budget_*` strings have no bounds message
+and no stored transform. `n_cache_reuse` (400, bounds 0 to 2147483647) and
+`xtc_threshold` (2.5 stored as 1.0) were the counter pilot and are excluded.
+
+## Round-28 instrument registry (owner: kama)
+
+Same columns as `## Local gate/probe registry`. Rows added by round 28
+(routed defect 3 of `corpus/lessons/round-27-verifier-spotcheck.md`).
+
+| Name | Kind / entry command | Exit map | Self-test / pinned values | Write scope |
+|---|---|---|---|---|
+| Round-28 C1 request-field outcomes | measurement: `/usr/bin/python3 .ufo/waves/round-28/count-c1.py --out <receipt.json>` (lane root; `--lane DIR`, `--repo GITDIR`) | 0 ran, prints `registered R counted N target 18 met B not-counted [...]` (label `counted`); 2 could not evaluate (pins, process identity, ports 47600-47619, base request) | counter sha256 `a38faefeeb48be9fd3590b5077030ed6b7cef08dcaf1ca0540b464bd222749a5` (A1; A0 `e6a706bb…0540c`); snapshot `server-schema.cpp` sha256 `1f9d7b73…0050`; server `b6a31a8e…d804`, `libllama-server-impl.so` `e404b91a…59ed`, model `270cba1b…256d`; pilot `.ufo/waves/round-28/before/pilot-A1-receipt.json` (2 scratch rows counted 2); controls `.ufo/waves/round-28/controls/`, `controls-A1/` | `--out` file and a removed temporary directory; launches and stops its own llama-server |
+| Round-27 C1 counter (retired) | `.ufo/waves/round-27/count-c1.py`, sha256 `49491b80e4f4ed2a85ab822a52f0b1a0fdb1dee53423e3d43b60ee25d1bf2765` — do not use | last run exit 0, `registered 0 counted 0 target 15 met False` (`.ufo/waves/round-27/a3/c1-final.out`) | retired with round-27 C1 (miss, never run on data); superseded for method by KQ37 and its round-28 qualification | none (retired) |
+| Round-25 C2 context-capacity binding (repaired round 28) | measurement: `python3 .ufo/waves/round-25/count-c2.py` | prints `registered R observed O bound B missing [...]`; cells are recomputed from sha256-bound raw bodies and log, never read from receipt cells | sha256 `5aa64a370196f352435bdf2cee2526019a3eac2737eb194496c5126d5759fa2a`; committed receipt → `registered 14 observed 14 bound True missing []`; forged-cell and forged-raw fixtures in `.ufo/waves/round-28/w1/out/ExecCountC2Fix/` | read-only |
+| Gate registry completeness | gate: `python3 tools/gate-registry-check.py [--rev REV]` | 0 every tracked `.ufo/waves/round-*/count-*.py` path occurs in SKILL.md; 1 some do not (`unregistered <path>`); 2 could not evaluate | at base `4179301f`: exit 1, `unregistered .ufo/waves/round-25/count-c2.py`, `unregistered .ufo/waves/round-27/count-c1.py` (`.ufo/waves/round-28/w1/out/ExecGateRegistryCheck/base-4179301.out`); occurrence check only, it does not inspect row columns | read-only git |
+| Echo recheck (round-27 live probe) | probe: `python3 tools/echo-recheck.py --out <fresh path>` (`--port` optional; default 48231-48233) | 0 `echo-recheck same N/N`; 1 `echo-recheck drift <ids>`; 2 cannot evaluate (also when `--out` exists) | replays `.ufo/waves/round-27/w1a3/out/ExecLiveEchoProbe/` requests against `receipt.json`; pins as round-27 counter; runs in `.ufo/waves/round-28/w1/out/ExecEchoRecheck/` | the `--out` file only; starts and stops its own server |

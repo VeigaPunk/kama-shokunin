@@ -1,0 +1,71 @@
+{
+ "rows": [
+  {
+   "field": "min_keep",
+   "set": {
+    "min_keep": -1
+   },
+   "outcome": {
+    "kind": "reject",
+    "bounds": [
+     0,
+     2147483647
+    ]
+   },
+   "line": 183,
+   "limits_line": 184,
+   "meaning": "A min_keep outside 0..2147483647 is refused with HTTP 400 naming the hard bounds, so clients must send an in-range integer and treat the 400 as their own request error.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:33:23Z",
+    "quote": "add((new field_num(\"min_keep\", params.sampling.min_keep)) ->set_hard_limits(0, INT32_MAX)"
+   },
+   "live": {
+    "status": 400,
+    "message": "Field 'min_keep': Value must be between 0 <= value <= 2147483647, but got -1",
+    "effective": null,
+    "base_effective": null,
+    "response_sha256": "bfce3536f68a4117810229d171770eddcdc26c75607f526f46313b978027b8af"
+   }
+  }
+ ],
+ "no_rows": [
+  {
+   "field": "backend_sampling",
+   "line": 187,
+   "reason": "Bool field with no limits or handler: sending true is stored verbatim and reported as true, identical to the value sent, so it is an identity outcome; the same field sent as the number 1 is refused with a json type_error 302 message that carries no bounds text, so no countable reject exists either (line 187 declares it; no limits line).",
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": true,
+    "base_effective": false,
+    "response_sha256": "d3a231e12480bbda2bb7a720c90d851909685942c186e92f22fb5ecc5ac12ac9"
+   }
+  },
+  {
+   "field": "post_sampling_probs",
+   "line": 190,
+   "reason": "Bool field with no limits or handler: sending true is stored verbatim and reported back as true, an identity outcome, and the number 1 yields a json type_error 302 400 without bounds text; the field is not transformed and there is no limits line (declared line 190).",
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": true,
+    "base_effective": false,
+    "response_sha256": "ff2691704ba602a455e6012eed4d0feff2250e2c758379e80bfa79d26f806576"
+   }
+  },
+  {
+   "field": "speculative.n_max",
+   "line": 200,
+   "reason": "Declared inside an #if 0 block (line 198), so it is not compiled into the schema: the request key is silently ignored, generation_settings has no speculative.n_max key (only speculative.types), and the response is 200 with defaults, leaving no reject or effective outcome.",
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": null,
+    "base_effective": null,
+    "response_sha256": "13a4030faac7b5cbe08c18366cbf575d38315167a4b1fdb5ae175e62d1059cd0"
+   }
+  }
+ ]
+}

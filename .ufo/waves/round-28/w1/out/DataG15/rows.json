@@ -1,0 +1,163 @@
+{
+ "rows": [
+  {
+   "field": "logit_bias",
+   "set": {
+    "logit_bias": {
+     "12": 5
+    }
+   },
+   "outcome": {
+    "kind": "effective",
+    "key": "logit_bias",
+    "value": [
+     {
+      "bias": 5.0,
+      "token": 12
+     }
+    ]
+   },
+   "line": 382,
+   "limits_line": 414,
+   "meaning": "Sending logit_bias as a JSON object returns 200 but generation_settings.logit_bias is normalized to an array of {\"bias\", \"token\"} objects, keeping only tokens in [0, n_vocab), so a client must read back the array form and may not assume an out-of-vocabulary token was applied.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:34:29Z",
+    "quote": "new field_json(\"logit_bias\") ... \"Accepts an array of [token, bias] pairs or an object mapping token to bias.\" ... ctx.params.sampling.logit_bias.push_back({tok, bias});"
+   },
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": [
+     {
+      "bias": 5.0,
+      "token": 12
+     }
+    ],
+    "base_effective": [],
+    "response_sha256": "a27f68bc89b089de4b15ec6dcc44a4aa6f4a670185e56e172101e413c4e1e66f",
+    "base_response_sha256": "d1b05dab9cadd2d0022bab3c2f33444745d8916a9c74263f2c0e09370d901e09",
+    "evidence_file": "logit_bias_object.json"
+   }
+  },
+  {
+   "field": "ignore_eos",
+   "set": {
+    "ignore_eos": true
+   },
+   "outcome": {
+    "kind": "effective",
+    "key": "logit_bias",
+    "value": [
+     {
+      "bias": null,
+      "token": 2
+     }
+    ]
+   },
+   "line": 423,
+   "limits_line": 429,
+   "meaning": "Setting ignore_eos true returns 200 with generation_settings.ignore_eos true and, because the handler appends the precomputed EOG biases, injects token 2 into generation_settings.logit_bias with a null (minus-infinity) bias that the client never sent.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:34:29Z",
+    "quote": "new field_bool(\"ignore_eos\", params.sampling.ignore_eos) ... \"Ignore the end-of-sequence token and continue generating\" ... ctx.params.sampling.logit_bias.insert("
+   },
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": [
+     {
+      "bias": null,
+      "token": 2
+     }
+    ],
+    "base_effective": [],
+    "response_sha256": "ea9b8bb01f4fed6c281f2fc692faa0ebafcf61f17dd52610484d3bc4a57860f8",
+    "base_response_sha256": "d1b05dab9cadd2d0022bab3c2f33444745d8916a9c74263f2c0e09370d901e09",
+    "evidence_file": "ignore_eos_true.json"
+   }
+  },
+  {
+   "field": "stop",
+   "set": {
+    "stop": "\n"
+   },
+   "outcome": {
+    "kind": "effective",
+    "key": "stop",
+    "value": [
+     "\n"
+    ]
+   },
+   "line": 435,
+   "limits_line": 445,
+   "meaning": "Sending stop as a bare string returns 200 with generation_settings.stop wrapped into a one-element array, while an empty string is echoed as a [\"\"] stopping entry and an empty array clears it, so a client should read back the echoed array instead of assuming rejection or clearing.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:34:29Z",
+    "quote": "new field_json(\"stop\") ... \"Specify stopping strings. Generation stops when one is produced, and the string is not included in the output\" ... ctx.params.antiprompt.push_back(stop.get<std::string>());"
+   },
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": [
+     "\n"
+    ],
+    "base_effective": [],
+    "response_sha256": "e1067012ed8d77b2b219ff391c5eb0f9b06f8bcddb6db55ba5d4ddec13a31934",
+    "base_response_sha256": "d1b05dab9cadd2d0022bab3c2f33444745d8916a9c74263f2c0e09370d901e09",
+    "evidence_file": "stop_string.json"
+   }
+  },
+  {
+   "field": "samplers",
+   "set": {
+    "samplers": "kp"
+   },
+   "outcome": {
+    "kind": "effective",
+    "key": "samplers",
+    "value": [
+     "top_k",
+     "top_p"
+    ]
+   },
+   "line": 453,
+   "limits_line": 460,
+   "meaning": "Sending samplers as the string \"kp\" returns 200 with generation_settings.samplers resolved to [\"top_k\", \"top_p\"], while unknown sampler names are silently dropped (an all-unknown array becomes []), so a client must read back the array and cannot assume the requested chain applied.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:34:29Z",
+    "quote": "field_json(\"samplers\") ... \"The order in which samplers are applied. An array of sampler type names, or a single string of sampler chars\" ... common_sampler_types_from_chars(samplers.get<std::string>())"
+   },
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": [
+     "top_k",
+     "top_p"
+    ],
+    "base_effective": [
+     "penalties",
+     "dry",
+     "top_n_sigma",
+     "top_k",
+     "typ_p",
+     "top_p",
+     "min_p",
+     "xtc",
+     "temperature"
+    ],
+    "response_sha256": "b72fc6fe1a1d6386d9dc66fbf08e73f5412c05e3cf2dc92f5403131641dea2c4",
+    "base_response_sha256": "d1b05dab9cadd2d0022bab3c2f33444745d8916a9c74263f2c0e09370d901e09",
+    "evidence_file": "samplers_string.json"
+   }
+  }
+ ],
+ "no_rows": []
+}

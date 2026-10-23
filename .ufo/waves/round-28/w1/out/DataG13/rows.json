@@ -1,0 +1,63 @@
+{
+  "rows": [
+    {
+      "field": "preserved_tokens",
+      "set": {"preserved_tokens": ["upon", "upon", "a"]},
+      "outcome": {"kind": "effective", "key": "preserved_tokens", "value": [261, 407]},
+      "line": 316,
+      "limits_line": 319,
+      "meaning": "Only strings that tokenize to exactly one token are kept, as ascending llama_token ids de-duplicated in a set, so send one-token strings and read preserved_tokens back to see what was kept.",
+      "source": {
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+        "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+        "accessed": "2026-10-23T08:34:35Z",
+        "quote": "field_json(\"preserved_tokens\") ... common_sampling_add_preserved_tokens(ctx.params.sampling, ctx.vocab, data.at(\"preserved_tokens\").get<std::vector<std::string>>());"
+      },
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": [261, 407],
+        "base_effective": [],
+        "response_sha256": "addb5f7b40ef278b5d0d7d2d4c3ee6bfd44612d8d6db64c14d0bfb1b098239c6"
+      }
+    }
+  ],
+  "no_rows": [
+    {
+      "field": "echo",
+      "line": 306,
+      "reason": "the field_json handler evaluates data.at(\"echo\").get<bool>() and discards the result, and generation_settings has no echo key, so echo:true is a 200 whose generation_settings equals the field-omitted call and echo:\"yes\" is a type_error 400, never a bounds 400",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": null,
+        "base_effective": null,
+        "response_sha256": "cf291a98addfeb9a39613e56d48f2e253ca49ee7751b8a761345accc85234612"
+      }
+    },
+    {
+      "field": "grammar_triggers",
+      "line": 322,
+      "reason": "one-key values either 400 with a non-bounds message (bare string: cannot use at() with string; {\"type\": 1, \"value\": \"Once\"}: Grammar trigger word should be marked as preserved token) or come back unchanged (type 2 and type 3 objects), and the only transformed form, a word trigger rewritten to {\"type\": 0, \"value\": \"Once\", \"token\": 403}, needs preserved_tokens in the same request",
+      "live": {
+        "status": 400,
+        "message": "Field 'grammar_triggers': Grammar trigger word should be marked as preserved token: Once",
+        "effective": null,
+        "base_effective": null,
+        "response_sha256": "9ff9739e5b5a41d3e521ec5bd3c47dc1b369136f861a539c5b902d7ad9c039fb"
+      }
+    },
+    {
+      "field": "reasoning_control",
+      "line": 332,
+      "reason": "field_bool stores params.sampling.reasoning_control but server-task.cpp to_json never emits it, so reasoning_control:true is a 200 whose generation_settings has no reasoning_control key and equals the field-omitted call, and 1 or \"true\" is a type_error 400, not a bounds 400",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": null,
+        "base_effective": null,
+        "response_sha256": "e6587e3ba98de4826e1c82a5bb8fcaf998d6505de6e221d410caf545d59f5844"
+      }
+    }
+  ]
+}

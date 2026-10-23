@@ -1,0 +1,94 @@
+{
+ "rows": [
+  {
+   "field": "lora",
+   "set": {
+    "lora": [
+     {"id": 0, "scale": 1.0},
+     {"id": 0, "scale": 0.5}
+    ]
+   },
+   "outcome": {
+    "kind": "effective",
+    "key": "lora",
+    "value": [
+     {"id": 0, "scale": 0.5}
+    ]
+   },
+   "line": 229,
+   "limits_line": 231,
+   "meaning": "Duplicate adapter ids collapse to one id-keyed entry and the last scale wins, so clients must send at most one lora entry per adapter id.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:32:44Z",
+    "quote": "add((new field_json(\"lora\")) ->set_handler([&](field_eval_context & ctx, const json & data) {"
+   },
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": [
+     {"id": 0, "scale": 0.5}
+    ],
+    "base_effective": [],
+    "response_sha256": "2786161a47665f965dce0ffeeb9a735d4a53de03f529d455f844ac24b3a52afc"
+   }
+  }
+ ],
+ "no_rows": [
+  {
+   "field": "speculative.ngram_size_m",
+   "line": 222,
+   "reason": "Declared inside the `#if 0` block that closes at line 227, so the field is not compiled into b11755 (libllama-server-impl.so has no 'speculative.ngram' string) and the server silently ignores it: every value returns 200 with generation_settings lacking the key, identical to a made-up unknown field and to the base request.",
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": null,
+    "base_effective": null,
+    "response_sha256": "8f55f869370100af93defc280dfd5aab491f9dc8002f81ad97a83d10cb976339",
+    "probes": [
+     {"set": {"speculative.ngram_size_m": 7}, "status": 200, "key_present": false, "response_sha256": "aaa4e2dc7516ed3e8e3889287df04ee48fb33469e87c4242adaef764718c08f4"},
+     {"set": {"speculative.ngram_size_m": -1}, "status": 200, "key_present": false, "response_sha256": "836dbdcaec43e7f8d23c69dc88afc9afdd7da51be69067a2368f1f230fb3b24a"},
+     {"set": {"speculative.ngram_size_m": 2147483648}, "status": 200, "key_present": false, "response_sha256": "8f55f869370100af93defc280dfd5aab491f9dc8002f81ad97a83d10cb976339"}
+    ],
+    "unknown_field_control_sha256": "754b17fcb70aba18afede256d2634e59b18ef381a6ab09e8dc21789060e2135b"
+   }
+  },
+  {
+   "field": "speculative.ngram_min_hits",
+   "line": 225,
+   "reason": "Also inside the same `#if 0` block (lines 198-227), so the field does not exist in b11755; values 9 and -5 both return 200 with generation_settings unchanged, exactly like an unknown field, so there is neither a reject nor an effective value to table.",
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": null,
+    "base_effective": null,
+    "response_sha256": "9893a619278b168f2c9cb7170e4ed7ec1506fb213067abf31939b1d4926e152e",
+    "probes": [
+     {"set": {"speculative.ngram_min_hits": 9}, "status": 200, "key_present": false, "response_sha256": "7f2a1e7f8e574be5054acb869a4ec78364500a0f6899ad18abcfe897951debe0"},
+     {"set": {"speculative.ngram_min_hits": -5}, "status": 200, "key_present": false, "response_sha256": "9893a619278b168f2c9cb7170e4ed7ec1506fb213067abf31939b1d4926e152e"}
+    ],
+    "unknown_field_control_sha256": "754b17fcb70aba18afede256d2634e59b18ef381a6ab09e8dc21789060e2135b"
+   }
+  },
+  {
+   "field": "dry_sequence_breakers",
+   "line": 242,
+   "reason": "The handler stores a non-empty array of strings verbatim, so generation_settings.dry_sequence_breakers echoes the sent value ([\"\\n\", \"::\"] -> same), which fails the effective rule; the only non-200 path rejects an empty array or a non-array with 'Field \\'dry_sequence_breakers\\': Error: dry_sequence_breakers must be a non-empty array of strings', a message with no 'Value must be between A <= value <= B' bounds that the reject rule requires.",
+   "live": {
+    "status": 400,
+    "message": "Field 'dry_sequence_breakers': Error: dry_sequence_breakers must be a non-empty array of strings",
+    "effective": null,
+    "base_effective": ["\n", ":", "\"", "*"],
+    "response_sha256": "466f2591d1f8656af6b32fe9ba9a75d24188ff7e9e5f493a5bf72f1e2da4d813",
+    "probe_set": {"dry_sequence_breakers": []},
+    "echo_probe": {
+     "set": {"dry_sequence_breakers": ["\n", "::"]},
+     "status": 200,
+     "effective": ["\n", "::"],
+     "response_sha256": "5dda7a56689a3d7a0ee364e883342f3de8ba9e238eee332f501489fc83a8b259"
+    }
+   }
+  }
+ ]
+}

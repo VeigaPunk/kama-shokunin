@@ -1,0 +1,29 @@
+lane counter sha256: 2f952dca58a4ff2efe55cbb9f2afcae1b8ae4efd41a3ee8461522699d77d760b
+patched counter sha256: 5aa64a370196f352435bdf2cee2526019a3eac2737eb194496c5126d5759fa2a
+committed receipt sha256: 78c51385991b1261359503e604adaf09113476d82ef7691f999d18abc673b98c
+=== (a) unchanged committed receipt ===
+$ python3 .ufo/waves/round-25/count-c2-before.py
+registered 14 observed 14 bound True missing []
+$ python3 .ufo/waves/round-25/count-c2-after.py
+registered 14 observed 14 bound True missing []
+K3 rebound raw_props 5e03cd808ae784d4e3eca0a4d12ffee3148fd9e008b71af85468deaf75ec6311 receipt cell n_ctx 2048
+wrote /fast/scratch/hyaku/kama-r28/w1/ExecCountC2Fix-demo/fixtures/forged-cells.receipt.json /fast/scratch/hyaku/kama-r28/w1/ExecCountC2Fix-demo/fixtures/forged-K3.props.body /fast/scratch/hyaku/kama-r28/w1/ExecCountC2Fix-demo/fixtures/forged-raw-receipt.json
+=== (b) forged receipt cell fields, raw files untouched ===
+$ python3 .ufo/waves/round-25/count-c2-before.py /fast/scratch/hyaku/kama-r28/w1/ExecCountC2Fix-demo/fixtures/forged-cells.receipt.json
+registered 14 observed 14 bound True missing []
+$ python3 .ufo/waves/round-25/count-c2-after.py /fast/scratch/hyaku/kama-r28/w1/ExecCountC2Fix-demo/fixtures/forged-cells.receipt.json
+registered 14 observed 11 bound False missing ['K2', 'K4', 'L1']
+=== (c1) forged raw file, committed receipt, hash not rebound ===
+forged K3.props.body sha256: 5e03cd808ae784d4e3eca0a4d12ffee3148fd9e008b71af85468deaf75ec6311
+$ python3 .ufo/waves/round-25/count-c2-before.py
+registered 14 observed 14 bound False missing []
+$ python3 .ufo/waves/round-25/count-c2-after.py
+registered 14 observed 13 bound False missing ['K3']
+=== (c2) forged raw file AND receipt raw hash rebound to it ===
+forged K3.props.body sha256: 5e03cd808ae784d4e3eca0a4d12ffee3148fd9e008b71af85468deaf75ec6311
+receipt-bound raw_props: 5e03cd808ae784d4e3eca0a4d12ffee3148fd9e008b71af85468deaf75ec6311
+$ python3 .ufo/waves/round-25/count-c2-before.py /fast/scratch/hyaku/kama-r28/w1/ExecCountC2Fix-demo/fixtures/forged-raw-receipt.json
+registered 14 observed 14 bound True missing []
+$ python3 .ufo/waves/round-25/count-c2-after.py /fast/scratch/hyaku/kama-r28/w1/ExecCountC2Fix-demo/fixtures/forged-raw-receipt.json
+registered 14 observed 13 bound False missing ['K3']
+done: scratch tree /fast/scratch/hyaku/kama-r28/w1/ExecCountC2Fix-demo

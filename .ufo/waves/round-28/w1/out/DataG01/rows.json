@@ -1,0 +1,89 @@
+{
+ "rows": [
+  {
+   "field": "sse_ping_interval",
+   "set": {"sse_ping_interval": -2},
+   "outcome": {"kind": "reject", "bounds": [-1, 2147483647]},
+   "line": 40,
+   "limits_line": 41,
+   "meaning": "A negative value below -1 is refused outright with HTTP 400 instead of being clamped, so clients must send -1 to disable SSE pings or a non-negative interval.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:33:24Z",
+    "quote": "add((new field_num(\"sse_ping_interval\", params.sse_ping_interval)) ->set_hard_limits(-1, INT32_MAX)"
+   },
+   "live": {
+    "status": 400,
+    "message": "Field 'sse_ping_interval': Value must be between -1 <= value <= 2147483647, but got -2",
+    "effective": null,
+    "base_effective": null,
+    "response_sha256": "c7d2e2768ee89048cd8ac2cacfb97a56915fe0e6a3e0d482eecbc1791b8a6197"
+   }
+  },
+  {
+   "field": "n_predict",
+   "set": {"n_predict": -2},
+   "outcome": {"kind": "reject", "bounds": [-1, 2147483647]},
+   "line": 44,
+   "limits_line": 45,
+   "meaning": "n_predict below -1 is rejected with HTTP 400 and not clamped, so clients asking for unbounded generation must send exactly -1 and never a smaller integer.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:33:24Z",
+    "quote": "add((new field_num(\"n_predict\", params.n_predict)) ->set_hard_limits(-1, INT32_MAX)"
+   },
+   "live": {
+    "status": 400,
+    "message": "Field 'n_predict': Value must be between -1 <= value <= 2147483647, but got -2",
+    "effective": null,
+    "base_effective": null,
+    "response_sha256": "0a238b5697acbad86983ab80e170aabd82e102d1ca65d9aba9505f7f7c686a33"
+   }
+  },
+  {
+   "field": "n_indent",
+   "set": {"n_indent": -1},
+   "outcome": {"kind": "reject", "bounds": [0, 2147483647]},
+   "line": 50,
+   "limits_line": 51,
+   "meaning": "A negative n_indent is a hard HTTP 400 rejection rather than a clamp to zero, so code-completion clients must send 0 to disable indentation and never a negative number.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:33:24Z",
+    "quote": "add((new field_num(\"n_indent\", params.n_indent)) ->set_hard_limits(0, INT32_MAX)"
+   },
+   "live": {
+    "status": 400,
+    "message": "Field 'n_indent': Value must be between 0 <= value <= 2147483647, but got -1",
+    "effective": null,
+    "base_effective": null,
+    "response_sha256": "23511a19f32b2168042f7fb97ae327256dce4395ca3b417f4edb5d074ca967d3"
+   }
+  },
+  {
+   "field": "n_keep",
+   "set": {"n_keep": -2},
+   "outcome": {"kind": "reject", "bounds": [-1, 2147483647]},
+   "line": 54,
+   "limits_line": 55,
+   "meaning": "n_keep accepts -1 to retain the whole prompt but rejects anything smaller with HTTP 400, so clients must use -1 rather than -2 and cannot rely on clamping.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:33:24Z",
+    "quote": "add((new field_num(\"n_keep\", params.n_keep)) ->set_hard_limits(-1, INT32_MAX)"
+   },
+   "live": {
+    "status": 400,
+    "message": "Field 'n_keep': Value must be between -1 <= value <= 2147483647, but got -2",
+    "effective": null,
+    "base_effective": null,
+    "response_sha256": "748f5fcb3dc688cfb086a826e7228f1d80c27afd70d2b1372be0255ec9231f8d"
+   }
+  }
+ ],
+ "no_rows": []
+}

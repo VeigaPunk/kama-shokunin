@@ -1,0 +1,53 @@
+{
+  "rows": [],
+  "no_rows": [
+    {
+      "field": "verbose",
+      "line": 17,
+      "reason": "field_bool with no set_limits, set_hard_limits or custom handler: server-schema.cpp:572 stores the boolean verbatim (val = data.at(n).get<bool>()), so the accepted value is identity, and generation_settings carries no 'verbose' key at all (server-task.cpp to_json lists stream at 73/127 and timings_per_token at 82/141, nothing else of these four). Live: {\"verbose\": true} -> 200 (verbose_true.json, sha 87191e9f...) with no __verbose in the native /completion body and no generation_settings.verbose; the __verbose field only appears on OpenAI-compatible responses (oai_verbose.out, sha 2dcde335...). Sending {\"verbose\": 1} -> 400 \"Field 'verbose': [json.exception.type_error.302] type must be boolean, but is number\" (verbose_num.json, sha 7b6e156e...), a type error with no bounds, so it matches neither the effective nor the reject rule.",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": null,
+        "base_effective": null,
+        "response_sha256": "87191e9f776fb58081276c20cf078ada8ede5cf01758fd814a5c326e6c2e5d5a"
+      }
+    },
+    {
+      "field": "timings_per_token",
+      "line": 20,
+      "reason": "field_bool identity: server-schema.cpp:572 assigns the sent boolean verbatim, and generation_settings.timings_per_token (server-task.cpp:82 and :141) then reports exactly that value. Live: {\"timings_per_token\": true} -> 200 with generation_settings.timings_per_token = true (tpt_true.json, sha dc5df906...), equal to the value sent, while the field-omitted base request reports false (base.json, sha 55b11fdd...). The effective rule needs a value different from both the sent value and the omitted-field default, which a boolean identity assignment cannot produce; false is the default and true is the sent value. Sending {\"timings_per_token\": 1} -> 400 \"Field 'timings_per_token': [json.exception.type_error.302] type must be boolean, but is number\" (tpt_num.json, sha 28d4cc69...), a type error with no bounds.",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": true,
+        "base_effective": false,
+        "response_sha256": "dc5df906fd06cf003d2f57c7c2f04bde09ca081b1ee4243b588a453123441b9a"
+      }
+    },
+    {
+      "field": "stream",
+      "line": 23,
+      "reason": "field_bool identity: server-schema.cpp:572 stores the sent boolean verbatim and generation_settings.stream (server-task.cpp:73 and :127) reports it. Live: {\"stream\": false} -> 200 with generation_settings.stream = false, equal to the omitted-field base value (stream_false.json, sha 199d0217...); {\"stream\": true} -> 200 but the body switches to text/event-stream (Content-Type: text/event-stream, chunked) whose final data chunk carries generation_settings.stream = true, equal to the value sent and not a single JSON document (stream_true.sse, sha ac3e4b46...). Neither direction differs from both sent value and default. Sending {\"stream\": 1} -> 400 \"Field 'stream': [json.exception.type_error.302] type must be boolean, but is number\" (stream_num.json, sha 16efcef7...), a type error with no bounds.",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": true,
+        "base_effective": false,
+        "response_sha256": "ac3e4b46d9330d82c28e88f102ecc2bb44dee5ddccb4827323ee6cf9d464d509"
+      }
+    },
+    {
+      "field": "include_usage",
+      "line": 27,
+      "reason": "Nested subfield of the stream_options object (server-schema.cpp:26-28) and another plain field_bool: it is never reported in generation_settings (server-task.cpp to_json has no such key), so there is no key/value pair to cite. Live: {\"stream_options\": {\"include_usage\": true}} -> 200 (usage_true.json, sha fa9739de...), native /completion body unchanged and no generation_settings.include_usage; a top-level {\"include_usage\": true} is silently ignored -> 200 (cu_toplevel.out, sha 8aca03c4...), and a non-object {\"stream_options\": 5} is silently ignored -> 200 (so_num.out, sha dd87658a...) because field_nested only evaluates object values. Its only effect is appending a usage chunk to OpenAI chat streaming; sending {\"stream_options\": {\"include_usage\": 1}} -> 400 \"Field 'include_usage': [json.exception.type_error.302] type must be boolean, but is number\" (usage_num.json, sha a1098a15...), a type error with no bounds.",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": null,
+        "base_effective": null,
+        "response_sha256": "fa9739deaf2f8ff58a16b7cbda9f6bad0be4b89fa23b3927ff69f96a7e762fd6"
+      }
+    }
+  ]
+}

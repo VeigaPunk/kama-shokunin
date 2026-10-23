@@ -1,0 +1,63 @@
+{
+  "rows": [
+    {
+      "field": "reasoning_budget_tokens",
+      "set": {"reasoning_budget_tokens": -2},
+      "outcome": {"kind": "reject", "bounds": [-1, 2147483647]},
+      "line": 335,
+      "limits_line": 336,
+      "meaning": "A reasoning_budget_tokens value below -1 is rejected with HTTP 400 by the hard limit, so clients must send -1 to disable the budget and never rely on a silent clamp.",
+      "source": {
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+        "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+        "accessed": "2026-10-23T08:33:42Z",
+        "quote": "add((new field_num(\"reasoning_budget_tokens\", params.sampling.reasoning_budget_tokens)) ->set_hard_limits(-1, INT32_MAX)"
+      },
+      "live": {
+        "status": 400,
+        "message": "Field 'reasoning_budget_tokens': Value must be between -1 <= value <= 2147483647, but got -2",
+        "effective": null,
+        "base_effective": null,
+        "response_sha256": "9c6ad502b6f1f4a7cfc44112ac21a4757497d4504520cfd409062ed22571f6b5"
+      }
+    }
+  ],
+  "no_rows": [
+    {
+      "field": "reasoning_budget_start_tag",
+      "line": 339,
+      "reason": "No countable outcome: field_str with no set_limits/set_hard_limits and a custom tokenize handler (lines 341-344) that stores reasoning_budget_start; POST /completion 200 for \"thinking\" and generation_settings has no reasoning_budget_start key (49 keys, keyset and values identical to base), so no reject bounds and no effective key. The only 400 is a JSON type error for a non-string value ('Field \\'reasoning_budget_start_tag\\': [json.exception.type_error.302] type must be string, but is number', raw/start_tag_num.json sha256 fdb4838de273b7e0f11326d32bbd19c92e96775ca8b2fc4f0f937999c6a49823), not the counted 'Value must be between' form. server-task.cpp to_json has no reasoning_budget key at all.",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": null,
+        "base_effective": null,
+        "response_sha256": "6d34137cd8b879adf419860d58607d45b034ac3304783997cd2b72ea7a28d0dc"
+      }
+    },
+    {
+      "field": "reasoning_budget_end_tags",
+      "line": 346,
+      "reason": "No countable outcome: field_json with a handler only (lines 349-365) that clears and re-tokenizes reasoning_budget_end (alias reasoning_budget_end_tag also accepted, 200); no limits, and generation_settings never reports reasoning_budget_end or reasoning_budget_end_tags, so neither a bounds reject nor an effective key exists. Array [\"</s>\"] and the alias both returned 200 with generation_settings identical to base.",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": null,
+        "base_effective": null,
+        "response_sha256": "1d12be2f61dd85141a80eb2720c54a1726ecc28e96bf55f743d310cfece34b42"
+      }
+    },
+    {
+      "field": "reasoning_budget_message",
+      "line": 367,
+      "reason": "No countable outcome: field_str with a handler (lines 369-380) that only runs when reasoning_budget_end is non-empty and otherwise no-ops, storing reasoning_budget_forced; it is not reported in generation_settings, so neither a bounds reject nor an effective key exists. Sent alone and together with reasoning_budget_end_tags [\"</s>\"], both requests returned 200 with generation_settings identical to base (raw/message_alone.json sha256 0b6eac9c0475dd982fd29730de6aaf57cb5c1ebd279392c48654d45ccdde4f25, raw/message_with_end.json sha256 3c680c063c5489f9c131e00639775fa27b198bb9f6348754fe55b2d9c4471bc9).",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": null,
+        "base_effective": null,
+        "response_sha256": "0b6eac9c0475dd982fd29730de6aaf57cb5c1ebd279392c48654d45ccdde4f25"
+      }
+    }
+  ]
+}

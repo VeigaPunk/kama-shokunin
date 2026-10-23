@@ -1,0 +1,89 @@
+{
+  "rows": [
+    {
+      "field": "adaptive_target",
+      "set": {"adaptive_target": 5.0},
+      "outcome": {"kind": "effective", "key": "adaptive_target", "value": 1.0},
+      "line": 167,
+      "limits_line": 168,
+      "meaning": "Values above the soft maximum are silently clamped to 1.0, so clients must expect 200 and read generation_settings instead of a validation error.",
+      "source": {
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+        "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+        "accessed": "2026-10-23T08:33:29Z",
+        "quote": "add((new field_num(\"adaptive_target\", params.sampling.adaptive_target))\n        ->set_limits(-std::numeric_limits<float>::max(), 1.0f)"
+      },
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": 1.0,
+        "base_effective": -1.0,
+        "response_sha256": "18405e0685950d017a64fc88f3d48cc404d38b1491073a3a75dabab93d029171"
+      }
+    },
+    {
+      "field": "adaptive_decay",
+      "set": {"adaptive_decay": 1.5},
+      "outcome": {"kind": "reject", "bounds": [0.0, 0.99]},
+      "line": 171,
+      "limits_line": 172,
+      "meaning": "Values above 0.99 are rejected with HTTP 400, so clients must keep adaptive_decay within 0.0 through 0.99 before sending.",
+      "source": {
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+        "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+        "accessed": "2026-10-23T08:33:29Z",
+        "quote": "add((new field_num(\"adaptive_decay\", params.sampling.adaptive_decay))\n        ->set_hard_limits(0.0f, 0.99f)"
+      },
+      "live": {
+        "status": 400,
+        "message": "Field 'adaptive_decay': Value must be between 0.000000 <= value <= 0.990000, but got 1.500000",
+        "effective": null,
+        "base_effective": null,
+        "response_sha256": "dda12a91522c46772957adba72eda2549150fc4bada90636e131802924975b19"
+      }
+    },
+    {
+      "field": "seed",
+      "set": {"seed": 4294967296},
+      "outcome": {"kind": "effective", "key": "seed", "value": 0},
+      "line": 176,
+      "limits_line": null,
+      "meaning": "Seeds above 4294967295 wrap to 0 through uint32 truncation, so clients must send only uint32-range values and verify generation_settings.",
+      "source": {
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+        "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+        "accessed": "2026-10-23T08:33:29Z",
+        "quote": "add((new field_num(\"seed\", params.sampling.seed))\n        ->set_desc(\"Set the random number generator (RNG) seed (-1 = random)\"));"
+      },
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": 0,
+        "base_effective": 4294967295,
+        "response_sha256": "6cafc9db13319a0e0fe08bbf7c16bad73ad323b3b3a771fff3c61748e16680cb"
+      }
+    },
+    {
+      "field": "n_probs",
+      "set": {"n_probs": 2.5},
+      "outcome": {"kind": "effective", "key": "n_probs", "value": 2},
+      "line": 179,
+      "limits_line": null,
+      "meaning": "A fractional n_probs is truncated to its integer part, so clients must send integers and confirm the stored value in generation_settings.",
+      "source": {
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+        "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+        "accessed": "2026-10-23T08:33:29Z",
+        "quote": "add((new field_num(\"n_probs\", params.sampling.n_probs))\n        ->add_alias(\"logprobs\") // use \"logprobs\" if \"n_probs\" wasn't provided"
+      },
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": 2,
+        "base_effective": 0,
+        "response_sha256": "a56617fb0b4364c0061d4445e0c60217bdd05a32e233e869f806a41afe991aa2"
+      }
+    }
+  ],
+  "no_rows": []
+}

@@ -1,0 +1,145 @@
+{
+ "seat": "DataG03",
+ "round": 28,
+ "port": 48203,
+ "base_request": {
+  "prompt": "Once upon a time",
+  "n_predict": 1
+ },
+ "base_response_sha256": "ead2ae1906ec831999555e7cf1ccb2caa3d59ddbe27f7b5ee8e857c3bbf310f0",
+ "source_fetch": {
+  "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+  "sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+  "accessed": "2026-10-23T08:32:44Z",
+  "snapshot_match": true
+ },
+ "rows": [
+  {
+   "field": "top_k",
+   "set": {
+    "top_k": -5
+   },
+   "outcome": {
+    "kind": "effective",
+    "key": "top_k",
+    "value": 0
+   },
+   "line": 89,
+   "limits_line": 90,
+   "meaning": "top_k has only soft limits, so llama-server silently clamps a negative request to 0 (top-k disabled) instead of rejecting it; clients must validate the range 0..INT32_MAX themselves.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:32:44Z",
+    "quote": "new field_num(\"top_k\", params.sampling.top_k))\n        ->set_limits(0, INT32_MAX)"
+   },
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": 0,
+    "base_effective": 40,
+    "response_sha256": "3f929f125af0f9ce7ca834f7afebad6686101888bd1aeffd3f6b714552fcc703",
+    "raw_file": "top_k.json"
+   }
+  },
+  {
+   "field": "top_p",
+   "set": {
+    "top_p": 2.5
+   },
+   "outcome": {
+    "kind": "effective",
+    "key": "top_p",
+    "value": 1.0
+   },
+   "line": 93,
+   "limits_line": 94,
+   "meaning": "top_p is clamped silently to its soft maximum, so a request above 1.0 is served with top_p = 1.0 (sampling disabled) rather than rejected; clients must check 0.0..1.0 before sending.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:32:44Z",
+    "quote": "new field_num(\"top_p\", params.sampling.top_p))\n        ->set_limits(0.0f, 1.0f)"
+   },
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": 1.0,
+    "base_effective": 0.949999988079071,
+    "response_sha256": "11a63f6d5132bd850b9ae40165c93e290f3f38b31d818eb7fa88e06c22dddc73",
+    "raw_file": "top_p.json"
+   }
+  },
+  {
+   "field": "min_p",
+   "set": {
+    "min_p": -1.5
+   },
+   "outcome": {
+    "kind": "effective",
+    "key": "min_p",
+    "value": 0.0
+   },
+   "line": 97,
+   "limits_line": 98,
+   "meaning": "min_p is clamped silently to its soft minimum: sent -1.5 it is served as min_p = 0.0 (disabled), a value no truncation of the request yields, so clients must validate 0.0..1.0 themselves.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:32:44Z",
+    "quote": "new field_num(\"min_p\", params.sampling.min_p))\n        ->set_limits(0.0f, 1.0f)"
+   },
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": 0.0,
+    "base_effective": 0.05000000074505806,
+    "response_sha256": "ad72bbe312132c4ff0007a6906f87d88883e0ba6611ecaafef4df7f4a31bd99e",
+    "raw_file": "probe5-00-min_p.json"
+   }
+  },
+  {
+   "field": "top_n_sigma",
+   "set": {
+    "top_n_sigma": 3.5e+38
+   },
+   "outcome": {
+    "kind": "effective",
+    "key": "top_n_sigma",
+    "value": 3.4028234663852886e+38
+   },
+   "line": 101,
+   "limits_line": null,
+   "meaning": "top_n_sigma declares no explicit bounds, so a value above the float32 maximum is accepted and saturated to 3.4028e38 instead of being rejected; clients must keep it finite.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:32:44Z",
+    "quote": "new field_num(\"top_n_sigma\", params.sampling.top_n_sigma))\n        ->set_desc(\"Keep tokens within n standard deviations of the top token logit (< 0 = disabled)\")"
+   },
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": 3.4028234663852886e+38,
+    "base_effective": -1.0,
+    "response_sha256": "27b80f7f7cb6d8c016a0997d26ae5b226517018b020d9f4fcda27374b0665d46",
+    "raw_file": "top_n_sigma-3.5e38.json"
+   }
+  }
+ ],
+ "no_rows": [
+  {
+   "field": "min_p",
+   "line": 97,
+   "reason": "superseded probe, not a candidate row: sent -0.25 was clamped to 0.0, which equals truncate-toward-zero(-0.25) = 0, so counter amendment A1 refuses it as a generic conversion; replaced by the -1.5 probe.",
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": 0.0,
+    "base_effective": 0.05000000074505806,
+    "response_sha256": "fb794db107cd3047bf870094675117ea03ef7e3833074a8d3bd2f4793874f0a3",
+    "raw_file": "min_p.json"
+   }
+  }
+ ]
+}

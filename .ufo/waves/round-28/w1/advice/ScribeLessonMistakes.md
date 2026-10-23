@@ -1,0 +1,17 @@
+# Round-28 mistake-row evidence report
+
+## Behavior and axes
+Prepared three proposed `## Mistakes` rows in the requested `class | evidence pointer | captured-by | fix` format. The relevant claim axis is depth; this report makes no numeric axis claim. It also records the calibration limit where proposed fixes have not been shown to fail.
+
+## Findings and provenance
+
+1. **Pre-data feasibility/control gap.** `SCORECARD.md:1312-1339` says round-26 C1 was depth, its pre-freeze shortcut control was refused, and a post-data base-tree shortcut met the frozen counter with 12 echoed literals. `SCORECARD.md:1365-1370` says round-27 C1 was a depth miss: counted 0, no data seat dispatched. The requested chronology needs narrowing: SCORECARD round 24 (`:1197-1239`) is calibration and round 25 (`:1252-1304`) is calibration/coverage, not depth claims. Round-28 preregistration (`.ufo/waves/round-28/preregistration.json:11,20`) records a feasibility scan (55 new error literals, 2–3 reachable over HTTP) and a pilot; `.ufo/waves/round-28/before/pilot-receipt.json` records 2 registered / 2 counted / target 18 / `met: false`, with live 400 and 200 rows. The preregistration states the pilot fields are excluded from round-28 data. This is positive counter-validity evidence, not a negative or fail-closed feasibility test; the proposed fix is **not demonstrated able to fail**.
+
+2. **Missing round-27 counter registry row.** The routed defect is explicit at `corpus/lessons/round-27-verifier-spotcheck.md:266-269`. The proposed checker evidence at `.ufo/waves/round-28/w1/out/ExecGateRegistryCheck/base-4179301.out` lists unregistered round-25 `count-c2.py` and round-27 `count-c1.py`, then `registered 2 unregistered 2`; `base-4179301.exit` is `1`. This is an observed base failure for the proposed `tools/gate-registry-check.py` fix. The checker is in the output directory, not integrated into tracked lane tools. The command line used by that seat was not preserved in the files read; the receipt filenames identify the base revision as `4179301`.
+
+3. **Round-27 report imprecisions.** Routed defect 7 is recorded at `corpus/lessons/round-27-verifier-spotcheck.md:284-287`. `.ufo/waves/round-27/residual/spawn-result.txt:10-11` records the successful resend at `2026-10-23T07:23:39.921107+00:00`, rather than about 07:27Z. I ran the read-only command `timeout 20s git -C /home/vgpnk/Projects/shokunin/kama-shokunin show --stat 8057282c`. Its output identifies commit `8057282c6d16f5b8471457ba15265dcae51d502a` and four changed files: `c1-final-receipt.json`, `c1-final.out`, `census-final.out`, and `sources-append-only-final.out` (71 insertions), so it did not add only receipt files. This source comparison demonstrates the proposed reporting check catches this pair of errors; it is not evidence of a general report-audit gate. The command's exit status was not separately captured.
+
+## Gates, touched surfaces, and limits
+- The base gate receipt's observed exit is 1; no build, test suite, linter, formatter, or server run was performed by this scribe.
+- Wrote only `.ufo/waves/round-28/w1/out/ScribeLessonMistakes/mistakes.md` and `.ufo/waves/round-28/w1/advice/ScribeLessonMistakes.md`. No tracked product files were edited.
+- No installs or updates; no git/jj writes, commit, push, judge, or publish action. The round-28 pilot is counter-validity evidence only and does not validate the claim target or demonstrate a fail-closed feasibility gate.

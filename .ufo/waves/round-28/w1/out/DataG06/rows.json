@@ -1,0 +1,64 @@
+{
+  "rows": [
+    {
+      "field": "dry_allowed_length",
+      "set": {"dry_allowed_length": -1},
+      "outcome": {"kind": "reject", "bounds": [0, 2147483647]},
+      "line": 149,
+      "limits_line": 150,
+      "meaning": "llama-server rejects a negative dry_allowed_length with HTTP 400 and the exact integer bounds, so clients must clamp the DRY window length to 0..2147483647 before sending.",
+      "source": {
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+        "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+        "accessed": "2026-10-23T08:33:00Z",
+        "quote": "add((new field_num(\"dry_allowed_length\", params.sampling.dry_allowed_length)) ->set_hard_limits(0, INT32_MAX)"
+      },
+      "live": {
+        "status": 400,
+        "message": "Field 'dry_allowed_length': Value must be between 0 <= value <= 2147483647, but got -1",
+        "effective": null,
+        "base_effective": 2,
+        "response_sha256": "7bfa1668e357c055ad7ceb70dab823e5cabb51e56bc88c7327d1a3a14168bb97"
+      }
+    }
+  ],
+  "no_rows": [
+    {
+      "field": "presence_penalty",
+      "line": 136,
+      "reason": "identity: the field has no set_limits/set_hard_limits and no handler, and an extreme out-of-range value 1000000000.0 came back unchanged in generation_settings, so neither a reject nor a transformed value exists.",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": 1000000000.0,
+        "base_effective": 0.0,
+        "response_sha256": "dc42c4aaf68be9a4734dcec50171c723a6bcffaa14130db24bb38f7d5207f621"
+      }
+    },
+    {
+      "field": "dry_multiplier",
+      "line": 139,
+      "reason": "identity: no limits and no handler; the negative out-of-range value -7.5 is stored verbatim and echoed in generation_settings, so it is neither rejected nor transformed.",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": -7.5,
+        "base_effective": 0.0,
+        "response_sha256": "ae17960027ad7ba11ff185b29a70ee96d47b5a88651fc986c8556b7f2e7c04ee"
+      }
+    },
+    {
+      "field": "dry_base",
+      "line": 142,
+      "reason": "handler substitutes the omitted-field default for values below 1.0: sent 0.5 returned 1.75, equal to base_effective 1.75, and sent 2.5 returned 2.5, so no value differs from both the sent value and the default.",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": 1.75,
+        "base_effective": 1.75,
+        "response_sha256": "735b96366ebb852f59c15b361b015476d56ec4ec3a14c3984e5383e11baeb2c3",
+        "identity_probe": {"set": {"dry_base": 2.5}, "status": 200, "effective": 2.5, "response_sha256": "932a81b67fae4b527ce46cf643f42767e2c398dd7bfab15b829a8ab0d3207611"}
+      }
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "rows": [
+    {
+      "field": "xtc_probability",
+      "set": {"xtc_probability": 5.0},
+      "outcome": {"kind": "effective", "key": "xtc_probability", "value": 1.0},
+      "line": 104,
+      "limits_line": 105,
+      "meaning": "llama-server silently clamps an out-of-range xtc_probability to 1.0 and still returns HTTP 200, so clients must validate the 0..1 range themselves instead of expecting an error.",
+      "source": {
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+        "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+        "accessed": "2026-10-23T08:33:00Z",
+        "quote": "new field_num(\"xtc_probability\", params.sampling.xtc_probability) ->set_limits(0.0f, 1.0f)"
+      },
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": 1.0,
+        "base_effective": 0.0,
+        "response_sha256": "73649880b773b55223e93afd6b5dec6fef4ee7a66629e6c412af85f84b9d7efc"
+      }
+    },
+    {
+      "field": "temperature",
+      "set": {"temperature": -1.0},
+      "outcome": {"kind": "effective", "key": "temperature", "value": 0.0},
+      "line": 116,
+      "limits_line": 117,
+      "meaning": "llama-server silently clamps a negative temperature to 0.0 (greedy decoding) with HTTP 200, so clients should reject negative values before sending them.",
+      "source": {
+        "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+        "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+        "accessed": "2026-10-23T08:33:00Z",
+        "quote": "new field_num(\"temperature\", params.sampling.temp) ->set_limits(0.0f, std::numeric_limits<float>::infinity())"
+      },
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": 0.0,
+        "base_effective": 0.800000011920929,
+        "response_sha256": "6e7ed2057cfb97fbf8ea57fb32e5c200c31455dd91566233e7b187b7e08fd079"
+      }
+    }
+  ],
+  "no_rows": [
+    {
+      "field": "typical_p",
+      "line": 112,
+      "reason": "No active limits: the only set_limits call is commented out at line 113, so field_num keeps lowest..max float and the value is stored unchanged. Sent 2.0 -> generation_settings typical_p = 2.0 (default 1.0): an identity, neither a reject nor a value different from the one sent.",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": 2.0,
+        "base_effective": 1.0,
+        "response_sha256": "3de5e581e00aa9070e5a943887858330d30df621b4639ff6e64259255d87994b"
+      }
+    },
+    {
+      "field": "dynatemp_range",
+      "line": 120,
+      "reason": "No limits and no custom handler in the pinned schema, so the value is stored unchanged. Sent -2.5 -> generation_settings dynatemp_range = -2.5 (default 0.0): an identity, neither a reject nor a value different from the one sent.",
+      "live": {
+        "status": 200,
+        "message": null,
+        "effective": -2.5,
+        "base_effective": 0.0,
+        "response_sha256": "058740c5d2ca337ed720e31d5afb45d577c2fc9ce5c962925b8fda797f974c93"
+      }
+    }
+  ]
+}

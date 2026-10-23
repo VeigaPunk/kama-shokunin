@@ -1,0 +1,89 @@
+{
+ "rows": [
+  {
+   "field": "dynatemp_exponent",
+   "set": {"dynatemp_exponent": 1e+39},
+   "outcome": {"kind": "effective", "key": "dynatemp_exponent", "value": 3.4028234663852886e+38},
+   "line": 123,
+   "limits_line": null,
+   "meaning": "A dynatemp_exponent beyond the float range is silently saturated to 3.4028234663852886e+38 in generation_settings instead of being rejected, so clients must read the echoed value rather than assume the sent number took effect.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:33:18Z",
+    "quote": "new field_num(\"dynatemp_exponent\", params.sampling.dynatemp_exponent))"
+   },
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": 3.4028234663852886e+38,
+    "base_effective": 1.0,
+    "response_sha256": "0de2b7adf79f7858966a865613ba5769185f54ccef9d290cb8ac333f09ff19a0"
+   }
+  },
+  {
+   "field": "repeat_last_n",
+   "set": {"repeat_last_n": -1},
+   "outcome": {"kind": "reject", "bounds": [0, 2147483647]},
+   "line": 126,
+   "limits_line": 127,
+   "meaning": "A negative repeat_last_n is rejected with HTTP 400 naming the inclusive hard bounds 0 to 2147483647, so clients must validate this count before sending instead of expecting a clamp.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:33:18Z",
+    "quote": "new field_num(\"repeat_last_n\", params.sampling.penalty_last_n))\n        ->set_hard_limits(0, INT32_MAX)"
+   },
+   "live": {
+    "status": 400,
+    "message": "Field 'repeat_last_n': Value must be between 0 <= value <= 2147483647, but got -1",
+    "effective": null,
+    "base_effective": null,
+    "response_sha256": "8a1934153f6ecbdc2284a1e8acd485af9d07009c9723796e608fbf633d6d57c0"
+   }
+  },
+  {
+   "field": "repeat_penalty",
+   "set": {"repeat_penalty": 1e+39},
+   "outcome": {"kind": "effective", "key": "repeat_penalty", "value": 3.4028234663852886e+38},
+   "line": 130,
+   "limits_line": null,
+   "meaning": "A repeat_penalty above the float range is silently saturated to 3.4028234663852886e+38 in generation_settings, so operators should verify the echoed value and keep penalties near the 1.0 default.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:33:18Z",
+    "quote": "new field_num(\"repeat_penalty\", params.sampling.penalty_repeat))"
+   },
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": 3.4028234663852886e+38,
+    "base_effective": 1.0,
+    "response_sha256": "0f0dae56f83e0290ff95ad40aa7fd2e2544f4cef243d9f9780384c4f711dde79"
+   }
+  },
+  {
+   "field": "frequency_penalty",
+   "set": {"frequency_penalty": 1e+39},
+   "outcome": {"kind": "effective", "key": "frequency_penalty", "value": 3.4028234663852886e+38},
+   "line": 133,
+   "limits_line": null,
+   "meaning": "A frequency_penalty beyond the float range is silently saturated to 3.4028234663852886e+38 in generation_settings rather than refused, so clients should clamp their own values and read the echoed settings.",
+   "source": {
+    "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-schema.cpp",
+    "fetched_sha256": "1f9d7b73b4363b90b08de0360b0a5ce0b3d152750bfb8d587a367e90c7904050",
+    "accessed": "2026-10-23T08:33:18Z",
+    "quote": "new field_num(\"frequency_penalty\", params.sampling.penalty_freq))"
+   },
+   "live": {
+    "status": 200,
+    "message": null,
+    "effective": 3.4028234663852886e+38,
+    "base_effective": 0.0,
+    "response_sha256": "7c6c63e4be8bc7b050c547c3a4c1ba7be6ece87ce8c212efe73fc54ac51128d1"
+   }
+  }
+ ],
+ "no_rows": []
+}

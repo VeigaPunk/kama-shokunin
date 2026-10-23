@@ -1,6 +1,6 @@
 source: S136 and S139 (RFC 8259 §7, JSON string escapes; S139 supersedes S136's escape-length wording), S137 (llama.cpp tools/server/server-common.cpp:1375 @ 704366d76, the response_format echo site); lane evidence `lessons/round-26-verifier-spotcheck.md:98-116` (the round-26 base-tree shortcut), `.ufo/waves/round-27/count-c1.py` (sha256 49491b80e4f4ed2a85ab822a52f0b1a0fdb1dee53423e3d43b60ee25d1bf2765, landed 1471f67659917cc0823caf6e08303a3a26977d66) and the round-27 wave receipts under `.ufo/waves/round-27/w1a3/out/`
 verified-at: 2026-10-23 — sources opened this round (raw sha256 in the SOURCES rows); live probe of b11755 at 07:11:54Z (`w1a3/out/ExecLiveEchoProbe/receipt.json`); code lines re-read at the named revisions
-recheck: on-release — reopen S137 and re-run the live probe when the installed llama.cpp build changes; S136/S139 180d
+recheck: on-release — reopen S137 and run tools/echo-recheck.py --out .ufo/waves/round-NN/echo-recheck-<build>.json (starts the pinned b11755 on a free port in 48231-48233 or --port, replays the six live-probe requests byte-for-byte, prints "echo-recheck same 6/6" exit 0, "echo-recheck drift <ids>" exit 1 or "echo-recheck cannot-evaluate <reason>" exit 2, proves the port closed, and refuses an existing --out so committed receipts are never overwritten); S136/S139 180d
 
 # Echo-discriminating error-signature counters
 
@@ -129,7 +129,9 @@ server echoed it.
   E26 rows (E26-07 and E26-14 stored in escaped spelling, E26-14 also
   overlapping the request key `prompt`; E26-17 has no single source
   literal): a conservative exclusion with a coverage cost
-  (`residual/out/CriticBoundaryLegProbe/`).
+  (`residual/out/CriticBoundaryLegProbe/`). The probe's scope was exact,
+  case-sensitive JSON-decoded body keys and string values of length >= 4
+  (no path, headers, or argv; `residual/out/CriticBoundaryLegProbe/boundary-leg.receipt.json:10-14`).
 - Shortfalls against the rule's wording (`w1a3/advice/CriticEntryRuleVsCode.md`):
   `lower()` is not Unicode case folding (`straße`/`strasse` are not matched);
   the placeholder keeps the cut position, so two messages whose remainders
@@ -156,5 +158,6 @@ server echoed it.
   warning paths that only other profiles or requests reach are unsampled.
 - The round-27 measured claim C1 was not run on data, so no count here shows
   that the rule discriminates genuine faults from shortcuts on real rows.
+  The round-27 counter is retired, and no signature counter has run KQ37 on data.
 - Other servers and other llama.cpp builds may echo at other sites. S137 is
   pinned to 704366d76; the live probe tested ASCII signatures only.
