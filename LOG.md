@@ -1926,3 +1926,41 @@ Sources: S178 (kumitate r48 counter-rerun, own-work `ce9aee5`) and S179 (mori r3
 own-work `e57c58b`/`6827d6e`) opened this round; census 177 → 179 rows, validate exit 0
 (`.ufo/waves/round-30/census-end.out`). QUALITY KQ40 added (census population declares its recall
 gap). No endpoint was sampled; K05 remains operator-runtime dependent.
+
+## round 31 — the chat-completions adapter (depth) + claim-row evidence (calibration), 2026-10-23
+
+**Claims.** C1 depth: `counted >= 12` over a new SKILL table of `/v1/chat/completions`
+parameter outcomes on the lane fixture. C2 calibration: every SCORECARD claim row names a
+commit that resolves at the measured tip, an evidence path that exists, and its counter
+script (`rows >= 28`, `unresolved 0`, `false_corrections 0`, `append_only True`).
+
+**Before → after (measured).**
+- C1: base `07794a4d` has no registry and no table (counter exits 2) → tip `54c6f4fe`
+  `registered 18 counted 17 target 12 met True not-counted ['K31-10']`
+  (`.ufo/waves/round-31/c1/c1-54c6f4fe.json`). K31-10 is refused because the adapter
+  appends the offending `response_format` type to its message, so the message is not a
+  verbatim pinned string — the row stays in the table as a true observation, uncounted.
+- C2: base `rows 28 base_mismatched 13 valid 0 unresolved 13 met False` → tip `b4f3edc0`
+  `rows 30 base_mismatched 13 valid_corrections 10 false_corrections 0 unresolved 3
+  append_only True met False` (`.ufo/waves/round-31/c2/c2-b4f3edc0.json`).
+
+**Landed.**
+- SKILL.md §Round-31 chat-completions parameter outcomes (18 rows, four outcome classes,
+  fixture pins, limits) and two instrument-registry rows for the new counters.
+- `registry/chat-param-outcomes-r31.json`; `corpus/knowledge/chat-adapter-outcomes.md`;
+  S180-S191 (twelve pinned `server-common.cpp`/`server-schema.cpp` lines @ 704366d).
+- SCORECARD §Round 31 (both claims recorded with verdicts), §Round 31 corrections (ten
+  claim rows), §Planned (round 32); `corpus/QUALITY.md` KQ41; README coverage + frontier.
+- Preregistration, both frozen counters, the 12-seat pre-data control call and the wave
+  fragments under `.ufo/waves/round-31/`.
+
+**Not admitted.** C1's frozen counter is met at the landed tip, but a do-nothing registry
+of twelve duplicate rows asserting the base request's own `n_predict = 1` also meets it
+(`.ufo/waves/round-31/w1/out/CriticClaimSize/c1-noop.json`), and two further counted-row
+classes prove nothing (`RevCounterFair` F1/F2). C2's predicate is unreachable: three
+failing rows share the Claim cell `C1` (rounds 11-13), so the `(row, class)` correction
+key collapses three dispositions (`controls/RefRepair/`: valid 10, false 3, unresolved 3).
+Both counters are frozen bytes; fixes are routed to round 32 (KQ41).
+
+**Hold.** The round-30 frozen counter still reads `met True`, 141 statements, unresolved 0
+at the round-31 tip (`.ufo/waves/round-31/c1/hold-r30.out`).
