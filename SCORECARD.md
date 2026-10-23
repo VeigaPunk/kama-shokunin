@@ -1453,12 +1453,54 @@ Confirm seats check each one independently (`.ufo/waves/round-29/w1/out/ConfirmM
 |---|---|---|---|---|---|---|
 | SA29:SCORECARD.md:Q:f4c42debcc:0 | SCORECARD.md:20 | Q | `snapshot=20261014T124232Z prev=20260929T043044Z rows=3 model_ok=0 drift=3 transitions=16 exit=2` | ea72c3ea | quoted as live re-census output; no committed file at W holds this line | q:no-artifact |
 | SA29:SCORECARD.md:Q:f4c42debcc:2 | SCORECARD.md:20 | Q | `RESULT pass=24 fail=0` | ea72c3ea | test-snapshot result quoted; at W no committed file held it (a later commit does) | q:no-artifact |
-| SA29:SCORECARD.md:P:980355388a:0 | SCORECARD.md:192 | P | `MISSION.md:29` | 1e41928a | names the fleet file ../MISSION.md (line 29 is the kama row); no lane path MISSION.md | p:absent |
+| SA29:SCORECARD.md:P:980355388a:0 | SCORECARD.md:192 | P | `MISSION.md` line 29 | 1e41928a | names the fleet file ../MISSION.md (line 29 is the kama row); no lane path MISSION.md | p:absent |
 | SA29:SCORECARD.md:Q:4f8083e30a:0 | SCORECARD.md:211 | Q | `rows=50 resolved=48 terminal=2 unresolved=0` | 40660352 | quoted audit result; no committed file at W holds this text | q:no-artifact |
-| SA29:SCORECARD.md:P:312b3e69b1:0 | SCORECARD.md:740 | P | `round-17-verifier-spotcheck.md:217–221` | c6dc46fa | bare file name; the lane file is corpus/lessons/round-17-verifier-spotcheck.md | p:absent |
+| SA29:SCORECARD.md:P:312b3e69b1:0 | SCORECARD.md:740 | P | `round-17-verifier-spotcheck.md` lines 217–221 | c6dc46fa | bare file name; the lane file is corpus/lessons/round-17-verifier-spotcheck.md | p:absent |
 | SA29:SCORECARD.md:Q:0ccd533544:0 | SCORECARD.md:823 | Q | `required=3 found=0 verified=0 missing=3` | 7229fa95 | quoted citation-provenance before-run; no committed file at W holds this text | q:no-artifact |
 | SA29:SCORECARD.md:Q:4c5d902830:0 | SCORECARD.md:824 | Q | `required=3 found=3 verified=3 missing=0 mismatch=0` | 7229fa95 | quoted citation-provenance after-run; no committed file at W holds this text | q:no-artifact |
 | SA29:SCORECARD.md:Q:f1021c03db:0 | SCORECARD.md:833 | Q | `baseline=VALID members=3 rejected=0/3` | 7229fa95 | quoted gate output; no committed file at W holds this text | q:no-artifact |
 | SA29:SCORECARD.md:Q:a7e98b1030:0 | SCORECARD.md:834 | Q | `baseline=VALID rejected=3/3` | 7229fa95 | quoted gate output; no committed file at W holds this text | q:no-artifact |
-| SA29:SCORECARD.md:P:1c6c1f3e4c:0 | SCORECARD.md:1349 | P | `.ufo/reports/round-25/kama.md:120-129` | 7f84cd0e | a fleet-repo report path written as if lane-relative | p:absent |
-| SA29:SCORECARD.md:P:17a7db7c81:0 | SCORECARD.md:1375 | P | `count-c1.py:384` | d183ec57 | bare file name; the lane file is .ufo/waves/round-26/count-c1.py (line 384 exists there) | p:absent |
+| SA29:SCORECARD.md:P:1c6c1f3e4c:0 | SCORECARD.md:1349 | P | `.ufo/reports/round-25/kama.md` lines 120–129 | 7f84cd0e | a fleet-repo report path written as if lane-relative | p:absent |
+| SA29:SCORECARD.md:P:17a7db7c81:0 | SCORECARD.md:1375 | P | `count-c1.py` line 384 | d183ec57 | bare file name; the lane file is .ufo/waves/round-26/count-c1.py (line 384 exists there) | p:absent |
+
+## Round 29 — self-assessment evidence at writing (calibration); round-28 repairs (2026-10-23, attempt 1)
+
+One measured claim. Lowest axes at the start: depth, calibration and adjacency, all 7
+(round-28 section); calibration is the lowest assigned axis (`../shokunin.conf:52`).
+Preregistration `.ufo/waves/round-29/preregistration.json`, frozen at `827d1365` before any seat;
+control receipts `35b90184` before any correction row (`.ufo/waves/round-29/controls/SUMMARY.md`).
+
+| Claim | Axis, score | Before → after | Counting command | Measured commit | Evidence |
+|---|---|---|---|---|---|
+| C1 (measured) | calibration 7 → 7 (no promotion by the author; closure rules) | `statements 69 mismatched_at_base 11 append_only True valid_corrections 0 false_corrections 0 unresolved 11 met False tip 2aa46e2481d2` at base (`.ufo/waves/round-29/before/c1-base.out`) → `statements 69 mismatched_at_base 11 append_only True valid_corrections 11 false_corrections 0 unresolved 0 met True tip 513eba3ba51a` | `/usr/bin/python3 .ufo/waves/round-29/count-c1.py --repo <fresh clone of the lane remote> --tip <full commit> --out <receipt.json>` (counter sha256 fe11d599…7383; the preregistration's `--tip refs/heads/master` resolves only on a remote clone whose master is at the measured commit — pin the explicit revision) | `513eba3ba51a142c9936553e3a85918345eb5c4c` (`.ufo/waves/round-29/final/c1-513eba3b.out`) | §Round 29 — self-assessment corrections above; `corpus/knowledge/self-assessment-at-writing.md`; lesson `corpus/lessons/round-29.md` |
+
+Surface moved: the lane's self-assessment evidence record. Eleven base statements whose stated
+evidence did not resolve in the lane at the commit that wrote them (4 pointers: two fleet files,
+two lane files cited without their directory; 7 quoted outputs not retained verbatim in a lane file
+outside the self-report files) now carry appended rows saying so. What it does not show: that any
+of the lane's past judgments were wrong. Wave-1 critic CriticAxisFit found the judgments behind
+lines 740 and 1375 true at W, and Q failures show missing retained output, not wrong values; the
+author accepts that reading (lesson §Claims). Controls: none meets the target (closest: text-only
+prediction, unresolved 9; base-tree check, unresolved 9); the reference policy that records the
+check's observed values meets it by design. Limits: the extractor finds 69 of at least 141
+checkable statements of its six classes (RecallA/B: 72 misses, 2 of them false at W, not
+counted); the predicate is stated in two sentences plus the docstring's class rules, not one
+literal sentence (CriticPredicateIdentity).
+
+Correction to the cause cells above (ConfirmM02, ConfirmM04): where a Q cell says "no committed
+file at W holds this text", read "no committed file at W outside SCORECARD.md, SHONEN.md, LOG.md and
+corpus/"; the spans of lines 20 (RESULT) and 211 sat at W in LOG.md and
+`corpus/lessons/round-10.md`. The observed cells are unaffected.
+
+Repairs (routed by `corpus/lessons/round-28-verifier-spotcheck.md`, not claims): items 1-9,
+lesson §Repairs. The round-28 A1 authoring record: preregistration text time "2026-10-23 ~08:45Z" is
+wrong; the authoring record logs the A1 edit call at 08:37:23.720Z and its result at 08:37:23.732Z,
+and commit `75b78bb4` is committer-dated 2026-10-23T05:38:16-03:00. Mined mistake: `tools/prereg-time-check.py` missed the round-28 A1 misdate; fixed
+and shown able to fail (lesson §Mistakes). Other scores held: operability 8, freshness 8,
+coverage 9, depth 7, adjacency 7. Capabilities: none claimed.
+
+### Planned (round 30)
+
+Work depth or adjacency (7). A depth re-claim meets KQ38 (credit only outcomes not predictable from
+declared bounds or type rules; both shortcuts scored before any seat). The 72 extractor misses and
+the line-824 "5 cases" prose mismatch are open calibration ground.

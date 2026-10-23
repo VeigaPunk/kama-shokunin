@@ -1,0 +1,2673 @@
+<!DOCTYPE html>
+
+
+
+<html lang="en">
+
+
+
+
+
+
+<head>
+  <script type="text/javascript">
+    
+    const currentTheme = localStorage.getItem("theme")
+    if (currentTheme) {
+      
+      const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)").matches
+      if (prefersDarkScheme === (currentTheme === "dark")) localStorage.removeItem("theme")
+      else if ((prefersDarkScheme && currentTheme === "light")
+        || (!prefersDarkScheme && currentTheme === "dark")) {
+	document.documentElement.dataset.theme = currentTheme
+      }
+    }
+  </script>
+
+  <meta charset='utf-8'>
+  <meta content='IE=edge,chrome=1' http-equiv='X-UA-Compatible'>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Git - git-grep Documentation</title>
+
+  <link href="/favicon.ico" rel='shortcut icon' type='image/x-icon'>
+
+  
+  <link rel="stylesheet" href="/application.min.ee050e6639aacc8d3f18c4718a1a579307a7b4f7e327a148fb17dba7398c7476.css">
+  <script src="/js/modernizr.js"></script>
+  
+
+</head>
+
+<body id="documentation">
+
+  <div class="inner">
+    <header>
+  <a id="logo" href="/"><img src="/images/logo@2x.png" width="110" height="46" alt="Git" class="no-filter" /></a>
+  <span id="tagline"></span>
+  <script type="text/javascript">
+   const taglines = [
+     "fast-version-control",
+     "everything-is-local",
+     "distributed-even-if-your-workflow-isnt",
+     "local-branching-on-the-cheap",
+     "distributed-is-the-new-centralized"
+   ];
+   var tagline = taglines[Math.floor(Math.random() * taglines.length)];
+   document.getElementById('tagline').innerHTML = '--' + tagline;
+  </script>
+
+  
+  <div id="search-container">
+    <form id="search" action="/search/results">
+      <input id="search-text" name="search" placeholder="Type / to search entire site…" autocomplete="off" type="text" />
+    </form>
+    <div id="search-results"></div>
+  </div>
+  
+  <img src="/images/dark-mode.svg" id="dark-mode-button" />
+</header>
+
+  </div> 
+
+  
+    <div class="inner">
+      <div id="content-wrapper">
+        
+<div tabindex="1" class="sidebar-btn"></div>
+<aside class="sidebar" id="sidebar">
+  <nav>
+    <ul>
+      <li>
+        <a href="/about">About</a>
+        <ul >
+          <li>
+            <a href="/about/trademark">Trademark</a>
+          </li>
+        </ul>
+      </li>
+
+      <li>
+        <a href="/learn">Learn</a>
+        <ul >
+          <li>
+            <a href="/book">Book</a>
+          </li>
+          <li>
+            <a href="/cheat-sheet">Cheat Sheet</a>
+          </li>
+          <li>
+            <a href="/videos">Videos</a>
+          </li>
+          <li>
+            <a href="/doc/ext">External Links</a>
+          </li>
+        </ul>
+      </li>
+
+      <li>
+        <a href="/tools">Tools</a>
+        <ul >
+          <li>
+            <a href="/tools/command-line">Command Line</a>
+          </li>
+          <li>
+            <a href="/tools/guis">GUIs</a>
+          </li>
+          <li>
+            <a href="/tools/hosting">Hosting</a>
+          </li>
+        </ul>
+      </li>
+      <li>
+        <a href="/docs" class="active">Reference</a>
+      </li>
+      <li>
+        <a href="/install" class="install-link">Install</a>
+      </li>
+      <li>
+        <a href="/community">Community</a>
+        <ul>
+          
+        </ul>
+      </li>
+    </ul>
+
+    
+    
+    <ul id="toc">
+      <li> Table of Contents
+        <ul class="expanded">
+          
+            <li><a href="#_name">NAME</a> </li>
+          
+            <li><a href="#_synopsis">SYNOPSIS</a> </li>
+          
+            <li><a href="#_description">DESCRIPTION</a> </li>
+          
+            <li><a href="#_options">OPTIONS</a> </li>
+          
+            <li><a href="#_examples">EXAMPLES</a> </li>
+          
+            <li><a href="#_notes_on_threads">NOTES ON THREADS</a> </li>
+          
+            <li><a href="#_configuration">CONFIGURATION</a> </li>
+          
+            <li><a href="#_git">GIT</a> </li>
+          
+        </ul>
+      </li>
+    </ul>
+    
+
+    
+  </nav>
+</aside>
+
+        <div id="content">
+          <div id='reference-version'>
+            
+<a class="dropdown-trigger" id="reference-languages-trigger" data-panel-id="l10n-versions-dropdown" href="#"> English ▾</a>
+<div class='dropdown-panel right' id='l10n-versions-dropdown'>
+  <header>Localized versions of <strong>git-grep</strong> manual</header>
+  <ol class='reference-previous-versions'>
+    
+    <li>
+      <a href="/docs/git-grep"><span class="version">English</span>
+      </a>
+      </li>
+    
+    
+    <li>
+        <a href="/docs/git-grep/fr"><span class="version">Français</span>
+        </a>
+        </li>
+    
+    <li>
+        <a href="/docs/git-grep/pt_BR"><span class="version">Português (Brasil)</span>
+        </a>
+        </li>
+    
+    <li>
+        <a href="/docs/git-grep/ru"><span class="version">Русский</span>
+        </a>
+        </li>
+    
+    <li>
+        <a href="/docs/git-grep/sv"><span class="version">Svenska</span>
+        </a>
+        </li>
+    
+    <li>
+        <a href="/docs/git-grep/uk"><span class="version">українська мова</span>
+        </a>
+        </li>
+    
+    <li>
+        <a href="/docs/git-grep/zh_HANS-CN"><span class="version">简体中文</span>
+        </a>
+        </li>
+    
+  </ol>
+  <footer>
+    Want to read in your language or fix typos?<br/> <a href="https://github.com/jnavila/git-manpages-l10n">You can help translate this page</a>.
+  </footer>
+</div>
+
+            
+<a class="dropdown-trigger" id="reference-topics-trigger" data-panel-id="topics-dropdown" href="#">Topics ▾</a>
+<div class='dropdown-panel right' id='topics-dropdown'>
+  <div class='three-column'>
+    <div class='column-left'>
+      
+      
+      
+
+<h3 class='setup'>Setup and Config</h3>
+<ul class='unstyled'>
+  
+  <li>
+    
+      <a href="/docs/git">
+    
+      
+        git
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-config">
+    
+      
+        config
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-help">
+    
+      
+        help
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-bugreport">
+    
+      
+        bugreport
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/doc/credential-helpers">
+    
+      
+        Credential helpers
+      
+    </a>
+  </li>
+  
+</ul>
+
+      
+      
+      
+
+<h3 class='projects'>Getting and Creating Projects</h3>
+<ul class='unstyled'>
+  
+  <li>
+    
+      <a href="/docs/git-init">
+    
+      
+        init
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-clone">
+    
+      
+        clone
+      
+    </a>
+  </li>
+  
+</ul>
+
+      
+      
+      
+
+<h3 class='snapshotting'>Basic Snapshotting</h3>
+<ul class='unstyled'>
+  
+  <li>
+    
+      <a href="/docs/git-add">
+    
+      
+        add
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-status">
+    
+      
+        status
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-diff">
+    
+      
+        diff
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-commit">
+    
+      
+        commit
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-notes">
+    
+      
+        notes
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-restore">
+    
+      
+        restore
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-reset">
+    
+      
+        reset
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-rm">
+    
+      
+        rm
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-mv">
+    
+      
+        mv
+      
+    </a>
+  </li>
+  
+</ul>
+
+      
+      
+      
+
+<h3 class='branching'>Branching and Merging</h3>
+<ul class='unstyled'>
+  
+  <li>
+    
+      <a href="/docs/git-branch">
+    
+      
+        branch
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-checkout">
+    
+      
+        checkout
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-switch">
+    
+      
+        switch
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-merge">
+    
+      
+        merge
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-mergetool">
+    
+      
+        mergetool
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-log">
+    
+      
+        log
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-stash">
+    
+      
+        stash
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-tag">
+    
+      
+        tag
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-worktree">
+    
+      
+        worktree
+      
+    </a>
+  </li>
+  
+</ul>
+
+      
+      
+      
+
+<h3 class='sharing'>Sharing and Updating Projects</h3>
+<ul class='unstyled'>
+  
+  <li>
+    
+      <a href="/docs/git-fetch">
+    
+      
+        fetch
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-pull">
+    
+      
+        pull
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-push">
+    
+      
+        push
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-remote">
+    
+      
+        remote
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-submodule">
+    
+      
+        submodule
+      
+    </a>
+  </li>
+  
+</ul>
+
+      
+    </div>
+    <div class='column-middle'>
+      
+      
+      
+
+<h3 class='inspection'>Inspection and Comparison</h3>
+<ul class='unstyled'>
+  
+  <li>
+    
+      <a href="/docs/git-show">
+    
+      
+        show
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-log">
+    
+      
+        log
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-diff">
+    
+      
+        diff
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-difftool">
+    
+      
+        difftool
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-range-diff">
+    
+      
+        range-diff
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-shortlog">
+    
+      
+        shortlog
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-describe">
+    
+      
+        describe
+      
+    </a>
+  </li>
+  
+</ul>
+
+      
+      
+      
+
+<h3 class='patching'>Patching</h3>
+<ul class='unstyled'>
+  
+  <li>
+    
+      <a href="/docs/git-apply">
+    
+      
+        apply
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-cherry-pick">
+    
+      
+        cherry-pick
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-diff">
+    
+      
+        diff
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-rebase">
+    
+      
+        rebase
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-revert">
+    
+      
+        revert
+      
+    </a>
+  </li>
+  
+</ul>
+
+      
+      
+      
+
+<h3 class='debugging'>Debugging</h3>
+<ul class='unstyled'>
+  
+  <li>
+    
+      <a href="/docs/git-bisect">
+    
+      
+        bisect
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-blame">
+    
+      
+        blame
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-grep">
+    
+      
+        grep
+      
+    </a>
+  </li>
+  
+</ul>
+
+      
+      
+      
+
+<h3 class='email'>Email</h3>
+<ul class='unstyled'>
+  
+  <li>
+    
+      <a href="/docs/git-am">
+    
+      
+        am
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-apply">
+    
+      
+        apply
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-imap-send">
+    
+      
+        imap-send
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-format-patch">
+    
+      
+        format-patch
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-send-email">
+    
+      
+        send-email
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-request-pull">
+    
+      
+        request-pull
+      
+    </a>
+  </li>
+  
+</ul>
+
+      
+      
+      
+
+<h3 class='external'>External Systems</h3>
+<ul class='unstyled'>
+  
+  <li>
+    
+      <a href="/docs/git-svn">
+    
+      
+        svn
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-fast-import">
+    
+      
+        fast-import
+      
+    </a>
+  </li>
+  
+</ul>
+
+      
+      
+      
+
+<h3 class='server-admin'>Server Admin</h3>
+<ul class='unstyled'>
+  
+  <li>
+    
+      <a href="/docs/git-daemon">
+    
+      
+        daemon
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-update-server-info">
+    
+      
+        update-server-info
+      
+    </a>
+  </li>
+  
+</ul>
+
+      
+    </div>
+    <div class='column-right'>
+      
+      
+      
+
+<h3 class='guides'>Guides</h3>
+<ul class='unstyled'>
+  
+  <li>
+    
+      <a href="/docs/gitattributes">
+    
+      
+        gitattributes
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/gitcli">
+    
+      
+        Command-line interface conventions
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/giteveryday">
+    
+      
+        Everyday Git
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/gitfaq">
+    
+      
+        Frequently Asked Questions (FAQ)
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/gitglossary">
+    
+      
+        Glossary
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/githooks">
+    
+      
+        Hooks
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/gitignore">
+    
+      
+        gitignore
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/gitmodules">
+    
+      
+        gitmodules
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/gitrevisions">
+    
+      
+        Revisions
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/gitsubmodules">
+    
+      
+        Submodules
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/gittutorial">
+    
+      
+        Tutorial
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/gitworkflows">
+    
+      
+        Workflows
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git#_guides">
+    
+      
+        All guides...
+      
+    </a>
+  </li>
+  
+</ul>
+
+      
+      
+      
+
+<h3 class='admin'>Administration</h3>
+<ul class='unstyled'>
+  
+  <li>
+    
+      <a href="/docs/git-clean">
+    
+      
+        clean
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-gc">
+    
+      
+        gc
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-fsck">
+    
+      
+        fsck
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-reflog">
+    
+      
+        reflog
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-filter-branch">
+    
+      
+        filter-branch
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-instaweb">
+    
+      
+        instaweb
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-archive">
+    
+      
+        archive
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-bundle">
+    
+      
+        bundle
+      
+    </a>
+  </li>
+  
+</ul>
+
+      
+      
+      
+
+<h3 class='plumbing'>Plumbing Commands</h3>
+<ul class='unstyled'>
+  
+  <li>
+    
+      <a href="/docs/git-cat-file">
+    
+      
+        cat-file
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-check-ignore">
+    
+      
+        check-ignore
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-checkout-index">
+    
+      
+        checkout-index
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-commit-tree">
+    
+      
+        commit-tree
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-count-objects">
+    
+      
+        count-objects
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-diff-index">
+    
+      
+        diff-index
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-for-each-ref">
+    
+      
+        for-each-ref
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-hash-object">
+    
+      
+        hash-object
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-ls-files">
+    
+      
+        ls-files
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-ls-tree">
+    
+      
+        ls-tree
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-merge-base">
+    
+      
+        merge-base
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-read-tree">
+    
+      
+        read-tree
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-rev-list">
+    
+      
+        rev-list
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-rev-parse">
+    
+      
+        rev-parse
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-show-ref">
+    
+      
+        show-ref
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-symbolic-ref">
+    
+      
+        symbolic-ref
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-update-index">
+    
+      
+        update-index
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-update-ref">
+    
+      
+        update-ref
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-verify-pack">
+    
+      
+        verify-pack
+      
+    </a>
+  </li>
+  
+  <li>
+    
+      <a href="/docs/git-write-tree">
+    
+      
+        write-tree
+      
+    </a>
+  </li>
+  
+</ul>
+
+      
+    </div>
+  </div>
+</div>
+
+            
+<a class="dropdown-trigger" id="reference-versions-trigger" data-panel-id="previous-versions-dropdown" href="#">
+  
+    Latest version
+   ▾ </a>
+<span class="light d-flex">git-grep last updated in 2.55.0</span>
+<div class='dropdown-panel left' id='previous-versions-dropdown'>
+  <header>Changes in the <strong>git-grep</strong> manual</header>
+  <ol class='reference-previous-versions'>
+    
+      
+        <li class="no-change"><span>2.56.0 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.55.0"><span class="version">2.55.0</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2026-06-29</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.45.1 → 2.54.0 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.45.0"><span class="version">2.45.0</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2024-04-29</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.43.1 → 2.44.4 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.43.0"><span class="version">2.43.0</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2023-11-20</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.38.1 → 2.42.4 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.38.0"><span class="version">2.38.0</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2022-10-02</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.32.1 → 2.37.7 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.32.0"><span class="version">2.32.0</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2021-06-06</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.30.1 → 2.31.8 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.30.0"><span class="version">2.30.0</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2020-12-27</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.29.1 → 2.29.3 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.29.0"><span class="version">2.29.0</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2020-10-19</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.27.1 → 2.28.1 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.27.0"><span class="version">2.27.0</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2020-06-01</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.26.1 → 2.26.3 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.26.0"><span class="version">2.26.0</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2020-03-22</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.25.2 → 2.25.5 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.25.1"><span class="version">2.25.1</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2020-02-17</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.24.1 → 2.25.0 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.24.0"><span class="version">2.24.0</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2019-11-04</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.22.1 → 2.23.4 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.22.0"><span class="version">2.22.0</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2019-06-07</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.20.1 → 2.21.4 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.20.0"><span class="version">2.20.0</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2018-12-09</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.19.1 → 2.19.6 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.19.0"><span class="version">2.19.0</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2018-09-10</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.18.1 → 2.18.5 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.18.0"><span class="version">2.18.0</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2018-06-21</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.16.6 → 2.17.6 no changes</span></li>
+      
+    
+      
+        <li class="no-change"><span>2.15.4 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.14.6"><span class="version">2.14.6</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2019-12-06</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.13.7 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.12.5"><span class="version">2.12.5</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2017-09-22</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.10.5 → 2.11.4 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.9.5"><span class="version">2.9.5</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2017-07-30</em>
+        </a>
+        </li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.8.6"><span class="version">2.8.6</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2017-07-30</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.7.6 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.6.7"><span class="version">2.6.7</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2017-05-05</em>
+        </a>
+        </li>
+      
+    
+      
+        <li class="no-change"><span>2.2.3 → 2.5.6 no changes</span></li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.1.4"><span class="version">2.1.4</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2014-12-17</em>
+        </a>
+        </li>
+      
+    
+      
+        <li>
+        <a href="/docs/git-grep/2.0.5"><span class="version">2.0.5</span>
+          <span class="diff">
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+              <img src="/images/icons/green-dot.png" />
+            
+            
+              <img src="/images/icons/red-dot.png" />
+            
+              <img src="/images/icons/red-dot.png" />
+            
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+              <img src="/images/icons/grey-dot.png" />
+            
+          </span>
+          <em class="date">2014-12-17</em>
+        </a>
+        </li>
+      
+    
+    <li>&nbsp;</li>
+    
+  </ol>
+  <footer>
+    <p>Check your version of git by running</p>
+    <code class="command">git --version</code>
+  </footer>
+</div>
+
+          </div>
+
+          
+          
+          <div id="main">
+	    
+            <div class="sect1">
+<h2 id="_name"><a class="anchor" href="#_name"></a>NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>git-grep - Print lines matching a pattern</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis"><a class="anchor" href="#_synopsis"></a>SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="verseblock">
+<pre class="content"><span class='synopsis'><code>git</code></span> <span class='synopsis'><code>grep</code></span> [<span class='synopsis'><code>-a</code></span> | <span class='synopsis'><code>--text</code></span>] [<span class='synopsis'><code>-I</code></span>] [<span class='synopsis'><code>--textconv</code></span>] [<span class='synopsis'><code>-i</code></span> | <span class='synopsis'><code>--ignore-case</code></span>] [<span class='synopsis'><code>-w</code></span> | <span class='synopsis'><code>--word-regexp</code></span>]
+	   [<span class='synopsis'><code>-v</code></span> | <span class='synopsis'><code>--invert-match</code></span>] [<span class='synopsis'><code>-h</code></span>|<span class='synopsis'><code>-H</code></span>] [<span class='synopsis'><code>--full-name</code></span>]
+	   [<span class='synopsis'><code>-E</code></span> | <span class='synopsis'><code>--extended-regexp</code></span>] [<span class='synopsis'><code>-G</code></span> | <span class='synopsis'><code>--basic-regexp</code></span>]
+	   [<span class='synopsis'><code>-P</code></span> | <span class='synopsis'><code>--perl-regexp</code></span>]
+	   [<span class='synopsis'><code>-F</code></span> | <span class='synopsis'><code>--fixed-strings</code></span>] [<span class='synopsis'><code>-n</code></span> | <span class='synopsis'><code>--line-number</code></span>] [<span class='synopsis'><code>--column</code></span>]
+	   [<span class='synopsis'><code>-l</code></span> | <span class='synopsis'><code>--files-with-matches</code></span>] [<span class='synopsis'><code>-L</code></span> | <span class='synopsis'><code>--files-without-match</code></span>]
+	   [(<span class='synopsis'><code>-O</code></span> | <span class='synopsis'><code>--open-files-in-pager</code></span>) [<em>&lt;pager&gt;</em>]]
+	   [<span class='synopsis'><code>-z</code></span> | <span class='synopsis'><code>--null</code></span>]
+	   [ <span class='synopsis'><code>-o</code></span> | <span class='synopsis'><code>--only-matching</code></span> ] [<span class='synopsis'><code>-c</code></span> | <span class='synopsis'><code>--count</code></span>] [<span class='synopsis'><code>--all-match</code></span>] [<span class='synopsis'><code>-q</code></span> | <span class='synopsis'><code>--quiet</code></span>]
+	   [<span class='synopsis'><code>--max-depth</code></span> <em>&lt;depth&gt;</em>] [<span class='synopsis'><code>--</code></span>[<span class='synopsis'><code>no-</code></span>]<span class='synopsis'><code>recursive</code></span>]
+	   [<span class='synopsis'><code>--color</code></span>[<span class='synopsis'><code>=</code></span><em>&lt;when&gt;</em>] | <span class='synopsis'><code>--no-color</code></span>]
+	   [<span class='synopsis'><code>--break</code></span>] [<span class='synopsis'><code>--heading</code></span>] [<span class='synopsis'><code>-p</code></span> | <span class='synopsis'><code>--show-function</code></span>]
+	   [<span class='synopsis'><code>-A</code></span> <em>&lt;post-context&gt;</em>] [<span class='synopsis'><code>-B</code></span> <em>&lt;pre-context&gt;</em>] [<span class='synopsis'><code>-C</code></span> <em>&lt;context&gt;</em>]
+	   [<span class='synopsis'><code>-W</code></span> | <span class='synopsis'><code>--function-context</code></span>]
+	   [(<span class='synopsis'><code>-m</code></span> | <span class='synopsis'><code>--max-count</code></span>) <em>&lt;num&gt;</em>]
+	   [<span class='synopsis'><code>--threads</code></span> <em>&lt;num&gt;</em>]
+	   [<span class='synopsis'><code>-f</code></span> <em>&lt;file&gt;</em>] [<span class='synopsis'><code>-e</code></span>] <em>&lt;pattern&gt;</em>
+	   [<span class='synopsis'><code>--and</code></span>|<span class='synopsis'><code>--or</code></span>|<span class='synopsis'><code>--not</code></span>|(|)|<span class='synopsis'><code>-e</code></span> <em>&lt;pattern&gt;</em>&#8230;&#8203;]
+	   [<span class='synopsis'><code>--recurse-submodules</code></span>] [<span class='synopsis'><code>--parent-basename</code></span> <em>&lt;basename&gt;</em>]
+	   [ [<span class='synopsis'><code>--</code></span>[<span class='synopsis'><code>no-</code></span>]<span class='synopsis'><code>exclude-standard</code></span>] [<span class='synopsis'><code>--cached</code></span> | <span class='synopsis'><code>--untracked</code></span> | <span class='synopsis'><code>--no-index</code></span>] | <em><span class="hover-term" data-term="tree">&lt;tree&gt;</span></em>&#8230;&#8203;]
+	   [<span class='synopsis'><code>--</code></span>] [<em><span class="hover-term" data-term="pathspec">&lt;pathspec&gt;</span></em>&#8230;&#8203;]</pre>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description"><a class="anchor" href="#_description"></a>DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Look for specified patterns in the tracked files in the work tree, blobs
+registered in the index file, or blobs in given tree objects.  Patterns
+are lists of one or more search expressions separated by newline
+characters.  An empty string as search expression matches all lines.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options"><a class="anchor" href="#_options"></a>OPTIONS</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--cachedcodespan"><a id="Documentation/git-grep.txt---cached" class="anchor" href="#Documentation/git-grep.txt---cached"></a><span class='synopsis'><code>--cached</code></span> </dt>
+<dd>
+<p>Instead of searching tracked files in the working tree, search
+blobs registered in the index file.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--untrackedcodespan"><a id="Documentation/git-grep.txt---untracked" class="anchor" href="#Documentation/git-grep.txt---untracked"></a><span class='synopsis'><code>--untracked</code></span> </dt>
+<dd>
+<p>In addition to searching in the tracked files in the working
+tree, search also in untracked files.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--no-indexcodespan"><a id="Documentation/git-grep.txt---no-index" class="anchor" href="#Documentation/git-grep.txt---no-index"></a><span class='synopsis'><code>--no-index</code></span> </dt>
+<dd>
+<p>Search files in the current directory that is not managed by Git,
+or by ignoring that the current directory is managed by Git.  This
+is rather similar to running the regular <span class='synopsis'><code>grep</code></span>(1) utility with its
+<span class='synopsis'><code>-r</code></span> option specified, but with some additional benefits, such as
+using pathspec patterns to limit paths;  see the <span class='synopsis'><code>pathspec</code></span> entry
+in <a href='/docs/gitglossary'>gitglossary[7]</a> for more information.</p>
+<div class="paragraph">
+<p>This option cannot be used together with <span class='synopsis'><code>--cached</code></span> or <span class='synopsis'><code>--untracked</code></span>.
+See also <span class='synopsis'><code>grep.fallbackToNoIndex</code></span> in <em>CONFIGURATION</em> below.</p>
+</div>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--no-exclude-standardcodespan"><a id="Documentation/git-grep.txt---no-exclude-standard" class="anchor" href="#Documentation/git-grep.txt---no-exclude-standard"></a><span class='synopsis'><code>--no-exclude-standard</code></span> </dt>
+<dd>
+<p>Also search in ignored files by not honoring the <span class='synopsis'><code>.gitignore</code></span>
+mechanism. Only useful with <span class='synopsis'><code>--untracked</code></span>.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--exclude-standardcodespan"><a id="Documentation/git-grep.txt---exclude-standard" class="anchor" href="#Documentation/git-grep.txt---exclude-standard"></a><span class='synopsis'><code>--exclude-standard</code></span> </dt>
+<dd>
+<p>Do not pay attention to ignored files specified via the <span class='synopsis'><code>.gitignore</code></span>
+mechanism.  Only useful when searching files in the current directory
+with <span class='synopsis'><code>--no-index</code></span>.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--recurse-submodulescodespan"><a id="Documentation/git-grep.txt---recurse-submodules" class="anchor" href="#Documentation/git-grep.txt---recurse-submodules"></a><span class='synopsis'><code>--recurse-submodules</code></span> </dt>
+<dd>
+<p>Recursively search in each submodule that is active and
+checked out in the repository.  When used in combination with the
+<em><span class="hover-term" data-term="tree">&lt;tree&gt;</span></em> option the prefix of all submodule output will be the name of
+the parent project&#8217;s <em><span class="hover-term" data-term="tree">&lt;tree&gt;</span></em> object.  This option cannot be used together
+with <span class='synopsis'><code>--untracked</code></span>, and it has no effect if <span class='synopsis'><code>--no-index</code></span> is specified.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-acodespan"><a id="Documentation/git-grep.txt--a" class="anchor" href="#Documentation/git-grep.txt--a"></a><span class='synopsis'><code>-a</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--textcodespan"><a id="Documentation/git-grep.txt---text" class="anchor" href="#Documentation/git-grep.txt---text"></a><span class='synopsis'><code>--text</code></span> </dt>
+<dd>
+<p>Process binary files as if they were text.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--textconvcodespan"><a id="Documentation/git-grep.txt---textconv" class="anchor" href="#Documentation/git-grep.txt---textconv"></a><span class='synopsis'><code>--textconv</code></span> </dt>
+<dd>
+<p>Honor textconv filter settings.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--no-textconvcodespan"><a id="Documentation/git-grep.txt---no-textconv" class="anchor" href="#Documentation/git-grep.txt---no-textconv"></a><span class='synopsis'><code>--no-textconv</code></span> </dt>
+<dd>
+<p>Do not honor textconv filter settings.
+This is the default.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-icodespan"><a id="Documentation/git-grep.txt--i" class="anchor" href="#Documentation/git-grep.txt--i"></a><span class='synopsis'><code>-i</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--ignore-casecodespan"><a id="Documentation/git-grep.txt---ignore-case" class="anchor" href="#Documentation/git-grep.txt---ignore-case"></a><span class='synopsis'><code>--ignore-case</code></span> </dt>
+<dd>
+<p>Ignore case differences between the patterns and the
+files.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-Icodespan"><a id="Documentation/git-grep.txt--I" class="anchor" href="#Documentation/git-grep.txt--I"></a><span class='synopsis'><code>-I</code></span> </dt>
+<dd>
+<p>Don&#8217;t match the pattern in binary files.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--max-depthcodeemltdepthgtemspan"><a id="Documentation/git-grep.txt---max-depthdepth" class="anchor" href="#Documentation/git-grep.txt---max-depthdepth"></a><span class='synopsis'><code>--max-depth</code> <em>&lt;depth&gt;</em></span> </dt>
+<dd>
+<p>For each <em><span class="hover-term" data-term="pathspec">&lt;pathspec&gt;</span></em> given on command line, descend at most <em>&lt;depth&gt;</em>
+levels of directories. A value of -1 means no limit.
+This option is ignored if <em><span class="hover-term" data-term="pathspec">&lt;pathspec&gt;</span></em> contains active wildcards.
+In other words if "a*" matches a directory named "a*",
+"*" is matched literally so <span class='synopsis'><code>--max-depth</code></span> is still effective.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-rcodespan"><a id="Documentation/git-grep.txt--r" class="anchor" href="#Documentation/git-grep.txt--r"></a><span class='synopsis'><code>-r</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--recursivecodespan"><a id="Documentation/git-grep.txt---recursive" class="anchor" href="#Documentation/git-grep.txt---recursive"></a><span class='synopsis'><code>--recursive</code></span> </dt>
+<dd>
+<p>Same as <span class='synopsis'><code>--max-depth=-1</code></span>; this is the default.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--no-recursivecodespan"><a id="Documentation/git-grep.txt---no-recursive" class="anchor" href="#Documentation/git-grep.txt---no-recursive"></a><span class='synopsis'><code>--no-recursive</code></span> </dt>
+<dd>
+<p>Same as <span class='synopsis'><code>--max-depth=0</code></span>.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-wcodespan"><a id="Documentation/git-grep.txt--w" class="anchor" href="#Documentation/git-grep.txt--w"></a><span class='synopsis'><code>-w</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--word-regexpcodespan"><a id="Documentation/git-grep.txt---word-regexp" class="anchor" href="#Documentation/git-grep.txt---word-regexp"></a><span class='synopsis'><code>--word-regexp</code></span> </dt>
+<dd>
+<p>Match the pattern only at word boundary (either begin at the
+beginning of a line, or preceded by a non-word character; end at
+the end of a line or followed by a non-word character).</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-vcodespan"><a id="Documentation/git-grep.txt--v" class="anchor" href="#Documentation/git-grep.txt--v"></a><span class='synopsis'><code>-v</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--invert-matchcodespan"><a id="Documentation/git-grep.txt---invert-match" class="anchor" href="#Documentation/git-grep.txt---invert-match"></a><span class='synopsis'><code>--invert-match</code></span> </dt>
+<dd>
+<p>Select non-matching lines.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-hcodespan"><a id="Documentation/git-grep.txt--h" class="anchor" href="#Documentation/git-grep.txt--h"></a><span class='synopsis'><code>-h</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-Hcodespan"><a id="Documentation/git-grep.txt--H" class="anchor" href="#Documentation/git-grep.txt--H"></a><span class='synopsis'><code>-H</code></span> </dt>
+<dd>
+<p>By default, the command shows the filename for each
+match.  <span class='synopsis'><code>-h</code></span> option is used to suppress this output.
+<span class='synopsis'><code>-H</code></span> is there for completeness and does not do anything
+except it overrides <span class='synopsis'><code>-h</code></span> given earlier on the command
+line.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--full-namecodespan"><a id="Documentation/git-grep.txt---full-name" class="anchor" href="#Documentation/git-grep.txt---full-name"></a><span class='synopsis'><code>--full-name</code></span> </dt>
+<dd>
+<p>When run from a subdirectory, the command usually
+outputs paths relative to the current directory.  This
+option forces paths to be output relative to the project
+top directory.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-Ecodespan"><a id="Documentation/git-grep.txt--E" class="anchor" href="#Documentation/git-grep.txt--E"></a><span class='synopsis'><code>-E</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--extended-regexpcodespan"><a id="Documentation/git-grep.txt---extended-regexp" class="anchor" href="#Documentation/git-grep.txt---extended-regexp"></a><span class='synopsis'><code>--extended-regexp</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-Gcodespan"><a id="Documentation/git-grep.txt--G" class="anchor" href="#Documentation/git-grep.txt--G"></a><span class='synopsis'><code>-G</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--basic-regexpcodespan"><a id="Documentation/git-grep.txt---basic-regexp" class="anchor" href="#Documentation/git-grep.txt---basic-regexp"></a><span class='synopsis'><code>--basic-regexp</code></span> </dt>
+<dd>
+<p>Use POSIX extended/basic regexp for patterns.  Default
+is to use basic regexp.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-Pcodespan"><a id="Documentation/git-grep.txt--P" class="anchor" href="#Documentation/git-grep.txt--P"></a><span class='synopsis'><code>-P</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--perl-regexpcodespan"><a id="Documentation/git-grep.txt---perl-regexp" class="anchor" href="#Documentation/git-grep.txt---perl-regexp"></a><span class='synopsis'><code>--perl-regexp</code></span> </dt>
+<dd>
+<p>Use Perl-compatible regular expressions for patterns.</p>
+<div class="paragraph">
+<p>Support for these types of regular expressions is an optional
+compile-time dependency. If Git wasn&#8217;t compiled with support for them
+providing this option will cause it to die.</p>
+</div>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-Fcodespan"><a id="Documentation/git-grep.txt--F" class="anchor" href="#Documentation/git-grep.txt--F"></a><span class='synopsis'><code>-F</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--fixed-stringscodespan"><a id="Documentation/git-grep.txt---fixed-strings" class="anchor" href="#Documentation/git-grep.txt---fixed-strings"></a><span class='synopsis'><code>--fixed-strings</code></span> </dt>
+<dd>
+<p>Use fixed strings for patterns (don&#8217;t interpret pattern
+as a regex).</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-ncodespan"><a id="Documentation/git-grep.txt--n" class="anchor" href="#Documentation/git-grep.txt--n"></a><span class='synopsis'><code>-n</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--line-numbercodespan"><a id="Documentation/git-grep.txt---line-number" class="anchor" href="#Documentation/git-grep.txt---line-number"></a><span class='synopsis'><code>--line-number</code></span> </dt>
+<dd>
+<p>Prefix the line number to matching lines.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--columncodespan"><a id="Documentation/git-grep.txt---column" class="anchor" href="#Documentation/git-grep.txt---column"></a><span class='synopsis'><code>--column</code></span> </dt>
+<dd>
+<p>Prefix the 1-indexed byte-offset of the first match from the start of the
+matching line.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-lcodespan"><a id="Documentation/git-grep.txt--l" class="anchor" href="#Documentation/git-grep.txt--l"></a><span class='synopsis'><code>-l</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--files-with-matchescodespan"><a id="Documentation/git-grep.txt---files-with-matches" class="anchor" href="#Documentation/git-grep.txt---files-with-matches"></a><span class='synopsis'><code>--files-with-matches</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--name-onlycodespan"><a id="Documentation/git-grep.txt---name-only" class="anchor" href="#Documentation/git-grep.txt---name-only"></a><span class='synopsis'><code>--name-only</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-Lcodespan"><a id="Documentation/git-grep.txt--L" class="anchor" href="#Documentation/git-grep.txt--L"></a><span class='synopsis'><code>-L</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--files-without-matchcodespan"><a id="Documentation/git-grep.txt---files-without-match" class="anchor" href="#Documentation/git-grep.txt---files-without-match"></a><span class='synopsis'><code>--files-without-match</code></span> </dt>
+<dd>
+<p>Instead of showing every matched line, show only the
+names of files that contain (or do not contain) matches.
+For better compatibility with <span class='synopsis'><code>git</code> <code>diff</code></span>, <span class='synopsis'><code>--name-only</code></span> is a
+synonym for <span class='synopsis'><code>--files-with-matches</code></span>.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-Ocodeemltpagergtemspan"><a id="Documentation/git-grep.txt--Opager" class="anchor" href="#Documentation/git-grep.txt--Opager"></a><span class='synopsis'><code>-O</code>[<em>&lt;pager&gt;</em>]</span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--open-files-in-pagercodecodecodeemltpagergtemspan"><a id="Documentation/git-grep.txt---open-files-in-pagerpager" class="anchor" href="#Documentation/git-grep.txt---open-files-in-pagerpager"></a><span class='synopsis'><code>--open-files-in-pager</code>[<code>=</code><em>&lt;pager&gt;</em>]</span> </dt>
+<dd>
+<p>Open the matching files in the pager (not the output of <span class='synopsis'><code>grep</code></span>).
+If the pager happens to be "less" or "vi", and the user
+specified only one pattern, the first file is positioned at
+the first match automatically. The <span class='synopsis'><code>pager</code></span> argument is
+optional; if specified, it must be stuck to the option
+without a space. If <span class='synopsis'><code>pager</code></span> is unspecified, the default pager
+will be used (see <span class='synopsis'><code>core.pager</code></span> in <a href='/docs/git-config'>git-config[1]</a>).</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-zcodespan"><a id="Documentation/git-grep.txt--z" class="anchor" href="#Documentation/git-grep.txt--z"></a><span class='synopsis'><code>-z</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--nullcodespan"><a id="Documentation/git-grep.txt---null" class="anchor" href="#Documentation/git-grep.txt---null"></a><span class='synopsis'><code>--null</code></span> </dt>
+<dd>
+<p>Use \0 as the delimiter for pathnames in the output, and print
+them verbatim. Without this option, pathnames with "unusual"
+characters are quoted as explained for the configuration
+variable <span class='synopsis'><code>core.quotePath</code></span> (see <a href='/docs/git-config'>git-config[1]</a>).</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-ocodespan"><a id="Documentation/git-grep.txt--o" class="anchor" href="#Documentation/git-grep.txt--o"></a><span class='synopsis'><code>-o</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--only-matchingcodespan"><a id="Documentation/git-grep.txt---only-matching" class="anchor" href="#Documentation/git-grep.txt---only-matching"></a><span class='synopsis'><code>--only-matching</code></span> </dt>
+<dd>
+<p>Print only the matched (non-empty) parts of a matching line, with each such
+part on a separate output line.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-ccodespan"><a id="Documentation/git-grep.txt--c" class="anchor" href="#Documentation/git-grep.txt--c"></a><span class='synopsis'><code>-c</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--countcodespan"><a id="Documentation/git-grep.txt---count" class="anchor" href="#Documentation/git-grep.txt---count"></a><span class='synopsis'><code>--count</code></span> </dt>
+<dd>
+<p>Instead of showing every matched line, show the number of
+lines that match.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--colorcodecodecodeemltwhengtemspan"><a id="Documentation/git-grep.txt---colorwhen" class="anchor" href="#Documentation/git-grep.txt---colorwhen"></a><span class='synopsis'><code>--color</code>[<code>=</code><em>&lt;when&gt;</em>]</span> </dt>
+<dd>
+<p>Show colored matches.
+The value must be <span class='synopsis'><code>always</code></span> (the default), <span class='synopsis'><code>never</code></span>, or <span class='synopsis'><code>auto</code></span>.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--no-colorcodespan"><a id="Documentation/git-grep.txt---no-color" class="anchor" href="#Documentation/git-grep.txt---no-color"></a><span class='synopsis'><code>--no-color</code></span> </dt>
+<dd>
+<p>Turn off match highlighting, even when the configuration file
+gives the default to color output.
+Same as <span class='synopsis'><code>--color=never</code></span>.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--breakcodespan"><a id="Documentation/git-grep.txt---break" class="anchor" href="#Documentation/git-grep.txt---break"></a><span class='synopsis'><code>--break</code></span> </dt>
+<dd>
+<p>Print an empty line between matches from different files.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--headingcodespan"><a id="Documentation/git-grep.txt---heading" class="anchor" href="#Documentation/git-grep.txt---heading"></a><span class='synopsis'><code>--heading</code></span> </dt>
+<dd>
+<p>Show the filename above the matches in that file instead of
+at the start of each shown line.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-pcodespan"><a id="Documentation/git-grep.txt--p" class="anchor" href="#Documentation/git-grep.txt--p"></a><span class='synopsis'><code>-p</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--show-functioncodespan"><a id="Documentation/git-grep.txt---show-function" class="anchor" href="#Documentation/git-grep.txt---show-function"></a><span class='synopsis'><code>--show-function</code></span> </dt>
+<dd>
+<p>Show the preceding line that contains the function name of
+the match, unless the matching line is a function name itself.
+The name is determined in the same way as <span class='synopsis'><code>git</code> <code>diff</code></span> works out
+patch hunk headers (see <em>Defining a custom hunk-header</em> in
+<a href='/docs/gitattributes'>gitattributes[5]</a>).</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-codeemltnumgtemspan"><a id="Documentation/git-grep.txt--num" class="anchor" href="#Documentation/git-grep.txt--num"></a><span class='synopsis'><code>-</code><em>&lt;num&gt;</em></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-Ccodeemltnumgtemspan"><a id="Documentation/git-grep.txt--Cnum" class="anchor" href="#Documentation/git-grep.txt--Cnum"></a><span class='synopsis'><code>-C</code> <em>&lt;num&gt;</em></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--contextcodeemltnumgtemspan"><a id="Documentation/git-grep.txt---contextnum" class="anchor" href="#Documentation/git-grep.txt---contextnum"></a><span class='synopsis'><code>--context</code> <em>&lt;num&gt;</em></span> </dt>
+<dd>
+<p>Show <em>&lt;num&gt;</em> leading and trailing lines, and place a line
+containing <span class='synopsis'><code>--</code></span> between contiguous groups of matches.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-Acodeemltnumgtemspan"><a id="Documentation/git-grep.txt--Anum" class="anchor" href="#Documentation/git-grep.txt--Anum"></a><span class='synopsis'><code>-A</code> <em>&lt;num&gt;</em></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--after-contextcodeemltnumgtemspan"><a id="Documentation/git-grep.txt---after-contextnum" class="anchor" href="#Documentation/git-grep.txt---after-contextnum"></a><span class='synopsis'><code>--after-context</code> <em>&lt;num&gt;</em></span> </dt>
+<dd>
+<p>Show <em>&lt;num&gt;</em> trailing lines, and place a line containing
+<span class='synopsis'><code>--</code></span> between contiguous groups of matches.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-Bcodeemltnumgtemspan"><a id="Documentation/git-grep.txt--Bnum" class="anchor" href="#Documentation/git-grep.txt--Bnum"></a><span class='synopsis'><code>-B</code> <em>&lt;num&gt;</em></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--before-contextcodeemltnumgtemspan"><a id="Documentation/git-grep.txt---before-contextnum" class="anchor" href="#Documentation/git-grep.txt---before-contextnum"></a><span class='synopsis'><code>--before-context</code> <em>&lt;num&gt;</em></span> </dt>
+<dd>
+<p>Show <em>&lt;num&gt;</em> leading lines, and place a line containing
+<span class='synopsis'><code>--</code></span> between contiguous groups of matches.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-Wcodespan"><a id="Documentation/git-grep.txt--W" class="anchor" href="#Documentation/git-grep.txt--W"></a><span class='synopsis'><code>-W</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--function-contextcodespan"><a id="Documentation/git-grep.txt---function-context" class="anchor" href="#Documentation/git-grep.txt---function-context"></a><span class='synopsis'><code>--function-context</code></span> </dt>
+<dd>
+<p>Show the surrounding text from the previous line containing a
+function name up to the one before the next function name,
+effectively showing the whole function in which the match was
+found. The function names are determined in the same way as
+<span class='synopsis'><code>git</code> <code>diff</code></span> works out patch hunk headers (see <em>Defining a
+custom hunk-header</em> in <a href='/docs/gitattributes'>gitattributes[5]</a>).</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-mcodeemltnumgtemspan"><a id="Documentation/git-grep.txt--mnum" class="anchor" href="#Documentation/git-grep.txt--mnum"></a><span class='synopsis'><code>-m</code> <em>&lt;num&gt;</em></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--max-countcodeemltnumgtemspan"><a id="Documentation/git-grep.txt---max-countnum" class="anchor" href="#Documentation/git-grep.txt---max-countnum"></a><span class='synopsis'><code>--max-count</code> <em>&lt;num&gt;</em></span> </dt>
+<dd>
+<p>Limit the amount of matches per file. When using the <span class='synopsis'><code>-v</code></span> or
+<span class='synopsis'><code>--invert-match</code></span> option, the search stops after the specified
+number of non-matches. A value of -1 will return unlimited
+results (the default). A value of 0 will exit immediately with
+a non-zero status.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--threadscodeemltnumgtemspan"><a id="Documentation/git-grep.txt---threadsnum" class="anchor" href="#Documentation/git-grep.txt---threadsnum"></a><span class='synopsis'><code>--threads</code> <em>&lt;num&gt;</em></span> </dt>
+<dd>
+<p>Number of <span class='synopsis'><code>grep</code></span> worker threads to use.  See <span class='synopsis'><code>NOTES</code> <code>ON</code> <code>THREADS</code></span>
+and <span class='synopsis'><code>grep.threads</code></span> in <em>CONFIGURATION</em> for more information.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-fcodeemltfilegtemspan"><a id="Documentation/git-grep.txt--ffile" class="anchor" href="#Documentation/git-grep.txt--ffile"></a><span class='synopsis'><code>-f</code> <em>&lt;file&gt;</em></span> </dt>
+<dd>
+<p>Read patterns from <em>&lt;file&gt;</em>, one per line.</p>
+<div class="paragraph">
+<p>Passing the pattern via <em>&lt;file&gt;</em> allows for providing a search pattern
+containing a \0.</p>
+</div>
+<div class="paragraph">
+<p>Not all pattern types support patterns containing \0. Git will error
+out if a given pattern type can&#8217;t support such a pattern. The
+<span class='synopsis'><code>--perl-regexp</code></span> pattern type when compiled against the PCRE v2 backend
+has the widest support for these types of patterns.</p>
+</div>
+<div class="paragraph">
+<p>In versions of Git before 2.23.0 patterns containing \0 would be
+silently considered fixed. This was never documented, there were also
+odd and undocumented interactions between e.g. non-ASCII patterns
+containing \0 and <span class='synopsis'><code>--ignore-case</code></span>.</p>
+</div>
+<div class="paragraph">
+<p>In future versions we may learn to support patterns containing \0 for
+more search backends, until then we&#8217;ll die when the pattern type in
+question doesn&#8217;t support them.</p>
+</div>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-ecodespan"><a id="Documentation/git-grep.txt--e" class="anchor" href="#Documentation/git-grep.txt--e"></a><span class='synopsis'><code>-e</code></span> </dt>
+<dd>
+<p>The next parameter is the pattern. This option has to be
+used for patterns starting with <span class='synopsis'><code>-</code></span> and should be used in
+scripts passing user input to grep.  Multiple patterns are
+combined by <span class='synopsis'><code>or</code></span>.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--andcodespan"><a id="Documentation/git-grep.txt---and" class="anchor" href="#Documentation/git-grep.txt---and"></a><span class='synopsis'><code>--and</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--orcodespan"><a id="Documentation/git-grep.txt---or" class="anchor" href="#Documentation/git-grep.txt---or"></a><span class='synopsis'><code>--or</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--notcodespan"><a id="Documentation/git-grep.txt---not" class="anchor" href="#Documentation/git-grep.txt---not"></a><span class='synopsis'><code>--not</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscodecodespan"><a id="Documentation/git-grep.txt-" class="anchor" href="#Documentation/git-grep.txt-"></a><span class='synopsis'>( <code>...</code> )</span> </dt>
+<dd>
+<p>Specify how multiple patterns are combined using Boolean
+expressions.  <span class='synopsis'><code>--or</code></span> is the default operator.  <span class='synopsis'><code>--and</code></span> has
+higher precedence than <span class='synopsis'><code>--or</code></span>.  <span class='synopsis'><code>-e</code></span> has to be used for all
+patterns.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--all-matchcodespan"><a id="Documentation/git-grep.txt---all-match" class="anchor" href="#Documentation/git-grep.txt---all-match"></a><span class='synopsis'><code>--all-match</code></span> </dt>
+<dd>
+<p>When giving multiple pattern expressions combined with <span class='synopsis'><code>--or</code></span>,
+this flag is specified to limit the match to files that
+have lines to match all of them.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode-qcodespan"><a id="Documentation/git-grep.txt--q" class="anchor" href="#Documentation/git-grep.txt--q"></a><span class='synopsis'><code>-q</code></span> </dt>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--quietcodespan"><a id="Documentation/git-grep.txt---quiet" class="anchor" href="#Documentation/git-grep.txt---quiet"></a><span class='synopsis'><code>--quiet</code></span> </dt>
+<dd>
+<p>Do not output matched lines; instead, exit with status 0 when
+there is a match and with non-zero status when there isn&#8217;t.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsisemlttreegtemspan"><a id="Documentation/git-grep.txt-tree" class="anchor" href="#Documentation/git-grep.txt-tree"></a><span class='synopsis'><em><span class="hover-term" data-term="tree">&lt;tree&gt;</span></em>...</span> </dt>
+<dd>
+<p>Instead of searching tracked files in the working tree, search
+blobs in the given trees.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscode--codespan"><a id="Documentation/git-grep.txt---" class="anchor" href="#Documentation/git-grep.txt---"></a><span class='synopsis'><code>--</code></span> </dt>
+<dd>
+<p>Signals the end of options; the rest of the parameters
+are <em><span class="hover-term" data-term="pathspec">&lt;pathspec&gt;</span></em> limiters.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsisemltpathspecgtemspan"><a id="Documentation/git-grep.txt-pathspec" class="anchor" href="#Documentation/git-grep.txt-pathspec"></a><span class='synopsis'><em><span class="hover-term" data-term="pathspec">&lt;pathspec&gt;</span></em>...</span> </dt>
+<dd>
+<p>If given, limit the search to paths matching at least one pattern.
+Both leading paths match and <span class='synopsis'><code>glob</code></span>(7) patterns are supported.</p>
+<div class="paragraph">
+<p>For more details about the <em><span class="hover-term" data-term="pathspec">&lt;pathspec&gt;</span></em> syntax, see the <span class='synopsis'><code>pathspec</code></span> entry
+in <a href='/docs/gitglossary'>gitglossary[7]</a>.</p>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_examples"><a class="anchor" href="#_examples"></a>EXAMPLES</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscodegitcodecodegrepcodecodetimetcodecode--codecodecodecodechcodespan"><a id="Documentation/git-grep.txt-gitgreptimet--ch" class="anchor" href="#Documentation/git-grep.txt-gitgreptimet--ch"></a><span class='synopsis'><code>git</code> <code>grep</code> <code>time_t'</code> <code>--</code> <code>*.</code>[<code>ch</code>]</span> </dt>
+<dd>
+<p>Looks for <span class='synopsis'><code>time_t</code></span> in all tracked .c and .h files in the working
+directory and its subdirectories.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsisemgitgrep-edefine--and-eMAXPATH-ePATHMAXemspan"><a id="Documentation/git-grep.txt-gitgrep-edefine--and-eMAXPATH-ePATHMAX" class="anchor" href="#Documentation/git-grep.txt-gitgrep-edefine--and-eMAXPATH-ePATHMAX"></a><span class='synopsis'><em>git grep -e '#define' --and \( -e MAX_PATH -e PATH_MAX \)</em></span> </dt>
+<dd>
+<p>Looks for a line that has <span class='synopsis'><code>#define</code></span> and either <span class='synopsis'><code>MAX_PATH</code></span> or
+<span class='synopsis'><code>PATH_MAX</code></span>.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscodegitcodecodegrepcodecode--all-matchcodecode-ecodecodeNODEcodecode-ecodecodeUnexpectedcodespan"><a id="Documentation/git-grep.txt-gitgrep--all-match-eNODE-eUnexpected" class="anchor" href="#Documentation/git-grep.txt-gitgrep--all-match-eNODE-eUnexpected"></a><span class='synopsis'><code>git</code> <code>grep</code> <code>--all-match</code> <code>-e</code> <code>NODE</code> <code>-e</code> <code>Unexpected</code></span> </dt>
+<dd>
+<p>Looks for a line that has <span class='synopsis'><code>NODE</code></span> or <span class='synopsis'><code>Unexpected</code></span> in
+files that have lines that match both.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscodegitcodecodegrepcodecodesolutioncodecode--codecodeDocumentationcodespan"><a id="Documentation/git-grep.txt-gitgrepsolution--Documentation" class="anchor" href="#Documentation/git-grep.txt-gitgrepsolution--Documentation"></a><span class='synopsis'><code>git</code> <code>grep</code> <code>solution</code> <code>--</code> <code>:^Documentation</code></span> </dt>
+<dd>
+<p>Looks for <span class='synopsis'><code>solution</code></span>, excluding files in <span class='synopsis'><code>Documentation</code></span>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_notes_on_threads"><a class="anchor" href="#_notes_on_threads"></a>NOTES ON THREADS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <span class='synopsis'><code>--threads</code></span> option (and the <span class='synopsis'><code>grep.threads</code></span> configuration) will be ignored when
+<span class='synopsis'><code>--open-files-in-pager</code></span> is used, forcing a single-threaded execution.</p>
+</div>
+<div class="paragraph">
+<p>When grepping the object store (with <span class='synopsis'><code>--cached</code></span> or giving tree objects), running
+with multiple threads might perform slower than single-threaded if <span class='synopsis'><code>--textconv</code></span>
+is given and there are too many text conversions.  Thus, if low performance is
+experienced in this case, it might be desirable to use <span class='synopsis'><code>--threads=1</code></span>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_configuration"><a class="anchor" href="#_configuration"></a>CONFIGURATION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Everything below this line in this section is selectively included
+from the <a href='/docs/git-config'>git-config[1]</a> documentation. The content is the same
+as what&#8217;s found there:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscodegreplineNumbercodespan"><a id="Documentation/git-grep.txt-greplineNumber" class="anchor" href="#Documentation/git-grep.txt-greplineNumber"></a><span class='synopsis'><code>grep.lineNumber</code></span> </dt>
+<dd>
+<p>If set to <span class='synopsis'><code>true</code></span>, enable <span class='synopsis'><code>-n</code></span> option by default.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscodegrepcolumncodespan"><a id="Documentation/git-grep.txt-grepcolumn" class="anchor" href="#Documentation/git-grep.txt-grepcolumn"></a><span class='synopsis'><code>grep.column</code></span> </dt>
+<dd>
+<p>If set to <span class='synopsis'><code>true</code></span>, enable the <span class='synopsis'><code>--column</code></span> option by default.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscodegreppatternTypecodespan"><a id="Documentation/git-grep.txt-greppatternType" class="anchor" href="#Documentation/git-grep.txt-greppatternType"></a><span class='synopsis'><code>grep.patternType</code></span> </dt>
+<dd>
+<p>Set the default matching behavior. Using a value of <span class='synopsis'><code>basic</code></span>, <span class='synopsis'><code>extended</code></span>,
+<span class='synopsis'><code>fixed</code></span>, or <span class='synopsis'><code>perl</code></span> will enable the <span class='synopsis'><code>--basic-regexp</code></span>, <span class='synopsis'><code>--extended-regexp</code></span>,
+<span class='synopsis'><code>--fixed-strings</code></span>, or <span class='synopsis'><code>--perl-regexp</code></span> option accordingly, while the
+value <span class='synopsis'><code>default</code></span> will use the <span class='synopsis'><code>grep.extendedRegexp</code></span> option to choose
+between <span class='synopsis'><code>basic</code></span> and <span class='synopsis'><code>extended</code></span>.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscodegrepextendedRegexpcodespan"><a id="Documentation/git-grep.txt-grepextendedRegexp" class="anchor" href="#Documentation/git-grep.txt-grepextendedRegexp"></a><span class='synopsis'><code>grep.extendedRegexp</code></span> </dt>
+<dd>
+<p>If set to <span class='synopsis'><code>true</code></span>, enable <span class='synopsis'><code>--extended-regexp</code></span> option by default. This
+option is ignored when the <span class='synopsis'><code>grep.patternType</code></span> option is set to a value
+other than <span class='synopsis'><code>default</code></span>.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscodegrepthreadscodespan"><a id="Documentation/git-grep.txt-grepthreads" class="anchor" href="#Documentation/git-grep.txt-grepthreads"></a><span class='synopsis'><code>grep.threads</code></span> </dt>
+<dd>
+<p>Number of grep worker threads to use. If unset (or set to 0), Git will
+use as many threads as the number of logical cores available.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscodegrepfullNamecodespan"><a id="Documentation/git-grep.txt-grepfullName" class="anchor" href="#Documentation/git-grep.txt-grepfullName"></a><span class='synopsis'><code>grep.fullName</code></span> </dt>
+<dd>
+<p>If set to <span class='synopsis'><code>true</code></span>, enable <span class='synopsis'><code>--full-name</code></span> option by default.</p>
+</dd>
+<dt class="hdlist1" id="Documentation/git-grep.txt-spanclasssynopsiscodegrepfallbackToNoIndexcodespan"><a id="Documentation/git-grep.txt-grepfallbackToNoIndex" class="anchor" href="#Documentation/git-grep.txt-grepfallbackToNoIndex"></a><span class='synopsis'><code>grep.fallbackToNoIndex</code></span> </dt>
+<dd>
+<p>If set to <span class='synopsis'><code>true</code></span>, fall back to <span class='synopsis'><code>git</code> <code>grep</code> <code>--no-index</code></span> if <span class='synopsis'><code>git</code> <code>grep</code></span>
+is executed outside of a git repository.  Defaults to <span class='synopsis'><code>false</code></span>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_git"><a class="anchor" href="#_git"></a>GIT</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Part of the <a href='/docs/git'>git[1]</a> suite</p>
+</div>
+</div>
+</div>
+            
+            
+              
+              
+              
+              <h3 hidden="true" data-pagefind-weight="10">grep</h3>
+            
+          </div>
+        </div>
+      </div>
+      <footer>
+  <div class="site-source">
+    <a href="/site">About this site</a><br>
+    Patches, suggestions, and comments are welcome.
+  </div>
+  <div class="sfc-member">
+    Git is a member of <a href="/sfc">Software Freedom Conservancy</a>
+  </div>
+</footer>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://code.jquery.com/ui/1.14.1/jquery-ui.min.js"></script>
+<script src="/js/jquery.defaultvalue.js"></script>
+<script src="/js/session.min.js"></script>
+
+<script src="/js/application.min.eab2fadf7c740b753eac932d50ce3f1a8faccdef730adfe2b7d9c14c898960c9.js"></script>
+
+      <script src="/js/nanopop.umd.js"></script>
+      <script src="/js/glossary.js"></script>
+    </div>
+  
+
+</body>
+</html>
+

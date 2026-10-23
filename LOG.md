@@ -1831,3 +1831,70 @@ DataG10/12/16/17 landed no row; the pinned server-schema.cpp was re-fetched by
 mismatch, SHONEN.md box 2's round-17 "8 bad fake-server shapes ... accepted 6"
 wording, is inherited from round 17 and left for a round that re-reads the
 round-17 receipts.
+
+## Round 29 — self-assessment evidence at writing (calibration) (2026-10-23)
+
+C1 (measured, calibration): frozen counter `.ufo/waves/round-29/count-c1.py` (`827d1365`) checks
+69 statements of six classes in SCORECARD.md/SHONEN.md at base `2aa46e24` against the commit that
+wrote each line; 11 were false at writing (4 pointers, 7 quoted outputs). 14 control seats scored
+before any data (`35b90184`): no control meets `unresolved == 0`. The L1 appended 11 correction
+rows (`513eba3b`); fresh-clone receipt `unresolved 0 met True` (`.ufo/waves/round-29/final/c1-513eba3b.out`). All 11
+confirmed false under the class rule by non-author ConfirmM seats; CriticAxisFit: the failures are
+evidence-resolution defects, not proven wrong judgments (accepted). Calibration 7 → 7, no
+promotion.
+
+Repairs: round-28 A1 time corrected by appended record (edit call 08:37:23.720Z, result
+08:37:23.732Z, commit 08:38:16Z, not
+"~08:45Z"; frozen bytes untouched); DataG01/DataG15 timing transcript excerpts committed with
+sha256 (`.ufo/waves/round-29/w1/out/ExecTimingTranscript/`); echo-recheck exit-2 receipt
+(`.ufo/waves/round-29/repairs/echo-exit2/receipt.txt`); round-28 lesson Gate preamble 4 → 8
+non-verbatim seat quotes (appended); SHONEN.md box 2 line 8: "8 bad fake-server shapes rejected,
+frozen pair accepted 6" → "8 adverse controls rejected: 7 bad server shapes + 1 injected teardown
+fault; frozen accepted-bad = 6 (5 accepted bad receipts + 1 receiptless escape), with K3
+inconclusive"; QUALITY KQ38 (depth counters) and KQ39 (calibration at writing).
+Mined mistake: `tools/prereg-time-check.py` now reads `YYYY-MM-DD ~HH:MMZ` / `YYYY-MM-DD HH:MMZ`
+(was blind to the round-28 A1 text; now flags it, exit 1).
+Sources S174-S177 (git-blame, git-merge-base, git-grep + gitglossary, pretty-formats) opened this
+round; census 173 → 177 rows, exit 0.
+Re-verification (freshness): `tools/prereg-time-check.py --selftest` 13 cases PASS plus the
+SELFTEST PASS aggregate line, exit 0 (working-tree tool, seat-unique /tmp scratch);
+ScoutHeldRules re-ran citation-provenance, report-landing-audit and sources-append-only self-tests,
+all exit 0.
+
+## Round 29 attempt 2 — verification wave and integration (2026-10-23)
+
+Attempt 1 died with the phase-4 orchestrator (~09:30 -03) after landing `827d1365` (freeze),
+`35b90184` (pre-data controls) and `513eba3b` (C1 data); its uncommitted narrative and wave
+evidence are inherited and verified, not trusted (addendum §5/§6). Attempt 2 (L1 KamaR29)
+re-verified C1 before touching anything: fresh clone of the lane remote at `513eba3b`, frozen
+counter sha256 `fe11d599…7383`, receipt `statements 69 mismatched_at_base 11 append_only True
+valid_corrections 11 false_corrections 0 unresolved 0 met True` (this session, 15:13 -03).
+
+Wave round-29-w2: one v2 wave, 64 seats, policy `ufo-wave-policy-v2.json` (band 64–128; attack
+42/64 = 65.6%), dispatched by the orchestrator per the operator's mid-flight directive (no seat
+dispatched from the L1 session); wave-slot grant `granted lane=kama wave=round-29-w2 seats=64
+live=21 pending=65 cap=256`. Spec/dispatch/registry: `.ufo/waves/round-29/w2/`; seat reports:
+`.ufo/waves/round-29/w2/out/`. Verdicts: all 64 seats returned (none dead); 11/11 per-row
+confirmations confirmed-false by hand; both closest controls (CtlSourceBounds 9/7/9, CtlBaseTree
+6/4/9) reproduced exactly; frozen bytes verified untampered across `827d1365`/`35b90184`/`513eba3b`;
+9+ counter mutants killed (row-kill, append, heading-binding, base-tip fail-closed); receipts
+byte-identical under `env -i`; controls SUMMARY recomputed 14/14. Disclosed defects fixed at
+integration: S174/S176 located-quote paraphrases repaired to verbatim pre-landing; lesson
+timestamps aligned to git metadata (freeze 10:55:43Z, data 12:02:52Z, dispatch 12:02:03Z); A1
+sub-second record (08:37:23.720Z/.732Z) added here and in SCORECARD; lesson "3 surviving mutants"
+corrected to 2 (`mined/survivor-recheck.out`); controls SUMMARY wording erratum appended
+(verdict receipts vs seat-disclosed DIAGNOSTIC copies). Disclosed, unfixed limits: counter recall
+69 of ≥141 checkable statements; predicate is two sentences plus docstring class rules (not one
+literal sentence — CriticPredicateIdentity, accepted as a conformance defect); counter enforces
+on tip bytes, not authorship; `blame.ignoreRevsFile` config can shift receipts (fail-closed
+direction; host unset); counter exit code signals execution, not verdict — the gate reads the
+receipt's `met`/`unresolved`; `in_lane()` skips absolute-pointer statements at extraction;
+scanner behavior under `###` subheadings unexercised. W2 item-text defects (mine): two
+arithmetic predictions wrong (counter self-consistent under the frozen contract); sid described
+as a revision prefix (it is `sha256(line)[:10]`); prereg-time-check items omitted `--scratch`
+(steered mid-flight; one pre-steering invocation left residue under
+/fast/scratch/hyaku/kama-r26/ExecPreregTimeCheck/ptc-selftest-ywq_7og0 — scratch space, disclosed).
+Prospective citation disclosed (RevengerPrereg F1): `513eba3b`'s prose cites w1 Confirm outputs
+created minutes after the commit; the artifacts materialized and reproduce. Origin/master moved
+to `49f849f292c3` (operator daily-reflection commit, descendant of `513eba3b`); the integration
+commit rebases over it. Census end: 177 rows, exit 0 (receipt `.ufo/waves/round-29/final/census-end.out`).

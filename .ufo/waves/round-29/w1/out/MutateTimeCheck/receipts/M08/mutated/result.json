@@ -1,0 +1,60 @@
+{
+  "id": "M08",
+  "phase": "mutated",
+  "tool": "/fast/scratch/hyaku/kama-r29/w1/MutateTimeCheck/M08.py",
+  "before_sha256": "b3e22de1fa2c66a4220917aa8122b8a87773daa04fd0cc619552ffdb94b3bdab",
+  "after_sha256": "b3e22de1fa2c66a4220917aa8122b8a87773daa04fd0cc619552ffdb94b3bdab",
+  "detectors": {
+    "selftest": {
+      "argv": [
+        "/usr/bin/timeout",
+        "--signal=TERM",
+        "--kill-after=2s",
+        "30s",
+        "/usr/bin/prlimit",
+        "--as=536870912",
+        "--cpu=25",
+        "--nofile=128",
+        "--",
+        "/usr/bin/python3",
+        "/fast/scratch/hyaku/kama-r29/w1/MutateTimeCheck/M08.py",
+        "--selftest",
+        "--scratch",
+        "/fast/scratch/hyaku/kama-r29/w1/MutateTimeCheck/selftests/M08/mutated"
+      ],
+      "rc": 1,
+      "stdout": "[PASS] clean: timestamp before commit: expect 0, got 0\n        rev=a1ca440e2e61fc14eb2b50b6c2119033a3328b90 path=f.json\n        committer_time=2026-10-23T03:19:43+00:00 max_future=86400\n          ok   line 1: 2026-10-23T03:18:51Z (at/before commit)\n        RESULT pass: no timestamp later than the committer time\n[FAIL] flag: minute-precision guess after commit: expect 1, got 0\n        rev=9999f8ecfad4bd20c2cf001045b99782430302b8 path=f.json\n        committer_time=2026-10-23T03:19:43+00:00 max_future=86400\n          ok   line 1: 2026-10-23T03:45Z (at/before commit)\n        RESULT pass: no timestamp later than the committer time\n[FAIL] flag: seconds-precision guess after commit: expect 1, got 0\n        rev=22f9b448ae1971deafac03e7e5ad2ce525e538a3 path=f.json\n        committer_time=2026-10-23T03:19:43+00:00 max_future=86400\n          ok   line 1: 2026-10-23T03:25:00Z (at/before commit)\n        RESULT pass: no timestamp later than the committer time\n[PASS] clean: legitimate far-future data beyond horizon: expect 0, got 0\n        rev=57c6e44225138d348ffa0d512759b5f1c900c681 path=f.json\n        committer_time=2026-10-23T03:19:43+00:00 max_future=86400\n          ok   line 1: 2026-10-25T14:27:28Z (future beyond horizon (+211245s))\n        RESULT pass: no timestamp later than the committer time\n[PASS] flag: strict mode flags far-future too: expect 1, got 1\n        rev=aa37f8c301ceb83cc7fd1c01d3b2a744b3930dd6 path=f.json\n        committer_time=2026-10-23T03:19:43+00:00 max_future=-1\n          FLAG line 1: 2026-10-25T14:27:28Z (later than commit by 211245s)\n        RESULT fail: 1 timestamp(s) later than the committer time\n[PASS] clean: mixed past and present-boundary times: expect 0, got 0\n        rev=15ab225b7380117ed1da7aa50b25e9ad77caf2d7 path=f.json\n        committer_time=2026-10-23T03:19:43+00:00 max_future=86400\n          ok   line 1: 2026-10-23T03:19:43Z (at/before commit)\n          ok   line 1: 2026-10-23T03:00:00Z (at/before commit)\n        RESULT pass: no timestamp later than the committer time\n[PASS] clean: no timestamps at all: expect 0, got 0\n        rev=86166bcffa3b684f745f52152219bea6d86adbd2 path=f.json\n        committer_time=2026-10-23T03:19:43+00:00 max_future=86400\n          no ISO-8601 UTC timestamps found\n        RESULT pass: no timestamp later than the committer time\n[FAIL] flag: space-tilde approximate time after commit (round-28 A1 form): expect 1, got 0\n        rev=074d62efcc9e4d909d9fe40d0761e63384913ccf path=f.json\n        committer_time=2026-10-23T03:19:43+00:00 max_future=86400\n          ok   line 1: 2026-10-23 ~03:45Z (at/before commit)\n        RESULT pass: no timestamp later than the committer time\n[PASS] clean: space-separated time before commit: expect 0, got 0\n        rev=4d753554a5e95215ab80143b456535120fb8c28c path=f.json\n        committer_time=2026-10-23T03:19:43+00:00 max_future=86400\n          ok   line 1: 2026-10-23 03:10Z (at/before commit)\n        RESULT pass: no timestamp later than the committer time\n[PASS] clean: malformed Z-suffix lookalike is skipped: expect 0, got 0\n        rev=38164a7cab49c332901e8c05b112ae6ce0775ec1 path=f.json\n        committer_time=2026-10-23T03:19:43+00:00 max_future=86400\n          no ISO-8601 UTC timestamps found\n        RESULT pass: no timestamp later than the committer time\n[PASS] missing path: expect 2, got 2 (ERROR could not evaluate: no commit touches missing.json at HEAD)\n[PASS] bad revision: expect 2, got 2 (ERROR could not evaluate: git log failed rc=128: fatal: bad object deadbeefdeadbeefdeadbeefdeadbeefdeadbeef)\nselftest repo: /fast/scratch/hyaku/kama-r29/w1/MutateTimeCheck/selftests/M08/mutated/ptc-selftest-ockrouho\nSELFTEST FAIL\n",
+      "stderr": "",
+      "stdout_sha256": "fd008069f7677887d85c15a3f4baf3296692ce28e537a8515dc66453f1bad1ab",
+      "meets_expected": false
+    },
+    "75b78bb4": {
+      "argv": [
+        "/usr/bin/timeout",
+        "--signal=TERM",
+        "--kill-after=2s",
+        "30s",
+        "/usr/bin/prlimit",
+        "--as=536870912",
+        "--cpu=25",
+        "--nofile=128",
+        "--",
+        "/usr/bin/python3",
+        "/fast/scratch/hyaku/kama-r29/w1/MutateTimeCheck/M08.py",
+        "--repo",
+        "/home/vgpnk/Projects/shokunin/kama-shokunin",
+        "--path",
+        ".ufo/waves/round-28/preregistration.json",
+        "--rev",
+        "75b78bb4900aae1edcdb6b229bb8c572c20fcbce",
+        "--strict"
+      ],
+      "rc": 0,
+      "stdout": "rev=75b78bb4900aae1edcdb6b229bb8c572c20fcbce path=.ufo/waves/round-28/preregistration.json\ncommitter_time=2026-10-23T05:38:16-03:00 max_future=-1\n  ok   line 41: 2026-10-23 ~08:45Z (at/before commit)\nRESULT pass: no timestamp later than the committer time\n",
+      "stderr": "",
+      "stdout_sha256": "8f88247207936fb306efe8e167a2264af688a1b8cb7331af3e37fe52005a00a5",
+      "meets_expected": false
+    }
+  },
+  "meets_expected": false
+}

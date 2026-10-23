@@ -1,0 +1,19 @@
+# CriticPredicateIdentity — scoped advice
+
+**Impacted axis: calibration.** Advisory review only; no claim verdict, data rows, counter execution, runtime judgment or source changes. No tools installed/updated.
+
+## Counterexample and evidence
+
+- **The predicate is not literally ONE sentence in three places.** `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-29/preregistration.json:14` contains two sentences and incorporates the frozen extractor/docstring. `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-29/count-c1.py:4-43` is a longer multi-sentence/class-specific expansion. `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-29/before/c1-base.json:625-759` has no predicate sentence/field; it records `unresolved`, the target string and `met`.
+- **The operative target fields agree.** Receipt label is `unresolved`; target is `mismatched_at_base >= 1 and unresolved == 0`; receipt values 11/11 yield `met: false`. The preregistration/docstring add measured-tip prose, not a different conjunction. All six class letters/base/digest and preregistered by-class counts match.
+- **A concrete prose/code restriction difference exists:** docstring prefix exclusion `sh` versus implementation `"sh "` with trailing space (counter lines 29 and 66). [INFERENCE] `shell=1` is admitted by the code's Q extractor but excluded by the literal prose prefix. No opened Q base token begins with `sh`; this is not an observed change to the baseline count.
+- **Other precision differences are itemized in the full findings:** P/H/N extension/path whitelist and exact lexical binding; H's 8-64 lowercase capture versus prose `>= 8`; C same-line token deduplication and upstream exclusion only on keyword tokens; T only 20xx and invalid-date evaluation errors; cell normalization/heading/fence behavior; and diagnostic strings differing from advertised failure labels. The existing duplicate control records 22 rows, 11 false corrections, zero valid corrections, unresolved 22: later copies are penalized, then each duplicated sid is invalidated, rather than every member being counted false.
+- **`before` is exact only for the first output line.** Read-only byte comparison found preregistration `before.line` equal to the first line of `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-29/before/c1-base.out`, but not the entire 141-byte file: the latter also has `exit 0\n`. No count difference was found.
+- **Freeze precedes every recorded seat in the control/wave-1 batches.** Commit `827d136546b85059a984b34970f5b493d9a71290` committer time is **10:55:43Z**; the raw 14-seat task call is **10:58:50.336Z**, result **10:58:50.348Z**; the 32-seat wave-1 call is **12:02:03.361941Z**, result **12:02:07.612Z**. The controls summary's `10:55:45Z` differs from commit metadata by two seconds without changing order. The freeze introduced all four artifacts; their scoped diff against it was empty, and both frozen/current counter SHA-256 equal the registered digest.
+
+## Smallest safe correction
+
+Describe the receipt as an instance of an incorporated, digest-frozen predicate, not a third literal sentence. Qualify the baseline comparison as first-line equality, preserve the wrapper exit line when quoting the whole output, and cite committer time with the two-second summary discrepancy disclosed. Disclose parser/diagnostic ambiguities as frozen limitations; **do not amend the predicate, extractor, target, receipt or correction rows to repair this claim**. Whether literal sentence identity is admission-blocking belongs to the canonical judge. This audit does not establish the substantive falsity of all 11 recognizer mismatches.
+
+Full findings: `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-29/w1/out/CriticPredicateIdentity/findings.md`.
+Durable timing projection: `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-29/w1/out/CriticPredicateIdentity/timing-evidence.json`.

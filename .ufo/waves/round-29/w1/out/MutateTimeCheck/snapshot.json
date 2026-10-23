@@ -1,0 +1,49 @@
+{
+  "source": "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/prereg-time-check.py",
+  "source_sha256": "ca72edf2a210a763c1d8cbc7a57aa70445a2794c195fc288e82d6dfe7d473dd4",
+  "pristine": "/fast/scratch/hyaku/kama-r29/w1/MutateTimeCheck/pristine.py",
+  "head": "513eba3ba51a142c9936553e3a85918345eb5c4c",
+  "source_diff": {
+    "argv": [
+      "/usr/bin/timeout",
+      "--signal=TERM",
+      "--kill-after=2s",
+      "30s",
+      "/usr/bin/prlimit",
+      "--as=536870912",
+      "--cpu=25",
+      "--nofile=128",
+      "--",
+      "/usr/bin/git",
+      "--no-replace-objects",
+      "-C",
+      "/home/vgpnk/Projects/shokunin/kama-shokunin",
+      "diff",
+      "35b90184",
+      "513eba3b",
+      "--",
+      "tools/prereg-time-check.py"
+    ],
+    "rc": 0,
+    "stdout": "diff --git a/tools/prereg-time-check.py b/tools/prereg-time-check.py\nindex d835882..ae76b9a 100755\n--- a/tools/prereg-time-check.py\n+++ b/tools/prereg-time-check.py\n@@ -36,7 +36,10 @@ from dataclasses import dataclass\n from datetime import datetime, timedelta, timezone\n from pathlib import Path\n \n-TIME_RE = re.compile(r\"\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2})?Z\")\n+# Round 29 (mined mistake): round-28 A1 text \"Written 2026-10-23 ~08:45Z\" (75b78bb4, committed\n+# 08:38:16Z) used a space/tilde form this regex missed, so the tool passed a false time. The date\n+# may now be followed by \"T\", \" \" or \" ~\" (approximate) before HH:MM[:SS]Z.\n+TIME_RE = re.compile(r\"\\d{4}-\\d{2}-\\d{2}(?:T| ~| )\\d{2}:\\d{2}(?::\\d{2})?Z\")\n DEFAULT_SCRATCH = \"/fast/scratch/hyaku/kama-r26/ExecPreregTimeCheck\"\n DEFAULT_MAX_FUTURE = 86400  # seconds; a guessed 'now' is minutes, not days, ahead\n \n@@ -66,8 +69,8 @@ def run_git(repo: str, args: list[str]) -> tuple[int, str, str]:\n \n \n def parse_iso(text: str) -> datetime | None:\n-    \"\"\"Parse YYYY-MM-DDTHH:MM[:SS]Z strictly; None if out of range/invalid.\"\"\"\n-    m = re.fullmatch(r\"(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2})(?::(\\d{2}))?Z\", text)\n+    \"\"\"Parse YYYY-MM-DD(T| | ~)HH:MM[:SS]Z strictly; None if out of range/invalid.\"\"\"\n+    m = re.fullmatch(r\"(\\d{4})-(\\d{2})-(\\d{2})(?:T| ~| )(\\d{2}):(\\d{2})(?::(\\d{2}))?Z\", text)\n     if not m:\n         return None\n     y, mo, d, h, mi, s = (int(g) if g else 0 for g in m.groups())\n@@ -199,6 +202,10 @@ def selftest(scratch: str) -> int:\n          '{\"a\": \"2026-10-23T03:19:43Z\", \"b\": \"2026-10-23T03:00:00Z\"}\\n',\n          EXIT_CLEAN)\n     case(\"clean: no timestamps at all\", '{\"note\": \"no times here\"}\\n', EXIT_CLEAN)\n+    case(\"flag: space-tilde approximate time after commit (round-28 A1 form)\",\n+         '{\"note\": \"Written 2026-10-23 ~03:45Z by the L1\"}\\n', EXIT_FLAGGED)\n+    case(\"clean: space-separated time before commit\",\n+         '{\"note\": \"frozen 2026-10-23 03:10Z\"}\\n', EXIT_CLEAN)\n     case(\"clean: malformed Z-suffix lookalike is skipped\",\n          '{\"x\": \"2026-13-40T03:45Z\"}\\n', EXIT_CLEAN)\n \n",
+    "stderr": ""
+  },
+  "ids": [
+    "M01",
+    "M02",
+    "M03",
+    "M04",
+    "M05",
+    "M06",
+    "M07",
+    "M08"
+  ],
+  "concurrency": 2,
+  "bounds": "timeout 30s + kill 2s; AS 512MiB; CPU 25s; nofile 128; outputs <1MiB",
+  "axes": [
+    "timestamp-form recall",
+    "detector sensitivity",
+    "exact restoration"
+  ],
+  "detector": "selftest exit 0/PASS plus historical --strict exit 1 and exact A1 404s FLAG"
+}

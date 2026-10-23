@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """prereg-time-check.py -- falsifier for the 'false timestamp repeated' mistake class.
 
-Given a git repo, a path and a revision, read every ISO-8601 UTC time
-(YYYY-MM-DDTHH:MM[:SS]Z) that occurs in the file at that revision and compare
+Given a git repo, a path and a revision, read every recognized UTC time
+(YYYY-MM-DDTHH:MM[:SS]Z, YYYY-MM-DD HH:MM[:SS]Z, or YYYY-MM-DD ~HH:MM[:SS]Z —
+the T form, a plain-space form and a tilde form) that occurs in the file at
+that revision and compare
 each against the committer time of the commit that introduced that version of
 the file:
 
@@ -206,6 +208,8 @@ def selftest(scratch: str) -> int:
          '{"note": "Written 2026-10-23 ~03:45Z by the L1"}\n', EXIT_FLAGGED)
     case("clean: space-separated time before commit",
          '{"note": "frozen 2026-10-23 03:10Z"}\n', EXIT_CLEAN)
+    case("flag: space-separated seconds-precision time 7 s after commit",
+         '{"note": "frozen 2026-10-23 03:19:50Z"}\n', EXIT_FLAGGED)
     case("clean: malformed Z-suffix lookalike is skipped",
          '{"x": "2026-13-40T03:45Z"}\n', EXIT_CLEAN)
 

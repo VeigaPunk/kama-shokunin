@@ -42,4 +42,13 @@ What these receipts show and do not show:
   move is the axis-fit question put to wave-1 critic CriticAxisFit, not something these receipts
   settle.
 - The mutation-tester seats also recorded "pristine also met=False" mutation verdicts; that is their
-  frame for a control (the unmutated freeze tip also fails), not a counter finding.
+frame for a control (the unmutated freeze tip also fails), not a counter finding.
+
+Erratum (round 29, attempt 2 — VerifyControlsSummary): the sentence "no control receipt shows the
+counter changed" is overbroad. Precise form: none of the 20 VERDICT receipts records a counter
+sha256 other than fe11d599d064f5749c829394fc813f43921de2f9903e41c7217e3daa4b647383; three seats
+(CtlAllFalse, CtlLabelKeyed, CtlTypeGuess) additionally recorded seat-disclosed DIAGNOSTIC receipts
+from a sandbox diag-counter copy (sha256 5ad2c74d…, run with --no-replace-objects removed), which
+their verdict texts identify as diagnostics, not control arms. Also, CtlObjectStore/REPORT.md names
+receipt-DIAGNOSTIC-clean.json, which exists nowhere in the tree; the clean-diagnostic run is quoted
+in that seat's prose only. Neither finding affects any control's met=False verdict.

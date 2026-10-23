@@ -1,0 +1,28 @@
+### exit codes reproduced from the scratch clone (repo=/tmp/kama-w2-VerifyMistakeFix/clone)
+
+A patched(ca72edf2) 75b78bb4 round-28 prereg : exit=1  [byte-identical to mined/patched-75b78bb4.out]
+B patched(ca72edf2) d8bf1804 round-28 prereg : exit=0  [byte-identical to mined/patched-d8bf1804.out]
+C original(3d508f77) 75b78bb4 round-28 prereg: exit=0  [byte-identical to mined/orig-75b78bb4.out]
+D patched 513eba3b round-28 prereg           : exit=1  [NO RECEIPT - defect D2]
+E patched 513eba3b round-29 prereg           : exit=0  [NO RECEIPT]
+F patched 75b78bb4 round-29 prereg           : exit=2  (path absent at that rev)
+G original d8bf1804 round-28 prereg          : exit=0  [control]
+H original 513eba3b round-28 prereg          : exit=0  [control]
+
+### self-test
+S1 working tree (ab685ac2) : exit=0  [PASS]=13  (14 lines containing 'PASS')
+S2 committed 513eba3b       : exit=0  [PASS]=12  (13 lines containing 'PASS')
+S3 original 75b78bb4        : exit=0  [PASS]=10  (11 lines containing 'PASS')
+S4 receipt patched-selftest-v2.out : [PASS]=13
+S5 receipt patched-selftest.out   : [PASS]=12
+S6 receipt orig-selftest.out      : [PASS]=10
+
+### mutants (in-process + subprocess agree)
+M02 no-plain-space in TIME_RE   : committed SURVIVED | working-tree KILLED
+M05 no-plain-space in parse_iso : committed SURVIVED | working-tree KILLED
+M07 zero-parsed-seconds (surgical): committed SURVIVED | working-tree KILLED
+  killed by: [FAIL] flag: space-separated seconds-precision time 7 s after commit: expect 1, got 0
+
+### harm scan: both tools over every tracked file at 513eba3b (8662 files)
+PATCHED-only extra flags = 1 file, both mf=86400 and mf=-1:
+  .ufo/waves/round-28/preregistration.json  FLAG line 41: 2026-10-23 ~08:45Z (later than commit by 404s)

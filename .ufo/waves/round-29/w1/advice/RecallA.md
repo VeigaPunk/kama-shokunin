@@ -1,0 +1,7 @@
+# RecallA — SCORECARD.md 1–720, extractor recall
+
+Base `2aa46e2481d2ec41a7ee5ed793fc50ae967a6e5d`. Frozen extractor list: 69 statements, all in SCORECARD.md, 20 of them on lines 1–720. This window has 32 statements of the six classes that the extractor does not emit, and no extracted P/H/N bound to the wrong path. 31 of the 32 hold at the writing revision; they are not counted. Detail: `.ufo/waves/round-29/w1/out/RecallA/missed.json` and `REPORT.md`. No tools installed.
+
+The miss that does not hold is line 41, Q `` `file=yes` `` (W `ea72c3eae4ecc68dab2b0a08153c9c1d2e16df21`). The span has `=` and no digit, so `RE_Q` skips it. At W the bytes occur only in `LOG.md` and `SCORECARD.md`, both Q-excluded. `tools/kama-probe.sh` contains `file=missing` and `file=${EV_FMATCH[i]}`, not `file=yes`.
+
+Other holes, all holding at W: C citations that are not `Measured commit:` and not `cue<space>hex` on the same line (9: colons, `revision is`, a cue on the previous line, `pinned to`); H digests not in `` `path` md5|sha256 `` form (5: unbound probe md5 on line 199, `SHA-256` of `tests/ollama-evidence/cases.json` on 447–448, ellipsis set/probe/matrix digests on 610 and 683); compact `YYYYMMDDTHHMMSSZ` times (3, lines 20 and 569); quoted results with no digit or without the Q keyword list (14 besides line 41). N and in-lane `path:L` in this window are complete. `` `../shokunin.conf:52` `` (lines 285, 342, 561) is out of class (`../`). Line 597 `704366d76` is llama.cpp, not a lane commit.

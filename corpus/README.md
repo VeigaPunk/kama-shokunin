@@ -432,3 +432,19 @@ the same fields through `/v1/chat/completions` and other endpoints, the
 json_schema → grammar transform, launch-dependent bounds under other argv
 (`n_parallel`), other builds and engines; K05 beyond the fixture and
 registered-consumer reconciliation stay open.
+
+## Coverage map — round 29 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/self-assessment-at-writing.md` | method: six checkable statement classes (P/H/N/C/T/Q) in SCORECARD.md/SHONEN.md each verified against the repo at the commit that wrote the line (`git blame --line-porcelain`, S174); calibration mismatch vs later drift distinguished (S175); frozen counter `.ufo/waves/round-29/count-c1.py`, sources S174-S177 — the lane's own self-assessment evidence record, not a serving/runtime surface | 29 |
+
+## Frontier disposition — round 29 (2026-10-23)
+
+No frontier row advanced and no core move: rounds 26-28 were rejected on
+depth-claim shapes, so round 29 worked calibration (tied-lowest assigned axis)
+on the self-assessment evidence record. The new knowledge entry rides the
+calibration claim; the serving frontier stays as round 28 left it (chat
+endpoint, json_schema → grammar, other argv/builds). Open calibration ground
+named for round 30: the 72 extractor recall misses (2 false at W) and the
+SCORECARD line-824 "5 cases" prose mismatch.

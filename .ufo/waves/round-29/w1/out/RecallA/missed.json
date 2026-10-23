@@ -1,0 +1,258 @@
+[
+  {
+    "line": 19,
+    "class": "Q",
+    "text": "`file=missing`",
+    "W": "ea72c3eae4ecc68dab2b0a08153c9c1d2e16df21",
+    "holds": true,
+    "evidence": "Miss: backtick has '=' but no digit, so RE_Q drops it. At W, git grep -F -q -e 'file=missing' with the frozen excludes (SCORECARD.md, SHONEN.md, LOG.md, corpus/**) is exit 0; the only hit is tools/kama-probe.sh (comment bytes at probe lines 106 and 532)."
+  },
+  {
+    "line": 20,
+    "class": "T",
+    "text": "20261014T124232Z",
+    "W": "ea72c3eae4ecc68dab2b0a08153c9c1d2e16df21",
+    "holds": true,
+    "evidence": "Miss: RE_T requires YYYY-MM-DD and a colon clock; this compact stamp sits inside the Q span the extractor did take. Parsed as 2026-10-14 12:42:32Z = 1791981752; W committer %ct = 1791981983; 1791981752 <= 1791981983."
+  },
+  {
+    "line": 20,
+    "class": "T",
+    "text": "20260929T043044Z",
+    "W": "ea72c3eae4ecc68dab2b0a08153c9c1d2e16df21",
+    "holds": true,
+    "evidence": "Miss: same compact form, second stamp in that Q span (prev=). Parsed as 2026-09-29 04:30:44Z = 1790656244; W committer %ct = 1791981983; not later."
+  },
+  {
+    "line": 32,
+    "class": "Q",
+    "text": "`file=missing`",
+    "W": "ea72c3eae4ecc68dab2b0a08153c9c1d2e16df21",
+    "holds": true,
+    "evidence": "Miss: '=' and no digit. Same W and same grep as line 19: the span is in tools/kama-probe.sh and not only in the excluded ledgers. Prose: 'two rows failed `file=missing`'."
+  },
+  {
+    "line": 41,
+    "class": "Q",
+    "text": "`file=yes`",
+    "W": "ea72c3eae4ecc68dab2b0a08153c9c1d2e16df21",
+    "holds": false,
+    "evidence": "Miss: '=' and no digit ('the pins verify `file=yes`'). git grep -F -e 'file=yes' at W lists only LOG.md and SCORECARD.md. Both are Q-excluded, so the frozen check is q:no-artifact. tools/kama-probe.sh:858 writes file=${EV_FMATCH[i]} and contains the bytes file=missing, not file=yes."
+  },
+  {
+    "line": 139,
+    "class": "Q",
+    "text": "`400 Upstream request failed: Model is unavailable.`",
+    "W": "f396b98945407374ee116e93453b04b0c396c200",
+    "holds": true,
+    "evidence": "Miss: digit and spaces, but no '=' and none of met/registered/counted/stale/observed/verified/RESULT. git grep -F with frozen excludes is exit 0; the hit is .ufo/round-6/telemetry.json."
+  },
+  {
+    "line": 154,
+    "class": "Q",
+    "text": "`400 Upstream request failed: Model is unavailable.`",
+    "W": "4bcae65a23f58186c826ef2f793b029f3f9f8405",
+    "holds": true,
+    "evidence": "Miss: same shape as line 139. At this W the frozen grep hits .ufo/round-6/telemetry.json and .ufo/round-7/telemetry.json."
+  },
+  {
+    "line": 199,
+    "class": "H",
+    "text": "probe/harness/registry bytes unchanged, md5 `1f81e859c2d7f43f87d1f7e01327b2cf`",
+    "W": "1e41928aba2b81dd65ea75084918a7fadf453720",
+    "holds": true,
+    "evidence": "Miss: RE_HN binds only a backticked path written immediately before md5/sha256; here the hex follows a comma phrase, not `path`. At W, md5(tools/kama-probe.sh)=1f81e859c2d7f43f87d1f7e01327b2cf (1092 newlines). md5(tools/test-snapshot.sh)=860f26ac05938cdfc1a8816eff1570b4 and md5(registry/endpoint-consumers.tsv)=40141835e450f5fe4fac31a8050d624a, so the one hex is the probe's, not a shared digest of the three named surfaces."
+  },
+  {
+    "line": 259,
+    "class": "C",
+    "text": "Measured work commit: `3285cdf7a50481694a36c4425cf32c915ab5e5f0`",
+    "W": "fe57cc8a01acba9b6d7ed20e11b4914dfb68d903",
+    "holds": true,
+    "evidence": "Miss: measured_cells only matches a line '^Measured commit:'; RE_CWORD requires the cue word, a space, then the hex, so the colon in 'commit:' blocks it. Token is a commit; merge-base --is-ancestor into W is exit 0 and the token is not W."
+  },
+  {
+    "line": 271,
+    "class": "Q",
+    "text": "`snapshot_tampered`",
+    "W": "fe57cc8a01acba9b6d7ed20e11b4914dfb68d903",
+    "holds": true,
+    "evidence": "Miss: quoted exit reason, no digit and no '=' or Q keyword ('exit 2 `snapshot_tampered`'). Frozen grep exit 0; hits include .ufo/waves/round-11/acceptance.json (6 files)."
+  },
+  {
+    "line": 295,
+    "class": "C",
+    "text": "Source revision is `2f7303c242319c1dc96c6bcf7702ac18b3ca1aad`",
+    "W": "33f46685b418af868259952884e34b93633820cb",
+    "holds": true,
+    "evidence": "Miss: cue 'revision' is followed by ' is `', not space plus hex. Token is a commit and a strict ancestor of W (merge-base --is-ancestor exit 0, token != W). The next sentence calls this hash the immutable source blob; cat-file -t says commit."
+  },
+  {
+    "line": 296,
+    "class": "C",
+    "text": "round-start revision is `79fa257719e8688692ed1dc443589331ba22b7fe`",
+    "W": "33f46685b418af868259952884e34b93633820cb",
+    "holds": true,
+    "evidence": "Miss: same 'revision is `' gap as line 295. Token is a commit and a strict ancestor of W."
+  },
+  {
+    "line": 313,
+    "class": "C",
+    "text": "Measured work revision: `33f46685b418af868259952884e34b93633820cb`",
+    "W": "1df80eab01bc5663deea65680673fef24f35d5b0",
+    "holds": true,
+    "evidence": "Miss: colon after 'revision' (not '^Measured commit:' and not 'revision `hex`'). Token is a commit and a strict ancestor of W."
+  },
+  {
+    "line": 316,
+    "class": "Q",
+    "text": "`ok: true`",
+    "W": "1df80eab01bc5663deea65680673fef24f35d5b0",
+    "holds": true,
+    "evidence": "Miss: quoted receipt field, no digit ('overall exit 0 / `ok: true`'). Frozen grep exit 0; 3 files, including .ufo/waves/round-12/advice/CountsConnection.md and ReviewRunner.md."
+  },
+  {
+    "line": 320,
+    "class": "Q",
+    "text": "`source_mismatch`",
+    "W": "1df80eab01bc5663deea65680673fef24f35d5b0",
+    "holds": true,
+    "evidence": "Miss: quoted exit reason ('exit 1 `source_mismatch`'), no digit, no '=' or Q keyword. Frozen grep exit 0; 26 files, including .ufo/waves/round-12/acceptance.json."
+  },
+  {
+    "line": 322,
+    "class": "Q",
+    "text": "`source_anchor_matches: true`",
+    "W": "1df80eab01bc5663deea65680673fef24f35d5b0",
+    "holds": true,
+    "evidence": "Miss: quoted field result, no digit. Frozen grep exit 0; only .ufo/waves/round-12/advice/Fidelity.md."
+  },
+  {
+    "line": 323,
+    "class": "Q",
+    "text": "`source_matches: false`",
+    "W": "1df80eab01bc5663deea65680673fef24f35d5b0",
+    "holds": true,
+    "evidence": "Miss: quoted field result, no digit. Frozen grep exit 0; only .ufo/waves/round-12/advice/Fidelity.md."
+  },
+  {
+    "line": 325,
+    "class": "Q",
+    "text": "`source_mismatch`",
+    "W": "1df80eab01bc5663deea65680673fef24f35d5b0",
+    "holds": true,
+    "evidence": "Miss: second quoted exit reason, same token shape as line 320 ('mutation exits 1 `source_mismatch`'). Same W; frozen grep exit 0, including .ufo/waves/round-12/acceptance.json."
+  },
+  {
+    "line": 326,
+    "class": "Q",
+    "text": "`snapshot_tampered`",
+    "W": "1df80eab01bc5663deea65680673fef24f35d5b0",
+    "holds": true,
+    "evidence": "Miss: quoted exit reason ('pin-only corruption exits 2 `snapshot_tampered`'). Frozen grep exit 0; 30 files, including .ufo/waves/round-11/acceptance.json."
+  },
+  {
+    "line": 327,
+    "class": "Q",
+    "text": "`manifest_invalid`",
+    "W": "1df80eab01bc5663deea65680673fef24f35d5b0",
+    "holds": true,
+    "evidence": "Miss: quoted exit reason ('exits 2 `manifest_invalid`'), no digit or Q keyword. Frozen grep exit 0; 11 files, including .ufo/waves/round-12/acceptance.json."
+  },
+  {
+    "line": 327,
+    "class": "Q",
+    "text": "`source_unavailable`",
+    "W": "1df80eab01bc5663deea65680673fef24f35d5b0",
+    "holds": true,
+    "evidence": "Miss: quoted exit reason on the same line ('empty source repo exits 2 `source_unavailable`'). Frozen grep exit 0; 23 files, including .ufo/waves/round-12/acceptance.json."
+  },
+  {
+    "line": 411,
+    "class": "C",
+    "text": "Before at `e1b3d746dbfd2100b61c67b6389217252592460f`",
+    "W": "e545ed99aaa519196a2a7779b0a293b2ce4c765c",
+    "holds": true,
+    "evidence": "Miss: the cue 'Before at' is line 410 and the hex is line 411, and extract() is line-local. Token is a commit and a strict ancestor of W."
+  },
+  {
+    "line": 436,
+    "class": "C",
+    "text": "Measured work commit: `e545ed99aaa519196a2a7779b0a293b2ce4c765c`",
+    "W": "06cc6dbea42b88849fb1808d40ae38a08dced21c",
+    "holds": true,
+    "evidence": "Miss: 'commit:' colon, same gap as line 259. Token is a commit and a strict ancestor of W."
+  },
+  {
+    "line": 448,
+    "class": "H",
+    "text": "Both corpus runs share SHA-256 `4a4de0b85009c42804e43c8ae8833bd6f0673edc71ae5ec8baa1e3201e158ae4`",
+    "W": "06cc6dbea42b88849fb1808d40ae38a08dced21c",
+    "holds": true,
+    "evidence": "Miss: the word is 'SHA-256' on line 447, not 'sha256', and no backticked path sits immediately before it; the hex is line 448. sha256(tests/ollama-evidence/cases.json) at W equals that hex (25069 bytes). .ufo/waves/round-14/acceptance.json records the same cases_sha256 for that path."
+  },
+  {
+    "line": 488,
+    "class": "C",
+    "text": "pinned to `6e348e28943849aceb08d6954dee92be48ce9ba8`",
+    "W": "70af36c2b15b46d3b4b3c15ef20459cff640dfaf",
+    "holds": true,
+    "evidence": "Miss: no cue word from {at, base, tip, commit, commits, epoch, revision, rev, measured} immediately before the hex (line 487 names measure-before.py; this line says pinned to the hash). cat-file -t is commit, not a blob; strict ancestor of W."
+  },
+  {
+    "line": 516,
+    "class": "C",
+    "text": "Measured and pushed implementation revision: `4b1b4ad1ba31660cc44c82d204dc85c1355e36d2`",
+    "W": "b8bdc56efc43fe6baad9415d0ca75b7b81ffa952",
+    "holds": true,
+    "evidence": "Miss: the cue 'revision:' is line 515 (colon, and the hex is the next line). Token is a commit and a strict ancestor of W."
+  },
+  {
+    "line": 535,
+    "class": "Q",
+    "text": "`corpus: duplicate case names`",
+    "W": "b8bdc56efc43fe6baad9415d0ca75b7b81ffa952",
+    "holds": true,
+    "evidence": "Miss: quoted error string, no digit and no '=' or Q keyword. Frozen grep exit 0; 14 files, including .ufo/waves/round-15/build/advice/GuardRepair.md."
+  },
+  {
+    "line": 569,
+    "class": "T",
+    "text": "20261014T124232Z",
+    "W": "b8e485cc6b201c8e4604a20808e58babbfe08e34",
+    "holds": true,
+    "evidence": "Miss: compact stamp, not backticked ('snapshot 20261014T124232Z'). Parsed 1791981752; W committer %ct = 1792504249; not later."
+  },
+  {
+    "line": 610,
+    "class": "H",
+    "text": "set sha256 `bf9068d8…1f32`",
+    "W": "ccc4bb31267f061c1d3cc4099eb9fb46ed48d004",
+    "holds": true,
+    "evidence": "Miss: 'sha256' is not preceded by a backticked path, and the token contains an ellipsis so it is not 8-64 pure hex. Recomputed measure.py matrix_digest (lines 286-290 at this W: sha256 of sorted 'name sha256\\n' lines of tests/probe-verdicts/*.json) = bf9068d89e4cb8a080167cb32cc818943d717a65fcbd21edb2b8256e22771f32 (9 files), which starts bf9068d8 and ends 1f32. acceptance.json matrix_set_sha256 is the same string."
+  },
+  {
+    "line": 683,
+    "class": "H",
+    "text": "probe `36b64978…`",
+    "W": "54a29268e2083caa2b1e0d54ee1e7d90961302f3",
+    "holds": true,
+    "evidence": "Miss: abbreviated digest, no md5/sha256 word and no `path` immediately before it. sha256(tools/kama-probe.sh) at W = 36b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3 (md5 is e8bfdcac…, so the prefix is the sha256)."
+  },
+  {
+    "line": 683,
+    "class": "H",
+    "text": "matrix digest `bf9068d8…`",
+    "W": "54a29268e2083caa2b1e0d54ee1e7d90961302f3",
+    "holds": true,
+    "evidence": "Miss: the word is 'digest', not sha256, and the hex is an 8-char prefix plus ellipsis. Same matrix_digest formula at this W is still bf9068d89e4cb8a080167cb32cc818943d717a65fcbd21edb2b8256e22771f32 (9 json files), prefix bf9068d8."
+  },
+  {
+    "line": 712,
+    "class": "C",
+    "text": "Measured lane commit: `54a29268e2083caa2b1e0d54ee1e7d90961302f3`",
+    "W": "5e9ae6e93dce529a48229647e482f18a291463cd",
+    "holds": true,
+    "evidence": "Miss: 'commit:' colon, not '^Measured commit:'. Token is a commit and a strict ancestor of W."
+  }
+]

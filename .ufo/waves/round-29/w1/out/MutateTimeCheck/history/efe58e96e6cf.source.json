@@ -1,0 +1,64 @@
+{
+ "schema": "kama-round-preregistration/v1",
+ "round": 25,
+ "attempt": 1,
+ "written_utc": "2026-10-22T08:31:00Z",
+ "base": "147f5bdd3228ab712520b5f377346cb2d9a64769",
+ "planner": "L1 kama round-25 author holds the canonical planner seat; bounded planning data walks ride scout/revenger items",
+ "claims": [
+  {
+   "id": "C1",
+   "kind": "repair-first calibration",
+   "axis": "calibration",
+   "score": "7 -> 7 (no numeric promotion)",
+   "repairs": "round-24 verifier spot-check (MANIFEST rounds[440]) routed defect 2 and its quality-harm finding: the registered M-series mutation instrument tests/report-audit/isolation-mutants.py is stale at the measured auditor, M11 has zero anchor occurrences and M17 has two, so the registered counting command aborts with exit 2 before any mutant runs",
+   "measure": "stale anchors = entries of MUTANTS in tests/report-audit/isolation-mutants.py whose literal does not occur exactly once in tools/report-landing-audit.py at the lane branch tip; the command enumerates the whole MUTANTS list",
+   "command": "python3 -c \"import importlib.util as u;s=u.spec_from_file_location('m','tests/report-audit/isolation-mutants.py');m=u.module_from_spec(s);s.loader.exec_module(m);src=m.AUDIT.read_text();bad=[n for n,o,_ in m.MUTANTS if src.count(o)!=1];print('registered',len(m.MUTANTS),'stale',len(bad),bad)\"",
+   "before": "registered 27 stale 2 ['M11-listing-surrogates', 'M17-ref-shadow'] at 147f5bdd",
+   "after_target": "stale 0",
+   "non_narrowing_rules": [
+    "M11 and M17 keep weakening the same element they weakened at round 23 (M11: surrogateescape decoding of the fleet report listing; M17: refusal of a citation that names a ref). A re-anchor that targets a different element is a miss.",
+    "An id may move to RETIRED only if a revenger proves its element is gone from the auditor, with attribution to the mutant that now carries the check. Retiring to reach zero without that proof is a miss.",
+    "If the element now lives at two call sites (M17), both stay covered: no call site is silently dropped from the registered set.",
+    "The denominator at the landed tip is reported as measured; ids are never reused."
+   ],
+   "supporting_evidence_not_the_claim_value": "one full `python3 tests/report-audit/isolation-mutants.py --json` run on the landed source, exit code and killed/surviving list recorded as observed; a survivor or exit 2 is reported, not hidden",
+   "not_claimed": "Git >=2.45 approval (R23-H2 stays operator-owned), PM08 execution credit, full isolation, deadline or legacy parity, any change to the round-24 original-view verdicts"
+  },
+  {
+   "id": "C2",
+   "kind": "learning claim, frontier K05 (declared versus served context capacity)",
+   "axis": "coverage",
+   "score": "8 -> 8 (no numeric promotion; ground grows by one entry and one capability)",
+   "measure": "preregistered context-capacity cells below with a committed live observation from the lane-owned llama-server fixture (b11755, stories260K.gguf, free unregistered loopback port, torn down in the same run): per cell the receipt records /props default_generation_settings.n_ctx, /props total_slots, every /slots n_ctx, /v1/models meta.n_ctx_train and the server log n_ctx_slot/kv_unified line",
+   "command": "python3 -c \"import json;d=json.load(open('.ufo/waves/round-25/final/context-capacity-receipt.json'));c=[x for x in d['cells'] if x.get('observed')];print('cells',len(d['cells']),'observed',len(c))\"",
+   "before": "0 cells (no committed context-capacity receipt; K05 deferred since round 10; corpus/knowledge has 18 entries)",
+   "after_target": "observed 8 (of the 8 cells below)",
+   "cells": [
+    {"id": "K1", "args": "-c 0", "prediction": "total_slots 4 (auto), kv_unified true, per-slot n_ctx 2048 (training context)"},
+    {"id": "K2", "args": "-c 2048 -np 2 --no-kv-unified", "prediction": "per-slot n_ctx 1024"},
+    {"id": "K3", "args": "-c 2048 -np 2 --kv-unified", "prediction": "per-slot n_ctx 2048"},
+    {"id": "K4", "args": "-c 1024 -np 1", "prediction": "kv_unified false (slots set explicitly), per-slot n_ctx 1024"},
+    {"id": "K5", "args": "-c 4096 -np 1", "prediction": "per-slot n_ctx capped at training context 2048"},
+    {"id": "K6", "args": "-c 1000 -np 3 --no-kv-unified", "prediction": "unknown: padding of n_ctx and per-sequence division; recorded as observed"},
+    {"id": "K7", "args": "-np 2 --kv-unified-per-slot 512", "prediction": "pool 1024, per-slot n_ctx 512"},
+    {"id": "K8", "args": "-c 4096 -np 4 --kv-unified --kv-unified-per-slot 512", "prediction": "per-slot n_ctx 512"}
+   ],
+   "learning_artifacts": [
+    "corpus/knowledge/context-capacity.md (new entry on K05 ground, sourced on S rows opened this round)",
+    "tools/kama-context-capacity.py capability row in SCORECARD capabilities table, shown running this round",
+    "SKILL.md decision-table rows grounded in the admitted entry"
+   ],
+   "prediction_grading": "prediction matches are reported as calibration evidence, never as the claim value; a wrong prediction is knowledge, not a hidden miss",
+   "pilot": ".ufo/waves/round-25/pilot.md (L1 planning walk, three configurations, before the wave)",
+   "not_claimed": "registered-consumer serving (the three registry rows stay DEAD and are not probed), model quality, other-engine runtime integration, ratification of the round-16 fixture question"
+  }
+ ],
+ "frontier_step": {
+  "sources_census_before": ".ufo/waves/round-25/before/census-validate.out (exit 0; 105 rows)",
+  "sourced_claim": "C2 rests on SOURCES rows opened this round",
+  "mistake": "round-24 stale registered counting command (instrument drifted from the measured source; captured-by none) mined into corpus/lessons/round-25.md ## Mistakes, with a fix shown able to fail"
+ },
+ "shape": "default two v1 waves: build then falsify",
+ "open_l0": "kama | round-24 | R23-H2 (Git >=2.45) stays open; routed around, not answered here"
+}
