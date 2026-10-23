@@ -1,0 +1,33 @@
+ScribeA1TimeCorrection — evidence and provenance
+
+Scope: read-only verification for routed round-28 repairs 2 (A1 timestamp) and 7 (quote total); proposed append-only text is in log-append.md and lesson-repair.md. Lane source files were read only. No package/tool installation, server process, git write, build, test, or counter run was performed.
+
+Commands run (each bounded by timeout)
+
+1. `timeout 10s git -C /home/vgpnk/Projects/shokunin/kama-shokunin log -1 --format='%H %cI %aI' 75b78bb4`
+Output:
+`75b78bb4900aae1edcdb6b229bb8c572c20fcbce 2026-10-23T05:38:16-03:00 2026-10-23T05:38:16-03:00`
+The output order is commit hash, committer ISO time, author ISO time. Both dates convert to 2026-10-23 08:38:16Z.
+
+2. `timeout 10s git -C /home/vgpnk/Projects/shokunin/kama-shokunin show 75b78bb4:.ufo/waves/round-28/preregistration.json | timeout 10s grep -n '08:45Z'`
+Outcome: match at line 41. The displayed prefix was `41:   "pre_data_amendment_A1": "Written 2026-10-23 ~08:45Z by the L1, after the pre-freeze control call (5ebe7b1b) and after wave-1 data seats had returned uncommitted row drafts, before any data row was committed to the lane and before the counter scored any data row...`; the tool truncated the long line after 768 characters, so the rest is not transcribed here.
+
+3. Directory setup: `timeout 10s mkdir -p /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-29/w1/out/ScribeA1TimeCorrection /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-29/w1/advice`
+Outcome: command returned with no output.
+
+Opened sources
+
+- `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-28/w2/out/CriticA1Legitimacy/evidence.md:69` (quoted verbatim): “At **08:37:23.720Z**, call `toolu_01QDrt3wf1yuUpvzNTmDZUxu`, intent `Implementing amendment A1`, replaces the A0 clause-(e) text, adds `conversions`, and adds `e:generic-conversion` in `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-28/count-c1.py`. Successful result at **08:37:23.732Z**:”
+- Same evidence file, line 76 (quoted verbatim): “At **08:37:36.767Z**, call `toolu_01MkiF6aPw7Vin9KH1NmLAQJ` simplifies the new check to `elif any(same(val, c) for c in conversions(sent)):`. At **08:38:16.571Z**, call `toolu_0152qDNt2RCJrSQytjPhYRxY` writes `pre_data_amendment_A1` and commits the amendment; its prose says \"Written ... ~08:45Z\". The actual authoring record is therefore earlier, about 08:37Z, and follows DataG01's completed evaluation by about 90 seconds.”
+- Same evidence file lines 27 and 51 record DataG01's relevant tool-call and result timestamps as 08:35:53.929Z and 08:35:54.037Z.
+- `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-28/preregistration.json:41` was read; its amendment text states `Written 2026-10-23 ~08:45Z`. The `git show` command above independently matched that text in commit 75b78bb4.
+- `/home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-28.md:77-80` says “Four seat-supplied quotes were not verbatim (lora, xtc_probability, temperature, logit_bias)”. Its `## Mistakes` row at line 124 states eight of 34 were not verbatim: those four paraphrase/drop-character cases plus four fragment joins (`preserved_tokens`, `ignore_eos`, `stop`, `samplers`).
+- `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-28/final/quote-check.out:9-10` reads `seat quotes 34 not-verbatim 8; gate quotes 34 not-verbatim 0` and `exit=0`.
+- `/home/vgpnk/Projects/shokunin/kama-shokunin/LOG.md:1790-1833` was read for its round-28 ending context.
+- `read` of `/home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-29.md` returned “Path not found”; the `corpus/lessons` directory listing did not include `round-29.md`. Therefore lesson paragraphs are prepared as insertion-ready drafts, not placed into the absent target.
+
+Findings and limits
+
+- Amendment edit: 08:37:23.720Z call; successful result 08:37:23.732Z. Amendment commit: 08:38:16.571Z per opened evidence, and 08:38:16Z to whole-second precision in `%cI`/`%aI`. The preregistration's ~08:45Z wording is inaccurate. Its frozen bytes were not edited.
+- Quote count: 8/34 seat quotes were non-verbatim, not four; 0/34 mechanically located Gate quotes were non-verbatim. The four in the Gate preamble are a subset, not a conflicting count from the checker.
+- Drafts are the only authored content; the actual `LOG.md`, `corpus/lessons/round-28.md`, preregistration, and not-yet-present round-29 lesson were not changed. Command 2's matched long line was tool-truncated as noted above.

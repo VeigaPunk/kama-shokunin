@@ -1,0 +1,9 @@
+# ScribeSrcGitGrep — S176 findings
+
+Proposed S176 in `../out/ScribeSrcGitGrep/row.md`, in the 11-column SOURCES shape. Scope: `git grep` searching blobs in supplied trees, `-F` fixed-string matching, `-q` exit-status matching, and pathspec exclusion; this is not evidence for blame attribution or counter correctness. C1's counter uses `git grep -F -q -e <span> W -- .` at `count-c1.py:260`, with `:(exclude)` patterns in lines 67–68. The `used-by` path in the proposal is `.ufo/waves/round-29/w1/out/ScribeKnowledgeEntry/self-assessment-at-writing.md`, supplied by that entry's author.
+
+Git-grep HTML fetch completed 2026-10-23T12:02:41Z UTC, SHA-256 `33803f943da8f3e6285e07422e2302a92ac7250df286a85a09ccaa7485236e5c`. Gitglossary HTML fetch completed 2026-10-23T12:02:57Z UTC, SHA-256 `3fa08dfd1ee99c6196e7b86f3fc11ebb47625879e2b05821384ccfc2e3d00262`. Saved page quotes and locations are in `../out/ScribeSrcGitGrep/quote.txt`; each quote is verbatim and below the 25-word limit.
+
+`git --version` returned `git version 2.56.0`. The opened git-grep web manual says last updated in 2.55.0 and marks 2.56.0 no changes; gitglossary says last updated in 2.56.0. The installed local man pages both have `Git 2.56.0` / 2026-09-27 footers and contain the same relevant semantics. `man -P cat git-git-grep` was tried exactly as assigned and reported `No manual entry for git-git-grep` (exit 16); the installed page name is `git-grep`.
+
+Commands, all bounded with `timeout`, hashes, and detailed outcomes are recorded in `../out/ScribeSrcGitGrep/REPORT.md`. Outputs: `../out/ScribeSrcGitGrep/{page.html,gitglossary.html,installed-git-grep.man.txt,installed-gitglossary.man.txt,row.md,quote.txt,REPORT.md}`. No tracked lane source was edited; no counter, test, or runtime was run; no tools were installed.

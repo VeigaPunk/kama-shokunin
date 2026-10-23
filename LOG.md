@@ -1831,3 +1831,30 @@ DataG10/12/16/17 landed no row; the pinned server-schema.cpp was re-fetched by
 mismatch, SHONEN.md box 2's round-17 "8 bad fake-server shapes ... accepted 6"
 wording, is inherited from round 17 and left for a round that re-reads the
 round-17 receipts.
+
+## Round 29 — self-assessment evidence at writing (calibration) (2026-10-23)
+
+C1 (measured, calibration): frozen counter `.ufo/waves/round-29/count-c1.py` (`827d1365`) checks
+69 statements of six classes in SCORECARD.md/SHONEN.md at base `2aa46e24` against the commit that
+wrote each line; 11 were false at writing (4 pointers, 7 quoted outputs). 14 control seats scored
+before any data (`35b90184`): no control meets `unresolved == 0`. The L1 appended 11 correction
+rows (`513eba3b`); fresh-clone receipt `unresolved 0 met True` (`final/c1-513eba3b.out`). All 11
+confirmed false under the class rule by non-author ConfirmM seats; CriticAxisFit: the failures are
+evidence-resolution defects, not proven wrong judgments (accepted). Calibration 7 → 7, no
+promotion.
+
+Repairs: round-28 A1 time corrected by appended record (edit 08:37:23Z, commit 08:38:16Z, not
+"~08:45Z"; frozen bytes untouched); DataG01/DataG15 timing transcript excerpts committed with
+sha256 (`w1/out/ExecTimingTranscript/`); echo-recheck exit-2 receipt
+(`.ufo/waves/round-29/repairs/echo-exit2/receipt.txt`); round-28 lesson Gate preamble 4 → 8
+non-verbatim seat quotes (appended); SHONEN.md box 2 line 8: "8 bad fake-server shapes rejected,
+frozen pair accepted 6" → "8 adverse controls rejected: 7 bad server shapes + 1 injected teardown
+fault; frozen accepted-bad = 6 (5 accepted bad receipts + 1 receiptless escape), with K3
+inconclusive"; QUALITY KQ38 (depth counters) and KQ39 (calibration at writing).
+Mined mistake: `tools/prereg-time-check.py` now reads `YYYY-MM-DD ~HH:MMZ` / `YYYY-MM-DD HH:MMZ`
+(was blind to the round-28 A1 text; now flags it, exit 1).
+Sources S174-S177 (git-blame, git-merge-base, git-grep + gitglossary, pretty-formats) opened this
+round; census 173 → 177 rows, exit 0.
+Re-verification (freshness): `tools/prereg-time-check.py --selftest` 14 PASS exit 0;
+ScoutHeldRules re-ran citation-provenance, report-landing-audit and sources-append-only self-tests,
+all exit 0.

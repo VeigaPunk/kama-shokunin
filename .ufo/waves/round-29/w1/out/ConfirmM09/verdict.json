@@ -1,0 +1,53 @@
+{
+  "sid": "SCORECARD.md:Q:a7e98b1030:0",
+  "verdict": "confirmed-false",
+  "W": "7229fa95eb122310e9e5334ad799ee3006293ebd",
+  "commands": [
+    {
+      "cmd": "git -C /home/vgpnk/Projects/shokunin/kama-shokunin blame -L 834,834 --line-porcelain 2aa46e2481d2ec41a7ee5ed793fc50ae967a6e5d -- SCORECARD.md",
+      "out": "7229fa95eb122310e9e5334ad799ee3006293ebd 834 834 1\nauthor kama-shokunin\nauthor-mail <kama@shokunin.local>\nauthor-time 1792562106\nauthor-tz -0300\ncommitter kama-shokunin\ncommitter-mail <kama@shokunin.local>\ncommitter-time 1792564487\ncommitter-tz -0300\nsummary round-19: citation provenance, install-tree pin, r18 defect corrections\nprevious 8bf99cae7de2517fd4ebe209f3b940aeabb6b687 SCORECARD.md\nfilename SCORECARD.md\n\t`baseline=VALID rejected=3/3` exit 0. The pin binds observed bytes, not an"
+    },
+    {
+      "cmd": "git -C /home/vgpnk/Projects/shokunin/kama-shokunin show 2aa46e2481d2ec41a7ee5ed793fc50ae967a6e5d:SCORECARD.md | sed -n '828,842p'",
+      "out": "**C2 operability, 8 → 8 (delta 0):** sixth pin\n`--expect-install-tree-sha256`; counting command\n`python3 tests/llamacpp-live/install-tree-grid.py … --gate\ntests/llamacpp-live/check-receipt.py --receipt\n.ufo/waves/round-18/live-recovery/receipt-1.json …` — without the pin\n`baseline=VALID members=3 rejected=0/3` exit 1, with `--tree-sha`\n`baseline=VALID rejected=3/3` exit 0. The pin binds observed bytes, not an\nupstream constant, and does not authenticate execution.\n\nOther axes unchanged: freshness 8, coverage 9, depth 7, adjacency 7.\nCapabilities unchanged; stagnation window 4 of 4 is reached at round end —\nthe next round should be a capability/frontier move unless the operator rules\notherwise. Planned: close the named gate coverage leaves, add the C2\nenumeration check, and obtain the outside non-author spot-check."
+    },
+    {
+      "cmd": "git --no-replace-objects -C /home/vgpnk/Projects/shokunin/kama-shokunin grep -F -q -e 'baseline=VALID rejected=3/3' 7229fa95eb122310e9e5334ad799ee3006293ebd -- . ':(exclude)SCORECARD.md' ':(exclude)SHONEN.md' ':(exclude)LOG.md' ':(exclude)corpus'; echo \"exit=$?\"",
+      "out": "exit=1"
+    },
+    {
+      "cmd": "git -C /home/vgpnk/Projects/shokunin/kama-shokunin grep -F -I -n 'baseline=VALID rejected=3/3' 7229fa95eb122310e9e5334ad799ee3006293ebd",
+      "out": "7229fa95eb122310e9e5334ad799ee3006293ebd:SCORECARD.md:834:`baseline=VALID rejected=3/3` exit 0. The pin binds observed bytes, not an"
+    },
+    {
+      "cmd": "git -C /home/vgpnk/Projects/shokunin/kama-shokunin grep -F -n -I 'rejected=3/3' 7229fa95eb122310e9e5334ad799ee3006293ebd -- LOG.md SHONEN.md; echo \"span=$?\"",
+      "out": "span=1"
+    },
+    {
+      "cmd": "git -C /home/vgpnk/Projects/shokunin/kama-shokunin log --oneline 7229fa95eb122310e9e5334ad799ee3006293ebd -- tests/llamacpp-live/install-tree-grid.py | cat",
+      "out": "7229fa9 round-19: citation provenance, install-tree pin, r18 defect corrections"
+    },
+    {
+      "cmd": "git -C /home/vgpnk/Projects/shokunin/kama-shokunin show 7229fa95eb122310e9e5334ad799ee3006293ebd:tests/llamacpp-live/install-tree-grid.py | sed -n '111,116p'",
+      "out": "        print(json.dumps(doc, indent=1))\n    else:\n        print(f\"baseline={baseline} members={len(rows)} \"\n              f\"rejected={rejected}/{len(rows)} \"\n              f\"tree_pin={'on' if args.tree_sha else 'off'}\")\n        for row in rows:"
+    },
+    {
+      "cmd": "grep -n -B3 -A3 'rejected=3/3' /home/vgpnk/Projects/shokunin/.ufo/reports/round-19/kama.md | head -40",
+      "out": "82-| Claim | Before → after | Counting command | Evidence |\n83-|---|---|---|---|\n84-| C1 | `required=4 found=0 verified=0 missing=4` exit 1 → `required=4 found=4 verified=4 missing=0 mismatch=0 off_ref=0` exit 0; selftest 15 cases | `python3 tools/citation-provenance.py` (before: `--docs` on the round-start `corpus/lessons/round-18.md` blob) | `evidence/c1-counting.txt` |\n85:| C2 | baseline VALID, consistent member swaps `rejected=0/3` exit 1 → `rejected=3/3` exit 0, tree pin on (51/51 with the full-member census); invalid baseline exits 2 without counting mutants; grid selftest green | `python3 tests/llamacpp-live/install-tree-grid.py --gate tests/llamacpp-live/check-receipt.py --receipt .ufo/waves/round-18/live-recovery/receipt-1.json --model-sha … --server-sha … --impl-sha … --probe-sha … --tool-sha … [--tree-sha 6c216313…]` | `evidence/c2-grid.txt` |\n86-\n87-The measured commit for both claims is `7229fa95…` plus the post-commit grid\n88-fail-closed change (committed in the evidence commit); the harness's own"
+    },
+    {
+      "cmd": "ls /home/vgpnk/Projects/shokunin/.ufo/reports/round-19/ ; grep -rn 'tree_pin=on' /home/vgpnk/Projects/shokunin/.ufo/reports/round-19/ | head -10",
+      "out": "kagi.md\nkaidoku.md\nkake.md\nkama.md\nkotoba.md\nkotodama.md\nmado.md\nmori.md\nsouji.md\ntabi.md\ntameshi.md\ntsukuroi.md\n---\n(no tree_pin=on match; evidence/c2-grid.txt not present under reports/round-19/)"
+    },
+    {
+      "cmd": "git -C /home/vgpnk/Projects/shokunin/kama-shokunin show 2aa46e2481d2ec41a7ee5ed793fc50ae967a6e5d:SCORECARD.md | sed -n '834p' | head -c -1 | sha256sum",
+      "out": "a7e98b1030bd5152d6d43fdba990766530d53c263775c8b1c93a7bec2da813bf  -"
+    },
+    {
+      "cmd": "git -C /home/vgpnk/Projects/shokunin/kama-shokunin grep -F -I -n 'baseline=VALID rejected=3/3' master -- . ':(exclude)SCORECARD.md' ':(exclude)SHONEN.md' ':(exclude)LOG.md' ':(exclude)corpus' (trimmed to first hits)",
+      "out": "master:.ufo/waves/round-29/before/c1-base.json:253:   \"token\": \"baseline=VALID rejected=3/3\"\nmaster:.ufo/waves/round-29/before/c1-base.json:721:   \"token\": \"baseline=VALID rejected=3/3\"\nmaster:.ufo/waves/round-29/controls/CtlAllFalse/receipt.json:389:   \"token\": \"baseline=VALID rejected=3/3\"\n... (only round-29 counter receipts / control echoes, no round-19 measurement artifact) ..."
+    }
+  ],
+  "intended_referent": "The round-19 C2 counting run: python3 tests/llamacpp-live/install-tree-grid.py --gate tests/llamacpp-live/check-receipt.py --receipt .ufo/waves/round-18/live-recovery/receipt-1.json ... --tree-sha 6c216313… (fleet report .ufo/reports/round-19/kama.md:85). Per the tool's print at W (blob lines 113-115) the real output line is `baseline=VALID members=3 rejected=3/3 tree_pin=on`; the SCORECARD quote drops `members=3 tree_pin=on`. The named evidence file evidence/c2-grid.txt is not under /home/vgpnk/Projects/shokunin/.ufo/reports/round-19/ and no grid-output artifact exists in the lane tree at W (or at master). The underlying measurement itself is not thereby falsified — only the claimed committed evidence.",
+  "cause": "Writer quoted a truncated paraphrase of the grid run's output; the verbatim line (with members=3 tree_pin=on) was never committed to the lane."
+}

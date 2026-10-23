@@ -1,0 +1,8 @@
+# ScribeSrcGitBlame — scoped findings
+
+- Proposed S174 is in `.ufo/waves/round-29/w1/out/ScribeSrcGitBlame/row.md`; Gate excerpts are copied from saved page text in `quote.txt` (18 words total).
+- Primary source: `https://git-scm.com/docs/git-blame`, fetched 2026-10-23T12:02:48Z; saved `page.html`, SHA-256 `c78da5c9b809721d7c32966f6b4127a5956923cdbef69f47a5c57fc22ed1ed0d`.
+- Manual states DESCRIPTION annotates each line with information from the revision that last modified it; OPTIONS `--line-porcelain` outputs commit information for each line rather than only on the first commit reference, and implies `--porcelain`. C1 counter docstring lines 7–10 uses `git blame --line-porcelain <base> -- <file>` to identify W.
+- `git --version`: 2.56.0. Requested `man -P cat git-git-blame` had no entry (exit 16); alternate installed `man -P cat git-blame` contains the same relevant text. `/usr/share/doc/git` was not found. Manual excerpt does not declare its version.
+- `CORPUS.md` §Shape defines `used-by` as repo-relative knowledge-entry or lesson paths. The row cites the present ScribeKnowledgeEntry draft `.ufo/waves/round-29/w1/out/ScribeKnowledgeEntry/self-assessment-at-writing.md`, which cites S174 and remains pending L1 integration, plus the explicitly requested direct counter path `.ufo/waves/round-29/count-c1.py`; the counter path is outside the schema's defined path types, so L1 should decide whether to retain it in the final row.
+- No tracked lane edits, counter run/rescore, tests, or installs. Full commands, outcomes, exact local manual output, and limits are in `out/ScribeSrcGitBlame/REPORT.md`.

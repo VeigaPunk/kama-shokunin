@@ -1,0 +1,46 @@
+{
+  "sid": "SCORECARD.md:Q:f1021c03db:0",
+  "verdict": "confirmed-false",
+  "W": "7229fa95eb122310e9e5334ad799ee3006293ebd",
+  "class": "Q",
+  "token": "baseline=VALID members=3 rejected=0/3",
+  "counter_observed": "q:no-artifact",
+  "counter_matches_independent_check": true,
+  "commands": [
+    {
+      "cmd": "git blame -L 833,833 --line-porcelain 2aa46e2481d2ec41a7ee5ed793fc50ae967a6e5d -- SCORECARD.md",
+      "output": "7229fa95eb122310e9e5334ad799ee3006293ebd 833 833 1\nauthor kama-shokunin\nauthor-mail <kama@shokunin.local>\nauthor-time 1792562106\nauthor-tz -0300\ncommitter kama-shokunin\ncommitter-mail <kama@shokunin.local>\ncommitter-time 1792564487\ncommitter-tz -0300\nsummary round-19: citation provenance, install-tree pin, r18 defect corrections\nprevious 8bf99cae7de2517fd4ebe209f3b940aeabb6b687 SCORECARD.md\nfilename SCORECARD.md\n\t`baseline=VALID members=3 rejected=0/3` exit 1, with `--tree-sha`"
+    },
+    {
+      "cmd": "git show 2aa46e2481d2ec41a7ee5ed793fc50ae967a6e5d:SCORECARD.md | awk 'NR==833'",
+      "output": "`baseline=VALID members=3 rejected=0/3` exit 1, with `--tree-sha`"
+    },
+    {
+      "cmd": "git grep -F -n 'baseline=VALID members=3 rejected=0/3' 7229fa95eb122310e9e5334ad799ee3006293ebd -- ':!SCORECARD.md' ':!SHONEN.md' ':!LOG.md' ':!corpus'",
+      "output": "[no matches; git grep exit 1]"
+    },
+    {
+      "cmd": "git grep -rn -F 'baseline=VALID' 7229fa95eb122310e9e5334ad799ee3006293ebd --",
+      "output": "7229fa95eb122310e9e5334ad799ee3006293ebd:SCORECARD.md:833:`baseline=VALID members=3 rejected=0/3` exit 1, with `--tree-sha`\n7229fa95eb122310e9e5334ad799ee3006293ebd:SCORECARD.md:834:`baseline=VALID rejected=3/3` exit 0. The pin binds observed bytes, not an\n7229fa95eb122310e9e5334ad799ee3006293ebd:tests/llamacpp-live/install-tree-grid.py:16:`baseline=VALID|INVALID members=N rejected=K/N tree_pin=on|off`."
+    },
+    {
+      "cmd": "git show 7229fa95eb122310e9e5334ad799ee3006293ebd:tests/llamacpp-live/install-tree-grid.py | awk 'NR>=105 && NR<=125'",
+      "output": "    rejected = sum(1 for r in rows if r[\"status\"] == \"rejected\")\n    doc = {\"schema\": \"kama-install-tree-grid/v1\",\n           \"gate\": str(args.gate), \"receipt\": str(args.receipt),\n           \"tree_pin\": bool(args.tree_sha), \"baseline\": baseline,\n           \"members\": len(rows), \"rejected\": rejected, \"rows\": rows}\n    if args.json:\n        print(json.dumps(doc, indent=1))\n    else:\n        print(f\"baseline={baseline} members={len(rows)} \"\n              f\"rejected={rejected}/{len(rows)} \"\n              f\"tree_pin={'on' if args.tree_sha else 'off'}\")\n        for row in rows:\n            print(f\"  {row['status']:<8} {row['member']}\")\n    if baseline != \"VALID\":\n        return 2\n    return 0 if rejected == len(rows) else 1"
+    },
+    {
+      "cmd": "git log --diff-filter=A --oneline -- .ufo/waves/round-19/evidence/c2-grid.txt",
+      "output": "5b108c1 round-19: doc-bound citations, ancestry gate, fail-closed grid, wave evidence"
+    },
+    {
+      "cmd": "git merge-base --is-ancestor 7229fa95eb122310e9e5334ad799ee3006293ebd 5b108c1 && echo '5b108c1-is-descendant-of-W'",
+      "output": "5b108c1-is-descendant-of-W"
+    },
+    {
+      "cmd": "git grep -F -n 'baseline=VALID members=3 rejected=0/3' master -- ':!SCORECARD.md' ':!SHONEN.md' ':!LOG.md' ':!corpus'",
+      "output": "[30+ matches on master only, e.g.]\nmaster:.ufo/waves/round-19/build/advice/C2BaselineInvalid.md:11:- Valid controls match SCORECARD: no pin gives `baseline=VALID members=3 rejected=0/3` with exit 1; with the pin, `rejected=3/3` with exit 0.\nmaster:.ufo/waves/round-19/build/advice/C2NullTree.md:18:1. [Medium] Without the pin, a null digest disables the recomputation. VALID, exit 0: A2, A5; C x3 (member swapped, digest nulled); D0 and D2 (impl digest nulled). Recomputed-digest swaps (B x3) are also VALID without the pin and are rejected 3/3 with it. The grid reproduces the C2 numbers: no pin `baseline=VALID members=3 rejected=0/3` (exit 1); with pin `rejected=3/3` (exit 0). The null form is at least as weak as the recomputed form without the pin, and the grid never measures it.\nmaster:.ufo/waves/round-19/build/advice/DraftReport.md:11:- `install-tree-grid.py` without `--tree-sha`: `baseline=VALID members=3 rejected=0/3 tree_pin=off`, exit 1. With `--tree-sha 6c216313…`: `rejected=3/3 tree_pin=on`, exit 0.\nmaster:.ufo/waves/round-19/evidence/c2-grid.txt:3:baseline=VALID members=3 rejected=0/3 tree_pin=off\n[all such matches are in commits after W (first added by 5b108c1)]"
+    }
+  ],
+  "intended_referent": "Run output of `python3 tests/llamacpp-live/install-tree-grid.py` without `--tree-sha` during round-19 C2 (the no-pin boundary): full line `baseline=VALID members=3 rejected=0/3 tree_pin=off` with exit 1. The first committed capture of that output line was added by 5b108c1, a descendant of W; at W no blob (outside SCORECARD.md/SHONEN.md/LOG.md/corpus) contained the quoted span verbatim, and the tool's own docstring at W (install-tree-grid.py:16) carries only the format template `baseline=VALID|INVALID members=N rejected=K/N tree_pin=on|off`.",
+  "cause": "Quoted baseline output never existed verbatim in any committed artifact at W; the statement paraphrased the tool's documented format.",
+  "REPORT.md": "REPORT.md"
+}

@@ -206,6 +206,8 @@ def selftest(scratch: str) -> int:
          '{"note": "Written 2026-10-23 ~03:45Z by the L1"}\n', EXIT_FLAGGED)
     case("clean: space-separated time before commit",
          '{"note": "frozen 2026-10-23 03:10Z"}\n', EXIT_CLEAN)
+    case("flag: space-separated seconds-precision time 7 s after commit",
+         '{"note": "frozen 2026-10-23 03:19:50Z"}\n', EXIT_FLAGGED)
     case("clean: malformed Z-suffix lookalike is skipped",
          '{"x": "2026-13-40T03:45Z"}\n', EXIT_CLEAN)
 
