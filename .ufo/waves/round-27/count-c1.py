@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Round-27 C1 counter (depth): live request-validation error signatures in SKILL.md.
 
-Frozen predicate, amendments A1 and A2 (the same sentence as preregistration.json
+Frozen predicate, amendments A1, A2 and A3 (the same sentence as preregistration.json
 C1.predicate and the label `counted` in the receipt):
 
   A registry row is COUNTED iff
@@ -34,7 +34,13 @@ C1.predicate and the label `counted` in the receipt):
       pinned llama-server process the counter launched: its /proc exe is the
       sha256-pinned binary, the pinned libllama-server-impl.so is mapped, and
       /props reports the pinned fixture model path; the counter re-executes
-      itself under `python3 -I -S` before reading anything;
+      itself as /usr/bin/python3 -I -S with the fixed environment
+      {PATH, HOME, LANG} before reading anything, and refuses to evaluate
+      (exit 2) when the interpreter or git is not the sha256-pinned host
+      binary, /etc/ld.so.preload is non-empty, its own process or the server
+      maps a file outside /usr/ and /etc/ld.so.cache (server: also the pinned install and model),
+      the server's environment is not the fixed one, or any base object it
+      reads (commit, every tree, every blob) fails its git hash;
   (f) the signature does not occur (case-insensitive, verbatim or with all
       whitespace removed) in the request path, in any JSON-decoded string key
       or value of the request body, in either JSON serialisation of the body,
@@ -48,8 +54,10 @@ C1.predicate and the label `counted` in the receipt):
       message and it occurs in no earlier counted row's error message, its
       request differs from every earlier counted request, its next-action
       cell (case and whitespace folded) differs from every earlier counted
-      row's next-action cell, and its S### differs from every earlier counted
-      row's S###.
+      row's next-action cell, its S### differs from every earlier counted
+      row's S###, and its error message with the signature cut out
+      (case-folded), when not blank, differs from every earlier counted row's
+      message with that row's signature cut out (one message frame, one row).
 
 Not checked by this counter (reviewed per row, never counted): whether the
 trigger, meaning and next-action prose is correct (KamaR27CtlContentFree).
@@ -89,6 +97,12 @@ PINS = {
 MODEL = Path.home() / ".cache/kama-shokunin/models/stories260K.gguf"
 MODEL_SHA256 = "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
 COMMIT = "704366d"
+PYTHON = Path("/usr/bin/python3")
+GIT = "/usr/bin/git"
+HOST_PINS = {
+    "/usr/bin/python3.14": "375532f83be620283ab780c14ca6bcc5907dc379d2b621de0c5d0a112cf5458b",
+    "/usr/bin/git": "2912a2a32f408c9b8122e476251b32f4b35f4c3f0c15961686ae87ca456d384c",
+}
 SOURCE_DIR = ".ufo/waves/round-27/sources/llama.cpp-704366d"
 SOURCE_SHA256 = {
     "arg.cpp": "bf4c58c189a774f2308acfe88e4ec5cebb0c43f60cf05cef4c5b2b9affd5822d",
@@ -156,38 +170,99 @@ def clean_env() -> dict:
     return {"PATH": "/usr/bin:/bin", "HOME": str(Path.home()), "LANG": "C.UTF-8"}
 
 
-def git_show(repo: str, rev: str, path: str) -> str | None:
-    r = subprocess.run(["git", "-C", repo, "show", f"{rev}:{path}"],
-                       capture_output=True, timeout=60)
-    return r.stdout.decode("utf-8", "replace") if r.returncode == 0 else None
+def git(repo: str, *args: str, **kw) -> subprocess.CompletedProcess:
+    env = clean_env() | {"GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": "/dev/null"}
+    return subprocess.run([GIT, "--no-replace-objects", "-C", repo, *args],
+                          capture_output=True, env=env, **kw)
 
 
+def read_objects(repo: str, oids: list[bytes]) -> dict[bytes, tuple[bytes, bytes]]:
+    """Raw objects by id; every object must hash to its id (no forged object store)."""
+    p = git(repo, "cat-file", "--batch", input=b"\n".join(oids) + b"\n", timeout=600)
+    if p.returncode != 0:
+        raise CannotEvaluate("git cat-file at base failed")
+    out, i, objs = p.stdout, 0, {}
+    for oid in oids:
+        nl = out.find(b"\n", i)
+        head = out[i:nl].split() if nl >= 0 else []
+        if len(head) != 3 or head[0] != oid:
+            raise CannotEvaluate(f"base object {oid.decode()} missing")
+        typ, size = head[1], int(head[2])
+        body = out[nl + 1:nl + 1 + size]
+        if hashlib.sha1(typ + b" %d\0" % size + body).hexdigest().encode() != oid:
+            raise CannotEvaluate(f"base object {oid.decode()} fails its hash")
+        objs[oid] = (typ, body)
+        i = nl + 1 + size + 1
+    return objs
+
+
+_BASE_FILES: dict[str, dict[str, bytes]] = {}
 _BASE_TEXT: dict[str, tuple[str, str]] = {}
 
 
-def base_text(repo: str) -> tuple[str, str]:
-    """Every tracked file at BASE except pinned source snapshots (paths holding
-    '/sources/'), concatenated: (lowercased text, whitespace-removed lowercased text)."""
-    if repo not in _BASE_TEXT:
-        r = subprocess.run(["git", "-C", repo, "ls-tree", "-r", "-z", BASE],
-                           capture_output=True, timeout=120)
+def base_files(repo: str) -> dict[str, bytes]:
+    """Every tracked blob at BASE except pinned source snapshots (paths holding
+    '/sources/'), read from hash-verified commit, tree and blob objects."""
+    if repo not in _BASE_FILES:
+        typ, body = read_objects(repo, [BASE.encode()])[BASE.encode()]
+        first = body.split(b"\n", 1)[0]
+        if typ != b"commit" or not first.startswith(b"tree "):
+            raise CannotEvaluate("base commit unreadable")
+        r = git(repo, "ls-tree", "-r", "-t", "-z", BASE, timeout=120)
         if r.returncode != 0:
             raise CannotEvaluate("git ls-tree at base failed")
-        oids = []
+        trees, blobs = [first[5:]], []
         for rec in r.stdout.split(b"\0"):
             if not rec:
                 continue
             meta, name = rec.split(b"\t", 1)
-            mode, typ, oid = meta.split()
-            if typ == b"blob" and b"/sources/" not in name:
-                oids.append(oid)
-        p = subprocess.run(["git", "-C", repo, "cat-file", "--batch"],
-                           input=b"\n".join(oids) + b"\n", capture_output=True, timeout=600)
-        if p.returncode != 0:
-            raise CannotEvaluate("git cat-file at base failed")
-        text = p.stdout.decode("utf-8", "replace").lower()
+            _mode, otyp, oid = meta.split()
+            if otyp == b"tree":
+                trees.append(oid)
+            elif otyp == b"blob" and b"/sources/" not in name:
+                blobs.append((name.decode("utf-8", "replace"), oid))
+        objs = read_objects(repo, trees + [oid for _, oid in blobs])
+        _BASE_FILES[repo] = {name: objs[oid][1] for name, oid in blobs}
+    return _BASE_FILES[repo]
+
+
+def base_file(repo: str, path: str) -> str | None:
+    data = base_files(repo).get(path)
+    return data.decode("utf-8", "replace") if data is not None else None
+
+
+def base_text(repo: str) -> tuple[str, str]:
+    """Every tracked file at BASE except pinned source snapshots, concatenated:
+    (lowercased text, whitespace-removed lowercased text)."""
+    if repo not in _BASE_TEXT:
+        text = "\n".join(d.decode("utf-8", "replace") for d in base_files(repo).values()).lower()
         _BASE_TEXT[repo] = (text, re.sub(r"\s+", "", text))
     return _BASE_TEXT[repo]
+
+
+def mapped_files(pid: str) -> set[str]:
+    out = set()
+    for ln in Path(f"/proc/{pid}/maps").read_text("utf-8", "replace").splitlines():
+        parts = ln.split(None, 5)
+        if len(parts) == 6 and parts[5].startswith("/"):
+            out.add(parts[5].removesuffix(" (deleted)"))
+    return out
+
+
+def host_integrity() -> None:
+    for p, want in HOST_PINS.items():
+        if not os.path.isfile(p) or sha256_file(Path(p)) != want:
+            raise CannotEvaluate(f"host pin mismatch {p}")
+    if os.path.realpath(sys.executable) != os.path.realpath(PYTHON) or \
+            os.path.realpath(PYTHON) not in HOST_PINS or os.path.realpath(GIT) not in HOST_PINS:
+        raise CannotEvaluate("interpreter or git is not the pinned host binary")
+    pre = Path("/etc/ld.so.preload")
+    if pre.exists() and pre.read_text("utf-8", "replace").strip():
+        raise CannotEvaluate("/etc/ld.so.preload is not empty")
+    stray = sorted(f for f in mapped_files("self")
+                   if not f.startswith("/usr/") and f != "/etc/ld.so.cache")
+    if stray:
+        raise CannotEvaluate(f"counter maps files outside /usr/: {stray}")
 
 
 def held_at_base(repo: str, sig: str) -> bool:
@@ -357,9 +432,18 @@ class Server:
         if exe != os.path.realpath(SERVER) or sha256_file(Path(exe)) != PINS[SERVER]:
             raise CannotEvaluate(f"launched process exe {exe} is not the pinned server")
         impl = os.path.realpath(OPT / "libllama-server-impl.so")
-        maps = Path(f"/proc/{self.proc.pid}/maps").read_text("utf-8", "replace")
+        maps = mapped_files(str(self.proc.pid))
         if impl not in maps:
             raise CannotEvaluate("pinned libllama-server-impl.so is not mapped")
+        allowed = (os.path.realpath(OPT) + "/", "/usr/")
+        stray = sorted(f for f in maps if not f.startswith(allowed)
+                       and f not in (os.path.realpath(MODEL), "/etc/ld.so.cache"))
+        if stray:
+            raise CannotEvaluate(f"server maps files outside the pinned install: {stray}")
+        raw = Path(f"/proc/{self.proc.pid}/environ").read_bytes()
+        env = dict(kv.split("=", 1) for kv in raw.decode("utf-8", "replace").split("\0") if "=" in kv)
+        if env != clean_env():
+            raise CannotEvaluate("server environment is not the fixed environment")
         status, data = http(self.port, "GET", "/props", None)
         try:
             mp = json.loads(data.decode("utf-8")).get("model_path")
@@ -505,10 +589,13 @@ def static_checks(e: dict, lane: Path, repo: str, skill: list[str],
 
 
 def main() -> int:
-    if not (sys.flags.isolated and sys.flags.no_site):
-        # run only on the interpreter's own stdlib: no PYTHONPATH, user site or sitecustomize
-        os.execv(sys.executable, [sys.executable, "-I", "-S", os.path.abspath(__file__)]
-                 + sys.argv[1:])
+    clean = (sys.flags.isolated and sys.flags.no_site
+             and os.path.realpath(sys.executable) == os.path.realpath(PYTHON))
+    if not clean:
+        # run only on the pinned interpreter's own stdlib in the fixed environment:
+        # no PYTHONPATH, user site, sitecustomize, LD_PRELOAD or PATH decoys
+        os.execve(str(PYTHON), [str(PYTHON), "-I", "-S", os.path.abspath(__file__)]
+                  + sys.argv[1:], clean_env())
     here = Path(__file__).resolve()
     ap = argparse.ArgumentParser()
     ap.add_argument("--lane", default=str(here.parents[3]))
@@ -520,6 +607,9 @@ def main() -> int:
     receipt: dict = {"schema": "kama-r27-c1-receipt/v1", "counter_sha256": sha256_file(here),
                      "lane": str(lane), "base": BASE, "target": TARGET}
     try:
+        if dict(os.environ) != clean_env():
+            raise CannotEvaluate("environment is not the fixed environment after re-exec")
+        host_integrity()
         for p, want in PINS.items():
             if not p.is_file() or sha256_file(p) != want:
                 raise CannotEvaluate(f"pin mismatch {p}")
@@ -529,7 +619,7 @@ def main() -> int:
             p = lane / SOURCE_DIR / f
             if not p.is_file() or sha256_file(p) != want:
                 raise CannotEvaluate(f"source pin mismatch {f}")
-        if git_show(repo, BASE, "SKILL.md") is None:
+        if base_file(repo, "SKILL.md") is None:
             raise CannotEvaluate("base revision not readable")
         reg_path = lane / REGISTRY
         entries = []
@@ -547,7 +637,7 @@ def main() -> int:
         skill = skill_rows(skill_p.read_text("utf-8")) if skill_p.is_file() else []
         src_p = lane / "corpus/SOURCES.md"
         src_now = sources_rows(src_p.read_text("utf-8")) if src_p.is_file() else {}
-        src_base = sources_rows(git_show(repo, BASE, "corpus/SOURCES.md") or "")
+        src_base = sources_rows(base_file(repo, "corpus/SOURCES.md") or "")
         base_seen: dict = {}
         rows = []
         for e in entries:
@@ -614,6 +704,9 @@ def main() -> int:
                     clash = "h:sub-or-superstring"
                 elif oe["signature"] in msg or e["signature"] in om:
                     clash = "h:shared-message"
+                elif (fr := msg.replace(e["signature"], "\0").lower()).strip("\0 ") and \
+                        fr == om.replace(oe["signature"], "\0").lower():
+                    clash = "h:same-message-frame"
                 elif canon == json.dumps(oe["request"], sort_keys=True):
                     clash = "h:same-request"
                 elif e["_next"] == oe["_next"]:
