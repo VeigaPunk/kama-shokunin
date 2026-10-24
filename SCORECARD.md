@@ -1822,3 +1822,45 @@ wave falsification first, or take the `response_format`/`json_schema` → gramma
 remaining meaning cells, and pin declared bytes plus refusal of working-tree pin edits
 (routed defects 1, 2, 4). Open calibration ground: the round-30 extractor still finds 69 of 141
 statements by itself; any statement outside both populations remains invisible.
+
+## Round 33 — routed receipt evidence corrections (2026-10-24)
+
+Authority: kama remains assigned operability + calibration (`../shokunin.conf`);
+calibration 7 is the lowest assigned axis and the stagnation nudge is inactive.
+The preregistration is `.ufo/waves/round-33/preregistration.json` (base
+`cc46980359278d0967cf65e785b41c27b8d9c36c`, claim predicates frozen before
+data). Both claims hold the numeric axis reading; the measured deltas are
+explicit record/evidence counts, not a conversion to mastery scores.
+
+### Round 33 — correction of round-32 gate-control receipt references
+
+The round-32 C2 row at `SCORECARD.md:1791`, written at
+`dc4258bdb08d658f1c5b15abc8378461659bd155`, says that each fixture exits 1
+with its named defect and cites `c2/controls/*-v2.out`. Three files in that
+glob contain the base-tree clean output, not the named fixture finding; they
+remain byte-intact as historical evidence. The exact output receipts that do
+show the findings are:
+
+| Fault | Replacement receipt | Observed output |
+|---|---|---|
+| thin-row | `.ufo/waves/round-32/c2/controls/thin-v2.out` | `defective .ufo/waves/round-29/count-c1.py: thin-row` |
+| empty-exit-map | `.ufo/waves/round-32/c2/controls/noexit-v2.out` | `defective .ufo/waves/round-29/count-c1.py: empty-exit-map` |
+| missing-path | `.ufo/waves/round-32/c2/controls/badpath-v2.out` | `defective .ufo/waves/round-29/count-c1.py: missing-path:.ufo/waves/round-999/count-c999.py` |
+
+### Round-32 filed report receipt-lineage correction (routed defect 1)
+
+The filed report's sentence “`c2r/c2r-tip.json` and the gate/selftest finals
+measure the data tip `967d88528c1d` and are committed in `3f1a7330`” is
+superseded only as to its grouping of receipts. The committed
+`c2r/c2r-tip.json` records `tip=dc4258bdb08d658f1c5b15abc8378461659bd155`
+and was first added by `967d88528c1d83535563f971863f7855f76b4849`. The
+separate `gate-tip.out` and `selftest-final.out` record the `967d88528c1d`
+lane-tip run and were added by `3f1a73308bec9c2f4497c557d01bc58ec8e72eca`.
+The filed report is not rewritten.
+
+### S193 quote correction (routed defect 3)
+
+The round-32 lesson's Gate text says “line 22” and “16 words”. At the pinned
+source revision, the sentence is in the docstring “Contract”, lines 15–16,
+and contains 17 whitespace-delimited words. S194 appends the corrected exact
+anchor and quote; S193 and the filed round-32 lesson remain unchanged.

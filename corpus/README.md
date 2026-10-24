@@ -513,3 +513,17 @@ K05) is unchanged and is carried by the prepared wave under `.ufo/waves/round-32
 The round-31 errata above about `rows 30` and the absent `c2-tip.json` stand; the
 round-32 section of SCORECARD records the reconciliations (RefRepair pointer, w2 seat
 census) routed by the round-31 closure.
+
+## Round-33 disposition — receipt lineage and gate evidence
+
+The round-32 report's c2r lineage sentence, three stale v2 control filenames,
+S193 quote location/count, and gate-receipt metadata are corrected by
+append-only records in `corpus/lessons/round-33.md` and `SCORECARD.md`.
+S194 is a scoped own-work source correction for the gate's exact docstring
+anchor; it does not add a `knowledge/` entry or serving surface. The first
+round-33 gate capture exposed an extra `missing-path` in its synthetic
+empty-exit-map fixture; the committed diagnostic preserves that output and
+the corrected fixture is isolated in the final replay set. No knowledge
+coverage-map ground or endpoint sample advanced. The serving frontier remains
+as recorded by round 32: `response_format`/`json_schema` grammar, `/v1/completions`,
+other engines, K05, and registered-consumer reconciliation.

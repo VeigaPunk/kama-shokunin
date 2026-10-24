@@ -1326,3 +1326,37 @@ properly here.
 | Round-17 verdict census (process tool) | measurement: `python3 .ufo/waves/round-17/count-verdicts.py ADVICE_DIR [--expect-names FILE.json] [--json]` | 0 count completed (any verdict mix); 2 could not evaluate (`--expect-names` unreadable / bad JSON) | strict first-line `VERDICT:` classifier; round-16 falsify arm: 34/40/0 + 5 nonconformant (`corpus/lessons/round-17.md` M3); demo `.ufo/waves/round-17/provenance-0to79-demo.txt` | read-only; writes nothing |
 | Round-26 C1 echo-signature counter | measurement: `python3 .ufo/waves/round-26/count-c1.py --out <receipt.json>` | 0 ran, prints `counted N` against the frozen predicate; 2 could not evaluate (pins, launch failure) | relaunches every trigger against the sha256-pinned binary and model (`.ufo/waves/round-26/preregistration.json`); echo-shortcut limit recorded in `corpus/lessons/round-26.md` | starts/stops its own fixture server; writes only the `--out` file |
 | Round-32 C2r claim-row evidence | measurement: `/usr/bin/python3 .ufo/waves/round-32/count-c2r.py --repo <clone> --tip <full commit> --out <receipt>` | 0 ran, prints `rows N base_mismatched M exempt E valid_corrections V false_corrections F unresolved U append_only A met B`; 2 could not evaluate (tip, base blob, correction header) | counter sha256 `ef298b63…c92e` (frozen at `9afaf0e9`); base `07794a4d`; round-qualified key `(round, row, class)` parsed from `CR<F>:<N>:` with a uniqueness precondition (duplicates are false); before receipts `.ufo/waves/round-32/c1/before-base.json`; kill-rule controls `.ufo/waves/round-32/c1/controls/`; final re-run `.ufo/waves/round-32/c2r/c2r-tip.json` at the landed tip | read-only git |
+
+## Round-33 receipt evidence replays
+
+The round-32 closure correction records three control filenames whose bodies
+are not the fixture outputs their names imply. Leave those historical files
+byte-intact; the authoritative fixture outputs are
+`.ufo/waves/round-32/c2/controls/{thin-v2.out,noexit-v2.out,badpath-v2.out}`.
+`corpus/lessons/round-33.md` records the append-only correction and S194's
+precise source anchor. The gate definition is the docstring "Contract" at
+`tools/gate-registry-check.py:15-16` (S194), not a live endpoint claim.
+
+Replay the round-32 gate from its pinned source revision and emit the clean
+lane-tip run plus three deterministic temporary-Git controls:
+
+```sh
+python3 tools/round33-gate-receipts.py capture --repo . --source-rev 967d88528c1d83535563f971863f7855f76b4849 --out .ufo/waves/round-33/c2/final
+python3 tools/round33-gate-receipts.py audit --repo . --tip <full-commit> --source-rev 967d88528c1d83535563f971863f7855f76b4849 --receipt-dir .ufo/waves/round-33/c2/final
+```
+
+`capture` refuses to overwrite an existing output directory and writes only
+beneath `.ufo/waves/round-33/c2/`; fixture Git writes remain temporary. Each
+receipt records the exact argv, source/evaluated revision, evaluated tree,
+gate and runner digests, numeric `EXIT_CODE`, and stdout/stderr. `audit`
+replays the pinned gate and requires the exact expected lines and exit for
+each named fixture. These receipts grade the registry instrument, not model
+readiness or endpoint health.
+
+The round-33 calibration census is narrower than the round-29 all-statement
+counter: it reads the round-32 C2 Scorecard row at its authoring revision and
+checks only the three append-only replacement mappings:
+
+```sh
+python3 tools/round33-claim-audit.py --repo . --statement-rev dc4258bdb08d658f1c5b15abc8378461659bd155 --tip <full-commit>
+```
