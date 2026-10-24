@@ -40,6 +40,24 @@ CASES = {
         "defective .ufo/waves/round-33/count-fixture.py: missing-path:.ufo/waves/round-999/count-c999.py",
     ),
 }
+EXPECTED_STDOUT = {
+    "gate-tip": ["registered 10 unregistered 0 defective 0"],
+    "thin-row": [
+        "defective .ufo/waves/round-33/count-fixture.py: thin-row",
+        "defective .ufo/waves/round-33/count-fixture.py: empty-entry",
+        "defective .ufo/waves/round-33/count-fixture.py: empty-exit-map",
+        "registered 1 unregistered 0 defective 3",
+    ],
+    "empty-exit-map": [
+        "defective .ufo/waves/round-33/count-fixture.py: empty-exit-map",
+        "registered 1 unregistered 0 defective 1",
+    ],
+    "missing-path": [
+        "defective .ufo/waves/round-33/count-fixture.py: missing-path:.ufo/waves/round-999/count-c999.py",
+        "registered 1 unregistered 0 defective 1",
+    ],
+}
+
 REGISTRY_HEADER = (
     "| Name | Kind / entry command | Exit map | Self-test / pinned values | Write scope |\n"
     "|---|---|---|---|---|\n"
@@ -109,7 +127,7 @@ def write_fixture(root: Path, kind: str, gate_bytes: bytes) -> None:
         row = f"| {counter} | | | | |\n"
     elif kind == "empty-exit-map":
         row = (
-            f"| {counter} | python3 tools/measure.py |   | "
+            f"| {counter} | python3 |   | "
             "fixed fixture values | no repository writes |\n"
         )
     elif kind == "missing-path":
@@ -285,6 +303,7 @@ def output_ok(case: str, receipt: str, expected_exit: int, expected_line: str,
         and headers.get("RUNNER_SHA256") == runner_hash
         and headers.get("EXIT_CODE") == str(expected_exit)
         and expected_line in stdout.splitlines()
+        and stdout.splitlines() == EXPECTED_STDOUT[case]
         and headers.get("COMMAND")
         and headers.get("COMMAND_ARGV_JSON")
     )
