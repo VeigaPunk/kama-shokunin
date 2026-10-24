@@ -293,6 +293,27 @@ def output_ok(case: str, receipt: str, expected_exit: int, expected_line: str,
         headers[key] = value
     evaluated = headers.get("EVALUATED_REV", "")
     tree = headers.get("EVALUATED_TREE", "")
+    try:
+        argv = json.loads(headers.get("COMMAND_ARGV_JSON", ""))
+    except (TypeError, json.JSONDecodeError):
+        return False
+    if (
+        not isinstance(argv, list)
+        or len(argv) != 6
+        or not all(isinstance(arg, str) for arg in argv)
+        or Path(argv[0]).name not in {"python", "python3"}
+        or not argv[1].endswith("gate-registry-check.py")
+        or argv[2] != "--repo"
+        or not os.path.isabs(argv[3])
+        or argv[4] != "--rev"
+        or argv[5] != evaluated
+    ):
+        return False
+    evaluated_for_command = source_rev if case == "gate-tip" else evaluated
+    fixture_for_command = "<lane>" if case == "gate-tip" else f"<fixture:{case}>"
+    expected_command = (
+        f"python3 {GATE_PATH} --repo {fixture_for_command} --rev {evaluated_for_command}"
+    )
     return (
         headers.get("FORMAT") == "KAMA_GATE_RECEIPT_V1"
         and headers.get("FIXTURE") == case
@@ -304,7 +325,7 @@ def output_ok(case: str, receipt: str, expected_exit: int, expected_line: str,
         and headers.get("EXIT_CODE") == str(expected_exit)
         and expected_line in stdout.splitlines()
         and stdout.splitlines() == EXPECTED_STDOUT[case]
-        and headers.get("COMMAND")
+        and headers.get("COMMAND") == expected_command
         and headers.get("COMMAND_ARGV_JSON")
     )
 
@@ -361,6 +382,34 @@ def receipt_blob(repo: Path, tip: str, path: str) -> str | None:
     except UnicodeDecodeError:
         return None
 
+def parse_receipt(receipt: str) -> tuple[dict[str, str], str, str] | None:
+    try:
+        header_text, remainder = receipt.split("STDOUT_BEGIN\n", 1)
+        stdout, remainder = remainder.split("STDOUT_END\nSTDERR_BEGIN\n", 1)
+        stderr, ending = remainder.rsplit("STDERR_END\n", 1)
+    except ValueError:
+        return None
+    if ending:
+        return None
+    headers: dict[str, str] = {}
+    for line in header_text.splitlines():
+        if "=" not in line:
+            return None
+        key, value = line.split("=", 1)
+        if key in headers:
+            return None
+        headers[key] = value
+    return headers, stdout, stderr
+
+
+def known_runner_hashes(repo: Path, tip: str) -> set[str]:
+    revisions = git(repo, "log", "--format=%H", tip, "--", RUNNER_PATH).decode().splitlines()
+    return {
+        hashlib.sha256(read_blob(repo, revision, RUNNER_PATH)).hexdigest()
+        for revision in revisions
+    }
+
+
 
 def audit(repo: Path, tip: str, source_rev: str, receipt_dir: str) -> int:
     verify_revision(repo, tip)
@@ -368,12 +417,7 @@ def audit(repo: Path, tip: str, source_rev: str, receipt_dir: str) -> int:
     root = lane_path(repo, receipt_dir)
     relative_root = root.relative_to(repo.resolve()).as_posix()
     gate_hash = hashlib.sha256(read_blob(repo, source_rev, GATE_PATH)).hexdigest()
-    runner_bytes = receipt_blob(repo, tip, RUNNER_PATH)
-    runner_hash = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
-    runner_matches = (
-        runner_bytes is not None
-        and hashlib.sha256(runner_bytes).hexdigest() == runner_hash
-    )
+    runner_hashes = known_runner_hashes(repo, tip)
 
     # Rebuild the exact bounded inputs and re-run the pinned gate as the oracle.
     expected = expected_receipts(repo, source_rev)
@@ -386,9 +430,23 @@ def audit(repo: Path, tip: str, source_rev: str, receipt_dir: str) -> int:
         if receipt is None:
             missing += 1
             continue
+        actual = parse_receipt(receipt)
+        expected_record = parse_receipt(expected[case])
+        if actual is None or expected_record is None:
+            invalid += 1
+            continue
+        headers, stdout, stderr = actual
+        expected_headers, expected_stdout, expected_stderr = expected_record
+        runner_hash = headers.get("RUNNER_SHA256", "")
+        stable_fields = (
+            "FORMAT", "FIXTURE", "COMMAND", "SOURCE_REV", "EVALUATED_REV",
+            "EVALUATED_TREE", "GATE_SHA256", "EXIT_CODE",
+        )
         if (
-            runner_matches
-            and receipt == expected[case]
+            runner_hash in runner_hashes
+            and all(headers.get(key) == expected_headers.get(key) for key in stable_fields)
+            and stdout == expected_stdout
+            and stderr == expected_stderr
             and output_ok(case, receipt, expected_exit, expected_line,
                           source_rev, gate_hash, runner_hash)
         ):
