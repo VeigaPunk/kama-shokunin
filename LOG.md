@@ -2017,3 +2017,32 @@ record: six meaning cells falsified by probe; three surviving C1 pin mutants; C2
 **Census.** Round start `validate` exit 0 (`.ufo/waves/round-31/w2/census-validate-start.out`); a
 wave seat's `census` run reports 191 rows, 0 missing (`w2/out/ExecCensusRows/`); round end receipts are
 in the receipt-only commit.
+
+## Round 31 attempt 3 — re-execution at write time, frontier row, prepared wave-3 (2026-10-24)
+
+Attempts 1-2 of this steered round landed all claim data and died without a fleet report (six
+`lane-dead-no-report kama round=31` watchdog lines on 2026-10-23). This attempt inherited the tree
+at `f129e27b3b57a8fed7a34a8e6fe96d481e6c959d` and:
+
+- re-executed all three frozen counters at write time on a fresh scratch clone
+  (`/tmp/kama-r31-clone` at `f129e27b`): C1 `registered 18 counted 17 target 12 met True
+  not-counted ['K31-10']` exit 0; C2 `rows 30 base_mismatched 13 exempt 1 valid_corrections 10
+  false_corrections 0 unresolved 3 append_only True met False` exit 0; C3 `registered 9
+  unregistered 0` exit 0 — every value byte-identical to attempt 2's committed receipts
+  (`.ufo/waves/round-31/res/out/KamaR31a3.ResReRun{C1,C2}/`, `diff` against the inherited
+  `KamaR31a1b`/`ResReRunC2` receipts: none);
+- committed the inherited-untracked re-run receipts (`res/`) under this round's entry, closing the
+  recurrence mined as lesson row 9;
+- opened source row S192 (OpenAI chat `response_format` reference) for the round-32 grammar
+  frontier; census 191 → 192 rows, validate exit 0 at start and end
+  (`.ufo/waves/round-31/census-end-attempt3.out`);
+- prepared wave-3 (32 seats, policy v1 validator exit 0) for the round-32 repair candidates under
+  `.ufo/waves/round-31/w3/` — not dispatched per the accepted host mapping; the orchestrator
+  dispatches prepared waves between rounds;
+- landed the round-31 fleet report that attempts 1-2 never filed.
+
+**Measurements.** Counting commands and receipts: C1 `.ufo/waves/round-31/res/out/KamaR31a3.ResReRunC1/c1-tip.json`;
+C2 `.ufo/waves/round-31/res/out/KamaR31a3.ResReRunC2/c2-tip.json`; C3
+`python3 tools/gate-registry-check.py --rev f129e27b3b57a8fed7a34a8e6fe96d481e6c959d`. Verdicts
+unchanged: C1 met-on-counter/not admitted; C2 not met (key defect); C3 met-on-predicate/not
+admitted. No axis score moved; no capability entered.

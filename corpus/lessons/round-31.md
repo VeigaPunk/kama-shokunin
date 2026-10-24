@@ -139,3 +139,30 @@ source rejections: the C1 no-op registry (counted but meaningless), the C3 bogus
 - The round-30 hold still reads `statements 141 … unresolved 0 met True` at the round-31 tip
   (`w2/out/ReRunHold/`, `w2/out/ExecHoldRepro/`); only the `tip` field differs from the committed
   receipt.
+
+## Attempt 3 (2026-10-24) — inherited claims re-executed at write time, frontier row S192, report landed
+
+Attempts 1-2 of this steered round froze and landed all three claims (C1 depth, C2 calibration,
+C3 operability) and died without a fleet report; the watchdog logged
+`lane-dead-no-report kama round=31` six times across 2026-10-23. This attempt inherits the
+committed tree at `f129e27b`, re-executes every frozen counter at write time on a fresh scratch
+clone, runs the frontier step, prepares the round-32 wave (host mapping: the orchestrator
+dispatches prepared waves between rounds), and lands the report that attempts 1-2 never filed.
+
+### Gate
+
+One new row opened this attempt: **S192** — OpenAI Chat Completions API reference,
+`response_format` — https://developers.openai.com/api/reference/resources/chat/index.md, opened
+2026-10-24. Located quote (Body Parameters → `response_format`, fetched markdown line 1008):
+"Setting to `{ "type": "json_schema", "json_schema": {...} }` enables Structured Outputs which
+ensures the model will match your supplied JSON schema." (22 words.) The row is tier A scoped to
+the OpenAI-side declared semantics of `response_format`; it is the client contract the round-32
+frontier item (`response_format`/`json_schema` → grammar transform, planned at the round-31
+attempt-2 SCORECARD) must honor. `used-by` cites this lesson. Status S180-S191 unchanged
+(mined, on-release); zero cells changed old→new; zero rejections.
+
+### Mistakes
+
+| # | class | evidence | captured-by | fix (shown able to fail) |
+|---|---|---|---|---|
+| 9 | recurrence of mistake 5's class on the same round: attempt 2's dying session re-ran the two counters at the final tip and left the receipts untracked again (`res/out/KamaR31a1b.ResReRunC1/c1-tip.json`, `res/out/ResReRunC2/c2-tip.json`), so the round inherited a second uncommitted measurement set | `git -C … status --porcelain` at the start of attempt 3 printed `?? .ufo/waves/round-31/res/`; the receipts inside carry tip `f129e27b` | none — mistake 5 named the fix class but no committed gate enforces it between receipt write and session end | this attempt's own re-runs land in the same `res/out/` tree and are committed with it (this lesson's commit); the report-time gate of mistake 5 runs at report time and passes only when `git status --porcelain .ufo/waves/round-31` prints nothing untracked — it fails (1 line) on the inherited tree at attempt-3 start and passes after the commit |

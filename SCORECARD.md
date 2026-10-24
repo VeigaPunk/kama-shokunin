@@ -1705,3 +1705,44 @@ C3 registers an existing instrument, it does not add one; no capability row ente
 4. Pin verification: `count-c1.py` verifies only sha256 fields read from the tip blob; working-tree pin
    edits and the declared `bytes` field are ignored (`w2/out/MutC1Pin/`), and C2's append-only check is
    a base-prefix check only (`w2/out/MutC2Append/`).
+
+## Round 31 attempt 3 — inherited claims re-executed at write time, frontier row S192, wave-3 prepared (2026-10-24)
+
+Authority unchanged: assigned axes operability + calibration (`../shokunin.conf` kama row); lowest
+axes at round start depth, calibration, adjacency all 7; stagnation nudge inactive. Attempts 1-2 of
+this steered round (2026-10-23) froze all three claims and landed their data but died without a
+fleet report (watchdog: six `lane-dead-no-report kama round=31` lines). This attempt inherits the
+committed tree at `f129e27b3b57a8fed7a34a8e6fe96d481e6c959d`, re-executes every frozen counter at
+write time on a fresh scratch clone (`/tmp/kama-r31-clone`, clean at `f129e27b`), runs the frontier
+step, prepares the round-32 wave under the accepted host mapping (L1 prepares; the orchestrator
+dispatches between rounds), and lands the report.
+
+| Claim | Axis, score | Re-executed at write time (2026-10-24) | Verdict (unchanged from attempt 2) |
+|---|---|---|---|
+| C1 (depth; frozen attempt 1) | depth 7 → 7 | `/usr/bin/python3 .ufo/waves/round-31/count-c1.py --lane . --repo /tmp/kama-r31-clone --tip f129e27b… --out .ufo/waves/round-31/res/out/KamaR31a3.ResReRunC1/c1-tip.json` → `registered 18 counted 17 target 12 met True not-counted ['K31-10']`, exit 0; every per-row live observation byte-identical to attempt 2's inherited receipt (`res/out/KamaR31a1b.ResReRunC1/c1-tip.json`, diff none) | **met on the frozen counter; not admitted** — a twelve-duplicate-row no-op registry also meets it (`w2/out/CriticNoop/`); counter defect routed to round 32 |
+| C2 (calibration; frozen attempt 1) | calibration 7 → 7 | `/usr/bin/python3 .ufo/waves/round-31/count-c2.py --repo /tmp/kama-r31-clone --tip f129e27b… --out .ufo/waves/round-31/res/out/KamaR31a3.ResReRunC2/c2-tip.json` → `rows 30 base_mismatched 13 exempt 1 valid_corrections 10 false_corrections 0 unresolved 3 append_only True met False`, exit 0 | **not met** — three rows (rounds 11-13) share the Claim cell `C1`; the `(row, class)` key is non-injective; reference repair also fails (`w2/out/RefRepair/`, `w2/out/MutC2Key/`) |
+| C3 (operability; frozen attempt 2) | operability 8 → 8 | `python3 tools/gate-registry-check.py --rev f129e27b…` → `registered 9 unregistered 0`, exit 0 | **met on the frozen predicate; not admitted** — occurrence check; an empty-exit-map row and a nonexistent metadata path also pass (`w2/out/ExecC3Control/`, `w2/out/CriticC3Control/`) |
+
+Frontier step this attempt: census before exit 0 (191 rows) → after exit 0 (192 rows,
+`.ufo/waves/round-31/census-end-attempt3.out`); one new row **S192** opened 2026-10-24 (OpenAI Chat
+Completions API reference, `response_format`; tier A scoped to the OpenAI-side declared semantics;
+`used-by` `corpus/lessons/round-31.md`); zero cells changed old→new on S180-S191; zero rejections.
+Mistake mined: lesson row 9 — recurrence of mistake 5's class (uncommitted re-run receipts in
+`res/`, again inherited untracked); fix enforced this attempt (receipts committed with this
+section; report-time untracked gate passes only at zero). Sourced claim: C1's rows rest on
+S180-S191 opened this round; S192 carries the round-32 frontier item. Wave-3 (32 seats, policy v1
+band 32-64, validator exit 0, attack roles 20/32 = 62.5%) is prepared at
+`.ufo/waves/round-31/w3/spec.json` + `taskCall.json`, NOT dispatched — host mapping: the
+orchestrator dispatches prepared waves between rounds. Other scores held: operability 8, freshness
+8, coverage 9, depth 7, adjacency 7. No capability row enters.
+
+### Planned (round 32) — restated, unchanged in substance from attempt 2's plan
+
+Repair the two frozen-counter defects as instruments (round-qualified C2 correction key with a
+declared uniqueness precondition — candidate `w2/out/MutC2Key/counter-roundkey.py`; C1 eligibility:
+a counted row names a parameter and value the base request does not already carry, and the
+`ignored` class excludes session-consumed keys), gate graded meaning cells by a probe, not a word
+count (KQ42), and pin declared bytes plus refuse working-tree pin edits. Then re-earn depth or take
+the `response_format`/`json_schema` → grammar transform (S192; scout item ScoutGrammarTransform in
+the prepared wave) or `/v1/completions`. Wave-3's 32 prepared items attack and build exactly these
+candidates.
