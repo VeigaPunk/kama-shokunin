@@ -1,0 +1,64 @@
+{
+  "schema": "kama-round-preregistration-v1",
+  "lane": "kama",
+  "round": 34,
+  "attempt": 1,
+  "frozen_at": "2026-10-24",
+  "base_commit": "7c35289da5f4b94e062cd900eb086919e5094003",
+  "author": "Kimi fresh L1",
+  "authority": {
+    "assigned_axes": "operability + calibration (../shokunin.conf kama row)",
+    "lowest_non_retired_axis": "calibration",
+    "stagnation_nudge": "inactive (calibration 7 is below the saturation line 8)"
+  },
+  "claims": [
+    {
+      "id": "C1",
+      "axis": "calibration",
+      "score": "7 -> 7 (delta 0)",
+      "surface": "the lane's SCORECARD capability self-assessment versus the capabilities the lane actually demonstrated",
+      "predicate": "The capability-repertoire counter prints exactly one line 'listed L observed O missing M unsubstantiated U met B'. Before: M > 0 (met False, exit 1). After: M == 0 and U == 0 (met True, exit 0).",
+      "counting_command": "python3 tools/capability-repertoire-audit.py --repo . --tip <full-commit> --out <receipt.json>",
+      "label": "listed/observed/missing/unsubstantiated/met",
+      "kill_rule": "If the counter at the landed tip does not print met True with M == 0 and U == 0, C1 is a MISS (honest stop). If a do-nothing control (a canonical list that merely repeats the missing capability names with no resolving evidence pointer, or that names a capability nobody demonstrated) reaches met True, the counter or the target is wrong and the claim is void.",
+      "do_nothing_control_required": true,
+      "expected_before": "missing 3 (the round-20, round-25 and round-30 capabilities are demonstrated in their own append sections but absent from the canonical list), met False",
+      "expected_after": "listed 6 observed 6 missing 0 unsubstantiated 0 met True",
+      "separable_from": "C2 touches SCORECARD.md capability tables and the C1 counter only; C2 touches SKILL.md registry rows and tools/gate-registry-check.py only"
+    },
+    {
+      "id": "C2",
+      "axis": "operability",
+      "score": "8 -> 8 (delta 0)",
+      "surface": "the lane's own instrument-registry gate coverage of round-scoped counters",
+      "predicate": "The instrument-registry gate prints 'registered R unregistered U defective D'. Before (widened population, base revision): the two round-33 counters appear as unregistered (exit 1). After (landed tip): registered 12 unregistered 0 defective 0 (exit 0).",
+      "counting_command": "python3 tools/gate-registry-check.py --rev <full-commit>",
+      "label": "registered/unregistered/defective",
+      "kill_rule": "If the gate at the landed tip does not print registered 12 unregistered 0 defective 0 with exit 0, C2 is a MISS (honest stop). If a do-nothing control (the two tools named in prose only, no five-column registry row) reaches exit 0, the counter or the target is wrong and the claim is void.",
+      "do_nothing_control_required": true,
+      "expected_before": "registered 10 unregistered 2 defective 0 (exit 1) at base 7c35289 with the widened population",
+      "expected_after": "registered 12 unregistered 0 defective 0 (exit 0)",
+      "separable_from": "C2 does not touch SCORECARD.md capability tables and does not depend on the C1 counter"
+    }
+  ],
+  "frontier_step": {
+    "assimilation_theme": "how a served model name / alias is resolved across local serving stacks (one theme)",
+    "candidate_entries": [
+      "corpus/knowledge/serving-alias-contract.md",
+      "corpus/knowledge/served-model-id-resolution.md",
+      "corpus/knowledge/served-model-id-resolution-amendment-2026-10-24-r7.md"
+    ],
+    "max_admitted_entries": 3,
+    "package_read_only": "/home/vgpnk/Projects/shokuknow (never written, never a campaign tool run there)",
+    "procedure": "id-collision check in scratch (0-3 leading spaces pattern) -> scratch transformation of the staged rows into fleet schema -> mirror the lane in scratch -> sources-census.sh validate --file on the mirror (exit 0) BEFORE any append -> append only the rows the admitted entries cite -> quarantine slice hand-checked before any append",
+    "considerthese": "at most one still-unimplemented proposal mined from considerthese/2026-10-23.md (never edited)"
+  },
+  "wave": {
+    "shape": "one v1 wave, 33 seats, policy v1 band 32-64",
+    "spec": ".ufo/waves/round-34/w1/spec.json",
+    "validate": ".ufo/waves/round-34/w1/validate.json",
+    "taskCall": ".ufo/waves/round-34/w1/taskCall.json",
+    "dispatch": "one batched dispatch of the validator's taskCall (33 lanes) on the Kimi surface",
+    "planner_seat": "held by the L1; no planner role in the wave (the validator refuses it)"
+  }
+}

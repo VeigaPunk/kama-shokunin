@@ -1,0 +1,297 @@
+{
+ "reportDir": ".ufo/waves/round-34/w1/out",
+ "maxLanes": 33,
+ "context": "# Goal\nkama lane (local model serving and endpoint health), round 34, attempt 1, WAVE 1 (build + attack). The L1 (Kimi fresh L1) holds the canonical planner seat; a planner role is never a swarm role and must not be added. This wave carries the \u00a73 L2 floor: connector, executor, scribe, scout, reviewer and critic roles all occur in this one batched dispatch.\n\n# Lane and bounds\nLane repo: /home/vgpnk/Projects/shokunin/kama-shokunin (jj-colocated; branch master). Work ONLY inside that lane and only inside your OWN seat directory /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-34/w1/out/<YourSeatName>/. Never mutate the fleet repo /home/vgpnk/Projects/shokunin, any sibling lane, the lane's jj state or the lane's Git index. Never run git add/commit/stash/checkout/switch/reset/pull/push and never run a mutating jj command. Read-only git (log/show/diff/status/ls-files) is permitted. Never write into /home/vgpnk/Projects/shokuknow - read only.\nEvery `Report:` trailer path is relative to /home/vgpnk/Projects/shokunin/kama-shokunin - write it at /home/vgpnk/Projects/shokunin/kama-shokunin/<that path>. If your agent profile has no Write and no Bash tool, print the COMPLETE report as your final message instead; the L1 persists your stdout as that report file. Never message agent://all.\n\n# Declared claims (frozen before any data seat ran)\nC1 calibration 7 -> 7 (the lowest assigned non-retired axis; operability is 8): the lane's SCORECARD capability self-assessment must list every capability the lane demonstrated. Frozen predicate: the capability-repertoire counter prints one line 'listed L observed O missing M unsubstantiated U met B'; before = missing M > 0 (met False, exit 1); after = M == 0 and U == 0 (met True, exit 0). A listed row counts only if its evidence cell contains at least one repo-relative path token that resolves at the evaluated revision. Counting command: python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/capability-repertoire-audit.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip <full-commit> --out <receipt.json>.\nC2 operability 8 -> 8: the lane's own instrument-registry gate must see every tracked round-scoped counter, including the two round-33 counters that today live in tools/ and are named only in prose. Frozen predicate: the widened gate prints 'registered R unregistered U defective D'; before = the two round-33 counters appear as unregistered (exit 1); after = registered 12 unregistered 0 defective 0 (exit 0). Counting command: python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/gate-registry-check.py --rev <full-commit>.\nBoth claims must be causally separable: each verifiable without the other having landed. Do-nothing controls are required for both (a construction that skips the claimed work must NOT reach the target).\n\n# Frontier step (item 10 of the round contract) - one theme only\nTheme: how a SERVED MODEL NAME / ALIAS is resolved across local serving stacks. Candidate staged entries: /home/vgpnk/Projects/shokuknow/merge/kama/knowledge/corpus/knowledge/serving-alias-contract.md, served-model-id-resolution.md and served-model-id-resolution-amendment-2026-10-24-r7.md (READ ONLY). Admit at most 1-3 entries on this ONE theme. Re-ground every cited source yourself: the Gate block must carry YOUR access date and a <=25-word located quote. Append only the SOURCES rows the admitted entries cite - never bulk-append the package. Every staged row must be normalized to the fleet census schema (11 columns, no literal or escaped pipe in any cell, recheck a valid ISO date or NNd or symbolic cadence, status mined, used-by exactly the admitted entries). The id-collision check, the scratch transformation and the validate-before-append all happen in scratch first. Quarantined payload-absent rows stay out until hand-checked.\nconsiderthese: /home/vgpnk/Projects/shokunin/kama-shokunin/considerthese/2026-10-23.md is operator-authored input - mine it, never edit it, and adopt at most ONE still-unimplemented proposal from it.\n\n# Evidence limits\nNo service restoration, endpoint readiness, model quality, current registered-consumer health, or cross-lane scope transfer is claimed. Do not fetch or write external domain source trees. A seat is a leaf; do not spawn subagents. A missing output is not a returned seat. The gate fixtures and census mirrors are synthetic control inputs, not live serving evidence.\n\n# Tooling authorization (operator, 2026-10-19)\nYou may install or upgrade tools that help your task - read /home/vgpnk/.omp/agent/RULES.md first (official channels, update-safety gate, record tool/version/channel/reason in your report); install via uv tool/npx/an official binary in ~/.local/bin.\nPacman guard (orchestrator ruling 2026-10-20): ALL pacman transactions are PAUSED host-wide until the operator resolves the host-recovery L0 question; never run pacman. If the pause lifts later, follow the dry-run rule in /home/vgpnk/.omp/agent/RULES.md and do not run a partial upgrade.\n",
+ "items": [
+  {
+   "name": "ExecCapabilityAudit",
+   "role": "executor",
+   "prompt": "# Target\nC1 instrument: a capability-repertoire audit that counts the lane's SCORECARD capability self-assessment against the capabilities the lane actually demonstrated.\n# Task\nWrite a standalone Python 3 stdlib-only tool at /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-34/w1/out/ExecCapabilityAudit/capability-repertoire-audit.py. It parses SCORECARD.md: (1) find every markdown table whose header has 4 columns and whose last header cell contains 'First-working round' -> capability-shaped; (2) find the line matching r'\\*\\*Capabilities . canonical list as of round (\\d+)\\*\\*' and take the HIGHEST round number; the canonical table is the first capability-shaped table after that line; (3) observed = union of capability names (first cell) over all capability-shaped tables except the canonical one, with their 'first working round' cell; (4) listed = names in the canonical table; (5) for each listed row, extract repo-relative path tokens (regex: [A-Za-z0-9._-]+(?:/[A-Za-z0-9._-]+)+ with a known extension .md/.py/.json/.out/.txt/.tsv/.sh) from its evidence/demonstration cell and check at least one resolves under the lane root (ignore tokens starting with / or ~ and bare filenames); a row with no resolving path token is unsubstantiated. Print exactly one line: 'listed L observed O missing M unsubstantiated U met B' where missing = observed minus listed and met = (missing==0 and unsubstantiated==0). Exit 0 only when met is True, else 1; exit 2 on usage/IO error. Add a --selftest arm that builds a scratch SCORECARD with a name-only row and must print met False. Run it against the lane repo and report its output. Do not edit any lane file other than files under your own seat directory.\nReport: .ufo/waves/round-34/w1/out/ExecCapabilityAudit.md",
+   "axes": [
+    "operability",
+    "calibration"
+   ]
+  },
+  {
+   "name": "ExecGatePopulation",
+   "role": "executor",
+   "prompt": "# Target\nC2 instrument: the lane instrument-registry gate whose population must cover round-scoped counters held in tools/ as well as in the wave directories.\n# Task\nCopy /home/vgpnk/Projects/shokunin/kama-shokunin/tools/gate-registry-check.py into /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-34/w1/out/ExecGatePopulation/gate-registry-check-widened.py and change ONLY the population rule: a tracked path is an instrument if it matches ^\\.ufo/waves/round-[^/]+/count-[^/]+\\.py$ OR ^tools/round[0-9]+-[A-Za-z0-9._-]+\\.py$. Keep every other behaviour (registry detection, defect grading, exit codes, output lines) byte-identical. Do NOT edit the lane's tools/ file. Then run: (a) python3 <your copy> --repo /home/vgpnk/Projects/shokunin/kama-shokunin --rev 7c35289da5f4b94e062cd900eb086919e5094003 ; (b) the same without --rev (working tree). Paste both outputs and exit codes. Expected: at the pinned rev the two round-33 tools appear as 'unregistered'. Also run the copy's --selftest and paste its output.\nReport: .ufo/waves/round-34/w1/out/ExecGatePopulation.md",
+   "axes": [
+    "operability"
+   ]
+  },
+  {
+   "name": "ExecRegistryRows",
+   "role": "executor",
+   "prompt": "# Target\nThe two five-column instrument-registry rows that SKILL.md must carry for the round-33 counters.\n# Task\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/SKILL.md sections '## Local gate/probe registry', '### Round-31 instrument registry rows' and '### Round-32 instrument registry rows' to learn the exact five-column row shape (| Name | Kind / entry command | Exit map | Self-test / pinned values | Write scope |). Draft TWO new rows, one for tools/round33-claim-audit.py and one for tools/round33-gate-receipts.py, each with: a non-empty entry command, the tool's real exit map (read the tool's argparse/docstring to get the true exit codes - do not guess), a self-test or pinned-values cell naming real existing files under the lane, and a write-scope cell. Verify every repo-relative path token you cite resolves with test -e under the lane root. Write the two rows as text into /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-34/w1/out/ExecRegistryRows/rows.md. Do not edit SKILL.md.\nReport: .ufo/waves/round-34/w1/out/ExecRegistryRows.md",
+   "axes": [
+    "operability"
+   ]
+  },
+  {
+   "name": "ExecIdCollision",
+   "role": "executor",
+   "prompt": "# Target\nItem-10 id collision check between the lane registry and the staged shokuknow package, in scratch only.\n# Task\nRun the required collision procedure read-only. Lane registry: /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md. Staged package: /home/vgpnk/Projects/shokuknow/merge/kama/SOURCES.append.md (READ ONLY - never write into /home/vgpnk/Projects/shokuknow). Extract ids with the 0-3 leading spaces pattern: grep -oE '^ {0,3}\\|[[:space:]]*S[0-9]{3,}' <file> | grep -oE 'S[0-9]+' | sort. Write both id lists and their comm -12 collision file into /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-34/w1/out/ExecIdCollision/ (reg-ids, staged-ids, collisions). Report: the lane's highest id, the staged id range, the collision count, and the full collisions list. Also PROVE the guard: build a scratch registry file that contains an INDENTED row '  | S002 | ...' and show the 0-3-space pattern extracts S002 from it while a column-zero-only pattern extracts nothing. Paste both outputs.\nReport: .ufo/waves/round-34/w1/out/ExecIdCollision.md",
+   "axes": [
+    "operability",
+    "calibration"
+   ]
+  },
+  {
+   "name": "ExecTransformAppend",
+   "role": "executor",
+   "prompt": "# Target\nItem-10 scratch transformation and validation of the staged SOURCES rows before any append.\n# Task\nBuild a scratch append block from the staged rows at /home/vgpnk/Projects/shokuknow/merge/kama/SOURCES.append.md (READ ONLY) for the ids cited by the served-name/alias theme entries. Transform each staged row into fleet schema: 11 columns, NO literal or escaped pipe inside any cell (rewrite any anchor containing a pipe), recheck becomes a valid ISO date (YYYY-MM-DD) or NNd or a symbolic cadence token, status = 'mined', used-by lists exactly the admitted entry paths that cite the row, and the stripped prose from the staged recheck cells is recorded in your report (not in the row). Then mirror the lane in scratch: copy /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/ to /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-34/w1/out/ExecTransformAppend/validate/corpus/, insert the append block into the Registry table, and run: /home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --file <that mirror>/corpus/SOURCES.md . Paste the command, its output and its exit code. Do not append anything to the lane's real corpus/SOURCES.md.\nReport: .ufo/waves/round-34/w1/out/ExecTransformAppend.md",
+   "axes": [
+    "operability",
+    "calibration"
+   ]
+  },
+  {
+   "name": "ScribeLesson",
+   "role": "scribe",
+   "prompt": "# Target\ncorpus/lessons/round-34.md skeleton with the four required sections.\n# Task\nDraft /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-34/w1/out/ScribeLesson/round-34-lesson-draft.md with the exact headings '## Claims', '## Gate', '## Mistakes', '## Frontier'. Under ## Claims record C1 (calibration 7 -> 7) and C2 (operability 8 -> 8) with their frozen predicates and counting commands as stated in the wave context. Under ## Gate leave a table skeleton with columns id | source | kind | tier | scope | anchor | teaches | status | opened | recheck | used-by for the rows the round will open, plus an admit/reject block. Under ## Mistakes leave the round-34 mined mistake rows. Do not write any lane file except your own seat directory.\nReport: .ufo/waves/round-34/w1/out/ScribeLesson.md",
+   "axes": [
+    "calibration"
+   ]
+  },
+  {
+   "name": "ScribeSourcesRows",
+   "role": "scribe",
+   "prompt": "# Target\nThe fleet-schema SOURCES.md rows the round will append, normalized to the census contract.\n# Task\nUsing the staged package /home/vgpnk/Projects/shokuknow/merge/kama/SOURCES.append.md (READ ONLY) and the lane registry /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md (READ ONLY), write a candidate append block to /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-34/w1/out/ScribeSourcesRows/append-block.md. Requirements: exactly 11 columns per row; no literal or escaped pipe inside any cell; id = 'S' + 3+ digits continuing the lane's space after its highest id (state which ids you used); kind one of spec|docs|paper|code|tool|dataset|talk|book|community|own-work; tier A|B|C; status 'mined'; opened = today's date 2026-10-24; recheck a valid ISO date or NNd or a symbolic cadence token; used-by the exact repo-relative paths of the knowledge entries that cite the row; anchor an exact section/heading/line plus revision. Also draft one own-work row for the round-34 instrument you cite. Report which staged row ids you selected and why. Do not append to the lane's corpus/SOURCES.md.\nReport: .ufo/waves/round-34/w1/out/ScribeSourcesRows.md",
+   "axes": [
+    "calibration",
+    "operability"
+   ]
+  },
+  {
+   "name": "ScribeScorecard",
+   "role": "scribe",
+   "prompt": "# Target\nThe SCORECARD.md round-34 sections: the claims table and the new canonical capabilities table.\n# Task\nDraft into /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-34/w1/out/ScribeScorecard/: (a) a '## Round 34 - ...' section with a claims table whose columns are Claim | Axis, score | Before -> after (measured) | Counting command | Measured commit | Evidence, leaving the measured cells as placeholders to be filled from the receipts; (b) a '**Capabilities - canonical list as of round 34**' section holding ONE capability-shaped table (| Capability | What it can now do | Evidence pointer | First-working round |) that lists EVERY capability the lane demonstrated with its first-working round and an evidence pointer that resolves under the lane root. To find the demonstrated set, read every capability-shaped table in /home/vgpnk/Projects/shokunin/kama-shokunin/SCORECARD.md (the one-row table near the top, the round-16 canonical list, and the '### capabilities: append' sections of rounds 20, 25 and 30). For each row, verify every cited repo-relative path with test -e and drop or fix any that does not resolve. Do not edit SCORECARD.md.\nReport: .ufo/waves/round-34/w1/out/ScribeScorecard.md",
+   "axes": [
+    "calibration",
+    "operability"
+   ]
+  },
+  {
+   "name": "ScoutCanonicalCaps",
+   "role": "scout",
+   "prompt": "# Target\nThe lane's capability self-assessment: every capability-shaped table in SCORECARD.md, its rows and its evidence pointers.\n# Task\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/SCORECARD.md. Enumerate EVERY markdown table whose header has 4 columns and whose last header cell contains 'First-working round'. For each: the section heading it sits under, the row names, the first-working-round cell and the evidence/demonstration cell. State which table is the canonical list (the one introduced by a line matching '**Capabilities . canonical list as of round N**'). Report the union of demonstrated capability names, and for each named capability whether at least one repo-relative path token in its evidence cell resolves under the lane root (use test -e; report the resolving token). Report the exact set of demonstrated capabilities NOT present in the canonical list. Paste the command you used to enumerate the tables.\nReport: .ufo/waves/round-34/w1/out/ScoutCanonicalCaps.md",
+   "axes": [
+    "calibration"
+   ]
+  },
+  {
+   "name": "ScoutAliasContract",
+   "role": "scout",
+   "prompt": "# Target\nThe staged served-name/alias contract knowledge entry and every source it cites.\n# Task\nRead /home/vgpnk/Projects/shokuknow/merge/kama/knowledge/corpus/knowledge/serving-alias-contract.md (READ ONLY). Report: its provenance trio (source/verified-at/recheck), the full body outline, and for EVERY source id it cites: the id, the URL or path, the exact anchor/section, and the located quote. Also report the file's total size and whether it contains any literal or escaped pipe characters inside table cells. Report only; do not copy the file into the lane.\nReport: .ufo/waves/round-34/w1/out/ScoutAliasContract.md",
+   "axes": [
+    "coverage",
+    "adjacency"
+   ]
+  },
+  {
+   "name": "ScoutServedIdResolution",
+   "role": "scout",
+   "prompt": "# Target\nThe staged served-model-id-resolution knowledge entry and every source it cites.\n# Task\nRead /home/vgpnk/Projects/shokuknow/merge/kama/knowledge/corpus/knowledge/served-model-id-resolution.md (READ ONLY). Report: its provenance trio, the body outline, and for EVERY source id it cites the id, URL/path, exact anchor and located quote. Note any amendment markers and any file it declares itself an amendment of. Report only.\nReport: .ufo/waves/round-34/w1/out/ScoutServedIdResolution.md",
+   "axes": [
+    "coverage",
+    "adjacency"
+   ]
+  },
+  {
+   "name": "ScoutR7Amendment",
+   "role": "scout",
+   "prompt": "# Target\nThe staged round-7 amendment to the served-model-id-resolution entry.\n# Task\nRead /home/vgpnk/Projects/shokuknow/merge/kama/knowledge/corpus/knowledge/served-model-id-resolution-amendment-2026-10-24-r7.md (READ ONLY). Report: its provenance trio, what it claims about Ollama's OpenAI-compatible model card, and every source id it cites with URL, anchor and located quote. State whether it supersedes or amends the round-2 entry and how the package says the two relate. Report only.\nReport: .ufo/waves/round-34/w1/out/ScoutR7Amendment.md",
+   "axes": [
+    "coverage",
+    "adjacency"
+   ]
+  },
+  {
+   "name": "ScoutCoverageMap",
+   "role": "scout",
+   "prompt": "# Target\ncorpus/README.md coverage map and frontier: which ground the lane already holds on served-name/alias resolution.\n# Task\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/README.md, especially its coverage map and '## Frontier' sections. Report: the rows that cover served-name / alias / model-id resolution (name the entry file and what it holds), the rows that cover vLLM/SGLang/Ollama model cards, and the explicit 'not held' / frontier items. Then judge, with quoted line numbers, whether a new entry on 'how a served model name is resolved and aliased across local serving stacks' lands on ground the lane already holds or on uncovered ground. Quote the lines you rely on.\nReport: .ufo/waves/round-34/w1/out/ScoutCoverageMap.md",
+   "axes": [
+    "coverage",
+    "calibration"
+   ]
+  },
+  {
+   "name": "ScoutAbsenceRegister",
+   "role": "scout",
+   "prompt": "# Target\nThe absent-defect register slice for lane kama.\n# Task\nRead /home/vgpnk/Projects/shokuknow/.ufo/waves/corpus-expansion-1/absent-defect-register.md (READ ONLY) and extract ONLY the data rows whose lane cell is exactly 'kama' (the header and the '## By lane' summary rows must be excluded - a summary row matches a bare lane name and prints blank cells). Use: awk -F'|' -v l='kama' '$2 ~ (\"`\" l \"`\") && $3 ~ /round[0-9]+/ && $4 ~ /S[0-9]+/ {print $4, $5}' <file>. Report the number of rows, every row's id and its class cell verbatim, and which rows carry a prose class cell ('could not be fetched', 'named no locator') instead of a specific defect class. Include the raw slice lines verbatim in your report (your profile has no Write tool; the L1 writes the slice file from your report). Report only; never edit the register.\nReport: .ufo/waves/round-34/w1/out/ScoutAbsenceRegister.md",
+   "axes": [
+    "calibration",
+    "freshness"
+   ]
+  },
+  {
+   "name": "ConnSiblingScope",
+   "role": "connector",
+   "prompt": "# Target\nSibling-overlap scan for the served-name/alias theme and for the round-34 instrument work.\n# Task\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/PROVINCE.md and /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/knowledge/cross-lane-scope.md. Then, using only read-only directory listings and greps under /home/vgpnk/Projects/shokunin, determine whether 'how a served model name or alias is resolved' is owned by another lane (look for sibling lane names in that knowledge file and in each sibling's PROVINCE.md title line - do not read sibling corpora in depth, do not write anywhere outside your seat directory). Name each boundary and say why the round-34 work stays inside kama. Also state whether the round-34 instrument work (a registry gate and a SCORECARD capability table) touches any sibling's surface.\nReport: .ufo/waves/round-34/w1/out/ConnSiblingScope.md",
+   "axes": [
+    "adjacency",
+    "coverage"
+   ]
+  },
+  {
+   "name": "ConnSeparability",
+   "role": "connector",
+   "prompt": "# Target\nCausal separability of the two round-34 claims.\n# Task\nRead the wave context's C1 and C2 definitions, then read /home/vgpnk/Projects/shokunin/kama-shokunin/tools/gate-registry-check.py and the C1 counter that the executor seat is building (if it exists by the time you run, read it under .ufo/waves/round-34/w1/out/ExecCapabilityAudit/). Test: can C1's counter reach its target WITHOUT C2's registry rows landing? Can C2's counter reach its target WITHOUT C1's canonical capabilities table landing? Name any hidden dependency (a shared file, a shared counter, a shared path). State the exact files each claim writes.\nReport: .ufo/waves/round-34/w1/out/ConnSeparability.md",
+   "axes": [
+    "calibration",
+    "operability"
+   ]
+  },
+  {
+   "name": "ConnRouteTable",
+   "role": "connector",
+   "prompt": "# Target\nThe host route table: which model alias serves which swarm role on this substrate.\n# Task\nRead /home/vgpnk/.omp/agent/config.yml and report ONLY these keys, with their values: the modelRoles table, task.agentModelOverrides, async.maxJobs, task.maxConcurrency, task.maxRecursionDepth. Do not read or print API keys, tokens, credentials or any secret value - if a line contains a key or token, report only that the line exists and its key name. Then report the default model alias from /home/vgpnk/.kimi-code/config.toml (the 'default_model' key under the top-level agent section only) and list the agent profile names available under /home/vgpnk/.kimi-code/agents/ufo/. This is a read-only routing report for the round record.\nReport: .ufo/waves/round-34/w1/out/ConnRouteTable.md",
+   "axes": [
+    "operability",
+    "freshness"
+   ]
+  },
+  {
+   "name": "ReviewC1Control",
+   "role": "reviewer",
+   "prompt": "# Target\nC1's do-nothing control: can the capability-repertoire counter reach its target without the claimed work?\n# Task\nRead the wave context's C1 predicate and the counter at .ufo/waves/round-34/w1/out/ExecCapabilityAudit/capability-repertoire-audit.py (if present). Build the cheapest do-nothing control that skips the claimed work: e.g. a scratch SCORECARD where the canonical list merely repeats the missing capability NAMES with no resolving evidence pointer, or a canonical list that names a capability nobody demonstrated. Score it with the frozen counter. Report: the exact command, its output, its exit code, and whether the control reaches the target. If it does reach the target, name the smallest correction to the counter that makes the control fail, and say whether that correction was frozen before data. Do not edit the counter.\nReport: .ufo/waves/round-34/w1/out/ReviewC1Control.md",
+   "axes": [
+    "calibration"
+   ]
+  },
+  {
+   "name": "ReviewC2Control",
+   "role": "reviewer",
+   "prompt": "# Target\nC2's do-nothing control: does a prose-only mention reach the target?\n# Task\nRead the wave context's C2 predicate and the widened gate copy at .ufo/waves/round-34/w1/out/ExecGatePopulation/gate-registry-check-widened.py (if present). Build the cheapest do-nothing control that skips the claimed work: a scratch repository whose SKILL.md mentions the two round-33 tools in PROSE (a fenced code block and a sentence) but has no five-column registry row for them. Score it with the frozen counter. Report the exact command, output, exit code, and whether the control reaches the target. Also test a second control: a registry row whose Exit map cell is empty. Report both. Do not edit any lane file.\nReport: .ufo/waves/round-34/w1/out/ReviewC2Control.md",
+   "axes": [
+    "operability"
+   ]
+  },
+  {
+   "name": "ReviewAliasQuotes",
+   "role": "reviewer",
+   "prompt": "# Target\nIndependent re-open of the staged alias-theme sources.\n# Task\nFor the staged entry /home/vgpnk/Projects/shokuknow/merge/kama/knowledge/corpus/knowledge/serving-alias-contract.md (READ ONLY), re-open each cited public URL yourself (curl the URL or the raw file) and check: does the page exist at the pinned revision, does the anchor exist, and is the located quote present verbatim? Report a per-source table: id | url | anchor present yes/no | quote present yes/no | quote word count. Use only read-only network fetches of public documentation; do not write into /home/vgpnk/Projects/shokuknow and do not modify the lane. If a source cannot be fetched, say so and mark it unreachable - unreachable is not fabrication.\nReport: .ufo/waves/round-34/w1/out/ReviewAliasQuotes.md",
+   "axes": [
+    "freshness",
+    "calibration"
+   ]
+  },
+  {
+   "name": "ReviewCensusBlock",
+   "role": "reviewer",
+   "prompt": "# Target\nThe transformed SOURCES append block against the census contract.\n# Task\nRead the candidate append block at .ufo/waves/round-34/w1/out/ScribeSourcesRows/append-block.md (if present) and the fleet census contract in /home/vgpnk/Projects/shokunin/CORPUS.md section 'SOURCES.md - where a shokunin learns'. Check every row against the contract: 11 columns (NF 13), no literal or escaped pipe in any cell, id format S+3 digits, kind enum, tier A|B|C, scope non-empty, anchor with a revision, status enum, opened ISO date, recheck a valid ISO date or NNd or symbolic cadence, used-by paths that exist under the lane root. Report a per-row verdict table with the offending cell and the rule. Do not edit the block.\nReport: .ufo/waves/round-34/w1/out/ReviewCensusBlock.md",
+   "axes": [
+    "calibration",
+    "operability"
+   ]
+  },
+  {
+   "name": "CriticC1Target",
+   "role": "critic",
+   "prompt": "# Target\nIs C1's target a real self-assessment mismatch or a convention artifact?\n# Task\nRead the wave context's C1 predicate, /home/vgpnk/Projects/shokunin/kama-shokunin/SCORECARD.md (the capability tables and the '### capabilities: append' sections of rounds 20, 25, 30) and /home/vgpnk/Projects/shokunin/AXES.md section 'Capabilities'. Attack the target: is the canonical list of round 16 meant to stay frozen as a historical record (in which case the three later capabilities are correctly declared in their own append sections and there is no mismatch), or is it the lane's live repertoire table (in which case the three absent rows are a self-assessment gap)? Quote the exact lines that decide it. Give the strongest counterexample to the claim and the smallest wording change that would make the claim honest either way.\nReport: .ufo/waves/round-34/w1/out/CriticC1Target.md",
+   "axes": [
+    "calibration"
+   ]
+  },
+  {
+   "name": "CriticC2Population",
+   "role": "critic",
+   "prompt": "# Target\nIs the widened instrument population a principled rule or a curve fit to two files?\n# Task\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/tools/gate-registry-check.py (its docstring 'Contract' and its COUNTER_RE), the lane's tools/ directory listing, and the wave context's C2 predicate. Attack the proposed rule '^tools/round[0-9]+-[A-Za-z0-9._-]+\\.py$': name a counterexample (a tracked instrument the rule still misses, or a non-instrument the rule would wrongly include), and check what happens to the gate's own summary line and the r32 selftest arms when the population grows. Report the smallest defensible population rule.\nReport: .ufo/waves/round-34/w1/out/CriticC2Population.md",
+   "axes": [
+    "operability",
+    "calibration"
+   ]
+  },
+  {
+   "name": "CriticAliasScope",
+   "role": "critic",
+   "prompt": "# Target\nPROVINCE scope and QUALITY bar per staged alias-theme entry.\n# Task\nRead /home/vgpnk/Projects/shokunin/kama-shokunin/PROVINCE.md, /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/QUALITY.md (the admission criteria) and the staged entries /home/vgpnk/Projects/shokuknow/merge/kama/knowledge/corpus/knowledge/serving-alias-contract.md and /home/vgpnk/Projects/shokuknow/merge/kama/knowledge/corpus/knowledge/served-model-id-resolution.md (READ ONLY). Judge each entry separately: in kama's province (local model serving and endpoint health) or generic/sibling-domain material that must be refused? Does it clear the lane's own quality bar? Report a per-entry verdict: admit | refuse, with the reason, and the flip condition for each refusal. Name at least one admission and one refusal candidate with reasons.\nReport: .ufo/waves/round-34/w1/out/CriticAliasScope.md",
+   "axes": [
+    "coverage",
+    "adjacency"
+   ]
+  },
+  {
+   "name": "CriticPredicateIdentity",
+   "role": "critic",
+   "prompt": "# Target\nAre the two frozen predicates the same sentence in the plan, the counter's code and the receipt label?\n# Task\nRead the wave context's C1 and C2 definitions, the executor seat's tools (.ufo/waves/round-34/w1/out/ExecCapabilityAudit/, .ufo/waves/round-34/w1/out/ExecGatePopulation/) and the lane's existing frozen-counter conventions. Check: the exact predicate sentence, the condition implemented in the counter's code, and the label the receipt prints are the same claim. Name every place they diverge (a different word count, a renamed field, a target that the code does not test, a kill rule the counter does not implement). Also check the kill rule: what makes the claim a MISS, and does the counter implement exactly that?\nReport: .ufo/waves/round-34/w1/out/CriticPredicateIdentity.md",
+   "axes": [
+    "calibration",
+    "operability"
+   ]
+  },
+  {
+   "name": "MutC1Counter",
+   "role": "mutation-tester",
+   "prompt": "# Target\nMutation-test the C1 capability-repertoire counter.\n# Task\nTake the counter at .ufo/waves/round-34/w1/out/ExecCapabilityAudit/capability-repertoire-audit.py (if present; if it is absent, say so and describe the mutation you would apply). Build mutants that each break the counter's ability to detect the C1 defect: (m1) the missing-capability set is computed as empty regardless of the tables; (m2) the canonical table is taken as the FIRST capability table instead of the canonical-list one; (m3) the evidence-pointer resolution always returns True; (m4) the counter counts only the first row of the canonical table. For each mutant, run it against the lane repo and against the do-nothing control and report the exact output and exit code. Report which mutants survive (a surviving mutant means the counter can be met without the claimed work). Do not edit the lane's own files.\nReport: .ufo/waves/round-34/w1/out/MutC1Counter.md",
+   "axes": [
+    "calibration",
+    "operability"
+   ]
+  },
+  {
+   "name": "MutC2Gate",
+   "role": "mutation-tester",
+   "prompt": "# Target\nMutation-test the C2 widened instrument-registry gate and its registry rows.\n# Task\nTake the widened gate copy at .ufo/waves/round-34/w1/out/ExecGatePopulation/gate-registry-check-widened.py (if present; if absent, say so). Build mutants: (m1) the tools/ population pattern is dropped so only wave counters count; (m2) a path counts as registered when it occurs ANYWHERE in SKILL.md (prose mention), not only in a five-column row; (m3) the unregistered list is emptied before the summary is printed; (m4) the exit code is forced to 0. For each: the exact command, output and exit code, and whether the mutant still reaches the claimed after-state. Report which survive.\nReport: .ufo/waves/round-34/w1/out/MutC2Gate.md",
+   "axes": [
+    "operability",
+    "calibration"
+   ]
+  },
+  {
+   "name": "MutAppendBlock",
+   "role": "mutation-tester",
+   "prompt": "# Target\nMutation-test the transformed SOURCES append block against the census gate.\n# Task\nTake the candidate append block at .ufo/waves/round-34/w1/out/ScribeSourcesRows/append-block.md (if present) and the scratch mirror at .ufo/waves/round-34/w1/out/ExecTransformAppend/validate/corpus/SOURCES.md (if present). Build mutated copies IN YOUR OWN SEAT DIRECTORY only: (m1) restore one staged prose recheck cell verbatim ('2026-10-23 - re-verify ...'); (m2) reintroduce one escaped pipe into a cell; (m3) duplicate one staged id so it collides with an existing row; (m4) set a used-by path to a file that does not exist. For each mutant run: /home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --file <mutated SOURCES.md> and paste output plus exit code. Report which mutants the census accepts (an accepted mutant means the gate cannot see that defect).\nReport: .ufo/waves/round-34/w1/out/MutAppendBlock.md",
+   "axes": [
+    "calibration",
+    "operability"
+   ]
+  },
+  {
+   "name": "RevengerNoOp",
+   "role": "revenger",
+   "prompt": "# Target\nFind the cheapest way to meet C1 or C2 without doing the claimed work.\n# Task\nRead the wave context's C1 and C2 predicates, the lane's SCORECARD.md capability tables and /home/vgpnk/Projects/shokunin/kama-shokunin/tools/gate-registry-check.py. For each claim, construct the cheapest artifact set that would make a plausible counter print met True / exit 0 while the lane's real state is unchanged: e.g. an empty canonical table, a table with renamed columns, a SKILL.md where the two tools appear in a one-row table that the parser mistakes for a registry row, a census row copy. Score each construction and report: the construction, the command, the output, the exit code, and whether it reaches the target. Report the strongest counterexample per claim. Do not edit lane files.\nReport: .ufo/waves/round-34/w1/out/RevengerNoOp.md",
+   "axes": [
+    "calibration",
+    "operability"
+   ]
+  },
+  {
+   "name": "RevengerQuarantine",
+   "role": "revenger",
+   "prompt": "# Target\nAdversarial read of the quarantined payload-absent rows for the kama lane.\n# Task\nRead /home/vgpnk/Projects/shokuknow/.ufo/waves/corpus-expansion-1/absent-defect-register.md (READ ONLY) and the kama slice written by the scout seat at .ufo/waves/round-34/w1/out/ScoutAbsenceRegister/quarantine-slice. For every kama slice row, judge its class cell: is it a specific absent-defect class (fabrication-risk class that must be hand-checked before any append) or a prose cell ('could not be fetched', 'named no locator') that marks the row unverifiable rather than fabricated? Report a per-row verdict: specific-class-needs-hand-check | prose-unverifiable, with the class cell quoted. If any row's id is missing or its lane cell is not exactly 'kama', say so. Do not edit the register and do not append any row.\nReport: .ufo/waves/round-34/w1/out/RevengerQuarantine.md",
+   "axes": [
+    "calibration",
+    "freshness"
+   ]
+  },
+  {
+   "name": "SentinelScope",
+   "role": "sentinel",
+   "prompt": "# Target\nWave write-scope watch: nothing may be written outside a seat's own directory.\n# Task\nDuring this wave, watch for writes that break the lane's write scope. Then verify: run 'git -C /home/vgpnk/Projects/shokunin/kama-shokunin status --porcelain' and 'git -C /home/vgpnk/Projects/shokunin status --porcelain' (the FLEET root) and report every path that is new or modified, stating for each whether its content names the kama lane and round 34 and whether it is a file this lane authored. Report any file that appeared at the fleet root (misroot) and any file written outside /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-34/. Do not delete or edit anything; report only.\nReport: .ufo/waves/round-34/w1/out/SentinelScope.md",
+   "axes": [
+    "freshness",
+    "operability"
+   ]
+  },
+  {
+   "name": "SentinelReceipts",
+   "role": "sentinel",
+   "prompt": "# Target\nSeat census: which seats returned a report, which died, and what each report contains.\n# Task\nAfter the other seats have had their interval, list the directory /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-34/w1/out/ and report for each expected seat name whether a report file exists, whether it is non-empty, and the first line of its verdict. Cross-check against the wave registry at .ufo/waves/round-34/w1/out/swarm-registry.json. Produce the final table: seat name | role | report present yes/no | bytes | verdict line. A seat with no output is a DEAD seat - report it as dead, do not treat it as returned, and do not respawn it.\nReport: .ufo/waves/round-34/w1/out/SentinelReceipts.md",
+   "axes": [
+    "freshness",
+    "calibration"
+   ]
+  },
+  {
+   "name": "SimplifyRows",
+   "role": "simplifier",
+   "prompt": "# Target\nSimplify the round-34 registry rows and the canonical capabilities table to the lane's existing shape.\n# Task\nRead the two drafted registry rows at .ufo/waves/round-34/w1/out/ExecRegistryRows/rows.md (if present) and the drafted canonical capabilities table at .ufo/waves/round-34/w1/out/ScribeScorecard/ (if present). Compare them with the SHILL.md's existing five-column registry rows and with the round-16 canonical capabilities table. Report the simplest form that keeps every field the lane's own gate grades: for a registry row, a non-empty entry command with the real argv, a non-empty exit map naming 0/1/2, a self-test or pinned-values cell whose cited paths resolve, and a write-scope cell; for a capability row, a one-line capability statement, a resolving evidence pointer and its first-working round. Flag anything that would make the row defective under tools/gate-registry-check.py. Report the simplified text; do not edit lane files.\nReport: .ufo/waves/round-34/w1/out/SimplifyRows.md",
+   "axes": [
+    "operability",
+    "calibration"
+   ]
+  }
+ ]
+}
