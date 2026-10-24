@@ -1,0 +1,433 @@
+{
+ "schema": "kama-r26-error-signatures/v1",
+ "build": "llama-server b11755 (704366d76)",
+ "fixture": "stories260K.gguf sha256 270cba1b...256d",
+ "note": "Read by .ufo/waves/round-26/count-c1.py; each entry is one SKILL.md row in section '## Round-26 live error signatures'. Candidate provenance per entry: wave-1 seat named in 'found_by'.",
+ "signatures": [
+  {
+   "id": "E26-01",
+   "channel": "http",
+   "signature": "This server does not support slots endpoint. Start it with `--slots`",
+   "args": [
+    "--no-slots",
+    "-t",
+    "2"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "GET",
+    "path": "/slots",
+    "headers": {},
+    "body": ""
+   },
+   "source": {
+    "row": "S114",
+    "file": "server-context.cpp"
+   },
+   "found_by": "KamaR26.ExecSlotsOff"
+  },
+  {
+   "id": "E26-02",
+   "channel": "http",
+   "signature": "This server does not support slots action. Start it with `--slot-save-path`",
+   "args": [
+    "-t",
+    "2"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/slots/0?action=save",
+    "headers": {},
+    "body": {
+     "filename": "s0.bin"
+    }
+   },
+   "source": {
+    "row": "S115",
+    "file": "server-context.cpp"
+   },
+   "found_by": "KamaR26.ExecSlotActionNoPath"
+  },
+  {
+   "id": "E26-03",
+   "channel": "http",
+   "signature": "No available space in KV cache or invalid slot save file",
+   "args": [
+    "--slot-save-path",
+    "/tmp",
+    "-t",
+    "2"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/slots/0?action=restore",
+    "headers": {},
+    "body": {
+     "filename": "kama-r26-absent-slot.bin"
+    }
+   },
+   "source": {
+    "row": "S116",
+    "file": "server-context.cpp"
+   },
+   "found_by": "KamaR26.ExecSlotActionNoPath"
+  },
+  {
+   "id": "E26-04",
+   "channel": "http",
+   "signature": "This server does not support changing global properties. Start it with `--props`",
+   "args": [
+    "-t",
+    "2"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/props",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "chat_template": "x"
+    }
+   },
+   "source": {
+    "row": "S117",
+    "file": "server-context.cpp"
+   },
+   "found_by": "KamaR26.ExecPropsOff"
+  },
+  {
+   "id": "E26-05",
+   "channel": "http",
+   "signature": "This server does not support embeddings. Start it with `--embeddings`",
+   "args": [
+    "-t",
+    "2"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/embeddings",
+    "headers": {},
+    "body": {
+     "model": "stories260K",
+     "input": "hello"
+    }
+   },
+   "source": {
+    "row": "S118",
+    "file": "server-context.cpp"
+   },
+   "found_by": "KamaR26.ExecEmbeddingsOff"
+  },
+  {
+   "id": "E26-06",
+   "channel": "http",
+   "signature": "Pooling type 'none' is not OAI compatible. Please use a different pooling type",
+   "args": [
+    "--embeddings",
+    "-t",
+    "2"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/embeddings",
+    "headers": {},
+    "body": {
+     "input": "hello world"
+    }
+   },
+   "source": {
+    "row": "S119",
+    "file": "server-context.cpp"
+   },
+   "found_by": "KamaR26.ExecEmbeddingsInput"
+  },
+  {
+   "id": "E26-07",
+   "channel": "http",
+   "signature": "\\\"input\\\" or \\\"content\\\" must be provided",
+   "args": [
+    "--embeddings",
+    "--pooling",
+    "mean",
+    "-t",
+    "2"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/embeddings",
+    "headers": {},
+    "body": {
+     "model": "stories260K"
+    }
+   },
+   "source": {
+    "row": "S120",
+    "file": "server-context.cpp"
+   },
+   "found_by": "KamaR26.ExecEmbeddingsInput"
+  },
+  {
+   "id": "E26-08",
+   "channel": "http",
+   "signature": "This server does not support reranking. Start it with `--reranking`",
+   "args": [
+    "-t",
+    "2"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/rerank",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "query": "test",
+     "documents": [
+      "a",
+      "b"
+     ]
+    }
+   },
+   "source": {
+    "row": "S121",
+    "file": "server-context.cpp"
+   },
+   "found_by": "KamaR26.ExecRerankOff"
+  },
+  {
+   "id": "E26-09",
+   "channel": "http",
+   "signature": "Infill is not supported by this model",
+   "args": [
+    "-t",
+    "2"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/infill",
+    "headers": {},
+    "body": {
+     "input_prefix": "int add(int a, int b) {\n    return ",
+     "input_suffix": ";\n}",
+     "prompt": "a + b"
+    }
+   },
+   "source": {
+    "row": "S122",
+    "file": "server-context.cpp"
+   },
+   "found_by": "KamaR26.ExecInfill"
+  },
+  {
+   "id": "E26-10",
+   "channel": "http",
+   "signature": "is too large to process. increase the physical batch ",
+   "args": [
+    "-c",
+    "64",
+    "--embedding",
+    "-t",
+    "2"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/embedding",
+    "headers": {},
+    "body": {
+     "content": "The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. "
+    }
+   },
+   "source": {
+    "row": "S123",
+    "file": "server-context.cpp"
+   },
+   "found_by": "KamaR26.ExecPromptTooLong"
+  },
+  {
+   "id": "E26-11",
+   "channel": "http",
+   "signature": "Request body must be an array",
+   "args": [
+    "-t",
+    "2"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/lora-adapters",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "id": 0,
+     "scale": 1.0
+    }
+   },
+   "source": {
+    "row": "S124",
+    "file": "server-context.cpp"
+   },
+   "found_by": "KamaR26.ExecLoraAudio"
+  },
+  {
+   "id": "E26-12",
+   "channel": "http",
+   "signature": "The current model does not support audio input.",
+   "args": [
+    "-t",
+    "2"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/audio/transcriptions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {}
+   },
+   "source": {
+    "row": "S125",
+    "file": "server-context.cpp"
+   },
+   "found_by": "KamaR26.ExecLoraAudio"
+  },
+  {
+   "id": "E26-13",
+   "channel": "http",
+   "signature": "audio input is not supported - hint: if this is unexpected, you may need to provide the mmproj",
+   "args": [
+    "-t",
+    "2"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/v1/chat/completions",
+    "headers": {
+     "Content-Type": "application/json"
+    },
+    "body": {
+     "messages": [
+      {
+       "role": "user",
+       "content": [
+        {
+         "type": "input_audio",
+         "input_audio": {
+          "data": "data:audio/wav;base64,UklGRg==",
+          "format": "wav"
+         }
+        }
+       ]
+      }
+     ]
+    }
+   },
+   "source": {
+    "row": "S126",
+    "file": "server-common.cpp"
+   },
+   "found_by": "KamaR26.ExecLoraAudio"
+  },
+  {
+   "id": "E26-14",
+   "channel": "http",
+   "signature": "\\\"prompt\\\" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.",
+   "args": [
+    "-t",
+    "2"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "request": {
+    "method": "POST",
+    "path": "/completion",
+    "headers": {},
+    "body": {
+     "prompt": {
+      "not_prompt": true
+     }
+    }
+   },
+   "source": {
+    "row": "S127",
+    "file": "server-common.cpp"
+   },
+   "found_by": "KamaR26.ExecRequestParams"
+  },
+  {
+   "id": "E26-15",
+   "channel": "startup",
+   "signature": "failed to open GGUF file",
+   "args": [
+    "-t",
+    "2"
+   ],
+   "model": "missing",
+   "occupy_port": false,
+   "source": {
+    "row": "S128",
+    "file": "gguf.cpp"
+   },
+   "found_by": "KamaR26.ExecMissingModel"
+  },
+  {
+   "id": "E26-16",
+   "channel": "startup",
+   "signature": "invalid magic characters: '",
+   "args": [
+    "-t",
+    "2"
+   ],
+   "model": "junk",
+   "occupy_port": false,
+   "source": {
+    "row": "S129",
+    "file": "gguf.cpp"
+   },
+   "found_by": "KamaR26.ExecJunkModel"
+  },
+  {
+   "id": "E26-17",
+   "channel": "startup",
+   "signature": "GGML_ASSERT(n_outputs >= 1)",
+   "args": [
+    "-t",
+    "2",
+    "--ctx-size",
+    "-5"
+   ],
+   "model": "fixture",
+   "occupy_port": false,
+   "source": {
+    "row": "S130",
+    "file": "llama-context.cpp"
+   },
+   "found_by": "KamaR26.ExecBadArgs"
+  }
+ ]
+}

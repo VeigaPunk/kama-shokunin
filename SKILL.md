@@ -1360,3 +1360,16 @@ checks only the three append-only replacement mappings:
 ```sh
 python3 tools/round33-claim-audit.py --repo . --statement-rev dc4258bdb08d658f1c5b15abc8378461659bd155 --tip <full-commit>
 ```
+
+### Round-34 instrument registry rows
+
+Same columns as `## Local gate/probe registry`. The round-33 counters were
+documented in prose only, so the lane's own instrument gate could not see them:
+its population named only `.ufo/waves/round-*/count-*.py`. Round 34 widens the
+population to `tools/round<N>-*.py` and registers both counters as rows.
+
+| Name | Kind / entry command | Exit map | Self-test / pinned values | Write scope |
+|---|---|---|---|---|
+| Round-33 C1 claim-statement audit | measurement: `python3 tools/round33-claim-audit.py --repo . --statement-rev <full-commit> --tip <full-commit>` | 0 ran, prints `R33_CLAIM_AUDIT false_at_writing=F valid_corrections=V unresolved=U met=B`; 1 the census did not reach its target; 2 could not evaluate (unreadable revision or blob) | counter sha256 `e98d8c0ca5e118bc7a82...`; preregistration `.ufo/waves/round-33/preregistration.json`; receipts `.ufo/waves/round-33/c1/after-evidence-tip.out`; lesson `corpus/lessons/round-33.md` | read-only git; writes nothing |
+| Round-33 C2 gate-receipt replay | measurement: `python3 tools/round33-gate-receipts.py capture --repo . --source-rev <full-commit> --out <dir>` then `python3 tools/round33-gate-receipts.py audit --repo . --tip <full-commit> --source-rev <full-commit> --receipt-dir <dir>` | 0 ran, prints `R33_GATE_RECEIPT_AUDIT complete=C/4 missing=M invalid=I met=B`; 1 a fixture did not match its expected output or exit; 2 could not evaluate | counter sha256 `196d9766cadc286fd...`; receipts `.ufo/waves/round-33/c2/final/`; audit receipt `.ufo/waves/round-33/c2/after-evidence-tip.out` | writes only the `--out` directory; fixture Git writes stay in a temporary directory |
+| Round-34 C1 capability-repertoire audit | measurement: `python3 tools/capability-repertoire-audit.py --repo . --tip <full-commit> --out <receipt.json>` | 0 met, prints `listed L observed O missing M unsubstantiated U met True`; 1 the canonical repertoire table does not carry every demonstrated capability, or a canonical row has no resolving evidence pointer; 2 could not evaluate (unreadable revision or missing SCORECARD.md) | `--selftest` prints `CAP_SELFTEST pass=2 fail=0`; before receipt `.ufo/waves/round-34/c1-before.out`; lesson `corpus/lessons/round-34.md` | read-only git; writes only the `--out` receipt |

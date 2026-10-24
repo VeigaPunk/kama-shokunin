@@ -9,7 +9,10 @@ nonexistent path all flipped the gate to exit 0).
 
 Contract:
     - Population: every tracked path matching ``.ufo/waves/round-*/count-*.py``
-      (one directory level below ``.ufo/waves/``, extension ``.py``).
+      (one directory level below ``.ufo/waves/``, extension ``.py``) or
+      ``tools/round<N>-*.py`` (a round-scoped counter kept in ``tools/``).
+      Round 34 widens the rule: the round-33 counters live in ``tools/`` and
+      were invisible to this gate (routed defect of the round-33 closure).
     - Registry: the ``| Name | Kind / entry command | Exit map |
       Self-test / pinned values | Write scope |`` tables in SKILL.md at the
       evaluated revision. A path is ``registered`` iff it occurs in a cell of
@@ -63,7 +66,9 @@ import sys
 import tempfile
 from pathlib import Path
 
-COUNTER_RE = re.compile(r"^\.ufo/waves/round-[^/]+/count-[^/]+\.py$")
+COUNTER_RE = re.compile(
+    r"^(?:\.ufo/waves/round-[^/]+/count-[^/]+|tools/round[0-9]+-[A-Za-z0-9._-]+)\.py$"
+)
 SKILL_PATH = "SKILL.md"
 RE_PATH = re.compile(
     r"(?<![\w./~:<])((?:[\w.-]+/)+[\w.-]+\."

@@ -1,0 +1,182 @@
+[
+  {
+    "name": "LoadingRace.HealthAlreadyOk",
+    "family": "LoadingRace",
+    "why": "Synthetic race (not reachable on b11755, where one atomic is_ready gates both paths): /health green while /v1/models still returns the loading envelope; verdict must key on /v1/models.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      },
+      "/health": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"status": "ok"}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_LOADING", "reason": "llamacpp-loading", "exit": 2}
+  },
+  {
+    "name": "LoadingRace.HealthExplicit404",
+    "family": "LoadingRace",
+    "why": "Loading envelope on /v1/models while /health answers a bare 404 (synthetic surface; b11755 serves the envelope on /health too); MODEL_LOADING does not depend on /health at all.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      },
+      "/health": {
+        "status": 404,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": {"message": "Not Found", "type": "not_found_error", "code": 404}}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_LOADING", "reason": "llamacpp-loading", "exit": 2}
+  },
+  {
+    "name": "LoadingRace.HealthUnlisted",
+    "family": "LoadingRace",
+    "why": "Loading envelope on /v1/models with /health never routed (default_route null -> stub 404; synthetic surface on b11755); verdict still MODEL_LOADING.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_LOADING", "reason": "llamacpp-loading", "exit": 2}
+  },
+  {
+    "name": "LoadingRace.HealthAlsoLoading",
+    "family": "LoadingRace",
+    "why": "Both endpoints return the identical loading envelope; the /v1/models envelope alone is sufficient for MODEL_LOADING.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      },
+      "/health": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_LOADING", "reason": "llamacpp-loading", "exit": 2}
+  },
+  {
+    "name": "LoadingRace.HealthConnClosed",
+    "family": "LoadingRace",
+    "why": "Loading envelope on /v1/models while /health accepts TCP then closes with no reply (synthetic); an unreachable health surface must not demote MODEL_LOADING.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      },
+      "/health": {"raw": "close"}
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_LOADING", "reason": "llamacpp-loading", "exit": 2}
+  },
+  {
+    "name": "LoadingRace.InverseHealthLoadingModelsOk",
+    "family": "LoadingRace",
+    "why": "Synthetic inverse race (unreachable on b11755, where is_ready flips both paths together): /health still returns the loading envelope but /v1/models is 200 with a model array whose id matches --expect; /v1/models decides -> MODEL_OK matched.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"object": "list", "data": [{"id": "stories260K", "object": "model", "created": 1760000000, "owned_by": "llamacpp"}]}
+      },
+      "/health": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_OK", "reason": "matched", "exit": 0}
+  },
+  {
+    "name": "LoadingRace.InverseWildcardExpect",
+    "family": "LoadingRace",
+    "why": "Synthetic inverse race with --expect '*': /health still loading, /v1/models 200 model array -> MODEL_OK expected-wildcard, proving a loading /health never overrides a ready /v1/models.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"object": "list", "data": [{"id": "stories260K", "object": "model", "created": 1760000000, "owned_by": "llamacpp"}]}
+      },
+      "/health": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "MODEL_OK", "reason": "expected-wildcard", "exit": 0}
+  },
+  {
+    "name": "LoadingRace.InverseHealthLoadingIdMismatch",
+    "family": "LoadingRace",
+    "why": "Synthetic inverse race must not force OK: /health still loading and /v1/models 200 but the served id disagrees with --expect -> MODEL_MISMATCH served-id-mismatch.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"object": "list", "data": [{"id": "stories260K", "object": "model", "created": 1760000000, "owned_by": "llamacpp"}]}
+      },
+      "/health": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "qwen3-8b",
+    "expected": {"verdict": "MODEL_MISMATCH", "reason": "served-id-mismatch", "exit": 2}
+  },
+  {
+    "name": "LoadingRace.HealthOkNonLoading503",
+    "family": "LoadingRace",
+    "why": "Race boundary: /health already 200 and /v1/models is 503 but the envelope is a different unavailable_error ('no slot available'); exact-match rule keeps FOREIGN_SERVICE.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"error": {"message": "no slot available", "type": "unavailable_error", "code": 503}}
+      },
+      "/health": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"status": "ok"}
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  }
+]

@@ -1890,3 +1890,49 @@ nonzero no-op control before data and append only observed corrections. Do not
 repeat the three resolved round-32 receipt references. If no reachable
 calibration mismatch exists, choose the next evidence-backed operability move
 within kama's lane rather than claiming a no-op census as progress.
+
+## Round 34 — capability repertoire and instrument-registry coverage (2026-10-24)
+
+Authority: assigned axes operability 8 + calibration 7 (`../shokunin.conf` kama
+row); calibration is the lowest assigned non-retired axis, below the saturation
+line 8, so no stagnation waiver. Preregistration
+`.ufo/waves/round-34/preregistration.json` (base `7c35289da5f4b94e062cd900eb086919e5094003`),
+frozen before any data row landed.
+
+**Capabilities — canonical list as of round 34**
+
+Same four columns as the round-16 canonical list; the round-16 table stays
+byte-intact. Every capability the lane demonstrated with a passing round
+demonstration is listed here, with an evidence pointer that resolves under the
+lane root.
+
+| Capability | What it can now do | Evidence pointer | First-working round |
+|---|---|---|---|
+| sources-registry | Curate where kama learns: tier-scoped, revision-anchored rows; contract-v1 census clean | `corpus/SOURCES.md` | 10 |
+| ollama-offline-evidence-replay | Reconcile caller-supplied `/api/tags` + `/api/ps` captures fail-closed; readiness always unknown | `tools/kama-ollama-evidence.py` | 14 |
+| live-llamacpp-lifecycle | Start the pinned llama.cpp b11755 server on an unregistered loopback port, capture its loading and ready surfaces, grade and tear it down | `.ufo/waves/round-16/live/receipt.json` | 16 |
+| gguf-declared-identity-replay | Decode bounded local GGUF metadata offline and compare declared metadata with a captured receipt | `tools/gguf-identity.py` | 20 |
+| context-capacity-receipt | Run the registered context-capacity cells on the lane-owned llama.cpp fixture and write a sha256-bound receipt | `tools/kama-context-capacity.py` | 25 |
+| instrument-agreement | Run a lane instrument N times over one tree and emit a receipt with per-run digests and an agreement counter | `tools/instrument-agreement.py` | 30 |
+
+The round-16 table listed three of these six: the round-20, round-25 and
+round-30 capabilities were demonstrated in their own append sections and never
+entered the canonical repertoire table. That gap is what C1 measures and what
+this table closes; the append sections stay byte-intact.
+
+| Claim | Axis, score | Before → after (measured) | Counting command | Measured commit | Evidence |
+|---|---|---|---|---|---|
+| C1 — canonical capability repertoire table | calibration 7 → 7 (delta 0) | `listed 3 observed 6 missing 3 unsubstantiated 0 met False` (exit 1) at base `7c35289` → `listed 6 observed 6 missing 0 unsubstantiated 0 met True` (exit 0) | `python3 tools/capability-repertoire-audit.py --repo . --tip <full-commit> --out <receipt.json>` | see `.ufo/waves/round-34/c1-after.out` | `.ufo/waves/round-34/c1-before.out`; `.ufo/waves/round-34/c1-after.out`; `corpus/lessons/round-34.md` |
+| C2 — instrument-registry gate sees every tracked round counter | operability 8 → 8 (delta 0) | `registered 10 unregistered 2 defective 0` (exit 1) at base `7c35289` with the widened population → `registered 12 unregistered 0 defective 0` (exit 0) | `python3 tools/gate-registry-check.py --rev <full-commit>` | see `.ufo/waves/round-34/c2-after.out` | `.ufo/waves/round-34/c2-before.out`; `.ufo/waves/round-34/c2-after.out`; `corpus/lessons/round-34.md` |
+
+Both scores are held: a table that finally lists what the lane demonstrated, and
+a gate that can see two more instruments, are bounded repairs, not mastery
+changes.
+
+### Planned (round 35)
+
+Outside non-author sampling of round 34. The round-33 wave's late-arriving
+seat outputs are inherited evidence, not this round's seats. The remaining
+calibration ground is the `capability-repertoire-audit.py` population itself: it
+reads the SCORECARD's own tables, so a capability demonstrated only in a lesson
+is still invisible to it.

@@ -1,0 +1,230 @@
+[
+  {
+    "name": "ReadyControls.expect-exact-id",
+    "family": "ReadyControls",
+    "why": "Ready b11755 /v1/models body (data[].id + owned_by llamacpp + Ollama models[]); --expect equal to data[0].id is the baseline MODEL_OK matched row.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {
+          "object": "list",
+          "data": [
+            {
+              "id": "kama-ready",
+              "object": "model",
+              "created": 1760976000,
+              "owned_by": "llamacpp",
+              "aliases": ["stories260K"],
+              "meta": {"n_ctx_train": 4096, "n_params": 260000}
+            }
+          ],
+          "models": [
+            {
+              "name": "stories260K",
+              "model": "stories260K",
+              "modified_at": "2026-10-20T13:00:00Z",
+              "size": 267264,
+              "digest": "sha256:270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+              "details": {"format": "gguf", "family": "llama"}
+            }
+          ]
+        }
+      },
+      "/health": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"status": "ok"}
+      }
+    },
+    "default_route": null,
+    "expect": "kama-ready",
+    "expected": {"verdict": "MODEL_OK", "reason": "matched", "exit": 0}
+  },
+  {
+    "name": "ReadyControls.expect-wildcard-star",
+    "family": "ReadyControls",
+    "why": "--expect '*' takes the wildcard arm in classify() before id matching, so any 2xx body with a model array is MODEL_OK expected-wildcard.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {
+          "object": "list",
+          "data": [
+            {"id": "kama-ready", "object": "model", "created": 1760976000, "owned_by": "llamacpp", "aliases": ["stories260K"]}
+          ],
+          "models": [
+            {"name": "stories260K", "model": "stories260K", "size": 267264, "digest": "sha256:270cba1b", "details": {"format": "gguf"}}
+          ]
+        }
+      },
+      "/health": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"status": "ok"}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "MODEL_OK", "reason": "expected-wildcard", "exit": 0}
+  },
+  {
+    "name": "ReadyControls.expect-wildcard-dash",
+    "family": "ReadyControls",
+    "why": "--expect '-' is the third wildcard literal in classify()'s ''|'*'|'-' case arm and must also yield MODEL_OK expected-wildcard, not a mismatch.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {
+          "object": "list",
+          "data": [
+            {"id": "kama-ready", "object": "model", "created": 1760976000, "owned_by": "llamacpp"}
+          ],
+          "models": [
+            {"name": "stories260K", "model": "stories260K", "size": 267264, "details": {"format": "gguf"}}
+          ]
+        }
+      }
+    },
+    "default_route": null,
+    "expect": "-",
+    "expected": {"verdict": "MODEL_OK", "reason": "expected-wildcard", "exit": 0}
+  },
+  {
+    "name": "ReadyControls.expect-different-id",
+    "family": "ReadyControls",
+    "why": "A real model array with a resolvable --expect that no served id normalizes to must be MODEL_MISMATCH served-id-mismatch, not MODEL_OK — defeats a '200+models is always OK' stub.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {
+          "object": "list",
+          "data": [
+            {"id": "kama-ready", "object": "model", "created": 1760976000, "owned_by": "llamacpp", "aliases": ["stories260K"]}
+          ],
+          "models": [
+            {"name": "stories260K", "model": "stories260K", "size": 267264, "details": {"format": "gguf"}}
+          ]
+        }
+      }
+    },
+    "default_route": null,
+    "expect": "qwen2.5-7b-instruct",
+    "expected": {"verdict": "MODEL_MISMATCH", "reason": "served-id-mismatch", "exit": 2}
+  },
+  {
+    "name": "ReadyControls.expect-gguf-path-basename",
+    "family": "ReadyControls",
+    "why": "normalize_id strips the directory and one trailing .gguf from --expect, so a path/to/<served-id>.gguf must still be MODEL_OK matched.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {
+          "object": "list",
+          "data": [
+            {"id": "stories260K", "object": "model", "created": 1760976000, "owned_by": "llamacpp"}
+          ],
+          "models": [
+            {"name": "stories260K", "model": "stories260K", "size": 267264, "details": {"format": "gguf"}}
+          ]
+        }
+      },
+      "/health": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"status": "ok"}
+      }
+    },
+    "default_route": null,
+    "expect": "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+    "expected": {"verdict": "MODEL_OK", "reason": "matched", "exit": 0}
+  },
+  {
+    "name": "ReadyControls.served-id-carries-gguf-suffix",
+    "family": "ReadyControls",
+    "why": "normalize_id also applies to served ids: a data[].id of 'kama-ready.gguf' must match --expect 'kama-ready' — symmetric basename/.gguf stripping, still MODEL_OK matched.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {
+          "object": "list",
+          "data": [
+            {"id": "kama-ready.gguf", "object": "model", "created": 1760976000, "owned_by": "llamacpp"}
+          ],
+          "models": [
+            {"name": "kama-ready", "model": "kama-ready", "size": 267264, "details": {"format": "gguf"}}
+          ]
+        }
+      }
+    },
+    "default_route": null,
+    "expect": "kama-ready",
+    "expected": {"verdict": "MODEL_OK", "reason": "matched", "exit": 0}
+  },
+  {
+    "name": "ReadyControls.ollama-name-not-served-id",
+    "family": "ReadyControls",
+    "why": "served_ids precedence picks the non-empty data[].id group and never falls through to models[].name/.model or aliases[]; expecting the Ollama-side name must be served-id-mismatch.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {
+          "object": "list",
+          "data": [
+            {"id": "kama-ready", "object": "model", "created": 1760976000, "owned_by": "llamacpp", "aliases": ["stories260K"]}
+          ],
+          "models": [
+            {"name": "stories260K", "model": "stories260K", "size": 267264, "details": {"format": "gguf"}}
+          ]
+        }
+      }
+    },
+    "default_route": null,
+    "expect": "stories260K",
+    "expected": {"verdict": "MODEL_MISMATCH", "reason": "served-id-mismatch", "exit": 2}
+  },
+  {
+    "name": "ReadyControls.second-data-id-match",
+    "family": "ReadyControls",
+    "why": "model_matches iterates every served id (router mode exposes several data[] entries); --expect equal to data[1].id must be MODEL_OK matched, not mismatch on first-entry-only comparison.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {
+          "object": "list",
+          "data": [
+            {"id": "kama-ready", "object": "model", "created": 1760976000, "owned_by": "llamacpp"},
+            {"id": "tiny-vocab", "object": "model", "created": 1760976001, "owned_by": "llamacpp", "aliases": ["stories260K"]}
+          ],
+          "models": [
+            {"name": "stories260K", "model": "stories260K", "size": 267264, "details": {"format": "gguf"}},
+            {"name": "tiny-vocab", "model": "tiny-vocab", "size": 267264, "details": {"format": "gguf"}}
+          ]
+        }
+      },
+      "/health": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json", "Server": "llama.cpp"},
+        "body_json": {"status": "ok"}
+      }
+    },
+    "default_route": null,
+    "expect": "tiny-vocab",
+    "expected": {"verdict": "MODEL_OK", "reason": "matched", "exit": 0}
+  }
+]
