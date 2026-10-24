@@ -15,6 +15,8 @@ New row opened this round: **S194**, own-work tier A, `tools/gate-registry-check
 
 Reject-side sample reopened this round: **S104**, the standing rejected claim that `git fsck` green proves local completeness. At `https://raw.githubusercontent.com/git/git/v2.56.0/builtin/fsck.c`, `mark_object` returns for `is_promisor_object()` before the `HAS_OBJ` check (lines 143–149); the rejection remains correct. S104's existing row is unchanged. The current round's non-author spot-check is recorded with the final claim verdicts once received.
 
+**Non-author spot-check — `CJ-kama-r32` (2026-10-24).** S194 admit: agree; the quote and 17-word count match lines 15–16 at the pinned c4c46ad5 revision, scoped only to five-column registry registration (not endpoint health or instrument correctness). S104 reject: agree; Git v2.56.0 `builtin/fsck.c` lines 143–151 return for a promisor object before the `HAS_OBJ` check, so fsck green does not prove local completeness.
+
 One bounded local source search: exact gate definition + reject-side re-open; identified 2 registered source candidates, screened 2, included 1 new row (S194), reopened S104 without a new row, excluded 0. Stop after the deciding fragments; no vendor/API or endpoint claim was sought. Search-log supplement is appended in `corpus/SOURCES.md`.
 
 ## Mistakes
