@@ -2097,3 +2097,30 @@ Two frozen claims target the round-32 closure defects; both retain numeric axis 
 **Frontier and mistakes.** Round-start validation (`.ufo/waves/round-33/census-start.out`) and round-end validation (`census-end.out`) both exit 0; census counts `193 → 194`, tier A `188 → 189`, B `2 → 2`, C `3 → 3`, mined `174 → 175`, queued `8 → 8`, rejected `11 → 11` (`sources-start-count.out`, `sources-end-count.out`). S194 is the only new row, tier A own-work; no old row cells/status/recheck/used-by changed, no knowledge entry or frontier row advanced. `corpus/lessons/round-33.md` records the receipt-lineage, three false references, S193 quote, incomplete receipts, accidental fixture path, misroot, and C2 audit runtime error; KQ43 is the new receipt criterion.
 
 Non-author `CJ-kama-r32` re-opened and agreed with S194's exact line/quote/scope and S104's retained reject. No endpoint, service, consumer, or model-quality state was sampled. No capability row entered. Wave policy v1 plan and taskCall rendered with exit 0: 33 prepared tasks (connector 3, executor 4, scribe 3, scout 4, reviewer 7, critic 5, mutation-tester 5, revenger 1, sentinel 1); L1 held planner. Accepted host mapping: 0 dispatched, 0 dead; no residual call. No tool installed or upgraded.
+
+## round 34 — capability repertoire census, instrument-registry coverage, alias-theme assimilation (2026-10-24)
+
+Two declared claims, both measured on committed bytes. C1 (calibration 7 → 7):
+the lane's SCORECARD capability self-assessment now lists every capability the
+lane demonstrated — `python3 tools/capability-repertoire-audit.py --repo .
+--tip <full-commit>` reads `listed 3 observed 6 missing 3 unsubstantiated 0 met
+False` (exit 1) at base `7c35289da5f4b94e062cd900eb086919e5094003` and `listed 6
+observed 6 missing 0 unsubstantiated 0 met True` (exit 0) at the data tip
+`29f9d1e1b20ef6e16e578e6e039f95f4f3fb4007`; the do-nothing control (names
+without a resolving evidence pointer) reads `unsubstantiated 6 met False`. The
+counter is new: `tools/capability-repertoire-audit.py`, selftest
+`CAP_SELFTEST pass=2 fail=0`. C2 (operability 8 → 8): the lane's own
+instrument-registry gate now evaluates round-scoped counters held in `tools/`
+as well as in the wave directories — `python3 tools/gate-registry-check.py
+--rev <full-commit>` reads `registered 10 unregistered 2 defective 0` (exit 1)
+at base and `registered 12 unregistered 0 defective 0` (exit 0) at the data
+tip; the prose-only control stays red and the gate selftest stays 6/6. The
+frontier step assimilated ONE theme (served-name / alias resolution) from the
+read-only shokuknow package: two knowledge entries admitted
+(`corpus/knowledge/serving-alias-contract.md`,
+`corpus/knowledge/served-model-id-resolution.md`), five source rows appended
+(S196, S205, S206, S209, S223) after an empty collision check, a scratch
+transformation and a mirror census that exited 0 before the first append, plus
+one own-work row S324 for the widened gate population. Sources validate exit
+0. Lessons and rejections with their flip conditions:
+`corpus/lessons/round-34.md`. Report: `.ufo/reports/round-34/kama.md`.
