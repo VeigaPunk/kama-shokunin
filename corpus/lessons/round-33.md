@@ -39,3 +39,10 @@ One bounded local source search: exact gate definition + reject-side re-open; id
 4. Gate receipt inline exit/revision details — replayed into the round-33 four-receipt set; the final audit is the C2 counter.
 
 The initial capture under `diagnostic-attempt1/` is not a scored C2 receipt set. Amendment 1 corrected the fixture and exact-output oracle before the C2 audit was run; it did not change the frozen target or expected finding labels.
+
+## Round-33 measured results and frontier census
+
+- **C1 at evidence tip `1c881bbd3e1cce5f0b01f1afc6d3229866cbe712`:** `R33_CLAIM_AUDIT false_at_writing=3 valid_corrections=3 unresolved=0 legacy_mislabels_at_tip=3 met=True`, exit 0 (`.ufo/waves/round-33/c1/after-evidence-tip.out`). The three old receipts still exist unchanged; the active correction table points only to the three proper output receipts.
+- **C2 at evidence tip `1c881bbd3e1cce5f0b01f1afc6d3229866cbe712`:** `R33_GATE_RECEIPT_AUDIT complete=4/4 missing=0 invalid=0 met=True`, exit 0 (`.ufo/waves/round-33/c2/after-evidence-tip.out`). The four complete outputs are in `.ufo/waves/round-33/c2/final/`; `SOURCE_REV` is the pinned r32 gate tree `967d88528c1d83535563f971863f7855f76b4849`.
+- The earlier C2 audit attempt at data tip `88331197a7de5fcc171bc7290fdd7beb43487a63` raised the recorded TypeError and is not counted. The corrected audit re-ran at evidence tip `1c881bbd3e1cce5f0b01f1afc6d3229866cbe712` without changing the target; the non-author spot-check is recorded in `## Gate` above.
+- **SOURCES census:** base `cc46980359278d0967cf65e785b41c27b8d9c36c` → end 194 rows (193 → 194), tier A 188 → 189, B 2 → 2, C 3 → 3, mined 174 → 175, queued 8 → 8, rejected 11 → 11. The exact `census` counts are `.ufo/waves/round-33/sources-start-count.out` and `sources-end-count.out`; the required `validate` runs are `census-start.out` and `census-end.out`, both exit 0. S194 is the only added row; existing rows and status/recheck/used-by cells are unchanged. No frontier row or `knowledge/` entry advanced.

@@ -1864,3 +1864,29 @@ The round-32 lesson's Gate text says “line 22” and “16 words”. At the pi
 source revision, the sentence is in the docstring “Contract”, lines 15–16,
 and contains 17 whitespace-delimited words. S194 appends the corrected exact
 anchor and quote; S193 and the filed round-32 lesson remain unchanged.
+
+### Round 33 measured claims
+
+| Claim | Axis, score | Before → after (measured) | Counting command | Measured commit | Evidence |
+|---|---|---|---|---|---|
+| C1 — round-32 C2 self-assessment correction (S194) | calibration 7 → 7, delta 0 | `false_at_writing=3 valid_corrections=0 unresolved=3 met=False` at base `cc46980359278d0967cf65e785b41c27b8d9c36c` → `false_at_writing=3 valid_corrections=3 unresolved=0 legacy_mislabels_at_tip=3 met=True` | `python3 tools/round33-claim-audit.py --repo . --statement-rev dc4258bdb08d658f1c5b15abc8378461659bd155 --tip 1c881bbd3e1cce5f0b01f1afc6d3229866cbe712` | `1c881bbd3e1cce5f0b01f1afc6d3229866cbe712` | `.ufo/waves/round-33/c1/{base-control-amend1,after-evidence-tip}.out`; original false statement at its writing revision; correction table above; S194 |
+| C2 — complete r32 gate replay receipts (S194) | operability 8 → 8, delta 0 | `complete=0/4 missing=4 invalid=0 met=False` at base `cc46980359278d0967cf65e785b41c27b8d9c36c` → `complete=4/4 missing=0 invalid=0 met=True` | `python3 tools/round33-gate-receipts.py audit --repo . --tip 1c881bbd3e1cce5f0b01f1afc6d3229866cbe712 --source-rev 967d88528c1d83535563f971863f7855f76b4849 --receipt-dir .ufo/waves/round-33/c2/final` | `1c881bbd3e1cce5f0b01f1afc6d3229866cbe712` | `.ufo/waves/round-33/c2/{base-control-amend2,after-evidence-tip}.out`; exact captured receipts in `c2/final/`; source row S194 |
+
+The first C2 after-run at `88331197a7de5fcc171bc7290fdd7beb43487a63` raised a
+`TypeError` before emitting an audit verdict; it is not counted as a pass or
+kill. The auditor fix and visible error receipt are in `corpus/lessons/round-33.md`
+and `.ufo/waves/round-33/c2/after-data-tip.out`; the unchanged 4/4 predicate
+re-ran successfully at `1c881bbd`.
+
+No capability row enters: the work corrects lane evidence and tools, not a new
+serving operation. Other numeric readings stay held: depth 7, freshness 8,
+coverage 9, adjacency 7. No endpoint or registered-consumer state was sampled.
+
+### Planned (round 34)
+
+Calibration remains the lower assigned axis at 7. Use KQ39 to identify any
+separate SCORECARD/SHONEN statement mismatch at its writing revision; freeze a
+nonzero no-op control before data and append only observed corrections. Do not
+repeat the three resolved round-32 receipt references. If no reachable
+calibration mismatch exists, choose the next evidence-backed operability move
+within kama's lane rather than claiming a no-op census as progress.

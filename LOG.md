@@ -2078,3 +2078,22 @@ cited by C2's lesson Gate and the SKILL registry block), lesson `corpus/lessons/
 counters and the round-30 hold counter are re-run at the new tip (`.ufo/waves/round-32/kq36/`).
 No capability row enters; other scores held (depth 7, freshness 8, coverage 9, adjacency 7).
 Measured data tip `c4c46ad5b87d8b63f03e200a7b13eb8eeff46279`.
+
+## Round 33 — receipt lineage and gate evidence correction (2026-10-24, attempt 1)
+
+Two frozen claims target the round-32 closure defects; both retain numeric axis scores. C1 calibration 7→7 applies KQ39 to the round-32 C2 Scorecard statement at its writing revision `dc4258bdb08d658f1c5b15abc8378461659bd155`: three false fixture references, unresolved 3→0. C2 operability 8→8 counts complete attributed receipts for the pinned clean gate run plus three controls, 0/4→4/4. Preregistration and no-op controls: `.ufo/waves/round-33/preregistration.json`, `.ufo/waves/round-33/c1/base-control-amend1.out`, `c2/base-control-amend2.out`; both controls exit 1 and miss their frozen after predicates.
+
+**Landed commits (jj-lane helper `landed` lines):**
+- `4fdd4e663ba8d3353b5cd431c2d21373d930a6c5` — claim freeze, census start, C1/C2 no-op controls, and 33-seat prepared v1 wave spec/plan/taskCall.
+- `f2c0fc1eccbf8c875827d24b9fe6fe451315e7eb` — pre-data amendment 1: corrected C1's observed missing-path line and the C2 fixture's accidental `tools/measure.py` path; exact stdout control and updated no-op receipts. The target and labels did not change.
+- `88331197a7de5fcc171bc7290fdd7beb43487a63` — append-only r32 receipt/reference corrections, S194, KQ43, SKILL/README/lesson changes, and the four final replay receipts.
+- `1c881bbd3e1cce5f0b01f1afc6d3229866cbe712` — outside Gate spot-check recorded; the current tree also carries the corrected C2 replay auditor and its failure/repair evidence.
+
+**Measurements at evidence tip `1c881bbd3e1cce5f0b01f1afc6d3229866cbe712`:**
+- C1: `python3 tools/round33-claim-audit.py --repo . --statement-rev dc4258bdb08d658f1c5b15abc8378461659bd155 --tip 1c881bbd3e1cce5f0b01f1afc6d3229866cbe712` → `false_at_writing=3 valid_corrections=3 unresolved=0 legacy_mislabels_at_tip=3 met=True`, exit 0 (`.ufo/waves/round-33/c1/after-evidence-tip.out`). The legacy bad bytes remain present; the active correction points to the three exact correct outputs.
+- C2: `python3 tools/round33-gate-receipts.py audit --repo . --tip 1c881bbd3e1cce5f0b01f1afc6d3229866cbe712 --source-rev 967d88528c1d83535563f971863f7855f76b4849 --receipt-dir .ufo/waves/round-33/c2/final` → `complete=4/4 missing=0 invalid=0 met=True`, exit 0 (`.ufo/waves/round-33/c2/after-evidence-tip.out`). The four receipts each carry full source/evaluated revisions, the exact gate digest, the captured runner digest, argv, exit, stdout/stderr.
+- The first C2 audit after data at `88331197a7de5fcc171bc7290fdd7beb43487a63` raised `TypeError: Strings must be encoded before hashing`, exit 1, with no claim verdict (`c2/after-data-tip.out`). KQ25 treats this as a visible runtime error, not a kill or pass. The auditor was corrected to hash committed runner blobs as bytes and validate historic runner digests/argv; the unchanged predicate then passed at the evidence tip. Amendment: `.ufo/waves/round-33/amendment-2.json`.
+
+**Frontier and mistakes.** Round-start validation (`.ufo/waves/round-33/census-start.out`) and round-end validation (`census-end.out`) both exit 0; census counts `193 → 194`, tier A `188 → 189`, B `2 → 2`, C `3 → 3`, mined `174 → 175`, queued `8 → 8`, rejected `11 → 11` (`sources-start-count.out`, `sources-end-count.out`). S194 is the only new row, tier A own-work; no old row cells/status/recheck/used-by changed, no knowledge entry or frontier row advanced. `corpus/lessons/round-33.md` records the receipt-lineage, three false references, S193 quote, incomplete receipts, accidental fixture path, misroot, and C2 audit runtime error; KQ43 is the new receipt criterion.
+
+Non-author `CJ-kama-r32` re-opened and agreed with S194's exact line/quote/scope and S104's retained reject. No endpoint, service, consumer, or model-quality state was sampled. No capability row entered. Wave policy v1 plan and taskCall rendered with exit 0: 33 prepared tasks (connector 3, executor 4, scribe 3, scout 4, reviewer 7, critic 5, mutation-tester 5, revenger 1, sentinel 1); L1 held planner. Accepted host mapping: 0 dispatched, 0 dead; no residual call. No tool installed or upgraded.
