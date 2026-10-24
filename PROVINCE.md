@@ -146,3 +146,14 @@ the actual opened rows are **S180-S191** and no `S192` exists in `corpus/SOURCES
 (`grep -c '^| S192' corpus/SOURCES.md` → 0; route: `.ufo/waves/round-31/w2/out/ScoutProvince/`).
 The entry and the registry are correct at S180-S191; only this note's range was
 written one row long.
+
+**Round-32 note — instrument registry, meaning-graded (2026-10-24).**
+`tools/gate-registry-check.py` v2 grades registry rows for meaning (table-row presence,
+cell presence, exit map, cited-path existence; S193) and the round-qualified claim-row
+counter `.ufo/waves/round-32/count-c2r.py` enters the registry; both are lane-internal
+methods, not new serving surface. The repair exposed and fixed two prose-only
+registrations (round-17 verdict census, round-26 echo-signature counter). No endpoint,
+runtime or consumer surface was sampled; registered consumers stay `DEAD` and
+reconciliation remains the probe's job. Frontier unchanged: `response_format` grammar
+transform (S192), `/v1/completions`, other engines, K05 — the wave items under
+`.ufo/waves/round-32/w1/` attack exactly these.

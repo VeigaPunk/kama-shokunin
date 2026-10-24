@@ -2046,3 +2046,35 @@ C2 `.ufo/waves/round-31/res/out/KamaR31a3.ResReRunC2/c2-tip.json`; C3
 `python3 tools/gate-registry-check.py --rev f129e27b3b57a8fed7a34a8e6fe96d481e6c959d`. Verdicts
 unchanged: C1 met-on-counter/not admitted; C2 not met (key defect); C3 met-on-predicate/not
 admitted. No axis score moved; no capability entered.
+
+## Round 32 — round-qualified evidence counter and meaning-grading registry gate (2026-10-24, attempt 1)
+
+Declared claims (`.ufo/waves/round-32/preregistration.json`, frozen at `9afaf0e9f03ea513e8ee54b43793d2f01cfa309e`):
+**C1 (calibration 7 → 7)** — `.ufo/waves/round-32/count-c2r.py` repairs the frozen round-31
+`(row, class)` correction key with a round-qualified `(round, row, class)` key and a uniqueness
+precondition; base `18464d0866afd5c4b471c8478d72b079d82d1fa8` reads `valid_corrections 10
+unresolved 3 met False` → landed tip reads `valid_corrections 13 false_corrections 0 unresolved 0
+met True` (receipts `.ufo/waves/round-32/c1/before-base.json`, `.ufo/waves/round-32/c2r/c2r-tip.json`).
+Kill rule: one collapsed `CR31:`-prefixed correction flips the FROZEN counter to `met True`
+while the repaired counter refuses it (`.ufo/waves/round-32/c1/controls/KeyCollapse/`); two
+corrections on one qualified key are both false (`controls/DupKey/`).
+**C2 (operability 8 → 8)** — `tools/gate-registry-check.py` v2 grades registry rows for meaning
+(table-row presence, cell presence, non-empty exit map, cited-path existence); the v1 do-nothing
+control exits 0 on all three r31 defective fixtures and on the prose-only counters
+(`.ufo/waves/round-32/c2/controls/*-v1.out`); v2 at the landed tip exits 0
+`registered 10 unregistered 0 defective 0` (`.ufo/waves/round-32/c2/gate-tip.out`,
+`selftest-final.out`), each fixture exit 1 with its named defect, and single-check-removal
+mutations flip exactly their fixtures (`c2/mutations/`). Two prose-registered counters
+(round-17, round-26) exposed by the repair are registered by SKILL's round-32 registry block.
+
+Repairs, not claims: RefRepair pointer drift (routed defect 5) and the w2 seat census
+44-planned/43-dirs/ConnInstrumentDup-unverifiable reconciliation (routed defect 6) — appended
+records in SCORECARD §Round 32. Routed defects 1 (C1 eligibility), 2 (KQ42 probe gating) and 4
+(pin bytes) are prepared as wave items under `.ufo/waves/round-32/w1/` (validated; the
+orchestrator dispatches prepared waves between rounds — this seat has no dispatch tool) and are
+not claimed. Frontier step: census 192 → 193 (S193, own-work, the repaired gate's contract;
+cited by C2's lesson Gate and the SKILL registry block), lesson `corpus/lessons/round-32.md`
+(mistakes: reference-drift, number-drift, prose-only registration). KQ36: the frozen round-31
+counters and the round-30 hold counter are re-run at the new tip (`.ufo/waves/round-32/kq36/`).
+No capability row enters; other scores held (depth 7, freshness 8, coverage 9, adjacency 7).
+Measured data tip `c4c46ad5b87d8b63f03e200a7b13eb8eeff46279`.

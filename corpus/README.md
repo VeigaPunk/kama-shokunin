@@ -500,3 +500,16 @@ correction flips `met` False→True while two dispositions stay uncorrected
 population; attempt 1's SCORECARD C2 cell says 28 and cites an absent
 `.ufo/waves/round-31/c2/c2-tip.json` (the receipts are `c2-b4f3edc0.json` and
 `c2-bda324bb.json`).
+
+## Round-32 disposition — instrument repairs, no new knowledge ground
+
+The round-32 claims are lane-internal instrument repairs: the round-qualified claim-row
+counter `.ufo/waves/round-32/count-c2r.py` (calibration) and the meaning-grading
+instrument-registry gate `tools/gate-registry-check.py` v2 (operability; S193). The gate's
+repair exposed two prose-only registrations now fixed by SKILL's round-32 registry block.
+No `knowledge/` entry is added and no coverage-map ground moves; the serving frontier
+(`response_format`/`json_schema` → grammar via S192, `/v1/completions`, other engines,
+K05) is unchanged and is carried by the prepared wave under `.ufo/waves/round-32/w1/`.
+The round-31 errata above about `rows 30` and the absent `c2-tip.json` stand; the
+round-32 section of SCORECARD records the reconciliations (RefRepair pointer, w2 seat
+census) routed by the round-31 closure.

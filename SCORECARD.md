@@ -1746,3 +1746,79 @@ count (KQ42), and pin declared bytes plus refuse working-tree pin edits. Then re
 the `response_format`/`json_schema` → grammar transform (S192; scout item ScoutGrammarTransform in
 the prepared wave) or `/v1/completions`. Wave-3's 32 prepared items attack and build exactly these
 candidates.
+
+## Round 32 — claim-row evidence corrections (round-qualified)
+
+Appended by the kama L1, round 32, for the repaired counter
+`.ufo/waves/round-32/count-c2r.py` (sha256 `ef298b6311cc30907590317f1e477704d28bf880c292d25e1c711cd8f379c92e`,
+frozen at `9afaf0e9f03ea513e8ee54b43793d2f01cfa309e`). The three rows below share the Claim cell
+`C1`; each id carries its claim row's round so the counter's `(round, row, class)` key stays
+injective. The round-31 corrections table above stays byte-untouched.
+
+| id | row | class | observed |
+|---|---|---|---|
+| CR31:11:C1:p1 | C1 | p1 | p1:no-revision |
+| CR31:12:C1:p1 | C1 | p1 | p1:no-revision |
+| CR31:13:C1:p1 | C1 | p1 | p1:no-revision |
+
+### Round-31 record corrections (routed defects 5 and 6, reconciled this round)
+
+- SCORECARD.md:1723 (round-31 attempt-3 table) cites `w2/out/RefRepair/`; the reference-repair
+  receipt lives at `.ufo/waves/round-31/controls/RefRepair/receipt.txt` (`w2/out/MutC2Key/` is
+  correctly cited beside it). The filed fleet round-31 report carries the same drift; filed bytes
+  are corrected here by append, never rewritten (KQ26).
+- Wave-2 seat census, re-run 2026-10-24 at the round-32 start:
+  `find .ufo/waves/round-31/w2/out -maxdepth 1 -type d | wc -l` → 44 including the `out`
+  directory itself, i.e. **43 seat-output dirs**. The w2 `spec.json`/`taskCall.json` name 44
+  distinct seats; the connector seat `ConnInstrumentDup` has no output directory, and the sweep
+  `grep -rli instrumentdup .ufo/waves/round-31/w2/out` prints nothing (only spec/plan/validate/
+  taskCall copies name it). The round-31 report's "44 returned reports" is corrected to: 44
+  planned seats, 43 committed seat-output dirs, one seat (`ConnInstrumentDup`) unverifiable as
+  returned — recorded as dead/unverifiable rather than silently counted.
+
+## Round 32 — round-qualified claim-row evidence (calibration) and registry-row meaning (operability)
+
+Authority: assigned axes operability + calibration (`../shokunin.conf` kama row); lowest axes at
+round start depth, calibration, adjacency all 7; stagnation nudge inactive. Priority queue: the
+round-31 closure-routed defects. Preregistration `.ufo/waves/round-32/preregistration.json`,
+frozen at `9afaf0e9f03ea513e8ee54b43793d2f01cfa309e` before any data receipt; base
+`18464d0866afd5c4b471c8478d72b079d82d1fa8`. Both claims are instrument repairs: the axis scores
+are held (calibration 7, operability 8) and the measured deltas below are the claim evidence.
+
+| Claim | Axis, score | Before → after (measured) | Counting command | Measured commit | Evidence |
+|---|---|---|---|---|---|
+| C1 — round-qualified claim-row-evidence counter (repaired instrument, supersedes the `(row, class)` key for new corrections) | calibration 7 → 7 | base `18464d0866afd5c4b471c8478d72b079d82d1fa8`: `rows 30 base_mismatched 13 exempt 1 valid_corrections 10 false_corrections 0 unresolved 3 append_only True met False` (`.ufo/waves/round-32/c1/before-base.json`; the frozen round-31 counter prints the same counts) → landed tip: `rows 30 base_mismatched 13 exempt 1 valid_corrections 13 false_corrections 0 unresolved 0 append_only True met True` (`.ufo/waves/round-32/c2r/c2r-tip.json`) | `/usr/bin/python3 .ufo/waves/round-32/count-c2r.py --repo <fresh clone> --tip <full commit> --out <receipt>` (counter sha256 `ef298b63…c92e`, frozen at `9afaf0e9`) | data tip `c4c46ad5b87d`; final re-run at the landed tip recorded in `.ufo/waves/round-32/c2r/c2r-tip.json` | `.ufo/waves/round-32/preregistration.json`; `.ufo/waves/round-32/c1/before-base.json`; kill-rule controls `.ufo/waves/round-32/c1/controls/KeyCollapse/` (frozen counter flips `met True` on one collapsed correction; the repaired counter refuses it) and `.ufo/waves/round-32/c1/controls/DupKey/` (two corrections, one qualified key → both false); `corpus/lessons/round-32.md` |
+| C2 — instrument-registry gate grades meaning, not presence (routed defect 3) | operability 8 → 8 | v1 gate (bytes from base) reconstructing the r31 w2 controls: exit 0 `registered 9 unregistered 0` on a thin empty row, on an empty-exit-map row, on a row citing `.ufo/waves/round-999/count-c999.py`, and on the base tree whose `.ufo/waves/round-17/count-verdicts.py` and `.ufo/waves/round-26/count-c1.py` are prose-only (`.ufo/waves/round-32/c2/controls/*-v1.out`, `prose-only-v1.out`) → v2 gate at the landed tip: exit 0, `registered 10 unregistered 0 defective 0` (`c2/gate-tip.out`); each fixture exits 1 with its named defect under v2 (`c2/controls/*-v2.out`); the v2 semantics on the base tree exit 1 with the two prose-only counters unregistered (`c2/before-base.out`) | `python3 tools/gate-registry-check.py --rev <full commit>` and `python3 tools/gate-registry-check.py --selftest` | data tip `c4c46ad5b87d`; final re-run at the landed tip recorded in `.ufo/waves/round-32/c2/gate-tip.out` and `c2/selftest-final.out` | `.ufo/waves/round-32/preregistration.json`; `.ufo/waves/round-32/c2/SUMMARY.md`; mutation arms `c2/mutations/` (each single-check removal flips exactly its fixture; thin-row entanglement disclosed); registry-row semantics row S193 (`corpus/lessons/round-32.md` Gate); SKILL round-32 registry block |
+
+Surface moved by C1: the claim-row-evidence census's correction key. Before, three distinct
+failing rows (rounds 11-13, all named `C1`) collapsed into one `(row, class)` key, one shortcut
+correction flipped `met` True while two dispositions stayed uncorrected, and two honest
+corrections for one key were silently uncounted; now every disposition is separately expressible,
+round-qualified, under a declared uniqueness precondition, and the frozen counter's shortcut is
+receipted red-handed. What it does not show: that the rows behind the corrections were ever
+true claims — the census calibrates evidence discipline, not claim truth.
+
+Surface moved by C2: the instrument-registry gate's verdict. Before, occurrence in any SKILL.md
+text (prose, a thin row, an empty exit map, a nonexistent pin) certified registration; now
+registration requires a registry-table row whose cells carry an entry command, a non-empty exit
+map and only resolvable cited paths, and the gate also exposed two counters that had been
+prose-registered for rounds (round-17, round-26 — registered properly by the round-32 block).
+What it does not show: that any registered instrument is correct — the gate grades the registry,
+not the instruments.
+
+No capability row enters (the two repairs are instrument repairs, and
+`instrument-agreement` from round 30 is unchanged). Other scores held: depth 7, freshness 8,
+coverage 9, adjacency 7. No axis harmed: both changes are additive to the lane's own
+calibration/operability surfaces; the frozen round-31 counters are byte-untouched and re-run
+unchanged at the new tip (`.ufo/waves/round-32/kq36/`).
+
+### Planned (round 33)
+
+Re-earn depth under a repaired C1-eligibility counter (a counted row names a parameter and value
+the base request does not already carry; the `ignored` class excludes session-consumed keys) with
+wave falsification first, or take the `response_format`/`json_schema` → grammar transform
+(S192; a live lane-fixture measurement) — both are prepared as wave items under
+`.ufo/waves/round-32/w1/` (validated, orchestrator-dispatched). Then: KQ42 probe gating for the
+remaining meaning cells, and pin declared bytes plus refusal of working-tree pin edits
+(routed defects 1, 2, 4). Open calibration ground: the round-30 extractor still finds 69 of 141
+statements by itself; any statement outside both populations remains invisible.
