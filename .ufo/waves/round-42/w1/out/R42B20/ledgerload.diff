@@ -1,0 +1,36 @@
+diff --git c/tools/digest-ledger.py w/tools/digest-ledger.py
+index 9c10907..6715152 100755
+--- c/tools/digest-ledger.py
++++ w/tools/digest-ledger.py
+@@ -109,6 +109,11 @@ def classify(tokens: set, blobs: set, ledger: dict):
+     return n, detail
+ 
+ 
++def load_ledger(path: str) -> dict:
++    with open(path, encoding="utf-8", errors="replace") as f:
++        return parse_ledger(f.read())
++
++
+ def scan_dir(root: str, ledger_file: str | None):
+     tokens, blobs, ledger = set(), set(), {}
+     for cur, _, files in os.walk(root):
+@@ -125,8 +130,7 @@ def scan_dir(root: str, ledger_file: str | None):
+             elif is_doc(rel):
+                 tokens |= set(TOKEN.findall(data.decode(errors="replace")))
+     if ledger_file is not None:
+-        with open(ledger_file, encoding="utf-8", errors="replace") as f:
+-            ledger = parse_ledger(f.read())
++        ledger = load_ledger(ledger_file)
+     return tokens, blobs, ledger
+ 
+ 
+@@ -161,8 +165,7 @@ def scan_git(repo: str, rev: str, ledger_file: str | None):
+         elif is_doc(path):
+             tokens |= set(TOKEN.findall(git(repo, "cat-file", "-p", f"{rev}:{path}").decode(errors="replace")))
+     if ledger_file is not None:
+-        with open(ledger_file, encoding="utf-8", errors="replace") as f:
+-            ledger = parse_ledger(f.read())
++        ledger = load_ledger(ledger_file)
+     return tokens, blobs, ledger
+ 
+ 

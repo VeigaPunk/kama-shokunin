@@ -1,0 +1,18 @@
+R42C09 counter sensitivity matrix — tools/round42-capacity-audit.py
+fixture: /fast/scratch/kama-r42/seats/R42C09/fx1 = git init + tip tree be588f5 (fixture-only identity), base fetched from the lane clone
+command per row:
+  python3 clone/tools/round42-capacity-audit.py --repo $D --tip HEAD --base 0b606b03bf0b2a87b791aa537f6c72c941624cf0
+
+mutation                                              legs e/r/cov/gate/census   met     exit
+control (unmodified tip tree)                          1/1/1/1/1                True    0
+A entry cites kv_cache_utils.py:1628 (not :1627)       0/1/1/1/1                False   1   detail: entry lacks citation kv_cache_utils.py:1627
+B one newline appended to the vLLM evidence copy       1/0/1/1/1                False   1   detail: row S478: anchor lacks copy sha256
+C S479 used-by cell drops the entry path               1/0/1/1/1                False   1   detail: row S479: used-by lacks entry
+D S479 located quote falsified (>= 0 for > 0)          1/1/1/1/1                True    0   HOLE: inline `model_info["context_length"]` on the same line satisfies the leg
+D2 as D, plus that inline quoted token de-quoted        1/1/1/0/1                False   1   detail: gate lacks a dated, <=25-word, located quote line for S479
+D3 S478 quote claimed at "line 9999"                   1/1/1/1/1                True    0   HOLE: the stated line number is never checked against the copy
+
+census leg sensitivity (outside the counter, lane-shaped tree copy):
+  cp -a export export-tamper; delete one cell from the S479 row
+  bash scripts/sources-census.sh validate --file export-tamper/corpus/SOURCES.md
+  -> file E01 S479 fields=10 ; exit 1  (clean tree: exit 0)

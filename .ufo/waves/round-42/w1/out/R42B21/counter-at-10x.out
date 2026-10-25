@@ -1,0 +1,16 @@
+tip=504c052e62d692883dd1d68e051c24c0c3f1fd33
+tool=1 contract=1 live=0 hygiene=0 capability=0 met=False seed=42
+live-reference: tokens=1000 blob=1000 external_ok=0 external_absent=0 unverifiable=0 wrong_flagged=0 ledger_bad=0 wrong_unflagged=0 unknown=0 exit=0
+detail: live: reference tokens=1000 blob=1000 external_ok=0 external_absent=0 unverifiable=0 wrong_flagged=0 ledger_bad=0 wrong_unflagged=0 unknown=0 exit=0; tool exit 0 'tokens=1000 blob=1000 external_ok=0 external_absent=0 unverifiable=0
+exit=1
+
+# reproduced verbatim from the run in measurements.txt:
+#   python3 sample.py python3 clone/tools/round42-digest-audit.py --repo <fixture C> --tip HEAD --seed 42
+#   wall_s=48.813 self_peak_kb=4433840 tree_peak_kb=4433840 exit=1
+# Fixture C = 20000 files / 201 docs / 51 commits / 20,254 reachable objects /
+# 2,238,683,804 B of reachable object bytes = 9.86x the lane's 226,852,785 B.
+# live=0 is the fixture's external_ok=0 < 4 (no host-local artifacts); hygiene=0 and
+# capability=0 are the fixture's missing round-41 counters and SCORECARD.md.
+# The 4,433,840 KB peak is reached in the `git archive` export and ref_git, before
+# any of those legs. No --out was passed for this run (the fixture's legs cannot
+# pass), so this file is the captured stdout, not a counter-written receipt.

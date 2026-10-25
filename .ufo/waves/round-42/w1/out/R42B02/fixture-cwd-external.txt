@@ -1,0 +1,20 @@
+$ # fixture: same scanned dir, relative external ledger path, two CWDs
+$ mkdir -p fix/ext/registry; printf "outside-bytes\n" > fix/outside.bin
+$ H=$(sha256sum fix/outside.bin | cut -d" " -f1)
+$ printf "cites %s\n" "$H" > fix/ext/doc.md
+$ printf "digest\tclass\tsubject\tpath\tcorrect\tverified-at\tnote\n%s\texternal\toutside payload\t../outside.bin\t\t\trelative path\n" "$H" > fix/ext/registry/digest-ledger.tsv
+
+$ (cd fix/ext && python3 <clone>/tools/digest-ledger.py scan --dir . --details; echo "rc=$?")
+tokens=1 blob=0 external_ok=1 external_absent=0 unverifiable=0 wrong_flagged=0 ledger_bad=0 wrong_unflagged=0 unknown=0
+
+rc=0
+
+$ (cd /fast/scratch/kama-r42/seats/R42B02 && python3 clone/tools/digest-ledger.py scan --dir fix/ext --details; echo "rc=$?")
+tokens=1 blob=0 external_ok=0 external_absent=1 unverifiable=0 wrong_flagged=0 ledger_bad=0 wrong_unflagged=0 unknown=0
+detail: external_absent 72bb19523779a1cce7f498c007a9cab9f2bb6256241b3a16d2012489e2d0b6cc class=external
+rc=0
+
+$ (cd clone && python3 tools/digest-ledger.py scan --dir /fast/scratch/kama-r42/seats/R42B02/fix/ext --details; echo "rc=$?")
+tokens=1 blob=0 external_ok=0 external_absent=1 unverifiable=0 wrong_flagged=0 ledger_bad=0 wrong_unflagged=0 unknown=0
+detail: external_absent 72bb19523779a1cce7f498c007a9cab9f2bb6256241b3a16d2012489e2d0b6cc class=external
+rc=0

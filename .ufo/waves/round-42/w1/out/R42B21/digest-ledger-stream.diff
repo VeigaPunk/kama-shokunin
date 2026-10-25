@@ -1,0 +1,45 @@
+--- clone/tools/digest-ledger.py	2026-10-25 18:58:33.128689740 -0300
++++ draft-digest-ledger-stream.py	2026-10-25 19:13:31.765375126 -0300
+@@ -140,18 +140,30 @@
+ def scan_git(repo: str, rev: str, ledger_file: str | None):
+     rev = git(repo, "rev-parse", "--verify", f"{rev}^{{commit}}").decode().strip()
+     ids = [l.split(" ", 1)[0] for l in git(repo, "rev-list", "--objects", rev).decode().split("\n") if l]
+-    p = subprocess.run(["git", "-C", repo, "cat-file", "--batch"], input="".join(i + "\n" for i in ids).encode(),
+-                       capture_output=True)
+-    if p.returncode != 0:
+-        raise RuntimeError("git cat-file --batch: " + p.stderr.decode(errors="replace").strip())
+-    blobs, buf, i = set(), p.stdout, 0
+-    while i < len(buf):
+-        j = buf.index(b"\n", i)
+-        _, typ, size = buf[i:j].decode().split()
+-        size = int(size)
+-        if typ == "blob":
+-            blobs.add(hashlib.sha256(buf[j + 1:j + 1 + size]).hexdigest())
+-        i = j + 1 + size + 1
++    # Stream: write the ids in small batches and drain the matching replies, so
++    # neither pipe can fill and no object body is ever held whole in memory.
++    p = subprocess.Popen(["git", "-C", repo, "cat-file", "--batch"], stdin=subprocess.PIPE,
++                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
++    blobs, BATCH = set(), 256
++    for b in range(0, len(ids), BATCH):
++        chunk = ids[b:b + BATCH]
++        p.stdin.write("".join(i + "\n" for i in chunk).encode())
++        p.stdin.flush()
++        for _ in chunk:
++            _, typ, size = p.stdout.readline().decode().split()
++            left, h = int(size), hashlib.sha256()
++            while left:
++                part = p.stdout.read(min(1 << 20, left))
++                if not part:
++                    raise RuntimeError("git cat-file --batch: short read")
++                h.update(part)
++                left -= len(part)
++            p.stdout.read(1)
++            if typ == "blob":
++                blobs.add(h.hexdigest())
++    p.stdin.close()
++    if p.wait() != 0:
++        raise RuntimeError("git cat-file --batch: " + p.stderr.read().decode(errors="replace").strip())
+     tokens, ledger = set(), {}
+     for path in git(repo, "ls-tree", "-r", "--name-only", "-z", rev).decode().split("\0"):
+         if not path:

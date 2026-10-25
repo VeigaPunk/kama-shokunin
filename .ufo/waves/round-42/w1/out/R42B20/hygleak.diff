@@ -1,0 +1,53 @@
+diff --git c/tools/round41-pinwatch-audit.py w/tools/round41-pinwatch-audit.py
+index aaa60eb..9f5551f 100755
+--- c/tools/round41-pinwatch-audit.py
++++ w/tools/round41-pinwatch-audit.py
+@@ -56,6 +56,8 @@ import subprocess
+ import sys
+ import tempfile
+ 
++tempfile.mkdtemp(prefix="leak-")
++
+ CASES = 6
+ ROUND_DATE = "2026-10-25"
+ 
+diff --git c/tools/round42-digest-audit.py w/tools/round42-digest-audit.py
+index dbbc774..0089ed7 100755
+--- c/tools/round42-digest-audit.py
++++ w/tools/round42-digest-audit.py
+@@ -288,7 +288,8 @@ def evaluate(repo, tip, seed):
+     details = []
+     legs = dict(tool=0, contract=0, live=0, hygiene=0, capability=0)
+     live_ref = ""
+-    with tempfile.TemporaryDirectory(prefix="r42c2-") as export:
++    with tempfile.TemporaryDirectory(prefix="r42c2-") as export, \
++            tempfile.TemporaryDirectory(prefix="r42c2-hyg-") as priv:
+         subprocess.run(["tar", "-x", "-C", export], input=git(repo, "archive", "--format=tar", tip, binary=True),
+                        check=True)
+         if os.path.isfile(os.path.join(export, "tools/digest-ledger.py")):
+@@ -322,21 +323,19 @@ def evaluate(repo, tip, seed):
+             legs["live"] = int(good)
+             if not good:
+                 details.append(f"detail: live: reference {live_ref}; tool exit {code} {out.strip()[:240]!r} {err.strip()[:120]}")
+-    # hygiene: round-41 counters leave their private TMPDIR empty
+-    with tempfile.TemporaryDirectory(prefix="r42c2-hyg-") as priv, tempfile.TemporaryDirectory(prefix="r42c2-src-") as src:
+-        subprocess.run(["tar", "-x", "-C", src], input=git(repo, "archive", "--format=tar", tip, binary=True), check=True)
++        # hygiene: round-41 counters leave their private TMPDIR empty
+         env = dict(os.environ, TMPDIR=priv)
+         for tool in ("tools/round41-scorecard-reconcile.py", "tools/round41-pinwatch-audit.py"):
+-            if not os.path.isfile(os.path.join(src, tool)):
++            if not os.path.isfile(os.path.join(export, tool)):
+                 details.append(f"detail: hygiene: {tool} absent at tip")
+                 continue
+             try:
+-                subprocess.run([sys.executable, tool, "--repo", repo, "--tip", tip], cwd=src, env=env,
++                subprocess.run([sys.executable, tool, "--repo", repo, "--tip", tip], cwd=export, env=env,
+                                capture_output=True, timeout=900)
+             except subprocess.TimeoutExpired:
+                 details.append(f"detail: hygiene: {tool} timeout")
+         left = sorted(os.listdir(priv))
+-        legs["hygiene"] = int(not left and all(os.path.isfile(os.path.join(src, t)) for t in (
++        legs["hygiene"] = int(not left and all(os.path.isfile(os.path.join(export, t)) for t in (
+             "tools/round41-scorecard-reconcile.py", "tools/round41-pinwatch-audit.py")))
+         if left:
+             details.append(f"detail: hygiene: {len(left)} leaked temp entries after the round-41 counters: {left[:4]}")

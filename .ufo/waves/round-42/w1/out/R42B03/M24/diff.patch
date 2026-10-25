@@ -1,0 +1,12 @@
+--- pristine
++++ M24
+@@ -119,7 +119,8 @@
+                 continue
+             with open(full, "rb") as f:
+                 data = f.read()
+-            blobs.add(hashlib.sha256(data).hexdigest())
++            if is_doc(rel):
++                blobs.add(hashlib.sha256(data).hexdigest())
+             if rel == LEDGER and ledger_file is None:
+                 ledger = parse_ledger(data.decode(errors="replace"))
+             elif is_doc(rel):

@@ -1,0 +1,11 @@
+Round 42 — SIGTERM cleanup of the round-41 counters (seats R42D10 and R42B14 found the leak).
+Method (L1, 2026-10-25, lane clone /fast/scratch/kama-r42/clone, base tip 0b606b03bf0b2a87b791aa537f6c72c941624cf0):
+  TMPDIR=<fresh empty dir> timeout 4 python3 tools/<counter>.py --repo . --tip 0b606b03...  (killed by SIGTERM after 4 s)
+  then count entries left in TMPDIR.
+Interim version (atexit only, commit 8bc8e375):
+  round41-scorecard-reconcile  exit=124 left=2
+  round41-pinwatch-audit       exit=124 left=1
+With SIGTERM -> sys.exit(143) added (this round's integration commit):
+  round41-scorecard-reconcile  exit=124 left=0
+  round41-pinwatch-audit       exit=124 left=0
+SIGKILL is not handled and still leaks; named, not fixed.

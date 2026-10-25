@@ -67,4 +67,16 @@ for p in C3_FILES + ["corpus/SOURCES.md", "corpus/README.md"]:
 for d in C3_DIRS:
     shutil.copytree(os.path.join(lane, d), os.path.join(D, d))
 score("sep-c3-only", commit("sep: C3 files only"))
+# probe: rename one row of the section Round 42 canonical list (the head mirror must no longer shield it)
+g("checkout", "-q", "--detach", tip)
+sc = open(os.path.join(D, "SCORECARD.md")).read()
+i = sc.index("**Capabilities — canonical list as of round 42**")
+sc = sc[:i] + sc[i:].replace("| sources-registry |", "| sources-registry-PROBE |", 1)
+open(os.path.join(D, "SCORECARD.md"), "w").write(sc)
+rev = commit("probe: rename a section Round 42 canonical row")
+p = subprocess.run([sys.executable, os.path.join(lane, CTR["c1"]), "--repo", D, "--tip", rev, "--out", os.path.join(out, "probe-canon-rename.c1.out")],
+                   capture_output=True, text=True, cwd=lane)
+with open(os.path.join(out, "probe-canon-rename.c1.out"), "a") as f:
+    f.write(f"exit={p.returncode}\n")
+print("probe-canon-rename c1", p.stdout.splitlines()[1][:160], "exit", p.returncode)
 print("sandbox", D)

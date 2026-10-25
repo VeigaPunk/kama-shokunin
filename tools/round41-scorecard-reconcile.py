@@ -48,6 +48,7 @@ import hashlib
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -185,6 +186,7 @@ def evaluate(repo: str, tip: str) -> tuple[dict, list[str]]:
             if export is None:
                 export = tempfile.mkdtemp(prefix="r41c1-")
                 atexit.register(shutil.rmtree, export, True)  # round 42: remove the export (R41A10-10)
+                signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))  # round 42: SIGTERM must reach atexit
                 arc = git(repo, "archive", "--format=tar", tip, binary=True)
                 subprocess.run(["tar", "-x", "-C", export], input=arc, check=True)
             ok, why = run_fact(export, cmd, want, code or None)

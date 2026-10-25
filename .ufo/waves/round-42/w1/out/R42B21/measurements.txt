@@ -1,0 +1,104 @@
+R42B21 — raw measurements (kama round 42, C2 scaling)
+host: linux 7.2.11-arch1-1, 32 cores, MemTotal 30,978 MB (available 16,555 MB during the runs),
+      /fast = xfs noatime on nvme1n1p2, python 3.14.8, git 2.56.0
+measurement root: fresh clone /fast/scratch/kama-r42/clone, claim tip 3d9bd8d72366e281fab291874524130428ee423d
+private working clone: /fast/scratch/kama-r42/seats/R42B21/clone (toplevel verified)
+GNU /usr/bin/time is not installed; peak RSS is the kernel high-water mark:
+  run.py    -> resource.getrusage(RUSAGE_CHILDREN).ru_maxrss  (max over the child and its descendants)
+  sample.py -> additionally samples the child's own /proc/<pid>/status VmHWM every 50 ms ("self_peak")
+
+== lane at 1x (claim tip) =====================================================
+git -C clone count-objects -v
+  count: 126 / size: 1652 / in-pack: 15985 / packs: 1 / size-pack: 31129 (KiB) / garbage: 0
+git -C clone rev-list --objects 3d9bd8d | wc -l        -> 16043
+git -C clone ls-tree -r --name-only 3d9bd8d | wc -l    -> 17642 tracked files
+docs scanned (md/tsv, not .ufo/, not the ledger)        -> 130
+uncompressed bytes of reachable objects                 -> 226,852,785  (blobs 225,023,259 / trees 1,738,543 / commits 90,983)
+working tree (du -sb, .git excluded)                    -> 226,239,998
+history growth: 0b606b03 -> 3d9bd8d -> 595b65f
+  objects=15930 bytes=225,459,575 | objects=16043 bytes=226,852,785 | objects=16056 bytes=227,195,304
+  (round 42 added 113 objects / 1.39 MB; 251 commits total, ~0.9 MB/commit)
+
+scan --repo clone          0.668 / 0.651 / 0.642 s   peak 468,720 / 468,688 / 469,140 KB
+  sample.py: wall 0.652 s  self_peak 473,244 KB  tree_peak 469,960 KB
+  -> tokens=96 blob=86 external_ok=4 external_absent=0 unverifiable=5 wrong_flagged=1
+     ledger_bad=0 wrong_unflagged=0 unknown=0   exit=0
+scan --dir clone           20.697 / 9.767 s   peak 50,704 / 51,292 KB
+  -> tokens=96 blob=79 external_ok=4 external_absent=0 unverifiable=5 wrong_flagged=1
+     ledger_bad=0 wrong_unflagged=0 unknown=7   exit=1
+scan --dir export-lane     0.351 s   peak 47,504 KB   (git archive 3d9bd8d | tar -x; 17634 files, 225,932,491 B)
+  -> tokens=96 blob=79 ... unknown=7   exit=1        (same result as --dir over the clone; .git is irrelevant)
+scan --dir clone --details -> the 7 unknown tokens are
+  493afecbd6dd85df0f08f4541ecd340b03dc5df797a73bf8744cfd94edebab5a  registry/history/DELTA.md          HISTORICAL
+  87cad1cad4565be01ce06e7f92c578c2f449c951894a880166040c3f118dc3ac  .ufo/waves/round-18/c2/survivors.py HISTORICAL
+  ac934794af1eee8067ea11f7f8cc31702ea7dfad257fec2649f2d638477bac75  .ufo/waves/round-18/c2/survivors.py HISTORICAL
+  ce7dc79c9523b92c33e0cbb141299db6196b2aa64b3c307779eee1842b51b84a  .ufo/waves/round-18/runs/commands.json HISTORICAL
+  dc036d7dcfe2933827c07f8bc0dedba68a24f7b099309871f6cb25ccb811a04b  tools/kama-llamacpp-live.py         HISTORICAL
+  e9fbaa02b4329ec415ac73eb0a6a5eaf4c91ae17f2889cc96232fb51f5d49c0a  .ufo/round-10/SEAT-PROTOCOL.md      HISTORICAL
+  fd98f07a2d845a31cdf0582aa0faf9180e0903754b33248897a7e4211d9843da  registry/history/latest.tsv         HISTORICAL
+  (whois.py: each is the SHA-256 of a blob that exists in history but is not the HEAD content at that path)
+
+== synthetic fixtures (gen.py; each: mktemp -d under /fast/scratch/kama-r42/seats/R42B21,
+   git init -q with -C, toplevel verified == D, fixture identity via git -C D config only) ==
+fixture  files  docs commits objects  object_bytes   worktree_bytes  pad/file
+  A      20000   201    51    20254     1,268,365        316,351     0        (fx-A.OZTQnq)
+  B      20000   201    51    20254   361,628,365    360,676,351   18,200     (fx-B.5QDqNq)
+  C      20000   201    51    20254 2,238,683,804  2,237,716,351  113,000     (fx-C.343UPD)
+  C/lane = 9.86x the lane's 226,852,785 B of reachable object bytes; same 20000-file / 201-doc shape;
+  each .md carries 5 full SHA-256 digests of blobs committed in the same commit (1000 distinct tokens,
+  all resolvable: tokens=1000 blob=1000 exit=0 in both modes).
+
+scan --repo
+  A  0.321 / 0.300 s      peak  34,352 / 33,552 KB
+  B  1.145 / 1.084 / 1.165 s  peak 734,788 / 734,648 / 736,204 KB
+     sample.py: wall 0.752 s self_peak 737,556 tree_peak 733,596
+  C  8.922 s (cold, sampler) self_peak 4,409,928  |  2.267 s tree_peak 4,410,344 KB
+scan --dir
+  A  14.211 (cold) / 0.420 (warm) s   peak 27,152 / 28,740 KB
+  B  13.535 / 11.978 s                peak 27,680 / 27,036 KB
+  C  39.442 s                         peak 27,384 KB
+
+== the scaling law ===========================================================
+peak_MiB(object_MiB) fit over lane(216.3, 458.1) B(344.9, 717.6) C(2135.0, 4307.0):
+    peak_MiB = 2.006 * object_MiB + 24.2      (B residual 0.2%, C residual 0.2%)
+    slope alone: lane 2.12x, B 2.08x, C 2.02x  -> the 2x is capture_output's
+    chunk-list + b"".join double buffer of the whole `git cat-file --batch` stdout.
+object-count axis: a set of 160,000 64-hex digests (10x the lane's 12,352 blobs) costs +28,764 KB.
+    -> count is negligible; uncompressed history bytes alone set the peak.
+per-document subprocess axis: 201 `git -C D cat-file -p HEAD:<doc>` spawns = 0.128 s = 0.64 ms each
+    (an earlier 4.79 ms reading was taken while fixture C was being built; the clean number is 0.64 ms).
+    -> 10x lane = 1300 docs = ~0.8 s; not a problem against the 300 s live-leg timeout.
+
+10x lane projection (10 x 226,852,785 B = 2,268,527,850 B = 2163.4 MiB):
+    peak = 2.006 * 2163.4 + 24.2 = 4,364 MiB = 4.26 GiB = 4.58 GB decimal
+    empirical cross-check at 9.86x (fixture C): measured 4,307 MiB, predicted 4,317 MiB (-0.2%)
+
+== the C2 counting command (tools/round42-digest-audit.py) ==================
+at the claim tip (seed 42, TMPDIR private and empty afterwards):
+  wall_s=224.986  peak 503,712 KB  exit=0
+  tip=3d9bd8d72366e281fab291874524130428ee423d
+  tool=1 contract=1 live=1 hygiene=1 capability=1 met=True seed=42
+  live-reference: tokens=96 blob=86 external_ok=4 external_absent=0 unverifiable=5 wrong_flagged=1
+                  ledger_bad=0 wrong_unflagged=0 unknown=0 exit=0
+  -> byte-equal to .ufo/waves/round-42/c2/candidate.out except its tip line
+at fixture C (9.86x lane, tool + ledger committed into the fixture):
+  wall_s=48.813  self_peak 4,433,840 KB  exit=1
+  tool=1 contract=1 live=0 hygiene=0 capability=0 met=False seed=42
+  (live=0 because external_ok=0 < 4: the fixture has no host-local artifacts; hygiene/capability
+   because the fixture has no round-41 counters and no SCORECARD.md — the RSS peak is reached
+   before any of that, in the `git archive` export and ref_git)
+  TMPDIR entries after: 0
+
+== draft fix (streaming cat-file), measured ==================================
+draft-digest-ledger-stream.py = claim-tip tool with scan_git's buffered
+  subprocess.run(capture_output=True) replaced by a batched Popen stream
+  (write 256 ids, drain 256 replies, hash each body in 1 MiB chunks)
+selftest            pass=6 fail=0   (original: pass=6 fail=0)
+fixture C  scan --repo  1.303 s  self_peak 29,872 KB  tree_peak 28,984 KB   exit=0  tokens=1000 blob=1000
+  -> 4,410,344 KB -> 29,872 KB = 148x less peak RSS, output line byte-equal
+lane       scan --repo  0.451 s  self_peak 29,052 KB  tree_peak 106,320 KB  exit=0
+  -> tokens=96 blob=86 external_ok=4 external_absent=0 unverifiable=5 wrong_flagged=1
+     ledger_bad=0 wrong_unflagged=0 unknown=0   (byte-equal to the claim-tip tool's line)
+  -> 473,244 KB -> 29,052 KB = 16x less peak RSS
+  tree_peak 106,320 KB is the `git cat-file --batch` child's own high-water mark, i.e. bounded
+  by git's per-object buffering rather than by the history size.

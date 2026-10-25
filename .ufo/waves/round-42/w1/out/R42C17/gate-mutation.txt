@@ -1,0 +1,46 @@
+R42C17 — mutation receipts: the C3 counter's gate leg checks verbatim presence, not grounding
+Fixture: /fast/scratch/kama-r42/seats/R42C17/fixture (git init in that dir;
+`git -C $F rev-parse --show-toplevel` -> /fast/scratch/kama-r42/seats/R42C17/fixture
+before the first commit; throwaway identity R42C17 <r42c17@local> used only there).
+Copied read-only from /fast/scratch/kama-r42/clone: corpus/SOURCES.md, corpus/README.md,
+corpus/lessons/round-42.md, corpus/knowledge/context-capacity-engine-sides.md,
+tools/round42-capacity-audit.py, .ufo/waves/round-42/{c3,assimilation}.
+TMPDIR=/fast/scratch/kama-r42/seats/R42C17/tmp (empty after the run).
+
+== baseline, unmutated Gate text (commit c6ee961)
+$ python3 tools/round42-capacity-audit.py --repo "$F" --tip c6ee961 --base c6ee961
+tip=c6ee961cd81223c9683fdc662da751ab7345faf1
+entry=1 rows=1 coverage=0 gate=1 census=0 met=False
+detail: entry already present at base
+detail: base already holds the ground in corpus/knowledge/context-capacity-engine-sides.md
+detail: census validate exit 1: file	W04	S031 duplicate url docs.ollama.com/api/tags across scopes
+exit=1
+(coverage=0 / census=0 are fixture artefacts: the fixture carries no base revision without the
+entry and the fleet census reads the whole SOURCES.md; the gate leg is what is under test.)
+
+== mutant 1 (commit c0d04e5): S478 quote replaced by a VERBATIM but IRRELEVANT fragment
+   lesson line 20 now reads:
+   Located quote, line 1605: "Attention free models do not have KV cache." (8 words)
+   (verbatim at vLLM copy line 1605, `# Attention free models do not have KV cache.`;
+    it grounds nothing in S478's teaches cell)
+$ python3 tools/round42-capacity-audit.py --repo "$F" --tip HEAD --base c6ee961
+tip=c0d04e5524c6d3f9ae821beb5605c92de423a372
+entry=1 rows=1 coverage=0 gate=1 census=0 met=False
+exit=1
+=> gate=1. The leg cannot tell a premise/an irrelevant fragment from the claim anchor.
+
+== mutant 2 (commit cf570b7): quote is NOT verbatim
+   Located quote, line 1605: "the served capacity is computed from the pool" (8 words)
+$ python3 tools/round42-capacity-audit.py --repo "$F" --tip HEAD --base c6ee961
+tip=cf570b77982b728073123999b969bafed50379cd
+entry=1 rows=1 coverage=0 gate=0 census=0 met=False
+exit=1
+=> gate=0. The leg only enforces: the double-quoted fragment occurs in the copy,
+   is <=25 whitespace tokens, and the line carries the URL and the date.
+
+Cause, at source: tools/round42-capacity-audit.py:202-204
+        q = re.findall(r'"([^"]{8,})"', l)
+        if url in sec and DATE in l and any(len(x.split()) <= 25 and ev[sid] is not None and
+                                            norm(x) in norm(ev[sid].decode(errors="replace")) for x in q):
+Nothing there relates the quoted fragment to the row's `teaches` cell, and backticked
+fragments are not inspected at all (so the S479 key literal on line 2379 is invisible to it).

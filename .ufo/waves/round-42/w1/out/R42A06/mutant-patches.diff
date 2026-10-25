@@ -1,0 +1,97 @@
+########## 78a5317 mutant A-extra-axis-row
+diff --git a/SCORECARD.md b/SCORECARD.md
+index b155824..09765b5 100644
+--- a/SCORECARD.md
++++ b/SCORECARD.md
+@@ -19,0 +20 @@ Round 42 adds, to every row, one axis-specific run fact (routed defect R41A03: a
++| **latency** | **6** | run `bash -c 'echo ok'` → `ok` | score round 42 |
+@@ -57 +58 @@ Superseded in round 42. The live plan is `### Planned (round 43)` at the end of
+-None. 6 axes and 8 capabilities remain active. Neither assigned axis is retired: the registered consumers still sample DEAD (`registry/history/latest.tsv`; restoring a serving runtime is operator-owned), while the lane-owned llama.cpp fixture reaches `MODEL_OK` on an unregistered loopback port (`.ufo/waves/round-16/live/receipt.json`), so the surface is not permanently gone. Retirement would need evidence of permanent absence or of saturation, and neither is observed.
++None. 7 axes and 8 capabilities remain active. Neither assigned axis is retired: the registered consumers still sample DEAD (`registry/history/latest.tsv`; restoring a serving runtime is operator-owned), while the lane-owned llama.cpp fixture reaches `MODEL_OK` on an unregistered loopback port (`.ufo/waves/round-16/live/receipt.json`), so the surface is not permanently gone. Retirement would need evidence of permanent absence or of saturation, and neither is observed.
+@@ -134 +135 @@ Rows enter only through a round that demonstrates the capability running (`AXES.
+-Saturation line **8/10** (declared round 10, unchanged); stagnation window **N = 4** rounds. Derived at the measured commit by `tools/round42-selfdesc-reconcile.py`: score vector operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7 (from `## Axes`); capability first-working rounds 10, 14, 16, 20, 25, 30, 41, 42 (highest canonical list); the assigned axes are operability + calibration and calibration 7 is below the line, so nudge inactive. A capability entered in round 42, so the window is not exhausted either.
++Saturation line **8/10** (declared round 10, unchanged); stagnation window **N = 4** rounds. Derived at the measured commit by `tools/round42-selfdesc-reconcile.py`: score vector operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7, latency 6 (from `## Axes`); capability first-working rounds 10, 14, 16, 20, 25, 30, 41, 42 (highest canonical list); the assigned axes are operability + calibration and calibration 7 is below the line, so nudge inactive. A capability entered in round 42, so the window is not exhausted either.
+########## 30129ad mutant B-stale-dup-sections
+diff --git a/SCORECARD.md b/SCORECARD.md
+index b155824..d7a5750 100644
+--- a/SCORECARD.md
++++ b/SCORECARD.md
+@@ -2274,0 +2275,14 @@ Same four columns as the round-41 canonical list, which stays byte-intact; one r
++
++## Retired
++
++Both assigned axes are retired; every model endpoint is dead.
++
++## Saturation
++
++8/10 on every owned axis.
++
++## Capabilities
++
++| Capability | What it can now do | Evidence pointer | First-working round |
++|---|---|---|---|
++| sources-registry | stale mirror | `corpus/SOURCES.md` | 10 |
+########## 4147e20 mutant C-substring-counts
+diff --git a/SCORECARD.md b/SCORECARD.md
+index b155824..440cd4d 100644
+--- a/SCORECARD.md
++++ b/SCORECARD.md
+@@ -57 +57 @@ Superseded in round 42. The live plan is `### Planned (round 43)` at the end of
+-None. 6 axes and 8 capabilities remain active. Neither assigned axis is retired: the registered consumers still sample DEAD (`registry/history/latest.tsv`; restoring a serving runtime is operator-owned), while the lane-owned llama.cpp fixture reaches `MODEL_OK` on an unregistered loopback port (`.ufo/waves/round-16/live/receipt.json`), so the surface is not permanently gone. Retirement would need evidence of permanent absence or of saturation, and neither is observed.
++None. 16 axes and 18 capabilities remain active. Neither assigned axis is retired: the registered consumers still sample DEAD (`registry/history/latest.tsv`; restoring a serving runtime is operator-owned), while the lane-owned llama.cpp fixture reaches `MODEL_OK` on an unregistered loopback port (`.ufo/waves/round-16/live/receipt.json`), so the surface is not permanently gone. Retirement would need evidence of permanent absence or of saturation, and neither is observed.
+########## 0eea466 mutant D-province-substring
+diff --git a/PROVINCE.md b/PROVINCE.md
+index d521efb..00655ff 100644
+--- a/PROVINCE.md
++++ b/PROVINCE.md
+@@ -16 +16 @@ drift, served-model reconciliation, probe conventions.
+-| lane instruments (the capability repertoire, `SCORECARD.md` canonical list) | `tools/kama-ollama-evidence.py` (offline Ollama capture replay), `tools/gguf-identity.py` (GGUF declared identity), `tools/kama-context-capacity.py` (fixture context-capacity receipt), `tools/instrument-agreement.py` (run agreement), `tools/pin-watch.py` with `registry/engine-pins.tsv` (newer-release triggers for the pinned SGLang, vLLM and llama.cpp lines), `tools/digest-ledger.py` with `registry/digest-ledger.tsv` (classification of every SHA-256 the lane's documents cite) |
++| lane instruments (the capability repertoire, `SCORECARD.md` canonical list) | `tools/kama-ollama-evidence.py` (offline Ollama capture replay), `tools/gguf-identity.py` (GGUF declared identity), `tools/kama-context-capacity.py` (fixture context-capacity receipt), `tools/instrument-agreement.py` (run agreement), `tools/pin-watch.py.bak` with `registry/engine-pins.tsv` (newer-release triggers for the pinned SGLang, vLLM and llama.cpp lines), `tools/digest-ledger.py` with `registry/digest-ledger.tsv` (classification of every SHA-256 the lane's documents cite) |
+diff --git a/SCORECARD.md b/SCORECARD.md
+index b155824..78fd8d4 100644
+--- a/SCORECARD.md
++++ b/SCORECARD.md
+@@ -17 +17 @@ Round 42 adds, to every row, one axis-specific run fact (routed defect R41A03: a
+-| coverage | **9** | surface list `PROVINCE.md` sha256 `5abc9fdfcfb57640c5dff460fa118c058181b00c445c1fb9b2d06d6481655707` (181 lines); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f]))"` → `34` (knowledge entries held before round 42); held ground includes `corpus/knowledge/endpoint-health-probe-conventions.md`, `corpus/knowledge/kv-cache-reclamation-models.md`, `corpus/knowledge/serving-alias-contract.md` | score round 10; evidence re-anchored round 42 |
++| coverage | **9** | surface list `PROVINCE.md` sha256 `a626c1531c4f15ef15486fd30547f06d5ec2f643295d9fd4029bdf2a25bbd55e` (181 lines); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f]))"` → `34` (knowledge entries held before round 42); held ground includes `corpus/knowledge/endpoint-health-probe-conventions.md`, `corpus/knowledge/kv-cache-reclamation-models.md`, `corpus/knowledge/serving-alias-contract.md` | score round 10; evidence re-anchored round 42 |
+########## 5d1e0e2 mutant E-firsts-set-collapse
+diff --git a/SCORECARD.md b/SCORECARD.md
+index b155824..b156cf6 100644
+--- a/SCORECARD.md
++++ b/SCORECARD.md
+@@ -2269 +2269 @@ Same four columns as the round-41 canonical list, which stays byte-intact; one r
+-| digest-ledger | Find every full SHA-256 the lane's documents cite and classify it: a committed blob, a ledger-declared external artifact re-hashed on this host, an unverifiable digest with its reason, or a flagged known-wrong digest; exit 1 on any unexplained digest | `tools/digest-ledger.py`; `registry/digest-ledger.tsv` | 42 |
++| digest-ledger | Find every full SHA-256 the lane's documents cite and classify it: a committed blob, a ledger-declared external artifact re-hashed on this host, an unverifiable digest with its reason, or a flagged known-wrong digest; exit 1 on any unexplained digest | `tools/digest-ledger.py`; `registry/digest-ledger.tsv` | 41 |
+########## 7074956 mutant F-sat-line-typed
+diff --git a/SCORECARD.md b/SCORECARD.md
+index b155824..eaad1fa 100644
+--- a/SCORECARD.md
++++ b/SCORECARD.md
+@@ -134 +134 @@ Rows enter only through a round that demonstrates the capability running (`AXES.
+-Saturation line **8/10** (declared round 10, unchanged); stagnation window **N = 4** rounds. Derived at the measured commit by `tools/round42-selfdesc-reconcile.py`: score vector operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7 (from `## Axes`); capability first-working rounds 10, 14, 16, 20, 25, 30, 41, 42 (highest canonical list); the assigned axes are operability + calibration and calibration 7 is below the line, so nudge inactive. A capability entered in round 42, so the window is not exhausted either.
++Saturation line **7/10** (declared round 10, unchanged); stagnation window **N = 4** rounds. Derived at the measured commit by `tools/round42-selfdesc-reconcile.py`: score vector operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7 (from `## Axes`); capability first-working rounds 10, 14, 16, 20, 25, 30, 41, 42 (highest canonical list); the assigned axes are operability + calibration and calibration 7 is below the line, so nudge inactive. A capability entered in round 42, so the window is not exhausted either.
+########## 6fb2cc1 mutant G2-receipt-missing-exempted
+diff --git a/SCORECARD.md b/SCORECARD.md
+index b155824..20eb273 100644
+--- a/SCORECARD.md
++++ b/SCORECARD.md
+@@ -2200,0 +2201 @@ Measured against lane commit `2429f48e2c679048d94566a9f3e800d5278b23eb` (the cou
++Missing receipt cited: `.ufo/waves/round-41/missing-receipt.md`.
+@@ -2223,0 +2225 @@ Same four columns as the round-34 canonical list, which stays byte-intact; one r
++Correction row quotes `.ufo/waves/round-41/missing-receipt.md`.
+########## 13e8f2c mutant M-fake-needle
+diff --git a/SCORECARD.md b/SCORECARD.md
+index b155824..6330964 100644
+--- a/SCORECARD.md
++++ b/SCORECARD.md
+@@ -14 +14 @@ Round 42 adds, to every row, one axis-specific run fact (routed defect R41A03: a
+-| **operability** | **8** | registry gate `tools/kama-probe.sh` sha256 `36b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3` (1138 lines); run `bash tools/test-snapshot.sh` → `RESULT pass=30 fail=0`; run `python3 tools/pin-watch.py selftest` → `selftest pass=9 fail=0`; run `python3 tools/report-landing-audit.py --selftest` → `selftest cases=79 failed=0`; run `python3 tools/sources-append-only.py --selftest` → `42/42 selftest cases passed`. Limit: the registered endpoints sample DEAD (no authorized serving runtime; operator-owned), so no model-readiness verdict is evidenced | score round 3; evidence re-anchored round 42 |
++| **operability** | **8** | registry gate `tools/kama-probe.sh` sha256 `36b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3` (1138 lines); run `bash tools/test-snapshot.sh` → `RESULT pass=30 fail=0`; run `bash -c 'echo selftest pass=9 fail=0; : pin-watch.py selftest'` → `selftest pass=9 fail=0`; run `python3 tools/report-landing-audit.py --selftest` → `selftest cases=79 failed=0`; run `python3 tools/sources-append-only.py --selftest` → `42/42 selftest cases passed`. Limit: the registered endpoints sample DEAD (no authorized serving runtime; operator-owned), so no model-readiness verdict is evidenced | score round 3; evidence re-anchored round 42 |
+########## ecb885c mutant K-hash-corrupt
+diff --git a/SCORECARD.md b/SCORECARD.md
+index b155824..d2bbdb4 100644
+--- a/SCORECARD.md
++++ b/SCORECARD.md
+@@ -14 +14 @@ Round 42 adds, to every row, one axis-specific run fact (routed defect R41A03: a
+-| **operability** | **8** | registry gate `tools/kama-probe.sh` sha256 `36b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3` (1138 lines); run `bash tools/test-snapshot.sh` → `RESULT pass=30 fail=0`; run `python3 tools/pin-watch.py selftest` → `selftest pass=9 fail=0`; run `python3 tools/report-landing-audit.py --selftest` → `selftest cases=79 failed=0`; run `python3 tools/sources-append-only.py --selftest` → `42/42 selftest cases passed`. Limit: the registered endpoints sample DEAD (no authorized serving runtime; operator-owned), so no model-readiness verdict is evidenced | score round 3; evidence re-anchored round 42 |
++| **operability** | **8** | registry gate `tools/kama-probe.sh` sha256 `46b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3` (1138 lines); run `bash tools/test-snapshot.sh` → `RESULT pass=30 fail=0`; run `python3 tools/pin-watch.py selftest` → `selftest pass=9 fail=0`; run `python3 tools/report-landing-audit.py --selftest` → `selftest cases=79 failed=0`; run `python3 tools/sources-append-only.py --selftest` → `42/42 selftest cases passed`. Limit: the registered endpoints sample DEAD (no authorized serving runtime; operator-owned), so no model-readiness verdict is evidenced | score round 3; evidence re-anchored round 42 |

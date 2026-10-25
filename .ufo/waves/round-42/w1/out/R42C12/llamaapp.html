@@ -1,0 +1,178 @@
+<!doctype html>
+<!-- `data-os` is the fallback for visitors without JS; the script below
+     replaces it with the visitor's actual OS (see `[data-os-only]` in
+     app.css). -->
+<html lang="en" data-os="other">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="text-scale" content="scale" />
+		<link rel="preconnect" href="https://fonts.googleapis.com" />
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+		<link
+			rel="stylesheet"
+			href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500;600&display=swap"
+		/>
+		<!-- The visitor's OS, for per-OS content like the homepage's download
+		     buttons. Set here, before the first paint, rather than from Svelte:
+		     the pages are prerendered, so anything decided after hydration
+		     would first flash the prerendered default. `other` covers phones,
+		     ChromeOS, and crawlers. iPads report themselves as Macintosh, so a
+		     touch screen rules out a Mac.
+
+		     `?os=windows` (or `mac`, `linux`, `other`) overrides the detected
+		     OS, so a link can show another OS's version of a page -- e.g. for
+		     reviewers, who'd otherwise only see their own. -->
+		<script>
+			(function () {
+				var ua = navigator.userAgent;
+				var param = new URLSearchParams(location.search).get('os');
+
+				document.documentElement.dataset.os = ['mac', 'windows', 'linux', 'other'].includes(param)
+					? param
+					: /Windows/.test(ua)
+						? 'windows'
+						: /Macintosh/.test(ua) && navigator.maxTouchPoints < 2
+							? 'mac'
+							: /Linux/.test(ua) && !/Android/.test(ua)
+								? 'linux'
+								: 'other';
+			})();
+		</script>
+		<!-- Privacy-friendly analytics by Plausible -->
+		<script async src="https://plausible.io/js/pa-YE0Tz1s09if09L7MI7nXR.js"></script>
+		<script>
+			window.plausible =
+				window.plausible ||
+				function () {
+					(plausible.q = plausible.q || []).push(arguments);
+				};
+			plausible.init =
+				plausible.init ||
+				function (i) {
+					plausible.o = i || {};
+				};
+			// No options needed. The homepage's download buttons open
+			// /download/mac and /download/windows, so their downloads are
+			// counted as those pages' pageviews. Direct links to the files
+			// (the download page's "Download it directly", the model catalog)
+			// go to github.com, and Plausible's click handler checks outbound
+			// links before file extensions and returns early -- so they land
+			// in the "Outbound Link: Click" goal, never "File Download". Find
+			// them there by breaking down on the url property. Outbound link
+			// tracking is enabled in the site settings, not here.
+			plausible.init();
+		</script>
+		<link href="../_app/immutable/bundle.D9uDNJ6F.js" rel="modulepreload">
+		<!--4t3fl1--><link rel="icon" href="data:image/svg+xml,%3csvg%20width='600'%20height='600'%20viewBox='0%200%20600%20600'%20fill='none'%20xmlns='http://www.w3.org/2000/svg'%3e%3cpath%20d='M600%20392L504.249%20558L504.137%20557.929C487.252%20584.069%20458.193%20600%20426.864%20600H120L240%20392H600Z'%20fill='%23111111'/%3e%3cpath%20d='M240%20392H0L199.602%2046.0254C216.032%2017.5463%20246.411%203.25756e-05%20279.29%200H466.154L240%20392Z'%20fill='%23111111'/%3e%3c/svg%3e"/> <meta property="og:type" content="website"/> <meta property="og:title" content="Llama · Your AI, on your computer"/> <meta property="og:description" content="Run the latest open models on your computer. Chat with them, or connect them to your coding agents, editors, and apps. Free, private, and nothing to configure."/> <meta property="og:url" content="https://llama.app"/> <meta property="og:image" content="https://llama.app/og-image.png"/> <meta property="og:image:alt" content="Llama: Your AI. On your computer. Llama’s menu in the Mac menu bar, listing installed models."/> <meta name="twitter:card" content="summary_large_image"/> <meta name="twitter:title" content="Llama · Your AI, on your computer"/> <meta name="twitter:description" content="Run the latest open models on your computer. Chat with them, or connect them to your coding agents, editors, and apps. Free, private, and nothing to configure."/> <meta name="twitter:image" content="https://llama.app/og-image.png"/><!----><!--1funsus--><!--[-1--><!--]--> <!----><script>(function setInitialMode({ defaultMode = "system", themeColors: themeColors2, darkClassNames: darkClassNames2 = ["dark"], lightClassNames: lightClassNames2 = [], defaultTheme = "", modeStorageKey: modeStorageKey2 = "mode-watcher-mode", themeStorageKey: themeStorageKey2 = "mode-watcher-theme" }) {
+  const rootEl = document.documentElement;
+  const mode = localStorage.getItem(modeStorageKey2) ?? defaultMode;
+  const theme = localStorage.getItem(themeStorageKey2) ?? defaultTheme;
+  const light = mode === "light" || mode === "system" && window.matchMedia("(prefers-color-scheme: light)").matches;
+  if (light) {
+    if (darkClassNames2.length)
+      rootEl.classList.remove(...darkClassNames2.filter(Boolean));
+    if (lightClassNames2.length)
+      rootEl.classList.add(...lightClassNames2.filter(Boolean));
+  } else {
+    if (lightClassNames2.length)
+      rootEl.classList.remove(...lightClassNames2.filter(Boolean));
+    if (darkClassNames2.length)
+      rootEl.classList.add(...darkClassNames2.filter(Boolean));
+  }
+  rootEl.style.colorScheme = light ? "light" : "dark";
+  if (themeColors2) {
+    const themeMetaEl = document.querySelector('meta[name="theme-color"]');
+    if (themeMetaEl) {
+      themeMetaEl.setAttribute("content", mode === "light" ? themeColors2.light : themeColors2.dark);
+    }
+  }
+  if (theme) {
+    rootEl.setAttribute("data-theme", theme);
+    localStorage.setItem(themeStorageKey2, theme);
+  }
+  localStorage.setItem(modeStorageKey2, mode);
+})({"defaultMode":"system","darkClassNames":["dark"],"lightClassNames":[],"defaultTheme":"","modeStorageKey":"mode-watcher-mode","themeStorageKey":"mode-watcher-theme"});</script><!----><!----><!--1mv48oe--><link rel="canonical" href="https://llama.app/docs/api"/> <link rel="alternate" type="text/markdown" href="/docs/api.md"/><!----><title>API server — llama.app</title>
+		<link href="../_app/immutable/assets/bundle.BBTg7_PC.css" rel="stylesheet">
+	</head>
+	<body data-sveltekit-preload-data="hover">
+		<div style="display: contents"><!--[--><!--[0--><!--[--><!--[0--><header class="mx-auto flex w-full max-w-6xl items-center justify-between p-6 md:px-12"><nav class="flex items-center gap-4 text-[15px] md:gap-6"><a href="../"><svelte-css-wrapper style="display: contents; --logo-height: 1.5rem;"><span class="logo flex items-center text-foreground svelte-2vbth6"><span class="mark text-foreground svelte-2vbth6"><!----><svg width="600" height="600" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M600 392L504.249 558L504.137 557.929C487.252 584.069 458.193 600 426.864 600H120L240 392H600Z" fill="#111111"/>
+<path d="M240 392H0L199.602 46.0254C216.032 17.5463 246.411 3.25756e-05 279.29 0H466.154L240 392Z" fill="#111111"/>
+</svg>
+<!----></span> <!--[-1--><!--]--></span><!----></svelte-css-wrapper></a> <span aria-hidden="true" class="h-5 w-px bg-border"></span> <a href="../models" class="-mx-2 -my-1 rounded-md px-2 py-1 text-foreground">Models</a> <a href="../docs" aria-current="page" class="-mx-2 -my-1 rounded-md px-2 py-1 text-foreground bg-foreground/6">Docs</a></nav> <div class="flex items-center gap-4 md:gap-6"><!--[0--><a href="https://github.com/ggml-org/llama.cpp" target="_blank" rel="noreferrer" class="inline-flex items-center gap-2 text-[15px] text-foreground"><span>GitHub</span> <!--[0--><span class="inline-flex items-center gap-1 rounded-md bg-foreground/8 px-1.5 py-0.5 text-xs text-foreground/70"><span aria-hidden="true">★</span> 132.1K</span><!--]--></a><!--]--> <button type="button" class="-m-1.5 inline-flex cursor-pointer items-center rounded-md p-1.5 text-foreground/70" aria-label="Theme: system (click to change)" title="Theme: system"><!--[-1--><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon lucide lucide-monitor size-4"><!--[--><!----><rect width="20" height="14" x="2" y="3" rx="2"><!----></rect><!----><!----><line x1="8" x2="16" y1="21" y2="21"><!----></line><!----><!----><line x1="12" x2="12" y1="17" y2="21"><!----></line><!----><!--]--><!----><!----></svg><!--]--></button></div></header><!--]--> <!----> <!--[-1--><!--]--><!----> <!--[--><dialog class="mx-auto mt-[12vh] w-full max-w-lg rounded-xl border border-border bg-background p-0 text-foreground shadow-2xl backdrop:bg-black/40 backdrop:backdrop-blur-xs"><div class="flex flex-col"><div class="flex items-center gap-2 border-b border-border px-4"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon lucide lucide-search size-4 shrink-0 text-foreground/40"><!--[--><!----><path d="m21 21-4.34-4.34"><!----></path><!----><!----><circle cx="11" cy="11" r="8"><!----></circle><!----><!--]--><!----><!----></svg><!----> <input value="" type="text" placeholder="Search docs…" aria-label="Search docs" role="combobox" aria-expanded="false" aria-controls="docs-search-results" class="w-full bg-transparent py-3.5 text-sm outline-none placeholder:text-foreground/40"/> <kbd class="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-foreground/40">esc</kbd></div> <div id="docs-search-results" role="listbox" class="max-h-80 overflow-y-auto p-2"><!--[-1--><!--]--> <!--[--><!--]--></div> <div class="flex items-center gap-3 border-t border-border px-4 py-2 text-xs text-foreground/40"><span><kbd class="font-mono">↑↓</kbd> navigate</span> <span><kbd class="font-mono">↵</kbd> open</span></div></div></dialog><!----> <div class="relative mx-auto grid w-full max-w-6xl grid-cols-1 px-6 md:px-12 lg:grid-cols-[13rem_minmax(0,1fr)] lg:gap-14"><aside class="sticky top-0 hidden h-dvh overflow-y-auto pt-6 pb-10 lg:block"><button type="button" class="flex w-full cursor-pointer items-center gap-2 rounded-lg bg-foreground/4 px-2.5 py-2 text-sm text-muted-foreground"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon lucide lucide-search size-3.5 shrink-0"><!--[--><!----><path d="m21 21-4.34-4.34"><!----></path><!----><!----><circle cx="11" cy="11" r="8"><!----></circle><!----><!--]--><!----><!----></svg><!----> Search docs <kbd class="ml-auto rounded bg-foreground/6 px-1.5 py-0.5 font-mono text-[10px]">⌘K</kbd></button> <nav class="mt-6 flex flex-col gap-6" aria-label="Documentation"><!--[--><!--[0--><div class="flex flex-col gap-0.5"><p class="px-2 pb-1 text-[13px] text-muted-foreground">Getting started</p> <!--[--><!--[1--><a href="../docs/introduction" class="rounded-md px-2 py-1 text-sm text-foreground ">Introduction <!--[-1--><!--]--></a><!--]--><!--[1--><a href="../docs/installation" class="rounded-md px-2 py-1 text-sm text-foreground ">Installation <!--[-1--><!--]--></a><!--]--><!--[1--><a href="../docs/quickstart" class="rounded-md px-2 py-1 text-sm text-foreground ">Quickstart <!--[-1--><!--]--></a><!--]--><!--]--></div><!--]--><!--[0--><div class="flex flex-col gap-0.5"><p class="px-2 pb-1 text-[13px] text-muted-foreground">Usage</p> <!--[--><!--[1--><a href="../docs/cli" class="rounded-md px-2 py-1 text-sm text-foreground ">Using the CLI <!--[-1--><!--]--></a><!--]--><!--[1--><a href="../docs/serve" class="rounded-md px-2 py-1 text-sm text-foreground ">Running a server <!--[-1--><!--]--></a><!--]--><!--[1--><a href="../docs/webui" class="rounded-md px-2 py-1 text-sm text-foreground ">Web UI <!--[-1--><!--]--></a><!--]--><!--[1--><a href="../docs/api" aria-current="page" class="rounded-md px-2 py-1 text-sm text-foreground bg-foreground/6 font-medium">API server <!--[-1--><!--]--></a><!--]--><!--[1--><a href="../docs/agents" class="rounded-md px-2 py-1 text-sm text-foreground ">Using Llama App with Agents <!--[-1--><!--]--></a><!--]--><!--]--></div><!--]--><!--[0--><div class="flex flex-col gap-0.5"><p class="px-2 pb-1 text-[13px] text-muted-foreground">Conceptual guides</p> <!--[--><!--[1--><a href="../docs/prefill-vs-decode" class="rounded-md px-2 py-1 text-sm text-foreground ">Prefill vs Decode <!--[-1--><!--]--></a><!--]--><!--]--></div><!--]--><!--]--></nav><!----></aside> <aside class="absolute top-0 left-full hidden h-full w-48 min-[100rem]:block"><div class="sticky top-0 max-h-dvh overflow-y-auto pt-6 pb-10"><!--[-1--><!--]--><!----></div></aside> <main class="relative min-w-0 pt-2 pb-24 lg:pt-6"><!----><details class="group mb-8 rounded-xl border lg:hidden"><summary class="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm [&amp;::-webkit-details-marker]:hidden"><span class="truncate"><span class="text-muted-foreground">Docs /</span> <span class="font-medium">API server</span></span> <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon lucide lucide-chevron-down size-4 shrink-0 transition-transform group-open:rotate-180"><!--[--><!----><path d="m6 9 6 6 6-6"><!----></path><!----><!--]--><!----><!----></svg><!----></summary> <div class="border-t p-4"><button type="button" class="flex w-full cursor-pointer items-center gap-2 rounded-lg bg-foreground/4 px-2.5 py-2 text-sm text-muted-foreground"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon lucide lucide-search size-3.5 shrink-0"><!--[--><!----><path d="m21 21-4.34-4.34"><!----></path><!----><!----><circle cx="11" cy="11" r="8"><!----></circle><!----><!--]--><!----><!----></svg><!----> Search docs <kbd class="ml-auto rounded bg-foreground/6 px-1.5 py-0.5 font-mono text-[10px]">⌘K</kbd></button> <nav class="mt-6 flex flex-col gap-6" aria-label="Documentation"><!--[--><!--[0--><div class="flex flex-col gap-0.5"><p class="px-2 pb-1 text-[13px] text-muted-foreground">Getting started</p> <!--[--><!--[1--><a href="../docs/introduction" class="rounded-md px-2 py-1 text-sm text-foreground ">Introduction <!--[-1--><!--]--></a><!--]--><!--[1--><a href="../docs/installation" class="rounded-md px-2 py-1 text-sm text-foreground ">Installation <!--[-1--><!--]--></a><!--]--><!--[1--><a href="../docs/quickstart" class="rounded-md px-2 py-1 text-sm text-foreground ">Quickstart <!--[-1--><!--]--></a><!--]--><!--]--></div><!--]--><!--[0--><div class="flex flex-col gap-0.5"><p class="px-2 pb-1 text-[13px] text-muted-foreground">Usage</p> <!--[--><!--[1--><a href="../docs/cli" class="rounded-md px-2 py-1 text-sm text-foreground ">Using the CLI <!--[-1--><!--]--></a><!--]--><!--[1--><a href="../docs/serve" class="rounded-md px-2 py-1 text-sm text-foreground ">Running a server <!--[-1--><!--]--></a><!--]--><!--[1--><a href="../docs/webui" class="rounded-md px-2 py-1 text-sm text-foreground ">Web UI <!--[-1--><!--]--></a><!--]--><!--[1--><a href="../docs/api" aria-current="page" class="rounded-md px-2 py-1 text-sm text-foreground bg-foreground/6 font-medium">API server <!--[-1--><!--]--></a><!--]--><!--[1--><a href="../docs/agents" class="rounded-md px-2 py-1 text-sm text-foreground ">Using Llama App with Agents <!--[-1--><!--]--></a><!--]--><!--]--></div><!--]--><!--[0--><div class="flex flex-col gap-0.5"><p class="px-2 pb-1 text-[13px] text-muted-foreground">Conceptual guides</p> <!--[--><!--[1--><a href="../docs/prefill-vs-decode" class="rounded-md px-2 py-1 text-sm text-foreground ">Prefill vs Decode <!--[-1--><!--]--></a><!--]--><!--]--></div><!--]--><!--]--></nav><!----></div></details><!----> <div class="mb-4 flex justify-end lg:absolute lg:top-6 lg:right-0 lg:mb-0"><div class="relative inline-flex text-sm"><button type="button" class="inline-flex cursor-pointer items-center gap-1.5 rounded-l-md border border-border px-2.5 py-1.5"><!--[-1--><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon lucide lucide-copy size-3.5"><!--[--><!----><rect width="14" height="14" x="8" y="8" rx="2" ry="2"><!----></rect><!----><!----><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"><!----></path><!----><!--]--><!----><!----></svg><!--]--> Copy page</button> <button type="button" aria-label="More page actions" aria-expanded="false" class="inline-flex cursor-pointer items-center rounded-r-md border border-l-0 border-border px-1.5 py-1.5"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon lucide lucide-chevron-down size-3.5 transition-transform "><!--[--><!----><path d="m6 9 6 6 6-6"><!----></path><!----><!--]--><!----><!----></svg><!----></button> <!--[-1--><!--]--></div><!----></div> <article class="prose max-w-none prose-headings:font-semibold prose-headings:tracking-tight prose-h1:text-4xl prose-code:font-normal prose-code:before:content-none prose-code:after:content-none prose-img:rounded-xl [&amp;_:not(pre)>code]:rounded-md [&amp;_:not(pre)>code]:bg-foreground/6 [&amp;_:not(pre)>code]:px-1.5 [&amp;_:not(pre)>code]:py-0.5 [&amp;_:not(pre)>code]:text-[0.85em] svelte-1mv48oe"><!--[--><h1 id="api-server">API server</h1> <p><code>llama serve</code> exposes a REST API on <code>http://localhost:9931</code> in various formats:</p> <ul><li><strong>OpenAI-compatible</strong> endpoints under <code>/v1/...</code> works with existing OpenAI SDKs and apps</li> <li>An <strong>Anthropic-compatible</strong> <code>/v1/messages</code> endpoint</li> <li><strong>llama.cpp endpoints</strong> with extra capabilities (lower level options)</li></ul> <p>If the server was started with <code>--api-key</code>, pass it as a Bearer token: <code>Authorization: Bearer YOUR_KEY</code>.</p> <h2 id="chat-completions">Chat completions</h2> <p><code>POST /v1/chat/completions</code> is the endpoint you’ll use most. It accepts the standard OpenAI chat format, with streaming supported via <code>"stream": true</code>:</p> <pre class="language-sh"><!----><code class="language-sh"><span class="token function">curl</span> http://localhost:9931/v1/chat/completions <span class="token punctuation">&#92;</span>
+    <span class="token parameter variable">-H</span> <span class="token string">"Content-Type: application/json"</span> <span class="token punctuation">&#92;</span>
+    <span class="token parameter variable">-d</span> <span class="token string">'&#123;
+        "messages": [
+            &#123;"role": "system", "content": "You are a helpful assistant."&#125;,
+            &#123;"role": "user", "content": "Write a limerick about python exceptions"&#125;
+        ]
+    &#125;'</span></code><!----></pre> <p>Or with the OpenAI Python SDK — only the base URL changes:</p> <pre class="language-python"><!----><code class="language-python"><span class="token keyword">import</span> openai
+
+client <span class="token operator">=</span> openai<span class="token punctuation">.</span>OpenAI<span class="token punctuation">(</span>base_url<span class="token operator">=</span><span class="token string">"http://localhost:9931/v1"</span><span class="token punctuation">,</span> api_key<span class="token operator">=</span><span class="token string">"no-key-required"</span><span class="token punctuation">)</span>
+
+completion <span class="token operator">=</span> client<span class="token punctuation">.</span>chat<span class="token punctuation">.</span>completions<span class="token punctuation">.</span>create<span class="token punctuation">(</span>
+    model<span class="token operator">=</span><span class="token string">"local-model"</span><span class="token punctuation">,</span>
+    messages<span class="token operator">=</span><span class="token punctuation">[</span><span class="token punctuation">&#123;</span><span class="token string">"role"</span><span class="token punctuation">:</span> <span class="token string">"user"</span><span class="token punctuation">,</span> <span class="token string">"content"</span><span class="token punctuation">:</span> <span class="token string">"Write a limerick about python exceptions"</span><span class="token punctuation">&#125;</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+<span class="token punctuation">)</span>
+<span class="token keyword">print</span><span class="token punctuation">(</span>completion<span class="token punctuation">.</span>choices<span class="token punctuation">[</span><span class="token number">0</span><span class="token punctuation">]</span><span class="token punctuation">.</span>message<span class="token punctuation">.</span>content<span class="token punctuation">)</span></code><!----></pre> <p>On top of the OpenAI parameters, llama.cpp-specific generation parameters are accepted in the same request body.</p> <h3 id="structured-output">Structured output</h3> <p>Constrain the response to valid JSON, or to a specific schema:</p> <pre class="language-json"><!----><code class="language-json"><span class="token punctuation">&#123;</span>
+	<span class="token property">"messages"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">&#123;</span> <span class="token property">"role"</span><span class="token operator">:</span> <span class="token string">"user"</span><span class="token punctuation">,</span> <span class="token property">"content"</span><span class="token operator">:</span> <span class="token string">"Extract the name and date: ..."</span> <span class="token punctuation">&#125;</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+	<span class="token property">"response_format"</span><span class="token operator">:</span> <span class="token punctuation">&#123;</span>
+		<span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"json_schema"</span><span class="token punctuation">,</span>
+		<span class="token property">"schema"</span><span class="token operator">:</span> <span class="token punctuation">&#123;</span>
+			<span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"object"</span><span class="token punctuation">,</span>
+			<span class="token property">"properties"</span><span class="token operator">:</span> <span class="token punctuation">&#123;</span>
+				<span class="token property">"name"</span><span class="token operator">:</span> <span class="token punctuation">&#123;</span> <span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"string"</span> <span class="token punctuation">&#125;</span><span class="token punctuation">,</span>
+				<span class="token property">"date"</span><span class="token operator">:</span> <span class="token punctuation">&#123;</span> <span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"string"</span> <span class="token punctuation">&#125;</span>
+			<span class="token punctuation">&#125;</span><span class="token punctuation">,</span>
+			<span class="token property">"required"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token string">"name"</span><span class="token punctuation">,</span> <span class="token string">"date"</span><span class="token punctuation">]</span>
+		<span class="token punctuation">&#125;</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span></code><!----></pre> <p>Use <code>{"type": "json_object"}</code> for free-form JSON.</p> <h3 id="tool-calling">Tool calling</h3> <p>OpenAI-style function calling works with any model native formats are used for models trained on tool use, with a generic fallback for the rest. Pass <code>tools</code> and <code>tool_choice</code> as usual. See the <a href="https://github.com/ggml-org/llama.cpp/blob/master/docs/function-calling.md" rel="nofollow">function calling docs</a> for supported model families.</p> <h3 id="multimodal-input">Multimodal input</h3> <p>Vision and audio models accept typed content parts in messages:</p> <pre class="language-json"><!----><code class="language-json"><span class="token punctuation">&#123;</span>
+	<span class="token property">"messages"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+		<span class="token punctuation">&#123;</span>
+			<span class="token property">"role"</span><span class="token operator">:</span> <span class="token string">"user"</span><span class="token punctuation">,</span>
+			<span class="token property">"content"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+				<span class="token punctuation">&#123;</span> <span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"text"</span><span class="token punctuation">,</span> <span class="token property">"text"</span><span class="token operator">:</span> <span class="token string">"What is in this image?"</span> <span class="token punctuation">&#125;</span><span class="token punctuation">,</span>
+				<span class="token punctuation">&#123;</span> <span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"image_url"</span><span class="token punctuation">,</span> <span class="token property">"image_url"</span><span class="token operator">:</span> <span class="token punctuation">&#123;</span> <span class="token property">"url"</span><span class="token operator">:</span> <span class="token string">"https://example.com/photo.jpg"</span> <span class="token punctuation">&#125;</span> <span class="token punctuation">&#125;</span>
+			<span class="token punctuation">]</span>
+		<span class="token punctuation">&#125;</span>
+	<span class="token punctuation">]</span>
+<span class="token punctuation">&#125;</span></code><!----></pre> <p><code>image_url.url</code> can be a remote URL or base64 data URI; <code>input_audio</code> works the same way for audio files.</p> <h3 id="reasoning-models">Reasoning models</h3> <p>For thinking models, the parsed reasoning is returned in <code>message.reasoning_content</code>, separate from the final answer in <code>message.content</code> (configurable with <code>--reasoning-format</code>).</p> <h3 id="timings-and-usage">Timings and usage</h3> <p>Responses include a standard OpenAI <code>usage</code> object, plus a llama.cpp <code>timings</code> object with tokens-per-second stats and the number of prompt tokens reused from cache (<code>cache_n</code>) — useful for tracking performance and context usage.</p> <h2 id="other-openai-compatible-endpoints">Other OpenAI-compatible endpoints</h2> <table><thead><tr><th>Endpoint</th><th>Purpose</th></tr></thead><tbody><tr><td><code>POST /v1/completions</code></td><td>Text completion from a raw <code>prompt</code></td></tr><tr><td><code>POST /v1/responses</code></td><td>OpenAI Responses API (translated to chat completions internally)</td></tr><tr><td><code>POST /v1/embeddings</code></td><td>Embeddings — requires a pooling-enabled model (see <a href="serve">serving</a>)</td></tr><tr><td><code>POST /v1/rerank</code></td><td>Rank documents against a query — requires a reranker model</td></tr><tr><td><code>GET /v1/models</code></td><td>Model metadata (id, context size, parameters)</td></tr></tbody></table> <p>The model <code>id</code> reported by <code>/v1/models</code> defaults to the model file path; set a friendly name with <code>--alias</code>.</p> <h2 id="anthropic-compatible-endpoint">Anthropic-compatible endpoint</h2> <p><code>POST /v1/messages</code> accepts the Anthropic Messages API format, including <code>system</code>, <code>stop_sequences</code>, streaming, and tool use — so Anthropic SDKs and apps can point at llama serve too:</p> <pre class="language-sh"><!----><code class="language-sh"><span class="token function">curl</span> http://localhost:9931/v1/messages <span class="token punctuation">&#92;</span>
+    <span class="token parameter variable">-H</span> <span class="token string">"Content-Type: application/json"</span> <span class="token punctuation">&#92;</span>
+    <span class="token parameter variable">-H</span> <span class="token string">"x-api-key: your-api-key"</span> <span class="token punctuation">&#92;</span>
+    <span class="token parameter variable">-d</span> <span class="token string">'&#123;
+        "model": "local-model",
+        "max_tokens": 1024,
+        "messages": [&#123;"role": "user", "content": "Hello!"&#125;]
+        &#125;'</span></code><!----></pre> <p><code>POST /v1/messages/count_tokens</code> counts input tokens without generating.</p> <h2 id="native-endpoints">Native endpoints</h2> <p>These expose llama.cpp features beyond the OpenAI surface:</p> <table><thead><tr><th>Endpoint</th><th>Purpose</th></tr></thead><tbody><tr><td><code>GET /health</code></td><td>Liveness check: <code>200</code> when ready, <code>503</code> while loading</td></tr><tr><td><code>POST /completion</code></td><td>Native completion with the full llama.cpp option set (token arrays, <code>n_probs</code> logprobs, <code>id_slot</code> pinning, per-request LoRA scales, …)</td></tr><tr><td><code>POST /tokenize</code> / <code>POST /detokenize</code></td><td>Convert between text and tokens</td></tr><tr><td><code>POST /apply-template</code></td><td>Apply the model’s chat template without running inference</td></tr><tr><td><code>POST /infill</code></td><td>Fill-in-the-middle code completion from <code>input_prefix</code> and <code>input_suffix</code></td></tr><tr><td><code>GET /props</code></td><td>Server and model properties (context size, chat template, modalities)</td></tr><tr><td><code>GET /slots</code></td><td>Current state of each processing slot</td></tr><tr><td><code>GET /metrics</code></td><td>Prometheus metrics (requires <code>--metrics</code>)</td></tr><tr><td><code>GET /lora-adapters</code> / <code>POST /lora-adapters</code></td><td>List and set LoRA adapter scales at runtime</td></tr></tbody></table> <p>A minimal native completion request:</p> <pre class="language-sh"><!----><code class="language-sh"><span class="token function">curl</span> http://localhost:9931/completion <span class="token punctuation">&#92;</span>
+    <span class="token parameter variable">-H</span> <span class="token string">"Content-Type: application/json"</span> <span class="token punctuation">&#92;</span>
+    <span class="token parameter variable">-d</span> <span class="token string">'&#123;"prompt": "Building a website can be done in 10 simple steps:", "n_predict": 128&#125;'</span></code><!----></pre> <h2 id="router-mode">Router mode</h2> <p>When <a href="serve">serving multiple models</a>, the same API routes requests by model name — the <code>"model"</code> field in POST bodies, or a <code>?model=</code> query parameter on GET endpoints. <code>GET /models</code> lists all available models with their load status and modalities, and <code>POST /models/load</code> / <code>POST /models/unload</code> manage them explicitly.</p> <h2 id="errors">Errors</h2> <p>Errors use the OpenAI format:</p> <pre class="language-json"><!----><code class="language-json"><span class="token punctuation">&#123;</span>
+	<span class="token property">"error"</span><span class="token operator">:</span> <span class="token punctuation">&#123;</span>
+		<span class="token property">"code"</span><span class="token operator">:</span> <span class="token number">401</span><span class="token punctuation">,</span>
+		<span class="token property">"message"</span><span class="token operator">:</span> <span class="token string">"Invalid API Key"</span><span class="token punctuation">,</span>
+		<span class="token property">"type"</span><span class="token operator">:</span> <span class="token string">"authentication_error"</span>
+	<span class="token punctuation">&#125;</span>
+<span class="token punctuation">&#125;</span></code><!----></pre> <p>For exhaustive request/response schemas and every endpoint option, see the <a href="https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md" rel="nofollow">server README</a>.</p><!--]--></article> <!--[0--><nav class="mt-16 grid grid-cols-2 gap-4 text-sm" aria-label="Pagination"><!--[0--><a href="../docs/webui" class="flex flex-col gap-1 rounded-xl border p-4"><span class="flex items-center gap-1 text-muted-foreground"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon lucide lucide-arrow-left size-3.5"><!--[--><!----><path d="m12 19-7-7 7-7"><!----></path><!----><!----><path d="M19 12H5"><!----></path><!----><!--]--><!----><!----></svg><!----> Previous</span> <span class="font-medium">Web UI</span></a><!--]--> <!--[0--><a href="../docs/agents" class="flex flex-col items-end gap-1 rounded-xl border p-4 text-right"><span class="flex items-center gap-1 text-muted-foreground">Next <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide-icon lucide lucide-arrow-right size-3.5"><!--[--><!----><path d="M5 12h14"><!----></path><!----><!----><path d="m12 5 7 7-7 7"><!----></path><!----><!--]--><!----><!----></svg><!----></span> <span class="font-medium">Using Llama App with Agents</span></a><!--]--></nav><!--]--><!----></main></div><!--]--><!----> <!--[-1--><!--]--><!--]--><!--]--> <!--[-1--><!--]--><!--]-->
+			
+			<script>
+				{
+					__sveltekit_vhv8c2 = {
+						base: new URL("..", location).pathname.slice(0, -1)
+					};
+
+					const element = document.currentScript.parentElement;
+
+					import("../_app/immutable/bundle.D9uDNJ6F.js").then((app) => {
+						app.start(element, {
+							node_ids: [0, 4],
+							data: [{type:"data",data:{stars:{"https://github.com/ggml-org/Llama-macOS":1668,"https://github.com/ggml-org/Llama-Windows":270,"https://github.com/ggml-org/llama.cpp":132109}},uses:{}},null],
+							form: null,
+							error: null
+						})
+					});
+				}
+			</script>
+		</div>
+	</body>
+</html>

@@ -1,0 +1,16 @@
+$ python3 <clone>/tools/digest-ledger.py scan --dir /nonexistent-kama-r42 --details; echo rc=$?
+tokens=0 blob=0 external_ok=0 external_absent=0 unverifiable=0 wrong_flagged=0 ledger_bad=0 wrong_unflagged=0 unknown=0
+
+rc=0
+
+$ mkdir -p tmp/empty && python3 <clone>/tools/digest-ledger.py scan --dir tmp/empty; echo rc=$?
+tokens=0 blob=0 external_ok=0 external_absent=0 unverifiable=0 wrong_flagged=0 ledger_bad=0 wrong_unflagged=0 unknown=0
+rc=0
+
+$ python3 <clone>/tools/digest-ledger.py scan --repo clone --rev deadbeefdeadbeefdeadbeefdeadbeefdeadbeef; echo rc=$?
+digest-ledger: git rev-parse --verify deadbeefdeadbeefdeadbeefdeadbeefdeadbeef^{commit}: fatal: Needed a single revision
+rc=2
+
+$ python3 <clone>/tools/digest-ledger.py selftest; echo rc=$?
+selftest pass=6 fail=0
+rc=0

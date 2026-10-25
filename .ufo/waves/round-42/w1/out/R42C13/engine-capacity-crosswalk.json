@@ -1,0 +1,71 @@
+{
+  "comparison_sentence": "Across both engines, the HTTP API publishes only the per-request ceiling or declared model length (max_model_len in vLLM, meta.n_ctx / meta.n_ctx_train / context_length in llama.cpp), while total concurrent capacity depends on the physical KV pool recorded only in startup logs (kv_cache_size_tokens / Maximum concurrency in vLLM, llama_context: n_ctx in llama.cpp), such that concurrent requests below the declared ceiling can exhaust the unadvertised pool.",
+  "engines": {
+    "vllm_v0_32_0": {
+      "sources": ["S478", "S330", "S347"],
+      "declared_context": {
+        "key": "max_model_len",
+        "surface": "model_config / /v1/models ModelCard",
+        "semantics": "per-request token limit declared by model / operator override"
+      },
+      "served_capacity": {
+        "key": "kv_cache_size_tokens",
+        "surface": "startup log line (kv_cache_utils.py:2328)",
+        "derivation": "int(max_concurrency * max_model_len) from available_memory // bytes_per_block",
+        "concurrency_metric": "kv_cache_max_concurrency = min(device_blocks / req_blocks, host_blocks / req_blocks)"
+      },
+      "saturation_behavior": {
+        "admission_control": "Budgeted by V1 scheduler; chunked prefill; requests queued or rejected rather than failing mid-execution",
+        "failure_mode": "Queueing / soft eviction of unreferenced radix leaves / 429 or HTTP queue wait"
+      }
+    },
+    "llamacpp_single_model_b11755": {
+      "sources": ["S106", "S107", "S108", "S109", "S110", "S111", "S112", "S113", "S060"],
+      "declared_context": {
+        "key": "meta.n_ctx_train",
+        "surface": "GET /v1/models (nested inside data[0].meta)",
+        "semantics": "GGUF header training context (e.g. 2048 in stories260K, 262144 in Qwen3-Coder-30B)"
+      },
+      "served_capacity": {
+        "key": "meta.n_ctx / n_ctx_slot",
+        "surface": "GET /props, GET /slots, GET /v1/models meta.n_ctx",
+        "pool_metric": "llama_context: n_ctx (verbose startup log -v, not in HTTP API)",
+        "derivation": "Padded per-sequence context (GGML_PAD to 256), adjusted by --fit or -c"
+      },
+      "saturation_behavior": {
+        "admission_control": "None up front; permits concurrent requests up to total_slots",
+        "failure_mode": "Batch-halving retry, then HTTP 500 'Context size has been exceeded' killing all active slots simultaneously (measured in cell L1)"
+      }
+    },
+    "llamacpp_router_mode_704366d7": {
+      "sources": ["S479", "S001"],
+      "declared_context": {
+        "key": "context_length",
+        "surface": "GET /models (get_router_models, server-models.cpp:2379)",
+        "semantics": "meta.n_ctx_train published only when meta.n_ctx_train > 0"
+      },
+      "served_capacity": {
+        "key": "unadvertised in router listing",
+        "surface": "Forwarded per loaded model to router's /v1/models; pool remains in server log",
+        "pool_metric": "llama_context: n_ctx"
+      },
+      "saturation_behavior": {
+        "admission_control": "Router tracks model status (loaded/unloaded/sleeping); slot allocation forwarded to underlying model instances",
+        "failure_mode": "Exhaustion at underlying server instance"
+      }
+    }
+  },
+  "cross_lane_boundaries": {
+    "kengaku": {
+      "observed": "GET /props, GET /slots, GET /v1/models on port 34113; meta.n_ctx=16384, meta.n_ctx_train=262144",
+      "boundary": "PROVINCE.md:24-25 disclaims model-serving plane; treats n_ctx solely as evaluation environment parameter"
+    },
+    "kumitate": {
+      "observed": "GET /slots on port 34113",
+      "boundary": "Treats slot counts solely as orchestration saturation and queueing signal, not model serving internals"
+    },
+    "kama": {
+      "ownership": "Owns local model serving & endpoint health, probe conventions (/props, /slots, /health), and K05 declared-vs-served verification"
+    }
+  }
+}

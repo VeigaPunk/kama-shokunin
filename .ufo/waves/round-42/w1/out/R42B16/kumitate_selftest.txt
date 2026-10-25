@@ -1,0 +1,86 @@
+COMMAND: node /home/vgpnk/Projects/shokunin/kumitate-shokunin/scripts/cite-check.mjs --selftest
+EXIT: 0
+--- STDOUT ---
+kumitate cite-check --selftest
+group: hermetic
+PASS  bogus-path → UNRESOLVED error — UNRESOLVED/error @SKILL.md:3
+PASS  prototype-member token (`toString`) is prose, not a crash — docs=1 errors=0
+PASS  out-of-range ref → LINE_OOR error — scripts/real.mjs:999 out of range — scripts/real.mjs has 20 lines
+PASS  bogus rev → REV_UNKNOWN error — pin deadbeef1 (rev) is neither a commit in the searched repos nor the content hash of the preceding cited file
+PASS  real rev → resolved-by-git — pin 7ec4ba9e7046061d73e1a96a33976003b33165f1 (rev) resolved-by-git:src (0 commits behind HEAD)
+PASS  content pin match → OK; mismatch → PIN_MISMATCH — match=yes mismatch=PIN_MISMATCH
+PASS  L0 lane vocabulary → no LINE_OOR — lineOOR=0
+PASS  runtime artifact name → RUNTIME_UNRESOLVED warn — meta.json is a runtime artifact; the only src hit (docs/evidence/meta.json) is not a source-tree artifact
+PASS  workspace artifact → note, not error — runtime/note
+PASS  unique suffix → SUFFIX_RESOLVED warn — ufo-lib/base.mjs -> src/scripts/ufo-lib/base.mjs (unique suffix match)
+PASS  symbol off-line → SYMBOL_OFF_LINE error; on-line → OK — offline=GateDecision not on crates/ufo-core-runtime/src/gate.rs:1 — occurs at line(s) 3 online=yes
+PASS  fragments → FRAGMENT note, no error — fragments=3 strayErrors=0
+PASS  ownerless ref → ORPHAN_REF warn (never LINE_OOR) — orphans=1 lineOOR=0
+PASS  file-relative ladder rung — OK corpus/knowledge/dispatch-shapes.md
+PASS  shorthand alias `cli:1` resolves — cli:1 -> crates/ufo-cli/src/main.rs (1 lines)
+PASS  F4-class misattributed ref → explicit ref-owner finding (both files named) — REF_OWNER_AMBIG/note: :12 does not fit config/app.json (3 lines) but fits scripts/real.mjs; bound to scripts/real.mjs
+PASS  generated $OUT_DIR name → generated class, no error — gen_roles.rs is build-generated ($OUT_DIR): target/debug/build/ufo-core-runtime-x/out/gen_roles.rs
+PASS  sticky owner carries bare refs — real.rs:3 -> crates/ufo-core-runtime/src/real.rs (8 lines)
+PASS  text/json totals agree, verdict line present — text byClass={"source":56,"runtime":3,"generated":1,"fragment":3,"binary-internal":1,"extension-list":1,"runtime-artifact":4,"self-doc":3}
+PASS  fail-closed: empty scan set → exit-2 condition — filesScanned=0 verdict=FAIL
+PASS  R16 repro: token after a ``` fence is found (UNRESOLVED), not lost — UNRESOLVED/error @corpus/knowledge/fence-backtick.md:7
+PASS  R16 repro: ~~~ fence gives the same result as ``` (marker-symmetric) — backtick=UNRESOLVED/error@line7 tilde=UNRESOLVED/error@line7
+PASS  cross-closing rejected: ~~~ does not close ```, and ``` does not close ~~~ — backtickOpened[fences=[[44,131]] eof=131 maskedTail=blank] tildeOpened[fences=[[59,146]] eof=146 maskedTail=blank] reported=0
+PASS  unclosed fence at EOF masks to end of file — fences=[[46,121]] eof=121 maskedTail=blank reported=0
+PASS  fence content is never tokenized (by design, kept) — insideFence=0 afterFence=OK
+PASS  alignment self-heal: tokens before AND after a ``` fence are both found — before=OK after=OK
+PASS  alias: a bare backticked `base` in prose is not a citation — no citation
+PASS  alias: bare `dispatcher` and `cli` in prose are not citations — dispatcher=0 cli=0
+PASS  alias: `base:1233-1235` still expands (citation shape) — OK/note base:1233-1235 -> scripts/ufo-sighting-lib/base.mjs (1240 lines)
+PASS  alias: `base:1233` in a citation-shaped table cell still expands — OK base:1233 -> scripts/ufo-sighting-lib/base.mjs (1240 lines)
+PASS  alias: second alias `dispatcher:5` gets the same treatment (expands) — dispatcher:5 -> scripts/fleet-dispatcher.mjs (20 lines)
+PASS  pairing: an odd-backtick line leaves the next line's citation reported — OK/note @line5
+PASS  pairing: an escaped backtick stays in its span and flips no parity — escapedLineSpan=OK belowLine=OK
+PASS  pairing: an unpaired trailing backtick makes no phantom span — spans=["lone"]
+PASS  pairing: no backtick span ever crosses a newline (grammar invariant) — all backtick spans single-line
+PASS  R23 repro under line-local pairing: tokens before AND after a ``` fence are both found — before=OK after=OK
+PASS  R16 regression: fence content is never tokenized under line-local pairing — fenceSpans=0 afterFence=OK
+PASS  R25 regression: a bare backticked alias word is still not a citation — no citation
+PASS  R27 exemption: extension list `.mjs/.rs/.sh/.js` → FP_EXEMPT note, not error — FP_EXEMPT/note[extension-list]
+PASS  R27 exemption: dot runtime artifact `.session-retention.lock` → FP_EXEMPT note — FP_EXEMPT/note[runtime-artifact]
+PASS  R27 exemption: declared run-state names `audit-env.sh`/`summary.txt`/`l0-watch-state.json` → note — audit-env[FP_EXEMPT/note[runtime-artifact]] summary[FP_EXEMPT/note[runtime-artifact]] l0-watch[FP_EXEMPT/note[runtime-artifact]]
+PASS  R27 exemption: binary-internal `src/…` in a strings region → FP_EXEMPT note — FP_EXEMPT/note[binary-internal]
+PASS  R27 negative guard: a real dead path `scripts/dead-helper.mjs` still errors — UNRESOLVED/error[source]
+PASS  R27 negative guard: extension list with a real path mixed in (`scripts/x.mjs/.rs`) still errors — UNRESOLVED/error[source]
+PASS  R27 negative guard: slash-path lookalikes (`scripts/audit-env.sh`, `logs/.session-retention.lock`) still error — scripts/audit-env.sh[UNRESOLVED/error[source]] logs/.session-retention.lock[UNRESOLVED/error[source]]
+PASS  R27 negative guard: binary-internal shape without a strings context (`src/utils/plain-thing.ts`) still errors — UNRESOLVED/error[source]
+PASS  R27 guard: a `src/…` token that really exists resolves (the exemption never shadows it) — OK/note[src]
+PASS  R28 quote: a «…» span crossing three lines is ONE span, content preserved — one span, 3 lines: "first line of the quote\nsecond line carries a re"
+PASS  R28 quote: an unpaired « stays prose — no span is invented — spansOverLoneOpener=0 findingsForLoneText=0
+PASS  R28 quote: a backticked citation INSIDE a quote is still found — 1x OK scripts/real.mjs:1 -> scripts/real.mjs (20 lines)
+PASS  R28 quote: a plain citation inside a quote is span content — OK/note scripts/other-lib/base.mjs -> src/scripts/other-lib/base.mjs
+PASS  R28 quote: a backticked «inline» pair is one span (no double count) — spansWithInlineContent=1
+PASS  R28 quote: a backticked quote carrying a citation counts once — 1x OK/note
+PASS  R28 quote: a «…» inside a fence is never a span (round-16 masking still wins) — fencedQuoteSpans=0 findingsForFencedCitation=0
+PASS  R28 quote: no byte is censused twice (span-raw coverage invariant) — every raw byte is owned exactly once
+PASS  R29 off-by-one: `off` is the token start — the round-27 repro sentence slices back exactly — tokens=2 qrOff=58 slice="src/utils/remote-control-qr.ts"
+PASS  R29 off-by-one: a later token in a multi-token span is not the span start either — first.mjs@24, second-thing.mjs@34
+PASS  R29 off-by-one: `off` maps across a multi-line «…» quote join — scripts/real.mjs@44
+PASS  R29 marker window: the binary-internal marker sits within the closing delimiter + one space — near[FP_EXEMPT/note[binary-internal]] far[UNRESOLVED/error[source]]
+PASS  bare run (no --src): resolves to the first existing candidate ~/Projects/ufo-fsd-alpha — exit=1 src=/fast/scratch/kama-r42/seats/R42B16/tmp/kumitate-cite-selftest-c3u5pq/home-new/Projects/ufo-fsd-alpha
+PASS  bare run (no --src): falls back to the legacy ~/Projects/origin-work/ufo-fsd-alpha when the new path is absent — exit=1 src=/fast/scratch/kama-r42/seats/R42B16/tmp/kumitate-cite-selftest-c3u5pq/home-legacy/Projects/origin-work/ufo-fsd-alpha
+PASS  bare run (no --src): both candidates absent keeps the --src fail-closed arm (exit 2) — exit=2 cite-check: fail-closed — --src /fast/scratch/kama-r42/seats/R42B16/tmp/kumitate-cite-selftest-c3u5pq/home-none/Projects/ufo-fsd-alpha is missing
+PASS  zero resolved citations with no drift → VERDICT FAIL (a broken scan is not a clean one) — filesScanned=2 resolved=0 errors=0 verdict=FAIL
+PASS  clean fixture with one resolved citation and no drift → VERDICT PASS — filesScanned=2 resolved=4 errors=0 warnings=0 verdict=PASS
+PASS  warn-only set, default mode → PASS; resolved counts OK findings only; warnings=1 — resolved=2 okFindings=2 warnings=1 errors=0 verdict=PASS citeCheck=CLEAN
+PASS  warn-only set, --strict → FAIL / DRIFT — verdict=FAIL citeCheck=DRIFT
+PASS  citeCheck maps a FAIL verdict to DRIFT (fixture with errors) — verdict=FAIL citeCheck=DRIFT
+PASS  text render: empty scan set → `CITE_CHECK: DRIFT (environment: empty-scan-set)` — CITE_CHECK: DRIFT (environment: empty-scan-set)
+PASS  text render: zero resolved citations → `CITE_CHECK: DRIFT (environment: zero-resolutions)` — CITE_CHECK: DRIFT (environment: zero-resolutions)
+PASS  exit contract: clean set → exit 0; --strict warn set → exit 1 — clean=0 strictWarn=1
+PASS  exit contract: empty scan set → exit 2 with `empty scan set` on stderr — exit=2 cite-check: fail-closed — empty scan set under /fast/scratch/kama-r42/seats/R42B16/tmp/kumitate-cite-selftest-c3u5pq/self-empty-41
+PASS  exit contract: zero resolved citations → exit 2 with `zero resolved citations` on stderr — exit=2 cite-check: fail-closed — zero resolved citations under /fast/scratch/kama-r42/seats/R42B16/tmp/kumitate-cite-selftest-c3u5pq/self-zero
+PASS  exit contract: unknown argument → exit 64 — exit=64
+PASS  suite self-observation: injected failure → text VERDICT FAIL, exit 1 — exit=1 verdict=VERDICT: FAIL child-skips=true
+PASS  suite self-observation: injected failure → --json verdict FAIL, exit 1 — exit=1 verdict=FAIL group=FAIL child-skips=true
+PASS  hermeticity: a planted GIT_DIR/GIT_WORK_TREE/GIT_INDEX_FILE canary never reaches a fixture git writer — at-entry=0 left=0 init=0 canary-entries=0
+76/76 cases passed (hermetic)
+VERDICT: PASS
+
+--- STDERR ---
+

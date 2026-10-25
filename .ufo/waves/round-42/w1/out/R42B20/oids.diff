@@ -1,0 +1,20 @@
+diff --git c/tools/round42-digest-audit.py w/tools/round42-digest-audit.py
+index dbbc774..53fadae 100755
+--- c/tools/round42-digest-audit.py
++++ w/tools/round42-digest-audit.py
+@@ -168,13 +168,8 @@ def ref_git(repo, rev):
+     rev = git(repo, "rev-parse", "--verify", f"{rev}^{{commit}}").strip()
+     objs = git(repo, "rev-list", "--objects", rev).split("\n")
+     tokens, blobs, ledger = set(), set(), {}
+-    names = {}
+-    for l in objs:
+-        if not l:
+-            continue
+-        oid, _, name = l.partition(" ")
+-        names[oid] = name
+-    p = subprocess.run(["git", "-C", repo, "cat-file", "--batch"], input="".join(o + "\n" for o in names).encode(),
++    oids = dict.fromkeys(l.partition(" ")[0] for l in objs if l)
++    p = subprocess.run(["git", "-C", repo, "cat-file", "--batch"], input="".join(o + "\n" for o in oids).encode(),
+                        capture_output=True)
+     buf, i = p.stdout, 0
+     while i < len(buf):

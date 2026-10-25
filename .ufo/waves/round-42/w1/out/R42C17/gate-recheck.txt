@@ -1,0 +1,64 @@
+R42C17 — non-author re-open of the two Gate sources (2026-10-25)
+Read-only root: /fast/scratch/kama-r42/clone (HEAD 595b65f, claim tip 3d9bd8d)
+Fetch dir: /fast/scratch/kama-r42/seats/R42C17/tmp (removed after the run)
+
+== 1. committed copy vs live URL, S478
+$ cd /fast/scratch/kama-r42/seats/R42C17/tmp
+$ curl -fsSL -o vllm.py https://raw.githubusercontent.com/vllm-project/vllm/v0.32.0/vllm/v1/core/kv_cache_utils.py
+curl-exit=0
+$ wc -c vllm.py
+111612 vllm.py
+$ sha256sum vllm.py | cut -c1-64
+af4164bca819f1cdc416077522a7019936fd38a523a482283eb91b08dae0e57a
+$ diff <(cat vllm.py) /fast/scratch/kama-r42/clone/.ufo/waves/round-42/c3/vllm-v0.32.0-kv_cache_utils.py
+(no output: byte-identical)
+
+== 2. committed copy vs live URL, S479
+$ curl -fsSL -o server-models.cpp https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-models.cpp
+curl-exit=0
+$ wc -c server-models.cpp
+117111 server-models.cpp
+$ sha256sum server-models.cpp | cut -c1-64
+9c5a6f2cc7997a3a409482c53119a2462e8c409ddf001cc568a9a8740e708b4a
+$ diff -q server-models.cpp /fast/scratch/kama-r42/clone/.ufo/waves/round-42/c3/llamacpp-704366d7-server-models.cpp && echo IDENTICAL
+IDENTICAL
+
+== 3. quote locations (committed copies, grep)
+$ grep -n "num_blocks = available_memory // bytes_per_block" .ufo/waves/round-42/c3/vllm-v0.32.0-kv_cache_utils.py
+1627:    num_blocks = available_memory // bytes_per_block
+$ grep -n "if (meta.n_ctx_train > 0)" .ufo/waves/round-42/c3/llamacpp-704366d7-server-models.cpp
+2378:            if (meta.n_ctx_train > 0) {
+$ grep -c 'model_info\["context_length"\] = meta.n_ctx_train;' .ufo/waves/round-42/c3/llamacpp-704366d7-server-models.cpp
+1
+$ grep -c "return int(max_concurrency \* max_model_len), max_concurrency" .ufo/waves/round-42/c3/vllm-v0.32.0-kv_cache_utils.py
+1
+$ grep -o max_model_len .ufo/waves/round-42/c3/llamacpp-704366d7-server-models.cpp | wc -l
+0
+
+Both quoted fragments are unique in their files and sit exactly on the lines the Gate names.
+
+== 4. word counts (whitespace tokens, the convention the counter itself uses at
+      tools/round42-capacity-audit.py:203 `len(x.split()) <= 25`)
+num_blocks = available_memory // bytes_per_block            -> 5
+if (meta.n_ctx_train > 0) {                                 -> 5
+return int(max_concurrency * max_model_len), max_concurrency -> 5
+Maximum concurrency for %s tokens per request: %.2fx        -> 8   (line 2329)
+if (meta.n_ctx_train > 0) { model_info["context_length"] = meta.n_ctx_train; } -> 9
+
+The lesson's "(6 words)" on both bullets is one higher than the actual token count.
+Cross-check of the convention on the previous round: corpus/lessons/round-41.md:18
+labels its S475 quote "22 words"; that quote is 22 whitespace tokens.
+
+== 5. function bounds around the S478 anchor
+$ awk 'NR>=2316 && NR<=2338' .ufo/waves/round-42/c3/vllm-v0.32.0-kv_cache_utils.py
+2316:def update_kv_cache_capacity(
+...
+2334:    )
+2337:def _max_memory_usage_bytes_from_groups(
+So update_kv_cache_capacity spans 2316-2334; 2337 is the next function's def.
+corpus/SOURCES.md:231 cell 6 says "§`update_kv_cache_capacity` lines 2316-2338".
+
+$ awk 'NR>=2300 && NR<=2308' ... (vLLM copy)
+2300:def get_kv_cache_capacity(
+2304:    max_model_len = vllm_config.model_config.max_model_len
+2308:    return int(max_concurrency * max_model_len), max_concurrency

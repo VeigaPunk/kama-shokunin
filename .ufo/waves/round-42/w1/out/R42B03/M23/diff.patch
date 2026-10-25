@@ -1,0 +1,11 @@
+--- pristine
++++ M23
+@@ -139,7 +139,7 @@
+ 
+ def scan_git(repo: str, rev: str, ledger_file: str | None):
+     rev = git(repo, "rev-parse", "--verify", f"{rev}^{{commit}}").decode().strip()
+-    ids = [l.split(" ", 1)[0] for l in git(repo, "rev-list", "--objects", rev).decode().split("\n") if l]
++    ids = [l.split("\t")[0].split(" ")[2] for l in git(repo, "ls-tree", "-r", rev).decode().split("\n") if l]
+     p = subprocess.run(["git", "-C", repo, "cat-file", "--batch"], input="".join(i + "\n" for i in ids).encode(),
+                        capture_output=True)
+     if p.returncode != 0:

@@ -1,0 +1,245 @@
+[
+ {
+  "id": "M01",
+  "desc": "token regex: drop left hex-boundary lookbehind",
+  "old": "TOKEN = re.compile(r\"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])\")",
+  "new": "TOKEN = re.compile(r\"[0-9a-f]{64}(?![0-9a-f])\")",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "27fd8ba49a9407ac0d9f292515cec3d10b6a456dc31c797a5b887b5b072de30b",
+  "changed_lines": 2
+ },
+ {
+  "id": "M02",
+  "desc": "token regex: drop right hex-boundary lookahead",
+  "old": "TOKEN = re.compile(r\"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])\")",
+  "new": "TOKEN = re.compile(r\"(?<![0-9a-f])[0-9a-f]{64}\")",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "77c0872a2f0ad5977a030f0cca47a6d390aef3eaa9530dfd7a47de555a5ae8b3",
+  "changed_lines": 2
+ },
+ {
+  "id": "M03",
+  "desc": "token regex: 64-hex run -> 63",
+  "old": "r\"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])\"",
+  "new": "r\"(?<![0-9a-f])[0-9a-f]{63}(?![0-9a-f])\"",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "f0b101d1df6922a752a545de58cabff0bf65fd1ba8142df63ecf88ab7a549353",
+  "changed_lines": 2
+ },
+ {
+  "id": "M04",
+  "desc": "is_doc: drop .ufo/ exclusion",
+  "old": "    return not rel.startswith(\".ufo/\") and rel != LEDGER and rel.endswith((\".md\", \".tsv\"))",
+  "new": "    return rel != LEDGER and rel.endswith((\".md\", \".tsv\"))",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "8875f05250a451381bfac96f1bc48708632dcc595b3fb80037c9f9115fbd3035",
+  "changed_lines": 2
+ },
+ {
+  "id": "M05",
+  "desc": "is_doc: drop ledger-file exclusion",
+  "old": "    return not rel.startswith(\".ufo/\") and rel != LEDGER and rel.endswith((\".md\", \".tsv\"))",
+  "new": "    return not rel.startswith(\".ufo/\") and rel.endswith((\".md\", \".tsv\"))",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "af72437e07312f45486e9d674b87a2905c1a981ea5e44db4903d489f57d47b5c",
+  "changed_lines": 2
+ },
+ {
+  "id": "M06",
+  "desc": "is_doc: suffixes (\".md\",\".tsv\") -> (\".md\",)",
+  "old": "    return not rel.startswith(\".ufo/\") and rel != LEDGER and rel.endswith((\".md\", \".tsv\"))",
+  "new": "    return not rel.startswith(\".ufo/\") and rel != LEDGER and rel.endswith((\".md\",))",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "b3629bf833c190021a9f269eaaf3617e047fa151f3b90bca60c19f9de2d9677a",
+  "changed_lines": 2
+ },
+ {
+  "id": "M07",
+  "desc": "blob prefix set b[:8] -> b[:7]",
+  "old": "    prefixes = {b[:8] for b in blobs}",
+  "new": "    prefixes = {b[:7] for b in blobs}",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "bc043ea47eca32078794af76702bb2aa2f1955601b505ff04669403a2a767715",
+  "changed_lines": 2
+ },
+ {
+  "id": "M08",
+  "desc": "blob prefix set b[:8] -> b[:9]",
+  "old": "    prefixes = {b[:8] for b in blobs}",
+  "new": "    prefixes = {b[:9] for b in blobs}",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "386c7296c5964753e6acd4caacc5d18702b4551576b22f0af5cee5143dcae2a9",
+  "changed_lines": 2
+ },
+ {
+  "id": "M09",
+  "desc": "wrong_unflagged probe t[:8] -> t[:7]",
+  "old": "        elif t[:8] in prefixes:",
+  "new": "        elif t[:7] in prefixes:",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "551834c7e7ffe1bb77524721e8131bba14cead4f41e22f6f849982ef61c1bb37",
+  "changed_lines": 2
+ },
+ {
+  "id": "M10",
+  "desc": "wrong-row prefix equality c[:8]==t[:8] -> c[:7]==t[:7]",
+  "old": "                ok = re.fullmatch(r\"[0-9a-f]{64}\", c) is not None and c in blobs and c[:8] == t[:8]",
+  "new": "                ok = re.fullmatch(r\"[0-9a-f]{64}\", c) is not None and c in blobs and c[:7] == t[:7]",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "3633de75bf7fa0d1b21c9585dc41f7ea0a2ed032d1279deeddd37810a483f9d6",
+  "changed_lines": 2
+ },
+ {
+  "id": "M11",
+  "desc": "wrong-row prefix equality c[:8]==t[:8] -> c[:9]==t[:9]",
+  "old": "                ok = re.fullmatch(r\"[0-9a-f]{64}\", c) is not None and c in blobs and c[:8] == t[:8]",
+  "new": "                ok = re.fullmatch(r\"[0-9a-f]{64}\", c) is not None and c in blobs and c[:9] == t[:9]",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "0f0fdb5eb2eff14eac03da6d94ceefd2432c8cb9523c21a3e9c32a13652d0728",
+  "changed_lines": 2
+ },
+ {
+  "id": "M12",
+  "desc": "wrong-row ok: drop `c in blobs` membership",
+  "old": "                ok = re.fullmatch(r\"[0-9a-f]{64}\", c) is not None and c in blobs and c[:8] == t[:8]",
+  "new": "                ok = re.fullmatch(r\"[0-9a-f]{64}\", c) is not None and c[:8] == t[:8]",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "5499405d95a06747a30145bcb66166e1d9575514918f56cb4b95bd738157dd72",
+  "changed_lines": 2
+ },
+ {
+  "id": "M13",
+  "desc": "wrong-row ok: drop 64-hex fullmatch validity of correct",
+  "old": "                ok = re.fullmatch(r\"[0-9a-f]{64}\", c) is not None and c in blobs and c[:8] == t[:8]",
+  "new": "                ok = c in blobs and c[:8] == t[:8]",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "f4774a454c494558e095f8b61b54dc962ea5d6c639bb0058896fb2bc38b71f9d",
+  "changed_lines": 2
+ },
+ {
+  "id": "M14",
+  "desc": "class name external -> External",
+  "old": "            if cls == \"external\":",
+  "new": "            if cls == \"External\":",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "99b5a7570f5b573c61888556f378272c0c61c566fedb884abfec134affac7d3c",
+  "changed_lines": 2
+ },
+ {
+  "id": "M15",
+  "desc": "class name unverifiable -> Unverifiable",
+  "old": "            elif cls == \"unverifiable\":",
+  "new": "            elif cls == \"Unverifiable\":",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "8389d1ae2b1b1a74bb51117a336f840e0063f1c77b6fc57e65e7a036b36949f5",
+  "changed_lines": 2
+ },
+ {
+  "id": "M16",
+  "desc": "class name wrong -> Wrong",
+  "old": "            elif cls == \"wrong\":",
+  "new": "            elif cls == \"Wrong\":",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "28c078a360c2c8d73edc6765a6b95b9f6a8e722f49e5f03fb88f171dcbb5d913",
+  "changed_lines": 2
+ },
+ {
+  "id": "M17",
+  "desc": "external re-hash compare h == t -> h != t",
+  "old": "                    key = \"external_ok\" if h == t else \"ledger_bad\"",
+  "new": "                    key = \"external_ok\" if h != t else \"ledger_bad\"",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "5206ab3cc12b4ad6224eaf1438e2b7e6be461f01d769bedfbd895b57f21b143d",
+  "changed_lines": 2
+ },
+ {
+  "id": "M18",
+  "desc": "unverifiable note non-empty check inverted",
+  "old": "                key = \"unverifiable\" if r[\"note\"].strip() else \"ledger_bad\"",
+  "new": "                key = \"unverifiable\" if not r[\"note\"].strip() else \"ledger_bad\"",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "d29c0d6d93d9bfe9fa9a469846f8f82e4a680d17a0fa44eada8e6b8da3ff3205",
+  "changed_lines": 2
+ },
+ {
+  "id": "M19",
+  "desc": "unknown ledger class routes to unknown instead of ledger_bad",
+  "old": "            else:\n                key = \"ledger_bad\"\n            n[key] += 1",
+  "new": "            else:\n                key = \"unknown\"\n            n[key] += 1",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "caeb016dc2edf7a370a3f24088e85295002421fbbbe03ef1974dcdd2db67f545",
+  "changed_lines": 2
+ },
+ {
+  "id": "M20",
+  "desc": "exit rule: wrong_unflagged no longer forces exit 1",
+  "old": "    return 1 if n[\"ledger_bad\"] + n[\"wrong_unflagged\"] + n[\"unknown\"] else 0",
+  "new": "    return 1 if n[\"ledger_bad\"] + n[\"unknown\"] else 0",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "d8d310713fdb7f4382a624fcf13f5e2049d28a4be6c4b0fe88c93de02b2ea797",
+  "changed_lines": 2
+ },
+ {
+  "id": "M21",
+  "desc": "exit rule: scan always exits 0",
+  "old": "    return 1 if n[\"ledger_bad\"] + n[\"wrong_unflagged\"] + n[\"unknown\"] else 0",
+  "new": "    return 0",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "7d7671f2e838bceb6d3acb89d18b4d6a7911f5e717e72966d26cd0b3124c6f64",
+  "changed_lines": 2
+ },
+ {
+  "id": "M22",
+  "desc": "selftest always returns 0",
+  "old": "    return 0 if bad == 0 else 1",
+  "new": "    return 0",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "16aa2e51ba0b0ec7639738277cc1f35fdf6af9d2250a4cfc84bca0631a89697c",
+  "changed_lines": 2
+ },
+ {
+  "id": "M23",
+  "desc": "blob universe: rev-list history -> HEAD tree only (ls-tree)",
+  "old": "    ids = [l.split(\" \", 1)[0] for l in git(repo, \"rev-list\", \"--objects\", rev).decode().split(\"\\n\") if l]",
+  "new": "    ids = [l.split(\"\\t\")[0].split(\" \")[2] for l in git(repo, \"ls-tree\", \"-r\", rev).decode().split(\"\\n\") if l]",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "75feb91ba89c75b007acc195a824f896874e41f4dfedd6ed84cfcf1f84067ab4",
+  "changed_lines": 2
+ },
+ {
+  "id": "M24",
+  "desc": "scan_dir: non-doc bytes excluded from blob set",
+  "old": "            blobs.add(hashlib.sha256(data).hexdigest())",
+  "new": "            if is_doc(rel):\n                blobs.add(hashlib.sha256(data).hexdigest())",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "d4bf089244968f4547b10926e5b81b86af7a5e53b01cc36bfa8d45138f873f83",
+  "changed_lines": 3
+ },
+ {
+  "id": "M25",
+  "desc": "parse_ledger: rows keyed by c[0][:8] instead of full digest",
+  "old": "        rows[c[0]] = {\"cls\": c[1], \"path\": c[3], \"correct\": c[4], \"note\": c[6]}",
+  "new": "        rows[c[0][:8]] = {\"cls\": c[1], \"path\": c[3], \"correct\": c[4], \"note\": c[6]}",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "c6628d1bde1dd3f22930656372fdfce2fba5e0b7b5d24d755f1fbb2e177346e1",
+  "changed_lines": 2
+ },
+ {
+  "id": "M26",
+  "desc": "selftest case-loop failure accounting disabled (bad+=1 -> ok+=1)",
+  "old": "                bad += 1\n                print(f\"selftest FAIL: {name}: got {render(n)} exit {got[1]}\", file=sys.stderr)",
+  "new": "                ok += 1\n                print(f\"selftest FAIL: {name}: got {render(n)} exit {got[1]}\", file=sys.stderr)",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "79ebb1e61f5c55191f209c0249140401e1b87f1284301be6a5a27cd7a3446cbd",
+  "changed_lines": 2
+ },
+ {
+  "id": "M27",
+  "desc": "selftest scope check (.ufo/ledger leak) disabled",
+  "old": "        if \"ef\" * 32 in tok or tok != {good, wrong, unk, ext}:",
+  "new": "        if False and (\"ef\" * 32 in tok or tok != {good, wrong, unk, ext}):",
+  "sha256_before": "d477333e134d91fa61726cf55fd665b9613705a40ba0df6479438aed08fc2637",
+  "sha256_after": "bbfa15648e856581856aadfeaa3b07e7c0abaafe33d0fdb3bbb04448861013ea",
+  "changed_lines": 2
+ }
+]
