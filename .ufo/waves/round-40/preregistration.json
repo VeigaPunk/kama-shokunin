@@ -1,0 +1,40 @@
+{
+  "round": 40,
+  "attempt": 1,
+  "lane": "kama",
+  "date": "2026-10-25",
+  "base": "efe25f962a0b3a2b9b111c03bb5b5386c9548195",
+  "authority": "shokunin.conf kama row: operability + calibration; calibration 7 is the lowest non-retired numeric axis; stagnation nudge inactive",
+  "claims": [
+    {
+      "id": "C1",
+      "axis": "calibration",
+      "score_before": 7,
+      "score_after": 7,
+      "type": "corrected statements (r38-verifier-routed digest-citation defects)",
+      "predicate": "A SOURCES row S474 exists whose teaches cell starts with \"supersedes S472\" and contains the exact evidence digest 5585f6027df2dbc4dbafd4979b61c218ffd94e8af99936733218e0ae989e50f2; corpus/knowledge/sglang-docs-version-pinning-amendment-2026-10-23.md carries a \"## Correction — round 40\" section that names the superseded digest 5585f602f71c4d4fa5a20125b2b8e4a1132a2d41abf511d7ef09c43a91d950f2 and the correct digest 5585f6027df2dbc4dbafd4979b61c218ffd94e8af99936733218e0ae989e50f2; corpus/lessons/round-40.md carries a correction row naming R36-D2C and giving the full package digest 3ad0df68504e1f49a0ab23e68b2034a9d6258345468fa03013737ced7ce234ff; false_corrections == 0.",
+      "counting_command": "python3 tools/round40-calibration-audit.py --repo <fresh clone of lane remote> --tip <full-commit> --out <receipt>",
+      "kill_rule": "met flips False -> True. At base (efe25f96) every leg is 0 and false_corrections == 0, i.e. met False. A true change is required on all three legs.",
+      "do_nothing_control": ".ufo/waves/round-40/controls/c1-base.out",
+      "measured_commit": null
+    },
+    {
+      "id": "C2",
+      "axis": "operability",
+      "score_before": 8,
+      "score_after": 8,
+      "type": "r38 wave-evidence completeness (r38-verifier-routed defect 3)",
+      "predicate": ".ufo/waves/round-38/w1/spec.json and run.json exist at tip; sha256 of committed spec.json == 397f598009ad9dab0699cc73d165cff583d8f069b445f0dbaa0b79f6a4122cb7 (authentic round-38 session file); sha256 of committed run.json == d0666a36f483685bcadfdce997389ea4af7c6a80efe8b75c70e2e4c6d2039642 (authentic round-38 session file); run.json counts.total == 36 and len(spec.json items) == 36.",
+      "counting_command": "python3 tools/round40-operability-audit.py --repo <fresh clone of lane remote> --tip <full-commit> --out <receipt>",
+      "kill_rule": "met flips False -> True. At base (efe25f96) both files are absent, i.e. met False.",
+      "do_nothing_control": ".ufo/waves/round-40/controls/c2-base.out",
+      "measured_commit": null
+    }
+  ],
+  "notes": [
+    "Both claims implement the two routed defects of closure round-38-verifier-spotcheck.md (items 1 and 2 -> C1; item 3 -> C2).",
+    "C1 also implements operator considerthese/2026-10-25.md proposal 1 (recompute every digest and S-id a new lesson or row cites).",
+    "The frozen counter code is the predicate: the label string in the receipt equals the predicate sentence above.",
+    "Scoring is held; measured deltas are the claim evidence, not a mastery conversion."
+  ]
+}
