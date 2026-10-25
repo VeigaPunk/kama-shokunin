@@ -1,0 +1,70 @@
+{
+  "round": 42,
+  "attempt": 1,
+  "lane": "kama",
+  "date": "2026-10-25",
+  "base": "0b606b03bf0b2a87b791aa537f6c72c941624cf0",
+  "measurement_root": "fresh clone of the lane remote at /fast/scratch/kama-r42/clone (the parked worktree is still detached on the mutation-sandbox lineage; round-40 D5, L0 kama round-41)",
+  "authority": "shokunin.conf kama row: operability + calibration; calibration 7 is the lowest non-retired assigned axis (operability 8); stagnation nudge inactive (calibration 7 < saturation line 8)",
+  "claims": [
+    {
+      "id": "C1",
+      "axis": "calibration",
+      "score_before": 7,
+      "score_after": 7,
+      "type": "self-assessment vs observed state: the SCORECARD head (banner, Planned, Retired, Saturation, Capabilities, Axes) plus README and PROVINCE",
+      "predicate": "At the measured commit every one of these holds, each derived from the tree by tools/round42-selfdesc-reconcile.py: the round-41 head-table counter reads zero mismatches; the SCORECARD head names `operability + calibration` and `Latest measured round: <maxN>` and no longer says `operability and freshness` or `adds **zero** verified completed rounds`; section Planned names `### Planned (round <maxN+1>)` (which exists with a numbered item) and no longer points at `.ufo/round-5/continuation.md` or plans a `freshness move`; section Retired states `<axes> axes` and `<capabilities> capabilities` and no longer says `Both assigned axes` or `every model endpoint is dead`; section Saturation states the derived score vector, the derived first-working-rounds list of the highest canonical capability table, and the derived nudge verdict, and no longer says `8/10 on every owned axis`; the head Capabilities table names exactly the highest canonical table's capabilities and every registry count it states equals the census; every backticked .ufo path cited by the round-40 and round-41 SCORECARD sections (other than tokens quoted in record-correction sections) resolves; README names every non-dot top-level entry; PROVINCE names every tools/ and registry/ token in the canonical capability evidence cells; and each head-table axis row carries a run fact whose command contains that axis's frozen needle (mismatches == 0, met=True).",
+      "counting_command": "python3 tools/round42-selfdesc-reconcile.py --repo <fresh clone of lane remote> --tip <full commit> --out <receipt>",
+      "kill_rule": "met must flip False -> True. At base mismatches=40 met=False (receipt controls/base.c1.out). A miss at the landed tip is an honest stop; the counter, needles and fact list are not changed after any seat scores.",
+      "do_nothing_control": ".ufo/waves/round-42/controls/base.c1.out and freeze.c1.out (mismatches=40, met=False)",
+      "shortcut_controls": {
+        "junk-c1-textonly": "four text sections fixed, caps/readme/province/rel untouched -> mismatches=26 met=False",
+        "junk-c1-sidefilesonly": "README and PROVINCE fixed, SCORECARD untouched -> mismatches=26 met=False (also shows editing PROVINCE.md breaks the r41 coverage-row hash)",
+        "junk-c1-falserel": "calibration row carries a false run fact -> r41 run_bad=1, met=False"
+      },
+      "positive_control": "receipt at the claim commit (.ufo/waves/round-42/c1/candidate.out); separability: the claim writes SCORECARD.md head sections, README.md, PROVINCE.md only (never tools/digest-ledger.py, registry/digest-ledger.tsv, the C3 entry or SOURCES rows)",
+      "out_of_counter_limit": "The counter checks that stated facts equal derived values and that relevance needles are present; it does not judge whether a needle is the best evidence for the axis score. Relevance is judged by reviewers and the non-author closure.",
+      "measured_commit": null
+    },
+    {
+      "id": "C2",
+      "axis": "operability",
+      "score_before": 8,
+      "score_after": 8,
+      "type": "capability acquisition: digest-ledger (considerthese/2026-10-25.md proposal 1, 'Recompute every digest and S-id that a new lesson or row cites'); plus the routed round-41 counter-hygiene defect (R41A10-10)",
+      "predicate": "The lane holds a working digest ledger: tools/digest-ledger.py exists (tool=1); on every one of 8 randomized offline --dir fixtures its summary line and exit code equal this counter's reference (contract=1); its git-mode scan of the measured commit equals the reference with ledger_bad=0 wrong_unflagged=0 unknown=0 and external_ok>=4 (live=1); both round-41 counters, run with TMPDIR set to an empty private directory, leave it empty (hygiene=1); and the highest canonical capability table of SCORECARD.md carries a digest-ledger row whose evidence names tools/digest-ledger.py (capability=1); met=True.",
+      "counting_command": "python3 tools/round42-digest-audit.py --repo <fresh clone of lane remote> --tip <full commit> [--seed N] --out <receipt>",
+      "kill_rule": "met must flip False -> True. At base every leg is 0 (receipt controls/base.c2.out); the base tree cites 94 distinct SHA-256 tokens of which 10 are unexplained (9 unknown, 1 wrong_unflagged: the round-38 S472 digest). A miss at the landed tip is an honest stop.",
+      "do_nothing_control": ".ufo/waves/round-42/controls/base.c2.out and freeze.c2.out (all legs 0, met=False)",
+      "shortcut_controls": {
+        "junk-c2-stub": "tool that prints a clean summary -> contract=0 met=False",
+        "junk-c2-allunverifiable": "real tool, every unexplained token declared unverifiable -> live=0 (external_ok=0 < 4), met=False"
+      },
+      "positive_control": "receipt at the claim commit (.ufo/waves/round-42/c2/candidate.out); separability: C2 writes tools/digest-ledger.py, registry/digest-ledger.tsv, the two round-41 counters (cleanup only), the SCORECARD canonical capability list, and the head-table operability row is NOT part of C2",
+      "out_of_counter_limit": "A ledger row says what a digest names and how it was or was not re-hashed; it does not make an unverifiable digest true. external_ok counts only host-local re-hashes on the measuring host, so the live leg is host-dependent by design (the four re-hashable artifacts sit under ~/.local/opt and the parked lane worktree).",
+      "measured_commit": null
+    },
+    {
+      "id": "C3",
+      "axis": "coverage",
+      "score_before": 9,
+      "score_after": 9,
+      "type": "assimilation from the staged merge/kama package, frontier K05 -> core (engine-side declared versus served context capacity); sourced claim (S478, S479 opened 2026-10-25)",
+      "predicate": "corpus/knowledge/context-capacity-engine-sides.md exists with a provenance trio whose source line names S478 and S479 and cites kv_cache_utils.py and server-models.cpp at the line numbers the counter computes from the committed copies and the max_model_len count of the llama.cpp copy (entry=1); rows S478 and S479 are 11-column mined tier-A code rows opened 2026-10-25 whose used-by names the entry, whose source cells carry the expected raw URLs and whose anchors carry the SHA-256 of the committed copies (rows=1); at base the entry path and the ground (kv_cache_size_tokens, Maximum concurrency for) are absent from corpus/ and SKILL.md and at tip README names the entry (coverage=1); the round-42 lesson Gate carries a dated, <=25-word, located quote per row and the assimilation scratch files exist with a non-empty quarantine slice (gate=1); and sources-census validate on the tip's registry exits 0 (census=1); met=True.",
+      "counting_command": "python3 tools/round42-capacity-audit.py --repo <fresh clone of lane remote> --tip <full commit> --base 0b606b03bf0b2a87b791aa537f6c72c941624cf0 --out <receipt>",
+      "kill_rule": "met must flip False -> True. At base entry=0 rows=0 coverage=0 gate=0 census=1 (receipt controls/base.c3.out). A miss at the landed tip is an honest stop.",
+      "do_nothing_control": ".ufo/waves/round-42/controls/base.c3.out and freeze.c3.out (met=False)",
+      "shortcut_controls": {
+        "junk-c3-rowsonly": "entry stub, fabricated rows, README line, no committed copies, no gate -> met=False",
+        "junk-c3-stagedverbatim": "staged r5 amendment copied byte-exact with a README line, no rows/copies/gate -> met=False"
+      },
+      "positive_control": "receipt at the claim commit (.ufo/waves/round-42/c3/candidate.out); separability: C3 writes corpus/knowledge/context-capacity-engine-sides.md, S478/S479 rows, corpus/README.md coverage line, corpus/lessons/round-42.md, .ufo/waves/round-42/c3 and assimilation (never SCORECARD head sections, README top-level list, PROVINCE, tools/digest-ledger.py)",
+      "out_of_counter_limit": "The counter proves the entry cites bytes it holds and that the quoted anchors exist at the stated lines; whether the entry's prose reading of those lines is correct is judged by reviewers and the closure. Census exit 0 does not clear the 93 pre-existing W04 warnings.",
+      "measured_commit": null
+    }
+  ],
+  "separability": "C1 writes SCORECARD.md head sections (banner, Planned, Retired, Saturation, Capabilities, Axes), README.md, PROVINCE.md. C2 writes tools/digest-ledger.py, registry/digest-ledger.tsv, the round-41 counters' temp cleanup and the SCORECARD canonical capability list. C3 writes the new knowledge entry, SOURCES rows S478-S479, the README coverage block, the round-42 lesson and wave evidence. C1's frozen rel needles name only files that exist at base (operability needle `pin-watch.py selftest`), so C1 needs neither C2 nor C3 to have landed.",
+  "frontier": "sourced claim C3 rests on S478 and S479 opened 2026-10-25; assimilation: merge/kama theme context-capacity (staged round-5 and round-7 amendments), re-grounded; considerthese/2026-10-25.md proposal 1 mined into C2 (proposals 3 and 4 remain unimplemented; proposal 2 landed in round 41).",
+  "routed_defects_from_r41_closure": "1 C1 relevance strengthening (rel needles, claim C1); 2 pin-watch absent from PROVINCE Owns (claim C1 province fact); 3 parked worktree (operator, L0); 4 report must not claim skill://shokunin is uninstalled (report hygiene).",
+  "measured_commit_rule": "measured commit = the integration commit that precedes the receipts commit; receipts and the end census land in the final commit."
+}
