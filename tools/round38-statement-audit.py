@@ -126,7 +126,7 @@ def main() -> int:
     print(
         f"uncorrected {r['uncorrected']} false_corrections {r['false_corrections']} "
         f"lesson_unchanged {r['lesson_unchanged']} report_unchanged {r['report_unchanged']} "
-        f"met {str(r['met']).lower()}"
+        f"met {str(r['met']).capitalize()}"
     )
     if note:
         print(f"note: {note}")

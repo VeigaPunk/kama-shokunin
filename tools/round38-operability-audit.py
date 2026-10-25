@@ -104,7 +104,7 @@ def main() -> int:
     print(
         f"found {found} base_found {base_found} help_ok {help_ok} "
         f"rerun_ok {rerun_ok} report_37 {report_37} receipt_ok {receipt_ok} "
-        f"met {str(met).lower()}"
+        f"met {str(met).capitalize()}"
     )
     return 0 if met else 1
 
