@@ -1,0 +1,589 @@
+{
+ "wave": "kama-r42-w1",
+ "reportDir": ".ufo/waves/round-42/w1/out",
+ "maxLanes": 64,
+ "axes": [
+  "calibration",
+  "operability",
+  "coverage"
+ ],
+ "context": "# Goal\nRound 42 for lane kama (local model serving and endpoint health): verify, falsify and extend three frozen claims and support the frontier step. C1 calibration 7\u21927 \u2014 the SCORECARD.md head (banner, Planned, Retired, Saturation, Capabilities, Axes) plus README.md and PROVINCE.md match observed repository state (counter tools/round42-selfdesc-reconcile.py; base mismatches=40 met=False). C2 operability 8\u21928, capability acquisition `digest-ledger` \u2014 tools/digest-ledger.py classifies every full SHA-256 the lane's documents cite; registry/digest-ledger.tsv explains the 10 unexplained base digests; the round-41 counters no longer leak temp exports (counter tools/round42-digest-audit.py; base all legs 0). C3 coverage 9\u21929, assimilation from the staged merge/kama package \u2014 corpus/knowledge/context-capacity-engine-sides.md sourced on S478 (vLLM v0.32.0 kv_cache_utils.py) and S479 (llama.cpp 704366d7 server-models.cpp) (counter tools/round42-capacity-audit.py; base met=False). Integration owner is the L1 (KamaR42). You produce findings and drafts only; you never edit lane or fleet files.\n# Evidence under test (read only)\n- Lane clone /fast/scratch/kama-r42/clone \u2014 a fresh clone of the lane remote https://github.com/VeigaPunk/kama-shokunin.git. Base 0b606b03bf0b2a87b791aa537f6c72c941624cf0; freeze 0bfd47abdda1f5ac21a0834654122644fc23e861 (counters, preregistration, controls); claim tip and measured candidate 3d9bd8d72366e281fab291874524130428ee423d. Never write inside /fast/scratch/kama-r42/clone; for anything that writes, make your own clone under /fast/scratch/kama-r42/seats/<your-name>/ : `mkdir -p /fast/scratch/kama-r42/seats/<your-name> && git clone -q /fast/scratch/kama-r42/clone /fast/scratch/kama-r42/seats/<your-name>/clone` and remove it when done (use /fast/scratch/kama-r42/seats, not /tmp: /tmp is shared and has filled up before; set TMPDIR=/fast/scratch/kama-r42/seats/<your-name>/tmp for every counter you run and remove it afterwards).\n- Frozen contract: /fast/scratch/kama-r42/clone/.ufo/waves/round-42/preregistration.json; controls and receipts: /fast/scratch/kama-r42/clone/.ufo/waves/round-42/controls/ (base, freeze, shortcut and separability controls) and /fast/scratch/kama-r42/clone/.ufo/waves/round-42/c1 c2 c3/candidate.out; assimilation scratch /fast/scratch/kama-r42/clone/.ufo/waves/round-42/assimilation/; fetched source copies /fast/scratch/kama-r42/clone/.ufo/waves/round-42/c3/.\n- Prior closure with routed defects: /fast/scratch/kama-r42/clone/corpus/lessons/round-41-verifier-spotcheck.md; prior wave findings /fast/scratch/kama-r42/clone/.ufo/waves/round-41/w1/out/R41A10.md, R41A03.md.\n- Round lesson draft: /fast/scratch/kama-r42/clone/corpus/lessons/round-42.md (\u00a7Gate). Staged package (read-only): /home/vgpnk/Projects/shokuknow/merge/kama/.\n# Output\n- Your tools start at the fleet root /home/vgpnk/Projects/shokunin. Every `Report:` trailer path is relative to /home/vgpnk/Projects/shokunin/kama-shokunin \u2014 write your report at /home/vgpnk/Projects/shokunin/kama-shokunin/<that path> (the parked lane worktree; the only lane path seats may write). Put any extra artifacts in a directory named after you beside that report. Lead the report with a one-line verdict, then evidence: commands, outputs, exit codes, file:line. If you find a defect, state the exact file and line, the command that shows it, and a proposed fix.\n# Constraints\n- /home/vgpnk/Projects/shokuknow (source repo), sibling lanes and the fleet repo are READ-ONLY. Never write, commit, fetch or push there; never run campaign tools (renumber-staged.py, merge-plan.py, quote-lint.py, absent-defect-register.py); never edit MISSION.md, AXES.md, scripts/, templates/, .ufo/state/, .scratch/ or considerthese/. Never write any file at the fleet root outside your Report path (seat notes landed as stray fleet-root files in earlier rounds).\n- Never mutate the lane's jj state or Git index (parked worktree or clone); read-only git is fine. Any fixture repo: D=$(mktemp -d -p /fast/scratch/kama-r42/seats) && git -C \"$D\" init -q; every later git/jj call names -C \"$D\"; verify `git -C \"$D\" rev-parse --show-toplevel` equals $D before the first commit. Never run git commit or jj with a throwaway identity anywhere else.\n- Tooling: you may install or upgrade tools that help the task \u2014 read /home/vgpnk/.omp/agent/RULES.md first (official channels, update-safety gate; record tool/version/channel/reason in your report). pacman guard: ALL pacman transactions are PAUSED host-wide \u2014 never run pacman; install via uv tool / npx / an official binary in ~/.local/bin, or report the need.\n- Never start, stop or restart services; never message agent://all; do not spawn subagents (leaf). Never invent evidence: an unrun check has not passed. A shortcut or defect you find is a finding, not something to fix in place.",
+ "items": [
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A01: C1 re-run: in your own clone run `python3 tools/round42-selfdesc-reconcile.py --repo <clone> --tip 3d9bd8d72366e281fab291874524130428ee423d` three times (TMPDIR private) and once at base `0b606b03bf0b2a87b791aa537f6c72c941624cf0`; report each summary line and exit code, whether the three tip runs are byte-identical, and compare the base run byte-for-byte with /fast/scratch/kama-r42/clone/.ufo/waves/round-42/controls/base.c1.out (ignoring the trailing exit= line). Report any /tmp or TMPDIR leftovers after each run.",
+   "role": "executor",
+   "name": "R42A01",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A02: C1 neighbours: at 3d9bd8d72366e281fab291874524130428ee423d run every self-test the SCORECARD head table cites (`bash tools/test-snapshot.sh`, `python3 tools/pin-watch.py selftest`, `python3 tools/report-landing-audit.py --selftest`, `python3 tools/sources-append-only.py --selftest`, `python3 tools/citation-provenance.py --selftest`, `python3 tools/capability-repertoire-audit.py --selftest`, `python3 tools/instrument-agreement.py --selftest`) in an export of the tip (git archive) and compare each last line with the value the head `## Axes` table cites. Also run the round-41 counter `python3 tools/round41-scorecard-reconcile.py` at the tip. Report any difference.",
+   "role": "executor",
+   "name": "R42A02",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A03: C1 fact mutants: in a sandbox clone, apply at least 30 single-token mutations to the head sections of SCORECARD.md, README.md and PROVINCE.md at the claim tip (e.g. flip `nudge inactive`, change one first-working round, drop one capability row from the head Capabilities table, drop a README top-level name, delete one PROVINCE token, edit an axis score, change a run fact's expected output) and run `tools/round42-selfdesc-reconcile.py` on each (commit each mutant in your sandbox with -C). Report a table: mutant, counter result, killed or survived. Survivors are the finding.",
+   "role": "mutation-tester",
+   "name": "R42A03",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A04: C1 counter mutants: copy tools/round42-selfdesc-reconcile.py into your sandbox and apply at least 20 mutations to the counter code itself (drop a fact, invert a comparison, loosen a needle, skip the r41 import, make `exists` always true). For each, run the mutated counter at base `0b606b03bf0b2a87b791aa537f6c72c941624cf0` and at the claim tip and say whether the frozen controls (/fast/scratch/kama-r42/clone/.ufo/waves/round-42/controls/*.c1.out) would have caught it (do the controls' recorded outputs change?). List mutants no committed control kills.",
+   "role": "mutation-tester",
+   "name": "R42A04",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A05: C1 relevance attack: the six frozen needles (operability `pin-watch.py selftest`, freshness `recheck`, depth `SKILL.md`, coverage `corpus/knowledge`, calibration `verifier-spotcheck`, adjacency `cross-lane-scope.md`) and the run facts now in the head `## Axes` table. For each axis row judge whether the new run fact is evidence FOR that axis's score (AXES.md definitions) or merely true. Propose the cheapest edit that satisfies the counter's needle without carrying relevance. Say which needles you would replace and with what.",
+   "role": "critic",
+   "name": "R42A05",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A06: C1 predicate-vs-code attack: read /fast/scratch/kama-r42/clone/.ufo/waves/round-42/preregistration.json claim C1 and tools/round42-selfdesc-reconcile.py side by side. Is each clause of the predicate computed by the code? List any clause the code does not check, any check the predicate does not state, any universal clause ('every', 'all') whose population the code does not enumerate, and any place where a derived value is typed into the code.",
+   "role": "critic",
+   "name": "R42A06",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A07: C1 truth review: read the head of SCORECARD.md at 3d9bd8d72366e281fab291874524130428ee423d (everything before the `## Axes` table through \u00a7Saturation and \u00a7Capabilities). For each factual sentence (authority, Latest measured round, retired text, saturation window and line, first-working rounds) run the command that checks it against the tree and report true, false or unverifiable with the command and output. A true-by-counter but false-in-fact sentence is the finding.",
+   "role": "reviewer",
+   "name": "R42A07",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A08: C1 history-intact review: `git show 0b606b03bf0b2a87b791aa537f6c72c941624cf0:SCORECARD.md` holds the round-41 banner (lines 6-13), \u00a7Planned, \u00a7Retired, head \u00a7Capabilities and \u00a7Saturation. They were moved to `## Historical head sections (superseded in round 42)` at the tip. Verify, byte for byte after removing the added demoted headings, that each moved block is verbatim; and verify the rest of the file below the head is unchanged apart from the replaced sections and the appended Round 42 section (`git diff --stat` and a diff you read). Report any deleted or altered historical line.",
+   "role": "reviewer",
+   "name": "R42A08",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A09: C1 README truth review: every bullet in README.md `## What's here` at 3d9bd8d72366e281fab291874524130428ee423d: is the description true (open the named path)? Check `plans/`, `MINT.md`, `tests/`, `considerthese/`, `registry/` and the claim that SHONEN has four boxes all `[~]`. Also check README's domain line and wiki link are unchanged. Report false or overreaching bullets.",
+   "role": "reviewer",
+   "name": "R42A09",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A10: C1 PROVINCE review: PROVINCE.md at 3d9bd8d72366e281fab291874524130428ee423d gained one Owns row and a 'Round-42 note'. Verify every path named exists, each tool description matches the tool's docstring, and the statement 'Release-watch method for other pins stays chousa's' against /home/vgpnk/Projects/shokunin/chousa-shokunin/PROVINCE.md and SKILL.md (read-only). Check the note does not contract or widen the province beyond its own text and that the Write boundary paragraph is untouched (`git diff 0b606b03bf0b2a87b791aa537f6c72c941624cf0 3d9bd8d72366e281fab291874524130428ee423d -- PROVINCE.md`).",
+   "role": "reviewer",
+   "name": "R42A10",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A11: Self-description surfaces C1 does not cover: sweep AGENTS.md, SHONEN.md, MINT.md, SKILL.md head (first 60 lines), corpus/README.md `## Known gaps` and `## Frontier` (lines 49-79), corpus/QUALITY.md header, and the SCORECARD `## Move log`/`Actual round 5` sections for current-tense statements the tree contradicts (counts, file lists, 'not yet', 'blocked', 'no serving'). Give each with the contradicting command output. Rank by how likely a reader lands on it. These are candidates for round 43; do not fix them.",
+   "role": "scout",
+   "name": "R42A11",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A12: Round-41 closure items: read /fast/scratch/kama-r42/clone/corpus/lessons/round-41-verifier-spotcheck.md \u00a77 (routed defects) and report, per item, whether the round-42 tip resolves it (command and output): item 1 relevance counter, item 2 pin-watch in PROVINCE Owns, item 3 parked worktree (operator), item 4 report must not say skill://shokunin is uninstalled (check ~/.agents/skills/shokunin). Also list any other defect that closure named that the lane has not routed.",
+   "role": "scout",
+   "name": "R42A12",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A13: C1 shortcut hunt: in a fixture repo (D=$(mktemp -d -p /fast/scratch/kama-r42/seats) && git -C \"$D\" init -q; every git call -C \"$D\"; verify rev-parse --show-toplevel == $D before committing) built from a copy of the base tree plus the frozen counters, construct the CHEAPEST change that meets the C1 counter without making the self-description true (e.g. generated sections, a different head table, trivially true run facts). Report whether it is achievable, its cost in lines, and what that implies for the claim's admissibility.",
+   "role": "executor",
+   "name": "R42A13",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A14: C1 coupling check: list the files each claim writes (`git diff --name-status 0b606b03bf0b2a87b791aa537f6c72c941624cf0 3d9bd8d72366e281fab291874524130428ee423d`), then run C1's counter on the committed separability control sandbox you rebuild from /fast/scratch/kama-r42/clone/.ufo/waves/round-42/controls/build_separability.py (read it; run it against YOUR clone path as the lane argument with output into your own directory). Report whether sep-c1-only is met=True, sep-c2-only c2 met=True, sep-c3-only c3 met=True, matching the committed receipts /fast/scratch/kama-r42/clone/.ufo/waves/round-42/controls/sep-*.out.",
+   "role": "executor",
+   "name": "R42A14",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A15: Cross-claim and sibling overlap for C1: do the lanes tameshi, mori, chousa, kumitate, kake, kotodama hold a self-description or head-table reconciliation counter (read their tools/ and SCORECARD heads read-only under /home/vgpnk/Projects/shokunin/<lane>-shokunin)? Is there a pattern in how those lanes keep banner/Planned/Saturation sections current that kama should adopt or that kama's C1 offers them? Name any contested scope; report, do not absorb.",
+   "role": "connector",
+   "name": "R42A15",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42A16: C1 deletion pass: read tools/round42-selfdesc-reconcile.py and the new SCORECARD head sections. Propose deletions that preserve every verified behavior: dead code, redundant facts, prose in the head that no fact checks and no reader needs. For each proposal run the counter on a sandbox copy to prove the verdict is unchanged. Report accepted and rejected deletions.",
+   "role": "simplifier",
+   "name": "R42A16",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B01: C2 contract fuzz: in your clone, import tools/round42-digest-audit.py (importlib) and, for 300 distinct seeds, build the counter's fixtures with make_case/ref_dir and compare tools/digest-ledger.py `scan --dir` output and exit code with the reference. Report seeds tried, mismatches (with the fixture kept under your directory) and the time taken. Then craft 10 hand fixtures the counter's generator cannot produce (uppercase hex, 65-hex runs, CRLF files, a token split by a markdown line break, a non-UTF-8 .md, a .md symlink, an empty ledger, a ledger without header) and report whether tool and reference agree on each.",
+   "role": "executor",
+   "name": "R42B01",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B02: C2 git-mode vs dir-mode: run `python3 tools/digest-ledger.py scan --repo <clone> --rev 3d9bd8d72366e281fab291874524130428ee423d --details` and `scan --dir <git archive export of 3d9bd8d72366e281fab291874524130428ee423d> --details`; explain every difference in the summary line (expected: dir mode lacks history blobs). Also run it at base `0b606b03bf0b2a87b791aa537f6c72c941624cf0` and at the freeze `0bfd47abdda1f5ac21a0834654122644fc23e861`. Time and peak memory (`/usr/bin/time -v`) for each. Report whether any class count changes between tip runs and whether output is deterministic across 5 runs.",
+   "role": "executor",
+   "name": "R42B02",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B03: C2 tool mutants: copy tools/digest-ledger.py into a sandbox clone and apply at least 20 mutations (prefix length 8\u21927 and 8\u21929, class names, `is_doc` suffixes or .ufo exclusion, token regex boundaries, ledger_bad conditions, exit-code rule, blob universe limited to HEAD tree). Score each with `python3 tools/digest-ledger.py selftest` and with tools/round42-digest-audit.py (--seed 42) in the sandbox. Report killed or survived per mutant and which leg kills it; survivors are the finding.",
+   "role": "mutation-tester",
+   "name": "R42B03",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B04: C2 ledger mutants: in a sandbox clone commit mutations of registry/digest-ledger.tsv at the claim tip (delete one row, swap a class, change one hex digit of a digest, point an external row at the wrong file, blank a note, change `correct` to a digest sharing no prefix, add a row for an already-blob digest) and run `python3 tools/digest-ledger.py scan --repo <sandbox> --rev <mutant>` and the C2 counter. Report which mutants flip the live leg and which are accepted silently.",
+   "role": "mutation-tester",
+   "name": "R42B04",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B05: C2 tool review: read tools/digest-ledger.py against its docstring contract. Look for correctness defects: tokens inside longer hex runs, digests split across lines, uppercase hex, .md files that are binary or non-UTF-8, symlink handling in dir vs git mode, `git rev-list --objects` with a shallow or partial clone, huge blobs held in memory, ledger parse with trailing blank lines or CRLF, duplicate ledger digests (last wins?). Run a reproducer for each defect you claim. Report with file:line.",
+   "role": "reviewer",
+   "name": "R42B05",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B06: C2 claim attack: read preregistration.json claim C2 and tools/round42-digest-audit.py. Attack: (1) is the target one a do-nothing control cannot reach (re-run controls/base.c2.out, junk-c2-stub, junk-c2-allunverifiable); (2) the `live` leg needs external_ok>=4 on THIS host \u2014 is that a calibration weakness; (3) docs written by this round carry new digests (S478/S479 copies, the lesson) \u2014 does the base-vs-tip comparison stay honest; (4) does `unverifiable` let a lazy ledger pass; propose a cheaper shortcut that meets met=True without explaining any digest truthfully, or show it fails.",
+   "role": "critic",
+   "name": "R42B06",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B07: C2 re-hash attempt, part 1: the ledger marks two digests `unverifiable` that may be re-hashable from public bytes. (a) 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d is claimed to be stories260K.gguf (S039 URL https://huggingface.co/ggml-org/models-moved/blob/main/tinyllamas/stories260K.gguf; use the /resolve/main/ raw form); (b) 1dead27b6a522709f0127d194e58c21dbbbf00ba1c64fe37c54d1a9048b05020 is claimed to be docs/gguf.md at ggml commit da8e2a54b919557b816b1c2beb432ccb766f7ce0 (S058 raw URL). Fetch each with curl into your own directory, sha256sum, report match or mismatch, access time, byte count. Do NOT write them anywhere in the lane. Say whether the ledger row could be upgraded (evidence copy committed would make the digest a blob).",
+   "role": "executor",
+   "name": "R42B07",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B08: C2 re-hash attempt, part 2: identify the subject of 38e4ab053e5cc7bfc53bdd8d9479a206d29dd37ccbc36f7f352582f42d766a09 (LOG.md line 1675 in /fast/scratch/kama-r42/clone: '11141804 bytes'). Search the lane's git history (`git log -S`), lessons, receipts under .ufo/waves, ~/.cache, ~/.local/opt, /fast/scratch and the lane tests for a file of exactly 11141804 bytes or any file hashing to it. Report the artifact if found (path, sha256sum) or the exhaustive sweep commands and outputs if not.",
+   "role": "executor",
+   "name": "R42B08",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B09: C2 re-hash attempt, part 3: 5b38422c32c5fb8bdfe1b69ed003f260914c339a2c12abf0f984790f4ca9833d is called the 'install-io-grid population SHA' in corpus/lessons/round-22.md line 274 and SCORECARD round-22 rows. Read tests/llamacpp-live/install-io-grid.py, run its documented command(s) at the claim tip in your clone (read-only, offline), and report whether any printed population digest equals it. If it does, name the exact command and output line; if not, say what it prints instead.",
+   "role": "executor",
+   "name": "R42B09",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B10: C2 re-hash attempt, part 4: bf9068d89e4cb8a080167cb32cc818943d717a65fcbd21edb2b8256e22771f32 is called the 'probe-verdict stub matrix set digest' in SCORECARD round-16 and the round-17 spot-check. Read tests/probe-verdicts/check.py, run its documented commands (including --json) at the claim tip in your clone, and report whether any printed or derivable set digest equals it, with the exact command and output line; otherwise what it prints instead.",
+   "role": "executor",
+   "name": "R42B10",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B11: Truncated digests: sweep the lane's .md and .tsv documents at 3d9bd8d72366e281fab291874524130428ee423d (excluding .ufo/) for hex runs of 8 to 63 characters that read as abbreviated SHA-256 digests (e.g. `3ad0df68\u2026`, `bf9068d8\u20261f32`, `270cba1b\u2026d256d`). For each distinct abbreviation report whether it resolves uniquely to a blob digest (history), a ledger digest, or nothing. This measures how much of the digest-citation surface the full-token ledger does not see. Give counts and the unresolved list with file:line.",
+   "role": "executor",
+   "name": "R42B11",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B12: Scope limit of C2: the contract excludes `.ufo/` documents. At 3d9bd8d72366e281fab291874524130428ee423d run the same token scan over `.ufo/**/*.md` and `*.tsv` (write your own throwaway scanner; do not edit the tool) and count distinct 64-hex tokens, how many match a blob digest and how many are unexplained. Report the numbers and the top five unexplained by frequency with file:line, so the claim's population limit is stated with a count.",
+   "role": "executor",
+   "name": "R42B12",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B13: C2 ledger truth review: for each of the 10 rows of registry/digest-ledger.tsv at 3d9bd8d72366e281fab291874524130428ee423d, check the `subject` and `note` are true: S038 archive identity, that e404b91a\u2026 is libllama-server-impl.so of the b11755 install (see corpus/knowledge/llamacpp-loading-lifecycle.md and SKILL.md), the dockerfile.html item (round-35 spot-check item 7), the package digest, the S472 wrong digest and its correction (open the amendment and round-38 spot-check), and the unverifiable notes. Report any overreaching or false subject/note.",
+   "role": "reviewer",
+   "name": "R42B13",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B14: C2 hygiene-patch review: `git diff 0b606b03bf0b2a87b791aa537f6c72c941624cf0 3d9bd8d72366e281fab291874524130428ee423d -- tools/round41-scorecard-reconcile.py tools/round41-pinwatch-audit.py` must add only temp-export cleanup. Verify no predicate, parsing or output change; run both round-41 counters at base and at the tip with a private TMPDIR and confirm the summary lines equal the round-41 receipts (/fast/scratch/kama-r42/clone/.ufo/waves/round-41/c1/candidate.out and c2/candidate.out, allowing the live leg's time-dependent reference) and that TMPDIR is empty afterwards. Also check atexit still runs when the counter exits non-zero and when it is killed by SIGTERM (report SIGKILL as a known gap).",
+   "role": "reviewer",
+   "name": "R42B14",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B15: C2 novelty and overlap attack: tools/citation-provenance.py (registered `cite(rev, path, sha256=)` tokens), tools/report-landing-audit.py, tools/gate-registry-check.py and tools/sources-append-only.py already check parts of the citation surface. Does tools/digest-ledger.py duplicate any of them or leave a gap between them? State, with a command per claim, what digest-ledger catches that none of them catch (run each existing tool on a fixture with a wrong digest) and what it misses that they catch.",
+   "role": "critic",
+   "name": "R42B15",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B16: Sibling scan for C2: search the sibling lane repos read-only (/home/vgpnk/Projects/shokunin/*-shokunin/tools, scripts, corpus) for digest or hash-citation checkers, evidence-hash ledgers or 'wrong digest' lessons (grep -rIl 'sha256' on tools, then read the best five). Report overlap with kama's digest-ledger, contested scope, and any portable lesson (what chousa/kengaku/kumitate/mori/tameshi already hold that kama should cite). Report, do not absorb.",
+   "role": "connector",
+   "name": "R42B16",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B17: C2 security review: read tools/digest-ledger.py and tools/round42-digest-audit.py. The ledger `path` column makes the tool read (hash) an arbitrary local file named by a committed row: can a hostile ledger row cause a read of a secret, a hang (FIFO, /dev/zero, huge file), or an information leak through the summary? Check git-mode argument handling (`--repo`, `--rev` option injection like `--rev --output=\u2026`), path handling in dir mode, subprocess use, and that no credential material enters a ledger or a corpus file. Reproduce each claimed issue in a sandbox; propose minimal fixes.",
+   "role": "sentinel",
+   "name": "R42B17",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B18: C2 interpreter matrix: run `python3 tools/digest-ledger.py selftest`, the C2 contract (import tools/round42-digest-audit.py and run its CASES fixtures for seed 42) and `scan --repo` at the tip under CPython 3.11, 3.12 and 3.13 (use `uv python install` and `uv run --python X` or `uv python find`; record versions and channel) and the system python3. Report pass/fail per interpreter with outputs.",
+   "role": "executor",
+   "name": "R42B18",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B19: Draft the `## Mistakes` rows for corpus/lessons/round-42.md in the format class \u00b7 evidence pointer \u00b7 captured-by \u00b7 fix, from this evidence: (1) the base tree cites 10 unexplained SHA-256 digests incl. the round-38 S472 wrong digest and no gate caught the class (captured-by none until tools/digest-ledger.py); (2) both round-41 counters leaked ~253 MB per run (R41A10-10, fix shown able to fail: controls/base.c2.out hygiene=0 vs candidate hygiene=1); (3) the head Capabilities/Saturation/Planned sections stayed stale through round 41 after the Axes table was reconciled (R41A10); (4) this round's C1 table facts first depended on files C3 adds (sep-c1-only r41=2) until count facts were filtered. Read the cited files, correct any statement you cannot verify, and give 4 to 6 rows with exact paths, commands and outputs. Draft only; the L1 integrates.",
+   "role": "scribe",
+   "name": "R42B19",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B20: C2 deletion pass: read tools/digest-ledger.py and tools/round42-digest-audit.py. Propose deletions or merges that preserve every verified behavior (selftest, contract, live): dead branches, unused helpers, duplicated logic between make_case and the tool. Prove each by running selftest and the counter on a sandbox copy. Report accepted and rejected proposals.",
+   "role": "simplifier",
+   "name": "R42B20",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42B21: C2 scaling: build a synthetic git repository in a mktemp dir under /fast/scratch/kama-r42/seats (init with -C; verify toplevel; fixture identity only inside it) with 20000 commits-worth of blobs approximated by 20000 small files over 50 commits and 200 .md files carrying 5 digests each; time `scan --repo` and `scan --dir` and record peak RSS. Extrapolate to this lane's repo (`git count-objects -v` at the claim tip). Report whether git mode's in-memory `cat-file --batch` buffering is a problem at 10x the lane's size.",
+   "role": "executor",
+   "name": "R42B21",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C01: Independent re-open of S478: fetch https://raw.githubusercontent.com/vllm-project/vllm/v0.32.0/vllm/v1/core/kv_cache_utils.py yourself (curl into your own directory), sha256sum it and compare with the digest in /fast/scratch/kama-r42/clone/corpus/SOURCES.md row S478 and with /fast/scratch/kama-r42/clone/.ufo/waves/round-42/c3/vllm-v0.32.0-kv_cache_utils.py; locate the quote `num_blocks = available_memory // bytes_per_block` (line), the log literal `KV cache size: %s tokens` (line) and `return int(max_concurrency * max_model_len), max_concurrency` (line). Report digests, byte counts and line numbers; flag any difference from what the row, the entry and the lesson Gate state.",
+   "role": "scout",
+   "name": "R42C01",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C02: Independent re-open of S479: fetch https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-models.cpp yourself, sha256sum it, compare with row S479 and the committed copy; locate `this->get_router_models`, `if (meta.n_ctx_train > 0) {`, `model_info[\"context_length\"] = meta.n_ctx_train;` and count `max_model_len` (`grep -o max_model_len <file> | wc -l`). Also check that commit 704366d7 is the tag b11755 (`git ls-remote --tags https://github.com/ggml-org/llama.cpp.git refs/tags/b11755`). Report lines, counts and any difference from the entry/row/Gate.",
+   "role": "scout",
+   "name": "R42C02",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C03: C3 claim-vs-source review, vLLM half: read /fast/scratch/kama-r42/clone/corpus/knowledge/context-capacity-engine-sides.md \u00a7'vLLM at v0.32.0' sentence by sentence against /fast/scratch/kama-r42/clone/.ufo/waves/round-42/c3/vllm-v0.32.0-kv_cache_utils.py (read the surrounding functions, not just the cited lines). For each sentence say supported, overreaching or unsupported, with file:line. Pay special attention to: 'the served pool can be an operator override', the min over device and host pool, and 'not a second independent measurement'.",
+   "role": "reviewer",
+   "name": "R42C03",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C04: C3 claim-vs-source review, llama.cpp half and tables: read the entry's \u00a7'llama.cpp at 704366d7', the comparison table and \u00a7Limits against /fast/scratch/kama-r42/clone/.ufo/waves/round-42/c3/llamacpp-704366d7-server-models.cpp and the lane's own entries corpus/knowledge/context-capacity.md and gguf-declared-identity.md. Check 'router-mode listing handler' scoping, that `n_ctx_train` is the quantity those entries report, and the claim that the staged amendments' simplifications were corrected. Report each sentence supported, overreaching or unsupported with file:line.",
+   "role": "reviewer",
+   "name": "R42C04",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C05: C3 inference attack: the entry says vLLM's reported token capacity 'equals the pool expressed in units of the declared per-request length'. Read get_max_concurrency_for_kv_cache_config, get_kv_cache_capacity, update_kv_cache_capacity and every consumer of kv_cache_size_tokens/kv_cache_max_concurrency in /fast/scratch/kama-r42/clone/.ufo/waves/round-42/c3/vllm-v0.32.0-kv_cache_utils.py (and say what you cannot see because only one file is held). Is the inference right for hybrid models, sliding window groups, host pools? Propose precise corrections or caveats; do not widen beyond the file.",
+   "role": "critic",
+   "name": "R42C05",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C06: C3 coverage and scope attack: (1) is the ground really uncovered at base \u2014 sweep corpus/ and SKILL.md at base `0b606b03bf0b2a87b791aa537f6c72c941624cf0` for 'context_length', 'max_model_len', 'n_ctx_train', 'kv_cache', 'concurrency' with commands and judge overlap with context-capacity.md, gguf-declared-identity.md, served-identity-crosswalk.md, kv-cache-reclamation-models.md; (2) PROVINCE scope check: is vLLM source reading inside kama's province or kengaku/chousa's; (3) does the counter's coverage leg count ground a sourceless fixture would also count. Report verdicts with commands.",
+   "role": "critic",
+   "name": "R42C06",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C07: C3 QUALITY.md bar: apply every KQ criterion in /fast/scratch/kama-r42/clone/corpus/QUALITY.md that can apply to a new knowledge entry (read the whole file; list the KQ numbers you applied) to corpus/knowledge/context-capacity-engine-sides.md and rows S478/S479. For each: pass, fail or not applicable with the evidence. Pay attention to KQ rules on source anchors, negative claims (the `max_model_len` count carries its sweep), quote location and uncited numbers.",
+   "role": "reviewer",
+   "name": "R42C07",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C08: C3 registry rows review: rows S478 and S479 in /fast/scratch/kama-r42/clone/corpus/SOURCES.md against CORPUS.md SOURCES contract v1 (/home/vgpnk/Projects/shokunin/CORPUS.md): 11 columns, no `|` in a cell, kind/tier/status enums, anchor = exact section plus revision, teaches = one grounded benefit, opened date, recheck cadence, used-by paths exist. Run the census commands from the contract (rows, malformed, tier histogram, status histogram, duplicate ids, enum violations, missing used-by) at the tip and at base and report deltas. Also check the new Paths bullet and Search-log note for claims the sources do not support.",
+   "role": "reviewer",
+   "name": "R42C08",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C09: C3 counter and census replay: in your clone run `python3 tools/round42-capacity-audit.py --repo <clone> --tip 3d9bd8d72366e281fab291874524130428ee423d --base 0b606b03bf0b2a87b791aa537f6c72c941624cf0` (TMPDIR private) and compare with /fast/scratch/kama-r42/clone/.ufo/waves/round-42/c3/candidate.out; run `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --file <export of the tip>/corpus/SOURCES.md` and the same over a mirror root (mkdir a root under /fast/scratch/kama-r42/seats/<you>, copy /home/vgpnk/Projects/shokunin/shokunin.conf, symlink or copy your clone as kama-shokunin, `validate --root <root> kama`). Report exit codes and W/E counts and compare with the start census in /fast/scratch/kama-r42/clone/.ufo/waves/round-42/census-start-*.out.",
+   "role": "executor",
+   "name": "R42C09",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C10: Assimilation scratch replay: regenerate reg-ids, staged-ids and collisions exactly as the round prompt states (0-3 leading spaces pattern) from the tip's corpus/SOURCES.md and /home/vgpnk/Projects/shokuknow/merge/kama/SOURCES.append.md into your own directory and diff against /fast/scratch/kama-r42/clone/.ufo/waves/round-42/assimilation/; re-prove the indented-row guard on a fixture of your own; verify the renumber map (staged S378\u2192S478, S394\u2192S479) by finding each staged row's URL and confirming the adopted row carries the same URL; report any divergence.",
+   "role": "executor",
+   "name": "R42C10",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C11: Quarantine re-derivation: derive the lane's quarantine slice from /home/vgpnk/Projects/shokuknow/.ufo/waves/corpus-expansion-1/absent-defect-register.md (read-only) with the awk in the round prompt and compare with /fast/scratch/kama-r42/clone/.ufo/waves/round-42/assimilation/quarantine-slice; for each of the 7 rows find the existing hand-check verdict in corpus/lessons/round-35.md, round-36.md or .ufo/waves/round-41/w1/out/R41F01.md and report a table row -> verdict -> pointer; flag any row with no verdict.",
+   "role": "executor",
+   "name": "R42C11",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C12: Refused-entry Gate check: open the staged files context-capacity-amendment-2026-10-24-r8.md and -r11.md under /home/vgpnk/Projects/shokuknow/merge/kama/knowledge/corpus/knowledge/ and the staged rows S401, S405, S424 in SOURCES.append.md. Check the reject reasons and flip conditions written in /fast/scratch/kama-r42/clone/corpus/lessons/round-42.md \u00a7Gate (assimilation table) against those bytes: is each reason true, specific and falsifiable? Draft corrected wording for any row that is not, as exact replacement text for the L1 to paste.",
+   "role": "scribe",
+   "name": "R42C12",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C13: C3 cross-source pattern: relate S478/S479 to the lane's held K05 ground (S106-S113 llama.cpp capacity sources, context-capacity.md measured cells) and to the other held engine entries (kv-cache-reclamation-models.md, prefix-cache-reuse-models.md, served-identity-crosswalk.md). Where does the new entry understate or overstate relative to the measured cells? What single comparison sentence could a K05 runtime probe use? Also check kengaku and kumitate lanes (read-only) for overlap on context capacity. Report contested scope and one improvement for the entry.",
+   "role": "connector",
+   "name": "R42C13",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C14: C3 mutants: in a sandbox clone commit single mutations of the entry (change a cited line number, change the max_model_len count, delete a citation, drop the provenance trio's recheck line), of rows S478/S479 (change the digest, URL, status, used-by, opened date), of the Gate quote lines (a 26-word quote, a quote absent from the copy, a missing date), and of the committed evidence copies (change one byte) and run tools/round42-capacity-audit.py on each. Report killed or survived per mutant and which leg kills it. Survivors are the finding.",
+   "role": "mutation-tester",
+   "name": "R42C14",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C15: Staged-intent audit: the staged amendments context-capacity-amendment-2026-10-23-r5.md and -2026-10-24-r7.md (under /home/vgpnk/Projects/shokuknow/merge/kama/knowledge/corpus/knowledge/) are the campaign's proposals; the lane's entry rewrote them. Reverse-engineer what each staged amendment meant to establish (read MERGE-REPORT.md, the staged round rows, any doctrine/ file) and report, per claim, whether the adopted entry preserves, corrects or drops it, and whether any dropped claim was true and valuable. Also report staged claims that the lane's sources do not support (so they stay refused).",
+   "role": "revenger",
+   "name": "R42C15",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C16: QUALITY criteria drafts: from /fast/scratch/kama-r42/clone/corpus/lessons/round-42.md and the evidence in /fast/scratch/kama-r42/clone/.ufo/waves/round-42/, draft candidate corpus/QUALITY.md criteria in the file's existing KQ row format (read the last ten rows of /fast/scratch/kama-r42/clone/corpus/QUALITY.md first for style and numbering; the next free number is KQ50): (a) every full SHA-256 a lane document cites is a blob, a ledger row or a flagged wrong digest; a digest whose first eight characters match a real one is a defect until flagged; (b) a lane counter removes what it creates (checked with a private TMPDIR); (c) a claim's table facts must not be derived from files another claim of the same round adds. Each row cites round-42 lesson evidence and must state how a fix is shown able to fail. Draft only.",
+   "role": "scribe",
+   "name": "R42C16",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42C17: Gate quote attack: the lesson Gate quotes `num_blocks = available_memory // bytes_per_block` (S478) and `if (meta.n_ctx_train > 0) {` (S479). Are the quotes located correctly, within 25 words, and do they ground the rows' `teaches` cells (the derived-capacity and key-name claims)? Would a quote taken from lines 2308 or 2328 be a stronger anchor for S478? Does the Gate record URL, access date and quote for every new row and is every Gate line a claim the committed copies can check? Report required changes.",
+   "role": "critic",
+   "name": "R42C17",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42D01: Census before/after: run `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh census --file corpus/SOURCES.md` on the base export and the tip export and report the row/tier/status deltas (expected 218\u2192220, tier A 208\u2192210, mined 199\u2192201); run `validate --root` on a mirror of the tip and on the base; also run the contract's manual census commands (CORPUS.md \u00a7Census) at the tip: rows, malformed (must print 0), duplicate ids (nothing), enum violations (nothing), mined rows whose used-by paths do not exist (nothing). Report outputs and exit codes.",
+   "role": "executor",
+   "name": "R42D01",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42D02: Draft the report's three-claim 'Before \u2192 after measurements' skeleton only from committed receipts: read /fast/scratch/kama-r42/clone/.ufo/waves/round-42/controls/*.out and c1/c2/c3/candidate.out and write, per claim, a table of control name \u2192 summary line \u2192 exit code (base, freeze, each shortcut control, each separability control, candidate), with the counting command. Check every number against its receipt file and report any receipt whose first line `tip=` is not the commit the table names. Draft only.",
+   "role": "scribe",
+   "name": "R42D02",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42D03: Coupling matrix: build a matrix of which claim's files each counter reads (C1 counter reads SCORECARD head, README, PROVINCE, SOURCES, SKILL.md, corpus/knowledge, lessons; C2 reads SCORECARD canonical list, registry ledger, tools; C3 reads entry, SOURCES, README, lesson, scratch). Verify the preregistration's `separability` sentence against `git diff --name-status 0b606b03bf0b2a87b791aa537f6c72c941624cf0 3d9bd8d72366e281fab291874524130428ee423d` and the committed sep-*.out receipts. Identify any remaining dependence of one claim's verdict on another's files (e.g. shared SCORECARD/README/SOURCES edits) and say whether each is a real coupling or only a shared file.",
+   "role": "connector",
+   "name": "R42D03",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42D04: Round-framing attack: check the round against the prompt contract at /home/vgpnk/Projects/shokunin/.ufo/prompts/kama-round-42.md sections 2, 2b, 3, 4, 9 and 10: lowest-axis rule (is calibration the lowest assigned non-retired axis; is the nudge inactive), at least one sourced claim (S478/S479 opened this round), assimilation shape (one theme, 1-3 entries, at least one admit and one reject recorded), claim sizing rules (universal clauses, do-nothing controls, same sentence in plan/counter/receipt), report contract. List each conformance gap the L1 must close before the report, with the file and line.",
+   "role": "critic",
+   "name": "R42D04",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42D05: Prereg consistency review: compare, clause by clause, /fast/scratch/kama-r42/clone/.ufo/waves/round-42/preregistration.json, the docstrings of the three counters, the SCORECARD \u00a7Round 42 claim table and corpus/lessons/round-42.md \u00a7Claims. Are predicate, counting command, kill rule and target the same sentence in each? List divergences (wording, numbers such as 'mismatches=40', 'external_ok>=4', '8 randomized fixtures', base hashes) with file:line. A divergence after freeze means the claim's rule is the frozen one.",
+   "role": "reviewer",
+   "name": "R42D05",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42D06: Control replay: rebuild every freeze control from /fast/scratch/kama-r42/clone/.ufo/waves/round-42/controls/build_controls.py in YOUR sandbox (the script takes <lane clone> <base> <out dir> <claim-source dir>; give your clone, base `0b606b03bf0b2a87b791aa537f6c72c941624cf0`, an output directory under /fast/scratch/kama-r42/seats/<you>/controls and your clone as claim-source; the script needs the freeze commit's counter files, so check them out as it does) and compare each regenerated *.out with the committed receipts in /fast/scratch/kama-r42/clone/.ufo/waves/round-42/controls/ (ignore the sandbox path in `tip=` lines and the exit= line only if identical). Report every differing receipt with a diff.",
+   "role": "executor",
+   "name": "R42D06",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42D07: C2 and C3 counter mutants: copy tools/round42-digest-audit.py and tools/round42-capacity-audit.py into a sandbox and apply at least 20 mutations (external_ok>=4 \u2192 >=0, drop the hygiene leg, CASES 8\u21921, accept an absent evidence copy, gate quote limit 25\u2192250, skip the base-absence check, census leg always 1, read the tip's README instead of the entry). Score each against base and the claim tip and against the committed shortcut controls. List counter mutants that none of the controls kills and that still read met=True at the tip where they should not.",
+   "role": "mutation-tester",
+   "name": "R42D07",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42D08: Considerthese backlog: read /fast/scratch/kama-r42/clone/considerthese/2026-10-19.md through 2026-10-25.md and list every proposal marked 'proposals only \u2026 not implemented' with (a) whether the lane has since implemented it (command/path), (b) whether it is grounded in an openable source, (c) cost to land in one round, (d) which axis it would move. Name the three best candidates for round 43 with the grounding source to open first. Do not implement.",
+   "role": "scout",
+   "name": "R42D08",
+   "axes": [
+    "coverage"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42D09: Cross-lane lessons for round 42: read the newest reports and lessons of the other lanes that ran round 41 or 42 (under /home/vgpnk/Projects/shokunin/.ufo/reports/round-4*/ and each lane's corpus/lessons/round-4*.md, read-only) and find portable patterns related to kama's three claims: stale head sections after a table reconciliation, unexplained digests or wrong-digest citations, counters that leak temp dirs, assimilation id collisions. Report which lane found what, whether kama's fix matches or contradicts theirs, and one thing kama's round offers them. Report, do not absorb.",
+   "role": "connector",
+   "name": "R42D09",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r42 claim falsification/build"
+  },
+  {
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 42 item R42D10: Temp hygiene audit: run each of tools/round41-scorecard-reconcile.py, tools/round41-pinwatch-audit.py, tools/round42-selfdesc-reconcile.py, tools/round42-digest-audit.py, tools/round42-capacity-audit.py (and tools/digest-ledger.py scan) three times at the claim tip with TMPDIR=/fast/scratch/kama-r42/seats/<you>/tmp set to a fresh empty directory, then list what remains in TMPDIR and in /tmp matching r41c*, r42c*, case*. Also run each once under `timeout 5` (SIGTERM) to see what a killed counter leaves. Report per counter: leaked entries after normal exit, after SIGTERM, and the disk used.",
+   "role": "executor",
+   "name": "R42D10",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r42 claim falsification/build"
+  }
+ ]
+}
