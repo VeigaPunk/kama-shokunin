@@ -1,0 +1,52 @@
+{
+  "round": 41,
+  "attempt": 1,
+  "lane": "kama",
+  "date": "2026-10-25",
+  "base": "8893b89466250c4d542912a867392698d2da00ce",
+  "measurement_root": "fresh clone of the lane remote at /fast/scratch/kama-r41/clone (the parked worktree is on the mutation-sandbox lineage; round-40 D5)",
+  "authority": "shokunin.conf kama row: operability + calibration; calibration 7 is the lowest non-retired assigned axis (operability 8); stagnation nudge inactive (SCORECARD §Saturation: line 8, calibration below it)",
+  "claims": [
+    {
+      "id": "C1",
+      "axis": "calibration",
+      "score_before": 7,
+      "score_after": 7,
+      "type": "self-assessment vs observed state: the SCORECARD head axes table",
+      "predicate": "The SCORECARD.md `## Axes` table matches observed repository state: all six axis rows are present; each row's score equals the frozen current-assessment vector (operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7); every hash, line count, run line and repo path the row cites re-derives at the measured commit; and every row carries at least one hash or run fact (mismatches == 0, met=True).",
+      "counting_command": "python3 tools/round41-scorecard-reconcile.py --repo <fresh clone of lane remote> --tip <full commit> --out <receipt>",
+      "kill_rule": "met must flip False -> True. At base mismatches=16 met=False (receipt controls/base.c1.out). A miss at the landed tip is an honest stop; the counter, vector and grammar are not changed after any seat scores.",
+      "do_nothing_control": ".ufo/waves/round-41/controls/base.c1.out and freeze.c1.out (mismatches=16, met=False)",
+      "shortcut_controls": {
+        "junk-c1-hollow": "scores corrected, evidence cells emptied -> hollow=6 met=False",
+        "junk-c1-scoresonly": "scores corrected, stale evidence kept -> mismatches=14 met=False",
+        "junk-c1-falserun": "candidate table with one false run line -> run_bad=1 met=False"
+      },
+      "positive_control": ".ufo/waves/round-41/controls/pos-c1only.c1.out (candidate table on base+counters: mismatches=0 met=True); separability: pos-c2only.c1.out stays met=False",
+      "out_of_counter_limit": "The counter checks that cited facts are true at the tip, not that they are sufficient evidence for the score; relevance is judged by reviewers and the non-author closure.",
+      "measured_commit": null
+    },
+    {
+      "id": "C2",
+      "axis": "operability",
+      "score_before": 8,
+      "score_after": 8,
+      "type": "capability acquisition: pin-watch (engine version-pin watch); mines considerthese/2026-10-25.md proposal 2; sourced on S475 (git-ls-remote manual) + own-work tag inventories S476/S477 opened 2026-10-25",
+      "predicate": "The lane holds a working engine version-pin watch: tools/pin-watch.py exists (tool=1); it gives byte-equal output and exit code to the counter's reference on every randomized offline fixture case (contract=1); its live check of registry/engine-pins.tsv equals the counter's own ls-remote reference over >= 3 engines (live=1); every pins row cites a mined registry row and corpus/knowledge/engine-pin-watch.md's source: line names a row opened 2026-10-25 (sourced=1); and the highest canonical capability list in SCORECARD.md carries a pin-watch row whose evidence names tools/pin-watch.py (capability=1); met=True.",
+      "counting_command": "python3 tools/round41-pinwatch-audit.py --repo <fresh clone of lane remote> --tip <full commit> [--seed N] --out <receipt>",
+      "kill_rule": "met must flip False -> True. At base every leg is 0 (receipt controls/base.c2.out). A miss at the landed tip is an honest stop.",
+      "do_nothing_control": ".ufo/waves/round-41/controls/base.c2.out and freeze.c2.out (all legs 0, met=False)",
+      "shortcut_controls": {
+        "junk-c2-stub": "tool that echoes the live output verbatim -> contract=0 met=False",
+        "junk-c2-nocap": "no capability row -> capability=0",
+        "junk-c2-unsourced": "no knowledge entry / row -> sourced=0"
+      },
+      "positive_control": ".ufo/waves/round-41/controls/pos-c2only.c2.out (met=True, seed 41); separability: pos-c1only.c2.out stays met=False",
+      "out_of_counter_limit": "Live leg is a same-moment agreement between tool and counter reference; it does not certify upstream release policy. The fixture contract is the counter docstring.",
+      "measured_commit": null
+    }
+  ],
+  "separability": "C1 cites no file that C2 writes (C2 writes tools/pin-watch.py, registry/engine-pins.tsv, corpus/knowledge/engine-pin-watch.md, corpus/SOURCES.md, corpus/README.md, the SCORECARD capability list); C1 writes only the SCORECARD `## Axes` table. pos-c1only / pos-c2only controls show each met without the other.",
+  "frontier": "sourced claim C2 rests on S475 opened 2026-10-25; considerthese/2026-10-25.md proposal 2 mined; merge/kama package: no knowledge entry adopted this round (named rejects in the round lesson Gate, routed defect D2).",
+  "routed_defects_from_r40_closure": "D1 QUALITY criterion for header-bound field indices; D2 named package rejects; D3 round-38 lesson digest pointer; D4 report/SCORECARD hygiene (N2, N3). Fixed in-round, not claimed."
+}
