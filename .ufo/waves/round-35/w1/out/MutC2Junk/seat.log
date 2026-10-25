@@ -1,0 +1,487 @@
+kimi version 2.3.1
+• I will act as a Godspeed-enabled subagent.
+
+  I will run the round 35 coverage audit selftest inside the lane repo. I will verify the base tip command exits with code 1. I will paste both outputs. If either meets the junk coverage target, I will flag a wrong counter.
+
+  The UFO mutation tester requires challenging the invariant with one plausible defect. I will mutate the smallest behavior-bearing point in the scratch copy and run the bounded detector on pristine, mutated, and restored bytes.
+
+  I will record outputs, verdicts, and hashes. A surviving mutant is a coverage finding, not permission to change the contract. I will return the mutant, detector, output, verdict, and restoration evidence. I will stop after the assigned probe. I will stay within my seat directory.
+
+  My seat name is MutC2Junk. The report path resolves to `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-35/w1/out/MutC2Junk.md`.
+
+  The C2 predicate requires three conditions: the round-35 coverage block names knowledge/endpoint-health-probe-conventions.md, that file exists, and it cites an S-id present in corpus/SOURCES.md. None of these hold at base commit 719655f12517a9ce6b1a5ca44316897fed8420b0. I will read the relevant files and rules before executing.
+
+• I'll run the coverage selftest and the base-tip check, then probe whether a junk mention can falsely meet C2.
+
+• I need to understand the task more carefully.
+
+  I am reading the MutC2Junk prompt and the UFO mutation tester instructions. The task requires running a coverage audit with selftest, confirming the base tip command exits 1, and reporting results to MutC2Junk.md.
+
+  The UFO mutation tester follows a Godspeed posture. It names axes and iterates cheaply in parallel. Moves improve any axis without harming others. Clarifying-question loops are avoided. A single plausible defect challenges the claimed invariant. The smallest behavior-bearing point in the isolated scratch copy is mutated. Sibling sources are never modified during concurrent waves. The same bounded behavioral detector runs on pristine, mutated, and restored bytes. A baseline failure is inconclusive.
+
+• The seat prompt and existing C2 controls will show what the probe must paste and whether a junk mention is already covered.
+
+• Running the round 35 coverage audit self-test.
+
+  The base tip command must exit with code 1. Both outputs will be pasted to verify the counter is wrong. The target is that junk coverage mentions fail C2, which requires named file_exists cited_row met True.
+
+  The selftest code confirms the base case must fail C2. It checks that `base["met"]` is False and `base["named"]` is zero.
+
+  The selftest prints the base and junk C2 flags, then exits 0 only if both fail C2. This confirms a junk mention outside the block must not meet C2.
+
+  The selftest output confirms both base and junk fail C2. The base command returns met False, so the counter is not wrong.
+
+  The base tip command must exit with code 1 and print met False. The selftest passes without printing the overall target. I will not flag the counter as wrong unless the actual run contradicts this.
+
+  The seat task only requires running the selftest and base tip. The UFO mutation tester preamble is not applicable here.
+
+  The seat directory is `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-35/w1/out/MutC2Junk/`. I will not modify the lane repository source. The task requires running the selftest and base tip directly.
+
+  The selftest only checks junk mentions appended after the readme. A plausible defect could be a mention inside an earlier heading, inside code fences, or a substring match that counts unrelated body text.
+
+  I will run the required selftest and base tip commands first. If the outputs do not meet the target, I will then attempt a mutation probe to challenge the invariant.
+
+  The invariant concerns detector behavior on junk mentions, not the detector code itself. Mutating the audit script in the lane would violate the sibling-source rule. The probe should instead challenge the corpus or test cases.
+
+  The primary deliverable is the selftest and base tip outputs. The mutation probe is a secondary requirement. I will check other mutation tester patterns for protocol guidance. I must not judge, integrate, ship, or invoke another runtime.
+
+  I will run the two commands now and capture their exit codes. I will also check for an existing scratch copy and search for the UFO mutation protocol document. The base tip command is the counting command with --tip BASE.
+
+  The selftest and base tip both correctly fail C2, so the counter is not wrong. I am now inspecting a subtle bug in the selftest junk case: it appends the entry name outside the coverage block while passing a fake entry file and sources.
+
+  The selftest junk case appends a reference outside the coverage block. The score function correctly returns named=0, file_exists=1, and cited=1, so met evaluates to False. This confirms the counter is behaving properly. The remaining question is whether this test case actually represents a genuine junk coverage mention.
+
+  The selftest's "outside the block" check is vacuous. If the base readme lacks the heading, `block_names` returns zero regardless of where the entry appears. The test therefore never actually exercises the outside-heading kill rule.
+
+  The selftest's outside-heading check is a plausible defect. Because the base readme lacks the heading, `named` stays zero for an unrelated reason. The test therefore never actually exercises the kill rule.
+
+  The literal task says not to flag the counter as wrong. The UFO tester requires challenging the invariant with one plausible defect. A plausible defect is a junk mention placed outside the heading block, such as before or after another heading.
+
+  I will run the audit script against a scratch repository instead of mutating lane files. The script reads from `corpus/README.md` in the working tree, so I can pass `--repo` to an isolated copy containing the required corpus files. This lets me test junk mentions without touching the lane source.
+
+  The seat task only requires the two specified commands. The UFO preamble is not applicable here. I will run the selftest and base tip against the lane repository directly, since the script only reads files. A scratch repository would be a mutation probe of inputs rather than the tool source.
+
+  The UFO preamble requires a mutation probe, so I will create one in my seat directory. I am inspecting `block_names` to find the smallest behavior-bearing point that could make a junk mention falsely meet C2.
+
+  I checked three edge cases for the `block_names` function. A substring match inside the block would still fail because `met` requires exactly one named entry. Mentions before the heading or after a later heading are correctly excluded. I also noticed that splitting on `\n## ` might mishandle `### ` subheadings.
+
+  Subheadings are not a bug; they correctly keep mentions inside the block. A mention on the heading line itself would be counted, but that is arguably not outside the block. The real issue is that `body.count(ENTRY)` matches non-word-bounded substrings, which could falsely inflate the count.
+
+  A substring match inside the block would falsely inflate the count, but that is acceptable because the mention remains inside the block. The outside-heading rejection test is still vacuous. A critical bug candidate is that `met` requires exactly one named entry, so a junk mention cannot meet C2 even if it appears both inside and outside the heading.
+
+  A valid entry inside the block still meets C2 even when a junk mention sits outside. The target only forbids a junk mention from alone satisfying the condition.
+
+  The selftest passes a fake file path string to `file_exists`, which treats any non-None value as existing.
+
+  The `file_exists` fake-path behavior is only a quirk of the isolated `score()` test. In real CLI runs, `load()` reads actual files, so a missing file would correctly fail.
+
+  A concrete mutation probe is now being considered: appending the real coverage heading and entry to the readme outside the existing block. This could test whether the detector rejects a junk mention that injects the heading string itself.
+
+  Appending junk text that includes the coverage heading itself would fabricate a valid coverage block. The entry would then legitimately meet C2 if the file exists and cites an S-id. This is not a false positive under the kill rule, which only rejects names that appear outside an existing heading block.
+
+  The selftest never exercises the kill rule because its base readme lacks the coverage heading. I will build a scratch repository in my seat directory to test this exact scenario: a README containing the heading with the entry name appearing only outside that heading's body, plus a knowledge file citing a real S-id. This will verify whether the detector correctly rejects the junk mention.
+
+  The scratch repository will be tested with `--repo` and no `--tip`, so the script reads working-tree files directly. The expected result is `met=False` and exit code 1, confirming the kill rule rejects the junk mention. A surviving positive would indicate a real defect. Only one plausible defect will be tested, chosen as the smallest behavior-bearing point.
+
+  The mutation will add the coverage heading to the base README without the entry inside it, then place the entry name outside the heading. This makes the outside-heading guard load-bearing. The knowledge file and a citation will be included so that if the guard fails, the junk mention would falsely meet C2.
+
+  The task is now being reframed as classic mutation testing. The detector itself will be the mutated target, not just the corpus files. A baseline run on pristine bytes will establish a hash, then one behavior-bearing condition in the detector will be altered to create a mutant. After restoring the original bytes, a second run will produce a second hash. If the two hashes differ, the mutant survives and the invariant is violated.
+
+  The mutation will strip the heading guard so any mention counts. The detector itself is the test suite. A passing test on a junk fixture means the mutant survived, revealing a coverage gap.
+
+  The audit script will be copied into a scratch directory for the mutation probe. A baseline run on pristine bytes must first confirm that junk fixtures fail to meet C2; if they pass, the result is inconclusive rather than killed. The smallest behavior-bearing change will be applied to the scratch copy—such as altering `block_names` or removing the heading guard—and then the detector will be rerun against the same junk fixture.
+
+  The selftest returns exit code 0 when it passes, but prints `met=False` for the junk fixture. The counting command returns 0 only when `met=True`. This means a passing selftest does not prove the counter is correct; the user must check whether the counting command itself produces exit code 0 on any input.
+
+  I will run the selftest and base tip commands to capture their exit codes. I also need to inspect the corpus README structure and SOURCES.md format to build a faithful junk fixture without modifying source files. I will check whether the seat directory exists before proceeding.
+
+  I will hash the audit script and read the corpus README headings and a SOURCES.md sample to build the junk fixture. The selftest and base tip commands can run in parallel, but I need their outputs before writing the report. I am also checking whether the counting command must exit 1 on the base tip.The grep for headings in the README returned only the filename.
+
+  Special characters likely caused the grep mismatch. I will inspect README structure, review ExecC1Selftest.md for output formatting, and check plan.json for mutation tester expectations. Then I will run the two commands and write the report.
+
+  Parsing the seat prompt's "If either meets the target" condition. The target could be the README section header or the C2 claim. I am weighing both interpretations.
+
+  A passing selftest would mean the junk coverage mention does not meet C2, which makes the instruction to say the counter is wrong paradoxical. This suggests the task may be a trap.
+
+  The instruction is likely inverted on purpose. If either command output shows met True, the counter is wrong because neither case should meet C2. I will paste both outputs and report whether either produced met True. The UFO mutation protocol still requires one plausible defect challenge.
+
+  The selftest's junk case is too weak. I will probe a stronger junk mention in an isolated scratch repository using the unmodified detector. The intended mutation targets the input coverage mention rather than the tool itself. I will add a junk mention to the smallest behavior-bearing point in an isolated scratch copy, then run the detector on pristine, mutated, and restored states.
+
+  The mutation will add a junk mention of the conventions file outside the heading guard. The detector should still return met False and exit 1, confirming the mutant was killed. A surviving mutant would mean met True, which is a coverage finding and signals a wrong counter.
+
+  A baseline failure is inconclusive, not a killed mutant. The official selftest and base tip commands are the required pristine detector runs. I will create a scratch copy of the three inputs in my seat directory and hash them before mutating.
+
+  The concrete mutation is appending the conventions file path to the README outside any round-35 heading. This is the smallest change that could plausibly flip met to True if the counter is wrong.
+
+  The planned mutation is ineffective. Even with a broken named counter, the missing file and cited row conjuncts would still prevent met from becoming True. The detector would kill this mutant because the file does not exist, not because of the junk-mention guard. This makes it an equivalent mutant that does not challenge the invariant.
+
+  A stronger mutation requires a two-step setup. The scratch README must already satisfy file_exists and cited_row while leaving named at zero. Then the junk mention would flip named to one if the guard is wrong. This makes the junk mention the decisive conjunct.
+
+  The base tip must also confirm exit 1. The mutation will be a single inserted line containing the entry path, placed outside the heading guard. Exact placement options include before the heading, after a subsequent ## heading, in another file, or on the heading line with an exact match. The selftest appends to the end of a base readme that has no heading.
+
+  I will inspect the real README for existing headings to make the scratch fixture realistic. The pristine state will contain a heading with an empty body, a subsequent ## heading, and the conventions file with its citation. The mutation will insert the junk mention after that later heading.
+
+• The official selftest and base-tip runs are the baseline; I’ll capture exit codes and the README shape before touching a scratch copy.SELFTEST base_met=False junk_met=False pass=1
+base named 0 file_exists 0 cited_row 0 met False
+SELFTEST_EXIT:0
+named 0 file_exists 0 cited_row 0 met False
+BASE_TIP_EXIT:1
+719655f12517a9ce6b1a5ca44316897fed8420b0
+529
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:4:cites its source (`path:line` or a command + its raw output). Coverage map and open
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:7:## Live authority vs historical census
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:25:## Coverage map
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:49:## Known gaps
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:66:## Frontier
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:80:## Corrections — round 10 (2026-10-19)
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:84:## Coverage map — round 10 additions (2026-10-19)
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:96:## Corrections — round 11 (reviewed 2026-10-20 UTC)
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:115:## Coverage map — round 11 addition
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:121:## Frontier disposition — round 11
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:128:## Round-12 evidence correction and frontier disposition (2026-10-20)
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:147:## Round-13 criterion precision and frontier disposition (2026-10-20)
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:163:## Round-14 executable evidence replay — capability, not integration
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:179:## Round-15 executable corpus-guard repair — reliability, not repertoire growth
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:202:## Round-16 loading-envelope verdict and live llama.cpp lifecycle
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:234:## Round-17 graded fields and fail-capable live checks
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:247:## Round-18 correction and loopback ownership
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:287:## Round-20 coverage — declared model identity and error evidence
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:301:## Round-22 deepening — helper errors are not smaller identities
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:317:## Frontier disposition — round 23
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:337:## Frontier correction — round24
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:359:## Frontier correction — round24 (continuation)
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:391:## Frontier advanced — round 25 (K05 declared versus served context)
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:402:## Frontier disposition — round 26 (2026-10-23)
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:412:## Frontier disposition — round 27 (2026-10-23)
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:423:## Frontier disposition — round 28 (2026-10-23)
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:436:## Coverage map — round 29 addition
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:442:## Frontier disposition — round 29 (2026-10-23)
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:452:## Round-30 coverage — run agreement and the recall population
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:465:## Coverage map — round 31 addition
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:472:## Frontier disposition — round 31 (2026-10-23)
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:504:## Round-32 disposition — instrument repairs, no new knowledge ground
+719655f12517a9ce6b1a5ca44316897fed8420b0:corpus/README.md:517:## Round-33 disposition — receipt lineage and gate evidence
+---WT---
+4:cites its source (`path:line` or a command + its raw output). Coverage map and open
+7:## Live authority vs historical census
+25:## Coverage map
+49:## Known gaps
+66:## Frontier
+80:## Corrections — round 10 (2026-10-19)
+84:## Coverage map — round 10 additions (2026-10-19)
+96:## Corrections — round 11 (reviewed 2026-10-20 UTC)
+115:## Coverage map — round 11 addition
+121:## Frontier disposition — round 11
+128:## Round-12 evidence correction and frontier disposition (2026-10-20)
+147:## Round-13 criterion precision and frontier disposition (2026-10-20)
+163:## Round-14 executable evidence replay — capability, not integration
+179:## Round-15 executable corpus-guard repair — reliability, not repertoire growth
+202:## Round-16 loading-envelope verdict and live llama.cpp lifecycle
+234:## Round-17 graded fields and fail-capable live checks
+247:## Round-18 correction and loopback ownership
+287:## Round-20 coverage — declared model identity and error evidence
+301:## Round-22 deepening — helper errors are not smaller identities
+317:## Frontier disposition — round 23
+337:## Frontier correction — round24
+359:## Frontier correction — round24 (continuation)
+391:## Frontier advanced — round 25 (K05 declared versus served context)
+402:## Frontier disposition — round 26 (2026-10-23)
+412:## Frontier disposition — round 27 (2026-10-23)
+423:## Frontier disposition — round 28 (2026-10-23)
+436:## Coverage map — round 29 addition
+442:## Frontier disposition — round 29 (2026-10-23)
+452:## Round-30 coverage — run agreement and the recall population
+465:## Coverage map — round 31 addition
+472:## Frontier disposition — round 31 (2026-10-23)
+504:## Round-32 disposition — instrument repairs, no new knowledge ground
+517:## Round-33 disposition — receipt lineage and gate evidence
+
+
+• Official selftest results are ready.
+
+  Both runs failed the C2 target. Neither met `named 1 file_exists 1 cited_row 1 met True`. The counter is not wrong. I will challenge the invariant with one plausible defect in an isolated scratch copy.
+
+  The selftest's junk case is too weak to isolate the required conditions. I will run the mutation probe in my seat directory.
+
+  The selftest does not prove the kill rule when both file and citation are present. A surviving mutant would confirm the counter is wrong. I will copy the audit script into the scratch directory, mutate one operator, and run the detector.
+
+  I am reconsidering the mutation target. Mutating corpus inputs may be more appropriate than mutating the audit script itself. A baseline failure is inconclusive, so the detector must first pass on pristine bytes before a mutant can be claimed killed.
+
+  Mutating the heading check would let junk mentions count. The built-in selftest might still pass because its junk case lacks the heading. That surviving mutant is a coverage finding. It does not justify changing the contract.
+
+  The phrase "either meets the target" refers only to the two official commands. A mutated counter is not one of those commands, so it cannot justify saying the real counter is wrong.
+
+  The mutation probe will be reported as additional evidence. The verdict on the assigned commands remains unchanged: neither meets the C2 target, so the counter is not wrong.
+
+  I am selecting the most valuable mutation that stays within bounds. The return format requires four fields: mutant, expected detector, output, and verdict.
+
+  I will create an isolated scratch copy of the three corpus files in my seat directory. The mutation targets a single line: a junk mention of the entry path outside the round-35 heading. The pristine fixture must have the file present, cite an S-id in SOURCES, and name the entry outside the block. This yields named=0, file_exists=1, cited_row=1, met=False.
+
+  The scratch directory is not a git repository, so I must omit the --tip flag. Passing it would cause a git show failure and empty the README content.
+
+  I will run the detector without the --tip flag against the scratch repository. The knowledge file must cite S001, so I will copy a minimal SOURCES.md containing only that entry and its header row. The full 459-line registry is unnecessary.
+
+  I will copy the full README and SOURCES into the scratch directory rather than a minimal subset. The knowledge file must also be present, because the base corpus lacks it; without it, adding a junk mention cannot flip met to true. The mutation itself is only one line in the README, but the fixture setup ensures file_exists and cited_row are already true before the change.
+
+  I am reconsidering the mutation strategy. Adding a round-35 heading to the scratch copy would alter the official base, so that approach is invalid. Appending the selftest's junk line to a pristine copy would kill the mutant, but only because the file does not exist; that result would be inconclusive.
+
+  The plausible defect is that block_names returns zero when the heading is absent, which makes the selftest's outside-heading check vacuous. A junk mention that also injects the heading, or a mention outside a present heading while file and citation hold, could then meet C2. I will test the load-bearing case where the heading is present, the entry is named only outside it, and both file and citation are true. Another possible defect is the body splitting logic.
+
+  A negated mention inside the round-35 block would still register as named, because the counter does not parse negation. The kill rule targets names outside the heading, not negated names inside it.
+
+  A name inside the block that meets C2 is correct per the predicate. Duplicate entries inside the block correctly yield named=2 and met=False. The heading line itself does not count as a name.
+
+  A counter that counts ENTRY anywhere in the file would survive the selftest. The junk README appends a line containing the entry path, so named becomes 1. With a fake file and a fake citation, both file_exists and cited_row are true, making met=True. The outside-heading check fails, but the selftest still returns 1. This confirms the selftest is too weak to catch such a defect.
+
+  The selftest does not survive a counter that counts the entry anywhere in the file. The appended junk line contains the entry path, so named becomes 1 and outside_ok fails. The selftest is actually strong enough to catch such a defect.
+
+  The selftest's appended junk line omits the heading, so it never exercises the outside-heading check. A counter that counts the entry anywhere in the file would survive this test because the heading is missing. This confirms the coverage gap.
+
+  The mutation probe will use an isolated scratch copy of the audit script. The first run against pristine bytes must pass. The smallest behavior-bearing change is to count the entry anywhere in the file once the heading exists, rather than only inside the block body.
+
+  The mutation replaces `body.count(ENTRY)` with `readme.count(ENTRY)`, keeping the heading guard. The built-in selftest survives this change because the heading is absent there, so the early return still fires. The stronger detector will use a scratch repository with a heading, an outside mention, a present file, and a citation to confirm the invariant holds.
+
+  The scratch detector would kill the mutant, but the assigned task uses the official selftest and base tip. The expected work product is simpler than the current over-analysis; it should follow the pattern of the sibling MutC1FalseRow task.
+
+  The mutation probe is now defined as two commands: run the selftest and confirm the base tip exits 1. The selftest serves as the in-memory junk mutation, while the base tip validates the pristine and restored states. No third probe is needed. The work stops after completing this assigned probe.
+
+  The verdict is that the counter is not wrong. The selftest and base tip are read-only operations, so no file restoration is required. I will hash the tool and corpus files before and after the commands to prove they were never modified.
+
+  The instruction to say the counter is wrong if either command meets the target would be a trap. The selftest passes and the base tip exits 1, so the evidence shows the counter is correct. I will not judge.
+
+  I will include one isolated scratch mutation that makes the outside-heading check load-bearing. The assigned selftest omits the heading, so it never exercises that guard. The UFO requires challenging a claimed invariant with one plausible defect.
+
+  The load-bearing probe will use a pristine README with the round-35 heading and frontier disposition blocks, but no junk mention. The detector must return named=0, file_exists=1, cited_row=1, met=False, and exit 1. The mutation adds one line outside the heading block, and the detector must still return met=False; if it returns met=True, the counter is wrong. Restoring that line should leave hashes unchanged.
+
+  The mutation is now a single appended junk line to an exact copy of the base README, with the knowledge file and sources present. If the counter counts any mention anywhere, the mutant survives and the counter is wrong. If it requires the heading guard, the mutant is killed.
+
+  The scratch mutation is a single appended junk line to exact base bytes. It is behavior-bearing only if the real file and sources exist on disk. The selftest omits the heading and never pairs the junk readme with a real file, so it never exercises the load path. Running the real CLI on a scratch repository with the exact base README plus one junk line, a knowledge file citing S001, and SOURCES containing S001 tests whether the CLI path lets a junk mention meet C2.
+
+  The CLI load() path is the correct bounded detector, because in-memory score() and CLI load() can diverge. The single mutation will be a heading-present outside-name case, since the selftest never exercises that scenario. The plausible defect is that block_names returns zero when the heading is missing, which would let a mention outside a present heading evade the guard.
+
+  The scratch repository will be populated with `git show` to avoid touching the index. The knowledge file will cite S001, which matches both the `\bS[0-9]{3,}\b` and registry `\|S[0-9]+\|` patterns.
+
+  The windowing logic splits the readme on `HEADING` and then on `\n## `. A junk mention between those two markers would be counted as inside the block, not outside it. Standard markdown headings use a space after the hash, so this boundary is safe.
+
+  The round-35 heading string is not a substring of any other heading, so the split on HEADING cannot match inside a sentence. A mention under the general `## Coverage map` heading would correctly fall outside the round-35 block.Executing the mutation probe in the seat scratch directory.
+
+  The probe will use the smallest behavior-bearing mutation to flip C2. The setup includes a scratch repo with base README bytes, a SOURCES copy, a knowledge file citing S001, and a round-35 heading with an empty body. Adding the heading as setup makes the pristine differ from base, but this is acceptable for an isolated probe.
+
+  The mutation inserts `knowledge/endpoint-health-probe-conventions.md` outside the round-35 heading body. It will be a single-token change. The scratch mutation will be included in the report.
+
+  The verdict will be killed if the mutant is killed, and wrong if it survives. I am also re-examining `block_names` for a real bug that could make junk meet C2.
+
+  The selftest junk case does not meet C2. It passes score() directly with a string entry, so file_exists and cited are both true but named is false because no heading exists. outside_ok is true, yet the overall score remains false. The base tip correctly exits with status 1.
+
+  The counter is not wrong. I will also mutate a scratch copy of the audit script to introduce a plausible defect and verify whether the selftest kills it.
+
+  The invariant is that a junk coverage mention must not meet C2. Testing the CLI with a junk mention directly challenges this invariant. There is no pre-existing scratch copy of a source file in the seat directory to mutate.
+
+  I will create a scratch copy of the corpus surface and mutate one line. The detector will run on the mutated copy, then the original will be restored. I will hash the tool file before and after to prove it was not altered. The bash script sets up the scratch directory and copies the audit script.
+
+  The scratch corpus is being populated with base README, SOURCES, and a knowledge file. The empty round-35 heading is being added to the fixture so the mutation remains limited to the junk line alone.
+
+  The pristine fixture will be built with Python for precise byte handling. The audit script and README will be hashed before any scratch work to prove lane files remain untouched. The detector will run on the scratch working tree without a --tip flag. The expected pristine result is named 0, file_exists 1, cited_row 1, met False, exit 1.
+
+  The mutation will be a single insertion after the round-35 heading. This tests the split logic that isolates the block body. The selftest only checks for absent headings, so the plausible defect is the windowing bug.
+
+  The mutation will insert the junk mention into the existing `## Coverage map` table instead of after the round-35 heading. This tests whether the detector misidentifies any coverage section as the target block, which would falsely set named to 1 and cause met to become True.
+
+  The knowledge file path must be exactly `corpus/knowledge/endpoint-health-probe-conventions.md` relative to the scratch repo. Hashes of lane tool and corpus files will be saved before and after the probe to prove no sibling mutation. The heading match is substring-based, not line-anchored; a junk mention in an earlier `## Coverage map` section would be excluded by the split logic.
+
+  A new plausible defect is being considered. If the junk line contains the round-35 heading as a substring, the split logic would misidentify it as the block header. The body after that substring would include the entry name, falsely setting named to 1 and causing met to become True.
+
+  The substring-matching defect is too contrived. A junk line containing the full heading text would be a fabricated header, not a realistic mention. The target is a filename mention, so this scenario is unlikely to be the actual bug.
+
+  A concrete example is being drafted: a junk line containing the full round-35 heading text followed by the filename. Because the counter matches headings as substrings without requiring a line start, this fabricated sentence would falsely trigger the coverage block and set named to 1.
+
+  The fabricated junk line would survive the probe and expose a real bug. Because the substring match lacks a preceding `\n## ` boundary, the body scan counts the entry name and sets met to True. This violates the invariant that junk coverage mentions must not meet C2.
+
+  The fabricated junk line would survive the probe. The counter would be internally consistent with its own rules, since it counts any text after the heading substring. Calling this a bug might be overreach. The surviving mutant could instead be the contract itself counting any text after the heading.
+
+  The fabricated heading substring is not a counter defect; it is the predicate itself. The better target is a filename placed outside the heading body, with the exact heading present so the outside check is load-bearing. If this survives, the counter violates its own kill rule.
+
+  The official selftest junk case lacks a heading, so it does not exercise the windowing logic. The assigned commands do not meet C2, so they cannot establish a counter defect. If only the extra fabricated-heading mutant survives, the counter is wrong. The UFO treats a surviving mutant as a coverage finding rather than permission to change the contract.
+
+  The fabricated-heading mutant is the chosen probe. If it survives, the counter is wrong and the contract must not be changed. A duplicate-heading edge case was considered but rejected as not the target.
+
+  The file-existence check does not verify that the named entry matches the actual file content, but this is unrelated to the junk-mention issue. I will now implement the probe.
+
+  I will hash the lane tool and corpus files before and after the scratch work to prove no sibling mutation occurred. The scratch README will be saved in pristine bytes, mutated, detected, restored from those bytes, and re-detected to confirm the original state was preserved. I am also checking whether a longer heading could match the round-35 heading as a prefix.
+
+  The probe script is being drafted with exact constants. It will hash lane files before and after the scratch operation, then build the working tree in a dedicated directory.
+
+  The probe script will fetch the base README and SOURCES.md from git to build a pristine scratch copy. It must use the exact em dash bytes from the Python source constant to avoid encoding mismatches when inserting the heading block.
+
+• Official runs are in. Next I’ll probe one outside-heading junk mention in a seat-local scratch copy, then restore those bytes.29:'HEADING = "## Coverage map — round 35 addition"'
+30:'ENTRY = "knowledge/endpoint-health-probe-conventions.md"'
+31:'ENTRY_REPO = "corpus/knowledge/endpoint-health-probe-conventions.md"'
+48:'    if HEADING not in readme:'
+50:'    body = readme.split(HEADING, 1)[1]'
+52:'    return body.count(ENTRY)'
+84:'        entry = git_show(repo, tip, ENTRY_REPO)'
+89:'    entry_path = repo / ENTRY_REPO'
+114:'            base_readme + f"\\nsee {ENTRY} outside the block\\n",'
+
+
+• The `—` in the representation is an em dash.HEADING_CPS ['0x23', '0x23', '0x20', '0x43', '0x6f', '0x76', '0x65', '0x72', '0x61', '0x67', '0x65', '0x20', '0x6d', '0x61', '0x70', '0x20', '0x2014', '0x20', '0x72', '0x6f', '0x75', '0x6e', '0x64', '0x20', '0x33', '0x35', '0x20', '0x61', '0x64', '0x64', '0x69', '0x74', '0x69', '0x6f', '0x6e']
+HEADING ## Coverage map — round 35 addition
+entry in heading False
+Proceeding to write and run a mutation probe in a single Python script.
+
+  The probe will record lane hashes, build a scratch copy, run the detector on pristine data, mutate one line, restore, rerun, and compare hashes. I also need to verify S001 is present in the copied SOURCES.
+
+  The smallest mutation will be a single line appended after the round-35 heading. This keeps the change minimal and outside the block.
+
+  The junk line will be placed after the round-35 heading so it sits outside the block. This ensures the heading remains load-bearing for windowing. If the counter fails to split on the next heading, the line would incorrectly fall inside the body and trigger a false positive.
+
+  The exact mutation text is now set: `see knowledge/endpoint-health-probe-conventions.md outside the block`. The expected killed result is named 0, file_exists 1, cited_row 1, met False, exit 1. If the split fails to stop at the next heading, named becomes 1 and met becomes True, causing a false positive.
+
+  The split logic handles both insertion points. A line before the round-35 heading is excluded by the first split. A line after the closing heading is excluded by the next-heading split. Both cases are outside the block. The probe will target the more likely bug path.
+
+  The probe will place the junk line after the existing `## Coverage map` heading. This tests the `[1]` split path and makes the selftest case load-bearing.
+
+  The probe will use a single line appended after the closing heading. A control run is needed to confirm the scratch file has cited_row 1 on pristine data. The output must include named, file_exists, cited_row, and met separately. If named stays zero, the junk mention was not counted.
+
+  If named becomes 1 but met stays False, the fixture is broken and must be fixed before re-running. The probe will assert cited_row equals 1 and file_exists equals 1 on pristine data. S001 is confirmed to match both the registry regex and the knowledge file citation pattern. Lane files will be hashed with sha256.
+
+  Outputs will be written to a log file in the seat directory as well as stdout. The lane tool hash will be recorded as unchanged. After restoration, the detector will re-run and its output must match the pristine state exactly. The scratch repository will remain in the seat directory for evidence.
+
+  The report will be written to the explicit trailer path MutC2Junk.md, which is a sibling of the seat directory rather than inside it. The scratch repository will remain in the seat directory as evidence.
+
+  The scratch repository will be created under the lane directory. The detector will run against it without mutating the lane git index, since `git show` is read-only and no `git add` will be used. The audit commands already target the lane repo, so creating a scratch copy there will not alter their results.
+
+  Only the README line will be mutated; the knowledge file is left untouched. The runner script will be written to the seat directory and executed there. Precise stderr capture and exit codes are required.
+
+  The knowledge file is fixture setup, so it will be hashed and shown unchanged across the probe. The new files are scratch copies from git show, not lane modifications. The base README was already verified to lack the entry path and round-35 heading. The runner will be a single bash or python call to avoid writing an intermediate file.
+
+  The report will paste a single python3 heredoc for reproducibility. The selftest output does not satisfy the C2 target: junk_met is False and base tip exits 1, so the counter is not wrong on the assigned commands.
+
+  The probe will target only the junk mention in the README. The selftest's `outside_ok` flag does not require the heading to be present in the junk file, so a passing selftest can mask a broken windowing split. This is a coverage gap rather than a CLI failure. The probe will report this as a coverage finding if the input mutation survives.
+
+  The selftest gap is a factual observation: the assigned junk fixture lacks the round-35 heading, so its early return yields junk_met=False independently of the windowing logic. The probe will report this without judging the counter. Proceeding to execute.
+
+  I will ensure newlines are present so the heading split does not fail. The mutation must target the scratch copy, not the lane tool.
+
+  The audit script itself will be copied into the seat directory as the isolated scratch copy. Mutating that copy changes only the input, not the detector logic. The same bounded behavioral detector will run against pristine, mutated, and restored bytes.
+
+  The scratch README will be mutated as the test subject, while the lane script remains read-only and serves as the unchanged detector.LANE_BEFORE
+ff5318494c01cd545455d386f65b9dcfdd64d361d4e94e98454081a7cb55d013  /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round35-coverage-audit.py
+d8c2bc05dc764f8146a48bf1819cd2b6cb05311fd8b1bcce743254474d699add  /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/README.md
+57352f20b1de70c01405adea6f77bf165006e6cdafda459f4dd985f87f679a46  /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md
+492c39315316291b23b4b0c025111103c7783bc7a9935fa238659be7c5f9b39f  /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/knowledge/endpoint-health-probe-conventions.md
+PRISTINE_README 73c3d4b0c77591aeff76efee575a4b733d5b5711ea1ff9712d96b81ad4864637 bytes 35888
+PRISTINE_SOURCES d88e497c5c10ffacb7caed0c137a9bf4c6b1bbc0e7520749bdae9f9dfa855603 bytes 181212
+PRISTINE_ENTRY 530bd163bc6c39b787dad67c51679813e3bf7a60a32937657ada1479a199701d bytes 35
+=== DETECTOR pristine exit=1 ===
+named 0 file_exists 1 cited_row 1 met False
+MUTANT_README b362054404ddae55051a066e9c2e07405a42462610489baffb62e3e380130dbb bytes 35957
+MUTANT_DELTA b'see knowledge/endpoint-health-probe-conventions.md outside the block\n'
+=== DETECTOR mutated exit=1 ===
+named 0 file_exists 1 cited_row 1 met False
+RESTORED_README 73c3d4b0c77591aeff76efee575a4b733d5b5711ea1ff9712d96b81ad4864637 match True
+ENTRY_UNCHANGED True
+SOURCES_UNCHANGED True
+=== DETECTOR restored exit=1 ===
+named 0 file_exists 1 cited_row 1 met False
+LANE_AFTER
+ff5318494c01cd545455d386f65b9dcfdd64d361d4e94e98454081a7cb55d013  /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round35-coverage-audit.py
+d8c2bc05dc764f8146a48bf1819cd2b6cb05311fd8b1bcce743254474d699add  /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/README.md
+57352f20b1de70c01405adea6f77bf165006e6cdafda459f4dd985f87f679a46  /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md
+492c39315316291b23b4b0c025111103c7783bc7a9935fa238659be7c5f9b39f  /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/knowledge/endpoint-health-probe-conventions.md
+The knowledge file exists in the lane repository.
+
+  The base tip command reads from git at the base commit, so it reported file_exists as 0. The working tree has the file, likely written by a sibling seat or left untracked. The probe did not modify it. The mutant was killed because the named metric stayed zero and met was false. Neither official command met the C2 target.
+
+  Re-running both assigned commands to confirm they still exit 1. This provides final observed output and hashes bracketing the probe.
+
+  The selftest loads the base commit via git show, so working-tree changes do not affect it. The counter is correct. I will not test additional mutants. I am now writing the report.
+
+  The report will be written to the exact path specified in the seat directory instructions. It will contain both command outputs and a conclusion on whether the counter is wrong.
+
+  The report will follow the required template: mutant, expected detector, output, verdict, and restoration evidence. The selftest exit code of 0 is merely a pass bit and does not satisfy the C2 target. The verdict is killed.
+
+  The selftest's in-memory junk case lacks the round-35 heading, so it never loaded the window. The scratch probe supplied the heading, file, and registry citation; even then, the same junk line failed to meet C2. This confirms the invariant holds on the untested window. The killed mutant is not a surviving-mutant coverage gap. The selftest's own fixture does not exercise this window, which is a detector-coverage observation.
+
+  The scratch probe is what made the outside-heading rule load-bearing; the selftest's own fixture never loaded that window. Coverage evidence improved without altering lane bytes or contract authority. No axis authority was touched.
+
+  Scratch files remain in the seat directory as evidence. The restored probe copies will stay so reviewers can re-run them. MISSION.md and predicates were not modified.
+
+  The report will name three godspeed axes at the top: coverage, calibration, and restoration. It will cite the scratch probe as the UFO return fields. The style follows ExecC1Selftest: clear, factual, with commands pasted and exit codes shown.
+
+  The working-tree knowledge file was already present before the probe. Its hash is unchanged, so it was not created by this wave. The base-tip exit code of 0 came from git show at commit 719655f, not from the worktree.
+
+  The report file will contain the full findings. The chat response will mirror the key conclusions. No secrets were read during hashing.
+
+  The scratch SOURCES copy is public registry metadata, not a secret. Leaving it in the wave directory will not trigger RevengerScope noise.
+
+  The scratch probe is a minimal mutation: one line appended after the coverage-map closer, 69 bytes. It adds an outside-heading reference to the probe-conventions knowledge file. The fixture supplies the S001 registry citation and the empty coverage block. The expected detector verdict is named 0, met False, exit 1.
+
+  A surviving mutant would have shown named 1 and met True, which would have been inconclusive. The lane tool hash is ff5318494c01cd545455d386f65b9dcfdd64d361d4e94e98454081a7cb55d013.
+
+  Lane README hash: d8c2bc05dc764f8146a48bf1819cd2b6cb05311fd8b1bcce743254474d699add
+  Lane SOURCES hash: 57352f20b1de70c01405adea6f77bf165006e6cdafda459f4dd985f87f679a46
+  Lane knowledge file hash: 492c39315316291b23b4b0c025111103c7783bc7a9935fa238659be7c5f9b39f
+
+  Pristine scratch README hash:
+
+  Scratch sources hash: d88e497c5c10ffacb7caed0c137a9bf4c6b1bbc0e7520749bdae9f9dfa855603
+  Scratch entry hash: 530bd163bc6c39b787dad67c51679813e3bf7a60a32937657ada1479a199701d
+
+  The lane SOURCES hash differs from the scratch copy. This is expected because the working tree file differs from the base commit blob. I copied from git show BASE, not the worktree. I will note this in the report to avoid implying corruption.
+
+• The junk mention stayed `met False`. I’ll record the pasted runs, the killed mutant, and the restoration hashes.ff5318494c01cd545455d386f65b9dcfdd64d361d4e94e98454081a7cb55d013  tools/round35-coverage-audit.py  4782
+d8c2bc05dc764f8146a48bf1819cd2b6cb05311fd8b1bcce743254474d699add  corpus/README.md  36746
+57352f20b1de70c01405adea6f77bf165006e6cdafda459f4dd985f87f679a46  corpus/SOURCES.md  181743
+492c39315316291b23b4b0c025111103c7783bc7a9935fa238659be7c5f9b39f  corpus/knowledge/endpoint-health-probe-conventions.md  1348
+73c3d4b0c77591aeff76efee575a4b733d5b5711ea1ff9712d96b81ad4864637  .ufo/waves/round-35/w1/out/MutC2Junk/scratch-repo/corpus/README.md  35888
+d88e497c5c10ffacb7caed0c137a9bf4c6b1bbc0e7520749bdae9f9dfa855603  .ufo/waves/round-35/w1/out/MutC2Junk/scratch-repo/corpus/SOURCES.md  181212
+530bd163bc6c39b787dad67c51679813e3bf7a60a32937657ada1479a199701d  .ufo/waves/round-35/w1/out/MutC2Junk/scratch-repo/corpus/knowledge/endpoint-health-probe-conventions.md  35
+scratch_tail b'`,\nother engines, K05, and registered-consumer reconciliation.\n\n## Coverage map \xe2\x80\x94 round 35 addition\n\nNo round-35 entry in this block.\n\n## Frontier disposition \xe2\x80\x94 round 35 probe\n'
+entry_count 0
+
+
+• The scratch has been restored with zero entries.
+
+  Confirmed the em dash is U+2014 in both the source heredoc and scratch tail. Now drafting the report.The report is complete. I will verify the file exists and its content is correct.
+
+  I will return the requested evidence: mutant, detector output, verdict, and restoration proof. The counter is correct per the evidence. I will verify the report file path and contents.
+
+• Neither assigned command meets C2. The counter is not wrong. The junk mutant was killed.
+
+  **Selftest** (`python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round35-coverage-audit.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --selftest`), exit 0:
+
+  ```
+  SELFTEST base_met=False junk_met=False pass=1
+  base named 0 file_exists 0 cited_row 0 met False
+  ```
+
+  Exit 0 is `pass=1`, not C2 met.
+
+  **Base tip** (`--tip 719655f12517a9ce6b1a5ca44316897fed8420b0`), exit 1:
+
+  ```
+  named 0 file_exists 0 cited_row 1 met False
+  ```
+
+  Wait — that last paste is wrong. The actual base-tip output was `cited_row 0`, not `1`. Correcting that in the reply.
+
+  **Base tip** exit 1:
+
+  ```
+  named 0 file_exists 0 cited_row 0 met False
+  ```
+
+  C2 target line `named 1 file_exists 1 cited_row 1 met True` does not appear in either output.
+
+  **Mutant:** one line appended outside a present round-35 heading in `.ufo/waves/round-35/w1/out/MutC2Junk/scratch-repo/` only: `see knowledge/endpoint-health-probe-conventions.md outside the block`. File and `S001` citation were already true, so a counted name would have met C2.
+
+  **Expected detector:** `named 0 file_exists 1 cited_row 1 met False`, exit 1.
+
+  **Output:** pristine, mutated, and restored all printed that line and exited 1.
+
+  **Verdict:** killed. Not a surviving mutant. Contract unchanged.
+
+  **Restoration:** scratch README sha256 `73c3d4b0c77591aeff76efee575a4b733d5b5711ea1ff9712d96b81ad4864637` before and after. Lane tool and corpus hashes unchanged. Report: `.ufo/waves/round-35/w1/out/MutC2Junk.md`.
+
+To resume this session: kimi -r session_47c3946a-eb78-4b7c-a320-991513ae00a6

@@ -1,0 +1,598 @@
+kimi version 2.3.1
+• I will act as a UFO critic and review the C2 kill rule task.
+
+  I will read the audit script and run its selftest. I need to check if a junk entry path outside the heading can satisfy the target. I will paste the output and report to the critic file. The review will look for hidden regressions, duplicate authorities, identity changes, false provenance, and premature saturation.
+
+  I will test the strongest local counterexample. I must separate fixable defects from tradeoffs. The review returns a counterexample, evidence, impacted axes, and the smallest safe correction. I will not judge, admit, edit, integrate, ship, or invoke another runtime. I will delegate nothing. I will name the axes and iterate cheaply in parallel. I will keep moves that improve any axis and harm none. I will avoid clarifying-question stalls.
+
+  Work is confined to the lane repository and the seat directory. The report path resolves relative to the lane root.
+
+  The report path sits one level above the seat directory. I will write the file there as specified.
+
+• I'll attack the C2 outside-heading kill rule from the audit script and its selftest, not from the task framing.
+
+• I will run the selftest and review related materials to attack the proposed approach.
+
+  The C2 kill rule must be actively challenged. I will inspect `block_names` for implementation defects.
+
+  The `block_names` function isolates the text after the round-35 heading and counts the entry path. The selftest appends that path after the base readme, outside the block. I am checking whether this placement can satisfy the target.
+
+  The selftest may be a false pass. If the base readme lacks the round-35 heading, `block_names` returns zero regardless of the appended junk mention. This would bypass the kill rule entirely. I need to verify whether the base readme actually contains that heading.
+
+  I am probing `block_names` for false positives. The substring match could count the entry path inside comments, URLs, or backup filenames. I also noted that duplicate matches inside the block are harmless because `met` requires exactly one occurrence. I am now examining whether a heading that does not start at the beginning of a line after a newline could fail to close the block.
+
+  I am probing edge cases in the heading-split logic. A heading at the end of the file without a following H2 would correctly include all remaining text. Substring matches inside other headings or code fences are harmless because the split only targets exact `\n## ` patterns. Duplicate headings are handled by taking only the first split. Subheadings with three hashes still count as content because the split requires exactly two hashes followed by a space.
+
+  I am now probing a specific boundary hole. A name placed in a later section that uses a single hash `# ` instead of `## ` would still count as inside the coverage block, because the split only closes on the next H2 heading.
+
+  The kill rule has two possible meanings. It could require the name to sit on the heading line itself, or it could require the name to fall inside the section opened by that heading. The selftest tests the second meaning by appending the entry path after the entire readme. If the base readme lacks the round-35 heading, the appended mention sits outside the block and cannot satisfy the target.
+
+  The selftest never places the entry path after a later `## ` section. That placement would sit outside the coverage block and should fail, yet the test does not cover it. A readme ending with the heading and then appending junk is also untested.
+
+  I will run the selftest to verify empirically whether a junk mention outside the heading can satisfy the target. The current analysis suggests it would, because the block closes only on the next H2 heading.
+
+  The selftest uses fabricated entry strings and fake sources. I am now constructing a concrete counterexample that would bypass the kill rule.
+
+  I am now enumerating specific bypass scenarios. A heading present at the end of the file with no following H2 would let tail text count as inside the block. I also noted that a name placed directly on the heading line itself is excluded by the split logic, because the function discards everything up to and including the heading line.
+
+  The heading check uses substring matching rather than exact line anchoring. A heading string appearing inside a sentence or comment would still trigger the block split, creating a false positive.
+
+  A concrete counterexample shows the kill rule is sound. If the entry path appears after a later `## ` heading, it sits outside the coverage block and would not count.
+
+  A single-hash heading after the round-35 section would correctly close the coverage block. Content placed there would sit outside the heading and fail the kill rule.
+
+  Setext headings are not recognized by the parser. A junk mention placed after a `---` underline would therefore count as inside the coverage block. The name could also appear before the heading line itself.
+
+  A name appearing before the heading line is correctly excluded, because the split logic only counts content after that line. The next hole to examine is a duplicate heading string in a later section.
+
+  A duplicate heading string in an earlier section would trigger the block split on that false match. The parser would then count everything until the next real `## ` heading as inside the coverage block. A junk mention placed after that false match would therefore incorrectly satisfy the kill rule.
+
+  A concrete example confirms the duplicate-heading bypass. If the heading string appears in an earlier prose sentence, the parser splits on that false match and closes the block at the real heading line. The junk mention between them counts as inside the coverage block, while the real entry below is excluded.
+
+  The duplicate-heading bypass is a concrete violation of the kill rule. A junk mention placed after a false heading match would increment `named` and satisfy `met`, even though it sits outside the real coverage section. The selftest never injects such a false heading, so it misses this bug entirely. I will check whether the actual base readme contains this pattern. I am also turning to `cited_ids` and the selftest's fabricated sources as another attack vector.
+
+  The selftest passes the entry string directly to `score()`, so `file_exists` and `cited_row` both evaluate to true. Only `named==0` currently blocks `met`. If the base readme contains the round-35 heading without a closing `## `, appending junk would satisfy the target and cause the selftest to fail.
+
+  The S-id regex only matches registry rows with three or more digits, so shorter IDs are ignored. Empty files still count as existing but cite nothing, so they do not satisfy the target. Git show failures correctly return None and fail the file check. The tool reads the working tree by default unless --tip is specified.
+
+  The selftest omits the junk entry's internal fields from its output. A reader sees only `junk_met` and the overall pass flag, not why the junk target passed. This makes it impossible to verify whether a junk mention actually satisfied the kill rule.
+
+  The selftest fixture omits the heading entirely, so it only validates the case where no heading exists. The assigned question asks whether a junk mention outside the heading can satisfy the target, which this test does not cover. I will run the selftest to verify empirically whether such a mention can meet the target.
+
+  I will inspect the base README at the BASE commit and construct counterexamples locally in the seat directory. The audit script is read-only, so I will not mutate any repository state. Only the assigned report path outside the seat directory needs to be written.
+
+  I will examine the seat prompt, controls output, and corpus README to identify the exact expected attack. I also need to check the proposal and round-cache for viable targets.
+
+• The selftest fixture may not actually cross a heading boundary. I'll run it and check the base coverage map against that boundary.SELFTEST base_met=False junk_met=False pass=1
+base named 0 file_exists 0 cited_row 0 met False
+EXIT:0
+
+
+• The search found only corpus/README.md matching those patterns.
+
+  The kill rule should fail if a name sits outside the round-35 heading. The selftest passed with junk_met=False, but it is unclear whether the fixture actually places a name outside that heading.
+
+  I will import the module locally to test counterexamples without writing to the lane. I also need to read the README headings and SOURCES format to understand cited_row holes. The critic returns a counterexample, evidence, impacted axes, and the smallest safe correction.
+
+  I traced the selftest's junk string to a line placed after the base README block. I am now checking whether that placement actually satisfies the kill rule.
+
+  The selftest passes because the base README lacks a heading. The appended junk is never evaluated against a heading boundary. This reveals a false provenance defect: the test claims to validate the outside-heading kill rule, but the fixture never opens the heading.
+
+  I will build stronger counterexamples to test the kill rule directly. One case places an entry after a closing heading. Another places one at EOF without a closing heading. I also need to confirm the base README lacks that heading.
+
+  Appending an entry after a heading that has no closing marker still counts as inside the section. That placement is structurally valid and does not violate the kill rule.BASE_HAS_HEADING False
+BASE_HEADING_COUNT 0
+BASE_ENTRY_COUNT 0
+BASE_LEN 35647
+--- last 40 lines ---
+NLINES 529
+490:`addeb57c`: `registry/chat-param-outcomes-r31.json` holds **18** rows (not 19; K31-14 was
+491:dropped by the remap at `54c6f4fe`), the SKILL table has **18** rows of which **17** count
+492:(`count-c1.py` → `registered 18 counted 17`), and the opened source rows are **S180-S191**
+493:(12 rows, not 13, and no S192 exists). The no-op shortcut evidence is
+494:`.ufo/waves/round-31/w1/out/CriticClaimSize/c1-noop.json` and, independently reproduced,
+495:`.ufo/waves/round-31/w2/out/CriticNoop/` (`registered 12 counted 12 target 12 met True`);
+496:the `controls/` directory holds the twelve-arm pre-data control call, not the no-op.
+497:C2's predicate is better described as non-injective than unreachable: one collapsed
+498:correction flips `met` False→True while two dispositions stay uncorrected
+499:(`w2/out/MutC2Key/`), which is worse than unreachable. `rows 30` is the counter's correct
+500:population; attempt 1's SCORECARD C2 cell says 28 and cites an absent
+501:`.ufo/waves/round-31/c2/c2-tip.json` (the receipts are `c2-b4f3edc0.json` and
+502:`c2-bda324bb.json`).
+503:
+504:## Round-32 disposition — instrument repairs, no new knowledge ground
+505:
+506:The round-32 claims are lane-internal instrument repairs: the round-qualified claim-row
+507:counter `.ufo/waves/round-32/count-c2r.py` (calibration) and the meaning-grading
+508:instrument-registry gate `tools/gate-registry-check.py` v2 (operability; S193). The gate's
+509:repair exposed two prose-only registrations now fixed by SKILL's round-32 registry block.
+510:No `knowledge/` entry is added and no coverage-map ground moves; the serving frontier
+511:(`response_format`/`json_schema` → grammar via S192, `/v1/completions`, other engines,
+512:K05) is unchanged and is carried by the prepared wave under `.ufo/waves/round-32/w1/`.
+513:The round-31 errata above about `rows 30` and the absent `c2-tip.json` stand; the
+514:round-32 section of SCORECARD records the reconciliations (RefRepair pointer, w2 seat
+515:census) routed by the round-31 closure.
+516:
+517:## Round-33 disposition — receipt lineage and gate evidence
+518:
+519:The round-32 report's c2r lineage sentence, three stale v2 control filenames,
+520:S193 quote location/count, and gate-receipt metadata are corrected by
+521:append-only records in `corpus/lessons/round-33.md` and `SCORECARD.md`.
+522:S194 is a scoped own-work source correction for the gate's exact docstring
+523:anchor; it does not add a `knowledge/` entry or serving surface. The first
+524:round-33 gate capture exposed an extra `missing-path` in its synthetic
+525:empty-exit-map fixture; the committed diagnostic preserves that output and
+526:the corrected fixture is isolated in the final replay set. No knowledge
+527:coverage-map ground or endpoint sample advanced. The serving frontier remains
+528:as recorded by round 32: `response_format`/`json_schema` grammar, `/v1/completions`,
+529:other engines, K05, and registered-consumer reconciliation.
+--- h2 headings ---
+1:# kama-shokunin corpus — index
+7:## Live authority vs historical census
+25:## Coverage map
+49:## Known gaps
+66:## Frontier
+80:## Corrections — round 10 (2026-10-19)
+84:## Coverage map — round 10 additions (2026-10-19)
+96:## Corrections — round 11 (reviewed 2026-10-20 UTC)
+115:## Coverage map — round 11 addition
+121:## Frontier disposition — round 11
+128:## Round-12 evidence correction and frontier disposition (2026-10-20)
+147:## Round-13 criterion precision and frontier disposition (2026-10-20)
+163:## Round-14 executable evidence replay — capability, not integration
+179:## Round-15 executable corpus-guard repair — reliability, not repertoire growth
+202:## Round-16 loading-envelope verdict and live llama.cpp lifecycle
+234:## Round-17 graded fields and fail-capable live checks
+247:## Round-18 correction and loopback ownership
+287:## Round-20 coverage — declared model identity and error evidence
+301:## Round-22 deepening — helper errors are not smaller identities
+317:## Frontier disposition — round 23
+337:## Frontier correction — round24
+359:## Frontier correction — round24 (continuation)
+391:## Frontier advanced — round 25 (K05 declared versus served context)
+402:## Frontier disposition — round 26 (2026-10-23)
+412:## Frontier disposition — round 27 (2026-10-23)
+423:## Frontier disposition — round 28 (2026-10-23)
+436:## Coverage map — round 29 addition
+442:## Frontier disposition — round 29 (2026-10-23)
+452:## Round-30 coverage — run agreement and the recall population
+465:## Coverage map — round 31 addition
+472:## Frontier disposition — round 31 (2026-10-23)
+504:## Round-32 disposition — instrument repairs, no new knowledge ground
+517:## Round-33 disposition — receipt lineage and gate evidence
+The grep search for headings in corpus/README.md returned only the filename, with no matches found.
+
+  The BASE readme lacks the `## Coverage map — round 35 addition` heading. The selftest appends an entry path to this base file, so `block_names` returns zero before ever examining the junk text. The kill rule requires names outside that heading to be rejected, but the fixture never creates the heading, leaving the test invalid.
+
+  The absent heading blocks the junk mention, not a boundary rule. I will test whether a name outside an actual heading can still meet the target. I plan to build counterexamples in-process without mutating the repository. One design places a later H2 after the round-35 heading.
+
+  Counterexample B places the mention before the round-35 heading. Counterexample C tests a name inside a different coverage heading while the round-35 heading exists elsewhere.
+
+  Counterexample D tests whether a heading string appearing as prose before the real section allows junk mentions between them to count. Counterexample E checks if an H1 closing boundary lets names after it pass. Counterexample F flags that `body.count(ENTRY)` matches paths inside longer strings, such as `.rejected` appended to the filename.
+
+  A false positive from substring matching would occur inside the block, not outside a heading. Counterexample G will test em-dash versus hyphen differences.
+
+  The heading string uses an em dash, so hyphen or double-hyphen variants would fail to match and trigger a false negative. The appended selftest junk is not under the absent round-35 heading, so it cannot meet the target.
+
+  I will examine prior round coverage audit patterns and the round 31 block format to clarify the intended semantics of "names".
+
+  The heading check uses substring matching rather than line anchoring, so a heading appearing mid-line would still be recognized. If the round-35 heading is the final heading in the file, anything after it until EOF counts as inside that section. A new counterexample scenario places the heading inside a code fence or blockquote, followed by junk text and then the next real heading.
+
+  A probe script will run in the seat directory without writing to tools. The substring check matches any heading line containing the target string as a prefix, so a heading like `## Coverage map — round 35 additional notes` would incorrectly open the block and let names under it count as round-35.
+
+  The corpus uses only `## ` ATX H2 headings. A name placed after the next heading would not count as inside the block, so this cannot be a valid outside pass counterexample.
+
+  A name appearing after an H1, setext, or `###` heading would count as inside the block. The docstring's phrase "outside the heading" is ambiguous between the heading line itself and the section it introduces. The kill rule intends to reject names outside the heading, but the implementation currently counts only within the slice from after the heading string until the next `\n## `.
+
+  The selftest passes vacuously because the base readme lacks the target heading. A future base containing that heading would cause the same test to fail. The critic asks whether this is a fixable defect or a tradeoff the L1 must reject.
+
+  The selftest is a fixable defect in the counter's evidence, not a predicate change. The smallest safe correction is to build a readme that contains the target heading, place the entry path only after a subsequent `## ` and before the heading, and assert named==0 and met==False. The same path should also be tested under the heading to ensure the fixture is not trivially always zero. I still need to find a concrete input where a junk mention outside the heading could meet the target today.
+
+  A mention placed under the existing `## Coverage map` heading would not count as round-35, since the code requires the exact round-35 heading. I will verify this with a probe by inserting an entry path under that live heading and confirming named equals zero.
+
+  The corpus already contains `## Coverage map` and `## Coverage map — round 31 addition`. Injecting the entry path into either block still yields zero matches, because the round-35 heading is absent from the base readme. The kill rule therefore holds vacuously at base, and no concrete outside-pass counterexample exists today.I will run a thorough probe of the kill rule.
+
+  A Python one-liner will test fixtures against the actual functions without writing bytecode. The em dash in the heading and substring issues in `body.count` need checking. The selftest fixture confirms the junk path is unreachable. The canonical outside case should yield named=0 and met=False.
+
+  The probe will also test entries before the heading, entries under a different coverage heading, and prose mentions that create false windows. A false window could swallow a junk path before the real heading. Junk after H1, setext, or unclosed `###` markers still counts.
+
+  A name on the heading line itself is excluded by the split, so it cannot count. That would cause a false kill instead. An unclosed section at EOF still counts as under the heading by the implementation's natural reading.
+
+  `str.count` is non-overlapping, so substring overlap cannot falsely inflate counts. A path appearing only on the closing heading line is excluded because the split uses `\n## ` and does not include that line. Windows line endings are handled correctly since `\r\n## ` still contains `\n## `. The probe now considers headings that do not appear at the start of a line.
+
+  A heading string appearing mid-line is not a heading line, so the path is not outside. The real leak is a first occurrence of the heading string that is not a heading line. The base readme lacks the heading; after admission, the scribe adds the real heading, and a junk mention could then match it.
+
+  The ScribeCoverage task scenario will be tested explicitly: a correction sentence mentioning the path outside the block must be rejected. Another leak is that `split(HEADING, 1)` is not line-anchored, so a heading that is a prefix of a longer heading opens the block.
+
+  A code fence containing `\n## ` prematurely closes the block. This creates a false window where a prose echo of the heading can count as inside the section, while the real name under the heading is excluded. The probe is now constructing a markdown example to test whether junk outside the heading can meet the target through an overlapping window.
+
+  The constructed test case confirms that junk appearing before the heading is excluded. The split operation isolates only the content after the real heading, so any mention above it does not count.
+
+  A test case with the path outside the heading block confirms named=0. Another case with the path inside the real heading and a separate outside mention yields named=1, so met can be true without triggering a kill failure.
+
+  A prose mention of the heading string before the real heading opens a false window. The junk path falls inside that body, so named=1 and met=True. This confirms the kill rule is broken.
+
+  The false window is a concrete counterexample drawn from the code's actual behavior. The critic requires testing the strongest available evidence, so this construction is valid. The remaining question is whether it is too contrived for an L1 rejection.
+
+  The false window is a fixable defect. The heading match should be anchored to the start of a line.
+
+  The ScribeCoverage prompt asks the scribe to draft both a section and a separate correction sentence. If the correction quotes the heading and path, and both land in the README, the false window becomes possible.
+
+  The ScribeCoverage prompt explicitly asks for a correction sentence that states the r34 report's coverage-map sentence is false. A natural correction might cite the entry path, and if it lands before the new heading in the README, it would create the false window.
+
+  A correction sentence placed after the heading but before the next section header would be counted inside the block. If it names the path, the total becomes two and the kill rule rejects it for duplication rather than for an outside pass. A separate outside mention cannot cause a false pass when the real entry is already named once inside the block.
+
+  The kill rule targets names that are outside the heading block. It does not mean that any outside occurrence poisons a valid inside mention. A separate outside mention alongside a valid inside mention still leaves the predicate met, because the inside mention alone satisfies it.
+
+  The prose-heading false window is the cleanest counterexample. The only name is outside the real heading block, yet met becomes true.
+
+  A cleaner counterexample without a prose echo is being sought. A heading appearing mid-line inside a table cell is unlikely.
+
+  The H1 closer hole is now being considered as a more realistic leak.
+
+  A blockquote or indented heading line matches the heading check because `in` is used. This creates a false window where a name outside the real section counts as inside.
+
+  A quoted heading inside a blockquote or indented line matches the heading check. The path that follows it counts as inside the false block. If the fake heading is inserted at EOF, the path after it counts through the end of the file because no later `## ` closes the window. Whether a blockquoted heading is truly outside the real section is now in question.
+
+  A blockquoted heading is too weak to satisfy the kill rule. A stronger leak would be a round heading appearing in a lessons cross-reference that is not a heading line. The tool itself is absent from the README, so its docstrings cannot appear in the corpus. A substring count leak is also being examined.
+
+  `str.count` is exact, so fuzzy substring matches cannot inflate counts. A superstring outside the heading window was already considered. Because `file_exists` and `cited_row` are independent of location, a wrongly counted name makes `met` true whenever the file exists and cites any registry S-id. The selftest uses S327, which may not appear in the real registry.
+
+  A junk README mention combined with a real entry file that cites a valid S-id and a falsely counted name would make `met` true. The scope remains limited to the outside-heading kill rule, and adjacent defects are only noted if they affect whether an outside mention can satisfy the target. S-IDs are matched using word boundaries.
+
+  The registry ID regex matches any S-id length, not just three digits. The selftest fixture will be checked to confirm that cited_row is one, isolating the named gate. A same-line heading leak is also being examined.
+
+  A path appearing on the same line as the heading, after the heading text, is treated as part of the heading rather than inside the block. The kill rule targets names that are truly outside the heading.
+
+  A name on the heading line itself is not outside the heading, so it does not satisfy the kill rule. The split operation also excludes names that appear in the next heading line.
+
+  A heading line that closes the block is not inside it, so named=0 is correct and this is a false negative rather than an outside pass. A subsection heading under the round-35 block counts as inside because `###` does not match `\n## `. CRLF and leading-heading edge cases are also fine.
+
+  A second heading line that repeats the round-35 heading string closes the body before the entry path appears. The name is therefore excluded, even though a real section names the entry.
+
+  The report will present the selftest output as evidence that the junk mention does not meet the target. A constructed counterexample will be executed to prove that a junk mention outside the real heading line can make met=True. The score function treats an entry string containing "source: S327" as file_exists.
+
+  A local import will print the full junk breakdown. Setext headings are a realistic authoring footgun: if the corpus used them instead of ATX `## `, a name in the next section would count as inside the block. The current corpus uses only ATX headings.
+
+  A concrete setext-heading leak is being drafted for execution. The example uses a frontier section with a setext underline instead of an ATX heading, which would leave the round-35 block open and allow an outside mention to count as inside.
+
+  The setext counterexample is valid against the code but not supported by local evidence, since the corpus uses only ATX headings. If the contract is strictly "outside the ATX heading section bounded by the next ATX h2," this leak may be a tradeoff.
+
+  The docstring says a name outside the heading does not count, but the implementation uses a slice-based definition. The selftest appends the path to the base readme, which differs from that operational definition. The binary answer is that the selftest junk fixture cannot meet the target, yet a stronger probe under different fixtures can.
+
+  The selftest fixture is confirmed to be a factual no: the base readme contains neither the heading nor the entry count, so the junk mention cannot satisfy the target. The critic role requires going beyond this negative result. A constructed counterexample that actually flips met to true must be executed and reported, along with the smallest safe correction.
+
+  Backticks do not interfere with the substring count, so a path inside backticks still matches. A path prefixed with `corpus/` also counts because `ENTRY` is a substring of that longer string.
+
+  The em dash will be verified by importing the heading from the module to avoid typos. The probe plan is in-process and requires no repository writes.
+
+  The probe plan now includes six concrete test cases. A canonical outside case places the path after a second heading and expects met=False. A before_heading case puts the path before the heading and also expects met=False. Two more cases inject the path under unrelated coverage headings or an empty round-35 block, both expecting met=False. The final case is a prose heading echo: a fake heading string in prose followed by the path, then the real heading with no path. If this triggers met=True, it becomes the counterexample.
+
+  The probe plan now includes four additional cases. A setext heading closer and an h1 closer will test whether a non-ATX closing line leaks the block. An inside-control case with a fake entry will verify the scorer works correctly. An inside-plus-outside case will confirm that a valid inside mention alone satisfies the target.
+
+  The kill rule is a specification ambiguity, not necessarily a defect. The preregistration text lists three conditions that keep `met` False: a name outside the heading, a file with no registry S-id, or a heading with no file. The phrase "a name outside the heading keeps met False" could be read as an exclusivity requirement. If an inside-plus-outside case still meets the target, that outside name did not keep `met` False, which would directly violate the kill line.
+
+  The selftest only implements Reading A of the kill rule. It counts the outside name as zero and leaves met False. Reading B is not implemented. An outside name therefore does not keep met False. The question remains whether Reading B is the intended kill.
+
+  Reading A is the natural parallel to the other two predicate conjuncts. The kill rule lists three failure modes: the block names nothing, the file cites no registry S-id, or the heading exists but the file does not. Reading B would impose an extra exclusivity constraint that is absent from the predicate itself.Grep is returning only filenames, not content.selftest_junk: named=0 file_exists=1 cited_row=1 met=False heading_present=False
+inside_control: named=1 file_exists=1 cited_row=1 met=True heading_present=True
+after_next_h2: named=0 file_exists=1 cited_row=1 met=False heading_present=True
+before_heading: named=0 file_exists=1 cited_row=1 met=False heading_present=True
+under_live_map_no_r35: named=0 file_exists=1 cited_row=1 met=False heading_present=False
+under_live_map_plus_empty_r35: named=0 file_exists=1 cited_row=1 met=False heading_present=True
+prose_heading_echo: named=1 file_exists=1 cited_row=1 met=True heading_present=True
+prose_then_real_then_outside: named=0 file_exists=1 cited_row=1 met=False heading_present=True
+setext_closer: named=1 file_exists=1 cited_row=1 met=True heading_present=True
+h1_closer: named=1 file_exists=1 cited_row=1 met=True heading_present=True
+h3_inside: named=1 file_exists=1 cited_row=1 met=True heading_present=True
+inside_and_outside: named=1 file_exists=1 cited_row=1 met=True heading_present=True
+on_heading_line: named=1 file_exists=1 cited_row=1 met=True heading_present=True
+indented_heading_with_name: named=1 file_exists=1 cited_row=1 met=True heading_present=True
+blockquote_heading: named=1 file_exists=1 cited_row=1 met=True heading_present=True
+superstring_outside: named=0 file_exists=1 cited_row=1 met=False heading_present=True
+superstring_inside: named=1 file_exists=1 cited_row=1 met=True heading_present=True
+heading_prefix: named=1 file_exists=1 cited_row=1 met=True heading_present=True
+fence_false_closer: named=0 file_exists=1 cited_row=1 met=False heading_present=True
+JUNK_DETAIL {'named': 0, 'file_exists': 1, 'cited_row': 1, 'met': False}
+HEADING_REPR '## Coverage map — round 35 addition'
+BASE_TAIL_IS_H2 other engines, K05, and registered-consumer reconciliation.
+ENTRY_IN_BASE False
+Evaluating which counterexamples are strongest and distinguishing fixable defects from tradeoffs.
+
+  The selftest answer is vacuous. The named=0 result stems from a missing heading, not from a section boundary excluding the mention.
+
+  Two counterexamples are now under review.
+
+  The prose_heading_echo case places the path outside the real heading section. It meets the target. The fix is to line-anchor the heading match.
+
+  The setext_closer case places the path after a setext heading. This is weaker because the corpus uses ATX headings. It remains a code hole.
+
+  The h1_closer case places the path after a top-level heading. CommonMark treats an H1 as a section break, so the mention falls outside the round-35 heading's section. The corpus uses only ATX headings, making this a rare but real markdown edge case.
+
+  The h1_closer hole is unlikely to be hit by the planned edit, since coverage additions are appended as `##` sections and the round-35 scribe uses that exact heading string.
+
+  A blockquote_heading case is also under review. It places the heading inside a blockquote, so the path before the next `##` counts as inside the section. This is another line-anchoring issue.
+
+  The heading_prefix case is a strong counterexample. An unanchored heading match lets a path under a different heading that merely starts with the required text meet the target. The fix is to require end-of-heading anchoring.
+
+  The fence_false_closer case is a false negative. A fenced code block followed by a non-heading line closes the block early, so a legitimate name after it fails to register.
+
+  The fence closer is a separate false-negative bug. It does not affect the assigned outside-pass issue, so it will be mentioned only if it complicates the correction.
+
+  The closer logic does not need to change for the outside-pass fix. That boundary bug should be handled separately.
+
+  A 4-space indented heading would open a false window, since CommonMark treats 3-space indentation as a heading but 4-space indentation as a code block.
+
+  A superstring inside the block is a separate false-name defect. It does not count as an outside mention.
+
+  The kill rule targets location, not identity. A superstring inside the block is a secondary named-count defect.
+
+  The inside_and_outside case is correct under the predicate: an outside mention does not prevent a match when the block also names the path.
+
+  Local precedent shows the round-31 path appears only once inside its coverage heading.
+
+  The inside_and_outside case is not a defect against the frozen predicate. The predicate does not require exclusivity, so an outside mention does not prevent a match when the block also names the path. A poison reading would reject disposition sections that repeat the path, but that is a tradeoff. I will classify this as a tradeoff to avoid a regression.
+
+  I am now checking whether a name on the same line as the heading counts as outside the heading.
+
+  A name on the heading line itself is not inside the block body. A junk mention appended to the heading line would meet the target without being in the block. This is a mild outside-the-block pass, smaller than the prose echo.
+
+  A concrete fixture confirms the outside-pass bug. A junk mention placed before the heading string causes the block to match, because `block_names` uses a non-line-anchored substring search rather than a line-boundary check.
+
+  The closer splits on `## ` lines, so any prose between a false heading mention and the real heading line is counted inside the window. The selftest never constructs a heading, so it cannot trigger this. A scribe could naturally create this window by quoting the heading text in a correction sentence. The code defect is executable now without needing the scribe. There is concern that requiring the scribe to avoid this may exceed implied scope.
+
+  The executable fixture is sufficient evidence without claiming the scribe will trigger it. A cleaner counterexample uses a longer heading that merely contains the required string as a prefix; a name under it still meets the target.
+
+  The docstring specifies the exact heading string, so a longer heading that merely contains it is not the target. A name under such a heading is therefore outside the specified section and still meets the target. Blockquote and 4-space indented headings are also being checked as additional boundary cases. HTML headings are not used in this corpus.
+
+  The fix is to line-anchor the heading opener in `block_names`. Only a full-line match of the exact heading string opens the block. The prose echo case is resolved: the junk line is not a full-line match, so it is excluded and `named=0`.
+
+  Line-anchoring the opener fixes the heading_prefix and blockquote cases. The setext and h1 closer bugs remain unfixed by that change. Whether those remaining holes belong in the smallest safe correction is now in question.
+
+  The closer currently splits on `\n## ` and misses `\n# ` lines. Local evidence confirms the corpus uses only ATX headings, so a level-2 or lower heading boundary would close blocks correctly. Setext detection is risky because horizontal rules can be mistaken for headings.
+
+  The h1 and setext closer holes are latent until a non-## section is appended after the block. The critic should report that the selftest's literal answer is vacuous because it never exercises the kill rule, and that the strongest executable counterexample is an unanchored heading match.
+
+  The smallest safe correction requires line-anchoring the opener to the exact heading line and extending the closer to the next ATX heading at level 1 or 2. The selftest should be expanded to cover three cases: a path after a closed exact heading, a path under a prefix or prose heading, and a path under the exact heading itself. The inside-and-outside case must remain met True because changing that predicate would regress blocks that also name the path later.
+
+  The closer should split on any ATX heading line (`^#{1,2} `), not only `## `. This fixes the h1_closer case. Setext remains a noted residual because this corpus has no setext headings and a setext closer could misfire on thematic breaks inside the block.
+
+  The coverage tables contain `|---|` rows, so a naive setext closer would misfire on horizontal rules and close blocks prematurely. That makes setext a residual tradeoff rather than part of the smallest safe correction. Matching `\n# ` for h1 closers is safe because it will not match table rows or thematic breaks.
+
+  A `# ` closer is safe for existing coverage blocks because that pattern does not appear inside tables, backticks, or prose. A fence false closer is a separate issue: if a fenced heading example appears inside the block, a legitimate name after it would be missed.
+
+  The smallest safe correction must not parse fences. A fenced heading inside the block would create a false negative, but that is a residual issue rather than the assigned kill failure. The selftest correction is reported as a suggested fix without editing the audit script.
+
+  The report will be written as a single file. The selftest's false pass is a calibration defect for the coverage instrument, not a second claim; the frozen axis remains coverage. No mission conflict will be named because axis authority is untouched.
+
+  The predicate is consistent across the docstring, preregistration, and PREDICATE constant. The kill in preregistration is slightly broader than the selftest, but this is not a duplicate authority conflict. The selftest falsely claims to enforce that kill.
+
+  The block names `knowledge/...` rather than `corpus/knowledge/...`. This matches the round-31 table style and is not a defect for this attack.
+
+  The selftest pass=1 saturates the kill check before the heading exists.
+
+  The exact-line opener must allow trailing spaces and closing hash sequences on ATX headings, since CommonMark permits them. A 4-space indented heading is a code block, not a heading, so it should not open a window.
+
+  The frozen heading string omits closing hashes, so an exact-line opener matches the scribe's instruction. The em dash must be quoted as U+2014. The selftest output and probe evidence will be pasted separately.
+
+  The selftest loads the base README via `git show BASE`, so no working-tree mutation is needed. I will check an existing audit selftest for comparison to strengthen the correction. I also need to verify the h1 closer against CommonMark and the local heading style before finalizing.
+
+  The docstring explicitly states that a name outside the heading does not count. This makes the h1 closer failure a real kill, not merely a style preference.
+
+  The smallest safe correction cannot be selftest-only. A better selftest would fail on the current code because the prose echo case still evaluates to met=True.
+
+  The smallest safe correction must change both the `block_names` implementation and the selftest. A selftest-only change would expose the defect but leave the counting command failing, so the code fix is required to make the kill true. I am sketching a line-anchored opener for the report.
+
+  The line-anchored opener sketch uses `line.strip() == HEADING`. That would also match 4-space indented headings, which are code blocks and not section openers. The opener must be stricter than a simple strip-equal check.
+
+  The opener must reject 4-space indented headings and prose echoes. The fix is a regex anchored to the start of the line with optional leading spaces, matching exactly the heading string followed by whitespace. The closer should match any ATX heading at level one or two.
+
+  The regex `^#{1,2} ` is safe for h1 closers. It matches `## ` and `# `, but not `### ` because the third hash is not followed by a space.
+
+  The current `\n## ` closer intentionally excludes `\n### ` lines, so h3 content remains inside the block and that behavior must be preserved. A substring match for the entry path could also count as a hidden regression.
+
+  A substring match for the entry path inside the block would falsely satisfy named=1 without being a true heading outside. This is a hidden regression, but it lies outside the assigned kill correction and should be noted only as a residual.
+
+  The kill verdict targets only the exact entry path, not any substring. A superstring inside the block correctly fails to meet the target, so it is omitted from the report to keep the scope tight.
+
+  The selftest junk already satisfies cited_row and file_exists while failing named, so the outside gate is the only remaining barrier to met True. This makes the vacuous named=0 result the critical kill. I will also verify the 4-space indented heading case, trailing-hash headings, and prose echo body content by printing the slice directly from the function.
+
+  I will run one final probe to print the counted window text for the false-pass cases so the report can cite exact evidence. I also need to verify whether a name between a round-35 heading and a following h1 closer is the h1 case, and check that I do not write into the seat directory.
+
+  The report will be written only to the required trailer path, with no scratch files in the seat directory. Probes were kept in-memory. The report will follow the local style and structure it around counterexample, evidence, impacted axes, and smallest safe correction.heading_codepoints ['0x2014']
+--- prose_echo {'named': 1, 'file_exists': 1, 'cited_row': 1, 'met': True}
+WINDOW_START ' but that section was absent.\nsee knowledge/endpoint-health-probe-conventions.md outside the real heading\n'
+ENTRY_IN_WINDOW True
+--- prefix_heading {'named': 1, 'file_exists': 1, 'cited_row': 1, 'met': True}
+WINDOW_START ' rejected\n\n`knowledge/endpoint-health-probe-conventions.md`\n'
+ENTRY_IN_WINDOW True
+--- h1_closer {'named': 1, 'file_exists': 1, 'cited_row': 1, 'met': True}
+WINDOW_START '\n\nempty\n\n# Next chapter\n\nsee knowledge/endpoint-health-probe-conventions.md outside\n'
+ENTRY_IN_WINDOW True
+--- setext {'named': 1, 'file_exists': 1, 'cited_row': 1, 'met': True}
+WINDOW_START '\n\nempty\n\nFrontier disposition\n--------------------\n\nsee knowledge/endpoint-health-probe-conventions.md outside\n'
+ENTRY_IN_WINDOW True
+--- four_space {'named': 1, 'file_exists': 1, 'cited_row': 1, 'met': True}
+WINDOW_START '\n\nsee knowledge/endpoint-health-probe-conventions.md outside a code heading\n'
+ENTRY_IN_WINDOW True
+--- blockquote {'named': 1, 'file_exists': 1, 'cited_row': 1, 'met': True}
+WINDOW_START '\n\nsee knowledge/endpoint-health-probe-conventions.md outside\n'
+ENTRY_IN_WINDOW True
+Evaluating whether h1 and setext cases are fixable defects or tradeoffs.
+
+  The selftest's junk fixture cannot meet the heading target. This does not establish the kill.
+
+  Junk mentions outside headings can meet targets under current block rules when the heading is not line-anchored or the next section is not an ATX h2. The h1 case is an explicit design choice matching corpus sectioning, since "the heading" refers to that specific section and sections are delimited by the next `## `. H1s are rare.
+
+  The smallest safe correction should close the ATX h1 case and leave setext as a residual. The selftest's false provenance is caused by a short-circuit that returns 0 when the heading is missing, so the appended path never gets scanned. Even without that shortcut, the count would remain zero because only text after the heading is counted.
+
+  The selftest cannot distinguish a missing heading from a present one that excludes the path. Premature saturation is the real harm: pass=1 and exit 0 may be treated as a kill by later seats before the boundary exists. The smallest safe correction is to open `block_names` only on a line matching the exact ATX h2 pattern, avoiding substring or split logic.
+
+  The closer should match any ATX heading line, not just h2. No setext closer is added in this patch because the README uses ATX section breaks. The named == 1 check must stay exact; poisoning on a later mention would tighten the predicate and reject valid blocks.
+
+  The h1 and setext cases are tradeoffs to reject.
+
+  The selftest needs three fixtures. One checks the exact heading with the path after the next `## `. Another checks a prose occurrence of the heading string with the path in that false window. A third positive control places the path once under the exact heading so the fixture cannot pass by always returning zero.
+
+  The current append-to-base junk can remain as a base-absence check, but it must not be the only outside check.
+
+  This is an attack report only; the tool itself was not edited.
+
+  The inside_and_outside case is a tradeoff, not a defect. L1 must be told to leave it alone.
+
+  Fence_false_closer is a false negative. A legitimate name after a fenced backtick line followed by `## ` is ignored. This is not the assigned kill. The correction must not worsen it. The closer should remain line-anchored ATX. Expanding this patch into a markdown parser is out of scope.
+
+  A path on the same line as the heading text is excluded by the exact-line opener. This may regress cases where the file is named on that line rather than inside the block body. The predicate requires the block to name the file, and round-31 entries appear in table rows under the heading.
+
+  Excluding the heading line is correct. A name on that line is not outside the heading, so it should not pass. This is a tightening rather than a regression.
+
+  Requiring an exact heading line prevents a prefix case where extra text on the heading line would falsely open the block. Trailing whitespace is permitted so trailing spaces do not cause false kills. If duplicate headings exist, the first exact match wins.
+
+  The selftest output should be pasted as raw stdout without the EXIT label, since the script does not print it. The exit code 0 is separate evidence. The controls file `c2-selftest.out` matches the two lines exactly. The two axes to name are coverage and kill fidelity.
+
+  The report will follow the UFO critic format: counterexample, evidence, impacted axes, and smallest safe correction. It must verify selftest soundness, predicate drift, and exclusivity regression. The tool files will not be edited. A conflict exists between the seat directory instruction and the required report path.A MutC2Junk scratch repository might have mutated the coverage audit behavior.Checking the MutC2Junk report for a conclusion that should not be blindly followed. Also verifying whether the scratch repository shows the same hole.
+
+  Writing the report now. It will be tight and evidence-heavy with a critic posture. No tools were installed. The selftest fixture fails to catch junk mentions outside headings. The kill as specified case is confirmed.
+
+  The report structure is now fixed: verdict, selftest output, answer, counterexample, evidence, impacted axes, tradeoff rationale, smallest safe correction, and bounds. A regex-based heading check will replace the strict string comparison. The selftest also masks false provenance by omitting the cited_row value when junk_met is False.
+
+  The correction should print the junk emit line to improve inspectability. If fixtures are added, outside_ok must include them or pass=1 becomes a lie. The kill text is only in preregistration and docstring line 9, not in PREDICATE, so the selftest is a weaker third encoding rather than a predicate split. The ENTRY constant is the exact path the block must name.
+
+  The counterexample preserves the identity requirement. It uses the same path but places the junk outside a heading.
+
+  Positive controls confirm the kill holds narrowly. The ATX-h2 case after the first heading is valid. Other placements are invalid.
+
+  The kill applies only when the heading is a real first occurrence and the junk appears after a later heading.
+
+  The precise defect is that "outside the heading" is implemented as a substring window opened by the first heading occurrence and closed only by `\n## `.
+
+  ATX h1 closers and setext headers were tested. Both cases met the target. The ATX h1 closer should be included in the smallest safe correction because corpus line 1 proves `# ` is a used heading rank, and CommonMark ends the h2 section there.
+
+  Setext headers should not be closed by `----` in the smallest correction. Thematic breaks risk false closure. L1 must not treat setext as required for this patch. A separate patch with a negative fixture is better if setext support is desired.
+
+  The h1 closer case is ambiguous. The docstring does not define it. The code currently closes on `\n## ` only.
+
+  The h1 closer is a latent defect. The README contains only one `#` at line 1, so no coverage section is actually closed by `# `. The critic instruction requires distinguishing fixable defects from tradeoffs that L1 must reject. Unanchored openers such as prose echoes, prefix headings, blockquotes, and 4-space code lines are fixable defects.
+
+  Exclusivity on later mentions is a tradeoff to reject. The predicate does not require it, and changing it would harm valid blocks that mention the path after the next heading.
+
+  The vacuous selftest is a fixable defect. It certifies a kill that its fixtures never exercise.
+
+  A prefix heading cannot be considered "the heading" for the predicate. The heading constant must remain exact.No pycache files were found. I will now write the report.
+
+  I verified the exact line numbers for block names, selftest junk, HEADING, ENTRY, and score met. The prose echo window splits at the first occurrence in the middle of a sentence. That split is the smoking gun.
+
+  The prefix case window starts with " rejected\n\n`knowledge/...". Cases that correctly fail include after the next `## ` heading, before the first real heading when it is absent, and under a coverage map heading with an empty body. The selftest only covers the absent-heading case, which matches base_ok's named==0 condition. base_ok also requires file_exists==0.
+
+  The junk fixture sets file_exists=1 via a synthetic entry string, so it is not a re-run of base. The only shared short-circuit is the absent heading for named. I will write the report to the specified path outside the seat directory. I am considering whether to also place a copy inside the seat directory.
+
+  I will not duplicate the report in the seat directory. The prose will avoid policy quotes and over-claims. I will frame the critic as an attack rather than a verdict, stating that the counter's kill does not hold and noting the smallest correction.
+
+  The report will open with a split verdict. A junk mention outside the heading can still satisfy the target. The selftest fixture alone cannot meet the target, so its pass does not prove the kill. This framing prevents a reader from skimming to the wrong conclusion.
+
+  I will frame both the selftest paste and the split verdict in the first paragraph to prevent a reader from thinking the kill holds. The report will be structured around five Godspeed axes: coverage, kill fidelity, selftest soundness, no predicate drift, and no exclusivity regression. I will keep the prose tight and include a smallest safe correction code sketch so the L1 can act on it without editing the tool.
+
+  I drafted the corrected `block_names` function using regex to isolate the round-35 coverage map block and count the entry inside it. I am now mentally verifying this against the test fixtures.
+
+  The regex draft correctly handles the prose echo, prefix heading, blockquote, and four-space fixtures. The h1_closer case is now being checked.
+
+  The h1_closer fixture correctly yields named=0. The setext fixture remains a residual case because its underline does not match the closing regex, so the path is still counted inside the body. The inside_control and h3_inside fixtures also pass with named=1. The after_next_h2 fixture correctly yields named=0. The on_heading_line fixture fails to match _OPEN due to extra trailing text, so start becomes None and named stays at 0.
+
+  The on_heading_line fixture previously returned named=1. The corrected regex now yields named=0 because a heading line with trailing text does not open the block. This is a behavior change for a name glued to the heading line. It would harm a legitimate admit that placed the path directly on the heading line. However, the scribe spec requires the section to name the path in its body, and Round-31 follows the existing table pattern. The intended admit remains unaffected.
+
+  A path placed directly on the heading line is a prefix defect, not a valid block name. The corrected regex preserves CommonMark indentation rules for 0-3 leading spaces. The inside_and_outside fixture remains unchanged.
+
+  The fence_false_closer case would still match the closing regex, preserving today's false negative without introducing new harm. The selftest base fixture remains unchanged. Trailing spaces on the heading line are handled correctly. A heading line ending with closing hashes would no longer match the open regex, but the current substring logic would still match it; this is a possible regression.
+
+  The frozen heading requires an exact match without closing hashes. A regex that also permits optional trailing hashes would be CommonMark-compatible but risks false-killing a heading line with extra text after the hash.
+
+  The optional closing-hash pattern is safe. It rejects a heading line with extra words after the title, such as "## Coverage map — round 35 addition rejected", while still accepting valid ATX headings with trailing hashes.
+
+  The regex will use `re.escape(HEADING)` to safely match the frozen heading, including its em dash. The optional closing-hash suffix is `(?:#+[ \t]*)?`. This is the smallest safe correction.
+
+  The report will present the corrected regex as a recommended patch without applying it. New selftest fixtures should be standalone strings so they do not depend on the base readme lacking the heading. The junk emit line should also print `cited_row=1` for better kill inspectability.
+
+  Selftest exit semantics will remain unchanged. The MISSION conflict at line 29 is left untouched because axis authority was not modified. No tool installation is required. The report is the final deliverable.
+
+  The report file is the primary deliverable. The chat response will be brief, pointing to the file and returning the required fields.
+
+  I realized the Write tool is not available. I will use Bash or Read to create the report file instead.
+
+  I will hash the tool bytes so the report can pin the exact file I attacked, similar to ExecC1Selftest. The report will be composed carefully in a heredoc. The `out/` parent directory exists, so no unexpected trees are created. I am also re-reading the `block_names` source lines to ensure accurate quotes.
+
+  The selftest fixture appends to a base readme that ends with the Round-33 heading. Because the Round-35 heading is absent, every appended path lies outside it. The selftest therefore proves that a junk mention outside the heading does not satisfy the target. This resolves the ambiguity between the literal fixture and the counter's general behavior.
+
+  The report will open with a direct "Yes" to the possibility question. It will then note that the selftest fixture answers a weaker "does" question and fails. I am also checking whether local corpus evidence alone can produce an even stronger counterexample.
+
+  The prose echo fixture is executed against the local function, not external speculation. It uses the same HEADING constant the tool defines. The report will not claim the scribe will produce it.
+
+  The kill's failure mode is in the function logic, not the current tree. The base README lacks both the heading and the entry, so it already fails C2. The synthetic fixtures are needed to reach the target.
+
+  The correction tightens the opener and closer regexes rather than rewriting the predicate. The report will be complete but not bloated, roughly 51 lines including fixtures.
+
+  I will include the exact selftest command and output in a code fence. I will use a heredoc with literal quotes to avoid quoting issues with the em dash and backticks. I will add a note that I did not edit the tool, change the predicate, or touch MISSION.md. I will also make it explicit that applying the correction is not this seat's job.
+
+  The closer regex is verified against `## Later`, `# Next`, and `### Notes`. It correctly matches two-level headings with one leading space but rejects three-level headings. A warning is added that omitting the trailing space would incorrectly match `###` as a closing heading.
+
+• The selftest passes without opening the heading. I’ll pin that against fixtures where a mention outside the heading line still scores `met True`.ff5318494c01cd545455d386f65b9dcfdd64d361d4e94e98454081a7cb55d013  /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round35-coverage-audit.py
+29:HEADING = "## Coverage map — round 35 addition"
+30:ENTRY = "knowledge/endpoint-health-probe-conventions.md"
+31:ENTRY_REPO = "corpus/knowledge/endpoint-health-probe-conventions.md"
+32:BASE = "719655f12517a9ce6b1a5ca44316897fed8420b0"
+33:
+34:
+35:def git_show(repo: Path, rev: str, path: str) -> str | None:
+36:    proc = subprocess.run(
+37:        ["git", "-C", str(repo), "show", f"{rev}:{path}"],
+38:        check=False,
+39:        capture_output=True,
+40:        text=True,
+41:    )
+42:    if proc.returncode != 0:
+43:        return None
+44:    return proc.stdout
+45:
+46:
+47:def block_names(readme: str) -> int:
+48:    if HEADING not in readme:
+49:        return 0
+50:    body = readme.split(HEADING, 1)[1]
+51:    body = body.split("\n## ", 1)[0]
+52:    return body.count(ENTRY)
+111:        base_readme, base_entry, base_sources = load(args.repo, BASE)
+112:        base = score(base_readme, base_entry, base_sources)
+113:        junk = score(
+114:            base_readme + f"\nsee {ENTRY} outside the block\n",
+115:            "source: S327\n",
+116:            "| S327 | x |\n",
+117:        )
+118:        outside_ok = junk["named"] == 0 and not junk["met"]
+119:        base_ok = not base["met"] and base["named"] == 0 and base["file_exists"] == 0
+120:        print(f"SELFTEST base_met={base['met']} junk_met={junk['met']} pass={int(base_ok and outside_ok)}")
+121:        print("base " + emit(base))
+122:        return 0 if base_ok and outside_ok else 1
+
+
+• The hash matches ExecC1Selftest's coverage audit hash.wrote /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-35/w1/out/CriticC2Outside.md bytes=6978 lines=105
+Verifying the em dash codepoint is U+2014 to avoid a false heading in the evidence.'Coverage map — round 35 addition but tha'
+['0x2014']
+The report is correct. I will provide a concise stand-alone answer matching the critic return contract.
+
+• Yes. A junk mention of `knowledge/endpoint-health-probe-conventions.md` outside the heading line can meet the target. The selftest fixture cannot, and its `pass=1` does not prove the kill.
+
+  Selftest stdout (exit 0):
+
+  ```
+  SELFTEST base_met=False junk_met=False pass=1
+  base named 0 file_exists 0 cited_row 0 met False
+  ```
+
+  **Counterexample.** `block_names` opens on the first substring of `## Coverage map — round 35 addition` and closes only on the next `\n## `. The selftest appends the path to base `719655f…`, which has no such heading, so the append is never scanned. A prose quote of that heading, with the path before the real heading line and an empty real block, scores `named=1 file_exists=1 cited_row=1 met=True`. The counted window is the prose after the quote, not the section.
+
+  **Evidence.** Same false pass for a longer heading with that prefix, a blockquoted or 4-space copy, a following `# ` section, and a setext closer. A path only after a later `\n## ` correctly stays `named=0`. An extra mention after a real closer does not flip `met` when the block itself names the path once. That is not the defect.
+
+  **Impacted axes.** Coverage (false C2 admit). Kill fidelity. Selftest soundness (`pass=1` is premature saturation). Predicate unchanged.
+
+  **Smallest safe correction.** Line-anchor the open to the exact heading (`^ {0,3}` + `HEADING` + optional closing hashes). Close on the next ATX h1/h2 line, not on `###`. Add selftest fixtures for the false window and for a real in-block name. Do not poison later mentions. Do not add a setext closer in this patch. Not applied.
+
+To resume this session: kimi -r session_106a347f-90a0-41be-a6a6-1fd4ad3e3efe
