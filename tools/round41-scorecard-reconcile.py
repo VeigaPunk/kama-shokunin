@@ -43,9 +43,11 @@ Read-only on --repo: git show / cat-file / archive only.
 from __future__ import annotations
 
 import argparse
+import atexit
 import hashlib
 import os
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -182,6 +184,7 @@ def evaluate(repo: str, tip: str) -> tuple[dict, list[str]]:
             consumed.add(cmd); consumed.add(want)
             if export is None:
                 export = tempfile.mkdtemp(prefix="r41c1-")
+                atexit.register(shutil.rmtree, export, True)  # round 42: remove the export (R41A10-10)
                 arc = git(repo, "archive", "--format=tar", tip, binary=True)
                 subprocess.run(["tar", "-x", "-C", export], input=arc, check=True)
             ok, why = run_fact(export, cmd, want, code or None)

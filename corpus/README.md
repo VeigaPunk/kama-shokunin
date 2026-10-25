@@ -619,3 +619,17 @@ Still frontier:
 - Entries pinned to older vLLM docs lines (v0.9.0, v0.17.0, v0.19.1, v0.25.0). They are not watched as separate pins.
 
 No endpoint was sampled and no serving runtime was started. Registered consumers still sample DEAD, and that stays operator-owned.
+
+## Coverage map — round 42 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/context-capacity-engine-sides.md` | Engine-side half of declared versus served context capacity (K05), as source readings: vLLM v0.32.0 derives its served KV-cache token figure from the block pool and `max_model_len` and prints it beside the declared length on one startup log line; llama.cpp 704366d7's router model listing publishes the declared training context as `context_length` (not `max_model_len`); S478, S479 | 42 |
+
+## Frontier disposition — round 42
+
+Advanced: the engine-side sources for K05 (vLLM, llama.cpp router listing), as source readings only. K05 itself stays runtime-blocked: the served side on a registered endpoint needs an authorised serving runtime, and no endpoint was sampled this round.
+
+Still frontier:
+- SGLang, Ollama, TGI and the llama.cpp single-model `/v1/models` body for the declared and served capacity (the staged round-8 and round-11 context-capacity amendments name llama-cpp-python settings and an own-work receipt, both refused this round with flips in `lessons/round-42.md` §Gate).
+- Cross-check of S-ids named in lesson prose against the rows they name (`considerthese/2026-10-25.md` proposal 1, second half); round 42's `tools/digest-ledger.py` covers digests only.

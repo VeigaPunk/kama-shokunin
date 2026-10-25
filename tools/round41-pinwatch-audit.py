@@ -47,9 +47,11 @@ Read-only on --repo (git rev-parse / archive / show).
 from __future__ import annotations
 
 import argparse
+import atexit
 import os
 import random
 import re
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -206,6 +208,7 @@ def evaluate(repo, tip, seed):
     details = []
     legs = dict(tool=0, contract=0, live=0, sourced=0, capability=0)
     export = tempfile.mkdtemp(prefix="r41c2-")
+    atexit.register(shutil.rmtree, export, True)  # round 42: remove the export (R41A10-10)
     subprocess.run(["tar", "-x", "-C", export], input=git(repo, "archive", "--format=tar", tip, binary=True),
                    check=True)
     if os.path.isfile(os.path.join(export, "tools/pin-watch.py")):

@@ -13,6 +13,7 @@ drift, served-model reconciliation, probe conventions.
 | liveness/readiness probe conventions | `/health`, `/props`, `/slots` |
 | endpoint-drift detection + invocation history | `tools/kama-probe.sh snapshot`, `registry/endpoint-consumers.tsv`, `registry/history/{latest.tsv,DELTA.md}` |
 | endpoint-consumers cross-lane registry | `corpus/knowledge/consumer-registry.md`, `cross-lane-scope.md` |
+| lane instruments (the capability repertoire, `SCORECARD.md` canonical list) | `tools/kama-ollama-evidence.py` (offline Ollama capture replay), `tools/gguf-identity.py` (GGUF declared identity), `tools/kama-context-capacity.py` (fixture context-capacity receipt), `tools/instrument-agreement.py` (run agreement), `tools/pin-watch.py` with `registry/engine-pins.tsv` (newer-release triggers for the pinned SGLang, vLLM and llama.cpp lines), `tools/digest-ledger.py` with `registry/digest-ledger.tsv` (classification of every SHA-256 the lane's documents cite) |
 
 **Observed state (lane baseline `c390918`, tracked snapshot `20261014T124232Z`):**
 `bash tools/kama-probe.sh check` evaluates 3 registry rows — `model_ok=0`, `drift=3`,
@@ -167,3 +168,14 @@ lane's own `git ls-remote --tags` row S472. The generic pinning *method*
 (how to pin any repo tag) is chousa's ground; the specific re-pin of the two
 held docs rows is kama's. No endpoint, runtime or consumer surface was sampled
 this round.
+
+**Round-42 note — instruments named in the province (2026-10-25).** The Owns table
+now lists every `tools/` and `registry/` surface the SCORECARD capability list cites,
+including `pin-watch` (round 41, routed defect R41A10-9 and closure item 2) and
+`digest-ledger` (round 42). Both read git objects and public tag lists only; neither
+samples an endpoint, starts a runtime or writes outside the lane. Release-watch
+*method* for other pins stays chousa's; the lane owns the watch of its own pinned
+serving engines. The context-capacity source readings of
+`corpus/knowledge/context-capacity-engine-sides.md` (vLLM v0.32.0, llama.cpp 704366d7
+router listing) are source readings on held K05 ground, not a serving surface: no
+endpoint or runtime was sampled.
