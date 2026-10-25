@@ -24,10 +24,9 @@ sha256, which addresses collision risks." The algorithm is also selectable with
 deterministic caching, plus xxhash and xxhash_cbor variants, for which the collision
 caution still applies).
 
-The advice became the default. A reader of the round-37 entry would conclude that a
-multi-tenant deployment must actively switch to SHA256 to avoid cross-tenant
-collision; on v0.11 and later it does not have to, unless it selects a non-sha256
-algorithm.
+The advice became the default. The v0.9.0 page advised SHA256 for multi-tenant
+setups; on v0.11 and later the default is sha256, so that active switch is no
+longer required unless a non-sha256 algorithm is selected.
 
 ### What the amendment does not establish
 

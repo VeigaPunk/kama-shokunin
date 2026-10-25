@@ -2,7 +2,7 @@
 
 source: S330 — https://docs.vllm.ai/en/v0.19.1/usage/v1_guide/ — §Feature Support (admonition note); §Differences from V0 → Chunked Prefill — docs page version v0.19.1, reopened 2026-10-25
 source: S333 — https://docs.sglang.io/docs/advanced_features/radix_eviction_policy — §How eviction picks a victim — reopened 2026-10-25
-source: S334 — https://docs.sglang.io/docs/advanced_features/session_radix_cache — lead paragraph under the page title (no heading) — reopened 2026-10-25
+source: S334 — https://docs.sglang.io/docs/advanced_features/session_radix_cache — §Eviction behavior (soft-protection sentence); §Pass and close the session (session_id sentence) — reopened 2026-10-25
 source: S335 — https://arxiv.org/abs/2312.07104 — §5.1 RadixAttention — arXiv:2312.07104 (abs) and arXiv:2312.07104v1 (HTML full text), reopened 2026-10-25
 source: S346 — https://github.com/AaronYang238/llm/blob/35b83cee12ae26f10b58d4163298352384503907/chapters/06-%E6%8E%A8%E7%90%86%E5%BC%95%E6%93%8E.md — §6.4 SGLang 深读 — commit 35b83cee12ae26f10b58d4163298352384503907, reopened 2026-10-25
 verified-at: 2026-10-25
@@ -33,9 +33,9 @@ ground: the lane's coverage map held engine surfaces (metrics, health routes, se
 A **session reference is not a memory pin**. SGLang's session-aware radix cache
 says so explicitly: "session references are soft protection, not memory pins",
 and referenced KV "can still be evicted when reclaiming unreferenced KV is
-insufficient". The `session_id` labels cache references only; "it does not
-append or reconstruct conversation context", so each request must still carry
-its full intended prompt.
+insufficient". The `session_id` labels cache references only; the section
+explains it "does not append or reconstruct conversation context", so each
+request must still contain the intended prompt.
 
 ### The Chinese-language source map (secondary)
 
