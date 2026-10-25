@@ -2215,3 +2215,17 @@ through `jj-lane.sh` in a scratch clone of the lane remote.
 
 Lessons, rejects, flip conditions and the quarantine verdicts:
 `corpus/lessons/round-37.md`. Report: `.ufo/reports/round-37/kama.md`.
+
+## round 38 — the R36-D2C correction, the SGLang docs version-pinning ground, and round-37 instrument closure (2026-10-25)
+
+Three declared claims, frozen in `.ufo/waves/round-38/preregistration.json` at `41e149ceee28b24596b5d8567a0ccf43ebbc6d50` before any seat scored, measured on committed bytes at `{{MEASURED_COMMIT}}`. Base `2a4a97dc890fe393035986c951797c5d65b6cc69`.
+
+C1 (calibration 7 → 7) corrects the R36-D2 third sub-fact by append in `corpus/lessons/round-38.md`. Round 37 froze only R36-D2A and R36-D2B; the third sub-fact appeared only in the `## Mistakes` evidence cell of `round-37.md`, so the wrong range stood (round-37 verifier spot-check §6 item 4). The correction row R36-D2C names the five staged rows (S332, S336, S337, S338, S339 at `SOURCES.append.md` lines 9, 13, 14, 15, 16) instead of the wrong range. Counter: `uncorrected 1 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met False` (exit 1) at base → `{{C1_AFTER_LINE}}` (exit {{C1_AFTER_EXIT}}). The r37 lesson blob and the r37 fleet report blob are unchanged.
+
+C2 (coverage 9 → 9) adds `corpus/knowledge/sglang-docs-version-pinning.md` and `corpus/knowledge/sglang-docs-version-pinning-amendment-2026-10-23.md` to the coverage map. The published SGLang docs pages carry no version marker; their sources are contained unchanged in release tag v0.5.22. Counter: `named 0 files_exist 0 cited_new 0 met False` (exit 1) at base → `{{C2_AFTER_LINE}}` (exit {{C2_AFTER_EXIT}}). Sources S352 and S353 (the v0.5.22 raw `.mdx` pages) and S472 (the lane's `git ls-remote --tags` row, first id free in both the lane registry and the staged package) are appended. Staged S360 is rejected: the GitHub REST `/tags` endpoint returned HTTP 403 (rate limit) on this host; the lane's ls-remote receipt carries the tag inventory instead (exit 0, 166 tags, `refs/tags/v0.5.22` peeling to commit `baa9befa`).
+
+C3 (operability 8 → 8) closes the inherited round-37 evidence gaps the verifier routed (§6 items 1–3). Commit `2f780765` lands `tools/round37-statement-audit.py` and `tools/round37-coverage-audit.py`, which round 37 cited but never committed, together with the 37th seat report `CriticEntries.md` and `seat-exit-codes.json`. Counter: `found 0 base_found 0 help_ok 2 rerun_ok 2 report_37 0 receipt_ok 0 met False` (exit 1) → `{{C3_AFTER_LINE}}` (exit {{C3_AFTER_EXIT}}). The receipt parses to 37 members, all with `rc: null`; "Dead seats: none" closes as report presence, not exit status. The rest of the uncommitted round-37 tree (29 scratch files) was not copied; named in the report.
+
+Frontier step: read-only shokuknow `corpus-expansion-1` package, one theme, two entries, three rows (S352, S353, S472); S360 rejected with flip. Id collision: only the 7 round-37 adoptions share bytes; no duplicate ids. Scratch validate exit 0. This round's lane work ran in the scratch clone `/fast/scratch/hyaku/kama-r38`; the parked worktree was left alone on its foreign-identity chain (L0 open); attempt 1 died with no work (watchdog 1293), attempt 2 landed (watchdog 1294).
+
+Lessons, rejects, flip conditions and the quarantine verdicts: `corpus/lessons/round-38.md`. Report: `.ufo/reports/round-38/kama.md`.

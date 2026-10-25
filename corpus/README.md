@@ -574,3 +574,19 @@ registry rows: S330, S333, S334, S335, S346, S347 and S363, all opened on
 the lane's registry; no adopted row re-points a staged citation by arithmetic.
 Quarantine verdicts, rejects with flip conditions, and the id-collision record
 are in `corpus/lessons/round-37.md`.
+
+## Coverage map — round 38 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `corpus/knowledge/sglang-docs-version-pinning.md` | the published SGLang docs pages carry no version marker; their sources are contained unchanged in release tag v0.5.22, so content can be anchored to a released version rather than a branch commit | 38 |
+| `corpus/knowledge/sglang-docs-version-pinning-amendment-2026-10-23.md` | v0.5.22 is the highest release tag (git ls-remote --tags), so the release pin is also the current release; the GitHub REST API rate-limit is bypassed by the read-only git protocol | 38 |
+
+The frontier step of round 38 is the corpus-expansion-1 package under
+`/home/vgpnk/Projects/shokuknow`, read only. One theme, two admitted entries,
+three registry rows: S352, S353 (admitted) and S472 (own-work, verifies the
+tag inventory via git ls-remote). Staged row S360 (GitHub tags API) is
+rejected: the API is rate-limited at HTTP 403 on this host, and the lane's own
+reproducible git ls-remote row supersedes it. Quarantine verdicts, rejects
+with flip conditions, and the id-collision record are in
+`corpus/lessons/round-38.md`.

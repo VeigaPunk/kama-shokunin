@@ -157,3 +157,13 @@ runtime or consumer surface was sampled; registered consumers stay `DEAD` and
 reconciliation remains the probe's job. Frontier unchanged: `response_format` grammar
 transform (S192), `/v1/completions`, other engines, K05 — the wave items under
 `.ufo/waves/round-32/w1/` attack exactly these.
+
+**Round-38 note — engine-documentation re-pin ownership (2026-10-25).**
+The lane owns how its engine-documentation rows are anchored: the published
+SGLang docs pages carry no version marker, and kama re-pins the two rows it
+already holds (S333, S334) to release tag v0.5.22 and its peeled commit
+(baa9befa…) via new rows S352, S353, with the tag inventory verified by the
+lane's own `git ls-remote --tags` row S472. The generic pinning *method*
+(how to pin any repo tag) is chousa's ground; the specific re-pin of the two
+held docs rows is kama's. No endpoint, runtime or consumer surface was sampled
+this round.
