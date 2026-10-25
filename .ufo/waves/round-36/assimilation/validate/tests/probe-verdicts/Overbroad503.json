@@ -1,0 +1,130 @@
+[
+  {
+    "name": "Overbroad503.nginx-html-503",
+    "family": "Overbroad503",
+    "why": "nginx-style HTML 503 page is a generic reverse-proxy/maintenance response, not a model service; HTML at any status maps to html-non-model.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "text/html"},
+        "body_text": "<html>\r\n<head><title>503 Service Temporarily Unavailable</title></head>\r\n<body>\r\n<center><h1>503 Service Temporarily Unavailable</h1></center>\r\n<hr><center>nginx</center>\r\n</body>\r\n</html>\r\n"
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "html-non-model", "exit": 2}
+  },
+  {
+    "name": "Overbroad503.error-string",
+    "family": "Overbroad503",
+    "why": "JSON body whose error member is a bare string (maintenance), not the llama.cpp error-object envelope; must stay non-2xx-non-model-http.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": "maintenance"}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  },
+  {
+    "name": "Overbroad503.no-slot-available",
+    "family": "Overbroad503",
+    "why": "Real llama.cpp unavailable_error envelope but message is 'no slot available' (server up, all slots busy) — message mismatch means FOREIGN_SERVICE, not MODEL_LOADING.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": {"message": "no slot available", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  },
+  {
+    "name": "Overbroad503.lowercase-loading",
+    "family": "Overbroad503",
+    "why": "Envelope shape is right but message 'loading model' is lowercase; the C1 rule requires exact 'Loading model', so a case-insensitive implementation is overbroad.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": {"message": "loading model", "type": "unavailable_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  },
+  {
+    "name": "Overbroad503.server-error-type",
+    "family": "Overbroad503",
+    "why": "Message matches 'Loading model' but type is server_error, not unavailable_error — a different failure mode that must not read as a model still loading.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": {"message": "Loading model", "type": "server_error", "code": 503}}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  },
+  {
+    "name": "Overbroad503.code-string",
+    "family": "Overbroad503",
+    "why": "Envelope carries code \"503\" as a JSON string, not the integer 503; the rule requires an integer code so a string-coercing check is overbroad.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": "503"}}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  },
+  {
+    "name": "Overbroad503.no-error-wrapper",
+    "family": "Overbroad503",
+    "why": "Loading fields sit at the JSON top level without the error object wrapper; envelope detection must require the nested error member.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"message": "Loading model", "type": "unavailable_error", "code": 503}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  },
+  {
+    "name": "Overbroad503.plaintext-loading",
+    "family": "Overbroad503",
+    "why": "text/plain 503 body 'Loading model' (e.g. a hand-rolled proxy) contains the right words but is not the JSON envelope; body sniffing the phrase is overbroad.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "text/plain"},
+        "body_text": "Loading model"
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  }
+]

@@ -1,0 +1,86 @@
+kimi version 2.3.1
+• Let me start. Task: fetch https://git-scm.com/docs/git-blame once, find the sentence beginning "Annotates each line", quote in ≤25 words, compare with S174 row's quote in corpus/SOURCES.md, say whether byte-exact, state the difference. Write report to .ufo/waves/round-36/w3/out/RevDrift174.md under the lane repo.
+
+  Axes: (1) fidelity of fetched quote vs page, (2) exact byte comparison with row, (3) bounded writes (only the report file), (4) no lane mutation.
+
+  Let me do parallel: fetch URL, read SOURCES.md rows around S174. First create the seat dir? The report path is .ufo/waves/round-36/w3/out/RevDrift174.md — that's the allowed write. The seat dir for scratch is .ufo/waves/round-36/w3/out/<SeatName> — my seat name appears to be RevDrift174? Actually "YourSeatName" — the report path suggests seat name is RevDrift174, and report lives in that out dir. Scratch can go in .ufo/waves/round-36/w3/out/RevDrift174/.
+
+  Fetch once with curl, save to scratch file. Then grep for "Annotates each line".
+
+  Let me batch: mkdir -p seat dir + curl fetch; and read SOURCES.md to find S174 row.
+
+  SOURCES.md may be big; grep for S174 with context.
+
+  Let's go.
+
+• Axes: (1) fetched-page quote fidelity, (2) byte-exactness vs S174 row, (3) bounded writes (report only), (4) no lane/repo mutation. Executing: one fetch + row read in parallel.82635 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevDrift174/git-blame.html
+
+
+• The fetch happened fast (0.077s for curl seems suspiciously fast — 82KB downloaded though; wc shows 82635 bytes so it did download). Let me check the HTML for the sentence.
+
+  Also interesting: SOURCES.md already contains a round-30 correction record noting S174's quote drops "given". So the row at line 186 carries: "Annotates each line in the file with information from the revision which last modified the line" — missing "given". But my job: fetch the URL, quote the sentence in ≤25 words, compare word for word with the row's quote, say whether byte-exact, state the difference.
+
+  Note: the row's teaches cell has two quotes; the target is the one beginning 'Annotates each line'.
+
+  Now extract the sentence from the fetched HTML. The page is likely HTML with the DESCRIPTION section. Let me grep the saved HTML for "Annotates each line".
+
+• Fetch landed (82,635 bytes). Row S174 found (line 186) — its first quote reads `Annotates each line in the file with information from the revision which last modified the line`. Now extracting the live sentence from the fetched bytes.occurrences: 1
+----RAW----
+&lt;file&gt;</em></pre>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description"><a class="anchor" href="#_description"></a>DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Annotates each line in the given file with information from the revision which
+last modified the line. Optionally, start annotating from the given revision.</p>
+</div>
+<div class="paragraph">
+<p>When specified one or more times, <span class='synopsis'><code>-L</code></span> restricts annotation to the requested
+lines.</p>
+</div>
+<div class="paragraph">
+<p>The origin of lines is automatically follo
+----CLEAN----
+'Annotates each line in the given file with information from the revision which last modified the line.'
+
+
+• Live sentence (git-scm.com/docs/git-blame, §DESCRIPTION): "Annotates each line in the given file with information from the revision which last modified the line." — 19 words.
+
+  Quote (≤25 words): "Annotates each line in the given file with information from the revision which last modified the line" — 19 words, fits.
+
+  Row S174 quote: "Annotates each line in the file with information from the revision which last modified the line" — 18 words. Difference: row drops the word "given" ("in the given file" → "in the file"). Not byte-exact.
+
+  Also worth noting: SOURCES.md lines 435-443 already contain a round-30 correction record acknowledging exactly this omission — so the row body still carries the false verbatim label (append-only record corrects it, row not edited). That's an observed fact, not my scope to fix (I must not edit the registry). Also note the row's second quote (--line-porcelain) is out of scope; but I could quickly verify? Task is scoped to the sentence beginning 'Annotates each line'. Keep scope. But one cheap check: does the fetched page contain the --line-porcelain text? Not required. Task says do not retarget; stay scoped.
+
+  Word-for-word comparison:
+  - Live: Annotates each line in the given file with information from the revision which last modified the line (19 words)
+  - Row: Annotates each line in the file with information from the revision which last modified the line (18 words)
+  Diff: missing "given" between "the" and "file".
+
+  Byte-exact: No.
+
+  Report to .ufo/waves/round-36/w3/out/RevDrift174.md. Include measured (fetched bytes, occurrences=1, exact sentence) vs inference (the SOURCES.md round-30 record already documents this; row unchanged because append-only). Also note fetched page date? The page is live today 2026-10-24. Row claims "live manual opened 2026-10-23" — consistent.
+
+  Write report now.
+
+• Live page says "in the **given** file" — the row drops "given". Not byte-exact. Writing the report.written
+2107 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevDrift174.md
+
+
+• Done. Report written at the required path. Summarize findings briefly and stop.
+
+• Report written: `.ufo/waves/round-36/w3/out/RevDrift174.md`. Findings:
+
+  **Verdict — S174 quote is NOT byte-exact.**
+  - **Measured** (single fetch, 82,635 bytes; pattern occurs once, §DESCRIPTION): live sentence is *"Annotates each line in the given file with information from the revision which last modified the line."* (19 words).
+  - **Row** (`corpus/SOURCES.md:186`, first quote, 18 words): *"Annotates each line in the file with information from the revision which last modified the line"* — **omits "given"**; all other words match in order. Only difference.
+  - **Context** (inference, recorded as such): SOURCES.md lines 435–443 already hold a round-30 append-only correction documenting this exact omission; the row body still carries the false "(§DESCRIPTION, verbatim)" label. Registry untouched.
+
+  **Residual risk / gaps:** the row's second quote (§OPTIONS `--line-porcelain`) was not compared (out of scope); page snapshot carries no visible version pin against the row's "Git 2.56.0" provenance note.
+
+  Stopped — no actionable finding remains in scope.
+
+To resume this session: kimi -r session_f0a3c05b-1d64-4233-b228-ad0254aed840

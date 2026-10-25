@@ -1,0 +1,471 @@
+kimi version 2.3.1
+• Let me start. The task: review the S328 and S329 rows at the end of SOURCES.md. Count pipe-delimited columns, check no cell contains a literal or escaped pipe, check recheck cell is valid ISO date or Nd value or symbolic cadence, check used-by cell names exactly the entry path, check opened cell, check anchor cell's quote sits at cited line in the fetched source. Report defects to .ufo/waves/round-36/w3/out/RevRowsBytes.md.
+
+  Let me read the files. First the SOURCES.md last rows, the entry draft, and the lesson draft (maybe not needed but helpful). Also need to check the anchor quotes against fetched sources — that means fetching the URLs. Let me read the files first.and used-by old→new changes for S075–S080 are in `lessons/round-22.md`.
+Status/recheck unchanged. Final additions14, superseding the earlier12-row
+population. No source-row growth is called new knowledge.
+
+## Round-30 source correction — S174 and S176 (append-only decision record)
+
+Routed by `corpus/lessons/round-29-verifier-spotcheck.md` §4 and §6 items 3–4; the rows stay as
+landed (append-only), and this record corrects what their `teaches` cells say.
+
+1. **S174.** The row's `teaches` cell is labelled "(§DESCRIPTION, verbatim)" but drops the manual's
+   word "given": the page reads "Annotates each line in the given file with information from the
+   revision which last modified the line". The fragment points at the right sentence; the verbatim
+   label with the omission is false. Read the cell's first phrase as a paraphrase, not a quote.
+2. **S176.** The wave-2 decision record said the `teaches` cell's "tree" would be fixed to "trees"
+   before landing; the landed cell still says "given tree" and composes the `:(exclude)` example
+   with the `<tree>` form. The landed cell is a composition, not a verbatim quote; the row's
+   `anchor` (git-grep `<tree>` form and gitglossary `exclude`) is the part grounded in the pages.
+   The decision record's "fixed pre-landing" claim is superseded by this note.
+
+## Round-31 rows relocated into the registry (repair, 2026-10-23)
+
+S180–S191 were first appended at end of file, after the last `##` section, so
+`scripts/sources-census.sh validate` read them as E12 `row outside Registry section` (12 findings,
+exit 1). They now sit in the `## Registry` table above with ids and cells unchanged; this pointer
+records the move (append-only: no cell was rewritten). Defect and fix recorded in
+`corpus/lessons/round-31.md` §Mistakes row 4.
+
+## Round-33 search log supplement
+
+**2026-10-24 — gate definition and reject-side re-open.** Question: where exactly does the r32 gate define registration, and does the standing S104 reject about fsck/promisor still hold? Where: `tools/gate-registry-check.py` at c4c46ad5 (docstring "Contract", lines 15–16); `https://raw.githubusercontent.com/git/git/v2.56.0/builtin/fsck.c` (S104, lines 143–149); and the r32 C2 gate receipts. Identified 2 source candidates; screened 2; included 1 new row (S194) and reopened standing rejected S104 without changing its row; excluded 0. Stop: both source decisions are bounded to the exact routed evidence; no vendor/API or endpoint claim was sought.
+The tail showed the last 30 lines but those seem to be the end of a notes section (round-33 supplement). The task says the S328 and S329 rows are "the last two data rows of SOURCES.md" — but the tail shows sections after the Registry table. Wait, the instruction says "the last two data rows of /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md (ids S328 and S329)". The tail I got shows the end of the file which is the round-33 search log supplement. So the rows must be in the Registry table, near the end of the table (before these `##` sections). Let me grep for S328 and S329.I have the two rows. Now let me analyze them.
+
+  Row S328 (line 214):
+  `| S328 | SGLang Native APIs at tag v0.5.22 — https://raw.githubusercontent.com/sgl-project/sglang/v0.5.22/docs/docs/basic_usage/native_api.mdx | docs | A | the published SGLang native-API route list at tag v0.5.22; a documentation surface, not a live server | line 6 and route-list line 9 — Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs. | the published page still lists only /get_model_info and never names /model_info, so a client that reads the page as the contract probes the route the engine is retiring | mined | 2026-10-24 | 90d | corpus/knowledge/sglang-native-route-deprecation.md |`
+
+  Count columns: leading `|` then cells:
+  1. S328
+  2. SGLang Native APIs at tag v0.5.22 — URL
+  3. docs
+  4. A
+  5. the published SGLang native-API route list ... not a live server
+  6. anchor: line 6 and route-list line 9 — quote
+  7. teaches
+  8. mined
+  9. 2026-10-24 (opened)
+  10. 90d (recheck)
+  11. corpus/knowledge/sglang-native-route-deprecation.md (used-by)
+
+  That's 11 cells. Let me check the registry header to know the column names and whether 11 is the expected count. Let me grep the header row.
+
+  Row S329 (line 215):
+  `| S329 | SGLang http_server.py at tag v0.5.22 — https://raw.githubusercontent.com/sgl-project/sglang/v0.5.22/python/sglang/srt/entrypoints/http_server.py | code | A | the engine-side deprecation of /get_model_info at tag v0.5.22 | lines 790-791 — Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead. | the engine itself warns that the documented route is deprecated and names /model_info as the replacement, so the published route list is not the engine's current contract | mined | 2026-10-24 | 90d | corpus/knowledge/sglang-native-route-deprecation.md |`
+
+  Also 11 cells.
+
+  Checks:
+  - Column count: need header. Let me get the header row of the Registry table.
+  - No cell contains literal or escaped pipe: visually no `\|` or `|` inside cells. I'll verify programmatically.
+  - Recheck cell: `90d` — is that a "symbolic cadence"? Task says valid ISO date or Nd value or symbolic cadence. `90d` is an Nd value (Nd = N days). 90d qualifies.
+  - Used-by cell names exactly the entry path: `corpus/knowledge/sglang-native-route-deprecation.md` — matches the entry draft path. Need to check convention in other rows: do other rows use `corpus/knowledge/...` prefix or `knowledge/...`? Let me check nearby rows for consistency. The task says "check the used-by cell names exactly the entry path" — the entry path is /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/knowledge/sglang-native-route-deprecation.md. The cell says corpus/knowledge/sglang-native-route-deprecation.md. Relative to repo root, that's exact. But I should check registry convention — if other rows use e.g. `knowledge/foo.md` without the `corpus/` prefix, then there's a consistency question but the task explicitly says "names exactly the entry path", so matching full repo-relative path is correct. Still worth noting convention.
+  - Opened cell: `2026-10-24` — valid ISO date, and matches verified-at 2026-10-24 and README claim "opened on 2026-10-24".
+  - Anchor cell quote sits at cited line in the fetched source:
+    - S328: anchor says "line 6 and route-list line 9 — Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs." Need to fetch the native_api.mdx at tag v0.5.22 and check line 6 contains that sentence and line 9 contains the route list naming /get_model_info. Note: the quote is only from line 6; line 9 is the route-list. The anchor format in this registry seems "lines — quote". Need to check whether the quote at line 6 matches. Also verify /model_info absence (zero count) as entry claims — that's entry-level but the anchor check includes the route-list line 9 claim implicitly? The task says "check the anchor cell's quote sits at the cited line in the fetched source". So primary: does the quote text appear at line 6? And does line 9 (route list) exist / name /get_model_info? The quote itself is attributed to "line 6 and route-list line 9" — but the quote is only one sentence; if line 9 doesn't contain the quote, is that a defect? The anchor names two lines; the quote is on line 6. Hmm — the anchor convention may be "lines N — quote" where the quote is on one of the cited lines. Compare S174 note: "The row's teaches cell is labelled '(§DESCRIPTION, verbatim)'..." and anchors like "lines 143–149". Let me look at how other rows format anchors to judge. E.g., check a few existing rows: "line X — quote".
+    - S329: anchor says "lines 790-791 — Endpoint '/get_model_info' is deprecated...". Need to fetch http_server.py at v0.5.22 and check lines 790-791 contain the warning. Also the entry claims line 786 registers /get_model_info and 796 registers /model_info — check those too since the used-by entry cites them, though the row anchor only cites 790-791. The task focuses on the anchor cell's quote at the cited line.
+
+  Also check: does the quote in S329's anchor cell match exactly the source text? The lesson says the located quote is 16 words. The anchor cell says: `lines 790-791 — Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead.` Note the entry quotes it with double quotes and same text.
+
+  One thing to watch: does the source use single quotes around '/get_model_info'? Need to fetch actual bytes.
+
+  Also "no cell contains a literal or escaped pipe" — check for `\|`.
+
+  Also I should verify the header of the Registry table to count expected columns, and check other rows' recheck/used-by conventions for context. And the tools/sources-census.sh validate script might define the contract — read it to know the canonical column expectations (id, title+url, type, tier, teaches?, anchor, teaches, status, opened, recheck, used-by?). Actually let me look at the header.
+
+  Plan of parallel actions:
+  1. Grep header rows of Registry table in SOURCES.md (lines around 60-100 maybe) — find `| id |` header.
+  2. Read scripts/sources-census.sh or tools/validate to learn the registry contract.
+  3. Fetch both URLs (raw.githubusercontent) and save to seat scratch dir, then check lines.
+
+  Fetch commands: curl -s <url> -o seat/native_api.mdx and seat/http_server.py. Then sed -n specific lines.
+
+  Seat dir: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/<YourSeatName>/ — my seat name... The report is RevRowsBytes.md, so seat name likely "RevRowsBytes" dir? The instruction: "Scratch files go only in your seat directory /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/<YourSeatName>/". The report path is .ufo/waves/round-36/w3/out/RevRowsBytes.md — hmm, that's directly in out/, not in a subdir. The seat name might be "RevRowsBytes". I'll put scratch in .ufo/waves/round-36/w3/out/RevRowsBytes/ (a directory) and the report at .ufo/waves/round-36/w3/out/RevRowsBytes.md. Wait — can't have both a file and dir with same name... RevRowsBytes.md vs RevRowsBytes/ — different names (extension), fine. But to be safe, scratch in a subdir named RevRowsBytes-scratch? The bounds say scratch goes only in the seat directory. Since the seat name is ambiguous, safest: create .ufo/waves/round-36/w3/out/RevRowsBytes/ as the seat dir (matching seat name) and write report at .ufo/waves/round-36/w3/out/RevRowsBytes.md. Hmm, but if the seat directory is supposed to be where the report lives... The report trailer path is .ufo/waves/round-36/w3/out/RevRowsBytes.md. Other waves pattern: out/<SeatName>/... In this case the report is directly at out/RevRowsBytes.md. I'll create the dir .ufo/waves/round-36/w3/out/RevRowsBytes.d/ maybe? That deviates. Let me just use out/RevRowsBytes/ as seat dir for scratch. Actually simplest and safest: scratch files under .ufo/waves/round-36/w3/out/RevRowsBytes/ (seat name RevRowsBytes). Report at the exact trailer path. Both inside bounds.
+
+  Also: the fetched-source check — "check the anchor cell's quote sits at the cited line in the fetched source". Fetch from raw.githubusercontent.com. That's network. Should be fine.
+
+  Also verify byte sizes claimed in lesson (17359 bytes, 110718 bytes) — not my scope but useful corroboration. Focus scope: the two rows.
+
+  Also check the recheck cell in the entry: entry says recheck: 90d. Consistent.
+
+  Also check opened cell: "check the opened cell" — valid ISO date, presumably matching lesson's "Opened 2026-10-24". Yes.
+
+  Also check "used-by cell names exactly the entry path": entry file is corpus/knowledge/sglang-native-route-deprecation.md — exists (I read it). Check that other rows use the same style. Let me grep a few other used-by cells.
+
+  Let me now run in parallel:
+  - Grep header of registry table.
+  - Read the census/validate script.
+  - curl both files into scratch.
+
+  First find the header: grep -n "^| id" SOURCES.md. And look at tools dir listing for sources-census.sh.
+
+• I have both rows. Now I'll pull the registry header/contract and fetch the two cited sources in parallel.native_api.mdx HTTP 200 bytes 17359
+http_server.py HTTP 200 bytes 110718
+/home/vgpnk/Projects/shokunin/kama-shokunin/tools/:
+capability-repertoire-audit.py
+citation-provenance.py
+echo-recheck.py
+error-verdict-census.py
+gate-registry-check.py
+gguf-identity.py
+instrument-agreement.py
+kama-context-capacity.py
+kama-llamacpp-live.py
+kama-ollama-evidence.py
+kama-probe.sh
+prereg-time-check.py
+__pycache__
+report-landing-audit.py
+round33-claim-audit.py
+round33-gate-receipts.py
+round35-coverage-audit.py
+round35-statement-audit.py
+round36-coverage-audit.py
+round36-statement-audit.py
+sources-append-only.py
+test-snapshot.sh
+
+
+• Header: `| id | source | kind | tier | scope | anchor | teaches | status | opened | recheck | used-by |` — 11 columns. Both rows have 11 cells (I counted 11). Let me verify programmatically, plus pipe/escaped-pipe checks, plus look at the fetched sources' cited lines.
+
+  Now check lines:
+  - native_api.mdx: line 6 and line 9.
+  - http_server.py: lines 786, 790-791, 796.
+
+  Also check /model_info absence in the mdx (entry claim), and /get_model_info on line 9 and line 71.
+
+  Run a python script to do the row parsing checks and the line checks. Also grep census validate script contract — there's no sources-census.sh in scripts/ (ls showed only tools/, scripts dir maybe doesn't exist). Let me check gate-registry-check.py for the row contract (it was mentioned as registry checker). Read its docstring quickly.
+
+• Fetched both sources (HTTP 200, byte sizes match the lesson's claims). Now the structural checks and cited-line verification in parallel.header cells: 11
+--- S328 line 214: 11 cells (header=11)
+  LEADING/TRAILING WS in cell 1: ' S328 '
+  LEADING/TRAILING WS in cell 2: ' SGLang Native APIs at tag v0.5.22 — https://raw.githubusercontent.com/sgl-project/sglang/v0.5.22/docs/docs/basic_usage/native_api.mdx '
+  LEADING/TRAILING WS in cell 3: ' docs '
+  LEADING/TRAILING WS in cell 4: ' A '
+  LEADING/TRAILING WS in cell 5: ' the published SGLang native-API route list at tag v0.5.22; a documentation surface, not a live server '
+  LEADING/TRAILING WS in cell 6: ' line 6 and route-list line 9 — Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs. '
+  LEADING/TRAILING WS in cell 7: ' the published page still lists only /get_model_info and never names /model_info, so a client that reads the page as the contract probes the route the engine is retiring '
+  LEADING/TRAILING WS in cell 8: ' mined '
+  LEADING/TRAILING WS in cell 9: ' 2026-10-24 '
+  LEADING/TRAILING WS in cell 10: ' 90d '
+  LEADING/TRAILING WS in cell 11: ' corpus/knowledge/sglang-native-route-deprecation.md '
+  id:  S328  | kind:  docs  | tier:  A  | status:  mined 
+  opened:  2026-10-24  -> valid ISO: False
+  recheck:  90d  -> Nd: False
+  used-by:  corpus/knowledge/sglang-native-route-deprecation.md 
+  anchor:  line 6 and route-list line 9 — Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native serve
+--- S329 line 215: 11 cells (header=11)
+  LEADING/TRAILING WS in cell 1: ' S329 '
+  LEADING/TRAILING WS in cell 2: ' SGLang http_server.py at tag v0.5.22 — https://raw.githubusercontent.com/sgl-project/sglang/v0.5.22/python/sglang/srt/entrypoints/http_server.py '
+  LEADING/TRAILING WS in cell 3: ' code '
+  LEADING/TRAILING WS in cell 4: ' A '
+  LEADING/TRAILING WS in cell 5: ' the engine-side deprecation of /get_model_info at tag v0.5.22 '
+  LEADING/TRAILING WS in cell 6: " lines 790-791 — Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead. "
+  LEADING/TRAILING WS in cell 7: " the engine itself warns that the documented route is deprecated and names /model_info as the replacement, so the published route list is not the engine's current contract "
+  LEADING/TRAILING WS in cell 8: ' mined '
+  LEADING/TRAILING WS in cell 9: ' 2026-10-24 '
+  LEADING/TRAILING WS in cell 10: ' 90d '
+  LEADING/TRAILING WS in cell 11: ' corpus/knowledge/sglang-native-route-deprecation.md '
+  id:  S329  | kind:  code  | tier:  A  | status:  mined 
+  opened:  2026-10-24  -> valid ISO: False
+  recheck:  90d  -> Nd: False
+  used-by:  corpus/knowledge/sglang-native-route-deprecation.md 
+  anchor:  lines 790-791 — Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_in
+neighbor row: | S324 | kama round-34 instrument-registry population widening — `tools/gate-registry-check.py` | own-work | A | the lane's own instrument gate: which tracked r
+neighbor row: | S327 | vLLM Engine Arguments — https://docs.vllm.ai/en/v0.32.0/configuration/engine_args/ | docs | A | vLLM admission-control limit and the HTTP status it pro
+=== native_api.mdx lines 1-12 ===
+---
+title: "SGLang Native APIs"
+metatags:
+    description: "SGLang native server APIs for text generation, embedding, reranking, model info, cache management, and more."
+---
+Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs. We introduce the following APIs:
+
+- `/generate` (text generation model)
+- `/get_model_info`
+- `/server_info`
+- `/health`
+- `/health_generate`
+=== line 71 ===
+url = f"http://localhost:{port}/get_model_info"
+=== model_info count in mdx ===
+2
+9:- `/get_model_info`
+71:url = f"http://localhost:{port}/get_model_info"
+=== http_server.py lines 784-798 ===
+     1	
+     2	
+     3	@app.get("/get_model_info")
+     4	async def get_model_info():
+     5	    """Get the model information (deprecated - use /model_info instead)."""
+     6	    logger.warning(
+     7	        "Endpoint '/get_model_info' is deprecated and will be removed in a future version. "
+     8	        "Please use '/model_info' instead."
+     9	    )
+    10	    return await model_info()
+    11	
+    12	
+    13	@app.get("/model_info")
+    14	async def model_info():
+    15	    """Get the model information."""
+
+
+• Important findings so far.
+
+  **Structural checks:**
+  - Both rows: 11 cells = header's 11. ✓ (my "valid ISO: False" was a bug in my own one-liner — the dict values retained surrounding spaces because I didn't strip; the opened cell content `2026-10-24` with padding spaces. I need to redo with stripped cells. Markdown tables conventionally pad cells; the neighbor row S324 also has padded cells. So padding is house style, not a defect.)
+  - No literal or escaped pipes inside cells. ✓ (split on `|` produced exactly 11 cells, so no embedded pipes; and no `\|` found.)
+  - recheck `90d` — Nd value. ✓
+  - used-by `corpus/knowledge/sglang-native-route-deprecation.md` — need to check convention of other rows: do other used-by cells use `corpus/knowledge/...` or `knowledge/...`? Let me check.
+  - opened `2026-10-24` valid ISO. ✓
+
+  **Anchor verification — S328:**
+  - Line 6 of native_api.mdx: "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs. We introduce the following APIs:" — the quoted sentence sits at line 6. ✓ (quote is the first sentence; anchor cites line 6 for the quote.)
+  - "route-list line 9": line 9 is `- \`/get_model_info\``. ✓ The route list names /get_model_info. ✓
+
+  **BUT — entry claim check (the teaches cell and entry claim `/model_info` zero count):**
+  - `grep -c 'model_info' native_api.mdx` = **2**, not zero! And grep -n shows lines 9 and 71 both match `get_model_info`... wait, `grep -c 'model_info'` counts lines containing 'model_info' — lines 9 and 71 contain `/get_model_info` which contains substring `model_info`. So count of lines matching `model_info` = 2 (lines 9 and 71). The entry claims: "The string `/model_info` does not occur anywhere in that file — the count is zero."
+
+  `/model_info` as a literal string with leading slash: line 9 is `- \`/get_model_info\`` — contains `/get_model_info`, not `/model_info`. Line 71: `http://localhost:{port}/get_model_info` — contains `/get_model_info`. Does `/model_info` (slash + model_info) occur? `/get_model_info` contains "get_model_info", the substring "/model_info" would require "/" immediately before "model_info". In "/get_model_info", before "model_info" is "_", not "/". So literal `/model_info` count should be 0. Let me verify with grep -F '/model_info'. grep -c 'model_info' matched substring model_info (2 lines). Need precise check: grep -Fc '/model_info' — expect 0. And grep -Fc 'model_info' would also be 2. The entry's claim is about `/model_info` — need to check exactly.
+
+  **Anchor verification — S329:**
+  - Line 786: `@app.get("/get_model_info")` ✓ (registration)
+  - Lines 790-791: the warning is split across two string literals:
+    - 790: `"Endpoint '/get_model_info' is deprecated and will be removed in a future version. "`
+    - 791: `"Please use '/model_info' instead."`
+    The anchor cell quote: `Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead.` — this is the *concatenated* string, spanning 790-791. The anchor cites lines 790-791, and the quote is the concatenation of the two adjacent string literals (minus the Python quotes). The concatenation is exactly what the logger emits. Is the quote "sitting at the cited line"? It spans the two cited lines as a two-part string literal — this is a fair verbatim-of-concatenation, and the anchor cites the range 790-791 precisely. I'd judge this ✓, but note it: the quote is not contiguous on a single line; it's the join of the two string literals at 790 and 791 (the join also drops nothing; note the trailing space after "version. " in line 790 makes the concatenation exact).
+
+  Actually wait — line 790 in the actual file: sed showed 784,798 range starting at 784. Line numbers: 784 → blank, 785 → blank, 786 → `@app.get("/get_model_info")`, 787 → `async def get_model_info():`, 788 → docstring, 789 → `logger.warning(`, 790 → `"Endpoint '/get_model_info' is deprecated and will be removed in a future version. "`, 791 → `"Please use '/model_info' instead."`, 792 → `)`, 793 → `return await model_info()`, 794 blank, 795 blank, 796 → `@app.get("/model_info")`, 797 → `async def model_info():`.
+
+  So:
+  - 786: /get_model_info registered ✓ (entry claim)
+  - 790-791: warning ✓ (row anchor)
+  - 796: /model_info registered ✓ (entry claim)
+  - old handler returns model_info() at 793 ✓ (entry: "the old handler still returns the result of model_info()") — entry says "the old handler still returns the result of `model_info()`" — yes line 793.
+
+  **Row-anchor nuance for S329:** the row's anchor cell cites only lines 790-791 and the quote. The lesson says anchor "lines 790-791 for the deprecation warning, lines 786 and 796 for the two route registrations" — the row cell only carries 790-791. That's fine; the entry carries the full set.
+
+  **S328 anchor nuance:** The anchor cell says "line 6 and route-list line 9 — Apart from..." The quote sits at line 6. Line 9 is the route-list entry `- \`/get_model_info\``. The teaches cell says "the published page still lists only /get_model_info and never names /model_info". Verify: does the mdx anywhere name /model_info (without "get")? grep -F '/model_info'. If 0, teaches holds. Let me run.
+
+  Also check mdx: does line 9 belong to a route list that "lists only /get_model_info" for model info? Lines 8-12 show the list: /generate, /get_model_info, /server_info, /health, /health_generate... there might be more items below (classify, embed, rerank etc.). "lists only /get_model_info" refers to model-info routes only. Fine — but scope of my task: anchor quote at cited line. Line 9 = `- \`/get_model_info\`` ✓.
+
+  **Used-by convention check:** Need to see whether other rows' used-by cells use `corpus/` prefix. Neighbor S324/S327 rows — let me print their full used-by cells. Also check whether the census/gate script validates used-by paths exist. The task says "check the used-by cell names exactly the entry path" — the entry path is corpus/knowledge/sglang-native-route-deprecation.md, and the cell says exactly that. But if house convention is `knowledge/...` (relative to corpus/), then "exactly the entry path" could conflict with convention. Let me check the full rows for S324-S327 and a sample of older rows.
+
+  Also re-verify opened/recheck with stripped values.
+
+  Also byte sizes: native_api.mdx 17359 bytes — matches lesson claim "17359 bytes". http_server.py 110718 — matches "110718 bytes". ✓
+
+  One more check for S328's teaches claim: "the published page still lists only /get_model_info" — in the route list, is /get_model_info the only model-info route? And the count-zero claim for `/model_info`. Also check the entry's claim "The worked example on line 71 still asks for http://localhost:{port}/get_model_info" — line 71 confirmed: `url = f"http://localhost:{port}/get_model_info"`. ✓
+
+  Now the escaped-pipe check: my python found no `\|`. Also confirm no literal pipe inside cells — proven by the 11-cell split.
+
+  Additional check per task: "check the opened cell" — 2026-10-24, valid ISO, matches lesson "Opened 2026-10-24" and README "opened on 2026-10-24". ✓
+
+  Let me also check sources-append-only.py / gate-registry-check.py to see if there's a canonical validator I can run read-only to cross-check row shape (e.g., expected recheck vocabulary, used-by convention). Reading the script is cheap and grounds the "symbolic cadence / Nd" vocabulary. Let me peek at gate-registry-check.py docstring quickly and run the census validate if it's read-only. Actually there's tools/sources-append-only.py — run it read-only? It might check append-only property. Running a validator that only reads is fine. Let me check what scripts/sources-census.sh is (referenced in SOURCES.md as validate). It's under scripts/? The ls earlier printed only tools/ contents and head cut at 40 lines — scripts/ listing may have been truncated. Let me ls scripts/ alone.
+
+  Run in parallel:
+  1. grep -Fc '/model_info' native_api.mdx; grep -Fnc 'model_info' native_api.mdx (count lines).
+  2. Full neighbor rows + used-by convention sample: grep used-by cells of all rows, uniq -c of distinct used-by prefixes... simpler: awk to extract 11th cell of each data row and show distinct values/sample; also show full S327 row.
+  3. ls scripts/; head of gate-registry-check.py.
+  4. Re-run date/recheck checks with stripped cells (trivial, can fold into #2).
+
+• Structural shape is good (11/11 cells, no pipes). The "False" flags were my own unstripped-cell artifact — markdown padding. Now the precise anchor/quote checks and house-convention cross-checks.count of literal '/model_info':
+0
+count of lines containing 'model_info':
+2
+quote exact-match check line 6:
+1
+    171 on-release
+     18 90d
+      6 every round
+      6 180d
+      2 365d
+--- S327 full row:
+213:| S327 | vLLM Engine Arguments — https://docs.vllm.ai/en/v0.32.0/configuration/engine_args/ | docs | A | vLLM admission-control limit and the HTTP status it produces; not a local health verdict | --max-num-queued-reqs — When the limit is reached, new requests are rejected with HTTP 503 so the client can retry on another instance. | a 503 can be a deliberate admission rejection, distinct from a dead endpoint and from llama.cpp loading 503 | mined | 2026-10-24 | 90d | corpus/knowledge/endpoint-health-probe-conventions.md |
+--- recheck vocabulary across rows:
+     30 2026-10-19
+     26 2026-10-20
+     49 2026-10-21
+      8 2026-10-22
+     78 2026-10-23
+     12 2026-10-24
+#!/usr/bin/env python3
+"""gate-registry-check.py -- instrument-registry gate: occurrence + meaning.
+
+Every tracked round counter is a lane instrument; an instrument that SKILL.md
+never names cannot be graded, re-run or retired by a reader. Round 32 repairs
+the round-28 occurrence-only gate (routed by the round-31 closure: a thin row
+with empty cells, a row with an empty exit map, and a row citing a
+nonexistent path all flipped the gate to exit 0).
+
+Contract:
+    - Population: every tracked path matching ``.ufo/waves/round-*/count-*.py``
+      (one directory level below ``.ufo/waves/``, extension ``.py``) or
+      ``tools/round<N>-*.py`` (a round-scoped counter kept in ``tools/``).
+      Round 34 widens the rule: the round-33 counters live in ``tools/`` and
+      were invisible to this gate (routed defect of the round-33 closure).
+    - Registry: the ``| Name | Kind / entry command | Exit map |
+      Self-test / pinned values | Write scope |`` tables in SKILL.md at the
+      evaluated revision. A path is ``registered`` iff it occurs in a cell of
+      a row of such a table. A prose mention (a wave-artifact paragraph, a
+      lesson pointer) does not register; that weaker class is reported
+      ``unregistered`` even though the raw text occurs.
+    - Meaning, graded per registered row (defects; a row with a defect is
+      still registered, so a defective row does not also read unregistered):
+        * ``thin-row``        fewer than two non-empty cells;
+        * ``empty-entry``     the Kind / entry command cell is empty;
+        * ``empty-exit-map``  the Exit map cell is empty;
+        * ``missing-path:PATH`` a repo-relative path token (containing at
+          least one slash) in the entry / self-test / write-scope cells does
+          not exist at the evaluated revision. The counter's own path is
+          exempt; ``<placeholder>`` and bare-filename tokens are not paths.
+
+Output lines:
+    unregistered <path>              (sorted; prose-only occurrences land here)
+    defective <path>: <reason>       (sorted; one line per defect)
+    registered R unregistered U defective D
+
+Exit codes:
+    0  U == 0 and D == 0
+    1  U > 0 or D > 0
+    2  could not evaluate (not a git repo, bad revision, missing SKILL.md,
+
+
+• Interesting: the awk used-by extraction printed... wait, the first output block shows the *recheck* vocabulary (171 on-release, 18 90d, etc.)? No wait — I asked for $11 (used-by) in the first uniq and $10 (recheck) in the second. But the first output shows "171 on-release / 18 90d / 6 every round / 6 180d / 2 365d" — those are recheck-like values, not paths! And the second shows dates — also recheck-like values.
+
+  Hmm: awk -F'|' on `| S324 | ... |` — field $1 is empty (before first pipe), $2=id, $3=source, ..., so used-by is $12, not $11! And recheck is $11, opened is $10. So my extraction was off by one. The first uniq output (171 on-release etc.) is actually the recheck column vocabulary, and the second ($10) is the opened column. Wait, but the second shows 30x2026-10-19 etc. totaling 203 = number of rows. And first totals 171+18+6+6+2=203. Yes — both hit recheck-ish columns: $11 = recheck (on-release/90d/...), $10 = opened (dates). So used-by is $12.
+
+  Key facts learned regardless:
+  - `90d` is an established recheck value in the registry (18 rows already use 90d). ✓ So S328/S329 `90d` matches house vocabulary.
+  - Opened dates cluster on recent dates; 12 rows opened 2026-10-24 — consistent.
+
+  I still want the used-by convention ($12): do existing rows use `corpus/knowledge/...`? S327 row shows: `| corpus/knowledge/endpoint-health-probe-conventions.md |` — yes, `corpus/` prefix is house style. ✓ And S328/S329 use `corpus/knowledge/sglang-native-route-deprecation.md` — exact entry path. ✓ Let me confirm $12 distribution quickly to be thorough, and also confirm that all `knowledge/` used-by cells use the corpus/ prefix.
+
+  Also: gate-registry-check.py is about SKILL.md instrument registry, not SOURCES.md. The SOURCES.md validator is scripts/sources-census.sh (referenced in SOURCES.md). ls scripts/ printed nothing before the sed output? The output starts with the shebang directly — so `ls scripts/` produced no output, meaning scripts/ doesn't exist (2>/dev/null suppressed). So the referenced `scripts/sources-census.sh validate` doesn't exist in this tree — that's pre-existing, not part of my two rows. Not in scope (my scope is the two rows), but worth a residual note since round-31 lesson referenced it. Actually careful: SOURCES.md round-31 note references `scripts/sources-census.sh validate` — if that path doesn't exist, that's a lane-level issue, not a defect of the two rows I'm attacking. I'll note it as residual/context only. Hmm — wait, is scripts/ maybe at repo root? Let me verify with a quick find to avoid a false claim.
+
+  Now the /model_info zero-count claim: confirmed 0 literal `/model_info` occurrences in the mdx. ✓ (The "count of lines containing model_info" = 2, both `/get_model_info`.) The entry's claim "The string `/model_info` does not occur anywhere in that file — the count is zero" is TRUE. Good.
+
+  Line 6 quote exact match: ✓.
+
+  Line 9: `- \`/get_model_info\`` ✓ route list names it.
+
+  http_server.py: 786 registration ✓, 790-791 warning (two string literals whose concatenation equals the anchor quote exactly) ✓, 796 `/model_info` registration ✓, 793 `return await model_info()` ✓.
+
+  Now the anchor-quote nuance for S329: the anchor cell quote is a concatenation across two source lines (790: `"...version. "` with trailing space, 791: `"...instead."`). The registry anchor convention: let me check how other rows cite multi-line quotes — do they use " — " with a quote that spans lines? S174/S176 notes in SOURCES.md discuss "verbatim" labels being false when composed. Is the S329 anchor cell labelled verbatim? The cell format is `lines 790-791 — Endpoint '/get_model_info' ... instead.` — no "verbatim" label. The quote as rendered is exactly the emitted log message (Python implicit string concatenation: "Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead."). As a claim "this warning text sits at lines 790-791" — true as the concatenation of the two adjacent literals; not contiguous bytes on one line. I'll report this as a nuance/observation, not a defect: the anchor cites the range, the quote is the exact join of the two literals, no bytes added or dropped (trailing space of 790 + 791). Verify byte-exact join: line 790 literal content: `Endpoint '/get_model_info' is deprecated and will be removed in a future version. ` (trailing space) + line 791: `Please use '/model_info' instead.` = exactly the quote. ✓
+
+  For S328: quote sits at line 6 as the sentence prefix of line 6 ("...native server APIs. We introduce the following APIs:"). The anchor cites "line 6" for the quote — the quote is contained in line 6. ✓ "route-list line 9" — line 9 is the first route item `- \`/get_model_info\``... wait line 8 is `- \`/generate\` (text generation model)`, line 9 is `- \`/get_model_info\``. ✓.
+
+  Teaches cell S328: "the published page still lists only /get_model_info and never names /model_info" — zero `/model_info` confirmed; "lists only /get_model_info" — among model-info routes in the route list, yes only /get_model_info appears (list lines 8-? need the full list to be sure there's no second model-info route; grep showed get_model_info only at lines 9 and 71 in the whole file, so only one occurrence in the list). ✓
+
+  Also should I check the route list doesn't include /model_info further down (already covered by zero-count grep across whole file). ✓
+
+  Now the used-by $12 check and scripts/sources-census.sh existence check. Also double-check there is no trailing content after line 215 (are S328/S329 the last data rows of the Registry table?) — line 216+ should be blank or `##` sections. And confirm row count: are there rows after 215 that are data rows (e.g., S330+)? Grep showed S328/S329 only at 214/215. Fine.
+
+  One more contract item from the task: "check the recheck cell is a valid ISO date or an Nd value or a symbolic cadence" — `90d` = Nd ✓, and house vocabulary ✓.
+
+  "check the used-by cell names exactly the entry path" — `corpus/knowledge/sglang-native-route-deprecation.md` vs actual file at corpus/knowledge/sglang-native-route-deprecation.md ✓ (I read it). Also check the entry's own `source:` lines name S328 and S329 — yes, lines 3-4. ✓ Cross-consistency: entry cites S328 anchor "line 6 and route-list line 9" — matches row. S329: entry cites "lines 786, 790–791 and 796" — row anchor carries only 790-791; entry carries the superset. Not a row defect (row anchor need not repeat 786/796, but... hmm, is it a defect that the row anchor omits the registrations? The row's teaches is about the warning; the anchor grounding the teaches is 790-791. Fine.)
+
+  Run last checks: used-by $12 distribution, scripts/ existence, and lines 213-220 of SOURCES.md for context (last table rows).
+
+• House vocabulary confirmed: `90d` is already used by 18 existing rows; `corpus/knowledge/...` is the established used-by style (S327). Two last cross-checks, then I write the report.     37 corpus/knowledge
+     34 SKILL.md, registry/request-field-outcomes-r28.json, corpus/lessons
+     20 corpus/lessons
+     17 SKILL.md, registry
+     14 —
+     12 corpus/knowledge/llamacpp-loading-lifecycle.md, corpus/lessons
+     12 corpus/knowledge/chat-adapter-outcomes.md, registry
+      8 corpus/lessons/round-22.md, corpus/knowledge
+--- used-by cells NOT starting corpus/:
+     14 —
+      1 SKILL.md
+     17 SKILL.md, registry/error-signatures-r26.json
+     34 SKILL.md, registry/request-field-outcomes-r28.json, corpus/lessons/round-28.md
+--- rows after 215:
+
+## Paths
+
+--- scripts/sources-census.sh exists?
+ls: cannot access 'scripts/': No such file or directory
+790 raw: '        "Endpoint \'/get_model_info\' is deprecated and will be removed in a future version. "'
+791 raw: '        "Please use \'/model_info\' instead."'
+join == anchor quote: True
+quote in line 6 of mdx: False
+
+
+• The last check: "quote in line 6 of mdx: False" — I sliced quote[:93]. Let me count: "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs." — the quote is 95 chars? Let me count: The row's anchor quote for S328 is "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs." — 95 characters including the period. quote[:93] chopped the last two chars ("s."). My slice was wrong, not the source. Earlier direct grep -Fc of the exact full quote on line 6 returned 1. So line 6 ✓ confirmed already. The python slice was just a bad length; the grep already proved it byte-exactly.
+
+  Everything checks out:
+
+  **S328:**
+  - 11 columns ✓ (header has 11: id, source, kind, tier, scope, anchor, teaches, status, opened, recheck, used-by)
+  - no literal/escaped pipe in any cell ✓ (split yields exactly 11)
+  - recheck `90d` = Nd ✓, house vocabulary (18 existing rows)
+  - used-by `corpus/knowledge/sglang-native-route-deprecation.md` = exact entry path ✓, exists ✓, house style ✓ (37 rows use corpus/knowledge prefix)
+  - opened `2026-10-24` valid ISO ✓, matches lesson + README + entry verified-at
+  - anchor: quote byte-exact at line 6 ✓; "route-list line 9" = `- \`/get_model_info\`` ✓
+  - teaches cross-check: `/model_info` literal count in whole file = 0 ✓; `/get_model_info` at lines 9 and 71 only ✓; line 71 worked example matches entry claim ✓
+  - kind `docs`, tier `A`, status `mined` — consistent with S327's shape.
+
+  **S329:**
+  - 11 columns ✓, no pipes ✓
+  - recheck `90d` ✓, used-by exact ✓, opened ISO ✓
+  - anchor: quote = exact concatenation of the two string literals at lines 790-791 (byte-exact, trailing space of 790 preserved) ✓. Nuance: the quote is not contiguous bytes on a single source line — it spans two adjacent string literals; the anchor honestly cites the range 790-791. Lines 786 (registration of /get_model_info) and 796 (registration of /model_info) verified for the entry's claims; row anchor cites only 790-791, which grounds its teaches. Fine.
+  - old handler `return await model_info()` at line 793 ✓ (entry claim).
+
+  **Cross-consistency:**
+  - byte sizes: fetched 17359 and 110718 bytes — exactly the lesson's claims ✓
+  - HTTP 200 ✓
+  - entry `source:` lines match row URLs and anchors ✓
+  - both rows are the last two data rows of the Registry table (line 216 blank, then `## Paths`) ✓
+
+  **Observations / non-defects / residual:**
+  1. S329 anchor quote is a two-literal concatenation (790 + 791), not contiguous on one line — the anchor range makes this unambiguous; renders exactly as the emitted warning. Not a defect, but worth recording since round-30 record shows the lane treats composed quotes as a known hazard (S174/S176 "verbatim" mislabels). S329's cell does NOT carry a "verbatim" label, so no false claim.
+  2. My earlier awk miscount taught: used-by is column 12 with -F'|' (leading empty field). House convention: `corpus/` prefix used by the vast majority; S328/S329 match it.
+  3. Residual (out of my row scope): SOURCES.md's round-31 note references `scripts/sources-census.sh validate`, but `scripts/` does not exist in the working tree — pre-existing pointer, not a property of S328/S329. I should mention as residual note only, flagged as outside scope. Hmm — careful: is it possible the census script lives elsewhere? Let me not overclaim: I checked `scripts/` at repo root doesn't exist; a Glob for sources-census.sh would settle it. Quick check before writing.
+  4. Substring hazard note: `/model_info` is a substring of nothing in the mdx — confirmed zero. But note "model_info" substring count = 2 (both within /get_model_info) — entry's claim is specifically about the string `/model_info`, which is accurate.
+
+  Let me do the final glob for sources-census.sh and then write the report. Also date "verified-at 2026-10-24" in the entry matches opened. Also recheck in entry (90d) matches rows.
+
+• All checks pass (the last "False" was my own bad 93-char slice — the earlier `grep -F` proved the full quote byte-exact on line 6). One final existence check, then the report.
+
+• No `scripts/sources-census.sh` in the working tree — only census outputs/logs in seat sandboxes. That's a pre-existing pointer outside my two-row scope; I'll note it as residual, clearly flagged (it's a stale reference inside SOURCES.md, but not a property of rows S328/S329, and the task forbids me from editing; also it may exist at some past revision — I only checked the working tree).
+
+  Now write the report at /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevRowsBytes.md.
+
+  Report contents:
+  - Scope, method (fetched bytes, HTTP 200, sizes).
+  - Findings by severity: no defects found in the two rows. List each check with evidence.
+  - Observations (non-defects): S329 quote is a two-literal concatenation (byte-exact join); anchor range honestly spans it; no "verbatim" label so no S174-style hazard. /model_info zero-count: literal `/model_info` = 0; note substring `model_info` appears twice, both inside `/get_model_info`, so entry's phrasing is precise.
+  - Residual risk and verification gaps: (a) single fetch, single mirror (raw.githubusercontent) — no independent mirror cross-check; (b) tag could be re-pointed upstream (tag mobility) — pinning is by tag not SHA; (c) stale `scripts/sources-census.sh` pointer in SOURCES.md (pre-existing, outside scope, working-tree check only); (d) verified S328/S329 against working tree, not against a landed commit — the draft bytes could differ at landing.
+
+  Measured vs inference separated. Keep it tight.
+
+  Columns: header `| id | source | kind | tier | scope | anchor | teaches | status | opened | recheck | used-by |` = 11. Both rows split into exactly 11 cells on literal `|`, and no `\|` anywhere in either row.
+
+  Write the file now.
+
+• No `scripts/sources-census.sh` exists in the working tree (only census output logs in other seats' sandboxes) — a pre-existing pointer, outside my row scope; I'll flag it as residual. Writing the report now.written
+69 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevRowsBytes.md
+
+
+• Report written at the trailer path. Task complete. Summarize concisely: findings by severity (none), observations, residual risk. Stop here — no actionable finding remains in scope.
+
+• Report written to `.ufo/waves/round-36/w3/out/RevRowsBytes.md`. Summary:
+
+  **Findings by severity: none.** Both rows survive every assigned check on the fetched bytes:
+
+  - **Columns:** 11/11 both rows (header has 11). No literal or escaped pipe in any cell.
+  - **Recheck:** `90d` — valid Nd, already house vocabulary (18 existing rows).
+  - **Used-by:** `corpus/knowledge/sglang-native-route-deprecation.md` — exactly the entry path, file exists, `corpus/` prefix matches house style (S327 immediate precedent).
+  - **Opened:** `2026-10-24` — valid ISO, consistent across lesson, README, and entry `verified-at`.
+  - **S328 anchor:** quote byte-exact at line 6; "route-list line 9" is `- \`/get_model_info\``; literal `/model_info` count in the whole file is 0 (grep -Fc: 0), so the teaches claim holds.
+  - **S329 anchor:** quote is the byte-exact concatenation of the two adjacent string literals at lines 790–791 (`ast.literal_eval` join == quote); registrations verified at lines 786 and 796; old handler still `return await model_info()` (793). Fetch sizes (17359 / 110718 bytes) match the lesson's claims exactly.
+
+  **Observations (non-defects):** S329's quote spans two source lines as a language-level join — the anchor honestly cites the 790-791 range and carries no "verbatim" label, so it avoids the S174/S176 composed-quote hazard. The entry's zero-count phrasing is precise for the literal string `/model_info`.
+
+  **Residual risk:** single fetch of a re-pointable tag (no SHA pin, no second mirror); working-tree bytes, not a landed commit; and one pre-existing out-of-scope stale pointer — SOURCES.md's round-31 note routes through `scripts/sources-census.sh`, which doesn't exist in the working tree.
+
+  No actionable finding remains in scope.
+
+To resume this session: kimi -r session_7d5df7d3-cca1-4d9f-83c7-47b6c4fc97e3

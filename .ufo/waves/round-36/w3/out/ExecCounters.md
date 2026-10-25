@@ -1,0 +1,755 @@
+kimi version 2.3.1
+• Let me parse the task. I'm a Godspeed subagent, kama lane round 36 wave 3, seat ExecCounters. My job:
+
+  1. Run both counting commands with `--tip e5a8ececf3d60fd53b36bb74299693a29e8f74b6` and paste both output lines and both exit codes.
+  2. From the counters' own code, say what tip value would make each command read the draft bytes.
+  3. Write report to `.ufo/waves/round-36/w3/out/ExecCounters.md` (relative to /home/vgpnk/Projects/shokunin/kama-shokunin).
+
+  Frozen claims:
+  - C1 calibration 7 -> 7, tool: tools/round36-statement-audit.py
+  - C2 coverage 9 -> 9, tool: tools/round36-coverage-audit.py
+
+  I must not edit the tools, must not run mutating git/jj, read-only git permitted.
+
+  Let me start by running both commands and reading the tool source in parallel.
+
+  Plan:
+  1. Run command 1 with --tip, capture output and exit code.
+  2. Run command 2 with --tip, capture output and exit code.
+  3. Read both tool sources to understand how they use --tip (e.g., do they use jj show/git show at that tip, and the draft bytes are in the working tree, uncommitted — so no tip value would read them unless tip is the working copy / virtual working-copy commit, e.g. jj's @ commit id or "@" itself, or the tool reads files directly when tip is something like "worktree" or empty).
+
+  Key insight likely: the draft bytes are in the working tree but not committed, so any --tip pointing to a commit won't include them. The counter code may run `git show <tip>:path` or `jj file show -r <tip>` — so the tip that would read draft bytes would be the working-copy commit id (jj @) or something like `-r @` / empty tree. I need to check the code.
+
+  Let me execute. All in parallel: two bash runs, two file reads.
+
+  Command form:
+  ```
+  cd /home/vgpnk/Projects/shokunin/kama-shokunin && python3 tools/round36-statement-audit.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip e5a8ececf3d60fd53b36bb74299693a29e8f74b6; echo "EXIT=$?"
+  ```
+
+  Careful with bounds: no mutating commands. python3 running a script that might write? The tools are auditors; presumably read-only, but I should check quickly. Actually the task explicitly says to run them, so it's sanctioned. But I should not let them mutate anything — I'll read the code anyway for the second part.
+
+  Let me do it in one batch:
+  - Bash 1: run statement audit, print output + exit code.
+  - Bash 2: run coverage audit, print output + exit code.
+  - Read tools/round36-statement-audit.py
+  - Read tools/round36-coverage-audit.py
+
+  Then answer what tip makes each read draft bytes.
+
+  Also need to determine whether the draft bytes are committed at tip e5a8ec... or only in working tree. I can check with `git status --porcelain` (read-only) on the lane, and `git show tip:corpus/lessons/round-36.md` existence. Careful: lane repo is jj; git commands read-only permitted. `git status` doesn't mutate. `git show` doesn't mutate. That's allowed ("Read-only git is permitted").
+
+  Let me batch all these.uncorrected 4 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met False
+EXIT_CODE=1
+named 0 file_exists 0 cited_new 0 met False
+EXIT_CODE=1
+Both commands ran. Output lines:
+
+  1. Statement audit: `uncorrected 4 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met False`, exit code 1.
+  2. Coverage audit: `named 0 file_exists 0 cited_new 0 met False`, exit code 1.
+
+  Now the question: from the counters' own code, what tip value would make each command read the draft bytes?
+
+  Key: both counters read everything through `git show <rev>:<path>` / `git rev-parse <rev>:<path>` / `git ls-tree -r rev`. The draft bytes are in the working tree, uncommitted (need to verify that). If the drafts were committed at some commit, then passing that commit id as --tip would read them. But "draft bytes ... the L1 has just written into the lane working tree" — likely uncommitted working tree changes.
+
+  git show with rev being the working tree? Git doesn't support `:` with working tree directly. Options:
+  - `git show :path` reads stage 0 of the index (not working tree).
+  - There's no rev syntax for working tree files via `git show`. `git show :./path`? That's relative to cwd in index. Working tree file content is not accessible via `git show` at all.
+
+  Wait — but the lane is a jj repo. In jj, the working copy is a real commit (`@`). If the lane repo has a colocated git dir, the jj working-copy commit exists as... hmm. In a jj git-colocated repo, jj maintains a git ref `jj/heads/<name>` or `refs/jj/...`? Actually jj in colocated repos stores refs under `refs/jj/` in the git repo. The working-copy commit `@` has a git commit object accessible via `git show <change-id>@<workspace>`? No — git can't resolve jj change ids. But jj writes a ref for the working copy: `refs/jj/heads/...`? Let me think.
+
+  In colocated repos, jj exports refs: branch names as `refs/heads/<name>`, and jj-internal refs under `refs/jj/`. The working copy commit id is a git commit object (jj commits are real git commits). So you could resolve it via the git object database if you know the commit id. You can find it via `jj log` (read-only? `jj log` is read-only, allowed — "never run a mutating jj command"; read-only jj should be fine... but careful: some jj commands auto-snapshot the working copy, mutating it. `jj log` snapshots! Actually `jj log` does snapshot the working copy by default (it materializes the working-copy commit). Hmm — jj auto-snapshots on most commands including `jj log`? jj commands snapshot the working copy before running (`jj st`, `jj log`, `jj commit`...). That snapshot updates the `@` commit — that's a mutating jj operation. Risky. The bounds say never run a mutating jj command. `jj log` triggers working-copy snapshot which creates/updates the commit — that mutates the repo state. I should avoid jj entirely to be safe.
+
+  Alternative: use git plumbing read-only. In a colocated repo, the jj working-copy commit is a git object in .git. Is it reachable via any ref? jj keeps refs for branches; the working copy commit may be referenced by `refs/jj/heads/...`? Let me just check with read-only git: `git -C lane rev-parse HEAD`, `git status --porcelain`, and look for refs: `git -C lane for-each-ref`. Also `git -C lane ls-files` won't show drafts unless staged.
+
+  But wait — maybe the task's intended answer is simpler. The question: "say, from the counters' own code, what tip value would make each command read the draft bytes." The honest answer from the code: the counters read via `git show {rev}:{path}`. Git resolves `rev:path` from commits, trees, and the index (`:path` = stage 0). The working tree is NOT addressable by any `--tip` value that git accepts for `git show`. Therefore no tip value reads the draft bytes — unless the drafts get committed. Hmm, but that's "no tip value" — is that the intended falsification? The wave goal is "falsify the draft landing bytes" — showing the counters can't see the drafts at any tip, i.e., the frozen claims (7→7, 9→9) can never be affected by the drafts until they're committed, OR conversely: the do-nothing controls print met False, and the drafts can't flip met without a commit.
+
+  Actually wait. Let me re-read: "Then say, from the counters' own code, what tip value would make each command read the draft bytes." This presupposes there is an answer. Possibly:
+
+  1. For the coverage audit: `base` is hardcoded to e5a8ec... and `tip` is the argument. `base_sources = git_show(repo, BASE, ...)`. So the base is fixed. The tip argument controls readme/entry/sources. If the drafts were committed as a git commit C, passing C would read them.
+
+  2. Git DOES support reading the index: `git show :corpus/lessons/round-36.md`. So `--tip ":corpus/lessons/round-36.md"`? No — the rev and path are separate args; the f-string is `f"{rev}:{path}"`. So rev = "" would give `:corpus/lessons/round-36.md` → git show reads from index stage 0! If the drafts are staged (git add), `--tip ""` would read the staged bytes. But the bounds forbid me from running git add. But the L1 may have staged them? Unlikely — bounds forbid mutating git index, and the L1 presumably follows the same.
+
+  3. For a jj colocated repo: the working copy IS a commit. The git ref... In colocated repos jj keeps the working copy commit in the git object store; `git rev-parse refs/jj/...`? Let me check what refs exist. jj writes `refs/jj/heads/<branch>` for branches? Actually jj exports branches as `refs/heads/*` and keeps its own under... Let me just look. Also, is the lane repo even colocated? Need to check for .jj directory and git log.
+
+  Also HEAD: `git show HEAD:...`. What is HEAD at e5a8ec? The tip e5a8ec is probably HEAD or the parent. The statement counter's FLEET report is read from FLEET repo at HEAD regardless.
+
+  Let me gather facts (all read-only):
+  - `git -C lane rev-parse HEAD`
+  - `git -C lane status --porcelain` (see if drafts are modified/untracked)
+  - `git -C lane ls-tree -r --name-only e5a8ec | grep round-36` (does the tip contain the draft paths?)
+  - `git -C lane for-each-ref` (what refs exist — any jj working copy ref?)
+  - Check .jj existence: `ls -d lane/.jj`.
+  - Check whether draft paths exist in working tree: ls.
+
+  Also verify: at tip e5a8ec, does corpus/lessons/round-36.md exist? git_show returns None → lesson = "". That's why uncorrected 4 (no rows found).
+
+  Also check whether the working copy commit is resolvable: in colocated jj repos, `git rev-parse @` won't work, but jj writes `refs/jj/heads/...`? Actually I recall: colocated jj repos have `refs/heads/*` exported and jj-specific refs hidden. The working copy commit is NOT exported as a ref by default (git.auto-local-branch). Hmm, but jj does keep `refs/jj/heads/<name>`? Let me check `git for-each-ref --format='%(refname)'` output and also `git rev-parse refs/jj 2>/dev/null` etc. Let me also check `git cat-file -t` for some candidate. Simpler: find the working copy commit id from jj metadata file `.jj/repo/working_copy/`? That contains a JSON describing the working copy commit. Reading it is read-only. But resolving its commit id via git cat-file works if colocated.
+
+  But hold on — is using the jj working-copy commit id as --tip legitimate "from the counters' own code"? The code does `git show f"{rev}:{path}"`. If rev = <working-copy commit id>, git show reads that commit's tree. In a colocated repo, the working copy commit is a git commit whose tree includes the working copy content (jj materializes the working tree from that commit; the commit's tree matches the snapshot of working copy as of last jj snapshot). The drafts written by the L1 — were they snapshotted into the working-copy commit? Only if some jj command ran after the writes. jj auto-snapshots on jj command invocation. The L1 wrote files with Write tools (not jj), so the working-copy commit may NOT contain the drafts until a jj snapshot runs. Hmm, but the L1 might have run `jj st` or the like. Can't assume.
+
+  Alternatively maybe the answer intended is simpler: the counters read `git show {tip}:{path}` — for the drafts to be read, tip must be a commit that contains them, i.e., a commit made after the drafts are committed (e.g., the future landing commit). But the question says "what tip value would make each command read the draft bytes" — maybe the answer is literally "no tip value in the current repo state; only a commit that contains the drafts (e.g., after they are committed) — git show cannot read the untracked/modified working tree". But we should check whether the working copy commit exists and contains the drafts — that's an empirical check.
+
+  Also possible subtlety: `git show {rev}:{path}` where rev could be any tree-ish. `git show <tree-ish>:<path>` works for trees too. So tip could be... still requires the bytes in a tree.
+
+  Special: `git show :path` (empty rev) reads index. If drafts are in the index (staged), tip="" reads them. Let me check `git -C lane ls-files -s | grep round-36` and `git diff --cached --stat`.
+
+  Empirical steps (all read-only, in lane repo; read-only git permitted):
+  1. `git rev-parse HEAD`
+  2. `git status --porcelain` (porcelain includes untracked)
+  3. `git ls-tree -r --name-only e5a8ec...` filtered for the draft paths
+  4. `git for-each-ref`
+  5. `ls -d .jj 2>/dev/null; cat .jj/repo/working_copy/ 2>/dev/null` — list `.jj/repo/working_copy/` to find the snapshot JSON with commit id.
+  6. Check staged: `git diff --cached --name-only`
+
+  Note: `git status` on a colocated jj repo... git sees untracked drafts and possibly a dirty tree. Safe, read-only.
+
+  Also careful: don't run `git -C /home/vgpnk/Projects/shokunin` fleet? Reading fleet HEAD is done by counter itself; fine.
+
+  Let me also confirm the lane's git HEAD relationship: `git log --oneline -3`.
+
+  Then compose the answer:
+
+  For statement audit: reads lesson draft via `git_show(repo, tip, "corpus/lessons/round-36.md")` at line 278. Also everything else at tip. So tip value must be a rev resolvable by git whose tree contains corpus/lessons/round-36.md with the draft rows. Empirically: X.
+
+  For coverage audit: reads via load(): `git_show(repo, tip, "corpus/README.md")`, `git_show(repo, tip, ENTRY_REPO)`, `git_show(repo, tip, "corpus/SOURCES.md")`, base fixed. So same requirement.
+
+  Now the nuance "from the counters' own code": the mechanism is `git show {rev}:{path}`, so the only tip values that can ever read the draft bytes are (a) a commit/tree-ish that contains them — i.e., after they're committed — or (b) `""` (empty string) making `git show :<path>` read the index, if the drafts were staged. Working tree bytes are unreachable for any tip value because `git show` never reads the working tree.
+
+  Let me run the checks now. Also double check: does `git show ":path"` work with rev=""? f"{rev}:{path}" with rev="" → ":corpus/lessons/round-36.md" — yes, that's the index syntax. And with rev absent... So from the code, tip="" reads the index version. Whether the index has drafts: check `git diff --cached`.
+
+  Let me also verify the draft files exist in the working tree.
+
+  One more check to nail "what tip value": try resolving whether the jj working-copy commit exists in git and contains drafts. If .jj exists and is colocated, find commit id from `.jj/repo/working_copy/` — there's usually a file like `working-copy.json` containing "commit_id"? Let me look. Actually jj stores it in `working_copy/working-copy-state.json` (older) with commit id fields. The commit id (git sha) — jj change id vs commit id. working-copy state stores the commit ID (git sha). Then `git cat-file -p <sha>` shows its tree, and `git show <sha>:corpus/lessons/round-36.md` — that's exactly the counter's code path. That would be the concrete empirical answer: tip = the jj working-copy commit sha (if it contains drafts).
+
+  But careful about read-only: `git show`/`cat-file` are read-only. Good. Reading .jj files: read-only, fine.
+
+  Plan the batch:
+  - Bash A: cd lane && git rev-parse HEAD && git log --oneline -2 && ls -d .jj && git status --porcelain (this may be big; limit output with head -50)
+  - Bash B: git -C lane ls-tree -r --name-only <base> | grep -E 'round-36|sglang|README|SOURCES' ; git -C lane diff --cached --name-only
+  - Bash C: ls lane/corpus/lessons/round-36.md lane/corpus/knowledge/sglang-native-route-deprecation.md; cat .jj/repo/working_copy/ dir listing
+  - Bash D: for-each-ref
+
+  Let me batch these into 3-4 parallel calls.
+
+  Then depending on results, resolve working-copy commit and test git show on it for the lesson draft (read-only).
+
+  Then write the report.
+
+  Also: the Godspeed prompt says spawn exactly one labrat when seated as probeParent executor — but my task prompt says "Do not spawn subagents" and "leaf member — no subagent dispatch except your single labrat". I am not explicitly seated as probeParent here; the task is pure execution. No subagent needed. The task prompt says "You are a leaf. Do not spawn subagents." I'll spawn none.
+
+  Proceed.
+
+• Both counters ran. Now I need to verify the repo state to answer the tip question from the code (both read via `git show {rev}:{path}` / `git rev-parse {rev}:{path}` / `git ls-tree {rev}` — never the working tree). Checking what revs exist:9014843cb7de8fbe87a97954c13832b67d55f046
+9014843 round-36: freeze predicates, failing controls, and wave spec
+e5a8ece round-35 verifier spot-check (integrator, hyaku): non-author admit/reject
+66bcd07 round-35: post-settlement seat log flushes
+---refs---
+refs/heads/hyaku/s3-ready66-kama 2e254a1763a9c08aa07fc53081287f506c447d84
+refs/heads/master 9014843cb7de8fbe87a97954c13832b67d55f046
+refs/jj/keep/00107b6e746c1edf287f0d21e6c0ea1389bcb376 00107b6e746c1edf287f0d21e6c0ea1389bcb376
+refs/jj/keep/0061863c43a98bb71b5ddd2d8fa1715c2b48558f 0061863c43a98bb71b5ddd2d8fa1715c2b48558f
+refs/jj/keep/00aa1486a0dee3375d6e974adc45ee501d7ab4d7 00aa1486a0dee3375d6e974adc45ee501d7ab4d7
+refs/jj/keep/00c0bd1dc391a127d4a992b9dc8b43d7b5753d53 00c0bd1dc391a127d4a992b9dc8b43d7b5753d53
+refs/jj/keep/00ea3419bcd7ce378129cfcb3e2f9c50b54bd19b 00ea3419bcd7ce378129cfcb3e2f9c50b54bd19b
+refs/jj/keep/01157a248356287028ee89fda0643a96bc317724 01157a248356287028ee89fda0643a96bc317724
+refs/jj/keep/01d0e985d0b32a173a3577d0651fece03f4a5ca0 01d0e985d0b32a173a3577d0651fece03f4a5ca0
+refs/jj/keep/01da3a5f774ae42c25fa3b9eda8af5dd267d9179 01da3a5f774ae42c25fa3b9eda8af5dd267d9179
+refs/jj/keep/01dd5ca6cebefaf05bf49fc7fa667ccf891a1a2b 01dd5ca6cebefaf05bf49fc7fa667ccf891a1a2b
+refs/jj/keep/020d08fb57468ec7fad5c13bb071fb25bc8b3fe1 020d08fb57468ec7fad5c13bb071fb25bc8b3fe1
+refs/jj/keep/022c3f06fcdc7133ec14ff4082b13e4379c2bd3d 022c3f06fcdc7133ec14ff4082b13e4379c2bd3d
+refs/jj/keep/02587ebdfe16eae456362734ac0efa48a7784630 02587ebdfe16eae456362734ac0efa48a7784630
+refs/jj/keep/026eede9f46abd4eeea204eb4262bbbb31a4facb 026eede9f46abd4eeea204eb4262bbbb31a4facb
+refs/jj/keep/027063b15d4b4026eb39287dd45908386952a623 027063b15d4b4026eb39287dd45908386952a623
+refs/jj/keep/028235e6f28d5b7f4106dd121956f10d2c762f48 028235e6f28d5b7f4106dd121956f10d2c762f48
+refs/jj/keep/02de2ffad535258ad3a94e6caf29e640c06e705e 02de2ffad535258ad3a94e6caf29e640c06e705e
+refs/jj/keep/03a2a4a583bf164e57513e6899dca926a37adb8b 03a2a4a583bf164e57513e6899dca926a37adb8b
+refs/jj/keep/0418cbdd9505d299e3217c8293b2264c6718c8c1 0418cbdd9505d299e3217c8293b2264c6718c8c1
+---colocated?---
+.jj
+---base tree has drafts?---
+.ufo/waves/round-11/frozen/before/corpus/SOURCES.md
+.ufo/waves/round-12/frozen/corpus/SOURCES.md
+.ufo/waves/round-13/frozen/after/corpus/QUALITY.md
+.ufo/waves/round-13/frozen/before/corpus/QUALITY.md
+.ufo/waves/round-16/sources/llama.cpp-704366d/README.md
+.ufo/waves/round-17/runs/noharm-README.txt
+.ufo/waves/round-17/sources/llama.cpp-704366d76/tools/server/README.md
+.ufo/waves/round-20/build/out/CensusHarness/error-injection-fixtures/README.txt
+.ufo/waves/round-20/build/out/ReadmeCoverage/README-append.md
+.ufo/waves/round-20/build/out/SrcGgufPyReader/SOURCES-row-draft.md
+.ufo/waves/round-20/build/out/SrcOllamaBlobs/SOURCES-row-candidate.md
+.ufo/waves/round-21/build/out/SrcGitRevisions/SOURCES-row-S066-draft.md
+.ufo/waves/round-21/falsify/out/ReopenS066/fixture-SOURCES.a6617149.md
+.ufo/waves/round-23/falsify/out/ConnFrontierLedger/README-frontier-round-23.md
+.ufo/waves/round-24/build/out/ConnClosure/auditors/README.md
+.ufo/waves/round-24/build/out/ScribeFrontier/corpus-README-round24-append-text.md
+.ufo/waves/round-24/build/out/ScribeFrontier/corpus-README-round24-frontier-correction.md
+.ufo/waves/round-24/build/out/ScribeFrontier/corpus-README-round24-frontier.patch
+.ufo/waves/round-24/build/out/ScribeFrontier/corpus-README.with-round24-frontier.md
+.ufo/waves/round-24/build/out/ScribeQuality/QUALITY-KQ35.patch
+.ufo/waves/round-24/build/out/SrcCatFile/SOURCES-candidate-row.md
+.ufo/waves/round-24/build/out/SrcPromisorCode/SOURCES-candidate-row.md
+.ufo/waves/round-24/build/out/SrcRevList/SOURCES-row-candidate.md
+.ufo/waves/round-24/fixes/GridAttestation/README.md
+.ufo/waves/round-24/fixes/GridAttestationV2/README.md
+.ufo/waves/round-24/fixes/GridAttestationV3/README.md
+.ufo/waves/round-24/fixes/GridAttestationV4/README.md
+.ufo/waves/round-24/fixes/GridAttestationV5/README.md
+.ufo/waves/round-24/fixes/GridAttestationV6/README.md
+.ufo/waves/round-24/fixes/GridAttestationV7/README.md
+.ufo/waves/round-24/fixes/GridMetrics/README.md
+.ufo/waves/round-24/fixes/StoreLocalPresence/README.md
+.ufo/waves/round-24/postfix/out/FinalCase02/README-evidence.txt
+.ufo/waves/round-24/postfix/prepared-appends-v2/corpus__QUALITY.md.txt
+.ufo/waves/round-24/postfix/prepared-appends-v2/corpus__README.md.txt
+.ufo/waves/round-24/postfix/prepared-appends-v3/corpus__QUALITY.md.txt
+.ufo/waves/round-24/postfix/prepared-appends-v3/corpus__README.md.txt
+.ufo/waves/round-24/postfix/prepared-appends/corpus__QUALITY.md.txt
+.ufo/waves/round-24/postfix/prepared-appends/corpus__README.md.txt
+.ufo/waves/round-26/controls/KamaR26CtlCounterMutants/SOURCES.md.control.patch
+.ufo/waves/round-26/sources/llama.cpp-704366d/README.md
+.ufo/waves/round-26/w2-falsify/out/CriticShortcutRows/shortcut.SOURCES.rows.md
+.ufo/waves/round-27/controls/KamaR27CtlAllFalse/SOURCES.md
+.ufo/waves/round-27/controls/KamaR27CtlContentFree/patch-SOURCES.patch
+.ufo/waves/round-27/controls/KamaR27CtlCounterMutants/fixtures/a_next_words/corpus/SOURCES.md
+.ufo/waves/round-27/controls/KamaR27CtlCounterMutants/fixtures/a_path_cell/corpus/SOURCES.md
+.ufo/waves/round-27/controls/KamaR27CtlCounterMutants/fixtures/a_signature_cell/corpus/SOURCES.md
+.ufo/waves/round-27/controls/KamaR27CtlCounterMutants/fixtures/b_held_at_base/corpus/SOURCES.md
+.ufo/waves/round-27/controls/KamaR27CtlCounterMutants/fixtures/b_short_signature/corpus/SOURCES.md
+.ufo/waves/round-27/controls/KamaR27CtlCounterMutants/fixtures/c_missing_sources_row/corpus/SOURCES.md
+.ufo/waves/round-27/controls/KamaR27CtlCounterMutants/fixtures/d_wrong_literal_line/corpus/SOURCES.md
+.ufo/waves/round-27/controls/KamaR27CtlCounterMutants/fixtures/e_healthy_request/corpus/SOURCES.md
+.ufo/waves/round-27/controls/KamaR27CtlCounterMutants/fixtures/f_casefold_request_echo/corpus/SOURCES.md
+.ufo/waves/round-27/controls/KamaR27CtlCounterMutants/fixtures/g_failed_control_status/corpus/SOURCES.md
+.ufo/waves/round-27/controls/KamaR27CtlCounterMutants/fixtures/h_same_next_action/corpus/SOURCES.md
+.ufo/waves/round-27/controls/KamaR27CtlCounterMutants/fixtures/pilot/corpus/SOURCES.md
+.ufo/waves/round-27/repairs/d3-r26-shortcut-pins/README.json
+.ufo/waves/rou
+nd-27/repairs/d4-r26-dead-seat-errors/README.json
+.ufo/waves/round-27/w1a3/out/ScoutEchoSitesSnapshot/README.txt
+.ufo/waves/round-27/w1a3/out/ScribeReadmeFrontier/README-append.md
+.ufo/waves/round-28/controls-A1/CtlA1Conversion/fixture/SOURCES.add.md
+.ufo/waves/round-28/controls/CtlDuplicateField/fixture/SOURCES-rows.md
+.ufo/waves/round-28/controls/CtlJunk/fixture/SOURCES-additions.md
+.ufo/waves/round-28/controls/CtlLabelKeyed/fixture/SOURCES-rows.md
+.ufo/waves/round-28/controls/CtlSourceBlind/fixture/SOURCES.add.md
+.ufo/waves/round-28/controls/CtlSourceMisuse/fixture/SOURCES-rows.md
+.ufo/waves/round-28/w1/out/ExecCountC2Fix/README.md
+.ufo/waves/round-29/w1/out/ExecTimingTranscript/README.md
+.ufo/waves/round-34/assimilation/validate/README.md
+.ufo/waves/round-34/assimilation/validate/corpus/QUALITY.md
+.ufo/waves/round-34/assimilation/validate/corpus/README.md
+.ufo/waves/round-34/assimilation/validate/corpus/SOURCES.md
+.ufo/waves/round-34/w1/out/ReviewC1Control/name-only-repo/corpus/SOURCES.md
+.ufo/waves/round-34/w1/out/ReviewC1Control/phantom-repo/corpus/SOURCES.md
+.ufo/waves/round-35/w1/out/MutC2Junk/scratch-repo/corpus/README.md
+.ufo/waves/round-35/w1/out/MutC2Junk/scratch-repo/corpus/SOURCES.md
+.ufo/waves/round-35/w1/out/MutCensusPipe/SOURCES.md
+.ufo/waves/round-35/w1/out/MutCensusPipe/SOURCES.mutant.md
+.ufo/waves/round-35/w1/out/MutCensusPipe/SOURCES.pristine.md
+.ufo/waves/round-35/w1/out/MutCensusPipe/SOURCES.restored.md
+.ufo/waves/round-35/w1/out/ScribeGate/fetch/sglang-llmd.html
+README.md
+corpus/QUALITY.md
+corpus/README.md
+corpus/SOURCES.md
+---staged (index)?---
+---working tree status---
+ M .ufo/waves/round-35/w1/out/ConnSibling/seat.log
+ M .ufo/waves/round-35/w1/out/ExecDisposition.md
+ M .ufo/waves/round-35/w1/out/ExecDisposition/seat.log
+ M .ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log
+ M corpus/QUALITY.md
+ M corpus/README.md
+ M corpus/SOURCES.md
+?? .ufo/waves/round-35/assimilation/validate/
+?? .ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html
+?? .ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html
+?? .ufo/waves/round-36/assimilation/append-block.md
+?? .ufo/waves/round-36/assimilation/correction-lines.md
+?? .ufo/waves/round-36/assimilation/guard/re-col0-collisions
+?? .ufo/waves/round-36/assimilation/guard/re-col0-ids
+?? .ufo/waves/round-36/assimilation/guard/re-space-collisions
+?? .ufo/waves/round-36/assimilation/guard/re-space-ids
+?? .ufo/waves/round-36/assimilation/guard/re-staged-ids
+?? .ufo/waves/round-36/assimilation/quarantine-slice
+?? .ufo/waves/round-36/assimilation/sglang-native-route-deprecation.md
+?? .ufo/waves/round-36/assimilation/validate-census.out
+?? .ufo/waves/round-36/assimilation/validate/
+?? .ufo/waves/round-36/census-worktree.out
+?? .ufo/waves/round-36/w1/out/ConnSibling.md
+?? .ufo/waves/round-36/w1/out/ConnSibling/
+?? .ufo/waves/round-36/w1/out/CriticC1Noop.md
+?? .ufo/waves/round-36/w1/out/CriticC1Noop/
+?? .ufo/waves/round-36/w1/out/CriticC2OldId.md
+?? .ufo/waves/round-36/w1/out/CriticC2OldId/
+?? .ufo/waves/round-36/w1/out/CriticProvince.md
+?? .ufo/waves/round-36/w1/out/CriticProvince/
+
+
+• Key facts so far:
+
+  - Lane git HEAD = 9014843cb7de8fbe87a97954c13832b67d55f046 ("round-36: freeze predicates, failing controls, and wave spec"), parent e5a8ececf3d60fd53b36bb74299693a29e8f74b6 (the BASE).
+  - Lane is jj (`.jj` exists) and colocated (refs/jj/keep/* exist). `.jj/repo/working_copy/` listing failed because of `&&` chain exit — the `ls .jj/repo/working_copy/` may have failed (exit 2 came from somewhere; actually the error "Command failed with exit code: 2" at the end: `ls -d .jj` succeeded printing `.jj`, then `ls .jj/repo/working_copy/` must have failed with exit 2? Actually output shows `.jj` printed, then command failed exit 2. Hmm, `ls .jj/repo/working_copy/` might not exist with that exact name (jj 0.x uses `.jj/repo/working-copy/` with hyphen!). Yes — newer jj uses `working-copy` hyphenated. Older used underscore. Let me check both.
+
+  - At base e5a8ec, corpus/lessons/round-36.md and corpus/knowledge/sglang-native-route-deprecation.md do NOT exist (grep showed none of those; corpus/QUALITY.md, corpus/README.md, corpus/SOURCES.md, README.md exist at base).
+  - Index: empty staged diff (git diff --cached --name-only printed nothing) → `git show :path` would give index == HEAD content for tracked files; drafts are NOT in the index.
+  - Working tree status: corpus/QUALITY.md, corpus/README.md, corpus/SOURCES.md modified (M) — these carry the draft rows/blocks. But corpus/lessons/round-36.md and corpus/knowledge/sglang-native-route-deprecation.md are NOT in the status list shown (truncated at 30 lines, ?? entries). They'd appear as ?? (untracked) — need full status for those two paths.
+
+  - The draft lesson and entry are presumably untracked files in working tree. Wait, status shows `?? .ufo/waves/round-36/...` entries but truncated. Need to check specifically.
+
+  So: no git rev can read the drafts UNLESS a jj snapshot commit contains them. In a colocated jj repo, the working copy is a commit; jj refs `refs/jj/keep/*` are keeps. The working-copy commit is stored in `.jj/repo/working-copy/` state. But the working-copy commit's tree is only updated when jj snapshots (auto-snapshot on jj commands). The L1 wrote drafts with file writes; unless a jj command ran after, the wc commit may lag.
+
+  But more importantly, the question is "from the counters' own code, what tip value would make each command read the draft bytes" — the code accepts ANY string as --tip passed to `git -C repo show f"{rev}:{path}"`. Git can read:
+  1. Commits/trees containing the bytes (requires commit).
+  2. `:path` — index stage 0 (rev = "" → f":path").
+  3. `:<n>:path` — stage n.
+  4. Also `git show {rev}:{path}` where rev is a blob sha? `git show <blob-sha>` works but `blob:path` doesn't.
+
+  So from code alone: `--tip ""` reads the index; drafts are unstaged → index == HEAD → still not the drafts. The drafts are untracked/unstaged → NO tip value readable by `git show rev:path` can reach the working tree bytes. Only after the bytes are committed (or staged, for tip="") would a tip read them.
+
+  But wait — the jj working-copy commit: if jj has snapshotted the current working copy, that commit's tree contains the drafts, and `git show <wc-commit-sha>:corpus/lessons/round-36.md` would read the draft bytes. The wc commit sha is resolvable in git (colocated). That IS a concrete tip value that reads the draft bytes right now, if a snapshot happened after the L1's writes. Empirically checkable: find wc commit sha from `.jj/repo/working-copy/` state and test with git show.
+
+  Also HEAD itself (9014843) does NOT contain the drafts (they're working-tree only — status shows M for the three tracked files vs HEAD, and lesson/entry untracked). Let me confirm: `git show HEAD:corpus/lessons/round-36.md` fails; `git show e5a8ec:corpus/lessons/round-36.md` fails.
+
+  Also, importantly for the falsification narrative: even if --tip were the wc commit, would `met` flip? For C2: named=1 requires README draft block containing ENTRY exactly once (count == 1, must be exactly 1 — `named == 1`); file_exists via git_show(entry) not None; cited_new via SOURCES at tip having S328/S329 while base doesn't. If wc commit contains all drafts, C2 would likely read them. For C1: lesson draft rows R35-* — the drafts in the working tree lesson... The C1 would read lesson from wc commit; uncorrected would drop to 0 if rows exist; then false_corrections depends on holds() — needs specific tokens. And lesson_unchanged requires lesson_blob == 428f1f... (r35 lesson unchanged) — reading round-35.md at the wc tip, which is unchanged in working tree (not in M list) → stays 1. report from FLEET HEAD — unchanged. So C1 could flip if the rows hold. But that's beyond my task: my task is only "what tip value would make each command READ the draft bytes", not whether met flips.
+
+  Empirical checks now:
+  1. Full status filtered for the two draft paths: `git status --porcelain -- corpus/lessons/round-36.md corpus/knowledge/sglang-native-route-deprecation.md`
+  2. `ls .jj/repo/` and `.jj/repo/working-copy/` (hyphen).
+  3. Read wc state json for commit id.
+  4. Verify `git show e5a8ec:corpus/lessons/round-36.md` and HEAD version fail; verify `git show :corpus/lessons/round-36.md` fails (not in index).
+  5. If wc sha found: test `git show <sha>:corpus/lessons/round-36.md | head` — does it contain R35- rows / the drafts? And compare wc tree's QUALITY/README/SOURCES blobs vs working tree files (do drafts sit in wc commit?).
+
+  Also worth verifying the exact draft presence: does working-tree SOURCES.md contain S328/S329 and README contain the heading? Quick grep on working files.
+
+  Batch:
+  - Bash A: status for the two paths + ls .jj/repo + working-copy dir
+  - Bash B: git show attempts (base, HEAD, index) for lesson and entry → expect failures; each `|| echo MISSING`
+  - Bash C: grep working files for S328, S329, heading, R35- rows
+  - After A, Bash D: wc commit sha → git show test.
+
+• Lane is jj-colocated (refs/jj/keep/*), HEAD=9014843 (child of base e5a8ec). Drafts are unstaged working-tree bytes (index clean). Now pinning down exactly which revs can and cannot see the drafts, and whether jj's working-copy commit has snapshotted them:---draft paths in status---
+?? corpus/knowledge/sglang-native-route-deprecation.md
+?? corpus/lessons/round-36.md
+---jj repo dirs---
+config-id
+index
+op_heads
+op_store
+store
+submodule_store
+workspace_store
+e5a8ececf3d60fd53b36bb74299693a29e8f74b6 corpus/lessons/round-36.md MISSING
+e5a8ececf3d60fd53b36bb74299693a29e8f74b6 corpus/knowledge/sglang-native-route-deprecation.md MISSING
+9014843cb7de8fbe87a97954c13832b67d55f046 corpus/lessons/round-36.md MISSING
+9014843cb7de8fbe87a97954c13832b67d55f046 corpus/knowledge/sglang-native-route-deprecation.md MISSING
+---index reads---
+index lesson MISSING
+index entry MISSING
+---working-tree draft markers---
+2
+546:## Coverage map — round 36 addition
+4
+-rw-r--r-- 1 vgpnk vgpnk  2831 Oct 24 22:42 corpus/knowledge/sglang-native-route-deprecation.md
+-rw-r--r-- 1 vgpnk vgpnk 14466 Oct 24 22:47 corpus/lessons/round-36.md
+
+
+• Confirmed:
+  - Draft lesson and entry are UNTRACKED (`??`) — not in any commit at base or HEAD, not in index.
+  - Working tree files carry the drafts: SOURCES has S328/S329 (2 hits), README has the heading at line 546, lesson has 4 R35- rows.
+  - `.jj/repo/` has `workspace_store` (not `working-copy`). jj newer versions store workspace state in `.jj/repo/workspace_store/`. The working-copy commit id is in `.jj/workspace/`? Actually: `.jj/repo/workspace_store/<workspace-name>/` contains `working-copy.json` (or `.jj/workspace`?). Let me look: `.jj/repo/workspace_store/default/working-copy.json` typically holds `{"commit_id": "...", ...}`. Hmm, jj versions: `.jj/repo/working-copy/working-copy-state.json` older; newer: `.jj/repo/workspace_store/default/working-copy.json` with fields `commit_id`, `tree_id` maybe. Let me check.
+
+  The question: has jj snapshotted the drafts? File mtimes 22:42 and 22:47 (today Oct 24). The draft lesson modified at 22:47 — recent. A jj snapshot would need to run after 22:47. Also, in colocated repos, jj auto-snapshots on jj CLI invocations, and possibly external tools watching. Also the counter runs (python subprocess git) do NOT snapshot.
+
+  Let me check workspace_store/default/working-copy.json for commit_id and tree_id, then test `git show <commit>:corpus/lessons/round-36.md`.
+
+  Also to be thorough: even if the wc commit contains the drafts, note the wc commit is a *moving* rev. The answer "from the counters' own code" should be principled:
+
+  The code reads `git -C repo show f"{rev}:{path}"`, `git rev-parse f"{rev}:{path}"`, `git ls-tree -r --name-only rev`. All of these resolve `rev` against the git object database and index — never the working tree. Therefore:
+  - No tip value that resolves to a git rev can read untracked working-tree bytes.
+  - The only tip values that could ever read the draft bytes: (1) `--tip ""` → `git show :<path>` = index stage-0 — only if drafts are staged (they are not; index clean); (2) a commit whose tree contains the drafts — i.e., only after the drafts are committed (or jj-snapshotted into the colocated working-copy commit, which exists as a git object).
+
+  Empirical check of the wc commit now.
+
+• Draft lesson/entry are untracked (`??`), absent from base, HEAD, and index — yet present in working tree (4 `R35-` rows; S328/S329; heading at README:546). Now checking whether jj's colocated working-copy commit has snapshotted these bytes into a git object:index
+== .jj/repo/workspace_store/*/
+ls: cannot access '.jj/repo/workspace_store/*/'
+: No such file or directory
+
+
+• `workspace_store/` contains only `index`. So no `default/` dir? Odd. Let me look at `.jj/repo/workspace_store/index` (a file or dir?) and `.jj/` top-level structure. In recent jj, workspace state may live in `.jj/workspace/` (per-workspace dir at repo root `.jj/workspace/`). Let me list `.jj/` recursively shallowly.---
+repo
+working_copy
+---workspace?---
+So `.jj/` contains `repo` and `working_copy`. The `find` printed nothing (maybe permission or no json at depth 3). `.jj/working_copy/` — that's the materialized working copy snapshot dir? Actually in older jj, `.jj/working_copy/`? No — older jj: `.jj/repo/working-copy/`. Hmm, here we have `.jj/working_copy/`. Let me list it.total 1352
+drwxr-xr-x 1 vgpnk vgpnk      44 Oct 24 21:54 .
+drwxr-xr-x 1 vgpnk vgpnk      52 Oct 20 11:16 ..
+-rw------- 1 vgpnk vgpnk      75 Oct 24 21:54 checkout
+-rw------- 1 vgpnk vgpnk 1373279 Oct 24 21:54 tree_state
+-rw-r--r-- 1 vgpnk vgpnk       5 Oct 20 11:16 type
+== .jj/working_copy/tree_state
+
+
+.gitignore	���ϕ44*
+.ufo/reports/round-5/kama.md
+����4�Q,
+.ufo/round-10/SEAT-PROTOCOL.md
+��⼕4�F3
+%.ufo/round-10/audit/stale-anchors.tsv
+��겕4�Q<
+,.ufo/round-10/audit/validate-new-pointers.sh��겕4�=
+/.ufo/round-10/fragments/KamaExecGguf-sources.md
+��겕4�-?
+1.ufo/round-10/fragments/KamaExecHealth-sources.md
+��겕4�7@
+2.ufo/round-10/fragments/KamaExecMetrics-sources.md
+��겕4�$1
+#.ufo/round-10/gates/check-json.json
+��겕4� ,
+.ufo/round-10/gates/check.json
+��겕4�0
+".ufo/round-10/gates/consumers.json
+��겕4�5
+'.ufo/round-10/gates/producer-ports.json
+��겕4�4
+&.ufo/round-10/gates/producer-unit.json
+��겕4�8
+*.ufo/round-10/gates/snapshot-isolated.json
+��겕4�4
+&.ufo/round-10/gates/test-snapshot.json
+��겕4�
+%
+.ufo/round-10/plan.json
+��΂�4�
+*
+.ufo/round-5/acceptance.json
+����4�Y,
+.ufo/round-5/before-check.json
+����4�.
+ .ufo/round-5/binding-search.json
+����4�,
+.ufo/round-5/continuation.json
+����4�*
+.ufo/round-5/continuation.md
+����4�$*
+.ufo/round-5/host-shape.json
+����4�/
+!.ufo/round-5/landed-evidence.json
+����4�#4
+&.ufo/round-5/mission-result-input.json
+����4�9
++.ufo/round-5/mission-result-validation.json
+����4�.
+ .ufo/round-5/mission-result.json
+����4�5
+'.ufo/round-5/receipt-prerequisites.json
+����4�	/
+!.ufo/round-5/route-preflight.json
+����4�-
+.ufo/round-5/wave-payload.json����4��*
+.ufo/round-5/wave-plan.json���4��*
+.ufo/round-5/wave-spec.jsonӘ��4��0
+!.ufo/round-5/wave-validation.json���4��6
+(.ufo/round-5/worktree-byte-manifest.json
+����4�+
+.ufo/round-6/SEAT-PROTOCOL.md
+�祂�4�"$
+.ufo/round-6/plan.json
+�����4�)
+.ufo/round-6/telemetry.json
+�����4�+
+.ufo/round-7/SEAT-PROTOCOL.md
+�ɴ��4�"$
+.ufo/round-7/plan.json
+�캂�4�)
+.ufo/round-7/telemetry.json
+�캂�4�
++
+.ufo/round-8/SEAT-PROTOCOL.md
+�����4�"$
+.ufo/round-8/plan.json
+���4�)
+.uf
+
+The `.jj/working_copy/checkout` file (75 bytes, mode 600) holds the current working-copy commit id. Last touched Oct 24 21:54 — BEFORE the drafts were written (22:42, 22:47). So the working-copy commit has NOT been re-snapshotted since the drafts were written (no jj command ran after 22:47, or it didn't update). But careful: `checkout` is the wc commit id; `tree_state` maps paths→mtimes for snapshot detection. The checkout commit's tree is from 21:54. The drafts at 22:42/22:47 are newer → not in the wc commit tree... unless a snapshot happened without updating? No — snapshot creates a NEW commit and rewrites checkout. checkout mtime 21:54 = last snapshot at 21:54. So drafts (22:42+) are NOT in any git object reachable from any ref — they exist only as working-tree bytes. Actually wait, are they maybe in some abandoned jj op? Not reachable via a stable named ref anyway; and `refs/jj/keep/*` are keep refs for change heads — one of them could be a newer snapshot? keep refs were listed alphabetically; the wc commit would be `00107b6e...`? Can't tell without reading checkout. Read it.
+
+  Then verify: `git show <checkout>:corpus/lessons/round-36.md` → expect MISSING (tree predates drafts). And confirm checkout commit's commit date.
+
+  Let me read checkout and test.
+
+• `.jj/working_copy/checkout` (mtime 21:54) holds the working-copy commit id — predating the drafts (22:42/22:47). Reading it and testing whether that commit contains the drafts:WC_COMMIT=@.��U�[gN�3ض�������܎g��;`=�*vf�и��z<��ۮi��nkD����I8
+�default
+fatal: Not a valid object name ?@.��U�?[gN�3ض���?�?���܎g�?�;`=�*vf�и��z<��ۮi��?nk?D��??��I8?�??default
+
+
+• The `checkout` file is binary — it's not a plain commit id (newer jj versions store it differently; contains raw bytes + workspace name "default"). 75 bytes. jj 0.2x: `checkout` file format = commit id (32 bytes binary) + workspace name string. jj commit ids are 32-byte binary (blake3?) no wait — jj commit IDs are git commit sha (20 bytes). The file likely contains binary commit id. Let me hexdump and extract: format seems to be raw 20-byte sha followed by "default"? Let's hexdump and reconstruct hex.
+
+  Actually in jj source: `WorkingCopyFreshness`... the `checkout` file: `write_checkout` writes: current operation? Let me just hexdump the 75 bytes and parse: likely [20-byte binary git sha][workspace name "default"]. 20 + 7 = 27, not 75. Or [32-byte change id][20-byte commit id]? 32+20=52, +name 7 = 59. Hmm 75 bytes. Maybe [32-byte change-id][20-byte commit-id][workspace "default"] = 59. Or sha256 repo? Unlikely.
+
+  Alternative cleaner route: find the working-copy commit via git refs? jj colocated exposes wc commit under `refs/jj/` — we saw only `refs/jj/keep/*` in first 20 (head -20 truncated). The wc commit may not be exported. Another route: git objects created recently. Or: `git log --all --since` — but simpler: parse hexdump.
+
+  Let me hexdump checkout.
+
+• The checkout file is binary (jj stores raw ids). Hexdumping to extract the commit id:00000000: 1240 7e4c d413 d2b8 dbd0 82b0 d749 aa2d  .@~L.........I.-
+00000010: 1e25 ef1a 44c1 44be 7364 7f95 5502 3f8a  .%..D.D.sd..U.?.
+00000020: abcb e58b 5e0c 98c3 48c5 6c0d 5610 fe07  ....^...H.l.V...
+00000030: a8cb 3430 7387 7746 d762 31e6 3dc7 19eb  ..40s.wF.b1.=...
+00000040: 7a9a 1a07 6465 6661 756c 74              z...default
+
+
+• 75 bytes total: 64 bytes of binary + "default" (7 bytes). 64 bytes = 512-bit hash. So this jj repo uses SHA-256 object format?! But git refs showed 40-hex ids (00107b6e... 40 chars = sha1). Hmm, the git objects are sha1 (git log showed 40-char). jj with colocated git uses git's object format = sha1 here. So 64 bytes is not the git sha.
+
+  Wait: maybe the checkout file format is: [32-byte change-id][32-byte commit-id]? jj ids are 32 bytes (16-byte prefix of blake3? no, jj change/commit ids are 32-byte blake3-based in newer versions). Newer jj (0.23+) uses 32-byte ids. But git commit ids in jj are the git sha (sha1, 20 bytes) when using git backend. Hmm.
+
+  Alternative interpretation: 64 bytes = two 32-byte values: change_id (32) + commit_id (32)? jj commit_id is defined as hash over the commit — in newer jj with git backend, commit id == git sha? Historically jj commit ids were 32-byte blake3 hashes, different from git shas. In newer versions (0.28+?), commit ids became git-compatible... Actually no: jj "commit id" has always been its own hash (blake3 32 bytes), while "git head" is the git sha. Recently (jj 0.25+) they unified: commit id is now the git commit object id when using git backend? Let me not go down the spec hole. 
+
+  Key insight: the last 32 bytes before "default": 34 30 73 87 77 46 d7 62 31 e6 3d c7 19 eb 7a 9a 1a 07 (that's 18) hmm. Let me split: bytes 0-31: 12 40 7e 4c d4 13 d2 b8 db d0 82 b0 d7 49 aa 2d 1e 25 ef 1a 44 c1 44 be 73 64 7f 95 55 02 3f 8a. Bytes 32-63: ab cb e5 8b 5e 0c 98 c3 48 c5 6c 0d 56 10 fe 07 a8 cb 34 30 73 87 77 46 d7 62 31 e6 3d c7 19 eb. Then 7a 9a 1a 07 + "default".
+
+  Hmm 64+4+7=75. So maybe [32-byte commit-id][32-byte change-id][4-byte?][workspace]. Or [48-byte op...]. 
+
+  This is a rabbit hole. Better approach: find the wc commit via the git side. In colocated repos, jj writes `refs/jj/heads/<branch>` and also keeps... The full for-each-ref was truncated at 20 (head -20). Let me grep refs for non-keep refs: `git for-each-ref --format='%(refname)' refs/jj | grep -v keep | head`. jj also exports `refs/jj/heads/...`? And `refs/heads/git-head`? 
+
+  Even simpler: the wc commit is the child of HEAD (9014843) containing a tree close to the working tree at 21:54. I can find it: `git log --all --format='%H %ci %P %s' | grep 9014843` — find commits with parent 9014843. Or `git rev-list --all --children`? Cheaper: `git log --all --oneline --children | grep -F 9014843` hmm.
+
+  Actually `git rev-list --children --all` then grep. Or since refs/jj/keep/* exist with 40-char ids, the wc commit likely has one. Let me do:
+
+  git rev-list --all --children | grep '^9014843cb7de8fbe87a97954c13832b67d55f046' — returns "parent child1 child2...".
+
+  Then check which child has commit date ~21:54 today and contains tree_state-ish content. Then test git show child:corpus/lessons/round-36.md → expect MISSING (predates 22:42 drafts).
+
+  That answers the empirical question: is there ANY currently-existing git rev that reads the draft bytes? Expected: NO. And from code: only a future rev that contains them (a commit made after landing the drafts, or after a jj snapshot commits them) would read them; `--tip ""` reads the index which currently lacks them.
+
+  Wait — one more code-level subtlety for the coverage counter: `git_show(repo, tip, ...)` — tip is interpolated as-is. If tip contains something like "9014843^{tree}"... still trees only contain committed bytes. `git show <blob-sha>` — but rev:path form requires blob at path in a tree-ish. No working-tree access. Also negative: `git show :(top)path`? Magic pathspec goes in the path part, not rev. So rev must resolve to tree-ish/commit; working tree is unreachable. Solid.
+
+  Also should confirm: does `git show :corpus/README.md` (index) differ from working tree? Index is clean (git diff --cached empty), so index == HEAD content, i.e., drafts NOT in index even for the three modified tracked files. The working-tree README/SOURCES/QUALITY drafts are also invisible to every tip. For completeness, verify modified bytes differ: `git diff --stat` for the three files. Quick check to state "even the modified tracked files' draft bytes are invisible to git show rev:path".
+
+  Let me run: children of HEAD; and diff stat.
+
+• The checkout file is 64 raw bytes + "default" (not directly a git sha). Cleaner route via git: find children of HEAD 9014843 among all refs — that's where a jj working-copy snapshot commit would sit:9014843cb7de8fbe87a97954c13832b67d55f046 092ffaf4d41b3873a63ddf83a79bf3de1eed254d 28a8bf50166962ed31b2e1a143277f0ce456c7da
+e5a8ececf3d60fd53b36bb74299693a29e8f74b6 bedb108113928f6fe9a0507e410ffff4f73e94af dfd092d150c8ce6d567467044ee24e563cc5d740 c266153ad37a0da185c3a4fffead4dadc495e2fb 1b5a68b2b98e6bc043dd2de00aec3838c2864d28 9014843cb7de8fbe87a97954c13832b67d55f046
+ corpus/QUALITY.md |  6 ++++++
+ corpus/README.md  | 16 ++++++++++++++++
+ corpus/SOURCES.md |  2 ++
+ 3 files changed, 24 insertions(+)
+
+
+• Children of HEAD 9014843: 092ffaf4d41b3873a63ddf83a79bf3de1eed254d and 28a8bf50166962ed31b2e1a143277f0ce456c7da. One of these is the jj working-copy commit (created 21:54 snapshot). The drafts were written 22:42/22:47 — after. Let me test both children for the draft paths and dates.
+
+• Two children of HEAD exist (jj snapshot candidates). Testing both for the draft bytes:== 092ffaf4d41b3873a63ddf83a79bf3de1eed254d
+  2026-10-24 21:54:19 -0300  parent=9014843cb7de8fbe87a97954c13832b67d55f046
+  corpus/lessons/round-36.md MISSING
+  corpus/knowledge/sglang-native-route-deprecation.md MISSING
+== 28a8bf50166962ed31b2e1a143277f0ce456c7da
+  2026-10-24 22:53:23 -0300  parent=9014843cb7de8fbe87a97954c13832b67d55f046
+  corpus/lessons/round-36.md PRESENT
+  corpus/knowledge/sglang-native-route-deprecation.md MISSING
+
+
+• Very interesting!
+
+  - 092ffaf (21:54:19) — the old working-copy commit (matches checkout file mtime 21:54): no drafts.
+  - 28a8bf5 (22:53:23) — a NEWER commit, child of HEAD, created at 22:53 (after drafts 22:42/22:47). It CONTAINS corpus/lessons/round-36.md but NOT corpus/knowledge/sglang-native-route-deprecation.md.
+
+  So there IS a commit containing the draft lesson (probably a jj snapshot — someone/something ran a jj command at ~22:53 that snapshotted the tree; or an op-head). But the knowledge entry is still missing — possibly excluded by .gitignore? Let me check: is corpus/knowledge/... ignored? The entry exists in working tree (ls showed it). `git status --porcelain` showed `?? corpus/knowledge/sglang-native-route-deprecation.md` — so it IS visible to git as untracked, not ignored. Hmm, but then why does 28a8bf5 not contain it? Maybe 28a8bf5 was snapshotted at 22:53 — after 22:47, when both files existed... unless the entry was created after 22:53? ls showed entry mtime 22:42. Hmm, both predate 22:53.
+
+  Wait — maybe 28a8bf5 is not a full snapshot; maybe it's a partial state, or the snapshot's tree was built from tracked files + some untracked but the entry was excluded... Actually maybe 28a8bf5 is someone's separate jj operation commit (e.g., a validation worktree?). Let me check more: does 28a8bf5 contain the modified SOURCES/README/QUALITY (the S328/S329 rows and heading)? And check its diff vs HEAD. Also check where 28a8bf5 sits in refs (is it reachable from any ref? rev-list --all found it, so yes reachable from some ref — maybe an op-head ref or keep ref).
+
+  Also check whether the lesson content in 28a8bf5 == working tree lesson (sha1 compare). And whether README/SOURCES in 28a8bf5 contain S328/S329/heading.
+
+  Note: the missing entry could be because jj snapshot only snapshots tracked+untracked-included files... jj by default snapshots all files not gitignored. The status shows entry as `??` untracked-but-visible. So why missing in 28a8bf5's tree? Maybe 28a8bf5 predates... no, 22:53 > 22:47. Unless the entry was deleted and recreated? Whatever — empirics first: compare contents.
+
+  Let me check:
+  1. git show 28a8bf5:corpus/lessons/round-36.md | sha1sum vs sha1sum working lesson.
+  2. git show 28a8bf5:corpus/SOURCES.md | grep S328; README heading; QUALITY KQ45.
+  3. Which refs point at/reach 28a8bf5: `git for-each-ref --contains`? Use `git for-each-ref --format='%(refname)' | while read r; do git merge-base --is-ancestor 28a8bf5 $r && echo $r; done` — heavy with many keep refs but fine (maybe hundreds). Limit: only refs/jj/* and heads. Also op_heads refs? `git for-each-ref | grep -v keep`.
+
+• A 22:53 commit contains the draft lesson but not the knowledge entry. Digging into what 28a8bf5 actually holds and which ref carries it:---lesson blob match?---
+20c298fd04165f7477801926a162be17b5af1c7a  -
+cc54a1a7ae2d9abe4e4d7c504ebf497870e55018  corpus/lessons/round-36.md
+---corpus drafts in 28a8bf5?---
+0
+0
+0
+refs/heads/hyaku/s3-ready66-kama 2e254a1763a9c08aa07fc53081287f506c447d84
+refs/heads/master 9014843cb7de8fbe87a97954c13832b67d55f046
+refs/remotes/origin/HEAD 9014843cb7de8fbe87a97954c13832b67d55f046
+refs/remotes/origin/cursor/amazing-readme-00f0 b04dc91030e46c4e6ed7de469a0786e2993acf01
+refs/remotes/origin/cursor/amazing-readme-58c8 1af24d97447206051bf92a01f04d6ddd3304a09f
+refs/remotes/origin/cursor/amazing-readme-a57c eaf40f8697be4c8f4a068552c69e18bec0e6193b
+refs/remotes/origin/cursor/amazing-readme-c238 939661b62d864636ec7ba40bdaba0d85455e04b1
+refs/remotes/origin/cursor/readme-corpus-legibility-b143 b231da001ac87c858deb64f7d665ea27676d1fe3
+refs/remotes/origin/cursor/readme-front-door-21e1 73db0ff4906589e44def0026ed1ae6c0972ddfc4
+refs/remotes/origin/cursor/readme-front-door-3439 d1923c0c6f79057c82755cecde0cef667b604549
+refs/remotes/origin/cursor/readme-refresh-fe4b d0cf2214e7f905c03b11914e41a3d2954fd4a7ed
+refs/remotes/origin/devin/wiki-link 1e489406686ddc45560403ce8289d5e38fc97b09
+refs/remotes/origin/master 9014843cb7de8fbe87a97954c13832b67d55f046
+refs/remotes/origin/wip/operator-save-20261023 8024b59668b1d1e1fbd6174bd14f326a4dddf830
+---ancestors of 28a8bf5 among non-keep refs---
+
+
+• Facts:
+
+  1. 28a8bf5's lesson blob (20c298fd) ≠ working-tree lesson (cc54a1a7). It has SOME round-36.md but not the current draft bytes. And 28a8bf5 does NOT contain the S328/S329 rows, the README heading, or KQ45. So 28a8bf5 is a stale/partial snapshot from an earlier point (or another workspace). No non-keep ref reaches 28a8bf5 — so it's reachable only from some refs/jj/keep/* (rev-list --all included keep refs). It's the jj working-copy commit as of 22:53 — but its lesson differs from the working tree?! Working lesson mtime 22:47 < 22:53 commit date... yet blob differs. So the L1 edited the lesson AFTER 22:53 again? No — mtime says 22:47. Hmm, or 28a8bf5 was snapshotted from a different state. Whatever — the empirical point stands:
+
+  **No existing git rev contains the current draft bytes.** Not base, not HEAD, not index, not the old wc commit (092ffaf), not the newer jj snapshot (28a8bf5 — lesson blob differs, and the entry, SOURCES rows, README heading, KQ45 are absent).
+
+  Wait — but let me double check the possibility that ANOTHER keep ref contains the current draft bytes (e.g., an even newer snapshot). The lesson blob cc54a1a7 — search all refs for a tree containing blob cc54a1a7: `git cat-file --batch-all-objects --batch-check` to find any blob = cc54a1a7? Or quicker: the object might not exist in the odb at all (untracked file, never snapshotted). Check: `git cat-file -t cc54a1a7ae2d9abe4e4d7c504ebf497870e55018` → if "No such object", the draft bytes were NEVER in any git object → conclusively no rev can show them.
+
+  Also check entry blob similarly, and the modified README/SOURCES/QUALITY working blobs.
+
+  2. So the answer to "what tip value would make each command read the draft bytes":
+
+  From the code:
+  - Both counters read ALL repo facts via `git -C repo show {tip}:{path}` / `git rev-parse {tip}:{path}` / `git ls-tree -r {tip}` (statement-audit lines 49-82, coverage-audit lines 34-43, load() lines 80-85; statement-audit main line 278 lesson read). Git cannot serve working-tree bytes for `rev:path` — only committed/tree/index objects. Therefore:
+    - No tip value reads the drafts today (verified: draft blobs don't even exist in the object database, base/HEAD/index/both jj snapshot commits all miss them).
+    - The only tip values that ever can: a future commit that actually contains the draft bytes (i.e., after the drafts are committed or jj-snapshotted). Empirically: the tip to pass = the (not-yet-existing) commit sha of the landing commit of the drafts. For the coverage counter specifically, tip must ALSO carry the S328/S329 rows in SOURCES.md at that same tip (base is hardcoded e5a8ec and unchanged).
+    - Code-level special case: `--tip ""` (empty string) makes `git show :<path>` read the index stage-0 — but only reads drafts if they were staged with git add (currently index is clean; and staging is out of my bounds anyway). Similarly any `:<n>:path` stage syntax. That is the only non-commit rev family the code's f-string admits. Note also `git show` with tip = another worktree's index? No — index of THAT repo only.
+
+  Actually let me also double check: does `git ls-tree -r --name-only <rev>` accept an index-ish rev? Only tree-ish. Fine.
+
+  Also worth noting for C2: `file_exists` reads ENTRY at tip; `named` reads README at tip; `cited_new` compares SOURCES at tip vs hardcoded BASE. All three must be satisfied at the same tip → the single future landing commit must contain all four draft byte-sets (README block + entry file + SOURCES rows). For C1: lesson at tip must contain the four R35- correction rows; plus r35 lesson/report blobs must remain unchanged (they are, as long as landing doesn't touch round-35.md; report is read from FLEET HEAD regardless of tip).
+
+  One more verification: confirm draft blobs absent from odb:
+  - cc54a1a7 (lesson working) 
+  - entry file sha
+  - working README/SOURCES/QUALITY blobs (or just the draft-relevant bytes — the whole-file blobs).
+
+  If cat-file says "No such object" for all → conclusive: no tip can read them; tip value must be a FUTURE commit.
+
+  Then run the counters one more time? No need.
+
+  Also confirm the counters' exit codes captured: both 1. Done.
+
+  Also should I verify that passing tip=28a8bf5 gives a different statement-audit output? Not required; task says run with the given tip. But one more cheap run with --tip 28a8bf5 would demonstrate sensitivity: statement audit would find rows (the stale lesson has 4 R35 rows?) — could show uncorrected 0. That's extra evidence of the mechanism ("tip controls which bytes are read"). Cheap and within bounds (read-only). Let me do it with the 28a8bf5 child and empty-tip test? Empty tip: `git show :corpus/README.md` works; python passing --tip "" → argparse fine, git show ":path" works. But careful — running the counter with weird tips is fine (read-only). Two quick demo runs:
+  - coverage audit --tip 28a8bf5 → named/file_exists/cited_new values (should show lesson present? no — README has no heading: named 0; entry missing: 0; cited_new 0).
+  - statement audit --tip 28a8bf5 → shows whether rows read.
+
+  These runs strengthen the "from the counters' own code" story: the tip parameter is the only lever over what bytes are read, and currently NO tip exposes the drafts.
+
+  Let me run the odb checks + two demo runs in parallel. Then write report.
+
+• 28a8bf5 holds a *stale* lesson blob (20c298fd ≠ working cc54a1a7) and none of the SOURCES/README/QUALITY drafts. Final conclusive check: do the working-tree draft blobs even exist as git objects anywhere, plus sensitivity demo runs of both counters on the only non-trivial alternative tip:corpus/lessons/round-36.md blob 6fb1ec151407b1207e8d540e83ba87d6a909d8ea EXISTS in odb
+corpus/knowledge/sglang-native-route-deprecation.md blob a2943722e76c4db13f5160c813ec543c9b4d7228 EXISTS in odb
+corpus/README.md blob 7aef23f20f2985380f3250d9bbca0f38439fa77e EXISTS in odb
+corpus/SOURCES.md blob 8b1aecc3a0d160370e4750ea42f924b9ba89c37f EXISTS in odb
+corpus/QUALITY.md blob 5baf5e8a59e817550ca48e39b5ae35ab3db751f4 EXISTS in odb
+uncorrected 0 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met True
+EXIT=0
+named 0 file_exists 0 cited_new 0 met False
+EXIT=1
+
+
+• Big developments:
+
+  1. **All five working-tree blobs EXIST in the odb.** So some jj snapshot (or git hash-object from another tool) has stored these exact bytes as loose objects — but are they in any tree/commit/ref? A blob existing in odb is NOT enough: `git show {rev}:{path}` needs the blob reachable from the tree of `rev`. So the question: is there a TREE (in any commit) that maps `corpus/lessons/round-36.md` → 6fb1ec15, `corpus/knowledge/sglang-native-route-deprecation.md` → a2943722, SOURCES → 8b1aecc3, README → 7aef23f2, QUALITY → 5baf5e8a simultaneously?
+
+  2. **--tip 28a8bf5 makes the statement audit print met True (exit 0)!** The stale lesson at 28a8bf5 has rows that PASS all four holds() checks at that tip (note: `holds` re-derives facts at the same tip — scout/spot/old_lesson from the tip's tree; at 28a8bf5 these presumably match what the rows assert, plus KEEP_PATHS html_clear/mirror_clear tracked-set conditions, disp_blob==DISP_BLOB etc.). Interesting: lesson_unchanged 1 and report_unchanged 1 (r35 blobs unchanged — round-35.md blob identical). So at tip 28a8bf5, C1 says 7→7 met=True.
+
+  Whoa — wait. That's a materially important falsification finding: the C1 counter's verdict is tip-relative, and there EXISTS a reachable commit (via keep refs) at which C1 passes with a lesson that is NOT the current working-tree draft (blob differs: 20c298fd vs cc54a1a7). I must be careful to report measured facts, not judge. My mandate: run at e5a8ec (done), and say from the code what tip reads the draft bytes. The 28a8bf5 result is exactly in-scope evidence about tip sensitivity.
+
+  3. Coverage audit at 28a8bf5: all zeros — no README heading, no entry, no S328/S329 at that commit.
+
+  Now: does ANY existing tree contain the current draft blobs? Search odb for trees/commits referencing them. Approach: use `git rev-list --all --objects` doesn't give tree mapping easily. Better: for each candidate rev that might contain them... but thousands of keep refs. Alternative: check if a tree exists mapping those blobs — heavy.
+
+  Simpler decisive check for "what tip value reads the drafts": if a commit exists whose tree contains ALL the draft bytes, then that sha would work. Since the blobs exist in odb, likely a snapshot happened at some point capturing the current state (or partial: e.g., lesson blob captured at 22:53 snapshot? but 28a8bf5's lesson = 20c298fd ≠ cc54a1a7... so no).
+
+  Hmm — where did cc54a1a7 (current lesson blob) come from? `git hash-object` I just ran CREATES a loose blob! Wait — `git hash-object <file>` WITHOUT -w only computes the hash, does NOT write. Default is no-write. So the blobs existing in odb is NOT from my command. They pre-exist. Interesting — so SOMETHING hashed these bytes into odb: likely a jj snapshot op (jj writes tree/blob objects even for the op that then got amended?), or the L1 ran `git add`-like hashing (bounds forbid, but L1's bounds may differ), or `git stash`? No mutation allowed... jj snapshot definitely writes blobs to the git odb.
+
+  So: some jj operation at/after 22:47 wrote these blobs (probably building trees for a snapshot), but the resulting commit(s) may be dangling (not reachable from any ref) — e.g., jj op-heads. rev-list --all covers refs only. jj's op store refs: `refs/jj/ops/...`? Not shown. op_heads dir in .jj/repo/op_heads — jj operations are stored in its own store, but with git backend the commits/trees are in git odb. Dangling commits: `git fsck --lost-found --unreachable`? fsck is read-only. That could find unreachable commits containing the drafts. But careful: fsck on a huge repo may be slow; also `git fsck` writes nothing unless --lost-found (which writes to .git/lost-found — avoid that; use plain --unreachable, read-only).
+
+  Let me try to find any COMMIT in odb whose tree contains all five draft blobs:
+  1. `git fsck --unreachable --no-reflogs 2>/dev/null | grep commit` → list unreachable commit shas (could be many).
+  2. For each, check the five paths' blobs. Could be slow if many; limit and filter by committer date >= today.
+
+  Alternatively, more targeted: find commits with parent 9014843 (children of HEAD) across the ENTIRE odb, not just refs. fsck --unreachable gives us those.
+
+  Also: maybe a reachable keep ref already points to a commit containing the current drafts. Quick check: iterate keep refs (there could be many hundreds) and test the five blob ids at the tip? Testing 5 git-shows per ref × N refs is heavy but with `git ls-tree -r` per ref it's N repo walks. Better: filter keep refs by commit date >= 2026-10-24 22:00 first, then test only those.
+
+  Plan:
+  - git for-each-ref refs/jj/keep --format='%(objectname)' | while read sha; do git log -1 --format='%H %ci' $sha; done | awk date>=22:00 today → candidates.
+  - Actually `git for-each-ref --sort=-committerdate refs/jj/keep --format='%(objectname) %(committerdate:iso)'` then filter by date.
+  - Then for each recent candidate: check `git ls-tree <sha>:corpus` etc. Simply: for p in the five paths, `git rev-parse $sha:$p` and compare to expected blob ids (lesson 6fb1ec15, entry a2943722, README 7aef23f2, SOURCES 8b1aecc3, QUALITY 5baf5e8a). rev-parse is cheap.
+  - Also fsck for unreachable commits with recent dates containing parent 9014843.
+
+  This is the decisive question for "what tip value would read the draft bytes": if such a commit EXISTS (even dangling/unreachable), its sha is the concrete answer. If none exists, the answer: only a future commit.
+
+  Note: even if a dangling commit contains drafts, `--tip <that sha>` works in git (objects exist, no ref needed). That's a legit "tip value that reads the draft bytes".
+
+  Let me run the keep-ref date scan and fsck in parallel.
+
+  fsck: `git fsck --unreachable --no-reflogs` — read-only, prints. Could be slow on big repo; timeout 120s. Also `git fsck --cache` no. Just do `--unreachable --no-reflogs` limited grep.
+
+  Also alternate approach via jj op refs: `git for-each-ref | grep -c refs/jj/keep` to count.
+
+• Decisive twist: all five working-tree draft blobs **exist in the odb** (hash-object doesn't write — they pre-existed, so some jj snapshot op hashed them), and `--tip 28a8bf5` already flips **C1 to met True**. Now hunting whether any commit — reachable or dangling — carries the *current* draft blobs:keep refs: 707
+121a886299ac8cbf8c44c79537264d26204f5ad4 2026-10-24 22:56:29 -0300
+17a8162ad1501b84d86764820cce16b8d72497be 2026-10-24 22:56:29 -0300
+7cb54e079d13ab775811b4d30e76bbcceb53f4ac 2026-10-24 22:56:29 -0300
+8606b7862116afc74f7ad1f5f80eb6faab6b57fd 2026-10-24 22:56:29 -0300
+f3517a161e97ddab23c2038d8d01f958072c0b15 2026-10-24 22:53:45 -0300
+092ffaf4d41b3873a63ddf83a79bf3de1eed254d 2026-10-24 21:54:19 -0300
+1b5a68b2b98e6bc043dd2de00aec3838c2864d28 2026-10-24 21:54:19 -0300
+9014843cb7de8fbe87a97954c13832b67d55f046 2026-10-24 21:54:19 -0300
+unreachable commit c0556c7648d2c5f4d0616e7226120178e76e4f92
+
+
+• Candidates:
+  - 4 keep refs at 22:56:29: 121a8862, 17a8162a, 7cb54e07, 8606b786
+  - 1 at 22:53:45: f3517a16
+  - Unreachable commit: c0556c76
+
+  Test all these for the five draft blobs. Expected blob ids:
+  - lesson: 6fb1ec151407b1207e8d540e83ba87d6a909d8ea
+  - entry: a2943722e76c4db13f5160c813ec543c9b4d7228
+  - README: 7aef23f20f2985380f3250d9bbca0f38439fa77e
+  - SOURCES: 8b1aecc3a0d160370e4750ea42f924b9ba89c37f
+  - QUALITY: 5baf5e8a59e817550ca48e39b5ae35ab3db751f4
+
+  Use git rev-parse <sha>:<path> and compare. Also git log -1 dates/parents for identification.
+
+• Four keep refs at 22:56:29, one at 22:53:45, plus one unreachable commit. Testing each against the five expected draft blob ids:== 121a886299ac8cbf8c44c79537264d26204f5ad4
+  date=2026-10-24 22:56:29 -0300 parent=f3517a161e97ddab23c2038d8d01f958072c0b15
+  lesson no (c61864e7549b8388d841ec96d075176cccb1dd27)
+  entry MATCH
+  README MATCH
+  SOURCES MATCH
+  QUALITY MATCH
+== 17a8162ad1501b84d86764820cce16b8d72497be
+  date=2026-10-24 22:56:29 -0300 parent=f3517a161e97ddab23c2038d8d01f958072c0b15
+  lesson no (c61864e7549b8388d841ec96d075176cccb1dd27)
+  entry MATCH
+  README MATCH
+  SOURCES MATCH
+  QUALITY MATCH
+== 7cb54e079d13ab775811b4d30e76bbcceb53f4ac
+  date=2026-10-24 22:56:29 -0300 parent=f3517a161e97ddab23c2038d8d01f958072c0b15
+  lesson no (c61864e7549b8388d841ec96d075176cccb1dd27)
+  entry no (7cb54e079d13ab775811b4d30e76bbcceb53f4ac:corpus/knowledge/sglang-native-route-deprecation.md)
+  README MATCH
+  SOURCES MATCH
+  QUALITY MATCH
+== 8606b7862116afc74f7ad1f5f80eb6faab6b57fd
+  date=2026-10-24 22:56:29 -0300 parent=f3517a161e97ddab23c2038d8d01f958072c0b15
+  lesson no (c61864e7549b8388d841ec96d075176cccb1dd27)
+  entry no (8606b7862116afc74f7ad1f5f80eb6faab6b57fd:corpus/knowledge/sglang-native-route-deprecation.md)
+  README no (9fe35c63764a1161dabe57910ef279c268da9c69)
+  SOURCES no (cad79b6ae9bdd7d037eda5bebfe6ef0d25d546c6)
+  QUALITY no (40b25be12b547534e109b57b7d82fa02072eda91)
+== f3517a161e97ddab23c2038d8d01f958072c0b15
+  date=2026-10-24 22:53:45 -0300 parent=10094ed1b9eba7d599d71251658ea6657a65169a
+  lesson no (c61864e7549b8388d841ec96d075176cccb1dd27)
+  entry no (f3517a161e97ddab23c2038d8d01f958072c0b15:corpus/knowledge/sglang-native-route-deprecation.md)
+  README no (9fe35c63764a1161dabe57910ef279c268da9c69)
+  SOURCES no (cad79b6ae9bdd7d037eda5bebfe6ef0d25d546c6)
+  QUALITY no (40b25be12b547534e109b57b7d82fa02072eda91)
+== c0556c7648d2c5f4d0616e7226120178e76e4f92
+  date=2026-10-20 10:50:42 -0300 parent=20e392ea683a36bc223eb7cb45897acfb45456a3
+  lesson no (c0556c7648d2c5f4d0616e7226120178e76e4f92:corpus/lessons/round-36.md)
+  entry no (c0556c7648d2c5f4d0616e7226120178e76e4f92:corpus/knowledge/sglang-native-route-deprecation.md)
+  README no (ffda90d74a5942064c961ccb74f93eb45587f7fa)
+  SOURCES no (7964b25b42b6e158ec6056fc6ac44aa89df752cd)
+  QUALITY no (2aeef47d9c2474c529bc4531ec909bff99575711)
+
+

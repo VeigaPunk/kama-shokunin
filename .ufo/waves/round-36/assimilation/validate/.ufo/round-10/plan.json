@@ -1,0 +1,31 @@
+{
+  "round": 10,
+  "loop": 2,
+  "lane": "kama",
+  "date": "2026-10-18",
+  "dispatch_utc": null,
+  "model": "opencode-go/deepseek-v4.1-flash-free",
+  "effort": "wire default (AgentSwarm exposes no per-seat effort pin)",
+  "seats_total": 64,
+  "seat_classes": {"audit": 20, "evidence": 12, "tps_probe": 32},
+  "seat_protocol": ".ufo/round-10/SEAT-PROTOCOL.md (carried verbatim modulo round number)",
+  "loop_1_result": "all 4 rounds blocked-with-data; 0 tokens; deepseek upstream outage 18:32-18:37Z; glm wire id absent from host catalog",
+  "claims": [
+    {
+      "axis": "freshness",
+      "claim": "Re-anchor still-live source anchors through explicit dated corpus correction entries while preserving dated history.",
+      "before": "sum(active_unresolved) across .ufo/round-10/audit/*.before.json",
+      "after": "sum(active_unresolved) across .ufo/round-10/audit/*.after.json",
+      "verifies_if": "after_total < before_total AND git diff shows append-only changes to historical corpus lines"
+    },
+    {
+      "axis": "operability",
+      "claim": "Refresh the gate evidence bundle at round-10 HEAD under .ufo/round-10/gates/.",
+      "before": "gate evidence dated 2026-10-15; no gate runs since",
+      "after": ".ufo/round-10/gates/*.json dated 2026-10-18 with preserved verdict vocabulary (check exit 2, consumers exit 0, test-snapshot 24/0)",
+      "verifies_if": "all gate artifacts exist, exits match preserved truth, timestamps current"
+    }
+  ],
+  "unchanged_axes_expected": ["depth", "coverage", "calibration", "adjacency"],
+  "non_goals": ["service restoration", "registry expected-value changes", "push", "sibling or integrator files", "provider substitution without operator sign-off"]
+}

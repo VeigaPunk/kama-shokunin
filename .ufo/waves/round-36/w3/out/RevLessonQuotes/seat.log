@@ -1,0 +1,406 @@
+kimi version 2.3.1
+• Let me start by naming the axes per Godspeed, then execute in parallel.
+
+  Task: For every quote in the lesson draft (/home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-36.md), count whitespace-delimited words and say whether ≤25 words. Also check the two registry rows' quotes in SOURCES.md (S328, S329). Do not edit any corpus file. Write report to .ufo/waves/round-36/w3/out/RevLessonQuotes.md.
+
+  Axes:
+  - Coverage: every quote in the lesson draft + the two registry rows' quotes.
+  - Accuracy: word counts measured, not eyeballed.
+  - Calibration: measured vs inference separated; the frozen claims C1/C2 say calibration 7→7, coverage 9→9 — I must not change predicates, just report.
+
+  Let me read the lesson draft and SOURCES.md in parallel, and check the seat out directory exists.
+
+  Let me do parallel tool calls:
+  1. Read round-36.md
+  2. Read SOURCES.md (or grep for S328/S329 rows — better read tail; file could be big; use Read with negative offset or Grep with context)
+  3. mkdir -p seat out dir
+  4. Read RULES.md? The tooling section says I may install tools; probably don't need any. Reading /home/vgpnk/.omp/agent/RULES.md only if installing. I'll just use python3 for counting — no install needed.
+
+  Also there's tools/round36-statement-audit.py — maybe relevant for understanding how quotes are counted, but my task is simply word counts. But calibration axis: maybe the lesson quotes are supposed to be ≤25 words per some QUALITY criterion. Let me check QUALITY.md KQ45 too since it may define the "≤25 words" criterion — but the task defines the threshold explicitly: 25 words or fewer. So just measure.
+
+  Let me be careful about "quote" identification: quotes in the lesson are likely blockquotes (lines starting with `>`) or quoted spans. I need to look at the file first.
+
+  Plan first batch (parallel):
+  - Read corpus/lessons/round-36.md
+  - Grep SOURCES.md for S328|S329 with context
+  - Bash: mkdir -p the out dir
+  - Read corpus/QUALITY.md tail (KQ45) — optional but cheap, gives context for what the quotes are.
+
+  Then count words per quote with python3 (measured). Then write report.
+
+  Let me go.
+
+• Axes: (1) coverage — every quote in `round-36.md` + S328/S329 quotes, no omissions; (2) accuracy — word counts computed by script, not eyeballed; (3) calibration — measured facts separated from inference, frozen predicates untouched.ConnScope2
+CritC1Sound
+CritC2Junk
+dispatch-manifest.json
+ExecCensusEnd
+ExecCounters
+ExecSweep
+MutLessonRow
+MutQuote26
+MutQuote26.md
+MutRowPipe
+RevDrift174
+RevDrift174.md
+RevDrift192
+RevDrift193
+RevDrift193.md
+RevEntryBytes
+RevLeftovers
+RevLessonGate
+RevLessonQuotes
+RevLessonQuotes.d
+RevMisroot
+RevQ202
+RevQ202.md
+RevQ206
+RevQ210
+RevQ211
+RevQ211.md
+RevQ224
+RevQ230
+RevQ230.md
+RevQualBytes
+RevReadmeBytes
+RevRowsBytes
+RevS328
+RevS329
+ScoutTally
+ScribeLog
+ScribeQual
+SentFinal
+swarm-registry.json
+
+
+• The out directory already has `RevLessonQuotes` as a file (a sibling wave may have created it? Actually my report path is `.ufo/waves/round-36/w3/out/RevLessonQuotes.md` — and there's a file `RevLessonQuotes` (no extension) and a directory `RevLessonQuotes.d` I just created... wait, `RevLessonQuotes` exists already as an entry. Let me check what it is. My report path is RevLessonQuotes.md which doesn't appear in the listing. `RevLessonQuotes` might be a directory created by a prior seat? Actually the listing shows both `RevLessonQuotes` and `RevLessonQuotes.d` (which I just created with mkdir -p). Hmm, `RevLessonQuotes` existed before my mkdir? The mkdir -p created `RevLessonQuotes.d`. The listing shows `RevLessonQuotes` and `RevLessonQuotes.d`. Maybe `RevLessonQuotes` is a directory created by... wait, other waves (w1, w2) are different directories. This is w3/out. Other w3 seats created files like MutQuote26.md, RevDrift193.md etc. So `RevLessonQuotes` (no extension) may have been created by an earlier attempt of my seat? Or it's a directory. Let me check with ls -la.
+
+  Also I created `RevLessonQuotes.d` scratch dir — fine, that's allowed (scratch in seat directory; well, bounds say scratch files go in seat directory /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/<YourSeatName>/ — my seat name... The report trailer says report to .ufo/waves/round-36/w3/out/RevLessonQuotes.md, so my seat name is RevLessonQuotes. Scratch should go in .../out/RevLessonQuotes/ presumably. Hmm, I created `RevLessonQuotes.d` — but if `RevLessonQuotes` is already a directory, then scratch goes inside it and the report... wait the report is RevLessonQuotes.md, a file. If RevLessonQuotes is a directory, that's fine, separate name.
+
+  Let me check what RevLessonQuotes is.
+
+  Now the main task: identify quotes in the lesson draft.
+
+  Quote identification in round-36.md: There are several kinds:
+  1. Backtick-quoted spans (inline code).
+  2. Double-quoted spans: line 33 has `"Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs."` — located quote (15 words claimed).
+  3. Line 35: `"Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead."` — located quote (16 words claimed).
+  4. Line 15: `` `kama | round-35 | MISSION.md:29 still says operability + freshness …` `` — quoted r35 question.
+  5. Line 21-27 corrections — R35-S211 etc. contain quoted cells like `DOI not in Semantic Scholar`? No wait, that's in the quarantine table (lines 51-57) with backticked cells.
+  6. Line 52: `service_healthy : Specifies that a dependency is expected to be "healthy" (as indicated by healthcheck ) before starting` — a backticked span.
+  7. Line 53: `对于vLLM/SGLang，可通过模型列表接口 <EAS_ENDPOINT>/v1/models 获取。`
+  8. Line 54: `Page Not Found`, `python3 -m sglang.launch_server`
+  9. Line 56: `render-only servers always return 200`
+  10. Line 57: quoted? "carries the register's quoted sentence at lines 790-791" — no explicit quote text.
+  11. Line 61: `  | S002 |` etc.
+
+  Hmm. The task says "For every quote in the lesson draft, count its whitespace-delimited words and say whether it is 25 words or fewer."
+
+  Scope question: What counts as "a quote"? The natural reading in this corpus context: "located quotes" — the quoted spans attributed to sources. The lesson has explicitly labeled "Located quote (15 words)" and "Located quote (16 words)". But the task says "every quote". I should be comprehensive: enumerate all quoted spans (backtick spans and double-quoted spans) and count. But backtick spans include commands, paths, file names — counting those as "quotes" and checking ≤25 words would be noise, but harmless and thorough. The instruction is "every quote in the lesson draft". Given the precedent (R35-WORDS: S327 quote word count; the 25-word bound for located quotes), the intended target is likely the source-attributed quoted sentences. But to be safe and calibrated, I'll enumerate:
+
+  Category A — double-quoted located quotes (the two Admit rows, lines 33 and 35).
+  Category B — backticked quoted spans attributed to source pages (quarantine table cells, lines 51-57).
+  Category C — inline code spans (commands, paths, ids) — I'll note these as not source quotes but still list counts? That could bloat. Hmm.
+
+  The task: "For every quote in the lesson draft, count its whitespace-delimited words and say whether it is 25 words or fewer. Give the count for each."
+
+  I think the right scope is every quoted span presented as a quotation (i.e., attributed to a source or another document): the two located quotes (double-quoted), the r35 question quote (backticked, line 15), and the quarantine table quoted spans (backticked, lines 51-57), plus maybe "healthy" inside line 52 — that's nested inside the larger quote; it's part of the source text itself. Also line 23 has no quoted text? Line 23: R35-WORDS — quotes "18 words"? It writes: is 20 words, not the 18 words its own paragraph records — no quote marks. Line 76: records "18 words" for a quote that is 20 words long — has double quotes around 18 words.
+
+  Hmm, this is getting fuzzy. Best approach: be systematic. Extract all quoted spans via a deterministic rule, count each, and report all with line numbers, marking which are source-attributed quotes vs incidental code/inline spans. The verdict "≤25 words" is then given for each. That's fully covered: every quote, no judgment calls about relevance.
+
+  Deterministic rule:
+  1. Double-quoted spans ("...") — regex for "..." non-greedy.
+  2. Backtick spans (`...`).
+
+  Also the em-dash-quoted? Line 15's quote is backticked. Fine.
+
+  Note nested quotes: line 52 backtick span contains "healthy" in double quotes — nested. My regex for double quotes would also catch "healthy" separately. I'll note it's nested inside the backtick span. Similarly line 35 double-quoted span contains single-quoted '/get_model_info' — single quotes not counted as separate quotes.
+
+  Also apostrophes: "engine's" etc. — double-quote regex could mismatch across quotes like "healthy" (as indicated... Let me be careful: line 52 has: `service_healthy : Specifies that a dependency is expected to be "healthy" (as indicated by healthcheck ) before starting` — the backticks wrap the whole span including "healthy". The "..." regex would find "healthy" only. OK.
+
+  Line 33: located quote in double quotes contains no internal double quotes. Line 35 same.
+
+  Line 15: backticked span: `kama | round-35 | MISSION.md:29 still says operability + freshness …` — the Read output shows the ellipsis character "…". Word count: whitespace-delimited words: "kama", "|", "round-35", "MISSION.md:29", "still", "says", "operability", "+", "freshness", "…" → 10 tokens by whitespace split.
+
+  Also line 27 R35-KEEP: no quotes, lists paths without backticks.
+
+  Line 37: `serving_container_health_route`, `containerSpec.healthRoute`, `AIP_HEALTH_ROUTE` — inline code, not source quotes.
+
+  Line 39: `sglang-native-api-deprecation-amendment-2026-10-23-r4.md` inline code.
+
+  Line 43: `endpoint-health-probe-conventions.md` inline code.
+
+  Line 47: awk recipe inline code.
+
+  Line 61: `  | S002 |` inline code; "collisions = S327"? No, backticked? Line 61: the collision check that produced `collisions = S327`? Actually line 69 has `collisions = S327`. Line 61 has no backticks except... "Renumber map: none required" — no quotes.
+
+  Line 65: `corpus/SOURCES.md` inline code.
+
+  Line 67: `file ok` in backticks — a receipt output quote; arguably a quote of output. Count it.
+
+  Line 69: `  | S002 |` and `collisions = S327` inline code.
+
+  Line 13: backticks: `.ufo/waves/round-36/preregistration.json`, control paths, etc.
+
+  Line 9/11: counting commands in backticks.
+
+  Line 75-77 mistakes table: line 75 no quotes? "the round-35 row was written from a seat summary that carried no status code" — no quotes. Line 76: records "18 words" for a quote that is 20 words long. Line 77: `provider.auth_error: 403` backticked.
+
+  Line 81-83: no quotes.
+
+  So the full inventory of quoted spans. I'll write a Python script to extract, per line, all double-quoted and backtick spans, count whitespace-delimited words, and output. Then in the report, classify:
+
+  - Primary target (source-located quotes): the two double-quoted "Located quote" spans (lines 33, 35) — these are the lesson's own located quotes and the same ones as S328/S329 rows.
+  - Registry rows S328/S329 quotes (em-dash cell after "lines N — quote"): count those.
+  - Quoted spans attributed to sources in the quarantine table (lines 51-57).
+  - Incidental inline-code spans (commands, paths, ids) — list for completeness with counts, noting they're not source quotes.
+
+  Also compare lesson quote (15 words) vs registry S328 quote text: registry S328 quote cell: "line 6 and route-list line 9 — Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs." The quote part after "—" is the same sentence. Count: Apart(1) from(2) the(3) OpenAI(4) compatible(5) APIs,(6) the(7) SGLang(8) Runtime(9) also(10) provides(11) its(12) native(13) server(14) APIs.(15) → 15 words. ≤25 ✓.
+
+  S329: Endpoint(1) '/get_model_info'(2) is(3) deprecated(4) and(5) will(6) be(7) removed(8) in(9) a(10) future(11) version.(12) Please(13) use(14) '/model_info'(15) instead.(16) → 16 words. ≤25 ✓.
+
+  Lesson line 33: same 15 words. Lesson line 35: same 16 words. Consistent with claimed counts (15 and 16) — matches the claimed "(15 words)" and "(16 words)". 
+
+  Now run the script to be measured, not eyeballed. Also check consistency between lesson quotes and registry quotes byte-wise (extra value for calibration). The task says don't edit any file — fine, script is read-only, writes output to stdout; I'll save script in my scratch dir... wait, my scratch should go in seat dir. The seat dir — report trailer path is .ufo/waves/round-36/w3/out/RevLessonQuotes.md, so seat name RevLessonQuotes. But `RevLessonQuotes` already exists in out/ as an entry. Let me check if it's a directory or file. If it's a directory, I can put scratch inside it. I created RevLessonQuotes.d — slightly off but it's within out/ which is within the seat area... Bounds: "Scratch files go only in your seat directory /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/<YourSeatName>/". My seat name is presumably RevLessonQuotes (from the report path stem). RevLessonQuotes.d is arguably a scratch sibling — to be safe, I'll use .ufo/waves/round-36/w3/out/RevLessonQuotes/ if it's a directory; if RevLessonQuotes is an existing file, hmm. Let me check.
+
+  Actually, simplest: run python3 inline via heredoc without writing any script file at all. Read-only counting, no scratch needed. Then write only the report file.
+
+  Let me check what RevLessonQuotes is first, and run the extraction script in parallel.
+
+  Script plan:
+
+  ```python
+  import re
+  text = open('corpus/lessons/round-36.md').read()
+  lines = text.splitlines()
+  # extract spans per line with type
+  for i, line in enumerate(lines, 1):
+      # backtick spans
+      for m in re.finditer(r'`([^`]*)`', line):
+          ...
+      # double-quoted spans, excluding those inside backtick spans
+  ```
+
+  To handle nesting: find backtick spans first, mask them, then find double-quoted spans in the masked line. Also record positions. Then classify.
+
+  For SOURCES.md rows: extract the quote cell. The anchor/quote cell format: `line 6 and route-list line 9 — Apart from ...`. The quote portion is after the em-dash. I'll split on ' — ' and take the remainder. Also verify the lesson-quoted sentence equals the registry-quoted sentence (modulo surrounding quote marks). That's a bonus consistency check (calibration).
+
+  Also count words via three methods like the lesson does? At least: python str.split() count and wc -w equivalent for the primary quotes. Keep it simple: str.split() (whitespace-delimited) — matches the task definition. Maybe also re.findall(r'\S+') same thing. One method suffices; mention method.
+
+  Let me also double check there are no other double-quoted spans I'd miss due to typographic quotes (" " or ' '). Line 52 contains "healthy" with straight quotes per the Read output. Also check for curly quotes in file: search for " " etc. Let me include a scan for typographic quotes in the script.
+
+  Now the report structure:
+  - Scope & method
+  - Quote inventory table: line, span type, quote text (truncated?), word count, ≤25?
+  - The two located quotes + S328/S329 registry quote cells: counts and cross-consistency
+  - Findings by severity
+  - Residual risk / verification gaps
+  - Measured vs inference separated.
+
+  Findings: if all quotes ≤25 words, no defect; note the claimed counts (15, 16) match measured — positive. Any drift in quarantine table spans? E.g., S224 compound span "render-only servers always return 200" = 5 words ≤25. None of the quotes exceed 25 presumably. The R35-WORDS correction says S327 quote is 20 words — not in this file.
+
+  Potential finding: line 15's r35 question quote is truncated with "…" — it's an ellipsis quote; count 10 words ≤25, fine. Not a defect.
+
+  One more check: the word "quote" — the two "Located quote (N words)" claims: verify claimed == measured. 15 and 16 → verify.
+
+  Also nested double quotes: line 52 `"healthy"` nested — counted separately; note it.
+
+  Edge: line 33 has URL and other text; double-quote regex must not capture across lines (I do per line, fine). Line 33: Located quote (15 words): "Apart ... APIs." — good.
+
+  Line 35 similar.
+
+  Any double quotes elsewhere? Line 21: records this quarantine row as unreachable — no quotes. Line 27: none. Line 31: none. Line 37: none (backticks only). Line 52: "healthy" nested. Line 75/76: "18 words" line 76. Line 3: attempt 1's — apostrophe only. OK.
+
+  Write the script now. Also check `RevLessonQuotes` existing entry type in parallel.
+
+• Lesson and registry rows in hand. Now measure — extract every quoted span (double-quoted and backtick), whitespace-split counts, plus the S328/S329 quote cells, with a read-only script (no scratch files needed)./home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLessonQuotes:
+total 24
+drwxr-xr-x 1 vgpnk vgpnk    36 Oct 24 22:45 .
+drwxr-xr-x 1 vgpnk vgpnk   908 Oct 24 22:49 ..
+-rw-r--r-- 1 vgpnk vgpnk  4065 Oct 24 22:45 prompt.txt
+-rw-r--r-- 1 vgpnk vgpnk 17272 Oct 24 22:51 seat.log
+
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLessonQuotes.d:
+total 0
+drwxr-xr-x 1 vgpnk vgpnk   0 Oct 24 22:49 .
+drwxr-xr-x 1 vgpnk vgpnk 908 Oct 24 22:49 ..
+=== LESSON round-36.md: quoted spans (per line) ===
+L9	bt	words=6	chars=111	<<python3 tools/round36-statement-audit.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip <full-commit>>>
+L11	bt	words=6	chars=110	<<python3 tools/round36-coverage-audit.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip <full-commit>>>
+L13	bt	words=1	chars=40	<<.ufo/waves/round-36/preregistration.json>>
+L13	bt	words=1	chars=40	<<.ufo/waves/round-36/controls/c1-noop.out>>
+L13	bt	words=10	chars=81	<<uncorrected 4 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met False>>
+L13	bt	words=1	chars=40	<<.ufo/waves/round-36/controls/c2-base.out>>
+L13	bt	words=8	chars=43	<<named 0 file_exists 0 cited_new 0 met False>>
+L15	bt	words=11	chars=68	<<kama | round-35 | MISSION.md:29 still says operability + freshness …>>
+L23	bt	words=2	chars=5	<<wc -w>>
+L23	bt	words=1	chars=11	<<quote_words>>
+L33	dq	words=15	chars=95	<<Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs.>>
+L35	dq	words=16	chars=115	<<Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead.>>
+L37	bt	words=1	chars=36	<<hosted-health-route-configuration.md>>
+L37	bt	words=1	chars=30	<<serving_container_health_route>>
+L37	bt	words=1	chars=25	<<containerSpec.healthRoute>>
+L37	bt	words=1	chars=16	<<AIP_HEALTH_ROUTE>>
+L39	bt	words=1	chars=56	<<sglang-native-api-deprecation-amendment-2026-10-23-r4.md>>
+L41	bt	words=1	chars=14	<<http_server.py>>
+L43	bt	words=1	chars=36	<<endpoint-health-probe-conventions.md>>
+L47	dq	words=1	chars=3	<< l >>
+L47	bt	words=7	chars=30	<<awk -F'|' -v l='kama' '$2 ~ (">>
+L47	bt	words=12	chars=58	<<") && $3 ~ /round[0-9]+/ && $4 ~ /S[0-9]+/ {print $4, $5}'>>
+L47	bt	words=1	chars=14	<<payload-absent>>
+L51	bt	words=5	chars=27	<<DOI not in Semantic Scholar>>
+L52	bt	words=18	chars=120	<<service_healthy : Specifies that a dependency is expected to be "healthy" (as indicated by healthcheck ) before starting>>
+L53	bt	words=3	chars=52	<<对于vLLM/SGLang，可通过模型列表接口 <EAS_ENDPOINT>/v1/models 获取。>>
+L54	bt	words=3	chars=31	<<python3 -m sglang.launch_server>>
+L54	bt	words=3	chars=14	<<Page Not Found>>
+L55	bt	words=1	chars=10	<<still-live>>
+L56	bt	words=1	chars=14	<<check_health()>>
+L56	bt	words=1	chars=15	<<EngineDeadError>>
+L56	bt	words=5	chars=37	<<render-only servers always return 200>>
+L56	bt	words=1	chars=11	<<render-only>>
+L56	bt	words=3	chars=17	<<always return 200>>
+L65	bt	words=1	chars=17	<<corpus/SOURCES.md>>
+L67	bt	words=1	chars=11	<<.ufo/waves/>>
+L67	bt	words=1	chars=7	<<used-by>>
+L67	bt	words=1	chars=52	<<.ufo/waves/round-36/assimilation/validate-census.out>>
+L67	bt	words=2	chars=7	<<file ok>>
+L69	bt	words=3	chars=10	<<  | S002 |>>
+L69	bt	words=3	chars=17	<<collisions = S327>>
+L76	dq	words=2	chars=8	<<18 words>>
+L76	bt	words=1	chars=11	<<quote_words>>
+L77	bt	words=2	chars=24	<<provider.auth_error: 403>>
+L77	bt	words=1	chars=20	<<seat-exit-codes.json>>
+
+=== typographic quote scan (curly quotes) ===
+U+201C: 0
+U+201D: 0
+U+2018: 0
+U+2019: 0
+U+2026 ellipsis: 1
+
+=== SOURCES.md S328/S329 anchor-quote cells ===
+S328	anchor=<<SGLang Native APIs at tag v0.5.22>>	quote_words=1	chars=97	<<https://raw.githubusercontent.com/sgl-project/sglang/v0.5.22/docs/docs/basic_usage/native_api.mdx>>
+S328	anchor=<<line 6 and route-list line 9>>	quote_words=15	chars=95	<<Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs.>>
+S329	anchor=<<SGLang http_server.py at tag v0.5.22>>	quote_words=1	chars=105	<<https://raw.githubusercontent.com/sgl-project/sglang/v0.5.22/python/sglang/srt/entrypoints/http_server.py>>
+S329	anchor=<<lines 790-791>>	quote_words=16	chars=115	<<Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead.>>
+
+
+• Good measurements. Notes:
+
+  1. The awk recipe on L47 got split by my backtick regex because the recipe itself contains backticks (`"'"` l `"'"`)... actually the recipe contains embedded backticks: `awk -F'|' -v l='kama' '$2 ~ ("`" l "`") && ...`. So my naive backtick regex split it into pieces and also mis-parsed the `"'"` — the dq span ` l ` on L47 is an artifact of that mis-split (it matched `"'" l "'"` wrongly? It printed << l >> — matched between a closing double quote after `("` ... hmm: the raw line contains `(" `+backtick+`" l "`+backtick+`")`. My bt regex first matched `` `kama' '$2 ~ ("` `` — wait it printed bt span <<awk -F'|' -v l='kama' '$2 ~ (">> (words=7) and <<") && $3 ~ /round[0-9]+/ && $4 ~ /S[0-9]+/ {print $4, $5}'>> (words=12), plus dq << l >>. So the true whole backtick span is the full awk recipe: `awk -F'|' -v l='kama' '$2 ~ ("`" l "`") && $3 ~ /round[0-9]+/ && $4 ~ /S[0-9]+/ {print $4, $5}'`. Let me count its words properly: awk(1) -F'|'(2) -v(3) l='kama'(4) '$2(5) ~(6) ("`"(7) l(8) "`")(9) &&(10) $3(11) ~(12) /round[0-9]+/(13) &&(14) $4(15) ~(16) /S[0-9]+/(17) {print(18) $4,(19) $5}'(20) → 20 words. The artifact dq span ` l ` (1 word) is not a real quote — it's a parsing artifact; the real text is `"'" l "'"` inside the awk recipe. I must correct this in the report: 46 real spans + this one corrected to 20 words, and the ` l ` artifact discarded.
+
+  Let me recount L47 combined exactly: full span text = awk -F'|' -v l='kama' '$2 ~ ("`" l "`") && $3 ~ /round[0-9]+/ && $4 ~ /S[0-9]+/ {print $4, $5}'
+  split(): ["awk","-F'|'","-v","l='kama'","'$2","~","(\"`\"","l","\"`\")","&&","$3","~","/round[0-9]+/","&&","$4","~","/S[0-9]+/","{print","$4,","$5}'"] = 20 tokens. Good, 20 words ≤25.
+
+  Also the two L47 pieces my script produced: 7 + 12 = 19 words plus the ` l ` = 20. Consistent.
+
+  2. L15 quote contains the ellipsis char … as a separate whitespace-delimited token → 11 words (kama, |, round-35, MISSION.md:29, still, says, operability, +, freshness, …) — wait that's 10. Script says 11. Let me recount: "kama | round-35 | MISSION.md:29 still says operability + freshness …" tokens: kama(1) |(2) round-35(3) |(4) MISSION.md:29(5) still(6) says(7) operability(8) +(9) freshness(10) …(11). Yes 11 — two pipe tokens. OK, script measured 11; trust script.
+
+  3. Primary located quotes: L33 = 15 words, L35 = 16 words — exactly matching the lesson's own claims "(15 words)" and "(16 words)", and matching registry S328/S329 quote cells (15 and 16, char-identical 95/115 chars). Both ≤25. This is a positive consistency result.
+
+  4. Every quoted span in the lesson is ≤25 words. Max is L47 awk recipe at 20.
+
+  5. S202 span L52 is 18 words (interesting: the r35 drift was 18 vs 20 — unrelated but note: not needed).
+
+  Classification for the report:
+  - A: source-located quotes (double-quoted, attributed): L33, L35 → 15, 16. PASS.
+  - B: source/register-quoted spans in quarantine table: L51 (5), L52 (18), L53 (3), L54 (3, 3), L55 (1), L56 (1,1,5,1,3). PASS.
+  - C: incidental backtick spans (commands, paths, ids, outputs): all ≤20 words. PASS. These are code formatting, not quotations; listed for completeness.
+  - D: dq span L76 "18 words" (2) — a quoted count reference, PASS. dq L47 ` l ` — parsing artifact, excluded (explained).
+
+  Also cross-checks measured:
+  - Lesson L33 quote text == S328 quote cell text (95 chars, equal? verify with exact comparison — both printed identical 95 chars; do an explicit equality check to be rigorous).
+  - Lesson L35 == S329 cell (115 chars).
+
+  Let me run the exact-equality check quickly, plus recount L47 full span with a proper parse, and confirm claimed counts in lesson text ("15 words"/"16 words" claims) exist. Then write the report.
+
+  Also double-check there are no quotes in lines 1-8, 19-32 beyond what found: L21-27 corrections had no backticks/quotes? Script shows none in L21, L25, L27. Wait L21: "records HEAD 200" no quotes. OK. L23 has `wc -w`, `quote_words` and blob hash 428f1f8a... not backticked. Fine.
+
+  Lines 79-83: none. Good.
+
+  One more sanity: mask-based dq detection could miss a dq span that overlaps a backtick span boundary — none likely. And the dq regex `[^"]+` requires non-empty; fine.
+
+  Now the equality check + L47 recount, then write report. Report path: the bounds say my one allowed report write is .ufo/waves/round-36/w3/out/RevLessonQuotes.md. But there is a DIRECTORY named RevLessonQuotes (my seat dir with prompt.txt and seat.log). Writing file .ufo/waves/round-36/w3/out/RevLessonQuotes.md is a distinct path from the directory RevLessonQuotes — allowed and unambiguous. Scratch: I created RevLessonQuotes.d — I'll remove it since I don't need it (leave no stray). Actually removing it is a write to the out dir; it's my own created dir, safe to rmdir. I'll rmdir it to keep the tree clean, and do scratch inside seat dir RevLessonQuotes/ if needed (I don't need any).
+
+  Also clean up: I should not delete anything I didn't create. RevLessonQuotes.d is mine (created this session). rmdir is fine.
+
+  Write the report now after the equality check.
+
+• Measurements in. One artifact to fix: L47's awk recipe contains embedded backticks, so my regex split it into three fragments (`7 + 1 + 12` words). Re-count it as one span, and byte-compare the lesson located quotes against the S328/S329 registry cells.L47 raw: Slice derived with the operator recipe: `awk -F'|' -v l='kama' '$2 ~ ("`" l "`") && $3 ~ /round[0-9]+/ && $4 ~ /S[0-9]+/ {print $4, $5}'` over the campaign register. Seven kama rows, each carrying an S-id; the class cell in every one of them reads `payload-absent`. Every row below was hand-checked by the L1 on 2026-10-24 with a direct fetch; wave-2 seats re-opened S211, S230, S224, S202 and S210 independently. The register was not edited.
+L47 full span words = 41 <<awk -F'|' -v l='kama' '$2 ~ ("`" l "`") && $3 ~ /round[0-9]+/ && $4 ~ /S[0-9]+/ {print $4, $5}'` over the campaign register. Seven kama rows, each carrying an S-id; the class cell in every one of them reads `payload-absent>>
+Traceback (most recent call last):
+  File "<stdin>", line 16, in <module>
+IndexError: list index out of range
+
+
+• Two issues:
+
+  1. L47 first-backtick-to-last-backtick grabs too much (the span from first ` to last ` includes intervening text because there are 4+ backticks on the line: recipe has internal backticks plus `payload-absent` later). The true recipe span is: `awk ... $5}'` — from the backtick after "recipe: " to the backtick right before " over the campaign register". That's the span with the embedded double-backtick pair (`" l "`). Words: awk(1) -F'|'(2) -v(3) l='kama'(4) '$2(5) ~(6) ("`"(7) l(8) "`")(9) &&(10) $3(11) ~(12) /round[0-9]+/(13) &&(14) $4(15) ~(16) /S[0-9]+/(17) {print(18) $4,(19) $5}'(20) = 20 words. And `payload-absent` separately = 1 word. My earlier fragment-based recount (7+12+1=20 for the recipe pieces) matches.
+
+  2. The registry cell extraction failed: index 6 out of range. The row has more `|` inside cells? The URL cell etc. Let me look: the S328 line — cells split by '|' naive split breaks because... the row: | S328 | title — URL | docs | A | description | anchor — quote | flip | mined | date | 90d | used-by |. That's 12 cells, index 6 should exist. IndexError means fewer cells... ah wait, I stripped and split, but the title cell contains " — " and URL; that doesn't reduce count. Hmm, actually the issue: I did line.strip().strip('|') — if the line ends without trailing '|'? Earlier Grep output showed the row ends with `corpus/knowledge/sglang-native-route-deprecation.md |`. So trailing pipe exists. Count cells: S328(0), title(1), docs(2), A(3), desc(4), anchor-quote(5), flip(6), mined(7), date(8), 90d(9), used-by(10). Index 5 is the anchor/quote cell, not 6! Earlier successful print found cells containing ' — ' which included the title cell (title — URL) and anchor — quote. In my equality script I used index 6 (flip cell, no ' — '... actually flip cell has no ' — ' so split(' — ',1) returned single element, and [1] → IndexError. Fix: use the cell that contains ' — ' and whose left side starts with "line"/"lines". Simpler: reuse the earlier working logic (cells with ' — ', take the one where left part contains 'line').
+
+  Rerun just the equality part.
+
+• L47's true recipe span ends before " over the campaign register" (the last-backtick grab over-extended across `payload-absent`). Fix both: slice the recipe span precisely, and use the correct cell index for the quote.L47 recipe span words = 20 tokens: ['awk', "-F'|'", '-v', "l='kama'", "'$2", '~', '("`"', 'l', '"`")', '&&', '$3', '~', '/round[0-9]+/', '&&', '$4', '~', '/S[0-9]+/', '{print', '$4,', "$5}'"]
+L47 payload-absent words = 1
+L33 == S328 quote: True | words: 15 vs 15
+L35 == S329 quote: True | words: 16 vs 16
+
+
+• All measured. Summary:
+
+  Lesson round-36.md quoted spans (46 real spans; L47 recipe counted as one 20-word span + payload-absent 1 word):
+
+  Source-located / register-quoted spans:
+  - L33 dq: 15 words — PASS (≤25). Matches claimed "(15 words)". Byte-identical to S328 registry quote cell.
+  - L35 dq: 16 words — PASS. Matches claimed "(16 words)". Byte-identical to S329 registry quote cell.
+  - L15 bt (r35 question): 11 — PASS.
+  - L51 bt: 5 — PASS.
+  - L52 bt: 18 — PASS.
+  - L53 bt: 3 — PASS.
+  - L54 bt: 3, 3 — PASS.
+  - L55 bt: 1 — PASS.
+  - L56 bt: 1, 1, 5, 1, 3 — PASS.
+  - L67 bt "file ok": 2 — PASS.
+
+  Incidental backtick spans (commands/paths/ids/flags — code formatting, not quotations): L9 6, L11 6, L13 1/1/10/1/8, L23 2/1, L37 1×4, L39 1, L41 1, L43 1, L47 20 (recipe) + 1 (payload-absent), L65 1, L67 1/1/52chars 1, L69 3/3, L76 1, L77 2/1 — all ≤20 words, PASS.
+
+  Double-quoted non-source spans: L76 "18 words" 2 — PASS. L47 dq ` l ` = parsing artifact of embedded quotes in the awk recipe, not a real span — excluded with explanation.
+
+  Registry rows:
+  - S328 quote cell: 15 words — PASS; identical to lesson L33.
+  - S329 quote cell: 16 words — PASS; identical to lesson L35.
+
+  Findings: no defect. Every quote ≤25 words. Claimed counts (15, 16) match measured. Lesson quotes byte-identical to registry quote cells. No drift.
+
+  Residual risks:
+  - Word counting method: whitespace split counts punctuation-bearing tokens and standalone symbols ("|", "+", "…") as words; a different tokenization (e.g., stripping punctuation, the C1 counter's quote_words extractor) could differ for edge spans like L15 (pipes/ellipsis inflate the count — would be 7 without standalone symbols). Since the bound is generous (max 20 measured vs 25), conclusion robust under any reasonable tokenizer. Note: I did not re-run the C1 counter's quote_words extractor; my counts are str.split() only.
+  - Scope call: counted every backtick and double-quoted span; if "quote" is meant narrowly (only the two Located quote lines), those are 15 and 16.
+  - L15 quote ends with ellipsis char (truncated quote) — counted "…" as a token; truncation itself not a word-count defect.
+  - Registry extraction relied on literal ' — ' cell split and column-0 id match (text search, not semantic row parse); the earlier Grep located the rows and my print of full cells confirmed the quote text visually.
+
+  Now write the report to .ufo/waves/round-36/w3/out/RevLessonQuotes.md. That is my one allowed report write. The dir out/RevLessonQuotes exists as a directory (seat dir with prompt.txt/seat.log); the file RevLessonQuotes.md is a distinct path — no conflict.
+
+  Report structure: Scope, method, verdicts table, findings by severity (none), measured vs inference, residual risk / verification gaps.
+
+• All measurements complete and consistent. Writing the report (my one allowed write) to the trailer path.written
+90 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLessonQuotes.md
+
+
+• Report written to the trailer path. Task complete. Summarize concisely: verdict, counts for the two located quotes + registry rows, no findings, residual notes. Stop — no actionable finding remains in scope.
+
+• Report written to `.ufo/waves/round-36/w3/out/RevLessonQuotes.md` (90 lines). Summary:
+
+  **Verdict — every quote passes the 25-word bound.**
+
+  Measured (`str.split()`, read-only):
+
+  - **Lesson located quotes**: L33 = **15 words** (claimed 15, exact match), L35 = **16 words** (claimed 16, exact match). Both ≤25.
+  - **Registry rows**: S328 quote cell = **15 words**, S329 quote cell = **16 words**, and both cells are **byte-identical** to the lesson's quotes — zero lesson↔registry drift.
+  - **All other quoted spans in the lesson** (quarantine-table register quotes L51–L56, r35 question L15, plus 29 incidental backtick command/path spans, listed in full): max count is **20** (the L47 awk recipe, a command not a quotation) — all ≤25.
+
+  **Findings by severity: none** (critical/major/minor empty).
+
+  **Residual notes**: counts are tokenizer-dependent for symbol-heavy spans (L15's pipes/ellipsis), but the 20-vs-25 margin means no verdict flips under any reasonable tokenization; the C1 counter's `quote_words` was not re-run by this seat; source pages were not re-fetched (out of scope — counts and internal consistency only). No file was edited; no mutating git/jj command run.
+
+To resume this session: kimi -r session_cbe00ce9-a45d-4a43-a80c-60be581e6903

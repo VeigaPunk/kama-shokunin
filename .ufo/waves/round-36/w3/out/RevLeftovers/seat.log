@@ -1,0 +1,913 @@
+kimi version 2.3.1
+• Let me start by understanding the task. I need to:
+
+  1. Run `git -C /home/vgpnk/Projects/shokunin/kama-shokunin status --porcelain`
+  2. List the seven paths that were the r35 leftovers
+  3. Say whether each is still uncommitted
+  4. Name the class of each: seat-log flush, report overwrite, mixed mirror, or helper-skipped HTML
+  5. Say whether committing any of them would break the C1 R35-KEEP arm
+  6. Write report to `.ufo/waves/round-36/w3/out/RevLeftovers.md`
+
+  Frozen claims:
+  - C1 calibration 7 -> 7. Counting command: `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round36-statement-audit.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip <full-commit>`
+  - C2 coverage 9 -> 9. Counting command: `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round36-coverage-audit.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip <full-commit>`
+
+  The C1 audit tool likely has an R35-KEEP arm that requires certain r35 leftovers to remain uncommitted... I need to look at the audit tool to understand what the R35-KEEP arm checks.
+
+  Let me start with parallel calls:
+  1. git status --porcelain
+  2. Read the audit tool round36-statement-audit.py
+  3. Read /home/vgpnk/.omp/agent/RULES.md (required before installing tools, but I may not need tools)
+
+  Let me go. M .ufo/waves/round-35/w1/out/ConnSibling/seat.log
+ M .ufo/waves/round-35/w1/out/ExecDisposition.md
+ M .ufo/waves/round-35/w1/out/ExecDisposition/seat.log
+ M .ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log
+ M corpus/QUALITY.md
+ M corpus/README.md
+ M corpus/SOURCES.md
+?? .ufo/waves/round-35/assimilation/validate/
+?? .ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html
+?? .ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html
+?? .ufo/waves/round-36/assimilation/append-block.md
+?? .ufo/waves/round-36/assimilation/correction-lines.md
+?? .ufo/waves/round-36/assimilation/guard/re-col0-collisions
+?? .ufo/waves/round-36/assimilation/guard/re-col0-ids
+?? .ufo/waves/round-36/assimilation/guard/re-space-collisions
+?? .ufo/waves/round-36/assimilation/guard/re-space-ids
+?? .ufo/waves/round-36/assimilation/guard/re-staged-ids
+?? .ufo/waves/round-36/assimilation/quarantine-slice
+?? .ufo/waves/round-36/assimilation/sglang-native-route-deprecation.md
+?? .ufo/waves/round-36/assimilation/validate-census.out
+?? .ufo/waves/round-36/assimilation/validate/
+?? .ufo/waves/round-36/census-worktree.out
+?? .ufo/waves/round-36/w1/out/ConnSibling.md
+?? .ufo/waves/round-36/w1/out/ConnSibling/
+?? .ufo/waves/round-36/w1/out/CriticC1Noop.md
+?? .ufo/waves/round-36/w1/out/CriticC1Noop/
+?? .ufo/waves/round-36/w1/out/CriticC2OldId.md
+?? .ufo/waves/round-36/w1/out/CriticC2OldId/
+?? .ufo/waves/round-36/w1/out/CriticProvince.md
+?? .ufo/waves/round-36/w1/out/CriticProvince/
+?? .ufo/waves/round-36/w1/out/ExecC1.md
+?? .ufo/waves/round-36/w1/out/ExecC1/
+?? .ufo/waves/round-36/w1/out/ExecC2.md
+?? .ufo/waves/round-36/w1/out/ExecC2/
+?? .ufo/waves/round-36/w1/out/ExecCensus.md
+?? .ufo/waves/round-36/w1/out/ExecCensus/
+?? .ufo/waves/round-36/w1/out/ExecCollision.md
+?? .ufo/waves/round-36/w1/out/ExecCollision/
+?? .ufo/waves/round-36/w1/out/MutBlob.md
+?? .ufo/waves/round-36/w1/out/MutBlob/
+?? .ufo/waves/round-36/w1/out/MutC1Token.md
+?? .ufo/waves/round-36/w1/out/MutC1Token/
+?? .ufo/waves/round-36/w1/out/MutC2Outside.md
+?? .ufo/waves/round-36/w1/out/MutC2Outside/
+?? .ufo/waves/round-36/w1/out/MutKeepTracked.md
+?? .ufo/waves/round-36/w1/out/MutKeepTracked/
+?? .ufo/waves/round-36/w1/out/RevengerBounds.md
+?? .ufo/waves/round-36/w1/out/RevengerBounds/
+?? .ufo/waves/round-36/w1/out/ReviewC1Predicate.md
+?? .ufo/waves/round-36/w1/out/ReviewC1Predicate/
+?? .ufo/waves/round-36/w1/out/ReviewC2Heading.md
+?? .ufo/waves/round-36/w1/out/ReviewC2Heading/
+?? .ufo/waves/round-36/w1/out/ReviewLeftovers.md
+?? .ufo/waves/round-36/w1/out/ReviewLeftovers/
+?? .ufo/waves/round-36/w1/out/ReviewS211.md
+?? .ufo/waves/round-36/w1/out/ReviewS211/
+?? .ufo/waves/round-36/w1/out/ReviewWordCount.md
+?? .ufo/waves/round-36/w1/out/ReviewWordCount/
+?? .ufo/waves/round-36/w1/out/ScoutConsider.md
+?? .ufo/waves/round-36/w1/out/ScoutConsider/
+?? .ufo/waves/round-36/w1/out/ScoutDocs.md
+?? .ufo/waves/round-36/w1/out/ScoutDocs/
+?? .ufo/waves/round-36/w1/out/ScoutEngine.md
+?? .ufo/waves/round-36/w1/out/ScoutEngine/
+?? .ufo/waves/round-36/w1/out/ScoutMatrix.md
+?? .ufo/waves/round-36/w1/out/ScoutMatrix/
+?? .ufo/waves/round-36/w1/out/ScoutQ200.md
+?? .ufo/waves/round-36/w1/out/ScoutQ200/
+?? .ufo/waves/round-36/w1/out/ScoutQ202.md
+?? .ufo/waves/round-36/w1/out/ScoutQ202/
+?? .ufo/waves/round-36/w1/out/ScoutQ206.md
+?? .ufo/waves/round-36/w1/out/ScoutQ206/
+?? .ufo/waves/round-36/w1/out/ScoutQ210.md
+?? .ufo/waves/round-36/w1/out/ScoutQ210/
+?? .ufo/waves/round-36/w1/out/ScoutQ211.md
+?? .ufo/waves/round-36/w1/out/ScoutQ211/
+?? .ufo/waves/round-36/w1/out/ScoutQ224.md
+?? .ufo/waves/round-36/w1/out/ScoutQ224/
+?? .ufo/waves/round-36/w1/out/ScoutQ230.md
+?? .ufo/waves/round-36/w1/out/ScoutQ230/
+?? .ufo/waves/round-36/w1/out/ScribeEntry.md
+?? .ufo/waves/round-36/w1/out/ScribeEntry/
+?? .ufo/waves/round-36/w1/out/ScribeLesson.md
+?? .ufo/waves/round-36/w1/out/ScribeLesson/
+?? .ufo/waves/round-36/w1/out/ScribeRows.md
+?? .ufo/waves/round-36/w1/out/ScribeRows/
+?? .ufo/waves/round-36/w1/out/dispatch-manifest.json
+?? .ufo/waves/round-36/w1/out/seat-exit-codes.json
+?? .ufo/waves/round-36/w2/
+?? .ufo/waves/round-36/w3/
+?? corpus/knowledge/sglang-native-route-deprecation.md
+?? corpus/lessons/round-36.md
+Now I understand the task. The C1 audit has an R35-KEEP arm. Looking at `KEEP_PATHS`:
+
+  ```
+  KEEP_PATHS = (
+      ".ufo/waves/round-35/w1/out/ConnSibling/seat.log",
+      ".ufo/waves/round-35/w1/out/ExecDisposition/seat.log",
+      ".ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log",
+      ".ufo/waves/round-35/w1/out/ExecDisposition.md",
+      ".ufo/waves/round-35/assimilation/validate/",
+      ".ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html",
+      ".ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html",
+  )
+  ```
+
+  That's exactly seven paths. The R35-KEEP arm in `holds`:
+
+  ```python
+  if sid == "R35-KEEP":
+      html_clear = all(path not in tracked for path in HTML_PATHS)
+      mirror_clear = not any(
+          path.startswith(".ufo/waves/round-35/assimilation/validate/") for path in tracked
+      )
+      return (
+          all(path in row for path in KEEP_PATHS)
+          and "seat-log-flush" in row
+          and "overwrite-not-committed" in row
+          and "mixed-mirror-not-committed" in row
+          and "helper-skipped" in row
+          and "1066624" in row
+          and "1066624" in spot
+          and disp_blob == DISP_BLOB
+          and html_clear
+          and mirror_clear
+      )
+  ```
+
+  Wait — interesting. The R35-KEEP arm does NOT require that KEEP_PATHS be untracked at the tip. The only "tracked" checks in the KEEP arm are:
+  - html_clear: HTML_PATHS must NOT be in tracked paths of the tip
+  - mirror_clear: nothing under `.ufo/waves/round-35/assimilation/validate/` must be in tracked paths of the tip
+
+  So the R35-KEEP arm requires the HTML files and the validate/ directory to remain NOT committed (not in the tree at tip). It does NOT check whether the seat logs or ExecDisposition.md remain uncommitted. Hmm, wait — actually "tracked" here means "present in `git ls-tree -r --name-only <tip>`", i.e., committed at tip.
+
+  So:
+  - HTML files (docker-dockerfile.html, dockerfile.html): committing them would add them to the tip tree → html_clear False → R35-KEEP fails → C1 breaks.
+  - validate/ directory: committing anything under it → mirror_clear False → R35-KEEP fails → C1 breaks.
+  - The three seat logs (ConnSibling/seat.log, ExecDisposition/seat.log, ScoutCoverageAbsence/seat.log) and ExecDisposition.md: the KEEP arm does NOT check whether these are committed or not. However, there's another check: `disp_blob == DISP_BLOB` — `git_blob(repo, tip, ".ufo/waves/round-35/w1/out/ExecDisposition.md")` must equal `9307c5d61c1942857a17cb259b4313460b37d0da`. ExecDisposition.md is currently MODIFIED in the working tree (M flag). If you commit the current working-tree content of ExecDisposition.md, the blob at tip would change (unless the modified content happens to hash the same — unlikely). So committing ExecDisposition.md as-is would change disp_blob → R35-KEEP fails → C1 breaks.
+
+  Wait, let me check: the current working tree ExecDisposition.md is modified relative to HEAD. What's the blob at HEAD vs the working tree blob? The DISP_BLOB = 9307c5d61c1942857a17cb259b4313460b37d0da. I need to check which version (HEAD or working tree) matches DISP_BLOB.
+
+  Also the seat logs: committing them would add them to the tip tree. The KEEP arm does not check seat logs' tracked status — only `all(path in row for path in KEEP_PATHS)` which requires the correction row in round-36.md to name all seven paths. So committing seat logs would NOT break R35-KEEP per the counter code... but wait, is that right? Let me re-read.
+
+  `html_clear = all(path not in tracked for path in HTML_PATHS)` — only HTML_PATHS.
+  `mirror_clear` — only validate/.
+
+  So seat logs and ExecDisposition.md being tracked at tip is not directly checked. BUT — ExecDisposition.md's blob must remain `9307c5d61c1942857a17cb259b4313460b37d0da`. If the working tree modification changed the content, committing it breaks the arm. If the modification is only mtime... no, git status shows " M" meaning content differs from index/HEAD.
+
+  Hmm, but wait. What is the current HEAD tip? The status shows M for those files relative to HEAD. The disp_blob check is against the tip passed to the counter. If tip == HEAD and ExecDisposition.md blob at HEAD == DISP_BLOB, then committing the modified version changes the blob → break.
+
+  But hold on — the " M" for the seat logs and ExecDisposition.md: are these the r35 leftovers, or were they modified again by r36 waves? The task says "the seven paths that were the r35 leftovers". The seven KEEP_PATHS:
+
+  1. `.ufo/waves/round-35/w1/out/ConnSibling/seat.log` — seat-log flush — status ` M` (modified, uncommitted)
+  2. `.ufo/waves/round-35/w1/out/ExecDisposition/seat.log` — seat-log flush — ` M` (modified, uncommitted)
+  3. `.ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log` — seat-log flush — ` M` (modified, uncommitted)
+  4. `.ufo/waves/round-35/w1/out/ExecDisposition.md` — report overwrite — ` M` (modified, uncommitted)
+  5. `.ufo/waves/round-35/assimilation/validate/` — mixed mirror — `??` untracked (contents untracked)
+  6. `.ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html` — helper-skipped HTML — `??` untracked
+  7. `.ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html` — helper-skipped HTML — `??` untracked
+
+  So classes: three seat logs → seat-log flush; ExecDisposition.md → report overwrite; validate/ → mixed mirror; two HTML files → helper-skipped HTML.
+
+  All seven are still uncommitted (three seat logs + ExecDisposition.md modified; validate/ + two HTMLs untracked).
+
+  Now, does committing each break the C1 R35-KEEP arm?
+
+  From the code:
+  - HTML files: YES, committing either breaks `html_clear` → R35-KEEP false → C1 met False (since score requires false_corrections == 0... wait, actually let me check: R35-KEEP row exists in round-36.md presumably; if holds() returns False, false_corrections += 1 → met False).
+  - validate/: YES, committing anything under it breaks `mirror_clear`.
+  - ExecDisposition.md: committing the current modified content changes the blob at tip → `disp_blob == DISP_BLOB` fails → YES, breaks. (Unless the committed version stays at blob 9307...; need to verify which blob the working tree content hashes to.)
+  - Seat logs (3): the counter does not check their tracked status or blob. Committing them would NOT break the counter's R35-KEEP arm per the code as written. Hmm — but wait. Careful: is there any other check involving seat logs? `all(path in row for path in KEEP_PATHS)` — that's about the lesson row text, not tracked state. So no.
+
+  But wait — should I say "committing seat logs would not break C1 R35-KEEP"? The task asks: "Say whether committing any of them would break the C1 R35-KEEP arm." Based on the code, the answer per class:
+  - seat-log flush (3 seat logs): committing would NOT break the arm as coded (the arm only checks the row text names them, plus html_clear/mirror_clear/disp_blob). But note the row text requirement `"seat-log-flush" in row` — the row must still contain the token. Committing the files doesn't change the row.
+  - report overwrite (ExecDisposition.md): committing the current modified working-tree content WOULD break the arm via disp_blob mismatch. Need to verify: compute hash-object of the working tree file and compare with DISP_BLOB and with the blob at HEAD.
+  - mixed mirror (validate/): YES breaks mirror_clear.
+  - helper-skipped HTML (2 files): YES breaks html_clear.
+
+  Also "1066624" must appear in spot (corpus/lessons/round-35-verifier-spotcheck.md) — that's a committed file; not affected by committing leftovers unless you touch it.
+
+  Now, one nuance: the seat logs' content — could committing them affect `git ls-tree` in a way that matters? No, tracked set only matters for html_clear and mirror_clear.
+
+  But hold on — also check whether the working tree seat.log content differences matter at all. Not for C1.
+
+  Also I should verify the actual working-tree blob hash of ExecDisposition.md to determine whether committing the modified bytes changes disp_blob. Let me do:
+  - `git -C repo hash-object .ufo/waves/round-35/w1/out/ExecDisposition.md` (read-only; writes to object store? No — `git hash-object` without `-w` doesn't write to the object database. Good, read-only.)
+  - `git -C repo rev-parse HEAD:.ufo/waves/round-35/w1/out/ExecDisposition.md`
+
+  Also confirm HEAD tip commit hash. And verify untracked status of validate/ contents (git status shows `??` for the dir, meaning all contents untracked). Check `git ls-files` for those paths to see if any are tracked.
+
+  Also, are the "seven r35 leftovers" as named in the round-36 lesson row identical to KEEP_PATHS? Let me check the round-36.md R35-KEEP row to confirm and also confirm classes named there (seat-log-flush etc.). The lesson draft at corpus/lessons/round-36.md contains a correction row `R35-KEEP:` naming all seven paths. Let me grep it.
+
+  Also, might there be a subtlety: `?? .ufo/waves/round-35/assimilation/validate/` — the directory itself untracked. And the draft status shows `?? .ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html` and `?? .../dockerfile.html` — untracked. Good.
+
+  Also check: are the seat logs modified *again* in r36 (i.e., new flushes after r35)? The class is "seat-log flush" — the r35 leftover was the flush appended to seat logs (seats keep writing logs after report). The current ` M` might include r36 append-block activity too? The r36 work was in w1/w2/w3 seats — their logs are under .ufo/waves/round-36/, which are untracked. The r35 seat logs are modified relative to HEAD because they were flushed after the r35 commit. Whether r36 touched r35 seat logs — unlikely.
+
+  Also "1066624" — probably a byte count. It must be in spot and row. Not affected.
+
+  Let me also double check whether there are other r35 leftovers beyond these seven in the porcelain output. The task says "the seven paths that were the r35 leftovers" — KEEP_PATHS has exactly seven. The porcelain shows:
+  - ` M .ufo/waves/round-35/w1/out/ConnSibling/seat.log` ✓
+  - ` M .ufo/waves/round-35/w1/out/ExecDisposition.md` ✓
+  - ` M .ufo/waves/round-35/w1/out/ExecDisposition/seat.log` ✓
+  - ` M .ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log` ✓
+  - `?? .ufo/waves/round-35/assimilation/validate/` ✓
+  - `?? .ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html` ✓
+  - `?? .ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html` ✓
+
+  Exactly seven round-35 paths. All still uncommitted. 
+
+  Now run the verification commands in parallel:
+  1. `git -C repo rev-parse HEAD` — current tip.
+  2. `git -C repo hash-object .ufo/waves/round-35/w1/out/ExecDisposition.md` and diff with HEAD blob.
+  3. `git -C repo rev-parse HEAD:.ufo/waves/round-35/w1/out/ExecDisposition.md`
+  4. `git -C repo ls-files -- .ufo/waves/round-35/` — confirm none of the seven are tracked (staged).
+  5. `git -C repo ls-files --error-unmatch` or `git ls-files -s` for the specific paths.
+  6. Grep the R35-KEEP row in corpus/lessons/round-36.md.
+  7. Check validate/ contents: `ls .ufo/waves/round-35/assimilation/validate/` and `git ls-files -- .ufo/waves/round-35/assimilation/validate/`.
+  8. Check "1066624" in spot file? The spot file is committed; not needed for my task but the KEEP arm requires it — not affected by committing leftovers. Actually my task: "Say whether committing any of them would break the C1 R35-KEEP arm." I should evaluate each class.
+
+  Also confirm the seat logs are listed as modified but not staged (` M` = worktree changed, index matches HEAD). Porcelain ` M` (leading space) means not staged. Good — nothing staged for those. And `??` untracked.
+
+  One more check: is the working tree ExecDisposition.md content different from HEAD's? If the "report overwrite" leftover means the working tree has an overwritten (post-commit flushed) version, then committing it would change the blob at the tip → disp_blob != DISP_BLOB → break. Verify by hash-object.
+
+  Also should I run the actual C1 counter to confirm current met=True? The frozen claims say do-nothing controls already printed met False; C1 calibration 7→7. I can run the counter with --tip HEAD to confirm met True currently (read-only). That gives evidence that currently the arm holds, and my analysis of what committing would do is derived from code. I can't actually test committing in the lane (no sandbox clone needed — I'm not asked to test, just to reason; but "A git-writing check runs on a sandbox clone in your seat directory, never in the lane" is permitted). That could strengthen: clone the repo into my seat dir (git clone is read-only on the source, allowed? "Never run git add/commit/stash/checkout/switch/reset/pull/push" — hmm, that's presumably about the lane. A sandbox clone in my seat directory: "A git-writing check runs on a sandbox clone in your seat directory, never in the lane." So I may clone into my seat dir and test committing there. But cloning writes to my seat dir — allowed (scratch files go in seat dir). The clone itself is a `git clone` — not in the forbidden list (add/commit/stash/checkout/switch/reset/pull/push). Clone does checkout internally... The spirit: don't mutate the lane; sandbox clone writes are allowed explicitly. I could do a lightweight test: clone, commit the seat logs, run the counter with --tip, observe met. That would empirically verify "seat-log flush commit does NOT break C1" — a falsifiable claim worth testing since it's counterintuitive. And committing HTML/validate in the sandbox should break it.
+
+  But careful with time budget. The clone of the lane repo — how big? Let me check repo size first. Actually a `git clone --no-hardlinks file://...` local clone is cheap. Let me do it: `git clone file:///home/vgpnk/Projects/shokunin/kama-shokunin <seat>/sandbox`. Then in sandbox: `git add` the three seat logs, commit, run counter `--repo sandbox --tip HEAD`, expect met True still. Then reset? No — instead do separate clones or just do experiments in sequence: commit seat logs first (expect True), then add ExecDisposition.md (expect False via disp_blob), then validate/ (expect False), then HTMLs (expect False). But once broken, subsequent experiments can't distinguish. Use `git reset --hard` in sandbox to restore between tests — allowed in sandbox (the prohibition targets the lane jj/git state; sandbox is explicitly for git-writing checks). Hmm, "never run a mutating jj command. Read-only git is permitted" — that's under "Never mutate ... the lane jj state, or the lane Git index". The sandbox clone exception is explicit: "A git-writing check runs on a sandbox clone in your seat directory, never in the lane."
+
+  Order of experiments in one sandbox, resetting between:
+  1. Baseline: counter --repo sandbox --tip HEAD → expect met True.
+  2. Commit 3 seat logs → counter → expect met True (proves seat-log flush commit doesn't break arm).
+  3. Reset --hard to HEAD (clean). Commit only ExecDisposition.md (modified content) → counter → expect met False (disp_blob).
+  4. Reset. Add a file under validate/ → commit → expect False (mirror_clear).
+  5. Reset. Add dockerfile.html → commit → expect False (html_clear).
+  6. Also test: commit ExecDisposition.md content identical to HEAD blob? Not possible since working tree differs. Alternatively commit an empty change? Not needed.
+
+  Also test that counter with --selftest passes. Optional.
+
+  Wait — but the C1 counter reads FLEET = /home/vgpnk/Projects/shokunin (read-only for report blobs). Fine.
+
+  Also note: the counter at tip uses `git ls-tree -r --name-only <tip>` of the sandbox repo. After committing HTMLs at sandbox tip, tracked includes them → html_clear False → holds(R35-KEEP) False → false_corrections 1 → met False. Good.
+
+  Also check baseline met True currently in the LANE repo (read-only run of the counter --repo lane --tip <HEAD>). That's fine — running python script is read-only.
+
+  Let me also confirm the r35 leftover classification from the round-36 lesson row (R35-KEEP row) — it should name classes: seat-log-flush, overwrite-not-committed, mixed-mirror-not-committed, helper-skipped. Grep round-36.md.
+
+  Also verify nothing round-35-related is staged (porcelain shows no staged changes — all ` M` and `??`; no first-column letters). Confirmed by output: all lines start with space or `??`.
+
+  Additional nuance: `1066624` in row and spot — if committing seat logs changed the spotcheck file... no, we're not touching it.
+
+  Another nuance for the report: the seat logs' working-tree content — if committed, blob at tip changes but counter doesn't check seat log blobs. Also `git status` shows ` M` for seat logs meaning their committed (HEAD) blobs exist; the leftovers are the post-commit appended flushes. Let me peek at what changed in one seat log: `git -C repo diff -- .ufo/waves/round-35/w1/out/ConnSibling/seat.log | head`. Read-only, cheap. And `git diff --stat` for the four modified files. That tells whether the modifications are appends (flush) vs overwrite. For ExecDisposition.md, diff shows the overwrite (report overwrite class = the fleet report was overwritten in working tree after commit? Actually "report overwrite" — ExecDisposition.md got overwritten post-commit).
+
+  Let me also count words: the "1066624" — check it's in the spot file at HEAD: `git show HEAD:corpus/lessons/round-35-verifier-spotcheck.md | grep -c 1066624`. Cheap confirmation that the arm currently holds on that sub-check. Not strictly needed.
+
+  Now the sandbox experiments. Plan:
+
+  ```bash
+  SEAT=/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLeftovers
+  mkdir -p "$SEAT"
+  git clone --quiet --no-hardlinks file:///home/vgpnk/Projects/shokunin/kama-shokunin "$SEAT/sandbox"
+  ```
+
+  Wait — cloning the lane repo includes untracked files? No — clone only copies committed history. The working tree modifications (seat log flushes, ExecDisposition overwrite, validate/, HTMLs) are NOT in the clone. Hmm. To test "committing the leftovers breaks/doesn't break", I need the leftover bytes in the sandbox. The clone won't have them (uncommitted). I can copy them from the lane working tree into the sandbox working tree — allowed (read from lane, write to sandbox). Copy with `cp` (lane → sandbox), then add/commit in sandbox.
+
+  But careful: copying files into sandbox is fine. Steps:
+
+  Test A (seat-log flush):
+  - cp three seat.log files from lane worktree into sandbox same paths.
+  - git add + commit in sandbox.
+  - run counter --repo sandbox --tip HEAD → record met.
+
+  Test B (report overwrite):
+  - git reset --hard HEAD (sandbox) — wait, reset --hard is forbidden? "Never run git add/commit/stash/checkout/switch/reset/pull/push" — this list appears under lane bounds: "Never mutate the fleet repo, any sibling lane, the lane jj state, or the lane Git index. Never run git add/commit/stash/checkout/switch/reset/pull/push and never run a mutating jj command." The bounds say never run those commands — contextually about the lane. The sandbox exception says "A git-writing check runs on a sandbox clone in your seat directory". To stay squeaky-clean, I can avoid reset/checkout entirely by making a fresh clone per test (clones are cheap if the repo is small). Check repo size first: `du -sh .git`. If small (<50MB), 4 clones fine. Or use `git clone --shared` (alternates) which is even cheaper and still fully read-only on source. `git clone --shared file://src dst` creates a sandbox whose objects reference the source — commits in sandbox write only to sandbox. Safe.
+
+  Actually even simpler: since each test needs a pristine sandbox tip, do: clone once per test with --shared. 4 clones + 1 baseline clone. Or run baseline on first clone, then for subsequent tests create new clones.
+
+  Plan:
+  - du -sh lane/.git
+  - sandbox = seat/sb0: clone --shared. Baseline counter → met True (tip == lane HEAD).
+  - sb1: clone --shared; cp 3 seat logs; add+commit; counter → expect met True.
+  - sb2: clone --shared; cp ExecDisposition.md; add+commit; counter → expect met False (disp_blob mismatch).
+  - sb3: clone --shared; cp -r validate dir; add+commit; counter → expect met False (mirror_clear).
+  - sb4: clone --shared; cp 2 HTMLs; add+commit; counter → expect met False (html_clear).
+  - Optional sb5: commit ALL seven together → expect False (multiple reasons). Good for the "any of them" question.
+
+  Note: `git clone --shared` requires the source to be a local path; `file://` URL forces transport but --shared works with local paths. Use plain path without file:// to avoid issues: `git clone --shared /path/src dst` — for local clones, --shared sets up alternates. Fine.
+
+  Also the counter needs `--tip <full-commit>`: use the sandbox HEAD full hash: `git -C sb rev-parse HEAD`.
+
+  Potential wrinkle: `git clone --shared` copies HEAD and working tree from committed state. The clone's config has alternates to the lane's object store — read-only access to lane objects, no writes. Good. One caveat: git may complain about ownership ("dubious ownership") — handle if it appears (git config --global safe.directory? That mutates global config — avoid; instead set env `GIT_CONFIG` ... actually simplest: if dubious ownership error appears, use `git -c safe.directory=...` per command or env var `GIT_CONFIG_COUNT`... Let me just try; likely fine since same user owns both.)
+
+  Another wrinkle: the counter's `load_facts` uses `git -C repo show tip:...` etc. In sandbox all objects available via alternates. Fine.
+
+  Also: in sandbox, committing requires user.name/email — use `git -c user.name=rev -c user.email=rev@invalid commit -m msg`. And `git add` — the forbidden list is for the lane; in sandbox it's the sanctioned git-writing check. I'll note that in the report.
+
+  Hmm wait, one more consideration: should I even do the sandbox experiments? The task says "Say whether committing any of them would break the C1 R35-KEEP arm." The code analysis gives the answer, but empirical verification in the sandbox is exactly the kind of falsification this wave is for ("falsify the draft landing bytes" is the wave goal; my task specifically is leftovers). The system prompt says "A git-writing check runs on a sandbox clone in your seat directory, never in the lane" — implying such checks are expected. Do it.
+
+  Also: the prior wave-1 reviewer (ReviewLeftovers.md) exists — .ufo/waves/round-36/w1/out/ReviewLeftovers.md. Should I read it to cross-check? It's not my assignment source (the canonical assignment is the dispatcher = the task text). Reading it could bias or help verify. The Godspeed prompt says assigned materials are data, not contract. I can read it as data but my judgment stands on my own evidence. Reading it is cheap; it may point at subtleties (e.g., whether seat-log commit breaks arm). But my own sandbox test will be authoritative. I'll read it after my own tests, or maybe skip. Actually — cross-checking is cheap and useful for "residual risk". I'll read it.
+
+  Also check the R35-KEEP row in corpus/lessons/round-36.md — confirm the row names all seven paths and the class tokens; it's part of C1 (all(path in row...)). And confirm the row contains "seat-log-flush", "overwrite-not-committed", "mixed-mirror-not-committed", "helper-skipped", "1066624".
+
+  Wait, actually — I realize the seat logs' classification: "seat-log flush" per the task. The row token is "seat-log-flush". Classes map 1:1:
+  - seat-log flush (3 files)
+  - report overwrite (1 file: ExecDisposition.md)
+  - mixed mirror (1: validate/)
+  - helper-skipped HTML (2 files)
+
+  Now — a critical nuance about "report overwrite": if ExecDisposition.md working-tree content == HEAD blob, then ` M` wouldn't show. It shows M, so content differs → committing changes tip blob → disp_blob check fails (DISP_BLOB is presumably the HEAD blob). Verify: `git -C lane rev-parse HEAD:.ufo/.../ExecDisposition.md` == 9307c5d61c1942857a17cb259b4313460b37d0da? And `git -C lane hash-object <worktree file>` != that.
+
+  Hmm, but actually there's a subtlety: maybe DISP_BLOB corresponds to the working-tree (overwritten) version and HEAD has a different blob — in which case committing the overwrite would FIX disp_blob?? But then the r35-KEEP arm currently would be failing at HEAD... unless the correction row... no wait, disp_blob is read from tip directly: `git_blob(repo, tip, ".ufo/waves/round-35/w1/out/ExecDisposition.md")`. Currently tip=HEAD. If HEAD blob != DISP_BLOB, the counter would already print met False. The frozen claim says C1 7→7 holds currently (met True). So HEAD blob must == DISP_BLOB, and the working-tree overwrite is the deviation. Committing it breaks the arm. My sandbox test will confirm.
+
+  Let me also double-check: the counter run against lane HEAD (baseline) — the frozen claim says "Do-nothing controls already printed met False" — hmm, that says controls printed met FALSE? Re-read: "Do-nothing controls already printed met False. Do not change either predicate." Hmm — "Do-nothing controls already printed met False"?? That's odd. If C1 calibration is 7→7 and met should be True at the tip... Wait, maybe the "do-nothing control" is a mutation-control variant (e.g., running the counter with an empty/selftest lesson) that prints met False as expected — i.e., the control demonstrating the counter isn't trivially satisfied. Yes: the selftest's empty lesson prints met False (uncorrected 4) — that's the do-nothing control: with no corrections, met False. So "do-nothing controls already printed met False" means the empty-lesson control behaves correctly. Fine — don't touch predicates.
+
+  So baseline real run should print met True. My sandbox baseline will confirm (that's also the C1=7 claim verification, but the calibration 7→7 counting is the C1 statement count... actually C1 calibration 7 -> 7 refers to statement-audit counting 7 statements? Not my axis to re-derive; my task is the leftovers question. I'll run baseline anyway as evidence the arm currently holds.)
+
+  Hmm, "Judged on: calibration" — my report should be well-calibrated: measured vs inference separated, no overclaims.
+
+  Now, execute. Batch 1 (parallel, all read-only):
+  1. `git -C lane rev-parse HEAD` + `git -C lane ls-files -s` for the seven paths (tracked/staged check) — combine into one bash with && or ;.
+  2. `git -C lane diff --stat -- <4 modified r35 paths>` and diff of one seat log (head).
+  3. `git -C lane hash-object ExecDisposition.md worktree` + `git -C lane rev-parse HEAD:ExecDisposition.md`.
+  4. `ls validate dir` + `git -C lane ls-files -- validate/`.
+  5. Grep R35-KEEP row in corpus/lessons/round-36.md.
+  6. `du -sh lane/.git`.
+  7. Read ReviewLeftovers.md (w1).
+
+  Then batch 2: sandbox clones + tests.
+
+  Let me write batch 1 as several parallel Bash calls plus one Grep and one Read.
+
+  Command details:
+
+  Call A: `git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-parse HEAD && git -C /home/vgpnk/Projects/shokunin/kama-shokunin ls-files -s -- .ufo/waves/round-35/ && echo '--- staged:' && git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff --cached --name-only`
+
+  Call B: `git -C lane diff --stat -- .ufo/waves/round-35/w1/out/ConnSibling/seat.log .ufo/waves/round-35/w1/out/ExecDisposition/seat.log .ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log .ufo/waves/round-35/w1/out/ExecDisposition.md`
+
+  Call C: `git -C lane hash-object .ufo/waves/round-35/w1/out/ExecDisposition.md && git -C lane rev-parse HEAD:.ufo/waves/round-35/w1/out/ExecDisposition.md`
+
+  Call D: `ls -la lane/.ufo/waves/round-35/assimilation/validate/ && git -C lane ls-files -- .ufo/waves/round-35/assimilation/validate/ | head`
+
+  Call E: `du -sh lane/.git && git -C lane log --oneline -3`
+
+  Call F (Grep): pattern `^R35-KEEP:` in corpus/lessons/round-36.md, content mode.
+
+  Call G (Read): .ufo/waves/round-36/w1/out/ReviewLeftovers.md
+
+  That's a good parallel batch. Then batch 2: sandbox.
+
+  Let me be careful about lanes: all writes only into /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLeftovers/. Sandbox clones go there.
+
+  Let me go.
+
+• Git status shows exactly seven round-35 paths still dirty. Now I'll pull the evidence needed to classify them and test the C1 R35-KEEP arm — reading the counter code already gives me the predicate; now I verify blobs, staging, and the lesson row.9014843cb7de8fbe87a97954c13832b67d55f046
+--- ls-files (index) under round-35:
+100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0	.ufo/waves/round-35/assimilation/collisions
+100644 0b449fdea1a2d4c1ca6b98440d7912e3574a1d61 0	.ufo/waves/round-35/assimilation/indent-fixture.md
+100644 3584b1ed6c236d969f24bb1936b9a3cc773106a9 0	.ufo/waves/round-35/assimilation/reg-ids
+100644 1991d770c96f7d76505cc84c4bb9daf296a6c435 0	.ufo/waves/round-35/assimilation/s327-row.md
+100644 508c83ec6b651d1e5f8e2e07f3cc8300362a4b52 0	.ufo/waves/round-35/assimilation/staged-ids
+100644 088eac5e122e4dbe4a4b8e8eb002a3a48f05e841 0	.ufo/waves/round-35/assimilation/validate-census.out
+100644 a2fc1716df9b2033642b22b4b64f138d24a19e89 0	.ufo/waves/round-35/c1-after.out
+100644 a2fc1716df9b2033642b22b4b64f138d24a19e89 0	.ufo/waves/round-35/c1-working.out
+100644 845024723199169b4bfaf65d951ec0d1025651e2 0	.ufo/waves/round-35/c2-after.out
+100644 845024723199169b4bfaf65d951ec0d1025651e2 0	.ufo/waves/round-35/c2-working.out
+100644 0db63176316cc713defe58431fb206c4e53edb11 0	.ufo/waves/round-35/census-end.out
+100644 0db63176316cc713defe58431fb206c4e53edb11 0	.ufo/waves/round-35/census-start.out
+100644 0db63176316cc713defe58431fb206c4e53edb11 0	.ufo/waves/round-35/census-working.out
+100644 b90a6eec1dffd1c22884ec84e5019f2956fe7b3e 0	.ufo/waves/round-35/controls/c1-noop.out
+100644 d6f40148398093c25ab7c6f926b01bc0fbe02a47 0	.ufo/waves/round-35/controls/c1-selftest.out
+100644 e266af9d9cee755a75342e8504955cdcae986dfc 0	.ufo/waves/round-35/controls/c2-base.out
+100644 e266af9d9cee755a75342e8504955cdcae986dfc 0	.ufo/waves/round-35/controls/c2-noop.out
+100644 5edfaa4ae6effd673207284dc9be2c289e2eae2c 0	.ufo/waves/round-35/controls/c2-selftest.out
+100644 c4fc42fc38a112676ff31558e917170801a7971a 0	.ufo/waves/round-35/disposition-receipt.txt
+100644 ffbc3720173f291654fdac0019e40c70f9234ae8 0	.ufo/waves/round-35/preregistration.json
+100644 529a3b0c33cd090780a6fd9d3c6f82f2ba938f57 0	.ufo/waves/round-35/w1/launch-wave.py
+100644 35c512276b00d72d4e4d73ea330fda5a1cc5c6ea 0	.ufo/waves/round-35/w1/out/ConnSibling.md
+100644 9f4026a5f1dba5c1c22f18f860b829685fc60ca7 0	.ufo/waves/round-35/w1/out/ConnSibling/prompt.txt
+100644 5abee1d78605227b357827d171515899d2473119 0	.ufo/waves/round-35/w1/out/ConnSibling/seat.log
+100644 6fe82f12bd4a081100e924652d9924703f8e3420 0	.ufo/waves/round-35/w1/out/CriticC1Rewrite.md
+100644 3b0160ec811d05773020579b9363a61be8f4ada6 0	.ufo/waves/round-35/w1/out/CriticC1Rewrite/prompt.txt
+100644 090bb7c1fcd8343517823e183e3aea3c689163b4 0	.ufo/waves/round-35/w1/out/CriticC1Rewrite/seat.log
+100644 b313ec3768bd946adef6f5f871400adb76dfbc6b 0	.ufo/waves/round-35/w1/out/CriticC2Outside.md
+100644 27eaefd92b32798d9360c484deba7f3e8d9e876b 0	.ufo/waves/round-35/w1/out/CriticC2Outside/prompt.txt
+100644 b80c785261af8d2818c2cdb8c464c8cb521c58f5 0	.ufo/waves/round-35/w1/out/CriticC2Outside/seat.log
+100644 db6124f3bc6a628d9e5b055cdcfa4316d134e890 0	.ufo/waves/round-35/w1/out/CriticMission.md
+100644 2e8e6abb4cea6e47f7a9bbd007cd3646eacd22ae 0	.ufo/waves/round-35/w1/out/CriticMission/prompt.txt
+100644 92d655e2f304e8c071445f8f3221cd0f2c3f2f81 0	.ufo/waves/round-35/w1/out/CriticMission/seat.log
+100644 b0d122e164f5b95bbbc6a26d4d586a242374cbcd 0	.ufo/waves/round-35/w1/out/CriticProvince.md
+100644 c01c541285f39e3f6f7d1538b558778516d28802 0	.ufo/waves/round-35/w1/out/CriticProvince/prompt.txt
+100644 218a751532fd5f2ece8f01160c4e29eeaf3d4078 0	.ufo/waves/round-35/w1/out/CriticProvince/seat.log
+100644 faeb1a8956c47a9b423e0a4cc620a471ff676fd6 0	.ufo/waves/round-35/w1/out/ExecC1Selftest.md
+100644 3991bb6c921e9c4da7a34af926d4a6b5f3189a54 0	.ufo/waves/round-35/w1/out/ExecC1Selftest/prompt.txt
+100644 6edb57d19ab7b046bffe278cfc6b295c5dfd172a 0	.ufo/waves/round-35/w1/out/ExecC1Selftest/seat.log
+100644 21fc487349c9194349b47ea1b297766ceee1d15a 0	.ufo/waves/round-35/w1/out/ExecCollision.md
+100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0	.ufo/waves/round-35/w1/out/ExecCollision/collisions
+100644 df032748ac30f523e18397cc6baa73d626e07773 0	.ufo/waves/round-35/w1/out/ExecCollision/guard-0-3-output
+100644 da32c61058784042b3baada9cc96e9d68ee8e367 0	.ufo/waves/round-35/w1/out/ExecCollision/guard-collisions-0-3
+100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0	.ufo/waves/round-35/w1/out/ExecCollision/guard-collisions-column-zero
+100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0	.ufo/waves/round-35/w1/out/ExecCollision/guard-column-zero-output
+100644 df032748ac30f523e18397cc6baa73d626e07773 0	.ufo/waves/round-35/w1/out/ExecCollision/indent-guard-0-3.out
+100644 a44a384474893c51b1c0ec7e53990a8da22cf017 0	.ufo/waves/round-35/w1/out/ExecCollision/indent-guard-0-3.raw
+100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0	.ufo/waves/round-35/w1/out/ExecCollision/indent-guard-col0.out
+100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0	.ufo/waves/round-35/w1/out/ExecCollision/indent-guard-col0.raw
+100644 3d66ab067799001df718949b20a075dd476a8510 0	.ufo/waves/round-35/w1/out/ExecCollision/indent-guard.txt
+100644 439207ca4ae6f98f1f795dd8b7e99105e4a6a255 0	.ufo/waves/round-35/w1/out/ExecCollision/prompt.txt
+100644 3584b1ed6c236d969f24bb1936b9a3cc773106a9 0	.ufo/waves/round-35/w1/out/ExecCollision/reg-ids
+100644 7050b1b6cf392f9849814154a1bcb852db30f33e 0	.ufo/waves/round-35/w1/out/ExecCollision/scratch-registry
+100644 7050b1b6cf392f9849814154a1bcb852db30f33e 0	.ufo/waves/round-35/w1/out/ExecCollision/scratch-registry-line.txt
+100644 d567ce19b6771e11e9547a6f802bc7544cf4b955 0	.ufo/waves/round-35/w1/out/ExecCollision/scratch-registry-staged-collision
+100644 da32c61058784042b3baada9cc96e9d68ee8e367 0	.ufo/waves/round-35/w1/out/ExecCollision/scratch-staged-ids-0-3
+100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0	.ufo/waves/round-35/w1/out/ExecCollision/scratch-staged-ids-column-zero
+100644 9177542eb1d1f764d65075467b833e1a9b4bd2bf 0	.ufo/waves/round-35/w1/out/ExecCollision/seat.log
+100644 508c83ec6b651d1e5f8e2e07f3cc8300362a4b52 0	.ufo/waves/round-35/w1/out/ExecCollision/staged-ids
+100644 9307c5d61c1942857a17cb259b4313460b37d0da 0	.ufo/waves/round-35/w1/out/ExecDisposition.md
+100644 35f5e083410c02280067923d3c54d922db546802 0	.ufo/waves/round-35/w1/out/ExecDisposition/prompt.txt
+100644 cfd4d25e10daf1f757de98538690554b848247d2 0	.ufo/waves/round-35/w1/out/ExecDisposition/receipt.tsv
+100644 85877aa195c5321e5721896cabdc553f2c37de65 0	.ufo/waves/round-35/w1/out/ExecDisposition/seat.log
+100644 a1c7c7074ff19b9aef7df58c4e1e6f838e816371 0	.ufo/waves/round-35/w1/out/ExecNormalize.md
+100644 4729cffe424c5dd0ff04609bea68669953b1d84d 0	.ufo/waves/round-35/w1/out/ExecNormalize/prompt.txt
+100644 c9f4f9cdd22f2c706f8f6d831f97f355a5219d1c 0	.ufo/waves/round-35/w1/out/ExecNormalize/s327-normalized.md
+100644 efec9098eb930d7f31fcb48768a6c8892a6e8040 0	.ufo/waves/round-35/w1/out/ExecNormalize/seat.log
+100644 4d940f8fa3112285eee6b38dc6c458696d102abf 0	.ufo/waves/round-35/w1/out/MutC1FalseRow.md
+100644 52b53fde8ffe350cccc6d37a575734a0ab53d138 0	.ufo/waves/round-35/w1/out/MutC1FalseRow/false.md
+100644 2bbeed1f8d25cfc97610cb4b3d0eaa2b4e69a2db 0	.ufo/waves/round-35/w1/out/MutC1FalseRow/prompt.txt
+100644 7c3fbda6eaf99316617f336a44239ba82bd6f9ed 0	.ufo/waves/round-35/w1/out/MutC1FalseRow/seat.log
+100644 df18a1950e4c2172cbfdebe6ecf50e715b5ba6bd 0	.ufo/waves/round-35/w1/out/MutC2Junk.md
+100644 1a4d5e496ffc90a60d89b2cadd675321b1bd80ef 0	.ufo/waves/round-35/w1/out/MutC2Junk/prompt.txt
+100644 a5463c12733c5645152e4be699f68054a5e26f65 0	.ufo/waves/round-35/w1/out/MutC2Junk/scratch-repo/corpus/README.md
+100644 3e2bfcebc8c2c64912f0a17d45bdf2a6feb579d3 0	.ufo/waves/round-35/w1/out/MutC2Junk/scratch-repo/corpus/SOURCES.md
+100644 ee077a02f1984b0847b6dbda4dc50d9bf396ee24 0	.ufo/waves/round-35/w1/out/MutC2Junk/scratch-repo/corpus/knowledge/endpoint-health-probe-conventions.md
+100644 499bf15e0ad9cc3c191f12a7ef610a4a1dacadca 0	.ufo/waves/round-35/w1/out/MutC2Junk/seat.log
+100644 062b8fc7d3fe64655fa62ca0b8f801bd8a982007 0	.ufo/waves/round-35/w1/out/MutCensusPipe.md
+100644 3f11a19f5d5d83a3b81b647767f08c041f60184c 0	.ufo/waves/round-35/w1/out/MutCensusPipe/SOURCES.md
+100644 3f11a19f5d5d83a3b81b647767f08c041f60184c 0	.ufo/waves/round-35/w1/out/MutCensusPipe/SOURCES.mutant.md
+100644 e48641b56c9ad3c6c5147c807f5243ccf00f318d 0	.ufo/waves/round-35/w1/out/MutCensusPipe/SOURCES.pristine.md
+100644 e48641b56c9ad3c6c5147c807f5243ccf00f318d 0	.ufo/waves/round-35/w1/out/MutCensusPipe/SOURCES.restored.md
+100644 ef55ffe41be73ba21735eed63a27b61299699bd3 0	.ufo/waves/round-35/w1/out/MutCensusPipe/probe.log
+100644 d51f7a21daab97cf750e9753c4de4a630837905d 0	.ufo/waves/round-35/w1/out/MutCensusPipe/prompt.txt
+100644 3c561cf11e9943d4cc38eb674ac75dbb3a8391ae 0	.ufo/waves/round-35/w1/out/MutCensusPipe/seat.log
+100644 1006c1e64fa206cc32e68e916cd0dec4b231723f 0	.ufo/waves/round-35/w1/out/RevengerScope.md
+100644 fffc9fc74e3b817e146831b7725bd712885d61ed 0	.ufo/waves/round-35/w1/out/RevengerScope/prompt.txt
+100644 ceb5268b5d24078f7d3a348d56c7b56c63b4d3af 0	.ufo/waves/round-35/w1/out/RevengerScope/seat.log
+100644 a2ab6cfdb36be13979c0bfa1a273858e4300f840 0	.ufo/waves/round-35/w1/out/ReviewC1Facts.md
+100644 46b157941bc0d2cd5f8498d3f02321890c52f695 0	.ufo/waves/round-35/w1/out/ReviewC1Facts/prompt.txt
+100644 533e6462798b011b19b905023d5951397f1635b3 0	.ufo/waves/round-35/w1/out/ReviewC1Facts/seat.log
+100644 549d08dded350d1367b6a22dc0a0d97e96537ab8 0	.ufo/waves/round-35/w1/out/ReviewC2Ground.md
+100644 471d2da10676199c52f0d4bed52cee6b9c519928 0	.ufo/waves/round-35/w1/out/ReviewC2Ground/prompt.txt
+100644 eaf9278beb82d56668ee3a254563f2fc9149134a 0	.ufo/waves/round-35/w1/out/ReviewC2Ground/seat.log
+100644 31f086e090ed281af6034aeae294021e0d18e719 0	.ufo/waves/round-35/w1/out/ReviewManifestDiff.md
+100644 3ca32d65255e8f5315f9f5e0ac4ecde329bcdeda 0	.ufo/waves/round-35/w1/out/ReviewManifestDiff/prompt.txt
+100644 676526e7b022dc6ecc8faadeebdd9e57c40a695e 0	.ufo/waves/round-35/w1/out/ReviewManifestDiff/seat.log
+100644 e8b6833386c247797d65d77751a921ec36cf0be0 0	.ufo/waves/round-35/w1/out/ReviewR33Count.md
+100644 3b84adbee6b11ed9fee53685773ca96c9ed785d4 0	.ufo/waves/round-35/w1/out/ReviewR33Count/prompt.txt
+100644 23138fc71a54cc4855ff9e60af30a365f48cb693 0	.ufo/waves/round-35/w1/out/ReviewR33Count/seat.log
+100644 0edf6b3eb879126fc0fc57409403f842ba0a41e1 0	.ufo/waves/round-35/w1/out/ScoutConsiderthese.md
+100644 9ffc5eca3b69f98c6623b9168bf1e54b10fa0ef6 0	.ufo/waves/round-35/w1/out/ScoutConsiderthese/prompt.txt
+100644 0edf6b3eb879126fc0fc57409403f842ba0a41e1 0	.ufo/waves/round-35/w1/out/ScoutConsiderthese/seat.log
+100644 2361b927f82ba083aea838af5634a60962b14738 0	.ufo/waves/round-35/w1/out/ScoutCoverageAbsence.md
+100644 f3707e6e78b471fe05e5296c50dba70407df916a 0	.ufo/waves/round-35/w1/out/ScoutCoverageAbsence/prompt.txt
+100644 d712f3d073a35bdeded92735695a39e8117002f3 0	.ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log
+100644 14a45bd33d31f438fd761c7f5bb6ec0ade4951b8 0	.ufo/waves/round-35/w1/out/ScoutDockerHc.md
+100644 47b8db3d4b138aca11d4f5abe7f8838762fbc26d 0	.ufo/waves/round-35/w1/out/ScoutDockerHc/prompt.txt
+100644 14a45bd33d31f438fd761c7f5bb6ec0ade4951b8 0	.ufo/waves/round-35/w1/out/ScoutDockerHc/seat.log
+100644 d3071b7dd804c131ff62f7f441469d0eafe9373d 0	.ufo/waves/round-35/w1/out/ScoutHostedReject.md
+100644 ff2219073dcca6a84cac61560cf5da3a261aec6c 0	.ufo/waves/round-35/w1/out/ScoutHostedReject/prompt.txt
+100644 d3071b7dd804c131ff62f7f441469d0eafe9373d 0	.ufo/waves/round-35/w1/out/ScoutHostedReject/seat.log
+100644 b4b5c85a401a03c76bb33ab8ac01a55f0db43fff 0	.ufo/waves/round-35/w1/out/ScoutProbeEntry.md
+100644 e026df3ac56769df819524060d33a0aa8b088d3c 0	.ufo/waves/round-35/w1/out/ScoutProbeEntry/prompt.txt
+100644 b4b5c85a401a03c76bb33ab8ac01a55f0db43fff 0	.ufo/waves/round-35/w1/out/ScoutProbeEntry/seat.log
+100644 5a61920400c4cd3cf8998fbd361260f00d0833d0 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS200.md
+100644 fbc4bfee48cbc553fa4c5292ccd9aba04fcc894c 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS200/prompt.txt
+100644 5a61920400c4cd3cf8998fbd361260f00d0833d0 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS200/seat.log
+100644 154e04acfb6e9270a0e32c12c115f69b493d4ecd 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS202.md
+100644 a61ab4a0c50a52e1639f994fde7fe9ff1bb9b473 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS202/prompt.txt
+100644 154e04acfb6e9270a0e32c12c115f69b493d4ecd 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS202/seat.log
+100644 ca3a06fc449db03cbc3ef09e50a73b9d6b8253ac 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS210.md
+100644 b7137ca3335ebcf8965922dd53b95754f688db18 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS210/prompt.txt
+100644 115e10fcad1dd64709fd3989bc5c99846700d26d 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS210/seat.log
+100644 b04494875ac2ac3b0b4ff0e453b42aaabfe5b5a7 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS211.md
+100644 0c87d24ffb4e2f64aa4fdc0babc9566d761d5593 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS211/prompt.txt
+100644 b04494875ac2ac3b0b4ff0e453b42aaabfe5b5a7 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS211/seat.log
+100644 2c6a9d909af0012e7a8b889df73533a0b282d38e 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS224.md
+100644 9e43096e67689a73f0eb35cf845702d3b1d091d8 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS224/prompt.txt
+100644 2c6a9d909af0012e7a8b889df73533a0b282d38e 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS224/seat.log
+100644 72d186182ab7386aabe25467801ed2d9d34db053 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS230.md
+100644 a696205168f172e53d904571cda5e6d0fbf20b96 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS230/prompt.txt
+100644 72d186182ab7386aabe25467801ed2d9d34db053 0	.ufo/waves/round-35/w1/out/ScoutQuarantineS230/seat.log
+100644 40c0f7cd830519915689740fafbaeee377e10cff 0	.ufo/waves/round-35/w1/out/ScoutVllm503.md
+100644 bf2bf9ae85233a3ac757f2434c51c431308e54fa 0	.ufo/waves/round-35/w1/out/ScoutVllm503/prompt.txt
+100644 40c0f7cd830519915689740fafbaeee377e10cff 0	.ufo/waves/round-35/w1/out/ScoutVllm503/seat.log
+100644 8870ce1df9bd7d340b1b774c5050348deedf793b 0	.ufo/waves/round-35/w1/out/ScribeCorrection.md
+100644 3b5175f54065d8b94ec1544cb867f4e18193e271 0	.ufo/waves/round-35/w1/out/ScribeCorrection/prompt.txt
+100644 2e9cd9052428da5e7c61e8eb92ed93a9623bd9b4 0	.ufo/waves/round-35/w1/out/ScribeCorrection/rows.md
+100644 f0d87bc8b1aa86ff632baa5c6171e6c653c6d52b 0	.ufo/waves/round-35/w1/out/ScribeCorrection/seat.log
+100644 ccca6c31208dc4d4678feda9e13dce7d4baf7433 0	.ufo/waves/round-35/w1/out/ScribeCoverage.md
+100644 c419d77e440c8f5f146e9b66b8627c8128fac85b 0	.ufo/waves/round-35/w1/out/ScribeCoverage/block.md
+100644 e4661732684382c97dbd13f06cfcf1e26f4f4518 0	.ufo/waves/round-35/w1/out/ScribeCoverage/prompt.txt
+100644 87750fe0f0b89bf36ced4481e2bd754c4beb8ee4 0	.ufo/waves/round-35/w1/out/ScribeCoverage/seat.log
+100644 1ad718f65598e8801523b6d77291f83ba25b6248 0	.ufo/waves/round-35/w1/out/ScribeGate.md
+100644 234a59dc726d3a8d1782212fa0a1e40e84b6ab79 0	.ufo/waves/round-35/w1/out/ScribeGate/fetch/blackbox-readme.md
+100644 304a33519953239aa1585bb10cead90f25192430 0	.ufo/waves/round-35/w1/out/ScribeGate/fetch/compose-services.html
+100644 304a33519953239aa1585bb10cead90f25192430 0	.ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-compose-services.html
+100644 1b042e9428712c4fa58a05fb4a79814f7a0e2ebd 0	.ufo/waves/round-35/w1/out/ScribeGate/fetch/hosted-s346.html
+100644 394289d4a7d1dc684e4f8da1a81f8d96247c7eed 0	.ufo/waves/round-35/w1/out/ScribeGate/fetch/hosted-s349.html
+100644 e490bb74d0546d7305f2a345f2993850dc863ead 0	.ufo/waves/round-35/w1/out/ScribeGate/fetch/hosted-s350.html
+100644 85742679d68fd249298c3888209ca4bff127bbdb 0	.ufo/waves/round-35/w1/out/ScribeGate/fetch/sglang-llmd.html
+100644 e13fe185ad714b645daeb4e6f66d587b9598eb2d 0	.ufo/waves/round-35/w1/out/ScribeGate/fetch/vllm-engine-args.html
+100644 2135c73e1eda750eca29ba2020a082cefb983672 0	.ufo/waves/round-35/w1/out/ScribeGate/gate.md
+100644 60680057b9922de1ca813920eaac562270499680 0	.ufo/waves/round-35/w1/out/ScribeGate/prompt.txt
+100644 db72904dc522bce648e2ec7fc0b4f9e35c662bb4 0	.ufo/waves/round-35/w1/out/ScribeGate/seat.log
+100644 c9b55b542a355618bb55f9c081b1ff85c973bb9d 0	.ufo/waves/round-35/w1/out/dispatch-manifest.json
+100644 f95fac81e5b80ca9358366ac1370ec6066c44e77 0	.ufo/waves/round-35/w1/out/seat-exit-codes.json
+100644 1a2ff7e775fd06556aed785d526a23f08110d590 0	.ufo/waves/round-35/w1/out/swarm-registry.json
+100644 2d3da52ffe393534df8040cd3fdb96c7c3af1899 0	.ufo/waves/round-35/w1/out/wave-census.md
+100644 3fd969e8df443315a35fa29c557e14a6f26380ce 0	.ufo/waves/round-35/w1/
+plan.json
+100644 e712ad72039a66c0dea88b3b5382336a974faf3a 0	.ufo/waves/round-35/w1/run.json
+100644 ad3a77c626baa104364868c3bc2ff6effa497084 0	.ufo/waves/round-35/w1/spec.json
+100644 5b13c0d57bb756a84158d93dfcf64d561bd0cebb 0	.ufo/waves/round-35/w1/wait-seats.py
+--- staged (diff --cached):
+(end staged)
+ .ufo/waves/round-35/w1/out/ConnSibling/seat.log    |  143 +-
+ .ufo/waves/round-35/w1/out/ExecDisposition.md      | 2037 +-------------------
+ .../waves/round-35/w1/out/ExecDisposition/seat.log | 2012 ++++++++++++++++++-
+ .../round-35/w1/out/ScoutCoverageAbsence/seat.log  |  145 +-
+ 4 files changed, 2381 insertions(+), 1956 deletions(-)
+--- ExecDisposition.md worktree blob:
+54be93f73868b2f46032d61c1066c12925106889
+--- ExecDisposition.md HEAD blob:
+9307c5d61c1942857a17cb259b4313460b37d0da
+total 44
+drwxr-xr-x 1 vgpnk vgpnk 184 Oct 24 21:26 .
+drwxr-xr-x 1 vgpnk vgpnk 164 Oct 24 21:26 ..
+lrwxrwxrwx 1 vgpnk vgpnk  57 Oct 24 21:26 considerthese -> /home/vgpnk/Projects/shokunin/kama-shokunin/considerthese
+drwxr-xr-x 1 vgpnk vgpnk  90 Oct 23 16:05 corpus
+lrwxrwxrwx 1 vgpnk vgpnk  50 Oct 24 21:26 LOG.md -> /home/vgpnk/Projects/shokunin/kama-shokunin/LOG.md
+lrwxrwxrwx 1 vgpnk vgpnk  49 Oct 24 21:26 plans -> /home/vgpnk/Projects/shokunin/kama-shokunin/plans
+lrwxrwxrwx 1 vgpnk vgpnk  55 Oct 24 21:26 PROVINCE.md -> /home/vgpnk/Projects/shokunin/kama-shokunin/PROVINCE.md
+lrwxrwxrwx 1 vgpnk vgpnk  52 Oct 24 21:26 registry -> /home/vgpnk/Projects/shokunin/kama-shokunin/registry
+lrwxrwxrwx 1 vgpnk vgpnk  56 Oct 24 21:26 SCORECARD.md -> /home/vgpnk/Projects/shokunin/kama-shokunin/SCORECARD.md
+lrwxrwxrwx 1 vgpnk vgpnk  53 Oct 24 21:26 SHONEN.md -> /home/vgpnk/Projects/shokunin/kama-shokunin/SHONEN.md
+lrwxrwxrwx 1 vgpnk vgpnk  52 Oct 24 21:26 SKILL.md -> /home/vgpnk/Projects/shokunin/kama-shokunin/SKILL.md
+lrwxrwxrwx 1 vgpnk vgpnk  49 Oct 24 21:26 tests -> /home/vgpnk/Projects/shokunin/kama-shokunin/tests
+lrwxrwxrwx 1 vgpnk vgpnk  49 Oct 24 21:26 tools -> /home/vgpnk/Projects/shokunin/kama-shokunin/tools
+lrwxrwxrwx 1 vgpnk vgpnk  48 Oct 24 21:26 .ufo -> /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo
+--- tracked under validate/:
+(end)
+38M	/home/vgpnk/Projects/shokunin/kama-shokunin/.git
+9014843 round-36: freeze predicates, failing controls, and wave spec
+e5a8ece round-35 verifier spot-check (integrator, hyaku): non-author admit/reject
+66bcd07 round-35: post-settlement seat log flushes
+
+
+• I have rich data now. Key measured facts:
+
+  1. Lane HEAD = 9014843cb7de8fbe87a97954c13832b67d55f046 ("round-36: freeze predicates, failing controls, and wave spec").
+  2. Nothing staged (`diff --cached` empty).
+  3. The seven r35 leftover paths (KEEP_PATHS in round36-statement-audit.py) and their status:
+     - ` M .ufo/waves/round-35/w1/out/ConnSibling/seat.log` — seat-log flush — still uncommitted (modified)
+     - ` M .ufo/waves/round-35/w1/out/ExecDisposition/seat.log` — seat-log flush — still uncommitted
+     - ` M .ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log` — seat-log flush — still uncommitted
+     - ` M .ufo/waves/round-35/w1/out/ExecDisposition.md` — report overwrite — still uncommitted
+     - `?? .ufo/waves/round-35/assimilation/validate/` — mixed mirror — still uncommitted (untracked)
+     - `?? .ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html` — helper-skipped HTML — still uncommitted
+     - `?? .ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html` — helper-skipped HTML — still uncommitted
+  4. ExecDisposition.md: worktree blob 54be93f73868b2f46032d61c1066c12925106889 ≠ HEAD blob 9307c5d61c1942857a17cb259b4313460b37d0da = DISP_BLOB in counter. So committing the worktree version breaks `disp_blob == DISP_BLOB` → R35-KEEP false → C1 met False.
+  5. validate/ has 0 tracked files currently; the mirror contains 11 symlinks + 84 regular files (82 byte-identical, 2 stale: QUALITY.md, README.md), including a recursive `.ufo` symlink → absolute path back into lane .ufo. Committing anything under that prefix breaks mirror_clear.
+  6. HTML files: both 1066624 bytes, identical sha256 bcc55c92..., untracked, over jj snapshot.max-new-file-size 1MiB (over by 18048 bytes). Committing either breaks html_clear.
+  7. Seat logs: not checked by R35-KEEP for tracked state. Committing them does NOT break the arm per code.
+  8. The R35-KEEP correction row exists in corpus/lessons/round-36.md line 27 with all seven paths and class tokens, "1066624".
+
+  The w1 review reached the same conclusions (seat logs not in kill set; four kill paths). Good — independent convergence. Note its run died at the end with a provider auth error, but the analysis text is there.
+
+  Now, the strongest verification available: empirical sandbox test. The system prompt explicitly sanctions "A git-writing check runs on a sandbox clone in your seat directory, never in the lane." Let me run the experiments:
+
+  - sb0: baseline clone, run counter → expect met True.
+  - sb1: commit 3 seat logs (copied from lane worktree) → expect met True (does NOT break arm).
+  - sb2: commit ExecDisposition.md worktree bytes → expect met False.
+  - sb3: commit validate/ → expect met False.
+  - sb4: commit HTMLs → expect met False.
+  - sb5 (optional): commit all seven → expect met False.
+
+  Wait — careful with sb3: `cp -r validate/` includes the recursive .ufo symlink pointing to the lane .ufo. `git add` on the sandbox would add the symlink itself (as a symlink blob), not follow it (git doesn't follow directory symlinks when adding... actually `git add dir/` where dir contains a symlink to a directory: git records the symlink as a symlink entry, does NOT recurse into it). But wait — validate/.ufo → /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo. In the sandbox, git add -A validate/ would add validate/.ufo as a symlink. Fine — no recursion into the lane. Safe. And `git ls-tree -r` would then show paths under `.ufo/waves/round-35/assimilation/validate/` → mirror_clear False.
+
+  But hold on — is cloning the lane repo into my seat dir okay given the symlinks? Clone only takes committed history; no symlinks in committed tree at validate/ (it's untracked). Fine.
+
+  Also careful: `git clone --shared` — the sandbox's object store alternates point at the lane's .git/objects (read-only use). Commits write new objects to the sandbox's own .git/objects. That does not mutate the lane. Good. Actually, one more caution: `git clone --shared` + `git add` — new blobs written to sandbox objects. Good.
+
+  Also the counter uses FLEET=/home/vgpnk/Projects/shokunin (fleet repo, read-only) for report blobs — unaffected.
+
+  Also, in the sandbox, will `git status` etc. trigger any jj? No.
+
+  One concern: does the sandbox clone inherit a worktree with the lane's working-tree bytes? No — clone checks out HEAD. The uncommitted bytes (seat log flushes etc.) are NOT in the clone, so I copy them in from the lane working tree (read-only copies).
+
+  For sb1, copy the three seat logs. For sb2, copy ExecDisposition.md. For sb3, copy the validate dir (cp -a to preserve symlinks). For sb4, copy the two HTML files (~2MB total, fine).
+
+  Use `git -c user.name=... -c user.email=...` to avoid identity config issues.
+
+  Also verify counter selftest? Not needed.
+
+  Additionally, run baseline counter on the actual LANE repo with --tip HEAD (read-only) to record met True at the lane tip — this is the current C1 hold state. Note: C1 calibration 7→7 is frozen; I'm not changing anything, just recording. Actually the counting command is with --tip <full-commit>; running it read-only is fine and cheap.
+
+  Let me also double-check that committing the seat logs in the sandbox doesn't incidentally change... `git ls-tree` tracked set grows with the three seat.log paths — not in HTML_PATHS, not under validate/ prefix. `disp_blob` unchanged (ExecDisposition.md not touched in sb1). So met True expected. Empirical confirmation is worthwhile since it's the non-obvious answer.
+
+  One more check for the report: the counter at lane HEAD — the lesson corpus/lessons/round-36.md is untracked in the working tree but... wait, `git_show(args.repo, args.tip, "corpus/lessons/round-36.md")` reads from the COMMIT at tip, not the working tree. The round-36.md is currently untracked (`?? corpus/lessons/round-36.md`). So at tip 9014843, round-36.md doesn't exist → lesson = "" → uncorrected=4 → met False!
+
+  Hmm wait — the commit log shows: `9014843 round-36: freeze predicates, failing controls, and wave spec`. Does that commit include corpus/lessons/round-36.md? Status shows `?? corpus/lessons/round-36.md` — untracked. So NOT committed. So running the C1 counter at tip 9014843 gives met False (uncorrected 4). That's consistent with "Do-nothing controls already printed met False" — ah, that's what that line means! The do-nothing control (running the counter at the current tip without committing anything) prints met False because the corrections aren't landed yet. That's expected: C1 7→7 is the calibration of the counter (it counts 7 routed statements... hmm, "calibration 7 -> 7"), not a claim that met is currently True.
+
+  OK so baseline expectation in sandbox: met False with uncorrected 4. The wave-1 MutBlob/ExecC1 seats presumably validated this. So my sandbox experiments: the baseline prints `uncorrected 4 ... met False`. Then committing seat logs: still met False (uncorrected 4) — the seat-log commit does not change the output AT ALL. Hmm — that makes "does committing seat logs break the R35-KEEP arm" harder to show empirically, because the arm is already failing at baseline (uncorrected). 
+
+  To empirically isolate the R35-KEEP arm, I'd need a tip where round-36.md with correction rows is committed. I can construct that in the sandbox: copy the lane's untracked corpus/lessons/round-36.md into the sandbox, commit it, then run the counter → expect met True (all four rows hold at that tip). Then test each leftover commit on top:
+  - sb-A: sandbox tip with round-36.md committed → counter → expect met True (this proves the arm currently holds when corrections land).
+  - sb-B: sb-A + commit 3 seat logs → expect met True (arm not broken).
+  - sb-C: sb-A + commit ExecDisposition.md worktree → expect met False (false_corrections 1, R35-KEEP row fails).
+  - sb-D: sb-A + commit validate/ → expect met False.
+  - sb-E: sb-A + commit HTMLs → expect met False.
+
+  This is the decisive experiment: it isolates the R35-KEEP arm's response to committing each leftover class. 
+
+  But wait — in sb-A, does committing round-36.md in the sandbox simulate "the draft landing"? The wave's actual landing will commit round-36.md and the drafts. My sandbox simulates post-landing state for the R35-KEEP arm. That's exactly the question: "whether committing any of them would break the C1 R35-KEEP arm" — in the landing context.
+
+  Also note: in sb-A, the counter's `git_blob(repo, tip, "corpus/lessons/round-35.md")` must equal LESSON_BLOB — the sandbox has that committed (from history). report_blob from FLEET — fine. spot, scout — committed at tip. tracked set: HTMLs not in tracked, validate/ not in tracked, disp_blob == DISP_BLOB (sandbox HEAD blob of ExecDisposition.md — clone has HEAD 9014843's tree, whose ExecDisposition.md blob = 9307c5d6...). row requirements — from round-36.md row. Should print met True.
+
+  Let me also confirm the sandbox clone lands on the same HEAD as the lane (9014843c...) — yes, clone default branch HEAD.
+
+  Edge: `git clone --shared` requires objects present — fine locally.
+
+  Also — the seat logs sb-B: after committing seat logs, tracked set includes seat.log paths. KEEP arm: `all(path in row for path in KEEP_PATHS)` — row text from round-36.md at tip; unchanged. html_clear — HTMLs still untracked. mirror_clear — validate/ still untracked. disp_blob — ExecDisposition.md still at 9307c5d6. → met True expected. 
+
+  One caveat in sb-B: I copy the seat logs from the lane worktree. If a seat appends more bytes between my copy and my commit — doesn't matter, blob content is whatever I copy.
+
+  Also in sb-C: copy ExecDisposition.md worktree (blob 54be93f...) → commit → tip blob becomes 54be93f ≠ DISP_BLOB → R35-KEEP false → false_corrections 1 → met False. 
+
+  Now — is doing all 5 sandbox runs overkill? The question explicitly asks "Say whether committing any of them would break the C1 R35-KEEP arm." The answer distinguishes seat logs (no) from the other four (yes). Empirical verification strengthens calibration ("judged on: calibration"). The code reading alone is strong, but an empirical check costs ~4 clones × cheap ops. Repo is 38M; shared clones are near-instant. Do it.
+
+  Plan one big bash script per sandbox to keep calls manageable. Actually I can do it in a few calls run in parallel? They're independent sandboxes — parallel is fine, but they all clone from the same source; no conflict. However writing five scripts in parallel — each is a multi-command chain; fine.
+
+  Let me write them:
+
+  Common setup:
+  ```bash
+  SEAT=/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLeftovers
+  mkdir -p "$SEAT"
+  ```
+
+  sb-A (baseline-with-corrections):
+  ```bash
+  R=/home/vgpnk/Projects/shokunin/kama-shokunin
+  S=$SEAT/sbA
+  git clone --quiet --shared "$R" "$S"
+  cp "$R/corpus/lessons/round-36.md" "$S/corpus/lessons/round-36.md"
+  git -C "$S" add corpus/lessons/round-36.md   # hmm — "git add" forbidden?
+  ```
+
+  The bounds: "Never run git add/commit/stash/checkout/switch/reset/pull/push and never run a mutating jj command. Read-only git is permitted... A git-writing check runs on a sandbox clone in your seat directory, never in the lane."
+
+  Reading it again: the add/commit prohibition sentence sits in the context of "Never mutate the fleet repo, any sibling lane, the lane jj state, or the lane Git index." Then "A git-writing check runs on a sandbox clone in your seat directory, never in the lane" explicitly sanctions git-writing in the sandbox clone. A git-writing check inherently requires add/commit in the sandbox. So add/commit inside the sandbox is sanctioned; the prohibition targets the lane. I'll confine every write-path git command with `-C $S` and never touch the lane.
+
+  To be extra careful, I'll avoid `git add` by using `git commit -a`? That still needs add semantics. Or `git update-index --add`? Same thing. `git commit --include <path>`? Simplest: `git -C "$S" add <paths> && git -C "$S" commit ...`. It's within the sanctioned sandbox. I'll document this in the report.
+
+  For sb-B..E, base on sb-A's commit: rather than recloning, create sbB as another clone from lane then repeat the round-36.md commit, then the leftover commit. Cleaner: make a function. But bash tool calls are separate shells; each call self-contained.
+
+  Actually simplest robust approach: one single bash call that does all five sandboxes sequentially and prints results. It's fast (shared clones). Let me write one script. Timeout 120s to be safe.
+
+  ```bash
+  set -e
+  R=/home/vgpnk/Projects/shokunin/kama-shokunin
+  OUT=$R/.ufo/waves/round-36/w3/out/RevLeftovers
+  mkdir -p "$OUT"
+  TIP=$(git -C "$R" rev-parse HEAD)
+  echo "lane tip $TIP"
+
+  mk() {  # $1 = name
+    d="$OUT/$1"
+    rm -rf "$d"
+    git clone --quiet --shared "$R" "$d"
+    cp "$R/corpus/lessons/round-36.md" "$d/corpus/lessons/round-36.md"
+    git -C "$d" add corpus/lessons/round-36.md
+    git -C "$d" -c user.name=w3rev -c user.email=w3rev@invalid commit -q -m "sandbox: land round-36 lesson draft"
+  }
+
+  run() { python3 "$R/tools/round36-statement-audit.py" --repo "$OUT/$1" --tip "$(git -C "$OUT/$1" rev-parse HEAD)"; }
+
+  mk sbA; echo -n "A base(lesson only):            "; run sbA || true
+
+  mk sbB
+  cp "$R/.ufo/waves/round-35/w1/out/ConnSibling/seat.log"        "$OUT/sbB/.ufo/waves/round-35/w1/out/ConnSibling/seat.log"
+  cp "$R/.ufo/waves/round-35/w1/out/ExecDisposition/seat.log"    "$OUT/sbB/.ufo/waves/round-35/w1/out/ExecDisposition/seat.log"
+  cp "$R/.ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log" "$OUT/sbB/.ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log"
+  git -C "$OUT/sbB" add .ufo/waves/round-35/w1/out/ConnSibling/seat.log .ufo/waves/round-35/w1/out/ExecDisposition/seat.log .ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log
+  git -C "$OUT/sbB" -c user.name=w3rev -c user.email=w3rev@invalid commit -q -m "sandbox: commit 3 seat-log flushes"
+  echo -n "B lesson+seatlogs:              "; run sbB || true
+
+  mk sbC
+  cp "$R/.ufo/waves/round-35/w1/out/ExecDisposition.md" "$OUT/sbC/.ufo/waves/round-35/w1/out/ExecDisposition.md"
+  git -C "$OUT/sbC" add .ufo/waves/round-35/w1/out/ExecDisposition.md
+  git -C "$OUT/sbC" -c user.name=w3rev -c user.email=w3rev@invalid commit -q -m "sandbox: commit ExecDisposition.md overwrite"
+  echo -n "C lesson+report-overwrite:      "; run sbC || true
+
+  mk sbD
+  cp -a "$R/.ufo/waves/round-35/assimilation/validate" "$OUT/sbD/.ufo/waves/round-35/assimilation/validate"
+  git -C "$OUT/sbD" add .ufo/waves/round-35/assimilation/validate
+  git -C "$OUT/sbD" -c user.name=w3rev -c user.email=w3rev@invalid commit -q -m "sandbox: commit validate mirror"
+  echo -n "D lesson+mixed-mirror:          "; run sbD || true
+
+  mk sbE
+  cp "$R/.ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html"        "$OUT/sbE/.ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html"
+  cp "$R/.ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html" "$OUT/sbE/.ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html"
+  git -C "$OUT/sbE" add .ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html .ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html
+  git -C "$OUT/sbE" -c user.name=w3rev -c user.email=w3rev@invalid commit -q -m "sandbox: commit helper-skipped HTML"
+  echo -n "E lesson+helper-skipped HTML:   "; run sbE || true
+  ```
+
+  Concern: `set -e` plus `|| true` on run — the counter exits 1 when met False, which with `set -e`... I have `|| true` so fine. But `rm -rf "$d"` — careful: it's inside my seat dir, fine. Also the cp -a of validate includes the recursive .ufo symlink pointing to the lane .ufo — cp -a preserves the symlink. Then `git add` of that path: git records the symlink (mode 120000) without following. Good — no lane mutation. Actually wait — one risk: `git add .ufo/waves/round-35/assimilation/validate` — git walks the directory; for symlink entries it records them as symlinks; it does NOT traverse into directory symlinks. Correct: git treats a symlink to a directory as a single entry.
+
+  But hmm — one more danger: validate/.ufo → /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo. If git DID follow it, add would try to add the whole live .ufo tree into the sandbox index — writes only to sandbox index, no lane mutation, but could be huge. Git does not follow directory symlinks during add (well-established behavior). Safe.
+
+  Also `git clone --shared` on a repo whose HEAD is checked out elsewhere: fine (it's not a worktree clone issue; shared just sets alternates).
+
+  Note: cloning a repo — the clone will use the lane's objects read-only. Also, the clone command will NOT run any hooks or write to the lane. Good.
+
+  Another subtlety: `git clone --shared "$R" "$d"` — clone from a repo with unstaged changes: copies committed state only, HEAD = master (branch). Wait, is HEAD on branch master? `git log --oneline` earlier showed `9014843 round-36: freeze predicates...` and jj showed parent "9014843c master". The w1 review showed "HEAD" detached? It printed "---BRANCH--- HEAD 9014843...". jj working copy parent is master @ 9014843. Git status earlier didn't show branch info (porcelain). Clone will create local branch master tracking origin/master pointing at 9014843. rev-parse HEAD gives 9014843. Good.
+
+  One more: after `git clone --shared`, `git add`/`commit` in the sandbox create new objects in sandbox .git/objects (plus alternates for reads). The lane .git is never written by the sandbox. Alternates are read-only usage. Good.
+
+  Also — will the counter's `git_blob(FLEET, "HEAD", ...)` work? FLEET=/home/vgpnk/Projects/shokunin is a separate repo; reading it is fine (read-only, and it's not in the forbidden-read list).
+
+  Timing: 5 shared clones of a 38M repo — seconds. The cp of validate (84 files + symlinks) trivial.
+
+  Also should I run the baseline do-nothing on the lane itself (`--repo lane --tip HEAD`) to record `uncorrected 4 ... met False`? That documents that at the current tip the corrections are not yet landed and the counter's do-nothing output matches the frozen expectation ("Do-nothing controls already printed met False"). Cheap; include it. But careful: `--repo $R --tip $TIP` — the counter reads via `git show`, purely read-only. Yes.
+
+  Hmm — but wait: do-nothing prints met False at lane tip because round-36.md isn't committed. That's "already printed met False" per the frozen claim. I'll record it as the do-nothing control replication, not as C1 calibration (7→7 is frozen; I'm not re-deriving the 7).
+
+  Actually the frozen claim C1 says "calibration 7 -> 7" with counting command `round36-statement-audit.py --tip <full-commit>`. I don't fully know what the "7" refers to (probably 7 statements audited / statement count). Not my axis; my task is the leftovers question. I'll note baseline output as context only.
+
+  Also one question in the task: "Say whether committing any of them would break the C1 R35-KEEP arm." — I should answer per class AND overall "any of them" → yes for 4 of 7; no for the 3 seat logs. Also note: committing seat logs is still not advisable per the spot-check process rule (don't sweep leftovers), but it doesn't break the frozen predicate — that's the w1 review's conclusion too; my sandbox test will confirm independently.
+
+  Also the report must include: the seven paths listed, still-uncommitted status, class names, and the C1 R35-KEEP impact. Plus findings by severity, residual risk, verification gaps.
+
+  Let me also grab quick measurements for the report:
+  - ExecDisposition.md worktree lines 125 vs HEAD 1994 (w1 measured; I can re-derive quickly: `wc -l` both). Cheap — do it in the same script or separate parallel call. I have blob hashes already (54be93f vs 9307c5d6) which is the decisive byte-level evidence; line counts are garnish. I'll include quick wc via git show HEAD file | wc -l and wc -l worktree.
+  - validate/ symlink/regular counts: w1 measured 11/84; re-derive quickly: `find validate -mindepth 1 -maxdepth 1 ... ` or full: `find -type l | wc -l` and `-type f`. Quick.
+  - HTML sizes: `stat -c %s` both.
+
+  I'll add a second parallel bash call for these re-measurements while the sandbox script runs. Actually the sandbox script depends on nothing from those; run both in parallel.
+
+  One more check — `git check-ignore` on the HTML files? Not needed; they show as untracked (not ignored).
+
+  Also confirm nothing under round-35 is staged: `diff --cached` was empty overall — yes, "(end staged)" with nothing between. 
+
+  Now write the script carefully. Potential gotcha: `rm -rf "$d"` where d under OUT — OUT = $R/.ufo/waves/round-36/w3/out/RevLeftovers — my seat dir. Allowed ("Scratch files go only in your seat directory"). Sandbox clones live there. Good.
+
+  Note: the final report path is `$OUT/RevLeftovers.md`... wait — the trailer says ".ufo/waves/round-36/w3/out/RevLeftovers.md" and seat dir is ".ufo/waves/round-36/w3/out/RevLeftovers/". So the report file sits NEXT to the seat directory (like w1 did). The instruction says "Your one allowed report write is the absolute path named by your Report trailer: /home/vgpnk/Projects/shokunin/kama-shokunin/<that relative path>" → exactly $R/.ufo/waves/round-36/w3/out/RevLeftovers.md. And scratch goes in .../out/RevLeftovers/. So sandbox clones go in .../out/RevLeftovers/, report at .../out/RevLeftovers.md. Match w1's pattern (ReviewLeftovers.md next to ReviewLeftovers/). Good — adjust OUT for sandboxes: SCRATCH=$R/.ufo/waves/round-36/w3/out/RevLeftovers.
+
+  Let me now also decide about `set -e` pitfalls: cp of missing file would abort — fine, I want to know. Use explicit error visibility: run without set -e but echo exit codes? Keep set -e but guard run with || true. Actually if `mk` fails mid-way for one sandbox, later steps get confusing. Keep set -e; on failure I'll see where.
+
+  Edge: `git -C "$d" add corpus/lessons/round-36.md` — the file exists at that path in lane (untracked) — cp from lane worktree. Yes: `?? corpus/lessons/round-36.md`.
+
+  Also note: in sbA..E I commit ONLY the lesson, not the other drafts (entry, SOURCES rows, QUALITY, README) — C1 only depends on the lesson. Fine, and C2 isn't in scope here (R35-KEEP is a C1 arm).
+
+  Alright, run the sandbox script + the measurement call in parallel.
+
+• Key facts landed: lane tip is `9014843c`, nothing staged, `ExecDisposition.md` worktree blob (`54be93f7…`) differs from HEAD blob (`9307c5d6…` = `DISP_BLOB`), validate/ and both HTMLs are untracked, and the counter's `R35-KEEP` arm checks `disp_blob`, `html_clear`, `mirror_clear` — but not seat-log trackedness. Now I verify empirically in a sandbox clone in my seat directory (the sanctioned git-writing location), plus re-measure the byte facts:lane tip 9014843cb7de8fbe87a97954c13832b67d55f046
+do-nothing control (lane tip):  
+uncorrected 4 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met False
+A lesson only (arm baseline):   
+uncorrected 0 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met True
+B lesson + 3 seat-log flushes:  
+uncorrected 0 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met True
+C lesson + report overwrite:    
+uncorrected 0 false_corrections 1 lesson_unchanged 1 report_unchanged 1 met False
+D lesson + mixed mirror:        
+uncorrected 0 false_corrections 1 lesson_unchanged 1 report_unchanged 1 met False
+E lesson + helper-skipped HTML: 
+uncorrected 0 false_corrections 1 lesson_unchanged 1 report_unchanged 1 met False
+--- lane untouched check:
+lane porcelain lines now: 92
+--- validate/ composition:
+symlinks: 11  regular: 84
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo
+--- HTML sizes:
+1066624 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html
+1066624 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html
+--- ExecDisposition.md line counts (HEAD blob vs worktree):
+1994
+125
+--- seat-log diffs: append-only check (numstat):
+142	1	.ufo/waves/round-35/w1/out/ConnSibling/seat.log
+2011	1	.ufo/waves/round-35/w1/out/ExecDisposition/seat.log
+144	1	.ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log
+
+
+• All experiments ran. Results:
+
+  - Do-nothing control at lane tip 9014843c: `uncorrected 4 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met False` — matches the frozen claim that the do-nothing control prints met False (corrections not yet landed at tip).
+  - A (lesson only committed in sandbox): met True — the R35-KEEP arm holds when the lesson lands with leftovers untouched.
+  - B (lesson + 3 seat-log flushes committed): met True — committing seat-log flushes does NOT break the R35-KEEP arm.
+  - C (lesson + ExecDisposition.md overwrite committed): false_corrections 1, met False — breaks (disp_blob).
+  - D (lesson + validate/ mirror committed): false_corrections 1, met False — breaks (mirror_clear).
+  - E (lesson + 2 HTMLs committed): false_corrections 1, met False — breaks (html_clear).
+
+  Byte measurements confirm:
+  - validate/: 11 symlinks + 84 regular files, `.ufo` symlink → absolute lane .ufo path (recursive/self-referential mirror).
+  - HTMLs: both 1066624 bytes (> 1 MiB snapshot limit).
+  - ExecDisposition.md: HEAD 1994 lines vs worktree 125 lines; blobs 9307c5d6 (= DISP_BLOB) vs 54be93f7.
+  - Seat logs: append-flush shape (142/1, 2011/1, 144/1 — the −1 is the missing-trailing-newline last line being extended).
+
+  Lane untouched: porcelain line count grew from 67 to 92 — that's other seats writing more round-36 untracked paths (and w2/w3 outputs); the seven r35 entries are unchanged in class (I should verify the 7 r35 lines are still identical — quick check). Let me confirm the seven r35 lines are still present unchanged in the current porcelain, then write the report.
+
+  Actually, I already know from the earlier status the seven r35 lines; other seats are appending new round-36 paths (92 lines now). A quick grep of current status for round-35 lines to confirm stability is cheap. Let me do that in the same call as... no, I'll just do it and then write the report. Actually I can do the grep and write the report in parallel — no, report content depends on grep result (minor). Just run the grep first — one quick call — then write report. Or include the grep output in the report-writing call? Cleaner: quick grep now.
+
+  Also note lane jj state untouched — I never ran jj. Git index untouched — all my git writes were `-C $SCRATCH/sbX`. Good.
+
+  One residual note: my sandbox commits used `git add`/`commit` strictly inside `$SCRATCH/sb*` clones — the sanctioned sandbox git-writing location. Never in the lane.
+
+  Report structure:
+  - Scope and method (one line).
+  - The seven paths table: path, status now, class, still uncommitted?
+  - C1 R35-KEEP impact per class, with measured sandbox results.
+  - Findings by severity (concrete defects — here there are no defects in the lane state; the "findings" are the classification verdicts + any calibration notes). Findings:
+    1. INFO/verdict: all seven still uncommitted; nothing staged.
+    2. Verdict: committing 4 of 7 breaks C1 R35-KEEP (each via a distinct sub-check).
+    3. Verdict: committing the 3 seat-log flushes does NOT break C1 R35-KEEP (measured met True) — but they remain process-forbidden to sweep (spot-check "none of them is swept"; not a counter kill).
+    4. Calibration notes: do-nothing control replicated (met False, uncorrected 4); live porcelain now 92 lines (other seats writing) — the seven r35 lines are the stable subset.
+  - Measured vs inference separated.
+  - Residual risk and verification gaps: e.g., if ExecDisposition.md were committed with its HEAD blob restored (not the worktree bytes), disp_blob would not break — the kill is specific to the worktree overwrite bytes; the counter does not check seat-log blobs; C2 predicate not examined here (out of scope); my sandbox A assumed only the lesson lands, not the other four draft files (entry/SOURCES/QUALITY/README) — C1 doesn't read them, so no impact on this arm.
+
+  Let me also double-check one subtlety for finding 4: in sandbox A, I committed only round-36.md, but the real landing will also commit corpus/knowledge/sglang-native-route-deprecation.md, SOURCES.md rows, QUALITY.md, README.md — none of these affect the C1 counter's inputs (it reads lesson round-36.md, round-35 files, spotcheck, fleet report, ExecDisposition.md blob, and the tracked path set). ExecDisposition.md blob unchanged, tracked set unchanged by those corpus files. So met True stands for the real landing too, provided the four kill paths stay out. That's inference from code + measured A.
+
+  Quick verification of the stable seven in current porcelain, then write the report.
+
+• All five sandbox runs measured. Quick stability check on the seven r35 lines in the live porcelain (other seats are writing — 92 lines now vs 67 earlier), then I write the report: M .ufo/waves/round-35/w1/out/ConnSibling/seat.log
+ M .ufo/waves/round-35/w1/out/ExecDisposition.md
+ M .ufo/waves/round-35/w1/out/ExecDisposition/seat.log
+ M .ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log
+?? .ufo/waves/round-35/assimilation/validate/
+?? .ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html
+?? .ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html
+--- staged check:
+0
+
+
+• The seven r35 leftovers are unchanged and stable; nothing staged. Now write the report to /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLeftovers.md.
+
+  Content plan (calibration-focused, measured vs inference separated):
+
+  1. Verdict up front.
+  2. The seven paths: status + class.
+  3. C1 R35-KEEP impact per class — measured sandbox results.
+  4. Measured facts (byte-level).
+  5. Inference (clearly labeled).
+  6. Findings by severity.
+  7. Residual risk and verification gaps.
+  8. Method note: sandbox git-writing confined to seat dir; lane untouched; no tools installed.
+
+  Keep it tight.
+
+• Stable. Writing the report now.written:
+93 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLeftovers.md
+
+
+• Report written. Done — all task questions answered with measured evidence:
+
+  1. Seven paths listed with status and class.
+  2. All seven still uncommitted, nothing staged.
+  3. C1 R35-KEEP impact: 4 of 7 break it (measured), 3 seat logs don't (measured).
+
+  Stop here — no actionable finding remains in scope. Give a concise summary.
+
+• Report written to `.ufo/waves/round-36/w3/out/RevLeftovers.md`. Summary of the answer:
+
+  **The seven r35 leftovers** (all still uncommitted, nothing staged, lane tip `9014843c`):
+
+  | Path | Class | Uncommitted? |
+  |---|---|---|
+  | `ConnSibling/seat.log` | seat-log flush | Yes (` M`) |
+  | `ExecDisposition/seat.log` | seat-log flush | Yes (` M`) |
+  | `ScoutCoverageAbsence/seat.log` | seat-log flush | Yes (` M`) |
+  | `ExecDisposition.md` | report overwrite | Yes (` M`) |
+  | `assimilation/validate/` | mixed mirror | Yes (`??`) |
+  | `ScribeGate/fetch/docker-dockerfile.html` | helper-skipped HTML | Yes (`??`) |
+  | `ScribeGate/fetch/dockerfile.html` | helper-skipped HTML | Yes (`??`) |
+
+  **C1 R35-KEEP impact — measured, not just read off the code.** In sandbox clones in my seat dir (the sanctioned git-writing location), I landed the round-36 lesson draft, then committed exactly one leftover class per clone and ran the frozen counter unchanged:
+
+  - **Seat-log flushes (3):** `met True` — committing them does **not** break the arm (the counter never checks their blobs or trackedness). Sweeping them is still forbidden by the preregistration process rule, but they are not predicate kills.
+  - **Report overwrite:** `met False` — worktree blob `54be93f7…` ≠ pinned `DISP_BLOB 9307c5d6…` (1994-line landed dump vs 125-line late write).
+  - **Mixed mirror:** `met False` — anything tracked under `validate/` fails `mirror_clear` (11 symlinks incl. a recursive absolute `.ufo` link, 84 regular files).
+  - **Helper-skipped HTML (either):** `met False` — fails `html_clear`; both are 1066624 bytes, over the 1 MiB snapshot threshold that skipped them at `f45f616`.
+
+  Do-nothing control replicated at the lane tip (`uncorrected 4 … met False`, corrections not yet landed — expected, not a defect). No add/commit/delete anywhere in the lane; index clean before and after. No actionable finding remains in scope — stopping.
+
+To resume this session: kimi -r session_4cbc4f54-5929-4878-ba1e-f3e0905280ad

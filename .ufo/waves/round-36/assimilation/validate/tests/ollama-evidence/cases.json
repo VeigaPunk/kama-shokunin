@@ -1,0 +1,768 @@
+[
+  {
+    "name": "loaded_same_digest",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 0,
+    "expected_finding": "loaded_same_digest"
+  },
+  {
+    "name": "loaded_with_unrelated_inventory_entries",
+    "tags": {
+      "models": [
+        {"name": "qwen3:4b", "model": "qwen3:4b", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"},
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "qwen3:4b", "model": "qwen3:4b", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"},
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 0,
+    "expected_finding": "loaded_same_digest"
+  },
+  {
+    "name": "loaded_empty_string_remote_markers_are_absent",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "remote_model": "", "remote_host": ""}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "remote_model": "", "remote_host": ""}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 0,
+    "expected_finding": "loaded_same_digest"
+  },
+  {
+    "name": "loaded_exact_gguf_name_no_stripping",
+    "tags": {
+      "models": [
+        {"name": "model.gguf", "model": "model.gguf", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "model.gguf", "model": "model.gguf", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "model.gguf",
+    "expected_exit": 0,
+    "expected_finding": "loaded_same_digest"
+  },
+  {
+    "name": "loaded_remote_marker_only_on_unselected_ps_entry",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "qwen3:4b", "model": "qwen3:4b", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "remote_host": "https://remote.invalid"},
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 0,
+    "expected_finding": "loaded_same_digest"
+  },
+  {
+    "name": "loaded_shared_digest_alias_copy_active",
+    "tags": {
+      "models": [
+        {"name": "llama3.2:latest", "model": "llama3.2:latest", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"},
+        {"name": "gpt-x:latest", "model": "gpt-x:latest", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "gpt-x:latest", "model": "gpt-x:latest", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "gpt-x:latest",
+    "expected_exit": 0,
+    "expected_finding": "loaded_same_digest"
+  },
+  {
+    "name": "loaded_remote_marker_only_on_unselected_tags_entry",
+    "tags": {
+      "models": [
+        {"name": "qwen3:4b", "model": "qwen3:4b", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "remote_model": "qwen3-cloud", "remote_host": "https://remote.invalid"},
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 0,
+    "expected_finding": "loaded_same_digest"
+  },
+  {
+    "name": "loaded_ignores_past_expires_at",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "modified_at": "2030-01-01T00:00:00Z"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "expires_at": "2001-01-01T00:00:00Z"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 0,
+    "expected_finding": "loaded_same_digest"
+  },
+  {
+    "name": "loaded_name_only_optional_model_field",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 0,
+    "expected_finding": "loaded_same_digest"
+  },
+  {
+    "name": "loaded_model_only_optional_name_field",
+    "tags": {
+      "models": [
+        {"model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 0,
+    "expected_finding": "loaded_same_digest"
+  },
+  {
+    "name": "available_tag_without_ps_entry",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "qwen3:4b", "model": "qwen3:4b", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 1,
+    "expected_finding": "available_not_loaded"
+  },
+  {
+    "name": "available_empty_ps_models",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": []
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 1,
+    "expected_finding": "available_not_loaded"
+  },
+  {
+    "name": "available_shared_digest_alias_copy_inactive",
+    "tags": {
+      "models": [
+        {"name": "llama3.2:latest", "model": "llama3.2:latest", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"},
+        {"name": "gpt-x:latest", "model": "gpt-x:latest", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3.2:latest", "model": "llama3.2:latest", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "gpt-x:latest",
+    "expected_exit": 1,
+    "expected_finding": "available_not_loaded"
+  },
+  {
+    "name": "unknown_ps_alias_without_tags_match",
+    "tags": {
+      "models": [
+        {"name": "qwen3:4b", "model": "qwen3:4b", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b-ctx8192", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "unknown"
+  },
+  {
+    "name": "unknown_no_tags_match_but_ps_match",
+    "tags": {
+      "models": [
+        {"name": "qwen3:4b", "model": "qwen3:4b", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "unknown"
+  },
+  {
+    "name": "unknown_empty_tags_inventory",
+    "tags": {
+      "models": []
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "unknown"
+  },
+  {
+    "name": "unknown_case_sensitive_name",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "Llama3:8B",
+    "expected_exit": 2,
+    "expected_finding": "unknown"
+  },
+  {
+    "name": "unknown_gguf_suffix_not_stripped",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b.gguf", "model": "llama3:8b.gguf", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b.gguf", "model": "llama3:8b.gguf", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "unknown"
+  },
+  {
+    "name": "unknown_tag_qualifier_not_normalized",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3",
+    "expected_exit": 2,
+    "expected_finding": "unknown"
+  },
+  {
+    "name": "identity_conflict_ps_digest_mismatch",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 1,
+    "expected_finding": "identity_conflict"
+  },
+  {
+    "name": "identity_conflict_name_model_alias_ambiguity",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b-ctx8192", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 1,
+    "expected_finding": "identity_conflict"
+  },
+  {
+    "name": "identity_conflict_digest_whitespace_not_stripped",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": " sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 1,
+    "expected_finding": "identity_conflict"
+  },
+  {
+    "name": "identity_conflict_ps_name_model_alias_ambiguity",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b-ctx8192", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 1,
+    "expected_finding": "identity_conflict"
+  },
+  {
+    "name": "identity_conflict_digest_prefix_not_stripped",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 1,
+    "expected_finding": "identity_conflict"
+  },
+  {
+    "name": "remote_inventory_tags_loaded_pair",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "remote_model": "llama3-cloud", "remote_host": "https://remote.invalid"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 1,
+    "expected_finding": "remote_inventory"
+  },
+  {
+    "name": "remote_inventory_tags_digest_mismatch",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "remote_host": "https://remote.invalid"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 1,
+    "expected_finding": "remote_inventory"
+  },
+  {
+    "name": "remote_inventory_ps_same_digest",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "remote_host": "https://remote.invalid"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 1,
+    "expected_finding": "remote_inventory"
+  },
+  {
+    "name": "remote_inventory_tags_without_ps_match",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "remote_model": "llama3-cloud"}
+      ]
+    },
+    "ps": {
+      "models": []
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 1,
+    "expected_finding": "remote_inventory"
+  },
+  {
+    "name": "remote_inventory_both_selected_remote",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "remote_model": "llama3-cloud"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222", "remote_host": "https://remote.invalid"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 1,
+    "expected_finding": "remote_inventory"
+  },
+  {
+    "name": "invalid_missing_ps_input",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": null,
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "invalid_missing_tags_input",
+    "tags": null,
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "invalid_remote_tags_with_missing_ps_input",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "remote_model": "llama3-cloud"}
+      ]
+    },
+    "ps": null,
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "invalid_tags_models_missing",
+    "tags": {},
+    "ps": {
+      "models": []
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "invalid_ps_models_missing",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {},
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "invalid_tags_models_not_array",
+    "tags": {
+      "models": {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+    },
+    "ps": {
+      "models": []
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "invalid_tags_entry_not_object",
+    "tags": {
+      "models": ["llama3:8b"]
+    },
+    "ps": {
+      "models": []
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "invalid_tags_digest_not_string",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": 12345}
+      ]
+    },
+    "ps": {
+      "models": []
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "unknown_tags_missing_digest",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b"}
+      ]
+    },
+    "ps": {
+      "models": []
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "unknown"
+  },
+  {
+    "name": "unknown_tags_empty_digest",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": ""}
+      ]
+    },
+    "ps": {
+      "models": []
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "unknown"
+  },
+  {
+    "name": "unknown_ps_missing_digest",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "unknown"
+  },
+  {
+    "name": "invalid_duplicate_selected_tags",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"},
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "invalid_duplicate_selected_ps",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"},
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "invalid_duplicate_selected_ps_with_remote_marker",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "remote_host": "https://remote.invalid"},
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "invalid_remote_marker_number_type",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "remote_model": 0}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "invalid_remote_marker_boolean_type",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "remote_host": false}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "invalid_remote_marker_null_type",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111", "remote_host": null}
+      ]
+    },
+    "ps": {
+      "models": []
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "remote_missing_digest",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "remote_host": "https://remote.invalid"}
+      ]
+    },
+    "ps": {
+      "models": []
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "unknown"
+  },
+  {
+    "name": "tags_none_ps_duplicates",
+    "tags": {
+      "models": [
+        {"name": "qwen3:4b", "model": "qwen3:4b", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"}
+      ]
+    },
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"},
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:2222222222222222222222222222222222222222222222222222222222222222"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "invalid_unparsable_tags_body",
+    "tags": "{\"models\": [{\"name\": \"llama3:8b\",",
+    "ps": {
+      "models": []
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "invalid_duplicate_raw_json_key",
+    "tags": "{\"models\": [{\"name\": \"llama3:8b\", \"model\": \"llama3:8b\", \"digest\": \"sha256:1111111111111111111111111111111111111111111111111111111111111111\", \"remote_host\": \"https://remote.invalid\", \"remote_host\": \"\"}]}",
+    "ps": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  },
+  {
+    "name": "invalid_ps_top_level_array",
+    "tags": {
+      "models": [
+        {"name": "llama3:8b", "model": "llama3:8b", "digest": "sha256:1111111111111111111111111111111111111111111111111111111111111111"}
+      ]
+    },
+    "ps": [],
+    "expect": "llama3:8b",
+    "expected_exit": 2,
+    "expected_finding": "invalid_input"
+  }
+]

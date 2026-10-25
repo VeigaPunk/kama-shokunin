@@ -1,0 +1,645 @@
+kimi version 2.3.1
+• Let me start by understanding the task. I need to:
+
+  1. Read the lesson draft at /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-36.md
+  2. For every row in its ## Gate quarantine table: check if it names a URL, a verdict, a reason, and a flip condition. Count the rows.
+  3. For each of the four ## Corrections rows, list the exact tokens the C1 counter requires and say whether the row has each.
+  4. Answer in a table. Do not edit the lesson.
+  5. Write report to /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLessonGate.md
+
+  The C1 counter is: python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round36-statement-audit.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip <full-commit>
+
+  I need to understand what tokens the C1 counter requires. Let me read the audit script to know what tokens it looks for in the Corrections rows.
+
+  Let me do parallel reads: the lesson draft, the audit script, and also the coverage audit script (maybe not needed). Let me read the lesson and the C1 script first.Now I have both the lesson and the C1 counter script. Let me extract the exact tokens required per correction row.
+
+  The counter works as follows:
+  - `rows_of` finds lines in corpus/lessons/round-36.md that start with `<id>:` for each of the four ids (R35-S211, R35-WORDS, R35-MIRROR, R35-KEEP).
+  - For each id: the row must not contain "429" and must pass `holds`.
+
+  Required tokens per id (from `holds`):
+
+  **R35-S211:**
+  - (from scout/spot facts — those come from other files, not the row)
+  - Row must contain: `"ScoutQuarantineS211.md"`, `"still-live"`, `"200"`
+  - And NOT contain `"429"`
+
+  Wait, careful: `FORBIDDEN = "429"`. And note "200" in row — the row contains "200" (yes, "HTTP 200"). Does the row contain "429"? Let me check R35-S211 row:
+
+  "R35-S211: The round-35 lesson records this quarantine row as unreachable. That reason is wrong. The closure spot-check at corpus/lessons/round-35-verifier-spotcheck.md:95 and :118 records HEAD 200 for the same cited URL, and this round's own fetch of that URL on 2026-10-24 returned HTTP 200 as well. The seat report .ufo/waves/round-35/w1/out/ScoutQuarantineS211.md records that the page was fetched successfully and that the token still-live is absent from it. The row stays unappended: no located quote exists for it. corpus/lessons/round-35.md is not rewritten."
+
+  - Contains "ScoutQuarantineS211.md"? Yes: ".ufo/waves/round-35/w1/out/ScoutQuarantineS211.md".
+  - Contains "still-live"? Yes: "the token still-live is absent from it".
+  - Contains "200"? Yes: "HEAD 200", "HTTP 200".
+  - Contains "429"? Let me check... "2026-10-24" — no 429 there. "429" substring: need digits 4,2,9 adjacent. Scan: "R35-S211", "unreachable", "spotcheck.md:95", ":118", "HEAD 200", "2026-10-24", "HTTP 200", "ScoutQuarantineS211.md", "fetched successfully", "still-live", "absent", "no located quote". No "429". 
+
+  But wait — the row matching is `line.startswith(sid + ":")`. The lesson line 21 starts with "R35-S211: The round-35 lesson records..." — yes it starts with "R35-S211:". Good.
+
+  **R35-WORDS:**
+  Row must contain: `"20 words"`. Also (via old_lesson facts, not the row): quote_words(old_lesson)==20, QUOTE in old_lesson, "18 words" in old_lesson — these are facts about the r35 lesson, not the row.
+
+  Row: "R35-WORDS: The S327 quote in corpus/lessons/round-35.md is 20 words, not the 18 words its own paragraph records. The count is re-derived from the committed lesson blob 428f1f8a0e8871022f7c1e8ea47e50ba5a8d6412 three ways — a whitespace split, `wc -w`, and the C1 counter's own `quote_words` extractor — and all three return 20. The located sentence is unchanged and stays inside the 25-word bound. corpus/lessons/round-35.md is not rewritten."
+
+  - Contains "20 words"? Yes: "is 20 words, not the 18 words".
+  - Contains "429"? Check: "428f1f8a0e8871022f7c1e8ea47e50ba5a8d6412" — the blob hash. Does it contain "429"? Let me scan: 4-2-8-f-1-f-8-a-0-e-8-8-7-1-0-2-2-f-7-c-1-e-8-e-a-4-7-e-5-0-b-a-5-a-8-d-6-4-1-2. Substring "429"? We need "4" followed by "2" followed by "9". Look at positions with 4: "428f..." at start → "42" followed by "8" not "9". Near end: "6-4-1-2" → "41", "42"? "...d6412" → "6412": "41", "12". No "429". Also "25-word bound" — no. So no "429". Good.
+
+  Also note the row itself matters: it must start with "R35-WORDS:" — line 23 starts with "R35-WORDS: The S327 quote..." Yes.
+
+  Also, importantly, the "18 words" in the row: the check is `"18 words" in old_lesson` (the old lesson), not the row. The row mentioning "18 words" is not required by the counter but is present.
+
+  **R35-MIRROR:**
+  Row must contain: `"mixed"`, `"11"`, `"84"`. Facts from spot: "11 symlinks" and "84 regular files" in spot; report contains "symlink tree".
+
+  Row: "R35-MIRROR: The round-35 report calls the round-35 validate tree a symlink tree. The closure spot-check records it as a mixed mirror: 11 symlinks and 84 regular files. The round-35 fleet report is not rewritten. The mirror is not committed this round. The round-36 scratch mirror at .ufo/waves/round-36/assimilation/validate/ is a separate plain copy and is committed as wave evidence."
+
+  - Contains "mixed"? Yes ("a mixed mirror").
+  - Contains "11"? Yes.
+  - Contains "84"? Yes.
+  - Contains "429"? Scan: no.
+
+  Starts with "R35-MIRROR:" — yes, line 25.
+
+  **R35-KEEP:**
+  Row must contain all KEEP_PATHS:
+  - ".ufo/waves/round-35/w1/out/ConnSibling/seat.log"
+  - ".ufo/waves/round-35/w1/out/ExecDisposition/seat.log"
+  - ".ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log"
+  - ".ufo/waves/round-35/w1/out/ExecDisposition.md"
+  - ".ufo/waves/round-35/assimilation/validate/"
+  - ".ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html"
+  - ".ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html"
+
+  And tokens: "seat-log-flush", "overwrite-not-committed", "mixed-mirror-not-committed", "helper-skipped", "1066624". Facts: "1066624" in spot, disp_blob unchanged, html paths not tracked, mirror path not tracked.
+
+  Row (line 27): "R35-KEEP: Seven r35 leftovers are classified and none of them is swept. seat-log-flush .ufo/waves/round-35/w1/out/ConnSibling/seat.log .ufo/waves/round-35/w1/out/ExecDisposition/seat.log .ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log; overwrite-not-committed .ufo/waves/round-35/w1/out/ExecDisposition.md — the working-tree file replaces the committed 1994-line thinking dump with a 125-line late write, and committing it would replace landed evidence; mixed-mirror-not-committed .ufo/waves/round-35/assimilation/validate/ — 11 symlinks and 84 regular files, including a recursive .ufo link, so it is not a safe commit; helper-skipped .ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html .ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html — both 1066624 bytes, over 1 MiB, skipped by the lane helper and left unforced."
+
+  - All 7 paths: yes, all present. Let me verify each literally:
+    1. ".ufo/waves/round-35/w1/out/ConnSibling/seat.log" — yes.
+    2. ".ufo/waves/round-35/w1/out/ExecDisposition/seat.log" — yes.
+    3. ".ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log" — yes.
+    4. ".ufo/waves/round-35/w1/out/ExecDisposition.md" — yes.
+    5. ".ufo/waves/round-35/assimilation/validate/" — yes.
+    6. ".ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html" — yes.
+    7. ".ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html" — yes.
+  - "seat-log-flush": yes.
+  - "overwrite-not-committed": yes.
+  - "mixed-mirror-not-committed": yes.
+  - "helper-skipped": yes.
+  - "1066624": yes.
+  - "429": scan. Contains "1994-line" — no 429. "1066624" — digits 1,0,6,6,6,2,4 → "24" preceded by "6"; no "429". Hmm wait: "1066624" contains "624" — no "429". No "429".
+
+  Starts with "R35-KEEP:" — line 27 begins "R35-KEEP: Seven r35 leftovers..." Yes.
+
+  Now, one subtlety: `rows_of` matches any line starting with "R35-S211:" etc. Note "R35-S211" contains "429"? No — "S211" no.
+
+  Wait, another subtlety: the FORBIDDEN check is `FORBIDDEN in row` where FORBIDDEN = "429". Interesting: "R35-S211" — no. But careful: does any row contain "429"? I checked all four above; none.
+
+  Hmm, but also note: `"200" in row` for S211. Yes.
+
+  Also note: the rows_of scan is line-based, and each of the four rows is a single line each in the file (lines 21, 23, 25, 27). Verified by Read output.
+
+  Additionally, the counter requires the correction rows to be in `corpus/lessons/round-36.md` at the tip (git show). This is a working-tree draft right now (uncommitted?), so the counter run against the tip won't see it yet — but that's the L1's concern, not mine; my task is to check the draft bytes. But I should note measured vs inferred. Actually — wait, is the working tree dirty or committed? The task says "the draft lesson ... the L1 has just written into the lane working tree". So these are working-tree bytes. The C1 counter reads from git at --tip. That's fine; my job is only the token-level audit of the draft.
+
+  Should I actually run the counter with the lesson injected to verify my token analysis? I could run a sandbox check: run the script against a sandbox clone in my seat directory with the draft lesson committed. That's what the bounds say: "A git-writing check runs on a sandbox clone in your seat directory, never in the lane." That would give measured verification rather than inference. That's a good move: clone the lane repo into my seat dir, add corpus/lessons/round-36.md, commit, run the counter with --tip HEAD. But wait — bounds: "Never mutate the fleet repo /home/vgpnk/Projects/shokunin, any sibling lane, the lane jj state, or the lane Git index. Never run git add/commit/stash/checkout/switch/reset/pull/push ... A git-writing check runs on a sandbox clone in your seat directory, never in the lane."
+
+  Hmm, "Never run git add/commit..." is stated absolutely, then the sandbox clone exception is mentioned. Reading it carefully: "Never run git add/commit/stash/checkout/switch/reset/pull/push and never run a mutating jj command. Read-only git is permitted. ... A git-writing check runs on a sandbox clone in your seat directory, never in the lane." The last sentence appears to carve out an explicit permission: git-writing checks are allowed on a sandbox clone in the seat directory. So a `git clone` + `git add/commit` in my seat dir is permitted for verification. Hmm, but "Never run git add/commit" — is the carve-out meant to supersede? The sentence structure suggests the general prohibition applies to the lane, and the sandbox clone is explicitly the sanctioned place for git-writing checks. The frozen claims C1/C2 give counting commands with --tip <full-commit>, implying that the canonical run happens at commit time. My task is judged on calibration; verifying my token analysis with an actual counter run on a sandbox clone is the calibrated move (measured, not inferred).
+
+  But careful about cloning: `git clone /home/vgpnk/Projects/shokunin/kama-shokunin .ufo/waves/round-36/w3/out/<seat>/sandbox` — wait, my seat directory is /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLessonGate/ (seat name presumably RevLessonGate based on the report filename RevLessonGate.md). The report path is .ufo/waves/round-36/w3/out/RevLessonGate.md — hmm, "Your one allowed report write is the absolute path named by your Report trailer: /home/vgpnk/Projects/shokunin/kama-shokunin/<that relative path>" and the task says "Report: write your scoped findings to .ufo/waves/round-36/w3/out/RevLessonGate.md". And "Scratch files go only in your seat directory /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/<YourSeatName>/". So my seat dir is probably .ufo/waves/round-36/w3/out/RevLessonGate/ and the report is the file RevLessonGate.md directly in out/. Hmm — the report path is `out/RevLessonGate.md` and scratch goes in `out/<YourSeatName>/`. If my seat name is "RevLessonGate", then scratch goes in out/RevLessonGate/ and the report at out/RevLessonGate.md. That's consistent.
+
+  Actually, is a sandbox clone verification even necessary? My primary task: table of Gate quarantine rows (URL, verdict, reason, flip) and Corrections tokens. The token analysis I can do exactly by reading the script. To be calibrated (measured vs inference), I can:
+
+  1. Measured: run a small Python script that imports the counter's functions (rows_of, holds tokens) against the actual draft bytes to confirm each row's required tokens are present/absent. This doesn't need git at all — I can replicate `rows_of` and the token checks by importing the module and calling `score` with... no, `holds` needs scout/spot/report facts from git. But I only need the row-level token checks, not the fact-level checks. I can write a small scratch script that, for each row, checks the exact token list from `holds`. That's measured (against actual bytes) for the row-side tokens.
+
+  2. The full `score()` requires git facts; I could run the actual counter on a sandbox clone. That would also verify the fact-side (which is beyond my scope but strengthens the calibration claim). The frozen claim says calibration 7→7 already verified by... whoever. My task is only: (a) quarantine table completeness, (b) corrections token presence. The task explicitly says "list the exact tokens the C1 counter requires and say whether the row has each". So the row-side check is exactly what's asked. The fact-side (scout/spot/report/old_lesson) tokens are not "required of the row" — but I should list which tokens are row-required vs fact-required to be precise.
+
+  Let me be careful about "exact tokens the C1 counter requires" per row:
+
+  The counter's requirements per row (row-side only):
+  - Presence of a line starting with `<id>:` (row discovery).
+  - Absence of "429" in the row.
+  - R35-S211: "ScoutQuarantineS211.md", "still-live", "200".
+  - R35-WORDS: "20 words".
+  - R35-MIRROR: "mixed", "11", "84".
+  - R35-KEEP: "seat-log-flush", "overwrite-not-committed", "mixed-mirror-not-committed", "helper-skipped", "1066624", plus all seven KEEP_PATHS strings.
+
+  Fact-side requirements (not of the row but of committed bytes elsewhere):
+  - S211: scout contains "fetched successfully", "still-live", "absent"; spot contains "HTTP 200", "still-live".
+  - WORDS: quote_words(old_lesson)==20; QUOTE string in old_lesson; "18 words" in old_lesson.
+  - MIRROR: spot contains "11 symlinks", "84 regular files"; fleet report contains "symlink tree".
+  - KEEP: "1066624" in spot; disp_blob matches; html paths untracked; mirror path untracked.
+  - Global: lesson blob and report blob unchanged.
+
+  Now, for the Gate quarantine table (### Quarantine hand-check): 7 rows (S200, S202, S206, S210, S211, S224, S230). For each, check: URL? verdict? reason? flip?
+
+  | id | URL? | verdict? | reason? | flip? |
+  - S200: URL https://arxiv.org/abs/2312.07104 ✓; verdict "absent" ✓; reason (DOI cell does not occur...) ✓; flip "a located sentence from that page replaces the cell" ✓.
+  - S202: URL docs.docker.com ✓; verdict "present, not appended" ✓; reason ✓; flip "an admitted entry cites it" ✓.
+  - S206: URL alibabacloud ✓; verdict "present, not appended" ✓; reason ✓; flip "an in-province entry cites it" ✓.
+  - S210: URL unsloth.ai ✓; verdict "absent" ✓; reason ✓; flip ✓.
+  - S211: URL github.com/AaronYang238/llm/blob/... ✓; verdict "absent" ✓; reason ✓; flip ✓.
+  - S224: URL docs.vllm.ai ✓; verdict "quote not located" ✓; reason ✓; flip ✓.
+  - S230: URL raw.githubusercontent ✓; verdict "present, covered by the lane's own row" ✓; reason ✓; flip ✓.
+
+  Count: 7 rows. All four elements present in every row.
+
+  Interesting cross-check: the lesson says "Seven kama rows" in the register and the quarantine table has 7 rows. Also S327 collision mention. Fine.
+
+  One potential defect to note: the C1 counter's S211 arm requires `"200" in row` — the row has "200" — and FORBIDDEN "429" absent — verified. But there's a subtle trap: FORBIDDEN is "429" as substring, and the S211 row contains "2026-10-24" — no. OK.
+
+  Another subtle check: `rows_of` requires the row line to START with "R35-S211:" etc. In the lesson, the lines start at column 0 (no leading spaces, not list markers). Verified from Read: lines 21, 23, 25, 27 start with the ids. Good. But wait — the Markdown renders them as plain paragraphs, not list items. Not a counter issue.
+
+  One more subtlety: `rows_of` iterates lines and checks `line.startswith(sid + ":")` — if a row id appears twice (two lines starting with the same id), the later one wins. Not the case here.
+
+  Also the "—" em-dashes: `holds` uses simple substring `in`, so em-dash whitespace doesn't matter. The KEEP row uses "—" separators but all tokens are present as substrings.
+
+  Wait — one more check for R35-KEEP: KEEP_PATHS includes ".ufo/waves/round-35/assimilation/validate/" — the row contains ".ufo/waves/round-35/assimilation/validate/" — yes ("mixed-mirror-not-committed .ufo/waves/round-35/assimilation/validate/ —"). Good.
+
+  And note: the row for KEEP contains both "docker-dockerfile.html" and "dockerfile.html"; `all(path in row ...)` — substring presence; "dockerfile.html" is also a substring of "docker-dockerfile.html"? No — "docker-dockerfile.html" contains "dockerfile.html" as substring ("docker-dockerfile.html" → the last 15 chars "dockerfile.html"). Actually yes it does contain it as a substring, but the row also contains the standalone path anyway, so fine.
+
+  Now, should I also verify with an actual measured run? The calibrated move: write a scratch Python script in my seat dir that imports the counter module and evaluates the row-side token requirements against the draft bytes. Also possibly run the full counter on a sandbox clone. The task is judged on calibration. Let me do:
+
+  1. Scratch script: import tools/round36-statement-audit.py, read the draft lesson from the working tree, run rows_of + the token checks, print results. This gives measured confirmation.
+
+  2. Optionally, sandbox clone + commit + run the real counter for the full met verdict. But careful: the counter reads `git show tip:corpus/lessons/round-36.md` — in a sandbox clone where I commit the current working tree, it would read the committed draft. It also reads scout/spot/old_lesson/report facts from the tip and FLEET HEAD. If the working tree also contains other drafts not yet committed (SOURCES.md rows etc.), committing everything in the clone would test with those too. For the C1 arm, only the lesson matters plus the r35 facts which are already committed at base. Hmm — but is the draft lesson the only uncommitted file relevant? The working tree may have uncommitted changes to committed files, which could alter git show results vs the lane tip. For safety, in the clone I could commit ALL working-tree files as-is — that mirrors "the tip when the L1 commits". Actually the cleanest sandbox test of "the row-side tokens": commit the whole working tree in the clone at the lane's current HEAD (the lane is a jj repo though — "the lane jj state" must not be mutated; a clone is separate, fine).
+
+  Is cloning mutating the lane? `git clone` is read-only on the source. But wait — this is a jj-managed repo (colocated?). A git clone of it just reads .git. That's fine and read-only on the lane. Actually `git clone /path` runs `git upload-pack` on the source — read-only. OK.
+
+  But hold on — do I even need the full counter run? My task: (a) quarantine table row audit — pure reading; (b) corrections token audit — token lists from the script. A measured token check via a scratch script suffices and is exactly scoped. The full counter run would additionally test fact-side predicates, which is C1's job (frozen claim C1 says 7→7 already; do-not-retarget). Running the full counter in a sandbox could produce a different result than the frozen claim if working-tree facts differ, and then I'd be "retargeting C1" — no, reporting a discrepancy wouldn't change the predicate. It could be valuable as residual risk info. But scope discipline ("finish early", "judged on calibration") — the sandbox run is one cheap command chain and gives a measured met True/False for the draft as committed-in-clone. I think it's worth it: it's the single canonical runtime check (Godspeed: verify one canonical runtime).
+
+  Let me plan the parallel batch:
+
+  Batch 1 (now):
+  - Bash: check lane git state (read-only): `git -C lane status --porcelain | head`, `git -C lane rev-parse HEAD`, current branch.
+  - Bash: mkdir seat dir and report dir.
+  - Also check whether there's a quarantine table beyond the one under "### Quarantine hand-check" — the task says "## Gate quarantine table". The lesson has "## Gate" section containing "### Quarantine hand-check" with the table. That's the one. 7 rows.
+
+  Batch 2:
+  - Write scratch script, run token audit.
+  - Sandbox clone + add/commit + run counter --tip HEAD. Hmm, "Never run git add/commit..." — with the carve-out sentence. I'll re-read the RULES.md file mentioned (/home/vgpnk/.omp/agent/RULES.md) to check tool-install rules; the task says "You may install or upgrade tools that help the task — read RULES.md first". I don't need new tools; python3 and git are present. I can skip installing anything. Reading RULES.md is conditioned on installing; I won't install, so optional. But it might also contain bounds clarifications. Cheap to read in parallel.
+
+  Regarding the sandbox git commit: risk of violating "Never run git add/commit" if the carve-out is read narrowly. The bounds text explicitly says "A git-writing check runs on a sandbox clone in your seat directory, never in the lane." That sentence only makes sense as an allowance for git-writing checks in the sandbox. I'll do it, carefully confined to the clone path in my seat dir. Also must not mutate the lane jj state — a clone doesn't touch it. And the clone's .git config might have hooks? No, clone copies objects only; hooks aren't copied.
+
+  Wait, one more thing: is /home/vgpnk/Projects/shokunin/kama-shokunin a git repo with commits? The lesson says base e5a8ecef... and tip will be some commit. The counter uses `git -C repo show` and `rev-parse`, `ls-tree`. And FLEET repo for the r35 report. Fine.
+
+  Also — the draft bytes: the task says the L1 "has just written into the lane working tree" the draft. So the working tree has uncommitted changes to corpus/lessons/round-36.md, corpus/knowledge/sglang-native-route-deprecation.md, corpus/SOURCES.md, corpus/QUALITY.md, corpus/README.md. For the sandbox counter run, the relevant committed-at-tip file is corpus/lessons/round-36.md — I must commit the draft version of it in the clone (git add -A then commit in clone = the whole working tree, which includes all drafts — that matches what the L1's eventual commit will look like).
+
+  Edge: If the lane working tree contains other stray modifications, committing them in the sandbox is harmless (sandbox only).
+
+  Let me also double check the "forbidden token 429" subtlety: does any of the four rows contain the substring "429"? Let me carefully scan each again, character by character for digit runs:
+
+  Row S211 (line 21): digits: "35" (R35), "211", "95", "118", "200", "2026-10-24", "200", "35" (round-35), "35" again. "429" — none. Wait, "2026-10-24": 2026, 10, 24. No.
+
+  Row WORDS (line 23): "35", "327", "20", "18", "428f1f8a0e8871022f7c1e8ea47e50ba5a8d6412", "20", "25". Hash contains: let me scan for "42": positions — "428f..." has "42" then "8f" → "428" not "429". "...7e50ba5a8d6412": "6412" → "641","412". No "429". Also "wc -w" no.
+
+  Row MIRROR (line 25): "35", "11", "84", "36", "36". No "429".
+
+  Row KEEP (line 27): "35", "35"... "1994", "125", "35", "11", "84", "1066624", "1", "35". "1994" contains "994" — no "429". "1066624": "106","066","662","624" — no "429". Good.
+
+  All clear. But I'll confirm measured via script.
+
+  Also check: does any of the four rows contain "200" requirement only for S211 — yes it does.
+
+  Now the fact-side I can also measure in the sandbox run. Good.
+
+  Another cross-check worth doing (cheap): the quarantine table claims S-id set {S200, S202, S206, S210, S211, S224, S230} — the lesson says "wave-2 seats re-opened S211, S230, S224, S202 and S210 independently" — consistent subset. And "Seven kama rows, each carrying an S-id; the class cell in every one of them reads payload-absent" — that's about the campaign register, not verifiable in scope (register is in shokuknow? "Never write into /home/vgpnk/Projects/shokuknow" — reading may be allowed but not needed).
+
+  Now the table for my report: For the Gate quarantine table, count = 7; each row: URL yes/no, verdict yes/no, reason yes/no, flip yes/no. All yes.
+
+  For Corrections: exact tokens per row with presence. I'll list:
+
+  R35-S211 row-required tokens:
+  1. Row discovery: line starts with `R35-S211:` — present.
+  2. `ScoutQuarantineS211.md` — present (line 21).
+  3. `still-live` — present.
+  4. `200` — present (twice).
+  5. NOT `429` — absent (passes).
+  Fact-side (for completeness): scout: `fetched successfully`, `still-live`, `absent`; spotcheck: `HTTP 200`, `still-live`.
+
+  R35-WORDS:
+  1. `R35-WORDS:` prefix — present.
+  2. `20 words` — present ("is 20 words, not the 18 words").
+  3. NOT `429` — absent.
+  Fact-side: `quote_words(old_lesson) == 20` (marker `Quote: "`), `QUOTE` exact sentence in old_lesson, `18 words` in old_lesson.
+
+  R35-MIRROR:
+  1. `R35-MIRROR:` prefix — present.
+  2. `mixed` — present.
+  3. `11` — present.
+  4. `84` — present.
+  5. NOT `429` — absent.
+  Fact-side: spotcheck `11 symlinks`, `84 regular files`; fleet report `symlink tree`.
+
+  R35-KEEP:
+  1. `R35-KEEP:` prefix — present.
+  2. `seat-log-flush` — present.
+  3. `overwrite-not-committed` — present.
+  4. `mixed-mirror-not-committed` — present.
+  5. `helper-skipped` — present.
+  6. `1066624` — present.
+  7. Seven paths — all present.
+  8. NOT `429` — absent.
+  Fact-side: `1066624` in spotcheck; ExecDisposition blob = 9307c5...; both html paths untracked at tip; `.ufo/waves/round-35/assimilation/validate/` prefix untracked.
+
+  Global: r35 lesson blob at tip == 428f1f8a...; fleet report blob at FLEET HEAD == 6d8f3173....
+
+  One nuance on FORBIDDEN: `FORBIDDEN in row` where row is the full line. Also note the check order: `if FORBIDDEN in row or not holds(...)` — same thing.
+
+  Another nuance worth flagging as a finding: the counter counts `uncorrected` for ids with no row. Since all four rows exist in the draft, uncorrected=0. But note: `rows_of` scans ALL lines of the lesson — the Corrections rows are at lines 21/23/25/27. Any other line starting with "R35-..." + ":" would also be picked up. None.
+
+  Potential finding candidates (severity):
+  - None blocking so far, pending measured run. Residual risks: the draft is uncommitted, so the counter at the current tip reports uncorrected 4 (measured?). Actually let me run the counter at the current lane tip (read-only run — the script only reads via git show; running it against the lane repo is read-only, permitted). That's a measured fact: at current tip, met False with uncorrected 4 (because the lesson isn't committed yet). That's expected behavior, not a defect — the C1 control already printed met False for noop. The frozen claim C1 7→7 is about the future commit. I shouldn't overclaim.
+
+  - A real potential defect: FORBIDDEN "429" as a bare substring — if a correction row legitimately mentioned HTTP 429 it'd be refused; that's by design. Not a draft defect.
+
+  - Another: `holds` for R35-WORDS requires `"18 words" in old_lesson` — the row says the r35 paragraph records "18 words"; if the r35 lesson at tip doesn't literally contain "18 words", the arm fails. Measured in sandbox run.
+
+  - Another subtle one: `quote_words(old_lesson)` looks for the FIRST occurrence of `Quote: "` in the whole r35 lesson. If the r35 lesson has an earlier `Quote: "` before the S327 one, the count would be of a different quote. The lesson draft claims all three methods return 20. Sandbox run measures the counter's own extractor.
+
+  Let me also double check the Gate quarantine table against the task phrasing: "For every row in its ## Gate quarantine table: does it name a URL, a verdict, a reason and a flip condition?" — the table columns are | id | verdict | reason | flip |. URLs are embedded in reason cells. Each row: URL present? yes (https://...). Verdict cell: S200 "absent"; S202 "present, not appended"; S206 "present, not appended"; S210 "absent"; S211 "absent"; S224 "quote not located"; S230 "present, covered by the lane's own row". Reason: all non-empty. Flip: all non-empty.
+
+  So: 7 rows, 7/7 with all four elements. Answer: yes for every row.
+
+  Now let me also verify these are indeed the rows of the "## Gate quarantine table" — the section "## Gate" contains a subsection "### Quarantine hand-check (register not edited)" with the table. Yes.
+
+  Now execute. Batch 1 (parallel):
+  1. Bash: lane read-only state: `git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-parse HEAD && git -C ... status --porcelain | wc -l && git -C ... status --porcelain -- corpus/lessons/round-36.md`
+  2. Bash: mkdir -p seat dir.
+  3. Read RULES.md (cheap, in parallel).
+
+  Then Batch 2:
+  - Write scratch audit script into seat dir; run it (measured token audit against draft bytes).
+  - Sandbox clone into seat dir; `git -C clone add -A; git -C clone commit -m sandbox`; run counter --repo clone --tip HEAD; also run counter --repo lane --tip <lane HEAD> (read-only) to record the no-commit behavior. Also run the selftest? `--selftest` flag exists — run it once on the clone: measures the counter's internal guards (empty → uncorrected 4; bad row → false_corrections ≥ 1; words=20). That's a cheap measured calibration of the counter itself.
+
+  Careful with the clone: `git clone --no-hardlinks /lane /seat/sandbox` to avoid any hardlink mutation risk (hardlinked objects could in theory be modified by gc etc.; --no-hardlinks is safer and cheap).
+
+  Also: the clone will include the working tree? No — clone gives a clean checkout of HEAD, not the working tree changes. So in the clone I must copy the draft files from the lane working tree before committing. `cp` the five draft files (lesson, knowledge entry, SOURCES.md, QUALITY.md, README.md) into the clone... actually for C1 only the lesson matters, but copying all five mirrors the eventual commit; for C2, SOURCES.md + knowledge file + README matter. My scope is the lesson only; but copying all five is harmless and makes the sandbox run representative. Actually — careful: don't overreach; copying exactly the five named drafts is fine.
+
+  Hmm wait — will `git add -A` in the clone also pick up files present in the lane working tree that are untracked? Clone checkout only contains tracked-at-HEAD files; then I cp the 5 drafts over tracked paths. If any of the 5 is untracked (new file — the knowledge entry is new), cp creates it and git add -A adds it. Good.
+
+  Then run: `python3 tools/round36-statement-audit.py --repo <clone> --tip $(git -C clone rev-parse HEAD)`.
+
+  Also run coverage audit? C2 is frozen and not my task. Skip. My task is lesson-only. The sandbox C1 run is the measured verification for my corrections table. That's enough. Actually, should I even run the sandbox C1? The task says "list the exact tokens the C1 counter requires and say whether the row has each" — row-side only. The sandbox run measures the fact-side too, which turns my "inferred" table into a measured "met" verdict — a calibration win, cheap. Do it.
+
+  One more check: the counter script's `load_facts` reads the fleet report from FLEET HEAD — read-only git on the fleet repo. Running the script with --repo clone reads the fleet repo read-only. Permitted ("Never mutate the fleet repo" — reading is fine).
+
+  Report structure:
+  - Scope note (what was read, what was measured vs inferred).
+  - Table 1: Gate quarantine rows (7), columns: row id, URL named?, verdict named?, reason named?, flip named?. Plus count line.
+  - Table 2: Corrections tokens per row: token, required-by (counter), present?
+  - Measured runs: selftest output, sandbox met output, current-tip output.
+  - Findings by severity (probably none blocking; note any).
+  - Residual risk and verification gaps.
+
+  Findings — let me think hard about whether there are any genuine defects in the draft relative to the counter:
+
+  1. All four rows carry required tokens → no missing-token defect.
+
+  2. Nuance: the counter requires the correction rows to be at the TIP version of corpus/lessons/round-36.md. Draft-only status is expected mid-round; not a defect.
+
+  3. Potential latent trap: FORBIDDEN substring "429" vs the KEEP row's "1994" — no match. The WORDS row's hash — no match. OK.
+
+  4. Potential trap: `rows_of` uses `line.startswith(sid + ":")` — in the draft, the four rows are separated by blank lines (paragraphs). Markdown-wise, "R35-S211: ..." renders as a paragraph. Fine.
+
+  5. Trap: In the KEEP row, the paths are separated from labels by spaces; `all(path in row)` substring — fine.
+
+  6. The MIRROR row requires literal "mixed" — present as "a mixed mirror". Also note "mixed-mirror-not-committed" contains "mixed" too. Fine.
+
+  7. S211 row requires literal "200" — "HEAD 200" and "HTTP 200". Fine.
+
+  8. WORDS row requires literal "20 words" (with space). Row: "is 20 words, not". Also "all three return 20" — no " words" after, but the first occurrence suffices. Fine.
+
+  Now fact-side risks (measured in sandbox): if any fact-side check fails, met=False — that would contradict frozen C1 claim 7→7... but the frozen claim is the target for the eventual committed state; the sandbox commit of current working tree should equal that state (assuming L1 commits exactly these bytes). If the sandbox run says met True, that's strong calibration evidence.
+
+  Let me now also double-check the QUOTE constant against the r35 lesson (the sandbox run measures it, but let me look): QUOTE = "When the limit is reached, new requests are rejected with HTTP 503 so the client can retry on another instance." — needs to be in old_lesson verbatim. Measured via run.
+
+  Also `"18 words" in old_lesson` — the draft's WORDS row asserts the r35 paragraph records 18 words. Measured via run.
+
+  Alright, execute.
+
+  Also note: report write is to /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLessonGate.md. Scratch in .../out/RevLessonGate/. Wait — is the seat name "RevLessonGate"? The report filename is RevLessonGate.md; seat dir pattern <YourSeatName> — I'll use RevLessonGate as the seat name; the report file sits at out/RevLessonGate.md (one level above the scratch dir, matching the trailer path). The trailer path is .ufo/waves/round-36/w3/out/RevLessonGate.md — that's the allowed write. Scratch: .ufo/waves/round-36/w3/out/RevLessonGate/. Good.
+
+  Batch 1 now: mkdir seat dir; git state of lane; read RULES.md.
+
+  Actually the instructions say to fire independent calls in parallel. Let me do:
+  - Bash 1: mkdir -p both paths (seat scratch dir; out dir exists after mkdir -p of scratch's parent).
+  - Bash 2: git -C lane rev-parse HEAD; git -C lane status --porcelain (limited output); git -C lane log -1 --format=%H.
+  - Read RULES.md.
+
+  Then batch 2: write scratch script (Write tool — wait, I have no Write tool listed! Tools: Bash, Glob, Grep, Read. So file creation must go through Bash heredoc/printf. The system prompt says prefer Write tool, but it's not available here. Use `cat > file <<'EOF'` via Bash.)
+
+  Then batch 3: run scratch script + sandbox clone chain.
+
+  Let me write the scratch script carefully — it must import the counter module without executing main (import is safe; main only runs under __main__... wait, the script has `if __name__ == "__main__":` guard, so import is safe).
+
+  Scratch script plan (measured, row-side only):
+  ```python
+  import importlib.util, sys
+  spec = importlib.util.spec_from_file_location("c1", "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round36-statement-audit.py")
+  c1 = importlib.util.module_from_spec(spec); spec.loader.exec_module(c1)
+  lesson = open("/home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-36.md").read()
+  rows = c1.rows_of(lesson)
+  req = {
+   "R35-S211": ["ScoutQuarantineS211.md", "still-live", "200"],
+   "R35-WORDS": ["20 words"],
+   "R35-MIRROR": ["mixed", "11", "84"],
+   "R35-KEEP": list(c1.KEEP_PATHS) + ["seat-log-flush", "overwrite-not-committed", "mixed-mirror-not-committed", "helper-skipped", "1066624"],
+  }
+  for sid in c1.IDS:
+      row = rows.get(sid)
+      print(sid, "row_found", row is not None)
+      if row is None: continue
+      print("  forbidden_429_present:", "429" in row)
+      for tok in req[sid]:
+          print("  token", repr(tok), "present:", tok in row)
+  print("uncorrected-if-committed-as-is (row-side only):", 4 - len(rows))
+  ```
+  Wait — importing the module executes module top-level code: constants only + function defs. Pathlib import etc. Safe.
+
+  Careful: exec_module runs top-level, no side effects beyond constants. Good.
+
+  Sandbox chain:
+  ```
+  SEAT=/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLessonGate
+  git clone --no-hardlinks --quiet /home/vgpnk/Projects/shokunin/kama-shokunin "$SEAT/sandbox"
+  cp lane/corpus/lessons/round-36.md clone/corpus/lessons/round-36.md
+  cp lane/corpus/knowledge/sglang-native-route-deprecation.md clone/corpus/knowledge/
+  cp lane/corpus/SOURCES.md clone/corpus/SOURCES.md
+  cp lane/corpus/QUALITY.md clone/corpus/QUALITY.md
+  cp lane/corpus/README.md clone/corpus/README.md
+  git -C clone add -A
+  git -C clone -c user.email=sandbox@seat -c user.name=sandbox commit -m "w3 sandbox: draft bytes" --quiet
+  python3 tools/round36-statement-audit.py --repo clone --tip $(git -C clone rev-parse HEAD); echo "exit=$?"
+  python3 tools/round36-statement-audit.py --repo clone --tip HEAD --selftest; echo "selftest_exit=$?"
+  python3 tools/round36-statement-audit.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip $(git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-parse HEAD); echo "tip_exit=$?"
+  ```
+
+  Hmm — one concern: `git clone` of the lane. The lane is a jj repo possibly colocated (.jj + .git). git clone reads .git only — fine, read-only on lane. But wait: does the lane have uncommitted working-tree state that clone won't copy? Yes — that's why I cp the five drafts. Also the scratch mirror `.ufo/waves/round-36/assimilation/` — untracked in lane; the KEEP arm checks `.ufo/waves/round-35/assimilation/validate/` NOT tracked (mirror_clear) — in the clone after add -A, would untracked lane files be included? No — clone checkout only has HEAD-tracked files; untracked lane files are not copied by clone. So `git add -A` in clone adds only my 5 cp'd files. But careful: round-35 leftovers tracked status at lane HEAD is what matters — measured faithfully in the clone. Good.
+
+  But hmm, one more: the r35 html files and validate/ dir — if they were committed in some earlier lane commit, then at tip they'd be tracked and mirror_clear would fail. The run measures it.
+
+  Also: the counter's `load_facts` reads scout/spot/old_lesson from the clone tip (after my commit). If the lane working tree modified round-35 files, I'm not cp-ing them, so clone tip keeps committed versions — which is what the L1's commit would contain (they must not modify r35 bytes; blob pins enforce it). Fine.
+
+  Edge: cp of knowledge file — target dir exists in clone (corpus/knowledge tracked with other entries). Fine.
+
+  Then the report. Also: per system prompt, prefer Read for known paths — done. Use Bash heredoc for the script and the final report (no Write tool available).
+
+  One more consideration on "Never run git add/commit": I've reasoned the sandbox carve-out authorizes it. The clone lives in my seat dir; no lane/fleet mutation. I'll note this in the report (moves used).
+
+  Let me also grab the quarantine table's exact row count via Grep for the report: count lines starting with "| S2" between the table header and section end — trivial, 7 rows confirmed by Read (lines 51–57). Row ids: S200, S202, S206, S210, S211, S224, S230.
+
+  Also double check each quarantine row has https:// URL: S200 arxiv ✓, S202 docs.docker.com ✓, S206 alibabacloud ✓, S210 unsloth.ai ✓, S211 github.com ✓, S224 docs.vllm.ai ✓, S230 raw.githubusercontent.com ✓. All four columns filled. 
+
+  Now fire batch 1.
+
+• Axes for this attack: (1) quarantine-table completeness per row (URL / verdict / reason / flip), (2) exact C1-required tokens per Corrections row vs draft bytes, (3) measured (not inferred) confirmation via the actual counter. Firing independent reads and setup in parallel.seat-dir-ok
+9014843cb7de8fbe87a97954c13832b67d55f046
+---
+ M .ufo/waves/round-35/w1/out/ConnSibling/seat.log
+ M .ufo/waves/round-35/w1/out/ExecDisposition.md
+ M .ufo/waves/round-35/w1/out/ExecDisposition/seat.log
+ M .ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log
+ M corpus/QUALITY.md
+ M corpus/README.md
+ M corpus/SOURCES.md
+?? .ufo/waves/round-35/assimilation/validate/
+?? .ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html
+?? .ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html
+?? .ufo/waves/round-36/assimilation/append-block.md
+?? .ufo/waves/round-36/assimilation/correction-lines.md
+?? .ufo/waves/round-36/assimilation/guard/re-col0-collisions
+?? .ufo/waves/round-36/assimilation/guard/re-col0-ids
+?? .ufo/waves/round-36/assimilation/guard/re-space-collisions
+?? .ufo/waves/round-36/assimilation/guard/re-space-ids
+?? .ufo/waves/round-36/assimilation/guard/re-staged-ids
+?? .ufo/waves/round-36/assimilation/quarantine-slice
+?? .ufo/waves/round-36/assimilation/sglang-native-route-deprecation.md
+?? .ufo/waves/round-36/assimilation/validate-census.out
+?? .ufo/waves/round-36/assimilation/validate/
+?? .ufo/waves/round-36/census-worktree.out
+?? .ufo/waves/round-36/w1/out/ConnSibling.md
+?? .ufo/waves/round-36/w1/out/ConnSibling/
+?? .ufo/waves/round-36/w1/out/CriticC1Noop.md
+?? .ufo/waves/round-36/w1/out/CriticC1Noop/
+?? .ufo/waves/round-36/w1/out/CriticC2OldId.md
+?? .ufo/waves/round-36/w1/out/CriticC2OldId/
+?? .ufo/waves/round-36/w1/out/CriticProvince.md
+?? .ufo/waves/round-36/w1/out/CriticProvince/
+?? .ufo/waves/round-36/w1/out/ExecC1.md
+?? .ufo/waves/round-36/w1/out/ExecC1/
+?? .ufo/waves/round-36/w1/out/ExecC2.md
+?? .ufo/waves/round-36/w1/out/ExecC2/
+?? .ufo/waves/round-36/w1/out/ExecCensus.md
+?? .ufo/waves/round-36/w1/out/ExecCensus/
+?? .ufo/waves/round-36/w1/out/ExecCollision.md
+?? .ufo/waves/round-36/w1/out/ExecCollision/
+?? .ufo/waves/round-36/w1/out/MutBlob.md
+?? .ufo/waves/round-36/w1/out/MutBlob/
+
+
+• Interesting — the lane git status shows:
+  - `M corpus/lessons/round-36.md` is NOT in the modified list... wait, let me look. The porcelain output shows M on QUALITY.md, README.md, SOURCES.md, and round-35 files — but NOT corpus/lessons/round-36.md and NOT corpus/knowledge/sglang-native-route-deprecation.md. I only saw the first 40 lines (sed -n '1,40p'). The list was truncated. Let me get the full list filtered for corpus/.
+
+  Also important: `M .ufo/waves/round-35/w1/out/ExecDisposition.md` — MODIFIED in the working tree! The C1 counter's R35-KEEP arm pins disp_blob = 9307c5d6... at tip. If the L1 commits the modified ExecDisposition.md, the blob changes and C1 fails. But wait — the draft lesson says "overwrite-not-committed .ufo/waves/round-35/w1/out/ExecDisposition.md — the working-tree file replaces the committed 1994-line thinking dump with a 125-line late write, and committing it would replace landed evidence" — so the plan is to NOT commit it. But if the L1 does `git add -A` when committing, it would be committed and C1 would fail. That's a real hazard worth flagging — the sandbox run will show it.
+
+  Hmm wait, but actually let me re-check: the KEEP arm requires `disp_blob == DISP_BLOB` where disp_blob = git_blob(repo, tip, ".ufo/waves/round-35/w1/out/ExecDisposition.md"). If the working-tree modification gets committed, blob differs → false_corrections for R35-KEEP → met False. The lesson itself says this file must stay overwrite-not-committed. So the commit must NOT include it. My sandbox test: if I cp only the five draft corpus files and commit, disp_blob stays pinned and C1 should pass. If I committed everything (add -A in a clone of the working tree), it would fail — but clone doesn't carry uncommitted changes anyway unless I cp them. So my sandbox approach (cp 5 drafts only) tests the intended-commit scenario.
+
+  Also note: `M .ufo/waves/round-35/w1/out/*seat.log` files are modified in the working tree — those are tracked! The KEEP arm's KEEP_PATHS include those three seat.logs — they must be "in row" only, no blob pin on them. But html_clear and mirror_clear require the html paths and the r35 validate/ dir to be UNTRACKED at tip — currently `??` untracked, good, as long as the L1 doesn't commit them. The draft lesson says mirror-not-committed and helper-skipped... but wait, it says "The round-36 scratch mirror at .ufo/waves/round-36/assimilation/validate/ is a separate plain copy and is committed as wave evidence" — so wave evidence commits WILL include .ufo/waves/round-36 files but must NOT include .ufo/waves/round-35/assimilation/validate/ nor the two html files nor the modified ExecDisposition.md (and modified seat.logs? Those aren't pinned — only their paths in the row text. But committing modified r35 seat.logs would change wave evidence... not pinned by C1 though).
+
+  This is exactly the kind of concrete defect/finding my report should note as residual risk: a naive `git add -A` at commit time breaks C1 via disp_blob (and would also commit the r35 mirror + html files, breaking html_clear/mirror_clear). But careful — is this in my scope? My task: quarantine table audit + corrections token audit. The token audit passes; the commit-time hazard is a verification-gap/residual-risk note, in scope as residual risk. Good, cheap to include with evidence (status output shows M on ExecDisposition.md).
+
+  Also the modified round-35 seat.logs: not pinned; only informational.
+
+  Now let me get the full porcelain list filtered for corpus/ and lessons to see whether round-36.md and the knowledge file are tracked-modified or untracked:
+
+  - `git status --porcelain -- corpus/` and `-- corpus/lessons/round-36.md corpus/knowledge/`.
+
+  Also verify blob pins: `git rev-parse HEAD:corpus/lessons/round-35.md` should be 428f1f8a...; fleet report blob `git -C /home/vgpnk/Projects/shokunin rev-parse HEAD:.ufo/reports/round-35/kama.md` should be 6d8f3173...; ExecDisposition committed blob `git rev-parse HEAD:.ufo/waves/round-35/w1/out/ExecDisposition.md` should be 9307c5d6....
+
+  Now batch 2 (parallel):
+  1. Full corpus status + blob pin checks (read-only).
+  2. Write scratch token-audit script and run it.
+  3. Sandbox clone + cp + commit + run counter (this depends on nothing from 1 or 2 — can run in parallel).
+
+  Let me write these as three Bash calls in one batch. The sandbox one is a chain; give it a decent timeout (clone of a repo with lots of wave files could take a bit — 120s).
+
+  Scratch script via heredoc. Sandbox via chained commands. Let me be careful with quoting.
+
+  Call A (read-only lane facts):
+  ```
+  cd /home/vgpnk/Projects/shokunin/kama-shokunin
+  git status --porcelain -- corpus/
+  echo ---
+  git rev-parse HEAD:corpus/lessons/round-35.md
+  git -C /home/vgpnk/Projects/shokunin rev-parse HEAD:.ufo/reports/round-35/kama.md
+  git rev-parse HEAD:.ufo/waves/round-35/w1/out/ExecDisposition.md
+  ```
+
+  Call B (measured row-side token audit):
+  heredoc python script into seat dir, run it.
+
+  Call C (sandbox canonical run):
+  ```
+  SEAT=/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLessonGate
+  LANE=/home/vgpnk/Projects/shokunin/kama-shokunin
+  git clone --no-hardlinks --quiet "$LANE" "$SEAT/sandbox" && \
+  cp "$LANE/corpus/lessons/round-36.md" "$SEAT/sandbox/corpus/lessons/round-36.md" && \
+  cp "$LANE/corpus/knowledge/sglang-native-route-deprecation.md" "$SEAT/sandbox/corpus/knowledge/sglang-native-route-deprecation.md" && \
+  cp "$LANE/corpus/SOURCES.md" "$SEAT/sandbox/corpus/SOURCES.md" && \
+  cp "$LANE/corpus/QUALITY.md" "$SEAT/sandbox/corpus/QUALITY.md" && \
+  cp "$LANE/corpus/README.md" "$SEAT/sandbox/corpus/README.md" && \
+  git -C "$SEAT/sandbox" add -A && \
+  git -C "$SEAT/sandbox" -c user.email=w3sandbox@seat -c user.name=w3sandbox commit --quiet -m "w3 sandbox: round-36 draft bytes" && \
+  TIP=$(git -C "$SEAT/sandbox" rev-parse HEAD) && echo "sandbox tip $TIP" && \
+  python3 "$LANE/tools/round36-statement-audit.py" --repo "$SEAT/sandbox" --tip "$TIP"; echo "c1_exit=$?"; \
+  python3 "$LANE/tools/round36-statement-audit.py" --repo "$SEAT/sandbox" --tip "$TIP" --selftest; echo "selftest_exit=$?"; \
+  python3 "$LANE/tools/round36-statement-audit.py" --repo "$LANE" --tip 9014843cb7de8fbe87a97954c13832b67d55f046; echo "lane_tip_exit=$?"
+  ```
+
+  Wait — careful with `;` after the first audit: `cmd; echo exit=$?` — $? captures the audit exit. But since the && chain before ends with `&& python3 ... ; echo`, if the chain fails earlier, $? is from the failed step. Acceptable; I'll read output carefully.
+
+  One concern: `git clone` of the lane — will it clone the .jj workspace? No, git clone copies the git object store and checks out HEAD tree. Untracked/ignored files not copied. Good. Does the lane repo have submodules or LFS? Unlikely. Size: lots of wave html files (~1MB each, a few) — clone should be quick.
+
+  Timeout: 120s for call C.
+
+  Note: running the audit against the LANE repo with --tip HEAD is read-only (git show/rev-parse/ls-tree only). Fine.
+
+  The sandbox run with tip = my sandbox commit: load_facts reads scout/spot/old_lesson from sandbox tip (committed versions — unchanged from lane HEAD since I only cp'd 5 corpus files), report from FLEET HEAD, tracked set from sandbox ls-tree. Since I add -A only the 5 files, r35 leftovers stay untracked → html_clear and mirror_clear hold. disp_blob at sandbox tip = committed blob = 9307c5d6... (unmodified in clone). So expected: uncorrected 0, false_corrections 0, lesson_unchanged 1, report_unchanged 1, met True — IF all fact-side token checks hold.
+
+  Also the selftest on the same tip.
+
+  Let me fire all three in parallel now.
+
+• Lane state noted: draft corpus files modified/untracked, and — important — `.ufo/waves/round-35/w1/out/ExecDisposition.md` is **tracked-modified** in the working tree, which the C1 counter pins by blob. Now the measured batch: row-side token audit script, blob-pin facts, and the canonical sandbox counter run (git-writing confined to the seat-dir clone, per bounds). M corpus/QUALITY.md
+ M corpus/README.md
+ M corpus/SOURCES.md
+?? corpus/knowledge/sglang-native-route-deprecation.md
+?? corpus/lessons/round-36.md
+---
+lesson_blob=428f1f8a0e8871022f7c1e8ea47e50ba5a8d6412
+report_blob=6d8f317378ba6048d8a3dfb4944adaf24f341eea
+disp_blob=9307c5d61c1942857a17cb259b4313460b37d0da
+R35-S211: row_found=True
+  forbidden_token_429_present=False
+  token 'ScoutQuarantineS211.md' present=True
+  token 'still-live' present=True
+  token '200' present=True
+R35-WORDS: row_found=True
+  forbidden_token_429_present=False
+  token '20 words' present=True
+R35-MIRROR: row_found=True
+  forbidden_token_429_present=False
+  token 'mixed' present=True
+  token '11' present=True
+  token '84' present=True
+R35-KEEP: row_found=True
+  forbidden_token_429_present=False
+  token '.ufo/waves/round-35/w1/out/ConnSibling/seat.log' present=True
+  token '.ufo/waves/round-35/w1/out/ExecDisposition/seat.log' present=True
+  token '.ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log' present=True
+  token '.ufo/waves/round-35/w1/out/ExecDisposition.md' present=True
+  token '.ufo/waves/round-35/assimilation/validate/' present=True
+  token '.ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html' present=True
+  token '.ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html' present=True
+  token 'seat-log-flush' present=True
+  token 'overwrite-not-committed' present=True
+  token 'mixed-mirror-not-committed' present=True
+  token 'helper-skipped' present=True
+  token '1066624' present=True
+rows_found_total: 4
+sandbox_tip=5b7c909465f9aaaab8c0abef3cddf3341e432ee2
+uncorrected 0 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met True
+c1_exit=0
+SELFTEST empty_met=False bad_met=False words=20 pass=1
+empty uncorrected 4 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met False
+selftest_exit=0
+uncorrected 4 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met False
+lane_tip_exit=1
+
+
+• All measured results are in:
+
+  1. Row-side token audit: all 4 rows found, all required tokens present, forbidden "429" absent from all four.
+  2. Blob pins at lane HEAD match the counter's frozen constants exactly (428f1f8a…, 6d8f3173…, 9307c5d6…).
+  3. Sandbox canonical run: committing the draft bytes (5 corpus files only) → `uncorrected 0 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met True`, exit 0. So fact-side predicates all hold too (quote_words=20, QUOTE present, "18 words" in old lesson, spotcheck tokens, scout tokens, fleet report "symlink tree", 1066624 in spotcheck, html/mirror untracked, disp blob pinned).
+  4. Selftest passes (empty lesson → uncorrected 4/met False; bad row → caught; words=20).
+  5. Control at current lane tip: met False, uncorrected 4, exit 1 — as expected since the lesson isn't committed yet (matches the frozen noop control).
+
+  Quarantine table: 7 rows (S200, S202, S206, S210, S211, S224, S230), each with URL + verdict + reason + flip. All complete.
+
+  Findings/severity:
+  - No blocking defect found in the lesson bytes themselves.
+  - Residual risk / commit-time hazard: lane working tree has tracked-modified r35 files (`.ufo/waves/round-35/w1/out/ExecDisposition.md` M, three seat.logs M) and untracked r35 mirror + html files. A blanket `git add -A` at commit time would break C1 three ways: disp_blob pin (ExecDisposition.md), html_clear (two html files become tracked), mirror_clear (`.ufo/waves/round-35/assimilation/validate/` becomes tracked). My sandbox run deliberately committed only the five corpus drafts and passed; the L1's real commit must be scoped the same way. Evidence: git status output. This is exactly a concrete, actionable finding (severity: high for the commit step, not a draft-bytes defect). Note the draft lesson itself asserts these must not be committed (R35-KEEP row text) — the hazard is in the commit mechanics, not the bytes.
+  - Also worth noting: `rows_of` counts a "row" as any line starting with `<id>:`; exactly 4 such lines exist in the draft (no duplicates/late overrides). Measured: rows_found_total 4.
+  - Minor observation: the FORBIDDEN token is a bare substring "429"; any incidental "429" anywhere in a row (e.g., a hash) would false-flag. Current draft bytes contain none (measured per row). Not a defect; a counter property.
+  - The WORDS arm requires the literal string "20 words" (with space) — present once ("is 20 words, not"); also the second occurrence "return 20" lacks " words" but is not needed.
+
+  Verification gaps:
+  - I did not verify the campaign-register quarantine slice (7 kama rows / payload-absent classes) — the register lives outside the lane (shokuknow staged package read-only; slice derived via awk recipe). Out of my scope; recorded as gap.
+  - C2/coverage, registry rows S328/S329, QUALITY KQ45, README block: other seats' scope; not audited here.
+  - The sandbox commit is my construction of "the tip when the L1 commits"; if the L1's real commit includes more or fewer files (e.g., the modified ExecDisposition.md), C1 outcome changes. Measured only for the five-draft commit shape.
+
+  Honest labeling: measured = token audit, status/blob pins, sandbox run, selftest, lane-tip control. Inference = the L1's eventual commit shape; assumption that spotcheck/scout/fleet-report bytes at lane HEAD are what the counter sees at the real tip.
+
+  Now write the report at /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLessonGate.md with the two required tables, findings by severity, residual risk, verification gaps. Then stop.
+
+  Let me compose the report carefully.
+
+  Table 1 — Gate quarantine (### Quarantine hand-check), 7 rows:
+
+  | # | id | URL named? | verdict named? | reason named? | flip named? |
+  1 S200 — https://arxiv.org/abs/2312.07104 — absent — yes — yes
+  2 S202 — https://docs.docker.com/reference/compose-file/services/ — "present, not appended" — yes — yes ("an admitted entry cites it")
+  3 S206 — https://www.alibabacloud.com/help/zh/pai/deploy-an-llm/ — "present, not appended" — yes — yes ("an in-province entry cites it")
+  4 S210 — https://unsloth.ai/docs/jp/ji-chu/inference-and-deployment/sglang-guide — absent — yes — yes
+  5 S211 — https://github.com/AaronYang238/llm/blob/35b83cee12ae26f10b58d4163298352384503907/chapters/06-推理引擎.md — absent — yes — yes
+  6 S224 — https://docs.vllm.ai/en/v0.17.0/api/vllm/entrypoints/serve/instrumentator/health/ — "quote not located" — yes — yes
+  7 S230 — https://raw.githubusercontent.com/sgl-project/sglang/v0.5.22/python/sglang/srt/entrypoints/http_server.py — "present, covered by the lane's own row" — yes — yes
+
+  Count: 7. 7/7 complete.
+
+  Table 2 — Corrections tokens. Required tokens (row-side, exact from round36-statement-audit.py `holds()`/`score()`), per row, with measured presence. Also note fact-side requirements separately (not required of the row).
+
+  I'll write the report now via Bash heredoc. Keep it tight but complete. Then finish.
+
+• All measurements landed and they agree: row-side tokens complete, blob pins exact, sandbox canonical run `met True` exit 0, selftest pass, lane-tip control `met False` (lesson uncommitted yet). Writing the report.report-written
+107 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLessonGate.md
+
+
+• Report written. Final answer summary to the user, then stop. Keep it tight: tables recap, measured results, findings, residual risk. No further tool calls needed.
+
+• Report written to `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevLessonGate.md`. Summary:
+
+  ## Gate quarantine table — count: **7** (S200, S202, S206, S210, S211, S224, S230)
+
+  | id | URL? | verdict? | reason? | flip? |
+  |----|------|----------|---------|-------|
+  | S200 | yes (arxiv 2312.07104) | yes — absent | yes | yes |
+  | S202 | yes (docker compose services) | yes — present, not appended | yes | yes |
+  | S206 | yes (alibabacloud PAI) | yes — present, not appended | yes | yes |
+  | S210 | yes (unsloth sglang guide) | yes — absent | yes | yes |
+  | S211 | yes (github chapter blob) | yes — absent | yes | yes |
+  | S224 | yes (vllm health docs) | yes — quote not located | yes | yes |
+  | S230 | yes (sglang http_server.py) | yes — present, covered by S329 | yes | yes |
+
+  **7/7 rows complete** — every row names all four of URL, verdict, reason, flip condition.
+
+  ## Corrections rows vs exact C1 tokens (all measured against draft bytes via the counter module)
+
+  | row | exact tokens required by `round36-statement-audit.py` | has each? |
+  |-----|--------------------------------------------------------|-----------|
+  | R35-S211 | prefix `R35-S211:`; `ScoutQuarantineS211.md`; `still-live`; `200`; NOT `429` | all yes |
+  | R35-WORDS | prefix `R35-WORDS:`; `20 words`; NOT `429` | all yes |
+  | R35-MIRROR | prefix `R35-MIRROR:`; `mixed`; `11`; `84`; NOT `429` | all yes |
+  | R35-KEEP | prefix `R35-KEEP:`; `seat-log-flush`; `overwrite-not-committed`; `mixed-mirror-not-committed`; `helper-skipped`; `1066624`; all 7 KEEP_PATHS; NOT `429` | all yes |
+
+  ## Measured (canonical runtime)
+  - Sandbox clone in seat dir, five draft corpus bytes committed (tip `5b7c9094…`): **`met True`, exit 0** — row-side and fact-side arms all pass, blob pins (428f1f8a…/6d8f3173…/9307c5d6…) exact at lane HEAD.
+  - Selftest: `pass=1`. Lane-tip control (lesson uncommitted): `met False`, exit 1 — expected pre-commit state.
+
+  ## Findings
+  - **High (commit mechanics, not bytes):** `ExecDisposition.md` and three r35 seat.logs are tracked-**modified**, plus untracked r35 mirror/html in the working tree. A blanket `git add -A` at commit breaks C1 on three arms (disp blob pin, `html_clear`, `mirror_clear`). The `met True` holds only for a five-corpus-draft-scoped commit.
+  - No missing-token or quarantine-completeness defect. Info: `FORBIDDEN "429"` is a bare substring; current rows contain none.
+
+  Residual risk: real commit shape is the L1's choice (inferred, not measured). Not in scope: register-slice claim, S328/S329/KQ45/README bytes, live re-fetches. Lesson untouched; only write was the report + seat-dir scratch.
+
+To resume this session: kimi -r session_aaa07c98-bdc8-4ab9-9671-ab5137e7f245

@@ -1,0 +1,322 @@
+kimi version 2.3.1
+• Let me start by understanding the task:
+
+  1. I'm a leaf agent ("RevDrift193") in a wave-3 review.
+  2. My target: Registry row S193, which quotes tools/gate-registry-check.py at commit c4c46ad5b87d8b63f03e200a7b13eb8eeff46279.
+  3. Task: Run `git -C /home/vgpnk/Projects/shokunin/kama-shokunin show c4c46ad5b87d8b63f03e200a7b13eb8eeff46279:tools/gate-registry-check.py` and find the sentence the row quotes. Give line number and exact bytes. Say whether the row's quote is byte-exact or normalized. Do not edit the registry or the tool.
+  4. Report to: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevDrift193.md
+
+  First, I need to find registry row S193 to know what it quotes. The registry draft rows are S328 and S329 (last two data rows of corpus/SOURCES.md), but S193 is somewhere in SOURCES.md too. Let me:
+
+  1. Grep for S193 in corpus/SOURCES.md
+  2. Run the git show command
+
+  Let me do these in parallel.#!/usr/bin/env python3$
+"""gate-registry-check.py -- instrument-registry gate: occurrence + meaning.$
+$
+Every tracked round counter is a lane instrument; an instrument that SKILL.md$
+never names cannot be graded, re-run or retired by a reader. Round 32 repairs$
+the round-28 occurrence-only gate (routed by the round-31 closure: a thin row$
+with empty cells, a row with an empty exit map, and a row citing a$
+nonexistent path all flipped the gate to exit 0).$
+$
+Contract:$
+    - Population: every tracked path matching ``.ufo/waves/round-*/count-*.py``$
+      (one directory level below ``.ufo/waves/``, extension ``.py``).$
+    - Registry: the ``| Name | Kind / entry command | Exit map |$
+      Self-test / pinned values | Write scope |`` tables in SKILL.md at the$
+      evaluated revision. A path is ``registered`` iff it occurs in a cell of$
+      a row of such a table. A prose mention (a wave-artifact paragraph, a$
+      lesson pointer) does not register; that weaker class is reported$
+      ``unregistered`` even though the raw text occurs.$
+    - Meaning, graded per registered row (defects; a row with a defect is$
+      still registered, so a defective row does not also read unregistered):$
+        * ``thin-row``        fewer than two non-empty cells;$
+        * ``empty-entry``     the Kind / entry command cell is empty;$
+        * ``empty-exit-map``  the Exit map cell is empty;$
+        * ``missing-path:PATH`` a repo-relative path token (containing at$
+          least one slash) in the entry / self-test / write-scope cells does$
+          not exist at the evaluated revision. The counter's own path is$
+          exempt; ``<placeholder>`` and bare-filename tokens are not paths.$
+$
+Output lines:$
+    unregistered <path>              (sorted; prose-only occurrences land here)$
+    defective <path>: <reason>       (sorted; one line per defect)$
+    registered R unregistered U defective D$
+$
+Exit codes:$
+    0  U == 0 and D == 0$
+    1  U > 0 or D > 0$
+    2  could not evaluate (not a git repo, bad revision, missing SKILL.md,$
+       git failure/timeout)$
+$
+Read-only: the tool issues only ``git rev-parse``, ``git ls-tree``,$
+``git ls-files``, ``git show`` and ``git cat-file -e``; it never writes to$
+the repository. ``--selftest`` builds sandbox fixtures under a temporary$
+directory (hermetic arms 1-5) and then evaluates this lane's own tree at its$
+branch tip (arm 6); it writes nothing inside any repository.$
+$
+Usage:$
+    gate-registry-check.py [--repo DIR] [--rev REV] [--selftest]$
+$
+    --repo DIR   Repository to evaluate (default: current directory).$
+    --rev REV    Git revision whose tree and SKILL.md are evaluated.$
+                 Default: the working tree (tracked files from the index,$
+                 SKILL.md from the filesystem).$
+    --selftest   Run the fixture matrix; print ``GATE_SELFTEST pass=N fail=M``$
+                 and exit 0 only if every arm holds and the lane arm is clean.$
+"""$
+from __future__ import annotations$
+$
+import argparse$
+import os$
+import re$
+import subprocess$
+import sys$
+import tempfile$
+from pathlib import Path$
+$
+COUNTER_RE = re.compile(r"^\.ufo/waves/round-[^/]+/count-[^/]+\.py$")$
+SKILL_PATH = "SKILL.md"$
+RE_PATH = re.compile($
+    r"(?<![\w./~:<])((?:[\w.-]+/)+[\w.-]+\."$
+    r"(?:md|py|sh|json|jsonl|tsv|txt|out|conf|cpp|hpp|h|yml|yaml|toml|err|log|gguf|so))"$
+    r"(?![\w])"$
+)$
+$
+EXIT_CLEAN = 0$
+EXIT_UNREGISTERED = 1$
+EXIT_ERROR = 2$
+$
+GIT_TIMEOUT = 30$
+$
+$
+def run_git(root: str, args: list[str]) -> tuple[int, bytes, str]:$
+    try:$
+        p = subprocess.run($
+            ["git", "-C", root, *args],$
+            capture_output=True,$
+            timeout=GIT_TIMEOUT,$
+        )$
+    except (OSError, subprocess.TimeoutExpired) as e:$
+        return 127, b"", str(e)$
+    return p.returncode, p.stdout, p.stderr.decode("utf-8", "replace").strip()$
+$
+$
+def git_root(repo: str) -> tuple[str | None, str]:$
+    rc, out, err = run_git(repo, ["rev-parse", "--show-toplevel"])$
+    if rc != 0:$
+        return None, f"not a git working tree at {repo!r}: {err or f'rc={rc}'}"$
+    root = out.decode("utf-8", "surrogateescape").strip()$
+    if not root:$
+        return None, f"empty repository root for {repo!r}"$
+    return root, ""$
+I have the registry row S193 (line 205 of corpus/SOURCES.md). The row quotes:
+
+  `A path is registered iff it occurs in a cell of a row of such a table.`
+
+  Note the backtick-quoted content in the row: `` `A path is registered iff it occurs in a cell of a row of such a table.` ``
+
+  The row also says the quote location is: docstring "Contract" section, read 2026-10-24 at c4c46ad5b87d8b63f03e200a7b13eb8eeff46279.
+
+  Now, from the git show output at that commit, the Contract section says:
+
+  ```
+      - Registry: the ``| Name | Kind / entry command | Exit map |$
+        Self-test / pinned values | Write scope |`` tables in SKILL.md at the$
+        evaluated revision. A path is ``registered`` iff it occurs in a cell of$
+        a row of such a table. A prose mention (a wave-artifact paragraph, a$
+        lesson pointer) does not register; that weaker class is reported$
+        ``unregistered`` even though the raw text occurs.$
+  ```
+
+  So the sentence in the source is: `A path is ``registered`` iff it occurs in a cell of a row of such a table.`
+
+  Note that `` ``registered`` `` is RST-style double-backtick literal markup. The row S193 quotes: `A path is registered iff it occurs in a cell of a row of such a table.` — without the double backticks around "registered". So the row's quote is NORMALIZED (strips the RST literal markup), not byte-exact.
+
+  Interestingly, row S194 (line 206) explicitly supersedes S193 and gives the exact sentence: `A path is ``registered`` iff it occurs in a cell of a row of such a table.` at lines 15–16.
+
+  Now I need to find the exact line number(s). The `cat -A` output shows each line numbered implicitly by the pipe? No — cat -A just shows byte markers; I piped through head -100 but no line numbers. Let me get numbered lines. Also I should check the line continuation: the sentence spans lines 15–16:
+
+  Line 15 (from the docstring, counting): Let me count lines in the file:
+  1: #!/usr/bin/env python3
+  2: """gate-registry-check.py -- instrument-registry gate: occurrence + meaning.
+  3: (empty)
+  4: Every tracked round counter is a lane instrument; an instrument that SKILL.md
+  5: never names cannot be graded, re-run or retired by a reader. Round 32 repairs
+  6: the round-28 occurrence-only gate (routed by the round-31 closure: a thin row
+  7: with empty cells, a row with an empty exit map, and a row citing a
+  8: nonexistent path all flipped the gate to exit 0).
+  9: (empty)
+  10: Contract:
+  11:     - Population: every tracked path matching ``.ufo/waves/round-*/count-*.py``
+  12:       (one directory level below ``.ufo/waves/``, extension ``.py``).
+  13:     - Registry: the ``| Name | Kind / entry command | Exit map |
+  14:       Self-test / pinned values | Write scope |`` tables in SKILL.md at the
+  15:       evaluated revision. A path is ``registered`` iff it occurs in a cell of
+  16:       a row of such a table. A prose mention (a wave-artifact paragraph, a
+  17:       lesson pointer) does not register; that weaker class is reported
+  18:       ``unregistered`` even though the raw text occurs.
+
+  So the sentence spans lines 15–16, matching S194's claim of lines 15–16. The sentence bytes:
+
+  Line 15 after "evaluated revision. ": `A path is ``registered`` iff it occurs in a cell of`
+  Line 16: `a row of such a table.`
+
+  Full exact bytes: `A path is ``registered`` iff it occurs in a cell of\n      a row of such a table.`
+
+  Let me verify with numbered output and exact byte extraction using sed/git show with line numbers, and extract the exact bytes. Also compute a byte-exact comparison: the S193 quote is `A path is registered iff it occurs in a cell of a row of such a table.` — compare to source with `` `` `` markers removed. The word count: S194 says "17 whitespace-delimited words". Let me count: A(1) path(2) is(3) registered(4) iff(5) it(6) occurs(7) in(8) a(9) cell(10) of(11) a(12) row(13) of(14) such(15) a(16) table.(17). Yes, 17 words.
+
+  Let me run precise commands:
+  1. `git show <commit>:tools/gate-registry-check.py | sed -n '13,18p' | cat -n` with line numbers relative to file — better: `git show ... | nl -ba | sed -n '10,20p'`
+  2. Extract exact bytes of the sentence: line 15 substring from "A path" to end, plus line 16 up to "table." — use sed and xxd for byte-level evidence.
+  3. Check SHA or md5 of the extracted sentence vs the row's quote.
+
+  Also, I should verify the row's exact quote bytes from SOURCES.md line 205. The quote inside backticks: `A path is registered iff it occurs in a cell of a row of such a table.`
+
+  Note the SOURCES.md row is at line 205 in the current working tree. Wait — is the working tree the right place to read the row? The task says "Registry row S193, which quotes tools/gate-registry-check.py at c4c46ad..." — the row exists in the current SOURCES.md (working tree). The row's quote: between the single backticks after the location column: `` `A path is registered iff it occurs in a cell of a row of such a table.` ``
+
+  Let me extract that precisely from the file to confirm exact bytes (e.g., whether there are double backticks in the row quote or not). From the grep output, the row quote reads:
+
+  `A path is registered iff it occurs in a cell of a row of such a table.`
+
+  So single-backtick delimited, and inside there are no backticks around "registered". That's the normalized form — RST double-backtick literal markup `` ``registered`` `` stripped.
+
+  To be rigorous, let me extract:
+  - exact bytes of source lines 15–16 at the commit
+  - exact bytes of the quote in SOURCES.md line 205
+  - compare via python
+
+  Also confirm the commit exists and check whether the file at HEAD differs (not required, but the pinned commit is the citation target; the task says quote is at that commit). Also verify the commit hash resolves (git show worked, so yes).
+
+  Plan of commands (parallel):
+  1. `git -C ... show c4c46...:tools/gate-registry-check.py | nl -ba | sed -n '9,19p'`
+  2. Python script to extract the sentence bytes from the blob and from SOURCES.md and compare, printing repr and hashes. Write scratch to seat dir? The scratch dir is /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevDrift193/ — wait, the bounds say scratch files go only in seat directory .ufo/waves/round-36/w3/out/<YourSeatName>/. My seat name is RevDrift193 and my report path is .ufo/waves/round-36/w3/out/RevDrift193.md. Hmm — the seat directory would be .ufo/waves/round-36/w3/out/RevDrift193/ (a directory), and the report is the .md file. I can run python inline via heredoc without writing scratch files, or write a small scratch script in the seat dir. Inline heredoc python is fine and avoids file writes. Actually a bash pipeline with python3 - <<'EOF' works.
+
+  Let me do it in one python call:
+  - run git show via subprocess to get blob bytes
+  - find the sentence: locate b'A path is ``registered`` iff it occurs in a cell of a row of such a table.'
+  - compute line number of start and end
+  - read SOURCES.md, extract row S193 line, find the backtick-quoted span after "docstring \"Contract\" section" column — more robustly: regex `` `(A path is[^`]*)` `` on that line.
+  - compare exact bytes.
+
+  Also verify word counts: S193 quote words = 17? "A path is registered iff it occurs in a cell of a row of such a table." = 17 words. Source with markup: also 17 whitespace-delimited words.
+
+  Check whether quote appears byte-exact anywhere in blob: search for b'A path is registered iff' — should NOT be found (since markup present). That establishes "normalized, not byte-exact".
+
+  Also double check: maybe the plain form appears somewhere else in the file (e.g., a comment). The byte-exactness claim should be about the cited location (docstring Contract section). But for completeness, grep the blob for the plain string. If found elsewhere, note it — but the row cites the docstring Contract section specifically.
+
+  Also verify lines 15–16 numbering matches S194's claim (supersede row) — a cross-check, and worth reporting since S194 says "lines 15–16" — my count agrees.
+
+  One more check: does the current working-tree SOURCES.md row S193 quote match what I extracted (I already have the grep output). I'll re-extract precisely with python.
+
+  Let me also confirm the commit's identity (full hash) — c4c46ad5b87d8b63f03e200a7b13eb8eeff46279 is already full-length (40 hex chars). Good.
+
+  Run now.
+
+• S193 found at `corpus/SOURCES.md:205`. Its quote: `` `A path is registered iff it occurs in a cell of a row of such a table.` `` pinned to the docstring "Contract" section at c4c46ad. The blob shows the sentence with RST markup (`` ``registered`` ``). Now extracting exact bytes and line numbers to settle byte-exact vs normalized.     9	
+    10	Contract:
+    11	    - Population: every tracked path matching ``.ufo/waves/round-*/count-*.py``
+    12	      (one directory level below ``.ufo/waves/``, extension ``.py``).
+    13	    - Registry: the ``| Name | Kind / entry command | Exit map |
+    14	      Self-test / pinned values | Write scope |`` tables in SKILL.md at the
+    15	      evaluated revision. A path is ``registered`` iff it occurs in a cell of
+    16	      a row of such a table. A prose mention (a wave-artifact paragraph, a
+    17	      lesson pointer) does not register; that weaker class is reported
+    18	      ``unregistered`` even though the raw text occurs.
+    19	    - Meaning, graded per registered row (defects; a row with a defect is
+blob bytes: 15140 sha256: e07cf8d753560cd3
+marked-up sentence found at byte offset: -1 (MISSING)
+starts on line: 380
+ends on line: 2
+raw bytes repr: b''
+plain form byte-exact in blob anywhere: -1
+marked-up sentence whitespace-delimited words: 17
+S193 row quote bytes repr: 'A path is registered iff it occurs in a cell of a row of such a table.'
+S193 quote == plain form: True
+S193 quote == marked-up form: False
+S193 quote words: 17
+plain vs marked-up identical after stripping double backticks: True
+
+
+• Interesting — the marked-up sentence was reported MISSING at byte offset -1. But the `nl -ba` output clearly shows `A path is ``registered`` iff it occurs in a cell of` on line 15 and `a row of such a table.` on line 16. The reason: the sentence spans two lines — there's a newline plus six spaces of indentation between "cell of" and "a row". So my contiguous byte search failed because of the line wrap.
+
+  So the exact bytes of the sentence are:
+  `A path is ``registered`` iff it occurs in a cell of\n      a row of such a table.`
+
+  starting on line 15 (mid-line, after "evaluated revision. ") and ending on line 16.
+
+  Let me redo the byte-exact verification with the newline+indent included. Also note: the plain form (single-line, no markup) is NOT byte-present anywhere in the blob — the find returned -1 for both. Good: that establishes the row's quote is a normalized (unwrapped, markup-stripped) rendition, not byte-exact.
+
+  Wait — one subtlety: the plain single-line form not being in the blob means the row quote is not a byte-exact contiguous substring of the file. But a reasonable reading of "byte-exact" for a quote spanning a source line wrap is: does the quote's content match the source after reflow? The row's quote omits the `` `` `` markup around `registered` — that's a normalization (markdown/RST literal delimiters stripped), not just line reflow. So verdict: normalized, not byte-exact.
+
+  Let me run the precise cross-line check:
+  1. Extract blob lines 15–16 exact bytes.
+  2. Build the wrapped target with \n and 6 spaces; confirm it's found and compute line numbers.
+  3. Compare normalized forms: strip `` from target, collapse the line-wrap whitespace to single space → should equal row quote. And confirm row quote ≠ any contiguous byte span.
+  4. Also confirm the sentence's line numbers: starts line 15, ends line 16 — matching S194's superseding claim of "lines 15–16".
+
+  Also worth checking: is there any other occurrence of "registered" sentence variant elsewhere in the blob (e.g., in selftest fixtures or comments)? Search for b'iff it occurs in a cell' to find all occurrences.
+
+• The contiguous search missed because the sentence wraps across lines 15–16 (newline + 6-space indent inside it). Re-verifying with the wrap included:line 15 repr: b'      evaluated revision. A path is ``registered`` iff it occurs in a cell of'
+line 16 repr: b'      a row of such a table. A prose mention (a wave-artifact paragraph, a'
+sentence repr: b'A path is ``registered`` iff it occurs in a cell of\n      a row of such a table.'
+sentence bytes: 80
+stem occurrences: [805]
+  at byte 805 line 15
+sentence found: True | starts line 15 | ends line 16
+normalized blob sentence == S193 quote: True
+S193 quote is contiguous byte span of blob: False
+sentence-only contiguous byte span of blob: False
+sha256(blob): e07cf8d753560cd34b5945c89f4dc3f19122ca87d19f8e85844e3b1ae4e0506b
+
+
+• All verified. Summary of measured facts:
+
+  1. Commit c4c46ad5b87d8b63f03e200a7b13eb8eeff46279:tools/gate-registry-check.py resolves; blob = 15140 bytes, sha256 e07cf8d753560cd34b5945c89f4dc3f19122ca87d19f8e85844e3b1ae4e0506b.
+
+  2. The quoted sentence lives in the module docstring's "Contract:" section, spanning lines 15–16:
+     - Line 15: `      evaluated revision. A path is ``registered`` iff it occurs in a cell of`
+     - Line 16: `      a row of such a table. A prose mention (a wave-artifact paragraph, a`
+     - Exact sentence bytes (80 bytes): `A path is ``registered`` iff it occurs in a cell of\n      a row of such a table.`
+     - Unique occurrence: stem "iff it occurs in a cell" appears exactly once in the blob (byte offset 805, line 15). So the citation is unambiguous.
+
+  3. S193 row (corpus/SOURCES.md line 205 in working tree) quotes: `A path is registered iff it occurs in a cell of a row of such a table.` — 17 whitespace-delimited words.
+
+  4. Verdict: NOT byte-exact — normalized.
+     - The source sentence contains RST literal markup double-backticks around `registered` (`` ``registered`` ``), which the row's quote strips.
+     - The source sentence wraps across lines 15–16 with `\n      ` (newline + 6 spaces) inside it; the row quote is a single line.
+     - The row's quote is not a contiguous byte span of the blob (find returns -1).
+     - After normalization (strip `` and collapse the wrap to one space), the source sentence equals the row quote byte-for-byte. So the quote is a faithful normalized rendition: zero content drift, markup/wrap normalized.
+     - Word count preserved: 17 words both sides.
+
+  5. Cross-check: S194 (SOURCES.md:206) explicitly supersedes S193 and states the sentence is at lines 15–16 with the markup `` ``registered`` `` — my measurement independently confirms both claims. So the superseding row is accurate, and S193's normalization is already acknowledged by the corpus itself.
+
+  Findings by severity: no defect. The row is honest enough? The row says: docstring "Contract" section, read 2026-10-24 at c4c46ad... and quotes the normalized form. Is presenting the quote without markup a defect? Under the corpus's own convention (S194 exists precisely to correct/precision this), the normalized quote in S193 could mislead a byte-grepper: someone grepping the tool for the quoted bytes finds nothing. That's a minor/cosmetic drift risk, but the corpus self-corrects via S194, and S193's meaning is unchanged. I'd report: verdict = normalized, not byte-exact; severity: none/info — no actionable defect; residual risk: byte-grep of the S193 quote against the blob fails, which any downstream byte-exactness checker must account for (S194 already documents the exact bytes).
+
+  Verification gaps: none material — full-blob byte search performed, unique occurrence confirmed. I did not verify that the working-tree SOURCES.md row S193 is identical to some committed version (out of scope; task is about the row's quote vs the pinned blob). Also did not run the tool (not needed).
+
+  Now write the report to /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevDrift193.md.
+
+  Report structure: findings by severity, then residual risk and verification gaps. Measured vs inference separated.
+
+  One thing to double check: is line 205 the right line for S193 in working tree SOURCES.md? Grep said corpus/SOURCES.md:205. Yes.
+
+  Write the report now.
+
+• All facts pinned. The row's quote is normalized (markup + line-wrap stripped), confirmed byte-identical after normalization, unique occurrence in the blob. Writing the report.
+
+written
+2614 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevDrift193.md
+• Report written to /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevDrift193.md. Task complete. Summarize briefly and stop.
+
+• Report written to `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevDrift193.md`. Summary:
+
+  **Answer**
+  - The quoted sentence sits in the docstring `Contract:` section of `tools/gate-registry-check.py` @ c4c46ad5b87d8b63f03e200a7b13eb8eeff46279, spanning **lines 15–16** (starts mid-line 15 after `evaluated revision. `).
+  - Exact bytes (80): `A path is ``registered`` iff it occurs in a cell of\n      a row of such a table.` — unique occurrence in the blob (stem found once, byte offset 805).
+  - Verdict: **normalized, not byte-exact.** The row's quote strips the RST double-backtick markup around `registered` and unwraps the line 15→16 break. After markup-strip + wrap-collapse it matches the row quote byte-for-byte (17 words both sides, zero content drift). The quote string is not a contiguous byte span of the blob.
+
+  **Findings:** none — no actionable defect. Residual risk: byte-grep checkers against the S193 quote will miss; mitigated by S194, which already supersedes S193 with the byte-faithful form at lines 15–16 (independently confirmed).
+
+To resume this session: kimi -r session_143afefd-f818-4365-9965-dd5588c0b1c4

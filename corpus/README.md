@@ -542,3 +542,19 @@ The filed round-34 report says the coverage map gains `serving-alias-contract.md
 |---|---|---|
 | `knowledge/serving-alias-contract.md` | served-name and alias resolution; absent from this map at the round-34 tip | 35 |
 | `knowledge/served-model-id-resolution.md` | served model id read from a local OpenAI-compatible listing; absent from this map at the round-34 tip | 35 |
+
+## Coverage map — round 36 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/sglang-native-route-deprecation.md` | at tag v0.5.22 the published SGLang native route list still names `/get_model_info` while the engine's own handler warns that the route is deprecated and names `/model_info` as the replacement | 36 |
+
+The frontier step of round 36 is the corpus-expansion-1 package under
+`/home/vgpnk/Projects/shokuknow`, read only. One theme, one entry, two registry
+rows: S328 and S329, both opened on 2026-10-24 by this lane and re-opened by
+wave-2 seats. The package's staged ids (S325 to S458) collided with this lane's
+own registry on S327; the adopted ids follow the lane's registry, and no
+adopted row re-points a staged citation by arithmetic. Quarantine verdicts for
+the seven kama rows of the campaign absent-defect register, the rejects with
+their flip conditions, and the id-collision record are in
+`corpus/lessons/round-36.md`.

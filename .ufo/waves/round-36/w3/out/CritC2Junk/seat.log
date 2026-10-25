@@ -1,0 +1,409 @@
+kimi version 2.3.1
+• Let me understand the task:
+
+  1. I'm a Godspeed-enabled subagent, seat "CritC2Junk" (based on report path `.ufo/waves/round-36/w3/out/CritC2Junk.md`).
+  2. Lane repo: `/home/vgpnk/Projects/shokunin/kama-shokunin`
+  3. My seat directory: `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/CritC2Junk/`
+  4. Task: In a sandbox clone in my seat directory only, add a knowledge entry that cites an S-id absent from the registry, and a README block that names the entry path. Run the C2 counter there with `--tip` at a commit carrying both. Paste the output line and say whether `cited_new` stays 0 and `named` is 1.
+  5. Report: `.ufo/waves/round-36/w3/out/CritC2Junk.md` — write at `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/CritC2Junk.md`
+
+  Constraints:
+  - Never mutate the real lane repo, sibling lanes, fleet repo, lane jj state, or lane Git index.
+  - No git add/commit/stash/checkout/switch/reset/pull/push in the real lane. But the sandbox clone in my seat directory is for git-writing checks — "A git-writing check runs on a sandbox clone in your seat directory, never in the lane." So git operations in the sandbox clone are permitted.
+  - Read-only git permitted in the lane.
+
+  Plan:
+  1. Read the audit tool `/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round36-coverage-audit.py` to understand what it checks (cited_new, named).
+  2. Look at the draft bytes (lesson, entry, registry rows, QUALITY KQ45, README block) to understand expected state.
+  3. Create sandbox clone in seat directory: `git clone /home/vgpnk/Projects/shokunin/kama-shokunin <seat>/sandbox` (clone is read-only w.r.t. source). Note: clone copies committed state, not working tree. The draft bytes are in the working tree — but the task says add my own junk entry and README block in the sandbox. The C2 counter run in the sandbox — the tip commit there won't carry the L1's drafts (uncommitted). But my task doesn't require the L1 drafts; it requires MY junk entry + README block committed in the sandbox. Then run the counter with `--tip <full-commit>` and check `cited_new` stays 0 and `named` is 1.
+
+  Wait — but what is `named`? Presumably the counter counts README-named entry paths. If the counter computes named from the README diff (new README lines naming entry paths) and cited_new from knowledge entries' cited S-ids that are new in SOURCES.md... Let me read the tool first.
+
+  Actually the question: "add a knowledge entry that cites an S-id which is absent from the registry, and a README block that names the entry path. Run the C2 counter there with --tip at a commit carrying both. Paste the output line and say whether cited_new stays 0 and named is 1."
+
+  So the soundness test: a knowledge entry citing an S-id NOT in the registry should NOT count toward cited_new (cited_new stays 0 — because the S-id is absent from SOURCES.md, so it's not a "cited new source"). And the README naming the entry should make `named` = 1. This tests the counter's correctness on junk bytes.
+
+  But wait — there might be a subtlety: if the counter counts cited_new by scanning the knowledge entries diff for `S\d+` references and checking them against SOURCES.md, then junk citation absent from registry → cited_new 0. And `named` counts README mentions of new entry paths → 1. That would be the expected pass.
+
+  Potential falsification: maybe the counter counts `named` only if the entry is in corpus/knowledge/ and named exactly; or maybe named counts 1 even if the entry doesn't exist; or maybe cited_new counts the junk id as a "new citation" incorrectly. The experiment determines it.
+
+  Also there's the L1's drafts in the working tree — uncommitted. The sandbox clone only has committed state. The C2 frozen claim says coverage 9 -> 9 counted with `--tip <full-commit>` on the real lane's tip commit. Hmm, but the drafts are in the working tree — are they committed? The L1 "has just written into the lane working tree". So they're uncommitted. The counting command uses `--tip <full-commit>` — maybe the tool takes the tip commit and reads files from the working tree, or from the commit. I need to read the tool to understand `--tip` semantics.
+
+  Let me start. First batch of parallel actions:
+  1. Read the coverage audit tool.
+  2. Read the draft bytes (lesson, entry, SOURCES last rows, QUALITY KQ45, README block).
+  3. Check git state of the lane (read-only): `git -C lane status --porcelain`, `git -C lane log --oneline -5`, `git rev-parse HEAD`.
+  4. Check RULES.md for tooling.
+
+  Let me do that.
+
+  Seat name: CritC2Junk. Seat directory: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/CritC2Junk/
+
+  Wait — the scratch dir given: `.ufo/waves/round-36/w3/out/<YourSeatName>/`. And the report path is `.ufo/waves/round-36/w3/out/CritC2Junk.md` — the report is a file directly in out/, not in the seat subdir. OK.
+
+  Let me begin with parallel reads.9014843cb7de8fbe87a97954c13832b67d55f046
+ M .ufo/waves/round-35/w1/out/ConnSibling/seat.log
+ M .ufo/waves/round-35/w1/out/ExecDisposition.md
+ M .ufo/waves/round-35/w1/out/ExecDisposition/seat.log
+ M .ufo/waves/round-35/w1/out/ScoutCoverageAbsence/seat.log
+ M corpus/QUALITY.md
+ M corpus/README.md
+ M corpus/SOURCES.md
+?? .ufo/waves/round-35/assimilation/validate/
+?? .ufo/waves/round-35/w1/out/ScribeGate/fetch/docker-dockerfile.html
+?? .ufo/waves/round-35/w1/out/ScribeGate/fetch/dockerfile.html
+?? .ufo/waves/round-36/assimilation/append-block.md
+?? .ufo/waves/round-36/assimilation/correction-lines.md
+?? .ufo/waves/round-36/assimilation/guard/re-col0-collisions
+?? .ufo/waves/round-36/assimilation/guard/re-col0-ids
+?? .ufo/waves/round-36/assimilation/guard/re-space-collisions
+?? .ufo/waves/round-36/assimilation/guard/re-space-ids
+?? .ufo/waves/round-36/assimilation/guard/re-staged-ids
+?? .ufo/waves/round-36/assimilation/quarantine-slice
+?? .ufo/waves/round-36/assimilation/sglang-native-route-deprecation.md
+?? .ufo/waves/round-36/assimilation/validate-census.out
+?? .ufo/waves/round-36/assimilation/validate/
+?? .ufo/waves/round-36/w1/out/ConnSibling.md
+?? .ufo/waves/round-36/w1/out/ConnSibling/
+?? .ufo/waves/round-36/w1/out/CriticC1Noop.md
+?? .ufo/waves/round-36/w1/out/CriticC1Noop/
+?? .ufo/waves/round-36/w1/out/CriticC2OldId.md
+?? .ufo/waves/round-36/w1/out/CriticC2OldId/
+?? .ufo/waves/round-36/w1/out/CriticProvince.md
+?? .ufo/waves/round-36/w1/out/CriticProvince/
+?? .ufo/waves/round-36/w1/out/ExecC1.md
+9014843 round-36: freeze predicates, failing controls, and wave spec
+e5a8ece round-35 verifier spot-check (integrator, hyaku): non-author admit/reject
+66bcd07 round-35: post-settlement seat log flushes
+The tool is clear:
+  - `named` = count of ENTRY string ("knowledge/sglang-native-route-deprecation.md") in the README block under heading "## Coverage map — round 36 addition". Note: named can be >1 (it's a count, `met` requires named == 1 exactly).
+  - `file_exists` = 1 if entry file exists at tip.
+  - `cited_new` = 1 if any S-id cited in the entry is in tip registry AND absent from base registry (base e5a8ece).
+  - `met` = named==1 and file_exists==1 and cited_new==1.
+
+  My junk experiment: add a knowledge entry citing an S-id ABSENT from the registry (e.g. S999, not in SOURCES.md at tip), and a README block (with the exact heading? The task says "a README block that names the entry path"). Hmm — the task: "add a knowledge entry that cites an S-id which is absent from the registry, and a README block that names the entry path."
+
+  For `named` to be 1, the README block must be under the exact heading `## Coverage map — round 36 addition`. But wait — in the sandbox clone at the committed tip (9014843), the README does not have that heading yet (the drafts are uncommitted in the working tree). So if I add my own README block naming the entry path, I need the heading to make named count. But careful: my junk test should not include a NEW S-id in the registry — the cited S-id must be absent from the registry, so cited_new should stay 0.
+
+  The test: named=1 (README block under the heading names the entry), file_exists=1 (entry committed), cited_new=0 (cited S-id absent from registry) → met False. This demonstrates: the counter doesn't get fooled by junk — a citation to a non-registry id does not count as cited_new, while the naming machinery still works (named=1). That's the soundness check the task asks for: "say whether cited_new stays 0 and named is 1".
+
+  Note the selftest already covers `old_ok` (old id → cited_new 0) and `outside_ok` (name outside block → named 0). My test covers the "absent id" case which is distinct from "old id present at base" (old_ok covers S006 present at base; my case covers an id in NEITHER tip nor base).
+
+  Also a subtle point: BASE is hardcoded `e5a8ece...`. The base_sources is loaded via `git_show(repo, BASE, ...)`. In my sandbox clone, the base commit must exist — it does since I clone the full repo.
+
+  Another subtlety: the junk entry path — if I name ENTRY "knowledge/sglang-native-route-deprecation.md" in README and create that file, that would collide with the real draft's entry name. But in the sandbox it doesn't matter — the real drafts are uncommitted so they don't exist in the clone. However, to keep the test clean and avoid ambiguity, I could use the exact entry path (to test named counting) — the task says "a README block that names the entry path". "the entry path" — probably meaning the path of MY junk entry. Hmm. Let me re-read: "add a knowledge entry that cites an S-id which is absent from the registry, and a README block that names the entry path."
+
+  Ambiguous: "the entry path" = my junk entry's path. If I use a different path, named would be 0 (the counter only counts the exact string "knowledge/sglang-native-route-deprecation.md"). That would be a trivial named=0 result, which doesn't test what's asked ("say whether cited_new stays 0 and named is 1" — they expect named=1).
+
+  So to get named=1, my README block must name exactly "knowledge/sglang-native-route-deprecation.md" under the exact heading. Two options:
+  (a) Name the real entry path in README, and create my junk entry AT that path (knowledge/sglang-native-route-deprecation.md) with a junk S-id (e.g. S999 absent from registry). That tests: file_exists=1, named=1, cited_new=0 → met False. This is the strongest junk test: everything else looks like the real thing, only the citation is junk, and the counter must reject it.
+  (b) Create a junk entry at a different path but have README mention the real path string... that's weirder.
+
+  Option (a) is cleanest and matches "add a knowledge entry ... and a README block that names the entry path". In the sandbox, the committed README has no round-36 block, so I add the block with the exact heading, naming the entry, and the entry cites e.g. S999 (verify absent from registry — max S-id in SOURCES is S329, and I should verify S999 truly absent).
+
+  Also I should double-check: the registry_ids regex requires the id in a table row `\|\s*(S[0-9]+)\s*\|`. My junk entry citing "S999" — S999 must be absent from tip_sources. Check: grep SOURCES.md for S999 — certainly absent. And S999 not at base either. So cited_new=0 regardless.
+
+  Also potential wrinkle: `cited_ids` uses `\bS[0-9]{3,}\b` — S999 matches (3 digits). Good.
+
+  Plan:
+  1. mkdir seat dir, clone lane into it (git clone — read-only w.r.t. source; the clone is a fresh repo in my seat dir; allowed: "A git-writing check runs on a sandbox clone in your seat directory, never in the lane").
+     - Use `git clone --no-hardlinks` maybe. Local clone is fine. Note clone brings full history including base e5a8ece.
+  2. In sandbox: verify base commit exists, verify S999 absent at tip and base.
+  3. Create `corpus/knowledge/sglang-native-route-deprecation.md` with junk citation (S999 + maybe a real old id S006 to be extra junky? Keep it simple: cite S999 only... Actually citing only S999 is the pure absent-id case. But adding S006 too would test "any()" semantics — if I cite both S999 and S006, both absent-from-tip... wait S006 IS at tip (old). any(sid in tip_ids and sid not in base_ids) — S006 in tip and in base → doesn't count; S999 in neither → doesn't count. cited_new 0. That's fine but simpler to cite only S999. Keep it minimal: cite S999 only.)
+  4. Append README block with exact heading `## Coverage map — round 36 addition` and a line naming `knowledge/sglang-native-route-deprecation.md`.
+  5. git add + commit in sandbox (allowed — it's the sandbox).
+  6. Run the counter from the LANE's tools copy (read-only execution) with --repo sandbox --tip <full commit sha>. Wait — should I run the tool from the sandbox clone's tools/ or the lane's tools/? The counting command is `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round36-coverage-audit.py --repo ... --tip ...`. Running the lane's tool file is read-only (python reads it). That preserves canonical tool bytes. Good — use the lane's tool with --repo pointing at sandbox.
+  7. Capture the output line; also capture exit code (expect 1 since met False).
+  8. Also as an extra sanity check, run `--selftest`? That would print selftest pass. Not required, but cheap and confirms tool integrity in my env. Actually careful: selftest uses the same --tip for base scoring... selftest loads readme/entry/sources from --tip and scores; base_ok expects all zeros at the REAL tip (9014843, which lacks the drafts since uncommitted). That would show met False, all zeros — consistent with frozen claim C2 do-nothing control. Cheap, one command. It also verifies base_ok/outside_ok/old_ok pass=1. This is useful supporting evidence for soundness. I'll run it once.
+  9. Also verify cited_new would be 1 in the sandbox with a REAL new id — hmm, not needed for my seat; that's the L1's job (the real drafts carry S328/S329). My seat is the junk case. But a quick complement: to prove named/file_exists machinery works in my sandbox (i.e., that cited_new=0 is due to the junk id and not some other breakage), I could add a second commit switching the citation to S328 (which is in tip registry? No — in sandbox, SOURCES.md at tip 9014843 does NOT have S328 since the registry rows draft is uncommitted!). Hmm — in the sandbox at the committed tip, S328/S329 are absent from SOURCES.md. So to test the positive path in-sandbox I'd need to also add a registry row. That would be a second experiment: add registry row S999 + keep entry citing S999 → cited_new should flip to 1 and met True. That's a nice completeness check proving the counter's citation machinery isn't just always-0. Is it in scope? My task: "add a knowledge entry that cites an S-id which is absent from the registry, and a README block that names the entry path. Run the C2 counter... Paste the output line and say whether cited_new stays 0 and named is 1."
+
+  The core deliverable is the junk case. The complement (flip registry → cited_new 1) is a cheap second commit that guards against a vacuous result (cited_new could be 0 for the wrong reason, e.g. if entry reading were broken — but file_exists=1 would show entry was read). Actually file_exists=1 already proves the entry bytes were loaded. And cited_new=0 with entry loaded and id absent is exactly the junk semantics. The complement strengthens: with S999 registered, cited_new must become 1 → proves the counter isn't a constant-0. This is a legit soundness check of the counter, cheap (one more commit + one run). I'll do it as a second commit and report it as a complement.
+
+  Also note exit codes: junk run → exit 1 (met False); complement run → exit 0 (met True). Wait — careful: met True in sandbox with S999 registered — that's fine, it's the sandbox, not the lane. The frozen claim C2 (9→9, do-nothing controls met False) is about the real lane tip; my sandbox tests don't touch it.
+
+  One more check: the counter's `named` counts `body.count(ENTRY)` — exact substring count, must equal exactly 1 for met (named == 1). In my README block, mention the path exactly once.
+
+  Careful with the em-dash in HEADING: "## Coverage map — round 36 addition" — must copy exactly (em dash U+2014, spaces around it). I'll copy from the tool source (line 28). I'll write the README block via python to avoid encoding issues... or via Write tool with the exact heading. The Write tool should handle UTF-8 em dash fine. Then git add/commit in sandbox.
+
+  Steps in sandbox:
+  ```
+  SEAT=/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/CritC2Junk
+  git clone --no-hardlinks --quiet /home/vgpnk/Projects/shokunin/kama-shokunin $SEAT/sandbox
+  cd sandbox; git rev-parse HEAD
+  grep -c 'S999' corpus/SOURCES.md  (expect 0)
+  git show BASE:corpus/SOURCES.md | grep -c S999 (expect 0)
+  ```
+  Then write files, commit, run counter, then second commit (add S999 row to SOURCES.md), run counter again.
+
+  For the SOURCES.md row format, check the table header to mimic a row `| S999 | ... |`. registry_ids regex: `^ {0,3}\|\s*(S[0-9]+)\s*\|` — any line starting with optional spaces, `|`, spaces, id, spaces, `|`. I'll append a row matching that.
+
+  Wait, one caution about cloning: the lane has a jj workspace? "Never ... mutate ... the lane jj state, or the lane Git index". `git clone` reads the source repo and creates a new repo elsewhere — it doesn't touch the source's index or working tree. Local clones may use hardlinks by default to .git/objects — with --no-hardlinks it copies files instead. Hardlinks into the source's object store could be considered mutating? Writing a new object locally would modify... no, hardlinked files: git only adds NEW object files; it never modifies existing pack files in the clone unless it repacks — repack would rewrite packs in the CLONE, but with hardlinks that would affect the source's packs! That's exactly why --no-hardlinks is the safe choice. Also `git clone` a non-bare repo won't touch source refs. Use --no-hardlinks to be safe.
+
+  Also: don't run `git gc`/`repack` in the clone... it's the clone's own files, that's fine post-copy with --no-hardlinks. No repack needed anyway.
+
+  Another subtlety: cloning a repo where the working tree has uncommitted changes — clone takes committed state only (HEAD=9014843). Good: sandbox tip = 9014843 full sha.
+
+  Also check jj: the lane might be a jj colocated repo; git clone just reads refs. Fine.
+
+  Let me also read the draft bytes quickly to context-check the report (what the L1 wrote), since wave description says I attack bytes they never saw — my report should note the junk-case result against the real drafts. But my scoped task is narrow: the sandbox experiment. Reading drafts is cheap and helps the report's context. I'll read the entry draft and README block draft and SOURCES last rows in parallel with the clone.
+
+  Now execute:
+
+  Batch 1 (parallel):
+  - Bash: mkdir -p seat dir && git clone --no-hardlinks
+  - Read: entry draft
+  - Read: README tail (last block)
+  - Read: SOURCES tail
+  - Read: QUALITY tail (KQ45) — optional; skip to save calls? It's cheap context. My report is scoped to C2 junk; QUALITY KQ45 isn't needed. Skip lesson and QUALITY; read entry draft + README block + SOURCES tail only.
+
+  Wait — clone needs the seat dir to exist first? mkdir -p creates it; clone creates sandbox subdir. Chain in one command with &&.
+
+  Then batch 2: verify S999 absence, write files, commit, run counter (these are dependent — sequential in one bash command chain is fine, or separate calls). I'll do: one bash call that does clone + checks; then Write calls for the two files (parallel); then bash: add+commit+rev-parse+run counter (chain); then bash: second commit + counter run.
+
+  Actually Write tool writes into the sandbox after clone — fine.
+
+  Let me be careful that `git -C sandbox commit` requires user.email/user.name — the clone inherits global config probably; if not, set -c user.email=... -c user.name=... on the commit command. Use `git -c user.name="CritC2Junk" -c user.email="crit@seat.invalid" commit -m ...` to be safe.
+
+  Counter run: `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round36-coverage-audit.py --repo $SEAT/sandbox --tip $(git -C $SEAT/sandbox rev-parse HEAD)`; capture exit code with `; echo exit=$?`.
+
+  Full commit sha needed. OK.
+
+  Let me run batch 1 now.
+
+• Lane tip is `9014843cb7de8fbe87a97954c13832b67d55f046`; drafts are uncommitted working-tree bytes, so a clone carries none of them — clean sandbox for the junk test. The counter reads `named` from a block under the exact heading `## Coverage map — round 36 addition`, `file_exists` from `corpus/knowledge/sglang-native-route-deprecation.md` at tip, and `cited_new` only when a cited `S\d{3,}` id is a registry row at tip **and** absent at base `e5a8ece`. Now: clone into my seat dir, and pull the draft bytes for context in parallel.9014843cb7de8fbe87a97954c13832b67d55f046
+0
+0
+* Question: where exactly does the r32 gate define registration, and does the standing S104 reject about fsck/promisor still hold? Where: `tools/gate-registry-check.py` at c4c46ad5 (docstring "Contract", lines 15–16); `https://raw.githubusercontent.com/git/git/v2.56.0/builtin/fsck.c` (S104, lines 143–149); and the r32 C2 gate receipts. Identified 2 source candidates; screened 2; included 1 new row (S194) and reopened standing rejected S104 without changing its row; excluded 0. Stop: both source decisions are bounded to the exact routed evidence; no vendor/API or endpoint claim was sought.
+|---|---|---|
+| `knowledge/sglang-native-route-deprecation.md` | at tag v0.5.22 the published SGLang native route list still names `/get_model_info` while the engine's own handler warns that the route is deprecated and names `/model_info` as the replacement | 36 |
+
+The frontier step of round 36 is the corpus-expansion-1 package under
+`/home/vgpnk/Projects/shokuknow`, read only. One theme, one entry, two registry
+rows: S328 and S329, both opened on 2026-10-24 by this lane and re-opened by
+wave-2 seats. The package's staged ids (S325 to S458) collided with this lane's
+own registry on S327; the adopted ids follow the lane's registry, and no
+adopted row re-points a staged citation by arithmetic. Quarantine verdicts for
+the seven kama rows of the campaign absent-defect register, the rejects with
+their flip conditions, and the id-collision record are in
+`corpus/lessons/round-36.md`.
+
+
+• Sandbox cloned at tip 9014843. S999 absent at tip (0) and at base (0). The README tail shows the draft block in the working tree (the last heading block shown is under the coverage map heading presumably — the tail starts with a table row and the heading is above it; fine).
+
+  Note: the working-tree README's last block contains the table row naming `knowledge/sglang-native-route-deprecation.md`. In my sandbox I'll construct the same shape: heading + table row.
+
+  Now write junk files into the sandbox:
+  1. `corpus/knowledge/sglang-native-route-deprecation.md` — junk entry citing only S999 (absent from registry at tip and base).
+  2. Append to `corpus/README.md` a block with exact heading `## Coverage map — round 36 addition` and exactly one mention of `knowledge/sglang-native-route-deprecation.md`.
+
+  I need to see the sandbox README tail to append cleanly. The committed README at 9014843 won't have the round-36 block. I'll just append with a preceding blank line. Use bash to append via heredoc? Guidance says use Write tool for echo > file. But appending to an existing file — Edit tool needs old_string; simplest: read the sandbox README tail, then use bash `cat >>`? The guidance prefers Write/Edit for file creation. Appending: I can use Edit on the sandbox README with old_string = last line, new_string = last line + block. But I don't know the last line yet. Simpler and reliable: use printf/heredoc in bash to append — it's a sandbox scratch file, and the "translate to dedicated tools" guidance is about known-path file creation/editing; an append of a UTF-8 em-dash block via heredoc is fine, but the guidance is explicit: `cat <<EOF` → Write. However Write overwrites the whole file. I can read the sandbox README (committed version) fully, then Write the full new content. That respects the guidance. Let me read the sandbox README tail to get exact bytes for reconstruction... Actually simpler: Write the junk entry (new file), and for README use bash heredoc append — hmm. The instruction list is a guideline ("Translate these to a dedicated tool instead"). For appending, Edit is the dedicated tool. Let me read the sandbox README tail first, then Edit.
+
+  Actually — the committed README's last block: let me check its tail. Then Edit with old_string being the final line.
+
+  Plan this batch:
+  1. Read sandbox corpus/README.md tail (bash tail -n 8 to see exact end; then Edit needs exact old_string — safer to read via Read tool for exact bytes with line numbers... Read gives content; Edit matches against file content. Fine.)
+  2. Write junk entry.
+
+  Then: Edit README, commit, run counter.
+
+  Junk entry content — keep it plausible-shaped but cite only S999:
+
+  ```
+  # Junk probe: citation absent from the registry
+
+  source: S999 — no such registry row; this id is deliberately absent from corpus/SOURCES.md at tip and at base
+  verified-at: 2026-10-24
+  recheck: 90d
+
+  ## Why this file exists
+
+  Round-36 wave-3 seat CritC2Junk planted this entry in a sandbox clone to test the C2 counter's junk rejection: a citation whose S-id is in neither the tip registry nor the base registry must not flip cited_new.
+  ```
+
+  Wait — the entry path must be `corpus/knowledge/sglang-native-route-deprecation.md` in the sandbox so file_exists=1 and named=1 align with the counter's hardcoded ENTRY_REPO. Yes, use that exact path (it's free in the sandbox since drafts are uncommitted).
+
+  README block to append:
+
+  ```
+
+  ## Coverage map — round 36 addition
+
+  | knowledge/sglang-native-route-deprecation.md | junk probe row planted by CritC2Junk in a sandbox clone | 36 |
+  ```
+
+  Mention of entry path: the table row contains `knowledge/sglang-native-route-deprecation.md` exactly once. named = count in body → 1. Good. Careful not to mention the path anywhere else in the block.
+
+  Do it: Write entry, Read README tail. Then Edit, commit, run.
+
+• Sandbox is up at tip `9014843`, and `S999` is absent from `SOURCES.md` at both tip and base (0 hits each) — clean junk id. Now plant the junk bytes.The filed round-34 report says the coverage map gains `serving-alias-contract.md` and `served-model-id-resolution.md`. At `719655f12517a9ce6b1a5ca44316897fed8420b0` those names are absent from this file. That sentence is false. It is not rewritten. The two names are recorded here as round-35 pointers, which does not make the round-34 sentence true.$
+$
+| Entry | Covers | Round |$
+|---|---|---|$
+| `knowledge/serving-alias-contract.md` | served-name and alias resolution; absent from this map at the round-34 tip | 35 |$
+| `knowledge/served-model-id-resolution.md` | served model id read from a local OpenAI-compatible listing; absent from this map at the round-34 tip | 35 |$
+wrote-entry
+total 384
+drwxr-xr-x 1 vgpnk vgpnk  1420 Oct 24 22:47 .
+drwxr-xr-x 1 vgpnk vgpnk    90 Oct 24 22:47 ..
+-rw-r--r-- 1 vgpnk vgpnk 10077 Oct 24 22:47 alias-endpoint-normalization.md
+-rw-r--r-- 1 vgpnk vgpnk  4367 Oct 24 22:47 chat-adapter-outcomes.md
+-rw-r--r-- 1 vgpnk vgpnk 42709 Oct 24 22:47 consumer-registry.md
+-rw-r--r-- 1 vgpnk vgpnk 17498 Oct 24 22:47 context-capacity.md
+-rw-r--r-- 1 vgpnk vgpnk 21286 Oct 24 22:47 cross-lane-scope.md
+-rw-r--r-- 1 vgpnk vgpnk  9203 Oct 24 22:47 drift-timeline.md
+-rw-r--r-- 1 vgpnk vgpnk 11192 Oct 24 22:47 echo-discriminating-counters.md
+-rw-r--r-- 1 vgpnk vgpnk  1348 Oct 24 22:47 endpoint-health-probe-conventions.md
+-rw-r--r-- 1 vgpnk vgpnk 25923 Oct 24 22:47 endpoint-identity.md
+-rw-r--r-- 1 vgpnk vgpnk 18314 Oct 24 22:47 error-is-not-a-verdict.md
+-rw-r--r-- 1 vgpnk vgpnk  5559 Oct 24 22:47 free-tier-provider-limits.md
+-rw-r--r-- 1 vgpnk vgpnk  3228 Oct 24 22:47 gguf-declared-identity.md
+-rw-r--r-- 1 vgpnk vgpnk  5931 Oct 24 22:47 gguf-runtime-compatibility-boundary.md
+-rw-r--r-- 1 vgpnk vgpnk  4930 Oct 24 22:47 instrument-run-agreement.md
+-rw-r--r-- 1 vgpnk vgpnk 36856 Oct 24 22:47 listener-census.md
+-rw-r--r-- 1 vgpnk vgpnk 29323 Oct 24 22:47 llamacpp-loading-lifecycle.md
+-rw-r--r-- 1 vgpnk vgpnk  6482 Oct 24 22:47 loopback-listener-ownership.md
+-rw-r--r-- 1 vgpnk vgpnk 24401 Oct 24 22:47 ollama-evidence-replay.md
+-rw-r--r-- 1 vgpnk vgpnk  8760 Oct 24 22:47 runtime-health-surface-matrix.md
+-rw-r--r-- 1 vgpnk vgpnk  5831 Oct 24 22:47 self-assessment-at-writing.md
+-rw-r--r-- 1 vgpnk vgpnk 19925 Oct 24 22:47 served-identity-crosswalk.md
+-rw-r--r-- 1 vgpnk vgpnk  2543 Oct 24 22:47 served-model-identity.md
+-rw-r--r-- 1 vgpnk vgpnk  2828 Oct 24 22:47 served-model-id-resolution.md
+-rw-r--r-- 1 vgpnk vgpnk  4009 Oct 24 22:47 serving-alias-contract.md
+-rw-r--r-- 1 vgpnk vgpnk  7454 Oct 24 22:47 serving-metrics-crosswalk.md
+-rw-r--r-- 1 vgpnk vgpnk   493 Oct 24 22:47 sglang-native-route-deprecation.md
+-rw-r--r-- 1 vgpnk vgpnk  8177 Oct 24 22:47 snapshot-history.md
+
+
+• The system reminder says an AGENTS.md applies to the sandbox directory. I should read it before making further changes there. Note the changes so far were writes to my own sandbox clone — but let me read the AGENTS.md to check for constraints relevant to the sandbox.
+
+  Note: the AGENTS.md in the sandbox is a copy of the lane's AGENTS.md (cloned). Let me read it quickly, then proceed: append README block, commit, run counter.
+
+  Also note: the tail of the sandbox README ends with the round-35 coverage table (`| `knowledge/served-model-id-resolution.md` | ... | 35 |`). So I append a new block after that. The heading must be `## Coverage map — round 36 addition` (em dash U+2014). Since the file already has round-35 blocks possibly under a heading like `## Coverage map — round 35 addition`... My new heading splits correctly because `block_names` splits on the exact heading and then on `\n## `.
+
+  Append with a bash heredoc (Write would need full-file rewrite; append via `cat >>` is simplest and it's my sandbox scratch). Actually the guidance says heredoc → Write, but appending to an 18k+ line file via Write requires reading it all. Edit tool: old_string = last line `| \`knowledge/served-model-id-resolution.md\` | served model id read from a local OpenAI-compatible listing; absent from this map at the round-34 tip | 35 |` → new_string = that line + block. That's clean. But there might be two identical last lines? No — served-model-id-resolution row is unique.
+
+  Let me read AGENTS.md first, then do the Edit + commit + counter run.The sandbox AGENTS.md is the lane's rules: "Gates that need git writes run in a /tmp clone" — my sandbox in the seat dir serves the same role, and my dispatcher bounds explicitly allow git-writing checks in the seat sandbox clone. The "never git add/commit" rules apply to the lane repo itself, not the sandbox clone (explicitly: "Gates that need git writes run in a /tmp clone"). My dispatcher instruction: "In a sandbox clone in your seat directory only, add a knowledge entry ... Run the C2 counter there with --tip at a commit carrying both." So committing in the sandbox is the assigned procedure. The clone is a fresh standalone repo (no jj colocated .jj there — git clone creates plain git; jj colocated state isn't cloned). Safe.
+
+  Now:
+  1. Append README block via Edit (anchor = last round-35 table row).
+  2. Commit in sandbox.
+  3. Run counter with --tip full sha, capture output + exit code.
+  4. Complement: add S999 registry row, commit, re-run → expect cited_new 1, met True (proves counter isn't constant-0).
+  5. Also run --selftest once against sandbox tip for supporting evidence (base controls pass=1) — cheap. Actually selftest against the junk tip: readme/entry/sources loaded from junk tip; base_ok expects base scores all-zero — at junk tip, base scoring uses the junk tip's readme (which HAS the block) — wait no: selftest's `base = score(readme, entry, sources, base_sources)` where readme/entry/sources come from --tip (the junk commit!). Then base_ok would be False because the junk tip has named=1, file_exists=1 (cited_new=0 though). selftest pass would be 0 — misleading. Run selftest with --tip 9014843 (clean lane tip) instead, where everything is absent → base_ok True. That's the faithful do-nothing control in my sandbox. Good: selftest --repo sandbox --tip 9014843.
+
+  Order: Edit README first. The Edit tool needs exact old_string from the file. The last line is:
+  `| \`knowledge/served-model-id-resolution.md\` | served model id read from a local OpenAI-compatible listing; absent from this map at the round-34 tip | 35 |`
+
+  I'll Edit the sandbox README: append block. Then commit + run.
+
+  Do Edit now, then one bash chain: commit, rev-parse, counter run (junk), print exit; then complement commit + counter run; then selftest. Chain dependent steps with && in one or two calls. Let me do Edit, then a single bash chain for junk commit + run + selftest, then a second bash chain for the complement. Edit first (dependency).
+
+• Sandbox rules confirm the pattern: gates needing git writes run in a clone — my seat sandbox is that clone, per the dispatcher bounds. Now append the README block naming the entry path exactly once, under the counter's exact heading (em dash U+2014 copied from the tool's `HEADING` constant).0b43926710eab3f7d76a99815ac8c0d52372647a
+0b43926 junk probe: entry cites S999 (absent from registry), README block names it
+ corpus/README.md                                    | 4 ++++
+ corpus/knowledge/sglang-native-route-deprecation.md | 9 +++++++++
+ 2 files changed, 13 insertions(+)
+
+
+• Junk commit landed in sandbox at 0b43926710eab3f7d76a99815ac8c0d52372647a, carrying both the entry (cites S999 only) and the README block naming the path once.
+
+  Now run the C2 counter (canonical tool bytes from the lane, read-only execution) with --repo sandbox --tip 0b43926..., capture output and exit code. Then the selftest at the clean tip 9014843. Then the complement: register S999, commit, re-run.--- junk run (tip 0b43926) ---
+named 1 file_exists 1 cited_new 0 met False
+exit=1
+--- selftest at clean lane tip 9014843 ---
+SELFTEST base_met=False outside_met=False old_id_met=False pass=1
+base named 0 file_exists 0 cited_new 0 met False
+exit=0
+The junk case behaves exactly as the soundness check demands:
+
+  - Junk tip 0b43926 (entry citing S999 absent from registry + README block naming the entry path): `named 1 file_exists 1 cited_new 0 met False`, exit 1.
+    - named = 1: the block-name counting works.
+    - file_exists = 1: the counter did read the entry bytes (so cited_new=0 is not a read failure).
+    - cited_new = 0: the junk id S999 (in neither tip nor base registry) does not flip cited_new — the any() requires sid ∈ tip_ids AND sid ∉ base_ids.
+    - met False: junk cannot satisfy the predicate.
+  - Selftest at clean lane tip 9014843: pass=1, base all zeros met False — the do-nothing control holds in my sandbox too, consistent with the frozen C2 controls.
+
+  Now the complement (guards against a vacuous constant-0 counter): register S999 in the sandbox SOURCES.md, commit, re-run. Expect cited_new flips to 1 and met True (named still 1). This proves the citation machinery actually fires when the id is legitimately registered — so the 0 above is semantic, not broken plumbing.
+
+  SOURCES.md table format: rows like `| S194 | ... |`. I'll append a row `| S999 | junk probe row planted by CritC2Junk in a sandbox clone; not a real source | 36 |` right after a table... wait, SOURCES.md structure: the tail I saw earlier was the lessons text? No — that tail output was from the sandbox SOURCES.md tail showing a Question paragraph (round-35 lesson tail?). Hmm, actually the earlier `tail -c 600 SOURCES.md` output showed a "Question: where exactly does the r32 gate..." paragraph — that's odd for SOURCES.md; it must end with an appendix of audit notes. The registry table is somewhere above. registry_ids regex matches any line `^\s{0,3}\|\s*(S\d+)\s*\|` anywhere in the file, so appending a row anywhere works as long as it matches the row shape. I'll append at end of file:
+
+  `\n| S999 | junk probe row planted by CritC2Junk in a sandbox clone; not a real source | 36 |\n`
+
+  That matches `^ {0,3}\|\s*(S[0-9]+)\s*\|`. Then commit, run counter at new tip. Expect: named 1 file_exists 1 cited_new 1 met True, exit 0.
+
+  Then write the report. Keep it tight: measured results (output lines, exit codes, commit shas, commands), inference (counter is sound on the junk axis; named counts exact string under exact heading; any-id semantics; complement proves non-vacuity), impacted axes (coverage), smallest safe correction (none needed — no defect found; note residual limitations: `named` counts substring occurrences, so a block naming the path twice gives named=2 → met False via ==1; and named uses substring not word-boundary so `knowledge/sglang-native-route-deprecation.md.bak` inside the block would count as naming — but that's outside my junk axis; I can mention as residual observation without editing the predicate — frozen claims forbid changing predicates; I only note).
+
+  Actually careful: residual observations are fine as inference, but the frozen claim says do not change either predicate. I won't propose predicate changes; at most note residuals as non-blocking.
+
+  Also confirm the complement run, then write report to /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/CritC2Junk.md.
+
+• Junk case is clean: `cited_new` stays 0, `named` is 1, `met False`, and the selftest controls pass at the clean lane tip. Now the complement — register S999 and confirm the counter is not a constant-0.tip=93c6b120a73bc463a23d3caea6dbc8bc2052c9de
+named 1 file_exists 1 cited_new 1 met True
+exit=0
+
+
+• Complement confirms: with S999 registered, `cited_new` flips to 1 and `met True` (exit 0). The counter is not a constant-0 — the junk rejection is semantic (the id must be a registry row at tip and absent at base).
+
+  All three measured results in hand:
+  1. Junk tip `0b43926710eab3f7d76a99815ac8c0d52372647a` (entry citing S999 absent from registry + README block naming entry path): `named 1 file_exists 1 cited_new 0 met False`, exit 1. Answer: cited_new stays 0, named is 1. ✓
+  2. Selftest at clean lane tip `9014843`: pass=1, base all-zero, met False — do-nothing control holds.
+  3. Complement tip `93c6b120a73bc463a23d3caea6dbc8bc2052c9de` (S999 registered): `named 1 file_exists 1 cited_new 1 met True`, exit 0 — machinery fires, non-vacuous.
+
+  Real lane untouched: I only read it and cloned it (`git clone --no-hardlinks` reads the source; no writes to lane refs/index/worktree). All git writes happened in the sandbox clone under my seat dir.
+
+  Now write the report to /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/CritC2Junk.md. Keep it scoped: counterexample, evidence (commands + output lines), impacted axes (coverage), smallest safe correction (none — no defect; note residuals as non-blocking observations without predicate changes).
+
+  Residual observations (inference, non-blocking):
+  - `named` is a raw substring count under the heading and `met` requires exactly 1; a block naming the path twice → named=2 → met False (strict, safe direction).
+  - `named` uses substring match, so e.g. `knowledge/sglang-native-route-deprecation.md.bak` in the block would count as naming — but met would then still require cited_new=1 on the actual entry file; direction is fail-safe only in combination. Also S-id regex `\bS[0-9]{3,}\b` would match S9999-style ids; registry regex anchors them as table rows. None of these break the junk axis; none require predicate edits (frozen).
+
+  Report structure per my seat contract: counterexample, evidence, impacted axes, smallest safe correction. Write it now with Write tool, then stop.
+
+• Complement fires: `cited_new 1 met True` once S999 is registered — the rejection is semantic, not broken plumbing. All three measurements are in; writing the report.wrote
+43 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/CritC2Junk.md
+0
+
+
+• The report was written (43 lines, "wrote" printed). The failure is the last chained command: `git status --porcelain | grep -c 'CritC2Junk'` returned 0 matches → grep exits 1 → non-zero chain exit. That's expected: `git status --porcelain` doesn't list untracked files inside untracked directories individually — `.ufo/waves/round-36/...` shows as an untracked directory entry (like `?? .ufo/waves/round-36/w1/out/...` earlier — actually those were shown individually... earlier status showed `?? .ufo/waves/round-36/w1/out/ConnSibling.md` etc., meaning untracked files inside untracked dirs get listed with default settings only when the parent dir is partially tracked... whatever). grep -c printing 0 and exiting 1 just means my report file doesn't appear as a modified tracked file — fine, it's a new untracked file. Not an error in the work itself.
+
+  Let me quickly confirm the report file exists and the lane status shows no unexpected modifications (e.g. that my writes went only to .ufo/out and the sandbox). One cheap verification, then stop.
+
+• Report written (43 lines); the nonzero exit is just `grep -c` finding 0 tracked-file modifications for my seat — my report is a new untracked file, as expected. One final sanity check that the lane saw no writes beyond seat outputs: M corpus/QUALITY.md
+ M corpus/README.md
+ M corpus/SOURCES.md
+?? corpus/knowledge/sglang-native-route-deprecation.md
+# CritC2Junk — C2 counter soundness under junk bytes (round 36, wave 3)
+
+Axis attacked: coverage (C2 counter). Scope: sandbox-only git-writing check. The real lane repo was only read and cloned; every git write happened in a fresh `--no-hardlinks` clone at `.ufo/waves/round-36/w3/out/CritC2Junk/sandbox/` (seeded at lane tip `9014843cb7de8fbe87a97954c13832b67d55f046`; the L1's drafts are uncommitted working-tree bytes, so the sandbox starts clean of them).
+93c6b12 junk probe complement: register S999 so cited_new machinery must fire
+0b43926 junk probe: entry cites S999 (absent from registry), README block names it
+9014843 round-36: freeze predicates, failing controls, and wave spec
+
+
+• Everything checks out:
+  - Lane corpus modifications (`M corpus/QUALITY.md`, `M corpus/README.md`, `M corpus/SOURCES.md`, `?? corpus/knowledge/...`) are the L1's pre-existing uncommitted drafts — identical to what I saw at the start (same four entries), untouched by me.
+  - Report exists at the assigned absolute path with the right header.
+  - Sandbox history: 9014843 → 0b43926 (junk) → 93c6b12 (complement).
+
+  Done. Summarize tightly and stop.
+
+• Review complete. Report is at `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/CritC2Junk.md`; the lane's `corpus/` shows only the L1's pre-existing uncommitted drafts (same four entries as at start), and every git write landed in the seat sandbox.
+
+  **Measured result (the assigned question):** at sandbox tip `0b43926710eab3f7d76a99815ac8c0d52372647a` — carrying a knowledge entry citing `S999` (absent from the registry at tip and at base `e5a8ece`, 0 grep hits at both) plus a README block under the exact heading naming the entry path once —
+
+  ```
+  named 1 file_exists 1 cited_new 0 met False    (exit 1)
+  ```
+
+  **cited_new stays 0 and named is 1.** The C2 counter rejects the junk citation while the naming machinery still counts.
+
+  **Evidence chain:**
+  - `file_exists 1` proves the entry bytes were read, so the 0 isn't dead plumbing.
+  - Non-vacuity complement at `93c6b120a73bc463a23d3caea6dbc8bc2052c9de` (adds one `| S999 | … |` registry row): `named 1 file_exists 1 cited_new 1 met True`, exit 0 — `cited_new` flips only on a tip-present/base-absent registry id.
+  - Selftest at the clean lane tip `9014843`: `pass=1`, base all-zero, `met False` — the frozen do-nothing control reproduces in the sandbox.
+
+  **Verdict:** no defect on the coverage axis. Junk bytes cannot move `cited_new`, and `met` is the conjunction with `cited_new`, so a junk README block alone can't satisfy the predicate. No correction; no predicate touched. Residuals noted in the report as non-blocking observations only (substring-count `named` fails safe via `== 1`; near-path strings count as naming but are still gated by `cited_new`).
+
+  Stopping here — assigned review finished.
+
+To resume this session: kimi -r session_cfc589a0-61d5-44bc-832f-131f56e6e9e2

@@ -1,0 +1,349 @@
+kimi version 2.3.1
+• Let me start by understanding the task. I'm a wave-3 reviewer attacking draft bytes in a lane repo. My specific assignment:
+
+  - Target: `/home/vgpnk/Projects/shokunin/kama-shokunin/corpus/knowledge/sglang-native-route-deprecation.md`
+  - Read the entry draft, re-fetch its two source URLs, check each located quote against the fetched bytes: quote text, line number, word count. Say for each quote whether it is present at the stated line.
+  - Do not edit the entry.
+  - Report to `.ufo/waves/round-36/w3/out/RevEntryBytes.md` (relative to `/home/vgpnk/Projects/shokunin/kama-shokunin`).
+
+  Steps:
+  1. Read the entry draft.
+  2. Identify the two source URLs and the quotes with line numbers and word counts.
+  3. Fetch both URLs (curl/wget).
+  4. Check each quote against the fetched bytes: text presence, line number, word count.
+  5. Write report.
+
+  Let me start by reading the entry draft and also check the rules file mentioned (/home/vgpnk/.omp/agent/RULES.md) — actually that's only needed if I install tools; curl should be available. Let me batch: read entry draft, and check network tooling.
+
+  Let me do it in parallel: Read the entry file, and run `which curl wget python3`./usr/bin/curl
+/usr/bin/wget
+/usr/bin/python3
+curl 8.23.0 (x86_64-pc-linux-gnu) libcurl/8.23.0 OpenSSL/3.6.5 zlib/1.3.2 brotli/1.2.0 zstd/1.5.7 libidn2/2.3.8 libpsl/0.21.5 libssh2/1.11.1 nghttp2/1.70.0 ngtcp2/1.25.0 nghttp3/1.18.0 mit-krb5/1.22.2
+The entry draft cites two sources:
+
+  - S328: https://raw.githubusercontent.com/sgl-project/sglang/v0.5.22/docs/docs/basic_usage/native_api.mdx — claims line 6 has "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs." Line 9 is the route list naming `/get_model_info`. Also `/model_info` count zero in that file. Also line 71 worked example `http://localhost:{port}/get_model_info`.
+  - S329: https://raw.githubusercontent.com/sgl-project/sglang/v0.5.22/python/sglang/srt/entrypoints/http_server.py — lines 786 (route /get_model_info registered), 790–791 (handler warning text), 796 (/model_info registered), old handler returns result of model_info().
+
+  Quotes to verify:
+  S328:
+  1. Line 6: "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs."
+  2. Line 9: route list naming `/get_model_info`.
+  3. `/model_info` count zero in file.
+  4. Line 71: `http://localhost:{port}/get_model_info`.
+
+  S329:
+  5. Line 786: route `/get_model_info` registered.
+  6. Lines 790–791: warning text "Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead."
+  7. Line 796: `/model_info` registered.
+  8. Old handler returns result of `model_info()`.
+
+  Fetch both URLs and check. Also I should look at SOURCES.md rows S328/S329 for consistency (registry rows draft), though my scope is the entry quotes. The task says "Read the entry draft. Re-fetch its two source URLs and check each located quote against the bytes you fetched: quote text, line number, and word count." So focus on quotes. But the registry rows may contain the quotes/word counts too — checking against them could be useful context, and the coverage axis is judged. Let me fetch both URLs first, plus read SOURCES.md rows and QUALITY criterion KQ45 maybe. Keep scope tight: entry quotes. But SOURCES rows are listed as part of the "draft bytes under attack" and my report could cross-check. My target is the entry; I'll primarily verify entry quotes. A quick look at SOURCES rows for S328/S329 to see whether line/word counts match is a cheap parallel read — worth it since "coverage" is the judged axis and misalignment between entry and registry would be a finding.
+
+  Fetch both URLs now in parallel. Save to seat scratch dir /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevEntryBytes/ — wait, scratch goes in "your seat directory /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/<YourSeatName>/". My seat name appears to be RevEntryBytes (report is .ufo/waves/round-36/w3/out/RevEntryBytes.md). I'll create out/RevEntryBytes/ scratch dir. Actually the report file is at out/RevEntryBytes.md — the seat directory convention <SeatName>. Let me just mkdir -p that dir and save fetched bytes there.
+
+• Entry draft read. Two sources cited, both at tag v0.5.22. Now fetching both URLs and reading the registry rows for cross-check in parallel.  467 17359 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevEntryBytes/native_api.mdx
+  2961 110718 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevEntryBytes/http_server.py
+
+
+• Both fetched. 467 lines for the mdx, 2961 lines for http_server.py. Interesting — the entry claims http_server.py has content at lines 786, 790–791, 796. The file has 2961 lines so that's plausible.
+
+  SOURCES.md grep for S328/S329 found nothing with `^S32[89]\b` — maybe rows don't start with the id at line start, or use different format. Let me check the last rows of SOURCES.md differently. Also the v0.5.22 tag — wait, does sglang even have a v0.5.22 tag? The fetch succeeded with `-f`, so raw.githubusercontent returned 200. Good — tag exists and file path exists.
+
+  Now check each quote. Let me:
+
+  For native_api.mdx:
+  - Line 6 content
+  - Line 9 content
+  - Count of `/model_info` occurrences
+  - Line 71 content
+  - Word count of the opening sentence quote
+
+  For http_server.py:
+  - Line 786, 787-791 (grab 780-800 range), 796
+  - grep for "deprecated" / "get_model_info" / "model_info" registrations
+
+  Let me batch these.
+
+• Both fetches succeeded (tag exists, files real). Now checking each claimed quote against fetched bytes, and re-checking the registry rows with a looser pattern.=== mdx line 6 ===
+Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs. We introduce the following APIs:$
+=== mdx lines 8-11 ===
+- `/generate` (text generation model)
+- `/get_model_info`
+- `/server_info`
+- `/health`
+=== mdx line 71 ===
+url = f"http://localhost:{port}/get_model_info"
+=== /model_info count in mdx ===
+0
+COUNT=0 (grep exit 1)
+=== /get_model_info occurrences in mdx (all, numbered) ===
+9:- `/get_model_info`
+71:url = f"http://localhost:{port}/get_model_info"
+=== py lines 780-800 ===
+780	)
+781	_global_state.tokenizer_manager.rid_to_state.pop(rid, None)
+782	_global_state.tokenizer_manager.server_status = ServerStatus.UnHealthy
+783	return Response(status_code=503)
+784	     5	
+785	     6	
+786	@app.get("/get_model_info")
+787	async def get_model_info():
+788	"""Get the model information (deprecated - use /model_info instead)."""
+789	logger.warning(
+790	"Endpoint '/get_model_info' is deprecated and will be removed in a future version. "
+791	"Please use '/model_info' instead."
+792	)
+793	return await model_info()
+794	    15	
+795	    16	
+796	@app.get("/model_info")
+797	async def model_info():
+798	"""Get the model information."""
+799	model_config = _global_state.tokenizer_manager.model_config
+800	result = {
+=== get_model_info / model_info routes anywhere ===
+786:@app.get("/get_model_info")
+787:async def get_model_info():
+788:    """Get the model information (deprecated - use /model_info instead)."""
+790:        "Endpoint '/get_model_info' is deprecated and will be removed in a future version. "
+791:        "Please use '/model_info' instead."
+793:    return await model_info()
+796:@app.get("/model_info")
+797:async def model_info():
+856:    an operator-set weight version -- are reported by `/model_info`, and the
+2216:def _get_vlm_warmup_image_base64(model_info: dict) -> str:
+2226:    architectures = model_info.get("architectures") or []
+2229:        or model_info.get("model_type") == "kimi_k3"
+2301:                url + "/model_info", timeout=5, headers=headers, verify=ssl_verify
+2315:    model_info = res.json()
+2321:        bool(model_info.get("has_image_understanding", False))
+2327:    if model_info["is_generation"]:
+2334:    max_new_tokens = 8 if model_info["is_generation"] else 1
+2351:        and model_info["is_generation"]
+2366:                                f"{_get_vlm_warmup_image_base64(model_info)}"
+2397:        not model_info["is_generation"]
+2398:        and model_info.get("architectures") == ["Qwen3_5ForConditionalGeneration"]
+`scripts/sources-census.sh validate` read them as E12 `row outside Registry section` (12 findings,
+exit 1). They now sit in the `## Registry` table above with ids and cells unchanged; this pointer
+records the move (append-only: no cell was rewritten). Defect and fix recorded in
+`corpus/lessons/round-31.md` §Mistakes row 4.
+
+## Round-33 search log supplement
+
+**2026-10-24 — gate definition and reject-side re-open.** Question: where exactly does the r32 gate define registration, and does the standing S104 reject about fsck/promisor still hold? Where: `tools/gate-registry-check.py` at c4c46ad5 (docstring "Contract", lines 15–16); `https://raw.githubusercontent.com/git/git/v2.56.0/builtin/fsck.c` (S104, lines 143–149); and the r32 C2 gate receipts. Identified 2 source candidates; screened 2; included 1 new row (S194) and reopened standing rejected S104 without changing its row; excluded 0. Stop: both source decisions are bounded to the exact routed evidence; no vendor/API or endpoint claim was sought.
+
+
+• The tail of SOURCES.md doesn't show S328/S329 rows — the last rows appear to be a Round-33 search log supplement. The dispatch said "Registry rows draft: the last two data rows of SOURCES.md (ids S328 and S329)". The L1 "has just written" these into the working tree — maybe the rows are in the `## Registry` table above, not literally the last lines. Let me grep for S328/S329 anywhere in SOURCES.md.
+
+  My awk renumbering hack in the sed output is a bit mangled (blank lines produced "5", "6", "15", "16" artifacts), but the grep -n output gives authoritative line numbers:
+
+  - 786: `@app.get("/get_model_info")` ✓
+  - 790: `"Endpoint '/get_model_info' is deprecated and will be removed in a future version. "` 
+  - 791: `"Please use '/model_info' instead."`
+  - 793: `return await model_info()` — entry says "the old handler still returns the result of `model_info()`" ✓ (line 793, entry doesn't give a line number for that, fine)
+  - 796: `@app.get("/model_info")` ✓
+
+  Entry's quote: "Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead." — spans lines 790–791 (Python implicit string concat). Entry cites "lines 786, 790–791 and 796" ✓.
+
+  mdx checks:
+  - Line 6: "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs." — present at line 6 ✓ (line continues with "We introduce the following APIs:")
+  - Line 9: `- \`/get_model_info\`` — route list names /get_model_info on line 9 ✓. Entry says "Its route list, on line 9, still names /get_model_info" ✓.
+  - `/model_info` count zero in mdx ✓ (grep exit 1, count 0). Wait — careful: `/get_model_info` contains `/model_info`? No — "/get_model_info" contains substring "model_info" but the pattern '/model_info' — does "/get_model_info" contain "/model_info"? g-e-t-_-m-o-d-e-l: "/get_model_info" = "/get" + "_model_info". Substring "/model_info" would require "/" immediately before "model_info". In "/get_model_info", before "model_info" is "_", so no match. Confirmed count 0. Good — the entry's zero-count claim holds exactly.
+  - Line 71: `url = f"http://localhost:{port}/get_model_info"` ✓.
+
+  Now word count check: the task says check "quote text, line number, and word count". Where does a word count come from? Probably the registry rows in SOURCES.md include a word count or quote cell. The grep for ^S32[89] found nothing — maybe rows are in the Registry table formatted as `| S328 | ...`. My grep pattern `^S32[89]\b` requires line start. Let me grep for `S328` and `S329` anywhere in SOURCES.md, and also in QUALITY.md (KQ45) and lessons/round-36.md for word-count claims. Also the entry itself doesn't state word counts — so the word count check likely references SOURCES.md rows or the lesson draft. Let me look.
+
+• All quote anchors in both fetched files check out so far. The registry rows S328/S329 weren't at the file tail — locating them plus any word-count claims across the draft bytes.
+
+• I have what I need on the word-count claims. The lesson draft (round-36.md) claims:
+
+  - Line 33 (S328): "Located quote (15 words): 'Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs.'" — 17359 bytes claim.
+  - Line 35 (S329): "Located quote (16 words): 'Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead.'" — 110718 bytes claim. Also "lines 790-791 for the deprecation warning, lines 786 and 796 for the two route registrations."
+
+  Byte sizes match my fetch exactly: 17359 and 110718. 
+
+  Now verify word counts:
+
+  S328 quote: "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs."
+  Count: Apart(1) from(2) the(3) OpenAI(4) compatible(5) APIs,(6) the(7) SGLang(8) Runtime(9) also(10) provides(11) its(12) native(13) server(14) APIs.(15) = 15 words. ✓ claim says 15.
+
+  S329 quote: "Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead."
+  Count: Endpoint(1) '/get_model_info'(2) is(3) deprecated(4) and(5) will(6) be(7) removed(8) in(9) a(10) future(11) version.(12) Please(13) use(14) '/model_info'(15) instead.(16) = 16 words. ✓ claim says 16.
+
+  Both ≤25. Good.
+
+  Now the quote text verbatim check in fetched bytes:
+
+  S328 line 6: "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs. We introduce the following APIs:" — the quoted sentence is present at line 6. ✓ Verbatim? The quote is a prefix of line 6. Yes verbatim.
+
+  S329 lines 790-791: 
+  ```
+  790:        "Endpoint '/get_model_info' is deprecated and will be removed in a future version. "
+  791:        "Please use '/model_info' instead."
+  ```
+  Whitespace-joined (Python implicit concatenation), the string is: `Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead.` — verbatim match with the quote as recorded. ✓
+
+  Line anchors:
+  - mdx line 6 ✓ (route list line 9: `- \`/get_model_info\``) ✓
+  - mdx line 71: `url = f"http://localhost:{port}/get_model_info"` ✓
+  - `/model_info` count zero in mdx ✓ (grep -c returned 0; and confirm `/get_model_info` doesn't contain `/model_info` as substring — correct, the char before `model_info` is `_`).
+
+  Wait, actually let me double check: "/get_model_info" — substring "/model_info"? The string is / g e t _ m o d e l _ i n f o. "/model_info" is / m o d e l _ i n f o. For it to be a substring, we need "/m" adjacent — in "/get_model_info" the "/" is followed by "g". No other "/" in the string. So no match. ✓ Count genuinely 0.
+
+  - py line 786: `@app.get("/get_model_info")` ✓
+  - py lines 790–791: warning text ✓
+  - py line 796: `@app.get("/model_info")` ✓
+  - "the old handler still returns the result of `model_info()`" — line 793: `return await model_info()` ✓ (entry says "still returns the result of model_info()" — with await; accurate enough, verbatim-ish claim is about behavior; entry's phrasing "returns the result of model_info()" matches `return await model_info()`).
+
+  Entry claims to double check:
+  - Entry line 3: "S328 — ... — line 6 and route-list line 9 — tag v0.5.22" ✓
+  - Entry line 4: "S329 — ... — lines 786, 790–791 and 796 — tag v0.5.22" ✓
+  - Entry line 10: quote of the opening sentence; "Its route list, on line 9, still names /get_model_info" ✓; "The string /model_info does not occur anywhere in that file — the count is zero" ✓; "The worked example on line 71 still asks for http://localhost:{port}/get_model_info" ✓.
+  - Entry line 16: "the route /get_model_info is still registered, at line 786" ✓; handler warning quote ✓ at 790–791; "The replacement route /model_info is registered at line 796" ✓; "the old handler still returns the result of model_info()" ✓ line 793.
+
+  One more check: is the worked example "on line 71" a "worked example" — line 71 is inside a code block presumably. Let me verify context lines 60-75 of the mdx to confirm it's a worked example (curl command). Also verify the route list is on line 9 within a list. Already saw lines 8-11 are a list. Good.
+
+  Also should I verify the bytes I fetched are what GitHub serves for tag v0.5.22 — one fetch each; the lesson records the same byte sizes (17359, 110718) which match. I could also record sha256 of my fetches for the report. Cheap: compute sha256. Also verify with `git ls-remote` that tag v0.5.22 exists? The raw fetch with -f already 200'd, so the tag resolves. Enough.
+
+  One residual check: the entry's claim "Its handler warns the caller" — logger.warning, yes. And "Both statements are true of this tag" fine.
+
+  Also worth verifying there isn't a second registration of /get_model_info or /model_info elsewhere in the file that would undermine "the count is zero" claim — that claim is about the mdx only. For the py, grep showed route registrations only at 786 and 796 (other mentions are docstring/comments/other functions). Line 856 mentions /model_info in a comment; lines 2301 use url + "/model_info" in warmup. That doesn't affect entry claims.
+
+  Also entry says "A reader who takes that page as the contract for the release reads one model-info route out of it." — the route list on line 9 names /get_model_info, and the file never names /model_info. Fine.
+
+  Word-count checks per the task: "check each located quote against the bytes you fetched: quote text, line number, and word count."
+
+  Quotes to enumerate:
+  1. S328 quote (entry line 10 / SOURCES S328 / lesson line 33): "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs." — present at line 6 (as prefix; line continues "We introduce the following APIs:"). 15 words — matches the lesson's "15 words" claim. ✓
+  2. S328 route list at line 9: names /get_model_info ✓ (anchor, not a quoted sentence).
+  3. S328 line 71: worked example URL ✓.
+  4. S329 quote: warning — present verbatim across lines 790–791 (string-literal continuation). 16 words — matches lesson's "16 words". ✓
+  5. S329 line 786 registration ✓; line 796 registration ✓.
+
+  Byte sizes: lesson claims 17359 bytes (S328) and 110718 bytes (S329) — my fetches match exactly. Compute sha256 to record.
+
+  Let me also double-check the word counts mechanically (wc -w) rather than by hand, and compute sha256. Then write the report.
+
+  One more subtle check: the entry says the route list "on line 9, still names /get_model_info" — line 9 is `- \`/get_model_info\``. ✓. And "The worked example on line 71 still asks for `http://localhost:{port}/get_model_info`" — line 71: `url = f"http://localhost:{port}/get_model_info"` ✓.
+
+  Also: does the mdx really "open with one sentence" — line 6 has the quote plus "We introduce the following APIs:". The entry says "opens with one sentence: '...'" — the first sentence of the page body is that sentence (line 6 contains two sentences; the first is the quoted one). The entry's phrasing "opens with one sentence" is fair: the opening line's first sentence. Minor nuance, not a defect — the quoted sentence is literally the first sentence on line 6. I'll note it as accurate.
+
+  Also check title/heading above line 6? Lines 1-5: probably frontmatter/title. Not needed.
+
+  Mechanical word count and sha256 now. Then write report.
+
+  For word count: careful about which normalization. The lesson says "Located quote (15 words)". The C1 counter's `quote_words` extractor was mentioned. I'll do `wc -w` on the quote and also on the whitespace-joined source lines.
+
+  Commands:
+  - printf '%s' "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs." | wc -w → expect 15
+  - sed -n '790,791p' file | tr -d ' "' ... hmm, joining: sed -n '790,791p' | sed 's/^[[:space:]]*//' | tr '\n' ' ' then strip quotes: the literal includes surrounding double quotes in source. Let me extract: sed -n '790p' gives `        "Endpoint '/get_model_info' is deprecated and will be removed in a future version. "` and 791 gives `        "Please use '/model_info' instead."`. Strip leading whitespace and the double quotes, join with space: `Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead.` → wc -w expect 16.
+  - sed -n '6p' mdx | grep -c exact prefix — do a grep -F check of the quote against the file.
+  - sha256sum both files.
+
+  Then write the report to /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevEntryBytes.md.
+
+  Also quickly check line 71's context to call it a worked example (lines ~65-75). Cheap to include: sed -n '60,75p'.
+
+• All anchors verified so far. Now mechanical word counts, byte hashes, and the line-71 context, then the report.Q1 words: 15
+Q1 verbatim-in-mdx (grep -F): 1
+Q2 joined: [Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead.]
+Q2 words: 16
+Q2 == lesson quote: YES
+--- sha256 ---
+209087c3d30dc25cbcdb3b8a31b0453089d83e0fdfa39d317ab54646787e11eb  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevEntryBytes/native_api.mdx
+a89d20bb2fa8a86c511ab4d9d054f74d707423ab220f733ff25e62fcc0e49979  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevEntryBytes/http_server.py
+--- mdx lines 60-75 (worked example context) ---
+- `is_generation`: Whether the model is used as generation model or embedding model.
+- `tokenizer_path`: The path/name of the tokenizer.
+- `preferred_sampling_params`: The default sampling params specified via `--preferred-sampling-params`. `None` is returned in this example as we did not explicitly configure it in server args.
+- `weight_version`: This field contains the version of the model weights. This is often used to track changes or updates to the model’s trained parameters.
+- `has_image_understanding`: Whether the model has image-understanding capability.
+- `has_audio_understanding`: Whether the model has audio-understanding capability.
+- `model_type`: The model type from the HuggingFace config (e.g., "qwen2", "llama").
+- `architectures`: The model architectures from the HuggingFace config (e.g., ["Qwen2ForCausalLM"]).
+- `embedding`: The resolved embedding-serving plan. It includes pooling, normalization, execution and attention style, Matryoshka dimensions, cache policy, and effective BCG prefill settings. This field is available when the model configuration exposes an embedding capability contract.
+
+```python Example
+url = f"http://localhost:{port}/get_model_info"
+
+response = requests.get(url)
+response_json = response.json()
+print_highlight(response_json)
+
+
+• Everything checks out. Now write the report.
+
+  Summary of findings:
+
+  **Measured (fetched bytes, sha256 recorded):**
+  - S328 native_api.mdx @ v0.5.22: 467 lines, 17359 bytes (matches lesson's 17359), sha256 209087c3…
+    - Line 6: contains the opening sentence verbatim (as the first sentence; line continues "We introduce the following APIs:"). Quote = 15 words (wc -w) — lesson says 15. PRESENT at line 6. ✓
+    - Line 9: `- \`/get_model_info\`` — route list names /get_model_info. ✓
+    - `/model_info` count in whole file: 0 (grep -F exit 1). `/get_model_info` does not contain `/model_info` as substring (char before model_info is `_`). Entry's zero-count claim holds. ✓
+    - Line 71: `url = f"http://localhost:{port}/get_model_info"` inside a ```python Example block (worked example). ✓
+  - S329 http_server.py @ v0.5.22: 2961 lines, 110718 bytes (matches lesson's 110718), sha256 a89d20bb…
+    - Line 786: `@app.get("/get_model_info")` ✓
+    - Lines 790–791: logger.warning with two string literals; whitespace-joined (implicit Python concatenation) they read exactly the lesson/SOURCES/entry quote, byte-for-byte. 16 words — lesson says 16. PRESENT at lines 790–791. ✓
+    - Line 796: `@app.get("/model_info")` ✓
+    - Line 793: `return await model_info()` — supports entry's "the old handler still returns the result of model_info()". ✓
+  - Word-count claims in lesson round-36.md lines 33 (15 words) and 35 (16 words): both verified mechanically; both ≤25. ✓
+  - Byte-size claims 17359 / 110718: both match my fetch exactly. ✓
+  - Registry rows S328/S329 (SOURCES.md lines 214–215): quote cells and anchors match fetched bytes; used-by path exists. ✓
+
+  **Findings:** No defect found in scope. Everything the entry claims about the two sources verifies against fresh fetches.
+
+  Residual notes (not defects, honesty items):
+  1. Line 6 nuance: the entry says the page "opens with one sentence" — line 6 also contains "We introduce the following APIs:" after the quoted sentence. The quoted sentence is the first sentence of the file body (lines 1–5 are heading/frontmatter? let me not overclaim — I didn't check lines 1-5). Actually I should check lines 1-5 of the mdx to see if there's a title above. The quote is present at line 6 either way; "opens with" is a fair description of the first sentence. I can note that line 6 carries a second sentence after the quote, so the quote is a prefix of line 6, not the whole line — matches how the entry/row phrase it ("opens with one sentence" = first sentence). Minor, informational.
+  2. The S329 quote is not on a single line: it spans 790–791 as two string literals joined by implicit concatenation. The entry and registry record the anchor as "lines 790–791", which is exactly right; a single-line grep for the full quote would miss it. Not a defect — recording as verified with the join method stated.
+  3. Fetch date 2026-10-24, same day as entry verified-at; single fetch per URL (per finish-early bound). GitHub raw could in principle serve different bytes later; sha256 recorded for re-verification.
+
+  Verification gaps:
+  - I fetched each URL once; byte-identity with the L1's fetch is supported by matching sizes (17359/110718) and sha256 recorded here, but I did not see the L1's own sha256 to compare (sizes match; lesson doesn't record sha). Check: does the lesson record a sha? Line 33/35 as seen: "Opened 2026-10-24, HTTP 200, 17359 bytes." No sha. So byte-identity rests on size match only — noted as gap.
+  - Did not confirm tag v0.5.22's commit identity via git ls-remote (raw 200 suffices for the quote checks).
+
+  Wait — should I double check lines 1-5 of mdx to substantiate "opens with"? Cheap. And also verify entry line 10's claim "Its route list, on line 9" — line 8-11 showed the list. Fine.
+
+  Actually, one more precision check on the entry: "At tag v0.5.22 the SGLang native-API page opens with one sentence: '...'" — if lines 1-5 contain a title and intro text, then line 6 may not literally be the opening. Let me check lines 1-7 quickly before writing. It matters for whether "opens with" is honest. Let me run it as part of the report-writing command batch — no, run first, then write.
+
+• All quotes verify. One last precision check — whether line 6 is genuinely the page's opening text (entry says the page "opens with" that sentence) — then write the report.---
+title: "SGLang Native APIs"
+metatags:
+    description: "SGLang native server APIs for text generation, embedding, reranking, model info, cache management, and more."
+---
+Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs. We introduce the following APIs:
+
+
+
+• Line 6 is the first prose line after frontmatter (lines 1–5). The quoted sentence is the first sentence of the page body. Line 6 continues with "We introduce the following APIs:" — so "opens with one sentence" is accurate for the first sentence; the quote is a prefix of line 6. No defect.
+
+  Now write the report to /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevEntryBytes.md.
+
+• Line 6 is the first prose line after frontmatter — "opens with" is accurate. Writing the report.42 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevEntryBytes.md
+
+
+• Report written. All quotes verified, no findings. Done — stop here per finish-early. Summarize briefly.
+
+• Report written to `.ufo/waves/round-36/w3/out/RevEntryBytes.md`. Summary:
+
+  **Verdict: every quote in the entry draft survives re-fetch — no findings at any severity.**
+
+  Measured against fresh 2026-10-24 fetches of both v0.5.22 URLs (bytes saved in seat dir, sha256 recorded in report):
+
+  | Quote | Claimed | Found | Words |
+  |---|---|---|---|
+  | S328 opening sentence | line 6 | ✅ byte-exact prefix of line 6 | 15 (lesson: 15) ✅ |
+  | S328 route list | line 9 | ✅ `- \`/get_model_info\`` | — |
+  | S328 `/model_info` count | zero | ✅ 0 matches (no substring artifact — `_` precedes `model_info`) | — |
+  | S328 worked example | line 71 | ✅ `url = f"http://localhost:{port}/get_model_info"` | — |
+  | S329 `/get_model_info` route | line 786 | ✅ `@app.get("/get_model_info")` | — |
+  | S329 deprecation warning | lines 790–791 | ✅ byte-exact after implicit string-concatenation join | 16 (lesson: 16) ✅ |
+  | S329 `/model_info` route | line 796 | ✅ `@app.get("/model_info")` | — |
+  | S329 handler delegates | (no line) | ✅ `return await model_info()` at 793 | — |
+
+  Byte sizes (17359 / 110718) match the lesson's claims exactly; SOURCES rows S328/S329 are consistent with the fetched bytes on quote, anchor, and used-by.
+
+  **Residual gaps:** byte-identity with the L1's opening fetch is size-supported but not hash-proven (lesson records no sha — mine are in the report for later comparison); single fetch per URL; tag commit not separately pinned via ls-remote. The entry's cross-surface claims (§"Why this is its own ground") are outside this seat's scope.
+
+  Stopping here — no actionable finding remains in scope.
+
+To resume this session: kimi -r session_250bf2ec-6f06-4460-8f2b-55a6d359e41e

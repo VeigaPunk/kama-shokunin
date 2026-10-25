@@ -1,0 +1,33 @@
+source: `.ufo/waves/round-29/count-c1.py` (frozen SHA-256 `fe11d599d064f5749c829394fc813f43921de2f9903e41c7217e3daa4b647383`), `.ufo/waves/round-29/preregistration.json`, `.ufo/waves/round-29/before/c1-base.json`; S174 (git-blame), S175 (merge-base), S176 (git-grep and pathspec exclusion), S177 (`%ct` committer date)
+verified-at: 2026-10-23 — opened the frozen counter, its check logic, the preregistration, baseline receipt, and cited Git manual passages; no fresh counter run performed
+recheck: `/usr/bin/python3 .ufo/waves/round-29/count-c1.py --tip refs/heads/master --out <fresh path>` from the lane checkout; substitute a nonexistent receipt path. For a fresh-clone run, pass `--repo <clone>` as specified by the preregistration.
+
+# Checking self-assessment statements at writing
+
+Round 29 C1 checks only the statement forms extracted from lines of `SCORECARD.md` and `SHONEN.md` at the frozen base. For each line, the counter gets writing revision `W` from `git blame --line-porcelain`; Git documents blame as attributing each line to the revision that last modified it, and `--line-porcelain` emits commit information for each line (S174). The check then evaluates the statement against the committed tree/history at `W`, not just against the current tip. A mismatch therefore records a calibration error present when the statement was written (for example, an overclaim or wrong pointer), rather than later drift from a once-correct statement. That is why C1 is a calibration check, not a freshness-only check.
+
+The frozen counter recognizes six classes, with these checks at `W`:
+
+- **P — pointer:** a lane-relative `path:L` or `path:L-M` (also an en dash) reference, not a `../` path, absolute path, `~` path, or URL scheme; its blob at `W` must exist and contain at least the range's final line.
+- **H — digest:** `md5` or `sha256` plus 8–64 lowercase hex characters directly after a backticked lane path; that blob must exist and its digest must start with the stated prefix. (The parser binds only a path written directly before the token; uppercase hex or an 8–64 window outside it is not extracted.)
+- **N — line count:** `(N lines` directly after a backticked lane path, or after that path's H token; the blob must exist and `N` must equal its newline count, or that count plus one when its last line is unterminated.
+- **C — commit:** the first 7–40 hex token in a Measured-commit cell (table column or `Measured commit:` line), plus 7–40 hex tokens with a digit and a letter directly after `at`, `base`, `tip`, `commit`, `commits`, `epoch`, `revision`, `rev`, or `measured`. Tokens are skipped when the preceding 40 characters contain `llama.cpp`, `upstream`, `ufo-fsd`, or `@`. A token must resolve to a lane commit that is a strict ancestor of `W`: the counter uses `git merge-base --is-ancestor` for the ordered pair and separately rejects equality; S175 documents the command's ancestor test and exit statuses.
+- **T — time:** a timestamp in the recognized form `YYYY-MM-DD(T| ~|T~)HH:MM[:SS]Z` must not be later than `W`'s committer time. The counter obtains that time with `%ct`, documented as the committer date in Unix time (S177).
+- **Q — quoted output:** a backticked span of 6–200 characters containing a digit and either `=` or a space plus one of `met`, `registered`, `counted`, `stale`, `observed`, `verified`, `RESULT`; it must not start with `python3`, `python`, `bash`, `sh `, `git`, `node`, `./`, `tools/`, or `/`. The span must occur verbatim in a blob of the tree at `W`, excluding `SCORECARD.md`, `SHONEN.md`, `LOG.md`, and `corpus`. The `git grep` check uses fixed-string and quiet modes with pathspec exclusions; S176 documents tree-object blob search, these options, and pathspec exclusion.
+
+A correction is appended under the exact heading `## Round 29 — self-assessment corrections` in `SCORECARD.md`, preserving the entire base `SCORECARD.md` as a byte-for-byte prefix. Each false base statement needs one row whose first cell is `SA29:<sid>` and whose last cell is the exact observed value printed by the counter. A row for a holding or nonexistent statement, a wrong value, or a duplicate SID is false and remains unresolved. The counter reads committed objects only, so a correction must be committed to appear at the measured tip; it does not read an uncommitted working-tree edit.
+
+The frozen base receipt reports 69 extracted statements, 11 mismatched at writing, zero valid corrections, and 11 unresolved; `met` is false at that baseline. These are baseline values from `before/c1-base.json`, not a fresh result.
+
+This is a bounded extractor, not a semantic proofreader: it evaluates the six recognized patterns, not arbitrary prose. Prose claims that do not match those forms, claims outside the two frozen base files, and claims the extractor fails to recognize are beyond its recall; the check does not establish that every factual assertion in either document was found or checked.
+
+What a failure means (added by the L1 after wave-1 critic CriticAxisFit,
+`.ufo/waves/round-29/w1/out/CriticAxisFit/critique.md`, and the Confirm seats): a P failure says
+the pointer as written does not resolve in the lane tree at W, and a Q failure says the quoted
+output is not retained verbatim in a committed lane file outside the self-report files at W. Neither
+proves that the judgment the sentence reports was wrong. Of the 11 base failures, the Confirm seats
+found the intended referent for all four P statements (two fleet files, two lane files written
+without their directory) and, for several Q statements, the output in excluded self-report files
+(LOG.md, a lesson) or in a later commit (`.ufo/waves/round-29/w1/out/ConfirmM01..11/verdict.json`).
+Read a correction row as "the stated evidence did not resolve at writing", not as "the claim was
+false".

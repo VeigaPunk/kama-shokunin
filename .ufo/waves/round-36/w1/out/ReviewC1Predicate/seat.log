@@ -1,0 +1,332 @@
+kimi version 2.3.1
+• I will act as a UFO reviewer for the user's specific task.
+
+  I will read the audit script and preregistration JSON. I will check if the predicate sentence is byte-identical in both files. I will run the counting command at the specified commit and paste the output. I will determine whether a missing lesson can meet the target. I will not edit the counter.
+
+  The review report will be written to ReviewC1Predicate.md. I am reading the frozen claim C1 predicate and the relevant instructions.
+
+• I'll compare the C1 predicate in the counter and preregistration, then run the frozen counting command at the named tip.
+
+• I will compare the predicate sentences byte-for-byte.
+
+  I extracted the predicate sentences from the Python docstring and the PREDICATE constant for comparison.
+
+  The remaining predicate fragments are being concatenated to reconstruct the full sentence.
+
+  The full predicate sentence is now reconstructed. I am now checking preregistration.json line 13.
+
+  The predicate sentences appear identical. I will verify byte-identity with a script rather than eyeballing.
+
+  The docstring also claims the predicate is identical in all three files. I will run a Python comparison script and the counting command to verify byte-identity across all three locations.
+
+  I am now examining the scoring logic to determine whether a missing lesson can still meet the target. The code fetches the round-36 lesson file and parses its rows by statement ID.
+
+  A missing lesson causes all four statement IDs to be uncorrected. The met flag becomes False. The predicate requires a correction row for each ID, so a missing lesson cannot satisfy the target.
+
+  The do-nothing control explicitly tests the absent-lesson case and already printed met=False. I will run the counting command to verify this at the target tip. I also need to check whether the receipt file is present.
+
+  I will run a precise byte comparison and the counting command. The UFO reviewer instructions require reviewing the actual diff, affected callers, invariants, error paths, and observable contracts. I must verify canonical runtime behavior, same-identity rerouting, honest saturation claims, and that failed continuity preflights cause zero mutation.
+
+  The report will be scoped to the predicate and counting command. Findings by severity, residual risk, and verification gaps will be returned in ReviewC1Predicate.md.
+
+  I will check the wave spec and prompt for the expected report format. I must keep assigned materials as data so they do not bias my judgment. I will also verify the receipt file and confirm the lesson is absent at that tip.
+
+• The two predicate texts look aligned; I’ll confirm byte identity and run the frozen counter before judging a missing lesson.
+
+• I will perform a precise byte comparison and run the counting command.
+
+  I will verify the predicate sentence matches across the docstring, PREDICATE constant, and JSON. I also need to check the report format requirements.
+
+  I will run the counting command directly rather than trusting the control file. I need to verify the lesson is actually missing at that tip and trace the code path carefully before answering whether a missing lesson can meet the target.
+
+  The docstring mentions a receipt file that does not exist. The missing lesson path is confirmed: if git show fails, the lesson string is empty, score() increments uncorrected for each ID, and met becomes false. A missing lesson cannot meet the target.
+
+  I also verified that a directory at the lesson path or an exception would still fail to meet the target. The script reads the lesson from the committed tip via git show, while using the working copy version of itself.
+
+  Line ending changes from git_show are irrelevant here. The predicate uses an "iff" condition. The counter requires all four statements to be corrected and the blobs to remain unchanged.
+
+  The predicate is phrased per-statement, but the counter emits a single met flag for all four statements. This mismatch could be a calibration defect. I will check whether the counter actually implements the predicate.
+
+  The predicate requires four conditions: a correction row naming the ID, the counter re-deriving the committed fact, no 429 token in the row, and unchanged lesson and report blobs. The counter implements these checks per statement and only sets met when all four pass.
+
+  I will verify the lesson is absent at the tip using read-only git commands. I also need to confirm whether the counter file exists in the committed tree or only in the working copy, since the do-nothing control relies on running the working script against the tip's tree.
+
+  I will run Python to compare the decoded JSON predicate against the Python constant and the docstring, checking for wrapping or spacing differences. I also need to verify the report format requirements from the spec, since the markdown report may not exist yet. The UFO reviewer format requires findings grouped by severity, followed by residual risk and verification gaps.
+
+  I will check whether the predicate is split across string literals in the Python file, or if the docstring and constant differ. I will also verify that the exact command is run once to confirm a single canonical runtime.
+
+  The script reroutes lane files via --repo but hardcodes the fleet report path. The r35 report blob is read from fleet HEAD and compared against the REPORT_BLOB constant. The do-nothing control file claims this blob is unchanged at the tip. I will verify this by running the counting command directly.
+
+  The script is strictly read-only. It only runs git show, git rev-parse, and git ls-tree. No mutation occurs. This satisfies the resume-path continuity preflight requirement.
+
+  The hardcoded four-ID list confirms that a missing lesson cannot meet the target. The docstring's receipt claim is likely out of scope for this predicate calibration, so it will be noted as residual risk if the receipt file is absent from the two target files. I also need to verify whether the PREDICATE constant is actually used in the comparison logic or merely defined.
+
+  The PREDICATE constant is defined but never referenced after its definition. The counter does not assert the predicate string matches the preregistration at runtime. This is a minor static property issue, not a blocking defect for the calibration task.DOC_COUNT 0
+CONST_REPR 'A frozen r35 routed statement is corrected iff corpus/lessons/round-36.md contains a correction row naming its id, the counter re-derives the cited committed-byte fact, the correction row does not contain the token 429, and the r35 lesson blob and the r35 fleet report blob are unchanged.'
+CONST_LEN 288
+JSON_ID C1
+JSON_REPR 'A frozen r35 routed statement is corrected iff corpus/lessons/round-36.md contains a correction row naming its id, the counter re-derives the cited committed-byte fact, the correction row does not contain the token 429, and the r35 lesson blob and the r35 fleet report blob are unchanged.'
+JSON_LEN 288
+CONST_EQ_JSON True
+CONST_BYTES_EQ_JSON True
+DOC_EQ_JSON None
+DOC_EQ_CONST None
+RAW_IDX 581
+RAW_EQ_CONST True
+RAW_EQ_JSON True
+ESCAPES_IN_PREDICATE_SOURCE False
+uncorrected 4 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met False
+EXIT:1
+commit
+fatal: path 'corpus/lessons/round-36.md' does not exist in 'e5a8ececf3d60fd53b36bb74299693a29e8f74b6'
+LESSON_CAT_EXIT:128
+LS_DONE:0
+/usr/bin/python3
+3.14.8 (main, Oct  2 2026, 10:23:31) [GCC 16.2.1 20260810]
+The docstring comparison failed because the line is indented rather than starting at column 0.
+
+  The predicate line is inside the docstring, not at the start of the file. The extraction failed because it looked for the line at the top level.
+
+  The extraction logic looks correct. The predicate line is indented in the file, so the filter that requires a leading "A frozen" fails.
+
+  The predicate line appears to have no leading space. The zero count suggests the docstring end was found too early, or a hidden character is preventing the match.
+
+  The predicate is confirmed to be inside the first docstring. The next step is to print the raw docstring lines to diagnose the extraction failure.
+
+  Using exec() on the audit script may have caused side effects. The script contains an if __name__ == "__main__" guard, and exec() might not set __name__ correctly.
+
+  The exec() call likely raised a NameError. The audit script's `if __name__ == "__main__"` guard references `__name__`, but exec() does not inject that variable into the namespace unless it is explicitly provided. The script therefore failed during evaluation rather than running normally.
+
+  The command continued and printed counter output, so exec() apparently succeeded. The NameError theory is inconsistent with the observed behavior. __name__ may have been defined in the namespace, or the exception was somehow suppressed.
+
+  Python's exec() documentation confirms it does not set __name__ in the globals dictionary. The script printed DOC_COUNT 0 before CONST_REPR, which means PREDICATE was assigned successfully. A NameError at the if __name__ guard would have crashed after that assignment, so the theory is inconsistent with the observed output.
+
+  The audit script ran to completion, so __name__ was present in the namespace. The predicate matches JSON exactly at 288 bytes. The zero DOC_COUNT remains unresolved.
+
+  The Read tool's tab-separated format might hide a leading space on the predicate line. A hex dump will verify the raw bytes. The predicate must also be byte-identical across both files.
+
+  The predicate sentence appears in both the module docstring and the PREDICATE constant. The docstring version must be checked for byte-identical agreement with the constant. The audit script did not execute main during heredoc execution, so it produced no counter output.
+
+  The missing lesson file caused the counter to report four uncorrected items and zero false corrections. Because no lesson was found, the target could not be met. The phrase "meet the target" is ambiguous.
+
+  The calibration target is 7, which requires the predicate to hold. A missing lesson yields met False and exit code 1, so it cannot meet the target. An empty string lesson is equivalent to a missing one because git_show returns None coerced to an empty string. No path exists where a missing lesson could still satisfy the target.
+
+  The file is absent from the commit tree, not merely missing from the working directory. An exception would have produced exit code 2 rather than 0. The four IDs guarantee a non-zero uncorrected count. The docstring line still needs to be extracted and checked for trailing punctuation differences.
+
+  The docstring claims the predicate is identical in the preregistration, this file, and the receipt. No receipt file exists. The task only requires byte-identical agreement between the two target files. I will search more carefully for a receipt and dump the raw docstring bytes.
+
+  The reviewer also wants affected callers, invariants, error paths, and observable contract checked. The task is narrower. I will note concrete defects if the counter's contract conflicts with the predicate. The PREDICATE constant is never used by the counter. Identity is only documentary. The task asks for byte-identical comparison. It does not ask for runtime enforcement.
+
+  The counter's `met` predicate is aggregate, requiring all four IDs to be corrected and blobs to remain unchanged. This aligns with the per-statement predicate. The missing lesson failure is therefore consistent with the target.
+
+  The missing lesson is not misclassified as corrected. `git_show` returns None for absent files, and the current tip is valid because `lesson_unchanged` is 1.
+
+  The counter reads the fleet report from the main project HEAD rather than the lane repo tip. The predicate claims those blobs are unchanged, and `report_unchanged` is 1. I should verify the blob hashes match the constants to ensure this is not a false positive from an absent file being coerced to an empty string.
+
+  I will verify the actual blob hashes with git rev-parse to confirm the counter's unchanged claims are honest. The predicate also requires the counter to re-derive the cited committed-byte fact.
+
+  The docstring extraction failure is now understood. The predicate line contains a special apostrophe or hidden character that the simple startswith filter misses.
+
+  The predicate line is on line 5, well after the docstring start. The extraction logic is correct, so the zero count must have a different cause.
+
+  The extraction bug is now clear. `text.find('"""', 3)` starts searching at index 3, but the opening triple quotes sit at index 22 after the shebang. The search therefore matches the opening quotes again instead of the closing ones, producing an empty docstring and a zero count. I will re-extract the predicate properly.
+
+  The PREDICATE constant is assigned but never referenced by the counter. The docstring sentence must be checked against that constant for byte-identical agreement. Blob hashes will also be verified.
+
+  The prompt's predicate matches the frozen claim, but the task restricts verification to the two target files. The docstring cites a receipt file that does not exist; whether this omission is a defect remains unresolved.
+
+  The missing receipt is a documentation overclaim, not a predicate defect. I will search for receipt references to confirm it is expected later in the wave. I also need to check the counter's callers.
+
+  The holds() logic is unnecessary for the missing-lesson question. The report must list findings by severity, then residual risk and verification gaps, stopping when no actionable finding remains in scope. It should be written to ReviewC1Predicate.md. If no actionable defects exist, the findings section should state none with the required answers: byte-identical yes, command line and exit code, and that a missing lesson cannot meet the target. Whether an unused PREDICATE constant qualifies as an actionable finding is still undecided.
+
+  The unused PREDICATE constant does not alter the counter's observable contract, so it is not a defect. The remaining question is whether whitespace differences between the docstring and the constant could be a real finding.
+
+  The predicate trailing period is confirmed identical in both the JSON and the constant. The hardcoded fleet path points to the main project, not the lane repo, so the blob hash must be verified against REPORT_BLOB to ensure the unchanged claim is honest.
+
+  The counting command uses the on-disk script, not the tip version. The working-tree file was read before execution to confirm it matched the committed content.
+
+  The runtime is confirmed as /usr/bin/python3. The exit code 1 is correct because the script returns 1 when met is false. The shell printed EXIT:1 after the script ran, but the command chain did not use set -e.
+
+  The output line matches the control file c1-noop.out exactly. The shell continued after the Python exit code 1 because the command chain did not use set -e. This confirms an honest reproduction.
+
+  The predicate and counter both reject a missing lesson as corrected. I will check whether the PREDICATE constant is referenced anywhere in the codebase, and review the spec to ensure the report cites paths and evidence for every finding.
+
+  The audit file was executed safely with no side effects. The JSON predicate is confirmed as the C1 claim, not C2.DOC_START 23 DOC_END 519
+---DOC LINES---
+0 'Round-36 C1 counter. Routed r35 statements, corrected by append only.' len 69
+1 '' len 0
+2 'Predicate (identical in the preregistration, this file, and the receipt):' len 73
+3 'A frozen r35 routed statement is corrected iff corpus/lessons/round-36.md contai' len 288
+4 '' len 0
+5 'Exit 0 when met is True, 1 when met is False, 2 on usage.' len 57
+PRED_LINE_COUNT 1
+DOC_EQ_CONST True
+DOC_EQ_JSON True
+CONST_EQ_JSON True
+PREDICATE_OCCURRENCES 1
+--- blobs ---
+428f1f8a0e8871022f7c1e8ea47e50ba5a8d6412
+6d8f317378ba6048d8a3dfb4944adaf24f341eea
+9307c5d61c1942857a17cb259b4313460b37d0da
+--- which ---
+/usr/bin/python3
+--- tip script? ---
+fatal: path 'tools/round36-statement-audit.py' exists on disk, but not in 'e5a8ececf3d60fd53b36bb74299693a29e8f74b6'
+TIP_SCRIPT_EXIT:128
+I will check the specification for the report contents and any receipt requirements.
+
+  The docstring claims a receipt file exists but it was not found. This may be a defect. The task requires comparing the predicate byte-identical across files, running the counting command, and assessing whether a missing lesson can meet the target. Findings must be returned by severity, residual risk, and verification gaps.
+
+  The missing receipt is a documentation overclaim, not a predicate mismatch between the two target files. It should be noted as residual risk rather than a finding.
+
+  The missing-lesson logic is now clear. If the lesson file is absent, git_show returns None, and the `or ""` fallback produces an empty string. The rows_of function then processes that empty string and returns an empty dictionary.
+
+  A missing lesson cannot meet the target. The code counts all four IDs as uncorrected, so the met flag becomes false and the exit code is 1. This matches the observed run and git confirmation that the file does not exist at the tip.
+
+  I verified that git show returns a non-zero exit code for missing files, ruling out edge cases where the command might succeed with empty output. I also noted that a working-tree-only copy of the lesson would not affect the tip comparison.
+
+  The predicate is per-statement, while the counter's met flag aggregates all four IDs. A missing lesson fails every statement, so the aggregate cannot be met. This is consistent.
+
+  I also noticed the PREDICATE constant is defined but never used at runtime. The embedded sentence matches the preregistration statically, so this is not a current mismatch.
+
+  The counter reads the fleet report from the lane repository's HEAD, not from the lane tip. The predicate requires that blob to be unchanged, and it is because the lane HEAD matches REPORT_BLOB. This is a same-identity reroute rather than a canonical runtime.
+
+  The fleet report lives in the fleet repository, not the lane. Hardcoding FLEET to that repo and checking HEAD means the unchanged check is against whatever fleet HEAD currently is, not a frozen commit. If fleet HEAD moves, report_unchanged could flip without any lane change. This is a residual risk, not a current false met, because the flag is already false.
+
+• Predicate copies match. I’ll check the wave report contract and whether a receipt is supposed to hold a third copy.
+
+• CriticC1Noop.md may show the expected report format.Checking the ReviewC1Predicate report format specification. Also verifying whether MutBlob's copy of the audit script uses a different predicate, which could indicate a same-identity issue.
+
+  The canonical audit script does not import or reroute to MutBlob's copy. The two files are independent.
+
+  The docstring claims byte-identity with a receipt file that does not exist for round 36. This overclaim may be an out-of-scope defect.The grep for ReviewC1Predicate in spec.json only returned the filename, not the content.I have enough information to write the report.
+
+  Checking for actionable findings. The task requires byte-identical predicate comparison, counting output, and a missing-lesson target assessment. Reviewer instructions demand severity rankings, concrete defects with evidence paths, and verification of canonical runtime rerouting and continuity preflight claims.
+
+  The predicate sentence is byte-identical across all three copies. The counting command returned exit code 1 with four uncorrected items and zero false corrections. The target was not met.
+
+  The counting command invoked the on-disk script directly. It did not reroute to a tip copy or MutBlob. The missing lesson cannot meet the target. Git reports the file does not exist at that path. The counter coerces a failed fetch into an empty string.
+
+  The four uncorrected items are four distinct IDs. Each ID increments the unclosed count, so the target cannot be met. The observed run matches this exactly.
+
+  Blob pins are honest at this tip. The lesson, report, and display blobs all match their constants. The failure is not caused by hidden blob drift.
+
+  A selftest in the counter would also assert these exact counts, but it was not re-run.
+
+  The predicate constant is assigned but never loaded or compared at runtime. The counter does not read the JSON file. This is residual risk, not a current defect.
+
+  The docstring claims the predicate sentence is identical in the preregistration, this file, and a receipt. No receipt artifact exists yet, so that claim is currently false or a forward commitment. Searching round-36 for a JSON key named "receipt" found no matches.
+
+  The receipt claim is a calibration honesty issue. It is low severity and likely not actionable because the receipt may be produced later in the wave, and the two assigned files already match.
+
+  The missing receipt claim is an unverified third-copy assertion, not a disproven future artifact. It belongs under residual risk.
+
+  The counter reads the fleet report from a hardcoded HEAD path instead of using the `--repo` or `--tip` arguments.
+
+  The hardcoded fleet HEAD blob matches REPORT_BLOB at this run. report_unchanged is therefore honest for the current fleet state. A later HEAD move could flip that flag without a lane change, but the target remains unmet.
+
+  The canonical runtime is the invoked script path. It does not re-execute another copy. Lane objects are read at the specified tip via git show. The fleet report is read at fleet HEAD, not at the lane tip.
+
+  The hardcoded fleet HEAD coupling is not an actionable defect for this seat. It does not let a missing lesson meet the target, because the uncorrected count remains four even when blobs match. The exception handler exits with code 2.
+
+  The missing lesson is a scored miss, not an exception. The counter only reads git objects and never writes. No mutation occurred. I did not check git status afterward to confirm the working tree remained clean.
+
+  An empty committed file would also be treated as missing, so that edge case does not change the outcome. A git error printed to stdout with exit code zero could theoretically be parsed as a lesson.
+
+  I will run the same git show command locally to confirm the missing lesson returns exit code 128 and produces no stdout. This closes the gap on whether the counter might have received unexpected output.
+
+  The counter printed met False, so it did not falsely claim the positive arm was saturated. A later tip with rows remains untested by this run. The selftest flag was not used because the assigned command did not include it.
+
+  I will run the counter's selftest. It is read-only and cheap, so it can strengthen the evidence that a missing lesson cannot meet the target without replacing the assigned command.
+
+  The frozen predicate claim matches the prompt text. No extra verification is needed.
+
+  JSON decoding does not alter the predicate sentence. The raw bytes of the JSON string content equal the Python constant.
+
+  The byte-identical predicate comparison applies only to the sentence text, excluding JSON wrapper quotes. The decoded sentence is 288 bytes of UTF-8 with no escapes. The docstring line matches the PREDICATE constant exactly. Both copies end with a period and no trailing space.
+
+  The counter fetches the lesson from git show at the specified tip, not from the working tree. I will verify that no worktree copy of round-36.md exists, since that would be a defect only if the counter read it.
+
+  A transport failure in git show would also yield an empty lesson and met False. The counter fails closed, so a git error cannot produce a false positive through the lesson path.
+
+  The holds() and 429 checks are not exercised by a missing lesson, so they are not actionable findings for this run.
+
+  The verdict is no actionable defect. The predicate sentences are byte-identical, the counting command did not meet the target, and a missing lesson cannot satisfy it.
+
+  I am considering flagging the unused PREDICATE constant as a low-severity calibration risk. Because the counter never loads or compares that constant at runtime, editing the sentence would not affect scoring, and editing the counter logic could change scoring without updating the sentence.
+
+  The unused PREDICATE constant is by design. The frozen predicate in the preregistration is the canonical specification, and the counter implements it. The implementation's met flag operationalizes the "corrected if" condition. I am now checking whether the counter faithfully follows that exact logical structure.
+
+  The counter's `met` flag is aggregate. It requires all four IDs to have valid rows and unchanged blobs. A missing lesson fails condition 1 for every ID, so none are corrected and the claim stays unmet. This is logically consistent.
+
+  The report will be written to the absolute path inside the seat directory as instructed. The findings format should follow CriticC1Noop, grouping by severity and separating residual risk from verification gaps.SHOW_EXIT:128
+STDOUT_LEN 0
+STDERR fatal: path 'corpus/lessons/round-36.md' does not exist in 'e5a8ececf3d60fd53b36bb74299693a29e8f74b6'
+
+e5a8ececf3d60fd53b36bb74299693a29e8f74b6
+Git status shows no modifications for those two files.
+
+  The counter script is absent at commit e5a8ecec. That commit may not be HEAD.
+
+  The files are tracked and unmodified in the current index. HEAD has moved past commit e5a8ecec.
+
+  The counting command used the working-tree script against the named tip. No files were mutated.
+
+  Temporary files were written to /tmp and removed afterward. They were not left in the seat directory.
+
+  The report is being drafted. It will document the byte-identical C1 predicate across both files and present the counting command evidence.
+
+  The counting command output and exit code are being recorded.
+
+  A missing lesson cannot satisfy the target. Code path evidence supports this.
+
+  Three verification gaps remain:
+  - The PREDICATE constant is not compared at runtime against the preregistration; identity is static.
+  - A docstring references a receipt file absent from the round-36 tree, so the third-copy claim is unverified.
+  - The fleet report is read from fleet HEAD rather than the lane tip; it currently matches REPORT_BLOB, but this does not hide a pass because met is already False on the uncorrected tip.
+
+  The positive arm was not executed; this seat only runs the do-nothing tip. The optional --selftest was skipped because the main path already shows empty or missing failures, and score() was traced instead. The unused PREDICATE is a residual risk, not a defect, since the sentences match and the task asked for static identity rather than runtime enforcement. The counting command invoked tools/round36-statement-audit.py directly via /usr/bin/python3 without importing or executing another runtime.
+
+  The MutBlob copy was not invoked. The fleet path is hardcoded; this is a residual risk, not a reroute that changes the missing-lesson result.
+
+  The predicate implementation is not fully saturated. Only at this tip with the absent lesson does met evaluate to False and the text identity hold. The counter's met False does not prove all kill conditions work.
+
+  Findings will be ordered by severity. Residual risks and verification gaps follow. The report file is the deliverable.
+
+  The report will be written to disk and the findings included in the response. The predicate sentence is 288 characters without a newline, matching the docstring line length. The JSON-decoded predicate value equals the constant.
+
+  The comparison focused on the decoded predicate sentence, not surrounding JSON punctuation. UTF-8 and unicode normalization were ruled out because Python string equality and matching byte lengths confirm code-point identity. The counter script was not modified.
+
+  The findings will be phrased as recommendations rather than admissions. The exact command line and exit code are being recorded: the script returned 1 because met was False.
+
+  The shell script exited with code 0 because it echoed the Python exit code and continued. The Python script itself returned 1 because met was False.
+
+  CriticC1Noop independently produced the same line, but the primary evidence is the re-run rather than another seat's verdict. The c1-noop.out file matches and will be cited as the recorded control.
+
+  A check for missed discrepancies between the docstring and PREDICATE due to Read tool line wrapping is in progress.
+
+  The docstring and PREDICATE are definitively identical. The report is being written now.
+
+  A missing lesson cannot satisfy the target. The predicate is the operational target, and the do-nothing control must print met False.
+
+• The sentence matches in both files, and the base-tip run fails closed. I’ll write that as the seat report without touching the counter.
+
+• The report has been written. I am now verifying the file exists and reading it back to confirm its contents.
+
+• No actionable defect. The counter was not edited.
+
+  The C1 predicate sentence is byte-identical in both files (288 UTF-8 bytes): the preregistration C1 `predicate`, the counter `PREDICATE` constant, and the same sentence in the counter docstring.
+
+  Counting command at tip `e5a8ececf3d60fd53b36bb74299693a29e8f74b6`:
+
+  ```
+  uncorrected 4 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met False
+  ```
+
+  Exit code: `1`.
+
+  A missing lesson cannot meet the target (`met True` / exit `0`). At that tip `corpus/lessons/round-36.md` is absent (`git cat-file -e` exit 128, `git show` exit 128, empty stdout). The counter treats that as no correction rows, so `uncorrected` is 4 and `met` stays false. The r35 lesson and fleet report blobs still match their pins; the fail is only the missing rows.
+
+  Residual: the docstring names a receipt that is not in the tree; the fleet report is read from fleet `HEAD`, not the lane tip; the positive arm was not run. None of those let a missing lesson pass.
+
+To resume this session: kimi -r session_7e9f5ee6-62f2-40e2-a484-bb2ac4a2c08f

@@ -1,0 +1,274 @@
+kimi version 2.3.1
+• Let me start by naming my axes and executing in parallel.
+
+  My task:
+  1. Fetch the URL once: https://raw.githubusercontent.com/sgl-project/sglang/v0.5.22/docs/docs/basic_usage/native_api.mdx
+  2. Record HTTP status
+  3. Count occurrences of `get_model_info` and of the route `/model_info`
+  4. Give line number of the route-list entry and of the worked example
+  5. Quote at most 25 words from line 6
+  6. Compare every measured number with S328 row and entry draft
+  7. Report to .ufo/waves/round-36/w3/out/RevS328.md
+
+  Let me do this in parallel:
+  - Fetch the URL
+  - Read the S328 row in SOURCES.md (last two rows)
+  - Read the entry draft
+  - Read RULES.md as required by tooling note (maybe skip if not installing tools — I likely won't need to install tools; curl is available presumably)
+
+  Also need the QUALITY draft (KQ45) maybe — task says compare with S328 row and entry draft. The QUALITY criterion and README block are also draft bytes under attack but my specific task only compares with S328 and entry. I'll read QUALITY.md last block and README last heading block too since it's cheap and relevant for coverage, but keep scoped.
+
+  Let me run in parallel:
+  1. FetchURL the target
+  2. Read corpus/SOURCES.md tail
+  3. Read corpus/knowledge/sglang-native-route-deprecation.md
+  4. Read corpus/lessons/round-36.md
+  5. Read QUALITY.md tail
+  6. Read README.md tail
+  7. Read RULES.md
+
+  Then compute counts with grep on a saved copy? I need to save the fetched bytes to my seat scratch dir to count precisely. FetchURL returns main text or full body. I'll save to seat dir via bash curl? The task says "Fetch the URL once." I can use curl once and save to scratch, which gives me exact bytes, HTTP status, and lets me grep line numbers. That's better than FetchURL for counting. But the tool guidance says use dedicated tools... but I need HTTP status and exact bytes; curl is appropriate. Actually the instructions say "Fetch the URL once. Record the HTTP status." Using curl -sS -w "%{http_code}" -o file is the cleanest. Raw.githubusercontent is public.
+
+  Let me do:
+  - Bash: mkdir -p seat dir && curl -sS -w '%{http_code}' -o native_api.mdx URL && wc -l native_api.mdx
+  - Read SOURCES.md, entry, lesson, QUALITY tail, README tail, RULES.md in parallel.
+
+  Then grep counts.
+
+  Seat name: RevS328. Scratch: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevS328/
+
+  Report path: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevS328.md
+
+  Let me go.
+
+• Axes: (1) fetch fidelity (status/bytes), (2) counts (`get_model_info`, `/model_info` route), (3) line numbers (route-list entry, worked example), (4) line-6 quote ≤25 words, (5) divergence vs S328 row + entry draft, (6) report written within bounds. Execute in parallel: fetch once via curl (captures HTTP status + exact bytes for counting) and read all draft bytes.
+HTTP_STATUS:200
+467 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevS328/native_api_v0.5.22.mdx
+   word "given": the page reads "Annotates each line in the given file with information from the
+   revision which last modified the line". The fragment points at the right sentence; the verbatim
+   label with the omission is false. Read the cell's first phrase as a paraphrase, not a quote.
+2. **S176.** The wave-2 decision record said the `teaches` cell's "tree" would be fixed to "trees"
+   before landing; the landed cell still says "given tree" and composes the `:(exclude)` example
+   with the `<tree>` form. The landed cell is a composition, not a verbatim quote; the row's
+   `anchor` (git-grep `<tree>` form and gitglossary `exclude`) is the part grounded in the pages.
+   The decision record's "fixed pre-landing" claim is superseded by this note.
+
+## Round-31 rows relocated into the registry (repair, 2026-10-23)
+
+S180–S191 were first appended at end of file, after the last `##` section, so
+`scripts/sources-census.sh validate` read them as E12 `row outside Registry section` (12 findings,
+exit 1). They now sit in the `## Registry` table above with ids and cells unchanged; this pointer
+records the move (append-only: no cell was rewritten). Defect and fix recorded in
+`corpus/lessons/round-31.md` §Mistakes row 4.
+
+## Round-33 search log supplement
+
+**2026-10-24 — gate definition and reject-side re-open.** Question: where exactly does the r32 gate define registration, and does the standing S104 reject about fsck/promisor still hold? Where: `tools/gate-registry-check.py` at c4c46ad5 (docstring "Contract", lines 15–16); `https://raw.githubusercontent.com/git/git/v2.56.0/builtin/fsck.c` (S104, lines 143–149); and the r32 C2 gate receipts. Identified 2 source candidates; screened 2; included 1 new row (S194) and reopened standing rejected S104 without changing its row; excluded 0. Stop: both source decisions are bounded to the exact routed evidence; no vendor/API or endpoint claim was sought.
+=====QUALITY=====
+| KQ38 | Before freezing a future depth counter, every outcome predictable from pinned source-declared bounds or type rules is excluded from the scored population. The counter credits only outcomes whose value requires the live measurement, not merely outcomes that a later live run confirms. A non-author pre-freeze control call, dispatched by the L1 before any data-collecting seat runs (an executor seat may execute it but collects no data), scores both a type-guess policy and a declared-bounds projection against the same candidate counter, population and target before any data seat scores, and the resulting receipts are committed with the freeze; those exact counter bytes are then frozen unchanged, both shortcuts fail the target, and a measurement-dependent positive control can meet it. | Any source-predictable outcome is credited as depth, exclusions happen only after freeze, either shortcut is omitted or first scored after a data seat, a shortcut reaches target, the control-tested counter differs from the frozen one, or an always-refuse counter passes without a measurement-dependent positive control. This would refuse the round-28 type-only `controls-A1/CtlA1Conversion/receipt-A0.json` (20/52 counted, met true; the same policy under A1 counted 0/52) and the post-data declared-bounds projection `.ufo/waves/round-28/w2/out/ExecShortcutPostData/shortcut-receipt.json` (20/20 counted, target 18, met true). These receipts are prior falsifiers, not a retroactive rescore. | `corpus/lessons/round-28-verifier-spotcheck.md:222-226`; `.ufo/waves/round-28/controls-A1/CtlA1Conversion/REPORT.md` and `receipt-A0.json`; `.ufo/waves/round-28/w2/advice/ExecShortcutPostData.md` and `.ufo/waves/round-28/w2/out/ExecShortcutPostData/shortcut-receipt.json` |
+
+## Criterion added — round 29: calibration statements are judged at their writing revision
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ39 | Each checkable self-assessment statement is evaluated against repository state and history at its writing revision W, identified for its line by `git blame --line-porcelain`: false at W is a calibration mismatch; true at W but false later is drift, assigned to freshness rather than calibration. A correction preserves the original statement and is a newly appended row carrying the counter's observed value; any missing, duplicate, wrong-value or otherwise false correction counts as a mismatch. A discriminating fixture includes both a statement false at W and one true at W that becomes false later, and demonstrates the different classifications. The committed control call must refuse its shortcut and tampering receipts; `RefPaste` is identified as a reference policy, not a control or axis-fit proof. | A statement is checked only at base or tip rather than W; later drift is called a writing-time error, or a writing-time mismatch is excused as drift; an in-place rewrite/deletion substitutes for an appended correction; a false correction is ignored or treated as repair; or a named shortcut/tampering control passes. The committed receipts summarized in `.ufo/waves/round-29/controls/SUMMARY.md:16-29` are discriminating rejects: `CtlDoNothing` (unresolved 11), `CtlDeletion` and `CtlEditInPlace` (append_only false, unresolved 69 each), `CtlJunk` (unresolved 22), `CtlAllFalse` (unresolved 58), `CtlLabelKeyed` (unresolved 80), `CtlTypeGuess` (unresolved 24), `CtlSourceBounds` (unresolved 9), `CtlNoReader` (unresolved 22), `CtlBaseTree` (unresolved 9), `CtlWorkingTree` and `CtlObjectStore` (unresolved 11 each), and `CtlDuplicate` (unresolved 22 for duplicated rows; unresolved 1 when it also adds a row to a holding statement). `RefPaste` reports valid 11, false 0, unresolved 0 and meets by design; it does not settle calibration-axis fit. | `SCORECARD.md:1278-1291` (round-25 axis-fit ruling); `.ufo/waves/round-29/preregistration.json:14-20`; `.ufo/waves/round-29/controls/SUMMARY.md:11-45` |
+
+Drafted by wave-1 scribe ScribeDepthCriterion (`.ufo/waves/round-29/w1/out/ScribeDepthCriterion/`), integrated by the kama L1, round 29. KQ39's drift-versus-writing distinction is exercised by control CtlBaseTree (`.ufo/waves/round-29/controls/CtlBaseTree/`): 4 statements that hold at W but not at base were refused as false corrections.
+
+## Criterion added — round 30: a census population declares its recall gap
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ40 | A census counter that counts self-assessment statements declares its population as the union of (a) what its extractor finds and (b) an independently enumerated set of what the extractor misses, with (b) pinned by revision; an item in (b) counts as classified only after the counter re-derives its class check and prints the observed value; closing a recall gap is credited to the statements whose observed values are newly recorded, never to the row count or to the enumerating seat's verdicts | A recall gap that is disclosed but never bounded; a counter that reads the enumerating seat's `holds`/`evidence` fields as its result (that is a paste, not a check); a statement outside both (a) and (b) counted as covered; a recall repair that changes the extractor's bytes without showing the old receipt at the same tip | Round 29 disclosed 72 checkable statements it could not see (`corpus/lessons/round-29.md` §Claims, `RecallA/B`); round 30 classified them at their writing revisions and landed the two observed values that had never carried a correction (`.ufo/waves/round-30/count-c1.py`; SCORECARD.md §Round 30) |
+
+## Criterion added — round 31: a correction's identity must be unique in its population
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ41 | A correction table keyed by a population row's own label declares that label's uniqueness first — as a precondition checked by the instrument (duplicate ids counted, not silently merged) or as a round-qualified composite key — and the instrument reports every failing row it cannot express instead of dropping it. | A predicate whose validity depends on labels that are not unique: three distinct failing rows sharing the cell `C1` (rounds 11-13) make one correction row silently resolve three dispositions, and the frozen predicate becomes unreachable while the counter still reports a tidy `unresolved` count. |
+
+## Criterion added — round 31 attempt 2: a graded prose cell is admitted by a probe, not a word count
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ42 | A cell whose text is graded by a counter only for shape (word count, non-empty, matches a rendering) is admitted as evidence only after a counterexample search on the same pinned fixture: for each prose cell, one request that the cell's literal reading forbids or excludes is issued and its outcome recorded, and the probe receipt is committed with the row. A cell whose probe confirms the literal reading keeps its wording; a cell falsified by its probe is narrowed by an appended correction, never by rewriting the counted bytes. | Counting a prose cell as verified because the counter accepted its shape: the round-31 C1 table counted all eighteen rows while six `meaning` cells asserted behaviour the pinned fixture contradicts (`content:null` → 200, `logprobs:true` alone → `n_probs: 20`, `grammar:""` → 200, `logprobs:false` with tools+stream → 200, native `n_predict` overriding the OpenAI aliases, assistant `content` without `tool_calls` → 200). `count-c1.py` says so itself: "Not checked (reviewed per row, never counted): whether the meaning prose is correct beyond its word count". | `.ufo/waves/round-31/w2/out/RevRow{A..E}/`; appended corrections in `SKILL.md` §Round-31 attempt-2 meaning-cell corrections |
+
+## Criterion added — round 33: gate receipts bind outputs to evaluated revisions
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ43 | A gate-run receipt supporting a claim records the invoked argv, full source and evaluated revisions, gate/runner digests, numeric process exit, and captured stdout/stderr; a synthetic fixture also pins its evaluated tree. The replay audit re-runs the pinned gate and requires the exact expected output lines and exit for that fixture. Report text distinguishes the revision evaluated from the commit that first carries the receipt. | A filename, commit message, abbreviated hash, or neighboring selftest arm supplies an omitted field; an extra defect line, changed exit, or receipt-tip/report contradiction is hidden by checking only that one expected substring appears. | `lessons/round-33.md` §Mistakes 1, 4–5; `.ufo/waves/round-33/c2/diagnostic-attempt1/controls/empty-exit-map.out` and `c2/final/` |
+| KQ44 | An outside closure verdict of improved on an axis is recorded next to the numeric score that round actually held. Repeated outside improved verdicts with no score movement are a promoter question, not a self-promotion. | The author raises the numeric score because a closure said improved; or the held score is described as a promotion. | `considerthese/2026-10-24.md` proposal 1, opened 2026-10-24; `corpus/lessons/round-29-verifier-spotcheck.md` and `corpus/lessons/round-30-verifier-spotcheck.md` (calibration improved, score held at 7) |
+
+## Criterion added — round 36: a located quote is checked at its anchor, and unreachable is not drift
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ45 | Every new SOURCES row's located quote is checked against the source bytes at its cited anchor in the round that writes the row: a quote labeled "verbatim" is checked byte-exact, and a row whose quote drops a word, strips markup, or sits at a line other than the one its anchor names is a defect, corrected by an appended superseding row (CORPUS.md rule 2) and never by editing the quoted cell. A row whose source the check cannot reach (a client-rendered body, a paywall, a bot wall) records the access route in its anchor cell and is marked unverifiable-by-fetch, which is not drift. | A row is admitted on the strength of a quote a reader cannot find at the cited anchor, and the drift is found by a later closure and fixed by rewriting the quoted cell; a quote labeled "verbatim" that is really a paraphrase with the markup stripped; or a source that cannot be fetched being recorded as drift instead of as unverifiable. | `considerthese/2026-10-24.md` proposal 2, opened 2026-10-24; the drift measured this round on S174 (the live git-blame manual reads "Annotates each line in the given file with information from the revision which last modified the line"; the row's verbatim quote reads "in the file") and on S193 (the committed gate docstring at c4c46ad5 reads "A path is ``registered`` iff it occurs in a cell of a row of such a table"; the row's quote drops the markup), and on S192 (the quoted sentence is absent from the fetched bytes of the cited URL, whose body renders client-side, so it is unverifiable-by-fetch rather than drift) |
+=====README=====
+append-only records in `corpus/lessons/round-33.md` and `SCORECARD.md`.
+S194 is a scoped own-work source correction for the gate's exact docstring
+anchor; it does not add a `knowledge/` entry or serving surface. The first
+round-33 gate capture exposed an extra `missing-path` in its synthetic
+empty-exit-map fixture; the committed diagnostic preserves that output and
+the corrected fixture is isolated in the final replay set. No knowledge
+coverage-map ground or endpoint sample advanced. The serving frontier remains
+as recorded by round 32: `response_format`/`json_schema` grammar, `/v1/completions`,
+other engines, K05, and registered-consumer reconciliation.
+
+## Coverage map — round 35 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/endpoint-health-probe-conventions.md` | a vLLM HTTP 503 can be an admission rejection, distinct from a dead endpoint and from llama.cpp loading 503 | 35 |
+
+## Round-35 correction of the round-34 map sentence
+
+The filed round-34 report says the coverage map gains `serving-alias-contract.md` and `served-model-id-resolution.md`. At `719655f12517a9ce6b1a5ca44316897fed8420b0` those names are absent from this file. That sentence is false. It is not rewritten. The two names are recorded here as round-35 pointers, which does not make the round-34 sentence true.
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/serving-alias-contract.md` | served-name and alias resolution; absent from this map at the round-34 tip | 35 |
+| `knowledge/served-model-id-resolution.md` | served model id read from a local OpenAI-compatible listing; absent from this map at the round-34 tip | 35 |
+
+## Coverage map — round 36 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/sglang-native-route-deprecation.md` | at tag v0.5.22 the published SGLang native route list still names `/get_model_info` while the engine's own handler warns that the route is deprecated and names `/model_info` as the replacement | 36 |
+
+The frontier step of round 36 is the corpus-expansion-1 package under
+`/home/vgpnk/Projects/shokuknow`, read only. One theme, one entry, two registry
+rows: S328 and S329, both opened on 2026-10-24 by this lane and re-opened by
+wave-2 seats. The package's staged ids (S325 to S458) collided with this lane's
+own registry on S327; the adopted ids follow the lane's registry, and no
+adopted row re-points a staged citation by arithmetic. Quarantine verdicts for
+the seven kama rows of the campaign absent-defect register, the rejects with
+their flip conditions, and the id-collision record are in
+`corpus/lessons/round-36.md`.
+
+
+• HTTP 200, 467 lines, saved. Now I need:
+  1. Count `get_model_info` occurrences in the file.
+  2. Count route `/model_info` occurrences — careful: the claim is that the literal `/model_info` doesn't occur anywhere (count 0). Note `get_model_info` contains `model_info` but not `/model_info` — `/get_model_info` contains `/get_model_info`, which contains the substring `model_info` but not `/model_info` (since after `/` comes `get`). So `/model_info` count should be 0 if only `/get_model_info` appears.
+  3. Line number of the route-list entry (claimed line 9) and worked example (claimed line 71).
+  4. Quote line 6, at most 25 words.
+  5. File size: lesson claims 17359 bytes for S328. My saved file — check byte size.
+
+  Wait: the wc -l says 467 lines but the curl output had a newline prepended by my -w? No, -w writes to stdout after body when -o is used, so the file is just the body. But `curl -w '\nHTTP_STATUS...'` — the \n went to stdout, not the file. Good. However wc -l = 467 lines; the file may lack trailing newline.
+
+  Also careful: the lesson claims line 6 quote and line 9 route-list. But my fetched file — check whether raw.githubusercontent served exactly the same bytes. Let me run greps.
+
+  Commands:
+  - grep -n 'get_model_info' file (count with -o | wc -l)
+  - grep -c and grep -n for '/model_info'
+  - grep -n for route list entries (lines with backticks and slashes, e.g. `/get_model_info`)
+  - sed -n '6p' and word count
+  - stat bytes
+  - md5sum for record
+
+  Let me also check the S328 row itself in SOURCES.md — the tail I got showed the round-33 supplement etc., not the S328 row. The registry rows are "the last two data rows of corpus/SOURCES.md (ids S328 and S329)" per the dispatcher, but the tail I printed showed sections after... Actually the tail showed "## Round-33 search log supplement" at the end. Hmm, so the S328/S329 rows are inside the Registry table earlier. Let me grep SOURCES.md for S328 and S329 rows.
+
+  Let me do all in parallel.
+
+• HTTP 200, 467 lines, bytes saved. Now measure counts, line numbers, line-6 quote, byte size, and pull the actual S328/S329 registry rows from SOURCES.md.== bytes ==
+17359
+d268509f4df1878934d59346b8973e9e  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevS328/native_api_v0.5.22.mdx
+== occurrences of get_model_info (total) ==
+2
+== occurrences of /model_info (literal, total) ==
+0
+== occurrences of model_info (total) ==
+2
+== lines containing get_model_info ==
+9:- `/get_model_info`
+71:url = f"http://localhost:{port}/get_model_info"
+== lines containing /model_info ==
+NO MATCHES
+== lines 1-12 ==
+---
+title: "SGLang Native APIs"
+metatags:
+    description: "SGLang native server APIs for text generation, embedding, reranking, model info, cache management, and more."
+---
+Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs. We introduce the following APIs:
+
+- `/generate` (text generation model)
+- `/get_model_info`
+- `/server_info`
+- `/health`
+- `/health_generate`
+== line 6 raw ==
+Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs. We introduce the following APIs:
+== line 6 word count ==
+20
+== line 71 ==
+url = f"http://localhost:{port}/get_model_info"
+214:| S328 | SGLang Native APIs at tag v0.5.22 — https://raw.githubusercontent.com/sgl-project/sglang/v0.5.22/docs/docs/basic_usage/native_api.mdx | docs | A | the published SGLang native-API route list at tag v0.5.22; a documentation surface, not a live server | line 6 and route-list line 9 — Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs. | the published page still lists only /get_model_info and never names /model_info, so a client that reads the page as the contract probes the route the engine is retiring | mined | 2026-10-24 | 90d | corpus/knowledge/sglang-native-route-deprecation.md |
+215:| S329 | SGLang http_server.py at tag v0.5.22 — https://raw.githubusercontent.com/sgl-project/sglang/v0.5.22/python/sglang/srt/entrypoints/http_server.py | code | A | the engine-side deprecation of /get_model_info at tag v0.5.22 | lines 790-791 — Endpoint '/get_model_info' is deprecated and will be removed in a future version. Please use '/model_info' instead. | the engine itself warns that the documented route is deprecated and names /model_info as the replacement, so the published route list is not the engine's current contract | mined | 2026-10-24 | 90d | corpus/knowledge/sglang-native-route-deprecation.md |
+
+
+• All measurements done. Let me compile.
+
+  Measured (from the single fetch, HTTP 200, 17359 bytes, 467 lines, md5 d268509f4df1878934d59346b8973e9e):
+  - `get_model_info` occurrences: 2 (line 9 route-list entry `- `/get_model_info``, line 71 worked example `url = f"http://localhost:{port}/get_model_info"`)
+  - literal `/model_info`: 0 occurrences
+  - `model_info` (bare substring): 2 (both inside `get_model_info`)
+  - Route-list entry line: 9 ✓ (matches claim)
+  - Worked example line: 71 ✓ (matches claim)
+  - Line 6 (20 words): "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs. We introduce the following APIs:"
+
+  Wait — the S328 row and entry quote line 6 as "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs." — that's 15 words. The actual line 6 is that sentence PLUS "We introduce the following APIs:" — so the quote is a partial extract of line 6 (the first sentence). The quote is located ON line 6, and it is 15 words. The lesson says "Located quote (15 words)". 15 words: Apart(1) from(2) the(3) OpenAI(4) compatible(5) APIs,(6) the(7) SGLang(8) Runtime(9) also(10) provides(11) its(12) native(13) server(14) APIs.(15) — yes 15 words. Located at line 6 ✓. Not byte-exact full line, but the quote doesn't claim to be the whole line — it's a located quote within line 6. The entry says "opens with one sentence" — the page's body line 6 opens with that sentence (line 6 is the first body line after frontmatter). Frontmatter is lines 1-5. "opens with one sentence" — line 6 contains that sentence and then a second sentence. Hmm: "the SGLang native-API page opens with one sentence" — arguably the page's body text opens with that sentence; line 6 also contains "We introduce the following APIs:". Is that a defect? The quote itself is exact and located at the anchor line. The claim "opens with one sentence" could be read as the page's opening sentence, which is accurate — the opening sentence of the page is that one; line 6 also carries a following sentence. This is a minor inference-level nit; the quote is verbatim-accurate. I should note it as an observation: line 6 contains 20 words total (two sentences); the quoted 15 words are the first sentence, exact byte match.
+
+  Verify quote byte-exact: line 6 first sentence: "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs." — matches the row quote exactly (row cell: "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs."). Yes byte-exact.
+
+  Now compare numbers vs S328 row and entry draft:
+
+  S328 row claims:
+  1. "the published page still lists only /get_model_info and never names /model_info" — measured: `/get_model_info` appears at lines 9 and 71 (2 occurrences of get_model_info, both as `/get_model_info`), `/model_info` count 0. "lists only /get_model_info" — in the route list (line 9), only `/get_model_info` among model-info routes; the route list also has /generate, /server_info, /health, /health_generate, and presumably more below line 12. But the claim is about model-info naming: "never names /model_info" → TRUE (0 occurrences). "lists only /get_model_info" as the model-info route → TRUE.
+  2. Anchor "line 6 and route-list line 9" — measured: line 6 is the opening body line with the quote; line 9 is the route-list entry `- `/get_model_info``. TRUE. Wait — line 9? Let me check: line 1 `---`, 2 title, 3 metatags:, 4 description, 5 `---`, 6 body, 7 blank, 8 `- /generate`, 9 `- /get_model_info`. Yes, line 9 is the route-list entry for `/get_model_info`. ✓
+  3. Quote at line 6 — byte-exact first sentence ✓.
+
+  Entry draft claims:
+  1. "line 6 and route-list line 9" ✓
+  2. "Its route list, on line 9, still names `/get_model_info`." ✓
+  3. "The string `/model_info` does not occur anywhere in that file — the count is zero." ✓ (grep -o '/model_info' → 0)
+  4. "The worked example on line 71 still asks for `http://localhost:{port}/get_model_info`." ✓ — line 71: `url = f"http://localhost:{port}/get_model_info"` — exact match.
+  5. Lesson gate: "HTTP 200, 17359 bytes" ✓ measured 17359.
+  6. Quote (15 words) byte-exact ✓, 25-word bound respected.
+
+  One nuance: entry says "At tag v0.5.22 the SGLang native-API page opens with one sentence: '...'" — line 6 actually contains two sentences (the quoted one plus "We introduce the following APIs:"). The quoted sentence is the opening sentence and is byte-exact; the phrase "opens with one sentence" is loose but the quote itself is accurate and located. I'll record this as a minor observation (not a falsified number). Also KQ45: verbatim check — the row doesn't label "verbatim" explicitly; the quote is byte-exact at its anchor. Route-list entry line 9 confirmed.
+
+  Also: get_model_info count = 2. The task asked: "Count occurrences of get_model_info and of the route /model_info." get_model_info: 2. /model_info: 0. 
+
+  One more check per instruction "Do not append a row" — I haven't. "Never mutate..." — I only wrote in my seat dir. Good.
+
+  Now write the report to /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevS328.md.
+
+  Report structure: measured results separate from inference. Include: URL, HTTP status, bytes, line count, md5, counts, line numbers, ≤25-word line-6 quote (quote the whole line 6 is 20 words ≤ 25 — I can quote the full line at 20 words), comparison table vs S328/entry, verdict.
+
+  Line 6 full quote = 20 words: "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs. We introduce the following APIs:" — that's 20 words ≤ 25. Good.
+
+  Note the fetch is a single fetch (one curl). No URL refetched.
+
+  Write the report.
+
+• All measurements complete. One fetch, HTTP 200, 17359 bytes, md5 `d268509f4df1878934d59346b8973e9e`, 467 lines. Every number in the draft checks out. Writing the report.4536 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-36/w3/out/RevS328.md
+
+
+• Report written. Stop here — the task is complete. Summarize briefly.
+
+• Report written: `.ufo/waves/round-36/w3/out/RevS328.md`. Done.
+
+  **Reconstructed contract**: the draft claims S328's source bytes at tag v0.5.22 name only `/get_model_info` (route list line 9, worked example line 71, opening quote at line 6) and never the string `/model_info`.
+
+  **Evidence chain** (one fetch, HTTP 200, 17359 bytes, md5 `d268509f4df1878934d59346b8973e9e`, 467 lines, saved to seat scratch):
+  - `get_model_info`: **2** occurrences (lines 9, 71)
+  - literal `/model_info`: **0** occurrences
+  - Route-list entry: **line 9** (`- `/get_model_info``)
+  - Worked example: **line 71** (`url = f"http://localhost:{port}/get_model_info"`)
+  - Line 6 (20 words, quoted in full): "Apart from the OpenAI compatible APIs, the SGLang Runtime also provides its native server APIs. We introduce the following APIs:"
+
+  **Divergences**: none. Status, byte size, both counts, both line numbers, and the quote all reproduce the S328 row, entry draft, and lesson gate paragraph exactly. The quote is byte-exact at its anchor (not the S174/S193 paraphrase pattern); only "opens with one sentence" is loose prose (line 6 holds 20 words in two sentences; the quote takes the first 15 verbatim) — recorded as an observation, not a defect; no correction warranted. No row appended, no corpus file touched.
+
+To resume this session: kimi -r session_c4245f63-db48-4950-8dea-212878b1c727

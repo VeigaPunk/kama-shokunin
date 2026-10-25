@@ -1,0 +1,369 @@
+{
+ "schema": "kama-chat-param-outcomes/v1",
+ "build": {
+  "server_sha256": "b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804",
+  "library_sha256": "e404b91a81c9ab65756b6a57b97b42115a5f429c5060c4b7f0d717ca595b59ed",
+  "model_sha256": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+ },
+ "base_body": {
+  "messages": [
+   {
+    "role": "user",
+    "content": "hi"
+   }
+  ],
+  "max_tokens": 1
+ },
+ "rows": [
+  {
+   "id": "K31-01",
+   "param": "max_tokens",
+   "sent": 3,
+   "outcome": {
+    "kind": "slot",
+    "set": {
+     "max_tokens": 3,
+     "n_predict": 3
+    }
+   },
+   "source": {
+    "row": "S190",
+    "file": "server-schema.cpp",
+    "line": 47,
+    "contains": "add_alias(\"max_tokens\")"
+   }
+  },
+  {
+   "id": "K31-02",
+   "param": "max_completion_tokens",
+   "sent": 3,
+   "outcome": {
+    "kind": "slot",
+    "set": {
+     "max_tokens": 3,
+     "n_predict": 3
+    }
+   },
+   "source": {
+    "row": "S189",
+    "file": "server-common.cpp",
+    "line": 1530,
+    "contains": "llama_params[item.key()] = item.value();"
+   }
+  },
+  {
+   "id": "K31-03",
+   "param": "logprobs",
+   "sent": true,
+   "outcome": {
+    "kind": "slot",
+    "set": {
+     "n_probs": 20
+    }
+   },
+   "source": {
+    "row": "S187",
+    "file": "server-common.cpp",
+    "line": 1519,
+    "contains": "llama_params[\"n_probs\"] = json_value(body, \"top_logprobs\", 20);"
+   }
+  },
+  {
+   "id": "K31-04",
+   "param": "top_logprobs",
+   "sent": 3,
+   "outcome": {
+    "kind": "slot",
+    "set": {
+     "n_probs": 3
+    }
+   },
+   "source": {
+    "row": "S187",
+    "file": "server-common.cpp",
+    "line": 1519,
+    "contains": "llama_params[\"n_probs\"] = json_value(body, \"top_logprobs\", 20);"
+   },
+   "also": {
+    "logprobs": true
+   }
+  },
+  {
+   "id": "K31-05",
+   "param": "top_logprobs",
+   "sent": 3,
+   "outcome": {
+    "kind": "reject",
+    "status": 400,
+    "type": "invalid_request_error",
+    "message": "top_logprobs requires logprobs to be set to true"
+   },
+   "source": {
+    "row": "S188",
+    "file": "server-common.cpp",
+    "line": 1521,
+    "contains": "throw std::invalid_argument(\"top_logprobs requires logprobs to be set to true\");"
+   }
+  },
+  {
+   "id": "K31-06",
+   "param": "messages",
+   "sent": "hi",
+   "outcome": {
+    "kind": "reject",
+    "status": 400,
+    "type": "invalid_request_error",
+    "message": "Expected 'messages' to be an array"
+   },
+   "source": {
+    "row": "S182",
+    "file": "server-common.cpp",
+    "line": 1390,
+    "contains": "Expected 'messages' to be an array"
+   }
+  },
+  {
+   "id": "K31-07",
+   "param": "messages",
+   "sent": [
+    {
+     "role": "user"
+    }
+   ],
+   "outcome": {
+    "kind": "reject",
+    "status": 400,
+    "type": "invalid_request_error",
+    "message": "All non-assistant messages must contain 'content'"
+   },
+   "source": {
+    "row": "S183",
+    "file": "server-common.cpp",
+    "line": 1395,
+    "contains": "All non-assistant messages must contain 'content'"
+   }
+  },
+  {
+   "id": "K31-08",
+   "param": "messages",
+   "sent": [
+    {
+     "role": "assistant"
+    }
+   ],
+   "outcome": {
+    "kind": "reject",
+    "status": 400,
+    "type": "invalid_request_error",
+    "message": "Assistant message must contain either 'content' or 'tool_calls'!"
+   },
+   "source": {
+    "row": "S184",
+    "file": "server-common.cpp",
+    "line": 1399,
+    "contains": "Assistant message must contain either 'content' or 'tool_calls'!"
+   }
+  },
+  {
+   "id": "K31-09",
+   "param": "messages",
+   "sent": [
+    {
+     "role": "user",
+     "content": 42
+    }
+   ],
+   "outcome": {
+    "kind": "reject",
+    "status": 400,
+    "type": "invalid_request_error",
+    "message": "Expected 'content' to be a string or an array"
+   },
+   "source": {
+    "row": "S185",
+    "file": "server-common.cpp",
+    "line": 1411,
+    "contains": "throw std::invalid_argument(\"Expected 'content' to be a string or an array\");"
+   }
+  },
+  {
+   "id": "K31-10",
+   "param": "response_format",
+   "sent": {
+    "type": "xml"
+   },
+   "outcome": {
+    "kind": "reject",
+    "status": 400,
+    "type": "invalid_request_error",
+    "message": "response_format type must be one of \"text\" or \"json_object\", but got: xml"
+   },
+   "source": {
+    "row": "S181",
+    "file": "server-common.cpp",
+    "line": 1375,
+    "contains": "response_format type must be one of"
+   }
+  },
+  {
+   "id": "K31-11",
+   "param": "json_schema",
+   "sent": {
+    "type": "object"
+   },
+   "outcome": {
+    "kind": "reject",
+    "status": 500,
+    "type": "server_error",
+    "message": "Cannot use both json_schema and grammar"
+   },
+   "source": {
+    "row": "S180",
+    "file": "server-common.cpp",
+    "line": 1360,
+    "contains": "Cannot use both json_schema and grammar"
+   },
+   "also": {
+    "grammar": "root ::= \"a\""
+   }
+  },
+  {
+   "id": "K31-12",
+   "param": "logprobs",
+   "sent": true,
+   "outcome": {
+    "kind": "reject",
+    "status": 400,
+    "type": "invalid_request_error",
+    "message": "logprobs is not supported with tools + stream"
+   },
+   "source": {
+    "row": "S186",
+    "file": "server-common.cpp",
+    "line": 1517,
+    "contains": "throw std::invalid_argument(\"logprobs is not supported with tools + stream\");"
+   },
+   "also": {
+    "stream": true,
+    "tools": [
+     {
+      "type": "function",
+      "function": {
+       "name": "noop",
+       "description": "No-op tool for protocol probe",
+       "parameters": {
+        "type": "object",
+        "properties": {}
+       }
+      }
+     }
+    ]
+   }
+  },
+  {
+   "id": "K31-13",
+   "param": "user",
+   "sent": "probe-user",
+   "outcome": {
+    "kind": "ignored"
+   },
+   "source": {
+    "row": "S189",
+    "file": "server-common.cpp",
+    "line": 1530,
+    "contains": "llama_params[item.key()] = item.value();"
+   }
+  },
+  {
+   "id": "K31-14",
+   "param": "parallel_tool_calls",
+   "sent": false,
+   "outcome": {
+    "kind": "ignored"
+   },
+   "source": {
+    "row": "S189",
+    "file": "server-common.cpp",
+    "line": 1530,
+    "contains": "llama_params[item.key()] = item.value();"
+   }
+  },
+  {
+   "id": "K31-15",
+   "param": "tools",
+   "sent": [
+    {
+     "type": "function",
+     "function": {
+      "name": "f",
+      "parameters": {
+       "type": "object"
+      }
+     }
+    }
+   ],
+   "outcome": {
+    "kind": "ignored"
+   },
+   "source": {
+    "row": "S189",
+    "file": "server-common.cpp",
+    "line": 1530,
+    "contains": "llama_params[item.key()] = item.value();"
+   }
+  },
+  {
+   "id": "K31-16",
+   "param": "n",
+   "sent": 2,
+   "outcome": {
+    "kind": "response",
+    "check": "n_choices",
+    "value": 2
+   },
+   "source": {
+    "row": "S191",
+    "file": "server-schema.cpp",
+    "line": 64,
+    "contains": "->add_alias(\"n\") // alias \"n\" as fallback (OpenAI completions API)"
+   }
+  },
+  {
+   "id": "K31-17",
+   "param": "stream",
+   "sent": true,
+   "outcome": {
+    "kind": "response",
+    "check": "sse",
+    "value": true
+   },
+   "source": {
+    "row": "S189",
+    "file": "server-common.cpp",
+    "line": 1530,
+    "contains": "llama_params[item.key()] = item.value();"
+   }
+  },
+  {
+   "id": "K31-18",
+   "param": "stream_options",
+   "sent": {
+    "include_usage": true
+   },
+   "outcome": {
+    "kind": "response",
+    "check": "sse_usage",
+    "value": true
+   },
+   "source": {
+    "row": "S189",
+    "file": "server-common.cpp",
+    "line": 1530,
+    "contains": "llama_params[item.key()] = item.value();"
+   },
+   "also": {
+    "stream": true
+   }
+  }
+ ]
+}

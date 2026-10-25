@@ -1,0 +1,135 @@
+[
+  {
+    "name": "ForeignControls.html-index",
+    "family": "ForeignControls",
+    "why": "Foreign web UI answering /v1/models with a 200 text/html index page must stay FOREIGN_SERVICE html-non-model (ishtml via Content-Type, kama-probe.sh:506-511).",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "text/html; charset=utf-8"},
+        "body_text": "<!doctype html><html><head><title>admin console</title></head><body><h1>storage dashboard</h1></body></html>"
+      },
+      "/": {
+        "status": 200,
+        "headers": {"Content-Type": "text/html; charset=utf-8"},
+        "body_text": "<!doctype html><html><head><title>admin console</title></head><body><h1>storage dashboard</h1></body></html>"
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "html-non-model", "exit": 2}
+  },
+  {
+    "name": "ForeignControls.openmetrics-text",
+    "family": "ForeignControls",
+    "why": "200 application/openmetrics-text exposition has no JSON content type and no model array, so it is FOREIGN_SERVICE non-model-2xx (kama-probe.sh:514-519) — status-only liveness must not pass.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/openmetrics-text; version=1.0.0; charset=utf-8"},
+        "body_text": "# HELP kama_up Service reachability\n# TYPE kama_up gauge\nkama_up 1\n# EOF\n"
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-model-2xx", "exit": 2}
+  },
+  {
+    "name": "ForeignControls.json-no-model-array",
+    "family": "ForeignControls",
+    "why": "200 application/json object without a data[] or models[] list is FOREIGN_SERVICE schema-unrecognized (body_has_model_array kama-probe.sh:392-411, reason at 516).",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"status": "ok", "uptime_seconds": 12345, "service": "inventory-api"}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "schema-unrecognized", "exit": 2}
+  },
+  {
+    "name": "ForeignControls.json-data-object-not-array",
+    "family": "ForeignControls",
+    "why": "200 JSON whose data key is an object, not an array, still fails body_has_model_array (requires isinstance list, kama-probe.sh:403-405) -> schema-unrecognized; guards a naive key-presence check.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"data": {"id": "single-tenant", "kind": "resource"}}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "schema-unrecognized", "exit": 2}
+  },
+  {
+    "name": "ForeignControls.not-found-json",
+    "family": "ForeignControls",
+    "why": "404 JSON error body is a non-2xx HTTP answer from a non-model service -> FOREIGN_SERVICE non-2xx-non-model-http (kama-probe.sh:520-522).",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 404,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": "not found"}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  },
+  {
+    "name": "ForeignControls.server-error-json",
+    "family": "ForeignControls",
+    "why": "500 JSON error object whose type is server_error, not the exact llama.cpp loading shape, stays FOREIGN_SERVICE non-2xx-non-model-http; C1 may only match message+type+code exactly.",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 500,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": {"message": "Internal server error", "type": "server_error", "code": 500}}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  },
+  {
+    "name": "ForeignControls.code-integer-500",
+    "family": "ForeignControls",
+    "why": "503 whose error has the exact message and type but integer code 500: the rule needs code == 503, so an any-integer-code matcher would wrongly grade it MODEL_LOADING (falsify-wave ReviewQualityKq19; replaces a duplicate of Overbroad503.no-slot-available).",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 503,
+        "headers": {"Content-Type": "application/json"},
+        "body_json": {"error": {"message": "Loading model", "type": "unavailable_error", "code": 500}}
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "non-2xx-non-model-http", "exit": 2}
+  },
+  {
+    "name": "ForeignControls.html-body-sniff-text-plain",
+    "family": "ForeignControls",
+    "why": "200 HTML page served as text/plain: only the body sniff (<!doctype ... html) marks it HTML, so this row pins that sniff, which no Content-Type text/html row exercises (falsify-wave FamilyForeignControls F4; replaces a duplicate of Overbroad503.server-error-type).",
+    "port_mode": "stub",
+    "routes": {
+      "/v1/models": {
+        "status": 200,
+        "headers": {"Content-Type": "text/plain"},
+        "body_text": "<!DOCTYPE html><html><head><title>router admin</title></head><body>login</body></html>"
+      }
+    },
+    "default_route": null,
+    "expect": "*",
+    "expected": {"verdict": "FOREIGN_SERVICE", "reason": "html-non-model", "exit": 2}
+  }
+]

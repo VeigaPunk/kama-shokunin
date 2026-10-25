@@ -1,0 +1,44 @@
+{
+  "measuredAt": "2026-10-15T05:13:49.883645+00:00",
+  "workCommit": "e246c40ec1b4ba08c36359934f69b8064b7dc54a",
+  "workAuthor": "kama-shokunin <kama@shokunin.local>",
+  "worktreeManifestPath": ".ufo/round-5/worktree-byte-manifest.json",
+  "worktreeManifestSha256": "ade0e5b3850b6cfde1f1cc0277b2577b8aca28d53c0b3605738fdf01b4268b0d",
+  "postCommitProbe": {
+    "argv": [
+      "bash",
+      "tools/kama-probe.sh",
+      "check",
+      "--json"
+    ],
+    "exitCode": 2,
+    "stdout": "{\n  \"schema\": \"kama-probe/v1\",\n  \"subcommand\": \"check\",\n  \"registry\": \"/home/vgpnk/Projects/shokunin/kama-shokunin/registry/endpoint-consumers.tsv\",\n  \"verdict_vocabulary\": \"MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP\",\n  \"exit_codes\": {\n    \"0\": \"every declared consumer reconciles\",\n    \"2\": \"at least one drift\",\n    \"1\": \"probe error\"\n  },\n  \"summary\": {\n    \"registry_rows_evaluated\": 3,\n    \"model_ok\": 0,\n    \"drift\": 3,\n    \"exit\": 2\n  },\n  \"rows\": [\n    {\n      \"id\": \"omp-llama-cpp-default\",\n      \"consumer_path\": \"~/.local/bin/omp\",\n      \"resolver\": \"grep:LLAMA_CPP_BASE_URL\",\n      \"declared\": \"http://127.0.0.1:8080\",\n      \"resolved_from_file\": \"LLAMA_CPP_BASE_URL\",\n      \"file_match\": \"inherited\",\n      \"resolve_kind\": \"raw\",\n      \"endpoint\": \"http://127.0.0.1:8080\",\n      \"port\": 8080,\n      \"expected_model_id\": \"-\",\n      \"verdict\": \"DEAD\",\n      \"reason\": \"connection-refused\",\n      \"served_model\": \"-\",\n      \"drift\": true,\n      \"evidence\": \"rc=7 Failed to connect to 127.0.0.1:8080 after 0 ms: Could not connect to server; GET /v1/models -> 000\",\n      \"notes\": \"code-level fallback pin, not proof of the effective environment-selected URL; check reuses the declaration when file_match=inherited; sampled DEAD in registry/history/latest.tsv\"\n    },\n    {\n      \"id\": \"ufo-fsd-thetick\",\n      \"consumer_path\": \"$UFO_SRC/config/the-tick.machine.json\",\n      \"resolver\": \"grep:http://127\\\\.0\\\\.0\\\\.1:34113[^\\\"]*\",\n      \"declared\": \"http://127.0.0.1:34113/v1/chat/completions\",\n      \"resolved_from_file\": \"http://127.0.0.1:34113/v1/chat/completions\",\n      \"file_match\": \"yes\",\n      \"resolve_kind\": \"url\",\n      \"endpoint\": \"http://127.0.0.1:34113/v1/chat/completions\",\n      \"port\": 34113,\n      \"expected_model_id\": \"Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS\",\n      \"verdict\": \"DEAD\",\n      \"reason\": \"connection-refused\",\n      \"served_model\": \"-\",\n      \"drift\": true,\n      \"evidence\": \"rc=7 Failed to connect to 127.0.0.1:34113 after 0 ms: Could not connect to server; GET /v1/models -> 000\",\n      \"notes\": \"surviving explicit pin; historical positive control, currently DEAD in registry/history/latest.tsv; a correct pin does not establish a live endpoint\"\n    },\n    {\n      \"id\": \"ufo-fsd-local-helper\",\n      \"consumer_path\": \"$UFO_SRC/scripts/local-helper.mjs\",\n      \"resolver\": \"grep:http://127\\\\.0\\\\.0\\\\.1:[0-9]+\",\n      \"declared\": \"http://127.0.0.1:34113\",\n      \"resolved_from_file\": \"http://127.0.0.1:34113\",\n      \"file_match\": \"yes\",\n      \"resolve_kind\": \"url\",\n      \"endpoint\": \"http://127.0.0.1:34113\",\n      \"port\": 34113,\n      \"expected_model_id\": \"Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS\",\n      \"verdict\": \"DEAD\",\n      \"reason\": \"connection-refused\",\n      \"served_model\": \"-\",\n      \"drift\": true,\n      \"evidence\": \"rc=7 Failed to connect to 127.0.0.1:34113 after 0 ms: Could not connect to server; GET /v1/models -> 000\",\n      \"notes\": \"surviving explicit DEFAULT_URL pin; historical positive control, currently DEAD in registry/history/latest.tsv; runtime readiness must be re-probed\"\n    }\n  ]\n}\n",
+    "stderr": ""
+  },
+  "summaryMeasurement": {
+    "fields_checked": 4,
+    "mismatches": 0,
+    "documented": {
+      "registry_rows_evaluated": 3,
+      "model_ok": 0,
+      "drift": 3,
+      "exit": 2
+    },
+    "observed": {
+      "registry_rows_evaluated": 3,
+      "model_ok": 0,
+      "drift": 3,
+      "exit": 2
+    }
+  },
+  "fixtureAndRealSnapshotEvidence": ".ufo/round-5/acceptance.json",
+  "nativeTaskCalls": 0,
+  "roundAdmitted": false,
+  "verifiedCompletedRoundIncrement": 0,
+  "receiptMinted": false,
+  "sightingCompleteCalled": false,
+  "blockedReasons": [
+    "Required native role-to-alias bindings unavailable",
+    "Interactive mission has no real fleet task receipt binding"
+  ]
+}

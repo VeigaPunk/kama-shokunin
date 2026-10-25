@@ -1,0 +1,338 @@
+
+
+
+<!DOCTYPE html>
+<html lang="zh" class="transparent alicloud back-to-top new_default">
+<link rel="stylesheet" href="//g.alicdn.com/aliyun-help/help-portal-fe/0.12.65/css/index.css" />
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+<meta name="spm-id" content="a2c63">
+<meta name="data-spm" content="a2c63" />
+<meta name="aplus-core" content="aplus.js">
+<meta name="aplus-ajax" content="chksum">
+<meta name="aplus-waiting" content="MAN">
+<meta name="aplus-pvhash" content="1">
+ <!-- MINOR_LANG_ENTRY_GATE：es/ko/de/tr/vi/th 入口卡点，翻译/内容就绪后把 content 追加 es,ko,de,tr,vi,th -->
+<!-- FR_ENTRY_GATE：fr 已在预发验证分支放开（本分支 FR_ENTRY_ENABLED=true）；线上卡点分支的 content 为 en,zh,tc,ja,id,pt-BR -->
+<meta name="kloud:supported-langs" content="en,zh,tc,ja,id,pt-BR,fr"/>
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="applicable-device" content="pc,mobile">
+<meta name="aplus-rhost-v" content="sg.mmstat.com">
+<meta name="aplus-rhost-g" content="sg.mmstat.com">
+<title>
+ 在PAI-EAS上部署大语言模型 - 人工智能平台 PAI - 阿里云
+
+</title>
+ <meta name="keywords" content="LLM模型部署,WebUI调用,API调用">
+ <meta name="description" content="在PAI-EAS上部署大语言模型，人工智能平台 PAI：EAS提供了一站式LLM部署解决方案，可一键部署DeepSeek、Qwen等热门模型，免去手动部署时复杂的环境配置、性能调优和成本管理。 以部署开源模型Qwen3-8B为例，该流程同样适用于其他支持的模型。">
+ <script>
+window.globalData = {
+website: "intl",
+language: "zh",
+nodeId:"2841373",
+channel: "",
+notfound: "",
+statusCode: "",
+errorType: ""
+};
+// UT的全局配置变量，在CDN加载前配置
+window.$ACE_TRACKER_CONFIG = {
+enableHistory: true,
+enableHash: false
+};
+</script>
+<!-- <base href="https://www.alibabacloud.com">-->
+<link rel="canonical" href="https://www.alibabacloud.com/help/zh/pai/deploy-an-llm/"/>
+ <meta property="og:title" content="在PAI-EAS上部署大语言模型 - Alibaba Cloud" />
+ <meta property="og:type" content="website" />
+ <meta property="og:url" content="https://www.alibabacloud.com/help/zh/pai/deploy-an-llm/" />
+ <meta property="og:image" content="https://img.alicdn.com/tfs/TB1xpNqnmslXu8jSZFuXXXg7FXa-1200-630.png_.webp" />
+ <meta property="og:description" content="在PAI-EAS上部署大语言模型，人工智能平台 PAI：EAS提供了一站式LLM部署解决方案，可一键部署DeepSeek、Qwen等热门模型，免去手动部署时复杂的环境配置、性能调优和成本管理。 以部署开源模型Qwen3-8B为例，该流程同样适用于其他支持的模型。" />
+ <link rel="shortcut icon" href="//img.alicdn.com/tfs/TB1ugg7M9zqK1RjSZPxXXc4tVXa-32-32.png"/>
+<link rel="stylesheet" href="https://o.alicdn.com/fund/alicloud-pure-layout/css/index.min.css" />
+ <link
+rel="icon"
+href="https://img.alicdn.com/imgextra/i2/O1CN01TFs5Qw27uYvfA6gib_!!6000000007857-55-tps-32-32.svg"
+type="image/x-icon"
+/>
+</head>
+<body data-spm="" class="HAS_ALPS_RESOURCE"><script  type="text/javascript">
+(function  (d)  {
+var  t=d.createElement("script");t.type="text/javascript";t.async=true;t.id="tb-beacon-aplus";
+t.setAttribute("exparams","category=&userid=&aplus&yunid=&yunpk=&channel=&cps=");
+t.src="//g.alicdn.com/alilog/mlog/aplus_v2.js";
+d.getElementsByTagName("head")[0].appendChild(t);
+})(document);
+</script><script>
+with(document)with(body)with(insertBefore(createElement("script"),firstChild))setAttribute("exparams","category=&userid=&aplus&yunid=&&trid=0a3c4ee417928927476183410e2b2a&asid=AQAAAABMX91q/slHTQAAAAC0evNwGfcm8g==",id="tb-beacon-aplus",src=(location>"https"?"//g":"//g")+".alicdn.com/alilog/mlog/aplus_v2.js")
+</script>
+
+ <script async src="https://o.alicdn.com/fund/alicloud-pure-layout/index.js"></script>
+
+<div id="app">
+<div class="aliyun-app-layout">
+
+<!-- docId:2841373 -->
+<input type="hidden" id="website" value="intl">
+<div class="products-wrapper$tip" data-spm="879954">
+<section id="products" class="intl-product container">
+<div class="row">
+<div class="col-lg-3 col-md-3 col-sm-4 col-xs-12" id="navDocument">
+<div class="doc-nav">
+<a class="doc-center" href="/help/zh">
+<i class="icon-docs icon-docs-back"></i>
+文档中心
+</a>
+</div>
+<div class="placeholder-ele">&nbsp;</div>
+</div>
+<div class="col-lg-7 col-md-7 col-sm-8 col-xs-12 doc-content">
+<div class="all-products action" id="J_AllProducts">
+<div class="all-products-head">
+<div class="all-products-title">全部产品</div>
+<div class="all-products-search-wrapper">
+<div class="all-products-search focus">
+<input autocomplete="off" class="all-products-search-box-input" id="J_AllProductsSearch" placeholder="请输入产品名称" data-spm-anchor-id="a2c4g.11186623.6.i0.1f753945H9RVzu">
+<i class="icon-search icon-docs icon-docs-search"></i>
+<ul class="all-products-search-result" style="display: none;">
+</ul>
+</div>
+</div>
+</div>
+<div class="all-products-body" id="J_AllProductsBody"></div>
+</div>
+<div class="search-product-modal">
+Search
+</div>
+<div class="breadcrumbs-top" data-spm="a1">
+<div class="row nav-breadcrumb">
+ <div class="col-md-12 hidden-sm hidden-xs">
+<ul class="breadcrumb text-sm">
+<li><a class="active" title="文档中心" href="/help/zh">文档中心</a></li>
+ <li><a class="active" title="人工智能平台 PAI" href="/help/zh/pai/">人工智能平台 PAI</a></li>
+ <li><a class="active" title="模型在线服务（EAS）" href="/help/zh/pai/eas-model-serving/">模型在线服务（EAS）</a></li>
+ <li><a class="active" title="服务部署" href="/help/zh/pai/service-deployment/">服务部署</a></li>
+ <li><a class="active" title="场景化部署" href="/help/zh/pai/service-deployment-scenario-based-deployment/">场景化部署</a></li>
+ <li><a class="active" title="LLM大语言模型部署" href="/help/zh/pai/deploy-an-llm/">LLM大语言模型部署</a></li>
+ </ul>
+</div>
+ <div class="col-md-4 col-sm-12">
+<button type="button" class="navbar-toggle bc mr0" data-toggle="collapse"
+data-target="#sideMenu-mobile">
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+all-products-head <span class="icon-bar"></span>
+</button>
+</div>
+</div>
+<form class="search-bar clearfix" method="GET" action="/s/zh">
+<input type="hidden" name="type" value="doc"/>
+<div class="select">
+<p class="select-text">
+<span class="placeholder">搜索本产品</span>
+<i class="icon-docs icon-docs-selected"></i>
+</p>
+<ul class="select-options" style="display:none;">
+<li class="option selected" data-value="h_pid_$productId">搜索本产品</li>
+<li class="option" data-value="">全部产品</li>
+</ul>
+<input type="hidden" name="rangeinfo" value="h_pid_30347"/>
+</div>
+<input autocomplete="off" class="search-key" type="text" placeholder="请输入关键字" name="k"/>
+<ul class="help-top-search-result" style="display: block;"></ul>
+<button class="search-submit" type="submit">
+<i class="icon-docs icon-docs-search"></i>
+</button>
+<div class="collapse-menus select">
+<p class="select-text">
+<span class="placeholder">人工智能平台 PAI：在PAI-EAS上部署大语言模型</span>
+<i class="icon-docs icon-docs-more"></i>
+</p>
+</div>
+</form>
+</div>
+<header id="header-faq" class="clearfix">
+<a class="doc-center" href="/help/zh">
+<i class="icon-docs icon-docs-back"></i>
+文档中心
+</a>
+<div class="download-links">
+ </div>
+<h1 class="page-title">人工智能平台 PAI：在PAI-EAS上部署大语言模型</h1>
+<div class="doc-status">
+更新时间：Aug 14, 2026
+</div>
+</header>
+<article class="product-description markdown-body">
+<div lang="zh" class="icms-help-docs-content">
+<main id="main-2760046"><p id="9b9d6e0688z6n" data-tag="shortdesc" class="shortdesc">EAS提供了一站式LLM部署解决方案，可一键部署DeepSeek、Qwen等热门模型，免去手动部署时复杂的环境配置、性能调优和成本管理。</p><div id="e4d0e202cco2d" data-tag="body" class="body"><section id="fe9919e00euf9" class="section"><h2 id="7b19362edexsm"><b>快速入门：部署一个开源模型</b></h2><p id="a7f83a64cf1zd">以部署开源模型<b>Qwen3-8B</b>为例，该流程同样适用于其他支持的模型。</p><section id="5b27ffacfcil3" class="section"><h3 id="e3265ea408t8w"><b>步骤一：创建服务</b></h3><ol id="af06a7aecbf8k"><li id="f91a329cd8vil" data-conref-text="登录PAI控制台，在页面上方选择目标地域，并在右侧选择目标工作空间，然后单击进入EAS。" docid="2699292" is-conref="true"><p id="92fcde3fb99ua">登录<a class="" href="https://pai.console.alibabacloud.com/?#/sw?path=/eas" id="aa0221dce5uzb">PAI控制台</a>，在页面上方选择目标地域，并在右侧选择目标工作空间，然后单击<b>进入EAS</b>。</p></li><li id="c8ff2bfbceudb"><p id="4563e1fb60qzl">单击<b id="08c65d50e1nfy" data-tag="uicontrol" data-isbold="true" class="uicontrol">部署服务</b>，然后在<b id="575b26988ak44" data-tag="uicontrol" data-isbold="true" class="uicontrol">场景化模型部署</b>区域，单击<b id="c8c1ccc71dfpo" data-tag="uicontrol" data-isbold="true" class="uicontrol">LLM大语言模型部署</b>。</p></li><li id="670e6b6b376lh"><p id="05a8619d1fb7f">配置以下关键参数：</p><table id="35aa02a2f80oq" tablewidth="100" tablecolswidth="25.08 74.92" autofit="true" class="table"><colgroup colwidth="0.5*" style="width:25.08%"></colgroup><colgroup colwidth="1.5*" style="width:74.92%"></colgroup><tbody class="tbody"><tr id="e667393660stn"><td id="7839959503kyw" rowspan="1" style="background-color:#e5e5e5" colspan="1"><p id="552d4e679f317"><b>配置项</b></p></td><td id="167bce2345tk6" rowspan="1" style="background-color:#e5e5e5" colspan="1"><p id="b62c43bd56szm"><b>值</b></p></td></tr><tr id="8c33e2b5a5ou0"><td id="4fdb7260a1e1f" rowspan="1" colspan="1"><p id="d72239a474jsn"><b id="9589b6feb6t5c" data-tag="uicontrol" data-isbold="true" class="uicontrol">模型配置</b></p></td><td id="ed4f95affb12q" rowspan="1" colspan="1"><p id="46916afc64hez">选择<b id="572f907850pfk" data-tag="uicontrol" data-isbold="true" class="uicontrol">公共模型</b>，搜索并选择<b>Qwen3-8B</b>。</p></td></tr><tr id="956c398cc6jj3"><td id="03a0d38c85g5e" rowspan="1" colspan="1"><p id="2834ae7205zfs"><b id="683d7eac70e6n" data-tag="uicontrol" data-isbold="true" class="uicontrol">推理引擎</b></p></td><td id="4d6b84b10875c" rowspan="1" colspan="1"><p id="88b25da8d747g">选择<b>vLLM</b>（推荐，兼容 OpenAI API）。</p></td></tr><tr id="b918c1ded63f1"><td id="cf19d51db6g3g" rowspan="1" colspan="1"><p id="4506fdd06012w"><b id="11c2b78c12i4b" data-tag="uicontrol" data-isbold="true" class="uicontrol">部署模板</b></p></td><td id="55428dbbcckqj" rowspan="1" colspan="1"><p id="23cc505e347td">选择<b>单机</b>。系统将根据模板自动填充推荐的实例规格、镜像等参数。</p></td></tr></tbody></table></li><li id="5a49819323rmo"><p id="b483ecaa2aw9l">单击<b id="289fa3ba91wqs" data-tag="uicontrol" data-isbold="true" class="uicontrol">部署</b>，服务部署耗时约5分钟。当服务状态变为<b id="bca0cb1c54hxp" data-tag="uicontrol" data-isbold="true" class="uicontrol">运行中</b>，表示部署成功。</p><div type="note" id="1d0858f1783jw" class="note note-note"><div class="note-icon-wrapper"><i class="icon-note note note"></i></div><div class="noteContentSpan"><strong>说明 </strong><p id="d5a51940f71ci">若服务部署失败，请参考<a href="/help/zh/pai/faq-about-eas#7ae03619d69hr" id="e52b0aba37hc9" title="" class="xref">服务部署与状态异常</a>解决。</p></div></div></li></ol></section><section id="1bcf82e674geu" class="section"><h3 uuid="mkck701o7u9ryafmwv8" id="ad684ccfd1sn2">步骤二：通过在线调试验证</h3><p id="4fbbcec48esac">部署成功后，建议先通过在线调试验证服务正常运行。</p><ol id="52ff1866757aq" start="1"><li id="9af239161at08"><p id="de821bbaf1beu">单击服务名称进入详情页面，切换到<b id="b68ff96b5baka" data-tag="uicontrol" data-isbold="true" class="uicontrol">在线调试</b>页签。</p></li><li id="06cb2a6124xqw"><p id="ce4b40518bz0m">配置如下请求参数：</p><table id="f4494fee40dtp" tablewidth="100" tablecolswidth="18.46 81.53999999999999" autofit="true" class="table"><colgroup colwidth="0.37*" style="width:18.46%"></colgroup><colgroup colwidth="1.63*" style="width:81.54%"></colgroup><tbody class="tbody"><tr id="8477c52d4155p"><td id="236fd239ec0fh" rowspan="1" style="background-color:#e5e5e5;vertical-align:middle" colspan="1"><p id="ee7dd78e16noz"><b>配置项</b></p></td><td id="268a786e04lmd" rowspan="1" style="background-color:#e5e5e5;vertical-align:middle" colspan="1"><p id="3e75af9e23369"><b>值</b></p></td></tr><tr id="e5671f2409kkt"><td id="09e85ff49bdzh" rowspan="1" style="vertical-align:middle" colspan="1"><p id="d2dba14275rsi"><b>请求方法</b></p></td><td id="6d5494399ex50" rowspan="1" style="vertical-align:middle" colspan="1"><p id="4ccf98e566udf">POST</p></td></tr><tr id="1cebc0e863t2e"><td id="6ad5723913vhk" rowspan="1" style="vertical-align:middle" colspan="1"><p id="b98d7aeef7aui"><b>URL路径</b></p></td><td id="a140b21ff3e2w" rowspan="1" style="vertical-align:middle" colspan="1"><p id="6621e6e50f76m">完整路径格式为 <code data-tag="code" uuid="mkck701okx4g5y08jm" id="a0bc4a2c1dwae" class="code">/api/predict/{service_name}/v1/chat/completions</code>，其中 <code data-tag="code" id="code-service-name" class="code">{service_name}</code> 替换为实际服务名称。示例：<code data-tag="code" uuid="mkck701or6cxiawj0mk" id="e9502ffbb6d2l" class="code">/api/predict/llm_qwen3_8b_test/v1/chat/completions</code>。</p></td></tr><tr id="467836e46bud2"><td id="1c58ecf003eap" rowspan="1" style="vertical-align:middle" colspan="1"><p id="0ca5c1b28fttx"><b>Body</b></p></td><td id="9b7c264cb0mky" rowspan="1" style="vertical-align:middle" colspan="1"><pre code-type="xCode" id="bad49c50e8x1c" index="0" data-tag="codeblock" outputclass="language-json" class="pre codeblock language-json"><code>{
+  "model": "Qwen3-8B",
+  "messages": [
+    {"role": "user", "content": "Hello!"}
+  ],
+  "max_tokens": 1024
+}</code></pre></td></tr><tr id="58c9f49500gl5"><td id="7612cf90509zh" rowspan="1" colspan="1"><p id="c4277495a2nej"><b>Headers</b></p></td><td id="03f5ad021b2ar" rowspan="1" colspan="1"><p id="a844f265cdj1h">确保包含 <code data-tag="code" uuid="mkck701pusdk75me6kr" id="6c876e737fzef" class="code">Content-Type: application/json</code>。</p></td></tr></tbody></table></li><li id="f463ec826do00"><p id="a9620aeec61va">点击<b id="72bd82ce2ax0v" data-tag="uicontrol" data-isbold="true" class="uicontrol">发送请求</b>。您应该会收到包含模型回复的响应。</p></li></ol><p id="p-2f3956b23cf7">发送请求后，若返回状态码为 <code data-tag="code" id="52b2f56ef7ef3" class="code">200</code>，且响应 Body 为 <code data-tag="code" id="29c43ef75fgbz" class="code">chat.completion</code> 类型的 JSON（包含 <code data-tag="code" id="fa1893b7937tf" class="code">content</code> 字段的模型回复），则表明服务部署成功、运行正常。</p></section></section><section id="036fbc6c0bbpd" class="section"><h2 id="a883e2b4821th"><b>通过API调用</b></h2><p id="c608c1e2d5gb8">在调用之前，请在服务详情页面的概览页签<b id="61989517c7q6a" data-tag="uicontrol" data-isbold="true" class="uicontrol">查看调用信息</b>，<a href="/help/zh/pai/call-via-shared-gateway-public-network-intranet#7938832e87pj1" id="dfdf36e2d5vnm" title="" class="xref">获取访问地址和Token</a>。</p><p id="bb72b2a2a3d3j">API调用服务示例代码如下：</p><section id="3fbdb3decfn63" data-tag="tabbed-content-box" outputclass="tabbed-content-box" class="tabbed-content-box section"><section id="19ca718d39x2q" class="section"><h4 id="e27e8ec50drgg"><b>cURL</b></h4><pre outputclass="language-curl" data-tag="codeblock" code-type="xCode" id="9af060c64fhsp" class="pre codeblock language-curl"><code>curl -X POST &lt;EAS_ENDPOINT&gt;/v1/chat/completions \
+    -H "Content-Type: application/json" \
+    -H "Authorization: &lt;EAS_TOKEN&gt;" \
+    -d '{
+        "model": "&lt;model_name&gt;",
+        "messages": [
+        {
+            "role": "system",
+            "content": "You are a helpful assistant."
+        },
+        {
+            "role": "user",
+            "content": "hello"
+        }
+        ],
+        "max_tokens":1024,
+        "temperature": 0.7,
+        "top_p": 0.8,
+        "stream":true
+    }'</code></pre><p jc="left" id="9b7c81b3df60u" style="text-align:left">其中：</p><ul id="89bdb734dbjvx"><li id="d85d0a7b7b2gh"><p id="141996e9d42je"><code data-tag="code" id="6968d5502au82" class="code">&lt;EAS_ENDPOINT&gt;</code>和<code data-tag="code" id="e4b9011164c5e" class="code">&lt;EAS_TOKEN&gt;</code>需替换为部署服务的访问地址和Token。</p></li><li id="5772516b5atbu"><p id="9555a27dc7ltz"><code data-tag="code" id="f109d0fbffpim" class="code">&lt;model_name&gt;</code>需替换为模型名称。对于vLLM/SGLang，可通过模型列表接口<code data-tag="code" class="code" id="b482d2c874o4n">&lt;EAS_ENDPOINT&gt;/v1/models</code>获取。</p><pre outputclass="language-bash" data-tag="codeblock" code-type="xCode" id="e6917567a3l40" class="pre codeblock language-bash"><code>curl -X GET &lt;EAS_ENDPOINT&gt;/v1/models -H "Authorization: &lt;EAS_TOKEN&gt;"</code></pre></li></ul></section><section id="faffa811ca835" class="section"><h4 id="bdfc708ff879v"><b>OpenAI SDK</b></h4><p id="da42c3fd190pg">推荐使用官方Python SDK与服务交互。确保已安装OpenAI SDK：<code data-tag="code" id="09432edca96bf" class="code">pip install openai</code>。</p><pre outputclass="language-python" data-tag="codeblock" code-type="xCode" id="a12c1df27cqfm" class="pre codeblock language-python"><code>from openai import OpenAI
+
+# 1. 配置客户端
+# &lt;EAS_TOKEN&gt;需替换为部署服务的Token
+openai_api_key = "&lt;EAS_TOKEN&gt;"
+# &lt;EAS_ENDPOINT&gt;需替换为部署服务的访问地址
+openai_api_base = "&lt;EAS_ENDPOINT&gt;/v1"
+
+client = OpenAI(
+    api_key=openai_api_key,
+    base_url=openai_api_base,
+)
+
+# 2. 获取模型名称
+# 对于BladeLLM， 设置model = ""。 因为BladeLLM不需要model入参，也不支持使用client.models.list()方式获取模型名称。设置空字符串以兼容OpenAI SDK的强制参数要求
+models = client.models.list()
+model = models.data[0].id
+print(model)
+
+# 3. 发起对话请求
+# 支持流式（stream=True）和非流式（stream=False）输出
+stream = True
+chat_completion = client.chat.completions.create(
+    messages=[
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "hello"},          
+    ],
+    model=model,
+    top_p=0.8,
+    temperature=0.7,
+    max_tokens=1024,
+    stream=stream,
+)
+
+if stream:
+    for chunk in chat_completion:
+        print(chunk.choices[0].delta.content, end="")
+else:
+    result = chat_completion.choices[0].message.content
+    print(result)</code></pre></section><section id="771a516654bjk" class="section"><h4 id="45c430dfbc7xk"><b>Python requests库</b></h4><p id="db68797789wes">对于不希望引入OpenAI SDK依赖的场景，可使用<code data-tag="code" uuid="mfuvdw3hl2dvtu7f5dm" id="09e79d574729w" class="code">requests</code>库。</p><pre outputclass="language-python" data-tag="codeblock" code-type="xCode" id="5fdff45118x6j" class="pre codeblock language-python"><code>import json
+import requests
+
+# &lt;EAS_ENDPOINT&gt;需替换为部署服务的访问地址
+EAS_ENDPOINT = "&lt;EAS_ENDPOINT&gt;"
+# &lt;EAS_TOKEN&gt;需替换为部署服务的Token
+EAS_TOKEN = "&lt;EAS_TOKEN&gt;"
+# &lt;model_name&gt;需替换为模型名称，可通过模型列表接口&lt;EAS_ENDPOINT&gt;/v1/models获取（对于BladeLLM，不支持该接口，可省略 "model" 字段或设为 ""）。
+model = "&lt;model_name&gt;"
+
+url = f"{EAS_ENDPOINT}/v1/chat/completions"
+headers = {
+    "Content-Type": "application/json",
+    "Authorization": EAS_TOKEN,
+}
+
+stream = True
+messages = [
+    {"role": "system", "content": "You are a helpful assistant."},
+    {"role": "user", "content": "hello"},
+]
+
+req = {
+    "messages": messages,
+    "stream": stream,
+    "temperature": 0.7,
+    "top_p": 0.8,
+    "max_tokens": 1024,
+    "model": model,
+}
+response = requests.post(
+    url,
+    json=req,
+    headers=headers,
+    stream=stream,
+)
+
+if stream:
+    for chunk in response.iter_lines(chunk_size=8192, decode_unicode=False):
+        msg = chunk.decode("utf-8")
+        # 以下代码用于处理Server-Sent Events (SSE)格式的流式响应
+        if msg.startswith("data:"):
+            info = msg[6:]
+            if info == "[DONE]":
+                break
+            else:
+                resp = json.loads(info)
+                if resp["choices"][0]["delta"].get("content") is not None:
+                    print(resp["choices"][0]["delta"]["content"], end="", flush=True)
+else:
+    resp = json.loads(response.text)
+    print(resp["choices"][0]["message"]["content"])</code></pre></section></section></section><section id="c1503f1a40hfi" class="section"><h2 uuid="mkck701qlpgt5ws6xbn" id="71d3557474jvm">使用Gradio构建本地Web UI</h2><p id="b0cadaabebuzg">Gradio是一个Python界面库，可快速创建模型的交互式界面。按以下步骤在本地运行Gradio WebUI。</p><ol id="60691bf53284j" start="1"><li id="088a2cc093s4l"><p id="a84b0f37612d4"><b>下载代码</b></p><p id="0ab335390b3im"><a href="https://github.com/aliyun/pai-examples/blob/master/model-gallery/deploy/llm/vLLM/webui_client.py" id="27bc32d921tkw" class="" target="_blank">GitHub链接</a>｜<a href="https://pai-quickstart-predeploy-hangzhou.oss-cn-hangzhou.aliyuncs.com/example_codes/model-gallery/deploy/llm/vLLM/webui_client.py" id="4c241131d6svf" class="" target="_blank">OSS链接</a> </p></li><li id="15c669dc55840"><p id="53b2d2cbcbm1j"><b>环境准备</b></p><p id="fdf269dd0c3sk">要求Python 3.10 或更高版本，并安装依赖 <code data-tag="code" id="e27ed24dd68mp" class="code">pip install openai gradio</code>。</p></li><li id="50e70e1ddbyt4"><p id="929e99cc7a3ab"><b>启动Web应用</b></p><p id="0ea291d9e51wv">在终端执行以下命令（其中<code data-tag="code" id="cfb587352b4jp" class="code">&lt;EAS_ENDPOINT&gt;</code>和<code data-tag="code" id="ad464438a3zv2" class="code">&lt;EAS_TOKEN&gt;</code> 需替换为部署服务的访问地址和Token）。</p><pre outputclass="language-shell" data-tag="codeblock" code-type="xCode" id="770fd9fa96c2n" class="pre codeblock language-shell"><code>python webui_client.py --eas_endpoint "&lt;EAS_ENDPOINT&gt;" --eas_token "&lt;EAS_TOKEN&gt;"</code></pre></li><li id="0f43cceeacv99"><p id="b1bf9c2f3akd5">启动成功后，会输出一个本地URL（通常是 <code data-tag="code" uuid="mfwk553j5mph3odqs9" id="b95c690a75lh5" class="code">http://127.0.0.1:7860</code>），在浏览器中打开该URL进行访问。</p></li></ol></section><section id="f292bc4564ta3" class="section"><h2 id="f55ddb4c91s4d"><b>集成至第三方应用</b></h2><p id="7c6aee6a6am2a">EAS服务可集成至支持OpenAI API的各类客户端和开发工具。核心配置要素是<a href="/help/zh/pai/call-via-shared-gateway-public-network-intranet#7938832e87pj1" id="39b811912e9hk" title="" class="xref">服务访问地址、Token</a>和模型名称。</p><section id="c9fce1a7b10b2" data-tag="tabbed-content-box" outputclass="tabbed-content-box" class="tabbed-content-box section"><section id="66de1f28a8xw4" class="section"><h4 id="760a973ed3f0q"><b>Dify</b></h4><ol id="2156f527e8fmo" start="1"><li id="6f09f148334vj"><p id="f84c06a08egfw"><b>安装模型供应商OpenAI-API-compatible</b></p><p id="fb5567ccf04b1">单击页面右上角的头像-<b>设置</b>，左侧选择<b>模型供应商。</b>如果<b>模型列表</b>中没有<b>OpenAI-API-compatible，</b>在下方列表查找<b>安装。</b></p></li><li id="a0850ba963m91"><p id="6300f9dd49qjk"><b>添加模型</b></p><p id="47e30237cfle4">单击<b>OpenAI-API-compatible</b>卡片右下角<b>添加模型</b>，参数如下配置：</p><ul id="37bba6a2274rk"><li id="927630c506bya"><p id="9c881df064flz"><b>模型类型</b>：选择LLM。</p></li><li id="a8c50c1ebc26v"><p id="01780f57e5ceu"><b>模型名称</b>：vLLM部署请通过<code data-tag="code" id="05e71b1f7avye" data-init-id="239ce11b1fhyx" class="code">/v1/models</code>接口发送GET请求获取。示例填写<b>Qwen3-8B</b>。</p></li><li id="88a37a18e9srg"><p id="8c076e16f4j2a"><b>API Key</b>：填写EAS服务Token。</p></li><li id="5134cbdd7b49t"><p id="a42e722117523"><b>API endpoint URL：</b>填写EAS服务公网调用地址（<b>注意末尾加上/v1</b>）。</p></li></ul></li><li id="6b0e8702bedxb"><p id="276ff0d2e1jkx"><b>测试使用</b></p><ol id="6a670f27e6pyd"><li id="d578e8297bwzw"><p id="7c81bb49e7nak">在Dify主界面单击<b>创建空白应用，</b>选择<b>Chatflow</b>类型，填入应用名称等信息后单击创建。</p></li><li id="693baaa3ferw7"><p id="cf097d345aph4">单击LLM节点，选择添加的模型，并设置上下文和提示词。模型选择 <b>OpenAI-API-compatible</b> 分类下的 <b>Qwen3-8B CHAT</b>。在 SYSTEM 提示词中填入角色描述并引用上下文变量 <b>sys.query</b>，USER 区域添加 <b>sys.query</b> 和 <b>sys.files</b> 变量。可按需调整<b>最大标记</b>（默认 512）、<b>存在惩罚</b>、<b>思考模式</b>等模型参数。</p></li><li id="40f8d086eemdh"><p id="db3bea9ca4nah">单击右上角预览，输入问题。</p><p id="p-57f2d35d8c90">Bot 通过<b>工作流</b>处理问题并返回回复，对话区域顶部会显示<b>已深度思考</b>及耗时信息。</p></li></ol></li></ol></section><section id="8d24f98b26sm5" class="section"><h4 id="7e54e6441420n"><b>Chatbox</b></h4><ol id="ac78eaaa857ht" start="1" data-spm-anchor-id="0.0.0.i4.4c42707fwiiwhO"><li id="7e321e1a46xpt"><p id="b6854be98f7wb">前往<a class="" href="https://chatboxai.app/zh" id="24659e0e73rk7">Chatbox</a>，根据您的设备下载并安装合适的版本，或直接<b>启动网页版</b>。本方案以macOS M3为例。</p></li><li id="8ab40f34aca1z"><p id="d20725500besb"><b>添加模型提供方</b>。单击设置，添加模型提供方，填写名称如pai，API模式选择<b>OpenAI API兼容</b>。</p></li><li id="6fe0000ee9kay"><p id="88f028a34dcnn">选择模型提供方pai，配置如下参数。</p><ul id="15a72329der1k" start="5"><li id="651b2c2d82tvu"><p id="59281fc3a1a8q"><b>API 密钥</b>：填写EAS服务Token。</p></li><li id="7b22d66ed9kg6"><p id="a9fb4d1de7rd7"><b>API 主机</b>：填写EAS服务公网调用地址（<b>注意末尾加上/v1</b>）。</p></li><li id="bf2ff568afihd"><p id="70821af2b7zn0"><b>API 路径</b>：无需填写。</p></li><li id="f13967d334qdk"><p id="0a864a07dd2n5"><b>模型</b>：单击获取进行添加（若推理引擎为BladeLLM，不支持通过接口获取，可单击新建填写）。</p></li></ul></li><li id="7e4253720dq4j"><p id="c709b661609kf"><b>对话测试</b>。单击新对话，文本输入框右下角选择模型服务。</p><p id="p-39dec3b2a1b4">对话界面顶部显示系统提示词（如<code data-tag="code" id="417496ae379ni" class="code">You are a helpful assistant.</code>），在文本输入框中输入问题（如"你是谁"）后发送，助手回复区域顶部会展示<b>已深度思考</b>折叠区域及思考耗时，下方为模型回复正文。</p></li></ol></section><section id="0a7100f71byxc" class="section"><h4 id="09f7860542mn0"><b>Cherry Studio</b></h4><ol id="023b76197arub" start="1" outputclass="wa-cherrystudio" class="wa-cherrystudio"><li id="9db619b54a6pl"><p id="336db093bbki0"><b>安装客户端</b></p><p id="6042a811bbffy">访问 <a class="" href="https://docs.cherry-ai.com/cherry-studio/download" id="2f334bce103uf">Cherry Studio</a> 下载并安装客户端。</p><blockquote id="76654a4a480q2">也可以访问<code data-tag="code" id="9c44e84215r3y" class="code">https://github.com/CherryHQ/cherry-studio/releases</code>进行下载。</blockquote></li><li id="acfdf6be9exrn"><p id="637eedab32aoq"><b>配置模型服务。</b></p><ol id="e228e413356za"><li id="0f153a21767xk"><p id="689022ae2bz95">单击左下角的设置按钮，在<b>模型服务</b>栏下方单击<b>添加</b>。在<b>提供商名称</b>中填写自定义名称，如<b>PAI</b>，提供商类型为<b>OpenAI</b>。单击<b>确定</b>。</p></li><li id="4b1bf81d29jh2"><p id="268fdce0ea54g">在<b>API 密钥</b>填写EAS服务Token；在<b>API 地址</b>填写EAS服务公网调用地址。</p></li><li id="87e6938051l1n"><p id="b417d5f5fehd0">单击<b>添加</b>，在<b>模型ID </b>中填写模型名称（vLLM部署请通过<code data-tag="code" id="17da402081gse" data-init-id="239ce11b1fhyx" class="code">/v1/models</code>接口发送GET请求获取），示例填写<code data-tag="code" id="2375df3264mdt" class="code">Qwen3-8B</code>（注意大小写）。<b>API 地址</b> 填写时，URL 结尾应忽略 v1 版本号；若以 <code data-tag="code" id="7a32afd2fel68" class="code">#</code> 结尾则强制使用 <code data-tag="code" id="d989bf4272hed" class="code">/v1/chat/completions</code> 路径。配置完成后，<b>模型</b> 区域将自动识别并列出可用模型（如 <b>Qwen3-8B</b>）。</p></li><li id="9ccccb7cf68kv"><p id="0d31881505thi">在<b>API 密钥</b>输入框旁单击<b>检测</b>来确认连通性。</p></li></ol></li><li id="2de10323397h5"><p id="ccb82f2e5bsgg"><b>快速体验模型</b></p><p id="6f77a555b2qh2">回到对话框界面，在顶部选择模型后开始对话。</p><p id="p-dc3f93338453">例如输入<b>你是谁</b>并发送，Qwen3-8B模型成功回复自我介绍，表明模型已部署成功并可正常对话。</p></li></ol></section><section id="section-langchain" class="section"><h4 id="h4-langchain"><b>LangChain</b></h4><p id="p-langchain-intro">LangChain 是常用的大模型应用编排框架。EAS 服务兼容 OpenAI API，可通过<code data-tag="code" id="code-langchain-chatopenai" class="code">langchain_openai.ChatOpenAI</code>直接接入，用于提示词模板编排、链式调用等场景。</p><ol id="ol-langchain" start="1"><li id="li-langchain-install"><p id="p-langchain-install"><b>安装依赖</b></p><pre outputclass="language-bash" data-tag="codeblock" code-type="xCode" id="code-langchain-pip" class="pre codeblock language-bash"><code>pip install langchain langchain-openai</code></pre></li><li id="li-langchain-config"><p id="p-langchain-config"><b>配置模型</b></p><p id="p-langchain-config-desc">初始化<code data-tag="code" id="code-langchain-cls" class="code">ChatOpenAI</code>时配置以下参数：</p><ul id="ul-langchain-params"><li id="li-langchain-baseurl"><p id="p-langchain-baseurl"><b>base_url</b>：填写 EAS 服务公网调用地址（<b>注意末尾加上 /v1</b>）。</p></li><li id="li-langchain-apikey"><p id="p-langchain-apikey"><b>api_key</b>：填写 EAS 服务 Token。</p></li><li id="li-langchain-model"><p id="p-langchain-model"><b>model</b>：填写模型名称（vLLM 部署请通过<code data-tag="code" id="code-langchain-models" data-init-id="239ce11b1fhyx" class="code">/v1/models</code>接口发送 GET 请求获取），示例填写 <code data-tag="code" id="code-langchain-qwen" class="code">Qwen3-8B</code>。</p></li></ul><pre outputclass="language-python" data-tag="codeblock" code-type="xCode" id="code-langchain-init" class="pre codeblock language-python"><code>from langchain_openai import ChatOpenAI
+
+llm = ChatOpenAI(
+    base_url="&lt;EAS_ENDPOINT&gt;/v1",
+    api_key="&lt;EAS_TOKEN&gt;",
+    model="&lt;model_name&gt;"
+)</code></pre><div type="important" id="note-langchain-v1" class="note note-important"><div class="note-icon-wrapper"><i class="icon-note note important"></i></div><div class="noteContentSpan"><strong>重要 </strong><p id="p-langchain-v1"><code data-tag="code" id="code-langchain-baseurl-param" class="code">base_url</code>末尾必须加上<code data-tag="code" id="code-langchain-v1" class="code">/v1</code>。若直接填写 EAS 服务公网调用地址（不含<code data-tag="code" id="code-langchain-v1-missing" class="code">/v1</code>），调用会返回 404。</p></div></div></li><li id="li-langchain-chain"><p id="p-langchain-chain"><b>链式调用</b></p><p id="p-langchain-chain-desc">将<code data-tag="code" id="code-langchain-prompt-cls" class="code">ChatPromptTemplate</code>与模型通过<code data-tag="code" id="code-langchain-pipe" class="code">|</code>组合成链后调用。</p><pre outputclass="language-python" data-tag="codeblock" code-type="xCode" id="code-langchain-chain" class="pre codeblock language-python"><code>from langchain_core.prompts import ChatPromptTemplate
+
+prompt = ChatPromptTemplate.from_messages([
+    ("system", "You are a helpful assistant."),
+    ("user", "{input}")
+])
+
+chain = prompt | llm
+response = chain.invoke({"input": "你是谁"})
+print(response.content)</code></pre></li></ol></section></section></section><section id="e17fc34b3fe97" class="section"><h2 id="29105629e32av"><b>计费说明</b></h2><p id="61d11679a23i5">包括但不限于以下费用，详情请参见<a href="/help/zh/pai/product-overview/billing-of-eas" id="b30a123646f81" title="" class="xref">模型在线服务（EAS）计费说明</a>。</p><ul id="a8a760766ak04"><li id="e62c5fab21vv9"><p id="d364bbac36zot"><b>计算费用</b>：主要成本来源，在创建EAS服务时，根据需求选择按量付费或包年包月的资源。</p></li><li id="2e1f5f59datu6"><p id="1e9e416137nir"><b>存储费用</b>：如果使用自定义模型，模型文件存储在OSS中，会产生对象存储费用。</p></li></ul></section><section id="2fa9705eebbmf" class="section"><h2 id="8f93b95f5efr4"><b>应用于生产环境</b></h2><section id="09c6d93affgv8" class="section"><h3 id="390808a61cce2"><b>选择合适的模型</b></h3><ol id="56ce5907f83fa" start="1"><li id="a13a62dd9c77w"><p id="f6776ea4eea1m"><b>明确应用场景</b>：</p><ul id="a385247d42arn" start="1" data-init-id="56ce5907f83fa"><li id="0cbffce09e93n"><p id="7b1be14987kjv"><b>通用对话</b>：请务必选择指令微调模型，而非基础模型，以确保模型能理解并遵循您的指令。</p></li><li id="a8c2dbf01covq"><p id="ea536c295erxd"><b>代码生成</b>：选择专门的代码模型，如 <code data-tag="code" uuid="mg5yqnjgpc8fvpwj51i" id="cac6019e5djr6" class="code">Qwen3-Coder</code> 系列，它们在代码相关任务上表现通常远超通用模型。</p></li><li id="216ed5f8fbezs"><p id="a95ad20f1c422"><b>特定领域任务</b>：如果任务非常专业（如金融、法律），可以考虑寻找在该领域微调过的模型，或者使用通用模型进行微调。</p></li></ul></li><li id="74e9483d391mx"><p id="c56210d1077ps"><b>性能与成本</b>：模型参数量越大，能力越强，但所需计算资源和推理成本也越高。建议从较小的模型（如7B级别）开始验证，若性能不满足需求，再尝试更大的模型。</p></li><li id="e3b2352b29nse"><p id="cf6d401ca67xe"><b>参考权威评测</b>：可参考OpenCompass、LMSys Chatbot Arena等评测榜单。这些榜单从推理、编码、数学等维度评估模型，能提供有价值的选型依据。</p></li></ol></section><section id="59c4adf373ias" class="section"><h3 id="11936938110ex"><b>选择合适的推理引擎</b></h3><ul id="db8123a33ab40"><li id="b26e7345eb8l3"><p id="3810f581a4wcs"><b>vLLM/SGLang</b>：作为开源社区的主流选择，拥有广泛的模型支持和丰富的社区文档与示例，易于集成和问题排查。</p></li><li id="094d88d58bmwa"><p id="5fa1be5b99rw0"><b>BladeLLM</b>：阿里云PAI团队自研的推理引擎，针对特定模型（尤其是Qwen系列）有深度优化，可能获得更高的性能和更低的显存占用。</p></li></ul></section><section id="82c781f8a081b" class="section"><h3 id="39ca93d73256y"><b>推理优化</b></h3><ul id="b08b60fa1ersx"><li id="720ecd548daaw"><p jc="left" data-spm-anchor-id="a2c4g.11186623.0.i4.7b59226ai7W8iv" id="8b0b771dd77vs" style="text-align:left"><a href="/help/zh/pai/use-llm-intelligent-router-to-improve-inference-efficiency/" id="af557b57f6oc8" title="" class="xref">LLM智能路由部署</a>：基于实时token吞吐量、GPU显存使用率等指标动态分发请求，均衡各推理实例的算力与显存分配，适用于部署多个推理实例，且预期请求负载不均的场景，提升集群资源利用率与系统稳定性。</p></li><li id="87de7431e8l2n"><p id="11b94d706d92o"><a href="/help/zh/pai/deployment-moe-model-based-on-expert-parallel-and-pd-separation" id="a8e216ba38lg9" title="" class="xref">基于专家并行和PD分离部署MoE模型</a>：针对专家混合（Mixture-of-Experts, MoE）模型，通过专家并行（EP）和Prefill-Decode（PD）分离部署等技术，提升推理吞吐、降低部署成本。</p></li></ul></section></section><section id="4ca8e1eb3cmbh" class="section"><h2 id="902ca3fb82g9p"><b>常见问题</b></h2><section id="e9e640512ecxg" class="section"><h3 id="b7aca41b173iy">Q：服务一直处于"等待中"状态，无法启动怎么办？</h3><p id="af15979be9kme">请按以下步骤排查：</p><ol id="d3893a214euw2"><li id="cc1c4fd783fza"><p id="14d8aceb80aco"><b>检查实例状态</b>：在服务列表页，单击服务名称进入详情页，在<b id="22ad5df1a2pqs" data-tag="uicontrol" data-isbold="true" class="uicontrol">服务实例</b>部分查看实例状态，如果显示<b>库存不足</b>，说明当前公共资源组资源不足。</p></li><li id="2ae82b83f1qua"><p id="da359a3f0aatf"><b>解决方案</b>（按优先级）：</p><ol id="1c5ccf297b3p0" data-init-id="d3893a214euw2"><li id="cd5f1d8af0uov"><p id="196e2b2d89qtq">方案1：<b>更换实例规格</b>。返回部署页面，选择其他GPU型号。</p></li><li id="a7bf83435814r"><p id="8b925c24b3t5i">方案2：<b>使用专有资源</b>。<b id="a5f124d7c0e4h" data-tag="uicontrol" data-isbold="true" class="uicontrol">资源类型</b>选择EAS资源组以使用专有资源（需提前创建）。</p></li></ol></li><li id="05a6f9dca9qfy"><p id="ab5bfc53fbhh3"><b>预防措施</b>：</p><ol id="a5cee80728kf3"><li id="e528a7a629s8l"><p id="7e9a060e862lu">建议企业用户创建专有资源组，避免受公共资源限制。</p></li><li id="e126fd420fsz1"><p id="fea78035b0h7t">高峰期建议选择多个地域进行测试。</p></li></ol></li></ol></section><section id="b843c76e7007e" class="section"><h3 id="5d0f228d56v9e"><b>Q：调用报错</b></h3><ol id="cb7f92f2adrj0" start="1"><li id="5f07a8be5bk3d"><p id="f3cf8e740dlhu"><b>调用返回错误</b><code data-tag="code" id="1f047d4af2u50" class="code"><b>Unsupported Media Type: Only 'application/json' is allowed</b></code></p><p id="6a99b89611x3a">请确保请求Headers中包含 <code data-tag="code" id="83c3102a3eq9l" data-init-id="60ed5e6da4vfw" class="code">Content-Type: application/json</code>。</p></li><li id="bd96a42e05z7g"><p id="a00376ce8ayg2"><b>调用返回错误</b><code data-tag="code" id="b1fe05471czae" class="code"><b>The model '&lt;model_name&gt;' does not exist.</b></code></p><p id="d6421b3e8asis">vLLM推理引擎要求model字段必须填写正确。可通过调用<code data-tag="code" id="4063d943b7ts3" class="code">/v1/models</code>接口（GET请求）获取模型名称。</p></li></ol></section><p id="17c92cf5e9nkd">更多问题请参见<a href="/help/zh/pai/faq-about-eas" id="e0ae5eb6e5oqq" title="" class="xref">EAS常见问题</a>。</p></section></div></main>
+
+</div>
+</article>
+<script type="text/javascript">
+window.storeDocs = {
+language: '$lang',
+docGithubLink: '$!githubInfo.url'
+}
+</script>
+<div class="nav-footer">
+ </div>
+<div class="alicloud-document-ask clearfix"></div>
+<div class="feedback-message" style="display:none;">
+<span class="hasfeedback acon acon-done-16"></span>
+谢谢！我们已经收到了您的反馈。
+</div>
+</div>
+<div class="col-log-2 col-md-2 col-sm-0 col-xs-0 nav-catalog">
+<div class="article-catalog" id="articleCatalog"></div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+<script
+crossorigin
+src="https://g.alicdn.com/code/lib/??react/16.8.6/umd/react.production.min.js,react-dom/16.8.6/umd/react-dom.production.min.js"
+></script>
+<script
+src="https://g.alicdn.com/code/lib/lodash.js/4.17.21/lodash.min.js"
+crossorigin="anonymous"
+></script>
+<script src="//g.alicdn.com/aliyun-help/help-portal-fe/0.12.65/js/vendor.js"></script>
+<script src="//g.alicdn.com/aliyun-help/help-portal-fe/0.12.65/js/index.js"></script>
+<script defer src="https://cloud-assets.alicdn.com/alicdn/dawn/user-tracker/latest/js/index.js"></script>
+</body>
+</html>
