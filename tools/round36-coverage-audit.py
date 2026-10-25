@@ -101,12 +101,17 @@ def main() -> int:
     args = parser.parse_args()
     if args.selftest:
         readme, entry, sources, base_sources = load(args.repo, args.tip)
-        base = score(readme, entry, sources, base_sources)
+        # The base arm must be the BASE state, not the tip's readme and entry
+        # paired with the base registry: once the round lands, the tip's
+        # README names the entry and the entry file exists, so mixing them
+        # made the base arm report met True at a landed tip.
+        base_readme, base_entry, base_sources2, _ = load(args.repo, BASE)
+        base = score(base_readme, base_entry, base_sources2, base_sources2)
         outside = score(
-            (readme or "") + f"\nsee {ENTRY} outside the block\n",
+            (base_readme or "") + f"\nsee {ENTRY} outside the block\n",
             "source: S328\n",
             "| S328 | x |\n",
-            base_sources or "",
+            base_sources2 or "",
         )
         old_id = score(
             f"{HEADING}\n| {ENTRY} | x | 36 |\n",

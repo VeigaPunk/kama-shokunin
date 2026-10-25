@@ -2128,3 +2128,67 @@ one own-work row S324 for the widened gate population. Sources validate exit
 ## round 35 — r34 self-assessment corrections and probe-signal coverage (2026-10-24)
 
 Two declared claims, measured on committed bytes at `d419b99df20d1f0b34caf65807e913784e69baf5`. C1 (calibration 7 → 7): four frozen r34 self-assessment statements are corrected by appended rows; the filed report blob is unchanged. The do-nothing control prints `uncorrected 4 met False`. The tip counter prints `uncorrected 0 false_corrections 0 report_unchanged 1 met True`. C2 (coverage 9 → 9): the round-35 coverage block names `knowledge/endpoint-health-probe-conventions.md`, the file exists, and it cites S327, which was opened 2026-10-24. Base `719655f` prints `named 0 file_exists 0 cited_row 0 met False`. The tip prints `named 1 file_exists 1 cited_row 1 met True`. MISSION.md:29 still says operability + freshness; it was not edited. Inherited round-33 and round-34 paths were re-verified; three nested git clones were discarded and the rest kept. Lessons: `corpus/lessons/round-35.md`. Report: `.ufo/reports/round-35/kama.md`.
+
+## round 36 — r35 routed corrections and the published-route-versus-engine-route ground (2026-10-24)
+
+Two declared claims, frozen in `.ufo/waves/round-36/preregistration.json` before
+any seat scored, measured on committed bytes at `2e8beda5b2a2dcc62d6782838ee6e47cda04df55`.
+
+C1 (calibration 7 → 7) corrects, by append only, the four statements the
+round-35 closure routed: the S211 quarantine reason (the closure and this
+round's own fetch both record HTTP 200 for the cited URL, and the seat report
+records a successful fetch with the token still-live absent from the page; the
+row stays unappended because no located quote exists), the S327 quote's word
+count (20 words, not the 18 its paragraph records — re-derived three ways from
+the committed lesson blob `428f1f8a0e8871022f7c1e8ea47e50ba5a8d6412`), the
+mixed-mirror description (11 symlinks and 84 regular files, not a symlink
+tree), and the seven r35 leftovers (3 seat-log flushes, 1 report overwrite, 1
+mixed mirror, 2 helper-skipped 1066624-byte HTML files), which are classified
+and left unswept. Counter: `uncorrected 4 false_corrections 0 met False` (exit
+1) at base → `uncorrected 0 false_corrections 0 met True` (exit 0) at the
+landed commit. The r35 lesson blob and the r35 fleet report blob are unchanged;
+the filed r35 report was not rewritten.
+
+C2 (coverage 9 → 9) adds `corpus/knowledge/sglang-native-route-deprecation.md`
+to the coverage map. At tag v0.5.22 the published SGLang native-API page still
+lists `/get_model_info` and never names `/model_info`, while the same tag's
+`http_server.py` registers both routes and warns in the deprecated route's own
+response that `/get_model_info` will be removed. Counter: `named 0 file_exists
+0 cited_new 0 met False` at base → `named 1 file_exists 1 cited_new 1 met True`
+(exit 0). Sources S328 and S329 appended, each opened and located by this lane
+on 2026-10-24.
+
+Frontier step: the read-only shokuknow `corpus-expansion-1` package, one theme,
+one entry, two rows. The scratch validate mirror's first build failed with E12
+on both rows — appended at the end of `corpus/SOURCES.md` they fell outside the
+Registry section — and the rows were re-placed inside the table before the
+gate exited 0 with 93 pre-existing W04 warnings. The seven kama rows of the
+campaign absent-defect register were hand-checked this round: S202, S206 and
+S230 present; S200, S210 and S211 absent; S224's compound span does not
+locate. No register row is appended. Id collision: registry 201, staged 134
+(S325 to S458), one collision (S327, the same document the lane already holds);
+the 0-3 leading-space guard proves it can see an indented row where the
+column-zero pattern cannot. `corpus/QUALITY.md` gains KQ45, mined from
+`considerthese/2026-10-24.md` proposal 2 and grounded by the drift measured on
+S174, S192 and S193 — the reflection was a pointer; the three sources were
+opened.
+
+Instrument repair: the C2 counter's selftest built its base and outside arms
+from the tip's README and entry, so after the round landed the base arm
+reported `met True` and the selftest exited 1. Both arms now load the BASE
+revision. `score()` and the frozen predicate are unchanged and the measurement
+line is byte-identical.
+
+VCS incident, recorded: the wave-3 mutation-tester seat ran `jj commit` inside
+the lane repo instead of its sandbox clone and parked the lane's working copy
+on three foreign-identity commits. `jj-lane.sh commit` refuses a non-empty
+working copy on a non-tip base, and `jj-lane.sh recover` cannot accept a
+candidate that is both a direct child of the tip and the working copy's direct
+parent. The claim work was committed and pushed through `jj-lane.sh` in a
+scratch clone of the lane remote, and the lane's branch was advanced by
+`jj-lane.sh push` through the helper's own moved-remote recovery path. The
+foreign commits were never pushed. The lane's working copy is still parked on
+them; that is filed as an L0 question for the operator.
+
+Lessons, rejects, flip conditions and the seven quarantine verdicts:
+`corpus/lessons/round-36.md`. Report: `.ufo/reports/round-36/kama.md`.

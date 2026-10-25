@@ -1960,3 +1960,73 @@ Other readings held: operability 8, freshness 8, depth 7, adjacency 7.
 Outside non-author sampling of round 35. The capability-repertoire audit still
 cannot see a capability demonstrated only in a lesson. Quarantine rows that
 located this round but were not cited by an admitted entry stay unappended.
+
+## Round 36 — r35 routed corrections and the published-route-versus-engine-route ground (2026-10-24)
+
+Authority: conf assigns operability 8 + calibration 7. Calibration is the lowest
+non-retired numeric axis (tied with depth and adjacency at 7). MISSION.md:29
+still says operability + freshness; that file was not edited and no duplicate
+L0 was filed — the round-35 question stands open. Stagnation nudge inactive.
+Preregistration `.ufo/waves/round-36/preregistration.json`, frozen before any
+seat scored. Base `e5a8ececf3d60fd53b36bb74299693a29e8f74b6`.
+
+| Claim | Axis, score | Before → after (measured) | Counting command | Measured commit | Evidence |
+|---|---|---|---|---|---|
+| C1 — four r35 routed statements corrected by append | calibration 7 → 7 (delta 0) | `uncorrected 4 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met False` (exit 1) at base → `uncorrected 0 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met True` (exit 0) | `python3 tools/round36-statement-audit.py --repo . --tip <full-commit>` | `2e8beda5b2a2dcc62d6782838ee6e47cda04df55` | `.ufo/waves/round-36/controls/c1-noop.out`; `.ufo/waves/round-36/c1/after.out`; `corpus/lessons/round-36.md` |
+| C2 — coverage map names the published-route entry | coverage 9 → 9 (delta 0) | `named 0 file_exists 0 cited_new 0 met False` at base → `named 1 file_exists 1 cited_new 1 met True` (exit 0) | `python3 tools/round36-coverage-audit.py --repo . --tip <full-commit>` | `2e8beda5b2a2dcc62d6782838ee6e47cda04df55` | `.ufo/waves/round-36/controls/c2-base.out`; `.ufo/waves/round-36/c2/after.out`; S328, S329 |
+
+Both scores are held. C1 corrects four statements the round-35 closure routed,
+by append only: the r35 lesson blob and the r35 fleet report blob are unchanged
+and the counter re-derives each correction from committed bytes. C2 adds one
+coverage-map pointer the base README did not hold. No capability row enters.
+Other readings held: operability 8, freshness 8, depth 7, adjacency 7.
+
+### Frontier step (round 36)
+
+One theme from the read-only shokuknow `corpus-expansion-1` package: a
+published native route name is not the engine's current route. One admitted
+entry, `corpus/knowledge/sglang-native-route-deprecation.md`, and two registry
+rows, S328 and S329, each opened and located by this lane on 2026-10-24. The
+scratch mirror's first build failed with E12 on both rows (appended at the end
+of the file they fell outside the Registry section); the rows were re-placed
+inside the table and the gate then exited 0 with 93 pre-existing W04 warnings.
+The seven kama rows of the campaign absent-defect register were hand-checked:
+S202, S206 and S230 are present, S200, S210 and S211 are absent, S224's
+compound span does not locate. No register row is appended; S230's anchor is
+carried by the lane's own S329 row. Id collision: registry 201, staged 134
+(S325 to S458), collisions 1 (S327, the same document the lane already holds).
+Lesson, rejects and flip conditions: `corpus/lessons/round-36.md`.
+
+### Instrument repair in this round
+
+`tools/round36-coverage-audit.py`'s selftest built its base arm from the tip's
+README and entry paired with the base registry, and its outside arm from the
+tip's README. Once the round landed, that base arm reported `met True` at a
+landed tip and the selftest exited 1. Both arms now load the BASE revision's
+README, entry and registry. `score()`, `PREDICATE`, `HEADING`, `ENTRY` and
+`BASE` are unchanged; the measurement line is byte-identical before and after
+(`.ufo/waves/round-36/c2/after.out`). The selftest exits 0 at the base tip and
+at the landed tip.
+
+### VCS incident, recorded not repaired in place
+
+The wave-3 mutation-tester seat ran `jj commit` inside the lane repo instead of
+its sandbox clone and parked the working copy on three foreign-identity commits
+(`28a8bf50` "baseline", `10094ed1` "mut1", `f3517a161e` "mut2", author
+`MutLessonRow sandbox <sandbox@mut.invalid>`). `jj-lane.sh commit` refuses a
+non-empty working copy on a non-tip base by design, and `jj-lane.sh recover`
+requires a candidate that is both a direct child of the tip and the working
+copy's direct parent — no commit in the chain is both. The claim work was
+therefore committed and pushed through `jj-lane.sh` in a scratch clone of the
+lane remote, and the lane's own branch was advanced by `jj-lane.sh push`,
+which adopted the moved remote tip through the helper's own recovery path. The
+foreign commits were never pushed and are not ancestors of the branch tip. The
+lane's local working copy remains parked on them; that is an operator item, not
+a lane mutation, and it is filed as an L0 question.
+
+### Planned (round 37)
+
+Re-anchor the lane's working copy off the foreign-identity chain (operator
+item, L0 filed). Outside non-author sampling of round 36, with the S211
+reason, the S327 word count and the mixed-mirror description checked again
+against the filed r35 lesson and r35 report, which this round did not rewrite.
