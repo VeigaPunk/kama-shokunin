@@ -624,7 +624,7 @@ No endpoint was sampled and no serving runtime was started. Registered consumers
 
 | Entry | Covers | Round |
 |---|---|---|
-| `knowledge/context-capacity-engine-sides.md` | Engine-side half of declared versus served context capacity (K05), as source readings: vLLM v0.32.0 derives its served KV-cache token figure from the block pool and `max_model_len` and prints it beside the declared length on one startup log line; llama.cpp 704366d7's router model listing publishes the declared training context as `context_length` (not `max_model_len`); S478, S479 | 42 |
+| `knowledge/context-capacity-engine-sides.md` (`corpus/knowledge/context-capacity-engine-sides.md`) | Engine-side half of declared versus served context capacity (K05), as source readings: vLLM v0.32.0 derives its served KV-cache token figure from the block pool and `max_model_len` and prints it beside the declared length on one startup log line; llama.cpp 704366d7's router model listing publishes the declared training context as `context_length` (not `max_model_len`); S478, S479 | 42 |
 
 ## Frontier disposition — round 42
 
