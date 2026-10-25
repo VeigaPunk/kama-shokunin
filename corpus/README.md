@@ -602,3 +602,9 @@ with flip conditions, and the id-collision record are in
 The OpenAI model-list `created` field is catalog creation-time metadata rather than a local serving-identity signal. The distinction is held in `knowledge/served-identity-crosswalk-amendment-2026-10-24-r16.md` (S473). No registered endpoint or live runtime was sampled; serving/runtime gaps remain open.
 
 The row was staged by attempt 1 as S472, which round 38 already holds for the SGLang tag inventory; attempt 2 renumbered it to S473 by document and re-pointed every live citation. Attempt-1 receipts under `.ufo/waves/round-39/assimilation/` keep the old id and are superseded, not edited; the replay receipts are `claim-after-replay.out`, `census-replay.out` and `renumber-map.md`.
+
+## Coverage map — round 41 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/engine-pin-watch.md` | Newer-release triggers for version-pinned entries: release-tag listing with `git ls-remote --tags`, peeled `^{}` lines skipped, numeric version order; per-pin status for SGLang v0.5.22, vLLM v0.32.0 and llama.cpp b11755; S475, S476, S477 | 41 |

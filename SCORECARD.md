@@ -14,6 +14,19 @@ verified completed round. This attempt adds **zero** verified completed rounds.
 
 ## Axes
 
+Reconciled in round 41 against the measured commit (`tools/round41-scorecard-reconcile.py`, claim C1): every hash, line count, run line and path in the table below re-derives there, and the scores are the lane's last-declared assessment (round 39 and round 40 sections). The round-3 table it replaces is kept below, byte-intact, as history; its md5s, line counts and bare file names no longer matched the tree, and its freshness 7 and coverage 8 predate the round-10 moves to 8 and 9.
+
+| Axis | Score | Evidence pointer (re-derivable at the measured commit) | Last change |
+|---|---|---|---|
+| **operability** | **8** | registry gate `tools/kama-probe.sh` sha256 `36b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3` (1138 lines); run `bash tools/test-snapshot.sh` → `RESULT pass=30 fail=0`; run `python3 tools/report-landing-audit.py --selftest` → `selftest cases=79 failed=0`; run `python3 tools/sources-append-only.py --selftest` → `42/42 selftest cases passed`. Limit: the registered endpoints sample DEAD (no authorized serving runtime; operator-owned), so no model-readiness verdict is evidenced | score round 3; evidence re-anchored round 41 |
+| **freshness** | **8** | snapshot/diff harness `tools/test-snapshot.sh` sha256 `236c23c12964cf0b2f0a2f970187e216d3398dcf2b92ffb7e8606e0fdd029646` (194 lines); run `python3 tools/citation-provenance.py --selftest` → `selftest: ok (24 cases)`. Limit: snapshots are invocation-driven (no clock), and source rechecks run on each row's `recheck` cadence | score round 10; evidence re-anchored round 41 |
+| depth | **7** | `SKILL.md` sha256 `151023b99bec115ee2cbab747c9641f243e15702210b76cd407135fa06dc4d0b` (1375 lines); `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 41 |
+| coverage | **9** | surface list `PROVINCE.md` sha256 `dbb5f4f786821debe385603bfc445b09f2a29103184fbee134977def84d777a1` (169 lines); held ground includes `corpus/knowledge/endpoint-health-probe-conventions.md`, `corpus/knowledge/kv-cache-reclamation-models.md`, `corpus/knowledge/serving-alias-contract.md` | score round 10; evidence re-anchored round 41 |
+| calibration | **7** | run `python3 tools/capability-repertoire-audit.py --selftest` → `CAP_SELFTEST pass=2 fail=0`; run `python3 tools/instrument-agreement.py --selftest` → `IA_SELFTEST pass=4 fail=0`; this table's counter `tools/round41-scorecard-reconcile.py`; latest outside closure `corpus/lessons/round-40-verifier-spotcheck.md` (honest stop) | score round 1; evidence re-anchored round 41 |
+| adjacency | **7** | `corpus/knowledge/cross-lane-scope.md` sha256 `1801cb7fa45ef6f56ff96cb67c7840256fcffce000a56067cd8133797b9728a9` (87 lines); contested scope stays reported, not absorbed (`PROVINCE.md` §Adjacent) | score round 1; evidence re-anchored round 41 |
+
+### Historical axes table (round-3 assessment; superseded in round 41)
+
 | Axis | Before → After | Evidence pointer | Last change |
 |---|---|---|---|
 | **operability** (worked round 1) | **0 → 8** | `tools/kama-probe.sh` md5 `1f81e859c2d7f43f87d1f7e01327b2cf` (1092 lines, 0755) + `registry/endpoint-consumers.tsv` (3 rows); live `check` → `registry_rows_evaluated=3 model_ok=0 drift=3 exit=2`; `--ufo-src` derives the ufo-fsd checkout (`$UFO_SRC` env → `~/Projects/ufo-fsd-alpha` → `~/Projects/origin-work/ufo-fsd-alpha` → fail-closed `file=missing`); `bash -n` clean (shellcheck absent on this box) | round 3 |
@@ -2146,3 +2159,26 @@ Measured against lane commit `2429f48e2c679048d94566a9f3e800d5278b23eb` (the cou
 - C1 command: `python3 tools/round40-calibration-audit.py --repo <fresh clone> --tip 2429f48e2c679048d94566a9f3e800d5278b23eb --out .ufo/waves/round-40/c1/after.out` → `s474_row=0 amend_corrected=1 r36d2c_fixed=1 false_corrections=0 met=False`, exit 1. **Unverified** due to the frozen counter’s index defect; no C1 score delta is claimed.
 - C2 command: `python3 tools/round40-operability-audit.py --repo <fresh clone> --tip 2429f48e2c679048d94566a9f3e800d5278b23eb --out .ufo/waves/round-40/c2/after.out` → `spec_exists=1 run_exists=1 spec_sha_ok=1 run_sha_ok=1 counts_ok=1 met=True`, exit 0. Claim verified, score held.
 - Census command: `sources-census.sh census --file corpus/SOURCES.md` → rows 214→215; tier A 204→205, B=7, C=3; mined 195→196, queued=8, rejected=11; missing=0. Full-mirror `sources-census.sh validate --root <mirror> kama` → exit 0, 93 W04, 0 E.
+
+## Round 41 — head axes table reconciled to the tree (calibration) and the pin-watch capability (operability) (2026-10-25)
+
+Authority: `shokunin.conf` assigns operability + calibration; calibration 7 is the lowest assigned non-retired axis, below operability 8; the stagnation nudge is inactive. Frozen base `8893b89466250c4d542912a867392698d2da00ce`; freeze commit `6fec0c4cd7b63ac733f2ae47fe73d1366b40c6dd` (`.ufo/waves/round-41/preregistration.json`, counters, controls). Measurement root: a fresh clone of the lane remote; the parked worktree is on the mutation-sandbox lineage (round-40 D5).
+
+| Claim | Axis, score | Before → after | Counting command | Evidence |
+|---|---|---|---|---|
+| C1 — the `## Axes` table matches observed repository state | calibration 7 → 7 | base `mismatches=16 met=False` → measured value recorded under §Round-41 measured results | `python3 tools/round41-scorecard-reconcile.py --repo <fresh clone> --tip <full commit> --out <receipt>` | `.ufo/waves/round-41/controls/base.c1.out`; `.ufo/waves/round-41/c1/after.out` |
+| C2 — capability acquisition `pin-watch` (considerthese 2026-10-25 proposal 2; sourced S475, S476, S477) | operability 8 → 8, new capability row | base `tool=0 contract=0 live=0 sourced=0 capability=0 met=False` → measured value recorded under §Round-41 measured results | `python3 tools/round41-pinwatch-audit.py --repo <fresh clone> --tip <full commit> --out <receipt>` | `.ufo/waves/round-41/controls/base.c2.out`; `.ufo/waves/round-41/c2/after.out` |
+
+**Capabilities — canonical list as of round 41**
+
+Same four columns as the round-34 canonical list, which stays byte-intact; one row is added.
+
+| Capability | What it can now do | Evidence pointer | First-working round |
+|---|---|---|---|
+| sources-registry | Curate where kama learns: tier-scoped, revision-anchored rows; contract-v1 census clean | `corpus/SOURCES.md` | 10 |
+| ollama-offline-evidence-replay | Reconcile caller-supplied `/api/tags` + `/api/ps` captures fail-closed; readiness always unknown | `tools/kama-ollama-evidence.py` | 14 |
+| live-llamacpp-lifecycle | Start the pinned llama.cpp b11755 server on an unregistered loopback port, capture its loading and ready surfaces, grade and tear it down | `.ufo/waves/round-16/live/receipt.json` | 16 |
+| gguf-declared-identity-replay | Decode bounded local GGUF metadata offline and compare declared metadata with a captured receipt | `tools/gguf-identity.py` | 20 |
+| context-capacity-receipt | Run the registered context-capacity cells on the lane-owned llama.cpp fixture and write a sha256-bound receipt | `tools/kama-context-capacity.py` | 25 |
+| instrument-agreement | Run a lane instrument N times over one tree and emit a receipt with per-run digests and an agreement counter | `tools/instrument-agreement.py` | 30 |
+| pin-watch | List upstream release tags for each pinned serving engine (SGLang, vLLM, llama.cpp) and report, per pin, the newest release tag and how many releases sort above it; exit 1 flags a recheck trigger | `tools/pin-watch.py`; `registry/engine-pins.tsv`; `corpus/knowledge/engine-pin-watch.md` | 41 |
