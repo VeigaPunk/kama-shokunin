@@ -109,3 +109,8 @@ Wave 1 (36 seats, v1): reviewer 8, scout 9, critic 4, scribe 5, executor 5, muta
 [~] coverage: S352, S353, S472 admitted; S360 and two wave-1 rejects recorded; README block added; C2 measured met False → met True at the measured tip.
 [~] operability: the two round-37 counters landed under tools/; the 37th seat report and an enriched seat-exit-codes.json landed; C3 measured met True at the measured tip.
 [~] frontier: one assimilation theme adopted; mistake mining yielded the `instrument-not-landed` row; the census start and end both exit 0.
+
+### Round-40 citation correction note (append-only)
+
+The package-byte digest cited in the R36-D2C paragraph above was abbreviated as `3ad0df68…`. On 2026-10-25, `/home/vgpnk/Projects/shokuknow/merge/kama/SOURCES.append.md` was re-opened and its full SHA-256 measured as `3ad0df68504e1f49a0ab23e68b2034a9d6258345468fa03013737ced7ce234ff`; see `corpus/lessons/round-40.md` and `.ufo/waves/round-40/c1/` receipts. This note supplements the historical paragraph; it does not rewrite it.
+

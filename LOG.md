@@ -2239,3 +2239,10 @@ Round-start census against the scratch root returned exit 2 because it lacks fle
 Round-39 wave attack qualification: the required v1 task batch was accidentally dispatched twice; 66 seats were attempted, the same 33 member names in each call. This is disclosed, not represented as one dispatch. One first-call reviewer (R39Attack10, openai-codex/gpt-6-luna) died with `Invalid prompt`; its duplicate completed. Thirty-two unique attack reports were recovered into scratch evidence. No wave 2 or residual call.
 
 Attempt 2 (replay-and-land): attempt 1's commits `eaa4106c` and `8e953f68` were made on the stale base `6a4afdfe` in the parked lane worktree and never reached the lane remote; this replay re-applies their content on `d7954be8` (r37 + r38), renumbers S472→S473, re-runs both frozen counters and the census, and lands through `jj-lane.sh`. The attempt-1 receipts are kept byte-exact under `.ufo/waves/round-39/assimilation/`; the replay receipts are `claim-after-replay.out`, `census-replay.out` and `renumber-map.md`.
+
+
+## Round 40 — digest citations, authentic wave evidence, and counter defect (2026-10-25)
+
+- **C1 calibration 7→7:** the round-38 verifier routed wrong evidence digests in the S472 citation and R36-D2C package-byte paragraph. Re-opened and hashed both sources; appended S474 and correction notes without rewriting historical text. The frozen C1 counter is invalid for its own sentence: it reads status column `row[7]` instead of teaches `row[6]`, and mutation probes show both false-accept and inability to recognize the valid row. C1 therefore remains unverified. Evidence: `corpus/lessons/round-40.md`; `.ufo/waves/round-40/w1/out/{R40A02,R40A05,R40F01}.md`; base receipt `controls/c1-base.out`.
+- **C2 operability 8→8:** staged the byte-exact round-38 session spec/run artifacts, verified SHA-256 pins, and recorded after-counter. Evidence: `.ufo/waves/round-38/w1/{spec,run}.json`; `.ufo/waves/round-40/c2/after.out`; base `controls/c2-base.out`.
+- Frontier sourced row S474 was opened against the committed ls-remote output; citation corrections remain append-only.

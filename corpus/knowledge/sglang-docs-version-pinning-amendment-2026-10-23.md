@@ -63,3 +63,7 @@ live-page wording check recorded in the amended entry. A tag ref is also not a G
 Release object: the inventory shows `v0.5.22` is the highest version tag, not that a
 release page was published for it. "Newest" here means the highest version under
 `sort -V`, a sort order that ranks `v0.5.10rc0` above `v0.5.10`.
+
+## Correction — round 40
+
+The S472 output SHA-256 in the provenance row above is superseded: 5585f602f71c4d4fa5a20125b2b8e4a1132a2d41abf511d7ef09c43a91d950f2 does not hash the committed ls-remote output. Its correct digest is 5585f6027df2dbc4dbafd4979b61c218ffd94e8af99936733218e0ae989e50f2 (S474), independently reproduced by the current run in `.ufo/waves/round-40/c1/ls-remote-rerun.txt`. The old provenance line is retained as historical text; S474 carries the corrected evidence citation.

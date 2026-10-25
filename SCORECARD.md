@@ -2119,3 +2119,22 @@ The frozen C1 predicate is present at the working tip (admit=1, two rejects, S47
 - **Replay receipts replace attempt-1 receipts as evidence.** `claim-after-replay.out`, `c1-noop-replay.out`, `c2-noop-replay.out`, `census-replay.out`, `validate-replay.out`, `reg-ids-replay`, `staged-ids-replay`, `collisions-replay`, `id-choice-collision` and `renumber-map.md`. The attempt-1 files keep their bytes and are superseded.
 - **Id collision.** The mechanical 0–3-space `comm -12` at the replay base returns 9 ids (S330, S333, S334, S335, S346, S347, S352, S353, S363) — all rows r37/r38 already adopted from the same staged package, none new. The real collision is the id attempt 1 *chose*: `S472` is round 38's own-work SGLang tag-inventory row (`corpus/SOURCES.md:225`), so the adopted row moves to `S473` by document.
 - **Append validation.** A full repository mirror (corpus + root + `.ufo`, `.git` excluded) validates exit 0, 0 E findings, W04 warnings only: `validate-replay.out`. The mirror itself is scratch and not committed.
+
+
+## Round 40 — digest citation corrections and r38 wave-evidence closure (2026-10-25)
+
+Authority: `shokunin.conf` assigns operability + calibration; calibration 7 is the lowest assigned non-retired axis, below operability 8. Frozen base `efe25f962a0b3a2b9b111c03bb5b5386c9548195`; freeze commit `f327904b72b2ff2aa1c9668cb23aa90054098e81`.
+
+| Claim | Axis, score | Before → after | Counting command | Result / evidence |
+|---|---|---|---|---|
+| C1 — correct routed r38 digests (unverified) | calibration 7 → 7 | base frozen control `s474_row=0 amend_corrected=0 r36d2c_fixed=0 false_corrections=1 met=False` → schema-valid S474 row still reads `s474_row=0`; frozen counter cannot verify its predicate | `python3 tools/round40-calibration-audit.py --repo <fresh clone> --tip <full commit> --out <receipt>` | **Unverified**: counter indexes status (`row[7]`) instead of teaches (`row[6]`); see wave reports R40A02, R40A05, R40F01. Do not treat a status-cell marker as a pass: census E07. |
+| C2 — stage exact r38 spec/run evidence | operability 8 → 8 | `spec_exists=0 run_exists=0 spec_sha_ok=0 run_sha_ok=0 counts_ok=0 met=False` → `spec_exists=1 run_exists=1 spec_sha_ok=1 run_sha_ok=1 counts_ok=1 met=True` | `python3 tools/round40-operability-audit.py --repo <fresh clone> --tip <full commit> --out <receipt>` | `.ufo/waves/round-40/c2/{base,after}.out`; copies of exact r38 bytes, SHA-256 pins in frozen predicate. |
+
+Both scalar scores held. C1's frozen instrument has a demonstrated false-accept path; its claim is reported unverified, not retuned after data. C2 is a pure staging operation.
+
+## Round 40 measured results
+
+C1 base-control command at frozen base: `python3 tools/round40-calibration-audit.py --repo /fast/scratch/hyaku/kama-r40 --tip efe25f962a0b3a2b9b111c03bb5b5386c9548195 --out .ufo/waves/round-40/controls/c1-base.out` → `s474_row=0 amend_corrected=0 r36d2c_fixed=0 false_corrections=1 met=False`, exit 1. C1's after-counter `met` value is **not** an admission signal because it can pass on a non-schema-compliant status value and fails the schema-valid teaches value.
+
+C2 base: `python3 tools/round40-operability-audit.py --repo /fast/scratch/hyaku/kama-r40 --tip efe25f962a0b3a2b9b111c03bb5b5386c9548195 --out .ufo/waves/round-40/controls/c2-base.out` → `spec_exists=0 run_exists=0 spec_sha_ok=0 run_sha_ok=0 counts_ok=0 met=False`, exit 1.
+
