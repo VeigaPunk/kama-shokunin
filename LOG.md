@@ -2192,3 +2192,26 @@ them; that is filed as an L0 question for the operator.
 
 Lessons, rejects, flip conditions and the seven quarantine verdicts:
 `corpus/lessons/round-36.md`. Report: `.ufo/reports/round-36/kama.md`.
+
+## round 37 — r36 routed corrections and the KV-cache reclamation/prefix-reuse ground (2026-10-25)
+
+The four r36 routed statements are corrected by append in
+`corpus/lessons/round-37.md` (R36-D1: census-end.out committed; R36-D2A:
+S371 native_api miswritten; R36-D2B: S364/S365/S377/S396 http_server.py;
+R36-D3: ScribeLog/RevQ206 with 429). The r36 lesson and r36 fleet report
+blobs are unchanged; the C1 counter re-derives each fact from committed bytes
+(`python3 tools/round37-statement-audit.py --repo . --tip <full-commit>` →
+`uncorrected 0 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met
+True`). Three knowledge entries on new ground (KV-cache reclamation, prefix
+reuse, the v0.11 hashing-default amendment) and seven registry rows S330, S333,
+S334, S335, S346, S347, S363, all opened 2026-10-25 and re-opened by wave-1
+seats; C2 counts `named 3 files_exist 3 cited_new 3 met True`. Id collision 0;
+scratch validate exit 0 with pre-existing W04 warnings; quarantine hand-check
+7/7 agree with round 36. D3 seat accounting (ScribeLog, RevQ206, rc=1,
+provider.rate_limit: 429) is named in the round-37 fleet report. KQ46 added to
+`corpus/QUALITY.md` for the id-drift class. The lane's working copy is still
+parked on the foreign-identity chain (L0 open); this round's commits were made
+through `jj-lane.sh` in a scratch clone of the lane remote.
+
+Lessons, rejects, flip conditions and the quarantine verdicts:
+`corpus/lessons/round-37.md`. Report: `.ufo/reports/round-37/kama.md`.

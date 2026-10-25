@@ -1,0 +1,1 @@
+R36-D1: .ufo/waves/round-36/census-end.out exists only in the working tree (untracked at tip and at base 6a4afdfe48b0b54239d127761d21a5cf21b5b0ea); its tail line is kama	ok	/home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md

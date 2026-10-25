@@ -2030,3 +2030,38 @@ Re-anchor the lane's working copy off the foreign-identity chain (operator
 item, L0 filed). Outside non-author sampling of round 36, with the S211
 reason, the S327 word count and the mixed-mirror description checked again
 against the filed r35 lesson and r35 report, which this round did not rewrite.
+
+## Round 37 — r36 routed corrections and the KV-cache reclamation/prefix-reuse ground (2026-10-25)
+
+Authority: conf assigns operability 8 + calibration 7. Calibration is the lowest
+non-retired numeric axis (tied with depth and adjacency at 7). MISSION.md:29
+still says operability + freshness; that file was not edited and no duplicate
+L0 was filed — the round-35 question stands open. Stagnation nudge inactive.
+Preregistration `.ufo/waves/round-37/preregistration.json`, frozen before any
+seat scored. Base `6a4afdfe48b0b54239d127761d21a5cf21b5b0ea`.
+
+| Claim | Axis, score | Before → after (measured) | Counting command | Measured commit | Evidence |
+|---|---|---|---|---|---|
+| C1 — four r36 routed statements corrected by append | calibration 7 → 7 (delta 0) | `uncorrected 4 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met False` (exit 1) at base → `uncorrected 0 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met True` (exit 0) | `python3 tools/round37-statement-audit.py --repo . --tip <full-commit>` | see `.ufo/waves/round-37/c1/after.out` | `.ufo/waves/round-37/controls/c1-noop.out`; `.ufo/waves/round-37/c1/after.out`; `corpus/lessons/round-37.md` |
+| C2 — coverage map names three KV-cache/prefix-reuse entries | coverage 9 → 9 (delta 0) | `named 0 files_exist 0 cited_new 0 met False` (exit 1) at base → `named 3 files_exist 3 cited_new 3 met True` (exit 0) | `python3 tools/round37-coverage-audit.py --repo . --tip <full-commit>` | see `.ufo/waves/round-37/c2/after.out` | `.ufo/waves/round-37/controls/c2-base.out`; `.ufo/waves/round-37/c2/after.out`; S330, S333, S334, S335, S346, S347, S363 |
+
+Both scores are held. C1 corrects four statements the round-36 verifier routed,
+by append only: the r36 lesson blob and the r36 fleet report blob are unchanged
+and the counter re-derives each correction from committed bytes. C2 adds three
+coverage-map pointers the base README did not hold. No capability row enters.
+Other readings held: operability 8, freshness 8, depth 7, adjacency 7.
+
+### Frontier step (round 37)
+
+One theme from the read-only shokuknow `corpus-expansion-1` package: engine
+internals that shape what a served endpoint answers — KV-cache reclamation and
+prefix-cache reuse models in vLLM and SGLang. Three admitted entries
+(`corpus/knowledge/kv-cache-reclamation-models.md`,
+`corpus/knowledge/prefix-cache-reuse-models.md`,
+`corpus/knowledge/prefix-cache-reuse-models-amendment-2026-10-23.md`) and
+seven registry rows (S330, S333, S334, S335, S346, S347, S363), each opened by
+this lane on 2026-10-25 and re-opened by wave-1 seats. Rejects (with flip
+conditions), the id-collision record (0 collisions), the scratch validate
+receipt and the quarantine hand-check are in
+`corpus/lessons/round-37.md`. The D3 seat accounting (ScribeLog and RevQ206,
+`rc=1`, `provider.rate_limit: 429`) is named in the round-37 fleet report.

@@ -558,3 +558,19 @@ adopted row re-points a staged citation by arithmetic. Quarantine verdicts for
 the seven kama rows of the campaign absent-defect register, the rejects with
 their flip conditions, and the id-collision record are in
 `corpus/lessons/round-36.md`.
+
+## Coverage map — round 37 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/kv-cache-reclamation-models.md` | vLLM V1's per-request token budget spans prompt and output with chunked prefill on by default; SGLang's radix tree evicts only evictable leaves by lowest score, and a session reference is soft protection, not a memory pin | 37 |
+| `knowledge/prefix-cache-reuse-models.md` | vLLM hashes each kv-cache block by its own tokens plus its prefix ancestry, caches only full blocks, and advises SHA256 for multi-tenant use; reuse requires an exact full-block prefix match | 37 |
+| `knowledge/prefix-cache-reuse-models-amendment-2026-10-23.md` | the hashing default changed at v0.11: sha256 is now the default and is selectable via --prefix-caching-hash-algo, so the v0.9.0 collision caveat is historical | 37 |
+
+The frontier step of round 37 is the corpus-expansion-1 package under
+`/home/vgpnk/Projects/shokuknow`, read only. One theme, three entries, seven
+registry rows: S330, S333, S334, S335, S346, S347 and S363, all opened on
+2026-10-25 by this lane and re-opened by wave-1 seats. The adopted ids follow
+the lane's registry; no adopted row re-points a staged citation by arithmetic.
+Quarantine verdicts, rejects with flip conditions, and the id-collision record
+are in `corpus/lessons/round-37.md`.
