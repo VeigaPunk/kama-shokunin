@@ -34,6 +34,7 @@ def score(name, rev):
 C2_FILES = ["tools/digest-ledger.py", "registry/digest-ledger.tsv"]
 C3_FILES = ["corpus/knowledge/context-capacity-engine-sides.md", "corpus/lessons/round-42.md"]
 C3_DIRS = [".ufo/waves/round-42/c3", ".ufo/waves/round-42/assimilation"]
+C2_DIRS = [".ufo/waves/round-42/c2/ledger-evidence"]  # committed copies that make ledger digests blobs
 
 def show(rev, p):
     return subprocess.run(["git", "-C", lane, "cat-file", "-p", f"{rev}:{p}"], capture_output=True, text=True).stdout
@@ -42,7 +43,7 @@ def show(rev, p):
 g("checkout", "-q", "--detach", tip)
 for p in C2_FILES + C3_FILES:
     os.remove(os.path.join(D, p))
-for d in C3_DIRS:
+for d in C3_DIRS + C2_DIRS:
     shutil.rmtree(os.path.join(D, d))
 for p in ("corpus/SOURCES.md", "corpus/README.md"):
     open(os.path.join(D, p), "w").write(show(base, p))
@@ -56,6 +57,8 @@ for p in C2_FILES + ["tools/round41-scorecard-reconcile.py", "tools/round41-pinw
 sc = show(base, "SCORECARD.md") + ("\n**Capabilities — canonical list as of round 42**\n\n| Capability | What it can now do | Evidence pointer | First-working round |\n|---|---|---|---|\n"
                                   "| digest-ledger | classify cited digests | `tools/digest-ledger.py`; `registry/digest-ledger.tsv` | 42 |\n")
 open(os.path.join(D, "SCORECARD.md"), "w").write(sc)
+for d in C2_DIRS:
+    shutil.copytree(os.path.join(lane, d), os.path.join(D, d))
 score("sep-c2-only", commit("sep: C2 files only"))
 # sepC3: base + C3 files + SOURCES rows + README block
 g("checkout", "-q", "--detach", base)
