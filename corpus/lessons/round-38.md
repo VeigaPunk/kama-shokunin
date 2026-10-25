@@ -48,17 +48,7 @@ capitalization was aligned to the frozen receipt text.
 
 ## Corrections
 
-R36-D2C: The round-36 Gate's byte-copy reject paragraph
-(`corpus/lessons/round-36.md:43`, the staged `endpoint-health-probe-conventions.md`
-reject) gives a four-id range as the staged rows that entry cites. That range
-is wrong: the five staged rows citing that entry are S332, S336, S337, S338
-and S339, at `/home/vgpnk/Projects/shokuknow/merge/kama/SOURCES.append.md`
-lines 9, 13, 14, 15 and 16 (vLLM Engine Arguments; SGLang in llm-d; Docker
-Compose file reference; Dockerfile reference; Prometheus blackbox_exporter
-README), and the staged entry's own source: lines 6–10 cite exactly those five.
-The reject decision stands; only the id set is corrected, and the wrong ids are
-absent from this row. Package bytes read at write time: SOURCES.append.md sha256
-`3ad0df68e8423a3b1b99d4e3b8d8c6271f7a4f4c96d3a5ad4e0a85a991ce234ff`.
+- R36-D2C: The round-36 Gate's byte-copy reject paragraph (`corpus/lessons/round-36.md:43`, staged `endpoint-health-probe-conventions.md`) gives a four-id range as the staged rows that entry cites. That range is wrong: the five staged rows citing that entry are S332, S336, S337, S338 and S339, at `/home/vgpnk/Projects/shokuknow/merge/kama/SOURCES.append.md` lines 9, 13, 14, 15 and 16 (vLLM Engine Arguments; SGLang in llm-d; Docker Compose file reference; Dockerfile reference; Prometheus blackbox_exporter README), and the staged entry's own source: lines 6–10 cite exactly those five. The reject decision stands; only the id set is corrected, and the wrong ids are absent from this row. Package bytes read at write time: SOURCES.append.md sha256 `3ad0df68e8423a3b1b99d4e3b8d8c6271f7a4f4c96d3a5ad4e0a85a991ce234ff`.
 
 ## Gate
 
