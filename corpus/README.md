@@ -527,3 +527,18 @@ the corrected fixture is isolated in the final replay set. No knowledge
 coverage-map ground or endpoint sample advanced. The serving frontier remains
 as recorded by round 32: `response_format`/`json_schema` grammar, `/v1/completions`,
 other engines, K05, and registered-consumer reconciliation.
+
+## Coverage map — round 35 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/endpoint-health-probe-conventions.md` | a vLLM HTTP 503 can be an admission rejection, distinct from a dead endpoint and from llama.cpp loading 503 | 35 |
+
+## Round-35 correction of the round-34 map sentence
+
+The filed round-34 report says the coverage map gains `serving-alias-contract.md` and `served-model-id-resolution.md`. At `719655f12517a9ce6b1a5ca44316897fed8420b0` those names are absent from this file. That sentence is false. It is not rewritten. The two names are recorded here as round-35 pointers, which does not make the round-34 sentence true.
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/serving-alias-contract.md` | served-name and alias resolution; absent from this map at the round-34 tip | 35 |
+| `knowledge/served-model-id-resolution.md` | served model id read from a local OpenAI-compatible listing; absent from this map at the round-34 tip | 35 |
