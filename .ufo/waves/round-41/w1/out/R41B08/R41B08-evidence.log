@@ -1,0 +1,63 @@
+R41B08 evidence log (captured 2026-10-25; faithful excerpts of runs)
+
+Environment: Linux 7.2.11-arch1-1; git 2.56.0; Python 3.14.8.
+Objects: tools/pin-watch.py @ tip 24aa1d3485c107f88b8b838892d43ea7587befcf (sha256 01331f8c222e0df20aac7edabdd3b6eaee55af78f3c2e0b40848f7388c06c4c9).
+All PoCs ran in /tmp/R41B08-dev (temp only; nothing outside it was written).
+
+------------------------------------------------------------------
+[1] OPTION INJECTION — exact subprocess shape (pin-watch.py:100-102):
+    subprocess.run(["git","ls-remote","--tags", pin["repo"]], capture_output=True,
+                   text=True, timeout=120, env={**os.environ,"GIT_TERMINAL_PROMPT":"0"})
+
+  a) No default remote configured (cwd not in a repo):
+     repo='--upload-pack=/tmp/NOPE'            -> rc=128 err='fatal: No remote configured to list refs from.'
+     repo='--get-url'                          -> rc=128 err='fatal: No remote configured to list refs from.'
+     repo='--refs'                             -> rc=128 err='fatal: No remote configured to list refs from.'
+     repo='--upload-pack=/bin/echo https://example.invalid/x.git' -> rc=128 (single argv element is not split)
+     repo='--unknown-flag'                     -> rc=129 err="error: unknown option `unknown-flag' ... usage: git ls-remote ..."
+
+  b) Default remote configured (git init; git remote add origin <local bare>):
+     repo='--upload-pack=/tmp/.../marker.sh'  -> rc=128 err='fatal: Could not read from remote repository...' BUT marker.sh RAN
+                                                 (marker file written -> local command execution confirmed)
+     repo='--get-url'                          -> rc=0 out='/tmp/.../bare.git'  (ls-remote semantics replaced by URL print)
+     repo='--refs'                             -> rc=0 out='' stderr='From /tmp/.../bare.git' (empty stdout -> all pins 'missing')
+     repo='-- /tmp/.../bare.git'               -> rc=129 unknown option (a single '-' cell cannot also carry a repository)
+
+  c) Baseline: repo cell = local bare path -> rc=0, tags listed.  Network branch works for legit repos.
+
+------------------------------------------------------------------
+[2] ReDoS — tag_regex (pin-watch.py:67-72 compile; :77-88 release_tags fullmatch/int)
+    Catastrophic pattern `(a+)+$`, single tag name 'a'*n + 'b' (forces backtracking; fullmatch):
+      n=10 0.0000s   n=18 0.0064s   n=24 0.4101s
+      n=20 0.0256s   n=26 1.6361s   n=28 6.5347s
+    -> x4 time per +2 chars (exponential); n=40 ≈ 28 minutes per single tag line; a few crafted rows = indefinite hang.
+    Baseline: benign lane regex v(\d+)\.(\d+)\.(\d+) over 2000 tag lines: 0.0018s.
+    No timeout protects release_tags (only the git subprocess has timeout=120).
+
+------------------------------------------------------------------
+[3] PATH TRAVERSAL — --tags-dir engine names (pin-watch.py:93 os.path.join(tags_dir, f"{engine}.txt"))
+    tags-dir = <root>/tags ; victim file <root>/escape.txt (one level up) contains refs/tags/v9.9.9.
+      engine='ok'       -> status=current (normal; reads tags/ok.txt)
+      engine='../escape' -> newest=v9.9.9 newer=- status=missing (READ ../escape.txt)
+      engine='../escape' with pin=v9.9.9 -> newest=v9.9.9 newer=0 status=current (content-driven result, exit 0)
+      engine='<root>/victim' (absolute; os.path.join discards tags-dir) -> reads <root>/victim.txt (status computed from it)
+      engine='ln' (symlink tags/ln.txt -> ../escape.txt) -> reads target even though target name lacks .txt
+      engine='../escap' (missing file) -> status=error (read oracle: distinguishes readable/missing paths)
+    No validation of engine anywhere (load_pins accepts any non-empty cell; only duplicate engine is checked).
+
+------------------------------------------------------------------
+[4] CREDENTIAL PROMPTS — pin-watch.py:100-102
+    GIT_TERMINAL_PROMPT=0 is set (good: git's own terminal prompt disabled).
+    subprocess.run does NOT pass stdin=DEVNULL; shim probe confirmed child stdin inherited (stdin-readable=yes),
+    and GIT_ASKPASS/SSH_ASKPASS are inherited from the environment.
+    Residual: when the caller has a TTY, ssh (host-key confirmation, password) can still prompt on ssh URLs;
+    inherited askpass helpers may run; nothing on the git side blocks these. The 120s timeout caps hangs.
+
+------------------------------------------------------------------
+[5] UNTRUSTED TSV ROBUSTNESS — load_pins (53-74) / release_tags (87)
+    Pin regex `v(\d+)\.(\d+)-([a-z]+)` passes load_pins (compiles, >=1 group) but tag 'v1.2-hotfix' matches with
+    non-digit group -> int('hotfix') raises ValueError at pin-watch.py:87 -> uncaught traceback, exit code 1:
+      ValueError: invalid literal for int() with base 10: 'hotfix'
+    (counter contract requires digit-run captures, but load_pins never checks).
+    Also: engine cell containing a NUL byte would raise ValueError in open() (not OSError) -> uncaught; no row-count
+    / size limits on the pins file or tag lists.

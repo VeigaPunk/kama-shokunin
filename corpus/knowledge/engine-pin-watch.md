@@ -6,12 +6,19 @@ recheck: run `python3 tools/pin-watch.py check --pins registry/engine-pins.tsv`;
 
 Several kama entries are true only of one engine release. SGLang knowledge is
 pinned to v0.5.22 (S474, S328, S329), vLLM knowledge to the v0.32.0 docs line
-(S327, S363), and the llama.cpp lifecycle work to build b11755 (S038). A row's
-`recheck` cadence re-opens its own page, but nothing in a cadence notices that
-upstream has shipped a newer release. A pin that falls behind still describes
-its pinned release correctly. It no longer describes what a fresh install gets.
+(S327, S363), and the llama.cpp lifecycle work to build b11755 (S038). A
+pin that falls behind still describes its pinned release correctly. It no
+longer describes what a fresh install gets.
 
-`tools/pin-watch.py` closes that gap. `registry/engine-pins.tsv` lists each
+Before this round the lane held a newer-release check for one engine only.
+S020 carries `recheck: on-release` for SGLang v0.5.22, and the SGLang
+pinning amendment's `recheck:` line re-runs a one-line `ls-remote | sort -V |
+tail -1` (`knowledge/sglang-docs-version-pinning-amendment-2026-10-23.md`
+line 11). Nothing did the same for vLLM or llama.cpp, and the one-liner sorts
+rc and `.post` tags in with releases. What is new here is the per-pin tool,
+the vLLM and llama.cpp statuses, and the counting rules below.
+
+`tools/pin-watch.py` extends the check to every row-backed pin. `registry/engine-pins.tsv` lists each
 pinned engine, its git URL, a release-tag pattern, the pin and the rows that
 cite it. The tool lists the upstream tags with `git ls-remote --tags` and
 reports, per pin, the newest release tag and how many release tags sort above
@@ -29,7 +36,11 @@ Two details decide whether the count is right:
 - **Release order is numeric.** Tags compare by their captured digit groups as
   integers. A string sort would put `v0.9.0` above `v0.32.0` and `b9999` above
   `b11887`. Tags that do not fully match the pattern are not releases: `rc`
-  and `.post` tags and branch refs are ignored.
+  and `.post` tags, four-part tags and branch refs are ignored. That is a
+  real limit. SGLang has shipped final `.postN` releases (newest
+  `v0.5.15.post1`) and vLLM has four-part finals (`v0.9.0.1`, `v0.10.1.1`),
+  so a final `v0.5.22.post1` would leave the SGLang pin `current`. None of
+  these sorts above a current pin today (2026-10-25 tag lists, S474, S476).
 
 Result at 2026-10-25T20:03Z (exit 1 = a newer release exists):
 
@@ -55,3 +66,8 @@ v4.11.0 (`corpus/knowledge/llamacpp-loading-lifecycle.md` lines 78–81 and
 2026-10-25). They are not watched until a sourced row backs them. An `error`
 or `missing` status (exit 2) means the pin could not be evaluated, not that it
 is current.
+
+Scope: the generic method of pinning and tracking any repository tag is
+chousa's ground (`PROVINCE.md`, round-38 note). Kama owns only this watch of
+its own serving-engine pins, as round 38 already owned the re-pin of its own
+SGLang docs rows.

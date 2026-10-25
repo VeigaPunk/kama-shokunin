@@ -114,3 +114,7 @@ Wave 1 (36 seats, v1): reviewer 8, scout 9, critic 4, scribe 5, executor 5, muta
 
 The package-byte digest cited in the R36-D2C paragraph above was abbreviated as `3ad0df68…`. On 2026-10-25, `/home/vgpnk/Projects/shokuknow/merge/kama/SOURCES.append.md` was re-opened and its full SHA-256 measured as `3ad0df68504e1f49a0ab23e68b2034a9d6258345468fa03013737ced7ce234ff`; see `corpus/lessons/round-40.md` and `.ufo/waves/round-40/c1/` receipts. This note supplements the historical paragraph; it does not rewrite it.
 
+
+### Round-41 correction pointer (append-only; round-40 closure defect D3)
+
+The S472 Admit paragraph above cites the evidence digest `5585f602f71c4d4fa5a20125b2b8e4a1132a2d41abf511d7ef09c43a91d950f2`. That digest is wrong. The committed evidence file `.ufo/waves/round-38/assimilation/exec-tag-inventory/ls-remote-tags.txt` hashes to `5585f6027df2dbc4dbafd4979b61c218ffd94e8af99936733218e0ae989e50f2`, and a fresh run on 2026-10-25T20:03:22Z reproduced that value (`.ufo/waves/round-41/c2/ls-remote-sglang.txt`). The correcting row is S474 (`corpus/SOURCES.md`). The correction section is `## Correction — round 40` in `corpus/knowledge/sglang-docs-version-pinning-amendment-2026-10-23.md`. S472 and the paragraph above stay as filed.

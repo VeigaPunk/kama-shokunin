@@ -1,0 +1,5 @@
+## Criterion added — round 41: a counter over SOURCES.md reads cells by header name and passes a valid positive control before freeze
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ48 | A counter that reads `corpus/SOURCES.md` cells resolves each cell by its header name (`id source kind tier scope anchor teaches status opened recheck used-by`) or asserts the header before indexing. Before the freeze it scores a positive control: a scratch registry carrying the intended after-state, census-clean under `sources-census.sh validate`, must meet the predicate, and the control's receipt is committed with the freeze. | The counter indexes cells by bare position with no header check, or the only control that meets it is census-invalid (for example a marker moved into the `status` cell, E07). Such a counter cannot verify its claim: report the claim unverified. Never repair the counter after data. | `corpus/lessons/round-40.md` §Mistakes row 1 (counter-schema mismatch: `row[7]` is status, not teaches); routed as D1 by `corpus/lessons/round-40-verifier-spotcheck.md` |

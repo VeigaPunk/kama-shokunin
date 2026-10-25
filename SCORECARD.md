@@ -23,7 +23,7 @@ Reconciled in round 41 against the measured commit (`tools/round41-scorecard-rec
 | depth | **7** | `SKILL.md` sha256 `151023b99bec115ee2cbab747c9641f243e15702210b76cd407135fa06dc4d0b` (1375 lines); `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 41 |
 | coverage | **9** | surface list `PROVINCE.md` sha256 `dbb5f4f786821debe385603bfc445b09f2a29103184fbee134977def84d777a1` (169 lines); held ground includes `corpus/knowledge/endpoint-health-probe-conventions.md`, `corpus/knowledge/kv-cache-reclamation-models.md`, `corpus/knowledge/serving-alias-contract.md` | score round 10; evidence re-anchored round 41 |
 | calibration | **7** | run `python3 tools/capability-repertoire-audit.py --selftest` → `CAP_SELFTEST pass=2 fail=0`; run `python3 tools/instrument-agreement.py --selftest` → `IA_SELFTEST pass=4 fail=0`; this table's counter `tools/round41-scorecard-reconcile.py`; latest outside closure `corpus/lessons/round-40-verifier-spotcheck.md` (honest stop) | score round 1; evidence re-anchored round 41 |
-| adjacency | **7** | `corpus/knowledge/cross-lane-scope.md` sha256 `1801cb7fa45ef6f56ff96cb67c7840256fcffce000a56067cd8133797b9728a9` (87 lines); contested scope stays reported, not absorbed (`PROVINCE.md` §Adjacent) | score round 1; evidence re-anchored round 41 |
+| adjacency | **7** | `corpus/knowledge/cross-lane-scope.md` sha256 `1801cb7fa45ef6f56ff96cb67c7840256fcffce000a56067cd8133797b9728a9` (87 lines); contested scope stays reported, not absorbed (`PROVINCE.md` paragraph "Out of province → report, never absorb") | score round 1; evidence re-anchored round 41 |
 
 ### Historical axes table (round-3 assessment; superseded in round 41)
 
@@ -2182,3 +2182,8 @@ Same four columns as the round-34 canonical list, which stays byte-intact; one r
 | context-capacity-receipt | Run the registered context-capacity cells on the lane-owned llama.cpp fixture and write a sha256-bound receipt | `tools/kama-context-capacity.py` | 25 |
 | instrument-agreement | Run a lane instrument N times over one tree and emit a receipt with per-run digests and an agreement counter | `tools/instrument-agreement.py` | 30 |
 | pin-watch | List upstream release tags for each pinned serving engine (SGLang, vLLM, llama.cpp) and report, per pin, the newest release tag and how many releases sort above it; exit 1 flags a recheck trigger | `tools/pin-watch.py`; `registry/engine-pins.tsv`; `corpus/knowledge/engine-pin-watch.md` | 41 |
+
+### Round-40 record corrections (append-only; round-40 closure defect D4)
+
+- N3: the round-40 C2 row above cites `.ufo/waves/round-40/c2/{base,after}.out`, but `c2/base.out` was never written. The base receipt is `.ufo/waves/round-40/controls/c2-base.out`, and the after receipt is `.ufo/waves/round-40/c2/after.out`. The row stays as filed.
+- N2: the round-40 report (fleet repo `.ufo/reports/round-40/kama.md`, §Sources & frontier) prints the SGLang v0.5.22 tag object as the 39-hex `35ce313293052f8362e0829e7512bc9bc3d336c`. The correct 40-hex value is `35ce313293052f8362e0829e7512bc9bc3d336c9`, as in S474 and `corpus/lessons/round-40.md`. The filed report is not edited; this correction is also recorded in `corpus/lessons/round-41.md`.

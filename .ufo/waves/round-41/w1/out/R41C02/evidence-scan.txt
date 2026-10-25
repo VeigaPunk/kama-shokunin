@@ -1,0 +1,72 @@
+R41C02 sibling-overlap scan — raw evidence manifest (read-only, 2026-10-25)
+All commands ran from fleet root /home/vgpnk/Projects/shokunin. Exit codes noted.
+
+=== A. Lane tools directory inventory =========================================
+cmd: for d in /home/vgpnk/Projects/shokunin/*-shokunin; do t=$(find "$d" \
+     -maxdepth 3 -type d \( -name tools -o -name 'tools-*' \) 2>/dev/null); \
+     [ -n "$t" ] && echo "== $(basename $d) ==" && find "$t" -maxdepth 1 -type f | sort; done
+(rc=0)
+Lanes with a tools tree: chousa, kaidoku (round-25..round-35 subdirs), kama,
+kotodama, lore (corpus/tools), mado, mori, souji, tameshi, tsukuroi.
+kotoba: only .ufo/round-48/tools/config-root-ruler.py (17,751 B).
+
+=== B. Filename sweep (pin|watch|release|upstream|latest|drift|fresh|revision|freeze) ===
+cmd: for d in /home/vgpnk/Projects/shokunin/*-shokunin; do find "$d/tools" \
+     "$d/corpus/tools" -maxdepth 1 -type f \( -iname '*pin*' -o -iname '*watch*' \
+     -o -iname '*release*' -o -iname '*upstream*' -o -iname '*latest*' \
+     -o -iname '*drift*' -o -iname '*fresh*' -o -iname '*revision*' \
+     -o -iname '*freeze*' \) 2>/dev/null | sed "s|$d/||"; done | sort -u
+(rc=0)
+corpus/tools/dependency-freeze-contract.json          (lore)
+corpus/tools/dependency_freeze.py                     (lore)
+tools/check-freshness-r17.py                          (tsukuroi)
+tools/check-readme-revisions.py                       (kotodama)
+tools/check-revision-binding.py                       (tsukuroi)
+tools/mori-freeze-order.py                            (mori)
+tools/mori-pin-check.py                               (mori)
+tools/mori-source-drift.py                            (mori)
+tools/pin-disposition.py                              (tameshi)
+tools/_revision.py                                    (tsukuroi)
+tools/souji-rev-pin.py                                (souji)
+
+=== C. Grep: ls-remote in sibling tools/ ======================================
+cmd: grep pattern 'ls-remote|ls_remote' path /home/vgpnk/Projects/shokunin/*-shokunin/tools
+result: No matches found (rc=0)
+
+=== D. Grep: release/tag/newer machinery in sibling tools/ =====================
+cmd: grep pattern 'releases|/tags/|refs/tags|latest_release|newer' path \
+     /home/vgpnk/Projects/shokunin/*-shokunin/tools
+result: No matches found (rc=0)
+
+=== E. SOURCES.md rows mentioning git ls-remote ================================
+cmd: for f in /home/vgpnk/Projects/shokunin/*-shokunin/corpus/SOURCES.md; do \
+     hits=$(grep -n -i 'ls-remote\|ls_remote' "$f" 2>/dev/null); \
+     [ -n "$hits" ] && echo "== $f ==" && echo "$hits"; done (rc=0)
+kaidoku: S033 :39 (PR head refs/pull/9348/head), S087 :93 (Sourcify HEAD/staging/master),
+          S088 :94 (ERCs master), S089 :95 (cargo-auditable HEAD);
+          search notes :152, :154, :193.
+kotoba:  S212 :152, S213 :153 ("equal to main on 2026-10-25, git ls-remote").
+kumitate: S024 :37, S026 :39 ("ls-remote 2026-10-20").
+mado:    S097 :109 (omarchy tag v3.8.4, no ^{} line), S099 :111 (git v2.56.0 tag+peeled),
+          S102 :114 (git v2.56.0), S103 :115 (jj v0.45.1 tag), S107 :119 (CPython v3.14.8 tag+peeled).
+mori:    S156 :162 (systemd v262 tag anchor).
+souji:  :182 "Revision pinning (2026-10-19)" block (git ls-remote for heads and tags).
+kama:    :226 ART dossier re-open note ("revision pins came from commit pages/atom feeds and `git ls-remote`").
+
+=== F. Key sibling tool docstring lines (read) =================================
+souji-rev-pin.py:1-2 "souji-rev-pin — durable revision resolution for lane evidence runners."
+                   :37 DURABLE_NAMESPACES = ("refs/heads", "refs/tags", "refs/remotes")
+                   :79-93 durable_tips() — peeled-tag commit tips.
+mori-pin-check.py:1-2 "mori-pin-check — re-measure the self-test pins of SKILL.md's gate registry."
+mori-source-drift.py:1-2 "mori-source-drift.py — re-fetch each corpus/SOURCES.md row that has a committed …"
+                   :50 STATES = ("fresh", "excerpt", "drifted", "unavailable", "no-copy")
+mori-freeze-order.py:1-2 "Check whether frozen claim inputs predate their implementation commits."
+pin-disposition.py:1-2 "pin-disposition.py — read-only pin/content disposition probe (tameshi-shokunin, round 13)."
+                   :136-146 CANONICAL_LEGS / CANONICAL_BY_LEG (fleet-repo evidence legs).
+dependency_freeze.py:1-2 "Freeze and verify per-fixture dependency inventories for the crossing chain."
+                   :66 PINNED_FILES = DATA_FILES + MARKDOWN_FILES
+check-freshness-r17.py:1-2 "Narrow, read-only round-17 freshness-recheck gate." :67-68 SCOPE
+                   = "dated freshness re-verification only; historical captures stay historical; no package,
+                   service or boot action is authorized"
+c2-xpin-check.py:1-2 "R27-C2 checker: cross-pin evidence-ID attribution capability (rea-agents 6.5.0 vs 6.7.0)."
+                   :53-54 PKG65/PKG67 = local ~/.npm/_npx/... installs (no upstream).

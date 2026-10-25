@@ -1,0 +1,15 @@
+--- /tmp/R41B03/pristine-pin-watch.py	2026-10-25 17:16:30.759129554 -0300
++++ /tmp/R41B03/export-M5/tools/pin-watch.py	2026-10-25 17:18:13.501361052 -0300
+@@ -110,11 +110,7 @@
+     n = dict(current=0, behind=0, missing=0, error=0)
+     for pin in pins:
+         head = f"engine={pin['engine']} pin={pin['pin']}"
+-        text = read_tags(pin, tags_dir)
+-        if text is None:
+-            n["error"] += 1
+-            out.append(f"{head} newest=- newer=- status=error")
+-            continue
++        text = read_tags(pin, tags_dir) or ""
+         tags = release_tags(text, pin["rx"])
+         newest = max(tags, key=lambda t: (tags[t], t)) if tags else "-"
+         if pin["pin"] not in tags:

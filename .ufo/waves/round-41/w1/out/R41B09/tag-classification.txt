@@ -1,0 +1,44 @@
+# R41B09 artifact — independent tag classification of the committed ls-remote captures
+
+Classifier mirrors the frozen contract (tools/pin-watch.py:9,77-89): only
+refs/tags/<name> refs, `^{}` peeled lines skipped, `rx.fullmatch(name)`,
+version key = tuple(int(g) for g in fullmatch.groups()).
+
+## sglang — .ufo/waves/round-41/c2/ls-remote-sglang.txt (sha256 5585f602…50f2, 190 lines)
+non-peeled tags: 166 | fullmatch v(\d+)\.(\d+)\.(\d+): 72 | excluded: 94
+  .post:            72  e.g. v0.2.14.post1 … v0.5.15.post1 (highest .post = v0.5.15.post1)
+  gateway-v*:       12  gateway-v0.1.5 … gateway-v0.3.1
+  rc pre-release:   10  v0.5.0rc0-2, v0.5.2rc0-2, v0.5.3rc0-2, v0.5.10rc0
+excluded tags sorting above pin v0.5.22 (numeric): none
+newest matched: v0.5.22 | newer than pin: 0 → status current
+
+## vllm — .ufo/waves/round-41/c2/ls-remote-vllm.txt (sha256 13388e48…9282, 224 lines)
+non-peeled tags: 214 | fullmatch v(\d+)\.(\d+)\.(\d+): 87 | excluded: 127
+  rc pre-release:  107  v0.10.0rc1 … v0.32.1rc0
+  .post:            10  v0.2.1.post1 … v0.8.5.post1 (highest .post = v0.8.5.post1)
+  proto-v*:          6  proto-v0.1.0 … proto-v0.6.0
+  four-component:    2  v0.10.1.1, v0.9.0.1
+  ci/*:              1  ci/build/22474
+  other:             1  submission
+excluded tags sorting above pin v0.32.0 (numeric): v0.32.1rc0 only (pre-release of an
+unreleased version — correctly ignored)
+newest matched: v0.32.0 | newer than pin: 0 → status current
+
+## llama.cpp — .ufo/waves/round-41/c2/ls-remote-llama.cpp.txt (sha256 c92b29af…7b81, 8199 lines)
+non-peeled tags: 8175 | fullmatch b(\d+): 7445 | excluded: 730
+  backup/* date tags: 674  backup/20260930-1347/… etc.
+  suffixed/component b-tags: 36  b10964-b10964-b29c606, ci_cublas_linux-b1071-5562e3e,
+                                 fix-release-duplicate-libs-b7083-d6abfe8, …
+                                 (b-numbers in them range 0 … 764743; master-b241649,
+                                  master-b391579, master-b764743 contain b-numbers
+                                  > 11755 but are master-<hash> tags, not releases)
+  gguf-v*: 20  gguf-v0.10.0 … gguf-v0.13.0
+excluded tags containing a b-number > 11755: only the master-<hash> tags above —
+correctly excluded; with re.search instead of fullmatch they would be falsely
+counted as releases b241649/b391579/b764743.
+newest matched: b11887 (= 6050b467c07a95c7b87debd4ddac2f8ba8d9b807, evidence line 1412)
+newer than pin b11755: 115 → status behind (matches S477's "115 bN tags above b11755")
+
+## Live re-sample (this session, git ls-remote --tags per repo)
+all three captures BYTE-IDENTICAL to the committed evidence (cmp clean):
+  sglang 190 lines, vllm 224 lines, llama.cpp 8199 lines; same newest/newer results.

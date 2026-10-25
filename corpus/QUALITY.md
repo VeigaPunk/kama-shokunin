@@ -332,3 +332,15 @@ Drafted by wave-1 scribe ScribeDepthCriterion (`.ufo/waves/round-29/w1/out/Scrib
 | ID | Admit only when | Reject or limit when | Motivating lesson |
 |---|---|---|---|
 | KQ47 | A round's report names the attempt count and, when it is not the first attempt, the reason each earlier attempt closed without work and the launch at which the round's work actually landed, with the watchdog line for each attempt. The lane records per-round attempts and restarts in SCORECARD.md and LOG.md so planning reviewers can see when a round restarted and why. | A round hides a restart, reports the first attempt as its only attempt, or names the reason without the watchdog evidence. | `considerthese/2026-10-24.md` proposal 4, opened 2026-10-24; `.ufo/watchdog.log` lines 1293–1294 (kama round 38 attempt 1 dead, attempt 2 launch); `.ufo/waves/round-38/assimilation/attempts-receipt.txt` |
+
+## Criterion added — round 41: a counter over SOURCES.md reads cells by header name and passes a valid positive control before freeze
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ48 | A counter that reads `corpus/SOURCES.md` cells resolves each cell by its header name (`id source kind tier scope anchor teaches status opened recheck used-by`) or asserts the header before indexing. Before the freeze it scores a positive control: a scratch registry carrying the intended after-state, census-clean under `sources-census.sh validate`, must meet the predicate, and the control's receipt is committed with the freeze. | The counter indexes cells by bare position with no header check, or the only control that meets it is census-invalid (for example a marker moved into the `status` cell, E07). Such a counter cannot verify its claim: report the claim unverified. Never repair the counter after data. | `corpus/lessons/round-40.md` §Mistakes row 1 (counter-schema mismatch: `row[7]` is status, not teaches); routed as D1 by `corpus/lessons/round-40-verifier-spotcheck.md` |
+
+## Criterion added — round 41: the head axes table is re-derived, not inherited
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ49 | Every hash, line count, run line and path in the SCORECARD.md head `## Axes` table re-derives at the round's landed tip (`python3 tools/round41-scorecard-reconcile.py --repo <clone> --tip <tip>` reports `mismatches=0`). A round that changes a file the table hashes or runs either re-anchors the table in the same round or records the mismatch line in its SCORECARD section. Scores in the table equal the lane's latest declared scores. | The head table is left stale while round sections below it carry the current state, or a superseding table is added further down instead of fixing the head (round 10 to round 40). A stale head table is a calibration defect even when every round section is accurate. | `corpus/lessons/round-41.md` §Mistakes row 1 |

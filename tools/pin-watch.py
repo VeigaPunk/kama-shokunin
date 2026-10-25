@@ -1,16 +1,24 @@
 #!/usr/bin/env python3
-"""pin-watch.py - report whether a newer upstream release exists for each
+r"""pin-watch.py - report whether a newer upstream release exists for each
 serving-engine version the kama corpus is pinned to.
 
 Pins file (TSV, `registry/engine-pins.tsv`), header then one row per pin:
     engine  repo  tag_regex  pin  source
-  engine     unique name; also the offline tag-list file name (<engine>.txt)
-  repo       git URL listed with `git ls-remote --tags <repo>`
+  engine     unique name matching [A-Za-z0-9][A-Za-z0-9_.-]*; also the
+             offline tag-list file name (<engine>.txt)
+  repo       git URL listed with `git ls-remote --tags <repo>`; a cell that
+             starts with '-' is refused (git would parse it as an option)
   tag_regex  Python regex that a release tag must fullmatch; its capturing
-             groups are digit runs and form the version key (compared as
-             integers, so v0.10.0 > v0.9.9 and b11887 > b9999)
+             groups are ASCII digit runs and form the version key (compared
+             as integers, so v0.10.0 > v0.9.9 and b11887 > b9999); a
+             quantified group such as (\d+)+ is refused; tag names longer
+             than 128 characters are skipped
   pin        the release tag the corpus is pinned to
   source     SOURCES.md row id(s) that cite the pinned release
+
+Release style is whatever tag_regex admits. With v(\d+)\.(\d+)\.(\d+),
+`.postN`, four-part (v0.9.0.1) and rc tags are not releases, so a final
+`v0.5.22.post1` would leave a v0.5.22 pin `current`.
 
 Tag list: `git ls-remote --tags` output (`<oid> TAB <ref>`). Only
 `refs/tags/<name>` refs count; the peeled `<ref>^{}` line git prints for an
@@ -44,6 +52,13 @@ import sys
 import tempfile
 
 HEADER = ["engine", "repo", "tag_regex", "pin", "source"]
+# Pins cells are data, never options or paths: an engine name is used as a
+# file name under --tags-dir, and a repo cell reaches git's argv.
+ENGINE_RE = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]*")
+# A quantified group such as (\d+)+ backtracks catastrophically on long names.
+QUANTIFIED_GROUP_RE = re.compile(r"\)[+*?{]")
+ASCII_DIGITS_RE = re.compile(r"[0-9]+")
+MAX_TAG_LEN = 128
 
 
 class PinsError(Exception):
@@ -61,15 +76,21 @@ def load_pins(path: str) -> list[dict]:
         if len(cells) < 5:
             raise PinsError(f"{path}:{n}: expected 5 tab-separated cells")
         engine, repo, regex, pin, source = (c.strip() for c in cells[:5])
+        if not ENGINE_RE.fullmatch(engine):
+            raise PinsError(f"{path}:{n}: engine must match {ENGINE_RE.pattern}: {engine!r}")
         if engine in seen:
             raise PinsError(f"{path}:{n}: duplicate engine {engine}")
         seen.add(engine)
+        if repo.startswith("-") or not repo:
+            raise PinsError(f"{path}:{n}: repo must be a URL, not an option: {repo!r}")
         try:
             rx = re.compile(regex)
         except re.error as e:
             raise PinsError(f"{path}:{n}: bad tag_regex: {e}")
         if rx.groups < 1:
             raise PinsError(f"{path}:{n}: tag_regex needs a capturing group")
+        if QUANTIFIED_GROUP_RE.search(regex):
+            raise PinsError(f"{path}:{n}: tag_regex must not quantify a group (backtracking risk)")
         pins.append(dict(engine=engine, repo=repo, rx=rx, pin=pin, source=source))
     return pins
 
@@ -82,8 +103,10 @@ def release_tags(lsremote: str, rx: re.Pattern) -> dict[str, tuple[int, ...]]:
         if not sep or not ref.startswith("refs/tags/") or ref.endswith("^{}"):
             continue
         name = ref[len("refs/tags/"):]
+        if len(name) > MAX_TAG_LEN:
+            continue
         m = rx.fullmatch(name)
-        if m:
+        if m and all(g is not None and ASCII_DIGITS_RE.fullmatch(g) for g in m.groups()):
             tags[name] = tuple(int(g) for g in m.groups())
     return tags
 
@@ -99,6 +122,7 @@ def read_tags(pin: dict, tags_dir: str | None) -> str | None:
     try:
         p = subprocess.run(["git", "ls-remote", "--tags", pin["repo"]],
                            capture_output=True, text=True, timeout=120,
+                           stdin=subprocess.DEVNULL,
                            env={**os.environ, "GIT_TERMINAL_PROMPT": "0"})
     except (OSError, subprocess.TimeoutExpired):
         return None
@@ -189,6 +213,24 @@ def selftest() -> int:
         passed += ok
         failed += not ok
         print(f"{'PASS' if ok else 'FAIL'} bad-header refused")
+        # hostile cells are refused at load, before git or the filesystem sees them
+        hostile = [
+            ("option-repo", "e\t--upload-pack=/bin/true\tv(\\d+)\tv1\tS000"),
+            ("traversal-engine", "../e\thttps://example.invalid/e.git\tv(\\d+)\tv1\tS000"),
+            ("quantified-group", "e\thttps://example.invalid/e.git\tv(\\d+)+\tv1\tS000"),
+        ]
+        for name, row in hostile:
+            path = os.path.join(tmp, f"{name}.tsv")
+            with open(path, "w") as fh:
+                fh.write("\t".join(HEADER) + "\n" + row + "\n")
+            try:
+                load_pins(path)
+                ok = False
+            except PinsError:
+                ok = True
+            passed += ok
+            failed += not ok
+            print(f"{'PASS' if ok else 'FAIL'} {name} refused")
     print(f"selftest pass={passed} fail={failed}")
     return 0 if failed == 0 else 1
 

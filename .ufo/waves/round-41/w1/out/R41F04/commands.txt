@@ -1,0 +1,224 @@
+# R41F04 — every command quoted in R41F04.md, with exit codes.
+# Lane clone is READ-ONLY. All counters were run in a throwaway clone at /tmp/R41F04-clone.
+# No pacman transaction attempted (pacman paused host-wide). No service started/stopped/restarted.
+
+# ---------------------------------------------------------------- setup
+$ rm -rf /tmp/R41F04-clone && git clone -q /fast/scratch/kama-r41/clone /tmp/R41F04-clone
+$ cd /tmp/R41F04-clone && git checkout -q 24aa1d3485c107f88b8b838892d43ea7587befcf && git rev-parse HEAD
+24aa1d3485c107f88b8b838892d43ea7587befcf
+exit=0
+
+$ python3 --version ; git --version
+Python 3.14.8
+git version 2.56.0
+
+# ---------------------------------------------------------------- considerthese parity (clone vs parked worktree)
+$ cd /fast/scratch/kama-r41/clone
+$ for f in 2026-10-19 2026-10-20 2026-10-21 2026-10-22 2026-10-23 2026-10-24; do
+    a=$(sha256sum considerthese/$f.md | cut -d' ' -f1)
+    b=$(sha256sum /home/vgpnk/Projects/shokunin/kama-shokunin/considerthese/$f.md | cut -d' ' -f1)
+    [ "$a" = "$b" ] && echo "$f SAME" || echo "$f DIFFER"; done
+2026-10-19 SAME
+2026-10-20 SAME
+2026-10-21 SAME
+2026-10-22 SAME
+2026-10-23 SAME
+2026-10-24 SAME
+exit=0
+# note: considerthese/2026-10-25.md exists in the clone (commit d7954be) but NOT in the parked
+# worktree, which is on the mutation-sandbox lineage (round-40 defect D5).
+
+# ---------------------------------------------------------------- C1 counter at tip
+$ python3 tools/round41-scorecard-reconcile.py --repo /tmp/R41F04-clone --tip 24aa1d3485c107f88b8b838892d43ea7587befcf --out /tmp/R41F04-c1-tip.out
+tip=24aa1d3485c107f88b8b838892d43ea7587befcf
+axes=6 facts=24 hash_bad=0 lines_bad=0 run_bad=0 dead=0 score_bad=0 hollow=0 mismatches=0 met=True
+exit=0
+$ diff .ufo/waves/round-41/c1/candidate.out /tmp/R41F04-c1-tip.out
+(no output — IDENTICAL)
+
+# ---------------------------------------------------------------- C1 base control reproduced independently
+$ D=$(mktemp -d /tmp/R41F04-base-XXXX); git clone -q /fast/scratch/kama-r41/clone "$D"
+$ git -C "$D" checkout -q 8893b89466250c4d542912a867392698d2da00ce
+$ python3 tools/round41-scorecard-reconcile.py --repo "$D" --tip 8893b89466250c4d542912a867392698d2da00ce --out /tmp/R41F04-c1-base3.out
+tip=8893b89466250c4d542912a867392698d2da00ce
+axes=6 facts=13 hash_bad=2 lines_bad=2 run_bad=0 dead=6 score_bad=2 hollow=4 mismatches=16 met=False
+exit=0
+$ diff <(sed 's/^tip=.*//' .../controls/base.c1.out) <(sed 's/^tip=.*//' /tmp/R41F04-c1-base3.out)
+19d18
+< exit=1
+# -> byte-identical except the trailing "exit=1" line the committed file appends
+$ rm -rf "$D"
+
+# ---------------------------------------------------------------- independent hash / line-count re-derivation of the new head axes table
+$ cd /tmp/R41F04-clone
+$ for f in tools/kama-probe.sh tools/test-snapshot.sh SKILL.md corpus/knowledge/endpoint-identity.md PROVINCE.md corpus/knowledge/cross-lane-scope.md; do
+    printf "%s %s %s\n" "$(sha256sum $f | cut -c1-64)" "$(wc -l < $f)" "$f"; done
+36b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3 1138 tools/kama-probe.sh
+236c23c12964cf0b2f0a2f970187e216d3398dcf2b92ffb7e8606e0fdd029646 194 tools/test-snapshot.sh
+151023b99bec115ee2cbab747c9641f243e15702210b76cd407135fa06dc4d0b 1375 SKILL.md
+0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7 218 corpus/knowledge/endpoint-identity.md
+dbb5f4f786821debe385603bfc445b09f2a29103184fbee134977def84d777a1 169 PROVINCE.md
+1801cb7fa45ef6f56ff96cb67c7840256fcffce000a56067cd8133797b9728a9 87 corpus/knowledge/cross-lane-scope.md
+exit=0
+
+# ---------------------------------------------------------------- independent run-fact re-execution at tip
+$ bash tools/test-snapshot.sh            -> RESULT pass=30 fail=0                              exit=0
+$ python3 tools/report-landing-audit.py --selftest -> selftest cases=79 failed=0                 exit=0
+$ python3 tools/sources-append-only.py --selftest  -> 42/42 selftest cases passed                exit=0
+$ python3 tools/capability-repertoire-audit.py --selftest -> CAP_SELFTEST pass=2 fail=0          exit=0
+$ python3 tools/instrument-agreement.py --selftest    -> IA_SELFTEST pass=4 fail=0                exit=0
+# NOTE: the report-landing-audit selftest ONCE failed at 100% /tmp with
+#   [Errno 28] No space left on device: '/tmp/report-landing-selftest-*/blobs/1027'
+# and the C1 counter then reported run_bad=1 met=False for the same tip. See "leak" below.
+
+# ---------------------------------------------------------------- C2 counter at tip, multiple seeds
+$ for s in 41 7 999 2026 1072186973; do
+    python3 tools/round41-pinwatch-audit.py --repo /tmp/R41F04-clone --tip 24aa1d3... --seed $s --out ...; done
+seed 41           -> tool=1 contract=1 live=1 sourced=1 capability=1 met=True
+seed 7            -> tool=1 contract=1 live=1 sourced=1 capability=1 met=True
+seed 999          -> tool=1 contract=1 live=1 sourced=1 capability=1 met=True
+seed 2026         -> tool=1 contract=1 live=1 sourced=1 capability=1 met=True
+seed 1072186973   -> tool=1 contract=1 live=1 sourced=1 capability=1 met=True seed=1072186973
+                    (reproduces the committed receipt .ufo/waves/round-41/c2/candidate.out byte-for-byte)
+exit=0
+
+# ---------------------------------------------------------------- C2 live leg passes with NO network
+$ D=$(mktemp -d /tmp/R41F04-net-XXXX)
+$ printf '[url "https://invalid.invalid/"]\n\tinsteadOf = https://github.com/\n' > "$D/gitconfig"
+$ GIT_CONFIG_GLOBAL="$D/gitconfig" GIT_TERMINAL_PROMPT=0 python3 tools/round41-pinwatch-audit.py --repo ... --seed 41
+tool=1 contract=1 live=1 sourced=1 capability=1 met=True seed=41
+live-reference: engine=sglang ... status=error | engine=vllm ... status=error | engine=llama.cpp ... status=error | pins=3 current=0 behind=0 missing=0 error=3 exit=2
+exit=0
+$ rm -rf "$D"
+
+# ---------------------------------------------------------------- C2 counter: independent recompute of the pin arithmetic from committed tag lists
+$ grep -oP "refs/tags/b\K[0-9]+$" .ufo/waves/round-41/c2/ls-remote-llama.cpp.txt | awk '$1>11755' | wc -l
+115
+$ grep -oP "refs/tags/b\K[0-9]+$" .ufo/waves/round-41/c2/ls-remote-llama.cpp.txt | sort -n | tail -1
+11887
+$ grep -c "refs/tags/v0.5.2[34]$" .ufo/waves/round-41/c2/ls-remote-sglang.txt
+0
+$ grep -oP "refs/tags/v\K[0-9]+\.[0-9]+\.[0-9]+$" .ufo/waves/round-41/c2/ls-remote-vllm.txt | sort -t. -k1,1n -k2,2n -k3,3n | tail -1
+0.32.0
+
+# ---------------------------------------------------------------- C2 Gate digests re-derived
+$ sha256sum .ufo/waves/round-41/c2/ls-remote-sglang.txt .ufo/waves/round-41/c2/ls-remote-vllm.txt \
+            .ufo/waves/round-41/c2/ls-remote-llama.cpp.txt .ufo/waves/round-41/c2/git-scm-docs-git-ls-remote.html
+5585f6027df2dbc4dbafd4979b61c218ffd94e8af99936733218e0ae989e50f2  ls-remote-sglang.txt
+13388e483163357aa4daea784d0e67cdc8d6b5438d3166d613a2a044590b9282  ls-remote-vllm.txt
+c92b29afe168a98040b71d3d3db2fa5f343fb63b346e94b11f04d96044297b81  ls-remote-llama.cpp.txt
+296a3d5cbc4dc359cd94da807e7c09db368186edb4c199cca625139d7c9b5f74  git-scm-docs-git-ls-remote.html
+exit=0
+# all four match corpus/lessons/round-41.md:18-22 verbatim
+$ sed -n '172p' .ufo/waves/round-41/c2/ls-remote-vllm.txt
+5df63a7203cdb9328d824a27b682e77c7b9928be	refs/tags/v0.32.0
+$ sed -n '1287p;1412p' .ufo/waves/round-41/c2/ls-remote-llama.cpp.txt
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad	refs/tags/b11755
+6050b467c07a95c7b87debd4ddac2f8ba8d9b807	refs/tags/b11887
+
+# ---------------------------------------------------------------- claim commit touched only S475-S477 in SOURCES.md
+$ git show 24aa1d3 -- corpus/SOURCES.md | grep "^[-+]| S" | cut -c1-120
++| S475 | ...
++| S476 | ...
++| S477 | ...
+# zero "-" rows -> no existing row changed
+
+# ---------------------------------------------------------------- DEFECT: counters leak a 253MB export per invocation
+$ grep -n "rmtree\|finally" tools/round41-scorecard-reconcile.py tools/round41-pinwatch-audit.py
+(no output)
+$ grep -n "mkdtemp" tools/round41-scorecard-reconcile.py tools/round41-pinwatch-audit.py
+tools/round41-scorecard-reconcile.py:184:  export = tempfile.mkdtemp(prefix="r41c1-")
+tools/round41-pinwatch-audit.py:208:  export = tempfile.mkdtemp(prefix="r41c2-")
+tools/round41-pinwatch-audit.py:221:  d = tempfile.mkdtemp(prefix=f"case{i}-", dir=export)
+$ du -sh /tmp/r41c1-c7ka8imk
+253M
+$ ls -d /tmp/r41c1-* | wc -l ; ls -d /tmp/r41c2-* | wc -l
+104
+170
+$ du -sc /tmp/r41c1-* | tail -1   -> 20658648 KB (~20.7 GB)
+$ du -sc /tmp/r41c2-* | tail -1   -> 43348796 KB (~43.3 GB)
+$ git archive --format=tar 24aa1d3... | wc -c
+234905600
+# -> each invocation exports 253 MB and never removes it
+
+# ---------------------------------------------------------------- DEFECT: counter verdict is host-state dependent
+# with /tmp at 100% (35 MB free), same tip, same command:
+axes=6 facts=24 hash_bad=0 lines_bad=0 run_bad=1 dead=0 score_bad=0 hollow=0 mismatches=1 met=False
+detail: operability run `python3 tools/report-landing-audit.py --selftest` no stdout line == 'selftest cases=79 failed=0' (exit 2)
+exit=1
+# after space was freed the same command returned met=True again.
+
+# ---------------------------------------------------------------- DEFECT: write-cap failure crashes instead of exit 2
+$ ( ulimit -f 100; TMPDIR=/tmp/R41F04-clone python3 tools/round41-scorecard-reconcile.py --repo ... --tip ... )
+subprocess.CalledProcessError: Command '['tar','-x','-C','/tmp/R41F04-clone/r41c1-yn1i5qhk']' died with <Signals.SIGXFSZ: 25>
+exit=1
+# counter contract (tools/round41-scorecard-reconcile.py:38): exit 2 == "could not evaluate"
+# fix shape already in the lane: tools/instrument-agreement.py:63,112 use shutil.rmtree(...)
+
+# ---------------------------------------------------------------- DEFECT: tools/pin-watch.py rejects duplicate engines, the counter accepts them
+$ D=$(mktemp -d /tmp/R41F04-fix-XXXX)
+$ printf 'engine\trepo\ttag_regex\tpin\tsource\nvllm\trepo\tv(\\d+)\\.(\\d+)\\.(\\d+)\tv0.32.0\tS327\nvllm\trepo\tv(\\d+)\\.(\\d+)\\.(\\d+)\tv0.9.0\tS347\n' > "$D/pins.tsv"
+$ python3 tools/pin-watch.py check --pins "$D/pins.tsv" --tags-dir "$D"
+pin-watch: pins.tsv:3: duplicate engine vllm
+exit=2
+$ (counter parse_pins + reference on the same file)
+counter rows accepted: 2 ['vllm', 'vllm']
+counter reference: (['engine=vllm pin=v0.32.0 newest=- newer=- status=missing', 'engine=vllm pin=v0.9.0 newest=- newer=- status=missing', 'pins=2 current=0 behind=0 missing=2 error=0'], 2)
+$ rm -rf "$D"
+
+# ---------------------------------------------------------------- DEFECT: SCORECARD round-41 rows cite receipts that do not exist
+$ ls .ufo/waves/round-41/c1 .ufo/waves/round-41/c2
+c1: candidate.out
+c2: candidate.out  git-scm-docs-git-ls-remote.html  ls-remote-*.txt  ls-remote-*.time
+$ test -f .ufo/waves/round-41/c1/after.out  -> ABSENT
+$ test -f .ufo/waves/round-41/c2/after.out  -> ABSENT
+$ grep -o "round-41/c[12]/after.out" SCORECARD.md | sort | uniq -c
+      1 round-41/c1/after.out
+      1 round-41/c2/after.out
+$ grep -n "Round-41 measured results" SCORECARD.md
+(no match — the "§Round-41 measured results" pointer does not resolve)
+
+# ---------------------------------------------------------------- DEFECT: r41 lesson names no rejected candidate; D2 missing from routed list
+$ grep -ci "reject" corpus/lessons/round-41.md
+0
+$ sed -n '/^## Routed defects/,/^## considerthese/p' corpus/lessons/round-41.md | grep -o "^- D[0-9]"
+-D1
+-D3
+-D4
+-D5
+# -> D2 absent
+$ git show 24aa1d3 | grep -c "D2"
+0
+
+# ---------------------------------------------------------------- proposal-1 mechanism still absent at tip
+$ python3 -c "AST over tools/round40-calibration-audit.py"
+imported: ['argparse', 'hashlib', 'json', 'subprocess', 'sys']
+UNUSED: ['hashlib', 'json']
+$ grep -c "cite(" corpus/SOURCES.md
+0
+$ grep -rn "daily\|morning\|cron\|recurring" tools/*.py
+(no lane driver)
+
+# ---------------------------------------------------------------- proposal status greps
+$ grep -rn "promotion path\|named promoter\|repeated.*improved" . --include=*.md --include=*.py | grep -v "^./considerthese"
+(no lane artifact)
+$ grep -rn "quote.*line number\|located quote\|cited line" tools/*.py
+(no tool checks a quote at a cited line)
+$ grep -rn "next counter refuses\|whether the next counter" . --include=*.md
+(only the proposal text itself, in considerthese/2026-10-23.md:29 and its round-36 assimilation copy)
+$ grep -rln "not dispatched\|undispatched\|never run\|never dispatched" corpus/ registry/ tools/
+(only incidental lesson prose and unrelated tool strings)
+$ grep -rn "drift watch\|anchor file touched by a later commit" corpus/ tools/
+(no hits)
+$ grep -rn "calibration.*ceiling" corpus/
+(no hits)
+
+# ---------------------------------------------------------------- fleet /tmp pressure context (read-only observation)
+$ df -h /tmp
+/dev/nvme1n1p1  128G  128G  35M 100% /tmp     # at peak, during this seat
+$ du -sk /tmp/* | sort -rn | head -4
+14478.9 MB  /tmp/r35audit13
+ 3951.7 MB  /tmp/tameshi-r45-ExecGtestMirror
+ 1514.8 MB  /tmp/R41B03
+ 1436.6 MB  /tmp/r33-R33ReconRegistry
+# attribution of the non-r41 remainder was not established by this seat (see report section 9).

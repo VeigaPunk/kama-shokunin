@@ -608,3 +608,14 @@ The row was staged by attempt 1 as S472, which round 38 already holds for the SG
 | Entry | Covers | Round |
 |---|---|---|
 | `knowledge/engine-pin-watch.md` | Newer-release triggers for version-pinned entries: release-tag listing with `git ls-remote --tags`, peeled `^{}` lines skipped, numeric version order; per-pin status for SGLang v0.5.22, vLLM v0.32.0 and llama.cpp b11755; S475, S476, S477 | 41 |
+
+## Frontier disposition — round 41
+
+Advanced: newer-release triggers for row-backed version pins. `tools/pin-watch.py` over `registry/engine-pins.tsv` gave this result at 2026-10-25T20:03Z: SGLang v0.5.22 current, vLLM v0.32.0 current, llama.cpp b11755 behind by 115 builds (newest b11887). Entry: `knowledge/engine-pin-watch.md` (S475, S476, S477).
+
+Still frontier:
+- Whether the llama.cpp server surfaces the b11755 entries describe changed by b11887 (S038 recheck trigger). The L1 has not verified this. Seat R41F09 read the b11755→b11887 server sources and reports the `/health` loading envelope, the `Loading model` text and `/v1/models` handling unchanged (`.ufo/waves/round-41/w1/out/R41F09.md`). That reading is a lead, not an admitted entry.
+- Four engine versions cited from round-16 lead files with no registry row: Ollama v0.40.6, TGI v3.3.7, KoboldCpp 1.123.1, LocalAI v4.11.0. They are not watched until a sourced row backs them.
+- Entries pinned to older vLLM docs lines (v0.9.0, v0.17.0, v0.19.1, v0.25.0). They are not watched as separate pins.
+
+No endpoint was sampled and no serving runtime was started. Registered consumers still sample DEAD, and that stays operator-owned.
