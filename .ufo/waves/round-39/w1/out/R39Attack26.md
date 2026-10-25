@@ -1,0 +1,9 @@
+# R39-26 — duplicate id/URL scans
+
+Read-only observations from the round-39 receipts; no code or registry edits made.
+
+- **IDs:** `assimilation/staged-ids` lists S330–S471 (142 IDs); `assimilation/reg-ids` lists 203 existing IDs, S001–S195 and S196/S205/S206/S209/S223/S324/S327–S329. The lists have no shared ID. The deliberate collision control files `trap-stage-ids` and `trap-reg-ids` both contain S471, and `trap-collisions` reports S471. This supports that the staged-vs-registry ID collision probe distinguishes a planted collision from the current staged set.
+- **URLs:** The validator receipt `assimilation/validate.out` has 93 W04 warnings, each explicitly marked `duplicate url … across scopes` (e.g. S031 and S043; later entries include S173 and S191). Thus duplicate URLs are present in the existing registry across scopes and reported as warnings, not validation failures; the receipt ends with the SOURCES.md file entry. `assimilation/census-end.out` independently repeats those warning records. The staged addition `assimilation/SOURCES-addition.md` proposes S472 at `https://developers.openai.com/api/reference/resources/models/methods/list/index.md`, but these receipts do not provide a staged-vs-registry URL-collision result for that URL.
+- **Claim relevance:** `claim-after.out` and lane `LOG.md` claim one new sourced row and registry counts 203→204. The duplicate-ID receipts support no S472 ID collision based on the staged range and registry list; the URL evidence does not establish uniqueness of S472’s URL. Therefore the duplicate-ID part is supported, while an affirmative duplicate-URL clearance for the new row is not evidenced here. No conclusion about either frozen C1/C2 predicate is drawn from these scans.
+
+Evidence pointers are relative to `/fast/scratch/hyaku/kama-r39`; scan receipts are observed artifacts, not a fresh validator run. No tools installed.

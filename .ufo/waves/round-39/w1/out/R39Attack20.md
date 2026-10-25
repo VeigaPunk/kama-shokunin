@@ -1,0 +1,14 @@
+# R39-20 — possible axis harm
+
+Agent: L1Kama39.R39Attack20 (scout; axes calibration/coverage; milestone r39 claim falsification)
+Repo: lane scratch working copy `/fast/scratch/hyaku/kama-r39`; read-only observations.
+
+## Findings
+
+- **Calibration 7→7: no numeric regression established.** The frozen C1 predicate ( `.ufo/waves/round-39/assimilation/preregistration-frozen.json:6-12`) asks for an admitted theme, a rejected non-fitting theme, and newly cited S472 evidence with located quote. The round-39 lesson records an admit and two rejects (`corpus/lessons/round-39.md:17-24`); S472's quote resolves at `assimilation/openai-list.md:15-17`. The no-op receipt fails (`assimilation/c1-noop.out`), while `claim-after.out` reports C1 met. These observations support that finite predicate, not a broader discernment-quality measure.
+- **Coverage 9→9: gap/overclaim risk is visible.** Round 39's declared addition is the `created` catalog-metadata distinction (`README.md:551,563-565`; amendment lines 25-27). But the amendment linked as coverage at the tip retains lines 13-23 asserting the round-15 ledger's gap was real, that its two traps are live-measured, and that a mandatory normalization rule follows. The round-39 lesson itself calls the premise stale and says the admission is limited to the actual new distinction (`lessons/round-39.md:19,40`). The pre-round crosswalk snapshot already lists OpenAI `created` among the card fields and says the OpenAI catalog does not establish local health or loaded weights (`assimilation/crosswalk-base.md:24-27,39`). Thus the row's statement of a new distinction is not evidence that the amendment's broader existing claims were newly established or corrected. This is a concrete coverage-description/claim-boundary concern, not evidence that the `created` quote is false.
+- **Source boundary is explicit and observed:** S472 describes public model-list card semantics, not a local responder, loaded weights, alias mapping, or readiness (`assimilation/S472.md:1-10`); lesson and README likewise disclaim local-runtime inference. I found no evidence that this source itself regresses runtime guidance.
+
+## Conclusion
+
+No demonstrated numerical harm to either held score from the inspected receipts. Possible coverage-axis harm: the coverage row points to an amendment containing broad live-measurement and novelty claims that the round-39 lesson identifies as stale/out-of-scope for its narrow admission; the frozen C2 presence predicate does not test those claims. Confidence: moderate, based on the lane's own working corpus and frozen receipts. No tools were installed; no checks were run.

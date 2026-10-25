@@ -590,3 +590,15 @@ rejected: the API is rate-limited at HTTP 403 on this host, and the lane's own
 reproducible git ls-remote row supersedes it. Quarantine verdicts, rejects
 with flip conditions, and the id-collision record are in
 `corpus/lessons/round-38.md`.
+
+## Coverage map — round 39 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/served-identity-crosswalk-amendment-2026-10-24-r16.md` | OpenAI model-card `created` is creation-time catalog metadata rather than local served-artifact identity; S473 | 39 |
+
+## Frontier disposition — round 39
+
+The OpenAI model-list `created` field is catalog creation-time metadata rather than a local serving-identity signal. The distinction is held in `knowledge/served-identity-crosswalk-amendment-2026-10-24-r16.md` (S473). No registered endpoint or live runtime was sampled; serving/runtime gaps remain open.
+
+The row was staged by attempt 1 as S472, which round 38 already holds for the SGLang tag inventory; attempt 2 renumbered it to S473 by document and re-pointed every live citation. Attempt-1 receipts under `.ufo/waves/round-39/assimilation/` keep the old id and are superseded, not edited; the replay receipts are `claim-after-replay.out`, `census-replay.out` and `renumber-map.md`.

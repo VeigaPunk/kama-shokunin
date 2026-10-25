@@ -1,0 +1,10 @@
+# R39-31 — C2 do-nothing control strength
+
+Axes: **coverage** (primary); **calibration** (whether the control supports the stated inference).
+
+- Frozen C2 predicate in `.ufo/waves/round-39/assimilation/preregistration.json` requires the round-39 README coverage pointer, the named amendment at tip, and an S472 citation present at tip but absent at base. It explicitly says all three are false at base.
+- The recorded do-nothing output `.ufo/waves/round-39/assimilation/c2-noop.out` is `coverage_block=0 file_exists=0 cited_new=0 met=False exit=1`. `claim-after-initial.out` repeats the same values; `claim-after.out` records the base control as `round39_pointer=0 entry=0 S472=0`, predicate false.
+- Read-only base checks at `HEAD=6a4afdfe48b0b54239d127761d21a5cf21b5b0ea`: README contains no round-39 pointer; `git show HEAD:corpus/SOURCES.md | grep -c S472` returns 0; `git cat-file -e HEAD:corpus/knowledge/served-identity-crosswalk-amendment-2026-10-24-r16.md` reports missing. In working bytes, README has the round-39 map row and disposition, amendment exists, and SOURCES has S472. The recorded `claim-after-initial.out` says tip checks were 1/1/1.
+- The three failures are jointly consistent with the declared base absence, not merely an exit-status assertion. However, available evidence is a recorded control output and an independently observed base/tip presence check; I did not rerun an executable round-39 counter. The lane exposes round-35/36 counter implementations but no round-39 runner/counter in the round-39 directory. Thus the artifact supports baseline separation for these three factual inputs, but does not establish executable detector strength beyond the recorded control.
+
+**Finding:** no falsification of C2's base-absence claim from the inspected evidence; control is informative for the frozen three-part predicate. Calibration limit: the control’s printed result is not an independent detector replay. No source, lane state, or Git index was modified; no tools installed.

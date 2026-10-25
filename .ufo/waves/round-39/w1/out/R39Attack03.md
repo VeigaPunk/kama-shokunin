@@ -1,0 +1,7 @@
+# R39-03 — S472 URL and quote/line
+
+**Observation (retained evidence only; no live fetch):** S472's source URL is recorded in the staged row and committed lane `corpus/SOURCES.md` row 216 as `https://developers.openai.com/api/reference/resources/models/methods/list/index.md`. The round-39 saved Markdown capture at `.ufo/waves/round-39/assimilation/openai-list.md` has heading `## List models`, `### Returns`, and `created` field at lines 15–17; line 17 reads: “The Unix timestamp (in seconds) when the model was created.” This matches S472's located quote and line 17 locator. The capture also shows `id` at lines 11–13, described as the model identifier referenced in API endpoints.
+
+**Falsification result:** The retained Markdown supports the exact quote and line citation; no URL/locator/quote discrepancy observed. The URL spelling is consistent across S472's metadata, staged source addition, and registry row. This only establishes consistency with the retained capture and records; it does not independently establish current remote availability or content.
+
+**Evidence references:** `corpus/SOURCES.md:216`; `.ufo/waves/round-39/assimilation/SOURCES-addition.md:1`; `.ufo/waves/round-39/assimilation/S472.md:1`; `.ufo/waves/round-39/assimilation/openai-list.md:1-17`. No tools installed. No checks run.
