@@ -172,10 +172,12 @@ this round.
 **Round-42 note — instruments named in the province (2026-10-25).** The Owns table
 now lists every `tools/` and `registry/` surface the SCORECARD capability list cites,
 including `pin-watch` (round 41, routed defect R41A10-9 and closure item 2) and
-`digest-ledger` (round 42). Both read git objects and public tag lists only; neither
-samples an endpoint, starts a runtime or writes outside the lane. Release-watch
-*method* for other pins stays chousa's; the lane owns the watch of its own pinned
-serving engines. The context-capacity source readings of
+`digest-ledger` (round 42). Both read git objects and public tag lists; `digest-ledger`
+also re-hashes the host files its ledger rows name, read-only and confined to the
+scanned tree and the home directory. Neither samples an endpoint, starts a runtime or
+writes anything. A release-watch *method* for pins the lane does not hold is outside
+this province (no chousa document names it, checked 2026-10-25); the lane owns the
+watch of its own pinned serving engines. The context-capacity source readings of
 `corpus/knowledge/context-capacity-engine-sides.md` (vLLM v0.32.0, llama.cpp 704366d7
 router listing) are source readings on held K05 ground, not a serving surface: no
 endpoint or runtime was sampled.

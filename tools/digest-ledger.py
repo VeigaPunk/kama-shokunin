@@ -33,6 +33,19 @@ classes:
 Classification, first match wins: blob | ledger (by class) | wrong_unflagged
 (first 8 characters equal those of some blob-set digest) | unknown.
 
+Scope and limits (found by the round-42 wave, kept honest here): only exact
+64-character runs are tokens. A cited "digest" of another length (a 65-character
+run, a digest hard-wrapped over two lines), an upper-case digest, abbreviated
+digests (`3ad0df68...`) and UTF-16 documents are not seen. A mixed-case
+neighbour (an upper-case hex character next to the run) is not a token boundary
+either. `path` cells are confined: a relative path resolves against the scanned
+tree, the resolved real path must lie inside the scanned tree or the home
+directory, the file must be regular and at most 256 MiB, and anything else (or
+any read error) counts as external_absent. Two ledger rows with the same digest
+make the digest ledger_bad. A promisor (partial) clone is refused with exit 2,
+because completing its blob set would write into the audited repository. Git mode
+considers regular-file blobs only (symlinks and gitlinks are skipped).
+
 Output (one line):
     tokens=T blob=B external_ok=E external_absent=A unverifiable=U wrong_flagged=W ledger_bad=L wrong_unflagged=X unknown=K
 `--details` also prints one `detail:` line per unexplained or flagged token.
@@ -45,11 +58,14 @@ import argparse
 import hashlib
 import os
 import re
+import stat
 import subprocess
 import sys
 import tempfile
+import threading
 
-TOKEN = re.compile(r"(?<![0-9a-f])[0-9a-f]{64}(?![0-9a-f])")
+TOKEN = re.compile(r"(?<![0-9a-fA-F])[0-9a-f]{64}(?![0-9a-fA-F])")
+MAX_EXTERNAL = 256 * 1024 * 1024
 LEDGER = "registry/digest-ledger.tsv"
 HEADER = "digest\tclass\tsubject\tpath\tcorrect\tverified-at\tnote"
 KEYS = ("tokens", "blob", "external_ok", "external_absent", "unverifiable", "wrong_flagged",
@@ -62,15 +78,43 @@ def is_doc(rel: str) -> bool:
 
 def parse_ledger(text: str) -> dict:
     rows = {}
-    for i, line in enumerate(text.split("\n")):
+    for i, line in enumerate(text.splitlines()):
         if not line or (i == 0 and line.startswith("digest\t")):
             continue
         c = line.split("\t") + [""] * 7
-        rows[c[0]] = {"cls": c[1], "path": c[3], "correct": c[4], "note": c[6]}
+        cls = "duplicate" if c[0] in rows else c[1]
+        rows[c[0]] = {"cls": cls, "path": c[3], "correct": c[4], "note": c[6]}
     return rows
 
 
-def classify(tokens: set, blobs: set, ledger: dict):
+def hash_external(path: str, roots: list):
+    """sha256 of a confined regular file, or None (absent, outside the roots, unreadable, too big)."""
+    if not path:
+        return None
+    base = roots[0] if roots else os.getcwd()
+    real = os.path.realpath(path if os.path.isabs(path) else os.path.join(base, path))
+    if not any(real == r or real.startswith(r.rstrip(os.sep) + os.sep) for r in roots):
+        return None
+    try:
+        fd = os.open(real, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError:
+        return None
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode) or st.st_size > MAX_EXTERNAL:
+            return None
+        h = hashlib.sha256()
+        with os.fdopen(fd, "rb", closefd=False) as f:
+            for chunk in iter(lambda: f.read(1 << 20), b""):
+                h.update(chunk)
+        return h.hexdigest()
+    except OSError:
+        return None
+    finally:
+        os.close(fd)
+
+
+def classify(tokens: set, blobs: set, ledger: dict, roots: list | None = None):
     n = dict.fromkeys(KEYS, 0)
     n["tokens"] = len(tokens)
     detail = []
@@ -82,13 +126,8 @@ def classify(tokens: set, blobs: set, ledger: dict):
             r = ledger[t]
             cls = r["cls"]
             if cls == "external":
-                p = r["path"]
-                if p and os.path.isfile(p):
-                    with open(p, "rb") as f:
-                        h = hashlib.sha256(f.read()).hexdigest()
-                    key = "external_ok" if h == t else "ledger_bad"
-                else:
-                    key = "external_absent"
+                got = hash_external(r["path"], roots or [])
+                key = "external_absent" if got is None else ("external_ok" if got == t else "ledger_bad")
             elif cls == "unverifiable":
                 key = "unverifiable" if r["note"].strip() else "ledger_bad"
             elif cls == "wrong":
@@ -109,6 +148,18 @@ def classify(tokens: set, blobs: set, ledger: dict):
     return n, detail
 
 
+def file_sha256(path: str) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for chunk in iter(lambda: f.read(1 << 20), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def home_root() -> str:
+    return os.path.realpath(os.path.expanduser("~"))
+
+
 def scan_dir(root: str, ledger_file: str | None):
     tokens, blobs, ledger = set(), set(), {}
     for cur, _, files in os.walk(root):
@@ -117,17 +168,17 @@ def scan_dir(root: str, ledger_file: str | None):
             rel = os.path.relpath(full, root)
             if os.path.islink(full) or not os.path.isfile(full):
                 continue
-            with open(full, "rb") as f:
-                data = f.read()
-            blobs.add(hashlib.sha256(data).hexdigest())
+            blobs.add(file_sha256(full))
             if rel == LEDGER and ledger_file is None:
-                ledger = parse_ledger(data.decode(errors="replace"))
+                with open(full, "rb") as f:
+                    ledger = parse_ledger(f.read().decode(errors="replace"))
             elif is_doc(rel):
-                tokens |= set(TOKEN.findall(data.decode(errors="replace")))
+                with open(full, "rb") as f:
+                    tokens |= set(TOKEN.findall(f.read().decode(errors="replace")))
     if ledger_file is not None:
         with open(ledger_file, encoding="utf-8", errors="replace") as f:
             ledger = parse_ledger(f.read())
-    return tokens, blobs, ledger
+    return tokens, blobs, ledger, [os.path.realpath(root), home_root()]
 
 
 def git(repo: str, *args: str) -> bytes:
@@ -137,24 +188,63 @@ def git(repo: str, *args: str) -> bytes:
     return p.stdout
 
 
-def scan_git(repo: str, rev: str, ledger_file: str | None):
-    rev = git(repo, "rev-parse", "--verify", f"{rev}^{{commit}}").decode().strip()
-    ids = [l.split(" ", 1)[0] for l in git(repo, "rev-list", "--objects", rev).decode().split("\n") if l]
-    p = subprocess.run(["git", "-C", repo, "cat-file", "--batch"], input="".join(i + "\n" for i in ids).encode(),
-                       capture_output=True)
-    if p.returncode != 0:
-        raise RuntimeError("git cat-file --batch: " + p.stderr.decode(errors="replace").strip())
-    blobs, buf, i = set(), p.stdout, 0
-    while i < len(buf):
-        j = buf.index(b"\n", i)
-        _, typ, size = buf[i:j].decode().split()
+def stream_blob_digests(repo: str, ids: list) -> set:
+    """SHA-256 of every blob in ids, streaming `git cat-file --batch` (one blob in memory at a time)."""
+    p = subprocess.Popen(["git", "-C", repo, "cat-file", "--batch"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+
+    def feed():
+        try:
+            for i in ids:
+                p.stdin.write((i + "\n").encode())
+            p.stdin.close()
+        except OSError:
+            pass
+
+    t = threading.Thread(target=feed, daemon=True)
+    t.start()
+    blobs = set()
+    out = p.stdout
+    while True:
+        head = out.readline()
+        if not head:
+            break
+        _, typ, size = head.decode().split()
         size = int(size)
-        if typ == "blob":
-            blobs.add(hashlib.sha256(buf[j + 1:j + 1 + size]).hexdigest())
-        i = j + 1 + size + 1
+        h = hashlib.sha256() if typ == "blob" else None
+        left = size
+        while left > 0:
+            chunk = out.read(min(left, 1 << 20))
+            if not chunk:
+                raise RuntimeError("git cat-file --batch: truncated stream")
+            if h is not None:
+                h.update(chunk)
+            left -= len(chunk)
+        out.read(1)
+        if h is not None:
+            blobs.add(h.hexdigest())
+    t.join()
+    if p.wait() != 0:
+        raise RuntimeError("git cat-file --batch: " + p.stderr.read().decode(errors="replace").strip())
+    return blobs
+
+
+def scan_git(repo: str, rev: str, ledger_file: str | None):
+    top = git(repo, "rev-parse", "--show-toplevel").decode(errors="replace").strip()
+    if git(repo, "rev-parse", "--is-bare-repository").decode().strip() == "false" and \
+            subprocess.run(["git", "-C", repo, "config", "--get-regexp", r"^(remote\..*\.promisor|extensions\.partialclone)$"],
+                           capture_output=True).stdout.strip():
+        raise RuntimeError("partial (promisor) clone refused: completing its blob set would write into the audited repository")
+    rev = git(repo, "rev-parse", "--verify", f"{rev}^{{commit}}").decode().strip()
+    ids = [l.split(" ", 1)[0] for l in git(repo, "rev-list", "--objects", rev).decode(errors="replace").split("\n") if l]
+    blobs = stream_blob_digests(repo, ids)
     tokens, ledger = set(), {}
-    for path in git(repo, "ls-tree", "-r", "--name-only", "-z", rev).decode().split("\0"):
-        if not path:
+    for rec in git(repo, "ls-tree", "-r", "-z", rev).decode(errors="replace").split("\0"):
+        if not rec:
+            continue
+        meta, _, path = rec.partition("\t")
+        mode, typ, _oid = (meta.split(" ") + ["", "", ""])[:3]
+        if typ != "blob" or mode not in ("100644", "100755"):
             continue
         if path == LEDGER and ledger_file is None:
             ledger = parse_ledger(git(repo, "cat-file", "-p", f"{rev}:{path}").decode(errors="replace"))
@@ -163,7 +253,7 @@ def scan_git(repo: str, rev: str, ledger_file: str | None):
     if ledger_file is not None:
         with open(ledger_file, encoding="utf-8", errors="replace") as f:
             ledger = parse_ledger(f.read())
-    return tokens, blobs, ledger
+    return tokens, blobs, ledger, [os.path.realpath(top), home_root()]
 
 
 def render(n: dict) -> str:
@@ -210,8 +300,8 @@ def selftest() -> int:
             else:
                 with open(lp, "w") as f:
                     f.write(HEADER + "\n" + "\n".join(rows) + "\n")
-            tok, blobs, led = scan_dir(d, None)
-            n, _ = classify(tok, blobs, led)
+            tok, blobs, led, roots = scan_dir(d, None)
+            n, _ = classify(tok, blobs, led, roots)
             exp = dict.fromkeys(KEYS, 0)
             exp.update(want)
             got = (n, 1 if n["ledger_bad"] + n["wrong_unflagged"] + n["unknown"] else 0)
@@ -220,13 +310,45 @@ def selftest() -> int:
             else:
                 bad += 1
                 print(f"selftest FAIL: {name}: got {render(n)} exit {got[1]}", file=sys.stderr)
+        # round-42 wave hardening: duplicate rows, confinement, CRLF, upper-case adjacency
+        lp = os.path.join(d, "registry", "digest-ledger.tsv")
+        extra = [
+            ("duplicate ledger rows make the digest ledger_bad",
+             [f"{unk}\tunverifiable\ts\t\t\t\twhy", f"{unk}\tunverifiable\ts\t\t\t\twhy again"], {"unverifiable": 0, "ledger_bad": 1}),
+            ("an external path outside the scanned tree and the home directory is not read",
+             [f"{unk}\tunverifiable\ts\t\t\t\twhy", f"{ext}\texternal\ts\t/etc/hostname\t\t\t"],
+             {"external_absent": 1, "unverifiable": 1}),
+            ("CRLF ledger rows parse like LF rows",
+             [f"{unk}\tunverifiable\ts\t\t\t\twhy\r", f"{ext}\texternal\ts\t\t\t\t\r"], {"unverifiable": 1, "external_absent": 1}),
+        ]
+        for name, rows, want in extra:
+            with open(lp, "w", newline="") as f:
+                f.write(HEADER + "\n" + "\n".join(rows) + "\n")
+            tok, blobs, led, roots = scan_dir(d, None)
+            n, _ = classify(tok, blobs, led, roots)
+            if all(n[k] == v for k, v in want.items()):
+                ok += 1
+            else:
+                bad += 1
+                print(f"selftest FAIL: {name}: got {render(n)}", file=sys.stderr)
+        with open(os.path.join(d, "up.md"), "w") as f:
+            f.write("A" * 64 + good + " " + good.upper() + "\n")
+        tok, _, _, _ = scan_dir(d, None)
+        if tok != {good, wrong, unk, ext}:
+            bad += 1
+            print("selftest FAIL: upper-case neighbour carved a token out of a longer run", file=sys.stderr)
+        else:
+            ok += 1
+        os.remove(os.path.join(d, "up.md"))
+        with open(lp, "w") as f:
+            f.write(HEADER + "\n" + f"{unk}\tunverifiable\ts\t\t\t\twhy\n")
         # a .ufo/ document and the ledger file are not documents
         with open(os.path.join(d, "registry", "digest-ledger.tsv"), "w") as f:
             f.write(HEADER + "\n" + f"{unk}\tunverifiable\ts\t\t\t\twhy\n")
         os.makedirs(os.path.join(d, ".ufo"))
         with open(os.path.join(d, ".ufo", "x.md"), "w") as f:
             f.write("ef" * 32 + "\n")
-        tok, _, _ = scan_dir(d, None)
+        tok, _, _, _ = scan_dir(d, None)
         if "ef" * 32 in tok or tok != {good, wrong, unk, ext}:
             bad += 1
             print("selftest FAIL: scope (.ufo/ or ledger file leaked into tokens)", file=sys.stderr)
@@ -251,11 +373,11 @@ def main() -> int:
     if a.cmd == "selftest":
         return selftest()
     try:
-        tok, blobs, led = scan_dir(a.dir, a.ledger) if a.dir else scan_git(a.repo, a.rev, a.ledger)
+        tok, blobs, led, roots = scan_dir(a.dir, a.ledger) if a.dir else scan_git(a.repo, a.rev, a.ledger)
     except (RuntimeError, OSError, ValueError) as e:
         print(f"digest-ledger: {e}", file=sys.stderr)
         return 2
-    n, detail = classify(tok, blobs, led)
+    n, detail = classify(tok, blobs, led, roots)
     print(render(n))
     if a.details:
         print("\n".join(detail))
