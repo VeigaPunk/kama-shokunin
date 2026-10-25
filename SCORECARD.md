@@ -2187,3 +2187,21 @@ Same four columns as the round-34 canonical list, which stays byte-intact; one r
 
 - N3: the round-40 C2 row above cites `.ufo/waves/round-40/c2/{base,after}.out`, but `c2/base.out` was never written. The base receipt is `.ufo/waves/round-40/controls/c2-base.out`, and the after receipt is `.ufo/waves/round-40/c2/after.out`. The row stays as filed.
 - N2: the round-40 report (fleet repo `.ufo/reports/round-40/kama.md`, §Sources & frontier) prints the SGLang v0.5.22 tag object as the 39-hex `35ce313293052f8362e0829e7512bc9bc3d336c`. The correct 40-hex value is `35ce313293052f8362e0829e7512bc9bc3d336c9`, as in S474 and `corpus/lessons/round-40.md`. The filed report is not edited; this correction is also recorded in `corpus/lessons/round-41.md`.
+
+### Round-41 measured results
+
+Measured commit: `4fe239a479bd86478912f3d79d42ec036ac9ae04`, the integration commit (lane branch tip at measurement). Measurement root: fresh clone of the lane remote.
+
+| Claim | Base `8893b894` | Measured `4fe239a4` | Command | Receipt |
+|---|---|---|---|---|
+| C1 calibration 7 → 7 | `axes=6 facts=13 hash_bad=2 lines_bad=2 run_bad=0 dead=6 score_bad=2 hollow=4 mismatches=16 met=False` (exit 1) | `axes=6 facts=24 hash_bad=0 lines_bad=0 run_bad=0 dead=0 score_bad=0 hollow=0 mismatches=0 met=True` (exit 0) | `python3 tools/round41-scorecard-reconcile.py --repo <clone> --tip <commit> --out <receipt>` | `.ufo/waves/round-41/controls/base.c1.out`; `.ufo/waves/round-41/c1/after.out` |
+| C2 operability 8 → 8, capability `pin-watch` | `tool=0 contract=0 live=0 sourced=0 capability=0 met=False` (exit 1) | `tool=1 contract=1 live=1 sourced=1 capability=1 met=True` (exit 0; random seed 788600741, and seed 41), live reference `error=0` | `python3 tools/round41-pinwatch-audit.py --repo <clone> --tip <commit> [--seed N] --out <receipt>` | `.ufo/waves/round-41/controls/base.c2.out`; `.ufo/waves/round-41/c2/after.out`; `.ufo/waves/round-41/c2/after-seed41.out` |
+
+Capability census (`tools/capability-repertoire-audit.py`): base `listed 6 observed 6 missing 0 unsubstantiated 0 met True` → measured `listed 7 observed 7 missing 0 unsubstantiated 0 met True` (`.ufo/waves/round-41/c2/capability-audit.out`). Sources census: rows 215 → 218 (tier A 205 → 208; mined 196 → 199). Mirror validate exit 0, 93 W04, 0 E, at start and end (`.ufo/waves/round-41/census-{start,end}-*.out`).
+
+Scores held: operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7. C1's counter checks that cited facts are true, not that they are relevant. Wave seats judged four of six rows weak evidence for their axis (`.ufo/waves/round-41/w1/out/R41A03.md`) and showed the counter can be met by low-cost edits (`R41A06.md`). No score moves on C1. C2's `live` leg is degenerate under total network loss (`R41B20.md`). The measured receipt's live reference shows `error=0`.
+
+### Planned (round 42)
+
+1. Calibration: reconcile the remaining stale self-assessment surfaces seat R41A10 itemized (SCORECARD banner, §Planned, §Saturation, head `## Capabilities` row counts), with a counter that a do-nothing control fails. Strengthen the head-table facts per `R41A03.md`.
+2. Operability: counter hygiene (temporary exports removed; the live leg requires `error=0`), or pin rows for the four older vLLM docs lines (`R41C03.md`) as a coverage move.
