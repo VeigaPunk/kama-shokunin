@@ -2138,3 +2138,11 @@ C1 base-control command at frozen base: `python3 tools/round40-calibration-audit
 
 C2 base: `python3 tools/round40-operability-audit.py --repo /fast/scratch/hyaku/kama-r40 --tip efe25f962a0b3a2b9b111c03bb5b5386c9548195 --out .ufo/waves/round-40/controls/c2-base.out` → `spec_exists=0 run_exists=0 spec_sha_ok=0 run_sha_ok=0 counts_ok=0 met=False`, exit 1.
 
+
+### Round-40 landed-tip measurements
+
+Measured against lane commit `2429f48e2c679048d94566a9f3e800d5278b23eb` (the counter and its required input blobs are unchanged at the final evidence commit):
+
+- C1 command: `python3 tools/round40-calibration-audit.py --repo <fresh clone> --tip 2429f48e2c679048d94566a9f3e800d5278b23eb --out .ufo/waves/round-40/c1/after.out` → `s474_row=0 amend_corrected=1 r36d2c_fixed=1 false_corrections=0 met=False`, exit 1. **Unverified** due to the frozen counter’s index defect; no C1 score delta is claimed.
+- C2 command: `python3 tools/round40-operability-audit.py --repo <fresh clone> --tip 2429f48e2c679048d94566a9f3e800d5278b23eb --out .ufo/waves/round-40/c2/after.out` → `spec_exists=1 run_exists=1 spec_sha_ok=1 run_sha_ok=1 counts_ok=1 met=True`, exit 0. Claim verified, score held.
+- Census command: `sources-census.sh census --file corpus/SOURCES.md` → rows 214→215; tier A 204→205, B=7, C=3; mined 195→196, queued=8, rejected=11; missing=0. Full-mirror `sources-census.sh validate --root <mirror> kama` → exit 0, 93 W04, 0 E.
