@@ -1936,3 +1936,27 @@ seat outputs are inherited evidence, not this round's seats. The remaining
 calibration ground is the `capability-repertoire-audit.py` population itself: it
 reads the SCORECARD's own tables, so a capability demonstrated only in a lesson
 is still invisible to it.
+
+## Round 35 — r34 self-assessment corrections and probe-signal coverage (2026-10-24)
+
+Authority: conf assigns operability 8 + calibration 7. Calibration is the lowest
+non-retired numeric axis (tied with depth and adjacency at 7). MISSION.md:29
+still says operability + freshness. That file was not edited. The conflict is
+named and does not change either predicate. Stagnation nudge inactive.
+Preregistration `.ufo/waves/round-35/preregistration.json`, frozen before seats
+scored. Base `719655f12517a9ce6b1a5ca44316897fed8420b0`.
+
+| Claim | Axis, score | Before → after (measured) | Counting command | Measured commit | Evidence |
+|---|---|---|---|---|---|
+| C1 — four r34 self-assessment statements corrected by append | calibration 7 → 7 (delta 0) | `uncorrected 4 false_corrections 0 report_unchanged 1 met False` (exit 1) with no lesson → `uncorrected 0 false_corrections 0 report_unchanged 1 met True` (exit 0) | `python3 tools/round35-statement-audit.py --repo . --lesson <round-35.md>` | `d419b99df20d1f0b34caf65807e913784e69baf5` | `.ufo/waves/round-35/controls/c1-noop.out`; `.ufo/waves/round-35/c1-after.out`; `corpus/lessons/round-35.md` |
+| C2 — coverage map names the probe-convention entry | coverage 9 → 9 (delta 0) | `named 0 file_exists 0 cited_row 0 met False` at base `719655f` → `named 1 file_exists 1 cited_row 1 met True` | `python3 tools/round35-coverage-audit.py --repo . --tip <full-commit>` | `d419b99df20d1f0b34caf65807e913784e69baf5` | `.ufo/waves/round-35/controls/c2-base.out`; `.ufo/waves/round-35/c2-after.out`; S327 |
+
+Both scores are held. C1 does not make the filed r34 report true. C2 adds one
+coverage-map pointer the base README did not hold. No capability row enters.
+Other readings held: operability 8, freshness 8, depth 7, adjacency 7.
+
+### Planned (round 36)
+
+Outside non-author sampling of round 35. The capability-repertoire audit still
+cannot see a capability demonstrated only in a lesson. Quarantine rows that
+located this round but were not cited by an admitted entry stay unappended.

@@ -2124,3 +2124,7 @@ transformation and a mirror census that exited 0 before the first append, plus
 one own-work row S324 for the widened gate population. Sources validate exit
 0. Lessons and rejections with their flip conditions:
 `corpus/lessons/round-34.md`. Report: `.ufo/reports/round-34/kama.md`.
+
+## round 35 — r34 self-assessment corrections and probe-signal coverage (2026-10-24)
+
+Two declared claims, measured on committed bytes at `d419b99df20d1f0b34caf65807e913784e69baf5`. C1 (calibration 7 → 7): four frozen r34 self-assessment statements are corrected by appended rows; the filed report blob is unchanged. The do-nothing control prints `uncorrected 4 met False`. The tip counter prints `uncorrected 0 false_corrections 0 report_unchanged 1 met True`. C2 (coverage 9 → 9): the round-35 coverage block names `knowledge/endpoint-health-probe-conventions.md`, the file exists, and it cites S327, which was opened 2026-10-24. Base `719655f` prints `named 0 file_exists 0 cited_row 0 met False`. The tip prints `named 1 file_exists 1 cited_row 1 met True`. MISSION.md:29 still says operability + freshness; it was not edited. Inherited round-33 and round-34 paths were re-verified; three nested git clones were discarded and the rest kept. Lessons: `corpus/lessons/round-35.md`. Report: `.ufo/reports/round-35/kama.md`.

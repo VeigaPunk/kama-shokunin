@@ -1,0 +1,55 @@
+# Exact commands executed for the round-33 w1 ExecGateReplay run.
+# All gate execution happened inside /tmp/kama-r33-execgate-replay; the lane
+# repository was only read (git clone source, git show, git status).
+
+# 1. Isolated clone of the lane (read-only against the lane).
+git clone -q --no-hardlinks --no-local /home/vgpnk/Projects/shokunin/kama-shokunin /tmp/kama-r33-execgate-replay/lane
+# exit 0; clone working tree clean.
+
+# 2. Capture run: one process invocation, four independent gate subprocesses,
+#    one receipt per case. run from the clone.
+cd /tmp/kama-r33-execgate-replay/lane
+python3 tools/round33-gate-receipts.py capture \
+  --repo /tmp/kama-r33-execgate-replay/lane \
+  --source-rev 967d88528c1d83535563f971863f7855f76b4849 \
+  --out .ufo/waves/round-33/c2/execgate-replay-1
+# exit 0
+# stdout: 4 CAPTURE lines + CAPTURE_COMPLETE=4/4 met=True  (see capture.stdout)
+# stderr: empty (0 bytes)
+
+# 3. Commit the fresh receipts in the disposable clone so audit can read them
+#    as committed blobs (no lane commit; clone is /tmp only).
+git -C /tmp/kama-r33-execgate-replay/lane add .ufo/waves/round-33/c2/execgate-replay-1
+git -C /tmp/kama-r33-execgate-replay/lane \
+  -c user.name=kama-r33-replay -c user.email=kama-r33-replay@shokunin.local \
+  -c commit.gpgsign=false commit -qm "round-33 w1 execgate replay receipts"
+# exit 0; receipt tip 455dddd282554369b370c473587fe290bf1a477e
+
+# 4. Audit (full replay) of the freshly committed receipts.
+python3 tools/round33-gate-receipts.py audit \
+  --repo /tmp/kama-r33-execgate-replay/lane \
+  --tip 455dddd282554369b370c473587fe290bf1a477e \
+  --source-rev 967d88528c1d83535563f971863f7855f76b4849 \
+  --receipt-dir .ufo/waves/round-33/c2/execgate-replay-1
+# exit 0
+# stdout: R33_GATE_RECEIPT_AUDIT source_rev=967d885... tip=455dddd... complete=4/4 missing=0 invalid=0 met=True
+# stderr: empty
+
+# 5. Audit of the already-committed c2/final receipts at the pre-wave lane tip.
+python3 tools/round33-gate-receipts.py audit \
+  --repo /tmp/kama-r33-execgate-replay/lane \
+  --tip 7c35289da5f4b94e062cd900eb086919e5094003 \
+  --source-rev 967d88528c1d83535563f971863f7855f76b4849 \
+  --receipt-dir .ufo/waves/round-33/c2/final
+# exit 0
+# stdout: R33_GATE_RECEIPT_AUDIT source_rev=967d885... tip=7c35289... complete=4/4 missing=0 invalid=0 met=True
+# stderr: empty
+
+# 6. Independent replay (separate process per case, fixtures rebuilt from the
+#    documented V1 fixture inputs, not by importing the tool):
+#    see independent_replay.py; results in independent-results.json.
+#    gate-tip exit 0; thin-row exit 1; empty-exit-map exit 1; missing-path exit 1.
+#    stdout/stderr byte-exact against the captured receipts.
+
+# 7. Lane untouched: only w1/out evidence paths are ours.
+git -C /home/vgpnk/Projects/shokunin/kama-shokunin status --porcelain

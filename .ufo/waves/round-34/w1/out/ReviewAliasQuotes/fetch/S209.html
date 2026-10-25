@@ -1,0 +1,393 @@
+
+<!DOCTYPE html>
+<html lang="ja" class="transparent alicloud back-to-top new_default">
+<link rel="stylesheet" href="//g.alicdn.com/aliyun-help/help-portal-fe/0.12.65/css/index.css" />
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+<meta name="spm-id" content="a2c63">
+<meta name="data-spm" content="a2c63" />
+<meta name="aplus-core" content="aplus.js">
+<meta name="aplus-ajax" content="chksum">
+<meta name="aplus-waiting" content="MAN">
+<meta name="aplus-pvhash" content="1">
+ <!-- MINOR_LANG_ENTRY_GATE：ko/de/tr/vi/th 入口卡点，翻译/内容就绪后把 content 追加 ko,de,tr,vi,th -->
+<!-- ES_ENTRY_GATE：es 已放开（本分支 ES_ENTRY_ENABLED=true），content 已含 es；如需回退从此处删除 es -->
+<!-- FR_ENTRY_GATE：fr 已在预发验证分支放开（本分支 FR_ENTRY_ENABLED=true）；线上卡点分支的 content 为 en,zh,tc,ja,id,pt-BR -->
+<meta name="kloud:supported-langs" content="en,zh,tc,ja,id,pt-BR,fr,es"/>
+
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="applicable-device" content="pc,mobile">
+<meta name="aplus-rhost-v" content="sg.mmstat.com">
+<meta name="aplus-rhost-g" content="sg.mmstat.com">
+<title>
+ スタンドアロン LLM 推論サービスのデプロイ - Container Service for Kubernetes - Alibaba Cloud ドキュメントセンター
+
+</title>
+ <meta name="keywords" content="qwen3-32b,vllm,sglang,ack,gpu,prometheus,kubernetes">
+ <meta name="description" content="スタンドアロン LLM 推論サービスのデプロイ,Container Service for Kubernetes:このガイドでは、Qwen3-32B をスタンドアロンの大規模言語モデル (LLM) 推論サービスとして Container Service for Kubernetes (ACK) 上にデプロイする手順を説明します。最終的に、GPU ノード上で実行される vLLM または SGLang を利用した、動作可能な OpenAI 互換の推論エンドポイントが完成します。">
+ <script>
+window.globalData = {
+website: "intl",
+language: "ja",
+nodeId:"2963707",
+channel: "",
+notfound: "",
+statusCode: "",
+errorType: ""
+};
+// UT的全局配置变量，在CDN加载前配置
+window.$ACE_TRACKER_CONFIG = {
+enableHistory: true,
+enableHash: false
+};
+</script>
+<!-- <base href="https://www.alibabacloud.com">-->
+<link rel="canonical" href="https://www.alibabacloud.com/help/ja/ack/cloud-native-ai-suite/user-guide/deploy-standalone-llm-inference-services"/>
+ <meta property="og:title" content="スタンドアロン LLM 推論サービスのデプロイ - Alibaba Cloud" />
+ <meta property="og:type" content="website" />
+ <meta property="og:url" content="https://www.alibabacloud.com/help/ja/ack/cloud-native-ai-suite/user-guide/deploy-standalone-llm-inference-services" />
+ <meta property="og:image" content="https://img.alicdn.com/tfs/TB1xpNqnmslXu8jSZFuXXXg7FXa-1200-630.png_.webp" />
+ <meta property="og:description" content="スタンドアロン LLM 推論サービスのデプロイ,Container Service for Kubernetes:このガイドでは、Qwen3-32B をスタンドアロンの大規模言語モデル (LLM) 推論サービスとして Container Service for Kubernetes (ACK) 上にデプロイする手順を説明します。最終的に、GPU ノード上で実行される vLLM または SGLang を利用した、動作可能な OpenAI 互換の推論エンドポイントが完成します。" />
+ <link rel="shortcut icon" href="//img.alicdn.com/tfs/TB1ugg7M9zqK1RjSZPxXXc4tVXa-32-32.png"/>
+<link rel="stylesheet" href="https://o.alicdn.com/fund/alicloud-pure-layout/css/index.min.css" />
+ <link
+rel="icon"
+href="https://img.alicdn.com/imgextra/i2/O1CN01TFs5Qw27uYvfA6gib_!!6000000007857-55-tps-32-32.svg"
+type="image/x-icon"
+/>
+</head>
+<body data-spm="" class="HAS_ALPS_RESOURCE"><script>
+with(document)with(body)with(insertBefore(createElement("script"),firstChild))setAttribute("exparams","category=&userid=&aplus&yunid=&&trid=0a3c4e9a17928858688936669eef70&asid=AQAAAABtRN1qwtNSYgAAAAA8JGVH5UaW6A==",id="tb-beacon-aplus",src=(location>"https"?"//g":"//g")+".alicdn.com/alilog/mlog/aplus_v2.js")
+</script>
+
+ <script async src="https://o.alicdn.com/fund/alicloud-pure-layout/index.js"></script>
+
+<div id="app">
+<div class="aliyun-app-layout">
+
+<!-- docId:2963707 -->
+<input type="hidden" id="website" value="intl">
+<div class="products-wrapper$tip" data-spm="879954">
+<section id="products" class="intl-product container">
+<div class="row">
+<div class="col-lg-3 col-md-3 col-sm-4 col-xs-12" id="navDocument">
+<div class="doc-nav">
+<a class="doc-center" href="/help/ja">
+<i class="icon-docs icon-docs-back"></i>
+ドキュメントセンター
+</a>
+</div>
+<div class="placeholder-ele">&nbsp;</div>
+</div>
+<div class="col-lg-7 col-md-7 col-sm-8 col-xs-12 doc-content">
+<div class="all-products action" id="J_AllProducts">
+<div class="all-products-head">
+<div class="all-products-title">すべてのプロダクト</div>
+<div class="all-products-search-wrapper">
+<div class="all-products-search focus">
+<input autocomplete="off" class="all-products-search-box-input" id="J_AllProductsSearch" placeholder="プロダクトの検索" data-spm-anchor-id="a2c4g.11186623.6.i0.1f753945H9RVzu">
+<i class="icon-search icon-docs icon-docs-search"></i>
+<ul class="all-products-search-result" style="display: none;">
+</ul>
+</div>
+</div>
+</div>
+<div class="all-products-body" id="J_AllProductsBody"></div>
+</div>
+<div class="search-product-modal">
+Search
+</div>
+<div class="breadcrumbs-top" data-spm="a1">
+<div class="row nav-breadcrumb">
+ <div class="col-md-12 hidden-sm hidden-xs">
+<ul class="breadcrumb text-sm">
+<li><a class="active" title="ドキュメントセンター" href="/help/ja">ドキュメントセンター</a></li>
+ <li><a class="active" title="Container Service for Kubernetes" href="/help/ja/ack/">Container Service for Kubernetes</a></li>
+ <li><a class="active" title="クラウドネイティブ AI スイート" href="/help/ja/ack/cloud-native-ai-suite/">クラウドネイティブ AI スイート</a></li>
+ <li><a class="active" title="操作ガイド" href="/help/ja/ack/cloud-native-ai-suite/user-guide/">操作ガイド</a></li>
+ <li><a class="active" title="AI サービスのデプロイ" href="/help/ja/ack/cloud-native-ai-suite/user-guide/overview-of-ai-inference-services/">AI サービスのデプロイ</a></li>
+ <li><a class="active" title="AI Serving Stack" href="/help/ja/ack/cloud-native-ai-suite/user-guide/ai-serving-stack/">AI Serving Stack</a></li>
+ <li><a class="active" title="スタンドアロン LLM 推論サービスのデプロイ" href="/help/ja/ack/cloud-native-ai-suite/user-guide/deploy-standalone-llm-inference-services">スタンドアロン LLM 推論サービスのデプロイ</a></li>
+ </ul>
+</div>
+ <div class="col-md-4 col-sm-12">
+<button type="button" class="navbar-toggle bc mr0" data-toggle="collapse"
+data-target="#sideMenu-mobile">
+<span class="icon-bar"></span>
+<span class="icon-bar"></span>
+all-products-head <span class="icon-bar"></span>
+</button>
+</div>
+</div>
+<form class="search-bar clearfix" method="GET" action="/s/ja">
+<input type="hidden" name="type" value="doc"/>
+<div class="select">
+<p class="select-text">
+<span class="placeholder">このプロダクト</span>
+<i class="icon-docs icon-docs-selected"></i>
+</p>
+<ul class="select-options" style="display:none;">
+<li class="option selected" data-value="h_pid_$productId">このプロダクト</li>
+<li class="option" data-value="">すべてのプロダクト</li>
+</ul>
+<input type="hidden" name="rangeinfo" value="h_pid_85222"/>
+</div>
+<input autocomplete="off" class="search-key" type="text" placeholder="キーワードで検索" name="k"/>
+<ul class="help-top-search-result" style="display: block;"></ul>
+<button class="search-submit" type="submit">
+<i class="icon-docs icon-docs-search"></i>
+</button>
+<div class="collapse-menus select">
+<p class="select-text">
+<span class="placeholder">Container Service for Kubernetes:スタンドアロン LLM 推論サービスのデプロイ</span>
+<i class="icon-docs icon-docs-more"></i>
+</p>
+</div>
+</form>
+</div>
+<header id="header-faq" class="clearfix">
+<a class="doc-center" href="/help/ja">
+<i class="icon-docs icon-docs-back"></i>
+ドキュメントセンター
+</a>
+<div class="download-links">
+ </div>
+<h1 class="page-title">Container Service for Kubernetes:スタンドアロン LLM 推論サービスのデプロイ</h1>
+<div class="doc-status">
+最終更新日:Sep 18, 2026
+</div>
+</header>
+<article class="product-description markdown-body">
+<div lang="ja" class="icms-help-docs-content">
+<main id="main-3026306"><p data-tag="shortdesc" id="879994b39de3w" class="shortdesc">このガイドでは、Qwen3-32B をスタンドアロンの大規模言語モデル (LLM) 推論サービスとして Container Service for Kubernetes (ACK) 上にデプロイする手順を説明します。最終的に、GPU ノード上で実行される vLLM または SGLang を利用した、動作可能な OpenAI 互換の推論エンドポイントが完成します。</p><div data-tag="body" class="body"><section id="ce6e7bb370ja4" class="section"><h2 data-tag="title" id="tLCCl" class="title">背景情報</h2><section id="d4c1c38a79b0e" class="section"><h3 data-tag="title" id="fsDT9" class="title">Qwen3-32B</h3><p id="7c04b48fe31cc">Qwen3-32B は、Qwen シリーズの最新の進化形であり、推論効率と会話の流暢さの両方に最適化された 32.8B パラメーターの高密度アーキテクチャを特徴としています。</p><p id="92e19c701b2s3"><b>主な特徴</b>：</p><ul id="5a8c290b87qrd"><li id="0ec72986100sl"><p id="d028b87204yrm"><b>デュアルモード性能</b>：論理的推論、数学、コード生成などの複雑なタスクに優れていると同時に、一般的なテキスト生成においても高い効率を維持します。</p></li><li id="fb3aca9d72dfy"><p id="119963367c9cs"><b>高度な機能</b>：指示追従、マルチターン対話、創造的なライティング、および AI エージェントタスク向けのクラス最高のツール使用において、優れた性能を発揮します。</p></li><li id="b023a00fb8q50"><p id="0338849256fkm"><b>大規模なコンテキストウィンドウ</b>：ネイティブで最大 32,000 トークンのコンテキストを処理でき、YaRN テクノロジーを使用することで 131,000 トークンまで拡張可能です。</p></li><li id="da0fe69efc43u"><p id="593d8737e02l7"><b>多言語サポート</b>：100 以上の言語を理解し、翻訳できるため、グローバルなアプリケーションに最適です。</p></li></ul><p id="6330e6184da5g">詳細については、<a class="" href="https://qwenlm.github.io/blog/qwen3/" id="754304c02au6q">ブログ</a>、<a class="" href="https://github.com/QwenLM/Qwen3" id="eed8faafefn8e">GitHub</a>、および<a class="" href="https://qwen.readthedocs.io/en/latest/" id="9bad20fbd9rna">ドキュメント</a>をご参照ください。</p></section></section><section id="06f618a5f295j" class="section"><h2 data-tag="title" id="FtCkr" class="title">前提条件</h2><p id="p-edfe14c4">開始する前に、以下が準備できていることを確認してください。</p><ul id="ul-cac67711"><li id="li-6881e99c"><p id="p-ad804ddd">Kubernetes 1.22 以降を実行する ACK クラスターと GPU アクセラレーテッドノード。詳細については、「<a class="" href="/help/ja/ack/ack-managed-and-ack-dedicated/user-guide/create-an-ack-managed-cluster-2/" id="a-3f1123e3">ACK マネージドクラスターの作成</a>」および「<a href="/help/ja/ack/ack-managed-and-ack-dedicated/user-guide/add-gpu-accelerated-nodes-to-a-cluster" id="c6810191dbsz1" title="" class="xref">クラスターへの GPU ノードの追加</a>」をご参照ください。</p></li></ul><div id="note-0014652e" type="important" class="note note-important"><div class="note-icon-wrapper"><i class="icon-note note important"></i></div><div class="noteContentSpan"><strong>重要 </strong><p id="p-546464ff">GPU ノードは、推論ポッド全体で 64 GB を超える合計 GPU メモリを提供する必要があります。インスタンスタイプ <code data-tag="code" id="code-d42130f0" class="code inline-code___exakR">ecs.gn8is-2x.8xlarge</code> (カードあたり 80 GB の GPU メモリ) を推奨します。詳細については、「<a href="/help/ja/ecs/user-guide/gpu-accelerated-compute-optimized-and-vgpu-accelerated-instance-families-1#gn8is" id="aab0d1b4f0n6f" title="" class="xref">GPU コンピューティング最適化インスタンスファミリー gn8is</a>」をご参照ください。</p></div></div></section><section id="section-0c53709f" class="section"><h2 data-tag="title" id="h2-7355dfa6" class="title">推論エンジンの選択</h2><p id="p-4f0d652f">このガイドでは 2 つの推論エンジンをサポートしています。ワークロードに基づいて選択してください。</p><table id="table-491a0656" tablewidth="648" tablecolswidth="216 216 216" autofit="false" class="table"><colgroup colwidth="1*" style="width:33.33%"></colgroup><colgroup colwidth="1*" style="width:33.33%"></colgroup><colgroup colwidth="1*" style="width:33.33%"></colgroup><tbody class="tbody"><tr id="1e08a03304mgi"><td id="th-d7561dd8" rowspan="1" style="background-color:#e5e5e5" colspan="1"><p id="4e7b8475a637t"><span style="background-color:rgb(229, 229, 229)"><b>エンジン</b></span></p></td><td id="th-4b7d10e6" rowspan="1" style="background-color:#e5e5e5" colspan="1"><p id="bc149228cbxjr"><span style="background-color:rgb(229, 229, 229)"><b>最適な用途</b></span></p></td><td id="th-7c7cfeef" rowspan="1" style="background-color:#e5e5e5" colspan="1"><p id="71ad749e83fnz"><span style="background-color:rgb(229, 229, 229)"><b>主な差別化要因</b></span></p></td></tr><tr id="18d66bc5e2b46"><td id="td-460e3111" rowspan="1" colspan="1"><p id="4533eff403bzy"><b>vLLM v0.10.0</b></p></td><td id="td-5c9b7f8d" rowspan="1" colspan="1"><p id="84109a2376wqy">高スループット、低レイテンシーのサービング</p></td><td id="td-4749e80a" rowspan="1" colspan="1"><p id="a1ce458c79x7e">PagedAttention KV キャッシュ、TP、PP、DP、EP 並列処理、OpenAI 互換 API</p></td></tr><tr id="73fe840d91hqg"><td id="td-f50661ef" rowspan="1" colspan="1"><p id="9cfc0e5e2fife"><b>SGLang 0.4.10.post2</b></p></td><td id="td-8a9f5029" rowspan="1" colspan="1"><p id="d3fc688d7fody">マルチモーダルおよびマルチ LoRA ワークロード</p></td><td id="td-6e716ddb" rowspan="1" colspan="1"><p id="11dc45f58b0zx">RadixAttention プレフィックスキャッシュ、PD 分離、マルチ LoRA バッチ処理、FP8/INT4/AWQ/GPTQ 量子化</p></td></tr></tbody></table><p id="p-d46b3b09">どちらのエンジンも、2 つの GPU (<code data-tag="code" id="code-ab4379c3" class="code inline-code___exakR">--tensor-parallel-size 2</code>) を持つ Kubernetes StatefulSet としてデプロイされ、ポート 8000 で ClusterIP Service を公開します。</p></section><section id="c50d5bf042nqz" class="section"><h2 data-tag="title" id="eO8F1" class="title">モデルデプロイ</h2><section id="c9dbb13603akv" class="section"><h3 data-tag="title" id="J3mMU" class="title">ステップ1: モデルファイルの準備</h3><p id="p-4f3ff88a"><b>ModelScope からモデルをダウンロードします。</b></p><blockquote id="4c424f4bec11d"><code data-tag="code" id="3ea8865954zcu" class="code inline-code___exakR">git-lfs</code> がインストールされていない場合は、先に <code data-tag="code" id="cbb62682d4jhp" class="code inline-code___exakR">yum install git-lfs</code> または <code data-tag="code" id="629ac5421ccoj" class="code inline-code___exakR">apt-get install git-lfs</code> を実行してください。他のインストール方法については、「<a class="" href="https://docs.github.com/en/repositories/working-with-files/managing-large-files/installing-git-large-file-storage" id="4f43f2674fovt">Installing Git Large File Storage</a>」をご参照ください。</blockquote><pre data-tag="codeblock" outputclass="language-bash" code-type="xCode" id="f855199789ech" class="pre codeblock language-bash"><code>git lfs install
+GIT_LFS_SKIP_SMUDGE=1 git clone https://www.modelscope.cn/Qwen/Qwen3-32B.git
+cd Qwen3-32B/
+git lfs pull</code></pre><p id="p-03ac31d4"><b>モデルを OSS にアップロードします。</b></p><p id="p-bef0c146"><a class="" href="https://oss.console.alibabacloud.com/bucket" id="5f82a5872cyrd">OSS コンソール</a>にログインし、バケット名をメモします。まだ作成していない場合は、「<a class="" href="/help/ja/oss/user-guide/create-a-bucket-4" id="a-8821066f">バケットの作成</a>」をご参照ください。その後、モデルファイルをアップロードします。</p><blockquote id="blockquote-37fa9f61">ossutil のインストール手順については、「<a class="" href="/help/ja/oss/developer-reference/install-ossutil" id="a-7a03f774">ossutil のインストール</a>」をご参照ください。</blockquote><pre data-tag="codeblock" outputclass="language-bash" code-type="xCode" id="9c2b64ca4c6sn" class="pre codeblock language-bash"><code>ossutil mkdir oss://&lt;your-bucket-name&gt;/Qwen3-32B
+ossutil cp -r . oss://&lt;your-bucket-name&gt;/Qwen3-32B</code></pre><p id="p-872e9920"><b>PersistentVolume (PV) と PersistentVolumeClaim (PVC) を作成します。</b></p><p id="p-eec91992"><code data-tag="code" id="1da2038d0crnm" class="code inline-code___exakR">llm-model</code> という名前の PV は、OSS バケットディレクトリを読み取り専用ストレージとして推論ポッドにマウントします。以下のいずれかの方法を選択してください。</p><section data-tag="tabbed-content-box" id="tabbed-9180bd7b" outputclass="tabbed-content-box" class="tabbed-content-box section"><section id="section-3569400d" class="section"><h4 data-tag="title" id="h4-974a55ea" class="title">ACK コンソールを使用</h4><ol id="ol-9ee82bf1"><li id="li-296c907b"><p id="e5720e03a1w4h">[<b data-tag="uicontrol" id="uicontrol-v30-x3b-3c7" class="uicontrol">PV の作成</b>]</p><ul id="ul-449315e6"><li id="li-f8fe0ffa"><p id="p-f25da65a"><span data-tag="ph" props="china intl" id="736b976617hg9" data-cond-props="china intl" class="ph"><a href="https://cs.console.alibabacloud.com" id="xref-c6s-99d-s5k" class="" target="_blank">ACK コンソール</a></span>にログインし、左側メニューで <b data-tag="uicontrol" id="wintitle-q4k-1rd-7hp" class="uicontrol">[クラスター]</b> をクリックします。</p></li><li id="b2a22dd3021yc"><p id="7bdcb9a21bpxl"><b data-tag="uicontrol" id="uicontrol-42p-agm-35k" class="uicontrol">[クラスター]</b> ページで、対象クラスターの名前をクリックします。左側メニューで、<b data-tag="uicontrol" id="uicontrol-ooo-doq-b51" class="uicontrol">[ボリューム]</b> &gt; <b data-tag="uicontrol" id="uicontrol-kvi-642-r0p" class="uicontrol">[永続ボリューム]</b> を選択します。</p></li><li id="li-5e5efe0c"><p id="p-6a1e39d3">右上隅にある <b data-tag="uicontrol" id="uicontrol-dum-25n-1wc" class="uicontrol">[作成]</b> をクリックします。</p></li><li id="li-09b2d0fd"><p id="p-7b6832d3"><b data-init-id="uicontrol-v30-x3b-3c7" data-tag="uicontrol" id="9ef827d708tmf" class="uicontrol">[PVの作成]</b> ダイアログボックスで、以下のパラメーターを設定します。</p><table id="d194701b54uqz" tablewidth="100" tablecolswidth="32.63 67.37" autofit="true" class="table"><colgroup colwidth="0.65*" style="width:32.63%"></colgroup><colgroup colwidth="1.35*" style="width:67.37%"></colgroup><tbody class="tbody"><tr id="4474e49ccczta"><td id="ef96e345b59nk" rowspan="1" style="background-color:#e5e5e5;vertical-align:middle" colspan="1"><p id="cbb757cb8f93j">[<b data-tag="uicontrol" id="b-param" class="uicontrol">パラメーター</b>]</p></td><td id="f54097a88f6sj" rowspan="1" style="background-color:#e5e5e5;vertical-align:middle" colspan="1"><p id="8d51f50051xzn">[<b data-tag="uicontrol" id="b-value" class="uicontrol">値</b>]</p></td></tr><tr id="47e00c2aac3ij"><td id="f391ab20d2qu0" rowspan="1" style="vertical-align:middle" colspan="1"><p id="a428e7886d09p">[<b data-tag="uicontrol" id="61f5b241b1lzz" class="uicontrol">PVタイプ</b>]</p></td><td id="7a299c6d33kq0" rowspan="1" style="vertical-align:middle" colspan="1"><p id="val-pvtype">OSS</p></td></tr><tr id="b8ea21f4fabcn"><td id="7867bb7ca55mg" rowspan="1" style="vertical-align:middle" colspan="1"><p id="3fa06df905fmp">[<b data-tag="uicontrol" id="b0e197de934ru" class="uicontrol">ボリューム名</b>]</p></td><td id="val-td-vn" rowspan="1" style="vertical-align:middle" colspan="1"><p id="val-volname">llm-model</p></td></tr><tr id="4560d0a083470"><td id="65cefb433dazf" rowspan="1" style="vertical-align:middle" colspan="1"><p id="62a0040fc8s5x">[<b data-tag="uicontrol" id="f455f5414bmcq" class="uicontrol">アクセス証明書</b>]</p></td><td id="279ec44b9eyzj" rowspan="1" style="vertical-align:middle" colspan="1"><p id="0ed54e27677yr">OSS バケット用の AccessKey ID と AccessKey シークレット</p></td></tr><tr id="43c5d2606bndm"><td id="c1b82a545b3gd" rowspan="1" style="vertical-align:middle" colspan="1"><p id="2325153d62y37">[<b data-tag="uicontrol" id="00c630151extg" class="uicontrol">バケットID</b>]</p></td><td id="val-td-bid" rowspan="1" style="vertical-align:middle" colspan="1"><p id="val-bid">前の手順で作成した OSS バケット</p></td></tr><tr id="row-osp"><td id="9de691d05bsxz" rowspan="1" style="vertical-align:middle" colspan="1"><p id="8c2f51fff4xo5">[<b data-tag="uicontrol" id="fb957914f6r6x" class="uicontrol">OSSパス</b>]</p></td><td id="val-td-osp" rowspan="1" style="vertical-align:middle" colspan="1"><p id="val-osp"><code data-tag="code" id="086f67cc3bi0a" class="code inline-code___exakR">/Qwen3-32B</code></p></td></tr></tbody></table></li></ul></li><li id="li-34619086"><p id="872d050305g4o">[<b data-tag="uicontrol" id="wintitle-ird-d9z-ijn" class="uicontrol">PVC の作成</b>]</p><ul id="ul-dff62857"><li id="5c689aef57wo6"><p id="7bdcb9a11bukc"><b data-init-id="uicontrol-42p-agm-35k" data-tag="uicontrol" id="e3b599b8909j0" class="uicontrol">[クラスター]</b> ページで、対象クラスターの名前をクリックします。左側メニューで、<b data-tag="uicontrol" id="uicontrol-0pz-5vy-eeu" class="uicontrol">[ボリューム]</b> &gt; <b data-tag="uicontrol" id="uicontrol-dro-re7-5zb" class="uicontrol">[永続ボリューム要求]</b> を選択します。</p></li><li id="li-54620533"><p id="p-4252955d">右上隅にある <b data-tag="uicontrol" id="uicontrol-nt1-id6-t2i" class="uicontrol">[作成]</b> をクリックします。</p></li><li id="li-9daf22d3"><p id="p-e716ba45"><b data-init-id="wintitle-ird-d9z-ijn" data-tag="uicontrol" id="9114b06fd8u51" class="uicontrol">[PVCの作成]</b> ダイアログボックスで、以下のパラメーターを設定します。</p><table id="cf16d2a05dswt" tablewidth="100" tablecolswidth="50 50" autofit="true" class="table"><colgroup colwidth="1*" style="width:50.00%"></colgroup><colgroup colwidth="1*" style="width:50.00%"></colgroup><tbody class="tbody"><tr id="cda9cba04b7dj"><td id="1d68f37b73gq3" rowspan="1" style="background-color:#e5e5e5;vertical-align:middle" colspan="1"><p id="b70894f0f4gw7">[<b data-tag="uicontrol" id="b-ci" class="uicontrol">設定項目</b>]</p></td><td id="h2-v" rowspan="1" style="background-color:#e5e5e5;vertical-align:middle" colspan="1"><p id="p-v">[<b data-tag="uicontrol" id="b-v2" class="uicontrol">値</b>]</p></td></tr><tr id="row-pvct"><td id="a320efffd06m6" rowspan="1" style="vertical-align:middle" colspan="1"><p id="d3e02f9ef9rd1">[<b data-isbold="true" data-tag="uicontrol" id="0f92069653mr2" class="uicontrol">PVCタイプ</b>]</p></td><td id="val-pvct-td" rowspan="1" style="vertical-align:middle" colspan="1"><p id="val-pvct">OSS</p></td></tr><tr id="row-name"><td id="85404a7c49i3h" rowspan="1" style="vertical-align:middle" colspan="1"><p id="04986fdc5e27h">[<b data-tag="uicontrol" id="91077e1db8qp9" class="uicontrol">名前</b>]</p></td><td id="val-name-td" rowspan="1" style="vertical-align:middle" colspan="1"><p id="val-name">llm-model</p></td></tr><tr id="row-am"><td id="6119073a3eixd" rowspan="1" style="vertical-align:middle" colspan="1"><p id="c07bd0b61c6p5">[<b data-tag="uicontrol" id="87774e9c98u7f" class="uicontrol">割り当てモード</b>]</p></td><td id="cca97905812zm" rowspan="1" style="vertical-align:middle" colspan="1"><p id="3f9f6bfaf0vhz">既存ボリューム</p></td></tr><tr id="885610152a8n7"><td id="key-ev" rowspan="1" style="vertical-align:middle" colspan="1"><p id="p-050ae3f176zff">[<b data-isbold="true" data-tag="uicontrol" id="050ae3f176zff" class="uicontrol">既存ボリューム</b>]</p></td><td id="aa7d9a31aekuf" rowspan="1" style="vertical-align:middle" colspan="1"><p id="8e8e81ee2asac"><b data-isbold="true" data-tag="uicontrol" id="d72f85181a7ge" class="uicontrol">[PVの選択]</b> をクリックし、作成した PV を選択します</p></td></tr></tbody></table></li></ul></li></ol></section><section id="95f9551ff1ifr" class="section"><h4 data-tag="title" id="248ccf28fepdi" class="title">kubectl を使用</h4><ol id="ol-d9b86e78"><li id="li-c2f0800b"><p id="p-4b6b11da">以下の内容で <code data-tag="code" id="7aedd7e4c0vin" class="code inline-code___exakR">llm-model.yaml</code> という名前のファイルを作成します。このファイルは、OSS の認証情報を持つ Secret、モデルディレクトリを指す静的 PV、およびその PV にバインドする静的 PVC を定義します。</p><pre data-tag="codeblock" outputclass="language-yaml" code-type="xCode" id="8d85bc863csg7" class="pre codeblock language-yaml"><code>apiVersion: v1
+kind: Secret
+metadata:
+  name: oss-secret
+stringData:
+  akId: &lt;your-oss-ak&gt;       # OSS バケットへのアクセスに使用する AccessKey ID。
+  akSecret: &lt;your-oss-sk&gt;   # OSS バケットへのアクセスに使用する AccessKey シークレット。
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: llm-model
+  labels:
+    alicloud-pvname: llm-model
+spec:
+  capacity:
+    storage: 30Gi
+  accessModes:
+    - ReadOnlyMany
+  persistentVolumeReclaimPolicy: Retain
+  csi:
+    driver: ossplugin.csi.alibabacloud.com
+    volumeHandle: llm-model
+    nodePublishSecretRef:
+      name: oss-secret
+      namespace: default
+    volumeAttributes:
+      bucket: &lt;your-bucket-name&gt;       # バケット名。
+      url: &lt;your-bucket-endpoint&gt;      # エンドポイント (例: oss-cn-hangzhou-internal.aliyuncs.com)。
+      otherOpts: "-o umask=022 -o max_stat_cache_size=0 -o allow_other"
+      path: &lt;your-model-path&gt;          # モデルディレクトリへのパス (例: /Qwen3-32B/)。
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: llm-model
+spec:
+  accessModes:
+    - ReadOnlyMany
+  resources:
+    requests:
+      storage: 30Gi
+  selector:
+    matchLabels:
+      alicloud-pvname: llm-model</code></pre></li><li id="li-6c4d49e2"><p id="p-42d8ab28">設定を適用します。</p><pre data-tag="codeblock" outputclass="language-bash" code-type="xCode" id="09a21daf293di" class="pre codeblock language-bash"><code>kubectl create -f llm-model.yaml</code></pre></li></ol></section></section></section><section id="631bbb1ff1tnl" class="section"><h3 data-tag="title" id="TVF7z" class="title">ステップ2: 推論サービスのデプロイ</h3><section data-tag="tabbed-content-box" id="e56a5903c23e5" outputclass="tabbed-content-box" class="tabbed-content-box section"><section id="5a06efbadb4i1" class="section"><h4 id="39305532bej1n"><b>vLLM を使用したスタンドアロン推論サービスのデプロイ</b></h4><ol id="92f4341f2ffy2"><li id="a6ef1a70688sp"><p id="4ae1e6467f568"><code data-tag="code" id="e986b74adfnqm" class="code inline-code___exakR">vllm.yaml</code> という名前のファイルを作成します。</p><div outputclass="collapse" id="1b1a189d61jg8" class="collapse"><p data-tag="expandable-title" id="d9d2e717259ve" class="expandable-title"><b>YAML テンプレートを展開して表示</b></p><div data-tag="expandable-content" id="a355d67e289e3" class="expandable-content"><pre data-tag="codeblock" outputclass="language-yaml" code-type="xCode" id="1cbcf64e5bqvk" class="pre codeblock language-yaml"><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    # Prometheus がスクレイピングするためのラベル
+    alibabacloud.com/inference-workload: vllm-inference
+    alibabacloud.com/inference_backend: vllm
+  name: vllm-inference
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      alibabacloud.com/inference-workload: vllm-inference
+      alibabacloud.com/inference_backend: vllm
+  template:
+    metadata:
+      labels:
+        alibabacloud.com/inference-workload: vllm-inference
+        alibabacloud.com/inference_backend: vllm
+    spec:
+      volumes:
+      - name: model
+        persistentVolumeClaim:
+          claimName: llm-model
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 15Gi
+      containers:
+      - command:
+        - sh
+        - -c
+        - vllm serve /models/Qwen3-32B --port 8000 --trust-remote-code --max-model-len 2048 --gpu-memory-utilization 0.85 --tensor-parallel-size 2
+#        image: vllm/vllm-openai:v0.10.0
+        image: kube-ai-registry.cn-shanghai.cr.aliyuncs.com/kube-ai/vllm:v0.10.0
+        name: vllm
+        ports:
+        - containerPort: 8000
+          name: http
+        readinessProbe:
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          tcpSocket:
+            port: 8000
+        resources:
+          limits:
+            nvidia.com/gpu: "2"
+            memory: "16Gi"
+            cpu: "4"
+          requests:
+            nvidia.com/gpu: "2"
+            memory: "16Gi"
+            cpu: "4"
+        volumeMounts:
+        - mountPath: /models/Qwen3-32B
+          name: model
+        - mountPath: /dev/shm
+          name: dshm
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inference-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      protocol: TCP
+      targetPort: 8000
+  selector:
+    alibabacloud.com/inference-workload: vllm-inference</code></pre></div></div></li><li id="053d4b5334sql"><p id="40bb63781eq98">サービスをデプロイします。</p><pre data-tag="codeblock" outputclass="language-bash" code-type="xCode" id="6685e937cb3ba" class="pre codeblock language-bash"><code>kubectl create -f vllm.yaml</code></pre></li></ol></section><section id="26ab691b164zi" class="section"><h4 id="1480fbf946ryj"><b>SGLang を使用したスタンドアロン推論サービスのデプロイ</b></h4><ol id="1faa526bcfd9z"><li id="168ee3bdcbcxo"><p id="947f36632de98"><code data-tag="code" id="cea54cec15ny8" class="code inline-code___exakR">sglang.yaml</code> という名前のファイルを作成します。</p><div outputclass="collapse" id="500d3b8865xqo" class="collapse"><p data-tag="expandable-title" id="de7a481cf9atk" class="expandable-title"><b>YAML テンプレートを展開して表示</b></p><div data-tag="expandable-content" id="f4205a9305z1q" class="expandable-content"><pre data-tag="codeblock" outputclass="language-yaml" code-type="xCode" id="ac66711d29bx9" class="pre codeblock language-yaml"><code>apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    # Prometheus がスクレイピングするためのラベル
+    alibabacloud.com/inference-workload: sgl-inference
+    alibabacloud.com/inference_backend: sglang
+  name: sgl-inference
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      alibabacloud.com/inference-workload: sgl-inference
+      alibabacloud.com/inference_backend: sglang
+  template:
+    metadata:
+      labels:
+        alibabacloud.com/inference-workload: sgl-inference
+        alibabacloud.com/inference_backend: sglang
+    spec:
+      volumes:
+        - name: model
+          persistentVolumeClaim:
+            claimName: llm-model
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 15Gi
+      containers:
+        - command:
+            - sh
+            - -c
+            - "python3 -m sglang.launch_server --model-path /models/Qwen3-32B --tp 2 --trust-remote-code  --context-length 2048 --host 0.0.0.0 --port 8000 --enable-metrics"
+          image: anolis-registry.cn-zhangjiakou.cr.aliyuncs.com/anolis-docker-images/docker-temp:0.3.4.post2-sglang0.4.10.post2-pytorch2.7.1.8-cuda12.8.1-py312-alinux3.2104
+          name: sglang
+          ports:
+            - containerPort: 8000
+              name: http
+          readinessProbe:
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            tcpSocket:
+              port: 8000
+          resources:
+            limits:
+              nvidia.com/gpu: "2"
+              memory: "16Gi"
+              cpu: "4"
+            requests:
+              nvidia.com/gpu: "2"
+              memory: "16Gi"
+              cpu: "4"
+          volumeMounts:
+            - mountPath: /models/Qwen3-32B
+              name: model
+            - mountPath: /dev/shm
+              name: dshm
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: inference-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8000
+      protocol: TCP
+      targetPort: 8000
+  selector:
+    alibabacloud.com/inference-workload: sgl-inference</code></pre></div></div></li><li id="li-38602c55"><p id="p-ea26147d">サービスをデプロイします。</p><pre data-tag="codeblock" outputclass="language-bash" code-type="xCode" id="8eb13d6bb11fp" class="pre codeblock language-bash"><code>kubectl create -f sglang.yaml</code></pre></li></ol></section></section></section><section id="21183e9a06n2k" class="section"><h3 data-tag="title" id="gOsk9" class="title">ステップ3: 推論サービスの検証</h3><ol id="ol-8588b67b"><li id="li-b99955ec"><p id="p-5438a569">ポートフォワーディングを設定して、ローカルからサービスにアクセスします。</p><div id="note-cd0484f4" type="important" class="note note-important"><div class="note-icon-wrapper"><i class="icon-note note important"></i></div><div class="noteContentSpan"><strong>重要 </strong><p id="p-7169e54d"><code data-tag="code" id="12fe5d2966qgd" class="code inline-code___exakR">kubectl port-forward</code> は開発およびデバッグ専用です。本番環境レベルの信頼性、セキュリティ、スケーラビリティは備わっていません。本番トラフィックについては、「<a class="" href="/help/ja/ack/ack-managed-and-ack-dedicated/user-guide/ingress-management-2/" id="a-cc0892bb">Ingress 管理</a>」をご参照ください。</p></div></div><pre data-tag="codeblock" outputclass="language-bash" code-type="xCode" id="33e83230507w3" class="pre codeblock language-bash"><code>kubectl port-forward svc/inference-service 8000:8000</code></pre><p id="aed2dffff9ywd">期待される出力：</p><pre data-tag="codeblock" outputclass="language-bash" code-type="xCode" id="10de6ae583kkj" class="pre codeblock language-bash"><code>Forwarding from 127.0.0.1:8000 -&gt; 8000
+Forwarding from [::1]:8000 -&gt; 8000</code></pre></li><li id="li-5248c766"><p id="p-bc3f4769">テストリクエストを送信します。</p><pre data-tag="codeblock" outputclass="language-bash" code-type="xCode" id="e846bf53ebtgo" class="pre codeblock language-bash"><code>curl http://localhost:8000/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model": "/models/Qwen3-32B", "messages": [{"role": "user", "content": "Test"}], "max_tokens": 30, "temperature": 0.7, "top_p": 0.9, "seed": 10}'</code></pre><p id="p-934e068f">成功した場合のレスポンスは次のようになります。</p><pre data-tag="codeblock" outputclass="language-json" code-type="xCode" id="057685ea17iym" class="pre codeblock language-json"><code>{"id":"chatcmpl-d490443cd4094bdf86a1a49144f77444","object":"chat.completion","created":1753684011,"model":"/models/Qwen3-32B","choices":[{"index":0,"message":{"role":"assistant","reasoning_content":null,"content":"&lt;think&gt;\nOkay, the user sent \"Test\". I need to confirm their request first. They might be testing my functionality or want to see my reaction.","tool_calls":[]},"logprobs":null,"finish_reason":"length","stop_reason":null}],"usage":{"prompt_tokens":10,"total_tokens":40,"completion_tokens":30,"prompt_tokens_details":null},"prompt_logprobs":null,"kv_transfer_params":null}</code></pre><p id="p-04f0a93d">レスポンスにメッセージを含む <code data-tag="code" id="code-2b4dc16b" class="code inline-code___exakR">choices</code> 配列が含まれていれば、モデルは正常に動作しています。</p></li></ol></section></section><section id="section-ae7e28c7" class="section"><h2 data-tag="title" id="h2-f179db8f" class="title">次のステップ</h2><p id="p-77dd909a">推論サービスが稼働したら、本番環境に対応するために以下の次のステップを検討してください。</p><ul id="ul-319823a0"><li id="li-18851637"><p id="p-cafc2038"><a href="/help/ja/ack/cloud-native-ai-suite/user-guide/configure-monitoring-for-llm-inference-services" id="5ac77ac3bfjnc" title="" class="xref">LLM 推論サービスのモニタリングの設定</a>：Managed Service for Prometheus と統合して推論メトリクスを収集し、パフォーマンスのボトルネックを検出し、リソース割り当てのための長期的な傾向を分析します。</p></li><li id="li-7b3b457b"><p id="p-e3699d09"><a href="/help/ja/ack/cloud-native-ai-suite/user-guide/configuring-elastic-scaling-for-single-machine-multi-machine-inference" id="95c44f59c177w" title="" class="xref">LLM 推論サービスの自動スケーリングの設定</a>：Horizontal Pod Autoscaler (HPA) と ack-alibaba-cloud-metrics-adapter を使用して、GPU、CPU、メモリ使用率に基づいてポッドを自動的にスケーリングします。これにより、アイドル期間中のコストを低く抑えながら、トラフィックスパイクに対応できます。</p></li><li id="li-6e6de6d8"><p id="p-f1b842e5"><a href="/help/ja/ack/ack-managed-and-ack-dedicated/user-guide/intelligent-routing-and-traffic-management-with-ack-gateway-inference-extension" id="6801acc6e784b" title="" class="xref">Gateway with Inference Extension を使用したインテリジェントルーティングとトラフィック管理の実装</a>：モデル名でリクエストをルーティングし、単一のエンドポイントで複数の LoRA バリアントを管理し、重要なモデルに優先度レベルを割り当てます。</p></li><li id="li-5dffccd1"><p id="p-13f9e76a"><a href="/help/ja/ack/cloud-native-ai-suite/user-guide/best-practices-for-optimizing-fluid-data-caching-strategies" id="1ceac687dbt31" title="" class="xref">Fluid データキャッシュの最適化ポリシーのベストプラクティス</a>：クラスターノード間でモデルデータをキャッシュすることにより、大規模なモデルファイル (&gt;10 GB) のポッドのコールドスタート時間を短縮し、再起動のたびに OSS からの繰り返しダウンロードを回避します。</p></li></ul></section><section id="cbb2c4c052dhv" class="section"><h2 id="fdf8e9067az70">関連ドキュメント</h2><ul data-tag="ul" id="fd41e67530ikb" class="ul"><li data-tag="li" id="acf83c363elp9" class="li"><p id="8333fcd0bfg91"><a href="/help/ja/ack/cloud-native-ai-suite/user-guide/configure-monitoring-for-llm-inference-services" id="7a2df4aa9261h" title="" class="xref">LLM 推論サービスのための Prometheus モニタリングの設定</a></p></li><li data-tag="li" id="0b1fe1c3d0jmm" class="li"><p id="0f8c70cb5c1tz"><a href="/help/ja/cs/user-guide/intelligent-routing-and-traffic-management-with-ack-gateway-inference-extension#e6c0d77ed1syv" id="f656fac986flq" title="" class="xref">Gateway with Inference Extension を使用したインテリジェントルーティングとトラフィック管理の実装</a></p></li><li data-tag="li" id="76029e18e3n0o" class="li"><p id="f15b687207r4k"><a href="/help/ja/ack/cloud-native-ai-suite/user-guide/best-practices-for-optimizing-fluid-data-caching-strategies" id="1a96c079c4n4f" title="" class="xref">Fluid 分散キャッシングによるモデル読み込みの高速化</a></p></li></ul></section></div></main>
+
+</div>
+</article>
+<script type="text/javascript">
+window.storeDocs = {
+language: '$lang',
+docGithubLink: '$!githubInfo.url'
+}
+</script>
+<div class="nav-footer">
+ </div>
+<div class="alicloud-document-ask clearfix"></div>
+<div class="feedback-message" style="display:none;">
+<span class="hasfeedback acon acon-done-16"></span>
+ありがとうございます。フィードバックを受け取りました。
+</div>
+</div>
+<div class="col-log-2 col-md-2 col-sm-0 col-xs-0 nav-catalog">
+<div class="article-catalog" id="articleCatalog"></div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+<script
+crossorigin
+src="https://g.alicdn.com/code/lib/??react/16.8.6/umd/react.production.min.js,react-dom/16.8.6/umd/react-dom.production.min.js"
+></script>
+<script
+src="https://g.alicdn.com/code/lib/lodash.js/4.17.21/lodash.min.js"
+crossorigin="anonymous"
+></script>
+<script src="//g.alicdn.com/aliyun-help/help-portal-fe/0.12.65/js/vendor.js"></script>
+<script src="//g.alicdn.com/aliyun-help/help-portal-fe/0.12.65/js/index.js"></script>
+<script defer src="https://cloud-assets.alicdn.com/alicdn/dawn/user-tracker/latest/js/index.js"></script>
+</body>
+</html>
