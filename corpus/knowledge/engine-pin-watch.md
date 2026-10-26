@@ -71,3 +71,38 @@ Scope: the generic method of pinning and tracking any repository tag is
 chousa's ground (`PROVINCE.md`, round-38 note). Kama owns only this watch of
 its own serving-engine pins, as round 38 already owned the re-pin of its own
 SGLang docs rows.
+
+## Correction — round 44 (2026-10-26): one pin per engine, and one entry pinned per process
+
+Superseded — lines 7-9:
+
+> Several kama entries are true only of one engine release. SGLang knowledge is pinned to v0.5.22 (S474, S328, S329), vLLM knowledge to the v0.32.0 docs line (S327, S363), and the llama.cpp lifecycle work to build b11755 (S038).
+
+Read them as: "Several kama entries are true only of one engine release.
+SGLang knowledge is pinned to v0.5.22 (S474, S328, S329), vLLM knowledge to
+the v0.32.0 docs line (S327, S363), and the llama.cpp lifecycle work to build
+b11755 (S038); one vLLM entry is pinned elsewhere — to the v0.31.0 release and
+a merged pull request (S480, S481) — because what that entry states is a
+property of a process, not of a docs line. The ledger's `engine` column is
+unique — `tools/pin-watch.py:81-82` refuses a duplicate engine name, and the
+name is also the offline tag-list file name — so a second vLLM pin of a
+different kind has no line in `registry/engine-pins.tsv` to sit on, and a pin that is current says nothing
+about which process answers a route: inside S481's own two commits the
+`/health` endpoint was moved to the `vllm preload` CLI before the pull request
+merged, so the route's owner changed inside one pull request that one pin
+covers."
+
+Superseded — lines 60-61:
+
+> It watches only pins that a registry row backs.
+
+Read it as: "It watches only pins that a registry row backs *and* that
+`registry/engine-pins.tsv` gives a line. The vLLM line names the v0.32.0 docs
+pin and its two rows (S327, S363) and nothing else, so the entry pinned to the
+v0.31.0 release and a process (S480, S481) is backed by two rows and still
+watched by nothing. The gap there is a missing ledger line, not a missing
+row."
+
+The four engine versions named at lines 61-66 are unaffected: they have
+neither a row nor a line, and the rule that they stay unwatched until a
+sourced row backs them still holds.

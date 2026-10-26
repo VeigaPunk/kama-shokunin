@@ -75,3 +75,69 @@ Lead files: `.ufo/waves/round-16/build/advice/` `ScoutVllmStartup.md`,
 these is a runtime observation of the engine.
 
 Round-17 correction (routed by `corpus/lessons/round-16-verifier-spotcheck.md` defect 4). Correction to line 65 (2026-10-20, source accessed 2026-10-20). "On every non-frontend path" narrows to every path except the frontend set (`server-http.cpp:309-311`) and `OPTIONS` (answered at `:347-352`, before the state gate at `:354`). `/v1/models` and `/health` remain inside the gate; the exempt set at `:251-258` is used only by the API-key check (`:267`). Envelope message, type and code: `:318-320`.
+
+## Correction — round 44 (2026-10-26): the table's key is the process, not the engine
+
+The round-43 entry `corpus/knowledge/runtime-health-surface-processes.md`
+shows that vLLM ships a second `/health` in a second process. Four readings
+below are superseded by that finding — the Claim, the table header, three cells
+of the vLLM row, and one clearance clause; each is quoted as it stood and then
+read as corrected. No data row is rewritten and no line above this section
+moves.
+
+Superseded — the Claim at line 8:
+
+> One `/health` URL shape does not carry one portable readiness meaning across llama.cpp, vLLM and SGLang — each engine's documented route semantics differ, and Ollama's opened pages document no dedicated health route at all.
+
+Read it as: "One `/health` URL shape does not carry one portable readiness
+meaning across llama.cpp, vLLM and SGLang, nor even inside one product: each
+engine's documented route semantics differ, vLLM's v0.31.0 release files a
+`/health` item under the `vllm preload` weight-cache feature, in the same
+bullet that names the daemon the CLI launches (S480 — the release page does
+not say which process answers it), the pull request behind that item names the
+process it went into — the weight cache daemon's parent process (S481,
+community tier C) — and Ollama's opened pages document no dedicated health
+route at all."
+
+Superseded — the table header at line 12:
+
+> | Engine | Documented revision | Liveness route | Readiness / loaded meaning | Identity route (separate) | Caveat | S-id |
+
+Read that table as keyed on (engine, process, date read), not on the engine
+alone. Until a `Process` column exists, each data row carries this process
+value:
+
+| line | engine | process the row's `/health` belongs to |
+|---|---|---|
+| 14 | llama.cpp server | the server process its own README documents (S001); no second llama.cpp health route is held |
+| 15 | vLLM | the inference server only — v0.31.0's second `/health` is the weight-cache supervisor's (S480, S481) |
+| 16 | SGLang | the server process its native-API page documents (S006) |
+| 17 | Ollama | the Ollama server the two opened pages' routes belong to (S009, S010); the pages name no health route |
+| 18 | Kubernetes | n/a — vocabulary, not a model server (S017) |
+
+Superseded — the vLLM row at line 15: its `Liveness route` cell "`GET /health`
+listed under Instrumentator APIs", its `Caveat` cell "Render-only servers have
+no engine and return 200 unconditionally — a passing `/health` may not even
+reach an engine", and its `S-id` cell "S002, S004". Read them as: liveness
+route "`GET /health` listed under Instrumentator APIs — the inference server's
+route; v0.31.0 also lists a `/health` under the `vllm preload` weight-cache
+feature, which is a different process (S480, S481)"; caveat "Render-only
+servers have no engine and return 200 unconditionally — a passing `/health`
+may not even reach an engine, and 'the vLLM `/health`' names two routes in two
+processes, so this row is read only together with its process value and the
+date it was read"; S-id "S002, S004 (inference server); S480, S481 (the second
+route's process)".
+
+Superseded — the KQ6 clause at line 35, "tier A for its scope; no C-tier row
+supports this entry". Read it as: "every engine statement cites an opened
+`SOURCES.md` row, tier A for its scope; the process attribution added by this
+correction additionally cites S481 (community, C), which supports the name of
+the process the route went into and the three states its purpose statement
+names — not the route's wire behaviour, which is `preload.py`'s at tag
+v0.31.0 — and S481 is never sole support for a statement.
+
+Recheck consequence: line 4 declares `on-release` for S001, S004, S006,
+S009/S010 and S020. S480 and S481 carry a 90d recheck, so the two added rows
+are re-read on their own 90d cadence until line 4 is superseded; a
+release-level re-read of S480 alone would not re-open S481, whose object is
+the pull request rather than the release page.

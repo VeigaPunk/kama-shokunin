@@ -20,7 +20,9 @@ Usage:
 
 Output columns: id path pin_commit release pin_blob release_blob changed
 pin_lines release_lines verdict note (the round-44 ledger header).
-Exit 0 written (TODO rows included), 2 a git or input failure.
+Exit 0 written (TODO rows included); 2 an unreadable --sources, an --upstream
+that lacks the release commit or a population pin commit, or a failing git call
+(round-44 repair; message on stderr).
 """
 from __future__ import annotations
 
@@ -40,7 +42,8 @@ HEX40 = re.compile(r"\b[0-9a-f]{40}\b")
 def git(repo, *args, check=True):
     p = subprocess.run(["git", "-C", repo, *args], capture_output=True, text=True)
     if check and p.returncode != 0:
-        raise SystemExit(f"git {' '.join(args)}: {p.stderr.strip()[:200]}")
+        print(f"release-recheck: git {' '.join(args)}: {p.stderr.strip()[:200]}", file=sys.stderr)
+        sys.exit(2)
     return p
 
 
@@ -170,7 +173,7 @@ def draft_row(sid, ent, up, rel_name, rel_commit):
         pr = clusters(strong, pl)
     elif weak:
         pr = clusters({min(weak)}, pl)
-        note_extra = "pin range picked from the first WEAK number; confirm it is the anchored line"
+        note_extra = "pin range picked from the smallest WEAK number; confirm it is the anchored line"
     else:
         return base + ["-", "-", "TODO", "no cited line: pick the anchored section by reading"]
     if changed == "0":
@@ -187,9 +190,27 @@ def draft_row(sid, ent, up, rel_name, rel_commit):
 
 
 def cmd_draft(a):
-    text = open(a.sources).read()
+    try:
+        text = open(a.sources).read()
+    except OSError as e:
+        print(f"release-recheck: cannot read --sources: {e}", file=sys.stderr)
+        return 2
+    probe = subprocess.run(["git", "-C", a.upstream, "cat-file", "-e", a.release_commit + "^{commit}"],
+                           capture_output=True, text=True)
+    if probe.returncode != 0:
+        print(f"release-recheck: --upstream {a.upstream} does not hold release commit {a.release_commit}",
+              file=sys.stderr)
+        return 2
     pop = population(text, a.repo_url)
     ids = set(a.ids.split(",")) if a.ids else None
+    for sid in sorted(pop):
+        if ids and sid not in ids:
+            continue
+        pin = pop[sid]["pin"]
+        if subprocess.run(["git", "-C", a.upstream, "cat-file", "-e", pin + "^{commit}"],
+                          capture_output=True).returncode != 0:
+            print(f"release-recheck: --upstream does not hold {sid}'s pin commit {pin}", file=sys.stderr)
+            return 2
     w = sys.stdout
     w.write("\t".join(HEADER) + "\n")
     for sid in sorted(pop):

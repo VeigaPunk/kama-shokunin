@@ -653,3 +653,14 @@ Still frontier:
 - Shipped readiness for the inference server: pull requests 46811 and 59179 remain open proposals, and the shipped server route set is still the single `/health` of S004.
 
 No endpoint was sampled, no serving runtime was started, and registered consumers still sample DEAD; that stays operator-owned.
+
+
+## Frontier disposition — round 44
+
+Advanced: release freshness of the llama.cpp-pinned ground. The 91 `on-release` rows pinned to a llama.cpp commit were re-verified at release b11889 (S482) and all still hold there (`registry/release-recheck-b11889.tsv`); the `server.cpp` entrypoint refactor (commit f3269ef96) moved three rows' anchors without changing their statements. One statement outside that population is now b11755-only (`SKILL.md` §Round-28, `dry_sequence_breakers`).
+
+Still frontier:
+- Rows that depend on the b11755 pin but sit outside the round-44 population: S038, S477, the own-work live receipts S041/S046/S055, and the `ggml-org/ggml` rows S014/S058 (lesson §Gate). The installed runtime is still b11755; b11889 verdicts say nothing about endpoint behaviour on this host.
+- Other pinned projects (seat U9Pins, `.ufo/waves/round-44/w1/out/U9Pins/pins.tsv`): S010, S019 and S048 changed upstream; S013 and S022 likely changed.
+
+No endpoint was sampled and no serving runtime was started this round.
