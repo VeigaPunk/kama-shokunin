@@ -27,6 +27,21 @@ lines are inlined in ``teardown.log_lines``). Checks record both ``passed``
 not-evaluated, never a server failure. The exact child argv is recorded;
 environment values are never recorded.
 
+Receipt schema ``kama-llamacpp-live/v5`` (round 48) is v4 with provenance
+verified when it is recorded (round-47 closure D3, D6). The four v4 flags
+(``--server-asset-url``, ``--server-asset-sha256``, ``--server-member``,
+``--model-url``) must now come together, with https URLs and a member path
+without a leading ``/`` or ``..`` (argument errors: exit 2, no receipt).
+``--server-archive`` (the local copy of the release archive) selects v5: it
+also needs the model URL pinned to a 40-hex ``/resolve/<commit>/`` revision,
+and before the server is started the tool hashes the archive (must equal the
+asset sha256) and the archive member's bytes (must equal the server binary's
+sha256), exiting 2 with a setup-error receipt otherwise. A v5 receipt adds
+``provenance.model.commit`` and ``provenance.verified`` {``at``: ``record``,
+``archive_sha256``, ``member_sha256``, ``model_sha256``}. Without
+``--server-archive`` the receipt stays v4, so round-47 replays of v4 receipts
+run as before.
+
 Deps: python3 stdlib only, plus whatever the probed server and
 ``bash tools/kama-probe.sh`` (curl, ss) need.
 """
@@ -52,6 +67,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 SCHEMA = 'kama-llamacpp-live/v4'
+SCHEMA_V5 = 'kama-llamacpp-live/v5'
+PINNED_MODEL_URL = re.compile(r'^https://[^/]+/.+/resolve/([0-9a-f]{40})/.+')
 SCRIPT = Path(__file__).resolve()
 LANE = SCRIPT.parent.parent
 REGISTRY = LANE / 'registry' / 'endpoint-consumers.tsv'
@@ -171,6 +188,35 @@ class Terminated(Exception):
 def _utc_now():
     return datetime.now(timezone.utc).isoformat(timespec='milliseconds').replace(
         '+00:00', 'Z')
+
+
+def verify_archive_member(archive, asset_sha256, member, server_sha256):
+    """Record-time provenance (v5): the archive must hash to asset_sha256 and its member
+    to the server binary's sha256. Returns (archive_sha256, member_sha256); raises
+    SetupError with a stable token otherwise. Reads the archive only; extracts nothing."""
+    import tarfile
+    try:
+        archive_sha = sha256_file(archive)
+    except OSError:
+        raise SetupError('provenance-archive-unreadable')
+    if archive_sha != asset_sha256:
+        raise SetupError('provenance-archive-digest-mismatch')
+    try:
+        with tarfile.open(archive) as tf:
+            info = tf.getmember(member)
+            if not info.isfile():
+                raise SetupError('provenance-member-not-a-file')
+            h = hashlib.sha256()
+            fh = tf.extractfile(info)
+            for chunk in iter(lambda: fh.read(1 << 20), b''):
+                h.update(chunk)
+    except KeyError:
+        raise SetupError('provenance-member-absent')
+    except (OSError, tarfile.TarError):
+        raise SetupError('provenance-archive-unreadable')
+    if h.hexdigest() != server_sha256:
+        raise SetupError('provenance-member-digest-mismatch')
+    return archive_sha, h.hexdigest()
 
 
 def sha256_file(path):
@@ -1097,7 +1143,7 @@ def build_parser():
         description='Launch an ephemeral llama-server on a free unregistered '
                     'loopback port, capture its lifecycle, probe it with '
                     'kama-probe.sh, tear it down, and emit a '
-                    'kama-llamacpp-live/v4 receipt.',
+                    'kama-llamacpp-live/v4 receipt (v5 with --server-archive).',
     )
     p.add_argument('--server', default=None,
                    help='llama-server binary (default: shutil.which'
@@ -1121,14 +1167,19 @@ def build_parser():
                         'any port in registry/endpoint-consumers.tsv) or '
                         'already listening')
     p.add_argument('--server-asset-url', default=None,
-                   help='provenance: URL of the release archive the server '
-                        'binary was extracted from (recorded, not fetched)')
+                   help='provenance: https URL of the release archive the '
+                        'server binary was extracted from')
     p.add_argument('--server-asset-sha256', default=None,
                    help='provenance: sha256 of that archive (64 hex)')
     p.add_argument('--server-member', default=None,
                    help='provenance: path of llama-server inside the archive')
     p.add_argument('--model-url', default=None,
-                   help='provenance: URL the --model file was fetched from')
+                   help='provenance: https URL the --model file was fetched '
+                        'from, pinned to a 40-hex /resolve/<commit>/ revision')
+    p.add_argument('--server-archive', default=None,
+                   help='provenance (v5): local copy of the release archive; '
+                        'hashed against --server-asset-sha256 and its member '
+                        'against --server before the server starts')
     p.add_argument('--selftest', action='store_true',
                    help='run parser and outcome self-tests without a server')
     return p
@@ -1217,10 +1268,47 @@ def _install_identity_selftest():
             os.chmod(lib, 0o644)
 
 
+def _provenance_selftest():
+    """v5 record-time verification on a stub archive: the right archive and member
+    pass; a wrong archive digest, an absent member, a directory member and a member
+    whose bytes are not the server each raise their own SetupError token."""
+    import tarfile
+    with tempfile.TemporaryDirectory(prefix='kama-live-prov-') as d:
+        rel = os.path.join(d, 'rel')
+        os.makedirs(rel)
+        srv = os.path.join(rel, 'llama-server')
+        with open(srv, 'wb') as fh:
+            fh.write(b'server-stub\n')
+        arc = os.path.join(d, 'a.tar.gz')
+        with tarfile.open(arc, 'w:gz') as tf:
+            tf.add(rel, arcname='rel')
+        asha, ssha = sha256_file(arc), sha256_file(srv)
+        got = verify_archive_member(arc, asha, 'rel/llama-server', ssha)
+        if got != (asha, ssha):
+            raise AssertionError('right archive and member not verified')
+        for args, token in (((arc, '0' * 64, 'rel/llama-server', ssha), 'provenance-archive-digest-mismatch'),
+                            ((arc, asha, 'rel/nope', ssha), 'provenance-member-absent'),
+                            ((arc, asha, 'rel', ssha), 'provenance-member-not-a-file'),
+                            ((arc, asha, 'rel/llama-server', '1' * 64), 'provenance-member-digest-mismatch')):
+            try:
+                verify_archive_member(*args)
+            except SetupError as exc:
+                if exc.code != token:
+                    raise AssertionError(f'{token}: got {exc.code}')
+            else:
+                raise AssertionError(f'{token}: not raised')
+    for url, pinned in (('https://huggingface.co/o/r/resolve/' + 'a' * 40 + '/m.gguf', True),
+                        ('https://huggingface.co/o/r/resolve/main/m.gguf', False),
+                        ('https://huggingface.co/o/r/resolve/' + 'a' * 7 + '/m.gguf', False)):
+        if bool(PINNED_MODEL_URL.match(url)) != pinned:
+            raise AssertionError(f'pinned-url rule wrong for {url}')
+
+
 def _selftest():
-    """Exercise procfs parsing, live tcp6 ownership rows, v3 verdicts and
-    install identity."""
+    """Exercise procfs parsing, live tcp6 ownership rows, v3 verdicts, install
+    identity and v5 record-time provenance."""
     _install_identity_selftest()
+    _provenance_selftest()
     port = 0x1234
     tcp6_rows = (
         ('00000000000000000000000001000000', True),
@@ -1365,6 +1453,30 @@ def main(argv=None):
             if not re.fullmatch(r'[0-9a-fA-F]{64}', value):
                 parser.error(f'--{name.replace("_", "-")} must be 64 hex digits')
             setattr(args, name, value.lower())
+    # provenance shape (round 48, closure D3): the four v4 flags come together with
+    # https URLs and a safe member; --server-archive selects v5, which also needs a
+    # model URL pinned to a /resolve/<40-hex commit>/ revision (closure D6)
+    v4_flags = (args.server_asset_url, args.server_asset_sha256,
+                args.server_member, args.model_url)
+    model_commit = None
+    if args.server_archive is not None or any(v is not None for v in v4_flags):
+        if any(v is None for v in v4_flags):
+            parser.error('provenance flags --server-asset-url, '
+                         '--server-asset-sha256, --server-member and '
+                         '--model-url must be given together')
+        for flag, url in (('--server-asset-url', args.server_asset_url),
+                          ('--model-url', args.model_url)):
+            if not url.startswith('https://'):
+                parser.error(f'{flag} must be an https:// URL')
+        member = args.server_member
+        if not member or member.startswith('/') or '..' in member.split('/'):
+            parser.error('--server-member must be a relative path without ..')
+        if args.server_archive is not None:
+            m = PINNED_MODEL_URL.match(args.model_url)
+            if not m:
+                parser.error('--model-url must be pinned to a 40-hex '
+                             '/resolve/<commit>/ revision (v5)')
+            model_commit = m.group(1)
 
     receipt = {
         'schema': SCHEMA,
@@ -1442,6 +1554,16 @@ def main(argv=None):
             raise SetupError('model-digest-mismatch')
 
         server_sha = sha256_file(server_real)
+        if args.server_archive is not None:
+            # v5: verify provenance now, before anything is started
+            archive_sha, member_sha = verify_archive_member(
+                args.server_archive, args.server_asset_sha256,
+                args.server_member, server_sha)
+            receipt['schema'] = SCHEMA_V5
+            receipt['provenance']['model']['commit'] = model_commit
+            receipt['provenance']['verified'] = {
+                'at': 'record', 'archive_sha256': archive_sha,
+                'member_sha256': member_sha, 'model_sha256': model_sha}
         tree, tree_sha = install_tree(server_real)
         links, links_sha, link_problems, unpinned = install_links(
             server_real, tree)
