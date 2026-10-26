@@ -1,0 +1,69 @@
+{
+ "lane": "kama",
+ "round": 48,
+ "attempt": 1,
+ "author": "kama L1 (agent KamaR48)",
+ "frozen_at_utc": "2026-10-26T22:19:34Z",
+ "base": "33e005827742b29772b153cda036ec9f27f653be",
+ "authority": "shokunin.conf assigns operability + calibration; the lowest-scoring non-retired axes are calibration, depth and adjacency (7 each); C1 works calibration (lowest assigned), C2 works operability (the other assigned axis). Stagnation nudge inactive (calibration 7 below saturation 8; a capability entered in round 47). Starting point: SCORECARD.md ### Planned (round 48) items 1 and 2, and the round-47 outside closure's routed D1-D6 (corpus/lessons/round-47-verifier-spotcheck.md section 6).",
+ "separability": "C1 touches tools/append-only-audit.py and registry/append-only-contract.tsv; its counter reads only those two paths, the declaring lines the contract names and the lane's git history. C2 touches tools/kama-llamacpp-live.py, tools/kama-live-replay.py, .ufo/waves/round-48/c2/live/receipt-{1,2,3}.json and one corpus/SOURCES.md row; its counter reads only those. A C2 SOURCES append adds lines (no deletion event, and C1's lane leg compares the tool with the counter's own recomputation at any history); C1 touches no C2 path.",
+ "claims": [
+  {
+   "id": "C1",
+   "axis": "calibration",
+   "score": "7->7",
+   "type": "measured (instrument correction: the lane's declared append-only rule, carve-outs included, in machine-readable bound form; outside ground truth git numstat and fixtures with expectations written by construction)",
+   "statement": "append-only-audit v3 grades the lane's append-only files under declared, bound regions: the contract gains a region cell; SCORECARD.md's head sections that SCORECARD.md:6 declares re-derived are ungraded while they are not gutted (round-47 Rev1Restore, K1Design; closure D5), the declared append-only ## Errata region of corpus/knowledge/consumer-registry.md is graded (K1Design D2), every declaration must bind to a line that says append-only for that path and is not a negation (V1Ctr F1), regressed reaches the exit code (X1Stable), the stable leg starts from a base that differs from the tip and the fixture leg covers the clamp, merges and the exact threshold deterministically (K1Fixture, V1Ctr).",
+   "predicate": "append-only-audit v3 at the measured commit grades the lane's append-only files under declared, bound regions - SCORECARD's re-derived head exempt, the consumer-registry Errata region graded - equals this counter's recomputation on the lane, reports no graded loss, regression, vanished path or unbound declaration there, passes eleven constructed fixtures and is stable from the round-48 base; selftest=1 contract=1 lane=1 fixture=1 stable=1.",
+   "counter": "tools/round48-append-audit-v3-check.py",
+   "counter_sha256": "92b0f9f1027b8214c7a702d928f89e5a6d9fb814fc565c234f6deee3f2d82ac7",
+   "command": "python3 tools/round48-append-audit-v3-check.py --repo <lane clone> --tip <full commit> --scratch <dir> --out <receipt>",
+   "before": "selftest=0 contract=0 lane=0 fixture=0 stable=0 met=False (controls/base.c1.out); at the base the v2 tool reports lane failures 2 (two SCORECARD partials) and regressed 1",
+   "target": "selftest=1 contract=1 lane=1 fixture=1 stable=1 met=True (lane_failures=0)",
+   "kill_rule": "met=False at the measured commit -> C1 is not achieved (honest stop; never narrowed after data).",
+   "limits": "The counter recomputes the v3 definition on its own code path, so lane equality is not independent of the definition; the fixtures (expectations by construction) and numstat are the outside ground truth. The exemption reads `## ` headings only (a heading inside a fenced block counts). Held lines are a multiset over the whole file, so an exempt line's text can count toward a graded line with the same text. The threshold stays 20: sub-threshold deletions are not graded."
+  },
+  {
+   "id": "C2",
+   "axis": "operability",
+   "score": "8->8",
+   "type": "measured (operability, sourced on the pinned Hugging Face revision opened this round)",
+   "statement": "The live evidence becomes re-runnable in a form a shortcut cannot meet: three b11909 receipts in schema kama-llamacpp-live/v5 pin the model to Hugging Face revision 499bc882 (closure D6) and carry provenance the live tool verified at record time against the archive, the archive member and the model (D3); the live tool refuses unverifiable provenance before starting a server; every receipt replays from committed bytes (D2) and the counter hashes the re-acquired files itself (D1); the replay compares a stable projection of the captured surfaces, not only check pass/fail (D4), exposed as --compare; swapped URLs and wrong digests are refused; the pinned revision is a source row.",
+   "predicate": "three committed v5 b11909 live receipts carry record-time-verified provenance with the model pinned to an HF revision, the live tool refuses unverifiable provenance before starting a server, every receipt replays from committed bytes with re-acquired inputs the counter hashes itself and an equal stable projection, the replay's comparison separates instance from stable fields, wrong digests and swapped URLs are refused, and the pinned revision is a source row; receipts=1 recordcheck=1 replay=1 compare=1 tamper=1 urlswap=1 newrow=1.",
+   "counter": "tools/round48-live-replay-v5-audit.py",
+   "counter_sha256": "6bc16e2532469f160cee59c78103688b8d16a9713fdb4d3c255f894975fb0c09",
+   "command": "python3 tools/round48-live-replay-v5-audit.py --repo <lane clone> --tip <full commit> --scratch <dir> --out <receipt>",
+   "before": "receipts=0 recordcheck=0 replay=0 compare=0 tamper=0 urlswap=0 newrow=0 met=False (controls/base.c2.out)",
+   "target": "receipts=1 recordcheck=1 replay=1 compare=1 tamper=1 urlswap=1 newrow=1 met=True (replayed=3/3)",
+   "kill_rule": "met=False at the measured commit -> C2 is not achieved (honest stop; never narrowed after data).",
+   "model": {
+    "url": "https://huggingface.co/ggml-org/models-moved/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/stories260K.gguf",
+    "observed": ".ufo/waves/round-48/c2/hf-revision-499bc882.txt (opened 2026-10-26T22:09:23Z: x-repo-commit 499bc8821c6b12b4e53c5bffcb21ec206f212d81, x-linked-etag 270cba1b..., download sha256 270cba1b...)"
+   },
+   "limits": "Replay needs github.com and huggingface.co; b11909 is a GitHub prerelease (closure D7). The stable projection is a chosen set of surfaces; timing, ports, pids, log text and the models `created` field are excluded as instance facts. The receipts leg is structural: fabricated receipts with self-consistent digests pass it (control r47-relabel), so the replay and urlswap legs carry the evidence. The record-time leg uses a stub server and stub archive; it shows the refusal happens before execution, not that the real archive is genuine (the receipts' verified block and the replay show that)."
+  }
+ ],
+ "controls": {
+  "builder": ".ufo/waves/round-48/controls/build_controls.py (sha256 c892d0c9dd0e897711b9a5a9f69c480b9c7d151acabfd53340a78b420a309d8a)",
+  "base": "C1 selftest=0 contract=0 lane=0 fixture=0 stable=0 met=False; C2 receipts=0 recordcheck=0 replay=0 compare=0 tamper=0 urlswap=0 newrow=0 met=False",
+  "junk-c1-v2-relabel": "C1 selftest=0 contract=0 lane=0 fixture=0 stable=0 met=False (v2 tool relabelled v3 with a v3 contract: skips region grading, binding and exit work)",
+  "junk-c1-drop-scorecard": "C1 selftest=0 contract=0 lane=0 fixture=0 stable=0 met=False (v2 tool, v3 contract without the SCORECARD row: the cheap way to a clean lane)",
+  "junk-c2-r47-relabel": "C2 receipts=1 recordcheck=0 replay=0 compare=0 tamper=0 urlswap=0 newrow=0 met=False (round-47 receipts relabelled v5 with a fabricated verified block and a copying replay: the receipts leg alone is structural)"
+ },
+ "frontier": {
+  "sourced_claim": "C2 rests on the pinned HF revision row registered this round (newrow leg), opened 2026-10-26 (.ufo/waves/round-48/c2/hf-revision-499bc882.txt) and on the huggingface_hub download guide (full-length commit hash for a revision; .ufo/waves/round-48/c2/hf-hub-download-doc.txt).",
+  "considerthese": "considerthese/2026-10-26.md proposal 3 (running count of counters a shortcut can satisfy): the round-47 shortcut tally is promoted to tools/ with its --check (frontier, not a claim).",
+  "assimilation": "none (both claims work the lane's own instruments and evidence)."
+ },
+ "routed": {
+  "r47-D1": "C2 (counter hashes re-acquired files itself; urlswap leg kills host-cache copies; started_utc bound to the counter start).",
+  "r47-D2": "C2 (replay leg over all three receipts).",
+  "r47-D3": "C2 (record-time provenance verification; recordcheck leg).",
+  "r47-D4": "C2 (stable projection comparison; compare leg).",
+  "r47-D5": "C1 (declared bound regions, binding rule, regressed in exit, fixture coverage, non-vacuous stable leg).",
+  "r47-D6": "C2 (pinned HF revision URL and commit in v5 receipts).",
+  "r47-D7": "frontier: disclosed limit (prerelease cliff); no cache hardening this round.",
+  "r47-D8": "frontier: tools/sources-append-only.py parser repair by a wave seat, integrated if it lands (no claim).",
+  "r47-D9": "report discipline: tip-level regression receipts are re-run and committed at the final tip; lesson Mistakes row."
+ }
+}
