@@ -1,0 +1,76 @@
+X4HexR45 gate receipt - hexrun census, round 47 (lane kama)
+========================================================================
+scratch:   /fast/scratch/hyaku/kama-r47/X4HexR45
+lane:      $S/lane  = git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin  (toplevel asserted before every commit)
+upstream:  $S/ollama.git  git clone --filter=blob:none --bare https://github.com/ollama/ollama.git
+           $S/genai.git   git clone --filter=blob:none --bare https://github.com/open-telemetry/semantic-conventions-genai.git
+           $S/linux.git   git init --bare; fetch --filter=blob:none --depth=1 refs/tags/v7.3 and refs/tags/v7.2
+           $S/llama.git   git init --bare; fetch --filter=blob:none refs/heads/master and refs/tags/b11889
+fixture:   commit 286bd41dc1c5d5c6193b473051ae999b2367fbaa  (lane tip 46a924e027f05614558c45ff02bf7a94ca57d3e1 + the 5 evidence files, nothing else)
+union fix: commit 21d63db28d586f1fc812138605088809b04396b4  (same tree + every round-47 hexrun evidence file)
+ledgers:   $S/ledger-v2.tsv (lane registry/hexrun-ledger.tsv + $O/rows.tsv, 88 lines)
+           $S/ledger-union.tsv / $S/ledger-union-dedup.tsv / $S/ledger-union-fixed.tsv
+
+--- 0. the evidence files this seat commits (token, repo, first command, its output)
+  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-47/hexrun-evidence/66ab8482e08035a3238dff04a5739c4371c61bfe.txt  3222 bytes
+  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-47/hexrun-evidence/547934afa90a34298441caf80c43b27255c3a292.txt  2393 bytes
+  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-47/hexrun-evidence/20259355b9631e3f032dcc099d1b5a2666818c42.txt  2611 bytes
+  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-47/hexrun-evidence/c03c1a14507dfaf8b856c2608f9ac216021fc222.txt  4928 bytes
+  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-47/hexrun-evidence/d854d98bae598388ecea1ed84396587e5edc326d.txt  2791 bytes
+
+--- 1. baseline, lane tip and build, unmodified ledger
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/hexrun-census.py scan --repo $S/lane --rev 3a09a1d93dcc16799cf6c4b48786e6440af134c4
+tokens=1772 distinct=280 lane_oid=178 md5_blob=1 upstream_ok=68 unverifiable=9 wrong_flagged=2 ledger_bad=0 unknown=22
+rc=1
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/hexrun-census.py scan --repo $S/lane --rev 46a924e027f05614558c45ff02bf7a94ca57d3e1
+tokens=1772 distinct=280 lane_oid=178 md5_blob=1 upstream_ok=68 unverifiable=9 wrong_flagged=2 ledger_bad=0 unknown=22
+rc=1
+
+--- 2. control, fixture commit with the evidence, unmodified ledger (evidence alone must change nothing)
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/hexrun-census.py scan --repo $S/lane --rev 286bd41dc1c5d5c6193b473051ae999b2367fbaa
+tokens=1772 distinct=280 lane_oid=178 md5_blob=1 upstream_ok=68 unverifiable=9 wrong_flagged=2 ledger_bad=0 unknown=22
+rc=1
+
+--- 3. gate, fixture commit with the evidence and rows.tsv appended
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/hexrun-census.py scan --repo $S/lane --rev 286bd41dc1c5d5c6193b473051ae999b2367fbaa --ledger $S/ledger-v2.tsv
+tokens=1772 distinct=280 lane_oid=178 md5_blob=1 upstream_ok=73 unverifiable=9 wrong_flagged=2 ledger_bad=0 unknown=17
+rc=1
+$ ... --details  (only this seat's five tokens)
+detail: 20259355b9631e3f032dcc099d1b5a2666818c42 len=40 occurrences=1 class=upstream_ok
+detail: 547934afa90a34298441caf80c43b27255c3a292 len=40 occurrences=1 class=upstream_ok
+detail: 66ab8482e08035a3238dff04a5739c4371c61bfe len=40 occurrences=1 class=upstream_ok
+detail: c03c1a14507dfaf8b856c2608f9ac216021fc222 len=40 occurrences=2 class=upstream_ok
+detail: d854d98bae598388ecea1ed84396587e5edc326d len=40 occurrences=19 class=upstream_ok
+
+--- 4. counterfactual, rows appended but evidence NOT in the tree at REV
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/hexrun-census.py scan --repo $S/lane --rev 46a924e027f05614558c45ff02bf7a94ca57d3e1 --ledger $S/ledger-v2.tsv
+tokens=1772 distinct=280 lane_oid=178 md5_blob=1 upstream_ok=68 unverifiable=9 wrong_flagged=2 ledger_bad=5 unknown=17
+rc=1
+
+--- 5. negative controls, one row broken at a time, at the fixture commit
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/hexrun-census.py scan --repo $S/lane --rev 286bd41dc1c5d5c6193b473051ae999b2367fbaa --ledger $S/neg-badrepo.tsv
+tokens=1772 distinct=280 lane_oid=178 md5_blob=1 upstream_ok=72 unverifiable=9 wrong_flagged=2 ledger_bad=1 unknown=17
+rc=1
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/hexrun-census.py scan --repo $S/lane --rev 286bd41dc1c5d5c6193b473051ae999b2367fbaa --ledger $S/neg-noevidence.tsv
+tokens=1772 distinct=280 lane_oid=178 md5_blob=1 upstream_ok=72 unverifiable=9 wrong_flagged=2 ledger_bad=1 unknown=17
+rc=1
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/hexrun-census.py scan --repo $S/lane --rev 286bd41dc1c5d5c6193b473051ae999b2367fbaa --ledger $S/neg-wrongevidence.tsv
+tokens=1772 distinct=280 lane_oid=178 md5_blob=1 upstream_ok=72 unverifiable=9 wrong_flagged=2 ledger_bad=1 unknown=17
+rc=1
+  badrepo:       d854d98b row repo cell 'ggml-org/ggml' (text absent from its evidence)
+  noevidence:    547934af row evidence path renamed to a file that does not exist
+  wrongevidence: 20259355 row pointed at the 66ab8482 evidence file (token absent from its bytes)
+
+--- 6. union preview, all four hexrun seats (advisory; the rows belong to the other seats)
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/hexrun-census.py scan --repo $S/lane --rev 21d63db28d586f1fc812138605088809b04396b4 --ledger $S/ledger-union.tsv   (raw concatenation)
+tokens=1772 distinct=280 lane_oid=178 md5_blob=1 upstream_ok=87 unverifiable=9 wrong_flagged=2 ledger_bad=2 unknown=1
+rc=1
+detail: b0fd7b7f5ae6a0ad7717461c5fea8cb8a8724025 len=40 occurrences=104 class=ledger_bad
+detail: d854d98bae598388ecea1ed84396587e5edc326d len=40 occurrences=19 class=ledger_bad
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/hexrun-census.py scan --repo $S/lane --rev 21d63db28d586f1fc812138605088809b04396b4 --ledger $S/ledger-union-dedup.tsv   (d854d98b kept once)
+tokens=1772 distinct=280 lane_oid=178 md5_blob=1 upstream_ok=88 unverifiable=9 wrong_flagged=2 ledger_bad=1 unknown=1
+rc=1
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/hexrun-census.py scan --repo $S/lane --rev 21d63db28d586f1fc812138605088809b04396b4 --ledger $S/ledger-union-fixed.tsv   (dedup + fleet repo cell + advisory ec82db00 row)
+tokens=1772 distinct=280 lane_oid=178 md5_blob=1 upstream_ok=90 unverifiable=9 wrong_flagged=2 ledger_bad=0 unknown=0
+rc=0
+  (no unknown and no ledger_bad detail lines)

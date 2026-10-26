@@ -1,0 +1,408 @@
+#!/usr/bin/env python3
+"""kama-live-replay.py - re-run a kama-llamacpp-live/v4 receipt from its recorded provenance.
+
+A live receipt is evidence only while a fresh session can re-run it. This tool
+reads a v4 receipt's ``provenance`` block, downloads the llama.cpp release
+archive and the model into --work, verifies each sha256 against the receipt
+BEFORE anything is extracted or executed, extracts the archive, runs
+tools/kama-llamacpp-live.py with the receipt's alias, ctx and threads (and the
+same provenance), and compares the new receipt with the original check by
+check: every check the original evaluated must be evaluated again with the
+same ``passed`` value, and the server and model sha256 must be equal.
+
+Usage:
+  kama-live-replay.py --receipt R --work DIR --out J [--live TOOL] [--timeout S]
+  kama-live-replay.py --selftest [--scratch DIR]
+Writes J: {"schema": "kama-live-replay/v1", "receipt", "work", "rerun_receipt",
+"match", "refused", "mismatches": [...], "inputs": {...}}.
+Exit: 0 the rerun matches; 1 it ran and differs; 2 refused (missing or wrong
+provenance, digest mismatch, unsafe archive member) or could not run.
+Network: https only, for the two recorded URLs. Writes only under --work and J.
+Deps: python3 stdlib.
+"""
+from __future__ import annotations
+
+import argparse
+import gzip
+import hashlib
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tarfile
+import tempfile
+import urllib.request
+
+SCHEMA = "kama-live-replay/v1"
+LIVE_SCHEMA = "kama-llamacpp-live/v4"
+HERE = os.path.dirname(os.path.abspath(__file__))
+DEFAULT_LIVE = os.path.join(HERE, "kama-llamacpp-live.py")
+HEX64 = re.compile(r"[0-9a-f]{64}")
+CHUNK = 1 << 20
+
+# Real-tool selftest inputs: a local llama.cpp install (the release the live
+# receipts were taken against) and the pinned stories260K GGUF. The case is
+# not-evaluated, never passed and never failed, when one of them is absent.
+REAL_MODEL_SHA = "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+# Every v4 check whose verdict is deterministic for a fixed server and model.
+# loading_envelope_graded is deliberately absent: a fast model can legitimately
+# leave the 503 window unobserved, which the live tool records as not-evaluated.
+REAL_REQUIRED_CHECKS = ("health_ready", "models_alias_id", "models_owned_by_llamacpp",
+                        "metrics_not_enabled", "props_alias", "probe_model_ok",
+                        "probe_mismatch", "teardown_graceful", "teardown_port_closed",
+                        "model_unchanged")
+
+
+class Refused(Exception):
+    pass
+
+
+def sha256_file(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as fh:
+        for chunk in iter(lambda: fh.read(CHUNK), b""):
+            h.update(chunk)
+    return h.hexdigest()
+
+
+def fetch(url, dest, timeout=120):
+    """Download url to dest (https or file://; file:// only for the selftest)."""
+    if not (url.startswith("https://") or url.startswith("file://")):
+        raise Refused(f"url-scheme:{url}")
+    tmp = dest + ".part"
+    req = urllib.request.Request(url, headers={"User-Agent": "kama-live-replay/1"})
+    with urllib.request.urlopen(req, timeout=timeout) as r, open(tmp, "wb") as fh:
+        shutil.copyfileobj(r, fh, CHUNK)
+    os.replace(tmp, dest)
+
+
+def provenance(rec):
+    prov = rec.get("provenance") if isinstance(rec.get("provenance"), dict) else None
+    if rec.get("schema") != LIVE_SCHEMA or prov is None:
+        raise Refused(f"not-a-v4-receipt:{rec.get('schema')}")
+    srv, mdl = prov.get("server") or {}, prov.get("model") or {}
+    need = {"server.asset_url": srv.get("asset_url"), "server.asset_sha256": srv.get("asset_sha256"),
+            "server.member": srv.get("member"), "model.url": mdl.get("url"), "model.sha256": mdl.get("sha256")}
+    missing = [k for k, v in need.items() if not isinstance(v, str) or not v]
+    if missing:
+        raise Refused("provenance-missing:" + ",".join(missing))
+    for k in ("server.asset_sha256", "model.sha256"):
+        if not HEX64.fullmatch(need[k]):
+            raise Refused(f"provenance-bad-digest:{k}")
+    if need["model.sha256"] != (rec.get("model") or {}).get("sha256"):
+        raise Refused("provenance-model-digest-differs-from-receipt-model")
+    member = need["server.member"]
+    if member.startswith("/") or ".." in member.split("/"):
+        raise Refused(f"unsafe-member:{member}")
+    return need
+
+
+def acquire(url, sha, dest):
+    fetch(url, dest)
+    got = sha256_file(dest)
+    if got != sha:
+        os.unlink(dest)
+        raise Refused(f"digest-mismatch:{os.path.basename(dest)}:want={sha}:got={got}")
+    return got
+
+
+def extract(archive, into):
+    with tarfile.open(archive) as tf:
+        tf.extractall(into, filter="data")
+
+
+def evaluated(rec):
+    return {c.get("id"): c.get("passed") for c in rec.get("checks") or []
+            if isinstance(c, dict) and c.get("evaluated")}
+
+
+def compare(orig, rerun):
+    out = []
+    if rerun.get("schema") != LIVE_SCHEMA:
+        out.append(f"schema:{rerun.get('schema')}")
+    if rerun.get("outcome") != orig.get("outcome"):
+        out.append(f"outcome:{orig.get('outcome')}->{rerun.get('outcome')}")
+    for side in ("server", "model"):
+        a, b = (orig.get(side) or {}).get("sha256"), (rerun.get(side) or {}).get("sha256")
+        if a != b:
+            out.append(f"{side}.sha256:{a}->{b}")
+    eo, er = evaluated(orig), evaluated(rerun)
+    for cid, passed in sorted(eo.items(), key=lambda kv: str(kv[0])):
+        if cid not in er:
+            out.append(f"check:{cid}:not-evaluated")
+        elif er[cid] != passed:
+            out.append(f"check:{cid}:{passed}->{er[cid]}")
+    return out
+
+
+def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600):
+    res = {"schema": SCHEMA, "receipt": os.path.abspath(receipt_path), "work": os.path.abspath(work),
+           "rerun_receipt": None, "match": False, "refused": None, "mismatches": [], "inputs": {}}
+    try:
+        with open(receipt_path) as fh:
+            rec = json.load(fh)
+        if not isinstance(rec, dict):
+            raise Refused("receipt-not-an-object")
+        need = provenance(rec)
+        os.makedirs(work, exist_ok=True)
+        dl = os.path.join(work, "download")
+        os.makedirs(dl, exist_ok=True)
+        archive = os.path.join(dl, os.path.basename(need["server.asset_url"].split("?")[0]) or "server.tar.gz")
+        model = os.path.join(dl, os.path.basename(need["model.url"].split("?")[0]) or "model.gguf")
+        res["inputs"]["archive_sha256"] = acquire(need["server.asset_url"], need["server.asset_sha256"], archive)
+        res["inputs"]["model_sha256"] = acquire(need["model.url"], need["model.sha256"], model)
+        tree = os.path.join(work, "server")
+        extract(archive, tree)
+        server = os.path.join(tree, need["server.member"])
+        if not os.path.realpath(server).startswith(os.path.realpath(tree) + os.sep) or not os.path.isfile(server):
+            raise Refused(f"member-absent:{need['server.member']}")
+        res["inputs"].update({"archive": archive, "model": model, "server": server})
+        rerun = os.path.join(work, "rerun-receipt.json")
+        env = dict(os.environ, TMPDIR=os.path.join(work, "tmp"))
+        os.makedirs(env["TMPDIR"], exist_ok=True)
+        argv = [sys.executable, live, "--server", server, "--model", model, "--model-sha256", need["model.sha256"],
+                "--alias", str(rec.get("alias") or "kama-live-replay"), "--ctx", str(rec.get("ctx") or 256),
+                "--threads", str(rec.get("threads") or 1), "--server-asset-url", need["server.asset_url"],
+                "--server-asset-sha256", need["server.asset_sha256"], "--server-member", need["server.member"],
+                "--model-url", need["model.url"], "--out", rerun]
+        p = subprocess.run(argv, capture_output=True, text=True, env=env, timeout=timeout)
+        res["live_exit"] = p.returncode
+        if not os.path.isfile(rerun):
+            raise Refused(f"no-rerun-receipt:exit={p.returncode}:{p.stderr[-300:]}")
+        res["rerun_receipt"] = rerun
+        with open(rerun) as fh:
+            res["mismatches"] = compare(rec, json.load(fh))
+        res["match"] = not res["mismatches"]
+        return res, (0 if res["match"] else 1)
+    except Refused as exc:
+        res["refused"] = str(exc)
+        return res, 2
+    except (OSError, ValueError, tarfile.TarError, subprocess.TimeoutExpired, urllib.error.URLError) as exc:
+        res["refused"] = f"could-not-run:{type(exc).__name__}:{exc}"
+        return res, 2
+
+
+def _real_live_case(root):
+    """End-to-end case on the REAL tools: build a tar.gz from a local llama.cpp
+    install, then drive the actual tools/kama-llamacpp-live.py through replay()
+    over file:// URLs and check what the rerun proves - outcome, the recorded
+    checks, the teardown proof (log_path null, SIGTERM-only, port closed), the
+    provenance the live tool echoed, and that both inputs were RE-acquired
+    under --work instead of reusing the install they were built from.
+
+    Inputs (env overrides first, then the lane's defaults): the live tool
+    KLR_SELFTEST_LIVE default DEFAULT_LIVE, the install directory
+    KLR_SELFTEST_SERVER default ~/.local/opt/llama-b11909, the GGUF
+    KLR_SELFTEST_MODEL default ~/.cache/kama-shokunin/models/stories260K.gguf.
+
+    Returns (True, note) on pass, (False, note) on a real difference, and
+    (None, note) when an input is absent or the model is not the pinned
+    digest: not-evaluated, never a pass.
+    """
+    live = os.path.abspath(os.environ.get("KLR_SELFTEST_LIVE") or DEFAULT_LIVE)
+    srv_dir = os.path.abspath((os.environ.get("KLR_SELFTEST_SERVER")
+                               or os.path.expanduser(os.path.join("~", ".local", "opt",
+                                                                  "llama-b11909"))).rstrip(os.sep))
+    model = os.path.abspath(os.environ.get("KLR_SELFTEST_MODEL") or os.path.expanduser(
+        os.path.join("~", ".cache", "kama-shokunin", "models", "stories260K.gguf")))
+    server = os.path.join(srv_dir, "llama-server")
+    probe = os.path.join(os.path.dirname(live), "kama-probe.sh")
+    absent = [f"{name}-absent:{path}" for name, path in
+              (("live", live), ("probe", probe), ("server", server), ("model", model))
+              if not os.path.isfile(path)]
+    if absent:
+        return None, " ".join(absent)
+    mdl_sha = sha256_file(model)
+    if mdl_sha != REAL_MODEL_SHA:
+        return None, f"model-digest-differs:{mdl_sha}:want={REAL_MODEL_SHA}"
+    live_sha = sha256_file(live)
+    d = tempfile.mkdtemp(prefix="klr-real-", dir=root)
+    try:
+        base = os.path.basename(srv_dir)
+        member = f"{base}/llama-server"
+        arc = os.path.join(d, base + ".tar.gz")
+        # gzip mtime pins the archive bytes: a fixed install yields a fixed
+        # digest, so the case's note is reproducible across runs.
+        with open(arc, "wb") as raw, gzip.GzipFile(
+                filename="", mode="wb", fileobj=raw, compresslevel=1,
+                mtime=0) as gz, tarfile.open(fileobj=gz, mode="w") as tf:
+            tf.add(srv_dir, arcname=base)
+        asha, ssha = sha256_file(arc), sha256_file(server)
+        rec = {"schema": LIVE_SCHEMA, "outcome": "pass", "alias": "klr-real", "ctx": 256, "threads": 1,
+               "server": {"sha256": ssha}, "model": {"sha256": REAL_MODEL_SHA},
+               "checks": [{"id": "health_ready", "passed": True, "evaluated": True}],
+               "provenance": {"server": {"asset_url": "file://" + arc, "asset_sha256": asha,
+                                         "member": member},
+                              "model": {"url": "file://" + model, "sha256": REAL_MODEL_SHA}}}
+        rpath = os.path.join(d, "receipt.json")
+        with open(rpath, "w") as fh:
+            json.dump(rec, fh)
+        work = os.path.join(d, "work")
+        res, code = replay(rpath, work, live=live, timeout=900)
+        probs = []
+        if code != 0:
+            probs.append(f"exit={code} refused={res.get('refused')} "
+                         f"mismatches={res.get('mismatches')}")
+        if res.get("live_exit") != 0:
+            probs.append(f"live exit={res.get('live_exit')}")
+        if res.get("match") is not True:
+            probs.append(f"match={res.get('match')}")
+        if (res.get("inputs") or {}).get("archive_sha256") != asha:
+            probs.append("archive sha256 not the one verified")
+        if (res.get("inputs") or {}).get("model_sha256") != REAL_MODEL_SHA:
+            probs.append("model sha256 not the pinned one")
+        rr, ev = None, {}
+        if res.get("rerun_receipt"):
+            try:
+                with open(res["rerun_receipt"]) as fh:
+                    rr = json.load(fh)
+            except (OSError, ValueError):
+                rr = None
+        if not isinstance(rr, dict):
+            probs.append("rerun receipt absent or unreadable")
+        else:
+            if rr.get("schema") != LIVE_SCHEMA or rr.get("outcome") != "pass":
+                probs.append(f"rerun {rr.get('schema')}/{rr.get('outcome')}")
+            if (rr.get("server") or {}).get("sha256") != ssha:
+                probs.append("rerun server.sha256 differs")
+            if (rr.get("model") or {}).get("sha256") != REAL_MODEL_SHA:
+                probs.append("rerun model.sha256 differs")
+            wroot = os.path.realpath(work)
+            srv_real = os.path.realpath((rr.get("server") or {}).get("realpath") or "")
+            if srv_real != os.path.realpath(os.path.join(work, "server", member)):
+                probs.append(f"rerun server is not the extracted copy: {srv_real}")
+            mdl_real = os.path.realpath((rr.get("model") or {}).get("path") or "")
+            if not mdl_real.startswith(wroot + os.sep):
+                probs.append(f"rerun model not re-acquired under --work: {mdl_real}")
+            td = rr.get("teardown") or {}
+            if td.get("log_path") is not None:
+                probs.append(f"teardown.log_path={td.get('log_path')!r} (v4 requires null)")
+            if not (td.get("sigterm_sent") is True and td.get("sigkill_sent") is False
+                    and td.get("alive_at_teardown_start") is True
+                    and td.get("returncode") == 0 and td.get("port_refuses") is True):
+                probs.append("teardown not proven: " + json.dumps(
+                    {k: td.get(k) for k in ("sigterm_sent", "sigkill_sent",
+                                            "alive_at_teardown_start", "returncode",
+                                            "port_refuses", "error")}, sort_keys=True))
+            ev = evaluated(rr)
+            for cid in REAL_REQUIRED_CHECKS:
+                if ev.get(cid) is not True:
+                    probs.append(f"check {cid}={ev.get(cid)!r}")
+            if (rr.get("provenance") or {}) != rec["provenance"]:
+                probs.append("provenance echo differs: "
+                             + json.dumps(rr.get("provenance"), sort_keys=True)[:300])
+        if probs:
+            return False, "; ".join(probs)[:600]
+        return True, (f"live={live} live-sha256={live_sha[:12]} member={member} "
+                      f"archive-sha256={asha[:12]} checks={len(ev)} teardown=rc0/port-refuses/term-only "
+                      "provenance-echo=ok (--work was a fresh re-extraction)")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+
+
+def _selftest(root):
+    """Offline cases: provenance validation, digest refusal before extraction, unsafe member,
+    a fake live tool driven end to end over file:// URLs, and the real
+    kama-llamacpp-live.py end to end over a file:// archive built from a local
+    llama.cpp install (not-evaluated when that install or the pinned GGUF is
+    absent)."""
+    cases = []
+    d = tempfile.mkdtemp(prefix="klr-st-", dir=root)
+    try:
+        # fake archive with a member, fake model
+        srcdir = os.path.join(d, "src", "build", "bin")
+        os.makedirs(srcdir)
+        with open(os.path.join(srcdir, "llama-server"), "w") as fh:
+            fh.write("#!/bin/sh\nexit 0\n")
+        arc = os.path.join(d, "srv.tar.gz")
+        with tarfile.open(arc, "w:gz") as tf:
+            tf.add(os.path.join(d, "src", "build"), arcname="build")
+        mdl = os.path.join(d, "m.gguf")
+        with open(mdl, "wb") as fh:
+            fh.write(os.urandom(64))
+        asha, msha = sha256_file(arc), sha256_file(mdl)
+        fake_live = os.path.join(d, "fake-live.py")
+        with open(fake_live, "w") as fh:
+            fh.write("import json,sys,hashlib\n"
+                     "a=sys.argv;o=a[a.index('--out')+1];s=a[a.index('--server')+1];m=a[a.index('--model')+1]\n"
+                     "h=lambda p:hashlib.sha256(open(p,'rb').read()).hexdigest()\n"
+                     "json.dump({'schema':'kama-llamacpp-live/v4','outcome':'pass','server':{'sha256':h(s)},"
+                     "'model':{'sha256':h(m)},'checks':[{'id':'health_ready','passed':True,'evaluated':True}]},open(o,'w'))\n")
+        ssha = sha256_file(os.path.join(srcdir, "llama-server"))
+
+        def receipt(**over):
+            r = {"schema": LIVE_SCHEMA, "outcome": "pass", "alias": "a", "ctx": 256, "threads": 1,
+                 "server": {"sha256": ssha}, "model": {"sha256": msha},
+                 "checks": [{"id": "health_ready", "passed": True, "evaluated": True}],
+                 "provenance": {"server": {"asset_url": "file://" + arc, "asset_sha256": asha,
+                                           "member": "build/bin/llama-server"},
+                                "model": {"url": "file://" + mdl, "sha256": msha}}}
+            for path, v in over.items():
+                node = r
+                keys = path.split(".")
+                for k in keys[:-1]:
+                    node = node[k]
+                node[keys[-1]] = v
+            p = os.path.join(d, f"r-{len(cases)}.json")
+            with open(p, "w") as fh:
+                json.dump(r, fh)
+            return p
+
+        def run(name, rp, want_exit, want_refused=None, live=fake_live):
+            res, code = replay(rp, os.path.join(d, f"w-{len(cases)}"), live=live)
+            ok = code == want_exit and (want_refused is None or (res["refused"] or "").startswith(want_refused))
+            cases.append((name, ok, f"exit={code} refused={res['refused']} mism={res['mismatches']}"))
+
+        run("match", receipt(), 0)
+        run("check-differs", receipt(**{"checks": [{"id": "health_ready", "passed": False, "evaluated": True}]}), 1)
+        run("model-digest-wrong", receipt(**{"provenance.model.sha256": "0" * 64, "model.sha256": "0" * 64}), 2,
+            "digest-mismatch:m.gguf")
+        run("asset-digest-wrong", receipt(**{"provenance.server.asset_sha256": "1" * 64}), 2, "digest-mismatch:srv")
+        run("model-digest-differs-from-receipt", receipt(**{"provenance.model.sha256": "2" * 64}), 2,
+            "provenance-model-digest-differs")
+        run("v3-receipt", receipt(**{"schema": "kama-llamacpp-live/v3"}), 2, "not-a-v4-receipt")
+        run("missing-url", receipt(**{"provenance.model.url": None}), 2, "provenance-missing")
+        run("unsafe-member", receipt(**{"provenance.server.member": "../x"}), 2, "unsafe-member")
+        run("absent-member", receipt(**{"provenance.server.member": "build/bin/nope"}), 2, "member-absent")
+        run("http-refused", receipt(**{"provenance.model.url": "http://example.invalid/m"}), 2, "url-scheme")
+    finally:
+        shutil.rmtree(d, ignore_errors=True)
+    try:
+        ok, why = _real_live_case(root)
+    except BaseException as exc:
+        ok, why = False, f"{type(exc).__name__}: {exc}"
+    cases.append(("real-live-e2e", ok, why))
+    for name, ok, why in cases:
+        tag = "pass" if ok else ("not-evaluated" if ok is None else "FAIL")
+        print(f"{tag} {name}: {why[:400]}")
+    fails = sum(1 for _, ok, _ in cases if ok is False)
+    skips = sum(1 for _, ok, _ in cases if ok is None)
+    print(f"KLR_SELFTEST pass={len(cases) - fails - skips} fail={fails} not-evaluated={skips}")
+    return 0 if fails == 0 else 1
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--receipt")
+    ap.add_argument("--work")
+    ap.add_argument("--out")
+    ap.add_argument("--live", default=DEFAULT_LIVE, help="kama-llamacpp-live.py path")
+    ap.add_argument("--timeout", type=float, default=600.0)
+    ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--scratch", help="selftest root (default TMPDIR)")
+    a = ap.parse_args(argv)
+    if a.selftest:
+        return _selftest(a.scratch or tempfile.gettempdir())
+    if not (a.receipt and a.work and a.out):
+        ap.error("--receipt, --work and --out are required")
+    res, code = replay(a.receipt, a.work, a.live, a.timeout)
+    with open(a.out, "w") as fh:
+        json.dump(res, fh, indent=1)
+    print(f"replay match={res['match']} refused={res['refused']} mismatches={len(res['mismatches'])} exit={code}")
+    return code
+
+
+if __name__ == "__main__":
+    sys.exit(main())

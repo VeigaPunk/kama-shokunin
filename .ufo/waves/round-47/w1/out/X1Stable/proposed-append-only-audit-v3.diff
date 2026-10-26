@@ -1,0 +1,107 @@
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -33,6 +33,11 @@
+                commit attaining it (null when 0); restored_by the first window commit
+                with held == |D| (null when none)
+   status       restored (max == |D|), unrestored (max == 0), partial otherwise
++  held_at_tip  held(<to>): the same measure at the audited tip, so a restored event
++               whose lines were deleted again below the threshold is visible
++  tip_status   held (held_at_tip == |D|), lost (0), partial otherwise
++  regressed    an event with status restored whose tip_status is not held: the window
++               maximum was attained, the tip no longer holds every deleted line
+ 
+ Usage:
+   append-only-audit.py --repo DIR [--to REV] [--contract FILE | --files a,b,...]
+@@ -216,29 +221,35 @@
+                     by = x
+                     break
+             status = "restored" if best == len(dl) else ("unrestored" if best == 0 else "partial")
++            M_tip = r.lines(wb[f"{to_full}:{f}"])
++            held_tip = sum(min(n, max(0, M_tip[l] - K[l])) for l, n in D.items())
++            tip_status = "held" if held_tip == len(dl) else ("lost" if held_tip == 0 else "partial")
+             events.append({"commit": c, "file": f, "deleted": len(dl), "restored_max": best,
+-                           "restored_best": best_c, "restored_by": by, "status": status})
++                           "restored_best": best_c, "restored_by": by, "status": status,
++                           "held_at_tip": held_tip, "tip_status": tip_status})
+     summary = {"commits": len(commits), "files": len(files), "events": len(events),
+                "restored": sum(e["status"] == "restored" for e in events),
+                "partial": sum(e["status"] == "partial" for e in events),
+-               "unrestored": sum(e["status"] == "unrestored" for e in events)}
++               "unrestored": sum(e["status"] == "unrestored" for e in events),
++               "regressed": sum(e["status"] == "restored" and e["tip_status"] != "held" for e in events)}
+     return {"schema": SCHEMA, "to": to_full, "threshold": threshold, "contract": label, "files": files,
+             "commits": len(commits), "events": events, "summary": summary}
+ 
+ 
+ def render(res):
+     out = [f"event {e['commit'][:12]} {e['file']} deleted={e['deleted']} restored_max={e['restored_max']} "
+-           f"status={e['status']} restored_best={(e['restored_best'] or '-')[:12]} "
++           f"status={e['status']} held_at_tip={e['held_at_tip']} tip_status={e['tip_status']} "
++           f"restored_best={(e['restored_best'] or '-')[:12]} "
+            f"restored_by={(e['restored_by'] or '-')[:12]}" for e in res["events"]]
+     s = res["summary"]
+     out.append(f"summary commits={s['commits']} files={s['files']} events={s['events']} restored={s['restored']} "
+-               f"partial={s['partial']} unrestored={s['unrestored']}")
++               f"partial={s['partial']} unrestored={s['unrestored']} regressed={s['regressed']}")
+     return "\n".join(out)
+ 
+ 
+ def exit_code(res):
+     s = res["summary"]
+-    return 1 if s["partial"] or s["unrestored"] else 0
++    return 1 if s["partial"] or s["unrestored"] or s["regressed"] else 0
+ 
+ 
+ # ---------------------------------------------------------------- selftest
+@@ -400,7 +411,8 @@
+         return len(e) == 1 and e[0]["restored_max"] == 21 and e[0]["status"] == "partial", str(e)
+ 
+     def t_window_max():
+-        # restored fully, then re-trimmed below threshold: the window maximum keeps it restored
++        # restored fully, then re-trimmed below threshold: restored_max keeps the event,
++        # held_at_tip and the exit code expose the later loss (v2 asserted exit 0 here)
+         f = Fixture(root)
+         a = lines("a", 40)
+         f.commit({"SCORECARD.md": a})
+@@ -410,7 +422,30 @@
+         res = audit(f.d, t, files=F)
+         e = res["events"]
+         return (len(e) == 1 and e[0]["restored_max"] == 25 and e[0]["restored_by"] == r
+-                and e[0]["status"] == "restored" and exit_code(res) == 0), str(e)
++                and e[0]["status"] == "restored" and e[0]["held_at_tip"] == 20
++                and e[0]["tip_status"] == "partial" and res["summary"]["regressed"] == 1
++                and exit_code(res) == 1), str(e)
++
++    def t_laundered():
++        # the whole restored block deleted again in three sub-threshold commits: the
++        # window maximum still says restored, held_at_tip == 0 and the audit exits 1
++        f = Fixture(root)
++        a = lines("a", 100)
++        f.commit({"SCORECARD.md": a})
++        f.commit({"SCORECARD.md": a[57:]})           # 57 deleted (event)
++        r = f.commit({"SCORECARD.md": a})            # all 57 restored
++        state = list(a)
++        for k in range(3):
++            drop = set(a[19 * k:19 * k + 19])        # 19 lines each, below threshold
++            state = [x for x in state if x not in drop]
++            f.commit({"SCORECARD.md": state})
++        t = _text(f.d, "rev-parse", "HEAD").strip()
++        res = audit(f.d, t, files=F)
++        e = res["events"]
++        return (len(e) == 1 and e[0]["restored_max"] == 57 and e[0]["restored_by"] == r
++                and e[0]["status"] == "restored" and e[0]["held_at_tip"] == 0
++                and e[0]["tip_status"] == "lost" and res["summary"]["regressed"] == 1
++                and exit_code(res) == 1), str(e)
+ 
+     def t_relocation():
+         # a block moved inside one commit is held in that commit
+@@ -452,7 +487,8 @@
+                      ("partial", t_partial), ("undeclared-file", t_undeclared),
+                      ("declared-file-removed", t_file_removed), ("merge-first-parent", t_merge_first_parent),
+                      ("dashdash-lines", t_dashdash), ("crlf-and-eof", t_crlf_and_eof), ("multiset", t_multiset),
+-                     ("window-max", t_window_max), ("relocation", t_relocation), ("contract", t_contract),
++                     ("window-max", t_window_max), ("laundered", t_laundered),
++                     ("relocation", t_relocation), ("contract", t_contract),
+                      ("threshold-flag", t_threshold_flag)]:
+         case(name, fn)
+     for name, ok, why in cases:

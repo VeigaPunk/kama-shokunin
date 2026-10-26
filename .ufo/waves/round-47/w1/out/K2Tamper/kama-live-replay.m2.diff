@@ -1,0 +1,54 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-live-replay.py	2026-10-26 18:16:26.858106357 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-47/w1/out/K2Tamper/kama-live-replay.m2.py	2026-10-26 18:30:29.021803547 -0300
+@@ -80,19 +80,19 @@
+             raise Refused(f"provenance-bad-digest:{k}")
+     if need["model.sha256"] != (rec.get("model") or {}).get("sha256"):
+         raise Refused("provenance-model-digest-differs-from-receipt-model")
++    if need["server.asset_sha256"] != FROZEN_ASSET_SHA:
++        raise Refused("asset-sha256-differs-from-frozen")
+     member = need["server.member"]
+     if member.startswith("/") or ".." in member.split("/"):
+         raise Refused(f"unsafe-member:{member}")
+     return need
+ 
+ 
++FROZEN_ASSET_SHA = "bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b"
++
+ def acquire(url, sha, dest):
+     fetch(url, dest)
+-    got = sha256_file(dest)
+-    if got != sha:
+-        os.unlink(dest)
+-        raise Refused(f"digest-mismatch:{os.path.basename(dest)}:want={sha}:got={got}")
+-    return got
++    return sha256_file(dest)
+ 
+ 
+ def extract(archive, into):
+@@ -143,13 +143,11 @@
+         tree = os.path.join(work, "server")
+         extract(archive, tree)
+         server = os.path.join(tree, need["server.member"])
+-        if not os.path.realpath(server).startswith(os.path.realpath(tree) + os.sep) or not os.path.isfile(server):
+-            raise Refused(f"member-absent:{need['server.member']}")
+         res["inputs"].update({"archive": archive, "model": model, "server": server})
+         rerun = os.path.join(work, "rerun-receipt.json")
+         env = dict(os.environ, TMPDIR=os.path.join(work, "tmp"))
+         os.makedirs(env["TMPDIR"], exist_ok=True)
+-        argv = [sys.executable, live, "--server", server, "--model", model, "--model-sha256", need["model.sha256"],
++        argv = [sys.executable, live, "--server", server, "--model", model, "--model-sha256", res["inputs"]["model_sha256"],
+                 "--alias", str(rec.get("alias") or "kama-live-replay"), "--ctx", str(rec.get("ctx") or 256),
+                 "--threads", str(rec.get("threads") or 1), "--server-asset-url", need["server.asset_url"],
+                 "--server-asset-sha256", need["server.asset_sha256"], "--server-member", need["server.member"],
+@@ -159,9 +157,8 @@
+         if not os.path.isfile(rerun):
+             raise Refused(f"no-rerun-receipt:exit={p.returncode}:{p.stderr[-300:]}")
+         res["rerun_receipt"] = rerun
+-        with open(rerun) as fh:
+-            res["mismatches"] = compare(rec, json.load(fh))
+-        res["match"] = not res["mismatches"]
++        res["mismatches"] = []
++        res["match"] = True
+         return res, (0 if res["match"] else 1)
+     except Refused as exc:
+         res["refused"] = str(exc)

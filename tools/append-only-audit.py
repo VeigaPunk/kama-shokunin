@@ -33,6 +33,18 @@ on its own code path):
                commit attaining it (null when 0); restored_by the first window commit
                with held == |D| (null when none)
   status       restored (max == |D|), unrestored (max == 0), partial otherwise
+Reported beside the events (round-47 wave findings; not part of the frozen counter's
+definition, which the events and files above follow exactly):
+  vanished            contract-matching paths some commit up to <to> held that <to> does
+                      not (a declared file deleted outright is never in `files`); exit 1
+  unmatched_patterns  contract patterns matching no path at <to> (a typo or `**` misuse)
+  binary_changes      (commit, file) pairs numstat reports as binary (`-`); not counted
+  held_at_to          per event, held(<to>); `summary.regressed` counts events whose file
+                      holds fewer deleted lines at <to> than at their best window commit
+                      (the window maximum keeps a restored-then-re-deleted event `restored`;
+                      round-47 seat X1Stable). Informational: the exit code follows status.
+Paths are read NUL-delimited (`ls-tree -z`, `diff --numstat -z`), so non-ASCII, tab and
+quote bytes in a path are not C-quoted away from the contract expansion.
 
 Usage:
   append-only-audit.py --repo DIR [--to REV] [--contract FILE | --files a,b,...]
@@ -43,8 +55,8 @@ Output: text lines `event <commit12> <file> deleted=N restored_max=K status=S
 restored_best=<c12|-> restored_by=<c12|->` then `summary ...`; --json prints
 {"schema": "append-only-audit/v2", "to", "threshold", "contract", "files", "commits",
 "events": [...], "summary": {...}} with full commit ids.
-Exit: 0 no event partial or unrestored; 1 at least one; 2 could not evaluate.
-Read-only on --repo. Fixtures (selftest) live under --scratch or $TMPDIR and are removed on exit.
+Exit: 0 no event partial or unrestored and no vanished path; 1 otherwise; 2 could not
+evaluate (including a malformed or CRLF contract). Read-only on --repo. Fixtures (selftest) live under --scratch or $TMPDIR and are removed on exit.
 """
 from __future__ import annotations
 
@@ -84,7 +96,9 @@ def _text(repo, *args, inp=None):
 def parse_contract(text):
     """Return [(pattern, rule, declared_at, note)]; raise AuditError on a malformed contract."""
     lines = text.split("\n")
-    if not lines or lines[0].rstrip("\r") != HEADER:
+    if "\r" in text:
+        raise AuditError("contract contains a carriage return (CRLF contract)")
+    if not lines or lines[0] != HEADER:
         raise AuditError("contract header is not path<TAB>rule<TAB>declared_at<TAB>note")
     rows = []
     for n, line in enumerate(lines[1:], 2):
@@ -102,9 +116,28 @@ def parse_contract(text):
     return rows
 
 
+def tree_paths(repo, rev):
+    """Paths at rev, NUL-delimited so non-ASCII, tab and quote bytes are not C-quoted."""
+    raw = _git(repo, "ls-tree", "-r", "-z", "--name-only", rev)
+    return [t.decode("utf-8", "surrogateescape") for t in raw.split(b"\0") if t]
+
+
 def expand(repo, rev, patterns):
-    tree = [t for t in _text(repo, "ls-tree", "-r", "--name-only", rev).split("\n") if t]
+    tree = tree_paths(repo, rev)
     return sorted({t for t in tree if any(fnmatch.fnmatchcase(t, p) for p in patterns)})
+
+
+def unmatched(repo, rev, patterns):
+    tree = tree_paths(repo, rev)
+    return [p for p in patterns if not any(fnmatch.fnmatchcase(t, p) for t in tree)]
+
+
+def vanished(repo, rev, patterns, present):
+    """Paths matching the contract that some commit up to rev held but rev does not."""
+    raw = _git(repo, "log", "-z", "--format=", "--name-only", "--no-renames", rev)
+    seen = {t.decode("utf-8", "surrogateescape") for t in raw.split(b"\0") if t.strip(b"\n")}
+    seen = {t.strip("\n") for t in seen}
+    return sorted(t for t in seen if t not in present and any(fnmatch.fnmatchcase(t, p) for p in patterns))
 
 
 def split_lines(data):
@@ -163,12 +196,14 @@ class Repo:
 
 
 def numstat(repo, parent, commit, files):
+    """{path: deletions} for text changes; {path: None} for a binary change (numstat `-`)."""
     res = {}
-    raw = _text(repo, "diff", "--numstat", "--no-renames", parent, commit, "--", *files)
-    for line in raw.split("\n"):
-        parts = line.split("\t")
-        if len(parts) >= 3 and parts[1].isdigit():
-            res[parts[2]] = int(parts[1])
+    raw = _git(repo, "diff", "--numstat", "-z", "--no-renames", parent, commit, "--", *files)
+    for rec in raw.split(b"\0"):
+        parts = rec.split(b"\t", 2)
+        if len(parts) == 3:
+            path = parts[2].decode("utf-8", "surrogateescape")
+            res[path] = int(parts[1]) if parts[1].isdigit() else None
     return res
 
 
@@ -176,12 +211,15 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
     """files: explicit list; else contract: (label, text); else the contract at <to>."""
     r = Repo(repo_path)
     to_full = _text(repo_path, "rev-parse", "--verify", to + "^{commit}").strip()
-    label = None
+    label, gone, nomatch = None, [], []
     if files is None:
         if contract is None:
             contract = (f"{to_full}:{CONTRACT}", _text(repo_path, "show", f"{to_full}:{CONTRACT}"))
         label, text = contract
-        files = expand(repo_path, to_full, [row[0] for row in parse_contract(text)])
+        patterns = [row[0] for row in parse_contract(text)]
+        files = expand(repo_path, to_full, patterns)
+        nomatch = unmatched(repo_path, to_full, patterns)
+        gone = vanished(repo_path, to_full, patterns, set(files))
     files = sorted(set(files))
     commits, parents = [], {}
     for line in _text(repo_path, "rev-list", "--topo-order", "--reverse", "--parents", to_full).split("\n"):
@@ -189,13 +227,16 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
         if parts:
             commits.append(parts[0])
             parents[parts[0]] = parts[1] if len(parts) > 1 else None
-    events = []
+    events, binary = [], []
     for i, c in enumerate(commits):
         p = parents[c]
         if p is None or not files:
             continue
         ns = numstat(repo_path, p, c, files)
         for f in sorted(ns):
+            if ns[f] is None:
+                binary.append({"commit": c, "file": f})
+                continue
             if ns[f] < threshold:
                 continue
             dl = deleted_lines(repo_path, p, c, f)
@@ -206,24 +247,26 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
             K = r.lines(pb) - D
             window = commits[i:]
             wb = r.blobs([f"{x}:{f}" for x in window])
-            best, best_c, by = 0, None, None
+            best, best_c, by, h = 0, None, None, 0
             for x in window:
                 M = r.lines(wb[f"{x}:{f}"])
                 h = sum(min(n, max(0, M[l] - K[l])) for l, n in D.items())
                 if h > best:
                     best, best_c = h, x
-                if h == len(dl):
+                if by is None and h == len(dl):
                     by = x
-                    break
             status = "restored" if best == len(dl) else ("unrestored" if best == 0 else "partial")
             events.append({"commit": c, "file": f, "deleted": len(dl), "restored_max": best,
-                           "restored_best": best_c, "restored_by": by, "status": status})
+                           "restored_best": best_c, "restored_by": by, "status": status, "held_at_to": h})
     summary = {"commits": len(commits), "files": len(files), "events": len(events),
                "restored": sum(e["status"] == "restored" for e in events),
                "partial": sum(e["status"] == "partial" for e in events),
-               "unrestored": sum(e["status"] == "unrestored" for e in events)}
+               "unrestored": sum(e["status"] == "unrestored" for e in events),
+               "vanished": len(gone), "unmatched": len(nomatch), "binary": len(binary),
+               "regressed": sum(e["held_at_to"] < e["restored_max"] for e in events)}
     return {"schema": SCHEMA, "to": to_full, "threshold": threshold, "contract": label, "files": files,
-            "commits": len(commits), "events": events, "summary": summary}
+            "commits": len(commits), "events": events, "vanished": gone, "unmatched_patterns": nomatch,
+            "binary_changes": binary, "summary": summary}
 
 
 def render(res):
@@ -231,14 +274,19 @@ def render(res):
            f"status={e['status']} restored_best={(e['restored_best'] or '-')[:12]} "
            f"restored_by={(e['restored_by'] or '-')[:12]}" for e in res["events"]]
     s = res["summary"]
+    out += [f"vanished {v}" for v in res.get("vanished", [])]
+    out += [f"unmatched-pattern {v}" for v in res.get("unmatched_patterns", [])]
+    out += [f"binary-change {b['commit'][:12]} {b['file']}" for b in res.get("binary_changes", [])]
     out.append(f"summary commits={s['commits']} files={s['files']} events={s['events']} restored={s['restored']} "
-               f"partial={s['partial']} unrestored={s['unrestored']}")
+               f"partial={s['partial']} unrestored={s['unrestored']} vanished={s.get('vanished', 0)} "
+               f"unmatched={s.get('unmatched', 0)} binary={s.get('binary', 0)} regressed={s.get('regressed', 0)}")
     return "\n".join(out)
 
 
 def exit_code(res):
+    """1 on a partial or unrestored event, or on a declared path that vanished from the tree."""
     s = res["summary"]
-    return 1 if s["partial"] or s["unrestored"] else 0
+    return 1 if s["partial"] or s["unrestored"] or s.get("vanished") else 0
 
 
 # ---------------------------------------------------------------- selftest
@@ -447,13 +495,68 @@ def selftest(root):
         res = audit(f.d, t, threshold=5, files=F)
         return len(res["events"]) == 1 and exit_code(res) == 1, str(res["events"])
 
+    def t_crlf_restore_exact():
+        # a CRLF line restored byte-exact as CRLF counts (round-47 seat M1Tool, survivor B2)
+        f = Fixture(root)
+        plain = [f"p{i} {os.urandom(3).hex()}" for i in range(30)]
+        base = ("\n".join(plain) + "\n").encode()
+        f.commit({"LOG.md": base + b"crlf line\r\n"}, raw=True)
+        c = f.commit({"LOG.md": ("\n".join(plain[:10]) + "\n").encode()}, raw=True)
+        t = f.commit({"LOG.md": base + b"crlf line\r\n"}, raw=True)
+        res = audit(f.d, t, files=F)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["commit"] == c and e[0]["deleted"] == 21
+                and e[0]["restored_max"] == 21 and e[0]["status"] == "restored"), str(e)
+
+    def t_dup_kept_not_restored():
+        # 2 of 3 copies deleted, 1 kept: the kept copy is not a restoration (survivor K2)
+        f = Fixture(root)
+        a = lines("a", 30) + ["dup"] * 3
+        f.commit({"LOG.md": a})
+        f.commit({"LOG.md": a[:10] + ["dup"]})
+        t = f.commit({"LOG.md": a[:10] + ["dup", "unrelated"]})
+        res = audit(f.d, t, files=F)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["deleted"] == 22 and e[0]["restored_max"] == 0
+                and e[0]["status"] == "unrestored"), str(e)
+
+    def t_final_segment():
+        # only the empty split artifact after a final newline is dropped (survivor S1)
+        return (split_lines(b"x\n") == [b"x"] and split_lines(b"x") == [b"x"]
+                and split_lines(b"a\n\n") == [b"a", b""] and split_lines(b"") == []
+                and split_lines(b"a\r\n") == [b"a\r"]), ""
+
+    def t_vanished_and_paths():
+        # a declared file deleted outright is reported vanished (exit 1); a non-ASCII path
+        # is expanded; a pattern matching nothing is reported; a binary change is listed
+        f = Fixture(root)
+        a = lines("a", 25)
+        contract = [HEADER, "corpus/lessons/*.md\tA-corr\tAGENTS.md:1\tx", "nope/*.md\tA\tAGENTS.md:1\tx"]
+        f.commit({"AGENTS.md": ["append-only"], "corpus/lessons/gone.md": a, "corpus/lessons/caf\u00e9.md": a,
+                  CONTRACT: contract})
+        f.commit({"corpus/lessons/caf\u00e9.md": a + ["more"]}, delete=["corpus/lessons/gone.md"])
+        t = f.commit({"corpus/lessons/bin.md": b"\x00\x01" * 40}, raw=True)
+        t = f.commit({"corpus/lessons/bin.md": b"\x00\x02" * 41}, raw=True)
+        res = audit(f.d, t)
+        ok = (res["files"] == ["corpus/lessons/bin.md", "corpus/lessons/caf\u00e9.md"]
+              and res["vanished"] == ["corpus/lessons/gone.md"] and res["unmatched_patterns"] == ["nope/*.md"]
+              and len(res["binary_changes"]) == 2 and exit_code(res) == 1)
+        try:
+            parse_contract(HEADER + "\r\nLOG.md\tA\tAGENTS.md:1\tx\r\n")
+            ok = False
+        except AuditError:
+            pass
+        return ok, json.dumps({k: res[k] for k in ("files", "vanished", "unmatched_patterns", "binary_changes")})
+
     for name, fn in [("no-deletion", t_none), ("below-threshold", t_below),
                      ("exact-threshold-unrestored", t_exact_unrestored), ("restored-later", t_restored),
                      ("partial", t_partial), ("undeclared-file", t_undeclared),
                      ("declared-file-removed", t_file_removed), ("merge-first-parent", t_merge_first_parent),
                      ("dashdash-lines", t_dashdash), ("crlf-and-eof", t_crlf_and_eof), ("multiset", t_multiset),
                      ("window-max", t_window_max), ("relocation", t_relocation), ("contract", t_contract),
-                     ("threshold-flag", t_threshold_flag)]:
+                     ("threshold-flag", t_threshold_flag), ("crlf-restore-exact", t_crlf_restore_exact),
+                     ("dup-kept-not-restored", t_dup_kept_not_restored), ("final-segment", t_final_segment),
+                     ("vanished-and-paths", t_vanished_and_paths)]:
         case(name, fn)
     for name, ok, why in cases:
         print(f"{'pass' if ok else 'FAIL'} {name}" + ("" if ok else f": {why[:300]}"))
@@ -468,19 +571,24 @@ def main(argv=None):
     ap.add_argument("--to", default="HEAD")
     ap.add_argument("--threshold", type=int, default=20)
     ap.add_argument("--contract", help=f"contract TSV (default: <to>:{CONTRACT})")
-    ap.add_argument("--files", help="comma list of repo-relative paths (overrides the contract)")
+    ap.add_argument("--files", help="comma list of repo-relative paths (instead of a contract)")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--selftest", action="store_true")
     ap.add_argument("--scratch", help="fixture root for --selftest (default $TMPDIR)")
     a = ap.parse_args(argv)
     if a.selftest:
-        root = tempfile.mkdtemp(prefix="aoa-", dir=a.scratch or tempfile.gettempdir())
+        base = a.scratch or tempfile.gettempdir()
+        os.makedirs(base, exist_ok=True)
+        root = tempfile.mkdtemp(prefix="aoa-", dir=base)
         try:
             return selftest(root)
         finally:
             shutil.rmtree(root, ignore_errors=True)
     if a.threshold < 1:
         print("could-not-evaluate: --threshold must be >= 1", file=sys.stderr)
+        return 2
+    if a.files and a.contract:
+        print("could-not-evaluate: --files and --contract are exclusive", file=sys.stderr)
         return 2
     files = [x.strip() for x in a.files.split(",") if x.strip()] if a.files else None
     try:

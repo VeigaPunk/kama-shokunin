@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent validator for kama-llamacpp-live/v1, /v2 and /v3 receipts.
+"""Independent validator for kama-llamacpp-live/v1, /v2, /v3 and /v4 receipts.
 
 Bound to the exact receipt keys emitted by ``tools/kama-llamacpp-live.py``.
 The gate re-derives checks from stored response, probe, and teardown
@@ -18,7 +18,11 @@ body), models_alias_id, models_owned_by_llamacpp, metrics_not_enabled,
 props_alias, probe_model_ok, probe_mismatch, teardown_graceful,
 teardown_port_closed (only after child ownership), loading_envelope_graded,
 model_unchanged. In v3 only loading_envelope_graded may be unevaluated,
-and only when no /v1/models 503 was observed.
+and only when no /v1/models 503 was observed. v4 (round 47) is v3 plus a
+``provenance`` block (server archive URL, archive sha256 and member; model
+URL and sha256 equal to ``model.sha256``; each a string, digests 64-hex) and
+``teardown.log_path`` null (the temp log is always deleted; its kept lines are
+inlined); every v3 rule applies to v4.
 
 Usage:
   check-receipt.py RECEIPT [--expect-model-sha256 HEX]
@@ -27,7 +31,7 @@ Usage:
                            [--expect-install-tree-sha256 HEX]
                            [--expect-probe-sha256 HEX]
                            [--expect-tool-sha256 HEX]
-                           [--require-schema v1|v2|v3]
+                           [--require-schema v1|v2|v3|v4]
   check-receipt.py --selftest
 
 Exit: 0 VALID, 1 INVALID, 2 unreadable / not JSON,
@@ -47,6 +51,7 @@ import tempfile
 RECEIPT_SCHEMA = "kama-llamacpp-live/v1"
 RECEIPT_SCHEMA_V2 = "kama-llamacpp-live/v2"
 RECEIPT_SCHEMA_V3 = "kama-llamacpp-live/v3"
+RECEIPT_SCHEMA_V4 = "kama-llamacpp-live/v4"
 PROBE_SCHEMA = "kama-probe/v1"
 HARD_PINS = (8080, 34113)
 MISMATCH_EXPECT = "kama-not-this-model"
@@ -298,12 +303,49 @@ def validate(receipt, expect_model=None, expect_server=None,
 
     # --- schema / run outcome ---------------------------------------------
     schema = receipt.get("schema")
-    is_v3 = schema == RECEIPT_SCHEMA_V3
-    is_v2 = schema in (RECEIPT_SCHEMA_V2, RECEIPT_SCHEMA_V3)
+    is_v4 = schema == RECEIPT_SCHEMA_V4
+    is_v3 = schema in (RECEIPT_SCHEMA_V3, RECEIPT_SCHEMA_V4)
+    is_v2 = schema in (RECEIPT_SCHEMA_V2, RECEIPT_SCHEMA_V3,
+                       RECEIPT_SCHEMA_V4)
     if schema not in (RECEIPT_SCHEMA, RECEIPT_SCHEMA_V2,
-                      RECEIPT_SCHEMA_V3):
+                      RECEIPT_SCHEMA_V3, RECEIPT_SCHEMA_V4):
         bad(f"schema is {schema!r}, want {RECEIPT_SCHEMA!r}, "
-            f"{RECEIPT_SCHEMA_V2!r} or {RECEIPT_SCHEMA_V3!r}")
+            f"{RECEIPT_SCHEMA_V2!r}, {RECEIPT_SCHEMA_V3!r} or "
+            f"{RECEIPT_SCHEMA_V4!r}")
+    if is_v4:
+        prov = receipt.get("provenance")
+        if not isinstance(prov, dict):
+            bad("v4 provenance is not an object")
+            prov = {}
+        srv = prov.get("server") if isinstance(prov.get("server"), dict) \
+            else None
+        mdl = prov.get("model") if isinstance(prov.get("model"), dict) \
+            else None
+        if srv is None or mdl is None:
+            bad("v4 provenance lacks a server or model object")
+        else:
+            for where, node, keys in (
+                    ("provenance.server", srv,
+                     ("asset_url", "asset_sha256", "member")),
+                    ("provenance.model", mdl, ("url", "sha256"))):
+                for k in keys:
+                    v = node.get(k, "missing")
+                    if v == "missing":
+                        bad(f"{where}.{k} key missing")
+                    elif v is not None and not isinstance(v, str):
+                        bad(f"{where}.{k} {v!r} is not string|null")
+            for where, v in (("provenance.server.asset_sha256",
+                              srv.get("asset_sha256")),
+                             ("provenance.model.sha256", mdl.get("sha256"))):
+                if v is not None and not is_hex64(v):
+                    bad(f"{where} {v!r} is not 64 lower-case hex")
+            msha = dig(receipt, "model", "sha256")
+            if mdl.get("sha256") is not None and mdl.get("sha256") != msha:
+                bad(f"provenance.model.sha256 {mdl.get('sha256')!r} != "
+                    f"model.sha256 {msha!r}")
+        td = receipt.get("teardown")
+        if isinstance(td, dict) and td.get("log_path") is not None:
+            bad(f"v4 teardown.log_path {td.get('log_path')!r} is not null")
     setup_error = receipt.get("setup_error")
     if setup_error is not None:
         bad(f"setup_error is {setup_error!r} "
@@ -1862,6 +1904,19 @@ def _selftest_receipt_v3():
             })
     return r
 
+def _selftest_receipt_v4(base_v3):
+    r = copy.deepcopy(base_v3)
+    r["schema"] = RECEIPT_SCHEMA_V4
+    r["provenance"] = {
+        "server": {"asset_url": "https://example.invalid/llama.tar.gz",
+                   "asset_sha256": "a" * 64, "member": "llama/llama-server"},
+        "model": {"url": "https://example.invalid/m.gguf",
+                  "sha256": r["model"]["sha256"]},
+    }
+    r["teardown"]["log_path"] = None
+    return r
+
+
 def _selftest():
     base = _selftest_receipt()
     expects = ["--expect-model-sha256", MODEL_SHA,
@@ -2147,6 +2202,23 @@ def _selftest():
         ("v3-require-schema-v3", base_v3, expects
          + ["--require-schema", "v3"], 0),
     ])
+    base_v4 = _selftest_receipt_v4(base_v3)
+    bad_prov = copy.deepcopy(base_v4)
+    bad_prov["provenance"]["model"]["sha256"] = "0" * 64
+    bad_log = copy.deepcopy(base_v4)
+    bad_log["teardown"]["log_path"] = "/fast/scratch/x.log"
+    no_prov = copy.deepcopy(base_v4)
+    del no_prov["provenance"]
+    cases.extend([
+        ("v4-valid", base_v4, expects, 0),
+        ("v4-require-schema-v4", base_v4, expects
+         + ["--require-schema", "v4"], 0),
+        ("v3-require-schema-v4-rejects-v3", base_v3, expects
+         + ["--require-schema", "v4"], 1),
+        ("v4-provenance-model-digest-differs", bad_prov, expects, 1),
+        ("v4-log-path-not-null", bad_log, expects, 1),
+        ("v4-provenance-missing", no_prov, expects, 1),
+    ])
 
     def mut3(name, fn, receipt=None, extra=None, want=1):
         r = copy.deepcopy(base_v3 if receipt is None else receipt)
@@ -2360,7 +2432,7 @@ def main(argv=None):
                     help="require the recorded probe sha256")
     ap.add_argument("--expect-tool-sha256", metavar="HEX",
                     help="require the recorded harness-tool sha256")
-    ap.add_argument("--require-schema", choices=("v1", "v2", "v3"),
+    ap.add_argument("--require-schema", choices=("v1", "v2", "v3", "v4"),
                     help="reject receipts below this schema version")
 
     ap.add_argument("--selftest", action="store_true",
@@ -2390,12 +2462,13 @@ def main(argv=None):
                         expect_probe=args.expect_probe_sha256,
                         expect_tool=args.expect_tool_sha256)
     if args.require_schema and isinstance(receipt, dict):
-        minimum = {"v1": 1, "v2": 2, "v3": 3}[args.require_schema]
+        minimum = {"v1": 1, "v2": 2, "v3": 3, "v4": 4}[args.require_schema]
         declared = receipt.get("schema")
         version = {
             RECEIPT_SCHEMA: 1,
             RECEIPT_SCHEMA_V2: 2,
             RECEIPT_SCHEMA_V3: 3,
+            RECEIPT_SCHEMA_V4: 4,
         }.get(declared)
         if version is not None and version < minimum:
             problems.append(
@@ -2407,7 +2480,8 @@ def main(argv=None):
             print(f"  - {p}")
         return 1
     if isinstance(receipt, dict) \
-            and receipt.get("schema") == RECEIPT_SCHEMA_V3 \
+            and receipt.get("schema") in (RECEIPT_SCHEMA_V3,
+                                          RECEIPT_SCHEMA_V4) \
             and receipt.get("outcome") == "not-evaluated":
         print(f"NOT-EVALUATED {args.receipt}")
         return 3

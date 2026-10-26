@@ -1,0 +1,299 @@
+{
+ "v2_tool": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-47/w1/out/X1SelftestV2/inputs/v2-append-only-audit-3a09a1d9.py",
+ "cases": [
+  "no-deletion",
+  "below-threshold",
+  "exact-threshold-unrestored",
+  "restored-later",
+  "partial",
+  "undeclared-file",
+  "declared-file-removed",
+  "merge-first-parent",
+  "dashdash-lines",
+  "crlf-and-eof",
+  "multiset",
+  "window-max",
+  "relocation",
+  "contract",
+  "threshold-flag"
+ ],
+ "rows": [
+  {
+   "mutation": "M0-identity",
+   "kind": "control",
+   "hypothesis": "control: the unmodified selftest is green on all 15 cases",
+   "target": null,
+   "exit": 0,
+   "cases": 15,
+   "killed": [],
+   "reasons": {},
+   "missing_cases": [],
+   "summary_line": "AOA_SELFTEST pass=15 fail=0",
+   "target_killed": null,
+   "probe_gap": null,
+   "applied": []
+  },
+  {
+   "mutation": "M1-dashdash-v1",
+   "kind": "mutation",
+   "hypothesis": "v1's D1 blind spot: `--`-prefixed deleted lines dropped and no numstat cross-check",
+   "target": "dashdash-lines",
+   "exit": 1,
+   "cases": 15,
+   "killed": [
+    "dashdash-lines"
+   ],
+   "reasons": {
+    "dashdash-lines": "[{'commit': '09c807713bece7f9bb34fbd397a08bf9ec20adb0', 'file': 'LOG.md', 'deleted': 19, 'restored_max': 0, 'restored_best': None, 'restored_by': None, 'status': 'unrestored'}]"
+   },
+   "missing_cases": [],
+   "summary_line": "AOA_SELFTEST pass=14 fail=1",
+   "target_killed": true,
+   "probe_gap": null,
+   "applied": [
+    "i += 1",
+    "if len(dl) != ns[f]:"
+   ]
+  },
+  {
+   "mutation": "M1b-dashdash-filter-only",
+   "kind": "mutation",
+   "hypothesis": "drop `--` lines but keep the numstat equality check (defense in depth)",
+   "target": "dashdash-lines",
+   "exit": 1,
+   "cases": 15,
+   "killed": [
+    "dashdash-lines"
+   ],
+   "reasons": {
+    "dashdash-lines": "exception f90a11ceb91c LOG.md: hunk count 19 != numstat 22"
+   },
+   "missing_cases": [],
+   "summary_line": "AOA_SELFTEST pass=14 fail=1",
+   "target_killed": true,
+   "probe_gap": null,
+   "applied": [
+    "i += 1"
+   ]
+  },
+  {
+   "mutation": "M2-newline-normalised",
+   "kind": "mutation",
+   "hypothesis": "v1 read git output and blobs through text=True, folding CRLF/CR to LF",
+   "target": "crlf-and-eof",
+   "exit": 1,
+   "cases": 15,
+   "killed": [
+    "crlf-and-eof"
+   ],
+   "reasons": {
+    "crlf-and-eof": "[{'commit': '207286f9928c1770e8381ca6dbedd382621bfadc', 'file': 'LOG.md', 'deleted': 27, 'restored_max': 26, 'restored_best': '2103ae9cfcd1208abd7c99f891fe3c47b120a64c', 'restored_by': None, 'status': 'partial'}]"
+   },
+   "missing_cases": [],
+   "summary_line": "AOA_SELFTEST pass=14 fail=1",
+   "target_killed": true,
+   "probe_gap": null,
+   "applied": [
+    "out.append(ln[1:])",
+    "self._lines[blob] = collections.Counter(split_lines(_git(self.path, \"c"
+   ]
+  },
+  {
+   "mutation": "M3-multiset-to-set",
+   "kind": "mutation",
+   "hypothesis": "v1 set membership: every deleted occurrence counts when the text is present",
+   "target": "multiset",
+   "exit": 1,
+   "cases": 15,
+   "killed": [
+    "multiset"
+   ],
+   "reasons": {
+    "multiset": "[{'commit': '1e65c3fbc6420b75919460114bfbb35c3a6de7f8', 'file': 'LOG.md', 'deleted': 23, 'restored_max': 23, 'restored_best': '1d42bfe5bba9b2863f46c97cf94291b7ef5a6ec3', 'restored_by': '1d42bfe5bba9b2863f46c97cf94291b7ef"
+   },
+   "missing_cases": [],
+   "summary_line": "AOA_SELFTEST pass=14 fail=1",
+   "target_killed": true,
+   "probe_gap": null,
+   "applied": [
+    "h = sum(min(n, max(0, M[l] - K[l])) for l, n in D.items())"
+   ]
+  },
+  {
+   "mutation": "M4-tip-only-max",
+   "kind": "mutation",
+   "hypothesis": "v1/D2: the restoration figure is measured at the audited tip, not maximised over the window",
+   "target": "window-max",
+   "exit": 1,
+   "cases": 15,
+   "killed": [
+    "window-max"
+   ],
+   "reasons": {
+    "window-max": "[{'commit': 'be0cc9158aed3f4bc0235a2fb02746a6ca5ef3ab', 'file': 'SCORECARD.md', 'deleted': 25, 'restored_max': 20, 'restored_best': '9374e95c90db91dfbcc12f11e08ef3ac17d7a096', 'restored_by': '2c58cc0ca0909d2011e685f7c446"
+   },
+   "missing_cases": [],
+   "summary_line": "AOA_SELFTEST pass=14 fail=1",
+   "target_killed": true,
+   "probe_gap": null,
+   "applied": [
+    "status = \"restored\" if best == len(dl) else (\"unrestored\" if best == 0"
+   ]
+  },
+  {
+   "mutation": "M5-later-only-witness",
+   "kind": "mutation",
+   "hypothesis": "v1 searched restored_by only in commits after the event commit",
+   "target": "relocation",
+   "exit": 1,
+   "cases": 15,
+   "killed": [
+    "relocation"
+   ],
+   "reasons": {
+    "relocation": "[{'commit': '96272385cf88885cd545a4168312cb32ec337d72', 'file': 'LOG.md', 'deleted': 25, 'restored_max': 0, 'restored_best': None, 'restored_by': None, 'status': 'unrestored'}]"
+   },
+   "missing_cases": [],
+   "summary_line": "AOA_SELFTEST pass=14 fail=1",
+   "target_killed": true,
+   "probe_gap": null,
+   "applied": [
+    "for x in window:"
+   ]
+  },
+  {
+   "mutation": "M6-hard-coded-files",
+   "kind": "mutation",
+   "hypothesis": "v1's fixed five-file set, ignoring the contract's expansion",
+   "target": "contract",
+   "exit": 1,
+   "cases": 15,
+   "killed": [
+    "contract"
+   ],
+   "reasons": {
+    "contract": "['LOG.md', 'SCORECARD.md', 'corpus/QUALITY.md', 'corpus/README.md', 'corpus/SOURCES.md'][]"
+   },
+   "missing_cases": [],
+   "summary_line": "AOA_SELFTEST pass=14 fail=1",
+   "target_killed": true,
+   "probe_gap": null,
+   "applied": [
+    "label, text = contract"
+   ]
+  },
+  {
+   "mutation": "P1-binary-numstat",
+   "kind": "probe",
+   "hypothesis": "a binary change (numstat `-`) is counted as 0 deletions",
+   "target": null,
+   "exit": 0,
+   "cases": 15,
+   "killed": [],
+   "reasons": {},
+   "missing_cases": [],
+   "summary_line": "AOA_SELFTEST pass=15 fail=0",
+   "target_killed": null,
+   "probe_gap": true,
+   "applied": [
+    "if len(parts) >= 3 and parts[1].isdigit():"
+   ]
+  },
+  {
+   "mutation": "P2-threshold-guard",
+   "kind": "probe",
+   "hypothesis": "the `--threshold < 1` -> exit 2 guard",
+   "target": null,
+   "exit": 0,
+   "cases": 15,
+   "killed": [],
+   "reasons": {},
+   "missing_cases": [],
+   "summary_line": "AOA_SELFTEST pass=15 fail=0",
+   "target_killed": null,
+   "probe_gap": true,
+   "applied": [
+    "if a.threshold < 1:"
+   ]
+  },
+  {
+   "mutation": "P3-rule-validation",
+   "kind": "probe",
+   "hypothesis": "the contract row rule in A | A-row | A-corr",
+   "target": null,
+   "exit": 0,
+   "cases": 15,
+   "killed": [],
+   "reasons": {},
+   "missing_cases": [],
+   "summary_line": "AOA_SELFTEST pass=15 fail=0",
+   "target_killed": null,
+   "probe_gap": true,
+   "applied": [
+    "if not pat or rule not in RULES or not re.fullmatch(r\"[^:]+:\\d+\", decl"
+   ]
+  },
+  {
+   "mutation": "P4-declared-at-validation",
+   "kind": "probe",
+   "hypothesis": "the contract declared_at <path>:<line> shape",
+   "target": null,
+   "exit": 0,
+   "cases": 15,
+   "killed": [],
+   "reasons": {},
+   "missing_cases": [],
+   "summary_line": "AOA_SELFTEST pass=15 fail=0",
+   "target_killed": null,
+   "probe_gap": true,
+   "applied": [
+    "if not pat or rule not in RULES or not re.fullmatch(r\"[^:]+:\\d+\", decl"
+   ]
+  },
+  {
+   "mutation": "P5-schema-string",
+   "kind": "probe",
+   "hypothesis": "the schema field `append-only-audit/v2`",
+   "target": null,
+   "exit": 0,
+   "cases": 15,
+   "killed": [],
+   "reasons": {},
+   "missing_cases": [],
+   "summary_line": "AOA_SELFTEST pass=15 fail=0",
+   "target_killed": null,
+   "probe_gap": true,
+   "applied": [
+    "SCHEMA = \"append-only-audit/v2\""
+   ]
+  },
+  {
+   "mutation": "P6-earlier-to-ignored",
+   "kind": "probe",
+   "hypothesis": "an earlier --to rev (v1 had a to-earlier-rev case; v2's list dropped it)",
+   "target": null,
+   "exit": 0,
+   "cases": 15,
+   "killed": [],
+   "reasons": {},
+   "missing_cases": [],
+   "summary_line": "AOA_SELFTEST pass=15 fail=0",
+   "target_killed": null,
+   "probe_gap": true,
+   "applied": [
+    "to_full = _text(repo_path, \"rev-parse\", \"--verify\", to + \"^{commit}\")."
+   ]
+  }
+ ],
+ "targets_killed": "7/7",
+ "coverage_gaps": [
+  "P1-binary-numstat",
+  "P2-threshold-guard",
+  "P3-rule-validation",
+  "P4-declared-at-validation",
+  "P5-schema-string",
+  "P6-earlier-to-ignored"
+ ],
+ "probe_covered": [],
+ "ok": true
+}

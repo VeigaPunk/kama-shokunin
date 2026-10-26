@@ -1,0 +1,103 @@
+K2Tamper round-47 attack evidence — verbatim captured outputs (2026-10-26)
+
+All runs: python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round47-live-replay-audit.py --repo <clone> --tip <full> --scratch /fast/scratch/hyaku/kama-r47/K2Tamper
+Scratch clones (--shared of the lane, read-only lane): lane (lane HEAD 46a924e0),
+F0..F4/Fm (fixtures at 3a09a1d93dcc16799cf6c4b48786e6440af134c4 + fixture SOURCES row).
+
+=== 1. Counter on lane clone at build commit (no SOURCES row yet) ===
+receipts=1 replay=1 tamper=1 newrow=0 rerun_checks=11 met=False
+tip=3a09a1d93dcc16799cf6c4b48786e6440af134c4 started=2026-10-26T21:29:10.340312+00:00
+detail: newrow: no registry row names b11909 and caa8191df159f764fb0160e3d2fc6be008948aee
+exit=1
+
+=== 2. Counter on F0 (honest receipts + fixture SOURCES row), tip e3ee84e11983275e6a83bfa221734b40120b23e1 ===
+receipts=1 replay=1 tamper=1 newrow=1 rerun_checks=11 met=True
+tip=e3ee84e11983275e6a83bfa221734b40120b23e1 started=2026-10-26T21:29:31.933220+00:00
+exit=0
+
+=== 3. Counter on F1 (receipt-1 provenance.server.member := llama-b11909/llama-cli), tip 94e38d3e5df6e2e039fe14f97be6ba1d4590de26 ===
+receipts=1 replay=0 tamper=1 newrow=1 rerun_checks=3 met=False
+tip=94e38d3e5df6e2e039fe14f97be6ba1d4590de26 started=2026-10-26T21:29:31.936272+00:00
+detail: replay: exit 1: replay match=False refused=None mismatches=12 exit=1  |
+detail: replay: rerun schema/outcome 'kama-llamacpp-live/v4'/'setup-error'
+detail: replay: rerun server.sha256 differs from receipt-1
+detail: replay: check health_ready: receipt-1 True rerun not-evaluated
+detail: replay: check models_alias_id: receipt-1 True rerun not-evaluated
+detail: replay: check models_owned_by_llamacpp: receipt-1 True rerun not-evaluated
+detail: replay: check metrics_not_enabled: receipt-1 True rerun not-evaluated
+detail: replay: check props_alias: receipt-1 True rerun not-evaluated
+detail: replay: check probe_model_ok: receipt-1 True rerun not-evaluated
+detail: replay: check probe_mismatch: receipt-1 True rerun not-evaluated
+detail: replay: check teardown_graceful: receipt-1 True rerun False
+detail: replay: check teardown_port_closed: receipt-1 True rerun False
+detail: replay: check loading_envelope_graded: receipt-1 True rerun not-evaluated
+exit=1
+
+=== 4. Counter on F2 (receipt-1 provenance.server.asset_url := same URL + "?mirror=k2"), tip e5821aa07b450169f551aa5f0c55a6e3ef8bba46 ===
+receipts=0 replay=1 tamper=1 newrow=1 rerun_checks=11 met=False
+tip=e5821aa07b450169f551aa5f0c55a6e3ef8bba46 started=2026-10-26T21:29:31.935120+00:00
+detail: receipts: .ufo/waves/round-47/c2/live/receipt-1.json: provenance.server.asset_url 'https://github.com/ggml-org/llama.cpp/releases/download/b11909/llama-b11909-bin-ubuntu-x64.tar.gz?mirror=k2'
+exit=1
+
+=== 5. Counter on F3 (receipt-1 provenance.model.sha256 AND model.sha256 := "5"*64), tip 9ec2f7473e10f000be08f8f9ff9b1b244ad4527a ===
+receipts=1 replay=0 tamper=1 newrow=1 rerun_checks=0 met=False
+tip=9ec2f7473e10f000be08f8f9ff9b1b244ad4527a started=2026-10-26T21:29:31.935925+00:00
+detail: replay: exit 2: replay match=False refused=digest-mismatch:stories260K.gguf:want=5555555555555555555555555555555555555555555555555555555555555555:got=270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d mismatches=0 exit=2  |
+detail: replay: rerun receipt missing
+exit=1
+
+=== 6. Counter on F4 (receipt-1 outcome := fail), tip 048617391ef83033212c6626e95af52dadb44fab ===
+receipts=0 replay=0 tamper=1 newrow=1 rerun_checks=11 met=False
+tip=048617391ef83033212c6626e95af52dadb44fab started=2026-10-26T21:29:31.937731+00:00
+detail: receipts: .ufo/waves/round-47/c2/live/receipt-1.json: outcome 'fail'
+detail: replay: exit 1: replay match=False refused=None mismatches=1 exit=1  |
+exit=1
+
+=== 7. Counter on Fm (M2 mutant replay tool committed at tools/kama-live-replay.py; honest receipts), tip 256151b21d5c232e12a0c309c04306f3bc25ad8e ===
+receipts=1 replay=1 tamper=1 newrow=1 rerun_checks=11 met=True
+tip=256151b21d5c232e12a0c309c04306f3bc25ad8e started=2026-10-26T21:30:00.389071+00:00
+exit=0
+
+=== 8. Direct replay runs, M2 mutant (tree at Fm tip) ===
+== M2 F1 (wrong member llama-cli) ==
+replay match=True refused=None mismatches=0 exit=0
+exit=0
+== M2 F2 (different asset URL ?mirror=k2, same digest) ==
+replay match=True refused=None mismatches=0 exit=0
+exit=0
+== M2 F3 (twin-consistent changed model digests) ==
+replay match=True refused=None mismatches=0 exit=0
+exit=0
+== M2 F4 (outcome fail) ==
+replay match=True refused=None mismatches=0 exit=0
+exit=0
+== M2 v2b (file:// mirror asset URL, same digest) ==
+replay match=True refused=None mismatches=0 exit=0
+exit=0
+== M2 flip-model (canonical first-hex-digit flip of provenance.model.sha256) ==
+replay match=False refused=provenance-model-digest-differs-from-receipt-model mismatches=0 exit=2
+exit=2
+== M2 flip-asset (canonical first-hex-digit flip of provenance.server.asset_sha256) ==
+replay match=False refused=asset-sha256-differs-from-frozen mismatches=0 exit=2
+exit=2
+
+=== 9. Direct replay runs, honest tool (tree at F0 tip) ===
+== honest F1 (wrong member llama-cli) ==
+replay match=False refused=None mismatches=12 exit=1
+exit=1
+== honest F2 (different asset URL ?mirror=k2, same digest) ==
+replay match=True refused=None mismatches=0 exit=0
+exit=0
+== honest F3 (twin-consistent changed model digests) ==
+replay match=False refused=digest-mismatch:stories260K.gguf:want=5555555555555555555555555555555555555555555555555555555555555555:got=270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d mismatches=0 exit=2
+exit=2
+== honest F4 (outcome fail) ==
+replay match=False refused=None mismatches=1 exit=1
+exit=1
+== honest v2b (file:// mirror asset URL, same digest) ==
+replay match=True refused=None mismatches=0 exit=0
+exit=0
+
+=== 10. Mirror asset byte-identity (file:// demo) ===
+bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b  /fast/scratch/hyaku/kama-r47/K2Tamper/mirror/llama-b11909-bin-ubuntu-x64.tar.gz
+(equals the frozen asset digest; the file was downloaded once from the release URL.)

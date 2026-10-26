@@ -1,0 +1,234 @@
+{
+ "seat": "L2Concurrent",
+ "round": 47,
+ "lane": "kama",
+ "measured": "two replays, same receipt, same start instant, separate --work",
+ "tool_identity": {
+  "kama-live-replay.py": {
+   "worktree_sha256": "39cd387a3a95b47865d81484ffe30664e653d5016c4c75d47abf6e855e43fdd0",
+   "equals_commit": "3a09a1d93dcc16799cf6c4b48786e6440af134c4"
+  },
+  "kama-llamacpp-live.py": {
+   "worktree_sha256": "65301a3c76f925bf3316673d3774269f6d93ca22f4ccdb7c7139e6826b8ae65d",
+   "equals_commit": "3a09a1d93dcc16799cf6c4b48786e6440af134c4"
+  },
+  "receipt_1_sha256": "a4caf311ac030ce3c50373d7f2c37aa62895bcec5deb93bfa8bbd24e0706e80d",
+  "kernel": "7.2.11-arch1-1",
+  "python": "3.14.8",
+  "note": "worktree==HEAD==3a09a1d9 verified at 21:31Z before all runs; a peer seat edited tools/kama-live-replay.py at 21:34:09Z (notes[], live-exit mismatches, original:no-evaluated-check, fetch .part cleanup, 2 selftest cases; worktree sha256 now 80149f0105e5629a3dee800817858742d0adbb8f97e201fc2d272452e81372bf). All line anchors and diffs are at commit 3a09a1d9; the peer change does not alter D3 (still exit 1 with live-exit:2)."
+ },
+ "assigned_pairs": [
+  {
+   "pair": 1,
+   "tools_from": "lane working tree (byte-identical to 3a09a1d9)",
+   "start_epoch": {
+    "A": 1793049941.6930594,
+    "B": 1793049941.6931705
+   },
+   "exit": {
+    "A": 0,
+    "B": 0
+   },
+   "match": {
+    "A": true,
+    "B": true
+   },
+   "ports": {
+    "A": 35567,
+    "B": 44199
+   },
+   "serve_window_utc": {
+    "A": [
+     "2026-10-26T21:25:44.015Z",
+     "2026-10-26T21:25:44.178Z"
+    ],
+    "B": [
+     "2026-10-26T21:25:44.288Z",
+     "2026-10-26T21:25:44.455Z"
+    ]
+   },
+   "checks": {
+    "A": "11/11 evaluated",
+    "B": "11/11 evaluated"
+   },
+   "leftover_listener": 0,
+   "leftover_child": 0
+  },
+  {
+   "pair": 2,
+   "tools_from": "clone --shared at 3a09a1d9",
+   "exit": {
+    "C": 0,
+    "D": 0
+   },
+   "match": {
+    "C": true,
+    "D": true
+   },
+   "ports": {
+    "C": 34025,
+    "D": 37747
+   },
+   "serve_window_utc": {
+    "C": [
+     "2026-10-26T21:32:17.382Z",
+     "2026-10-26T21:32:17.560Z"
+    ],
+    "D": [
+     "2026-10-26T21:32:17.686Z",
+     "2026-10-26T21:32:17.864Z"
+    ]
+   },
+   "leftover_listener": 0,
+   "leftover_child": 0
+  }
+ ],
+ "amplification": {
+  "n6": {
+   "rounds": 8,
+   "runs": 48,
+   "collisions": 0,
+   "exits": "48x0",
+   "distinct_ports": 48,
+   "leftover_listener": 0,
+   "leftover_child": 0
+  },
+  "n2_at_scale": {
+   "rounds": 600,
+   "runs": 1200,
+   "collisions": 0,
+   "leftover_listener": 0,
+   "leftover_child": 0
+  },
+  "n12_campaign_a": {
+   "rounds": 6,
+   "runs": 72,
+   "collision_round": 6,
+   "port": "44879",
+   "loser": {
+    "receipt": "collision12/r6-1.json",
+    "outcome": "setup-error",
+    "setup_error": "port-listener-not-our-child",
+    "checks": "teardown_graceful=False, teardown_port_closed=False, loading_envelope_graded=not-evaluated, model_unchanged=True",
+    "child_returncode": 1,
+    "alive_at_teardown_start": false
+   },
+   "winner": {
+    "receipt": "collision12/r6-2.json",
+    "outcome": "pass",
+    "port": "44879",
+    "log": "server_on_li: listening on http://127.0.0.1:44879"
+   }
+  },
+  "n12_campaign_b": {
+   "rounds": 45,
+   "runs": 540,
+   "collisions": 0,
+   "leftover_listener": 0,
+   "leftover_child": 0
+  },
+  "totals": {
+   "live_lifecycle_runs": 1860,
+   "replays": 4,
+   "collisions_observed": 1,
+   "simultaneous_pick_pair_opportunities": 4086,
+   "collision_rate_per_pair": 0.00024,
+   "collision_rate_per_run": 0.00054
+  }
+ },
+ "mechanism_probes": {
+  "released_port_reassigned_next_bind": {
+   "trials": 200000,
+   "hits": 22,
+   "rate": 0.00011,
+   "script": "amp/bindseq.py"
+  },
+  "simultaneous_live_sockets_share_port": {
+   "trials_pairs": 750,
+   "hits": 0,
+   "note": "probe cannot see the release/rebind race; superseded by bindseq"
+  },
+  "forced_port_in_use": {
+   "port": 38153,
+   "live_exit": 2,
+   "setup_error": "port-in-use:38153",
+   "checks_evaluated": 0,
+   "replay_compare_mismatches": 13,
+   "replay_exit_would_be": 1
+  }
+ },
+ "proposed_patches": {
+  "replay_retry": {
+   "diff": "patches/proposed-replay-retry.diff",
+   "selftest": "10/10 pass",
+   "fixtures": {
+    "collision_then_success": "exit 0 match True attempts=2",
+    "always_collision": "exit 2 refused (3 attempts)",
+    "non_transient_setup_error": "exit 2 refused (1 attempt)"
+   }
+  },
+  "live_teardown_ownership": {
+   "diff": "patches/proposed-live-teardown-ownership.diff",
+   "healthy_run_inside_clone": {
+    "outcome": "pass",
+    "checks": "11/11 evaluated",
+    "teardown": "True/evaluated both"
+   }
+  }
+ },
+ "tool_installs": "none needed",
+ "evidence_kept": [
+  "amp/amp.out",
+  "amp/bindrace.out",
+  "amp/bindrace.py",
+  "amp/bindseq.out",
+  "amp/bindseq.py",
+  "amp/rounds.txt",
+  "collision12/collision-compare.json",
+  "collision12/listeners-after-n2.txt",
+  "collision12/listeners-after.txt",
+  "collision12/pgrep-after.txt",
+  "collision12/r6-1.json",
+  "collision12/r6-1.log",
+  "collision12/r6-2.json",
+  "collision12/rounds-campaign-b.txt",
+  "collision12/rounds-n2-600.txt",
+  "collision12/rounds.txt",
+  "collision12/stop.txt",
+  "forced/forced-summary.json",
+  "forced/forced.json",
+  "patches/patched-live-healthy-run.json",
+  "patches/proposed-live-teardown-ownership.diff",
+  "patches/proposed-replay-retry.diff",
+  "replay-pair/A.log",
+  "replay-pair/B.log",
+  "replay-pair/a.json",
+  "replay-pair/b.json",
+  "replay-pair/pgrep-during.uniq.txt",
+  "replay-pair/pgrep-post.txt",
+  "replay-pair/pgrep-pre.txt",
+  "replay-pair/rerun-A.json",
+  "replay-pair/rerun-B.json",
+  "replay-pair/source-receipt-1.json",
+  "replay-pair/ss-during.txt",
+  "replay-pair/ss-post.txt",
+  "replay-pair/ss-pre.txt",
+  "replay-pair/timing.txt",
+  "replay-pair2/C.log",
+  "replay-pair2/D.log",
+  "replay-pair2/c.json",
+  "replay-pair2/d.json",
+  "replay-pair2/pgrep2-post.txt",
+  "replay-pair2/pgrep2-pre.txt",
+  "replay-pair2/rerun-C.json",
+  "replay-pair2/rerun-D.json",
+  "replay-pair2/ss2-during.txt",
+  "replay-pair2/ss2-post.txt",
+  "replay-pair2/ss2-pre.txt",
+  "replay-pair2/timing2.txt",
+  "scripts/amp.sh",
+  "scripts/drive.sh",
+  "scripts/drive2.sh",
+  "scripts/stress.sh"
+ ]
+}

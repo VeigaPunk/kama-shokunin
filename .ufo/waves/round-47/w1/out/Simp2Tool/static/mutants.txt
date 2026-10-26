@@ -1,0 +1,37 @@
+Selftest discrimination matrix (seat Simp2Tool, round 47)
+=========================================================
+Purpose: decide whether any selftest case in the two tools "tests nothing distinct".
+Method: one guard at a time is broken in a copy of the tool under scratch, then the
+copy's own --selftest is run. A case is distinct when it is the only killer of at
+least one broken guard. Single-line replacement, `python3 <copy> --selftest --scratch $S`.
+
+Tool = append-only-audit.py (base copy of tools/append-only-audit.py at 3a09a1d9)
+  A1  if ns[f] < threshold:                      -> if ns[f] < 20:
+  A2  if ns[f] < threshold:                      -> if ns[f] <= threshold:
+  A3  if ln.startswith(b"-") and gd < nd:        -> ... and not ln.startswith(b"---") ... (v1 rule)
+Tool = kama-live-replay.py (base copy of tools/kama-live-replay.py at 3a09a1d9)
+  R1  if got != sha:                             -> if got != sha and not dest.endswith(".gguf"):
+  R2  if got != sha:                             -> if got != sha and dest.endswith(".gguf"):
+  R3  if rec.get("schema") != LIVE_SCHEMA or ...  -> if prov is None:
+  R4  if member.startswith("/") or ".." in ...    -> if False:
+
+mutant                          rc  selftest line                  failed cases
+-------------------------------------------------------------------------------------------
+A1-threshold-hardcoded          1   AOA_SELFTEST pass=14 fail=1   threshold-flag
+A2-threshold-inclusive          1   AOA_SELFTEST pass=13 fail=2   exact-threshold-unrestored, threshold-flag
+A3-v1-dashdash-blind            1   AOA_SELFTEST pass=14 fail=1   dashdash-lines
+R1-model-digest-skipped         1   KLR_SELFTEST pass=9 fail=1    model-digest-wrong
+R2-asset-digest-skipped         1   KLR_SELFTEST pass=9 fail=1    asset-digest-wrong
+R3-schema-gate-removed          1   KLR_SELFTEST pass=9 fail=1    v3-receipt
+R4-pre-member-check-removed     1   KLR_SELFTEST pass=9 fail=1    unsafe-member
+
+Reading: every case in the two runs is the unique killer of at least one guard, and no
+guard in this set is killed by two cases whose mechanisms coincide. The two pairs that
+looked redundant on inspection are not:
+  * asset-digest-wrong / model-digest-wrong: R2 breaks only the first acquire()
+    (archive), R1 breaks only the second (model); each kills exactly its own case, so
+    the two cases cover two different digest checks, not one.
+  * exact-threshold-unrestored / threshold-flag: A1 (threshold hard-coded) kills only
+    threshold-flag, A2 (boundary inclusive) kills both. threshold-flag is the only case
+    that kills A1, so it is retained (see report finding F2 for its misleading name).
+No selftest case is proposed for deletion on distinctness grounds.

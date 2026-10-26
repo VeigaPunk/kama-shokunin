@@ -1,0 +1,35 @@
+# Pinned model URL for a kama live receipt (X2Revision, round 47, 2026-10-26)
+
+URL to record in provenance.model.url (instead of the moving `main` ref):
+
+https://huggingface.co/ggml-org/models-moved/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/stories260K.gguf
+
+Fields a v5 receipt should carry (v4 shape + one field):
+
+  "provenance": {
+    "model": {
+      "url":    "https://huggingface.co/ggml-org/models-moved/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/stories260K.gguf",
+      "sha256": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+      "commit": "499bc8821c6b12b4e53c5bffcb21ec206f212d81"
+    }
+  }
+
+Invariants for v5:
+  - model.commit is 40 lowercase hex;
+  - model.url contains "/resolve/<model.commit>/" (the tool records the revision it
+    resolved, taken from the resolve response header `x-repo-commit`, and refuses a
+    URL whose revision segment differs from commit);
+  - model.sha256 still equals model.sha256 in the receipt's `model` block and is
+    still verified before llama-server is spawned.
+
+Why this commit: 499bc8821c6b12b4e53c5bffcb21ec206f212d81 is what `main` resolved to
+(x-repo-commit) when the round-47 C2 receipts were taken, and it is the containing
+commit of the blob that serves the frozen sha256. The blob itself was written by
+96f460f9c1e2ca43d0adc1c682b832525a2c0ea3 (git blob 941cd12cc9e7e7b83944e83ab5887cbed28d2f0f);
+pinning the containing commit keeps the URL a true statement of what the receipt
+downloaded. (The file commit also serves the same bytes and is the tighter anchor:
+https://huggingface.co/ggml-org/models-moved/resolve/96f460f9c1e2ca43d0adc1c682b832525a2c0ea3/tinyllamas/stories260K.gguf)
+
+Note: no schema bump is strictly required to stop depending on `main` - a v4 receipt
+whose provenance.model.url is already pinned replays byte-identically today (3/3
+receipts, match=True). The `commit` field is what makes the pin machine-checkable.

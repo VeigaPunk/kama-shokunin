@@ -1,0 +1,64 @@
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -40,6 +40,12 @@
+ DEFAULT_LIVE = os.path.join(HERE, "kama-llamacpp-live.py")
+ HEX64 = re.compile(r"[0-9a-f]{64}")
+ CHUNK = 1 << 20
++# A live run picks its serve port by bind(:0)/release, so two runs starting at the same
++# moment can collide and one of them fails closed with an ownership setup error before any
++# check is captured (tools/kama-llamacpp-live.py:371-378,1473-1475). That is an infrastructure
++# transient, not a measurement: re-run with a fresh pick, bounded, and report the attempts.
++RERUN_ATTEMPTS = 3
++RERUN_RETRY_TOKENS = ("port-listener-not-our-child", "port-listener-ownership-unproven")
+ 
+ 
+ class Refused(Exception):
+@@ -146,23 +152,37 @@
+         if not os.path.realpath(server).startswith(os.path.realpath(tree) + os.sep) or not os.path.isfile(server):
+             raise Refused(f"member-absent:{need['server.member']}")
+         res["inputs"].update({"archive": archive, "model": model, "server": server})
+-        rerun = os.path.join(work, "rerun-receipt.json")
+         env = dict(os.environ, TMPDIR=os.path.join(work, "tmp"))
+         os.makedirs(env["TMPDIR"], exist_ok=True)
+         argv = [sys.executable, live, "--server", server, "--model", model, "--model-sha256", need["model.sha256"],
+                 "--alias", str(rec.get("alias") or "kama-live-replay"), "--ctx", str(rec.get("ctx") or 256),
+                 "--threads", str(rec.get("threads") or 1), "--server-asset-url", need["server.asset_url"],
+                 "--server-asset-sha256", need["server.asset_sha256"], "--server-member", need["server.member"],
+-                "--model-url", need["model.url"], "--out", rerun]
+-        p = subprocess.run(argv, capture_output=True, text=True, env=env, timeout=timeout)
+-        res["live_exit"] = p.returncode
+-        if not os.path.isfile(rerun):
+-            raise Refused(f"no-rerun-receipt:exit={p.returncode}:{p.stderr[-300:]}")
+-        res["rerun_receipt"] = rerun
+-        with open(rerun) as fh:
+-            res["mismatches"] = compare(rec, json.load(fh))
+-        res["match"] = not res["mismatches"]
+-        return res, (0 if res["match"] else 1)
++                "--model-url", need["model.url"]]
++        token = None
++        for attempt in range(1, RERUN_ATTEMPTS + 1):
++            rerun = os.path.join(work, "rerun-receipt.json" if attempt == 1
++                                 else f"rerun-receipt-{attempt}.json")
++            p = subprocess.run(argv + ["--out", rerun], capture_output=True, text=True,
++                               env=env, timeout=timeout)
++            res["live_exit"] = p.returncode
++            if not os.path.isfile(rerun):
++                raise Refused(f"no-rerun-receipt:exit={p.returncode}:{p.stderr[-300:]}")
++            res["rerun_receipt"] = rerun
++            with open(rerun) as fh:
++                rerun_rec = json.load(fh)
++            token = rerun_rec.get("setup_error") if isinstance(rerun_rec, dict) else None
++            res.setdefault("rerun_attempts", []).append(
++                {"attempt": attempt, "path": rerun, "setup_error": token})
++            if not token:
++                res["mismatches"] = compare(rec, rerun_rec)
++                res["match"] = not res["mismatches"]
++                return res, (0 if res["match"] else 1)
++            if not any(marker in str(token) for marker in RERUN_RETRY_TOKENS):
++                break
++        # a rerun that could not run is a refusal (exit 2), never "it ran and differs"
++        res["refused"] = f"rerun-setup-error:{token}"
++        return res, 2
+     except Refused as exc:
+         res["refused"] = str(exc)
+         return res, 2

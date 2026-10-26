@@ -1,0 +1,45 @@
+mutant	category	lane_diff	control_diff	mutation	verdict
+m01_threshold19	threshold	True	True	THRESHOLD 20->19	?	killed
+m02_threshold21	threshold	False	True	THRESHOLD 20->21	?	killed
+m03_thresh_le	threshold	False	False	skip events at exactly threshold (< -> <=)	?	killed(flaky)
+m04_thresh_off	threshold	True	True	include 19-line deletions (< threshold-1)	?	killed
+m05_hunk_start_count	hunk-header parse	True	True	hunk deleted count := start line number	?	killed
+m06_hunk_no_cap	hunk-header parse	False	False	collect '-' lines without got_d cap	?	equivalent
+m07_hunk_regex_break	hunk-header parse	True	True	hunk regex no longer matches counted hunks	?	killed
+m08_numstat_split	numstat parse	False	False	numstat split('\t') -> split()	?	survived
+m09_numstat_addition	numstat parse	True	True	numstat uses additions column	?	killed
+m10_numstat_plus1	numstat parse	True	True	numstat deleted +1	?	killed
+m11_K_kept	K = parent - D	True	True	K = parent lines (no D subtraction)	?	killed
+m12_held_noneg	held formula max(0,..)	False	False	held drops max(0, ...)	?	survived
+m13_held_nocap	held formula max(0,..)	True	False	held drops min(n, ...)	?	killed
+m14_win_after	window start index	True	True	window starts after event commit	?	killed
+m15_win_all	window start index	True	True	window = all commits	?	killed
+m16_tie_last	restored_best/restored_by	True	True	strict > -> >= (tie picks later)	?	killed
+m17_by_early	restored_best/restored_by	True	False	restored_by set at h >= deleted-1	?	killed
+m18_nobreak	restored_best/restored_by	False	False	remove early-exit break after full restore	?	equivalent
+m19_status_swap	status classes	True	True	restored/unrestored labels swapped	?	killed
+m20_status_nopartial	status classes	True	True	status drops 'partial' class	?	killed
+m21_rules_missing	contract header/rule/declared_at	True	True	RULES drops A-corr	?	killed
+m22_header_unchecked	contract header/rule/declared_at	False	False	contract header check removed	?	survived
+m23_decl_prefix_match	contract header/rule/declared_at	False	False	declared_at fullmatch -> match	?	survived
+m24_append_case	contract header/rule/declared_at	True	True	declared line 'append' check case-sensitive	?	killed
+m25_required_extra	REQUIRED list	True	True	REQUIRED adds phantom lessons file	?	killed
+m26_required_drop	REQUIRED list	False	False	REQUIRED drops SOURCES	?	survived
+m27_lessons_unchecked	lessons requirement	False	False	lessons coverage check removed	?	survived
+m28_lessons_all	lessons requirement	True	True	lessons check any -> all	?	killed
+m29_patterns_exact	files equality	True	True	contract patterns: fnmatchcase -> ==	?	killed
+m30_keys_nostatus	files equality	False	False	norm KEYS drops status	?	survived
+m31_stable_flip	stable comparison direction	False	False	stable comparison direction flipped	?	survived
+m32_stable_deleted_flip	stable comparison direction	False	False	stable deleted check != -> <	?	survived
+m33_stable_wrong_empty	stable comparison direction	False	False	stable checks tip events instead of base	?	survived
+m34_round47_guard	round47 guard	False	False	round47 source guard looks for roundXX	?	survived
+m35_exit_any_restored	expected exit	False	False	expected exit: any restored -> 1	?	survived
+m36_exit_any_unrestored	expected exit	True	False	expected exit: any unrestored -> 1	?	killed
+m37_lane_mismatch_ignored	lane compare sensitivity	False	False	lane leg ignores event mismatch	?	survived
+m38_fx_move21to19	fixture construction	True	True	fixture relocate block 21 -> 19 lines	?	killed
+m39_fx_cut19to20	fixture construction	True	True	fixture final cut 19 -> 20 lines	?	killed
+m40_fx_k2_range	fixture construction	True	True	fixture E2 deletion 20-26 -> 10-19	?	killed
+m41_fx_k1_range	fixture construction	True	True	fixture E1 deletion 22-30 -> 15-19	?	killed
+m42_fx_e1_status	fixture construction	True	True	fixture E1 expected status partial -> restored	?	killed
+m43_fx_e3_status	fixture construction	True	True	fixture E3 expected status restored -> partial	?	killed
+m44_fx_e2_status	fixture construction	True	True	fixture E2 expected status unrestored -> restored	?	killed

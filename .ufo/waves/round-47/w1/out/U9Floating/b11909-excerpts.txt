@@ -1,0 +1,58 @@
+# b11909 (caa8191df159f764fb0160e3d2fc6be008948aee) excerpts, read 2026-10-26T21:30:35Z
+blob tools/server/server-context.cpp 9043fa2c02905495f55045d8d0fc978b1f94e027
+blob tools/server/server-common.cpp 80a9f2d7270d072967c9ad243864147cbd1e175e
+blob tools/server/server-http.cpp cf147c7e70f434c3b8b93d978fd285cc888e079c
+blob tools/server/server.cpp b6ebf7523364109181ff3447a8bdf4843a3947cb
+## server-context.cpp:5609-5626
+    this->get_health = [this](const server_http_req &) {
+        // error and loading states are handled by middleware
+        auto res = create_response(true);
+
+        // this endpoint can be accessed during sleeping
+        // the next LOC is to avoid someone accidentally use ctx_server
+        bool ctx_server; // do NOT delete this line
+        GGML_UNUSED(ctx_server);
+
+        res->ok({{"status", "ok"}});
+        return res;
+    };
+
+    this->get_metrics = [this](const server_http_req & req) {
+        auto res = create_response(true);
+        if (!params.endpoint_metrics) {
+            res->error(format_error_response("This server does not support metrics endpoint. Start it with `--metrics`", ERROR_TYPE_NOT_SUPPORTED));
+            return res;
+## server-context.cpp:5503
+        {"owned_by", "llamacpp"},
+## server-common.cpp:117-120
+        case ERROR_TYPE_NOT_SUPPORTED:
+            type_str = "not_supported_error";
+            code = 501;
+            break;
+## server-http.cpp:311-323
+                return true; // frontend asset, allow it to load and show "loading"
+            }
+            // no endpoints are allowed to be accessed when the server is not ready
+            // this is to prevent any data races or inconsistent states
+            res.status = 503;
+            res.set_content(
+                safe_json_to_str(json {
+                    {"error", {
+                        {"message", "Loading model"},
+                        {"type", "unavailable_error"},
+                        {"code", 503}
+                    }}
+                }),
+## server.cpp:171,177,325
+    ctx_http.get ("/health",                   ex_wrapper(routes.get_health)); // public endpoint (no API key check)
+    ctx_http.get ("/v1/models",                ex_wrapper(routes.get_models));
+    sigaction(SIGTERM, &sigint_action, NULL);
+## README.md:479-481,1221
+### GET `/health`: Returns health check result
+This endpoint is public (no API key check). `/v1/health` also works.
+This endpoint is only accessible if `--metrics` is set.
+## git grep 'v1/metrics' at b11909: exit 1
+## server files identical b11906..b11909: 0 diff lines; b11889..b11909 server-context differs: 9	6	tools/server/server-context.cpp
+1	1	tools/server/server-models.cpp
+1	1	tools/server/tests/utils.py
+## rev-list counts: b11906..b11909 3; b11889..b11909 20; b11755..b11909 154

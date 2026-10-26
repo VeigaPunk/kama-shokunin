@@ -1,0 +1,17 @@
+hexrun upstream evidence (advisory, outside the llama.cpp rows) -- seat X4HexUp2, round 47, 2026-10-26
+repo: torvalds/linux
+cited by: registry/recheck-r45.tsv rows 5 and 6 (key S048:tcp_ipv6.c, S048:in6.h) as `new_ref`; tools/round45-recheck-audit.py
+role: linux kernel commit ref used as the v7.3 side of the S048 recheck, not a llama.cpp object.
+The token sorts inside the seat's range a4b4feae..e1e006f1 but is not a row blob of
+registry/release-recheck-b11889.tsv. It is not the git blob id of the lane's own byte copies
+(git hash-object of .ufo/waves/round-45/c1/upstream/S048_tcp_ipv6.c/new is
+7fa4ed2fd4f166a9c0454c2f4ee4cd3b541b4c84 and of S048_in6.h/new is
+5a47339ef7d7688f3ca50f574d1fa62783fc56fe), so the row's `new_ref` cell names a commit, not a blob.
+
+verification command (no clone, no API quota; a raw.githubusercontent 404 marks a missing commit):
+command: curl -sS -o /dev/null -w '%{http_code}\n' -I https://raw.githubusercontent.com/torvalds/linux/c03c1a14507dfaf8b856c2608f9ac216021fc222/net/ipv6/tcp_ipv6.c
+output:  200
+
+lane-side corroboration, .ufo/waves/round-45/c1/upstream/fetch.log lines 8 and 10 (blob at 3a09a1d9):
+  S048:tcp_ipv6.c	new	https://raw.githubusercontent.com/torvalds/linux/c03c1a14507dfaf8b856c2608f9ac216021fc222/net/ipv6/tcp_ipv6.c	HTTP 200	65043	cc8f8c48c4b9008f52ee66901df04555090c94638278b448bc8b2b3d68ed0fc4
+  S048:in6.h	new	https://raw.githubusercontent.com/torvalds/linux/c03c1a14507dfaf8b856c2608f9ac216021fc222/include/uapi/linux/in6.h	HTTP 200	7593	4b70a42300079eee8dc3bc9d6c327a04cbd8eb75b2fa9d995d9f0a3306d6b27d

@@ -1,0 +1,44 @@
+# D2 stability evidence, collected 2026-10-26T21:29:48Z by seat S9Lesson
+## v1 tool (git show 4a2a4d55:tools/append-only-audit.py), lane clone at $S/lane
+$ python3 v1-audit.py --repo lane --to 0163fea2dab3f282ebd70c71da9ab5de4cedf733 --json
+dd9f5dc6 SCORECARD.md deleted=31 restored_at_tip=24 partial
+0718b6ab SCORECARD.md deleted=2417 restored_at_tip=2416 partial
+0718b6ab LOG.md deleted=2290 restored_at_tip=2290 restored
+0718b6ab corpus/QUALITY.md deleted=375 restored_at_tip=375 restored
+0718b6ab corpus/README.md deleted=663 restored_at_tip=663 restored
+$ python3 v1-audit.py --repo lane --to 4340cf2f68ebbfb618086e16825c2e7effd7fa58 --json
+dd9f5dc6 SCORECARD.md deleted=31 restored_at_tip=24 partial
+0718b6ab SCORECARD.md deleted=2417 restored_at_tip=2409 partial
+0718b6ab LOG.md deleted=2290 restored_at_tip=2290 restored
+0718b6ab corpus/QUALITY.md deleted=375 restored_at_tip=375 restored
+0718b6ab corpus/README.md deleted=663 restored_at_tip=663 restored
+## v2 tool (git show 3a09a1d9:tools/append-only-audit.py) with the build contract
+$ python3 v2-audit.py --repo lane --to 0163fea2dab3f282ebd70c71da9ab5de4cedf733 --contract contract.tsv --json  (exit 1: partial events)
+files=83 events=5
+dd9f5dc6 SCORECARD.md deleted=31 restored_max=24 restored_best=dd9f5dc6 partial
+0718b6ab LOG.md deleted=2292 restored_max=2292 restored_best=82b5e9d3 restored
+0718b6ab SCORECARD.md deleted=2421 restored_max=2420 restored_best=82b5e9d3 partial
+0718b6ab corpus/QUALITY.md deleted=375 restored_max=375 restored_best=82b5e9d3 restored
+0718b6ab corpus/README.md deleted=663 restored_max=663 restored_best=82b5e9d3 restored
+$ python3 v2-audit.py --repo lane --to 4340cf2f68ebbfb618086e16825c2e7effd7fa58 --contract contract.tsv --json  (exit 1: partial events)
+files=84 events=5
+dd9f5dc6 SCORECARD.md deleted=31 restored_max=24 restored_best=dd9f5dc6 partial
+0718b6ab LOG.md deleted=2292 restored_max=2292 restored_best=82b5e9d3 restored
+0718b6ab SCORECARD.md deleted=2421 restored_max=2420 restored_best=82b5e9d3 partial
+0718b6ab corpus/QUALITY.md deleted=375 restored_max=375 restored_best=82b5e9d3 restored
+0718b6ab corpus/README.md deleted=663 restored_max=663 restored_best=82b5e9d3 restored
+$ python3 v2-audit.py --repo lane --to 3a09a1d93dcc16799cf6c4b48786e6440af134c4 --contract contract.tsv --json  (exit 1: partial events)
+files=85 events=5
+dd9f5dc6 SCORECARD.md deleted=31 restored_max=24 restored_best=dd9f5dc6 partial
+0718b6ab LOG.md deleted=2292 restored_max=2292 restored_best=82b5e9d3 restored
+0718b6ab SCORECARD.md deleted=2421 restored_max=2420 restored_best=82b5e9d3 partial
+0718b6ab corpus/QUALITY.md deleted=375 restored_max=375 restored_best=82b5e9d3 restored
+0718b6ab corpus/README.md deleted=663 restored_max=663 restored_best=82b5e9d3 restored
+## git numstat for the event commits (ground truth for deleted)
+$ git -C lane diff --numstat --no-renames 0718b6ab^1 0718b6ab -- LOG.md SCORECARD.md corpus/QUALITY.md corpus/README.md
+5	2292	LOG.md
+9	2421	SCORECARD.md
+4	375	corpus/QUALITY.md
+2	663	corpus/README.md
+$ git -C lane diff --numstat --no-renames dd9f5dc6^1 dd9f5dc6 -- SCORECARD.md
+98	31	SCORECARD.md

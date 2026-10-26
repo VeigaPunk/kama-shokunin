@@ -1,0 +1,14 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 9442eb8c..d2b86eb4 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -208,7 +208,8 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
+             wb = r.blobs([f"{x}:{f}" for x in window])
+             best, best_c, by = 0, None, None
+             for x in window:
+-                M = r.lines(wb[f"{x}:{f}"])
++                _b = wb[f"{x}:{f}"]
++                M = r.lines(pb if _b is None else _b)
+                 h = sum(min(n, max(0, M[l] - K[l])) for l, n in D.items())
+                 if h > best:
+                     best, best_c = h, x

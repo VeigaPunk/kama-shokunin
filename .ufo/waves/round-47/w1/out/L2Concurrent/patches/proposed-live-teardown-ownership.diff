@@ -1,0 +1,49 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -1694,6 +1694,14 @@
+         if port is not None:
+             checks = receipt['checks']
+             try:
++                # The teardown checks are claims about OUR child's port. When the listener
++                # on that port belongs to another process (port-pick collision, setup error
++                # before any capture) the port is neither ours to close nor evidence of a
++                # leak: not-evaluated, never False.
++                ours = receipt.get('port_listener_ownership') == 'child'
++                reason = (None if ours else
++                          'port-not-ours:%s'
++                          % receipt.get('port_listener_ownership'))
+                 graceful = (
+                     isinstance(td, dict)
+                     and td.get('sigterm_sent') is True
+@@ -1702,7 +1710,7 @@
+                     and td.get('returncode') == 0
+                     and receipt.get('port_listener_ownership') == 'child')
+                 checks.append(_check(
+-                    'teardown_graceful', graceful,
++                    'teardown_graceful', graceful if ours else None,
+                     {'sigterm_sent': td.get('sigterm_sent')
+                      if isinstance(td, dict) else None,
+                      'sigkill_sent': td.get('sigkill_sent')
+@@ -1715,16 +1723,17 @@
+                      'port_listener_ownership':
+                          receipt.get('port_listener_ownership'),
+                      'error': td.get('error')
+-                     if isinstance(td, dict) else None}))
++                     if isinstance(td, dict) else None}, reason))
+                 checks.append(_check(
+                     'teardown_port_closed',
+-                    isinstance(td, dict)
+-                    and td.get('port_refuses') is True
+-                    and receipt.get('port_listener_ownership') == 'child',
++                    (isinstance(td, dict)
++                     and td.get('port_refuses') is True
++                     and receipt.get('port_listener_ownership') == 'child')
++                    if ours else None,
+                     {'port_refuses': td.get('port_refuses')
+                      if isinstance(td, dict) else None,
+                      'port_listener_ownership':
+-                         receipt.get('port_listener_ownership')}))
++                         receipt.get('port_listener_ownership')}, reason))
+                 bodies = receipt.get('loading_503_bodies') or []
+                 total_503 = sum(
+                     1 + (body.get('repeats') or 0)

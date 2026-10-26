@@ -1,0 +1,57 @@
+# QUALITY.md criteria KQ69–KQ71 — round 47 draft (seat S9Quality)
+
+Append-ready block for `corpus/QUALITY.md`, appended after line 390 (end of file) at
+`corpus/QUALITY.md` blob `1d613cebbf5aae0a9302be90333f1d96efa42cbf`, which is the same
+blob at the round-47 freeze base `bbcc6dc2`, at the build `3a09a1d9` and at the wave
+tip `46a924e0` (390 lines; KQ68 at line 388, round-46 footer at line 390). Nothing
+above it moves (KQ7, KQ14) and no earlier criterion is superseded.
+
+What the three rows add, and what they leave alone:
+
+- **KQ69 is the re-runnability half of KQ66.** KQ66 binds a receipt's *record* of an
+  input to a URL, byte count and SHA-256 a fresh session can re-fetch. KQ69 binds the
+  *evidence* to a replay that re-acquires those inputs, verifies each digest before
+  use, re-runs the lifecycle and compares check by check — a receipt whose download is
+  never exercised is still only a record. KQ66's fields stay as they are.
+- **KQ70 carries the round-46 closure D1 and D2 into any counter that counts deleted
+  lines.** It does not restate KQ63 (a shown-to-fail check exits nonzero) or KQ67 (the
+  round runs the audit and reports its summary); it fixes the *line model* and the
+  *restoration measure* those rows leave to the tool.
+- **KQ71 names the declaration of record for "append-only".** KQ67 lists five files by
+  name and is still satisfiable (all five are in the contract); KQ71 makes
+  `registry/append-only-contract.tsv` the only declaration, and requires the round to
+  report prose that calls a file append-only without a row — the class the C1
+  preregistration's `limits` cell says the counter does not detect.
+
+Citation convention: each row cites `corpus/lessons/round-47.md` by section. The lesson
+is filed by the L1 after this wave, so the anchors name the sections that will carry the
+material — `## Claims` (bullets C1 and C2) and `## Gate` — and, where a row names a
+round-46 closure defect, the defect label the closure itself fixed (D1, D2, D5 in
+`corpus/lessons/round-46-verifier-spotcheck.md` lines 139, 140, 141). If the L1 files
+the claim under a different heading it adjusts the cell rather than renumbering the
+rows, as round 46 did with its `## Mistakes` labels.
+
+## Criteria added — round 47 (each cites `corpus/lessons/round-47.md`)
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ69 | A live or deploy receipt filed as evidence records, for every input it ran, where that input came from — an `https://` URL, its SHA-256 and, for an archive member, the member path — and the lane ships a replay tool that re-acquires those inputs from the recorded URLs into a home the tool creates (`HOME`, `XDG_CACHE_HOME` and `TMPDIR` under its own scratch), verifies every digest **before** anything is extracted or executed, re-runs the same lifecycle and compares the new receipt with the original check by check. A receipt with one recorded digest altered in its first hex digit exits nonzero and leaves no passing rerun, and a recorded `teardown.log_path` is null or a repo-relative path that exists at the tip. Check: `python3 tools/round47-live-replay-audit.py --repo <clone> --tip <tip> --scratch <dir>` reports `receipts=1 replay=1 tamper=1`, and the legs are shown able to fail on the round-46 receipts relabelled v4 — `controls/junk-c2-r46-relabel.c2.out` prints `receipts=0 replay=0 tamper=0`, `exit=1`, with `replay: rerun inputs not re-acquired under scratch: '/home/vgpnk/.local/opt/llama-b11906/llama-server'` and `tamper-model: exit 0, rerun outcome pass: not refused`. | An input named by host cache or scratch path plus a digest, with no locator a later session can follow: the round-45 b11889 receipts name `~/.cache/kama-shokunin/models/stories260K.gguf` and its sha256, the file was gone at the round-45 closure and nothing committed held a URL (round-46 lesson `## Mistakes` row 1, evidence-durability); a `log_path` into deleted seat scratch (row 3, dead-pointer; closure **D5**). A "replay" that downloads after the run has used the input, or whose rerun resolves the server outside its own work dir — the relabel control's two detail lines above. | `corpus/lessons/round-47.md` §Claims C2; supplements KQ66 (which asks for the record) with re-runnability, which KQ66 does not require |
+| KQ70 | A counter that counts deleted lines from a git history names its line model and is cross-checked, per `(commit, file)`, against `git diff --numstat --no-renames` on the same first-parent range; it splits a blob on `b"\n"` and compares lines byte-exact, so a deleted line whose text starts with `--`, a CRLF line, a lone CR and a final line without a trailing newline are counted as the bytes they are; and the restoration it reports is a multiset measure maximised over the event's own window, so auditing a later tip cannot lower it. Check: `python3 tools/round47-append-audit-v2-check.py --repo <clone> --tip <tip> --scratch <dir>` reports `lane=1 fixture=1 stable=1`, and the tool refuses its own hunk count when it differs from numstat (`tools/append-only-audit.py:203` raises `hunk count != numstat`). | A count read from decoded text or from diff lines filtered by prefix: v1 dropped every deleted line starting with `--` and read `0718b6ab` SCORECARD.md 2417 against `git diff --numstat` 2421 and LOG.md 2290 against 2292 (closure **D1**; round-46 lesson row 6, shared-definition blind spot — the counter shared the tool's rule, so its "independent recomputation" leg could not fail). A restoration measured against the tip: it fell 2416 → 2409 from a head re-anchor alone (closure **D2**). The v1-semantics control reproduces both, `controls/junk-c1-v1-numstat.c1.out`: `lane=0 fixture=0`, `restored_max=2413` where 2420 is the recomputation. | `corpus/lessons/round-47.md` §Claims C1; carries round-46 closure D1 and D2 into the counter |
+| KQ71 | A lane file is called append-only — in `corpus/QUALITY.md`, `README.md`, `SCORECARD.md`, a lesson or a receipt — only where `registry/append-only-contract.tsv` carries a row whose path pattern matches that file **and** whose `declared_at` `<path>:<line>` holds, at the tip, text that declares the rule; the audited population is that expansion and nothing else, and a round that writes, cites or narrows such a claim reports every heading or sentence in a lane `.md` outside `.ufo/` that calls a file append-only with no row, with the disposition. Check: `python3 tools/append-only-audit.py --repo <clone> --to <tip> --contract registry/append-only-contract.tsv --json` prints `files` equal to the contract expansion (85 paths at `3a09a1d9`: `LOG.md`, `SCORECARD.md`, `corpus/QUALITY.md`, `corpus/README.md`, `corpus/SOURCES.md`, `registry/history/DELTA.md` and 79 `corpus/lessons/*.md`) and exits 1 while any event is partial (KQ63); `.ufo/waves/round-47/w1/out/S9Quality/heading-census.py --repo <clone> --head <tip>` prints `headings=13 covered=11 uncovered=2` and each uncovered heading is dispositioned — `SKILL.md:1434` labels a topic (`append-only calibration`) and is not a claim on the file; `corpus/knowledge/consumer-registry.md:30` declares its section append-only and has no row. | A prose set standing in for the declaration: `corpus/README.md:759-761` says "the five files the lane treats as append-only" while the contract declares seven patterns and 85 files, so a session following the prose alone never audits `corpus/lessons/*.md` or `registry/history/DELTA.md` (round-46 lesson row 4; seats K2Design and Rev2Decl found the five-file default declared nowhere and `corpus/lessons/*.md` unaudited). A file whose own heading declares it append-only with no row is not append-only evidence until a row exists — the C1 preregistration's `limits` cell says the counter does not detect this class, so the round reports it instead of assuming green. | `corpus/lessons/round-47.md` §Claims C1 `limits` cell and §Gate; supplements KQ67 by naming the declaration of record instead of a five-file list |
+
+Drafted by wave-1 scribe S9Quality (`.ufo/waves/round-47/w1/out/S9Quality/`), integrated by the kama L1, round 47. KQ69 supplements KQ66 (receipt inputs, not outputs); KQ70 carries closure D1 and D2 into any deletion counter; KQ71 supplements KQ67 and leaves its five named files covered.
+
+## Evidence behind the rows (all commands run on a `--shared` clone of the lane; receipts beside this file)
+
+| claim in a row | command | observed |
+|---|---|---|
+| KQ69: a v4 receipt records input origin and has no dead log path | `python3 -c "import json;d=json.load(open('.ufo/waves/round-47/c2/live/receipt-1.json'));print(d['schema'],d['provenance'],d['teardown']['log_path'])"` (lane, read-only) | `kama-llamacpp-live/v4`; `server.asset_url` the b11909 GitHub asset URL, `server.asset_sha256` 64-hex, `server.member` `llama-b11909/llama-server`, `model.url` `https://huggingface.co/ggml-org/models-moved/resolve/main/tinyllamas/stories260K.gguf` with its sha256; `teardown.log_path` `None` |
+| KQ69: the replay verifies before use | `tools/kama-live-replay.py:78-91` | required provenance keys checked, then `acquire()` → `sha256_file(dest)` compared to the recorded digest before extraction; refusal path at `:167-170` sets `refused` and exits 2 |
+| KQ69: legs shown able to fail | `.ufo/waves/round-47/controls/junk-c2-r46-relabel.c2.out` | `receipts=0 replay=0 tamper=0 newrow=0 met=False`, `exit=1` |
+| KQ70: numstat is the ground truth the v1 count missed | `git -C <clone> diff --numstat --no-renames 0718b6ab^ 0718b6ab -- SCORECARD.md LOG.md corpus/QUALITY.md corpus/README.md` | `9 2421 SCORECARD.md`, `5 2292 LOG.md`, `4 375 corpus/QUALITY.md`, `2 663 corpus/README.md` (`numstat-0718b6ab.out`) |
+| KQ70: v2 equals numstat on the lane | `python3 tools/append-only-audit.py --repo <clone> --to 3a09a1d9 --contract registry/append-only-contract.tsv` | `deleted=2421` SCORECARD, `2292` LOG, `375` QUALITY, `663` README; `summary commits=303 files=85 events=5 restored=3 partial=2 unrestored=0`; `exit=1` (`append-only-audit-v2-at-3a09a1d9.out`, `.json`) |
+| KQ70: v1 semantics fail the same check | `.ufo/waves/round-47/controls/junk-c1-v1-numstat.c1.out` | `lane=0 fixture=0`, `lane missing ('0718b6ab…','SCORECARD.md',2421,2420,…)` against `lane unexpected (…, deleted=2421, restored_max=2413,…)` |
+| KQ71: the contract is the declaration and its expansion is 85 paths | `python3 tools/append-only-audit.py … --json` at `3a09a1d9` | `"schema": "append-only-audit/v2"`, `files` 85 = 6 non-lesson paths + 79 `corpus/lessons/*.md` |
+| KQ71: each declared_at line declares the rule at the tip | `sed -n '<line>p' <path>` for the seven rows | `README.md:16` "`LOG.md` — append-only round log", `corpus/README.md:521` "append-only records in …", `corpus/QUALITY.md:24` "appended so no existing line moves", `corpus/README.md:86` "Appended rather than inserted", `SKILL.md:578` "SOURCES append-only guard", `corpus/lessons/round-23.md:100` "are append-only.", `registry/history/DELTA.md:3` "# Append-only; …" |
+| KQ71: the prose set is narrower than the contract | `sed -n '759,761p' corpus/README.md` | "sets the five files the lane treats as append-only (SCORECARD.md, LOG.md, corpus/QUALITY.md, corpus/README.md, corpus/SOURCES.md)" — no `corpus/lessons/*.md`, no `registry/history/DELTA.md` |
+| KQ71: heading census | `python3 .ufo/waves/round-47/w1/out/S9Quality/heading-census.py --repo <clone> --head 3a09a1d9` | `headings=13 covered=11 uncovered=2` (`heading-census-3a09a1d9.out`) |

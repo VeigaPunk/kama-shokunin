@@ -1,0 +1,58 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-live-replay.py	2026-10-26 18:16:26.858106357 -0300
++++ /fast/scratch/hyaku/kama-r47/K2Checks/kama-live-replay.proposed.py	2026-10-26 18:31:38.243549360 -0300
+@@ -121,6 +121,55 @@
+             out.append(f"check:{cid}:not-evaluated")
+         elif er[cid] != passed:
+             out.append(f"check:{cid}:{passed}->{er[cid]}")
++    # stable-projection comparison: observation-level, instance-free facts
++    # (K2Checks round-47; ports/pids/timings/paths/utc/counts stay ignored)
++    def _stable_models(rec):
++        try:
++            doc = json.loads((rec.get("captures") or {}).get("models", {}).get("body") or "{}")
++        except ValueError:
++            return None
++        if not isinstance(doc, dict):
++            return None
++        stable = []
++        for m in doc.get("data") or []:
++            if isinstance(m, dict):
++                m = dict(m)
++                m.pop("created", None)  # per-request wall clock (server-context.cpp:5502)
++                stable.append(m)
++        return stable
++    sm_orig, sm_rerun = _stable_models(orig), _stable_models(rerun)
++    if sm_orig != sm_rerun:
++        out.append(f"capture:models.stable:{sm_orig}->{sm_rerun}")
++    for key in ("health",):
++        a = (orig.get("captures") or {}).get(key, {}).get("body_sha256")
++        b = (rerun.get("captures") or {}).get(key, {}).get("body_sha256")
++        if a != b:
++            out.append(f"capture:{key}.body_sha256:{a}->{b}")
++    for key in ("fields",):
++        a = (orig.get("captures") or {}).get("props", {}).get(key)
++        b = (rerun.get("captures") or {}).get("props", {}).get(key)
++        if a != b:
++            out.append(f"capture:props.{key}:{a}->{b}")
++    a = (orig.get("captures") or {}).get("slots", {}).get("element_count")
++    b = (rerun.get("captures") or {}).get("slots", {}).get("element_count")
++    if a != b:
++        out.append(f"capture:slots.element_count:{a}->{b}")
++    a = (orig.get("loading_503") or {}).get("body_sha256")
++    b = (rerun.get("loading_503") or {}).get("body_sha256")
++    if a != b:
++        out.append(f"loading_503.body_sha256:{a}->{b}")
++    for flag in ("loading_envelope_exact", "loading_observed"):
++        if orig.get(flag) != rerun.get(flag):
++            out.append(f"{flag}:{orig.get(flag)}->{rerun.get(flag)}")
++    for key in ("returncode", "sigterm_sent", "sigkill_sent", "port_refuses",
++                "alive_at_teardown_start", "log_path"):
++        a = (orig.get("teardown") or {}).get(key, "<absent>")
++        b = (rerun.get("teardown") or {}).get(key, "<absent>")
++        if a != b:
++            out.append(f"teardown.{key}:{a}->{b}")
++    for key in ("port_listener_ownership",):
++        if orig.get(key) != rerun.get(key):
++            out.append(f"{key}:{orig.get(key)}->{rerun.get(key)}")
+     return out
+ 
+ 

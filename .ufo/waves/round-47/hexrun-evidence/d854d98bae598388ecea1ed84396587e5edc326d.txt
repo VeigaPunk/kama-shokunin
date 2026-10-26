@@ -1,0 +1,28 @@
+repo: ggml-org/llama.cpp
+claim: token d854d98bae598388ecea1ed84396587e5edc326d is a commit id in ggml-org/llama.cpp: it is the commit release tag b11889 names (the b11889 recheck release the round-45 rows S041/S046/S055 were re-run on) and the lower bound of the b11889..b11906 range corpus/README.md cites
+source: corpus/README.md:679 (round-46 frontier disposition: `git rev-list --count d854d98bae598388ecea1ed84396587e5edc326d..4d71b42fd87db24b8b7c808c151b713aa4459cfd` -> 17); registry/recheck-r45.tsv rows S041, S046, S055 (new_ref 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad -> d854d98bae598388ecea1ed84396587e5edc326d); corpus/SOURCES.md:235 S482 release b11889
+upstream: blobless bare clone of https://github.com/ggml-org/llama.cpp.git (seat scratch, directory ./llama.git)
+  git init -q --bare llama.git
+  git -C llama.git fetch --filter=blob:none origin '+refs/heads/master:refs/heads/master'
+  git -C llama.git fetch --filter=blob:none origin refs/tags/b11889:refs/tags/b11889
+commands and output:
+$ git -C llama.git cat-file -t d854d98bae598388ecea1ed84396587e5edc326d
+commit
+$ git -C llama.git log -1 --format='%H %cI %s' d854d98bae598388ecea1ed84396587e5edc326d
+d854d98bae598388ecea1ed84396587e5edc326d 2026-10-26T00:08:22+01:00 cuda : use std::string instead of VLA for archName (#30463)
+$ git -C llama.git cat-file -t b11889
+commit
+$ git -C llama.git rev-parse b11889 b11889^{commit}
+d854d98bae598388ecea1ed84396587e5edc326d
+d854d98bae598388ecea1ed84396587e5edc326d
+$ git -C llama.git rev-list --count d854d98bae598388ecea1ed84396587e5edc326d..4d71b42fd87db24b8b7c808c151b713aa4459cfd
+17
+verdict: match. d854d98bae598388ecea1ed84396587e5edc326d is a commit in ggml-org/llama.cpp (2026-10-26T00:08:22+01:00, cuda VLA (#30463)); b11889 is a lightweight tag on it (cat-file -t returns commit, and rev-parse of the tag and of its peel print the same id), and the distance to the round-46 release b11906 4d71b42fd87db24b8b7c808c151b713aa4459cfd is 17, the count corpus/README.md:679 states.
+
+lane citations of this token (the cells it stands in):
+$ grep -rn d854d98bae598388ecea1ed84396587e5edc326d corpus/README.md registry/recheck-r45.tsv
+corpus/README.md:679:d854d98bae598388ecea1ed84396587e5edc326d..4d71b42fd87db24b8b7c808c151b713aa4459cfd` → 
+registry/recheck-r45.tsv:8:S041	S041	live	704366d76f8748cf9ad3df62a464bfcc8d1ae6ad	d854d98bae598388ecea1ed84396587e5edc326d
+registry/recheck-r45.tsv:9:S046	S046	live	704366d76f8748cf9ad3df62a464bfcc8d1ae6ad	d854d98bae598388ecea1ed84396587e5edc326d
+registry/recheck-r45.tsv:10:S055	S055	live	704366d76f8748cf9ad3df62a464bfcc8d1ae6ad	d854d98bae598388ecea1ed84396587e5edc326d
+=> every lane cell naming this token is a commit position (a rev-list range endpoint and the new_ref column of three live rows), which is what the object is.

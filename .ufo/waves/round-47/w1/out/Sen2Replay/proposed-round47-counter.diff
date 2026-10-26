@@ -1,0 +1,68 @@
+--- a/tools/round47-live-replay-audit.py
++++ b/tools/round47-live-replay-audit.py
+@@ -82,6 +82,7 @@
+ import os
+ import re
+ import shutil
++import signal
+ import subprocess
+ import sys
+ import tarfile
+@@ -93,6 +94,9 @@
+ ASSET_URL = ("https://github.com/ggml-org/llama.cpp/releases/download/b11909/"
+              "llama-b11909-bin-ubuntu-x64.tar.gz")
+ ASSET_SHA = "bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b"
++MODEL_URL = ("https://huggingface.co/ggml-org/models-moved/resolve/main/"
++             "tinyllamas/stories260K.gguf")
++MODEL_SHA = "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+ RECEIPTS = [f".ufo/waves/round-47/c2/live/receipt-{n}.json" for n in (1, 2, 3)]
+ REPLAY = "tools/kama-live-replay.py"
+ SCHEMA = "kama-llamacpp-live/v4"
+@@ -156,8 +160,10 @@
+         probs.append(f"provenance.server.asset_sha256 {srv.get('asset_sha256')!r}")
+     if not isinstance(srv.get("member"), str) or not srv.get("member"):
+         probs.append("provenance.server.member missing")
+-    if not str(mdl.get("url") or "").startswith("https://"):
++    if mdl.get("url") != MODEL_URL:
+         probs.append(f"provenance.model.url {mdl.get('url')!r}")
++    if mdl.get("sha256") != MODEL_SHA:
++        probs.append(f"provenance.model.sha256 {mdl.get('sha256')!r}")
+     msha = (rec.get("model") or {}).get("sha256") if isinstance(rec.get("model"), dict) else None
+     if not (isinstance(mdl.get("sha256"), str) and HEX64.fullmatch(mdl.get("sha256"))
+             and mdl.get("sha256") == msha):
+@@ -182,18 +188,31 @@
+ 
+ 
+ def run_replay(tree, receipt, work, outj, env, timeout=1200):
++    argv = [sys.executable, os.path.join(tree, REPLAY), "--receipt", receipt,
++            "--work", work, "--out", outj]
+     try:
+-        p = subprocess.run([sys.executable, os.path.join(tree, REPLAY), "--receipt", receipt,
+-                            "--work", work, "--out", outj], capture_output=True, text=True,
+-                           env=env, cwd=tree, timeout=timeout)
++        proc = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
++                                text=True, env=env, cwd=tree, start_new_session=True)
++    except OSError as exc:
++        return None, None, f"could-not-start:{exc}"
++    try:
++        out, err = proc.communicate(timeout=timeout)
+     except subprocess.TimeoutExpired:
++        # the replay tool, the live tool and llama-server share this new
++        # session; kill the group so nothing outlives the counter and
++        # races the scratch removal below
++        try:
++            os.killpg(proc.pid, signal.SIGKILL)
++        except OSError:
++            pass
++        proc.communicate()
+         return None, None, "timeout"
+     try:
+         with open(outj) as fh:
+             j = json.load(fh)
+     except (OSError, ValueError):
+         j = None
+-    return p.returncode, j, (p.stdout[-400:] + " | " + p.stderr[-400:]).replace("\n", " ")
++    return proc.returncode, j, (out[-400:] + " | " + err[-400:]).replace("\n", " ")
+ 
+ 
+ def load_json(path):

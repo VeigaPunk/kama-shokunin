@@ -1,0 +1,22 @@
+hexrun upstream evidence -- seat X4HexUp2, round 47, 2026-10-26
+repo: ggml-org/llama.cpp
+cited by: corpus/SOURCES.md S482 (b11889 tag target), corpus/README.md, corpus/lessons/round-44*.md, registry/recheck-r45.tsv
+role: this is the b11889 tag commit itself, not a file blob: every ledger release_blob in
+registry/release-recheck-b11889.tsv is read at this commit, so the tokens that sort next to it
+in the same documents need the commit identified as an upstream object.
+
+scratch clone (bare, tree-less, nothing written outside it):
+  git clone --filter=tree:0 --bare https://github.com/ggml-org/llama.cpp.git up
+
+command: git -C up cat-file -t d854d98bae598388ecea1ed84396587e5edc326d
+output:  commit
+
+command: git -C up rev-parse 'd854d98bae598388ecea1ed84396587e5edc326d^{commit}'
+output:  d854d98bae598388ecea1ed84396587e5edc326d
+
+command: git -C up ls-remote --tags origin refs/tags/b11889
+output:  d854d98bae598388ecea1ed84396587e5edc326d	refs/tags/b11889
+
+command: git -C up ls-remote --tags origin refs/tags/b11906
+output:  4d71b42fd87db24b8b7c808c151b713aa4459cfd	refs/tags/b11906
+(the next release the lane rechecked sits 17 commits after this commit)

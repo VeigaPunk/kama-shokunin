@@ -1,0 +1,83 @@
+X4HexUp1 gate receipt - hexrun census, round 47
+========================================================================
+scratch: /fast/scratch/hyaku/kama-r47/X4HexUp1  (S)
+lane clone: $S/lane  = git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin
+upstream:   $S/up    = git init -q --bare up; fetch --filter=blob:none --depth=1
+                       https://github.com/ggml-org/llama.cpp.git
+                       refs/tags/b11889:refs/tags/b11889
+                       + the same fetch for ad1b88ca0d37a2171efba1c04f1a3531c78f1b52
+                       + 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad
+fixture:    $S/fix   = git clone --shared $S/lane $S/fix; checkout 3a09a1d93dcc16799cf6c4b48786e6440af134c4
+                       evidence copied to .ufo/waves/round-47/hexrun-evidence/, committed
+                       (git -C $S/fix rev-parse --show-toplevel == $S/fix, verified before the commit)
+                       fixture commit 4db8e535aeab903f136c5cd4b1ebebfbc7f1ef78
+ledger copy: $S/ledger-v2.tsv = registry/hexrun-ledger.tsv (83 lines) + rows.tsv (5 lines) = 88 lines
+
+1. upstream identity of the tag
+$ git -C up cat-file -t b11889
+commit
+$ git -C up rev-parse b11889
+d854d98bae598388ecea1ed84396587e5edc326d
+$ git -C up rev-parse 'b11889^{commit}'
+d854d98bae598388ecea1ed84396587e5edc326d
+
+2. blob resolution (want = token in registry/release-recheck-b11889.tsv)
+$ git -C up rev-parse "d854d98bae598388ecea1ed84396587e5edc326d:<path>"
+tools/server/server-schema.cpp   want=0a14a9620961ff627348952112b4a9a6a0513c43 got=0a14a9620961ff627348952112b4a9a6a0513c43 MATCH
+tools/quantize/README.md         want=27384bebf697fec4e22df899fdbc345da4e89e91 got=27384bebf697fec4e22df899fdbc345da4e89e91 MATCH
+src/llama-kv-cache.cpp           want=4ab280a6196c9dbac0716475eafb53cbbeb35ce4 got=4ab280a6196c9dbac0716475eafb53cbbeb35ce4 MATCH
+tools/server/server-common.cpp   want=80a9f2d7270d072967c9ad243864147cbd1e175e got=80a9f2d7270d072967c9ad243864147cbd1e175e MATCH
+common/arg.cpp                   want=9706b3ac58d5c30bdbf06c17b61151070421a64a got=9706b3ac58d5c30bdbf06c17b61151070421a64a MATCH
+
+3. pin side (rows' pin_blob column, reverse check)
+704366d7:tools/server/server-schema.cpp MATCH 54e126aa0c3572895042cd0a8c4faf4a0eb0b9f7
+704366d7:common/arg.cpp                 MATCH 267b84874912508f5ce205916a1abaaf6fd878b8
+704366d7:src/llama-kv-cache.cpp         MATCH b7dfadef4638f6221608f48aff0a1f83df281063
+704366d7:tools/server/server-common.cpp MATCH 3ea20c3d2f813018d7306751b1b769a374f1a521
+ad1b88ca:tools/quantize/README.md       MATCH 27384bebf697fec4e22df899fdbc345da4e89e91   (same token as at b11889 -> file unchanged, S015)
+
+4. baseline, lane tip, unmodified ledger
+$ python3 kama-shokunin/tools/hexrun-census.py scan --repo $S/lane --rev 3a09a1d93dcc16799cf6c4b48786e6440af134c4
+tokens=1772 distinct=280 lane_oid=178 md5_blob=1 upstream_ok=68 unverifiable=9 wrong_flagged=2 ledger_bad=0 unknown=22
+rc=1
+
+5. control, fixture commit with evidence, unmodified ledger
+$ python3 .../hexrun-census.py scan --repo $S/fix --rev 4db8e535aeab903f136c5cd4b1ebebfbc7f1ef78
+tokens=1772 distinct=280 lane_oid=178 md5_blob=1 upstream_ok=68 unverifiable=9 wrong_flagged=2 ledger_bad=0 unknown=22
+rc=1
+(evidence blobs alone change nothing; they are .txt, not documents)
+
+6. gate, fixture commit with evidence, appended ledger
+$ python3 .../hexrun-census.py scan --repo $S/fix --rev 4db8e535aeab903f136c5cd4b1ebebfbc7f1ef78 --ledger $S/ledger-v2.tsv
+tokens=1772 distinct=280 lane_oid=178 md5_blob=1 upstream_ok=73 unverifiable=9 wrong_flagged=2 ledger_bad=0 unknown=17
+rc=1
+$ ... --details 2>&1 >/dev/null | grep -E '0a14a962|27384beb|4ab280a6|80a9f2d7|9706b3ac'
+detail: 0a14a9620961ff627348952112b4a9a6a0513c43 len=40 occurrences=72 class=upstream_ok
+detail: 27384bebf697fec4e22df899fdbc345da4e89e91 len=40 occurrences=4 class=upstream_ok
+detail: 4ab280a6196c9dbac0716475eafb53cbbeb35ce4 len=40 occurrences=4 class=upstream_ok
+detail: 80a9f2d7270d072967c9ad243864147cbd1e175e len=40 occurrences=26 class=upstream_ok
+detail: 9706b3ac58d5c30bdbf06c17b61151070421a64a len=40 occurrences=6 class=upstream_ok
+unknown 22 -> 17, upstream_ok 68 -> 73, ledger_bad 0 -> 0.
+
+7. counterfactual, appended ledger but evidence NOT at REV (ledger row landed without its evidence)
+$ python3 .../hexrun-census.py scan --repo $S/lane --rev 3a09a1d93dcc16799cf6c4b48786e6440af134c4 --ledger $S/ledger-v2.tsv
+tokens=1772 distinct=280 lane_oid=178 md5_blob=1 upstream_ok=68 unverifiable=9 wrong_flagged=2 ledger_bad=5 unknown=17
+rc=1
+=> the 5 ledger rows are only worth their evidence if the evidence blobs are in the tree at the census REV.
+
+8. surviving unknown set at the fixture commit (17)
+in range [0a14a962..9706b3ac], in no b11889 row (8):
+  20259355b9631e3f032dcc099d1b5a2666818c42  (registry/recheck-r45.tsv, round-45 wave files)
+  277ee2ef32435155212d48b1711413305f017bc3  (corpus/lessons/round-45-verifier-spotcheck.md)
+  463f498cc8e8af89aa7b3bb594bb4b494a0571de  (corpus/lessons/round-44-verifier-spotcheck.md)
+  547934afa90a34298441caf80c43b27255c3a292  (registry/recheck-r45.tsv, round-45 wave files)
+  6105c5870859f15ba5372ccbe3835d65b0d9d38b  (SCORECARD.md, registry/claim-outcome-ledger.tsv, claim-outcome counters)
+  66ab8482e08035a3238dff04a5739c4371c61bfe  (registry/recheck-r45.tsv, round-45 wave files)
+  70e6cd5f317cd6f7a5431c819bf0f5971fc64f15  (corpus/lessons/round-43-verifier-spotcheck.md)
+  8bca0cf333e7ceab5e734b354c87075c6efec86c  (corpus/lessons/round-46-verifier-spotcheck.md)
+out of range (9):
+  a4b4feaee3c066dbc2a4e72d6089dfcd8e0e159a, b0fd7b7f5ae6a0ad7717461c5fea8cb8a8724025,
+  bf3e083800b01c822989c096f0d875dc750ab022, c03c1a14507dfaf8b856c2608f9ac216021fc222,
+  c4ce90721b9498506a7b0b13841fb5cf2ede7016, d5a66a49990b6ea12bbfb887e19399ad8944c4c4,
+  d854d98bae598388ecea1ed84396587e5edc326d, e1e006f1018fdcfd76f9f20f5a1a638c7f3245d6,
+  ec82db0076ed55986ff97bdf327e8d86054c510d

@@ -1,0 +1,16 @@
+--- kama-live-replay.py
++++ m03-archive-extracted-before-digest-verify
+@@ -138,10 +138,11 @@
+         os.makedirs(dl, exist_ok=True)
+         archive = os.path.join(dl, os.path.basename(need["server.asset_url"].split("?")[0]) or "server.tar.gz")
+         model = os.path.join(dl, os.path.basename(need["model.url"].split("?")[0]) or "model.gguf")
++        fetch(need["server.asset_url"], archive)
++        tree = os.path.join(work, "server")
++        extract(archive, tree)
+         res["inputs"]["archive_sha256"] = acquire(need["server.asset_url"], need["server.asset_sha256"], archive)
+         res["inputs"]["model_sha256"] = acquire(need["model.url"], need["model.sha256"], model)
+-        tree = os.path.join(work, "server")
+-        extract(archive, tree)
+         server = os.path.join(tree, need["server.member"])
+         if not os.path.realpath(server).startswith(os.path.realpath(tree) + os.sep) or not os.path.isfile(server):
+             raise Refused(f"member-absent:{need['server.member']}")

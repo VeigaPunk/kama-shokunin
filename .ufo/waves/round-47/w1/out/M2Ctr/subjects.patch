@@ -1,0 +1,34 @@
+diff --git a/corpus/SOURCES.md b/corpus/SOURCES.md
+index d053b402..566b98c5 100644
+--- a/corpus/SOURCES.md
++++ b/corpus/SOURCES.md
+@@ -585,3 +585,4 @@ Results: 91 of 91 rows re-verify at b11906 — 6 `unchanged-file`, 81 `holds`, 4
+ S121 (round-46 Gate decision): the builder filed `holds` on the anchor's single error line 5803 → 6855, which the counter accepts; the critic K1R07 showed that the row's anchor names "the E26-08 error … and its guard" and that the guard moved from the inline `post_rerank` lambda (pin 5800-5805) into `handle_rerank_impl` (b11906 6852-6857), already noted in the b11889 note. The ledger records the full anchored range as `holds-reworded` with witnesses `this->post_rerank = [this](const server_http_req & req) {` (pin only) and `server_routes::handle_rerank_impl(const server_http_req & req) {` (b11906 only): the refusal and its condition still hold, the enclosing construct moved.
+ 
+ New rows: S486 (llama.cpp release b11906 Linux x64 binary and tag identity) and S487 (kama live lifecycle receipts at b11906, three runs, all 11 checks passing). What stays frontier: bN tags after b11906 (b11907 = `4b851fbee…` was tagged at 2026-10-26T19:57:59Z, seat X1Rel), the floating-series rows (S013 citation defect, seat U9Floating), and the ten off-population llama.cpp rows seat K1Pop lists.
++| S488 | llama.cpp release b11909 Linux x64 CPU binary — https://github.com/ggml-org/llama.cpp/releases/download/b11909/llama-b11909-bin-ubuntu-x64.tar.gz (asset record: https://api.github.com/repos/ggml-org/llama.cpp/releases/tags/b11909) | docs | A | identity of the official b11909 Linux x64 CPU binary kama ran in round 47 and the commit its tag names; not runtime behaviour, not performance, not any later release | tag b11909 = caa8191df159f764fb0160e3d2fc6be008948aee (`git ls-remote --tags` refs/tags/b11909); release JSON `published_at` 2026-10-26T21:00:58Z, `prerelease` true; asset `llama-b11909-bin-ubuntu-x64.tar.gz` 22475032 bytes, sha256 bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b |
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index 3773e62d..c4ca53cb 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -106,6 +106,7 @@ def evaluated(rec):
+ 
+ 
+ def compare(orig, rerun):
++    return []  # BROKEN REPLAY (fixture b1): compare always claims agreement
+     out = []
+     if rerun.get("schema") != LIVE_SCHEMA:
+         out.append(f"schema:{rerun.get('schema')}")
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index 3773e62d..babfa20b 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -89,7 +89,7 @@ def provenance(rec):
+ def acquire(url, sha, dest):
+     fetch(url, dest)
+     got = sha256_file(dest)
+-    if got != sha:
++    if False and got != sha:  # BROKEN REPLAY (fixture b2): digest mismatch accepted
+         os.unlink(dest)
+         raise Refused(f"digest-mismatch:{os.path.basename(dest)}:want={sha}:got={got}")
+     return got

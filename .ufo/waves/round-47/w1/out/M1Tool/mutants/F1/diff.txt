@@ -1,0 +1,11 @@
+--- append-only-audit.py (F1 pristine)
++++ append-only-audit.py (F1 mutant)
+@@ -104,7 +104,7 @@
+ 
+ def expand(repo, rev, patterns):
+     tree = [t for t in _text(repo, "ls-tree", "-r", "--name-only", rev).split("\n") if t]
+-    return sorted({t for t in tree if any(fnmatch.fnmatchcase(t, p) for p in patterns)})
++    return sorted({t for t in tree if any(p in t for p in patterns)})
+ 
+ 
+ def split_lines(data):

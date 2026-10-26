@@ -14,7 +14,8 @@ Usage:
   kama-live-replay.py --receipt R --work DIR --out J [--live TOOL] [--timeout S]
   kama-live-replay.py --selftest [--scratch DIR]
 Writes J: {"schema": "kama-live-replay/v1", "receipt", "work", "rerun_receipt",
-"match", "refused", "mismatches": [...], "inputs": {...}}.
+"match", "refused", "mismatches": [...], "notes": [...], "inputs": {...}}; notes list
+tool/probe digest differences between the original and the rerun (informational).
 Exit: 0 the rerun matches; 1 it ran and differs; 2 refused (missing or wrong
 provenance, digest mismatch, unsafe archive member) or could not run.
 Network: https only, for the two recorded URLs. Writes only under --work and J.
@@ -60,9 +61,13 @@ def fetch(url, dest, timeout=120):
         raise Refused(f"url-scheme:{url}")
     tmp = dest + ".part"
     req = urllib.request.Request(url, headers={"User-Agent": "kama-live-replay/1"})
-    with urllib.request.urlopen(req, timeout=timeout) as r, open(tmp, "wb") as fh:
-        shutil.copyfileobj(r, fh, CHUNK)
-    os.replace(tmp, dest)
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as r, open(tmp, "wb") as fh:
+            shutil.copyfileobj(r, fh, CHUNK)
+        os.replace(tmp, dest)
+    finally:
+        if os.path.exists(tmp):
+            os.unlink(tmp)
 
 
 def provenance(rec):
@@ -106,6 +111,8 @@ def evaluated(rec):
 
 
 def compare(orig, rerun):
+    """Mismatches that fail the replay. An original with no evaluated check cannot be
+    reproduced (nothing to agree with), so it is a mismatch, never a vacuous match."""
     out = []
     if rerun.get("schema") != LIVE_SCHEMA:
         out.append(f"schema:{rerun.get('schema')}")
@@ -116,6 +123,8 @@ def compare(orig, rerun):
         if a != b:
             out.append(f"{side}.sha256:{a}->{b}")
     eo, er = evaluated(orig), evaluated(rerun)
+    if not eo:
+        out.append("original:no-evaluated-check")
     for cid, passed in sorted(eo.items(), key=lambda kv: str(kv[0])):
         if cid not in er:
             out.append(f"check:{cid}:not-evaluated")
@@ -160,7 +169,14 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600):
             raise Refused(f"no-rerun-receipt:exit={p.returncode}:{p.stderr[-300:]}")
         res["rerun_receipt"] = rerun
         with open(rerun) as fh:
-            res["mismatches"] = compare(rec, json.load(fh))
+            rr = json.load(fh)
+        res["mismatches"] = compare(rec, rr)
+        if p.returncode != 0:
+            res["mismatches"].append(f"live-exit:{p.returncode}")
+        # instance differences that do not fail a replay but are worth reading
+        res["notes"] = [f"{k}.sha256:{(rec.get(k) or {}).get('sha256')}->{(rr.get(k) or {}).get('sha256')}"
+                        for k in ("tool", "probe")
+                        if (rec.get(k) or {}).get("sha256") != (rr.get(k) or {}).get("sha256")]
         res["match"] = not res["mismatches"]
         return res, (0 if res["match"] else 1)
     except Refused as exc:
@@ -233,6 +249,11 @@ def _selftest(root):
         run("unsafe-member", receipt(**{"provenance.server.member": "../x"}), 2, "unsafe-member")
         run("absent-member", receipt(**{"provenance.server.member": "build/bin/nope"}), 2, "member-absent")
         run("http-refused", receipt(**{"provenance.model.url": "http://example.invalid/m"}), 2, "url-scheme")
+        run("no-evaluated-check", receipt(**{"checks": []}), 1)
+        bad_live = os.path.join(d, "bad-live.py")
+        with open(bad_live, "w") as fh:
+            fh.write(open(fake_live).read() + "sys.exit(2)\n")
+        run("live-exit-nonzero", receipt(), 1, live=bad_live)
     finally:
         shutil.rmtree(d, ignore_errors=True)
     for name, ok, why in cases:

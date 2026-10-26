@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inspect GGUF identity and optionally reconcile one llama.cpp v3 receipt.
+"""Inspect GGUF identity and optionally reconcile one llama.cpp v3 or v4 receipt.
 
 Usage: gguf-identity.py FILE [--json] [--max-kv N] [--max-str BYTES]
                            [--receipt RECEIPT]
@@ -42,6 +42,9 @@ MAX_RECEIPT_BODY_BYTES = 512 * 1024
 MAX_JSON_DEPTH = 64
 MAX_JSON_NODES = 100_000
 RECEIPT_SCHEMA_V3 = "kama-llamacpp-live/v3"
+# v4 (round 47) adds only a provenance block and a null teardown.log_path; the
+# fields this reconciler reads are unchanged.
+RECEIPT_SCHEMAS = (RECEIPT_SCHEMA_V3, "kama-llamacpp-live/v4")
 SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
 KEY_RE = re.compile(
     r"[a-z][a-z0-9]*(?:_[a-z0-9]+)*(?:\.[a-z][a-z0-9]*(?:_[a-z0-9]+)*)+\Z")
@@ -474,7 +477,7 @@ def _reconcile_receipt_checked(decoded: Mapping, file_sha256: str,
                                receipt: Mapping) -> dict[str, object]:
     try:
         document = _mapping(receipt, "receipt_not_object")
-        if document.get("schema") != RECEIPT_SCHEMA_V3:
+        if document.get("schema") not in RECEIPT_SCHEMAS:
             raise ReceiptError("receipt_schema_unsupported")
         model_sha = _sha256(document.get("model_sha256_post"),
                             "receipt_model_sha256_invalid")

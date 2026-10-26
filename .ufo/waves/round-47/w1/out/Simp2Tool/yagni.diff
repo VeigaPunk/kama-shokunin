@@ -1,0 +1,76 @@
+diff -r a/tools/append-only-audit.py b/tools/append-only-audit.py
+--- a/tools/append-only-audit.py	2026-10-26 18:31:03.308097509 -0300
++++ b/tools/append-only-audit.py	2026-10-26 18:31:03.308756654 -0300
+@@ -63,7 +63,7 @@
+ CONTRACT = "registry/append-only-contract.tsv"
+ HEADER = "path\trule\tdeclared_at\tnote"
+ RULES = ("A", "A-row", "A-corr")
+-HUNK = re.compile(rb"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
++HUNK = re.compile(rb"^@@ -\d+(?:,(\d+))? \+\d+(?:,(\d+))? @@")
+ 
+ 
+ class AuditError(Exception):
+@@ -123,8 +123,8 @@
+         i += 1
+         if not m:
+             continue
+-        nd = int(m.group(2)) if m.group(2) is not None else 1
+-        na = int(m.group(4)) if m.group(4) is not None else 1
++        nd = int(m.group(1)) if m.group(1) is not None else 1
++        na = int(m.group(2)) if m.group(2) is not None else 1
+         gd = ga = 0
+         while i < len(lines) and (gd < nd or ga < na):
+             ln = lines[i]
+diff -r a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+--- a/tools/kama-live-replay.py	2026-10-26 18:31:03.308693020 -0300
++++ b/tools/kama-live-replay.py	2026-10-26 18:31:03.308756654 -0300
+@@ -11,7 +11,7 @@
+ same ``passed`` value, and the server and model sha256 must be equal.
+ 
+ Usage:
+-  kama-live-replay.py --receipt R --work DIR --out J [--live TOOL] [--timeout S]
++  kama-live-replay.py --receipt R --work DIR --out J [--timeout S]
+   kama-live-replay.py --selftest [--scratch DIR]
+ Writes J: {"schema": "kama-live-replay/v1", "receipt", "work", "rerun_receipt",
+ "match", "refused", "mismatches": [...], "inputs": {...}}.
+@@ -54,13 +54,13 @@
+     return h.hexdigest()
+ 
+ 
+-def fetch(url, dest, timeout=120):
++def fetch(url, dest):
+     """Download url to dest (https or file://; file:// only for the selftest)."""
+     if not (url.startswith("https://") or url.startswith("file://")):
+         raise Refused(f"url-scheme:{url}")
+     tmp = dest + ".part"
+     req = urllib.request.Request(url, headers={"User-Agent": "kama-live-replay/1"})
+-    with urllib.request.urlopen(req, timeout=timeout) as r, open(tmp, "wb") as fh:
++    with urllib.request.urlopen(req, timeout=120) as r, open(tmp, "wb") as fh:
+         shutil.copyfileobj(r, fh, CHUNK)
+     os.replace(tmp, dest)
+ 
+@@ -155,7 +155,6 @@
+                 "--server-asset-sha256", need["server.asset_sha256"], "--server-member", need["server.member"],
+                 "--model-url", need["model.url"], "--out", rerun]
+         p = subprocess.run(argv, capture_output=True, text=True, env=env, timeout=timeout)
+-        res["live_exit"] = p.returncode
+         if not os.path.isfile(rerun):
+             raise Refused(f"no-rerun-receipt:exit={p.returncode}:{p.stderr[-300:]}")
+         res["rerun_receipt"] = rerun
+@@ -247,7 +246,6 @@
+     ap.add_argument("--receipt")
+     ap.add_argument("--work")
+     ap.add_argument("--out")
+-    ap.add_argument("--live", default=DEFAULT_LIVE, help="kama-llamacpp-live.py path")
+     ap.add_argument("--timeout", type=float, default=600.0)
+     ap.add_argument("--selftest", action="store_true")
+     ap.add_argument("--scratch", help="selftest root (default TMPDIR)")
+@@ -256,7 +254,7 @@
+         return _selftest(a.scratch or tempfile.gettempdir())
+     if not (a.receipt and a.work and a.out):
+         ap.error("--receipt, --work and --out are required")
+-    res, code = replay(a.receipt, a.work, a.live, a.timeout)
++    res, code = replay(a.receipt, a.work, timeout=a.timeout)
+     with open(a.out, "w") as fh:
+         json.dump(res, fh, indent=1)
+     print(f"replay match={res['match']} refused={res['refused']} mismatches={len(res['mismatches'])} exit={code}")

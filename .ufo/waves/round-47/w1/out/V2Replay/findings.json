@@ -1,0 +1,51 @@
+{
+  "seat": "V2Replay",
+  "round": 47,
+  "lane": "kama",
+  "reviewed": "tools/kama-live-replay.py",
+  "tip": "46a924e027f05614558c45ff02bf7a94ca57d3e1",
+  "build": "3a09a1d93dcc16799cf6c4b48786e6440af134c4",
+  "verdict": "correct against docstring and C2 replay contract on all probed paths; two hardening findings (M1, M2)",
+  "findings": [
+    {
+      "id": "M1",
+      "severity": "medium",
+      "title": "live tool non-zero exit masked when a matching rerun receipt exists",
+      "file": "tools/kama-live-replay.py",
+      "lines": "158-165",
+      "probe": "F2-live-exit2-masked-by-matching-receipt",
+      "observed": "exit=0 match=true live_exit=2",
+      "reachable_with_shipped_live_tool": false
+    },
+    {
+      "id": "M2",
+      "severity": "medium",
+      "title": "selftest never runs the real kama-llamacpp-live.py or real network",
+      "file": "tools/kama-live-replay.py",
+      "lines": "174-242",
+      "note": "all 10 cases use fake_live over file:// URLs; real path exercised only by C2 counter replay leg"
+    },
+    {
+      "id": "L1",
+      "severity": "low",
+      "title": "vacuous match when original receipt has zero evaluated checks",
+      "file": "tools/kama-live-replay.py",
+      "lines": "118-124",
+      "probe": "F10-vacuous-orig-zero-evaluated",
+      "observed": "exit=0 match=true"
+    },
+    {
+      "id": "L2",
+      "severity": "low",
+      "title": "dest+'.part' temp file leaks on aborted downloads",
+      "file": "tools/kama-live-replay.py",
+      "lines": "57-65,89-95"
+    }
+  ],
+  "probes": {
+    "exit0": ["F1-match", "F2-live-exit2-masked-by-matching-receipt", "F8-rerun-missing-check", "F10-vacuous-orig-zero-evaluated", "G6-rerun-extra-evaluated-check", "G7-control-match"],
+    "exit1": ["F3-live-exit2-partial-receipt", "F6-rerun-server-sha-differs", "F9-rerun-check-false", "F11-rerun-extra-check-allowed", "G1-rerun-server-sha-differs", "G2-rerun-model-sha-differs", "G3-rerun-schema-not-v4", "G4-rerun-outcome-fail", "G5-rerun-missing-evaluated-check"],
+    "exit2": ["F4-timeout-hung-live", "F5-live-exit0-no-receipt", "F7-rerun-schema-not-v4", "F12-digest-refusal-before-live", "F13-provenance-model-digest-differs-from-receipt"]
+  },
+  "verification_gaps": ["full C2 counter not re-run (network); relies on recorded L1 dry-run at build commit replay=1 rerun_checks=11"]
+}

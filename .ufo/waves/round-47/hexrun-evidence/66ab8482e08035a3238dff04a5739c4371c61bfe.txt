@@ -1,0 +1,35 @@
+repo: ollama/ollama
+claim: token 66ab8482e08035a3238dff04a5739c4371c61bfe is a commit id in ollama/ollama, the new_ref of registry/recheck-r45.tsv row S010 ("main HEAD" at the round-45 recheck) whose file is docs/api/openai-compatibility.mdx
+source: registry/recheck-r45.tsv row S010 (pin_ref c1737589973d5cefd676ef16eb43835663540035 -> new_ref 66ab8482e08035a3238dff04a5739c4371c61bfe); corpus/SOURCES.md:22 S010 pins docs/api/openai-compatibility.mdx @ ollama/ollama c1737589 (2026-09-23)
+upstream: blobless bare clone of https://github.com/ollama/ollama.git (seat scratch, directory ./ollama.git)
+  git clone --filter=blob:none --bare https://github.com/ollama/ollama.git ollama.git
+commands and output:
+$ git -C ollama.git cat-file -t 66ab8482e08035a3238dff04a5739c4371c61bfe
+commit
+$ git -C ollama.git log -1 --format='%H %cI %s' 66ab8482e08035a3238dff04a5739c4371c61bfe
+66ab8482e08035a3238dff04a5739c4371c61bfe 2026-10-25T21:25:58-07:00 MLX, MLX-C: version bump - prompt speed up for gemma/flint/laguna (#19291)
+$ git -C ollama.git rev-parse 66ab8482e08035a3238dff04a5739c4371c61bfe:docs/api/openai-compatibility.mdx
+75218fc8f8044a8d0c0f0adc6c77684fec57711f
+$ git -C ollama.git cat-file -s 75218fc8f8044a8d0c0f0adc6c77684fec57711f
+25472
+pin side (reverse check that the token names the new file, not the pin file):
+$ git -C ollama.git cat-file -t c1737589973d5cefd676ef16eb43835663540035
+commit
+$ git -C ollama.git log -1 --format='%H %cI %s' c1737589973d5cefd676ef16eb43835663540035
+c1737589973d5cefd676ef16eb43835663540035 2026-09-22T18:28:11-07:00 docs: document thinking control discovery (#18501)
+$ git -C ollama.git rev-parse c1737589973d5cefd676ef16eb43835663540035:docs/api/openai-compatibility.mdx
+272f98ea7ae8bf9d4cd463ebdca352793cbe1dda
+$ git -C ollama.git cat-file -s 272f98ea7ae8bf9d4cd463ebdca352793cbe1dda
+24664
+verdict: match. 66ab8482e08035a3238dff04a5739c4371c61bfe is a commit in ollama/ollama (2026-10-25T21:25:58-07:00); its docs/api/openai-compatibility.mdx blob is 75218fc8f8044a8d0c0f0adc6c77684fec57711f at 25472 bytes, the size row S010 records for its new copy, while the pin commit c1737589973d5cefd676ef16eb43835663540035 carries blob 272f98ea7ae8bf9d4cd463ebdca352793cbe1dda at 24664 bytes, the size the row records for its pin copy. The row's "file changed" reading is a real file change between two commits of the same repo.
+
+lane-side reverse check (the bytes the row was read from, hashed locally):
+$ git hash-object .ufo/waves/round-45/c1/upstream/S010/pin
+272f98ea7ae8bf9d4cd463ebdca352793cbe1dda
+$ git hash-object .ufo/waves/round-45/c1/upstream/S010/new
+75218fc8f8044a8d0c0f0adc6c77684fec57711f
+=> the blob ids the two commits resolve the path to are exactly the git blob ids of the lane's stored pin and new copies, so both ends of the recheck read those bytes from upstream.
+byte equality (the resolved blobs hashed through the clone, fetched on demand):
+$ git -C ollama.git cat-file blob 75218fc8f8044a8d0c0f0adc6c77684fec57711f | sha256sum
+44071a1277796b5ad28e51e561afd94ac75f6f76cd75c4b8d9d80b9dff760cd5  -
+=> equals the sha256 .ufo/waves/round-45/c1/upstream/fetch.log line 2 records for S010 new (HTTP 200, 25472 bytes), so the upstream bytes are the lane's stored copy.

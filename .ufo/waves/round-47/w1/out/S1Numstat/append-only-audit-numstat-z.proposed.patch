@@ -1,0 +1,28 @@
+Proposed fix — NOT APPLIED (leaf seat). Target: /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py lines 165-172
+Reason: git quotes a pathname containing "unusual" characters in --numstat output unless -z is used
+(diff-format page, rendered lines 2057-2060; git-diff page, rendered lines 3500-3512). The tool keys
+the per-file deletion count on the tab-split third field, so such a path would never match the
+contract path and its deletions would be silently unaudited. With --no-renames every record is a
+single-path record, so a -z triplet parse is exact.
+Residual limit even after this change: _text() decodes with errors="replace", so bytes that are not
+valid UTF-8 in a pathname would still not round-trip; a bytes-based key would be needed for those.
+The identical parse in the frozen counter (tools/round47-append-audit-v2-check.py:189-198) is out of
+scope for a fix — the counter is frozen; this report records it as a finding.
+
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -165,10 +165,11 @@
+ def numstat(repo, parent, commit, files):
+     res = {}
+-    raw = _text(repo, "diff", "--numstat", "--no-renames", parent, commit, "--", *files)
+-    for line in raw.split("\n"):
+-        parts = line.split("\t")
+-        if len(parts) >= 3 and parts[1].isdigit():
+-            res[parts[2]] = int(parts[1])
++    raw = _text(repo, "diff", "--numstat", "--no-renames", "-z", parent, commit, "--", *files)
++    fields = raw.split("\0")
++    for i in range(0, len(fields) - 2, 3):
++        deleted, path = fields[i + 1], fields[i + 2]
++        if deleted.isdigit():
++            res[path] = int(deleted)
+     return res

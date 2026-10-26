@@ -1,0 +1,26 @@
+repo: open-telemetry/semantic-conventions-genai
+claim: token 20259355b9631e3f032dcc099d1b5a2666818c42 is a commit id in open-telemetry/semantic-conventions-genai, the new_ref of registry/recheck-r45.tsv row S019 ("main HEAD" at the round-45 recheck) whose file is docs/gen-ai/gen-ai-metrics.md
+source: registry/recheck-r45.tsv row S019 (pin_ref 547934afa90a34298441caf80c43b27255c3a292 -> new_ref 20259355b9631e3f032dcc099d1b5a2666818c42); corpus/SOURCES.md:31 S019
+upstream: blobless bare clone of https://github.com/open-telemetry/semantic-conventions-genai.git (seat scratch, directory ./genai.git)
+  git clone --filter=blob:none --bare https://github.com/open-telemetry/semantic-conventions-genai.git genai.git
+commands and output:
+$ git -C genai.git cat-file -t 20259355b9631e3f032dcc099d1b5a2666818c42
+commit
+$ git -C genai.git log -1 --format='%H %cI %s' 20259355b9631e3f032dcc099d1b5a2666818c42
+20259355b9631e3f032dcc099d1b5a2666818c42 2026-10-26T04:55:42Z Use `gen_ai.client.embeddings.duration` and `gen_ai.client.embeddings.operation.input_tokens` metrics for embeddings, move embeddings signals to one file (#578)
+$ git -C genai.git rev-parse 20259355b9631e3f032dcc099d1b5a2666818c42:docs/gen-ai/gen-ai-metrics.md
+04e38a4dcd9e320626fb62ad89eb17d14166e81e
+$ git -C genai.git cat-file -s 04e38a4dcd9e320626fb62ad89eb17d14166e81e
+65149
+verdict: match. 20259355b9631e3f032dcc099d1b5a2666818c42 is a commit in open-telemetry/semantic-conventions-genai (2026-10-26T04:55:42Z, the embeddings-metrics move #578); its docs/gen-ai/gen-ai-metrics.md blob is 04e38a4dcd9e320626fb62ad89eb17d14166e81e at 65149 bytes, exactly the size row S019 records for its new copy (".ufo/waves/round-45/c1/upstream/S019/new" is that 65149-byte file). The row's "file changed in the client section only" reading is a real change between the two commits of that repo.
+
+lane-side reverse check (the bytes the row was read from, hashed locally):
+$ git hash-object .ufo/waves/round-45/c1/upstream/S019/pin
+c131e6d03b2e8246cba4ef428581999ed455e807
+$ git hash-object .ufo/waves/round-45/c1/upstream/S019/new
+04e38a4dcd9e320626fb62ad89eb17d14166e81e
+=> the blob ids the pin and new commits resolve the path to are exactly the git blob ids of the lane's stored pin and new copies.
+byte equality (the resolved new blob hashed through the clone, fetched on demand):
+$ git -C genai.git cat-file blob 04e38a4dcd9e320626fb62ad89eb17d14166e81e | sha256sum
+a3ea5831a2862f738da277689432cc29e99d2cba6856282e365b42969fcbf40f  -
+=> equals the sha256 .ufo/waves/round-45/c1/upstream/fetch.log line 6 records for S019 new (HTTP 200, 65149 bytes).

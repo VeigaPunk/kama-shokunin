@@ -1,0 +1,67 @@
+--- C1 file:// receipt replayed by the non-selftest path
+    exit: 0
+    stdout: replay match=True refused=None mismatches=0 exit=0
+    match: True
+    refused: None
+    seconds: 0.06
+    server: /fast/scratch/hyaku/kama-r47/Sen2Replay/e2/c1/w/server/build/bin/llama-server
+--- C2 http:// model url
+    exit: 2
+    refused: url-scheme:http://example.invalid/m.gguf
+--- C3 receipt records server.sha256=000..., archive member differs
+    exit: 1
+    refused: None
+    mismatches: ['outcome:pass->setup-error', 'server.sha256:0000000000000000000000000000000000000000000000000000000000000000->194d880e566e805c64e78d14a03ddb6bf98fbdd87feabb543aab52175e2943bf', 'check:health_ready:not-evaluated']
+    marker_exists: True
+    marker: ['/fast/scratch/hyaku/kama-r47/Sen2Replay/e2/c3/w/server/build/bin/llama-server', '-m', '/fast/scratch/hyaku/kama-r47/Sen2Replay/e2/c3/w/download/m.gguf', '--alias', 'sen2', '--host', '127.0.0.1', '--port', '45323', '-c', '256', '-t', '1', '--no-webui', '--offline']
+    seconds: 0.1
+--- C4 wrong asset digest
+    exit: 2
+    refused: digest-mismatch:srv.tar.gz:want=1111111111111111111111111111111111111111111111111111111111111111:got=93450de046efdc539a870e50a6da3caec08b25456b4901522988810c146a44da
+    tree_exists: False
+    sentinel_extracted: []
+    work_listing: ['download']
+--- C5 second run reuses the first run's extracted tree
+    run1_exit: 0
+    run2_exit: 0
+    archive2_members: ['README']
+    run2_server: /fast/scratch/hyaku/kama-r47/Sen2Replay/e2/c5/w/server/build/bin/llama-server
+    run2_server_sha: eb6758e20ff3171ff7f5ec07e72d1369ae8156f1b5a3576bca8195e9f09582c4
+    receipt_sha: eb6758e20ff3171ff7f5ec07e72d1369ae8156f1b5a3576bca8195e9f09582c4
+    run2_match: True
+--- C6 fetch() copies the whole object before any digest is computed
+    source_bytes: 67108864
+    fetched_bytes: 67108864
+    note: acquire() hashes the completed file; sha256_file reads it again
+--- C7a download aborted mid-body
+    error: OSError: connection reset mid-body
+    part_file_exists: True
+    part_bytes: 4096
+    dir_listing: ['dest.bin.part']
+--- C7b IncompleteRead inside replay()
+    escaped_exception: http.client.IncompleteRead: IncompleteRead(7 bytes read, 1000 more expected)
+    caught_by_tool: no (http.client.HTTPException is not OSError/URLError/TarError)
+    note: the CLI then exits 1 through a traceback and writes no --out
+--- C8 replay --timeout 3 against a live tool that spawns a grandchild
+    exit: 2
+    stdout: replay match=False refused=could-not-run:TimeoutExpired:Command '['/usr/bin/python3', '/fast/scratch/hyaku/kama-r47/Sen2Replay/demo/fake_live.py', '--server', '/fast/scratch/hyaku/kama-r47/Sen2Replay/e2/c8/w2/server/build/bin/llama-server', '--model', '/fast/scratch/hyaku/kama-r47/Sen2Replay/e2/c8/w2/download/m.gguf', '--model-sha256', '22383a41d7c0807a033bd96b1e73c2b10d208da096ac94bb329ebe4959542c06', '--alias', 'sen2', '--ctx', '256', '--threads', '1', '--server-asset-url', 'file:///fast/scratch/hyaku/kama-r47/Sen2Replay/e2/c1/srv.tar.gz', '--server-asset-sha256', '5d6db13f07e354ec896503691a944eef97d01be49982c538060de49c9f57bd5e', '--server-member', 'build/bin/llama-server', '--model-url', 'file:///fast/scratch/hyaku/kama-r47/Sen2Replay/e2/m.gguf', '--out', '/fast/scratch/hyaku/kama-r47/Sen2Replay/e2/c8/w2/rerun-receipt.json']' timed out after 3.0 seconds mismatches=0 exit=2
+    live_pid: 1102794
+    live_alive: False
+    grandchild: 1102836
+    grandchild_alive: True
+    note: subprocess.run(timeout) SIGKILLs only the direct child; no start_new_session, no killpg in the replay tool
+--- C9 outer timeout on the replay process (the counter's shape)
+    outer: TimeoutExpired (outer kill)
+    live_pid: 1105623
+    live_alive: True
+    grandchild_alive: True
+    note: counter run_replay uses subprocess.run(timeout=1200) with no process group, so the live tool survives the counter's timeout
+--- C10 environment handed to the live tool
+    exit: 0
+    child_env: {'TMPDIR': '/fast/scratch/hyaku/kama-r47/Sen2Replay/e2/c10/w/tmp', 'HOME': '/home/vgpnk', 'KAMA_SEN2_SENTINEL': 'leak-123', 'LD_PRELOAD': None, 'PYTHONPATH': None}
+    work_tmp: /fast/scratch/hyaku/kama-r47/Sen2Replay/e2/c10/w/tmp
+    tmp_exists: True
+--- C11 bytes left under --work
+    exit: 0
+    total_bytes: 2081
+    files: [('download/m.gguf', 64), ('download/srv.tar.gz', 138), ('rerun-receipt.json', 1862), ('server/build/bin/llama-server', 17)]

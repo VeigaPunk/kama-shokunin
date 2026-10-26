@@ -1,0 +1,26 @@
+repo: open-telemetry/semantic-conventions-genai
+claim: token 547934afa90a34298441caf80c43b27255c3a292 is a commit id in open-telemetry/semantic-conventions-genai, the pin_ref of registry/recheck-r45.tsv row S019 whose file is docs/gen-ai/gen-ai-metrics.md
+source: registry/recheck-r45.tsv row S019 (pin_ref 547934afa90a34298441caf80c43b27255c3a292 -> new_ref 20259355b9631e3f032dcc099d1b5a2666818c42); corpus/SOURCES.md:31 S019 cites docs/gen-ai/gen-ai-metrics.md "main branch commit 547934a"
+upstream: blobless bare clone of https://github.com/open-telemetry/semantic-conventions-genai.git (seat scratch, directory ./genai.git)
+  git clone --filter=blob:none --bare https://github.com/open-telemetry/semantic-conventions-genai.git genai.git
+commands and output:
+$ git -C genai.git cat-file -t 547934afa90a34298441caf80c43b27255c3a292
+commit
+$ git -C genai.git log -1 --format='%H %cI %s' 547934afa90a34298441caf80c43b27255c3a292
+547934afa90a34298441caf80c43b27255c3a292 2026-10-18T02:49:01Z run conformance in strict mode, fix or declare violations (#444)
+$ git -C genai.git rev-parse 547934afa90a34298441caf80c43b27255c3a292:docs/gen-ai/gen-ai-metrics.md
+c131e6d03b2e8246cba4ef428581999ed455e807
+$ git -C genai.git cat-file -s c131e6d03b2e8246cba4ef428581999ed455e807
+64991
+verdict: match. 547934afa90a34298441caf80c43b27255c3a292 is a commit in open-telemetry/semantic-conventions-genai (2026-10-18T02:49:01Z); its docs/gen-ai/gen-ai-metrics.md blob is c131e6d03b2e8246cba4ef428581999ed455e807 at 64991 bytes, exactly the size row S019 records for its pin copy (".ufo/waves/round-45/c1/upstream/S019/pin" is that 64991-byte file).
+
+lane-side reverse check (the bytes the row was read from, hashed locally):
+$ git hash-object .ufo/waves/round-45/c1/upstream/S019/pin
+c131e6d03b2e8246cba4ef428581999ed455e807
+$ git hash-object .ufo/waves/round-45/c1/upstream/S019/new
+04e38a4dcd9e320626fb62ad89eb17d14166e81e
+=> the blob ids the pin and new commits resolve the path to are exactly the git blob ids of the lane's stored pin and new copies.
+byte equality (the resolved pin blob hashed through the clone, fetched on demand):
+$ git -C genai.git cat-file blob c131e6d03b2e8246cba4ef428581999ed455e807 | sha256sum
+bf2359b880618efece9c8f5e1f76e3b3782fe8d8ecc22fb1df2bac3b549d7194  -
+=> equals the sha256 .ufo/waves/round-45/c1/upstream/fetch.log line 5 records for S019 pin (HTTP 200, 64991 bytes).

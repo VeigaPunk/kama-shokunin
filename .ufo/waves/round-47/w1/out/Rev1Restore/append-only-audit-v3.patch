@@ -1,0 +1,270 @@
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -1,5 +1,5 @@
+ #!/usr/bin/env python3
+-"""append-only-audit.py (v2) - set the lane's declared append-only files against its git history.
++"""append-only-audit.py (v3 proposal) - set the lane's declared append-only files against its history.
+ 
+ v2 (round 47) replaces the round-46 v1 definition after its outside closure
+ (corpus/lessons/round-46-verifier-spotcheck.md D1, D2) and the round-46 wave
+@@ -14,6 +14,20 @@
+     maximised there (v1 measured set membership at the audited tip only, so a
+     later head re-anchor lowered a restoration with no new deletion).
+ 
++v3 (proposed; not the round-47 instrument) closes the gap v2 leaves. The
++contract declares that SCORECARD.md's head sections are re-derived in place and
++that "a head re-anchor is an expected partial", but v2 has no machine-readable
++form of that carve-out, so its exit 1 at a tip whose only non-restored lines are
++head re-derivations carries no signal. v3 grades a deletion only when it falls
++outside a declared re-derived section. Section titles come from a trailing
++`exempt=<title>|<title>|...` clause in the contract row's note; a title is
++honoured only when that section holds at least as many lines at the audited
++revision as it did at the event's parent (a section that does not come back
++whole at the audited revision is not exempt, so a truncation whose repair never
++lands still fails). Lines in a declared and non-shrinking section are
++reported as exempt and do not gate the exit code; dated-section lines still do.
++The contract format is unchanged (4 cells, same header).
++
+ Definitions (the round-47 C1 counter, frozen before this tool, recomputes them
+ on its own code path):
+   contract     tab-separated; header `path<TAB>rule<TAB>declared_at<TAB>note`;
+@@ -32,17 +46,21 @@
+   restored_max the maximum held(x) over the window; restored_best the first window
+                commit attaining it (null when 0); restored_by the first window commit
+                with held == |D| (null when none)
+-  status       restored (max == |D|), unrestored (max == 0), partial otherwise
++  exempt       the deleted lines whose section title is declared in the row's
++               `exempt=` clause and whose section is non-shrinking over the window
++  graded       D minus the exempt lines; graded and exempt partition D
++  status       restored (max == |graded|), unrestored (max == 0 with |graded| > 0),
++               partial otherwise, exempt when |graded| == 0
+ 
+ Usage:
+   append-only-audit.py --repo DIR [--to REV] [--contract FILE | --files a,b,...]
+                        [--threshold N] [--json]
+   append-only-audit.py --selftest [--scratch DIR]
+ Without --contract and --files the contract is read from <to>:registry/append-only-contract.tsv.
+-Output: text lines `event <commit12> <file> deleted=N restored_max=K status=S
+-restored_best=<c12|-> restored_by=<c12|->` then `summary ...`; --json prints
+-{"schema": "append-only-audit/v2", "to", "threshold", "contract", "files", "commits",
+-"events": [...], "summary": {...}} with full commit ids.
++Output: text lines `event <commit12> <file> deleted=N graded=G exempt=E
++restored_max=K status=S restored_best=<c12|-> restored_by=<c12|->` then
++`summary ...`; --json prints {"schema": "append-only-audit/v3", "to", "threshold",
++"contract", "files", "commits", "events": [...], "summary": {...}} with full ids.
+ Exit: 0 no event partial or unrestored; 1 at least one; 2 could not evaluate.
+ Read-only on --repo. Fixtures (selftest) live under --scratch or $TMPDIR and are removed on exit.
+ """
+@@ -59,10 +77,11 @@
+ import sys
+ import tempfile
+ 
+-SCHEMA = "append-only-audit/v2"
++SCHEMA = "append-only-audit/v3"
+ CONTRACT = "registry/append-only-contract.tsv"
+ HEADER = "path\trule\tdeclared_at\tnote"
+ RULES = ("A", "A-row", "A-corr")
++EXEMPT = "exempt="
+ HUNK = re.compile(rb"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
+ 
+ 
+@@ -115,6 +134,7 @@
+ 
+ 
+ def deleted_lines(repo, parent, commit, path):
++    """(parent line number, text) of every deleted line, read by hunk-header counts."""
+     raw = _git(repo, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", "--text",
+                parent, commit, "--", path)
+     out, lines, i = [], raw.split(b"\n"), 0
+@@ -123,13 +143,14 @@
+         i += 1
+         if not m:
+             continue
++        start = int(m.group(1))
+         nd = int(m.group(2)) if m.group(2) is not None else 1
+         na = int(m.group(4)) if m.group(4) is not None else 1
+         gd = ga = 0
+         while i < len(lines) and (gd < nd or ga < na):
+             ln = lines[i]
+             if ln.startswith(b"-") and gd < nd:
+-                out.append(ln[1:])
++                out.append((start + gd, ln[1:]))
+                 gd += 1
+             elif ln.startswith(b"+") and ga < na:
+                 ga += 1
+@@ -137,10 +158,28 @@
+     return out
+ 
+ 
++def exempt_titles(note):
++    """Section titles from a contract note's trailing `exempt=a|b|c` clause."""
++    if EXEMPT not in note:
++        return []
++    return [t.strip() for t in note.rsplit(EXEMPT, 1)[1].split("|") if t.strip()]
++
++
++def section_of(body):
++    """The `## ...` heading owning each 1-based line; None before the first heading."""
++    out, title = [], None
++    for line in body:
++        if line.startswith(b"## "):
++            title = line.decode("utf-8", "replace").strip()
++        out.append(title)
++    return out
++
++
+ class Repo:
+     def __init__(self, path):
+         self.path = path
+         self._lines = {}
++        self._lists = {}
+ 
+     def blobs(self, specs):
+         """Map each `<rev>:<path>` spec to its blob id or None (one cat-file call)."""
+@@ -161,6 +200,14 @@
+             self._lines[blob] = collections.Counter(split_lines(_git(self.path, "cat-file", "blob", blob)))
+         return self._lines[blob]
+ 
++    def list_lines(self, blob):
++        """The blob's lines in order; empty for an absent blob."""
++        if blob is None:
++            return []
++        if blob not in self._lists:
++            self._lists[blob] = split_lines(_git(self.path, "cat-file", "blob", blob))
++        return self._lists[blob]
++
+ 
+ def numstat(repo, parent, commit, files):
+     res = {}
+@@ -176,12 +223,15 @@
+     """files: explicit list; else contract: (label, text); else the contract at <to>."""
+     r = Repo(repo_path)
+     to_full = _text(repo_path, "rev-parse", "--verify", to + "^{commit}").strip()
+-    label = None
++    label, notes = None, {}
+     if files is None:
+         if contract is None:
+             contract = (f"{to_full}:{CONTRACT}", _text(repo_path, "show", f"{to_full}:{CONTRACT}"))
+         label, text = contract
+-        files = expand(repo_path, to_full, [row[0] for row in parse_contract(text)])
++        rows = parse_contract(text)
++        files = expand(repo_path, to_full, [row[0] for row in rows])
++        for f in files:
++            notes[f] = [row[3] for row in rows if fnmatch.fnmatchcase(f, row[0])]
+     files = sorted(set(files))
+     commits, parents = [], {}
+     for line in _text(repo_path, "rev-list", "--topo-order", "--reverse", "--parents", to_full).split("\n"):
+@@ -201,38 +251,53 @@
+             dl = deleted_lines(repo_path, p, c, f)
+             if len(dl) != ns[f]:
+                 raise AuditError(f"{c[:12]} {f}: hunk count {len(dl)} != numstat {ns[f]}")
+-            D = collections.Counter(dl)
++            D = collections.Counter(text for _o, text in dl)
+             pb = r.blobs([f"{p}:{f}"])[f"{p}:{f}"]
+             K = r.lines(pb) - D
++            psec = section_of(r.list_lines(pb))
+             window = commits[i:]
+             wb = r.blobs([f"{x}:{f}" for x in window])
++            tsec = section_of(r.list_lines(wb[f"{window[-1]}:{f}"]))
++            titles = {t for note in notes.get(f, ()) for t in exempt_titles(note)}
++            eligible = {t for t in titles
++                        if sum(1 for s in tsec if s == t) >= sum(1 for s in psec if s == t)}
++            graded = collections.Counter(text for o, text in dl if psec[o - 1] not in eligible)
++            gcount = sum(graded.values())
+             best, best_c, by = 0, None, None
+             for x in window:
+                 M = r.lines(wb[f"{x}:{f}"])
+-                h = sum(min(n, max(0, M[l] - K[l])) for l, n in D.items())
++                h = sum(min(n, max(0, M[l] - K[l])) for l, n in graded.items())
+                 if h > best:
+                     best, best_c = h, x
+-                if h == len(dl):
++                if gcount and h == gcount:
+                     by = x
+                     break
+-            status = "restored" if best == len(dl) else ("unrestored" if best == 0 else "partial")
+-            events.append({"commit": c, "file": f, "deleted": len(dl), "restored_max": best,
++            if gcount == 0:
++                status = "exempt"
++            else:
++                status = "restored" if best == gcount else ("unrestored" if best == 0 else "partial")
++            events.append({"commit": c, "file": f, "deleted": len(dl), "graded": gcount,
++                           "exempt": len(dl) - gcount, "restored_max": best,
+                            "restored_best": best_c, "restored_by": by, "status": status})
+     summary = {"commits": len(commits), "files": len(files), "events": len(events),
+                "restored": sum(e["status"] == "restored" for e in events),
+                "partial": sum(e["status"] == "partial" for e in events),
+-               "unrestored": sum(e["status"] == "unrestored" for e in events)}
++               "unrestored": sum(e["status"] == "unrestored" for e in events),
++               "exempt": sum(e["status"] == "exempt" for e in events),
++               "exempt_lines": sum(e["exempt"] for e in events)}
+     return {"schema": SCHEMA, "to": to_full, "threshold": threshold, "contract": label, "files": files,
+             "commits": len(commits), "events": events, "summary": summary}
+ 
+ 
+ def render(res):
+-    out = [f"event {e['commit'][:12]} {e['file']} deleted={e['deleted']} restored_max={e['restored_max']} "
++    out = [f"event {e['commit'][:12]} {e['file']} deleted={e['deleted']} graded={e['graded']} "
++           f"exempt={e['exempt']} restored_max={e['restored_max']} "
+            f"status={e['status']} restored_best={(e['restored_best'] or '-')[:12]} "
+            f"restored_by={(e['restored_by'] or '-')[:12]}" for e in res["events"]]
+     s = res["summary"]
+     out.append(f"summary commits={s['commits']} files={s['files']} events={s['events']} restored={s['restored']} "
+-               f"partial={s['partial']} unrestored={s['unrestored']}")
++               f"partial={s['partial']} unrestored={s['unrestored']} exempt={s['exempt']} "
++               f"exempt_lines={s['exempt_lines']}")
+     return "\n".join(out)
+ 
+ 
+@@ -447,13 +512,50 @@
+         res = audit(f.d, t, threshold=5, files=F)
+         return len(res["events"]) == 1 and exit_code(res) == 1, str(res["events"])
+ 
++    HEAD_ROW = "SCORECARD.md\tA-corr\tSCORECARD.md:1\texempt=## Axes"
++
++    def _two_sections():
++        f = Fixture(root)
++        head = ["## Axes"] + lines("h", 24)
++        tail = ["## Round 1 — dated"] + lines("d", 25)
++        base = f.commit({"SCORECARD.md": head + tail, CONTRACT: [HEADER, HEAD_ROW]})
++        return f, head, tail, base
++
++    def t_exempt_head_rewritten():
++        # a declared head row rewritten in place is exempt and does not gate the exit code
++        f, head, tail, base = _two_sections()
++        t = f.commit({"SCORECARD.md": ["## Axes"] + lines("h2", 24) + tail})
++        res = audit(f.d, t)
++        e = res["events"]
++        return (len(e) == 1 and e[0]["commit"] == t and e[0]["deleted"] == 24 and e[0]["graded"] == 0
++                and e[0]["exempt"] == 24 and e[0]["status"] == "exempt" and exit_code(res) == 0), str(e)
++
++    def t_exempt_head_gutted():
++        # the same section collapsed instead of rewritten is not exempt
++        f, head, tail, base = _two_sections()
++        t = f.commit({"SCORECARD.md": ["## Axes", "collapsed"] + tail})
++        res = audit(f.d, t)
++        e = res["events"]
++        return (len(e) == 1 and e[0]["exempt"] == 0 and e[0]["graded"] == 24
++                and e[0]["status"] == "unrestored" and exit_code(res) == 1), str(e)
++
++    def t_dated_rewritten():
++        # a dated section rewritten in place is not declared re-derivable and still fails
++        f, head, tail, base = _two_sections()
++        t = f.commit({"SCORECARD.md": head + ["## Round 1 — dated"] + lines("d2", 25)})
++        res = audit(f.d, t)
++        e = res["events"]
++        return (len(e) == 1 and e[0]["deleted"] == 25 and e[0]["exempt"] == 0
++                and e[0]["status"] == "unrestored" and exit_code(res) == 1), str(e)
++
+     for name, fn in [("no-deletion", t_none), ("below-threshold", t_below),
+                      ("exact-threshold-unrestored", t_exact_unrestored), ("restored-later", t_restored),
+                      ("partial", t_partial), ("undeclared-file", t_undeclared),
+                      ("declared-file-removed", t_file_removed), ("merge-first-parent", t_merge_first_parent),
+                      ("dashdash-lines", t_dashdash), ("crlf-and-eof", t_crlf_and_eof), ("multiset", t_multiset),
+                      ("window-max", t_window_max), ("relocation", t_relocation), ("contract", t_contract),
+-                     ("threshold-flag", t_threshold_flag)]:
++                     ("threshold-flag", t_threshold_flag), ("exempt-head-rewritten", t_exempt_head_rewritten),
++                     ("exempt-head-gutted", t_exempt_head_gutted), ("dated-rewritten", t_dated_rewritten)]:
+         case(name, fn)
+     for name, ok, why in cases:
+         print(f"{'pass' if ok else 'FAIL'} {name}" + ("" if ok else f": {why[:300]}"))

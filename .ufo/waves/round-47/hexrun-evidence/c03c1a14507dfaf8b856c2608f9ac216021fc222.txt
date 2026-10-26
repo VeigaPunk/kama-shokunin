@@ -1,0 +1,58 @@
+hexrun upstream evidence (advisory, outside the llama.cpp rows) -- seat X4HexUp2, round 47, 2026-10-26
+repo: torvalds/linux
+cited by: registry/recheck-r45.tsv rows 5 and 6 (key S048:tcp_ipv6.c, S048:in6.h) as `new_ref`; tools/round45-recheck-audit.py
+role: linux kernel commit ref used as the v7.3 side of the S048 recheck, not a llama.cpp object.
+The token sorts inside the seat's range a4b4feae..e1e006f1 but is not a row blob of
+registry/release-recheck-b11889.tsv. It is not the git blob id of the lane's own byte copies
+(git hash-object of .ufo/waves/round-45/c1/upstream/S048_tcp_ipv6.c/new is
+7fa4ed2fd4f166a9c0454c2f4ee4cd3b541b4c84 and of S048_in6.h/new is
+5a47339ef7d7688f3ca50f574d1fa62783fc56fe), so the row's `new_ref` cell names a commit, not a blob.
+
+verification command (no clone, no API quota; a raw.githubusercontent 404 marks a missing commit):
+command: curl -sS -o /dev/null -w '%{http_code}\n' -I https://raw.githubusercontent.com/torvalds/linux/c03c1a14507dfaf8b856c2608f9ac216021fc222/net/ipv6/tcp_ipv6.c
+output:  200
+
+lane-side corroboration, .ufo/waves/round-45/c1/upstream/fetch.log lines 8 and 10 (blob at 3a09a1d9):
+  S048:tcp_ipv6.c	new	https://raw.githubusercontent.com/torvalds/linux/c03c1a14507dfaf8b856c2608f9ac216021fc222/net/ipv6/tcp_ipv6.c	HTTP 200	65043	cc8f8c48c4b9008f52ee66901df04555090c94638278b448bc8b2b3d68ed0fc4
+  S048:in6.h	new	https://raw.githubusercontent.com/torvalds/linux/c03c1a14507dfaf8b856c2608f9ac216021fc222/include/uapi/linux/in6.h	HTTP 200	7593	4b70a42300079eee8dc3bc9d6c327a04cbd8eb75b2fa9d995d9f0a3306d6b27d
+
+seat X4HexR45 confirmation (own blobless bare clone of https://github.com/torvalds/linux.git; the item assigns this token to that seat, so both readings are kept side by side):
+  git init -q --bare linux.git
+  git -C linux.git fetch --filter=blob:none --depth=1 origin refs/tags/v7.3:refs/tags/v7.3
+  git -C linux.git fetch --filter=blob:none --depth=1 origin refs/tags/v7.2:refs/tags/v7.2
+$ git ls-remote https://github.com/torvalds/linux.git refs/tags/v7.2 refs/tags/v7.3 'refs/tags/v7.2^{}' 'refs/tags/v7.3^{}'
+237a1c39e8dfd3e1c6f1f023eea37a48ec04cc63	refs/tags/v7.2
+8d3ae59288f1e7d58d76558a6ee96d533bc5019f	refs/tags/v7.2^{}
+091b06388b117fefdcb63336ac09956a4914b961	refs/tags/v7.3
+c03c1a14507dfaf8b856c2608f9ac216021fc222	refs/tags/v7.3^{}
+$ git -C linux.git cat-file -t 091b06388b117fefdcb63336ac09956a4914b961
+tag
+$ git -C linux.git cat-file -p 091b06388b117fefdcb63336ac09956a4914b961 | head -4
+object c03c1a14507dfaf8b856c2608f9ac216021fc222
+type commit
+tag v7.3
+tagger Linus Torvalds <torvalds@linux-foundation.org> 1792365298 -1000
+$ git -C linux.git cat-file -t c03c1a14507dfaf8b856c2608f9ac216021fc222
+commit
+$ git -C linux.git log -1 --format='%H %cI %s' c03c1a14507dfaf8b856c2608f9ac216021fc222
+c03c1a14507dfaf8b856c2608f9ac216021fc222 2026-10-18T13:14:58-10:00 Linux 7.3
+$ git -C linux.git rev-parse c03c1a14507dfaf8b856c2608f9ac216021fc222:net/ipv6/tcp_ipv6.c c03c1a14507dfaf8b856c2608f9ac216021fc222:include/uapi/linux/in6.h
+7fa4ed2fd4f166a9c0454c2f4ee4cd3b541b4c84
+5a47339ef7d7688f3ca50f574d1fa62783fc56fe
+$ git -C linux.git rev-parse 8d3ae59288f1e7d58d76558a6ee96d533bc5019f:net/ipv6/tcp_ipv6.c 8d3ae59288f1e7d58d76558a6ee96d533bc5019f:include/uapi/linux/in6.h
+9e9155b1b3aa752631d8a2e4db73fb39a229b9ae
+5a47339ef7d7688f3ca50f574d1fa62783fc56fe
+$ git hash-object .ufo/waves/round-45/c1/upstream/S048_tcp_ipv6.c/new .ufo/waves/round-45/c1/upstream/S048_tcp_ipv6.c/pin .ufo/waves/round-45/c1/upstream/S048_in6.h/new .ufo/waves/round-45/c1/upstream/S048_in6.h/pin
+7fa4ed2fd4f166a9c0454c2f4ee4cd3b541b4c84
+9e9155b1b3aa752631d8a2e4db73fb39a229b9ae
+5a47339ef7d7688f3ca50f574d1fa62783fc56fe
+5a47339ef7d7688f3ca50f574d1fa62783fc56fe
+verdict: match. c03c1a14507dfaf8b856c2608f9ac216021fc222 is the commit that annotated tag object v7.3 091b0638 peels to ("Linux 7.3", 2026-10-18), it is reachable in torvalds/linux, its net/ipv6/tcp_ipv6.c and include/uapi/linux/in6.h blobs equal the git blob ids of the lane's stored new copies (65043 and 7593 bytes), and in6.h resolves to the same blob at the v7.2 pin commit 8d3ae59288f1e7d58d76558a6ee96d533bc5019f, so the row's unchanged-file reading for in6.h and its changed reading for tcp_ipv6.c both hold.
+byte equality at both ends (blobs hashed through the clone, fetched on demand):
+$ git -C linux.git cat-file blob 7fa4ed2fd4f166a9c0454c2f4ee4cd3b541b4c84 | sha256sum
+cc8f8c48c4b9008f52ee66901df04555090c94638278b448bc8b2b3d68ed0fc4  -
+$ git -C linux.git cat-file blob 5a47339ef7d7688f3ca50f574d1fa62783fc56fe | sha256sum
+4b70a42300079eee8dc3bc9d6c327a04cbd8eb75b2fa9d995d9f0a3306d6b27d  -
+$ git -C linux.git cat-file -s 9e9155b1b3aa752631d8a2e4db73fb39a229b9ae
+65016
+=> the two sha256s equal fetch.log lines 8 and 10 (.ufo/waves/round-45/c1/upstream/fetch.log) and 4b70a423 is the in6.h digest corpus/SOURCES.md:60 already cites; the v7.2 pin-side tcp_ipv6.c blob is 65016 bytes, the pin copy's size.

@@ -1,0 +1,25 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 9442eb8c..0777630e 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -207,14 +207,12 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
+             window = commits[i:]
+             wb = r.blobs([f"{x}:{f}" for x in window])
+             best, best_c, by = 0, None, None
+-            for x in window:
+-                M = r.lines(wb[f"{x}:{f}"])
+-                h = sum(min(n, max(0, M[l] - K[l])) for l, n in D.items())
+-                if h > best:
+-                    best, best_c = h, x
+-                if h == len(dl):
+-                    by = x
+-                    break
++            x = window[-1]
++            M = r.lines(wb[f"{x}:{f}"])
++            h = sum(min(n, max(0, M[l] - K[l])) for l, n in D.items())
++            best, best_c = h, x
++            if h == len(dl):
++                by = x
+             status = "restored" if best == len(dl) else ("unrestored" if best == 0 else "partial")
+             events.append({"commit": c, "file": f, "deleted": len(dl), "restored_max": best,
+                            "restored_best": best_c, "restored_by": by, "status": status})

@@ -1,0 +1,79 @@
+--- /dev/fd/63	2026-10-26 18:33:17.182700246 -0300
++++ /fast/scratch/hyaku/kama-r47/V0Census/fix-base/sources-append-only.py	2026-10-26 18:33:17.020879255 -0300
+@@ -25,10 +25,13 @@
+ later repeat of that header or of a separator line is skipped. No row is
+ lost by parsing: a table line that is not a well-formed `S0NN` row, a table
+ line without a leading pipe, and a row-like line (`| S0NN |`, also with
+-markup around the id or without the leading pipe) anywhere in the blob that
+-was not read as a registry row are parse errors, never skipped. Fenced code,
+-HTML comments and setext headings are not modelled; they can only add rows
+-to the section or end in exit 2, never hide a row.
++markup around the id or without the leading pipe) anywhere in the registry
++section that was not read as a registry row are parse errors, never skipped.
++Rows that look like registry rows but appear under later headings of the same
++or a higher level (e.g. re-verification appendix tables, lessons) are outside
++the section and are not graded. Fenced code, HTML comments and setext
++headings are not modelled; they can only add rows to the section or end in
++exit 2, never hide a row.
+ 
+ Exit codes:
+   0  no violations (added rows and mutable-cell changes are fine)
+@@ -36,8 +39,8 @@
+   2  unreadable blob (git failure, not UTF-8) or unparseable registry
+      (missing or repeated `Registry` heading, header column names not exactly
+      the contract's eleven in any order, missing or misfit separator,
+-     malformed row width, unrecognised table line, row-like line outside the
+-     parsed registry, duplicate id) — the guard refuses to grade a table it
++     malformed row width, unrecognised table line, row-like line inside the
++     registry but outside a parsed table, duplicate id) — the guard refuses to grade a table it
+      cannot fully parse; an internal fault also exits 2, never 1
+ 
+ Cell-splitting note: GFM technically requires `\|` inside code spans in table
+@@ -168,11 +171,13 @@
+     row_lines = set()
+     header = None
+     seen_separator = False
++    section_end = len(lines)
+     for idx in range(start, len(lines)):
+         line = lines[idx]
+         heading = HEADING_RE.match(line)
+         if heading:
+             if len(heading.group(1)) <= level:
++                section_end = idx
+                 break
+             continue  # a deeper subheading stays inside the registry section
+         if not ROW_RE.match(line):
+@@ -224,11 +229,12 @@
+ 
+     if header is None or not seen_separator:
+         raise ParseError(f"{label}: registry section has no complete table header")
+-    for idx, line in enumerate(lines):
++    for idx in range(start, section_end):
++        line = lines[idx]
+         if idx not in row_lines and ROWLIKE_RE.match(line):
+             raise ParseError(
+-                f"{label}:{idx + 1}: row-like line outside the parsed registry "
+-                "table; refusing to drop it"
++                f"{label}:{idx + 1}: row-like line inside the registry section "
++                "but outside a parsed table; refusing to drop it"
+             )
+     if not rows_by_id:
+         raise ParseError(f"{label}: registry table has no data rows")
+@@ -489,9 +495,14 @@
+          1, {"S002:scope"})
+ 
+     # 30-38. a row the parser cannot read, or a table it cannot read
+-    # consistently, is reported (exit 2), never silently skipped
+-    case("row-like line outside the registry", _doc(s001), _doc(s001) + s002 + "\n",
+-         2, error="row-like line outside")
++    # consistently, is reported (exit 2), never silently skipped — but only
++    # inside the `## Registry` section: row-like lines under later or earlier
++    # headings (re-verification appendix tables) are outside the section and
++    # do not poison the grade
++    case("row-like line outside the registry", _doc(s001),
++         _doc(s001) + s002 + "\n", 0)
++    case("row-like line before the registry", _doc(s001),
++         s002 + "\n" + _doc(s001), 0)
+     case("row without a leading pipe", _doc(s001, s002),
+          _doc(s001, s002.lstrip("| ")), 2, error="without a leading pipe")
+     case("row with a marked-up id", _doc(s001, _row("`S002`")),

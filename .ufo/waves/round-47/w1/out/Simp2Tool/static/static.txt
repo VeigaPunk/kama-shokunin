@@ -1,0 +1,45 @@
+Static dead-code checks on the two tools (seat Simp2Tool, round 47)
+====================================================================
+$ vulture --min-confidence 60 tools/append-only-audit.py tools/kama-live-replay.py
+(no output) rc=0
+$ vulture --min-confidence 100 tools/append-only-audit.py tools/kama-live-replay.py
+(no output) rc=0
+$ uvx pyflakes tools/append-only-audit.py tools/kama-live-replay.py
+(no output) rc=0
+
+=> no unused name, import, local or parameter at vulture's confidence levels.
+   The deletions below are therefore structural (unused regex captures, a parameter no
+   caller overrides, an option with no caller, an output field with no reader), not
+   named dead code.
+
+Unused hunk captures (append-only-audit.py:66, used at :126-127):
+$ grep -n "m.group" tools/append-only-audit.py
+126:        nd = int(m.group(2)) if m.group(2) is not None else 1
+127:        na = int(m.group(4)) if m.group(4) is not None else 1
+Only groups 2 (deleted count) and 4 (added count) are read. Group 1 (old start line)
+and group 3 (new start line) are captured and never referenced anywhere in the file.
+
+Callers of the options under review:
+$ grep -rn -- "--live" <lane> --include=*.py --include=*.sh --include=*.md | grep -v tools/kama-live-replay.py | grep -v out/K2Cheat
+tools/__pycache__/kama-live-replay.cpython-314.pyc:18  (byte-code of the tool itself)
+.ufo/waves/round-47/w1/out/K2Fresh/transcript.md:65    (a seat quoting the option list)
+.ufo/waves/round-47/w1/out/V2Replay.md:20              (a seat naming --live as a hazard)
+=> no invocation anywhere passes --live.
+
+Retained options and their in-wave callers (do not delete):
+  --threshold   .ufo/waves/round-47/w1/ seat L1Lowthr: "append-only-audit.py --repo <clone>
+                --to 3a09a1d9... --contract .../registry/append-only-contract.tsv --threshold 1 --json";
+                seat R1Sample uses the same command. SCORECARD.md round-46 table also records a
+                "--threshold 1" run (66 events, 11/6/49).
+  --files       seat N3Fleet: "append-only-audit.py --repo <lane> --to <tip>
+                --files SCORECARD.md,LOG.md,corpus/QUALITY.md,corpus/README.md,corpus/SOURCES.md --json",
+                used to run the same measure against sibling lanes that have no contract.
+  --timeout     seat X2Offline probes "(d) a --timeout of 1 second".
+  --json        corpus/QUALITY.md:387 (KQ67) and both counters.
+  --scratch     tools/round47-append-audit-v2-check.py:337 runs the tool with
+                "--selftest --scratch <dir>".
+  inputs / live_exit in the replay J: inputs.archive_sha256 is quoted as evidence by
+                .ufo/waves/round-47/w1/out/K2Fresh.md:32 and the round-47 replay J files
+                (X2Replica/replay-2.json:9-16, K2Fresh/replay-out.json:9-16). live_exit is
+                read by no counter and quoted by no report (grep "live_exit" over the lane:
+                only the JSON artifacts and the tool itself).

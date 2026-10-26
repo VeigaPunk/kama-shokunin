@@ -1,0 +1,13 @@
+--- append-only-audit.py (C2 pristine)
++++ append-only-audit.py (C2 mutant)
+@@ -94,8 +94,8 @@
+         if len(cells) != 4:
+             raise AuditError(f"contract line {n}: {len(cells)} cells, want 4")
+         pat, rule, decl, note = (c.strip() for c in cells)
+-        if not pat or rule not in RULES or not re.fullmatch(r"[^:]+:\d+", decl):
+-            raise AuditError(f"contract line {n}: bad path, rule or declared_at")
++        if not pat or rule not in RULES:
++            raise AuditError(f"contract line {n}: bad path or rule")
+         rows.append((pat, rule, decl, note))
+     if not rows:
+         raise AuditError("contract has no rows")

@@ -1,0 +1,17 @@
+repo: ggml-org/llama.cpp
+claim: token 9706b3ac58d5c30bdbf06c17b61151070421a64a is the git blob id of common/arg.cpp at release b11889
+source: registry/release-recheck-b11889.tsv rows S054, S056 and S110 (release_blob column), path common/arg.cpp
+upstream: blobless bare clone of https://github.com/ggml-org/llama.cpp.git (seat scratch, directory ./up)
+  git init -q --bare up
+  git -C up fetch --filter=blob:none --depth=1 https://github.com/ggml-org/llama.cpp.git refs/tags/b11889:refs/tags/b11889
+commands and output:
+$ git -C up cat-file -t b11889
+commit
+$ git -C up rev-parse 'b11889^{commit}'
+d854d98bae598388ecea1ed84396587e5edc326d
+$ git -C up rev-parse 'b11889^{commit}:common/arg.cpp'
+9706b3ac58d5c30bdbf06c17b61151070421a64a
+pin side:
+$ git -C up rev-parse '704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:common/arg.cpp'
+267b84874912508f5ce205916a1abaaf6fd878b8
+verdict: match. b11889 is a lightweight tag on commit d854d98bae598388ecea1ed84396587e5edc326d; its common/arg.cpp blob is 9706b3ac58d5c30bdbf06c17b61151070421a64a, and the pin-side blob at 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad is 267b84874912508f5ce205916a1abaaf6fd878b8, equal to the rows' pin_blob column.

@@ -1,0 +1,17 @@
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -115,6 +115,14 @@
+         a, b = (orig.get(side) or {}).get("sha256"), (rerun.get(side) or {}).get("sha256")
+         if a != b:
+             out.append(f"{side}.sha256:{a}->{b}")
++    for k in ("install_links_sha256", "install_tree_sha256"):
++        a, b = (orig.get("server") or {}).get(k), (rerun.get("server") or {}).get(k)
++        if a != b:
++            out.append(f"server.{k}:{a}->{b}")
++    for side in ("tool", "probe"):
++        a, b = (orig.get(side) or {}).get("sha256"), (rerun.get(side) or {}).get("sha256")
++        if a != b:
++            out.append(f"{side}.sha256:{a}->{b}")
+     eo, er = evaluated(orig), evaluated(rerun)
+     for cid, passed in sorted(eo.items(), key=lambda kv: str(kv[0])):
+         if cid not in er:

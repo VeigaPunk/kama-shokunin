@@ -1,0 +1,17 @@
+repo: ggml-org/llama.cpp
+claim: token 4ab280a6196c9dbac0716475eafb53cbbeb35ce4 is the git blob id of src/llama-kv-cache.cpp at release b11889
+source: registry/release-recheck-b11889.tsv rows S113 and S135 (release_blob column), path src/llama-kv-cache.cpp
+upstream: blobless bare clone of https://github.com/ggml-org/llama.cpp.git (seat scratch, directory ./up)
+  git init -q --bare up
+  git -C up fetch --filter=blob:none --depth=1 https://github.com/ggml-org/llama.cpp.git refs/tags/b11889:refs/tags/b11889
+commands and output:
+$ git -C up cat-file -t b11889
+commit
+$ git -C up rev-parse 'b11889^{commit}'
+d854d98bae598388ecea1ed84396587e5edc326d
+$ git -C up rev-parse 'b11889^{commit}:src/llama-kv-cache.cpp'
+4ab280a6196c9dbac0716475eafb53cbbeb35ce4
+pin side:
+$ git -C up rev-parse '704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:src/llama-kv-cache.cpp'
+b7dfadef4638f6221608f48aff0a1f83df281063
+verdict: match. b11889 is a lightweight tag on commit d854d98bae598388ecea1ed84396587e5edc326d; its src/llama-kv-cache.cpp blob is 4ab280a6196c9dbac0716475eafb53cbbeb35ce4, and the pin-side blob at 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad is b7dfadef4638f6221608f48aff0a1f83df281063, equal to the rows' pin_blob column.

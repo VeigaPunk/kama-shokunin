@@ -1,0 +1,209 @@
+[
+ {
+  "id": "M01",
+  "category": "schema-string-receipts",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M01.py",
+  "sha256": "e9ddde83073267d4d474c0c61e6ee6ebe819981184de21ef41adf2c1697bd28c",
+  "old": "SCHEMA = \"kama-llamacpp-live/v4\"",
+  "new": "SCHEMA = \"kama-llamacpp-live/v5\"",
+  "note": "receipts+rerun schema check broken"
+ },
+ {
+  "id": "M02",
+  "category": "schema-string-replayjson",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M02.py",
+  "sha256": "dd37881c08d51b8bad717de44284c07094c948ffebe3ea70652a59049df51934",
+  "old": "j.get(\"schema\") != \"kama-live-replay/v1\"",
+  "new": "j.get(\"schema\") != \"kama-live-replay/v9\"",
+  "note": "replay-json schema check broken"
+ },
+ {
+  "id": "M03",
+  "category": "outcome",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M03.py",
+  "sha256": "f460c12f873476373c2f82a91874ab42c5af36dfaabbdc8fd8261e83e61f6b00",
+  "old": "if rec.get(\"outcome\") != \"pass\":",
+  "new": "if rec.get(\"outcome\") != \"ok\":",
+  "note": "receipts outcome check broken"
+ },
+ {
+  "id": "M04",
+  "category": "outcome-rerun",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M04.py",
+  "sha256": "ec7fe3a065cc74fd8b6ce2955345b5253ed834e72c9a75a0ac8060d424e5b812",
+  "old": "if rr.get(\"schema\") != SCHEMA or rr.get(\"outcome\") != \"pass\":",
+  "new": "if rr.get(\"schema\") != SCHEMA or rr.get(\"outcome\") != \"ok\":",
+  "note": "rerun outcome check broken"
+ },
+ {
+  "id": "M05",
+  "category": "evaluated-floor-up",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M05.py",
+  "sha256": "7dd4d7f70c443144a8df310ccdbbf3f34e54909df47d41083aa2366ac8f4e99f",
+  "old": "if len(ev) < 10 or not all(v is True for v in ev.values()):",
+  "new": "if len(ev) < 12 or not all(v is True for v in ev.values()):",
+  "note": "floor above real count 11"
+ },
+ {
+  "id": "M06",
+  "category": "evaluated-floor-down",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M06.py",
+  "sha256": "126e73936daa31e37c9449603904fbc63ee2da9f9630e28322c37d509cc4b57e",
+  "old": "if len(ev) < 10 or not all(v is True for v in ev.values()):",
+  "new": "if len(ev) < 1 or not all(v is True for v in ev.values()):",
+  "note": "floor neutered"
+ },
+ {
+  "id": "M07",
+  "category": "asset-url-invert",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M07.py",
+  "sha256": "8fcd33b95f86c24bd4eacbe660194286ce34a033880f675db3e86ee9f13c97d0",
+  "old": "if srv.get(\"asset_url\") != ASSET_URL:",
+  "new": "if srv.get(\"asset_url\") == ASSET_URL:",
+  "note": "url equality inverted"
+ },
+ {
+  "id": "M08",
+  "category": "asset-url-weaken",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M08.py",
+  "sha256": "0647931ecd2ef7cc484701b00308c9fc13dc7771467f88602b7c234aada978a5",
+  "old": "if srv.get(\"asset_url\") != ASSET_URL:",
+  "new": "if not str(srv.get(\"asset_url\") or \"\").startswith(\"https://\"):",
+  "note": "url pinned to scheme only"
+ },
+ {
+  "id": "M09",
+  "category": "member-check-weaken",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M09.py",
+  "sha256": "e3c335cfae5d28cb13b63c9cabc9874ba8c15a665113c6843ea91400ef05242c",
+  "old": "if not isinstance(srv.get(\"member\"), str) or not srv.get(\"member\"):",
+  "new": "if not isinstance(srv.get(\"member\"), str):",
+  "note": "empty member accepted"
+ },
+ {
+  "id": "M10",
+  "category": "model-url-scheme",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M10.py",
+  "sha256": "5151cbc1bc29d54bd8d2fac873da437211dff97a973a1a51a9ac98fc7700a518",
+  "old": "if not str(mdl.get(\"url\") or \"\").startswith(\"https://\"):",
+  "new": "if not str(mdl.get(\"url\") or \"\").startswith(\"http://\"):",
+  "note": "scheme check flipped"
+ },
+ {
+  "id": "M11",
+  "category": "model-sha-equality-drop",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M11.py",
+  "sha256": "2bf0820300d08671bd01aeeeb3cac327b8bc48efa772ce0dcd674edeb36ec696",
+  "old": "and mdl.get(\"sha256\") == msha):",
+  "new": "):",
+  "note": "provenance/model digest equality dropped"
+ },
+ {
+  "id": "M12",
+  "category": "buildinfo-prefix",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M12.py",
+  "sha256": "0cacf83d6684c8565a8aeb40bfe731081f8c4d39bf8f38e46bc97d414e91244c",
+  "old": "if not str(bi or \"\").startswith(RELEASE + \"-\"):",
+  "new": "if not str(bi or \"\").startswith(RELEASE):",
+  "note": "prefix hyphen dropped"
+ },
+ {
+  "id": "M13",
+  "category": "logpath-rule",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M13.py",
+  "sha256": "5a12a8b951444431f10a195c510b82c12bdb9347d7fbee7085fb05b39bee7f19",
+  "old": "elif lp is not None:",
+  "new": "else:",
+  "note": "null log_path flagged"
+ },
+ {
+  "id": "M14",
+  "category": "started-utc-invert",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M14.py",
+  "sha256": "295e44295267c479c89fb028ca3c2fb0ac9730b4e7e895c9670f3850b30196cb",
+  "old": "if st is None or st < t0:",
+  "new": "if st is None or st > t0:",
+  "note": "freshness inverted"
+ },
+ {
+  "id": "M15",
+  "category": "started-utc-drop",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M15.py",
+  "sha256": "3be8577197fc528e7d8c4dc728f039d89d38d7d7497bc4abf62ffa44f7f17a28",
+  "old": "if st is None or st < t0:",
+  "new": "if st is None:",
+  "note": "freshness dropped"
+ },
+ {
+  "id": "M16",
+  "category": "inside-weaken",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M16.py",
+  "sha256": "983e764755bece16119e7adf55f798c6f9329b5525979e50a28ff65e9a4b3cc9",
+  "old": "return rp == rr or rp.startswith(rr + os.sep)",
+  "new": "return rp.startswith(rr)",
+  "note": "sibling-prefix escape allowed"
+ },
+ {
+  "id": "M17",
+  "category": "percheck-equality-drop",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M17.py",
+  "sha256": "47fa35a3e95fc267fbf035e0d3abd35155de5213eb072fc4c1803ffacdbfa8d4",
+  "old": "for cid, passed in ev1.items():",
+  "new": "for cid, passed in []:",
+  "note": "per-check equality loop neutered"
+ },
+ {
+  "id": "M18",
+  "category": "tamper-flip-noop",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M18.py",
+  "sha256": "a02c1dcde663abfd83d96f0b500cacd5ed92e2803ffc0355b56b3dcb18260e0c",
+  "old": "node[keys[-1]] = (\"0\" if v[0] != \"0\" else \"1\") + v[1:]",
+  "new": "node[keys[-1]] = v",
+  "note": "tamper flip becomes no-op"
+ },
+ {
+  "id": "M19",
+  "category": "tamper-exit-rule",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M19.py",
+  "sha256": "026037b329dcdaae64dc682a5b46871a96c9779780ee019cca75d92ba4b9f073",
+  "old": "if code in (0, None) or (isinstance(rr, dict) and rr.get(\"outcome\") == \"pass\"):",
+  "new": "if code not in (0, None) or (isinstance(rr, dict) and rr.get(\"outcome\") == \"pass\"):",
+  "note": "exit rule inverted"
+ },
+ {
+  "id": "M20",
+  "category": "newrow-commit-drop",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M20.py",
+  "sha256": "28b06cb860a5a3a97462c4d359a7077e00b1893253f39e2f97ab894e2ce805cc",
+  "old": "ln.startswith(\"| S\") and RELEASE in ln and COMMIT in ln",
+  "new": "ln.startswith(\"| S\") and RELEASE in ln",
+  "note": "commit containment dropped"
+ },
+ {
+  "id": "M21",
+  "category": "newrow-pattern",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M21.py",
+  "sha256": "7167b89bebe4f8ec1695c0b426e6e0928c2262f265fc01d9fd93bcba408a2332",
+  "old": "ln.startswith(\"| S\") and RELEASE in ln and COMMIT in ln",
+  "new": "ln.startswith(\"| R\") and RELEASE in ln and COMMIT in ln",
+  "note": "row pattern broken"
+ },
+ {
+  "id": "M22",
+  "category": "receipts-subset",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M22.py",
+  "sha256": "e581519ea8ff176967ec777ae801b3284841d050d0986a7978987df50d0ccfb4",
+  "old": "for n in (1, 2, 3)",
+  "new": "for n in (1, 2)",
+  "note": "receipt-3 dropped from receipts leg"
+ },
+ {
+  "id": "M23",
+  "category": "asset-sha-invert",
+  "path": "/fast/scratch/hyaku/kama-r47/M2Ctr/mut/M23.py",
+  "sha256": "548a29b769b19dcc33f4241bf3296b06c848bf290cfef092cbb720682ad0fea3",
+  "old": "if srv.get(\"asset_sha256\") != ASSET_SHA:",
+  "new": "if srv.get(\"asset_sha256\") == ASSET_SHA:",
+  "note": "digest equality inverted"
+ }
+]

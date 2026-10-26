@@ -1,0 +1,22 @@
+# round-47 X9Tally - shortcut-tally.py run record
+
+lane clone: /fast/scratch/hyaku/kama-r47/X9Tally/lane (git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin)
+clone commit: 3a09a1d93dcc16799cf6c4b48786e6440af134c4
+clone toplevel: /fast/scratch/hyaku/kama-r47/X9Tally/lane
+
+script: .ufo/waves/round-47/w1/out/X9Tally/shortcut-tally.py
+script sha256: ae35d7037a6d3a7ba418d13933c17031daaef99164c3d91d28a534c7dfe9626a
+python: Python 3.14.8
+
+commands (run from $S, exit codes in brackets):
+[0] python3 <script> --lane $S/lane --rounds 40-46            -> tally.out
+[0] python3 <script> --lane $S/lane --json                   -> tally.json
+[1] python3 <script> --lane $S/lane --check 7                -> check-fail.out
+[0] python3 <script> --lane $S/lane --check 8                -> check-pass.out
+[1] python3 <script> --lane $S/fix1 --check 99               -> unreadable-nosection.out
+[1] python3 <script> --lane $S/fix2 --check 99               -> unreadable-report.out
+[2] python3 <script> --lane $S/nonexistent                  -> usage-nonexistent-lane.out
+
+fixtures (built under $S, removed afterwards):
+  fix1 = clone/SCORECARD.md + clone/.ufo/waves with the '## Round 44 —' heading deleted (round 44 -> unreadable:no-section)
+  fix2 = clone/SCORECARD.md + clone/.ufo/waves with round-46 M2Tool.md verdict '**10 survived with demonstrated pristine-vs-mutant divergence**' changed to '**10 mutants with demonstrated pristine-vs-mutant divergence**' (no survived count -> unreadable:mutation-report)

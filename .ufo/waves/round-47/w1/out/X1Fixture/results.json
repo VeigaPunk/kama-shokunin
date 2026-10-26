@@ -1,0 +1,946 @@
+[
+ {
+  "case": "C01 binary (NUL) declared file loses 35 lines, text sibling loses 35",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c01-binary-nul",
+  "rc": 1,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"4f798460e351ea7651c6007b8ecd9cb24d80ef86\",\n \"threshold\": 20,\n \"contract\": \"4f798460e351ea7651c6007b8ecd9cb24d80ef86:registry/append-only-contract.tsv\",\n \"files\": [\n  \"assets/blob.bin\",\n  \"assets/plain.txt\"\n ],\n \"commits\": 2,\n \"events\": [\n  {\n   \"commit\": \"4f798460e351ea7651c6007b8ecd9cb24d80ef86\",\n   \"file\": \"assets/plain.txt\",\n   \"deleted\": 35,\n   \"res",
+  "secs": 0.041,
+  "truth": "only the text sibling is an event; the declared binary file's 35 deletions are skipped with no warning",
+  "expect_exit": 1,
+  "expect": [
+   {
+    "commit": "c2",
+    "file": "assets/plain.txt",
+    "deleted": 35,
+    "restored_max": 0,
+    "status": "unrestored"
+   }
+  ],
+  "got": [
+   {
+    "commit": "c2",
+    "file": "assets/plain.txt",
+    "deleted": 35,
+    "restored_max": 0,
+    "status": "unrestored",
+    "restored_best": null,
+    "restored_by": null
+   }
+  ],
+  "numstat": [
+   {
+    "event": "c2 assets/plain.txt",
+    "deleted": 35,
+    "numstat_no_renames": "0\t35\tassets/plain.txt",
+    "numstat_default_renames": "0\t35\tassets/plain.txt"
+   }
+  ],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "numstat_raw": {
+   "binary_default": "-\t-\tassets/blob.bin",
+   "binary_no_renames": "-\t-\tassets/blob.bin",
+   "plain": "0\t35\tassets/plain.txt"
+  },
+  "diff_binary": " assets/blob.bin | Bin 470 -> 55 bytes\n 1 file changed, 0 insertions(+), 0 deletions(-)\n",
+  "files": [
+   "assets/blob.bin",
+   "assets/plain.txt"
+  ],
+  "summary": {
+   "commits": 2,
+   "files": 2,
+   "events": 1,
+   "restored": 0,
+   "partial": 0,
+   "unrestored": 1
+  }
+ },
+ {
+  "case": "C02a declared file git mv out of the contract, then renamed back",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c02-rename-out-back",
+  "rc": 0,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"416b0d68fba25b909970b41d5eaa76afc2fcb525\",\n \"threshold\": 20,\n \"contract\": \"416b0d68fba25b909970b41d5eaa76afc2fcb525:registry/append-only-contract.tsv\",\n \"files\": [\n  \"data/doc.md\"\n ],\n \"commits\": 3,\n \"events\": [\n  {\n   \"commit\": \"ac09c17eedf2a04c7a33c34e3cb5508e0fa30d68\",\n   \"file\": \"data/doc.md\",\n   \"deleted\": 30,\n   \"restored_max\": 30,\n   \"restored_be",
+  "secs": 0.04,
+  "truth": "rename out reads as delete-30 (--no-renames); rename back restores it; git's rename-detecting numstat says 0 0",
+  "expect_exit": 0,
+  "expect": [
+   {
+    "commit": "c2",
+    "file": "data/doc.md",
+    "deleted": 30,
+    "restored_max": 30,
+    "restored_best": "c3",
+    "restored_by": "c3",
+    "status": "restored"
+   }
+  ],
+  "got": [
+   {
+    "commit": "c2",
+    "file": "data/doc.md",
+    "deleted": 30,
+    "restored_max": 30,
+    "status": "restored",
+    "restored_best": "c3",
+    "restored_by": "c3"
+   }
+  ],
+  "numstat": [
+   {
+    "event": "c2 data/doc.md",
+    "deleted": 30,
+    "numstat_no_renames": "0\t30\tdata/doc.md",
+    "numstat_default_renames": "0\t30\tdata/doc.md"
+   }
+  ],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "numstat_raw": {
+   "out_default_renames": "0\t30\tdata/doc.md",
+   "out_no_renames": "0\t30\tdata/doc.md",
+   "back_default_renames": "30\t0\tdata/doc.md"
+  },
+  "files": [
+   "data/doc.md"
+  ],
+  "summary": {
+   "commits": 3,
+   "files": 1,
+   "events": 1,
+   "restored": 1,
+   "partial": 0,
+   "unrestored": 0
+  }
+ },
+ {
+  "case": "C02b declared file git mv to a sibling path also inside the contract",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c02b-rename-inside-contract",
+  "rc": 0,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"3c9a0f01e4a0c57784e66003e4a16484267272c5\",\n \"threshold\": 20,\n \"contract\": \"3c9a0f01e4a0c57784e66003e4a16484267272c5:registry/append-only-contract.tsv\",\n \"files\": [\n  \"data/doc2.md\"\n ],\n \"commits\": 3,\n \"events\": [],\n \"summary\": {\n  \"commits\": 3,\n  \"files\": 1,\n  \"events\": 0,\n  \"restored\": 0,\n  \"partial\": 0,\n  \"unrestored\": 0\n }\n}\n",
+  "secs": 0.036,
+  "truth": "all 30 lines survive under data/doc2.md; the old path is absent at the tip, so the contract expansion drops it and the move is invisible (--files sees it)",
+  "expect_exit": 0,
+  "expect": [],
+  "got": [],
+  "numstat": [],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "control_files_run": {
+   "rc": 1,
+   "events": [
+    {
+     "commit": "5b1f66c099a1e8e7495ab4f7f54429d4835d1f41",
+     "file": "data/doc.md",
+     "deleted": 30,
+     "restored_max": 0,
+     "restored_best": null,
+     "restored_by": null,
+     "status": "unrestored"
+    }
+   ]
+  },
+  "numstat_out": "0\t30\tdata/doc.md",
+  "numstat_back": "1\t0\tdata/doc2.md",
+  "files": [
+   "data/doc2.md"
+  ],
+  "summary": {
+   "commits": 3,
+   "files": 1,
+   "events": 0,
+   "restored": 0,
+   "partial": 0,
+   "unrestored": 0
+  }
+ },
+ {
+  "case": "C03 declared file deleted and recreated with identical text",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c03-delete-recreate",
+  "rc": 0,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"a829386e5551b0d3ecf8917422b8af782023fc3f\",\n \"threshold\": 20,\n \"contract\": \"a829386e5551b0d3ecf8917422b8af782023fc3f:registry/append-only-contract.tsv\",\n \"files\": [\n  \"data/doc.md\"\n ],\n \"commits\": 3,\n \"events\": [\n  {\n   \"commit\": \"00b7fe0d9819c7c74a6fd14976c2993a034a87e6\",\n   \"file\": \"data/doc.md\",\n   \"deleted\": 30,\n   \"restored_max\": 30,\n   \"restored_be",
+  "secs": 0.039,
+  "truth": "delete-30 then a byte-identical recreate is restored in the recreate commit",
+  "expect_exit": 0,
+  "expect": [
+   {
+    "commit": "c2",
+    "file": "data/doc.md",
+    "deleted": 30,
+    "restored_max": 30,
+    "restored_best": "c3",
+    "restored_by": "c3",
+    "status": "restored"
+   }
+  ],
+  "got": [
+   {
+    "commit": "c2",
+    "file": "data/doc.md",
+    "deleted": 30,
+    "restored_max": 30,
+    "status": "restored",
+    "restored_best": "c3",
+    "restored_by": "c3"
+   }
+  ],
+  "numstat": [
+   {
+    "event": "c2 data/doc.md",
+    "deleted": 30,
+    "numstat_no_renames": "0\t30\tdata/doc.md",
+    "numstat_default_renames": "0\t30\tdata/doc.md"
+   }
+  ],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "files": [
+   "data/doc.md"
+  ],
+  "summary": {
+   "commits": 3,
+   "files": 1,
+   "events": 1,
+   "restored": 1,
+   "partial": 0,
+   "unrestored": 0
+  }
+ },
+ {
+  "case": "C04 delete 25 blank lines only, then add 25 unrelated blank lines",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c04-blank-lines",
+  "rc": 0,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"364a7949fb064150fdbc42e07f9ccf38fc56bc05\",\n \"threshold\": 20,\n \"contract\": \"364a7949fb064150fdbc42e07f9ccf38fc56bc05:registry/append-only-contract.tsv\",\n \"files\": [\n  \"data/notes.md\"\n ],\n \"commits\": 3,\n \"events\": [\n  {\n   \"commit\": \"0d36a137a99a9a6b17e45ede95d21e498cbba2fb\",\n   \"file\": \"data/notes.md\",\n   \"deleted\": 25,\n   \"restored_max\": 25,\n   \"restore",
+  "secs": 0.039,
+  "truth": "the 25 deleted empty lines are not back; 25 different empty lines were inserted 15 lines higher",
+  "expect_exit": 0,
+  "expect": [
+   {
+    "commit": "c2",
+    "file": "data/notes.md",
+    "deleted": 25,
+    "restored_max": 25,
+    "restored_best": "c3",
+    "restored_by": "c3",
+    "status": "restored"
+   }
+  ],
+  "got": [
+   {
+    "commit": "c2",
+    "file": "data/notes.md",
+    "deleted": 25,
+    "restored_max": 25,
+    "status": "restored",
+    "restored_best": "c3",
+    "restored_by": "c3"
+   }
+  ],
+  "numstat": [
+   {
+    "event": "c2 data/notes.md",
+    "deleted": 25,
+    "numstat_no_renames": "0\t25\tdata/notes.md",
+    "numstat_default_renames": "0\t25\tdata/notes.md"
+   }
+  ],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "diff_c1_c2": "diff --git a/data/notes.md b/data/notes.md\nindex b9f56f0..e1666f3 100644\n--- a/data/notes.md\n+++ b/data/notes.md\n@@ -31,25 +30,0 @@ head line 29\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n-\n",
+  "diff_c2_c3": "diff --git a/data/notes.md b/data/notes.md\nindex e1666f3..0eaa101 100644\n--- a/data/notes.md\n+++ b/data/notes.md\n@@ -15,0 +16,25 @@ head line 14\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n+\n",
+  "files": [
+   "data/notes.md"
+  ],
+  "summary": {
+   "commits": 3,
+   "files": 1,
+   "events": 1,
+   "restored": 1,
+   "partial": 0,
+   "unrestored": 0
+  }
+ },
+ {
+  "case": "C05a merge whose second parent deleted 30 lines (merge keeps them)",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c05-merge-side-deletes",
+  "rc": 1,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"c684ebef28e0415199319fc9b55481b7baa8a8fd\",\n \"threshold\": 20,\n \"contract\": \"c684ebef28e0415199319fc9b55481b7baa8a8fd:registry/append-only-contract.tsv\",\n \"files\": [\n  \"data/doc.md\"\n ],\n \"commits\": 4,\n \"events\": [\n  {\n   \"commit\": \"958ab5344740c0043747dcf4ff92e8759d06fa20\",\n   \"file\": \"data/doc.md\",\n   \"deleted\": 30,\n   \"restored_max\": 0,\n   \"restored_bes",
+  "secs": 0.041,
+  "truth": "both events unrestored: after the merge the audited file holds 10 lines. The side commit is NOT credited with c3, which still holds all 40 lines, because topo-order puts c3 before it",
+  "expect_exit": 1,
+  "expect": [
+   {
+    "commit": "c2",
+    "file": "data/doc.md",
+    "deleted": 30,
+    "restored_max": 0,
+    "restored_best": null,
+    "status": "unrestored"
+   },
+   {
+    "commit": "cm",
+    "file": "data/doc.md",
+    "deleted": 30,
+    "restored_max": 0,
+    "restored_best": null,
+    "status": "unrestored"
+   }
+  ],
+  "got": [
+   {
+    "commit": "c2",
+    "file": "data/doc.md",
+    "deleted": 30,
+    "restored_max": 0,
+    "status": "unrestored",
+    "restored_best": null,
+    "restored_by": null
+   },
+   {
+    "commit": "cm",
+    "file": "data/doc.md",
+    "deleted": 30,
+    "restored_max": 0,
+    "status": "unrestored",
+    "restored_best": null,
+    "restored_by": null
+   }
+  ],
+  "numstat": [
+   {
+    "event": "c2 data/doc.md",
+    "deleted": 30,
+    "numstat_no_renames": "0\t30\tdata/doc.md",
+    "numstat_default_renames": "0\t30\tdata/doc.md"
+   },
+   {
+    "event": "cm data/doc.md",
+    "deleted": 30,
+    "numstat_no_renames": "0\t30\tdata/doc.md",
+    "numstat_default_renames": "0\t30\tdata/doc.md"
+   }
+  ],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "merge_parents": "c684ebef28e0415199319fc9b55481b7baa8a8fd 87b1e2c97baecba4f6eb5c6ebe702e841f6be9e4 958ab5344740c0043747dcf4ff92e8759d06fa20",
+  "topo_order": [
+   "c1",
+   "c3",
+   "c2",
+   "cm"
+  ],
+  "lines_at_c3": 40,
+  "lines_at_cm": 10,
+  "files": [
+   "data/doc.md"
+  ],
+  "summary": {
+   "commits": 4,
+   "files": 1,
+   "events": 2,
+   "restored": 0,
+   "partial": 0,
+   "unrestored": 2
+  }
+ },
+ {
+  "case": "C05b merge -s ours: side's 30-line deletion never lands",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c05b-merge-ours",
+  "rc": 0,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"07edd6633025660a10316079c6832d187201f737\",\n \"threshold\": 20,\n \"contract\": \"07edd6633025660a10316079c6832d187201f737:registry/append-only-contract.tsv\",\n \"files\": [\n  \"data/doc.md\"\n ],\n \"commits\": 4,\n \"events\": [\n  {\n   \"commit\": \"958ab5344740c0043747dcf4ff92e8759d06fa20\",\n   \"file\": \"data/doc.md\",\n   \"deleted\": 30,\n   \"restored_max\": 30,\n   \"restored_be",
+  "secs": 0.039,
+  "truth": "the merge discards the side tree: no merge event; the side event is credited to cm, not to the c3 that already held all 40 lines",
+  "expect_exit": 0,
+  "expect": [
+   {
+    "commit": "c2",
+    "file": "data/doc.md",
+    "deleted": 30,
+    "restored_max": 30,
+    "restored_best": "cm",
+    "restored_by": "cm",
+    "status": "restored"
+   }
+  ],
+  "got": [
+   {
+    "commit": "c2",
+    "file": "data/doc.md",
+    "deleted": 30,
+    "restored_max": 30,
+    "status": "restored",
+    "restored_best": "cm",
+    "restored_by": "cm"
+   }
+  ],
+  "numstat": [
+   {
+    "event": "c2 data/doc.md",
+    "deleted": 30,
+    "numstat_no_renames": "0\t30\tdata/doc.md",
+    "numstat_default_renames": "0\t30\tdata/doc.md"
+   }
+  ],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "merge_parents": "07edd6633025660a10316079c6832d187201f737 87b1e2c97baecba4f6eb5c6ebe702e841f6be9e4 958ab5344740c0043747dcf4ff92e8759d06fa20",
+  "files": [
+   "data/doc.md"
+  ],
+  "summary": {
+   "commits": 4,
+   "files": 1,
+   "events": 1,
+   "restored": 1,
+   "partial": 0,
+   "unrestored": 0
+  }
+ },
+ {
+  "case": "C06 60k-line file, 30000 deleted, 20 window commits, then restored",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c06-60k-lines",
+  "rc": 0,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"cb1b7a55a29f038c0abbf4c18d9144e17f1a7236\",\n \"threshold\": 20,\n \"contract\": \"cb1b7a55a29f038c0abbf4c18d9144e17f1a7236:registry/append-only-contract.tsv\",\n \"files\": [\n  \"data/big.md\",\n  \"data/other.md\"\n ],\n \"commits\": 24,\n \"events\": [\n  {\n   \"commit\": \"c8668cb9a5ed80ff9416eb1ececa60f1b2a089be\",\n   \"file\": \"data/big.md\",\n   \"deleted\": 30000,\n   \"restored_ma",
+  "secs": 0.295,
+  "truth": "30000 deleted equals numstat; restoration only at the commit that puts all 60000 originals back",
+  "expect_exit": 0,
+  "expect": [
+   {
+    "commit": "c2",
+    "file": "data/big.md",
+    "deleted": 30000,
+    "restored_max": 30000,
+    "restored_best": "c23",
+    "restored_by": "c23",
+    "status": "restored"
+   }
+  ],
+  "got": [
+   {
+    "commit": "c2",
+    "file": "data/big.md",
+    "deleted": 30000,
+    "restored_max": 30000,
+    "status": "restored",
+    "restored_best": "c23",
+    "restored_by": "c23"
+   }
+  ],
+  "numstat": [
+   {
+    "event": "c2 data/big.md",
+    "deleted": 30000,
+    "numstat_no_renames": "0\t30000\tdata/big.md",
+    "numstat_default_renames": "0\t30000\tdata/big.md"
+   }
+  ],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "files": [
+   "data/big.md",
+   "data/other.md"
+  ],
+  "summary": {
+   "commits": 24,
+   "files": 2,
+   "events": 1,
+   "restored": 1,
+   "partial": 0,
+   "unrestored": 0
+  },
+  "commits_total": 24
+ },
+ {
+  "case": "C07a CRLF file: 25 lines restored with LF endings",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c07-crlf-lf-restore",
+  "rc": 1,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"a34720473ca3125950c4100441cff409c929ac0f\",\n \"threshold\": 20,\n \"contract\": \"a34720473ca3125950c4100441cff409c929ac0f:registry/append-only-contract.tsv\",\n \"files\": [\n  \"data/crlf.md\"\n ],\n \"commits\": 3,\n \"events\": [\n  {\n   \"commit\": \"4754bb20724fd54f7658021e3115f5110cf3c008\",\n   \"file\": \"data/crlf.md\",\n   \"deleted\": 25,\n   \"restored_max\": 0,\n   \"restored_b",
+  "secs": 0.039,
+  "truth": "byte-exact identity: b'crlf N\\r' != b'crlf N', so an LF recopy restores nothing",
+  "expect_exit": 1,
+  "expect": [
+   {
+    "commit": "c2",
+    "file": "data/crlf.md",
+    "deleted": 25,
+    "restored_max": 0,
+    "restored_best": null,
+    "restored_by": null,
+    "status": "unrestored"
+   }
+  ],
+  "got": [
+   {
+    "commit": "c2",
+    "file": "data/crlf.md",
+    "deleted": 25,
+    "restored_max": 0,
+    "status": "unrestored",
+    "restored_best": null,
+    "restored_by": null
+   }
+  ],
+  "numstat": [
+   {
+    "event": "c2 data/crlf.md",
+    "deleted": 25,
+    "numstat_no_renames": "0\t25\tdata/crlf.md",
+    "numstat_default_renames": "0\t25\tdata/crlf.md"
+   }
+  ],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "files": [
+   "data/crlf.md"
+  ],
+  "summary": {
+   "commits": 3,
+   "files": 1,
+   "events": 1,
+   "restored": 0,
+   "partial": 0,
+   "unrestored": 1
+  }
+ },
+ {
+  "case": "C07b CRLF file: 25 lines restored with CRLF endings",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c07b-crlf-crlf-restore",
+  "rc": 0,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"7a6fb10c1d2d05fcfa286571b717d22c199c9479\",\n \"threshold\": 20,\n \"contract\": \"7a6fb10c1d2d05fcfa286571b717d22c199c9479:registry/append-only-contract.tsv\",\n \"files\": [\n  \"data/crlf.md\"\n ],\n \"commits\": 3,\n \"events\": [\n  {\n   \"commit\": \"4754bb20724fd54f7658021e3115f5110cf3c008\",\n   \"file\": \"data/crlf.md\",\n   \"deleted\": 25,\n   \"restored_max\": 25,\n   \"restored_",
+  "secs": 0.038,
+  "truth": "identical CRLF lines count as restored (control for C07a)",
+  "expect_exit": 0,
+  "expect": [
+   {
+    "commit": "c2",
+    "file": "data/crlf.md",
+    "deleted": 25,
+    "restored_max": 25,
+    "restored_best": "c3",
+    "restored_by": "c3",
+    "status": "restored"
+   }
+  ],
+  "got": [
+   {
+    "commit": "c2",
+    "file": "data/crlf.md",
+    "deleted": 25,
+    "restored_max": 25,
+    "status": "restored",
+    "restored_best": "c3",
+    "restored_by": "c3"
+   }
+  ],
+  "numstat": [
+   {
+    "event": "c2 data/crlf.md",
+    "deleted": 25,
+    "numstat_no_renames": "0\t25\tdata/crlf.md",
+    "numstat_default_renames": "0\t25\tdata/crlf.md"
+   }
+  ],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "files": [
+   "data/crlf.md"
+  ],
+  "summary": {
+   "commits": 3,
+   "files": 1,
+   "events": 1,
+   "restored": 1,
+   "partial": 0,
+   "unrestored": 0
+  }
+ },
+ {
+  "case": "C08 '\\ No newline at end of file' on both sides of a 26-deletion hunk",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c08-no-newline-both",
+  "rc": 1,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"f5be19f15665f4543781531cb919e483ca92c02a\",\n \"threshold\": 20,\n \"contract\": \"f5be19f15665f4543781531cb919e483ca92c02a:registry/append-only-contract.tsv\",\n \"files\": [\n  \"data/nonl.md\"\n ],\n \"commits\": 2,\n \"events\": [\n  {\n   \"commit\": \"f5be19f15665f4543781531cb919e483ca92c02a\",\n   \"file\": \"data/nonl.md\",\n   \"deleted\": 26,\n   \"restored_max\": 0,\n   \"restored_b",
+  "secs": 0.037,
+  "truth": "hunk header says 26 deletions (25 filler + the bare final line); the two '\\ No newline' markers must not be counted and must not swallow a real line",
+  "expect_exit": 1,
+  "expect": [
+   {
+    "commit": "c2",
+    "file": "data/nonl.md",
+    "deleted": 26,
+    "restored_max": 0,
+    "status": "unrestored"
+   }
+  ],
+  "got": [
+   {
+    "commit": "c2",
+    "file": "data/nonl.md",
+    "deleted": 26,
+    "restored_max": 0,
+    "status": "unrestored",
+    "restored_best": null,
+    "restored_by": null
+   }
+  ],
+  "numstat": [
+   {
+    "event": "c2 data/nonl.md",
+    "deleted": 26,
+    "numstat_no_renames": "1\t26\tdata/nonl.md",
+    "numstat_default_renames": "1\t26\tdata/nonl.md"
+   }
+  ],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "diff": "diff --git a/data/nonl.md b/data/nonl.md\nindex c75858d..5d23251 100644\n--- a/data/nonl.md\n+++ b/data/nonl.md\n@@ -6,26 +6 @@ L line 4\n-F line 0\n-F line 1\n-F line 2\n-F line 3\n-F line 4\n-F line 5\n-F line 6\n-F line 7\n-F line 8\n-F line 9\n-F line 10\n-F line 11\n-F line 12\n-F line 13\n-F line 14\n-F line 15\n-F line 16\n-F line 17\n-F line 18\n-F line 19\n-F line 20\n-F line 21\n-F line 22\n-F line 23\n-F line 24\n-OLDLAST\n\\ No newline at end of file\n+NEWLAST\n\\ No newline at end of file\n",
+  "files": [
+   "data/nonl.md"
+  ],
+  "summary": {
+   "commits": 2,
+   "files": 1,
+   "events": 1,
+   "restored": 0,
+   "partial": 0,
+   "unrestored": 1
+  }
+ },
+ {
+  "case": "C08b removing the final newline is counted as a deletion restored in the same commit",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c08b-newline-only-churn",
+  "rc": 1,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"dd944451a51288f158fd490f8443c098ca08c830\",\n \"threshold\": 20,\n \"contract\": \"dd944451a51288f158fd490f8443c098ca08c830:registry/append-only-contract.tsv\",\n \"files\": [\n  \"data/nonl.md\"\n ],\n \"commits\": 2,\n \"events\": [\n  {\n   \"commit\": \"dd944451a51288f158fd490f8443c098ca08c830\",\n   \"file\": \"data/nonl.md\",\n   \"deleted\": 26,\n   \"restored_max\": 1,\n   \"restored_b",
+  "secs": 0.036,
+  "truth": "numstat also says 26 deletions / 1 addition: the '-L4'/'+L4' terminator pair contributes a deleted line whose text is present in the same commit, so held=1 at the event commit",
+  "expect_exit": 1,
+  "expect": [
+   {
+    "commit": "c2",
+    "file": "data/nonl.md",
+    "deleted": 26,
+    "restored_max": 1,
+    "status": "partial"
+   }
+  ],
+  "got": [
+   {
+    "commit": "c2",
+    "file": "data/nonl.md",
+    "deleted": 26,
+    "restored_max": 1,
+    "status": "partial",
+    "restored_best": "c2",
+    "restored_by": null
+   }
+  ],
+  "numstat": [
+   {
+    "event": "c2 data/nonl.md",
+    "deleted": 26,
+    "numstat_no_renames": "1\t26\tdata/nonl.md",
+    "numstat_default_renames": "1\t26\tdata/nonl.md"
+   }
+  ],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "diff": "diff --git a/data/nonl.md b/data/nonl.md\nindex fd5a489..47ca386 100644\n--- a/data/nonl.md\n+++ b/data/nonl.md\n@@ -5,26 +5 @@ L line 3\n-L line 4\n-L line 5\n-L line 6\n-L line 7\n-L line 8\n-L line 9\n-L line 10\n-L line 11\n-L line 12\n-L line 13\n-L line 14\n-L line 15\n-L line 16\n-L line 17\n-L line 18\n-L line 19\n-L line 20\n-L line 21\n-L line 22\n-L line 23\n-L line 24\n-L line 25\n-L line 26\n-L line 27\n-L line 28\n-L line 29\n+L line 4\n\\ No newline at end of file\n",
+  "files": [
+   "data/nonl.md"
+  ],
+  "summary": {
+   "commits": 2,
+   "files": 1,
+   "events": 1,
+   "restored": 0,
+   "partial": 1,
+   "unrestored": 0
+  }
+ },
+ {
+  "case": "C09 contract patterns with ** and []",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c09-contract-patterns",
+  "rc": 0,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"4d077799ce93cf1daae15f9417f3d61710f64077\",\n \"threshold\": 20,\n \"contract\": \"4d077799ce93cf1daae15f9417f3d61710f64077:registry/append-only-contract.tsv\",\n \"files\": [\n  \"corpus/lessons/sub/r2.md\",\n  \"docs/c1.md\"\n ],\n \"commits\": 2,\n \"events\": [],\n \"summary\": {\n  \"commits\": 2,\n  \"files\": 2,\n  \"events\": 0,\n  \"restored\": 0,\n  \"partial\": 0,\n  \"unrestored\": 0\n }",
+  "secs": 0.035,
+  "truth": "corpus/lessons/r1.md loses all 30 lines and is silent: '**' needs a directory level, '[1]' is a character class, the literal docs/c[1].md is never matched, and the zero-match row is accepted",
+  "expect_exit": 0,
+  "expect": [],
+  "got": [],
+  "numstat": [],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "tree": [
+   "README.md",
+   "corpus/lessons/r1.md",
+   "corpus/lessons/sub/r2.md",
+   "docs/b1.md",
+   "docs/c1.md",
+   "docs/c[1].md",
+   "registry/append-only-contract.tsv"
+  ],
+  "numstat_r1": "0\t30\tcorpus/lessons/r1.md",
+  "fnmatch_translate": {
+   "corpus/lessons/**/*.md": "(?s:corpus/lessons/(?>.*?/).*\\.md)\\z",
+   "docs/c[1].md": "(?s:docs/c[1]\\.md)\\z"
+  },
+  "files": [
+   "corpus/lessons/sub/r2.md",
+   "docs/c1.md"
+  ],
+  "summary": {
+   "commits": 2,
+   "files": 2,
+   "events": 0,
+   "restored": 0,
+   "partial": 0,
+   "unrestored": 0
+  }
+ },
+ {
+  "case": "C10 contract declared_at that resolves to nothing",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c10-declared-at-missing",
+  "rc": 1,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"c38c5ca2744249beefa321ef4bf09f7ba6c5bdfb\",\n \"threshold\": 20,\n \"contract\": \"c38c5ca2744249beefa321ef4bf09f7ba6c5bdfb:registry/append-only-contract.tsv\",\n \"files\": [\n  \"data/doc.md\"\n ],\n \"commits\": 2,\n \"events\": [\n  {\n   \"commit\": \"c38c5ca2744249beefa321ef4bf09f7ba6c5bdfb\",\n   \"file\": \"data/doc.md\",\n   \"deleted\": 35,\n   \"restored_max\": 0,\n   \"restored_bes",
+  "secs": 0.039,
+  "truth": "the tool audits normally and never resolves declared_at; the counter's contract leg rejects all three rows",
+  "expect_exit": 1,
+  "expect": [
+   {
+    "commit": "c2",
+    "file": "data/doc.md",
+    "deleted": 35,
+    "restored_max": 0,
+    "status": "unrestored"
+   }
+  ],
+  "got": [
+   {
+    "commit": "c2",
+    "file": "data/doc.md",
+    "deleted": 35,
+    "restored_max": 0,
+    "status": "unrestored",
+    "restored_best": null,
+    "restored_by": null
+   }
+  ],
+  "numstat": [
+   {
+    "event": "c2 data/doc.md",
+    "deleted": 35,
+    "numstat_no_renames": "0\t35\tdata/doc.md",
+    "numstat_default_renames": "0\t35\tdata/doc.md"
+   }
+  ],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "counter": {
+   "leg_contract_ok": false,
+   "files": [
+    "data/doc.md"
+   ],
+   "probs": [
+    "contract line 2: declared_at path MISSING.md absent at tip"
+   ],
+   "all_prob_count": 9,
+   "all_probs": [
+    "contract line 2: declared_at path MISSING.md absent at tip",
+    "contract line 3: README.md:999 does not hold a line containing 'append'",
+    "contract line 4: README.md:2 does not hold a line containing 'append'",
+    "contract expansion lacks SCORECARD.md",
+    "contract expansion lacks LOG.md",
+    "contract expansion lacks corpus/QUALITY.md",
+    "contract expansion lacks corpus/README.md",
+    "contract expansion lacks corpus/SOURCES.md",
+    "contract expansion holds no corpus/lessons/*.md file"
+   ]
+  },
+  "files": [
+   "data/doc.md"
+  ],
+  "summary": {
+   "commits": 2,
+   "files": 1,
+   "events": 1,
+   "restored": 0,
+   "partial": 0,
+   "unrestored": 1
+  }
+ },
+ {
+  "case": "C10b contract declared_at without :line",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c10b-declared-at-malformed",
+  "rc": 2,
+  "stderr": "could-not-evaluate: contract line 2: bad path, rule or declared_at",
+  "stdout_head": "",
+  "secs": 0.032,
+  "truth": "the tool refuses the contract (exit 2); the counter records a prob",
+  "expect_exit": 2,
+  "expect": [],
+  "got": [],
+  "numstat": [],
+  "verdict": "AS-EXPECTED (exit 2, no JSON)",
+  "problems": [],
+  "counter": {
+   "leg_contract_ok": false,
+   "files": [
+    "data/doc.md"
+   ],
+   "probs": [
+    "contract line 2: declared_at 'README.md' is not path:line"
+   ],
+   "all_prob_count": 7,
+   "all_probs": [
+    "contract line 2: declared_at 'README.md' is not path:line",
+    "contract expansion lacks SCORECARD.md",
+    "contract expansion lacks LOG.md",
+    "contract expansion lacks corpus/QUALITY.md",
+    "contract expansion lacks corpus/README.md",
+    "contract expansion lacks corpus/SOURCES.md",
+    "contract expansion holds no corpus/lessons/*.md file"
+   ]
+  }
+ },
+ {
+  "case": "C11 contract written with CRLF line endings",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c11-crlf-contract",
+  "rc": 1,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"8b39ebc578dc468e9ab5715a7d28d1bdd8491c5d\",\n \"threshold\": 20,\n \"contract\": \"8b39ebc578dc468e9ab5715a7d28d1bdd8491c5d:registry/append-only-contract.tsv\",\n \"files\": [\n  \"data/doc.md\"\n ],\n \"commits\": 2,\n \"events\": [\n  {\n   \"commit\": \"8b39ebc578dc468e9ab5715a7d28d1bdd8491c5d\",\n   \"file\": \"data/doc.md\",\n   \"deleted\": 27,\n   \"restored_max\": 0,\n   \"restored_bes",
+  "secs": 0.039,
+  "truth": "the tool rstrips \\r on the header and strips cells, so it accepts a CRLF contract; the counter compares the header byte-exact and rejects it",
+  "expect_exit": 1,
+  "expect": [
+   {
+    "commit": "c2",
+    "file": "data/doc.md",
+    "deleted": 27,
+    "restored_max": 0,
+    "status": "unrestored"
+   }
+  ],
+  "got": [
+   {
+    "commit": "c2",
+    "file": "data/doc.md",
+    "deleted": 27,
+    "restored_max": 0,
+    "status": "unrestored",
+    "restored_best": null,
+    "restored_by": null
+   }
+  ],
+  "numstat": [
+   {
+    "event": "c2 data/doc.md",
+    "deleted": 27,
+    "numstat_no_renames": "0\t27\tdata/doc.md",
+    "numstat_default_renames": "0\t27\tdata/doc.md"
+   }
+  ],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "counter": {
+   "leg_contract_ok": false,
+   "files": [],
+   "probs": [
+    "contract: header line is not exactly path<TAB>rule<TAB>declared_at<TAB>note"
+   ],
+   "all_prob_count": 1,
+   "all_probs": [
+    "contract: header line is not exactly path<TAB>rule<TAB>declared_at<TAB>note"
+   ]
+  },
+  "header_bytes": "b'path\\trule\\tdeclared_at\\tnote\\r\\n'",
+  "files": [
+   "data/doc.md"
+  ],
+  "summary": {
+   "commits": 2,
+   "files": 1,
+   "events": 1,
+   "restored": 0,
+   "partial": 0,
+   "unrestored": 1
+  }
+ },
+ {
+  "case": "C12 contract absent at the audited tip",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c12-contract-absent",
+  "rc": 2,
+  "stderr": "could-not-evaluate: git show 3aecbd5b34ff36c249528c90914e418866ce0bf0:registry/append-only-contract.tsv: fatal: path 'registry/append-only-contract.tsv' does not exist in '3aecbd5b34ff36c249528c90914e418866ce0bf0'",
+  "stdout_head": "",
+  "secs": 0.031,
+  "truth": "the tool exits 2 (could-not-evaluate); the counter reports contract=0 'absent at tip'",
+  "expect_exit": 2,
+  "expect": [],
+  "got": [],
+  "numstat": [],
+  "verdict": "AS-EXPECTED (exit 2, no JSON)",
+  "problems": [],
+  "counter": {
+   "leg_contract_ok": false,
+   "files": [],
+   "probs": [
+    "contract: absent at tip"
+   ],
+   "all_prob_count": 1,
+   "all_probs": [
+    "contract: absent at tip"
+   ]
+  }
+ },
+ {
+  "case": "C13 declared file deleted and left deleted (the violation the audit exists for)",
+  "repo": "/fast/scratch/hyaku/kama-r47/X1Fixture/fx/c13-file-deleted-at-tip",
+  "rc": 0,
+  "stderr": "",
+  "stdout_head": "{\n \"schema\": \"append-only-audit/v2\",\n \"to\": \"fc630cf6cabb84114879a76076a81d9c190d18bb\",\n \"threshold\": 20,\n \"contract\": \"fc630cf6cabb84114879a76076a81d9c190d18bb:registry/append-only-contract.tsv\",\n \"files\": [],\n \"commits\": 2,\n \"events\": [],\n \"summary\": {\n  \"commits\": 2,\n  \"files\": 0,\n  \"events\": 0,\n  \"restored\": 0,\n  \"partial\": 0,\n  \"unrestored\": 0\n }\n}\n",
+  "secs": 0.035,
+  "truth": "40 lines deleted and the file is absent at the tip, so the contract expansion does not contain it: 0 events, exit 0. The same repo with --files data/doc.md reports the event as unrestored, exit 1",
+  "expect_exit": 0,
+  "expect": [],
+  "got": [],
+  "numstat": [],
+  "verdict": "AS-EXPECTED",
+  "problems": [],
+  "numstat_raw": "0\t40\tdata/doc.md",
+  "control_files_run": {
+   "rc": 1,
+   "events": [
+    {
+     "commit": "fc630cf6cabb84114879a76076a81d9c190d18bb",
+     "file": "data/doc.md",
+     "deleted": 40,
+     "restored_max": 0,
+     "restored_best": null,
+     "restored_by": null,
+     "status": "unrestored"
+    }
+   ]
+  },
+  "summary": {
+   "commits": 2,
+   "files": 0,
+   "events": 0,
+   "restored": 0,
+   "partial": 0,
+   "unrestored": 0
+  },
+  "files": []
+ }
+]

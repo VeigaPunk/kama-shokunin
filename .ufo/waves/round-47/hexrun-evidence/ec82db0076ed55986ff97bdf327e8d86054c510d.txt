@@ -1,0 +1,23 @@
+repo: ggml-org/llama.cpp
+claim: token ec82db0076ed55986ff97bdf327e8d86054c510d is a git blob id in ggml-org/llama.cpp, the pin_blob of registry/release-recheck-b11889.tsv row S001: the blob of tools/server/README.md at the S001 file commit c0fd78626405c6d9b934efef0ec7291fcc20e3d6
+source: registry/release-recheck-b11889.tsv:2 row S001 (pin_blob ec82db0076ed55986ff97bdf327e8d86054c510d, release_blob 8e27e37b8d4aa623006e413e7c8c4062a542e079, changed 1); registry/release-recheck-b11906.tsv:2 row S001 (same two blobs, "file blob identical at b11889 and b11906"); corpus/SOURCES.md:13 S001 pins tools/server/README.md @ file commit c0fd78626405
+advisory: written by seat X4HexR45 outside its assigned token set. The round-47 hexrun range split ([0a14a962..9706b3ac] for X4HexUp1, [a4b4feae..e1e006f1] for X4HexUp2) does not cover this token: ec82db00 sorts after e1e006f1, so no seat was assigned it and it is the one unknown left after the four hexrun seats land (union gate unknown=1). Verified here because the repo and the clone were already in this seat's scratch.
+upstream: blobless bare clone of https://github.com/ggml-org/llama.cpp.git (seat scratch, directory ./llama.git)
+  git init -q --bare llama.git
+  git -C llama.git fetch --filter=blob:none origin '+refs/heads/master:refs/heads/master'
+  git -C llama.git fetch --filter=blob:none origin refs/tags/b11889:refs/tags/b11889
+commands and output:
+$ git -C llama.git cat-file -t ec82db0076ed55986ff97bdf327e8d86054c510d
+blob
+$ git -C llama.git rev-parse 'c0fd78626405c6d9b934efef0ec7291fcc20e3d6:tools/server/README.md'
+ec82db0076ed55986ff97bdf327e8d86054c510d
+$ git -C llama.git cat-file -s ec82db0076ed55986ff97bdf327e8d86054c510d
+119356
+release side (reverse check that the token names the pin blob, not the release blob):
+$ git -C llama.git rev-parse 'b11889^{commit}:tools/server/README.md'
+8e27e37b8d4aa623006e413e7c8c4062a542e079
+$ git -C llama.git rev-parse '4d71b42fd87db24b8b7c808c151b713aa4459cfd:tools/server/README.md'
+8e27e37b8d4aa623006e413e7c8c4062a542e079
+$ git -C llama.git cat-file -s 8e27e37b8d4aa623006e413e7c8c4062a542e079
+126663
+verdict: match. ec82db0076ed55986ff97bdf327e8d86054c510d is a git blob in ggml-org/llama.cpp: the tools/server/README.md blob at the S001 pin commit c0fd78626405c6d9b934efef0ec7291fcc20e3d6 (119356 bytes), the row's pin_blob cell. The release side resolves to a different blob, 8e27e37b8d4aa623006e413e7c8c4062a542e079 (126663 bytes), identical at b11889 and b11906, so the row's changed=1 and its b11906 "identical at both releases" note are both consistent.

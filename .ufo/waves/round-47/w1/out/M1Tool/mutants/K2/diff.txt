@@ -1,0 +1,11 @@
+--- append-only-audit.py (K2 pristine)
++++ append-only-audit.py (K2 mutant)
+@@ -203,7 +203,7 @@
+                 raise AuditError(f"{c[:12]} {f}: hunk count {len(dl)} != numstat {ns[f]}")
+             D = collections.Counter(dl)
+             pb = r.blobs([f"{p}:{f}"])[f"{p}:{f}"]
+-            K = r.lines(pb) - D
++            K = D - r.lines(pb)
+             window = commits[i:]
+             wb = r.blobs([f"{x}:{f}" for x in window])
+             best, best_c, by = 0, None, None

@@ -1,0 +1,39 @@
+Round-47 digest re-hash (seat X0Digest, 2026-10-26) — every digest the round-47 SOURCES rows S488 and S489 cite that can be re-hashed on this host, re-hashed here. Host linux x86_64 7.2.11-arch1-1. Paths are absolute except the wave files, which are relative to the lane root.
+
+$ sha256sum /home/vgpnk/.local/opt/llama-b11909/llama-server
+35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0  /home/vgpnk/.local/opt/llama-b11909/llama-server
+
+$ sha256sum /home/vgpnk/.local/opt/llama-b11909/libllama-server-impl.so
+b8f0f203f3c593225710bc2075b404944037b172c021e0136791dbff6f9043c2  /home/vgpnk/.local/opt/llama-b11909/libllama-server-impl.so
+
+$ sha256sum /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf
+270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d  /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf
+
+$ sha256sum .ufo/waves/round-47/c2/release-b11909.json
+6ad897dd84e64dcf6aff9997dc19d2e835b7a90adc37da12bb0e00b310db46d2  .ufo/waves/round-47/c2/release-b11909.json   (68603 bytes)
+
+$ sha256sum .ufo/waves/round-47/c2/live/receipt-1.json .ufo/waves/round-47/c2/live/receipt-2.json .ufo/waves/round-47/c2/live/receipt-3.json .ufo/waves/round-47/c2/live/install.txt
+a4caf311ac030ce3c50373d7f2c37aa62895bcec5deb93bfa8bbd24e0706e80d  .ufo/waves/round-47/c2/live/receipt-1.json
+d36d29417ce5cf7e2f9d1424a281e54b6ec44575f2b67be1acb3d8dec349eb49  .ufo/waves/round-47/c2/live/receipt-2.json
+f3f961517711a18ccfce7db837d116e06b7a01ab046f404c95e83c64b2542b68  .ufo/waves/round-47/c2/live/receipt-3.json
+80eb0e586aa1b111518cb233285555b431eee343db38465f84c50f69937eaa39  .ufo/waves/round-47/c2/live/install.txt
+
+$ sha256sum tools/kama-llamacpp-live.py tools/kama-live-replay.py tools/kama-probe.sh
+65301a3c76f925bf3316673d3774269f6d93ca22f4ccdb7c7139e6826b8ae65d  tools/kama-llamacpp-live.py
+39cd387a3a95b47865d81484ffe30664e653d5016c4c75d47abf6e855e43fdd0  tools/kama-live-replay.py
+36b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3  tools/kama-probe.sh
+
+Release asset (22475032 bytes) — not retained: /home/vgpnk/.local/opt holds only llama-b11755-bin-ubuntu-x64.tar.gz, and the archive is over the committed-file limit. A transient copy was re-hashed in seat scratch on 2026-10-26 and then deleted with the scratch (not retained, so not a verification path):
+
+$ sha256sum <transient copy of llama-b11909-bin-ubuntu-x64.tar.gz>
+bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b   (= the release record's assets[llama-b11909-bin-ubuntu-x64.tar.gz].digest)
+
+$ tar -xOf <transient copy> llama-b11909/llama-server | sha256sum
+35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0   (= the installed llama-server above)
+
+$ tar -xOf <transient copy> llama-b11909/libllama-server-impl.so | sha256sum
+b8f0f203f3c593225710bc2075b404944037b172c021e0136791dbff6f9043c2   (= the installed library above)
+
+Cross-check inside the receipts: receipt-1..3 `server.install_tree` carries `llama-server` 35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0 and `libllama-server-impl.so` b8f0f203f3c593225710bc2075b404944037b172c021e0136791dbff6f9043c2 — the same values as the installed files, and `model.sha256` / `model_sha256_post` both 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d, the same value as the cache copy.
+
+What this establishes: the server binary the receipts ran, the library beside it and the model they loaded are the digests the round-47 rows cite, and the transient asset whose members they are hashed to the release record's digest. It does not establish that the release asset digest still holds at any later download: b11909 is a Pre-release and mutable, and the archive is not kept.

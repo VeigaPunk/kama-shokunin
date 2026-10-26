@@ -1,0 +1,72 @@
+# X1Fixture run 2026-10-26T21:30:26Z host=Linux 7.2.11-arch1-1 python=Python 3.14.8 git=git version 2.56.0
+# pinned tool: /fast/scratch/hyaku/kama-r47/X1Fixture/pin/append-only-audit.py sha256 5d47bc77e9bde41a1af1fcba449e60fd027d9ed30fbf2770a5a53f177856f874
+# lane blob 3a09a1d9:tools/append-only-audit.py sha256 5d47bc77e9bde41a1af1fcba449e60fd027d9ed30fbf2770a5a53f177856f874
+# cmd: python3 run_cases.py /fast/scratch/hyaku/kama-r47/X1Fixture /fast/scratch/hyaku/kama-r47/X1Fixture/pin/append-only-audit.py /fast/scratch/hyaku/kama-r47/X1Fixture/results.json /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round47-append-audit-v2-check.py
+## tool --selftest (baseline of the pinned bytes)
+pass no-deletion
+pass below-threshold
+pass exact-threshold-unrestored
+pass restored-later
+pass partial
+pass undeclared-file
+pass declared-file-removed
+pass merge-first-parent
+pass dashdash-lines
+pass crlf-and-eof
+pass multiset
+pass window-max
+pass relocation
+pass contract
+pass threshold-flag
+AOA_SELFTEST pass=15 fail=0
+selftest exit=0
+## fixture suite
+AS-EXPECTED            C01 binary (NUL) declared file loses 35 lines, text sibling loses 35
+AS-EXPECTED            C02a declared file git mv out of the contract, then renamed back
+AS-EXPECTED            C02b declared file git mv to a sibling path also inside the contract
+AS-EXPECTED            C03 declared file deleted and recreated with identical text
+AS-EXPECTED            C04 delete 25 blank lines only, then add 25 unrelated blank lines
+AS-EXPECTED            C05a merge whose second parent deleted 30 lines (merge keeps them)
+AS-EXPECTED            C05b merge -s ours: side's 30-line deletion never lands
+AS-EXPECTED            C06 60k-line file, 30000 deleted, 20 window commits, then restored
+AS-EXPECTED            C07a CRLF file: 25 lines restored with LF endings
+AS-EXPECTED            C07b CRLF file: 25 lines restored with CRLF endings
+AS-EXPECTED            C08 '\ No newline at end of file' on both sides of a 26-deletion hunk
+AS-EXPECTED            C08b removing the final newline is counted as a deletion restored in the same commit
+AS-EXPECTED            C09 contract patterns with ** and []
+AS-EXPECTED            C10 contract declared_at that resolves to nothing
+AS-EXPECTED (exit 2, no JSON) C10b contract declared_at without :line
+AS-EXPECTED            C11 contract written with CRLF line endings
+AS-EXPECTED (exit 2, no JSON) C12 contract absent at the audited tip
+AS-EXPECTED            C13 declared file deleted and left deleted (the violation the audit exists for)
+18 cases -> /fast/scratch/hyaku/kama-r47/X1Fixture/results.json
+suite exit=0
+## rendered (text mode) output of the two headline cases
+--- C13 file deleted at tip, contract path:
+summary commits=2 files=0 events=0 restored=0 partial=0 unrestored=0
+exit=0
+--- C13 same repo, --files:
+event fc630cf6cabb data/doc.md deleted=40 restored_max=0 status=unrestored restored_best=- restored_by=-
+summary commits=2 files=1 events=1 restored=0 partial=0 unrestored=1
+exit=1
+--- C02b rename inside contract, --files control:
+event 5b1f66c099a1 data/doc.md deleted=30 restored_max=0 status=unrestored restored_best=- restored_by=-
+summary commits=3 files=1 events=1 restored=0 partial=0 unrestored=1
+exit=1
+--- C10 bogus declared_at (tool view):
+event c38c5ca27442 data/doc.md deleted=35 restored_max=0 status=unrestored restored_best=- restored_by=-
+summary commits=2 files=1 events=1 restored=0 partial=0 unrestored=1
+exit=1
+--- C11 CRLF contract (tool view):
+event 8b39ebc578dc data/doc.md deleted=27 restored_max=0 status=unrestored restored_best=- restored_by=-
+summary commits=2 files=1 events=1 restored=0 partial=0 unrestored=1
+exit=1
+--- C12 contract absent:
+could-not-evaluate: git show 3aecbd5b34ff36c249528c90914e418866ce0bf0:registry/append-only-contract.tsv: fatal: path 'registry/append-only-contract.tsv' does not exist in '3aecbd5b34ff36c249528c90914e418866ce0bf0'
+exit=2
+--- C08b numstat/diff:
+1	26	data/nonl.md
+-L line 28
+-L line 29
++L line 4
+\ No newline at end of file

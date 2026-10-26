@@ -1,0 +1,17 @@
+repo: ggml-org/llama.cpp
+claim: token 0a14a9620961ff627348952112b4a9a6a0513c43 is the git blob id of tools/server/server-schema.cpp at release b11889
+source: registry/release-recheck-b11889.tsv rows S140-S173 and S190-S191 (release_blob column), path tools/server/server-schema.cpp
+upstream: blobless bare clone of https://github.com/ggml-org/llama.cpp.git (seat scratch, directory ./up)
+  git init -q --bare up
+  git -C up fetch --filter=blob:none --depth=1 https://github.com/ggml-org/llama.cpp.git refs/tags/b11889:refs/tags/b11889
+commands and output:
+$ git -C up cat-file -t b11889
+commit
+$ git -C up rev-parse b11889
+d854d98bae598388ecea1ed84396587e5edc326d
+$ git -C up rev-parse 'b11889^{commit}:tools/server/server-schema.cpp'
+0a14a9620961ff627348952112b4a9a6a0513c43
+pin side (reverse check that the token names the release file, not the pin file):
+$ git -C up rev-parse '704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:tools/server/server-schema.cpp'
+54e126aa0c3572895042cd0a8c4faf4a0eb0b9f7
+verdict: match. b11889 is a lightweight tag (cat-file -t returns commit) on commit d854d98bae598388ecea1ed84396587e5edc326d; that commit's tools/server/server-schema.cpp blob is 0a14a9620961ff627348952112b4a9a6a0513c43, and the pin-side blob at 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad is 54e126aa0c3572895042cd0a8c4faf4a0eb0b9f7, equal to the rows' pin_blob column.

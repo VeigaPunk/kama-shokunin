@@ -1,0 +1,18 @@
+repo: ggml-org/llama.cpp
+claim: token 27384bebf697fec4e22df899fdbc345da4e89e91 is the git blob id of tools/quantize/README.md at release b11889 (and at pin ad1b88ca: the file is unchanged)
+source: registry/release-recheck-b11889.tsv row S015 (pin_blob and release_blob columns, both this token), path tools/quantize/README.md
+upstream: blobless bare clone of https://github.com/ggml-org/llama.cpp.git (seat scratch, directory ./up)
+  git init -q --bare up
+  git -C up fetch --filter=blob:none --depth=1 https://github.com/ggml-org/llama.cpp.git refs/tags/b11889:refs/tags/b11889
+  git -C up fetch --filter=blob:none --depth=1 https://github.com/ggml-org/llama.cpp.git ad1b88ca0d37a2171efba1c04f1a3531c78f1b52
+commands and output:
+$ git -C up cat-file -t b11889
+commit
+$ git -C up rev-parse 'b11889^{commit}'
+d854d98bae598388ecea1ed84396587e5edc326d
+$ git -C up rev-parse 'b11889^{commit}:tools/quantize/README.md'
+27384bebf697fec4e22df899fdbc345da4e89e91
+pin side:
+$ git -C up rev-parse 'ad1b88ca0d37a2171efba1c04f1a3531c78f1b52:tools/quantize/README.md'
+27384bebf697fec4e22df899fdbc345da4e89e91
+verdict: match. b11889 is a lightweight tag on commit d854d98bae598388ecea1ed84396587e5edc326d; its tools/quantize/README.md blob is 27384bebf697fec4e22df899fdbc345da4e89e91, byte-identical to the blob at pin commit ad1b88ca0d37a2171efba1c04f1a3531c78f1b52, which corroborates row S015's verdict unchanged-file.

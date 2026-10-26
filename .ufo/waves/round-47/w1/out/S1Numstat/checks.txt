@@ -1,0 +1,76 @@
+S1Numstat — command transcript (round 47, kama lane)
+All commands run 2026-10-26 from the fleet root; scratch S=/fast/scratch/hyaku/kama-r47/S1Numstat.
+
+1. Pages fetched
+   $ curl -sSL -o git-diff.html https://git-scm.com/docs/git-diff            -> rc 0
+   $ curl -sSL -o diff-format.html https://git-scm.com/docs/diff-format      -> rc 0
+   $ sha256sum git-diff.html diff-format.html
+     5ae80d1deee5dc2c1acafff5491c5ba019629b9a785e6781a3e8a411cf9e22ed  git-diff.html      (229155 bytes)
+     a486a5f8aa7c75fa7f114547af55a976baf026e5e387f287127e6c6656e2b078  diff-format.html   (63322 bytes)
+   Page versions, from the rendered page header text:
+     "git-diff last updated in 2.56.0"           (git-diff text line 1279)
+     "diff-format last updated in 2.55.0"        (diff-format text line 1233)
+
+2. Quote located (git-diff rendered text, lines 3419-3425)
+   3419: --numstat
+   3421: Similar to --stat, but shows number of added and
+   3422: deleted lines in decimal notation and pathname without
+   3423: abbreviation, to make it more machine friendly.  For
+   3424: binary files, outputs two - instead of saying
+   3425: 0 0.
+   Quote used in the row: "shows number of added and deleted lines in decimal notation and
+   pathname without abbreviation, to make it more machine friendly" -> 20 words; substring of the
+   whitespace-normalized page text (verified True).
+
+3. Second locator (diff-format rendered text, lines 2315-2345; source Documentation/diff-format.adoc
+   lines 145-160 at git v2.56.0): entry fields listed as
+     "the number of added lines; a tab; the number of deleted lines; a tab; pathname ..."
+   Pathname quoting rule (diff-format rendered lines 2057-2060):
+     "Without the -z option, pathnames with "unusual" characters are quoted as explained for the
+      configuration variable core.quotePath ... Using -z the filename is output verbatim and the
+      line is terminated by a NUL byte."
+   git-diff rendered lines 3500-3512 also states that with --numstat "-z" the output uses NULs as
+   field terminators and that without it unusual pathnames are quoted.
+
+4. Marker `\ No newline at end of file` — NOT on either page
+   $ grep -c "No newline at end of file" git-diff.html diff-format.html
+     0 and 0
+   $ grep -ci "newline" diff-format.html  -> only "a newline." (entry terminator)
+   Where the literal actually lives, git v2.56.0 source:
+     $ curl -sSL -o diff.c https://raw.githubusercontent.com/git/git/v2.56.0/diff.c
+     $ grep -n "No newline at end of file" diff.c
+       1868:        static const char nneof[] = "\\ No newline at end of file\n";
+   Also absent from git's own doc sources at v2.56.0:
+     Documentation/diff-format.adoc, Documentation/diff-generate-patch.adoc, Documentation/diff-options.adoc
+     -> no match for "no newline at end of file"
+   And from the installed manuals (git 2.56.0):
+     $ zgrep -il "no newline at end of file" /usr/share/man/man1/git-*.1.gz /usr/share/man/man5/git*.5.gz
+     -> no files matched
+
+5. Behaviour check of the quoted text (scratch fixture, git 2.56.0)
+   fixture D=/fast/scratch/hyaku/kama-r47/S1Numstat/numstat-fixture; `git -C $D rev-parse --show-toplevel` == $D (asserted before commit)
+   text.md rewritten to one line, bin.dat rewritten with NUL bytes, committed
+   $ git -C $D diff --numstat --no-renames <parent> HEAD
+     -<TAB>-<TAB>bin.dat
+     0<TAB>2<TAB>text.md
+   -> text file: numeric deleted count; binary file: two `-`. No numeric deletion count for binary.
+
+6. Census gate (fleet validator /home/vgpnk/Projects/shokunin/scripts/sources-census.sh)
+   Scratch mirrors: $S/mini (header + the row only), $S/fullbase (lane corpus/SOURCES.md unchanged),
+   $S/full (same file with the row inserted after S487). Each mirror symlinks every lane top-level
+   entry (dotfiles included: .ufo) and corpus children except SOURCES.md, so used-by paths resolve.
+   $ sources-census.sh validate --file $S/mini/corpus/SOURCES.md --today 2026-10-26
+     file<TAB>ok<TAB>/fast/scratch/hyaku/kama-r47/S1Numstat/mini/corpus/SOURCES.md                          exit 0
+   $ sources-census.sh validate --file $S/fullbase/corpus/SOURCES.md --today 2026-10-26
+     ... 95 lines, 0 E codes (93 W04 duplicate-URL warnings, 1 W01 at S481), ok  exit 0
+   $ sources-census.sh validate --file $S/full/corpus/SOURCES.md --today 2026-10-26
+     ... 95 lines, identical finding set to fullbase, ok                    exit 0
+     new-vs-base findings: none; no line mentions S489
+   $ sources-census.sh census --file $S/fullbase/corpus/SOURCES.md  -> file rows 228, tier.A 217
+   $ sources-census.sh census --file $S/full/corpus/SOURCES.md      -> file rows 229, tier.A 218
+
+7. used-by paths exist at lane tip 3a09a1d93dcc16799cf6c4b48786e6440af134c4
+   $ git -C <lane> ls-tree 3a09a1d9 -- tools/append-only-audit.py registry/append-only-contract.tsv tools/round47-append-audit-v2-check.py
+     100755 blob 9442eb8c...  tools/append-only-audit.py
+     100644 blob 3310246b...  registry/append-only-contract.tsv
+     100755 blob e74d168c...  tools/round47-append-audit-v2-check.py

@@ -1,0 +1,52 @@
+# transcripts for S1Rows (round 47), 2026-10-26, host Linux 7.2.11-arch1-1, git 2.56.0, Python 3.14.8
+
+## release record: fresh gh api vs the committed copy
+$ gh api repos/ggml-org/llama.cpp/releases/tags/b11909 > release-b11909.gh.json
+exit=0  68614 bytes  sha256 e41c4b75188b7b710843fc450c5ad84463a035670d481e982cebf78729c3b63c
+$ sha256sum .ufo/waves/round-47/c2/release-b11909.json
+6ad897dd84e64dcf6aff9997dc19d2e835b7a90adc37da12bb0e00b310db46d2  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-47/c2/release-b11909.json
+semantic diff (python, recursive): identical except per-asset download_count
+diffs_total=31 download_count_only=31 other=0
+  tag_name='b11909'
+  target_commitish='caa8191df159f764fb0160e3d2fc6be008948aee'
+  published_at='2026-10-26T21:00:58Z'
+  prerelease=True
+  immutable=False
+  draft=False
+  asset llama-b11909-bin-ubuntu-x64.tar.gz 22475032 sha256:bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b 2026-10-26T21:03:16Z 2026-10-26T21:03:17Z
+
+## asset download and extraction
+$ curl -sSL -o llama-b11909-bin-ubuntu-x64.tar.gz https://github.com/ggml-org/llama.cpp/releases/download/b11909/llama-b11909-bin-ubuntu-x64.tar.gz
+exit=0
+$ stat -c %s llama-b11909-bin-ubuntu-x64.tar.gz
+22475032
+$ sha256sum llama-b11909-bin-ubuntu-x64.tar.gz
+bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b  llama-b11909-bin-ubuntu-x64.tar.gz
+$ tar -tzf llama-b11909-bin-ubuntu-x64.tar.gz | wc -l
+62
+$ tar -tzf llama-b11909-bin-ubuntu-x64.tar.gz | grep "llama-server$"
+llama-b11909/llama-server
+$ sha256sum extract/llama-b11909/llama-server
+35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0  extract/llama-b11909/llama-server
+$ LD_LIBRARY_PATH=extract/llama-b11909 ./extract/llama-b11909/llama-server --version
+  ++ LD_LIBRARY_PATH=/fast/scratch/hyaku/kama-r47/S1Rows/extract/llama-b11909
+  ++ /fast/scratch/hyaku/kama-r47/S1Rows/extract/llama-b11909/llama-server --version
+  version: 0.7.0-dev (build 11909, commit caa8191df)
+  built with GNU 11.4.0 for Linux x86_64
+
+## model artifact
+$ curl -sSIL https://huggingface.co/ggml-org/models-moved/resolve/main/tinyllamas/stories260K.gguf
+exit=0 (302 -> us.aws.cdn.hf.co xet-bridge, then 200); full transcript in model-head.txt
+  HTTP/2 302 
+  content-length: 1036
+  x-linked-size: 1185376
+  x-linked-etag: "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+  HTTP/2 200 
+  etag: "7cfbf69e76aef0af92130af4e5c57a2a170423fb2a273b4f11a04bcc70088ba5"
+  content-length: 1185376
+$ curl -sSL -o stories260K.gguf <same URL>
+exit=0
+$ stat -c %s stories260K.gguf
+1185376
+$ sha256sum stories260K.gguf
+270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d  stories260K.gguf
