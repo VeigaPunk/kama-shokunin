@@ -1,0 +1,95 @@
+X1Sparse / round 49 — commands and raw output
+==============================================
+Lane:      /home/vgpnk/Projects/shokunin/kama-shokunin (read-only; clone used)
+Scratch:   /fast/scratch/hyaku/kama-r49/X1Sparse (deleted at the end; every
+           fixture this seat needs is rebuildable with scripts/build_art.py)
+Out:       kama-shokunin/.ufo/waves/round-49/w1/out/X1Sparse
+
+Subject under test
+------------------
+tools/kama-llamacpp-live.py at two commits, imported as a byte copy (the real
+function, not a re-implementation):
+
+  git show 438127bc01ff3b99f98468549d58046f932490ef:tools/kama-llamacpp-live.py > before/kama-llamacpp-live.py
+  git show 74558c71c38ceaeace15fd4cf8aa9d84977584b1:tools/kama-llamacpp-live.py > after/kama-llamacpp-live.py
+  sha256 1e5ea0fde985367d9d6335eae3825068e64063f032bbbc59fc8909e7b7f9a6d2  before/kama-llamacpp-live.py
+  sha256 72e76079995c5ba8269bbaa31e30b8c15c5e503de2a58e603b78561424bffd4c  after/kama-llamacpp-live.py
+  (the clone at 122c4ee9 carries the same 72e7607... file: verified with sha256sum
+   on lane/tools/kama-llamacpp-live.py)
+
+fixed/ is after/ with the two proposed hunks applied (proposed-fix.diff); it is
+the only code this seat wrote, and only in scratch.
+
+Harness
+-------
+cell.py     imports the tool copy, wraps hashlib.sha256 with a delegating counter
+            (the real hash still does the work) so "bytes hashed" is measured per
+            hash object: #1 = archive digest, #2 = member digest; counts are
+            checkpointed every 128 MiB so a killed cell still yields a lower bound.
+matrix.py   one subprocess per case with a hard timeout; a case that does not
+            return is recorded as "no return, killed at N s" plus its checkpoint.
+one.py / gen_extras.py   same for the big/malformed fixtures (machine-written).
+build_art.py  builds every crafted archive once; before and after consume the
+              identical bytes.
+
+Invocations (all from the scratch root, TMPDIR=$S)
+-------------------------------------------------
+python3 build_art.py $S/art
+python3 matrix.py --tool-dir $S/before --art $S/art --tag before --out rows-before.jsonl --progress-dir $S/prog --sizes good
+python3 matrix.py --tool-dir $S/after  --art $S/art --tag after  --out rows-after.jsonl  --progress-dir $S/prog --sizes good,none
+python3 matrix.py --tool-dir $S/fixed  --art $S/art --tag fixed  --out rows-fixed.jsonl  --progress-dir $S/prog --sizes good
+python3 gen_extras.py --root $S --out $OUT/extras.jsonl
+python3 malformed.py --tool-dir $S/<tag> --art $S/art          # (superseded by one.py rows)
+
+Timings reported in table.md come from those files; rows-before.jsonl shows the
+hash-byte checkpoints for every case.
+
+Cases whose cost is attributed by direct probe
+---------------------------------------------
+# tarfile on an all-zero file: which compressor open pays
+$ python3 - <<'EOF'
+import tarfile, time
+for meth in ("gzopen","bz2open","xzopen","zstopen","taropen"):
+    fn = getattr(tarfile.TarFile, meth); t=time.monotonic()
+    try:
+        r = fn("z64m.bin","r",None); print(meth,"opened",type(r).__name__,"%.3f"%(time.monotonic()-t))
+    except Exception as e:
+        print(meth,"raised",type(e).__name__,str(e)[:40],"%.3f"%(time.monotonic()-t))
+EOF
+gzopen raised ReadError not a gzip file 0.001
+bz2open raised ReadError not a bzip2 file 0.000
+xzopen raised ReadError not an lzma file 5.689        <-- 64 MiB zeros, ~11.8 MB/s
+zstopen raised ReadError not a zstd file 0.000
+taropen opened TarFile 0.000
+
+# sha256 throughput of the archive pass (1 MiB chunks)
+$ python3 -c "import hashlib,time; f=open('art/zeros-512m.tar','rb'); h=hashlib.sha256(); t0=time.monotonic();
+  [h.update(c) for c in iter(lambda: f.read(1<<20), b'')]; dt=time.monotonic()-t0; print('%.3f s'%dt)"
+0.355 s for 512 MiB -> 1443 MB/s
+
+# selftest, lane shape (clone copy with registry/ next to tools/)
+$ cd $S/lane && python3 tools/kama-llamacpp-live.py --selftest
+selftest: ok; closed tcp6 listeners ::1:46445, ::ffff:127.0.0.1:46019     rc=0
+$ cd $S/fixedtree && python3 tools/kama-llamacpp-live.py --selftest      # after + proposed fix
+selftest: ok; closed tcp6 listeners ::1:41771, ::ffff:127.0.0.1:33305     rc=0
+
+# NOTE: running the *same* file from a bare copy fails the selftest, and that is
+# the harness, not the build: _selftest() calls refused_ports() which reads
+# <tool-dir>/../registry/endpoint-consumers.tsv -> SetupError registry-unreadable.
+$ python3 after/kama-llamacpp-live.py --selftest
+kama-llamacpp-live selftest: SetupError                                    rc=1
+
+End-to-end CLI (whole tool, not the function) on the malformed PAX archive
+-------------------------------------------------------------------------
+$ python3 after/kama-llamacpp-live.py --server e2e/server.sh --model e2e/model.gguf \
+    --model-sha256 <sha> --server-archive art/pax-bad-map-0.1.tgz \
+    --server-asset-sha256 e69bfeb0... --server-member rel/llama-server \
+    --server-asset-url https://github.com/ggml-org/llama.cpp/releases/download/b11909/llama-b11909-bin-ubuntu-x64.zip \
+    --model-url https://huggingface.co/ggml-org/models-moved/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/stories260K.gguf \
+    --probe e2e/server.sh --out e2e/receipt-after.json --port 0
+rc=2  receipt written  setup_error = "internal:ValueError"  schema = kama-llamacpp-live/v4
+(the server never starts; the token is the generic main() catch-all at
+ tools/kama-llamacpp-live.py:1868-1874, not a provenance-* code)
+
+No llama-server was started by this seat. pgrep -af llama-server shows only
+processes from other seats' scratch trees (M1Ctr, M1Live), left untouched.

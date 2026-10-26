@@ -1,0 +1,296 @@
+[
+ {
+  "name": "M01-neg3-empty",
+  "desc": "NEG3 tuple emptied",
+  "old": "NEG3 = (\"not append-only\", \"not append only\", \"no longer append\", \"never append-only\")",
+  "new": "NEG3 = ()"
+ },
+ {
+  "name": "M02-negw-window2",
+  "desc": "NEGW negation window 3 -> 2 words",
+  "old": "{0,3}?",
+  "new": "{0,2}?"
+ },
+ {
+  "name": "M03-negw-window6",
+  "desc": "NEGW negation window 3 -> 6 words",
+  "old": "{0,3}?",
+  "new": "{0,6}?"
+ },
+ {
+  "name": "M04-negw-drop-nor",
+  "desc": "NEGW drops 'nor' from the negator alternation",
+  "old": "no|nor|neither",
+  "new": "no|neither"
+ },
+ {
+  "name": "M05-negw-drop-non",
+  "desc": "NEGW drops 'non' from the negator alternation",
+  "old": "non|isn't",
+  "new": "isn't"
+ },
+ {
+  "name": "M06-negw-hyphen-only",
+  "desc": "NEGW 'append[- ]only' -> 'append-only' (space variant lost)",
+  "old": "[\\s\\-]+append[- ]only\")",
+  "new": "[\\s\\-]+append-only\")"
+ },
+ {
+  "name": "M07-says-drop-negw",
+  "desc": "says() no longer consults NEGW",
+  "old": "and not any(n in low for n in NEG3) \\\n        and not NEGW.search(low)",
+  "new": "and not any(n in low for n in NEG3)"
+ },
+ {
+  "name": "M08-token-wild-base",
+  "desc": "wildcard token uses base name not parent dir",
+  "old": "return parts[-2] if len(parts) > 1 else \"\"",
+  "new": "return parts[-1]"
+ },
+ {
+  "name": "M09-token-keep-ext",
+  "desc": "token() keeps the extension",
+  "old": "return base.rsplit(\".\", 1)[0] if \".\" in base else base",
+  "new": "return base"
+ },
+ {
+  "name": "M10-word-lookahead",
+  "desc": "word regex lookahead [a-z0-9_] -> [a-z]",
+  "old": "re.escape(tok) + r\"(?![a-z0-9_])\"",
+  "new": "re.escape(tok) + r\"(?![a-z])\""
+ },
+ {
+  "name": "M11-self-wild-bind",
+  "desc": "self-declaration binds even under a wildcard row",
+  "old": "if not wild and fnmatch.fnmatchcase(decl_path, pattern):",
+  "new": "if fnmatch.fnmatchcase(decl_path, pattern):"
+ },
+ {
+  "name": "M12-wild-const-false",
+  "desc": "wild detection disabled (wild=False)",
+  "old": "wild = any(ch in pattern for ch in \"*?[\")",
+  "new": "wild = False"
+ },
+ {
+  "name": "M13-wild-star-only",
+  "desc": "wild detection sees only '*'",
+  "old": "wild = any(ch in pattern for ch in \"*?[\")",
+  "new": "wild = any(ch in pattern for ch in \"*\")"
+ },
+ {
+  "name": "M14-sections-hash1",
+  "desc": "sections() keys on '# ' not '## '",
+  "old": "if ln.startswith(b\"## \"):",
+  "new": "if ln.startswith(b\"# \"):"
+ },
+ {
+  "name": "M15-origin-all",
+  "desc": "origin membership any-title -> all-titles",
+  "old": "if psec[pos - 1] in ex and org.get(text, set()) & ex",
+  "new": "if psec[pos - 1] in ex and ex <= org.get(text, set())"
+ },
+ {
+  "name": "M16-native-ge",
+  "desc": "native overshoot check > -> >=",
+  "old": "if e[\"ungraded\"] > native:",
+  "new": "if e[\"ungraded\"] >= native:"
+ },
+ {
+  "name": "M17-events-ge6",
+  "desc": "lane events threshold >=5 -> >=6",
+  "old": "len(j.get(\"events\") or []) >= 5",
+  "new": "len(j.get(\"events\") or []) >= 6"
+ },
+ {
+  "name": "M18-events-gt5",
+  "desc": "lane events threshold >=5 -> >5",
+  "old": "len(j.get(\"events\") or []) >= 5",
+  "new": "len(j.get(\"events\") or []) > 5"
+ },
+ {
+  "name": "M19-lane-exit-le0",
+  "desc": "lane tool exit ==0 -> <=0",
+  "old": "ok = p.returncode == 0 and s.get(\"bad_declarations\") == 0",
+  "new": "ok = p.returncode <= 0 and s.get(\"bad_declarations\") == 0"
+ },
+ {
+  "name": "M20-drop-baddecl",
+  "desc": "lane bad_declarations==0 clause removed",
+  "old": " and s.get(\"bad_declarations\") == 0 and len(j.get(\"events\") or []) >= 5",
+  "new": " and len(j.get(\"events\") or []) >= 5"
+ },
+ {
+  "name": "M21-scenarios-7",
+  "desc": "fl requires 7/8 scenarios not 8/8",
+  "old": "fl = len(res) == 8 and all(res)",
+  "new": "fl = len(res) == 7 and all(res)"
+ },
+ {
+  "name": "M22-met-or",
+  "desc": "met = fl and ll -> fl or ll",
+  "old": "met = fl and ll",
+  "new": "met = fl or ll"
+ },
+ {
+  "name": "M23-launder-exit0",
+  "desc": "launder want_exit 1 -> 0",
+  "old": "check(\"launder\", code, j, 1, (c3,",
+  "new": "check(\"launder\", code, j, 0, (c3,"
+ },
+ {
+  "name": "M24-launder-graded",
+  "desc": "launder want graded 25 -> 24",
+  "old": "{\"deleted\": 25, \"graded\": 25, \"ungraded\": 0, \"status\": \"unrestored\"}",
+  "new": "{\"deleted\": 25, \"graded\": 24, \"ungraded\": 0, \"status\": \"unrestored\"}"
+ },
+ {
+  "name": "M25-nativehead-ungraded",
+  "desc": "native-head want ungraded 25 -> 24",
+  "old": "{\"deleted\": 25, \"graded\": 0, \"ungraded\": 25, \"status\": \"ungraded\"}",
+  "new": "{\"deleted\": 25, \"graded\": 0, \"ungraded\": 24, \"status\": \"ungraded\"}"
+ },
+ {
+  "name": "M26-datedloss-exit",
+  "desc": "dated-loss want_exit 1 -> 0",
+  "old": "check(\"dated-loss\", code, j, 1, (c2,",
+  "new": "check(\"dated-loss\", code, j, 0, (c2,"
+ },
+ {
+  "name": "M27-substring-exit",
+  "desc": "substring want_exit 1 -> 0",
+  "old": "LOG.md\\tA\\tNOTES.md:1\\t*\\tfixture\", 1, 1),",
+  "new": "LOG.md\\tA\\tNOTES.md:1\\t*\\tfixture\", 0, 1),"
+ },
+ {
+  "name": "M28-wordtoken-exit",
+  "desc": "word-token want_exit 0 -> 1",
+  "old": "LOG.md\\tA\\tNOTES.md:1\\t*\\tfixture\", 0, 0),",
+  "new": "LOG.md\\tA\\tNOTES.md:1\\t*\\tfixture\", 1, 0),"
+ },
+ {
+  "name": "M29-negated-exit",
+  "desc": "negated want_exit 1 -> 0",
+  "old": "SCORE.md\\tA\\tNOTES.md:1\\t*\\tfixture\", 1, 1),",
+  "new": "SCORE.md\\tA\\tNOTES.md:1\\t*\\tfixture\", 0, 1),"
+ },
+ {
+  "name": "M30-wildself-exit",
+  "desc": "wildcard-self want_exit 1 -> 0",
+  "old": "notes/*.md\\tA-corr\\tnotes/a.md:1\\t*\\tfixture\", 1, 1),",
+  "new": "notes/*.md\\tA-corr\\tnotes/a.md:1\\t*\\tfixture\", 0, 1),"
+ },
+ {
+  "name": "M31-wildnamed-exit",
+  "desc": "wildcard-named want_exit 0 -> 1",
+  "old": "notes/*.md\\tA-corr\\tREADME.md:1\\t*\\tfixture\", 0, 0)):",
+  "new": "notes/*.md\\tA-corr\\tREADME.md:1\\t*\\tfixture\", 1, 0)):"
+ },
+ {
+  "name": "M32-wildself-bad",
+  "desc": "wildcard-self want bad_declarations 1 -> 0",
+  "old": "notes/*.md\\tA-corr\\tnotes/a.md:1\\t*\\tfixture\", 1, 1),",
+  "new": "notes/*.md\\tA-corr\\tnotes/a.md:1\\t*\\tfixture\", 1, 0),"
+ },
+ {
+  "name": "M33-runtool-path",
+  "desc": "run_tool contract path drops the scenario name",
+  "old": "f\"{name}.contract.tsv\"",
+  "new": "\"contract.tsv\""
+ },
+ {
+  "name": "M34-runtool-flag",
+  "desc": "run_tool passes --contract-typo",
+  "old": "\"--contract\", cpath",
+  "new": "\"--contract-typo\", cpath"
+ },
+ {
+  "name": "M35-exit-always-0",
+  "desc": "exit code always 0",
+  "old": "return 0 if met else 1",
+  "new": "return 0"
+ },
+ {
+  "name": "M36-exit-invert",
+  "desc": "exit code inverted",
+  "old": "return 0 if met else 1",
+  "new": "return 1 if met else 0"
+ },
+ {
+  "name": "M37-archive-head",
+  "desc": "tool archived from HEAD instead of --tip",
+  "old": "git(a.repo, \"archive\", \"--format=tar\", tip)",
+  "new": "git(a.repo, \"archive\", \"--format=tar\", \"HEAD\")"
+ },
+ {
+  "name": "M38-revlist-noreverse",
+  "desc": "origin rev-list loses --reverse (first -> last appearance)",
+  "old": "\"rev-list\", \"--topo-order\", \"--reverse\", \"--parents\", tip",
+  "new": "\"rev-list\", \"--topo-order\", \"--parents\", tip"
+ },
+ {
+  "name": "M39-region-relax",
+  "desc": "exempt region regex loosened ([^@:]+:\\d+ -> [^@:]*:\\d*)",
+  "old": "re.fullmatch(r\"exempt=(.+)@[^@:]+:\\d+\", region)",
+  "new": "re.fullmatch(r\"exempt=(.+)@[^@:]*:\\d*\", region)"
+ },
+ {
+  "name": "M40-region-never",
+  "desc": "exempt region regex never matches",
+  "old": "re.fullmatch(r\"exempt=(.+)@[^@:]+:\\d+\", region)",
+  "new": "re.fullmatch(r\"exempt=(.+?)@\", region)"
+ },
+ {
+  "name": "M41-titles-split",
+  "desc": "multi-title split '|' -> whitespace",
+  "old": "m.group(1).split(\"|\")",
+  "new": "m.group(1).split()"
+ },
+ {
+  "name": "M42-ex-fnmatch-eq",
+  "desc": "exempt-row file match fnmatch -> equality",
+  "old": "if fnmatch.fnmatchcase(f or \"\", pat):",
+  "new": "if f == pat:"
+ },
+ {
+  "name": "M43-diff-U3",
+  "desc": "deleted_with_pos runs with -U3 instead of -U0",
+  "old": "\"-U0\", \"--text\"",
+  "new": "\"-U3\", \"--text\""
+ },
+ {
+  "name": "M44-header-row",
+  "desc": "parse_contract includes the header row",
+  "old": "for ln in text.split(\"\\n\")[1:]:",
+  "new": "for ln in text.split(\"\\n\"):"
+ },
+ {
+  "name": "M45-fx-no-trailing-nl",
+  "desc": "Fx.commit writes without trailing newline",
+  "old": "fh.write(\"\".join(x + \"\\n\" for x in body))",
+  "new": "fh.write(\"\\n\".join(body))"
+ },
+ {
+  "name": "M46-ident-name",
+  "desc": "fixture commit identity renamed",
+  "old": "user.name=r49c2-fixture",
+  "new": "user.name=r49c2"
+ },
+ {
+  "name": "M47-toplevel-guard",
+  "desc": "fixture toplevel guard disabled",
+  "old": "if os.path.realpath(top) != os.path.realpath(self.d):",
+  "new": "if False:"
+ },
+ {
+  "name": "M48-origins-lastwins",
+  "desc": "origins() keeps the LAST section holding the text",
+  "old": "            fresh = collections.defaultdict(set)\n            for ln, t in zip(body, sections(body)):\n                if ln not in orig:\n                    fresh[ln].add(t)\n            orig.update(fresh)",
+  "new": "            for ln, t in zip(body, sections(body)):\n                orig[ln] = {t}"
+ },
+ {
+  "name": "M49-negw-apos",
+  "desc": "NEGW middle-word class drops apostrophes",
+  "old": "[\\w'\u2019]+",
+  "new": "[\\w]+"
+ }
+]

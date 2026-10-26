@@ -1,0 +1,45 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py	2026-10-26 20:41:09.561502472 -0300
++++ /fast/scratch/hyaku/kama-r49/X2Perf/append-only-audit-proto-originflag.py	2026-10-26 20:52:34.603915997 -0300
+@@ -428,9 +428,10 @@
+     events, binary = [], []
+     origin_cache = {}
+ 
+-    def origins(f):
+-        """v4 origin: line text -> the `## ` titles holding it in the first commit's blob of f
+-        (rev-list order) that holds it."""
++    def origins(f, titles):
++        """PROTOTYPE: text -> True when its first appearance in the file (rev-list order) lies
++        under one of this file's exempt titles. Same answer as the v4 set-valued origin for the
++        only question the audit asks of it (`origin(l) & titles`), without a frozenset per text."""
+         if f not in origin_cache:
+             orig, seen = {}, set()
+             bl = r.blobs([f"{x}:{f}" for x in commits])
+@@ -440,10 +441,10 @@
+                     continue
+                 seen.add(b)
+                 body = r.list_lines(b)
+-                fresh = collections.defaultdict(set)
++                fresh = {}
+                 for ln, t in zip(body, sections(body)):
+                     if ln not in orig:
+-                        fresh[ln].add(t)
++                        fresh[ln] = fresh.get(ln, False) or (t in titles)
+                 orig.update(fresh)
+             origin_cache[f] = orig
+         return origin_cache[f]
+@@ -474,13 +475,13 @@
+                         if max(r.section_counts(wb[f"{x}:{f}"])[t] if wb[f"{x}:{f}"] else 0 for x in window)
+                         >= pcount[t]}
+             G = collections.Counter()
+-            org = origins(f) if titles else {}
++            org = origins(f, titles) if titles else {}
+             for pos, text in dl:
+                 s = psec[pos - 1]
+                 if prefixes and not any(s is not None and s.startswith(q) for q in prefixes):
+                     continue
+                 # v4: the carve-out covers only text born in an exempt section (origin)
+-                if s in eligible and org.get(text, frozenset()) & titles:
++                if s in eligible and org.get(text, False):
+                     continue
+                 G[text] += 1
+             ng = sum(G.values())

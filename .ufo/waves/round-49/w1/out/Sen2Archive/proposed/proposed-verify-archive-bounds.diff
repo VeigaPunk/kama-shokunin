@@ -1,0 +1,103 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -68,6 +68,7 @@
+ import json
+ import os
+ import re
++import resource
+ import shutil
+ import signal
+ import socket
+@@ -207,22 +208,26 @@
+ 
+ ARCHIVE_MAX_BYTES = 1 << 30      # release assets are ~70 MB; 1 GiB is generous
+ MEMBER_MAX_COUNT = 4096          # archive index entries; the b11909 asset has ~60
++ARCHIVE_WALK_SECONDS = 20        # wall-clock budget for the index walk + member hash
++ARCHIVE_WALK_RSS_BYTES = 2 << 30 # address-space budget for the same
++
++
++class _ArchiveWalkTimeout(Exception):
++    """SIGALRM during the bounded archive walk."""
++
++
++def _archive_walk_alarm(signum, frame):
++    raise _ArchiveWalkTimeout()
+ 
+ 
+ def verify_archive_member(archive, asset_sha256, member, server_sha256, server_size=None):
+-    """Record-time provenance (v5): the archive must hash to asset_sha256 and its member
+-    to the server binary's sha256. Returns (archive_sha256, member_sha256); raises
+-    SetupError with a stable token otherwise. Reads the archive only; extracts nothing.
+-
+-    Host-safety bounds (round 49; round-48 seat Sen2Live F1-F3, closure R1): the archive
+-    must be a regular file of at most ARCHIVE_MAX_BYTES (a FIFO or device path would block
+-    or stream forever) and is opened once, that descriptor hashed and parsed; the index is
+-    walked streaming with a MEMBER_MAX_COUNT cap (getmember() materialises it all); the
+-    member must be a regular, non-sparse file whose declared size equals server_size (the
+-    --server file's size) - tarfile synthesises a sparse member's declared size, so a
+-    ~104-byte archive could otherwise make this loop hash ~10^15 bytes. The size checks run
+-    before a byte of the member is read. The last occurrence of a duplicated member name
+-    wins, as extraction does."""
++    """Record-time provenance (v5). Bounds: regular file <= ARCHIVE_MAX_BYTES; the
++    archive hash reads no more than the size the cap was checked on; the tar walk
++    (which must inflate a compressed stream to the end of the catalogue, and which
++    materialises any pax extension header at its declared size) runs under
++    ARCHIVE_WALK_SECONDS and ARCHIVE_WALK_RSS_BYTES; the member must be a regular,
++    non-sparse file whose declared size equals server_size, all before a byte of it
++    is hashed."""
+     import tarfile
+     try:
+         st = os.stat(archive)
+@@ -238,13 +243,30 @@
+         raise SetupError('provenance-archive-unreadable')
+     with arc:
+         h_arc = hashlib.sha256()
+-        for chunk in iter(lambda: arc.read(1 << 20), b''):
++        remaining = st.st_size
++        while remaining > 0:
++            chunk = arc.read(min(1 << 20, remaining))
++            if not chunk:
++                break
+             h_arc.update(chunk)
++            remaining -= len(chunk)
+         archive_sha = h_arc.hexdigest()
+         if archive_sha != asset_sha256:
+             raise SetupError('provenance-archive-digest-mismatch')
+         arc.seek(0)
++        old_handler = signal.signal(signal.SIGALRM, _archive_walk_alarm)
++        old_alarm = signal.setitimer(signal.ITIMER_REAL, ARCHIVE_WALK_SECONDS)
++        old_rss = resource.getrlimit(resource.RLIMIT_AS)
++        cur_soft = old_rss[0]
+         try:
++            resource.setrlimit(resource.RLIMIT_AS, (
++                ARCHIVE_WALK_RSS_BYTES
++                if cur_soft == resource.RLIM_INFINITY or cur_soft > ARCHIVE_WALK_RSS_BYTES
++                else cur_soft,
++                old_rss[1]))
++        except (ValueError, OSError):
++            pass
++        try:
+             with tarfile.open(fileobj=arc, mode='r:*') as tf:
+                 found, count = None, 0
+                 for info in tf:
+@@ -267,8 +289,19 @@
+                     h.update(chunk)
+         except SetupError:
+             raise
+-        except (OSError, EOFError, tarfile.TarError):
++        except _ArchiveWalkTimeout:
++            raise SetupError('provenance-archive-walk-timeout')
++        except MemoryError:
++            raise SetupError('provenance-archive-walk-memory')
++        except (OSError, EOFError, RecursionError, tarfile.TarError):
+             raise SetupError('provenance-archive-unreadable')
++        finally:
++            signal.setitimer(signal.ITIMER_REAL, *old_alarm)
++            signal.signal(signal.SIGALRM, old_handler)
++            try:
++                resource.setrlimit(resource.RLIMIT_AS, old_rss)
++            except (ValueError, OSError):
++                pass
+     if h.hexdigest() != server_sha256:
+         raise SetupError('provenance-member-digest-mismatch')
+     return archive_sha, h.hexdigest()

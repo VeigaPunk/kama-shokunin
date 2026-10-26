@@ -1,0 +1,234 @@
+[
+ {
+  "id": "m01",
+  "description": "origins: rev-list order reversed (last appearance instead of first)",
+  "line": 429,
+  "old": "            for x in commits:\n                b = bl[f\"{x}:{f}\"]",
+  "new": "            for x in reversed(commits):\n                b = bl[f\"{x}:{f}\"]",
+  "sha256": "866dfa89735e349b77000dffaecc297d9c7b120a482392cc755d30f345edf96a"
+ },
+ {
+  "id": "m02",
+  "description": "origins: first-appearance guard dropped (later blobs overwrite -> last appearance)",
+  "line": 437,
+  "old": "                    if ln not in orig:\n                        fresh[ln].add(t)",
+  "new": "                    if True:\n                        fresh[ln].add(t)",
+  "sha256": "9d16125cefe36e6e8f0a84ddb7495feeb4999bdd4a5c8a2d2cdde1d758483240"
+ },
+ {
+  "id": "m03",
+  "description": "origins: blob dedup dropped (expected equivalent: first-appearance guard suffices)",
+  "line": 431,
+  "old": "                if b is None or b in seen:\n                    continue",
+  "new": "                if b is None:\n                    continue",
+  "sha256": "5ea4112cb57642e336a8139fedf48f814215090c0b7cfbe993fcf3330fffd427"
+ },
+ {
+  "id": "m04",
+  "description": "origins: `if titles else {}` guard dropped (expected equivalent: org unread when titles empty)",
+  "line": 469,
+  "old": "            org = origins(f) if titles else {}",
+  "new": "            org = origins(f)",
+  "sha256": "fa43cf3739d6a1542bdc8421f6afa5b24c48d302abbbb6a86379d6170754b20f"
+ },
+ {
+  "id": "m05",
+  "description": "origins: `if titles else {}` guard inverted (no origins when titles exist)",
+  "line": 469,
+  "old": "            org = origins(f) if titles else {}",
+  "new": "            org = origins(f) if not titles else {}",
+  "sha256": "1d6ec21e6ac06a4c44d383bc9cc32aafe0c54e8214ef3e6c37a36bc2fc09f789"
+ },
+ {
+  "id": "m06",
+  "description": "graded: carve-out AND -> OR (reverts to v3 content-blind carve-out)",
+  "line": 475,
+  "old": "                if s in eligible and org.get(text, frozenset()) & titles:",
+  "new": "                if s in eligible or org.get(text, frozenset()) & titles:",
+  "sha256": "70b5bc46fa64f3577fefd5a2034aa5537acbc782a3d47bb8e58e17160d78b181"
+ },
+ {
+  "id": "m07",
+  "description": "graded: `s in eligible` -> `s in titles` (gutted-section protection dropped)",
+  "line": 475,
+  "old": "                if s in eligible and org.get(text, frozenset()) & titles:",
+  "new": "                if s in titles and org.get(text, frozenset()) & titles:",
+  "sha256": "d42eaf63f7efdedcfabde8e421045c6eb571a58bf1104ece52d7a42ca98c14ac"
+ },
+ {
+  "id": "m08",
+  "description": "titles intersection -> union (origin set OR titles)",
+  "line": 475,
+  "old": "                if s in eligible and org.get(text, frozenset()) & titles:",
+  "new": "                if s in eligible and org.get(text, frozenset()) | titles:",
+  "sha256": "2ca0425785551fcf46ccfe4558ddfacac41b29b885f933cdbc63d57c906069b9"
+ },
+ {
+  "id": "m09",
+  "description": "titles intersection -> difference (origin minus titles)",
+  "line": 475,
+  "old": "                if s in eligible and org.get(text, frozenset()) & titles:",
+  "new": "                if s in eligible and org.get(text, frozenset()) - titles:",
+  "sha256": "7a4c7c946f64d1d7315597bfc581555c20d28792d8eee2c4f2f2d8e9a643bb32"
+ },
+ {
+  "id": "m10",
+  "description": "titles: org.get default frozenset() -> titles (expected equivalent: deleted text always has origin)",
+  "line": 475,
+  "old": "                if s in eligible and org.get(text, frozenset()) & titles:",
+  "new": "                if s in eligible and org.get(text, titles) & titles:",
+  "sha256": "8f9427b9a9da2c9d6449feb41183912219115d352e0630413dc0b5a28f0f21f8"
+ },
+ {
+  "id": "m11",
+  "description": "binds word: both word boundaries dropped (v3 substring regression)",
+  "line": 233,
+  "old": "    return bool(tok) and re.search(r\"(?<![a-z0-9_])\" + re.escape(tok) + r\"(?![a-z0-9_])\", low) is not None",
+  "new": "    return bool(tok) and re.search(re.escape(tok), low) is not None",
+  "sha256": "f28843415a9a6165d47ceaeb820dd1eb0f974443a1dadc1b4b98081373d1612d"
+ },
+ {
+  "id": "m12",
+  "description": "binds word: trailing boundary (?![a-z0-9_]) dropped",
+  "line": 233,
+  "old": "    return bool(tok) and re.search(r\"(?<![a-z0-9_])\" + re.escape(tok) + r\"(?![a-z0-9_])\", low) is not None",
+  "new": "    return bool(tok) and re.search(r\"(?<![a-z0-9_])\" + re.escape(tok), low) is not None",
+  "sha256": "a19f0cc7dee6242fb04bceb937ac679c2087f115df4832ae96df072f516bc8ea"
+ },
+ {
+  "id": "m13",
+  "description": "binds word: leading boundary (?<![a-z0-9_]) dropped",
+  "line": 233,
+  "old": "    return bool(tok) and re.search(r\"(?<![a-z0-9_])\" + re.escape(tok) + r\"(?![a-z0-9_])\", low) is not None",
+  "new": "    return bool(tok) and re.search(re.escape(tok) + r\"(?![a-z0-9_])\", low) is not None",
+  "sha256": "b80c2a59fdb78cb0d49e4c4b1c62692d3dd262b766b497102945be0d45442c9c"
+ },
+ {
+  "id": "m14",
+  "description": "binds wild: wildcard detection disabled (wild=False -> self-declaration binds)",
+  "line": 230,
+  "old": "    wild = any(ch in pattern for ch in \"*?[\")",
+  "new": "    wild = False",
+  "sha256": "f9197ff007452eb541f308bb1ff52636d424c3b497cff9f63a34ca945db58c8d"
+ },
+ {
+  "id": "m15",
+  "description": "binds wild: `not wild` dropped from self-declaration gate",
+  "line": 231,
+  "old": "    if not wild and fnmatch.fnmatchcase(decl_path, pattern):\n        return True",
+  "new": "    if fnmatch.fnmatchcase(decl_path, pattern):\n        return True",
+  "sha256": "dbbd4c9c41ec1ecd39d09f0d6734adf341764dddef194d9489857922f3571a6f"
+ },
+ {
+  "id": "m16",
+  "description": "negation: NEGATIONS fixed-string list dropped (expected equivalent: NEGW language covers all four)",
+  "line": 226,
+  "old": "    if not (\"append-only\" in low or \"append only\" in low) or any(n in low for n in NEGATIONS) \\\n            or NEG_WINDOW.search(low):\n        return False",
+  "new": "    if not (\"append-only\" in low or \"append only\" in low) \\\n            or NEG_WINDOW.search(low):\n        return False",
+  "sha256": "1b53195a98228c75091ee29156f98390410d82b3d70e3de8473b5f2201ea4cc2"
+ },
+ {
+  "id": "m17",
+  "description": "negation: `or NEG_WINDOW.search(low)` -> `and ...` (negation check effectively off)",
+  "line": 226,
+  "old": "    if not (\"append-only\" in low or \"append only\" in low) or any(n in low for n in NEGATIONS) \\\n            or NEG_WINDOW.search(low):\n        return False",
+  "new": "    if not (\"append-only\" in low or \"append only\" in low) or any(n in low for n in NEGATIONS) \\\n            and NEG_WINDOW.search(low):\n        return False",
+  "sha256": "716011ae4016c8112c3316a3f563864302fc97ba566a7a3786f5517a36e148c7"
+ },
+ {
+  "id": "m18",
+  "description": "NEG_WINDOW quantifier {0,3}? -> {0,2}? (3-word gap escapes)",
+  "line": 213,
+  "old": "                        r\"(?:[\\s\\-]+[\\w'\u2019]+){0,3}?[\\s\\-]+append[- ]only\")",
+  "new": "                        r\"(?:[\\s\\-]+[\\w'\u2019]+){0,2}?[\\s\\-]+append[- ]only\")",
+  "sha256": "1c50ad8b0effc5a6b0885dfbdc2b6ae42374a3bf4e9886e998bcffe0ce69cbcd"
+ },
+ {
+  "id": "m19",
+  "description": "NEG_WINDOW quantifier {0,3}? -> {1,3}? (zero-word gap escapes NEG_WINDOW)",
+  "line": 213,
+  "old": "                        r\"(?:[\\s\\-]+[\\w'\u2019]+){0,3}?[\\s\\-]+append[- ]only\")",
+  "new": "                        r\"(?:[\\s\\-]+[\\w'\u2019]+){1,3}?[\\s\\-]+append[- ]only\")",
+  "sha256": "056bdd1fc07525bacdde7d6c6f90d1688aaabd1fd3224ad7b9b559ba3e225da1"
+ },
+ {
+  "id": "m20",
+  "description": "NEG_WINDOW quantifier {0,3}? -> {0,3} greedy (expected equivalent: same language)",
+  "line": 213,
+  "old": "                        r\"(?:[\\s\\-]+[\\w'\u2019]+){0,3}?[\\s\\-]+append[- ]only\")",
+  "new": "                        r\"(?:[\\s\\-]+[\\w'\u2019]+){0,3}[\\s\\-]+append[- ]only\")",
+  "sha256": "8acc4789300c966d47da3215c168124dfd46f43898db394f4e20cc02a344393d"
+ },
+ {
+  "id": "m21",
+  "description": "NEG_WINDOW joiner class -> [\\s]+ in the final gap (hyphen/dash-joined negation escapes)",
+  "line": 213,
+  "old": "{0,3}?[\\s\\-]+append",
+  "new": "{0,3}?[\\s]+append",
+  "sha256": "1e1d774df5912a39ee5c362c385fdb0e5d420479202392d9278d814dfd9054b7"
+ },
+ {
+  "id": "m22",
+  "description": "NEG_WINDOW append[- ]only -> append-only (spaced `append only` escapes the window)",
+  "line": 213,
+  "old": "{0,3}?[\\s\\-]+append[- ]only",
+  "new": "{0,3}?[\\s\\-]+append-only",
+  "sha256": "b2bfb927417405c9d826a494a6bbf0f1a5e17e39f9f88137d7545e33a0fa42fd"
+ },
+ {
+  "id": "m23",
+  "description": "NEG_WINDOW: `\\bno longer\\b|` alternative dropped (expected equivalent: \\bno\\b covers it)",
+  "line": 212,
+  "old": "NEG_WINDOW = re.compile(r\"(?:\\b(?:not|never|no|nor|neither|non|isn't|aren't)\\b|\\bno longer\\b)\"",
+  "new": "NEG_WINDOW = re.compile(r\"(?:\\b(?:not|never|no|nor|neither|non|isn't|aren't)\\b)\"",
+  "sha256": "b56778d5edb3889a5d092cb7495497e8b769565401ab3f7894fb752180534039"
+ },
+ {
+  "id": "m24",
+  "description": "row_token: extension kept in token (token `log.md` instead of `log`)",
+  "line": 209,
+  "old": "    return base.rsplit(\".\", 1)[0] if \".\" in base else base",
+  "new": "    return base",
+  "sha256": "87eb7f858c097872826ce6f782ae5875d34a3fd79d013400a4be475713fd8ab9"
+ },
+ {
+  "id": "m25",
+  "description": "row_token: wildcard token always empty (wildcard rows never bind by token)",
+  "line": 207,
+  "old": "    if any(ch in base for ch in \"*?[\"):\n        return parts[-2] if len(parts) > 1 else \"\"",
+  "new": "    if any(ch in base for ch in \"*?[\"):\n        return \"\"",
+  "sha256": "e86491cae180b63a06196bf981e59e0cc51e2fab13ae17d65446759285d22f53"
+ },
+ {
+  "id": "m26",
+  "description": "binds: bool(tok) -> tok is not None (empty-token pattern binds on any append-only line)",
+  "line": 233,
+  "old": "    return bool(tok) and re.search(r\"(?<![a-z0-9_])\" + re.escape(tok) + r\"(?![a-z0-9_])\", low) is not None",
+  "new": "    return (tok is not None) and re.search(r\"(?<![a-z0-9_])\" + re.escape(tok) + r\"(?![a-z0-9_])\", low) is not None",
+  "sha256": "a60b09362e680baac364d4eb056edb54a2ace335d771c403d18dd4776788bac4"
+ },
+ {
+  "id": "m27",
+  "description": "definition key: v4 -> v3 (metadata lie, counters never read it)",
+  "line": 504,
+  "old": "    return {\"schema\": SCHEMA, \"definition\": \"v4\", \"to\": to_full, \"threshold\": threshold, \"contract\": label,",
+  "new": "    return {\"schema\": SCHEMA, \"definition\": \"v3\", \"to\": to_full, \"threshold\": threshold, \"contract\": label,",
+  "sha256": "b73387601bedf0e2cab2333d4c945c31c597ea004b180929be03d92f85162103"
+ },
+ {
+  "id": "m28",
+  "description": "schema string: append-only-audit/v3 -> v4 (contract says unchanged; nobody asserts it)",
+  "line": 135,
+  "old": "SCHEMA = \"append-only-audit/v3\"",
+  "new": "SCHEMA = \"append-only-audit/v4\"",
+  "sha256": "25a0d9e9f0bafe091282fd9affb923133417d3ae01f48f82a59adeec3d1b1825"
+ },
+ {
+  "id": "m29",
+  "description": "binds: fnmatchcase -> fnmatch (expected equivalent on POSIX: normcase is identity)",
+  "line": 231,
+  "old": "    if not wild and fnmatch.fnmatchcase(decl_path, pattern):",
+  "new": "    if not wild and fnmatch.fnmatch(decl_path, pattern):",
+  "sha256": "2adedbb5bd2989c471802211e77f57b89e41372ea06003f1ab490672a9d26c42"
+ }
+]

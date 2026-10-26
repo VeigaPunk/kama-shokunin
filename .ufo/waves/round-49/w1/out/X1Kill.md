@@ -28,15 +28,15 @@ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-live-replay.py \
 
 The replay was started in its own session (`start_new_session=True`, so cleanup could `killpg`
 without touching the harness), then polled for `$S/wd-<tag>/ready.json` (ready in **2.4–2.9 s**
-each run, four runs), and after `ready.json` appeared the signal was sent and the tree observed
+in every run), and after `ready.json` appeared the signal was sent and the tree observed
 every 250 ms for **15 s**: `alive(/proc/<pid>)` (Z counted dead), a real connect to
 `127.0.0.1:<port>`, and `ss -ltnp 'sport = :<port>'` at t=0 and at the end of the window.
 `/proc/<server>/exe` hashed `35ac50fb2cfd9c4f…d7ff0` (frozen b11909 server) in every run;
 `ready.json` schema/port/pid were correct in every run.
 
 Drivers kept in `out/X1Kill/`: `drive.py` (A/B/C), `driveD.py`, `driveE.py`, `driveFG.py`,
-`driveH.py`, `driveI2.py`, `counter_shape.py`, `driveBuild.py`. Raw per-scenario records:
-`out/X1Kill/result-*.json`, compact roll-up `out/X1Kill/SUMMARY.json`.
+`driveH.py`, `driveI2.py`, `driveW.py` (worktree W1/W2), `counter_shape.py`, `driveBuild.py`.
+Raw per-scenario records: `out/X1Kill/result-*.json`, compact roll-up `out/X1Kill/SUMMARY.json`.
 
 ## Evidence
 
@@ -118,9 +118,10 @@ no `start_new_session`, no `preexec_fn` pdeathsig, and the module imports none o
 server down with it: a SIGTERM/SIGKILL of the replay leaves the live tool waiting on
 `<witness-dir>/release` (up to 120 s) and the server holding the port.
 
-**`tools/kama-llamacpp-live.py:280-300` (hold loop, `while … :295-296`)** — the hold loop watches
-`release`, the timeout and the child; it never watches its own parent. The only parent-awareness
-in the file is child-side: `_preexec_pdeathsig` (588-601, `prctl` at 595), `_FORKED_PPID`
+**`tools/kama-llamacpp-live.py:280-300` (hold loop, `while … :295-296`)** — at the build the hold
+loop watched `release`, the timeout and the child; it never watched its own parent (the worktree
+has since added that check — see *Lane state*). The only parent-awareness
+in the build file is child-side: `_preexec_pdeathsig` (588-601, `prctl` at 595), `_FORKED_PPID`
 (1743, 596), and the spawn flags at 1748-1749. `receipt['pdeathsig']` (1760) is recorded
 `prctl_ok 'unknown'` — honest, but it documents only the live→server hop.
 

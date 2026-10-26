@@ -24,13 +24,13 @@ def git(d, *args, inp=None):
     return p.stdout
 
 
-def head_lines(commit, n):
-    return [f"## Axes" if False else f"h{c:04d} c{commit:05d} blk" for c in range(n)]
-
-
-def body(i, head_n, tail_n):
+def body(i, head_n, tail_n, mode="head"):
+    """mode=head: fresh head text every commit (the exempt section is rewritten);
+    mode=tail: the head is frozen, only the dated tail is rewritten (an event whose
+    deleted lines are all in a dated section)."""
+    h_at = 0 if mode == "tail" else i
     out = ["# score", "## Axes"]
-    out += [f"h{c:04d} c{i:05d} blk" for c in range(head_n)]
+    out += [f"h{c:04d} c{h_at:05d} blk" for c in range(head_n)]
     out += ["## Round 1"]
     out += [f"d{c:04d} c{i:05d} row" for c in range(tail_n)]
     return out
@@ -39,6 +39,7 @@ def body(i, head_n, tail_n):
 def main():
     d, commits, head_n, tail_n = sys.argv[1], int(sys.argv[2]), int(sys.argv[3]), int(sys.argv[4])
     stride = int(sys.argv[5]) if len(sys.argv) > 5 else 1
+    mode = sys.argv[6] if len(sys.argv) > 6 else "head"
     os.makedirs(d, exist_ok=True)
     subprocess.run(["git", "-C", d, "init", "-q"], check=True)
     top = git(d, "rev-parse", "--show-toplevel").decode().strip()
@@ -60,7 +61,7 @@ def main():
                                    "-m", f"noop {i}"], capture_output=True,
                                   check=True).stdout.decode().strip()
             continue
-        data = ("\n".join(body(i, head_n, tail_n)) + "\n").encode()
+        data = ("\n".join(body(i, head_n, tail_n, mode)) + "\n").encode()
         blob = subprocess.run(["git", "-C", d, "hash-object", "-w", "--stdin"], input=data,
                               capture_output=True, check=True).stdout.decode().strip()
         subprocess.run(["git", "-C", d, "update-index", "--add", "--cacheinfo",

@@ -1,5 +1,16 @@
---- /fast/scratch/hyaku/kama-r49/X1Sparse/after/kama-llamacpp-live.py	2026-10-26 20:26:40.991477759 -0300
-+++ /fast/scratch/hyaku/kama-r49/X1Sparse/fixed/kama-llamacpp-live.py	2026-10-26 20:39:15.265623027 -0300
+# Proposed fix for tools/kama-llamacpp-live.py, against round-49 build
+# 74558c71c38ceaeace15fd4cf8aa9d84977584b1 (base 438127bc...).
+# Hunk 1 (F1): refuse a member whose declared size exceeds the archive gate from
+#   inside the iteration, before tarfile advances past its data; keeps the sparse
+#   token first because a sparse member's info.size is its 10**15 real size.
+# Hunk 2 (F2): map tarfile's ValueError (malformed GNU sparse pax headers) onto
+#   the existing provenance-archive-unreadable token instead of internal:ValueError.
+# Measured on the patched tree: pax-size-1e15-payload-16g 7.021 s -> 0.032 s,
+# 4 GiB variant 1.803 s -> 0.012 s; pax_bad_map / pax10_nomap -> unreadable;
+# sparse tokens unchanged; lane-shaped --selftest rc=0; real 62-entry asset ok.
+# Apply from the repository root: patch -p1 < proposed-fix.diff
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
 @@ -251,6 +251,10 @@
                      count += 1
                      if count > MEMBER_MAX_COUNT:
