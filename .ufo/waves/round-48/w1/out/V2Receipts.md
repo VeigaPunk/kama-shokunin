@@ -1,0 +1,29 @@
+# V2Receipts — round-48 seat report
+
+**Verdict: no defect — all three v5 receipts pass every frozen receipts-leg condition, are the committed bytes at the build tip, and differ from the round-47 v4 receipts only in intended v5 changes (pinned model URL + commit, record-time `verified` block, round alias, tool digest) plus instance fields; the scratch `model.path` is ephemeral but not a round-46-D5-class dead pointer because the durable locator (pinned URL + sha256, verified at record time) lives in the receipt and no counter leg dereferences the path.**
+
+Full audit + comparison: `.ufo/waves/round-48/w1/out/V2Receipts/compare.md`. Receipt copies cited: `.ufo/waves/round-48/w1/out/V2Receipts/receipt-{1,2,3}.json`, `install.txt`, and `round-47/receipt-{1,2,3}.json`, `round-47/install.txt`.
+
+## Evidence (commands, outputs, exit codes)
+
+- Receipts-leg check (programmatic, all 15 conditions of `tools/round48-live-replay-v5-audit.py` docstring lines 56-66 per receipt): `receipt-1: OK … receipt-3: OK … ALL-RECEIPTS-LEG: PASS` — schema `kama-llamacpp-live/v5`, outcome `pass`, 11/11 checks evaluated and passed (ids identical to v4), `build_info` `b11909-caa8191df` in `captures.props.fields` and `checks[4].observed.fields`, `provenance.server` = frozen asset URL/`bf94332a…e695b`/member `llama-b11909/llama-server`, `provenance.model.url` = pinned `/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/`, `provenance.verified{at:record, archive_sha256=bf94332a…, member_sha256=35ac50fb…=server.sha256, model_sha256=270cba1b…}`.
+- Committed bytes: `git show 380bcdff9c8af06997c482f6eb03db926a794a2b:.ufo/waves/round-48/c2/live/receipt-{1,2,3}.json/install.txt | sha256sum` equals the worktree files (`164a4d9d…`, `4a0041b3…`, `7ab10613…`, `b029cd70…`).
+- Tool/probe digests: receipt `tool.sha256` `1e5ea0fd…` = tip's `tools/kama-llamacpp-live.py`; `probe.sha256` `36b64978…` = tip's `tools/kama-probe.sh`; v4's `65301a3c…` = base `33e0058…`'s tool. Tool diff base→tip: 134 insertions (v5 provenance flags + `verify_archive_member()` record-time hashing) / 164 in `kama-live-replay.py`.
+- Same model bytes: `sha256sum` of the v5 run input `/fast/scratch/hyaku/kama-r48/L1/live/stories260K.gguf` and the v4 cache copy `/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf` both `270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d` (frozen digest; HF pin sidecar `.ufo/waves/round-48/c2/hf-revision-499bc882.txt`: `x-repo-commit`, `x-linked-etag`, `x-linked-size: 1185376`; source row S492 `corpus/SOURCES.md:245`).
+- v4→v5 recursive leaf diffs: 43/42/45 per receipt, all in intended classes (schema, pinned URL, new provenance fields, alias `kama-r47-live`→`kama-r48-live`, model path cache→scratch, tool sha, instance port/pid/times/repeats/`total_503_responses`/log timings/props Content-Length 2067→2064). Top-level key sets identical; all stable captures (`slots` sha+count `6d345b40…`/4, `health` `a29ee2b1…`/200, `metrics` 501, loading envelope + 503 body `baa09177…`, teardown rc 0/sigterm T/sigkill F/port_refuses T/log_path null/term_wait 3 ms, ownership `child`) unchanged.
+- `--compare` (tool bytes at tip, sha `69837013…`): v5 r1↔r2, r1↔r3, r2↔r3 and v4 r1↔r2 all `match=True` exit 0; v4 r1 vs v5 r1/r2 exactly 3 mismatches (`schema:v4->v5`, `projection:props` alias, `projection:models` alias) exit 1 — the intended differences, nothing else.
+- Within-v5 models body differs in exactly one leaf: `data[0].created` (1793053583 vs 1793053584) — instance, excluded from the projection.
+- `props.body_sha256` per-receipt variance explained from upstream source at the pinned commit `704366d7…`: `media_marker` = `"<__media_" + random_string() + "__>"` per server start (`server-common.cpp:189-197`; `child_env_keys` = HOME/LANG/PATH/TMPDIR, no `LLAMA_MEDIA_MARKER` pin), plus between-rounds `model_path` (server-context.cpp:5247) 55→52 chars = the 3-byte Content-Length delta. The projection compares `props.fields`, not the raw body — by design.
+- `source_binding`: all 5 spans recomputed OK (file_sha256 + span_sha256) at `704366d7…`; `gh api …/compare/704366d7…caa8191df…` → `behind_by=0` (ancestor of the built release); spans verbatim at `caa8191df` for server-context.cpp/server-http.cpp; server.cpp spans drifted (refactored into `server_install_signal_handlers()` L318-325/L652, shutdown_handler L645-648, start_loop L671, `return 0` L684) — semantics hold, pre-existing convention (v4 cites the same commit).
+
+## Model path / dead-pointer ruling
+
+`model.path`/`argv[2]` = `/fast/scratch/hyaku/kama-r48/L1/live/stories260K.gguf` (L1 scratch; `install.txt` says removed after the round; file still existed and hashed to the frozen digest at audit time). **Not D5-class**: round-46 D5 (`corpus/lessons/round-46-verifier-spotcheck.md:141`) polices `teardown.log_path` — null in all six receipts, satisfying the adopted rule (`tools/round47-live-replay-audit.py:172-178`). Run-input durability is carried by `provenance.model.url` (pinned 40-hex) + `model.sha256` + record-time `verified`, registered as S492; `kama-live-replay.py` re-acquires from the URL and the counter hashes the **rerun's** paths — the original's `model.path` is never dereferenced. KQ66/KQ69 (`corpus/QUALITY.md:386,396`) satisfied via the receipt's provenance and committed sidecars. Residual note only: the path itself will not resolve after the reaper; policing path fields like `log_path` would be a schema-v6 question, not a round-48 defect.
+
+## Findings
+
+None in scope. Two no-action observations recorded in compare.md §9-§10 (ephemeral `model.path` with durable locator present; upstream `server.cpp` span drift at the release commit, semantics verified at `caa8191df`, pre-existing).
+
+## Tooling installs
+
+None. No pacman, no uv/npm/cargo installs; only `curl`/`gh api` reads of upstream sources and one `gh api` compare call (quota: 1 request).

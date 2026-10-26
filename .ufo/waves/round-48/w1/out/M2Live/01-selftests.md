@@ -1,0 +1,26 @@
+# M2Live selftest verdicts (mutant -> --selftest exit; 0=survived, 1=killed)
+```
+A1-schema-stays-v4 selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:36131, ::ffff:127.0.0.1:45277
+A2-commit-whole-match selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:43585, ::ffff:127.0.0.1:39015
+A3-verified-drop-model-sha selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:44457, ::ffff:127.0.0.1:44239
+A4-verified-at-post selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:44541, ::ffff:127.0.0.1:34781
+H1-https-to-http-both selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:44939, ::ffff:127.0.0.1:36479
+H2-drop-https-check-model-url selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:45541, ::ffff:127.0.0.1:43881
+H3-drop-https-check-asset-url selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:37883, ::ffff:127.0.0.1:40409
+P1-verify-after-popen selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:36865, ::ffff:127.0.0.1:45161
+R1-regex-40-to-7plus selftest_exit=1 :: kama-llamacpp-live selftest: AssertionError
+R2-regex-allow-uppercase selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:45263, ::ffff:127.0.0.1:45167
+R3-regex-drop-artifact-suffix selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:32943, ::ffff:127.0.0.1:43349
+R4-regex-host-any-segments selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:35979, ::ffff:127.0.0.1:39281
+S1-member-shape-drop-dotdot selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:37381, ::ffff:127.0.0.1:41059
+T1-together-any-none-to-all selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:43869, ::ffff:127.0.0.1:34233
+T2-together-trigger-or-to-and selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:39501, ::ffff:127.0.0.1:45221
+T3-v4flags-drop-asset-sha256 selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:46873, ::ffff:127.0.0.1:43189
+V1-archive-digest-trunc32 selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:34443, ::ffff:127.0.0.1:42713
+V2-member-digest-trunc8 selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:37383, ::ffff:127.0.0.1:41567
+V3-member-digest-disabled selftest_exit=1 :: kama-llamacpp-live selftest: AssertionError
+V4-member-lookup-by-basename selftest_exit=0 :: selftest: ok; closed tcp6 listeners ::1:42143, ::ffff:127.0.0.1:42571
+V5-isfile-check-dropped selftest_exit=1 :: kama-llamacpp-live selftest: AttributeError
+V6-isfile-inverted-to-isdir selftest_exit=1 :: kama-llamacpp-live selftest: SetupError
+V7-absent-token-swapped selftest_exit=1 :: kama-llamacpp-live selftest: AssertionError
+```

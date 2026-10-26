@@ -1,0 +1,110 @@
+# S9Lesson round-48 sweep transcript (commands and raw outputs, 2026-10-26)
+# lane clone: /fast/scratch/hyaku/kama-r48/S9Lesson/lane (git clone --shared), read-only use
+# scratch removed after the seat; every command below is re-runnable against a fresh clone
+
+## A. class 1 (superseded text rewritten in place) - graded space at the build, v3 tool from 380bcdff
+$ git show 380bcdff:tools/append-only-audit.py > $S/build/tools/append-only-audit.py
+$ git show 380bcdff:registry/append-only-contract.tsv > $S/build/registry/append-only-contract.tsv
+$ python3 $S/build/tools/append-only-audit.py --repo $S/lane --to 380bcdff9c8af06997c482f6eb03db926a794a2b \
+    --contract $S/build/registry/append-only-contract.tsv --json
+EXIT=0
+{'commits': 311, 'files': 89, 'events': 5, 'restored': 5, 'partial': 0, 'unrestored': 0,
+ 'ungraded': 0, 'ungraded_lines': 89, 'regressed': 0, 'vanished': 0, 'unmatched': 0,
+ 'binary': 0, 'bad_declarations': 0}
+dd9f5dc6 SCORECARD.md deleted 31 graded 14 ungraded 17 rmax 14 held 14 restored
+0718b6ab LOG.md deleted 2292 graded 2292 ungraded 0 rmax 2292 held 2292 restored
+0718b6ab SCORECARD.md deleted 2421 graded 2349 ungraded 72 rmax 2349 held 2349 restored
+0718b6ab corpus/QUALITY.md deleted 375 graded 375 ungraded 0 rmax 375 held 375 restored
+0718b6ab corpus/README.md deleted 663 graded 663 ungraded 0 rmax 663 held 663 restored
+# same tool at the base:
+$ python3 $S/build/tools/append-only-audit.py --repo $S/lane --to 33e005827742b29772b153cda036ec9f27f653be ...
+EXIT=1  summary.regressed=1; 0718b6ab SCORECARD.md held_at_to 2348 of restored_max 2349
+  -> the one missing graded line is the round-45 banner (SCORECARD.md:6 at 82b5e9d3)
+  -> evidence: out/S9Lesson/v3-tool-at-base-33e00582.json
+
+## B. sub-threshold banner rewrites (same class, not graded) - peer X1Banner ledger
+.ufo/waves/round-48/w1/out/X1Banner/04-banner-replacement-ledger.txt
+dd9f5dc6  98/31   r42 installed, r5 8-line banner deleted
+44fa5627  42/9    r43 installed, r42 banner deleted (1 line, < 20)
+d48e8cc3  19/1    r44 installed, r43 banner deleted (1 line, < 20)
+21945c61  33/3    r45 installed, r44 banner deleted (1 of 3, < 20)
+0718b6ab  9/2421  truncation, r45 banner among 2421 deletions
+82b5e9d3  2428/0  restore, r45 banner back at line 6
+4340cf2f  231/8   r46 installed, r45 banner deleted (1 of 8, < 20)
+383f1fc7  43/9    r47 installed, r46 banner deleted (1 of 9, < 20)
+380bcdff  8/0     build append, r45+r46 banners appended at lines 2740/2742
+
+## C. appended banners byte-exact (this seat)
+SCORECARD.md:2740 sha256 == git show 82b5e9d3:SCORECARD.md line 6 sha256
+  8f56ab3ffeb6abf8db00b9173031440ef6eee53eb13e55f8ead9d15bcd57acb5
+SCORECARD.md:2742 sha256 == git show 42ea1204:SCORECARD.md line 6 sha256
+  87a437e7d22908d2709d3fcc3a0798e41e78bbf24c0d3d49452add231e392fe3
+evidence: out/S9Lesson/banner-byte-exact.txt
+
+## D. class 2 (receipt names a tip it was not produced at) - one instance, round 47
+$ grep -h '^tip=' .ufo/waves/round-47/measured/*-fix.out
+measured/r41-fix.out:1:tip=3442d707fdf926ec5ea3f34363cf2f0899cc79b5
+measured/r42-fix.out:1:tip=3442d707fdf926ec5ea3f34363cf2f0899cc79b5
+measured/r43-fix.out:1:tip=3442d707fdf926ec5ea3f34363cf2f0899cc79b5
+measured/c1-fix.out:2:tip=3442d707fdf926ec5ea3f34363cf2f0899cc79b5 base=172b8ad040d51ce8c011238c1408d4e0b6aa9595
+measured/c2-fix.out:2:tip=3442d707fdf926ec5ea3f34363cf2f0899cc79b5
+round-47 closure D9 (corpus/lessons/round-47-verifier-spotcheck.md:105) quotes the report as
+"re-run at the final tip 6b7e6cf8". No second instance found in rounds 45-47 receipts:
+round-46 measured carries `tip=` lines and its lesson cites the *-final.out tip it holds.
+
+## E. class 3 (a counter trusting evidence it should check) - round 47 closed for C2, one survivor
+round-47 closure D1 (corpus/lessons/round-47-verifier-spotcheck.md:97), seat K2Cheat
+(.ufo/waves/round-47/w1/out/K2Cheat.md): host-cache copy (V1), 0-byte fabricated rerun (V3),
+forged started_utc (V4b) all met the frozen round-47 counter.
+round-48 kill: controls/junk-c2-r47-relabel.c2.out
+  receipts=1 recordcheck=0 replay=0 compare=0 tamper=0 urlswap=0 newrow=0 replayed=0/3 met=False
+  detail: replay 1: server file '/home/vgpnk/.local/opt/llama-b11909/llama-server' not under scratch
+  detail: replay 1: rerun started_utc '2026-10-26T21:16:50.545Z' precedes counter start
+  detail: urlswap-asset: exit 0 refused None rerun True
+  detail: compare props-n_ctx: exit 0 want 1
+Survivor (this seat's sweep): the round-48 C2 counter still never compares the tool that
+produced a receipt.
+$ grep -n 'tool' tools/round48-live-replay-v5-audit.py
+  12,30,37,41,67,75,104  docstring only; 144 REPLAY = "tools/kama-live-replay.py"; 145 LIVE = ...
+$ python3 -c "import json;d=json.load(open('.ufo/waves/round-48/c2/live/receipt-1.json'));print(d['tool'])"
+{'path': '/home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-llamacpp-live.py',
+ 'sha256': '1e5ea0fde985367d9d6335eae3825068e64063f032bbbc59fc8909e7b7f9a6d2'}
+$ sha256sum tools/kama-llamacpp-live.py          -> 1e5ea0fd...9a6d2  (build tool == receipt tool)
+$ git show 33e00582:tools/kama-llamacpp-live.py | sha256sum -> 65301a3c...ae65d
+$ sha256sum tools/kama-live-replay.py             -> 69837013...b15f
+$ git show 33e00582:tools/kama-live-replay.py | sha256sum -> 3c573444...0f2cb
+# a freeze-time pin would distinguish (hashes differ across commits) and would pass today's
+# filed receipts; no leg in either round-48 counter does it.
+
+## F. declaration prose no instrument reads (sweep)
+$ awk 'NR>1 && NF' registry/append-only-contract.tsv | wc -l   -> 9
+$ sed -n '760p;783p' corpus/README.md
+  :760 "C2, capability table row `append-only-audit`) sets the five files the lane treats as append-only"
+  :783 "reads its file set from `registry/append-only-contract.tsv`, whose seven rows each name"
+# five and seven vs the contract's nine rows; corpus/README.md is A-corr (corrections appended),
+# so the drift is a missing append, and nothing compares the prose count with the contract.
+
+## G. sources guard still blind at the build (round-47 Mistakes row 5, routed r47-D8 to frontier)
+$ python3 tools/sources-append-only.py --repo $S/lane --from 1641aa07 --to 052cb1e9
+error: 052cb1e9:corpus/SOURCES.md:514: row-like line outside the parsed registry table; refusing to drop it
+EXIT=2
+$ python3 tools/sources-append-only.py --repo $S/lane --from d48e8cc3 --to 6b8ccfb3
+no append-only violations
+EXIT=0   (the last graded transition)
+$ git log --oneline 33e005827742b29772b153cda036ec9f27f653be..380bcdff9c8af06997c482f6eb03db926a794a2b -- tools/sources-append-only.py
+(empty: the tool is unchanged between base and build)
+evidence: out/S9Lesson/sources-guard-1641aa07-to-052cb1e9.out
+
+## H. C1 frozen counter at the build (this seat)
+$ python3 tools/round48-append-audit-v3-check.py --repo $S/lane --tip 380bcdff... --scratch $S/c1
+EXIT=0
+selftest=1 contract=1 lane=1 fixture=1 stable=1 rows=9 files=89 lane_events=5 lane_failures=0
+ungraded_lines=89 fixture_fail=0 met=True
+evidence: out/S9Lesson/c1-counter-at-build-380bcdff.out
+
+## I. v5 receipts, structure only (this seat; no replay, no network)
+receipt-{1,2,3}.json: schema kama-llamacpp-live/v5, outcome pass, checks 11 evaluated 11 passed 11,
+teardown.log_path null, tool.sha256 1e5ea0fd... (the build's live tool),
+provenance.model.commit 499bc8821c6b12b4e53c5bffcb21ec206f212d81,
+provenance.verified {"at": "record", archive_sha256 bf94332a..., member_sha256 35ac50fb...,
+model_sha256 270cba1b...}

@@ -1,0 +1,19 @@
+== F1: malformed rerun fields crash compare (uncaught TypeError/AttributeError) ==
+(a) body-as-object: exit=1 stdout='' stderr_tail='TypeError: the JSON object must be str, bytes or bytearray, not dict'
+(b) data=5: exit=1 stdout='' stderr_tail="TypeError: 'int' object is not iterable"
+(c) server-as-string: exit=1 stdout='' stderr_tail="AttributeError: 'str' object has no attribute 'get'"
+== F2: replay() crash path writes no J (docstring says Writes J) ==
+replay exit=2 J_exists=True stderr_tail=''
+== F3: file:// URLs accepted by replay (https-only not enforced) ==
+replay exit=2 stdout='replay match=False refused=provenance-url-revision-differs-from-commit mismatches=0 exit=2'
+== F4: None vs absent conflation in projection ==
+null-captures vs no-captures: exit=0 stdout='compare match=True mismatches=0'
+models-body-null vs absent: exit=0 stdout='compare match=True mismatches=0'
+real-slots vs absent: exit=1 stdout='compare match=False mismatches=1\nmismatch: projection:slots:[4, "s"]->[null, null]'
+== F5: argv insertion position for v5 ==
+STDERR:
+Traceback (most recent call last):
+  File "/fast/scratch/hyaku/kama-r48/V2Replay/fixtures.py", line 129, in <module>
+    argv = eval(open(os.path.join(D, "argv.txt")).read())
+                ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/fast/scratch/hyaku/kama-r48/V2Replay/fix/d/argv.txt'

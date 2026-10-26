@@ -1,0 +1,49 @@
+R2Compare — proposed fix P2 (frozen counter; for a future round's counter only)
+Target: tools/round48-live-replay-v5-audit.py projection() (frozen at 12284ba /
+380bcdff; NOT applied here).
+Problem: the counter re-implements the stable projection with different models
+semantics than the tool's (counter-frozen.py:209-217): it collapses every
+non-dict parse, every non-string body and every unparseable body; (a) non-dict
+parses to None and (b) unparseable bodies to "unparseable", while the tool
+preserves parsed values and falls back to the recorded byte digest. The two
+definitions therefore disagree in both directions (see R2Compare.md F1-F3).
+Proposal: mirror the tool's models semantics exactly (including P1's tuple
+sentinel), so the counter's projection is a faithful independent cross-check that
+agrees with the tool's on every receipt pair:
+
+  --- a/tools/round48-live-replay-v5-audit.py
+  +++ b/tools/round48-live-replay-v5-audit.py
+  @@ -206,12 +206,19 @@ def projection(rec):
+       """This counter's own stable projection of a live receipt."""
+       cap = rec.get("captures") if isinstance(rec.get("captures"), dict) else {}
+  -    models = None
+  -    try:
+  -        doc = json.loads(dig(cap, "models", "body") or "null")
+  -        if isinstance(doc, dict):
+  -            models = (sorted(str(m.get("id")) + "|" + str(m.get("owned_by")) for m in doc.get("data") or []
+  -                             if isinstance(m, dict)),
+  -                      sorted(str(m.get("name")) for m in doc.get("models") or [] if isinstance(m, dict)))
+  -    except ValueError:
+  -        models = "unparseable"
+  +    raw = dig(cap, "models", "body")
+  +    try:
+  +        doc = json.loads(raw) if isinstance(raw, str) else None
+  +    except ValueError:
+  +        doc = None
+  +    if doc is None and raw is not None:
+  +        # mirror tools/kama-live-replay.py projection(): unparseable or non-string
+  +        # bodies fall back to the recorded byte digest (or a tuple sentinel no JSON
+  +        # value can equal), so the counter's projection agrees with the tool's
+  +        models = ("unparseable", dig(cap, "models", "body_sha256"))
+  +    elif isinstance(doc, dict):
+  +        data = doc.get("data") if isinstance(doc.get("data"), list) else []
+  +        names = doc.get("models") if isinstance(doc.get("models"), list) else []
+  +        models = (sorted(str(m.get("id")) + "|" + str(m.get("owned_by")) for m in data
+  +                         if isinstance(m, dict)),
+  +                  sorted(str(m.get("name")) for m in names if isinstance(m, dict)))
+  +    else:
+  +        models = doc
+
+This also removes the counter's TypeError crash on non-string bodies and on
+non-iterable "data"/"models" values (the counter's current `for m in ... or []`
+raises TypeError on {"data": 5}; the patched tool guards these).

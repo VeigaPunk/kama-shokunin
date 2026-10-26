@@ -1,0 +1,73 @@
+K2Design — proposed smallest corrections (round 48, C2 design critic)
+All paths relative to kama-shokunin. Nothing applied; counters and tools are frozen this round.
+
+§1 F1: bind the model URL to the model bytes at record time (v5)
+File: tools/kama-llamacpp-live.py
+
+a) Add a fetch helper next to sha256_file (uses stdlib only; https only):
+    def fetch(url, dest):
+        req = urllib.request.Request(url, headers={"User-Agent": "kama-llamacpp-live/5"})
+        with urllib.request.urlopen(req, timeout=120) as r, open(dest, "wb") as fh:
+            shutil.copyfileobj(r, fh, 1 << 20)
+
+b) In main(), v5 branch (currently lines 1556-1566), before verify_archive_member:
+      if args.server_archive is not None:
+          fd, fetched = tempfile.mkstemp(prefix="kama-model-", suffix=".gguf")
+          os.close(fd)
+          try:
+              fetch(args.model_url, fetched)
+          except Exception as exc:
+              os.unlink(fetched)
+              raise SetupError(f"provenance-model-url-unfetchable:{type(exc).__name__}")
+          if sha256_file(fetched).lower() != args.model_sha256.lower():
+              os.unlink(fetched)
+              raise SetupError("provenance-model-url-digest-mismatch")
+          args.model = fetched
+          model_sha = sha256_file(args.model)
+      (thus provenance.verified.model_sha256 attests the URL serves those bytes)
+
+c) Adjust the argument gate (lines 1447-1449): --model-sha256 stays required;
+   --model required only when --server-archive is absent. v5 therefore never
+   needs a local model file (replay no longer has to pre-download the model).
+
+d) Fixture ripple (counter round48-live-replay-v5-audit.py recordcheck leg):
+   the all-right-control must serve the stub model over a local https endpoint
+   (stdlib http.server + ssl, self-signed CA, SSL_CERT_FILE in env; urllib's
+   default SSL context honors it). Add negative cases: model URL serving wrong
+   bytes -> exit 2, no marker; model URL unreachable -> exit 2, no marker.
+
+§2 F2: project the already-captured body digests
+File: tools/kama-live-replay.py, projection() (lines 154-174); mirror in
+round48-live-replay-v5-audit.py projection() (lines 206-226) for future rounds.
+
+    add under the returned dict:
+        "props_body":  _get(rec, "captures", "props", "body_sha256"),
+        "models_body": _get(rec, "captures", "models", "body_sha256"),
+        "loading_bodies": [len(_get(rec, "loading_503_bodies") or []),
+                           rec.get("loading_bodies_dropped")],
+    and extend the compare leg with two new stable-surface variants (props body
+    digest changed, models body digest changed) expecting exit 1.
+
+§3 F3: refuse unpinned receipts (v4 included)
+File: tools/kama-live-replay.py, provenance() (lines 96-123):
+    move the v5-only checks (currently 114-122) to run for every accepted
+    schema: parse the model URL's `/resolve/<40hex>/` segment (add
+    PINNED_MODEL_URL-equivalent regex); if absent -> Refused("provenance-unpinned-model-url").
+    The check runs before any acquire(), so it is offline and cheap.
+    Document that round-46/47 S490 (main-ref) receipts are historical and no
+    longer replayable; add an offline counter leg: copy the committed r47
+    receipt, assert replay exit 2 + that token, and that no download directory
+    was created under --work.
+
+§4 F4: vendor the pinned inputs (D7)
+New lane files (committed, recorded in corpus/SOURCES.md as S494/S495):
+    tools/vendor/kama-live/llama-b11909-bin-ubuntu-x64.tar.gz   (22 475 032 B, sha256 bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b)
+    tools/vendor/kama-live/stories260K.gguf                     (1 185 376 B, sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d)
+File: tools/kama-live-replay.py:
+    in acquire(url, sha, dest): on fetch failure (urllib.error.URLError /
+    HTTPError / TimeoutExpired) fall back to the vendored copy searched under
+    --vendor DIR (default LANE/tools/vendor/kama-live); verify sha against the
+    receipt (same check); record res["inputs"]["source"] = "remote"|"vendor"
+    and a note when the remote responded but bytes differed (that case still
+    REFUSES: the tamper/urlswap signal must remain a refusal, so the fallback
+    never masks drift).

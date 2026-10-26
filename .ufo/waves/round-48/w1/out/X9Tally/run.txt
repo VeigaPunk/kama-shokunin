@@ -1,0 +1,50 @@
+# round-48 X9Tally - shortcut-tally.py (v2, promoted draft) run record
+
+lane source (read-only): /home/vgpnk/Projects/shokunin/kama-shokunin
+clone (for every run below): /fast/scratch/hyaku/kama-r48/X9Tally/lane
+  git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin $S/lane
+  git -C $S/lane checkout --detach 380bcdff9c8af06997c482f6eb03db926a794a2b
+  toplevel: /fast/scratch/hyaku/kama-r48/X9Tally/lane
+bare clone (objects only, no worktree): /fast/scratch/hyaku/kama-r48/X9Tally/lane-bare.git
+  git clone --bare --shared ... ; git cat-file -e 380bcdff^{commit} -> present
+
+measured commit: 380bcdff9c8af06997c482f6eb03db926a794a2b (round-48 build)
+base: 33e005827742b29772b153cda036ec9f27f653be; freeze: 12284ba39fb1b46b43d43ee82423bebe08c700dc
+
+script: .ufo/waves/round-48/w1/out/X9Tally/shortcut-tally.py
+script sha256: 3ee41c877007188a3b205837d6e164060b4f978b058b09af2f291befe9a57c09
+script lines: 975
+git: 2.56.0   python: 3.14.8   (no tool installed; stdlib + git only)
+
+commands (run from $S, exit codes in brackets):
+[0] python3 <script> --repo $S/lane --rev 380bcdff... --rounds 40-47                 -> tally.out
+[1] python3 <script> --repo $S/lane --rev 380bcdff... --rounds 40-47 --check 3        -> check-fail.out
+[0] python3 <script> --repo $S/lane --rev 380bcdff... --rounds 40-47 --check 4        -> check-pass.out
+[0] python3 <script> --repo $S/lane --rev 380bcdff... --rounds 40-47 --json           -> tally.json
+[0] python3 <script> --selftest --scratch $S                                          -> selftest.out
+[0] python3 <script> --repo $S/lane-bare.git --rev 380bcdff... --rounds 40-47         -> tally-bare.out
+[0] python3 <script> --repo $S/lane --rev 380bcdff... --rounds 40-47  (dirty worktree) -> tally-worktree-dirty.out
+[2] python3 <script> --repo $S/notgit --rounds 40-40                                   -> nongit.out
+[2] python3 <script> --repo $S/lane --rev 380bcdff... --rounds 47-40                  -> badrounds.out
+[0] python3 <script> --repo $S/lane --rev 380bcdff... --rounds 40-47 (rerun, diff -q) -> identical (determinism)
+
+round-47 draft on the same clone (defect evidence):
+[0] python3 .ufo/waves/round-47/w1/out/X9Tally/shortcut-tally.py --lane $S/lane --rounds 40-47 -> round47-draft-at-380bcdff.out
+    round 47 reads `unreadable:mutation-report`; notes: ambiguous killed [29,44] (M1Ctr.md:3),
+    ambiguous killed [3,22] (M1Tool.md:3), ambiguous killed [13,23] (M2Ctr.md:3); M2Replay.md not read at all.
+
+equivalence: rounds 40-46 rows are byte-identical to the published
+.ufo/waves/round-47/w1/out/X9Tally/tally.out (diff of the round/40-46 lines: no output).
+
+fixture (created by --selftest under $S, one git repo per group, each `git init`ed and its
+`rev-parse --show-toplevel` asserted equal to the fixture dir before the first commit;
+identity only via `-c user.name=shortcut-tally selftest -c user.email=selftest@example.invalid`,
+never a global config):
+  a  SCORECARD.md with rounds 10-12, a clean 1/3 battery, round 11 naming a wide-shape seat
+     plus a K2Cheat report file                                        -> readable-round, check-fails, committed-bytes, bad-rev
+  b  fixture a with the `## Round 12` heading deleted                  -> unreadable-round
+  c  split kills (22+3), `29/44 mutants killed`, `10 SURVIVED both`     -> split-slash-uppercase-kill
+     + a battery that does not close killed+survived+equivalent        -> contradictory-report
+  all fixtures removed by --selftest (shutil.rmtree in a finally block)
+
+wall time: 1.7 s selftest, 0.6 s per tally at the build commit.

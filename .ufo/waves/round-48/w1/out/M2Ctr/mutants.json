@@ -1,0 +1,448 @@
+{
+ "pristine_sha256": "6bc16e2532469f160cee59c78103688b8d16a9713fdb4d3c255f894975fb0c09",
+ "pristine_path": "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round48-live-replay-v5-audit.py",
+ "mutants": [
+  {
+   "id": "M01-schema-v4",
+   "region": "SCHEMA",
+   "lines": [
+    146
+   ],
+   "prediction": "KILLED-TIP",
+   "reason": "tip receipts are v5; receipts leg compares rec.schema != SCHEMA",
+   "sha256": "9d3d0a5e09db02944a0bb5c059c3ad80d8eb58c97c66fcd7e3e2bbed46b904a0",
+   "edits": [
+    {
+     "old": "SCHEMA = \"kama-llamacpp-live/v5\"",
+     "new": "SCHEMA = \"kama-llamacpp-live/v4\""
+    }
+   ]
+  },
+  {
+   "id": "M02-asset-sha",
+   "region": "frozen-digests",
+   "lines": [
+    135
+   ],
+   "prediction": "KILLED-TIP",
+   "reason": "receipt provenance.server.asset_sha256 is the real digest; frozen-constant compare fails",
+   "sha256": "1799bbe2beb4e12f9e382a9b608db3b18ec10f448afcbf594c9fb9e72a23bebb",
+   "edits": [
+    {
+     "old": "ASSET_SHA = \"bf94332a",
+     "new": "ASSET_SHA = \"cf94332a"
+    }
+   ]
+  },
+  {
+   "id": "M03-model-commit",
+   "region": "frozen-digests",
+   "lines": [
+    136
+   ],
+   "prediction": "KILLED-TIP",
+   "reason": "receipt provenance.model.commit is the real pin; compare fails (also shifts MODEL_URL)",
+   "sha256": "6c1013bf2e93070d763d99b18c616a69694c4c49a79ff3f724e8991581a83606",
+   "edits": [
+    {
+     "old": "MODEL_COMMIT = \"499bc8821",
+     "new": "MODEL_COMMIT = \"599bc8821"
+    }
+   ]
+  },
+  {
+   "id": "M04-model-url-path",
+   "region": "frozen-urls",
+   "lines": [
+    138
+   ],
+   "prediction": "KILLED-TIP",
+   "reason": "receipt model.url names tinyllamas; MODEL_URL compare fails",
+   "sha256": "4abc66fef93e13a3e1ac858558df15cae61faf73d3cc5c8cd576240b8a27aed2",
+   "edits": [
+    {
+     "old": "f\"{MODEL_COMMIT}/tinyllamas/stories260K.gguf\")",
+     "new": "f\"{MODEL_COMMIT}/tinyllama/stories260K.gguf\")"
+    }
+   ]
+  },
+  {
+   "id": "M05-model-sha",
+   "region": "frozen-digests",
+   "lines": [
+    139
+   ],
+   "prediction": "KILLED-TIP",
+   "reason": "receipt model digests are the real ones; frozen-constant compare fails",
+   "sha256": "3495ea8d4b2044902ec154661bd88ff7b081fc6b24c55980a0eea524d2a8bc1f",
+   "edits": [
+    {
+     "old": "MODEL_SHA = \"270cba1bd",
+     "new": "MODEL_SHA = \"370cba1bd"
+    }
+   ]
+  },
+  {
+   "id": "M06-eval-threshold-3",
+   "region": "receipts-leg",
+   "lines": [
+    234
+   ],
+   "prediction": "SURVIVED",
+   "reason": "tip receipts have >=10 evaluated checks either way; control receipts leg already passes",
+   "sha256": "9b551c93d3ff456d40bdb095ea9638c9fc6737757a7deb6c112214297865b733",
+   "edits": [
+    {
+     "old": "if len(ev) < 10 or not all(v is True for v in ev.values()):",
+     "new": "if len(ev) < 3 or not all(v is True for v in ev.values()):"
+    }
+   ]
+  },
+  {
+   "id": "M07-all-passed-false",
+   "region": "receipts-leg",
+   "lines": [
+    234
+   ],
+   "prediction": "KILLED-TIP",
+   "reason": "tip receipts have all checks passed=True; all-False is False so a prob is appended",
+   "sha256": "fca7c358342ad06ca3a3e894af19b94febc09487a97291442d09a2551410f3f0",
+   "edits": [
+    {
+     "old": "not all(v is True for v in ev.values())",
+     "new": "not all(v is False for v in ev.values())"
+    }
+   ]
+  },
+  {
+   "id": "M08-verified-at-rerun",
+   "region": "verified-block",
+   "lines": [
+    246
+   ],
+   "prediction": "KILLED-TIP",
+   "reason": "receipts carry verified.at=record; compare fails",
+   "sha256": "36b6f2a7a75cea01f08defeec611f27e8526388cef03f7b10d3f4760cefe3e0b",
+   "edits": [
+    {
+     "old": "ver.get(\"at\") == \"record\"",
+     "new": "ver.get(\"at\") == \"rerun\""
+    }
+   ]
+  },
+  {
+   "id": "M09-member-binding-asset",
+   "region": "verified-block",
+   "lines": [
+    248
+   ],
+   "prediction": "KILLED-TIP",
+   "reason": "member_sha256 binds to server.sha256 (member digest), not the archive digest",
+   "sha256": "f44f53e85879a580560d4d3da18804cefe4141f5bc00e5fe4f05f2d82021e6ef",
+   "edits": [
+    {
+     "old": "and ver.get(\"member_sha256\") == dig(rec, \"server\", \"sha256\")):",
+     "new": "and ver.get(\"member_sha256\") == ASSET_SHA):"
+    }
+   ]
+  },
+  {
+   "id": "M10-marker-always",
+   "region": "recordcheck",
+   "lines": [
+    333
+   ],
+   "prediction": "KILLED-TIP",
+   "reason": "negative recordcheck cases require not executed; marker-True fails them all",
+   "sha256": "fa53c3365a2ac29d102644356b3975a6471a6a027388bb1602c176baf7f04ddc",
+   "edits": [
+    {
+     "old": "executed = os.path.exists(marker)",
+     "new": "executed = True"
+    }
+   ]
+  },
+  {
+   "id": "M11-rc-ignore-executed",
+   "region": "recordcheck",
+   "lines": [
+    337
+   ],
+   "prediction": "SURVIVED",
+   "reason": "no target ships a live tool that executes the stub server on a refused case",
+   "sha256": "bf2333463b6458e22de4dc2e0898e88f96ee5dc065961c4686e5eb24e341365e",
+   "edits": [
+    {
+     "old": "code == want and not executed and not (isinstance(rec, dict) and rec.get(\"outcom",
+     "new": "code == want and not (isinstance(rec, dict) and rec.get(\"outcome\") == \"pass\")"
+    }
+   ]
+  },
+  {
+   "id": "M12-rc-want-3",
+   "region": "recordcheck",
+   "lines": [
+    314
+   ],
+   "prediction": "KILLED-TIP",
+   "reason": "live tool refuses unpinned URL with exit 2, not 3",
+   "sha256": "8eb6217ebfc06e227dc25b6d22c1a2174c50988403e27196c2573359733ead83",
+   "edits": [
+    {
+     "old": "resolve/main/m.gguf\"}), 2),",
+     "new": "resolve/main/m.gguf\"}), 3),"
+    }
+   ]
+  },
+  {
+   "id": "M13-inside-true",
+   "region": "inside",
+   "lines": [
+    182
+   ],
+   "prediction": "EXERCISED-CTL",
+   "reason": "control detail loses the 9 'not under scratch' lines; leg stays 0 via started_utc",
+   "sha256": "49f732ebb2fc12ac0c758846fbfd6bc4da5778fb99f12717530239036ce57616",
+   "edits": [
+    {
+     "old": "return rp.startswith(rr + os.sep)",
+     "new": "return True"
+    }
+   ]
+  },
+  {
+   "id": "M14-replay-no-hash",
+   "region": "replay-cross-hash",
+   "lines": [
+    422
+   ],
+   "prediction": "SURVIVED",
+   "reason": "tip rerun files hash correctly anyway; control hash branch unreached (inside() gate first)",
+   "sha256": "1836924296ea4a9c4279c522246a41d1eba7f3d36157b58ea44c6bca7f471ccb",
+   "edits": [
+    {
+     "old": "elif sha_file(fpath) != want:",
+     "new": "elif False:"
+    }
+   ]
+  },
+  {
+   "id": "M15-started-utc-drop",
+   "region": "started-utc",
+   "lines": [
+    412
+   ],
+   "prediction": "EXERCISED-CTL",
+   "reason": "control detail loses the 3 'precedes counter start' lines; leg stays 0 via scratch paths",
+   "sha256": "da63cce19157c071518568632265f395bee55d1dc0eaa28c0b9d0c2dd44dd39f",
+   "edits": [
+    {
+     "old": "if st is None or st < t0:",
+     "new": "if st is None:"
+    }
+   ]
+  },
+  {
+   "id": "M16-compound-mno",
+   "region": "replay-leg",
+   "lines": [
+    182,
+    422,
+    412
+   ],
+   "prediction": "KILLED-CTL",
+   "reason": "with all three guards off the copied-receipt cheat passes the replay leg on the control",
+   "sha256": "15ee297b34cec52bf97e0c9d915e64ee74dc7c57cd53d14b89d800d10e7e0cf8",
+   "edits": [
+    {
+     "old": "return rp.startswith(rr + os.sep)",
+     "new": "return True"
+    },
+    {
+     "old": "elif sha_file(fpath) != want:",
+     "new": "elif False:"
+    },
+    {
+     "old": "if st is None or st < t0:",
+     "new": "if st is None:"
+    }
+   ]
+  },
+  {
+   "id": "M17-projection-metrics",
+   "region": "projection-keys",
+   "lines": [
+    223
+   ],
+   "prediction": "SURVIVED",
+   "reason": "projection() is applied to both sides of the rec-vs-rr compare, so it is self-consistent",
+   "sha256": "540ec2456f9143469e3048138c795199a52c5e5fbd50f2e172a705bc836c0d21",
+   "edits": [
+    {
+     "old": "\"metrics\": dig(cap, \"metrics\", \"status\"),",
+     "new": "\"metrics\": None,"
+    }
+   ]
+  },
+  {
+   "id": "M18-cmp-instance-want1",
+   "region": "compare",
+   "lines": [
+    478
+   ],
+   "prediction": "KILLED-TIP",
+   "reason": "instance-only copy must compare equal (exit 0); demanding 1 fails the leg",
+   "sha256": "36ce6ab80525aced5bbc27d979e17dbffc63e26af4bd681f3c96fd771a47e400",
+   "edits": [
+    {
+     "old": "(\"instance-only\", inst, 0),",
+     "new": "(\"instance-only\", inst, 1),"
+    }
+   ]
+  },
+  {
+   "id": "M19-cmp-props-want0",
+   "region": "compare",
+   "lines": [
+    480
+   ],
+   "prediction": "KILLED-TIP",
+   "reason": "props n_ctx change must exit 1; demanding 0 fails the leg",
+   "sha256": "1971330bb0994733f422fc4567f4f19631f115f5d90518793d65cd4c8396d33b",
+   "edits": [
+    {
+     "old": "(x or 0) * 2 + 1), 1),",
+     "new": "(x or 0) * 2 + 1), 0),"
+    }
+   ]
+  },
+  {
+   "id": "M20-tamper-noop",
+   "region": "tamper",
+   "lines": [
+    509
+   ],
+   "prediction": "KILLED-TIP",
+   "reason": "unflipped variant replays cleanly with exit 0 and a pass rerun; tamper leg sees code 0",
+   "sha256": "955f67259ecf4833834cbe2e1090145765f337aebe878fec8b5e69edfa90baaf",
+   "edits": [
+    {
+     "old": "node[keys[-1]] = (\"0\" if s[0] != \"0\" else \"1\") + s[1:]",
+     "new": "pass"
+    }
+   ]
+  },
+  {
+   "id": "M21-tamper-accept-all",
+   "region": "tamper",
+   "lines": [
+    517
+   ],
+   "prediction": "KILLED-CTL",
+   "reason": "control tamper refusals disappear; tamper flag flips 0->1 on the control",
+   "sha256": "447e771a2d7b2bce5211c5e8119a2eae5448e3c406a15721c9d55d02126c9f75",
+   "edits": [
+    {
+     "old": "if code in (0, None) or (isinstance(rr, dict) and rr.get(\"outcome\") == \"pass\"):",
+     "new": "if False:"
+    }
+   ]
+  },
+  {
+   "id": "M22-urlswap-prefix-loose",
+   "region": "urlswap",
+   "lines": [
+    541
+   ],
+   "prediction": "SURVIVED",
+   "reason": "tip refusal prefix still matches the looser prefix; control urlswap already 0",
+   "sha256": "83f1874e5bfdaea7c100447d8a55f3b13b3219f1dad3926a91adc8541aeb01a2",
+   "edits": [
+    {
+     "old": "startswith(\"digest-mismatch\")",
+     "new": "startswith(\"digest\")"
+    }
+   ]
+  },
+  {
+   "id": "M23-urlswap-rerun-ok",
+   "region": "urlswap",
+   "lines": [
+    541
+   ],
+   "prediction": "SURVIVED",
+   "reason": "tip refusals produce no rerun either way; control urlswap already 0",
+   "sha256": "e6d8d303c93d6c8215ac450895758a62a503a5c97bfbf9c2e9281c4eaa01f5dd",
+   "edits": [
+    {
+     "old": "startswith(\"digest-mismatch\") or rr is not None",
+     "new": "startswith(\"digest-mismatch\")"
+    }
+   ]
+  },
+  {
+   "id": "M24-urlswap-code0",
+   "region": "urlswap",
+   "lines": [
+    541
+   ],
+   "prediction": "KILLED-TIP",
+   "reason": "tip urlswap refusals exit 2, not 0; demanding 0 fails the leg",
+   "sha256": "32c434681c7ab65c2bdc1ca72cbf5c38c79680c968ba34a1c51aa6a4185fd108",
+   "edits": [
+    {
+     "old": "if code != 2 or not str(ref or \"\")",
+     "new": "if code != 0 or not str(ref or \"\")"
+    }
+   ]
+  },
+  {
+   "id": "M25-newrow-noshape",
+   "region": "newrow",
+   "lines": [
+    546
+   ],
+   "prediction": "SURVIVED",
+   "reason": "tip has a real '| S' row so the shape test is redundant there; control lacks the URL entirely",
+   "sha256": "10f75046ea138e56869a31ae07d136a4b1918f529bf3c5a9880b42c91e71e563",
+   "edits": [
+    {
+     "old": "any(ln.lstrip(\" \").startswith(\"| S\") and MODEL_URL in ln",
+     "new": "any(MODEL_URL in ln"
+    }
+   ]
+  },
+  {
+   "id": "M26-newrow-src-only",
+   "region": "newrow",
+   "lines": [
+    546
+   ],
+   "prediction": "KILLED-CTL",
+   "reason": "SOURCES.md exists at the control base, so newrow flips 0->1 without the row-content check",
+   "sha256": "8a47504f2046932633cf3fa8078f56392853330ccbae9adb6d165be57efe835a",
+   "edits": [
+    {
+     "old": "newrow = bool(src) and any(",
+     "new": "newrow = bool(src) or any("
+    }
+   ]
+  },
+  {
+   "id": "M27-replayed-2",
+   "region": "replay-aggregation",
+   "lines": [
+    435
+   ],
+   "prediction": "KILLED-TIP",
+   "reason": "tip replays 3/3; ==2 makes rep False and the tip run exits 1",
+   "sha256": "7580cfe2c60e04c7f46725c759689018e7843d7109a06fabcae6156f104c1118",
+   "edits": [
+    {
+     "old": "rep = replayed == 3",
+     "new": "rep = replayed == 2"
+    }
+   ]
+  }
+ ]
+}

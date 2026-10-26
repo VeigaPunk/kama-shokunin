@@ -1,0 +1,25 @@
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -120,6 +120,12 @@
+         ver = prov.get("verified") if isinstance(prov.get("verified"), dict) else {}
+         if ver.get("at") != "record":
+             raise Refused("provenance-not-verified-at-record")
++        # the recorded verification must bind the same bytes the receipt names
++        want = {"archive_sha256": need["server.asset_sha256"], "model_sha256": need["model.sha256"],
++                "member_sha256": (rec.get("server") or {}).get("sha256")}
++        for k, v in want.items():
++            if ver.get(k) != v:
++                raise Refused(f"provenance-verified-{k.replace('_sha256', '')}")
+     return need
+ 
+ 
+@@ -315,7 +321,8 @@
+ 
+         def v5(**over):
+             base = {"schema": LIVE_V5, "provenance.model.commit": commit,
+-                    "provenance.verified": {"at": "record"}}
++                    "provenance.verified": {"at": "record", "archive_sha256": asha,
++                                            "member_sha256": ssha, "model_sha256": msha}}
+             return receipt(**dict(base, **over))
+ 
+         def run(name, rp, want_exit, want_refused=None, live=fake_live):

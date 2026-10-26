@@ -24,9 +24,10 @@ models body's per-request ``created`` - are excluded):
   loading    loading_envelope_exact and loading_503.body_sha256
   teardown   returncode, sigterm_sent, sigkill_sent, port_refuses
   ownership  port_listener_ownership
-v5 receipts (round 48) must also carry provenance.model.commit (40 hex) named by
-the model URL's ``/resolve/<commit>/`` segment and a provenance.verified block
-recorded at record time.
+v5 receipts (round 48) must also carry provenance.model.commit (40 lower-case hex)
+named by the model URL's ``/resolve/<commit>/`` segment and a provenance.verified
+block recorded at record time whose digests, when present, equal the asset, server
+and model sha256; a v5 rerun must carry the same commit and verified digests.
 
 Usage:
   kama-live-replay.py --receipt R --work DIR --out J [--live TOOL] [--timeout S]
@@ -36,10 +37,13 @@ Writes J: {"schema": "kama-live-replay/v1", "receipt", "work", "rerun_receipt",
 "match", "refused", "mismatches": [...], "notes": [...], "inputs": {...}}; notes list
 tool/probe digest differences between the original and the rerun (informational).
 Exit: 0 the rerun matches; 1 it ran and differs; 2 refused (missing or wrong
-provenance, digest mismatch, unsafe archive member) or could not run.
---compare prints `compare match=<bool> mismatches=N` and one `mismatch:` line each;
-exit 0 equal, 1 different, 2 unreadable.
-Network: https only, for the two recorded URLs. Writes only under --work and J.
+provenance, digest mismatch, unsafe archive member, malformed receipt) or could not run.
+--timeout bounds the live child only (each download has its own 120 s socket timeout).
+--compare validates both receipts' provenance like a replay would, then prints
+`compare match=<bool> mismatches=N` and one `mismatch:` line each; exit 0 equal,
+1 different, 2 unreadable or refused.
+Network: https only, for the two recorded URLs (file:// is accepted by the selftest
+alone; round-48 seat V2Replay F2). Writes only under --work and J.
 Deps: python3 stdlib.
 """
 from __future__ import annotations
@@ -78,9 +82,9 @@ def sha256_file(path):
     return h.hexdigest()
 
 
-def fetch(url, dest, timeout=120):
-    """Download url to dest (https or file://; file:// only for the selftest)."""
-    if not (url.startswith("https://") or url.startswith("file://")):
+def fetch(url, dest, timeout=120, allow_file=False):
+    """Download url to dest (https; file:// only when allow_file, i.e. the selftest)."""
+    if not (url.startswith("https://") or (allow_file and url.startswith("file://"))):
         raise Refused(f"url-scheme:{url}")
     tmp = dest + ".part"
     req = urllib.request.Request(url, headers={"User-Agent": "kama-live-replay/1"})
@@ -120,11 +124,17 @@ def provenance(rec):
         ver = prov.get("verified") if isinstance(prov.get("verified"), dict) else {}
         if ver.get("at") != "record":
             raise Refused("provenance-not-verified-at-record")
+        for key, want in (("archive_sha256", need["server.asset_sha256"]),
+                          ("member_sha256", (rec.get("server") or {}).get("sha256")),
+                          ("model_sha256", need["model.sha256"])):
+            got = ver.get(key)
+            if isinstance(got, str) and HEX64.fullmatch(got) and got != want:
+                raise Refused(f"provenance-verified-{key}-differs")
     return need
 
 
-def acquire(url, sha, dest):
-    fetch(url, dest)
+def acquire(url, sha, dest, allow_file=False):
+    fetch(url, dest, allow_file=allow_file)
     got = sha256_file(dest)
     if got != sha:
         os.unlink(dest)
@@ -153,14 +163,21 @@ def _get(rec, *keys):
 
 def projection(rec):
     """The stable projection of a live receipt (see the module docstring)."""
+    raw = _get(rec, "captures", "models", "body")
     try:
-        body = json.loads(_get(rec, "captures", "models", "body") or "null")
+        body = json.loads(raw) if isinstance(raw, str) else None
     except ValueError:
-        body = "unparseable"
-    if isinstance(body, dict):
-        models = {"data": sorted(f"{m.get('id')}|{m.get('owned_by')}" for m in body.get("data") or []
+        body = None
+    if body is None and raw is not None:
+        # unparseable or non-string body: fall back to the byte digest so two
+        # different unparseable bodies do not compare equal (F11)
+        models = _get(rec, "captures", "models", "body_sha256") or "unparseable"
+    elif isinstance(body, dict):
+        data = body.get("data") if isinstance(body.get("data"), list) else []
+        names = body.get("models") if isinstance(body.get("models"), list) else []
+        models = {"data": sorted(f"{m.get('id')}|{m.get('owned_by')}" for m in data
                                  if isinstance(m, dict)),
-                  "models": sorted(str(m.get("name")) for m in body.get("models") or [] if isinstance(m, dict))}
+                  "models": sorted(str(m.get("name")) for m in names if isinstance(m, dict))}
     else:
         models = body
     td = rec.get("teardown") if isinstance(rec.get("teardown"), dict) else {}
@@ -183,7 +200,7 @@ def compare(orig, rerun):
     if rerun.get("outcome") != orig.get("outcome"):
         out.append(f"outcome:{orig.get('outcome')}->{rerun.get('outcome')}")
     for side in ("server", "model"):
-        a, b = (orig.get(side) or {}).get("sha256"), (rerun.get(side) or {}).get("sha256")
+        a, b = _get(orig, side, "sha256"), _get(rerun, side, "sha256")
         if a != b:
             out.append(f"{side}.sha256:{a}->{b}")
     eo, er = evaluated(orig), evaluated(rerun)
@@ -194,6 +211,15 @@ def compare(orig, rerun):
             out.append(f"check:{cid}:not-evaluated")
         elif er[cid] != passed:
             out.append(f"check:{cid}:{passed}->{er[cid]}")
+    if orig.get("schema") == LIVE_V5:
+        # a v5 rerun must itself be verified at record time, against the same pins
+        # (round-48 seat K2Selftest: a v5 rerun with no provenance used to match)
+        for path in (("provenance", "model", "commit"), ("provenance", "verified", "at"),
+                     ("provenance", "verified", "archive_sha256"), ("provenance", "verified", "member_sha256"),
+                     ("provenance", "verified", "model_sha256")):
+            a, b = _get(orig, *path), _get(rerun, *path)
+            if a is None or a != b:
+                out.append(f"{'.'.join(path)}:{a}->{b}")
     po, pr = projection(orig), projection(rerun)
     for k in po:
         if po[k] != pr[k]:
@@ -201,7 +227,7 @@ def compare(orig, rerun):
     return out
 
 
-def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600):
+def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False):
     res = {"schema": SCHEMA, "receipt": os.path.abspath(receipt_path), "work": os.path.abspath(work),
            "rerun_receipt": None, "match": False, "refused": None, "mismatches": [], "inputs": {}}
     try:
@@ -215,8 +241,10 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600):
         os.makedirs(dl, exist_ok=True)
         archive = os.path.join(dl, os.path.basename(need["server.asset_url"].split("?")[0]) or "server.tar.gz")
         model = os.path.join(dl, os.path.basename(need["model.url"].split("?")[0]) or "model.gguf")
-        res["inputs"]["archive_sha256"] = acquire(need["server.asset_url"], need["server.asset_sha256"], archive)
-        res["inputs"]["model_sha256"] = acquire(need["model.url"], need["model.sha256"], model)
+        res["inputs"]["archive_sha256"] = acquire(need["server.asset_url"], need["server.asset_sha256"], archive,
+                                                  allow_file=allow_file)
+        res["inputs"]["model_sha256"] = acquire(need["model.url"], need["model.sha256"], model,
+                                                allow_file=allow_file)
         tree = os.path.join(work, "server")
         extract(archive, tree)
         server = os.path.join(tree, need["server.member"])
@@ -250,15 +278,16 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600):
         if p.returncode != 0:
             res["mismatches"].append(f"live-exit:{p.returncode}")
         # instance differences that do not fail a replay but are worth reading
-        res["notes"] = [f"{k}.sha256:{(rec.get(k) or {}).get('sha256')}->{(rr.get(k) or {}).get('sha256')}"
+        res["notes"] = [f"{k}.sha256:{_get(rec, k, 'sha256')}->{_get(rr, k, 'sha256')}"
                         for k in ("tool", "probe")
-                        if (rec.get(k) or {}).get("sha256") != (rr.get(k) or {}).get("sha256")]
+                        if _get(rec, k, "sha256") != _get(rr, k, "sha256")]
         res["match"] = not res["mismatches"]
         return res, (0 if res["match"] else 1)
     except Refused as exc:
         res["refused"] = str(exc)
         return res, 2
-    except (OSError, ValueError, tarfile.TarError, subprocess.TimeoutExpired, urllib.error.URLError) as exc:
+    except (OSError, ValueError, TypeError, AttributeError, tarfile.TarError,
+            subprocess.TimeoutExpired, urllib.error.URLError) as exc:
         res["refused"] = f"could-not-run:{type(exc).__name__}:{exc}"
         return res, 2
 
@@ -291,6 +320,10 @@ def _selftest(root):
                      "'model':{'sha256':h(m)},'checks':[{'id':'health_ready','passed':True,'evaluated':True}]}\n"
                      "if '--server-archive' in a:\n"
                      "    r['schema']='kama-llamacpp-live/v5'\n"
+                     "    u=a[a.index('--model-url')+1];c=re.search('/resolve/([0-9a-f]{40})/',u).group(1)\n"
+                     "    r['provenance']={'model':{'commit':c},'verified':{'at':'record',"
+                     "'archive_sha256':h(a[a.index('--server-archive')+1]),'member_sha256':h(s),"
+                     "'model_sha256':h(m)}}\n"
                      "json.dump(r,open(o,'w'))\n")
         ssha = sha256_file(os.path.join(srcdir, "llama-server"))
         commit = "c" * 40
@@ -315,11 +348,12 @@ def _selftest(root):
 
         def v5(**over):
             base = {"schema": LIVE_V5, "provenance.model.commit": commit,
-                    "provenance.verified": {"at": "record"}}
+                    "provenance.verified": {"at": "record", "archive_sha256": asha, "member_sha256": ssha,
+                                            "model_sha256": msha}}
             return receipt(**dict(base, **over))
 
         def run(name, rp, want_exit, want_refused=None, live=fake_live):
-            res, code = replay(rp, os.path.join(d, f"w-{len(cases)}"), live=live)
+            res, code = replay(rp, os.path.join(d, f"w-{len(cases)}"), live=live, allow_file=True)
             ok = code == want_exit and (want_refused is None or (res["refused"] or "").startswith(want_refused))
             cases.append((name, ok, f"exit={code} refused={res['refused']} mism={res['mismatches']}"))
 
@@ -355,6 +389,10 @@ def _selftest(root):
         with open(v4_live, "w") as fh:
             fh.write(open(fake_live).read().replace("if '--server-archive' in a:", "if False:"))
         run("v5-rerun-schema-differs", v5(**{"provenance.model.url": pinned}), 1, live=v4_live)
+        bare_live = os.path.join(d, "bare-live.py")
+        with open(bare_live, "w") as fh:
+            fh.write(open(fake_live).read().replace("    r['provenance']=", "    r['unused']="))
+        run("v5-rerun-unverified", v5(**{"provenance.model.url": pinned}), 1, live=bare_live)
         proj_live = os.path.join(d, "proj-live.py")
         with open(proj_live, "w") as fh:
             fh.write(open(fake_live).read().replace(
@@ -409,8 +447,13 @@ def main(argv=None):
                     recs.append(json.load(fh))
             if not all(isinstance(r, dict) for r in recs):
                 raise ValueError("not a JSON object")
+            for r in recs:
+                provenance(r)
         except (OSError, ValueError) as exc:
             print(f"compare could-not-read: {exc}")
+            return 2
+        except Refused as exc:
+            print(f"compare refused: {exc}")
             return 2
         mism = compare(recs[0], recs[1])
         print(f"compare match={not mism} mismatches={len(mism)}")

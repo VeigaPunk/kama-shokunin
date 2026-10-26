@@ -1,0 +1,22 @@
+== F2: replay() crash path (compare raises) writes no J ==
+replay exit=1 J_exists=False stderr_tail="TypeError: 'int' object is not iterable"
+== F3: file:// URLs accepted end-to-end (no network, exit 0) ==
+replay exit=0 stdout='replay match=True refused=None mismatches=0 exit=0'
+== F5: argv insertion position for v5 ==
+replay exit=0; argv=['/fast/scratch/hyaku/kama-r48/V2Replay/fix2/d/fake-live.py', '--server', '/fast/scratch/hyaku/kama-r48/V2Replay/fix2/d/w5/server/build/bin/llama-server', '--model', '/fast/scratch/hyaku/kama-r48/V2Replay/fix2/d/w5/download/m.gguf', '--model-sha256', 'a0da2c666d9b0a4b1fa51d563f0dcfa45119d2b32b56300661d76503b6107caf', '--alias', 'a', '--ctx', '256', '--threads', '1', '--server-asset-url', 'file:///fast/scratch/hyaku/kama-r48/V2Replay/fix2/d/srv.tar.gz', '--server-asset-sha256', '95b596f1543f2acc2e7e083dd4af1c47fe5257e2377ffa40277c6eb2d75aa1e9', '--server-member', 'build/bin/llama-server', '--model-url', 'file:///fast/scratch/hyaku/kama-r48/V2Replay/fix2/d/resolve/cccccccccccccccccccccccccccccccccccccccc/m.gguf', '--server-archive', '/fast/scratch/hyaku/kama-r48/V2Replay/fix2/d/w5/download/srv.tar.gz', '--out', '/fast/scratch/hyaku/kama-r48/V2Replay/fix2/d/w5/rerun-receipt.json']
+--server-archive before --out: True; after --model-url value: True
+== F6: --compare exit codes 0/1/2 ==
+equal: exit=0 out='compare match=True mismatches=0'
+differ: exit=1 out='compare match=False mismatches=1\nmismatch: projection:slots:[null, null]->[7, null]'
+missing: exit=2 out="compare could-not-read: [Errno 2] No such file or directory: '/fast/scratch/hyaku/kama-r48/V2Replay/fix2/d/nope.json'"
+json-list: exit=2 out='compare could-not-read: not a JSON object'
+== F7: v4 original + v5-emitting live -> schema flip caught ==
+exit=1 match=False mismatches=['schema:kama-llamacpp-live/v4->kama-llamacpp-live/v5']
+== F8: --compare skips provenance validation (replay refuses same receipt) ==
+--compare self: exit=0 out='compare match=True mismatches=0'
+replay:         exit=2 out='replay match=False refused=provenance-bad-commit mismatches=0 exit=2'
+== F9: URL containment weakness (commit in query passes both tools) ==
+replay provenance(): ACCEPTED main-resolved URL with query-injected commit
+live-tool regex re.compile(r'^https://[^/]+/.+/resolve/([0-9a-f]{40})/.+'): MATCH commit=cccccccc...
+== F10: verified-block digests not cross-checked by replay ==
+replay provenance(): ACCEPTED verified block whose digests contradict the receipt

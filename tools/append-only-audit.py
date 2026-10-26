@@ -835,6 +835,17 @@ def selftest(root):
         return (s["events"] == 2 and s["restored"] == 1 and s["ungraded"] == 1 and s["regressed"] == 0
                 and s["bad_declarations"] == 0 and exit_code(res) == 0), str(res["events"])
 
+    def t_preamble_graded():
+        # lines before the first `## ` heading (the SCORECARD authority banner) have no
+        # section, so no exempt title covers them: a rewrite is graded (round-48 build finding;
+        # seat X1SelftestPower: no case covered the pre-heading region)
+        f = scored([SCORE], ["# score"] + lines("p", 24) + head[1:] + tail)
+        c = f.commit({"score.md": ["# score"] + lines("p2", 24) + head[1:] + tail})
+        res = audit(f.d, c)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["graded"] == 24 and e[0]["ungraded"] == 0
+                and e[0]["status"] == "unrestored" and exit_code(res) == 1), str(e)
+
     for name, fn in [("no-deletion", t_none), ("below-threshold", t_below),
                      ("exact-threshold-unrestored", t_exact_unrestored), ("restored-later", t_restored),
                      ("partial", t_partial), ("undeclared-file", t_undeclared),
@@ -846,7 +857,8 @@ def selftest(root):
                      ("vanished-and-paths", t_vanished_and_paths), ("exempt-rewritten", t_exempt_rewritten),
                      ("exempt-gutted", t_exempt_gutted), ("exempt-gutted-then-regrown", t_exempt_gutted_then_regrown),
                      ("dated-rewritten", t_dated_rewritten), ("only-errata", t_only_errata), ("clamp", t_clamp),
-                     ("bad-declarations", t_bad_declarations), ("clean", t_clean)]:
+                     ("bad-declarations", t_bad_declarations), ("clean", t_clean),
+                     ("preamble-graded", t_preamble_graded)]:
         case(name, fn)
     for name, ok, why in cases:
         print(f"{'pass' if ok else 'FAIL'} {name}" + ("" if ok else f": {why[:300]}"))

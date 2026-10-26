@@ -1,0 +1,111 @@
+# S8Considerthese — commands and exit codes (snapshot 2026-10-26T22:38Z, lane tip b85783e8)
+
+All commands ran from the lane root `/home/vgpnk/Projects/shokunin/kama-shokunin` (or with absolute paths) and are read-only: no `git add/commit/checkout/stash/reset`, no jj, no writes outside this directory and `$S=/fast/scratch/hyaku/kama-r48/S8Considerthese`.
+
+## 1. Proposal inventory (the 20 numbered proposals)
+
+```
+grep -n "^[0-9]\+\. \*\*" considerthese/2026-10-2{2,3,4,5,6}.md
+```
+exit 0. Proposal lines: 2026-10-22.md:20,22,24,26 · 2026-10-23.md:29,31,33,35 · 2026-10-24.md:27,29,31,33 · 2026-10-25.md:27,29,31,33 · 2026-10-26.md:29,31,33,35. (Matches the round-47 table's file:line cells; no drift.)
+
+## 2. Phrase matrix over the round-47 and round-48 artifact sets
+
+One `grep -rnF` per proposal, over the two explicit path lists (the exact per-proposal hit lines are in `refs-matrix.txt`):
+
+R47 set:
+`.ufo/waves/round-47/preregistration.json` `.ufo/waves/round-47/w1/build_spec.py` `.ufo/waves/round-47/w1/spec.json` `.ufo/waves/round-47/w1/out` `corpus/lessons/round-47.md` `corpus/lessons/round-47-verifier-spotcheck.md` `$S/log47.txt` `$S/score47.txt` `/home/vgpnk/Projects/shokunin/.ufo/reports/round-47/kama.md`
+
+R48 set:
+`.ufo/waves/round-48/preregistration.json` `.ufo/waves/round-48/w1/build_spec.py` `.ufo/waves/round-48/w1/spec.json` `.ufo/waves/round-48/w1/out` `corpus/lessons/round-48.md` `$S/score48.txt`
+
+```
+grep -rnF --exclude-dir=S8Considerthese -- "<phrase>" <set paths...>
+```
+
+`$S/log47.txt` = `sed -n '2310,2318p' LOG.md` (the whole `## Round 47` section: the next `## ` heading is at line 2319).
+`$S/score47.txt` = the `## Round 47` section of `SCORECARD.md` (2701-2730) including the `### Planned (round 48)` and banner subsections that follow it.
+`$S/score48.txt` = `SCORECARD.md:2731-2742` (`### Planned (round 48)`).
+
+Phrases and hit counts (R47 / R48): P1 outside admission 1/2 · P2 calibration-candidate 1/0 · P3 drift watch 1/0 · P4 infrastructure friction 1/0 · P5 shortcut-class 4/0 · P6 scoring-before-amendment 1/0 · P7 true-but-unadmitted 1/0 · P8 in-flight rounds 1/0 · P9 score movement 1/0 · P10 re-open every new SOURCES 2/3 · P11 prepared, not dispatched 2/0 · P12 attempts and restarts 2/0 · P13 recompute every digest 2/0 · P14 version pins 4/0 · P15 staged items 2/0 · P16 seat yield 9/7 · P17 flag deletions 2/0 · P18 own proposals 7/0 · P19 running count 11/1 · P20 pin gap 3/8. Every hit, with its file:line, is in `refs-matrix.txt`.
+
+## 3. File-path matrix (per day, over the same two sets)
+
+```
+grep -rnF --exclude-dir=S8Considerthese -- "considerthese/<day>.md" <set paths...>
+```
+2026-10-22 7/0 · 2026-10-23 11/0 · 2026-10-24 12/3 · 2026-10-25 24/8 · 2026-10-26 29/13. Round-48 hits are in every case either a quoted historical `SCORECARD.md` line or `swarm-registry.json`/`spec.json` copies of the seat item; `refs-files.txt` lists them.
+
+Full-range count (preregs + lessons, rounds through 48):
+
+```
+grep -rn 'considerthese/2026-10-2[2-6].md' .ufo/waves/round-*/preregistration.json corpus/lessons/round-*.md 2>/dev/null | wc -l
+```
+exit 0; per day: 10-22 **0**, 10-23 **4**, 10-24 **7**, 10-25 **16**, 10-26 **8**.
+Breakdown for 10-26: `corpus/lessons/round-46.md` 1, `.ufo/waves/round-46/preregistration.json` 2, `corpus/lessons/round-47.md` 3, `.ufo/waves/round-47/preregistration.json` 1, `.ufo/waves/round-48/preregistration.json` 1.
+(The `2>/dev/null` hides exit 2 from the 14 round dirs that have no `preregistration.json`; that is why the pipeline's `wc` exit is 0 and the grep exit is not used.)
+
+## 4. Negative check: the round-47 pin-gap work is carried into no round-47 artifact
+
+```
+grep -nE 'U2Pins|pin gap|b11910' <artifact>
+```
+| artifact | exit | hits |
+|---|---|---|
+| `$S/log47.txt` (LOG.md:2310-2318) | 1 | 0 |
+| `corpus/lessons/round-47.md` | 1 | 0 |
+| `corpus/lessons/round-47-verifier-spotcheck.md` | 1 | 0 |
+| `/home/vgpnk/Projects/shokunin/.ufo/reports/round-47/kama.md` | 1 | 0 |
+| `$S/score47.txt` (`SCORECARD.md:2701-2730`) | 1 | 0 |
+
+Positive evidence that the work exists: `.ufo/waves/round-47/w1/out/U2Pins/pins.md:6-10` (pin-watch table, llama.cpp b11755 → b11910, 134 behind), `:16` (Above b11909: 1, b11910), `:25` (Next re-verification triggers).
+
+Ordering check (the tracker's row 20 says "no round" although the seat output predates the table):
+```
+ls -la --time-style=full-iso .ufo/waves/round-47/w1/out/U2Pins/pins.md .ufo/waves/round-47/w1/out/S8Proposals/table.md
+```
+`pins.md` 2026-10-26 18:26:11 -0300 · `table.md` 2026-10-26 18:36:48 -0300 (10m37s later).
+
+## 5. Negative check: the round-47 closure names no proposal product
+
+```
+grep -nE 'S8Proposals|X9Tally|considerthese|proposal|tally' corpus/lessons/round-47-verifier-spotcheck.md
+```
+exit 1, no output. The closure's round verdict is `corpus/lessons/round-47-verifier-spotcheck.md:12` ("Verdict: **admitted**").
+
+## 6. Round-48 uptake pointers (the positive side)
+
+```
+grep -n 'considerthese' .ufo/waves/round-48/preregistration.json
+  -> 55 (proposal 3 only)
+grep -n 'proposal 4\|add("U2Pins"\|add("X9Tally"\|add("S8Considerthese"' .ufo/waves/round-48/w1/build_spec.py
+  -> 171 (add X9Tally), 179 (add U2Pins), 180 (proposal 4 text), 197 (add S8Considerthese), 198 (proposal 3 and 4 named)
+grep -n 'promote the shortcut tally' SCORECARD.md
+  -> 2733
+grep -n 'considerthese/2026-10-26.md' .ufo/waves/round-47/preregistration.json
+  -> 56
+```
+`grep -c 'considerthese\|proposal' corpus/lessons/round-48.md` -> exit 1, count 0 (in-flight lesson has no proposal line).
+
+Round-47 side:
+```
+grep -n 'add("U2Pins"\|add("X9Tally"\|add("S8Proposals"' .ufo/waves/round-47/w1/build_spec.py
+  -> 113 (U2Pins, no considerthese pointer), 133 (X9Tally), 166 (S8Proposals)
+grep -n 'considerthese\|proposal' corpus/lessons/round-47.md
+  -> 14 (routed: proposal 3), 37 (considerthese: proposals 3 and 2), 45 (Mistakes row 1)
+grep -n 'considerthese\|shortcut tally\|proposals table' /home/vgpnk/Projects/shokunin/.ufo/reports/round-47/kama.md
+  -> 47, 128
+```
+
+## 7. Snapshot state (for the round-48 cells)
+
+```
+git -C /home/vgpnk/Projects/shokunin/kama-shokunin log --oneline -3 master
+  -> b85783e8 round-48: wave spec kama-r48-w1 (69 seats, policy v2) and dispatch
+     380bcdff round-48: build ...
+     12284ba3 round-48: freeze ...
+git -C ... status --porcelain
+  -> M SKILL.md; ?? .ufo/waves/round-48/w1.ready; ?? ...w1.ready.dispatched; ?? .ufo/waves/round-48/w1/out/; ?? corpus/lessons/round-48.md
+ls /home/vgpnk/Projects/shokunin/.ufo/reports/round-48/   -> no kama.md (round-48 report not written)
+ls corpus/lessons/round-48-verifier-spotcheck.md          -> absent
+```

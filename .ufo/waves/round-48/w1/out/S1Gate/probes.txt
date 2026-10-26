@@ -1,0 +1,148 @@
+# S1Gate round-48 probes — raw commands and outputs (observed 2026-10-26, UTC)
+# scratch: /fast/scratch/hyaku/kama-r48/S1Gate (removed at seat end; copies in this dir)
+# lane clone: git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin $S/lane
+#   HEAD = b85783e889c261ff870da65d091ff1014ffe7c10, 380bcdff... present, toplevel = clone
+
+## A. pinned model URL headers (HF)
+$ curl -sSI 'https://huggingface.co/ggml-org/models-moved/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/stories260K.gguf'
+HTTP/2 302
+location: https://us.aws.cdn.hf.co/xet-bridge-us/6580840062b6ed53c4c72d61/7cfbf69e76aef0af92130af4e5c57a2a170423fb2a273b4f11a04bcc70088ba5?response-content-disposition=...&Expires=1793057674&Policy=eyJTdGF0ZW1lbnQi...&Signature=...
+           (middle of the query elided here; the verbatim 1019-char value is loc1.txt in this directory)
+x-repo-commit: 499bc8821c6b12b4e53c5bffcb21ec206f212d81
+x-linked-size: 1185376
+x-linked-etag: "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+x-xet-hash: 7cfbf69e76aef0af92130af4e5c57a2a170423fb2a273b4f11a04bcc70088ba5
+cache-control: no-store
+exit=0   (full location saved as loc1.txt)
+
+## B. main ref, same path
+$ curl -sSI 'https://huggingface.co/ggml-org/models-moved/resolve/main/tinyllamas/stories260K.gguf'
+HTTP/2 302 ... x-repo-commit: 499bc8821c6b12b4e53c5bffcb21ec206f212d81
+x-linked-size: 1185376
+x-linked-etag: "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+=> main currently resolves to the same commit and bytes as the pinned URL.
+
+## C. repo main sha
+$ curl -sS 'https://huggingface.co/api/models/ggml-org/models-moved'
+{'id': 'ggml-org/models-moved', 'sha': '499bc8821c6b12b4e53c5bffcb21ec206f212d81', 'lastModified': '2025-10-28T10:43:38.000Z'}
+
+## D. signed-location expiry
+Expires values seen and their UTC times (each = fetch time + 3600 s):
+1793057674 -> 2026-10-26T23:34:34Z   (fetch 22:34:34)
+1793057702 -> 2026-10-26T23:35:02Z   (fetch 22:35:02)
+1793057735 -> 2026-10-26T23:35:35Z   (fetch 22:35:35)
+
+## E. commits on main (2025-10-28 window)
+$ curl -sS 'https://huggingface.co/api/models/ggml-org/models-moved/commits/main?limit=50'
+commits on 2025-10-28: 4
+  499bc8821c6b12b4e53c5bffcb21ec206f212d81 2025-10-28T10:43:38.000Z | stories15M : revert training context to 128
+  e2d5caf5587262b440f392e36f06594da5afa1f6 2025-10-28T09:18:28.000Z | stories15M : bump training context to 256
+  96f460f9c1e2ca43d0adc1c682b832525a2c0ea3 2025-10-28T08:55:08.000Z | gguf : bump training context from 256 to 2048
+  22027b1ab988d9d04ec83020f28c2db533985059 2025-10-28T08:07:12.000Z | gguf : bump training context from 128 to 256
+
+## F. tree at 499bc882 (tinyllamas)
+tinyllamas/stories260K.gguf   lfs oid 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d size 1185376
+tinyllamas/stories15M-q4_0.gguf lfs oid 66967fbece6dbe97886593fdbb73589584927e29119ec31f08090732d1861739
+(others recorded in the transcript)
+
+## G. two fetches of the pinned URL one second apart
+[1] xet-bridge-us/6580840062b6ed53c4c72d61/7cfbf69e...  xip=DgUDK7K_0Z0  Expires=1793057735
+[2] xet-bridge-us/6580840062b6ed53c4c72d61/7cfbf69e...  xip=DgUDK7K_0Z0  Expires=1793057735
+locations differ: DIFFER — the only differing query field is Signature:
+< Signature=MEQCIDdOs69S3Zh0dBSsAGFODKkFE9UeFRPRxC6%7EVVfJZpFFAiB53%7EZtBh1ksp84voCgPzvUCRp-iHMHETcwnGPjtsNc0A__
+> Signature=MEUCIBnPaMV10hDfs5Xu8zgj4z2x8idT394qiM9NXI0xTzO3AiEAy-8U2B124e2ple2Mg8khgxu1iSxXfuSd5gI0Yu6YnGE_
+
+## H. previous main commit e2d5caf5, tree tinyllamas
+tinyllamas/stories15M-q4_0.gguf  696f4aeb78402421f905d60ae7a673ad907e86bef5619a3393241157c8b0e47a   <-- was 66967fbe at 499bc882
+tinyllamas/stories260K.gguf      270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d   <-- unchanged
+
+## I. same path, three commits: x-linked-etag and x-repo-commit
+499bc882...  x-repo-commit: 499bc882...  x-linked-etag: "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+e2d5caf5...  x-repo-commit: e2d5caf5...  x-linked-etag: "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+22027b1a...  x-linked-etag: "68c694e7584c358446e8ec05c4648c72382aa3457b56443e35a6fecf55b429d2"
+96f460f9...  x-linked-etag: "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+
+## J. short (7-hex) revision is resolved by the server
+$ curl -sSI 'https://huggingface.co/ggml-org/models-moved/resolve/499bc88/tinyllamas/stories260K.gguf'
+HTTP/2 302
+location: https://us.aws.cdn.hf.co/xet-bridge-us/.../7cfbf69e...?xip=DgUDK7K_0Z0&respo...
+x-repo-commit: 499bc8821c6b12b4e53c5bffcb21ec206f212d81
+x-linked-etag: "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+
+## K. downloaded bytes of the pinned URL
+$ curl -sSL -o model.gguf '<pinned URL>'; echo exit=$?; sha256sum model.gguf; stat -c '%s bytes' model.gguf
+curl_exit=0
+270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d  model.gguf
+1185376 bytes
+
+## L. CDN 200 headers (python urllib HEAD on loc1.txt)
+status 200
+etag = "7cfbf69e76aef0af92130af4e5c57a2a170423fb2a273b4f11a04bcc70088ba5"   <-- not the LFS sha256
+content-length = 1185376
+content-type = application/octet-stream
+
+## M. counter C1 at the build tip (my own run)
+$ python3 tools/round48-append-audit-v3-check.py --repo $S/lane --tip 380bcdff... --scratch $S/c1run --out $S/c1.json
+selftest=1 contract=1 lane=1 fixture=1 stable=1 rows=9 files=89 lane_events=5 lane_failures=0 ungraded_lines=89 fixture_fail=0 met=True
+tip=380bcdff9c8af06997c482f6eb03db926a794a2b
+exit=0
+
+## N. counter C2 at the build tip (my own run)
+$ python3 tools/round48-live-replay-v5-audit.py --repo $S/lane --tip 380bcdff... --scratch $S/c2run --out $S/c2.json
+receipts=1 recordcheck=1 replay=1 compare=1 tamper=1 urlswap=1 newrow=1 replayed=3/3 met=True
+tip=380bcdff9c8af06997c482f6eb03db926a794a2b started=2026-10-26T22:35:02.370894+00:00
+exit=0
+
+## O. v3 tool verdict at the build tip (my own run, tip tree)
+$ python3 $S/lane/tools/append-only-audit.py --repo $S/lane --to 380bcdff... --json
+exit=0
+schema append-only-audit/v3
+{commits 311, files 89, events 5, restored 5, partial 0, unrestored 0, ungraded 0,
+ ungraded_lines 89, regressed 0, vanished 0, unmatched 0, binary 0, bad_declarations 0}
+events:
+  dd9f5dc6 SCORECARD.md deleted 31 graded 14 ungraded 17 restored held_to 14 max 14
+  0718b6ab LOG.md deleted 2292 graded 2292 ungraded 0 restored held_to 2292 max 2292
+  0718b6ab SCORECARD.md deleted 2421 graded 2349 ungraded 72 restored held_to 2349 max 2349
+  0718b6ab corpus/QUALITY.md deleted 375 graded 375 ungraded 0 restored held_to 375 max 375
+  0718b6ab corpus/README.md deleted 663 graded 663 ungraded 0 restored held_to 663 max 663
+
+## P. replay --compare semantics
+$ python3 $S/lane/tools/kama-live-replay.py --compare R48/receipt-1.json R48/receipt-2.json
+compare match=True mismatches=0        exit=0
+$ python3 $S/lane/tools/kama-live-replay.py --compare R48/receipt-1.json R47/receipt-1.json
+compare match=False mismatches=3       exit=1
+mismatch: schema:kama-llamacpp-live/v5->kama-llamacpp-live/v4
+mismatch: projection:props:{... "model_alias": "kama-..."}->{...}
+mismatch: projection:models:{"data": ["kama-r48-live|llamacpp"], "models": ["kama-r48-live"]}->{"data": ["kama-r47-live|llamacpp"], "models": ["kama-r47-live"]}
+$ python3 $S/lane/tools/kama-live-replay.py --compare R47/receipt-1.json R47/receipt-2.json
+compare match=True mismatches=0        exit=0
+
+## Q. round-47 vs round-48 receipt provenance
+R47 receipt-1: schema kama-llamacpp-live/v4, model.url .../resolve/main/tinyllamas/stories260K.gguf, verified null
+R48 receipt-1: schema kama-llamacpp-live/v5, model.url .../resolve/499bc882.../tinyllamas/stories260K.gguf
+  provenance.verified {archive_sha256 bf94332a..., member_sha256 35ac50fb..., model_sha256 270cba1b..., at record}
+  provenance.server.sha256 = 35ac50fb... (== verified.member_sha256); asset_sha256 = bf94332a... (== verified.archive_sha256)
+  checks = 11
+
+## R. contract rows (registry/append-only-contract.tsv, 9 data rows, 5 cells each)
+row 2 LOG.md A-corr README.md:16 *
+row 3 SCORECARD.md A-corr corpus/README.md:761 exempt=## Axes|## Planned|## Retired|## Saturation|## Capabilities@SCORECARD.md:6
+row 9 registry/report-landing-errata.tsv A registry/report-landing-errata.tsv:1 *
+row 10 corpus/knowledge/consumer-registry.md A-corr corpus/knowledge/consumer-registry.md:30 only=## Errata@corpus/knowledge/consumer-registry.md:30
+SCORECARD.md:6 begins: **Current authority (round 48):** ... (declares the head sections re-derived in place)
+
+## S. tool enforcement lines
+tools/kama-llamacpp-live.py:71   PINNED_MODEL_URL = re.compile(r'^https://[^/]+/.+/resolve/([0-9a-f]{40})/.+')
+tools/kama-llamacpp-live.py:1300-1302 selftest: 40-hex -> True, resolve/main -> False, 7-hex -> False
+tools/kama-llamacpp-live.py:1469 refuses non-https asset/model URLs
+tools/kama-llamacpp-live.py:1477 parser.error('--model-url must be pinned to a 40-hex /resolve/<commit>/ revision (v5)')
+tools/kama-llamacpp-live.py:1564 receipt['provenance']['verified'] = ...
+tools/kama-live-replay.py:115-118 commit must be 40-hex and the model URL must contain /resolve/<commit>/
+tools/kama-live-replay.py:177 compare(); :397 --compare
+tools/append-only-audit.py:470-474 exit 1 on partial/unrestored/regressed/vanished/bad_declarations
+
+## T. lane tip after the build commit
+$ git -C <lane> log --oneline -3 b85783e8
+b85783e8 round-48: wave spec kama-r48-w1 (69 seats, policy v2) and dispatch
+380bcdff round-48: build - append-only-audit v3 + v3 contract with bound regions (C1), ... freeze-time receipt
+12284ba3 round-48: freeze - counters (C1 append-only-audit v3, C2 live replay v5), preregistration, controls, start census, pinned HF revision record

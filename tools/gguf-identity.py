@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Inspect GGUF identity and optionally reconcile one llama.cpp v3 or v4 receipt.
+"""Inspect GGUF identity and optionally reconcile one llama.cpp v3, v4 or v5 receipt.
 
 Usage: gguf-identity.py FILE [--json] [--max-kv N] [--max-str BYTES]
                            [--receipt RECEIPT]
@@ -42,9 +42,10 @@ MAX_RECEIPT_BODY_BYTES = 512 * 1024
 MAX_JSON_DEPTH = 64
 MAX_JSON_NODES = 100_000
 RECEIPT_SCHEMA_V3 = "kama-llamacpp-live/v3"
-# v4 (round 47) adds only a provenance block and a null teardown.log_path; the
-# fields this reconciler reads are unchanged.
-RECEIPT_SCHEMAS = (RECEIPT_SCHEMA_V3, "kama-llamacpp-live/v4")
+# v4 (round 47) adds only a provenance block and a null teardown.log_path; v5
+# (round 48) adds provenance.model.commit and provenance.verified. The fields
+# this reconciler reads are unchanged in both.
+RECEIPT_SCHEMAS = (RECEIPT_SCHEMA_V3, "kama-llamacpp-live/v4", "kama-llamacpp-live/v5")
 SHA256_RE = re.compile(r"[0-9a-f]{64}\Z")
 KEY_RE = re.compile(
     r"[a-z][a-z0-9]*(?:_[a-z0-9]+)*(?:\.[a-z][a-z0-9]*(?:_[a-z0-9]+)*)+\Z")

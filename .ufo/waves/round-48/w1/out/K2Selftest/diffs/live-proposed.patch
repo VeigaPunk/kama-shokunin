@@ -1,0 +1,117 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-llamacpp-live.py	2026-10-26 19:24:50.998194331 -0300
++++ /fast/scratch/hyaku/kama-r48/K2Selftest/patch/live.py	2026-10-26 19:37:15.193936390 -0300
+@@ -48,6 +48,8 @@
+ from __future__ import annotations
+ 
+ import argparse
++import contextlib
++import io
+ import http.client
+ import hashlib
+ import json
+@@ -1297,18 +1299,104 @@
+                     raise AssertionError(f'{token}: got {exc.code}')
+             else:
+                 raise AssertionError(f'{token}: not raised')
++        try:
++            verify_archive_member(os.path.join(d, 'missing.tar.gz'), asha,
++                                  'rel/llama-server', ssha)
++            raise AssertionError('missing archive not refused')
++        except SetupError as exc:
++            if exc.code != 'provenance-archive-unreadable':
++                raise AssertionError(f'archive-unreadable: got {exc.code}')
++        corrupt = os.path.join(d, 'corrupt.tar.gz')
++        with open(corrupt, 'wb') as fh:
++            fh.write(b'not-a-tar')
++        try:
++            verify_archive_member(corrupt, hashlib.sha256(b'not-a-tar').hexdigest(),
++                                  'rel/llama-server', ssha)
++            raise AssertionError('corrupt tar not refused')
++        except SetupError as exc:
++            if exc.code != 'provenance-archive-unreadable':
++                raise AssertionError(f'corrupt-tar: got {exc.code}')
+     for url, pinned in (('https://huggingface.co/o/r/resolve/' + 'a' * 40 + '/m.gguf', True),
+                         ('https://huggingface.co/o/r/resolve/main/m.gguf', False),
+-                        ('https://huggingface.co/o/r/resolve/' + 'a' * 7 + '/m.gguf', False)):
++                        ('https://huggingface.co/o/r/resolve/' + 'a' * 7 + '/m.gguf', False),
++                        ('https://huggingface.co/o/r/resolve/' + 'A' * 40 + '/m.gguf', True),
++                        ('https://huggingface.co/o/r/resolve/' + 'a' * 39 + 'A/m.gguf', True),
++                        ('https://huggingface.co/o/r/resolve/' + 'a' * 40 + '/m.gguf?x=1', True),
++                        ('https://huggingface.co/o/r/resolve/main/m.gguf?revision=' + 'a' * 40, False)):
+         if bool(PINNED_MODEL_URL.match(url)) != pinned:
+             raise AssertionError(f'pinned-url rule wrong for {url}')
+ 
+ 
++def _parser_provenance_selftest():
++    """Argparse-level provenance shape rules (K2Selftest): the four v4 flags come
++    together, https URLs, a safe member, the v5 pinned URL (commit in the path,
++    not only in a query string), and 64-hex digest normalization (uppercase
++    accepted, lowercased before recording)."""
++    p = build_parser()
++    base = ['--model', 'x.gguf', '--model-sha256', '0' * 64]
++    pin = 'https://huggingface.co/o/r/resolve/' + 'a' * 40 + '/m.gguf'
++    flags = ['--server-asset-url', 'https://x/a.tar.gz',
++             '--server-asset-sha256', '0' * 64,
++             '--server-member', 'bin/llama-server',
++             '--model-url', pin]
++
++    def expect_error(argv, fragment):
++        err = io.StringIO()
++        with contextlib.redirect_stderr(err):
++            try:
++                p.parse_args(argv)
++            except SystemExit as exc:
++                if exc.code != 2:
++                    raise AssertionError(f'{fragment}: exit {exc.code}')
++            else:
++                raise AssertionError(f'{fragment}: no error')
++        if fragment not in err.getvalue():
++            raise AssertionError(f'{fragment}: message missing')
++
++    expect_error(base + ['--server-asset-url', 'https://x/a.tar.gz'],
++                 'must be given together')
++    expect_error(base + flags[:5], 'must be given together')
++    expect_error(base + ['--server-asset-url', 'http://x/a.tar.gz'] + flags[3:],
++                 'must be an https:// URL')
++    expect_error(base + flags[:3] + ['--model-url', 'file:///tmp/m.gguf'],
++                 'must be an https:// URL')
++    expect_error(base + flags[:3] + ['--server-member', '/bin/llama-server',
++                                     '--model-url', pin],
++                 'relative path without ..')
++    expect_error(base + flags[:3] + ['--server-member', 'bin/../llama-server',
++                                     '--model-url', pin],
++                 'relative path without ..')
++    expect_error(base + flags[:3] + ['--server-member', 'bin/llama-server',
++                                     '--model-url',
++                                     'https://huggingface.co/o/r/resolve/main/m.gguf',
++                                     '--server-archive', 'a.tar.gz'],
++                 'must be pinned')
++    expect_error(base + flags[:3] + ['--server-member', 'bin/llama-server',
++                                     '--model-url',
++                                     'https://huggingface.co/o/r/resolve/main/m.gguf?revision='
++                                     + 'a' * 40,
++                                     '--server-archive', 'a.tar.gz'],
++                 'must be pinned')
++    got = p.parse_args(['--model', 'x.gguf', '--model-sha256', 'AB' * 32])
++    if got.model_sha256 != 'ab' * 32:
++        raise AssertionError('uppercase model sha256 not normalized')
++    got = p.parse_args(['--server-asset-url', 'https://x/a.tar.gz',
++                        '--server-asset-sha256', 'EF' * 32,
++                        '--server-member', 'bin/llama-server',
++                        '--model-url', pin,
++                        '--model', 'x.gguf', '--model-sha256', '0' * 64])
++    if got.server_asset_sha256 != 'ef' * 32:
++        raise AssertionError('uppercase asset sha256 not normalized')
++    if PINNED_MODEL_URL.match(pin).group(1) != 'a' * 40:
++        raise AssertionError('commit extraction mismatch')
++
++
+ def _selftest():
+     """Exercise procfs parsing, live tcp6 ownership rows, v3 verdicts, install
+     identity and v5 record-time provenance."""
+     _install_identity_selftest()
+     _provenance_selftest()
++    _parser_provenance_selftest()
+     port = 0x1234
+     tcp6_rows = (
+         ('00000000000000000000000001000000', True),

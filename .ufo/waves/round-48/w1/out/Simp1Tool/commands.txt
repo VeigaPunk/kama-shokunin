@@ -1,0 +1,57 @@
+# Round-48 C1 YAGNI review (seat Simp1Tool) - exact commands, in order.
+# S = /fast/scratch/hyaku/kama-r48/Simp1Tool ; all lane runs use the scratch clone.
+
+S=/fast/scratch/hyaku/kama-r48/Simp1Tool; mkdir -p "$S"; export TMPDIR="$S"
+git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin "$S/lane"
+cp "$S/lane/tools/append-only-audit.py" "$S/work/before.py"     # sha256 ec9c6d206fcc...
+
+# --- unused-name scan (no system install; ephemeral)
+uvx pyflakes work/before.py                                      -> exit 0, no output  (pyflakes 4.0.3, uv 0.13.0)
+
+# --- baseline of the build's tool
+python3 work/before.py --selftest --scratch "$S/st-before"       -> exit 0, "AOA_SELFTEST pass=27 fail=0"
+python3 work/before.py --repo "$S/lane" --to 380bcdff9c8af06997c482f6eb03db926a794a2b
+                                                                 -> exit 0, 1003 bytes text
+python3 work/before.py --repo "$S/lane" --to 380bcdff9c8af06997c482f6eb03db926a794a2b --json
+                                                                 -> exit 0, 7085 bytes JSON
+
+# --- the proposed file is built from before.py by the replacements listed in the report,
+#     then written as work/after.py (no edit to the lane, no edit in place)
+python3 -m py_compile work/after.py                              -> exit 0
+uvx pyflakes work/after.py                                       -> exit 0, no output
+
+# --- the proposal as a diff, and proof it applies to a mirror of the lane tree
+diff -u --label a/tools/append-only-audit.py --label b/tools/append-only-audit.py work/before.py work/after.py
+                                                                 -> out/simplify.diff (9 hunks)
+mkdir -p work/patchtest/tools && cp lane/tools/append-only-audit.py work/patchtest/tools/
+cd work/patchtest && patch -p1 < "$S/out/simplify.diff"          -> "patching file tools/append-only-audit.py"
+cmp tools/append-only-audit.py "$S/work/after.py"                -> identical
+
+# --- selftest before/after
+python3 work/after.py --selftest --scratch "$S/st-after"         -> exit 0, "AOA_SELFTEST pass=27 fail=0"
+cmp out/selftest-before.out out/selftest-after.out               -> identical (570 bytes)
+
+# --- lane run at the measured tip, text and JSON, byte-compared
+python3 work/after.py --repo "$S/lane" --to 380bcdff9c8af06997c482f6eb03db926a794a2b        -> exit 0
+python3 work/after.py --repo "$S/lane" --to 380bcdff9c8af06997c482f6eb03db926a794a2b --json -> exit 0
+cmp out/lane-before-380bcdff.out  out/lane-after-380bcdff.out    -> identical (sha256 7b5c065c...)
+cmp out/lane-before-380bcdff.json out/lane-after-380bcdff.json   -> identical (sha256 2cfcafe9...)
+
+# --- differential over 6 named revs + 8 revs spread over the first-parent history (text and --json),
+#     plus --contract, --files, --threshold 0, both-modes and a missing rev
+python3 work/differential.py                                     -> "DIFFERENCES=0 comparisons=34"
+
+# --- differential over 14 revs spread over the history, tip contract passed explicitly
+#     (without it the pre-v3 contract exits 2 and only the parser is exercised)
+python3 - <<'PY' ... tip contract ... PY                          -> "DIFFERENCES=0 comparisons=14"
+
+# --- selftest distinctness: 32 single-defect mutants of before.py, per-case pass/FAIL matrix
+python3 work/mutants.py                                          -> out/kill-matrix.txt
+                                                                 -> every one of 27 cases killed by >=1 mutant
+
+# --- cost of the one duplicated git call left in place (expand + unmatched each ls-tree)
+git -C "$S/lane" ls-tree -r -z --name-only 380bcdff...           -> median 0.0074 s of a 0.734 s run
+python3 -c 'time 5 runs of before/after --json'                  -> median 0.734 s / 0.744 s (noise)
+
+# --- cleanup
+rm -rf "$S"                                                      # after copying every cited artifact here

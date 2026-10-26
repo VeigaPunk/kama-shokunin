@@ -1,0 +1,62 @@
+X1Stable round-48 runlog — C1 (append-only-audit v3) graded/ungraded stability
+host: linux 7.2.11-arch1-1, python 3.14.8 (/usr/bin/python3), git 2.56.0
+nothing installed, no pacman, no network; lane read-only; fixtures under /fast/scratch/hyaku/kama-r48/X1Stable (removed after copy)
+
+objects under test (sha256), byte-identical in the lane working tree and at 380bcdff:
+  ec9c6d206fccfd9b9b04526b54da34207c48ab9f0768c3285128cd59fcf60f72  tools/append-only-audit.py  (schema append-only-audit/v3)
+  ca0618e50fadc4b0d53b0d8a61868b0ea7fbf33b3429c125a0d5643022a77075  registry/append-only-contract.tsv (5 rows, v3 header)
+verified:
+  git -C <lane> show 380bcdff…:tools/append-only-audit.py | sha256sum           -> ec9c6d20…
+  git -C <lane> show 380bcdff…:registry/append-only-contract.tsv | sha256sum    -> ca0618e5…
+  git -C <lane> rev-parse HEAD = b85783e8… (wave-spec commit, child of the measured tip); runs pin --to, so HEAD is irrelevant
+  git -C <lane> rev-list --merges --count 33e0058…~30..380bcdff… = 0 (linear range, 32 commits, 1 parent each)
+
+S=/fast/scratch/hyaku/kama-r48/X1Stable; export TMPDIR="$S"
+git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin "$S/lane"
+git -C "$S/lane" rev-parse --show-toplevel   -> /fast/scratch/hyaku/kama-r48/X1Stable/lane
+
+# 8-tip sample (rev-list index 1,5,10,15,20,25,30,32 of 32)
+revs="d48e8cc32feffccb44d00a9cc04a3c9b4d9cfc50 052cb1e94c0a97b4be8b44030a6b70a0eea5a561 \
+0fddf257a0c574dc4a29106602fcfb489e6f7376 4a2a4d55d09dfacf83dc62d1b3fddae5f6d2a050 \
+42ea1204aef3aaa847f64112cbec1dc6eafb1ff9 46a924e027f05614558c45ff02bf7a94ca57d3e1 \
+33e005827742b29772b153cda036ec9f27f653be 380bcdff9c8af06997c482f6eb03db926a794a2b"
+for r in $revs; do python3 <lane>/tools/append-only-audit.py --repo "$S/lane" --to "$r" \
+    --contract <lane>/registry/append-only-contract.tsv --json > "$S/out/$r.json"; echo "$r rc=$?"; done
+  rc: d48e8cc3=1 052cb1e9=1 0fddf257=1 4a2a4d55=1 42ea1204=1 46a924e0=1 33e00582=1 380bcdff=0
+all-32 sweep: same command for every commit of `git rev-list --topo-order --reverse 33e0058…~30..380bcdff…`
+  -> 32 JSON files; rc 1 for 31 tips, rc 0 only at 380bcdff
+
+# determinism at the measured tip (two runs, byte-compare)
+python3 <lane>/tools/append-only-audit.py --repo "$S/lane" --to 380bcdff… \
+        --contract <lane>/registry/append-only-contract.tsv   [twice]
+  sha256 tip-a.txt = tip-b.txt = 7b5c065c834d58ca4b6305f69cda5d61d3f6a0e8b5c01ac4d6295097bb8778e4
+
+# pinned-bytes rerun: extract the tool+contract from 380bcdff itself, rerun the 8 tips
+git -C <lane> show 380bcdff…:tools/append-only-audit.py > "$S/pin/append-only-audit.py"
+git -C <lane> show 380bcdff…:registry/append-only-contract.tsv > "$S/pin/append-only-contract.tsv"
+for r in $revs; do python3 "$S/pin/append-only-audit.py" --repo "$S/lane" --to "$r" \
+    --contract "$S/pin/append-only-contract.tsv" --json > "$S/pin/$r.json"; done
+  events and summary identical to the working-tree runs at all 8 tips (events_identical True x8)
+
+# fixtures (each own git repo, toplevel asserted before the first commit, throwaway identity via git -c)
+D=$(mktemp -d -p "$S" fx.XXXXXX)
+python3 <out>/xstab_fixture.py --tool <lane>/tools/append-only-audit.py --dir "$D" --contract "$S/fixture-contract.tsv"
+  -> xstab-fixture.out   (event ungraded 0,0,14,14; graded 24,24,10,10; exits 1,1,0,0)
+D2=$(mktemp -d -p "$S" fxb.XXXXXX)
+python3 <out>/xstab_fixture.py --tool <lane>/tools/append-only-audit.py --dir unused \
+        --contract "$S/unused.tsv" --case-b-dir "$D2" --case-b-contract "$S/fixture-b-contract.tsv"
+  -> xstab-fixture-b.out (restored_max 0,24,10; graded 24,24,10; ungraded 0,0,14)
+  standalone exit codes: case A c2=1 c3=1 c4=0 c5=0; case B c2=1 c3=0 c4=0
+
+# counter stable-leg predicate applied to the fixture JSONs (round48-append-audit-v3-check.py:747-758 fields)
+  case A base=c3 tip=c4 -> graded 24->10, ungraded 0->14  => predicate would print "stable: … changed" and set stable=0
+  case B base=c3 tip=c4 -> restored_max 24->10            => predicate would print "stable: … changed" and set stable=0
+# same predicate on the lane: base 33e00582 vs tip 380bcdff, 5 events, fields
+# deleted/graded/ungraded/restored_max/restored_best -> EQUAL on all five events
+
+artifact hashes written to the out dir:
+  xstab_fixture.py          ff655769cd872e58216ddae70a9d213a7c490d2c4e221f3c83461c45faea180d
+  fixture-contract.tsv      9481e5424e3bf1367eae100a0212acc104fc5c3113544ffd37f6b94133a9190e
+  res/<8 tip>.json          raw --json output of the 8 tips
+  res/all32-trajectory.json per-event [tip, deleted, graded, ungraded, restored_max, held_at_to, status]
+  res/all32-summary.json    per-tip counts and process exit code

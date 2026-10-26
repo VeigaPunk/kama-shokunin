@@ -1,0 +1,92 @@
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -114,7 +114,7 @@
+ CONTRACT = "registry/append-only-contract.tsv"
+ HEADER = "path\trule\tdeclared_at\tregion\tnote"
+ RULES = ("A", "A-row", "A-corr")
+-HUNK = re.compile(rb"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
++HUNK = re.compile(rb"^@@ -(\d+)(?:,(\d+))? \+\d+(?:,(\d+))? @@")
+ REGION = re.compile(r"(exempt|only)=(.+)@([^@:]+):(\d+)")
+ NEGATIONS = ("not append-only", "not append only", "no longer append", "never append-only")
+ WHOLE = ("*",)
+@@ -159,7 +159,7 @@
+     lines = text.split("\n")
+     if "\r" in text:
+         raise AuditError("contract contains a carriage return (CRLF contract)")
+-    if not lines or lines[0] != HEADER:
++    if lines[0] != HEADER:
+         raise AuditError("contract header is not path<TAB>rule<TAB>declared_at<TAB>region<TAB>note")
+     rows = []
+     for n, line in enumerate(lines[1:], 2):
+@@ -215,7 +215,7 @@
+     if not binds(line_at(repo, rev, dp, int(dn)), pat, dp):
+         out.update(ok=False, reason=f"declared_at {decl} does not say append-only for {pat}")
+         return out
+-    if region[0] == "*":
++    if region == WHOLE:
+         return out
+     pp, pn = region[2]
+     text = line_at(repo, rev, pp, pn)
+@@ -258,7 +258,6 @@
+     """Paths matching the contract that some commit up to rev held but rev does not."""
+     raw = _git(repo, "log", "-z", "--format=", "--name-only", "--no-renames", rev)
+     seen = {t.decode("utf-8", "surrogateescape") for t in raw.split(b"\0") if t.strip(b"\n")}
+-    seen = {t.strip("\n") for t in seen}
+     return sorted(t for t in seen if t not in present and any(fnmatch.fnmatchcase(t, p) for p in patterns))
+ 
+ 
+@@ -281,7 +280,7 @@
+             continue
+         start = int(m.group(1))
+         nd = int(m.group(2)) if m.group(2) is not None else 1
+-        na = int(m.group(4)) if m.group(4) is not None else 1
++        na = int(m.group(3)) if m.group(3) is not None else 1
+         gd = ga = 0
+         while i < len(lines) and (gd < nd or ga < na):
+             ln = lines[i]
+@@ -303,8 +302,6 @@
+ 
+     def blobs(self, specs):
+         """Map each `<rev>:<path>` spec to its blob id or None (one cat-file call)."""
+-        if not specs:
+-            return {}
+         out = _text(self.path, "cat-file", "--batch-check=%(objectname) %(objecttype)",
+                     inp=("\n".join(specs) + "\n").encode())
+         res = {}
+@@ -398,9 +395,7 @@
+             dl = deleted_lines(repo_path, p, c, f)
+             if len(dl) != ns[f]:
+                 raise AuditError(f"{c[:12]} {f}: hunk count {len(dl)} != numstat {ns[f]}")
+-            D = collections.Counter(text for _pos, text in dl)
+             pb = r.blobs([f"{p}:{f}"])[f"{p}:{f}"]
+-            K = r.lines(pb) - D
+             window = commits[i:]
+             wb = r.blobs([f"{x}:{f}" for x in window])
+             titles, prefixes = file_regions(rows, f)
+@@ -409,14 +404,16 @@
+             eligible = {t for t in titles
+                         if max(r.section_counts(wb[f"{x}:{f}"])[t] if wb[f"{x}:{f}"] else 0 for x in window)
+                         >= pcount[t]}
+-            G = collections.Counter()
++            D, G = collections.Counter(), collections.Counter()
+             for pos, text in dl:
++                D[text] += 1
+                 s = psec[pos - 1]
+                 if prefixes and not any(s is not None and s.startswith(q) for q in prefixes):
+                     continue
+                 if s in eligible:
+                     continue
+                 G[text] += 1
++            K = r.lines(pb) - D
+             ng = sum(G.values())
+             best, best_c, by, h = 0, None, None, 0
+             for x in window:
+@@ -883,7 +880,7 @@
+     files = [x.strip() for x in a.files.split(",") if x.strip()] if a.files else None
+     try:
+         contract = None
+-        if a.contract and files is None:
++        if a.contract:
+             with open(a.contract, encoding="utf-8") as fh:
+                 contract = (os.path.abspath(a.contract), fh.read())
+         res = audit(a.repo, a.to, a.threshold, files, contract)

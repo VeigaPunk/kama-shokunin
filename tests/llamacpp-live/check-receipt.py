@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent validator for kama-llamacpp-live/v1, /v2, /v3 and /v4 receipts.
+"""Independent validator for kama-llamacpp-live/v1, /v2, /v3, /v4 and /v5 receipts.
 
 Bound to the exact receipt keys emitted by ``tools/kama-llamacpp-live.py``.
 The gate re-derives checks from stored response, probe, and teardown
@@ -22,7 +22,11 @@ and only when no /v1/models 503 was observed. v4 (round 47) is v3 plus a
 ``provenance`` block (server archive URL, archive sha256 and member; model
 URL and sha256 equal to ``model.sha256``; each a string, digests 64-hex) and
 ``teardown.log_path`` null (the temp log is always deleted; its kept lines are
-inlined); every v3 rule applies to v4.
+inlined); every v3 rule applies to v4. v5 (round 48) is v4 plus
+``provenance.model.commit`` (40 lower-case hex, named by the model URL's
+``/resolve/<commit>/``) and ``provenance.verified`` (``at`` = ``record``;
+``archive_sha256``, ``member_sha256`` and ``model_sha256`` equal to the asset
+sha256, ``server.sha256`` and ``model.sha256``); every v4 rule applies to v5.
 
 Usage:
   check-receipt.py RECEIPT [--expect-model-sha256 HEX]
@@ -31,7 +35,7 @@ Usage:
                            [--expect-install-tree-sha256 HEX]
                            [--expect-probe-sha256 HEX]
                            [--expect-tool-sha256 HEX]
-                           [--require-schema v1|v2|v3|v4]
+                           [--require-schema v1|v2|v3|v4|v5]
   check-receipt.py --selftest
 
 Exit: 0 VALID, 1 INVALID, 2 unreadable / not JSON,
@@ -52,6 +56,7 @@ RECEIPT_SCHEMA = "kama-llamacpp-live/v1"
 RECEIPT_SCHEMA_V2 = "kama-llamacpp-live/v2"
 RECEIPT_SCHEMA_V3 = "kama-llamacpp-live/v3"
 RECEIPT_SCHEMA_V4 = "kama-llamacpp-live/v4"
+RECEIPT_SCHEMA_V5 = "kama-llamacpp-live/v5"
 PROBE_SCHEMA = "kama-probe/v1"
 HARD_PINS = (8080, 34113)
 MISMATCH_EXPECT = "kama-not-this-model"
@@ -303,15 +308,18 @@ def validate(receipt, expect_model=None, expect_server=None,
 
     # --- schema / run outcome ---------------------------------------------
     schema = receipt.get("schema")
-    is_v4 = schema == RECEIPT_SCHEMA_V4
-    is_v3 = schema in (RECEIPT_SCHEMA_V3, RECEIPT_SCHEMA_V4)
+    is_v5 = schema == RECEIPT_SCHEMA_V5
+    is_v4 = schema in (RECEIPT_SCHEMA_V4, RECEIPT_SCHEMA_V5)
+    is_v3 = schema in (RECEIPT_SCHEMA_V3, RECEIPT_SCHEMA_V4,
+                       RECEIPT_SCHEMA_V5)
     is_v2 = schema in (RECEIPT_SCHEMA_V2, RECEIPT_SCHEMA_V3,
-                       RECEIPT_SCHEMA_V4)
+                       RECEIPT_SCHEMA_V4, RECEIPT_SCHEMA_V5)
     if schema not in (RECEIPT_SCHEMA, RECEIPT_SCHEMA_V2,
-                      RECEIPT_SCHEMA_V3, RECEIPT_SCHEMA_V4):
+                      RECEIPT_SCHEMA_V3, RECEIPT_SCHEMA_V4,
+                      RECEIPT_SCHEMA_V5):
         bad(f"schema is {schema!r}, want {RECEIPT_SCHEMA!r}, "
-            f"{RECEIPT_SCHEMA_V2!r}, {RECEIPT_SCHEMA_V3!r} or "
-            f"{RECEIPT_SCHEMA_V4!r}")
+            f"{RECEIPT_SCHEMA_V2!r}, {RECEIPT_SCHEMA_V3!r}, "
+            f"{RECEIPT_SCHEMA_V4!r} or {RECEIPT_SCHEMA_V5!r}")
     if is_v4:
         prov = receipt.get("provenance")
         if not isinstance(prov, dict):
@@ -343,6 +351,29 @@ def validate(receipt, expect_model=None, expect_server=None,
             if mdl.get("sha256") is not None and mdl.get("sha256") != msha:
                 bad(f"provenance.model.sha256 {mdl.get('sha256')!r} != "
                     f"model.sha256 {msha!r}")
+            if is_v5:
+                # v5 (round 48): provenance verified when recorded and the
+                # model pinned to the 40-hex revision its URL names
+                commit = mdl.get("commit")
+                if not (isinstance(commit, str) and len(commit) == 40
+                        and all(c in "0123456789abcdef" for c in commit)):
+                    bad(f"v5 provenance.model.commit {commit!r} is not "
+                        "40 lower-case hex")
+                elif f"/resolve/{commit}/" not in str(mdl.get("url")):
+                    bad("v5 provenance.model.url does not name "
+                        "/resolve/<commit>/")
+                ver = prov.get("verified")
+                if not isinstance(ver, dict) or ver.get("at") != "record":
+                    bad("v5 provenance.verified is not an at=record object")
+                else:
+                    for k, want in (
+                            ("archive_sha256", srv.get("asset_sha256")),
+                            ("member_sha256", dig(receipt, "server",
+                                                  "sha256")),
+                            ("model_sha256", msha)):
+                        if ver.get(k) is None or ver.get(k) != want:
+                            bad(f"v5 provenance.verified.{k} "
+                                f"{ver.get(k)!r} != {want!r}")
         td = receipt.get("teardown")
         if isinstance(td, dict) and td.get("log_path") is not None:
             bad(f"v4 teardown.log_path {td.get('log_path')!r} is not null")
@@ -2219,6 +2250,33 @@ def _selftest():
         ("v4-log-path-not-null", bad_log, expects, 1),
         ("v4-provenance-missing", no_prov, expects, 1),
     ])
+    base_v5 = copy.deepcopy(base_v4)
+    base_v5["schema"] = RECEIPT_SCHEMA_V5
+    commit = "b" * 40
+    base_v5["provenance"]["model"]["url"] = (
+        f"https://example.invalid/resolve/{commit}/m.gguf")
+    base_v5["provenance"]["model"]["commit"] = commit
+    base_v5["provenance"]["verified"] = {
+        "at": "record", "archive_sha256": "a" * 64,
+        "member_sha256": base_v5["server"]["sha256"],
+        "model_sha256": base_v5["model"]["sha256"]}
+    v5_unverified = copy.deepcopy(base_v5)
+    del v5_unverified["provenance"]["verified"]
+    v5_member = copy.deepcopy(base_v5)
+    v5_member["provenance"]["verified"]["member_sha256"] = "c" * 64
+    v5_unpinned = copy.deepcopy(base_v5)
+    v5_unpinned["provenance"]["model"]["url"] = (
+        "https://example.invalid/resolve/main/m.gguf")
+    cases.extend([
+        ("v5-valid", base_v5, expects, 0),
+        ("v5-require-schema-v5", base_v5, expects
+         + ["--require-schema", "v5"], 0),
+        ("v4-require-schema-v5-rejects-v4", base_v4, expects
+         + ["--require-schema", "v5"], 1),
+        ("v5-unverified", v5_unverified, expects, 1),
+        ("v5-member-digest-differs", v5_member, expects, 1),
+        ("v5-url-not-at-commit", v5_unpinned, expects, 1),
+    ])
 
     def mut3(name, fn, receipt=None, extra=None, want=1):
         r = copy.deepcopy(base_v3 if receipt is None else receipt)
@@ -2432,7 +2490,7 @@ def main(argv=None):
                     help="require the recorded probe sha256")
     ap.add_argument("--expect-tool-sha256", metavar="HEX",
                     help="require the recorded harness-tool sha256")
-    ap.add_argument("--require-schema", choices=("v1", "v2", "v3", "v4"),
+    ap.add_argument("--require-schema", choices=("v1", "v2", "v3", "v4", "v5"),
                     help="reject receipts below this schema version")
 
     ap.add_argument("--selftest", action="store_true",
@@ -2462,13 +2520,14 @@ def main(argv=None):
                         expect_probe=args.expect_probe_sha256,
                         expect_tool=args.expect_tool_sha256)
     if args.require_schema and isinstance(receipt, dict):
-        minimum = {"v1": 1, "v2": 2, "v3": 3, "v4": 4}[args.require_schema]
+        minimum = {"v1": 1, "v2": 2, "v3": 3, "v4": 4, "v5": 5}[args.require_schema]
         declared = receipt.get("schema")
         version = {
             RECEIPT_SCHEMA: 1,
             RECEIPT_SCHEMA_V2: 2,
             RECEIPT_SCHEMA_V3: 3,
             RECEIPT_SCHEMA_V4: 4,
+            RECEIPT_SCHEMA_V5: 5,
         }.get(declared)
         if version is not None and version < minimum:
             problems.append(

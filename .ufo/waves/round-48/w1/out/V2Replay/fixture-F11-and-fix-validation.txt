@@ -1,0 +1,26 @@
+=== F11 (two different unparseable models bodies, build version) ===
+exit=0 out='compare match=True mismatches=0'  <- false match
+
+=== fixed-version validation ===
+-- F1a body-as-object --
+compare match=True mismatches=0 exit=0 (no traceback)
+-- F1b data=5 --
+compare match=True mismatches=0 exit=0 (no traceback)
+-- F1c server-as-string --
+compare match=True mismatches=0 exit=0 (no traceback)
+-- F3 file:// with /resolve/<commit>/ path --
+replay match=False refused=url-scheme:file:///...srv.tar.gz mismatches=0 exit=2
+-- F8 v5-no-commit --compare --
+compare refused: provenance-bad-commit exit=2
+-- F8 v5-no-commit replay --
+replay match=False refused=provenance-bad-commit exit=2
+-- F11 two unparseable bodies --
+compare match=False mismatches=1
+mismatch: projection:models:"444a1579..."->"e28f7c1f..."
+exit=1
+-- F10 verified-digest contradiction --
+refused: provenance-verified-archive_sha256-differs
+-- fixed selftest --
+KLR_SELFTEST pass=21 fail=0 (FIXED_SELFTEST_EXIT=0)
+-- real receipts under fixed version --
+receipt-1 vs receipt-2: compare match=True mismatches=0 exit=0

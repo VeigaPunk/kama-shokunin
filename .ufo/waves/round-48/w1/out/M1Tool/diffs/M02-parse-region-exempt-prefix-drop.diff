@@ -1,0 +1,11 @@
+--- pristine
++++ M02-parse-region-exempt-prefix-drop
+@@ -146,7 +146,7 @@
+     kind, body, ptr = m.group(1), m.group(2), (m.group(3), int(m.group(4)))
+     if kind == "exempt":
+         titles = frozenset(t.strip() for t in body.split("|") if t.strip())
+-        if not titles or not all(t.startswith("## ") for t in titles):
++        if not titles:
+             raise AuditError(f"region {cell!r}: exempt titles must start with `## `")
+         return ("exempt", titles, ptr)
+     if not body.startswith("## "):

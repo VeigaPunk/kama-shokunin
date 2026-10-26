@@ -1,0 +1,44 @@
+# round-48 S9Knowledge probe: does tools/kama-live-replay.py grade provenance.verified digests?
+# run 2026-10-26; nothing here touches the lane (module imported read-only; receipts read-only)
+$ python3 - <<'PY'
+import importlib.util, json, copy
+spec = importlib.util.spec_from_file_location(
+    "klr", "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-live-replay.py")
+m = importlib.util.module_from_spec(spec); spec.loader.exec_module(m)
+base = json.load(open("/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-48/c2/live/receipt-1.json"))
+t = copy.deepcopy(base)
+t["provenance"]["verified"].update(archive_sha256="0"*64, member_sha256="1"*64, model_sha256="2"*64)
+try:
+    need = m.provenance(t)
+    print("ACCEPTED tampered provenance.verified; asset it would download:", need["server.asset_sha256"])
+except m.Refused as e:
+    print("refused:", e)
+print("compare(clean, tampered-verified) mismatches:", m.compare(base, t))
+u = copy.deepcopy(base); u["provenance"].pop("verified", None)
+try:
+    m.provenance(u); print("ACCEPTED receipt with no verified block")
+except m.Refused as e: print("no verified block refused:", e)
+v = copy.deepcopy(base); v["provenance"]["verified"]["at"] = "replay"
+try:
+    m.provenance(v); print("ACCEPTED at!=record")
+except m.Refused as e: print("at!=record refused:", e)
+w = copy.deepcopy(base); w["provenance"]["model"]["commit"] = "499bc88"
+try:
+    m.provenance(w); print("ACCEPTED 7-hex commit")
+except m.Refused as e: print("short commit refused:", e)
+PY
+
+# observed output (exit 0):
+ACCEPTED tampered provenance.verified; asset it would download: bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b
+compare(clean, tampered-verified) mismatches: []
+no verified block refused: provenance-not-verified-at-record
+at!=record refused: provenance-not-verified-at-record
+short commit refused: provenance-bad-commit
+
+# proposed fix (replay-verified-binding.diff) applied with `git apply` in a scratch repo and re-probed:
+clean accepted: True
+tampered refused: provenance-verified-mismatch
+receipt-2 accepted: True
+receipt-3 accepted: True
+# NOTE: GNU patch 2.8 refused this hunk ("Hunk #1 FAILED at 117") although the context bytes are
+# identical and `git apply --check` succeeds; the diff is a git unified diff and applies with git apply.

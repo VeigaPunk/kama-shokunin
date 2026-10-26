@@ -1,0 +1,143 @@
+--- a/tools/sources-append-only.py
++++ b/tools/sources-append-only.py
+@@ -25,8 +25,16 @@
+ later repeat of that header or of a separator line is skipped. No row is
+ lost by parsing: a table line that is not a well-formed `S0NN` row, a table
+ line without a leading pipe, and a row-like line (`| S0NN |`, also with
+-markup around the id or without the leading pipe) anywhere in the blob that
+-was not read as a registry row are parse errors, never skipped. Fenced code,
++markup around the id or without the leading pipe) that was not read as a
++registry row are parse errors, never skipped. Outside the section the blob
++may hold other tables — the corpus appends re-verification sections whose
++tables are keyed by S-id — so there a row-like line is refused only when it
++cannot belong to such a table: it sits in no `|`-led run at all, its run's
++header is exactly the contract header (a copy of the registry table outside
++the section), or the line itself has the registry's eleven cells and an
++`S0NN` first cell (a registry row or a truncated registry table). A
++non-registry table whose own header is the contract header, or that carries
++an eleven-cell `S0NN` row, is refused rather than guessed at. Fenced code,
+ HTML comments and setext headings are not modelled; they can only add rows
+ to the section or end in exit 2, never hide a row.
+ 
+@@ -145,6 +153,65 @@
+     return bool(cells) and all(re.fullmatch(r":?-+:?", c) for c in cells)
+ 
+ 
++def markup_free_id(cell):
++    """The id a reader sees in `cell`, with backtick/italic/bold markup off."""
++    return cell.strip().strip("`*_[]")
++
++
++def scan_row_like(lines, start, end, label):
++    r"""Refuse every row-shaped line outside the graded registry section.
++
++    Lines [start, end) are the `## Registry` section the caller already
++    graded line by line. Beyond it, a `|`-led run is another table (the
++    corpus appends re-verification sections keyed by S-id), so a line in one
++    is a fault only when it cannot belong to such a table: the run's header
++    is exactly the contract header (a copy of the registry table outside the
++    section), or the line itself is registry-shaped — eleven cells with an
++    `S0NN` first cell. A row-like line in no `|`-led run is always a fault.
++    Raises ParseError; a line is never dropped.
++    """
++    def refuse(segment):
++        header = split_cells(segment[0][1])
++        if header is not None and sorted(header) == sorted(CONTRACT_COLUMNS):
++            raise ParseError(
++                f"{label}:{segment[0][0] + 1}: a copy of the registry table "
++                "outside the `## Registry` section; refusing to drop its rows"
++            )
++        for idx, line in segment:
++            cells = split_cells(line)
++            if (
++                cells is not None
++                and len(cells) == len(CONTRACT_COLUMNS)
++                and ID_RE.match(markup_free_id(cells[0]))
++            ):
++                raise ParseError(
++                    f"{label}:{idx + 1}: row-like line outside the parsed "
++                    "registry table: registry-shaped row in a table outside "
++                    "the `## Registry` section; refusing to drop it"
++                )
++
++    segment = []
++    for idx, line in enumerate(lines):
++        if start <= idx < end:
++            if segment:
++                refuse(segment)
++                segment = []
++            continue
++        if ROW_RE.match(line):
++            segment.append((idx, line))
++            continue
++        if segment:
++            refuse(segment)
++            segment = []
++        if ROWLIKE_RE.match(line):
++            raise ParseError(
++                f"{label}:{idx + 1}: row-like line outside the parsed registry "
++                "table; refusing to drop it"
++            )
++    if segment:
++        refuse(segment)
++
++
+ def parse_registry(text, label):
+     """Parse every table segment of the `## Registry` section.
+ 
+@@ -168,11 +235,13 @@
+     row_lines = set()
+     header = None
+     seen_separator = False
++    section_end = len(lines)
+     for idx in range(start, len(lines)):
+         line = lines[idx]
+         heading = HEADING_RE.match(line)
+         if heading:
+             if len(heading.group(1)) <= level:
++                section_end = idx
+                 break
+             continue  # a deeper subheading stays inside the registry section
+         if not ROW_RE.match(line):
+@@ -224,12 +293,7 @@
+ 
+     if header is None or not seen_separator:
+         raise ParseError(f"{label}: registry section has no complete table header")
+-    for idx, line in enumerate(lines):
+-        if idx not in row_lines and ROWLIKE_RE.match(line):
+-            raise ParseError(
+-                f"{label}:{idx + 1}: row-like line outside the parsed registry "
+-                "table; refusing to drop it"
+-            )
++    scan_row_like(lines, start, section_end, label)
+     if not rows_by_id:
+         raise ParseError(f"{label}: registry table has no data rows")
+     return rows_by_id, header
+@@ -521,6 +585,27 @@
+          _doc(_row("S001", tier="B")).replace("## Registry", "## Registry ##", 1),
+          1, {"S001:tier"})
+ 
++    # 40-42. outside the section, an S-keyed table is another table (the
++    # corpus appends re-verification sections keyed by S-id), while a copy of
++    # the registry header or a registry-shaped row is still a fault
++    keyed = (
++        "\n## Round-45 re-verification\n\n"
++        "| key | pin to current | class | what the witness shows |\n"
++        "|---|---|---|---|\n"
++        "| `S001` | ollama `c1` to main `c2` | holds | unchanged |\n"
++        "| `S002` | ggml `a` to master `b` | unchanged-file | identical |\n"
++        "\n| id | pin verdict | release verdict | lines | read by |\n"
++        "|---|---|---|---|---|\n"
++        "| `S001` | holds | holds | 4-6 to 9-11 | X1 (built) |\n"
++    )
++    case("S-keyed table outside the registry section", _doc(s001, s002),
++         _doc(s001, s002) + keyed, 0)
++    case("registry header copied outside the section", _doc(s001),
++         _doc(s001) + "\n## Copy\n\n" + _HDR + s002 + "\n", 2,
++         error="copy of the registry table outside")
++    case("registry-shaped row outside any table", _doc(s001),
++         _doc(s001) + "\n" + s002 + "\n", 2, error="registry-shaped row")
++
+     failures = 0
+     for name, from_text, to_text, want_exit, want, want_added, want_error in cases:
+         got, got_added, got_error = set(), [], ""

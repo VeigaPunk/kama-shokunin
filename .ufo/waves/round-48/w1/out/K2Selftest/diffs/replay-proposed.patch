@@ -1,0 +1,136 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-live-replay.py	2026-10-26 19:26:07.965141673 -0300
++++ /fast/scratch/hyaku/kama-r48/K2Selftest/patch/replay.py	2026-10-26 19:36:34.185751212 -0300
+@@ -45,6 +45,8 @@
+ from __future__ import annotations
+ 
+ import argparse
++import contextlib
++import io
+ import hashlib
+ import json
+ import os
+@@ -246,6 +248,12 @@
+         res["rerun_receipt"] = rerun
+         with open(rerun) as fh:
+             rr = json.load(fh)
++        if rr.get("schema") == LIVE_V5:
++            rp = rr.get("provenance") if isinstance(rr.get("provenance"), dict) else {}
++            if not (isinstance(rp.get("model"), dict) and isinstance(rp["model"].get("commit"), str)
++                    and HEX40.fullmatch(rp["model"]["commit"])
++                    and isinstance(rp.get("verified"), dict) and rp["verified"].get("at") == "record"):
++                raise Refused("v5-rerun-provenance-incomplete")
+         res["mismatches"] = compare(rec, rr)
+         if p.returncode != 0:
+             res["mismatches"].append(f"live-exit:{p.returncode}")
+@@ -291,6 +299,11 @@
+                      "'model':{'sha256':h(m)},'checks':[{'id':'health_ready','passed':True,'evaluated':True}]}\n"
+                      "if '--server-archive' in a:\n"
+                      "    r['schema']='kama-llamacpp-live/v5'\n"
++                     "    u=a[a.index('--model-url')+1];c=re.search(r'/resolve/([0-9a-f]{40})/',u).group(1)\n"
++                     "    ar=a[a.index('--server-archive')+1]\n"
++                     "    r['provenance']={'model':{'url':u,'sha256':h(m),'commit':c},\n"
++                     "                      'verified':{'at':'record','archive_sha256':h(ar),\n"
++                     "                                  'member_sha256':h(s),'model_sha256':h(m)}}\n"
+                      "json.dump(r,open(o,'w'))\n")
+         ssha = sha256_file(os.path.join(srcdir, "llama-server"))
+         commit = "c" * 40
+@@ -378,6 +391,99 @@
+         stab["captures"]["props"]["fields"]["n_ctx"] = 512
+         cases.append(("compare-instance-only", compare(full, inst) == [], str(compare(full, inst))))
+         cases.append(("compare-stable-differs", len(compare(full, stab)) == 1, str(compare(full, stab))))
++        # ---- K2Selftest additions (round 48): gaps in the original 21 ----
++        # verified block present but at != record / empty (only None was covered)
++        run("v5-verified-at-wrong-value",
++            v5(**{"provenance.model.url": pinned, "provenance.verified": {"at": "time"}}),
++            2, "provenance-not-verified-at-record")
++        run("v5-verified-empty-block",
++            v5(**{"provenance.model.url": pinned, "provenance.verified": {}}),
++            2, "provenance-not-verified-at-record")
++        # non-hex digest shape (HEX64 path never exercised)
++        run("asset-digest-bad-hex", receipt(**{"provenance.server.asset_sha256": "xyz"}), 2,
++            "provenance-bad-digest")
++        run("model-digest-bad-hex",
++            receipt(**{"provenance.model.sha256": "zz", "model.sha256": "zz"}), 2,
++            "provenance-bad-digest")
++        # commit as uppercase hex (contract: 40-hex; hex is case-insensitive)
++        up_commit = "A" * 40
++        up_dir = os.path.join(d, "resolve", up_commit)
++        os.makedirs(up_dir)
++        shutil.copy(mdl, os.path.join(up_dir, "m.gguf"))
++        up_pinned = "file://" + os.path.join(up_dir, "m.gguf")
++        run("v5-commit-uppercase-accepted",
++            v5(**{"provenance.model.commit": up_commit, "provenance.model.url": up_pinned}), 0)
++        # commit appears only as a query string, not a /resolve/<commit>/ path segment
++        run("v5-url-commit-query-string",
++            v5(**{"provenance.model.url":
++                   "https://huggingface.co/o/r/resolve/main/m.gguf?revision=" + commit}),
++            2, "provenance-url-revision-differs-from-commit")
++        # projection: captures fully absent on the rerun side (original full)
++        full_caps = {"props": {"fields": {"n_ctx": 256}},
++                     "slots": {"element_count": 4, "body_sha256": "s"},
++                     "health": {"status": 200, "body_sha256": "h"},
++                     "models": {"body": json.dumps({"data": [{"id": "x", "owned_by": "llamacpp"}],
++                                                    "models": [{"name": "m"}]})},
++                     "metrics": {"status": 501}}
++        full_orig = receipt(**{"captures": full_caps, "loading_envelope_exact": True,
++                               "loading_503": {"body_sha256": "l"},
++                               "teardown": {"returncode": 0, "sigterm_sent": True,
++                                            "sigkill_sent": False, "port_refuses": True},
++                               "port_listener_ownership": "child"})
++        run("projection-full-captures-vs-none", full_orig, 1)
++        # projection: models body unparseable on one side
++        run("projection-models-body-unparseable",
++            receipt(**{"captures": {"models": {"body": "{invalid"}}}), 1)
++        # compare semantics not covered by the original 21
++        def stub2(name, repl):
++            p2 = os.path.join(d, name)
++            with open(p2, "w") as fh:
++                fh.write(open(fake_live).read().replace(
++                    "json.dump(r,open(o,'w'))", repl))
++            return p2
++        run("compare-outcome-mismatch", receipt(), 1,
++            live=stub2("out-fail-live.py", "r['outcome']='fail';json.dump(r,open(o,'w'))"))
++        run("compare-server-sha256-mismatch", receipt(), 1,
++            live=stub2("srv-diff-live.py", "r['server']['sha256']='4'*64;json.dump(r,open(o,'w'))"))
++        run("compare-check-not-evaluated-in-rerun", receipt(), 1,
++            live=stub2("no-check-live.py", "r['checks']=[];json.dump(r,open(o,'w'))"))
++        # live tool exits without writing a rerun receipt
++        silent = os.path.join(d, "silent-live.py")
++        with open(silent, "w") as fh:
++            fh.write("import sys\nsys.exit(0)\n")
++        run("live-no-rerun-receipt", receipt(), 2, "no-rerun-receipt", live=silent)
++        # v5 rerun must itself carry commit + verified (the old stub omitted them)
++        malformed = os.path.join(d, "malformed-v5-live.py")
++        with open(malformed, "w") as fh:
++            fh.write("import json,sys\n"
++                     "a=sys.argv;o=a[a.index('--out')+1]\n"
++                     "json.dump({'schema':'kama-llamacpp-live/v5','outcome':'pass',"
++                     "'server':{'sha256':'0'*64},'model':{'sha256':'0'*64},"
++                     "'checks':[{'id':'health_ready','passed':True,'evaluated':True}]},open(o,'w'))\n")
++        run("v5-rerun-provenance-shape",
++            v5(**{"provenance.model.url": pinned}),
++            2, "v5-rerun-provenance-incomplete", live=malformed)
++        # --compare CLI paths (unreadable, malformed, non-object)
++        def cli(argv):
++            buf = io.StringIO()
++            with contextlib.redirect_stdout(buf):
++                code = main(argv)
++            return code, buf.getvalue()
++        miss = cli(["--compare", os.path.join(d, "nope-a.json"), os.path.join(d, "nope-b.json")])
++        cases.append(("compare-cli-unreadable", miss[0] == 2 and miss[1].startswith("compare could-not-read:"),
++                      f"exit={miss[0]} out={miss[1][:80]!r}"))
++        junk = os.path.join(d, "junk.json")
++        with open(junk, "w") as fh:
++            fh.write("not json")
++        mangled = cli(["--compare", junk, os.path.join(d, "r-0.json")])
++        cases.append(("compare-cli-malformed-json", mangled[0] == 2 and mangled[1].startswith("compare could-not-read:"),
++                      f"exit={mangled[0]} out={mangled[1][:80]!r}"))
++        arr = os.path.join(d, "array.json")
++        with open(arr, "w") as fh:
++            fh.write("[1,2,3]")
++        nonobj = cli(["--compare", arr, os.path.join(d, "r-0.json")])
++        cases.append(("compare-cli-non-object", nonobj[0] == 2 and nonobj[1].startswith("compare could-not-read:"),
++                      f"exit={nonobj[0]} out={nonobj[1][:80]!r}"))
+     finally:
+         shutil.rmtree(d, ignore_errors=True)
+     for name, ok, why in cases:

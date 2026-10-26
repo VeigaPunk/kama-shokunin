@@ -1,0 +1,11 @@
+--- pristine
++++ M39-contract-drop-rule
+@@ -169,7 +169,7 @@
+         if len(cells) != 5:
+             raise AuditError(f"contract line {n}: {len(cells)} cells, want 5")
+         pat, rule, decl, region, note = (c.strip() for c in cells)
+-        if not pat or rule not in RULES or not re.fullmatch(r"[^:]+:\d+", decl):
++        if not pat or not re.fullmatch(r"[^:]+:\d+", decl):
+             raise AuditError(f"contract line {n}: bad path, rule or declared_at")
+         rows.append((pat, rule, decl, parse_region(region), note))
+     if not rows:

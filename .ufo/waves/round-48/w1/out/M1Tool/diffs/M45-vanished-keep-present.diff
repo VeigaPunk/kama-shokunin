@@ -1,0 +1,11 @@
+--- pristine
++++ M45-vanished-keep-present
+@@ -259,7 +259,7 @@
+     raw = _git(repo, "log", "-z", "--format=", "--name-only", "--no-renames", rev)
+     seen = {t.decode("utf-8", "surrogateescape") for t in raw.split(b"\0") if t.strip(b"\n")}
+     seen = {t.strip("\n") for t in seen}
+-    return sorted(t for t in seen if t not in present and any(fnmatch.fnmatchcase(t, p) for p in patterns))
++    return sorted(t for t in seen if any(fnmatch.fnmatchcase(t, p) for p in patterns))
+ 
+ 
+ def split_lines(data):

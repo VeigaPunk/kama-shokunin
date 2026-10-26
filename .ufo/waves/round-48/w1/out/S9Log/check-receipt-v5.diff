@@ -1,0 +1,51 @@
+--- a/tests/llamacpp-live/check-receipt.py
++++ b/tests/llamacpp-live/check-receipt.py
+@@ -52,6 +52,7 @@
+ RECEIPT_SCHEMA_V2 = "kama-llamacpp-live/v2"
+ RECEIPT_SCHEMA_V3 = "kama-llamacpp-live/v3"
+ RECEIPT_SCHEMA_V4 = "kama-llamacpp-live/v4"
++RECEIPT_SCHEMA_V5 = "kama-llamacpp-live/v5"
+ PROBE_SCHEMA = "kama-probe/v1"
+ HARD_PINS = (8080, 34113)
+ MISMATCH_EXPECT = "kama-not-this-model"
+@@ -303,15 +304,18 @@
+ 
+     # --- schema / run outcome ---------------------------------------------
+     schema = receipt.get("schema")
+-    is_v4 = schema == RECEIPT_SCHEMA_V4
+-    is_v3 = schema in (RECEIPT_SCHEMA_V3, RECEIPT_SCHEMA_V4)
++    is_v5 = schema == RECEIPT_SCHEMA_V5
++    is_v4 = schema in (RECEIPT_SCHEMA_V4, RECEIPT_SCHEMA_V5)
++    is_v3 = schema in (RECEIPT_SCHEMA_V3, RECEIPT_SCHEMA_V4,
++                       RECEIPT_SCHEMA_V5)
+     is_v2 = schema in (RECEIPT_SCHEMA_V2, RECEIPT_SCHEMA_V3,
+-                       RECEIPT_SCHEMA_V4)
++                       RECEIPT_SCHEMA_V4, RECEIPT_SCHEMA_V5)
+     if schema not in (RECEIPT_SCHEMA, RECEIPT_SCHEMA_V2,
+-                      RECEIPT_SCHEMA_V3, RECEIPT_SCHEMA_V4):
++                      RECEIPT_SCHEMA_V3, RECEIPT_SCHEMA_V4,
++                      RECEIPT_SCHEMA_V5):
+         bad(f"schema is {schema!r}, want {RECEIPT_SCHEMA!r}, "
+-            f"{RECEIPT_SCHEMA_V2!r}, {RECEIPT_SCHEMA_V3!r} or "
+-            f"{RECEIPT_SCHEMA_V4!r}")
++            f"{RECEIPT_SCHEMA_V2!r}, {RECEIPT_SCHEMA_V3!r}, "
++            f"{RECEIPT_SCHEMA_V4!r} or {RECEIPT_SCHEMA_V5!r}")
+     if is_v4:
+         prov = receipt.get("provenance")
+         if not isinstance(prov, dict):
+@@ -2462,13 +2466,14 @@
+                         expect_probe=args.expect_probe_sha256,
+                         expect_tool=args.expect_tool_sha256)
+     if args.require_schema and isinstance(receipt, dict):
+-        minimum = {"v1": 1, "v2": 2, "v3": 3, "v4": 4}[args.require_schema]
++        minimum = {"v1": 1, "v2": 2, "v3": 3, "v4": 4, "v5": 5}[args.require_schema]
+         declared = receipt.get("schema")
+         version = {
+             RECEIPT_SCHEMA: 1,
+             RECEIPT_SCHEMA_V2: 2,
+             RECEIPT_SCHEMA_V3: 3,
+             RECEIPT_SCHEMA_V4: 4,
++            RECEIPT_SCHEMA_V5: 5,
+         }.get(declared)
+         if version is not None and version < minimum:
+             problems.append(

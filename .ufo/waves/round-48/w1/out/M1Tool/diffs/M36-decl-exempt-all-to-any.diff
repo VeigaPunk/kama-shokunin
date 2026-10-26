@@ -1,0 +1,11 @@
+--- pristine
++++ M36-decl-exempt-all-to-any
+@@ -221,7 +221,7 @@
+     text = line_at(repo, rev, pp, pn)
+     low = (text or "").lower()
+     if region[0] == "exempt":
+-        if text is None or "re-derived" not in low or not all(t[3:].strip().lower() in low for t in region[1]):
++        if text is None or "re-derived" not in low or not any(t[3:].strip().lower() in low for t in region[1]):
+             out.update(ok=False, reason=f"exempt pointer {pp}:{pn} does not name every title as re-derived")
+     elif not binds(text, pat, pp) or region[1][3:].strip().lower() not in low:
+         out.update(ok=False, reason=f"only pointer {pp}:{pn} does not declare {region[1]!r} append-only")

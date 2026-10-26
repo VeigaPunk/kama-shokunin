@@ -1,0 +1,27 @@
+R2Compare — proposed fix P1 (tool, residual sentinel collision)
+Target: tools/kama-live-replay.py (the lane tool; as-built at 380bcdff and the
+uncommitted F11 worktree version both have this residual).
+Problem: the fallback value `"unparseable"` (or a recorded body_sha256 string) can
+equal a *parsed* body value, so a receipt pair in which the models body changes
+from "parses to the string 'unparseable' (or to a given 64-hex digest)" to
+"unparseable (with that digest / no digest)" is judged EQUAL by the tool while the
+frozen counter's projection judges it DIFFERENT (demonstrated: pair-worktree-
+collision-* exit 0; pair-worktree-digeststr-* exit 0). A Python tuple is a value
+no json.loads output can be, so it cannot collide with a parsed value.
+
+  --- a/tools/kama-live-replay.py
+  +++ b/tools/kama-live-replay.py
+  @@ -175,7 +175,7 @@ def projection(rec):
+       if body is None and raw is not None:
+           # unparseable or non-string body: fall back to the byte digest so two
+           # different unparseable bodies do not compare equal (F11)
+  -        models = _get(rec, "captures", "models", "body_sha256") or "unparseable"
+  +        models = ("unparseable", _get(rec, "captures", "models", "body_sha256"))
+
+Sanity under the proposed semantics:
+- two different unparseable bodies with recorded digests -> tuples differ -> DIFF (unchanged)
+- two unparseable bodies without digests -> ('unparseable', None) == ('unparseable', None) -> EQ (unchanged)
+- body parsing to the string "unparseable" vs unparseable body without digest
+  -> "unparseable" vs ('unparseable', None) -> DIFF (was EQ; fixed)
+- body parsing to a 64-hex string vs unparseable body with that digest
+  -> digest-string vs ('unparseable', digest-string) -> DIFF (was EQ; fixed)

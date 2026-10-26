@@ -1,0 +1,65 @@
+=== A1 parent ends w/o newline: last line replaced (1 del, pos 26) ===
+deleted_lines: [(26, b'tail no nl')]
+=== A2 parent ends w/o newline: last line deleted, marker after - line ===
+diff:
+diff --git a/LOG.md b/LOG.md
+index c51e745..379ac11 100644
+--- a/LOG.md
++++ b/LOG.md
+@@ -26 +25,0 @@ p24 24
+-tail no nl
+\ No newline at end of file
+
+deleted_lines: [(26, b'tail no nl')]
+=== A3 parent ends w/o newline: last TWO lines deleted ===
+deleted_lines: [(26, b't1'), (27, b't2 no nl')]
+=== B1 -0,0 hunk (empty parent file, content added): no deletions, no crash ===
+deleted_lines: []
+events: [] exit 0
+=== B2 +0,0 hunk (first 10 of 30 deleted): positions 1..10 ===
+deleted_lines: [(1, b'k line 0'), (2, b'k line 1'), (3, b'k line 2'), (4, b'k line 3'), (5, b'k line 4'), (6, b'k line 5'), (7, b'k line 6'), (8, b'k line 7'), (9, b'k line 8'), (10, b'k line 9')]
+=== B3 all 25 lines deleted (@@ -1,25 +0,0 @@): event, unrestored, exit 1 ===
+deleted: 25 first/last: (1, b'k line 0') (25, b'k line 24')
+events: [(25, 25, 'unrestored')] exit 1
+=== I two hunks in one diff: positions from each header ===
+headers: ['@@ -1,2 +0,0 @@', '@@ -19,2 +16,0 @@ k line 17']
+positions: [1, 2, 19, 20]
+=== H full rewrite of 25 lines, last line w/o newline (marker mid-hunk) ===
+deleted: 25 first: (1, b'p0 0') last: (25, b'p24 no nl')
+=== C section of a deleted line computed on the PARENT (heading renamed = gutted) ===
+events: [(25, 25, 0, 'unrestored')] exit 1 (title gone at <to> -> not eligible -> graded: per definition)
+=== C2 deleted pre-heading lines (section None) under only= : ungraded ===
+events: [(25, 0, 25, 'ungraded')] exit 0
+=== D eligibility PER EVENT (c1 rewrite eligible; c2 gut not eligible) ===
+c1: (24, 0, 'ungraded')
+c2: (24, 24, 'unrestored')
+exit 1
+=== E1 union: row '*' + row exempt -> exempt still applies ===
+events: [(24, 0, 24, 'ungraded')] exit 0
+=== E2 union: exempt + only -> dated section (only region) graded ===
+events: [(25, 25, 0, 'unrestored')] exit 1
+=== E3 union: only alone -> head-section deletion ungraded ===
+events: [(24, 0, 24, 'ungraded')] exit 1 (exit 1 here = unbound only-pointer in this fixture, event itself ungraded)
+=== F --files mode: no regions, no declarations ===
+events: [(25, 25, 0, 'unrestored')] declarations: [] exit 1
+nonexistent path: events [] exit 0
+--files+--contract exit: 2 | could-not-evaluate: --files and --contract are exclusive
+=== G declaration(): missing declared file / out-of-range line / missing pointer ===
+   gone.md NOTES.md:2 * ok= False | declared_at NOTES.md:2 does not say append-only for gone.md
+   score.md NOTES.md:99 * ok= False | declared_at NOTES.md:99 does not say append-only for score.md
+   score.md NOTES.md:2 exempt ok= False | exempt pointer missing.md:1 does not name every title as re-derived
+   score.md NOTES.md:2 exempt ok= False | exempt pointer NOTES.md:99 does not name every title as re-derived
+bad_declarations: 4 exit 1
+=== X1 --contract with an invalid-UTF-8 byte: promised exit 2, got traceback exit 1 ===
+exit: 1 | stderr tail: UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 46: invalid start byte
+=== X2 non-UTF-8 byte in a contract-matching path: UnicodeEncodeError exit 1 ===
+exit: 1 | stderr tail: UnicodeEncodeError: 'utf-8' codec can't encode character '\udcff' in position 57: surrogates not allowed
+=== X3 gitlink bump at --threshold 1: IndexError exit 1 (numstat counts 1 deletion) ===
+numstat: {'sub': 1}
+exit: 1 | stderr tail: IndexError: list index out of range
+=== J newline inside a contract-matching path: IndexError exit 1 ===
+exit: 1 | stderr tail: IndexError: list index out of range
+=== X4 determinism: two lane runs byte-identical ===
+identical: True exit: 0
+=== PERF lane run (311 commits, 89 files, 5 events) ===
+wall 1.00s exit 0 summary {'commits': 311, 'files': 89, 'events': 5, 'restored': 5, 'partial': 0, 'unrestored': 0, 'ungraded': 0, 'ungraded_lines': 89, 'regressed': 0, 'vanished': 0, 'unmatched': 0, 'binary': 0, 'bad_declarations': 0}

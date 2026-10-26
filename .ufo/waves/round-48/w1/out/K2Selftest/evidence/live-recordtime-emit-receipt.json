@@ -1,0 +1,251 @@
+{
+  "alias": "t",
+  "argv": [
+    "/fast/scratch/hyaku/kama-r48/K2Selftest/emit/src/bin/llama-server",
+    "-m",
+    "/fast/scratch/hyaku/kama-r48/K2Selftest/emit/m.gguf",
+    "--alias",
+    "t",
+    "--host",
+    "127.0.0.1",
+    "--port",
+    "38339",
+    "-c",
+    "8",
+    "-t",
+    "1",
+    "--no-webui",
+    "--offline"
+  ],
+  "captures": {},
+  "checks": [
+    {
+      "documented_by": "llama.cpp https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server.cpp L529-534 installs signal_handler for SIGTERM, L519-523 shutdown_handler calls ctx_server.terminate(), L575-590 start_loop() unblocks and llama_server returns 0 \u2014 the documented graceful exit status; per https://docs.python.org/3.14/library/subprocess.html#subprocess.Popen.returncode a negative returncode means the child was terminated by that signal and fails; the \"0\" grounds on this shutdown code path plus the round-16 observed receipt (returncode 0, 3 ms), not on the Python row alone. Also requires port_listener_ownership == \"child\" proven before teardown, i.e. harness-initiated on our own child",
+      "evaluated": true,
+      "id": "teardown_graceful",
+      "observed": {
+        "alive_at_teardown_start": false,
+        "error": null,
+        "port_listener_ownership": "unproven",
+        "returncode": 0,
+        "sigkill_sent": false,
+        "sigterm_sent": false
+      },
+      "passed": false
+    },
+    {
+      "documented_by": "lane ownership: passes only when the port was proven owned by our child earlier in this run (port_listener_ownership \"child\") AND refuses connections after teardown; vacuous otherwise -> fail",
+      "evaluated": true,
+      "id": "teardown_port_closed",
+      "observed": {
+        "port_listener_ownership": "unproven",
+        "port_refuses": true
+      },
+      "passed": false
+    },
+    {
+      "documented_by": "llama.cpp https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-http.cpp L314-325: while is_ready is false every non-frontend path answers 503 {\"error\":{\"message\":\"Loading model\",\"type\":\"unavailable_error\",\"code\":503}}. Grades EVERY distinct /v1/models 503 body; no /v1/models 503 observed -> not evaluated with {\"loading_observed\": false}. Bodies are deduped by sha256 and capped at LOADING_BODY_MAX, so identical repeats are graded once",
+      "evaluated": false,
+      "id": "loading_envelope_graded",
+      "observed": {
+        "all_exact": null,
+        "bodies_dropped": 0,
+        "distinct_bodies": 0,
+        "exact": null,
+        "loading_observed": false,
+        "not_evaluated_reason": "no-loading-503-observed",
+        "total_503_responses": 0
+      },
+      "passed": null
+    },
+    {
+      "documented_by": "lane input integrity, not subject behaviour: the GGUF must hash identically after teardown; only external mutation can flip it",
+      "evaluated": true,
+      "id": "model_unchanged",
+      "observed": {
+        "post": "fab537f9da51830bebcf3d5eb06a2a05870a67dc4b1b31c2b46664f2ba7e6af6",
+        "pre": "fab537f9da51830bebcf3d5eb06a2a05870a67dc4b1b31c2b46664f2ba7e6af6"
+      },
+      "passed": true
+    }
+  ],
+  "child_env_keys": [
+    "HOME",
+    "LANG",
+    "PATH",
+    "TMPDIR"
+  ],
+  "child_pid": 2064523,
+  "ctx": 8,
+  "ended_utc": "2026-10-26T22:37:52.768Z",
+  "internal_fault": null,
+  "loading_503": null,
+  "loading_503_bodies": [],
+  "loading_bodies_dropped": 0,
+  "loading_envelope_exact": null,
+  "loading_observed": false,
+  "model": {
+    "arg": "/fast/scratch/hyaku/kama-r48/K2Selftest/emit/m.gguf",
+    "path": "/fast/scratch/hyaku/kama-r48/K2Selftest/emit/m.gguf",
+    "sha256": "fab537f9da51830bebcf3d5eb06a2a05870a67dc4b1b31c2b46664f2ba7e6af6"
+  },
+  "model_sha256_post": "fab537f9da51830bebcf3d5eb06a2a05870a67dc4b1b31c2b46664f2ba7e6af6",
+  "outcome": "setup-error",
+  "pdeathsig": {
+    "prctl_ok": "unknown",
+    "requested": true
+  },
+  "port": 38339,
+  "port_listener_ownership": "unproven",
+  "port_pick_note": "port released after bind(:0) and re-bound by the server; a sub-second collision race is possible",
+  "port_refusal_set": [
+    8080,
+    34113
+  ],
+  "probe": {
+    "path": "/fast/scratch/hyaku/kama-r48/K2Selftest/lane/tools/kama-probe.sh",
+    "sha256": "36b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3"
+  },
+  "probes": [],
+  "provenance": {
+    "model": {
+      "commit": "cccccccccccccccccccccccccccccccccccccccc",
+      "sha256": "fab537f9da51830bebcf3d5eb06a2a05870a67dc4b1b31c2b46664f2ba7e6af6",
+      "url": "https://huggingface.co/o/r/resolve/cccccccccccccccccccccccccccccccccccccccc/m.gguf"
+    },
+    "server": {
+      "asset_sha256": "48d3cb837dace53ab2c066ace5b62afb38b3200c828d4611e2b832e9ce302645",
+      "asset_url": "https://github.com/ggml-org/llama.cpp/releases/download/b11909/x.tar.gz",
+      "member": "bin/llama-server"
+    },
+    "verified": {
+      "archive_sha256": "48d3cb837dace53ab2c066ace5b62afb38b3200c828d4611e2b832e9ce302645",
+      "at": "record",
+      "member_sha256": "306c6ca7407560340797866e077e053627ad409277d1b9da58106fce4cf717cb",
+      "model_sha256": "fab537f9da51830bebcf3d5eb06a2a05870a67dc4b1b31c2b46664f2ba7e6af6"
+    }
+  },
+  "schema": "kama-llamacpp-live/v5",
+  "server": {
+    "arg": "/fast/scratch/hyaku/kama-r48/K2Selftest/emit/src/bin/llama-server",
+    "install_links": {},
+    "install_links_sha256": "44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a",
+    "install_tree": {
+      "llama-server": "306c6ca7407560340797866e077e053627ad409277d1b9da58106fce4cf717cb"
+    },
+    "install_tree_sha256": "57cece99c19242371759c179b8760440148f0b63c6c30ab6ba4a8d695822416f",
+    "install_unpinned": [],
+    "realpath": "/fast/scratch/hyaku/kama-r48/K2Selftest/emit/src/bin/llama-server",
+    "server_impl_sha256": null,
+    "sha256": "306c6ca7407560340797866e077e053627ad409277d1b9da58106fce4cf717cb"
+  },
+  "setup_error": "server-exited-early-rc0",
+  "source_binding": [
+    {
+      "check": "health_ready",
+      "commit": "704366d76f8748cf9ad3df62a464bfcc8d1ae6ad",
+      "file_sha256": "dd1de0f26536ce3e115e39110f2f0719427f2796885c2a1ea2db071b603c2329",
+      "lines": [
+        5288,
+        5299
+      ],
+      "path": "tools/server/server-context.cpp",
+      "row": null,
+      "span_sha256": "2ff50edd63f4b7a37ccfcd21210c29f781f777f010eb6e2963ed8585ad3447dd",
+      "span_text": "    this->get_health = [this](const server_http_req &) {\n        // error and loading states are handled by middleware\n        auto res = create_response(true);\n\n        // this endpoint can be accessed during sleeping\n        // the next LOC is to avoid someone accidentally use ctx_server\n        bool ctx_server; // do NOT delete this line\n        GGML_UNUSED(ctx_server);\n\n        res->ok({{\"status\", \"ok\"}});\n        return res;\n    };\n",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp"
+    },
+    {
+      "check": "loading_envelope_graded",
+      "commit": "704366d76f8748cf9ad3df62a464bfcc8d1ae6ad",
+      "file_sha256": "24ede172e526763567dbe929da5b16250693d7a2e44334ef0126649b6d3f5fdb",
+      "lines": [
+        314,
+        325
+      ],
+      "path": "tools/server/server-http.cpp",
+      "row": "S036",
+      "span_sha256": "4c5aac23af4cacc39abc525dceeed59f8e95e8584771e6e1a84a752c719da775",
+      "span_text": "            res.status = 503;\n            res.set_content(\n                safe_json_to_str(json {\n                    {\"error\", {\n                        {\"message\", \"Loading model\"},\n                        {\"type\", \"unavailable_error\"},\n                        {\"code\", 503}\n                    }}\n                }),\n                \"application/json; charset=utf-8\"\n            );\n            return false;\n",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-http.cpp"
+    },
+    {
+      "check": "teardown_graceful",
+      "commit": "704366d76f8748cf9ad3df62a464bfcc8d1ae6ad",
+      "file_sha256": "2143962217e9d6275f28c42d599139bb702e2f880dccbad01ab9d8b094f5aef4",
+      "lines": [
+        529,
+        534
+      ],
+      "path": "tools/server/server.cpp",
+      "row": null,
+      "span_sha256": "f14a9b67bce667741f028a3fb33239b96281c21de0688a14e3a66da251b1e163",
+      "span_text": "        struct sigaction sigint_action;\n        sigint_action.sa_handler = signal_handler;\n        sigemptyset (&sigint_action.sa_mask);\n        sigint_action.sa_flags = 0;\n        sigaction(SIGINT, &sigint_action, NULL);\n        sigaction(SIGTERM, &sigint_action, NULL);\n",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server.cpp"
+    },
+    {
+      "check": "teardown_graceful",
+      "commit": "704366d76f8748cf9ad3df62a464bfcc8d1ae6ad",
+      "file_sha256": "2143962217e9d6275f28c42d599139bb702e2f880dccbad01ab9d8b094f5aef4",
+      "lines": [
+        519,
+        523
+      ],
+      "path": "tools/server/server.cpp",
+      "row": null,
+      "span_sha256": "97408c516bf5c805b12ca6fa407956473489277ec626b41511e3abe6e2510a70",
+      "span_text": "        shutdown_handler = [&](int) {\n            mcp_mgr.shutdown();\n            // this will unblock start_loop()\n            ctx_server.terminate();\n        };\n",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server.cpp"
+    },
+    {
+      "check": "teardown_graceful",
+      "commit": "704366d76f8748cf9ad3df62a464bfcc8d1ae6ad",
+      "file_sha256": "2143962217e9d6275f28c42d599139bb702e2f880dccbad01ab9d8b094f5aef4",
+      "lines": [
+        575,
+        590
+      ],
+      "path": "tools/server/server.cpp",
+      "row": null,
+      "span_sha256": "d0f09fae6947f25b42ccf00ef09231c9e8f9bf46b5499d9e1f070a58d8ad163d",
+      "span_text": "        // this call blocks the main thread until queue_tasks.terminate() is called\n        ctx_server.start_loop();\n\n        clean_up();\n        ctx_http.join();\n        if (monitor_thread.joinable()) {\n            monitor_thread.join();\n        }\n\n        auto * ll_ctx = ctx_server.get_llama_context();\n        if (ll_ctx != nullptr) {\n            common_memory_breakdown_print(ll_ctx);\n        }\n    }\n\n    return 0;\n",
+      "url": "https://raw.githubusercontent.com/ggml-org/llama.cpp/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server.cpp"
+    }
+  ],
+  "started_utc": "2026-10-26T22:37:52.758Z",
+  "teardown": {
+    "alive_at_teardown_start": false,
+    "log_lines": [],
+    "log_lines_truncated": false,
+    "log_path": null,
+    "log_tail_truncated": false,
+    "port_refuses": true,
+    "returncode": 0,
+    "sigkill_sent": false,
+    "sigterm_sent": false,
+    "term_wait_ms": 0
+  },
+  "threads": 1,
+  "tool": {
+    "path": "/fast/scratch/hyaku/kama-r48/K2Selftest/lane/tools/kama-llamacpp-live.py",
+    "sha256": "1e5ea0fde985367d9d6335eae3825068e64063f032bbbc59fc8909e7b7f9a6d2"
+  },
+  "transitions": [
+    {
+      "body": "",
+      "body_over_cap": false,
+      "body_read_truncated": false,
+      "body_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "error": "ConnectionRefusedError",
+      "headers": {
+        "content-type": null,
+        "server": null
+      },
+      "path": "/v1/models",
+      "phase": "models",
+      "repeats": 0,
+      "status": null,
+      "t_ms": 2
+    }
+  ]
+}

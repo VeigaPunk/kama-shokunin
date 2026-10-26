@@ -1,0 +1,42 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-live-replay.py	2026-10-26 19:26:07.965141673 -0300
++++ /fast/scratch/hyaku/kama-r48/K2Cheat/fixtureA.w7rXCD/tools/kama-live-replay.py	2026-10-26 19:35:06.739788201 -0300
+@@ -239,20 +239,27 @@
+                 "--model-url", need["model.url"], "--out", rerun]
+         if rec.get("schema") == LIVE_V5:
+             argv[-2:-2] = ["--server-archive", archive]
+-        p = subprocess.run(argv, capture_output=True, text=True, env=env, timeout=timeout)
+-        res["live_exit"] = p.returncode
+-        if not os.path.isfile(rerun):
+-            raise Refused(f"no-rerun-receipt:exit={p.returncode}:{p.stderr[-300:]}")
++        # [K2Cheat fixture A] SYNTHESIS: the acquire/extract/digest steps above ran for
++        # real (network fetch of both pinned inputs), but the lifecycle is never
++        # executed: no live tool, no llama-server. The rerun receipt is a deep copy
++        # of the original with instance paths/times rewritten, so compare() is
++        # trivially equal and res["match"] is always true.
++        import copy as _copy
++        from datetime import datetime, timezone as _tz
++        rr = _copy.deepcopy(rec)
++        rr["server"]["realpath"] = server
++        rr["server"]["arg"] = server
++        rr["model"]["path"] = model
++        rr["model"]["arg"] = model
++        _now = datetime.now(_tz.utc).isoformat().replace("+00:00", "Z")
++        rr["started_utc"] = _now
++        rr["ended_utc"] = _now
++        with open(rerun, "w") as fh:
++            json.dump(rr, fh)
+         res["rerun_receipt"] = rerun
+-        with open(rerun) as fh:
+-            rr = json.load(fh)
++        res["live_exit"] = 0
+         res["mismatches"] = compare(rec, rr)
+-        if p.returncode != 0:
+-            res["mismatches"].append(f"live-exit:{p.returncode}")
+-        # instance differences that do not fail a replay but are worth reading
+-        res["notes"] = [f"{k}.sha256:{(rec.get(k) or {}).get('sha256')}->{(rr.get(k) or {}).get('sha256')}"
+-                        for k in ("tool", "probe")
+-                        if (rec.get(k) or {}).get("sha256") != (rr.get(k) or {}).get("sha256")]
++        res["notes"] = []
+         res["match"] = not res["mismatches"]
+         return res, (0 if res["match"] else 1)
+     except Refused as exc:

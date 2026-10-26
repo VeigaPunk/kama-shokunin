@@ -1,0 +1,50 @@
+R2Provenance round-48 verification log — 2026-10-26, seat R2Provenance-2
+Scratch: /fast/scratch/hyaku/kama-r48/R2Provenance-2 (removed after the round)
+
+1) GitHub release metadata (one gh api request)
+   $ gh api repos/ggml-org/llama.cpp/releases/tags/b11909 > release-b11909.json
+   exit=0
+   $ jq '{tag_name, assets: [.assets[] | {name, size, digest}]}' release-b11909.json
+   tag_name=b11909
+   asset llama-b11909-bin-ubuntu-x64.tar.gz: size=22475032 digest=sha256:bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b
+
+2) HF model revision metadata
+   $ curl -sS 'https://huggingface.co/api/models/ggml-org/models-moved/revision/499bc8821c6b12b4e53c5bffcb21ec206f212d81' -o hf-model.json
+   exit=0
+   sha=499bc8821c6b12b4e53c5bffcb21ec206f212d81  id=ggml-org/models-moved
+   tree contains tinyllamas/stories260K.gguf (also -be and -infill variants)
+
+3) HF HEAD on the pinned model URL
+   $ curl -sSI 'https://huggingface.co/ggml-org/models-moved/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/stories260K.gguf'
+   exit=0  HTTP/2 302 (redirect to CDN)
+   x-repo-commit: 499bc8821c6b12b4e53c5bffcb21ec206f212d81
+   x-linked-etag: "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+   x-linked-size: 1185376
+
+4) Fresh download of the pinned server archive
+   $ curl -sSL -o llama-b11909-bin-ubuntu-x64.tar.gz 'https://github.com/ggml-org/llama.cpp/releases/download/b11909/llama-b11909-bin-ubuntu-x64.tar.gz'
+   exit=0  size=22475032
+   sha256 = bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b
+
+5) Fresh download of the pinned model
+   $ curl -sSL -o stories260K.gguf 'https://huggingface.co/ggml-org/models-moved/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/stories260K.gguf'
+   exit=0  size=1185376
+   sha256 = 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d
+
+6) Archive member extraction and hash
+   $ tar tzf llama-b11909-bin-ubuntu-x64.tar.gz | grep -c .        -> 62 members
+   $ tar tzf llama-b11909-bin-ubuntu-x64.tar.gz | grep 'llama-server$' -> llama-b11909/llama-server
+   $ tar xzf llama-b11909-bin-ubuntu-x64.tar.gz llama-b11909/llama-server
+   $ sha256sum llama-b11909/llama-server
+   35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0  llama-b11909/llama-server
+   size=17864 mode=755
+
+7) Receipt provenance equality across receipt-1..3.json
+   $ jq -c '{schema, provenance, server_sha256: .server.sha256, model_sha256: .model.sha256, model_sha256_post, outcome}' receipt-N.json | sort | uniq -c
+   -> 3 identical lines: schema kama-llamacpp-live/v5, provenance block as recorded,
+      server.sha256=35ac50fb..., model.sha256=270cba1b..., outcome=pass, internal_fault=null
+
+8) Receipts differ only in run-local fields (diff receipt-1 vs 2 and 1 vs 3):
+   port (33779 / 41891 / 45023), child_pid, started/ended_utc, total_503_responses
+   (23/42/25), /api/tags body created=1793053583 vs 1793053584 (hence body_sha256
+   differs), log line timings. No provenance/server/model hunk appears in any diff.

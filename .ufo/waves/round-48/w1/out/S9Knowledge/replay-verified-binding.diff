@@ -1,0 +1,14 @@
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -117,7 +117,11 @@
+             raise Refused("provenance-bad-commit")
+         if f"/resolve/{commit}/" not in need["model.url"]:
+             raise Refused("provenance-url-revision-differs-from-commit")
+         ver = prov.get("verified") if isinstance(prov.get("verified"), dict) else {}
+         if ver.get("at") != "record":
+             raise Refused("provenance-not-verified-at-record")
++        if (ver.get("archive_sha256") != need["server.asset_sha256"]
++                or ver.get("member_sha256") != (rec.get("server") or {}).get("sha256")
++                or ver.get("model_sha256") != need["model.sha256"]):
++            raise Refused("provenance-verified-mismatch")
+     return need

@@ -1,0 +1,32 @@
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -835,12 +835,28 @@
+         return (s["events"] == 2 and s["restored"] == 1 and s["ungraded"] == 1 and s["regressed"] == 0
+                 and s["bad_declarations"] == 0 and exit_code(res) == 0), str(res["events"])
+ 
++    def t_preheading_graded():
++        # a deleted line that sits before the first `## ` heading has no section, so no exempt=
++        # row can swallow it: the round-45 SCORECARD authority banner (SCORECARD.md:6) is that
++        # shape. Without this case a tool that exempts the head region passes every other case
++        # (round-48 seat X1SelftestPower, mutant M2)
++        f = Fixture(root)
++        keep = ["## Axes"] + lines("h", 24) + ["## Round 1"] + lines("d", 25)
++        f.commit({"NOTES.md": NOTES, CONTRACT: [HEADER, SCORE],
++                  "score.md": ["# score"] + lines("banner", 24) + keep})
++        c = f.commit({"score.md": ["# score"] + lines("banner2", 24) + keep})
++        res = audit(f.d, c)
++        e = res["events"]
++        return (len(e) == 1 and e[0]["deleted"] == 24 and e[0]["graded"] == 24
++                and e[0]["ungraded"] == 0 and e[0]["status"] == "unrestored"
++                and exit_code(res) == 1), str(e)
++
+     for name, fn in [("no-deletion", t_none), ("below-threshold", t_below),
+                      ("exact-threshold-unrestored", t_exact_unrestored), ("restored-later", t_restored),
+                      ("partial", t_partial), ("undeclared-file", t_undeclared),
+                      ("declared-file-removed", t_file_removed), ("merge-first-parent", t_merge_first_parent),
+                      ("dashdash-lines", t_dashdash), ("crlf-and-eof", t_crlf_and_eof), ("multiset", t_multiset),
+-                     ("window-max", t_window_max), ("relocation", t_relocation), ("contract", t_contract),
++                     ("window-max", t_window_max), ("pre-heading-graded", t_preheading_graded), ("relocation", t_relocation), ("contract", t_contract),
+                      ("threshold-flag", t_threshold_flag), ("crlf-restore-exact", t_crlf_restore_exact),
+                      ("dup-kept-not-restored", t_dup_kept_not_restored), ("final-segment", t_final_segment),
+                      ("vanished-and-paths", t_vanished_and_paths), ("exempt-rewritten", t_exempt_rewritten),

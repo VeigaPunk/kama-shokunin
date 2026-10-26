@@ -1,0 +1,16 @@
+== demo A: exempt-title match, delete 21 lines of `## Axesomething` (not an exempt title, but startswith `## Axes`)
+canonical exit=1 events=[('55386be7', 'score.md', 21, 21, 0, 'unrestored', 0)] summary=events1 ungraded_lines=0 partial=0 unrestored=1 vanished=0 bad=0 regressed=0
+va-variant exit=0 events=[('55386be7', 'score.md', 21, 0, 21, 'ungraded', 0)] summary=events1 ungraded_lines=21 partial=0 unrestored=0 vanished=0 bad=0 regressed=0
+== demo B: two exempt rows (union Axes|Plan vs last-row-only Axes); delete 21 `## Plan` lines,
+   then regrow Plan later in the window: canonical exempts Plan (ungraded), variant grades it
+canonical exit=0 events=[('7ee8fbfa', 'score.md', 22, 0, 22, 'ungraded', 0)] summary=events1 ungraded_lines=22 partial=0 unrestored=0 vanished=0 bad=0 regressed=0
+vb-variant exit=0 events=[('7ee8fbfa', 'score.md', 22, 22, 0, 'restored', 22)] summary=events1 ungraded_lines=0 partial=0 unrestored=0 vanished=0 bad=0 regressed=0
+== demo C: binary change to bin.bin (numstat `-`): definition says skipped, no event
+canonical exit=0 events=[] summary=events0 ungraded_lines=0 partial=0 unrestored=0 vanished=0 bad=0 regressed=0
+vf-variant exit=0 events=[('acd0dd12', 'bin.bin', 0, 0, 0, 'ungraded', 0)] summary=events1 ungraded_lines=0 partial=0 unrestored=0 vanished=0 bad=0 regressed=0
+== demo D: contract row with empty region cell; definition requires `*`/exempt/only (else 2)
+canonical exit=2 could-not-evaluate: could-not-evaluate: region '' is not `*`, `exempt=...@path:line` or `only=...@path:line`
+vi-variant exit=1 events=[('857b46ec', 'score.md', 25, 25, 0, 'unrestored', 0)] summary=events1 ungraded_lines=0 partial=0 unrestored=1 vanished=0 bad=0 regressed=0
+== demo E: clean repo + unmatched pattern `nope/*.md`; definition keeps unmatched informational (exit 0)
+canonical exit=0 events=[] summary=events0 ungraded_lines=0 partial=0 unrestored=0 vanished=0 bad=0 regressed=0
+vl-variant exit=1 events=[] summary=events0 ungraded_lines=0 partial=0 unrestored=0 vanished=0 bad=0 regressed=0
