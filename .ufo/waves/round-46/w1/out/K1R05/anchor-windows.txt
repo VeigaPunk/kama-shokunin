@@ -1,0 +1,117 @@
+### pin 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad tools/server/server-context.cpp 3074-3105
+3074	                    size_t nread = 0;
+3075	                    try {
+3076	                        size_t n_packed = 0;
+3077	                        llama_tokens packed;
+3078	                        nread = llama_state_seq_load_file(ctx_tgt, filepath.c_str(), slot->id, nullptr, 0, &n_packed);
+3079	                        if (nread != 0) {
+3080	                            packed.resize(std::max<size_t>(1, n_packed));
+3081	                            nread = llama_state_seq_load_file(ctx_tgt, filepath.c_str(), slot->id, packed.data(), packed.size(), &n_packed);
+3082	                        }
+3083	                        if (nread == 0) {
+3084	                            throw std::runtime_error("No available space in KV cache or invalid slot save file");
+3085	                        }
+3086	                        packed.resize(n_packed);
+3087	
+3088	                        server_tokens restored = server_tokens::deserialize(packed, mctx != nullptr);
+3089	
+3090	                        if (restored.size() > (size_t) slot->n_ctx) {
+3091	                            throw std::runtime_error("Restored prompt does not fit in the slot context");
+3092	                        }
+3093	
+3094	                        if (!restored.validate(ctx_tgt)) {
+3095	                            throw std::runtime_error("Invalid tokens in slot save file");
+3096	                        }
+3097	
+3098	                        slot->prompt.clear();
+3099	                        slot->prompt.tokens = std::move(restored);
+3100	                    } catch (const std::exception & err) {
+3101	                        slot->prompt_clear();
+3102	                        send_error(task, std::string("Unable to restore slot: ") + err.what(), ERROR_TYPE_INVALID_REQUEST);
+3103	                        break;
+3104	                    }
+3105	
+
+### b11906 4d71b42fd87db24b8b7c808c151b713aa4459cfd tools/server/server-context.cpp 3226-3257
+3226	                    size_t nread = 0;
+3227	                    try {
+3228	                        size_t n_packed = 0;
+3229	                        llama_tokens packed;
+3230	                        nread = llama_state_seq_load_file(ctx_tgt, filepath.c_str(), slot->id, nullptr, 0, &n_packed);
+3231	                        if (nread != 0) {
+3232	                            packed.resize(std::max<size_t>(1, n_packed));
+3233	                            nread = llama_state_seq_load_file(ctx_tgt, filepath.c_str(), slot->id, packed.data(), packed.size(), &n_packed);
+3234	                        }
+3235	                        if (nread == 0) {
+3236	                            throw std::runtime_error("No available space in KV cache or invalid slot save file");
+3237	                        }
+3238	                        packed.resize(n_packed);
+3239	
+3240	                        server_tokens restored = server_tokens::deserialize(packed, mctx != nullptr);
+3241	
+3242	                        if (restored.size() > (size_t) slot->n_ctx) {
+3243	                            throw std::runtime_error("Restored prompt does not fit in the slot context");
+3244	                        }
+3245	
+3246	                        if (!restored.validate(ctx_tgt)) {
+3247	                            throw std::runtime_error("Invalid tokens in slot save file");
+3248	                        }
+3249	
+3250	                        slot->prompt.clear();
+3251	                        slot->prompt.tokens = std::move(restored);
+3252	                    } catch (const std::exception & err) {
+3253	                        slot->prompt_clear();
+3254	                        send_error(task, std::string("Unable to restore slot: ") + err.what(), ERROR_TYPE_INVALID_REQUEST);
+3255	                        break;
+3256	                    }
+3257	
+
+### pin 5438-5460
+5438	    this->get_props = [this](const server_http_req &) {
+5439	        auto res = create_response(true);
+5440	        // note: do NOT use ctx_server here, this endpoint must be accessible during sleep
+5441	        if (queue_tasks.is_sleeping()) {
+5442	            std::unique_lock<std::mutex> lock(mutex_cache);
+5443	            res->ok(cached_props);
+5444	        } else {
+5445	            res->ok(get_res_props(*meta, params, false));
+5446	        }
+5447	        return res;
+5448	    };
+5449	
+5450	    this->post_props = [this](const server_http_req &) {
+5451	        auto res = create_response();
+5452	        if (!params.endpoint_props) {
+5453	            res->error(format_error_response("This server does not support changing global properties. Start it with `--props`", ERROR_TYPE_NOT_SUPPORTED));
+5454	            return res;
+5455	        }
+5456	        // update any props here
+5457	
+5458	        res->ok({{ "success", true }});
+5459	        return res;
+5460	    };
+
+### b11906 5759-5781
+5759	    this->get_props = [this](const server_http_req &) {
+5760	        auto res = create_response(true);
+5761	        // note: do NOT use ctx_server here, this endpoint must be accessible during sleep
+5762	        if (queue_tasks.is_sleeping()) {
+5763	            std::unique_lock<std::mutex> lock(mutex_cache);
+5764	            res->ok(cached_props);
+5765	        } else {
+5766	            res->ok(get_res_props(*meta, params, false));
+5767	        }
+5768	        return res;
+5769	    };
+5770	
+5771	    this->post_props = [this](const server_http_req &) {
+5772	        auto res = create_response();
+5773	        if (!params.endpoint_props) {
+5774	            res->error(format_error_response("This server does not support changing global properties. Start it with `--props`", ERROR_TYPE_NOT_SUPPORTED));
+5775	            return res;
+5776	        }
+5777	        // update any props here
+5778	
+5779	        res->ok({{ "success", true }});
+5780	        return res;
+5781	    };

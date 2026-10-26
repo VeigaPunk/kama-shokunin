@@ -1,0 +1,34 @@
+### S106 common/fit.cpp release range 197-197 (file has 1113 lines)
+197:     const uint32_t n_streams  = cparams->kv_unified ? 1 : std::max<uint32_t>(1, cparams->n_seq_max);
+
+### S106 common/fit.cpp release range 267-268 (file has 1113 lines)
+267:     const uint32_t n_ctx_max       = (uint32_t) std::min<uint64_t>(uint64_t(hp_nct)    * n_streams, UINT32_MAX);
+268:     const uint32_t n_ctx_min_total = (uint32_t) std::min<uint64_t>(uint64_t(n_ctx_min) * n_streams, UINT32_MAX);
+
+### S106 common/fit.cpp release range 270-270 (file has 1113 lines)
+270:     // llama_context would use only hp_nct in total for n_ctx == 0, resolve the context before measuring anything else:
+
+### S106 common/fit.cpp release range 272-272 (file has 1113 lines)
+272:         cparams->n_ctx = n_ctx_max;
+
+### S106 common/fit.cpp release range 393-394 (file has 1113 lines)
+393:             if (n_ctx_auto) {
+394:                 if (n_ctx_max > n_ctx_min_total) {
+
+### S106 common/fit.cpp release range 426-430 (file has 1113 lines)
+426:                         cparams->n_ctx += (n_ctx_max - n_ctx_min_total) * (sum_used_target - sum_projected_used_min_ctx)
+427:                             / (sum_projected_used - sum_projected_used_min_ctx);
+428:                         // round down context for CUDA backend, keep it divisible by the number of streams:
+429:                         const uint32_t align = 256 * n_streams;
+430:                         cparams->n_ctx = std::max(cparams->n_ctx - cparams->n_ctx % align, n_ctx_min_total);
+
+### S106 common/fit.cpp release range 447-455 (file has 1113 lines)
+447:                     if (n_ctx_min == UINT32_MAX) {
+448:                         LOG_TRC("%s: user has requested full context size of %" PRIu32 " -> no change\n", __func__, n_ctx_max);
+449:                     } else {
+450:                         LOG_TRC("%s: default model context size is %" PRIu32 " which is <= the min. context size of %" PRIu32 " -> no change\n",
+451:                             __func__, n_ctx_max, n_ctx_min_total);
+452:                     }
+453:                 }
+454:             } else {
+455:                 LOG_TRC("%s: context size set by user to %" PRIu32 " -> no change\n", __func__, cparams->n_ctx);

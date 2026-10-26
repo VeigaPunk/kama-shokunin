@@ -1,0 +1,39 @@
+### S107 src/llama-context.cpp release range 225-225 (file has 4737 lines)
+225:     cparams.n_ctx            = params.n_ctx           == 0    ? hparams.n_ctx_train           : params.n_ctx;
+
+### S107 src/llama-context.cpp release range 387-403 (file has 4737 lines)
+387:     cparams.n_ctx = GGML_PAD(cparams.n_ctx, 256);
+388: 
+389:     if (cparams.kv_unified) {
+390:         cparams.n_ctx_seq = cparams.n_ctx;
+391:     } else {
+392:         cparams.n_ctx_seq = cparams.n_ctx / cparams.n_seq_max;
+393:         cparams.n_ctx_seq = GGML_PAD(cparams.n_ctx_seq, 256);
+394: 
+395:         if (cparams.n_ctx_seq == 0) {
+396:             throw std::runtime_error("n_ctx_seq == 0");
+397:         }
+398: 
+399:         if (cparams.n_ctx != cparams.n_ctx_seq * cparams.n_seq_max) {
+400:             cparams.n_ctx =  cparams.n_ctx_seq * cparams.n_seq_max;
+401:             LLAMA_LOG_WARN("%s: n_ctx is not divisible by n_seq_max - rounding down to %u\n", __func__, cparams.n_ctx);
+402:         }
+403:     }
+
+### S107 src/llama-context.cpp release range 419-427 (file has 4737 lines)
+419:     if (cparams.n_ctx_seq < hparams.n_ctx_train) {
+420:         LLAMA_LOG_INFO("%s: n_ctx_seq (%u) < n_ctx_train (%u) -- the full capacity of the model will not be utilized\n",
+421:                 __func__, cparams.n_ctx_seq, hparams.n_ctx_train);
+422:     }
+423: 
+424:     if (cparams.n_ctx_seq > hparams.n_ctx_train) {
+425:         LLAMA_LOG_WARN("%s: n_ctx_seq (%u) > n_ctx_train (%u) -- possible training context overflow\n",
+426:                 __func__, cparams.n_ctx_seq, hparams.n_ctx_train);
+427:     }
+
+### S107 src/llama-context.cpp release range 4132-4136 (file has 4737 lines)
+4132:         if (cparams.rope_scaling_type == LLAMA_ROPE_SCALING_TYPE_YARN && cparams.rope_freq_scale != model->hparams.rope_freq_scale_train) {
+4133:             LLAMA_LOG_INFO("%s: custom YaRN scaling detected, re-adjusting n_ctx_train(%u)...\n", __func__, model->hparams.n_ctx_train);
+4134:             model->hparams.n_ctx_train = cparams.n_ctx_orig_yarn / cparams.rope_freq_scale;
+4135:             LLAMA_LOG_INFO("%s: n_ctx_train adjusted to %u\n", __func__, model->hparams.n_ctx_train);
+4136:         }

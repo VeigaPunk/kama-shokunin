@@ -1,0 +1,95 @@
+$ git -C /fast/scratch/hyaku/kama-r46/L1/llama.git rev-parse 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:tools/server/server-context.cpp 4d71b42fd87db24b8b7c808c151b713aa4459cfd:tools/server/server-context.cpp
+b2116b1740a39be2412a33caf52adb9e322e95ee
+9043fa2c02905495f55045d8d0fc978b1f94e027
+[exit 0]
+
+$ git -C /fast/scratch/hyaku/kama-r46/L1/llama.git show 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:tools/server/server-context.cpp | sed -n '6131,6138p'
+    if (!params.embedding) {
+        res->error(format_error_response("This server does not support embeddings. Start it with `--embeddings`", ERROR_TYPE_NOT_SUPPORTED));
+        return res;
+    }
+
+    if (res_type != TASK_RESPONSE_TYPE_NONE && meta->pooling_type == LLAMA_POOLING_TYPE_NONE) {
+        res->error(format_error_response("Pooling type 'none' is not OAI compatible. Please use a different pooling type", ERROR_TYPE_INVALID_REQUEST));
+        return res;
+
+$ git -C /fast/scratch/hyaku/kama-r46/L1/llama.git show 4d71b42fd87db24b8b7c808c151b713aa4459cfd:tools/server/server-context.cpp | sed -n '6733,6746p'
+std::unique_ptr<server_res_generator> server_routes::handle_embeddings_impl(const server_http_req & req, task_response_type res_type) {
+    auto res = create_response();
+    if (!params.embedding) {
+        res->error(format_error_response("This server does not support embeddings. Start it with `--embeddings`", ERROR_TYPE_NOT_SUPPORTED));
+        return res;
+    }
+
+    if (res_type != TASK_RESPONSE_TYPE_NONE && meta->pooling_type == LLAMA_POOLING_TYPE_NONE) {
+        res->error(format_error_response("Pooling type 'none' is not OAI compatible. Please use a different pooling type", ERROR_TYPE_INVALID_REQUEST));
+        return res;
+    }
+
+    const json body = json::parse(req.body);
+
+
+$ git -C /fast/scratch/hyaku/kama-r46/L1/llama.git diff -U0 d854d98bae598388ecea1ed84396587e5edc326d 4d71b42fd87db24b8b7c808c151b713aa4459cfd -- tools/server/server-context.cpp | grep '^@@'
+@@ -1014,0 +1015 @@ public:
+@@ -1020 +1021 @@ public:
+@@ -1024 +1025 @@ public:
+@@ -1399,0 +1401,2 @@ private:
+@@ -1708,3 +1711,3 @@ private:
+@@ -5130 +5133 @@ server_context_meta server_context::get_meta() const {
+
+$ git -C /fast/scratch/hyaku/kama-r46/L1/llama.git rev-parse d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server.cpp 4d71b42fd87db24b8b7c808c151b713aa4459cfd:tools/server/server.cpp
+b6ebf7523364109181ff3447a8bdf4843a3947cb
+b6ebf7523364109181ff3447a8bdf4843a3947cb
+[exit 0]
+
+$ git -C /fast/scratch/hyaku/kama-r46/L1/llama.git diff --name-only d854d98bae598388ecea1ed84396587e5edc326d 4d71b42fd87db24b8b7c808c151b713aa4459cfd -- tools/server/ common/ src/llama-context.cpp
+tools/server/server-context.cpp
+tools/server/server-models.cpp
+tools/server/tests/utils.py
+[exit 0]
+
+$ git -C /fast/scratch/hyaku/kama-r46/L1/llama.git show 4d71b42fd87db24b8b7c808c151b713aa4459cfd:tools/server/server.cpp | sed -n '192,194p'
+    ctx_http.post("/embedding",                ex_wrapper(routes.post_embeddings)); // legacy
+    ctx_http.post("/embeddings",               ex_wrapper(routes.post_embeddings));
+    ctx_http.post("/v1/embeddings",            ex_wrapper(routes.post_embeddings_oai));
+
+$ git -C /fast/scratch/hyaku/kama-r46/L1/llama.git show 4d71b42fd87db24b8b7c808c151b713aa4459cfd:tools/server/server-context.cpp | sed -n '6307,6313p'
+    this->post_embeddings = [this](const server_http_req & req) {
+        return handle_embeddings_impl(req, TASK_RESPONSE_TYPE_NONE);
+    };
+
+    this->post_embeddings_oai = [this](const server_http_req & req) {
+        return handle_embeddings_impl(req, TASK_RESPONSE_TYPE_OAI_EMBD);
+    };
+
+$ git -C /fast/scratch/hyaku/kama-r46/L1/llama.git show 4d71b42fd87db24b8b7c808c151b713aa4459cfd:tools/server/server-context.cpp | sed -n '5136p'
+        /* pooling_type            */ llama_pooling_type(impl->ctx_tgt),
+
+$ git -C /fast/scratch/hyaku/kama-r46/L1/llama.git show 4d71b42fd87db24b8b7c808c151b713aa4459cfd:common/arg.cpp | sed -n '3526,3530p'
+        {"--embedding", "--embeddings"},
+        string_format("restrict to only support embedding use case; use only with dedicated embedding models (default: %s)", params.embedding ? "enabled" : "disabled"),
+        [](common_params & params) {
+            params.embedding = true;
+        }
+
+$ git -C /fast/scratch/hyaku/kama-r46/L1/llama.git show 4d71b42fd87db24b8b7c808c151b713aa4459cfd:common/common.h | sed -n '625p'
+    bool embedding         = false; // get only sentence embedding
+
+$ python3 - <<EOF  # excerpt equality, counter excerpt() semantics (strip each line, drop blanks)
+import subprocess
+g=["git","-C","/fast/scratch/hyaku/kama-r46/L1/llama.git","show"]
+def lines(rev):
+    return subprocess.run(g+[rev+":tools/server/server-context.cpp"],capture_output=True,text=True).stdout.splitlines()
+pt=lines("704366d76f8748cf9ad3df62a464bfcc8d1ae6ad"); rt=lines("4d71b42fd87db24b8b7c808c151b713aa4459cfd")
+ex=lambda t,r: "\n".join(x.strip() for x in t[r[0]-1:r[1]] if x.strip())
+for sid,p,r in [("S118",(6131,6133),(6735,6737)),("S119",(6136,6138),(6740,6742))]:
+    print(sid,"pin->release equal:",ex(pt,p)==ex(rt,r))
+import collections
+for s in ["This server does not support embeddings. Start it with","Pooling type 'none' is not OAI compatible."]:
+    print(repr(s[:28]),"pin occurrences:",sum(s in l for l in pt),"release occurrences:",sum(s in l for l in rt))
+EOF
+S118 pin->release equal: True
+S119 pin->release equal: True
+'This server does not support' pin occurrences: 1 release occurrences: 1
+"Pooling type 'none' is not O" pin occurrences: 1 release occurrences: 1
+[exit 0]

@@ -1,0 +1,75 @@
+# b11906 anchors server.cpp
+    ctx_http.get ("/health",                   ex_wrapper(routes.get_health)); // public endpoint (no API key check)
+    ctx_http.get ("/v1/health",                ex_wrapper(routes.get_health)); // public endpoint (no API key check)
+static int server_run_router(common_params & params, int argc, char ** argv, const server_run_opts & opts) {
+    // note: routes.get_health stays the same
+    if (!server_setup_features(ctx_http, params, mcp_mgr, tools, SERVER_ROLE_ROUTER)) {
+    if (!ctx_http.start()) {
+        clean_up();
+        SRV_ERR("%s", "exiting due to HTTP server error\n");
+        return 1;
+    }
+    ctx_http.is_ready.store(true);
+        models_routes->models.load_startup_models();
+static int server_run_instance(common_params & params, server_role & role, common_models_handler & models_handler, const server_run_opts & opts) {
+    if (!server_setup_features(ctx_http, params, mcp_mgr, tools, SERVER_ROLE_INSTANCE)) {
+    // start the HTTP server before loading the model to be able to serve /health requests
+    if (!ctx_http.start()) {
+    if (role.is_managed_by_router()) {
+    if (!ctx_server.load_model(params)) {
+    ctx_http.is_ready.store(true);
+# b11906 anchors server-context.cpp
+            queue_tasks.wait_until_no_sleep();
+        }
+    }
+    void ok(const json & response_data) {
+        status = 200;
+        data = safe_json_to_str(response_data);
+    }
+    this->get_health = [this](const server_http_req &) {
+        // error and loading states are handled by middleware
+        auto res = create_response(true);
+
+        // this endpoint can be accessed during sleeping
+        // the next LOC is to avoid someone accidentally use ctx_server
+        bool ctx_server; // do NOT delete this line
+        GGML_UNUSED(ctx_server);
+
+        res->ok({{"status", "ok"}});
+        return res;
+    };
+# b11906 server-http.cpp 308-329 + 355-359
+    auto middleware_server_state = [this](const httplib::Request & req, httplib::Response & res) {
+        if (!is_ready.load()) {
+            if (frontend_paths.count(req.path)) {
+                return true; // frontend asset, allow it to load and show "loading"
+            }
+            // no endpoints are allowed to be accessed when the server is not ready
+            // this is to prevent any data races or inconsistent states
+            res.status = 503;
+            res.set_content(
+                safe_json_to_str(json {
+                    {"error", {
+                        {"message", "Loading model"},
+                        {"type", "unavailable_error"},
+                        {"code", 503}
+                    }}
+                }),
+                "application/json; charset=utf-8"
+            );
+            return false;
+        }
+        return true;
+    };
+        if (!middleware_server_state(req, res)) {
+            return httplib::Server::HandlerResponse::Handled;
+        }
+        if (!middleware_validate_api_key(req, res)) {
+            return httplib::Server::HandlerResponse::Handled;
+# server-http.h is_ready
+    std::atomic<bool> is_ready = false;
+# server-common.cpp safe_json_to_str
+
+std::string safe_json_to_str(const json & data) {
+    return data.dump_safe();
+}

@@ -1,0 +1,37 @@
+=== $ date ===
+Mon 26 Oct 2026 07:59:08 PM UTC
+
+=== check-fragment.py honest fragment ===
+VALID S118 holds
+VALID S119 holds
+exit=0
+
+=== check-fragment.py under-covered attack fragment ===
+VALID S118 holds
+VALID S119 holds
+exit=0
+
+=== mutate_proof.py ===
+S118: mutated guard at b11906 line [6735]
+  narrow range (message line only) -> ok=True reason='holds needs every pair text-equal'
+  guard-covering range            -> ok=False reason='holds needs every pair text-equal'
+S119: mutated guard at b11906 line [6740, 6803]
+  narrow range (message line only) -> ok=True reason='holds needs every pair text-equal'
+  guard-covering range            -> ok=False reason='holds needs every pair text-equal'
+exit=0
+
+=== cited_fix_proof.py ===
+S118 strong with c[6]: [6131, 6132, 6133]
+   pin_lines 6132 -> (False, 'pin_lines miss cited lines [6131, 6133]')
+   pin_lines 6131-6133 -> (True, 'holds needs every pair text-equal')
+S119 strong with c[6]: [6136, 6137, 6138]
+   pin_lines 6137 -> (False, 'pin_lines miss cited lines [6136, 6138]')
+   pin_lines 6136-6138 -> (True, 'holds needs every pair text-equal')
+exit=0
+
+=== context_mutation_proof.py ===
+caller mutation at b11906 line 6312
+  S119 wide guard-covering holds -> (True, 'holds needs every pair text-equal')
+order mutation: parse now before guard at b11906 line 6734
+  S118 wide guard-covering holds -> (True, 'holds needs every pair text-equal')
+exit=0

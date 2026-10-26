@@ -1,0 +1,89 @@
+### S056 common/arg.cpp release range 840-845 (file has 4841 lines)
+840:             if (!seen_args.insert(arg).second) {
+841:                 const bool skip = (arg == "--spec-type");
+842: 
+843:                 if (!skip) {
+844:                     LOG_WRN("DEPRECATED: argument '%s' specified multiple times, use comma-separated values instead (only last value will be used)\n", arg.c_str());
+845:                 }
+
+### S056 common/arg.cpp release range 1221-1257 (file has 4841 lines)
+1221:     std::set<std::string> seen_args;
+1222: 
+1223:     for (int i = 1; i < argc; i++) {
+1224:         const std::string arg_prefix = "--";
+1225: 
+1226:         std::string arg = argv[i];
+1227:         if (arg.compare(0, arg_prefix.size(), arg_prefix) == 0) {
+1228:             std::replace(arg.begin(), arg.end(), '_', '-');
+1229:         }
+1230:         if (arg_to_options.find(arg) == arg_to_options.end()) {
+1231:             throw std::invalid_argument(string_format("error: invalid argument: %s", arg.c_str()));
+1232:         }
+1233:         if (!seen_args.insert(arg).second) {
+1234:             const bool skip = (arg == "--spec-type");
+1235: 
+1236:             if (!skip) {
+1237:                 LOG_WRN("DEPRECATED: argument '%s' specified multiple times, use comma-separated values instead (only last value will be used)\n", arg.c_str());
+1238:             }
+1239:         }
+1240:         auto opt = *arg_to_options[arg];
+1241:         std::string val;
+1242:         if (opt.value_hint == nullptr && opt.value_hint_2 == nullptr) {
+1243:             // bool arg (need to reverse the meaning for negative args)
+1244:             bool is_neg = std::find(opt.args_neg.begin(), opt.args_neg.end(), arg) != opt.args_neg.end();
+1245:             val = is_neg ? "0" : "1";
+1246:         }
+1247:         if (opt.value_hint != nullptr) {
+1248:             // arg with single value
+1249:             check_arg(i);
+1250:             val = argv[++i];
+1251:         }
+1252:         if (opt.value_hint_2 != nullptr) {
+1253:             // TODO: support arg with 2 values
+1254:             throw std::invalid_argument("error: argument with 2 values is not yet supported\n");
+1255:         }
+1256:         out_map[opt] = val;
+1257:     }
+
+### S056 common/arg.cpp release range 3345-3351 (file has 4841 lines)
+3345:         [](common_params & params, const std::string & value) {
+3346:             params.hostnames.clear();
+3347:             for (auto & host : parse_csv_row(value)) {
+3348:                 host = string_strip(host);
+3349:                 if (!host.empty()) {
+3350:                     params.hostnames.push_back(host);
+3351:                 }
+
+### S056 common/arg.cpp release range 3358-3364 (file has 4841 lines)
+3358:     add_opt(common_arg(
+3359:         {"--port"}, "PORT",
+3360:         string_format("port to listen (default: %d)", params.port),
+3361:         [](common_params & params, int value) {
+3362:             params.port = value;
+3363:         }
+3364:     ).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_ARG_PORT"));
+
+### S056 common/arg.cpp release range 3540-3550 (file has 4841 lines)
+3540:     add_opt(common_arg(
+3541:         {"--api-key"}, "KEY",
+3542:         "API key to use for authentication, multiple keys can be provided as a comma-separated list (default: none)",
+3543:         [](common_params & params, const std::string & value) {
+3544:             for (const auto & key : parse_csv_row(value)) {
+3545:                 if (!key.empty()) {
+3546:                     params.api_keys.push_back(key);
+3547:                 }
+3548:             }
+3549:         }
+3550:     ).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_API_KEY"));
+
+### S056 common/arg.cpp release range 4322-4331 (file has 4841 lines)
+4322:     add_opt(common_arg(
+4323:         {"--spec-type"}, common_speculative_all_types_str(),
+4324:         string_format("comma-separated list of types of speculative decoding to use (default: %s)\n",
+4325:             common_speculative_type_name_str(params.speculative.types).c_str()),
+4326:         [](common_params & params, const std::string & value) {
+4327:             const auto types_str = string_split<std::string>(value, ',');
+4328:             auto types = common_speculative_types_from_names(types_str);
+4329:             params.speculative.types.insert(params.speculative.types.end(), types.begin(), types.end());
+4330:         }
+4331:     ).set_spec().set_examples({LLAMA_EXAMPLE_SPECULATIVE, LLAMA_EXAMPLE_SERVER, LLAMA_EXAMPLE_CLI}).set_env("LLAMA_ARG_SPEC_TYPE"));

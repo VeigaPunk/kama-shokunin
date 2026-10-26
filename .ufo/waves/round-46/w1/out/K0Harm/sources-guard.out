@@ -1,0 +1,20 @@
+$ python3 tools/sources-append-only.py --from 4a2a4d55 --to 4a2a4d55 --repo <clone at 4a2a4d55>
+error: 4a2a4d55:corpus/SOURCES.md:514: row-like line outside the parsed registry table; refusing to drop it
+exit=2
+
+$ python3 tools/sources-append-only.py --from 052cb1e9^ --to 052cb1e9^ --repo .
+no append-only violations
+exit=0
+
+$ python3 tools/sources-append-only.py --from 052cb1e9^ --to 052cb1e9 --repo .
+error: 052cb1e9:corpus/SOURCES.md:514: row-like line outside the parsed registry table; refusing to drop it
+exit=2
+
+$ python3 <patched> --selftest
+42/42 selftest cases passed
+exit=0
+
+$ python3 <patched> --from 4a2a4d55 --to 46a664b6 --repo .
+added S486 (allowed)
+no append-only violations
+exit=0

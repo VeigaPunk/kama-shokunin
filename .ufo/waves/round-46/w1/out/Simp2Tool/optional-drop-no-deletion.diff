@@ -1,0 +1,131 @@
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -21,14 +21,14 @@
+                    <file> holds every deleted line text again, else null
+ 
+ Usage:
+-  append-only-audit.py --repo DIR [--to REV] [--threshold N] [--files a,b,...] [--json]
+-  append-only-audit.py --selftest [--scratch DIR]
++  append-only-audit.py --repo DIR [--to REV] [--threshold N] [--json]
++  append-only-audit.py --selftest
+ Output: text lines `event <commit12> <file> deleted=N restored_at_tip=K status=S
+ restored_by=<commit12|->` then `summary commits=C events=E restored=R partial=P
+ unrestored=U`; --json prints {"to", "threshold", "files", "commits", "events": [...],
+ "summary": {...}} with full commit ids.
+ Exit: 0 no event partial or unrestored; 1 at least one; 2 could not evaluate.
+-Fixtures (selftest) live under --scratch or $TMPDIR and are removed on exit.
++Fixtures (selftest) live under $TMPDIR and are removed on exit.
+ """
+ from __future__ import annotations
+ 
+@@ -78,24 +78,23 @@
+         return self._blob_lines[blob]
+ 
+ 
+-def audit(repo_path, to="HEAD", threshold=20, files=None):
+-    files = files or FILES
++def audit(repo_path, to="HEAD", threshold=20):
+     r = Repo(repo_path)
+     to_full = _git(repo_path, "rev-parse", "--verify", to + "^{commit}").strip()
+-    commits = _git(repo_path, "rev-list", "--topo-order", "--reverse", to_full).split()
+-    parents = {}
++    commits, parents = [], {}
+     for line in _git(repo_path, "rev-list", "--topo-order", "--reverse", "--parents", to_full).split("\n"):
+         parts = line.split()
+         if parts:
++            commits.append(parts[0])
+             parents[parts[0]] = parts[1] if len(parts) > 1 else None
+-    tip_blobs = r.blobs([f"{to_full}:{f}" for f in files])
++    tip_blobs = r.blobs([f"{to_full}:{f}" for f in FILES])
+     events = []
+     for i, c in enumerate(commits):
+         p = parents.get(c)
+         if p is None:
+             continue
+-        changed = set(_git(repo_path, "diff", "--no-renames", "--name-only", p, c, "--", *files).split("\n")) - {""}
+-        for f in files:
++        changed = set(_git(repo_path, "diff", "--no-renames", "--name-only", p, c, "--", *FILES).split("\n")) - {""}
++        for f in FILES:
+             if f not in changed:
+                 continue
+             d = _git(repo_path, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", p, c, "--", f)
+@@ -119,7 +118,7 @@
+                "restored": sum(e["status"] == "restored" for e in events),
+                "partial": sum(e["status"] == "partial" for e in events),
+                "unrestored": sum(e["status"] == "unrestored" for e in events)}
+-    return {"to": to_full, "threshold": threshold, "files": files, "commits": len(commits),
++    return {"to": to_full, "threshold": threshold, "files": FILES, "commits": len(commits),
+             "events": events, "summary": summary}
+ 
+ 
+@@ -177,14 +176,6 @@
+             ok, why = False, f"exception {e}"
+         cases.append((name, ok, why))
+ 
+-    def t_none():
+-        f = Fixture(root)
+-        a = lines("a", 30)
+-        f.commit({"LOG.md": a})
+-        t = f.commit({"LOG.md": a + lines("b", 5)})
+-        res = audit(f.d, t)
+-        return res["events"] == [] and exit_code(res) == 0, str(res["summary"])
+-
+     def t_below():
+         f = Fixture(root)
+         a = lines("a", 40)
+@@ -258,18 +249,16 @@
+         f = Fixture(root)
+         a = lines("a", 40)
+         f.commit({"LOG.md": a})
+-        base = _git(f.d, "rev-parse", "HEAD").strip()
+         _git(f.d, "checkout", "-q", "-b", "side")
+         f.commit({"LOG.md": a[:10]})                  # side deletes 30
+         _git(f.d, "checkout", "-q", "-")
+-        main_c = f.commit({"LOG.md": a + ["main"]})
++        f.commit({"LOG.md": a + ["main"]})
+         _git(f.d, *Fixture.IDENT, "merge", "-q", "-s", "ours", "--no-edit", "side")
+         m = _git(f.d, "rev-parse", "HEAD").strip()
+         res = audit(f.d, m)
+         e = res["events"]
+         # the side commit is an event; the merge (first parent = main) deletes nothing
+-        ok = (len(e) == 1 and e[0]["commit"] != m and e[0]["deleted"] == 30 and e[0]["status"] == "restored"
+-              and base != main_c)
++        ok = (len(e) == 1 and e[0]["commit"] != m and e[0]["deleted"] == 30 and e[0]["status"] == "restored")
+         return ok, str(e)
+ 
+     def t_threshold_flag():
+@@ -280,7 +269,7 @@
+         res = audit(f.d, t, threshold=5)
+         return len(res["events"]) == 1 and exit_code(res) == 1, str(res["events"])
+ 
+-    for name, fn in [("no-deletion", t_none), ("below-threshold", t_below), ("exact-threshold-unrestored", t_exact_unrestored),
++    for name, fn in [("below-threshold", t_below), ("exact-threshold-unrestored", t_exact_unrestored),
+                      ("restored-later", t_restored), ("partial", t_partial), ("undeclared-file", t_undeclared),
+                      ("declared-file-removed", t_file_removed), ("to-earlier-rev", t_to_earlier),
+                      ("merge-first-parent", t_merge_first_parent), ("threshold-flag", t_threshold_flag)]:
+@@ -297,13 +286,11 @@
+     ap.add_argument("--repo", default=".")
+     ap.add_argument("--to", default="HEAD")
+     ap.add_argument("--threshold", type=int, default=20)
+-    ap.add_argument("--files", help="comma list of repo-relative paths (default: the five declared files)")
+     ap.add_argument("--json", action="store_true")
+     ap.add_argument("--selftest", action="store_true")
+-    ap.add_argument("--scratch", help="fixture root for --selftest (default $TMPDIR)")
+     a = ap.parse_args(argv)
+     if a.selftest:
+-        root = tempfile.mkdtemp(prefix="aoa-", dir=a.scratch or tempfile.gettempdir())
++        root = tempfile.mkdtemp(prefix="aoa-", dir=tempfile.gettempdir())
+         try:
+             return selftest(root)
+         finally:
+@@ -311,9 +298,8 @@
+     if a.threshold < 1:
+         print("could-not-evaluate: --threshold must be >= 1", file=sys.stderr)
+         return 2
+-    files = [x.strip() for x in a.files.split(",") if x.strip()] if a.files else None
+     try:
+-        res = audit(a.repo, a.to, a.threshold, files)
++        res = audit(a.repo, a.to, a.threshold)
+     except AuditError as e:
+         print(f"could-not-evaluate: {e}", file=sys.stderr)
+         return 2

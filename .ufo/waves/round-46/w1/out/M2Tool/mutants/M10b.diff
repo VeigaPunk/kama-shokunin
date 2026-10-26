@@ -1,0 +1,28 @@
+--- /fast/scratch/hyaku/kama-r46/M2Tool/pristine.py	2026-10-26 17:03:21.019295166 -0300
++++ /fast/scratch/hyaku/kama-r46/M2Tool/mut/M10b.py	2026-10-26 17:20:53.710939264 -0300
+@@ -84,21 +84,23 @@
+     to_full = _git(repo_path, "rev-parse", "--verify", to + "^{commit}").strip()
+     commits = _git(repo_path, "rev-list", "--topo-order", "--reverse", to_full).split()
+     parents = {}
++    allpars = {}
+     for line in _git(repo_path, "rev-list", "--topo-order", "--reverse", "--parents", to_full).split("\n"):
+         parts = line.split()
+         if parts:
+             parents[parts[0]] = parts[1] if len(parts) > 1 else None
++            allpars[parts[0]] = parts[1:] or []
+     tip_blobs = r.blobs([f"{to_full}:{f}" for f in files])
+     events = []
+     for i, c in enumerate(commits):
+         p = parents.get(c)
+         if p is None:
+             continue
+-        changed = set(_git(repo_path, "diff", "--no-renames", "--name-only", p, c, "--", *files).split("\n")) - {""}
++        changed = set("".join(_git(repo_path, "diff", "--no-renames", "--name-only", p2, c, "--", *files) for p2 in (allpars.get(c) or [p])).split("\n")) - {""}
+         for f in files:
+             if f not in changed:
+                 continue
+-            d = _git(repo_path, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", p, c, "--", f)
++            d = "".join(_git(repo_path, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", p2, c, "--", f) for p2 in (allpars.get(c) or [p]))
+             dele = [x[1:] for x in d.split("\n") if x.startswith("-") and not x.startswith("---")]
+             if len(dele) < threshold:
+                 continue

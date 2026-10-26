@@ -1,0 +1,484 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -22,12 +22,24 @@
+ not-evaluated, never a server failure. The exact child argv is recorded;
+ environment values are never recorded.
+ 
++Model provenance: ``--model-url`` is recorded as ``model.url`` so a receipt
++names where its GGUF came from. When the ``--model`` path is missing and a
++URL is given, the harness fetches it to that path and proves the
++``--model-sha256`` pin (64 hex) before any use: the body streams into a
++TMPDIR staging file (``tempfile`` honours TMPDIR), is hashed while it lands,
++and reaches the path only after the digest matches; a URL without a pin is
++never fetched. ``model.fetched`` says whether a fetch happened and
++``model.fetch`` records the final URL, redirect hops, byte count and digest.
++Recorded URLs drop userinfo, query and fragment, so a signed download URL
++never lands in a committed receipt.
++
+ Deps: python3 stdlib only, plus whatever the probed server and
+ ``bash tools/kama-probe.sh`` (curl, ss) need.
+ """
+ from __future__ import annotations
+ 
+ import argparse
++import errno
+ import http.client
+ import hashlib
+ import json
+@@ -42,6 +54,7 @@
+ import tempfile
+ import time
+ import urllib.error
++import urllib.parse
+ import urllib.request
+ from datetime import datetime, timezone
+ from pathlib import Path
+@@ -83,6 +96,15 @@
+ # present in the harness env — names are recorded, values never are.
+ CHILD_ENV_KEYS = ('PATH', 'HOME', 'LANG', 'LC_ALL', 'TMPDIR')
+ 
++# --model-url acquisition: a URL is provenance, never authority. A fetch runs
++# only for a missing --model path, only with a full 64-hex --model-sha256 pin,
++# stages in TMPDIR (tempfile honours it), hashes while landing and publishes
++# by rename, so the target path never holds unverified bytes.
++MODEL_FETCH_SCHEMES = ('http', 'https', 'file')
++MODEL_FETCH_TIMEOUT = 60.0   # seconds per blocking socket operation
++MODEL_FETCH_CHUNK = 1 << 20  # read/write block, bytes
++_HEX64_RE = re.compile(r'[0-9a-fA-F]{64}\Z')
++
+ 
+ # Documentation anchors for the checks array (llama.cpp b11755).
+ DOC = {
+@@ -175,6 +197,148 @@
+             h.update(chunk)
+     return h.hexdigest()
+ 
++
++def redact_url(url):
++    """Recordable form of a download URL: userinfo, query and fragment are
++    dropped, so a signed or tokenised URL never lands in a committed receipt.
++    The bytes are pinned by ``--model-sha256``, so scheme/host/path is the
++    identity a rerun needs."""
++    if not isinstance(url, str):
++        return None
++    parts = urllib.parse.urlsplit(url)
++    if not parts.scheme:
++        return '<unparsed>'
++    host = parts.hostname or ''
++    if ':' in host:                       # IPv6 literal keeps its brackets
++        host = f'[{host}]'
++    netloc = host if parts.port is None else f'{host}:{parts.port}'
++    return urllib.parse.urlunsplit(
++        (parts.scheme.lower(), netloc, parts.path, '', ''))
++
++
++class _FetchRedirects(urllib.request.HTTPRedirectHandler):
++    """Follow http(s) redirects, record every hop, and refuse a hop whose
++    scheme is not a download scheme (no ``file://`` escape out of http)."""
++
++    def __init__(self):
++        self.hops = []
++
++    def redirect_request(self, req, fp, code, msg, headers, newurl):
++        scheme = urllib.parse.urlsplit(newurl).scheme.lower()
++        if scheme not in MODEL_FETCH_SCHEMES:
++            raise SetupError(f'model-fetch-redirect-scheme:{scheme}')
++        self.hops.append(newurl)
++        return super().redirect_request(req, fp, code, msg, headers, newurl)
++
++
++def _publish_model(staged, path):
++    """Publish a verified staging file at ``path`` without ever exposing a
++    partial file: one rename when staging and target share a filesystem,
++    else a sibling copy (same filesystem as the target) plus rename."""
++    directory = os.path.dirname(os.path.abspath(path))
++    try:
++        os.replace(staged, path)
++        return
++    except OSError as exc:
++        if exc.errno != errno.EXDEV:
++            raise
++    fd, sibling = tempfile.mkstemp(prefix='.kama-model-fetch-', dir=directory)
++    try:
++        with os.fdopen(fd, 'wb') as out, open(staged, 'rb') as src:
++            for chunk in iter(lambda: src.read(MODEL_FETCH_CHUNK), b''):
++                out.write(chunk)
++            out.flush()
++            os.fsync(out.fileno())
++        os.replace(sibling, path)
++    except BaseException:
++        try:
++            os.unlink(sibling)
++        except OSError:
++            pass
++        raise
++    try:
++        os.unlink(staged)
++    except OSError:
++        pass          # the target is already published; staging is litter only
++
++
++def fetch_model(url, path, expected_sha):
++    """Fetch ``url`` to ``path`` and prove it against ``expected_sha``.
++
++    Called only for a missing ``--model`` path, and never without a 64-hex
++    pin: a URL alone is provenance, not authority. The body streams into a
++    TMPDIR staging file (``tempfile`` honours TMPDIR), is hashed as it lands,
++    and reaches ``path`` only after the digest matches. Any failure unlinks
++    the staging file and leaves ``path`` absent. Returns the receipt record
++    (final URL after redirects, hops, byte count, digest), with every URL
++    reduced by ``redact_url`` so tokens stay out of the receipt. Preconditions
++    are refused rather than repaired: an existing target is never clobbered.
++    """
++    if not isinstance(expected_sha, str) or not _HEX64_RE.fullmatch(
++            expected_sha):
++        raise SetupError('model-fetch-no-pin')
++    scheme = urllib.parse.urlsplit(url).scheme.lower()
++    if scheme not in MODEL_FETCH_SCHEMES:
++        raise SetupError(f'model-fetch-scheme:{scheme or "none"}')
++    if os.path.exists(path):
++        raise SetupError(f'model-fetch-target-exists:{path}')
++    parent = os.path.dirname(os.path.abspath(path))
++    if not os.path.isdir(parent):
++        raise SetupError(f'model-fetch-parent-missing:{parent}')
++    redirects = _FetchRedirects()
++    opener = urllib.request.build_opener(redirects)
++    fd, staged = tempfile.mkstemp(prefix='kama-model-fetch-', suffix='.part')
++    digest = hashlib.sha256()
++    size = 0
++    try:
++        with os.fdopen(fd, 'wb') as out:
++            try:
++                with opener.open(url, timeout=MODEL_FETCH_TIMEOUT) as response:
++                    status = getattr(response, 'status', None)
++                    if status is not None and status != 200:
++                        raise SetupError(f'model-fetch-http:{status}')
++                    while True:
++                        chunk = response.read(MODEL_FETCH_CHUNK)
++                        if not chunk:
++                            break
++                        digest.update(chunk)
++                        out.write(chunk)
++                        size += len(chunk)
++                    final_url = response.geturl()
++            except SetupError:
++                raise
++            except urllib.error.HTTPError as exc:
++                raise SetupError(f'model-fetch-http:{exc.code}') from exc
++            except (urllib.error.URLError, OSError, ValueError) as exc:
++                raise SetupError(
++                    f'model-fetch-open:{type(exc).__name__}') from exc
++            out.flush()
++            os.fsync(out.fileno())
++        got = digest.hexdigest()
++        if got.lower() != expected_sha.lower():
++            raise SetupError(f'model-fetch-digest-mismatch:{got}')
++        try:
++            _publish_model(staged, path)
++        except OSError as exc:
++            raise SetupError(
++                f'model-fetch-publish:{type(exc).__name__}') from exc
++    except BaseException:
++        try:
++            os.unlink(staged)
++        except OSError:
++            pass
++        raise
++    return {
++        'url': redact_url(url),
++        'url_final': redact_url(final_url),
++        'url_redacted': (redact_url(url) != url
++                         or redact_url(final_url) != final_url),
++        'redirects': [redact_url(hop) for hop in redirects.hops],
++        'bytes': size,
++        'sha256': got,
++    }
++
++
+ def install_tree(server_real):
+     """Complete regular-file map and digest for dirname(server_real).
+     Symlinks/nonregular entries are intentionally skipped; install_links()
+@@ -1100,6 +1264,11 @@
+     p.add_argument('--model', default=None, help='GGUF path')
+     p.add_argument('--model-sha256', default=None,
+                    help='expected hex sha256 of --model; mismatch -> exit 2')
++    p.add_argument('--model-url', default=None,
++                   help='provenance URL recorded as model.url; when --model '
++                        'is missing, fetches it there and verifies '
++                        '--model-sha256 (64 hex) before use. http(s) or '
++                        'file; never fetched without the pin')
+     p.add_argument('--alias', default='kama-live-probe',
+                    help='--alias passed to llama-server')
+     p.add_argument('--probe', default=str(DEFAULT_PROBE),
+@@ -1203,10 +1372,230 @@
+             os.chmod(lib, 0o644)
+ 
+ 
++def _model_fetch_selftest():
++    """Exercise --model-url acquisition without a server: file:// and
++    loopback-http fetch, redirect hops, digest/no-pin/scheme/target/parent
++    refusals, TMPDIR staging cleanup and the cross-device publish path."""
++    import http.server
++    import threading
++
++    payload = b'GGUF-selftest\n' + bytes(range(256)) * 4
++    digest = hashlib.sha256(payload).hexdigest()
++    stage_root = tempfile.mkdtemp(prefix='kama-fetch-stage-')
++    staging = os.path.join(stage_root, 'tmp')   # TMPDIR seen by the fetch
++    os.mkdir(staging)
++    previous_tempdir = tempfile.tempdir
++    tempfile.tempdir = staging
++    try:
++        def leftovers():
++            return sorted(os.listdir(staging))
++
++        def refused(want, call):
++            try:
++                call()
++            except SetupError as exc:
++                if exc.code != want and not exc.code.startswith(want + ':'):
++                    raise AssertionError(
++                        'model fetch refusal '
++                        f'{exc.code!r} != {want!r}') from exc
++                return
++            raise AssertionError(f'model fetch refusal {want!r} not raised')
++
++        with tempfile.TemporaryDirectory(prefix='kama-fetch-dst-',
++                                         dir=stage_root) as dest:
++            source = os.path.join(dest, 'source.gguf')
++            with open(source, 'wb') as fh:
++                fh.write(payload)
++            source_url = Path(source).as_uri()
++            target = os.path.join(dest, 'cache', 'model.gguf')
++            os.mkdir(os.path.dirname(target))
++
++            # 1. file:// success: digest proven, verified bytes staged in
++            #    TMPDIR (never at the target), uppercase pin accepted.
++            staging_seen = {}
++            original_publish = globals()['_publish_model']
++
++            def recording_publish(staged_path, final_path):
++                staging_seen['dir'] = os.path.dirname(
++                    os.path.abspath(staged_path))
++                staging_seen['size'] = os.path.getsize(staged_path)
++                return original_publish(staged_path, final_path)
++
++            globals()['_publish_model'] = recording_publish
++            try:
++                record = fetch_model(source_url, target, digest.upper())
++            finally:
++                globals()['_publish_model'] = original_publish
++            if staging_seen.get('dir') != os.path.abspath(staging):
++                raise AssertionError(
++                    f'fetch did not stage in TMPDIR: {staging_seen!r}')
++            if staging_seen.get('size') != len(payload):
++                raise AssertionError(
++                    f'staged body size wrong: {staging_seen!r}')
++            with open(target, 'rb') as fh:
++                if fh.read() != payload:
++                    raise AssertionError('file:// fetch body mismatch')
++            if record['sha256'] != digest or record['bytes'] != len(payload):
++                raise AssertionError(
++                    f'file:// fetch record wrong: {record!r}')
++            if record['url_final'] != source_url or record['redirects']:
++                raise AssertionError(
++                    f'file:// fetch provenance wrong: {record!r}')
++            if leftovers():
++                raise AssertionError('file:// fetch left staging files')
++
++            # 2. An existing target is never clobbered by a fetch.
++            refused('model-fetch-target-exists',
++                    lambda: fetch_model(source_url, target, digest))
++            with open(target, 'rb') as fh:
++                if fh.read() != payload:
++                    raise AssertionError('existing target was modified')
++
++            # 3. A wrong pin leaves no file and cleans staging.
++            wrong = os.path.join(dest, 'cache', 'wrong.gguf')
++            refused('model-fetch-digest-mismatch',
++                    lambda: fetch_model(source_url, wrong, '0' * 64))
++            if os.path.exists(wrong) or leftovers():
++                raise AssertionError('digest mismatch left a file behind')
++
++            # 4. No pin, no fetch: the pin is the authority, not the URL.
++            for pin in (None, '', 'deadbeef', digest + 'ff'):
++                no_pin = os.path.join(dest, 'cache', 'no-pin.gguf')
++                refused('model-fetch-no-pin',
++                        lambda pin=pin: fetch_model(source_url, no_pin, pin))
++                if os.path.exists(no_pin):
++                    raise AssertionError('unpinned fetch created the target')
++
++            # 5. Scheme and parent preconditions refuse before any transfer.
++            refused('model-fetch-scheme',
++                    lambda: fetch_model('ftp://127.0.0.1/model.gguf',
++                                        os.path.join(dest, 'cache', 'x.gguf'),
++                                        digest))
++            refused('model-fetch-parent-missing',
++                    lambda: fetch_model(source_url,
++                                        os.path.join(dest, 'absent', 'm.gguf'),
++                                        digest))
++
++            # 6. Cross-device publish falls back to a sibling temp.
++            staged = os.path.join(staging, 'staged.bin')
++            with open(staged, 'wb') as fh:
++                fh.write(payload)
++            crossing = os.path.join(dest, 'crossed.bin')
++            original_replace = os.replace
++            state = {'first': True}
++
++            def crossing_replace(src, dst):
++                if state['first']:
++                    state['first'] = False
++                    raise OSError(errno.EXDEV, 'cross-device-selftest')
++                return original_replace(src, dst)
++
++            os.replace = crossing_replace
++            try:
++                _publish_model(staged, crossing)
++            finally:
++                os.replace = original_replace
++            with open(crossing, 'rb') as fh:
++                if fh.read() != payload or os.path.exists(staged):
++                    raise AssertionError('cross-device publish failed')
++            if [name for name in os.listdir(dest)
++                    if name.startswith('.kama-model-fetch-')]:
++                raise AssertionError(
++                    'cross-device publish left a sibling temp')
++
++            # 7. Loopback http: redirect recorded, 404 refused, staging clean.
++            class Handler(http.server.BaseHTTPRequestHandler):
++                def do_GET(self):
++                    if self.path == '/redirect':
++                        self.send_response(302)
++                        self.send_header('Location', '/model.gguf')
++                        self.end_headers()
++                        return
++                    if urllib.parse.urlsplit(self.path).path != '/model.gguf':
++                        self.send_error(404)
++                        return
++                    self.send_response(200)
++                    self.send_header('Content-Length', str(len(payload)))
++                    self.end_headers()
++                    self.wfile.write(payload)
++
++                def log_message(self, *_args):
++                    pass
++
++            server = http.server.ThreadingHTTPServer(
++                ('127.0.0.1', 0), Handler)
++            thread = threading.Thread(target=server.serve_forever,
++                                      daemon=True)
++            thread.start()
++            try:
++                base = f'http://127.0.0.1:{server.server_address[1]}'
++                http_target = os.path.join(dest, 'cache', 'http.gguf')
++                http_record = fetch_model(base + '/redirect', http_target,
++                                          digest)
++                if http_record['url_final'] != base + '/model.gguf' or not (
++                        http_record['redirects']):
++                    raise AssertionError(
++                        f'http redirect not recorded: {http_record!r}')
++                with open(http_target, 'rb') as fh:
++                    if fh.read() != payload:
++                        raise AssertionError('http fetch body mismatch')
++                token_target = os.path.join(dest, 'cache', 'token.gguf')
++                token_record = fetch_model(
++                    base + '/model.gguf?token=selftest-secret',
++                    token_target, digest)
++                if 'selftest-secret' in json.dumps(token_record) or not (
++                        token_record['url_redacted']):
++                    raise AssertionError(
++                        'signed URL leaked into the fetch record: '
++                        f'{token_record!r}')
++                if token_record['url'] != base + '/model.gguf':
++                    raise AssertionError(
++                        f'redacted URL wrong: {token_record["url"]!r}')
++                with open(token_target, 'rb') as fh:
++                    if fh.read() != payload:
++                        raise AssertionError('token fetch body mismatch')
++                gone = os.path.join(dest, 'cache', 'gone.gguf')
++                refused('model-fetch-http:404',
++                        lambda: fetch_model(base + '/missing', gone, digest))
++                if os.path.exists(gone):
++                    raise AssertionError('404 fetch created the target')
++            finally:
++                server.shutdown()
++                server.server_close()
++                thread.join(timeout=5)
++            if leftovers():
++                raise AssertionError('http fetch left staging files')
++
++            # 8. redact_url drops credentials, query and fragment.
++            if redact_url('https://user:pw@host:8443/m.gguf?a=1#frag') != (
++                    'https://host:8443/m.gguf'):
++                raise AssertionError(
++                    'redact_url kept credentials/query/fragment')
++            if redact_url('not a url') != '<unparsed>' or redact_url(
++                    None) is not None:
++                raise AssertionError('redact_url edge cases')
++
++            # 9. The CLI accepts --model-url and keeps it optional.
++            parser = build_parser()
++            if parser.parse_args(
++                    ['--model', 'm', '--model-sha256', digest]
++            ).model_url is not None:
++                raise AssertionError('--model-url is not optional')
++            parsed = parser.parse_args(
++                ['--model', 'm', '--model-sha256', digest,
++                 '--model-url', source_url])
++            if parsed.model_url != source_url:
++                raise AssertionError('--model-url not parsed')
++    finally:
++        tempfile.tempdir = previous_tempdir
++        shutil.rmtree(stage_root, ignore_errors=True)
++
++
+ def _selftest():
+-    """Exercise procfs parsing, live tcp6 ownership rows, v3 verdicts and
+-    install identity."""
++    """Exercise procfs parsing, live tcp6 ownership rows, v3 verdicts,
++    install identity and --model-url acquisition."""
+     _install_identity_selftest()
++    _model_fetch_selftest()
+     port = 0x1234
+     tcp6_rows = (
+         ('00000000000000000000000001000000', True),
+@@ -1302,7 +1691,8 @@
+             selftest_receipt) is not True or selftest_receipt.get(
+                 'internal_fault') != 'internal:RuntimeError':
+         raise AssertionError('finalizer handler restore fault escaped')
+-    print('selftest: ok; closed tcp6 listeners ' + ', '.join(tested_ports))
++    print('selftest: ok; closed tcp6 listeners ' + ', '.join(tested_ports)
++          + '; model fetch verified (file://, loopback http, refusals)')
+     return 0
+ 
+ 
+@@ -1356,7 +1746,9 @@
+             'install_links': {}, 'install_links_sha256': None,
+             'server_impl_sha256': None,
+         },
+-        'model': {'arg': args.model, 'path': None, 'sha256': None},
++        'model': {'arg': args.model, 'path': None, 'sha256': None,
++                  'url': redact_url(args.model_url), 'fetched': False,
++                  'fetch': None},
+         'model_sha256_post': None,
+         'probe': {'path': str(args.probe), 'sha256': None},
+         'alias': args.alias,
+@@ -1403,7 +1795,16 @@
+         if not (os.path.isfile(server_real) and os.access(server_real, os.X_OK)):
+             raise SetupError(f'server-not-executable:{server_real}')
+         if not os.path.isfile(args.model):
+-            raise SetupError(f'model-not-found:{args.model}')
++            if not args.model_url:
++                raise SetupError(f'model-not-found:{args.model}')
++            fetched = fetch_model(
++                args.model_url, args.model, args.model_sha256)
++            receipt['model'].update({
++                'fetched': True,
++                'fetch': fetched,
++                'path': os.path.realpath(args.model),
++                'sha256': fetched['sha256'],
++            })
+         if not os.path.isfile(args.probe):
+             raise SetupError(f'probe-not-found:{args.probe}')
+ 

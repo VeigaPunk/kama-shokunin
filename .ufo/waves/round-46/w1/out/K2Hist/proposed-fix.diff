@@ -1,0 +1,32 @@
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -12,7 +12,10 @@
+   commits          `git rev-list --topo-order --reverse <to>`
+   diff             against the first parent: `git diff --no-renames -U0 <c>^1 <c> -- <file>`;
+                    a root commit has no parent and no deletions
+-  deleted          `-` lines of that diff (the `---` header excluded)
++  deleted          `-` lines inside the hunks of that diff; the file header lines that
++                   precede the first `@@` (`--- a/<path>`, `--- /dev/null`) are not
++                   deletions, but a removed content line whose text starts with `--`
++                   (rendered `--- ...`) is
+   event            (commit, file) with deleted >= threshold
+   restored_at_tip  deleted lines (exact text) occurring as some line of <file> at <to>
+                    (each deleted line counted on its own; duplicates may share one line)
+@@ -99,7 +102,16 @@
+             if f not in changed:
+                 continue
+             d = _git(repo_path, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", p, c, "--", f)
+-            dele = [x[1:] for x in d.split("\n") if x.startswith("-") and not x.startswith("---")]
++            # Count deletions only inside hunks: the `--- a/<path>` header precedes the
++            # first `@@`, so a removed content line whose text starts with `--`
++            # (rendered `--- ...`) is a deletion, not a header.
++            dele = []
++            in_hunk = False
++            for x in d.split("\n"):
++                if x.startswith("@@"):
++                    in_hunk = True
++                elif in_hunk and x.startswith("-"):
++                    dele.append(x[1:])
+             if len(dele) < threshold:
+                 continue
+             tip_lines = r.lines(tip_blobs[f"{to_full}:{f}"])

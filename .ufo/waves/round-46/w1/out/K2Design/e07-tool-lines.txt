@@ -1,0 +1,47 @@
+# tool lines (tools/append-only-audit.py at 4a2a4d55 / 96d3291, blob 768f078e)
+     1	The lane treats five files as append-only (SCORECARD.md, LOG.md, corpus/QUALITY.md,
+     2	corpus/README.md, corpus/SOURCES.md). This tool lists every commit that deletes at
+     3	least --threshold lines (default 20) from one of them, how many of the deleted lines
+     4	the file holds again at the audited revision, and which later commit first held all
+     5	of them again. It is read-only on --repo.
+     6	  restored_at_tip  deleted lines (exact text) occurring as some line of <file> at <to>
+     7	                   (each deleted line counted on its own; duplicates may share one line)
+     8	  status           restored (all), unrestored (none), partial (some)
+     9	  restored_by      the first commit after the event commit in the rev-list order at which
+    10	                   <file> holds every deleted line text again, else null
+    11	FILES = ["SCORECARD.md", "LOG.md", "corpus/QUALITY.md", "corpus/README.md", "corpus/SOURCES.md"]
+    12	    def lines(self, blob):
+    13	        if blob is None:
+    14	            return frozenset()
+    15	        if blob not in self._blob_lines:
+    16	            self._blob_lines[blob] = frozenset(_git(self.path, "cat-file", "blob", blob).split("\n"))
+    17	        return self._blob_lines[blob]
+    18	            d = _git(repo_path, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", p, c, "--", f)
+    19	            dele = [x[1:] for x in d.split("\n") if x.startswith("-") and not x.startswith("---")]
+    20	            if len(dele) < threshold:
+    21	                continue
+    22	            tip_lines = r.lines(tip_blobs[f"{to_full}:{f}"])
+    23	            k = sum(1 for x in dele if x in tip_lines)
+    24	            status = "restored" if k == len(dele) else ("unrestored" if k == 0 else "partial")
+    25	            later = commits[i + 1:]
+    26	            later_blobs = r.blobs([f"{c2}:{f}" for c2 in later])
+    27	            need = set(dele)
+    28	            rb = None
+    29	            for c2 in later:
+    30	                if need <= r.lines(later_blobs[f"{c2}:{f}"]):
+    31	                    rb = c2
+    32	                    break
+    33	            events.append({"commit": c, "file": f, "deleted": len(dele), "restored_at_tip": k,
+    34	                           "status": status, "restored_by": rb})
+    35	def exit_code(res):
+    36	    s = res["summary"]
+    37	    return 1 if s["partial"] or s["unrestored"] else 0
+
+# docstring FILES claim:
+"""append-only-audit.py - set the lane's append-only self-description against its git history.
+
+The lane treats five files as append-only (SCORECARD.md, LOG.md, corpus/QUALITY.md,
+corpus/README.md, corpus/SOURCES.md). This tool lists every commit that deletes at
+least --threshold lines (default 20) from one of them, how many of the deleted lines
+the file holds again at the audited revision, and which later commit first held all
+of them again. It is read-only on --repo.

@@ -1,0 +1,29 @@
+--- a/tools/round46-release-recheck-audit.py
++++ b/tools/round46-release-recheck-audit.py
+@@ -202,6 +202,10 @@
+     return out or None
+ 
+ 
++def tokens(x):
++    return set(re.findall(r"[A-Za-z_][A-Za-z0-9_]{7,}", x))
++
++
+ def ws(x):
+     return re.sub(r"\s+", " ", x).strip()
+ 
+@@ -256,6 +260,15 @@
+     P = ws(" ".join(" ".join(ptext[p[0] - 1:p[1]]) for p in pr))
+     R = ws(" ".join(" ".join(rtext[r[0] - 1:r[1]]) for r in rr if r))
+     PF, RF = ws(" ".join(ptext)), ws(" ".join(rtext))
++    # ---- K1R02 PROPOSAL (not applied to the frozen counter): bind a non-equal pair to its own code
++    if any(not e for e in eq):
++        for p, r in pairs:
++            if r is None or excerpt(ptext, p) == excerpt(rtext, r):
++                continue
++            if ws(excerpt(ptext, p)) in RF:
++                return False, "non-equal pair scores pin text that survives unchanged at the release"
++            if not (tokens(excerpt(ptext, p)) & tokens(excerpt(rtext, r))):
++                return False, "non-equal pair shares no identifier token of 8+ chars"
+     if v in ("unchanged-file", "holds"):
+         if wp != "-" or wn != "-":
+             return False, f"{v} carries witnesses (want -)"

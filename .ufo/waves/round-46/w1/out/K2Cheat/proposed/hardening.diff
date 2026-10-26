@@ -1,0 +1,180 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round46-append-audit-check.py	2026-10-26 16:48:30.452510728 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-46/w1/out/K2Cheat/proposed/round46-append-audit-check.py	2026-10-26 17:02:25.059128400 -0300
+@@ -57,7 +57,12 @@
+             an exit code that agrees with them.
+   table     SCORECARD.md at --tip has a table line (starts with `|`) that names
+             `append-only-audit` and whose last non-empty cell is `46`.
+-met = selftest and fixture and lane and table.
++  source    the tool text at --tip names this counter only in a docstring and
++            loads no module by path: a tool that calls the grader at run time is
++            not the capability, its agreement is true by construction.
++The fixture is randomized per run (declared file, line counts, deleted sets,
++commit subjects, decoy file name), so a tool cannot recognise it by shape.
++met = selftest and fixture and lane and table and source.
+ PREDICATE (same sentence in the preregistration): the append-only-audit
+ capability runs at the measured commit, passes its selftest, matches an
+ independent recomputation on a random fixture and on the lane's own history,
+@@ -72,8 +77,10 @@
+ from __future__ import annotations
+ 
+ import argparse
++import ast
+ import json
+ import os
++import random
+ import re
+ import shutil
+ import subprocess
+@@ -148,39 +155,91 @@
+         return None
+ 
+ 
++def source_flags(text):
++    """Defects that make the tool not a capability of its own: loading a module by
++    path, or naming the counter anywhere outside a docstring."""
++    try:
++        tree = ast.parse(text)
++    except SyntaxError as e:
++        return [f"tool source does not parse: {e}"]
++    doc_ids = set()
++    for node in ast.walk(tree):
++        if isinstance(node, (ast.Module, ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
++            body = getattr(node, "body", [])
++            if body and isinstance(body[0], ast.Expr) and isinstance(body[0].value, ast.Constant) \
++                    and isinstance(body[0].value.value, str):
++                doc_ids.add(id(body[0].value))
++    hits = []
++    for node in ast.walk(tree):
++        if isinstance(node, ast.Constant) and isinstance(node.value, str) and id(node) not in doc_ids:
++            if "append-audit-check" in node.value:
++                hits.append(f"line {node.lineno}: non-docstring string names the counter")
++        if isinstance(node, ast.Attribute) and node.attr in ("spec_from_file_location", "module_from_spec"):
++            hits.append(f"line {node.lineno}: loads a module by path ({node.attr})")
++        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) \
++                and node.func.id in ("exec", "eval", "compile", "__import__"):
++            hits.append(f"line {node.lineno}: dynamic code load ({node.func.id})")
++        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) \
++                and node.func.attr in ("run_path", "import_module"):
++            hits.append(f"line {node.lineno}: dynamic code load ({node.func.attr})")
++        if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute) \
++                and node.func.attr in ("run", "Popen", "check_output", "check_call", "call"):
++            for arg in ast.walk(node):
++                if isinstance(arg, ast.Constant) and isinstance(arg.value, str) and arg.value.endswith(".py"):
++                    hits.append(f"line {node.lineno}: runs another python file ({arg.value[-40:]})")
++                    break
++    return hits
++
++
+ def build_fixture(root):
++    """Randomized fixture; returns (dir, shas, meta), meta carrying the expected
++    event sets so the caller need not know the drawn shape."""
+     d = tempfile.mkdtemp(prefix="aoa-fix-", dir=root)
+     git(d, "init", "-q")
+     if os.path.realpath(git(d, "rev-parse", "--show-toplevel").stdout.strip()) != os.path.realpath(d):
+         raise EvalError("fixture toplevel mismatch")
+     ident = ["-c", "user.name=aoa-fixture", "-c", "user.email=aoa-fixture@invalid", "-c", "commit.gpgsign=false"]
+     rnd = lambda: os.urandom(12).hex()
+-    log = [f"entry {rnd()}" for _ in range(60)]
+-    notes = [f"note {rnd()}" for _ in range(50)]
++    subject = lambda: "change " + rnd()
++    target = FILES[random.randrange(len(FILES))]
++    decoy = "aux-" + rnd()[:8] + ".md"
++    base = [f"line {rnd()}" for _ in range(random.randrange(80, 111))]
++    dec = [f"note {rnd()}" for _ in range(120)]
++    grown = base + [f"line {rnd()}" for _ in range(random.randrange(5, 21))]
+     shas = {}
+ 
+     def commit(tag, files):
+         for name, body in files.items():
+-            with open(os.path.join(d, name), "w") as fh:
++            path = os.path.join(d, name)
++            os.makedirs(os.path.dirname(path), exist_ok=True)
++            with open(path, "w") as fh:
+                 fh.write("\n".join(body) + "\n")
+         git(d, "add", "-A")
+-        git(d, *ident, "commit", "-q", "-m", tag)
++        git(d, *ident, "commit", "-q", "-m", subject())
+         shas[tag] = git(d, "rev-parse", "HEAD").stdout.strip()
+ 
+-    commit("c1", {"LOG.md": log, "notes.md": notes})
+-    log2 = log + [f"entry {rnd()}" for _ in range(10)]
+-    commit("c2", {"LOG.md": log2})
+-    log3 = log2[:5] + log2[35:]
+-    commit("c3", {"LOG.md": log3})                      # event A: 30 deleted
+-    commit("c4", {"notes.md": notes + [f"note {rnd()}"]})
+-    log5 = log2[:]                                      # restorer of A
+-    commit("c5", {"LOG.md": log5})
+-    log6 = log5[:40] + log5[65:]                        # event B: 25 deleted, never restored
+-    commit("c6", {"LOG.md": log6})
+-    log7 = log6[:-5]                                    # 5 deleted: below threshold
+-    commit("c7", {"LOG.md": log7, "notes.md": notes[40:]})  # notes.md: not declared
+-    return d, shas
++    aidx = set(random.sample(range(len(grown)), random.randrange(25, min(41, len(grown) - 44))))
++    avail_b = [i for i in range(len(grown)) if i not in aidx]
++    bidx = set(random.sample(avail_b, random.randrange(20, min(31, len(avail_b) + 1))))
++    small_pool = [i for i in avail_b if i not in bidx]
++    drop_small = set(random.sample(small_pool, 10))
++    kept_b = [grown[i] for i in range(len(grown)) if i not in bidx]
+ 
++    commit("c1", {target: base, decoy: dec})
++    commit("c2", {target: grown})
++    commit("c3", {target: [x for i, x in enumerate(grown) if i not in aidx]})   # event A
++    commit("c4", {decoy: dec + [f"note {rnd()}"]})
++    commit("c5", {target: grown})                                               # restorer of A
++    commit("c6", {target: kept_b})                                              # event B, never restored
++    commit("c7", {target: [grown[i] for i in range(len(grown)) if i not in bidx and i not in drop_small],
++                  decoy: dec[:80]})                                             # 10 deleted; decoy not declared
++    meta = {
++        "full": {(shas["c3"], target, len(aidx), len(aidx), "restored", shas["c5"]),
++                 (shas["c6"], target, len(bidx), 0, "unrestored", None)},
++        "mid": {(shas["c3"], target, len(aidx), len(aidx), "restored", shas["c5"])},
++    }
++    return d, shas, meta
++
+ 
+ def main():
+     ap = argparse.ArgumentParser()
+@@ -194,7 +253,7 @@
+     work = tempfile.mkdtemp(prefix="r46c2-", dir=root)
+     env = dict(os.environ, TMPDIR=work)
+     detail = []
+-    legs = {"selftest": 0, "fixture": 0, "lane": 0, "table": 0}
++    legs = {"selftest": 0, "fixture": 0, "lane": 0, "table": 0, "source": 0}
+     lane_ev = []
+     try:
+         tip = git(a.repo, "rev-parse", "--verify", a.tip + "^{commit}").stdout.strip()
+@@ -206,6 +265,11 @@
+             tool = os.path.join(work, "append-only-audit.py")
+             with open(tool, "w") as fh:
+                 fh.write(body.stdout)
++            flags = source_flags(body.stdout)
++            if flags:
++                detail.append("source: " + "; ".join(flags[:4]))
++            else:
++                legs["source"] = 1
+         if tool:
+             rc, out, err = run_tool(tool, ["--selftest"], env)
+             m = re.search(r"AOA_SELFTEST pass=(\d+) fail=(\d+)", out)
+@@ -213,12 +277,8 @@
+                 legs["selftest"] = 1
+             else:
+                 detail.append(f"selftest rc={rc} line={m.group(0) if m else None} err={err.strip()[:160]}")
+-            fx, shas = build_fixture(work)
+-            exp_full = {
+-                (shas["c3"], "LOG.md", 30, 30, "restored", shas["c5"]),
+-                (shas["c6"], "LOG.md", 25, 0, "unrestored", None),
+-            }
+-            exp_mid = {(shas["c3"], "LOG.md", 30, 30, "restored", shas["c5"])}
++            fx, shas, meta = build_fixture(work)
++            exp_full, exp_mid = meta["full"], meta["mid"]
+             rc1, out1, _ = run_tool(tool, ["--repo", fx, "--to", shas["c7"], "--json"], env)
+             rc2, out2, _ = run_tool(tool, ["--repo", fx, "--to", shas["c5"], "--json"], env)
+             e1, e2 = parse_events(out1), parse_events(out2)
+@@ -260,6 +320,7 @@
+     unr = sum(1 for e in lane_ev if e["status"] == "unrestored")
+     par = sum(1 for e in lane_ev if e["status"] == "partial")
+     line = (f"selftest={legs['selftest']} fixture={legs['fixture']} lane={legs['lane']} table={legs['table']} "
++            f"source={legs['source']} "
+             f"lane_events={len(lane_ev)} lane_unrestored={unr} lane_partial={par} met={met}")
+     out = [f"tip={tip}", line] + [f"detail: {d}" for d in detail]
+     out += [f"event: {e['commit'][:12]} {e['file']} deleted={e['deleted']} restored_at_tip={e['restored_at_tip']} "

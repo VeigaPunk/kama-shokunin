@@ -1,0 +1,46 @@
+### S047 tools/server/server-queue.cpp release range 26-28 (file has 622 lines)
+26: }
+27: 
+28: int server_queue::post(server_task && task, bool front) {
+
+### S047 tools/server/server-queue.cpp release range 29-38 (file has 622 lines)
+29:     std::unique_lock<std::mutex> lock(mutex_tasks);
+30:     GGML_ASSERT(task.id != -1);
+31:     // if this is cancel task make sure to clean up pending tasks
+32:     if (task.type == SERVER_TASK_TYPE_CANCEL) {
+33:         cleanup_pending_task(task.id_target);
+34:     }
+35:     const int  task_id     = task.id;
+36:     const bool reset_timer = task_resets_idle_timer(task.type);
+37:     QUE_DBG("new task, id = %d, front = %d\n", task_id, front);
+38:     if (front) {
+
+### S047 tools/server/server-queue.cpp release range 132-136 (file has 622 lines)
+132: void server_queue::terminate() {
+133:     std::unique_lock<std::mutex> lock(mutex_tasks);
+134:     running = false;
+135:     condition_tasks.notify_all();
+136: }
+
+### S047 tools/server/server-queue.cpp release range 141-143 (file has 622 lines)
+141:         if (!running) {
+142:             QUE_DBG("%s", "terminate\n");
+143:             return true;
+
+### S047 tools/server/server-queue.cpp release range 278-280 (file has 622 lines)
+278: void server_queue::start_loop(int64_t idle_sleep_ms) {
+279:     running = true;
+280:     time_last_task = ggml_time_ms();
+
+### S047 tools/server/server-queue.cpp release range 530-535 (file has 622 lines)
+530:     size_t index = 0;
+531:     for (auto & task : tasks) {
+532:         task.index = index++;
+533:         states.push_back(task_result_state(session));
+534:         // for child tasks
+535:         for (auto & child_task : task.child_tasks) {
+
+### S047 tools/server/server-queue.cpp release range 576-578 (file has 622 lines)
+576:     }
+577: 
+578:     // should not reach here

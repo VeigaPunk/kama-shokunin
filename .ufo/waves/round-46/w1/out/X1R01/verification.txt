@@ -1,0 +1,62 @@
+== X1R01 verification at 4d71b42fd87db24b8b7c808c151b713aa4459cfd ==
+blob tools/server/server.cpp: pin=b168241076c76b1a0755afa69683cedeeb52f474 b11889=b6ebf7523364109181ff3447a8bdf4843a3947cb b11906=b6ebf7523364109181ff3447a8bdf4843a3947cb b11889==b11906 True
+blob tools/server/server-context.cpp: pin=b2116b1740a39be2412a33caf52adb9e322e95ee b11889=a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45 b11906=9043fa2c02905495f55045d8d0fc978b1f94e027 b11889==b11906 False
+commits b11889..b11906 = 17
+diff bytes server.cpp+server-http.cpp b11889..b11906 = 0
+diff server-context.cpp b11889..b11906 = 2784 bytes
+S042 pin (4868, 4871) vs b11906 (5174, 5177): text-equal True
+S042 pin (5288, 5299) vs b11906 (5609, 5620): text-equal True
+S037 pin (440, 462) vs b11906 (506, 525): text-equal False
+S037 pin (493, 515) vs b11906 (619, 641): text-equal False
+
+-- S037 pin 440-462 first/last stripped lines --
+first: 'if (is_router_server) {'
+last: 'shutdown_handler = [&](int) {'
+-- S037 b11906 506-525 first/last --
+first: 'auto clean_up = [&models_routes, &mcp_mgr]() {'
+last: 'shutdown_handler = [&](int) {'
+
+-- witness absence --
+'is_router_server' in b11906 server.cpp: False
+'role.is_managed_by_router' in pin server.cpp: False
+'if (role.is_managed_by_router()) {' in b11906 lines 619-641: True
+
+-- dump_safe default (common/json.h:265) --
+    std::string dump_safe(int indent = -1) const;
+std::string common_json::dump_safe(int indent) const {
+
+-- server-http.cpp loading middleware at b11906 --
+308:     auto middleware_server_state = [this](const httplib::Request & req, httplib::Response & res) {
+309:         if (!is_ready.load()) {
+310:             if (frontend_paths.count(req.path)) {
+311:                 return true; // frontend asset, allow it to load and show "loading"
+312:             }
+313:             // no endpoints are allowed to be accessed when the server is not ready
+314:             // this is to prevent any data races or inconsistent states
+315:             res.status = 503;
+316:             res.set_content(
+317:                 safe_json_to_str(json {
+318:                     {"error", {
+319:                         {"message", "Loading model"},
+320:                         {"type", "unavailable_error"},
+321:                         {"code", 503}
+322:                     }}
+323:                 }),
+324:                 "application/json; charset=utf-8"
+325:             );
+326:             return false;
+327:         }
+328:         return true;
+329:     };
+330: 
+
+-- b11906 server.cpp health registration 171-172 --
+171:     ctx_http.get ("/health",                   ex_wrapper(routes.get_health)); // public endpoint (no API key check)
+172:     ctx_http.get ("/v1/health",                ex_wrapper(routes.get_health)); // public endpoint (no API key check)
+
+-- b11906 server.cpp role dispatch 718-721 --
+718:     switch (role_type) {
+719:         case SERVER_ROLE_DOWNLOAD: return server_run_download(params, role);
+720:         case SERVER_ROLE_ROUTER:   return server_run_router(params, argc, argv, opts);
+721:         case SERVER_ROLE_INSTANCE: return server_run_instance(params, role, models_handler, opts);
+722:     }

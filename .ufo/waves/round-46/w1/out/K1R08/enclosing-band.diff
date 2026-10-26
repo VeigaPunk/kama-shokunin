@@ -1,0 +1,23 @@
+## pin..b11906 band diff server-context.cpp pin 3560-3670 / rel 3853-3963
+--- pin3560-3670
++++ rel3853-3963
+@@ -28,3 +28,3 @@
+ 
+-                if (!slot.is_processing()) {
++                if (!slot.is_processing() || slot.task->type == SERVER_TASK_TYPE_TTS) {
+                     return;
+@@ -40,2 +40,7 @@
+                     SLT_DBG(slot, "%s", "waiting for parent slot to complete\n");
++                    return;
++                }
++
++                // no prompt, the rows come from the audio stream
++                if (slot.task->type == SERVER_TASK_TYPE_TRANSCRIBE_RT) {
+                     return;
+@@ -106,6 +111 @@
+                             if (slot.task->n_tokens() > slot.n_ctx) {
+-                                send_error(
+-                                    slot,
+-                                    string_format(
+-                                        "input (%d tokens) is larger than the max context size (%d tokens). skipping",
+-                                        slot.task->n_tokens(), slot.n_ctx),

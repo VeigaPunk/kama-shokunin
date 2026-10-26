@@ -1,0 +1,285 @@
+
+########## common/arg.cpp @ b11906
+--- 1413-1414
+1413	    } else if (ex == LLAMA_EXAMPLE_SERVER) {
+1414	        params.n_parallel = -1;     // auto by default
+--- 1649-1667
+1649	    add_opt(common_arg(
+1650	        {"-c", "--ctx-size"}, "N",
+1651	        string_format("size of the prompt context (default: %d, 0 = loaded from model)", params.n_ctx),
+1652	        [](common_params & params, int value) {
+1653	            params.n_ctx = value;
+1654	            if (value == 0) {
+1655	                // disable context reduction in llama_params_fit if the user explicitly requests the full context size:
+1656	                params.fit_params_min_ctx = UINT32_MAX;
+1657	            }
+1658	        }
+1659	    ).set_env("LLAMA_ARG_CTX_SIZE"));
+1660	    add_opt(common_arg(
+1661	        { "--kv-unified-per-slot" }, "N",
+1662	        "context limit per parallel slot (default: unset, behavior unchanged).\n"
+1663	        "when set without -c/--ctx-size, the shared KV pool is sized to n_parallel*N",
+1664	        [](common_params & params, int value) {
+1665	            params.kv_unified_per_slot = value;
+1666	        }
+1667	    ).set_env("LLAMA_ARG_KV_UNIFIED_PER_SLOT").set_examples({ LLAMA_EXAMPLE_SERVER }));
+--- 1735-1742
+1735	    add_opt(common_arg(
+1736	        {"-kvu", "--kv-unified"},
+1737	        {"-no-kvu", "--no-kv-unified"},
+1738	        "use single unified KV buffer shared across all sequences (default: enabled if number of slots is auto)",
+1739	        [](common_params & params, bool value) {
+1740	            params.kv_unified = value;
+1741	        }
+1742	    ).set_env("LLAMA_ARG_KV_UNIFIED").set_examples({LLAMA_EXAMPLE_SERVER, LLAMA_EXAMPLE_PERPLEXITY, LLAMA_EXAMPLE_BATCHED, LLAMA_EXAMPLE_BENCH, LLAMA_EXAMPLE_PARALLEL, LLAMA_EXAMPLE_SPECULATIVE}));
+--- 2553-2564
+2553	    if (ex == LLAMA_EXAMPLE_SERVER) {
+2554	        // this is to make sure this option appears in the server-specific section of the help message
+2555	        add_opt(common_arg(
+2556	            {"-np", "--parallel"}, "N",
+2557	            string_format("number of server slots (default: %d, -1 = auto)", params.n_parallel),
+2558	            [](common_params & params, int value) {
+2559	                if (value == 0) {
+2560	                    throw std::invalid_argument("error: invalid value for n_parallel\n");
+2561	                }
+2562	                params.n_parallel = value;
+2563	            }
+2564	        ).set_env("LLAMA_ARG_N_PARALLEL").set_examples({LLAMA_EXAMPLE_SERVER}));
+--- 2889-2902
+2889	    add_opt(common_arg(
+2890	        { "-fit", "--fit" }, "[on|off]",
+2891	        string_format("whether to adjust unset arguments to fit in device memory ('on' or 'off', default: '%s')", params.fit_params ? "on" : "off"),
+2892	        [](common_params & params, const std::string & value) {
+2893	            if (is_truthy(value)) {
+2894	                params.fit_params = true;
+2895	            } else if (is_falsey(value)) {
+2896	                params.fit_params = false;
+2897	            } else {
+2898	                throw std::runtime_error(
+2899	                    string_format("error: unknown value for --fit: '%s'\n", value.c_str()));
+2900	            }
+2901	        }
+2902	    ).set_env("LLAMA_ARG_FIT"));
+--- 2942-2948
+2942	    add_opt(common_arg(
+2943	        { "-fitc", "--fit-ctx" }, "N",
+2944	        string_format("minimum ctx size that can be set by --fit option, default: %" PRIu32, params.fit_params_min_ctx),
+2945	        [](common_params & params, int value) {
+2946	            params.fit_params_min_ctx = value;
+2947	        }
+2948	    ).set_env("LLAMA_ARG_FIT_CTX"));
+
+########## common/common.cpp @ b11906
+--- 1255-1295
+1255	common_init_result::common_init_result(common_params & params, bool model_only) :
+1256	    pimpl(new impl{}) {
+1257	    auto mparams = common_model_params_to_llama(params);
+1258	    auto cparams = common_context_params_to_llama(params);
+1259	
+1260	    if (params.fit_params) {
+1261	        COM_TRC("%s", "fitting params to device memory ...\n");
+1262	        COM_TRC("%s", "(for bugs during this step try to reproduce them with -fit off, or provide --verbose logs if the bug only occurs with -fit on)\n");
+1263	
+1264	        // the draft context is created from the same base params and follows the main context, fit both together
+1265	        const bool has_draft = params.speculative.has_dft();
+1266	        const bool spec_mtp  = std::find(params.speculative.types.begin(), params.speculative.types.end(),
+1267	            COMMON_SPECULATIVE_TYPE_DRAFT_MTP) != params.speculative.types.end();
+1268	
+1269	        common_params params_dft = common_base_params_to_speculative(params);
+1270	
+1271	        auto mparams_dft = common_model_params_to_llama(params_dft);
+1272	        auto cparams_dft = common_context_params_to_llama(params_dft);
+1273	        if (spec_mtp) {
+1274	            cparams_dft.ctx_type = LLAMA_CONTEXT_TYPE_MTP;
+1275	        }
+1276	        cparams_dft.n_rs_seq = 0;
+1277	
+1278	        const common_fit_extra_model extra = {
+1279	            /*.path_model   =*/ params_dft.model.path.c_str(),
+1280	            /*.mparams      =*/ &mparams_dft,
+1281	            /*.cparams      =*/ &cparams_dft,
+1282	            /*.shares_model =*/ !has_draft, // an MTP context runs on the weights of the main model
+1283	        };
+1284	
+1285	        common_fit_params(params.model.path.c_str(), &mparams, &cparams,
+1286	            params.tensor_split,
+1287	            params.tensor_buft_overrides.data(),
+1288	            params.fit_params_target.data(),
+1289	            params.fit_params_min_ctx,
+1290	            has_draft || spec_mtp ? &extra : nullptr,
+1291	            params.verbosity >= LOG_LEVEL_DEBUG ? GGML_LOG_LEVEL_DEBUG : GGML_LOG_LEVEL_ERROR);
+1292	    }
+1293	
+1294	    llama_model * model = llama_model_load_from_file(params.model.path.c_str(), mparams);
+1295	    if (model == NULL) {
+--- 1433-1440
+1433	common_init_result_ptr common_init_from_params(common_params & params, bool model_only) {
+1434	    common_init_result_ptr res(new common_init_result(params, model_only));
+1435	
+1436	    llama_model * model = res->model();
+1437	    if (model == NULL) {
+1438	        COM_ERR("failed to load model '%s'\n", params.model.path.c_str());
+1439	        return res;
+1440	    }
+
+########## src/llama-kv-cache.cpp @ b11906
+--- 142-145
+142	    v_cells.resize(n_stream);
+143	    for (uint32_t s = 0; s < n_stream; ++s) {
+144	        v_cells[s].resize(kv_size);
+145	    }
+--- 233-234
+233	        ggml_tensor * k = has_k ? ggml_new_tensor_3d(ctx, type_k, n_embd_k_gqa, kv_size, n_stream) : nullptr;
+234	        ggml_tensor * v = has_v ? ggml_new_tensor_3d(ctx, type_v, n_embd_v_gqa, kv_size, n_stream) : nullptr;
+--- 301-304
+301	        LLAMA_LOG_INFO("%s: size = %7.2f MiB (%6u cells, %3d layers, %2u/%u seqs), K (%s): %7.2f MiB, V (%s): %7.2f MiB\n", __func__,
+302	                (float)(memory_size_k + memory_size_v) / (1024.0f * 1024.0f), kv_size, (int) layers.size(), n_seq_max, n_stream,
+303	                ggml_type_name(type_k), (float)memory_size_k / (1024.0f * 1024.0f),
+304	                ggml_type_name(type_v), (float)memory_size_v / (1024.0f * 1024.0f));
+--- 1222-1234
+1222	uint32_t llama_kv_cache::get_size() const {
+1223	    const auto & cells = v_cells[seq_to_stream[0]];
+1224	
+1225	    return cells.size();
+1226	}
+1227	
+1228	uint32_t llama_kv_cache::get_n_seq_max() const {
+1229	    return n_seq_max;
+1230	}
+1231	
+1232	uint32_t llama_kv_cache::get_n_stream() const {
+1233	    return n_stream;
+1234	}
+
+########## ggml/src/gguf.cpp @ b11906
+--- 1017-1022
+1017	struct gguf_context * gguf_init_from_file(const char * fname, struct gguf_init_params params) {
+1018	    FILE * file = ggml_fopen(fname, "rb");
+1019	
+1020	    if (!file) {
+1021	        GGML_LOG_ERROR("%s: failed to open GGUF file '%s' (%s)\n", __func__, fname, strerror(errno));
+1022	        return nullptr;
+
+########## src/llama-context.cpp @ b11906
+--- 2642-2642
+2642	    GGML_ASSERT(n_outputs >= 1);
+--- 225-225
+225	    cparams.n_ctx            = params.n_ctx           == 0    ? hparams.n_ctx_train           : params.n_ctx;
+--- 387-403
+387	    cparams.n_ctx = GGML_PAD(cparams.n_ctx, 256);
+388	
+389	    if (cparams.kv_unified) {
+390	        cparams.n_ctx_seq = cparams.n_ctx;
+391	    } else {
+392	        cparams.n_ctx_seq = cparams.n_ctx / cparams.n_seq_max;
+393	        cparams.n_ctx_seq = GGML_PAD(cparams.n_ctx_seq, 256);
+394	
+395	        if (cparams.n_ctx_seq == 0) {
+396	            throw std::runtime_error("n_ctx_seq == 0");
+397	        }
+398	
+399	        if (cparams.n_ctx != cparams.n_ctx_seq * cparams.n_seq_max) {
+400	            cparams.n_ctx =  cparams.n_ctx_seq * cparams.n_seq_max;
+401	            LLAMA_LOG_WARN("%s: n_ctx is not divisible by n_seq_max - rounding down to %u\n", __func__, cparams.n_ctx);
+402	        }
+403	    }
+--- 419-427
+419	    if (cparams.n_ctx_seq < hparams.n_ctx_train) {
+420	        LLAMA_LOG_INFO("%s: n_ctx_seq (%u) < n_ctx_train (%u) -- the full capacity of the model will not be utilized\n",
+421	                __func__, cparams.n_ctx_seq, hparams.n_ctx_train);
+422	    }
+423	
+424	    if (cparams.n_ctx_seq > hparams.n_ctx_train) {
+425	        LLAMA_LOG_WARN("%s: n_ctx_seq (%u) > n_ctx_train (%u) -- possible training context overflow\n",
+426	                __func__, cparams.n_ctx_seq, hparams.n_ctx_train);
+427	    }
+
+########## tools/server/server-common.cpp @ b11906
+--- 1287-1290
+1287	        } else if (type == "input_audio") {
+1288	            if (!opt.allow_audio) {
+1289	                throw std::runtime_error("audio input is not supported - hint: if this is unexpected, you may need to provide the mmproj");
+1290	            }
+--- 1375-1379
+1375	    auto json_schema = json_value(body, "json_schema", json());
+1376	    auto grammar = json_value(body, "grammar", std::string());
+1377	    if (!json_schema.is_null() && !grammar.empty()) {
+1378	        throw std::runtime_error("Cannot use both json_schema and grammar");
+1379	    }
+--- 1381-1395
+1381	    // Handle "response_format" field
+1382	    if (body.contains("response_format")) {
+1383	        json response_format      = json_value(body, "response_format", json::object());
+1384	        std::string response_type = json_value(response_format, "type", std::string());
+1385	        if (response_type == "json_object") {
+1386	            if (response_format.contains("schema") || json_schema.empty()) {
+1387	                json_schema = json_value(response_format, "schema", json::object());
+1388	            }
+1389	        } else if (response_type == "json_schema") {
+1390	            auto schema_wrapper = json_value(response_format, "json_schema", json::object());
+1391	            json_schema = json_value(schema_wrapper, "schema", json::object());
+1392	        } else if (!response_type.empty() && response_type != "text") {
+1393	            throw std::invalid_argument("response_format type must be one of \"text\" or \"json_object\", but got: " + response_type);
+1394	        }
+1395	    }
+
+########## tools/server/server-schema.cpp @ b11906
+--- 42-43
+42	    add((new field_num("sse_ping_interval", params.sse_ping_interval))
+43	        ->set_hard_limits(-1, INT32_MAX)
+
+########## tools/server/README.md @ b11906
+--- 50-50
+50	| `-c, --ctx-size N` | size of the prompt context (default: 0, 0 = loaded from model)<br/>(env: LLAMA_ARG_CTX_SIZE) |
+--- 165-169
+165	| `--kv-unified-per-slot N` | context limit per parallel slot (default: unset, behavior unchanged).<br/>when set without -c/--ctx-size, the shared KV pool is sized to n_parallel*N<br/>(env: LLAMA_ARG_KV_UNIFIED_PER_SLOT) |
+166	| `-ctxcp, --ctx-checkpoints, --swa-checkpoints N` | max number of context checkpoints to create per slot (default: 32)[(more info)](https://github.com/ggml-org/llama.cpp/pull/15293)<br/>(env: LLAMA_ARG_CTX_CHECKPOINTS) |
+167	| `-cms, --checkpoint-min-step N` | minimum spacing between context checkpoints in tokens (default: 8192, 0 = no minimum)<br/>(env: LLAMA_ARG_CHECKPOINT_MIN_SPACING_NT) |
+168	| `-cram, --cache-ram N` | set the maximum cache size in MiB (default: 8192, 0 for decision models, -1 - no limit, 0 - disable)[(more info)](https://github.com/ggml-org/llama.cpp/pull/16391)<br/>(env: LLAMA_ARG_CACHE_RAM) |
+169	| `-kvu, --kv-unified, -no-kvu, --no-kv-unified` | use single unified KV buffer shared across all sequences (default: enabled if number of slots is auto)<br/>(env: LLAMA_ARG_KV_UNIFIED) |
+--- 177-177
+177	| `-np, --parallel N` | number of server slots (default: -1, -1 = auto)<br/>(env: LLAMA_ARG_N_PARALLEL) |
+--- 671-671
+671	- `generation_settings`: The provided options above excluding `prompt` but including `n_ctx`, `model`. These options may differ from the original ones in some way (e.g. bad values filtered out, strings converted to tokens, etc.).
+--- 683-683
+683	- `truncated`: Boolean indicating if the context size was exceeded during generation, i.e. the number of tokens provided in the prompt (`tokens_evaluated`) plus tokens generated (`tokens predicted`) exceeded the context size (`n_ctx`)
+--- 927-928
+927	### **GET** `/props`: Get server global properties.
+928	
+--- 1015-1016
+1015	- `default_generation_settings` - the default generation settings for the `/completion` endpoint, which has the same fields as the `generation_settings` response object from the `/completion` endpoint.
+1016	- `total_slots` - the total number of slots for process requests (defined by `--parallel` option)
+--- 1071-1075
+1071	### GET `/slots`: Returns the current slots processing state
+1072	
+1073	This endpoint is enabled by default and can be disabled with `--no-slots`. It can be used to query various per-slot metrics, such as speed, processed tokens, sampling parameters, etc.
+1074	
+1075	If query param `?fail_on_no_slot=1` is set, this endpoint will respond with status code 503 if there is no available slots.
+--- 1219-1243
+1219	### GET `/metrics`: Prometheus compatible metrics exporter
+1220	
+1221	This endpoint is only accessible if `--metrics` is set.
+1222	
+1223	In *router mode* the query param `?model={model_id}` has to be set. This endpoint will respond with status code 400 `model name is missing from the request` if not set.
+1224	
+1225	#### Available metrics
+1226	
+1227	| Metric | Type | Description |
+1228	| ------ | ---------------------- | ----------- |
+1229	| `llamacpp:prompt_tokens_total` | Counter | Number of prompt tokens processed. |
+1230	| `llamacpp:prompt_seconds_total` | Counter | Prompt process time in seconds. |
+1231	| `llamacpp:prompt_tokens_seconds` | Gauge | Average prompt throughput in tokens/s. |
+1232	| `llamacpp:tokens_predicted_total` | Counter | Number of generation tokens processed. |
+1233	| `llamacpp:tokens_predicted_seconds_total` | Counter | Predict process time in seconds. |
+1234	| `llamacpp:predicted_tokens_seconds` | Gauge | Average generation throughput in tokens/s. |
+1235	| `llamacpp:requests_processing` | Gauge | Number of requests processing. |
+1236	| `llamacpp:requests_deferred` | Gauge | Number of requests deferred. |
+1237	| `llamacpp:n_tokens_max` | Counter | High watermark of the context size observed. |
+1238	| `llamacpp:n_decode_total` | Counter | Total Number of llama_decode() calls. |
+1239	| `llamacpp:n_busy_slots_per_decode` | Gauge | Average number of busy slots per llama_decode() call. |
+1240	| `llamacpp:spec_decode_num_draft_tokens_total` | Counter | Total draft tokens generated (0 when spec-decode is off). |
+1241	| `llamacpp:spec_decode_num_accepted_tokens_total` | Counter | Total draft tokens accepted by the target model (0 when spec-decode is off). |
+1242	| `llamacpp:spec_decode_num_drafts_total` | Counter | Total speculative decoding verification steps (0 when spec-decode is off). |
+1243	| `llamacpp:spec_decode_num_accepted_tokens_per_pos_total` | Counter | Accepted tokens per draft position (labeled `position="N"`; absent when spec-decode is off or before the first completed speculative request). |
+--- 1393-1393
+1393	                "n_ctx_train": 131072,

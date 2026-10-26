@@ -1,0 +1,134 @@
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -21,14 +21,14 @@
+                    <file> holds every deleted line text again, else null
+ 
+ Usage:
+-  append-only-audit.py --repo DIR [--to REV] [--threshold N] [--files a,b,...] [--json]
+-  append-only-audit.py --selftest [--scratch DIR]
++  append-only-audit.py --repo DIR [--to REV] [--threshold N] [--json]
++  append-only-audit.py --selftest
+ Output: text lines `event <commit12> <file> deleted=N restored_at_tip=K status=S
+ restored_by=<commit12|->` then `summary commits=C events=E restored=R partial=P
+ unrestored=U`; --json prints {"to", "threshold", "files", "commits", "events": [...],
+ "summary": {...}} with full commit ids.
+ Exit: 0 no event partial or unrestored; 1 at least one; 2 could not evaluate.
+-Fixtures (selftest) live under --scratch or $TMPDIR and are removed on exit.
++Fixtures (selftest) live under $TMPDIR and are removed on exit.
+ """
+ from __future__ import annotations
+ 
+@@ -78,24 +78,23 @@
+         return self._blob_lines[blob]
+ 
+ 
+-def audit(repo_path, to="HEAD", threshold=20, files=None):
+-    files = files or FILES
++def audit(repo_path, to="HEAD", threshold=20):
+     r = Repo(repo_path)
+     to_full = _git(repo_path, "rev-parse", "--verify", to + "^{commit}").strip()
+-    commits = _git(repo_path, "rev-list", "--topo-order", "--reverse", to_full).split()
+-    parents = {}
++    commits, parents = [], {}
+     for line in _git(repo_path, "rev-list", "--topo-order", "--reverse", "--parents", to_full).split("\n"):
+         parts = line.split()
+         if parts:
++            commits.append(parts[0])
+             parents[parts[0]] = parts[1] if len(parts) > 1 else None
+-    tip_blobs = r.blobs([f"{to_full}:{f}" for f in files])
++    tip_blobs = r.blobs([f"{to_full}:{f}" for f in FILES])
+     events = []
+     for i, c in enumerate(commits):
+         p = parents.get(c)
+         if p is None:
+             continue
+-        changed = set(_git(repo_path, "diff", "--no-renames", "--name-only", p, c, "--", *files).split("\n")) - {""}
+-        for f in files:
++        changed = set(_git(repo_path, "diff", "--no-renames", "--name-only", p, c, "--", *FILES).split("\n")) - {""}
++        for f in FILES:
+             if f not in changed:
+                 continue
+             d = _git(repo_path, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", p, c, "--", f)
+@@ -119,7 +118,7 @@
+                "restored": sum(e["status"] == "restored" for e in events),
+                "partial": sum(e["status"] == "partial" for e in events),
+                "unrestored": sum(e["status"] == "unrestored" for e in events)}
+-    return {"to": to_full, "threshold": threshold, "files": files, "commits": len(commits),
++    return {"to": to_full, "threshold": threshold, "files": FILES, "commits": len(commits),
+             "events": events, "summary": summary}
+ 
+ 
+@@ -258,18 +257,16 @@
+         f = Fixture(root)
+         a = lines("a", 40)
+         f.commit({"LOG.md": a})
+-        base = _git(f.d, "rev-parse", "HEAD").strip()
+         _git(f.d, "checkout", "-q", "-b", "side")
+         f.commit({"LOG.md": a[:10]})                  # side deletes 30
+         _git(f.d, "checkout", "-q", "-")
+-        main_c = f.commit({"LOG.md": a + ["main"]})
++        f.commit({"LOG.md": a + ["main"]})
+         _git(f.d, *Fixture.IDENT, "merge", "-q", "-s", "ours", "--no-edit", "side")
+         m = _git(f.d, "rev-parse", "HEAD").strip()
+         res = audit(f.d, m)
+         e = res["events"]
+         # the side commit is an event; the merge (first parent = main) deletes nothing
+-        ok = (len(e) == 1 and e[0]["commit"] != m and e[0]["deleted"] == 30 and e[0]["status"] == "restored"
+-              and base != main_c)
++        ok = (len(e) == 1 and e[0]["commit"] != m and e[0]["deleted"] == 30 and e[0]["status"] == "restored")
+         return ok, str(e)
+ 
+     def t_threshold_flag():
+@@ -297,13 +294,11 @@
+     ap.add_argument("--repo", default=".")
+     ap.add_argument("--to", default="HEAD")
+     ap.add_argument("--threshold", type=int, default=20)
+-    ap.add_argument("--files", help="comma list of repo-relative paths (default: the five declared files)")
+     ap.add_argument("--json", action="store_true")
+     ap.add_argument("--selftest", action="store_true")
+-    ap.add_argument("--scratch", help="fixture root for --selftest (default $TMPDIR)")
+     a = ap.parse_args(argv)
+     if a.selftest:
+-        root = tempfile.mkdtemp(prefix="aoa-", dir=a.scratch or tempfile.gettempdir())
++        root = tempfile.mkdtemp(prefix="aoa-", dir=tempfile.gettempdir())
+         try:
+             return selftest(root)
+         finally:
+@@ -311,9 +306,8 @@
+     if a.threshold < 1:
+         print("could-not-evaluate: --threshold must be >= 1", file=sys.stderr)
+         return 2
+-    files = [x.strip() for x in a.files.split(",") if x.strip()] if a.files else None
+     try:
+-        res = audit(a.repo, a.to, a.threshold, files)
++        res = audit(a.repo, a.to, a.threshold)
+     except AuditError as e:
+         print(f"could-not-evaluate: {e}", file=sys.stderr)
+         return 2
+--- a/.ufo/waves/round-46/tools/check-fragment.py
++++ b/.ufo/waves/round-46/tools/check-fragment.py
+@@ -52,8 +52,10 @@
+         if not fr or fr[0] != HEADER:
+             print("fragment header differs from the ledger header:\n" + HEADER)
+             return 2
+-        ids = [x.split("\t")[0] for x in fr[1:]]
+-        verdict = {x.split("\t")[0]: (x.split("\t")[11] if len(x.split("\t")) > 11 else "?") for x in fr[1:]}
++        verdict = {}
++        for x in fr[1:]:
++            r = x.split("\t")
++            verdict[r[0]] = r[11] if len(r) > 11 else "?"
+         os.makedirs(os.path.dirname(os.path.join(d, LEDGER)), exist_ok=True)
+         open(os.path.join(d, LEDGER), "w").write("\n".join(fr) + "\n")
+         subprocess.run(["git", "-C", d, "add", "-A"], check=True)
+@@ -67,9 +69,9 @@
+         if p.returncode == 2:
+             print("counter could not evaluate:", p.stderr.strip()[:300])
+             return 2
+-        for i in ids:
++        for i in verdict:
+             hits = [x for x in lines if x.startswith(f"detail: {i} ")]
+-            print("\n".join(hits) if hits else f"VALID {i} {verdict.get(i)}")
++            print("\n".join(hits) if hits else f"VALID {i} {verdict[i]}")
+         bad = ["bad ledger line", "ledger header mismatch"]
+         for x in lines:
+             if any(b in x for b in bad):

@@ -1,0 +1,80 @@
+[
+ {
+  "step": "release metadata",
+  "cmd": "gh api repos/ggml-org/llama.cpp/releases/tags/b11906 > release-b11906.json",
+  "exit": 0,
+  "observed": "asset llama-b11906-bin-ubuntu-x64.tar.gz size 22478121 digest sha256:064ade62...eeef3; target_commitish 4d71b42fd87db24b8b7c808c151b713aa4459cfd; published 2026-10-26T19:45:36Z"
+ },
+ {
+  "step": "asset download",
+  "cmd": "curl -fL --retry 3 -o llama-b11906-bin-ubuntu-x64.tar.gz https://github.com/ggml-org/llama.cpp/releases/download/b11906/llama-b11906-bin-ubuntu-x64.tar.gz",
+  "exit": 0
+ },
+ {
+  "step": "asset digest",
+  "cmd": "sha256sum llama-b11906-bin-ubuntu-x64.tar.gz",
+  "exit": 0,
+  "observed": "064ade6220799fd9e7b1804b574f5f92c38dde358cc987c6b8283cfaeb1eeef3 == release digest"
+ },
+ {
+  "step": "extract",
+  "cmd": "tar -xzf llama-b11906-bin-ubuntu-x64.tar.gz -C extract",
+  "exit": 0,
+  "observed": "single dir llama-b11906/"
+ },
+ {
+  "step": "install",
+  "cmd": "cp -a extract/llama-b11906/. /home/vgpnk/.local/opt/llama-b11906/",
+  "exit": 0
+ },
+ {
+  "step": "server identity",
+  "cmd": "sha256sum /home/vgpnk/.local/opt/llama-b11906/llama-server",
+  "exit": 0,
+  "observed": "c949950ee76bf84e0dc8f537a98a2c702169f09b5a061c27c87edff753fac3ff"
+ },
+ {
+  "step": "server version",
+  "cmd": "/home/vgpnk/.local/opt/llama-b11906/llama-server --version",
+  "exit": 0,
+  "observed": "version: 0.7.0-dev (build 11906, commit 4d71b42fd)"
+ },
+ {
+  "step": "model dir",
+  "cmd": "mkdir -p /home/vgpnk/.cache/kama-shokunin/models",
+  "exit": 0,
+  "observed": "directory absent before this seat"
+ },
+ {
+  "step": "model fetch",
+  "cmd": "curl -fL --retry 3 -o stories260K.gguf.part https://huggingface.co/ggml-org/models-moved/resolve/main/tinyllamas/stories260K.gguf",
+  "exit": 0
+ },
+ {
+  "step": "model digest",
+  "cmd": "sha256sum stories260K.gguf.part",
+  "exit": 0,
+  "observed": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d == expected; 1185376 bytes"
+ },
+ {
+  "step": "live run 1",
+  "cmd": "TMPDIR=$S python3 tools/kama-llamacpp-live.py --server /home/vgpnk/.local/opt/llama-b11906/llama-server --model /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf --model-sha256 270cba...256d --alias kama-r46-live --ctx 256 --threads 1 --out .ufo/waves/round-46/c1/live/receipt-1.json",
+  "exit": 0
+ },
+ {
+  "step": "live run 2",
+  "cmd": "same as run 1 --out receipt-2.json",
+  "exit": 0
+ },
+ {
+  "step": "live run 3",
+  "cmd": "same as run 1 --out receipt-3.json",
+  "exit": 0
+ },
+ {
+  "step": "post-run hygiene",
+  "cmd": "pgrep -af llama-server ; for p in 33179 46073 44923; do (exec 3<>/dev/tcp/127.0.0.1/$p); done",
+  "exit": 1,
+  "observed": "no llama-server process remains; all three ports refuse"
+ }
+]

@@ -1,0 +1,4 @@
+# U1DiffCtx report
+Verdict: server-context.cpp has exactly one commit b11889->b11906 (c6fb3b5be, mtmd capabilities cache; 6 hunks, net +3); no hunk touches any anchored range of S042 S060 S109 S114-S125 S133 S138 - all 17 rows' ranges are text-equal at b11906 shifted +3; S125's b11889 note wording (allow_audio expression, line 1709) is stale (now `mtmd_cap.audio` at 1712).
+Full evidence, hunk table with old/new line numbers, per-row shifted ranges, and findings (S037/S043/S108 are server.cpp, byte-identical; S479 in server-models.cpp is comment-only changed at 536, omitted from the brief's 20-row list): /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-46/w1/out/U1DiffCtx/map.md
+Raw diffs: same dir, server-context.diff, server-models.diff, mtmd-helper.diff. No tools installed; scratch removed.

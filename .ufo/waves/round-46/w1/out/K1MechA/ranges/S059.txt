@@ -1,0 +1,50 @@
+### S059 gguf-py/gguf/gguf_reader.py release range 116-164 (file has 390 lines)
+116: class GGUFReader:
+117:     # I - same as host, S - swapped
+118:     byte_order: Literal['I', 'S'] = 'I'
+119:     alignment: int = GGUF_DEFAULT_ALIGNMENT
+120:     data_offset: int
+121: 
+122:     # Note: Internal helper, API may change.
+123:     gguf_scalar_to_np: dict[GGUFValueType, type[np.generic]] = {
+124:         GGUFValueType.UINT8:   np.uint8,
+125:         GGUFValueType.INT8:    np.int8,
+126:         GGUFValueType.UINT16:  np.uint16,
+127:         GGUFValueType.INT16:   np.int16,
+128:         GGUFValueType.UINT32:  np.uint32,
+129:         GGUFValueType.INT32:   np.int32,
+130:         GGUFValueType.FLOAT32: np.float32,
+131:         GGUFValueType.UINT64:  np.uint64,
+132:         GGUFValueType.INT64:   np.int64,
+133:         GGUFValueType.FLOAT64: np.float64,
+134:         GGUFValueType.BOOL:    np.bool_,
+135:     }
+136: 
+137:     def __init__(self, path: os.PathLike[str] | str, mode: Literal['r', 'r+', 'c'] = 'r'):
+138:         self.data = np.memmap(path, mode = mode)
+139:         offs = 0
+140: 
+141:         # Check for GGUF magic
+142:         if self._get(offs, np.uint32, override_order = '<')[0] != GGUF_MAGIC:
+143:             raise ValueError('GGUF magic invalid')
+144:         offs += 4
+145: 
+146:         # Check GGUF version
+147:         temp_version = self._get(offs, np.uint32)
+148:         if temp_version[0] & 65535 == 0:
+149:             # If we get 0 here that means it's (probably) a GGUF file created for
+150:             # the opposite byte order of the machine this script is running on.
+151:             self.byte_order = 'S'
+152:             temp_version = temp_version.view(temp_version.dtype.newbyteorder(self.byte_order))
+153:         version = temp_version[0]
+154:         if version not in READER_SUPPORTED_VERSIONS:
+155:             raise ValueError(f'Sorry, file appears to be version {version} which we cannot handle')
+156:         if sys.byteorder == "little":
+157:             # Host is little endian
+158:             host_endian = GGUFEndian.LITTLE
+159:             swapped_endian = GGUFEndian.BIG
+160:         else:
+161:             # Sorry PDP or other weird systems that don't use BE or LE.
+162:             host_endian = GGUFEndian.BIG
+163:             swapped_endian = GGUFEndian.LITTLE
+164:         self.endianess = swapped_endian if self.byte_order == "S" else host_endian

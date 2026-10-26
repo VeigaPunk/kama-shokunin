@@ -1,0 +1,35 @@
+usage: kama-llamacpp-live.py [-h] [--server SERVER] [--model MODEL]
+                             [--model-sha256 MODEL_SHA256]
+                             [--model-url MODEL_URL] [--alias ALIAS]
+                             [--probe PROBE] [--ctx CTX] [--threads THREADS]
+                             [--ready-timeout READY_TIMEOUT] [--out OUT]
+                             [--port PORT] [--selftest]
+
+Launch an ephemeral llama-server on a free unregistered loopback port, capture
+its lifecycle, probe it with kama-probe.sh, tear it down, and emit a kama-
+llamacpp-live/v3 receipt.
+
+options:
+  -h, --help            show this help message and exit
+  --server SERVER       llama-server binary (default: shutil.which("llama-
+                        server")); realpath+sha256 recorded
+  --model MODEL         GGUF path
+  --model-sha256 MODEL_SHA256
+                        expected hex sha256 of --model; mismatch -> exit 2
+  --model-url MODEL_URL
+                        provenance URL recorded as model.url; when --model is
+                        missing, fetches it there and verifies --model-sha256
+                        (64 hex) before use. http(s) or file; never fetched
+                        without the pin
+  --alias ALIAS         --alias passed to llama-server
+  --probe PROBE         kama-probe.sh path
+  --ctx CTX             -c ctx size
+  --threads THREADS     -t threads
+  --ready-timeout READY_TIMEOUT
+                        seconds to wait for /health == 200
+  --out OUT             receipt path (default: stdout)
+  --port PORT           explicit port instead of bind(:0); still refused when
+                        it is a registered consumer port (8080, 34113, any
+                        port in registry/endpoint-consumers.tsv) or already
+                        listening
+  --selftest            run parser and outcome self-tests without a server

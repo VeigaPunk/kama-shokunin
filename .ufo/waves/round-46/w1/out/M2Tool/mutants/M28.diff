@@ -1,0 +1,16 @@
+--- /fast/scratch/hyaku/kama-r46/M2Tool/pristine.py	2026-10-26 17:03:21.019295166 -0300
++++ /fast/scratch/hyaku/kama-r46/M2Tool/mut/M28.py	2026-10-26 17:18:40.133208171 -0300
+@@ -94,11 +94,11 @@
+         p = parents.get(c)
+         if p is None:
+             continue
+-        changed = set(_git(repo_path, "diff", "--no-renames", "--name-only", p, c, "--", *files).split("\n")) - {""}
++        changed = set(_git(repo_path, "diff", "--name-only", p, c, "--", *files).split("\n")) - {""}
+         for f in files:
+             if f not in changed:
+                 continue
+-            d = _git(repo_path, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", p, c, "--", f)
++            d = _git(repo_path, "diff", "--no-color", "--no-ext-diff", "-U0", p, c, "--", f)
+             dele = [x[1:] for x in d.split("\n") if x.startswith("-") and not x.startswith("---")]
+             if len(dele) < threshold:
+                 continue

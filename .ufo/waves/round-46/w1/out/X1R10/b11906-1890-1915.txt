@@ -1,0 +1,26 @@
+  1890	    bool try_clear_idle_slots() {
+  1891	        bool res = false;
+  1892	
+  1893	        if (!params_base.kv_unified) {
+  1894	            return res;
+  1895	        }
+  1896	
+  1897	        for (auto & slot : slots) {
+  1898	            if (slot.is_processing()) {
+  1899	                continue;
+  1900	            }
+  1901	
+  1902	            if (slot.prompt.n_tokens() > 0) {
+  1903	                SRV_WRN("purging slot %d with %zu tokens\n", slot.id, slot.prompt.tokens.size());
+  1904	
+  1905	                slot.prompt_clear();
+  1906	
+  1907	                res = true;
+  1908	
+  1909	                // clear slots one by one
+  1910	                break;
+  1911	            }
+  1912	        }
+  1913	
+  1914	        return res;
+  1915	    }

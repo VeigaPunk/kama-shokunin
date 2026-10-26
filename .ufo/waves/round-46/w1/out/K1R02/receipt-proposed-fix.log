@@ -1,0 +1,11 @@
+# proposed-fix verification: tools/round46-release-recheck-audit.py patched copy at /fast/scratch/hyaku/kama-r46/K1R02/counter-proposed.py
+# diff = proposed-counter-fix.diff (NOT applied to the lane)
+# fixture D=/fast/scratch/hyaku/kama-r46/K1R02/fix2, isolation checked (git -C D rev-parse --show-toplevel == D)
+# command: python3 counter-proposed.py --repo $D --tip $TIP --upstream /fast/scratch/hyaku/kama-r46/L1/llama.git
+fragment.tsv                     -> valid=2 reworded=1 holds=1  (both honest rows still VALID)
+strengthened-S060.tsv            -> valid=1 holds=1              (4-element S060 still VALID)
+attack1-unbound-pairing.tsv      -> valid=0 detail: S043 invalid: non-equal pair scores pin text that survives unchanged at the release
+attack3-false-note.tsv           -> valid=0 detail: S043 invalid: non-equal pair scores pin text that survives unchanged at the release
+attack2-label-substitution.tsv   -> valid=1 drifted=1 flags_missing=2  (residual: label swap still accepted, but the flag legs fire)
+control-stale-ranges.tsv         -> valid=0 rejected
+control-duplicate-range.tsv      -> valid=0 rejected

@@ -1,0 +1,9 @@
+case: merge-all-parents-strong (prefilter + -U0 union) on conflict merge
+fixture: c0 base40; side=base[:30] (10 del); main=base[:10]+extra15 (30 del); merge resolved to base[:25]
+args: --repo <fixture> --to <merge> --json
+
+pristine rc=1 events=[('86c671', 'LOG.md', 30, 15, 'partial', '-')] summary={'commits': 4, 'events': 1, 'restored': 0, 'partial': 1, 'unrestored': 0} err=''
+M10b    rc=1 events=[('86c671', 'LOG.md', 30, 15, 'partial', '-'), ('d0b876', 'LOG.md', 20, 0, 'unrestored', '-')] summary={'commits': 4, 'events': 2, 'restored': 0, 'partial': 1, 'unrestored': 1} err=''
+
+diverges: True (mutant adds a spurious event at the merge commit: deleted=20 = union of
+5 first-parent deletions + 15 second-parent deletions; contract says first parent only)

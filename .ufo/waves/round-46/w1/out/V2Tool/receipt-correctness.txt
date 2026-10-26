@@ -1,0 +1,17 @@
+V2Tool correctness probes for tools/append-only-audit.py
+[PASS] P1 path-with-spaces: rc=0 events=[{'commit': '0dd8dc138df97cd959393d52dbb1ef7e363fe08b', 'file': 'my file.md', 'deleted': 30, 'restored_at_tip': 30, 'status': 'restored', 'restored_by': '3f53d14467afc4326bf365d899cd8f68245d748a'}]
+[PASS] P2 missing-paths: removed-at-tip: rc=1 ev=[{'commit': '58db2656056f2b821c1bfc62ab47041ac5de89f5', 'file': 'gone file.md', 'deleted': 30, 'restored_at_tip': 0, 'status': 'unrestored', 'restored_by': None}]; never-existed: rc=0 ev=[]
+[PASS] P3 root-commit: single-commit: rc=0 summary={'commits': 1, 'events': 0, 'restored': 0, 'partial': 0, 'unrestored': 0}; --to root: rc=0 summary={'commits': 1, 'events': 0, 'restored': 0, 'partial': 0, 'unrestored': 0}
+[PASS] P4a merge-deletes-vs-first-parent: parents=['ac121c71', '6c121775', '294fd34c'] events={'294fd34c': (30, 'unrestored'), 'ac121c71': (31, 'unrestored')} rc=1 
+[PASS] P4b octopus-first-parent: parents=['96097ab7', 'ef1cddbf', 'da7c0907', '0f48f17d'] events={'da7c0907': 30, '96097ab7': 30} rc=1 
+[PASS] P5 exit-codes: missing-repo: rc=2(want 2)ok; bad-to: rc=2(want 2)ok; threshold-0: rc=2(want 2)ok; threshold-neg: rc=2(want 2)ok; threshold-notint: rc=2(want 2)ok; event-exit-1: rc=1(want 1)ok; no-event-exit-0: rc=0(want 0)ok
+[PASS] P6a tmpdir/scratch-honored: mkdtemp dir with TMPDIR=/fast/scratch/hyaku/kama-r46/V2Tool/tmpA: ['/fast/scratch/hyaku/kama-r46/V2Tool/tmpA'] (selftest rc=0); with --scratch=/fast/scratch/hyaku/kama-r46/V2Tool/tmpB: ['/fast/scratch/hyaku/kama-r46/V2Tool/tmpB'] (rc=0)
+[PASS] P6b nonexistent-scratch: rc=1 stderr-tail=FileNotFoundError: [Errno 2] No such file or directory: '/fast/scratch/hyaku/kama-r46/V2Tool/nope-nope-nope/aoa-8saikomm' (F1 evidence: traceback instead of clean error; counter does makedirs first)
+[PASS] P6c bad-TMPDIR-falls-back: rc=0 line=AOA_SELFTEST pass=10 fail=0 (gettempdir() falls back to /tmp when TMPDIR is invalid)
+[PASS] P7 json-shape+render: top-keys=ok to-is-tip=ok threshold=ok files-default=ok ev-keys=ok hex40=ok expect-events=ok rc-agrees=ok summary=ok short-to-expands=ok render-format=ok rc=1
+[PASS] P8 files-comma-silent-fallback: --files ',' rc=1 files=['SCORECARD.md', 'LOG.md', 'corpus/QUALITY.md', 'corpus/README.md', 'corpus/SOURCES.md'] events=['LOG.md'] (F3 evidence: empty --files list silently reverts to the five declared files; notes.md losing 30 lines is unaudited)
+[PASS] P9 non-utf8-crash: rc=1 UnicodeDecodeError-in-traceback=True stderr-tail=UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff in position 106: invalid start byte (F2 evidence: exit 1 + traceback; docstring promises exit 2 for could-not-evaluate)
+[PASS] P10a shared-quirk-events: dup-lines restored_at_tip=30 from one occurrence ok; 25 empty lines deleted=restored ok; 30 '--'-prefixed deletions produce NO event (shared '---' exclusion) ok; rc=0 evs={('LOG.md', 30, 30, 'restored', '1323061681ae03f29f94643d3b5bd1fd03df21b7'), ('corpus/README.md', 25, 25, 'restored', '1323061681ae03f29f94643d3b5bd1fd03df21b7')}
+[PASS] P10b counter-agreement: counter legs selftest/fixture/lane=('1', '1', '1') table=0 (1 = tool matches independent recomputation incl. blind random fixture; table=0 expected, no SCORECARD in fixture) rc=1
+[PASS] P11 quote-in-path: rc=0 events=[] (git C-quotes this path in --name-only output; event MISSED - F7 confirmed at L97/L99)
+[PASS] P12 dir-as-files-silent-skip: --files corpus rc=0 events=[] (F7 class: '--files' value matches as a pathspec at L97 but the literal compare at L99 skips it; silent no-audit, rc=0)

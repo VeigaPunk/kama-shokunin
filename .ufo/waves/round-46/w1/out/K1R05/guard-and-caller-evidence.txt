@@ -1,0 +1,57 @@
+## pin: case + preconditions before the throw (3040-3084)
+15:            case SERVER_TASK_TYPE_SLOT_RESTORE:
+18:                    server_slot * slot = get_slot_by_id(id_slot);
+19:                    if (slot == nullptr) {
+20:                        send_error(task, "Invalid slot ID", ERROR_TYPE_INVALID_REQUEST);
+23:                    if (slot->is_processing()) {
+24:                        // if requested slot is unavailable, we defer this task for processing later
+25:                        SRV_DBG("requested slot is unavailable, defer task, id_task = %d\n", task.id);
+26:                        queue_tasks.defer(std::move(task));
+
+## release: case + preconditions before the throw (3192-3236)
+15:            case SERVER_TASK_TYPE_SLOT_RESTORE:
+18:                    server_slot * slot = get_slot_by_id(id_slot);
+19:                    if (slot == nullptr) {
+20:                        send_error(task, "Invalid slot ID", ERROR_TYPE_INVALID_REQUEST);
+23:                    if (slot->is_processing()) {
+24:                        // if requested slot is unavailable, we defer this task for processing later
+25:                        SRV_DBG("requested slot is unavailable, defer task, id_task = %d\n", task.id);
+26:                        queue_tasks.defer(std::move(task));
+
+## pin post_props lambda full (5450-5460)
+
+    this->post_props = [this](const server_http_req &) {
+        auto res = create_response();
+        if (!params.endpoint_props) {
+            res->error(format_error_response("This server does not support changing global properties. Start it with `--props`", ERROR_TYPE_NOT_SUPPORTED));
+            return res;
+        }
+        // update any props here
+
+        res->ok({{ "success", true }});
+        return res;
+    };
+
+
+## release post_props lambda full (5770-5782)
+
+    this->post_props = [this](const server_http_req &) {
+        auto res = create_response();
+        if (!params.endpoint_props) {
+            res->error(format_error_response("This server does not support changing global properties. Start it with `--props`", ERROR_TYPE_NOT_SUPPORTED));
+            return res;
+        }
+        // update any props here
+
+        res->ok({{ "success", true }});
+        return res;
+    };
+
+
+## release catch + 400 for the restore error (3252-3256)
+                    } catch (const std::exception & err) {
+                        slot->prompt_clear();
+                        send_error(task, std::string("Unable to restore slot: ") + err.what(), ERROR_TYPE_INVALID_REQUEST);
+                        break;
+                    }
+

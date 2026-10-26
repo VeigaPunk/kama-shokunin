@@ -1,0 +1,29 @@
+--- a/tools/round46-release-recheck-audit.py
++++ b/tools/round46-release-recheck-audit.py
+@@ -265,7 +265,17 @@
+     if changed != "1":
+         return False, f"{v} needs changed=1"
+     if v == "holds":
++        if len(note) < 40:
++            return False, "note < 40 chars (changed=1 holds must say what was read)"
+         return all(eq), "holds needs every pair text-equal"
++    if v in ("holds-reworded", "drifted"):
++        for p, r in pairs:
++            if r is None:
++                continue
++            ps = {x.strip() for x in ptext[p[0] - 1:p[1]] if len(x.strip()) >= 12}
++            rs = {x.strip() for x in rtext[r[0] - 1:r[1]] if len(x.strip()) >= 12}
++            if not ps & rs:
++                return False, "pair shares no >= 12-char line (detached ranges)"
+     if v in ("holds-reworded", "drifted", "removed"):
+         if len(note) < 40:
+             return False, "note < 40 chars"
+@@ -365,7 +375,7 @@
+                 missing += 1
+                 detail.append(f"{sid} not listed in SOURCES section")
+             for u in [u.strip() for u in pop[sid]["cells"][10].split(",")]:
+-                if not re.fullmatch(r"corpus/knowledge/[\w.\-]+\.md", u):
++                if not re.fullmatch(r"(corpus/knowledge/[\w.\-]+\.md|SKILL\.md)", u):
+                     continue
+                 body = show(a.repo, tip, u)
+                 if body is None:

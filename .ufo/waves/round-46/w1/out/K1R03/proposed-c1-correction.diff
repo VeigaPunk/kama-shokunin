@@ -1,0 +1,27 @@
+--- a/tools/round46-release-recheck-audit.py
++++ b/tools/round46-release-recheck-audit.py
+@@ -274,6 +274,24 @@
+     if v == "holds-reworded":
+         if len(wn) < 12 or wn not in R or wn in PF:
+             return False, "witness_new rule (>= 12 chars, in release ranges, absent from pin file)"
++        # PROPOSED RULES (round-46 K1R03 review, not part of the frozen counter):
++        # (i) release ranges pairwise distinct; (ii) both witnesses inside one
++        # text-unequal pair; (iii) the note quotes the new text verbatim.
++        if len({r for r in rr}) != len(rr):
++            return False, "PROPOSED: duplicate release range"
++        ok_pair = False
++        for i, (pr_i, rr_i) in enumerate(pairs):
++            if eq[i]:
++                continue
++            Pi = ws(" ".join(ptext[pr_i[0] - 1:pr_i[1]]))
++            Ri = ws(" ".join(rtext[rr_i[0] - 1:rr_i[1]]))
++            if wp in Pi and wn in Ri:
++                ok_pair = True
++                break
++        if not ok_pair:
++            return False, "PROPOSED: witnesses must lie in one text-unequal pair"
++        if wn not in ws(note):
++            return False, "PROPOSED: note must quote witness_new"
+         return all(r is not None for r in rr) and not all(eq), "holds-reworded rule"
+     if v == "drifted":
+         if len(wn) < 12 or wn not in R or wn in PF:

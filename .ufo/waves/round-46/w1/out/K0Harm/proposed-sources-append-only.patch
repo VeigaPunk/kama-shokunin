@@ -1,0 +1,33 @@
+--- a/tools/sources-append-only.py
++++ b/tools/sources-append-only.py
+@@ -224,13 +224,25 @@
+ 
+     if header is None or not seen_separator:
+         raise ParseError(f"{label}: registry section has no complete table header")
+     for idx, line in enumerate(lines):
+-        if idx not in row_lines and ROWLIKE_RE.match(line):
+-            raise ParseError(
+-                f"{label}:{idx + 1}: row-like line outside the parsed registry "
+-                "table; refusing to drop it"
+-            )
++        if idx in row_lines or not ROWLIKE_RE.match(line):
++            continue
++        # A row-like line outside the parsed registry is an error only when it
++        # belongs to a table whose header is the contract header (a relocated
++        # registry table) or when it stands alone (no table header above it).
++        # An id-first preview table with a non-contract header (the round-44/45
++        # re-verification tables) cannot hide a registry row and is ignored.
++        top = idx
++        while top - 1 >= 0 and ROW_RE.match(lines[top - 1]):
++            top -= 1
++        header_cells = split_cells(lines[top]) if ROW_RE.match(lines[top]) else None
++        if top != idx and header_cells is not None and sorted(header_cells) != sorted(CONTRACT_COLUMNS):
++            continue
++        raise ParseError(
++            f"{label}:{idx + 1}: row-like line outside the parsed registry "
++            "table; refusing to drop it"
++        )
+     if not rows_by_id:
+         raise ParseError(f"{label}: registry table has no data rows")
+     return rows_by_id, header
+ 

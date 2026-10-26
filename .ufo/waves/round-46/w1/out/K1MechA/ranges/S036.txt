@@ -1,0 +1,38 @@
+### S036 tools/server/server-http.cpp release range 308-329 (file has 991 lines)
+308:     auto middleware_server_state = [this](const httplib::Request & req, httplib::Response & res) {
+309:         if (!is_ready.load()) {
+310:             if (frontend_paths.count(req.path)) {
+311:                 return true; // frontend asset, allow it to load and show "loading"
+312:             }
+313:             // no endpoints are allowed to be accessed when the server is not ready
+314:             // this is to prevent any data races or inconsistent states
+315:             res.status = 503;
+316:             res.set_content(
+317:                 safe_json_to_str(json {
+318:                     {"error", {
+319:                         {"message", "Loading model"},
+320:                         {"type", "unavailable_error"},
+321:                         {"code", 503}
+322:                     }}
+323:                 }),
+324:                 "application/json; charset=utf-8"
+325:             );
+326:             return false;
+327:         }
+328:         return true;
+329:     };
+
+### S036 tools/server/server-http.cpp release range 348-360 (file has 991 lines)
+348:         if (req.method == "OPTIONS") {
+349:             res.set_header("Access-Control-Allow-Credentials", params.cors_credentials ? "true" : "false");
+350:             res.set_header("Access-Control-Allow-Methods",     params.cors_methods);
+351:             res.set_header("Access-Control-Allow-Headers",     params.cors_headers);
+352:             res.set_content("", "text/html"); // blank response, no data
+353:             return httplib::Server::HandlerResponse::Handled; // skip further processing
+354:         }
+355:         if (!middleware_server_state(req, res)) {
+356:             return httplib::Server::HandlerResponse::Handled;
+357:         }
+358:         if (!middleware_validate_api_key(req, res)) {
+359:             return httplib::Server::HandlerResponse::Handled;
+360:         }

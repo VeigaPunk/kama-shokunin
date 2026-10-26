@@ -1,0 +1,110 @@
+# X1R05 receipts - C1 rows S116 S117 - release b11906 = 4d71b42fd87db24b8b7c808c151b713aa4459cfd (17 commits after b11889 = d854d98bae598388ecea1ed84396587e5edc326d)
+
+## blob ids
+pin     704366d76f8748cf9ad3df62a464bfcc8d1ae6ad : b2116b1740a39be2412a33caf52adb9e322e95ee
+b11889  d854d98bae598388ecea1ed84396587e5edc326d : a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45
+b11906  4d71b42fd87db24b8b7c808c151b713aa4459cfd : 9043fa2c02905495f55045d8d0fc978b1f94e027
+src/llama-context.cpp b11889 : d5a66a49990b6ea12bbfb887e19399ad8944c4c4
+src/llama-context.cpp b11906 : d5a66a49990b6ea12bbfb887e19399ad8944c4c4
+tools/server/server.cpp b11889 : b6ebf7523364109181ff3447a8bdf4843a3947cb
+tools/server/server.cpp b11906 : b6ebf7523364109181ff3447a8bdf4843a3947cb
+line counts: pin 6320, b11889 7070, b11906 7073
+
+## S116 range comparison: pin 3078-3085 vs b11906 3230-3237
+IDENTICAL (diff exit 0)
+-- b11906 3230-3237:
+  3230	                        nread = llama_state_seq_load_file(ctx_tgt, filepath.c_str(), slot->id, nullptr, 0, &n_packed);
+  3231	                        if (nread != 0) {
+  3232	                            packed.resize(std::max<size_t>(1, n_packed));
+  3233	                            nread = llama_state_seq_load_file(ctx_tgt, filepath.c_str(), slot->id, packed.data(), packed.size(), &n_packed);
+  3234	                        }
+  3235	                        if (nread == 0) {
+  3236	                            throw std::runtime_error("No available space in KV cache or invalid slot save file");
+  3237	                        }
+
+## S117 range comparison: pin 5450-5455 vs b11906 5771-5776
+IDENTICAL (diff exit 0)
+-- b11906 5771-5776:
+  5771	    this->post_props = [this](const server_http_req &) {
+  5772	        auto res = create_response();
+  5773	        if (!params.endpoint_props) {
+  5774	            res->error(format_error_response("This server does not support changing global properties. Start it with `--props`", ERROR_TYPE_NOT_SUPPORTED));
+  5775	            return res;
+  5776	        }
+
+## full diff b11889..b11906 tools/server/server-context.cpp
+diff --git a/tools/server/server-context.cpp b/tools/server/server-context.cpp
+index a5cba1d71..9043fa2c0 100644
+--- a/tools/server/server-context.cpp
++++ b/tools/server/server-context.cpp
+@@ -1012,16 +1012,17 @@ public:
+     llama_model * model_tgt = nullptr;
+ 
+     mtmd_context * mctx = nullptr;
++    mtmd_helper_cap mtmd_cap = {};
+     // note: video_params.ffmpeg_bin_dir points into params_base, which outlives this struct
+     mtmd_helper_init_opt init_opt = mtmd_helper_init_opt_default();
+     const llama_vocab * vocab = nullptr;
+ 
+     bool has_cap_tts() const {
+-        return mctx != nullptr && mtmd_gen_audio_get_info(mctx).type != MTMD_GEN_AUDIO_TYPE_NONE;
++        return mtmd_cap.audio_gen;
+     }
+ 
+     bool has_cap_chat() const {
+-        return mctx == nullptr || mtmd_helper_model_can_chat(ctx_tgt, mctx);
++        return mtmd_cap.chat;
+     }
+ 
+     server_decision_context decision;
+@@ -1397,6 +1398,8 @@ private:
+             }
+         }
+ 
++        mtmd_cap = mtmd_helper_get_capabilities(model_tgt, mctx);
++
+         if (!llama_memory_can_shift(llama_get_memory(ctx_tgt))) {
+             if (params_base.ctx_shift) {
+                 params_base.ctx_shift = false;
+@@ -1705,9 +1708,9 @@ private:
+                 /* reasoning_format      */ params_base.reasoning_format,
+                 /* chat_template_kwargs  */ params_base.default_template_kwargs,
+                 /* tmpls                 */ std::move(chat_templates),
+-                /* allow_image           */ mctx ? mtmd_support_vision(mctx) : false,
+-                /* allow_audio           */ mctx ? mtmd_support_audio (mctx) : false,
+-                /* allow_video           */ mctx ? mtmd_helper_support_video(mctx) : false,
++                /* allow_image           */ mtmd_cap.vision,
++                /* allow_audio           */ mtmd_cap.audio,
++                /* allow_video           */ mtmd_cap.video,
+                 /* enable_thinking       */ enable_thinking,
+                 /* reasoning_budget      */ params_base.sampling.reasoning_budget_tokens,
+                 /* reasoning_budget_msg  */ params_base.sampling.reasoning_budget_message,
+@@ -5127,7 +5130,7 @@ server_context_meta server_context::get_meta() const {
+         /* has_inp_video           */ impl->chat_params.allow_video,
+         /* has_cap_chat            */ impl->has_cap_chat(),
+         /* has_cap_tts             */ impl->has_cap_tts(),
+-        /* has_audio_stream        */ impl->mctx != nullptr && mtmd_support_audio_stream(impl->mctx),
++        /* has_audio_stream        */ impl->mtmd_cap.audio_stream,
+         /* json_ui_settings        */ impl->json_ui_settings,
+         /* slot_n_ctx              */ impl->n_ctx_slot(),
+         /* pooling_type            */ llama_pooling_type(impl->ctx_tgt),
+
+## full diff b11889..b11906 tools/server/server-models.cpp
+diff --git a/tools/server/server-models.cpp b/tools/server/server-models.cpp
+index e1e006f10..575140132 100644
+--- a/tools/server/server-models.cpp
++++ b/tools/server/server-models.cpp
+@@ -533,7 +533,7 @@ void server_model_meta::update_caps(const common_params & base) {
+     std::vector<std::string> output_modalities = {"text"};
+     if (!params.model.path.empty()) {
+         const common_gguf_info info = common_get_gguf_info(params.model.path);
+-        // same rule as mtmd_helper_model_can_chat()
++        // same rule as mtmd_helper_get_capabilities()
+         const bool can_chat = !gen_audio || info.has_chat_tmpl;
+         output_modalities = server_model_output_modalities(info.decision_type, can_chat, gen_audio);
+         n_ctx_train       = info.n_ctx_train;
+
+## fragment checker (frozen counter tools/round46-release-recheck-audit.py via check-fragment.py)
+VALID S116 holds
+VALID S117 holds
+checker exit=0

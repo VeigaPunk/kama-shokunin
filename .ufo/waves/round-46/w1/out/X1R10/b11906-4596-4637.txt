@@ -1,0 +1,42 @@
+  4596	                if (n_batch == 1 && ret == 1) {
+  4597	                    // TODO: try to terminate only the largest active slot/sequence and continue with the rest
+  4598	                    //       need to remove the tokens from the current batch too
+  4599	                    err = "Context size has been exceeded.";
+  4600	                }
+  4601	
+  4602	                if (ret == -1) {
+  4603	                    err = "Invalid input batch.";
+  4604	                }
+  4605	
+  4606	                if (ret < -1) {
+  4607	                    // TODO: update slot state based on llama_memory_seq_pos_min() and llama_memory_seq_pos_max()
+  4608	                    err = "Compute error.";
+  4609	                }
+  4610	
+  4611	                // TODO: handle ret == 2 (abort) when we start aborting
+  4612	
+  4613	                if (!err.empty()) {
+  4614	                    SRV_ERR("%s off = %d, n_batch = %d, ret = %d\n", err.c_str(), off, n_batch, ret);
+  4615	
+  4616	                    for (auto & slot : slots) {
+  4617	                        if (slot.is_processing()) {
+  4618	                            send_error(slot, err);
+  4619	                            slot.release();
+  4620	
+  4621	                            // note: it's complicated to keep track of how much of the current batch has been
+  4622	                            //       processed before the error occurred, so we simply clear the entire context
+  4623	                            slot.prompt_clear();
+  4624	                        }
+  4625	                    }
+  4626	
+  4627	                    // stop, do not retry with smaller batch size
+  4628	                    throw std::runtime_error(err);
+  4629	                }
+  4630	            }
+  4631	
+  4632	            // retry with half the batch size to try to find a free slot in the KV cache
+  4633	            if (!try_clear_idle_slots()) {
+  4634	                n_batch /= 2;
+  4635	            }
+  4636	
+  4637	            SRV_WRN("failed to find free space in the KV cache, retrying with smaller batch size, off = %d, n_batch = %d, ret = %d\n", off, n_batch, ret);

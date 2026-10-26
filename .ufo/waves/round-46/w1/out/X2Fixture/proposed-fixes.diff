@@ -1,0 +1,50 @@
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -48,10 +48,12 @@
+ 
+ 
+ def _git(repo, *args, inp=None):
+-    p = subprocess.run(["git", "-C", repo, *args], input=inp, capture_output=True, text=True)
++    p = subprocess.run(["git", "-C", repo, *args], input=inp.encode() if isinstance(inp, str) else inp,
++                       capture_output=True)
+     if p.returncode != 0:
+-        raise AuditError(f"git {' '.join(args)[:100]}: {p.stderr.strip()[:200]}")
+-    return p.stdout
++        raise AuditError(f"git {' '.join(args)[:100]}: "
++                         f"{p.stderr.decode('utf-8', 'surrogateescape').strip()[:200]}")
++    return p.stdout.decode("utf-8", "surrogateescape")
+ 
+ 
+ class Repo:
+@@ -74,7 +76,10 @@
+         if blob is None:
+             return frozenset()
+         if blob not in self._blob_lines:
+-            self._blob_lines[blob] = frozenset(_git(self.path, "cat-file", "blob", blob).split("\n"))
++            parts = _git(self.path, "cat-file", "blob", blob).split("\n")
++            if parts and parts[-1] == "":
++                parts.pop()
++            self._blob_lines[blob] = frozenset(parts)
+         return self._blob_lines[blob]
+ 
+ 
+@@ -99,7 +104,18 @@
+             if f not in changed:
+                 continue
+             d = _git(repo_path, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", p, c, "--", f)
+-            dele = [x[1:] for x in d.split("\n") if x.startswith("-") and not x.startswith("---")]
++            # A pathspec also matches everything under a directory of that name, so
++            # only the section whose a-side path is exactly f is counted; within that
++            # section the `-` lines are found by position (content may start with `--`).
++            dele, hunk, keep = [], False, False
++            for x in d.split("\n"):
++                if x.startswith("diff --git "):
++                    keep = x[len("diff --git "):].split(" b/")[0] == "a/" + f
++                    hunk = False
++                elif keep and x.startswith("@@"):
++                    hunk = True
++                elif keep and hunk and x.startswith("-"):
++                    dele.append(x[1:])
+             if len(dele) < threshold:
+                 continue
+             tip_lines = r.lines(tip_blobs[f"{to_full}:{f}"])

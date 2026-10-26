@@ -1,0 +1,37 @@
+# S9Quality receipt — commands and observed outcomes (all read-only on the lane)
+# fixture clone: /fast/scratch/hyaku/kama-r46/S9Quality/lane-clone (git clone --shared --no-checkout of the lane, detached at 0163fea2dab3f282ebd70c71da9ab5de4cedf733, one fixture commit 3000cb1d6be6b0f10265a6e5b9bfad62fd4c1d24)
+
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py --repo ./lane-clone --to 0163fea2dab3f282ebd70c71da9ab5de4cedf733 --json
+{"commits": 292, "events": 5, "restored": 3, "partial": 2, "unrestored": 0}
+dd9f5dc6c0e6 SCORECARD.md 31 24 partial -
+0718b6abbda6 SCORECARD.md 2417 2416 partial -
+0718b6abbda6 LOG.md 2290 2290 restored 82b5e9d33a19
+0718b6abbda6 corpus/QUALITY.md 375 375 restored 82b5e9d33a19
+0718b6abbda6 corpus/README.md 663 663 restored 82b5e9d33a19
+exit=1
+
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py --repo ./lane-clone --to 3000cb1d6be6b0f10265a6e5b9bfad62fd4c1d24
+event dd9f5dc6c0e6 SCORECARD.md deleted=31 restored_at_tip=24 status=partial restored_by=-
+event 0718b6abbda6 SCORECARD.md deleted=2417 restored_at_tip=2416 status=partial restored_by=-
+event 0718b6abbda6 LOG.md deleted=2290 restored_at_tip=2290 status=restored restored_by=82b5e9d33a19
+event 0718b6abbda6 corpus/QUALITY.md deleted=375 restored_at_tip=375 status=restored restored_by=82b5e9d33a19
+event 0718b6abbda6 corpus/README.md deleted=663 restored_at_tip=663 status=restored restored_by=82b5e9d33a19
+summary commits=293 events=5 restored=3 partial=2 unrestored=0
+
+$ python3 tools/hexrun-census.py scan --repo ./lane-clone --rev 0163fea2…
+exit=1
+tokens=1453 distinct=267 lane_oid=169 md5_blob=1 upstream_ok=65 unverifiable=9 wrong_flagged=2 ledger_bad=0 unknown=21
+
+$ python3 tools/hexrun-census.py scan --repo ./lane-clone --rev 3000cb1d…
+tokens=1454 distinct=268 lane_oid=170 md5_blob=1 upstream_ok=65 unverifiable=9 wrong_flagged=2 ledger_bad=0 unknown=21
+
+$ python3 tools/digest-ledger.py scan --repo ./lane-clone --rev 0163fea2…
+tokens=104 blob=93 external_ok=4 external_absent=1 unverifiable=3 wrong_flagged=1 ledger_bad=0 wrong_unflagged=0 unknown=2
+exit=1
+
+$ python3 tools/digest-ledger.py scan --repo ./lane-clone --rev 3000cb1d…
+tokens=104 blob=93 external_ok=4 external_absent=1 unverifiable=3 wrong_flagged=1 ledger_bad=0 wrong_unflagged=0 unknown=2
+exit=1
+append-only-audit at fixture tip exit=1
+hexrun-census at fixture tip exit=1
+hexrun-census at base exit=1

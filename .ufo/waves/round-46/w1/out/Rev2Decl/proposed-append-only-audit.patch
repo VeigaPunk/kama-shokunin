@@ -1,0 +1,37 @@
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@
+-FILES = ["SCORECARD.md", "LOG.md", "corpus/QUALITY.md", "corpus/README.md", "corpus/SOURCES.md"]
++# Whole-file append-only set. SCORECARD.md is here because its dated round sections are
++# append-only (corpus/lessons/round-16-verifier-spotcheck.md:41); its head sections are
++# re-derived in place by contract (SCORECARD.md:6, tools/round42-selfdesc-reconcile.py),
++# so a whole-file count reports exempt text as a violation (round-46 seat Rev2Decl D1/D3).
++FILES = ["SCORECARD.md", "LOG.md", "corpus/QUALITY.md", "corpus/README.md", "corpus/SOURCES.md"]
++
++# Declared append-only surfaces the default set omits, and the cost of auditing them at
++# 0163fea2 (round-46 seat Rev2Decl, .ufo/waves/round-46/w1/out/Rev2Decl/contract.md):
++#   corpus/lessons/*.md         corpus/lessons/round-44.md:37            0 events / exit 0
++#   registry/history/DELTA.md   DELTA.md:3-4 "Append-only; ... never hand-edited"  0 events
++#   corpus/knowledge/*.md       ## Errata region only (consumer-registry.md:30):
++#                               3 file-level body events, 0 inside an Errata region ->
++#                               needs region scoping, never whole-file inclusion
++DECLARED = ["corpus/lessons/*.md", "registry/history/DELTA.md"]
++
++# SCORECARD head sections re-derived in place (SCORECARD.md:6). A region-aware mode is a
++# follow-up: the sections are not contiguous at any fixed line (Capabilities 115-132 and
++# Saturation 133-136 sit below "## Move log" and "## Actual round 5"), so a line range is
++# the wrong shape for the exemption.
++HEAD_SECTIONS = ("## Axes", "## Planned", "## Retired", "## Capabilities", "## Saturation")
+@@ def audit(repo_path, to="HEAD", threshold=20, files=None):
+-    files = files or FILES
++    files = files or FILES
+@@ def main(argv=None):
++    ap.add_argument("--declared", action="store_true",
++                    help="also audit the declared append-only surfaces in DECLARED")
+@@ in main(), before calling audit():
++    files = list(args.files.split(",")) if args.files else None
++    if args.declared:
++        import glob as _glob
++        extra = [p for pat in DECLARED for p in sorted(_glob.glob(os.path.join(args.repo, pat)))]
++        extra = [os.path.relpath(p, args.repo) for p in extra]
++        files = sorted(set((files or FILES) + extra))

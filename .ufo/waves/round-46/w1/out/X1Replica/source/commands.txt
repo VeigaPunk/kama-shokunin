@@ -1,0 +1,76 @@
+# X1Replica — round-46 independent b11906 live replication: commands and exit codes
+# Seat cwd for every command: /fast/scratch/hyaku/kama-r46/X1Replica (S), fleet root otherwise.
+# S=/fast/scratch/hyaku/kama-r46/X1Replica ; O=<lane>/.ufo/waves/round-46/w1/out/X1Replica
+# Lane tree was read-only for this seat; no lane file was written except this out dir.
+
+[1] mkdir -p "$S"; cd "$S"
+    curl -fsSL --retry 3 -o release-b11906.json \
+      https://api.github.com/repos/ggml-org/llama.cpp/releases/tags/b11906
+    -> exit 0; tag b11906, target_commitish 4d71b42fd87db24b8b7c808c151b713aa4459cfd,
+       published_at 2026-10-26T19:45:36Z, 36 assets.
+
+[2] cd "$S"
+    curl -fsSL --retry 3 -o llama-b11906-bin-ubuntu-x64.tar.gz \
+      https://github.com/ggml-org/llama.cpp/releases/download/b11906/llama-b11906-bin-ubuntu-x64.tar.gz
+    curl -fsSL --retry 3 -o stories260K.gguf \
+      https://huggingface.co/ggml-org/models-moved/resolve/main/tinyllamas/stories260K.gguf
+    sha256sum llama-b11906-bin-ubuntu-x64.tar.gz stories260K.gguf
+    -> exit 0
+    064ade6220799fd9e7b1804b574f5f92c38dde358cc987c6b8283cfaeb1eeef3  llama-b11906-bin-ubuntu-x64.tar.gz  (22478121 bytes; equals the release-record asset digest)
+    270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d  stories260K.gguf  (1185376 bytes)
+
+[3] cd "$S"; mkdir -p bin; tar -xzf llama-b11906-bin-ubuntu-x64.tar.gz -C bin
+    sha256sum bin/llama-b11906/llama-server
+    -> exit 0
+    c949950ee76bf84e0dc8f537a98a2c702169f09b5a061c27c87edff753fac3ff  bin/llama-b11906/llama-server
+    ldconfig resolution (ldd): every DT_NEEDED resolves inside bin/llama-b11906 plus system libs;
+    no missing entry.
+
+[4] cd "$S"; ./bin/llama-b11906/llama-server --version
+    -> exit 0
+    version: 0.7.0-dev (build 11906, commit 4d71b42fd)
+    built with GNU 11.4.0 for Linux x86_64
+
+[5] Run 1 (cwd "$S", TMPDIR="$S"):
+    TMPDIR="$S" python3 <lane>/tools/kama-llamacpp-live.py \
+      --server "$S/bin/llama-b11906/llama-server" \
+      --model "$S/stories260K.gguf" \
+      --model-sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d \
+      --alias kama-r46-replica --ctx 256 --threads 1 \
+      --out "$O/receipt-1.json"
+    -> exit 0; receipt outcome "pass"; port 38645; 11/11 checks evaluated+passed.
+
+[6] Run 2 (identical argv except --out receipt-2.json)
+    -> exit 0; receipt outcome "pass"; port 45335; 11/11 checks evaluated+passed.
+
+[7] Cross-run pin and field comparison (python3, reads both receipts)
+    -> exit 0; pins identical across runs; check ids identical; every check passed;
+       all four byte pins identical.
+
+[8] Read-only inspection of the shared bare clone (never fetched into, never written):
+    git -C /fast/scratch/hyaku/kama-r46/L1/llama.git rev-parse b11906^{commit}
+    -> 4d71b42fd87db24b8b7c808c151b713aa4459cfd
+    git -C ... rev-list --count d854d98bae598388ecea1ed84396587e5edc326d..4d71b42fd87db24b8b7c808c151b713aa4459cfd
+    -> 17
+    git -C ... diff --stat d854d98b..4d71b42 -- tools/server/server.cpp tools/server/server-http.cpp \
+        tools/server/server-context.cpp tools/server/server-models.cpp
+    -> server-context.cpp 15 +++++------, server-models.cpp 2 +-; server.cpp and
+       server-http.cpp byte-identical across b11889..b11906.
+    git -C ... show 704366d76:<path> | sha256sum  vs  git -C ... show 4d71b42fd:<path> | sha256sum
+    -> server-context.cpp dd1de0f2 -> 61c1afcf, server-http.cpp 24ede172 -> aad15b75,
+       server.cpp 21439622 -> f047969d (drift is b11755 -> b11889; b11889 == b11906 for server.cpp).
+
+[9] source_binding freshness re-derivation (python3 over receipt-1.json + bare clone)
+    -> exit 0; five bindings: pin file_sha256 and pin span both re-derived OK at b11755;
+       at b11906 health_ready span present, loading_envelope_graded span present,
+       all three teardown_graceful server.cpp spans ABSENT (see binding-freshness.json).
+
+[10] Cross-release surface comparison against the lane's b11889 receipt
+     (.ufo/waves/round-45/c1/live/receipt-1.json)
+     -> health body/sha, metrics status, loading envelope body/sha, /v1/models top keys,
+        data[0] keys, data[0].meta, capabilities, details, props field keys, total_slots,
+        the 11 check ids and their pass state are all EQUAL across the two builds;
+        teardown equal except term_wait_ms (15 ms b11889 vs 3 ms b11906);
+        server binary sha differs (build-specific); probe/tool/model pins identical.
+
+[11] rm -rf "$S" (operator scratch directive, after every cited artifact was copied here)

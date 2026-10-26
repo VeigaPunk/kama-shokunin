@@ -3,7 +3,7 @@
 Contract per `AXES.md` §SCORECARD.md contract. Scores are 0–10, self-assessed,
 each bound to an evidence pointer and the round that last changed it.
 
-**Current authority (round 45):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 45. Calibration 7 is the lowest assigned axis, below operability 8, and below the saturation line, so the stagnation nudge is inactive. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived from the tree by `tools/round42-selfdesc-reconcile.py` (round-42 claim C1) and kept current in rounds 43, 44 and 45; the round-5 banner and the head sections they replace are kept verbatim under §Historical head sections. Completed rounds are counted by the fleet's `MANIFEST.json`, not by this file.
+**Current authority (round 46):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 46. Calibration 7 is the lowest assigned axis, below operability 8, and below the saturation line, so the stagnation nudge is inactive. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived from the tree by `tools/round42-selfdesc-reconcile.py` (round-42 claim C1) and kept current in rounds 43, 44, 45 and 46; the round-5 banner and the head sections they replace are kept verbatim under §Historical head sections. Completed rounds are counted by the fleet's `MANIFEST.json`, not by this file.
 
 ## Axes
 
@@ -13,9 +13,9 @@ Round 43 re-anchors the `SKILL.md` and `PROVINCE.md` hashes after the round-43 e
 |---|---|---|---|
 | **operability** | **8** | registry gate `tools/kama-probe.sh` sha256 `36b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3` (1138 lines); run `bash tools/test-snapshot.sh` → `RESULT pass=30 fail=0`; run `python3 tools/pin-watch.py selftest` → `selftest pass=9 fail=0`; run `python3 tools/report-landing-audit.py --selftest` → `selftest cases=79 failed=0`; run `python3 tools/sources-append-only.py --selftest` → `42/42 selftest cases passed`. Limit: the registered endpoints sample DEAD (no authorized serving runtime; operator-owned), so no model-readiness verdict is evidenced | score round 3; evidence re-anchored round 42 |
 | **freshness** | **8** | snapshot/diff harness `tools/test-snapshot.sh` sha256 `236c23c12964cf0b2f0a2f970187e216d3398dcf2b92ffb7e8606e0fdd029646` (194 lines); run `python3 tools/citation-provenance.py --selftest` → `selftest: ok (24 cases)`; live drift evidence `.ufo/waves/round-41/c2/ls-remote-vllm.txt` sha256 `13388e483163357aa4daea784d0e67cdc8d6b5438d3166d613a2a044590b9282`; run `python3 -c "recheck=[l.split(chr(124))[10].strip() for l in open('corpus/SOURCES.md') if l.startswith(chr(124)+' S') and int(l.split(chr(124))[1].strip()[1:])<=477];print(sum(1 for r in recheck if r))"` → `218` (registry rows S001–S477 carrying a recheck cadence). Limit: snapshots are invocation-driven (no clock), and source rechecks run on each row's `recheck` cadence; release re-verification ledger `registry/release-recheck-b11889.tsv`: the 91 `on-release` registry rows pinned to a llama.cpp commit re-verified at release b11889 (counter `tools/round44-release-recheck-audit.py`, §Round-44 measured results: 82 holds, 3 holds-reworded, 6 unchanged-file, 0 drifted, 0 removed) | score round 10; evidence re-anchored round 44 |
-| depth | **7** | `SKILL.md` sha256 `3046955b2fd5140a9439dee7ff1c67d7d03432a4c4ca73870b1393d805ef7297` (1432 lines); run `grep -c '^## ' SKILL.md` → `33`; `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 45 |
-| coverage | **9** | surface list `PROVINCE.md` sha256 `36d6bb3ac93b1cc20e07969b373fd89d473fc476647f69c2f7e1ae4333a9b6aa` (186 lines); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f and 'processes' not in f]))"` → `34` (knowledge entries held before rounds 42 and 43); held ground includes `corpus/knowledge/endpoint-health-probe-conventions.md`, `corpus/knowledge/kv-cache-reclamation-models.md`, `corpus/knowledge/serving-alias-contract.md` | score round 10; evidence re-anchored round 42 |
-| calibration | **7** | run `python3 tools/capability-repertoire-audit.py --selftest` → `CAP_SELFTEST pass=2 fail=0`; run `python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"` → `31` (outside closures on record); that figure is the number of `corpus/lessons/*verifier-spotcheck.md` blobs at the measured commit; run `python3 tools/instrument-agreement.py --selftest` → `IA_SELFTEST pass=4 fail=0`; this table's counters `tools/round41-scorecard-reconcile.py` and `tools/round42-selfdesc-reconcile.py`; latest outside closure `corpus/lessons/round-44-verifier-spotcheck.md` (admitted); trend-verdict ledger `registry/verdict-ledger.tsv` (204 rows, self against outside for rounds 10–43: `agreement=69/87 overclaim=2 underclaim=16 other=0 absent=15`, §Round-44 calibration ledger); claim-outcome ledger `registry/claim-outcome-ledger.tsv` (126 rows, the 63 claims of rounds 10–44, self against outside: `agreement=58/61 overclaim=1 underclaim=2 other=1 absent=1`, §Round-45 claim-outcome ledger) | score round 1; evidence re-anchored round 45 |
+| depth | **7** | `SKILL.md` sha256 `1ad95066b59d260aa374886584dacbad95cd7c9bf1b1e350e9dd5d2eae96727a` (1442 lines); run `grep -c '^## ' SKILL.md` → `34`; `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 46 |
+| coverage | **9** | surface list `PROVINCE.md` sha256 `659a5101ce0a8bc08d2c63a23d52049cd97e183d92f226568607ebf11bc9fc49` (186 lines); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f and 'processes' not in f]))"` → `34` (knowledge entries held before rounds 42 and 43); held ground includes `corpus/knowledge/endpoint-health-probe-conventions.md`, `corpus/knowledge/kv-cache-reclamation-models.md`, `corpus/knowledge/serving-alias-contract.md` | score round 10; evidence re-anchored round 42 |
+| calibration | **7** | run `python3 tools/capability-repertoire-audit.py --selftest` → `CAP_SELFTEST pass=2 fail=0`; run `python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"` → `32` (outside closures on record; re-anchored round 46); that figure is the number of `corpus/lessons/*verifier-spotcheck.md` blobs at the measured commit; run `python3 tools/instrument-agreement.py --selftest` → `IA_SELFTEST pass=4 fail=0`; this table's counters `tools/round41-scorecard-reconcile.py` and `tools/round42-selfdesc-reconcile.py`; latest outside closure `corpus/lessons/round-45-verifier-spotcheck.md` (rejected-honest-stop; re-anchored round 46); trend-verdict ledger `registry/verdict-ledger.tsv` (204 rows, self against outside for rounds 10–43: `agreement=69/87 overclaim=2 underclaim=16 other=0 absent=15`, §Round-44 calibration ledger); claim-outcome ledger `registry/claim-outcome-ledger.tsv` (126 rows, the 63 claims of rounds 10–44, self against outside: `agreement=58/61 overclaim=1 underclaim=2 other=1 absent=1`, §Round-45 claim-outcome ledger) | score round 1; evidence re-anchored round 45 |
 | adjacency | **7** | `corpus/knowledge/cross-lane-scope.md` sha256 `1801cb7fa45ef6f56ff96cb67c7840256fcffce000a56067cd8133797b9728a9` (87 lines); run `python3 -c "print(sum(1 for l in open('corpus/knowledge/cross-lane-scope.md') if l.startswith(chr(124))))"` → `16` (lines starting with a table pipe, header and separator lines included); contested scope stays reported, not absorbed (`PROVINCE.md` paragraph "Out of province → report, never absorb") | score round 1; evidence re-anchored round 42 |
 
 ### Historical axes table (round-3 assessment; superseded in round 41)
@@ -50,11 +50,11 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 ## Planned
 
-Superseded in round 42. The live plan is `### Planned (round 46)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
+Superseded in round 42. The live plan is `### Planned (round 47)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
 
 ## Retired
 
-None. 6 axes and 9 capabilities remain active. Neither assigned axis is retired: the registered consumers still sample DEAD (`registry/history/latest.tsv`; restoring a serving runtime is operator-owned), while the lane-owned llama.cpp fixture reaches `MODEL_OK` on an unregistered loopback port (`.ufo/waves/round-16/live/receipt.json`), so the surface is not permanently gone. Retirement would need evidence of permanent absence or of saturation, and neither is observed.
+None. 6 axes and 10 capabilities remain active. Neither assigned axis is retired: the registered consumers still sample DEAD (`registry/history/latest.tsv`; restoring a serving runtime is operator-owned), while the lane-owned llama.cpp fixture reaches `MODEL_OK` on an unregistered loopback port (`.ufo/waves/round-16/live/receipt.json`), so the surface is not permanently gone. Retirement would need evidence of permanent absence or of saturation, and neither is observed.
 
 ## Move log
 
@@ -114,7 +114,7 @@ plan, not a run. No native Phase 0/self-iter failure was re-executed.
 
 ## Capabilities
 
-Mirror of the round-43 canonical capability list that §Round 43 carries (a mirror, not the canonical source: the counters resolve the highest-numbered canonical heading below this line). Registry counts are not restated here: `scripts/sources-census.sh census --file corpus/SOURCES.md` derives them.
+Mirror of the round-46 canonical capability list that §Round 46 carries (a mirror, not the canonical source: the counters resolve the highest-numbered canonical heading below this line). Registry counts are not restated here: `scripts/sources-census.sh census --file corpus/SOURCES.md` derives them.
 
 | Capability | What it can now do | Evidence pointer | First-working round |
 |---|---|---|---|
@@ -127,12 +127,13 @@ Mirror of the round-43 canonical capability list that §Round 43 carries (a mirr
 | pin-watch | List upstream release tags for each pinned serving engine (SGLang, vLLM, llama.cpp) and report, per pin, the newest release tag and how many releases sort above it; exit 1 flags a recheck trigger | `tools/pin-watch.py`; `registry/engine-pins.tsv`; `corpus/knowledge/engine-pin-watch.md` | 41 |
 | digest-ledger | Find every full SHA-256 the lane's documents cite and classify it: a committed blob, a ledger-declared external artifact re-hashed on this host, an unverifiable digest with its reason, or a flagged known-wrong digest; exit 1 on any unexplained digest | `tools/digest-ledger.py`; `registry/digest-ledger.tsv` | 42 |
 | hexrun-census | Find every lower-case hex run of 32-127 characters other than 64 that the lane's documents cite (git object ids, MD5 sums, over-long or abbreviated runs) and classify it: a lane object, the MD5 of a committed blob, an upstream object whose committed evidence file contains it, an unverifiable run with its reason, or a flagged wrong run linked to a correct one; exit 1 on any unexplained run | `tools/hexrun-census.py`; `registry/hexrun-ledger.tsv` | 43 |
+| append-only-audit | Set the lane's five append-only self-description files (SCORECARD.md, LOG.md, corpus/QUALITY.md, corpus/README.md, corpus/SOURCES.md) against its git history: list every commit that deletes >= 20 lines from one of them, report how many of those lines the file holds again at the audited revision and which later commit first restored all of them, and exit 1 on a partial or unrestored mass deletion | `tools/append-only-audit.py`; `tools/round46-append-audit-check.py`; run `python3 tools/append-only-audit.py --repo . --to <commit> --json` | 46 |
 
 Rows enter only through a round that demonstrates the capability running (`AXES.md` §Capabilities).
 
 ## Saturation
 
-Saturation line **8/10** (declared round 10, unchanged); stagnation window **N = 4** rounds. Derived at the measured commit by `tools/round42-selfdesc-reconcile.py` (kept current in round 43): score vector operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7 (from `## Axes`); capability first-working rounds 10, 14, 16, 20, 25, 30, 41, 42, 43 (highest canonical list); the assigned axes are operability + calibration and calibration 7 is below the line, so nudge inactive. A capability entered in round 43, so the window is not exhausted either.
+Saturation line **8/10** (declared round 10, unchanged); stagnation window **N = 4** rounds. Derived at the measured commit by `tools/round42-selfdesc-reconcile.py` (kept current in round 46): score vector operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7 (from `## Axes`); capability first-working rounds 10, 14, 16, 20, 25, 30, 41, 42, 43, 46 (highest canonical list); the assigned axes are operability + calibration and calibration 7 is below the line, so nudge inactive. A capability entered in round 46, so the window is not exhausted either.
 
 ## Historical head sections (superseded in round 42)
 
@@ -2443,3 +2444,225 @@ C2 is **not achieved** under the frozen counter or the amendment: an honest stop
 
 1. Calibration: re-freeze a claim-outcome counter that reads a hand-picked sample of true outcome lines (KQ65) and re-score `registry/claim-outcome-ledger.tsv` unchanged; route the 23 unreadable rows as the sample.
 2. Freshness: llama.cpp releases after b11889 (b11897 at the round-45 sample) for the 91 round-44 rows and S484/S485, and the floating-series rows S013, S022.
+
+**Capabilities — canonical list as of round 46**
+
+Same four columns as the round-43 canonical list, which stays byte-intact; one row is added.
+
+| Capability | What it can now do | Evidence pointer | First-working round |
+|---|---|---|---|
+| sources-registry | Curate where kama learns: tier-scoped, revision-anchored rows; contract-v1 census clean | `corpus/SOURCES.md` | 10 |
+| ollama-offline-evidence-replay | Reconcile caller-supplied `/api/tags` + `/api/ps` captures fail-closed; readiness always unknown | `tools/kama-ollama-evidence.py` | 14 |
+| live-llamacpp-lifecycle | Start the pinned llama.cpp b11755 server on an unregistered loopback port, capture its loading and ready surfaces, grade and tear it down | `.ufo/waves/round-16/live/receipt.json` | 16 |
+| gguf-declared-identity-replay | Decode bounded local GGUF metadata offline and compare declared metadata with a captured receipt | `tools/gguf-identity.py` | 20 |
+| context-capacity-receipt | Run the registered context-capacity cells on the lane-owned llama.cpp fixture and write a sha256-bound receipt | `tools/kama-context-capacity.py` | 25 |
+| instrument-agreement | Run a lane instrument N times over one tree and emit a receipt with per-run digests and an agreement counter | `tools/instrument-agreement.py` | 30 |
+| pin-watch | List upstream release tags for each pinned serving engine (SGLang, vLLM, llama.cpp) and report, per pin, the newest release tag and how many releases sort above it; exit 1 flags a recheck trigger | `tools/pin-watch.py`; `registry/engine-pins.tsv`; `corpus/knowledge/engine-pin-watch.md` | 41 |
+| digest-ledger | Find every full SHA-256 the lane's documents cite and classify it: a committed blob, a ledger-declared external artifact re-hashed on this host, an unverifiable digest with its reason, or a flagged known-wrong digest; exit 1 on any unexplained digest | `tools/digest-ledger.py`; `registry/digest-ledger.tsv` | 42 |
+| hexrun-census | Find every lower-case hex run of 32-127 characters other than 64 that the lane's documents cite (git object ids, MD5 sums, over-long or abbreviated runs) and classify it: a lane object, the MD5 of a committed blob, an upstream object whose committed evidence file contains it, an unverifiable run with its reason, or a flagged wrong run linked to a correct one; exit 1 on any unexplained run | `tools/hexrun-census.py`; `registry/hexrun-ledger.tsv` | 43 |
+| append-only-audit | Set the lane's five append-only self-description files (SCORECARD.md, LOG.md, corpus/QUALITY.md, corpus/README.md, corpus/SOURCES.md) against its git history: list every commit that deletes >= 20 lines from one of them, report how many of those lines the file holds again at the audited revision and which later commit first restored all of them, and exit 1 on a partial or unrestored mass deletion | `tools/append-only-audit.py`; `tools/round46-append-audit-check.py`; run `python3 tools/append-only-audit.py --repo . --to <commit> --json` | 46 |
+
+## Round 46 — llama.cpp release re-verification at b11906 with machine witnesses (freshness) and the append-only-audit capability (calibration) (2026-10-26)
+
+Authority: `shokunin.conf` assigns operability + calibration; the lowest-scoring non-retired axes are calibration, depth and adjacency (7 each), and C2 works calibration; calibration is below the saturation line 8, so the stagnation nudge is inactive. Base `0163fea2dab3f282ebd70c71da9ab5de4cedf733` (round-45 spot-check); freeze commit `5790944350ae41bfe2ce50934bba59e086e747f4` (`.ufo/waves/round-46/preregistration.json`; counters `tools/round46-release-recheck-audit.py` and `tools/round46-append-audit-check.py`; controls `.ufo/waves/round-46/controls/`; KQ64 receipt `.ufo/waves/round-46/freeze/prereg-time-check.out` exit 0). The capability tool `tools/append-only-audit.py` landed after the freeze at `4a2a4d55d09dfacf83dc62d1b3fddae5f6d2a050`, before the wave.
+
+| Claim | Axis, score | Before → after | Counting command | Evidence |
+|---|---|---|---|---|
+| C1 — the 91 on-release llama.cpp rows re-verified at b11906 (`4d71b42f`) with a machine witness for every reworded, drifted or removed verdict; b11906 registered (sourced: S486, S487) | freshness 8 → 8 | base `unverified=91 section=0 newrow=0 met=False` → measured value under §Round-46 measured results | `python3 tools/round46-release-recheck-audit.py --repo <fresh clone> --tip <full commit> --upstream <llama.cpp clone> --out <receipt>` | `.ufo/waves/round-46/controls/base.c1.out`; `registry/release-recheck-b11906.tsv` |
+| C2 — capability `append-only-audit`: the lane's append-only self-description set against its history, matching an independent recomputation on a random fixture and on the lane, entered in the capability table (considerthese/2026-10-26.md proposal 1) | calibration 7 → 7 (capability acquisition) | base `selftest=0 fixture=0 lane=0 table=0 met=False` → measured value under §Round-46 measured results | `python3 tools/round46-append-audit-check.py --repo <fresh clone> --tip <full commit> --scratch <dir> --out <receipt>` | `.ufo/waves/round-46/controls/base.c2.out`; `tools/append-only-audit.py` |
+
+Controls (all `met=False`, `.ufo/waves/round-46/controls/`): C1 carry-forward of the b11889 ledger `valid=71 unverified=20`; C1 mass `holds-reworded` with boilerplate witnesses `valid=6 unverified=85`; C2 a tool replaying the lane's events fixed at build time `fixture=0`; C2 the event finder without restoration `fixture=0 lane=0`.
+
+### Round-46 append-only audit
+
+The lane treats five files as append-only — `SCORECARD.md`, `LOG.md`,
+`corpus/QUALITY.md`, `corpus/README.md`, `corpus/SOURCES.md`; earlier outside
+closures read a round's SCORECARD diff as `+65/−0` / "0 removed lines" and called
+that append-only (`corpus/lessons/round-29-verifier-spotcheck.md:32`,
+`corpus/lessons/round-30-verifier-spotcheck.md:41`). `python3
+tools/append-only-audit.py --repo <lane> --to 4a2a4d55` sets that description
+against 294 commits and exits **1**:
+
+```
+event dd9f5dc6c0e6 SCORECARD.md deleted=31 restored_at_tip=24 status=partial restored_by=-
+event 0718b6abbda6 SCORECARD.md deleted=2417 restored_at_tip=2416 status=partial restored_by=-
+event 0718b6abbda6 LOG.md deleted=2290 restored_at_tip=2290 status=restored restored_by=82b5e9d33a19
+event 0718b6abbda6 corpus/QUALITY.md deleted=375 restored_at_tip=375 status=restored restored_by=82b5e9d33a19
+event 0718b6abbda6 corpus/README.md deleted=663 restored_at_tip=663 status=restored restored_by=82b5e9d33a19
+summary commits=294 events=5 restored=3 partial=2 unrestored=0
+```
+
+The same command at `0163fea2` (292 commits) and at the tip as read (`96d32918`,
+295 commits) reports the same five events, so the picture is not an artifact of one
+revision. Five is the count **above the frozen threshold**: `--threshold 1` on
+the same tree reports 66 events (SCORECARD 23, SOURCES 20, LOG 13, README 8,
+QUALITY 2; 11 restored, 6 partial, 49 unrestored) and exits 1. "Append-only"
+here is a statement about deletions of >= 20 lines in one commit, not a
+byte-level property of the five files.
+
+**The three restored events are one bug and one repair.** `0718b6ab` (round-45
+integration, 2026-10-26 07:46) deleted 2,290 lines of `LOG.md`, 663 of
+`corpus/README.md`, 375 of `corpus/QUALITY.md` and 2,417 of `SCORECARD.md` — 5752
+deletions against 565 insertions in that commit. `82b5e9d3` (07:50, "restore
+SCORECARD/LOG/QUALITY/README bodies truncated by the previous commit (append
+bug)") put them back text-for-text: `LOG.md` 2290/2290, `corpus/README.md`
+663/663, `corpus/QUALITY.md` 375/375, `SCORECARD.md` 2416/2417 (`git show
+--numstat 82b5e9d3 -- SCORECARD.md` → `2428 0`, a pure addition). No body line of those four files was lost.
+
+**The two partials are the SCORECARD head, which the file declares re-derived.**
+The round-42 event `dd9f5dc6` removed 31 lines, and 24 are held again:
+
+- 23 came back in the same commit as archived blocks under §Historical head
+  sections — the round-5 banner (8 lines), the round-5 plan (9) and the round-3
+  Retired block (6);
+- 1 (`## Saturation`) is held only because the current head carries the same
+  heading; its archived copy was retitled `### Saturation (round-10 text)`;
+- the 7 not held are the six round-41 `## Axes` rows and the round-41 reconcile
+  sentence. The rows survive only as re-anchored rows (`depth` in that diff:
+  `SKILL.md` sha256 `151023b9…`, 1375 lines, `grep -c '^## '` → `30`; at the tip
+  `3046955b…`, 1432 lines, `33` — `git show dd9f5dc6^1:SCORECARD.md | grep -c
+  151023b99bec` → `1`, `grep -c 151023b99bec SCORECARD.md` → `0`), and the
+  round-41 sentence survives only inside the tip line (`grep -c 'Reconciled in
+  round 41 against the measured commit' SCORECARD.md` → `1`).
+
+The round-45 event `0718b6ab` left exactly one line unrestored of its 2,417: the
+pre-round-45 `depth` row (`SKILL.md` sha256 `91440eb8…`, 1420 lines, `32`
+headings), replaced inside the repair commit by the re-anchored row
+(`3046955b…`, 1432, `33`): `git show 82b5e9d3^1:SCORECARD.md | grep -c 3046955b`
+→ `0`, `git show 82b5e9d3:SCORECARD.md | grep -c 3046955b` → `1`.
+
+What that means for the claim "SCORECARD.md is append-only":
+
+- For the record it holds. No round section, correction row, historical table
+  or capability row is among the unrestored lines; `unrestored=0`, and the
+  three mass deletions of body text were repaired text-for-text.
+- For the head it does not, and the file itself says so: `SCORECARD.md:6`
+  declares the `## Axes` table, §Planned, §Retired, §Saturation and
+  §Capabilities re-derived from the tree by `tools/round42-selfdesc-reconcile.py`
+  since round 42. Both partials are that carve-out exactly — 7 superseded head
+  lines in round 42, 1 superseded head row in round 45.
+- The head's own promise is wider than its practice. `SCORECARD.md:6` says "the
+  round-5 banner and the head sections they replace are kept verbatim under
+  §Historical head sections"; the round-5 banner, round-5 plan and round-3
+  Retired block are (23 lines), but the `## Axes` rows it re-derives are not
+  archived — the six round-41 rows and the round-45 `depth` row exist only in
+  git history. Either those rows are appended under §Historical head sections,
+  or the sentence is narrowed to the blocks that are.
+
+**Limits of the instrument, read off its own output and source.**
+
+- `restored_by=-` on a partial is definitional — no later commit holds *every*
+  deleted line — and does not mean nothing was restored: `82b5e9d3` holds
+  2416/2417 counted lines (1789/1790 unique) of the SCORECARD event.
+- `restored_at_tip` is set membership, not position or identity: a deleted line
+  that recurs as another line counts, which is how `## Saturation` is "held".
+- The filter at `tools/append-only-audit.py:102` (`not x.startswith("---")`)
+  drops deleted lines whose *text* begins `--`, as if each were the `---`
+  header: four `--out …` lines in the SCORECARD event
+  (`git show 0718b6ab^1:SCORECARD.md | grep -c '^--out '` → `4`; at the tip →
+  `4`) and two (`--tip …`, `--rev …`) in the LOG event. A header-aware recount
+  (`.ufo/waves/round-46/w1/out/S2Events/recount.py`) reads `2421`/`2420` for SCORECARD and
+  `2292`/`2292` for LOG; no verdict class changes, and the counter
+  `tools/round46-append-audit-check.py:115` carries the same filter, so tool and
+  counter agree on the undercount.
+
+**Verdict.** The five-file append-only self-description survives its own history
+at mass-deletion scale: 0 unrestored, 3 repaired text-for-text after a real
+truncation, 2 accounted head re-derivations, 0 lost record lines. It does not
+survive as a literal whole-file claim; the honest form is that the record is
+append-only while the head is re-derived, and the head's superseded rows are not
+archived. The instrument is red at the tip (exit 1) and this section reports the
+red, not a green.
+
+---
+
+## Seat notes — S2Events (not part of the section text above)
+
+### Provenance of every figure
+
+| Figure | Command | Exit | Receipt |
+|---|---|---|---|
+| 5 events / 3 restored / 2 partial / 0 unrestored at `4a2a4d55`, 294 commits | `python3 tools/append-only-audit.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --to 4a2a4d55d09dfacf83dc62d1b3fddae5f6d2a050` | 1 | `audit-at-4a2a4d55.out` |
+| same 5 events at `0163fea2`, 292 commits | same with `--to 0163fea2dab3f282ebd70c71da9ab5de4cedf733` | 1 | `audit-at-0163fea2.out` |
+| same 5 events at tip `96d32918`, 295 commits | same with `--to HEAD` | 1 | `audit-at-head.out` |
+| 66 events (11/6/49) at threshold 1 | same with `--threshold 1 --json` | 1 | `audit-threshold1.json` |
+| `AOA_SELFTEST pass=10 fail=0` | `python3 tools/append-only-audit.py --selftest` | 0 | `selftest.out` |
+| header-aware 2421/2420, 2292/2292, 31/24, 663/663, 375/375 | `python3 <out>/S2Events/recount.py <lane> 4a2a4d55` | 0 | `recount.out` |
+| C2 legs at `4a2a4d55`: `selftest=1 fixture=1 lane=1 table=0 lane_events=5 lane_partial=2 met=False` | `python3 tools/round46-append-audit-check.py --repo <lane> --tip 4a2a4d55d09dfacf83dc62d1b3fddae5f6d2a050 --scratch <scratch>` | 1 | `c2-counter-at-4a2a4d55.out` |
+| SCORECARD event breakdown 8/1/6/9/6/1 = 31 | `git diff --no-renames --no-color --no-ext-diff -U0 dd9f5dc6^1 dd9f5dc6 -- SCORECARD.md` | 0 | `recount.out`, this note |
+| 2416/2417 held by `82b5e9d3`; `2428 0` numstat | `git show --numstat 82b5e9d3 -- SCORECARD.md` + counted intersection | 0 | `recount.out` |
+| no round section/correction row among unrestored lines | `recount.out` `absent:` lines: six `## Axes` rows + one reconcile sentence | 0 | `recount.out` |
+
+`table=0` at `4a2a4d55` is expected: the C2 counter's table leg needs the
+capability row naming `append-only-audit` with last cell `46`, which is this
+round's entry and lands with the measured commit. The measured result belongs to
+§Round-46 measured results, not to this paragraph.
+
+### Findings
+
+**F1 (instrument, frozen) — the `---` filter also drops `--…` content lines.**
+`tools/append-only-audit.py:102` and `tools/round46-append-audit-check.py:115`
+both read `not x.startswith("---")`. After the diff marker is stripped, a
+deleted content line that begins `--` (a wrapped `--out`, `--tip`, `--rev`) is
+excluded as if it were the `---` header, contradicting the docstring ("the
+`---` header excluded"). Evidence: `git show 0718b6ab^1:SCORECARD.md | grep -c
+'^--out '` → `4`; the SCORECARD event reads `deleted=2417` where the
+header-aware count is `2421` (LOG: `2290` vs `2292`). Verdict classes
+unchanged. Proposed fix (not applied — both files are frozen; the counter
+carries `counter_sha256 4dcfbe10…`):
+
+```diff
+-            dele = [x[1:] for x in d.split("\n") if x.startswith("-") and not x.startswith("---")]
++            body = d.split("\n")
++            dele = [x[1:] for i, x in enumerate(body) if x.startswith("-")
++                    and not (x.startswith("---") and i + 1 < len(body) and body[i + 1].startswith("+++"))]
+```
+
+Applied to the frozen tool, this changes two `deleted`/`restored_at_tip` pairs
+and no `status`/`restored_by` value, so C2's `lane` leg still agrees if both
+copies take the fix in the same round.
+
+**F2 (self-description) — §Historical head sections covers less than
+`SCORECARD.md:6` promises.** The sentence says "the round-5 banner and the head
+sections they replace are kept verbatim under §Historical head sections". The
+`## Axes` rows re-derived in rounds 42 and 45 are not archived: `grep -c
+151023b99bec SCORECARD.md` → `0`, `grep -c 91440eb8 SCORECARD.md` → `0`, both
+present in the pre-change files (`git show dd9f5dc6^1:SCORECARD.md`,
+`git show 0718b6ab^1:SCORECARD.md`, each `1`). Proposed narrowing of the
+sentence at `SCORECARD.md:6` (full proposed line text in
+`proposed-scorecard-head-line6.txt`):
+
+> … the round-5 banner, the round-5 plan and the round-3 Retired and round-10
+> Capabilities blocks they replace are kept verbatim under §Historical head
+> sections; the superseded `## Axes` rows are kept in git history only.
+
+The alternative fix — appending each superseded row as a dated line under
+§Historical head sections — is what would make the claim unqualified but adds
+about seven lines per re-anchoring round.
+
+**F3 (contract limit, disclosed, no fix).** `restored_by` is null for a partial
+by definition, so the check cannot name the commit that restored the bulk of a
+partially restored file (`82b5e9d3`, 2416/2417). That is the frozen contract,
+not a defect; the paragraph states it so a reader does not read `-` as "nothing
+came back".
+
+### Out of scope / not done
+
+- The capability-table row for `append-only-audit` (C2's `table` leg) is not
+  added here; that is the round's capability entry.
+- No counter, preregistration or control was edited; the F1 fix is proposed
+  only, in this directory.
+- No measured-commit receipt is filed: the measured commit does not exist yet;
+  this paragraph reports `4a2a4d55`, `0163fea2` and `96d32918`.
+
+### What `met=True` does not show (round-46 wave attacks)
+
+- **C1 verdicts are machine-checked text, not meaning.** Seat K1Cheat greens 91/91 rows with a two-second script from git alone: 17 of the 20 read rows are verified by text relocation, which the preregistration names as the verification itself, but the three `holds-reworded` rows on the byte-identical `server.cpp` (S037, S043, S108) can be rubber-stamped with auto-picked witnesses and a 40-character note. Critics K1R01–K1R10 each showed a range choice the counter accepts for a wrong or weaker verdict (a guard-omitting single-line `holds`, a decoy-witnessed `drifted`, positional range pairing); the S121 case was caught and corrected in the ledger (lesson §Gate). Seat V1Code: `check-fragment.py` prints `VALID` for an id outside the population (F1) and exits 0 when rows are invalid (F4); the counter's `removed` rule checks only the first line of each range (F2) and exits 1, not 2, on a non-git exception (F3). Seat M1Ctr: 46 counter mutants, 43 killed, 3 equivalent. The flag leg reads only `corpus/knowledge/*.md`, so a drifted row used by `SKILL.md` alone could not be flagged (K1R07); no row drifted this round.
+- **C2's "independent recomputation" shares the tool's definition.** Both drop deleted lines that begin with `--` (lesson §Mistakes, shared-definition row; seat K2Hist: lane counts low by 4 and 2, a 21-line fixture deletion read as 0 events); seat X2Fixture found 7 fixtures where tool and counter agree and both differ from a byte-exact oracle (6 of them a ≥20-line deletion passing with exit 0). Seat K2Cheat built three non-capabilities that reach `met=True` (importing the counter's own `recompute`, recognising the fixture's shape, exec of the genuine tool); seat M2Ctr: 12 of 32 counter mutants survive, and the pristine counter accepts a tool whose default threshold is 21; seat M2Tool: 10 of 39 tool mutants survive the selftest and the counter. Seat K2Design: three of the five files are declared append-only nowhere in the lane, and `restored` counts same-commit relocations and blank lines. These are routed to round 47 (planned item 2), not fixed in place: the tool stays on the frozen definition, which the counter is.
+- **Separability holds** (seat N2Couple): the counters read disjoint surfaces; a C1-shaped SOURCES append creates no C2 event and the C2 capability line changes no C1 output.
+
+### Planned (round 47)
+
+1. Calibration: the claim-outcome reader re-freeze routed by the round-45 closure (D1), scored first against the round-46 hand-read sample (`.ufo/waves/round-46/w1/out/S8Sample{1,2,3}/sample.tsv`, `R8Sample/sample.tsv`) before it reads `registry/claim-outcome-ledger.tsv`; or `append-only-audit` v2 with a `git diff --numstat` cross-check for `--`-prefixed lines, byte-exact line identity and the declared regions and exemptions seat Rev2Decl mapped (`.ufo/waves/round-46/w1/out/Rev2Decl/contract.md`), under a counter amendment frozen before it is scored.
+2. Freshness: llama.cpp after b11906 (b11907 = `4b851fbee…` tagged 2026-10-26T19:57:59Z), the ten off-population llama.cpp rows seat K1Pop lists, the S013 citation defect seat U9Floating found; C1 counter fixes F1–F4 (seat V1Code) and `SKILL.md` as a flag target (K1R07) at the next freeze.
+

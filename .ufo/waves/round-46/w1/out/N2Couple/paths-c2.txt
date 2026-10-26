@@ -1,0 +1,18 @@
+# Paths read by C2 counter (tools/round46-append-audit-check.py, frozen)
+
+From --repo (lane clone):
+  rev-parse <tip>^{commit}                        (line 200)
+  tools/append-only-audit.py @ tip                 (line 201, show; written to temp file and executed)
+  rev-list --topo-order --reverse <tip>            (line 106, recompute)
+  For every commit > root, for each of the five FILES
+    (SCORECARD.md, LOG.md, corpus/QUALITY.md, corpus/README.md, corpus/SOURCES.md):
+    rev-parse <c>^1                                (line 109)
+    diff --no-renames --no-color --no-ext-diff -U0 <p> <c> -- <file>  (line 114)
+    show <to>:<file>                                (line 101, lines_at)
+    show <c2>:<file> for later commits              (lines 122-125, restored_by)
+  SCORECARD.md @ tip                                (line 245, show) -- table leg
+  (Running the extracted tool itself performs the same reads on --repo.)
+
+NOT read: registry/* (incl. the b11906 ledger), corpus/knowledge/*,
+corpus/SOURCES.md content as data (only its deletion history), tools/* other
+than tools/append-only-audit.py @ tip.

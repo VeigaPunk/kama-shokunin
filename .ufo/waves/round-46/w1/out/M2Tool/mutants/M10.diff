@@ -1,0 +1,24 @@
+--- /fast/scratch/hyaku/kama-r46/M2Tool/pristine.py	2026-10-26 17:03:21.019295166 -0300
++++ /fast/scratch/hyaku/kama-r46/M2Tool/mut/M10.py	2026-10-26 17:20:50.566094256 -0300
+@@ -84,10 +84,12 @@
+     to_full = _git(repo_path, "rev-parse", "--verify", to + "^{commit}").strip()
+     commits = _git(repo_path, "rev-list", "--topo-order", "--reverse", to_full).split()
+     parents = {}
++    allpars = {}
+     for line in _git(repo_path, "rev-list", "--topo-order", "--reverse", "--parents", to_full).split("\n"):
+         parts = line.split()
+         if parts:
+             parents[parts[0]] = parts[1] if len(parts) > 1 else None
++            allpars[parts[0]] = parts[1:] or []
+     tip_blobs = r.blobs([f"{to_full}:{f}" for f in files])
+     events = []
+     for i, c in enumerate(commits):
+@@ -98,7 +100,7 @@
+         for f in files:
+             if f not in changed:
+                 continue
+-            d = _git(repo_path, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", p, c, "--", f)
++            d = "".join(_git(repo_path, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", p2, c, "--", f) for p2 in (allpars.get(c) or [p]))
+             dele = [x[1:] for x in d.split("\n") if x.startswith("-") and not x.startswith("---")]
+             if len(dele) < threshold:
+                 continue

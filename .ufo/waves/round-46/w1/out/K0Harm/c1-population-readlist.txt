@@ -1,0 +1,43 @@
+# C1 population read-list check (K0Harm, round 46)
+# command: python3 - <<EOF ... git -C /fast/scratch/hyaku/kama-r46/L1/llama.git rev-parse <c>:<path> for the 91 b11889 ledger rows
+# commits: b11889=d854d98bae598388ecea1ed84396587e5edc326d b11906=4d71b42fd87db24b8b7c808c151b713aa4459cfd
+
+rows=91 identical_b11889_to_b11906=73 changed_in_window=18
+changed rows (id path blob_b11889 blob_b11906):
+S042	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S060	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S109	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S114	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S115	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S116	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S117	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S118	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S119	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S120	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S121	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S122	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S123	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S124	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S125	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S133	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S138	tools/server/server-context.cpp	a5cba1d71d46c1c87ca868ac4a6a8b4c8902ca45	9043fa2c02905495f55045d8d0fc978b1f94e027
+S479	tools/server/server-models.cpp	e1e006f1018fdcfd76f9f20f5a1a638c7f3245d6	5751401328682cfaae705b57536778566885e7ce
+
+brief's 20-row read list omits: S479 (tools/server/server-models.cpp, the only server-models.cpp row in the population)
+
+git -C /fast/scratch/hyaku/kama-r46/L1/llama.git diff d854d98b 4d71b42f -- tools/server/server-models.cpp:
+diff --git a/tools/server/server-models.cpp b/tools/server/server-models.cpp
+index e1e006f10..575140132 100644
+--- a/tools/server/server-models.cpp
++++ b/tools/server/server-models.cpp
+@@ -533,7 +533,7 @@ void server_model_meta::update_caps(const common_params & base) {
+     std::vector<std::string> output_modalities = {"text"};
+     if (!params.model.path.empty()) {
+         const common_gguf_info info = common_get_gguf_info(params.model.path);
+-        // same rule as mtmd_helper_model_can_chat()
++        // same rule as mtmd_helper_get_capabilities()
+         const bool can_chat = !gen_audio || info.has_chat_tmpl;
+         output_modalities = server_model_output_modalities(info.decision_type, can_chat, gen_audio);
+         n_ctx_train       = info.n_ctx_train;
+
+frozen counter changed set (release_blob != pin_blob at b11906): 85 rows; unchanged-file (blob == b11755 pin): 6 rows

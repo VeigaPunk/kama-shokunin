@@ -1,0 +1,74 @@
+    this->get_slots = [this](const server_http_req & req) {
+        auto res = create_response();
+        if (!params.endpoint_slots) {
+            res->error(format_error_response("This server does not support slots endpoint. Start it with `--slots`", ERROR_TYPE_NOT_SUPPORTED));
+            return res;
+        }
+
+        // request slots data using task queue
+        {
+            server_task task(SERVER_TASK_TYPE_SLOT_GET);
+            task.id = res->rd.get_new_id();
+            res->rd.post_task(std::move(task), true); // high-priority task
+        }
+
+        // get the result
+        auto result = res->rd.next(req.should_stop);
+        if (!result) {
+            // connection was closed
+            GGML_ASSERT(req.should_stop());
+            return res;
+        }
+
+        if (result->is_error()) {
+            res->error(result->to_json());
+            return res;
+        }
+
+        auto * res_task = dynamic_cast<server_task_result_slots*>(result.get());
+        GGML_ASSERT(res_task != nullptr);
+
+        // optionally return "fail_on_no_slot" error
+        if (!req.get_param("fail_on_no_slot").empty()) {
+            if (res_task->n_idle_slots == 0) {
+                res->error(format_error_response("no slot available", ERROR_TYPE_UNAVAILABLE));
+                return res;
+            }
+        }
+
+        res->ok(res_task->to_json());
+        return res;
+    };
+
+    this->post_slots = [this](const server_http_req & req) {
+        auto res = create_response();
+        if (params.slot_save_path.empty()) {
+            res->error(format_error_response("This server does not support slots action. Start it with `--slot-save-path`", ERROR_TYPE_NOT_SUPPORTED));
+            return res;
+        }
+
+        std::string id_slot_str = req.get_param("id_slot");
+
+        int id_slot;
+        try {
+            id_slot = std::stoi(id_slot_str);
+        } catch (const std::exception &) {
+            res->error(format_error_response("Invalid slot ID", ERROR_TYPE_INVALID_REQUEST));
+            return res;
+        }
+
+        std::string action = req.get_param("action");
+
+        if (action == "save") {
+            return handle_slots_save(req, id_slot);
+        }
+        if (action == "restore") {
+            return handle_slots_restore(req, id_slot);
+        }
+        if (action == "erase") {
+            return handle_slots_erase(req, id_slot);
+        }
+
+        res->error(format_error_response("Invalid action", ERROR_TYPE_INVALID_REQUEST));
+        return res;
+    };

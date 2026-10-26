@@ -1,0 +1,21 @@
+--- a/tools/round46-release-recheck-audit.py
++++ b/tools/round46-release-recheck-audit.py
+@@ (contract note: K1R05 proposal, NOT applied to the frozen counter)
+@@ def check_row(ent, lr, up):
+     strong, weak = cited(ent["cells"])
+     covered = lambda n: any(a <= n <= b for (a, b) in pr)
++    # PROPOSED FIX (K1R05, round 46 C1 attack): a file-qualified range written in the
++    # claim or note cell (`<basename>:a-b`, `<basename>:line n`) is part of the anchored
++    # statement the ledger claims to re-verify; require it to lie in the pin range union.
++    # Without this a ledger can verify only the message line and leave the guard, or pair
++    # the anchor with a decoy range elsewhere in the file (both accepted today).
++    base_name = path.rsplit("/", 1)[-1]
++    for extra in re.finditer(re.escape(base_name) + r":(\d{1,5})(?:-(\d{1,5}))?",
++                             ent["cells"][4] + " " + ent["cells"][6]):
++        a0, b0 = int(extra.group(1)), int(extra.group(2) or extra.group(1))
++        miss0 = sorted(n for n in range(a0, b0 + 1) if n <= len(ptext) and not covered(n))
++        if miss0:
++            return False, f"pin_lines miss claim/note cited lines {miss0[:5]}"
+     strong = {n for n in strong if n <= len(ptext)}
+     weak = {n for n in weak if n <= len(ptext)}
+     if strong:

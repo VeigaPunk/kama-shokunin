@@ -1,0 +1,35 @@
+--- a/tools/round46-release-recheck-audit.py
++++ b/tools/round46-release-recheck-audit.py
+@@ -241,6 +241,17 @@ def check_row(ent, lr, up):
+     strong, weak = cited(ent["cells"])
+     covered = lambda n: any(a <= n <= b for (a, b) in pr)
++    # a `holds` window must also cover the span the usage cell anchors
++    # (`<this file>:<a>-<b>`): text equality of the error line alone proves
++    # nothing about the guard named in the statement (round-46 attack K1R08).
++    base = path.rsplit("/", 1)[-1]
++    span = set()
++    for m in re.finditer(re.escape(base) + r":(\d+)-(\d+)", ent["cells"][6]):
++        a, b = int(m.group(1)), int(m.group(2))
++        if 0 < a <= b and b - a < 400:
++            span.update(range(a, b + 1))
++    miss_span = sorted(n for n in span if not covered(n))
++    if miss_span:
++        return False, f"pin_lines miss usage-cell span {miss_span[:3]}"
+     strong = {n for n in strong if n <= len(ptext)}
+     weak = {n for n in weak if n <= len(ptext)}
+     if strong:
+@@ -266,7 +277,7 @@ def check_row(ent, lr, up):
+     if changed != "1":
+         return False, f"{v} needs changed=1"
+     if v == "holds":
+-        return all(eq), "holds needs every pair text-equal"
++        return all(eq) and len(note) >= 40, "holds needs every pair text-equal and a note >= 40 chars"
+     if v in ("holds-reworded", "drifted", "removed"):
+         if len(note) < 40:
+             return False, "note < 40 chars"
+@@ -268,6 +279,7 @@ def check_row(ent, lr, up):
+         if len(wp) < 12 or wp not in P or wp in RF:
+             return False, "witness_pin rule (>= 12 chars, in pin ranges, absent from release file)"
+     if v == "holds-reworded":
+         if len(wn) < 12 or wn not in R or wn in PF:
+             return False, "witness_new rule (>= 12 chars, in release ranges, absent from pin file)"

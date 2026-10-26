@@ -1,0 +1,128 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -71,6 +71,8 @@
+ POLL_TIMEOUT = 0.5          # per-request readiness poll timeout, seconds
+ PROBE_TIMEOUT = 60          # seconds per kama-probe.sh invocation
+ TERM_GRACE = 10.0           # SIGTERM grace before SIGKILL
++MAX_CTX = 4096              # proposal: upper bound on --ctx (KV-cache size);
++                            # the lane's live runs use 256. L1 to confirm.
+ TRANSITION_BODY_CAP = 4096  # verbatim body kept on lifecycle transitions
+ LOADING_BODY_MAX = 256      # distinct loading-503 bodies kept verbatim
+ CAPTURE_BODY_CAP = 65536    # verbatim body kept on ready captures (= read cap)
+@@ -809,9 +811,15 @@
+             '--timeout', '2', '--connect-timeout', '1']
+     rec = {'expect': expect, 'argv': argv, 'exit': None,
+            'result': None, 'stderr_tail': None}
++    # kama-probe.sh honours KAMA_PROBE_TMPDIR (and only that name) for its
++    # work dir; the allowlist above cannot carry it, so a run with TMPDIR set
++    # still mktemp'd under /tmp (probe line ~1128). Pass the harness's own
++    # temp root so both write to the same place.
++    probe_env = dict(child_env)
++    probe_env['KAMA_PROBE_TMPDIR'] = tempfile.gettempdir()
+     try:
+         cp = subprocess.run(argv, capture_output=True, text=True,
+-                            timeout=PROBE_TIMEOUT, env=child_env)
++                            timeout=PROBE_TIMEOUT, env=probe_env)
+     except subprocess.TimeoutExpired:
+         rec['exit'] = None
+         rec['stderr_tail'] = f'timeout after {PROBE_TIMEOUT}s'
+@@ -1352,6 +1360,7 @@
+         'ended_utc': None,
+         'server': {
+             'arg': args.server, 'realpath': None, 'sha256': None,
++            'install_tree_sha256_post': None,
+             'install_tree': {}, 'install_tree_sha256': None,
+             'install_links': {}, 'install_links_sha256': None,
+             'server_impl_sha256': None,
+@@ -1406,6 +1415,11 @@
+             raise SetupError(f'model-not-found:{args.model}')
+         if not os.path.isfile(args.probe):
+             raise SetupError(f'probe-not-found:{args.probe}')
++        # Host-safety bound: --ctx sizes the KV cache the child allocates.
++        if not 1 <= args.ctx <= MAX_CTX:
++            raise SetupError(f'ctx-out-of-range:{args.ctx}')
++        if not 1 <= args.threads <= (os.cpu_count() or 1):
++            raise SetupError(f'threads-out-of-range:{args.threads}')
+ 
+         model_sha = sha256_file(args.model)
+         receipt['model'].update({
+@@ -1449,7 +1463,7 @@
+             'a sub-second collision race is possible')
+ 
+         server_argv = [
+-            server_real, '-m', args.model,
++            server_real, '-m', os.path.realpath(args.model),
+             '--alias', args.alias,
+             '--host', '127.0.0.1',
+             '--port', str(port),
+@@ -1466,6 +1480,12 @@
+         child_env = {key: os.environ[key] for key in CHILD_ENV_KEYS
+                      if key in os.environ}
+         receipt['child_env_keys'] = sorted(child_env)
++        # The server must not inherit the harness's cwd (a seat's cwd is a
++        # repository root); give it the same temp root the log lives in.
++        child_cwd = tempfile.gettempdir()
++        if not os.path.isdir(child_cwd):
++            raise SetupError(f'child-cwd-not-a-directory:{child_cwd}')
++        receipt['child_cwd'] = child_cwd
+ 
+         def _term_handler(signum, _frame):
+             raise Terminated(f'signal {signum}')
+@@ -1475,7 +1495,8 @@
+ 
+         try:
+             log_fd, log_path = tempfile.mkstemp(
+-                prefix='kama-llamacpp-live-', suffix='.log')
++                prefix='kama-llamacpp-live-', suffix='.log',
++                dir=child_cwd)
+         except OSError as exc:
+             raise SetupError(f'log-mkstemp-failed:{exc}') from exc
+         try:
+@@ -1495,6 +1516,7 @@
+                 start_new_session=True,
+                 preexec_fn=_preexec_pdeathsig,
+                 env=child_env,
++                cwd=child_cwd,
+             )
+             try:
+                 proc = subprocess.Popen(server_argv, **popen_kwargs)
+@@ -1668,6 +1690,39 @@
+         if port is not None:
+             checks = receipt['checks']
+             try:
++                # A leaked child is a process, not a socket: port_refuses
++                # cannot see a child that never held the port, so prove the
++                # child is gone after the final SIGKILL backstop.
++                if isinstance(td, dict):
++                    td['child_gone'] = None if receipt.get('child_pid') is None \
++                        else not _child_running(proc)
++                gone = td.get('child_gone') if isinstance(td, dict) else None
++                checks.append(_check(
++                    'child_gone',
++                    None if gone is None else bool(gone),
++                    {'child_gone': gone,
++                     'child_pid': receipt.get('child_pid'),
++                     'returncode': td.get('returncode')
++                     if isinstance(td, dict) else None},
++                    'child-never-started' if gone is None else None))
++                # The installed tree is hashed before launch and never again;
++                # mirror model_unchanged so a post-launch swap of a .so or the
++                # server itself is visible in this receipt.
++                server_path = receipt['server'].get('realpath')
++                if server_path:
++                    try:
++                        post_tree_sha = install_tree(server_path)[1]
++                    except SetupError as exc:
++                        post_tree_sha = f'rehash-error:{exc.code}'
++                    except OSError as exc:
++                        post_tree_sha = f'rehash-error:{exc}'
++                    receipt['server']['install_tree_sha256_post'] = post_tree_sha
++                    checks.append(_check(
++                        'install_unchanged',
++                        post_tree_sha
++                        == receipt['server'].get('install_tree_sha256'),
++                        {'pre': receipt['server'].get('install_tree_sha256'),
++                         'post': post_tree_sha}))
+                 graceful = (
+                     isinstance(td, dict)
+                     and td.get('sigterm_sent') is True
