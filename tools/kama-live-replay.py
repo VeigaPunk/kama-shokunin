@@ -4,7 +4,8 @@
 A live receipt is evidence only while a fresh session can re-run it. This tool
 reads a v4 receipt's ``provenance`` block, downloads the llama.cpp release
 archive and the model into --work, verifies each sha256 against the receipt
-BEFORE anything is extracted or executed, extracts the archive, runs
+BEFORE anything is extracted or executed, extracts the archive, checks the
+archive member against the receipt's ``server.sha256`` before running it, runs
 tools/kama-llamacpp-live.py with the receipt's alias, ctx and threads (and the
 same provenance), and compares the new receipt with the original check by
 check: every check the original evaluated must be evaluated again with the
@@ -154,6 +155,12 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600):
         server = os.path.join(tree, need["server.member"])
         if not os.path.realpath(server).startswith(os.path.realpath(tree) + os.sep) or not os.path.isfile(server):
             raise Refused(f"member-absent:{need['server.member']}")
+        # the member must be the binary the receipt says ran, checked before it is executed
+        # (round-47 seat Sen2Replay: a digest-verified archive is not yet a verified binary)
+        want_srv = (rec.get("server") or {}).get("sha256")
+        got_srv = sha256_file(server)
+        if not isinstance(want_srv, str) or got_srv != want_srv:
+            raise Refused(f"member-digest-mismatch:want={want_srv}:got={got_srv}")
         res["inputs"].update({"archive": archive, "model": model, "server": server})
         rerun = os.path.join(work, "rerun-receipt.json")
         env = dict(os.environ, TMPDIR=os.path.join(work, "tmp"))
@@ -248,6 +255,7 @@ def _selftest(root):
         run("missing-url", receipt(**{"provenance.model.url": None}), 2, "provenance-missing")
         run("unsafe-member", receipt(**{"provenance.server.member": "../x"}), 2, "unsafe-member")
         run("absent-member", receipt(**{"provenance.server.member": "build/bin/nope"}), 2, "member-absent")
+        run("member-digest-differs", receipt(**{"server.sha256": "3" * 64}), 2, "member-digest-mismatch")
         run("http-refused", receipt(**{"provenance.model.url": "http://example.invalid/m"}), 2, "url-scheme")
         run("no-evaluated-check", receipt(**{"checks": []}), 1)
         bad_live = os.path.join(d, "bad-live.py")
