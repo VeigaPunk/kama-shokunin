@@ -24,3 +24,5 @@ under the [shokunin skill](https://github.com/VeigaPunk/shokunin).
 - `registry/` — registered consumers and invocation history, outcome registries, `engine-pins.tsv`, `digest-ledger.tsv`
 - `tests/` — fixtures and regression suites for the probe and the live-fixture tools
 - `tools/` — the probe, the instruments and the per-round counters (`tools/round<N>-*.py`)
+
+The listing covers non-hidden top-level entries only: the hidden `.gitignore` names the paths git ignores (`.ufo/interactive-sessions/`, `.ufo/state/`, `__pycache__/`), and the hidden `.ufo/` directory holds the round work directories `round-5/`–`round-10/`, `reports/` (the round-5 report) and `waves/` (`round-11/`–`round-43/`).
