@@ -1,0 +1,45 @@
+{
+ "lane": "kama",
+ "round": 49,
+ "attempt": 1,
+ "author": "kama L1 (agent KamaR49)",
+ "frozen_at_utc": "2026-10-26T23:17:45Z",
+ "base": "438127bc01ff3b99f98468549d58046f932490ef",
+ "authority": "shokunin.conf assigns operability + calibration; the lowest-scoring non-retired axes are calibration, depth and adjacency (7 each); C2 works calibration (lowest assigned axis), C1 works operability (the other assigned axis). Stagnation nudge inactive (calibration 7 below saturation 8; capabilities entered in rounds 46 and 47, inside the N=4 window). Starting point: SCORECARD.md ### Planned (round 49) items 1 and 2 and the round-48 outside closure's routed R1 and R5 (corpus/lessons/round-48-verifier-spotcheck.md section 6).",
+ "separability": "C1 touches tools/kama-llamacpp-live.py, tools/kama-live-replay.py and corpus/SOURCES.md rows; its counter reads only those, the three committed round-48 receipts and the network. C2 touches tools/append-only-audit.py (and, only if v4 finds a real loss on the lane, a byte-exact restoration in the affected file); its counter reads only that tool, registry/append-only-contract.tsv, the declaring lines it names and git history. A C1 SOURCES append adds lines (no deletion event); C1 touches no C2 path and C2 no C1 path.",
+ "claims": [
+  {
+   "id": "C1",
+   "axis": "operability",
+   "score": "8->8",
+   "type": "measured (capability depth: an execution witness for live-receipt replay observed by the counter from /proc and the server's own tokenizer, plus a record-time bound on archive members); sourced on the llama.cpp server README at caa8191d (/tokenize, /detokenize) and proc_pid_exe(5)",
+   "statement": "kama-live-replay.py --witness-dir holds the rerun server up for an outside observer (round-48 seats K2Cheat, K2Urlswap; closure R5): the counter finds the frozen llama-server binary executing as the listener of the announced port with the frozen model and round-trips a fresh nonce through /tokenize and /detokenize against the model vocabulary it decodes itself, then sees the server gone; verify_archive_member() refuses a sparse or size-mismatched member before hashing it (seat Sen2Live F1; closure R1); the tokenize surface is a source row.",
+   "predicate": "a replay of each of the three committed v5 b11909 receipts holds its rerun server up for an outside observer, which finds the frozen llama-server binary executing as the listener of the announced port with the frozen model, round-trips a fresh nonce through /tokenize and /detokenize against the model's own vocabulary, and sees the server gone after release; the live tool refuses a sparse or size-mismatched archive member before hashing it; and the tokenize surface is a source row; witness=1 cap=1 newrow=1.",
+   "counter": "tools/round49-replay-witness-audit.py",
+   "counter_sha256": "86b4a40dd027ad7dd62c71c9694b354d52e88ffdfc04aa83a1bb648799f0d6c1",
+   "command": "python3 tools/round49-replay-witness-audit.py --repo <lane clone> --tip <full commit> --scratch <dir> --out <receipt>",
+   "target": "witness=1 cap=1 newrow=1 witnessed=3/3 met=True",
+   "kill": "any leg 0 at the measured commit, or met=True on any control"
+  },
+  {
+   "id": "C2",
+   "axis": "calibration",
+   "score": "7->7",
+   "type": "measured (instrument correction: the lane's append-only rule graded through the carve-out by line origin, and declarations bound by whole-word tokens, a negation window and no wildcard self-declaration; outside ground truth: eight constructed fixtures with expectations by construction)",
+   "statement": "append-only-audit v4 definitions (round-48 seats K1Regions, K1Binding): a deleted line in an eligible exempt section stays ungraded only when its text was born in an exempt section (origin), the row token must occur as a whole word, negations within three words of append-only unbind, and a wildcard row binds only through a line naming its directory; the lane stays bound and clean.",
+   "predicate": "append-only-audit at the measured commit grades dated text laundered through an exempt heading, refuses substring, negated and wildcard self-declaration bindings, keeps the native head carve-out, and on the lane binds every contract row, exits 0 and ungrades no deleted line whose origin is not an exempt section; fixture=1 lane=1.",
+   "counter": "tools/round49-append-audit-v4-check.py",
+   "counter_sha256": "26c465a9830b6894160190a8ac777bdb006b79ec421586adb6527f12ab066945",
+   "command": "python3 tools/round49-append-audit-v4-check.py --repo <lane clone> --tip <full commit> --scratch <dir> --out <receipt>",
+   "target": "fixture=1 lane=1 scenarios=8/8 met=True",
+   "kill": "any leg 0 at the measured commit, or met=True on any control"
+  }
+ ],
+ "controls": ".ufo/waves/round-49/controls/ (base.c1.out, base.c2.out, junk-c1-fake-witness.c1.out, junk-c2-no-exempt.c2.out, junk-c2-word-token.c2.out); every control must be met=False",
+ "limits": [
+  "C1 witnesses that the frozen binary executed as the listener with the frozen model and that its tokenizer answered a counter nonce; it does not show the binary came from the downloaded archive at replay time (the r48 replay leg's digest checks carry that) and a replay that runs the same binary from a host copy still passes the witness.",
+  "C1's exe check reads /proc/<pid>/exe: Linux only; a process the counter cannot read (another uid) fails closed.",
+  "C2's origin is the text's first appearance in the file: a line born in the head, later carried in a dated section and deleted from the head again stays ungraded; identical text born in both places counts as exempt-born.",
+  "C2's lane leg bounds the tool's ungraded count by the counter's own natively-exempt count per event; it does not recompute eligibility or the held measures (round-48 C1 counter territory). The sub-20 threshold is unchanged."
+ ]
+}
