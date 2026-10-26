@@ -50,20 +50,7 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 ## Planned
 
-Superseded in round 42. The live plan is `### Round-46 measured results
-
-Measured commit: `4340cf2f68ebbfb618086e16825c2e7effd7fa58` (fresh clone of the lane remote; upstream: a bare clone of `https://github.com/ggml-org/llama.cpp.git` holding every pin and b11906). Base `0163fea2`. Counters: frozen bytes of `5790944350ae41bfe2ce50934bba59e086e747f4`.
-
-| Claim | Base | Measured `4340cf2f` | Command | Receipt |
-|---|---|---|---|---|
-| C1 freshness 8 → 8 | `unverified=91 section=0 newrow=0 met=False` (exit 1) | `pop=91 rows=91 valid=91 unverified=0 unchanged=6 holds=81 reworded=4 drifted=0 removed=0 flags_missing=0 section=1 newrow=1 met=True` (exit 0) | `python3 tools/round46-release-recheck-audit.py --repo <clone> --tip <commit> --upstream <llama.cpp clone>` | `.ufo/waves/round-46/controls/base.c1.out`; `.ufo/waves/round-46/measured/c1-after.out` |
-| C2 calibration 7 → 7 (capability) | `selftest=0 fixture=0 lane=0 table=0 met=False` (exit 1) | `selftest=1 fixture=1 lane=1 table=1 lane_events=5 lane_unrestored=0 lane_partial=2 met=True` (exit 0) | `python3 tools/round46-append-audit-check.py --repo <clone> --tip <commit> --scratch <dir>` | `.ufo/waves/round-46/controls/base.c2.out`; `.ufo/waves/round-46/measured/c2-after.out` |
-
-Regressions at `4340cf2f` (`.ufo/waves/round-46/measured/`): round-41 head counter `mismatches=0 met=True`; round-42 self-description counter `mismatches=0 maxN=46 met=True`; gate `registered 38 unregistered 0 defective 0`; capability census `listed 10 observed 10 missing 0 unsubstantiated 0 met True`; `append-only-audit --selftest` `pass=10 fail=0`; seat yield `seats=65 reports=65 missing=0` (exit 0). Three harms the measured commit introduced, corrected in the next commit (lesson §Mistakes): the round-43 registry counter read `spot=1 mismatches=1 met=False` because the re-anchored calibration row broke its `(outside closures on record)` pattern; `digest-ledger` unknown 2 → 5 and `hexrun-census` unknown 21 → 26 (b11906 binary digests, b11906/b11907 commits and blobs, the S013 re-pin commit) — five digest-ledger rows (two of them the round-45 b11889 leftovers) and five hexrun-ledger rows with evidence `.ufo/waves/round-46/hexrun-evidence/` are appended; tip receipts follow under the same directory (`*-fix.out`). Both scans stay exit 1 on their pre-existing unknowns (digest 2 → 0 not claimed; hexrun 21 at base).
-
-Scores held: operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7. Capabilities 9 → 10 (`append-only-audit`, first-working round 46).
-
-### Planned (round 47)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
+Superseded in round 42. The live plan is `### Planned (round 47)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
 
 ## Retired
 
@@ -2673,6 +2660,19 @@ came back".
 - **C1 verdicts are machine-checked text, not meaning.** Seat K1Cheat greens 91/91 rows with a two-second script from git alone: 17 of the 20 read rows are verified by text relocation, which the preregistration names as the verification itself, but the three `holds-reworded` rows on the byte-identical `server.cpp` (S037, S043, S108) can be rubber-stamped with auto-picked witnesses and a 40-character note. Critics K1R01–K1R10 each showed a range choice the counter accepts for a wrong or weaker verdict (a guard-omitting single-line `holds`, a decoy-witnessed `drifted`, positional range pairing); the S121 case was caught and corrected in the ledger (lesson §Gate). Seat V1Code: `check-fragment.py` prints `VALID` for an id outside the population (F1) and exits 0 when rows are invalid (F4); the counter's `removed` rule checks only the first line of each range (F2) and exits 1, not 2, on a non-git exception (F3). Seat M1Ctr: 46 counter mutants, 43 killed, 3 equivalent. The flag leg reads only `corpus/knowledge/*.md`, so a drifted row used by `SKILL.md` alone could not be flagged (K1R07); no row drifted this round.
 - **C2's "independent recomputation" shares the tool's definition.** Both drop deleted lines that begin with `--` (lesson §Mistakes, shared-definition row; seat K2Hist: lane counts low by 4 and 2, a 21-line fixture deletion read as 0 events); seat X2Fixture found 7 fixtures where tool and counter agree and both differ from a byte-exact oracle (6 of them a ≥20-line deletion passing with exit 0). Seat K2Cheat built three non-capabilities that reach `met=True` (importing the counter's own `recompute`, recognising the fixture's shape, exec of the genuine tool); seat M2Ctr: 12 of 32 counter mutants survive, and the pristine counter accepts a tool whose default threshold is 21; seat M2Tool: 10 of 39 tool mutants survive the selftest and the counter. Seat K2Design: three of the five files are declared append-only nowhere in the lane, and `restored` counts same-commit relocations and blank lines. These are routed to round 47 (planned item 2), not fixed in place: the tool stays on the frozen definition, which the counter is.
 - **Separability holds** (seat N2Couple): the counters read disjoint surfaces; a C1-shaped SOURCES append creates no C2 event and the C2 capability line changes no C1 output.
+
+### Round-46 measured results
+
+Measured commit: `4340cf2f68ebbfb618086e16825c2e7effd7fa58` (fresh clone of the lane remote; upstream: a bare clone of `https://github.com/ggml-org/llama.cpp.git` holding every pin and b11906). Base `0163fea2`. Counters: frozen bytes of `5790944350ae41bfe2ce50934bba59e086e747f4`.
+
+| Claim | Base | Measured `4340cf2f` | Command | Receipt |
+|---|---|---|---|---|
+| C1 freshness 8 → 8 | `unverified=91 section=0 newrow=0 met=False` (exit 1) | `pop=91 rows=91 valid=91 unverified=0 unchanged=6 holds=81 reworded=4 drifted=0 removed=0 flags_missing=0 section=1 newrow=1 met=True` (exit 0) | `python3 tools/round46-release-recheck-audit.py --repo <clone> --tip <commit> --upstream <llama.cpp clone>` | `.ufo/waves/round-46/controls/base.c1.out`; `.ufo/waves/round-46/measured/c1-after.out` |
+| C2 calibration 7 → 7 (capability) | `selftest=0 fixture=0 lane=0 table=0 met=False` (exit 1) | `selftest=1 fixture=1 lane=1 table=1 lane_events=5 lane_unrestored=0 lane_partial=2 met=True` (exit 0) | `python3 tools/round46-append-audit-check.py --repo <clone> --tip <commit> --scratch <dir>` | `.ufo/waves/round-46/controls/base.c2.out`; `.ufo/waves/round-46/measured/c2-after.out` |
+
+Regressions at `4340cf2f` (`.ufo/waves/round-46/measured/`): round-41 head counter `mismatches=0 met=True`; round-42 self-description counter `mismatches=0 maxN=46 met=True`; gate `registered 38 unregistered 0 defective 0`; capability census `listed 10 observed 10 missing 0 unsubstantiated 0 met True`; `append-only-audit --selftest` `pass=10 fail=0`; seat yield `seats=65 reports=65 missing=0` (exit 0). Three harms the measured commit introduced, corrected in the next commit (lesson §Mistakes): the round-43 registry counter read `spot=1 mismatches=1 met=False` because the re-anchored calibration row broke its `(outside closures on record)` pattern; `digest-ledger` unknown 2 → 5 and `hexrun-census` unknown 21 → 26 (b11906 binary digests, b11906/b11907 commits and blobs, the S013 re-pin commit) — five digest-ledger rows (two of them the round-45 b11889 leftovers) and five hexrun-ledger rows with evidence `.ufo/waves/round-46/hexrun-evidence/` are appended; tip receipts follow under the same directory (`*-fix.out`). Both scans stay exit 1 on their pre-existing unknowns (digest 2 → 0 not claimed; hexrun 21 at base).
+
+Scores held: operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7. Capabilities 9 → 10 (`append-only-audit`, first-working round 46).
 
 ### Planned (round 47)
 
