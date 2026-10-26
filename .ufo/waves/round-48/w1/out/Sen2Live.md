@@ -1,6 +1,6 @@
 # Sen2Live — round 48 host-safety review: `verify_archive_member`, `--compare`, replay→live hand-off
 
-**Verdict:** No escape survives — every member-type, path, extraction and digest case I could craft is refused with a stable token, the archive→member→executed-binary binding is sound, and replay hands the live tool exactly one digest-verified archive — but one **High** availability defect is reachable (a 189-byte archive makes `verify_archive_member` read ~10^15 bytes, ≈31–37 h of one core, before the server starts) and eight smaller gaps remain, led by `--compare` leaving its own 0/1/2 exit contract with a traceback.
+**Verdict:** No escape survives — every member-type, path, extraction and digest case I could craft is refused with a stable token, the archive→member→executed-binary binding is sound, and replay hands the live tool exactly one digest-verified archive — but one **High** availability defect is reachable (a 104-byte archive makes `verify_archive_member` hash ~10^15 bytes — ≈6 days of one core at the measured 2.0 GB/s — before the server starts) and twelve further gaps remain (three Medium, five Low, four informational), led by `--compare` leaving its own 0/1/2 exit contract with a traceback.
 
 Reviewed bytes — frozen tip `380bcdff9c8af06997c482f6eb03db926a794a2b`, not the working tree:
 
@@ -17,17 +17,17 @@ Line numbers below are **tip** line numbers, read from the pinned copies in `out
 
 ## Method
 
-Scratch only (`/fast/scratch/hyaku/kama-r48/Sen2Live`): byte copies of the two tip tools, crafted archives and receipts, and every probe calls the **real lane function** (imported from the pinned copy) or the **real CLI**, so both the code path and the exit codes are measured. No untrusted binary was executed; no server was started (the one real-live replay stops at the argparse https gate, before `pick_port`); no lane file, index or jj state was touched; no subagent. `repro_all.py` re-runs every cited measurement in order (≈90 s) and its output is `evidence.txt`.
+Scratch only (`/fast/scratch/hyaku/kama-r48/Sen2Live`): byte copies of the two tip tools, crafted archives and receipts, and every probe calls the **real lane function** (imported from the pinned copy) or the **real CLI**, so both the code path and the exit codes are measured. No untrusted binary was executed; no server was started (the one real-live replay stops at the argparse https gate, before `pick_port`); no lane file, index or jj state was touched; no subagent. `repro_all.py` re-runs every cited measurement in order (≈2 min) and its output is `evidence.txt`.
 
 ## Trust model (stated once, it decides reachability)
 
-`kama-live-replay.py` consumes a receipt that names **both** the `https` URL and its `sha256` (`provenance()`, tip `:96-123`), downloads it, checks the digest (`acquire`, `:126-132`), extracts it, and then executes the extracted member through the live tool. The digest gate therefore proves *the bytes are the ones this receipt claims*, not that the receipt is authentic, and nothing anchors who serves them (§F9). **Every archive-shaped input below is therefore reachable with a receipt that did not come from the lane**, and the hardening is not defence-in-depth.
+`kama-live-replay.py` consumes a receipt that names **both** the asset/model URL and its `sha256` (`provenance()`, tip `:96-123`), downloads it, checks the digest (`acquire`, `:126-132`), extracts it, and then executes the extracted member through the live tool. The digest gate therefore proves *the bytes are the ones this receipt claims*, not that the receipt is authentic, and nothing anchors who serves them (§F12). **Every archive-shaped input below is therefore reachable with a receipt that did not come from the lane**, and the hardening is not defence-in-depth.
 
 ---
 
 ## 1. `verify_archive_member` (live `:193-219`)
 
-### 1.1 What holds (measured, `probe_archive.py`, `evidence.txt` §1)
+### 1.1 What holds (measured, `probe_archive.py`; log in `evidence.txt`)
 
 | crafted input | result |
 |---|---|
@@ -64,13 +64,16 @@ $ python3 pax_sparse_probe.py          # PAX 0.1 and 1.0, 189 / 204-byte archive
 0.1 declared=1000000000000000 archive_bytes=189 read=34360786944 eof=False seconds=3.70 GiB_per_s=9.28
 1.0 declared=1000000000000000 archive_bytes=204 read=34360786944 eof=False seconds=3.84 GiB_per_s=8.95
 $ python3 sparse_bounded_probe.py      # the read is bounded exactly by the declared size
-declared=68719476736 archive_bytes=194 read=68719476736 eof=True seconds=9.19 -> 10**15 B would take 37 h
+declared=68719476736 archive_bytes=194 read=68719476736 eof=True seconds=9.19 -> 10**15 B would take 37 h (read only)
+$ python3 sparse_rate_probe.py         # the real verify loop: read + SHA-256, the number that matters
+declared=1073741824 archive_bytes=104 seconds=0.530 GB_per_s=2.03 -> a 10**15 declared member takes 137 h
+declared=4294967296 archive_bytes=104 seconds=2.134 GB_per_s=2.01 -> a 10**15 declared member takes 138 h
 $ python3 probe_archive.py ... (old-GNU header, 12-byte octal cap)
 gnu-sparse-declared-1073741824   seconds 0.578   archive 104 bytes
 gnu-sparse-declared-8589934591   seconds 4.438   archive 103 bytes
 ```
 
-Impact: 9.3 GB/s of zero-page reads and SHA-256 for 31–37 h on a 189-byte input, single-threaded, before `pick_port` (`:1579`) and `Popen` (`:1648`) — i.e. the harness never gets to its 10 s SIGTERM grace, its readiness timeout or its receipt. The 12-byte octal field of old GNU format caps the damage at ~8 GiB (≈1 s); PAX `GNU.sparse.size`/`GNU.sparse.realsize` are decimal and cap nothing.
+Impact: 137–143 h (5.7–6 days) of one core on a 104-byte input, single-threaded, before `pick_port` (`:1579`) and `Popen` (`:1648`) — the harness never reaches its 10 s SIGTERM grace, its readiness timeout or its receipt, and `--server-archive` has no timeout. The verifier runs at ≈2.0 GB/s because the loop also hashes (a read-only loop reaches 9.3 GB/s, so 137 h is the cost of SHA-256 on zero pages, not of I/O). The 12-byte octal field of old GNU format caps the damage at ~8 GiB (≈4 s); PAX `GNU.sparse.size`/`GNU.sparse.realsize` are decimal and cap nothing.
 
 Smallest fix (verified, `proposed-verify.diff` / `proposed_verify.py`): refuse sparse members and cap the member — `if not found.isfile() or found.sparse or found.size > MEMBER_MAX_BYTES:`. Against the same matrix the sparse case is now refused in 0.000 s and every other verdict is unchanged.
 
@@ -83,7 +86,7 @@ Smallest fix (verified, `proposed-verify.diff` / `proposed_verify.py`): refuse s
 300k members: archive 2.97 MB, 3.1 s, 133 MB heap (tracemalloc)
 ```
 
-Impact: ≈0.44 MB RSS and ≈23 µs per member, all before the one member that matters is read. A ~50 MB gzip with 5M entries is ≈2.2 GB RSS **[INFERENCE: linear extrapolation of the measured 1M point]**, on a host that is also running the lane's other seats.
+Impact: ≈444 bytes of Python heap and ≈23 µs per member, all before the one member that matters is read. A ~50 MB gzip with 5M entries is ≈2.2 GB RSS **[INFERENCE: linear extrapolation of the measured 1M point]**, on a host that is also running the lane's other seats.
 
 Smallest fix (verified): iterate the `TarFile` (streaming), keep the last match, and cap the entry count — `for info in tf: count += 1; if count > MEMBER_MAX_COUNT: raise SetupError('provenance-archive-too-many-members')`. Measured after the fix: 20k entries refused in 0.054 s, last-occurrence semantics preserved.
 
@@ -102,7 +105,7 @@ Smallest fix (verified): `os.stat` + `stat.S_ISREG` + size cap before opening �
 
 ### F4 (Low) — hash-then-reopen: the recorded archive digest need not be the parsed bytes
 
-`:199` hashes **by path**, `:205` opens **by path** again. An attacker with write access to the archive's directory (shared `$TMPDIR`, or `--work` on a shared filesystem) can swap the file between the two opens: `provenance.verified.archive_sha256` then records an archive whose member was never read. The member→executed-binary binding still holds (`:1569` passes `server_sha`), so the impact is a false provenance record, not wrong execution.
+`:199` hashes **by path**, `:205` opens **by path** again. An attacker with write access to the archive's directory (shared `$TMPDIR`, or `--work` on a shared filesystem) can swap the file between the two opens: `provenance.verified.archive_sha256` then records an archive whose member was never read. The member→executed-binary binding still holds (`:1561` passes `server_sha`, `:1564-1566` record the digest it returned), so the impact is a false provenance record, not wrong execution.
 
 Smallest fix (verified in the same patch): open once, hash that descriptor, `seek(0)`, `tarfile.open(fileobj=arc, mode='r:*')`.
 
@@ -128,7 +131,7 @@ $ python3 compare_probe.py shape
 
 Exit **1 is the documented "the receipts differ" code**, so a caller cannot distinguish unusable input from a real disagreement, and gets a traceback instead of a `mismatch:` line. In the replay path the same escape is worse: `compare()` is called at `:249`, and `replay()`'s handler at `:261` lists `(OSError, ValueError, tarfile.TarError, TimeoutExpired, URLError)` — a `TypeError` or `RecursionError` from `projection`/`json.load` (`:209`) leaves `replay()` and `main` writes **no `--out` JSON at all**.
 
-Smallest fix (verified, `proposed-replay.diff`): strict `projection` raising `ValueError`, `compare()` turning it into an explicit `projection:unreadable:<why>` mismatch, and `except (OSError, ValueError, RecursionError, MemoryError)` on the read path. After the fix: deep nesting → exit 2 `could-not-read: RecursionError…`; the three `TypeError` cases → exit 1 with a named mismatch; identical and the three real round-48 receipts → exit 0 (unchanged).
+Smallest fix (verified, `proposed-replay.diff`): strict `projection` raising `ValueError`, `compare()` turning it into an explicit `projection:unreadable:<why>` mismatch, and `except (OSError, ValueError, RecursionError, MemoryError)` on the read path. After the fix: deep nesting → exit 2 `could-not-read: RecursionError…`; the two `TypeError` cases → exit 1 with a named mismatch; identical and the three real round-48 receipts → exit 0 (unchanged).
 
 ### F6 (Medium) — a dict-valued `models.data` silently projects to `[]`: two different receipts compare equal
 
@@ -173,7 +176,7 @@ A 400 MB receipt loads in 1.09 s with an **824 MB** child RSS (`compare_probe.py
 
 ### F8 (Low) — `fetch()` accepts `file://` in production
 
-`:81-84`: `if not (url.startswith("https://") or url.startswith("file://"): raise Refused(...)`, while the docstring says *"file:// only for the selftest"* and the module doc says *"Network: https only"*. Consequence (measured above): replay reads, hashes and extracts any local path a receipt names before the live gate refuses. Smallest fix: `allow_file=False` parameter, set only by `_selftest` — already present in the uncommitted worktree edit (§Coordination).
+`:81-84`: `if not (url.startswith("https://") or url.startswith("file://")): raise Refused(f"url-scheme:{url}")`, while the docstring says *"file:// only for the selftest"* and the module doc says *"Network: https only"*. Consequence (measured above): replay reads, hashes and extracts any local path a receipt names before the live gate refuses. Smallest fix: `allow_file=False` parameter, set only by `_selftest` — already present in the uncommitted worktree edit (§Coordination).
 
 ### F9 (Low) — no download bound
 
@@ -229,7 +232,7 @@ It reached `server-not-executable`, so the whole v5 gate accepted `https://evil.
 |---|---|
 | `verify_archive_member`: `S_ISREG` + size cap + single descriptor + streaming index + entry cap + sparse/size refusal | 6/6 type refusals unchanged; sparse 1 GiB refused in 0.000 s (was 0.578 s + 1 GiB read); 20k entries refused in 0.054 s (was a full index); FIFO refused in 0.000 s (was a hang, rc 124); last-occurrence duplicate semantics preserved |
 | drop-in safety | lane-shaped copy of the tree (`tools/` + `registry/`): tip `--selftest` → `selftest: ok`; patched `--selftest` → `selftest: ok` |
-| replay: strict projection + `projection:unreadable` + `RecursionError`/`MemoryError` on the read path | deep nesting → exit 2 `could-not-read`; the 3 `TypeError` cases → exit 1 with a named mismatch (was exit 1 + traceback); malformed-vs-malformed → exit 1 (was a vacuous match); identical + the three real round-48 receipts → exit 0; `--selftest` 21/21 |
+| replay: strict projection + `projection:unreadable` + `RecursionError`/`MemoryError` on the read path | deep nesting → exit 2 `could-not-read`; the two `TypeError` cases → exit 1 with a named mismatch (was exit 1 + traceback); the two silent-drop cases now name their reason; malformed-vs-malformed → exit 1 (was a vacuous match); identical + the three real round-48 receipts → exit 0; `--selftest` 21/21 |
 
 Note: the live tool's `--selftest` needs its `registry/` sibling (`refused_ports()` reads `LANE/registry/endpoint-consumers.tsv`), so a bare copy of `tools/kama-llamacpp-live.py` fails `--selftest` with `SetupError` — an artefact of copying one file, not a lane defect. Reproduce with a lane-shaped copy as in `evidence.txt`.
 
@@ -249,6 +252,6 @@ None of this falsifies C1 (7/7, untouched by this seat) or C2 (8/8): the v5 clai
 
 ## Reproduction & artefacts
 
-`out/Sen2Live/`: `repro_all.py` (driver), `evidence.txt` (its full log), `kama-llamacpp-live.py` + `kama-live-replay.py` (pinned reviewed bytes, `reviewed-bytes.txt`), `probe_archive.py`, `compare_probe.py`, `passthrough_probe.py`, `urlgate_probe.py`, `pax_sparse_probe.py`, `sparse_bounded_probe.py`, `extract_bomb_probe.py`, `proposed_verify.py`, `compare_fix_check.py`, `fake_live.py`, `proposed-verify.diff`, `proposed-replay.diff`, `kama-live-replay-fixed.py`.
+`out/Sen2Live/`: `repro_all.py` (driver), `evidence.txt` (its full log), `kama-llamacpp-live.py` + `kama-live-replay.py` (pinned reviewed bytes, `reviewed-bytes.txt`), `probe_archive.py`, `compare_probe.py`, `passthrough_probe.py`, `urlgate_probe.py`, `pax_sparse_probe.py`, `sparse_bounded_probe.py`, `sparse_rate_probe.py`, `extract_bomb_probe.py`, `proposed_verify.py`, `compare_fix_check.py`, `fake_live.py`, `proposed-verify.diff`, `proposed-replay.diff`, `kama-live-replay-fixed.py`.
 
 Scratch `/fast/scratch/hyaku/kama-r48/Sen2Live` was removed after the run; no `/tmp` path is cited. No tool was installed (`RULES.md` tooling authorisation not used; the host-wide pacman pause was irrelevant), no service was started or stopped, no subagent, no `agent://all`.

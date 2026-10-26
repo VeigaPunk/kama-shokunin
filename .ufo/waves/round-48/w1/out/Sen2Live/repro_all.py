@@ -62,3 +62,7 @@ EOF""", "verify_archive_member: GNU sparse members (declared size drives the rea
     sh("python3 compare_fix_check.py", "PROPOSED compare/projection fix on the same cases + real receipts")
     sh("python3 passthrough_probe.py", "replay -> live pass-through (fake argv dump, then real live)")
     sh("python3 urlgate_probe.py", "v5 URL/pin gate: what is anchored, and the v4 counter-example")
+    sh("python3 pax_sparse_probe.py", "PAX sparse realsize is decimal: no EOF in 34.4 GiB (probe caps at 32 GiB)")
+    sh("python3 sparse_bounded_probe.py", "read bounded by the declared size + extraction sparse-ness")
+    sh("python3 extract_bomb_probe.py", "replay extract() on a 1 GiB-declared sparse member")
+    sh("python3 sparse_rate_probe.py", "throughput of the real verify loop (read + SHA-256)")
