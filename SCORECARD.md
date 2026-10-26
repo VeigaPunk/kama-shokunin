@@ -50,7 +50,7 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 ## Planned
 
-Superseded in round 42. The live plan is `### Planned (round 48)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
+Superseded in round 42. The live plan is `### Planned (round 49)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
 
 ## Retired
 
@@ -2794,3 +2794,14 @@ Same four columns as the round-47 canonical list, which stays byte-intact; no ro
 
 1. Calibration: content-aware eligibility for the exempt head sections (seat K1Regions: the window-maximum line count is content-blind), a word-bounded binding token and a denial window (seat K1Binding), fixtures for the five unexercised v3 clauses and for partial/unrestored states in the counter's own recompute (seats K1Fixture, M1Ctr), a selftest leg the tool cannot self-certify (seat M1Tool); decide the sub-20 boundary (seat L1Lowthr's 66 graded sub-threshold events, one real `LOG.md` loss at `ed135b3c`).
 2. Operability: an execution witness in the replay leg (seats K2Cheat, K2Urlswap: a replay that never runs a server meets the round-48 counter), record-time fetching of the recorded URLs or a stated reason not to (seat K2Record), the prerelease cliff (closure D7), and the b11906 ledger population at b11909+ (round-47 seat U2Server).
+
+### Round-48 measured results
+
+Measured commit: `c4b2175d2ff9466beaed039dc8330176362e7d82` (fresh clone of the lane). Base `33e00582`. Counters: frozen bytes of `12284ba39fb1b46b43d43ee82423bebe08c700dc`.
+
+| Claim | Base | Measured `c4b2175d` | Command | Receipt |
+|---|---|---|---|---|
+| C1 calibration 7 → 7 | `selftest=0 contract=0 lane=0 fixture=0 stable=0 rows=0 files=0 lane_events=0 lane_failures=NA ungraded_lines=0 fixture_fail=11 met=False` (exit 1) | `selftest=1 contract=1 lane=1 fixture=1 stable=1 rows=10 files=91 lane_events=5 lane_failures=0 ungraded_lines=89 fixture_fail=0 met=True` (exit 0) | `python3 tools/round48-append-audit-v3-check.py --repo <clone> --tip <commit> --scratch <dir>` | `.ufo/waves/round-48/controls/base.c1.out`; `.ufo/waves/round-48/measured/c1-after.out` |
+| C2 operability 8 → 8 | `receipts=0 recordcheck=0 replay=0 compare=0 tamper=0 urlswap=0 newrow=0 replayed=0/3 met=False` (exit 1) | `receipts=1 recordcheck=1 replay=1 compare=1 tamper=1 urlswap=1 newrow=1 replayed=3/3 met=True` (exit 0) | `python3 tools/round48-live-replay-v5-audit.py --repo <clone> --tip <commit> --scratch <dir>` | `.ufo/waves/round-48/controls/base.c2.out`; `.ufo/waves/round-48/measured/c2-after.out` |
+
+Regressions at `c4b2175d` (`.ufo/waves/round-48/measured/*.out`, each with its `tip=` line): gate `registered 42 unregistered 0 defective 0`; capability census `listed 11 observed 11 missing 0 unsubstantiated 0 met True`; round-41 head counter `mismatches=0 met=True`; round-43 registry `mismatches=0 met=True`; `digest-ledger` `unknown=0`; `hexrun-census` `unknown=0`; `sources-append-only.py --from 33e00582` exit 0 (blind since round 45 until this round); `append-only-audit` on the lane exit 0 (`regressed=0`); selftests `AOA_SELFTEST pass=28`, `KLR_SELFTEST pass=22`, `check-receipt` 16 VALID / 107 rejected, live `selftest: ok`; round-47 C2 counter `met=True` (v4 replays still work). Two head items the measured commit missed, fixed in the next commit and re-run at the final tip (`*-final.out`): the round-42 self-description counter wanted `### Planned (round 49)` named in the head §Planned pointer, and the pointer check wanted this section. The round-47 C1 counter fails by construction (it grades the v2 contract format v3 replaced; seat X2V4Compat).
