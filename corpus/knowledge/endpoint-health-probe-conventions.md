@@ -67,3 +67,5 @@ one, and still not a readiness proof.
 
 Recheck: this entry's `recheck:` is 90d (line 5) and so are S480's and S481's;
 no cadence change follows from this correction.
+
+**Round-45 citation correction (appended 2026-10-26; round-44 closure D3).** The round-44 process qualifications above cite "(S480, S481)" for which process answers the second vLLM `/health` (lines 42 and 61). S480's own `teaches` cell disclaims the process question (release notes list what shipped, not where the route lives) and S481 is a tier-C pull request. The row that carries the process fact is **S483** (`vllm/entrypoints/cli/preload.py` at v0.31.0: `_build_health_app` line 70, `@app.get("/health", include_in_schema=False)` line 73, `return Response(status_code=200 if state.is_ready else 503)` line 75). Read those citations as S483 for the process statement; S480 and S481 stay as the release-scope and change-history pointers. The earlier lines are not rewritten.
