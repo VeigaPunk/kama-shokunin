@@ -1,0 +1,128 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -286,6 +286,19 @@
+ WITNESS_SCHEMA = 'kama-live-witness/v1'
+ 
+ 
++def _released(release, announced_ns):
++    """Round 49 host-safety (seat Sen1Witness F2 residual): only a regular file
++    created after this run's announcement releases the hold. os.path.exists also
++    accepted a directory or FIFO, and a release planted between
++    prepare_witness_dir() and the announcement ended the hold at once
++    (witness.released true with waited_ms 0 and nothing observed)."""
++    try:
++        st = os.lstat(release)
++    except OSError:
++        return False
++    return stat.S_ISREG(st.st_mode) and st.st_mtime_ns >= announced_ns
++
++
+ def prepare_witness_dir(wdir):
+     """Round 49 (seat X1Offline): a witness dir carries ONE run's handshake.
+ 
+@@ -331,7 +344,7 @@
+     /proc/<pid>/exe, the listening socket and the server's own answers; this tool records
+     only that it waited, never what the observer saw."""
+     ready = {'schema': WITNESS_SCHEMA, 'port': port, 'pid': proc.pid,
+-             'written_utc': _utc_now()}
++             'written_utc': _utc_now(), 'nonce': os.urandom(8).hex()}
+     ready_path = os.path.join(wdir, 'ready.json')
+     # per-run temp name: a fixed ready.json.tmp is opened by every run using the
+     # directory, and a second run's os.replace() then fails ENOENT (X1Offline)
+@@ -343,23 +356,26 @@
+     # O_EXCL|O_NOFOLLOW: a symlink planted at the temp name is never followed for the
+     # write (round-49 seat Sen1Witness F1); an existing entry is a setup error
+     try:
+-        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
++        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
+     except OSError as exc:
+         raise SetupError('witness-dir-unusable:' + (exc.strerror or type(exc).__name__))
+     with os.fdopen(fd, 'w') as fh:
+         json.dump(ready, fh)
+     os.replace(tmp, ready_path)
++    # the announcement time gates `release`: a file created before it (planted in the
++    # window between prepare_witness_dir() and this write) never ends the hold
++    announced_ns = os.lstat(ready_path).st_mtime_ns
+     release = os.path.join(wdir, 'release')
+     t0 = time.monotonic()
+     try:
+         # the hold also ends when this tool's parent dies (round-49 seat X1Kill: a killed
+         # replay left the server listening for the whole witness timeout, because
+         # pdeathsig covers only live tool -> server); teardown then runs as usual
+-        while (not os.path.exists(release) and time.monotonic() - t0 < timeout
++        while (not _released(release, announced_ns) and time.monotonic() - t0 < timeout
+                and _child_running(proc) and os.getppid() == parent):
+             time.sleep(0.05)
+         waited = int((time.monotonic() - t0) * 1000)
+-        released = os.path.exists(release)
++        released = _released(release, announced_ns)
+         orphaned = os.getppid() != parent
+     finally:
+         # the handshake names this run's child only while it is up: a ready.json left
+@@ -370,7 +386,8 @@
+             except OSError:
+                 pass
+     return {'schema': WITNESS_SCHEMA, 'dir': os.path.abspath(wdir), 'port': port,
+-            'pid': proc.pid, 'released': released, 'waited_ms': waited, 'orphaned': orphaned}
++            'pid': proc.pid, 'released': released, 'waited_ms': waited, 'orphaned': orphaned,
++            'nonce': ready['nonce'], 'timeout_s': timeout}
+ 
+ 
+ def sha256_file(path):
+--- a/tools/round49-replay-witness-audit.py
++++ b/tools/round49-replay-witness-audit.py
+@@ -289,6 +289,16 @@
+     return nonce
+ 
+ 
++def _fresh(path, after_ns):
++    """Round 49 host-safety (seat Sen1Witness F3): an announcement this replay did not
++    write is not a witness of this replay (a ready.json planted after the live tool's
++    prepare_witness_dir() named a foreign server and passed every per-pid check)."""
++    try:
++        return os.stat(path).st_mtime_ns >= after_ns
++    except OSError:
++        return False
++
++
+ def witness_one(tree, rpath, S, tag, env, vocab, detail):
+     work, wd = os.path.join(S, f"work-{tag}"), os.path.join(S, f"wd-{tag}")
+     os.makedirs(wd)
+@@ -297,6 +307,7 @@
+     p = subprocess.Popen([sys.executable, os.path.join(tree, REPLAY), "--receipt", rpath, "--work", work,
+                           "--out", outj, "--witness-dir", wd], env=env, cwd=tree, stdout=log, stderr=log)
+     probs, ready, t0 = [], None, time.monotonic()
++    started_ns = time.time_ns()
+     try:
+         while time.monotonic() - t0 < READY_WAIT and p.poll() is None:
+             ready = load(os.path.join(wd, "ready.json"))
+@@ -306,6 +317,9 @@
+         if not isinstance(ready, dict) or not isinstance(ready.get("pid"), int) \
+                 or not isinstance(ready.get("port"), int):
+             probs.append(f"no ready.json (replay exit {p.poll()})")
++        elif not _fresh(os.path.join(wd, "ready.json"), started_ns):
++            probs.append("ready.json predates this replay: an announcement planted or "
++                         "left over from another run was observed, not this run's")
+         else:
+             pid, port = ready["pid"], ready["port"]
+             nonce = observe(pid, port, vocab, probs)
+@@ -322,8 +336,17 @@
+                          f"refused {j.get('refused') if isinstance(j, dict) else None}")
+         rr = load(j.get("rerun_receipt")) if isinstance(j, dict) and j.get("rerun_receipt") else None
+         if not (isinstance(rr, dict) and isinstance(rr.get("witness"), dict)
+-                and rr["witness"].get("released") is True):
+-            probs.append("rerun receipt does not record witness.released true")
++                and rr["witness"].get("released") is True
++                and isinstance(rr["witness"].get("waited_ms"), int)
++                and rr["witness"]["waited_ms"] > 0):
++            probs.append("rerun receipt does not record a non-empty witness.released")
++        elif isinstance(ready, dict) and (
++                (rr["witness"].get("pid"), rr["witness"].get("port")) != (ready.get("pid"), ready.get("port"))
++                or (rr["witness"].get("nonce") is not None
++                    and rr["witness"].get("nonce") != ready.get("nonce"))):
++            probs.append("ready.json is not the rerun receipt's witness "
++                         f"({ready.get('pid')}@{ready.get('port')} "
++                         f"vs {rr['witness'].get('pid')}@{rr['witness'].get('port')})")
+         if isinstance(ready, dict) and isinstance(ready.get("pid"), int):
+             if pid_alive(ready["pid"]) or not port_refuses(ready["port"]):
+                 probs.append("server still alive or port still accepting after the replay exited")

@@ -95,10 +95,14 @@ Peer changes that landed during the wave: `prepare_witness_dir()` (X1Offline), a
 
 The worktree `hold_for_witness()` now reads `parent = os.getppid()`, ends the loop when reparented,
 unlinks `ready.json` in a `finally` and reports `orphaned` — the comment credits this seat. The
-worktree `kama-live-replay.py` still differs from the build only by a witness selftest case: no
-`start_new_session`, no `preexec_fn`, no signal handling, so the replay hop remains open and W2 is
-closed only by proposal 1. With the hold fix in place, cleaning W2 now needs two signals instead
-of three: `SIGTERM` the replay → the live tool aborts its hold → server down within ~1 s.
+replay hop is still open: the worktree `kama-live-replay.py` has gained a witness selftest and a
+`--witness-timeout` bound (`0 < t <= 3600`, Sen1Witness F4) but still spawns the live child with a
+bare `subprocess.run(...)` — no `start_new_session`, no `preexec_fn`, no signal handling — so W2 is
+closed only by proposal 1. The worktree moved again after the W1/W2 runs
+(`kama-live-replay.py` `f615d9a0…e16894`, `kama-llamacpp-live.py` `0b31f8e6…88a3ba` at 23:43Z);
+the spawn and the hold fix were unchanged in that move, but re-check at integration. With the hold
+fix in place, cleaning W2 now needs two signals instead of three: `SIGTERM` the replay → the live
+tool aborts its hold → server down within ~1 s.
 
 ## Defect
 
@@ -148,11 +152,13 @@ reports the leak rather than hiding it, so C1's `met` predicate is not cheated b
 2. `out/X1Kill/proposed-live-witness-orphan.diff` — `tools/kama-llamacpp-live.py` against the
    build blob: `hold_for_witness()` records `os.getppid()` and leaves the loop as soon as it is
    reparented, adding `orphaned` to the witness block. Defence in depth for any future caller
-   that gets the spawn wrong.
+   that gets the spawn wrong. **This one has since landed in the worktree** (~20:38Z, with a
+   `ready.json` cleanup and an announce check on top); the diff is kept as the minimal form.
 
-Verification (each a real replay of receipt-1; `$S/prop/` and `$S/fake-lane/` are the patched
-copies, the patched live tool staged with `tools/kama-probe.sh` + `registry/` so it resolves its
-lane-relative paths):
+Verification (each a real replay of receipt-1; the patched copies lived in scratch `$S/prop/` and
+`$S/fake-lane/`, since removed — patched replay sha256 `aa5ff0568fb3470847c540306211de4bfd8dddcb6001f6b6b46e0b1c4e9ebf20`,
+patched live tool `4a46e208b42ff66746cacc489a0b79df2cacf6ab43f5abb3ca86ef95aaa01312`, the patched
+live tool staged with `tools/kama-probe.sh` + `registry/` so it resolves its lane-relative paths):
 
 | run | combination | result |
 |-----|-------------|--------|
@@ -163,11 +169,14 @@ lane-relative paths):
 
 ## Operability notes
 
-* A killed witness run binds a loopback port for up to `--witness-timeout` (120 s default) and
-  then self-cleans; the correct teardown target today is the **live child** (SIGTERM, 0.2 s) or
-  writing `<witness-dir>/release`, *not* the replay.
-* `ready.json` outlives a killed replay, which is what lets an outside observer still find the
-  held server — useful, but it also means "replay gone" does not imply "server gone".
+* At the build, a killed witness run binds a loopback port for up to `--witness-timeout`
+  (120 s default) and then self-cleans; the teardown target was the **live child** (SIGTERM,
+  0.2 s) or `<witness-dir>/release`, never the replay. With the worktree's hold fix, SIGTERM to
+  the replay is enough for the replay-kill case (W1: 0.25 s), but a killed *counter* still needs
+  the replay stopped first (W2).
+* At the build, `ready.json` outlived a killed replay, so "replay gone" did not imply "server
+  gone". The worktree now unlinks it when the hold ends (W1: `ready_json_left false`), which
+  also removes a stale handshake a later observer could read.
 * No new tool was installed; system `python3` (3.14), `ss`, `sha256sum` only. No pacman, no git
   mutation, no lane write outside `out/` (`git -C kama-shokunin status --porcelain` shows only
   other seats' in-flight files, e.g. `tools/kama-llamacpp-live.py` from V1Live; untouched by me).
@@ -180,5 +189,6 @@ lane-relative paths):
 `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/w1/out/X1Kill.md`
 `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/w1/out/X1Kill/`
 (`SUMMARY.json`, `result-A…E.json`, `result-B1.json`, `result-B2.json`, `result-F…H2.json`,
-`result-I2.json`, `drive*.py`, `counter_shape.py`, `replay-*.log`,
-`proposed-replay-spawn.diff`, `proposed-live-witness-orphan.diff`)
+`result-I2.json`, `result-W1.json`, `result-W2.json`, `drive*.py`, `counter_shape.py`,
+`worktree-sha.txt`, `replay-*.log`, `proposed-replay-spawn.diff`,
+`proposed-live-witness-orphan.diff`)
