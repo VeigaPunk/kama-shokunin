@@ -635,3 +635,21 @@ Still frontier:
 - Cross-check of S-ids named in lesson prose against the rows they name (`considerthese/2026-10-25.md` proposal 1, second half); round 42's `tools/digest-ledger.py` covers digests only.
 
 Correction to the `## Frontier` list above (seat R42A11, round-42 wave): its third bullet says "discernment and promotion remain unverified" because a non-author spot-check was "unavailable in round 5". That is stale for discernment: 28 outside closures are committed (`python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"` → 28 at the round-42 tip) and `lessons/round-41-verifier-spotcheck.md` §4 samples one admitted and one rejected candidate. Promotion stays unverified: `SHONEN.md` holds four `[~]` boxes and no named non-author verifier. The bullet above is left as written (append-only).
+
+
+## Coverage map — round 43 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/runtime-health-surface-processes.md` (`corpus/knowledge/runtime-health-surface-processes.md`) | Which vLLM process answers `/health`: the v0.31.0 release notes list a `/health` endpoint and a readiness wait under "Fast restart" (`vllm preload`, the weight cache daemon), and pull request 58552 states the endpoint was added to the weight cache daemon parent process with `starting`, `ready` and `failed` states — a different process from the inference server whose one `/health` route the lane already holds (S004); S480, S481 | 43 |
+
+## Frontier disposition — round 43
+
+Advanced: the process map of vLLM's `/health` surface. The endpoint the v0.31.0 release notes announce is the weight cache daemon's (`vllm preload`), not the inference server's; the pull request behind it names the three states and the reason for them, "distinguish daemon startup from readiness". Entry: `knowledge/runtime-health-surface-processes.md` (S480, S481).
+
+Still frontier:
+- K05 (declared versus served context capacity): the served side on a registered endpoint still needs an authorised serving runtime. No endpoint was sampled this round; round 42's engine-side source readings (`knowledge/context-capacity-engine-sides.md`, S478, S479) stand and nothing here widens them.
+- Where the endpoint is served from today. The pull request's own commit list carries "Move daemon health endpoint to preload CLI" and the diff registers the route in `vllm/entrypoints/cli/preload.py` (S481); the entry reads that diff, not the merged file at the v0.31.0 tag, so a later move is outside it.
+- Shipped readiness for the inference server: pull requests 46811 and 59179 remain open proposals, and the shipped server route set is still the single `/health` of S004.
+
+No endpoint was sampled, no serving runtime was started, and registered consumers still sample DEAD; that stays operator-owned.

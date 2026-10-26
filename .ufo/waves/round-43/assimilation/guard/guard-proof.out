@@ -1,0 +1,24 @@
+# Guard proof — 0-3-space vs column-zero row patterns (observed transcript)
+# commands run from /fast/scratch/kama-r43/clone (read-only) and the seat output dir
+
+$ grep -oE "^|[[:space:]]*S[0-9]{3,}" guard/fixture-registry.md | grep -oE "S[0-9]+" | sort   # (column-zero pattern, literal ^|)
+S001
+
+$ grep -oE "^ {0,3}|[[:space:]]*S[0-9]{3,}" guard/fixture-registry.md | grep -oE "S[0-9]+" | sort  # (0-3-space pattern)
+S001
+S330
+
+$ wc -l re-staged-ids   # copy of the real staged ids
+142
+
+$ comm -12 re-col0-ids re-staged-ids > re-col0-collisions; wc -c re-col0-collisions
+0
+$ cat re-space-collisions
+S330
+
+# real registry control (no indented rows today): both patterns give the same 220 ids
+$ grep -oE "^|[[:space:]]*S[0-9]{3,}" /fast/scratch/kama-r43/clone/corpus/SOURCES.md | grep -oE "S[0-9]+" | sort | wc -l
+220
+$ grep -oE "^ {0,3}|[[:space:]]*S[0-9]{3,}" /fast/scratch/kama-r43/clone/corpus/SOURCES.md | grep -oE "S[0-9]+" | sort | wc -l
+220
+$ diff <col0> <space>  ->  identical (same-id-sets, exit 0)
