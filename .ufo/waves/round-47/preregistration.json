@@ -1,0 +1,68 @@
+{
+ "lane": "kama",
+ "round": 47,
+ "attempt": 1,
+ "author": "kama L1 (agent KamaR47)",
+ "frozen_at_utc": "2026-10-26T21:12:52Z",
+ "base": "172b8ad040d51ce8c011238c1408d4e0b6aa9595",
+ "authority": "shokunin.conf assigns operability + calibration; the lowest-scoring non-retired axes are calibration, depth and adjacency (7 each); C1 works calibration (lowest assigned), C2 works operability (the other assigned axis). Stagnation nudge inactive (calibration 7 below saturation 8). Starting point: SCORECARD.md ### Planned (round 47) item 1, second option (append-only-audit v2 with a numstat cross-check, byte-exact line identity and declared regions, under a counter frozen before it is scored), plus the round-46 closure's routed D1, D2 (C1) and D5 with round-45 D3 (C2). Planned item 2 (freshness after b11906) is not claimed: two claims, two assigned axes.",
+ "separability": "C1 touches tools/append-only-audit.py and registry/append-only-contract.tsv; its counter reads those two paths and the lane's history of the files the contract declares. C2 touches tools/kama-llamacpp-live.py, tools/kama-live-replay.py, .ufo/waves/round-47/c2/live/receipt-{1,2,3}.json and one corpus/SOURCES.md row; its counter reads only those. C2's SOURCES append adds lines (no deletion event); the C1 lane leg compares the tool with the counter's own recomputation at any history, so C2 landing cannot change a C1 leg's verdict, and C1 landing touches no C2 path.",
+ "claims": [
+  {
+   "id": "C1",
+   "axis": "calibration",
+   "score": "7->7",
+   "type": "measured (instrument correction against outside ground truth: git numstat and a constructed fixture)",
+   "statement": "append-only-audit v2: the lane's append-only self-description is audited against the files a machine-readable contract (registry/append-only-contract.tsv) declares, each row pointing at the lane line that declares the rule, including corpus/lessons/*.md; deleted counts equal git numstat (round-46 closure D1: the `--` blind spot); restoration is a byte-exact multiset measure maximised over the event's own window, so a later head re-anchor cannot lower it (closure D2); and v2 matches an independent recomputation on the lane and on a constructed fixture with CRLF, `--`, `---`, duplicate and no-final-newline lines.",
+   "predicate": "append-only-audit v2 at the measured commit passes its selftest, audits exactly the files a resolvable append-only contract declares, matches git numstat and this counter's recomputation on the lane's own history and a constructed fixture, and does not lower a restoration when the audited tip moves; selftest=1 contract=1 lane=1 fixture=1 stable=1.",
+   "counter": "tools/round47-append-audit-v2-check.py",
+   "counter_sha256": "a180ab84cc642731a6bd5fca92e5218dfaa6c074279e2f001110b348d73755ed",
+   "command": "python3 tools/round47-append-audit-v2-check.py --repo <lane clone> --tip <full commit> --scratch <dir> --out <receipt>",
+   "before": "selftest=1 contract=0 lane=0 fixture=0 stable=0 met=False (controls/base.c1.out)",
+   "target": "selftest=1 contract=1 lane=1 fixture=1 stable=1 met=True",
+   "kill_rule": "met=False at the measured commit -> C1 is not achieved (honest stop; never narrowed after data).",
+   "limits": "The counter's recomputation and the tool share the v2 definition by contract; ground truth independent of both is git numstat (deleted) and the fixture's construction (all fields). Restoration stays text identity: a line restored elsewhere in the file counts. The contract's coverage is only as good as its declaring lines; a lane file declared append-only but missing from the contract is not detected by the counter (attacked by wave seats)."
+  },
+  {
+   "id": "C2",
+   "axis": "operability",
+   "score": "8->8",
+   "type": "measured (operability, sourced on the b11909 release row opened this round)",
+   "statement": "The lane's live llama.cpp lifecycle evidence becomes re-runnable from committed bytes: three live receipts at llama.cpp release b11909 (caa8191d) in schema kama-llamacpp-live/v4 record where the server binary (release asset URL and digest, archive member) and the model (URL and digest) came from and carry no dead log pointer (round-46 closure D5, round-45 closure D3); tools/kama-live-replay.py re-acquires both into an empty home, verifies each digest before use, re-runs the lifecycle and reproduces receipt-1's checks, and refuses a receipt whose recorded digest is wrong; b11909 is registered as a source.",
+   "predicate": "three committed b11909 live receipts record where their server and model came from, a fresh-home replay from committed bytes re-acquires and digest-verifies both and reproduces receipt-1's checks, a receipt with a wrong recorded digest is refused, and b11909 is registered as a source; receipts=1 replay=1 tamper=1 newrow=1.",
+   "counter": "tools/round47-live-replay-audit.py",
+   "counter_sha256": "15408dce5b2f8f5dbe4dd7bacf17ddb0737fcbe480686907f40483273b128b0f",
+   "command": "python3 tools/round47-live-replay-audit.py --repo <lane clone> --tip <full commit> --scratch <dir> --out <receipt>",
+   "before": "receipts=0 replay=0 tamper=0 newrow=0 met=False (controls/base.c2.out)",
+   "target": "receipts=1 replay=1 tamper=1 newrow=1 met=True",
+   "kill_rule": "met=False at the measured commit -> C2 is not achieved (honest stop; never narrowed after data).",
+   "release": {
+    "name": "b11909",
+    "commit": "caa8191df159f764fb0160e3d2fc6be008948aee",
+    "observed": "gh api repos/ggml-org/llama.cpp/releases/tags/b11909 at freeze (.ufo/waves/round-47/c2/release-b11909.json): published 2026-10-26T21:00:58Z, prerelease true, asset llama-b11909-bin-ubuntu-x64.tar.gz 22475032 bytes digest sha256:bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b"
+   },
+   "limits": "Replay needs network access to github.com and the model host; a replay is three sampled instants on one tiny model, not model quality or timing. Agreement is check-by-check pass/fail equality, not byte equality of bodies. The counter replays receipt-1 only."
+  }
+ ],
+ "controls": {
+  "builder": ".ufo/waves/round-47/controls/build_controls.py (sha256 b2379a4beec43f415eb62d596ed3ad9627021ce00a967a913be2de361ce7fc3a)",
+  "base": "C1 selftest=1 contract=0 lane=0 fixture=0 stable=0 met=False; C2 receipts=0 replay=0 tamper=0 newrow=0 met=False",
+  "junk-c1-v1-contract": "C1 selftest=1 contract=0 lane=0 fixture=0 stable=0 met=False (v1 tool unchanged plus a contract file: skips v2)",
+  "junk-c1-v1-numstat": "C1 selftest=0 contract=1 lane=0 fixture=0 stable=1 lane_mismatch=4 fixture_mismatch=6 met=False (v1 with the `---` filter fixed, contract expansion and v2 key names: skips the multiset and window work)",
+  "junk-c2-r46-relabel": "C2 receipts=0 replay=0 tamper=0 newrow=0 met=False (the b11906 receipts relabelled v4 with b11909 provenance and a replay tool that copies receipt-1)"
+ },
+ "frontier": {
+  "sourced_claim": "C2 rests on the b11909 release row registered this round (newrow leg), opened 2026-10-26 (.ufo/waves/round-47/c2/release-b11909.json).",
+  "considerthese": "considerthese/2026-10-26.md proposal 3 (keep a running count of counters a shortcut can satisfy) is mined as the round lesson's sufficiency-family row (round-46 closure D3), not as a claim.",
+  "assimilation": "none (both claims work the lane's own instruments and evidence)."
+ },
+ "routed": {
+  "r46-D1": "C1 (numstat-equal deleted counts).",
+  "r46-D2": "C1 (window-maximum restoration; stable leg).",
+  "r46-D3": "frontier: sufficiency family written as a lesson Mistakes row with a fail-capable check (considerthese proposal 3).",
+  "r46-D4": "frontier: hexrun-census unknowns ledgered or closed by wave seats (no claim).",
+  "r46-D5": "C2 (teardown.log_path null or committed).",
+  "r46-D6": "operator/aggregator: not acted on (sibling repos).",
+  "r45-D3": "C2 (model and binary provenance in the receipt; replay)."
+ }
+}
