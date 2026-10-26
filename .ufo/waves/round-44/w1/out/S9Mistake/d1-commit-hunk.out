@@ -1,0 +1,41 @@
+== git show 9307b15e -- SCORECARD.md (pointer hunk) ==
++++ b/SCORECARD.md
+@@ -50,7 +50,21 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
+ 
+ ## Planned
+ 
+-Superseded in round 42. The live plan is `### Planned (round 44)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
++Superseded in round 42. The live plan is `### Round-43 measured results
++
++Measured commit: `25df591a4e50f315b920ec0d0acba6145989e267`, the integration commit (lane branch tip at measurement; the final commit adds receipts, the end census and this section). Measurement root: a fresh clone of the lane remote. Base `6897ead55c24ba08c9ac0b09466d4fbfe005a459`. Counters are the frozen bytes of freeze commit `895793e0b4c56bdcb939277b8ff0251b26306d4d`.
++
++| Claim | Base `6897ead5` | Measured `25df591a` | Command | Receipt |
++|---|---|---|---|---|
++| C1 calibration 7 → 7 | `unreg=16 defect=0 flags=2 pins=19 selftest=1 dc=1 spot=1 hidden=2 pop=28 registered=12 mismatches=42 met=False` (exit 1) | `unreg=0 defect=0 flags=0 pins=0 selftest=0 dc=0 spot=0 hidden=0 pop=31 registered=31 mismatches=0 met=True` (exit 0) | `python3 tools/round43-registry-audit.py --repo <clone> --tip <commit> --out <receipt>` | `.ufo/waves/round-43/controls/base.c1.out`; `.ufo/waves/round-43/c1/after.out` |
++| C2 operability 8 → 8, capability `hexrun-census` | `tool=0 contract=0 live=0 hygiene=0 capability=0 met=False` (exit 1) | `tool=1 contract=1 live=1 hygiene=1 capability=1 met=True` (exit 0; seeds 43 and 7), scan `tokens=778 distinct=215 lane_oid=138 md5_blob=1 upstream_ok=65 unverifiable=9 wrong_flagged=2 ledger_bad=0 unknown=0` | `python3 tools/round43-hexrun-audit.py --repo <clone> --tip <commit> [--seed N] --out <receipt>` | `.ufo/waves/round-43/controls/base.c2.out`; `.ufo/waves/round-43/c2/after.out`, `after-seed7.out` |
++| C3 coverage 9 → 9, assimilation | `entry=0 rows=0 coverage=0 gate=0 refetch=1 census=1 met=False` (exit 1) | `entry=1 rows=1 coverage=1 gate=1 refetch=1 census=1 met=True` (exit 0) | `python3 tools/round43-health-audit.py --repo <clone> --tip <commit> --base 6897ead55c24ba08c9ac0b09466d4fbfe005a459 --out <receipt>` | `.ufo/waves/round-43/controls/base.c3.out`; `.ufo/waves/round-43/c3/after.out` |
++
++Capability census: `python3 tools/capability-repertoire-audit.py --repo <clone> --tip <commit>` base `listed 8 observed 8 missing 0 unsubstantiated 0 met True` → measured `listed 9 observed 9 missing 0 unsubstantiated 0 met True`. Sources census: rows 220 → 222 (tier A 210 → 211, tier C 3 → 4, mined 201 → 203, queued 8, rejected 11); mirror validate exit 0 with 93 W04 and 0 E at start and end (`.ufo/waves/round-43/census-{start,end}-*.out`). Regression at the measured commit: the round-41 and round-42 head counters still read `mismatches=0 met=True`; `tools/digest-ledger.py scan` reads `unknown=0`; the gate reads `registered 31 unregistered 0 defective 0`; `tools/sources-append-only.py` finds no violation.
++
++Scores held: operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7. What `met=True` does not show (wave-1 findings, `corpus/lessons/round-43.md` §Wave-1 findings): C1 is met by one mega-row of 11 inserted lines (W1R01); C2 by a 78-line fixture-name shell tool (W1R02); C3 by a keyword-shell entry over stub copies with true but irrelevant live quotes (W1R02); 20 of 53 counter mutants survive (W1R03). The landed tree carries 19 individual rows, a content-based tool and real API copies, but the counters cannot tell it from the shortcuts. **The planned falsify wave (48 seats) was not dispatched** (run 7 closed), so no claim was attacked beyond wave 1's four early falsifiers; separability controls (each claim's file set alone) were not built. No score moves; the closure judges relevance and sufficiency.
++
++### Planned (round 44)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
+ 
+ ## Retired
+ 
+== registry/ at 9307b15e ==
+registry/chat-param-outcomes-r31.json
+registry/digest-ledger.tsv
+registry/endpoint-consumers.tsv
+registry/engine-pins.tsv
+registry/error-injection-cells.json
+registry/error-injection-fixtures
+registry/error-signatures-r26.json
+registry/hexrun-ledger.tsv
+registry/history
+registry/report-landing-errata.tsv
+registry/request-field-outcomes-r28.json
+registry/required-citations.json
+registry/staged-refusals.tsv
+== LOG.md:2259 ==
+- **C2 operability 8→8, capability `pin-watch`.** Mines `considerthese/2026-10-25.md` proposal 2. Adds `tools/pin-watch.py`, `registry/engine-pins.tsv` (SGLang v0.5.22, vLLM v0.32.0, llama.cpp b11755) and `corpus/knowledge/engine-pin-watch.md`, sourced on S4

@@ -1,0 +1,34 @@
+# S015 pin ad1b88ca tools/quantize/README.md  source=s015-pin.md
+--- 10-28 ---
+10: ## Overview
+11: 
+12: Quantization is done in two phases:
+13: - Convert the original model to GGUF format.
+14: - Quantize the converted GGUF file.
+15: 
+16: If the model supports multimodal inputs (images or audio), you also need to convert and quantize the multimodal encoders and projectors.
+17: 
+18: To perform these tasks, you need to install the Python requirements:
+19: 
+20: ```bash
+21: python3 -m pip install -r requirements.txt
+22: ```
+23: 
+24: Or if you use `uv`:
+25: 
+26: ```bash
+27: uv pip install -r requirements.txt --index-strategy unsafe-best-match
+28: ```
+--- 43-54 ---
+43: ## Quantize the GGUF
+44: 
+45: After you have created a high-quality GGUF version of the model, you use `llama-quantize` to apply quantization. For example, quantize to `Q4_K_M` using a command like the following:
+46: 
+47: ```bash
+48: ./build/bin/llama-quantize gemma-4-E2B-it-bf16.gguf gemma-4-E2B-it-Q4_K_M.gguf Q4_K_M
+49: ```
+50: 
+51: Various quantization methods are described [later in this document](#quantize).
+52: 
+53: Options:
+54: * `--allow-requantize` allow requantizing tensors that have already been quantized. Warning: This can severely reduce quality compared to quantizing from 16bit or 32bit

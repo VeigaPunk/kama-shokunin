@@ -1,0 +1,29 @@
+--- /fast/scratch/hyaku/kama-r44/M2Ctr/lane/tools/round44-verdict-ledger-audit.py	2026-10-26 04:58:38.714135808 -0300
++++ /fast/scratch/hyaku/kama-r44/M2Ctr/mut/M01b/lane/tools/round44-verdict-ledger-audit.py	2026-10-26 05:04:45.799233508 -0300
+@@ -90,12 +90,13 @@
+ 
+ def read_line(line):
+     """trend -> set of verdict words on this line (nearest preceding trend)."""
+-    out, cur = {}, None
++    out, pending = {}, []
+     for m in TOK.finditer(line):
+         if m.group(1):
+-            cur = m.group(1).lower()
+-            continue
+-        if cur is None:
++            t = m.group(1).lower()
++            for v in pending:
++                out.setdefault(t, set()).add(v)
++            pending = []
+             continue
+         if m.group(2):
+             v = "unprovable-but-better"
+@@ -103,7 +104,7 @@
+             v = "unprovable"
+         else:
+             v = m.group(4).lower()
+-        out.setdefault(cur, set()).add(v)
++        pending.append(v)
+     return out
+ 
+ 

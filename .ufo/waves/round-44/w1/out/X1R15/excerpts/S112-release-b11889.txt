@@ -1,0 +1,254 @@
+# S112 release b11889  source=rel.md
+--- 50-50 ---
+50: | `-c, --ctx-size N` | size of the prompt context (default: 0, 0 = loaded from model)<br/>(env: LLAMA_ARG_CTX_SIZE) |
+--- 165-165 ---
+165: | `--kv-unified-per-slot N` | context limit per parallel slot (default: unset, behavior unchanged).<br/>when set without -c/--ctx-size, the shared KV pool is sized to n_parallel*N<br/>(env: LLAMA_ARG_KV_UNIFIED_PER_SLOT) |
+--- 169-169 ---
+169: | `-kvu, --kv-unified, -no-kvu, --no-kv-unified` | use single unified KV buffer shared across all sequences (default: enabled if number of slots is auto)<br/>(env: LLAMA_ARG_KV_UNIFIED) |
+--- 177-177 ---
+177: | `-np, --parallel N` | number of server slots (default: -1, -1 = auto)<br/>(env: LLAMA_ARG_N_PARALLEL) |
+--- 927-1006 ---
+927: ### **GET** `/props`: Get server global properties.
+928: 
+929: By default, it is read-only. To make POST request to change global properties, you need to start server with `--props`
+930: 
+931: **Response format**
+932: 
+933: ```json
+934: {
+935:   "default_generation_settings": {
+936:     "id": 0,
+937:     "id_task": -1,
+938:     "n_ctx": 1024,
+939:     "speculative": false,
+940:     "is_processing": false,
+941:     "params": {
+942:       "n_predict": -1,
+943:       "seed": 4294967295,
+944:       "temperature": 0.800000011920929,
+945:       "dynatemp_range": 0.0,
+946:       "dynatemp_exponent": 1.0,
+947:       "top_k": 40,
+948:       "top_p": 0.949999988079071,
+949:       "min_p": 0.05000000074505806,
+950:       "xtc_probability": 0.0,
+951:       "xtc_threshold": 0.10000000149011612,
+952:       "typical_p": 1.0,
+953:       "repeat_last_n": 64,
+954:       "repeat_penalty": 1.0,
+955:       "presence_penalty": 0.0,
+956:       "frequency_penalty": 0.0,
+957:       "dry_multiplier": 0.0,
+958:       "dry_base": 1.75,
+959:       "dry_allowed_length": 2,
+960:       "dry_penalty_last_n": 64,
+961:       "dry_sequence_breakers": [
+962:         "\n",
+963:         ":",
+964:         "\"",
+965:         "*"
+966:       ],
+967:       "mirostat": 0,
+968:       "mirostat_tau": 5.0,
+969:       "mirostat_eta": 0.10000000149011612,
+970:       "stop": [],
+971:       "max_tokens": -1,
+972:       "n_keep": 0,
+973:       "n_discard": 0,
+974:       "ignore_eos": false,
+975:       "stream": true,
+976:       "n_probs": 0,
+977:       "min_keep": 0,
+978:       "grammar": "",
+979:       "samplers": [
+980:         "dry",
+981:         "top_k",
+982:         "typ_p",
+983:         "top_p",
+984:         "min_p",
+985:         "xtc",
+986:         "temperature"
+987:       ],
+988:       "speculative.n_max": 16,
+989:       "speculative.n_min": 5,
+990:       "speculative.p_min": 0.8999999761581421,
+991:       "timings_per_token": false
+992:     },
+993:     "prompt": "",
+994:     "next_token": {
+995:       "has_next_token": true,
+996:       "has_new_line": false,
+997:       "n_remain": -1,
+998:       "n_decoded": 0,
+999:       "stopping_word": ""
+1000:     }
+1001:   },
+1002:   "total_slots": 1,
+1003:   "model_path": "../models/Meta-Llama-3.1-8B-Instruct-Q4_K_M.gguf",
+1004:   "chat_template": "...",
+1005:   "chat_template_caps": {},
+1006:   "modalities": {
+--- 1007-1021 ---
+1007:     "vision": false
+1008:   },
+1009:   "media_marker": "<__media_YoNhud46VdDqbuFmKYEO9PY7A4ARzRfg__>",
+1010:   "build_info": "b(build number)-(build commit hash)",
+1011:   "is_sleeping": false
+1012: }
+1013: ```
+1014: 
+1015: - `default_generation_settings` - the default generation settings for the `/completion` endpoint, which has the same fields as the `generation_settings` response object from the `/completion` endpoint.
+1016: - `total_slots` - the total number of slots for process requests (defined by `--parallel` option)
+1017: - `model_path` - the path to model file (same with `-m` argument)
+1018: - `chat_template` - the model's original Jinja2 prompt template
+1019: - `chat_template_caps` - capabilities of the chat template (see `common/jinja/caps.h` for more info)
+1020: - `modalities` - the list of supported modalities
+1021: - `is_sleeping` - sleeping status, see [Sleeping on idle](#sleeping-on-idle)
+--- 1071-1150 ---
+1071: ### GET `/slots`: Returns the current slots processing state
+1072: 
+1073: This endpoint is enabled by default and can be disabled with `--no-slots`. It can be used to query various per-slot metrics, such as speed, processed tokens, sampling parameters, etc.
+1074: 
+1075: If query param `?fail_on_no_slot=1` is set, this endpoint will respond with status code 503 if there is no available slots.
+1076: 
+1077: **Response format**
+1078: 
+1079: <details>
+1080: <summary>Example with 2 slots</summary>
+1081: 
+1082: ```json
+1083: [
+1084:   {
+1085:     "id": 0,
+1086:     "id_task": 135,
+1087:     "n_ctx": 65536,
+1088:     "speculative": false,
+1089:     "is_processing": true,
+1090:     "params": {
+1091:       "n_predict": -1,
+1092:       "seed": 4294967295,
+1093:       "temperature": 0.800000011920929,
+1094:       "dynatemp_range": 0.0,
+1095:       "dynatemp_exponent": 1.0,
+1096:       "top_k": 40,
+1097:       "top_p": 0.949999988079071,
+1098:       "min_p": 0.05000000074505806,
+1099:       "top_n_sigma": -1.0,
+1100:       "xtc_probability": 0.0,
+1101:       "xtc_threshold": 0.10000000149011612,
+1102:       "typical_p": 1.0,
+1103:       "repeat_last_n": 64,
+1104:       "repeat_penalty": 1.0,
+1105:       "presence_penalty": 0.0,
+1106:       "frequency_penalty": 0.0,
+1107:       "dry_multiplier": 0.0,
+1108:       "dry_base": 1.75,
+1109:       "dry_allowed_length": 2,
+1110:       "dry_penalty_last_n": 131072,
+1111:       "mirostat": 0,
+1112:       "mirostat_tau": 5.0,
+1113:       "mirostat_eta": 0.10000000149011612,
+1114:       "max_tokens": -1,
+1115:       "n_keep": 0,
+1116:       "n_discard": 0,
+1117:       "ignore_eos": false,
+1118:       "stream": true,
+1119:       "n_probs": 0,
+1120:       "min_keep": 0,
+1121:       "chat_format": "GPT-OSS",
+1122:       "reasoning_format": "none",
+1123:       "reasoning_in_content": false,
+1124:       "generation_prompt": "",
+1125:       "samplers": [
+1126:         "penalties",
+1127:         "dry",
+1128:         "top_k",
+1129:         "typ_p",
+1130:         "top_p",
+1131:         "min_p",
+1132:         "xtc",
+1133:         "temperature"
+1134:       ],
+1135:       "speculative.n_max": 16,
+1136:       "speculative.n_min": 0,
+1137:       "speculative.p_min": 0.75,
+1138:       "timings_per_token": false,
+1139:       "post_sampling_probs": false,
+1140:       "lora": []
+1141:     },
+1142:     "next_token": {
+1143:       "has_next_token": true,
+1144:       "has_new_line": false,
+1145:       "n_remain": -1,
+1146:       "n_decoded": 0
+1147:     }
+1148:   },
+1149:   {
+1150:     "id": 1,
+--- 1151-1214 ---
+1151:     "id_task": 0,
+1152:     "n_ctx": 65536,
+1153:     "speculative": false,
+1154:     "is_processing": true,
+1155:     "params": {
+1156:       "n_predict": -1,
+1157:       "seed": 4294967295,
+1158:       "temperature": 0.800000011920929,
+1159:       "dynatemp_range": 0.0,
+1160:       "dynatemp_exponent": 1.0,
+1161:       "top_k": 40,
+1162:       "top_p": 0.949999988079071,
+1163:       "min_p": 0.05000000074505806,
+1164:       "top_n_sigma": -1.0,
+1165:       "xtc_probability": 0.0,
+1166:       "xtc_threshold": 0.10000000149011612,
+1167:       "typical_p": 1.0,
+1168:       "repeat_last_n": 64,
+1169:       "repeat_penalty": 1.0,
+1170:       "presence_penalty": 0.0,
+1171:       "frequency_penalty": 0.0,
+1172:       "dry_multiplier": 0.0,
+1173:       "dry_base": 1.75,
+1174:       "dry_allowed_length": 2,
+1175:       "dry_penalty_last_n": 131072,
+1176:       "mirostat": 0,
+1177:       "mirostat_tau": 5.0,
+1178:       "mirostat_eta": 0.10000000149011612,
+1179:       "max_tokens": -1,
+1180:       "n_keep": 0,
+1181:       "n_discard": 0,
+1182:       "ignore_eos": false,
+1183:       "stream": true,
+1184:       "n_probs": 0,
+1185:       "min_keep": 0,
+1186:       "chat_format": "GPT-OSS",
+1187:       "reasoning_format": "none",
+1188:       "reasoning_in_content": false,
+1189:       "generation_prompt": "",
+1190:       "samplers": [
+1191:         "penalties",
+1192:         "dry",
+1193:         "top_k",
+1194:         "typ_p",
+1195:         "top_p",
+1196:         "min_p",
+1197:         "xtc",
+1198:         "temperature"
+1199:       ],
+1200:       "speculative.n_max": 16,
+1201:       "speculative.n_min": 0,
+1202:       "speculative.p_min": 0.75,
+1203:       "timings_per_token": false,
+1204:       "post_sampling_probs": false,
+1205:       "lora": []
+1206:     },
+1207:     "next_token": {
+1208:       "has_next_token": true,
+1209:       "has_new_line": true,
+1210:       "n_remain": -1,
+1211:       "n_decoded": 136
+1212:     }
+1213:   }
+1214: ]
+--- 1393-1393 ---
+1393:                 "n_ctx_train": 131072,

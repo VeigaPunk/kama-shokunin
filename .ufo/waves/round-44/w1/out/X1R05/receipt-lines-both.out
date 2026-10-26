@@ -1,0 +1,58 @@
+== pin
+   175	    // seed is uint32_t; field_num uses int32_t so use a handler
+   176	    add((new field_num("seed", params.sampling.seed))
+   177	        ->set_desc("Set the random number generator (RNG) seed (-1 = random)"));
+   178	
+   179	    add((new field_num("n_probs", params.sampling.n_probs))
+   180	        ->add_alias("logprobs") // use "logprobs" if "n_probs" wasn't provided
+   181	        ->set_desc("If greater than 0, output the probabilities of top N tokens for each generated token"));
+   182	
+   183	    add((new field_num("min_keep", params.sampling.min_keep))
+   184	        ->set_hard_limits(0, INT32_MAX)
+   185	        ->set_desc("If greater than 0, force samplers to return at least N possible tokens"));
+   229	    add((new field_json("lora"))
+   230	        ->set_desc("A list of LoRA adapters to apply to this request. Each entry must have `id` and `scale` fields. Adapters not listed default to scale 0.0")
+   231	        ->set_handler([&](field_eval_context & ctx, const json & data) {
+   232	            const auto & lora = data.at("lora");
+   233	            if (!lora.is_array()) {
+   234	                throw std::runtime_error("Error: 'lora' must be an array of objects with 'id' and 'scale' fields");
+   235	            }
+   236	            ctx.params.lora = parse_lora_request(lora);
+   237	        }));
+   316	    add((new field_json("preserved_tokens"))
+   317	        ->set_desc("List of token strings that must not be split during tokenization")
+   318	        ->set_handler([&](field_eval_context & ctx, const json & data) {
+   319	            common_sampling_add_preserved_tokens(ctx.params.sampling, ctx.vocab, data.at("preserved_tokens").get<std::vector<std::string>>());
+   320	        }));
+   335	    add((new field_num("reasoning_budget_tokens", params.sampling.reasoning_budget_tokens))
+   336	        ->set_hard_limits(-1, INT32_MAX)
+   337	        ->set_desc("Number of tokens in the reasoning budget (-1 = disabled)"));
+== release
+   177	    // seed is uint32_t; field_num uses int32_t so use a handler
+   178	    add((new field_num("seed", params.sampling.seed))
+   179	        ->set_desc("Set the random number generator (RNG) seed (-1 = random)"));
+   180	
+   181	    add((new field_num("n_probs", params.sampling.n_probs))
+   182	        ->add_alias("logprobs") // use "logprobs" if "n_probs" wasn't provided
+   183	        ->set_desc("If greater than 0, output the probabilities of top N tokens for each generated token"));
+   184	
+   185	    add((new field_num("min_keep", params.sampling.min_keep))
+   186	        ->set_hard_limits(0, INT32_MAX)
+   187	        ->set_desc("If greater than 0, force samplers to return at least N possible tokens"));
+   231	    add((new field_json("lora"))
+   232	        ->set_desc("A list of LoRA adapters to apply to this request. Each entry must have `id` and `scale` fields. Adapters not listed default to scale 0.0")
+   233	        ->set_handler([&](field_eval_context & ctx, const json & data) {
+   234	            const auto & lora = data.at("lora");
+   235	            if (!lora.is_array()) {
+   236	                throw std::runtime_error("Error: 'lora' must be an array of objects with 'id' and 'scale' fields");
+   237	            }
+   238	            ctx.params.lora = parse_lora_request(lora);
+   239	        }));
+   335	    add((new field_json("preserved_tokens"))
+   336	        ->set_desc("List of token strings that must not be split during tokenization")
+   337	        ->set_handler([&](field_eval_context & ctx, const json & data) {
+   338	            common_sampling_add_preserved_tokens(ctx.params.sampling, ctx.vocab, data.at("preserved_tokens").get<std::vector<std::string>>());
+   339	        }));
+   354	    add((new field_num("reasoning_budget_tokens", params.sampling.reasoning_budget_tokens))
+   355	        ->set_hard_limits(-1, INT32_MAX)
+   356	        ->set_desc("Number of tokens in the reasoning budget (-1 = disabled)"));

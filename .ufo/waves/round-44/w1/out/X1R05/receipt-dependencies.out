@@ -1,0 +1,187 @@
+== field_num::eval @release server-schema.cpp
+   602	template <typename T>
+   603	void field_num<T>::eval(field_eval_context & ctx, const json & data) {
+   604	    for (const auto & n : name) {
+   605	        if (has_value(data, n)) {
+   606	            handle_with_catch(n, [&]() {
+   607	                if (custom_handler) {
+   608	                custom_handler(ctx, data);
+   609	                } else if (!is_hard_limit) {
+   610	                    val = std::max(min, std::min(max, data.at(n).template get<T>()));
+   611	                } else {
+   612	                    T tmp = data.at(n).template get<T>();
+   613	                    if (tmp < min || tmp > max) {
+   614	                        throw std::invalid_argument(std::string("Value must be between ") + std::to_string(min) + " <= value <= " + std::to_string(max) + ", but got " + std::to_string(tmp));
+   615	                    }
+   616	                    val = tmp;
+   617	                }
+   618	            });
+   619	            return;
+   620	        }
+   621	    }
+   622	}
+== field_num struct @release server-schema.h
+    47	template <typename T = int32_t>
+    48	struct field_num : public field {
+    49	    T & val;
+    50	    T min = std::numeric_limits<T>::lowest();
+    51	    T max = std::numeric_limits<T>::max();
+    52	    bool is_hard_limit = false; // if true, throw error if the value is invalid
+    53	    field_num(const char * n, T & val) : field(n), val(val) {}
+    54	    // limits are inclusive, min <= value <= max
+    55	    field_num * set_limits(T min, T max) {
+    56	        this->min = min;
+    57	        this->max = max;
+    58	        return this;
+    59	    }
+    60	    field_num * set_hard_limits(T min, T max) {
+    61	        set_limits(min, max);
+    62	        is_hard_limit = true;
+    63	        return this;
+    64	    }
+    65	    virtual void eval(field_eval_context & ctx, const json & data) override;
+    66	};
+== common.h field types @release
+   229	struct common_params_sampling {
+   230	    uint32_t seed = LLAMA_DEFAULT_SEED; // the seed used to initialize llama_sampler
+   231	
+   232	    int32_t n_prev             = 64;     // number of previous tokens to remember
+   233	    int32_t n_probs            = 0;      // if greater than 0, output the probabilities of top n_probs tokens.
+   234	    int32_t min_keep           = 0;      // 0 = disabled, otherwise samplers should return at least min_keep tokens
+   235	    int32_t top_k              = 40;     // <= 0 to use vocab size
+   279	    bool                                grammar_lazy = false;
+   280	    std::vector<common_grammar_trigger> grammar_triggers; // optional triggers (for lazy grammars)
+   281	    std::set<llama_token>               preserved_tokens;
+   282	
+   292	    // reasoning budget sampler parameters
+   293	    // these are populated by the server/CLI based on chat template params
+   294	    int32_t                   reasoning_budget_tokens   = -1;  // -1 = disabled, >= 0 = token budget
+   295	    std::vector<llama_token>  reasoning_budget_start;          // start tag token sequence
+== task_params::to_json echo @release server-task.cpp
+    30	json task_params::to_json(bool only_metrics) const {
+    31	    std::vector<std::string> samplers;
+    32	    samplers.reserve(sampling.samplers.size());
+    33	    for (const auto & sampler : sampling.samplers) {
+    34	        samplers.emplace_back(common_sampler_type_to_str(sampler));
+    35	    }
+    36	
+    37	    json lora = json::array();
+    38	    for (auto & it : this->lora) {
+    39	        lora.push_back({{"id", it.first}, {"scale", it.second}});
+    40	    }
+    41	
+    42	    if (only_metrics) {
+    43	        return json {
+    44	            {"seed",                      sampling.seed},
+    45	            {"temperature",               sampling.temp},
+    95	    return json {
+    96	        {"seed",                      sampling.seed},
+    97	        {"temperature",               sampling.temp},
+    98	        {"dynatemp_range",            sampling.dynatemp_range},
+    99	        {"dynatemp_exponent",         sampling.dynatemp_exponent},
+   100	        {"top_k",                     sampling.top_k},
+   128	        {"logit_bias",                format_logit_bias(sampling.logit_bias)},
+   129	        {"n_probs",                   sampling.n_probs},
+   130	        {"min_keep",                  sampling.min_keep},
+   131	        {"grammar",                   common_grammar_value(sampling.grammar)},
+   132	        {"grammar_lazy",              sampling.grammar_lazy},
+   133	        {"grammar_triggers",          grammar_triggers},
+   134	        {"preserved_tokens",          sampling.preserved_tokens},
+   135	        {"chat_format",               common_chat_format_name(chat_format)},
+== json.hpp arithmetic static_cast @release
+  4866	void get_arithmetic_value(const BasicJsonType& j, ArithmeticType& val)
+  4867	{
+  4868	    switch (static_cast<value_t>(j))
+  4869	    {
+  4870	        case value_t::number_unsigned:
+  4871	        {
+  4872	            val = static_cast<ArithmeticType>(*j.template get_ptr<const typename BasicJsonType::number_unsigned_t*>());
+  4873	            break;
+  4874	        }
+  4875	        case value_t::number_integer:
+  4876	        {
+  4877	            val = static_cast<ArithmeticType>(*j.template get_ptr<const typename BasicJsonType::number_integer_t*>());
+  4878	            break;
+  4879	        }
+  4880	        case value_t::number_float:
+  4881	        {
+  4882	            val = static_cast<ArithmeticType>(*j.template get_ptr<const typename BasicJsonType::number_float_t*>());
+  4883	            break;
+  4884	        }
+  4885	
+  4886	        case value_t::null:
+== completion handler @release server-context.cpp
+  5212	    try {
+  5213	        std::vector<server_task> tasks;
+  5214	
+  5245	            task.id = rd.get_new_id();
+  5246	
+  5247	            task.tokens = std::move(inputs[i]);
+  5248	            task.params = server_schema::eval_llama_cmpl_schema(
+  5249	                    ctx_server.vocab,
+  5250	                    params,
+  5251	                    meta->logit_bias_eog,
+  5252	                    data);
+  5253	
+  5274	
+  5275	        rd.post_tasks(std::move(tasks), chat_session);
+  5276	    } catch (const std::exception & e) {
+  5277	        res->error(format_error_response(e.what(), ERROR_TYPE_INVALID_REQUEST));
+  5278	        return res;
+  5279	    }
+== ex_wrapper @release server.cpp
+    61	static server_http_context::handler_t ex_wrapper(server_http_context::handler_t func) {
+    62	    return [func = std::move(func)](const server_http_req & req) -> server_http_res_ptr {
+    63	        std::string message;
+    64	        error_type error;
+    65	        try {
+    66	            return func(req);
+    67	        } catch (const std::invalid_argument & e) {
+    68	            // treat invalid_argument as invalid request (400)
+    69	            error = ERROR_TYPE_INVALID_REQUEST;
+    70	            message = e.what();
+    71	        } catch (const common_json_error & e) {
+    72	            // JSON parse and type errors are invalid requests (400)
+    73	            error = ERROR_TYPE_INVALID_REQUEST;
+    74	            message = e.what();
+    75	        } catch (const std::exception & e) {
+== format_error_response @release server-common.cpp
+    93	json format_error_response(const std::string & message, const enum error_type type) {
+    94	    std::string type_str;
+    95	    int code = 500;
+    96	    switch (type) {
+    97	        case ERROR_TYPE_INVALID_REQUEST:
+    98	            type_str = "invalid_request_error";
+    99	            code = 400;
+   100	            break;
+== parse_lora_request @release
+   298	std::map<int, float> parse_lora_request(const json & data) {
+   299	    std::map<int, float> lora;
+   300	
+   301	    // set value
+   302	    for (const auto & entry : data) {
+   303	        int id      = json_value(entry, "id", -1);
+   304	        float scale = json_value(entry, "scale", 0.0f);
+   305	        lora[id] = scale;
+   306	    }
+   307	
+   308	    return lora;
+   309	}
+== add_preserved_tokens @release common/sampling.cpp
+  1055	void common_sampling_add_preserved_tokens(common_params_sampling & sampling, const llama_vocab * vocab, const std::vector<std::string> & tokens) {
+  1056	    GGML_ASSERT(vocab != nullptr);
+  1057	    for (const auto & t : tokens) {
+  1058	        auto ids = common_tokenize(vocab, t, false, true);
+  1059	        if (ids.size() == 1) {
+  1060	            sampling.preserved_tokens.insert(ids[0]);
+  1061	        }
+  1062	    }
+  1063	}
+== diff --stat pin..release (mechanism files)
+ common/common.h                |  4 +++
+ tools/server/server-schema.cpp | 71 ++++++++++++++++++++++++++++++++++++++++++
+ tools/server/server-schema.h   |  8 +++++
+ tools/server/server-task.cpp   | 32 +++++++++++++++++++
+ 4 files changed, 115 insertions(+)
+== diff --stat pin..release server-common.cpp lora/preserved hunks (0 expected)
+0

@@ -1,0 +1,12 @@
+id	verdict	release_lines	reason
+S036	holds	308-329,348-360	gate text and order verbatim; every route (incl. new ws /v1/realtime) goes through the pre-routing handler and httplib runs pre-routing before a websocket upgrade, so the 503 Loading model body still answers all non-frontend paths before the API-key check
+S060	holds	4954-4963,5501-5506,5547-5563	n_ctx_slot() still mins seq ctx with kv_unified_per_slot and n_ctx_train and still fills meta.slot_n_ctx; /props emits slot_n_ctx, /v1/models emits n_ctx plus n_ctx_train separately
+S113	holds	65-98,142-145,233-244,301-304,1222-1234	n_stream=unified?1:n_seq_max (84), v_cells[s].resize(kv_size) (142-145), 3d tensors (embd,kv_size,n_stream) (233-234), size log (301-304) and shared-source kv_size override (92-97) all byte-identical; the only file changes are the K-shift rope guard at 883, the PLE token and a comment
+S121	holds	6852	rerank guard !params.embedding || pooling_type != LLAMA_POOLING_TYPE_RANK and the refuse message are verbatim inside handle_rerank_impl (6849-6854), still wired from post_rerank (6312-6313) for all four rerank routes
+S129	unchanged-file	482	ggml/src/gguf.cpp blob 75ceade7d5fb9155f30e01d0cfa45d2f92814fb3 identical at pin and release; bad-magic guard 476-484 and the byte-printing log line unchanged
+S138	holds	1887-1912,4593-4625,4629-4634	try_clear_idle_slots, the ret==1 terminal branch and the retry call are verbatim; the enclosing decode region is normalized-identical over 180 lines, the helper has one call site, and llama_decode still returns 1 for a missing memory slot
+S147	holds	91-92	top_k declared with set_limits(0, INT32_MAX) unchanged; non-hard limits still clamp silently in field_num::eval, so -5 is stored as 0 with 200
+S155	holds	132	repeat_penalty declared with only set_desc (default float min/max) unchanged; 1e39 clamps to FLT_MAX 3.4028234663852886e+38, still 200
+S163	holds	173-174	adaptive_decay declared with set_hard_limits(0.0f, 0.99f) unchanged; field_num::eval still throws invalid_argument for 1.5, so the 400 rejection stands
+S171	holds	442,448	ignore_eos field_bool and its handler inserting logit_bias_eog are verbatim; logit_bias_eog is still passed from params_base.sampling into the schema eval
+S185	holds	1429	throw std::invalid_argument("Expected 'content' to be a string or an array") verbatim inside oaicompat_chat_params_parse; a number is neither string/null nor array, so it is still refused; call sites unchanged

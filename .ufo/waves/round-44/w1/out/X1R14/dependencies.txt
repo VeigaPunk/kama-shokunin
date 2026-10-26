@@ -1,0 +1,29 @@
+== dependency: n_seq_max / n_batch / kv_unified / graph_reserve callers (pin then release)
+-- 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:src/llama-context.cpp:186:    cparams.n_seq_max = std::max(1u, params.n_seq_max);
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:src/llama-context.cpp:332:    cparams.n_batch = cparams.causal_attn ? std::min(cparams.n_ctx, params.n_batch) : params.n_batch;
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:src/llama-context.cpp:360:    cparams.kv_unified     = params.kv_unified;
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:src/llama-context.cpp:608:        auto * gf = graph_reserve(n_tokens_probe, n_seqs, n_tokens_probe, mctx, true);
+-- d854d98bae598388ecea1ed84396587e5edc326d
+d854d98bae598388ecea1ed84396587e5edc326d:src/llama-context.cpp:192:    cparams.n_seq_max = std::max(1u, params.n_seq_max);
+d854d98bae598388ecea1ed84396587e5edc326d:src/llama-context.cpp:342:    cparams.n_batch = cparams.causal_attn ? std::min(cparams.n_ctx, params.n_batch) : params.n_batch;
+d854d98bae598388ecea1ed84396587e5edc326d:src/llama-context.cpp:370:    cparams.kv_unified     = params.kv_unified;
+d854d98bae598388ecea1ed84396587e5edc326d:src/llama-context.cpp:618:        auto * gf = graph_reserve(n_tokens_probe, n_seqs, n_tokens_probe, mctx, true);
+== dependency: arg.cpp -c/--ctx-size lambda (release 1649-1659)
+1649:    add_opt(common_arg(
+1650:        {"-c", "--ctx-size"}, "N",
+1651:        string_format("size of the prompt context (default: %d, 0 = loaded from model)", params.n_ctx),
+1652:        [](common_params & params, int value) {
+1653:            params.n_ctx = value;
+1654:            if (value == 0) {
+1655:                // disable context reduction in llama_params_fit if the user explicitly requests the full context size:
+1656:                params.fit_params_min_ctx = UINT32_MAX;
+1657:            }
+1658:        }
+1659:    ).set_env("LLAMA_ARG_CTX_SIZE"));
+== dependency: GGML_ASSERT macro pin vs release
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:ggml/include/ggml.h:288:#define GGML_ASSERT(x) if (!(x)) GGML_ABORT("GGML_ASSERT(%s) failed", #x)
+d854d98bae598388ecea1ed84396587e5edc326d:ggml/include/ggml.h:288:#define GGML_ASSERT(x) if (!(x)) GGML_ABORT("GGML_ASSERT(%s) failed", #x)
+== dependency: ggml_print_backtrace at ggml.c pin vs release
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:ggml/src/ggml.c:269:        ggml_print_backtrace();
+d854d98bae598388ecea1ed84396587e5edc326d:ggml/src/ggml.c:269:        ggml_print_backtrace();

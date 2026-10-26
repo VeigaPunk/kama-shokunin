@@ -1,0 +1,184 @@
+# release excerpts at b11889 = d854d98bae598388ecea1ed84396587e5edc326d (git show <c>:<path> | sed -n)
+## common/arg.cpp 837-845
+   837	            if (arg_to_options.find(arg) == arg_to_options.end()) {
+   838	                throw std::invalid_argument(string_format("error: invalid argument: %s", arg.c_str()));
+   839	            }
+   840	            if (!seen_args.insert(arg).second) {
+   841	                const bool skip = (arg == "--spec-type");
+   842	
+   843	                if (!skip) {
+   844	                    LOG_WRN("DEPRECATED: argument '%s' specified multiple times, use comma-separated values instead (only last value will be used)\n", arg.c_str());
+   845	                }
+## common/arg.cpp 1221-1240 (common_params_to_map duplicate path)
+  1221	    std::set<std::string> seen_args;
+  1222	
+  1223	    for (int i = 1; i < argc; i++) {
+  1224	        const std::string arg_prefix = "--";
+  1225	
+  1226	        std::string arg = argv[i];
+  1227	        if (arg.compare(0, arg_prefix.size(), arg_prefix) == 0) {
+  1228	            std::replace(arg.begin(), arg.end(), '_', '-');
+  1229	        }
+  1230	        if (arg_to_options.find(arg) == arg_to_options.end()) {
+  1231	            throw std::invalid_argument(string_format("error: invalid argument: %s", arg.c_str()));
+  1232	        }
+  1233	        if (!seen_args.insert(arg).second) {
+  1234	            const bool skip = (arg == "--spec-type");
+  1235	
+  1236	            if (!skip) {
+  1237	                LOG_WRN("DEPRECATED: argument '%s' specified multiple times, use comma-separated values instead (only last value will be used)\n", arg.c_str());
+  1238	            }
+  1239	        }
+  1240	        auto opt = *arg_to_options[arg];
+## common/arg.cpp 3342-3364 (host last-wins, port last-wins)
+  3342	    add_opt(common_arg(
+  3343	        {"--host"}, "HOST",
+  3344	        string_format("IP addresses to listen on, comma-separated, or UNIX socket paths ending in .sock; with multiple TCP addresses, :: binds IPv6 only; overlapping addresses result in undefined behavior (default: %s)", params.hostnames[0].c_str()),
+  3345	        [](common_params & params, const std::string & value) {
+  3346	            params.hostnames.clear();
+  3347	            for (auto & host : parse_csv_row(value)) {
+  3348	                host = string_strip(host);
+  3349	                if (!host.empty()) {
+  3350	                    params.hostnames.push_back(host);
+  3351	                }
+  3352	            }
+  3353	            if (params.hostnames.empty()) {
+  3354	                throw std::invalid_argument("--host requires at least one address");
+  3355	            }
+  3356	        }
+  3357	    ).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_ARG_HOST"));
+  3358	    add_opt(common_arg(
+  3359	        {"--port"}, "PORT",
+  3360	        string_format("port to listen (default: %d)", params.port),
+  3361	        [](common_params & params, int value) {
+  3362	            params.port = value;
+  3363	        }
+  3364	    ).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_ARG_PORT"));
+## common/arg.cpp 3540-3550 (api-key append)
+  3540	    add_opt(common_arg(
+  3541	        {"--api-key"}, "KEY",
+  3542	        "API key to use for authentication, multiple keys can be provided as a comma-separated list (default: none)",
+  3543	        [](common_params & params, const std::string & value) {
+  3544	            for (const auto & key : parse_csv_row(value)) {
+  3545	                if (!key.empty()) {
+  3546	                    params.api_keys.push_back(key);
+  3547	                }
+  3548	            }
+  3549	        }
+  3550	    ).set_examples({LLAMA_EXAMPLE_SERVER}).set_env("LLAMA_API_KEY"));
+## common/arg.cpp 4322-4331 (spec-type append)
+  4322	    add_opt(common_arg(
+  4323	        {"--spec-type"}, common_speculative_all_types_str(),
+  4324	        string_format("comma-separated list of types of speculative decoding to use (default: %s)\n",
+  4325	            common_speculative_type_name_str(params.speculative.types).c_str()),
+  4326	        [](common_params & params, const std::string & value) {
+  4327	            const auto types_str = string_split<std::string>(value, ',');
+  4328	            auto types = common_speculative_types_from_names(types_str);
+  4329	            params.speculative.types.insert(params.speculative.types.end(), types.begin(), types.end());
+  4330	        }
+  4331	    ).set_spec().set_examples({LLAMA_EXAMPLE_SPECULATIVE, LLAMA_EXAMPLE_SERVER, LLAMA_EXAMPLE_CLI}).set_env("LLAMA_ARG_SPEC_TYPE"));
+## common/arg.cpp 1649-1659 (-c 0 sentinel) / 2889-2902 (-fit) / 2942-2948 (-fitc)
+  1649	    add_opt(common_arg(
+  1650	        {"-c", "--ctx-size"}, "N",
+  1651	        string_format("size of the prompt context (default: %d, 0 = loaded from model)", params.n_ctx),
+  1652	        [](common_params & params, int value) {
+  1653	            params.n_ctx = value;
+  1654	            if (value == 0) {
+  1655	                // disable context reduction in llama_params_fit if the user explicitly requests the full context size:
+  1656	                params.fit_params_min_ctx = UINT32_MAX;
+  1657	            }
+  1658	        }
+  1659	    ).set_env("LLAMA_ARG_CTX_SIZE"));
+  2889	    add_opt(common_arg(
+  2890	        { "-fit", "--fit" }, "[on|off]",
+  2891	        string_format("whether to adjust unset arguments to fit in device memory ('on' or 'off', default: '%s')", params.fit_params ? "on" : "off"),
+  2892	        [](common_params & params, const std::string & value) {
+  2893	            if (is_truthy(value)) {
+  2894	                params.fit_params = true;
+  2895	            } else if (is_falsey(value)) {
+  2896	                params.fit_params = false;
+  2897	            } else {
+  2898	                throw std::runtime_error(
+  2899	                    string_format("error: unknown value for --fit: '%s'\n", value.c_str()));
+  2900	            }
+  2901	        }
+  2902	    ).set_env("LLAMA_ARG_FIT"));
+  2942	    add_opt(common_arg(
+  2943	        { "-fitc", "--fit-ctx" }, "N",
+  2944	        string_format("minimum ctx size that can be set by --fit option, default: %" PRIu32, params.fit_params_min_ctx),
+  2945	        [](common_params & params, int value) {
+  2946	            params.fit_params_min_ctx = value;
+  2947	        }
+  2948	    ).set_env("LLAMA_ARG_FIT_CTX"));
+## common/arg.cpp 1735-1742 (-kvu) / 2553-2564 (-np server)
+  1735	    add_opt(common_arg(
+  1736	        {"-kvu", "--kv-unified"},
+  1737	        {"-no-kvu", "--no-kv-unified"},
+  1738	        "use single unified KV buffer shared across all sequences (default: enabled if number of slots is auto)",
+  1739	        [](common_params & params, bool value) {
+  1740	            params.kv_unified = value;
+  1741	        }
+  1742	    ).set_env("LLAMA_ARG_KV_UNIFIED").set_examples({LLAMA_EXAMPLE_SERVER, LLAMA_EXAMPLE_PERPLEXITY, LLAMA_EXAMPLE_BATCHED, LLAMA_EXAMPLE_BENCH, LLAMA_EXAMPLE_PARALLEL, LLAMA_EXAMPLE_SPECULATIVE}));
+  2553	    if (ex == LLAMA_EXAMPLE_SERVER) {
+  2554	        // this is to make sure this option appears in the server-specific section of the help message
+  2555	        add_opt(common_arg(
+  2556	            {"-np", "--parallel"}, "N",
+  2557	            string_format("number of server slots (default: %d, -1 = auto)", params.n_parallel),
+  2558	            [](common_params & params, int value) {
+  2559	                if (value == 0) {
+  2560	                    throw std::invalid_argument("error: invalid value for n_parallel\n");
+  2561	                }
+  2562	                params.n_parallel = value;
+  2563	            }
+  2564	        ).set_env("LLAMA_ARG_N_PARALLEL").set_examples({LLAMA_EXAMPLE_SERVER}));
+## common/common.cpp 1255-1295 (ctor fit call)
+  1255	common_init_result::common_init_result(common_params & params, bool model_only) :
+  1256	    pimpl(new impl{}) {
+  1257	    auto mparams = common_model_params_to_llama(params);
+  1258	    auto cparams = common_context_params_to_llama(params);
+  1259	
+  1260	    if (params.fit_params) {
+  1261	        COM_TRC("%s", "fitting params to device memory ...\n");
+  1262	        COM_TRC("%s", "(for bugs during this step try to reproduce them with -fit off, or provide --verbose logs if the bug only occurs with -fit on)\n");
+  1263	
+  1264	        // the draft context is created from the same base params and follows the main context, fit both together
+  1265	        const bool has_draft = params.speculative.has_dft();
+  1266	        const bool spec_mtp  = std::find(params.speculative.types.begin(), params.speculative.types.end(),
+  1267	            COMMON_SPECULATIVE_TYPE_DRAFT_MTP) != params.speculative.types.end();
+  1268	
+  1269	        common_params params_dft = common_base_params_to_speculative(params);
+  1270	
+  1271	        auto mparams_dft = common_model_params_to_llama(params_dft);
+  1272	        auto cparams_dft = common_context_params_to_llama(params_dft);
+  1273	        if (spec_mtp) {
+  1274	            cparams_dft.ctx_type = LLAMA_CONTEXT_TYPE_MTP;
+  1275	        }
+  1276	        cparams_dft.n_rs_seq = 0;
+  1277	
+  1278	        const common_fit_extra_model extra = {
+  1279	            /*.path_model   =*/ params_dft.model.path.c_str(),
+  1280	            /*.mparams      =*/ &mparams_dft,
+  1281	            /*.cparams      =*/ &cparams_dft,
+  1282	            /*.shares_model =*/ !has_draft, // an MTP context runs on the weights of the main model
+  1283	        };
+  1284	
+  1285	        common_fit_params(params.model.path.c_str(), &mparams, &cparams,
+  1286	            params.tensor_split,
+  1287	            params.tensor_buft_overrides.data(),
+  1288	            params.fit_params_target.data(),
+  1289	            params.fit_params_min_ctx,
+  1290	            has_draft || spec_mtp ? &extra : nullptr,
+  1291	            params.verbosity >= LOG_LEVEL_DEBUG ? GGML_LOG_LEVEL_DEBUG : GGML_LOG_LEVEL_ERROR);
+  1292	    }
+  1293	
+  1294	    llama_model * model = llama_model_load_from_file(params.model.path.c_str(), mparams);
+  1295	    if (model == NULL) {
+## common/common.cpp 1433-1440
+  1433	common_init_result_ptr common_init_from_params(common_params & params, bool model_only) {
+  1434	    common_init_result_ptr res(new common_init_result(params, model_only));
+  1435	
+  1436	    llama_model * model = res->model();
+  1437	    if (model == NULL) {
+  1438	        COM_ERR("failed to load model '%s'\n", params.model.path.c_str());
+  1439	        return res;
+  1440	    }

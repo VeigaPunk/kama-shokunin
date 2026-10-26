@@ -1,0 +1,19 @@
+mutant	target_function	mutation	selftest_verdict	selftest_evidence	additions_killer	population_rows_changed
+R1-first-match	relocate	`abs(cand[0]-r[0]) < abs(best[0]-r[0])` dropped (keeps first match, not nearest)	SURVIVED	selftest pass=5 fail=0 rc=0	dup-nearest-offset	-
+R2-window-8	relocate	span window `j - i > 80` -> `> 8`	SURVIVED	selftest pass=5 fail=0 rc=0	blanks-span-window	17 (S035,S036,S042,... holds->TODO)
+R3-raw-compare	relocate	`rs = [x.strip() for x in rlines]` -> `rs = list(rlines)`	SURVIVED	selftest pass=5 fail=0 rc=0	indented-release	82 (holds->TODO)
+C1a-no-adjacent-merge	clusters	merge `n <= out[-1][1] + 1` -> `+ 0` (adjacent numbers split)	KILLED	FAIL range: verdict=holds pin=5,6,7 rel=7,8,9 (rc=1)	-	-
+C1b-split-at-8	clusters	split bound `n - out[-1][0] < 80` -> `< 8`	SURVIVED	selftest pass=5 fail=0 rc=0	split-at-80	-
+C2a-no-widen	clusters	widen bound `nonws < 20` -> `< 0` (widening disabled)	SURVIVED	selftest pass=5 fail=0 rc=0	widen-short-lines	1 (S047 26-27->26, 575-576->575)
+C2b-widen-200	clusters	widen bound `nonws < 20` -> `< 200`	KILLED	FAIL moved-holds: verdict=holds pin=10-16 rel=12-18 (rc=1)	-	-
+H1-keep-hex	cited	hex-run strip `[0-9a-fA-F]{7,}` disabled	SURVIVED	selftest pass=5 fail=0 rc=0	hex-token-boundary	-
+D1-keep-dates	cited	ISO-date strip `\d{4}-\d\d-\d\d` disabled	SURVIVED	selftest pass=5 fail=0 rc=0	date-year-line	-
+RD1-keep-round	cited	`round-\d+` strip disabled	SURVIVED	selftest pass=5 fail=0 rc=0	round-token-boundary	-
+BV1-keep-bv	cited	`\b[bv]\d[\d.]*` strip disabled	SURVIVED	selftest pass=5 fail=0 rc=0	bv-token-boundary	-
+GH1-no-anchorL	cited	`#L(\d+)(?:-L(\d+))?` pattern disabled	SURVIVED	selftest pass=5 fail=0 rc=0	github-anchor	-
+LN1-no-Lnum	cited	`\bL(\d{1,5})\b` pattern disabled	SURVIVED	selftest pass=5 fail=0 rc=0	lnum-anchor	-
+BR1-no-bare-range	cited	bare `a-b` range pattern disabled	KILLED	FAIL range: verdict=TODO pin=- rel=- (rc=1)	-	-
+LI1-no-linesN	cited	`lines? (\d{1,5})` pattern disabled	SURVIVED	selftest pass=5 fail=0 rc=0	two-line-cites (also widen-short-lines)	-
+WK1-no-weak	cited	weak `(\d{2,5})` pattern disabled	SURVIVED	selftest pass=5 fail=0 rc=0	weak-only-anchor	-
+V1-unchanged-as-holds	draft_row	verdict `unchanged-file` -> `holds` for changed=0	SURVIVED	selftest pass=5 fail=0 rc=0	unchanged-file	4 (S106,S128,S129,S130 unchanged-file->holds)
+V2-holds-as-reworded	draft_row	verdict `holds` -> `holds-reworded` on full relocation	KILLED	FAIL moved-holds: verdict=holds-reworded pin=10 rel=12 (rc=1)	-	-

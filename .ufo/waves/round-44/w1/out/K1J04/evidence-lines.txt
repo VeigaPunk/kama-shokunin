@@ -1,0 +1,240 @@
+# K1J04 anchored-line receipts (release d854d98bae598388ecea1ed84396587e5edc326d unless marked pin)
+
+=== S036 server-http.cpp rel 308-329 ===
+   308	    auto middleware_server_state = [this](const httplib::Request & req, httplib::Response & res) {
+   309	        if (!is_ready.load()) {
+   310	            if (frontend_paths.count(req.path)) {
+   311	                return true; // frontend asset, allow it to load and show "loading"
+   312	            }
+   313	            // no endpoints are allowed to be accessed when the server is not ready
+   314	            // this is to prevent any data races or inconsistent states
+   315	            res.status = 503;
+   316	            res.set_content(
+   317	                safe_json_to_str(json {
+   318	                    {"error", {
+   319	                        {"message", "Loading model"},
+   320	                        {"type", "unavailable_error"},
+   321	                        {"code", 503}
+   322	                    }}
+   323	                }),
+   324	                "application/json; charset=utf-8"
+   325	            );
+   326	            return false;
+   327	        }
+   328	        return true;
+   329	    };
+=== S036 server-http.cpp rel 348-362 (gate before key) ===
+   348	        if (req.method == "OPTIONS") {
+   349	            res.set_header("Access-Control-Allow-Credentials", params.cors_credentials ? "true" : "false");
+   350	            res.set_header("Access-Control-Allow-Methods",     params.cors_methods);
+   351	            res.set_header("Access-Control-Allow-Headers",     params.cors_headers);
+   352	            res.set_content("", "text/html"); // blank response, no data
+   353	            return httplib::Server::HandlerResponse::Handled; // skip further processing
+   354	        }
+   355	        if (!middleware_server_state(req, res)) {
+   356	            return httplib::Server::HandlerResponse::Handled;
+   357	        }
+   358	        if (!middleware_validate_api_key(req, res)) {
+   359	            return httplib::Server::HandlerResponse::Handled;
+   360	        }
+   361	        return httplib::Server::HandlerResponse::Unhandled;
+   362	    });
+=== S036 ws route rel server.cpp 171-199 ===
+   171	    ctx_http.get ("/health",                   ex_wrapper(routes.get_health)); // public endpoint (no API key check)
+   172	    ctx_http.get ("/v1/health",                ex_wrapper(routes.get_health)); // public endpoint (no API key check)
+   173	    ctx_http.get ("/metrics",                  ex_wrapper(routes.get_metrics));
+   174	    ctx_http.get ("/props",                    ex_wrapper(routes.get_props));
+   175	    ctx_http.post("/props",                    ex_wrapper(routes.post_props));
+   176	    ctx_http.get ("/models",                   ex_wrapper(routes.get_models));
+   177	    ctx_http.get ("/v1/models",                ex_wrapper(routes.get_models));
+   178	    ctx_http.post("/completion",               ex_wrapper(routes.post_completions)); // legacy
+   179	    ctx_http.post("/completions",              ex_wrapper(routes.post_completions));
+   180	    ctx_http.post("/v1/completions",           ex_wrapper(routes.post_completions_oai));
+   181	    ctx_http.post("/chat/completions",         ex_wrapper(routes.post_chat_completions));
+   182	    ctx_http.post("/v1/chat/completions",      ex_wrapper(routes.post_chat_completions));
+   183	    ctx_http.post("/v1/chat/completions/control", ex_wrapper(routes.post_control));
+   184	    ctx_http.post("/v1/responses",             ex_wrapper(routes.post_responses_oai));
+   185	    ctx_http.post("/responses",                ex_wrapper(routes.post_responses_oai));
+   186	    ctx_http.post("/v1/audio/transcriptions",  ex_wrapper(routes.post_transcriptions_oai));
+   187	    ctx_http.post("/audio/transcriptions",     ex_wrapper(routes.post_transcriptions_oai));
+   188	    ctx_http.post("/tts",                      ex_wrapper(routes.post_tts));
+   189	    ctx_http.ws  ("/v1/realtime",              routes.ws_realtime);
+   190	    ctx_http.post("/v1/messages",              ex_wrapper(routes.post_anthropic_messages)); // anthropic messages API
+   191	    ctx_http.post("/infill",                   ex_wrapper(routes.post_infill));
+   192	    ctx_http.post("/embedding",                ex_wrapper(routes.post_embeddings)); // legacy
+   193	    ctx_http.post("/embeddings",               ex_wrapper(routes.post_embeddings));
+   194	    ctx_http.post("/v1/embeddings",            ex_wrapper(routes.post_embeddings_oai));
+   195	    ctx_http.post("/rerank",                   ex_wrapper(routes.post_rerank));
+   196	    ctx_http.post("/reranking",                ex_wrapper(routes.post_rerank));
+   197	    ctx_http.post("/v1/rerank",                ex_wrapper(routes.post_rerank));
+   198	    ctx_http.post("/v1/reranking",             ex_wrapper(routes.post_rerank));
+   199	    ctx_http.post("/v1/systemone",             ex_wrapper(routes.post_systemone));
+=== S036 httplib rel 10350-10364 (pre-routing runs before ws upgrade) ===
+ 10350	  // WebSocket upgrade
+ 10351	  // Run pre_routing_handler_ and pre_request_handler_ before upgrading so
+ 10352	  // that authentication and other middleware can reject the request with an
+ 10353	  // HTTP response (e.g., 401) before the protocol switches.
+ 10354	  // The response says so when this connection closes after it.
+ 10355	  auto close_after_response = close_connection || connection_closed;
+ 10356	
+ 10357	  // An upgrade request has been through pre-routing before it reaches routing()
+ 10358	  auto is_upgrade = detail::is_websocket_upgrade(req);
+ 10359	  if (is_upgrade) {
+ 10360	    if (pre_routing_handler_ &&
+ 10361	        pre_routing_handler_(req, res) == HandlerResponse::Handled) {
+ 10362	      if (res.status == -1) { res.status = StatusCode::OK_200; }
+ 10363	      return write_response_with_content(strm, close_after_response, req, res);
+ 10364	    }
+=== S036 server-http.cpp diff hunks pin..release ===
+@@ -13,0 +14 @@
+@@ -746,0 +748,50 @@ void server_http_context::post(const std::string & path, const server_http_conte
+
+=== S060 server-context.cpp rel 4954-4963 / 5129-5135 / 5501-5510 / 5552-5555 ===
+  4954	    // context size of a single slot, capped by --kv-unified-per-slot and by the training context of the model
+  4955	    int n_ctx_slot() const {
+  4956	        int res = llama_n_ctx_seq(ctx_tgt);
+  4957	
+  4958	        if (params_base.kv_unified_per_slot > 0) {
+  4959	            res = std::min(res, params_base.kv_unified_per_slot);
+  4960	        }
+  4961	
+  4962	        return std::min(res, llama_model_n_ctx_train(model_tgt));
+  4963	    }
+  5129	        /* has_cap_tts             */ impl->has_cap_tts(),
+  5130	        /* has_audio_stream        */ impl->mctx != nullptr && mtmd_support_audio_stream(impl->mctx),
+  5131	        /* json_ui_settings        */ impl->json_ui_settings,
+  5132	        /* slot_n_ctx              */ impl->n_ctx_slot(),
+  5133	        /* pooling_type            */ llama_pooling_type(impl->ctx_tgt),
+  5134	
+  5135	        /* chat_params             */ impl->chat_params,
+  5501	        {"meta",     {
+  5502	            {"vocab_type",  meta.model_vocab_type},
+  5503	            {"n_vocab",     meta.model_vocab_n_tokens},
+  5504	            {"n_ctx",       meta.slot_n_ctx},
+  5505	            {"n_ctx_train", meta.model_n_ctx_train},
+  5506	            {"n_embd",      meta.model_n_embd_inp},
+  5507	            {"n_params",    meta.model_n_params},
+  5508	            {"size",        meta.model_size},
+  5509	            {"ftype",       meta.model_ftype},
+  5510	        }},
+  5552	    json default_generation_settings_for_props = json {
+  5553	        { "params", tparams.to_json(true) },
+  5554	        { "n_ctx",  meta.slot_n_ctx },
+  5555	    };
+
+=== S113 llama-kv-cache.cpp rel 84 / 142-145 / 233-234 / 301-304 / 1222-1226 ===
+    84	    n_seq_max(n_seq_max), n_stream(unified ? 1 : n_seq_max), n_pad(n_pad), n_swa(n_swa), swa_type(swa_type),
+   142	    v_cells.resize(n_stream);
+   143	    for (uint32_t s = 0; s < n_stream; ++s) {
+   144	        v_cells[s].resize(kv_size);
+   145	    }
+   233	        ggml_tensor * k = has_k ? ggml_new_tensor_3d(ctx, type_k, n_embd_k_gqa, kv_size, n_stream) : nullptr;
+   234	        ggml_tensor * v = has_v ? ggml_new_tensor_3d(ctx, type_v, n_embd_v_gqa, kv_size, n_stream) : nullptr;
+   301	        LLAMA_LOG_INFO("%s: size = %7.2f MiB (%6u cells, %3d layers, %2u/%u seqs), K (%s): %7.2f MiB, V (%s): %7.2f MiB\n", __func__,
+   302	                (float)(memory_size_k + memory_size_v) / (1024.0f * 1024.0f), kv_size, (int) layers.size(), n_seq_max, n_stream,
+   303	                ggml_type_name(type_k), (float)memory_size_k / (1024.0f * 1024.0f),
+   304	                ggml_type_name(type_v), (float)memory_size_v / (1024.0f * 1024.0f));
+  1222	uint32_t llama_kv_cache::get_size() const {
+  1223	    const auto & cells = v_cells[seq_to_stream[0]];
+  1224	
+  1225	    return cells.size();
+  1226	}
+=== S113 diff hunks pin..release ===
+@@ -885 +885,4 @@ bool llama_kv_cache::update(llama_context * lctx, bool do_shift, const stream_co
+@@ -1168,3 +1171 @@ void llama_kv_cache::apply_ubatch(const slot_info & sinfo, const llama_ubatch &
+@@ -1849 +1850 @@ bool llama_kv_cache::has_cell_ext() const {
+
+=== S121 rel 195-198 (rerank routes) / 6312-6313 / 6849-6854 ===
+   195	    ctx_http.post("/rerank",                   ex_wrapper(routes.post_rerank));
+   196	    ctx_http.post("/reranking",                ex_wrapper(routes.post_rerank));
+   197	    ctx_http.post("/v1/rerank",                ex_wrapper(routes.post_rerank));
+   198	    ctx_http.post("/v1/reranking",             ex_wrapper(routes.post_rerank));
+  6312	    this->post_rerank = [this](const server_http_req & req) {
+  6313	        return handle_rerank_impl(req);
+  6849	std::unique_ptr<server_res_generator> server_routes::handle_rerank_impl(const server_http_req & req) {
+  6850	    auto res = create_response();
+  6851	    if (!params.embedding || params.pooling_type != LLAMA_POOLING_TYPE_RANK) {
+  6852	        res->error(format_error_response("This server does not support reranking. Start it with `--reranking`", ERROR_TYPE_NOT_SUPPORTED));
+  6853	        return res;
+  6854	    }
+
+=== S129 gguf.cpp rel 476-484 (blob identical to pin) ===
+   476	        for (uint32_t i = 0; i < magic.size(); i++) {
+   477	            if (magic[i] != GGUF_MAGIC[i]) {
+   478	                char c0 = isprint(magic[0]) ? magic[0] : '?';
+   479	                char c1 = isprint(magic[1]) ? magic[1] : '?';
+   480	                char c2 = isprint(magic[2]) ? magic[2] : '?';
+   481	                char c3 = isprint(magic[3]) ? magic[3] : '?';
+   482	                GGML_LOG_ERROR("%s: invalid magic characters: '%c%c%c%c', expected 'GGUF'\n", __func__, c0, c1, c2, c3);
+   483	                gguf_free(ctx);
+   484	                return nullptr;
+
+=== S138 rel 1887-1892 / 4593-4596 / 4629-4632 ===
+  1887	    bool try_clear_idle_slots() {
+  1888	        bool res = false;
+  1889	
+  1890	        if (!params_base.kv_unified) {
+  1891	            return res;
+  1892	        }
+  4593	                if (n_batch == 1 && ret == 1) {
+  4594	                    // TODO: try to terminate only the largest active slot/sequence and continue with the rest
+  4595	                    //       need to remove the tokens from the current batch too
+  4596	                    err = "Context size has been exceeded.";
+  4629	            // retry with half the batch size to try to find a free slot in the KV cache
+  4630	            if (!try_clear_idle_slots()) {
+  4631	                n_batch /= 2;
+  4632	            }
+=== S138 normalized decode-region compare (pin 4180-4360 vs rel 4475-4655) ===
+diff_exit=0
+
+=== S147 rel 91-93 / S155 rel 132-133 / S163 rel 173-175 / S171 rel 442-452 ===
+    91	    add((new field_num("top_k", params.sampling.top_k))
+    92	        ->set_limits(0, INT32_MAX)
+    93	        ->set_desc("Limit the next token selection to the K most probable tokens (0 = disabled)"));
+   132	    add((new field_num("repeat_penalty", params.sampling.penalty_repeat))
+   133	        ->set_desc("Control the repetition of token sequences in the generated text (1.0 = disabled)"));
+   173	    add((new field_num("adaptive_decay", params.sampling.adaptive_decay))
+   174	        ->set_hard_limits(0.0f, 0.99f)
+   175	        ->set_desc("EMA decay for adaptive sampling; history approximates 1/(1-decay) tokens"));
+   442	    add((new field_bool("ignore_eos", params.sampling.ignore_eos))
+   443	        ->set_desc("Ignore the end-of-sequence token and continue generating")
+   444	        ->set_handler([&](field_eval_context & ctx, const json & data) {
+   445	            GGML_ASSERT(ctx.logit_bias_eog != nullptr);
+   446	            ctx.params.sampling.ignore_eos = data.at("ignore_eos").get<bool>();
+   447	            if (ctx.params.sampling.ignore_eos && ctx.logit_bias_eog) {
+   448	                ctx.params.sampling.logit_bias.insert(
+   449	                    ctx.params.sampling.logit_bias.end(),
+   450	                    ctx.logit_bias_eog->begin(), ctx.logit_bias_eog->end());
+   451	            }
+   452	        }));
+=== field_num::eval rel 603-621 (clamp vs hard-limit throw) ===
+   603	void field_num<T>::eval(field_eval_context & ctx, const json & data) {
+   604	    for (const auto & n : name) {
+   605	        if (has_value(data, n)) {
+   606	            handle_with_catch(n, [&]() {
+   607	                if (custom_handler) {
+   608	                custom_handler(ctx, data);
+   609	                } else if (!is_hard_limit) {
+   610	                    val = std::max(min, std::min(max, data.at(n).template get<T>()));
+   611	                } else {
+   612	                    T tmp = data.at(n).template get<T>();
+   613	                    if (tmp < min || tmp > max) {
+   614	                        throw std::invalid_argument(std::string("Value must be between ") + std::to_string(min) + " <= value <= " + std::to_string(max) + ", but got " + std::to_string(tmp));
+   615	                    }
+   616	                    val = tmp;
+   617	                }
+   618	            });
+   619	            return;
+   620	        }
+   621	    }
+
+=== S185 rel 1345 / 1423-1430 ===
+  1345	json oaicompat_chat_params_parse(
+  1423	        json & content = msg.at("content");
+  1424	        if (content.is_string() || content.is_null()) {
+  1425	            continue;
+  1426	        }
+  1427	
+  1428	        if (!content.is_array()) {
+  1429	            throw std::invalid_argument("Expected 'content' to be a string or an array");
+  1430	        }

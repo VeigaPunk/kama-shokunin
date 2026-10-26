@@ -1,0 +1,117 @@
+# X1R02 evidence (2026-10-26; upstream /fast/scratch/hyaku/kama-r44/shared/llama.cpp, read-only via git show/diff/grep, lane read-only)
+
+## E1 anchors: pin 74-75,89-90,93-94,97-98,101,104-105 vs release 76-77,91-92,95-96,99-100,103,106-107
+IDENTICAL (byte-equal ranges)
+
+## E2 blob ids (pin, release)
+54e126aa0c3572895042cd0a8c4faf4a0eb0b9f7
+0a14a9620961ff627348952112b4a9a6a0513c43
+
+## E3 commits touching server-schema.cpp pin..release
+63412d873 llama: fix exhausting CPU and MEM caused by dry sequence breaker (#31035)
+5c0b49a23 server : add POST /tts endpoint for TTS models (#26603)
+
+## E4 hunk headers, full file diff (none before @@ -246)
+@@ -2,6 +2,8 @@
+@@ -246,6 +248,23 @@ std::vector<std::unique_ptr<field>> make_llama_cmpl_schema(const common_params &
+@@ -511,6 +530,58 @@ task_params eval_llama_cmpl_schema(
+
+## E5 field_num<T>::eval, clamp branch vs throw branch
+-- PIN 531-551
+   531	template <typename T>
+   532	void field_num<T>::eval(field_eval_context & ctx, const json & data) {
+   533	    for (const auto & n : name) {
+   534	        if (has_value(data, n)) {
+   535	            handle_with_catch(n, [&]() {
+   536	                if (custom_handler) {
+   537	                custom_handler(ctx, data);
+   538	                } else if (!is_hard_limit) {
+   539	                    val = std::max(min, std::min(max, data.at(n).template get<T>()));
+   540	                } else {
+   541	                    T tmp = data.at(n).template get<T>();
+   542	                    if (tmp < min || tmp > max) {
+   543	                        throw std::invalid_argument(std::string("Value must be between ") + std::to_string(min) + " <= value <= " + std::to_string(max) + ", but got " + std::to_string(tmp));
+   544	                    }
+   545	                    val = tmp;
+   546	                }
+   547	            });
+   548	            return;
+   549	        }
+   550	    }
+   551	}
+-- RELEASE 602-622
+   602	template <typename T>
+   603	void field_num<T>::eval(field_eval_context & ctx, const json & data) {
+   604	    for (const auto & n : name) {
+   605	        if (has_value(data, n)) {
+   606	            handle_with_catch(n, [&]() {
+   607	                if (custom_handler) {
+   608	                custom_handler(ctx, data);
+   609	                } else if (!is_hard_limit) {
+   610	                    val = std::max(min, std::min(max, data.at(n).template get<T>()));
+   611	                } else {
+   612	                    T tmp = data.at(n).template get<T>();
+   613	                    if (tmp < min || tmp > max) {
+   614	                        throw std::invalid_argument(std::string("Value must be between ") + std::to_string(min) + " <= value <= " + std::to_string(max) + ", but got " + std::to_string(tmp));
+   615	                    }
+   616	                    val = tmp;
+   617	                }
+   618	            });
+   619	            return;
+   620	        }
+   621	    }
+   622	}
+
+## E6 invalid_argument -> HTTP 400
+-- ex_wrapper pin vs release:
+IDENTICAL
+-- release server.cpp:67-70
+    67	        } catch (const std::invalid_argument & e) {
+    68	            // treat invalid_argument as invalid request (400)
+    69	            error = ERROR_TYPE_INVALID_REQUEST;
+    70	            message = e.what();
+-- release server-common.cpp:97-99
+    97	        case ERROR_TYPE_INVALID_REQUEST:
+    98	            type_str = "invalid_request_error";
+    99	            code = 400;
+-- routes release server.cpp:178,180
+   178	    ctx_http.post("/completion",               ex_wrapper(routes.post_completions)); // legacy
+   180	    ctx_http.post("/v1/completions",           ex_wrapper(routes.post_completions_oai));
+
+## E7 statement chain at release
+-- server-context.cpp:5248 (completion handler uses the schema)
+  5248	            task.params = server_schema::eval_llama_cmpl_schema(
+  5249	                    ctx_server.vocab,
+  5250	                    params,
+  5251	                    meta->logit_bias_eog,
+  5252	                    data);
+-- server-context.cpp:2415 generation_params <- task params (clamped)
+  2415	        res->generation_params = slot.task->params; // copy the parameters
+-- server-task.cpp:100-104 and 342
+   100	        {"top_k",                     sampling.top_k},
+   101	        {"top_p",                     sampling.top_p},
+   102	        {"min_p",                     sampling.min_p},
+   103	        {"top_n_sigma",               sampling.top_n_sigma},
+   104	        {"xtc_probability",           sampling.xtc_probability},
+   342	        {"generation_settings", generation_params.to_json()},
+
+## E8 types/defaults; pin common.h 233-236,253 vs release 235-238,255
+IDENTICAL types/defaults
+-- t_max_predict_ms int64_t, release then pin
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-task.h:80:    int64_t t_max_predict_ms = -1; // if positive, limit the generation phase to this time limit
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:tools/server/server-task.h:69:    int64_t t_max_predict_ms = -1; // if positive, limit the generation phase to this time limit
+
+## E9 server-schema.h: only TTS declarations added; default limits untouched
+@@ -101,4 +101,12 @@ task_params eval_llama_cmpl_schema(
+    50	    T min = std::numeric_limits<T>::lowest();
+    51	    T max = std::numeric_limits<T>::max();
+
+## E10 fragment checker
+$ python3 .ufo/waves/round-44/tools/check-fragment.py c1 .ufo/waves/round-44/w1/out/X1R02/fragment.tsv /fast/scratch/hyaku/kama-r44/X1R02/chk
+pop=91 rows=91 valid=85 unverified=6 unchanged=4 holds=81 reworded=0 drifted=0 removed=0 flags_missing=0 section=0 met=False
+VALID S146
+VALID S147
+VALID S148
+VALID S149
+VALID S150
+VALID S151

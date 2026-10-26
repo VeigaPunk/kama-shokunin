@@ -1,0 +1,51 @@
+diff --git a/SCORECARD.md b/SCORECARD.md
+index 608bee75..16b57763 100644
+--- a/SCORECARD.md
++++ b/SCORECARD.md
+@@ -11,6 +11,7 @@ Round 43 re-anchors the `SKILL.md` and `PROVINCE.md` hashes after the round-43 e
+ 
+ | Axis | Score | Evidence pointer (re-derivable at the measured commit) | Last change |
+ |---|---|---|---|
++| calibration | 7 | `registry/verdict-ledger.tsv` (round-44 C2) | round 44 |
+ | **operability** | **8** | registry gate `tools/kama-probe.sh` sha256 `36b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3` (1138 lines); run `bash tools/test-snapshot.sh` → `RESULT pass=30 fail=0`; run `python3 tools/pin-watch.py selftest` → `selftest pass=9 fail=0`; run `python3 tools/report-landing-audit.py --selftest` → `selftest cases=79 failed=0`; run `python3 tools/sources-append-only.py --selftest` → `42/42 selftest cases passed`. Limit: the registered endpoints sample DEAD (no authorized serving runtime; operator-owned), so no model-readiness verdict is evidenced | score round 3; evidence re-anchored round 42 |
+ | **freshness** | **8** | snapshot/diff harness `tools/test-snapshot.sh` sha256 `236c23c12964cf0b2f0a2f970187e216d3398dcf2b92ffb7e8606e0fdd029646` (194 lines); run `python3 tools/citation-provenance.py --selftest` → `selftest: ok (24 cases)`; live drift evidence `.ufo/waves/round-41/c2/ls-remote-vllm.txt` sha256 `13388e483163357aa4daea784d0e67cdc8d6b5438d3166d613a2a044590b9282`; run `python3 -c "recheck=[l.split(chr(124))[10].strip() for l in open('corpus/SOURCES.md') if l.startswith(chr(124)+' S') and int(l.split(chr(124))[1].strip()[1:])<=477];print(sum(1 for r in recheck if r))"` → `218` (registry rows S001–S477 carrying a recheck cadence). Limit: snapshots are invocation-driven (no clock), and source rechecks run on each row's `recheck` cadence | score round 10; evidence re-anchored round 42 |
+ | depth | **7** | `SKILL.md` sha256 `542d6da23245773400de835b7a86ea19b289dcd31e3668f5893aed1a6ab12f89` (1402 lines); run `grep -c '^## ' SKILL.md` → `31`; `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 42 |
+@@ -2335,3 +2336,38 @@ Same four columns as the round-42 canonical list, which stays byte-intact; one r
+ 
+ 1. Calibration: the descriptor-based half of the S-id cross-check (`considerthese/2026-10-25.md` proposal 1, second half): the round-36 misattributions named staged ids by description, which the URL form cannot see (`.ufo/waves/round-43/frontier/sid-prototype.out`); re-open every new SOURCES row's quote at its cited line (`considerthese/2026-10-24.md` proposal 2).
+ 2. Coverage: the refused round-13 amendment rows (S438, S439, S442, S443) once a claim consumes the readiness column, or the llama.cpp single-model `/v1/models` body and the older vLLM docs lines as pin rows.
++
++### Round-44 calibration ledger
++
++Round-44 C2: the lane's filed trend verdict beside the outside closure's verdict.
++
++| round | trend | self | outside |
++|---|---|---|---|
++| 10 | discernment | unchanged | improved |
++| 11 | discernment | unchanged | improved |
++| 12 | discernment | unchanged | mixed |
++| 14 | discernment | unchanged | mixed |
++| 15 | discernment | unchanged | mixed |
++| 16 | discernment | unchanged | mixed |
++| 17 | discernment | unchanged | mixed |
++| 18 | discernment | mixed | improved |
++| 19 | expansion | improved | unchanged |
++| 19 | discernment | unchanged | improved |
++| 24 | discernment | mixed | unchanged |
++| 25 | quality | unchanged | harmed |
++| 25 | discernment | unchanged | improved |
++| 27 | discernment | mixed | improved |
++| 28 | expansion | improved | unprovable-but-better |
++| 29 | expansion | unchanged | mixed |
++| 33 | discernment | mixed | improved |
++| 34 | expansion | improved | mixed |
++| 34 | discernment | unchanged | improved |
++| 35 | quality | mixed | mixed |
++| 35 | discernment | unchanged | improved |
++| 37 | quality | mixed | improved |
++| 39 | discernment | unchanged | mixed |
++| 40 | discernment | unchanged | improved |
++| 43 | quality | unprovable-but-better | mixed |
++| 43 | discernment | unchanged | improved |
++
++agreement=61/72 overclaim=3 underclaim=8 other=15 absent=15

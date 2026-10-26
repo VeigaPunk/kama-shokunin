@@ -1,0 +1,290 @@
+diff --git c/corpus/knowledge/chat-adapter-outcomes.md w/corpus/knowledge/chat-adapter-outcomes.md
+index 5237cd81..62825cec 100644
+--- c/corpus/knowledge/chat-adapter-outcomes.md
++++ w/corpus/knowledge/chat-adapter-outcomes.md
+@@ -49,6 +49,30 @@ parameter and re-derived by `.ufo/waves/round-31/count-c1.py`:
+   (`parallel_tool_calls`, `add_generation_prompt`, `chat_template_kwargs`)
+   before the copy loop, so a no-op needs the live observation.
+ 
++Release recheck (round 44, b11889): S180 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S181 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S182 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S183 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S184 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S185 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S186 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S187 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S188 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S189 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S190 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S191 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ ## Limits
+ 
+ - One request per parameter on one build, model and argv: a row is one observed
+diff --git c/corpus/knowledge/context-capacity-engine-sides.md w/corpus/knowledge/context-capacity-engine-sides.md
+index cbba5cf4..39992af5 100644
+--- c/corpus/knowledge/context-capacity-engine-sides.md
++++ w/corpus/knowledge/context-capacity-engine-sides.md
+@@ -23,6 +23,8 @@ Reading for an operator: on vLLM the startup log is the single place where a per
+ - The value is the GGUF *training* context (`n_ctx_train`), the same quantity the lane's fixture reports in its own measured cells (`corpus/knowledge/context-capacity.md`); it is not the per-slot ceiling and not the pool.
+ - Scope: this is the router-mode listing handler. The single-model server's `/v1/models` body is a different handler, not read in this file; the lane already holds that it carries `meta.n_ctx_train` (`corpus/knowledge/gguf-declared-identity.md:30`) next to the per-slot `meta.n_ctx`, so the declared training context is published in both modes, under different nesting and key names. That cross-mode equivalence is the lane's earlier reading, not something this file proves.
+ 
++Release recheck (round 44, b11889): S479 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ ## What the two readings establish together
+ 
+ | engine | declared side | served side | where it is printed or returned |
+diff --git c/corpus/knowledge/context-capacity.md w/corpus/knowledge/context-capacity.md
+index b8650434..d1199e9b 100644
+--- c/corpus/knowledge/context-capacity.md
++++ w/corpus/knowledge/context-capacity.md
+@@ -72,6 +72,18 @@ statement of that behavior, not the first observation.
+   its size log prints cells per stream (S113, llama-kv-cache.cpp 84, 144,
+   301-304).
+ 
++Release recheck (round 44, b11889): S060 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S107 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S108 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S110 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S112 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S113 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ ## Fit raises a zero split context to the training context per slot (corrects the round-20 rule for that case only)
+ 
+ With `--fit` on (the default; S110 declares the handler, the default value
+@@ -86,6 +98,10 @@ stream for a unified cache, one per slot for a split cache (S106, fit.cpp
+ and a split cache, but `--kv-unified-per-slot 512` sizes the pool to 1024 and
+ fit leaves it there.
+ 
++Release recheck (round 44, b11889): S106 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S111 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ - X1 (`-np 4 --no-kv-unified`, no `-c`): pool 8192, 2048 per slot. Its raw
+   log (`final/raw/X1.server.log`) shows the fit probe first (`n_ctx = 2048`,
+   line 283), the fit step's own re-measure at 8192 (line 812, inside the fit
+@@ -171,6 +187,8 @@ several requests at once. The L cells sent two `/completion` requests, each a
+ - Tested: two requests with 1000-token prompts, `cache_prompt` false, no
+   streaming. No claim is made for other request counts or prompt sizes.
+ 
++Release recheck (round 44, b11889): S109 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ ## What the three endpoints cannot show
+ 
+ - No field of `/props`, `/slots` or `/v1/models` carries the KV pool or the
+@@ -260,3 +278,13 @@ wording above stays; these lines qualify it.
+   the measurement order in fit (S106), the idle-slot clearing precondition
+   (S109), the per-layer wording of the size log (S113) and the scope of S107
+   and S112. The old rows stay as written.
++
++Release recheck (round 44, b11889): S131 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S132 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S133 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S134 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S135 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
+diff --git c/corpus/knowledge/echo-discriminating-counters.md w/corpus/knowledge/echo-discriminating-counters.md
+index 84d1149b..e98f97e5 100644
+--- c/corpus/knowledge/echo-discriminating-counters.md
++++ w/corpus/knowledge/echo-discriminating-counters.md
+@@ -65,6 +65,8 @@ round, the round-26 test flags 0 of the 12 as echoes
+    `server-models.cpp`), plus 14 throws that dump request JSON into the
+    message (`w1a3/advice/ScoutEchoSitesSnapshot.md`).
+ 
++Release recheck (round 44, b11889): S137 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ ## The rule
+ 
+ A counter that credits a live error signature must refuse it when either
+diff --git c/corpus/knowledge/endpoint-identity.md w/corpus/knowledge/endpoint-identity.md
+index 430845c6..d052df12 100644
+--- c/corpus/knowledge/endpoint-identity.md
++++ w/corpus/knowledge/endpoint-identity.md
+@@ -185,6 +185,8 @@ source: `S036` (llama.cpp `tools/server/server-http.cpp` @ 704366d76 = release b
+ verified-at: 2026-10-20 — upstream files opened at the pinned commit; frozen-versus-repaired stub matrix run by L1 (receipts under `.ufo/waves/round-16/`)
+ recheck: on-release — re-open the pinned middleware when the installed llama.cpp build changes
+ 
++Release recheck (round 44, b11889): S035 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ Line 3 ("The verdict vocabulary is fixed") and the closing note at line 163
+ ("verdict vocabulary are unchanged") are superseded: the vocabulary now has
+ seven verdicts. Rule 5 at line 17 ("A live HTTP error response from a
+@@ -207,6 +209,10 @@ never emits the envelope. The no-slot (`no slot available`) and router-stream
+ (`Stream owner model is loading, retry later`) `unavailable_error` bodies stay
+ on rule 5. Without python3 the body keeps its old `FOREIGN_SERVICE` verdict.
+ 
++Release recheck (round 44, b11889): S036 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S037 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ Line 161 cites S001's README sentence that `meta` may be `null` "while the
+ model is still loading". At b11755 single-model mode that window is answered
+ by the 503 middleware, not by a `/v1/models` 200 (S036, S037). The README
+diff --git c/corpus/knowledge/gguf-declared-identity.md w/corpus/knowledge/gguf-declared-identity.md
+index 4f50c42e..219d5aa7 100644
+--- c/corpus/knowledge/gguf-declared-identity.md
++++ w/corpus/knowledge/gguf-declared-identity.md
+@@ -33,6 +33,8 @@ that relationship. Do not require served context to equal training context.
+ Round 25: the rule, the KV pool and the fit step are in
+ `corpus/knowledge/context-capacity.md`, with observed cells.
+ 
++Release recheck (round 44, b11889): S060 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ The retained round-18 fixture (`live-recovery/receipt-1.json`) has served
+ `n_ctx=256`, training `n_ctx_train=2048`, and a GGUF declaration of 2048.
+ The first comparison is an informational capacity relation; the second
+diff --git c/corpus/knowledge/gguf-runtime-compatibility-boundary.md w/corpus/knowledge/gguf-runtime-compatibility-boundary.md
+index f273a6af..ee506d4f 100644
+--- c/corpus/knowledge/gguf-runtime-compatibility-boundary.md
++++ w/corpus/knowledge/gguf-runtime-compatibility-boundary.md
+@@ -21,6 +21,8 @@ and llama.cpp (S005, S008, S013, S015).
+ | SGLang | `docs/advanced_features/quantization.md` at commit `50ed4c01` (2026-07-13) | §Platform Compatibility `gguf` row: yes on NVIDIA GPUs and Ascend NPUs, no on AMD GPUs | Offline loads pre-quantized weights; online computes scaling at runtime; docs recommend offline over online | "If you use a pre-quantized model, do not add `--quantization` to enable online quantization at the same time" | S008 |
+ | Ollama | undated page; text mirrors `ollama/ollama` `docs/import.md` at commit `6d02a43a` (2025-10-28) | Imports single-file or sharded GGUF via `Modelfile` `FROM`; shards keep original filenames under a wildcard | Import only: "Ollama does not quantize GGUF models during import"; quantize beforehand with an external GGUF tool | Import consumes the file as prepared; the suffix on disk is not re-derived or verified by Ollama | S013 |
+ 
++Release recheck (round 44, b11889): S015 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ ## What this does not establish
+ 
+ - That any local runtime exists, loads GGUF, or serves any model: no endpoint,
+diff --git c/corpus/knowledge/llamacpp-loading-lifecycle.md w/corpus/knowledge/llamacpp-loading-lifecycle.md
+index af3e42de..999f2c4d 100644
+--- c/corpus/knowledge/llamacpp-loading-lifecycle.md
++++ w/corpus/knowledge/llamacpp-loading-lifecycle.md
+@@ -56,6 +56,10 @@ mapping, the scope limits, and one live lane-owned run.
+    insertion order `message, type, code` (server-http.cpp:318-320), so matching
+    must parse JSON, never compare bytes.
+ 
++Release recheck (round 44, b11889): S036 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S037 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ ## Probe mapping (repaired `tools/kama-probe.sh`)
+ 
+ | `GET /v1/models` answer | Verdict / reason |
+@@ -169,6 +173,10 @@ with any other body (for example `{"status":"degraded"}`) is not this handler.
+ A body check must use GET: `OPTIONS` is answered by the pre-routing CORS branch
+ (server-http.cpp:347-352) before the state gate.
+ 
++Release recheck (round 44, b11889): S035 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S042 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ **Graceful teardown.** SIGINT and SIGTERM share one handler, registered at
+ server.cpp:529-534 only after `load_model` (507) and `is_ready.store(true)` (515)
+ (S043). The first signal calls `ctx_server.terminate()` (519-523), which stops
+@@ -183,6 +191,8 @@ before `killpg` (`alive_at_teardown_start`), `sigterm_sent` only on successful
+ delivery, `sigkill_sent` false, and port ownership proven for the child earlier
+ in the same run.
+ 
++Release recheck (round 44, b11889): S043 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ **Observed (S046).** Three runs on the pinned build and fixture: `/health` 200
+ `{"status":"ok"}`; 42, 45 and 45 loading 503s on `/v1/models`, every one the exact
+ envelope (one distinct body, sha256 `baa09177…957c`); SIGTERM to a live child,
+@@ -227,6 +237,8 @@ the falsify wave 1 of 60 real runs at 32x `stress-ng` load observed no 503 and f
+ `loading_envelope_graded` on a healthy server (0 of 20 idle runs, 0 of 30 at 3-12x
+ load; `.ufo/waves/round-17/falsify/advice/LiveUnderLoad.md`, `LiveFastLoad.md`).
+ 
++Release recheck (round 44, b11889): S047 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ ## Round 18 — missing observation is not failure; v3 boundary
+ 
+ The round-17 line “That holds once start_loop is running” is too strong if read
+@@ -251,6 +263,8 @@ coverage gaps. S054 shows why server-side duplicate warnings are not rejection.
+ The raw model argument and resolved input path are separately recorded, avoiding
+ the old false failure on a genuine relative model path.
+ 
++Release recheck (round 44, b11889): S054 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ S048/S050 ground the fixed IPv6 listener-ownership parser; S051 explains why
+ Exception-only guards missed KeyboardInterrupt/SystemExit. Internal faults
+ produce setup-error receipts and exit 2 where output remains writable. A receipt
+@@ -279,6 +293,8 @@ link serves 3.15 and is not the host-version source. BaseExceptionGroup can also
+ escape Exception; the tool's BaseException guard covers it, without relying on
+ the abbreviated three-example list.
+ 
++Release recheck (round 44, b11889): S056 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ **Four-pin limit:** `--expect-server-sha256` pins the launcher file. This release
+ loads `libllama-server-impl.so`; the receipt records its digest and the install
+ tree, but those are not independently expected by the current four-pin gate.
+diff --git c/corpus/knowledge/runtime-health-surface-matrix.md w/corpus/knowledge/runtime-health-surface-matrix.md
+index 3e7a5b41..e3e00610 100644
+--- c/corpus/knowledge/runtime-health-surface-matrix.md
++++ w/corpus/knowledge/runtime-health-surface-matrix.md
+@@ -17,6 +17,8 @@ One `/health` URL shape does not carry one portable readiness meaning across lla
+ | Ollama | docs.ollama.com (API stated stable, unversioned) | No dedicated health route in the two opened pages | N/A documented — absence in opened pages is not a claim of non-existence | `/api/tags` (available models), `/api/ps` (running models); OpenAI-compat `/v1/models` | Distinct `/api` and `/v1` roots; the OpenAI-compatible surface is an explicit subset | S009, S010 |
+ | Kubernetes (vocabulary) | probes doc, modified 2026-06-30 | liveness probe → restart decision | readiness probe → traffic admission; startup probe gates both during initialization | n/a — not a model server | Lifecycle vocabulary only; a non-Kubernetes local server inherits none of these semantics | S017 |
+ 
++Release recheck (round 44, b11889): S001 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ ## What this does not establish
+ 
+ No local runtime was contacted: nothing here says any engine is installed, running, or conforms to its docs today (KQ4). Ollama's missing health row means "not found in the two opened pages", not "no such route exists". Kubernetes probe categories are borrowed vocabulary for slow model loads, not a policy this lane applies. Routing/gateway health dispatch is kumitate's surface; model quality is kengaku's.
+@@ -74,4 +76,10 @@ Lead files: `.ufo/waves/round-16/build/advice/` `ScoutVllmStartup.md`,
+ `ScoutTgiStartup.md`, `ScoutSglangStartup.md`, `ScoutOllamaLoading.md`. None of
+ these is a runtime observation of the engine.
+ 
++Release recheck (round 44, b11889): S035 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S036 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S037 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ Round-17 correction (routed by `corpus/lessons/round-16-verifier-spotcheck.md` defect 4). Correction to line 65 (2026-10-20, source accessed 2026-10-20). "On every non-frontend path" narrows to every path except the frontend set (`server-http.cpp:309-311`) and `OPTIONS` (answered at `:347-352`, before the state gate at `:354`). `/v1/models` and `/health` remain inside the gate; the exempt set at `:251-258` is used only by the API-key check (`:267`). Envelope message, type and code: `:318-320`.
+diff --git c/corpus/knowledge/served-identity-crosswalk.md w/corpus/knowledge/served-identity-crosswalk.md
+index d37e8787..e59786f5 100644
+--- c/corpus/knowledge/served-identity-crosswalk.md
++++ w/corpus/knowledge/served-identity-crosswalk.md
+@@ -28,6 +28,8 @@ the accompanying corrections to older entries.
+ | llama.cpp router mode (S001; launch without `-m`) | `GET /models` (cache listing); `/v1/models` (forwarded per loaded model); `GET /props?model=` for sleeping status | `id` is the preset/repo tag with a separate `path` field; `status.value` is `loaded` / `unloaded` / `loading` / `sleeping` / `downloading` / `incomplete` | "Listing all models in cache. The model metadata will also include a field to indicate the status of the model"; "When the model is loaded, the info from `/v1/models` is forwarded to router's `/v1/models`." Sleep mode unloads "the model and its associated memory (including the KV cache) ... from RAM" | `/health` is server-level here and does not name a model; `/health`, `/props`, `/models`, `/metrics` are exempt from incoming tasks — "They do not trigger model reloading and do not reset the idle timer", so a 200 does not wake a sleeping model; the single-model `-m`-path `id` rule must not be applied to router ids |
+ | Ollama (S010 @c1737589; S011; S012; S031) | `/api/tags` (native available list); `/api/ps` (native running list); `/v1/models` and `/v1/models/{model}` (OpenAI-compatible) | tags: `name`, `model`, `remote_model`/`remote_host` ("if the model is remote"), `modified_at`, `size` ("Total size of the model on disk in bytes"), `digest` ("SHA256 digest identifier of the model contents"), `details`; ps: `name`, `model`, `size`, `digest`, `details`, `expires_at`, `size_vram`, `context_length`; `/v1/models` documents only that "`created` corresponds to when the model was last modified" and "`owned_by` corresponds to the ollama username, defaulting to `\"library\"`" | tags = "Summary information for a locally available model" (200 description: "List available models"), membership may be remote; ps = "Models currently loaded into memory" with `expires_at` = "Time when the model will be unloaded"; `/v1/models` documents metadata only, not residency | `/v1/models` cannot be read as loaded residency (the page does not say whether it lists installed, running, cloud or copied names); a tags entry does not prove local weights (S031); a ps sample is not durable (unload time); name-only matching is unsafe because `ollama cp` copies "an existing model name to a temporary name"; joining tags/ps by digest is [INFERENCE] — the pages do not describe the join and prove no on-disk artifact identity |
+ 
++Release recheck (round 44, b11889): S001 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ ## Grounded failure cases
+ 
+ 1. **llama.cpp during load** — the documented list always has one element and `meta` can be `null` "for example, while the model is still loading". [INFERENCE] Therefore identifier listing alone cannot be used as a load-completion guarantee (S001); this is not a runtime observation.
+@@ -154,3 +156,9 @@ holds for router mode (catalog `status` values) and for a sleeping server
+ (`/v1/models` from cache, server-context.cpp:5725-5733 at 704366d76, pinned
+ under `.ufo/waves/round-16/sources/`; sleep is opt-in, `--sleep-idle-seconds`
+ default -1).
++
++Release recheck (round 44, b11889): S035 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S036 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
++Release recheck (round 44, b11889): S037 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
+diff --git c/corpus/knowledge/serving-metrics-crosswalk.md w/corpus/knowledge/serving-metrics-crosswalk.md
+index 15107db8..3ba8c828 100644
+--- c/corpus/knowledge/serving-metrics-crosswalk.md
++++ w/corpus/knowledge/serving-metrics-crosswalk.md
+@@ -20,6 +20,8 @@ recheck: on-release — S001 §GET `/metrics`; S003 §General Metrics and §Cust
+ | End-to-end latency | `llamacpp:prompt_seconds_total`; `llamacpp:tokens_predicted_seconds_total` (cumulative process time, not per-request latency) [S001] | `vllm:e2e_request_latency_seconds` [S003] | `sglang:e2e_request_latency_seconds` [S007] | `gen_ai.server.request.duration` [S019] |
+ | Token throughput | `llamacpp:prompt_tokens_seconds`; `llamacpp:predicted_tokens_seconds` gauges + `llamacpp:prompt_tokens_total`; `llamacpp:tokens_predicted_total` counters [S001] | `vllm:prompt_tokens`; `vllm:generation_tokens` counters [S003] | `sglang:prompt_tokens_total`; `sglang:generation_tokens_total` counters; `sglang:gen_throughput` gauge [S007] | not documented in opened page (token counters sit in the client-side section) |
+ 
++Release recheck (round 44, b11889): S001 <what changed, release lines> - the statement above holds at b11755 (704366d76), not at b11889.
++
+ Measurement-boundary notes:
+ 
+ - TTFT boundary differs: SGLang ends streaming TTFT "when the first output arrives after detokenization" but non-streaming at first scheduler token [S007]; OTel defines "Time to generate first token for successful responses" [S019]; S003's table gives no boundary split.

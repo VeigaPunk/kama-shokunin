@@ -1,0 +1,185 @@
+diff --git a/corpus/SOURCES.md b/corpus/SOURCES.md
+index 0185bd1f..9cfa9bcc 100644
+--- a/corpus/SOURCES.md
++++ b/corpus/SOURCES.md
+@@ -6,7 +6,9 @@ source for which scope, and when to look again. Tiers are scoped to `scope`, nev
+ global. Every row was opened in round 10 (2026-10-19); the round lesson
+ `lessons/round-10.md` §Gate carries each row's URL, access date and quote.
+ 
+-## Registry
++NOTE on the registry table below.
++
++## Round-44 release re-verification
+ 
+ | id | source | kind | tier | scope | anchor | teaches | status | opened | recheck | used-by |
+ |---|---|---|---|---|---|---|---|---|---|---|
+@@ -482,7 +484,7 @@ landed (append-only), and this record corrects what their `teaches` cells say.
+ 
+ S180–S191 were first appended at end of file, after the last `##` section, so
+ `scripts/sources-census.sh validate` read them as E12 `row outside Registry section` (12 findings,
+-exit 1). They now sit in the `## Registry` table above with ids and cells unchanged; this pointer
++exit 1). They now sit in the `NOTE on the registry table below.` table above with ids and cells unchanged; this pointer
+ records the move (append-only: no cell was rewritten). Defect and fix recorded in
+ `corpus/lessons/round-31.md` §Mistakes row 4.
+ 
+diff --git a/corpus/knowledge/chat-adapter-outcomes.md b/corpus/knowledge/chat-adapter-outcomes.md
+deleted file mode 100644
+index 5237cd81..00000000
+--- a/corpus/knowledge/chat-adapter-outcomes.md
++++ /dev/null
+@@ -1,65 +0,0 @@
+-# The chat-completions adapter: what it maps, refuses, and drops
+-
+-source: S180-S191 (llama.cpp b11755 `tools/server/server-common.cpp` and `server-schema.cpp` @ 704366d76, opened 2026-10-23)
+-verified-at: 2026-10-23, lane fixture (llama-server `b6a31a8e…d804`, `stories260K.gguf` `270cba1b…256d`, default argv, `n_slots` 4), live rows in `registry/chat-param-outcomes-r31.json`
+-recheck: on release (a new llama.cpp build; the pinned lines are the recheck anchor)
+-
+-`POST /v1/chat/completions` is a conversion layer over the same task parameters
+-the native `/completion` endpoint uses, so the question a client faces is not
+-"which fields exist" but "what did the adapter do with the field I sent".
+-That question has four answerable forms on this fixture, each measured once per
+-parameter and re-derived by `.ufo/waves/round-31/count-c1.py`:
+-
+-| Form | What it means | How it was observed |
+-|---|---|---|
+-| reject | the request is refused before inference | HTTP status plus an `error` object with exactly `code`, `message`, `type` |
+-| slot | the value reaches the stored task parameters, sometimes under another key | the newest `/slots` entry's `params` |
+-| ignored | no observable change | zero delta on the full `params` object and an unchanged normalized response |
+-| response | the OpenAI-compatible response contract changes | `choices` length, `logprobs` presence, SSE framing, SSE usage frame |
+-
+-## What the layer does
+-
+-- **Aliases resolve through the schema, not the adapter.** `max_tokens` is
+-  declared as an alias of `n_predict` (`server-schema.cpp:47`) and `n` as the
+-  fallback alias of the multiple-completion count (`server-schema.cpp:64`). A
+-  chat body that sends `max_tokens: 3` is stored as both `max_tokens = 3` and
+-  `n_predict = 3`; `max_completion_tokens: 3` reaches the same pair through the
+-  adapter's property copy (`server-common.cpp:1530`). Treat the two stored keys
+-  as one budget, not two.
+-- **`logprobs` is a mapping, not a boolean effect.** With `logprobs: true` the
+-  adapter sets `n_probs` to `top_logprobs` or 20 when that field is absent
+-  (`server-common.cpp:1519`). `top_logprobs` alone is refused
+-  (`server-common.cpp:1521`).
+-- **Validation lives in the adapter and the messages are its own.**
+-  `messages` must be an array (`:1390`); every non-assistant message needs
+-  `content` (`:1395`); an assistant message needs `content` or `tool_calls`
+-  (`:1399`); `content` must be a string or an array (`:1411`);
+-  `response_format.type` must be `text` or `json_object` (`:1375`); a request
+-  carrying both `json_schema` and `grammar` raises a **500 `server_error`**, not
+-  a 400 (`:1360`). The status and the error `type` are decided by the HTTP
+-  layer's exception mapping, so the same adapter exception class can surface as
+-  either code: read the message and type together, never the status alone.
+-- **Undeclared OpenAI-standard keys are copied and then pruned.** The adapter
+-  copies every remaining key into the task parameters (`:1530`); the schema then
+-  keeps only what it declares. `user`, `parallel_tool_calls` and `tools` (with
+-  the lane's default argv and no tool-capable template effect) produced no
+-  stored change and no response change, while `stream` and `stream_options` did
+-  change the response contract. Absence from the schema predicts "no generation
+-  effect" but does not by itself prove it: the adapter reads several keys
+-  (`parallel_tool_calls`, `add_generation_prompt`, `chat_template_kwargs`)
+-  before the copy loop, so a no-op needs the live observation.
+-
+-## Limits
+-
+-- One request per parameter on one build, model and argv: a row is one observed
+-  point, not the parameter's response function.
+-- A `slot` value is what the server stored for that task, not proof the sampler
+-  used it; a grammar carried in the chat session never appears in `/slots`, so
+-  "no slot delta" does not exclude a template or grammar effect.
+-- The counter's normalization (`top_keys`, `n_choices`, `choice_keys`,
+-  `has_logprobs`, `usage_keys`, `prompt_tokens`) cannot see effects outside
+-  those fields; the round-31 falsify wave demonstrated two ways a row can be
+-  counted while proving nothing (a mapping whose stored value equals the base's,
+-  and an `ignored` claim on a field the session layer consumes). Those are
+-  counter defects recorded in `corpus/lessons/round-31.md`, not evidence for the
+-  rows involved.
+diff --git a/corpus/knowledge/context-capacity-engine-sides.md b/corpus/knowledge/context-capacity-engine-sides.md
+index cbba5cf4..c2cc1d25 100644
+--- a/corpus/knowledge/context-capacity-engine-sides.md
++++ b/corpus/knowledge/context-capacity-engine-sides.md
+@@ -37,3 +37,5 @@ A K05 comparison needs the declared value under each engine's own key name and t
+ - Two source files at two pins. SGLang, Ollama, TGI and the llama.cpp single-model server are not read here.
+ - Source reading only; the vLLM figures were not reproduced by running vLLM, and v0.32.0 is the lane's `pin-watch` pin for vLLM (`registry/engine-pins.tsv`), so a newer tag can change these lines.
+ - The staged shokuknow amendments that proposed this ground (`merge/kama/knowledge/corpus/knowledge/context-capacity-amendment-2026-10-23-r5.md` and `...-2026-10-24-r7.md`) were re-grounded, not copied: this entry corrects three of their simplifications (the vLLM token figure is derived from `max_model_len` and is not the pool for hybrid or host-bound configurations; the llama.cpp listing is the router handler, not a general card; the vLLM override applies on the dense path only as read here). Reasons and quotes: `corpus/lessons/round-42.md` §Gate.
++
++b11889 re-verification flags (round 44): S479
+diff --git a/corpus/knowledge/context-capacity.md b/corpus/knowledge/context-capacity.md
+index b8650434..edb9ffdb 100644
+--- a/corpus/knowledge/context-capacity.md
++++ b/corpus/knowledge/context-capacity.md
+@@ -260,3 +260,5 @@ wording above stays; these lines qualify it.
+   the measurement order in fit (S106), the idle-slot clearing precondition
+   (S109), the per-layer wording of the size log (S113) and the scope of S107
+   and S112. The old rows stay as written.
++
++b11889 re-verification flags (round 44): S060 S107 S108 S109 S110 S111 S112 S113 S132 S133 S134 S135
+diff --git a/corpus/knowledge/echo-discriminating-counters.md b/corpus/knowledge/echo-discriminating-counters.md
+index 84d1149b..1936b7e6 100644
+--- a/corpus/knowledge/echo-discriminating-counters.md
++++ b/corpus/knowledge/echo-discriminating-counters.md
+@@ -161,3 +161,5 @@ server echoed it.
+   The round-27 counter is retired, and no signature counter has run KQ37 on data.
+ - Other servers and other llama.cpp builds may echo at other sites. S137 is
+   pinned to 704366d76; the live probe tested ASCII signatures only.
++
++b11889 re-verification flags (round 44): S137
+diff --git a/corpus/knowledge/endpoint-identity.md b/corpus/knowledge/endpoint-identity.md
+index 430845c6..d34e4b9f 100644
+--- a/corpus/knowledge/endpoint-identity.md
++++ b/corpus/knowledge/endpoint-identity.md
+@@ -216,3 +216,5 @@ build is therefore not expected [INFERENCE from the code path, consistent with
+ the round-16 live receipt in `corpus/knowledge/llamacpp-loading-lifecycle.md`].
+ 
+ Round-17 correction (routed by `corpus/lessons/round-16-verifier-spotcheck.md` defect 4). Correction to line 202 (2026-10-20, source accessed 2026-10-20). "Every non-frontend path" narrows to every path except the frontend set (`/` and embedded UI assets, `server-http.cpp:309-311`) and `OPTIONS` requests, which return before the gate at `server-http.cpp:347-352`. The envelope's type and code are at `:319-320`, beside the message at `:318`. `/health` and `/v1/health` are not exempt from the loading gate: the public-endpoint set at `:251-258` is consulted only by the API-key check (`:267`).
++
++b11889 re-verification flags (round 44): S035 S036 S037
+diff --git a/corpus/knowledge/gguf-declared-identity.md b/corpus/knowledge/gguf-declared-identity.md
+index 4f50c42e..5dcf519a 100644
+--- a/corpus/knowledge/gguf-declared-identity.md
++++ b/corpus/knowledge/gguf-declared-identity.md
+@@ -51,3 +51,5 @@ This capability belongs to kama's declared-versus-served identity frontier,
+ not kengaku's quality/evaluation work. It reads the existing 1.2 MB CI model
+ and old receipts without downloads, persistent servers or consumer changes.
+ K05 runtime-dependent identity fields and registered consumers remain open.
++
++b11889 re-verification flags (round 44): S060
+diff --git a/corpus/knowledge/llamacpp-loading-lifecycle.md b/corpus/knowledge/llamacpp-loading-lifecycle.md
+index af3e42de..8d1459d0 100644
+--- a/corpus/knowledge/llamacpp-loading-lifecycle.md
++++ b/corpus/knowledge/llamacpp-loading-lifecycle.md
+@@ -428,3 +428,5 @@ name the first failing operation/file, for example `read:'X':Permission denied`,
+ rather than the former later-scan `X:unreadable`/`X:not-hashed` list.
+ The `install-tree-unpinnable:` prefix and actual refusal remain unchanged;
+ no multi-error aggregation or exact description-text guarantee is credited.
++
++b11889 re-verification flags (round 44): S035 S036 S037 S042 S043 S047 S054 S056
+diff --git a/corpus/knowledge/runtime-health-surface-matrix.md b/corpus/knowledge/runtime-health-surface-matrix.md
+index 3e7a5b41..8266889c 100644
+--- a/corpus/knowledge/runtime-health-surface-matrix.md
++++ b/corpus/knowledge/runtime-health-surface-matrix.md
+@@ -75,3 +75,5 @@ Lead files: `.ufo/waves/round-16/build/advice/` `ScoutVllmStartup.md`,
+ these is a runtime observation of the engine.
+ 
+ Round-17 correction (routed by `corpus/lessons/round-16-verifier-spotcheck.md` defect 4). Correction to line 65 (2026-10-20, source accessed 2026-10-20). "On every non-frontend path" narrows to every path except the frontend set (`server-http.cpp:309-311`) and `OPTIONS` (answered at `:347-352`, before the state gate at `:354`). `/v1/models` and `/health` remain inside the gate; the exempt set at `:251-258` is used only by the API-key check (`:267`). Envelope message, type and code: `:318-320`.
++
++b11889 re-verification flags (round 44): S001 S035 S036 S037
+diff --git a/corpus/knowledge/served-identity-crosswalk.md b/corpus/knowledge/served-identity-crosswalk.md
+index d37e8787..be3b2ff9 100644
+--- a/corpus/knowledge/served-identity-crosswalk.md
++++ b/corpus/knowledge/served-identity-crosswalk.md
+@@ -154,3 +154,5 @@ holds for router mode (catalog `status` values) and for a sleeping server
+ (`/v1/models` from cache, server-context.cpp:5725-5733 at 704366d76, pinned
+ under `.ufo/waves/round-16/sources/`; sleep is opt-in, `--sleep-idle-seconds`
+ default -1).
++
++b11889 re-verification flags (round 44): S001 S035 S036 S037
+diff --git a/corpus/knowledge/serving-metrics-crosswalk.md b/corpus/knowledge/serving-metrics-crosswalk.md
+index 15107db8..f9e39ea9 100644
+--- a/corpus/knowledge/serving-metrics-crosswalk.md
++++ b/corpus/knowledge/serving-metrics-crosswalk.md
+@@ -59,3 +59,5 @@ Measurement-boundary notes:
+ - S007 — SGLang Production Metrics, §Language model metrics + §Request-level time per output token + §Setup Guide (opened 2026-10-19)
+ - S018 — Prometheus Metric and label naming, §Metric names + §Labels + §Base Units (opened 2026-10-19)
+ - S019 — OTel semantic-conventions-genai `gen-ai-metrics.md`, §Generative AI model server metrics, `Status: Development`, main @ `547934a` (opened 2026-10-19)
++
++b11889 re-verification flags (round 44): S001

@@ -1,0 +1,28 @@
+diff --git a/.ufo/waves/round-44/controls/build_controls.py b/.ufo/waves/round-44/controls/build_controls.py
+index a1426c2..1136971 100755
+--- a/.ufo/waves/round-44/controls/build_controls.py
++++ b/.ufo/waves/round-44/controls/build_controls.py
+@@ -20,8 +20,8 @@ C2 = "round44-verdict-ledger-audit.py"
+ REL = "d854d98bae598388ecea1ed84396587e5edc326d"
+ 
+ 
+-def sh(*a, cwd=None, check=True):
+-    return subprocess.run(a, cwd=cwd, capture_output=True, text=True, check=check)
++def sh(*a, cwd=None, check=True, env=None):
++    return subprocess.run(a, cwd=cwd, capture_output=True, text=True, check=check, env=env)
+ 
+ 
+ def clone(lane, scratch, name):
+@@ -36,9 +36,11 @@ def clone(lane, scratch, name):
+ 
+ 
+ def commit(d, msg):
++    fixed = dict(os.environ, GIT_AUTHOR_DATE="2000-01-01T00:00:00 +0000",
++                 GIT_COMMITTER_DATE="2000-01-01T00:00:00 +0000")
+     sh("git", "-C", d, "add", "-A")
+     sh("git", "-C", d, "-c", "user.name=r44-control", "-c", "user.email=r44-control@fixture.invalid",
+-       "commit", "-qm", msg, "--allow-empty")
++       "commit", "-qm", msg, "--allow-empty", env=fixed)
+     return sh("git", "-C", d, "rev-parse", "HEAD").stdout.strip()
+ 
+ 

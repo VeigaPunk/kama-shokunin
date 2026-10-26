@@ -1,0 +1,144 @@
+== /completion route at release ==
+   176	    ctx_http.get ("/models",                   ex_wrapper(routes.get_models));
+   177	    ctx_http.get ("/v1/models",                ex_wrapper(routes.get_models));
+   178	    ctx_http.post("/completion",               ex_wrapper(routes.post_completions)); // legacy
+   179	    ctx_http.post("/completions",              ex_wrapper(routes.post_completions));
+   180	    ctx_http.post("/v1/completions",           ex_wrapper(routes.post_completions_oai));
+   181	    ctx_http.post("/chat/completions",         ex_wrapper(routes.post_chat_completions));
+   182	    ctx_http.post("/v1/chat/completions",      ex_wrapper(routes.post_chat_completions));
+
+== post_completions -> handle_completions_impl ==
+  5856	    };
+  5857	
+  5858	    this->post_completions = [this](const server_http_req & req) {
+  5859	        auto res = create_response();
+  5860	        std::vector<raw_buffer> files; // dummy
+  5861	        const json body = json::parse(req.body);
+  5862	        return handle_completions_impl(
+  5863	            req,
+  5864	            SERVER_TASK_TYPE_COMPLETION,
+  5865	            body,
+  5866	            files,
+  5867	            TASK_RESPONSE_TYPE_NONE);
+  5868	    };
+
+== eval_llama_cmpl_schema call ==
+  5244	
+  5245	            task.id = rd.get_new_id();
+  5246	
+  5247	            task.tokens = std::move(inputs[i]);
+  5248	            task.params = server_schema::eval_llama_cmpl_schema(
+  5249	                    ctx_server.vocab,
+  5250	                    params,
+  5251	                    meta->logit_bias_eog,
+  5252	                    data);
+
+== catch -> 400 ==
+  5274	
+  5275	        rd.post_tasks(std::move(tasks), chat_session);
+  5276	    } catch (const std::exception & e) {
+  5277	        res->error(format_error_response(e.what(), ERROR_TYPE_INVALID_REQUEST));
+  5278	        return res;
+  5279	    }
+  5280	
+
+== format_error_response code 400 ==
+    93	json format_error_response(const std::string & message, const enum error_type type) {
+    94	    std::string type_str;
+    95	    int code = 500;
+    96	    switch (type) {
+    97	        case ERROR_TYPE_INVALID_REQUEST:
+    98	            type_str = "invalid_request_error";
+    99	            code = 400;
+   100	            break;
+   101	        case ERROR_TYPE_AUTHENTICATION:
+
+== handle_with_catch + field_num::eval (release) ==
+   589	static void handle_with_catch(const char * name, std::function<void()> func) {
+   590	    try {
+   591	        func();
+   592	    } catch (const std::exception & e) {
+   593	        throw std::invalid_argument(string_format("Field '%s': %s", name, e.what()));
+   594	    }
+   595	}
+   596	
+   597	// treat a null value as absent so clients can send null to request the server default
+   598	static bool has_value(const json & data, const char * n) {
+   599	    return data.contains(n) && !data.at(n).is_null();
+   600	}
+   601	
+   602	template <typename T>
+   603	void field_num<T>::eval(field_eval_context & ctx, const json & data) {
+   604	    for (const auto & n : name) {
+   605	        if (has_value(data, n)) {
+   606	            handle_with_catch(n, [&]() {
+   607	                if (custom_handler) {
+   608	                custom_handler(ctx, data);
+   609	                } else if (!is_hard_limit) {
+   610	                    val = std::max(min, std::min(max, data.at(n).template get<T>()));
+   611	                } else {
+   612	                    T tmp = data.at(n).template get<T>();
+   613	                    if (tmp < min || tmp > max) {
+   614	                        throw std::invalid_argument(std::string("Value must be between ") + std::to_string(min) + " <= value <= " + std::to_string(max) + ", but got " + std::to_string(tmp));
+   615	                    }
+   616	                    val = tmp;
+   617	                }
+   618	            });
+   619	            return;
+   620	        }
+   621	    }
+   622	}
+   623	
+
+== make_llama_cmpl_schema bounds ==
+13:std::vector<std::unique_ptr<field>> make_llama_cmpl_schema(const common_params & params_base, task_params & params) {
+484:}
+531:}
+566:}
+583:}
+595:}
+600:}
+622:}
+634:}
+649:}
+661:}
+672:}
+674:} // namespace server_schema
+
+== TTS duplicate repeat_penalty (release) ==
+   530	    return params;
+   531	}
+   532	
+   533	//
+   534	// TTS schema
+   535	//
+   536	
+   537	std::vector<std::unique_ptr<field>> make_tts_schema(server_task & task) {
+   538	    std::vector<std::unique_ptr<field>> fields;
+   539	    auto add = [&](field * f) {
+   540	        fields.emplace_back(f);
+   541	    };
+   542	
+   543	    add((new field_num("top_k", task.tts_inp.data.top_k))
+   544	        ->set_limits(0, INT32_MAX)
+   545	        ->set_desc("Top-k for the acoustic code predictor, 0 to use the model default"));
+   546	
+   547	    add((new field_num("top_p", task.tts_inp.data.top_p))
+   548	        ->set_limits(0.0f, 1.0f)
+   549	        ->set_desc("Top-p for the acoustic code predictor, 0.0 to use the model default"));
+   550	
+   551	    add((new field_num("seed", task.tts_inp.data.seed))
+   552	        ->set_desc("RNG seed for the backbone sampler and the codec/vocoder (-1 = random)"));
+   553	
+   554	    add((new field_num("n_predict", task.params.n_predict))
+   555	        ->set_hard_limits(-1, INT32_MAX)
+   556	        ->add_alias("max_tokens")
+   557	        ->set_desc("Max number of audio frames to generate"));
+   558	
+   559	    add((new field_num("repeat_penalty", task.params.sampling.penalty_repeat))
+   560	        ->set_desc("Repetition penalty applied to the backbone sampler over the whole generation"));
+   561	
+   562	    add((new field_bool("stream", task.params.stream))
+
+$ git -C /fast/scratch/hyaku/kama-r44/shared/llama.cpp log --oneline -S make_tts_schema 704366d76..d854d98bae -- tools/server/server-schema.cpp
+5c0b49a23 server : add POST /tts endpoint for TTS models (#26603)

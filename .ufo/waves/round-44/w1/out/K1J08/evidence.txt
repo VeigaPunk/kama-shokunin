@@ -1,0 +1,525 @@
+### commits between pins touching the five cited files
+$ git -C $U log --oneline 704366d76..d854d98b -- tools/server/server-{queue,context,schema,common}.cpp tools/server/server.cpp
+63412d873 llama: fix exhausting CPU and MEM caused by dry sequence breaker (#31035)
+f3269ef96 server: refactor server entrypoint (#31113)
+184f65360 server: Substitute rerank placeholder from the original template only. (#30864)
+d814cbb88 server: realtime API: send complete after committed audio drains (#30994)
+a5d22276b server : support typed content input for RERANK endpoint (#29625)
+9a3b91c68 server : fix usage.completion_tokens undercount with n > 1 (#29486)
+5c0b49a23 server : add POST /tts endpoint for TTS models (#26603)
+1242be66f server: add realtime transcription API (#30636)
+ead9f3205 server: Support logprobs with speculative decoding (#27196)
+7e3eeee04 model : add H2O-Lightning-4B decision model (#30361)
+5a9a34d88 server : avoid repeated mmproj memory margin addition on sleep/resume (#28233)
+4e201388c server: Router wasn't propagating the client disconnects fully to the child, the response wait could cause a delayed cancellation (#29707)
+
+### S047: the only server-queue.cpp change at b11889
+$ git -C $U diff 704366d76 d854d98b -- tools/server/server-queue.cpp
+diff --git a/tools/server/server-queue.cpp b/tools/server/server-queue.cpp
+index 3352c3cb5..c4ce90721 100644
+--- a/tools/server/server-queue.cpp
++++ b/tools/server/server-queue.cpp
+@@ -448,6 +448,7 @@ server_task_result_ptr server_response::recv(const std::unordered_set<int> & id_
+ }
+ 
+ server_task_result_ptr server_response::recv_with_timeout(const std::unordered_set<int> & id_tasks, int timeout) {
++    const auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(timeout);
+     while (true) {
+         std::unique_lock<std::mutex> lock(mutex_results);
+ 
+@@ -459,7 +460,7 @@ server_task_result_ptr server_response::recv_with_timeout(const std::unordered_s
+             }
+         }
+ 
+-        std::cv_status cr_res = condition_results.wait_for(lock, std::chrono::seconds(timeout));
++        std::cv_status cr_res = condition_results.wait_until(lock, deadline);
+         if (!running) {
+             RES_DBG("%s : queue result stop\n", __func__);
+             std::terminate(); // we cannot return here since the caller is HTTP code
+
+### S047: b11889 server.cpp signal_handler / statics
+$ git -C $U show d854d98b:tools/server/server.cpp | sed -n '26,38p'
+26: static std::function<void(int)> shutdown_handler;
+27: static std::atomic_flag is_terminating = ATOMIC_FLAG_INIT;
+28: 
+29: static inline void signal_handler(int signal) {
+30:     if (is_terminating.test_and_set()) {
+31:         // in case it hangs, we can force terminate the server by hitting Ctrl+C twice
+32:         // this is for better developer experience, we can remove when the server is stable enough
+33:         fprintf(stderr, "Received second interrupt, terminating immediately.\n");
+34:         exit(1);
+35:     }
+36: 
+37:     shutdown_handler(signal);
+38: }
+
+### S047: b11889 install helper, instance shutdown_handler, ordering, return 0, entry points
+$ git -C $U show d854d98b:tools/server/server.cpp | sed -n '318,332p;645,684p'
+318: static void server_install_signal_handlers() {
+319: #if defined (__unix__) || (defined (__APPLE__) && defined (__MACH__))
+320:     struct sigaction sigint_action;
+321:     sigint_action.sa_handler = signal_handler;
+322:     sigemptyset (&sigint_action.sa_mask);
+323:     sigint_action.sa_flags = 0;
+324:     sigaction(SIGINT, &sigint_action, NULL);
+325:     sigaction(SIGTERM, &sigint_action, NULL);
+326: #elif defined (_WIN32)
+327:     auto console_ctrl_handler = +[](DWORD ctrl_type) -> BOOL {
+328:         return (ctrl_type == CTRL_C_EVENT) ? (signal_handler(SIGINT), true) : false;
+329:     };
+330:     SetConsoleCtrlHandler(reinterpret_cast<PHANDLER_ROUTINE>(console_ctrl_handler), true);
+331: #endif
+332: }
+...
+644: 
+645:     shutdown_handler = [&](int) {
+646:         mcp_mgr.shutdown();
+647:         // this will unblock start_loop()
+648:         ctx_server.terminate();
+649:     };
+650: 
+651:     if (opts.install_signal_handlers) {
+652:         server_install_signal_handlers();
+653:     }
+654: 
+655:     server_connect connect_proc;
+656:     if (!server_on_listening(ctx_http, params, connect_proc)) {
+657:         ctx_http.stop();
+658:         ctx_http.join();
+659:         clean_up();
+660:         return 1;
+661:     }
+662: 
+663:     // optionally, notify router server that this instance is ready
+664:     std::thread monitor_thread;
+665:     if (role.is_managed_by_router()) {
+666:         monitor_thread = role.setup(shutdown_handler);
+667:         role.notify_to_router(server_state_to_str(SERVER_STATE_READY), routes.get_model_info());
+668:     }
+669: 
+670:     // this call blocks the main thread until queue_tasks.terminate() is called
+671:     ctx_server.start_loop();
+672: 
+673:     clean_up();
+674:     ctx_http.join();
+675:     if (monitor_thread.joinable()) {
+676:         monitor_thread.join();
+677:     }
+678: 
+679:     auto * ll_ctx = ctx_server.get_llama_context();
+680:     if (ll_ctx != nullptr) {
+681:         common_memory_breakdown_print(ll_ctx);
+682:     }
+683: 
+684:     return 0;
+...
+755:     const int result = server_run(params, argc, argv, role, server_run_opts{});
+756:     common_log_flush(common_log_main());
+757:     return result;
+758: }
+759: 
+760: int llama_server(common_params & params, int argc, char ** argv) {
+761:     // embedded in llama-cli: it handles the signals, and the model is resolved already
+762:     server_run_opts opts;
+763:     opts.install_signal_handlers = false;
+764:     opts.resolve_model           = false;
+765: 
+766:     server_role role;
+767:     return server_run(params, argc, argv, role, opts);
+
+### S047 EVIDENCE DEFECT: pin server-queue.cpp 24-38 is server_queue::post(), not signal_handler
+$ git -C $U show 704366d76:tools/server/server-queue.cpp | sed -n '24,38p'
+24: static bool task_resets_idle_timer(server_task_type type) {
+25:     return type != SERVER_TASK_TYPE_METRICS;
+26: }
+27: 
+28: int server_queue::post(server_task && task, bool front) {
+29:     std::unique_lock<std::mutex> lock(mutex_tasks);
+30:     GGML_ASSERT(task.id != -1);
+31:     // if this is cancel task make sure to clean up pending tasks
+32:     if (task.type == SERVER_TASK_TYPE_CANCEL) {
+33:         cleanup_pending_task(task.id_target);
+34:     }
+35:     const int  task_id     = task.id;
+36:     const bool reset_timer = task_resets_idle_timer(task.type);
+37:     QUE_DBG("new task, id = %d, front = %d\n", task_id, front);
+38:     if (front) {
+
+### S047 EVIDENCE DEFECT: pin/release server-queue.cpp 525-540 and 573-580 (post_tasks loop / should-not-reach-here)
+$ git -C $U show 704366d76:tools/server/server-queue.cpp | sed -n '525,540p'; ... | sed -n '573,580p'
+525: void server_response_reader::post_tasks(std::vector<server_task> && tasks, const common_chat_session & session, bool front) {
+526:     GGML_ASSERT(id_tasks.empty() && "post_tasks() can only be called once per reader");
+527:     id_tasks = server_task::get_list_id(tasks);
+528:     states.reserve(tasks.size());
+529:     size_t index = 0;
+530:     for (auto & task : tasks) {
+531:         task.index = index++;
+532:         states.push_back(task_result_state(session));
+533:         // for child tasks
+534:         for (auto & child_task : task.child_tasks) {
+535:             child_task.index = index++;
+536:             states.push_back(task_result_state(session));
+537:         }
+538:     }
+539:     GGML_ASSERT(states.size() == id_tasks.size());
+540:     queue_results.add_waiting_task_ids(id_tasks);
+--
+526: void server_response_reader::post_tasks(std::vector<server_task> && tasks, const common_chat_session & session, bool front) {
+527:     GGML_ASSERT(id_tasks.empty() && "post_tasks() can only be called once per reader");
+528:     id_tasks = server_task::get_list_id(tasks);
+529:     states.reserve(tasks.size());
+530:     size_t index = 0;
+531:     for (auto & task : tasks) {
+532:         task.index = index++;
+533:         states.push_back(task_result_state(session));
+534:         // for child tasks
+535:         for (auto & child_task : task.child_tasks) {
+536:             child_task.index = index++;
+537:             states.push_back(task_result_state(session));
+538:         }
+539:     }
+540:     GGML_ASSERT(states.size() == id_tasks.size());
+541:     queue_results.add_waiting_task_ids(id_tasks);
+--
+573:             return result;
+574:         }
+575:     }
+576: 
+577:     // should not reach here
+578: }
+579: 
+580: server_response_reader::batch_response server_response_reader::wait_for_all(const std::function<bool()> & should_stop) {
+--
+574:             return result;
+575:         }
+576:     }
+577: 
+578:     // should not reach here
+579: }
+580: 
+581: server_response_reader::batch_response server_response_reader::wait_for_all(const std::function<bool()> & should_stop) {
+
+### S109/S133: b11889 decode terminal branch and retry
+$ git -C $U show d854d98b:tools/server/server-context.cpp | sed -n '4589,4636p'
+4589:         if (ret != 0) {
+4590:             {
+4591:                 std::string err;
+4592: 
+4593:                 if (n_batch == 1 && ret == 1) {
+4594:                     // TODO: try to terminate only the largest active slot/sequence and continue with the rest
+4595:                     //       need to remove the tokens from the current batch too
+4596:                     err = "Context size has been exceeded.";
+4597:                 }
+4598: 
+4599:                 if (ret == -1) {
+4600:                     err = "Invalid input batch.";
+4601:                 }
+4602: 
+4603:                 if (ret < -1) {
+4604:                     // TODO: update slot state based on llama_memory_seq_pos_min() and llama_memory_seq_pos_max()
+4605:                     err = "Compute error.";
+4606:                 }
+4607: 
+4608:                 // TODO: handle ret == 2 (abort) when we start aborting
+4609: 
+4610:                 if (!err.empty()) {
+4611:                     SRV_ERR("%s off = %d, n_batch = %d, ret = %d\n", err.c_str(), off, n_batch, ret);
+4612: 
+4613:                     for (auto & slot : slots) {
+4614:                         if (slot.is_processing()) {
+4615:                             send_error(slot, err);
+4616:                             slot.release();
+4617: 
+4618:                             // note: it's complicated to keep track of how much of the current batch has been
+4619:                             //       processed before the error occurred, so we simply clear the entire context
+4620:                             slot.prompt_clear();
+4621:                         }
+4622:                     }
+4623: 
+4624:                     // stop, do not retry with smaller batch size
+4625:                     throw std::runtime_error(err);
+4626:                 }
+4627:             }
+4628: 
+4629:             // retry with half the batch size to try to find a free slot in the KV cache
+4630:             if (!try_clear_idle_slots()) {
+4631:                 n_batch /= 2;
+4632:             }
+4633: 
+4634:             SRV_WRN("failed to find free space in the KV cache, retrying with smaller batch size, off = %d, n_batch = %d, ret = %d\n", off, n_batch, ret);
+4635: 
+4636:             return false; // retry with the updated n_batch
+
+### S109/S133: b11889 caller retry/abort loop
+$ git -C $U show d854d98b:tools/server/server-context.cpp | sed -n '3536,3564p'
+3536:         int32_t off_next = 0;
+3537:         int32_t n_batch = llama_n_batch(ctx_tgt);
+3538:         for (int32_t off = 0; off < batch.size(); off = off_next) {
+3539:             const int32_t n_tokens = std::min(n_batch, batch.size() - off);
+3540:             try {
+3541:                 scoped_timer t(t_decode, n_decode);
+3542:                 // TODO @ngxson : maybe handle n_batch == 1 here instead of inside decode()
+3543: 
+3544:                 batch.render(off, n_tokens);
+3545:                 bool ok = decode(n_batch, off);
+3546: #ifdef DEBUG_TIMINGS
+3547:                 llama_synchronize(ctx_tgt);
+3548: #endif
+3549: 
+3550:                 if (ok) {
+3551:                     // move the head of the batch forward with the number of tokens we just processed
+3552:                     off_next = off + n_tokens;
+3553: 
+3554:                     // on successful decode, restore the original batch size
+3555:                     n_batch = llama_n_batch(ctx_tgt);
+3556:                 } else {
+3557:                     // try again with the updated n_batch
+3558:                     continue;
+3559:                 }
+3560:             } catch (const std::exception & e) {
+3561:                 SRV_ERR("decode() failed: %s\n", e.what());
+3562:                 abort_all_slots("decode() failed: " + std::string(e.what()));
+3563:                 break; // stop any further processing
+3564:             }
+
+### S109/S133: b11889 try_clear_idle_slots
+$ git -C $U show d854d98b:tools/server/server-context.cpp | sed -n '1887,1912p'
+1887:     bool try_clear_idle_slots() {
+1888:         bool res = false;
+1889: 
+1890:         if (!params_base.kv_unified) {
+1891:             return res;
+1892:         }
+1893: 
+1894:         for (auto & slot : slots) {
+1895:             if (slot.is_processing()) {
+1896:                 continue;
+1897:             }
+1898: 
+1899:             if (slot.prompt.n_tokens() > 0) {
+1900:                 SRV_WRN("purging slot %d with %zu tokens\n", slot.id, slot.prompt.tokens.size());
+1901: 
+1902:                 slot.prompt_clear();
+1903: 
+1904:                 res = true;
+1905: 
+1906:                 // clear slots one by one
+1907:                 break;
+1908:             }
+1909:         }
+1910: 
+1911:         return res;
+1912:     }
+
+### S117: b11889 post_props guard (release 5768-5778)
+$ git -C $U show d854d98b:tools/server/server-context.cpp | sed -n '5768,5778p'
+5768:     this->post_props = [this](const server_http_req &) {
+5769:         auto res = create_response();
+5770:         if (!params.endpoint_props) {
+5771:             res->error(format_error_response("This server does not support changing global properties. Start it with `--props`", ERROR_TYPE_NOT_SUPPORTED));
+5772:             return res;
+5773:         }
+5774:         // update any props here
+5775: 
+5776:         res->ok({{ "success", true }});
+5777:         return res;
+5778:     };
+
+### S125: b11889 transcriptions guard (release 5969-5975)
+$ git -C $U show d854d98b:tools/server/server-context.cpp | sed -n '5969,5975p'
+5969:     this->post_transcriptions_oai = [this](const server_http_req & req) {
+5970:         auto res = create_response();
+5971: 
+5972:         if (!meta->has_mtmd || !meta->chat_params.allow_audio) {
+5973:             res->error(format_error_response("The current model does not support audio input.", ERROR_TYPE_NOT_SUPPORTED));
+5974:             return res;
+5975:         }
+
+### S143/S151/S159/S167: b11889 declarations + field_num::eval
+$ git -C $U show d854d98b:tools/server/server-schema.cpp | sed -n '56,58p;106,108p;159,161p;231,239p;603,622p'
+56:     add((new field_num("n_keep", params.n_keep))
+57:         ->set_hard_limits(-1, INT32_MAX)
+58:         ->set_desc("Specify the number of tokens from the initial prompt to retain when context size is exceeded. Use -1 to retain all tokens from the prompt"));
+--
+106:     add((new field_num("xtc_probability", params.sampling.xtc_probability))
+107:         ->set_limits(0.0f, 1.0f)
+108:         ->set_desc("Set the chance for token removal via XTC sampler (0 = disabled)"));
+--
+159:     add((new field_num("mirostat", params.sampling.mirostat))
+160:         ->set_limits(0, 2)
+161:         ->set_desc("Enable Mirostat sampling, controlling perplexity during text generation (0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0)"));
+--
+231:     add((new field_json("lora"))
+232:         ->set_desc("A list of LoRA adapters to apply to this request. Each entry must have `id` and `scale` fields. Adapters not listed default to scale 0.0")
+233:         ->set_handler([&](field_eval_context & ctx, const json & data) {
+234:             const auto & lora = data.at("lora");
+235:             if (!lora.is_array()) {
+236:                 throw std::runtime_error("Error: 'lora' must be an array of objects with 'id' and 'scale' fields");
+237:             }
+238:             ctx.params.lora = parse_lora_request(lora);
+239:         }));
+--
+600: }
+601: 
+602: template <typename T>
+603: void field_num<T>::eval(field_eval_context & ctx, const json & data) {
+604:     for (const auto & n : name) {
+605:         if (has_value(data, n)) {
+606:             handle_with_catch(n, [&]() {
+607:                 if (custom_handler) {
+608:                 custom_handler(ctx, data);
+609:                 } else if (!is_hard_limit) {
+610:                     val = std::max(min, std::min(max, data.at(n).template get<T>()));
+611:                 } else {
+612:                     T tmp = data.at(n).template get<T>();
+613:                     if (tmp < min || tmp > max) {
+614:                         throw std::invalid_argument(std::string("Value must be between ") + std::to_string(min) + " <= value <= " + std::to_string(max) + ", but got " + std::to_string(tmp));
+615:                     }
+616:                     val = tmp;
+617:                 }
+618:             });
+619:             return;
+620:         }
+621:     }
+622: }
+
+### S143: 400 mapping (server-common.cpp 93-100) and schema evaluation site
+$ git -C $U show d854d98b:tools/server/server-common.cpp | sed -n '93,100p'; show ...:server-context.cpp | sed -n '5246,5253p;5275,5279p'
+93: json format_error_response(const std::string & message, const enum error_type type) {
+94:     std::string type_str;
+95:     int code = 500;
+96:     switch (type) {
+97:         case ERROR_TYPE_INVALID_REQUEST:
+98:             type_str = "invalid_request_error";
+99:             code = 400;
+100:             break;
+--
+5246: 
+5247:             task.tokens = std::move(inputs[i]);
+5248:             task.params = server_schema::eval_llama_cmpl_schema(
+5249:                     ctx_server.vocab,
+5250:                     params,
+5251:                     meta->logit_bias_eog,
+5252:                     data);
+5253: 
+--
+5275:         rd.post_tasks(std::move(tasks), chat_session);
+5276:     } catch (const std::exception & e) {
+5277:         res->error(format_error_response(e.what(), ERROR_TYPE_INVALID_REQUEST));
+5278:         return res;
+5279:     }
+
+### S181: b11889 response_format branch
+$ git -C $U show d854d98b:tools/server/server-common.cpp | sed -n '1381,1395p'
+1381:     // Handle "response_format" field
+1382:     if (body.contains("response_format")) {
+1383:         json response_format      = json_value(body, "response_format", json::object());
+1384:         std::string response_type = json_value(response_format, "type", std::string());
+1385:         if (response_type == "json_object") {
+1386:             if (response_format.contains("schema") || json_schema.empty()) {
+1387:                 json_schema = json_value(response_format, "schema", json::object());
+1388:             }
+1389:         } else if (response_type == "json_schema") {
+1390:             auto schema_wrapper = json_value(response_format, "json_schema", json::object());
+1391:             json_schema = json_value(schema_wrapper, "schema", json::object());
+1392:         } else if (!response_type.empty() && response_type != "text") {
+1393:             throw std::invalid_argument("response_format type must be one of \"text\" or \"json_object\", but got: " + response_type);
+1394:         }
+1395:     }
+
+### S189: b11889 copy-remaining + prune
+$ git -C $U show d854d98b:tools/server/server-common.cpp | sed -n '1542,1560p'
+1542:     // Copy remaining properties to llama_params
+1543:     // This allows user to use llama.cpp-specific params like "mirostat", ... via OAI endpoint.
+1544:     // See "launch_slot_with_task()" for a complete list of params supported by llama.cpp
+1545:     for (const auto & item : body.items()) {
+1546:         // Exception: if "n_predict" is present, we overwrite the value specified earlier by "max_tokens"
+1547:         if (!llama_params.contains(item.key()) || item.key() == "n_predict") {
+1548:             llama_params[item.key()] = item.value();
+1549:         }
+1550:     }
+1551: 
+1552:     // the session owns these, the server applies them with server_task::apply_chat_session()
+1553:     for (const char * key : { "grammar_lazy", "grammar_triggers", "preserved_tokens" }) {
+1554:         llama_params.erase(key);
+1555:     }
+1556:     if (!out_session.grammar().empty()) {
+1557:         llama_params.erase("grammar");
+1558:         llama_params.erase("json_schema");
+1559:     }
+1560: 
+
+### reachability: b11889 route table around /props, transcriptions, /tts, /v1/realtime
+$ git -C $U show d854d98b:tools/server/server.cpp | sed -n '171,190p'
+171:     ctx_http.get ("/health",                   ex_wrapper(routes.get_health)); // public endpoint (no API key check)
+172:     ctx_http.get ("/v1/health",                ex_wrapper(routes.get_health)); // public endpoint (no API key check)
+173:     ctx_http.get ("/metrics",                  ex_wrapper(routes.get_metrics));
+174:     ctx_http.get ("/props",                    ex_wrapper(routes.get_props));
+175:     ctx_http.post("/props",                    ex_wrapper(routes.post_props));
+176:     ctx_http.get ("/models",                   ex_wrapper(routes.get_models));
+177:     ctx_http.get ("/v1/models",                ex_wrapper(routes.get_models));
+178:     ctx_http.post("/completion",               ex_wrapper(routes.post_completions)); // legacy
+179:     ctx_http.post("/completions",              ex_wrapper(routes.post_completions));
+180:     ctx_http.post("/v1/completions",           ex_wrapper(routes.post_completions_oai));
+181:     ctx_http.post("/chat/completions",         ex_wrapper(routes.post_chat_completions));
+182:     ctx_http.post("/v1/chat/completions",      ex_wrapper(routes.post_chat_completions));
+183:     ctx_http.post("/v1/chat/completions/control", ex_wrapper(routes.post_control));
+184:     ctx_http.post("/v1/responses",             ex_wrapper(routes.post_responses_oai));
+185:     ctx_http.post("/responses",                ex_wrapper(routes.post_responses_oai));
+186:     ctx_http.post("/v1/audio/transcriptions",  ex_wrapper(routes.post_transcriptions_oai));
+187:     ctx_http.post("/audio/transcriptions",     ex_wrapper(routes.post_transcriptions_oai));
+188:     ctx_http.post("/tts",                      ex_wrapper(routes.post_tts));
+189:     ctx_http.ws  ("/v1/realtime",              routes.ws_realtime);
+190:     ctx_http.post("/v1/messages",              ex_wrapper(routes.post_anthropic_messages)); // anthropic messages API
+
+### reachability: b11889 post_chat_completions calls the adapter, then handle_completions_impl
+$ git -C $U show d854d98b:tools/server/server-context.cpp | sed -n '5882,5900p'
+5882:     this->post_chat_completions = [this](const server_http_req & req) {
+5883:         auto res = create_response();
+5884:         std::vector<raw_buffer> files;
+5885:         json body = json::parse(req.body);
+5886:         common_chat_session session;
+5887:         json body_parsed = oaicompat_chat_params_parse(
+5888:             ctx_server.vocab,
+5889:             body,
+5890:             meta->chat_params,
+5891:             files,
+5892:             session);
+5893:         return handle_completions_impl(
+5894:             req,
+5895:             SERVER_TASK_TYPE_COMPLETION,
+5896:             body_parsed,
+5897:             files,
+5898:             TASK_RESPONSE_TYPE_OAI_CHAT,
+5899:             session);
+5900:     };
+
+### S133: helper gating on kv_unified and slot selection
+$ git -C $U show d854d98b:tools/server/server-context.cpp | sed -n '1887,1912p'
+1887:     bool try_clear_idle_slots() {
+1888:         bool res = false;
+1889: 
+1890:         if (!params_base.kv_unified) {
+1891:             return res;
+1892:         }
+1893: 
+1894:         for (auto & slot : slots) {
+1895:             if (slot.is_processing()) {
+1896:                 continue;
+1897:             }
+1898: 
+1899:             if (slot.prompt.n_tokens() > 0) {
+1900:                 SRV_WRN("purging slot %d with %zu tokens\n", slot.id, slot.prompt.tokens.size());
+1901: 
+1902:                 slot.prompt_clear();
+1903: 
+1904:                 res = true;
+1905: 
+1906:                 // clear slots one by one
+1907:                 break;
+1908:             }
+1909:         }
+1910: 
+1911:         return res;
+1912:     }
+

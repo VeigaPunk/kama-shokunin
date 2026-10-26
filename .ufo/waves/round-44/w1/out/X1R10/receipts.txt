@@ -1,0 +1,102 @@
+## git grep -n throws at pin 704366d76 (b11755) and release d854d98ba (b11889)
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:tools/server/server-common.cpp:1114:       throw std::invalid_argument("\"prompt\" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.");
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:tools/server/server-common.cpp:1272:                throw std::runtime_error("audio input is not supported - hint: if this is unexpected, you may need to provide the mmproj");
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:tools/server/server-common.cpp:1360:        throw std::runtime_error("Cannot use both json_schema and grammar");
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:tools/server/server-common.cpp:1375:            throw std::invalid_argument("response_format type must be one of \"text\" or \"json_object\", but got: " + response_type);
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:tools/server/server-common.cpp:1390:        throw std::invalid_argument("Expected 'messages' to be an array");
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:tools/server/server-common.cpp:1395:            throw std::invalid_argument("All non-assistant messages must contain 'content'");
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-common.cpp:1132:       throw std::invalid_argument("\"prompt\" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings & tokens.");
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-common.cpp:1289:                throw std::runtime_error("audio input is not supported - hint: if this is unexpected, you may need to provide the mmproj");
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-common.cpp:1378:        throw std::runtime_error("Cannot use both json_schema and grammar");
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-common.cpp:1393:            throw std::invalid_argument("response_format type must be one of \"text\" or \"json_object\", but got: " + response_type);
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-common.cpp:1408:        throw std::invalid_argument("Expected 'messages' to be an array");
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-common.cpp:1413:            throw std::invalid_argument("All non-assistant messages must contain 'content'");
+
+## blobs
+3ea20c3d2f813018d7306751b1b769a374f1a521
+80a9f2d7270d072967c9ad243864147cbd1e175e
+
+## call sites oaicompat_chat_params_parse (release)
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-context.cpp:5887:        json body_parsed = oaicompat_chat_params_parse(
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-context.cpp:5950:        json body_parsed = oaicompat_chat_params_parse(
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-context.cpp:5986:        json body_parsed = oaicompat_chat_params_parse(
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-context.cpp:6202:        json body_parsed = oaicompat_chat_params_parse(
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-context.cpp:6227:        json data = oaicompat_chat_params_parse(
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-context.cpp:7023:    json body_parsed = oaicompat_chat_params_parse(
+
+## ex_wrapper release server.cpp:61-92
+static server_http_context::handler_t ex_wrapper(server_http_context::handler_t func) {
+    return [func = std::move(func)](const server_http_req & req) -> server_http_res_ptr {
+        std::string message;
+        error_type error;
+        try {
+            return func(req);
+        } catch (const std::invalid_argument & e) {
+            // treat invalid_argument as invalid request (400)
+            error = ERROR_TYPE_INVALID_REQUEST;
+            message = e.what();
+        } catch (const common_json_error & e) {
+            // JSON parse and type errors are invalid requests (400)
+            error = ERROR_TYPE_INVALID_REQUEST;
+            message = e.what();
+        } catch (const std::exception & e) {
+            // treat other exceptions as server error (500)
+            error = ERROR_TYPE_SERVER;
+            message = e.what();
+        } catch (...) {
+            error = ERROR_TYPE_SERVER;
+            message = "unknown error";
+        }
+
+        auto res = std::make_unique<server_http_res>();
+        res->status = 500;
+        try {
+            json error_data = format_error_response(message, error);
+            res->status = json_value(error_data, "code", 500);
+            res->data = safe_json_to_str({{ "error", error_data }});
+            SRV_WRN("got exception: %s\n", res->data.c_str());
+        } catch (const std::exception & e) {
+            SRV_ERR("got another exception: %s | while handling exception: %s\n", e.what(), message.c_str());
+
+## routes release server.cpp:181-182
+    ctx_http.post("/chat/completions",         ex_wrapper(routes.post_chat_completions));
+    ctx_http.post("/v1/chat/completions",      ex_wrapper(routes.post_chat_completions));
+
+## format_error_response ERROR_TYPE_SERVER release server-common.cpp:109-111
+            code = 404;
+            break;
+        case ERROR_TYPE_SERVER:
+            type_str = "server_error";
+            code = 500;
+            break;
+
+## json_value release server-common.h:45-57
+static T json_value(const json & body, const std::string & key, const T & default_value) {
+    // Fallback null to default value
+    if (body.contains(key) && !body.at(key).is_null()) {
+        try {
+            return body.at(key).get<T>();
+        } catch (const common_json_error & err) {
+            LOG_WRN("Wrong type supplied for parameter '%s', using default value: %s\n", key.c_str(), err.what());
+            return default_value;
+        }
+    } else {
+        return default_value;
+    }
+}
+
+## commits pin..release touching server-common.cpp
+f3269ef96 server: refactor server entrypoint (#31113)
+184f65360 server: Substitute rerank placeholder from the original template only. (#30864)
+a5d22276b server : support typed content input for RERANK endpoint (#29625)
+5c0b49a23 server : add POST /tts endpoint for TTS models (#26603)
+7e3eeee04 model : add H2O-Lightning-4B decision model (#30361)
+
+## stripped-line excerpt equality, chosen pin/release ranges
+S126 (1270, 1273) (1287, 1290) EQ lines=4 nonws=156
+S127 (1106, 1118) (1124, 1136) EQ lines=12 nonws=597
+S137 (1363, 1377) (1381, 1395) EQ lines=15 nonws=711
+S180 (1357, 1361) (1375, 1379) EQ lines=5 nonws=215
+S181 (1374, 1377) (1392, 1395) EQ lines=4 nonws=165
+S182 (1387, 1391) (1405, 1409) EQ lines=5 nonws=121
+S183 (1392, 1396) (1410, 1414) EQ lines=5 nonws=200

@@ -1,0 +1,177 @@
+### receipt X1R04 C1 rows S158-S163  (upstream /fast/scratch/hyaku/kama-r44/shared/llama.cpp)
+
+## R1 commits touching tools/server/server-schema.cpp pin..b11889
+63412d873 llama: fix exhausting CPU and MEM caused by dry sequence breaker (#31035)
+5c0b49a23 server : add POST /tts endpoint for TTS models (#26603)
+
+## R2 pin 153-174 (704366d7)
+   153	    add((new field_num("dry_penalty_last_n", params.sampling.dry_penalty_last_n))
+   154	        ->set_hard_limits(0, INT32_MAX)
+   155	        ->set_desc("How many tokens to scan for repetitions (0 = disabled)"));
+   156	
+   157	    add((new field_num("mirostat", params.sampling.mirostat))
+   158	        ->set_limits(0, 2)
+   159	        ->set_desc("Enable Mirostat sampling, controlling perplexity during text generation (0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0)"));
+   160	
+   161	    add((new field_num("mirostat_tau", params.sampling.mirostat_tau))
+   162	        ->set_desc("Set the Mirostat target entropy, parameter tau"));
+   163	
+   164	    add((new field_num("mirostat_eta", params.sampling.mirostat_eta))
+   165	        ->set_desc("Set the Mirostat learning rate, parameter eta"));
+   166	
+   167	    add((new field_num("adaptive_target", params.sampling.adaptive_target))
+   168	        ->set_limits(-std::numeric_limits<float>::max(), 1.0f)
+   169	        ->set_desc("Adaptive sampling target entropy (valid range 0.0 to 1.0; negative = disabled)"));
+   170	
+   171	    add((new field_num("adaptive_decay", params.sampling.adaptive_decay))
+   172	        ->set_hard_limits(0.0f, 0.99f)
+   173	        ->set_desc("EMA decay for adaptive sampling; history approximates 1/(1-decay) tokens"));
+   174	
+
+## R3 release 155-176 (d854d98b = b11889)
+   155	    add((new field_num("dry_penalty_last_n", params.sampling.dry_penalty_last_n))
+   156	        ->set_hard_limits(0, INT32_MAX)
+   157	        ->set_desc("How many tokens to scan for repetitions (0 = disabled)"));
+   158	
+   159	    add((new field_num("mirostat", params.sampling.mirostat))
+   160	        ->set_limits(0, 2)
+   161	        ->set_desc("Enable Mirostat sampling, controlling perplexity during text generation (0 = disabled, 1 = Mirostat, 2 = Mirostat 2.0)"));
+   162	
+   163	    add((new field_num("mirostat_tau", params.sampling.mirostat_tau))
+   164	        ->set_desc("Set the Mirostat target entropy, parameter tau"));
+   165	
+   166	    add((new field_num("mirostat_eta", params.sampling.mirostat_eta))
+   167	        ->set_desc("Set the Mirostat learning rate, parameter eta"));
+   168	
+   169	    add((new field_num("adaptive_target", params.sampling.adaptive_target))
+   170	        ->set_limits(-std::numeric_limits<float>::max(), 1.0f)
+   171	        ->set_desc("Adaptive sampling target entropy (valid range 0.0 to 1.0; negative = disabled)"));
+   172	
+   173	    add((new field_num("adaptive_decay", params.sampling.adaptive_decay))
+   174	        ->set_hard_limits(0.0f, 0.99f)
+   175	        ->set_desc("EMA decay for adaptive sampling; history approximates 1/(1-decay) tokens"));
+   176	
+
+## R4 blobs
+54e126aa0c3572895042cd0a8c4faf4a0eb0b9f7
+0a14a9620961ff627348952112b4a9a6a0513c43
+b11889
+
+## R5 range text equality (stripped non-blank lines)
+S158 153-154 vs 155-156 EQUAL; S159 157-158 vs 159-160 EQUAL; S160 161 vs 163 EQUAL; S161 164 vs 166 EQUAL; S162 167-168 vs 169-170 EQUAL; S163 171-172 vs 173-174 EQUAL
+
+## R6 field machinery pin 532-551 vs release 603-622 (identical)
+void field_num<T>::eval(field_eval_context & ctx, const json & data) {
+    for (const auto & n : name) {
+        if (has_value(data, n)) {
+            handle_with_catch(n, [&]() {
+                if (custom_handler) {
+                custom_handler(ctx, data);
+                } else if (!is_hard_limit) {
+                    val = std::max(min, std::min(max, data.at(n).template get<T>()));
+                } else {
+                    T tmp = data.at(n).template get<T>();
+                    if (tmp < min || tmp > max) {
+                        throw std::invalid_argument(std::string("Value must be between ") + std::to_string(min) + " <= value <= " + std::to_string(max) + ", but got " + std::to_string(tmp));
+                    }
+                    val = tmp;
+                }
+            });
+            return;
+        }
+    }
+}
+--- release
+void field_num<T>::eval(field_eval_context & ctx, const json & data) {
+    for (const auto & n : name) {
+        if (has_value(data, n)) {
+            handle_with_catch(n, [&]() {
+                if (custom_handler) {
+                custom_handler(ctx, data);
+                } else if (!is_hard_limit) {
+                    val = std::max(min, std::min(max, data.at(n).template get<T>()));
+                } else {
+                    T tmp = data.at(n).template get<T>();
+                    if (tmp < min || tmp > max) {
+                        throw std::invalid_argument(std::string("Value must be between ") + std::to_string(min) + " <= value <= " + std::to_string(max) + ", but got " + std::to_string(tmp));
+                    }
+                    val = tmp;
+                }
+            });
+            return;
+        }
+    }
+}
+
+## R7 default limits / soft vs hard (server-schema.h pin 47-66, unchanged at release)
+template <typename T = int32_t>
+struct field_num : public field {
+    T & val;
+    T min = std::numeric_limits<T>::lowest();
+    T max = std::numeric_limits<T>::max();
+    bool is_hard_limit = false; // if true, throw error if the value is invalid
+    field_num(const char * n, T & val) : field(n), val(val) {}
+    // limits are inclusive, min <= value <= max
+    field_num * set_limits(T min, T max) {
+        this->min = min;
+        this->max = max;
+        return this;
+    }
+    field_num * set_hard_limits(T min, T max) {
+        set_limits(min, max);
+        is_hard_limit = true;
+        return this;
+    }
+    virtual void eval(field_eval_context & ctx, const json & data) override;
+};
+
+## R8 /completion caller + catch
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:tools/server/server-context.cpp:4940:            task.params = server_schema::eval_llama_cmpl_schema(
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad:tools/server/server-context.cpp:4969:        res->error(format_error_response(e.what(), ERROR_TYPE_INVALID_REQUEST));
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-context.cpp:5248:            task.params = server_schema::eval_llama_cmpl_schema(
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-context.cpp:5277:        res->error(format_error_response(e.what(), ERROR_TYPE_INVALID_REQUEST));
+
+## R9 ERROR_TYPE_INVALID_REQUEST -> code 400
+        case ERROR_TYPE_INVALID_REQUEST:
+            type_str = "invalid_request_error";
+            code = 400;
+            break;
+        case ERROR_TYPE_INVALID_REQUEST:
+            type_str = "invalid_request_error";
+            code = 400;
+            break;
+
+## R10 generation_settings keys (server-task.cpp:30 to_json, same at both; line 342 wires it)
+        {"dry_base",                  sampling.dry_base},
+        {"dry_allowed_length",        sampling.dry_allowed_length},
+        {"dry_penalty_last_n",        sampling.dry_penalty_last_n},
+        {"dry_sequence_breakers",     sampling.dry_sequence_breakers},
+        {"mirostat",                  sampling.mirostat},
+        {"mirostat_tau",              sampling.mirostat_tau},
+        {"mirostat_eta",              sampling.mirostat_eta},
+        {"adaptive_target",           sampling.adaptive_target},
+        {"adaptive_decay",            sampling.adaptive_decay},
+        {"stop",                      antiprompt},
+d854d98bae598388ecea1ed84396587e5edc326d:tools/server/server-task.cpp:342:        {"generation_settings", generation_params.to_json()},
+
+## R11 member types (common/common.h, same text at both)
+    int32_t dry_penalty_last_n = 64;     // how many tokens to scan for repetitions (0 = disable penalty)
+    float   adaptive_target    = -1.0f;  // select tokens near this probability (valid range 0.0 to 1.0; negative = disabled)
+    float   adaptive_decay     = 0.90f;  // EMA decay for adaptation; history ≈ 1/(1-decay) tokens (0.0 - 0.99)
+    int32_t mirostat           = 0;      // 0 = disabled, 1 = mirostat, 2 = mirostat 2.0
+    float   top_n_sigma        = -1.00f; // -1.0 = disabled
+    float   mirostat_tau       = 5.00f;  // target entropy
+    int32_t dry_penalty_last_n = 64;     // how many tokens to scan for repetitions (0 = disable penalty)
+    float   adaptive_target    = -1.0f;  // select tokens near this probability (valid range 0.0 to 1.0; negative = disabled)
+    float   adaptive_decay     = 0.90f;  // EMA decay for adaptation; history ≈ 1/(1-decay) tokens (0.0 - 0.99)
+    int32_t mirostat           = 0;      // 0 = disabled, 1 = mirostat, 2 = mirostat 2.0
+    float   top_n_sigma        = -1.00f; // -1.0 = disabled
+    float   mirostat_tau       = 5.00f;  // target entropy
+    float   mirostat_eta       = 0.10f;  // learning rate
+
+## R12 server-schema.cpp diff pin..release (hunks only, none in 153-174 at pin)
+@@ -2,6 +2,8 @@
++#include <unordered_set>
+@@ -246,6 +248,23 @@ std::vector<std::unique_ptr<field>> make_llama_cmpl_schema(const common_params &
++            std::unordered_set<std::string> seen;
+@@ -511,6 +530,58 @@ task_params eval_llama_cmpl_schema(

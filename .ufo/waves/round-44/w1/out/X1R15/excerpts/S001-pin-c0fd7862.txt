@@ -1,0 +1,44 @@
+# S001 pin c0fd7862 tools/server/README.md  source=s001-pin.md
+--- 477-489 ---
+477: ### GET `/health`: Returns health check result
+478: 
+479: This endpoint is public (no API key check). `/v1/health` also works.
+480: 
+481: **Response format**
+482: 
+483: - HTTP status code 503
+484:   - Body: `{"error": {"code": 503, "message": "Loading model", "type": "unavailable_error"}}`
+485:   - Explanation: the model is still being loaded.
+486: - HTTP status code 200
+487:   - Body: `{"status": "ok" }`
+488:   - Explanation: the model is successfully loaded and the server is ready.
+489: 
+--- 1129-1154 ---
+1129: ### GET `/metrics`: Prometheus compatible metrics exporter
+1130: 
+1131: This endpoint is only accessible if `--metrics` is set.
+1132: 
+1133: In *router mode* the query param `?model={model_id}` has to be set. This endpoint will respond with status code 400 `model name is missing from the request` if not set.
+1134: 
+1135: #### Available metrics
+1136: 
+1137: | Metric | Type | Description |
+1138: | ------ | ---------------------- | ----------- |
+1139: | `llamacpp:prompt_tokens_total` | Counter | Number of prompt tokens processed. |
+1140: | `llamacpp:prompt_seconds_total` | Counter | Prompt process time in seconds. |
+1141: | `llamacpp:prompt_tokens_seconds` | Gauge | Average prompt throughput in tokens/s. |
+1142: | `llamacpp:tokens_predicted_total` | Counter | Number of generation tokens processed. |
+1143: | `llamacpp:tokens_predicted_seconds_total` | Counter | Predict process time in seconds. |
+1144: | `llamacpp:predicted_tokens_seconds` | Gauge | Average generation throughput in tokens/s. |
+1145: | `llamacpp:requests_processing` | Gauge | Number of requests processing. |
+1146: | `llamacpp:requests_deferred` | Gauge | Number of requests deferred. |
+1147: | `llamacpp:n_tokens_max` | Counter | High watermark of the context size observed. |
+1148: | `llamacpp:n_decode_total` | Counter | Total Number of llama_decode() calls. |
+1149: | `llamacpp:n_busy_slots_per_decode` | Gauge | Average number of busy slots per llama_decode() call. |
+1150: | `llamacpp:spec_decode_num_draft_tokens_total` | Counter | Total draft tokens generated (0 when spec-decode is off). |
+1151: | `llamacpp:spec_decode_num_accepted_tokens_total` | Counter | Total draft tokens accepted by the target model (0 when spec-decode is off). |
+1152: | `llamacpp:spec_decode_num_drafts_total` | Counter | Total speculative decoding verification steps (0 when spec-decode is off). |
+1153: | `llamacpp:spec_decode_num_accepted_tokens_per_pos_total` | Counter | Accepted tokens per draft position (labeled `position="N"`; absent when spec-decode is off or before the first completed speculative request). |
+1154: 
+--- 1282-1282 ---
+1282: By default, model `id` field is the path to model file, specified via `-m`. You can set a custom value for model `id` field via `--alias` argument. For example, `--alias gpt-4o-mini`.

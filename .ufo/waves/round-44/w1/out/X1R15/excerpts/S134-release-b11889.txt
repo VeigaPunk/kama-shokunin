@@ -1,0 +1,45 @@
+# S134 release b11889  source=rel.md
+--- 50-50 ---
+50: | `-c, --ctx-size N` | size of the prompt context (default: 0, 0 = loaded from model)<br/>(env: LLAMA_ARG_CTX_SIZE) |
+--- 165-165 ---
+165: | `--kv-unified-per-slot N` | context limit per parallel slot (default: unset, behavior unchanged).<br/>when set without -c/--ctx-size, the shared KV pool is sized to n_parallel*N<br/>(env: LLAMA_ARG_KV_UNIFIED_PER_SLOT) |
+--- 168-169 ---
+168: | `-cram, --cache-ram N` | set the maximum cache size in MiB (default: 8192, 0 for decision models, -1 - no limit, 0 - disable)[(more info)](https://github.com/ggml-org/llama.cpp/pull/16391)<br/>(env: LLAMA_ARG_CACHE_RAM) |
+169: | `-kvu, --kv-unified, -no-kvu, --no-kv-unified` | use single unified KV buffer shared across all sequences (default: enabled if number of slots is auto)<br/>(env: LLAMA_ARG_KV_UNIFIED) |
+--- 177-177 ---
+177: | `-np, --parallel N` | number of server slots (default: -1, -1 = auto)<br/>(env: LLAMA_ARG_N_PARALLEL) |
+--- 671-671 ---
+671: - `generation_settings`: The provided options above excluding `prompt` but including `n_ctx`, `model`. These options may differ from the original ones in some way (e.g. bad values filtered out, strings converted to tokens, etc.).
+--- 683-683 ---
+683: - `truncated`: Boolean indicating if the context size was exceeded during generation, i.e. the number of tokens provided in the prompt (`tokens_evaluated`) plus tokens generated (`tokens predicted`) exceeded the context size (`n_ctx`)
+--- 1015-1016 ---
+1015: - `default_generation_settings` - the default generation settings for the `/completion` endpoint, which has the same fields as the `generation_settings` response object from the `/completion` endpoint.
+1016: - `total_slots` - the total number of slots for process requests (defined by `--parallel` option)
+--- 1219-1243 ---
+1219: ### GET `/metrics`: Prometheus compatible metrics exporter
+1220: 
+1221: This endpoint is only accessible if `--metrics` is set.
+1222: 
+1223: In *router mode* the query param `?model={model_id}` has to be set. This endpoint will respond with status code 400 `model name is missing from the request` if not set.
+1224: 
+1225: #### Available metrics
+1226: 
+1227: | Metric | Type | Description |
+1228: | ------ | ---------------------- | ----------- |
+1229: | `llamacpp:prompt_tokens_total` | Counter | Number of prompt tokens processed. |
+1230: | `llamacpp:prompt_seconds_total` | Counter | Prompt process time in seconds. |
+1231: | `llamacpp:prompt_tokens_seconds` | Gauge | Average prompt throughput in tokens/s. |
+1232: | `llamacpp:tokens_predicted_total` | Counter | Number of generation tokens processed. |
+1233: | `llamacpp:tokens_predicted_seconds_total` | Counter | Predict process time in seconds. |
+1234: | `llamacpp:predicted_tokens_seconds` | Gauge | Average generation throughput in tokens/s. |
+1235: | `llamacpp:requests_processing` | Gauge | Number of requests processing. |
+1236: | `llamacpp:requests_deferred` | Gauge | Number of requests deferred. |
+1237: | `llamacpp:n_tokens_max` | Counter | High watermark of the context size observed. |
+1238: | `llamacpp:n_decode_total` | Counter | Total Number of llama_decode() calls. |
+1239: | `llamacpp:n_busy_slots_per_decode` | Gauge | Average number of busy slots per llama_decode() call. |
+1240: | `llamacpp:spec_decode_num_draft_tokens_total` | Counter | Total draft tokens generated (0 when spec-decode is off). |
+1241: | `llamacpp:spec_decode_num_accepted_tokens_total` | Counter | Total draft tokens accepted by the target model (0 when spec-decode is off). |
+1242: | `llamacpp:spec_decode_num_drafts_total` | Counter | Total speculative decoding verification steps (0 when spec-decode is off). |
+1243: | `llamacpp:spec_decode_num_accepted_tokens_per_pos_total` | Counter | Accepted tokens per draft position (labeled `position="N"`; absent when spec-decode is off or before the first completed speculative request). |
+--- 1393-1393 ---
+1393:                 "n_ctx_train": 131072,

@@ -1,0 +1,95 @@
+== PIN 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad tools/server/server-schema.cpp lines 110-155 ==
+   110	        ->set_desc("Set a minimum probability threshold for tokens to be removed via XTC sampler (> 0.5 disables XTC)"));
+   111	
+   112	    add((new field_num("typical_p", params.sampling.typ_p))
+   113	        // ->set_limits(0.0f, 1.0f) // what's the valid range?
+   114	        ->set_desc("Enable locally typical sampling with parameter p (1.0 = disabled)"));
+   115	
+   116	    add((new field_num("temperature", params.sampling.temp))
+   117	        ->set_limits(0.0f, std::numeric_limits<float>::infinity())
+   118	        ->set_desc("Adjust the randomness of the generated text (0 = greedy)"));
+   119	
+   120	    add((new field_num("dynatemp_range", params.sampling.dynatemp_range))
+   121	        ->set_desc("Dynamic temperature range. The final temperature will be in [temperature - range, temperature + range] (0 = disabled)"));
+   122	
+   123	    add((new field_num("dynatemp_exponent", params.sampling.dynatemp_exponent))
+   124	        ->set_desc("Dynamic temperature exponent, controls how entropy maps to temperature"));
+   125	
+   126	    add((new field_num("repeat_last_n", params.sampling.penalty_last_n))
+   127	        ->set_hard_limits(0, INT32_MAX)
+   128	        ->set_desc("Last n tokens to consider for penalizing repetition (0 = disabled)"));
+   129	
+   130	    add((new field_num("repeat_penalty", params.sampling.penalty_repeat))
+   131	        ->set_desc("Control the repetition of token sequences in the generated text (1.0 = disabled)"));
+   132	
+   133	    add((new field_num("frequency_penalty", params.sampling.penalty_freq))
+   134	        ->set_desc("Repeat alpha frequency penalty (0 = disabled)"));
+   135	
+   136	    add((new field_num("presence_penalty", params.sampling.penalty_present))
+   137	        ->set_desc("Repeat alpha presence penalty (0 = disabled)"));
+   138	
+   139	    add((new field_num("dry_multiplier", params.sampling.dry_multiplier))
+   140	        ->set_desc("Set the DRY (Don't Repeat Yourself) repetition penalty multiplier (0 = disabled)"));
+   141	
+   142	    add((new field_num("dry_base", params.sampling.dry_base))
+   143	        ->set_desc("Set the DRY repetition penalty base value (must be >= 1.0, any values < 1.0 will be replaced with the default value)")
+   144	        ->set_handler([&](field_eval_context & ctx, const json & data) {
+   145	            float v = data.at("dry_base").get<float>();
+   146	            ctx.params.sampling.dry_base = (v < 1.0f) ? params_base.sampling.dry_base : v;
+   147	        }));
+   148	
+   149	    add((new field_num("dry_allowed_length", params.sampling.dry_allowed_length))
+   150	        ->set_hard_limits(0, INT32_MAX)
+   151	        ->set_desc("Tokens that extend repetition beyond this length receive exponentially increasing penalty: multiplier * base ^ (sequence_length - allowed_length)"));
+   152	
+   153	    add((new field_num("dry_penalty_last_n", params.sampling.dry_penalty_last_n))
+   154	        ->set_hard_limits(0, INT32_MAX)
+   155	        ->set_desc("How many tokens to scan for repetitions (0 = disabled)"));
+
+== RELEASE d854d98bae598388ecea1ed84396587e5edc326d tools/server/server-schema.cpp lines 112-157 ==
+   112	        ->set_desc("Set a minimum probability threshold for tokens to be removed via XTC sampler (> 0.5 disables XTC)"));
+   113	
+   114	    add((new field_num("typical_p", params.sampling.typ_p))
+   115	        // ->set_limits(0.0f, 1.0f) // what's the valid range?
+   116	        ->set_desc("Enable locally typical sampling with parameter p (1.0 = disabled)"));
+   117	
+   118	    add((new field_num("temperature", params.sampling.temp))
+   119	        ->set_limits(0.0f, std::numeric_limits<float>::infinity())
+   120	        ->set_desc("Adjust the randomness of the generated text (0 = greedy)"));
+   121	
+   122	    add((new field_num("dynatemp_range", params.sampling.dynatemp_range))
+   123	        ->set_desc("Dynamic temperature range. The final temperature will be in [temperature - range, temperature + range] (0 = disabled)"));
+   124	
+   125	    add((new field_num("dynatemp_exponent", params.sampling.dynatemp_exponent))
+   126	        ->set_desc("Dynamic temperature exponent, controls how entropy maps to temperature"));
+   127	
+   128	    add((new field_num("repeat_last_n", params.sampling.penalty_last_n))
+   129	        ->set_hard_limits(0, INT32_MAX)
+   130	        ->set_desc("Last n tokens to consider for penalizing repetition (0 = disabled)"));
+   131	
+   132	    add((new field_num("repeat_penalty", params.sampling.penalty_repeat))
+   133	        ->set_desc("Control the repetition of token sequences in the generated text (1.0 = disabled)"));
+   134	
+   135	    add((new field_num("frequency_penalty", params.sampling.penalty_freq))
+   136	        ->set_desc("Repeat alpha frequency penalty (0 = disabled)"));
+   137	
+   138	    add((new field_num("presence_penalty", params.sampling.penalty_present))
+   139	        ->set_desc("Repeat alpha presence penalty (0 = disabled)"));
+   140	
+   141	    add((new field_num("dry_multiplier", params.sampling.dry_multiplier))
+   142	        ->set_desc("Set the DRY (Don't Repeat Yourself) repetition penalty multiplier (0 = disabled)"));
+   143	
+   144	    add((new field_num("dry_base", params.sampling.dry_base))
+   145	        ->set_desc("Set the DRY repetition penalty base value (must be >= 1.0, any values < 1.0 will be replaced with the default value)")
+   146	        ->set_handler([&](field_eval_context & ctx, const json & data) {
+   147	            float v = data.at("dry_base").get<float>();
+   148	            ctx.params.sampling.dry_base = (v < 1.0f) ? params_base.sampling.dry_base : v;
+   149	        }));
+   150	
+   151	    add((new field_num("dry_allowed_length", params.sampling.dry_allowed_length))
+   152	        ->set_hard_limits(0, INT32_MAX)
+   153	        ->set_desc("Tokens that extend repetition beyond this length receive exponentially increasing penalty: multiplier * base ^ (sequence_length - allowed_length)"));
+   154	
+   155	    add((new field_num("dry_penalty_last_n", params.sampling.dry_penalty_last_n))
+   156	        ->set_hard_limits(0, INT32_MAX)
+   157	        ->set_desc("How many tokens to scan for repetitions (0 = disabled)"));

@@ -1,0 +1,89 @@
+=== MAIN: expect met=True exit 0 (30 valid, agree=1 over=2 under=1 other=1 absent=10) ===
+[main] exit=0
+    rows=30 valid=30 missing=0 bad=0 agree=1 overclaim=2 underclaim=1 other=1 absent=10 table_missing=0 table_extra=0 summary=1 axes=1 met=True
+=== M1 duplicate key ===
+[m1] exit=1
+    rows=30 valid=29 missing=0 bad=1 agree=1 overclaim=1 underclaim=1 other=1 absent=10 table_missing=0 table_extra=1 summary=0 axes=1 met=False
+    detail: ('10', 'expansion', 'self') invalid: duplicate key
+    detail: table extra ('10', 'expansion', 'improved', 'unchanged')
+    detail: summary line wanted: agreement=1/3 overclaim=1 underclaim=1 other=1 absent=10
+=== M2 wrong rev on self row ===
+[m2] exit=1
+    rows=30 valid=29 missing=0 bad=1 agree=1 overclaim=1 underclaim=1 other=1 absent=10 table_missing=0 table_extra=1 summary=0 axes=1 met=False
+    detail: ('10', 'expansion', 'self') invalid: repo/rev/path differ from the side's file
+    detail: table extra ('10', 'expansion', 'improved', 'unchanged')
+    detail: summary line wanted: agreement=1/3 overclaim=1 underclaim=1 other=1 absent=10
+=== M3 line out of range (0 and len+1) ===
+[m3] exit=1
+    rows=30 valid=28 missing=0 bad=2 agree=1 overclaim=1 underclaim=1 other=1 absent=10 table_missing=0 table_extra=1 summary=0 axes=1 met=False
+    detail: ('10', 'expansion', 'self') invalid: line out of range
+    detail: ('10', 'expansion', 'outside') invalid: line out of range
+    detail: table extra ('10', 'expansion', 'improved', 'unchanged')
+    detail: summary line wanted: agreement=1/3 overclaim=1 underclaim=1 other=1 absent=10
+=== M4 verdict outside vocabulary ===
+[m4] exit=1
+    rows=30 valid=29 missing=0 bad=1 agree=1 overclaim=1 underclaim=1 other=1 absent=10 table_missing=0 table_extra=1 summary=0 axes=1 met=False
+    detail: ('10', 'expansion', 'self') invalid: cited line gives expansion ['improved'], not better
+    detail: table extra ('10', 'expansion', 'improved', 'unchanged')
+    detail: summary line wanted: agreement=1/3 overclaim=1 underclaim=1 other=1 absent=10
+=== M5 absent note too short ===
+[m5] exit=1
+    rows=29 valid=28 missing=1 bad=1 agree=1 overclaim=2 underclaim=1 other=1 absent=9 table_missing=0 table_extra=0 summary=0 axes=1 met=False
+    detail: ('11', 'expansion', 'self') missing
+    detail: ('11', 'expansion', 'outside') invalid: duplicate key
+    detail: summary line wanted: agreement=1/4 overclaim=2 underclaim=1 other=1 absent=9
+=== M6 absent with numeric line ===
+[m6] exit=1
+    rows=29 valid=28 missing=1 bad=1 agree=1 overclaim=2 underclaim=1 other=1 absent=9 table_missing=0 table_extra=0 summary=0 axes=1 met=False
+    detail: ('11', 'expansion', 'self') missing
+    detail: ('11', 'expansion', 'outside') invalid: duplicate key
+    detail: summary line wanted: agreement=1/4 overclaim=2 underclaim=1 other=1 absent=9
+=== M7 absent but the file's line gives the trend a verdict ===
+[m7] exit=1
+    rows=30 valid=29 missing=0 bad=1 agree=1 overclaim=1 underclaim=1 other=1 absent=10 table_missing=0 table_extra=1 summary=0 axes=1 met=False
+    detail: ('12', 'expansion', 'outside') invalid: absent but a line gives this trend a verdict
+    detail: table extra ('12', 'expansion', 'unprovable-but-better', 'unprovable')
+    detail: summary line wanted: agreement=1/3 overclaim=1 underclaim=1 other=1 absent=10
+=== M8 mixed claimed but line has one word ===
+[m8] exit=1
+    rows=30 valid=29 missing=0 bad=1 agree=1 overclaim=2 underclaim=1 other=0 absent=10 table_missing=0 table_extra=1 summary=0 axes=1 met=False
+    detail: ('10', 'discernment', 'self') invalid: cited line gives discernment [], not mixed
+    detail: table extra ('10', 'discernment', 'mixed', 'harmed')
+    detail: summary line wanted: agreement=1/4 overclaim=2 underclaim=1 other=0 absent=10
+=== M9 summary figure wrong ===
+[m9] exit=1
+    rows=30 valid=30 missing=0 bad=0 agree=1 overclaim=2 underclaim=1 other=1 absent=10 table_missing=0 table_extra=0 summary=0 axes=1 met=False
+    detail: summary line wanted: agreement=1/4 overclaim=2 underclaim=1 other=1 absent=10
+=== M10 extra table row ===
+[m10] exit=1
+    rows=30 valid=30 missing=0 bad=0 agree=1 overclaim=2 underclaim=1 other=1 absent=10 table_missing=0 table_extra=1 summary=1 axes=1 met=False
+    detail: table extra ('11', 'quality', 'unchanged', 'absent')
+=== M11 missing table row ===
+[m11] exit=1
+    rows=30 valid=30 missing=0 bad=0 agree=1 overclaim=2 underclaim=1 other=1 absent=10 table_missing=1 table_extra=0 summary=1 axes=1 met=False
+    detail: table missing ('10', 'expansion', 'improved', 'unchanged')
+=== M12 axes row without ledger path ===
+[m12] exit=1
+    rows=30 valid=30 missing=0 bad=0 agree=1 overclaim=2 underclaim=1 other=1 absent=10 table_missing=0 table_extra=0 summary=1 axes=0 met=False
+=== M13 heading typo ===
+[m13] exit=1
+    rows=30 valid=30 missing=0 bad=0 agree=1 overclaim=2 underclaim=1 other=1 absent=10 table_missing=4 table_extra=0 summary=0 axes=1 met=False
+    detail: table missing ('10', 'discernment', 'mixed', 'harmed')
+    detail: table missing ('10', 'expansion', 'improved', 'unchanged')
+    detail: table missing ('12', 'expansion', 'unprovable-but-better', 'unprovable')
+    detail: table missing ('13', 'quality', 'unchanged', 'unprovable-but-better')
+    detail: summary line wanted: agreement=1/4 overclaim=2 underclaim=1 other=1 absent=10
+=== M16 mismatch row placed OUTSIDE the section ===
+[m16] exit=1
+    rows=30 valid=30 missing=0 bad=0 agree=1 overclaim=2 underclaim=1 other=1 absent=10 table_missing=4 table_extra=0 summary=1 axes=1 met=False
+    detail: table missing ('10', 'discernment', 'mixed', 'harmed')
+    detail: table missing ('10', 'expansion', 'improved', 'unchanged')
+    detail: table missing ('12', 'expansion', 'unprovable-but-better', 'unprovable')
+    detail: table missing ('13', 'quality', 'unchanged', 'unprovable-but-better')
+=== M15 unresolvable tip -> exit 2 ===
+[m15] exit=2
+    (no output)
+    stderr: could-not-evaluate: git -C /fast/scratch/hyaku/kama-r44/V2Code/syn-lane rev-parse --verify 0000000000000000000000000000000000000000^{commit}: fatal: Needed a si
+=== M17 fidelity probe: self absent with MISSING fleet file accepted inside met=True run ===
+    r14 self rows flagged? NONE (accepted as valid/absent)
+done

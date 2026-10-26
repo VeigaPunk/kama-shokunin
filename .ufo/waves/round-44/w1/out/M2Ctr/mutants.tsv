@@ -1,0 +1,23 @@
+mutant	family	mutation	controls_diff	fixture_kills	verdict	smallest_killing_fixture	note
+M01a	read_line nearest-preceding-trend rule	verdict words attach to the FIRST trend word on the line instead of the nearest preceding one	junk-c2-noscorecard	good(over-rejects);k9b(over-rejects)	killed	good	noscorecard diff partly generation-coupled (mutant's read_line builds that control's ledger); see ns-good fixture
+M01b	read_line nearest-preceding-trend rule	verdict words attach to the NEXT trend word (deferred) instead of the nearest preceding one	junk-c2-noscorecard	good(over-rejects);k9b(over-rejects)	killed	good	noscorecard diff partly generation-coupled (mutant's read_line builds that control's ledger); see ns-good fixture
+M02	unprovable-but-better / unprovable distinction	the token 'unprovable-but-better' on a cited line parses as plain 'unprovable' (distinction collapsed)	junk-c2-noscorecard	good(over-rejects);k2b(over-accepts);k9b(over-rejects)	killed	good	noscorecard diff partly generation-coupled (mutant's read_line builds that control's ledger); see ns-good fixture
+M03a	mixed rule	mixed accepted with only ONE distinct verdict word on the cited line (>=2 -> >=1)	-	k3a(over-accepts)	killed	k3a	
+M03b	mixed rule	mixed requires EXACTLY two distinct verdict words (>=2 -> ==2)	-	-	survivor	-	
+M03c	mixed rule	mixed accepted with ZERO verdict words on the cited line (>=2 -> !=1)	-	k3c(over-accepts)	killed	k3c	
+M04a	absent rule (note/line form)	absent rows no longer need line '-' and a >=20-char note	-	k4a(over-accepts)	killed	k4a	
+M04b	absent rule (no-verdict-line check)	absent accepted even when a line of the file gives the trend a verdict word	-	k4b(over-accepts)	killed	k4b	
+M04c	absent rule (file missing vs no verdict line)	absent accepted ONLY when the file is missing at the rev (no-verdict-line files must not be absent)	junk-c2-noscorecard	good(over-rejects);k9b(over-rejects)	killed	good	
+M05a	repo/rev/path pinning	repo/rev/path equality with the side's file no longer checked	-	k5(over-accepts)	killed	k5	
+M05b	repo/rev/path pinning	only repo is pinned; wrong rev/path accepted	-	k5(over-accepts)	killed	k5	
+M06a	duplicate keys	duplicate (round,trend,side) rows no longer rejected (last row silently wins)	-	k6(over-accepts)	killed	k6	
+M07a	ORDER comparison (overclaim/underclaim)	overclaim and underclaim swapped (ORDER[s] > ORDER[o] -> <)	junk-c2-noscorecard	good(over-rejects);k7a(over-accepts);k9b(over-rejects)	killed	good	
+M07b	ORDER comparison (overclaim/underclaim)	equal-verdict pairs no longer 'agree' (fall through to the ORDER check -> underclaim)	junk-c2-noscorecard	good(over-rejects);k7b(over-accepts);k9b(over-rejects)	killed	good	
+M08a	SCORECARD table set-equality	extra scorecard table rows no longer rejected (textra dropped from met)	-	k7b(over-accepts);k8a(over-accepts)	killed	k8a	
+M08b	SCORECARD table set-equality	table rows matched on (round,trend) only; the self/outside verdict cells are ignored	junk-c2-noscorecard	k8b(over-accepts)	killed	k8b	
+M08c	SCORECARD table set-equality	missing scorecard table rows no longer rejected (tmiss dropped from met)	-	k8c(over-accepts)	killed	k8c	
+M09a	summary line	the agreement-figures summary line is no longer required (summary forced to 1)	base,junk-c2-allimproved,junk-c2-noscorecard	k7a(over-accepts);k9a(over-accepts)	killed	k9a	
+M09b	summary line	summary must match the wanted string EXACTLY (substring search dropped)	-	k9b(over-rejects)	killed	k9b	
+M09c	summary line	summary denominator n computed as agree only (drops overclaim+underclaim)	junk-c2-noscorecard	good(over-rejects);k9b(over-rejects)	killed	good	
+M10a	Axes calibration-row cite	the ## Axes calibration row naming the ledger is no longer required (axes forced to 1)	base,junk-c2-allimproved,junk-c2-noscorecard	k10a(over-accepts);k10b(over-accepts)	killed	k10a	
+M10b	Axes calibration-row cite	the 'calibration' word requirement in the Axes row's second cell dropped (any row naming the ledger passes)	-	k10b(over-accepts)	killed	k10b	

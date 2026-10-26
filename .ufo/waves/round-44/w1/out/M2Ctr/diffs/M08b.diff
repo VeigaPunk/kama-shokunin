@@ -1,0 +1,30 @@
+--- /fast/scratch/hyaku/kama-r44/M2Ctr/lane/tools/round44-verdict-ledger-audit.py	2026-10-26 04:58:38.714135808 -0300
++++ /fast/scratch/hyaku/kama-r44/M2Ctr/mut/M08b/lane/tools/round44-verdict-ledger-audit.py	2026-10-26 05:07:37.634794403 -0300
+@@ -205,15 +205,15 @@
+                     continue
+                 if "mixed" in (s, o):
+                     other += 1
+-                    mism.add((str(rnd), tr, s, o))
++                    mism.add((str(rnd), tr))
+                 elif s == o:
+                     agree += 1
+                 elif ORDER[s] > ORDER[o]:
+                     over += 1
+-                    mism.add((str(rnd), tr, s, o))
++                    mism.add((str(rnd), tr))
+                 else:
+                     under += 1
+-                    mism.add((str(rnd), tr, s, o))
++                    mism.add((str(rnd), tr))
+         sc = (show(a.repo, tip, "SCORECARD.md") or "").splitlines()
+         sec, insec = [], False
+         for x in sc:
+@@ -226,7 +226,7 @@
+         for x in sec:
+             c = [y.strip() for y in x.strip().strip("|").split("|")] if x.lstrip().startswith("|") else []
+             if len(c) >= 4 and c[0].isdigit() and c[1] in TRENDS:
+-                trow.add((c[0], c[1], c[2], c[3]))
++                trow.add((c[0], c[1]))
+         tmiss, textra = len(mism - trow), len(trow - mism)
+         for m in sorted(mism - trow):
+             detail.append(f"table missing {m}")

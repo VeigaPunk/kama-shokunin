@@ -1,0 +1,194 @@
+--- a/corpus/knowledge/runtime-health-surface-matrix.md
++++ b/corpus/knowledge/runtime-health-surface-matrix.md
+@@ -75,3 +75,69 @@
+ these is a runtime observation of the engine.
+ 
+ Round-17 correction (routed by `corpus/lessons/round-16-verifier-spotcheck.md` defect 4). Correction to line 65 (2026-10-20, source accessed 2026-10-20). "On every non-frontend path" narrows to every path except the frontend set (`server-http.cpp:309-311`) and `OPTIONS` (answered at `:347-352`, before the state gate at `:354`). `/v1/models` and `/health` remain inside the gate; the exempt set at `:251-258` is used only by the API-key check (`:267`). Envelope message, type and code: `:318-320`.
++
++## Correction — round 44 (2026-10-26): the table's key is the process, not the engine
++
++The round-43 entry `corpus/knowledge/runtime-health-surface-processes.md`
++shows that vLLM ships a second `/health` in a second process. Four readings
++below are superseded by that finding — the Claim, the table header, three cells
++of the vLLM row, and one clearance clause; each is quoted as it stood and then
++read as corrected. No data row is rewritten and no line above this section
++moves.
++
++Superseded — the Claim at line 8:
++
++> One `/health` URL shape does not carry one portable readiness meaning across llama.cpp, vLLM and SGLang — each engine's documented route semantics differ, and Ollama's opened pages document no dedicated health route at all.
++
++Read it as: "One `/health` URL shape does not carry one portable readiness
++meaning across llama.cpp, vLLM and SGLang, nor even inside one product: each
++engine's documented route semantics differ, vLLM's v0.31.0 release files a
++`/health` item under the `vllm preload` weight-cache feature, in the same
++bullet that names the daemon the CLI launches (S480 — the release page does
++not say which process answers it), the pull request behind that item names the
++process it went into — the weight cache daemon's parent process (S481,
++community tier C) — and Ollama's opened pages document no dedicated health
++route at all."
++
++Superseded — the table header at line 12:
++
++> | Engine | Documented revision | Liveness route | Readiness / loaded meaning | Identity route (separate) | Caveat | S-id |
++
++Read that table as keyed on (engine, process, date read), not on the engine
++alone. Until a `Process` column exists, each data row carries this process
++value:
++
++| line | engine | process the row's `/health` belongs to |
++|---|---|---|
++| 14 | llama.cpp server | the server process its own README documents (S001); no second llama.cpp health route is held |
++| 15 | vLLM | the inference server only — v0.31.0's second `/health` is the weight-cache supervisor's (S480, S481) |
++| 16 | SGLang | the server process its native-API page documents (S006) |
++| 17 | Ollama | the Ollama server the two opened pages' routes belong to (S009, S010); the pages name no health route |
++| 18 | Kubernetes | n/a — vocabulary, not a model server (S017) |
++
++Superseded — the vLLM row at line 15: its `Liveness route` cell "`GET /health`
++listed under Instrumentator APIs", its `Caveat` cell "Render-only servers have
++no engine and return 200 unconditionally — a passing `/health` may not even
++reach an engine", and its `S-id` cell "S002, S004". Read them as: liveness
++route "`GET /health` listed under Instrumentator APIs — the inference server's
++route; v0.31.0 also lists a `/health` under the `vllm preload` weight-cache
++feature, which is a different process (S480, S481)"; caveat "Render-only
++servers have no engine and return 200 unconditionally — a passing `/health`
++may not even reach an engine, and 'the vLLM `/health`' names two routes in two
++processes, so this row is read only together with its process value and the
++date it was read"; S-id "S002, S004 (inference server); S480, S481 (the second
++route's process)".
++
++Superseded — the KQ6 clause at line 35, "tier A for its scope; no C-tier row
++supports this entry". Read it as: "every engine statement cites an opened
++`SOURCES.md` row, tier A for its scope; the process attribution added by this
++correction additionally cites S481 (community, C), which supports the name of
++the process the route went into and the three states its purpose statement
++names — not the route's wire behaviour, which is `preload.py`'s at tag
++v0.31.0 — and S481 is never sole support for a statement.
++
++Recheck consequence: line 4 declares `on-release` for S001, S004, S006,
++S009/S010 and S020. S480 and S481 carry a 90d recheck, so the two added rows
++are re-read on their own 90d cadence until line 4 is superseded; a
++release-level re-read of S480 alone would not re-open S481, whose object is
++the pull request rather than the release page.
+--- a/corpus/knowledge/endpoint-health-probe-conventions.md
++++ b/corpus/knowledge/endpoint-health-probe-conventions.md
+@@ -23,3 +23,47 @@
+ re-opened into this file. A cloud platform's configurable health route
+ (`serving_container_health_route`) is remote endpoint health and stays outside
+ this entry.
++
++## Correction — round 44 (2026-10-26): the API server's 503 is not the only vLLM 503 that is not a death verdict
++
++The round-43 entry `corpus/knowledge/runtime-health-surface-processes.md` adds
++a third vLLM 503, in a second process. Both sentences below are quoted as they
++stood and then read as corrected; this entry's own S327 ground (the v0.32.0
++admission limits) is unchanged.
++
++Superseded — the sentence at lines 12-14 (inside the enumerated 9-14):
++
++> Those are admission valves in the API server process, not a statement that the process is down.
++
++Read it as: "Those are admission valves in the API server process, not a
++statement that the process is down, and they are not the whole vLLM 503 space:
++from v0.31.0 the `vllm preload` weight-cache supervisor answers its own
++`/health` with 503 until every expected target and draft rank reports, which
++is a third condition — not ready — on a route in a second process (S480, S481;
++the two-outcome handler at `preload.py:75`, recorded at
++`runtime-health-surface-processes.md:41`)."
++
++Superseded — the sentence at line 16 (the enumerated range 16-17 is that
++sentence plus the start of the next, which stands):
++
++> A probe that maps every 503 to dead will call a saturated vLLM server dead.
++
++Read it as: "A probe that maps every 503 to dead will call a saturated vLLM
++inference server dead, and will call a weight-cache supervisor whose ranks are
++still loading dead — the same status code on a different process's `/health`.
++Which vLLM process answered therefore belongs in the probe's rule, not only
++which status came back: the supervisor's route is opt-in
++(`--weight-cache-health-port`, default `None`, 'disabled by default' — the
++`preload.py:134-137` read recorded at
++`runtime-health-surface-processes.md:41`), so a probe pointed at the inference
++server never sees it and
++a probe pointed at it reads a 200 as 'every daemon rank is up', not as 'the
++engine is alive' (S480, S481)."
++
++The sentence that follows at lines 17-18 — "That is a different condition from
++llama.cpp's loading 503, and it is not a readiness proof." — stands as
++written: the admission 503 is still a different condition from the loading
++one, and still not a readiness proof.
++
++Recheck: this entry's `recheck:` is 90d (line 5) and so are S480's and S481's;
++no cadence change follows from this correction.
+--- a/corpus/knowledge/served-model-id-resolution.md
++++ b/corpus/knowledge/served-model-id-resolution.md
+@@ -44,3 +44,28 @@
+ already holds that handler as S004, whose anchor is the same source block, so no new
+ row was opened for it in this round; the observation is recorded in
+ `CANNOT-ANSWER.md` for the next wave that touches that file.
++
++## Correction — round 44 (2026-10-26): three routes, two processes, and no `CANNOT-ANSWER.md`
++
++Superseded — lines 39-46:
++
++> The same guide records that a vLLM `/health` handler returns 503 when the engine raises `EngineDeadError`, while the wave-1 vLLM engine-arguments row records that `/v1/chat/completions` returns 503 as a deliberate admission rejection. The two routes therefore use the same status code for different conditions, which is exactly the distinction the lane's "an error is not a verdict" discipline needs. The lane already holds that handler as S004, whose anchor is the same source block, so no new row was opened for it in this round; the observation is recorded in `CANNOT-ANSWER.md` for the next wave that touches that file.
++
++Read them as: "The same guide records that a vLLM `/health` handler returns
++503 when the engine raises `EngineDeadError`, while the wave-1 vLLM
++engine-arguments row records that `/v1/chat/completions` returns 503 as a
++deliberate admission rejection. Three routes therefore use the same status
++code for different conditions, which is exactly the distinction the lane's "an
++error is not a verdict" discipline needs, and two of the three are `/health`
++in two different processes: the inference server's, held as S004, whose anchor
++is the same source block, and — from vLLM v0.31.0 — the `vllm preload`
++weight-cache supervisor's, which answers 503 until every expected target and
++draft rank reports and 200 after (the two outcomes at `preload.py:75`,
++recorded at `runtime-health-surface-processes.md:41`), on a route that is
++opt-in (S480, S481). The observation is recorded in the lane, not deferred to
++a file outside it: `CANNOT-ANSWER.md`, which the superseded sentence named,
++exists nowhere in this lane's tree, and the third route is now held by the two
++rows at `corpus/SOURCES.md:233-234`."
++
++Recheck: this entry's `recheck:` is 90d (line 5) and so are S480's and S481's;
++no cadence change follows from this correction.
+--- a/corpus/knowledge/engine-pin-watch.md
++++ b/corpus/knowledge/engine-pin-watch.md
+@@ -71,3 +71,38 @@
+ chousa's ground (`PROVINCE.md`, round-38 note). Kama owns only this watch of
+ its own serving-engine pins, as round 38 already owned the re-pin of its own
+ SGLang docs rows.
++
++## Correction — round 44 (2026-10-26): one pin per engine, and one entry pinned per process
++
++Superseded — lines 7-9:
++
++> Several kama entries are true only of one engine release. SGLang knowledge is pinned to v0.5.22 (S474, S328, S329), vLLM knowledge to the v0.32.0 docs line (S327, S363), and the llama.cpp lifecycle work to build b11755 (S038).
++
++Read them as: "Several kama entries are true only of one engine release.
++SGLang knowledge is pinned to v0.5.22 (S474, S328, S329), vLLM knowledge to
++the v0.32.0 docs line (S327, S363), and the llama.cpp lifecycle work to build
++b11755 (S038); one vLLM entry is pinned elsewhere — to the v0.31.0 release and
++a merged pull request (S480, S481) — because what that entry states is a
++property of a process, not of a docs line. The ledger's `engine` column is
++unique — `tools/pin-watch.py:81-82` refuses a duplicate engine name, and the
++name is also the offline tag-list file name — so a second vLLM pin of a
++different kind has no line in `registry/engine-pins.tsv` to sit on, and a pin that is current says nothing
++about which process answers a route: inside S481's own two commits the
++`/health` endpoint was moved to the `vllm preload` CLI before the pull request
++merged, so the route's owner changed inside one pull request that one pin
++covers."
++
++Superseded — lines 60-61:
++
++> It watches only pins that a registry row backs.
++
++Read it as: "It watches only pins that a registry row backs *and* that
++`registry/engine-pins.tsv` gives a line. The vLLM line names the v0.32.0 docs
++pin and its two rows (S327, S363) and nothing else, so the entry pinned to the
++v0.31.0 release and a process (S480, S481) is backed by two rows and still
++watched by nothing. The gap there is a missing ledger line, not a missing
++row."
++
++The four engine versions named at lines 61-66 are unaffected: they have
++neither a row nor a line, and the rule that they stay unwatched until a
++sourced row backs them still holds.

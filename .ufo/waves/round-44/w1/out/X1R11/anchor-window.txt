@@ -1,0 +1,435 @@
+## pin 1330-1545
+1330:     const server_chat_params & opt,
+1331:     std::vector<raw_buffer> & out_files,
+1332:     common_chat_session & out_session)
+1333: {
+1334:     json llama_params;
+1335: 
+1336:     auto tools = json_value(body, "tools", json());
+1337:     auto has_tools = tools.is_array() && !tools.empty();
+1338:     auto stream = json_value(body, "stream", false);
+1339:     auto tool_choice = json_value(body, "tool_choice", std::string("auto"));
+1340: 
+1341:     if (!opt.use_jinja) {
+1342:         if (has_tools) {
+1343:             throw std::runtime_error("tools param requires --jinja flag");
+1344:         }
+1345:         if (tool_choice != "auto") {
+1346:             throw std::runtime_error("tool_choice param requires --jinja flag");
+1347:         }
+1348:     }
+1349: 
+1350:     // Handle "stop" field
+1351:     if (body.contains("stop") && body.at("stop").is_string()) {
+1352:         llama_params["stop"] = json::array({body.at("stop").get<std::string>()});
+1353:     } else {
+1354:         llama_params["stop"] = json_value(body, "stop", json::array());
+1355:     }
+1356: 
+1357:     auto json_schema = json_value(body, "json_schema", json());
+1358:     auto grammar = json_value(body, "grammar", std::string());
+1359:     if (!json_schema.is_null() && !grammar.empty()) {
+1360:         throw std::runtime_error("Cannot use both json_schema and grammar");
+1361:     }
+1362: 
+1363:     // Handle "response_format" field
+1364:     if (body.contains("response_format")) {
+1365:         json response_format      = json_value(body, "response_format", json::object());
+1366:         std::string response_type = json_value(response_format, "type", std::string());
+1367:         if (response_type == "json_object") {
+1368:             if (response_format.contains("schema") || json_schema.empty()) {
+1369:                 json_schema = json_value(response_format, "schema", json::object());
+1370:             }
+1371:         } else if (response_type == "json_schema") {
+1372:             auto schema_wrapper = json_value(response_format, "json_schema", json::object());
+1373:             json_schema = json_value(schema_wrapper, "schema", json::object());
+1374:         } else if (!response_type.empty() && response_type != "text") {
+1375:             throw std::invalid_argument("response_format type must be one of \"text\" or \"json_object\", but got: " + response_type);
+1376:         }
+1377:     }
+1378: 
+1379:     // an absent or empty schema means any object
+1380:     if (json_schema.is_object() && json_schema.empty()) {
+1381:         json_schema["type"] = "object";
+1382:     }
+1383: 
+1384:     // get input files
+1385:     if (!body.contains("messages")) {
+1386:         throw std::invalid_argument("'messages' is required");
+1387:     }
+1388:     json & messages = body.at("messages");
+1389:     if (!messages.is_array()) {
+1390:         throw std::invalid_argument("Expected 'messages' to be an array");
+1391:     }
+1392:     for (auto & msg : messages) {
+1393:         std::string role = json_value(msg, "role", std::string());
+1394:         if (role != "assistant" && !msg.contains("content")) {
+1395:             throw std::invalid_argument("All non-assistant messages must contain 'content'");
+1396:         }
+1397:         if (role == "assistant") {
+1398:             if (!msg.contains("content") && !msg.contains("tool_calls")) {
+1399:                 throw std::invalid_argument("Assistant message must contain either 'content' or 'tool_calls'!");
+1400:             }
+1401:             if (!msg.contains("content")) {
+1402:                 continue; // avoid errors with no content
+1403:             }
+1404:         }
+1405:         json & content = msg.at("content");
+1406:         if (content.is_string() || content.is_null()) {
+1407:             continue;
+1408:         }
+1409: 
+1410:         if (!content.is_array()) {
+1411:             throw std::invalid_argument("Expected 'content' to be a string or an array");
+1412:         }
+1413: 
+1414:         oaicompat_content_load_media(content, opt, out_files);
+1415:     }
+1416: 
+1417:     auto caps = common_chat_templates_get_caps(opt.tmpls.get());
+1418: 
+1419:     common_chat_templates_inputs inputs;
+1420:     inputs.messages               = common_chat_msgs_parse_oaicompat(messages);
+1421:     inputs.tools                  = common_chat_tools_parse_oaicompat(tools);
+1422:     inputs.tool_choice            = common_chat_tool_choice_parse_oaicompat(tool_choice);
+1423:     inputs.json_schema            = json_schema.is_null() ? "" : json_schema.dump();
+1424:     inputs.grammar                = grammar;
+1425:     inputs.use_jinja              = opt.use_jinja;
+1426:     inputs.parallel_tool_calls    = json_value(body, "parallel_tool_calls", caps["supports_parallel_tool_calls"]);
+1427:     inputs.add_generation_prompt  = json_value(body, "add_generation_prompt", true);
+1428:     inputs.continue_final_message = body.contains("continue_final_message") ?
+1429:         common_chat_continuation_parse(body.at("continue_final_message")) :
+1430:         COMMON_CHAT_CONTINUATION_NONE;
+1431:     if (inputs.continue_final_message == COMMON_CHAT_CONTINUATION_NONE && opt.prefill_assistant
+1432:         && !inputs.messages.empty() && inputs.messages.back().role == "assistant") {
+1433:         if (inputs.messages.size() >= 2 && inputs.messages[inputs.messages.size() - 2].role == "assistant") {
+1434:             throw std::invalid_argument("Cannot have 2 or more assistant messages at the end of the list.");
+1435:         }
+1436:         inputs.continue_final_message = COMMON_CHAT_CONTINUATION_AUTO;
+1437:         inputs.add_generation_prompt  = false;
+1438:     }
+1439:     if (inputs.continue_final_message != COMMON_CHAT_CONTINUATION_NONE && inputs.add_generation_prompt) {
+1440:         throw std::invalid_argument("Cannot set both add_generation_prompt and continue_final_message to true.");
+1441:     }
+1442:     if (inputs.continue_final_message != COMMON_CHAT_CONTINUATION_NONE
+1443:         && !inputs.messages.empty()
+1444:         && inputs.messages.back().role == "assistant"
+1445:         && !inputs.messages.back().tool_calls.empty()) {
+1446:         throw std::invalid_argument("Cannot continue an assistant message that contains tool calls.");
+1447:     }
+1448:     inputs.reasoning_format = opt.reasoning_format;
+1449:     if (body.contains("reasoning_format")) {
+1450:         inputs.reasoning_format = common_reasoning_format_from_name(body.at("reasoning_format").get<std::string>());
+1451:     }
+1452:     inputs.enable_thinking = opt.enable_thinking;
+1453:     if (!inputs.tools.empty() && inputs.tool_choice != COMMON_CHAT_TOOL_CHOICE_NONE) {
+1454:         if (body.contains("grammar")) {
+1455:             throw std::invalid_argument("Cannot use custom grammar constraints with tools.");
+1456:         }
+1457:     }
+1458: 
+1459:     // merge the template args provided from command line with the args provided in the user request
+1460:     auto chat_template_kwargs_object = json_value(body, "chat_template_kwargs", json::object());
+1461:     inputs.chat_template_kwargs = opt.chat_template_kwargs;
+1462:     for (const auto & item : chat_template_kwargs_object.items()) {
+1463:         inputs.chat_template_kwargs[item.key()] = item.value().dump();
+1464:     }
+1465: 
+1466:     // parse the "enable_thinking" kwarg to override the default value
+1467:     auto enable_thinking_kwarg = json_value(inputs.chat_template_kwargs, "enable_thinking", std::string(""));
+1468:     if (enable_thinking_kwarg == "true") {
+1469:         inputs.enable_thinking = true;
+1470:     } else if (enable_thinking_kwarg == "false") {
+1471:         inputs.enable_thinking = false;
+1472:     } else if (!enable_thinking_kwarg.empty() && enable_thinking_kwarg[0] == '"') {
+1473:         throw std::invalid_argument("invalid type for \"enable_thinking\" (expected boolean, got string)");
+1474:     }
+1475: 
+1476:     // Parse the OAI "reasoning_effort" field; "none" disables reasoning.
+1477:     if (body.contains("reasoning_effort")) {
+1478:         auto reasoning_effort = json_value(body, "reasoning_effort", std::string(""));
+1479:         if (reasoning_effort == "none") {
+1480:             inputs.enable_thinking = false;
+1481:             inputs.chat_template_kwargs.erase("reasoning_effort");
+1482:         } else if (!reasoning_effort.empty()) {
+1483:             inputs.chat_template_kwargs["reasoning_effort"] = json(reasoning_effort).dump();
+1484:         }
+1485:     }
+1486: 
+1487:     inputs.force_pure_content = opt.force_pure_content;
+1488: 
+1489:     // Apply chat template to the list of messages
+1490:     common_chat_session_params session_params;
+1491:     session_params.echo = json_value(body, "echo", false);
+1492:     out_session = common_chat_session(opt.tmpls.get(), vocab, inputs, session_params);
+1493: 
+1494:     llama_params["prompt"] = out_session.prompt().str();
+1495: 
+1496:     // Reasoning budget: pass parameters through to sampling layer
+1497:     {
+1498:         int reasoning_budget = json_value(body, "reasoning_budget_tokens",
+1499:                                json_value(body, "thinking_budget_tokens", -1));
+1500:         if (reasoning_budget == -1) {
+1501:             reasoning_budget = opt.reasoning_budget;
+1502:         }
+1503: 
+1504:         if (!out_session.thinking_end_tags().empty()) {
+1505:             llama_params["reasoning_budget_tokens"] = reasoning_budget;
+1506:             llama_params["reasoning_budget_start_tag"] = out_session.thinking_start_tag();
+1507:             llama_params["reasoning_budget_end_tags"] = out_session.thinking_end_tags();
+1508:             llama_params["reasoning_budget_message"] = json_value(body, "reasoning_budget_message", opt.reasoning_budget_message);
+1509:             llama_params["reasoning_control"] = json_value(body, "reasoning_control", false);
+1510:         }
+1511:     }
+1512: 
+1513:     // Handle "logprobs" field
+1514:     // TODO: The response format of this option is not yet OAI-compatible, but seems like no one really using it; We may need to fix it in the future
+1515:     if (json_value(body, "logprobs", false)) {
+1516:         if (has_tools && stream) {
+1517:             throw std::invalid_argument("logprobs is not supported with tools + stream");
+1518:         }
+1519:         llama_params["n_probs"] = json_value(body, "top_logprobs", 20);
+1520:     } else if (body.contains("top_logprobs") && !body.at("top_logprobs").is_null()) {
+1521:         throw std::invalid_argument("top_logprobs requires logprobs to be set to true");
+1522:     }
+1523: 
+1524:     // Copy remaining properties to llama_params
+1525:     // This allows user to use llama.cpp-specific params like "mirostat", ... via OAI endpoint.
+1526:     // See "launch_slot_with_task()" for a complete list of params supported by llama.cpp
+1527:     for (const auto & item : body.items()) {
+1528:         // Exception: if "n_predict" is present, we overwrite the value specified earlier by "max_tokens"
+1529:         if (!llama_params.contains(item.key()) || item.key() == "n_predict") {
+1530:             llama_params[item.key()] = item.value();
+1531:         }
+1532:     }
+1533: 
+1534:     // the session owns these, the server applies them with server_task::apply_chat_session()
+1535:     for (const char * key : { "grammar_lazy", "grammar_triggers", "preserved_tokens" }) {
+1536:         llama_params.erase(key);
+1537:     }
+1538:     if (!out_session.grammar().empty()) {
+1539:         llama_params.erase("grammar");
+1540:         llama_params.erase("json_schema");
+1541:     }
+1542: 
+1543:     return llama_params;
+1544: }
+1545: 
+
+## release 1348-1563
+1348:     const server_chat_params & opt,
+1349:     std::vector<raw_buffer> & out_files,
+1350:     common_chat_session & out_session)
+1351: {
+1352:     json llama_params;
+1353: 
+1354:     auto tools = json_value(body, "tools", json());
+1355:     auto has_tools = tools.is_array() && !tools.empty();
+1356:     auto stream = json_value(body, "stream", false);
+1357:     auto tool_choice = json_value(body, "tool_choice", std::string("auto"));
+1358: 
+1359:     if (!opt.use_jinja) {
+1360:         if (has_tools) {
+1361:             throw std::runtime_error("tools param requires --jinja flag");
+1362:         }
+1363:         if (tool_choice != "auto") {
+1364:             throw std::runtime_error("tool_choice param requires --jinja flag");
+1365:         }
+1366:     }
+1367: 
+1368:     // Handle "stop" field
+1369:     if (body.contains("stop") && body.at("stop").is_string()) {
+1370:         llama_params["stop"] = json::array({body.at("stop").get<std::string>()});
+1371:     } else {
+1372:         llama_params["stop"] = json_value(body, "stop", json::array());
+1373:     }
+1374: 
+1375:     auto json_schema = json_value(body, "json_schema", json());
+1376:     auto grammar = json_value(body, "grammar", std::string());
+1377:     if (!json_schema.is_null() && !grammar.empty()) {
+1378:         throw std::runtime_error("Cannot use both json_schema and grammar");
+1379:     }
+1380: 
+1381:     // Handle "response_format" field
+1382:     if (body.contains("response_format")) {
+1383:         json response_format      = json_value(body, "response_format", json::object());
+1384:         std::string response_type = json_value(response_format, "type", std::string());
+1385:         if (response_type == "json_object") {
+1386:             if (response_format.contains("schema") || json_schema.empty()) {
+1387:                 json_schema = json_value(response_format, "schema", json::object());
+1388:             }
+1389:         } else if (response_type == "json_schema") {
+1390:             auto schema_wrapper = json_value(response_format, "json_schema", json::object());
+1391:             json_schema = json_value(schema_wrapper, "schema", json::object());
+1392:         } else if (!response_type.empty() && response_type != "text") {
+1393:             throw std::invalid_argument("response_format type must be one of \"text\" or \"json_object\", but got: " + response_type);
+1394:         }
+1395:     }
+1396: 
+1397:     // an absent or empty schema means any object
+1398:     if (json_schema.is_object() && json_schema.empty()) {
+1399:         json_schema["type"] = "object";
+1400:     }
+1401: 
+1402:     // get input files
+1403:     if (!body.contains("messages")) {
+1404:         throw std::invalid_argument("'messages' is required");
+1405:     }
+1406:     json & messages = body.at("messages");
+1407:     if (!messages.is_array()) {
+1408:         throw std::invalid_argument("Expected 'messages' to be an array");
+1409:     }
+1410:     for (auto & msg : messages) {
+1411:         std::string role = json_value(msg, "role", std::string());
+1412:         if (role != "assistant" && !msg.contains("content")) {
+1413:             throw std::invalid_argument("All non-assistant messages must contain 'content'");
+1414:         }
+1415:         if (role == "assistant") {
+1416:             if (!msg.contains("content") && !msg.contains("tool_calls")) {
+1417:                 throw std::invalid_argument("Assistant message must contain either 'content' or 'tool_calls'!");
+1418:             }
+1419:             if (!msg.contains("content")) {
+1420:                 continue; // avoid errors with no content
+1421:             }
+1422:         }
+1423:         json & content = msg.at("content");
+1424:         if (content.is_string() || content.is_null()) {
+1425:             continue;
+1426:         }
+1427: 
+1428:         if (!content.is_array()) {
+1429:             throw std::invalid_argument("Expected 'content' to be a string or an array");
+1430:         }
+1431: 
+1432:         oaicompat_content_load_media(content, opt, out_files);
+1433:     }
+1434: 
+1435:     auto caps = common_chat_templates_get_caps(opt.tmpls.get());
+1436: 
+1437:     common_chat_templates_inputs inputs;
+1438:     inputs.messages               = common_chat_msgs_parse_oaicompat(messages);
+1439:     inputs.tools                  = common_chat_tools_parse_oaicompat(tools);
+1440:     inputs.tool_choice            = common_chat_tool_choice_parse_oaicompat(tool_choice);
+1441:     inputs.json_schema            = json_schema.is_null() ? "" : json_schema.dump();
+1442:     inputs.grammar                = grammar;
+1443:     inputs.use_jinja              = opt.use_jinja;
+1444:     inputs.parallel_tool_calls    = json_value(body, "parallel_tool_calls", caps["supports_parallel_tool_calls"]);
+1445:     inputs.add_generation_prompt  = json_value(body, "add_generation_prompt", true);
+1446:     inputs.continue_final_message = body.contains("continue_final_message") ?
+1447:         common_chat_continuation_parse(body.at("continue_final_message")) :
+1448:         COMMON_CHAT_CONTINUATION_NONE;
+1449:     if (inputs.continue_final_message == COMMON_CHAT_CONTINUATION_NONE && opt.prefill_assistant
+1450:         && !inputs.messages.empty() && inputs.messages.back().role == "assistant") {
+1451:         if (inputs.messages.size() >= 2 && inputs.messages[inputs.messages.size() - 2].role == "assistant") {
+1452:             throw std::invalid_argument("Cannot have 2 or more assistant messages at the end of the list.");
+1453:         }
+1454:         inputs.continue_final_message = COMMON_CHAT_CONTINUATION_AUTO;
+1455:         inputs.add_generation_prompt  = false;
+1456:     }
+1457:     if (inputs.continue_final_message != COMMON_CHAT_CONTINUATION_NONE && inputs.add_generation_prompt) {
+1458:         throw std::invalid_argument("Cannot set both add_generation_prompt and continue_final_message to true.");
+1459:     }
+1460:     if (inputs.continue_final_message != COMMON_CHAT_CONTINUATION_NONE
+1461:         && !inputs.messages.empty()
+1462:         && inputs.messages.back().role == "assistant"
+1463:         && !inputs.messages.back().tool_calls.empty()) {
+1464:         throw std::invalid_argument("Cannot continue an assistant message that contains tool calls.");
+1465:     }
+1466:     inputs.reasoning_format = opt.reasoning_format;
+1467:     if (body.contains("reasoning_format")) {
+1468:         inputs.reasoning_format = common_reasoning_format_from_name(body.at("reasoning_format").get<std::string>());
+1469:     }
+1470:     inputs.enable_thinking = opt.enable_thinking;
+1471:     if (!inputs.tools.empty() && inputs.tool_choice != COMMON_CHAT_TOOL_CHOICE_NONE) {
+1472:         if (body.contains("grammar")) {
+1473:             throw std::invalid_argument("Cannot use custom grammar constraints with tools.");
+1474:         }
+1475:     }
+1476: 
+1477:     // merge the template args provided from command line with the args provided in the user request
+1478:     auto chat_template_kwargs_object = json_value(body, "chat_template_kwargs", json::object());
+1479:     inputs.chat_template_kwargs = opt.chat_template_kwargs;
+1480:     for (const auto & item : chat_template_kwargs_object.items()) {
+1481:         inputs.chat_template_kwargs[item.key()] = item.value().dump();
+1482:     }
+1483: 
+1484:     // parse the "enable_thinking" kwarg to override the default value
+1485:     auto enable_thinking_kwarg = json_value(inputs.chat_template_kwargs, "enable_thinking", std::string(""));
+1486:     if (enable_thinking_kwarg == "true") {
+1487:         inputs.enable_thinking = true;
+1488:     } else if (enable_thinking_kwarg == "false") {
+1489:         inputs.enable_thinking = false;
+1490:     } else if (!enable_thinking_kwarg.empty() && enable_thinking_kwarg[0] == '"') {
+1491:         throw std::invalid_argument("invalid type for \"enable_thinking\" (expected boolean, got string)");
+1492:     }
+1493: 
+1494:     // Parse the OAI "reasoning_effort" field; "none" disables reasoning.
+1495:     if (body.contains("reasoning_effort")) {
+1496:         auto reasoning_effort = json_value(body, "reasoning_effort", std::string(""));
+1497:         if (reasoning_effort == "none") {
+1498:             inputs.enable_thinking = false;
+1499:             inputs.chat_template_kwargs.erase("reasoning_effort");
+1500:         } else if (!reasoning_effort.empty()) {
+1501:             inputs.chat_template_kwargs["reasoning_effort"] = json(reasoning_effort).dump();
+1502:         }
+1503:     }
+1504: 
+1505:     inputs.force_pure_content = opt.force_pure_content;
+1506: 
+1507:     // Apply chat template to the list of messages
+1508:     common_chat_session_params session_params;
+1509:     session_params.echo = json_value(body, "echo", false);
+1510:     out_session = common_chat_session(opt.tmpls.get(), vocab, inputs, session_params);
+1511: 
+1512:     llama_params["prompt"] = out_session.prompt().str();
+1513: 
+1514:     // Reasoning budget: pass parameters through to sampling layer
+1515:     {
+1516:         int reasoning_budget = json_value(body, "reasoning_budget_tokens",
+1517:                                json_value(body, "thinking_budget_tokens", -1));
+1518:         if (reasoning_budget == -1) {
+1519:             reasoning_budget = opt.reasoning_budget;
+1520:         }
+1521: 
+1522:         if (!out_session.thinking_end_tags().empty()) {
+1523:             llama_params["reasoning_budget_tokens"] = reasoning_budget;
+1524:             llama_params["reasoning_budget_start_tag"] = out_session.thinking_start_tag();
+1525:             llama_params["reasoning_budget_end_tags"] = out_session.thinking_end_tags();
+1526:             llama_params["reasoning_budget_message"] = json_value(body, "reasoning_budget_message", opt.reasoning_budget_message);
+1527:             llama_params["reasoning_control"] = json_value(body, "reasoning_control", false);
+1528:         }
+1529:     }
+1530: 
+1531:     // Handle "logprobs" field
+1532:     // TODO: The response format of this option is not yet OAI-compatible, but seems like no one really using it; We may need to fix it in the future
+1533:     if (json_value(body, "logprobs", false)) {
+1534:         if (has_tools && stream) {
+1535:             throw std::invalid_argument("logprobs is not supported with tools + stream");
+1536:         }
+1537:         llama_params["n_probs"] = json_value(body, "top_logprobs", 20);
+1538:     } else if (body.contains("top_logprobs") && !body.at("top_logprobs").is_null()) {
+1539:         throw std::invalid_argument("top_logprobs requires logprobs to be set to true");
+1540:     }
+1541: 
+1542:     // Copy remaining properties to llama_params
+1543:     // This allows user to use llama.cpp-specific params like "mirostat", ... via OAI endpoint.
+1544:     // See "launch_slot_with_task()" for a complete list of params supported by llama.cpp
+1545:     for (const auto & item : body.items()) {
+1546:         // Exception: if "n_predict" is present, we overwrite the value specified earlier by "max_tokens"
+1547:         if (!llama_params.contains(item.key()) || item.key() == "n_predict") {
+1548:             llama_params[item.key()] = item.value();
+1549:         }
+1550:     }
+1551: 
+1552:     // the session owns these, the server applies them with server_task::apply_chat_session()
+1553:     for (const char * key : { "grammar_lazy", "grammar_triggers", "preserved_tokens" }) {
+1554:         llama_params.erase(key);
+1555:     }
+1556:     if (!out_session.grammar().empty()) {
+1557:         llama_params.erase("grammar");
+1558:         llama_params.erase("json_schema");
+1559:     }
+1560: 
+1561:     return llama_params;
+1562: }
+1563: 

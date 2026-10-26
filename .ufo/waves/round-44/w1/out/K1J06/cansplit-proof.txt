@@ -1,0 +1,33 @@
+# can_split() byte identity: pin 704366d76:tools/server/server-context.cpp:447-475 vs release d854d98b:494-522
+# command: git -C <clone> show <rev>:tools/server/server-context.cpp | sed -n '<range>p' > f; diff f1 f2
+# diff exit=0
+# release range bytes:
+     1	    bool can_split() const {
+     2	        GGML_ASSERT(task);
+     3	        // a decision over a non-causal context reads the whole prompt in one batch
+     4	        if (task->type == SERVER_TASK_TYPE_DECISION && !llama_get_causal_attn(ctx_tgt)) {
+     5	            return false;
+     6	        }
+     7	        // MTP supports splitting - uses task->need_embd() not need_embd()
+     8	        if (!task->need_embd()) {
+     9	            return true;
+    10	        }
+    11	        // if the context does not have a memory module then all embeddings have to be computed within a single ubatch
+    12	        if (!llama_get_memory(ctx_tgt)) {
+    13	            return false;
+    14	        }
+    15	        // context can be chunked/split if the pooling type is LAST
+    16	        const auto pooling = llama_pooling_type(ctx_tgt);
+    17	        if (pooling == LLAMA_POOLING_TYPE_LAST) {
+    18	            return true;
+    19	        }
+    20	        // causal rerankers read the last token and have a KV cache, so they can also be chunked/split.
+    21	        if (pooling == LLAMA_POOLING_TYPE_RANK && llama_get_causal_attn(ctx_tgt)) {
+    22	            return true;
+    23	        }
+    24	        // a decision task reads its outputs from the last batch
+    25	        if (task->type == SERVER_TASK_TYPE_DECISION) {
+    26	            return true;
+    27	        }
+    28	        return false;
+    29	    }

@@ -1,0 +1,230 @@
+# X1R15 evidence log (commands rerun below; outputs verbatim)
+
+## blobs (git rev-parse <commit>:<path>)
+c0fd78626405c6d9b934efef0ec7291fcc20e3d6 tools/server/README.md -> ec82db0076ed55986ff97bdf327e8d86054c510d
+704366d76f8748cf9ad3df62a464bfcc8d1ae6ad tools/server/README.md -> e1c5804da5c275aa856f40f6e4f4b1b1acb93731
+d854d98bae598388ecea1ed84396587e5edc326d tools/server/README.md -> 8e27e37b8d4aa623006e413e7c8c4062a542e079
+ad1b88ca0d37a2171efba1c04f1a3531c78f1b52 tools/quantize/README.md -> 27384bebf697fec4e22df899fdbc345da4e89e91
+d854d98bae598388ecea1ed84396587e5edc326d tools/quantize/README.md -> 27384bebf697fec4e22df899fdbc345da4e89e91
+
+## sha256 of extracted blobs
+ad0dbc023796480d96f551c5eee69cd1c48c216d964409eea1cc9054c083ca23  s001-pin.md
+714c067bdbc49bde2735810fbff83eb2933b12c57d50f0012b61fcecb75a6a37  b11755.md
+009af291f69adaa041be4e79f1550e5f36bcaf3a929373091a7e4ac9b7bbac0c  rel.md
+4dcc340a48ea558bb824aeb075d556eb4a1bc4c76f86953be80cb9dd16e976e1  s015-pin.md
+
+## text-equality of every pinned pair (eq.py = counter excerpt rule: stripped non-blank lines joined)
+PIN 477-489 (9 nonblank) vs REL (479, 491): eq=True nw_pin= 358
+PIN 1129-1154 (21 nonblank) vs REL (1219, 1244): eq=True nw_pin= 1674
+PIN 1282-1282 (1 nonblank) vs REL (1373, 1373): eq=True nw_pin= 153
+PIN 479-491 (9 nonblank) vs REL (479, 491): eq=True nw_pin= 358
+PIN 1258-1258 (1 nonblank) vs REL (1346, 1346): eq=True nw_pin= 107
+PIN 50-50 (1 nonblank) vs REL (50, 50): eq=True nw_pin= 99
+PIN 165-165 (1 nonblank) vs REL (165, 165): eq=True nw_pin= 197
+PIN 169-169 (1 nonblank) vs REL (169, 169): eq=True nw_pin= 163
+PIN 177-177 (1 nonblank) vs REL (177, 177): eq=True nw_pin= 90
+PIN 839-918 (77 nonblank) vs REL (927, 1006): eq=True nw_pin= 1379
+PIN 919-934 (14 nonblank) vs REL (1007, 1021): eq=True nw_pin= 716
+PIN 983-1062 (75 nonblank) vs REL (1071, 1150): eq=True nw_pin= 1493
+PIN 1063-1126 (64 nonblank) vs REL (1151, 1214): eq=True nw_pin= 1094
+PIN 1304-1304 (1 nonblank) vs REL (1393, 1393): eq=True nw_pin= 21
+PIN 50-50 (1 nonblank) vs REL (50, 50): eq=True nw_pin= 99
+PIN 165-165 (1 nonblank) vs REL (165, 165): eq=True nw_pin= 197
+PIN 168-169 (2 nonblank) vs REL (168, 169): eq=True nw_pin= 359
+PIN 177-177 (1 nonblank) vs REL (177, 177): eq=True nw_pin= 90
+PIN 671-671 (1 nonblank) vs REL (671, 671): eq=True nw_pin= 197
+PIN 683-683 (1 nonblank) vs REL (683, 683): eq=True nw_pin= 203
+PIN 927-928 (2 nonblank) vs REL (1015, 1016): eq=True nw_pin= 260
+PIN 1131-1155 (21 nonblank) vs REL (1219, 1243): eq=True nw_pin= 1674
+PIN 1304-1304 (1 nonblank) vs REL (1393, 1393): eq=True nw_pin= 21
+
+## diff hunks touching the anchored release ranges (none expected)
+b11755->b11889: 19 hunks in tools/server/README.md
+  release 479-491: overlapping hunks []
+  release 927-1214: overlapping hunks []
+  release 1219-1243: overlapping hunks []
+  release 1346-1346: overlapping hunks []
+  release 1393-1393: overlapping hunks []
+  release 50-50: overlapping hunks []
+  release 165-177: overlapping hunks []
+c0fd7862->b11889: 21 hunks in tools/server/README.md
+  release 479-491: overlapping hunks []
+  release 1219-1244: overlapping hunks []
+  release 1373-1373: overlapping hunks []
+
+## code the statements depend on, at release d854d98bae598388ecea1ed84396587e5edc326d
+--- server-http.cpp 307-329 middleware_server_state (503 before auth; pre-routing calls state at 353 then api key at 356)
+
+    auto middleware_server_state = [this](const httplib::Request & req, httplib::Response & res) {
+        if (!is_ready.load()) {
+            if (frontend_paths.count(req.path)) {
+                return true; // frontend asset, allow it to load and show "loading"
+            }
+            // no endpoints are allowed to be accessed when the server is not ready
+            // this is to prevent any data races or inconsistent states
+            res.status = 503;
+            res.set_content(
+                safe_json_to_str(json {
+                    {"error", {
+                        {"message", "Loading model"},
+                        {"type", "unavailable_error"},
+                        {"code", 503}
+                    }}
+                }),
+                "application/json; charset=utf-8"
+            );
+            return false;
+        }
+        return true;
+    };
+--- server-context.cpp 5606-5623 get_health / get_metrics gate
+    this->get_health = [this](const server_http_req &) {
+        // error and loading states are handled by middleware
+        auto res = create_response(true);
+
+        // this endpoint can be accessed during sleeping
+        // the next LOC is to avoid someone accidentally use ctx_server
+        bool ctx_server; // do NOT delete this line
+        GGML_UNUSED(ctx_server);
+
+        res->ok({{"status", "ok"}});
+        return res;
+    };
+
+    this->get_metrics = [this](const server_http_req & req) {
+        auto res = create_response(true);
+        if (!params.endpoint_metrics) {
+            res->error(format_error_response("This server does not support metrics endpoint. Start it with `--metrics`", ERROR_TYPE_NOT_SUPPORTED));
+            return res;
+--- server-context.cpp 1596-1608 model_name default
+        }
+
+        if (!params_base.model_alias.empty()) {
+            // backward compat: use first alias as model name
+            model_name = *params_base.model_alias.begin();
+        } else if (!params_base.model.get_name().empty()) {
+            model_name = params_base.model.get_name();
+        } else {
+            // fallback: derive model name from file name
+            auto model_path = std::filesystem::path(params_base.model.path);
+            model_name = model_path.filename().string();
+        }
+
+--- server-context.cpp 5486-5512 get_res_model_info (meta always populated, never null)
+static json get_res_model_info(const server_context_meta & meta) {
+    // note: do NOT use ctx_server here, otherwise it's not possible to use this during sleep
+
+    return {
+        {"id",       meta.model_name},
+        {"aliases",  meta.model_aliases},
+        {"tags",     meta.model_tags},
+        {"object",   "model"},
+        {"architecture", server_model_architecture_json(
+            meta.has_inp_image,
+            meta.has_inp_audio,
+            meta.has_inp_video,
+            meta.model_output_modalities)},
+        {"created",  std::time(0)},
+        {"owned_by", "llamacpp"},
+        {"meta",     {
+            {"vocab_type",  meta.model_vocab_type},
+            {"n_vocab",     meta.model_vocab_n_tokens},
+            {"n_ctx",       meta.slot_n_ctx},
+            {"n_ctx_train", meta.model_n_ctx_train},
+            {"n_embd",      meta.model_n_embd_inp},
+            {"n_params",    meta.model_n_params},
+            {"size",        meta.model_size},
+            {"ftype",       meta.model_ftype},
+        }},
+    };
+}
+--- server-context.cpp 5547-5575 props total_slots = params.n_parallel and default_generation_settings n_ctx
+static json get_res_props(const server_context_meta & meta, const common_params & params, bool is_sleeping) {
+    // note: do NOT use ctx_server here, otherwise it's not possible to use this during sleep
+
+    task_params tparams;
+    tparams.sampling = params.sampling;
+    json default_generation_settings_for_props = json {
+        { "params", tparams.to_json(true) },
+        { "n_ctx",  meta.slot_n_ctx },
+    };
+
+    std::string tmpl_default = common_chat_templates_source(meta.chat_params.tmpls.get(), "");
+    std::string tmpl_tools   = common_chat_templates_source(meta.chat_params.tmpls.get(), "tool_use");
+
+    json props = {
+        { "default_generation_settings", default_generation_settings_for_props },
+        { "total_slots",                 params.n_parallel },
+        { "model_alias",                 meta.model_name },
+        { "model_ftype",                 meta.model_ftype },
+        { "model_path",                  meta.model_path },
+        { "modalities",                  json {
+            {"vision", meta.has_inp_image},
+            {"video",  meta.has_inp_video},
+            {"audio",  meta.has_inp_audio},
+        } },
+        { "media_marker",                get_media_marker() },
+        { "endpoint_slots",              params.endpoint_slots },
+        { "endpoint_props",              params.endpoint_props },
+        { "endpoint_metrics",            params.endpoint_metrics },
+        { "ui",                          params.ui },
+--- server-context.cpp 1581-1585 cache-ram -> server_prompt_cache
+                SRV_TRC("prompt cache is enabled, size limit: %d MiB\n", params_base.cache_ram_mib);
+            }
+            SRV_TRC("%s", "use `--cache-ram 0` to disable the prompt cache\n");
+
+            prompt_cache = std::make_unique<server_prompt_cache>(params_base.cache_ram_mib, n_ctx);
+--- server-context.cpp 5003-5006 n_tokens_max
+                metrics.n_busy_slots++;
+            }
+            metrics.n_tokens_max = std::max(metrics.n_tokens_max, (uint64_t) slot.prompt.n_tokens());
+        }
+--- common/arg.cpp 1650-1667, 1736-1738, 2556-2562
+        {"-c", "--ctx-size"}, "N",
+        string_format("size of the prompt context (default: %d, 0 = loaded from model)", params.n_ctx),
+        [](common_params & params, int value) {
+            params.n_ctx = value;
+            if (value == 0) {
+                // disable context reduction in llama_params_fit if the user explicitly requests the full context size:
+                params.fit_params_min_ctx = UINT32_MAX;
+            }
+        }
+    ).set_env("LLAMA_ARG_CTX_SIZE"));
+    add_opt(common_arg(
+        { "--kv-unified-per-slot" }, "N",
+        "context limit per parallel slot (default: unset, behavior unchanged).\n"
+        "when set without -c/--ctx-size, the shared KV pool is sized to n_parallel*N",
+        [](common_params & params, int value) {
+            params.kv_unified_per_slot = value;
+        }
+    ).set_env("LLAMA_ARG_KV_UNIFIED_PER_SLOT").set_examples({ LLAMA_EXAMPLE_SERVER }));
+        {"-kvu", "--kv-unified"},
+        {"-no-kvu", "--no-kv-unified"},
+        "use single unified KV buffer shared across all sequences (default: enabled if number of slots is auto)",
+            {"-np", "--parallel"}, "N",
+            string_format("number of server slots (default: %d, -1 = auto)", params.n_parallel),
+            [](common_params & params, int value) {
+                if (value == 0) {
+                    throw std::invalid_argument("error: invalid value for n_parallel\n");
+                }
+                params.n_parallel = value;
+--- quantize.cpp 123-130, 449
+    printf("usage: %s [--help] [--allow-requantize] [--leave-output-tensor] [--pure] [--imatrix] [--include-weights]\n", executable);
+    printf("       [--exclude-weights] [--output-tensor-type] [--token-embedding-type] [--tensor-type] [--tensor-type-file]\n");
+    printf("       [--prune-layers] [--keep-split] [--override-kv] [--dry-run] [--max-buffer-size]\n");
+    printf("       model-f32.gguf [model-quant.gguf] type [nthreads]\n\n");
+    printf("  --allow-requantize\n");
+    printf("                                      allow requantizing tensors that have already been quantized\n");
+    printf("                                      WARNING: this can severely reduce quality compared to quantizing\n");
+    printf("                                               from 16bit or 32bit!\n");
+        } else if (strcmp(argv[arg_idx], "--allow-requantize") == 0) {
+
+## grep: no meta-null emission anywhere in tools/server at release
+grep rc=1 (1 = no match)
+
+## tools/quantize/README.md: commits in ad1b88ca..d854d98b (empty = untouched)
+(end; no lines above means no commit touched the path)
+
+## release pre-routing middleware order
+355:        if (!middleware_server_state(req, res)) {
+358:        if (!middleware_validate_api_key(req, res)) {

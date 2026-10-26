@@ -1,0 +1,68 @@
+# Receipts for V1Code code review, round 44 w1
+All commands run from a scratch seat; lane and fleet repos untouched (read-only git).
+
+## R0. Selftest (tools/release-recheck.py)
+$ TMPDIR=/fast/scratch/hyaku/kama-r44/V1Code python3 tools/release-recheck.py selftest
+PASS moved-holds: verdict=holds pin=10 rel=12
+PASS rewritten-todo: verdict=TODO pin=10 rel=-
+PASS no-cite-todo: verdict=TODO pin=- rel=-
+PASS range: verdict=holds pin=5-7 rel=7-9
+PASS absent-at-pin: pin_blob=-
+selftest pass=5 fail=0
+SELFTEST_EXIT=0
+
+## R1. Counter on the freeze commit
+$ python3 tools/round44-release-recheck-audit.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip 77d1bbf55c62a1d5fc08fcbd682f22277a5cdb40 --upstream /fast/scratch/hyaku/kama-r44/shared/llama.cpp
+tip=77d1bbf55c62a1d5fc08fcbd682f22277a5cdb40
+pop=91 rows=0 valid=0 unverified=91 unchanged=0 holds=0 reworded=0 drifted=0 removed=0 flags_missing=0 section=0 met=False
+detail: S001 no ledger row
+... (all 91 ids listed: S001 S015 S035 S036 S037 S042 S043 S047 S054 S056 S059 S060 S106-S191 S479)
+COUNTER_EXIT=1
+
+## R2. Draft regeneration vs frozen draft-ledger.tsv
+$ python3 tools/release-recheck.py draft --sources corpus/SOURCES.md --upstream /fast/scratch/hyaku/kama-r44/shared/llama.cpp --release-name b11889 --release-commit d854d98bae598388ecea1ed84396587e5edc326d > draft-regen.tsv
+DRAFT_EXIT=0
+92 draft-regen.tsv   (header + 91 rows)
+  81 holds / 6 TODO / 4 unchanged-file / 1 header
+diff draft-regen.tsv .ufo/waves/round-44/c1/draft-ledger.tsv
+REGEN_IDENTICAL
+
+## R3. Drafter edge fixtures (fixture upstream: 40-line file; S901 pin=40x'e' absent upstream; S903 path deleted at release)
+== T1 pin-commit-missing-upstream == (exit 0)
+S901	x.cpp	eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee	rel	-	-	0	-	-	TODO	no cited line: pick the anchored section by reading
+T1_EXIT=0
+== T4 path-absent-at-release == (exit 0)
+S903	gone.cpp	ac8b53db4786b748698ef5e796fba1f02bab5552	rel	0f92803b3c118ca5a00531d39234b4238c54d1d7	-	1	5-7	-	TODO	pin ranges 5-7 not found verbatim at the release: read and judge drifted/removed/holds
+T4_EXIT=0
+== T2 missing sources file == (uncaught traceback)
+T2_EXIT=1
+Traceback (most recent call last): ... FileNotFoundError ... release-recheck.py line 268 in <module>
+== T3 upstream not a git repo == (silent garbage rows)
+S902	stay.cpp	ac8b53db4786b748698ef5e796fba1f02bab5552	rel	-	-	0	-	-	TODO	no cited line: pick the anchored section by reading
+T3_EXIT=0
+== T1b nonexistent --release-commit 1111... == (indistinguishable from drift)
+S902	stay.cpp	ac8b53db4786b748698ef5e796fba1f02bab5552	rel	0f92803b3c118ca5a00531d39234b4238c54d1d7	-	1	5-7	-	TODO	pin ranges 5-7 not found verbatim at the release: read and judge drifted/removed/holds
+T1B_EXIT=0
+== --ids S902 == (filter conforms)
+header + single row S902, exit 0
+
+## R4. Counter fixtures (lane BASE 9d9cc93ec replaced via git replace inside a scratch shared clone; population S901=DialogManageModels.svelte [real file deleted at b11889], S902=CMakeLists.txt, S903=.github/workflows/build-apple.yml)
+tip1-met:           exit=0 pop=2 rows=2 valid=2 unverified=0 unchanged=1 removed=1 flags_missing=0 section=1 met=True
+tip2-crlf:          exit=0 identical result (CRLF ledger silently accepted)
+tip3-dup-badline:   exit=1 valid=1 unverified=1; detail: bad ledger line: S901... / S901 duplicate ledger rows
+tip6-header:        exit=1 rows=0 valid=0 unverified=2; detail: ledger header mismatch + S901/S902 no ledger row
+upstream-missing:   exit=2 could-not-evaluate: git cat-file -e d854d98b...^{commit}: fatal: not a git repository
+tip-bogus:          exit=2 could-not-evaluate: git rev-parse --verify deadbeef...^{commit}: fatal: Needed a single revision
+t7-flags-both:      exit=1 flags_missing=2; S901 not listed in SOURCES section / S901 not flagged in corpus/knowledge/flag.md
+t8-flags-knowledge: exit=1 flags_missing=1; S901 not flagged in corpus/knowledge/flag.md
+tipA-false-removed: exit=1 pop=3 valid=2 unverified=1; detail: S903 invalid: removed: pin text still present
+tipB-equal-reworded:exit=1 detail: S903 invalid: holds-reworded rule (text-equal pair cannot be holds-reworded)
+tipC-holds-control: exit=0 pop=3 rows=3 valid=3 unverified=0 unchanged=1 holds=1 removed=1 met=True
+tipD-reworded-pos:  exit=0 pop=3 valid=3 unchanged=1 reworded=1 removed=1 met=True (holds-reworded positive, unequal pair)
+tipE-drifted-pos:   exit=0 pop=3 valid=3 unchanged=1 drifted=1 removed=1 met=True (drifted positive, flags satisfied)
+non-population row: ledger row for an id outside the population is silently ignored (valid=2 unverified=0 met=True, rows=3)
+
+## R5. Cross-tool identity
+cited() AST-identical in tools/release-recheck.py and tools/round44-release-recheck-audit.py: True
+population body: differs only in repo_url parameterization; URL regexes equivalent modulo ggml-org/llama.cpp interpolation
+HEADER lists identical in both tools

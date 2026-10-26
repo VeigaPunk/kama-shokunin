@@ -1,0 +1,40 @@
+mutant	rule	counter_line	mutation	verdict	killed_by	note
+M01	blob comparison	196	if lr["pin_blob"] != pb or lr["release_blob"] != rb:  ==>  if lr["pin_blob"] != pb:	killed-behavioral	F01-relblob,IN2-allunchanged	prediction: killed by F01
+M02	blob comparison	196	if lr["pin_blob"] != pb or lr["release_blob"] != rb:  ==>  if False:	killed-behavioral	F01-relblob,F02-pinblob,IN2-allunchanged	prediction: killed by F01/F02
+M03	changed flag	198	changed = "0" if pb == rb else "1"  ==>  changed = "0" if lr["pin_blob"] == lr["release_blob"] else "1"	survived-equivalent		no fixture can kill: blob equality is enforced two lines earlier, so ledger blobs == upstream blobs whenever changed is used; ledger-derived flag is then identical to the upstream-derived one
+M04	changed flag	199	if lr["changed"] != changed:  ==>  if False:	killed-behavioral	F03-changed	prediction: killed by F03
+M05	80-line cap	176	if a < 1 or b < a or b - a >= 80:  ==>  if a < 1 or b < a or b - a >= 800:	killed-behavioral	F04-cap80	prediction: killed by F04
+M06	range parsing	176	if a < 1 or b < a or b - a >= 80:  ==>  if b < a or b - a >= 80:	killed-behavioral	F33-relzero	killed by F33-relzero
+M07	range parsing	176	if a < 1 or b < a or b - a >= 80:  ==>  if a < 1 or b - a >= 80:	killed-behavioral	F32-relb<a	prediction: killed by F32
+M08	range parsing	201	pr = ranges(lr["pin_lines"], False)  ==>  pr = ranges(lr["pin_lines"], True)	killed-behavioral	IN3-draftonly	prediction: killed by IN3 (crash on '-')
+M09	20-char pin-range rule	210	if len(re.sub(r"\s", "", "".join(ptext[r[0] - 1:r[1]]))) < 20:  ==>  if len(re.sub(r"\s", "", "".join(ptext[r[0] - 1:r[1]]))) < 2:	killed-behavioral	F05-20char	prediction: killed by F05
+M10	20-char pin-range rule	210	if len(re.sub(r"\s", "", "".join(ptext[r[0] - 1:r[1]]))) < 20:  ==>  if len(re.sub(r"\s", "", "".join(ptext[r[0] - 1:r[1]]))) < 0:	killed-behavioral	F05-20char	prediction: killed by F05
+M11	STRONG cited-line coverage	221	if miss:  ==>  if False:	killed-behavioral	F06-strongmiss	prediction: killed by F06
+M12	WEAK cited-line coverage	223	elif weak and not any(covered(n) for n in weak):  ==>  elif False:	survived-equivalent		no population row has empty STRONG and >=1 in-file WEAK cite (scan: weak-only=[]) so the elif is dead code; smallest killer would need a frozen-SOURCES row citing only a bare 2-5 digit number
+M13a	STRONG cited-line coverage	217	strong = {n for n in strong if n <= len(ptext)}  ==>  strong = set(strong)	survived-equivalent		no population row cites a STRONG line beyond its pinned file length (scan: strong-beyond=[]); tightening mutant indistinguishable; killer would need such a row in frozen BASE SOURCES
+M13b	WEAK cited-line coverage	218	weak = {n for n in weak if n <= len(ptext)}  ==>  weak = set(weak)	survived-equivalent		no population row cites a WEAK number beyond its pinned file length (scan: weak-beyond=[])
+M14	verdict holds	234	return all(eq), "holds needs every pair text-equal"  ==>  return any(eq), "holds needs every pair text-equal"	killed-behavioral	F08-holdsany	prediction: killed by F08
+M15	verdict holds-reworded	238	return all(r is not None for r in rr) and not all(eq), "holds-reworded rule"  ==>  return all(r is not None for r in rr), "holds-reworded rule"	killed-behavioral	F09-rewordedeq	prediction: killed by F09
+M16	verdict holds-reworded	235	if v == "holds-reworded": |         if len(note) < 20:  ==>  if v == "holds-reworded": |         if False:	killed-behavioral	F10-rewordednote	prediction: killed by F10
+M17	verdict holds-reworded	238	return all(r is not None for r in rr) and not all(eq), "holds-reworded rule"  ==>  return not all(eq), "holds-reworded rule"	killed-behavioral	F11-rewordeddash	prediction: killed by F11
+M18	verdict drifted	242	return not all(r is None for r in rr), "drifted rule"  ==>  return True, "drifted rule"	killed-behavioral	F12-driftednone	prediction: killed by F12
+M19	verdict drifted	239	if v == "drifted": |         if len(note) < 20:  ==>  if v == "drifted": |         if False:	killed-behavioral	F13-driftednote	prediction: killed by F13
+M20	verdict removed	249	if first is None or first in rset:  ==>  if False:	killed-behavioral	F14-removedpresent	prediction: killed by F14
+M21	verdict removed	244	if len(note) < 20 or not all(r is None for r in rr):  ==>  if not all(r is None for r in rr):	killed-behavioral	F15-removednote	prediction: killed by F15
+M22	verdict removed	244	if len(note) < 20 or not all(r is None for r in rr):  ==>  if len(note) < 20:	killed-behavioral	F16-removedrel	prediction: killed by F16
+M23	verdict dispatch	252	return False, "unknown verdict"  ==>  return True, ""	killed-behavioral	IN3-draftonly	prediction: killed by IN3
+M24	release cell	191	if lr["release"] != RELEASE:  ==>  if False:	killed-behavioral	F25-releasecell	prediction: killed by F25
+M25	population binding	189	if lr["path"] != path or lr["pin_commit"] != pin:  ==>  if False:	killed-behavioral	F26-pathcell	prediction: killed by F26
+M26	duplicate-row handling	285	if d["id"] in ledger:  ==>  if False:	killed-behavioral	F24-duprow	prediction: killed by F24
+M27	duplicate-row handling	287	ledger[d["id"]] = d  ==>  ledger.setdefault(d["id"], d)	survived-equivalent		duplicate rows are still flagged by the intact dup check (M26 rule) and invalidated regardless of which copy wins; killable only jointly with a dup-flag mutant
+M28	SOURCES section check	336	met = unverified == 0 and missing == 0 and section == 1  ==>  met = unverified == 0 and missing == 0	survived-equivalent		on this population unverified=0 and missing=0 imply section=1: S037/S043/S108 have strong-cited lines absent from the release file (4/46, 2/31, 1/28 absent) so they cannot be holds/holds-reworded and changed=1 bars unchanged-file, forcing >=1 valid drifted row; with no section each such row adds flags_missing>=1; smallest killer would need a population where every row re-locates verbatim
+M29	SOURCES section check	314	section = int(any(SECTION in x and x.startswith("#") for x in tip_src.splitlines()))  ==>  section = int(any(SECTION in x for x in tip_src.splitlines()))	killed-behavioral	F22-unheading	prediction: killed by F22
+M30	flag check drifted/removed	320	if not any(re.search(rf"\b{sid}\b", x) for x in sec_lines):  ==>  if False:	killed-behavioral	F17-nosourcesline,F20-removedunflagged,F21-nosection,F22-unheading	prediction: killed by F17/F21
+M31	flag check drifted/removed	329	if not any(re.search(rf"\b{sid}\b", x) and RELEASE in x for x in body.splitlines()):  ==>  if False:	killed-behavioral	F18-nokbline,F19-kbnorelease,F20-removedunflagged	prediction: killed by F18
+M32	flag check drifted/removed	329	if not any(re.search(rf"\b{sid}\b", x) and RELEASE in x for x in body.splitlines()):  ==>  if not any(re.search(rf"\b{sid}\b", x) for x in body.splitlines()):	killed-behavioral	F18-nokbline,F19-kbnorelease,F20-removedunflagged	prediction: killed by F19
+M33	flag check drifted/removed	318	if lr["verdict"] not in ("drifted", "removed"):  ==>  if lr["verdict"] != "drifted":	killed-behavioral	F20-removedunflagged	prediction: killed by F20
+M34	ledger header check	278	if lines and lines[0].split("\t") == HEADER:  ==>  if lines:	killed-behavioral	F23-header	prediction: killed by F23
+M36	population filter	123	if len(c) != 11 or c[9] != "on-release" or c[7] not in ("mined", "queued"):  ==>  if len(c) != 11:	survived-equivalent		all 56 eleven-cell rows failing recheck/status also lack a ggml-org/llama.cpp URL (measured), so the URL filter re-absorbs them; smallest killer would need a frozen-SOURCES row with a llama.cpp URL + 40-hex pin but cadence != on-release
+M38	exit code	347	return 0 if met else 1  ==>  return 0	killed-behavioral	F01-relblob,F02-pinblob,F03-changed,F04-cap80,F05-20char,F06-strongmiss	prediction: killed by IN1 (exit)
+M39	range parsing	213	if r and r[1] > len(rtext):  ==>  if False:	killed-behavioral	F27b-reloutside	prediction: killed by F27
+M40	range parsing	208	if r[1] > len(ptext):  ==>  if False:	killed-behavioral	F28b-pinoutside	prediction: killed by F28

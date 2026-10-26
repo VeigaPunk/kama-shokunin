@@ -1,0 +1,86 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round44-release-recheck-audit.py	(timestamp)
++++ tools/round44-release-recheck-audit.py	(proposed)
+@@ -179,6 +179,20 @@
+     return out or None
+ 
+ 
++MOVE = 2000
++QUOTE = 12
++
++
++def note_quotes(note, text, n=QUOTE):
++    note = re.sub(r"\s+", " ", note)
++    text = re.sub(r"\s+", " ", text).strip()
++    return bool(text) and any(text[i:i + n] in note for i in range(0, len(text) - n + 1))
++
++
++def pin_first_lines(ptext, pr):
++    return [next((x.strip() for x in ptext[p[0] - 1:p[1]] if len(x.strip()) >= 8), None) for p in pr]
++
++
+ def excerpt(lines, r):
+     return "\n".join(x.strip() for x in lines[r[0] - 1:r[1]] if x.strip())
+ 
+@@ -230,19 +244,38 @@
+                 "unchanged-file rule")
+     if changed != "1":
+         return False, f"{v} needs changed=1"
++    near = all(r is not None and abs(r[0] - p[0]) <= MOVE for p, r in pairs)
++    rising = all(r is not None for r in rr) and all(rr[i + 1][0] > rr[i][1] for i in range(len(rr) - 1))
+     if v == "holds":
+-        return all(eq), "holds needs every pair text-equal"
++        return (all(eq) and near and rising), "holds needs ordered, near, text-equal pairs"
+     if v == "holds-reworded":
+         if len(note) < 20:
+             return False, "note too short"
+-        return all(r is not None for r in rr) and not all(eq), "holds-reworded rule"
++        if not (near and rising):
++            return False, "holds-reworded pairs must be near and rising"
++        diff = [(p, r) for (p, r), e in zip(pairs, eq) if r is not None and not e]
++        if not diff:
++            return False, "holds-reworded needs a differing pair"
++        if not any(note_quotes(note, excerpt(rtext, r)) for _, r in diff):
++            return False, "note does not quote the reworded release text"
++        return True, ""
+     if v == "drifted":
+         if len(note) < 20:
+             return False, "note too short"
+-        return not all(r is None for r in rr), "drifted rule"
++        if not near:
++            return False, "release ranges must stay within MOVE of the pin ranges"
++        rset = {x.strip() for x in rtext}
++        gone = [f for f in pin_first_lines(ptext, pr) if f and f not in rset]
++        if not gone:
++            return False, "drifted without a missing pin line"
++        if not any(note_quotes(note, g, 16) for g in gone):
++            return False, "note does not quote a missing pin line"
++        return True, ""
+     if v == "removed":
+         if len(note) < 20 or not all(r is None for r in rr):
+             return False, "removed rule"
++        if rb != "-":
++            return False, "removed but path present at release"
+         rset = {x.strip() for x in rtext}
+         for p in pr:
+             first = next((x.strip() for x in ptext[p[0] - 1:p[1]] if len(x.strip()) >= 8), None)
+@@ -317,7 +350,7 @@
+             lr = ledger[sid]
+             if lr["verdict"] not in ("drifted", "removed"):
+                 continue
+-            if not any(re.search(rf"\b{sid}\b", x) for x in sec_lines):
++            if not any(RELEASE in x and re.findall(r"\bS\d{3,}\b", x) == [sid] for x in sec_lines):
+                 missing += 1
+                 detail.append(f"{sid} not listed in SOURCES section")
+             for u in [u.strip() for u in pop[sid]["cells"][10].split(",")]:
+@@ -325,8 +358,10 @@
+                     continue
+                 body = show(a.repo, tip, u)
+                 if body is None:
++                    missing += 1
++                    detail.append(f"{sid} used-by entry missing: {u}")
+                     continue
+-                if not any(re.search(rf"\b{sid}\b", x) and RELEASE in x for x in body.splitlines()):
++                if not any(RELEASE in x and re.findall(r"\bS\d{3,}\b", x) == [sid] for x in body.splitlines()):
+                     missing += 1
+                     detail.append(f"{sid} not flagged in {u}")
+     except EvalError as e:
