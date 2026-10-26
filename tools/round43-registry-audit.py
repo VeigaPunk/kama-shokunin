@@ -15,9 +15,17 @@ Facts (frozen before data; every fact counts MISMATCHES, so 0 is clean):
             and .ufo/waves/round-*/count-*.py) that is registered in a SKILL.md
             registry row (a 5-column row whose cells contain the path): the
             row's Kind/entry-command cell must name at least one `--flag`, and
-            every `--flag` it names must occur in the counter's source at TIP.
+            every `--flag` it names must be declared by an `add_argument("--flag"`
+            call in the counter's source at TIP (a counter that declares no
+            `--` option is exempt).
             One mismatch per counter that fails either clause. A counter with
             no registry row is counted by `unreg`, not here.
+  pins      for each counter in NEWSET (the 16 counters the base gate reports
+            unregistered plus this round's three counters): the registry row's
+            Self-test / pinned-values cell (4th cell) names `sha256 `<hex>``
+            with at least 8 hex characters equal to the prefix of the SHA-256
+            of the counter's blob at TIP, and the Exit-map cell (3rd) names at
+            least one digit. One mismatch per counter that fails either.
   selftest  SKILL.md at TIP documents `GATE_SELFTEST pass=P fail=0`; the tool's
             `--selftest`, run in a throwaway clone of R with branch `master` set
             to TIP, must print exactly `GATE_SELFTEST pass=P fail=0` and exit 0.
@@ -38,7 +46,7 @@ Facts (frozen before data; every fact counts MISMATCHES, so 0 is clean):
 
 met = (mismatches == 0 and pop >= POP_MIN and registered >= POP_MIN).
 Output: `tip=<full>` then
-  unreg=U defect=D flags=F selftest=S dc=C spot=P hidden=H pop=N registered=R mismatches=M met=True|False
+  unreg=U defect=D flags=F pins=I selftest=S dc=C spot=P hidden=H pop=N registered=R mismatches=M met=True|False
 then `detail:` lines. Exit 0 met, 1 not met, 2 could not evaluate.
 Read-only on --repo; temporary directories are removed (also on SIGTERM).
 """
@@ -57,6 +65,17 @@ import tempfile
 POP_MIN = 28
 COUNTER_RE = re.compile(r"^(?:\.ufo/waves/round-[^/]+/count-[^/]+|tools/round[0-9]+-[A-Za-z0-9._-]+)\.py$")
 FLAG_RE = re.compile(r"(?<![\w-])--[a-z][a-z0-9-]*")
+ADD_RE = re.compile(r"add_argument\(\s*[\"'](--[a-z][a-z0-9-]*)")
+NEWSET = [
+    "tools/round35-coverage-audit.py", "tools/round35-statement-audit.py", "tools/round36-coverage-audit.py",
+    "tools/round36-statement-audit.py", "tools/round37-coverage-audit.py", "tools/round37-statement-audit.py",
+    "tools/round38-coverage-audit.py", "tools/round38-operability-audit.py", "tools/round38-statement-audit.py",
+    "tools/round40-calibration-audit.py", "tools/round40-operability-audit.py", "tools/round41-pinwatch-audit.py",
+    "tools/round41-scorecard-reconcile.py", "tools/round42-capacity-audit.py", "tools/round42-digest-audit.py",
+    "tools/round42-selfdesc-reconcile.py", "tools/round43-registry-audit.py", "tools/round43-hexrun-audit.py",
+    "tools/round43-health-audit.py",
+]
+SHA_RE = re.compile(r"sha256 `([0-9a-f]{8,64})")
 _tmp: list[str] = []
 
 
@@ -118,16 +137,37 @@ def evaluate(repo: str, tip: str):
         if not hit:
             continue
         src = (blob(repo, tip, path) or b"").decode(errors="replace")
+        declared = set(ADD_RE.findall(src))
         ok = False
         for l in hit:
             cells = [c.strip() for c in l.strip().strip("|").split("|")]
             named = FLAG_RE.findall(cells[1]) if len(cells) > 1 else []
-            if named and all(f in src for f in named):
+            if not declared or (named and all(f in declared for f in named)):
                 ok = True
                 break
         if not ok:
             flags += 1
             d.append(f"detail: flags: {path} row names no --flag or a flag absent from the source")
+    # pins
+    import hashlib
+    pins = 0
+    for path in NEWSET:
+        hit = [l for l in rows if path in l]
+        data = blob(repo, tip, path)
+        if not hit or data is None:
+            pins += 1
+            d.append(f"detail: pins: {path} has no row or no blob at tip")
+            continue
+        want = hashlib.sha256(data).hexdigest()
+        good = False
+        for l in hit:
+            cells = [c.strip() for c in l.strip().strip("|").split("|")]
+            if len(cells) >= 4 and re.search(r"[0-9]", cells[2]) and any(want.startswith(h) for h in SHA_RE.findall(cells[3])):
+                good = True
+                break
+        if not good:
+            pins += 1
+            d.append(f"detail: pins: {path} row lacks a matching `sha256 `<prefix>` pin or an exit-code digit")
     # selftest
     selftest = 1
     m = re.search(r"`GATE_SELFTEST pass=(\d+) fail=0`", skill)
@@ -135,9 +175,9 @@ def evaluate(repo: str, tip: str):
         want = f"GATE_SELFTEST pass={m.group(1)} fail=0"
         ex = mktmp("r43c1s-")
         cl = os.path.join(ex, "c")
-        subprocess.run(["git", "clone", "-q", "--no-hardlinks", repo, cl], check=True, capture_output=True)
-        subprocess.run(["git", "-C", cl, "branch", "-f", "master", tip], check=True, capture_output=True)
+        subprocess.run(["git", "clone", "-q", "--no-checkout", "--no-hardlinks", repo, cl], check=True, capture_output=True)
         subprocess.run(["git", "-C", cl, "checkout", "-q", "--detach", tip], check=True, capture_output=True)
+        subprocess.run(["git", "-C", cl, "branch", "-f", "master", tip], check=True, capture_output=True)
         p = subprocess.run([sys.executable, os.path.join(cl, "tools/gate-registry-check.py"), "--selftest"],
                            capture_output=True, text=True, cwd=cl, timeout=300)
         last = p.stdout.strip().splitlines()[-1] if p.stdout.strip() else ""
@@ -177,9 +217,9 @@ def evaluate(repo: str, tip: str):
     hidden = sum(1 for n in (".gitignore", ".ufo") if n not in rd)
     if hidden:
         d.append(f"detail: hidden: README.md names {2 - hidden} of .gitignore, .ufo")
-    mism = max(unreg, 0) + max(defect, 0) + flags + selftest + dc + spot + hidden
+    mism = max(unreg, 0) + max(defect, 0) + flags + pins + selftest + dc + spot + hidden
     met = mism == 0 and len(pop) >= POP_MIN and registered >= POP_MIN
-    return tip, dict(unreg=unreg, defect=defect, flags=flags, selftest=selftest, dc=dc, spot=spot,
+    return tip, dict(unreg=unreg, defect=defect, flags=flags, pins=pins, selftest=selftest, dc=dc, spot=spot,
                      hidden=hidden, pop=len(pop), registered=registered, mismatches=mism), met, d
 
 
