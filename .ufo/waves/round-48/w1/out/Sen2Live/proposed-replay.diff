@@ -1,0 +1,59 @@
+--- kama-live-replay.py	2026-10-26 19:37:18.920590905 -0300
++++ kama-live-replay-fixed.py	2026-10-26 19:40:42.534866995 -0300
+@@ -153,14 +153,22 @@
+ 
+ def projection(rec):
+     """The stable projection of a live receipt (see the module docstring)."""
++    raw = _get(rec, "captures", "models", "body")
++    if raw is not None and not isinstance(raw, str):
++        raise ValueError("models-body-not-a-string")
+     try:
+-        body = json.loads(_get(rec, "captures", "models", "body") or "null")
++        body = json.loads(raw or "null")
+     except ValueError:
+         body = "unparseable"
+     if isinstance(body, dict):
+-        models = {"data": sorted(f"{m.get('id')}|{m.get('owned_by')}" for m in body.get("data") or []
+-                                 if isinstance(m, dict)),
+-                  "models": sorted(str(m.get("name")) for m in body.get("models") or [] if isinstance(m, dict))}
++        data, names = body.get("data") or [], body.get("models") or []
++        if not isinstance(data, list) or not isinstance(names, list):
++            raise ValueError("models-body-shape")
++        bad = [x for x in data + names if not isinstance(x, dict)]
++        if bad:
++            raise ValueError("models-element-not-an-object")
++        models = {"data": sorted(f"{m.get('id')}|{m.get('owned_by')}" for m in data),
++                  "models": sorted(str(m.get("name")) for m in names)}
+     else:
+         models = body
+     td = rec.get("teardown") if isinstance(rec.get("teardown"), dict) else {}
+@@ -194,10 +202,14 @@
+             out.append(f"check:{cid}:not-evaluated")
+         elif er[cid] != passed:
+             out.append(f"check:{cid}:{passed}->{er[cid]}")
+-    po, pr = projection(orig), projection(rerun)
+-    for k in po:
+-        if po[k] != pr[k]:
+-            out.append(f"projection:{k}:{json.dumps(po[k])[:120]}->{json.dumps(pr[k])[:120]}")
++    try:
++        po, pr = projection(orig), projection(rerun)
++    except (ValueError, TypeError, RecursionError) as exc:
++        out.append(f"projection:unreadable:{exc}")   # never a vacuous match
++    else:
++        for k in po:
++            if po[k] != pr[k]:
++                out.append(f"projection:{k}:{json.dumps(po[k])[:120]}->{json.dumps(pr[k])[:120]}")
+     return out
+ 
+ 
+@@ -409,8 +421,8 @@
+                     recs.append(json.load(fh))
+             if not all(isinstance(r, dict) for r in recs):
+                 raise ValueError("not a JSON object")
+-        except (OSError, ValueError) as exc:
+-            print(f"compare could-not-read: {exc}")
++        except (OSError, ValueError, RecursionError, MemoryError) as exc:
++            print(f"compare could-not-read: {type(exc).__name__}: {exc}")
+             return 2
+         mism = compare(recs[0], recs[1])
+         print(f"compare match={not mism} mismatches={len(mism)}")

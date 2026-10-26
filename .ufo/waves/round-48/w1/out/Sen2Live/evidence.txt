@@ -1,0 +1,144 @@
+
+$ verify_archive_member: regular member
+{"ok": true, "result": ["d0a92d6afa06418e012409ad41441e7e72dfa53cdc57f279e2b62a8b55498b91", "6ecf06f6dbbab6a920b5b208bc7c4069ca266b150d6c00533a00b5975a8417ca"], "label": "regular-ok", "seconds": 0.0, "size": 143}
+{"setup_error": "provenance-member-digest-mismatch", "label": "regular-wrong-server-digest", "seconds": 0.0, "size": 143}
+[exit 0]
+
+$ verify_archive_member: symlink/hardlink/dir/dev/fifo/absent/duplicate
+{"setup_error": "provenance-member-not-a-file", "label": "member-symlink", "seconds": 0.0, "size": 117}
+{"setup_error": "provenance-member-not-a-file", "label": "member-hardlink", "seconds": 0.0, "size": 121}
+{"setup_error": "provenance-member-not-a-file", "label": "member-dir", "seconds": 0.0, "size": 107}
+{"setup_error": "provenance-member-not-a-file", "label": "member-chrdev", "seconds": 0.0, "size": 114}
+{"setup_error": "provenance-member-not-a-file", "label": "member-blockdev", "seconds": 0.0, "size": 117}
+{"setup_error": "provenance-member-not-a-file", "label": "member-fifo", "seconds": 0.0, "size": 108}
+{"setup_error": "provenance-member-digest-mismatch", "label": "member-contiguous", "seconds": 0.0, "size": 112}
+{"setup_error": "provenance-member-absent", "label": "member-absent", "seconds": 0.0, "size": 131}
+{"setup_error": "provenance-member-digest-mismatch", "label": "duplicate-name-first-is-good", "seconds": 0.0, "size": 157}
+{"ok": true, "result": ["56382b2884d1cfa2a58953a66acd2894342bc1acfe1ca51a1323dd54ecb6809b", "af474f3a513dd6f7efba743079489289edf6358e4327faa0d29d240194821736"], "label": "duplicate-name-first-is-decoy", "seconds": 0.0, "size": 157}
+[exit 0]
+
+$ verify_archive_member: archive-level refusals
+{"setup_error": "provenance-archive-digest-mismatch", "label": "asset-digest-mismatch", "seconds": 0.0, "size": 141}
+{"setup_error": "provenance-archive-unreadable", "label": "not-an-archive", "seconds": 0.0, "size": 4096}
+{"setup_error": "provenance-archive-unreadable", "label": "missing-archive", "seconds": 0.0, "size": null}
+{"setup_error": "provenance-archive-unreadable", "label": "archive-is-dir", "seconds": 0.0, "size": 4096}
+{"setup_error": "provenance-archive-unreadable", "label": "truncated-member", "seconds": 0.0, "size": 104}
+[exit 0]
+
+$ verify_archive_member: 64 MiB declared member
+{"ok": true, "result": ["d402598faeef830d36ee211dc0d95022fce4ee871c6ed9768367fc3920080d90", "3b6a07d0d404fab4e23b6d34bc6696a6a312dd92821332385e5af7c01c421351"], "label": "regular-member-64MiB", "seconds": 0.096, "size": 292959}
+[exit 0]
+
+$ verify_archive_member: 300k members (index scan)
+{"setup_error": "provenance-member-absent", "label": "300k-empty-members", "seconds": 3.103, "size": 2973835}
+[exit 0]
+
+$ getmembers(): 1M members, 9.9 MB archive
+1M members: archive_bytes=9852048 python_peak_MB=443.9 seconds=23.19 index_len=1000000
+[exit 0]
+
+$ verify_archive_member: GNU sparse members (declared size drives the read)
+{"setup_error": "provenance-member-digest-mismatch", "label": "gnu-sparse-declared-1073741824", "seconds": 0.578, "size": 104}
+{"setup_error": "provenance-member-digest-mismatch", "label": "gnu-sparse-declared-8589934591", "seconds": 4.438, "size": 103}
+[exit 0]
+
+$ verify_archive_member: FIFO archive path (no S_ISREG check)
+fifo_rc=124
+[exit 0]
+
+$ verify_archive_member: /dev/zero archive path
+devzero_rc=124
+[exit 0]
+
+$ PROPOSED verify_archive_member against the same matrix
+regular-ok                             ok                                     0.000s
+regular-wrong-server-digest            refused provenance-member-digest-mismatch      0.000s
+member-symlink                         refused provenance-member-not-a-file           0.000s
+member-hardlink                        refused provenance-member-not-a-file           0.000s
+member-dir                             refused provenance-member-not-a-file           0.000s
+member-chrdev                          refused provenance-member-not-a-file           0.000s
+member-fifo                            refused provenance-member-not-a-file           0.000s
+duplicate-last-wins                    ok                                     0.000s
+gnu-sparse-1GiB                        refused provenance-member-not-a-file           0.000s
+20k-members                            refused provenance-archive-too-many-members    0.054s
+fifo-archive-path                      refused provenance-archive-unreadable          0.000s
+[exit 0]
+
+$ --compare: shape
+{"rc": 1, "stdout": "", "stderr_tail": "TypeError: the JSON object must be str, bytes or bytearray, not dict", "label": "models-body-is-object", "seconds": 0.06}
+{"rc": 1, "stdout": "", "stderr_tail": "TypeError: 'int' object is not iterable", "label": "models-data-is-int", "seconds": 0.06}
+{"rc": 1, "stdout": "compare match=False mismatches=1\nmismatch: projection:models:{\"data\": [], \"models\": []}->{\"data\": [\"m|x\"], \"models\": []}", "stderr_tail": "", "label": "models-data-is-object", "seconds": 0.05}
+{"rc": 1, "stdout": "compare match=False mismatches=1\nmismatch: projection:models:{\"data\": [], \"models\": []}->{\"data\": [\"m|x\"], \"models\": []}", "stderr_tail": "", "label": "models-element-is-int", "seconds": 0.06}
+{"rc": 1, "stdout": "compare match=False mismatches=1\nmismatch: original:no-evaluated-check", "stderr_tail": "", "label": "checks-is-object", "seconds": 0.06}
+{"rc": 1, "stdout": "compare match=False mismatches=5\nmismatch: projection:props:null->{\"n\": 1}\nmismatch: projection:slots:[null, null]->[0, \"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"]\nmismatch: projection:health:[null, null]->[200, \"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\"]\nmismatch: projection:models:null->{\"data\": [\"m|x\"], \"models\": []}\nmismatch: projection:metrics:n", "stderr_tail": "", "label": "captures-is-string", "seconds": 0.06}
+[exit 0]
+
+$ --compare: deep
+{"rc": 1, "stdout": "", "stderr_tail": "RecursionError: Stack overflow (used 8140 kB) while decoding a JSON array from a unicode string", "label": "deep-nesting-200k", "seconds": 0.07}
+[exit 0]
+
+$ --compare: bytes
+{"rc": 2, "stdout": "compare could-not-read: 'utf-8' codec can't decode byte 0xff in position 42: invalid start byte", "stderr_tail": "", "label": "invalid-utf8", "seconds": 0.07}
+{"rc": 2, "stdout": "compare could-not-read: Expecting value: line 1 column 1 (char 0)", "stderr_tail": "", "label": "empty-file", "seconds": 0.06}
+{"rc": 2, "stdout": "compare could-not-read: [Errno 2] No such file or directory: '/fast/scratch/hyaku/kama-r48/Sen2Live/cmp/nope.json'", "stderr_tail": "", "label": "missing-file", "seconds": 0.06}
+[exit 0]
+
+$ --compare: twins
+{"rc": 0, "stdout": "compare match=True mismatches=0", "stderr_tail": "", "label": "v5-vs-identical", "seconds": 0.06}
+{"rc": 1, "stdout": "compare match=False mismatches=1\nmismatch: schema:kama-llamacpp-live/v5->kama-llamacpp-live/v4", "stderr_tail": "", "label": "v5-vs-v4-schema", "seconds": 0.06}
+[exit 0]
+
+$ --compare: vacuous
+{"rc": 0, "stdout": "compare match=True mismatches=0", "stderr_tail": "", "label": "dict-data-A-vs-B", "seconds": 0.06}
+{"rc": 0, "stdout": "compare match=True mismatches=0", "stderr_tail": "", "label": "dict-data-A-vs-A", "seconds": 0.06}
+[exit 0]
+
+$ PROPOSED compare/projection fix on the same cases + real receipts
+deep-nesting-200k              rc=2 compare could-not-read: RecursionError: Stack overflow (used 8140 kB)   
+models-body-is-object          rc=1 compare match=False mismatches=1 mismatch: projection:unreadable:models-body-not-a-string 
+models-data-is-int             rc=1 compare match=False mismatches=1 mismatch: projection:unreadable:models-body-shape 
+models-data-is-object          rc=1 compare match=False mismatches=1 mismatch: projection:unreadable:models-body-shape 
+models-element-is-int          rc=1 compare match=False mismatches=1 mismatch: projection:unreadable:models-element-not-an-object 
+two-malformed-models           rc=1 compare match=False mismatches=1 mismatch: projection:unreadable:models-body-shape 
+identical-receipt              rc=0 compare match=True mismatches=0  
+real-r48-receipt-1-vs-1        rc=0 compare match=True mismatches=0  
+real-r48-receipt-1-vs-2        rc=0 compare match=True mismatches=0  
+real-r48-receipt-1-vs-3        rc=0 compare match=True mismatches=0  
+[exit 0]
+
+$ replay -> live pass-through (fake argv dump, then real live)
+[fake-live v5] replay rc=0 replay match=True refused=None mismatches=0 exit=0
+  --server-archive occurrences=1 value=['/fast/scratch/hyaku/kama-r48/Sen2Live/work-v5/download/llama.tgz']
+  --server value=['/fast/scratch/hyaku/kama-r48/Sen2Live/work-v5/server/rel/llama-server']
+  tail=['--out', '/fast/scratch/hyaku/kama-r48/Sen2Live/work-v5/rerun-receipt.json']
+  inputs={"archive_sha256": "53716e59321202acf139f9e1f13468eac076f6dd56683b4eb02d04928edfcab1", "model_sha256": "d9865667153eba8ab848a2e12543bf24470341890fc328296424db291b49ec7a", "archive": "/fast/scratch/hyaku/kama-r48/Sen2Live/work-v5/download/llama.tgz", "model": "/fast/scratch/hyaku/kama-r48/Sen2Live/work-v5/download/m.gguf", "server": "/fast/scratch/hyaku/kama-r48/Sen2Live/work-v5/server/rel/llama-server"}
+[fake-live v4] replay rc=0 replay match=True refused=None mismatches=0 exit=0
+  --server-archive occurrences=0 value=[]
+  --server value=['/fast/scratch/hyaku/kama-r48/Sen2Live/work-v4/server/rel/llama-server']
+  tail=['--out', '/fast/scratch/hyaku/kama-r48/Sen2Live/work-v4/rerun-receipt.json']
+  inputs={"archive_sha256": "53716e59321202acf139f9e1f13468eac076f6dd56683b4eb02d04928edfcab1", "model_sha256": "d9865667153eba8ab848a2e12543bf24470341890fc328296424db291b49ec7a", "archive": "/fast/scratch/hyaku/kama-r48/Sen2Live/work-v4/download/llama.tgz", "model": "/fast/scratch/hyaku/kama-r48/Sen2Live/work-v4/download/m.gguf", "server": "/fast/scratch/hyaku/kama-r48/Sen2Live/work-v4/server/rel/llama-server"}
+[real-live file://] replay rc=2 refused=kama-llamacpp-live.py: error: --server-asset-url must be an https:// URL
+  live_exit=2 extracted=True
+[exit 0]
+
+$ v5 URL/pin gate: what is anchored, and the v4 counter-example
+v5-any-host-pinned-shape       rc=2 schema=kama-llamacpp-live/v4 setup_error=server-not-executable:/fast/scratch/hyaku/kama-r48/Sen2Live/urlgate/missing-server stderr=
+v5-any-host-unpinned           rc=2 schema=None setup_error=None stderr=kama-llamacpp-live.py: error: --model-url must be pinned to a 40-hex /resolve/<commit>/ revision (v5)
+v4-any-host-unpinned-no-archive rc=2 schema=kama-llamacpp-live/v4 setup_error=server-not-executable:/fast/scratch/hyaku/kama-r48/Sen2Live/urlgate/missing-server stderr=
+[exit 0]
+
+$ python3 pax_sparse_probe.py   # PAX sparse realsize is decimal (read capped at 32 GiB by the probe)
+0.1 declared=1000000000000000 archive_bytes=189 read=34360786944 eof=False seconds=3.70 GiB_per_s=9.28
+1.0 declared=1000000000000000 archive_bytes=204 read=34360786944 eof=False seconds=3.84 GiB_per_s=8.95
+$ python3 extract_bomb_probe.py   # replay extract() on the same member
+archive_bytes=198 declared=1073741824 on_disk=1073741824 seconds=0.00 (extract() has no size check)
+$ (lane-shaped copy) python3 tools/kama-llamacpp-live.py --selftest   # frozen tip
+selftest: ok; closed tcp6 listeners ::1:46051, ::ffff:127.0.0.1:46431
+rc=0
+$ (lane-shaped copy) python3 tools/kama-llamacpp-live-fixed.py --selftest   # proposed verify_archive_member
+selftest: ok; closed tcp6 listeners ::1:34055, ::ffff:127.0.0.1:36649
+rc=0
+
+$ python3 sparse_bounded_probe.py   # read bounded by declared size; extraction sparse-ness
+declared=68719476736 archive_bytes=194 read=68719476736 eof=True seconds=9.19 GiB_per_s=7.48 -> 10^15 B would take 37 h
+extracted apparent=1073741824 allocated=4096 sparse_on_this_fs=True
