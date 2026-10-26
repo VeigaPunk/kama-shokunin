@@ -17,7 +17,12 @@ Exit codes:
     0  outcome pass: every evaluated check passed
     1  outcome fail: at least one evaluated check failed
     2  outcome not-evaluated or setup-error (including internal faults)
-Receipt schema: ``kama-llamacpp-live/v3``. Checks record both ``passed``
+Receipt schema: ``kama-llamacpp-live/v4`` (round 47): v3 plus a ``provenance``
+block (where the server archive and the model came from, recorded from
+``--server-asset-url``/``--server-asset-sha256``/``--server-member``/``--model-url``;
+``tools/kama-live-replay.py`` re-acquires and verifies them) and
+``teardown.log_path`` null, because the temp log is always deleted (its kept
+lines are inlined in ``teardown.log_lines``). Checks record both ``passed``
 (true/false/null) and ``evaluated``. A missing loading-503 observation is
 not-evaluated, never a server failure. The exact child argv is recorded;
 environment values are never recorded.
@@ -46,7 +51,7 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
-SCHEMA = 'kama-llamacpp-live/v3'
+SCHEMA = 'kama-llamacpp-live/v4'
 SCRIPT = Path(__file__).resolve()
 LANE = SCRIPT.parent.parent
 REGISTRY = LANE / 'registry' / 'endpoint-consumers.tsv'
@@ -868,7 +873,7 @@ def teardown(proc, port, log_path):
     out = {'returncode': None, 'sigterm_sent': False, 'sigkill_sent': False,
            'alive_at_teardown_start': _child_running(proc),
            'term_wait_ms': None, 'port_refuses': None, 'log_lines': [],
-           'log_lines_truncated': False, 'log_path': str(log_path)}
+           'log_lines_truncated': False, 'log_path': None}
     if out['alive_at_teardown_start']:  # F5: killpg only on a live child
         try:
             os.killpg(proc.pid, signal.SIGTERM)
@@ -1092,7 +1097,7 @@ def build_parser():
         description='Launch an ephemeral llama-server on a free unregistered '
                     'loopback port, capture its lifecycle, probe it with '
                     'kama-probe.sh, tear it down, and emit a '
-                    'kama-llamacpp-live/v3 receipt.',
+                    'kama-llamacpp-live/v4 receipt.',
     )
     p.add_argument('--server', default=None,
                    help='llama-server binary (default: shutil.which'
@@ -1115,6 +1120,15 @@ def build_parser():
                         'when it is a registered consumer port (8080, 34113, '
                         'any port in registry/endpoint-consumers.tsv) or '
                         'already listening')
+    p.add_argument('--server-asset-url', default=None,
+                   help='provenance: URL of the release archive the server '
+                        'binary was extracted from (recorded, not fetched)')
+    p.add_argument('--server-asset-sha256', default=None,
+                   help='provenance: sha256 of that archive (64 hex)')
+    p.add_argument('--server-member', default=None,
+                   help='provenance: path of llama-server inside the archive')
+    p.add_argument('--model-url', default=None,
+                   help='provenance: URL the --model file was fetched from')
     p.add_argument('--selftest', action='store_true',
                    help='run parser and outcome self-tests without a server')
     return p
@@ -1345,6 +1359,12 @@ def main(argv=None):
     if args.model is None or args.model_sha256 is None:
         parser.error('--model and --model-sha256 are required unless '
                      '--selftest is used')
+    for name in ('model_sha256', 'server_asset_sha256'):
+        value = getattr(args, name)
+        if value is not None:
+            if not re.fullmatch(r'[0-9a-fA-F]{64}', value):
+                parser.error(f'--{name.replace("_", "-")} must be 64 hex digits')
+            setattr(args, name, value.lower())
 
     receipt = {
         'schema': SCHEMA,
@@ -1358,6 +1378,12 @@ def main(argv=None):
         },
         'model': {'arg': args.model, 'path': None, 'sha256': None},
         'model_sha256_post': None,
+        'provenance': {
+            'server': {'asset_url': args.server_asset_url,
+                       'asset_sha256': args.server_asset_sha256,
+                       'member': args.server_member},
+            'model': {'url': args.model_url, 'sha256': args.model_sha256},
+        },
         'probe': {'path': str(args.probe), 'sha256': None},
         'alias': args.alias,
         'ctx': args.ctx,
