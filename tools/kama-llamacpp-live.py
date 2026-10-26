@@ -42,6 +42,20 @@ sha256), exiting 2 with a setup-error receipt otherwise. A v5 receipt adds
 ``--server-archive`` the receipt stays v4, so round-47 replays of v4 receipts
 run as before.
 
+Round 49 (schema unchanged): ``--server-archive`` verification is bounded - the
+archive must be a regular file of at most 1 GiB with at most 4096 index entries,
+and the member a regular, non-sparse file whose declared size equals the
+``--server`` file's size, all checked before a byte of the member is hashed
+(round-48 seat Sen2Live F1: a ~104-byte sparse archive made record time hash
+~10^15 bytes); new tokens ``provenance-archive-not-regular``,
+``-archive-too-large``, ``-archive-too-many-members``, ``-member-sparse``,
+``-member-size-mismatch``. ``--witness-dir D`` (an existing directory) makes the
+tool, once the server is ready and its checks ran, write ``D/ready.json``
+{schema ``kama-live-witness/v1``, port, pid of the llama-server child} and keep
+the server up until ``D/release`` exists (``--witness-timeout``, default 120 s),
+so an outside observer can check the running binary, its listening socket and
+its answers; the receipt gains ``witness`` {released, waited_ms, port, pid, dir}.
+
 Deps: python3 stdlib only, plus whatever the probed server and
 ``bash tools/kama-probe.sh`` (curl, ss) need.
 """
@@ -50,6 +64,7 @@ from __future__ import annotations
 import argparse
 import http.client
 import hashlib
+import io
 import json
 import os
 import re
@@ -190,33 +205,99 @@ def _utc_now():
         '+00:00', 'Z')
 
 
-def verify_archive_member(archive, asset_sha256, member, server_sha256):
+ARCHIVE_MAX_BYTES = 1 << 30      # release assets are ~70 MB; 1 GiB is generous
+MEMBER_MAX_COUNT = 4096          # archive index entries; the b11909 asset has ~60
+
+
+def verify_archive_member(archive, asset_sha256, member, server_sha256, server_size=None):
     """Record-time provenance (v5): the archive must hash to asset_sha256 and its member
     to the server binary's sha256. Returns (archive_sha256, member_sha256); raises
-    SetupError with a stable token otherwise. Reads the archive only; extracts nothing."""
+    SetupError with a stable token otherwise. Reads the archive only; extracts nothing.
+
+    Host-safety bounds (round 49; round-48 seat Sen2Live F1-F3, closure R1): the archive
+    must be a regular file of at most ARCHIVE_MAX_BYTES (a FIFO or device path would block
+    or stream forever) and is opened once, that descriptor hashed and parsed; the index is
+    walked streaming with a MEMBER_MAX_COUNT cap (getmember() materialises it all); the
+    member must be a regular, non-sparse file whose declared size equals server_size (the
+    --server file's size) - tarfile synthesises a sparse member's declared size, so a
+    ~104-byte archive could otherwise make this loop hash ~10^15 bytes. The size checks run
+    before a byte of the member is read. The last occurrence of a duplicated member name
+    wins, as extraction does."""
     import tarfile
     try:
-        archive_sha = sha256_file(archive)
+        st = os.stat(archive)
     except OSError:
         raise SetupError('provenance-archive-unreadable')
-    if archive_sha != asset_sha256:
-        raise SetupError('provenance-archive-digest-mismatch')
+    if not stat.S_ISREG(st.st_mode):
+        raise SetupError('provenance-archive-not-regular')
+    if st.st_size > ARCHIVE_MAX_BYTES:
+        raise SetupError('provenance-archive-too-large')
     try:
-        with tarfile.open(archive) as tf:
-            info = tf.getmember(member)
-            if not info.isfile():
-                raise SetupError('provenance-member-not-a-file')
-            h = hashlib.sha256()
-            fh = tf.extractfile(info)
-            for chunk in iter(lambda: fh.read(1 << 20), b''):
-                h.update(chunk)
-    except KeyError:
-        raise SetupError('provenance-member-absent')
-    except (OSError, tarfile.TarError):
+        arc = open(archive, 'rb')
+    except OSError:
         raise SetupError('provenance-archive-unreadable')
+    with arc:
+        h_arc = hashlib.sha256()
+        for chunk in iter(lambda: arc.read(1 << 20), b''):
+            h_arc.update(chunk)
+        archive_sha = h_arc.hexdigest()
+        if archive_sha != asset_sha256:
+            raise SetupError('provenance-archive-digest-mismatch')
+        arc.seek(0)
+        try:
+            with tarfile.open(fileobj=arc, mode='r:*') as tf:
+                found, count = None, 0
+                for info in tf:
+                    count += 1
+                    if count > MEMBER_MAX_COUNT:
+                        raise SetupError('provenance-archive-too-many-members')
+                    if info.name == member:
+                        found = info
+                if found is None:
+                    raise SetupError('provenance-member-absent')
+                if not found.isfile():
+                    raise SetupError('provenance-member-not-a-file')
+                if found.sparse is not None:
+                    raise SetupError('provenance-member-sparse')
+                if server_size is not None and found.size != server_size:
+                    raise SetupError('provenance-member-size-mismatch')
+                h = hashlib.sha256()
+                fh = tf.extractfile(found)
+                for chunk in iter(lambda: fh.read(1 << 20), b''):
+                    h.update(chunk)
+        except SetupError:
+            raise
+        except (OSError, EOFError, tarfile.TarError):
+            raise SetupError('provenance-archive-unreadable')
     if h.hexdigest() != server_sha256:
         raise SetupError('provenance-member-digest-mismatch')
     return archive_sha, h.hexdigest()
+
+
+WITNESS_SCHEMA = 'kama-live-witness/v1'
+
+
+def hold_for_witness(wdir, proc, port, timeout):
+    """Round 49 (closure R5: a replay that never ran a server met the round-48 counter):
+    announce the ready server - ready.json {schema, port, pid} written atomically in wdir,
+    pid being the llama-server child itself - and keep it up until wdir/release exists,
+    the child exits or `timeout` seconds pass. An outside observer can then read
+    /proc/<pid>/exe, the listening socket and the server's own answers; this tool records
+    only that it waited, never what the observer saw."""
+    ready = {'schema': WITNESS_SCHEMA, 'port': port, 'pid': proc.pid,
+             'written_utc': _utc_now()}
+    tmp = os.path.join(wdir, 'ready.json.tmp')
+    with open(tmp, 'w') as fh:
+        json.dump(ready, fh)
+    os.replace(tmp, os.path.join(wdir, 'ready.json'))
+    release = os.path.join(wdir, 'release')
+    t0 = time.monotonic()
+    while (not os.path.exists(release) and time.monotonic() - t0 < timeout
+           and _child_running(proc)):
+        time.sleep(0.05)
+    return {'schema': WITNESS_SCHEMA, 'dir': os.path.abspath(wdir), 'port': port,
+            'pid': proc.pid, 'released': os.path.exists(release),
+            'waited_ms': int((time.monotonic() - t0) * 1000)}
 
 
 def sha256_file(path):
@@ -1180,6 +1261,13 @@ def build_parser():
                    help='provenance (v5): local copy of the release archive; '
                         'hashed against --server-asset-sha256 and its member '
                         'against --server before the server starts')
+    p.add_argument('--witness-dir', default=None,
+                   help='existing directory: once the server is ready and its '
+                        'checks ran, write ready.json {port, pid} there and keep '
+                        'the server up until a file named release appears '
+                        '(round 49)')
+    p.add_argument('--witness-timeout', type=float, default=120.0,
+                   help='seconds to wait for the release file (default 120)')
     p.add_argument('--selftest', action='store_true',
                    help='run parser and outcome self-tests without a server')
     return p
@@ -1283,13 +1371,26 @@ def _provenance_selftest():
         with tarfile.open(arc, 'w:gz') as tf:
             tf.add(rel, arcname='rel')
         asha, ssha = sha256_file(arc), sha256_file(srv)
-        got = verify_archive_member(arc, asha, 'rel/llama-server', ssha)
+        got = verify_archive_member(arc, asha, 'rel/llama-server', ssha, os.path.getsize(srv))
+        # a PAX GNU-sparse member declaring 10**15 bytes in a ~200-byte archive (round-48
+        # seat Sen2Live F1): refused before a byte of it is hashed
+        sparse = os.path.join(d, 'sparse.tar.gz')
+        with tarfile.open(sparse, 'w:gz', format=tarfile.PAX_FORMAT) as tf:
+            ti = tarfile.TarInfo('rel/llama-server')
+            ti.size = 1
+            ti.pax_headers = {'GNU.sparse.map': '0,1', 'GNU.sparse.major': '1',
+                              'GNU.sparse.minor': '0',
+                              'GNU.sparse.realsize': str(10 ** 15)}
+            tf.addfile(ti, io.BytesIO(b'A'))
         if got != (asha, ssha):
             raise AssertionError('right archive and member not verified')
         for args, token in (((arc, '0' * 64, 'rel/llama-server', ssha), 'provenance-archive-digest-mismatch'),
                             ((arc, asha, 'rel/nope', ssha), 'provenance-member-absent'),
                             ((arc, asha, 'rel', ssha), 'provenance-member-not-a-file'),
-                            ((arc, asha, 'rel/llama-server', '1' * 64), 'provenance-member-digest-mismatch')):
+                            ((arc, asha, 'rel/llama-server', '1' * 64), 'provenance-member-digest-mismatch'),
+                            ((arc, asha, 'rel/llama-server', ssha, 1), 'provenance-member-size-mismatch'),
+                            ((sparse, sha256_file(sparse), 'rel/llama-server', ssha), 'provenance-member-sparse'),
+                            ((d, asha, 'rel/llama-server', ssha), 'provenance-archive-not-regular')):
             try:
                 verify_archive_member(*args)
             except SetupError as exc:
@@ -1477,6 +1578,10 @@ def main(argv=None):
                 parser.error('--model-url must be pinned to a 40-hex '
                              '/resolve/<commit>/ revision (v5)')
             model_commit = m.group(1)
+    if args.witness_dir is not None and not os.path.isdir(args.witness_dir):
+        parser.error('--witness-dir must be an existing directory')
+    if not args.witness_timeout > 0:
+        parser.error('--witness-timeout must be > 0')
 
     receipt = {
         'schema': SCHEMA,
@@ -1558,7 +1663,7 @@ def main(argv=None):
             # v5: verify provenance now, before anything is started
             archive_sha, member_sha = verify_archive_member(
                 args.server_archive, args.server_asset_sha256,
-                args.server_member, server_sha)
+                args.server_member, server_sha, os.path.getsize(server_real))
             receipt['schema'] = SCHEMA_V5
             receipt['provenance']['model']['commit'] = model_commit
             receipt['provenance']['verified'] = {
@@ -1752,6 +1857,14 @@ def main(argv=None):
             and bad_row.get('reason') == 'served-id-mismatch',
             {'exit': bad_probe['exit'], 'verdict': bad_row.get('verdict'),
              'reason': bad_row.get('reason')}))
+        if args.witness_dir is not None:
+            # round 49 (closure R5): hold the ready server up for an outside observer
+            receipt['witness'] = hold_for_witness(
+                args.witness_dir, proc, port, args.witness_timeout)
+            err, owned_state = verify_live(proc, port, 'post-witness')
+            receipt['port_listener_ownership'] = owned_state
+            if err:
+                raise SetupError(err)
     except SetupError as exc:
         receipt['setup_error'] = exc.code
     except Terminated as exc:

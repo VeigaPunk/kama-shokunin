@@ -1,5 +1,27 @@
 #!/usr/bin/env python3
-"""append-only-audit.py (v3) - set the lane's declared append-only files against its git history.
+"""append-only-audit.py (v4 definitions, v3 output) - set the lane's declared append-only files against its git history.
+
+v4 (round 49) closes the two escape hatches the round-48 wave found (seats K1Regions,
+K1Binding; corpus/lessons/round-48-verifier-spotcheck.md R5); the JSON output shape is
+unchanged (`"schema": "append-only-audit/v3"`) and gains `"definition": "v4"`:
+  origin(l)  the `## ` titles (None before the first heading) holding the line text l in
+             the file's blob at the first commit of `git rev-list --topo-order --reverse
+             <to>` whose blob of that file holds l
+  ungraded   a deleted line is ungraded only when its parent section is an eligible
+             exempt title (v3) AND origin(l) contains one of the file's exempt titles:
+             dated text moved under an exempt heading and dropped there is graded
+             (v3 left it ungraded while the head kept its size)
+  binding    the row token must occur as a whole word (not preceded or followed by
+             [a-z0-9_]: `log` inside `catalog` no longer binds); a line with not, never,
+             no, nor, neither, non, isn't, aren't or `no longer` within three words before
+             `append-only`/`append only` is a negation (v3's four strings still apply); a
+             wildcard row binds only through a line naming its token (a covered file
+             merely saying append-only is a self-declaration and no longer binds)
+The round-49 C2 counter (tools/round49-append-audit-v4-check.py, frozen before this
+tool) checks these on eight constructed fixtures and bounds the lane's ungraded lines
+by its own origin count.
+
+v3 (round 48) text, kept:
 
 v3 (round 48) grades the lane's rule as the lane declares it, carve-outs included
 (round-47 closure D5; seats Rev1Restore, K1Design, V1Ctr, X1Stable, K1Fixture):
@@ -187,16 +209,28 @@ def row_token(pattern):
     return base.rsplit(".", 1)[0] if "." in base else base
 
 
+NEG_WINDOW = re.compile(r"(?:\b(?:not|never|no|nor|neither|non|isn't|aren't)\b|\bno longer\b)"
+                        r"(?:[\s\-]+[\w'’]+){0,3}?[\s\-]+append[- ]only")
+
+
 def binds(text, pattern, decl_path):
     """A declaring line binds a row when it says append-only, is not a negation, and either
-    the declaring file is one the row covers or the line names the row's token."""
+    the declaring file is the row's (non-wildcard) path or the line names the row's token
+    as a whole word. v4 (round 49, round-48 seat K1Binding): the token match is
+    word-bounded (`log` inside `catalog` no longer binds), a negation within three words
+    before `append-only` unbinds (`not strictly append-only`), and a wildcard row is never
+    bound by a line of a file it covers merely saying append-only (self-declaration)."""
     if text is None:
         return False
     low = text.lower()
-    if not ("append-only" in low or "append only" in low) or any(n in low for n in NEGATIONS):
+    if not ("append-only" in low or "append only" in low) or any(n in low for n in NEGATIONS) \
+            or NEG_WINDOW.search(low):
         return False
     tok = row_token(pattern).lower()
-    return fnmatch.fnmatchcase(decl_path, pattern) or (bool(tok) and tok in low)
+    wild = any(ch in pattern for ch in "*?[")
+    if not wild and fnmatch.fnmatchcase(decl_path, pattern):
+        return True
+    return bool(tok) and re.search(r"(?<![a-z0-9_])" + re.escape(tok) + r"(?![a-z0-9_])", low) is not None
 
 
 def line_at(repo, rev, path, n):
@@ -384,6 +418,28 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
             commits.append(parts[0])
             parents[parts[0]] = parts[1] if len(parts) > 1 else None
     events, binary = [], []
+    origin_cache = {}
+
+    def origins(f):
+        """v4 origin: line text -> the `## ` titles holding it in the first commit's blob of f
+        (rev-list order) that holds it."""
+        if f not in origin_cache:
+            orig, seen = {}, set()
+            bl = r.blobs([f"{x}:{f}" for x in commits])
+            for x in commits:
+                b = bl[f"{x}:{f}"]
+                if b is None or b in seen:
+                    continue
+                seen.add(b)
+                body = r.list_lines(b)
+                fresh = collections.defaultdict(set)
+                for ln, t in zip(body, sections(body)):
+                    if ln not in orig:
+                        fresh[ln].add(t)
+                orig.update(fresh)
+            origin_cache[f] = orig
+        return origin_cache[f]
+
     for i, c in enumerate(commits):
         p = parents[c]
         if p is None or not files:
@@ -410,11 +466,13 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
                         if max(r.section_counts(wb[f"{x}:{f}"])[t] if wb[f"{x}:{f}"] else 0 for x in window)
                         >= pcount[t]}
             G = collections.Counter()
+            org = origins(f) if titles else {}
             for pos, text in dl:
                 s = psec[pos - 1]
                 if prefixes and not any(s is not None and s.startswith(q) for q in prefixes):
                     continue
-                if s in eligible:
+                # v4: the carve-out covers only text born in an exempt section (origin)
+                if s in eligible and org.get(text, frozenset()) & titles:
                     continue
                 G[text] += 1
             ng = sum(G.values())
@@ -443,7 +501,8 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
                                 for e in events),
                "vanished": len(gone), "unmatched": len(nomatch), "binary": len(binary),
                "bad_declarations": sum(not d["ok"] for d in decls)}
-    return {"schema": SCHEMA, "to": to_full, "threshold": threshold, "contract": label, "files": files,
+    return {"schema": SCHEMA, "definition": "v4", "to": to_full, "threshold": threshold, "contract": label,
+            "files": files,
             "commits": len(commits), "events": events, "declarations": decls, "vanished": gone,
             "unmatched_patterns": nomatch, "binary_changes": binary, "summary": summary}
 
@@ -846,6 +905,33 @@ def selftest(root):
         return (len(e) == 1 and e[0]["graded"] == 24 and e[0]["ungraded"] == 0
                 and e[0]["status"] == "unrestored" and exit_code(res) == 1), str(e)
 
+    # ---- v4 (round 49): origin-aware carve-out, word-bounded token, negation window,
+    # no wildcard self-declaration (round-48 seats K1Regions, K1Binding)
+    def t_launder_through_head():
+        # dated text moved under the exempt head (a 1-line diff), then dropped there while
+        # the head regrows past its parent size: v3 left it ungraded, v4 grades it
+        f = scored([SCORE], head + tail)
+        f.commit({"score.md": head + tail[1:] + ["## Round 1", "kept"]})
+        c = f.commit({"score.md": head + lines("regrow", 30) + ["## Round 1", "kept"]})
+        res = audit(f.d, c)
+        e = [x for x in res["events"] if x["commit"] == c]
+        return (len(e) == 1 and e[0]["deleted"] == 25 and e[0]["graded"] == 25 and e[0]["ungraded"] == 0
+                and e[0]["status"] == "unrestored" and exit_code(res) == 1), str(res["events"])
+
+    def t_binding_v4():
+        f = Fixture(root)
+        f.commit({"NOTES.md": ["# n", "the catalog is append-only", "score.md is not strictly append-only",
+                               "LOG.md is append-only"],
+                  "notes/a.md": ["this file is append-only"], "notes/b.md": ["x"], "score.md": ["s"],
+                  "LOG.md": ["x"],
+                  CONTRACT: [HEADER, "LOG.md\tA\tNOTES.md:2\t*\tsubstring token",
+                             "score.md\tA\tNOTES.md:3\t*\tnegation window",
+                             "notes/*.md\tA\tnotes/a.md:1\t*\twildcard self-declaration",
+                             "LOG.md\tA\tNOTES.md:4\t*\tbound"]})
+        res = audit(f.d, "HEAD")
+        oks = [d["ok"] for d in res["declarations"]]
+        return oks == [False, False, False, True] and exit_code(res) == 1, str(res["declarations"])
+
     for name, fn in [("no-deletion", t_none), ("below-threshold", t_below),
                      ("exact-threshold-unrestored", t_exact_unrestored), ("restored-later", t_restored),
                      ("partial", t_partial), ("undeclared-file", t_undeclared),
@@ -858,7 +944,8 @@ def selftest(root):
                      ("exempt-gutted", t_exempt_gutted), ("exempt-gutted-then-regrown", t_exempt_gutted_then_regrown),
                      ("dated-rewritten", t_dated_rewritten), ("only-errata", t_only_errata), ("clamp", t_clamp),
                      ("bad-declarations", t_bad_declarations), ("clean", t_clean),
-                     ("preamble-graded", t_preamble_graded)]:
+                     ("preamble-graded", t_preamble_graded), ("launder-through-head", t_launder_through_head),
+                     ("binding-v4", t_binding_v4)]:
         case(name, fn)
     for name, ok, why in cases:
         print(f"{'pass' if ok else 'FAIL'} {name}" + ("" if ok else f": {why[:300]}"))
