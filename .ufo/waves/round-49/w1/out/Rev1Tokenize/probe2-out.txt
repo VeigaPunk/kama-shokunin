@@ -1,0 +1,34 @@
+counter gguf_tokens: n = 512 sha ok = True
+[nonce] text='kama witness 771f62308fafbb2f'
+   ids      = [409, 314, 412, 263, 275, 416, 406, 419, 410, 491, 491, 475, 431, 490, 479, 472, 477, 487, 431, 412, 431, 430, 430, 479, 431]
+   pieces   = [" k", "am", "a", " w", "it", "n", "es", "s", " ", "7", "7", "1", "f", "6", "2", "3", "0", "8", "f", "a", "f", "b", "b", "2", "f"]
+   vocab[id]= ["▁k", "am", "a", "▁w", "it", "n", "es", "s", "▁", "7", "7", "1", "f", "6", "2", "3", "0", "8", "f", "a", "f", "b", "b", "2", "f"]
+   counter_bad = [] n_bad 0
+   detok = ' kama witness 771f62308fafbb2f' counter_detok_ok = True
+[cafe] text='café'
+   ids      = [280, 412, 431, 485]
+   pieces   = [" c", "a", "f", "é"]
+   vocab[id]= ["▁c", "a", "f", "é"]
+   counter_bad = [] n_bad 0
+   detok = ' café' counter_detok_ok = True
+[cjk] text='智'
+   ids      = [410, 233, 156, 189]
+   pieces   = [" ", [230], [153], [186]]
+   vocab[id]= ["▁", "<0xE6>", "<0x99>", "<0xBA>"]
+   counter_bad = [{"id": 233, "piece": [230]}, {"id": 156, "piece": [153]}, {"id": 189, "piece": [186]}] n_bad 3
+   detok = ' 智' counter_detok_ok = True
+[emoji] text='😀'
+   ids      = [410, 243, 162, 155, 131]
+   pieces   = [" ", [240], [159], [152], [128]]
+   vocab[id]= ["▁", "<0xF0>", "<0x9F>", "<0x98>", "<0x80>"]
+   counter_bad = [{"id": 243, "piece": [240]}, {"id": 162, "piece": [159]}, {"id": 155, "piece": [152]}, {"id": 131, "piece": [128]}] n_bad 4
+   detok = ' 😀' counter_detok_ok = True
+[plain] text='kama witness '
+   ids      = [409, 314, 412, 263, 275, 416, 406, 419, 410]
+   pieces   = [" k", "am", "a", " w", "it", "n", "es", "s", " "]
+   vocab[id]= ["▁k", "am", "a", "▁w", "it", "n", "es", "s", "▁"]
+   counter_bad = [] n_bad 0
+   detok = ' kama witness ' counter_detok_ok = True
+byte-token ids in vocab range 0..258: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+vocab[3]= '<0x00>' vocab[485]= 'é' vocab[503]= '€'
+detokenize([3,4]) = '\x00\x01>'

@@ -1,0 +1,87 @@
+Seat S9Scorecard — commands, tips and exits (2026-10-26)
+========================================================
+Scratch: S=/fast/scratch/hyaku/kama-r49/S9Scorecard (TMPDIR=$S)
+Clone:   git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin $S/lane
+         toplevel asserted = $S/lane ; HEAD = 122c4ee95701587cef7f4342c3d175622ec2f4ad (lane HEAD)
+Draft:   commit e68ba975d2b1a15258c2138a2564346c57ec6c60  "draft: round-49 SCORECARD section and head re-anchors"
+         (SCORECARD.md only, 1 file changed, 67 insertions(+), 8 deletions(-); round-48 section byte-intact)
+Sim A:   commit 9b272dce26088cbc16132e7da329e88039b29db7  "test: S9Skill registry rows (simulation)"
+Sim B:   commit 8dfe3f17a28d604910c5370c26eaf4cabb951f09  "test: S9Cap evidence cells (province coupling)"
+Both simulations were reset away; the clone is back at e68ba975.
+
+1. round41-scorecard-reconcile.py at e68ba975
+   $ python3 tools/round41-scorecard-reconcile.py --repo . --tip e68ba975... --out out/r41.out
+   tip=e68ba975d2b1a15258c2138a2564346c57ec6c60
+   axes=6 facts=36 hash_bad=0 lines_bad=0 run_bad=0 dead=0 score_bad=0 hollow=0 mismatches=0 met=True
+   exit=0                                                    [r41.out]
+
+2. round42-selfdesc-reconcile.py at e68ba975
+   $ python3 tools/round42-selfdesc-reconcile.py --repo . --tip e68ba975... --out out/r42.out
+   tip=e68ba975d2b1a15258c2138a2564346c57ec6c60
+   r41=0 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 mismatches=0 maxN=49 met=True
+   exit=0                                                    [r42.out]
+
+3. round43-registry-audit.py at e68ba975
+   $ python3 tools/round43-registry-audit.py --repo . --tip e68ba975... --out out/r43.out
+   tip=e68ba975d2b1a15258c2138a2564346c57ec6c60
+   unreg=2 defect=0 flags=0 pins=0 selftest=1 dc=0 spot=0 hidden=0 pop=44 registered=42 mismatches=3 met=False
+   detail: gate unregistered tools/round49-append-audit-v4-check.py
+   detail: gate unregistered tools/round49-replay-witness-audit.py
+   detail: selftest: documented 'GATE_SELFTEST pass=6 fail=0', run printed 'GATE_SELFTEST pass=5 fail=1' exit 1
+   exit=1                                                    [r43.out]
+
+4. planned-pointer-check.py on the drafted file
+   $ python3 tools/planned-pointer-check.py SCORECARD.md
+   pointer: ok (The live plan is `### Planned (round 50)` at the end of this file)
+   measured: ok (### Round-14 ... ### Round-49 measured results)   [11 refs, all resolve]
+   met=True ; exit=0                                         [pointer.out]
+
+5. gate-registry-check.py --selftest at e68ba975
+   FAIL lane-tip e68ba975d2b1: exit=1 line='registered 42 unregistered 2 defective 0'
+   GATE_SELFTEST pass=5 fail=1   (SKILL.md:1330 documents pass=6 fail=0)
+
+6. Simulation A (S9Skill's six registry rows appended to SKILL.md), tip 9b272dce
+   $ python3 tools/gate-registry-check.py --rev 9b272dce...
+   registered 44 unregistered 0 defective 0 ; exit=0          [gate-with-skillrows.out]
+   $ python3 tools/round43-registry-audit.py --repo . --tip 9b272dce... --out out/r43-withrows.out
+   unreg=0 defect=0 flags=0 pins=0 selftest=0 dc=0 spot=0 hidden=0 pop=44 registered=44 mismatches=0 met=True
+   exit=0                                                    [r43-with-skillrows.out]
+
+7. Simulation B (round-49 canon evidence cells citing tools/round49-*.py, as S9Cap's draft does), tip 8dfe3f17
+   $ python3 tools/round42-selfdesc-reconcile.py --repo . --tip 8dfe3f17... --out out/r42-s9cap.out
+   r41=0 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=2 rel=0 mismatches=2 maxN=49 met=False
+   detail: province: PROVINCE.md lacks tools/round49-append-audit-v4-check.py (capability append-only-audit)
+   detail: province: PROVINCE.md lacks tools/round49-replay-witness-audit.py (capability live-receipt-replay)
+   exit=1                                                    [r42-with-s9cap-cells.out]
+
+8. Integrity checks on the draft at e68ba975
+   $ python3 tools/digest-ledger.py scan --repo . --rev e68ba975...
+   tokens=130 blob=114 external_ok=9 external_absent=1 unverifiable=5 wrong_flagged=1 ledger_bad=0 wrong_unflagged=0 unknown=0 ; exit=0
+   $ python3 tools/hexrun-census.py scan --repo . --rev e68ba975...
+   tokens=1837 distinct=299 lane_oid=193 md5_blob=1 upstream_ok=92 unverifiable=9 wrong_flagged=2 ledger_bad=0 unknown=2 ; exit=1
+   $ python3 tools/hexrun-census.py scan --repo . --rev 438127bc...   (base)
+   tokens=1832 distinct=296 lane_oid=190 md5_blob=1 upstream_ok=92 unverifiable=9 wrong_flagged=2 ledger_bad=0 unknown=2 ; exit=1
+   $ python3 tools/append-only-audit.py --repo . --to e68ba975...
+   summary commits=321 files=92 events=5 restored=5 partial=0 unrestored=0 ungraded=0 ungraded_lines=82 regressed=0 vanished=0 unmatched=0 binary=0 bad_declarations=0 ; exit=0
+   $ git show 122c4ee9:SCORECARD.md | sed -n 6p  vs  the banner appended under "### Superseded head banners"
+   cmp: identical ("BANNER BYTE-EXACT")
+
+9. Head-table run facts re-executed at 122c4ee9 (the tip the draft is applied to; unchanged by the draft)
+   bash tools/test-snapshot.sh                      -> RESULT pass=30 fail=0
+   python3 tools/pin-watch.py selftest              -> selftest pass=9 fail=0
+   python3 tools/report-landing-audit.py --selftest -> selftest cases=79 failed=0
+   python3 tools/sources-append-only.py --selftest  -> 45/45 selftest cases passed
+   python3 tools/citation-provenance.py --selftest  -> selftest: ok (24 cases)
+   python3 tools/capability-repertoire-audit.py --selftest -> CAP_SELFTEST pass=2 fail=0
+   python3 tools/instrument-agreement.py --selftest -> IA_SELFTEST pass=4 fail=0
+   recheck count (S001-S477 with a cadence)         -> 218
+   corpus/lessons/*verifier-spotcheck.md blobs      -> 35   (head row said 34: stale, re-anchored)
+   registry/verdict-ledger.tsv data rows            -> 204  (205 lines incl. header)
+   corpus/knowledge/*.md (excl. engine-sides, processes) -> 34 ; cross-lane-scope table lines -> 16
+
+No tool was installed or upgraded. No pacman. No service started or stopped by this seat; the
+llama-server processes visible in `pgrep -af llama-server` at report time belong to sibling seats'
+scratch trees under /fast/scratch/hyaku/kama-r49/ (M1Live, X1Kill), not to this seat.
+
+10. Scratch removed at the end of the seat: rm -rf /fast/scratch/hyaku/kama-r49/S9Scorecard
+    The commits named above existed only in that clone; every receipt cited is copied into this directory.

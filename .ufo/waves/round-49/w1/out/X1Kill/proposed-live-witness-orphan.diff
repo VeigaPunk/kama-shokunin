@@ -1,0 +1,18 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -291,12 +291,14 @@
+         json.dump(ready, fh)
+     os.replace(tmp, os.path.join(wdir, 'ready.json'))
+     release = os.path.join(wdir, 'release')
++    parent = os.getppid()
+     t0 = time.monotonic()
+     while (not os.path.exists(release) and time.monotonic() - t0 < timeout
+-           and _child_running(proc)):
++           and _child_running(proc) and os.getppid() == parent):
+         time.sleep(0.05)
+     return {'schema': WITNESS_SCHEMA, 'dir': os.path.abspath(wdir), 'port': port,
+             'pid': proc.pid, 'released': os.path.exists(release),
++            'orphaned': os.getppid() != parent,
+             'waited_ms': int((time.monotonic() - t0) * 1000)}
+ 
+ 

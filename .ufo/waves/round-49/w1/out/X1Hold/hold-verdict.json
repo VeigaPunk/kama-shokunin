@@ -1,0 +1,73 @@
+{
+ "schema": "x1hold/hold-check/v1",
+ "lane_commit": "74558c71c38ceaeace15fd4cf8aa9d84977584b1",
+ "original": "corpus/lessons/round-48 base: .ufo/waves/round-48/c2/live/receipt-1.json",
+ "runs": {
+  "unwitnessed": {
+   "replay_exit": 0,
+   "match": true,
+   "mismatches_vs_original": 0,
+   "span_ms": 353,
+   "witness": null,
+   "term_wait_ms": 3,
+   "returncode": 0,
+   "props_body_sha": "2d6b13c5e4780edf3feb454f625d30b9858512ab3d00efe202371247ff4d7cc0"
+  },
+  "witnessed": {
+   "replay_exit": 0,
+   "match": true,
+   "mismatches_vs_original": 0,
+   "span_ms": 3465,
+   "witness": {
+    "released": true,
+    "waited_ms": 3105,
+    "pid_matches_child_pid": true,
+    "port_matches": true
+   },
+   "term_wait_ms": 3,
+   "returncode": 0,
+   "props_body_sha": "be4c32b68b28ef881e1cfdc1bb61822bafc56f2ff466c9cdabc9002598da1e9a"
+  },
+  "original": {
+   "span_ms": 370,
+   "term_wait_ms": 3,
+   "returncode": 0,
+   "props_body_sha": "f6cb10aaadd5ca999e3b0fe4855ed44eb4efa2b33f3e93a9752de8e3fd2422e6"
+  }
+ },
+ "cli_compare": {
+  "a_vs_b": "match=True mismatches=0 exit=0",
+  "orig_vs_a": "match=True mismatches=0 exit=0",
+  "orig_vs_b": "match=True mismatches=0 exit=0"
+ },
+ "leaves": {
+  "total": 414,
+  "equal": 376,
+  "differ": 38,
+  "compared_by_compare": 60
+ },
+ "verdict": "holding changes no value the replay compares; only the witness block (6 leaves) and instance timing/paths differ",
+ "loading_envelope_identical": true,
+ "slots_body_sha_identical": {
+  "orig": true,
+  "a": true,
+  "b": true,
+  "sha": "6d345b4035d771f3303f5be226fae1ce9cc9c45182d43587ac073b2f583efb30"
+ },
+ "checks_identical": {
+  "n": 11,
+  "passed": 11,
+  "all_three": true
+ },
+ "finding": {
+  "id": "F1",
+  "kind": "documentation-gap, frozen files, not a counter failure",
+  "what": "/props response carries a random per-process `media_marker`, so captures.props.body_sha256 is unique per run; the replay compares only captures.props.fields (5 leaves).",
+  "evidence": "two direct servers, same argv, ports 39021/39022: bodies both 2079 bytes, differ only at .media_marker; within one process the body is byte-identical across two reads 0.4 s apart; props body_sha256 differs across orig/a/b while fields are equal.",
+  "file_lines": [
+   "tools/kama-live-replay.py:18-19 (exclusion list omits media_marker)",
+   "tools/kama-live-replay.py:168-176 (projection uses captures.props.fields)",
+   "tools/kama-llamacpp-live.py:899-914 (only 5 props fields recorded)"
+  ]
+ }
+}

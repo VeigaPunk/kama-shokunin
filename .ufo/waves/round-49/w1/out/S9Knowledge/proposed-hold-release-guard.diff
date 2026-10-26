@@ -1,0 +1,20 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -291,11 +291,16 @@
+     only that it waited, never what the observer saw."""
+     ready = {'schema': WITNESS_SCHEMA, 'port': port, 'pid': proc.pid,
+              'written_utc': _utc_now()}
++    # An observer's release must postdate this announcement, and a stale
++    # ready.json would name a dead pid: a reused witness directory is refused
++    # rather than half-honoured (round 49, S9Knowledge finding F1).
++    release = os.path.join(wdir, 'release')
++    if os.path.exists(release) or os.path.exists(os.path.join(wdir, 'ready.json')):
++        raise SetupError('witness-dir-not-fresh')
+     tmp = os.path.join(wdir, 'ready.json.tmp')
+     with open(tmp, 'w') as fh:
+         json.dump(ready, fh)
+     os.replace(tmp, os.path.join(wdir, 'ready.json'))
+-    release = os.path.join(wdir, 'release')
+     t0 = time.monotonic()
+     while (not os.path.exists(release) and time.monotonic() - t0 < timeout
+            and _child_running(proc)):

@@ -1,0 +1,22 @@
+Negation-class differential: the tool's NEGATIONS tuple vs its NEG_WINDOW regex.
+
+Predicate evaluated on every line of every file at commit c9ac0612 (= landed build +
+this seat's proposed deletions; the deletions do not touch binds()):
+  a = any(n in low for n in NEGATIONS)      # landed tools/append-only-audit.py:141
+  b = bool(NEG_WINDOW.search(low))          # landed tools/append-only-audit.py:212
+over lines that already pass the `append-only` / `append only` test.
+
+  4,191,050 lines in 24,597 files scanned
+  (a=False,b=False) 6864   neither class fires
+  (a=False,b=True)   237   NEG_WINDOW alone fires (e.g. "does not prove append-only",
+                           "no append-only violations", "It is not a full-hist...")
+  (a=True, b=True)   147   both fire (e.g. "... are not append-only by any declaration")
+  (a=True, b=False)    0   NEGATIONS alone fires: NONE in the whole lane
+
+So the four fixed strings are unreachable on the lane's own text: NEG_WINDOW covers
+every line they match.  Deleting the tuple and the `any(...)` clause would therefore be
+lane-neutral *today*.  It is KEPT because the frozen C2 counter's definition says the
+two apply together ("v3's four fixed strings still apply", tools/round49-append-audit-v4-check.py
+docstring, `negation` bullet) and its own binder (tools/round49-append-audit-v4-check.py:116
+`says()`) keeps NEG3 + NEGW; dropping the strings from the tool would make its binder
+bind a line the counter unbinds for the cost of one line and one clause.

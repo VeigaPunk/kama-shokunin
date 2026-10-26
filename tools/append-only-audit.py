@@ -16,7 +16,12 @@ unchanged (`"schema": "append-only-audit/v3"`) and gains `"definition": "v4"`:
              no, nor, neither, non, isn't, aren't or `no longer` within three words before
              `append-only`/`append only` is a negation (v3's four strings still apply); a
              wildcard row binds only through a line naming its token (a covered file
-             merely saying append-only is a self-declaration and no longer binds)
+             merely saying append-only is a self-declaration and no longer binds).
+             Integration (round-49 seat K2Negation F1): `cannot`, `can't`, curly
+             apostrophes (isn’t, aren’t, can’t) and en/em dashes between the words count
+             too. Known limits (K2Negation): other punctuation breaks the window (`not, as
+             of round 40, append-only` binds), trailing negations (`append-only? No.`) are
+             not read, and `no edits append-only` is read as a negation
 The round-49 C2 counter (tools/round49-append-audit-v4-check.py, frozen before this
 tool) checks these on eight constructed fixtures and bounds the lane's ungraded lines
 by its own origin count.
@@ -209,8 +214,11 @@ def row_token(pattern):
     return base.rsplit(".", 1)[0] if "." in base else base
 
 
-NEG_WINDOW = re.compile(r"(?:\b(?:not|never|no|nor|neither|non|isn't|aren't)\b|\bno longer\b)"
-                        r"(?:[\s\-]+[\w'’]+){0,3}?[\s\-]+append[- ]only")
+# integration (round-49 seat K2Negation F1): `cannot`/`can't`, curly apostrophes and en/em
+# dashes as separators are negations too; punctuation other than dashes still breaks the
+# window (widening it would unbind declarations such as `no edits: append-only`, F2)
+NEG_WINDOW = re.compile(r"(?:\b(?:not|never|no|nor|neither|non|cannot|can['’]t|isn['’]t|aren['’]t)\b"
+                        r"|\bno longer\b)(?:[\s\-–—]+[\w'’]+){0,3}?[\s\-–—]+append[- ]only")
 
 
 def binds(text, pattern, decl_path):
@@ -921,16 +929,102 @@ def selftest(root):
     def t_binding_v4():
         f = Fixture(root)
         f.commit({"NOTES.md": ["# n", "the catalog is append-only", "score.md is not strictly append-only",
-                               "LOG.md is append-only"],
+                               "LOG.md is append-only", "score.md cannot be called append-only",
+                               "score.md isn’t append-only", "score.md is not—append-only"],
                   "notes/a.md": ["this file is append-only"], "notes/b.md": ["x"], "score.md": ["s"],
                   "LOG.md": ["x"],
                   CONTRACT: [HEADER, "LOG.md\tA\tNOTES.md:2\t*\tsubstring token",
                              "score.md\tA\tNOTES.md:3\t*\tnegation window",
                              "notes/*.md\tA\tnotes/a.md:1\t*\twildcard self-declaration",
-                             "LOG.md\tA\tNOTES.md:4\t*\tbound"]})
+                             "LOG.md\tA\tNOTES.md:4\t*\tbound",
+                             "score.md\tA\tNOTES.md:5\t*\tcannot (seat K2Negation)",
+                             "score.md\tA\tNOTES.md:6\t*\tcurly apostrophe",
+                             "score.md\tA\tNOTES.md:7\t*\tem dash"]})
         res = audit(f.d, "HEAD")
         oks = [d["ok"] for d in res["declarations"]]
-        return oks == [False, False, False, True] and exit_code(res) == 1, str(res["declarations"])
+        return oks == [False, False, False, True, False, False, False] and exit_code(res) == 1, \
+            str(res["declarations"])
+
+    def t_wildcard_token_bound():
+        # v4: a wildcard row binds through a line naming its directory token as a whole word,
+        # and not through the token inside a longer word. `contract` covers the positive only
+        # in passing (its declaring line is the token itself, which v3's substring test also
+        # accepts); this pins both sides of the rule.
+        f = Fixture(root)
+        f.commit({"NOTES.md": ["# n", "the logs directory is append-only",
+                               "our catalogs are append-only"],
+                  "corpus/logs/a.md": ["this file is append-only"],
+                  CONTRACT: [HEADER, "corpus/logs/*.md\tA\tNOTES.md:2\t*\tbound by token",
+                             "corpus/logs/*.md\tA\tNOTES.md:3\t*\ttoken inside longer word"]})
+        res = audit(f.d, "HEAD")
+        oks = [d["ok"] for d in res["declarations"]]
+        return oks == [True, False] and exit_code(res) == 1, str(res["declarations"])
+
+    def t_origin_preamble_moved_under_head():
+        # preamble-born text (origin None) moved under the exempt head and dropped there while
+        # the head regrows past its parent size: the carve-out needs an origin inside an exempt
+        # title, so None never qualifies and the deletion is graded (v4 origin clause, None side)
+        p = lines("p", 25)
+        f = scored([SCORE], ["# score"] + p + head[1:] + tail)
+        f.commit({"score.md": ["# score", "## Axes"] + head[2:] + p + tail})
+        c = f.commit({"score.md": ["# score", "## Axes"] + head[2:] + lines("regrow", 30) + tail})
+        res = audit(f.d, c)
+        e = [x for x in res["events"] if x["commit"] == c]
+        return (len(e) == 1 and e[0]["deleted"] == 25 and e[0]["graded"] == 25 and e[0]["ungraded"] == 0
+                and e[0]["status"] == "unrestored" and exit_code(res) == 1), str(res["events"])
+
+    def t_negation_window_three_vs_four():
+        # the negation window reaches three words before append-only, not four: both sides of
+        # the {0,3} bound are pinned (v3 had no window and bound both lines)
+        f = Fixture(root)
+        f.commit({"NOTES.md": ["# n", "score.md is not yet considered strictly append-only",
+                               "LOG.md is not yet really considered strictly append-only"],
+                  "score.md": ["s"], "LOG.md": ["x"],
+                  CONTRACT: [HEADER, "score.md\tA\tNOTES.md:2\t*\tthree words",
+                             "LOG.md\tA\tNOTES.md:3\t*\tfour words"]})
+        res = audit(f.d, "HEAD")
+        oks = [d["ok"] for d in res["declarations"]]
+        return oks == [False, True] and exit_code(res) == 1, str(res["declarations"])
+
+    def t_negation_curly_apostrophe():
+        # a word carrying a typographic apostrophe still counts as one word inside the negation
+        # window (v4 `[\\w'\u2019]`); dropping U+2019 from the class binds the line
+        f = Fixture(root)
+        f.commit({"NOTES.md": ["# n", "score.md is not the round\u2019s append-only log",
+                               "LOG.md is not the round's append-only log"],
+                  "score.md": ["s"], "LOG.md": ["x"],
+                  CONTRACT: [HEADER, "score.md\tA\tNOTES.md:2\t*\tcurly",
+                             "LOG.md\tA\tNOTES.md:3\t*\tascii"]})
+        res = audit(f.d, "HEAD")
+        oks = [d["ok"] for d in res["declarations"]]
+        return oks == [False, False] and exit_code(res) == 1, str(res["declarations"])
+
+    def t_origin_multi_title():
+        # origin(l) may hold several titles; one of them being exempt keeps the line ungraded
+        # (`origin ... contains one of`). A line born both under the head and under a dated
+        # heading is exempt (v4); a single-origin reading grades it.
+        h = lines("h", 24) + ["shared line"]
+        d = ["shared line"] + lines("d", 24)
+        f = scored([SCORE], ["# score", "## Axes"] + h + ["## Round 1"] + d)
+        c = f.commit({"score.md": ["# score", "## Axes"] + h[:-1] + lines("regrow", 30)
+                      + ["## Round 1"] + d})
+        res = audit(f.d, c, threshold=1)
+        e = [x for x in res["events"] if x["commit"] == c]
+        return (len(e) == 1 and e[0]["deleted"] == 1 and e[0]["graded"] == 0 and e[0]["ungraded"] == 1
+                and e[0]["status"] == "ungraded" and exit_code(res) == 0), str(res["events"])
+
+    def t_negation_typographic_isnt():
+        # the documented negation set is `isn't`/`aren't`, but both spellings in NEGATIONS and
+        # NEG_WINDOW are ASCII-only: `isn\u2019t append-only` binds on the build commit
+        # (already covered by the uncommitted integration edit from seat K2Negation F1)
+        f = Fixture(root)
+        f.commit({"NOTES.md": ["# n", "LOG.md isn\u2019t append-only", "QQ.md aren\u2019t append-only"],
+                  "LOG.md": ["x"], "QQ.md": ["x"],
+                  CONTRACT: [HEADER, "LOG.md\tA\tNOTES.md:2\t*\tisn't curly",
+                             "QQ.md\tA\tNOTES.md:3\t*\taren't curly"]})
+        res = audit(f.d, "HEAD")
+        oks = [d["ok"] for d in res["declarations"]]
+        return oks == [False, False], str(res["declarations"])
 
     for name, fn in [("no-deletion", t_none), ("below-threshold", t_below),
                      ("exact-threshold-unrestored", t_exact_unrestored), ("restored-later", t_restored),
@@ -945,7 +1039,13 @@ def selftest(root):
                      ("dated-rewritten", t_dated_rewritten), ("only-errata", t_only_errata), ("clamp", t_clamp),
                      ("bad-declarations", t_bad_declarations), ("clean", t_clean),
                      ("preamble-graded", t_preamble_graded), ("launder-through-head", t_launder_through_head),
-                     ("binding-v4", t_binding_v4)]:
+                     ("binding-v4", t_binding_v4),
+                     ("wildcard-token-bound", t_wildcard_token_bound),
+                     ("origin-preamble-moved-under-head", t_origin_preamble_moved_under_head),
+                     ("negation-window-three-vs-four", t_negation_window_three_vs_four),
+                     ("negation-curly-apostrophe", t_negation_curly_apostrophe),
+                     ("origin-multi-title", t_origin_multi_title),
+                     ("negation-typographic-isnt", t_negation_typographic_isnt)]:
         case(name, fn)
     for name, ok, why in cases:
         print(f"{'pass' if ok else 'FAIL'} {name}" + ("" if ok else f": {why[:300]}"))

@@ -1,0 +1,51 @@
+# S9Cap round-49 capability census - transcript (scratch clone, edit appended, nothing committed)
+$ git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin "$S/lane"
+$ git -C "$L" checkout --detach 74558c71c38ceaeace15fd4cf8aa9d84977584b1
+HEAD: 74558c71c38ceaeace15fd4cf8aa9d84977584b1
+ancestor of lane tip 122c4ee9: yes
+worktree changes (mine only):
+ M SCORECARD.md
+
+$ python3 tools/capability-repertoire-audit.py --repo "$L" --out cap.json   # cwd $L
+listed 11 observed 11 missing 0 unsubstantiated 0 met True
+exit=0
+
+$ python3 tools/capability-repertoire-audit.py --selftest
+CAP_SELFTEST pass=2 fail=0
+exit=0
+
+# sensitivity of the census to the two rows this seat rewords
+# arm A: every evidence pointer of live-receipt-replay rewritten to a non-existent path
+listed 11 observed 11 missing 0 unsubstantiated 1 met False
+exit=1
+# arm B: a capability-shaped table adding an observed name the canonical list does not carry
+listed 11 observed 12 missing 1 unsubstantiated 0 met False
+exit=1
+# restored: the seat block only
+exit=0
+listed 11 observed 11 missing 0 unsubstantiated 0 met True
+
+# the canonical table the counter resolved: names and first-working rounds
+canonical header line 2815
+  sources-registry                   first-working 10
+  ollama-offline-evidence-replay     first-working 14
+  live-llamacpp-lifecycle            first-working 16
+  gguf-declared-identity-replay      first-working 20
+  context-capacity-receipt           first-working 25
+  instrument-agreement               first-working 30
+  pin-watch                          first-working 41
+  digest-ledger                      first-working 42
+  hexrun-census                      first-working 43
+  append-only-audit                  first-working 46
+  live-receipt-replay                first-working 47
+
+# two further limits of the frozen census (round-49 observation, not a fix request)
+# arm C: a capability-shaped table inserted directly after the canonical marker wins as "canonical"
+listed 1 observed 11 missing 10 unsubstantiated 0 met False
+exit=1
+# arm D: the head mirror keeps the round-48 wording of both reworded rows while the canonical table is round-49
+listed 11 observed 11 missing 0 unsubstantiated 0 met True
+exit=0
+# restored: the seat block only, run again
+listed 11 observed 11 missing 0 unsubstantiated 0 met True
+exit=0

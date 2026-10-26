@@ -1,0 +1,57 @@
+diff --git c/tools/append-only-audit.py w/tools/append-only-audit.py
+index 84157d38..b470ee6d 100755
+--- c/tools/append-only-audit.py
++++ w/tools/append-only-audit.py
+@@ -16,7 +16,12 @@ unchanged (`"schema": "append-only-audit/v3"`) and gains `"definition": "v4"`:
+              no, nor, neither, non, isn't, aren't or `no longer` within three words before
+              `append-only`/`append only` is a negation (v3's four strings still apply); a
+              wildcard row binds only through a line naming its token (a covered file
+-             merely saying append-only is a self-declaration and no longer binds)
++             merely saying append-only is a self-declaration and no longer binds).
++             Integration (round-49 seat K2Negation F1): `cannot`, `can't`, curly
++             apostrophes (isn’t, aren’t, can’t) and en/em dashes between the words count
++             too. Known limits (K2Negation): other punctuation breaks the window (`not, as
++             of round 40, append-only` binds), trailing negations (`append-only? No.`) are
++             not read, and `no edits append-only` is read as a negation
+ The round-49 C2 counter (tools/round49-append-audit-v4-check.py, frozen before this
+ tool) checks these on eight constructed fixtures and bounds the lane's ungraded lines
+ by its own origin count.
+@@ -209,8 +214,11 @@ def row_token(pattern):
+     return base.rsplit(".", 1)[0] if "." in base else base
+ 
+ 
+-NEG_WINDOW = re.compile(r"(?:\b(?:not|never|no|nor|neither|non|isn't|aren't)\b|\bno longer\b)"
+-                        r"(?:[\s\-]+[\w'’]+){0,3}?[\s\-]+append[- ]only")
++# integration (round-49 seat K2Negation F1): `cannot`/`can't`, curly apostrophes and en/em
++# dashes as separators are negations too; punctuation other than dashes still breaks the
++# window (widening it would unbind declarations such as `no edits: append-only`, F2)
++NEG_WINDOW = re.compile(r"(?:\b(?:not|never|no|nor|neither|non|cannot|can['’]t|isn['’]t|aren['’]t)\b"
++                        r"|\bno longer\b)(?:[\s\-–—]+[\w'’]+){0,3}?[\s\-–—]+append[- ]only")
+ 
+ 
+ def binds(text, pattern, decl_path):
+@@ -921,16 +929,21 @@ def selftest(root):
+     def t_binding_v4():
+         f = Fixture(root)
+         f.commit({"NOTES.md": ["# n", "the catalog is append-only", "score.md is not strictly append-only",
+-                               "LOG.md is append-only"],
++                               "LOG.md is append-only", "score.md cannot be called append-only",
++                               "score.md isn’t append-only", "score.md is not—append-only"],
+                   "notes/a.md": ["this file is append-only"], "notes/b.md": ["x"], "score.md": ["s"],
+                   "LOG.md": ["x"],
+                   CONTRACT: [HEADER, "LOG.md\tA\tNOTES.md:2\t*\tsubstring token",
+                              "score.md\tA\tNOTES.md:3\t*\tnegation window",
+                              "notes/*.md\tA\tnotes/a.md:1\t*\twildcard self-declaration",
+-                             "LOG.md\tA\tNOTES.md:4\t*\tbound"]})
++                             "LOG.md\tA\tNOTES.md:4\t*\tbound",
++                             "score.md\tA\tNOTES.md:5\t*\tcannot (seat K2Negation)",
++                             "score.md\tA\tNOTES.md:6\t*\tcurly apostrophe",
++                             "score.md\tA\tNOTES.md:7\t*\tem dash"]})
+         res = audit(f.d, "HEAD")
+         oks = [d["ok"] for d in res["declarations"]]
+-        return oks == [False, False, False, True] and exit_code(res) == 1, str(res["declarations"])
++        return oks == [False, False, False, True, False, False, False] and exit_code(res) == 1, \
++            str(res["declarations"])
+ 
+     for name, fn in [("no-deletion", t_none), ("below-threshold", t_below),
+                      ("exact-threshold-unrestored", t_exact_unrestored), ("restored-later", t_restored),

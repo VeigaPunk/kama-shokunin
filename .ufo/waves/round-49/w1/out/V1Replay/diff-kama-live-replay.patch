@@ -1,0 +1,66 @@
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index 0201debd..53a28659 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -38,7 +38,11 @@ Writes J: {"schema": "kama-live-replay/v1", "receipt", "work", "rerun_receipt",
+ tool/probe digest differences between the original and the rerun (informational).
+ Exit: 0 the rerun matches; 1 it ran and differs; 2 refused (missing or wrong
+ provenance, digest mismatch, unsafe archive member, malformed receipt) or could not run.
+---timeout bounds the live child only (each download has its own 120 s socket timeout).
++--timeout bounds the live child only (each download has its own 120 s socket timeout);
++with --witness-dir (round 49) the live child also gets --witness-dir/--witness-timeout and
++the bound grows by the witness timeout. An observer reads <dir>/ready.json {port, pid} and
++creates <dir>/release; the rerun receipt's `witness` block records whether it was released.
++A witnessed replay matches exactly as an unwitnessed one: the witness is not compared.
+ --compare validates both receipts' provenance like a replay would, then prints
+ `compare match=<bool> mismatches=N` and one `mismatch:` line each; exit 0 equal,
+ 1 different, 2 unreadable or refused.
+@@ -227,7 +231,8 @@ def compare(orig, rerun):
+     return out
+ 
+ 
+-def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False):
++def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False, witness_dir=None,
++           witness_timeout=120.0):
+     res = {"schema": SCHEMA, "receipt": os.path.abspath(receipt_path), "work": os.path.abspath(work),
+            "rerun_receipt": None, "match": False, "refused": None, "mismatches": [], "inputs": {}}
+     try:
+@@ -267,7 +272,13 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False)
+                 "--model-url", need["model.url"], "--out", rerun]
+         if rec.get("schema") == LIVE_V5:
+             argv[-2:-2] = ["--server-archive", archive]
+-        p = subprocess.run(argv, capture_output=True, text=True, env=env, timeout=timeout)
++        if witness_dir is not None:
++            # round 49 (closure R5): the rerun server is held up for an outside observer
++            argv[-2:-2] = ["--witness-dir", os.path.abspath(witness_dir),
++                           "--witness-timeout", str(witness_timeout)]
++            res["witness_dir"] = os.path.abspath(witness_dir)
++        p = subprocess.run(argv, capture_output=True, text=True, env=env,
++                           timeout=timeout + (witness_timeout if witness_dir is not None else 0))
+         res["live_exit"] = p.returncode
+         if not os.path.isfile(rerun):
+             raise Refused(f"no-rerun-receipt:exit={p.returncode}:{p.stderr[-300:]}")
+@@ -436,6 +447,11 @@ def main(argv=None):
+                     help="compare two receipts with the replay rules (no network)")
+     ap.add_argument("--selftest", action="store_true")
+     ap.add_argument("--scratch", help="selftest root (default TMPDIR)")
++    ap.add_argument("--witness-dir", help="existing directory passed to the live tool: it writes "
++                    "ready.json {port, pid} there and holds the rerun server until a `release` file "
++                    "appears (round 49)")
++    ap.add_argument("--witness-timeout", type=float, default=120.0,
++                    help="seconds the live tool waits for `release` (default 120)")
+     a = ap.parse_args(argv)
+     if a.selftest:
+         return _selftest(a.scratch or tempfile.gettempdir())
+@@ -462,7 +478,10 @@ def main(argv=None):
+         return 0 if not mism else 1
+     if not (a.receipt and a.work and a.out):
+         ap.error("--receipt, --work and --out are required")
+-    res, code = replay(a.receipt, a.work, a.live, a.timeout)
++    if a.witness_dir is not None and not os.path.isdir(a.witness_dir):
++        ap.error("--witness-dir must be an existing directory")
++    res, code = replay(a.receipt, a.work, a.live, a.timeout, witness_dir=a.witness_dir,
++                       witness_timeout=a.witness_timeout)
+     with open(a.out, "w") as fh:
+         json.dump(res, fh, indent=1)
+     print(f"replay match={res['match']} refused={res['refused']} mismatches={len(res['mismatches'])} exit={code}")

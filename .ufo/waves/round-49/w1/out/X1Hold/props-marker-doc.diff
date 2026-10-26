@@ -1,0 +1,23 @@
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -15,7 +15,8 @@
+ captured surfaces.
+ 
+ Stable projection (instance facts - ports, pids, times, paths, log text, the
+-models body's per-request ``created`` - are excluded):
++models body's per-request ``created`` and the /props body's random
++``media_marker`` - are excluded):
+   props      captures.props.fields
+   slots      captures.slots element_count and body_sha256
+   health     captures.health status and body_sha256
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -901,6 +901,8 @@
+         doc = json.loads(props_res['body'])
+         if isinstance(doc, dict):
+             dgs = doc.get('default_generation_settings')
++            # /props also carries a random per-process ``media_marker`` and the
++            # model path, so only these fields are stable across runs.
+             props_fields = {
+                 'model_alias': doc.get('model_alias'),
+                 'total_slots': doc.get('total_slots'),

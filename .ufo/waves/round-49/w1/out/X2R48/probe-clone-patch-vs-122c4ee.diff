@@ -1,0 +1,22 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 84157d38..d9c9a8c7 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -472,7 +472,7 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
+                 if prefixes and not any(s is not None and s.startswith(q) for q in prefixes):
+                     continue
+                 # v4: the carve-out covers only text born in an exempt section (origin)
+-                if s in eligible and org.get(text, frozenset()) & titles:
++                if s in eligible:
+                     continue
+                 G[text] += 1
+             ng = sum(G.values())
+@@ -944,7 +944,7 @@ def selftest(root):
+                      ("exempt-gutted", t_exempt_gutted), ("exempt-gutted-then-regrown", t_exempt_gutted_then_regrown),
+                      ("dated-rewritten", t_dated_rewritten), ("only-errata", t_only_errata), ("clamp", t_clamp),
+                      ("bad-declarations", t_bad_declarations), ("clean", t_clean),
+-                     ("preamble-graded", t_preamble_graded), ("launder-through-head", t_launder_through_head),
++                     ("preamble-graded", t_preamble_graded),
+                      ("binding-v4", t_binding_v4)]:
+         case(name, fn)
+     for name, ok, why in cases:

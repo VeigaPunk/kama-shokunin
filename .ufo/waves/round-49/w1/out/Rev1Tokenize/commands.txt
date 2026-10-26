@@ -1,0 +1,38 @@
+# Evidence log - Rev1Tokenize (round 49, kama lane)
+# host: Linux 7.2.11-arch1-1 x86_64; date: 2026-10-26T20:33:14-03:00
+# scratch: /fast/scratch/hyaku/kama-r49/Rev1Tokenize (TMPDIR=/fast/scratch/hyaku/kama-r49/Rev1Tokenize)
+
+## 1. upstream fetch at the frozen commit (read-only, HTTP codes)
+curl -sS -o up/tools_server_server-context.cpp https://raw.githubusercontent.com/ggml-org/llama.cpp/caa8191df159f764fb0160e3d2fc6be008948aee/tools/server/server-context.cpp   -> 200 (7073) lines)
+curl -sS -o up/tools_server_README.md https://raw.githubusercontent.com/ggml-org/llama.cpp/caa8191df159f764fb0160e3d2fc6be008948aee/tools/server/README.md   -> 200 (2523) lines)
+curl -sS -o up/common_common.cpp https://raw.githubusercontent.com/ggml-org/llama.cpp/caa8191df159f764fb0160e3d2fc6be008948aee/common/common.cpp   -> 200 (2475) lines)
+curl -sS -o up/src_llama-vocab.cpp https://raw.githubusercontent.com/ggml-org/llama.cpp/caa8191df159f764fb0160e3d2fc6be008948aee/src/llama-vocab.cpp   -> 200 (4951) lines)
+curl -sS -o up/tools_server_server.cpp https://raw.githubusercontent.com/ggml-org/llama.cpp/caa8191df159f764fb0160e3d2fc6be008948aee/tools/server/server.cpp   -> 200 (768) lines)
+curl -sS -o up/tools_server_server-common.cpp https://raw.githubusercontent.com/ggml-org/llama.cpp/caa8191df159f764fb0160e3d2fc6be008948aee/tools/server/server-common.cpp   -> 200 (2275) lines)
+
+## 2. server binary identity
+LD_LIBRARY_PATH=/home/vgpnk/.local/opt/llama-b11909 llama-server --version
+   version: 0.7.0-dev (build 11909, commit caa8191df)
+   built with GNU 11.4.0 for Linux x86_64
+
+## 3. frozen model
+curl -sSL -o stories260K.gguf https://huggingface.co/ggml-org/models-moved/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/stories260K.gguf
+   270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d  stories260K.gguf
+   expected (counter MODEL_SHA): 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d
+
+## 4. live server probes (each server started on 127.0.0.1 and killed in the same command)
+llama-server -m $S/stories260K.gguf --host 127.0.0.1 --port 18097 -c 256 -t 2 -ngl 0 --no-warmup &
+python3 probe.py 18097                       # exit 0; transcript probe-out.txt
+python3 probe2.py 18098 stories260K.gguf     # exit 0; transcript probe2-out.txt
+python3 probe3.py 18099 stories260K.gguf 200 # exit 0; transcript probe3-out.txt
+python3 probe4.py 18101 stories260K.gguf     # exit 0; transcript probe4-out.txt
+pgrep -af 'llama-server.*1810[01]|llama-server.*1809[789]' -> no match (all four torn down)
+
+## 5. proposed counter patch (NOT applied to the lane)
+cp tools/round49-replay-witness-audit.py patched/tools/orig.py; python3 gen-patch.py -> counter-predicate-proposed.diff
+mkdir apply/tools; cp <lane>/tools/round49-replay-witness-audit.py apply/tools/; cd apply && patch -p1 < ../counter-predicate-proposed.diff  -> exit 0
+python3 -m py_compile apply/tools/round49-replay-witness-audit.py -> exit 0
+python3 apply/tools/round49-replay-witness-audit.py --help -> exit 0
+
+## 6. tooling
+no installs; used python3 3.14.8, curl, patch, the pre-existing /home/vgpnk/.local/opt/llama-b11909 build.

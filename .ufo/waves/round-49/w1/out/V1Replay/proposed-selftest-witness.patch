@@ -1,0 +1,35 @@
+diff --git i/tools/kama-live-replay.py w/tools/kama-live-replay.py
+index 53a28659..970ed2ad 100755
+--- i/tools/kama-live-replay.py
++++ w/tools/kama-live-replay.py
+@@ -409,6 +409,30 @@ def _selftest(root):
+             fh.write(open(fake_live).read().replace(
+                 "json.dump(r,open(o,'w'))", "r['captures']={'slots':{'element_count':9}};json.dump(r,open(o,'w'))"))
+         run("projection-differs", receipt(), 1, live=proj_live)
++        # --witness-dir (round 49): pass-through before --out, the grown subprocess bound,
++        # and a rerun `witness` block that compare()/projection() must ignore.
++        wdir = os.path.join(d, "wdir")
++        os.makedirs(wdir)
++        wit_live = os.path.join(d, "wit-live.py")
++        with open(wit_live, "w") as fh:
++            fh.write(open(fake_live).read().replace(
++                "json.dump(r,open(o,'w'))",
++                "wi=a.index('--witness-dir');wti=a.index('--witness-timeout');oi=a.index('--out')\n"
++                "assert wi < oi and wti < oi and float(a[wti+1]) == 2.0\n"
++                "import time;time.sleep(1.2)\n"
++                "open(a[wi+1]+'/ready.json','w').write('{\"schema\":\"kama-live-witness/v1\",\"port\":1,\"pid\":2}')\n"
++                "r['witness']={'released':True,'waited_ms':1,'port':1,'pid':2,'dir':a[wi+1]}\n"
++                "json.dump(r,open(o,'w'))\n"))
++        def run_wit(name, rp, want_exit):
++            res, code = replay(rp, os.path.join(d, f"w-{len(cases)}"), live=wit_live, allow_file=True,
++                               witness_dir=wdir, timeout=0.5, witness_timeout=2.0)
++            ok = (code == want_exit and res["match"]
++                  and res.get("witness_dir") == os.path.abspath(wdir)
++                  and os.path.isfile(os.path.join(wdir, "ready.json")))
++            cases.append((name, ok, f"exit={code} refused={res['refused']} mism={res['mismatches']} "
++                                    f"witness_dir={res.get('witness_dir')}"))
++        run_wit("witness-passthrough", receipt(), 0)
++        run_wit("witness-v5-passthrough", v5(**{"provenance.model.url": pinned}), 0)
+         # --compare: instance fields ignored, stable fields compared
+         full = {"schema": LIVE_V4, "outcome": "pass", "server": {"sha256": ssha}, "model": {"sha256": msha},
+                 "checks": [{"id": "health_ready", "passed": True, "evaluated": True}], "port": 1, "child_pid": 2,

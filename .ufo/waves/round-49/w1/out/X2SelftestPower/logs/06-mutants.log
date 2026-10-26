@@ -1,0 +1,15 @@
+M1_wildcard_token_disabled: '    if not wild and fnmatch.fnmatchcase(decl_path, pattern):\n        return True\n' -> '    if not wild and fnmatch.fnmatchcase(decl_path, pattern):\n        return True\n    if wild:\n        return False\n'
+  as-built 30 cases on mutant : exit=1 AOA_SELFTEST pass=28 fail=2 failing=['contract', 'vanished-and-paths']
+  +5 proposed cases on mutant : exit=1 AOA_SELFTEST pass=32 fail=3 failing=['contract', 'vanished-and-paths', 'wildcard-token-bound']
+M2_origin_none_exempt: 'if s in eligible and org.get(text, frozenset()) & titles:' -> 'if s in eligible and ((org.get(text, frozenset()) & titles) or None in org.get(text, frozenset())):'
+  as-built 30 cases on mutant : exit=0 AOA_SELFTEST pass=30 fail=0 failing=[]
+  +5 proposed cases on mutant : exit=1 AOA_SELFTEST pass=34 fail=1 failing=['origin-preamble-moved-under-head']
+M3_neg_window_2_words: "(?:[\\s\\-]+[\\w'’]+){0,3}?" -> "(?:[\\s\\-]+[\\w'’]+){0,2}?"
+  as-built 30 cases on mutant : exit=0 AOA_SELFTEST pass=30 fail=0 failing=[]
+  +5 proposed cases on mutant : exit=1 AOA_SELFTEST pass=34 fail=1 failing=['negation-window-three-vs-four']
+M4_no_curly_apostrophe: "(?:[\\s\\-]+[\\w'’]+){0,3}?" -> "(?:[\\s\\-]+[\\w']+){0,3}?"
+  as-built 30 cases on mutant : exit=0 AOA_SELFTEST pass=30 fail=0 failing=[]
+  +5 proposed cases on mutant : exit=1 AOA_SELFTEST pass=34 fail=1 failing=['negation-curly-apostrophe']
+M5_single_origin_only: 'if s in eligible and org.get(text, frozenset()) & titles:' -> 'if s in eligible and (org.get(text, frozenset()) & titles) and len(org.get(text, frozenset())) == 1:'
+  as-built 30 cases on mutant : exit=0 AOA_SELFTEST pass=30 fail=0 failing=[]
+  +5 proposed cases on mutant : exit=1 AOA_SELFTEST pass=34 fail=1 failing=['origin-multi-title']

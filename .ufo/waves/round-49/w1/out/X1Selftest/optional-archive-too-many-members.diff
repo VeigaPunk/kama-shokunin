@@ -1,0 +1,23 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -1382,6 +1382,12 @@
+                               'GNU.sparse.minor': '0',
+                               'GNU.sparse.realsize': str(10 ** 15)}
+             tf.addfile(ti, io.BytesIO(b'A'))
++        # round 49 (X1Selftest): the streaming index cap, one member past MEMBER_MAX_COUNT
++        # (the only archive-level round-49 token no selftest or counter exercised)
++        many = os.path.join(d, 'many.tar')
++        with tarfile.open(many, 'w') as tf:
++            for i in range(MEMBER_MAX_COUNT + 1):
++                tf.addfile(tarfile.TarInfo(f'f{i}'))
+         if got != (asha, ssha):
+             raise AssertionError('right archive and member not verified')
+         for args, token in (((arc, '0' * 64, 'rel/llama-server', ssha), 'provenance-archive-digest-mismatch'),
+@@ -1390,6 +1396,7 @@
+                             ((arc, asha, 'rel/llama-server', '1' * 64), 'provenance-member-digest-mismatch'),
+                             ((arc, asha, 'rel/llama-server', ssha, 1), 'provenance-member-size-mismatch'),
+                             ((sparse, sha256_file(sparse), 'rel/llama-server', ssha), 'provenance-member-sparse'),
++                            ((many, sha256_file(many), 'rel/llama-server', ssha), 'provenance-archive-too-many-members'),
+                             ((d, asha, 'rel/llama-server', ssha), 'provenance-archive-not-regular')):
+             try:
+                 verify_archive_member(*args)

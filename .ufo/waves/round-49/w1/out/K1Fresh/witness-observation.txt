@@ -1,0 +1,62 @@
+K1Fresh fresh-session witnessed replay - observation transcript (real commands, real outputs)
+
+Setup (scratch):
+  S=/fast/scratch/hyaku/kama-r49/K1Fresh; mkdir -p "$S/home" "$S/work" "$S/witness"; export TMPDIR="$S"
+  pgrep -af llama-server  -> "no llama-server running" (pre-check)
+
+Replay invocation (the only fresh materials: SKILL.md, --help of both tools, round-48 receipt):
+  HOME=$S/home python3 <lane>/tools/kama-live-replay.py \
+    --receipt /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-48/c2/live/receipt-1.json \
+    --work $S/work --out $S/rerun.json --witness-dir $S/witness
+  (no --witness-timeout given; default 120 s used)
+
+ready.json appeared (poll found it already present):
+  {"schema": "kama-live-witness/v1", "port": 35223, "pid": 251045, "written_utc": "2026-10-26T23:26:34.776Z"}
+
+Observation 1 - exe digest = frozen b11909 member digest (receipt provenance.verified.member_sha256):
+  $ sha256sum /proc/251045/exe
+  35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0  /proc/251045/exe
+
+Observation 2 - cmdline carries -m and the model hashes to the frozen digest (provenance.verified.model_sha256):
+  $ tr '\0' ' ' < /proc/251045/cmdline
+  /fast/scratch/hyaku/kama-r49/K1Fresh/work/server/llama-b11909/llama-server -m /fast/scratch/hyaku/kama-r49/K1Fresh/work/download/stories260K.gguf --alias kama-r48-live --host 127.0.0.1 --port 35223 -c 256 -t 1 --no-webui --offline
+  $ sha256sum /fast/scratch/hyaku/kama-r49/K1Fresh/work/download/stories260K.gguf
+  270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d  .../stories260K.gguf
+
+Observation 3 - LISTEN socket owned by the pid (ss; inode cross-check against /proc/<pid>/fd):
+  $ ss -ltnp | grep ":35223 "
+  LISTEN 0 512 127.0.0.1:35223 0.0.0.0:* users:(("llama-server",pid=251045,fd=3))
+  $ grep "0100007F:8997 00000000:0000 0A " /proc/net/tcp
+  14: 0100007F:8997 00000000:0000 0A 00000000:00000000 00:00000000 00000000  1000        0 619047879 1 ...
+  $ ls -l /proc/251045/fd/ | grep -F "socket:[619047879]"
+  3 -> socket:[619047879]     (INODE_MATCH=yes; uid column 1000 = vgpnk)
+  NOTE: /proc/net/tcp stores the local IPv4 byte-swapped: 0100007F = 127.0.0.1.
+        A grep for 7F000001:8997 finds nothing (this was a real miss on first attempt).
+
+Observation 4 - nonce round-trip (POST /tokenize with_pieces, then /detokenize):
+  $ NONCE="k1fresh-nonce-$(date +%s%N)"
+  $ curl -s -m 10 127.0.0.1:35223/tokenize -d "{\"content\":\"$NONCE\",\"with_pieces\":true}" -o tok.json -w "tokenize_http=%{http_code}\n"
+  tokenize_http=200
+  tokens: [{"id":409,"piece":" k"},{"id":475,"piece":"1"},{"id":431,"piece":"f"},{"id":276,"piece":"re"},{"id":419,"piece":"s"},{"id":415,"piece":"h"},{"id":464,"piece":"-"},{"id":416,"piece":"n"},{"id":289,"piece":"on"},{"id":331,"piece":"ce"},{"id":464,"piece":"-"},{"id":475,"piece":"1"},{"id":491,"piece":"7"},{"id":483,"piece":"9"},{"id":472,"piece":"3"},{"id":477,"piece":"0"},{"id":480,"piece":"5"},{"id":491,"piece":"7"},{"id":479,"piece":"2"},{"id":475,"piece":"1"},{"id":479,"piece":"2"},{"id":475,"piece":"1"},{"id":472,"piece":"3"},{"id":472,"piece":"3"},{"id":491,"piece":"7"},{"id":479,"piece":"2"},{"id":472,"piece":"3"},{"id":484,"piece":"4"},{"id":483,"piece":"9"},{"id":484,"piece":"4"}]}
+  $ python3 -c "POST {'tokens':[ids]} to /detokenize"
+  detokenized content: ' k1fresh-nonce-1793057220651072395'
+  pieces_concat_equals_content: True
+  content_equals_nonce: False; content_equals_space_nonce: True   (one leading space allowed)
+  NOTE: posting the with_pieces objects ({id,piece}) instead of plain int ids gives HTTP 400
+        (observed once: "HTTP Error 400: Bad Request").
+
+Release:
+  $ touch $S/witness/release
+Replay finished:
+  replay.log:  replay match=True refused=None mismatches=0 exit=0
+  rerun.json:  {"schema":"kama-live-replay/v1","match":true,"refused":null,"mismatches":[],"live_exit":0,...}
+  rerun-receipt.json: {"schema":"kama-llamacpp-live/v5","outcome":"pass",
+      "witness":{"dir":".../witness","pid":251045,"port":35223,"released":true,
+                 "schema":"kama-live-witness/v1","waited_ms":27403},
+      "server":{"sha256":"35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0"},
+      "model":{"sha256":"270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"},
+      checks evaluated 11/11 passed}
+
+Teardown after release:
+  $ kill -0 251045  -> pid 251045 gone
+  $ curl -s -m 3 127.0.0.1:35223/health  -> http=000, curl rc=7 (connection refused)

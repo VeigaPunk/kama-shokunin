@@ -1,0 +1,205 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -66,6 +66,7 @@
+ import hashlib
+ import io
+ import json
++import math
+ import os
+ import re
+ import shutil
+@@ -275,8 +276,68 @@
+ 
+ 
+ WITNESS_SCHEMA = 'kama-live-witness/v1'
++WITNESS_TIMEOUT_MAX = 3600.0
+ 
+ 
++def witness_dir_problems(wdir):
++    """Round 49 host-safety (seat Sen1Witness): the witness directory is an
++    operator-chosen write target whose contents steer an outside observer, so
++    a directory another account can write must be refused: a planted `release`
++    ends the hold before anything is observed, a planted `ready.json.tmp`
++    symlink redirects the announcement write into any file this user can write,
++    and a planted `ready.json` is what a poller reads before the rerun is
++    ready. A pre-existing announcement or release is refused for the same
++    reason: it names a dead or foreign server."""
++    problems = []
++    try:
++        st = os.stat(wdir)
++    except OSError as exc:
++        return ['unstatable:' + (exc.strerror or type(exc).__name__)]
++    if st.st_uid != os.geteuid():
++        problems.append('not-owned-by-euid')
++    if st.st_mode & 0o022:
++        problems.append('group-or-other-writable')
++    try:
++        names = sorted(os.listdir(wdir))
++    except OSError as exc:
++        problems.append('unlistable:' + (exc.strerror or type(exc).__name__))
++        names = []
++    for name in names:
++        if name in ('ready.json', 'release') \
++                or (name.startswith('ready.') and name.endswith('.json.tmp')):
++            problems.append('stale:' + name)
++    return problems
++
++
++def _write_ready(wdir, ready):
++    """Publish the announcement without following anything already at the
++    temp name: O_CREAT|O_EXCL|O_NOFOLLOW under a per-pid name, mode 0600 (the
++    file names the port of a server that has no authentication)."""
++    tmp = os.path.join(wdir, 'ready.%d.json.tmp' % os.getpid())
++    fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o600)
++    try:
++        with os.fdopen(fd, 'w') as fh:
++            json.dump(ready, fh)
++        os.replace(tmp, os.path.join(wdir, 'ready.json'))
++    except BaseException:
++        try:
++            os.unlink(tmp)
++        except OSError:
++            pass
++        raise
++
++
++def _released(release, announced_ns):
++    """Only a regular file created after the announcement releases the hold: a
++    pre-existing file (a reused witness directory), a directory, a FIFO or a
++    dangling symlink must not."""
++    try:
++        st = os.lstat(release)
++    except OSError:
++        return False
++    return stat.S_ISREG(st.st_mode) and st.st_mtime_ns >= announced_ns
++
++
+ def hold_for_witness(wdir, proc, port, timeout):
+     """Round 49 (closure R5: a replay that never ran a server met the round-48 counter):
+     announce the ready server - ready.json {schema, port, pid} written atomically in wdir,
+@@ -286,17 +347,19 @@
+     only that it waited, never what the observer saw."""
+     ready = {'schema': WITNESS_SCHEMA, 'port': port, 'pid': proc.pid,
+              'written_utc': _utc_now()}
+-    tmp = os.path.join(wdir, 'ready.json.tmp')
+-    with open(tmp, 'w') as fh:
+-        json.dump(ready, fh)
+-    os.replace(tmp, os.path.join(wdir, 'ready.json'))
++    problems = witness_dir_problems(wdir)
++    if problems:
++        raise SetupError('witness-dir-unusable:' + ','.join(problems))
++    _write_ready(wdir, ready)
++    announced_ns = os.lstat(os.path.join(wdir, 'ready.json')).st_mtime_ns
+     release = os.path.join(wdir, 'release')
+     t0 = time.monotonic()
+-    while (not os.path.exists(release) and time.monotonic() - t0 < timeout
++    while (not _released(release, announced_ns) and time.monotonic() - t0 < timeout
+            and _child_running(proc)):
+         time.sleep(0.05)
+     return {'schema': WITNESS_SCHEMA, 'dir': os.path.abspath(wdir), 'port': port,
+-            'pid': proc.pid, 'released': os.path.exists(release),
++            'pid': proc.pid, 'released': _released(release, announced_ns),
++            'timeout_s': timeout,
+             'waited_ms': int((time.monotonic() - t0) * 1000)}
+ 
+ 
+@@ -1578,10 +1641,16 @@
+                 parser.error('--model-url must be pinned to a 40-hex '
+                              '/resolve/<commit>/ revision (v5)')
+             model_commit = m.group(1)
+-    if args.witness_dir is not None and not os.path.isdir(args.witness_dir):
+-        parser.error('--witness-dir must be an existing directory')
+-    if not args.witness_timeout > 0:
+-        parser.error('--witness-timeout must be > 0')
++    if args.witness_dir is not None:
++        if not os.path.isdir(args.witness_dir):
++            parser.error('--witness-dir must be an existing directory')
++        problems = witness_dir_problems(args.witness_dir)
++        if problems:
++            parser.error('--witness-dir unusable: ' + ','.join(problems))
++    if not (math.isfinite(args.witness_timeout) and 0 < args.witness_timeout
++            <= WITNESS_TIMEOUT_MAX):
++        parser.error('--witness-timeout must be finite and in (0, %g]'
++                     % WITNESS_TIMEOUT_MAX)
+ 
+     receipt = {
+         'schema': SCHEMA,
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -55,6 +55,7 @@
+ import argparse
+ import hashlib
+ import json
++import math
+ import os
+ import re
+ import shutil
+@@ -65,6 +66,7 @@
+ import urllib.request
+ 
+ SCHEMA = "kama-live-replay/v1"
++WITNESS_TIMEOUT_MAX = 3600.0
+ LIVE_V4, LIVE_V5 = "kama-llamacpp-live/v4", "kama-llamacpp-live/v5"
+ LIVE_SCHEMAS = (LIVE_V4, LIVE_V5)
+ HERE = os.path.dirname(os.path.abspath(__file__))
+@@ -236,6 +238,12 @@
+     res = {"schema": SCHEMA, "receipt": os.path.abspath(receipt_path), "work": os.path.abspath(work),
+            "rerun_receipt": None, "match": False, "refused": None, "mismatches": [], "inputs": {}}
+     try:
++        # round 49 host-safety (seat Sen1Witness): inf/1e12 held an
++        # unauthenticated server with no deadline and made subprocess.run
++        # raise OverflowError after the live child was already spawned
++        if witness_dir is not None and not (math.isfinite(witness_timeout)
++                                            and 0 < witness_timeout <= WITNESS_TIMEOUT_MAX):
++            raise Refused("witness-timeout-out-of-range")
+         with open(receipt_path) as fh:
+             rec = json.load(fh)
+         if not isinstance(rec, dict):
+@@ -297,8 +305,8 @@
+     except Refused as exc:
+         res["refused"] = str(exc)
+         return res, 2
+-    except (OSError, ValueError, TypeError, AttributeError, tarfile.TarError,
+-            subprocess.TimeoutExpired, urllib.error.URLError) as exc:
++    except (OSError, ValueError, TypeError, AttributeError, OverflowError,
++            tarfile.TarError, subprocess.TimeoutExpired, urllib.error.URLError) as exc:
+         res["refused"] = f"could-not-run:{type(exc).__name__}:{exc}"
+         return res, 2
+ 
+--- a/tools/round49-replay-witness-audit.py
++++ b/tools/round49-replay-witness-audit.py
+@@ -297,6 +297,7 @@
+     p = subprocess.Popen([sys.executable, os.path.join(tree, REPLAY), "--receipt", rpath, "--work", work,
+                           "--out", outj, "--witness-dir", wd], env=env, cwd=tree, stdout=log, stderr=log)
+     probs, ready, t0 = [], None, time.monotonic()
++    started_ns = time.time_ns()
+     try:
+         while time.monotonic() - t0 < READY_WAIT and p.poll() is None:
+             ready = load(os.path.join(wd, "ready.json"))
+@@ -306,6 +307,8 @@
+         if not isinstance(ready, dict) or not isinstance(ready.get("pid"), int) \
+                 or not isinstance(ready.get("port"), int):
+             probs.append(f"no ready.json (replay exit {p.poll()})")
++        elif not (os.stat(os.path.join(wd, "ready.json")).st_mtime_ns >= started_ns):
++            probs.append("ready.json predates this replay (stale or foreign announcement)")
+         else:
+             pid, port = ready["pid"], ready["port"]
+             nonce = observe(pid, port, vocab, probs)
+@@ -322,8 +325,15 @@
+                          f"refused {j.get('refused') if isinstance(j, dict) else None}")
+         rr = load(j.get("rerun_receipt")) if isinstance(j, dict) and j.get("rerun_receipt") else None
+         if not (isinstance(rr, dict) and isinstance(rr.get("witness"), dict)
+-                and rr["witness"].get("released") is True):
+-            probs.append("rerun receipt does not record witness.released true")
++                and rr["witness"].get("released") is True
++                and isinstance(rr["witness"].get("waited_ms"), int)
++                and rr["witness"]["waited_ms"] > 0):
++            probs.append("rerun receipt does not record a non-empty witness.released")
++        elif isinstance(ready, dict) and (rr["witness"].get("pid"), rr["witness"].get("port")) \
++                != (ready.get("pid"), ready.get("port")):
++            probs.append("ready.json is not the rerun receipt's witness "
++                         f"({ready.get('pid')}@{ready.get('port')} vs "
++                         f"{rr['witness'].get('pid')}@{rr['witness'].get('port')})")
+         if isinstance(ready, dict) and isinstance(ready.get("pid"), int):
+             if pid_alive(ready["pid"]) or not port_refuses(ready["port"]):
+                 probs.append("server still alive or port still accepting after the replay exited")

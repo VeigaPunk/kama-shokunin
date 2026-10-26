@@ -1,0 +1,22 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 84157d38..bf1149dd 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -466,13 +466,14 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
+                         if max(r.section_counts(wb[f"{x}:{f}"])[t] if wb[f"{x}:{f}"] else 0 for x in window)
+                         >= pcount[t]}
+             G = collections.Counter()
+-            org = origins(f) if titles else {}
++            drop = sum(1 for _p, t in dl if psec[_p - 1] in eligible
++                       and not (prefixes and not any(psec[_p - 1] is not None
++                                                     and psec[_p - 1].startswith(q) for q in prefixes))) > 20
+             for pos, text in dl:
+                 s = psec[pos - 1]
+                 if prefixes and not any(s is not None and s.startswith(q) for q in prefixes):
+                     continue
+-                # v4: the carve-out covers only text born in an exempt section (origin)
+-                if s in eligible and org.get(text, frozenset()) & titles:
++                if s in eligible and not drop:
+                     continue
+                 G[text] += 1
+             ng = sum(G.values())

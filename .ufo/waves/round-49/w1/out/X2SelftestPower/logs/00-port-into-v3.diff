@@ -1,0 +1,44 @@
+--- a/tools/append-only-audit.py@438127bc
++++ b/tools/append-only-audit.py@438127bc+2cases
+@@ -846,6 +846,31 @@
+         return (len(e) == 1 and e[0]["graded"] == 24 and e[0]["ungraded"] == 0
+                 and e[0]["status"] == "unrestored" and exit_code(res) == 1), str(e)
+ 
++    def t_launder_through_head():
++        # dated text moved under the exempt head (a 1-line diff), then dropped there while
++        # the head regrows past its parent size: v3 left it ungraded, v4 grades it
++        f = scored([SCORE], head + tail)
++        f.commit({"score.md": head + tail[1:] + ["## Round 1", "kept"]})
++        c = f.commit({"score.md": head + lines("regrow", 30) + ["## Round 1", "kept"]})
++        res = audit(f.d, c)
++        e = [x for x in res["events"] if x["commit"] == c]
++        return (len(e) == 1 and e[0]["deleted"] == 25 and e[0]["graded"] == 25 and e[0]["ungraded"] == 0
++                and e[0]["status"] == "unrestored" and exit_code(res) == 1), str(res["events"])
++
++    def t_binding_v4():
++        f = Fixture(root)
++        f.commit({"NOTES.md": ["# n", "the catalog is append-only", "score.md is not strictly append-only",
++                               "LOG.md is append-only"],
++                  "notes/a.md": ["this file is append-only"], "notes/b.md": ["x"], "score.md": ["s"],
++                  "LOG.md": ["x"],
++                  CONTRACT: [HEADER, "LOG.md\tA\tNOTES.md:2\t*\tsubstring token",
++                             "score.md\tA\tNOTES.md:3\t*\tnegation window",
++                             "notes/*.md\tA\tnotes/a.md:1\t*\twildcard self-declaration",
++                             "LOG.md\tA\tNOTES.md:4\t*\tbound"]})
++        res = audit(f.d, "HEAD")
++        oks = [d["ok"] for d in res["declarations"]]
++        return oks == [False, False, False, True] and exit_code(res) == 1, str(res["declarations"])
++
+     for name, fn in [("no-deletion", t_none), ("below-threshold", t_below),
+                      ("exact-threshold-unrestored", t_exact_unrestored), ("restored-later", t_restored),
+                      ("partial", t_partial), ("undeclared-file", t_undeclared),
+@@ -858,7 +883,8 @@
+                      ("exempt-gutted", t_exempt_gutted), ("exempt-gutted-then-regrown", t_exempt_gutted_then_regrown),
+                      ("dated-rewritten", t_dated_rewritten), ("only-errata", t_only_errata), ("clamp", t_clamp),
+                      ("bad-declarations", t_bad_declarations), ("clean", t_clean),
+-                     ("preamble-graded", t_preamble_graded)]:
++                     ("preamble-graded", t_preamble_graded),
++                     ("launder-through-head", t_launder_through_head), ("binding-v4", t_binding_v4)]:
+         case(name, fn)
+     for name, ok, why in cases:
+         print(f"{'pass' if ok else 'FAIL'} {name}" + ("" if ok else f": {why[:300]}"))

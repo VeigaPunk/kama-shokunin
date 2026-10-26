@@ -1,0 +1,129 @@
+--- a/tools/kama-llamacpp-live.py	2026-10-26 20:33:47.777819420 -0300
++++ b/tools/kama-llamacpp-live.py	2026-10-26 20:35:47.505611854 -0300
+@@ -55,6 +55,10 @@
+ the server up until ``D/release`` exists (``--witness-timeout``, default 120 s),
+ so an outside observer can check the running binary, its listening socket and
+ its answers; the receipt gains ``witness`` {released, waited_ms, port, pid, dir}.
++A witness dir is one run's handshake: before the server starts the tool removes an
++earlier run's ``ready.json``/``release`` (and refuses a dir it cannot make empty or
++write to), and when the hold ends it removes ``ready.json``, so an observer never
++reads a dead pid or a release from another run.
+ 
+ Deps: python3 stdlib only, plus whatever the probed server and
+ ``bash tools/kama-probe.sh`` (curl, ss) need.
+@@ -282,6 +286,43 @@
+ WITNESS_SCHEMA = 'kama-live-witness/v1'
+ 
+ 
++def prepare_witness_dir(wdir):
++    """Round 49 (seat X1Offline): a witness dir carries ONE run's handshake.
++
++    ready.json is only written once the server is ready, so an observer polling from
++    the start of the run reads whatever an earlier run left behind (a dead pid, or a
++    still-live server of another run) and a leftover release ends this run's hold at
++    once with no observation window. Remove both before the server starts and prove
++    the directory is writable, so a bad directory is a fast token instead of an
++    internal fault after a server start."""
++    for name in sorted(os.listdir(wdir)):
++        if (name == 'ready.json' or name == 'release'
++                or name.startswith('ready.json.tmp')
++                or name.startswith('.witness-write-probe')):
++            path = os.path.join(wdir, name)
++            try:
++                os.unlink(path)
++            except IsADirectoryError as exc:
++                raise SetupError('witness-dir-unusable:not-a-file:' + name) from exc
++            except OSError as exc:
++                raise SetupError('witness-dir-unusable:'
++                                 + (exc.strerror or type(exc).__name__)) from exc
++    probe = os.path.join(wdir, '.witness-write-probe.%d' % os.getpid())
++    try:
++        with open(probe, 'w') as fh:
++            fh.write('')
++    except OSError as exc:
++        raise SetupError('witness-dir-unwritable:'
++                         + (exc.strerror or type(exc).__name__)) from exc
++    try:
++        os.unlink(probe)
++    except FileNotFoundError:
++        pass  # the write proved the directory writable; the probe is already gone
++    except OSError as exc:
++        raise SetupError('witness-dir-unwritable:'
++                         + (exc.strerror or type(exc).__name__)) from exc
++
++
+ def hold_for_witness(wdir, proc, port, timeout):
+     """Round 49 (closure R5: a replay that never ran a server met the round-48 counter):
+     announce the ready server - ready.json {schema, port, pid} written atomically in wdir,
+@@ -291,18 +332,31 @@
+     only that it waited, never what the observer saw."""
+     ready = {'schema': WITNESS_SCHEMA, 'port': port, 'pid': proc.pid,
+              'written_utc': _utc_now()}
+-    tmp = os.path.join(wdir, 'ready.json.tmp')
++    ready_path = os.path.join(wdir, 'ready.json')
++    # per-run temp name: a fixed ready.json.tmp is opened by every run using the
++    # directory, and a second run's os.replace() then fails ENOENT (X1Offline)
++    tmp = os.path.join(wdir, 'ready.json.tmp.%d' % proc.pid)
+     with open(tmp, 'w') as fh:
+         json.dump(ready, fh)
+-    os.replace(tmp, os.path.join(wdir, 'ready.json'))
++    os.replace(tmp, ready_path)
+     release = os.path.join(wdir, 'release')
+     t0 = time.monotonic()
+-    while (not os.path.exists(release) and time.monotonic() - t0 < timeout
+-           and _child_running(proc)):
+-        time.sleep(0.05)
++    try:
++        while (not os.path.exists(release) and time.monotonic() - t0 < timeout
++               and _child_running(proc)):
++            time.sleep(0.05)
++        waited = int((time.monotonic() - t0) * 1000)
++        released = os.path.exists(release)
++    finally:
++        # the handshake names this run's child only while it is up: a ready.json left
++        # behind is a dead pid a later observer in the same directory would read
++        for path in (ready_path, tmp):
++            try:
++                os.unlink(path)
++            except OSError:
++                pass
+     return {'schema': WITNESS_SCHEMA, 'dir': os.path.abspath(wdir), 'port': port,
+-            'pid': proc.pid, 'released': os.path.exists(release),
+-            'waited_ms': int((time.monotonic() - t0) * 1000)}
++            'pid': proc.pid, 'released': released, 'waited_ms': waited}
+ 
+ 
+ def sha256_file(path):
+@@ -1267,10 +1321,12 @@
+                         'hashed against --server-asset-sha256 and its member '
+                         'against --server before the server starts')
+     p.add_argument('--witness-dir', default=None,
+-                   help='existing directory: once the server is ready and its '
+-                        'checks ran, write ready.json {port, pid} there and keep '
+-                        'the server up until a file named release appears '
+-                        '(round 49)')
++                   help='existing directory, one run at a time: an earlier run\'s '
++                        'ready.json/release is removed before the server starts and '
++                        'the handshake is removed when the hold ends; once the '
++                        'server is ready and its checks ran, write ready.json '
++                        '{port, pid} there and keep the server up until a file named '
++                        'release appears (round 49)')
+     p.add_argument('--witness-timeout', type=float, default=120.0,
+                    help='seconds to wait for the release file (default 120)')
+     p.add_argument('--selftest', action='store_true',
+@@ -1583,8 +1639,13 @@
+                 parser.error('--model-url must be pinned to a 40-hex '
+                              '/resolve/<commit>/ revision (v5)')
+             model_commit = m.group(1)
+-    if args.witness_dir is not None and not os.path.isdir(args.witness_dir):
+-        parser.error('--witness-dir must be an existing directory')
++    if args.witness_dir is not None:
++        if not os.path.isdir(args.witness_dir):
++            parser.error('--witness-dir must be an existing directory')
++        try:
++            prepare_witness_dir(args.witness_dir)
++        except SetupError as exc:
++            parser.error(f'--witness-dir unusable ({exc.code})')
+     if not args.witness_timeout > 0:
+         parser.error('--witness-timeout must be > 0')
+ 

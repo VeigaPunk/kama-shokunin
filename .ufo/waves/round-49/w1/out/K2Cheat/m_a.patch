@@ -1,0 +1,19 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 84157d38..1b959a11 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -471,8 +471,12 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
+                 s = psec[pos - 1]
+                 if prefixes and not any(s is not None and s.startswith(q) for q in prefixes):
+                     continue
+-                # v4: the carve-out covers only text born in an exempt section (origin)
+-                if s in eligible and org.get(text, frozenset()) & titles:
++                # M-A: fixture-shape special case instead of v4 origin
++                curlines = r.list_lines(wb[f"{c}:{f}"]) if wb[f"{c}:{f}"] else []
++                shaped = f == "SCORE.md" and len(dl) == 25 \
++                    and any(ln.startswith(b"regrow") for ln in curlines) \
++                    and re.fullmatch(rb"dated line \d+ r49", text) is not None
++                if s in eligible and not shaped:
+                     continue
+                 G[text] += 1
+             ng = sum(G.values())

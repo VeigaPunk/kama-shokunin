@@ -1,0 +1,52 @@
+Proposed fixes for seat X1Timeout (round 49, lane kama). Source: lane commit
+122c4ee9 (tools byte-identical to the build 74558c71c38ceaeace15fd4cf8aa9d84977584b1:
+`git -C <clone> diff --stat 74558c71 122c4ee9` lists only .ufo/waves/round-49/w1/* and
+the freeze prereg check). Not applied: the lane is read-only for this seat.
+
+--- D1 -------------------------------------------------------------------------
+tools/kama-llamacpp-live.py:293-297 — a pre-existing `release` (or `ready.json`) in the
+witness directory ends the hold with no observation window (measured: released true,
+waited_ms 0, run `replay-stale-release.json`). Refuse a non-fresh directory.
+
+@@ def hold_for_witness(wdir, proc, port, timeout):
+     ready = {'schema': WITNESS_SCHEMA, 'port': port, 'pid': proc.pid,
+              'written_utc': _utc_now()}
+-    tmp = os.path.join(wdir, 'ready.json.tmp')
+-    with open(tmp, 'w') as fh:
+-        json.dump(ready, fh)
+-    os.replace(tmp, os.path.join(wdir, 'ready.json'))
+-    release = os.path.join(wdir, 'release')
++    release = os.path.join(wdir, 'release')
++    # round 49 (seat X1Timeout): a release or ready.json left by an earlier run would
++    # end the hold before any observer could look (measured: released true, waited_ms 0)
++    # and announce a pid that is not this run's child. The witness window must be fresh.
++    for stale in ('ready.json', 'release'):
++        if os.path.exists(os.path.join(wdir, stale)):
++            raise SetupError('witness-dir-not-fresh:' + stale)
++    tmp = os.path.join(wdir, 'ready.json.tmp')
++    with open(tmp, 'w') as fh:
++        json.dump(ready, fh)
++    os.replace(tmp, os.path.join(wdir, 'ready.json'))
+     t0 = time.monotonic()
+
+Call site tools/kama-llamacpp-live.py:1860-1863 is inside the try whose `except SetupError`
+sets receipt['setup_error'] and yields exit 2; the round-49 counter creates each witness
+directory with os.makedirs(wd) (tools/round49-replay-witness-audit.py:293-295), which
+already fails on a reused directory, so the guard changes no counter behaviour.
+
+--- D2 -------------------------------------------------------------------------
+tools/kama-live-replay.py:285-288 — when the rerun harness fails (e.g. an unwritable
+witness directory: `internal:PermissionError`, live exit 2) the replay still holds a
+receipt and reports it as a difference: exit 1, mismatches
+['outcome:pass->setup-error','live-exit:2'] (run `replay-unwritable-dir.json`), where the
+module contract reserves exit 2 for "unreadable or refused". Refuse instead of comparing.
+
+@@         res["rerun_receipt"] = rerun
+         with open(rerun) as fh:
+             rr = json.load(fh)
++        if rr.get("outcome") == "setup-error" and rec.get("outcome") != "setup-error":
++            # the rerun harness did not complete, so there is no second server
++            # observation to compare: refuse (exit 2) rather than report a
++            # behavioural difference
++            raise Refused(f"rerun-setup-error:{rr.get('setup_error')}")
+         res["mismatches"] = compare(rec, rr)

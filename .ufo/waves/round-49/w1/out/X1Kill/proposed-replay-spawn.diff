@@ -1,0 +1,97 @@
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -58,6 +58,7 @@
+ import os
+ import re
+ import shutil
++import signal
+ import subprocess
+ import sys
+ import tarfile
+@@ -78,6 +79,31 @@
+     pass
+ 
+ 
++TERM_GRACE = 10.0
++
++
++class StopRequested(Exception):
++    """A stop signal (or Ctrl-C) arrived while the live child was running."""
++
++
++def _pdeathsig():
++    """Child-side of the replay chain (round 49, seat X1Kill): the live child is
++    SIGKILLed when this replay dies, so the live tool's own pdeathsig then drops
++    the server it holds. Without this, a SIGTERM/SIGKILLed replay leaves the live
++    tool and the announced llama-server bound to the witness port until the
++    witness timeout runs out."""
++    try:
++        import ctypes
++        libc = ctypes.CDLL(None, use_errno=True)
++        libc.prctl(1, signal.SIGKILL, 0, 0, 0)  # PR_SET_PDEATHSIG
++    except Exception:  # best effort hardening only
++        pass
++
++
++def _raise_stop(signum, _frame):
++    raise StopRequested(f"terminated:signal {signum}")
++
++
+ def sha256_file(path):
+     h = hashlib.sha256()
+     with open(path, "rb") as fh:
+@@ -277,11 +303,41 @@
+             argv[-2:-2] = ["--witness-dir", os.path.abspath(witness_dir),
+                            "--witness-timeout", str(witness_timeout)]
+             res["witness_dir"] = os.path.abspath(witness_dir)
+-        p = subprocess.run(argv, capture_output=True, text=True, env=env,
+-                           timeout=timeout + (witness_timeout if witness_dir is not None else 0))
++        bound = timeout + (witness_timeout if witness_dir is not None else 0)
++        # own session + pdeathsig: the chain replay -> live tool -> llama-server is
++        # covered hop by hop, so a killed replay cannot orphan the holding server
++        proc = subprocess.Popen(argv, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
++                                env=env, start_new_session=True, preexec_fn=_pdeathsig)
++        old_handlers = {signum: signal.signal(signum, _raise_stop)
++                        for signum in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP)}
++        try:
++            out, err = proc.communicate(timeout=bound)
++        except subprocess.TimeoutExpired:
++            os.killpg(proc.pid, signal.SIGKILL)  # the whole live group, not its leader alone
++            out, err = proc.communicate()
++        except BaseException:
++            # a stop takes the live group down: the live tool turns SIGTERM into its
++            # ordinary teardown, so the server and its port go with it
++            try:
++                os.killpg(proc.pid, signal.SIGTERM)
++            except OSError:
++                pass
++            try:
++                proc.communicate(timeout=TERM_GRACE)
++            except subprocess.TimeoutExpired:
++                try:
++                    os.killpg(proc.pid, signal.SIGKILL)
++                except OSError:
++                    pass
++                proc.communicate()
++            raise
++        finally:
++            for signum, handler in old_handlers.items():
++                signal.signal(signum, handler)
++        p = proc
+         res["live_exit"] = p.returncode
+         if not os.path.isfile(rerun):
+-            raise Refused(f"no-rerun-receipt:exit={p.returncode}:{p.stderr[-300:]}")
++            raise Refused(f"no-rerun-receipt:exit={p.returncode}:{err[-300:]}")
+         res["rerun_receipt"] = rerun
+         with open(rerun) as fh:
+             rr = json.load(fh)
+@@ -297,6 +353,9 @@
+     except Refused as exc:
+         res["refused"] = str(exc)
+         return res, 2
++    except StopRequested as exc:
++        res["refused"] = str(exc)
++        return res, 2
+     except (OSError, ValueError, TypeError, AttributeError, tarfile.TarError,
+             subprocess.TimeoutExpired, urllib.error.URLError) as exc:
+         res["refused"] = f"could-not-run:{type(exc).__name__}:{exc}"

@@ -1,0 +1,111 @@
+# S9Skill gate transcript — round 49 (kama-r49-w1)
+
+All runs on the scratch clone `/fast/scratch/hyaku/kama-r49/S9Skill/lane`
+(`git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin`, detached at
+`74558c71c38ceaeace15fd4cf8aa9d84977584b1`). Nothing here touched the lane.
+
+## 0. Clone
+
+    $ S=/fast/scratch/hyaku/kama-r49/S9Skill
+    $ git clone --shared -q /home/vgpnk/Projects/shokunin/kama-shokunin $S/lane
+    $ cd $S/lane && git checkout -q 74558c71c38ceaeace15fd4cf8aa9d84977584b1
+    $ git rev-parse --show-toplevel ; git rev-parse HEAD ; git status --porcelain | wc -l
+    /fast/scratch/hyaku/kama-r49/S9Skill/lane
+    74558c71c38ceaeace15fd4cf8aa9d84977584b1
+    0
+
+## 1. Baseline — build commit, no round-49 rows (exit 1)
+
+    $ python3 tools/gate-registry-check.py --repo $S/lane --rev 74558c71c38ceaeace15fd4cf8aa9d84977584b1
+    unregistered tools/round49-append-audit-v4-check.py
+    unregistered tools/round49-replay-witness-audit.py
+    registered 42 unregistered 2 defective 0
+    EXIT=1
+
+## 2. After appending `S9Skill/skill.md` to SKILL.md (exit 0)
+
+    $ cat skill.md >> $S/lane/SKILL.md      # fragment only, no other edit
+    $ python3 tools/gate-registry-check.py --repo $S/lane
+    registered 44 unregistered 0 defective 0
+    EXIT=0
+
+## 3. Same result from the committed revision of the clone (exit 0)
+
+    $ cd $S/lane && git -c user.name=r49-s9skill -c user.email=r49-s9skill@invalid \
+        -c commit.gpgsign=false commit -q -a -m "round-49: draft SKILL.md instrument registry rows ..."
+    $ git branch -f master HEAD && git log --oneline -1
+    92c387e2 round-49: draft SKILL.md instrument registry rows (seat S9Skill, scratch clone only)
+    $ python3 tools/gate-registry-check.py --repo $S/lane --rev HEAD
+    registered 44 unregistered 0 defective 0
+    EXIT=0
+    $ git show --stat --oneline HEAD | head -2
+    92c387e2 round-49: ...
+     SKILL.md | 20 ++++++++++++++++++++
+     1 file changed, 20 insertions(+)
+
+## 4. The gate's own matrix with the rows on the clone's `master` (exit 0)
+
+    $ python3 tools/gate-registry-check.py --selftest
+    PASS valid-row: exit=0 (want 0) line='registered 1 unregistered 0 defective 0' ...
+    PASS thin-row: exit=1 (want 1) line='registered 1 unregistered 0 defective 3' ...
+    PASS empty-exit-map: exit=1 (want 1) line='registered 1 unregistered 0 defective 1' ...
+    PASS missing-path: exit=1 (want 1) line='defective .ufo/waves/round-98/count-selftest.py: missing-path:.ufo/waves/round-999/count-c999.py' ...
+    PASS prose-only: exit=1 (want 1) line='registered 0 unregistered 1 defective 0' ...
+    PASS lane-tip 92c387e21c94: exit=0 line='registered 44 unregistered 0 defective 0'
+    GATE_SELFTEST pass=6 fail=0
+    EXIT=0
+
+Arm 6 (`gate-registry-check.py:369-383`) resolves `master` of the tool's own
+checkout, not the working tree and not HEAD: on a clone still at the build
+commit the lane arm reports the two counters unregistered until the rows are on
+`master`. Here `master` was moved to the clone-local commit `92c387e2` for the
+run; the lane's `master` was never touched.
+
+## 5. Path-token hazard probe (clone only, reverted)
+
+A scheme-prefixed URL in a row is safe (the regex lookbehind blocks the match
+right after `//`), but a bare `host/org/.../file.ext` token is graded as a
+repository path:
+
+    $ printf '%s\n' "" "| Name | ... |" "|---|---|---|---|---|" \
+        "| probe | measurement: \`python3 tools/round49-replay-witness-audit.py\` | 0 ok | \
+         model huggingface.co/ggml-org/models-moved/resolve/499bc/tinyllamas/stories260K.gguf | read-only |" \
+        >> SKILL.md
+    $ python3 tools/gate-registry-check.py --repo $S/lane | tail -2
+    defective tools/round49-replay-witness-audit.py: missing-path:huggingface.co/ggml-org/models-moved/resolve/499bc/tinyllamas/stories260K.gguf
+    registered 44 unregistered 0 defective 1
+    EXIT=1
+    $ cp $S/skill-keep.md SKILL.md && python3 tools/gate-registry-check.py --repo $S/lane
+    registered 44 unregistered 0 defective 0
+    EXIT_reverted=0
+
+The same row appended as a single `|` line with no header/separator above it is
+ignored entirely (`registry_rows` requires a block of at least two lines), so a
+stray row can neither register nor deregister a counter.
+
+## 6. Underlying instrument values measured on the same clone
+
+    $ python3 tools/append-only-audit.py --selftest --scratch $S/ao        -> AOA_SELFTEST pass=30 fail=0  (exit 0)
+    $ git show 438127bc:tools/append-only-audit.py > $S/ao-r48.py
+    $ python3 $S/ao-r48.py --selftest --scratch $S/ao48                    -> AOA_SELFTEST pass=28 fail=0  (exit 0)
+    $ python3 tools/kama-live-replay.py --selftest --scratch $S/klr        -> KLR_SELFTEST pass=22 fail=0  (exit 0)
+    $ python3 tools/kama-llamacpp-live.py --selftest
+      selftest: ok; closed tcp6 listeners ::1:35727, ::ffff:127.0.0.1:44609    (exit 0)
+    $ python3 tools/round49-append-audit-v4-check.py --repo $S/lane --tip 74558c71... --scratch $S/c2
+      tip=74558c71c38ceaeace15fd4cf8aa9d84977584b1
+      fixture=1 lane=1 scenarios=8/8 met=True                                   (exit 0, 4.4 s)
+    $ python3 tools/round49-replay-witness-audit.py --repo $S/lane --tip 74558c71... --scratch $S/c1
+      tip=74558c71c38ceaeace15fd4cf8aa9d84977584b1
+      witness=1 cap=1 newrow=1 witnessed=3/3 met=True                           (exit 0, 12.7 s)
+
+    $ python3 $S/ao-r48.py --repo $S/lane --contract registry/append-only-contract.tsv | grep 0718b6ab
+    event 0718b6abbda6 LOG.md deleted=2292 graded=2292 ungraded=0 ...
+    event 0718b6abbda6 SCORECARD.md deleted=2421 graded=2349 ungraded=72 ... status=restored
+    summary commits=320 files=92 events=5 restored=5 ... ungraded_lines=89 ...
+
+    $ python3 tools/append-only-audit.py --repo $S/lane --contract registry/append-only-contract.tsv \
+        | grep -E "event 0718b6ab.*SCORECARD|summary"
+    event 0718b6abbda6 SCORECARD.md deleted=2421 graded=2356 ungraded=65 restored_max=2356 held_at_to=2356 status=restored ...
+    summary commits=320 files=92 events=5 restored=5 partial=0 unrestored=0 ungraded=0 ungraded_lines=82 regressed=0 vanished=0 unmatched=0 binary=0 bad_declarations=0   (exit 0)
+
+    0718b6ab SCORECARD.md: ungraded 72 -> 65, total ungraded_lines 89 -> 82.

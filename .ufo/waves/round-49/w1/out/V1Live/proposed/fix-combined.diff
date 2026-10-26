@@ -1,0 +1,76 @@
+diff --git 1/lane/tools/kama-llamacpp-live.py 2/live.fixed.py
+old mode 100755
+new mode 100644
+index 1f97b7d..3a96564
+--- 1/lane/tools/kama-llamacpp-live.py
++++ 2/live.fixed.py
+@@ -225,18 +225,24 @@ def verify_archive_member(archive, asset_sha256, member, server_sha256, server_s
+     wins, as extraction does."""
+     import tarfile
+     try:
+-        st = os.stat(archive)
++        # Open first, then fstat the descriptor: the S_ISREG and size-cap
++        # checks then describe the exact object that will be hashed.  A path
++        # swapped between a stat-then-open pair (e.g. to a FIFO or to a larger
++        # regular file) cannot change the verdict or block open() forever
++        # (O_NONBLOCK is irrelevant for regular files; read() never blocks).
++        fd = os.open(archive, os.O_RDONLY | os.O_NONBLOCK)
+     except OSError:
+         raise SetupError('provenance-archive-unreadable')
+-    if not stat.S_ISREG(st.st_mode):
+-        raise SetupError('provenance-archive-not-regular')
+-    if st.st_size > ARCHIVE_MAX_BYTES:
+-        raise SetupError('provenance-archive-too-large')
+     try:
+-        arc = open(archive, 'rb')
+-    except OSError:
+-        raise SetupError('provenance-archive-unreadable')
+-    with arc:
++        st = os.fstat(fd)
++        if not stat.S_ISREG(st.st_mode):
++            raise SetupError('provenance-archive-not-regular')
++        if st.st_size > ARCHIVE_MAX_BYTES:
++            raise SetupError('provenance-archive-too-large')
++    except BaseException:
++        os.close(fd)
++        raise
++    with os.fdopen(fd, 'rb') as arc:
+         h_arc = hashlib.sha256()
+         for chunk in iter(lambda: arc.read(1 << 20), b''):
+             h_arc.update(chunk)
+@@ -284,17 +290,35 @@ def hold_for_witness(wdir, proc, port, timeout):
+     the child exits or `timeout` seconds pass. An outside observer can then read
+     /proc/<pid>/exe, the listening socket and the server's own answers; this tool records
+     only that it waited, never what the observer saw."""
++    def _announce(dead):
++        # never leave a stale ready.json behind: the observer reads it and
++        # fails against a server that is already gone
++        if dead:
++            try:
++                os.unlink(os.path.join(wdir, 'ready.json'))
++            except OSError:
++                pass
++            return {'schema': WITNESS_SCHEMA, 'dir': os.path.abspath(wdir),
++                    'port': port, 'pid': proc.pid, 'released': False,
++                    'waited_ms': 0}
++        return None
++    if not _child_running(proc):
++        return _announce(True)
+     ready = {'schema': WITNESS_SCHEMA, 'port': port, 'pid': proc.pid,
+              'written_utc': _utc_now()}
+     tmp = os.path.join(wdir, 'ready.json.tmp')
+     with open(tmp, 'w') as fh:
+         json.dump(ready, fh)
+     os.replace(tmp, os.path.join(wdir, 'ready.json'))
++    if not _child_running(proc):
++        return _announce(True)
+     release = os.path.join(wdir, 'release')
+     t0 = time.monotonic()
+     while (not os.path.exists(release) and time.monotonic() - t0 < timeout
+            and _child_running(proc)):
+         time.sleep(0.05)
++    if not _child_running(proc):
++        return _announce(True)
+     return {'schema': WITNESS_SCHEMA, 'dir': os.path.abspath(wdir), 'port': port,
+             'pid': proc.pid, 'released': os.path.exists(release),
+             'waited_ms': int((time.monotonic() - t0) * 1000)}

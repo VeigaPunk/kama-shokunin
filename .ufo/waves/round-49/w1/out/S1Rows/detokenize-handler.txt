@@ -1,0 +1,16 @@
+    };
+
+    this->post_detokenize = [this](const server_http_req & req) {
+        auto res = create_response();
+        const json body = json::parse(req.body);
+
+        std::string content;
+        if (body.count("tokens") != 0) {
+            const llama_tokens tokens = body.at("tokens").get<llama_tokens>();
+            content = tokens_to_str(ctx_server.vocab, tokens);
+        }
+
+        res->ok(json{{"content", std::move(content)}});
+        return res;
+    };
+

@@ -1,0 +1,33 @@
+R1Provenance evidence (commands run from fleet root, scratch /fast/scratch/hyaku/kama-r49/R1Provenance)
+2026-10-26
+
+[1] SERVER_SHA: release asset
+$ curl -sSL --fail -o $S/llama-b11909-bin-ubuntu-x64.tar.gz \
+    https://github.com/ggml-org/llama.cpp/releases/download/b11909/llama-b11909-bin-ubuntu-x64.tar.gz
+$ sha256sum $S/llama-b11909-bin-ubuntu-x64.tar.gz
+bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b  $S/llama-b11909-bin-ubuntu-x64.tar.gz
+$ tar -xzf $S/llama-b11909-bin-ubuntu-x64.tar.gz -C $S/x
+$ sha256sum $S/x/llama-b11909/llama-server
+35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0  $S/x/llama-b11909/llama-server
+Frozen SERVER_SHA (round49-replay-witness-audit.py:97) = 35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0  -> MATCH
+
+[2] MODEL_SHA: pinned URL
+$ curl -sSL --fail -o $S/stories260K.gguf \
+    https://huggingface.co/ggml-org/models-moved/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/stories260K.gguf
+$ sha256sum $S/stories260K.gguf
+270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d  $S/stories260K.gguf
+Frozen MODEL_SHA (line 101) = 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d  -> MATCH
+
+[3] README_COMMIT: b11909 tag
+$ git ls-remote https://github.com/ggml-org/llama.cpp.git refs/tags/b11909
+caa8191df159f764fb0160e3d2fc6be008948aee	refs/tags/b11909
+Frozen README_COMMIT (line 102) = caa8191df159f764fb0160e3d2fc6be008948aee  -> MATCH (lightweight tag, no peeled object)
+
+[4] README bytes
+$ curl -sSL --fail -o $S/README-upstream.md \
+    https://raw.githubusercontent.com/ggml-org/llama.cpp/caa8191df159f764fb0160e3d2fc6be008948aee/tools/server/README.md
+$ sha256sum $S/README-upstream.md /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/c1/server-README-caa8191d.md
+009af291f69adaa041be4e79f1550e5f36bcaf3a929373091a7e4ac9b7bbac0c  $S/README-upstream.md
+009af291f69adaa041be4e79f1550e5f36bcaf3a929373091a7e4ac9b7bbac0c  .../c1/server-README-caa8191d.md
+$ cmp -s $S/README-upstream.md .../c1/server-README-caa8191d.md && echo BYTE_IDENTICAL
+BYTE_IDENTICAL

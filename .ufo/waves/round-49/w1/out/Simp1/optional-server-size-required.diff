@@ -1,0 +1,43 @@
+diff --git a/tools/kama-llamacpp-live.py b/tools/kama-llamacpp-live.py
+index aded4be7..f4b50d0c 100755
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -209,7 +209,7 @@ ARCHIVE_MAX_BYTES = 1 << 30      # release assets are ~70 MB; 1 GiB is generous
+ MEMBER_MAX_COUNT = 4096          # archive index entries; the b11909 asset has ~60
+ 
+ 
+-def verify_archive_member(archive, asset_sha256, member, server_sha256, server_size=None):
++def verify_archive_member(archive, asset_sha256, member, server_sha256, server_size):
+     """Record-time provenance (v5): the archive must hash to asset_sha256 and its member
+     to the server binary's sha256. Returns (archive_sha256, member_sha256); raises
+     SetupError with a stable token otherwise. Reads the archive only; extracts nothing.
+@@ -256,7 +256,7 @@ def verify_archive_member(archive, asset_sha256, member, server_sha256, server_s
+                     raise SetupError('provenance-member-not-a-file')
+                 if found.sparse is not None:
+                     raise SetupError('provenance-member-sparse')
+-                if server_size is not None and found.size != server_size:
++                if found.size != server_size:
+                     raise SetupError('provenance-member-size-mismatch')
+                 member_sha = sha256_stream(tf.extractfile(found)).hexdigest()
+         except SetupError:
+@@ -1381,13 +1381,14 @@ def _provenance_selftest():
+             tf.addfile(ti, io.BytesIO(b'A'))
+         if got != (asha, ssha):
+             raise AssertionError('right archive and member not verified')
+-        for args, token in (((arc, '0' * 64, 'rel/llama-server', ssha), 'provenance-archive-digest-mismatch'),
+-                            ((arc, asha, 'rel/nope', ssha), 'provenance-member-absent'),
+-                            ((arc, asha, 'rel', ssha), 'provenance-member-not-a-file'),
+-                            ((arc, asha, 'rel/llama-server', '1' * 64), 'provenance-member-digest-mismatch'),
++        size = os.path.getsize(srv)
++        for args, token in (((arc, '0' * 64, 'rel/llama-server', ssha, size), 'provenance-archive-digest-mismatch'),
++                            ((arc, asha, 'rel/nope', ssha, size), 'provenance-member-absent'),
++                            ((arc, asha, 'rel', ssha, size), 'provenance-member-not-a-file'),
++                            ((arc, asha, 'rel/llama-server', '1' * 64, size), 'provenance-member-digest-mismatch'),
+                             ((arc, asha, 'rel/llama-server', ssha, 1), 'provenance-member-size-mismatch'),
+-                            ((sparse, sha256_file(sparse), 'rel/llama-server', ssha), 'provenance-member-sparse'),
+-                            ((d, asha, 'rel/llama-server', ssha), 'provenance-archive-not-regular')):
++                            ((sparse, sha256_file(sparse), 'rel/llama-server', ssha, size), 'provenance-member-sparse'),
++                            ((d, asha, 'rel/llama-server', ssha, size), 'provenance-archive-not-regular')):
+             try:
+                 verify_archive_member(*args)
+             except SetupError as exc:

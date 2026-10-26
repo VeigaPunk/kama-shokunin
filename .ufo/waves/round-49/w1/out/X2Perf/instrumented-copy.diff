@@ -1,0 +1,40 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py	2026-10-26 20:30:14.771344834 -0300
++++ /fast/scratch/hyaku/kama-r49/X2Perf/append-only-audit-instr.py	2026-10-26 20:32:07.927710962 -0300
+@@ -427,6 +427,8 @@
+             parents[parts[0]] = parts[1] if len(parts) > 1 else None
+     events, binary = [], []
+     origin_cache = {}
++    import time as _time
++    ORIG = [0.0, 0, 0, 0]  # seconds, calls, unique blobs, lines
+ 
+     def origins(f):
+         """v4 origin: line text -> the `## ` titles holding it in the first commit's blob of f
+@@ -445,6 +447,8 @@
+                     if ln not in orig:
+                         fresh[ln].add(t)
+                 orig.update(fresh)
++                ORIG[2] += 1
++                ORIG[3] += len(body)
+             origin_cache[f] = orig
+         return origin_cache[f]
+ 
+@@ -474,7 +478,10 @@
+                         if max(r.section_counts(wb[f"{x}:{f}"])[t] if wb[f"{x}:{f}"] else 0 for x in window)
+                         >= pcount[t]}
+             G = collections.Counter()
+-            org = origins(f) if titles else {}
++            if titles:
++                _t = _time.perf_counter(); org = origins(f); ORIG[0] += _time.perf_counter() - _t; ORIG[1] += 1
++            else:
++                org = {}
+             for pos, text in dl:
+                 s = psec[pos - 1]
+                 if prefixes and not any(s is not None and s.startswith(q) for q in prefixes):
+@@ -509,6 +516,7 @@
+                                 for e in events),
+                "vanished": len(gone), "unmatched": len(nomatch), "binary": len(binary),
+                "bad_declarations": sum(not d["ok"] for d in decls)}
++    print(f"INSTR origins_s={ORIG[0]:.3f} calls={ORIG[1]} blobs={ORIG[2]} lines={ORIG[3]}", file=__import__("sys").stderr)
+     return {"schema": SCHEMA, "definition": "v4", "to": to_full, "threshold": threshold, "contract": label,
+             "files": files,
+             "commits": len(commits), "events": events, "declarations": decls, "vanished": gone,

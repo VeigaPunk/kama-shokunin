@@ -1,0 +1,272 @@
+{
+  "seat": "X2Fixtures",
+  "round": 49,
+  "lane": "kama",
+  "tool": "tools/append-only-audit.py",
+  "tool_source_commit": "74558c71c38ceaeace15fd4cf8aa9d84977584b1",
+  "tool_sha256": "3bae58a391bc7a859446c68e632d79b593cf6b286f3599c359899699427eb0ed",
+  "written_before_any_run": true,
+  "revision_note": "Revised before any tool run (no fixture had been built or executed): three fixtures' move commits are diffed by git as a small deletion (the moved block is matched, so the deleted side is the 1-line heading or the 6-line head, below --threshold=20) and therefore raise no event; only the drop commit is an event. Predictions keyed to the drop commit only.",
+  "threshold": 20,
+  "method": "predictions derived by hand from the v4 definitions in the tool docstring/body (sections() at tools/append-only-audit.py:265, origins() at :423, the carve-out gate at :475, file_regions() at :384, vanished() at :291, the `not files` skip at :437) before building or running any fixture; `predicted` is what those definitions compute, `intended` is what the v4 purpose stated in the docstring (:1-40) implies for the same fixture",
+  "scenarios": [
+    {
+      "id": "fence-heading-move",
+      "axis": "heading inside a fenced code block whose lines move",
+      "fixture": {
+        "contract_rows": ["SCORE.md\tA-corr\tNOTES.md:1\texempt=## Axes@NOTES.md:2\tfixture"],
+        "c1": "SCORE.md: [# score, ## Axes, h0..h4, ## Round 1, d0..d4, ```, ## Axes, f0..f24, ```]  (the fenced body f0..f24 sits under a quoted `## Axes` inside the fence, in the dated part of the file)",
+        "c2": "f0..f24 moved out of the fence into the real ## Axes head; the fence keeps only its quoted heading (diff: 9 deletions, below threshold, no event)",
+        "c3": "f0..f24 dropped from the head and replaced by 30 regrow lines g0..g29 (diff: 25 deletions)"
+      },
+      "predicted": {
+        "events": [
+          {"tag": "c3", "deleted": 25, "graded": 0, "ungraded": 25, "status": "ungraded"}
+        ],
+        "vanished": [],
+        "unmatched_patterns": [],
+        "bad_declarations": 0,
+        "exit": 0
+      },
+      "intended": {
+        "events": [{"tag": "c3", "graded": 25, "ungraded": 0, "status": "unrestored"}],
+        "exit": 1,
+        "reason": "the 25 lines are dated-section text (they sit under ## Round 1); a fenced ## Axes is a quotation, not a heading, and must not make a home for them in the exemption"
+      },
+      "agreement_expected": "DISAGREE",
+      "why": "sections() (:265) is fence-blind: any line starting with b'## ' becomes a title, so the quoted heading inside the fence gives the fenced body the exempt title; origins() (:423) reuses sections(), so origin(f_i) = {'## Axes'} and the :475 gate passes"
+    },
+    {
+      "id": "crlf-dated-to-head",
+      "axis": "CRLF line text born in a dated section moved into the head (byte-exact move)",
+      "fixture": {
+        "contract_rows": ["SCORE.md\tA-corr\tNOTES.md:1\texempt=## Axes@NOTES.md:2\tfixture"],
+        "c1": "SCORE.md (mixed endings): [# score\\n, ## Axes\\n, h0..h4\\n, ## Round 1\\n, 25 lines d0..d24 each ending \\r\\n]",
+        "c2": "the 25 CRLF lines moved byte-exact into the ## Axes head (still \\r\\n; diff: 1 deletion, no event)",
+        "c3": "the 25 CRLF lines dropped from the head and replaced by 30 LF regrow lines (diff: 25 deletions)"
+      },
+      "predicted": {
+        "events": [
+          {"tag": "c3", "deleted": 25, "graded": 25, "ungraded": 0, "status": "unrestored"}
+        ],
+        "vanished": [],
+        "unmatched_patterns": [],
+        "bad_declarations": 0,
+        "exit": 1
+      },
+      "intended": {
+        "events": [{"tag": "c3", "graded": 25, "ungraded": 0, "status": "unrestored"}],
+        "exit": 1,
+        "reason": "text born in ## Round 1 keeps that origin through a byte-exact move, so the drop under ## Axes is graded"
+      },
+      "agreement_expected": "AGREE",
+      "why": "the \\r survives split_lines() (:300) unchanged, so the deleted bytes equal the born bytes and origin(l) = {'## Round 1'}"
+    },
+    {
+      "id": "crlf-normalized-move",
+      "axis": "CRLF dated text moved into the head with CRLF->LF normalisation in the move commit",
+      "fixture": {
+        "contract_rows": ["SCORE.md\tA-corr\tNOTES.md:1\texempt=## Axes@NOTES.md:2\tfixture"],
+        "c1": "as crlf-dated-to-head c1",
+        "c2": "the 25 dated lines moved into the ## Axes head and normalised to LF in the same commit (diff: 25 deletions of the \\r\\n bytes, 25 additions of the LF bytes)",
+        "c3": "the 25 LF lines dropped from the head and replaced by 30 LF regrow lines (diff: 25 deletions)"
+      },
+      "predicted": {
+        "events": [
+          {"tag": "c2", "deleted": 25, "graded": 25, "ungraded": 0, "status": "unrestored"},
+          {"tag": "c3", "deleted": 25, "graded": 0, "ungraded": 25, "status": "ungraded"}
+        ],
+        "vanished": [],
+        "unmatched_patterns": [],
+        "bad_declarations": 0,
+        "exit": 1
+      },
+      "intended": {
+        "events": [{"tag": "c3", "graded": 25, "ungraded": 0, "status": "unrestored"}],
+        "exit": 1,
+        "reason": "a line-ending normalisation does not change the words: the dated birth should survive it and the drop under ## Axes should be graded"
+      },
+      "agreement_expected": "DISAGREE",
+      "why": "the LF variant is a new byte string first held at c2, inside ## Axes, so origin(LF text) = {'## Axes'} and the :475 gate ungrades the c3 drop; the exit code is still 1 but from c2 reading the merely-normalised text as an unrestored 25-line loss, not from the drop"
+    },
+    {
+      "id": "crlf-normalized-subthreshold",
+      "axis": "the same normalising move split below the 20-line event threshold",
+      "fixture": {
+        "contract_rows": ["SCORE.md\tA-corr\tNOTES.md:1\texempt=## Axes@NOTES.md:2\tfixture"],
+        "c1": "as crlf-dated-to-head c1",
+        "c2": "13 of the 25 dated lines moved into the head and normalised to LF (13 deletions < threshold, no event)",
+        "c3": "the remaining 12 moved and normalised (12 deletions < threshold, no event)",
+        "c4": "all 25 LF lines dropped from the head and replaced by 30 LF regrow lines (diff: 25 deletions)"
+      },
+      "predicted": {
+        "events": [
+          {"tag": "c4", "deleted": 25, "graded": 0, "ungraded": 25, "status": "ungraded"}
+        ],
+        "vanished": [],
+        "unmatched_patterns": [],
+        "bad_declarations": 0,
+        "exit": 0
+      },
+      "intended": {
+        "events": [{"tag": "c4", "graded": 25, "ungraded": 0, "status": "unrestored"}],
+        "exit": 1,
+        "reason": "25 dated lines are gone; the absence of a graded event for the normalisation is not a licence"
+      },
+      "agreement_expected": "DISAGREE",
+      "why": "no normalising move reaches --threshold, and by c4 every dropped line's first appearance is inside ## Axes: origin = {'## Axes'}, the :475 gate passes, exit 0"
+    },
+    {
+      "id": "preamble-to-head-dropped",
+      "axis": "a preamble (no section) line moved into the head and dropped",
+      "fixture": {
+        "contract_rows": ["SCORE.md\tA-corr\tNOTES.md:1\texempt=## Axes@NOTES.md:2\tfixture"],
+        "c1": "SCORE.md: [# score, 25 preamble lines p0..p24 (before the first ## heading), ## Axes, h0..h4, ## Round 1, d0..d2]",
+        "c2": "the 25 preamble lines moved into the ## Axes head (diff: 6 deletions, no event)",
+        "c3": "the 25 lines dropped from the head and replaced by 30 regrow lines (diff: 25 deletions)"
+      },
+      "predicted": {
+        "events": [
+          {"tag": "c3", "deleted": 25, "graded": 25, "ungraded": 0, "status": "unrestored"}
+        ],
+        "vanished": [],
+        "unmatched_patterns": [],
+        "bad_declarations": 0,
+        "exit": 1
+      },
+      "intended": {
+        "events": [{"tag": "c3", "graded": 25, "ungraded": 0, "status": "unrestored"}],
+        "exit": 1,
+        "reason": "None is not an exempt title, so preamble-born text stays graded wherever it is later deleted"
+      },
+      "agreement_expected": "AGREE",
+      "why": "origin(l) = {None} for preamble-born text; frozenset({None}) & titles is empty at :475"
+    },
+    {
+      "id": "two-rows-two-titles",
+      "axis": "two contract rows matching one file with different exempt titles",
+      "fixture": {
+        "contract_rows": [
+          "SCORE.md\tA-corr\tNOTES.md:1\texempt=## Axes@NOTES.md:3\trow A",
+          "SCORE.md\tA-corr\tNOTES.md:1\texempt=## Planned@NOTES.md:3\trow B"
+        ],
+        "c1": "SCORE.md: [# score, ## Axes, h0..h4, ## Planned, q0..q24]",
+        "c2": "the 25 ## Planned lines moved into the ## Axes head (diff: 1 deletion, no event)",
+        "c3": "the 25 lines dropped from the head and replaced by 30 regrow lines (diff: 25 deletions)"
+      },
+      "predicted": {
+        "events": [
+          {"tag": "c3", "deleted": 25, "graded": 0, "ungraded": 25, "status": "ungraded"}
+        ],
+        "vanished": [],
+        "unmatched_patterns": [],
+        "bad_declarations": 0,
+        "exit": 0
+      },
+      "intended": {
+        "events": [{"tag": "c3", "graded": 0, "ungraded": 25, "status": "ungraded"}],
+        "exit": 0,
+        "reason": "both titles are declared re-derived in place, so text born in either one is exempt text; the union is what the contract says"
+      },
+      "agreement_expected": "AGREE",
+      "why": "file_regions() (:384) unions the two rows' titles; origin(q_i) = {'## Planned'} intersects the union at :475"
+    },
+    {
+      "id": "star-plus-exempt-row",
+      "axis": "two rows for one file: one whole-file (*) and one exempt, both valid",
+      "fixture": {
+        "contract_rows": [
+          "SCORE.md\tA-corr\tNOTES.md:1\t*\twhole-file row",
+          "SCORE.md\tA-corr\tNOTES.md:1\texempt=## Axes@NOTES.md:2\texempt row"
+        ],
+        "c1": "SCORE.md: [# score, ## Axes, 25 o lines, ## Round 1, d0..d2]",
+        "c2": "the 25 ## Axes lines rewritten in place (diff: 25 deletions)"
+      },
+      "predicted": {
+        "events": [
+          {"tag": "c2", "deleted": 25, "graded": 0, "ungraded": 25, "status": "ungraded"}
+        ],
+        "vanished": [],
+        "unmatched_patterns": [],
+        "bad_declarations": 0,
+        "exit": 0
+      },
+      "intended": {
+        "events": [{"tag": "c2", "graded": 25, "ungraded": 0, "status": "unrestored"}],
+        "exit": 1,
+        "reason": "a row declaring `*` grades every line of the file; a second row cannot loosen a rule the contract states without qualification, so the stricter row should win (or the contract should reject the disagreement)"
+      },
+      "agreement_expected": "DISAGREE",
+      "why": "file_regions() (:384) ignores the `*` row entirely (it collects only exempt titles and only prefixes), so the exempt row alone decides and the carve-out applies"
+    },
+    {
+      "id": "rename-declared-away",
+      "axis": "a file renamed (--no-renames diff): declared file renamed to an undeclared path",
+      "fixture": {
+        "contract_rows": ["SCORE.md\tA-corr\tNOTES.md:1\texempt=## Axes@NOTES.md:2\tfixture"],
+        "c1": "SCORE.md: [# score, ## Axes, a0..a24, ## Round 1, d0..d24] (52 lines) plus NOTES.md",
+        "c2": "git mv SCORE.md OTHER.md, no content change"
+      },
+      "predicted": {
+        "events": [],
+        "vanished": ["SCORE.md"],
+        "unmatched_patterns": ["SCORE.md"],
+        "bad_declarations": 0,
+        "exit": 1
+      },
+      "intended": {
+        "events": [],
+        "exit": 1,
+        "reason": "the loss is caught (exit 1) but only as a vanished path; no deleted count is attached to it"
+      },
+      "agreement_expected": "AGREE",
+      "why": "files = expand(patterns, tip) is empty (SCORE.md is not at the tip) and audit() skips every commit when `not files` (:437), so the 52-line deletion raises no event; vanished() (:291) reads the --no-renames log, sees SCORE.md and reports it"
+    },
+    {
+      "id": "rename-within-wildcard",
+      "axis": "a declared file renamed to another path the same wildcard row covers",
+      "fixture": {
+        "contract_rows": ["corpus/lessons/*.md\tA-corr\tNOTES.md:1\t*\tfixture"],
+        "c1": "corpus/lessons/r1.md: 30 lines",
+        "c2": "git mv corpus/lessons/r1.md corpus/lessons/r2.md, no content change"
+      },
+      "predicted": {
+        "events": [],
+        "vanished": ["corpus/lessons/r1.md"],
+        "unmatched_patterns": [],
+        "bad_declarations": 0,
+        "exit": 1
+      },
+      "intended": {
+        "events": [],
+        "exit": 1,
+        "reason": "the old path leaves the declared set, so the 30-line deletion is a loss; caught, but with no deleted count"
+      },
+      "agreement_expected": "AGREE",
+      "why": "files at tip = [corpus/lessons/r2.md]; numstat is asked only about r2.md (additions only), so the old path's 30 deletions never reach deleted_lines(); vanished reports r1.md"
+    },
+    {
+      "id": "rename-into-declared",
+      "axis": "an undeclared file renamed onto a declared path",
+      "fixture": {
+        "contract_rows": ["SCORE.md\tA-corr\tNOTES.md:1\texempt=## Axes@NOTES.md:2\tfixture"],
+        "c1": "DRAFT.md: [# draft, ## Axes, 25 lines] (26 lines); no SCORE.md",
+        "c2": "git mv DRAFT.md SCORE.md, no content change"
+      },
+      "predicted": {
+        "events": [],
+        "vanished": [],
+        "unmatched_patterns": [],
+        "bad_declarations": 0,
+        "exit": 0
+      },
+      "intended": {
+        "events": [],
+        "exit": 0,
+        "reason": "arriving at a declared path is an addition; the file is audited from the first commit that holds it"
+      },
+      "agreement_expected": "AGREE",
+      "why": "SCORE.md's diff against c1 is 26 additions and 0 deletions; DRAFT.md is not matched by any pattern so it is not vanished"
+    }
+  ]
+}

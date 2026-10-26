@@ -1,0 +1,61 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 84157d38..6dbfe23d 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -199,9 +199,12 @@ def parse_contract(text):
+     return rows
+ 
+ 
+-def row_token(pattern):
+-    """The word a declaring line must name: the base name without extension, or the
+-    parent directory's name when the base name holds a wildcard."""
++NEG3 = ("not append-only", "not append only", "no longer append", "never append-only")
++NEGW = re.compile(r"(?:\b(?:not|never|no|nor|neither|non|isn't|aren't)\b|\bno longer\b)"
++                  r"(?:[\s\-]+[\w'’]+){0,3}?[\s\-]+append[- ]only")
++
++
++def token(pattern):
+     parts = pattern.split("/")
+     base = parts[-1]
+     if any(ch in base for ch in "*?["):
+@@ -209,24 +212,18 @@ def row_token(pattern):
+     return base.rsplit(".", 1)[0] if "." in base else base
+ 
+ 
+-NEG_WINDOW = re.compile(r"(?:\b(?:not|never|no|nor|neither|non|isn't|aren't)\b|\bno longer\b)"
+-                        r"(?:[\s\-]+[\w'’]+){0,3}?[\s\-]+append[- ]only")
++def says(low):
++    return ("append-only" in low or "append only" in low) and not any(n in low for n in NEG3) \
++        and not NEGW.search(low)
+ 
+ 
+ def binds(text, pattern, decl_path):
+-    """A declaring line binds a row when it says append-only, is not a negation, and either
+-    the declaring file is the row's (non-wildcard) path or the line names the row's token
+-    as a whole word. v4 (round 49, round-48 seat K1Binding): the token match is
+-    word-bounded (`log` inside `catalog` no longer binds), a negation within three words
+-    before `append-only` unbinds (`not strictly append-only`), and a wildcard row is never
+-    bound by a line of a file it covers merely saying append-only (self-declaration)."""
+     if text is None:
+         return False
+     low = text.lower()
+-    if not ("append-only" in low or "append only" in low) or any(n in low for n in NEGATIONS) \
+-            or NEG_WINDOW.search(low):
++    if not says(low):
+         return False
+-    tok = row_token(pattern).lower()
++    tok = token(pattern).lower()
+     wild = any(ch in pattern for ch in "*?[")
+     if not wild and fnmatch.fnmatchcase(decl_path, pattern):
+         return True
+@@ -471,8 +468,8 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
+                 s = psec[pos - 1]
+                 if prefixes and not any(s is not None and s.startswith(q) for q in prefixes):
+                     continue
+-                # v4: the carve-out covers only text born in an exempt section (origin)
+-                if s in eligible and org.get(text, frozenset()) & titles:
++                # M-C: v3 title-based exemption (no origin; binder copied from counter)
++                if s in eligible:
+                     continue
+                 G[text] += 1
+             ng = sum(G.values())

@@ -1,0 +1,33 @@
+# KQ75 pointers at base 438127bc and at tip 74558c71
+## base 154-176
+154:
+155:def _get(rec, *keys):
+156:    node = rec
+157:    for k in keys:
+158:        if not isinstance(node, dict):
+159:            return None
+160:        node = node.get(k)
+161:    return node
+162:
+163:
+164:def projection(rec):
+165:    """The stable projection of a live receipt (see the module docstring)."""
+166:    raw = _get(rec, "captures", "models", "body")
+167:    try:
+168:        body = json.loads(raw) if isinstance(raw, str) else None
+169:    except ValueError:
+170:        body = None
+171:    if body is None and raw is not None:
+172:        # unparseable or non-string body: fall back to the byte digest so two
+173:        # different unparseable bodies do not compare equal (F11)
+174:        models = _get(rec, "captures", "models", "body_sha256") or "unparseable"
+175:    elif isinstance(body, dict):
+176:        data = body.get("data") if isinstance(body.get("data"), list) else []
+## base compare/argparse
+194:def compare(orig, rerun):
+435:    ap.add_argument("--compare", nargs=2, metavar=("A", "B"),
+## tip compare/argparse
+198:def compare(orig, rerun):
+446:    ap.add_argument("--compare", nargs=2, metavar=("A", "B"),
+## tip 397
+397:        run("v5-not-verified", v5(**{"provenance.model.url": pinned, "provenance.verified": None}), 2,

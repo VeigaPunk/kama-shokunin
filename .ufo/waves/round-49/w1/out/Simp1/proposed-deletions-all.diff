@@ -1,0 +1,131 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 84157d38..bd9da6ac 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -21,8 +21,6 @@ The round-49 C2 counter (tools/round49-append-audit-v4-check.py, frozen before t
+ tool) checks these on eight constructed fixtures and bounds the lane's ungraded lines
+ by its own origin count.
+ 
+-v3 (round 48) text, kept:
+-
+ v3 (round 48) grades the lane's rule as the lane declares it, carve-outs included
+ (round-47 closure D5; seats Rev1Restore, K1Design, V1Ctr, X1Stable, K1Fixture):
+   - the contract gains a `region` cell: `*` (every line graded), `exempt=<T1>|<T2>@<p>:<n>`
+@@ -55,8 +53,6 @@ recomputes them on its own code path):
+              row's token (base name without extension; the parent directory's name when
+              the base name has a wildcard)
+ 
+-v2 (round 47) text, kept:
+-
+ v2 (round 47) replaces the round-46 v1 definition after its outside closure
+ (corpus/lessons/round-46-verifier-spotcheck.md D1, D2) and the round-46 wave
+ (K2Design, Rev2Decl, X2Fixture):
+@@ -88,7 +84,6 @@ on its own code path):
+   restored_max the maximum held(x) over the window; restored_best the first window
+                commit attaining it (null when 0); restored_by the first window commit
+                with held == |D| (null when none)
+-  status       restored (max == |D|), unrestored (max == 0), partial otherwise
+ Reported beside the events (round-47 wave findings; not part of the frozen counter's
+ definition, which the events and files above follow exactly):
+   vanished            contract-matching paths some commit up to <to> held that <to> does
+diff --git a/tools/kama-llamacpp-live.py b/tools/kama-llamacpp-live.py
+index 1f97b7de..f4b50d0c 100755
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -209,7 +209,7 @@ ARCHIVE_MAX_BYTES = 1 << 30      # release assets are ~70 MB; 1 GiB is generous
+ MEMBER_MAX_COUNT = 4096          # archive index entries; the b11909 asset has ~60
+ 
+ 
+-def verify_archive_member(archive, asset_sha256, member, server_sha256, server_size=None):
++def verify_archive_member(archive, asset_sha256, member, server_sha256, server_size):
+     """Record-time provenance (v5): the archive must hash to asset_sha256 and its member
+     to the server binary's sha256. Returns (archive_sha256, member_sha256); raises
+     SetupError with a stable token otherwise. Reads the archive only; extracts nothing.
+@@ -237,10 +237,7 @@ def verify_archive_member(archive, asset_sha256, member, server_sha256, server_s
+     except OSError:
+         raise SetupError('provenance-archive-unreadable')
+     with arc:
+-        h_arc = hashlib.sha256()
+-        for chunk in iter(lambda: arc.read(1 << 20), b''):
+-            h_arc.update(chunk)
+-        archive_sha = h_arc.hexdigest()
++        archive_sha = sha256_stream(arc).hexdigest()
+         if archive_sha != asset_sha256:
+             raise SetupError('provenance-archive-digest-mismatch')
+         arc.seek(0)
+@@ -259,19 +256,16 @@ def verify_archive_member(archive, asset_sha256, member, server_sha256, server_s
+                     raise SetupError('provenance-member-not-a-file')
+                 if found.sparse is not None:
+                     raise SetupError('provenance-member-sparse')
+-                if server_size is not None and found.size != server_size:
++                if found.size != server_size:
+                     raise SetupError('provenance-member-size-mismatch')
+-                h = hashlib.sha256()
+-                fh = tf.extractfile(found)
+-                for chunk in iter(lambda: fh.read(1 << 20), b''):
+-                    h.update(chunk)
++                member_sha = sha256_stream(tf.extractfile(found)).hexdigest()
+         except SetupError:
+             raise
+         except (OSError, EOFError, tarfile.TarError):
+             raise SetupError('provenance-archive-unreadable')
+-    if h.hexdigest() != server_sha256:
++    if member_sha != server_sha256:
+         raise SetupError('provenance-member-digest-mismatch')
+-    return archive_sha, h.hexdigest()
++    return archive_sha, member_sha
+ 
+ 
+ WITNESS_SCHEMA = 'kama-live-witness/v1'
+@@ -284,8 +278,7 @@ def hold_for_witness(wdir, proc, port, timeout):
+     the child exits or `timeout` seconds pass. An outside observer can then read
+     /proc/<pid>/exe, the listening socket and the server's own answers; this tool records
+     only that it waited, never what the observer saw."""
+-    ready = {'schema': WITNESS_SCHEMA, 'port': port, 'pid': proc.pid,
+-             'written_utc': _utc_now()}
++    ready = {'schema': WITNESS_SCHEMA, 'port': port, 'pid': proc.pid}
+     tmp = os.path.join(wdir, 'ready.json.tmp')
+     with open(tmp, 'w') as fh:
+         json.dump(ready, fh)
+@@ -300,12 +293,16 @@ def hold_for_witness(wdir, proc, port, timeout):
+             'waited_ms': int((time.monotonic() - t0) * 1000)}
+ 
+ 
+-def sha256_file(path):
++def sha256_stream(fh):
+     h = hashlib.sha256()
++    for chunk in iter(lambda: fh.read(1 << 20), b''):
++        h.update(chunk)
++    return h
++
++
++def sha256_file(path):
+     with open(path, 'rb') as fh:
+-        for chunk in iter(lambda: fh.read(1 << 20), b''):
+-            h.update(chunk)
+-    return h.hexdigest()
++        return sha256_stream(fh).hexdigest()
+ 
+ def install_tree(server_real):
+     """Complete regular-file map and digest for dirname(server_real).
+@@ -1384,13 +1381,14 @@ def _provenance_selftest():
+             tf.addfile(ti, io.BytesIO(b'A'))
+         if got != (asha, ssha):
+             raise AssertionError('right archive and member not verified')
+-        for args, token in (((arc, '0' * 64, 'rel/llama-server', ssha), 'provenance-archive-digest-mismatch'),
+-                            ((arc, asha, 'rel/nope', ssha), 'provenance-member-absent'),
+-                            ((arc, asha, 'rel', ssha), 'provenance-member-not-a-file'),
+-                            ((arc, asha, 'rel/llama-server', '1' * 64), 'provenance-member-digest-mismatch'),
++        size = os.path.getsize(srv)
++        for args, token in (((arc, '0' * 64, 'rel/llama-server', ssha, size), 'provenance-archive-digest-mismatch'),
++                            ((arc, asha, 'rel/nope', ssha, size), 'provenance-member-absent'),
++                            ((arc, asha, 'rel', ssha, size), 'provenance-member-not-a-file'),
++                            ((arc, asha, 'rel/llama-server', '1' * 64, size), 'provenance-member-digest-mismatch'),
+                             ((arc, asha, 'rel/llama-server', ssha, 1), 'provenance-member-size-mismatch'),
+-                            ((sparse, sha256_file(sparse), 'rel/llama-server', ssha), 'provenance-member-sparse'),
+-                            ((d, asha, 'rel/llama-server', ssha), 'provenance-archive-not-regular')):
++                            ((sparse, sha256_file(sparse), 'rel/llama-server', ssha, size), 'provenance-member-sparse'),
++                            ((d, asha, 'rel/llama-server', ssha, size), 'provenance-archive-not-regular')):
+             try:
+                 verify_archive_member(*args)
+             except SetupError as exc:

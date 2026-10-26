@@ -1,0 +1,50 @@
+--- a/tools/round49-replay-witness-audit.py
++++ b/tools/round49-replay-witness-audit.py
+@@ -147,8 +147,10 @@
+         data = fh.read()
+     if data[:4] != b"GGUF":
+         raise EvalError("model is not GGUF")
++    if len(data) < 24:
++        raise EvalError("GGUF header truncated")
+     ver = struct.unpack_from("<I", data, 4)[0]
+-    if ver < 2:
++    if ver not in (2, 3):
+         raise EvalError(f"GGUF v{ver} unsupported")
+     _nt, nkv = struct.unpack_from("<QQ", data, 8)
+     off = 24
+@@ -156,9 +158,13 @@
+ 
+     def rstr(o):
+         n = struct.unpack_from("<Q", data, o)[0]
++        if n > len(data) - (o + 8):
++            raise EvalError(f"truncated string: {n} bytes declared, {len(data) - o - 8} left")
+         return data[o + 8:o + 8 + n].decode("utf-8", "replace"), o + 8 + n
+ 
+-    def skip(t, o):
++    def skip(t, o, depth=0):
++        if depth > 64:
++            raise EvalError("GGUF nesting too deep")
+         if t in fixed:
+             return o + fixed[t]
+         if t == 8:
+@@ -166,8 +172,10 @@
+         if t == 9:
+             et, n = struct.unpack_from("<IQ", data, o)
+             o += 12
++            if n > len(data) - o:
++                raise EvalError(f"implausible array length {n} in {len(data) - o} bytes")
+             for _ in range(n):
+-                o = skip(et, o)
++                o = skip(et, o, depth + 1)
+             return o
+         raise EvalError(f"GGUF value type {t}")
+ 
+@@ -180,6 +188,8 @@
+             off += 12
+             if et != 8:
+                 raise EvalError("tokens array is not strings")
++            if n > len(data) - off:
++                raise EvalError(f"tokens array declares {n} entries in {len(data) - off} bytes")
+             out = []
+             for _ in range(n):
+                 s, off = rstr(off)

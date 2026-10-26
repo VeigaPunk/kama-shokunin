@@ -55,6 +55,10 @@ tool, once the server is ready and its checks ran, write ``D/ready.json``
 the server up until ``D/release`` exists (``--witness-timeout``, default 120 s),
 so an outside observer can check the running binary, its listening socket and
 its answers; the receipt gains ``witness`` {released, waited_ms, port, pid, dir}.
+A witness dir is one run's handshake: before the server starts the tool removes an
+earlier run's ``ready.json``/``release`` (and refuses a dir it cannot make empty or
+write to), and when the hold ends it removes ``ready.json``, so an observer never
+reads a dead pid or a release from another run.
 
 Deps: python3 stdlib only, plus whatever the probed server and
 ``bash tools/kama-probe.sh`` (curl, ss) need.
@@ -224,18 +228,23 @@ def verify_archive_member(archive, asset_sha256, member, server_sha256, server_s
     before a byte of the member is read. The last occurrence of a duplicated member name
     wins, as extraction does."""
     import tarfile
+    # one descriptor for the checks and the reads (round-49 seat V1Live F1: a path stat'ed
+    # then re-opened could be swapped for a FIFO, which blocks open(), or a larger file);
+    # O_NONBLOCK keeps open() from blocking on a FIFO and is inert for a regular file
     try:
-        st = os.stat(archive)
+        fd = os.open(archive, os.O_RDONLY | os.O_NONBLOCK)
     except OSError:
         raise SetupError('provenance-archive-unreadable')
-    if not stat.S_ISREG(st.st_mode):
-        raise SetupError('provenance-archive-not-regular')
-    if st.st_size > ARCHIVE_MAX_BYTES:
-        raise SetupError('provenance-archive-too-large')
     try:
-        arc = open(archive, 'rb')
-    except OSError:
-        raise SetupError('provenance-archive-unreadable')
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode):
+            raise SetupError('provenance-archive-not-regular')
+        if st.st_size > ARCHIVE_MAX_BYTES:
+            raise SetupError('provenance-archive-too-large')
+        arc = os.fdopen(fd, 'rb')
+    except BaseException:
+        os.close(fd)
+        raise
     with arc:
         h_arc = hashlib.sha256()
         for chunk in iter(lambda: arc.read(1 << 20), b''):
@@ -277,6 +286,43 @@ def verify_archive_member(archive, asset_sha256, member, server_sha256, server_s
 WITNESS_SCHEMA = 'kama-live-witness/v1'
 
 
+def prepare_witness_dir(wdir):
+    """Round 49 (seat X1Offline): a witness dir carries ONE run's handshake.
+
+    ready.json is only written once the server is ready, so an observer polling from
+    the start of the run reads whatever an earlier run left behind (a dead pid, or a
+    still-live server of another run) and a leftover release ends this run's hold at
+    once with no observation window. Remove both before the server starts and prove
+    the directory is writable, so a bad directory is a fast token instead of an
+    internal fault after a server start."""
+    for name in sorted(os.listdir(wdir)):
+        if (name == 'ready.json' or name == 'release'
+                or name.startswith('ready.json.tmp')
+                or name.startswith('.witness-write-probe')):
+            path = os.path.join(wdir, name)
+            try:
+                os.unlink(path)
+            except IsADirectoryError as exc:
+                raise SetupError('witness-dir-unusable:not-a-file:' + name) from exc
+            except OSError as exc:
+                raise SetupError('witness-dir-unusable:'
+                                 + (exc.strerror or type(exc).__name__)) from exc
+    probe = os.path.join(wdir, '.witness-write-probe.%d' % os.getpid())
+    try:
+        with open(probe, 'w') as fh:
+            fh.write('')
+    except OSError as exc:
+        raise SetupError('witness-dir-unwritable:'
+                         + (exc.strerror or type(exc).__name__)) from exc
+    try:
+        os.unlink(probe)
+    except FileNotFoundError:
+        pass  # the write proved the directory writable; the probe is already gone
+    except OSError as exc:
+        raise SetupError('witness-dir-unwritable:'
+                         + (exc.strerror or type(exc).__name__)) from exc
+
+
 def hold_for_witness(wdir, proc, port, timeout):
     """Round 49 (closure R5: a replay that never ran a server met the round-48 counter):
     announce the ready server - ready.json {schema, port, pid} written atomically in wdir,
@@ -286,18 +332,45 @@ def hold_for_witness(wdir, proc, port, timeout):
     only that it waited, never what the observer saw."""
     ready = {'schema': WITNESS_SCHEMA, 'port': port, 'pid': proc.pid,
              'written_utc': _utc_now()}
-    tmp = os.path.join(wdir, 'ready.json.tmp')
-    with open(tmp, 'w') as fh:
+    ready_path = os.path.join(wdir, 'ready.json')
+    # per-run temp name: a fixed ready.json.tmp is opened by every run using the
+    # directory, and a second run's os.replace() then fails ENOENT (X1Offline)
+    tmp = os.path.join(wdir, 'ready.json.tmp.%d' % proc.pid)
+    # announce only a child that is still running (round-49 seat V1Live F2)
+    if not _child_running(proc):
+        raise SetupError('witness-child-exited-before-announce')
+    parent = os.getppid()
+    # O_EXCL|O_NOFOLLOW: a symlink planted at the temp name is never followed for the
+    # write (round-49 seat Sen1Witness F1); an existing entry is a setup error
+    try:
+        fd = os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW, 0o644)
+    except OSError as exc:
+        raise SetupError('witness-dir-unusable:' + (exc.strerror or type(exc).__name__))
+    with os.fdopen(fd, 'w') as fh:
         json.dump(ready, fh)
-    os.replace(tmp, os.path.join(wdir, 'ready.json'))
+    os.replace(tmp, ready_path)
     release = os.path.join(wdir, 'release')
     t0 = time.monotonic()
-    while (not os.path.exists(release) and time.monotonic() - t0 < timeout
-           and _child_running(proc)):
-        time.sleep(0.05)
+    try:
+        # the hold also ends when this tool's parent dies (round-49 seat X1Kill: a killed
+        # replay left the server listening for the whole witness timeout, because
+        # pdeathsig covers only live tool -> server); teardown then runs as usual
+        while (not os.path.exists(release) and time.monotonic() - t0 < timeout
+               and _child_running(proc) and os.getppid() == parent):
+            time.sleep(0.05)
+        waited = int((time.monotonic() - t0) * 1000)
+        released = os.path.exists(release)
+        orphaned = os.getppid() != parent
+    finally:
+        # the handshake names this run's child only while it is up: a ready.json left
+        # behind is a dead pid a later observer in the same directory would read
+        for path in (ready_path, tmp):
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
     return {'schema': WITNESS_SCHEMA, 'dir': os.path.abspath(wdir), 'port': port,
-            'pid': proc.pid, 'released': os.path.exists(release),
-            'waited_ms': int((time.monotonic() - t0) * 1000)}
+            'pid': proc.pid, 'released': released, 'waited_ms': waited, 'orphaned': orphaned}
 
 
 def sha256_file(path):
@@ -1262,10 +1335,12 @@ def build_parser():
                         'hashed against --server-asset-sha256 and its member '
                         'against --server before the server starts')
     p.add_argument('--witness-dir', default=None,
-                   help='existing directory: once the server is ready and its '
-                        'checks ran, write ready.json {port, pid} there and keep '
-                        'the server up until a file named release appears '
-                        '(round 49)')
+                   help='existing directory, one run at a time: an earlier run\'s '
+                        'ready.json/release is removed before the server starts and '
+                        'the handshake is removed when the hold ends; once the '
+                        'server is ready and its checks ran, write ready.json '
+                        '{port, pid} there and keep the server up until a file named '
+                        'release appears (round 49)')
     p.add_argument('--witness-timeout', type=float, default=120.0,
                    help='seconds to wait for the release file (default 120)')
     p.add_argument('--selftest', action='store_true',
@@ -1382,6 +1457,12 @@ def _provenance_selftest():
                               'GNU.sparse.minor': '0',
                               'GNU.sparse.realsize': str(10 ** 15)}
             tf.addfile(ti, io.BytesIO(b'A'))
+        # round 49 (X1Selftest): the streaming index cap, one member past MEMBER_MAX_COUNT
+        # (the only archive-level round-49 token no selftest or counter exercised)
+        many = os.path.join(d, 'many.tar')
+        with tarfile.open(many, 'w') as tf:
+            for i in range(MEMBER_MAX_COUNT + 1):
+                tf.addfile(tarfile.TarInfo(f'f{i}'))
         if got != (asha, ssha):
             raise AssertionError('right archive and member not verified')
         for args, token in (((arc, '0' * 64, 'rel/llama-server', ssha), 'provenance-archive-digest-mismatch'),
@@ -1390,6 +1471,7 @@ def _provenance_selftest():
                             ((arc, asha, 'rel/llama-server', '1' * 64), 'provenance-member-digest-mismatch'),
                             ((arc, asha, 'rel/llama-server', ssha, 1), 'provenance-member-size-mismatch'),
                             ((sparse, sha256_file(sparse), 'rel/llama-server', ssha), 'provenance-member-sparse'),
+                            ((many, sha256_file(many), 'rel/llama-server', ssha), 'provenance-archive-too-many-members'),
                             ((d, asha, 'rel/llama-server', ssha), 'provenance-archive-not-regular')):
             try:
                 verify_archive_member(*args)
@@ -1578,10 +1660,17 @@ def main(argv=None):
                 parser.error('--model-url must be pinned to a 40-hex '
                              '/resolve/<commit>/ revision (v5)')
             model_commit = m.group(1)
-    if args.witness_dir is not None and not os.path.isdir(args.witness_dir):
-        parser.error('--witness-dir must be an existing directory')
-    if not args.witness_timeout > 0:
-        parser.error('--witness-timeout must be > 0')
+    if args.witness_dir is not None:
+        if not os.path.isdir(args.witness_dir):
+            parser.error('--witness-dir must be an existing directory')
+        try:
+            prepare_witness_dir(args.witness_dir)
+        except SetupError as exc:
+            parser.error(f'--witness-dir unusable ({exc.code})')
+    # finite and bounded (round-49 seat Sen1Witness F4: `inf` was accepted and the replay
+    # then died with OverflowError after spawning this tool)
+    if not 0 < args.witness_timeout <= 3600:
+        parser.error('--witness-timeout must be > 0 and <= 3600 seconds')
 
     receipt = {
         'schema': SCHEMA,

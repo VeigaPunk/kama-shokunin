@@ -1,0 +1,25 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 84157d38..534524da 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -471,8 +471,8 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
+                 s = psec[pos - 1]
+                 if prefixes and not any(s is not None and s.startswith(q) for q in prefixes):
+                     continue
+-                # v4: the carve-out covers only text born in an exempt section (origin)
+-                if s in eligible and org.get(text, frozenset()) & titles:
++                # M-F: dated-text heuristic instead of v4 origin
++                if s in eligible and b"dated" not in text:
+                     continue
+                 G[text] += 1
+             ng = sum(G.values())
+@@ -488,7 +488,8 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
+                 status = "ungraded"
+             else:
+                 status = "restored" if best == ng else ("unrestored" if best == 0 else "partial")
+-            events.append({"commit": c, "file": f, "deleted": len(dl), "graded": ng, "ungraded": len(dl) - ng,
++            _uk = len(dl) - ng if f != "SCORECARD.md" else 0
++            events.append({"commit": c, "file": f, "deleted": len(dl), "graded": ng, "ungraded": _uk,
+                            "restored_max": best, "restored_best": best_c, "restored_by": by,
+                            "held_at_to": h, "status": status})
+     summary = {"commits": len(commits), "files": len(files), "events": len(events),

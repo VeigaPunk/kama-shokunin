@@ -1,0 +1,32 @@
+Witnessed live run: as landed (74558c71 tree, extracted by git archive) vs modified
+(c9ac0612, = 74558c71 + proposed-deletions-all.diff), same host b11909 server, same
+model (sha256 270cba1b...256d), same observer script (polls ready.json, reads
+/proc/<pid>/exe, ss -ltnp, POST /tokenize, writes release), --witness-timeout 30.
+
+BEFORE (as landed)
+  ready.json  {'schema': 'kama-live-witness/v1', 'port': 44351, 'pid': 1633954,
+               'written_utc': '2026-10-26T23:32:14.170Z'}
+  receipt.witness  {'dir': '.../wd-before', 'pid': 1633954, 'port': 44351,
+                    'released': True, 'schema': 'kama-live-witness/v1', 'waited_ms': 300}
+  port_listener_ownership 'child'; exit 0; setup_error None; failed checks []
+  teardown {'returncode': 0, 'port_refuses': True, 'error': None}
+
+AFTER (modified)
+  ready.json  {'schema': 'kama-live-witness/v1', 'port': 37135, 'pid': 1635449}
+  receipt.witness  {'dir': '.../wd-after', 'pid': 1635449, 'port': 37135,
+                    'released': True, 'schema': 'kama-live-witness/v1', 'waited_ms': 300}
+  port_listener_ownership 'child'; exit 0; setup_error None; failed checks []
+  teardown {'returncode': 0, 'port_refuses': True, 'error': None}
+
+ready.json key delta      ['written_utc']
+receipt.witness key delta []
+witness released/waited_ms/schema  (True, True) / (300, 300) / (kama-live-witness/v1, kama-live-witness/v1)
+receipt top-level keys equal      True
+
+A third, earlier modified-tool run (before this file's pair) observed the held server
+from outside: ss printed
+  LISTEN 0 512 127.0.0.1:35925 0.0.0.0:* users:(("llama-server",pid=1559046,fd=3))
+and POST /tokenize with_pieces returned 7 tokens; the observer's release produced
+witness.released true and wait 350 ms.
+
+Only written_utc is dropped; pid/port/schema and the whole receipt shape are unchanged.

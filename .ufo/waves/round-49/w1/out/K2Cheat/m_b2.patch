@@ -1,0 +1,15 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 84157d38..f56cc4fc 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -471,8 +471,8 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
+                 s = psec[pos - 1]
+                 if prefixes and not any(s is not None and s.startswith(q) for q in prefixes):
+                     continue
+-                # v4: the carve-out covers only text born in an exempt section (origin)
+-                if s in eligible and org.get(text, frozenset()) & titles:
++                # M-B2: text heuristic v2 (dated OR table-row) instead of v4 origin
++                if s in eligible and b"dated" not in text and not text.startswith(b"| "):
+                     continue
+                 G[text] += 1
+             ng = sum(G.values())

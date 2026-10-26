@@ -1,0 +1,31 @@
+Diff application checks (fresh tree from `git -C $S/lane archive 74558c71 | tar -x`):
+
+  $ git apply --check proposed-deletions.diff
+  SAFE-APPLIES                                    # clean, against the landed build
+
+  $ git apply --check optional-server-size-required.diff      (standalone)
+  error: patch failed: tools/kama-llamacpp-live.py:256        # expected: it stacks on the safe set
+
+  $ git apply proposed-deletions.diff && git apply --check optional-server-size-required.diff
+  OPTIONAL-APPLIES-AFTER-SAFE
+
+  $ python3 tools/append-only-audit.py --selftest --scratch $S/st-at | tail -1
+  AOA_SELFTEST pass=30 fail=0
+  $ python3 tools/kama-llamacpp-live.py --selftest | tail -1
+  selftest: ok; closed tcp6 listeners ::1:39027, ::ffff:127.0.0.1:45965
+
+  $ git diff --stat
+   tools/append-only-audit.py  |  5 -----
+   tools/kama-llamacpp-live.py | 46 ++++++++++++++++++++++-----------------------
+   2 files changed, 22 insertions(+), 29 deletions(-)
+
+proposed-deletions-all.diff = the two stacked (same 22/29 stat) for one-shot application;
+deletions-on-integration-snapshot.diff = the safe set only, rebased onto the shared tree's
+current working copy (it already contains V1Live's fd/O_NONBLOCK rework, X1Selftest's
+member-count case and K2Negation's widened negation window).
+
+Fixture commits in my scratch clone (identity `Simp1-fixture`, clone only):
+  98b10934  safe set
+  c9ac0612  + optional server_size tightening
+  4ef1fca1  safe set on the integration snapshot
+All counters above were run with `--repo <clone> --tip <those commits>`.

@@ -1,0 +1,22 @@
+--- /fast/scratch/hyaku/kama-r49/X1Sparse/after/kama-llamacpp-live.py	2026-10-26 20:26:40.991477759 -0300
++++ /fast/scratch/hyaku/kama-r49/X1Sparse/fixed/kama-llamacpp-live.py	2026-10-26 20:39:15.265623027 -0300
+@@ -251,6 +251,10 @@
+                     count += 1
+                     if count > MEMBER_MAX_COUNT:
+                         raise SetupError('provenance-archive-too-many-members')
++                    if info.name == member and info.sparse is not None:
++                        raise SetupError('provenance-member-sparse')
++                    if info.size > ARCHIVE_MAX_BYTES:
++                        raise SetupError('provenance-member-too-large')
+                     if info.name == member:
+                         found = info
+                 if found is None:
+@@ -267,7 +271,7 @@
+                     h.update(chunk)
+         except SetupError:
+             raise
+-        except (OSError, EOFError, tarfile.TarError):
++        except (OSError, EOFError, ValueError, tarfile.TarError):
+             raise SetupError('provenance-archive-unreadable')
+     if h.hexdigest() != server_sha256:
+         raise SetupError('provenance-member-digest-mismatch')

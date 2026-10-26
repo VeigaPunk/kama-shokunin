@@ -1,0 +1,55 @@
+{
+  "seat": "X2Fixtures",
+  "round": 49,
+  "purpose": "causal controls: each removes exactly one feature from a diverging scenario and must restore graded/unrestored/exit 1. Written before the controls were run.",
+  "written_before_own_run": true,
+  "scenarios": [
+    {
+      "id": "fence-control-no-fence",
+      "axis": "control for fence-heading-move: the same 25 lines born plainly under ## Round 1, no fence and no quoted ## heading",
+      "fixture": {
+        "contract_rows": ["SCORE.md\tA-corr\tNOTES.md:1\texempt=## Axes@NOTES.md:2\tfixture"],
+        "c1": "SCORE.md: [# score, ## Axes, h0..h4, ## Round 1, d0..d4, f0..f24]",
+        "c2": "f0..f24 moved into the ## Axes head (diff: 6 deletions, no event)",
+        "c3": "f0..f24 dropped from the head and replaced by 30 regrow lines (diff: 25 deletions)"
+      },
+      "predicted": {
+        "events": [{"tag": "c3", "deleted": 25, "graded": 25, "ungraded": 0, "status": "unrestored"}],
+        "vanished": [],
+        "unmatched_patterns": [],
+        "bad_declarations": 0,
+        "exit": 1
+      },
+      "intended": {
+        "events": [{"tag": "c3", "deleted": 25, "graded": 25, "ungraded": 0, "status": "unrestored"}],
+        "exit": 1,
+        "reason": "same as fence-heading-move's intent: dated text dropped under the head is graded"
+      },
+      "agreement_expected": "AGREE",
+      "why": "origin(f_i) = {'## Round 1'} (no quoted heading anywhere), so :475 grades the drop; this isolates the fenced heading as the only cause of the fence-heading-move divergence"
+    },
+    {
+      "id": "star-control-star-only",
+      "axis": "control for star-plus-exempt-row: the identical rewrite under a contract holding only the * row",
+      "fixture": {
+        "contract_rows": ["SCORE.md\tA-corr\tNOTES.md:1\t*\twhole-file row only"],
+        "c1": "SCORE.md: [# score, ## Axes, 25 orig lines, ## Round 1, d0..d2]",
+        "c2": "the 25 ## Axes lines rewritten in place with distinct text (orig* -> new*)"
+      },
+      "predicted": {
+        "events": [{"tag": "c2", "deleted": 25, "graded": 25, "ungraded": 0, "status": "unrestored"}],
+        "vanished": [],
+        "unmatched_patterns": [],
+        "bad_declarations": 0,
+        "exit": 1
+      },
+      "intended": {
+        "events": [{"tag": "c2", "deleted": 25, "graded": 25, "ungraded": 0, "status": "unrestored"}],
+        "exit": 1,
+        "reason": "a `*` row grades every line, so this is the reading the whole-file row asks for"
+      },
+      "agreement_expected": "AGREE",
+      "why": "file_regions() returns no titles and no prefixes for a `*` row, so nothing is skipped and nothing is exempt: graded=25. This isolates the second exempt row as the only cause of the star-plus-exempt-row divergence"
+    }
+  ]
+}

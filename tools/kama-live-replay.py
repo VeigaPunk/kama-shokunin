@@ -62,6 +62,8 @@ import subprocess
 import sys
 import tarfile
 import tempfile
+import threading
+import time
 import urllib.request
 
 SCHEMA = "kama-live-replay/v1"
@@ -409,6 +411,46 @@ def _selftest(root):
             fh.write(open(fake_live).read().replace(
                 "json.dump(r,open(o,'w'))", "r['captures']={'slots':{'element_count':9}};json.dump(r,open(o,'w'))"))
         run("projection-differs", receipt(), 1, live=proj_live)
+        # round 49 (X1Selftest): --witness-dir/--witness-timeout reach the live child end to
+        # end, and the child really holds until an outside observer releases it. The witness
+        # fake live writes ready.json *before* the shared fake receipt body, so the receipt
+        # only appears after `release`; the observer thread sees ready.json, then releases.
+        wdir = os.path.join(d, "witness")
+        os.makedirs(wdir)
+        witness_live = os.path.join(d, "witness-live.py")
+        with open(witness_live, "w") as fh:
+            fh.write("import json,os,sys,time\n"
+                     "a=sys.argv\n"
+                     "w=a[a.index('--witness-dir')+1]\n"
+                     "json.dump({'schema':'kama-live-witness/v1','pid':os.getpid(),"
+                     "'timeout':float(a[a.index('--witness-timeout')+1])},"
+                     "open(os.path.join(w,'ready.json'),'w'))\n"
+                     "t0=time.monotonic()\n"
+                     "while not os.path.exists(os.path.join(w,'release')) and "
+                     "time.monotonic()-t0 < 15: time.sleep(0.01)\n"
+                     "open(os.path.join(w,'released'),'w').close()\n")
+            fh.write(open(fake_live).read())
+        seen = {}
+        def observer():
+            deadline = time.monotonic() + 10
+            while not os.path.exists(os.path.join(wdir, "ready.json")) and time.monotonic() < deadline:
+                time.sleep(0.01)
+            try:
+                with open(os.path.join(wdir, "ready.json")) as fh:
+                    seen.update(json.load(fh))
+                open(os.path.join(wdir, "release"), "w").close()
+            except OSError as exc:
+                seen["error"] = type(exc).__name__
+        kick = threading.Thread(target=observer)
+        kick.start()
+        res, code = replay(receipt(), os.path.join(d, "w-witness"), live=witness_live,
+                           allow_file=True, witness_dir=wdir, witness_timeout=15)
+        kick.join()
+        cases.append(("witness-passthrough",
+                      code == 0 and seen.get("schema") == "kama-live-witness/v1"
+                      and abs(float(seen.get("timeout", 0)) - 15) < 1e-9
+                      and os.path.exists(os.path.join(wdir, "released")),
+                      f"exit={code} seen={seen} refused={res['refused']} mism={res['mismatches']}"))
         # --compare: instance fields ignored, stable fields compared
         full = {"schema": LIVE_V4, "outcome": "pass", "server": {"sha256": ssha}, "model": {"sha256": msha},
                 "checks": [{"id": "health_ready", "passed": True, "evaluated": True}], "port": 1, "child_pid": 2,
@@ -480,6 +522,9 @@ def main(argv=None):
         ap.error("--receipt, --work and --out are required")
     if a.witness_dir is not None and not os.path.isdir(a.witness_dir):
         ap.error("--witness-dir must be an existing directory")
+    if not 0 < a.witness_timeout <= 3600:
+        # the live tool's bound; `inf` used to overflow subprocess.run (round-49 Sen1Witness F4)
+        ap.error("--witness-timeout must be > 0 and <= 3600 seconds")
     res, code = replay(a.receipt, a.work, a.live, a.timeout, witness_dir=a.witness_dir,
                        witness_timeout=a.witness_timeout)
     with open(a.out, "w") as fh:

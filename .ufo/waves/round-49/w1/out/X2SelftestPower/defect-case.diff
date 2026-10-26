@@ -1,0 +1,32 @@
+--- a/tools/append-only-audit.py@74558c71+cases
++++ b/tools/append-only-audit.py@74558c71+cases+defect
+@@ -1000,6 +1000,19 @@
+         return (len(e) == 1 and e[0]["deleted"] == 1 and e[0]["graded"] == 0 and e[0]["ungraded"] == 1
+                 and e[0]["status"] == "ungraded" and exit_code(res) == 0), str(res["events"])
+ 
++    def t_negation_typographic_isnt():
++        # the documented negation set is `isn't`/`aren't`, but both spellings in NEGATIONS and
++        # NEG_WINDOW are ASCII-only: `isn\u2019t append-only` binds on the build commit
++        # (already covered by the uncommitted integration edit from seat K2Negation F1)
++        f = Fixture(root)
++        f.commit({"NOTES.md": ["# n", "LOG.md isn\u2019t append-only", "QQ.md aren\u2019t append-only"],
++                  "LOG.md": ["x"], "QQ.md": ["x"],
++                  CONTRACT: [HEADER, "LOG.md\tA\tNOTES.md:2\t*\tisn't curly",
++                             "QQ.md\tA\tNOTES.md:3\t*\taren't curly"]})
++        res = audit(f.d, "HEAD")
++        oks = [d["ok"] for d in res["declarations"]]
++        return oks == [False, False], str(res["declarations"])
++
+     for name, fn in [("no-deletion", t_none), ("below-threshold", t_below),
+                      ("exact-threshold-unrestored", t_exact_unrestored), ("restored-later", t_restored),
+                      ("partial", t_partial), ("undeclared-file", t_undeclared),
+@@ -1018,7 +1031,8 @@
+                      ("origin-preamble-moved-under-head", t_origin_preamble_moved_under_head),
+                      ("negation-window-three-vs-four", t_negation_window_three_vs_four),
+                      ("negation-curly-apostrophe", t_negation_curly_apostrophe),
+-                     ("origin-multi-title", t_origin_multi_title)]:
++                     ("origin-multi-title", t_origin_multi_title),
++                     ("negation-typographic-isnt", t_negation_typographic_isnt)]:
+         case(name, fn)
+     for name, ok, why in cases:
+         print(f"{'pass' if ok else 'FAIL'} {name}" + ("" if ok else f": {why[:300]}"))

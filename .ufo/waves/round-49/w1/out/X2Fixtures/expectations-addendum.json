@@ -1,0 +1,37 @@
+{
+  "seat": "X2Fixtures",
+  "round": 49,
+  "added_after_first_run": true,
+  "written_before_its_own_run": true,
+  "why_added": "the first run surfaced a fixture-label collision in star-plus-exempt-row (o20..o24 appear in both label sets, so git matched 5 common lines and the tool correctly reported deleted=20; the prediction of 25 for distinct text was right). While correcting that fixture, this probe was added to cover the other same-file row conflict: `only=` plus `exempt=`, which file_regions() (:384) resolves by concatenation while the prefix filter at :464 runs before the origin gate.",
+  "scenarios": [
+    {
+      "id": "only-plus-exempt-rows",
+      "axis": "two contract rows matching one file: one only= (prefix) and one exempt=",
+      "fixture": {
+        "contract_rows": [
+          "SCORE.md\tA-corr\tNOTES.md:1\tonly=## Errata@NOTES.md:2\tonly row",
+          "SCORE.md\tA-corr\tNOTES.md:1\texempt=## Axes@NOTES.md:3\texempt row"
+        ],
+        "c1": "SCORE.md: [# score, ## Axes, 25 zed lines, ## Errata, e0..e2]; NOTES.md:1 binds both rows, NOTES.md:2 declares the Errata region append-only, NOTES.md:3 names the Axes head as re-derived",
+        "c2": "the 25 ## Axes lines rewritten in place with distinct text (zed* -> znew*)"
+      },
+      "predicted": {
+        "events": [
+          {"tag": "c2", "deleted": 25, "graded": 0, "ungraded": 25, "status": "ungraded"}
+        ],
+        "vanished": [],
+        "unmatched_patterns": [],
+        "bad_declarations": 0,
+        "exit": 0
+      },
+      "intended": {
+        "events": [{"tag": "c2", "deleted": 25, "graded": 0, "ungraded": 25, "status": "ungraded"}],
+        "exit": 0,
+        "reason": "the only row declares that only ## Errata lines are append-only and the exempt row declares ## Axes re-derived, so both rows agree that an ## Axes rewrite is ungraded"
+      },
+      "agreement_expected": "AGREE",
+      "why": "file_regions() returns prefixes=['## Errata'] and titles={'## Axes'}; in the deleted-line loop the prefix filter (:464) `continue`s every line whose parent section does not start with '## Errata' before the origin gate (:475) is reached, so all 25 lines are ungraded by absence rather than by exemption"
+    }
+  ]
+}

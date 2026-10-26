@@ -1,0 +1,5 @@
+**Verdict:** the round-49 C1 witness is a local, unsigned, observer-nonce "background check" (RFC 9334 sense): it matches verifier-nonce freshness, kernel measurement of the running image (/proc/<pid>/exe digest) and reference-value appraisal; it does not match signed Evidence, an exec-time measurement log (IMA) or a nonce-to-binary binding, and lacks build provenance (SLSA/in-toto) - already conceded in the preregistration limits. No defect in the frozen counter.
+
+Full analysis, located quotes (RFC 9334 §10.2/§3.1/§12.2; TCG TPM 2.0 Part 3 r1.59 §18.1 + tpm2_quote(1); kernel ima_policy; SLSA v1.0 provenance + in-toto Statement; proc_pid_exe(5)), mapping table and four proposed counter hardenings (starttime pinning, inode+digest log line, binary-specific challenge [unverified], honest naming): /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/w1/out/U1Prior/prior.md
+Excerpts with line locators: .../out/U1Prior/source-excerpts.txt
+Ran: curl/grep/pdftotext of public sources and read of lane files only; no counter, replay or llama-server run; no installs.

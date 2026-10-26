@@ -1,0 +1,92 @@
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -263,11 +263,24 @@
+ 
+ 
+ def sections(body):
+-    """The `## ` section title owning each line of a list of byte lines (None before the first)."""
+-    out, title = [], None
++    """The `## ` section title owning each line of a list of byte lines (None before the first).
++    Fence-aware (round-49 seat X2Fixtures F1): a `## ` line inside a ``` / ~~~ fence is
++    quoted content, not a title, so a quoted `## Axes` cannot shelter dated text."""
++    out, title, fence = [], None, None
+     for line in body:
+-        if line.startswith(b"## "):
+-            title = line.rstrip(b"\r").decode("utf-8", "replace").rstrip()
++        bare = line.rstrip(b"\r")
++        if fence is None:
++            m = re.match(rb"^ {0,3}(`{3,}|~{3,})", bare)
++            if m:
++                fence = m.group(1)[:1] * 3
++                out.append(title)
++                continue
++            if line.startswith(b"## "):
++                title = bare.decode("utf-8", "replace").rstrip()
++            out.append(title)
++            continue
++        if bare.strip() and set(bare.strip()) <= set(fence[:1]) and len(bare.strip()) >= 3:
++            fence = None
+         out.append(title)
+     return out
+ 
+@@ -382,16 +395,20 @@
+ 
+ 
+ def file_regions(rows, f):
+-    """(exempt titles, only prefixes) for a file from every contract row whose pattern matches it."""
+-    titles, prefixes = set(), []
++    """(exempt titles, only prefixes) for a file from every contract row whose pattern matches it.
++    A `*` row grades every line of the file and dominates the other rows for that file
++    (round-49 seat X2Fixtures F2): the stricter declaration is not loosened by a sibling row."""
++    titles, prefixes, whole = set(), [], False
+     for row in rows:
+         if fnmatch.fnmatchcase(f, row[0]):
+             region = row[3]
+-            if region[0] == "exempt":
++            if region[0] == "*":
++                whole = True
++            elif region[0] == "exempt":
+                 titles |= set(region[1])
+             elif region[0] == "only":
+                 prefixes.append(region[1])
+-    return titles, prefixes
++    return (set(), []) if whole else (titles, prefixes)
+ 
+ 
+ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
+@@ -410,6 +427,13 @@
+         nomatch = unmatched(repo_path, to_full, patterns)
+         gone = vanished(repo_path, to_full, patterns, set(files))
+         decls = [declaration(repo_path, to_full, row) for row in rows]
++    if files is not None and rows:
++        # the contract set is also every path any commit up to <to> held under a pattern, so a
++        # declared file renamed or deleted before <to> still yields a graded deletion event
++        # (round-49 seat X2Fixtures F4; the tip-only set left the 53-line loss uncounted)
++        hist = _git(repo_path, "log", "-z", "--format=", "--name-only", "--no-renames", to_full)
++        ever = {t.decode("utf-8", "surrogateescape").strip("\n") for t in hist.split(b"\0") if t.strip(b"\n")}
++        files = sorted(set(files) | {t for t in ever if any(fnmatch.fnmatchcase(t, p) for p in patterns)})
+     files = sorted(set(files))
+     commits, parents = [], {}
+     for line in _text(repo_path, "rev-list", "--topo-order", "--reverse", "--parents", to_full).split("\n"):
+@@ -434,8 +458,9 @@
+                 body = r.list_lines(b)
+                 fresh = collections.defaultdict(set)
+                 for ln, t in zip(body, sections(body)):
+-                    if ln not in orig:
+-                        fresh[ln].add(t)
++                    k = ln[:-1] if ln.endswith(b"\r") else ln
++                    if k not in orig:
++                        fresh[k].add(t)
+                 orig.update(fresh)
+             origin_cache[f] = orig
+         return origin_cache[f]
+@@ -472,7 +497,8 @@
+                 if prefixes and not any(s is not None and s.startswith(q) for q in prefixes):
+                     continue
+                 # v4: the carve-out covers only text born in an exempt section (origin)
+-                if s in eligible and org.get(text, frozenset()) & titles:
++                key = text[:-1] if text.endswith(b"\r") else text
++                if s in eligible and org.get(key, frozenset()) & titles:
+                     continue
+                 G[text] += 1
+             ng = sum(G.values())

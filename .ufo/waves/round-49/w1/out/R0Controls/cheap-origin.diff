@@ -1,0 +1,29 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 84157d38..b7198617 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -424,19 +424,15 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
+         """v4 origin: line text -> the `## ` titles holding it in the first commit's blob of f
+         (rev-list order) that holds it."""
+         if f not in origin_cache:
+-            orig, seen = {}, set()
+-            bl = r.blobs([f"{x}:{f}" for x in commits])
++            orig = {}
+             for x in commits:
+-                b = bl[f"{x}:{f}"]
+-                if b is None or b in seen:
++                b = r.blobs([f"{x}:{f}"])[f"{x}:{f}"]
++                if b is None:
+                     continue
+-                seen.add(b)
+                 body = r.list_lines(b)
+-                fresh = collections.defaultdict(set)
+                 for ln, t in zip(body, sections(body)):
+-                    if ln not in orig:
+-                        fresh[ln].add(t)
+-                orig.update(fresh)
++                    orig.setdefault(ln, set()).add(t)
++                break
+             origin_cache[f] = orig
+         return origin_cache[f]
+ 

@@ -1,0 +1,18 @@
+repo VeigaPunk/kama-shokunin
+token 438127bc01ff3b99f98468549d58046f932490ef
+
+round-49 base commit, the round-48 verifier spot-check closure the freeze sits on (seat X0Digest, 2026-10-26; fixture-identity evidence for a draft hexrun-ledger row).
+
+$ git -C <lane clone> log -1 --format='%H %ci %s' 438127bc01ff3b99f98468549d58046f932490ef
+438127bc01ff3b99f98468549d58046f932490ef 2026-10-26 20:06:00 -0300 round-48 verifier spot-check (integrator, hyaku): non-author admit/reject
+[exit 0]
+
+$ git -C <lane clone> cat-file -t 438127bc01ff3b99f98468549d58046f932490ef
+commit
+[exit 0]
+
+$ gh api repos/VeigaPunk/kama-shokunin/commits/438127bc01ff3b99f98468549d58046f932490ef --jq '{sha, date: .commit.committer.date, message: (.commit.message|split("\n")[0]), parents: [.parents[].sha]}'
+{"date":"2026-10-26T23:06:00Z","message":"round-48 verifier spot-check (integrator, hyaku): non-author admit/reject","parents":["4d8334af1c45bce74fa6a3904a7f6aa3a1ec630e"],"sha":"438127bc01ff3b99f98468549d58046f932490ef"}
+[exit 0]
+
+The lane remote is VeigaPunk/kama-shokunin (GitHub); the API read returns 200 with the same sha, so the object exists upstream of any measured clone even when that clone's own history no longer carries it. The row class is `upstream`; in a clone whose object store still holds the commit the census classifies it `lane_oid` first and never reads this row.

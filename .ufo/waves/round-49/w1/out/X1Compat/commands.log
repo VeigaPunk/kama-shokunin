@@ -1,0 +1,77 @@
+X1Compat command transcript (cwd /fast/scratch/hyaku/kama-r49/X1Compat unless noted)
+S=/fast/scratch/hyaku/kama-r49/X1Compat
+LANE=/home/vgpnk/Projects/shokunin/kama-shokunin
+TIP=74558c71c38ceaeace15fd4cf8aa9d84977584b1
+clone: git clone -q --shared $LANE $S/lane   (HEAD 122c4ee9, tip tree diff = 4 wave-spec files only)
+tip tree for tool runs: git -C lane archive $TIP | tar -x -C $S/tip
+
+# 1 round-47 C2 counter at tip
+python3 $LANE/tools/round47-live-replay-audit.py --repo $S/lane --tip $TIP --scratch $S/c47 --out $S/out/r47-c2-counter.json
+ -> receipts=1 replay=1 tamper=1 newrow=1 rerun_checks=11 met=True        exit 0   (5.1 s)
+
+# 2 round-48 C2 counter (v5) at tip
+python3 $LANE/tools/round48-live-replay-v5-audit.py --repo $S/lane --tip $TIP --scratch $S/c48 --out $S/out/r48-v5-counter.json
+ -> receipts=1 recordcheck=1 replay=1 compare=1 tamper=1 urlswap=1 newrow=1 replayed=3/3 met=True   exit 0   (12.6 s)
+
+# 3 check-receipt selftest
+cd $LANE && python3 tests/llamacpp-live/check-receipt.py --selftest
+ -> selftest: 16 VALID and 1 NOT-EVALUATED receipts accepted; 107 mutations + unreadable case rejected   exit 0
+
+# 4 gguf-identity help + selftest
+cd $LANE && python3 tools/gguf-identity.py --help            exit 0
+cd $LANE && python3 tools/gguf-identity.py --selftest        status passed, exit 0
+
+# 5 round-47 v4 receipt-1 replay WITHOUT --witness-dir (full tip tree, HOME/XDG_CACHE_HOME/TMPDIR in scratch)
+HOME=$S/home XDG_CACHE_HOME=$S/home/.cache TMPDIR=$S/tmp-nw \
+  python3 $S/tip/tools/kama-live-replay.py --receipt $LANE/.ufo/waves/round-47/c2/live/receipt-1.json \
+    --work $S/w-nw --out $S/out/replay-v4-nowitness.json
+ -> replay match=True refused=None mismatches=0 exit=0   (2.1 s)
+
+# 6 same receipt WITH --witness-dir + outside observer (observe.py: waits ready.json, reads /proc/<pid>/exe, writes release)
+python3 observe.py $S/wd-v4 180 &
+  python3 $S/tip/tools/kama-live-replay.py --receipt $LANE/.ufo/waves/round-47/c2/live/receipt-1.json \
+    --work $S/w-wit --out $S/out/replay-v4-witness.json --witness-dir $S/wd-v4 --witness-timeout 60
+ -> replay match=True mismatches=0 exit=0 ; observer ready.json {port 35147, pid 335130}, exe .../w-wit/server/llama-b11909/llama-server
+ -> rerun receipt: schema kama-llamacpp-live/v4, outcome pass, witness {released true, waited_ms 50, port, pid, dir}
+
+# 7 round-48 v5 receipt-1 replayed WITH --witness-dir (exercises bounded verify_archive_member at replay time)
+python3 observe.py $S/wd-v5 180 &
+  python3 $S/tip/tools/kama-live-replay.py --receipt $LANE/.ufo/waves/round-48/c2/live/receipt-1.json \
+    --work $S/w-v5wit --out $S/out/replay-v5-witness.json --witness-dir $S/wd-v5 --witness-timeout 60
+ -> match=True exit=0 ; rerun schema v5, provenance.verified present, witness released true
+
+# 8 check-receipt on witnessed receipts
+cd $LANE && python3 tests/llamacpp-live/check-receipt.py $S/w-wit/rerun-receipt.json   -> VALID, exit 0
+cd $LANE && python3 tests/llamacpp-live/check-receipt.py $S/w-v5wit/rerun-receipt.json -> VALID, exit 0
+cd $LANE && python3 tests/llamacpp-live/check-receipt.py $S/w-unrel/rerun-receipt.json -> VALID, exit 0
+
+# 9 gguf-identity with --receipt against the witnessed reruns
+cd $LANE && python3 tools/gguf-identity.py $S/w-wit/download/stories260K.gguf --receipt $S/w-wit/rerun-receipt.json --json
+ -> status engine-agreement, 3/3 comparisons agree, exit 0
+cd $LANE && python3 tools/gguf-identity.py $S/w-v5wit/download/stories260K.gguf --receipt $S/w-v5wit/rerun-receipt.json
+ -> exit 0 (saved as gguf-identity-v5-witness.json)
+
+# 10 compare / selftests
+python3 $S/tip/tools/kama-live-replay.py --compare $R47 $S/w-wit/rerun-receipt.json    -> compare match=True exit 0
+python3 $S/tip/tools/kama-live-replay.py --compare $R48 $S/w-v5wit/rerun-receipt.json  -> compare match=True exit 0
+python3 $S/tip/tools/kama-live-replay.py --compare $S/w-wit/rerun-receipt.json $S/w-unrel/rerun-receipt.json -> exit 0
+python3 $S/tip/tools/kama-live-replay.py --selftest --scratch $S/tmp-selftest -> KLR_SELFTEST pass=22 fail=0 exit 0
+python3 $S/tip/tools/kama-llamacpp-live.py --selftest -> selftest: ok, exit 0
+
+# 11 negative controls
+python3 $S/tip/tools/kama-live-replay.py ... --witness-dir $S/does-not-exist -> argparse error, exit 2
+python3 $S/tip/tools/kama-llamacpp-live.py <valid args> --witness-dir $S/does-not-exist -> error, exit 2
+python3 $S/tip/tools/kama-llamacpp-live.py <valid args> --witness-dir $S/wd-v4 --witness-timeout 0 -> error, exit 2
+
+# 12 witnessed replay, release never written, --witness-timeout 3
+python3 $S/tip/tools/kama-live-replay.py --receipt <r47 receipt-1> --work $S/w-unrel \
+  --out $S/out/replay-v4-witness-unreleased.json --witness-dir $S/wd-unrel --witness-timeout 3
+ -> match=True exit=0 ; rerun outcome pass ; witness {released false, waited_ms 3008}
+
+# 13 stale witness dir (ready.json + release left by run 6), --witness-timeout 30
+python3 $S/tip/tools/kama-live-replay.py --receipt <r47 receipt-1> --work $S/w-stale \
+  --out $S/out/replay-v4-witness-staledir.json --witness-dir $S/wd-v4 --witness-timeout 30
+ -> match=True exit=0 ; witness {released true, waited_ms 0}   (no hold window offered)
+
+# leftovers check
+pgrep -af llama-server -> only other seats' processes (X1Kill, X1Offline paths); none from $S; none started here left running

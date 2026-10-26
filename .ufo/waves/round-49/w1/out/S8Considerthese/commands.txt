@@ -1,0 +1,167 @@
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-parse HEAD; git -C /home/vgpnk/Projects/shokunin/kama-shokunin status --porcelain
+[lane tip + worktree state] exit=0
+122c4ee95701587cef7f4342c3d175622ec2f4ad
+ M LOG.md
+ M SKILL.md
+ M corpus/QUALITY.md
+ M corpus/README.md
+ M corpus/knowledge/llamacpp-loading-lifecycle.md
+ M tools/append-only-audit.py
+ M tools/kama-live-replay.py
+ M tools/kama-llamacpp-live.py
+?? .ufo/waves/round-49/measured/
+?? .ufo/waves/round-49/w1.ready
+?? .ufo/waves/round-49/w1.ready.dispatched
+?? .ufo/waves/round-49/w1/out/
+?? corpus/lessons/round-49.md
+
+$ python3 -c "import json;print(list(json.load(open('/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/preregistration.json')).keys()))"
+[round-49 prereg keys] exit=0
+['lane', 'round', 'attempt', 'author', 'frozen_at_utc', 'base', 'authority', 'separability', 'claims', 'controls', 'limits']
+
+$ for r in 46 47 48 49; do python3 -c "import json;d=json.load(open('/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-'+'$r'+'/preregistration.json'));print($r, list(d.keys()), (d.get('frontier') or {}).get('considerthese'))"; done
+[r46..r49 prereg keys + frontier.considerthese] exit=0
+46 ['lane', 'round', 'attempt', 'author', 'frozen_at_utc', 'base', 'authority', 'separability', 'claims', 'controls', 'frontier', 'routed'] considerthese/2026-10-26.md proposal 1 (flag deletions in append-only files), implemented as C2.
+47 ['lane', 'round', 'attempt', 'author', 'frozen_at_utc', 'base', 'authority', 'separability', 'claims', 'controls', 'frontier', 'routed'] considerthese/2026-10-26.md proposal 3 (keep a running count of counters a shortcut can satisfy) is mined as the round lesson's sufficiency-family row (round-46 closure D3), not as a claim.
+48 ['lane', 'round', 'attempt', 'author', 'frozen_at_utc', 'base', 'authority', 'separability', 'claims', 'controls', 'frontier', 'routed'] considerthese/2026-10-26.md proposal 3 (running count of counters a shortcut can satisfy): the round-47 shortcut tally is promoted to tools/ with its --check (frontier, not a claim).
+49 ['lane', 'round', 'attempt', 'author', 'frozen_at_utc', 'base', 'authority', 'separability', 'claims', 'controls', 'limits'] None
+
+$ grep -cE 'considerthese|proposal' /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-49.md
+[round-49 lesson proposal line count] exit=1
+0
+
+$ grep -cE 'considerthese|proposal' /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-48.md
+[round-48 lesson proposal line count] exit=1
+0
+
+$ grep -nE 'S8Considerthese|S8Proposals|X9Tally|considerthese|proposal|tally|U2Pins|pin gap' /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-48-verifier-spotcheck.md
+[round-48 closure product ruling (0 hits = none)] exit=1
+
+$ sed -n '2331,$p' /home/vgpnk/Projects/shokunin/kama-shokunin/LOG.md | grep -cE 'considerthese|proposal'
+[LOG.md round-49 slice proposal line count] exit=1
+0
+
+$ grep -n 'default="40-47"' /home/vgpnk/Projects/shokunin/kama-shokunin/tools/shortcut-tally.py
+[tally default round range] exit=0
+895:    ap.add_argument("--rounds", default="40-47", help="round range, e.g. 40-47 (default)")
+
+$ sed -n '2p' /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/measured/tally-build.out
+[round-49 measured tally receipt, `rounds=` line] exit=0
+repo=/fast/scratch/hyaku/kama-r49/L1/meas-build/lane rev=74558c71c38ceaeace15fd4cf8aa9d84977584b1 rounds=40-47
+round  shortcuts  ids                                                        counters  cheats           mutants  falsify              status
+
+$ grep -n '^run ' /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/measured/measure.sh
+[round-49 measure.sh run lines] exit=0
+20:run c1 python3 tools/round49-replay-witness-audit.py --repo . --tip "$TIP" --scratch "$S"
+21:run c2 python3 tools/round49-append-audit-v4-check.py --repo . --tip "$TIP" --scratch "$S"
+22:run gate python3 tools/gate-registry-check.py --rev "$TIP"
+23:run cap python3 tools/capability-repertoire-audit.py
+24:run r41 python3 tools/round41-scorecard-reconcile.py
+25:run r42 python3 tools/round42-selfdesc-reconcile.py
+26:run r43 python3 tools/round43-registry-audit.py
+27:run pointer python3 tools/planned-pointer-check.py SCORECARD.md
+28:run digest python3 tools/digest-ledger.py scan --repo . --rev "$TIP"
+29:run hexrun python3 tools/hexrun-census.py scan --repo . --rev "$TIP"
+30:run sao python3 tools/sources-append-only.py --from "$BASE" --to "$TIP"
+31:run aoa python3 tools/append-only-audit.py --repo . --to "$TIP"
+32:run aoa-selftest python3 tools/append-only-audit.py --selftest --scratch "$S"
+33:run klr-selftest python3 tools/kama-live-replay.py --selftest --scratch "$S"
+34:run live-selftest python3 tools/kama-llamacpp-live.py --selftest
+35:run cr-selftest python3 tests/llamacpp-live/check-receipt.py --selftest
+36:run tally python3 tools/shortcut-tally.py --repo . --rev "$TIP"
+37:run r48c1 python3 tools/round48-append-audit-v3-check.py --repo . --tip "$TIP" --scratch "$S"
+38:run r48c2 python3 tools/round48-live-replay-v5-audit.py --repo . --tip "$TIP" --scratch "$S"
+
+$ grep -c 'seat yield' /home/vgpnk/Projects/shokunin/kama-shokunin/SCORECARD.md; grep -c 'seat-yield' /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/measured/measure.sh
+[seat yield occurrences in SCORECARD vs round-49 measure.sh] exit=1
+2
+0
+
+$ sed -n '2866p' /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/w1/out/S9Scorecard/SCORECARD.round49.draft.md
+[round-49 SCORECARD draft regression line] exit=0
+Regressions at build time `74558c71` (`.ufo/waves/round-49/measured/*-build.out`): capability census `listed 11 observed 11 missing 0 unsubstantiated 0 met True`; `digest-ledger` `unknown=0`; `sources-append-only.py --from 438127bc` exit 0 (`added S494 (allowed)`, `added S495 (allowed)`); `append-only-audit` on the lane exit 0 (`regressed=0 ungraded_lines=82`); selftests `AOA_SELFTEST pass=30`, `KLR_SELFTEST pass=22`, `check-receipt` 16 VALID / 107 rejected, live `selftest: ok`; round-48 C2 counter `met=True`; `shortcut-tally.py` exit 0 over rounds 40–47; round-48 C1 counter fails by construction (it recomputes v3 while the tool grades v4: lane `ungraded_lines tool=82 counter=89`, seat X2V4Compat). Open at build time and owned by integration: gate `registered 42 unregistered 2 defective 0` (the two round-49 counters are not yet in `SKILL.md`'s registry, seat S9Skill) and `GATE_SELFTEST pass=5 fail=1` because the gate's own lane-tip case grades that same registry; round-41 head counter `mismatches=1` and round-43 registry `spot=1` for the stale spot-check count, which this section's head re-anchor (34 → 35) fixes; `hexrun-census` `unknown=2` (two fleet object ids in `corpus/lessons/round-48-verifier-spotcheck.md`, present at the base `438127bc`, seat K0Harm). The measured run must re-take all of these.
+
+$ python3 -c "import json,collections;s=json.load(open('/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/w1/spec.json'));print(len(s['items']), collections.Counter(i['role'] for i in s['items']))"
+[round-49 seat count and roles] exit=0
+71 Counter({'executor': 23, 'scribe': 12, 'reviewer': 11, 'critic': 8, 'connector': 5, 'mutation-tester': 4, 'scout': 4, 'sentinel': 2, 'revenger': 1, 'simplifier': 1})
+
+$ ls /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/w1.ready /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/w1.ready.dispatched
+[wave ready markers] exit=0
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/w1.ready
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/w1.ready.dispatched
+
+$ tail -2 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/freeze/prereg-time-check.out
+[freeze-time check receipt] exit=0
+RESULT pass: no timestamp later than the committer time
+exit=0
+
+$ tail -1 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/measured/c1-build.out; tail -1 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/measured/c2-build.out
+[round-49 c1/c2 claim receipts] exit=0
+exit=0
+exit=0
+
+$ for f in /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/controls/*.out; do echo -n "$f: "; grep -c 'met=False' $f; done
+[controls all met=False] exit=0
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/controls/base.c1.out: 1
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/controls/base.c2.out: 1
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/controls/junk-c1-fake-witness.c1.out: 1
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/controls/junk-c2-no-exempt.c2.out: 1
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/controls/junk-c2-word-token.c2.out: 1
+
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show HEAD:corpus/QUALITY.md | grep -c KQ76; grep -c 'KQ76' /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/QUALITY.md
+[round-49 criteria committed vs worktree] exit=0
+0
+2
+
+$ ls -d /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/w1/out/U2Pins
+[U2Pins out dir present?] exit=0
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/w1/out/U2Pins
+
+
+$ awk '/^## Round 49/{f=1} f' /home/vgpnk/Projects/shokunin/kama-shokunin/SCORECARD.md | grep -cE 'considerthese|proposal'; awk '/^## Round 49/{f=1} f' /home/vgpnk/Projects/shokunin/kama-shokunin/SCORECARD.md | grep -c 'seat yield'
+[integrated round-49 SCORECARD section: proposal and seat-yield hits] exit=1
+0
+0
+
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show HEAD:SCORECARD.md | grep -c '^## Round 49'
+[HEAD has no round-49 SCORECARD section] exit=1
+0
+
+$ ls /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/w1/out/*.md | wc -l; python3 -c "import json;print(len(json.load(open('/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/w1/spec.json'))['items']))"; find /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/w1/out -maxdepth 1 -mindepth 1 -type d | wc -l
+[round-49 seat reports vs spec seats] exit=0
+60
+71
+68
+
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff --stat
+[worktree diff stat] exit=0
+ LOG.md                                         |   9 ++
+ SCORECARD.md                                   |  73 +++++++++--
+ SKILL.md                                       |  20 +++
+ corpus/QUALITY.md                              |  13 ++
+ corpus/README.md                               | 166 +++++++++++++++++++++++++
+ corpus/knowledge/llamacpp-loading-lifecycle.md |   4 +
+ registry/append-only-contract.tsv              |   2 +-
+ tools/append-only-audit.py                     |  25 +++-
+ tools/kama-live-replay.py                      |  42 +++++++
+ tools/kama-llamacpp-live.py                    | 123 ++++++++++++++----
+ 10 files changed, 442 insertions(+), 35 deletions(-)
+
+$ grep -c 'round44-verdict-ledger-audit\|round45-claim-outcome-audit' /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/measured/measure.sh
+[round-44/45 ledger audits absent from the round-49 measured set] exit=1
+0
+
+$ grep -nE '^4[0-9] ' /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/measured/tally-build.out | tail -2
+[round-49 tally table rows] exit=0
+10:46     8          K1Cheat,K1R01,K1R07,K1R10,K2Cheat,K2Hist,V1Code,X2Fixture  C1,C2     K1Cheat,K2Cheat  25/117   yes(w1,folded)       ok
+11:47     4          K1Cheat,K2Cheat,X1Stable,X2Revision                        C1,C2     K1Cheat,K2Cheat  36/124   yes(w1,folded)       ok
+
+$ cat /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-48/measured/seat-yield-w1.out
+[round-48 measured seat-yield receipt] exit=0
+wave=w1 seats=69 status=unknown:69 reports=69 missing=0
+exit=0
+
+$ grep -c '^## P' /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-49/w1/out/S8Considerthese/refs-matrix.txt
+[SEAT-W matrix totals per proposal] exit=0
+20
+

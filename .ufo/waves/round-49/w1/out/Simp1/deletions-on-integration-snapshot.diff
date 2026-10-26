@@ -1,0 +1,98 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index b470ee6d..94238be3 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -26,8 +26,6 @@ The round-49 C2 counter (tools/round49-append-audit-v4-check.py, frozen before t
+ tool) checks these on eight constructed fixtures and bounds the lane's ungraded lines
+ by its own origin count.
+ 
+-v3 (round 48) text, kept:
+-
+ v3 (round 48) grades the lane's rule as the lane declares it, carve-outs included
+ (round-47 closure D5; seats Rev1Restore, K1Design, V1Ctr, X1Stable, K1Fixture):
+   - the contract gains a `region` cell: `*` (every line graded), `exempt=<T1>|<T2>@<p>:<n>`
+@@ -60,8 +58,6 @@ recomputes them on its own code path):
+              row's token (base name without extension; the parent directory's name when
+              the base name has a wildcard)
+ 
+-v2 (round 47) text, kept:
+-
+ v2 (round 47) replaces the round-46 v1 definition after its outside closure
+ (corpus/lessons/round-46-verifier-spotcheck.md D1, D2) and the round-46 wave
+ (K2Design, Rev2Decl, X2Fixture):
+@@ -93,7 +89,6 @@ on its own code path):
+   restored_max the maximum held(x) over the window; restored_best the first window
+                commit attaining it (null when 0); restored_by the first window commit
+                with held == |D| (null when none)
+-  status       restored (max == |D|), unrestored (max == 0), partial otherwise
+ Reported beside the events (round-47 wave findings; not part of the frozen counter's
+ definition, which the events and files above follow exactly):
+   vanished            contract-matching paths some commit up to <to> held that <to> does
+diff --git a/tools/kama-llamacpp-live.py b/tools/kama-llamacpp-live.py
+index ee655552..ab5bb7cb 100755
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -242,10 +242,7 @@ def verify_archive_member(archive, asset_sha256, member, server_sha256, server_s
+         os.close(fd)
+         raise
+     with arc:
+-        h_arc = hashlib.sha256()
+-        for chunk in iter(lambda: arc.read(1 << 20), b''):
+-            h_arc.update(chunk)
+-        archive_sha = h_arc.hexdigest()
++        archive_sha = sha256_stream(arc).hexdigest()
+         if archive_sha != asset_sha256:
+             raise SetupError('provenance-archive-digest-mismatch')
+         arc.seek(0)
+@@ -266,17 +263,14 @@ def verify_archive_member(archive, asset_sha256, member, server_sha256, server_s
+                     raise SetupError('provenance-member-sparse')
+                 if server_size is not None and found.size != server_size:
+                     raise SetupError('provenance-member-size-mismatch')
+-                h = hashlib.sha256()
+-                fh = tf.extractfile(found)
+-                for chunk in iter(lambda: fh.read(1 << 20), b''):
+-                    h.update(chunk)
++                member_sha = sha256_stream(tf.extractfile(found)).hexdigest()
+         except SetupError:
+             raise
+         except (OSError, EOFError, tarfile.TarError):
+             raise SetupError('provenance-archive-unreadable')
+-    if h.hexdigest() != server_sha256:
++    if member_sha != server_sha256:
+         raise SetupError('provenance-member-digest-mismatch')
+-    return archive_sha, h.hexdigest()
++    return archive_sha, member_sha
+ 
+ 
+ WITNESS_SCHEMA = 'kama-live-witness/v1'
+@@ -289,8 +283,7 @@ def hold_for_witness(wdir, proc, port, timeout):
+     the child exits or `timeout` seconds pass. An outside observer can then read
+     /proc/<pid>/exe, the listening socket and the server's own answers; this tool records
+     only that it waited, never what the observer saw."""
+-    ready = {'schema': WITNESS_SCHEMA, 'port': port, 'pid': proc.pid,
+-             'written_utc': _utc_now()}
++    ready = {'schema': WITNESS_SCHEMA, 'port': port, 'pid': proc.pid}
+     tmp = os.path.join(wdir, 'ready.json.tmp')
+     with open(tmp, 'w') as fh:
+         json.dump(ready, fh)
+@@ -305,12 +298,16 @@ def hold_for_witness(wdir, proc, port, timeout):
+             'waited_ms': int((time.monotonic() - t0) * 1000)}
+ 
+ 
+-def sha256_file(path):
++def sha256_stream(fh):
+     h = hashlib.sha256()
++    for chunk in iter(lambda: fh.read(1 << 20), b''):
++        h.update(chunk)
++    return h
++
++
++def sha256_file(path):
+     with open(path, 'rb') as fh:
+-        for chunk in iter(lambda: fh.read(1 << 20), b''):
+-            h.update(chunk)
+-    return h.hexdigest()
++        return sha256_stream(fh).hexdigest()
+ 
+ def install_tree(server_real):
+     """Complete regular-file map and digest for dirname(server_real).

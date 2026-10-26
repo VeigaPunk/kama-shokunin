@@ -1,0 +1,47 @@
+--- a/tools/round49-replay-witness-audit.py
++++ b/tools/round49-replay-witness-audit.py
+@@ -277,8 +277,7 @@
+     try:
+         tk = post(port, "/tokenize", {"content": nonce, "with_pieces": True})["tokens"]
+         ids = [t["id"] for t in tk]
+-        bad = [t for t in tk if not (isinstance(t.get("piece"), str) and 0 <= t["id"] < len(vocab)
+-                                     and vocab[t["id"]].replace("\u2581", " ") == t["piece"])]
++        bad = [t for t in tk if not piece_matches(t, vocab)]
+         if not ids or bad:
+             probs.append(f"tokenize pieces disagree with the model vocabulary: {bad[:3]}")
+         dt = post(port, "/detokenize", {"tokens": ids})["content"]
+@@ -289,6 +288,34 @@
+     return nonce
+ 
+ 
++def piece_want(tok):
++    """Expected `piece` for one GGUF vocabulary entry: a byte-fallback entry
++    <0xXX> is rendered by the server as that single byte; any other entry is
++    its text with U+2581 read as a space."""
++    if len(tok) == 6 and tok.startswith("<0x") and tok.endswith(">"):
++        try:
++            return bytes([int(tok[3:5], 16)])
++        except ValueError:
++            return None
++    return tok.replace("\u2581", " ")
++
++
++def piece_matches(t, vocab):
++    tid = t.get("id")
++    if not isinstance(tid, int) or not 0 <= tid < len(vocab):
++        return False
++    want = piece_want(vocab[tid])
++    if want is None:
++        return False
++    piece = t.get("piece")
++    if isinstance(want, bytes):
++        got = bytes(piece) if isinstance(piece, list) else (
++            piece.encode("utf-8", "surrogateescape") if isinstance(piece, str) else None)
++    else:
++        got = piece if isinstance(piece, str) else None
++    return got == want
++
++
+ def witness_one(tree, rpath, S, tag, env, vocab, detail):
+     work, wd = os.path.join(S, f"work-{tag}"), os.path.join(S, f"wd-{tag}")
+     os.makedirs(wd)
