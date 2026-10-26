@@ -36,9 +36,9 @@ That sentence has one grammatical subject — the new CLI, which launches the da
 
 ## What the same pull request's diff adds, read against the body's three states
 
-The file list of the same pull request (`.ufo/waves/round-43/c3/vllm-pr-58552-files.json`, fetched 2026-10-26T01:52Z) modifies two files: `vllm/entrypoints/cli/preload.py` (+87) and `tests/model_executor/model_loader/test_weight_cache.py` (+19). In `preload.py` the route is `@app.get("/health", include_in_schema=False)` and its handler returns one expression: `return Response(status_code=200 if state.is_ready else 503)`. `is_ready` is `ready and not any(proc.exitcode is not None for proc in self.processes)` over a single `_ready` flag set by `mark_ready()`.
+The file list of the same pull request (`.ufo/waves/round-43/c3/vllm-pr-58552-files.json`, fetched 2026-10-26T01:52Z) modifies two files: `vllm/entrypoints/cli/preload.py` (+87) and `tests/model_executor/model_loader/test_weight_cache.py` (+19). The file itself, read at tag v0.31.0 (`.ufo/waves/round-43/c3/vllm-v0.31.0-preload.py`, 12631 bytes, SHA-256 `d2704e80c08f49455c048724dce8d1eeb22bfa9bc97961ef567106425effa57d`; `gh api` at the PR's merge commit `e7900156e130c9880eb03b7c1f2df32820e7a2be` returns the same digest), registers the route at `preload.py:73`, `@app.get("/health", include_in_schema=False)`, inside `_build_health_app` (`:70`), and its handler returns one expression at `:75`: `return Response(status_code=200 if state.is_ready else 503)`. `is_ready` (`:64-67`) is `ready and not any(proc.exitcode is not None for proc in self.processes)` over a single `_ready` flag set by `mark_ready()` (`:59`).
 
-Read against the body, that is two HTTP outcomes, not three: `ready` is 200, and `starting` and `failed` are both 503, with no body distinguishing them. The three names are the description's vocabulary, and `failed` is observable on the wire only as "not ready". The same file also makes the route opt-in — `--weight-cache-health-port` defaults to `None` with the help "Port for the parent /health endpoint; disabled by default." — and the test's `check_health` accepts only 200, raising "Weight cache daemon is not ready: HTTP {error.code}" otherwise.
+Read against the body, that is two HTTP outcomes, not three: `ready` is 200, and `starting` and `failed` are both 503, with no body distinguishing them. The three names are the description's vocabulary, and `failed` is observable on the wire only as "not ready". The same file also makes the route opt-in — `--weight-cache-health-port` (`preload.py:134-137`) defaults to `None` with the help "Port for the parent /health endpoint; disabled by default." — and the test's `check_health` accepts only 200, raising "Weight cache daemon is not ready: HTTP {error.code}" otherwise.
 
 ## Which `/health` a row means: S004 is the other process
 
@@ -50,15 +50,15 @@ A matrix row must therefore carry a process value and a read date. On 2026-10-25
 
 - The inference server keeps one health route. Neither source read here adds a second route to it, so on this evidence no readiness route has shipped there; the release's readiness wait (#58370) is listed beside `/health` and is not read here.
 - The two readiness-proposal pull requests the staged round-13 amendment names (#46811, #59179) were not opened for this entry, which makes no claim about their state, paths or merges.
-- No vLLM process was run and no host was contacted: this is a reading of two GitHub API objects and one file list, and nothing here says the endpoint answers anywhere (KQ4).
+- No vLLM process was run and no host was contacted: this is a reading of two GitHub API objects, one file list and one source file, and nothing here says the endpoint answers anywhere (KQ4).
 
 ## Limits
 
-- Two objects plus one file list, not the merged tree. The diff is GitHub's `patch` for the pull request, not a read of `preload.py` at the merge commit or at tag v0.31.0, so a later change to that file is outside this reading.
+- Two API objects, one file list and one source file at a tag. The file is `preload.py` at tag v0.31.0, byte-identical to the merge commit's; a later change to it (v0.32.0 or `main`) is outside this reading, which is why the recheck re-reads it.
 - The body's "Test Result" section is the author's own statement; it is recorded as a description, not treated as evidence that the states behave as described.
 - Tier split is deliberate (KQ6): the release page (docs, A) grounds that v0.31.0 shipped a `/health` item, and the pull request (community, C) grounds the process, the states and the move; no sentence here rests on the C row alone.
 - The release `body` is a curated summary and lists the same two fixes again in its "Get started" section; a later tag can reword either occurrence.
 
 ## Cited sources
 
-S480 vLLM v0.31.0 release notes §Fast restart, release `body` line 8 (opened 2026-10-25); S481 vLLM pull request 58552 §Purpose, title, commit list and file list (opened 2026-10-25); S004 vLLM `health(raw_request)` handler, held at `corpus/SOURCES.md:16` (opened 2026-10-19).
+S480 vLLM v0.31.0 release notes §Fast restart, release `body` line 8 (opened 2026-10-25); S481 vLLM pull request 58552 §Purpose, title, commit list and file list (opened 2026-10-25) and `vllm/entrypoints/cli/preload.py` at tag v0.31.0, read through the same row's pull request (the file copy is evidence, not a separate row); S004 vLLM `health(raw_request)` handler, held at `corpus/SOURCES.md:16` (opened 2026-10-19).
