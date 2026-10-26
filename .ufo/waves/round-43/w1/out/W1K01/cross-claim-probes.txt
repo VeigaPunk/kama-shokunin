@@ -1,0 +1,260 @@
+W1K01 — cross-claim probes (lane kama, round 43, wave 1)
+Seat: leaf member (W1K01). No subagent dispatch. No tool installed or upgraded.
+
+Fixture repo (per the seat's constraint):
+  D=$(mktemp -d -p /fast/scratch/kama-r43/seats) && git -C "$D" init -q
+  git -C "$D" rev-parse --show-toplevel  ->  /fast/scratch/kama-r43/seats/tmp.gvj9G0hu4Y   (== $D, verified)
+  D was seeded from /fast/scratch/kama-r43/seats/W1K01/clone (a clone of the lane clone, checked out
+  --detach 895793e0b4c56bdcb939277b8ff0251b26306d4d).  All probes ran with
+  TMPDIR=/fast/scratch/kama-r43/seats/W1K01/tmp.  Every probe below starts from
+  git reset --hard 895793e0b4c56bdcb939277b8ff0251b26306d4d.
+
+The lane clone /fast/scratch/kama-r43/clone was never written to.  The parked lane worktree was written
+only at .ufo/waves/round-43/w1/out/W1K01.md and .ufo/waves/round-43/w1/out/W1K01/.
+
+================================================================================
+PROBE 1 — C2's registry/hexrun-ledger.tsv turns round-42's C2 (digest-ledger) RED
+================================================================================
+
+Cause: tools/digest-ledger.py:76  is_doc(rel) excludes .ufo/ and registry/digest-ledger.tsv ONLY.
+       registry/hexrun-ledger.tsv is NOT excluded, so it is read as a document by the round-42 tool.
+       tools/round43-hexrun-audit.py:83 DOES exclude it (LEDGERS = both files).
+       The two tools disagree about the document set, and the round-42 tool is the blind one.
+
+$ git reset -q --hard 895793e0b4c56bdcb939277b8ff0251b26306d4d && rm -f registry/hexrun-ledger.tsv
+$ printf 'token\tclass\trepo\tevidence\tcorrect\tverified-at\tnote\n61e82ee22dc89292175c5431f1ed6dc1\tunverifiable\t\t\t\t2026-10-25\tsee sha256 926bd7557ccfcc1dee2f68e82862c4dab452f3f80decc816c57acb974dd14f7b for the archived bytes\n' > registry/hexrun-ledger.tsv
+$ git add registry/hexrun-ledger.tsv && git commit -q -m "probe1: hexrun-ledger.tsv with a 64-hex in its note"
+$ TIP=$(git rev-parse HEAD)   # 332bd53ca681967376aca686735d68a76c89f7c8
+$ TMPDIR=/fast/scratch/kama-r43/seats/W1K01/tmp timeout 400 python3 tools/round42-digest-audit.py --repo "$D" --tip "$TIP"
+
+tip=332bd53ca681967376aca686735d68a76c89f7c8
+tool=1 contract=1 live=0 hygiene=1 capability=1 met=False seed=1148355800
+live-reference: tokens=98 blob=88 external_ok=5 external_absent=0 unverifiable=3 wrong_flagged=1 ledger_bad=0 wrong_unflagged=0 unknown=1 exit=1
+detail: live: reference tokens=98 blob=88 external_ok=5 external_absent=0 unverifiable=3 wrong_flagged=1 ledger_bad=0 wrong_unflagged=0 unknown=1 exit=1; tool exit 1 'tokens=98 blob=88 external_ok=5 external_absent=0 unverifiable=3 wrong_flagged=1 ledger_bad=0 wrong_unflagged=0 unknown=1'
+
+Compare the same counter at the unmodified freeze tip:
+  tool=1 contract=1 live=1 hygiene=1 capability=1 met=True seed=1977537849
+  live-reference: tokens=97 blob=88 external_ok=5 external_absent=0 unverifiable=3 wrong_flagged=1 ledger_bad=0 wrong_unflagged=0 unknown=0 exit=0
+
+=> round-42 C2's `live` leg 1 -> 0 and `met` True -> False, caused only by a 64-hex value in the
+   note column of the file C2 must create.  The note column is free text; the token and correct
+   columns are not 64-hex (token is 32..127 except 64; correct must share the first 8 chars of
+   a token-shaped run).
+   Recommended: write C2's ledger with no 64-hex in ANY cell (option a) rather than edit the
+   round-42 tool (option b would change tools/digest-ledger.py's blob and feed C1's pins leg).
+
+================================================================================
+PROBE 2 — C1's pins leg is positional; only a 5-COLUMN row satisfies gate + pins together
+================================================================================
+
+C1 pins leg  tools/round43-registry-audit.py:151-168
+    cells = [c.strip() for c in l.strip().strip("|").split("|")]
+    if len(cells) >= 4 and re.search(r"[0-9]", cells[2]) and any(want.startswith(h) for h in SHA_RE.findall(cells[3])):
+  -> exit digit in cells[2], sha256 pin in cells[3], unconditionally, whatever the table width.
+     SHA_RE = re.compile(r"sha256 `([0-9a-f]{8,64})")   (:78)  -> needs the literal backticked form
+     and want.startswith(h) -> the pin must be a PREFIX of the counter's blob sha256.
+
+Gate C1 grades  tools/gate-registry-check.py:148-169
+  -> accepts ONLY 5-column tables: len(hdr)==5, hdr[0]=="name", "kind"/"entry" in hdr[1],
+     "exit" in hdr[2], "self-test"/"selftest" in hdr[3].
+     A 7-column table's hdr[2] is "Verdict map" -> no "exit" -> the gate cannot see it.
+
+Enumeration of kama SKILL.md (19 '| Name |' tables: 6 five-column, 13 seven-column):
+  gate-visible 5-cell registry tables: 6
+    line 303 ['Name','Kind / entry command','Exit map','Self-test / pinned values','Write scope']
+    line 373 (same shape)
+    line 1224 (same shape)
+    line 1308 (same shape)
+    line 1323 (same shape)
+    line 1371 (same shape)
+  line 396 hdr[2]= 'verdict map (code -> class)' contains 'exit'? False
+  line 430 hdr[2]= 'verdict map' contains 'exit'? False
+  (7-cell tables at 396, 430, 470, 495, 533, 570, 652, 699, 739, 783, 818, 866, 886)
+
+--- PROBE 2a: 7-CELL row, sha in the "Pinned values" cell (index 4) ---
+
+$ git reset -q --hard 895793e0b4c56bdcb939277b8ff0251b26306d4d
+$ # row appended to SKILL.md:
+$ # | Exp7 | gate: `python3 tools/round42-capacity-audit.py --repo R --tip T` | 0 clean; 1 failed | `python3 tools/round42-capacity-audit.py --selftest` | sha256 `<sha>` | read-only | kama |
+$ git add SKILL.md && git commit -q -m "probe2a: 7-cell row, sha at index 4"
+$ TIP=$(git rev-parse HEAD)   # 47086a85cce3aed65be0a0aaa0556a5c835d495e
+$ TMPDIR=... python3 tools/round43-registry-audit.py --repo "$D" --tip "$TIP"
+
+tip=47086a85cce3aed65be0a0aaa0556a5c835d495e
+unreg=19 defect=0 flags=2 pins=19 selftest=1 dc=1 spot=1 hidden=2 pop=31 registered=12 mismatches=45 met=False
+detail: gate unregistered tools/round42-capacity-audit.py
+detail: pins: tools/round42-capacity-audit.py row lacks a matching `sha256 `<prefix>` pin or an exit-code digit
+
+=> NO improvement.  The gate does not see the 7-column row, and the counter's cells[3] is the
+   Self-test cell, which carries no sha256.
+
+--- PROBE 2b: 5-CELL row, sha in cell index 3 (Self-test / pinned values) ---
+
+$ git reset -q --hard 895793e0b4c56bdcb939277b8ff0251b26306d4d
+$ # appended table:
+$ # | Name | Kind / entry command | Exit map | Self-test / pinned values | Write scope |
+$ # |---|---|---|---|---|
+$ # | Exp5 | gate: `python3 tools/round42-capacity-audit.py --repo R --tip T` | 0 clean; 1 failed | `python3 tools/round42-capacity-audit.py --selftest`; sha256 `<sha>` | read-only |
+$ git add SKILL.md && git commit -q -m "probe2b: 5-cell row, sha at index 3"
+$ TIP=$(git rev-parse HEAD)   # 56b3a85418d7035cd6b49c3e1d37021b681a414a
+$ TMPDIR=... python3 tools/round43-registry-audit.py --repo "$D" --tip "$TIP"
+
+tip=56b3a85418d7035cd6b49c3e1d37021b681a414a
+unreg=18 defect=0 flags=2 pins=18 selftest=1 dc=1 spot=1 hidden=2 pop=31 registered=13 mismatches=43 met=False
+detail: round42-capacity-audit.py   ->  (no lines: BOTH legs resolved)
+
+=> unreg 19 -> 18 AND pins 19 -> 18 from ONE row.  The 5-column shape with the sha256 pin in cell
+   index 3 is the ONLY shape that satisfies the gate and the pins leg at the same time.
+   Consequence for the C1 repair: 19 NEWSET counters need 19 new rows in a freshly-shaped
+   5-column table; editing any of the 13 seven-column tables achieves nothing.
+   Note also: the C1 flags leg (round43-registry-audit.py:143-147) matches `path in l` across ALL
+   pipe rows with >=5 cells, so a path mentioned only in a 7-column table can satisfy `flags`
+   while the gate still reports it unregistered -- that asymmetry is how flags=0 coexists with
+   unreg=19.
+
+  Declared flags of the three round-43 counters (grep of add_argument("--...")):
+    tools/round43-registry-audit.py : --out --repo --tip   PLUS the phantom --flag at line 18
+    tools/round43-hexrun-audit.py    : --out --repo --seed --tip
+    tools/round43-health-audit.py    : --base --out --repo --tip
+
+  The phantom --flag: tools/round43-registry-audit.py:68 is
+      ADD_RE = re.compile(r"add_argument\(\s*[\"'](--[a-z][a-z0-9-]*)")
+  and ADD_RE.findall() runs over the RAW source text, so it matches the counter's OWN docstring
+  at line 18:  "every `--flag` it names must be declared by an `add_argument("--flag"`".
+  AST walk of the same file: real parser keys are only --out --repo --tip.
+  This is a FROZEN-COUNTER OBSERVATION, not a fix (preregistration/counters/controls are frozen).
+  Sibling pattern that would have caught it: mori-shokunin/tools/mori-gate-registry.py:15-16 and
+  :325-345 (mask_python/mask_shell; "an occurrence of `--selftest` inside a comment line or a
+  docstring is not a branch").
+
+================================================================================
+PROBE 3 — a new "canonical list as of round 43" table silently un-seats round 42's capability row
+================================================================================
+
+tools/round42-digest-audit.py:270-283 selects the HIGHEST-numbered
+"canonical list as of round N" table; its capability leg (:58-60) requires a `digest-ledger` row
+in that table.  C2's capability leg (tools/round43-hexrun-audit.py:57-60) likewise requires a
+`hexrun-census` row in the highest canonical table.
+
+$ git reset -q --hard 895793e0b4c56bdcb939277b8ff0251b26306d4d
+$ # appended to SCORECARD.md:
+$ # **Capabilities — canonical list as of round 43**
+$ # | Capability | First working round | Evidence | Notes |
+$ # |---|---|---|---|
+$ # | hexrun-census | 43 | `tools/hexrun-census.py` | new |
+$ git add SCORECARD.md && git commit -q -m "probe3: round-43 canonical capability table without a digest-ledger row"
+$ TIP=$(git rev-parse HEAD)   # 9271f0fb0e1cf97d84f7629c1806ac64cab2c969
+$ TMPDIR=... timeout 400 python3 tools/round42-digest-audit.py --repo "$D" --tip "$TIP"
+
+tip=9271f0fb0e1cf97d84f7629c1806ac64cab2c969
+tool=1 contract=1 live=1 hygiene=1 capability=0 met=False seed=1927555486
+live-reference: tokens=97 blob=88 external_ok=5 external_absent=0 unverifiable=3 wrong_flagged=1 ledger_bad=0 wrong_unflagged=0 unknown=0 exit=0
+detail: no digest-ledger row in canonical list as of round 43
+
+=> round-42 C2's capability leg 1 -> 0 and met True -> False.
+   => The round-43 canonical capability table must carry BOTH the digest-ledger row and the new
+      hexrun-census row.
+
+   tools/capability-repertoire-audit.py (read by C2's capability leg) is green at the freeze tip:
+     $ python3 tools/capability-repertoire-audit.py --repo <clone> --tip 895793e0...
+     listed 8 observed 8 missing 0 unsubstantiated 0 met True     (EXIT=0)
+
+================================================================================
+PROBE 4 — base numbers reproduced independently at the freeze commit
+================================================================================
+
+$ TMPDIR=... python3 tools/round43-registry-audit.py --repo <clone> --tip 895793e0b4c56bdcb939277b8ff0251b26306d4d
+tip=895793e0b4c56bdcb939277b8ff0251b26306d4d
+unreg=19 defect=0 flags=2 pins=19 selftest=1 dc=1 spot=1 hidden=2 pop=31 registered=12 mismatches=45 met=False
+detail: gate unregistered tools/round35-coverage-audit.py            (16 gate-unregistered lines)
+detail: flags: .ufo/waves/round-27/count-c1.py row names no --flag or a flag absent from the source
+detail: flags: .ufo/waves/round-30/count-c1.py row names no --flag or a flag absent from the source
+detail: pins: tools/round35-coverage-audit.py has no row or no blob at tip   (19 pins lines)
+detail: selftest: documented 'GATE_SELFTEST pass=6 fail=0', run printed 'GATE_SELFTEST pass=5 fail=1' exit 1
+detail: dc: no correction line for the round-42 search-log entry after it
+detail: spot: calibration row states 28, tree holds 29
+detail: hidden: README.md names 0 of .gitignore, .ufo
+
+  (the frozen base receipt controls/base.c1.out reports mismatches=42 at base tip
+   4dc17978e184d5474f6b0ff3f3d9af608e06aac3; the freeze tip itself reports 45 because the three
+    round-43 counters joined the population: pop 28 -> 31.  Both are met=False, as preregistered.)
+
+$ TMPDIR=... timeout 300 python3 tools/round42-digest-audit.py --repo <clone> --tip 895793e0...
+tool=1 contract=1 live=1 hygiene=1 capability=1 met=True seed=1977537849
+live-reference: tokens=97 blob=88 external_ok=5 external_absent=0 unverifiable=3 wrong_flagged=1 ledger_bad=0 wrong_unflagged=0 unknown=0 exit=0
+
+$ bash /home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --file <clone>/corpus/SOURCES.md
+  ... W04 duplicate-url advisories for S173, S181..S191 (pinned 704366d7... llama.cpp tree) ...
+file	ok	<clone>/corpus/SOURCES.md                                       (EXIT=0)
+
+$ python3 tools/gate-registry-check.py --repo <clone> --rev 895793e0...
+registered 12 unregistered 19 defective 0                                  (EXIT=1)
+
+================================================================================
+PROBE 5 — C2's base population, recomputed from the frozen base receipt
+================================================================================
+
+$ awk -F'\t' '{print $2}' .ufo/waves/round-43/c2/base-unresolved.tsv | sort -n | uniq -c
+      7 32
+      1 39
+     64 40
+      1 65
+     (74 lines total = header + 73 distinct runs; preregistration says 73)
+
+* 64 forty-hex runs: `git cat-file --batch-check` over all 64 -> every one "missing".
+  NONE is an object in the kama repo.  corpus/SOURCES.md alone holds 33 distinct 40-hex runs,
+  of which 2 are commits in the kama repo and 31 are upstream project oids.
+* 7 thirty-two-hex runs: MD5 of every blob at 895793e0 computed (12,759 distinct blob MD5s);
+  none of the 7 matches.  They are MD5s of host files at an earlier time (LOG.md:13-14 cites
+  the 788-line tools/kama-probe.sh and the 11-row registry/endpoint-consumers.tsv), plus two
+  IPv6 renderings (00000000000000000000000001000000, 00000000000000000000000000000000) and one
+  UFO mission id.
+* 1 thirty-nine-hex run: 35ce313293052f8362e0829e7512bc9bc3d336c (SCORECARD.md:2226); the
+  correct 40-hex value is 35ce313293052f8362e0829e7512bc9bc3d336c9.  Shares the first 8 chars
+  -> exactly C2's `wrong` class, whose `correct` cell must resolve as upstream (needs evidence).
+* 1 sixty-five-hex run: 3ad0df68e8423a3b1b99d4e3b8d8c6271f7a4f4c96d3a5ad4e0a85a991ce234ff
+  (corpus/lessons/round-38.md:51).  The real digest of the staged package is
+  3ad0df68504e1f49a0ab23e68b2034a9d6258345468fa03013737ced7ce234ff:
+      $ sha256sum /home/vgpnk/Projects/shokuknow/merge/kama/SOURCES.append.md
+      3ad0df68504e1f49a0ab23e68b2034a9d6258345468fa03013737ced7ce234ff  ...  196639 bytes
+  -> a CORRUPTED 64-hex digest, i.e. precisely the class the round-42 ledger cannot see
+     (its TOKEN rule is exactly 64 hex).  Single clearest proof that C2 is not redundant.
+
+Feasibility of the upstream_ok >= 40 floor (UPSTREAM_MIN at round43-hexrun-audit.py:80):
+  For each of the 64 forty-hex runs, searched every tip blob whose bytes contain the token for a
+  file that also contains an upstream repo name:
+     59 of 64 have SOME file at the tip containing both the token and a repo name
+      5 of 64 have NO file containing any repo name -> cannot be `upstream`; must be `unverifiable`
+          (note >= 10 chars, round43-hexrun-audit.py:30-31), within UNVERIFIED_MAX=25.
+  => the floor is reachable but must be authored per run with a real evidence path; it is not
+     automatic.
+
+================================================================================
+PROBE 6 — sibling registry gates run against kama's tree (read-only, no writes to kama)
+================================================================================
+
+$ python3 mori-shokunin/tools/mori-gate-registry.py --rev 895793e0... --repo <kama clone> --registry SKILL.md --audit tools/round43-registry-audit.py
+REGISTRY_SETUP no registry table with the eight standard cells in SKILL.md          (EXIT=2)
+  -> mori's 8-cell gate cannot read kama's 5-cell SKILL.md tables.
+
+$ python3 <kama clone>/tools/gate-registry-check.py --repo mori-shokunin --rev HEAD
+registered 0 unregistered 35 defective 0                                            (EXIT=1)
+  -> kama's 5-cell gate cannot read mori's 8-cell SKILL.md tables: every mori counter reads
+     as unregistered.  The two generations are mutually unreadable.
+
+$ python3 tsukuroi-shokunin/tools/check-registry-coverage.py --revision 895793e0...
+{"branch":"master","branch_tip":null,"counts":{"findings":1,...},"findings":[{"detail":"895793e0... does not name one commit","id":"E-REVISION-INVALID","site":"revision"}],...}
+  -> tsukuroi's gate binds to its OWN lane root (ROOT = tools/..), so it cannot be pointed at
+     another lane without a --repo option it does not have.  Only mori's gate takes --repo.
+
+$ python3 mori-shokunin/tools/mori-gate-registry.py --repo mori-shokunin --rev HEAD --audit-all
+  (mori's own tree: 41 tools, 9 tables, population_digest=eb41216dbd70..., REGISTRY=met)
+  -> mori's gate is the only sibling registry gate that is lane-portable (--repo/--registry).
+
+================================================================================
+CLEANUP
+================================================================================
+  rm -rf /fast/scratch/kama-r43/seats/W1K01/clone
+  rm -rf /fast/scratch/kama-r43/seats/W1K01/exp
+  rm -rf $(cat /fast/scratch/kama-r43/seats/W1K01/fixture_dir.txt)     # the mktemp fixture repo
+The lane clone /fast/scratch/kama-r43/clone was never written to.

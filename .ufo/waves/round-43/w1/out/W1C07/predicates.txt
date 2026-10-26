@@ -1,0 +1,67 @@
+### C1
+--predicate--
+At the measured commit tools/round43-registry-audit.py reports mismatches=0 with pop>=28 and registered>=28,
+where mismatches = unreg + defect + flags + pins + selftest + dc + spot + hidden: the lane's own gate
+tools/gate-registry-check.py (as committed at the tip) finds every tracked round counter registered in a
+SKILL.md registry row (unreg=0 defect=0); each registered counter's entry cell names only flags its source
+declares (flags=0); each of the 19 counters in NEWSET has a row whose pinned-values cell names a sha256 prefix
+equal to the counter's actual SHA-256 and whose exit-map cell names an exit digit (pins=0); SKILL.md's
+documented `GATE_SELFTEST pass=P fail=0` equals what the tool's --selftest prints in a throwaway clone with
+master set to the tip (selftest=0); corpus/SOURCES.md carries a search-log correction naming S401 and S424
+after the round-42 entry (dc=0); the SCORECARD calibration row's `N (outside closures on record)` equals the
+number of corpus/lessons/*verifier-spotcheck.md blobs at the tip (spot=0); README.md names `.gitignore` and
+`.ufo` (hidden=0).
+--kill_rule--
+met must flip False -> True. At base mismatches=42 met=False (controls/base.c1.out). A miss at the landed tip
+is an honest stop; the counter, NEWSET and fact list are not changed after any seat scores.
+--counting_command--
+python3 tools/round43-registry-audit.py --repo <fresh clone of lane remote> --tip <full commit> --out
+<receipt>
+--out_of_counter_limit--
+The counter checks that registry rows exist, name real flags and carry the correct SHA-256 pin; it does not
+judge whether the exit map or write-scope text is the best description of the counter. A copy-pasted but true
+row meets it. Relevance and sufficiency are judged by reviewers and the non-author closure.
+### C2
+--predicate--
+tools/round43-hexrun-audit.py reports tool=1 contract=1 live=1 hygiene=1 capability=1 met=True: tools/hexrun-
+census.py exists; on the twelve planted fixtures (eleven --dir cases and one real git repo, hex values drawn
+from the counter's seed) its summary line and exit code equal the counter's by-construction expectation; its
+`scan --repo --rev TIP` finds unknown=0 and ledger_bad=0, with distinct, lane_oid and md5_blob equal to the
+counter's own census of the same documents, upstream_ok>=40 and unverifiable+wrong_flagged<=25 (at base the
+census finds 73 unexplained distinct runs: 64 unresolved 40-hex oids, 7 32-hex runs not hashing a blob, one
+39-hex and one 65-hex run); a scan under an empty private TMPDIR leaves it empty; and the highest canonical
+SCORECARD capability list carries a hexrun-census row naming tools/hexrun-census.py with first-working round
+43, with the repertoire audit reading met True.
+--kill_rule--
+met must flip False -> True. At base every leg is 0 (controls/base.c2.out). A miss at the landed tip is an
+honest stop; the counter, fixtures and thresholds are not changed after any seat scores.
+--counting_command--
+python3 tools/round43-hexrun-audit.py --repo <fresh clone of lane remote> --tip <full commit> [--seed N] --out
+<receipt>
+--out_of_counter_limit--
+The contract fixtures define behavior by construction but cover twelve cases; the live leg requires an
+evidence-backed `upstream` class but cannot prove the evidence files were fetched from the stated upstream
+(the closure re-queries a sample). Host-dependent evidence (gh api) is committed bytes, not re-fetched by the
+counter.
+### C3
+--predicate--
+tools/round43-health-audit.py reports entry=1 rows=1 coverage=1 gate=1 refetch=1 census=1 met=True:
+corpus/knowledge/runtime-health-surface-processes.md exists with the provenance trio, names the registry ids
+of both new rows, and states that the v0.31.0 `/health` endpoint belongs to the weight cache daemon (`vllm
+preload`, #58552) with its three states, as a different process from the inference server row S004; both new
+rows (the v0.31.0 release page, docs/A, and PR 58552, community/not A) are 11-cell mined rows opened
+2026-10-25 whose anchor holds the SHA-256 of a committed API copy; at base no tracked md outside .ufo holds
+`weight cache daemon` or `vllm preload`; the round-43 lesson Gate gives each new row's URL, date and a
+<=25-word quote located in the copy, and an Assimilation set with an admit and a reject; the four assimilation
+scratch files and a guard proof are committed; every frozen quote and every Gate quote also occurs in a live
+refetch of the GitHub API; sources-census validate exits 0.
+--kill_rule--
+met must flip False -> True. At base entry=0 rows=0 coverage=0 gate=0 (controls/base.c3.out). A miss at the
+landed tip is an honest stop; the counter and fixed names are not changed after any seat scores.
+--counting_command--
+python3 tools/round43-health-audit.py --repo <fresh clone of lane remote> --tip <full commit> --base
+6897ead55c24ba08c9ac0b09466d4fbfe005a459 --out <receipt>
+--out_of_counter_limit--
+The entry's prose is checked by keyword, not read; reviewers and the closure read it against the committed
+copies. The counter does not test whether the process-map claims about PR 46811, PR 59179, the agentic-api
+gateway or the semantic router (staged but not frozen here) hold.
