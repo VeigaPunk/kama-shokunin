@@ -428,3 +428,5 @@ name the first failing operation/file, for example `read:'X':Permission denied`,
 rather than the former later-scan `X:unreadable`/`X:not-hashed` list.
 The `install-tree-unpinnable:` prefix and actual refusal remain unchanged;
 no multi-error aggregation or exact description-text guarantee is credited.
+
+**Round-45 re-verification at b11889 (appended 2026-10-26; S484, S485).** The lifecycle statements this entry rests on (S041, S046, S055, all b11755) were re-run on the official llama.cpp b11889 binary (S484: asset digest `sha256:2076290f…d350`, `llama-server` sha256 `248e790d…f7a7`) with the same model and tool: three receipts (S485, `.ufo/waves/round-45/c1/live/receipt-1.json`..`-3.json`) each pass all 11 checks — exact loading 503 envelope, ready `/health` body `{"status":"ok"}`, `/v1/models` id = alias with owned_by `llamacpp`, `/metrics` 501, probe MODEL_OK and MODEL_MISMATCH, SIGTERM teardown returncode 0 without SIGKILL. These are sampled instants on one fixture model, not a guarantee for later builds; the round-17 "3 ms" teardown figure is a sampled duration (b11889: 15, 9 and 7 ms) and is not re-asserted. Ledger: `registry/recheck-r45.tsv`.
