@@ -3,18 +3,18 @@
 Contract per `AXES.md` §SCORECARD.md contract. Scores are 0–10, self-assessed,
 each bound to an evidence pointer and the round that last changed it.
 
-**Current authority (round 42):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 42. Calibration 7 is the lowest assigned axis, below operability 8, and below the saturation line, so the stagnation nudge is inactive. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived from the tree by `tools/round42-selfdesc-reconcile.py` (round-42 claim C1); the round-5 banner and the head sections they replace are kept verbatim under §Historical head sections. Completed rounds are counted by the fleet's `MANIFEST.json`, not by this file.
+**Current authority (round 43):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 43. Calibration 7 is the lowest assigned axis, below operability 8, and below the saturation line, so the stagnation nudge is inactive. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived from the tree by `tools/round42-selfdesc-reconcile.py` (round-42 claim C1) and kept current in round 43; the round-5 banner and the head sections they replace are kept verbatim under §Historical head sections. Completed rounds are counted by the fleet's `MANIFEST.json`, not by this file.
 
 ## Axes
 
-Round 42 adds, to every row, one axis-specific run fact (routed defect R41A03: a true fact is not yet a relevant one) and re-anchors the `PROVINCE.md` hash after the round-42 edit. Reconciled in round 41 against the measured commit (`tools/round41-scorecard-reconcile.py`, claim C1): every hash, line count, run line and path in the table below re-derives there, and the scores are the lane's last-declared assessment (round 39 and round 40 sections). The round-3 table it replaces is kept below, byte-intact, as history; its md5s, line counts and bare file names no longer matched the tree, and its freshness 7 and coverage 8 predate the round-10 moves to 8 and 9.
+Round 43 re-anchors the `SKILL.md` and `PROVINCE.md` hashes after the round-43 edits and restates the closure count of the calibration row. Round 42 added, to every row, one axis-specific run fact (routed defect R41A03: a true fact is not yet a relevant one) and re-anchored the `PROVINCE.md` hash after the round-42 edit. Reconciled in round 41 against the measured commit (`tools/round41-scorecard-reconcile.py`, claim C1): every hash, line count, run line and path in the table below re-derives there, and the scores are the lane's last-declared assessment (round 39 and round 40 sections). The round-3 table it replaces is kept below, byte-intact, as history; its md5s, line counts and bare file names no longer matched the tree, and its freshness 7 and coverage 8 predate the round-10 moves to 8 and 9.
 
 | Axis | Score | Evidence pointer (re-derivable at the measured commit) | Last change |
 |---|---|---|---|
-| **operability** | **8** | registry gate `tools/kama-probe.sh` sha256 `36b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3` (1138 lines); run `bash tools/test-snapshot.sh` → `RESULT pass=30 fail=0`; run `python3 tools/pin-watch.py selftest` → `selftest pass=9 fail=0`; run `python3 tools/report-landing-audit.py --selftest` → `selftest cases=79 failed=0`; run `python3 tools/sources-append-only.py --selftest` → `42/42 selftest cases passed`. Limit: the registered endpoints sample DEAD (no authorized serving runtime; operator-owned), so no model-readiness verdict is evidenced | score round 3; evidence re-anchored round 42 |
+| **operability** | **8** | registry gate `tools/kama-probe.sh` sha256 `36b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3` (1139 lines); run `bash tools/test-snapshot.sh` → `RESULT pass=30 fail=0`; run `python3 tools/pin-watch.py selftest` → `selftest pass=9 fail=0`; run `python3 tools/report-landing-audit.py --selftest` → `selftest cases=79 failed=0`; run `python3 tools/sources-append-only.py --selftest` → `42/42 selftest cases passed`. Limit: the registered endpoints sample DEAD (no authorized serving runtime; operator-owned), so no model-readiness verdict is evidenced | score round 3; evidence re-anchored round 42 |
 | **freshness** | **8** | snapshot/diff harness `tools/test-snapshot.sh` sha256 `236c23c12964cf0b2f0a2f970187e216d3398dcf2b92ffb7e8606e0fdd029646` (194 lines); run `python3 tools/citation-provenance.py --selftest` → `selftest: ok (24 cases)`; live drift evidence `.ufo/waves/round-41/c2/ls-remote-vllm.txt` sha256 `13388e483163357aa4daea784d0e67cdc8d6b5438d3166d613a2a044590b9282`; run `python3 -c "recheck=[l.split(chr(124))[10].strip() for l in open('corpus/SOURCES.md') if l.startswith(chr(124)+' S') and int(l.split(chr(124))[1].strip()[1:])<=477];print(sum(1 for r in recheck if r))"` → `218` (registry rows S001–S477 carrying a recheck cadence). Limit: snapshots are invocation-driven (no clock), and source rechecks run on each row's `recheck` cadence | score round 10; evidence re-anchored round 42 |
-| depth | **7** | `SKILL.md` sha256 `151023b99bec115ee2cbab747c9641f243e15702210b76cd407135fa06dc4d0b` (1375 lines); run `grep -c '^## ' SKILL.md` → `30`; `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 42 |
-| coverage | **9** | surface list `PROVINCE.md` sha256 `1dc13fa62e1f59c5adc3a078f4a26530ce648c959b6dc5b2377c604049329b4e` (183 lines); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f]))"` → `34` (knowledge entries held before round 42); held ground includes `corpus/knowledge/endpoint-health-probe-conventions.md`, `corpus/knowledge/kv-cache-reclamation-models.md`, `corpus/knowledge/serving-alias-contract.md` | score round 10; evidence re-anchored round 42 |
+| depth | **7** | `SKILL.md` sha256 `542d6da23245773400de835b7a86ea19b289dcd31e3668f5893aed1a6ab12f89` (1402 lines); run `grep -c '^## ' SKILL.md` → `30`; `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 42 |
+| coverage | **9** | surface list `PROVINCE.md` sha256 `5a3660b30b8ac82a4395757098b1f3773abd8c08072e0396a3906425b7d8c278` (184 lines); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f and 'processes' not in f]))"` → `34` (knowledge entries held before rounds 42 and 43); held ground includes `corpus/knowledge/endpoint-health-probe-conventions.md`, `corpus/knowledge/kv-cache-reclamation-models.md`, `corpus/knowledge/serving-alias-contract.md` | score round 10; evidence re-anchored round 42 |
 | calibration | **7** | run `python3 tools/capability-repertoire-audit.py --selftest` → `CAP_SELFTEST pass=2 fail=0`; run `python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"` → `29` (outside closures on record); that figure is the number of `corpus/lessons/*verifier-spotcheck.md` blobs at the measured commit; run `python3 tools/instrument-agreement.py --selftest` → `IA_SELFTEST pass=4 fail=0`; this table's counters `tools/round41-scorecard-reconcile.py` and `tools/round42-selfdesc-reconcile.py`; latest outside closure `corpus/lessons/round-41-verifier-spotcheck.md` (admitted) | score round 1; evidence re-anchored round 42 |
 | adjacency | **7** | `corpus/knowledge/cross-lane-scope.md` sha256 `1801cb7fa45ef6f56ff96cb67c7840256fcffce000a56067cd8133797b9728a9` (87 lines); run `python3 -c "print(sum(1 for l in open('corpus/knowledge/cross-lane-scope.md') if l.startswith(chr(124))))"` → `16` (lines starting with a table pipe, header and separator lines included); contested scope stays reported, not absorbed (`PROVINCE.md` paragraph "Out of province → report, never absorb") | score round 1; evidence re-anchored round 42 |
 
@@ -50,11 +50,11 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 ## Planned
 
-Superseded in round 42. The live plan is `### Planned (round 43)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
+Superseded in round 42. The live plan is `### Planned (round 44)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
 
 ## Retired
 
-None. 6 axes and 8 capabilities remain active. Neither assigned axis is retired: the registered consumers still sample DEAD (`registry/history/latest.tsv`; restoring a serving runtime is operator-owned), while the lane-owned llama.cpp fixture reaches `MODEL_OK` on an unregistered loopback port (`.ufo/waves/round-16/live/receipt.json`), so the surface is not permanently gone. Retirement would need evidence of permanent absence or of saturation, and neither is observed.
+None. 6 axes and 9 capabilities remain active. Neither assigned axis is retired: the registered consumers still sample DEAD (`registry/history/latest.tsv`; restoring a serving runtime is operator-owned), while the lane-owned llama.cpp fixture reaches `MODEL_OK` on an unregistered loopback port (`.ufo/waves/round-16/live/receipt.json`), so the surface is not permanently gone. Retirement would need evidence of permanent absence or of saturation, and neither is observed.
 
 ## Move log
 
@@ -114,7 +114,7 @@ plan, not a run. No native Phase 0/self-iter failure was re-executed.
 
 ## Capabilities
 
-Mirror of the round-42 canonical capability list that §Round 42 carries (a mirror, not the canonical source: the counters resolve the highest-numbered canonical heading below this line). Registry counts are not restated here: `scripts/sources-census.sh census --file corpus/SOURCES.md` derives them.
+Mirror of the round-43 canonical capability list that §Round 43 carries (a mirror, not the canonical source: the counters resolve the highest-numbered canonical heading below this line). Registry counts are not restated here: `scripts/sources-census.sh census --file corpus/SOURCES.md` derives them.
 
 | Capability | What it can now do | Evidence pointer | First-working round |
 |---|---|---|---|
@@ -126,12 +126,13 @@ Mirror of the round-42 canonical capability list that §Round 42 carries (a mirr
 | instrument-agreement | Run a lane instrument N times over one tree and emit a receipt with per-run digests and an agreement counter | `tools/instrument-agreement.py` | 30 |
 | pin-watch | List upstream release tags for each pinned serving engine (SGLang, vLLM, llama.cpp) and report, per pin, the newest release tag and how many releases sort above it; exit 1 flags a recheck trigger | `tools/pin-watch.py`; `registry/engine-pins.tsv`; `corpus/knowledge/engine-pin-watch.md` | 41 |
 | digest-ledger | Find every full SHA-256 the lane's documents cite and classify it: a committed blob, a ledger-declared external artifact re-hashed on this host, an unverifiable digest with its reason, or a flagged known-wrong digest; exit 1 on any unexplained digest | `tools/digest-ledger.py`; `registry/digest-ledger.tsv` | 42 |
+| hexrun-census | Find every lower-case hex run of 32-127 characters other than 64 that the lane's documents cite (git object ids, MD5 sums, over-long or abbreviated runs) and classify it: a lane object, the MD5 of a committed blob, an upstream object whose committed evidence file contains it, an unverifiable run with its reason, or a flagged wrong run linked to a correct one; exit 1 on any unexplained run | `tools/hexrun-census.py`; `registry/hexrun-ledger.tsv` | 43 |
 
 Rows enter only through a round that demonstrates the capability running (`AXES.md` §Capabilities).
 
 ## Saturation
 
-Saturation line **8/10** (declared round 10, unchanged); stagnation window **N = 4** rounds. Derived at the measured commit by `tools/round42-selfdesc-reconcile.py`: score vector operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7 (from `## Axes`); capability first-working rounds 10, 14, 16, 20, 25, 30, 41, 42 (highest canonical list); the assigned axes are operability + calibration and calibration 7 is below the line, so nudge inactive. A capability entered in round 42, so the window is not exhausted either.
+Saturation line **8/10** (declared round 10, unchanged); stagnation window **N = 4** rounds. Derived at the measured commit by `tools/round42-selfdesc-reconcile.py` (kept current in round 43): score vector operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7 (from `## Axes`); capability first-working rounds 10, 14, 16, 20, 25, 30, 41, 42, 43 (highest canonical list); the assigned axes are operability + calibration and calibration 7 is below the line, so nudge inactive. A capability entered in round 43, so the window is not exhausted either.
 
 ## Historical head sections (superseded in round 42)
 
@@ -2288,3 +2289,35 @@ Scores held: operability 8, freshness 8, depth 7, coverage 9, calibration 7, adj
 
 1. Calibration: the second half of `considerthese/2026-10-25.md` proposal 1 — cross-check every S-id a lesson names against the registry row it is said to be (round 36's five misattributed ids were this class), with a counter a do-nothing control fails.
 2. Coverage or operability: the llama.cpp single-model `/v1/models` body and the older vLLM docs lines (R41C03) as pin rows, or the refused round-8 llama-cpp-python settings theme once a claim consumes it.
+
+
+## Round 43 — instrument registry reconciled (calibration), the hexrun-census capability (operability) and the vLLM `/health` process map (coverage) (2026-10-25)
+
+Authority: `shokunin.conf` assigns operability + calibration; calibration 7 is the lowest assigned non-retired axis, below operability 8; the stagnation nudge is inactive. Frozen base `6897ead55c24ba08c9ac0b09466d4fbfe005a459`; freeze commit `895793e0b4c56bdcb939277b8ff0251b26306d4d` (`.ufo/waves/round-43/preregistration.json`, three counters, controls). Measurement root: a fresh clone of the lane remote; the parked worktree is still on the mutation-sandbox lineage (round-40 D5).
+
+| Claim | Axis, score | Before → after | Counting command | Evidence |
+|---|---|---|---|---|
+| C1 — SKILL.md's instrument registry, its documented self-test line, the calibration row's closure count, the SOURCES search-log correction and README's hidden entries match the tree | calibration 7 → 7 | base `mismatches=42 met=False` → measured value recorded under §Round-43 measured results | `python3 tools/round43-registry-audit.py --repo <fresh clone> --tip <full commit> --out <receipt>` | `.ufo/waves/round-43/controls/base.c1.out` |
+| C2 — capability acquisition `hexrun-census` (considerthese 2026-10-25 proposal 1, the non-64 hex-run half) | operability 8 → 8, new capability row | base `tool=0 contract=0 live=0 hygiene=0 capability=0 met=False` → measured value recorded under §Round-43 measured results | `python3 tools/round43-hexrun-audit.py --repo <fresh clone> --tip <full commit> [--seed N] --out <receipt>` | `.ufo/waves/round-43/controls/base.c2.out` |
+| C3 — the vLLM `/health` process map, assimilated from the staged package (sourced: S480, S481) | coverage 9 → 9 | base `entry=0 rows=0 coverage=0 gate=0 met=False` → measured value recorded under §Round-43 measured results | `python3 tools/round43-health-audit.py --repo <fresh clone> --tip <full commit> --base 6897ead55c24ba08c9ac0b09466d4fbfe005a459 --out <receipt>` | `.ufo/waves/round-43/controls/base.c3.out` |
+
+**Capabilities — canonical list as of round 43**
+
+Same four columns as the round-42 canonical list, which stays byte-intact; one row is added.
+
+| Capability | What it can now do | Evidence pointer | First-working round |
+|---|---|---|---|
+| sources-registry | Curate where kama learns: tier-scoped, revision-anchored rows; contract-v1 census clean | `corpus/SOURCES.md` | 10 |
+| ollama-offline-evidence-replay | Reconcile caller-supplied `/api/tags` + `/api/ps` captures fail-closed; readiness always unknown | `tools/kama-ollama-evidence.py` | 14 |
+| live-llamacpp-lifecycle | Start the pinned llama.cpp b11755 server on an unregistered loopback port, capture its loading and ready surfaces, grade and tear it down | `.ufo/waves/round-16/live/receipt.json` | 16 |
+| gguf-declared-identity-replay | Decode bounded local GGUF metadata offline and compare declared metadata with a captured receipt | `tools/gguf-identity.py` | 20 |
+| context-capacity-receipt | Run the registered context-capacity cells on the lane-owned llama.cpp fixture and write a sha256-bound receipt | `tools/kama-context-capacity.py` | 25 |
+| instrument-agreement | Run a lane instrument N times over one tree and emit a receipt with per-run digests and an agreement counter | `tools/instrument-agreement.py` | 30 |
+| pin-watch | List upstream release tags for each pinned serving engine (SGLang, vLLM, llama.cpp) and report, per pin, the newest release tag and how many releases sort above it; exit 1 flags a recheck trigger | `tools/pin-watch.py`; `registry/engine-pins.tsv`; `corpus/knowledge/engine-pin-watch.md` | 41 |
+| digest-ledger | Find every full SHA-256 the lane's documents cite and classify it: a committed blob, a ledger-declared external artifact re-hashed on this host, an unverifiable digest with its reason, or a flagged known-wrong digest; exit 1 on any unexplained digest | `tools/digest-ledger.py`; `registry/digest-ledger.tsv` | 42 |
+| hexrun-census | Find every lower-case hex run of 32-127 characters other than 64 that the lane's documents cite (git object ids, MD5 sums, over-long or abbreviated runs) and classify it: a lane object, the MD5 of a committed blob, an upstream object whose committed evidence file contains it, an unverifiable run with its reason, or a flagged wrong run linked to a correct one; exit 1 on any unexplained run | `tools/hexrun-census.py`; `registry/hexrun-ledger.tsv` | 43 |
+
+### Planned (round 44)
+
+1. Calibration: the descriptor-based half of the S-id cross-check (`considerthese/2026-10-25.md` proposal 1, second half): the round-36 misattributions named staged ids by description, which the URL form cannot see (`.ufo/waves/round-43/frontier/sid-prototype.out`); re-open every new SOURCES row's quote at its cited line (`considerthese/2026-10-24.md` proposal 2).
+2. Coverage: the refused round-13 amendment rows (S438, S439, S442, S443) once a claim consumes the readiness column, or the llama.cpp single-model `/v1/models` body and the older vLLM docs lines as pin rows.
