@@ -29,8 +29,15 @@ the two moves that only become necessary once a `## Round 47` heading exists:
   (banner leg);
 - `SCORECARD.md:53`: the live-plan pointer `### Planned (round 47)` → `### Planned (round 48)`, and
   a `### Planned (round 48)` heading with a numbered item must exist (planned leg: `maxN+1`).
+- `SCORECARD.md:16` `depth` row — **not forced by the canon list**, but forced by the round-47
+  SKILL registry rows: it anchors `SKILL.md` sha256 / line count / `grep -c '^## '` run fact.
+  Committed tip `46a924e0` matches the row (`1ad95066…`, 1442 lines, 34); the round-47 SKILL.md in
+  the working tree is `ddb80f6e…`, 1463 lines, 35 headings, so all three fields move when it lands
+  (otherwise `round41-scorecard-reconcile` reads `hash_bad=1 lines_bad=1 run_bad=1`). Re-derive from
+  the applied blob at integration.
 
-`S9Scorecard`'s head re-anchor set covers all three and its merged measurement at commit
+`S9Scorecard`'s head re-anchor set covers all of these (its `head-reanchors.diff`, including the
+depth row) and its merged measurement at commit
 `1d910297` reads `r41=0 … province=0 rel=0 mismatches=0 maxN=47 met=True` (exit 0). This seat's
 demo tree has no `## Round 47` heading, so `maxN` stays 46 there and `planned`/`banner` read 0 —
 that difference is the missing section, not a disagreement.

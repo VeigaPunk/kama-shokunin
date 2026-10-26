@@ -185,6 +185,14 @@ Verified here, independently: 33 `corpus/lessons/*verifier-spotcheck.md` blobs a
 the calibration row is a round-47 repair (`32` → `33`), and banner/Planned moves are needed once
 `## Round 47` exists. Placement is settled (block inside the section); apply the block once.
 
+One further head move is live but **not forced by the canon list** (S9Scorecard raised it, numbers
+re-measured here): `SCORECARD.md:16` `depth` row anchors `SKILL.md`. Committed tip `46a924e0`:
+sha256 `1ad95066…`, 1442 lines, `grep -c '^## '` → 34 — the row is correct there. The round-47
+SKILL registry rows sit uncommitted in the lane working tree at sha256 `ddb80f6e…`, 1463 lines,
+35 headings; when they land, the depth row's hash, line count and run fact must all three move or
+`round41-scorecard-reconcile` reads `hash_bad=1 lines_bad=1 run_bad=1`. Re-derive from the applied
+blob at integration, not from these working-tree figures.
+
 ## 8. Files written (absolute)
 
 - `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-47/w1/out/S9Cap.md`

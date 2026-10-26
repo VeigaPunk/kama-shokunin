@@ -20,6 +20,14 @@ the line; "truth" means no counter reads it but the tree contradicts it.
 | 12 | `SCORECARD.md:17` (coverage row) | "surface list `PROVINCE.md` sha256 659a5101… (186 lines)" | "sha256 929f3e3eef20fa90429ca0c5a96a63821cff6aeca912ac55bad3a82b4bd3a079 (186 lines)" | r41 `HASH` | forced by #11; `reconcile41-without-coverage-reanchor.out`: `hash_bad=1`, `detail: coverage sha256 PROVINCE.md cited 659a5101… observed 929f3e3e…` |
 | 13 | `SCORECARD.md:16` (depth row) | "`SKILL.md` sha256 1ad95066… (1442 lines); `grep -c '^## '` → 34" | **only if SKILL.md gains the round-47 registry rows**: sha256 from the applied bytes, line count, `## ` count. Probe with seat S9Skill's rows: `682fba3bf87ea43cb5494fb00ae091c92eed50b49e6ebd00e3484d29876a2616`, 1463 lines, "→ 35". **The lane's working tree at report time carried the L1's own rows: `ddb80f6e275d345badd2fd554b0759842d8287387a4579affe71143e0e783555`, 1463 lines, 35 headings** (measured, uncommitted) | r41 `HASH`, `LINES`, `RUN` | `reconcile41-with-skill-rows.out` (`hash_bad=1 lines_bad=1 run_bad=1`); re-anchored in `reconcile41-depth-reanchored.out` (`mismatches=0`); working-tree read: `sha256sum SKILL.md`, `wc -l < SKILL.md`, `grep -c '^## ' SKILL.md` |
 
+**Row 13 is computed from the applied blob, never from a working-tree file
+that still has unstaged edits** — the counter reads `SKILL.md` at the audited
+commit, so the sha256/line/heading facts must be those of the final bytes, e.g.
+`git show :SKILL.md | sha256sum` and `git show :SKILL.md | grep -c '^## '`
+after staging, or the same reads at the measured commit after the fact. The
+`ddb80f6e…`/1463/35 figures above are a working-tree reading and are labelled
+as such.
+
 ## What stays put, verified rather than assumed
 
 - **Score vector** `operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7` — C1 is 7 → 7 and C2 8 → 8, so no score cell moves and `r41` stays `score_bad=0`. The capability entry is a table event, not a score move.

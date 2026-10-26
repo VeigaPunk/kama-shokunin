@@ -42,6 +42,7 @@ capability table after the line matching `canonical list as of round N**`, highe
 | 10 | `python3 tools/append-only-audit.py --repo $S/lane --to 3a09a1d9` | 1 | `event dd9f5dc6 SCORECARD deleted=31 restored_max=24 partial`; `0718b6ab LOG deleted=2292 restored_max=2292 restored`; `0718b6ab SCORECARD deleted=2421 restored_max=2420 partial`; `QUALITY 375/375 restored`; `README 663/663 restored`; `summary commits=303 files=85 events=5 restored=3 partial=2 unrestored=0` | `append-only-v2-at-tip.out` |
 | 11 | controls (see `controls.out`), each `capability-repertoire-audit.evaluate(dir, None)` on a constructed tree | 0 | 6 rows, below | `controls.out` |
 | 12 | `git ls-tree --name-only <rev> corpus/lessons/ \| grep -c 'verifier-spotcheck\.md$'` for `3a09a1d9` and `46a924e0` | 0 | `33` both times; `SCORECARD.md:18` claims `32`, so r41 is a stale row this round repairs | this receipt, `companion-head-and-province.md` |
+| 13 | `sha256sum SKILL.md`, `wc -l`, `grep -c '^## '` on the committed tip and on the lane working tree | 0 | tip `46a924e0`: `1ad95066…`, 1442 lines, 34 headings (depth row correct there); working tree (round-47 SKILL rows, uncommitted): `ddb80f6e…`, 1463 lines, 35 headings, so the depth row moves when they land | this receipt, `companion-head-and-province.md` |
 
 ### Controls (row 11)
 
@@ -97,7 +98,9 @@ required and are now recorded there: `SCORECARD.md:18` calibration `32` → `33`
 both revisions, run 12 above) and, once `## Round 47` exists, `SCORECARD.md:6` banner 46 → 47 and
 `SCORECARD.md:53` planned pointer 47 → 48 with a `### Planned (round 48)` heading. The block must
 be applied once: `proposed.patch` and the section draft overlap on the canon and the four companion
-edits.
+edits. A further live head move, not forced by the canon list: `SCORECARD.md:16` depth anchors
+`SKILL.md` (tip `1ad95066…`/1442/34 is correct; the uncommitted round-47 SKILL is
+`ddb80f6e…`/1463/35, so hash, lines and run fact all move with it) - run 13.
 
 ## Artifact hashes
 
@@ -112,7 +115,7 @@ f93d2650430213642fbcfaa1e5f9fbd226fc061813b067205ef32843736f74bb  caps-baseline.
 1c8769c74944d2310f01a948e26a114d63660c7ff5b9fe2a980d84086708bde4  caps-tip-committed.json
 b9c3569e4208d66d8b90dbb9d0898675c8a25f3869f12bb1f57c4d66ed5c820a  caps-tip-committed.out
 7a2a10d44325154b21e649e7b0f204e3593b3b292f80981a0dc4f3fba95f78c5  caps-tip-tokens.out
-df5137028098ffde52f75a196059ac72b855ad070a1d1634d6b62890ead1578f  companion-head-and-province.md
+b1ac49f7acc1435183d953b4ad68e467ac394032d00d56f4d3ccda60efc900c0  companion-head-and-province.md
 abb9330294c4181065be644dc10aeb5bfeba6cec6859cb71c4577e5551eb62e3  controls.out
 f4713c91e0075538581248d106b0226d51232fff247f5f6d7210a46dac68f0f4  mirror-capabilities.md
 2d95bffcc2beb6cf7ae6386ef49f5d3e816b2e40d4b79ea8dd3f250889204853  proposed.patch
