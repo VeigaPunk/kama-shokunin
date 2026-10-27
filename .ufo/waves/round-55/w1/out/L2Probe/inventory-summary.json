@@ -1,0 +1,40 @@
+{
+  "probe": "L2Probe round-55 bounded /proc/<pid>/maps pathname-form inventory",
+  "host_kernel": "7.2.11-arch1-1",
+  "counter_KERNEL_MAPS": ["[vdso]", "[vsyscall]", "[vvar]", "[vvar_vclock]", "[vvar_boot", "[uprobes]"],
+  "counter_path": "tools/round54-replay-code-audit.py",
+  "counter_line": 144,
+  "forms_empirically_observed": [
+    {"form": "plain path", "example": "/usr/lib/libc.so.6", "exec_rows": "yes", "counter_handling": "tree branch (byte-compare) or host branch (HOST_LIBS allowlist)"},
+    {"form": "path + ' (deleted)' (unlinked file still mapped)", "example": "/fast/.../todelete.bin (deleted)", "exec_rows": "possible in principle", "counter_handling": "host branch -> basename not in HOST_LIBS -> flagged (fail-closed)"},
+    {"form": "/memfd:<name> (deleted) (sealed image)", "example": "/memfd:llama-server (deleted)", "exec_rows": "yes (the server image)", "counter_handling": "memfd branch: admitted by (dev,ino) match to sealed image, else flagged"},
+    {"form": "/dev/zero (deleted) (MAP_SHARED|MAP_ANONYMOUS)", "example": "/dev/zero (deleted)", "exec_rows": "not observed exec", "counter_handling": "host branch -> flagged if exec (fail-closed)"},
+    {"form": "/SYSV<hex> (deleted) (SysV shm)", "example": "/SYSV00000000 (deleted)", "exec_rows": "not observed exec", "counter_handling": "host branch -> flagged if exec (fail-closed)"},
+    {"form": "[vdso]", "example": "r-xp", "exec_rows": "yes", "counter_handling": "KERNEL_MAPS hit -> skipped"},
+    {"form": "[vsyscall]", "example": "--xp on this host", "exec_rows": "yes (x bit set)", "counter_handling": "KERNEL_MAPS hit -> skipped; x86_64 processes only (absent in ia32 sample)"},
+    {"form": "[vvar]", "example": "r--p", "exec_rows": "no", "counter_handling": "skipped by executable-row filter before KERNEL_MAPS is consulted; also in KERNEL_MAPS"},
+    {"form": "[vvar_vclock]", "example": "r--p", "exec_rows": "no", "counter_handling": "same as [vvar]"},
+    {"form": "[heap]", "example": "rw-p", "exec_rows": "no", "counter_handling": "skipped by executable-row filter"},
+    {"form": "[stack]", "example": "rw-p (leader view)", "exec_rows": "no", "counter_handling": "skipped by executable-row filter"},
+    {"form": "[stack:<tid>]", "example": "appears only in per-thread /proc/<tid>/maps views", "exec_rows": "no", "counter_handling": "not visible in leader maps; non-exec anyway"},
+    {"form": "[anon:<name>] (prctl PR_SET_VMA_ANON_NAME, kernel>=6.2)", "example": "[anon:l2probe_named_anon] rw-p", "exec_rows": "not observed; an exec one would be flagged", "counter_handling": "flagged as anonymous executable mapping (intended K1Cheat shape)"},
+    {"form": "anon (no pathname field; row ends ' 00:00 0 ' with trailing space)", "example": "rw-p heaps; rwxp shellcode page", "exec_rows": "yes (rwxp page observed in enriched probe)", "counter_handling": "flagged as anonymous executable mapping (intended); split(None,5) yields 5 fields, len(f)<6 branch"},
+    {"form": "[uprobes]", "example": "not produced (requires armed uprobe events)", "exec_rows": "n/a", "counter_handling": "in KERNEL_MAPS (defensive); not produced by the server"},
+    {"form": "[vvar_boot]", "example": "not produced on this host/config", "exec_rows": "no (r--p when present)", "counter_handling": "KERNEL_MAPS contains the dead prefix string '[vvar_boot' (no ']'); the kernel name is '[vvar_boot]' which can never match; harmless because the row is non-executable"}
+  ],
+  "ia32_compat_sample": "ia32 process shows identical kernel names [vdso]/[vvar]/[vvar_vclock] (no [vdso32]) and no [vsyscall]; see inventory-ia32-maps.txt",
+  "server_build_receipt_rows": {
+    "source": ".ufo/waves/round-55/measured/c1-build.out detail lines (b1,b2,b3 identical)",
+    "plain_paths_under_tree": "8 archive files, 16 executable ranges, byte-equal in /proc/<pid>/mem",
+    "plain_paths_host": "13 root-owned host libs (HOST_LIBS basenames)",
+    "memfd": "/memfd:llama-server (deleted) sealed image, seals=15",
+    "anon_exec_rows": 0,
+    "kernel_rows": "[vdso] r-xp and [vsyscall] --xp (both KERNEL_MAPS); [vvar]/[vvar_vclock] r--p filtered by x-bit"
+  },
+  "answer": "KERNEL_MAPS is exhaustive for the rows the server produced in the build receipts: the only bracketed executable rows a process on this host produces are [vdso] and [vsyscall], both covered; the server produced zero anonymous executable rows (anon=0).",
+  "findings": [
+    "F1 (cosmetic, frozen): '[vvar_boot' in KERNEL_MAPS is a dead prefix string - the kernel name is '[vvar_boot]'. No match possible. Harmless: the row is r--p, filtered before the check; a hypothetical exec row would be flagged (fail-closed). Candidate fix for a future freeze: replace with '[vvar_boot]'.",
+    "F2 (over-approximation, harmless): [vvar], [vvar_vclock] are in KERNEL_MAPS but the executable-row filter always skips them; [uprobes] is never produced by the server.",
+    "F3 (correctly absent): [heap], [stack], [stack:<tid>], [anon:<name>], [anon_shmem:<name>] are not kernel-provided code and would be fail-closed flags if ever executable - the intended K1Cheat behavior."
+  ]
+}

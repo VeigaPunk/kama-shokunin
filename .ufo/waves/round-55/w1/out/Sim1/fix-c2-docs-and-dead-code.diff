@@ -1,0 +1,115 @@
+--- a/tools/round54-cited-path-check.py
++++ b/tools/round54-cited-path-check.py
+@@ -94,13 +94,15 @@
+                unresolved at --base. Exempts the token from `dropped` and `stale`,
+                like `fixed`.
+   superseded (round 55) evidence = a replacement token; the original token was cited
+-               in that surface at --base and resolved there (unlike `fixed`, which
+-               corrects an UNRESOLVED citation, `superseded` discloses a live citation
+-               re-pointed to a different file - e.g. the calibration row's
+-               "latest outside closure" pointer moved from round-52's spotcheck to
+-               round-53's); the token is no longer cited at --tip, and the replacement
+-               is cited in that surface at --tip and resolves. Exempts the token from
+-               `dropped` and `stale`, like `fixed`.
++               in that surface at --base (the class checks citation, not resolution: a
++               token that was unresolved at --base passes here too and thereby skips
++               the `fixed` stem and line binding; unlike `fixed`, which corrects an
++               UNRESOLVED citation, `superseded` discloses a citation re-pointed to a
++               different file - e.g. the calibration row's "latest outside closure"
++               pointer moved from round-52's spotcheck to round-53's); the token is no
++               longer cited at --tip, and the replacement is cited in that surface at
++               --tip and resolves. Exempts the token from `dropped` and `stale`, like
++               `fixed`.
+ A row is `bad` when its class check fails, and `stale` when its token is not an
+ unresolved citation of its surface at --tip (for `fixed`/`externalized`/`superseded`:
+ when its check fails it is bad).
+@@ -109,7 +111,7 @@
+   fixture  fifteen constructed scenarios in a scratch git repository (built here,
+            never in the lane) each get the verdict their construction fixes: the
+            round-53 eight (unresolved counted; fenced not; brace group; forged
+-           deleted; true deleted; forged never; anchor past EOF; stale row) plus six:
++           deleted; true deleted; forged never; anchor past EOF; stale row) plus seven:
+            an upstream row at a mutable ref is bad (M10); an upstream row serving
+            bytes the surface does not pin is bad (M11 bytes); an upstream row at the
+            pinned revision with the pinned bytes discloses (M11/M12 contrast); a
+@@ -267,8 +269,8 @@
+     return out
+ 
+ 
+-def citations_line(line):
+-    """citations() for one line (no fence state)."""
++def _spans(line):
++    """(token, path_part, lo, hi) of every lane/fleet citation span on one line."""
+     for span in re.findall(r"`([^`\n]+)`", line):
+         tok = span.strip()
+         if tok.startswith("./"):
+@@ -283,6 +285,12 @@
+             continue
+         if not (core.startswith(LANE_ROOTS) or core.startswith(FLEET_ROOTS) or core in TOP):
+             continue
++        yield tok, core, lo, hi
++
++
++def citations_line(line):
++    """citations() for one line (no fence state)."""
++    for tok, core, lo, hi in _spans(line):
+         yield 0, tok, core, lo, hi
+ 
+ 
+@@ -321,20 +329,7 @@
+             continue
+         if fenced:
+             continue
+-        for span in re.findall(r"`([^`\n]+)`", line):
+-            tok = span.strip()
+-            if tok.startswith("./"):
+-                tok = tok[2:]
+-            core = tok.split("#", 1)[0]
+-            lo = hi = None
+-            m = ANCHOR.match(core)
+-            if m:
+-                nums = [int(x) for x in re.split(r"[-,]", m.group(2))]
+-                core, lo, hi = m.group(1), min(nums), max(nums)
+-            if not core or any(c in BAD_CHARS for c in core):
+-                continue
+-            if not (core.startswith(LANE_ROOTS) or core.startswith(FLEET_ROOTS) or core in TOP):
+-                continue
++        for tok, core, lo, hi in _spans(line):
+             out.append((n, tok, core, lo, hi))
+     return out
+ 
+@@ -463,9 +458,10 @@
+         # calibration row's "latest outside closure" pointer moved from round-52's
+         # spotcheck to round-53's in round 54, and the round-54 class vocabulary had
+         # no row for it - the base control's dropped=1 demonstrated the gap). The
+-        # token is no longer cited at tip, it WAS cited at base (unlike `fixed`,
+-        # whose token was unresolved at base), and the replacement token is cited
+-        # in that surface at tip and resolves.
++        # token is no longer cited at tip, it WAS cited at base (the check is citation
++        # only: a token that was unresolved at base passes here too, skipping the
++        # `fixed` stem and line binding), and the replacement token is cited in that
++        # surface at tip and resolves.
+         surf = row["surface"]
+         if tok in cited_tip.get(surf, {}):
+             return "superseded token is still cited at tip"
+@@ -579,10 +575,10 @@
+                     or not os.path.exists(os.path.join(fleet.path, e)):
+                 return f"{e} is not an untracked file on disk under the fleet root"
+         return None
+-    return "unreachable"
++    return "unreachable"  # sentinel: unreachable while every CLASSES member is branched above; a reason marks the row bad
+ 
+ 
+-def survey(lane, fleet, base_unres=None, detail=None):
++def survey(lane, fleet, detail=None):
+     """Counts and per-item detail for one lane revision. With detail (a list), also
+     appends advisory lines for prose-shaped root tokens that resolve nowhere (K4Cheat
+     a2)."""
+@@ -678,7 +674,6 @@
+     env = clean_env({"GIT_AUTHOR_NAME": "fixture", "GIT_AUTHOR_EMAIL": "fixture@invalid",
+                      "GIT_COMMITTER_NAME": "fixture", "GIT_COMMITTER_EMAIL": "fixture@invalid",
+                      "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1"})
+-    got = 0
+     try:
+         def g(*a):
+             p = subprocess.run(["git", "-C", D, *a], capture_output=True, env=env)

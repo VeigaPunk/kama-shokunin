@@ -1,0 +1,32 @@
+--- a/.ufo/waves/round-55/c1/battery/run-battery.py
++++ b/.ufo/waves/round-55/c1/battery/run-battery.py
+@@ -100,5 +100,16 @@
+         print(f"battery: clone failed: {r.stderr[:300]}")
+         return 2
++    # every committed receipt must name a mutant the driver can reproduce, and every
++    # `kill` row must name a receipt: the round-55 prereg states its target over
++    # "each named mutant receipt", so an orphan receipt (m-ldaudit-writable,
++    # m-extra-in-tree) or a receipt-less mutant makes the kill rule uncheckable
++    committed = {os.path.basename(p)[:-4]
++                 for p in __import__("glob").glob(os.path.join(OUT, "m-*.out"))}
++    orphan = sorted(committed - set(MUTANTS))
++    if orphan:
++        print(f"battery: receipts with no driver row: {orphan}")
++        return 2
++    report = []
+     live_path = os.path.join(clone, LIVE)
+     original = open(live_path).read()
+     summary = []
+@@ -145,5 +156,11 @@
+     for name, leg, kind, rc, met, ok in summary:
+-        print(f"battery {name}: leg={leg} kind={kind} exit={rc} met={met} -> {'ok' if ok else 'BATTERY-FAIL'}")
++        report.append(f"battery {name}: leg={leg} kind={kind} exit={rc} met={met} "
++                      f"-> {'ok' if ok else 'BATTERY-FAIL'}")
++    # the kill rule is stated over these lines: commit them, or the verdict can only be
++    # re-derived by re-running the network legs
++    with open(os.path.join(OUT, "summary.out"), "w") as fh:
++        fh.write("\n".join(report) + "\n")
++    print("\n".join(report))
+     shutil.rmtree(SCRATCH, ignore_errors=True)
+     return 0 if all(s[5] for s in summary) else 1
+ 

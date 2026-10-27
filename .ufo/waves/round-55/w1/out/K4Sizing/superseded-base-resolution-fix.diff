@@ -1,0 +1,11 @@
+--- /fast/scratch/hyaku/kama-r55/w1/K4Sizing/lane/tools/round54-cited-path-check.py	2026-10-27 10:54:49.102709368 -0300
++++ /fast/scratch/hyaku/kama-r55/w1/K4Sizing/cited-check-fixed.py	2026-10-27 10:58:27.475790251 -0300
+@@ -476,6 +476,8 @@
+             return f"replacement {ev!r} does not resolve at tip"
+         if base_citelines is not None and tok not in (base_citelines.get(surf) or {}):
+             return "superseded token was not cited in this surface at the base"
++        if base_unres is not None and tok in (base_unres.get(surf) or set()):
++            return "superseded token was unresolved at base; a `fixed` row, not `superseded`"
+         return None
+     if not bad_exp:
+         return None  # stale; reported by the caller

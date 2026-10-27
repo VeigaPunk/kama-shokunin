@@ -1,0 +1,34 @@
+# S7Pointers evidence-pointer sweep — citations.tsv
+# Checked against git tree of lane clone at landed tip
+# TIP=9c60eae6f7ed84f7da93d219a406aadc30958c6c, TOP=8abadfedf89f35372645b1e5d6ce4a2109186f90 (w1 follow-up)
+# columns: citing_file:line | cited_path | in TIP tree | on disk | verdict | notes
+
+lesson:4      | corpus/lessons/round-54-verifier-spotcheck.md            | YES | YES | EXISTS
+lesson:14     | tools/round54-replay-code-audit.py                       | YES | YES | EXISTS | sha256 at TIP = c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af, matches preregistration.json claims.C1.counter_sha256
+lesson:17     | .ufo/waves/round-55/preregistration.json                 | YES | YES | EXISTS
+lesson:20     | tools/round54-cited-path-check.py                        | YES | YES | EXISTS | sha256 at TIP = d70a1729174e4df8c71e5954da85b9580d409595e7c2e1f238a81b92a326510c, matches preregistration.json claims.C2.counter_sha256
+lesson:34     | .ufo/waves/round-55/sources/git-docs-git-config.html     | YES | YES | EXISTS | 830,605 bytes at TIP; lesson's located quote verified at HTML lines 5850-5852 ("all environment pairs GIT_CONFIG_KEY_<n> and GIT_CONFIG_VALUE_<n> up to that number will be added to the process's runtime configuration")
+lesson:53     | corpus/lessons/round-54.md                               | NO  | NO  | MISSING-BY-DESIGN | never existed: `git log --all -- corpus/lessons/round-54.md` is empty; citation records the OLD dangling used-by value (E11); census start.out line 101 names exactly this path
+lesson:53,101 | corpus/lessons/round-55.md                               | YES | YES | EXISTS (self)
+lesson:62     | .ufo/waves/round-53                                      | YES | YES | EXISTS | J12Hide receipts under .ufo/waves/round-53/w1/out/J12Hide/ (e.g. c2-frozen-v_a_all.out)
+lesson:63     | corpus/lessons/round-53-verifier-spotcheck.md            | YES | YES | EXISTS | C2 row at line 17 names J12Hide met=True, matches lesson's quote claim
+lesson:73     | .ufo/waves/round-55/c1/battery/                          | NO  | YES | NOT-IN-TIP-TREE | wave artifact: committed later at TOP=8abadfed; reconstruction: python3 .ufo/waves/round-55/c1/battery/run-battery.py (docstring: receipts beside itself, scratch /fast/scratch/hyaku/kama-r55/c1/battery removed on exit)
+lesson:95,101 | .ufo/waves/round-55/census/end.out                       | NO  | NO  | MISSING-PENDING | cited as the required round-end receipt; not yet produced anywhere in git or on disk; reconstruction: /home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama > .ufo/waves/round-55/census/end.out
+lesson:100    | .ufo/waves/round-55/census/start.out                     | YES | YES | EXISTS | E11 at its line 101 ("kama E11 S510 missing used-by corpus/lessons/round-54.md"), 1x W01, several W04 — matches lesson text
+lesson:100    | /home/vgpnk/Projects/shokunin/scripts/sources-census.sh    | n/a | YES | EXISTS (host absolute, fleet scripts/)
+lesson:105    | considerthese/2026-10-26.md                              | YES | YES | EXISTS | proposal 2 at line 31
+lesson:106    | corpus/QUALITY.md                                        | YES | YES | EXISTS | KQ97 at line 477, cites considerthese/2026-10-26.md proposal 2
+lesson:112    | tools/pin-watch.py                                       | YES | YES | EXISTS
+lesson:65     | SCORECARD.md                                             | YES | YES | EXISTS
+prereg:9      | corpus/SOURCES.md                                        | YES | YES | EXISTS | S510 row 263 and S511 row 264, used-by cell (field 12) = corpus/lessons/round-55.md for both — matches "S510 used-by re-pointed old->new" and S511's citation
+prereg:9      | registry/cited-path-corrections.tsv                      | YES | YES | EXISTS | superseded row at line 46: SCORECARD.md -> corpus/lessons/round-52-verifier-spotcheck.md superseded -> corpus/lessons/round-53-verifier-spotcheck.md
+prereg:9,30   | SCORECARD.md / SHONEN.md / SKILL.md                      | YES | YES | EXISTS (all three; C2 surfaces)
+prereg:40     | .ufo/waves/round-55/controls/base.c1.out                 | YES | YES | EXISTS | content: newrow=0 ... met=False — matches prereg expected "C1: exit 1, newrow=0, met=False"
+prereg:40     | .ufo/waves/round-55/controls/base.c2.out                 | YES | YES | EXISTS | content: fixture=1 lane=0 scenarios=15/15 ... dropped=1 met=False — matches "C2: exit 1, dropped=1, met=False"
+prereg:45     | .ufo/waves/round-55/c1/battery/                          | NO  | YES | NOT-IN-TIP-TREE | same row as lesson:73 above
+prereg:9      | .ufo/waves/round-48/c2/live/receipt-{1,2,3}.json        | YES | YES | EXISTS (all three; "three committed round-48 v5 receipts")
+prereg:7,38   | commit 3a600d2f729828419aaea34cc402c8b0d20fb720         | EXISTS | base = round-54 lane tip
+prereg:28     | commit 0b75a84c56e024cac1662e8ff81802f249acb410         | EXISTS | C2 counter_base = round-53 tip
+prereg:10     | commit 9a3104c771509df2dad6b6fe13c023bd3c472c35         | EXISTS | round-54 draft of both counters
+prereg:8      | shokunin.conf                                            | n/a | YES | EXISTS at fleet root /home/vgpnk/Projects/shokunin/shokunin.conf | line 52: "kama|kama-shokunin|operability + calibration (local model serving and endpoint health)" — matches prereg authority claim
+prereg:8      | MANIFEST                                                   | n/a | YES | EXISTS at fleet root as /home/vgpnk/Projects/shokunin/MANIFEST.json | cited loosely as "MANIFEST rounds[812]"; only manifest at fleet root; minor pointer looseness (name without .json)

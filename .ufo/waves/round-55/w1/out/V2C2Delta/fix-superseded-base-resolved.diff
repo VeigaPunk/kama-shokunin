@@ -1,0 +1,16 @@
+--- a/tools/round54-cited-path-check.py
++++ b/tools/round54-cited-path-check.py
+@@ -475,6 +475,11 @@
+         if any(v != "ok" for _e, v in rep):
+             return f"replacement {ev!r} does not resolve at tip"
+         if base_citelines is not None and tok not in (base_citelines.get(surf) or {}):
+             return "superseded token was not cited in this surface at the base"
++        # the docstring class is a LIVE base citation re-pointed: resolved at base,
++        # unlike `fixed` whose token was unresolved there. Without this check a
++        # never-resolved citation dropped at tip launders through `superseded`
++        # (V2C2Delta: forged tip on the real tree printed met=True).
++        if tok in base_unres.get(surf, set()):
++            return "superseded token was unresolved at the base (a fixed-class correction, not a re-point)"
+         return None
+     if not bad_exp:
+         return None  # stale; reported by the caller

@@ -1,0 +1,12 @@
+--- a/tools/round54-cited-path-check.py
++++ b/tools/round54-cited-path-check.py
+@@ -805,7 +805,9 @@
+             else:
+                 lane = at(scard, ledger)
+                 ok, c = evaluate(lane, None, None, sub, verbose=False)
+-            hit = bool(want(ok, c))
++            # superseded computes its own hit above (honest met + forged bad);
++            # an unconditional assignment here would clobber the forged arm.
++            hit = bool(want(ok, c)) if shape != "superseded" else hit
+             got += hit
+             detail.append(f"fixture {'ok' if hit else 'FAIL'}: {name} (met={ok} {c})")

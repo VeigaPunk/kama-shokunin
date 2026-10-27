@@ -1,0 +1,65 @@
+# Rev4 proposed fixes — NOT applied; the frozen counter/preregistration are read-only.
+# Against blob tools/round54-cited-path-check.py @ 9c60eae6f7ed84f7da93d219a406aadc30958c6c
+# and registry/cited-path-corrections.tsv @ the same commit.
+#
+# (0) ROUND-56 PREREGISTRATION wordings this is meant to accompany (no diff: JSON text).
+#   C2 "limits": "...; the counter is an existence/disposition instrument, not a truth or
+#   reachability checker; upstream rows validate bytes against the surface-stated digest at
+#   the frozen commit, not the semantic content of the citing claim; the `untracked` class
+#   re-derives the last fleet commit that held the token and never treats a row's note as
+#   evidence; prose-shaped root tokens are advisory only."
+#   C1 controls wording: "kill battery: each mutant expected to fail prints met=False with
+#   its named leg failing; a `vector` mutant whose vector is void on the host is recorded
+#   with its receipt and is never counted as a kill" (the round-55 text at
+#   .ufo/waves/round-55/preregistration.json:19-20,44 cannot be met by a non-root seat for
+#   the hostlibs leg: see Rev4.md D2).
+#
+--- a/registry/cited-path-corrections.tsv
++++ b/registry/cited-path-corrections.tsv
+@@ -4,7 +4,8 @@
+ # in a class tools/round53-cited-path-check.py re-derives from git history (see its docstring):
+ # deleted <commit> | never - | moved <path> | eof <commit> | untracked - | upstream <raw URL> |
+-# fixed <replacement token>. Rows are appended; a row whose token later resolves is stale and is
+-# superseded by a dated comment, never deleted in place.
++# fixed <replacement token> | externalized <replacement text> | superseded <replacement token>.
++# Rows are appended; a row whose token later resolves is stale and is superseded by a dated
++# comment, never deleted in place.
+ # SKILL.md is not an append-only file: its two in-place corrections are the `fixed` row below and
+--- a/tools/round54-cited-path-check.py
++++ b/tools/round54-cited-path-check.py
+@@ -72,6 +72,11 @@
+                file, it had at least max(N, M) lines (the anchor named an older
+                version).
+-  untracked    evidence `-`; a fleet-root token absent from the fleet tree that exists
+-               on disk under --fleet (a runtime file such as the driver's log).
++  untracked    evidence = the full fleet commit that last held the path, or `-` only when
++               no fleet commit reachable from `--fleet-rev` ever held it; the token is
++               absent from the fleet tree at --fleet-rev and exists on disk under
++               --fleet. History is re-derived with `git log --all -- <path>`; the row's
++               note is never evidence (round-53 limit: the class checked present disk
++               state, not history - the watchdog.log note was false for a round).
+   upstream     evidence = https://raw.githubusercontent.com/<owner>/<repo>/<ref>/<token>;
+@@ -574,6 +579,20 @@
+     if cls == "untracked":
+         if fleet is None:
+             return "no fleet repo"
++        e = bad_exp[0][0] if bad_exp else tok
++        tracked = git(fleet.path, "log", "--all", "--format=%H", "--", e,
++                      check=False).stdout.decode().strip().split()
++        if ev == "-":
++            if tracked:
++                return (f"{e} was held by fleet commit {tracked[-1][:12]}; evidence '-' is false")
++        else:
++            if not re.fullmatch(r"[0-9a-f]{40}", ev):
++                return f"untracked evidence {ev!r} is not a full fleet commit or '-'"
++            if ev not in tracked:
++                return f"{e} is not held by fleet commit {ev}"
+         for e, v in bad_exp:
+             if v != "missing" or not e.startswith((".ufo/",) + FLEET_ROOTS) or e in fleet.tree \
+                     or not os.path.exists(os.path.join(fleet.path, e)):
+# EFFECT ON THE LANDED LEDGER (hand-computed, not run): the watchdog.log row
+# (registry/cited-path-corrections.tsv:21, evidence `-`) becomes bad, because
+#   git -C /home/vgpnk/Projects/shokunin log --all --format=%H -- .ufo/watchdog.log
+# is non-empty (7930399e untracked it; 609ecb6e..7930399e held it). The row's evidence must
+# become 7930399e, the commit that removed it from the tree - which turns the "present disk
+# state, not a history-derived explanation" limit into a re-derived fact.

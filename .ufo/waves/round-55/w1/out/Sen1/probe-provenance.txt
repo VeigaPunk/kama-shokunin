@@ -1,0 +1,50 @@
+Sen1 — provenance of the live probe (round 55, kama, w1)
+
+Why: the frozen harness's m-ldaudit-foreign entry claims the LD_AUDIT vector is
+"empirically void on this glibc" (run-battery.py:52-56). That claim is testable in two
+steps, both cheap, neither touching a frozen file.
+
+1. Is LD_AUDIT honored at all on this host?
+   $ ldd --version | head -1
+   ldd (GNU libc) 2.44
+   $ LD_AUDIT=/usr/lib/libexpat.so.1 python3 -c "print(open('/proc/self/maps').read().count('libexpat'))"
+   ERROR: ld.so: object '/usr/lib/libexpat.so.1' cannot be loaded as audit interface: undefined symbol: la_version; ignored.
+   mapped_expat= 0
+   -> the battery's file is refused for exporting no la_version, not because the loader
+      ignores LD_AUDIT.
+
+2. Is the channel live with a la_version-bearing object?
+   $ cat libaud.c
+   unsigned int la_version(unsigned int v){return v;}
+   $ gcc -shared -fPIC -o libaud.so libaud.c
+   $ LD_AUDIT=$PWD/libaud.so python3 -c "print(open('/proc/self/maps').read().count('libaud.so'))"
+   mapped_aud= 5
+   -> the loader maps it. LD_AUDIT is a live injection channel on glibc 2.44.
+
+3. Does the frozen counter see a loaded auditor? (one counter run, my own clone)
+   $ git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin $S/lane
+   $ git -C $S/lane checkout -q 9c60eae6f7ed84f7da93d219a406aadc30958c6c
+   $ git -C $S/lane rev-parse --show-toplevel      # == $S/lane (asserted before commit)
+   mutant: tools/kama-llamacpp-live.py, immediately before ENV_ANCHOR (=
+           receipt['child_env_keys'] = sorted(child_env)), insert
+           child_env['LD_AUDIT'] = '<S>/libaud.so'
+   $ git -C $S/lane -c user.name=fx -c user.email=fx@invalid commit -qam "probe: LD_AUDIT la_version auditor"
+   75026e6b3c1b218414c53af4f2d2e8a266af93fc
+   $ python3 tools/round54-replay-code-audit.py --repo $S/lane --tip 75026e6b... \
+         --scratch $S/run-ldaudit --out $S/ldaudit-la_version.out
+   exit 1 (met=False), receipt copied beside this file:
+     bind=0 sealed=1 code=0 teardown=1 newrow=1 ... envnames=3/3 hostlibs=3/3 rehash=0 met=False
+     detail: envnames b1: 6 environment variable names recorded, none of LD_PRELOAD/DYLD_INSERT_LIBRARIES
+     detail: code b1: code: executable mapping <S>/libaud.so (103:05 751293104) is neither an
+             archive file under the unpacked tree nor a root-owned host file (uid 1000, ... writable True)
+
+Reading: the envnames leg does not know LD_AUDIT (counter BAD_ENV = LD_PRELOAD,
+DYLD_INSERT_LIBRARIES only, tools/round54-replay-code-audit.py:146); the code leg
+catches the loaded auditor because it classifies every executable mapping. So the
+counter is not blind to the channel, but the battery's "vector void" receipt is a
+no-op receipt (libexpat never loaded), not evidence that the counter tolerates a
+loaded auditor.
+
+Scratch used: /fast/scratch/hyaku/kama-r55/w1/Sen1 (removed after this file was
+written). No llama-server process survived (pgrep -af llama-server empty before and
+after; the counter's teardown leg reaps its own children).

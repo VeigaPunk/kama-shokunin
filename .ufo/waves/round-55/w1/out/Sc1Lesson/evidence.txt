@@ -1,0 +1,89 @@
+Sc1Lesson evidence transcript (all runs read-only, 2026-10-27; lane at tip 9c60eae6, base 3a600d2f)
+=================================================================================================
+
+1. Gate quote length (lesson line 39 claims "23 words")
+$ python3 - <<'EOF'
+q="all environment pairs GIT_CONFIG_KEY_<n> and GIT_CONFIG_VALUE_<n> up to that number will be added to the process's runtime configuration"
+print(len(q.split()))
+EOF
+18
+Exact source sentence, from the round-55 snapshot, renders with U+2019:
+$ python3 ... html.unescape(strip_tags(snapshot[If GIT_CONFIG_COUNT is set to a positive number ...]))
+'If GIT_CONFIG_COUNT is set to a positive number, all environment pairs\nGIT_CONFIG_KEY_<n> and GIT_CONFIG_VALUE_<n> up to that number will be\nadded to the process\u2019s runtime configuration. ...'
+match with U+2019: True | match with ASCII apostrophe: False
+Snapshot size: 830605 bytes (= lesson line 36).
+
+2. S510 used-by change
+$ git show 3a600d2f:corpus/SOURCES.md | grep '^| S510' | awk -F'|' '{print $12}'
+ corpus/lessons/round-54.md
+$ git diff --stat 3a600d2f 9c60eae -- corpus/SOURCES.md
+ corpus/SOURCES.md | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+Column diff old vs new for S510 (11 columns): only col 11 changed,
+ OLD corpus/lessons/round-54.md -> NEW corpus/lessons/round-55.md
+$ ls corpus/lessons/round-54.md
+ls: cannot access 'corpus/lessons/round-54.md': No such file or directory
+
+3. Census before / after
+$ ls .ufo/waves/round-55/census/
+start.out          # end.out absent
+$ tail -1 .ufo/waves/round-55/census/start.out
+census_start_exit=1
+$ grep -E '^kama\s+E11' .ufo/waves/round-55/census/start.out
+kama	E11	S510 missing used-by corpus/lessons/round-54.md
+$ bash scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama > census-now.out 2>&1; echo $?
+0                  # 99 kama lines, no E rows; copied as census-now.out
+
+4. C1 kill battery receipts (line 2 of each, .ufo/waves/round-55/c1/battery/)
+control.out            met=True
+m-ldpreload.out        envnames=0/3 ... met=False
+m-text-flip.out        bind=0 code=0 ... met=False
+m-member-flip.out      rehash=3 met=False
+m-ldaudit-foreign.out  met=True
+m-ldaudit-writable.out met=True
+m-extra-in-tree.out    met=True
+run-battery.py:36-40 defines m-ldaudit-foreign kind="vector" (expects met=True);
+run-battery.py:120-145 grades vector mutants as ok when rc==0 and met; the MUTANTS
+table holds four names (m-ldpreload, m-text-flip, m-ldaudit-foreign, m-member-flip),
+so m-ldaudit-writable.out and m-extra-in-tree.out predate it (mtimes 10:30/10:37 vs
+runner 10:42). preregistration.json target: "each named mutant receipt prints met=False
+(exit 1) with its named leg failing"; its mutants list names m-ldaudit-writable.
+
+5. KQ97 landing (lesson line 106 claims "landed round 54")
+$ git log --format='%h %ad %s' --date=short -S 'KQ97' -- corpus/QUALITY.md
+e81d90e6 2026-10-27 round-53: integrate code identity, curation, falsification and report evidence
+$ git blame -L 477,477 --date=short corpus/QUALITY.md | cut -c1-80
+e81d90e6 (kama-shokunin 2026-10-27 477) | KQ97 | ...
+$ grep -n "KQ97" corpus/lessons/round-53.md
+37: ... proposal 2 ... is captured by KQ97 in `corpus/QUALITY.md`
+
+6. considerthese proposal 1 (lesson line 107: "no lane instrument exists for it")
+$ git log --format='%h %ad %s' --date=short -1 4a2a4d55
+4a2a4d55 2026-10-26 round-46: append-only-audit tool (C2 capability, considerthese 2026-10-26 proposal 1) with 10-case selftest; ...
+corpus/lessons/round-46.md:11: "- **C2 calibration 7->7 (capability acquisition, considerthese/2026-10-26.md proposal 1).** `tools/append-only-audit.py` ... sets the five files the lane treats as append-only against its history"
+tools/append-only-audit.py:817: F = ["LOG.md", "SCORECARD.md", "corpus/QUALITY.md", "corpus/README.md", "corpus/SOURCES.md"]
+tools/append-only-audit.py:4-8: v6 (round 51) grades every deletion ...
+corpus/lessons/round-46-verifier-spotcheck.md:108: | calibration | improved | C2 re-measured on the lane leg; ... |
+
+7. considerthese proposal 3 (lesson line 110: "a standing tally is still pending")
+tools/shortcut-tally.py:1-16: "shortcut-tally.py (v2) - tally counters that a shortcut can satisfy ... v2 (round 48) promotes the round-47 draft (.ufo/waves/round-47/w1/out/X9Tally/shortcut-tally.py, considerthese/2026-10-26.md proposal 3) to a lane tool"
+.ufo/waves/round-48/measured/tally.out: "$ python3 tools/shortcut-tally.py --repo . --rev c4b2175d ..." (committed 1541a0dd)
+corpus/lessons/round-47.md:37: proposal 3 -> Mistakes row 1's check (seat X9Tally)
+
+8. Claims C2 vs frozen preregistration (lesson lines 20-25)
+preregistration.json claims.C2.counter_base = 0b75a84c56e024cac1662e8ff81802f249acb410
+preregistration.json controls.base_do_nothing: tip = 3a600d2f...
+controls/base.c2.out line 1: tip=3a600d2f729828419aaea34cc402c8b0d20fb720 fleet=6c4aba34...
+lesson lines 78-86 (Mistakes row 2): "C2's BASE reverted to the round-53 tip (0b75a84c)"
+.ufo/waves/round-55/w1/spec.json:9: "BASE deliberately stays at the round-53 tip 0b75a84c"
+
+9. Counter exit mapping (lesson states exit 1/0; receipts carry stdout only)
+tools/round54-replay-code-audit.py:966  return 0 if met else 1  (docstring :97 "Exit 0 met, 1 not met, 2 could not evaluate")
+tools/round54-cited-path-check.py:856   return 0 if met else 1
+
+10. proc(5) rejection citations (lesson lines 47-50)
+corpus/SOURCES.md:248 S048 kernel tcp6 printer (round 18); :249 S496 proc_pid_maps(5) tier A;
+:259 S506 proc_pid_mem(5); :261 S508 proc_pid_map_files(5); S050 = RFC 4291 (corpus/lessons/round-18.md:45)
+QUALITY.md KQ6 reject column: docs-claims-as-runtime-fact, not row growth; KQ12 reject column:
+"row or field growth is called new knowledge without a new sourced distinction"
+CORPUS.md SOURCES rule 4: "Expansion is knowledge, not rows."

@@ -1,0 +1,22 @@
+== clause reachability matrix ==
+honest (expect met): ok=True counts={'cited': 1, 'unresolved': 0, 'disclosed': 0, 'undisclosed': 0, 'bad': 0, 'stale': 0, 'dropped': 0}
+clause-a still-cited (expect bad): ok=False counts={'cited': 2, 'unresolved': 0, 'disclosed': 0, 'undisclosed': 0, 'bad': 1, 'stale': 0, 'dropped': 0}
+    bad ledger line 2 (SCORECARD.md `tools/live.py` superseded): superseded token is still cited at tip
+clause-b replacement-uncited (expect bad): ok=False counts={'cited': 0, 'unresolved': 0, 'disclosed': 0, 'undisclosed': 0, 'bad': 1, 'stale': 0, 'dropped': 0}
+    bad ledger line 2 (SCORECARD.md `tools/live.py` superseded): replacement 'tools/new.py' is not cited in SCORECARD.md at tip
+clause-c replacement-unresolving (expect bad + undisclosed): ok=False counts={'cited': 1, 'unresolved': 1, 'disclosed': 0, 'undisclosed': 1, 'bad': 1, 'stale': 0, 'dropped': 0}
+    bad ledger line 2 (SCORECARD.md `tools/live.py` superseded): replacement 'tools/new.py' does not resolve at tip
+    undisclosed SCORECARD.md `tools/new.py`: [('tools/new.py', 'missing')]
+clause-d not-cited-at-base (expect bad): ok=False counts={'cited': 1, 'unresolved': 0, 'disclosed': 0, 'undisclosed': 0, 'bad': 1, 'stale': 0, 'dropped': 0}
+    bad ledger line 2 (SCORECARD.md `tools/ghost.py` superseded): superseded token was not cited in this surface at the base
+no-base evaluate (expect bad via base_citelines={}): ok=False counts={'cited': 1, 'unresolved': 0, 'disclosed': 0, 'undisclosed': 0, 'bad': 1, 'stale': 0, 'dropped': 0}
+    bad ledger line 2 (SCORECARD.md `tools/ghost.py` superseded): superseded token was not cited in this surface at the base
+check_row base_citelines=None -> None   base_citelines={} -> 'superseded token was not cited in this surface at the base'
+== laundering: unresolved-at-base token rowed superseded ==
+laundering (defect -> expect met=True under current code): ok=True counts={'cited': 2, 'unresolved': 0, 'disclosed': 0, 'undisclosed': 0, 'bad': 0, 'stale': 0, 'dropped': 0}
+laundering with never row kept (expect stale): ok=False counts={'cited': 2, 'unresolved': 0, 'disclosed': 0, 'undisclosed': 0, 'bad': 0, 'stale': 1, 'dropped': 0}
+    stale ledger line 2 (SCORECARD.md `tools/ghost.py`): token resolves or is not cited
+== fixture clobber demonstration ==
+unpatched fixture: got=15/15; superseded line: ["fixture ok: superseded re-pointed citation discloses, forged superseded is bad (met=True {'cited': 1, 'unresolved': 0, 'disclosed': 0, 'undisclosed': 0, 'bad': 0, 'stale': 0, 'dropped': 0})"]
+patched (clause-b dead) fixture: got=15/15; superseded line: ["fixture ok: superseded re-pointed citation discloses, forged superseded is bad (met=True {'cited': 1, 'unresolved': 0, 'disclosed': 0, 'undisclosed': 0, 'bad': 0, 'stale': 0, 'dropped': 0})"]
+last two evaluate() results (honest, forged): [(True, {'cited': 1, 'unresolved': 0, 'disclosed': 0, 'undisclosed': 0, 'bad': 0, 'stale': 0, 'dropped': 0}), (True, {'cited': 0, 'unresolved': 0, 'disclosed': 0, 'undisclosed': 0, 'bad': 0, 'stale': 0, 'dropped': 0})]

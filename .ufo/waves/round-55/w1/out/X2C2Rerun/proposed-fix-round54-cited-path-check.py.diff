@@ -1,0 +1,100 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round54-cited-path-check.py	2026-10-27 10:22:02.591227726 -0300
++++ /fast/scratch/hyaku/kama-r55/w1/X2C2Rerun/fix/tools/round54-cited-path-check.py	2026-10-27 11:03:23.506703833 -0300
+@@ -165,7 +165,7 @@
+ BAD_CHARS = set(" <>$=()|'\"")
+ ANCHOR = re.compile(r"^(.*?):(\d+(?:[-,]\d+)*)$")
+ CLASSES = ("deleted", "never", "moved", "eof", "untracked", "upstream", "fixed", "externalized", "superseded")
+-SCENARIOS = 15
++SCENARIOS = 17
+ # the lane's frozen upstream inventory: llama.cpp's tools/server files the lane pins.
+ # owner/repo and revision are frozen here; the digest is the one the citing surface
+ # states (full, or the truncated first/last form) - J11BadFixed/M6Ledger M10-M12.
+@@ -476,6 +476,35 @@
+             return f"replacement {ev!r} does not resolve at tip"
+         if base_citelines is not None and tok not in (base_citelines.get(surf) or {}):
+             return "superseded token was not cited in this surface at the base"
++        # LIVE at base: the token must have RESOLVED at the frozen base, not merely
++        # been cited there. `fixed` owns the unresolved-at-base case ("fixed token
++        # was not an unresolved citation of this surface at base"); a superseded row
++        # that covers a base-dead citation overlaps it, so either class could be
++        # used to cover the other's case.
++        if base_unres is not None and tok in base_unres.get(surf, set()):
++            return "superseded token was an unresolved (not live) citation of this surface at base"
++        # ANCHORED at the base citation line: the re-point must have happened where
++        # the base cited the token, exactly as `fixed` requires (M15: "fixed
++        # replacement cited away from the base line is bad"). Without this, any
++        # cited+resolving token in the surface can be named as the "replacement",
++        # and a live base citation can be DELETED (not re-pointed) while the row
++        # still discloses it - and a `superseded` row exempts its token from the
++        # dropped computation, so the deletion stays invisible (dropped=0).
++        inherited = base_rows is not None and (surf, tok) in base_rows
++        if not inherited:
++            lines = (base_citelines or {}).get(surf, {}).get(tok, set())
++            if len(lines) != 1:
++                return "superseded token needs exactly one base citation line"
++            ln = next(iter(lines))
++            tip_text = show(lane.path, lane.rev, surf) or ""
++            tip_lines = tip_text.split("\n")
++            cited = False
++            if ln <= len(tip_lines):
++                for _n2, t2, _c2, _l2, _h2 in citations_line(tip_lines[ln - 1]):
++                    if t2 == ev or ev in t2 or t2 in ev:
++                        cited = True
++            if not cited:
++                return f"replacement {ev!r} is not cited at the base citation line {ln}"
+         return None
+     if not bad_exp:
+         return None  # stale; reported by the caller
+@@ -772,6 +801,14 @@
+             # round 55: a live base citation re-pointed to a different file
+             ("superseded re-pointed citation discloses, forged superseded is bad",
+              None, None, "superseded", lambda ok, c: ok),
++            # round 55 follow-up (X2C2Rerun): the superseded class must be anchored
++            # to the base citation line, exactly as `fixed` is (M15)
++            ("superseded replacement cited away from the base line is bad (M16)",
++             None, None, "superseded-unanchored", lambda ok, c: not ok and c["bad"] == 1),
++            # round 55 follow-up (X2C2Rerun): a superseded row must cover a LIVE
++            # base citation (one that resolved at base), not a base-dead one
++            ("superseded row on a base-dead citation is bad (M17)",
++             None, None, "superseded-deadbase", lambda ok, c: not ok and c["bad"] == 1),
+         ]
+         for name, scard, ledger, shape, want in cases:
+             sub = []
+@@ -794,6 +831,37 @@
+                 ok2, c2 = evaluate(lane2, None, scen_base, sub, verbose=False)
+                 hit = bool(want(ok, c)) and ok and c["dropped"] == 0 and c["bad"] == 0 \
+                     and (not ok2) and c2["bad"] == 1
++            elif shape == "superseded-unanchored":
++                # base cites tools/live.py at line 2; the tip re-points the SAME line
++                # to tools/new.py, but the ledger names a third file cited on an
++                # unrelated line - `fixed` calls that "cited away from the base
++                # line" (M15); `superseded` must too (M16)
++                w("tools/live.py", "live\n")
++                w("tools/new.py", "new\n")
++                w("tools/other.py", "other\n")
++                w("SCORECARD.md", "one\n`tools/live.py`\nthree\nfour\n`tools/other.py`\n")
++                if os.path.exists(os.path.join(D, LEDGER)):
++                    os.unlink(os.path.join(D, LEDGER))
++                scen_base = Repo(D, commit("superseded-unanchored base"))
++                lane = at("one\n`tools/new.py`\nthree\nfour\n`tools/other.py`\n",
++                          "SCORECARD.md\ttools/live.py\tsuperseded\ttools/other.py\t\n")
++                ok, c = evaluate(lane, None, scen_base, sub, verbose=False)
++                hit = bool(want(ok, c))
++            elif shape == "superseded-deadbase":
++                # the base citation was DEAD (the path did not exist at base):
++                # `fixed` owns that case ("fixed token was not an unresolved
++                # citation of this surface at base"); a superseded row must not
++                # cover it (M17)
++                w("tools/live.py", "live\n")
++                w("tools/new.py", "new\n")
++                w("SCORECARD.md", "one\n`tools/gone.py`\nthree\n")
++                if os.path.exists(os.path.join(D, LEDGER)):
++                    os.unlink(os.path.join(D, LEDGER))
++                scen_base = Repo(D, commit("superseded-deadbase base"))
++                lane = at("one\n`tools/new.py`\nthree\n",
++                          "SCORECARD.md\ttools/gone.py\tsuperseded\ttools/new.py\t\n")
++                ok, c = evaluate(lane, None, scen_base, sub, verbose=False)
++                hit = bool(want(ok, c))
+             elif shape in ("m15", "fixed-honest"):
+                 # base cites the ellipsis token at line 2; the m15 tip cites the
+                 # replacement at line 6 (away from the base line -> bad), the honest tip

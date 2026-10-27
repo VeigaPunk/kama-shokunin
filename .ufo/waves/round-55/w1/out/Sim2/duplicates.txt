@@ -1,0 +1,91 @@
+# Sim2 round-55 wave-evidence minimality: raw evidence transcript
+# Host: cwd /home/vgpnk/Projects/shokunin. Clone: /fast/scratch/hyaku/kama-r55/w1/Sim2/lane
+# (git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin $S/lane; rev-parse --show-toplevel => $S/lane)
+# Commits: FREEZE=9c60eae6f7ed84f7da93d219a406aadc30958c6c (w0 freeze), WAVE=8abadfed (round-55 w1), BASE=3a600d2f...
+
+$ git -C $S/lane log --oneline -2 9c60eae6
+9c60eae6 round-55 w0 freeze: round-54 counters frozen with preregistration + red base controls (C1 newrow=0, C2 dropped=1); S511; superseded class; lesson
+3a600d2f round-54 verifier spot-check (integrator, hyaku): non-author admit/reject
+
+$ git -C $S/lane ls-tree -r -l 9c60eae6 -- .ufo/waves/round-55/ | awk '{s+=$4; n++} END {print n" files, "s" bytes"}'
+5 files, 858956 bytes
+
+$ git -C $S/lane ls-tree -r -l 8abadfed -- .ufo/waves/round-55/ | awk '{s+=$4; n++} END {print n" files, "s" bytes"}'
+22 files, 1495293 bytes
+
+# --- 1 MiB threshold: nothing exceeds it ---
+$ git -C $S/lane ls-tree -r -l 8abadfed -- .ufo/waves/round-55/ | awk '$4>1048576 {print $4"\t"$5}'
+(no output)
+$ find /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-55 -type f -size +1M -printf '%s\t%p\n'
+(no output)
+# largest file in the wave dir:
+830605  .ufo/waves/round-55/sources/git-docs-git-config.html   (96.7% of the freeze commit's bytes, 55.5% of the wave commit's)
+
+# --- the cited commit does not carry the evidence its own dispatch text names ---
+$ for p in measured/c1-build.out measured/c2-build.out c1/battery/control.out build_spec.py w1/spec.json; do git -C $S/lane cat-file -e 9c60eae6:.ufo/waves/round-55/$p && echo PRESENT || echo ABSENT; done
+ABSENT  .ufo/waves/round-55/measured/c1-build.out
+ABSENT  .ufo/waves/round-55/measured/c2-build.out
+ABSENT  .ufo/waves/round-55/c1/battery/control.out
+ABSENT  .ufo/waves/round-55/build_spec.py
+ABSENT  .ufo/waves/round-55/w1/spec.json
+$ git -C $S/lane diff --name-only --diff-filter=A 3a600d2f 8abadfed -- .ufo/waves/round-55/
+(22 paths: build_spec.py, 8 c1/battery files, census/start.out, 2 controls, 2 measured, preregistration.json,
+ sources/git-docs-git-config.html, w1.ready, w1/dispatch.json, w1/out/swarm-registry.json, w1/spec.json,
+ w1/validate.out, w1/validate.stderr)
+
+# --- byte-identical duplicate pair (the only content-free file in the wave dir) ---
+$ cmp .ufo/waves/round-55/w1/dispatch.json .ufo/waves/round-55/w1/validate.out ; echo exit=$?
+exit=0
+$ sha256sum .../w1/dispatch.json .../w1/validate.out .../w1/validate.stderr
+6201d1933e1e91537ab1ad3fcea27c54703d5630f218698da640c0e3bde924ee  .../w1/dispatch.json
+6201d1933e1e91537ab1ad3fcea27c54703d5630f218698da640c0e3bde924ee  .../w1/validate.out
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  .../w1/validate.stderr   (0 bytes)
+$ git -C $S/lane cat-file blob 8abadfed:.ufo/waves/round-55/w1/validate.out | cmp - <(git -C $S/lane cat-file blob 8abadfed:.ufo/waves/round-55/w1/dispatch.json) && echo IDENTICAL_AT_COMMIT
+IDENTICAL_AT_COMMIT
+
+# --- item prose is produced once and stored three times (spec -> dispatch -> registry) ---
+$ python3 -  (blob contents parsed as JSON)
+spec: context chars 6891 items chars 71691 items 64
+dispatch registry items chars 71691 registry.json items chars 71691
+dispatch taskCall tasks chars 84445 context chars 6891
+identical sets: True          # sorted(items) equal across spec.json, dispatch.registry.members[].item, registry.json
+per-task overhead chars: 199  # taskCall.tasks[].task = item text + ~199 chars of framing
+# => 71691 chars x 3 copies + 84445 chars = 299518 chars (~293 KiB) of one 64-seat prompt set, 4 files
+# registry.json fields per member: kind, agentId, role, item, axes, milestone -> only agentId is new information
+# dispatch.json: 187305 B total; item prose 71691 + taskCall 84445 = 156136 B (83.4%) is prompt text also in spec.json
+
+# --- no second copy of the 830 KB HTML exists in the tree (it is not derivable in-place) ---
+$ H=$(git -C $S/lane rev-parse 9c60eae6:.ufo/waves/round-55/sources/git-docs-git-config.html); git -C $S/lane ls-tree -r 9c60eae6 | grep -F "$H"
+100644 blob ee9c4bcc31ea33c349b3f773a2731518a046e5d9  .ufo/waves/round-55/sources/git-docs-git-config.html
+# the page is a moving upstream target; SOURCES.md:264 quotes it, so the fetched bytes are the audit object
+
+# --- the HTML is the live page (not a stub), so the S511 quote is auditable from the copy ---
+$ grep -c GIT_CONFIG_COUNT .../sources/git-docs-git-config.html
+3
+$ tail -3 .../sources/git-docs-git-config.html
+</body>
+</html>
+
+# --- counter digests at the freeze match the frozen preregistration ---
+$ for f in tools/round54-replay-code-audit.py tools/round54-cited-path-check.py; do git -C $S/lane cat-file blob 9c60eae6:$f | sha256sum; done
+c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af  tools/round54-replay-code-audit.py   (prereg C1 counter_sha256: c81fe971... MATCH)
+d70a1729174e4df8c71e5954da85b9580d409595e7c2e1f238a81b92a326510c  tools/round54-cited-path-check.py    (prereg C2 counter_sha256: d70a1729... MATCH)
+
+# --- receipts that look alike are distinct runs, not duplicates ---
+$ diff <(sed 's/[0-9a-f]\{40,\}//g' measured/c1-build.out) <(sed 's/[0-9a-f]\{40,\}//g' c1/battery/control.out)
+9,10c9,10  / 15,16c15,16  / 21,22c21,22   # pid, port, dev/inode of the mapping, nonce differ per run
+$ sha256sum measured/c1-build.out c1/battery/control.out
+4f8f277b04b11861b5e45664db6c97fea9a078431c4e450ae89b846e893331b6  measured/c1-build.out
+8f8bbf60bffd90a27c8e4ca6b844309026d2151fe534a5a762d64cc9b27a85b9  c1/battery/control.out
+
+# --- whole-dir duplicate scan (tracked + peers' in-flight out dirs at check time) ---
+$ find . -type f ! -name '*.partial' -print0 | xargs -0 sha256sum | ... group by hash
+6 copies: measured/c2-build.out  w1/out/X2C2Rerun/{A-tip9c60eae-fleet6c4aba34.out,A-tip9c60eae-fleet6c4aba34.stdout,rep1,rep2,rep3}
+3 copies: controls/base.c2.out   w1/out/X2C2Rerun/{C-tip3a600d2f-fleet6c4aba34.out,C-tip3a600d2f-fleet6c4aba34.stdout}
+2 copies: w1/dispatch.json w1/validate.out
+# The X2C2Rerun copies are a peer seat's independent replays landing byte-identical => the C2 measurement is
+# deterministic; they are that seat's deliverables, not wave-dir evidence, and need no wave-dir counterpart.
+
+# --- transient leftover in the live tree, not in any commit ---
+$ ls -la .ufo/waves/round-55/w1.ready.partial ; git -C <lane> status --porcelain | grep partial
+944 bytes, "?? .ufo/waves/round-55/w1.ready.partial"   (w1.ready, 148 B, is the committed marker)

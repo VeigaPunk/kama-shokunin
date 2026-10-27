@@ -1,0 +1,201 @@
+{
+  "checks": [
+    {
+      "case": "frozen",
+      "check": "counter bytes match the preregistration sha256",
+      "detail": "sha256=c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af expected=c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af",
+      "ok": true
+    },
+    {
+      "case": "frozen",
+      "check": "ROW_CAP is 64 MiB",
+      "detail": "ROW_CAP=67108864 (67108864 bytes)",
+      "ok": true
+    },
+    {
+      "case": "frozen",
+      "check": "the two guards are present in the frozen source",
+      "detail": "ROW_CAP guard and past-the-end guard found verbatim",
+      "ok": true
+    },
+    {
+      "case": "control",
+      "check": "no code problem",
+      "detail": "code problems=[]",
+      "ok": true
+    },
+    {
+      "case": "control",
+      "check": "four archive files seen",
+      "detail": "files=['/fake/unpacked/libggml-base.so.0.27.0', '/fake/unpacked/libggml-cpu-zen4.so', '/fake/unpacked/libggml.so.0.27.0', '/fake/unpacked/libllama-server-impl.so']",
+      "ok": true
+    },
+    {
+      "case": "control",
+      "check": "one range read per file",
+      "detail": "ranges=4 pread_calls=[(139637976727552, 4096), (139637977776128, 4096), (139637978824704, 4096), (139637979873280, 4096)]",
+      "ok": true
+    },
+    {
+      "case": "control",
+      "check": "every pread within ROW_CAP",
+      "detail": "ROW_CAP=67108864 calls=[(139637976727552, 4096), (139637977776128, 4096), (139637978824704, 4096), (139637979873280, 4096)]",
+      "ok": true
+    },
+    {
+      "case": "control",
+      "check": "snaps recorded",
+      "detail": "snaps=['/fake/unpacked/libggml-base.so.0.27.0|7f0000100000-7f0000101000', '/fake/unpacked/libggml-cpu-zen4.so|7f0000300000-7f0000301000', '/fake/unpacked/libggml.so.0.27.0|7f0000200000-7f0000201000', '/fake/unpacked/libllama-server-impl.so|7f0000000000-7f0000001000']",
+      "ok": true
+    },
+    {
+      "case": "control",
+      "check": "code leg passes",
+      "detail": "not cprobs and cobs",
+      "ok": true
+    },
+    {
+      "case": "clause-A",
+      "check": "oversized row reported as a problem",
+      "detail": "hit=['code: maps row 7f4001000000-7f4005001000 of libggml.so.0.27.0 is 67112960 bytes; not read'] all=['code: maps row 7f4001000000-7f4005001000 of libggml.so.0.27.0 is 67112960 bytes; not read']",
+      "ok": true
+    },
+    {
+      "case": "clause-A",
+      "check": "no pread longer than ROW_CAP",
+      "detail": "calls=[(139637976727552, 4096), (139637977776128, 4096), (139637978824704, 4096), (139637979873280, 4096)] ROW_CAP=67108864",
+      "ok": true
+    },
+    {
+      "case": "clause-A",
+      "check": "oversized row not counted as compared",
+      "detail": "ranges=4",
+      "ok": true
+    },
+    {
+      "case": "clause-A",
+      "check": "code leg fails",
+      "detail": "a ROW_CAP violation is a code problem",
+      "ok": true
+    },
+    {
+      "case": "clause-B",
+      "check": "past-the-end row reported as a problem",
+      "detail": "hit=['code: maps row 7f4002000000-7f4002001000 of libggml.so.0.27.0 extends past the member (10240 > 8192 bytes)'] all=['code: maps row 7f4002000000-7f4002001000 of libggml.so.0.27.0 extends past the member (10240 > 8192 bytes)']",
+      "ok": true
+    },
+    {
+      "case": "clause-B",
+      "check": "the past-the-end row was not read",
+      "detail": "pread offsets=[139637976727552, 139637977776128, 139637978824704, 139637979873280]",
+      "ok": true
+    },
+    {
+      "case": "clause-B",
+      "check": "past-the-end row not counted as compared",
+      "detail": "ranges=4",
+      "ok": true
+    },
+    {
+      "case": "clause-B",
+      "check": "not zero-padded into a byte-equal verdict",
+      "detail": "accepted snaps for the past-the-end row=[] snaps=['/fake/unpacked/libggml-base.so.0.27.0|7f0000100000-7f0000101000', '/fake/unpacked/libggml-cpu-zen4.so|7f0000300000-7f0000301000', '/fake/unpacked/libggml.so.0.27.0|7f0000200000-7f0000201000', '/fake/unpacked/libllama-server-impl.so|7f0000000000-7f0000001000']",
+      "ok": true
+    },
+    {
+      "case": "clause-B",
+      "check": "code leg fails",
+      "detail": "a past-the-end row is a code problem",
+      "ok": true
+    },
+    {
+      "case": "mutant-M1",
+      "check": "without the ROW_CAP guard the oversized row IS read",
+      "detail": "oversized preads=[(139912871411712, 67112960)] (ROW_CAP=67108864)",
+      "ok": true
+    },
+    {
+      "case": "mutant-M1",
+      "check": "without the ROW_CAP guard the oversized row is not reported",
+      "detail": "code problems=['code: mapped bytes 7f4001000000-7f4005001000 (offset 00000000) of libggml-cpu-zen4.so differ from the archive member']",
+      "ok": true
+    },
+    {
+      "case": "mutant-M2",
+      "check": "without the past-the-end guard the row IS read",
+      "detail": "preads=[(139637976727552, 4096), (139637977776128, 4096), (139637978824704, 4096), (139637979873280, 4096), (139912888188928, 4096)]",
+      "ok": true
+    },
+    {
+      "case": "mutant-M2",
+      "check": "without the past-the-end guard the row is not refused",
+      "detail": "code problems=['code: mapped bytes 7f4002000000-7f4002001000 (offset 00001800) of libggml.so.0.27.0 differ from the archive member']",
+      "ok": true
+    },
+    {
+      "case": "mutant-M3",
+      "check": "a zero-padding 'fix' accepts the past-the-end row",
+      "detail": "accepted snaps=['/fake/unpacked/libggml.so.0.27.0|7f0000200000-7f0000201000', '/fake/unpacked/libggml.so.0.27.0|7f4002000000-7f4002001000'] code problems=[]",
+      "ok": true
+    },
+    {
+      "case": "mutant-M4",
+      "check": "with a small member, the oversized row is still refused without the ROW_CAP guard",
+      "detail": "oversized preads=[] problems=['code: maps row 7f4003000000-7f4007001000 of libggml.so.0.27.0 extends past the member (67112960 > 8192 bytes)']",
+      "ok": true
+    },
+    {
+      "case": "mutant-M4",
+      "check": "the refusal message differs (ROW_CAP guard vs past-the-end guard)",
+      "detail": "problems=['code: maps row 7f4003000000-7f4007001000 of libggml.so.0.27.0 extends past the member (67112960 > 8192 bytes)']",
+      "ok": true
+    },
+    {
+      "case": "real-kernel",
+      "check": "the real past-EOF row is refused as a problem",
+      "detail": "hit=['code: maps row 7f1eae2b5000-7f1eae2b7000 of libggml-partial-eof.so extends past the member (8192 > 6144 bytes)', 'code: maps row 7f1eae2b7000-7f1eae2b9000 of libggml-past-eof.so extends past the member (8192 > 4096 bytes)'] all=['code: root-owned host library /usr/bin/python3.14 is not in the frozen host set', 'code: maps row 7f1ea9a00000-7f1eada01000 of libggml-cpu-huge.so is 67112960 bytes; not read', 'code: maps row 7f1eae2b5000-7f1eae2b7000 of libggml-partial-eof.so extends past the member (8192 > 6144 bytes)', 'code: maps row 7f1eae2b7000-7f1eae2b9000 of libggml-past-eof.so extends past the member (8192 > 4096 bytes)', 'code: root-owned host library /usr/lib/python3.14/lib-dynload/_struct.cpython-314-x86_64-linux-gnu.so is not in the frozen host set', 'code: root-owned host library /usr/lib/libffi.so.8.5.0 is not in the frozen host set', 'code: root-owned host library /usr/lib/python3.14/lib-dynload/_ctypes.cpython-314-x86_64-linux-gnu.so is not in the frozen host set', 'code: root-owned host library /usr/lib/libpython3.14.so.1.0 is not in the frozen host set', \"code: anonymous executable mapping 7f1eaea81000-7f1eaea82000 rwxp (name '(none)')\"]",
+      "ok": true
+    },
+    {
+      "case": "real-kernel",
+      "check": "the real past-EOF row was not byte-compared",
+      "detail": "snaps=['/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libggml-base.so.0.27.0|7f1eae2bd000-7f1eae2bf000', '/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libggml-cpu-zen4.so|7f1eae2b9000-7f1eae2bb000', '/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libggml.so.0.27.0|7f1eae2bb000-7f1eae2bd000', '/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libllama-server-impl.so|7f1eaea7f000-7f1eaea81000']",
+      "ok": true
+    },
+    {
+      "case": "real-kernel",
+      "check": "the real >ROW_CAP row is refused as a problem",
+      "detail": "hit=['code: maps row 7f1ea9a00000-7f1eada01000 of libggml-cpu-huge.so is 67112960 bytes; not read'] all=['code: root-owned host library /usr/bin/python3.14 is not in the frozen host set', 'code: maps row 7f1ea9a00000-7f1eada01000 of libggml-cpu-huge.so is 67112960 bytes; not read', 'code: maps row 7f1eae2b5000-7f1eae2b7000 of libggml-partial-eof.so extends past the member (8192 > 6144 bytes)', 'code: maps row 7f1eae2b7000-7f1eae2b9000 of libggml-past-eof.so extends past the member (8192 > 4096 bytes)', 'code: root-owned host library /usr/lib/python3.14/lib-dynload/_struct.cpython-314-x86_64-linux-gnu.so is not in the frozen host set', 'code: root-owned host library /usr/lib/libffi.so.8.5.0 is not in the frozen host set', 'code: root-owned host library /usr/lib/python3.14/lib-dynload/_ctypes.cpython-314-x86_64-linux-gnu.so is not in the frozen host set', 'code: root-owned host library /usr/lib/libpython3.14.so.1.0 is not in the frozen host set', \"code: anonymous executable mapping 7f1eaea81000-7f1eaea82000 rwxp (name '(none)')\"]",
+      "ok": true
+    },
+    {
+      "case": "real-kernel",
+      "check": "the real >ROW_CAP row was not byte-compared",
+      "detail": "snaps=['/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libggml-base.so.0.27.0|7f1eae2bd000-7f1eae2bf000', '/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libggml-cpu-zen4.so|7f1eae2b9000-7f1eae2bb000', '/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libggml.so.0.27.0|7f1eae2bb000-7f1eae2bd000', '/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libllama-server-impl.so|7f1eaea7f000-7f1eaea81000']",
+      "ok": true
+    },
+    {
+      "case": "real-kernel",
+      "check": "the four legitimate real mappings were read and accepted",
+      "detail": "accepted=['/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libggml-base.so.0.27.0|7f1eae2bd000-7f1eae2bf000', '/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libggml-cpu-zen4.so|7f1eae2b9000-7f1eae2bb000', '/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libggml.so.0.27.0|7f1eae2bb000-7f1eae2bd000', '/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libllama-server-impl.so|7f1eaea7f000-7f1eaea81000'] problems=['code: root-owned host library /usr/bin/python3.14 is not in the frozen host set', 'code: maps row 7f1ea9a00000-7f1eada01000 of libggml-cpu-huge.so is 67112960 bytes; not read', 'code: maps row 7f1eae2b5000-7f1eae2b7000 of libggml-partial-eof.so extends past the member (8192 > 6144 bytes)', 'code: maps row 7f1eae2b7000-7f1eae2b9000 of libggml-past-eof.so extends past the member (8192 > 4096 bytes)', 'code: root-owned host library /usr/lib/python3.14/lib-dynload/_struct.cpython-314-x86_64-linux-gnu.so is not in the frozen host set', 'code: root-owned host library /usr/lib/libffi.so.8.5.0 is not in the frozen host set', 'code: root-owned host library /usr/lib/python3.14/lib-dynload/_ctypes.cpython-314-x86_64-linux-gnu.so is not in the frozen host set', 'code: root-owned host library /usr/lib/libpython3.14.so.1.0 is not in the frozen host set', \"code: anonymous executable mapping 7f1eaea81000-7f1eaea82000 rwxp (name '(none)')\"]",
+      "ok": true
+    },
+    {
+      "case": "real-kernel",
+      "check": "the frozen counter also refuses the real partial-EOF row",
+      "detail": "frozen snaps=['/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libggml-base.so.0.27.0|7f1eae2bd000-7f1eae2bf000', '/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libggml-cpu-zen4.so|7f1eae2b9000-7f1eae2bb000', '/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libggml.so.0.27.0|7f1eae2bb000-7f1eae2bd000', '/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libllama-server-impl.so|7f1eaea7f000-7f1eaea81000'] problems=['code: root-owned host library /usr/bin/python3.14 is not in the frozen host set', 'code: maps row 7f1ea9a00000-7f1eada01000 of libggml-cpu-huge.so is 67112960 bytes; not read', 'code: maps row 7f1eae2b5000-7f1eae2b7000 of libggml-partial-eof.so extends past the member (8192 > 6144 bytes)', 'code: maps row 7f1eae2b7000-7f1eae2b9000 of libggml-past-eof.so extends past the member (8192 > 4096 bytes)', 'code: root-owned host library /usr/lib/python3.14/lib-dynload/_struct.cpython-314-x86_64-linux-gnu.so is not in the frozen host set', 'code: root-owned host library /usr/lib/libffi.so.8.5.0 is not in the frozen host set', 'code: root-owned host library /usr/lib/python3.14/lib-dynload/_ctypes.cpython-314-x86_64-linux-gnu.so is not in the frozen host set', 'code: root-owned host library /usr/lib/libpython3.14.so.1.0 is not in the frozen host set', \"code: anonymous executable mapping 7f1eaea81000-7f1eaea82000 rwxp (name '(none)')\"]",
+      "ok": true
+    },
+    {
+      "case": "real-kernel",
+      "check": "a zero-padding implementation ACCEPTS the real partial-EOF row (the kernel zero-fills the partial page past EOF, so zero-padding is byte-equal to it)",
+      "detail": "accepted=['/fast/scratch/hyaku/kama-r55/w1/J2RowCap/j2rowcap-xvyj_vmv/tree/libggml-partial-eof.so|7f1eae2b5000-7f1eae2b7000'] problems=['code: root-owned host library /usr/bin/python3.14 is not in the frozen host set', 'code: maps row 7f1ea9a00000-7f1eada01000 of libggml-cpu-huge.so is 67112960 bytes; not read', 'code: mapped bytes 7f1eae2b7000-7f1eae2b9000 (offset 00000000) of libggml-past-eof.so differ from the archive member', 'code: root-owned host library /usr/lib/python3.14/lib-dynload/_struct.cpython-314-x86_64-linux-gnu.so is not in the frozen host set', 'code: root-owned host library /usr/lib/libffi.so.8.5.0 is not in the frozen host set', 'code: root-owned host library /usr/lib/python3.14/lib-dynload/_ctypes.cpython-314-x86_64-linux-gnu.so is not in the frozen host set', 'code: root-owned host library /usr/lib/libpython3.14.so.1.0 is not in the frozen host set', \"code: anonymous executable mapping 7f1eaea81000-7f1eaea82000 rwxp (name '(none)')\"]",
+      "ok": true
+    }
+  ],
+  "counter": "/fast/scratch/hyaku/kama-r55/w1/J2RowCap/lane/tools/round54-replay-code-audit.py",
+  "counter_sha256": "c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af",
+  "failed": 0,
+  "passed": 32,
+  "row_cap": 67108864
+}

@@ -1,0 +1,22 @@
+=== m-ldpreload leg=envnames kind=kill
+--- old ---
+"        receipt['child_env_keys'] = sorted(child_env)\n"
+--- new ---
+"        child_env['LD_PRELOAD'] = '/usr/lib/libzstd.so.1.5.7'\n        receipt['child_env_keys'] = sorted(child_env)\n"
+=== m-text-flip leg=code kind=kill
+--- old ---
+"        receipt['child_env_keys'] = sorted(child_env)\n"
+--- new ---
+"        import glob as _g\n        for _p in _g.glob(os.path.join(os.path.dirname(server_real), 'libggml-rpc.so*')):\n            if os.path.getsize(_p) > 0x6000:\n                with open(_p, 'r+b') as fh:\n                    fh.seek(-0x3000, 2)\n                    _b = fh.read(1)\n                    fh.seek(-0x3000, 2)\n                    fh.write(bytes([_b[0] ^ 1]))\n                break\n        receipt['child_env_keys'] = sorted(child_env)\n"
+=== m-ldaudit-foreign leg=hostlibs kind=vector
+--- old ---
+"        receipt['child_env_keys'] = sorted(child_env)\n"
+--- new ---
+"        child_env['LD_AUDIT'] = '/usr/lib/libexpat.so.1'\n        receipt['child_env_keys'] = sorted(child_env)\n"
+=== m-member-flip leg=rehash kind=kill
+--- old ---
+"            receipt['code_mappings'] = code_mappings(proc.pid)\n"
+--- new ---
+"            receipt['code_mappings'] = code_mappings(proc.pid)\n            import glob as _g\n            for _p in _g.glob(os.path.join(os.path.dirname(server_real), 'libggml-cpu-*.so*')):\n                try:\n                    with open(_p, 'r+b') as fh:\n                        fh.seek(-32, 2)\n                        _b = fh.read(1)\n                        fh.seek(-32, 2)\n                        fh.write(bytes([_b[0] ^ 1]))\n                except OSError:\n                    pass\n"
+ENV_ANCHOR="        receipt['child_env_keys'] = sorted(child_env)\n"
+FLIP_ANCHOR="            receipt['code_mappings'] = code_mappings(proc.pid)\n"

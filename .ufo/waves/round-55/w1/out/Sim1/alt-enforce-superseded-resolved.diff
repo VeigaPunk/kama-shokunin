@@ -1,0 +1,11 @@
+--- a/tools/round54-cited-path-check.py
++++ b/tools/round54-cited-path-check.py
+@@ -476,6 +476,8 @@
+             return f"replacement {ev!r} does not resolve at tip"
+         if base_citelines is not None and tok not in (base_citelines.get(surf) or {}):
+             return "superseded token was not cited in this surface at the base"
++        if tok in base_unres.get(surf, set()):
++            return "superseded token was an unresolved citation at the base; that is a `fixed` correction, not a re-point"
+         return None
+     if not bad_exp:
+         return None  # stale; reported by the caller

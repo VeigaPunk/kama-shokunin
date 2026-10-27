@@ -1,0 +1,106 @@
+--- a/run-battery.py
++++ b/run-battery.py
+@@ -5,16 +5,27 @@
+ Receipts land in .ufo/waves/round-55/c1/battery/ beside this file. Everything else
+ lives under /fast/scratch/hyaku/kama-r55/c1/battery and is removed on exit.
+ """
++import hashlib
+ import os
+ import shutil
+ import subprocess
+ import sys
++import tempfile
++import time
+ 
+ LANE = "/home/vgpnk/Projects/shokunin/kama-shokunin"
+ FREEZE = "9c60eae6f7ed84f7da93d219a406aadc30958c6c"
+ COUNTER = os.path.join(LANE, "tools/round54-replay-code-audit.py")
+ OUT = os.path.join(LANE, ".ufo/waves/round-55/c1/battery")
+-SCRATCH = "/fast/scratch/hyaku/kama-r55/c1/battery"
++SCRATCH_ROOT = "/fast/scratch/hyaku/kama-r55/c1"
++COUNTER_SHA = "c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af"  # preregistration.json claims.C1.counter_sha256
++# per-leg kill signature: (header predicate, detail phrase the leg prints when it fails)
++KILL_SIGNATURE = {
++    "envnames": (lambda f: f.get("envnames") == "0/3", "env: server environment carries "),
++    "code": (lambda f: f.get("code") == "0" and f.get("coderuns") == "0/3", "code: replay own_code"),
++    "rehash": (lambda f: int(f.get("rehash", "0")) > 0, "changed after the observation"),
++    "hostlibs": (lambda f: f.get("hostlibs") == "0/3", "root-owned host library"),
++}
+ LIVE = "tools/kama-llamacpp-live.py"
+ 
+ ENV_ANCHOR = "        receipt['child_env_keys'] = sorted(child_env)\n"
+@@ -89,10 +100,40 @@
+     return subprocess.run(cmd, capture_output=True, text=True, **kw)
+ 
+ 
++def flags(text):
++    """The counter's second line as a dict: bind=1 code=0 coderuns=0/3 rehash=3 ..."""
++    lines = text.splitlines()
++    out = {}
++    for tok in (lines[1] if len(lines) > 1 else "").split():
++        if "=" in tok:
++            k, v = tok.split("=", 1)
++            out[k] = v
++    return out
++
++
+ def main():
+     os.makedirs(OUT, exist_ok=True)
+-    shutil.rmtree(SCRATCH, ignore_errors=True)
+-    os.makedirs(SCRATCH)
++    # the counter that produces the receipts must be the frozen one, not the lane's
++    # working copy as it happens to stand after the freeze
++    got = hashlib.sha256(open(COUNTER, "rb").read()).hexdigest()
++    if got != COUNTER_SHA:
++        print(f"battery: counter sha256 {got} != frozen {COUNTER_SHA}")
++        return 2
++    harness_sha = hashlib.sha256(open(__file__, "rb").read()).hexdigest()
++    summaries = []
++    # a per-run scratch: two batteries must not delete each other's clone
++    SCRATCH = tempfile.mkdtemp(prefix="battery-", dir=SCRATCH_ROOT)
++    try:
++        return battery(SCRATCH, harness_sha, summaries)
++    finally:
++        shutil.rmtree(SCRATCH, ignore_errors=True)
++        with open(os.path.join(OUT, "summary.out"), "w") as fh:
++            fh.write(f"counter_sha256={COUNTER_SHA}\nharness_sha256={harness_sha}\n")
++            for name, leg, kind, rc, met, ok in summaries:
++                fh.write(f"battery {name}: leg={leg} kind={kind} exit={rc} met={met} -> {'ok' if ok else 'BATTERY-FAIL'}\n")
++
++
++def battery(SCRATCH, harness_sha, summaries):
+     clone = os.path.join(SCRATCH, "lane")
+     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+     r = run(["git", "clone", "--shared", LANE, clone], env=env)
+@@ -101,7 +142,7 @@
+         return 2
+     live_path = os.path.join(clone, LIVE)
+     original = open(live_path).read()
+-    summary = []
++    summary = summaries
+ 
+     def counter(tip, name):
+         outp = os.path.join(OUT, f"{name}.out")
+@@ -135,16 +176,17 @@
+         tip = run(["git", "-C", clone, "rev-parse", "HEAD"], env=env).stdout.strip()
+         rc, met, text = counter(tip, name)
+         if kind == "vector":
+-            ok = rc == 0 and met  # the vector is void: the mutant passes, which is the finding
++            # a vector analysis is NOT a kill: it must be reported as such, never counted
++            # toward "each named mutant fails its named leg" (preregistration.json
++            # controls.c1_kill_battery)
++            ok = rc == 0 and met
+         else:
+-            leg_failed = f"{leg} " in "\n".join(
+-                ln for ln in text.splitlines() if ln.startswith("detail: "))
+-            ok = rc == 1 and not met and leg_failed
++            sig, phrase = KILL_SIGNATURE[leg]
++            ok = rc == 1 and not met and sig(flags(text)) and phrase in text
+         summary.append((name, leg, kind, rc, met, ok))
+ 
+     for name, leg, kind, rc, met, ok in summary:
+         print(f"battery {name}: leg={leg} kind={kind} exit={rc} met={met} -> {'ok' if ok else 'BATTERY-FAIL'}")
+-    shutil.rmtree(SCRATCH, ignore_errors=True)
+     return 0 if all(s[5] for s in summary) else 1
+ 
+ 

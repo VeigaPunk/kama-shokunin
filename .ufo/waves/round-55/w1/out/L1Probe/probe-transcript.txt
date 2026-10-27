@@ -1,0 +1,196 @@
+L1Probe bounded-probe transcript — round 55, wave 1
+Host: x86_64, glibc 2.44 (ldd --version), GCC 16.2.1, kernel arch linux 7.2.11
+Scratch: /fast/scratch/hyaku/kama-r55/w1/L1Probe (removed after the probe)
+Out: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-55/w1/out/L1Probe/
+No lane/fleet files touched. No llama-server started (pgrep leftovers shown at end
+all belong to other seats' scratch trees).
+
+===============================================================================
+BUILD (all in scratch)
+===============================================================================
+$ cc --version | head -1 ; uname -m ; ldd --version | head -1
+cc (GCC) 16.2.1 20260810
+x86_64
+ldd (GNU libc) 2.44
+
+$ cat audit.c        # audit-capable DSO: exports la_version (required by ld.so)
+                     # and la_preinit (dumps /proc/self/maps lines w/ 'libaudit')
+$ cat child.c        # int main(void) { return 0; }
+$ cat child_slow.c   # int main(void) { usleep(600000); return 0; }
+$ cat parent.c       # fork+exec child under chosen env; SIGSTOP after 200 ms;
+                     # read /proc/<pid>/maps; SIGCONT; waitpid
+$ cat marker.c       # constructor prints "[marker] ctor ran"
+
+$ cc -shared -fPIC -o libaudit.so audit.c
+$ cc -O1 -o child child.c
+$ cc -O1 -o parent parent.c
+$ cc -O1 -o child_slow child_slow.c
+$ cc -shared -fPIC -o marker64.so marker.c
+$ cc -m32 -shared -fPIC -o marker32.so marker.c        # MARKER32-OK
+$ cc -m32 -O1 -o child32 child_slow.c                  # CHILD32-OK
+$ cc -m32 -shared -fPIC -o libaudit32.so audit.c
+$ file marker32.so child32
+marker32.so: ELF 32-bit LSB shared object, Intel i386 ...
+child32:     ELF 32-bit LSB pie executable, Intel i386, interpreter /lib/ld-linux.so.2
+
+===============================================================================
+RUN 1 — LD_AUDIT = audit-capable DSO, trivial child (exact `int main(){return 0;}`)
+===============================================================================
+$ ./parent LD_AUDIT $S/libaudit.so $S/child
+[audit] la_version called: glibc offered version, echoing it back
+[audit] la_preinit: dumping /proc/self/maps lines mentioning libaudit
+7f5155b5b000-7f5155b5c000 r--p 00000000 103:05 1752985586  .../libaudit.so
+7f5155b5c000-7f5155b5d000 r-xp 00001000 103:05 1752985586  .../libaudit.so
+7f5155b5d000-7f5155b5e000 r--p 00002000 103:05 1752985586  .../libaudit.so
+7f5155b5e000-7f5155b5f000 r--p 00002000 103:05 1752985586  .../libaudit.so
+7f5155b5f000-7f5155b60000 rw-p 00003000 103:05 1752985586  .../libaudit.so
+[audit] la_preinit done
+SUMMARY maps_lines=0 audit_so_mapped=0 child_exit=0
+RC=0
+
+Observation: glibc honored LD_AUDIT — la_version ran (it MUST run before mapping is
+usable; returning nonzero keeps the audit object) and la_preinit's in-child
+/proc/self/maps dump shows libaudit.so mapped with 5 VMAs (r--p/r-xp/r--p/r--p/rw-p).
+maps_lines=0 is a harness artifact: the exact trivial child exits in microseconds,
+before the parent's 200 ms SIGSTOP, so /proc/<pid>/maps was already gone. The
+mapping evidence inside the child's own maps dump is authoritative.
+
+===============================================================================
+RUN 2 — LD_AUDIT = audit-capable DSO, slow twin, EXTERNAL maps while SIGSTOP-held
+===============================================================================
+$ ./parent LD_AUDIT $S/libaudit.so $S/child_slow
+[audit] la_version called ...
+[audit] la_preinit: dumping ... (5 libaudit.so VMAs, same as RUN 1)
+...full 36-line maps dump...
+7f8a7b43b000-7f8a7b43c000 r--p ... /fast/scratch/.../libaudit.so
+7f8a7b43c000-7f8a7b43d000 r-xp ... /fast/scratch/.../libaudit.so
+7f8a7b43d000-7f8a7b43e000 r--p ... /fast/scratch/.../libaudit.so
+7f8a7b43e000-7f8a7b43f000 r--p ... /fast/scratch/.../libaudit.so
+7f8a7b43f000-7f8a7b440000 rw-p ... /fast/scratch/.../libaudit.so
+SUMMARY maps_lines=36 audit_so_mapped=1 child_exit=0
+RC=0
+
+=> EXTERNALLY OBSERVED while held: the audit DSO is mapped into the child.
+   Answer to the seat question: YES, glibc 2.44 honors LD_AUDIT for an
+   audit-capable DSO (one exporting la_version that returns nonzero).
+
+===============================================================================
+RUN 3 — battery vector: LD_AUDIT = /usr/lib/libexpat.so.1 (foreign host lib)
+===============================================================================
+$ nm -D /usr/lib/libexpat.so.1 | grep -c la_version
+0
+
+$ ./parent LD_AUDIT /usr/lib/libexpat.so.1 $S/child_slow
+ERROR: ld.so: object '/usr/lib/libexpat.so.1' cannot be loaded as audit interface:
+undefined symbol: la_version; ignored.
+...25-line maps dump, NO libexpat, NO foreign lib...
+SUMMARY maps_lines=25 audit_so_mapped=0 child_exit=0
+RC=0
+
+=> An ordinary root-owned host library is NOT audit-capable; ld.so refuses the
+   audit load ("undefined symbol: la_version; ignored") and maps nothing extra.
+   The battery's m-ldaudit-foreign vector-analysis claim is grounded: the
+   LD_AUDIT route cannot plant a foreign non-audit DSO into the counter's child.
+   Only a purpose-built DSO exporting la_version gets mapped (RUN 2), and the
+   counter's envnames leg records env-var NAMES — an attacker-controlled
+   LD_AUDIT value would still require a writable, audit-capable DSO path.
+
+===============================================================================
+Complement A — LD_AUDIT = nonexistent path
+===============================================================================
+$ LD_AUDIT=/nonexistent.so ./child
+ERROR: ld.so: object '/nonexistent.so' cannot be loaded as audit interface:
+cannot open shared object file; ignored.
+exit=0
+=> Missing audit DSO: loud stderr line, child unaffected, nothing mapped.
+
+===============================================================================
+Complement B — 32-bit audit-capable DSO into 32-bit child
+===============================================================================
+$ LD_AUDIT=$S/libaudit32.so ./child32
+[audit] la_version called ...
+[audit] la_preinit: ... (5 libaudit32.so VMAs, ELFCLASS32)
+exit=0
+=> Symmetric: 32-bit ld.so also honors LD_AUDIT for audit-capable DSOs.
+
+===============================================================================
+Complement C — 32-bit audit DSO into 64-bit child (wrong class)
+===============================================================================
+$ LD_AUDIT=$S/libaudit32.so ./child_slow
+ERROR: ld.so: object '.../libaudit32.so' cannot be loaded as audit interface:
+wrong ELF class: ELFCLASS32; ignored.
+exit=0
+
+===============================================================================
+RUN 4 — LD_PRELOAD_32 against the 64-bit child (seat ask)
+===============================================================================
+$ ./parent LD_PRELOAD_32 $S/libaudit.so $S/child_slow
+...24-line maps dump...
+SUMMARY maps_lines=24 audit_so_mapped=0 child_exit=0
+RC=0
+=> LD_PRELOAD_32 did nothing to the 64-bit process (no mapping, no ctor, exit 0).
+
+===============================================================================
+RUN 5 — LD_PRELOAD_32 = nonexistent path, 64-bit child
+===============================================================================
+$ LD_PRELOAD_32=/nonexistent.so ./child ; echo exit=$?
+exit=0
+=> Silently ignored. No error, no load.
+
+===============================================================================
+RUN 6 — positive control attempt: 32-bit child + LD_PRELOAD_32=marker32.so
+===============================================================================
+$ LD_PRELOAD_32=$S/marker32.so ./child32 ; echo exit=$?
+exit=0                      # <-- NO "[marker] ctor ran"
+$ LD_PRELOAD_32=$S/marker32.so LD_DEBUG=libs,files ./child32 2>&1 | grep -iE "marker|preload"
+(no output)
+$ LD_PRELOAD=$S/marker32.so ./child32
+[marker] ctor ran         # plain LD_PRELOAD with the SAME 32-bit object: loads
+exit=0
+=> glibc 2.44 does not honor LD_PRELOAD_32 even for a 32-bit process.
+
+Root cause check: the token is not in the loader at all —
+$ strings /usr/lib/ld-linux-x86-64.so.2 | grep -c LD_PRELOAD_32 ; echo 0
+0
+$ strings /usr/lib32/ld-linux.so.2 | grep -c LD_PRELOAD_32
+0
+$ strings /usr/lib32/ld-linux.so.2 | grep -E '^LD_[A-Z_0-9]+$' | sort -u
+LD_AUDIT LD_BIND_NOT LD_BIND_NOW LD_DEBUG LD_DEBUG_OUTPUT LD_DYNAMIC_WEAK
+LD_LIBRARY_PATH LD_ORIGIN_PATH LD_PRELOAD LD_PROFILE LD_PROFILE_OUTPUT
+LD_SHOW_AUXV LD_VERBOSE LD_WARN        # (64-bit list adds LD_PREFER_MAP_32BIT_EXEC)
+=> LD_PRELOAD_32 is a Solaris ld.so.1 feature; upstream glibc process_envvars()
+   never implemented it (2011 libc-alpha proposal not adopted). On this host it
+   is unconditionally inert — even more absent than "ignored for 64-bit".
+
+Host note: the seat brief says "64-bit-only host"; observed: /usr/lib32 +
+/lib/ld-linux.so.2 exist and a 32-bit child RUNS (IA32 emulation present, child32
+executed fine). Not 64-bit-only. For the counter this is moot: its child
+(file on the running server binary): "ELF 64-bit LSB pie executable, x86-64".
+
+===============================================================================
+RUN 7 — control: LD_PRELOAD=marker64.so into 64-bit child
+===============================================================================
+$ LD_PRELOAD=$S/marker64.so ./child_slow
+[marker] ctor ran
+exit=0
+=> Plain LD_PRELOAD still works on this glibc — the envnames leg's relevance is
+   intact; only the LD_PRELOAD_32 and foreign-LD_AUDIT vectors are void.
+
+===============================================================================
+RUN 8 — 64-bit object into 32-bit child via LD_PRELOAD (wrong class)
+===============================================================================
+$ LD_PRELOAD=$S/marker64.so ./child32
+ERROR: ld.so: object '.../marker64.so' from LD_PRELOAD cannot be preloaded
+(wrong ELF class: ELFCLASS64): ignored.
+exit=0
+=> Wrong-class preloads are refused with a stderr line and ignored.
+
+===============================================================================
+Leftovers check (host guard)
+===============================================================================
+$ pgrep -af llama-server
+3521908 ... J5EnvNames/lane/tools/kama-llamacpp-live.py ...
+3523374 ... J5EnvNames/work/server/llama-b11909/llama-server ...
+3855601 ... X9Separation/.../kama-llamacpp-live.py ...
+3856992 ... X9Separation/.../llama-server ...
+(all under OTHER seats' scratch trees; L1Probe started none)

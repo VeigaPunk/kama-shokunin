@@ -1,0 +1,15 @@
+--- a/tools/round54-cited-path-check.py
++++ b/tools/round54-cited-path-check.py
+@@ -200,6 +200,12 @@
+     (Sen4Fixture: GIT_DIR redirected the fixture into a foreign repository,
+     GIT_CONFIG_COUNT reached core.hooksPath and executed an attacker hook)."""
+     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
++    # Rev2 round 55 (hardening, no demonstrated defect in this counter's reads):
++    # the read commands still consult the global/system config and the loader
++    # environment; close them so the receipt is a function of the repositories.
++    env.update({"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1"})
++    for k in ("LD_PRELOAD", "LD_AUDIT", "LD_LIBRARY_PATH"):
++        env.pop(k, None)
+     env.update(extra or {})
+     return env
+ 

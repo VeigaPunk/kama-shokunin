@@ -1,0 +1,69 @@
+--- a/tools/round54-replay-code-audit.py
++++ b/tools/round54-replay-code-audit.py
+@@ -168,6 +168,15 @@
+     C2 counter; grounded by S510 (git(1) env vars) and S511 (git-config(1)
+     GIT_CONFIG_COUNT)."""
+     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
++    # Rev2 round 55: GIT_* is not the only inherited channel.  The global
++    # attribute file ($XDG_CONFIG_HOME/git/attributes, $HOME/.config/git/attributes
++    # when XDG is unset, or core.attributesFile) and the system one are read by
++    # `git archive` regardless of GIT_*; LD_PRELOAD/LD_AUDIT/LD_LIBRARY_PATH reach
++    # the git child whole.  Close them, then let the caller's extras win.
++    env.update({"GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1",
++                "GIT_ATTR_NOSYSTEM": "1"})
++    for k in ("LD_PRELOAD", "LD_AUDIT", "LD_LIBRARY_PATH"):
++        env.pop(k, None)
+     env.update(extra or {})
+     return env
+ 
+@@ -889,15 +898,46 @@
+     try:
+         try:
+             tip = git(a.repo, "rev-parse", "--verify", a.tip + "^{commit}").stdout.decode().strip()
+-            arc = git(a.repo, "archive", "--format=tar", tip).stdout
++            # Rev2 round 55: `git archive` applies attribute files.  -c
++            # core.attributesFile=/dev/null replaces the global one (which
++            # clean_env cannot reach: it is the XDG-config file, not a GIT_* var);
++            # in-tree .gitattributes of --repo stay part of the measured surface,
++            # so the mismatch and unreadable checks below bind the result.
++            arc = git(a.repo, "-c", f"core.attributesFile={os.devnull}",
++                      "archive", "--format=tar", tip).stdout
+         except EvalError as exc:
+             print(f"could-not-evaluate: {exc}")
+             return 2
+         tree = os.path.join(S, "tree")
+         os.makedirs(tree)
+-        with tarfile.open(fileobj=io.BytesIO(arc)) as tf:
+-            tf.extractall(tree, filter=lambda m, dest: None if (m.issym() or m.islnk())
+-                          else tarfile.data_filter(m, dest))
++        try:
++            with tarfile.open(fileobj=io.BytesIO(arc)) as tf:
++                names = {m.name for m in tf.getmembers() if m.isfile()}
++                want = set()
++                for _rec in git(a.repo, "ls-tree", "-r", "-z", "--full-tree", tip) \
++                        .stdout.decode("utf-8", "replace").split("\0"):
++                    if _rec and _rec.split(" ", 1)[0] in ("100644", "100755"):
++                        want.add(_rec.split("\t", 1)[1])
++                if not want <= names:
++                    print(f"could-not-evaluate: the archived tree lacks {len(want - names)} of the "
++                          f"{len(want)} paths at {tip}; an attribute file or a config channel "
++                          "changed `git archive`")
++                    return 2
++                tf.extractall(tree, filter=lambda m, dest: None if (m.issym() or m.islnk())
++                              else tarfile.data_filter(m, dest))
++        except tarfile.TarError as exc:
++            print(f"could-not-evaluate: the archived tree is unreadable: {exc}")
++            return 2
++        for _p in (REPLAY, "corpus/SOURCES.md") + RECEIPTS:
++            _want = git(a.repo, "show", f"{tip}:{_p}", check=False)
++            try:
++                with open(os.path.join(tree, _p), "rb") as _fh:
++                    _got = _fh.read()
++            except OSError:
++                _got = None
++            if _want.returncode != 0 or _got != _want.stdout:
++                print(f"could-not-evaluate: {_p} extracted from the archive is not the blob at {tip}")
++                return 2
+         model = os.path.join(S, "counter-model.gguf")
+         vocab = None
+         try:

@@ -1,0 +1,18 @@
+--- a/tools/round54-replay-code-audit.py
++++ b/tools/round54-replay-code-audit.py
+@@ -880,6 +880,15 @@
+     ap.add_argument("--scratch", default=None, help="scratch dir (default: TMPDIR)")
+     ap.add_argument("--out", default=None, help="also write the receipt here")
+     a = ap.parse_args(argv)
++    try:
++        with open("/proc/sys/kernel/yama/ptrace_scope") as fh:
++            scope = int(fh.read().strip())
++    except (OSError, ValueError):
++        scope = 0
++    if scope > 1:
++        print(f"could-not-evaluate: Yama ptrace_scope {scope} (need 0 or 1); the counter "
++              "cannot read its descendants' environ/exe/maps/mem")
++        return 2
+     if a.out:
+         os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
+     root = a.scratch or tempfile.gettempdir()

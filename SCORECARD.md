@@ -15,7 +15,7 @@ Round 43 re-anchors the `SKILL.md` and `PROVINCE.md` hashes after the round-43 e
 | **freshness** | **8** | snapshot/diff harness `tools/test-snapshot.sh` sha256 `236c23c12964cf0b2f0a2f970187e216d3398dcf2b92ffb7e8606e0fdd029646` (194 lines); run `python3 tools/citation-provenance.py --selftest` → `selftest: ok (24 cases)`; live drift evidence `.ufo/waves/round-41/c2/ls-remote-vllm.txt` sha256 `13388e483163357aa4daea784d0e67cdc8d6b5438d3166d613a2a044590b9282`; run `python3 -c "recheck=[l.split(chr(124))[10].strip() for l in open('corpus/SOURCES.md') if l.startswith(chr(124)+' S') and int(l.split(chr(124))[1].strip()[1:])<=477];print(sum(1 for r in recheck if r))"` → `218` (registry rows S001–S477 carrying a recheck cadence). Limit: snapshots are invocation-driven (no clock), and source rechecks run on each row's `recheck` cadence; release re-verification ledger `registry/release-recheck-b11889.tsv`: the 91 `on-release` registry rows pinned to a llama.cpp commit re-verified at release b11889 (counter `tools/round44-release-recheck-audit.py`, §Round-44 measured results: 82 holds, 3 holds-reworded, 6 unchanged-file, 0 drifted, 0 removed) | score round 10; evidence re-anchored round 44 |
 | depth | **7** | `SKILL.md` sha256 `7f454761a058b59c90aa470c83337ebedb0d9e74381b1edee5c2dd8bc92ebaef` (1600 lines); run `grep -c '^## ' SKILL.md` → `42`; `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 54 |
 | coverage | **9** | surface list `PROVINCE.md` sha256 `aa7915a8590d9180ac559864897679ecb532a3c5b6595f58a4d19a5491e5d67d` (186 lines); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f and 'processes' not in f]))"` → `34` (knowledge entries held before rounds 42 and 43); held ground includes `corpus/knowledge/endpoint-health-probe-conventions.md`, `corpus/knowledge/kv-cache-reclamation-models.md`, `corpus/knowledge/serving-alias-contract.md` | score round 10; evidence re-anchored round 48 |
-| calibration | **7** | run `python3 tools/capability-repertoire-audit.py --selftest` → `CAP_SELFTEST pass=2 fail=0`; run `python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"` → `40` (outside closures on record); that figure is the number of `corpus/lessons/*verifier-spotcheck.md` blobs at the measured commit; run `python3 tools/instrument-agreement.py --selftest` → `IA_SELFTEST pass=4 fail=0`; this table's counters `tools/round41-scorecard-reconcile.py` and `tools/round42-selfdesc-reconcile.py`; latest outside closure `corpus/lessons/round-53-verifier-spotcheck.md` (rejected; re-anchored round 54); trend-verdict ledger `registry/verdict-ledger.tsv` (204 rows, self against outside for rounds 10–43: `agreement=69/87 overclaim=2 underclaim=16 other=0 absent=15`, §Round-44 calibration ledger); claim-outcome ledger `registry/claim-outcome-ledger.tsv` (126 rows, the 63 claims of rounds 10–44, self against outside: `agreement=58/61 overclaim=1 underclaim=2 other=1 absent=1`, §Round-45 claim-outcome ledger) | score round 1; evidence re-anchored round 53 |
+| calibration | **7** | run `python3 tools/capability-repertoire-audit.py --selftest` → `CAP_SELFTEST pass=2 fail=0`; run `python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"` → `41` (outside closures on record); that figure is the number of `corpus/lessons/*verifier-spotcheck.md` blobs at the measured commit; run `python3 tools/instrument-agreement.py --selftest` → `IA_SELFTEST pass=4 fail=0`; this table's counters `tools/round41-scorecard-reconcile.py` and `tools/round42-selfdesc-reconcile.py`; latest outside closure `corpus/lessons/round-53-verifier-spotcheck.md` (rejected; re-anchored round 54); trend-verdict ledger `registry/verdict-ledger.tsv` (204 rows, self against outside for rounds 10–43: `agreement=69/87 overclaim=2 underclaim=16 other=0 absent=15`, §Round-44 calibration ledger); claim-outcome ledger `registry/claim-outcome-ledger.tsv` (126 rows, the 63 claims of rounds 10–44, self against outside: `agreement=58/61 overclaim=1 underclaim=2 other=1 absent=1`, §Round-45 claim-outcome ledger) | score round 1; evidence re-anchored round 53 |
 | adjacency | **7** | `corpus/knowledge/cross-lane-scope.md` sha256 `1801cb7fa45ef6f56ff96cb67c7840256fcffce000a56067cd8133797b9728a9` (87 lines); run `python3 -c "print(sum(1 for l in open('corpus/knowledge/cross-lane-scope.md') if l.startswith(chr(124))))"` → `16` (lines starting with a table pipe, header and separator lines included); contested scope stays reported, not absorbed (`PROVINCE.md` paragraph "Out of province → report, never absorb") | score round 1; evidence re-anchored round 42 |
 
 ### Historical axes table (round-3 assessment; superseded in round 41)
@@ -50,7 +50,7 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 ## Planned
 
-Superseded in round 42. The live plan is `### Planned (round 54)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
+Superseded in round 42. The live plan is `### Planned (round 55)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
 
 ## Retired
 
@@ -3051,3 +3051,67 @@ Scores remain 8/7; capabilities remain 11. No measured axis score delta is claim
 2. Calibration: do not reuse round-53 C2 as an admission gate without first replacing its frozen weaknesses in a new preregistered counter: guard citation drops across all registered surfaces, validate upstream bytes against a pinned digest, validate ledger reasons/notes, make fixture Git environment hermetic, and attack scorecard/skill hiding controls before data.
 
 Assimilation: none from shokuknow (`A1Assim`). One considerthese proposal mined: `considerthese/2026-10-26.md` proposal 2 is captured in `corpus/QUALITY.md` KQ97; this is a curation criterion, not a new round-53 claim.
+
+## Round 55 — the round-54 counters frozen, measured and battery-killed (2026-10-27)
+
+Authority: `shokunin.conf` assigns operability + calibration; calibration 7 is the lowest
+assigned axis (depth and adjacency also 7), below the saturation line 8; the stagnation
+nudge is inactive. Base `3a600d2f729828419aaea34cc402c8b0d20fb720` (round-54 tip);
+freeze `9c60eae6f7ed84f7da93d219a406aadc30958c6c`; wave `kama-r55-w1` (one v2 wave,
+64 seats, 44 settled at the integration commit; the wave was still settling at wrap-up
+- see the round report). Frozen predicates, counter sha256s and kill rules:
+`.ufo/waves/round-55/preregistration.json`.
+
+| Claim | Axis, score | Before → after (measured) | Counting command | Evidence |
+|---|---|---|---|---|
+| C1 — the round-54 replay-code counter frozen for round 55 (BASE re-frozen to the round-54 tip, newrow row re-pointed at S511, every git call `GIT_*`-stripped) | operability 8 → 8 | base `bind=1 sealed=1 code=1 teardown=1 newrow=0 ... met=False` (exit 1) → build `bind=1 sealed=1 code=1 teardown=1 newrow=1 bound=3/3 sealedruns=3/3 coderuns=3/3 envnames=3/3 hostlibs=3/3 anon=0 twopass=3/3 rehash=0 met=True` (exit 0); kill battery: control green; m-ldpreload kills envnames; m-text-flip kills code; m-member-flip kills rehash; m-ldaudit-foreign vector analysis (`met=True` by design) | `python3 tools/round54-replay-code-audit.py --repo <clone> --tip <full commit> --scratch <dir> --out <receipt>` | `.ufo/waves/round-55/controls/base.c1.out`, `measured/c1-build.out`, `c1/battery/*.out`; independently reproduced by seats X1Rerun, X7, K1DoNothing |
+| C2 — the round-54 cited-path counter frozen with the `superseded` ledger class + fixture scenario (BASE stays at the round-53 tip so the drop horizon covers the round-54 re-anchor; the pre-freeze do-nothing catch reverted a same-tip BASE) | calibration 7 → 7 | base `fixture=1 lane=0 scenarios=15/15 dropped=1 met=False` (exit 1) → build `fixture=1 lane=1 scenarios=15/15 undisclosed=0 bad=0 stale=0 dropped=0 met=True` (exit 0) | `python3 tools/round54-cited-path-check.py --repo <clone> --tip <full commit> --scratch <dir> --out <receipt>` | `.ufo/waves/round-55/controls/base.c2.out`, `measured/c2-build.out`; reproduced by seats X2C2Rerun, X6C2Smoke, K1DoNothing |
+
+Scores remain 8/7; no capability enters (both counters were already registered as
+round-54 instruments; round 55 freezes and measures them).
+
+### Kill-rule disposition (round 55)
+
+The frozen C1 kill rule ("falsified if any battery mutant prints met=True") fires on
+its literal text: the bring-up-redesigned battery (committed `8abadfed`) contains the
+vector-analysis receipt `m-ldaudit-foreign.out` (`met=True` by design) and the roster
+diverged from the preregistration's named mutants (`m-ldaudit-writable` replaced by
+`m-text-flip`; two stale first-run receipts deleted at integration, named in the
+lesson). The three kill-designated mutants each print `met=False` with their named leg
+failing; seats Rev1/L1Probe grounded the hostlibs vector (a conforming audit module IS
+loaded by glibc; the live hostlibs kill stays root-gated) and Rev1 demonstrated the
+anon leg killing an in-set-basename plant (`anon=6`). Reported honestly: C1 measured
+green on predicate and target; the kill rule as frozen fired; the closure rules.
+C2's kill rule is discharged (base red, build green, 15/15 fixture, forged-superseded
+mutants killed by seat M3LedgerMut 5/5).
+
+### What `met=True` does not show (round 55)
+
+C1: host libraries bound by basename, not bytes (a root-owned in-set-basename plant
+survives - seat Rev1 D3; LD_AUDIT is not a named BAD_ENV; the host count is printed,
+not asserted); model/data mappings uncompared; the sampling window (two passes + a
+post-exit re-hash); under Yama ptrace_scope > 1 the counter exits 1 instead of
+could-not-evaluate (seat Sen2); `git archive` honors tree and global `export-ignore`
+attributes, which fails the counter closed with no receipt (seat Rev2); inherited
+user gitconfig/`XDG_CONFIG_HOME` still reaches every git call - a malformed config
+crashes C2's moved branch with no receipt (seat Sec1). C2: existence/disposition, not
+truth; upstream rows validate bytes at the pinned commit, not content; prose root
+tokens advisory; the `superseded` branch checks cited-at-base, not resolved-at-base
+(seats K2Predicate/K4Sizing - next-freeze wording); the round-53 `untracked`-row
+present-disk-state/no-history limit remains open (seat Rev4 D1).
+
+### Planned (round 55)
+
+1. Operability: close the root-owned host-library route with byte-provenance (e.g.
+   package-owner binding) and assert the host count; name LD_AUDIT in BAD_ENV; make
+   the counters' git environment fully config-hermetic (the C2 fixture's own
+   `GIT_CONFIG_GLOBAL=/dev/null` + `GIT_CONFIG_NOSYSTEM=1` pair) and pin
+   `--worktree-attributes`-free archive extraction.
+2. Calibration: re-freeze the C1 battery roster with the preregistration (kill-designated
+   mutants only, vector analyses named as controls); adopt the KQ98 criterion proposal
+   (seat Sc4Quality) once the outside closure agrees the classification.
+
+Integration repairs (wave seats, inherited from base `3a600d2f`): SCORECARD calibration
+run-fact 40→41 (seat X8Regression; the round-54 closure's own spotcheck file is the
+41st); hexrun-ledger row + evidence for fleet commit `e2e2d10f`. Census: start exit 1
+(E11 S510) → end exit 0 (receipts `.ufo/waves/round-55/census/{start,end}.out`).

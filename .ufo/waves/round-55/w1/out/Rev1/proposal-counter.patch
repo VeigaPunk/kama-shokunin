@@ -1,0 +1,35 @@
+NOT APPLIED. Proposal for a round-56 preregistered counter (the round-55 counter at
+9c60eae, sha256 c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af, is
+frozen and must not be edited). Diff against tools/round54-replay-code-audit.py at
+9c60eae6f7ed84f7da93d219a406aadc30958c6c.
+
+Two changes, each demonstrated to fire on the evidence in this seat's report:
+
+1. LD_AUDIT joins BAD_ENV. Safe for the honest build: its server environment is 5
+   names (PATH HOME LANG LC_ALL TMPDIR - base.c1.out detail lines), no LD_AUDIT.
+   This kills the end-to-end fixture in ./fixture.patch (met=True today) at the
+   envnames leg.
+2. The host set is asserted to be exactly the frozen 13 basenames at 13 distinct
+   paths, not merely a subset. The honest build maps exactly 13 host files
+   (base.c1.out / c1-build.out detail: "13 root-owned host files"), so the equality
+   holds there; a root-owned foreign file with an in-set basename - the +1 that
+   K1Cheat counted as benign - now fails the hostlibs leg. Without this, the
+   ./fixture.patch plant passes with 14 host files and met=True.
+
+--- a/tools/round54-replay-code-audit.py
++++ b/tools/round54-replay-code-audit.py
+@@ -144,7 +144,7 @@
+ KERNEL_MAPS = ("[vdso]", "[vsyscall]", "[vvar]", "[vvar_vclock]", "[vvar_boot", "[uprobes]")
+ ROW_CAP = 64 << 20  # a single maps row is read at most 64 MiB (Sen1Mem F3)
+-BAD_ENV = ("LD_PRELOAD", "DYLD_INSERT_LIBRARIES")
++BAD_ENV = ("LD_PRELOAD", "LD_AUDIT", "DYLD_INSERT_LIBRARIES")
+@@ -566,6 +566,9 @@
+                 host.add(path)
+     finally:
+         os.close(mem)
++    if len(host) != len(HOST_LIBS) or {os.path.basename(p) for p in host} != set(HOST_LIBS):
++        probs.append(f"code: host library set {sorted(os.path.basename(p) for p in host)} "
++                     f"({len(host)} paths) is not the frozen {len(HOST_LIBS)}-name set")
+     names = [os.path.basename(m) for _d, _i, m in seen.values()]
+     for pat in REQUIRED:
+         if not any(fnmatch.fnmatchcase(n, pat) for n in names):

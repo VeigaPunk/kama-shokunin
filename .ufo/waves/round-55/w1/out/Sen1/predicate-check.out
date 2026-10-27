@@ -1,0 +1,12 @@
+patched predicate on the shipped receipts (rc=1 for every met=False receipt):
+  m-ldpreload     leg=envnames  -> ok
+  m-text-flip     leg=code      -> ok
+  m-member-flip   leg=rehash    -> ok
+patched predicate under the PREREGISTRATION's mutant list (controls.c1_kill_battery):
+  m-ldpreload        leg=envnames  met=False exit=derived 1 -> ok
+  m-ldaudit-writable leg=code      met=True exit=0 -> BATTERY-FAIL
+  m-ldaudit-foreign  leg=hostlibs  met=True exit=0 -> BATTERY-FAIL
+  m-member-flip      leg=rehash    met=False exit=derived 1 -> ok
+mislabel regression (the shipped harness says ok; the patched one must not):
+  m-member-flip   mislabelled leg=code    -> BATTERY-FAIL
+  m-text-flip     mislabelled leg=rehash  -> ok

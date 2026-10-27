@@ -1,0 +1,30 @@
+--- a/.ufo/waves/round-55/c1/battery/run-battery.py	2026-10-27 10:59:02.545985114 -0300
++++ b/.ufo/waves/round-55/c1/battery/run-battery.py	2026-10-27 10:59:02.552387267 -0300
+@@ -104,7 +104,16 @@
+     summary = []
+ 
+     def counter(tip, name):
++        # KQ98 (round 55): never overwrite a previous attempt. The first-run
++        # m-member-flip receipt - the only artifact of the delayed-flip race - was
++        # lost this way, leaving the lesson recorded only in this file's comment.
++        # First run keeps `{name}.out` so the committed receipts stay valid; a rerun
++        # lands as `{name}.2.out`, `{name}.3.out`.
+         outp = os.path.join(OUT, f"{name}.out")
++        n = 1
++        while os.path.exists(outp):
++            n += 1
++            outp = os.path.join(OUT, f"{name}.{n}.out")
+         p = run([sys.executable, COUNTER, "--repo", clone, "--tip", tip,
+                  "--scratch", os.path.join(SCRATCH, f"run-{name}"), "--out", outp], env=env)
+         text = open(outp).read() if os.path.isfile(outp) else p.stdout
+@@ -115,6 +124,10 @@
+     rc, met, _ = counter(FREEZE, "control")
+     summary.append(("control", "all legs", "kill", rc, met, rc == 0 and met))
+ 
++    # KQ99 (round 55): `kind == "vector"` receipts must pass; the summary line
++    # already prints `kind=vector`, so a later reader must not grade them as named
++    # mutants. (The frozen preregistration's mutant list cannot be amended here -
++    # reported, not fixed.)
+     for name, (leg, kind, old, new) in MUTANTS.items():
+         # reset the clone to the freeze tip and apply exactly one mutant
+         run(["git", "-C", clone, "reset", "--hard", FREEZE], env=env)

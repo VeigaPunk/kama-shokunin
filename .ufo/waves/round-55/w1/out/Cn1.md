@@ -1,0 +1,19 @@
+Verdict: Cross-claim separability is supported by the two requested reversal measurements; the shared ledger mutation has no effect on C1, and removing S511 has no effect on C2. No shared mutable runtime state coupling was observed.
+
+Axes: operability (C1, held green); calibration (C2, held green). No axis improvement is claimed; this is verification of independence, not a score change.
+
+Evidence
+
+- Frozen specification: `.ufo/waves/round-55/preregistration.json:9-10` declares C1 consumes S511/SOURCES and C2 consumes the cited-path ledger and three citation surfaces; it says either can be measured with the other reverted. Claims and kill rules are at lines 11-34.
+- Clone: `git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin /fast/scratch/hyaku/kama-r55/w1/Cn1/lane`; `git -C .../lane rev-parse --show-toplevel` printed `/fast/scratch/hyaku/kama-r55/w1/Cn1/lane`; target tip resolved to `9c60eae6f7ed84f7da93d219a406aadc30958c6c`. No fixture commit or lane mutation was used.
+- C2 build delta reverted in clone: removed the `superseded` row `SCORECARD.md\tcorpus/lessons/round-52-verifier-spotcheck.md\tsuperseded\t...` from the clone's `registry/cited-path-corrections.tsv` (tip row is the only such data row; comment text also says superseded). Ran `python3 .../tools/round54-replay-code-audit.py --repo "$S/lane" --tip 9c60eae6f7ed84f7da93d219a406aadc30958c6c --scratch "$S/c1-c2-reverted" --out "$S/c1-reverted-c2.out"`: exit 0, `bind=1 sealed=1 code=1 teardown=1 newrow=1 ... met=True`; newrow detail found S511. Thus C1 remains green with C2's operative ledger delta reverted.
+- C1 S511 delta reverted in clone: removed S511 row from clone `corpus/SOURCES.md`, leaving the C2 ledger restored. Ran `python3 .../tools/round54-cited-path-check.py --repo "$S/lane" --tip 9c60eae6f7ed84f7da93d219a406aadc30958c6c --scratch "$S/c2-c1-reverted" --out "$S/c2-reverted-c1.out"`: exit 0, `fixture=1 lane=1 scenarios=15/15 cited=693 unresolved=14 disclosed=14 undisclosed=0 bad=0 stale=0 dropped=0 met=True`. Thus C2 remains green with S511 removed.
+- Static cross-surface: C1 newrow reads only `corpus/SOURCES.md` and base diff (`round54-replay-code-audit.py:863-873`); C2 uses SCORECARD/SHONEN/SKILL, ledger and history (`round54-cited-path-check.py:159-167,610-669`). C2's S510 reference in preregistration is S510's used-by re-point, not C2's source-row counter dependency. Both counters independently define `clean_env` and route their Git calls through it (`round54-replay-code-audit.py:163-179`; `round54-cited-path-check.py:198-211`), but neither writes repository state through that helper. C1 starts/reaps its own loopback replay processes; C2's fixture uses scratch repositories (`round54-cited-path-check.py:672-815`). The shared waves directory is only a path namespace for receipts/scratch arguments; no common mutable receipt or process state was observed.
+
+Contradictions / limits
+
+- The spec says C2 touches no C1 path, yet its frozen `counter_base` is round-53 tip and it scans lane history, which necessarily includes history across C1-related commits; this is a shared read dependency, not a mutable data dependency. The target-tip measurement survived S511 removal, so no observed coupling.
+- C1 does not consult the C2 ledger at all, while the C2 count does depend on its ledger for drop exemptions (`round54-cited-path-check.py:643-656`). Reverting only the superseded row still left C1 green; the C2 build itself was intentionally not expected green in that condition and was not separately measured.
+- This pair checks the declared deltas, not every possible future shared-file mutation. Counters read frozen tip content and invoke network/runtime operations; host/network variation remains a measurement risk.
+
+Verification: exactly the two commands above, both exit 0. No tools installed. No proposed fix: no defect observed.

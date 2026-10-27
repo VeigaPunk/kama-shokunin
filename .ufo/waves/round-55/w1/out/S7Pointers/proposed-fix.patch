@@ -1,0 +1,48 @@
+# Proposed fix for the battery-composition mismatch (defect report S7Pointers).
+# NOT applied — lane is frozen/read-only for this seat. Two parts:
+# (1) lesson disclosure row; (2) evidence-dir hygiene for the two stale met=True receipts.
+
+--- a/corpus/lessons/round-55.md
++++ b/corpus/lessons/round-55.md
+@@ Mistakes section, after the "vacuous — a counter/target a do-nothing control can reach" row
++- **class: disclosure — a kill battery whose landed composition diverges from the
++  frozen preregistration's named mutants, with stale receipts left in the evidence
++  dir.**
++  Evidence: the frozen preregistration names four battery mutants
++  (`.ufo/waves/round-55/preregistration.json` c1_kill_battery.mutants):
++  m-ldpreload (envnames leg), m-ldaudit-writable (code leg), m-ldaudit-foreign
++  (hostlibs leg), m-member-flip (rehash leg). The landed battery
++  (`.ufo/waves/round-55/c1/battery/`, committed 8abadfed) is driven by
++  run-battery.py whose MUTANTS dict is {m-ldpreload, m-text-flip, m-ldaudit-foreign
++  (vector), m-member-flip}: the code-leg kill mutant is m-text-flip, which the
++  preregistration never names; the prereg-named m-ldaudit-writable receipt in the
++  same dir is stale (fixture tip 23dc15da, first battery composition) and prints
++  met=True; m-extra-in-tree.out (fixture tip 312530a9, also first composition,
++  named nowhere) also prints met=True. Under the frozen kill rule "the claim is
++  falsified if ... any battery mutant prints met=True" a literal scorer reads C1
++  as falsified by two receipts sitting in the committed evidence dir.
++  Captured-by: none — the w1 commit message ("3 live kills + 1 vector analysis")
++  records the landed intent, but no instrument binds the frozen preregistration's
++  named-mutant list to the evidence dir's file set.
++  Fix: this disclosure row names the swap old→new (m-ldaudit-writable →
++  m-text-flip for the code leg) like the C2 BASE revert above (KQ26 — named, not
++  erased); the two first-composition receipts move to
++  `.ufo/waves/round-55/c1/battery/first-composition/` with a one-line README;
++  run-battery.py's header states the frozen named list and the disposition of
++  each file in the dir (kill / vector / superseded-first-composition), so the
++  preregistration's "each named mutant receipt prints met=False" reads against
++  the kill subset only, with m-ldaudit-foreign named as the vector analysis the
++  assignment text already records.
+
+# Part 2 — evidence-dir hygiene (shell sketch, to run by the lane owner):
+#   mkdir -p .ufo/waves/round-55/c1/battery/first-composition
+#   git mv .ufo/waves/round-55/c1/battery/m-ldaudit-writable.out \
+#          .ufo/waves/round-55/c1/battery/first-composition/
+#   git mv .ufo/waves/round-55/c1/battery/m-extra-in-tree.out \
+#          .ufo/waves/round-55/c1/battery/first-composition/
+#   printf '%s\n' 'First kill-battery composition (pre-landing). m-ldaudit-writable' \
+#     'was the prereg-named code-leg mutant; its mutant did not kill (met=True),' \
+#     'so the code leg was re-run as m-text-flip. m-extra-in-tree probed the' \
+#     'in-tree backend scan (dlcloses; not a kill). Both receipts are kept per' \
+#     'KQ26, named, not erased.' \
+#     > .ufo/waves/round-55/c1/battery/first-composition/README.md

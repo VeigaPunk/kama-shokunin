@@ -1,0 +1,15 @@
+--- a/.ufo/waves/round-55/build_spec.py
++++ b/.ufo/waves/round-55/build_spec.py
+@@ -10,4 +10,5 @@
+ BASE = "3a600d2f729828419aaea34cc402c8b0d20fb720"
+ FREEZE = "9c60eae6f7ed84f7da93d219a406aadc30958c6c"
++EVIDENCE_COMMIT = "8abadfed"  # lane commit carrying .ufo/waves/round-55/measured/ and c1/battery/; set before rebuilding
+ SCR = "/fast/scratch/hyaku/kama-r55"
+ C1CTR = f"{L}/tools/round54-replay-code-audit.py"
+@@ -22,5 +23,5 @@
+ 
+ CONTEXT = f"""# Goal
+-Round 55 for lane kama (local model serving and endpoint health). One v2 wave (attack + verification together); the build already landed at lane commit {FREEZE} (preregistration {PR} - claims, predicates, kill rules, counter sha256s). Base {BASE} (round-54 lane tip). Two claims, frozen before data:
++Round 55 for lane kama (local model serving and endpoint health). One v2 wave (attack + verification together); the freeze landed at lane commit {FREEZE} (preregistration {PR} - claims, predicates, kill rules, counter sha256s); the measurement and battery receipts named below landed one commit later, in {EVIDENCE_COMMIT}, and do not resolve at {FREEZE}. Base {BASE} (round-54 lane tip). Two claims, frozen before data:
+ - C1 operability 8->8: {C1CTR} - the round-54 replay-code counter re-frozen for round 55 (BASE re-frozen to the round-54 tip; newrow source row re-pointed at S511; every git call runs with inherited GIT_* stripped). Predicate, target and kill rule: {PR}. Base control {W}/controls/base.c1.out (newrow=0 met=False exit 1); build measurement {MEAS}/c1-build.out (met=True exit 0); kill battery {BAT}/ (control + m-ldpreload/envnames + m-text-flip/code + m-member-flip/rehash + m-ldaudit-foreign vector analysis).
+ - C2 calibration 7->7: {C2CTR} - the round-54 cited-path counter frozen with the new `superseded` ledger class (a live base citation re-pointed to a cited, resolving replacement) plus its fixture scenario; BASE deliberately stays at the round-53 tip 0b75a84c (the drop horizon must include the round-54 re-anchor - a same-tip base let the do-nothing control pass, which the pre-freeze check caught). Base control {W}/controls/base.c2.out (dropped=1 met=False exit 1); build measurement {MEAS}/c2-build.out (fixture=1 lane=1 scenarios=15/15 dropped=0 met=True exit 0).

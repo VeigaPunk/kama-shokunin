@@ -1,0 +1,15 @@
+--- a/.ufo/waves/round-55/c1/battery/run-battery.py
++++ b/.ufo/waves/round-55/c1/battery/run-battery.py
+@@ -143,8 +143,12 @@
+         summary.append((name, leg, kind, rc, met, ok))
+ 
++    summary_lines = []
+     for name, leg, kind, rc, met, ok in summary:
+-        print(f"battery {name}: leg={leg} kind={kind} exit={rc} met={met} -> {'ok' if ok else 'BATTERY-FAIL'}")
++        line = f"battery {name}: leg={leg} kind={kind} exit={rc} met={met} -> {'ok' if ok else 'BATTERY-FAIL'}"
++        print(line)
++        summary_lines.append(line)
++    open(os.path.join(OUT, "summary.out"), "w").write("\n".join(summary_lines) + "\n")
+     shutil.rmtree(SCRATCH, ignore_errors=True)
+     return 0 if all(s[5] for s in summary) else 1
+ 

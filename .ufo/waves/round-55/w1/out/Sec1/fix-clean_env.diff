@@ -1,0 +1,36 @@
+diff --git a/tools/round54-cited-path-check.py b/tools/round54-cited-path-check.py
+index e1c5b684..136c5100 100755
+--- a/tools/round54-cited-path-check.py
++++ b/tools/round54-cited-path-check.py
+@@ -200,6 +200,13 @@ def clean_env(extra=None):
+     (Sen4Fixture: GIT_DIR redirected the fixture into a foreign repository,
+     GIT_CONFIG_COUNT reached core.hooksPath and executed an attacker hook)."""
+     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
++    # The user-scope config search is not driven by GIT_*: an inherited HOME
++    # (~/.gitconfig) or XDG_CONFIG_HOME ($XDG_CONFIG_HOME/git/config) is read on
++    # every call, so ambient config can rewrite `git log --format=%H`
++    # (i18n.logOutputEncoding) or fail every call outright (bad config line ->
++    # could-not-evaluate). Closed the same way the fixture already closes it.
++    env["GIT_CONFIG_GLOBAL"] = os.devnull
++    env["GIT_CONFIG_NOSYSTEM"] = "1"
+     env.update(extra or {})
+     return env
+ 
+diff --git a/tools/round54-replay-code-audit.py b/tools/round54-replay-code-audit.py
+index e3cfc996..85a70bcc 100755
+--- a/tools/round54-replay-code-audit.py
++++ b/tools/round54-replay-code-audit.py
+@@ -168,6 +168,13 @@ def clean_env(extra=None):
+     C2 counter; grounded by S510 (git(1) env vars) and S511 (git-config(1)
+     GIT_CONFIG_COUNT)."""
+     env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
++    # The user-scope config search is not driven by GIT_*: an inherited HOME
++    # (~/.gitconfig) or XDG_CONFIG_HOME ($XDG_CONFIG_HOME/git/config) is read on
++    # every call, so ambient config can rewrite `git log --format=%H`
++    # (i18n.logOutputEncoding) or fail every call outright (bad config line ->
++    # could-not-evaluate). Closed the same way the C2 fixture already closes it.
++    env["GIT_CONFIG_GLOBAL"] = os.devnull
++    env["GIT_CONFIG_NOSYSTEM"] = "1"
+     env.update(extra or {})
+     return env
+ 

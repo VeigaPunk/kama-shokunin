@@ -1,0 +1,32 @@
+# KQ99 empirical probe: does a void LD_AUDIT vector ever reach the child?
+# host: Linux 7.2.11-arch1-1 x86_64
+# libc: ldd (GNU libc) 2.44
+# cwd: /fast/scratch/hyaku/kama-r55/w1/Sc4Quality (scratch; removed after the seat)
+# command: python3 probe.py
+
+case: control (no env vector)
+  pid=2766191 target=libnonaudit.so mapped_rows=0
+
+case: LD_PRELOAD=libnonaudit.so
+  pid=2769916 target=libnonaudit.so mapped_rows=5
+    7f56406b5000-7f56406b6000 r--p 00000000 103:05 738246812                 /fast/scratch/hyaku/kama-r55/w1/Sc4Quality/libnonaudit.so
+    7f56406b6000-7f56406b7000 r-xp 00001000 103:05 738246812                 /fast/scratch/hyaku/kama-r55/w1/Sc4Quality/libnonaudit.so
+    7f56406b7000-7f56406b8000 r--p 00002000 103:05 738246812                 /fast/scratch/hyaku/kama-r55/w1/Sc4Quality/libnonaudit.so
+
+case: LD_AUDIT=libnonaudit.so (no la_version)
+  pid=2773885 target=libnonaudit.so mapped_rows=0
+  child stderr: ERROR: ld.so: object '/fast/scratch/hyaku/kama-r55/w1/Sc4Quality/libnonaudit.so' cannot be loaded as audit interface: undefined symbol: la_version; ignored.
+
+case: LD_AUDIT=libaudit.so (exports la_version)
+  pid=2777811 target=libaudit.so mapped_rows=5
+    7ff1fb662000-7ff1fb663000 r--p 00000000 103:05 738246813                 /fast/scratch/hyaku/kama-r55/w1/Sc4Quality/libaudit.so
+    7ff1fb663000-7ff1fb664000 r-xp 00001000 103:05 738246813                 /fast/scratch/hyaku/kama-r55/w1/Sc4Quality/libaudit.so
+    7ff1fb664000-7ff1fb665000 r--p 00002000 103:05 738246813                 /fast/scratch/hyaku/kama-r55/w1/Sc4Quality/libaudit.so
+
+probe exit=0
+
+# conclusion: glibc 2.44 refuses LD_AUDIT for a DSO without la_version
+# ('cannot be loaded as audit interface: undefined symbol: la_version; ignored')
+# and maps an audit-capable DSO; LD_PRELOAD maps the same DSO. A battery
+# mutant that only sets LD_AUDIT to a non-audit DSO loads nothing and cannot
+# kill any leg.

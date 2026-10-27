@@ -1,0 +1,70 @@
+X1Rerun - C1 field-by-field comparison, round-55 lane kama
+=====================================================================
+Receipts compared (all produced by the frozen counter
+/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round54-replay-code-audit.py,
+sha256 c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af):
+
+  MINE-BUILD  .ufo/waves/round-55/w1/out/X1Rerun/c1-build.out   (my clone, tip 9c60eae6, exit 0)
+  MINE-BASE   .ufo/waves/round-55/w1/out/X1Rerun/c1-base.out    (my clone, tip 3a600d2f, exit 1)
+  LANE-BUILD  .ufo/waves/round-55/measured/c1-build.out         (lane receipt)
+  LANE-BASE   .ufo/waves/round-55/controls/base.c1.out          (lane receipt)
+
+MUST-AGREE FIELDS (verbatim, all four receipts identical)
+---------------------------------------------------------
+leg line (MINE-BUILD == LANE-BUILD):
+  bind=1 sealed=1 code=1 teardown=1 newrow=1 bound=3/3 sealedruns=3/3 coderuns=3/3
+  envnames=3/3 hostlibs=3/3 anon=0 twopass=3/3 rehash=0 met=True
+leg line (MINE-BASE == LANE-BASE):
+  bind=1 sealed=1 code=1 teardown=1 newrow=0 bound=3/3 sealedruns=3/3 coderuns=3/3
+  envnames=3/3 hostlibs=3/3 anon=0 twopass=3/3 rehash=0 met=False
+
+8 archive library names (own_code), identical in all four receipts:
+  libggml-base.so.0.27.0, libggml-cpu-zen4.so, libggml-rpc.so, libggml.so.0.27.0,
+  libllama-common.so.0.7.0, libllama-server-impl.so, libllama.so.0.7.0, libmtmd.so.0.7.0
+
+range counts, identical in all four receipts (code b1/b2/b3):
+  "8 archive files (16 executable ranges) byte-equal in /proc/<pid>/mem to the
+   counter's own archive, 13 root-owned host files"
+  -> 8 archive files, 16 executable ranges, 13 root-owned host files
+
+host count: 13 root-owned host files in every code detail line of every receipt.
+  Independent check of the frozen 13-name HOST_LIBS set on this host:
+  all 13 basenames resolve to /usr/lib/<name> with owner=root:
+    ld-linux-x86-64.so.2, libbrotlicommon.so.1.2.0, libbrotlidec.so.1.2.0,
+    libbrotlienc.so.1.2.0, libcrypto.so.3, libc.so.6, libgcc_s.so.1, libgomp.so.1.0.0,
+    libm.so.6, libssl.so.3, libstdc++.so.6.0.36, libz.so.1.3.2, libzstd.so.1.5.7
+
+other must-agree detail lines (1 entry each, byte-identical after normalising
+pids/ports/inodes/nonces/seal-dev):
+  counter vocabulary: 512 tokens from its own download
+  counter archive: its own download, read once, frozen digest
+  envnames b1/b2/b3: 5 environment variable names recorded, none of
+                     LD_PRELOAD/DYLD_INSERT_LIBRARIES
+  twopass b1/b2/b3: both observation passes byte-identical over 16 range reads
+  rehash b1/b2/b3: 8 observed archive paths re-stat'ed and re-hashed after the
+                   replay exited, inode and digest unchanged
+  teardown: invoker SIGKILLed with 3 descendants; after 0.10 s alive [] port refuses ok
+  newrow (build): 2 rows new since base; 1 name the git environment doc: ['| S511 |']
+  newrow (base):  0 rows new since base; 0 name the git environment doc: []
+
+MAY-DIFFER FIELDS (by design; differ in every run)
+---------------------------------------------------
+  bind bN:   pid <N>, port <N>, mapping inode <N>, nonce '<random hex>'
+  sealed bN: memfd dev:inode 00:01:<N> (seals 15 in every receipt)
+
+RAW diff result (unnormalised)
+------------------------------
+  MINE-BUILD vs LANE-BUILD : 3 changed line pairs, all of them the bind/sealed
+                              pid/port/inode/nonce/memfd-inode lines. Nothing else.
+  MINE-BASE  vs LANE-BASE  : 3 changed line pairs, same reason. Nothing else.
+  MINE-BUILD vs MINE-BUILD-RERUN (second independent run): same 3 line pairs.
+
+EXIT CODES
+----------
+  mine build tip 9c60eae6 -> exit 0, met=True   (matches prereg target)
+  mine base  tip 3a600d2f -> exit 1, newrow=0, met=False (matches prereg target)
+  mine build rerun       -> exit 0, met=True
+  mine build with poisoned GIT_DIR/GIT_CONFIG_COUNT/GIT_CONFIG_KEY_0/
+       GIT_CONFIG_VALUE_0 in the environment -> exit 0, met=True, newrow=1
+       (the round-55 clean_env delta holds; the injected config did not redirect
+        the counter's git calls)

@@ -1,0 +1,21 @@
+# Battery receipts vs citations — battery-map.txt
+# dir: .ufo/waves/round-55/c1/battery/ (on disk; committed at 8abadfed, NOT in 9c60eae6 tree)
+# receipt_dir per preregistration.json line 45: .ufo/waves/round-55/c1/battery/
+# mutants named at preregistration.json line 44:
+#   ["m-ldpreload (envnames leg)", "m-ldaudit-writable (code leg)",
+#    "m-ldaudit-foreign (hostlibs leg)", "m-member-flip (rehash leg)"]
+
+file                     | cited by lesson? | cited by prereg? | produced by committed run-battery.py? | verdict line
+control.out              | dir only (l.73)  | target sentence  | yes (positive control)               | tip=9c60eae6...; met=True (all legs 1) — matches "unmutated positive control prints met=True"
+m-ldpreload.out          | dir only         | named (envnames) | yes, MUTANTS["m-ldpreload"]="kill"   | met=False, envnames=0/3 — named leg fails. KILL OK
+m-text-flip.out          | NO               | NO               | yes, MUTANTS["m-text-flip"]="kill"   | met=False, bind=0/3 code=0/3 — code leg fails. KILL OK but UNNAMED in both lesson and prereg
+m-member-flip.out        | dir only         | named (rehash)   | yes, MUTANTS["m-member-flip"]="kill" | met=False, rehash=3 — named leg fails. KILL OK
+m-ldaudit-foreign.out    | dir only         | named (hostlibs) | yes, MUTANTS["m-ldaudit-foreign"]="vector" | met=True — run-battery.py l.57-60: "expect met=True: the LD_AUDIT vector is void on this glibc; the receipt is the evidence that the live hostlibs kill is root-gated". Consistent with assignment text ("m-ldaudit-foreign vector analysis"), in tension with prereg C1 target sentence "each named mutant receipt prints met=False"
+m-ldaudit-writable.out   | NO               | named (code leg) | NO — stale, fixture tip=23dc15dae61f04e86efb62ef2e622154bc4db36a (file mtime 10:30) | met=True — a prereg-NAMED mutant whose receipt prints met=True sits in the evidence dir under kill rule "if any battery mutant prints met=True" (prereg l.23)
+m-extra-in-tree.out      | NO               | NO               | NO — stale, fixture tip=312530a9bcfad7bbd06130f4e7916e859182a7a7 (file mtime 10:37) | met=True — named nowhere; run-battery.py l.36 comment says the in-tree backend scan "dlcloses" (analysed, not a kill)
+run-battery.py           | no (driver)      | no (driver)      | self                                  | committed MUTANTS dict = {m-ldpreload, m-text-flip, m-ldaudit-foreign(vector), m-member-flip}; docstring names FREEZE=9c60eae6...
+__pycache__/             | no               | no               | on disk only (not committed)         | —
+
+# Committed file set at 8abadfed under .ufo/waves/round-55/c1/battery/:
+#   control.out, m-extra-in-tree.out, m-ldaudit-foreign.out, m-ldaudit-writable.out,
+#   m-ldpreload.out, m-member-flip.out, m-text-flip.out, run-battery.py

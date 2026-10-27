@@ -1,0 +1,11 @@
+--- a/tools/kama-live-replay.py (9c60eae6f7ed84f7da93d219a406aadc30958c6c)
++++ b/tools/kama-live-replay.py (sab-d mutant)
+@@ -308,7 +308,7 @@
+         for ti in tf:
+             if carried is not None and ti.isreg():
+                 carried.append(ti.name)
+-            if ti.name in names and ti.isreg():
++            if ti.name in names:  # sabotage d (round-53 mutation d, re-verified in round 55): non-regular members are hashed too
+                 h = hashlib.sha256()
+                 src = tf.extractfile(ti)
+                 for chunk in iter(lambda: src.read(CHUNK), b""):

@@ -1,0 +1,45 @@
+--- tools/kama-live-replay.py
++++ tools/kama-live-replay.py (sabotage-a)
+@@ -325,7 +325,7 @@
+             member = os.path.relpath(path, root)
+             if member not in digests:
+                 probs.append(f"code-mapping:not-a-member:{member}")
+-            elif e["sha256"] != digests[member]:
++            elif False:  # sabotage a: a digest mismatch is accepted
+                 probs.append(f"code-mapping:digest:{member}:{digests[member]}->{e['sha256']}")
+             else:
+                 members[member] = digests[member]
+--- tools/kama-live-replay.py
++++ tools/kama-live-replay.py (sabotage-b)
+@@ -329,7 +329,7 @@
+                 probs.append(f"code-mapping:digest:{member}:{digests[member]}->{e['sha256']}")
+             else:
+                 members[member] = digests[member]
+-        elif e.get("uid") != 0:
++        elif False:  # sabotage b: a non-root file outside the tree is host code
+             probs.append(f"code-mapping:foreign:{path}:uid={e.get('uid')}")
+         else:
+             host.append(path)
+--- tools/kama-live-replay.py
++++ tools/kama-live-replay.py (sabotage-c)
+@@ -333,8 +333,7 @@
+             probs.append(f"code-mapping:foreign:{path}:uid={e.get('uid')}")
+         else:
+             host.append(path)
+-    if not members:
+-        probs.append("code-mapping:no-archive-library")
++    # sabotage c: the no-archive-library rule is removed
+     return {"verified": not probs, "members": members, "host": sorted(host)}, probs
+ 
+ 
+--- tools/kama-live-replay.py
++++ tools/kama-live-replay.py (sabotage-d)
+@@ -293,7 +293,7 @@
+     out = {}
+     with tarfile.open(archive) as tf:
+         for ti in tf:
+-            if ti.name in names and ti.isreg():
++            if ti.name in names:  # sabotage d: non-regular members are hashed too
+                 h = hashlib.sha256()
+                 src = tf.extractfile(ti)
+                 for chunk in iter(lambda: src.read(CHUNK), b""):

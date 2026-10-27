@@ -1,0 +1,71 @@
+{
+  "seat": "Rev3",
+  "lane": "kama",
+  "round": 55,
+  "freeze_commit": "9c60eae6f7ed84f7da93d219a406aadc30958c6c",
+  "head_at_read": "8abadfedf89f35372645b1e5d6ce4a2109186f90",
+  "snapshot_utc": "2026-10-27T13:58:00Z",
+  "items": {
+    "1_lesson_and_S510_census": {
+      "status": "closed",
+      "evidence": [
+        "corpus/lessons/round-55.md in 9c60eae6 tree",
+        "corpus/SOURCES.md:263 used-by -> corpus/lessons/round-55.md",
+        "sources-census.sh validate --file <clone9c60>/corpus/SOURCES.md -> exit 0",
+        "sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama -> exit 0"
+      ],
+      "gap": "lesson:95,101 cite .ufo/waves/round-55/census/end.out which does not exist (D2)"
+    },
+    "2_X5_and_C2_fixture_receipts": {
+      "status": "open",
+      "evidence": [
+        "no X5 or C2-smoke receipt in 9c60eae6 or HEAD trees",
+        "build_spec.py:139-142 assigns X5ReplaySelftest and X6C2Smoke this wave",
+        "snapshot: X5 base selftests pass=48 fail=0 / selftest ok (uncommitted); X6C2Smoke c2-smoke.out fixture=1 scenarios=15/15 met=True (uncommitted)",
+        "measured/c2-build.out (committed 8abadfed) already carries fixture=1 scenarios=15/15 met=True (15 scenarios, not the round-54 14/14)"
+      ]
+    },
+    "3_prereg_and_base_controls": {
+      "status": "closed",
+      "evidence": [
+        "9c60eae6 tree: preregistration.json, controls/base.c1.out, controls/base.c2.out",
+        "counter sha256 at 9c60eae6 == preregistration.json:16 and :27",
+        "base.c1.out:2 met=False newrow=0; base.c2.out:2 dropped=1 met=False",
+        "freeze commit 10:24:22-03 precedes measured runs 10:24:37/10:25:00 and battery 10:30+"
+      ],
+      "note": "preregistration.json mtime 10:38:10 > commit time but bytes identical to HEAD blob (git status/diff clean)"
+    },
+    "4_C1_e2e_and_battery": {
+      "status": "closed-with-defect",
+      "evidence": [
+        "measured/c1-build.out:2 met=True (committed 8abadfed)",
+        "battery control met=True; m-ldpreload/m-text-flip/m-member-flip met=False",
+        "defect D1: preregistration.json:44 names m-ldaudit-writable; m-ldaudit-writable.out:2 met=True; run-battery.py:23-75 omits it and adds undisclosed m-text-flip",
+        "defect D3: no exit codes in receipts; m-extra-in-tree and m-ldaudit-writable unreproducible from committed driver"
+      ]
+    },
+    "5_LOG_round55_entry": {
+      "status": "open",
+      "evidence": [
+        "LOG.md at 9c60eae6 has 2443 lines, last entry corpus/lessons/round-53.md (LOG.md:2440-2443)",
+        "grep round-5[45] LOG.md -> no hit (freeze, HEAD, disk)",
+        "build_spec.py:100 assigns Sc2Scoring to draft the entry; nothing landed"
+      ]
+    },
+    "6_ed135b3c_ruling": {
+      "status": "operator-owned",
+      "evidence": [
+        "lane has no .ufo/l0-questions.md",
+        "fleet .ufo/l0-questions.md:184-187 carries the round-52/53 corrections and round-54 forward",
+        "no round-55 kama line; last kama forward in fleet commit e2e2d10f"
+      ]
+    }
+  },
+  "defects": [
+    {"id": "D1", "kind": "calibration", "blocking_admission": true,
+     "where": ".ufo/waves/round-55/preregistration.json:19,20,44 vs .ufo/waves/round-55/c1/battery/run-battery.py:23-75 and c1/battery/m-ldaudit-writable.out:2"},
+    {"id": "D2", "kind": "receipt", "where": "corpus/lessons/round-55.md:95,101 (census/end.out absent)"},
+    {"id": "D3", "kind": "receipt-hygiene", "where": "c1/battery/*.out (no exit codes); m-extra-in-tree.out, m-ldaudit-writable.out (no committed mutant)"}
+  ],
+  "limits": "No counter rerun, no battery rerun; census rerun only. Base/build exits taken from frozen receipts/assignment; committed met lines verified. One read-only shared clone at 9c60eae6."
+}

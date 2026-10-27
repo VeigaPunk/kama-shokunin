@@ -1584,3 +1584,16 @@ measured values are in SCORECARD under the round-52 measured-results heading.
 Round 53 moves one part of the replay-identity frontier into a runnable lane instrument: the C1 counter compares executable ranges of the server's mapped archive libraries against a counter-owned release archive. The sampled b11909 server maps eight archive libraries and thirteen root-owned host libraries; its three archive-library runs matched. This does **not** close code identity generally: root-owned external libraries are accepted without byte comparison (J5Preload), the memfd-from-host-install and download-provenance limits remain, executable memfds are skipped by the frozen counter, and model/data mappings are not byte-compared. Keep those surfaces in Frontier; no general move to core.
 
 The cited-path check records a local self-assessment hygiene instrument, not kama serving-domain knowledge. J12Hide, J11BadFixed and Sen4Fixture show why its measured C2 result does not establish a general calibration gate. No knowledge entry was added and no frontier area is promoted on that result. Assimilation: none from shokuknow; considerthese proposal 2 is represented by `corpus/QUALITY.md` KQ97 (proposal disposition tracking), not a domain-coverage claim.
+
+## Frontier disposition — round 55 (appended)
+
+Round 55 freezes and measures the replay-identity and citation-disposition instruments
+built in round 54; no frontier area moves to core. The C1 battery grounds one vector
+closure empirically (glibc loads LD_AUDIT only for audit-capable DSOs - seat L1Probe;
+an in-set-basename root-owned plant survives via the disclosed name-only host limit -
+seat Rev1 D3), so the remaining non-archive code classes need byte-provenance or
+root-actor treatment; the host-library byte-provenance route and the model's mapped
+bytes without a pathname stay Frontier. C2's `superseded` class records one local
+self-assessment hygiene distinction; no corpus knowledge ground changes. Assimilation:
+none from shokuknow (no new package rows); considerthese 2026-10-26 proposals 1-3 are
+dispositioned taken-up (rounds 46/53/47-48) in the round-55 lesson, proposal 4 pending.
