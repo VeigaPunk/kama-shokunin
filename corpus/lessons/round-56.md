@@ -24,8 +24,8 @@ The claims are causally separable: C1 invokes only the selected counter's `env_l
 
 ## Census before→after
 
-- Before: `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama` → exit 0; full output `.ufo/waves/round-56/census/start.out` (standing W01/W04 warnings).
-- After: same command; final output and exit code are recorded in `.ufo/waves/round-56/census/end.out` and this section is finalized after the end-of-round run.
+- Before: `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama` → exit 0; 252 rows, tiers A/B/C 239/9/4, statuses mined/queued/rejected 228/8/16. Full 99-line output `.ufo/waves/round-56/census/start.out` (97 W04, 1 W01, final `ok`).
+- After: same command → exit 0; 256 rows, tiers A/B/C 242/10/4, statuses mined/queued/rejected 231/8/17. Full 102-line output `.ufo/waves/round-56/census/end.out`, exit `.ufo/waves/round-56/census/end.exit` (100 W04, 1 W01, final `ok`). Four rows added: tier A=3 (S512, S513, S514), tier B=1 (S515); status mined=3, rejected=1. One pre-existing cell changed old→new: S512 `used-by` added `tools/round56-replay-code-audit.py`; no row advanced from queued to mined.
 
 ## Assimilation and consideration
 
