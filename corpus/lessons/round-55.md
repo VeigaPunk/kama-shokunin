@@ -219,7 +219,7 @@ exists and none is backdated).
   by this round's battery receipts (each names its killed leg); a standing tally is
   still pending, not deferred silently.
 - Proposal 4 (daily pin-gap line) — pending; `tools/pin-watch.py` exists since round
-  41; the daily reflection owns it.
+  41; the daily reflection owns running it.
 ```
 
 ## Errata appended round 56 — round-55 integration corrections
