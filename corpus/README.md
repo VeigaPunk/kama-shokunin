@@ -1604,3 +1604,7 @@ bytes without a pathname stay Frontier. C2's `superseded` class records one loca
 self-assessment hygiene distinction; no corpus knowledge ground changes. Assimilation:
 none from shokuknow (no new package rows); considerthese 2026-10-26 proposals 1-3 are
 dispositioned taken-up (rounds 46/53/47-48) in the round-55 lesson, proposal 4 pending.
+
+## Round 58 coverage note (2026-10-27)
+
+Held now: `knowledge/battery-execution-evidence.md` — what a `sys.setprofile` execution record of a lane battery establishes (entry of a named frame, argv shape under it) and does not (leg results, confinement beyond the audit-hook deny-list, threads); source S517 (`SOURCES.md`). It is instrument knowledge about a lane tool, not serving knowledge, and the coverage-map table above is not edited (append-only prose). S518 records a claim-scoped delta on `ld.so(8)` LD_AUDIT (secure-execution, tokens) beside S512 and leaves S513 rejected for name-presence detection; KQ98 (`QUALITY.md`) is the criterion that disagreement taught. Frontier unchanged: host-library byte provenance, config-hermetic Git environment, attribute-free archive extraction, and a leg-outcome binding for batteries (round-58 survivors: a leg that discards its verdict, a decoy `--counter`, a thread-issued leg).

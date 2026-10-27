@@ -6,7 +6,13 @@ dead code, an unused function, an early return or a rebound `run` all satisfy). 
 committed battery blob at --tip is executed as `__main__` in a child interpreter under
 a hermetic harness:
   * subprocess.run/call/check_call/check_output are replaced by a recorder that returns a
-    canned CompletedProcess; Popen and os.system are blocked;
+    canned CompletedProcess; Popen and os.system are blocked; a `sys.addaudithook` (armed only
+    while the battery executes, so it survives calls to unpatched APIs) denies file opens for
+    writing, os.remove/rename/mkdir/..., os.posix_spawn/spawn/exec, ctypes.dlopen, socket
+    connect/bind and shutil mutation with PermissionError (a battery that trips it crashes and
+    is not met).  Limits: reads are not confined; a battery may disarm via gc/ctypes
+    introspection of the hook closure; in-process confinement is not a sandbox (bwrap/unshare
+    would be, and is not used);
   * pathlib.Path.read_text serves committed blobs of the --repo tip (by longest repo-
     relative path suffix), write_text/mkdir/write_bytes are swallowed, and
     tempfile.TemporaryDirectory yields a virtual name - nothing is written, nothing is run;
@@ -124,7 +130,30 @@ def harness(src_path, repo, tip, out_path):
         elif event == "return" and stack and stack[-1]["frame"] == id(frame):
             stack.pop()
 
+    armed = []
+    deny = {"os.remove", "os.rename", "os.mkdir", "os.rmdir", "os.truncate", "os.chmod", "os.chown",
+            "os.link", "os.symlink", "os.utime", "os.posix_spawn", "os.spawn", "os.exec", "os.fork",
+            "os.forkpty", "ctypes.dlopen", "ctypes.dlsym", "ctypes.call_function",
+            "socket.connect", "socket.bind", "shutil.copyfile", "shutil.move", "shutil.rmtree",
+            "shutil.copytree", "shutil.chown", "shutil.unpack_archive", "pty.spawn", "os.putenv"}
+    write_flags = os.O_WRONLY | os.O_RDWR | os.O_CREAT | os.O_TRUNC | os.O_APPEND
+
+    def audit(event, args):
+        if not armed:
+            return
+        if event == "open":
+            mode, flags = args[1], args[2]
+            if (isinstance(mode, str) and any(c in mode for c in "wax+")) or \
+                    (isinstance(flags, int) and flags & write_flags):
+                raise PermissionError("write denied by harness")
+        elif event in ("subprocess.Popen", "_posixsubprocess.fork_exec") and not allow:
+            raise PermissionError("process creation denied by harness")
+        elif event in deny:
+            raise PermissionError(f"{event} denied by harness")
+
+    sys.addaudithook(audit)
     err = None
+    armed.append(1)
     sys.setprofile(prof)
     try:
         exec(code, {"__name__": "__main__", "__file__": src_path})
@@ -134,6 +163,7 @@ def harness(src_path, repo, tip, out_path):
         err = f"{type(exc).__name__}: {exc}"
     finally:
         sys.setprofile(None)
+        armed.clear()
     rows = [{"fn": f["fn"], "label": f["label"], "sub": len(f["sub"]),
              "counter": sum(1 for s in f["sub"] if "--counter" in s),
              "expects": [s[s.index("--expect") + 1] for s in f["sub"]

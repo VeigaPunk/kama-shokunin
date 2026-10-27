@@ -32,6 +32,8 @@ Assimilation: none. `considerthese/2026-10-26.md` was opened; no new proposal wa
 
 **Gate correction (same round, before any outside reading):** the S517 anchor first read "Python 3.14 docs"; the fetched page title is "Python 3.15.2 documentation" (the local interpreter is 3.14.8; I mislabelled the page by the interpreter). S517's anchor cell was corrected in place in the same round the row was added; the base-to-tip append-only comparison sees S517 only as an added row.
 
+**Knowledge entry and used-by change (old→new):** `corpus/knowledge/battery-execution-evidence.md` (source S517) admitted: what a profile hook does and does not establish (adopted from seat W08KnowledgeEntry's draft, two claims in it corrected against the post-wave checker). S517 `used-by`: `tools/round58-battery-exec-check.py, corpus/lessons/round-58.md` → `tools/round58-battery-exec-check.py, corpus/knowledge/battery-execution-evidence.md, corpus/lessons/round-58.md`; status and recheck unchanged (`mined`, `on-release`). The entry sits on coverage ground the map did not hold (instrument evidence for lane checkers); it is counted for expansion only if the closure agrees.
+
 ## Census before → after
 
 Before: exit 0, 257 rows (`.ufo/waves/round-58/census/start.out`). After: recorded at round end (`.ufo/waves/round-58/census/end.out`).
