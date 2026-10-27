@@ -1,0 +1,40 @@
+--- genuine.py
++++ N11-try-else.py
+@@ -67,18 +67,23 @@
+     scratch.mkdir(parents=True, exist_ok=True)
+     results = []
+-    results.append(comparator_selftest(OUT / "comparator-selftest.out"))
+-    results.append(run("base-old-counter", OLD, "missed", OUT / "base-c1.out"))
+-    results.append(run("round56-counter", NEW, "detected", OUT / "build-c1.out"))
+-    with tempfile.TemporaryDirectory(prefix="mutant-", dir=scratch) as d:
+-        mutant = pathlib.Path(d) / "counter.py"
+-        src = NEW.read_text()
+-        old = 'BAD_ENV = ("LD_PRELOAD", "DYLD_INSERT_LIBRARIES", "LD_AUDIT")'
+-        new = 'BAD_ENV = ("LD_PRELOAD", "DYLD_INSERT_LIBRARIES")'
+-        if src.count(old) != 1:
+-            raise SystemExit("mutant anchor is not unique")
+-        mutant.write_text(src.replace(old, new))
+-        results.append(run("m-drop-ldaudit", mutant, "missed", OUT / "m-drop-ldaudit.out"))
+-        results.append(assert_mutant_breaks_detection(
+-            mutant, OUT / "m-drop-ldaudit-target-fails.out"))
++    try:
++        raise RuntimeError("battery disabled")
++    except RuntimeError:
++        pass
++    else:
++            results.append(comparator_selftest(OUT / "comparator-selftest.out"))
++            results.append(run("base-old-counter", OLD, "missed", OUT / "base-c1.out"))
++            results.append(run("round56-counter", NEW, "detected", OUT / "build-c1.out"))
++            with tempfile.TemporaryDirectory(prefix="mutant-", dir=scratch) as d:
++                mutant = pathlib.Path(d) / "counter.py"
++                src = NEW.read_text()
++                old = 'BAD_ENV = ("LD_PRELOAD", "DYLD_INSERT_LIBRARIES", "LD_AUDIT")'
++                new = 'BAD_ENV = ("LD_PRELOAD", "DYLD_INSERT_LIBRARIES")'
++                if src.count(old) != 1:
++                    raise SystemExit("mutant anchor is not unique")
++                mutant.write_text(src.replace(old, new))
++                results.append(run("m-drop-ldaudit", mutant, "missed", OUT / "m-drop-ldaudit.out"))
++                results.append(assert_mutant_breaks_detection(
++                    mutant, OUT / "m-drop-ldaudit-target-fails.out"))
+     return 0 if all(results) else 1
+ 

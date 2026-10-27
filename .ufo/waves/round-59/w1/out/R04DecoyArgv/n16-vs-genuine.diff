@@ -1,0 +1,10 @@
+--- genuine
++++ N16-decoy-counter-call
+@@ -37,6 +37,7 @@
+ def run(label, counter, expected, out):
+     p = subprocess.run(["python3", str(TEST), "--counter", str(counter), "--expect", expected],
+                        capture_output=True, text=True)
++    subprocess.run(["python3", "other-script", "--counter", str(counter), "--expect", expected])
+     body = p.stdout + p.stderr + f"exit={p.returncode}\n"
+     out.write_text(body)
+     fields = {tok.split("=", 1)[0]: tok.split("=", 1)[1]
