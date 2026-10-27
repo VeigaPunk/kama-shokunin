@@ -50,7 +50,7 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 ## Planned
 
-Superseded in round 42. The live plan is `### Planned (round 53)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
+Superseded in round 42. The live plan is `### Planned (round 54)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
 
 ## Retired
 
