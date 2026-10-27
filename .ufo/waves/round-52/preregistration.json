@@ -1,0 +1,47 @@
+{
+ "lane": "kama",
+ "round": 52,
+ "attempt": 1,
+ "author": "kama L1 (agent KamaR52)",
+ "frozen_at_utc": "2026-10-27T04:42:00Z",
+ "base": "9ff76b1f763512be2f554cbbfd0b2213b63b0847",
+ "authority": "shokunin.conf assigns operability + calibration; the lowest-scoring non-retired axes are calibration, depth and adjacency (7 each); C2 works calibration (the lowest assigned axis) and C1 works operability (the other assigned axis). Stagnation nudge inactive (calibration 7 below saturation 8). Starting point: SCORECARD.md ### Planned (round 52) items 1 (bind the replay's server to the extraction event, not dev/inode of a path) and 2 (independent exempt=/only= recomputation, the ledger cutoff tested in the counter, the A-corr decision on the disclosed in-place edits), and the round-51 outside closure's routed D5 (corpus/lessons/round-51-verifier-spotcheck.md section 6).",
+ "separability": "C1 touches tools/kama-llamacpp-live.py, tools/kama-live-replay.py and one corpus/SOURCES.md row; its counter reads only those, the three committed round-48 v5 receipts and the network. C2 touches the A-corr files' tails (appended restored lines), registry/append-only-disclosures.tsv (A-corr rows removed); its counter reads the tool, the contract, the ledger and git history. C1's SOURCES append adds lines only (no deletion event; SOURCES is an A-row file outside C2's corr_lost); C1 touches no C2 path and C2 no C1 path.",
+ "disclosure": "Both counters were written in this session before any build of either claim; each was dry-run at the base only (C2 twice: the first run exposed a fixture bug - the in-tree ledger is read only with the in-tree contract - fixed before this freeze; C1 once). No predicate, target or kill rule was changed after a dry run. The base controls below were run with the frozen bytes.",
+ "claims": [
+  {
+   "id": "C1",
+   "axis": "operability",
+   "score": "8->8",
+   "type": "measured (capability depth: the witnessed replay's server runs from a sealed anonymous memfd the replay filled from its verified archive member, so no on-disk file - copy, hardlink, rename-over - can be the running image); sourced on memfd_create(2)",
+   "statement": "kama-live-replay.py copies the verified member from the archive stream into a memfd (MFD_ALLOW_SEALING), seals it (F_SEAL_WRITE|SHRINK|GROW|SEAL), and hands it to kama-llamacpp-live.py (--server-fd), which execs the server from that descriptor; the live tool records the running image's seals in server_exe and the replay refuses a rerun whose server_exe is not its own sealed memfd (dev, inode, seals, digest).",
+   "predicate": "a replay of each of the three committed v5 b11909 receipts holds a server whose running image, opened by the counter through /proc/<pid>/exe, is a sealed anonymous memfd (`/memfd:` link, no link count, write/shrink/grow/seal seals) with the frozen digest, recorded with the same dev, inode and seals in the rerun receipt's server_exe and named by the replay as its own_server, while every round-50 bind check still holds; killing the replay's invoker still removes the whole tree within 30 s; and the memfd surface is a source row; bind=1 sealed=1 teardown=1 newrow=1.",
+   "counter": "tools/round52-replay-memfd-audit.py",
+   "counter_sha256": "053ff50261812de3236697dd8dc847b3dff9507f8290b0d42aaf65c12e1121f5",
+   "command": "python3 tools/round52-replay-memfd-audit.py --repo <lane clone> --tip <full commit> --scratch <dir> --out <receipt>",
+   "target": "bind=1 sealed=1 teardown=1 newrow=1 bound=3/3 sealedruns=3/3 met=True",
+   "kill": "any leg 0 at the measured commit, or met=True on any control"
+  },
+  {
+   "id": "C2",
+   "axis": "calibration",
+   "score": "7->7",
+   "type": "measured (self-description matched to repo state: the lane declares LOG.md, SCORECARD.md dated sections, QUALITY.md, corpus/README.md and filed lessons append-only with corrections appended; lines those files lost in place are counted by the counter's own section/fence logic and must be held again, by verbatim re-append, leaving the ledger only the losses a re-append cannot repair)",
+   "statement": "every graded line the A-corr files lost (151 by the counter at the base, 155 by the tool) is re-appended verbatim, inside a fenced `Restored lines` block at the end of its file, and its ledger row removed; registry/append-only-disclosures.tsv keeps only the A/A-row rows (corpus/SOURCES.md, registry/report-landing-errata.tsv) where a re-appended registry or errata row would be a duplicate-id defect.",
+   "predicate": "every line any commit deleted from a graded region of the lane's A-corr append-only files is held at --tip by the counter's own section and fence logic (corr_lost=0), the disclosure ledger names exactly the unheld lines of the A and A-row files, the tip's append-only-audit exits 0 on the lane, and eight constructed scenarios - the ledger cutoff, only= and exempt= regions, and a fenced verbatim re-append among them - each get the verdict their construction fixes; fixture=1 lane=1 corr_lost=0.",
+   "counter": "tools/round52-append-restore-check.py",
+   "counter_sha256": "29dfd886d858f24d7cbd7a62d829c35545fc39294fe7923c59eae1ecc30853ea",
+   "command": "python3 tools/round52-append-restore-check.py --repo <lane clone> --tip <full commit> --scratch <dir> --out <receipt>",
+   "target": "fixture=1 lane=1 scenarios=8/8 corr_lost=0 met=True",
+   "kill": "any leg 0 at the measured commit, or met=True on any control"
+  }
+ ],
+ "controls": ".ufo/waves/round-52/controls/: base.c1.out (bind=1 sealed=0 teardown=1 newrow=0 met=False) and base.c2.out (fixture=1 lane=0 corr_lost=151 met=False) at the base, committed at this freeze (do-nothing controls); after the build, ablation controls on the build tree by wave seats, each removing one claimed mechanism - C1: replay execs the extracted path (no memfd); memfd left unsealed; a byte-identical host copy at the member path (the round-51 J3CopyDecoy shape); a hardlink at the member path; C2: lines re-appended with a prefix (not verbatim); restored lines kept but the A-corr ledger rows left; the corpus/lessons/*.md contract row dropped; a ledger row added for an A-corr file. Every control must be met=False.",
+ "limits": [
+  "C1: a decoy that fills a sealed memfd from the host's own byte-identical install (not from the downloaded archive) meets the counter: the bytes are the frozen ones either way, and whether the replay downloaded and read the archive is not observed by this counter.",
+  "C1: shared libraries (libllama-server-impl.so, libggml*) still load from the extracted tree by path (LD_LIBRARY_PATH); only the server image itself is sealed.",
+  "C1 keeps every round-50 leg; the round-50 carried limits (probe PATH execution, model bytes rewritten in place after mapping, kills during download or readiness) are not addressed.",
+  "C2: the counter's exempt= rule is simpler than the tool's (a deleted line in an exempt-titled parent section is ungraded; the tool also requires the line's origin to hold an exempt title and the section not to be gutted), so in SCORECARD.md the counter may grade fewer lines than the tool; the tool leg (exit 0, no A-corr ledger rows) holds the stricter rule.",
+  "C2: re-appended lines restore the lane's declared invariant; they are historical bytes, superseded where the file's later text says so, not re-asserted facts."
+ ]
+}
