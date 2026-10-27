@@ -3,7 +3,7 @@
 Contract per `AXES.md` §SCORECARD.md contract. Scores are 0–10, self-assessed,
 each bound to an evidence pointer and the round that last changed it.
 
-**Current authority (round 58):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 58. Calibration 7 is the lowest assigned axis, below operability 8 and the saturation line, so the stagnation nudge is inactive. Round 58 froze and measured C1 (execution-bound battery checker, operability) and C2 (calibration-row closure pointer bound to the fleet MANIFEST verdict, calibration) with controls committed before data (SCORECARD §Round 58). Scores remain operability 8 and calibration 7; no capability enters. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived by `tools/round42-selfdesc-reconcile.py`; the historic round-57 statement is preserved under §Historical authority text — round 57.
+**Current authority (round 59):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 59. Calibration 7 is the lowest assigned axis, below operability 8 and the saturation line; the nudge is inactive. Round 59's C1 finite fixture counter prints `genuine=1/1 benign=3/3 noop_rejected=16/16 errors=0 met=True`, but seat R04's one-call `python3 other-script --counter ...` battery also makes the checker report `met=True`; the frozen operability predicate is falsified and earns no score change. C2's row now names a counter that resolves the lane count and fleet ref dynamically; the counter prints 0 mismatches at the measured tip, but seat K05's static assertion and M12's clause-deletion matrix also meet it, and no outside S517/S518 spot-check is recorded (MANIFEST's latest kama closure remains r57); the frozen calibration claim is not admitted. Scores remain operability 8 and calibration 7; no capability enters. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived by `tools/round42-selfdesc-reconcile.py`; round-specific outcomes remain in their sections.
 
 ## Axes
 
@@ -50,7 +50,7 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 ## Planned
 
-Superseded in round 42. The live plan is `### Planned (round 59)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
+Superseded in round 42. The live plan is `### Planned (round 60)` below; the round-5 plan this section carried is kept verbatim under §Historical head sections.
 
 ## Retired
 
@@ -3184,10 +3184,10 @@ The exact former current-authority line is retained here; the live authority abo
 
 The round-57 C1 before→after row above records the bounded no-op case, but the frozen predicate requires binding actual execution. A later 13-fixture falsification by R57Item05CounterSelftest found dead-code and unused-function call-site no-ops still return `met=True` after the AST walker change (two survivors; `.ufo/waves/round-57/measured/R57Item05CounterSelftest/out/evidence-c1.txt`, lane commit `9df8e8ddb4d245611ef3ce65490c42f102ecda95`). C1 is therefore not verified and earns no operability credit. Calibration C2 remains measured as recorded above; no scalar changes.
 
-### Planned (round 59)
+### Planned (round 60)
 
-1. Operability: bind each battery leg to the leg's own asserted outcome, not only to the invocation (seat survivors of round 58: a leg that ignores its result, a decoy `--counter` argv, `python3 other-script --counter`), with a pre-data control for each.
-2. Calibration: replace the typed spotcheck count and the pinned manifest revision in the calibration row by a derivation the next closure cannot stale, and obtain an outside admit/reject spot-check of S517/S518 before claiming discernment progress.
+1. Operability: replace the synthetic per-leg classifier with a source-bound execution/result check and make a one-call `python3 other-script --counter` decoy fail; preregister that exact D1 control and a name-keyed checker control before data.
+2. Calibration: replace C2's row-text heuristic with an independent derivation and controls that fail when one requirement is dropped; obtain a non-author admit/reject review of S517/S518 before asserting discernment progress, and pin the fleet revision for reproducible measurements.
 
 ## Round 58 — execution-bound battery checker and closure-pointer binding (2026-10-27)
 
@@ -3216,3 +3216,14 @@ The two claim rows below were first written with PENDING cells and replaced in p
 
 | C1 — execution-bound battery checker (sourced on S517) | operability 8→8 | base round-57 checker `genuine=1/1 benign=1/3 noop_rejected=1/11 met=False` → PENDING | `python3 tools/round58-c1-counter.py --repo <repo> --tip <rev> --checker-blob <rev>:tools/round58-battery-exec-check.py`; `.ufo/waves/round-58/controls/c1-base-r57-checker.out` |
 | C2 — calibration-row closure pointer bound to the fleet MANIFEST verdict | calibration 7→7 | `r42=1 stale=1 verdict=1 including=1 mismatches=4 met=False` → PENDING | `python3 tools/round58-c2-counter.py --repo <repo> --tip <rev> --manifest-rev 941acf70583a2b3a1d33460b31967e0efd291f3e`; `.ufo/waves/round-58/controls/c2-base.out` |
+
+## Round 59 — outcome-binding and calibration row derivation (2026-10-27; honest stop)
+
+Pre-data freeze: `.ufo/waves/round-59/controls/freeze.txt`, base `8f7f58cd161f2b7dfa1709450c3ae79599c12833`, freeze/control commit `5d957d24e77bef5cb2e7c658060b2d98a37c96c5`. Wave: one v2 wave, 64 seats; immutable dispatch/result evidence under `.ufo/waves/round-59/w1/`.
+
+| Claim | Axis, score | Before → after measurement | Exact command and evidence | Verdict |
+|---|---|---|---|---|
+| C1 — bind each battery leg's expected result to that leg's outcome (S517) | operability 8→8 | Prior r58 checker: `genuine=1/1 benign=3/3 noop_rejected=13/16 errors=0 met=False` → r59 checker: `genuine=1/1 benign=3/3 noop_rejected=16/16 errors=0 met=True`; both counter runs at `aca8d0067ea25627c5015c2193c843965148bc8e` | `python3 tools/round59-c1-counter.py --repo <repo> --tip aca8d0067ea25627c5015c2193c843965148bc8e --checker tools/round58-battery-exec-check.py`; repeat without `--checker`. Receipts `.ufo/waves/round-59/controls/c1-oldchecker-final.out`, `c1-candidate-final.out`. | **Not verified.** R04's one-call `python3 other-script --counter ...` battery passes the measured checker (`runs=5/5 met=True`); R15's fixture-name-keyed checker also passes the counter. |
+| C2 — derive the closure count/pointer from the measured lane and fleet refs, not typed cells | calibration 7→7 | Base `mismatches=3 met=False` → edited row `rows=44 mismatches=0 met=True`; base lane `8f7f58cd`, edited lane `2c7443ab`, both against the same fleet commit `0f99f606120d0c884656c6e7a290f0e8f33c2181` | `python3 tools/round59-c2-counter.py --repo <repo> --tip <lane-tip> --fleet-repo /home/vgpnk/Projects/shokunin --fleet-ref 0f99f606120d0c884656c6e7a290f0e8f33c2181`. Receipts `.ufo/waves/round-59/controls/c2-base-current-head.out`, `c2-after-current-head-latest.out`. | **Not verified.** K05's static-assertion row and M12's eight one-clause counter mutants all meet; the required outside S517/S518 admit/reject record is absent. |
+
+Scores remain operability 8 and calibration 7. No capability entered. C1's finite matrix is stronger than the prior one but does not verify the frozen claim; C2's zero-mismatch result does not verify the demanded dynamic semantics or outside review. No claim is admitted.
