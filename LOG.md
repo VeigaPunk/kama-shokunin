@@ -2460,3 +2460,4 @@ Deleted by `8bee4e56a995` (round-43: LOG wording):
 - Pre-data controls and frozen predicates: `.ufo/waves/round-57/controls/`; round-56 outside defect lesson: `corpus/lessons/round-57.md`.
 - Opened S516 from the round-56 battery's committed call sites; append-only row added and cited by C1/lesson. S515 was also reopened from its authoritative Git manual; no existing row cell changed.
 - The round-56 S513 rejection disagreement remains unresolved; this round made no source-admission decision and claims no discernment improvement (`corpus/lessons/round-57.md`).
+- Post-filing seat falsification: R57Item05CounterSelftest finds two AST-only no-op mutants still meet C1; the operability claim is not verified. Evidence `.ufo/waves/round-57/measured/R57Item05CounterSelftest/`; recorded append-only in lesson §Mistakes.
