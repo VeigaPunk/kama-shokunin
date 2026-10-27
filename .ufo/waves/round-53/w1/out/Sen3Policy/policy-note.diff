@@ -1,0 +1,19 @@
+# PROPOSAL — not applied. Target: scripts/hyaku/ufo-wave-policy-v2.json (fleet, operator-owned, FROZEN).
+# Author: Sen3Policy (round 53, kama, wave kama-r53-w1). Purpose: W1+W2 of policy.md — one
+# existing string key ('sighting.dispatch.swarm.note', no new keys, no schema change) so a reader
+# cannot mistake missionFormat.l1Alias or nativeProfiles.omp-native-v1.concurrencyCeiling for the
+# live route / for a wave-size bound.
+# Verified: git apply --check exit 0 in a scratch fixture repo; file stays valid JSON (13 top-level keys).
+# Apply from the fleet root: patch -p1 < policy-note.diff
+
+--- a/scripts/hyaku/ufo-wave-policy-v2.json	2026-10-27 03:18:13.602006587 -0300
++++ b/scripts/hyaku/ufo-wave-policy-v2.json	2026-10-27 03:18:13.616002550 -0300
+@@ -85,7 +85,7 @@
+         "minLanes": 16,
+         "rampBatchSize": 5,
+         "rampIntervalMs": 700,
+-        "note": "hyaku campaign policy v2 (operator directives 2026-10-20: 'increaase concurrency to 64-128 subagent swarms'; 2026-10-22: 'increase L1 max to 128 subagents', 'make it 256 max xwarm lanes'); wave band 64-128; per-L1 round budget maxLanes 256 = the validator's MAX_SWARM_LANES (ufo-mission-result.mjs); copy of ufo-fsd-alpha config/ufo.json with only the swarm band changed. v1 (ufo-wave-policy.json, 32-64) stays for rounds dispatched under it.",
++        "note": "hyaku campaign policy v2 (operator directives 2026-10-20: 'increaase concurrency to 64-128 subagent swarms'; 2026-10-22: 'increase L1 max to 128 subagents', 'make it 256 max xwarm lanes'); wave band 64-128; per-L1 round budget maxLanes 256 = the validator's MAX_SWARM_LANES (ufo-mission-result.mjs); copy of ufo-fsd-alpha config/ufo.json with only the swarm band changed. v1 (ufo-wave-policy.json, 32-64) stays for rounds dispatched under it. The band bounds SEATS PER WAVE only: nativeProfiles.omp-native-v1.concurrencyCeiling (32) is the fixture loop per-transport admission ceiling and does not bound wave size - the run-9 operator band is 64-128 seats, so a 66-seat v2 wave is in-band by design. missionFormat.l1Alias (m_strong) is superseded by the operator live task.agentModelOverrides map (run-9: main/task @m_opus): read the map, not the alias.",
+         "waveMinLanes": 64,
+         "waveMaxLanes": 128
+       }

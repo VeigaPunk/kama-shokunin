@@ -1,0 +1,27 @@
+--- a/tools/round53-cited-path-check.py
++++ b/tools/round53-cited-path-check.py
+@@
+ import argparse
+ import fnmatch
++import hashlib
+ import os
+ import re
+@@
+-        rows.append({"line": n, "surface": f[0], "token": f[1], "class": f[2], "evidence": f[3]})
++        rows.append({"line": n, "surface": f[0], "token": f[1], "class": f[2], "evidence": f[3],
++                     "note": f[4]})
+@@
+         try:
+             opener = urllib.request.build_opener()
+             with opener.open(urllib.request.Request(ev, method="GET"), timeout=60) as r:
+                 if r.status != 200:
+                     return f"{ev} answered {r.status}"
++                body = r.read()
++            pin = re.search(r"sha256 ([0-9a-f]{64})", row.get("note", ""))
++            if pin:
++                got = hashlib.sha256(body).hexdigest()
++                if got != pin.group(1):
++                    return f"{ev} body sha256 {got[:12]} != pinned {pin.group(1)[:12]}"
+         except (OSError, ValueError) as exc:
+             return f"{ev} unfetchable: {exc}"
+         return None

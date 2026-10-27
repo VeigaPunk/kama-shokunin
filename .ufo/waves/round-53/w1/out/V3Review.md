@@ -1,0 +1,12 @@
+Verdict: C1 matches its frozen predicate and hash, but the counter leaves executable memfd mappings outside the predicate’s stated classification.
+
+Evidence:
+- `sha256sum tools/round53-replay-code-audit.py` → `1a7a144204ba8b7ea9791706ab5fc90f1dab55db12a824a1af5ae89a81b75d8f`, equal to C1 `counter_sha256` in `.ufo/waves/round-53/preregistration.json` (`claims[0]`).
+- `diff -u tools/round52-replay-memfd-audit.py tools/round53-replay-code-audit.py` completed with exit 1 (expected differences), 385 diff lines. It preserves bind/sealed/teardown structure, adds archive-based code observations, receipt and `own_code` checks, `newrow`, and includes `code` in `met`.
+- Counter docstring PREDICATE (`tools/round53-replay-code-audit.py:55-64`) matches the preregistration C1 `predicate` exactly.
+- Clause evidence: memory range compare and zero-padding at `tools/round53-replay-code-audit.py:422-433`; host uid/inode/non-writable rule at 438-452; REQUIRED patterns at 456-459; receipt mapping identity/digest at 615-630; `own_code.verified` and members at 619-630; new source row at 695-705; final `met = bool(bl and ol and cl and tl and nl)` at 770-780. No unrelated diagnostic/detail computation gates `met`; normal `bind` and `sealed` legs remain intentionally required.
+- Preregistration disclosure explicitly records the pre-freeze host-file adjustment: different maps `dev` versus stat `st_dev` (00:20 vs 00:1e), therefore matching by inode, uid 0 and non-writable. This is honestly disclosed and code implements that rule (`:443-450`). It is a weaker host identity check than dev+inode, but justified by the observed host mismatch; the executable mapping’s inode still must match.
+
+Finding (medium): executable memfd-backed mappings are skipped rather than classified. At `tools/round53-replay-code-audit.py:413`, the filter rejects any pathname starting `/memfd:` before either archive-member byte comparison or host-file validation. Thus an additional executable memfd mapping (distinct from the separately checked server image) can evade the C1 “every executable file mapping” requirement while `code` remains true. The frozen PREDICATE does not state a memfd exception. Proposed fix: inspect executable `/memfd:` mappings and fail them unless independently proven to be the expected frozen server image; alternatively, explicitly narrow the frozen predicate and counter contract to exclude memfd mappings (not a post-freeze counter edit).
+
+Verification gap: static review only; no counter execution was assigned or performed. No lane files were modified.

@@ -1,0 +1,94 @@
+--- a/tools/round53-cited-path-check.py
++++ b/tools/round53-cited-path-check.py
+@@ -86,6 +86,7 @@
+ from __future__ import annotations
+ 
+ import argparse
++import collections
+ import fnmatch
+ import os
+ import re
+@@ -104,7 +105,9 @@
+        "SHONEN.md", "SKILL.md")
+ BAD_CHARS = set(" <>$=()|'\"")
+ ANCHOR = re.compile(r"^(.*?):(\d+(?:[-,]\d+)*)$")
+-CLASSES = ("deleted", "never", "moved", "eof", "untracked", "upstream", "fixed")
++CLASSES = ("deleted", "never", "moved", "eof", "untracked", "upstream", "fixed",
++           "external", "withdrawn")
++DROP_CLASSES = ("fixed", "external", "withdrawn")
+ SCENARIOS = 8
+ 
+ 
+@@ -248,6 +251,21 @@
+         if any(v != "ok" for _e, v in rep):
+             return f"replacement {ev!r} does not resolve at tip"
+         return None
++    if cls in ("external", "withdrawn"):
++        if bad_exp:
++            return f"{cls} covers a removed citation, not a present miss"
++        if cls == "external":
++            if not (ev.startswith("/") or ev.startswith("~/")):
++                return "external needs an absolute path"
++            if not os.path.exists(os.path.expanduser(ev)):
++                return f"{ev} does not exist on this host"
++            return None
++        if ev in cited_tip.get(row["surface"], {}):
++            return "withdrawn replacement is still cited in the same surface"
++        for s in SURFACES:
++            if ev in cited_tip.get(s, {}) and all(v == "ok" for _e, v in cited_tip[s][ev]):
++                return None
++        return f"withdrawn claim {ev!r} is not cited and resolving at tip"
+     if not bad_exp:
+         return None  # stale; reported by the caller
+     if cls == "deleted":
+@@ -351,22 +369,32 @@
+             continue
+         exp = unres.get(row["surface"], {}).get(row["token"])
+         why = check_row(row, exp, lane, fleet, cited, base_unres)
+-        if row["class"] != "fixed" and not exp and why is None:
++        if row["class"] not in DROP_CLASSES and not exp and why is None:
+             stale.append(row)
+         elif why is not None:
+             bad.append((row, why))
+-        elif row["class"] != "fixed":
++        elif row["class"] not in DROP_CLASSES:
+             disclosed.add(key)
+     n_cited = sum(len(v) for v in cited.values())
+     n_unres = sum(len(v) for v in unres.values())
+     undisclosed = [(s, t, v) for s, d in unres.items() for t, v in d.items() if (s, t) not in disclosed]
+     dropped = []
+     if base_lane is not None:
+-        bt = show(base_lane.path, base_lane.rev, "SCORECARD.md") or ""
+-        tt = show(lane.path, lane.rev, "SCORECARD.md") or ""
+-        bset = {tok for _n, tok, *_r in citations(bt)}
+-        tset = {tok for _n, tok, *_r in citations(tt)}
+-        dropped = sorted(bset - tset)
++        by_key = {(r["surface"], r["token"]): r for r in rows}
++        bad_rows = {id(r) for r, _w in bad}
++        for surf in SURFACES:
++            bt = show(base_lane.path, base_lane.rev, surf) or ""
++            tt = show(lane.path, lane.rev, surf) or ""
++            bonce = collections.Counter(tok for _n, tok, *_r in citations(bt))
++            tonce = collections.Counter(tok for _n, tok, *_r in citations(tt))
++            for tok, k in bonce.items():
++                miss = k - tonce.get(tok, 0)
++                if miss <= 0:
++                    continue
++                row = by_key.get((surf, tok))
++                if row is not None and row["class"] in DROP_CLASSES and id(row) not in bad_rows:
++                    continue
++                dropped.append((surf, tok, miss))
+     if verbose:
+         for s, t, v in undisclosed:
+             detail.append(f"undisclosed {s} `{t}`: {v}")
+@@ -374,8 +402,8 @@
+             detail.append(f"bad ledger line {row['line']} ({row['surface']} `{row['token']}` {row['class']}): {why}")
+         for row in stale:
+             detail.append(f"stale ledger line {row['line']} ({row['surface']} `{row['token']}`): token resolves or is not cited")
+-        for t in dropped:
+-            detail.append(f"dropped SCORECARD.md citation `{t}` (cited at base, not at tip)")
++        for s, t, k in dropped:
++            detail.append(f"dropped {s} citation `{t}` x{k} (cited at base, cited {k} fewer times at tip)")
+     counts = {"cited": n_cited, "unresolved": n_unres, "disclosed": len(disclosed),
+               "undisclosed": len(undisclosed), "bad": len(bad), "stale": len(stale), "dropped": len(dropped)}
+     ok = not undisclosed and not bad and not stale and not dropped

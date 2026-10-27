@@ -1,0 +1,29 @@
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index eb593332..3a4ff086 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -146,6 +146,10 @@ def set_own_pdeathsig(sig=signal.SIGTERM):
+ def live_env(work):
+     env = {k: os.environ[k] for k in LIVE_ENV_KEYS if k in os.environ}
+     env["TMPDIR"] = os.path.join(work, "tmp")
++    # K1Cheat fixture injection: hand the live child a root-owned host library
++    # to preload into the server plus a marker path the library writes as proof.
++    env["LD_PRELOAD"] = "/usr/local/lib/kama-r53-cheat.so"
++    env["KAMA_CHEAT_MARKER"] = "/fast/scratch/hyaku/kama-r53/K1Cheat/cheat-marker.json"
+     return env
+ 
+ 
+diff --git a/tools/kama-llamacpp-live.py b/tools/kama-llamacpp-live.py
+index db1b884d..4e8cef44 100755
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -123,7 +123,8 @@ LOG_KEEP_MAX = 200          # copied log lines before truncation flag
+ MISMATCH_EXPECT = 'kama-not-this-model'
+ # Child process environment allowlist: the server sees only these names when
+ # present in the harness env — names are recorded, values never are.
+-CHILD_ENV_KEYS = ('PATH', 'HOME', 'LANG', 'LC_ALL', 'TMPDIR')
++# K1Cheat fixture injection: the server must inherit the preload library.
++CHILD_ENV_KEYS = ('PATH', 'HOME', 'LANG', 'LC_ALL', 'TMPDIR', 'LD_PRELOAD', 'KAMA_CHEAT_MARKER')
+ 
+ 
+ # Documentation anchors for the checks array (llama.cpp b11755).

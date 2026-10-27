@@ -82,7 +82,12 @@ a mapped file under <work>/server whose bytes are not its member is
 regular member is `code-mapping:not-a-member`, an executable mapping outside the tree that
 is not root-owned is `code-mapping:foreign`, an unmatched one `code-mapping:unopened`, and
 a server mapping no archive library `code-mapping:no-archive-library`. `own_code` names the
-verified members with their archive digests and the root-owned host files.
+verified members with their archive digests and the root-owned host files. From the wave
+(seats V1Review, V3Review): an entry without an absolute path is `code-mapping:malformed:<n>`,
+and an executable anonymous memfd other than the replay's own sealed server (by dev and
+inode) is `code-mapping:foreign-memfd`. A required library the archive carries (server
+implementation, ggml, ggml-base, a ggml CPU backend) missing from the verified members is
+`code-mapping:required-absent:<pattern>` (seat J4OmitLib).
 --compare validates both receipts' provenance like a replay would, then prints
 `compare match=<bool> mismatches=N` and one `mismatch:` line each; exit 0 equal,
 1 different, 2 unreadable or refused.
@@ -96,6 +101,7 @@ import argparse
 import ctypes
 import errno
 import fcntl
+import fnmatch
 import hashlib
 import json
 import os
@@ -287,12 +293,21 @@ def sealed_member(archive, member, want):
                 "dev": "%02x:%02x" % (os.major(st.st_dev), os.minor(st.st_dev)), "inode": str(st.st_ino)}
 
 
-def member_digests(archive, names):
+# round 53 (wave seat J4OmitLib: a live tool that leaves a library out of code_mappings left
+# the replay green): every one of these the archive carries as a regular member must be
+# among the verified mapped members - the server's code, ggml, its base, a CPU backend
+REQUIRED_CODE = ("libllama-server-impl.so", "libggml-base.so*", "libggml.so*", "libggml-cpu-*.so")
+
+
+def member_digests(archive, names, carried=None):
     """{member: sha256} for each regular member of the archive whose name is in names,
-    hashed straight from the archive's stream (never from the unpacked tree)."""
+    hashed straight from the archive's stream (never from the unpacked tree); when
+    `carried` is a list, every regular member's name is appended to it."""
     out = {}
     with tarfile.open(archive) as tf:
         for ti in tf:
+            if carried is not None and ti.isreg():
+                carried.append(ti.name)
             if ti.name in names and ti.isreg():
                 h = hashlib.sha256()
                 src = tf.extractfile(ti)
@@ -302,24 +317,39 @@ def member_digests(archive, names):
     return out
 
 
-def verify_code(cm, archive, tree):
+def verify_code(cm, archive, tree, own=None):
     """Round 53 (round-52 closure R2, seat K2Design: the server's libraries load by path
     from the unpacked tree, so a library swapped after the member check would run unseen):
     every executable file mapping the live tool recorded (`code_mappings`) must be either
     a file under the unpacked tree whose bytes are a regular member of the archive - by
     the member's digest, hashed from the archive's stream - or a root-owned host file; and
-    at least one archive library must be among them. Returns (own_code, mismatches)."""
+    at least one archive library must be among them. An executable anonymous memfd mapping
+    is admitted only when it is `own` (the replay's sealed server memfd, by dev and inode;
+    wave seat V3Review: any other one would be code from nowhere), and an entry that is not
+    an object with an absolute path is a mismatch (seat V1Review: a path-less entry was
+    admitted as host code). Every REQUIRED_CODE library the archive carries must be among
+    the verified members (seat J4OmitLib: an omitted library left the replay green).
+    Returns (own_code, mismatches)."""
     probs, members, host = [], {}, []
     if not isinstance(cm, dict) or cm.get("read") is not True or not isinstance(cm.get("mappings"), list):
         reason = cm.get("reason") if isinstance(cm, dict) else "absent"
         return {"verified": False, "members": {}, "host": []}, [f"code-mappings:{reason}"]
     root = os.path.realpath(tree) + os.sep
-    ents = [e for e in cm["mappings"] if isinstance(e, dict)]
-    want = {os.path.relpath(str(e.get("path")), root) for e in ents if str(e.get("path")).startswith(root)}
-    digests = member_digests(archive, want)
+    ents = []
+    for n, e in enumerate(cm["mappings"]):
+        if not isinstance(e, dict) or not isinstance(e.get("path"), str) or not e["path"].startswith("/"):
+            probs.append(f"code-mapping:malformed:{n}")
+        else:
+            ents.append(e)
+    want = {os.path.relpath(e["path"], root) for e in ents if e["path"].startswith(root)}
+    carried = []
+    digests = member_digests(archive, want, carried)
     for e in ents:
-        path = str(e.get("path"))
-        if e.get("opened") is not True or not isinstance(e.get("sha256"), str):
+        path = e["path"]
+        if path.startswith("/memfd:"):
+            if own is None or (str(e.get("dev")), str(e.get("inode"))) != (own.get("dev"), own.get("inode")):
+                probs.append(f"code-mapping:foreign-memfd:{path}:{e.get('dev')}:{e.get('inode')}")
+        elif e.get("opened") is not True or not isinstance(e.get("sha256"), str):
             probs.append(f"code-mapping:unopened:{path}:{e.get('reason')}")
         elif path.startswith(root):
             member = os.path.relpath(path, root)
@@ -335,8 +365,12 @@ def verify_code(cm, archive, tree):
             host.append(path)
     if not members:
         probs.append("code-mapping:no-archive-library")
+    have = [os.path.basename(m) for m in members]
+    for pat in REQUIRED_CODE:
+        if any(fnmatch.fnmatchcase(os.path.basename(c), pat) for c in carried) \
+                and not any(fnmatch.fnmatchcase(n, pat) for n in have):
+            probs.append(f"code-mapping:required-absent:{pat}")
     return {"verified": not probs, "members": members, "host": sorted(host)}, probs
-
 
 def evaluated(rec):
     return {c.get("id"): c.get("passed") for c in rec.get("checks") or []
@@ -518,7 +552,7 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
             res["mismatches"].append(f"server-exe:not-sealed-memfd:seals={se.get('seals')}:"
                                      f"nlink={se.get('nlink')}:path={se.get('path')}")
         # round 53 (round-52 closure R2): the code the server maps is the archive's
-        own_code, code_probs = verify_code(rr.get("code_mappings"), archive, tree)
+        own_code, code_probs = verify_code(rr.get("code_mappings"), archive, tree, own)
         res["own_code"] = own_code
         res["mismatches"].extend(code_probs)
         if p.returncode != 0:
@@ -554,6 +588,8 @@ def _selftest(root):
             fh.write("#!/bin/sh\nexit 0\n")
         with open(os.path.join(srcdir, "libfake.so"), "wb") as fh:
             fh.write(b"\x7fELF fake library " + os.urandom(16))
+        with open(os.path.join(srcdir, "libggml-base.so.0"), "wb") as fh:
+            fh.write(b"\x7fELF fake ggml-base " + os.urandom(16))
         arc = os.path.join(d, "srv.tar.gz")
         with tarfile.open(arc, "w:gz") as tf:
             tf.add(os.path.join(d, "src", "build"), arcname="build")
@@ -575,9 +611,16 @@ def _selftest(root):
                      "os.minor(x.st_dev)),'inode':str(x.st_ino),'seals':fcntl.fcntl(f,1034),"
                      "'nlink':x.st_nlink,'path':'/memfd:llama-server (deleted)'}\n"
                      "L=os.path.join(os.path.dirname(os.path.realpath(s)),'libfake.so');y=os.stat(L)\n"
+                     "G=os.path.join(os.path.dirname(os.path.realpath(s)),'libggml-base.so.0');z=os.stat(G);KEEP_G=True\n"
                      "r['code_mappings']={'read':True,'mappings':[{'path':L,'dev':'%02x:%02x'%(os.major(y.st_dev),"
                      "os.minor(y.st_dev)),'inode':str(y.st_ino),'opened':True,'uid':y.st_uid,'sha256':h(L)},"
-                     "{'path':'/usr/lib/libc.so.6','dev':'00:1e','inode':'1','opened':True,'uid':0,'sha256':'0'*64}]}\n"
+                     "{'path':G,'dev':'%02x:%02x'%(os.major(z.st_dev),os.minor(z.st_dev)),'inode':str(z.st_ino),"
+                     "'opened':True,'uid':z.st_uid,'sha256':h(G)},"
+                     "{'path':'/usr/lib/libc.so.6','dev':'00:1e','inode':'1','opened':True,'uid':0,'sha256':'0'*64},"
+                     "{'path':'/memfd:llama-server (deleted)','dev':'%02x:%02x'%(os.major(x.st_dev),os.minor(x.st_dev)),"
+                     "'inode':str(x.st_ino),'opened':False,'reason':'anonymous-memfd'}]}\n"
+                     "if 'code_mappings' in r: r['code_mappings']['mappings']=[m for m in r['code_mappings']['mappings'] "
+                     "if KEEP_G or m.get('path')!=G]\n"
                      "if '--server-archive' in a:\n"
                      "    r['schema']='kama-llamacpp-live/v5'\n"
                      "    u=a[a.index('--model-url')+1];c=re.search('/resolve/([0-9a-f]{40})/',u).group(1)\n"
@@ -694,7 +737,11 @@ def _selftest(root):
                                "'libfake.so');import shutil;shutil.copy(L,L[:-3]+'.copy.so');"
                                "L=L[:-3]+'.copy.so';y=os.stat(L)"),
                               ("unopened", "'opened':True,'uid':y.st_uid", "'opened':False,'uid':y.st_uid"),
-                              ("no-archive-library", "'mappings':[{'path':L,", "'mappings':[{'path':'/usr/x',")):
+                              ("no-archive-library", "'mappings':[{'path':L,", "'mappings':[{'path':'/usr/x',"),
+                              ("path-missing", "{'path':'/usr/lib/libc.so.6',", "{'nopath':'/usr/lib/libc.so.6',"),
+                              ("required-absent", "KEEP_G=True", "KEEP_G=False"),
+                              ("foreign-memfd", "'inode':str(x.st_ino),'opened':False,'reason':'anonymous-memfd'",
+                               "'inode':str(x.st_ino+1),'opened':False,'reason':'anonymous-memfd'")):
             alt_live = os.path.join(d, f"code-{tag}-live.py")
             with open(alt_live, "w") as fh:
                 src = open(fake_live).read()
@@ -704,7 +751,8 @@ def _selftest(root):
             run(f"code-{tag}", receipt(), 1, live=alt_live)
         res, code = replay(receipt(), os.path.join(d, "w-code-own"), live=fake_live, allow_file=True)
         cases.append(("code-own-members", code == 0 and res.get("own_code", {}).get("verified") is True
-                      and list(res["own_code"].get("members", {})) == ["build/bin/libfake.so"]
+                      and sorted(res["own_code"].get("members", {})) == ["build/bin/libfake.so",
+                                                                         "build/bin/libggml-base.so.0"]
                       and res["own_code"].get("host") == ["/usr/lib/libc.so.6"],
                       f"exit={code} own_code={res.get('own_code')} mism={res['mismatches']}"))
         # the sealed memfd is filled from the archive's member stream, not from the path

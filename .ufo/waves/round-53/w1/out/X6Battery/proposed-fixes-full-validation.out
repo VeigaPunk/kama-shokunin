@@ -1,0 +1,42 @@
+# full proposed-fix validation at the fixture tip (SKILL registry section, SCORECARD re-anchor, hexrun ledger row + evidence); master points at the fixture tip so gate --selftest arm 6 evaluates it
+$ git rev-parse HEAD
+d8d8eecdead871dd2bb8daaf2eb3a145736f7053
+$ git diff --stat c22602bd8d83ab26349d1087e916ca537ee4f9d1 HEAD
+ .../3945011969fbc4b0bdcf4c856626d016068558ec.txt        | 17 +++++++++++++++++
+ SCORECARD.md                                            |  4 ++--
+ SKILL.md                                                |  9 +++++++++
+ registry/hexrun-ledger.tsv                              |  1 +
+ 4 files changed, 29 insertions(+), 2 deletions(-)
+$ python3 tools/gate-registry-check.py --rev HEAD
+registered 52 unregistered 0 defective 0
+exit=0
+$ python3 tools/round41-scorecard-reconcile.py
+tip=d8d8eecdead871dd2bb8daaf2eb3a145736f7053
+axes=6 facts=36 hash_bad=0 lines_bad=0 run_bad=0 dead=0 score_bad=0 hollow=0 mismatches=0 met=True
+exit=0
+$ python3 tools/round42-selfdesc-reconcile.py
+tip=d8d8eecdead871dd2bb8daaf2eb3a145736f7053
+r41=0 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 mismatches=0 maxN=52 met=True
+exit=0
+$ python3 tools/round43-registry-audit.py
+tip=d8d8eecdead871dd2bb8daaf2eb3a145736f7053
+unreg=0 defect=0 flags=0 pins=0 selftest=0 dc=0 spot=0 hidden=0 pop=52 registered=52 mismatches=0 met=True
+exit=0
+$ python3 tools/hexrun-census.py scan --repo . --rev HEAD
+tokens=1951 distinct=342 lane_oid=231 md5_blob=1 upstream_ok=98 unverifiable=9 wrong_flagged=3 ledger_bad=0 unknown=0
+exit=0
+$ python3 tools/digest-ledger.py scan --repo . --rev HEAD
+tokens=137 blob=122 external_ok=8 external_absent=1 unverifiable=5 wrong_flagged=1 ledger_bad=0 wrong_unflagged=0 unknown=0
+exit=0
+$ python3 tools/round53-cited-path-check.py --repo . --tip HEAD --scratch /fast/scratch/hyaku/kama-r53/X6Battery/c2v
+tip=d8d8eecdead871dd2bb8daaf2eb3a145736f7053 fleet=305a7cac65ffd366fecc1e8d984cb74a61e7251d
+fixture=1 lane=1 scenarios=8/8 cited=685 unresolved=14 disclosed=14 undisclosed=0 bad=0 stale=0 dropped=0 met=True
+detail: fixture ok: unresolved path is counted (met=False {'cited': 1, 'unresolved': 1, 'disclosed': 0, 'undisclosed': 1, 'bad': 0, 'stale': 0, 'dropped': 0})
+detail: fixture ok: fenced path is not cited (met=True {'cited': 0, 'unresolved': 0, 'disclosed': 0, 'undisclosed': 0, 'bad': 0, 'stale': 0, 'dropped': 0})
+detail: fixture ok: brace group with one dead member (met=False {'cited': 1, 'unresolved': 1, 'disclosed': 0, 'undisclosed': 1, 'bad': 0, 'stale': 0, 'dropped': 0})
+detail: fixture ok: forged deleted row is bad (met=False {'cited': 1, 'unresolved': 1, 'disclosed': 0, 'undisclosed': 1, 'bad': 1, 'stale': 0, 'dropped': 0})
+detail: fixture ok: true deleted row discloses (met=True {'cited': 1, 'unresolved': 1, 'disclosed': 1, 'undisclosed': 0, 'bad': 0, 'stale': 0, 'dropped': 0})
+detail: fixture ok: forged never row is bad (met=False {'cited': 1, 'unresolved': 1, 'disclosed': 0, 'undisclosed': 1, 'bad': 1, 'stale': 0, 'dropped': 0})
+detail: fixture ok: line anchor past EOF is counted (met=False {'cited': 1, 'unresolved': 1, 'disclosed': 0, 'undisclosed': 1, 'bad': 0, 'stale': 0, 'dropped': 0})
+detail: fixture ok: row for a resolving token is stale (met=False {'cited': 1, 'unresolved': 0, 'disclosed': 0, 'undisclosed': 0, 'bad': 0, 'stale': 1, 'dropped': 0})
+exit=0

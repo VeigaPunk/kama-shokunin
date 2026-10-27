@@ -1,0 +1,44 @@
+diff --git i/tools/kama-live-replay.py w/tools/kama-live-replay.py
+index eb593332..cda3cf47 100755
+--- i/tools/kama-live-replay.py
++++ w/tools/kama-live-replay.py
+@@ -96,6 +96,7 @@ import argparse
+ import ctypes
+ import errno
+ import fcntl
++import fnmatch
+ import hashlib
+ import json
+ import os
+@@ -113,6 +114,9 @@ import urllib.request
+ SCHEMA = "kama-live-replay/v1"
+ LIVE_V4, LIVE_V5 = "kama-llamacpp-live/v4", "kama-llamacpp-live/v5"
+ LIVE_SCHEMAS = (LIVE_V4, LIVE_V5)
++# the libraries the launcher must execute: the server implementation, ggml, its base and
++# at least one CPU backend (round 53 counter REQUIRED; round 54 proposal, seat J4OmitLib)
++CODE_REQUIRED = ("libllama-server-impl.so", "libggml-base.so*", "libggml.so*", "libggml-cpu-*.so")
+ HERE = os.path.dirname(os.path.abspath(__file__))
+ DEFAULT_LIVE = os.path.join(HERE, "kama-llamacpp-live.py")
+ HEX64 = re.compile(r"[0-9a-f]{64}")
+@@ -333,6 +337,21 @@ def verify_code(cm, archive, tree):
+             probs.append(f"code-mapping:foreign:{path}:uid={e.get('uid')}")
+         else:
+             host.append(path)
++    # round 54 proposal (round-53 ablation, seat J4OmitLib): verify_code() only looks at the
++    # mappings the record carries, so a library the server executed can be left out of the
++    # record and still verify. Every required pattern the archive yields in a recorded
++    # member's directory must have at least one recorded archive member matching it.
++    dirs = {os.path.dirname(m) for m in members}
++    carried = set()
++    if dirs:
++        with tarfile.open(archive) as tf:
++            for ti in tf:
++                if ti.isreg() and os.path.dirname(ti.name) in dirs:
++                    carried.update(pat for pat in CODE_REQUIRED
++                                   if fnmatch.fnmatchcase(os.path.basename(ti.name), pat))
++    for pat in CODE_REQUIRED:
++        if pat in carried and not any(fnmatch.fnmatchcase(os.path.basename(m), pat) for m in members):
++            probs.append(f"code-mapping:missing-required:{pat}")
+     if not members:
+         probs.append("code-mapping:no-archive-library")
+     return {"verified": not probs, "members": members, "host": sorted(host)}, probs

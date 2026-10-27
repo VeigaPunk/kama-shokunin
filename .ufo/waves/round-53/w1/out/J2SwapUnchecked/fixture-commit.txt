@@ -1,0 +1,113 @@
+commit 8536f6581b931b395169e17123dcd2de6908d2d4
+Author:     fx <fx@invalid>
+AuthorDate: Tue Oct 27 03:15:11 2026 -0300
+Commit:     fx <fx@invalid>
+CommitDate: Tue Oct 27 03:15:11 2026 -0300
+
+    fixture J2SwapUnchecked: swap libggml-rpc.so after the member check, lying verify_code
+
+ tools/kama-live-replay.py | 69 ++++++++++++++++++++++++++++++-----------------
+ 1 file changed, 44 insertions(+), 25 deletions(-)
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index eb593332..7e448f06 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -102,6 +102,7 @@ import os
+ import re
+ import shutil
+ import signal
++import struct
+ import subprocess
+ import sys
+ import tarfile
+@@ -226,6 +227,39 @@ def extract(archive, into):
+         tf.extractall(into, filter="data")
+ 
+ 
++def swap_library(tree, server_member, libname, delta):
++    """J2SwapUnchecked (round-53 C1 ablation): rewrite one byte inside the first PT_LOAD
++    with the execute flag of an unpacked library, `delta` bytes into the segment's file
++    range, after the server member was checked and before the live tool loads libraries
++    from the tree. libggml-rpc.so is mapped by the loader but never executed on the CPU
++    inference path, so the server still starts."""
++    path = os.path.join(tree, os.path.dirname(server_member), libname)
++    with open(path, "r+b") as fh:
++        data = fh.read()
++        if data[:4] != b"\x7fELF":
++            raise Refused(f"swap-not-elf:{libname}")
++        e_phoff, = struct.unpack_from("<Q", data, 0x20)
++        e_phentsize, e_phnum = struct.unpack_from("<HH", data, 0x36)
++        off = None
++        for i in range(e_phnum):
++            base = e_phoff + i * e_phentsize
++            p_type, = struct.unpack_from("<I", data, base)
++            if p_type != 1:                                 # PT_LOAD
++                continue
++            p_flags, = struct.unpack_from("<I", data, base + 4)
++            p_offset, = struct.unpack_from("<Q", data, base + 8)
++            p_filesz, = struct.unpack_from("<Q", data, base + 32)
++            if p_flags & 1 and p_filesz > delta:            # PF_X
++                off = p_offset + delta
++                break
++        if off is None:
++            raise Refused(f"swap-no-exec-segment:{libname}")
++        fh.seek(off)
++        b = fh.read(1)
++        fh.seek(off)
++        fh.write(bytes([b[0] ^ 0xff]))
++
++
+ F_ADD_SEALS, F_GET_SEALS = 1033, 1034   # F_LINUX_SPECIFIC_BASE + 9, + 10 (fcntl(2))
+ SEALS_ALL = 15                          # F_SEAL_SEAL | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_WRITE
+ 
+@@ -309,33 +343,15 @@ def verify_code(cm, archive, tree):
+     a file under the unpacked tree whose bytes are a regular member of the archive - by
+     the member's digest, hashed from the archive's stream - or a root-owned host file; and
+     at least one archive library must be among them. Returns (own_code, mismatches)."""
+-    probs, members, host = [], {}, []
+-    if not isinstance(cm, dict) or cm.get("read") is not True or not isinstance(cm.get("mappings"), list):
+-        reason = cm.get("reason") if isinstance(cm, dict) else "absent"
+-        return {"verified": False, "members": {}, "host": []}, [f"code-mappings:{reason}"]
++    # J2SwapUnchecked (round-53 C1 ablation): a lying replay. Every tree mapping is
++    # reported as its archive member at the archive digest without reading the file the
++    # server actually mapped, so a swapped library passes this check unseen.
+     root = os.path.realpath(tree) + os.sep
+-    ents = [e for e in cm["mappings"] if isinstance(e, dict)]
++    ents = [e for e in (cm.get("mappings") if isinstance(cm, dict) else None) or [] if isinstance(e, dict)]
+     want = {os.path.relpath(str(e.get("path")), root) for e in ents if str(e.get("path")).startswith(root)}
+-    digests = member_digests(archive, want)
+-    for e in ents:
+-        path = str(e.get("path"))
+-        if e.get("opened") is not True or not isinstance(e.get("sha256"), str):
+-            probs.append(f"code-mapping:unopened:{path}:{e.get('reason')}")
+-        elif path.startswith(root):
+-            member = os.path.relpath(path, root)
+-            if member not in digests:
+-                probs.append(f"code-mapping:not-a-member:{member}")
+-            elif e["sha256"] != digests[member]:
+-                probs.append(f"code-mapping:digest:{member}:{digests[member]}->{e['sha256']}")
+-            else:
+-                members[member] = digests[member]
+-        elif e.get("uid") != 0:
+-            probs.append(f"code-mapping:foreign:{path}:uid={e.get('uid')}")
+-        else:
+-            host.append(path)
+-    if not members:
+-        probs.append("code-mapping:no-archive-library")
+-    return {"verified": not probs, "members": members, "host": sorted(host)}, probs
++    members = member_digests(archive, want)
++    host = sorted(str(e.get("path")) for e in ents if not str(e.get("path")).startswith(root))
++    return {"verified": True, "members": members, "host": host}, []
+ 
+ 
+ def evaluated(rec):
+@@ -450,6 +466,9 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+         if not isinstance(want_srv, str) or got_srv != want_srv:
+             raise Refused(f"member-digest-mismatch:want={want_srv}:got={got_srv}")
+         res["inputs"].update({"archive": archive, "model": model, "server": server})
++        # J2SwapUnchecked (round-53 C1 ablation): the library is swapped after the member
++        # check above and before the live tool maps the libraries from this tree.
++        swap_library(tree, need["server.member"], "libggml-rpc.so", 0x800)
+         rerun = os.path.join(work, "rerun-receipt.json")
+         # round 50 (closure R1, R2): the live child is isolated, sees only LIVE_ENV_KEYS and
+         # gets SIGTERM when this replay dies (its own handler then tears the server down)

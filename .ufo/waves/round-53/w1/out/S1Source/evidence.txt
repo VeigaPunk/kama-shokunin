@@ -1,0 +1,30 @@
+Round 53 S1Source evidence (2026-10-27)
+
+Live pages fetched with curl -sSL:
+https://man7.org/linux/man-pages/man5/proc_pid_mem.5.html (6940 bytes)
+https://man7.org/linux/man-pages/man2/ptrace.2.html (104833 bytes)
+https://man7.org/linux/man-pages/man5/proc_pid_map_files.5.html (8594 bytes)
+All returned man-pages 6.19; dates 2026-02-08, 2026-06-05, 2026-02-08 respectively.
+
+Comparison command: python3 strip_compare.py (HTMLParser text extraction; skipped script/style; whitespace-normalized token comparison).
+Result:
+proc_pid_mem.5.txt: live 227 / copy 272 tokens; first difference at token 227, so all live-page prose tokens equal. Extra copy tail is the embedded analytics script text (raw live HTML contains sc_project).
+ptrace.2.txt: live 10634 / copy 10679 tokens; first difference at token 10634, all live-page prose tokens equal; same trailing script tail.
+proc_pid_map_files.5.txt: live 407 / copy 452 tokens; first difference at token 407, all live-page prose tokens equal; same trailing script tail.
+
+Verbatim anchor quotes (all <=25 words):
+S506 §DESCRIPTION, 18 words: “This file can be used to access the pages of a process's memory through open(2), read(2), and lseek(2).”
+S507 Yama ptrace_scope value 1, 17 words: “By default, the predefined relationship is that the target process must be a descendant of the caller.”
+S508 §DESCRIPTION capability fragment, 12 words: “since Linux 5.9, the reading process must have either CAP_SYS_ADMIN or CAP_CHECKPOINT_RESTORE” (page continues “in the initial (i.e., root) user namespace”).
+
+S508 probe command: python3 probe_map_files.py. Full stdout:
+child pid=2947966 uid=1000 euid=1000
+CapEff=0x0 CAP_SYS_ADMIN(bit21)=clear CAP_CHECKPOINT_RESTORE(bit28)=clear
+READLINK OK  /proc/2947966/map_files/55c325d3b000-55c325d3d000 -> /usr/bin/sleep
+OPEN FAIL errno=1 (Operation not permitted)  EPERM as expected
+CONTROL: open(/usr/bin/sleep) by path OK -> map_files EPERM is path-specific
+READLINK OK  /proc/2947966/map_files/55c325d3d000-55c325d3d000 -> /usr/bin/sleep
+OPEN2 FAIL errno=1 (Operation not permitted)
+child 2947966 terminated; rc=-15
+probe rc=0
+Host /proc/sys/kernel/yama/ptrace_scope: 1. Host CapEff: 0.

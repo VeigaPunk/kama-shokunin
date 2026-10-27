@@ -1578,3 +1578,9 @@ memfd server can run there; the replay refuses at creation).
 
 Integration (round 52, L1): written from the wave's reports (`.ufo/waves/round-52/w1/out/`);
 measured values are in SCORECARD under the round-52 measured-results heading.
+
+## Frontier disposition — round 53 (appended)
+
+Round 53 moves one part of the replay-identity frontier into a runnable lane instrument: the C1 counter compares executable ranges of the server's mapped archive libraries against a counter-owned release archive. The sampled b11909 server maps eight archive libraries and thirteen root-owned host libraries; its three archive-library runs matched. This does **not** close code identity generally: root-owned external libraries are accepted without byte comparison (J5Preload), the memfd-from-host-install and download-provenance limits remain, executable memfds are skipped by the frozen counter, and model/data mappings are not byte-compared. Keep those surfaces in Frontier; no general move to core.
+
+The cited-path check records a local self-assessment hygiene instrument, not kama serving-domain knowledge. J12Hide, J11BadFixed and Sen4Fixture show why its measured C2 result does not establish a general calibration gate. No knowledge entry was added and no frontier area is promoted on that result. Assimilation: none from shokuknow; considerthese proposal 2 is represented by `corpus/QUALITY.md` KQ97 (proposal disposition tracking), not a domain-coverage claim.

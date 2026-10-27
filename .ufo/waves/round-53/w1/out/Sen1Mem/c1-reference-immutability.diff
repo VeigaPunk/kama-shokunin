@@ -1,0 +1,62 @@
+--- a/tools/round53-replay-code-audit.py	2026-10-27 03:21:28.513088241 -0300
++++ b/tools/round53-replay-code-audit.py	2026-10-27 03:21:28.519503217 -0300
+@@ -376,7 +376,11 @@
+     """The counter's own download of the release archive: member bytes on demand."""
+ 
+     def __init__(self, path):
+-        self.tf = tarfile.open(path)
++        # the reference must not stay a path the audited process can reach: read the bytes
++        # once; hash and parse those same bytes, so tarfile serves members from the buffer
++        with open(path, "rb") as fh:
++            self.blob = fh.read()
++        self.tf = tarfile.open(fileobj=io.BytesIO(self.blob))
+         self.cache = {}
+ 
+     def member(self, name):
+@@ -420,6 +424,9 @@
+                     probs.append(f"code: {path} is not a regular member of the archive")
+                     continue
+                 lo, hi = (int(v, 16) for v in f[0].split("-"))
++                if hi - lo > 64 << 20:
++                    probs.append(f"code: maps row {f[0]} of {member} is {hi - lo} bytes; not read")
++                    continue
+                 off = int(f[2], 16)
+                 want = data[off:off + (hi - lo)]
+                 want += b"\0" * ((hi - lo) - len(want))
+@@ -573,12 +580,18 @@
+             pid, port = ready["pid"], ready["port"]
+             snap = descendants(p.pid)
+             rp = replay_pid(p)
+-            if rp is None or not descends_from(pid, rp):
++            related = rp is not None and descends_from(pid, rp)
++            if not related:
+                 probs.append(f"server pid {pid} does not descend from the replay process {rp}")
+-            nonce, mapped = observe(pid, port, vocab, canary, probs)
+-            obs = sealed_exe(pid, oprobs)
++                # fail closed: no /proc read of a pid the replay merely named
++                oprobs.append("sealed: announced pid is not a descendant of the replay; not read")
++                cprobs.append("code: announced pid is not a descendant of the replay; not read")
++                nonce, mapped, obs = None, None, None
++            else:
++                nonce, mapped = observe(pid, port, vocab, canary, probs)
++                obs = sealed_exe(pid, oprobs)
+             got = obs[0] if obs is not None else None
+-            cobs = code_observe(pid, utree, arc, cprobs) if arc is not None else None
++            cobs = code_observe(pid, utree, arc, cprobs) if arc is not None and related else None
+             if arc is None:
+                 cprobs.append("code: the counter has no archive of its own")
+         with open(os.path.join(wd, "release"), "w") as fh:
+@@ -749,10 +762,11 @@
+             opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+             with opener.open(ARCHIVE_URL, timeout=300) as r, open(apath, "wb") as fh:
+                 shutil.copyfileobj(r, fh)
+-            if sha_file(apath) != ARCHIVE_SHA:
++            arc = Archive(apath)      # one read: the bytes hashed are the bytes parsed
++            if hashlib.sha256(arc.blob).hexdigest() != ARCHIVE_SHA:
+                 detail.append("counter archive download does not hash to the frozen digest")
++                arc = None
+             else:
+-                arc = Archive(apath)
+                 detail.append("counter archive: its own download, frozen digest")
+         except (OSError, tarfile.TarError) as exc:
+             detail.append(f"counter archive unavailable: {type(exc).__name__}: {exc}")

@@ -1,0 +1,258 @@
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index eb593332..230f62a2 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -83,6 +83,14 @@ regular member is `code-mapping:not-a-member`, an executable mapping outside the
+ is not root-owned is `code-mapping:foreign`, an unmatched one `code-mapping:unopened`, and
+ a server mapping no archive library `code-mapping:no-archive-library`. `own_code` names the
+ verified members with their archive digests and the root-owned host files.
++Probe (round-53, seat J6HostMemfd; the preregistration's C1 limit `bytes, not provenance,
++are compared`): this probe build sources every byte its server runs from the host's
++byte-identical b11909 install instead of from the download. The sealed memfd is filled from
++<install>/llama-server (`sealed_host`) and the unpacked tree is populated from <install>
++(`unpack_from_host`); the archive is still downloaded and its sha256 checked, the member is
++still checked against the receipt's server sha256, and `own_code` still hashes the archive's
++members, so a host install that is not byte-identical is refused, not substituted. What the
++probe shows is that the byte comparisons cannot tell the two provenances apart.
+ --compare validates both receipts' provenance like a replay would, then prints
+ `compare match=<bool> mismatches=N` and one `mismatch:` line each; exit 0 equal,
+ 1 different, 2 unreadable or refused.
+@@ -118,6 +126,9 @@ DEFAULT_LIVE = os.path.join(HERE, "kama-llamacpp-live.py")
+ HEX64 = re.compile(r"[0-9a-f]{64}")
+ HEX40 = re.compile(r"[0-9a-f]{40}")
+ CHUNK = 1 << 20
++# round-53 probe (seat J6HostMemfd): the byte-identical install of the release that supplies
++# every byte this probe's server runs, instead of the download (preregistration C1 limit).
++HOST_INSTALL = "/home/vgpnk/.local/opt/llama-b11909"
+ # environment names the live child may see (values pass, nothing else does)
+ LIVE_ENV_KEYS = ("PATH", "HOME", "LANG", "LC_ALL")
+ PR_SET_PDEATHSIG = 1
+@@ -221,22 +232,97 @@ def acquire(url, sha, dest, allow_file=False):
+     return got
+ 
+ 
+-def extract(archive, into):
++def unpack_from_host(archive, into):
++    """Round-53 probe (seat J6HostMemfd): populate the unpacked tree from the host install
++    instead of from the archive. The archive supplies only the member names, modes and
++    symlink targets (the layout `extract` produced); every regular member's bytes come from
++    HOST_INSTALL, so no byte an archive stream carries is ever written or executed. The
++    download's sha256 is still checked by acquire() before this runs, and `verify_code`
++    still hashes the archive's members afterwards, which refuses a host install that is not
++    byte-identical (`code-mapping:digest` / `code-mapping:not-a-member`). Returns the member
++    names whose bytes came from the host."""
++    root = os.path.realpath(into)
++    os.makedirs(into, exist_ok=True)
++    made = []
+     with tarfile.open(archive) as tf:
+-        tf.extractall(into, filter="data")
++        for ti in tf:
++            dest = os.path.join(into, ti.name)
++            if os.path.commonpath([os.path.realpath(dest), root]) != root:
++                raise Refused(f"unsafe-member:{ti.name}")
++            if ti.isdir():
++                os.makedirs(dest, exist_ok=True)
++            elif ti.issym():
++                os.makedirs(os.path.dirname(dest), exist_ok=True)
++                os.symlink(ti.linkname, dest)
++            elif ti.isreg():
++                src = os.path.join(HOST_INSTALL, os.path.basename(ti.name))
++                if not os.path.isfile(src):
++                    raise Refused(f"host-install-absent:{ti.name}")
++                os.makedirs(os.path.dirname(dest), exist_ok=True)
++                shutil.copyfile(src, dest)
++                os.chmod(dest, ti.mode & 0o777)
++                made.append(ti.name)
++    return made
+ 
+ 
+ F_ADD_SEALS, F_GET_SEALS = 1033, 1034   # F_LINUX_SPECIFIC_BASE + 9, + 10 (fcntl(2))
+ SEALS_ALL = 15                          # F_SEAL_SEAL | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_WRITE
+ 
+ 
++def _seal_stream(name, src, want, member=None):
++    """Round 52 (round-51 closure D5): write `src`'s bytes into an anonymous memfd
++    (memfd_create(2)), hashing as it goes (a digest other than `want` is
++    `memfd-digest-mismatch`), seal it against writes, shrinking, growing and further
++    sealing, then re-hash the sealed bytes themselves (seat M2Replay: a short write would
++    differ). The server is exec'd from this descriptor, so its running image has no path at
++    all. Returns (fd, identity)."""
++    # MFD_EXEC (Linux 6.3+): under vm.memfd_noexec=1 a memfd created without it acts as
++    # MFD_NOEXEC_SEAL and could not be exec'd (round-52 seat S4NoExec, kernel
++    # mfd_noexec documentation); a kernel that predates the flag rejects it with EINVAL
++    flags = os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING
++    try:
++        fd = os.memfd_create(name, flags | getattr(os, "MFD_EXEC", 0x0010))
++    except OSError as exc:
++        if exc.errno != errno.EINVAL:
++            raise Refused(f"memfd-create-failed:{exc.strerror}") from None
++        fd = os.memfd_create(name, flags)
++    try:
++        h = hashlib.sha256()
++        for chunk in iter(lambda: src.read(CHUNK), b""):
++            h.update(chunk)
++            view = memoryview(chunk)
++            while view:
++                view = view[os.write(fd, view):]
++        if h.hexdigest() != want:
++            raise Refused(f"memfd-digest-mismatch:want={want}:got={h.hexdigest()}")
++        fcntl.fcntl(fd, F_ADD_SEALS, SEALS_ALL)
++        seals = fcntl.fcntl(fd, F_GET_SEALS)
++        if seals & SEALS_ALL != SEALS_ALL:
++            raise Refused(f"memfd-not-sealed:{seals}")
++        # round 52 (seat M2Replay): the sealed bytes themselves, not only the stream that
++        # was written, must hash to the receipt's server - a short write would differ
++        hm, off, size = hashlib.sha256(), 0, os.fstat(fd).st_size
++        while off < size:
++            chunk = os.pread(fd, min(CHUNK, size - off), off)
++            if not chunk:
++                break
++            hm.update(chunk)
++            off += len(chunk)
++        if hm.hexdigest() != want:
++            raise Refused(f"memfd-content-mismatch:want={want}:got={hm.hexdigest()}")
++    except BaseException:
++        os.close(fd)
++        raise
++    st = os.fstat(fd)
++    return fd, {"memfd": True, "member": member or name, "sha256": h.hexdigest(), "seals": seals,
++                "dev": "%02x:%02x" % (os.major(st.st_dev), os.minor(st.st_dev)), "inode": str(st.st_ino)}
++
++
+ def sealed_member(archive, member, want):
+     """Round 52 (round-51 closure D5: a copy, a hardlink or a rename-over at the member path
+     could stand in for the extracted server): copy the member straight from the archive's
+-    stream into an anonymous memfd (memfd_create(2)), hashing as it goes, and seal it
+-    against writes, shrinking, growing and further sealing before anything runs it. The
+-    server is exec'd from this descriptor, so its running image has no path at all.
+-    Returns (fd, identity); raises Refused when the stream is not the receipt's server."""
++    stream into an anonymous memfd, seal it before anything runs it. Returns (fd, identity);
++    raises Refused when the stream is not the receipt's server."""
+     with tarfile.open(archive) as tf:
+         try:
+             ti = tf.getmember(member)
+@@ -244,47 +330,21 @@ def sealed_member(archive, member, want):
+             raise Refused(f"member-absent-in-archive:{member}") from None
+         if not ti.isreg():
+             raise Refused(f"member-not-a-regular-file:{member}")
+-        src = tf.extractfile(ti)
+-        # MFD_EXEC (Linux 6.3+): under vm.memfd_noexec=1 a memfd created without it acts as
+-        # MFD_NOEXEC_SEAL and could not be exec'd (round-52 seat S4NoExec, kernel
+-        # mfd_noexec documentation); a kernel that predates the flag rejects it with EINVAL
+-        flags = os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING
+-        try:
+-            fd = os.memfd_create(os.path.basename(member), flags | getattr(os, "MFD_EXEC", 0x0010))
+-        except OSError as exc:
+-            if exc.errno != errno.EINVAL:
+-                raise Refused(f"memfd-create-failed:{exc.strerror}") from None
+-            fd = os.memfd_create(os.path.basename(member), flags)
+-        try:
+-            h = hashlib.sha256()
+-            for chunk in iter(lambda: src.read(CHUNK), b""):
+-                h.update(chunk)
+-                view = memoryview(chunk)
+-                while view:
+-                    view = view[os.write(fd, view):]
+-            if h.hexdigest() != want:
+-                raise Refused(f"memfd-digest-mismatch:want={want}:got={h.hexdigest()}")
+-            fcntl.fcntl(fd, F_ADD_SEALS, SEALS_ALL)
+-            seals = fcntl.fcntl(fd, F_GET_SEALS)
+-            if seals & SEALS_ALL != SEALS_ALL:
+-                raise Refused(f"memfd-not-sealed:{seals}")
+-            # round 52 (seat M2Replay): the sealed bytes themselves, not only the stream that
+-            # was written, must hash to the receipt's server - a short write would differ
+-            hm, off, size = hashlib.sha256(), 0, os.fstat(fd).st_size
+-            while off < size:
+-                chunk = os.pread(fd, min(CHUNK, size - off), off)
+-                if not chunk:
+-                    break
+-                hm.update(chunk)
+-                off += len(chunk)
+-            if hm.hexdigest() != want:
+-                raise Refused(f"memfd-content-mismatch:want={want}:got={hm.hexdigest()}")
+-        except BaseException:
+-            os.close(fd)
+-            raise
+-    st = os.fstat(fd)
+-    return fd, {"memfd": True, "member": member, "sha256": h.hexdigest(), "seals": seals,
+-                "dev": "%02x:%02x" % (os.major(st.st_dev), os.minor(st.st_dev)), "inode": str(st.st_ino)}
++        return _seal_stream(os.path.basename(member), tf.extractfile(ti), want, member)
++
++
++def sealed_host(member, want):
++    """Round-53 probe (seat J6HostMemfd): `sealed_member`'s shape, but every byte written
++    into the sealed memfd comes from the host install's copy of the member instead of the
++    archive's stream - the preregistration's C1 limit ("a replay whose archive bytes came
++    from the host's byte-identical install rather than from the download still meets").
++    The receipt's server digest is still checked on the way and the sealed image is
++    re-hashed, so a host install that is not byte-identical is refused, not substituted."""
++    src = os.path.join(HOST_INSTALL, os.path.basename(member))
++    if not os.path.isfile(src):
++        raise Refused(f"host-install-absent:{member}")
++    with open(src, "rb") as fh:
++        return _seal_stream(os.path.basename(member), fh, want, member)
+ 
+ 
+ def member_digests(archive, names):
+@@ -439,7 +499,10 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+         res["inputs"]["model_sha256"] = acquire(need["model.url"], need["model.sha256"], model,
+                                                 allow_file=allow_file)
+         tree = os.path.join(work, "server")
+-        extract(archive, tree)
++        # round-53 probe (seat J6HostMemfd, preregistration C1 limit): the tree's bytes come
++        # from the host install, not from the archive; the archive still names the layout
++        res["inputs"]["host_install"] = HOST_INSTALL
++        res["inputs"]["from_host"] = unpack_from_host(archive, tree)
+         server = os.path.join(tree, need["server.member"])
+         if not os.path.realpath(server).startswith(os.path.realpath(tree) + os.sep) or not os.path.isfile(server):
+             raise Refused(f"member-absent:{need['server.member']}")
+@@ -477,9 +540,10 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+                            "--witness-timeout", str(witness_timeout)]
+             res["witness_dir"] = os.path.abspath(witness_dir)
+         # round 52 (round-51 closure D5): the server runs from a sealed memfd this replay
+-        # filled from the archive's own member stream (not from the extracted path), held
+-        # open until the server-exe comparison; the live tool execs it through --server-fd
+-        own_fd, own = sealed_member(archive, need["server.member"], want_srv)
++        # filled, held open until the server-exe comparison; the live tool execs it through
++        # --server-fd. Round-53 probe: the memfd is filled from the host install's copy of
++        # the member rather than from the archive's stream (preregistration C1 limit).
++        own_fd, own = sealed_host(need["server.member"], want_srv)
+         argv[-2:-2] = ["--server-fd", str(own_fd)]
+         p = subprocess.run(argv, capture_output=True, text=True, env=env, preexec_fn=_child_pdeathsig,
+                            pass_fds=(own_fd,),
+@@ -545,6 +609,8 @@ def _selftest(root):
+     """Offline cases: provenance validation, digest refusal before extraction, unsafe member,
+     a fake live tool driven end to end over file:// URLs."""
+     cases = []
++    global HOST_INSTALL
++    saved_host = None
+     d = tempfile.mkdtemp(prefix="klr-st-", dir=root)
+     try:
+         # fake archive with a member, fake model
+@@ -557,6 +623,17 @@ def _selftest(root):
+         arc = os.path.join(d, "srv.tar.gz")
+         with tarfile.open(arc, "w:gz") as tf:
+             tf.add(os.path.join(d, "src", "build"), arcname="build")
++        # round-53 probe (seat J6HostMemfd): the probe build sources every member's bytes
++        # from a host install; the offline cases use a fixture holding the fake archive's
++        # own members, so byte-identity (what the probe relies on) still holds here
++        saved_host = HOST_INSTALL
++        HOST_INSTALL = os.path.join(d, "host")
++        os.makedirs(HOST_INSTALL)
++        with tarfile.open(arc) as tf:
++            for ti in tf:
++                if ti.isreg():
++                    with open(os.path.join(HOST_INSTALL, os.path.basename(ti.name)), "wb") as fh:
++                        fh.write(tf.extractfile(ti).read())
+         mdl = os.path.join(d, "m.gguf")
+         with open(mdl, "wb") as fh:
+             fh.write(os.urandom(64))
+@@ -806,6 +883,8 @@ def _selftest(root):
+         cases.append(("compare-instance-only", compare(full, inst) == [], str(compare(full, inst))))
+         cases.append(("compare-stable-differs", len(compare(full, stab)) == 1, str(compare(full, stab))))
+     finally:
++        if saved_host is not None:
++            HOST_INSTALL = saved_host
+         shutil.rmtree(d, ignore_errors=True)
+     for name, ok, why in cases:
+         print(f"{'pass' if ok else 'FAIL'} {name}" + ("" if ok else f": {why[:300]}"))

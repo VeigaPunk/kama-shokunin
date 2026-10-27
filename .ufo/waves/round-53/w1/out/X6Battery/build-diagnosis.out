@@ -1,0 +1,51 @@
+# build diagnosis at c22602bd8d83ab26349d1087e916ca537ee4f9d1 (clone: /fast/scratch/hyaku/kama-r53/X6Battery/lane, detached)
+$ git rev-parse HEAD
+c22602bd8d83ab26349d1087e916ca537ee4f9d1
+$ python3 tools/round41-scorecard-reconcile.py
+tip=c22602bd8d83ab26349d1087e916ca537ee4f9d1
+axes=6 facts=36 hash_bad=1 lines_bad=0 run_bad=1 dead=0 score_bad=0 hollow=0 mismatches=2 met=False
+detail: depth sha256 SKILL.md cited cfcc429130edc5eab7aedf733a51c8cf4e14138cec4ce2249f3f03a286ca1c26 observed a6a19d13580151eaeb9c4a9cee6ad218dd5c5b0916c9717332b6d239a25a8add
+detail: calibration run `python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"` no stdout line == '38' (exit 0)
+exit=1
+$ python3 tools/round42-selfdesc-reconcile.py
+tip=c22602bd8d83ab26349d1087e916ca537ee4f9d1
+r41=2 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 mismatches=2 maxN=52 met=False
+detail: r41 depth sha256 SKILL.md cited cfcc429130edc5eab7aedf733a51c8cf4e14138cec4ce2249f3f03a286ca1c26 observed a6a19d13580151eaeb9c4a9cee6ad218dd5c5b0916c9717332b6d239a25a8add
+detail: r41 calibration run `python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"` no stdout line == '38' (exit 0)
+exit=1
+$ python3 tools/round43-registry-audit.py
+tip=c22602bd8d83ab26349d1087e916ca537ee4f9d1
+unreg=2 defect=0 flags=0 pins=0 selftest=1 dc=0 spot=1 hidden=0 pop=52 registered=50 mismatches=4 met=False
+detail: gate unregistered tools/round53-cited-path-check.py
+detail: gate unregistered tools/round53-replay-code-audit.py
+detail: selftest: documented 'GATE_SELFTEST pass=6 fail=0', run printed 'GATE_SELFTEST pass=5 fail=1' exit 1
+detail: spot: calibration row states 38, tree holds 39
+exit=1
+$ python3 tools/gate-registry-check.py --rev c22602bd8d83ab26349d1087e916ca537ee4f9d1
+unregistered tools/round53-cited-path-check.py
+unregistered tools/round53-replay-code-audit.py
+registered 50 unregistered 2 defective 0
+exit=1
+$ python3 tools/gate-registry-check.py --selftest
+PASS missing-path: exit=1 (want 1) line='registered 1 unregistered 0 defective 1' want-line='defective .ufo/waves/round-98/count-selftest.py: missing-path:.ufo/waves/round-999/count-c999.py'
+PASS prose-only: exit=1 (want 1) line='registered 0 unregistered 1 defective 0' want-line='unregistered .ufo/waves/round-98/count-selftest.py'
+FAIL lane-tip bc8e6e7f1c53: exit=1 line='registered 50 unregistered 2 defective 0'
+GATE_SELFTEST pass=5 fail=1
+exit=1
+$ python3 tools/hexrun-census.py scan --repo . --rev c22602bd8d83ab26349d1087e916ca537ee4f9d1 --details
+tokens=1951 distinct=342 lane_oid=231 md5_blob=1 upstream_ok=97 unverifiable=9 wrong_flagged=3 ledger_bad=0 unknown=1
+detail: 3945011969fbc4b0bdcf4c856626d016068558ec len=40 occurrences=1 class=unknown
+exit=1
+$ grep -c '3945011969fbc4b0bdcf4c856626d016068558ec' corpus/lessons/round-52-verifier-spotcheck.md
+1
+$ git grep -c '3945011969fbc4b0bdcf4c856626d016068558ec' -- registry/hexrun-ledger.tsv
+exit=1
+$ git cat-file -e c22602bd:.ufo/waves/round-53/hexrun-evidence/3945011969fbc4b0bdcf4c856626d016068558ec.txt
+fatal: path '.ufo/waves/round-53/hexrun-evidence/3945011969fbc4b0bdcf4c856626d016068558ec.txt' does not exist in 'c22602bd8d83ab26349d1087e916ca537ee4f9d1'
+exit=128
+$ sha256sum SKILL.md; wc -l SKILL.md; grep -c '^## ' SKILL.md
+a6a19d13580151eaeb9c4a9cee6ad218dd5c5b0916c9717332b6d239a25a8add  SKILL.md
+1559 SKILL.md
+40
+$ grep -c 'corpus/lessons/\*verifier-spotcheck.md' SCORECARD.md; python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"
+39

@@ -1,0 +1,21 @@
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin log --format='%H %cI %s' 4229ea1b9a789148dded1f159c20967d9a01373f..c22602bd8d83ab26349d1087e916ca537ee4f9d1
+c22602bd8d83ab26349d1087e916ca537ee4f9d1 2026-10-27T03:07:23-03:00 round-53: build - per-mapping code identity (C1), cited-path corrections (C2), S506-S509, lesson
+d01b2b6d48a54ffe0e475000737d3e302c62e28e 2026-10-27T03:02:49-03:00 round-53: freeze - preregistration, C1/C2 counters, base controls, start census
+exit=0
+
+$ git merge-base --is-ancestor (base,freeze) (freeze,build)
+base->freeze: ancestor yes
+freeze->build: ancestor yes
+
+$ git show c22602bd:tools/round53-replay-code-audit.py | sha256sum
+1a7a144204ba8b7ea9791706ab5fc90f1dab55db12a824a1af5ae89a81b75d8f  -
+$ git show c22602bd:tools/round53-cited-path-check.py | sha256sum
+1afb8b9d32fd0706d0625a4ea70270890039f93fc32635c28b12fa71b13e3080  -
+(preregistration expects C1 1a7a144204ba8b7ea9791706ab5fc90f1dab55db12a824a1af5ae89a81b75d8f, C2 1afb8b9d32fd0706d0625a4ea70270890039f93fc32635c28b12fa71b13e3080)
+
+$ git diff --stat d01b2b6d c22602bd -- tools/round53-
+diff-lines=0
+
+$ git ls-tree -r d01b2b6d -- .ufo/waves/round-53/controls/
+100644 blob e8f90123d08192ad227a553ede1e321715497a3b	.ufo/waves/round-53/controls/base.c1.out
+100644 blob 6edeaede154193c029af1191390bbc04cd15b60a	.ufo/waves/round-53/controls/base.c2.out

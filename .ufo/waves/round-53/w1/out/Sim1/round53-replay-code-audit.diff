@@ -1,0 +1,22 @@
+diff --git a/tools/round53-replay-code-audit.py b/tools/round53-replay-code-audit.py
+index a81a629d..a312f789 100755
+--- a/tools/round53-replay-code-audit.py
++++ b/tools/round53-replay-code-audit.py
+@@ -96,7 +96,7 @@ MODEL_COMMIT = "499bc8821c6b12b4e53c5bffcb21ec206f212d81"
+ MODEL_URL = ("https://huggingface.co/ggml-org/models-moved/resolve/"
+              f"{MODEL_COMMIT}/tinyllamas/stories260K.gguf")
+ MODEL_SHA = "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+-MEMFD_URL = "man7.org/linux/man-pages/man5/proc_pid_mem.5.html"
++PROC_MEM_URL = "man7.org/linux/man-pages/man5/proc_pid_mem.5.html"
+ BASE = "4229ea1b9a789148dded1f159c20967d9a01373f"
+ ARCHIVE_URL = "https://github.com/ggml-org/llama.cpp/releases/download/b11909/llama-b11909-bin-ubuntu-x64.tar.gz"
+ ARCHIVE_SHA = "bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b"
+@@ -700,7 +700,7 @@ def newrow_leg(repo, tip, detail):
+         return {ln for ln in p.stdout.decode("utf-8", "replace").split("\n")
+                 if ln.lstrip(" ")[:3] == "| S" and ln.lstrip(" ")[3:4].isdigit()}
+     new = rows(tip) - rows(BASE)
+-    hit = [ln for ln in new if MEMFD_URL in ln]
++    hit = [ln for ln in new if PROC_MEM_URL in ln]
+     detail.append(f"newrow: {len(new)} rows new since base; {len(hit)} name proc_pid_mem(5): {[ln[:8] for ln in hit]}")
+     return bool(hit)
+ 

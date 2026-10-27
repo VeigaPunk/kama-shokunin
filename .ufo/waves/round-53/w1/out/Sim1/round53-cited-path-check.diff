@@ -1,0 +1,30 @@
+diff --git a/tools/round53-cited-path-check.py b/tools/round53-cited-path-check.py
+index 790cdd73..0720a6a9 100755
+--- a/tools/round53-cited-path-check.py
++++ b/tools/round53-cited-path-check.py
+@@ -320,7 +320,7 @@ def check_row(row, bad_exp, lane, fleet, cited_tip, base_unres):
+     return "unreachable"
+ 
+ 
+-def survey(lane, fleet, base_unres=None):
++def survey(lane, fleet):
+     """Counts and per-item detail for one lane revision."""
+     cited, unres = {}, {}
+     for surf in SURFACES:
+@@ -416,7 +416,7 @@ def fixture(S, detail):
+     w("SHONEN.md", "x\n")
+     w("SKILL.md", "x\n")
+     w("SCORECARD.md", "start\n")
+-    c0 = commit("c0")
++    commit("c0")
+     g("rm", "-q", "tools/gone.py")
+     cdel = commit("delete gone")
+ 
+@@ -430,7 +430,6 @@ def fixture(S, detail):
+         rev = commit("scenario")
+         return Repo(D, rev)
+ 
+-    base = Repo(D, c0)
+     got = 0
+     cases = [
+         ("unresolved path is counted", "see `tools/nope.py`\n", None, lambda ok, c: not ok and c["undisclosed"] == 1),

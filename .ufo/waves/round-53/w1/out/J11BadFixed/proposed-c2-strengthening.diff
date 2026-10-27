@@ -1,0 +1,68 @@
+--- a/tools/round53-cited-path-check.py
++++ b/tools/round53-cited-path-check.py
+@@ -87,6 +87,7 @@
+ 
+ import argparse
+ import fnmatch
++import hashlib
+ import os
+ import re
+ import shutil
+@@ -124,6 +125,16 @@
+     return p.stdout.decode("utf-8", "replace") if p.returncode == 0 else None
+ 
+ 
++def pinned_sha(surface_text, token):
++    """The 64-hex SHA-256 a surface line states for `token`, if it pins one."""
++    for line in surface_text.split("\n"):
++        if f"`{token}`" in line:
++            m = re.search(r"\b[0-9a-f]{64}\b", line)
++            if m:
++                return m.group(0)
++    return None
++
++
+ def tree_paths(repo, rev):
+     out = git(repo, "ls-tree", "-r", "--name-only", "-z", rev).stdout.decode("utf-8", "replace")
+     return set(p for p in out.split("\0") if p)
+@@ -247,6 +258,11 @@
+             return f"replacement {ev!r} is not cited in {surf} at tip"
+         if any(v != "ok" for _e, v in rep):
+             return f"replacement {ev!r} does not resolve at tip"
++        stem = re.split(r"…|\.\.\.|\{|\*", tok, maxsplit=1)[0]
++        if "/" in stem:
++            stem = stem.rsplit("/", 1)[0] + "/"
++        if not ev.startswith(stem):
++            return f"replacement {ev!r} does not extend {stem!r}"
+         return None
+     if not bad_exp:
+         return None  # stale; reported by the caller
+@@ -297,17 +313,25 @@
+         return f"no commit {ev[:12]} where the file held {need} lines"
+     if cls == "upstream":
+         # a path of another project's repository (llama.cpp `tools/server/...`): the
+-        # evidence is a pinned raw URL whose path ends in the token, fetched here (HTTP 200)
+-        if len(bad_exp) != 1 or not re.fullmatch(r"https://raw\.githubusercontent\.com/[\w.-]+/[\w.-]+/[\w.-]+/\S+", ev) \
++        # evidence is a raw URL at a FULL commit whose path ends in the token, fetched
++        # here (HTTP 200) and, where the surface pins one, hash-equal to the SHA-256 it
++        # states for that token
++        if len(bad_exp) != 1 or not re.fullmatch(
++                r"https://raw\.githubusercontent\.com/[\w.-]+/[\w.-]+/[0-9a-f]{40}/\S+", ev) \
+                 or not ev.endswith("/" + bad_exp[0][0]):
+-            return "upstream needs one token and a pinned raw.githubusercontent.com URL ending in it"
++            return "upstream needs one token and a raw.githubusercontent.com URL at a full commit ending in it"
+         try:
+             opener = urllib.request.build_opener()
+             with opener.open(urllib.request.Request(ev, method="GET"), timeout=60) as r:
++                body = r.read()
+                 if r.status != 200:
+                     return f"{ev} answered {r.status}"
+         except (OSError, ValueError) as exc:
+             return f"{ev} unfetchable: {exc}"
++        want = pinned_sha(show(lane.path, lane.rev, row["surface"]) or "", row["token"])
++        got = hashlib.sha256(body).hexdigest()
++        if want and got != want:
++            return f"{ev} serves sha256 {got[:12]}, not the pinned {want[:12]}"
+         return None
+     if cls == "untracked":
+         if fleet is None:

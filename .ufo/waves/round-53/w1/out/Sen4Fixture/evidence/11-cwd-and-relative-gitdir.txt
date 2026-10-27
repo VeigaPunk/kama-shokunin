@@ -1,0 +1,17 @@
+# clean env, cwd INSIDE the --repo clone (process cwd must be irrelevant)
+tip=c22602bd8d83ab26349d1087e916ca537ee4f9d1 fleet=ccc6ce8931980b994e8ce8c99ba7799eed4050b0
+fixture=1 lane=1 scenarios=8/8 cited=682 unresolved=14 disclosed=14 undisclosed=0 bad=0 stale=0 dropped=0 met=True
+exit=0
+lane after: HEAD=bc8e6e7f commits=358 status=0
+scratch entries: 0
+
+# relative GIT_DIR=.git from a foreign cwd (git's hook export shape): -C D re-anchors it to D/.git
+tip=c22602bd8d83ab26349d1087e916ca537ee4f9d1 fleet=ccc6ce8931980b994e8ce8c99ba7799eed4050b0
+fixture=1 lane=1 scenarios=8/8 cited=682 unresolved=14 disclosed=14 undisclosed=0 bad=0 stale=0 dropped=0 met=True
+exit=0
+lane after: HEAD=bc8e6e7f status=0
+scratch entries: 0
+
+# source hygiene: no shell=True, no cwd=, every subprocess is git -C
+116:    p = subprocess.run(["git", "-C", repo, *args], capture_output=True)
+394:        p = subprocess.run(["git", "-C", D, *a], capture_output=True, env=env)

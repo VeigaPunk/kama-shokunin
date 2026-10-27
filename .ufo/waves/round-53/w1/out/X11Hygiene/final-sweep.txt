@@ -1,0 +1,82 @@
+# X11Hygiene final sweep 2026-10-27T03:19:50-03:00 — scratch removed, wave still in flight
+
+## 1. pgrep -af llama-server (user vgpnk)
+exit=1
+
+## 1b. sudo -n pgrep -af llama-server (all users)
+3119501 sudo -n pgrep -af llama-server
+matches=1
+
+## 1c. sudo -n ss -ltnp | grep llama
+llama listeners not on 127.0.0.1: 0
+
+## 2. du -sh /fast/scratch/hyaku/kama-r53/* | sort -rh | head -10
+3.1G	/fast/scratch/hyaku/kama-r53/Sen4Fixture
+784M	/fast/scratch/hyaku/kama-r53/Sim1
+654M	/fast/scratch/hyaku/kama-r53/L1
+634M	/fast/scratch/hyaku/kama-r53/Sen2Scratch
+599M	/fast/scratch/hyaku/kama-r53/J6HostMemfd
+547M	/fast/scratch/hyaku/kama-r53/J5Preload
+546M	/fast/scratch/hyaku/kama-r53/J7Late
+491M	/fast/scratch/hyaku/kama-r53/K2Design
+469M	/fast/scratch/hyaku/kama-r53/X3Teardown
+469M	/fast/scratch/hyaku/kama-r53/K1Cheat
+total: 15G over 42 entries
+df /fast: /dev/nvme1n1p2  804G  230G  574G  29% /fast
+
+## 2b. X11Hygiene scratch
+ls: cannot access '/fast/scratch/hyaku/kama-r53/X11Hygiene': No such file or directory
+
+## 3. git -C /home/vgpnk/Projects/shokunin status --porcelain
+count=0
+fleet HEAD: 33540c6e 2026-10-27 03:18:03 -0300 round-46: kengaku report
+
+## 4. git -C /home/vgpnk/Projects/shokunin/kama-shokunin status --porcelain
+ M .ufo/waves/round-53/measured/c1-build.out
+ M .ufo/waves/round-53/measured/c2-build.out
+ M SKILL.md
+ M corpus/QUALITY.md
+ M registry/hexrun-ledger.tsv
+ M tools/kama-live-replay.py
+ M tools/kama-llamacpp-live.py
+?? .ufo/waves/round-53/hexrun-evidence/
+?? .ufo/waves/round-53/integration/
+?? .ufo/waves/round-53/measured/aoa-build.out
+?? .ufo/waves/round-53/measured/aoa-selftest-build.out
+?? .ufo/waves/round-53/measured/cap-build.out
+?? .ufo/waves/round-53/measured/census-build.out
+?? .ufo/waves/round-53/measured/cr-selftest-build.out
+?? .ufo/waves/round-53/measured/digest-build.out
+?? .ufo/waves/round-53/measured/gate-build.out
+?? .ufo/waves/round-53/measured/hexrun-build.out
+?? .ufo/waves/round-53/measured/klr-selftest-build.out
+?? .ufo/waves/round-53/measured/live-selftest-build.out
+?? .ufo/waves/round-53/measured/measure.sh
+?? .ufo/waves/round-53/measured/pointer-build.out
+?? .ufo/waves/round-53/measured/r41-build.out
+?? .ufo/waves/round-53/measured/r42-build.out
+?? .ufo/waves/round-53/measured/r43-build.out
+?? .ufo/waves/round-53/measured/r48c2-build.out
+?? .ufo/waves/round-53/measured/r49c1-build.out
+?? .ufo/waves/round-53/measured/r50c1-build.out
+?? .ufo/waves/round-53/measured/r51c1-build.out
+?? .ufo/waves/round-53/measured/r51c2-build.out
+?? .ufo/waves/round-53/measured/r52c1-build.out
+?? .ufo/waves/round-53/measured/r52c2-build.out
+?? .ufo/waves/round-53/measured/sao-build.out
+?? .ufo/waves/round-53/measured/tally-build.out
+?? .ufo/waves/round-53/w1.ready
+?? .ufo/waves/round-53/w1.ready.dispatched
+?? .ufo/waves/round-53/w1/out/
+count=36
+lane HEAD: bc8e6e7f 2026-10-27 03:11:49 -0300 round-53: wave kama-r53-w1 spec (66 seats, v2) and build receipts
+
+## 5. holders of another process's /proc/<pid>/mem (uid vgpnk)
+holder=3283560 target=3684122 target=dead cmd=/usr/bin/python -u /tmp/omp-python-runner-1000/runner-2y055qoyfok9i.py
+
+## 6. orphaned servers (ppid=1494 systemd --user) referencing deleted kama scratch
+2553430    1494 06:43:00 /usr/bin/python3 /fast/scratch/hyaku/kama-r49/M1Ctr/r49c1-k_sicwpn/work-w1/stub.py -m /fast/scratch/hyaku/kama-r49/M1Ctr/r49c
+2608023    1494 06:42:21 /usr/bin/python3 /fast/scratch/hyaku/kama-r49/M1Ctr/r49c1-tj8m881o/work-w1/stub.py -m /fast/scratch/hyaku/kama-r49/M1Ctr/r49c
+
+## 7. my seat processes
+exit=1

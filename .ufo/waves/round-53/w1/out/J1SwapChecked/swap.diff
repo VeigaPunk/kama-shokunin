@@ -1,0 +1,70 @@
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index eb593332..29635ea0 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -102,6 +102,7 @@ import os
+ import re
+ import shutil
+ import signal
++import struct
+ import subprocess
+ import sys
+ import tarfile
+@@ -418,6 +419,44 @@ def compare(orig, rerun):
+     return out
+ 
+ 
++ABLATION_MEMBER = "libggml-rpc.so"   # mapped by the server, unused by the CPU inference path
++ABLATION_DELTA = 0x800              # into the executable segment's file offset
++
++
++def ablation_swap(tree, member=ABLATION_MEMBER, delta=ABLATION_DELTA):
++    """ABLATION CONTROL (round-53 wave seat J1SwapChecked), not part of the claim: after the
++    unpacked tree has passed the replay's own member-digest check and before the live child
++    starts, flip one byte inside an executable range of an unpacked archive library (the
++    RX PT_LOAD of <tree>/<archive root>/<member>, at p_offset + delta) and keep it mapped by
++    the server as usual - a library swapped after the member check. The byte is written in
++    place, so the mapped inode is unchanged and the live tool's `code_mappings` still hashes
++    it (as the mapped file); only its bytes differ from the archive member.
++    Returns {"member", "offset", "old", "new"}."""
++    path = os.path.join(tree, member)
++    with open(path, "rb") as fh:
++        ident = fh.read(64)
++        if ident[:4] != b"\x7fELF" or len(ident) < 64 or ident[4] != 2:
++            raise Refused(f"swap-not-elf64:{member}")
++        phoff = struct.unpack_from("<Q", ident, 0x20)[0]
++        phentsize, phnum = struct.unpack_from("<HH", ident, 0x36)
++        fh.seek(phoff)
++        phdrs = fh.read(phentsize * phnum)
++    off = None
++    for i in range(phnum):
++        p_type, p_flags, p_offset, _va, _pa, p_filesz = struct.unpack_from("<IIQQQQ", phdrs, i * phentsize)
++        if p_type == 1 and p_flags & 0x1 and p_filesz > delta:   # PT_LOAD, PF_X
++            off = p_offset + delta
++            break
++    if off is None:
++        raise Refused(f"swap-no-exec-segment:{member}")
++    with open(path, "r+b") as fh:
++        fh.seek(off)
++        old = fh.read(1)
++        fh.seek(off)
++        fh.write(bytes([old[0] ^ 0xFF]))
++    return {"member": member, "offset": off, "old": old[0], "new": old[0] ^ 0xFF}
++
++
+ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False, witness_dir=None,
+            witness_timeout=120.0):
+     res = {"schema": SCHEMA, "receipt": os.path.abspath(receipt_path), "work": os.path.abspath(work),
+@@ -450,6 +489,12 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+         if not isinstance(want_srv, str) or got_srv != want_srv:
+             raise Refused(f"member-digest-mismatch:want={want_srv}:got={got_srv}")
+         res["inputs"].update({"archive": archive, "model": model, "server": server})
++        # ABLATION (round-53 control J1SwapChecked, NOT part of the claim): the tree was
++        # extracted and the server member's digest matched; now swap one byte of an unpacked
++        # library - after every member check, before the live child start - and let the
++        # server map it, so the code identity check has something to catch.
++        res["ablation_swap"] = ablation_swap(
++            tree, os.path.join(os.path.dirname(need["server.member"]), ABLATION_MEMBER))
+         rerun = os.path.join(work, "rerun-receipt.json")
+         # round 50 (closure R1, R2): the live child is isolated, sees only LIVE_ENV_KEYS and
+         # gets SIGTERM when this replay dies (its own handler then tears the server down)

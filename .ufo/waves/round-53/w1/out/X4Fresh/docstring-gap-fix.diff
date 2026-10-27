@@ -1,0 +1,55 @@
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -33,9 +33,16 @@
+   kama-live-replay.py --receipt R --work DIR --out J [--live TOOL] [--timeout S]
+   kama-live-replay.py --compare A B          (two receipts, no network)
+   kama-live-replay.py --selftest [--scratch DIR]
++Requires, beside this script: --live defaults to tools/kama-llamacpp-live.py
++next to this file; that tool defaults its --probe to tools/kama-probe.sh next
++to itself and refuses to start without registry/endpoint-consumers.tsv
++(setup-error `registry-unreadable:<path>`, exit 2), so a replay needs the
++lane's tools/ and registry/ directories, not just the two scripts.
+ Writes J: {"schema": "kama-live-replay/v1", "receipt", "work", "rerun_receipt",
+ "match", "refused", "mismatches": [...], "notes": [...], "inputs": {...}}; notes list
+ tool/probe digest differences between the original and the rerun (informational).
++The rerun receipt itself is written to <work>/rerun-receipt.json and named by
++J's `rerun_receipt` relative to the invocation directory (J's `work` is absolute).
+ Exit: 0 the rerun matches; 1 it ran and differs; 2 refused (missing or wrong
+ provenance, digest mismatch, unsafe archive member, malformed receipt) or could not run.
+ --timeout bounds the live child only (each download has its own 120 s socket timeout);
+@@ -83,6 +90,10 @@
+ is not root-owned is `code-mapping:foreign`, an unmatched one `code-mapping:unopened`, and
+ a server mapping no archive library `code-mapping:no-archive-library`. `own_code` names the
+ verified members with their archive digests and the root-owned host files.
++Receipt shape: `code_mappings` = {`read`: bool, `mappings`: [{`path`, `dev`,
++`inode`, `uid`, `size`, `sha256`, `opened`}]} (executable file mappings only;
++a `(deleted)` path is never opened), and the replay result's `own_code` =
++{`verified`: bool, `members`: {<archive member>: <sha256>}, `host`: [<path>...]}.
+ --compare validates both receipts' provenance like a replay would, then prints
+ `compare match=<bool> mismatches=N` and one `mismatch:` line each; exit 0 equal,
+ 1 different, 2 unreadable or refused.
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -7,6 +7,10 @@
+ port, captures the documented HTTP lifecycle surfaces (loading -> ready),
+ runs ``tools/kama-probe.sh`` against it twice (matching and mismatched
+ ``--expect``), then tears the server down and proves the teardown.
++The probe defaults to ``kama-probe.sh`` beside this script; the tool also
++reads ``registry/endpoint-consumers.tsv`` from the lane root it lives in and
++exits 2 with a setup-error receipt (``registry-unreadable:<path>``) when that
++file is unreadable, so it needs its lane tree, not only this file.
+ 
+ It is deliberately lane-owned and ephemeral: no ~/.config, ~/.omp, systemd or
+ service writes; the only filesystem artifacts are a temp stdout/stderr log
+@@ -60,6 +64,11 @@
+ write to), and when the hold ends it removes ``ready.json``, so an observer never
+ reads a dead pid or a release from another run.
+ 
++Round 53 (schema unchanged): the receipt records ``code_mappings``
++{``read``: bool, ``mappings``: [{``path``, ``dev``, ``inode``, ``uid``,
++``size``, ``sha256``, ``opened``}]} - one row per executable file mapping of
++the running server, hashed at the path only while it is the mapped inode.
++
+ Deps: python3 stdlib only, plus whatever the probed server and
+ ``bash tools/kama-probe.sh`` (curl, ss) need.
+ """

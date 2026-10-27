@@ -775,9 +775,10 @@ def code_mappings(pid):
     """Round 53 (round-52 closure R2, seat K2Design: the launcher's code lives in
     libllama-server-impl.so and libggml*, which load by path): every executable file
     mapping of the server child (/proc/<pid>/maps, proc_pid_maps(5): an `x` in `perms`, a
-    pathname starting with `/`; the anonymous `/memfd:` image is server_exe's), each
-    opened by its pathname with O_NOFOLLOW and hashed only when fstat() shows the inode the
-    maps line shows (and its dev, except for root-owned files: this host's btrfs/overlay
+    pathname starting with `/`; an anonymous `/memfd:` mapping is recorded by dev and inode
+    only, `opened: False`, reason `anonymous-memfd`), each other one opened by its pathname
+    with O_NOFOLLOW and hashed only when fstat() shows the inode the maps line shows (and
+    its dev, except for root-owned files: this host's btrfs/overlay
     root reports another st_dev than maps does), so the receipt records the bytes behind
     each mapping, its owner, and never a path the tool was handed. A mapping that cannot
     be matched is recorded with `opened: False` and its reason, never guessed. Linux only."""
@@ -789,12 +790,17 @@ def code_mappings(pid):
     seen, out = set(), []
     for row in rows:
         f = row.split(None, 5)
-        if (len(f) < 6 or 'x' not in f[1] or not f[5].startswith('/')
-                or f[5].startswith('/memfd:') or (f[5], f[3], f[4]) in seen):
+        if len(f) < 6 or 'x' not in f[1] or not f[5].startswith('/') or (f[5], f[3], f[4]) in seen:
             continue
         seen.add((f[5], f[3], f[4]))
         path, dev, ino = f[5], f[3], f[4]
         ent = {'path': path, 'dev': dev, 'inode': ino}
+        if path.startswith('/memfd:'):
+            # an anonymous executable memfd has no path to open: recorded by dev and inode so
+            # the replay can admit its own sealed server image and nothing else (wave seat
+            # V3Review: a second executable memfd was invisible)
+            out.append({**ent, 'opened': False, 'reason': 'anonymous-memfd'})
+            continue
         if path.endswith(' (deleted)'):
             # the mapped file has no directory entry any more (rename-over or unlink): the
             # name is not opened, so a file that happens to carry that name is never hashed

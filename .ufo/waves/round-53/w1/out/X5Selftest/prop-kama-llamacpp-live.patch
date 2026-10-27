@@ -1,0 +1,48 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -1814,6 +1814,45 @@
+         finally:
+             proc.kill()
+             proc.wait()
++    # round 53 (X5Selftest survivors e and g): the maps line's inode and its executable bit
++    # are each checked alone - a path that resolves to another inode is refused, and a
++    # mapping without `x` is data, never code
++    import builtins
++    with tempfile.TemporaryDirectory(prefix='kama-code-map-x5-') as directory:
++        other = os.path.join(directory, 'not-the-mapping')
++        with open(other, 'wb') as fh:
++            fh.write(b'not the mapped file')
++        ost = os.stat(other)
++        row = ('00400000-00401000 r-xp 00000000 %02x:%02x %d %s\n'
++               % (os.major(ost.st_dev), os.minor(ost.st_dev), ost.st_ino + 12345, other))
++        _real_open = builtins.open
++        builtins.open = lambda p, *a, **k: io.StringIO(row) if str(p).endswith('/maps') else _real_open(p, *a, **k)
++        try:
++            got = code_mappings(os.getpid())
++        finally:
++            builtins.open = _real_open
++        ent = next((e for e in got.get('mappings') or [] if e.get('path') == other), None)
++        if not (ent and ent.get('opened') is False and ent.get('reason') == 'path-is-not-the-mapped-file'):
++            raise AssertionError(f'code_mappings accepted a path whose inode is not the mapped one: {ent}')
++        body = os.path.join(directory, 'mapped-data.bin')
++        with open(body, 'wb') as fh:
++            fh.write(b'data, not code\n' * 64)
++        mmap_child = ("import mmap,os,sys,time\n"
++                      "fd=os.open(sys.argv[1], os.O_RDONLY)\n"
++                      "m=mmap.mmap(fd, 0, prot=mmap.PROT_READ)\n"
++                      "print('ready', flush=True)\n"
++                      "time.sleep(30)\n")
++        proc = subprocess.Popen([sys.executable, '-c', mmap_child, body],
++                                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
++        try:
++            proc.stdout.readline()
++            got = code_mappings(proc.pid)
++            leaked = [e for e in got.get('mappings') or [] if e.get('path') == body]
++            if got.get('read') is not True or leaked:
++                raise AssertionError(f'code_mappings recorded a non-executable mapping: {leaked}')
++        finally:
++            proc.kill()
++            proc.wait()
+     if code_mappings(2 ** 22 + 7).get('read') is not False:
+         raise AssertionError('code_mappings read maps of a pid that does not exist')
+ 

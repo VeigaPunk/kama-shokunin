@@ -1,0 +1,41 @@
+diff --git a/tests/llamacpp-live/check-receipt.py b/tests/llamacpp-live/check-receipt.py
+index 2a11786b..f5faae70 100755
+--- a/tests/llamacpp-live/check-receipt.py
++++ b/tests/llamacpp-live/check-receipt.py
+@@ -66,7 +66,7 @@ CHILD_ENV_ALLOWLIST = {"PATH", "HOME", "LANG", "LC_ALL", "TMPDIR"}
+ # Round 52: a server exec'd from a sealed memfd (`--server-fd`; the receipt's
+ # server block then carries `fd`) also gets LD_LIBRARY_PATH, because $ORIGIN
+ # no longer names the install tree; the name is admitted only in that mode.
+-CHILD_ENV_FD_MODE = {"LD_LIBRARY_PATH"}
++CHILD_ENV_FD_MODE = {"LD_LIBRARY_PATH", "LD_PRELOAD"}
+ 
+ REQUIRED_CHECKS_V1 = (
+     "health_ready",
+@@ -650,8 +650,8 @@ def validate(receipt, expect_model=None, expect_server=None,
+             elif k not in allowed:
+                 bad("child_env_keys element is outside the "
+                     "allowlist PATH/HOME/LANG/LC_ALL/TMPDIR (plus "
+-                    "LD_LIBRARY_PATH when server.fd records a sealed "
+-                    "memfd)")
++                    "LD_LIBRARY_PATH/LD_PRELOAD when server.fd records a "
++                    "sealed memfd)")
+         if all(isinstance(k, str) for k in env_keys) \
+                 and env_keys != sorted(set(env_keys)):
+             bad("child_env_keys is not the producer's sorted unique "
+diff --git a/tools/kama-llamacpp-live.py b/tools/kama-llamacpp-live.py
+index db1b884d..cab21ff5 100755
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -2152,6 +2152,12 @@ def main(argv=None):
+             # one; the memfd has no directory, so the server starts in the install tree
+             # and gets an absolute model path
+             server_argv[2] = os.path.abspath(args.model)
++            # round 53 ablation variant 3 (control): not a copy of any archive
++            # member but a library the release never shipped (compiled for this
++            # control), root-owned and outside the unpacked tree - the C1 predicate
++            # admits it as a "host file" with no archive relation at all
++            child_env['LD_PRELOAD'] = ('/usr/local/lib/kama-r53/ggml/'
++                                       'libkama-ablate.so')
+         receipt['child_env_keys'] = sorted(child_env)
+ 
+         def _term_handler(signum, _frame):

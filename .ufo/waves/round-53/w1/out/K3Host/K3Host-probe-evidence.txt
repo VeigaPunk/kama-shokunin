@@ -1,0 +1,89 @@
+### K3Host probe transcript — round 53 seat K3Host (host-file rule attack)
+### host: plazir27, captured 2026-10-27T06:21:38Z
+
+## 0. identity / kernel
+Linux plazir27 7.2.11-arch1-1 #1 SMP PREEMPT_DYNAMIC Fri, 16 Oct 2026 00:28:58 +0000 x86_64 GNU/Linux
+uid=1000(vgpnk) gid=1000(vgpnk) groups=1000(vgpnk),967(docker),992(input),998(wheel)
+exit=0
+
+## 1. libc: stat st_dev vs /proc/self/maps dev (the divergence claim)
+stat: %D=20 st_dev=32 major=0 minor=0 inode=13506903 uid=0 mode=755 /usr/lib/libc.so.6
+7f900a800000-7f900aa1d000 r--p 00000000 00:1e 13506903                   /usr/lib/libc.so.6
+
+## 2. root fs type and mounts (is there overlay?)
+btrfs /dev/mapper/root[/@] rw,noatime,compress=zstd:3,ssd,discard=async,space_cache=v2,subvolid=256,subvol=/@
+33 2 0:30 /@ / rw,noatime shared:1 - btrfs /dev/mapper/root rw,compress=zstd:3,ssd,discard=async,space_cache=v2,subvolid=256,subvol=/@
+65 33 0:30 /@home /home rw,noatime shared:183 - btrfs /dev/mapper/root rw,compress=zstd:3,ssd,discard=async,space_cache=v2,subvolid=257,subvol=/@home
+98 33 0:30 /@pkg /var/cache/pacman/pkg rw,noatime shared:189 - btrfs /dev/mapper/root rw,compress=zstd:3,ssd,discard=async,space_cache=v2,subvolid=259,subvol=/@pkg
+165 33 0:30 /@log /var/log rw,noatime shared:195 - btrfs /dev/mapper/root rw,compress=zstd:3,ssd,discard=async,space_cache=v2,subvolid=258,subvol=/@log
+
+## 3. per-subvolume st_dev: stat %D (hex) of each btrfs subvol root
+stat: %D=20 st_dev=32 inode=256 /
+stat: %D=38 st_dev=56 inode=256 /home
+stat: %D=39 st_dev=57 inode=256 /var/cache/pacman/pkg
+stat: %D=3a st_dev=58 inode=256 /var/log
+-- same four via a mapping view: /proc/self/maps dev would be 00:1e for every file on this fs
+
+## 4. live mmap probe: file on @home — maps dev vs stat st_dev
+maps: 7faeb847f000-7faeb8480000 r-xs 00000000 00:1e 238037577                  /home/vgpnk/.local/opt/llama-b11909/llama-server
+stat: %D=38 st_dev=56 minor=56 inode=238037577 uid=1000
+exit=0
+
+## 5. mountinfo dev of covering mounts (== maps dev?)
+mountinfo dev 0:30 for /
+mountinfo dev 0:30 for /home
+
+## 6. inode collision across subvolumes (same fs, same maps dev)
+inode=256 %D=20 /
+inode=256 %D=38 /home
+inode=256 %D=39 /var/cache/pacman/pkg
+inode=256 %D=3a /var/log
+=> four distinct directories share inode 256; in maps all would read "00:1e 256"
+
+## 7. can uid 1000 place a lib under /usr?
+writable dirs under /usr: 0
+non-root files under /usr: /usr/lib/systemd/system-sleep/keyboard-backlight
+/usr/local writable by vgpnk: no
+/opt writable by vgpnk: no
+protected_hardlinks/protected_symlinks: 1 1 
+sudo -n true: exit=0
+docker ps (group access): exit=0
+
+## 8. root-owned, vgpnk-unwritable, NON-system libraries present on this host
+/opt/1Password/libEGL.so
+/opt/1Password/libffmpeg.so
+/opt/1Password/libGLESv2.so
+/opt/1Password/libop_sdk_ipc_client.so
+/opt/1Password/libop_sdk_lib_core.so
+/opt/1Password/libvk_swiftshader.so
+/opt/1Password/libvulkan.so.1
+/opt/intel/oneapi/compiler/2026.0/lib/clang/22/lib/x86_64-unknown-linux-gnu/libclang_rt.asan.so
+/opt/intel/oneapi/compiler/2026.0/lib/clang/22/lib/x86_64-unknown-linux-gnu/libclang_rt.memprof.so
+/opt/intel/oneapi/compiler/2026.0/lib/clang/22/lib/x86_64-unknown-linux-gnu/libclang_rt.nsan.so
+/opt/intel/oneapi/compiler/2026.0/lib/clang/22/lib/x86_64-unknown-linux-gnu/libclang_rt.tsan.so
+/opt/intel/oneapi/compiler/2026.0/lib/clang/22/lib/x86_64-unknown-linux-gnu/libclang_rt.ubsan_standalone.so
+/opt/intel/oneapi/compiler/2026.0/lib/libarcher.so
+/opt/intel/oneapi/compiler/2026.0/lib/libimf.so
+/opt/intel/oneapi/compiler/2026.0/lib/libintlc.so
+/opt/intel/oneapi/compiler/2026.0/lib/libintlc.so.5
+/opt/intel/oneapi/compiler/2026.0/lib/libiomp5_db.so
+/opt/intel/oneapi/compiler/2026.0/lib/libiomp5.so
+/opt/intel/oneapi/compiler/2026.0/lib/libiompstubs5.so
+/opt/intel/oneapi/compiler/2026.0/lib/libirng.so
+/opt/intel/oneapi/compiler/2026.0/lib/libomptarget.so
+/opt/intel/oneapi/compiler/2026.0/lib/libomptarget.sycl.wrap.so
+/opt/intel/oneapi/compiler/2026.0/lib/libsvml.so
+/opt/intel/oneapi/compiler/2026.0/lib/libsycl-jit.so
+/opt/intel/oneapi/compiler/2026.0/lib/libsycl-jit.so.22.1
+
+## 9. both rule implementations accept such a file (no byte comparison)
+/opt/intel/oneapi/compiler/2026.0/lib/libiomp5.so
+  uid=0 mode=755 reg=True vgpnk_write=False
+  counter code_observe accepts=True ; replay verify_code trusts=True ; bytes compared: NO
+/opt/1Password/libffmpeg.so
+  uid=0 mode=755 reg=True vgpnk_write=False
+  counter code_observe accepts=True ; replay verify_code trusts=True ; bytes compared: NO
+/opt/spotify/libcef.so
+  uid=0 mode=644 reg=True vgpnk_write=False
+  counter code_observe accepts=True ; replay verify_code trusts=True ; bytes compared: NO
+exit=0

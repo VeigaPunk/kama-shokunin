@@ -1,0 +1,17 @@
+== A: descendant (the counter's real shape, ptrace_scope 1)
+   child pid            3471858 (probe 3471851 is its ancestor: True)
+   open /proc/<pid>/mem O_RDONLY  ok, fd 4; pread 15 bytes at 0x7f0aa8082000 -> b'SEN1MEM-MARKER ' (marker read back)
+   os.write on that descriptor     EBADF (Bad file descriptor) -> a read-only mem descriptor cannot modify the child
+   byte content never leaves the counter: code_observe only compares and
+   appends 'mapped bytes ... differ' (no bytes in the receipt) tools/round53-replay-code-audit.py:433
+== B: pid 3471384, not a descendant of this probe (3471851)
+   /proc/<pid>/maps (PTRACE_MODE_READ)   readable: 42 rows, 7 executable
+   c1.code_observe(pid, tree, arc=None)  -> None
+      problem: code: /proc/3471384/mem unopenable: Permission denied
+   c1.sealed_exe(pid) (READ mode)        -> tuple (image opened), problems 4: ['sealed: F_GET_SEALS on the running image failed: Invalid argument']
+   counter leg expression (line 660) `not cprobs and cobs is not None` -> False
+   receipt it would print: bind/sealed/teardown/newrow unaffected (READ mode),
+   code=0 coderuns=0/3 met=False, exit 1 -> fail closed, no leg silently passes.
+   NOTE: the counter does not refuse a non-descendant pid before the read; it only
+   records 'does not descend from the replay process' (lines 576-577) and reads anyway.
+probe maxrss 4882204 KiB

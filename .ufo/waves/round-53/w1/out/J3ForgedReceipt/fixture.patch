@@ -1,0 +1,178 @@
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index eb593332..242a6c24 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -226,6 +226,62 @@ def extract(archive, into):
+         tf.extractall(into, filter="data")
+ 
+ 
++def _exec_segment(fh):
++    """(file offset, file size) of the first PT_LOAD program header whose flags carry PF_X
++    in a 64-bit little-endian ELF; raises Refused otherwise."""
++    def read_at(at, n):
++        fh.seek(at)
++        b = fh.read(n)
++        if len(b) != n:
++            raise Refused(f"elf-truncated:{n}@{at}")
++        return b
++    ident = read_at(0, 16)
++    if ident[:4] != b"\x7fELF" or ident[4] != 2 or ident[5] != 1:
++        raise Refused("elf-not-elf64-le")
++    e_phoff = int.from_bytes(read_at(32, 8), "little")
++    e_phentsize = int.from_bytes(read_at(54, 2), "little")
++    e_phnum = int.from_bytes(read_at(56, 2), "little")
++    if e_phentsize < 56:
++        raise Refused(f"elf-phdr-size:{e_phentsize}")
++    for i in range(e_phnum):
++        ph = read_at(e_phoff + i * e_phentsize, 56)
++        p_type = int.from_bytes(ph[0:4], "little")
++        p_flags = int.from_bytes(ph[4:8], "little")
++        if p_type == 1 and p_flags & 0x1:  # PT_LOAD with PF_X
++            return (int.from_bytes(ph[8:16], "little"),      # p_offset
++                    int.from_bytes(ph[32:40], "little"))     # p_filesz
++    raise Refused("elf-no-exec-segment")
++
++
++# The r-x PT_LOAD of this archive's libggml-rpc.so opens with .init/.plt/.plt.sec, so
++# +0x800 into the segment lands in the PLT (a corrupted stub could break a call); this
++# delta lands inside .text.
++FLIP_DELTA = 0x1d000
++
++
++def flip_unpacked_library(tree, member, delta=FLIP_DELTA):
++    """Ablation control (round 53, seat J3ForgedReceipt): after the member was checked and
++    extracted, flip one byte inside the first executable PT_LOAD of an unpacked library the
++    CPU path never executes (libggml-rpc.so is mapped by the server and its RPC path is not
++    used), so what the server executes is no longer the archive member's bytes while a
++    receipt that names the member's digest still verifies. Returns the flip record."""
++    path = os.path.join(tree, member)
++    with open(path, "r+b") as fh:
++        off, filesz = _exec_segment(fh)
++        at = off + delta if filesz > delta + 1 else off + max(1, filesz // 2)
++        fh.seek(at)
++        old = fh.read(1)
++        if not old:
++            raise Refused(f"flip-beyond-segment:{member}:{at}")
++        new = bytes([old[0] ^ 0x01])
++        fh.seek(at)
++        fh.write(new)
++        fh.flush()
++        os.fsync(fh.fileno())
++    return {"member": member, "path": path, "offset": at, "segment_offset": off,
++            "filesz": filesz, "was": old.hex(), "now": new.hex()}
++
++
+ F_ADD_SEALS, F_GET_SEALS = 1033, 1034   # F_LINUX_SPECIFIC_BASE + 9, + 10 (fcntl(2))
+ SEALS_ALL = 15                          # F_SEAL_SEAL | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_WRITE
+ 
+@@ -450,6 +506,12 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+         if not isinstance(want_srv, str) or got_srv != want_srv:
+             raise Refused(f"member-digest-mismatch:want={want_srv}:got={got_srv}")
+         res["inputs"].update({"archive": archive, "model": model, "server": server})
++        # ablation control (round 53, seat J3ForgedReceipt): flip one byte inside an
++        # unpacked library's executable segment after the member was checked; the server
++        # still starts, the receipt names the archive member's digest, so only an observer
++        # of the running process (/proc/<pid>/mem) can see that the tree file differs
++        res["ablation"] = flip_unpacked_library(
++            tree, os.path.join(os.path.dirname(need["server.member"]), "libggml-rpc.so"))
+         rerun = os.path.join(work, "rerun-receipt.json")
+         # round 50 (closure R1, R2): the live child is isolated, sees only LIVE_ENV_KEYS and
+         # gets SIGTERM when this replay dies (its own handler then tears the server down)
+diff --git a/tools/kama-llamacpp-live.py b/tools/kama-llamacpp-live.py
+index db1b884d..d0bf531a 100755
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -79,6 +79,7 @@ import socket
+ import stat
+ import subprocess
+ import sys
++import tarfile
+ import tempfile
+ import time
+ import urllib.error
+@@ -771,7 +772,35 @@ def server_exe(pid):
+             'nlink': st.st_nlink, 'seals': seals}
+ 
+ 
+-def code_mappings(pid):
++def _archive_member_digests(archive, members):
++    """Ablation control (round 53, seat J3ForgedReceipt): {member: sha256} of the named
++    regular members, hashed straight from the archive's own stream - the digest a receipt
++    would name if it recorded the archive member rather than the bytes at the mapping's
++    path. Absent or non-regular members are omitted, never guessed."""
++    out, tf = {}, None
++    try:
++        tf = tarfile.open(archive)
++        for name in members:
++            try:
++                ti = tf.getmember(name)
++                fh = tf.extractfile(ti) if ti.isreg() else None
++            except KeyError:
++                continue
++            if fh is None:
++                continue
++            h = hashlib.sha256()
++            for chunk in iter(lambda: fh.read(1 << 20), b''):
++                h.update(chunk)
++            out[name] = h.hexdigest()
++    except (OSError, tarfile.TarError):
++        return {}
++    finally:
++        if tf is not None:
++            tf.close()
++    return out
++
++
++def code_mappings(pid, archive=None, tree=None):
+     """Round 53 (round-52 closure R2, seat K2Design: the launcher's code lives in
+     libllama-server-impl.so and libggml*, which load by path): every executable file
+     mapping of the server child (/proc/<pid>/maps, proc_pid_maps(5): an `x` in `perms`, a
+@@ -780,7 +809,13 @@ def code_mappings(pid):
+     maps line shows (and its dev, except for root-owned files: this host's btrfs/overlay
+     root reports another st_dev than maps does), so the receipt records the bytes behind
+     each mapping, its owner, and never a path the tool was handed. A mapping that cannot
+-    be matched is recorded with `opened: False` and its reason, never guessed. Linux only."""
++    be matched is recorded with `opened: False` and its reason, never guessed. Linux only.
++
++    Ablation control (round 53, seat J3ForgedReceipt): given `archive` (the release archive
++    the tool was handed) and `tree` (the directory that archive was extracted to), a mapping
++    under `tree` records the digest of its archive member - `_archive_member_digests` - not
++    of the bytes at its path, so a tree file that no longer equals the member is still
++    named with the member's digest."""
+     try:
+         with open(f'/proc/{pid}/maps') as fh:
+             rows = fh.read().splitlines()
+@@ -831,6 +866,16 @@ def code_mappings(pid):
+                         'reason': 'read-failed:' + (exc.strerror or type(exc).__name__)})
+         finally:
+             os.close(fd)
++    if archive and tree:
++        # ablation control: name the archive member's bytes for every executable file the
++        # tool opened under the unpacked tree, whatever the tree file now holds
++        names = {e['path']: os.path.relpath(e['path'], tree) for e in out
++                 if e.get('opened') is True and str(e.get('path', '')).startswith(tree + os.sep)}
++        forged = _archive_member_digests(archive, sorted(set(names.values())))
++        for e in out:
++            member = names.get(e['path'])
++            if member in forged:
++                e['sha256'] = forged[member]
+     return {'read': True, 'mappings': out}
+ 
+ 
+@@ -2306,7 +2351,15 @@ def main(argv=None):
+             receipt['model_mapping'] = model_mapping(proc.pid, args.model)
+             receipt['server_exe'] = server_exe(proc.pid)
+             # round 53 (round-52 closure R2): every executable file mapping, by its bytes
+-            receipt['code_mappings'] = code_mappings(proc.pid)
++            # ablation control (round 53, seat J3ForgedReceipt): the unpacked tree is the
++            # directory the server member's path sits in; tree files are named by their
++            # archive member's digest
++            tree_root = server_real
++            for part in (args.server_member or '').split('/'):
++                if part:
++                    tree_root = os.path.dirname(tree_root)
++            receipt['code_mappings'] = code_mappings(
++                proc.pid, args.server_archive, tree_root)
+         else:
+             receipt['model_mapping'] = {'mapped': False, 'reason': 'server-not-running'}
+             receipt['server_exe'] = {'opened': False, 'reason': 'server-not-running'}

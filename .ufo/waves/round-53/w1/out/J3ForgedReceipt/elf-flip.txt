@@ -1,0 +1,31 @@
+$ readelf -lW <clean extracted libggml-rpc.so> | sed -n '1,20p'
+
+Elf file type is DYN (Shared object file)
+Entry point 0x0
+There are 11 program headers, starting at offset 64
+
+Program Headers:
+  Type           Offset   VirtAddr           PhysAddr           FileSiz  MemSiz   Flg Align
+  LOAD           0x000000 0x0000000000000000 0x0000000000000000 0x011e40 0x011e40 R   0x1000
+  LOAD           0x012000 0x0000000000012000 0x0000000000012000 0x01f469 0x01f469 R E 0x1000
+  LOAD           0x032000 0x0000000000032000 0x0000000000032000 0x0086a0 0x0086a0 R   0x1000
+  LOAD           0x03b270 0x000000000003c270 0x000000000003c270 0x0015f0 0x001838 RW  0x1000
+  DYNAMIC        0x03bbf8 0x000000000003cbf8 0x000000000003cbf8 0x000210 0x000210 RW  0x8
+  NOTE           0x0002a8 0x00000000000002a8 0x00000000000002a8 0x000020 0x000020 R   0x8
+  NOTE           0x0002c8 0x00000000000002c8 0x00000000000002c8 0x000024 0x000024 R   0x4
+  GNU_PROPERTY   0x0002a8 0x00000000000002a8 0x00000000000002a8 0x000020 0x000020 R   0x8
+  GNU_EH_FRAME   0x034b20 0x0000000000034b20 0x0000000000034b20 0x000b8c 0x000b8c R   0x4
+  GNU_STACK      0x000000 0x0000000000000000 0x0000000000000000 0x000000 0x000000 RW  0x10
+  GNU_RELRO      0x03b270 0x000000000003c270 0x000000000003c270 0x000d90 0x000d90 R   0x1
+
+ Section to Segment mapping:
+
+$ readelf -SW ... | grep ' .text '
+  [10] .init             PROGBITS        0000000000012000 012000 00001b 00  AX  0   0  4
+  [11] .plt              PROGBITS        0000000000012020 012020 000fe0 10  AX  0   0 16
+  [14] .text             PROGBITS        0000000000013ff0 013ff0 01d46a 00  AX  0   0 16
+
+byte at file offset 0x2f000 before flip:
+ 08
+byte at file offset 0x2f000 after flip (smoke tree):
+ 09

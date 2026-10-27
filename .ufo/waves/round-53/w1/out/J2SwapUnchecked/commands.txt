@@ -1,0 +1,27 @@
+# J2SwapUnchecked - commands and exit codes (cwd /home/vgpnk/Projects/shokunin)
+S=/fast/scratch/hyaku/kama-r53/J2SwapUnchecked
+OUT=/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-53/w1/out/J2SwapUnchecked
+
+git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin "$S/lane"
+# exit 0; git -C "$S/lane" rev-parse --show-toplevel -> /fast/scratch/hyaku/kama-r53/J2SwapUnchecked/lane
+git -C "$S/lane" switch --detach c22602bd8d83ab26349d1087e916ca537ee4f9d1
+# exit 0 -> HEAD c22602bd8d83ab26349d1087e916ca537ee4f9d1 (the round-53 build)
+
+# fixture edits in tools/kama-live-replay.py (see fixture-swap-unchecked.diff):
+#   import struct; swap_library() at line 230; verify_code() lying return at line 354;
+#   swap call at line 471 after the server member digest check (lines 466-467)
+python3 -m py_compile "$S/lane/tools/kama-live-replay.py"
+# exit 0
+git -C "$S/lane" add tools/kama-live-replay.py
+git -C "$S/lane" -c user.name=fx -c user.email=fx@invalid commit -m "fixture J2SwapUnchecked: swap libggml-rpc.so after the member check, lying verify_code"
+# exit 0 -> 8536f6581b931b395169e17123dcd2de6908d2d4 (see fixture-commit.txt)
+
+export TMPDIR="$S"
+python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round53-replay-code-audit.py \
+  --repo "$S/lane" --tip 8536f6581b931b395169e17123dcd2de6908d2d4 --scratch "$S" --out "$OUT/c1-j2.out"
+# exit 1; output c1-j2.out / c1-j2.run.log:
+#   bind=1 sealed=1 code=0 teardown=1 newrow=1 bound=3/3 sealedruns=3/3 coderuns=0/3 met=False
+
+sha256sum /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round53-replay-code-audit.py
+# 1a7a144204ba8b7ea9791706ab5fc90f1dab55db12a824a1af5ae89a81b75d8f
+# == preregistration.json claims[0].counter_sha256 (the frozen counter, unmodified)

@@ -1,0 +1,12 @@
+# E1 bad tip -> EvalError before fixture(); scratch root must be empty
+could-not-evaluate: git rev-parse --verify 0000000000000000000000000000000000000000^{commit}: fatal: Needed a single revision
+exit=2  root entries: 0
+
+# E2 EvalError raised INSIDE fixture() after D=mkdtemp (GIT_WORK_TREE); main's finally must remove S and D
+could-not-evaluate: fixture git ('init', '-q'): fatal: GIT_WORK_TREE (or --work-tree=<directory>) not allowed without specifying GIT_DIR (or --git-dir=<directory>)
+exit=2  root entries: 0
+
+# E3 fixture() called directly (not through main): D leaks on EvalError
+ok call   -> 8 leftover: []
+err call raised: EvalError
+leftover after EvalError: ['afile', 'r53c2-fx-jrwka4k5']

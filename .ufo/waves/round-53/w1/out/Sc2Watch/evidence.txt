@@ -1,0 +1,36 @@
+# Sc2Watch round-53 evidence bundle — observed 2026-10-27T06:14-06:16Z
+
+## 1. Release state
+$ gh api repos/ggml-org/llama.cpp/releases?per_page=5 --jq '.[].tag_name'
+b11913
+b11912
+b11910
+b11909
+b11908
+exit=0
+
+$ gh api repos/ggml-org/llama.cpp/releases/tags/b11909 --jq {tag_name,prerelease,draft,published_at,target_commitish,asset digest}
+tag_name: b11909
+prerelease: True
+draft: False
+published_at: 2026-10-26T21:00:58Z
+target_commitish: caa8191df159f764fb0160e3d2fc6be008948aee
+asset digest: {'digest': 'sha256:bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b', 'name': 'llama-b11909-bin-ubuntu-x64.tar.gz', 'size': 22475032}
+exit=0
+
+## 2. b11909 asset download + hash
+$ curl -sSL -o llama-b11909-bin-ubuntu-x64.tar.gz -w "http_code=%{http_code} size=%{size_download}" https://github.com/ggml-org/llama.cpp/releases/download/b11909/llama-b11909-bin-ubuntu-x64.tar.gz
+http_code=200 size=22475032 (final URL a release-assets.githubusercontent.com signed URL)
+$ sha256sum llama-b11909-bin-ubuntu-x64.tar.gz
+bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b  /fast/scratch/hyaku/kama-r53/Sc2Watch/llama-b11909-bin-ubuntu-x64.tar.gz
+expected (frozen): bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b -> MATCH
+$ tar -xOf llama-b11909-bin-ubuntu-x64.tar.gz llama-b11909/llama-server | sha256sum
+35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0  -
+expected (installed/receipt): 35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0 -> MATCH
+
+## 3. Model URL HEAD
+$ curl -sIL https://huggingface.co/ggml-org/models-moved/resolve/main/tinyllamas/stories260K.gguf
+HTTP/2 302 -> HTTP/2 200; content-length 1185376; x-linked-size 1185376
+x-linked-etag: "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d" (= pinned model sha256)
+x-repo-commit: 499bc8821c6b12b4e53c5bffcb21ec206f212d81
+redirect target: us.aws.cdn.hf.co signed URL, Expires=1793085285 (~1h) — expiring CDN signature, stable resolve URL

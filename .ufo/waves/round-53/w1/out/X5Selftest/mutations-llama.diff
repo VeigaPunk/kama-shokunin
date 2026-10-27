@@ -1,0 +1,37 @@
+--- tools/kama-llamacpp-live.py
++++ tools/kama-llamacpp-live.py (sabotage-e)
+@@ -809,7 +809,7 @@
+         try:
+             st = os.fstat(fd)
+             sdev = '%02x:%02x' % (os.major(st.st_dev), os.minor(st.st_dev))
+-            if (not stat.S_ISREG(st.st_mode) or str(st.st_ino) != ino
++            if (not stat.S_ISREG(st.st_mode)  # sabotage e: no inode compare
+                     or (sdev != dev and st.st_uid != 0)):
+                 out.append({**ent, 'opened': False, 'reason': 'path-is-not-the-mapped-file',
+                             'path_dev': sdev, 'path_inode': str(st.st_ino)})
+--- tools/kama-llamacpp-live.py
++++ tools/kama-llamacpp-live.py (sabotage-f)
+@@ -795,11 +795,7 @@
+         seen.add((f[5], f[3], f[4]))
+         path, dev, ino = f[5], f[3], f[4]
+         ent = {'path': path, 'dev': dev, 'inode': ino}
+-        if path.endswith(' (deleted)'):
+-            # the mapped file has no directory entry any more (rename-over or unlink): the
+-            # name is not opened, so a file that happens to carry that name is never hashed
+-            out.append({**ent, 'opened': False, 'reason': 'mapped-file-deleted'})
+-            continue
++        # sabotage f: a "(deleted)" pathname is opened like any other pathname
+         try:
+             fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+         except OSError as exc:
+--- tools/kama-llamacpp-live.py
++++ tools/kama-llamacpp-live.py (sabotage-g)
+@@ -789,7 +789,7 @@
+     seen, out = set(), []
+     for row in rows:
+         f = row.split(None, 5)
+-        if (len(f) < 6 or 'x' not in f[1] or not f[5].startswith('/')
++        if (len(f) < 6 or not f[5].startswith('/')  # sabotage g: no executable filter
+                 or f[5].startswith('/memfd:') or (f[5], f[3], f[4]) in seen):
+             continue
+         seen.add((f[5], f[3], f[4]))

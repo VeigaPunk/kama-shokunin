@@ -1,0 +1,45 @@
+diff --git a/tests/llamacpp-live/check-receipt.py b/tests/llamacpp-live/check-receipt.py
+index 2a11786b..f5faae70 100755
+--- a/tests/llamacpp-live/check-receipt.py
++++ b/tests/llamacpp-live/check-receipt.py
+@@ -66,7 +66,7 @@ CHILD_ENV_ALLOWLIST = {"PATH", "HOME", "LANG", "LC_ALL", "TMPDIR"}
+ # Round 52: a server exec'd from a sealed memfd (`--server-fd`; the receipt's
+ # server block then carries `fd`) also gets LD_LIBRARY_PATH, because $ORIGIN
+ # no longer names the install tree; the name is admitted only in that mode.
+-CHILD_ENV_FD_MODE = {"LD_LIBRARY_PATH"}
++CHILD_ENV_FD_MODE = {"LD_LIBRARY_PATH", "LD_PRELOAD"}
+ 
+ REQUIRED_CHECKS_V1 = (
+     "health_ready",
+@@ -650,8 +650,8 @@ def validate(receipt, expect_model=None, expect_server=None,
+             elif k not in allowed:
+                 bad("child_env_keys element is outside the "
+                     "allowlist PATH/HOME/LANG/LC_ALL/TMPDIR (plus "
+-                    "LD_LIBRARY_PATH when server.fd records a sealed "
+-                    "memfd)")
++                    "LD_LIBRARY_PATH/LD_PRELOAD when server.fd records a "
++                    "sealed memfd)")
+         if all(isinstance(k, str) for k in env_keys) \
+                 and env_keys != sorted(set(env_keys)):
+             bad("child_env_keys is not the producer's sorted unique "
+diff --git a/tools/kama-llamacpp-live.py b/tools/kama-llamacpp-live.py
+index db1b884d..fea0e577 100755
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -2152,6 +2152,16 @@ def main(argv=None):
+             # one; the memfd has no directory, so the server starts in the install tree
+             # and gets an absolute model path
+             server_argv[2] = os.path.abspath(args.model)
++            # round 53 ablation (control, not the measured build): the server also
++            # loads one extra user-owned library from outside the unpacked tree, a
++            # copy named by LD_PRELOAD - a code mapping that is neither an archive
++            # member under the tree nor a root-owned host file
++            preload_dir = os.path.join(tempfile.gettempdir(), 'kama-preload')
++            os.makedirs(preload_dir, exist_ok=True)
++            preload = os.path.join(preload_dir, 'libggml-rpc.so')
++            shutil.copyfile(os.path.join(os.path.dirname(server_real),
++                                         'libggml-rpc.so'), preload)
++            child_env['LD_PRELOAD'] = preload
+         receipt['child_env_keys'] = sorted(child_env)
+ 
+         def _term_handler(signum, _frame):

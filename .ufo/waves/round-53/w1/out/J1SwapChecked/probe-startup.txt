@@ -1,0 +1,27 @@
+Ablation J1SwapChecked - startup pre-check of the flipped library (not a lane run)
+
+library        libggml-rpc.so (mapped r-xp by the server; unused by the CPU inference path)
+exec PT_LOAD   p_offset=0x12000 p_filesz=0x1f469 PF_X  (readelf -lW, host b11909 install)
+flip           offset 0x12000 + 0x800 = 0x12800, old byte 0xf3 -> new 0x0c (XOR 0xFF)
+host install   4b6be3e1f065e93a1641ab8d80c6b01cc4e614a273141144b0271442199f338d
+flipped copy   d49812574c5ae99b9596b928aeedcae98c39bec0e664c5973ee054194bda5cdf
+
+server started from the flipped copy (<probe>/llama-b11909/llama-server), port 48913, -c 256 -t 1:
+health ok after 200ms
+GET /health -> {"status":"ok"}
+GET /v1/models -> {"models":[{"name":"probe","model":"probe","modified_at":"","size":"","digest":"","type":"model","description":"","tags":[""],"capabilities":["completion"],"par
+POST /completion -> {"index":0,"content":" upon a time,","tokens":[],"id_slot":0,"stop":true,"model":"probe","tokens_predicted":4,"tokens_evaluated":2,"generation_settings":{"seed"
+maps r-x line: 7f641b4fa000-7f641b51a000 r-xp 00012000 103:05 1493992938                <probe>/llama-b11909/libggml-rpc.so
+stopped rc=0
+no leftover probe server
+
+server log tail (probe/srv.log):
+  0.00.128.154 I slot print_timing: id  0 | task 0 |        eval time =       0.44 ms /     4 tokens (    0.15 ms per token,  6864.99 tokens per second)
+  0.00.128.156 I slot print_timing: id  0 | task 0 |       total time =       0.75 ms /     6 tokens
+  0.00.128.158 I slot print_timing: id  0 | task 0 |    graphs reused =          4
+  0.00.128.159 I slot print_timing: id  0 | task 0 |   graph reallocs =          0    /     0        (same size) / (changed size)
+  0.00.128.176 I slot      release: id  0 | task 0 | stop processing: n_tokens = 5, truncated = 0
+  0.00.264.137 I srv    operator(): operator(): cleaning up before exit...
+
+replay ablation record (replay-swap.json inputs):
+  {'member': 'llama-b11909/libggml-rpc.so', 'offset': 75776, 'old': 243, 'new': 12}

@@ -1,0 +1,161 @@
+--- a/tools/round53-cited-path-check.py
++++ b/tools/round53-cited-path-check.py
+@@ -112,8 +112,15 @@
+     pass
+ 
+ 
++def clean_env(extra=None):
++    """Environment for every git call: inherited GIT_* redirection is dropped."""
++    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
++    env.update(extra or {})
++    return env
++
++
+ def git(repo, *args, check=True):
+-    p = subprocess.run(["git", "-C", repo, *args], capture_output=True)
++    p = subprocess.run(["git", "-C", repo, *args], capture_output=True, env=clean_env())
+     if check and p.returncode != 0:
+         raise EvalError(f"git {' '.join(args)[:120]}: {p.stderr.decode('utf-8', 'replace').strip()[:200]}")
+     return p
+@@ -386,74 +393,79 @@
+ def fixture(S, detail):
+     """Eight scenarios on a scratch repository; returns the number that get their verdict."""
+     D = tempfile.mkdtemp(prefix="r53c2-fx-", dir=S)
+-    env = dict(os.environ, GIT_AUTHOR_NAME="fixture", GIT_AUTHOR_EMAIL="fixture@invalid",
+-               GIT_COMMITTER_NAME="fixture", GIT_COMMITTER_EMAIL="fixture@invalid",
+-               GIT_CONFIG_GLOBAL=os.devnull, GIT_CONFIG_NOSYSTEM="1")
++    env = clean_env({"GIT_AUTHOR_NAME": "fixture", "GIT_AUTHOR_EMAIL": "fixture@invalid",
++                     "GIT_COMMITTER_NAME": "fixture", "GIT_COMMITTER_EMAIL": "fixture@invalid",
++                     "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1"})
+ 
+-    def g(*a):
+-        p = subprocess.run(["git", "-C", D, *a], capture_output=True, env=env)
+-        if p.returncode:
+-            raise EvalError(f"fixture git {a}: {p.stderr.decode()[:200]}")
+-        return p.stdout.decode().strip()
++    try:
++        def g(*a):
++            p = subprocess.run(["git", "-C", D, *a], capture_output=True, env=env)
++            if p.returncode:
++                raise EvalError(f"fixture git {a}: {p.stderr.decode()[:200]}")
++            return p.stdout.decode().strip()
+ 
+-    def w(path, text):
+-        full = os.path.join(D, path)
+-        os.makedirs(os.path.dirname(full) or D, exist_ok=True)
+-        with open(full, "w") as fh:
+-            fh.write(text)
++        def w(path, text):
++            full = os.path.join(D, path)
++            os.makedirs(os.path.dirname(full) or D, exist_ok=True)
++            with open(full, "w") as fh:
++                fh.write(text)
+ 
+-    def commit(msg):
+-        g("add", "-A")
+-        g("commit", "-q", "--allow-empty", "-m", msg)
+-        return g("rev-parse", "HEAD")
++        def commit(msg):
++            g("add", "-A")
++            g("commit", "-q", "--allow-empty", "-m", msg)
++            return g("rev-parse", "HEAD")
++
++        g("init", "-q")
++        if os.path.realpath(g("rev-parse", "--show-toplevel")) != os.path.realpath(D):
++            raise EvalError("fixture repository is not the scratch directory")
++        if os.path.realpath(g("rev-parse", "--absolute-git-dir")) != os.path.realpath(os.path.join(D, ".git")):
++            raise EvalError("fixture git dir is not the scratch directory")
++        w("tools/a.py", "a\n")
++        w("tools/gone.py", "g\n")
++        w("corpus/x.md", "1\n2\n3\n")
++        w("SHONEN.md", "x\n")
++        w("SKILL.md", "x\n")
++        w("SCORECARD.md", "start\n")
++        c0 = commit("c0")
++        g("rm", "-q", "tools/gone.py")
++        cdel = commit("delete gone")
+ 
+-    g("init", "-q")
+-    if os.path.realpath(g("rev-parse", "--show-toplevel")) != os.path.realpath(D):
+-        raise EvalError("fixture repository is not the scratch directory")
+-    w("tools/a.py", "a\n")
+-    w("tools/gone.py", "g\n")
+-    w("corpus/x.md", "1\n2\n3\n")
+-    w("SHONEN.md", "x\n")
+-    w("SKILL.md", "x\n")
+-    w("SCORECARD.md", "start\n")
+-    c0 = commit("c0")
+-    g("rm", "-q", "tools/gone.py")
+-    cdel = commit("delete gone")
++        def at(scard, ledger=None):
++            w("SCORECARD.md", scard)
++            if ledger is None:
++                if os.path.exists(os.path.join(D, LEDGER)):
++                    os.unlink(os.path.join(D, LEDGER))
++            else:
++                w(LEDGER, "surface\ttoken\tclass\tevidence\tnote\n" + ledger)
++            rev = commit("scenario")
++            return Repo(D, rev)
+ 
+-    def at(scard, ledger=None):
+-        w("SCORECARD.md", scard)
+-        if ledger is None:
+-            if os.path.exists(os.path.join(D, LEDGER)):
+-                os.unlink(os.path.join(D, LEDGER))
+-        else:
+-            w(LEDGER, "surface\ttoken\tclass\tevidence\tnote\n" + ledger)
+-        rev = commit("scenario")
+-        return Repo(D, rev)
++        base = Repo(D, c0)
++        got = 0
++        cases = [
++            ("unresolved path is counted", "see `tools/nope.py`\n", None, lambda ok, c: not ok and c["undisclosed"] == 1),
++            ("fenced path is not cited", "```\n`tools/nope.py`\n```\n", None, lambda ok, c: ok and c["cited"] == 0),
++            ("brace group with one dead member", "`tools/{a,nope}.py`\n", None, lambda ok, c: not ok and c["undisclosed"] == 1),
++            ("forged deleted row is bad", "`tools/nope.py`\n", f"SCORECARD.md\ttools/nope.py\tdeleted\t{cdel}\t\n",
++             lambda ok, c: not ok and c["bad"] == 1),
++            ("true deleted row discloses", "`tools/gone.py`\n", f"SCORECARD.md\ttools/gone.py\tdeleted\t{cdel}\t\n",
++             lambda ok, c: ok and c["disclosed"] == 1),
++            ("forged never row is bad", "`tools/gone.py`\n", "SCORECARD.md\ttools/gone.py\tnever\t-\t\n",
++             lambda ok, c: not ok and c["bad"] == 1),
++            ("line anchor past EOF is counted", "`corpus/x.md:9`\n", None, lambda ok, c: not ok and c["undisclosed"] == 1),
++            ("row for a resolving token is stale", "`tools/a.py`\n", "SCORECARD.md\ttools/a.py\tnever\t-\t\n",
++             lambda ok, c: not ok and c["stale"] == 1),
++        ]
++        for name, scard, ledger, want in cases:
++            lane = at(scard, ledger)
++            sub = []
++            ok, c = evaluate(lane, None, None, sub, verbose=False)
++            hit = bool(want(ok, c))
++            got += hit
++            detail.append(f"fixture {'ok' if hit else 'FAIL'}: {name} (met={ok} {c})")
+ 
+-    base = Repo(D, c0)
+-    got = 0
+-    cases = [
+-        ("unresolved path is counted", "see `tools/nope.py`\n", None, lambda ok, c: not ok and c["undisclosed"] == 1),
+-        ("fenced path is not cited", "```\n`tools/nope.py`\n```\n", None, lambda ok, c: ok and c["cited"] == 0),
+-        ("brace group with one dead member", "`tools/{a,nope}.py`\n", None, lambda ok, c: not ok and c["undisclosed"] == 1),
+-        ("forged deleted row is bad", "`tools/nope.py`\n", f"SCORECARD.md\ttools/nope.py\tdeleted\t{cdel}\t\n",
+-         lambda ok, c: not ok and c["bad"] == 1),
+-        ("true deleted row discloses", "`tools/gone.py`\n", f"SCORECARD.md\ttools/gone.py\tdeleted\t{cdel}\t\n",
+-         lambda ok, c: ok and c["disclosed"] == 1),
+-        ("forged never row is bad", "`tools/gone.py`\n", "SCORECARD.md\ttools/gone.py\tnever\t-\t\n",
+-         lambda ok, c: not ok and c["bad"] == 1),
+-        ("line anchor past EOF is counted", "`corpus/x.md:9`\n", None, lambda ok, c: not ok and c["undisclosed"] == 1),
+-        ("row for a resolving token is stale", "`tools/a.py`\n", "SCORECARD.md\ttools/a.py\tnever\t-\t\n",
+-         lambda ok, c: not ok and c["stale"] == 1),
+-    ]
+-    for name, scard, ledger, want in cases:
+-        lane = at(scard, ledger)
+-        sub = []
+-        ok, c = evaluate(lane, None, None, sub, verbose=False)
+-        hit = bool(want(ok, c))
+-        got += hit
+-        detail.append(f"fixture {'ok' if hit else 'FAIL'}: {name} (met={ok} {c})")
+-    shutil.rmtree(D, ignore_errors=True)
++    finally:
++        shutil.rmtree(D, ignore_errors=True)
+     return got
+ 
+ 

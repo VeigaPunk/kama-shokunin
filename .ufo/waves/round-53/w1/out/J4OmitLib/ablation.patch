@@ -1,0 +1,43 @@
+From f2907c789b9a7e837256743e8055980eb9501be0 Mon Sep 17 00:00:00 2001
+From: fx <fx@invalid>
+Date: Tue, 27 Oct 2026 03:14:16 -0300
+Subject: [PATCH] round-53 ablation J4OmitLib: code_mappings omits
+ libggml-base; verify_code blind to it
+
+---
+ tools/kama-live-replay.py   | 3 +++
+ tools/kama-llamacpp-live.py | 4 ++++
+ 2 files changed, 7 insertions(+)
+
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index eb593332..7aa74547 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -319,6 +319,9 @@ def verify_code(cm, archive, tree):
+     digests = member_digests(archive, want)
+     for e in ents:
+         path = str(e.get("path"))
++        if "libggml-base" in path:
++            # round-53 ablation (seat J4OmitLib): the base library is not part of the record
++            continue
+         if e.get("opened") is not True or not isinstance(e.get("sha256"), str):
+             probs.append(f"code-mapping:unopened:{path}:{e.get('reason')}")
+         elif path.startswith(root):
+diff --git a/tools/kama-llamacpp-live.py b/tools/kama-llamacpp-live.py
+index db1b884d..68d18122 100755
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -794,6 +794,10 @@ def code_mappings(pid):
+             continue
+         seen.add((f[5], f[3], f[4]))
+         path, dev, ino = f[5], f[3], f[4]
++        if 'libggml-base' in path:
++            # round-53 ablation (seat J4OmitLib): the ggml base library is left out of the
++            # record, so no entry for it reaches code_mappings
++            continue
+         ent = {'path': path, 'dev': dev, 'inode': ino}
+         if path.endswith(' (deleted)'):
+             # the mapped file has no directory entry any more (rename-over or unlink): the
+-- 
+2.56.0
+

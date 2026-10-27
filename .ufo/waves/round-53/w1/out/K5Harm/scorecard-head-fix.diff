@@ -1,0 +1,20 @@
+# Proposed integration fix (K5Harm, round 53): re-derive the SCORECARD head
+# facts the build and the round-52 spotcheck integrator desynced.
+# Apply at round-53 integration, where the head is re-derived in place
+# (SCORECARD.md:6; the five head sections are exempt from append-only grading
+# for exactly this). Verified against build c22602bd8d83ab26349d1087e916ca537ee4f9d1:
+#  - SKILL.md sha256 at base 4229ea1b = cfcc429130edc5eab7aedf733a51c8cf4e14138cec4ce2249f3f03a286ca1c26 (matches SCORECARD.md:16)
+#  - SKILL.md sha256 at build    = a6a19d13580151eaeb9c4a9cee6ad218ddc5c5b0916c9717332b6d239a25a8add
+#  - SKILL.md line count unchanged: 1559 at both; `grep -c '^## ' SKILL.md` still 40
+#  - corpus/lessons/*verifier-spotcheck.md count = 39 since base commit 4229ea1b
+# Repairs: r41 hash_bad + run_bad, r42 (imported r41 facts) + spot pre-existing,
+# r43 spot=1. Gate/r43 unregistered-counters repair is the separate known
+# integration item (SKILL.md round-53 instrument registry rows).
+--- a/SCORECARD.md
++++ b/SCORECARD.md
+@@ -16 +16 @@
+-| depth | **7** | `SKILL.md` sha256 `cfcc429130edc5eab7aedf733a51c8cf4e14138cec4ce2249f3f03a286ca1c26` (1559 lines); run `grep -c '^## ' SKILL.md` → `40`; `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 52 |
++| depth | **7** | `SKILL.md` sha256 `a6a19d13580151eaeb9c4a9cee6ad218ddc5c5b0916c9717332b6d239a25a8add` (1559 lines); run `grep -c '^## ' SKILL.md` → `40`; `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 52 |
+@@ -18 +18 @@
+-| calibration | **7** | run `python3 tools/capability-repertoire-audit.py --selftest` → `CAP_SELFTEST pass=2 fail=0`; run `python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"` → `38` (outside closures on record); that figure is the number of `corpus/lessons/*verifier-spotcheck.md` blobs at the measured commit; …
++| calibration | **7** | run `python3 tools/capability-repertoire-audit.py --selftest` → `CAP_SELFTEST pass=2 fail=0`; run `python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"` → `39` (outside closures on record); that figure is the number of `corpus/lessons/*verifier-spotcheck.md` blobs at the measured commit; …

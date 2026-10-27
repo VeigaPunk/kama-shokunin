@@ -1,0 +1,26 @@
+--- a/tools/round53-replay-code-audit.py
++++ b/tools/round53-replay-code-audit.py
+@@ -628,6 +628,23 @@
+                         cprobs.append(f"code: rerun code_mappings has no entry {path} {dev} {ino} with the archive digest")
+                     if om.get(member) != digest:
+                         cprobs.append(f"code: replay own_code.members[{member!r}] {om.get(member)!r} != archive digest")
++                # round-54 proposal (round-53 seat J7Late, measured): the receipt hash (T0,
++                # kama-llamacpp-live.py:2309) and the mem read (T1, :581 above) are two state
++                # samples taken before the release, and nothing re-reads afterwards - the
++                # frozen counter printed code=1 at c22602bd with libggml-rpc.so rewritten
++                # 5 ms after its own release file. Re-hash every path the observation named
++                # now that the replay has exited; a change that persists past the read then
++                # stops surviving unseen (a transient swap still can - sampling is not history).
++                for path, (dev, ino, member) in sorted(cobs["files"].items()):
++                    want = hashlib.sha256(arc.member(member)).hexdigest()
++                    try:
++                        st, got = os.stat(path), sha_file(path)
++                    except OSError as exc:
++                        cprobs.append(f"code: {path} not re-readable after the replay: {exc.strerror}")
++                        continue
++                    if str(st.st_ino) != ino or got != want:
++                        cprobs.append(f"code: {path} changed after the observation: inode "
++                                      f"{st.st_ino} != {ino} or digest {got} != {want}")
+             if pid_alive(pid) or not port_refuses(port):
+                 probs.append("server still alive or port still accepting after the replay exited")
+         try:

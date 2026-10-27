@@ -1,0 +1,54 @@
+Proposal only — the frozen counter (tools/round53-replay-code-audit.py, sha256
+1a7a144204ba8b7ea9791706ab5fc90f1dab55db12a824a1af5ae89a81b75d8f) and the frozen
+predicate MUST NOT be edited in round 53. This is the smallest correction I recommend
+for a future counter revision, derived from the K3Host probes:
+
+1. Compare the mount device (recoverable from /proc/self/mountinfo; on this host it is
+   byte-identical to the maps dev for btrfs AND xfs) instead of dropping dev entirely.
+2. Fix the mechanism comment: there is no overlayfs on this host; the divergence is
+   btrfs's per-subvolume anonymous st_dev vs the fs-wide mountinfo/maps dev.
+3. Add S_ISREG (the live tool already requires it, kama-llamacpp-live.py:817-819) and a
+   parent-directory writability check to the counter's host branch.
+4. (round-54 predicate change, not code): anchor host files to a frozen set recorded at
+   build time (the 13 observed files: path, mount-dev, inode, size, mtime, sha256) and
+   treat any new/changed/missing host file as a `code:` problem; optionally require
+   `pacman -Qo` package ownership with a clean `pacman -Qk` verification.
+
+--- a/tools/round53-replay-code-audit.py
++++ b/tools/round53-replay-code-audit.py
+@@ -441,12 +441,26 @@
+                 sdev = "%02x:%02x" % (os.major(st.st_dev), os.minor(st.st_dev))
+-                # host files: the maps `dev` of a file on this host's btrfs/overlay root is
+-                # not the st_dev stat() reports (00:1e vs 00:20 in the pre-freeze dry run),
+-                # so a host file is matched by inode, uid 0 and not writable by this counter
+-                if st.st_uid != 0 or str(st.st_ino) != ino or os.access(path, os.W_OK):
++                # host files: stat() st_dev on this host's btrfs root is the per-subvolume
++                # anonymous device (0:32 for @, 0:38 for @home, ...), while /proc/<pid>/maps
++                # shows the mount device 0:30 -- exactly the major:minor /proc/self/mountinfo
++                # reports for every subvolume of the fs, so the maps dev IS recoverable and
++                # is compared here (no overlayfs is involved on this host); btrfs inodes are
++                # unique per subvolume only, and (mount-dev, inode) pairs DO collide across
++                # subvolumes (/, /home, @pkg, @log roots are all inode 256), so inode alone
++                # is not a unique identity for a mapped host file
++                mdev = mountinfo_dev(path)  # major:minor of the path's covering mount
++                if (mdev != dev or st.st_uid != 0 or str(st.st_ino) != ino
++                        or not stat.S_ISREG(st.st_mode)
++                        or os.access(path, os.W_OK)
++                        or any(os.access(d, os.W_OK) for d in parent_dirs(path))):
+                     probs.append(f"code: executable mapping {path} ({dev} {ino}) is neither an archive file "
+                                  f"under the unpacked tree nor a root-owned host file (uid {st.st_uid}, "
+                                  f"{sdev} {st.st_ino}, writable {os.access(path, os.W_OK)})")
+                     continue
+                 host.add(path)
+
+where mountinfo_dev(path) parses /proc/self/mountinfo, picks the row whose mount point
+is the longest prefix of the resolved path, and returns its field 3 (e.g. "0:30");
+parent_dirs(path) yields every ancestor from the file's directory up to / .
+
+Rationale per probe (K3Host-probe-evidence.txt):
+- maps dev == mountinfo dev: 00:1e == 0:30 for @ and @home alike (sections 2, 4, 5).
+- stat st_dev is per-subvolume: %D=20 (@), %D=38 (@home) (section 3).
+- collisions: /, /home, /var/cache/pacman/pkg, /var/log are all inode 256 (section 6).
+- no uid-1000-writable dir exists under /usr, so parent_dirs() adds no false rejects
+  for the real system libraries; /home/vgpnk/.local/opt/... stays correctly rejected as
+  uid != 0 (it is vgpnk-owned).

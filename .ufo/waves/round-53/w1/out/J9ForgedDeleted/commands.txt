@@ -1,0 +1,19 @@
+# Exact commands (scratch S=/fast/scratch/hyaku/kama-r53/J9ForgedDeleted, TMPDIR=$S)
+git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin "$S/lane"
+git -C "$S/lane" switch -c ctlA c22602bd8d83ab26349d1087e916ca537ee4f9d1
+# ctlA: registry/cited-path-corrections.tsv line 16 evidence 9874e455... -> 4229ea1b...
+git -C "$S/lane" -c user.name=fx -c user.email=fx@invalid commit -q -m "control C2/A: ..." -- registry/cited-path-corrections.tsv   # 4ea9683669dcf84659b3d5746228a4773028876b
+python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round53-cited-path-check.py --repo "$S/lane" --tip 4ea9683669dcf84659b3d5746228a4773028876b --scratch "$S" --out "$S/ctlA-forged-deleted-commit.out"
+git -C "$S/lane" switch -c ctlB c22602bd8d83ab26349d1087e916ca537ee4f9d1
+# ctlB: line 17 `never -` -> `deleted c22602bd8d83ab26349d1087e916ca537ee4f9d1`
+git -C "$S/lane" -c user.name=fx -c user.email=fx@invalid commit -q -m "control C2/B: ..." -- registry/cited-path-corrections.tsv   # 2404119056b7f8bdd97e247a27a64286c7573f29
+python3 .../round53-cited-path-check.py --repo "$S/lane" --tip 2404119056b7f8bdd97e247a27a64286c7573f29 --scratch "$S" --out "$S/ctlB-forged-never-as-deleted.out"
+git -C "$S/lane" switch -c ctlC c22602bd8d83ab26349d1087e916ca537ee4f9d1
+# ctlC (supplementary): line 16 evidence -> 19c07aa9... (a commit that deletes two round-49 paths, not utils.hpp)
+git -C "$S/lane" -c user.name=fx -c user.email=fx@invalid commit -q -m "control C2/C: ..." -- registry/cited-path-corrections.tsv   # f0114116fdc3e9b4d13080e8a50a447e777c1472
+python3 .../round53-cited-path-check.py --repo "$S/lane" --tip f0114116fdc3e9b4d13080e8a50a447e777c1472 --scratch "$S" --out "$S/ctlC-forged-deleted-other-deletions.out"
+# reference (unmutated build, same fleet HEAD as the three runs)
+python3 .../round53-cited-path-check.py --repo "$S/lane" --tip c22602bd8d83ab26349d1087e916ca537ee4f9d1 --scratch "$S" --out "$S/ref-build-current-fleet.out"
+sha256sum /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round53-cited-path-check.py
+# pinned re-runs (deterministic fleet revision):
+for spec in A:4ea96836... B:24041190... ref:c22602bd...; do python3 .../round53-cited-path-check.py --repo "$S/lane" --tip <tip> --fleet-rev d2a6c59aaabcbde2d4a946c31d0276bb2c3d7887 --scratch "$S" --out "$S/pinned-<name>.out"; done

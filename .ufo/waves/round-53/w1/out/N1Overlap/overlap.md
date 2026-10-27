@@ -1,0 +1,22 @@
+Verdict: Two bounded adjacencies found; report them, do not absorb either lane’s domain.
+
+## Evidence
+
+- `/home/vgpnk/Projects/shokunin/shokunin.conf:45-58` registers `kengaku` (LLM/model research and evaluation), `kasegi` (bounty/security research), `kumitate` (orchestration/tooling), `kaidoku` (reverse engineering), and `kama` (local model serving and endpoint health). The configured fleet lanes `protocol` and `aggregator` are fleet-root entries (`:19-22`), not sibling lane directories.
+- `kama-shokunin/PROVINCE.md:3-16` defines kama’s endpoint, health, served-model reconciliation, and lane instrument surfaces. The round-53 claim adds in-process executable-byte identity verification, a distinct security/verification concern rather than endpoint-health ownership.
+- `kengaku-shokunin/PROVINCE.md:14,136-139` records a local llama-server process identity/argv pin as model-serving interpretation evidence, and explicitly says flag-change authority is unowned/integrator; its `:136` routes serving-plane and endpoint identity to kama, while model-quality/evaluation remains kengaku (`:42-45`). This overlaps on the evidence subject (a running local model server), not the round-53 byte-authenticity method. Report-not-absorb; kama remains owner of serving/endpoint health and kengaku owns model evaluation/interpretation.
+- `kaidoku-shokunin/PROVINCE.md:48,57,64-70` owns native ELF analysis and binary-linkage interpretation; its `:105-109` refuses dynamic analysis/tracing. Reading mapped bytes from a live llama-server is adjacent to binary identity/analysis, but no PROVINCE evidence establishes kaidoku ownership of this runtime memory-verification method. Report-not-absorb; route binary linkage interpretation to kaidoku, while kama’s bounded claim remains about server runtime identity for serving-health evidence.
+- `chousa-shokunin/PROVINCE.md:5-8` explicitly owns citation chaining and hop resolution, claim-vs-source verification, and its own corpus/gates. This is adjacent to C2’s cited-path resolution. The C2 check is specifically lane self-assessment pointer existence/correction against the lane/fleet trees, not research citation quality; report-not-absorb and route reusable citation-chain/source-verification methodology to chousa.
+- `mori-shokunin/PROVINCE.md:65-68` says kama owns local model-serving/endpoint health and mori does not infer serving health from host/resource signals. No conflict: this confirms the endpoint boundary; it does not cover executable-byte identity or evidence-pointer auditing.
+
+## Axes and proposed move
+
+Affected axis: kama operability/calibration (adjacency clarity); neighboring boundary clarity for chousa citation method and kaidoku ELF interpretation. Proposed move: preserve the current division and record the two report-outs—runtime code identity as a serving-evidence instrument, not a general binary-analysis capability; cited-path checking as self-assessment ledger integrity, not a replacement for chousa’s citation/source method. No code or contract change proposed. This improves boundary precision without claiming another lane’s ground.
+
+## Risks / contradictions
+
+The common subject “running llama-server” appears in both kama and kengaku’s historical process pin, but their stated purposes differ: kama governs serving health/identity, kengaku preserves interpretation evidence and refuses remediation authority. Likewise, C2 checks file/anchor existence and disclosed corrections; chousa owns citation-chain and claim/source quality. Treating either overlap as exclusive ownership would erase a real distinction. No explicit sibling ownership statement for `/proc/<pid>/mem` authenticity verification or scorecard path-existence counters was found in the inspected Province evidence. `protocol` and `aggregator` are configured as fleet-root lanes, and their `*-shokunin/PROVINCE.md` files were absent at the attempted paths; no province-level ownership can be attributed to them from this evidence.
+
+## Verification
+
+Read-only evidence commands/tool calls: read `shokunin.conf`; enumerate `*-shokunin/PROVINCE.md`; inspect `kama-shokunin/PROVINCE.md`, `kengaku-shokunin/PROVINCE.md`, `kaidoku-shokunin/PROVINCE.md`, `chousa-shokunin/PROVINCE.md`, and `mori-shokunin/PROVINCE.md`; search sibling Province text for process-memory and citation/path ownership terms. No counters or runtime checks run; no lane files modified.

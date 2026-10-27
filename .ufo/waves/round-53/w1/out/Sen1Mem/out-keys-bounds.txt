@@ -1,0 +1,26 @@
+== 1: the mem byte comparison, with the counter's own code_observe()
+   child 3138773: 10 executable file mappings (the counter's filter)
+   1a honest archive            4 ranges compared, 4 problems
+      code: mapped bytes 7f0a0f285000-7f0a0f286000 (offset 00000000) of libggml-cpu-zen4.so differ from the archive member
+      code: mapped bytes 7f0a0f286000-7f0a0f287000 (offset 00000000) of libggml.so.0.27.0 differ from the archive member
+      code: mapped bytes 7f0a0f287000-7f0a0f288000 (offset 00000000) of libggml-base.so.0.27.0 differ from the archive member
+      code: mapped bytes 7f0a0f288000-7f0a0f289000 (offset 00000000) of libllama-server-impl.so differ from the archive member
+      leg `not cprobs and cobs is not None` -> False  (code=0: control holds)
+   1b archive rewritten to those bytes  4 ranges compared, 0 problems: []
+      leg `not cprobs and cobs is not None` -> True  (code=1: FALSE PASS)
+      files executed: libllama-server-impl.so (sha 9ec29d42259b...), libggml-base.so.0.27.0 (sha 2487709712cd...), libggml.so.0.27.0 (sha 043b23d027f9...), libggml-cpu-zen4.so (sha b2a6259c888d...)
+== 2: member names are only keys
+   Archive.member('../etc/passwd') -> None (getmember exact match, line 384)
+   Archive.member('/etc/passwd') -> None (getmember exact match, line 384)
+   Archive.member('libggml.so.0.27.0/../../x') -> None (getmember exact match, line 384)
+   Archive.member('') -> None (getmember exact match, line 384)
+   extraction of the tip (git archive) drops symlinks/hardlinks and applies
+   tarfile.data_filter (lines 776-779):
+   extractall -> OutsideDestinationError: '../../sen1mem-escaped' would be extracted to '/fast/scratch/hyaku/kama-r53/Sen1Mem/sen1mem-escaped', which is
+   escaped file exists: False; symlink extracted: False
+== 3: size bounds
+   maps row 7fb1b0c00000-7fb1c0c00000 perms r-xs: 268435456 bytes (256 MiB), archive member 'big-extra.so' is 4096 bytes
+   code_observe -> 1 ranges, problems ["code: no mapped archive member matches libllama-server-impl.so (mapped: ['big-extra.so'])", "code: no mapped archive member matches libggml-base.so* (mapped: ['big-extra.so'])", "code: no mapped archive member matches libggml.so* (mapped: ['big-extra.so'])", "code: no mapped archive member matches libggml-cpu-*.so (mapped: ['big-extra.so'])"]
+   the whole range is held twice (want, line 424-425; got, line 427): the
+   zero-padded tail compares equal, and nothing caps hi-lo
+   VmHWM 27824 kB -> 550424 kB

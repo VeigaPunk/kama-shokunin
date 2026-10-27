@@ -1,0 +1,74 @@
+--- a/tools/round53-cited-path-check.py
++++ b/tools/round53-cited-path-check.py
+@@ -104,7 +104,7 @@
+        "SHONEN.md", "SKILL.md")
+ BAD_CHARS = set(" <>$=()|'\"")
+ ANCHOR = re.compile(r"^(.*?):(\d+(?:[-,]\d+)*)$")
+-CLASSES = ("deleted", "never", "moved", "eof", "untracked", "upstream", "fixed")
++CLASSES = ("deleted", "never", "moved", "eof", "untracked", "upstream", "fixed", "externalized")
+ SCENARIOS = 8
+ 
+ 
+@@ -248,6 +248,21 @@
+         if any(v != "ok" for _e, v in rep):
+             return f"replacement {ev!r} does not resolve at tip"
+         return None
++    if cls == "externalized":
++        # a citation corrected in place to a target that is not itself a citation (an
++        # absolute path outside the tree): the token must leave that surface, its evidence
++        # text must be present there at tip, and that evidence must not be a citation
++        surf = row["surface"]
++        if tok in cited_tip.get(surf, {}):
++            return "externalized token is still cited at tip"
++        if tok not in base_unres.get(surf, set()):
++            return "externalized token was not an unresolved citation of this surface at base"
++        text = show(lane.path, lane.rev, surf) or ""
++        if ev not in text:
++            return f"evidence {ev!r} does not appear in {surf} at tip"
++        if any(t == ev for _n, t, *_r in citations(text)):
++            return f"evidence {ev!r} is itself a citation"
++        return None
+     if not bad_exp:
+         return None  # stale; reported by the caller
+     if cls == "deleted":
+@@ -351,22 +366,24 @@
+             continue
+         exp = unres.get(row["surface"], {}).get(row["token"])
+         why = check_row(row, exp, lane, fleet, cited, base_unres)
+-        if row["class"] != "fixed" and not exp and why is None:
++        if row["class"] not in ("fixed", "externalized") and not exp and why is None:
+             stale.append(row)
+         elif why is not None:
+             bad.append((row, why))
+-        elif row["class"] != "fixed":
++        elif row["class"] not in ("fixed", "externalized"):
+             disclosed.add(key)
+     n_cited = sum(len(v) for v in cited.values())
+     n_unres = sum(len(v) for v in unres.values())
+     undisclosed = [(s, t, v) for s, d in unres.items() for t, v in d.items() if (s, t) not in disclosed]
+     dropped = []
+     if base_lane is not None:
+-        bt = show(base_lane.path, base_lane.rev, "SCORECARD.md") or ""
+-        tt = show(lane.path, lane.rev, "SCORECARD.md") or ""
+-        bset = {tok for _n, tok, *_r in citations(bt)}
+-        tset = {tok for _n, tok, *_r in citations(tt)}
+-        dropped = sorted(bset - tset)
++        excused = {(r["surface"], r["token"]) for r in rows if r["class"] in ("fixed", "externalized")}
++        for surf in SURFACES:
++            bt = show(base_lane.path, base_lane.rev, surf) or ""
++            tt = show(lane.path, lane.rev, surf) or ""
++            bset = {tok for _n, tok, *_r in citations(bt)}
++            tset = {tok for _n, tok, *_r in citations(tt)}
++            dropped += [f"{surf}:{tok}" for tok in sorted(bset - tset) if (surf, tok) not in excused]
+     if verbose:
+         for s, t, v in undisclosed:
+             detail.append(f"undisclosed {s} `{t}`: {v}")
+@@ -375,7 +392,7 @@
+         for row in stale:
+             detail.append(f"stale ledger line {row['line']} ({row['surface']} `{row['token']}`): token resolves or is not cited")
+         for t in dropped:
+-            detail.append(f"dropped SCORECARD.md citation `{t}` (cited at base, not at tip)")
++            detail.append(f"dropped citation `{t}` (cited at base, not at tip)")
+     counts = {"cited": n_cited, "unresolved": n_unres, "disclosed": len(disclosed),
+               "undisclosed": len(undisclosed), "bad": len(bad), "stale": len(stale), "dropped": len(dropped)}
+     ok = not undisclosed and not bad and not stale and not dropped
