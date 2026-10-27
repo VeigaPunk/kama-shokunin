@@ -1,0 +1,11 @@
+--- /fast/scratch/hyaku/kama-r58/M01DropCounterFlag/checker-pristine.py	2026-10-27 16:54:48.875501937 -0300
++++ /fast/scratch/hyaku/kama-r58/M01DropCounterFlag/checker-mutant.py	2026-10-27 16:55:24.644558021 -0300
+@@ -201,7 +201,7 @@
+         frames = json.load(open(res))["frames"]
+     finally:
+         shutil.rmtree(work, ignore_errors=True)
+-    ran = {f["label"] for f in frames if f["fn"] == "run" and f["counter"] >= 1}
++    ran = {f["label"] for f in frames if f["fn"] == "run"}
+     asserts = [f for f in frames if f["fn"] == "assert_mutant_breaks_detection"]
+     assert_ok = (not defines_assert) or (bool(asserts) and all(f["sub"] >= 1 for f in asserts))
+     executed = bool(expected) and expected <= ran and assert_ok

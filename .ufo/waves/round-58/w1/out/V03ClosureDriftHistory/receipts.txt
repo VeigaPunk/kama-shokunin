@@ -1,0 +1,94 @@
+V03ClosureDriftHistory receipts (round 58, kama lane). Read-only clone:
+$S=/fast/scratch/hyaku/kama-r58/V03ClosureDriftHistory
+git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin $S/lane
+git -C $S/lane rev-parse --show-toplevel -> /fast/scratch/hyaku/kama-r58/V03ClosureDriftHistory/lane
+
+[1] git -C $S/lane log -S 'latest outside closure' -- SCORECARD.md
+82b5e9d3 round-45: restore SCORECARD/LOG/QUALITY/README bodies truncated by the previous commit (append bug) ...
+0718b6ab round-45: lesson, KQ62-KQ65, seat-yield and manifest-crosscheck tools, D3 corrections, ...
+24aa1d34 round-41: claim work - reconciled head axes table (C1); pin-watch tool, engine pins, entry, S475-S477, ...
+exit=0 (3 commits: the occurrence count of the phrase never changes, so -S cannot see drift)
+
+[2] Per-commit pointer extraction ($S/ptr.py; frozen CLAIM/INCL/SPOT regexes copied from
+tools/round58-c2-counter.py), state changes only:
+24aa1d34 N=40 tok='honest stop' incl=None maxN=40
+dd9f5dc6 N=41 tok='admitted' incl=None maxN=41
+dabc6eee N=41 tok='admitted' incl=None maxN=42   (stale)
+ef76777e N=43 tok='admitted' incl=None maxN=43
+21945c61 N=44 tok='admitted' incl=None maxN=44
+0718b6ab N=None (row truncated) maxN=44
+82b5e9d3 N=44 tok='admitted' incl=None maxN=44
+4340cf2f N=45 tok='rejected-honest-stop; re-anchored round 46' incl=None maxN=45
+383f1fc7 N=46 tok='admitted; re-anchored round 47' incl=None maxN=46
+380bcdff N=46 tok='admitted; re-anchored round 47' incl=None maxN=47  (stale)
+c4b2175d N=47 tok='admitted; re-anchored round 48' incl=None maxN=47
+24e906f0 N=48 tok='admitted; re-anchored round 49' incl=None maxN=48
+1c030f18 N=48 tok='admitted; re-anchored round 50' incl=None maxN=49  (stale)
+c5ec93d5 N=50 tok='admitted; re-anchored round 51' incl=None maxN=50
+5dacf2c7 N=51 tok='admitted; re-anchored round 52' incl=None maxN=51
+e81d90e6 N=52 tok='admitted; re-anchored round 53' incl=None maxN=52
+9a3104c7 N=53 tok='rejected; re-anchored round 54' incl=None maxN=53
+c2c05e30 N=53 tok='rejected; re-anchored round 54' incl=None maxN=54  (stale)
+750e76b9 N=55 tok='admitted' incl=54 maxN=55
+7b74e2f2 N=56 tok='admitted' incl=56 maxN=56
+bfaea953 N=57 tok='rejected-honest-stop' incl=57 maxN=57
+
+[3] Round-58 frozen counter at each state tip
+  python3 tools/round58-c2-counter.py --repo $S/lane --tip <rev> \
+      --manifest-rev 941acf70583a2b3a1d33460b31967e0efd291f3e
+2f53614e claim=N=56 token=admitted maxN=57 manifest=rejected-honest-stop
+         r42=1 missing=0 stale=1 verdict=1 including=1 mismatches=4 met=False   exit=1
+5dacf2c7 claim=N=51 token=admitted; re-anchored round 52 maxN=51 manifest=admitted
+         r42=0 missing=0 stale=0 verdict=1 including=1 mismatches=2 met=False   exit=1
+c22602bd claim=N=51 token=admitted; re-anchored round 52 maxN=52 manifest=admitted
+         r42=2 missing=0 stale=1 verdict=1 including=1 mismatches=5 met=False   exit=1
+e81d90e6 claim=N=52 token=admitted; re-anchored round 53 maxN=52 manifest=admitted
+         r42=1 missing=0 stale=0 verdict=1 including=1 mismatches=3 met=False   exit=1
+9a3104c7 claim=N=53 token=rejected; re-anchored round 54 maxN=53 manifest=rejected-harmed
+         r42=1 missing=0 stale=0 verdict=1 including=1 mismatches=3 met=False   exit=1
+c2c05e30 claim=N=53 token=rejected; re-anchored round 54 maxN=54 manifest=rejected-harmed
+         r42=6 missing=0 stale=1 verdict=1 including=1 mismatches=9 met=False   exit=1
+750e76b9 claim=N=55 token=admitted maxN=55 manifest=admitted
+         r42=1 missing=0 stale=0 verdict=0 including=1 mismatches=2 met=False   exit=1
+7b74e2f2 claim=N=56 token=admitted maxN=56 manifest=rejected-honest-stop
+         r42=0 missing=0 stale=0 verdict=1 including=0 mismatches=1 met=False   exit=1
+bfaea953 claim=N=57 token=rejected-honest-stop maxN=57 manifest=rejected-honest-stop
+         r42=1 missing=0 stale=0 verdict=0 including=0 mismatches=1 met=False   exit=1
+e4891d8a claim=N=57 token=rejected-honest-stop maxN=57 manifest=rejected-honest-stop
+         r42=0 missing=0 stale=0 verdict=0 including=0 mismatches=0 met=True    exit=0
+
+[4] Spotcheck addition commits (each touches ONLY its own file)
+git log --diff-filter=A --format='%h %cI %s' -- corpus/lessons/round-N-verifier-spotcheck.md
+9c603f39 2026-10-27T01:27:15-03:00  round-51
+4229ea1b 2026-10-27T02:49:15-03:00  round-52
+2f88b357 2026-10-27T03:35:34-03:00  round-53
+3a600d2f 2026-10-27T04:33:30-03:00  round-54
+e10b6d39 2026-10-27T11:31:52-03:00  round-55
+b89bdab2 2026-10-27T14:42:40-03:00  round-56
+2f53614e 2026-10-27T16:35:45-03:00  round-57
+git show --name-only --format='' on each: one corpus/lessons/round-N-verifier-spotcheck.md
+
+[5] Fleet MANIFEST kama closure verdicts and their ledger commits
+git -C /home/vgpnk/Projects/shokunin log -G'"lane_round": N' -- MANIFEST.json
+f8cc8779 2026-10-27T01:27:42-03:00 kama r51 closure (admitted)
+5a95d137 2026-10-27T02:49:54-03:00 kama r52 closure (admitted)
+93b7097c 2026-10-27T03:35:50-03:00 kama r53 closure (rejected-harmed)
+0705c9dc 2026-10-27T04:34:12-03:00 kama r54 closure (rejected-honest-stop)
+4b777609 2026-10-27T11:32:46-03:00 kama r55 closure (admitted)
+81e1b508 2026-10-27T14:43:02-03:00 kama r56 closure (rejected-honest-stop)
+cfd9ad5a 2026-10-27T16:35:57-03:00 kama r57 closure (rejected-honest-stop)
+One commit per kama lane_round 51-57; 941acf70 holds the same seven verdicts.
+
+[6] Blob counts vs row count field (count=38..44), git ls-tree <rev> corpus/lessons | grep -c verifier-spotcheck
+5dacf2c7 38   c22602bd 39   e81d90e6 39   9a3104c7 40
+c2c05e30 41   750e76b9 42   7b74e2f2 43   bfaea953 44   2f53614e 44
+Row count at each commit equals the blob count; c2c05e30 changed 40->41 with the pointer stuck at 53.
+
+[7] Blind-spot check at base 2f53614e
+git grep -n 'latest outside closure' 2f53614e -- tools/  -> 2 hits, both
+  tools/round54-cited-path-check.py:100 and :463 (pointer re-point modelled as citation
+  class `superseded`; only the replacement path must resolve).
+git grep -n 'verifier-spotcheck' 2f53614e -- tools/ -> count/verdict-ledger readers only;
+  none compares the row pointer to maxN or to MANIFEST.
+tools/round42-selfdesc-reconcile.py at 7b74e2f2:
+  ok ... mismatches=0 maxN=56 met=True  exit=0  (with the false round-56 "(admitted)")

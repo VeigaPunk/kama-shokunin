@@ -1,0 +1,11 @@
+# X04ScratchHygiene round-58 exact commands (all with `unset HYAKU_SCRATCH`)
+# pins: build tip e4891d8a4c9c70e97124980c2ec9aee5762a7f0a; manifest 941acf70583a2b3a1d33460b31967e0efd291f3e
+# lane: /home/vgpnk/Projects/shokunin/kama-shokunin (read-only, git show/rev only)
+# S=/fast/scratch/hyaku/kama-r58/X04ScratchHygiene ; tools extracted from tip blobs (hash-object == blob)
+1) TMPDIR=$S/tmp-checker python3 $S/tools/round58-battery-exec-check.py --repo <lane> --tip e4891d8a...
+2) TMPDIR=$S/tmp-c1 python3 $S/tools/round58-c1-counter.py --repo <lane> --tip e4891d8a... --checker-blob e4891d8a...:tools/round58-battery-exec-check.py
+3) TMPDIR=$S/tmp-c2 python3 $S/tools/round58-c2-counter.py --repo <lane> --tip e4891d8a... --manifest-rev 941acf70...
+4) strace -f -e trace=mkdir,mkdirat,openat,unlink,rmdir -o trace python3 <tool> ...   (repeat of 1-3 with fresh TMPDIRs tmp-checker2/tmp-c1/tmp-c2)
+5) TMPDIR=$S/tmp-none-checker|tmp-none-c1|tmp-none-c2 python3 <tool> ...  (nonexistent-root probe)
+# /tmp observation per run: find /tmp -mindepth 1 -maxdepth 1 -printf '%f\n' | sort, before/after
+# scratch observation per run: find $TMPDIR -mindepth 1 | wc -l  (0 before, 0 after)

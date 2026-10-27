@@ -1,0 +1,14 @@
+# X08Timing -- exact commands, all at lane HEAD-read rev e4891d8a4c9c70e97124980c2ec9aee5762a7f0a
+# python 3.14.8 (GCC 16.2.1), host loadavg during runs 7.41-8.06 on 32 cores, TMPDIR=/fast/scratch/hyaku/kama-r58/X08Timing
+L=/home/vgpnk/Projects/shokunin/kama-shokunin
+S=/fast/scratch/hyaku/kama-r58/X08Timing
+git -C $L show e4891d8a:tools/round58-battery-exec-check.py > $S/checker-tip.py
+git -C $L show e4891d8a:tools/round58-c1-counter.py         > $S/counter-tip.py
+git -C $L show e4891d8a:tools/round56-env-leg-battery.py    > $S/battery-tip.py
+# A: whole checker (5x)   B: harness child only = the span TIMEOUT=60 bounds (5x)   C: whole frozen counter, 15 variants (5x)
+TMPDIR=$S python3 $S/timeit.py > $S/timing.json
+# A observed line, every run: present=1 roster_match=1 kills=1 controls=2 executed=1 legs=3/3 mutant_assert=1 met=True (rc=0)
+# C observed line, every run: genuine=1/1 benign=3/3 noop_rejected=11/11 errors=0 met=True (rc=0)
+# sanity: bash `time` on the plain checker, 3x  -> real 0m0.095s / 0m0.097s / 0m0.090s
+python3 $S/checker-tip.py --repo $L --tip e4891d8a --work $S/sanityN > $S/sanityN.out
+# scale: git ls-tree -r at tip = 32372 paths; .git pack 35.26 MiB

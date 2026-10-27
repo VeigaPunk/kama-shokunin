@@ -1,0 +1,29 @@
+# Q10OldBatteryUse — old roster-checker dependencies
+
+## Result
+The checker semantic change affects interpretation of **checker-run receipts on synthetic no-op batteries**, not the raw round-56 environment-probe receipts. Round-56/57 claims that the old prereg checker proved a battery *executed* its roster legs must be qualified: the pre-repair checker only established a matching declared roster plus its declared kill/control counts. The repaired checker is stronger but still checks AST call-site presence, not runtime execution.
+
+## Observed source and receipts
+- At freeze `dcd69473`, `tools/round56-prereg-check.py` parses `ROSTER` via `ast.literal_eval`, walks the AST for `run()` calls, and sets `met = match and executed and kills == 1 and controls == 2`. This is **static call-site inventory**, not evidence the calls ran. The build-tip checker at `e4891d8a` has the same code at the inspected lines 6, 25, 42, 49, 56–77; no changed semantics are observed between those two revisions. The round-57 lesson/report corroborate this limit: `.ufo/waves/round-57/reports/R57Item07LessonDraft-case7.md` lines 115–125 calls the old checker roster-only, shows old literal-noop `met=True`/0, new checker literal-noop `met=False`/1, and new checker static/dead-call no-op `met=True`/0.
+- Frozen round-56 raw probe outputs (`.ufo/waves/round-56/measured/{base-c1,build-c1,m-drop-ldaudit}.out`, at freeze) are unchanged facts: respectively `ld_audit=missed/detected/missed`, each driver `exit=0`. These are outputs from the env-leg test, not prereg-checker verdicts; replacing the checker does **not** change their meaning.
+
+## Committed artifacts whose meaning changes under a counter/checker replay
+- `.ufo/waves/round-57/reports/R57Item07LessonDraft-case7.md` §checker comparison (lines 115–123): historical old-checker literal-noop `met=True` is valid evidence of the old checker's weakness; it is not evidence the genuine battery executed. New-checker genuine pass means roster/call-site inventory matched, not that runtime execution was proved. Static-only-call pass remains a documented survivor.
+- `.ufo/waves/round-57/reports/R57Item10AxisFit-case31.md` lines 55–67, and its `...-evidence.md` lines 88–101 / 124–132: old-checker no-op `met=True` vs repaired checker `met=False` demonstrates the narrow literal-roster mutation; the wording “executed call sites” or separability must not be generalized to dynamic execution. The same report explicitly notes unreachable calls are accepted.
+- `.ufo/waves/round-57/reports/R57Item09ClaimFalsifier-case30.md` lines 18–20, 43–45 and `.ufo/waves/round-57/OutsideDefectAudit/38/evidence.md` lines 51–62: old literal-roster no-op accepts, new checker rejects that fixture, but dead/unreachable calls still pass. These meanings survive replacement only when understood as fixture-specific/static-checker results; a broad statement that all no-ops are rejected would change and is contradicted by the reported survivor.
+- `.ufo/waves/round-57/reports/R57Item05CounterSelftest-case05.md` lines 64–80 and `.ufo/waves/round-57/reports/R57Item05CounterSelftest-case05-evidence.md` lines 55–78: the prereg checker is an instrument under test; its literal-noop result changes after repair while deadcode/unused-function no-ops remain accepted. Historical false-green references remain accurate as historical behavior, not current checker behavior.
+- `.ufo/waves/round-57/reports/R57Item10AxisFit-case31-receipts/separability.json` records old-checker no-op (`noop_under_old_checker`) as `met=True` and repaired-checker no-op as `met=False`; this is a stored historical observation, not a rerunnable assertion about current checker semantics.
+
+## Explicitly unaffected / not identified as dependent
+- The three committed round-56 `measured/*.out` probe receipts above: checker-independent observations, no reinterpretation.
+- The round-56 `corpus/lessons/round-56-verifier-spotcheck.md:14` and round-57 lesson references (e.g. `.ufo/waves/round-57/reports/R57Item05CounterSelftest.md:27–29`): statements about the old checker falsely accepting a no-op remain historical facts. They change only if read as claiming current-checker behavior.
+- Genuine checker result `met=True` means the frozen prereg roster matched and (since round 57) expected `run()` label call sites were found. It never by itself established runtime execution. Replacing/replaying with the new checker therefore strengthens rejection of literal-only no-ops, but does not warrant upgrading the claim to actual execution binding.
+
+## Evidence commands and outcomes
+- `git -C /home/vgpnk/Projects/shokunin/kama-shokunin show dcd69473dd7e33b316e2ba238a48e5119a6cd809:tools/round56-prereg-check.py | grep -n -E 'ROSTER|run\(|present=|met =|ast|kills|controls'` → exit 0; relevant lines 6, 25, 42, 49, 56–77 show AST parsing/walk and conjunction.
+- Same command against `e4891d8a4c9c70e97124980c2ec9aee5762a7f0a` → exit 0; same relevant code/line numbers.
+- `git -C ... show <freeze>:.ufo/waves/round-56/measured/{base-c1,build-c1,m-drop-ldaudit}.out` (run as three separate `show` commands) → all present; output as summarized above. The commands were run as three calls, each exit 0.
+- Searches were read-only; no checker/battery execution was performed.
+
+## Limits
+This is a source/receipt inventory, not an exhaustive path-by-path census of every occurrence throughout all historical wave materials. In particular, old checker references in round-57 supporting fixtures/receipts are historical outputs and are not silently reinterpreted as current runs. No live serving endpoint behavior is established by these receipts.

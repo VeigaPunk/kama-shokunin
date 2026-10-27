@@ -1,0 +1,12 @@
+# Exact commands (cwd = fixture for checker runs; checker extracted from e4891d8a)
+python3 <S>/blobs/checker.py --repo <S>/fixtures/{genuine,escape,fabricated,forged,faillegs} --tip HEAD --work <S>/work/<name>
+  genuine      rc=0 present=1 roster_match=1 kills=1 controls=2 executed=1 legs=3/3 mutant_assert=1 met=True
+  escape       rc=0 present=1 roster_match=1 kills=1 controls=2 executed=1 legs=3/3 mutant_assert=1 met=True
+  fabricated   rc=0 present=1 roster_match=1 kills=1 controls=2 executed=1 legs=3/3 mutant_assert=1 met=True
+  forged       rc=0 present=1 roster_match=1 kills=1 controls=2 executed=1 legs=3/3 mutant_assert=n/a met=True
+  faillegs     rc=0 present=1 roster_match=1 kills=1 controls=2 executed=1 legs=3/3 mutant_assert=1 met=True
+python3 <S>/blobs/checker.py --repo <S>/fixtures/forged --tip <sha> --harness <battery> --harness-out <res>  rc=0 (battery os._exit(0) before harness write)
+python3 tools/round58-c1-counter.py --repo <lane> --tip e4891d8a4c9c70e97124980c2ec9aee5762a7f0a   --checker-blob e4891d8a...:tools/round58-battery-exec-check.py --work <S>/c1work
+  rc=0 genuine=1/1 benign=3/3 noop_rejected=11/11 errors=0 met=True
+PYTHONPATH=<S>/pyinj python3 <S>/blobs/checker.py --repo <S>/fixtures/genuine --tip HEAD  -> 2 sitecustomize runs
+LD_PRELOAD=<S>/preload/p.so python3 <S>/blobs/checker.py --repo <S>/fixtures/genuine --tip HEAD -> 7 constructor runs

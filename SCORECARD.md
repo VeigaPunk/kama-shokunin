@@ -3195,10 +3195,12 @@ Pre-data freeze: `dcd69473dd7e33b316e2ba238a48e5119a6cd809`; base and do-nothing
 
 | Claim | Axis, score | Before → after | Counting command and evidence |
 |---|---|---|---|
-| C1 — execution-bound battery checker (sourced on S517) | operability 8→8 | base round-57 checker `genuine=1/1 benign=1/3 noop_rejected=1/11 met=False` → PENDING | `python3 tools/round58-c1-counter.py --repo <repo> --tip <rev> --checker-blob <rev>:tools/round58-battery-exec-check.py`; `.ufo/waves/round-58/controls/c1-base-r57-checker.out` |
-| C2 — calibration-row closure pointer bound to the fleet MANIFEST verdict | calibration 7→7 | `r42=1 stale=1 verdict=1 including=1 mismatches=4 met=False` → PENDING | `python3 tools/round58-c2-counter.py --repo <repo> --tip <rev> --manifest-rev 941acf70583a2b3a1d33460b31967e0efd291f3e`; `.ufo/waves/round-58/controls/c2-base.out` |
+| C1 — execution-bound battery checker (sourced on S517) | operability 8→8 | base round-57 checker `genuine=1/1 benign=1/3 noop_rejected=1/11 met=False` → `genuine=1/1 benign=3/3 noop_rejected=11/11 errors=0 met=True` (measured tip in the report; `.ufo/waves/round-58/measured/c1-final.out`) | `python3 tools/round58-c1-counter.py --repo <repo> --tip <rev> --checker-blob <rev>:tools/round58-battery-exec-check.py`; `.ufo/waves/round-58/controls/c1-base-r57-checker.out` |
+| C2 — calibration-row closure pointer bound to the fleet MANIFEST verdict | calibration 7→7 | `r42=1 stale=1 verdict=1 including=1 mismatches=4 met=False` → `r42=0 missing=0 stale=0 verdict=0 including=0 mismatches=0 met=True` (`.ufo/waves/round-58/measured/c2-final.out`) | `python3 tools/round58-c2-counter.py --repo <repo> --tip <rev> --manifest-rev 941acf70583a2b3a1d33460b31967e0efd291f3e`; `.ufo/waves/round-58/controls/c2-base.out` |
 
 Scores held at operability 8 and calibration 7; no capability added. C1 certifies checker discrimination under a hermetic harness over 15 enumerated fixtures; it does not show that a battery's real subprocess work succeeds, nor resistance to unlisted no-ops. C2 certifies one pointer's agreement with the ledger at a measured tip; the next closure appends a round-58 row and the pointer then legitimately names round 58.
+
+Seat falsification (72 seats, 0 dead; `corpus/lessons/round-58.md` §Mistakes): no seat falsified either frozen predicate. Survivors outside the 11 enumerated no-ops (decoy `--counter`, discarded leg verdict, thread-issued leg, copied legs) and mutants that the frozen sets cannot see (dropped roster match, dropped kills/controls conjunct; dropped C2 `stale`/`verdict`/`including`) are limits. The checker was hardened after the freeze (expect-binding, nonce, crash = not met, audit hook); the frozen counter, variants and predicates are byte-unchanged. KQ98 added to `corpus/QUALITY.md`; S517/S518 added to `corpus/SOURCES.md` (259 rows).
 
 ## Historical authority text — round 57
 

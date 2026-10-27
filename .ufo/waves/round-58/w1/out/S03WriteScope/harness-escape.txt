@@ -1,0 +1,12 @@
+# captured 2026-10-27T17:01:17-03:00
+# frozen checker at dcd69473-tip blob (lane tools/round58-battery-exec-check.py, sha256 89ad4e5d..., unchanged at e4f207f5)
+# fixture 1: tests/round58-battery-variants/genuine.py with LANE rewritten to /fast/scratch/hyaku/kama-r58/S03WriteScope/fake-lane
+cmd: TMPDIR=/fast/scratch/hyaku/kama-r58/S03WriteScope/harness-test python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round58-battery-exec-check.py --repo /fast/scratch/hyaku/kama-r58/S03WriteScope/harness-test/patched-genuine --tip HEAD --work /fast/scratch/hyaku/kama-r58/S03WriteScope/harness-test/scratch-patched-genuine
+rc=0 stdout: tip=2b6734c57a1d434ba0fd620f3ddcaa74d1cb6f58 present=1 roster_match=1 kills=1 controls=2 executed=1 legs=3/3 mutant_assert=1 met=True
+result: fake-lane files: none (Path.write_text/swallowed)
+
+# fixture 2: battery body = Path(...).open('w'); Path(...).write_text; os.open/os.write (paths under /fast/scratch/hyaku/kama-r58/S03WriteScope/harness-test)
+cmd: TMPDIR=/fast/scratch/hyaku/kama-r58/S03WriteScope/harness-test python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round58-battery-exec-check.py --repo /fast/scratch/hyaku/kama-r58/S03WriteScope/harness-test/pathopen --tip HEAD --work /fast/scratch/hyaku/kama-r58/S03WriteScope/harness-test/scratch-pathopen
+rc=1 stdout: tip=c597ceed219a77c10be14789ed1dcf4910d55602 present=1 roster_match=0 kills=1 controls=2 executed=0 legs=0/3 mutant_assert=n/a met=False
+result: pathopen.txt PRESENT ('escaped'), osopen.txt PRESENT ('escaped'), writetext.txt ABSENT
+=> the harness masks Path.write_text/write_bytes/mkdir only; Path.open('w') and os.open reach the real filesystem.

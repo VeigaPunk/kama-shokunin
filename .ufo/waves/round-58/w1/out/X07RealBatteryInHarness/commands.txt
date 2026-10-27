@@ -1,0 +1,11 @@
+# exact commands and exit codes (S=/fast/scratch/hyaku/kama-r58/X07RealBatteryInHarness)
+git -C /home/vgpnk/Projects/shokunin/kama-shokunin archive e4891d8a4c9c70e97124980c2ec9aee5762a7f0a | tar -x -C "$S/lane"   # 0
+# sha256 tip blob vs sandbox copy, 5 files (battery, env-leg-test, r54, r56, checker): all "same"
+diff -u "$S/tip-battery.py" "$S/lane/tools/round56-env-leg-battery.py"   # 0, 3 del + 3 add path lines only
+TMPDIR="$S" python3 "$S/lane/tools/round56-env-leg-battery.py" > real-battery.out 2>&1   # 0
+TMPDIR="$S" PYTHONDONTWRITEBYTECODE=1 python3 "$S/lane/tools/round58-battery-exec-check.py" --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip e4891d8a4c9c70e97124980c2ec9aee5762a7f0a --harness "$S/tip-battery.py" --harness-out harness-frames.json   # 0
+TMPDIR="$S" python3 "$S/lane/tools/round58-battery-exec-check.py" --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip e4891d8a4c9c70e97124980c2ec9aee5762a7f0a --work "$S/work" --out checker.out   # 0 (met=True)
+# benign rewrites, sandbox copies patched on the same 3 path constants:
+for v in B1-rename-comment B2-helper-leg B3-concat-labels; do TMPDIR="$S" python3 "$S/lane/tests/round58-battery-variants/$v.py" > real-$v.out 2>&1; done   # 0,0,0
+# same loop, harness mode on tip blobs -> harness-frames-$v.json   # 0,0,0
+git -C <lane> status --porcelain  # before/after diff: only .ufo/waves/round-58/w1.ready.partial -> w1.ready.dispatched (L1, not this seat)

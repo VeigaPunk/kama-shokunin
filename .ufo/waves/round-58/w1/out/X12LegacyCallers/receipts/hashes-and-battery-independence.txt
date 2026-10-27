@@ -1,0 +1,34 @@
+## 1. base checker sha256 in the tip tree vs the two hashes receipts record
+$ git -C <lane> show e4891d8a4c9c70e97124980c2ec9aee5762a7f0a:tools/round56-prereg-check.py | sha256sum
+dee6f922d0d93b10512f9a799b94f36a1e0f080404a525e08121a223b2e90ced  -
+exit=0
+
+## 2. if that same path were overwritten with the round-58 checker bytes (fixture commit aab4c5e4)
+$ git -C <fixture> show aab4c5e4:tools/round56-prereg-check.py | sha256sum
+89ad4e5d5c15c883eacf39126c6d1a0859382c54142976b4ed8539680832eec5  -
+exit=0
+
+## 3. hashes already recorded by receipts
+$ git -C <lane> show e4891d8:.ufo/waves/round-57/OutsideDefectAudit/38/receipts/checks.txt | sed -n 37,43p
+$ sha256sum tools/round56-prereg-check.py
+dee6f922d0d93b10512f9a799b94f36a1e0f080404a525e08121a223b2e90ced  tools/round56-prereg-check.py
+exit=0
+
+$ git show b89bdab2:tools/round56-prereg-check.py | sha256sum
+c7b0d787f348691bbc057114b455545f5abfb0c70ec497e1ad695591f1489853  -
+exit=0
+
+## 4. battery independence: tools/round56-env-leg-battery.py never names the checker
+$ git -C <lane> show e4891d8:tools/round56-env-leg-battery.py | grep -n prereg-check
+grep_exit=1 (1 = no match)
+$ git -C <lane> show e4891d8:tools/round56-env-leg-battery.py | sed -n 78,88p
+            raise SystemExit("mutant anchor is not unique")
+        mutant.write_text(src.replace(old, new))
+        results.append(run("m-drop-ldaudit", mutant, "missed", OUT / "m-drop-ldaudit.out"))
+        results.append(assert_mutant_breaks_detection(
+            mutant, OUT / "m-drop-ldaudit-target-fails.out"))
+    return 0 if all(results) else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

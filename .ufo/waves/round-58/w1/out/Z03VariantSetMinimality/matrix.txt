@@ -1,0 +1,23 @@
+# Round-58 Z03: per-variant clause attribution (checker @ e4891d8a, fixtures from blobs @ dcd69473)
+# exit: 0=accept 1=reject; legs=len(ran&expected)/len(expected); obs=byte-identical {frames,error} hash
+variant                    rc  roster kills ctrl exec   legs assfrm false sub-conjunct(s)           single-clause flip   base57  obs
+genuine                     0       1     1    2    1    3/3      1 none (accepted)                 -                    accept  0ce35e7d8221
+B1-rename-comment           0       1     1    2    1    3/3      1 none (accepted)                 -                    accept  0ce35e7d8221
+B2-helper-leg               0       1     1    2    1    3/3      1 none (accepted)                 -                    reject  0ce35e7d8221
+B3-concat-labels            0       1     1    2    1    3/3      1 none (accepted)                 -                    reject  0ce35e7d8221
+N01-calls-removed           1       1     1    2    0    0/3      0 legs+assert_ok                  executed             reject  f62d79caabe4
+N02-if-false                1       1     1    2    0    0/3      0 legs+assert_ok                  executed             accept  f62d79caabe4
+N03-unused-function         1       1     1    2    0    0/3      0 legs+assert_ok                  executed             accept  f62d79caabe4
+N04-early-return            1       1     1    2    0    0/3      0 legs+assert_ok                  executed             accept  f62d79caabe4
+N05-env-guard               1       1     1    2    0    0/3      0 legs+assert_ok                  executed             accept  f62d79caabe4
+N06-run-body-noop           1       1     1    2    0    0/3      1 legs                            executed,legs-only   accept  c7325ceccf09
+N07-mutant-assert-noop      1       1     1    2    0    3/3      1 assert_ok                       executed,assert-only accept  4d27e51f61c4
+N08-main-not-invoked        1       1     1    2    0    0/3      0 legs+assert_ok                  executed             accept  f62d79caabe4
+N09-empty-loop              1       1     1    2    0    0/3      0 legs+assert_ok                  executed             accept  f62d79caabe4
+N10-run-rebound             1       1     1    2    0    0/3      1 legs                            executed,legs-only   accept  dc689fe16691
+N11-try-else                1       1     1    2    0    0/3      0 legs+assert_ok                  executed             accept  f62d79caabe4
+
+# clause-level: top-level conjunction evaluated by the checker is
+#   met = roster_match AND executed AND kills==1 AND controls==2
+#   executed = bool(expected) AND expected<=ran AND assert_ok
+# controls used: single-conjunct ablations of a scratch copy of the checker; exit 0 = accept

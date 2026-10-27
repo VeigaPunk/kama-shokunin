@@ -1,0 +1,18 @@
+## base arm is blob-bound: worktree state of tools/round56-prereg-check.py cannot leak into it
+$ python3 tools/round58-c1-counter.py --repo <lane> --tip e4891d8 --checker-blob 2f53614e:tools/round56-prereg-check.py
+exit=1
+tip=e4891d8a4c9c70e97124980c2ec9aee5762a7f0a
+predicate=C1-r58 accept genuine+3/3 benign, reject 11/11 no-op, errors=0
+genuine=1/1 benign=1/3 noop_rejected=1/11 errors=0 met=False
+
+## live-tree hash of the replaced file vs the hash the round-57 receipt recorded
+$ sha256sum tools/round56-prereg-check.py   # in replaced state aab4c5e4
+sha256sum: /fast/scratch/hyaku/kama-r58/X12LegacyCallers/tip/tools/round56-prereg-check.py: No such file or directory (os error 2)
+recorded in .ufo/waves/round-57/OutsideDefectAudit/38/receipts/checks.txt:38
+$ sha256sum tools/round56-prereg-check.py
+dee6f922d0d93b10512f9a799b94f36a1e0f080404a525e08121a223b2e90ced  tools/round56-prereg-check.py
+exit=0
+
+$ git show b89bdab2:tools/round56-prereg-check.py | sha256sum
+c7b0d787f348691bbc057114b455545f5abfb0c70ec497e1ad695591f1489853  -
+exit=0
