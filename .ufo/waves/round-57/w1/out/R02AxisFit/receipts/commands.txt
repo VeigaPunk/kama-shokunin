@@ -1,0 +1,52 @@
+# R02AxisFit receipts — commands and observed outputs (all read-only on the lane)
+
+Scratch: /fast/scratch/hyaku/kama-r57/R02AxisFit (mkdir -p'd explicitly; receipts copied here first; scratch removed after copy). No /tmp used. No lane file outside this receipts dir and ../R02AxisFit.md was created or modified.
+
+## [1] Before-control replay — round42 counter at frozen tip b89bdab2cc114735ec5d331c6c610134258f7864
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round42-selfdesc-reconcile.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip b89bdab2cc114735ec5d331c6c610134258f7864 --out /fast/scratch/hyaku/kama-r57/R02AxisFit/receipts/replay-base-c1.out
+tip=b89bdab2cc114735ec5d331c6c610134258f7864
+r41=1 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 mismatches=1 maxN=56 met=False
+detail: r41 calibration run `python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"` no stdout line == '42' (exit 0)
+exit=1
+Byte-diff vs .ufo/waves/round-57/controls/base-c1.out after dropping its wrapper tail line `base_c1_exit=1`: identical (`diff` clean, "bytes-match-minus-exit-line").
+
+## [2] Actual committed outside-verifier spotcheck census (ground truth for C2)
+$ ls /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/*verifier-spotcheck.md | wc -l
+43
+Latest five rows end at round-56-verifier-spotcheck.md.
+
+## [3] No-op control replay (fixture copied to scratch first; sha256 1910e45e4274e4ce8a4aca4a05deb759ba7413cc030137780f3beecae2120271 identical for scratch copy and frozen fixture)
+$ python3 /fast/scratch/hyaku/kama-r57/R02AxisFit/c1-noop-copy.py
+mismatches=0 maxN=46 met=True
+exit=0
+Frozen noop-c1.out shows the same summary line; noop-c2.out additionally labels the same literal as summary with canonical_table_reads=0 self_description_reads=0 — a do-nothing instrument reports met=True exit 0. The `maxN=46` literal is the round-46 historical counter output recorded at SCORECARD.md:2676 for commit `4340cf2f`, not any current or frozen expectation.
+
+## [4] Frozen tip ancestry and landing commits
+$ git rev-parse --verify 'b89bdab2cc114735ec5d331c6c610134258f7864^{commit}'
+b89bdab2cc114735ec5d331c6c610134258f7864
+$ git merge-base --is-ancestor b89bdab2cc114735ec5d331c6c610134258f7864 HEAD && echo ancestor-ok
+ancestor-ok
+$ git log --format='%H %ci %s' -3
+3d2d5d4d6cba3028ec5358832a67f192cc0e41ec 2026-10-27 15:15:42 -0300 round-57: add source and route outside disagreement
+77e7f5eef2b0c759b7509056c7c511255477496d 2026-10-27 15:14:29 -0300 round-57: record final-tip checker outputs
+16efcf5eedf4887df188790eec48afbb023e7991 2026-10-27 15:12:08 -0300 round-57: source and record frozen counter claims
+
+## [5] Freeze commits exist and are committed
+$ git cat-file -e 89dc4f5239fe1f875adda4613812e77fb9bbc7cc && echo present
+89dc4f5239fe1f875adda4613812e77fb9bbc7cc present
+$ git cat-file -e 7c873d7b4e3839489a93d6334cdf93fe5d34d19f && echo present
+7c873d7b4e3839489a93d6334cdf93fe5d34d19f present
+$ git merge-base --is-ancestor 7c873d7b4e3839489a93d6334cdf93fe5d34d19f HEAD && echo amendment-commit-in-HEAD
+amendment-commit-in-HEAD
+(7c873d7b is not an ancestor of base b89bdab — the ordering correction postdates the base, as freeze-amendment.txt itself states; control-file mtimes 15:03–15:06 sit between base commit 14:42:40 and first landing commit 15:12:08.)
+
+## [6] Instrument delta base→HEAD (which tool changed)
+$ git diff --stat b89bdab2cc114735ec5d331c6c610134258f7864 HEAD -- tools/
+ tools/round56-prereg-check.py | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+round42-selfdesc-reconcile.py: unchanged base→HEAD, matching the amendment's "update only the stale self-description count".
+
+## [7] Base-state sanity (maxN derivation)
+round57-headings-at-base=0        # `git show b89bdab:SCORECARD.md | grep -c '^## Round 57'`
+base-latest-measured=Latest measured round: 56
+→ maxN=56 at the frozen tip is the correct derived value (greatest `^## Round (\d+)` heading); no committed artifact anywhere expects 46 (repo-wide grep: only SCORECARD.md:2676 historical note and the wave's own no-op fixture literals).
