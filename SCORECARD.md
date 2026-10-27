@@ -3152,8 +3152,8 @@ Pre-data freeze: `89dc4f5239fe1f875adda4613812e77fb9bbc7cc`; ordering correction
 
 | Claim | Axis, score | Before → after | Counting command and evidence |
 |---|---|---|---|
-| C1 — bind declared roster to actual battery call sites | operability 8→8 | genuine round-56 roster: `met=True` → `met=True`; matching-roster no-op: `met=True` → `met=False` (exit 1) | `python3 tools/round56-prereg-check.py --repo <repo> --tip <revision>`; `.ufo/waves/round-57/measured/noop-c1.out` |
-| C2 — re-anchor the SCORECARD verifier-spotcheck count | calibration 7→7 | frozen round-42 counter `mismatches=1 met=False` (expected 42, observed 43) → `mismatches=0 met=True` | `python3 tools/round42-selfdesc-reconcile.py --repo <repo> --tip <revision>`; `.ufo/waves/round-57/controls/base-c1.out`, `.ufo/waves/round-57/measured/c2-final.out` |
+| C1 — bind declared roster to actual battery call sites | operability 8→8 | genuine round-56 roster: `met=True` → `met=True`; matching-roster no-op: `met=True` → `met=False` (exit 1) | `python3 tools/round56-prereg-check.py --repo <repo> --tip <revision>`; `.ufo/waves/round-57/measured/noop-c1.out`; sourced on S516 |
+| C2 — re-anchor the SCORECARD verifier-spotcheck count | calibration 7→7 | frozen round-42 counter `mismatches=1 met=False` (expected 42, observed 43) → `mismatches=0 met=True` | `python3 tools/round42-selfdesc-reconcile.py --repo <repo> --tip <revision>`; `.ufo/waves/round-57/controls/base-c1.out`, `.ufo/waves/round-57/measured/c2-committed-tip.out` |
 
 Scores held at operability 8 and calibration 7; no capability added. C1 does not assert that every runtime effect of a battery call was executed; it checks the call-site inventory in the committed battery AST. C2 corrects one stale factual count; it is not a mastery score.
 

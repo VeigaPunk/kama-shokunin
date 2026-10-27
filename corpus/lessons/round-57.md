@@ -9,7 +9,9 @@ Author: KamaR57a2. Base: `b89bdab2cc114735ec5d331c6c610134258f7864`. Pre-data fr
 
 ## Gate
 
-S515 was reopened 2026-10-27 at https://git-scm.com/docs/git-config#Documentation/git-config.txt-GITCONFIGCOUNT, section `GIT_CONFIG_COUNT`, Git 2.56.0 documentation. Located quote: “all environment pairs GIT_CONFIG_KEY_<n> and GIT_CONFIG_VALUE_<n> up to that number will be added to the process’s runtime configuration” (18 words). This is an existing lane-owned source row; no row cell was changed. C1's own-work evidence is the committed round-56 battery source and its frozen prereg checker; S515 is not claimed as support for C1.
+S515 was reopened 2026-10-27 at https://git-scm.com/docs/git-config#Documentation/git-config.txt-GITCONFIGCOUNT, section `GIT_CONFIG_COUNT`, Git 2.56.0 documentation. Located quote: “all environment pairs GIT_CONFIG_KEY_<n> and GIT_CONFIG_VALUE_<n> up to that number will be added to the process’s runtime configuration” (18 words). No existing row cell changed.
+
+**S516 — ADMIT, tier A, mined (own-work).** Opened this round: `/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round56-env-leg-battery.py`, source bytes at base `b89bdab2cc114735ec5d331c6c610134258f7864`. Located quote in `main()` lines 69–83: “results.append(run("base-old-counter", OLD, "missed", OUT / "base-c1.out"))” (5 words). This establishes a concrete named call site; the roster literal alone is not execution evidence. The round-57 checker compares the declared names against these call sites. Registry row S516.
 
 Discernment spot-check: no independent verifier of this round is available before filing; dispatched members are lane authors. S515 is a scoped source citation, not an admit/reject verdict.
 
@@ -25,3 +27,7 @@ Assimilation: none. `considerthese/2026-10-26.md` proposal 3 (counter-shortcut t
 ## Census before → after
 
 Before: `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama`; full output `.ufo/waves/round-57/census/start.out`, exit `.ufo/waves/round-57/census/start.exit`.
+
+Before census: `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama` → exit 0; 256 rows (`git show b89bdab2cc114735ec5d331c6c610134258f7864:corpus/SOURCES.md | grep -cE '^ {0,3}\\|[[:space:]]*S[0-9]{3,}[[:space:]]*\\|'`). Full output `.ufo/waves/round-57/census/start.out`, exit `.ufo/waves/round-57/census/start.exit`.
+
+After census: same validator → exit 0; 257 rows (`grep -cE '^ {0,3}\\|[[:space:]]*S[0-9]{3,}[[:space:]]*\\|' corpus/SOURCES.md`). Full output `.ufo/waves/round-57/census/end.out`, exit `.ufo/waves/round-57/census/end.exit`. Added tier A=1/status mined=1 (S516); no existing row status/recheck/used-by changed; frontier rows advanced: none.

@@ -2458,4 +2458,4 @@ Deleted by `8bee4e56a995` (round-43: LOG wording):
 - C1 operability: `tools/round56-prereg-check.py` now binds preregistered roster members to battery call sites; round-56 closure documented the passing no-op roster control (`corpus/lessons/round-56-verifier-spotcheck.md:14`).
 - C2 calibration 7→7: SCORECARD's verifier-spotcheck count corrected from 42 to the observed 43; the re-derivation command counts `corpus/lessons/*verifier-spotcheck.md`.
 - Pre-data controls and frozen predicates: `.ufo/waves/round-57/controls/`; round-56 outside defect lesson: `corpus/lessons/round-57.md`.
-- Reopened S515 source this round; no SOURCES registry cell changed.
+- Opened S516 from the round-56 battery's committed call sites; append-only row added and cited by C1/lesson. S515 was also reopened from its authoritative Git manual; no existing row cell changed.
