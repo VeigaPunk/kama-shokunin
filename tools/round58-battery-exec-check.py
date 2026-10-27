@@ -16,15 +16,19 @@ a hermetic harness:
     invocations made while that frame is on the stack.
 Verdict (met): the preregistered ROSTER matches the battery literal, kills == 1 and
 controls == 2, every control/positive-control/kill roster label was passed to a `run`
-frame that issued at least one subprocess invocation carrying `--counter`, and, if the
+frame that issued at least one subprocess invocation carrying `--counter` and an `--expect`
+value equal to that label's preregistered `expected` (round-58 hardening after seats K05/K06:
+a decoy or vacuous `--counter` no longer counts), and, if the
 battery defines assert_mutant_breaks_detection, that function was invoked at least once
 and every invocation issued at least one subprocess invocation.  Exit 0 met, 1 not met,
-2 could not evaluate (child failure or timeout).  Scratch: --work, $TMPDIR, else
+2 could not evaluate (child failure, timeout, or a result file lacking the parent's one-shot
+nonce, which the harness reads from stdin before exec so a battery cannot forge it).  Scratch: --work, $TMPDIR, else
 $HYAKU_SCRATCH/kama-r58; removed on exit."""
 import argparse
 import ast
 import json
 import os
+import secrets
 import shutil
 import subprocess
 import sys
@@ -101,6 +105,8 @@ def harness(src_path, repo, tip, out_path):
     pathlib.Path.write_bytes = lambda self, data: len(data)
     pathlib.Path.mkdir = lambda self, *a, **k: None
     tf.TemporaryDirectory = FakeTD
+    nonce = sys.stdin.readline().strip()  # one-shot secret from the parent; never in argv/env
+    sys.argv = [src_path]
     src = open(src_path).read()
     code = compile(src, src_path, "exec")
 
@@ -128,9 +134,12 @@ def harness(src_path, repo, tip, out_path):
     finally:
         sys.setprofile(None)
     rows = [{"fn": f["fn"], "label": f["label"], "sub": len(f["sub"]),
-             "counter": sum(1 for s in f["sub"] if "--counter" in s)} for f in frames]
+             "counter": sum(1 for s in f["sub"] if "--counter" in s),
+             "expects": [s[s.index("--expect") + 1] for s in f["sub"]
+                         if "--counter" in s and "--expect" in s and s.index("--expect") + 1 < len(s)]}
+            for f in frames]
     with open(out_path, "w") as fh:
-        json.dump({"frames": rows, "error": err}, fh)
+        json.dump({"frames": rows, "error": err, "nonce": nonce}, fh)
     return 0
 
 
@@ -143,6 +152,7 @@ def main():
     ap.add_argument("--harness", help=argparse.SUPPRESS)
     ap.add_argument("--harness-out", help=argparse.SUPPRESS)
     a = ap.parse_args()
+    a.repo = os.path.abspath(a.repo)
     if a.harness:
         return harness(a.harness, a.repo, a.tip, a.harness_out)
     rev = git(a.repo, "rev-parse", "--verify", a.tip + "^{commit}")
@@ -189,19 +199,26 @@ def main():
         res = os.path.join(work, "result.json")
         open(src, "wb").write(bat.stdout)
         try:
+            nonce = secrets.token_hex(16)
             p = subprocess.run([sys.executable, os.path.abspath(__file__), "--repo", a.repo, "--tip", tip,
                                 "--harness", src, "--harness-out", res],
-                               capture_output=True, text=True, timeout=TIMEOUT, cwd=work, env=clean_env())
+                               input=nonce + "\n", capture_output=True, text=True, timeout=TIMEOUT,
+                               cwd=work, env=clean_env())
         except subprocess.TimeoutExpired:
             print("could-not-evaluate: harness timeout")
             return 2
         if p.returncode or not os.path.exists(res):
             print(f"could-not-evaluate: harness failed rc={p.returncode}")
             return 2
-        frames = json.load(open(res))["frames"]
+        doc = json.load(open(res))
+        if doc.get("nonce") != nonce:
+            print("could-not-evaluate: harness result not authored by the harness")
+            return 2
+        frames = doc["frames"]
     finally:
         shutil.rmtree(work, ignore_errors=True)
-    ran = {f["label"] for f in frames if f["fn"] == "run" and f["counter"] >= 1}
+    want = {k: v.get("expected") for k, v in (roster.items() if isinstance(roster, dict) else [])}
+    ran = {f["label"] for f in frames if f["fn"] == "run" and want.get(f["label"]) in f.get("expects", [])}
     asserts = [f for f in frames if f["fn"] == "assert_mutant_breaks_detection"]
     assert_ok = (not defines_assert) or (bool(asserts) and all(f["sub"] >= 1 for f in asserts))
     executed = bool(expected) and expected <= ran and assert_ok
