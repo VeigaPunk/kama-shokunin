@@ -107,9 +107,8 @@ def child(src_path, repo, tip, out_path, fault_label):
         if frame.f_code.co_filename != src_path or frame.f_code.co_name not in ("run", "assert_mutant_breaks_detection"):
             return
         if event == "call":
-            names = frame.f_code.co_varnames
-            label_name = names[0] if frame.f_code.co_name == "run" else "mutant-assert"
-            rec = {"label": frame.f_locals.get(label_name), "calls": [], "returned": None}
+            label = frame.f_locals.get(frame.f_code.co_varnames[0]) if frame.f_code.co_name == "run" else "mutant-assert"
+            rec = {"label": label, "calls": [], "returned": None}
             stack.append(rec)
             frames.append(rec)
         elif event == "return" and stack and stack[-1]["label"] == ("mutant-assert" if frame.f_code.co_name == "assert_mutant_breaks_detection" else frame.f_locals.get("label")):
