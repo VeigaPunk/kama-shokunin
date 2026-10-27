@@ -1,0 +1,30 @@
+{
+  "schema": "kama-probe/v1",
+  "subcommand": "listeners",
+  "verdict_vocabulary": "MODEL_OK MODEL_MISMATCH FOREIGN_SERVICE UNAUTHORIZED_SERVICE DEAD NOT_HTTP MODEL_LOADING",
+  "exit_codes": {
+    "0": "probe completed",
+    "2": "drift (listeners does not gate)",
+    "1": "probe error"
+  },
+  "summary": {
+    "probed": 1,
+    "model_endpoints": 1,
+    "foreign_service": 0,
+    "unauthorized_service": 0,
+    "dead": 0,
+    "not_http": 0,
+    "model_loading": 0
+  },
+  "listeners": [
+    {
+      "port": 55369,
+      "bind": "override",
+      "owner": "ollama(pid=1957373)",
+      "verdict": "MODEL_MISMATCH",
+      "reason": "served-id-mismatch",
+      "served_model": "r60p048170ff:latest",
+      "evidence": "GET /v1/models -> 200 application/json (runtime=other; expected=definitely-not-loaded; reason=served-id-mismatch)"
+    }
+  ]
+}

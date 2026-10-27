@@ -1,0 +1,75 @@
+# S519 evidence transcript — gathered 2026-10-27 (UTC) on host vgpnk
+# cwd: /fast/scratch/hyaku/kama-r60/S01OllamaRelease
+# every fetch went to github.com (release page, sha256sum.txt asset, api.github.com release record)
+
+$ date -u +%Y-%m-%dT%H:%M:%SZ
+2026-10-27T21:37:44Z
+
+$ curl -sS -o /dev/null -w "%{http_code}" <tag page>
+200
+$ curl -sS -o /dev/null -w "%{http_code}" <sha256sum.txt asset>
+302
+$ curl -sS -o /dev/null -w "%{http_code}" <expanded_assets/v0.40.11>
+200
+
+$ wc -l sha256sum.txt
+16 sha256sum.txt
+
+$ grep -n 7bedab90dd122661be78798e9f0edf37fccf0cccf2699d2c58ea1a3afdc04b6d sha256sum.txt
+6:7bedab90dd122661be78798e9f0edf37fccf0cccf2699d2c58ea1a3afdc04b6d  ./ollama-linux-amd64.tar.zst
+
+$ grep -c 7bedab90dd122661be78798e9f0edf37fccf0cccf2699d2c58ea1a3afdc04b6d sha256sum.txt
+1
+
+$ grep -n ollama-linux-amd64 sha256sum.txt
+5:0e45493c905b781108cdce1986dfcdb629b29c829f326ded12fc4abde1299d8e  ./ollama-linux-amd64-rocm.tar.zst
+6:7bedab90dd122661be78798e9f0edf37fccf0cccf2699d2c58ea1a3afdc04b6d  ./ollama-linux-amd64.tar.zst
+10:0122fdb0f929db3b2fc43c0b82bd1a562152684814f37f404415b2a118e27a31  ./ollama-linux-amd64-mlx.tar.zst
+
+$ sha256sum ollama-linux-amd64.tar.zst
+7bedab90dd122661be78798e9f0edf37fccf0cccf2699d2c58ea1a3afdc04b6d  ollama-linux-amd64.tar.zst
+
+$ stat -c %s ollama-linux-amd64.tar.zst
+1508659610
+
+$ tar --zstd -tf ollama-linux-amd64.tar.zst | grep -c .
+80
+
+$ tar --zstd -xf ollama-linux-amd64.tar.zst bin/ollama
+
+$ sha256sum bin/ollama
+b0a4becfaf872e3ad5d2e9051244e0dfe55409f03d6e2cd9bd9c34400e201b4c  bin/ollama
+
+$ stat -c %s bin/ollama
+40779408
+
+$ sha256sum ~/.local/opt/ollama-v0.40.11/bin/ollama
+b0a4becfaf872e3ad5d2e9051244e0dfe55409f03d6e2cd9bd9c34400e201b4c  /home/vgpnk/.local/opt/ollama-v0.40.11/bin/ollama
+
+$ cmp bin/ollama ~/.local/opt/ollama-v0.40.11/bin/ollama && echo identical
+identical
+
+$ grep -n "archive_sha256\|bin_sha256" /home/vgpnk/Projects/shokunin/kama-shokunin/registry/ollama-live-pin.tsv
+4:# bin_sha256 is the sha256 of bin/ollama extracted from that archive on this host.
+7:archive_sha256	7bedab90dd122661be78798e9f0edf37fccf0cccf2699d2c58ea1a3afdc04b6d	ollama-linux-amd64.tar.zst (1508659610 bytes)
+8:bin_sha256	b0a4becfaf872e3ad5d2e9051244e0dfe55409f03d6e2cd9bd9c34400e201b4c	bin/ollama inside the archive (40779408 bytes)
+
+$ python3 <<PY   # api.github.com/repos/ollama/ollama/releases/tags/v0.40.11
+tag_name v0.40.11 | prerelease False | draft False | published_at 2026-10-24T00:30:13Z | target_commitish main
+asset ollama-linux-amd64.tar.zst | size 1508659610 | digest sha256:7bedab90dd122661be78798e9f0edf37fccf0cccf2699d2c58ea1a3afdc04b6d
+
+$ python3 <<PY   # asset row as rendered by expanded_assets/v0.40.11 (raw span text)
+name-span-raw : ollama-linux-amd64.tar.zst" rel="nofollow" data-turbo="false" class="wb-break-all"> <span class="text-bold">ollama-linux-amd64.tar.zst</span>
+digest-span-raw: sha256:7bedab90dd122661be78798e9f0edf37fccf0cccf2699d2c58ea1a3afdc04b6d</span> </span> <span data-view-component="true"> <clipboard-copy id="clipbo
+span-containing-digest: sha256:7bedab90dd122661be78798e9f0edf37fccf0cccf2699d2c58ea1a3afdc04b6d
+name/digest offsets: 24989 25713 | distance 724
+
+# lazy-asset check, 2026-10-27 (added after the first transcript)
+$ curl -sSL -o tag.html https://github.com/ollama/ollama/releases/tag/v0.40.11
+bytes=202410
+$ grep -c "ollama-linux-amd64.tar.zst" tag.html
+0
+$ grep -c "7bedab90dd122661be78798e9f0edf37fccf0cccf2699d2c58ea1a3afdc04b6d" tag.html
+0
+$ grep -o "expanded_assets/v0.40.11" tag.html | head -1
+expanded_assets/v0.40.11

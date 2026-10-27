@@ -1,0 +1,78 @@
+case	expr	safe_compile	reject_reason	evaluate	falsifiable	eval_s	fals_s	wall_s
+01-import	__import__('os').system('id')	rejected	ValueError: call not allowed	"-"	"-"			0.18
+02-builtins-sub	c['__class__']	accepted		null	false	0.0	0.0	0.04
+03-str-subscript-type	str[0]	accepted		null	false	0.0	0.0	0.04
+04-list-subscript-type	list[int]	accepted		true	false	0.0	0.0	0.04
+05-dict-subscript-type	dict['x']	accepted		true	false	0.0	0.0	0.03
+06-isinstance-subscript	isinstance[0]	accepted		null	false	0.0	0.0	0.03
+07-attr-globals	len.__globals__	rejected	ValueError: node Attribute not allowed	"-"	"-"			0.03
+08-sorted-key	sorted(c['models'], key=len)	rejected	ValueError: node keyword not allowed	"-"	"-"			0.03
+09-sorted-key-pos	sorted(c['models'], len)	accepted		null	false	0.0	0.0	0.03
+10-dunder-string	c['__builtins__']	accepted		null	false	0.0	0.0	0.04
+11-escape-string-sub	str(c)['__class__']	accepted		null	false	0.0001	0.0001	0.04
+12-shadow-c	[c for c in c]	accepted		true	false	0.0	0.0	0.03
+13-genexp-frame	(x for x in c).gi_frame	rejected	ValueError: node Attribute not allowed	"-"	"-"			0.04
+14-genexp-any	any(x for x in c['models'])	accepted		null	false	0.0001	0.0	0.03
+15-walrus	(x := 1)	rejected	ValueError: node NamedExpr not allowed	"-"	"-"			0.04
+16-lambda	(lambda: 1)()	rejected	ValueError: call not allowed	"-"	"-"			0.04
+17-fstring	f'{c}'	rejected	ValueError: node JoinedStr not allowed	"-"	"-"			0.04
+18-binop-pow	10**9	rejected	ValueError: node BinOp not allowed	"-"	"-"			0.03
+19-list-mul-bomb	[0]*10**9	rejected	ValueError: node BinOp not allowed	"-"	"-"			0.03
+20-negative	len(c['models']) > -1	rejected	ValueError: node USub not allowed	"-"	"-"			0.03
+21-not-chain	not not c['version']['version']	accepted		true	true	0.0	0.0001	0.04
+22-ifexp	c['version']['version'] if c['version'] else ''	accepted		true	true	0.0	0.0001	0.04
+23-getattr-via-class	isinstance(c['models'], type)	accepted		null	false	0.0	0.0	0.05
+24-str-of-dict	str(c['show'])	accepted		true	false	0.0001	0.0055	0.23
+25-set-items	set(c)	accepted		true	false	0.0	0.0	0.12
+26-subscript-slice	c['show']['modelfile'][:5]	accepted		true	false	0.0	0.0	0.27
+27-tuple-unpack-comp	[(a,b) for a,b in []]	accepted		false	false	0.0	0.0	0.05
+28-nested-listlit	[[c['version']] for _ in c['models']]	accepted		null	false	0.0001	0.0	0.10
+29-call-comp-var	[f() for f in c['models']]	rejected	ValueError: call not allowed	"-"	"-"			0.09
+30-condition-call	any(x for x in c['models'] if x)	accepted		null	false	0.0001	0.0	0.11
+31-format-method	c['version']['version'].format(1)	rejected	ValueError: call not allowed	"-"	"-"			0.08
+32-in-operator	'models' in c['tags']	accepted		true	true	0.0	0.0003	0.10
+33-is-op	c['version'] is not None	accepted		true	true	0.0	0.0001	0.03
+34-boolcall	bool(c['models'])	accepted		null	false	0.0	0.0	0.05
+35-intcall	int(c['version']['version'].split('.')[0])	rejected	ValueError: call not allowed	"-"	"-"			0.04
+36-truthy-tautology	True	accepted		true	false	0.0	0.0	0.05
+37-list-truthy	[0]	accepted		true	false	0.0	0.0	0.06
+38-or-tautology	c['models'] is not None or True	accepted		null	false	0.0	0.0	0.05
+40-nest-paren-20k	((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((...(len 40001)	rejected	SyntaxError: too many nested parentheses (<unknown>, line 1)	"-"	"-"			0.06
+41-nest-paren-100k	((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((((...(len 200001)	rejected	SyntaxError: too many nested parentheses (<unknown>, line 1)	"-"	"-"			0.16
+42-not-chain-100k	not not not not not not not not not not not not not not not not not not not not not not not not not not not not not not ...(len 400001)	rejected	MemoryError: Parser stack overflowed - Python source too complex to parse	"-"	"-"			0.14
+43-sub-chain-20k	c['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags'...(len 160001)	accepted		null	false	0.1605	0.3508	0.87
+44-sub-chain-100k	c['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags']['tags'...(len 800001)	rejected	RecursionError: Stack overflow (used 8136 kB) during compilation	"-"	"-"			0.12
+45-huge-listlit-1e6	[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0...(len 2000001)	accepted		true	false	0.4651	1.2148	3.39
+46-many-chains-2000	c['tags'] or c['tags'] or c['tags'] or c['tags'] or c['tags'] or c['tags'] or c['tags'] or c['tags'] or c['tags'] or c['...(len 25996)	accepted		true	true	0.0043	0.0159	0.07
+47-comp2-512tok	[[t for t in c['show']['model_info']['tokenizer.ggml.tokens']] for _ in c['show']['model_info']['tokenizer.ggml.tokens']]	accepted		true	true	0.0021	0.0041	0.04
+48-comp3-512tok	[[[t for t in c['show']['model_info']['tokenizer.ggml.tokens']] for _ in c['show']['model_info']['tokenizer.ggml.tokens']] for _ in c['show']['model_info']['tokenizer.ggml.tokens']]	accepted		true	true	2.2747	4.5603	6.87
+49-comp4-512tok	[[[[t for t in c['show']['model_info']['tokenizer.ggml.tokens']] for _ in c['show']['model_info']['tokenizer.ggml.tokens...(len 241)	timeout	 driver_exit=124	"-"	"-"			10.08
+50-comp-str2	[[ch for ch in c['show']['modelfile']] for _ in c['show']['modelfile']]	accepted		true	true	0.0007	0.0012	0.05
+51-nest-listlit-100k	[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[...(len 200000)	rejected	SyntaxError: too many nested parentheses (<unknown>, line 1)	"-"	"-"			0.05
+52-slice-chain-falsifiable	c['show']['modelfile'][:5] != ''	accepted		true	false	0.0	0.0	0.04
+53-str-sorted-keyword	sorted(c['tags']['models'], key=str)	rejected	ValueError: node keyword not allowed	"-"	"-"			0.04
+54-set-of-dicts	set(c['tags']['models'])	accepted		null	false	0.0	0.0	0.04
+55-isinstance-tuple	isinstance(c['tags'], (dict, list))	accepted		true	true	0.0	0.0002	0.04
+56-huge-const-str	"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA...(len 5000029)	accepted		false	false	0.0018	0.0047	0.06
+57-comp5-512tok	[[[[[t for t in c['show']['model_info']['tokenizer.ggml.tokens']] for _ in c['show']['model_info']['tokenizer.ggml.token...(len 301)	accepted		null	false	4.6316	3.9335	8.61
+60-listcomp	[x for x in c['tags']['models']]	accepted		true	true	0.0	0.0005	0.03
+61-setcomp	{x for x in c['tags']['models']}	accepted		null	false	0.0	0.0	0.03
+62-genexp	(x for x in c['tags']['models'])	accepted		true	false	0.0001	0.0003	0.03
+63-any-genexp	any(x for x in c['tags']['models'])	accepted		true	true	0.0001	0.0004	0.03
+64-any-listcomp	any([x for x in c['tags']['models']])	accepted		true	true	0.0	0.0003	0.03
+65-all-genexp	all(x for x in c['version'])	accepted		true	false	0.0001	0.0003	0.03
+66-list-genexp	list(x for x in c['version'])	accepted		true	true	0.0	0.0003	0.03
+67-sorted-genexp	sorted(x for x in c['version'])	accepted		true	true	0.0	0.0003	0.03
+68-listcomp-outer	[[t for t in c['version']] for _ in c['version']]	accepted		true	true	0.0001	0.0004	0.03
+69-genexp-in-listcomp	[[y for y in (x for x in c['version'])] for _ in c['version']]	accepted		true	true	0.0001	0.0004	0.03
+70-slice-falsifiable	c['show']['modelfile'][:5] != ''	accepted		true	false	0.0	0.0	0.03
+71-slice-compare	len(c['show']['modelfile'][:5]) == 5	accepted		true	false	0.0	0.0	0.03
+72-str-sorted-keyword	sorted(c['tags']['models'], key=str)	rejected	ValueError: node keyword not allowed	"-"	"-"			0.04
+73-reverse-keyword	sorted(c['version'], reverse=True)	rejected	ValueError: node keyword not allowed	"-"	"-"			0.03
+74-set-of-dicts	set(c['tags']['models'])	accepted		null	false	0.0	0.0	0.03
+75-isinstance-tuple	isinstance(c['tags'], (dict, list))	accepted		true	true	0.0	0.0001	0.03
+76-genexp-c-shadow	any(x for x in c['version'])	accepted		true	true	0.0001	0.0004	0.03
+77-any-dict	any(c['version'])	accepted		true	true	0.0	0.0003	0.03
+78-notgenexp-arg	all(map)	accepted		null	false	0.0	0.0	0.03
+79-name-only-len	len	accepted		true	false	0.0	0.0	0.03
+80-sub-of-call	str(c)['version']	accepted		null	false	0.0001	0.0001	0.03

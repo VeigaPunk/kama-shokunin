@@ -1,0 +1,31 @@
+run	command	exit	wall_ms	stdout_tail
+fixA_tip	ulimit -v 2000000; timeout 30 python3 -B tools/round60-c2-counter.py --repo <fixA> --tip HEAD --base HEAD	1	279	Traceback ... File tools/round60-c2-counter.py line 209 in score / line 85 in safe_compile / ast.parse -> RecursionError: Stack overflow (used 8140 kB) during compilation  [NO summary line, controls never run]
+fixA_patched	ulimit -v 2000000; timeout 300 python3 -B counter-patched.py --repo <fixA> --tip HEAD --base HEAD	1	224	population=1 rows=1 covered=0/1 evaluated=0 eval_lines=0 sensitive=0/0 bound=0 contradicted=0 amended=0/0 receipt_ok=1 controls_rejected=5/5 errors=1 met=False
+fixC_tip	ulimit -v 2000000; timeout 120 python3 -B tools/round60-c2-counter.py --repo <fixC> --tip HEAD --base HEAD	1	281	Traceback ... File tools/round60-c2-counter.py line 182 in score / line 172 in receipt_caps / json.loads -> RecursionError: Stack overflow (used 8140 kB) while decoding a JSON array from a unicode string  [NO summary line]
+fixC_patched	ulimit -v 2000000; timeout 300 python3 -B counter-patched.py --repo <fixC> --tip HEAD --base HEAD	1	224	population=1 rows=1 covered=0/1 ... receipt_ok=1 controls_rejected=5/5 errors=0 met=False
+fixB_tip	ulimit -v 2000000; timeout 120 python3 -B tools/round60-c2-counter.py --repo <fixB> --tip HEAD --base HEAD	1	12689	population=1 rows=1 covered=1/1 evaluated=1 eval_lines=1 sensitive=1/1 bound=1 contradicted=0 amended=0/0 receipt_ok=1 controls_rejected=5/5 errors=0 met=False
+fixB_patched	ulimit -v 2000000; timeout 300 python3 -B counter-patched.py --repo <fixB> --tip HEAD --base HEAD	1	212	population=1 rows=1 covered=0/1 ... controls_rejected=5/5 errors=1 met=False
+fixD_tip_14rows_bomb	ulimit -v 2000000; timeout 300 python3 -B tools/round60-c2-counter.py --repo <fixD> --tip HEAD --base HEAD	0	254859	population=14 rows=14 covered=14/14 evaluated=14 eval_lines=14 sensitive=14/14 bound=14 contradicted=0 amended=0/0 receipt_ok=1 controls_rejected=44/44 errors=0 met=True
+fixF_tip_14rows_cheap	ulimit -v 2000000; timeout 120 python3 -B tools/round60-c2-counter.py --repo <fixF> --tip HEAD --base HEAD	0	418	population=14 rows=14 covered=14/14 evaluated=14 eval_lines=14 sensitive=14/14 bound=14 contradicted=0 amended=0/0 receipt_ok=1 controls_rejected=44/44 errors=0 met=True
+fixE_tip	ulimit -v 2000000; timeout 120 python3 -B tools/round60-c2-counter.py --repo <fixE> --tip HEAD --base HEAD	1	233	population=2 rows=6 covered=1/2 evaluated=1 eval_lines=1 sensitive=1/1 bound=1 ... errors=0 met=False
+fixE_patched	ulimit -v 2000000; timeout 300 python3 -B counter-patched.py --repo <fixE> --tip HEAD --base HEAD	1	217	population=2 rows=6 covered=2/2 evaluated=2 eval_lines=2 sensitive=2/2 bound=2 ... errors=0 met=False
+genexp_name_resolution	python3 probe: eval(compile(safe_compile(expr)), {'__builtins__':{},**ALLOWED_CALLS}, {'c':caps})	0	-	any(x for x in c['version']) -> True ; any(c['version'] for x in c['version']) -> NameError: name 'c' is not defined ; all(all(y for y in c['version']) for _ in c['version']) -> NameError ; same six forms with c in globals -> all True
+receipt_caps_depth	python3 probe m.receipt_caps() on schema-correct, hash-correct receipts	0	-	depth 1000 ok=True ; depth 50000 ok=True ; depth 200000 -> RecursionError (uncaught, not in except tuple)
+eval_call_amplification	python3 probe: monkeypatched m.evaluate counter, score() + controls() on synthetic registries	0	-	R=1: 5+8=13 ; R=5: 25+340=365 ; R=14: 70+2842=2912 (208 per row) ; R=20: 100+5860=5960 ; R=28: 140+11564=11704
+bomb_600mb	ulimit -v 600000; timeout 20 python3 -B driver.py cases2/48-comp3-512tok.expr full	0	1970	evaluate=null (MemoryError inside evaluate) eval_s=0.7456 falsifiable=false -> a 181-byte predicate demands > 600 MB
+bomb_2gb	ulimit -v 2000000; timeout 20 python3 -B driver.py cases2/48-comp3-512tok.expr full	0	6168	evaluate=true eval_s=1.9539 falsifiable=true falsifiable_s=3.7842 -> credited row, 5.7 s per score() call
+bomb_4level	ulimit -v 2000000; timeout 10 python3 -B driver.py cases2/49-comp4-512tok.expr full	124	>10000	no result inside 10 s (earlier single run 7 379 ms, evaluate=null)
+bomb_5level	ulimit -v 2000000; timeout 10 python3 -B driver.py cases2/57-comp5-512tok.expr full	0	7184	evaluate=null eval_s=3.7667 falsifiable=false
+deep_parens_100k	run cases2/41-nest-paren-100k.expr	0	-	SyntaxError: too many nested parentheses -> REJECTED (counted as errors, safe)
+deep_not_100k	run cases2/42-not-chain-100k.expr	0	-	MemoryError: Parser stack overflowed - Python source too complex to parse -> UNCAUGHT at score() -> crash
+deep_subscript_100k	run cases2/44-sub-chain-100k.expr	0	-	RecursionError: Stack overflow (used 8136 kB) during compilation -> UNCAUGHT at score() -> crash
+huge_listlit_1e6	run cases2/45-huge-listlit-1e6.expr	0	2991	safe_compile accepted 1.2002 s, evaluate true 0.3917 s, falsifiable false 1.0238 s (ast.walk over 1e6 nodes)
+huge_const_str_5mb	run cases2/56-huge-const-str.expr	0	220	accepted, evaluate false, 5 000 029-byte source parsed in 5.5 ms
+repro_fixA	repro/build_fixtures.py $S; counter --repo $S/fixA --tip HEAD --base HEAD	1	289	RecursionError at ast.parse, no verdict line (crash reproduced)
+repro_fixA_patched	counter-patched.py --repo $S/fixA ...	1	229	population=1 rows=1 covered=0/1 ... errors=1 met=False
+repro_fixE_tip	counter --repo $S/fixE ...	1	228	population=2 rows=4 covered=1/2 evaluated=1 eval_lines=1 sensitive=1/1 ... errors=0 met=False
+repro_fixE_patched	counter-patched.py --repo $S/fixE ...	1	235	population=2 rows=4 covered=2/2 evaluated=2 eval_lines=2 sensitive=2/2 ... errors=0 met=False
+repro_fixB_tip	counter --repo $S/fixB ...	1	13081	population=1 rows=1 covered=1/1 sensitive=1/1 errors=0 met=False (bomb row credited, 13.1 s)
+repro_fixB_patched	counter-patched.py --repo $S/fixB ...	1	225	errors=1 met=False (bomb refused by the comprehension cap)
+repro_fixC_patched	counter-patched.py --repo $S/fixC ...	1	259	receipt_ok=1 controls_rejected=5/5 errors=0 met=False (no crash)
+repro_fixF_tip	counter --repo $S/fixF ...	0	353	population=14 rows=14 covered=14/14 sensitive=14/14 controls_rejected=44/44 errors=0 met=True

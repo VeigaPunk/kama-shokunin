@@ -1,0 +1,8 @@
+# F05C1StubReplay — C1 stub replay (w2)
+
+Attack: reproduced A10 exactly — scratch copy of tools/kama-ollama-live.py with `run_evidence()` stubbed to return canned `available_not_loaded,1` / `loaded_same_digest,0` without invoking kama-ollama-evidence.py; everything else a genuine live run (pinned v0.40.11 sha b0a4becf…, fixture sha 270cba1b…, fresh nonce f05stubdf03a44b, tool_exit=0, verdict=MODEL_OK).
+Result: frozen tools/round60-c1-counter.py `verify()` accepts the forged receipt (failures `[]`); outcome unchanged when evidence detail strings are garbage, or the run dir's `evidence-{before,after}-{tags,ps}.json` are deleted or replaced with garbage the genuine classifier rejects (exit 2 `invalid_input`).
+Missing binding: counter's only "evidence" mentions are REQUIRED ids (L34) and TOOL_FILES (L35); REQUIRED loop (L79-81) checks receipt flags only; nothing executes the classifier, re-derives finding_id/exit from captures, or reads the written evidence files.
+Full counter at tip 8f5f4e334fbecc2251c331f7301a0e8c01805391 still prints met=True (7/7 controls rejected, errors=0) — no control mutates the tool, so C1-r60 is falsifiable by tool stubbing.
+Findings: kama-shokunin/.ufo/waves/round-60/w2/out/F05C1StubReplay/findings.md · evidence: kama-shokunin/.ufo/waves/round-60/w2/out/F05C1StubReplay/evidence/{receipt-stub-f05stubdf03a44b.json, run-stub-f05stubdf03a44b.stdout, serve-stub.log, counter-tip-met-true.stdout, probes.stdout}
+Hygiene: lane read-only; disk guard checked (/fast 592G free); scratch /fast/scratch/hyaku/kama-r60/F05C1StubReplay + explicit TMPDIR removed; no installs; no commits/push.

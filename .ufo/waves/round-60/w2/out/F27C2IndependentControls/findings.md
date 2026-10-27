@@ -1,0 +1,17 @@
+# F27C2IndependentControls — C2 independent controls
+
+## Frozen target and W1 evidence
+The frozen C2 predicate remains unchanged: the 14-line base population must be covered, >=5 live predicate rows span >=4 lines, predicates are falsifiable and verdict-bound to committed captures, contradicted rows are amended, receipt capture hashes are intact, and the five control families reject (freeze.txt, C2 section). W1 `K01C2DoNothingCritic` produced a constructed do-nothing registry and reported `score()` met=True with `controls()` tautology 1/1, verdict flip 5/5, quote corruption 14/14, dropped line 14/14, tamper 1/1. It explicitly noted that its predicates need not concern the quoted line.
+
+## Reproduction/control comparison
+I imported the unchanged `tools/round60-c2-counter.py`, used its frozen `population()` and committed `HEAD` receipt, and called `score()` and `controls()` directly. The W1 `min.tsv` was the do-nothing registry. As a comparison, I constructed an “honest-shaped” reference registry with five capture-reading, true-on-this-receipt predicates and nine not-observable rows; this is a control fixture, not an independently validated set of claims about Ollama or the quoted text.
+
+- Do-nothing: `population=14 rows=14 covered=14/14 evaluated=5 eval_lines=5 sensitive=5/5 bound=5 contradicted=0 amended=0/0 receipt_ok=1 good_rows=14 errors=0 met=True`; `controls()`: `tautology=(1,1), verdict_flip=(5,5), quote_corrupt=(14,14), drop_line=(14,14), tamper=(1,1)`.
+- Honest-shaped reference: identical score fields and identical `controls()` results. Thus this control suite distinguishes neither meaningful claim/quote binding nor the do-nothing registry. Perturbation resistance only shows that the detector responds to the particular malformed mutations; it does not show that the unmutated predicates are true, relevant to their quotes, or evidentially independent. Here truth/relevance was not established by the fact that controls reject.
+
+## Requested mutations (in-memory only)
+- Swap the first two live predicates across rows: `score().met=True`; all five controls still reject with the same counts. The counter rechecks row-local verdicts/sensitivity but has no predicate-to-line binding, and both predicates remain true/sensitive on this receipt.
+- Promote a not-observable row to a true-on-receipt live predicate: `evaluated=6`, `eval_lines=6`, `met=True`; controls still reject (`verdict_flip=(6,6)`, other counts unchanged). This demonstrates the existing allowance for not-observable rows and that promotion does not establish truth about the source statement.
+- Demote one live row to not-observable: `evaluated=4`, `eval_lines=4`, `met=False`; `verdict_flip=(4,4)`. This fails only because the minimum live-row threshold is no longer met; it does not establish semantic relevance for the remaining rows.
+
+No lane files or receipts were modified; registry perturbations were in memory. No server/runtime was invoked. No tool installed or updated. A frozen line-key → relevant capture-field binding rule (plus a not-observable policy) would be needed to make predicate swaps a semantic test, but this finding does not alter the frozen contract or recommend changing it within this seat.

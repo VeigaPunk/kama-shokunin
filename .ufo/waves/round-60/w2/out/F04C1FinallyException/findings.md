@@ -1,0 +1,7 @@
+# F04C1FinallyException — C1 A09 H4
+
+## Axis: operability
+
+**Result: H4 reproduced by the assigned W1 artifact; C1’s run result cannot be reliably distinguished from FAIL and its receipt is lost.** The frozen contract defines exit 1 as “at least one check failed,” while setup/not-evaluated is exit 2. A09’s patched copy injects `raise OSError('A09-simulated-finally-failure')` immediately after `log.close()` at finally line 423, after the child has been reaped. Its recorded exact outcome: tool exit **1**; receipt **absent** (`No such file or directory`); stderr traceback ends `OSError: A09-simulated-finally-failure`. Teardown proof therefore is not recorded, and exit 1 collides with a graded FAIL despite no graded check failure. This is loss of result/ambiguous classification, not a false-green receipt.
+
+Evidence: `.ufo/waves/round-60/w1/out/A09FalseGreenReading.md:45-50`; exact stderr `.ufo/waves/round-60/w1/out/A09FalseGreenReading/repro/p5.stderr`; injected copy `.ufo/waves/round-60/w1/out/A09FalseGreenReading/repro/p5.py:423`; tool cleanup/finish control flow `tools/kama-ollama-live.py:405-432`. W1 reproduction is the evidence used here; this seat did not independently rerun it. Frozen claim/predicate unchanged.

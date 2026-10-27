@@ -1,0 +1,59 @@
+# S519 registry shape + duplicate checks (2026-10-27)
+
+## 1. duplicate check against the lane registry (all exit 1 = no match)
+$ grep -nF "ollama/ollama/releases/tag/v0.40.11" /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md
+exit=1
+$ grep -nF "sha256sum.txt" .../corpus/SOURCES.md
+exit=1
+$ grep -nF "7bedab90dd122661be78798e9f0edf37fccf0cccf2699d2c58ea1a3afdc04b6d" .../corpus/SOURCES.md
+exit=1
+$ grep -nE "^[^|]*\|[^|]*ollama/ollama/releases" .../corpus/SOURCES.md   # any ollama release-asset row
+exit=1
+
+## 2. id space
+$ grep -o "^| S[0-9]*" .../corpus/SOURCES.md | sort -t S -k2 -n | tail -3
+| S516
+| S517
+| S518
+$ grep -n "^| S519 " .../corpus/SOURCES.md
+exit=1 (1 = free)
+$ grep -c "^| S" .../corpus/SOURCES.md
+259
+
+## 3. in-lane baseline validate (real registry, untouched)
+$ bash scripts/sources-census.sh validate /home/vgpnk/Projects/shokunin/kama-shokunin --today 2026-10-27
+    101 W04
+      1 ok
+      1 W01
+in-lane validate exit recorded: 0
+
+## 4. fixture-lane A/B: same lane tree (symlinked), corpus/SOURCES.md swapped
+# fixture: /fast/scratch/hyaku/kama-r60/S01OllamaRelease/fixture-lane-shokunin
+#   every lane top-level entry symlinked except corpus; corpus/ holds symlinks to
+#   knowledge, lessons, README.md, QUALITY.md and a real SOURCES.md (base, then candidate).
+$ validate <fixture> (base row set)   -> exit 0
+$ validate <fixture> (candidate + S519) -> exit 0
+$ diff base.out cand.out
+diff_exit=0
+base lines=103 candidate lines=103
+codes naming S519 in candidate output: 0
+
+## 5. census counters
+# in-lane registry (base, 259 rows): rows 259 | tier.A 245 | tier.B 10 | tier.C 4 | mined 234 | queued 8 | rejected 17
+$ census <fixture with candidate in place>
+fixture-lane-shokunin	rows	260
+fixture-lane-shokunin	tier.A	246
+fixture-lane-shokunin	tier.B	10
+fixture-lane-shokunin	tier.C	4
+fixture-lane-shokunin	status.mined	234
+fixture-lane-shokunin	status.queued	9
+fixture-lane-shokunin	status.rejected	17
+FLEET	rows	260
+FLEET	tier.A	246
+FLEET	tier.B	10
+FLEET	tier.C	4
+FLEET	tier.invalid	0
+FLEET	status.queued	9
+FLEET	status.mined	234
+FLEET	status.rejected	17
+FLEET	status.invalid	0

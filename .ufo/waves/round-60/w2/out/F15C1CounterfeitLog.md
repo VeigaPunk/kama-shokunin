@@ -1,0 +1,11 @@
+# F15C1CounterfeitLog
+- Axis: operability; frozen C1 predicate unchanged.
+- Offline `verify()` accepted copied W1 receipt/log plus synthesized manifest and copied frozen-hash model blob: `failures= []` (exit 0).
+- No Ollama server started for the offline check; no lane source changed.
+- This demonstrates offline replay acceptance, not that the full counter reports `met=True` offline.
+- Counter `main()` always invokes `run_tool()` and requires `live_ok=1/1` (counter lines 170-175, 215-220).
+- Verifier only checks log substrings, manifest text, and blob digest (lines 108-129); these artifacts are not provenance-bound to a server lifecycle.
+- W1 evidence: `w1/out/MT01CounterClauseDrops.md:53-81` reports 30/31 clause-drop mutants surviving its seven controls.
+- Verdict: actionable limitation in offline provenance, but no falsification of the frozen full-run predicate established.
+- Commands/output and scope details: `w2/out/F15C1CounterfeitLog/findings.md`.
+- Disk guard checked: `/fast/scratch` 27% used, 593G available; no installs/updates.

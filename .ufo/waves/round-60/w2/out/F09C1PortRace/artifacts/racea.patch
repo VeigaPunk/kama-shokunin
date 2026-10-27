@@ -1,0 +1,41 @@
+--- pristine/kama-ollama-live.py
++++ racea/tools/kama-ollama-live.py
+@@ -207,6 +207,29 @@
+     return finding, p.returncode
+ 
+ 
++
++
++def _f09_competitor_start(port):
++    """F09C1PortRace injection: start a competing listener AFTER free_port()
++    returns and BEFORE the child spawns, synchronized on the tool's own
++    listening_ports() view of /proc."""
++    script = os.environ['F09_COMPETITOR']
++    racedir = os.environ['F09_RACE_DIR']
++    outf = open(os.path.join(racedir, 'competitor.log'), 'ab')
++    proc = subprocess.Popen([sys.executable, script, str(port)], stdout=outf,
++                            stderr=subprocess.STDOUT, cwd=racedir)
++    with open(os.path.join(racedir, 'competitor.pid'), 'w') as f:
++        f.write(str(proc.pid) + '\n')
++    deadline = time.time() + 10.0
++    while time.time() < deadline:
++        if port in listening_ports():
++            return
++        if proc.poll() is not None:
++            break
++        time.sleep(0.02)
++    raise RuntimeError(f'f09 competitor did not take port {port}')
++
++
+ def main(argv=None):
+     ap = argparse.ArgumentParser(description=__doc__.split('\n')[0])
+     ap.add_argument('--work', required=True, help='scratch dir for HOME, model store, log (caller deletes)')
+@@ -273,6 +296,8 @@
+         return finish('MODEL_DIGEST_MISMATCH', 2)
+ 
+     port = free_port()
++    if os.environ.get('F09_COMPETITOR'):
++        _f09_competitor_start(port)
+     receipt['port'] = port
+     check('port-unregistered', port not in REGISTERED_PORTS and port not in listening_ports(),
+           'chosen loopback port is neither a registered consumer port nor listening before start')

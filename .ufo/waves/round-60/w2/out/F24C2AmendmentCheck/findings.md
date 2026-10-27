@@ -1,0 +1,11 @@
+# F24C2AmendmentCheck — C2 amendment requirement
+
+Counterexample: The frozen amendment clause is satisfied by arbitrary prose, not a documented correction. W1's `K01C2DoNothingCritic/min.tsv` establishes a fully met 14-row registry with five sensitive predicates, but all predicates concern only the receipt's version string and none concern the cited Ollama statements. Against that registry, I changed D0 to `c['version']['version'] != '0.40.11'` with verdict `contradicted`, and set observed text to `FALSE AMENDMENT: arbitrary text unrelated to cited claim`; amendment text was simply `D0 FALSE AMENDMENT: arbitrary text unrelated to cited claim`.
+
+Exact in-process `score()` result: `covered=14`, `evaluated=5`, `contradicted=1`, `amended=1`, `receipt_ok=True`, `errors=0`, `met=True`. Thus row id and observed text mechanically inserted satisfy amendment matching; no correction content or relation to the quoted statement is checked. Strong counterexample: C2 remains green with five irrelevant receipt-version checks and a fabricated amendment line.
+
+Evidence: frozen C2 at `controls/freeze.txt:28-43`; checker `tools/round60-c2-counter.py:226-231` increments amended solely when id and observed string appear as substrings in amendment text; W1 `out/K01C2DoNothingCritic.md:11-22` and `min.tsv` provide base false-green registry. Receipt hashes validate self-consistency, not narrative provenance.
+
+Impacted axes: calibration (C2) directly; operability not implicated by this amendment test. Smallest safe correction: bind amendment entries to the contradicted registry row and require a fixed, machine-checkable correction field or structured replacement claim; reject text-only id/observed substring presence. Keep frozen predicate/verdict claims unchanged for this round.
+
+Checks: disk-guard status command exit 0 (592.2G free on /fast/scratch/hyaku). One exploratory attempt failed with a local NameError before producing a result; corrected run above succeeded. No installs or lane-source edits.

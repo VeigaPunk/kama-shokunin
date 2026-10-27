@@ -1,0 +1,429 @@
+{
+ "hashes_before": {
+  "counter": "d2e9a722416b8e482224dc2e6e17ced14bb87fb0ebd7de4464b04776b86a8fe5",
+  "receipt": "49d06600521ce766488f4941b24a3f245883bf6744d0b214c21201f24090c2a6"
+ },
+ "caps_ok": true,
+ "capture_names": [
+  "generate",
+  "ps-after",
+  "ps-before",
+  "show",
+  "tags",
+  "tags-empty",
+  "v1-model-single",
+  "v1-models",
+  "v1-models-empty",
+  "version"
+ ],
+ "population_size": 14,
+ "population": {
+  "corpus/knowledge/ollama-evidence-replay.md:35": "therefore kama lane policy, marked **[INFERENCE]**, not upstream behavior.",
+  "corpus/knowledge/ollama-evidence-replay.md:44": "**[INFERENCE]** for real-world exports, not a documented ps field. The tags",
+  "corpus/knowledge/ollama-evidence-replay.md:46": "counted as locally loaded is also **[INFERENCE]** (and is already labeled that",
+  "corpus/knowledge/ollama-evidence-replay.md:60": "  the tags-to-ps digest join is an inference; alias names can multiply; and",
+  "corpus/knowledge/ollama-evidence-replay.md:141": "### Matching and policy \u2014 all **[INFERENCE]** lane rules",
+  "corpus/knowledge/ollama-evidence-replay.md:170": "   markers is a conservative lane inference, not a ps OpenAPI field.",
+  "corpus/knowledge/ollama-evidence-replay.md:294": "  S012/S031; every classification rule is labeled **[INFERENCE]** lane policy.",
+  "corpus/knowledge/ollama-evidence-replay.md:301": "- KQ13: available inventory, loaded residency, advertised identity and inference",
+  "corpus/knowledge/ollama-evidence-replay.md:302": "  readiness stay separate; the digest join is **[INFERENCE]**.",
+  "corpus/knowledge/served-identity-crosswalk.md:29": "| Ollama (S010 @c1737589; S011; S012; S031) | `/api/tags` (native available list); `/api/ps` (native running list); `/v1/models` and `/v1/models/{model}` (OpenAI-compatible) | tags: `name`, `model`, `remote_model`/`remote_host` (\"if the model is remote\"), `modified_at`, `size` (\"Total size of the model on disk in bytes\"), `digest` (\"SHA256 digest identifier of the model contents\"), `details`; ps: `name`, `model`, `size`, `digest`, `details`, `expires_at`, `size_vram`, `context_length`; `/v1/models` documents only that \"`created` corresponds to when the model was last modified\" and \"`owned_by` corresponds to the ollama username, defaulting to `\\\"library\\\"`\" | tags = \"Summary information for a locally available model\" (200 description: \"List available models\"), membership may be remote; ps = \"Models currently loaded into memory\" with `expires_at` = \"Time when the model will be unloaded\"; `/v1/models` documents metadata only, not residency | `/v1/models` cannot be read as loaded residency (the page does not say whether it lists installed, running, cloud or copied names); a tags entry does not prove local weights (S031); a ps sample is not durable (unload time); name-only matching is unsafe because `ollama cp` copies \"an existing model name to a temporary name\"; joining tags/ps by digest is [INFERENCE] \u2014 the pages do not describe the join and prove no on-disk artifact identity |",
+  "corpus/knowledge/served-identity-crosswalk.md:45": "- Ollama: `name` and `model` are both just \"Model name\"; only `digest` is content-addressed (\"SHA256 digest identifier of the model contents\" / \"SHA256 digest of the model\"), and the tags-to-ps digest join is an [INFERENCE] candidate, not a documented mapping (S010/S011/S012).",
+  "corpus/knowledge/served-identity-crosswalk.md:51": "- **No inference-readiness guarantee from inventory.** Loaded-residency statements exist where documented: llama.cpp router `status.value == \"loaded\"` and `/props` for sleeping, and Ollama `/api/ps` entries bounded by `expires_at`. Neither is a durable readiness guarantee. Ollama's compatibility documentation does not specify equivalent residency fields.",
+  "corpus/knowledge/served-identity-crosswalk.md:103": "  row's claim cell as the upstream Ollama URL). [INFERENCE] Because the page",
+  "corpus/knowledge/served-identity-crosswalk.md:132": "... local (vs remote) provenance on Ollama\"); it carries the same `[INFERENCE]`"
+ },
+ "probes": [
+  {
+   "id": "P01",
+   "class": "control-honest",
+   "expect": "accepted as sensitive (baseline pass)",
+   "expr": "c['tags']['models'][0]['name'] == 'kama-b61c98ad5747:latest'",
+   "semantics": "reads the exact capture/field the row documents",
+   "safe_compile": "accept",
+   "chains": [
+    [
+     "tags",
+     "models",
+     0,
+     "name"
+    ]
+   ],
+   "evaluate": true,
+   "falsifiable": true,
+   "verdict_binding": "confirmed",
+   "counts_as_sensitive_row": true
+  },
+  {
+   "id": "P02",
+   "class": "control-trivial",
+   "expect": "killed by falsifiable (no c-chain)",
+   "expr": "True",
+   "semantics": "no capture read at all",
+   "safe_compile": "accept",
+   "chains": [],
+   "evaluate": true,
+   "falsifiable": false,
+   "verdict_binding": "confirmed",
+   "counts_as_sensitive_row": false
+  },
+  {
+   "id": "P03",
+   "class": "cross-capture always-equal (identical bodies)",
+   "expect": "SURVIVOR candidate",
+   "expr": "c['ps-before'] == c['tags-empty']",
+   "semantics": "compares two captures the quote never mentions; equal only because both bodies are {\"models\":[]}",
+   "safe_compile": "accept",
+   "chains": [
+    [
+     "ps-before"
+    ],
+    [
+     "tags-empty"
+    ]
+   ],
+   "evaluate": true,
+   "falsifiable": true,
+   "verdict_binding": "confirmed",
+   "counts_as_sensitive_row": true
+  },
+  {
+   "id": "P04",
+   "class": "cross-capture always-equal (field)",
+   "expect": "SURVIVOR candidate",
+   "expr": "c['tags-empty']['models'] == c['ps-before']['models']",
+   "semantics": "same tautology at field level; neither capture named by any documented statement",
+   "safe_compile": "accept",
+   "chains": [
+    [
+     "tags-empty",
+     "models"
+    ],
+    [
+     "ps-before",
+     "models"
+    ]
+   ],
+   "evaluate": true,
+   "falsifiable": true,
+   "verdict_binding": "confirmed",
+   "counts_as_sensitive_row": true
+  },
+  {
+   "id": "P05",
+   "class": "cross-capture always-equal (sorted dressing)",
+   "expect": "SURVIVOR candidate",
+   "expr": "sorted(c['tags-empty']['models']) == sorted(c['ps-before']['models'])",
+   "semantics": "sorted() dresses the identical-body tautology as analysis",
+   "safe_compile": "accept",
+   "chains": [
+    [
+     "tags-empty",
+     "models"
+    ],
+    [
+     "ps-before",
+     "models"
+    ]
+   ],
+   "evaluate": true,
+   "falsifiable": false,
+   "verdict_binding": "confirmed",
+   "counts_as_sensitive_row": false
+  },
+  {
+   "id": "P14",
+   "class": "cross-capture always-equal (stringified)",
+   "expect": "SURVIVOR candidate",
+   "expr": "str(c['ps-before']) == str(c['tags-empty'])",
+   "semantics": "str() wrapper, same always-equal pair",
+   "safe_compile": "accept",
+   "chains": [
+    [
+     "ps-before"
+    ],
+    [
+     "tags-empty"
+    ]
+   ],
+   "evaluate": true,
+   "falsifiable": true,
+   "verdict_binding": "confirmed",
+   "counts_as_sensitive_row": true
+  },
+  {
+   "id": "P06",
+   "class": "unrelated-field constant (version on unrelated line)",
+   "expect": "accepted; semantic gap by design",
+   "expr": "c['version']['version'] == '0.40.11'",
+   "semantics": "genuine capture read, but attachable to any quote: no quote<->predicate linkage exists",
+   "safe_compile": "accept",
+   "chains": [
+    [
+     "version",
+     "version"
+    ]
+   ],
+   "evaluate": true,
+   "falsifiable": true,
+   "verdict_binding": "confirmed",
+   "counts_as_sensitive_row": true
+  },
+  {
+   "id": "P20",
+   "class": "same-capture different-key always-equal",
+   "expect": "accepted; vacuous unless quote names it",
+   "expr": "c['ps-after']['models'][0]['name'] == c['ps-after']['models'][0]['model']",
+   "semantics": "name==model is incidental on ps-after; falsifiable only because chains differ",
+   "safe_compile": "accept",
+   "chains": [
+    [
+     "ps-after",
+     "models",
+     0,
+     "name"
+    ],
+    [
+     "ps-after",
+     "models",
+     0,
+     "model"
+    ]
+   ],
+   "evaluate": true,
+   "falsifiable": true,
+   "verdict_binding": "confirmed",
+   "counts_as_sensitive_row": true
+  },
+  {
+   "id": "P07",
+   "class": "'or True' hidden in comprehension",
+   "expect": "SURVIVOR candidate",
+   "expr": "any(m['name'] or True for m in c['tags']['models'])",
+   "semantics": "reads name field but asserts only non-emptiness; name content never tested",
+   "safe_compile": "accept",
+   "chains": [
+    [
+     "tags",
+     "models"
+    ]
+   ],
+   "evaluate": true,
+   "falsifiable": true,
+   "verdict_binding": "confirmed",
+   "counts_as_sensitive_row": true
+  },
+  {
+   "id": "P08",
+   "class": "IfExp constant dressing",
+   "expect": "accepted; same class as P06",
+   "expr": "1 if c['version']['version'] == '0.40.11' else 0",
+   "semantics": "constant-branch IfExp; verdict binding sees bool(1)",
+   "safe_compile": "accept",
+   "chains": [
+    [
+     "version",
+     "version"
+    ]
+   ],
+   "evaluate": true,
+   "falsifiable": true,
+   "verdict_binding": "confirmed",
+   "counts_as_sensitive_row": true
+  },
+  {
+   "id": "P13",
+   "class": "is-None on unrelated field, sentinel flip",
+   "expect": "accepted; class-3 on unrelated line",
+   "expr": "c['v1-models-empty']['data'] is None",
+   "semantics": "flips only under 'sent' mutation (string is not None); reads field no statement mentions",
+   "safe_compile": "accept",
+   "chains": [
+    [
+     "v1-models-empty",
+     "data"
+    ]
+   ],
+   "evaluate": true,
+   "falsifiable": true,
+   "verdict_binding": "confirmed",
+   "counts_as_sensitive_row": true
+  },
+  {
+   "id": "P09",
+   "class": "slice-only read",
+   "expect": "expect falsifiable False (chains drops Slice)",
+   "expr": "c['tags']['models'][:0] == []",
+   "semantics": "slice access is invisible to chains(); predicate auto-rejected despite honest read",
+   "safe_compile": "accept",
+   "chains": [],
+   "evaluate": true,
+   "falsifiable": false,
+   "verdict_binding": "confirmed",
+   "counts_as_sensitive_row": false
+  },
+  {
+   "id": "P10",
+   "class": "self-comparison, same path twice",
+   "expect": "killed (mutation hits both sides)",
+   "expr": "c['tags']['models'] == c['tags']['models']",
+   "semantics": "exact tautology; correctly rejected",
+   "safe_compile": "accept",
+   "chains": [
+    [
+     "tags",
+     "models"
+    ],
+    [
+     "tags",
+     "models"
+    ]
+   ],
+   "evaluate": true,
+   "falsifiable": false,
+   "verdict_binding": "confirmed",
+   "counts_as_sensitive_row": false
+  },
+  {
+   "id": "P11",
+   "class": "nonexistent field (exception path)",
+   "expect": "evaluate None -> silent skip",
+   "expr": "c['tags']['fabricated_field'] == 'x'",
+   "semantics": "references a capture field that does not exist; errors stays 0",
+   "safe_compile": "accept",
+   "chains": [
+    [
+     "tags",
+     "fabricated_field"
+    ]
+   ],
+   "evaluate": null,
+   "falsifiable": false,
+   "verdict_binding": "skipped: evaluate None -> row silently ignored, errors unchanged",
+   "counts_as_sensitive_row": false
+  },
+  {
+   "id": "P12",
+   "class": "'!=' on boolean scalar",
+   "expect": "expect falsifiable False (asymmetry)",
+   "expr": "c['generate']['done'] != False",
+   "semantics": "!= cannot flip under none/sent/empty on scalars; == form flips, != does not",
+   "safe_compile": "accept",
+   "chains": [
+    [
+     "generate",
+     "done"
+    ]
+   ],
+   "evaluate": true,
+   "falsifiable": false,
+   "verdict_binding": "confirmed",
+   "counts_as_sensitive_row": false
+  },
+  {
+   "id": "P15",
+   "class": "zip escape attempt",
+   "expect": "expect compile reject (zip not allowed)",
+   "expr": "any(m == m2 for m, m2 in zip(c['tags-empty']['models'], c['ps-before']['models']))",
+   "semantics": "probes whether helpers can smuggle cross-capture zips",
+   "safe_compile": "reject(ValueError: call not allowed)"
+  },
+  {
+   "id": "P16",
+   "class": "top-level 'or True'",
+   "expect": "expect killed (no flip survives 'or True')",
+   "expr": "len(c['tags']['models']) == 1 or True",
+   "semantics": "contrast with P07: at top level the tautology removes the only flip channel",
+   "safe_compile": "accept",
+   "chains": [
+    [
+     "tags",
+     "models"
+    ]
+   ],
+   "evaluate": true,
+   "falsifiable": false,
+   "verdict_binding": "confirmed",
+   "counts_as_sensitive_row": false
+  },
+  {
+   "id": "P17",
+   "class": "dunder/attribute escape",
+   "expect": "expect compile reject",
+   "expr": "c['version'].__class__ == dict",
+   "semantics": "attribute access closed by allowlist",
+   "safe_compile": "reject(ValueError: node Attribute not allowed)"
+  },
+  {
+   "id": "P18",
+   "class": "walrus escape",
+   "expect": "expect compile reject",
+   "expr": "(c := c) == c",
+   "semantics": "assignment expressions closed by allowlist",
+   "safe_compile": "reject(ValueError: node NamedExpr not allowed)"
+  }
+ ],
+ "demo": {
+  "score": {
+   "rows": 14,
+   "covered": 14,
+   "population": 14,
+   "evaluated": 5,
+   "eval_lines": 5,
+   "sensitive": 5,
+   "bound": 5,
+   "contradicted": 0,
+   "amended": 0,
+   "receipt_ok": true,
+   "good_rows": 14,
+   "errors": 0,
+   "met": true
+  },
+  "controls": {
+   "tautology": [
+    1,
+    1
+   ],
+   "verdict_flip": [
+    5,
+    5
+   ],
+   "quote_corrupt": [
+    14,
+    14
+   ],
+   "drop_line": [
+    14,
+    14
+   ],
+   "tamper": [
+    1,
+    1
+   ]
+  },
+  "registry_text": "id\tpath\tline\tquote\tpredicate\tverdict\tobserved\treason\nMT4-00\tcorpus/knowledge/ollama-evidence-replay.md\t35\ttherefore kama lane policy, marked **[INFERENCE]**, not upstream behavior.\tc['ps-before'] == c['tags-empty']\tconfirmed\t\t\nMT4-01\tcorpus/knowledge/ollama-evidence-replay.md\t44\t**[INFERENCE]** for real-world exports, not a documented ps field. The tags\tany(m['name'] or True for m in c['tags']['models'])\tconfirmed\t\t\nMT4-02\tcorpus/knowledge/ollama-evidence-replay.md\t46\tcounted as locally loaded is also **[INFERENCE]** (and is already labeled that\tstr(c['ps-before']) == str(c['tags-empty'])\tconfirmed\t\t\nMT4-03\tcorpus/knowledge/ollama-evidence-replay.md\t60\tthe tags-to-ps digest join is an inference; alias names can multiply; and\t1 if c['version']['version'] == '0.40.11' else 0\tconfirmed\t\t\nMT4-04\tcorpus/knowledge/ollama-evidence-replay.md\t141\t### Matching and policy \u2014 all **[INFERENCE]** lane rules\tc['ps-after']['models'][0]['name'] == c['ps-after']['models'][0]['model']\tconfirmed\t\t\nMT4-05\tcorpus/knowledge/ollama-evidence-replay.md\t170\tmarkers is a conservative lane inference, not a ps OpenAPI field.\t\tnot-observable\t\tno live capture addresses this documented statement line\nMT4-06\tcorpus/knowledge/ollama-evidence-replay.md\t294\tS012/S031; every classification rule is labeled **[INFERENCE]** lane policy.\t\tnot-observable\t\tno live capture addresses this documented statement line\nMT4-07\tcorpus/knowledge/ollama-evidence-replay.md\t301\t- KQ13: available inventory, loaded residency, advertised identity and inference\t\tnot-observable\t\tno live capture addresses this documented statement line\nMT4-08\tcorpus/knowledge/ollama-evidence-replay.md\t302\treadiness stay separate; the digest join is **[INFERENCE]**.\t\tnot-observable\t\tno live capture addresses this documented statement line\nMT4-09\tcorpus/knowledge/served-identity-crosswalk.md\t29\t| Ollama (S010 @c1737589; S011; S012; S031) | `/api/tags` (native available list);\t\tnot-observable\t\tno live capture addresses this documented statement line\nMT4-10\tcorpus/knowledge/served-identity-crosswalk.md\t45\t- Ollama: `name` and `model` are both just \"Model name\"; only `digest`\t\tnot-observable\t\tno live capture addresses this documented statement line\nMT4-11\tcorpus/knowledge/served-identity-crosswalk.md\t51\t- **No inference-readiness guarantee from inventory.** Loaded-residency statements exist where documented: llama.cpp\t\tnot-observable\t\tno live capture addresses this documented statement line\nMT4-12\tcorpus/knowledge/served-identity-crosswalk.md\t103\trow's claim cell as the upstream Ollama URL). [INFERENCE] Because the page\t\tnot-observable\t\tno live capture addresses this documented statement line\nMT4-13\tcorpus/knowledge/served-identity-crosswalk.md\t132\t... local (vs remote) provenance on Ollama\"); it carries the same `[INFERENCE]`\t\tnot-observable\t\tno live capture addresses this documented statement line\n",
+  "note": "every evaluated predicate is a P03/P07/P14/P08/P20-class survivor; no predicate tests the quoted statement text"
+ },
+ "demo_broken_field": {
+  "score": {
+   "rows": 14,
+   "covered": 13,
+   "population": 14,
+   "evaluated": 4,
+   "eval_lines": 4,
+   "sensitive": 4,
+   "bound": 4,
+   "contradicted": 0,
+   "amended": 0,
+   "receipt_ok": true,
+   "good_rows": 13,
+   "errors": 0,
+   "met": false
+  }
+ },
+ "hashes_after": {
+  "counter": "d2e9a722416b8e482224dc2e6e17ced14bb87fb0ebd7de4464b04776b86a8fe5",
+  "receipt": "49d06600521ce766488f4941b24a3f245883bf6744d0b214c21201f24090c2a6"
+ },
+ "hashes_stable": true
+}

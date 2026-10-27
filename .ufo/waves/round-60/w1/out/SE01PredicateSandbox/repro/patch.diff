@@ -1,0 +1,70 @@
+--- round60-c2-counter.py	2026-10-27 18:36:28.169513865 -0300
++++ counter-patched.py	2026-10-27 18:41:47.853974741 -0300
+@@ -81,21 +81,43 @@
+     return rows
+ 
+ 
++MAX_SRC, MAX_NODES, MAX_COMP = 2048, 256, 2
++
++
+ def safe_compile(expr):
+-    tree = ast.parse(expr, mode="eval")
++    if len(expr) > MAX_SRC:
++        raise ValueError(f"source longer than {MAX_SRC} bytes")
++    try:
++        tree = ast.parse(expr, mode="eval")
++    except (RecursionError, MemoryError) as e:  # parser stack / alloc blowups are rejections, not crashes
++        raise ValueError(f"source too complex: {type(e).__name__}") from None
++    nodes = 0
++    comps = []
+     for node in ast.walk(tree):
++        nodes += 1
++        if nodes > MAX_NODES:
++            raise ValueError(f"more than {MAX_NODES} nodes")
+         if not isinstance(node, ALLOWED_NODES):
+             raise ValueError(f"node {type(node).__name__} not allowed")
+         if isinstance(node, ast.Call) and not (isinstance(node.func, ast.Name) and node.func.id in ALLOWED_CALLS):
+             raise ValueError("call not allowed")
+         if isinstance(node, ast.Name) and node.id.startswith("__"):
+             raise ValueError("dunder name")
++        if isinstance(node, (ast.ListComp, ast.SetComp, ast.GeneratorExp, ast.DictComp)):
++            comps.append(node)
++    if len(comps) > MAX_COMP:
++        raise ValueError(f"more than {MAX_COMP} comprehensions")
++    if len(comps) == 2:
++        children = {id(n) for c in comps for n in ast.walk(c) if n is not c}
++        if any(id(c) in children for c in comps):
++            raise ValueError("nested comprehension")
+     return tree
+ 
+ 
+ def evaluate(tree, caps):
+     try:
+-        return bool(eval(compile(tree, "<pred>", "eval"), {"__builtins__": {}, **ALLOWED_CALLS}, {"c": caps}))
++        scope = {"__builtins__": {}, **ALLOWED_CALLS, "c": caps}
++        return bool(eval(compile(tree, "<pred>", "eval"), scope, {}))
+     except Exception:  # noqa: BLE001
+         return None
+ 
+@@ -170,10 +192,10 @@
+                 ok = False
+             try:
+                 caps[name] = json.loads(cap["body"])
+-            except ValueError:
++            except (ValueError, RecursionError):
+                 pass
+         return caps, ok
+-    except (ValueError, KeyError, TypeError, AttributeError):
++    except (ValueError, KeyError, TypeError, AttributeError, RecursionError, MemoryError):
+         return {}, False
+ 
+ 
+@@ -207,7 +229,7 @@
+             continue
+         try:
+             tree = safe_compile(r["predicate"])
+-        except (SyntaxError, ValueError):
++        except (SyntaxError, ValueError, RecursionError, MemoryError):
+             errors += 1
+             continue
+         res = evaluate(tree, caps)

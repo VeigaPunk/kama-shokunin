@@ -1,0 +1,9 @@
+P02AliasAndCopy — round 60 w1, live Ollama v0.40.11 (binary b0a4be…, fixture 270cba…), 3 runs + 2 probes, every server lane-owned and killed by PID; ports re-probed refused; lane source untouched.
+1. Canonical form: tags/v1/ps list only `<name>:latest`; cp/create/generate accept unqualified names and `/api/generate` echoes the request string verbatim. Replay (14 name forms × 4 ps states): every unqualified `--expect` is unknown/exit 2; `NAME:latest` classifies.
+2. Case: server identity is case-insensitive — `ollama cp caseprobe CASEPROBE` (exit 0) creates no second entry (tags still `caseprobe:latest`, one store dir), `/api/show` is 200 both ways; replay `--expect CASEPROBE:latest` → unknown/2 on the same captures where `caseprobe:latest` → loaded_same_digest/0.
+3. ps: always exactly one entry and sticky to the first-loaded alias; after a 200 generate through NAME2 (same digest) ps still lists ALIAS and `--expect NAME2:latest` → available_not_loaded/1.
+4. digest = manifest digest (`8cf91c71…`, 475-byte manifest; layer `270cba…` = GGUF); the same bytes imported from a renamed GGUF give `cef1ee24…`, so equality binds filename+template, not weights alone.
+5. id forms diverge: tags and v1 ids are the same strings (`owned_by: library`), `/api/show` carries no name/digest and canonicalizes `:latest`, `/api/generate` echoes request case.
+6. Trap: top-level `num_predict` was silently ignored (200, eval_count 20480, NDJSON stream); `stream:false` + `options.num_predict` gives 4 tokens. C1's tool already uses that form.
+Evidence: findings.md (F1–F6 with commands/exits), captures.jsonl + captures-case.jsonl + digest-probe.json (raw), replay-matrix.jsonl (56 exits).
+Limits: CPU-only, one fixture, one version; ps stickiness over 3 requests only; case-fold mechanism is [INFERENCE]; scratch removed, no build/lint/test run (parent owns gates).

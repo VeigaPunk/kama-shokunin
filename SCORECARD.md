@@ -3,7 +3,7 @@
 Contract per `AXES.md` §SCORECARD.md contract. Scores are 0–10, self-assessed,
 each bound to an evidence pointer and the round that last changed it.
 
-**Current authority (round 59):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 59. Calibration 7 is the lowest assigned axis, below operability 8 and the saturation line; the nudge is inactive. Round 59's C1 finite fixture counter prints `genuine=1/1 benign=3/3 noop_rejected=16/16 errors=0 met=True`, but seat R04's one-call `python3 other-script --counter ...` battery also makes the checker report `met=True`; the frozen operability predicate is falsified and earns no score change. C2's row now names a counter that resolves the lane count and fleet ref dynamically; the counter prints 0 mismatches at the measured tip, but seat K05's static assertion and M12's clause-deletion matrix also meet it, and no outside S517/S518 spot-check is recorded (MANIFEST's latest kama closure remains r57); the frozen calibration claim is not admitted. Scores remain operability 8 and calibration 7; no capability enters. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived by `tools/round42-selfdesc-reconcile.py`; round-specific outcomes remain in their sections.
+**Current authority (round 60):** assigned axes are operability + calibration (`shokunin.conf` kama row; the MISSION.md freshness conflict remains open at `.ufo/l0-questions.md:145`). Latest measured round: 60. Calibration 7 remains the lowest assigned axis, below operability 8; nudge inactive. Round 60 declared C1 operability 8→8 plus live-Ollama lifecycle capability and C2 calibration 7→7. Both frozen claims were falsified by W1/W2 (C1 stubbed replay and post-capture child death; C2 unrelated-predicate do-nothing registry); no score or capability change. The C1 counter's apparent green receipt is not admission evidence. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived by `tools/round42-selfdesc-reconcile.py`; round-specific outcomes remain in their sections.
 
 ## Axes
 
@@ -3184,10 +3184,10 @@ The exact former current-authority line is retained here; the live authority abo
 
 The round-57 C1 before→after row above records the bounded no-op case, but the frozen predicate requires binding actual execution. A later 13-fixture falsification by R57Item05CounterSelftest found dead-code and unused-function call-site no-ops still return `met=True` after the AST walker change (two survivors; `.ufo/waves/round-57/measured/R57Item05CounterSelftest/out/evidence-c1.txt`, lane commit `9df8e8ddb4d245611ef3ce65490c42f102ecda95`). C1 is therefore not verified and earns no operability credit. Calibration C2 remains measured as recorded above; no scalar changes.
 
-### Planned (round 60)
+### Planned (round 61)
 
-1. Operability: replace the synthetic per-leg classifier with a source-bound execution/result check and make a one-call `python3 other-script --counter` decoy fail; preregister that exact D1 control and a name-keyed checker control before data.
-2. Calibration: replace C2's row-text heuristic with an independent derivation and controls that fail when one requirement is dropped; obtain a non-author admit/reject review of S517/S518 before asserting discernment progress, and pin the fleet revision for reproducible measurements.
+1. Operability: repair the frozen live-lifecycle false-green weaknesses (independent evidence-classifier re-execution from captured bytes, a post-replay live contact, receipt-proven model/blob binding, graded `/api/show`, catchable signal cleanup); do not claim SIGKILL cleanup without a real parent-death mechanism.
+2. Calibration: replace C2's line/quote/predicate-presence scheme with a frozen line-to-observable-field binding and bounded not-observable set; demonstrate that a syntactically valid unrelated-predicate registry is rejected. Preserve the lesson that sensitivity is not semantic relevance.
 
 ## Round 58 — execution-bound battery checker and closure-pointer binding (2026-10-27)
 
@@ -3227,3 +3227,19 @@ Pre-data freeze: `.ufo/waves/round-59/controls/freeze.txt`, base `8f7f58cd161f2b
 | C2 — derive the closure count/pointer from the measured lane and fleet refs, not typed cells | calibration 7→7 | Base `mismatches=3 met=False` → edited row `rows=44 mismatches=0 met=True`; base lane `8f7f58cd`, edited lane `2c7443ab`, both against the same fleet commit `0f99f606120d0c884656c6e7a290f0e8f33c2181` | `python3 tools/round59-c2-counter.py --repo <repo> --tip <lane-tip> --fleet-repo /home/vgpnk/Projects/shokunin --fleet-ref 0f99f606120d0c884656c6e7a290f0e8f33c2181`. Receipts `.ufo/waves/round-59/controls/c2-base-current-head.out`, `c2-after-current-head-latest.out`. | **Not verified.** K05's static-assertion row and M12's eight one-clause counter mutants all meet; the required outside S517/S518 admit/reject record is absent. |
 
 Scores remain operability 8 and calibration 7. No capability entered. C1's finite matrix is stronger than the prior one but does not verify the frozen claim; C2's zero-mismatch result does not verify the demanded dynamic semantics or outside review. No claim is admitted.
+
+## Round 60 — live Ollama lifecycle and falsified frozen claims (2026-10-27)
+
+Pre-data freeze `e0b5b1ead9adb7a5a4744caca8837ec6496e1ca1`; controls `8b9f3060966c22bede3094d748974caf041b4c33`; base `ec3b0d583ed4eb05c7ae935dc59f560e86b0a80b`; frozen predicates and kill rules in `.ufo/waves/round-60/controls/freeze.txt`.
+
+| Claim | Axis, score | Before → after / counting command | Verdict |
+|---|---|---|---|
+| C1 — lane-owned live Ollama lifecycle (capability acquisition; sourced S519) | operability 8→8 | base `tool_present=0 met=False` → freeze tip `live_ok=1/1 fake_rejected=2/2 stale_rejected=1/1 tamper_rejected=3/3 log_rejected=1/1 errors=0 met=True`; command `python3 tools/round60-c1-counter.py --repo <repo> --tip <rev> --work <scratch>`; controls `.ufo/waves/round-60/controls/c1-base.out`, `c1-freeze-tip.out` | **Not verified.** W1 A09/F01 and A10/F05 demonstrate external post-capture SIGTERM and canned evidence-replay stubs can yield receipts accepted by `verify()`; F02 found `/api/show` is ungraded. Counter's finite green is not semantic verification. |
+| C2 — live-checkable Ollama claims versus lane self-assessment | calibration 7→7 | base `population=14 rows=0 covered=0/14 ... met=False`; tip counter's own W1 K01 do-nothing registry: `population=14 rows=14 covered=14/14 evaluated=5 eval_lines=5 sensitive=5/5 bound=5 contradicted=0 amended=0/0 receipt_ok=1 controls_rejected=35/35 errors=0 met=True`; command `python3 tools/round60-c2-counter.py --repo <repo> --tip <rev>`; evidence `.ufo/waves/round-60/w1/out/K01C2DoNothingCritic/` | **Not verified.** The five predicates assert unrelated receipt literals and nine boilerplate not-observable rows; counter has no frozen semantic binding from predicate to claim. |
+
+Scores remain operability 8, calibration 7; no capability entered. Round 60 does not claim axis improvement or admission.
+
+### Round-60 planned (round 61)
+
+1. Operability: repair the frozen live-lifecycle false-green weaknesses (independent evidence-classifier re-execution from captured bytes, a post-replay live contact, receipt-proven model/blob binding, graded `/api/show`, catchable signal cleanup); do not claim SIGKILL cleanup without a real parent-death mechanism.
+2. Calibration: replace C2's line/quote/predicate-presence scheme with a frozen line-to-observable-field binding and a bounded not-observable set, then demonstrate that a syntactically valid unrelated-predicate registry is rejected. Preserve the lesson that sensitivity is not semantic relevance.

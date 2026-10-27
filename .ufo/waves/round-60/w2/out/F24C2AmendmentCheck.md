@@ -1,0 +1,13 @@
+# F24C2AmendmentCheck — C2 amendment falsification
+- Counterexample: arbitrary amendment text satisfies amendment accounting.
+- W1 false-green base: `K01C2DoNothingCritic/min.tsv` (14 rows).
+- Set D0 predicate to `version != 0.40.11`, verdict contradicted.
+- Set observed to arbitrary string; amendment merely contains D0 + that string.
+- `score()`: covered=14 evaluated=5 contradicted=1 amended=1 receipt_ok=True errors=0 met=True.
+- Checker `round60-c2-counter.py:226-231` checks only substring inclusion for id and observed.
+- No semantic correction, relation to quote, or provenance is required.
+- Impact: calibration/C2; no evidence against C1 operability.
+- Smallest safe correction: bind amendment to row plus machine-checkable correction content.
+- Frozen predicates/claims were not changed.
+- Details/evidence: `w2/out/F24C2AmendmentCheck/findings.md`.
+- No installs; disk guard exit 0; no lane-source edits.

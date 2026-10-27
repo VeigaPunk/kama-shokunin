@@ -491,3 +491,11 @@ No earlier criterion is superseded. KQ20's mutation witness and KQ25's finite er
 | ID | Admit only when | Reject or limit when | Motivating lesson |
 |---|---|---|---|
 | KQ99 | A battery gate that claims a named leg's expected outcome is bound to an actual field and exit must fail a one-call control that routes the same `--counter`/`--expect` arguments to `python3 other-script`, and must not derive a successful outcome from a fixture name, source-text guess, or the expected token itself. The frozen counter must execute that control while preserving genuine and benign controls. | A leg can reach `met=True` without invoking its named runner, or a checker keyed only to fixture basename predicts the oracle without observing the subject. | `corpus/lessons/round-59.md` Mistakes: R04DecoyArgv and R15CounterGaming. |
+
+## Criterion added — round 60: link fulfilled rejection flips
+
+No earlier criterion is superseded; KQ98 still governs overlap and claim-scope judgments.
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ100 | When a later SOURCES row documents that an earlier rejected row's stated flip condition has occurred, retain the source row's append-only status and link the earlier row's `used-by` to a lesson that names both source ids, quotes the flip condition and states whether the earlier row's narrower claim remains rejected or is reopened. The lesson must distinguish an actual source-scope distinction from a status/registry inconsistency. | A later row asserts the earlier rejection reason is false while the rejected row has no round lesson pointer explaining the completed flip; do not silently edit `teaches` or auto-promote/reject a row solely from the supersession label. | `corpus/lessons/round-60.md` Mistakes: `stale-supersession-disagreement` (S513/S518). |

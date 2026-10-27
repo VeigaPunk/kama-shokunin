@@ -461,6 +461,35 @@ join is the lane's inference policy, not a vendor contract. Nothing proves that
 the inputs came from one host, one daemon, simultaneous captures, or Ollama at
 all. No current liveness, local-weight residency, installed runtime, generation
 success or permission to route follows. Timestamps are not assessed.
+## Round-60 Ollama live child observations (2026-10-27; bounded)
+
+`tools/kama-ollama-live.py --work DIR --out RECEIPT` starts only its own
+digest-pinned Ollama v0.40.11 child with a scratch HOME/model store and an
+unregistered loopback port; it does not probe or restore registered consumers.
+The one committed receipt `.ufo/waves/round-60/live/receipt.json` records an
+empty `/v1/models` body with `data: null` (not `[]`), a qualified id in the model
+list (`name:latest`) and an unqualified id from the single-model route requested
+with a bare name. These are one-run observations, not guarantees for other
+versions or names. See `corpus/knowledge/ollama-live-lifecycle.md` and sources
+S519–S523 for the bounded run and source anchors.
+
+Do not treat its initial green receipt or `round60-c1-counter.py` as proof that
+replay execution is genuine or that teardown resists parent death. W1 falsified
+both: a scratch-patched `run_evidence()` returning canned verdicts still yielded
+a receipt accepted by the verifier; SIGKILL of the tool during ready wait leaked
+its child; external child SIGTERM after the last server contact also reached a
+green receipt. The capability is therefore **not admitted**. A future frozen
+gate must re-run the classifier from the captured bodies and bind a live server
+contact after the final replay; parent-death cleanup needs a separately defined
+mechanism, since SIGKILL cannot be caught by Python.
+
+Ollama is not llama.cpp under `kama-probe.sh`'s identity conventions: W1 saw
+an empty live Ollama store classified `FOREIGN_SERVICE`, bare model names
+classified as mismatch despite working through Ollama, and `/health` 404 while
+`/` returned the Ollama liveness text. Do not infer registered-endpoint health
+or alter the probe's cross-engine rules from the one sample; record the version,
+route and exact capture before any future adapter work. No source-claim census
+from one local run establishes remote-provenance semantics.
 
 Do not transfer exit meanings across tools: existing `kama-probe.sh check`
 uses 0 reconciled / 1 tool error / 2 drift; replay uses 0 metadata match /

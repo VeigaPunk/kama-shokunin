@@ -1,0 +1,195 @@
+{
+ "argv_child": [
+  "/fast/scratch/hyaku/kama-r60/A02BinarySwapRace/att-1-1/bin/live",
+  "serve"
+ ],
+ "binary_sha256": "b0a4becfaf872e3ad5d2e9051244e0dfe55409f03d6e2cd9bd9c34400e201b4c",
+ "captures": {
+  "generate": {
+   "body": "{\"model\": \"kama-aa1x001z:latest\", \"created_at\": \"2026-10-27T00:00:00Z\", \"response\": \"attacker\", \"done\": true, \"done_reason\": \"stop\"}",
+   "name": "generate",
+   "sha256": "96c27acaa236207c2ddd3e70db0219affb4c83959fd6092177c7674d77673df3",
+   "status": 200
+  },
+  "ps-after": {
+   "body": "{\"models\": [{\"name\": \"kama-aa1x001z:latest\", \"model\": \"kama-aa1x001z:latest\", \"digest\": \"ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34\", \"expires_at\": \"2026-10-28T00:00:00Z\", \"size\": 1185376, \"size_vram\": 400000}]}",
+   "name": "ps-after",
+   "sha256": "98ceb6b4c0e45d8b62b24e1aec5688fe462c3ac0f40b64e0b8c1db4eb7e71c24",
+   "status": 200
+  },
+  "ps-before": {
+   "body": "{\"models\": []}",
+   "name": "ps-before",
+   "sha256": "96bf1f74db13c5f18f70b523611510113af8d0bfba815584dc6aef505eb0ff06",
+   "status": 200
+  },
+  "root": {
+   "body": "Ollama is running",
+   "name": "root",
+   "sha256": "afea168799b6bcdb259676a41b211bc7cef67ff4ff09d31e8c9e477449eaa8af",
+   "status": 200
+  },
+  "show": {
+   "body": "{\"modelfile\": \"FROM fixture.gguf\", \"details\": {\"family\": \"llama\", \"parameter_size\": \"260K\"}, \"model_info\": {\"general.architecture\": \"llama\"}}",
+   "name": "show",
+   "sha256": "6243456ad1f9d4b56bcca87ca4ceb27306f567c21090d471336a8fba0318cad0",
+   "status": 200
+  },
+  "tags": {
+   "body": "{\"models\": [{\"name\": \"kama-aa1x001z:latest\", \"model\": \"kama-aa1x001z:latest\", \"digest\": \"ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34ab12cd34\", \"size\": 1185376}]}",
+   "name": "tags",
+   "sha256": "df7c333b79eb269f1be84539224c9a60361941115501d7460bb934888fd4cb9a",
+   "status": 200
+  },
+  "tags-empty": {
+   "body": "{\"models\": []}",
+   "name": "tags-empty",
+   "sha256": "96bf1f74db13c5f18f70b523611510113af8d0bfba815584dc6aef505eb0ff06",
+   "status": 200
+  },
+  "v1-model-single": {
+   "body": "{\"id\": \"kama-aa1x001z\", \"object\": \"model\"}",
+   "name": "v1-model-single",
+   "sha256": "401cd13f2d71dedd1a3989d34f2907b439b4044788e766f710140f64273a076f",
+   "status": 200
+  },
+  "v1-models": {
+   "body": "{\"object\": \"list\", \"data\": [{\"id\": \"kama-aa1x001z:latest\", \"object\": \"model\", \"owned_by\": \"attacker\"}]}",
+   "name": "v1-models",
+   "sha256": "c5e9600ead51aff4b54ca1b33f63310a1ce70e98248c39d5ed8e040749216adb",
+   "status": 200
+  },
+  "v1-models-empty": {
+   "body": "{\"object\": \"list\", \"data\": null}",
+   "name": "v1-models-empty",
+   "sha256": "ba4325e70ec58e2098107172976e00a3aa867102ac468197373706a0688f1f32",
+   "status": 200
+  },
+  "version": {
+   "body": "{\"version\": \"0.40.11\"}",
+   "name": "version",
+   "sha256": "aabfc827cab18199335d7b9d19c4fcfe3a88b387983edbc2c523f5ce91d6f522",
+   "status": 200
+  }
+ },
+ "checks": [
+  {
+   "detail": "sha256 of the server file is the pinned release binary",
+   "evaluated": true,
+   "id": "binary-digest",
+   "passed": true
+  },
+  {
+   "detail": "fixture GGUF sha256 equals the pinned digest",
+   "evaluated": true,
+   "id": "model-digest",
+   "passed": true
+  },
+  {
+   "detail": "chosen loopback port is neither a registered consumer port nor listening before start",
+   "evaluated": true,
+   "id": "port-unregistered",
+   "passed": true
+  },
+  {
+   "detail": "GET / returned 200 \"Ollama is running\" before the timeout",
+   "evaluated": true,
+   "id": "ready",
+   "passed": true
+  },
+  {
+   "detail": "/api/version reports '0.40.11'; pin '0.40.11'",
+   "evaluated": true,
+   "id": "version",
+   "passed": true
+  },
+  {
+   "detail": "/proc/<child pid>/exe sha256 equals the pinned binary",
+   "evaluated": true,
+   "id": "running-exe-digest",
+   "passed": false
+  },
+  {
+   "detail": "the listening socket on the port is held by the child pid",
+   "evaluated": true,
+   "id": "listener-owned",
+   "passed": true
+  },
+  {
+   "detail": "/api/tags on a fresh model store holds an empty models array",
+   "evaluated": true,
+   "id": "tags-empty-before-create",
+   "passed": true
+  },
+  {
+   "detail": "ollama create kama-aa1x001z exited 0",
+   "evaluated": true,
+   "id": "create",
+   "passed": true
+  },
+  {
+   "detail": "/api/tags holds exactly one entry named kama-aa1x001z:latest with equal name/model and a 64-hex digest",
+   "evaluated": true,
+   "id": "tags-lists-model",
+   "passed": true
+  },
+  {
+   "detail": "/v1/models lists id kama-aa1x001z:latest",
+   "evaluated": true,
+   "id": "v1-models-lists-model",
+   "passed": true
+  },
+  {
+   "detail": "kama-ollama-evidence over tags+ps before any generation: available_not_loaded exit 1",
+   "evaluated": true,
+   "id": "evidence-before-load",
+   "passed": true
+  },
+  {
+   "detail": "POST /api/generate returned done=true with a response string (not a quality claim)",
+   "evaluated": true,
+   "id": "generate",
+   "passed": true
+  },
+  {
+   "detail": "/api/ps lists the model with the digest /api/tags reported",
+   "evaluated": true,
+   "id": "ps-lists-loaded",
+   "passed": true
+  },
+  {
+   "detail": "kama-ollama-evidence over tags+ps after generation: loaded_same_digest exit 0",
+   "evaluated": true,
+   "id": "evidence-after-load",
+   "passed": true
+  },
+  {
+   "detail": "SIGTERM ended the child without SIGKILL and the port refuses connections",
+   "evaluated": true,
+   "id": "teardown",
+   "passed": true
+  }
+ ],
+ "elapsed_s": 0.93,
+ "nonce": "aa1x001z",
+ "observations": {
+  "v1_models_empty_data_form": "null",
+  "v1_single_id": "kama-aa1x001z",
+  "v1_single_id_equals_list_id": false
+ },
+ "pin": {
+  "archive_sha256": "7bedab90dd122661be78798e9f0edf37fccf0cccf2699d2c58ea1a3afdc04b6d",
+  "bin_sha256": "b0a4becfaf872e3ad5d2e9051244e0dfe55409f03d6e2cd9bd9c34400e201b4c",
+  "model_sha256": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+  "version": "0.40.11"
+ },
+ "port": 53863,
+ "schema": "kama-ollama-live/v1",
+ "teardown": {
+  "log_path": "/fast/scratch/hyaku/kama-r60/A02BinarySwapRace/att-1-1/work/serve.log",
+  "port_closed": true,
+  "returncode": -15,
+  "sigkill_needed": false
+ },
+ "verdict": "FAIL"
+}

@@ -1,0 +1,9 @@
+S521 opened: docs/import.mdx @ v0.40.11 (HTTP 200, 2869 B, sha256 04803f9359d7dba1); `docs/import.md` is 404 at this tag (renamed), and docs.ollama.com/import serves the same text.
+Quote (15 words, §Importing a GGUF model, line 49): "Once you have created your `Modelfile`, use the `ollama create` command to build the model." Tier A, scoped to import naming at v0.40.11 only.
+Duplicate: S013 owns docs.ollama.com/import (scope: quantization + shard filenames); no row uses the tag-pinned URL (`grep v0.40.11/docs/import` → none). Same URL, different scope = W04 (reported); same URL, same scope = E04 (refused) — both directions exercised on a scratch registry copy.
+Gate: `sources-census.sh validate` on base+row → 0 S521 findings, exit 0, census rows 260 vs 259 base; the check can fail on my row (E01 fields=12, E10 community-at-A, E06 tier=a all fired), and a byte-identical base copy diffs empty.
+Live corroboration, kept out of the row's cells (own port 38583, own HOME/OLLAMA_MODELS, GPU vars -1, PID killed in the starting shell): `ollama create s03g5281` → `s03g5281:latest`; `s03g5281:probe` → second tag, same manifest 8cf91c7109e7; /api/show parent_model stories260K.gguf.
+Finding: the import page contains no `tag`/`:latest` text at all (grep exit 1), so the default-tag fact is sourced by neither S013 nor S521; it needs a live-capture row.
+Finding: S013's anchor cites docs/import.md, whose last real commit (6d02a43a, 2025-10-28) predates the .mdx rename — consistent with the "S013 citation defect" lead at SOURCES.md line 22.
+Files: .ufo/waves/round-60/w1/out/S03OllamaImportGguf/{row.md, gate.md, live.out, serve.log, controls.out, live2.sh, import.mdx.v0.40.11.snapshot, Modelfile.s03}.
+Bounds kept: lane source untouched, no commit/jj, no sibling lane; scratch /fast/scratch/hyaku/kama-r60/S03OllamaImportGguf removed after receipts were copied (disk-guard showed 593.7G free on /fast/scratch before the pass).

@@ -1,0 +1,11 @@
+# M02 — C2 calibration row mapping, base line ollama-evidence-replay.md:44
+
+Attacked clause: C2-r60 coverage of population line `corpus/knowledge/ollama-evidence-replay.md:44` (base `ec3b0d5`) — the ps remote-marker `[INFERENCE]` label and the opening of the tags clause.
+Rows (2, prefix OL02): `OL02A` confirmed + falsifiable predicate; `OL02B` not-observable with reason (no captured surface exercises remote entries; policy/provenance is not an HTTP body). Files: `.ufo/waves/round-60/w1/out/M02MapOllamaevidence44/{rows.tsv,notes.md,fresh-receipt.json}`.
+Observed on both receipts: `ps-after.models[0]` keys `context_length details digest expires_at model name runner size size_vram`; `remote_model`/`remote_host` absent; `ps-before = {"models": []}`; tags entry carries no remote fields.
+Second look: `python3 tools/kama-ollama-live.py --work <scratch>/run --out <scratch>/r.json --nonce ol02fresh1` -> `verdict MODEL_OK`, exit 0, 16 checks, 0 failed, teardown `port_closed=True sigkill_needed=False` (lane-owned server on port 47755, gone).
+Validation: `m.receipt_caps(committed receipt)` -> ok=True; `m.safe_compile(OL02A predicate)` -> `evaluate=True`, `falsifiable=True` (also true on the fresh receipt; False if the ps entry gains `remote_model` or ps models is empty); `m.score(pop=14 lines, my 2 rows, receipt, amend='')` -> `covered=1 evaluated=1 sensitive=1 bound=1 contradicted=0 errors=0 good_rows=2 receipt_ok=True`.
+Amendments: none — no contradicted row on this line, so nothing is proposed for `ollama-live-amendment-r60.md`.
+Boundary (advisory, not my line): the live ps entry also carries undocumented `runner`, which bears on the line-40 table row; line 42's OpenAPI-schema clause is untested here because the harness captures no `/openapi.json` or `/docs`.
+Risks: OL02A confirms the live entry's field inventory, not the schema document itself (stated in notes); one run only, CPU-only, single fixture, v0.40.11; the registry alone stays `met=False` until sibling lines land.
+Disk: `scripts/hyaku/disk-guard.sh status` exit 0, `/fast/scratch/hyaku` 593.0G free. Scratch `/fast/scratch/hyaku/kama-r60/M02MapOllamaevidence44` removed after copying the fresh receipt; no lane source, registry, or fleet file touched.
