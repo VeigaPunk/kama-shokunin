@@ -114,3 +114,13 @@ Round shape, stated plainly: **one v1 build wave of 38 seats ran; the planned 48
 - **Siblings (W1K01, W1K03).** No sibling lane holds a hex-run ledger, vLLM daemon-health knowledge or a round-end registry gate run; the hosted-platform refusals name `kake` as destination, which owns remote web properties, not hosted model-serving configuration.
 - **Coupling (W1K04).** The one hard C2 to C3 coupling is the two ledger rows for the PR commit ids the entry cites; the three claims are separable otherwise. C1 depends on the two other claims' counters being committed (they are in its NEWSET).
 - Dead seats: 0 of 38. Seat W1K02 needed three nudges (it ran 80 minutes); its report landed.
+
+## Restored lines (round 52)
+
+Lines this file lost in place, re-appended verbatim in round 52 (claim C2): the file is declared append-only with corrections appended (`registry/append-only-contract.tsv`), and `tools/append-only-audit.py` v6 graded each line below as deleted and no longer held (round-51 rows of `registry/append-only-disclosures.tsv`). They are historical bytes, kept so that no declared line is lost; where this file's later text replaced them, the later text stands. One fenced block per deleting commit, in history order.
+
+Deleted by `9307b15e0731` (round-43: measured receipts at 25df591a, end census, SCORECARD measured results, LOG wave and measured lines):
+
+`````text
+Start receipts (committed): `.ufo/waves/round-43/census-start-fleetroot.out` (fleet-root `validate --root /home/vgpnk/Projects/shokunin kama`, exit 0, reads the parked worktree's registry), `census-start-mirror.out` (mirror of the base clone, exit 0, 93 W04, 0 E), `census-start-counts.out` (rows 220, tier A 210, B 7, C 3, mined 201, queued 8, rejected 11). End receipts are `census-end-*.out` of the same names (see the report).
+`````

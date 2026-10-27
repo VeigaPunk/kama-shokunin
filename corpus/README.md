@@ -1470,3 +1470,57 @@ round-46 text stays as the record of that round's instrument.
 
 Integration (round 51, L1): written from the wave's reports (`.ufo/waves/round-51/a2w1/out/`);
 measured values are in SCORECARD §Round-51 measured results.
+
+## Restored lines (round 52)
+
+Lines this file lost in place, re-appended verbatim in round 52 (claim C2): the file is declared append-only with corrections appended (`registry/append-only-contract.tsv`), and `tools/append-only-audit.py` v6 graded each line below as deleted and no longer held (round-51 rows of `registry/append-only-disclosures.tsv`). They are historical bytes, kept so that no declared line is lost; where this file's later text replaced them, the later text stands. One fenced block per deleting commit, in history order.
+
+Deleted by `c6199a254244` (round-1: operability axis — runnable endpoint-identity gate for local model serving):
+
+`````text
+Proprietary memory for the local model serving & endpoint health domain. Every entry cites
+its source. Coverage map + open gaps grow with rounds.
+(empty — round 1 builds the first census)
+- Full consumer registry (every config file that pins a baseURL to a local port).
+- Live inventory of llama-server/llama.cpp processes and their served model ids.
+`````
+
+Deleted by `83bee7faf5a7` (round-2):
+
+`````text
+- No periodic/automated re-verification yet — `tools/kama-probe.sh` is manual
+  (round-2 candidate: turn it into a scheduled freshness check).
+- Served-model reconciliation is proven for the llama.cpp runtime only; vLLM/ollama
+  runtimes are classified by rule, not measured (`MODEL_OK` vs look-alike stub).
+`````
+
+Deleted by `ea72c3eae4ec` (round-3: re-census — derived --ufo-src, registry cut to live rows, corpus errata):
+
+`````text
+- **Operator-dependent:** the stale pins in `~/.config/opencode/opencode.json:158`,
+  `~/.config/opencode/agents/janitor.md:21`, and `~/.local/bin/the-janitor:19` are
+  *detected and reported*, never rewritten by kama (operator-owned files).
+`````
+
+Deleted by `e246c40ec1b4` (round-5: reconcile interrupted runbook freshness; record blocked native dispatch):
+
+`````text
+- Declared-vs-served context size (32768 vs live 16384) is not in the snapshot schema.
+`````
+
+Deleted by `726f737a942f` (round-16: falsify-wave repairs — hardened live harness and receipt gate, matrix breadth pin, doc-correction ledger, narrowed claims):
+
+`````text
+corrections: `endpoint-identity.md`, `consumer-registry.md`, `listener-census.md`,
+`served-identity-crosswalk.md`, `runtime-health-surface-matrix.md`.
+Frontier disposition: the "real-runtime evidence for llama.cpp only, and stale"
+gap now has a re-runnable lane-owned sample on the current build. Still open:
+live grading of a loading server (the tiny model loads in about 8 ms; no 503
+was captured by the receipt), router mode and sleep (source reads only), other
+`````
+
+Deleted by `2793eb5173e3` (round-42: claim fixes — adjacency count 16, README names the entry by repo path):
+
+`````text
+| `knowledge/context-capacity-engine-sides.md` | Engine-side half of declared versus served context capacity (K05), as source readings: vLLM v0.32.0 derives its served KV-cache token figure from the block pool and `max_model_len` and prints it beside the declared length on one startup log line; llama.cpp 704366d7's router model listing publishes the declared training context as `context_length` (not `max_model_len`); S478, S479 | 42 |
+`````

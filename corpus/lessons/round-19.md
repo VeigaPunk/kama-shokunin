@@ -132,3 +132,28 @@ The outside round-19 trend verdict is **expansion unchanged**, not the author's
 "improved (narrow)": a source row alone added no knowledge entry or capability.
 Quality and discernment were improved by the outside spot-check.
 
+
+## Restored lines (round 52)
+
+Lines this file lost in place, re-appended verbatim in round 52 (claim C2): the file is declared append-only with corrections appended (`registry/append-only-contract.tsv`), and `tools/append-only-audit.py` v6 graded each line below as deleted and no longer held (round-51 rows of `registry/append-only-disclosures.tsv`). They are historical bytes, kept so that no declared line is lost; where this file's later text replaced them, the later text stands. One fenced block per deleting commit, in history order.
+
+Deleted by `5b108c1a7e94` (round-19: doc-bound citations, ancestry gate, fail-closed grid, wave evidence):
+
+`````text
+- **C2 operability, 8 → 8 (delta 0):** a sixth receipt pin,
+  and `libllama` are accepted 0/3 before the pin and rejected 3/3 with it,
+| Shared libraries are found through DT_NEEDED and the loader search path, so a launcher's bytes do not identify the libraries it loads | admit (grounds C2) | https://man7.org/linux/man-pages/man8/ld.so.8.html §Dynamic string tokens: "This expands to the directory containing the program or shared object" (11 words at the $ORIGIN entry) |
+`````
+
+Deleted by `f1790e25b421` (round-19: empty-tree rejection, C1 scope erratum, separability correction, final receipts):
+
+`````text
+Causally separable: C1 owns the checker/registry/lesson/SOURCES/SCORECARD
+corrections; C2 owns the gate, runner argv and grid. No shared source file.
+`````
+
+Deleted by `028235e6f28d` (round-19: checkpoint Gate citation row; four-row C1 registry):
+
+`````text
+  `python3 tools/citation-provenance.py` (prints `required=3 found=3 verified=3
+`````

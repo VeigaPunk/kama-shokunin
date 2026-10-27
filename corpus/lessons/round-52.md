@@ -1,0 +1,20 @@
+# kama round 52 lesson
+
+author: kama L1 (agent `KamaR52`, attempt 1); wave seats' findings integrated by the L1 (named per row)
+date: 2026-10-27
+base: `9ff76b1f763512be2f554cbbfd0b2213b63b0847` (round-51 tip after the hyaku orchestrator's salvage of late a2w1 seat output; lane remote tip at launch)
+freeze: `8551ba7f2056f2465d20f5b50586978133212fe1` (preregistration `.ufo/waves/round-52/preregistration.json`, `frozen_at_utc` 2026-10-27T04:42:00Z written from `date -u` at write time, before the commit — round-51 Mistakes #1 procedure)
+measured: SCORECARD §Round-52 measured results
+
+## Claims
+
+- **C1 operability 8→8 — the replay's server runs from a sealed anonymous memfd, sourced on S500.** `tools/kama-live-replay.py` copies the verified member straight from the archive's tar stream into a memfd (`memfd_create(2)`, MFD_ALLOW_SEALING), hashes it on the way and seals it (F_SEAL_WRITE, SHRINK, GROW, SEAL); `tools/kama-llamacpp-live.py --server-fd` execs the server from that descriptor (`/proc/<tool pid>/fd/<n>`), so the running image has no path. The replay refuses a rerun whose `server_exe` is not its own memfd (dev, inode), lacks the four seals, has a link, or has a non-`/memfd:` link. Round 51 bound the image to the extracted member's dev and inode: a byte-identical copy at the member path (seat J3CopyDecoy) met that counter and a hardlink met its own leg (seat J4Hardlink); a memfd has no directory entry, so neither shape can be it. Counter `tools/round52-replay-memfd-audit.py`: the round-50 bind and teardown legs unchanged, plus `sealed` (the counter's own `/proc/<pid>/exe` open: `/memfd:` link, `st_nlink` 0, F_GET_SEALS ⊇ 15, frozen digest; the same dev/inode/seals in the rerun's `server_exe` and the replay's `own_server`) and `newrow` (S500). Base `bind=1 sealed=0 teardown=1 newrow=0 met=False` (`.ufo/waves/round-52/controls/base.c1.out`).
+- **C2 calibration 7→7 — the A-corr files hold every line they declared append-only.** The lane declares `LOG.md`, `SCORECARD.md` (dated sections), `corpus/QUALITY.md`, `corpus/README.md` and every filed lesson append-only with corrections appended; round 51 graded every deletion and disclosed 165 lost lines instead of restoring them, and its slice audits judged the in-place edits contrary to the files' own A-corr practice (SCORECARD §Planned (round 52) item 2). The 155 lost lines of A-corr files are re-appended verbatim, one fenced block per deleting commit, under `## Restored lines (round 52)` (`###` in `SCORECARD.md`) at the end of 18 files; their ledger rows are removed. The ledger keeps only the 10 lines of `corpus/SOURCES.md` (A-row: 7 rows whose immutable cells were edited in place) and `registry/report-landing-errata.tsv` (A: 3 errata rows) — a verbatim re-append there would duplicate a registry id or an errata key, a new defect. Counter `tools/round52-append-restore-check.py`: its own fence-aware section logic for `exempt=` and `only=` regions (the round-51 counter only bound-checked those files), eight constructed scenarios (the ledger cutoff tested both ways among them), and the lane leg (`corr_lost=0`, ledger rows equal the unheld A/A-row lines key for key, no A-corr ledger row, base contract rows unchanged). Base `fixture=1 lane=0 corr_lost=151 row_lost=10 disclosed=165 met=False` (`.ufo/waves/round-52/controls/base.c2.out`; the counter's simpler `exempt=` rule grades 4 fewer `SCORECARD.md` lines than the tool, a preregistered limit).
+
+Measured values: SCORECARD §Round-52 measured results.
+
+## Gate
+
+| Row | Decision | URL | Opened (UTC) | Located quote (≤ 25 words) | Why |
+|---|---|---|---|---|---|
+| S500 | admit (tier A, mined) | https://man7.org/linux/man-pages/man2/memfd_create.2.html | 2026-10-27T04:35:17Z (text copy `.ufo/waves/round-52/c1/memfd_create.2.txt`; man-pages 6.19, page dated 2026-02-08) | "memfd_create() creates an anonymous file and returns a file descriptor that refers to it." (§DESCRIPTION) | grounds running the server from an anonymous, sealable file the replay filled itself, so the running image has no path a decoy could occupy; §HISTORY "Linux 3.17, glibc 2.27." scopes it to Linux |

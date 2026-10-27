@@ -62,6 +62,17 @@ of the file that existed at exec time and its inode cannot be reused meanwhile (
 K1Design3); a member with more than one link (a hardlink to another install, seat
 J4Hardlink) is `server-exe:member-links:<n>`; a byte-identical copy put at the member path
 before exec still matches.
+Round 52 (round-51 closure D5; seats J3CopyDecoy, J4Hardlink): the round-51 binding to the
+member path is superseded. The replay copies the member straight from the archive's tar
+stream into an anonymous memfd (memfd_create(2)), hashes it on the way (a digest other
+than the receipt's server is `memfd-digest-mismatch`), seals it (F_SEAL_WRITE, SHRINK,
+GROW, SEAL) and passes it to the live child as `--server-fd`; the live tool execs the
+server from that descriptor, so the running image has no path - no copy, hardlink or
+rename-over at <work>/server/<member> can be it. `own_server` records the memfd (dev,
+inode, seals, stream sha256) and the rerun's `server_exe` must name that dev and inode,
+the four seals, link count 0 and a `/memfd:` link, else `server-exe:not-own-memfd` or
+`server-exe:not-sealed-memfd`. The extracted tree still supplies the libraries (by path);
+a memfd filled from a byte-identical host install still matches.
 --compare validates both receipts' provenance like a replay would, then prints
 `compare match=<bool> mismatches=N` and one `mismatch:` line each; exit 0 equal,
 1 different, 2 unreadable or refused.
@@ -73,6 +84,7 @@ from __future__ import annotations
 
 import argparse
 import ctypes
+import fcntl
 import hashlib
 import json
 import os
@@ -201,6 +213,47 @@ def acquire(url, sha, dest, allow_file=False):
 def extract(archive, into):
     with tarfile.open(archive) as tf:
         tf.extractall(into, filter="data")
+
+
+F_ADD_SEALS, F_GET_SEALS = 1033, 1034   # F_LINUX_SPECIFIC_BASE + 9, + 10 (fcntl(2))
+SEALS_ALL = 15                          # F_SEAL_SEAL | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_WRITE
+
+
+def sealed_member(archive, member, want):
+    """Round 52 (round-51 closure D5: a copy, a hardlink or a rename-over at the member path
+    could stand in for the extracted server): copy the member straight from the archive's
+    stream into an anonymous memfd (memfd_create(2)), hashing as it goes, and seal it
+    against writes, shrinking, growing and further sealing before anything runs it. The
+    server is exec'd from this descriptor, so its running image has no path at all.
+    Returns (fd, identity); raises Refused when the stream is not the receipt's server."""
+    with tarfile.open(archive) as tf:
+        try:
+            ti = tf.getmember(member)
+        except KeyError:
+            raise Refused(f"member-absent-in-archive:{member}") from None
+        if not ti.isreg():
+            raise Refused(f"member-not-a-regular-file:{member}")
+        src = tf.extractfile(ti)
+        fd = os.memfd_create(os.path.basename(member), os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING)
+        try:
+            h = hashlib.sha256()
+            for chunk in iter(lambda: src.read(CHUNK), b""):
+                h.update(chunk)
+                view = memoryview(chunk)
+                while view:
+                    view = view[os.write(fd, view):]
+            if h.hexdigest() != want:
+                raise Refused(f"memfd-digest-mismatch:want={want}:got={h.hexdigest()}")
+            fcntl.fcntl(fd, F_ADD_SEALS, SEALS_ALL)
+            seals = fcntl.fcntl(fd, F_GET_SEALS)
+            if seals & SEALS_ALL != SEALS_ALL:
+                raise Refused(f"memfd-not-sealed:{seals}")
+        except BaseException:
+            os.close(fd)
+            raise
+    st = os.fstat(fd)
+    return fd, {"memfd": True, "member": member, "sha256": h.hexdigest(), "seals": seals,
+                "dev": "%02x:%02x" % (os.major(st.st_dev), os.minor(st.st_dev)), "inode": str(st.st_ino)}
 
 
 def evaluated(rec):
@@ -341,11 +394,13 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
             argv[-2:-2] = ["--witness-dir", os.path.abspath(witness_dir),
                            "--witness-timeout", str(witness_timeout)]
             res["witness_dir"] = os.path.abspath(witness_dir)
-        # round 51 (seat K1Design3): the member is held open from before exec until the
-        # server-exe comparison, so its inode cannot be freed and reused in between
-        own_fd = os.open(server, os.O_RDONLY | os.O_NOFOLLOW)
-        own = os.fstat(own_fd)
+        # round 52 (round-51 closure D5): the server runs from a sealed memfd this replay
+        # filled from the archive's own member stream (not from the extracted path), held
+        # open until the server-exe comparison; the live tool execs it through --server-fd
+        own_fd, own = sealed_member(archive, need["server.member"], want_srv)
+        argv[-2:-2] = ["--server-fd", str(own_fd)]
         p = subprocess.run(argv, capture_output=True, text=True, env=env, preexec_fn=_child_pdeathsig,
+                           pass_fds=(own_fd,),
                            timeout=timeout + (witness_timeout if witness_dir is not None else 0))
         res["live_exit"] = p.returncode
         if not os.path.isfile(rerun):
@@ -362,24 +417,24 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
                 f"model-mapping:{mm.get('reason') if isinstance(mm, dict) else 'absent'}")
         elif mm.get("sha256") != need["model.sha256"]:
             res["mismatches"].append(f"model-mapping:sha256:{need['model.sha256']}->{mm.get('sha256')}")
-        # round 51 (round-50 closure R6, seat J4Decoy): the rerun's server must be the member
-        # this replay extracted - the live tool opened its running image through
-        # /proc/<pid>/exe; the dev and inode it saw must be those of <work>/server/<member>
-        # and its bytes must hash to the receipt's server
+        # round 52 (round-51 closure D5; round 51 bound the image to the extracted path's
+        # dev and inode, which a copy, hardlink or rename-over at that path could share):
+        # the live tool opened its server's running image through /proc/<pid>/exe; it must
+        # be this replay's own sealed memfd - same dev and inode, the four seals, no link,
+        # an anonymous "/memfd:" link - and hash to the receipt's server
         se = rr.get("server_exe")
-        own_id = ("%02x:%02x" % (os.major(own.st_dev), os.minor(own.st_dev)), str(own.st_ino))
-        res["own_server"] = {"path": server, "dev": own_id[0], "inode": own_id[1]}
+        res["own_server"] = own
         if not isinstance(se, dict) or se.get("opened") is not True:
             res["mismatches"].append(f"server-exe:{se.get('reason') if isinstance(se, dict) else 'absent'}")
         elif se.get("sha256") != want_srv:
             res["mismatches"].append(f"server-exe:sha256:{want_srv}->{se.get('sha256')}")
-        elif (str(se.get("dev")), str(se.get("inode"))) != own_id:
-            res["mismatches"].append(f"server-exe:not-own-member:{se.get('dev')}:{se.get('inode')}"
-                                     f"!={own_id[0]}:{own_id[1]}")
-        # round 51 (seat J4Hardlink): a member hard-linked to another file (the host install,
-        # say) has the same inode as that file; an extracted member has exactly one link
-        if os.fstat(own_fd).st_nlink != 1:
-            res["mismatches"].append(f"server-exe:member-links:{os.fstat(own_fd).st_nlink}")
+        elif (str(se.get("dev")), str(se.get("inode"))) != (own["dev"], own["inode"]):
+            res["mismatches"].append(f"server-exe:not-own-memfd:{se.get('dev')}:{se.get('inode')}"
+                                     f"!={own['dev']}:{own['inode']}")
+        elif not (isinstance(se.get("seals"), int) and se["seals"] & SEALS_ALL == SEALS_ALL
+                  and se.get("nlink") == 0 and str(se.get("path", "")).startswith("/memfd:")):
+            res["mismatches"].append(f"server-exe:not-sealed-memfd:seals={se.get('seals')}:"
+                                     f"nlink={se.get('nlink')}:path={se.get('path')}")
         if p.returncode != 0:
             res["mismatches"].append(f"live-exit:{p.returncode}")
         # instance differences that do not fail a replay but are worth reading
@@ -427,9 +482,10 @@ def _selftest(root):
                      "r={'schema':'kama-llamacpp-live/v4','outcome':'pass','server':{'sha256':h(s)},"
                      "'model':{'sha256':h(m)},'checks':[{'id':'health_ready','passed':True,'evaluated':True}]}\n"
                      "r['model_mapping']={'mapped':True,'sha256':h(m)}\n"
-                     "x=os.stat(s)\n"
+                     "f=int(a[a.index('--server-fd')+1]);x=os.fstat(f);import fcntl\n"
                      "r['server_exe']={'opened':True,'sha256':h(s),'dev':'%02x:%02x'%(os.major(x.st_dev),"
-                     "os.minor(x.st_dev)),'inode':str(x.st_ino)}\n"
+                     "os.minor(x.st_dev)),'inode':str(x.st_ino),'seals':fcntl.fcntl(f,1034),"
+                     "'nlink':x.st_nlink,'path':'/memfd:llama-server (deleted)'}\n"
                      "if '--server-archive' in a:\n"
                      "    r['schema']='kama-llamacpp-live/v5'\n"
                      "    u=a[a.index('--model-url')+1];c=re.search('/resolve/([0-9a-f]{40})/',u).group(1)\n"
@@ -510,27 +566,48 @@ def _selftest(root):
             fh.write(open(fake_live).read().replace(
                 "json.dump(r,open(o,'w'))", "r['captures']={'slots':{'element_count':9}};json.dump(r,open(o,'w'))"))
         run("projection-differs", receipt(), 1, live=proj_live)
-        # round 51 (round-50 closure R6): the rerun's server_exe must be the replay's own member
+        # round 51 (round-50 closure R6): the rerun's server_exe must be the replay's own image
         noexe_live = os.path.join(d, "noexe-live.py")
         with open(noexe_live, "w") as fh:
             fh.write(open(fake_live).read().replace("r['server_exe']=", "r['unused_exe']="))
         run("server-exe-absent", receipt(), 1, live=noexe_live)
         copy_live = os.path.join(d, "copy-live.py")
         with open(copy_live, "w") as fh:
-            # a byte-identical copy elsewhere (as a decoy exec of another install would show)
+            # a byte-identical copy at a path (the round-51 J3CopyDecoy shape) is not the memfd
             fh.write(open(fake_live).read().replace(
-                "x=os.stat(s)\n", "import shutil;c=o+'.copy';shutil.copy(s,c);x=os.stat(c)\n"))
-        run("server-exe-not-own-member", receipt(), 1, live=copy_live)
+                "x=os.fstat(f);", "import shutil;c=o+'.copy';shutil.copy(s,c);x=os.stat(c);"))
+        run("server-exe-not-own-memfd", receipt(), 1, live=copy_live)
         badsha_live = os.path.join(d, "badsha-live.py")
         with open(badsha_live, "w") as fh:
             fh.write(open(fake_live).read().replace("r['server_exe']={'opened':True,'sha256':h(s),",
                                                     "r['server_exe']={'opened':True,'sha256':'4'*64,"))
         run("server-exe-digest-differs", receipt(), 1, live=badsha_live)
-        link_live = os.path.join(d, "link-live.py")
-        with open(link_live, "w") as fh:
-            # the member gains a second link while the replay holds it (seat J4Hardlink)
-            fh.write(open(fake_live).read().replace("x=os.stat(s)\n", "os.link(s,o+'.link');x=os.stat(s)\n"))
-        run("server-exe-member-links", receipt(), 1, live=link_live)
+        # round 52 (round-51 closure D5): the image must be sealed, linkless and anonymous
+        for tag, old, new in (("unsealed", "'seals':fcntl.fcntl(f,1034)", "'seals':0"),
+                              ("linked", "'nlink':x.st_nlink", "'nlink':1"),
+                              ("path", "'path':'/memfd:llama-server (deleted)'", "'path':s")):
+            alt_live = os.path.join(d, f"{tag}-live.py")
+            with open(alt_live, "w") as fh:
+                fh.write(open(fake_live).read().replace(old, new))
+            run(f"server-exe-{tag}", receipt(), 1, live=alt_live)
+        # the sealed memfd is filled from the archive's member stream, not from the path
+        fd, ident = sealed_member(arc, "build/bin/llama-server", ssha)
+        try:
+            sealed = fcntl.fcntl(fd, F_GET_SEALS) & SEALS_ALL == SEALS_ALL
+            try:
+                os.write(fd, b"x")
+                wrote = True
+            except OSError:
+                wrote = False
+        finally:
+            os.close(fd)
+        cases.append(("sealed-member-refuses-writes", sealed and not wrote and ident["memfd"] is True,
+                      f"sealed={sealed} wrote={wrote} ident={ident}"))
+        try:
+            sealed_member(arc, "build/bin/llama-server", "5" * 64)
+            cases.append(("sealed-member-digest-mismatch", False, "no refusal"))
+        except Refused as exc:
+            cases.append(("sealed-member-digest-mismatch", str(exc).startswith("memfd-digest-mismatch"), str(exc)))
         # round 49 (X1Selftest): --witness-dir/--witness-timeout reach the live child end to
         # end, and the child really holds until an outside observer releases it. The witness
         # fake live writes ready.json *before* the shared fake receipt body, so the receipt

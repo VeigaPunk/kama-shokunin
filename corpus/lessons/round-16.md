@@ -197,3 +197,23 @@ README line 1 (identity cells come from the tree API, not the quote); S040
 (21 words); S017 `https://kubernetes.io/docs/concepts/workloads/pods/probes/`
 §Types of probe, readiness sentence (11 words); S041 `receipt.json` check
 `probe_model_ok`, re-serialized compactly from the pretty-printed file.
+
+## Restored lines (round 52)
+
+Lines this file lost in place, re-appended verbatim in round 52 (claim C2): the file is declared append-only with corrections appended (`registry/append-only-contract.tsv`), and `tools/append-only-audit.py` v6 graded each line below as deleted and no longer held (round-51 rows of `registry/append-only-disclosures.tsv`). They are historical bytes, kept so that no declared line is lost; where this file's later text replaced them, the later text stands. One fenced block per deleting commit, in history order.
+
+Deleted by `ccc4bb31267f` (round-16: record measured C1/C2 results, falsify-wave dispositions and live loading capture):
+
+`````text
+  (`c6199a2`) `tools/kama-probe.sh` graded every non-2xx, non-HTML response
+  without a model array `FOREIGN_SERVICE` / `non-2xx-non-model-http`, evidence
+  "non-2xx HTTP from a non-model service". A loading llama.cpp server answers
+  `/v1/models` exactly that way. The lane's own matrix (round 10,
+  `runtime-health-surface-matrix.md:14`) already documented the body, and no
+  criterion compared that knowledge with the probe's behaviour. The repair adds
+  vocabulary fixed or routed the state elsewhere. Counting command: `python3
+  stub matrix `tests/probe-verdicts/*.json`).
+  llama.cpp observation was round 3 (2026-10-14), and the registered consumers
+  are `DEAD`.
+| A green live receipt proves registered-consumer health or restoration | reject | S041 receipt port 32845 and refusal set {8080, 34113}; `registry/history/latest.tsv` still `DEAD`; nothing was restored |
+`````

@@ -13,9 +13,9 @@ Round 43 re-anchors the `SKILL.md` and `PROVINCE.md` hashes after the round-43 e
 |---|---|---|---|
 | **operability** | **8** | registry gate `tools/kama-probe.sh` sha256 `36b64978ee3a3aa29e1b73f04ca5c7ad04a9aee880e7032abfd894fa7b3a29d3` (1138 lines); run `bash tools/test-snapshot.sh` → `RESULT pass=30 fail=0`; run `python3 tools/pin-watch.py selftest` → `selftest pass=9 fail=0`; run `python3 tools/report-landing-audit.py --selftest` → `selftest cases=79 failed=0`; run `python3 tools/sources-append-only.py --selftest` → `45/45 selftest cases passed`. Limit: the registered endpoints sample DEAD (no authorized serving runtime; operator-owned), so no model-readiness verdict is evidenced | score round 3; evidence re-anchored round 48 |
 | **freshness** | **8** | snapshot/diff harness `tools/test-snapshot.sh` sha256 `236c23c12964cf0b2f0a2f970187e216d3398dcf2b92ffb7e8606e0fdd029646` (194 lines); run `python3 tools/citation-provenance.py --selftest` → `selftest: ok (24 cases)`; live drift evidence `.ufo/waves/round-41/c2/ls-remote-vllm.txt` sha256 `13388e483163357aa4daea784d0e67cdc8d6b5438d3166d613a2a044590b9282`; run `python3 -c "recheck=[l.split(chr(124))[10].strip() for l in open('corpus/SOURCES.md') if l.startswith(chr(124)+' S') and int(l.split(chr(124))[1].strip()[1:])<=477];print(sum(1 for r in recheck if r))"` → `218` (registry rows S001–S477 carrying a recheck cadence). Limit: snapshots are invocation-driven (no clock), and source rechecks run on each row's `recheck` cadence; release re-verification ledger `registry/release-recheck-b11889.tsv`: the 91 `on-release` registry rows pinned to a llama.cpp commit re-verified at release b11889 (counter `tools/round44-release-recheck-audit.py`, §Round-44 measured results: 82 holds, 3 holds-reworded, 6 unchanged-file, 0 drifted, 0 removed) | score round 10; evidence re-anchored round 44 |
-| depth | **7** | `SKILL.md` sha256 `3b2425b7e9a984c8ac2b322659a68a4222a3eaaa73350ac0480cb04e418da892` (1541 lines); run `grep -c '^## ' SKILL.md` → `39`; `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 51 |
+| depth | **7** | `SKILL.md` sha256 `e749b35012ebafcbcbab26531467955b144b2cd8ffc40b71cef5eb330c83f154` (1558 lines); run `grep -c '^## ' SKILL.md` → `40`; `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 52 |
 | coverage | **9** | surface list `PROVINCE.md` sha256 `aa7915a8590d9180ac559864897679ecb532a3c5b6595f58a4d19a5491e5d67d` (186 lines); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f and 'processes' not in f]))"` → `34` (knowledge entries held before rounds 42 and 43); held ground includes `corpus/knowledge/endpoint-health-probe-conventions.md`, `corpus/knowledge/kv-cache-reclamation-models.md`, `corpus/knowledge/serving-alias-contract.md` | score round 10; evidence re-anchored round 48 |
-| calibration | **7** | run `python3 tools/capability-repertoire-audit.py --selftest` → `CAP_SELFTEST pass=2 fail=0`; run `python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"` → `37` (outside closures on record); that figure is the number of `corpus/lessons/*verifier-spotcheck.md` blobs at the measured commit; run `python3 tools/instrument-agreement.py --selftest` → `IA_SELFTEST pass=4 fail=0`; this table's counters `tools/round41-scorecard-reconcile.py` and `tools/round42-selfdesc-reconcile.py`; latest outside closure `corpus/lessons/round-50-verifier-spotcheck.md` (admitted; re-anchored round 51); trend-verdict ledger `registry/verdict-ledger.tsv` (204 rows, self against outside for rounds 10–43: `agreement=69/87 overclaim=2 underclaim=16 other=0 absent=15`, §Round-44 calibration ledger); claim-outcome ledger `registry/claim-outcome-ledger.tsv` (126 rows, the 63 claims of rounds 10–44, self against outside: `agreement=58/61 overclaim=1 underclaim=2 other=1 absent=1`, §Round-45 claim-outcome ledger) | score round 1; evidence re-anchored round 51 |
+| calibration | **7** | run `python3 tools/capability-repertoire-audit.py --selftest` → `CAP_SELFTEST pass=2 fail=0`; run `python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"` → `38` (outside closures on record); that figure is the number of `corpus/lessons/*verifier-spotcheck.md` blobs at the measured commit; run `python3 tools/instrument-agreement.py --selftest` → `IA_SELFTEST pass=4 fail=0`; this table's counters `tools/round41-scorecard-reconcile.py` and `tools/round42-selfdesc-reconcile.py`; latest outside closure `corpus/lessons/round-51-verifier-spotcheck.md` (admitted; re-anchored round 52); trend-verdict ledger `registry/verdict-ledger.tsv` (204 rows, self against outside for rounds 10–43: `agreement=69/87 overclaim=2 underclaim=16 other=0 absent=15`, §Round-44 calibration ledger); claim-outcome ledger `registry/claim-outcome-ledger.tsv` (126 rows, the 63 claims of rounds 10–44, self against outside: `agreement=58/61 overclaim=1 underclaim=2 other=1 absent=1`, §Round-45 claim-outcome ledger) | score round 1; evidence re-anchored round 52 |
 | adjacency | **7** | `corpus/knowledge/cross-lane-scope.md` sha256 `1801cb7fa45ef6f56ff96cb67c7840256fcffce000a56067cd8133797b9728a9` (87 lines); run `python3 -c "print(sum(1 for l in open('corpus/knowledge/cross-lane-scope.md') if l.startswith(chr(124))))"` → `16` (lines starting with a table pipe, header and separator lines included); contested scope stays reported, not absorbed (`PROVINCE.md` paragraph "Out of province → report, never absorb") | score round 1; evidence re-anchored round 42 |
 
 ### Historical axes table (round-3 assessment; superseded in round 41)
@@ -2925,3 +2925,70 @@ Integration hardening after the freeze (tools only; the frozen counters are unch
 ### Round-51 measured results
 
 Measured commit: `be8169a667301dc2b8118615e262968266959303` (post-wave fixes on top of integration `c5ec93d5`; fresh clone of the lane), counters the frozen bytes of `804bde75`. C1 operability 8 → 8: `bind=1 own=1 teardown=1 newrow=1 bound=3/3 owned=3/3 met=True`, exit 0 (`.ufo/waves/round-51/measured/c1.out`; also met at integration `c5ec93d5`, `c1-int.out`, and at build-fix `73bf2a7a`, `c1-build.out`). C2 calibration 7 → 7: `fixture=1 lane=1 scenarios=9/9 lost=142 disclosed=165 met=True`, exit 0 (`.ufo/waves/round-51/measured/c2.out`; lane `events 107`, 165 disclosed lines in 50 events, 58 permitted lines — one row fewer than the build because the round-49 banner is restored). Regressions at `be8169a6` (`.ufo/waves/round-51/measured/*.out`, each with its `tip=` line): gate `registered 48 unregistered 0 defective 0`; capability census `listed 11 observed 11 met True`; round-41 `mismatches=0 met=True`; round-42 `mismatches=0 maxN=51 met=True`; round-43 `registered=48 mismatches=0 met=True`; digest-ledger `unknown=0`; hexrun-census `unknown=0` (was 2 at the base); `sources-append-only --from 57a2e25b` no violations; append-only-audit exit 0 (`unrestored=0 partial=0 regressed=0 bad_disclosures=0`); selftests AOA 51/51, KLR 27/27, live ok. The planned-pointer check resolves only once this subsection exists (receipt at the final tip). The round-50 C2 counter reads `lane=0` under v6 (stated supersession; round-49 C2 already did at the base).
+
+### Restored lines (round 52)
+
+Lines this file lost in place, re-appended verbatim in round 52 (claim C2): the file is declared append-only with corrections appended (`registry/append-only-contract.tsv`), and `tools/append-only-audit.py` v6 graded each line below as deleted and no longer held (round-51 rows of `registry/append-only-disclosures.tsv`). They are historical bytes, kept so that no declared line is lost; where this file's later text replaced them, the later text stands. One fenced block per deleting commit, in history order.
+
+Deleted by `fd48f9a3b7ca` (round-26: falsify-wave corrections (SKILL row prose and header, lesson Gate and Mistakes incl. post-data shortcut break, SCORECARD/LOG calibration fixes, no depth promotion), snapshot files fit.cpp/llama-kv-cache.cpp/README.md, wave-2 evidence):
+
+`````text
+the report-landing auditor; this round works depth on the serving runtime.
+| C1 | depth 7 → 8 (author reading; the closure decides) | `registered 0 counted 0 target 12 met False` at base 1560e4d8 → `registered 17 counted 17 target 12 met True` | `python3 .ufo/waves/round-26/count-c1.py --out <receipt.json>` (counter sha256 6501737c…6588, unchanged since a23c0e04) | the landed lane tip named in the round report (receipt `.ufo/waves/round-26/final/c1-tip-receipt.json`) | SKILL.md "## Round-26 live error signatures" (E26-01 to E26-17), `registry/error-signatures-r26.json`, SOURCES S114-S130, lesson `corpus/lessons/round-26.md` |
+runtime; before this round SKILL.md held only the September sample from dead
+ports ("Historical error signatures"). The command that would show it unmoved
+is the same counter at base (counted 0). Known counter limits found after data
+adjacency 7. Capabilities: none added.
+`````
+
+Deleted by `4d2e74f421bc` (round-27: residual review call (7 seats) evidence; late w1a3 seat outputs; X1 entry corrections (string-body reachability, literal binding, ASCII scope, frame replay provenance, boundary-leg cost); KQ37 residual qualification; SCORECARD measured-commit fix; lesson residual evidence and Gate decisions):
+
+`````text
+| C1 (measured) | depth | 7 → 7 | **miss** (honest stop): withdrawn before data, no data seat dispatched; under the frozen kill rule counted < 15 at the landed tip is a miss | `.ufo/waves/round-27/a3/plan.json`; lesson `corpus/lessons/round-27.md` §Claims; tip receipt `.ufo/waves/round-27/a3/c1-tip.out` | `/usr/bin/python3 .ufo/waves/round-27/count-c1.py --out <receipt.json>` (preregistration.json C1.command) | lane tip at report time (see the report) |
+KQ37 with the shortfalls recorded in the entry; defect 8 (`count-c2.py` reads
+"neither meets nor misses", 1853 vs 1846); each is corrected by an appended
+entry or a superseding row (lesson §Mistakes).
+`````
+
+Deleted by `6de225c289b7` (round-29 attempt 2: verification wave w2 (64 seats, orchestrator-dispatched) integration; narrative, verbatim repairs, wave evidence, lesson/knowledge/SOURCES landing):
+
+`````text
+| SA29:SCORECARD.md:P:980355388a:0 | SCORECARD.md:192 | P | `MISSION.md:29` | 1e41928a | names the fleet file ../MISSION.md (line 29 is the kama row); no lane path MISSION.md | p:absent |
+| SA29:SCORECARD.md:P:312b3e69b1:0 | SCORECARD.md:740 | P | `round-17-verifier-spotcheck.md:217–221` | c6dc46fa | bare file name; the lane file is corpus/lessons/round-17-verifier-spotcheck.md | p:absent |
+| SA29:SCORECARD.md:P:1c6c1f3e4c:0 | SCORECARD.md:1349 | P | `.ufo/reports/round-25/kama.md:120-129` | 7f84cd0e | a fleet-repo report path written as if lane-relative | p:absent |
+| SA29:SCORECARD.md:P:17a7db7c81:0 | SCORECARD.md:1375 | P | `count-c1.py:384` | d183ec57 | bare file name; the lane file is .ufo/waves/round-26/count-c1.py (line 384 exists there) | p:absent |
+`````
+
+Deleted by `026eede9f46a` (round-30: SCORECARD round-30 section (C1 measured row, C2 capability row, planned), lesson with seat findings):
+
+`````text
+## Round 30 — self-assessment corrections (recall population)
+`````
+
+Deleted by `ce41bae692c8` (round-38: measurement receipts (c1/c2/c3 after.out) and scorecard/log measurement values):
+
+`````text
+| C1 — the R36-D2 third sub-fact (R36-D2C) corrected by append | calibration 7 → 7 (delta 0) | `uncorrected 1 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met False` (exit 1) at base → `{{C1_AFTER_LINE}}` (exit {{C1_AFTER_EXIT}}) | `python3 /fast/scratch/hyaku/kama-r38/tools/round38-statement-audit.py --repo /fast/scratch/hyaku/kama-r38 --tip <full-commit>` | `{{MEASURED_COMMIT}}` | `.ufo/waves/round-38/controls/c1-noop.out`; `{{C1_AFTER_PATH}}`; `corpus/lessons/round-38.md` |
+| C2 — coverage map names the two SGLang docs version-pinning entries | coverage 9 → 9 (delta 0) | `named 0 files_exist 0 cited_new 0 met False` (exit 1) at base → `{{C2_AFTER_LINE}}` (exit {{C2_AFTER_EXIT}}) | `python3 /fast/scratch/hyaku/kama-r38/tools/round38-coverage-audit.py --repo /fast/scratch/hyaku/kama-r38 --tip <full-commit>` | `{{MEASURED_COMMIT}}` | `.ufo/waves/round-38/controls/c2-base.out`; `{{C2_AFTER_PATH}}`; S352, S353, S472 |
+| C3 — the round-37 counting instruments and the wave's 37th seat report land | operability 8 → 8 (delta 0) | `found 0 base_found 0 help_ok 2 rerun_ok 2 report_37 0 receipt_ok 0 met False` (exit 1) at base → `{{C3_AFTER_LINE}}` (exit {{C3_AFTER_EXIT}}) | `python3 /fast/scratch/hyaku/kama-r38/tools/round38-operability-audit.py --repo /fast/scratch/hyaku/kama-r38 --tip <full-commit>` | `{{MEASURED_COMMIT}}` | `.ufo/waves/round-38/controls/c3-base.out`; `{{C3_AFTER_PATH}}`; `tools/round37-statement-audit.py`; `tools/round37-coverage-audit.py`; `.ufo/waves/round-37/w1/out/CriticEntries.md`; `.ufo/waves/round-37/w1/out/seat-exit-codes.json` |
+`````
+
+Deleted by `ef76777e5fbd` (round-44: integration — C1 release-recheck ledger at b11889 + S482, C2 verdict ledger + SCORECARD calibration ledger, routed D1-D6, S483, KQ58-KQ61, tools, lesson, LOG):
+
+`````text
+Superseded in round 42. The live plan is `### Round-43 measured results
+### Planned (round 44)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
+`````
+
+Deleted by `42ea1204aef3` (round-46: move the measured-results block out of the head pointer sentence (repeat of round-43 D1), lesson row, tip receipts at 4991ecc2):
+
+`````text
+Superseded in round 42. The live plan is `### Round-46 measured results
+### Planned (round 47)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
+`````
+
+Deleted by `db6bfa8d9354` (round-50: measured results filled into scorecard section):
+
+`````text
+(placeholder — filled after the measured commit)
+`````

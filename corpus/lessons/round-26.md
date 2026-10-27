@@ -106,3 +106,29 @@ record):
    quoted in the round report). A wave-1 seat (ExecRequestParams) returned
    after integration had started; its candidates were not registered.
 8. Lowest axis: C1 works depth (7), not calibration (the rejected streak).
+
+## Restored lines (round 52)
+
+Lines this file lost in place, re-appended verbatim in round 52 (claim C2): the file is declared append-only with corrections appended (`registry/append-only-contract.tsv`), and `tools/append-only-audit.py` v6 graded each line below as deleted and no longer held (round-51 rows of `registry/append-only-disclosures.tsv`). They are historical bytes, kept so that no declared line is lost; where this file's later text replaced them, the later text stands. One fenced block per deleting commit, in history order.
+
+Deleted by `fd48f9a3b7ca` (round-26: falsify-wave corrections (SKILL row prose and header, lesson Gate and Mistakes incl. post-data shortcut break, SCORECARD/LOG calibration fixes, no depth promotion), snapshot files fit.cpp/llama-kv-cache.cpp/README.md, wave-2 evidence):
+
+`````text
+row's anchor cell; L1 fetch plus wave-1 scribes ScribeSourcesContext,
+(teaches starts `supersedes S1NN —`) for S106, S107, S109, S112 and S113, routed
+by `round-25-verifier-spotcheck.md` defect 3; drafted by ScribeSupersedes
+| S114 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp#L5366 | 2026-10-23 | line 5366: `res->error(format_error_response("This server does not support slots endpoint. Start it with `--slots`", ERROR_TYPE_NOT_SUPPORTED));` |
+| S115 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp#L5408 | 2026-10-23 | line 5408: `res->error(format_error_response("This server does not support slots action. Start it with `--slot-save-path`", ERROR_TYPE_NOT_SUPPORTED));` |
+| S117 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp#L5453 | 2026-10-23 | line 5453: `res->error(format_error_response("This server does not support changing global properties. Start it with `--props`", ERROR_TYPE_NOT_SUPPORTED));` |
+| S118 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp#L6132 | 2026-10-23 | line 6132: `res->error(format_error_response("This server does not support embeddings. Start it with `--embeddings`", ERROR_TYPE_NOT_SUPPORTED));` |
+| S121 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-context.cpp#L5803 | 2026-10-23 | line 5803: `res->error(format_error_response("This server does not support reranking. Start it with `--reranking`", ERROR_TYPE_NOT_SUPPORTED));` |
+| S127 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-common.cpp#L1114 | 2026-10-23 | line 1114: `throw std::invalid_argument("\"prompt\" elements must be a string, a list of tokens, a JSON object containing a prompt string, or a list of mixed strings &` |
+| S132 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/src/llama-context.cpp#L219 | 2026-10-23 | line 219: `params.n_ctx == 0 ? hparams.n_ctx_train : params.n_ctx;` |
+| nine further per-flag argument messages (`--parallel 0`, `--flash-attn bogus`, `--repeat-penalty 0`, ...) | one validation pattern per flag; they add no decision value beyond one example, and the counter can evaluate at most 19 runnable rows (ReviewerCounterCode F4) |
+| false timestamp repeated a third time: the L1 wrote clock guesses into a preregistration | `.ufo/waves/round-26/preregistration.json` at a4a159c3 (`frozen_at_utc` 03:45Z, commit 03:18:51Z) and a12850c5 (A0 03:55Z, commit 03:19:43Z); corrected at f071209a; same class as `round-25.md` §Mistakes row 7 | none mechanical: round 25 named the class but added no check, so it recurred (L1 self-review found it two minutes later) | `tools/prereg-time-check.py` (wave-1 seat ExecPreregTimeCheck): exit 1 when a JSON at a revision holds a UTC time later than that revision's commit time (24 h horizon; `--strict` for any later time). Shown able to fail: exit 1 at a4a159c3 and a12850c5, exit 0 at f071209a and a23c0e04; it also flags the original round-25 preregistration (+76 s) and amendment 1 (+16 s), which `round-25.md` row 7 said amendment 1 had corrected (`.ufo/waves/round-26/w1-build/out/ExecPreregTimeCheck/RUNS.txt`) |
+| counter weaknesses found after data, so not repairable this round | ReviewerCounterCode (`.ufo/waves/round-26/w1-build/out/ReviewerCounterCode/findings.md`): F1 warning lines on an unrelated startup failure count; F2 request echo through JSON unicode escapes; F3 echo through argument file contents; F4 more than 19 runnable rows exhaust the 20-port range and the run cannot evaluate | the pre-freeze control wave did not cover them: its shortcut and counter-mutant items were refused by the provider (cyber_policy) and three critic seats died on quota | not fixed: a rule changed after data is not the claim's rule. The registered rows avoid each path (no warning-only startup row, no echoed field, no file argument, 17 rows); wave 2 attacks each row for these paths. A next counter should add a per-row healthy control with the same argv, decoded-request echo checks, file-content echo checks and port reuse |
+1. 42 uncommitted `a2-falsify/` paths: committed at a4a159c3 as late
+   round-25 seat outputs (the deleted receipt copy stays deleted; it duplicated
+   the committed receipt).
+7. Seat-gate reservations: released per wave only after the wave settled.
+`````

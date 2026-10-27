@@ -2354,3 +2354,69 @@ Round-end fleet-root census rerun: `scripts/sources-census.sh validate --root /h
 - Re-verification (freshness, no claim): S496–S499 re-opened live by seat Sc1Exe — S499 verbatim at §DESCRIPTION (man-pages 6.19, 2026-02-08); S498's `teaches` quote still drops the spec's two parenthesised fence characters (round-50 R5; erratum in `corpus/lessons/round-51.md`). llama.cpp upstream at b11913 while b11909 stays a prerelease (seat Sc4Watch); the pinned model object still resolves.
 - Routed defects: r50-R1 (report row count 236 → 239, not 237 → 240) and r50-R4 (Gate reject 2 wording) and r50-R5 (S498 elision) → errata in `corpus/lessons/round-51.md`; r50-R2 → the regression receipts are committed at the round-51 measured commit (`.ufo/waves/round-51/measured/*.out`, each with its `tip=` line); r50-R3 → the calibration row re-anchored (37 spot-checks, latest closure round 50) and the depth row re-anchored with `evidence re-anchored round 51`; r50-R6 → C1 (J4Decoy) and C2 (sub-20 threshold), the rest carried; r50-R7 (route map) → seat Sen4Policy recorded the live map and its mtime at dispatch. The two `hexrun-census` unknowns carried since round 49 (fleet report commits `f8cdb853`, `9e38a361` cited by the round-49/50 spot-checks) are classified `upstream` with evidence files (`registry/hexrun-ledger.tsv`, `.ufo/waves/round-51/hexrun-evidence/`; seat X4Hexrun).
 - Lesson: `corpus/lessons/round-51.md`.
+
+## Restored lines (round 52)
+
+Lines this file lost in place, re-appended verbatim in round 52 (claim C2): the file is declared append-only with corrections appended (`registry/append-only-contract.tsv`), and `tools/append-only-audit.py` v6 graded each line below as deleted and no longer held (round-51 rows of `registry/append-only-disclosures.tsv`). They are historical bytes, kept so that no declared line is lost; where this file's later text replaced them, the later text stands. One fenced block per deleting commit, in history order.
+
+Deleted by `ed135b3cb869` (Revert "HOURS.md: craft-hours ledger opened (§Craft-hours canon)"):
+
+`````text
+## 2026-10-13 — HOURS.md ledger opened
+- Operator seed per PROTOCOL.md §Craft-hours: shonen→shokunin now requires
+  ≥10,000 verified craft-hours AND the SHONEN gate. Ledger starts at 0;
+  instrumented rounds accrue collective in-domain lane-minutes.
+- Evidence: fleet commit; PROTOCOL.md §Craft-hours.
+`````
+
+Deleted by `47f3aedd6fa3` (round-4: audit corrections — lane-root-resolvable pointers; kotoba index row + tracked_files pin refresh; kama line ref; kasegi census regeneration):
+
+`````text
+`.ufo/waves/shokunin12h-20261014-p1-repair/members/`.
+`````
+
+Deleted by `f4066979096e` (round-26: LOG candidate count corrected; wave-1 final seat outputs):
+
+`````text
+(12/14); A1 closed it before data (0/14). Wave 1 (36 seats) found 58
+candidates; 17 registered, the rest rejected or held back with reasons in
+`corpus/lessons/round-26.md` §Gate.
+`````
+
+Deleted by `fd48f9a3b7ca` (round-26: falsify-wave corrections (SKILL row prose and header, lesson Gate and Mistakes incl. post-data shortcut break, SCORECARD/LOG calibration fixes, no depth promotion), snapshot files fit.cpp/llama-kv-cache.cpp/README.md, wave-2 evidence):
+
+`````text
+**Claim C1 (depth).** Before: SKILL.md held no live error signature for the
+b11755 runtime; the counter `python3 .ufo/waves/round-26/count-c1.py` printed
+scout listed 8 more, 3 of them not found by an executor; 17 registered, the
+sample from ports that are now dead.
+42 late paths committed (a4a159c3), KQ36 qualification, round-25 erratum,
+`````
+
+Deleted by `9cb3abae9d48` (round-29 attempt 2: VerifyLogFreshness late relay — stale qualifier fix, late-seat record in lesson):
+
+`````text
+SELFTEST PASS aggregate line, exit 0 (working-tree tool, seat-unique /tmp scratch);
+`````
+
+Deleted by `ce41bae692c8` (round-38: measurement receipts (c1/c2/c3 after.out) and scorecard/log measurement values):
+
+`````text
+Three declared claims, frozen in `.ufo/waves/round-38/preregistration.json` at `41e149ceee28b24596b5d8567a0ccf43ebbc6d50` before any seat scored, measured on committed bytes at `{{MEASURED_COMMIT}}`. Base `2a4a97dc890fe393035986c951797c5d65b6cc69`.
+C1 (calibration 7 → 7) corrects the R36-D2 third sub-fact by append in `corpus/lessons/round-38.md`. Round 37 froze only R36-D2A and R36-D2B; the third sub-fact appeared only in the `## Mistakes` evidence cell of `round-37.md`, so the wrong range stood (round-37 verifier spot-check §6 item 4). The correction row R36-D2C names the five staged rows (S332, S336, S337, S338, S339 at `SOURCES.append.md` lines 9, 13, 14, 15, 16) instead of the wrong range. Counter: `uncorrected 1 false_corrections 0 lesson_unchanged 1 report_unchanged 1 met False` (exit 1) at base → `{{C1_AFTER_LINE}}` (exit {{C1_AFTER_EXIT}}). The r37 lesson blob and the r37 fleet report blob are unchanged.
+C2 (coverage 9 → 9) adds `corpus/knowledge/sglang-docs-version-pinning.md` and `corpus/knowledge/sglang-docs-version-pinning-amendment-2026-10-23.md` to the coverage map. The published SGLang docs pages carry no version marker; their sources are contained unchanged in release tag v0.5.22. Counter: `named 0 files_exist 0 cited_new 0 met False` (exit 1) at base → `{{C2_AFTER_LINE}}` (exit {{C2_AFTER_EXIT}}). Sources S352 and S353 (the v0.5.22 raw `.mdx` pages) and S472 (the lane's `git ls-remote --tags` row, first id free in both the lane registry and the staged package) are appended. Staged S360 is rejected: the GitHub REST `/tags` endpoint returned HTTP 403 (rate limit) on this host; the lane's ls-remote receipt carries the tag inventory instead (exit 0, 166 tags, `refs/tags/v0.5.22` peeling to commit `baa9befa`).
+C3 (operability 8 → 8) closes the inherited round-37 evidence gaps the verifier routed (§6 items 1–3). Commit `2f780765` lands `tools/round37-statement-audit.py` and `tools/round37-coverage-audit.py`, which round 37 cited but never committed, together with the 37th seat report `CriticEntries.md` and `seat-exit-codes.json`. Counter: `found 0 base_found 0 help_ok 2 rerun_ok 2 report_37 0 receipt_ok 0 met False` (exit 1) → `{{C3_AFTER_LINE}}` (exit {{C3_AFTER_EXIT}}). The receipt parses to 37 members, all with `rc: null`; "Dead seats: none" closes as report presence, not exit status. The rest of the uncommitted round-37 tree (29 scratch files) was not copied; named in the report.
+`````
+
+Deleted by `2c0181074050` (round-42: integrate wave-1 — entry and Gate corrections, ledger evidence and tool hardening, SIGTERM cleanup, Mistakes, wave findings, 62 seat reports):
+
+`````text
+- **C1 calibration 7→7.** Round 41's counter covered only the `## Axes` table; seat R41A10 itemised the surfaces around it that the tree contradicts. At base `0b606b03`, `tools/round42-selfdesc-reconcile.py` reads `mismatches=40 met=False` (banner 4, Planned 3, Retired 4, Saturation 3, head Capabilities 4, README 11, PROVINCE 5, relevance needles 6). The head sections were re-derived from the tree and the round-5 text moved verbatim under §Historical head sections; README names every top-level entry; PROVINCE names every instrument the capability list cites (closing round-41 closure item 2, `pin-watch` absent from Owns); each axis row carries one axis-specific run fact (round-41 closure item 1).
+`````
+
+Deleted by `8bee4e56a995` (round-43: LOG wording):
+
+`````text
+- Freeze `895793e0` (preregistration, three counters, base and nine shortcut/freeze controls). The committed `freeze.c*.out` receipts are byte copies of the base receipts; the counters measured at the real freeze commit are `controls/freeze-measured.c*.out` (C1 reads `mismatches=45` there). Census at start: 220 rows, mirror and fleet-root validate exit 0, 93 W04.
+- Frontier: `considerthese/2026-10-25.md` proposal 3 implemented as `registry/staged-refusals.tsv` (73 refused items, 6 stale flips, one quarantine row the registry contradicts); KQ54-KQ57 added to `corpus/QUALITY.md`; six Mistakes rows in the lesson.
+`````

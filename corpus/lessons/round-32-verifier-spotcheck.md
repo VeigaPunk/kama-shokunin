@@ -82,3 +82,13 @@ Census: `scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin
 4. **Receipt completeness (minor).** `gate-tip.out` and the v2 control receipts record no `EXIT_CODE` line and gate-tip.out names no revision inline (revision survives only in the commit message and the selftest lane-tip arm). The v1 controls and mutation arms do record exit codes; make gate run receipts record `EXIT_CODE=` and the evaluated revision like the v1 controls do.
 
 Non-blocking observation for the operator: SHONEN boxes 1–4 all carry `[~]` (author-asserted). Box 2's evidence (round-16/17 live receipts, round-32 kq36 live re-run) is committed and resolvable, and boxes 1/3/4 are checkable by a non-author against committed bytes — the boxes look fully checkable in a promotion review; writing `[x]` is operator/promoter-owned and was not done here.
+
+## Restored lines (round 52)
+
+Lines this file lost in place, re-appended verbatim in round 52 (claim C2): the file is declared append-only with corrections appended (`registry/append-only-contract.tsv`), and `tools/append-only-audit.py` v6 graded each line below as deleted and no longer held (round-51 rows of `registry/append-only-disclosures.tsv`). They are historical bytes, kept so that no declared line is lost; where this file's later text replaced them, the later text stands. One fenced block per deleting commit, in history order.
+
+Deleted by `cc4698035927` (round-32 verifier spot-check: correct lane tip citation):
+
+`````text
+lane tip verified: kama-shokunin@907cdcc0a76f8656fde4574c0c50725fcea42fa9 (master; lane HEAD before round: 18464d0866afd5c4b471c8478d72b079d82d1fa8)
+`````

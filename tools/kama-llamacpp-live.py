@@ -70,6 +70,7 @@ import http.client
 import hashlib
 import io
 import json
+import fcntl
 import os
 import re
 import shutil
@@ -743,6 +744,7 @@ def server_exe(pid):
         return {'opened': False, 'reason': 'exe-unreadable:' + (exc.strerror or type(exc).__name__)}
     try:
         st = os.fstat(fd)
+        seals = file_seals(fd)
         if not stat.S_ISREG(st.st_mode):
             return {'opened': False, 'reason': 'exe-not-a-regular-file', 'path': path}
         h, left = hashlib.sha256(), st.st_size
@@ -760,9 +762,53 @@ def server_exe(pid):
                 'path': path}
     finally:
         os.close(fd)
+    # round 52: `seals` is fcntl(F_GET_SEALS) on the opened image (None for a file that
+    # does not support sealing) and `nlink` its link count - a sealed memfd (memfd_create(2))
+    # has no directory entry, so no copy, hardlink or rename-over at a path can be it
     return {'opened': True, 'path': path,
             'dev': '%02x:%02x' % (os.major(st.st_dev), os.minor(st.st_dev)),
-            'inode': str(st.st_ino), 'size': st.st_size, 'sha256': h.hexdigest()}
+            'inode': str(st.st_ino), 'size': st.st_size, 'sha256': h.hexdigest(),
+            'nlink': st.st_nlink, 'seals': seals}
+
+
+F_GET_SEALS = 1034          # F_LINUX_SPECIFIC_BASE + 10 (fcntl(2))
+SEALS_ALL = 15              # F_SEAL_SEAL | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_WRITE
+
+
+def file_seals(fd):
+    """fcntl(F_GET_SEALS) on fd; None when the file does not support sealing (EINVAL)."""
+    try:
+        return fcntl.fcntl(fd, F_GET_SEALS)
+    except OSError:
+        return None
+
+
+def sealed_fd(fd, want_sha, want_size):
+    """Round 52: the inherited --server-fd must be a sealed memfd holding exactly the bytes
+    of --server (memfd_create(2): an anonymous file; seals write/shrink/grow/seal), read
+    with pread from offset 0 so the descriptor's own offset does not matter. Returns its
+    identity; raises SetupError otherwise."""
+    try:
+        st = os.fstat(fd)
+    except OSError as exc:
+        raise SetupError(f'server-fd-unusable:{exc.strerror}') from exc
+    seals = file_seals(fd)
+    if not stat.S_ISREG(st.st_mode) or seals is None or seals & SEALS_ALL != SEALS_ALL:
+        raise SetupError(f'server-fd-not-sealed:{seals}')
+    if st.st_size != want_size:
+        raise SetupError(f'server-fd-size:{st.st_size}!={want_size}')
+    h, off = hashlib.sha256(), 0
+    while off < st.st_size:
+        chunk = os.pread(fd, min(1 << 20, st.st_size - off), off)
+        if not chunk:
+            break
+        h.update(chunk)
+        off += len(chunk)
+    if h.hexdigest() != want_sha:
+        raise SetupError('server-fd-digest-differs-from-server')
+    return {'dev': '%02x:%02x' % (os.major(st.st_dev), os.minor(st.st_dev)),
+            'inode': str(st.st_ino), 'nlink': st.st_nlink, 'seals': seals,
+            'sha256': h.hexdigest()}
 
 
 def _header_subset(headers):
@@ -1430,6 +1476,13 @@ def build_parser():
                         'release appears (round 49)')
     p.add_argument('--witness-timeout', type=float, default=120.0,
                    help='seconds to wait for the release file (default 120)')
+    p.add_argument('--server-fd', type=int, default=None,
+                   help='round 52: an inherited descriptor of a sealed memfd '
+                        '(memfd_create(2); F_SEAL_WRITE|SHRINK|GROW|SEAL) holding '
+                        'the bytes of --server; the server is exec\'d from it '
+                        '(/proc/<this pid>/fd/<n>), so its running image is that '
+                        'anonymous file, and LD_LIBRARY_PATH names --server\'s '
+                        'directory because $ORIGIN no longer does')
     p.add_argument('--selftest', action='store_true',
                    help='run parser and outcome self-tests without a server')
     return p
@@ -1896,6 +1949,16 @@ def main(argv=None):
             pass
         child_env = {key: os.environ[key] for key in CHILD_ENV_KEYS
                      if key in os.environ}
+        if args.server_fd is not None:
+            # round 52: the server runs from the sealed memfd, whose /proc link is
+            # "/memfd:..." - $ORIGIN cannot find the install tree's libraries any more
+            receipt['server']['fd'] = sealed_fd(
+                args.server_fd, server_sha, os.path.getsize(server_real))
+            child_env['LD_LIBRARY_PATH'] = os.path.dirname(server_real)
+            # ggml finds its CPU backend in the executable's directory or the current
+            # one; the memfd has no directory, so the server starts in the install tree
+            # and gets an absolute model path
+            server_argv[2] = os.path.abspath(args.model)
         receipt['child_env_keys'] = sorted(child_env)
 
         def _term_handler(signum, _frame):
@@ -1927,6 +1990,11 @@ def main(argv=None):
                 preexec_fn=_preexec_pdeathsig,
                 env=child_env,
             )
+            if args.server_fd is not None:
+                # argv[0] stays the --server path; the image is the memfd itself
+                popen_kwargs['executable'] = (
+                    f'/proc/{os.getpid()}/fd/{args.server_fd}')
+                popen_kwargs['cwd'] = os.path.dirname(server_real)
             try:
                 proc = subprocess.Popen(server_argv, **popen_kwargs)
             except OSError as exc:

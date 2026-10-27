@@ -79,3 +79,13 @@ record the omission as debt in the round-4 record.
 *[correction 2026-10-19 (round 10, A48): `SKILL.md:120,:317` at line 48 is stale (nl -ba SKILL.md | sed -n '120p;317p'; nl -ba corpus/knowledge/alias-endpoint-normalization.md | sed -n '11p' => those skill lines no longer locate m_flash; the current alias table records its row at 11); the companion `config.yml:433` reference is an external config pointer not re-read under the host-content restriction; current anchor: `corpus/knowledge/alias-endpoint-normalization.md:11`]*
 
 *[correction 2026-10-19 (round 10, A49): `SKILL.md:93,:101` at line 50 is stale (nl -ba SKILL.md | sed -n '93p;101p'; nl -ba corpus/knowledge/consumer-registry.md | sed -n '49p;54,55p;89,107p' => the old skill locations no longer cite those consumer rows, and registry lines 49/54-55 describe remotes/removed checkout rather than the current inventory); the current consumer table is at `SKILL.md:94-103` and `consumer-registry.md:89-107`; current anchor: `SKILL.md:94-103; corpus/knowledge/consumer-registry.md:89-107`]*
+
+## Restored lines (round 52)
+
+Lines this file lost in place, re-appended verbatim in round 52 (claim C2): the file is declared append-only with corrections appended (`registry/append-only-contract.tsv`), and `tools/append-only-audit.py` v6 graded each line below as deleted and no longer held (round-51 rows of `registry/append-only-disclosures.tsv`). They are historical bytes, kept so that no declared line is lost; where this file's later text replaced them, the later text stands. One fenced block per deleting commit, in history order.
+
+Deleted by `47f3aedd6fa3` (round-4: audit corrections — lane-root-resolvable pointers; kotoba index row + tracked_files pin refresh; kama line ref; kasegi census regeneration):
+
+`````text
+`.ufo/waves/shokunin12h-20261014-p1-repair/members/Kama*.md`.
+`````

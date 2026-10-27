@@ -83,3 +83,14 @@ whose match is too loose in one direction and too strict in the other).
 - Declared-vs-served *context* drift (`~/.config/the-janitor/opencode.json` declares
   `limit.context: 32768`; the live server runs `--ctx-size 16384`) — a second class in
   province, not yet covered by the registry schema.
+
+## Restored lines (round 52)
+
+Lines this file lost in place, re-appended verbatim in round 52 (claim C2): the file is declared append-only with corrections appended (`registry/append-only-contract.tsv`), and `tools/append-only-audit.py` v6 graded each line below as deleted and no longer held (round-51 rows of `registry/append-only-disclosures.tsv`). They are historical bytes, kept so that no declared line is lost; where this file's later text replaced them, the later text stands. One fenced block per deleting commit, in history order.
+
+Deleted by `ea72c3eae4ec` (round-3: re-census — derived --ufo-src, registry cut to live rows, corpus errata):
+
+`````text
+   the bug (`8080` family) and its fix (`~/Projects/origin-work/ufo-fsd-alpha/config/
+   the-tick.machine.json:16`, `scripts/local-helper.mjs:8` → `34113`), in two checkouts.
+`````

@@ -478,3 +478,31 @@ provenance and bind-guard distinct-port statistics differ (1382 versus 1376).
 Both binds totals are 1464. Source: round-20 `R18CitationRows.md` and its full
 comparison transcript. No new execution of the old 42-run counter is implied.
 
+
+## Restored lines (round 52)
+
+Lines this file lost in place, re-appended verbatim in round 52 (claim C2): the file is declared append-only with corrections appended (`registry/append-only-contract.tsv`), and `tools/append-only-audit.py` v6 graded each line below as deleted and no longer held (round-51 rows of `registry/append-only-disclosures.tsv`). They are historical bytes, kept so that no declared line is lost; where this file's later text replaced them, the later text stands. One fenced block per deleting commit, in history order.
+
+Deleted by `1b85a24eca4d` (round-18: measured pass on eb78788b, recovery receipts, scorecard and log):
+
+`````text
+| M8 | Measurement-publication gap: both official counters ended exit 2 at the checkpoint, and the published head counter bytes no longer matched the retained run | `ReportNumbers.md`, `MistakesFailCapable.md`, `C2Admission.md`, `ConnectTameshi.md`; `runs/c1-measure.exit`/`c2-survivors.exit` at 101f399 | falsify wave 2's re-run duty; the coordinator treated counter repair as done without re-running | corrected counters now exit 0 on the official invocation; the stale artifact is retained under `runs/pre-repair/`; the run records measured argv and exits |
+`````
+
+Deleted by `f1790e25b421` (round-19: empty-tree rejection, C1 scope erratum, separability correction, final receipts):
+
+`````text
+  cite(eb78788b35b832d08887d4c366d1d0c1df3a6c19, .ufo/waves/round-18/runs/live-gate-1.stdout, sha256=b2043ba8a7b20b707367f03c13d25333ed045c4ec303b2ff3cc0df0dc5395c15)
+`````
+
+Deleted by `028235e6f28d` (round-19: checkpoint Gate citation row; four-row C1 registry):
+
+`````text
+- The recovery gate output describes `live-recovery/`, not the checkpoint `live/`:
+`````
+
+Deleted by `30ed37837782` (round-19: full-digest diagnostics; 279 wording):
+
+`````text
+| Handler installed implies SIGTERM necessarily terminates with 0 | reject S043's overclaim; S047 narrows it | Same pinned files: `server.cpp` install at 534 precedes call at 576, and `server-queue.cpp:279` resets the handler's `running = false;` at 134. An actual termination guarantee additionally needs locking/shutdown assumptions. |
+`````

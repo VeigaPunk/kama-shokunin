@@ -164,3 +164,30 @@ bound for 5 s reached 20,971,520 bytes, and a 2 MiB run with the same 5 s
 timeout stopped at 2,097,152: the cap, not the timeout, stops it. A writer
 that swallows the EFBIG error keeps spinning until its timeout, but the file
 stays at the cap. So the rule bounds disk use; it does not end the process.
+
+## Restored lines (round 52)
+
+Lines this file lost in place, re-appended verbatim in round 52 (claim C2): the file is declared append-only with corrections appended (`registry/append-only-contract.tsv`), and `tools/append-only-audit.py` v6 graded each line below as deleted and no longer held (round-51 rows of `registry/append-only-disclosures.tsv`). They are historical bytes, kept so that no declared line is lost; where this file's later text replaced them, the later text stands. One fenced block per deleting commit, in history order.
+
+Deleted by `d183ec572a5e` (round-27: w1a3 wave evidence (34 seats); X1 entry revised from wave findings (decoded-echo conditions, boundary leg, limits, novelty); KQ37 round-27 qualification; S139 supersedes S136; second LOG correction; C1 reported as miss; lesson Gate/X1 evidence/Mistakes/Fix receipt; SCORECARD, README, LOG round-27 entries):
+
+`````text
+history; their uncommitted lane files (1853 paths under
+`.ufo/waves/round-27/w1-controls/advice/` and `out/`) were moved unread to
+  dispatched in this round. The counter, predicate and target are unchanged;
+  the claim is not pursued, so it neither meets nor misses. This is an honest
+  stop, not a re-scaled target.
+  held no echo rule. Sources opened this round: S136, S137. Verdict: only a
+No existing row's `status`, `recheck` or `used-by` changed.
+| unbounded self-referential fixture write: a seat's preload fixture was appended to itself until it filled /fast | attempt-2 seat ReviewA3Diff: `sitecustomize.py` reached 262699483136 bytes of a repeated two-line MARKER snippet; copies of Main's removal note and the first 4096 bytes: `.ufo/waves/round-27/a3/mistake-runaway/` | none — the wave contexts capped processes, memory and wall time, never file size, and never forbade a MARKER or log path that is also the fixture | every round-27 wave context requires `ulimit -f` on fixture-writing commands and a MARKER file separate from any file Python imports; shown able to fail only if this round's FixtureBoundDemo seat receipt shows the cap stopping a self-append (see §Fix receipt) |
+`````
+
+Deleted by `4d2e74f421bc` (round-27: residual review call (7 seats) evidence; late w1a3 seat outputs; X1 entry corrections (string-body reachability, literal binding, ASCII scope, frame replay provenance, boundary-leg cost); KQ37 residual qualification; SCORECARD measured-commit fix; lesson residual evidence and Gate decisions):
+
+`````text
+here also counted 7 attempt-3 repair files) were moved unread to
+  round: S136, S137, S139 (supersedes S136). Verdict: only a
+ScoutReopenS136, ScoutReopenS137, ReviewLessonGate (all `holds`; reports in
+`.ufo/waves/round-27/w1a3/advice/`).
+| unbounded self-referential fixture write: a seat's preload fixture was appended to itself until it filled /fast | attempt-2 seat ReviewA3Diff: `sitecustomize.py` reached 262699483136 bytes of a repeated two-line MARKER snippet; copies of Main's removal note and the first 4096 bytes: `.ufo/waves/round-27/a3/mistake-runaway/` | none — the wave contexts capped processes, memory and wall time, never file size, and never forbade a MARKER or log path that is also the fixture | every round-27 wave context requires `ulimit -f` on fixture-writing commands and a MARKER file separate from any file Python imports; shown able to fail by the wave seat ExecFixtureBoundDemo (§Fix receipt) |
+`````

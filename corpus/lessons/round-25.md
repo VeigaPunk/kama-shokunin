@@ -144,3 +144,27 @@ Correct attribution: the full-run receipt `final/c1/c1-tip-mutants.json` lists
 M17 and M20 as survivors; the SKILL registry row records the re-anchor and the
 second call site only. Draft and check: round-26 wave-1 scribe
 `.ufo/waves/round-26/w1-build/out/ScribeRoutedRepairs/Defect2-KQ36-and-lesson.md`.
+
+## Restored lines (round 52)
+
+Lines this file lost in place, re-appended verbatim in round 52 (claim C2): the file is declared append-only with corrections appended (`registry/append-only-contract.tsv`), and `tools/append-only-audit.py` v6 graded each line below as deleted and no longer held (round-51 rows of `registry/append-only-disclosures.tsv`). They are historical bytes, kept so that no declared line is lost; where this file's later text replaced them, the later text stands. One fenced block per deleting commit, in history order.
+
+Deleted by `c0a9b029c035` (round-25: falsify-wave corrections in progress: entry scope (K7 fit exception, shared-pool wording, endpoints, environment flags), SKILL rows, C1 axis-fit correction, lesson rows, late wave-1 advice):
+
+`````text
+| false timestamp repeated | amendment 2 `written_utc` 09:30Z is later than its commit (09:28:44Z); the same class amendment 1 corrected | CriticC2SizingA2 | erratum in amendment 4; later amendments name the observed `date -u` output and defer to the commit time |
+Axis fit is contested. The critic seat CriticC1Calibration holds that the
+command counts instrument-to-auditor anchor mismatches, not SCORECARD or
+SHONEN self-assessment mismatches, and that SCORECARD line 1166 is a
+historical round-23 measurement. Its correction text is filed verbatim in
+SCORECARD §Round 25. The author does not relabel the axis after landing; the
+closure decides. The before command stops on reaching M11, after earlier
+mutants have run, and emits no JSON; it does not abort before any mutant.
+`````
+
+Deleted by `a46a61815f79` (round-25: falsify-wave errata, entry fit-condition and log attribution fixes, lesson gate and credit fixes, falsify-wave advice received so far):
+
+`````text
+| S108 | https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server.cpp | lines 172-173: "params.n_parallel = 4; params.kv_unified = true;" and line 184: "params.n_ctx = params.n_parallel * params.kv_unified_per_slot;" |
+| chronology: an amendment written after the receipt it governs | amendment 3 was committed (c808ba07) after the first receipt (5ea4fc44) | the author, on reading CriticC2SizingA2 | amendment 4 (46fb04bd) was committed before the receipt was re-run (5c95c8f1); the earlier receipt stays in history |
+`````

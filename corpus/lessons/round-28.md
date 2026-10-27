@@ -196,3 +196,23 @@ source-blind controls (README and names only) reached 14 (A0) and 11 (A1).
 | Gate-registry check is occurrence-only (ReviewGateRegistryCheck) | **admit** | stated in the registry row and the mistake row |
 | Echo-recheck write scope and counter exit 1 path (ReviewInstrumentRegistry) | **admit** | registry rows corrected |
 | Mistake row fixes lacked committed receipts (ReviewLessonMistakes) | **admit** | `final/quote-check.out`, `final/r27-8057282c-stat.out` |
+
+## Restored lines (round 52)
+
+Lines this file lost in place, re-appended verbatim in round 52 (claim C2): the file is declared append-only with corrections appended (`registry/append-only-contract.tsv`), and `tools/append-only-audit.py` v6 graded each line below as deleted and no longer held (round-51 rows of `registry/append-only-disclosures.tsv`). They are historical bytes, kept so that no declared line is lost; where this file's later text replaced them, the later text stands. One fenced block per deleting commit, in history order.
+
+Deleted by `9ce5bd377562` (round-28: wave-2 falsify evidence, meaning-cell corrections, final receipts, SCORECARD/LOG/README/PROVINCE round-28 sections, lesson):
+
+`````text
+4. Amendment A1 (`75b78bb4`, before any data row was committed or scored):
+| 3 | round-27 counter not registered | repaired: SKILL.md registry rows retire `.ufo/waves/round-27/count-c1.py` and register this round's counter, `tools/gate-registry-check.py` and `tools/echo-recheck.py`; the check itself is the mined-mistake fix below | SKILL.md `## Local gate/probe registry — round-28 rows` |
+| 7 | round-27 report imprecisions | corrected here and in the round-28 report: the residual call spawned at 07:23:39Z (`.ufo/waves/round-27/residual/spawn-result.txt`), and `8057282c` also added `census-final.out` and `sources-append-only-final.out` | `git show --stat 8057282c` |
+`````
+
+Deleted by `c23ebaa4883a` (round-28: residual review evidence and corrections (prose, digest, lesson attribution, LOG counts), final census):
+
+`````text
+2. Pre-freeze control call (10 seats, 08:14Z): `5ebe7b1b`
+3. Wave 1 (32 seats, 08:31-08:34Z): 17 data seats measured every declared
+| Meaning-cell defects F28-03/04/05/07/08/09/11/14/16/17/19/20/21/22/25/27/33/34 and two intro/no-row sentences (RowReview04/06/09/10/11/13/17, CriticDepthAxisPostData, ReviewSkillSectionIntro, ScoutSkillContradictions) | **admit** | corrected in SKILL.md; counted cells unchanged |
+`````

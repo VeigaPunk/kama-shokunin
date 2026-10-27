@@ -118,3 +118,23 @@ The package-byte digest cited in the R36-D2C paragraph above was abbreviated as 
 ### Round-41 correction pointer (append-only; round-40 closure defect D3)
 
 The S472 Admit paragraph above cites the evidence digest `5585f602f71c4d4fa5a20125b2b8e4a1132a2d41abf511d7ef09c43a91d950f2`. That digest is wrong. The committed evidence file `.ufo/waves/round-38/assimilation/exec-tag-inventory/ls-remote-tags.txt` hashes to `5585f6027df2dbc4dbafd4979b61c218ffd94e8af99936733218e0ae989e50f2`, and a fresh run on 2026-10-25T20:03:22Z reproduced that value (`.ufo/waves/round-41/c2/ls-remote-sglang.txt`). The correcting row is S474 (`corpus/SOURCES.md`). The correction section is `## Correction — round 40` in `corpus/knowledge/sglang-docs-version-pinning-amendment-2026-10-23.md`. S472 and the paragraph above stay as filed.
+
+## Restored lines (round 52)
+
+Lines this file lost in place, re-appended verbatim in round 52 (claim C2): the file is declared append-only with corrections appended (`registry/append-only-contract.tsv`), and `tools/append-only-audit.py` v6 graded each line below as deleted and no longer held (round-51 rows of `registry/append-only-disclosures.tsv`). They are historical bytes, kept so that no declared line is lost; where this file's later text replaced them, the later text stands. One fenced block per deleting commit, in history order.
+
+Deleted by `d854475aecc1` (round-38: single-line R36-D2C corrections row (C1 counter scans lines carrying the id)):
+
+`````text
+R36-D2C: The round-36 Gate's byte-copy reject paragraph
+(`corpus/lessons/round-36.md:43`, the staged `endpoint-health-probe-conventions.md`
+reject) gives a four-id range as the staged rows that entry cites. That range
+is wrong: the five staged rows citing that entry are S332, S336, S337, S338
+and S339, at `/home/vgpnk/Projects/shokuknow/merge/kama/SOURCES.append.md`
+lines 9, 13, 14, 15 and 16 (vLLM Engine Arguments; SGLang in llm-d; Docker
+Compose file reference; Dockerfile reference; Prometheus blackbox_exporter
+README), and the staged entry's own source: lines 6–10 cite exactly those five.
+The reject decision stands; only the id set is corrected, and the wrong ids are
+absent from this row. Package bytes read at write time: SOURCES.append.md sha256
+`3ad0df68e8423a3b1b99d4e3b8d8c6271f7a4f4c96d3a5ad4e0a85a991ce234ff`.
+`````
