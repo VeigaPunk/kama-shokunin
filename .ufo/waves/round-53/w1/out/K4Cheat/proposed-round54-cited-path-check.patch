@@ -1,0 +1,88 @@
+--- a/tools/round53-cited-path-check.py
++++ b/tools/round53-cited-path-check.py
+@@ round-54 advisory patch (NOT applied; the round-53 counter is frozen).
+@@ K4Cheat seat findings a2, a5a, X. Three independent hunks; each is optional.
+@@ Rationale in .ufo/waves/round-53/w1/out/K4Cheat.md.
++
++1) X: scope history legs to commits reachable from BASE or the measured tip, so a
++     clone's unrelated fixture branches (or future lane refs) cannot flip `never`
++     rows bad or retarget `moved`'s "last commit". Fallback keeps --all for repos
++     that do not contain BASE (the counter's own scratch fixtures).
++
+-def history_paths(repo):
+-    out = git(repo, "log", "--all", "--name-only", "--format=", "-z").stdout.decode("utf-8", "replace")
++def history_paths(repo, *tips):
++    have = all(git(repo, "cat-file", "-e", f"{t}^{{commit}}", check=False).returncode == 0
++               for t in tips)
++    out = git(repo, "log", *(tips if have and tips else ("--all",)),
++              "--name-only", "--format=", "-z").stdout.decode("utf-8", "replace")
+     return set(p.strip("\n") for p in out.split("\0") if p.strip("\n"))
+@@
+-    def hist(self):
+-        if self._hist is None:
+-            self._hist = history_paths(self.path)
+-        return self._hist
++    def hist(self):
++        if self._hist is None:
++            self._hist = history_paths(self.path, BASE, self.rev)
++        return self._hist
+@@
+-        last = git(lane.path, "log", "--all", "-1", "--format=%H", "--", e).stdout.decode().strip()
++        last = git(lane.path, "log", BASE, lane.rev, "-1", "--format=%H", "--", e).stdout.decode().strip()
++
++2) a5a: guard evidence-pointer drops on all three self-assessment surfaces, not
++     only SCORECARD.md (keep the frozen `dropped` leg byte-identical; add the
++     other two as a separate advisory count so met semantics do not change).
++
+@@ evaluate()
+-    dropped = []
++    dropped, dropped_x = [], []
+     if base_lane is not None:
+-        bt = show(base_lane.path, base_lane.rev, "SCORECARD.md") or ""
+-        tt = show(lane.path, lane.rev, "SCORECARD.md") or ""
+-        bset = {tok for _n, tok, *_r in citations(bt)}
+-        tset = {tok for _n, tok, *_r in citations(tt)}
+-        dropped = sorted(bset - tset)
++        for surf in ("SCORECARD.md", "SHONEN.md", "SKILL.md"):
++            bt = show(base_lane.path, base_lane.rev, surf) or ""
++            tt = show(lane.path, lane.rev, surf) or ""
++            bset = {tok for _n, tok, *_r in citations(bt)}
++            tset = {tok for _n, tok, *_r in citations(tt)}
++            (dropped if surf == "SCORECARD.md" else dropped_x).extend(sorted(bset - tset))
+@@
+-        for t in dropped:
++        for t in dropped_x:
++            detail.append(f"dropped {t.split(None,0) and ''}SHONEN/SKILL.md citation `{t}` (cited at base, not at tip)")
++        for t in dropped:
+             detail.append(f"dropped SCORECARD.md citation `{t}` (cited at base, not at tip)")
++
++3) a2: surface prose-shaped lane/fleet-root tokens as advisory detail lines.
++     They are not added to `cited`/met (that would change the frozen predicate);
++     they only make prose evidence claims visible to a reviewer.
++
+@@ citations(text)
++def prose_paths(text):
++    """[(line_no, token)] lane/fleet-root path tokens NOT inside backticks (advisory)."""
++    out = []
++    plain = re.sub(r"`[^`\n]+`", "", text)          # drop backtick spans
++    plain = "\n".join(l for l in plain.split("\n") if not l.strip().startswith("```"))
++    for n, line in enumerate(plain.split("\n"), 1):
++        for tok in re.findall(r"(?:[\w.-]+/)+[\w.…-]+", line):
++            if any(c in tok for c in BAD_CHARS):
++                continue
++            if tok.startswith(LANE_ROOTS) or tok.startswith(FLEET_ROOTS) or tok in TOP:
++                out.append((n, tok))
++    return out
++
+@@ survey()
+     for surf in SURFACES:
+         text = show(lane.path, lane.rev, surf)
+         cited[surf] = {}
+         unres[surf] = {}
+         if text is None:
+             continue
++        for n, tok in prose_paths(text):
++            if not matches(tok.split("#", 1)[0], lane.tree) and not (
++                    fleet is not None and matches(tok.split("#", 1)[0], fleet.tree)):
++                detail.append(f"advisory: {surf}:{n} prose-cites missing path {tok}")
+         for _n, tok, core, lo, hi in citations(text):

@@ -755,6 +755,39 @@ def _selftest(root):
                                                                          "build/bin/libggml-base.so.0"]
                       and res["own_code"].get("host") == ["/usr/lib/libc.so.6"],
                       f"exit={code} own_code={res.get('own_code')} mism={res['mismatches']}"))
+        # round 53 (X5Selftest survivors c and d): verify_code's refusals called directly,
+        # so each rule is exercised alone instead of as a side effect of another entry
+        import io
+        oc, probs = verify_code({"read": True, "mappings": [
+            {"path": "/usr/lib/libc.so.6", "dev": "00:1e", "inode": "1", "opened": True,
+             "uid": 0, "sha256": "0" * 64}]}, arc, os.path.join(d, "no-tree"))
+        cases.append(("code-hostonly-no-library",
+                      "code-mapping:no-archive-library" in probs
+                      and "code-mapping:required-absent:libggml-base.so*" in probs
+                      and oc == {"verified": False, "members": {}, "host": ["/usr/lib/libc.so.6"]},
+                      f"own_code={oc} probs={probs}"))
+        hard = os.path.join(d, "hard.tar.gz")
+        payload = b"\x7fELF hardlinked payload " + os.urandom(16)
+        with tarfile.open(hard, "w:gz") as tf:
+            reg = tarfile.TarInfo("build/bin/libpayload.so")
+            reg.size = len(payload)
+            tf.addfile(reg, io.BytesIO(payload))
+            link = tarfile.TarInfo("build/bin/libhard.so")
+            link.type = tarfile.LNKTYPE
+            link.linkname = "build/bin/libpayload.so"
+            tf.addfile(link)
+        htree = os.path.realpath(os.path.join(d, "hard-tree"))
+        os.makedirs(os.path.join(htree, "build", "bin"))
+        hpath = os.path.join(htree, "build", "bin", "libhard.so")
+        with open(hpath, "wb") as fh:
+            fh.write(payload)
+        oc, probs = verify_code({"read": True, "mappings": [
+            {"path": hpath, "dev": "00:01", "inode": "1", "opened": True, "uid": 1000,
+             "sha256": hashlib.sha256(payload).hexdigest()}]}, hard, htree)
+        cases.append(("code-non-regular-member",
+                      "code-mapping:not-a-member:build/bin/libhard.so" in probs
+                      and "build/bin/libhard.so" not in oc["members"],
+                      f"own_code={oc} probs={probs}"))
         # the sealed memfd is filled from the archive's member stream, not from the path
         fd, ident = sealed_member(arc, "build/bin/llama-server", ssha)
         try:

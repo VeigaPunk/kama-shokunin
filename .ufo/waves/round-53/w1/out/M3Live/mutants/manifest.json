@@ -1,0 +1,154 @@
+{
+  "pristine_sha256": "82b253e58ae75457b3dc81e6a7450510a50f815e3503bc6a2b61b7d1342b349d",
+  "pristine": "/fast/scratch/hyaku/kama-r53/M3Live/live/tools/kama-llamacpp-live.py",
+  "mutants": {
+    "M01-perm-filter-drop": {
+      "file": "/fast/scratch/hyaku/kama-r53/M3Live/mutants/M01-perm-filter-drop.py",
+      "sha256": "f44b6a770820718e4900af14bb301d194f3839fe2af99ee6fbb6319015a6171e",
+      "edits": [
+        {
+          "old": "if (len(f) < 6 or 'x' not in f[1] or not f[5].startswith('/')",
+          "new": "if (len(f) < 6 or not f[5].startswith('/')",
+          "count": 1
+        }
+      ]
+    },
+    "M02-slash-prefix-drop": {
+      "file": "/fast/scratch/hyaku/kama-r53/M3Live/mutants/M02-slash-prefix-drop.py",
+      "sha256": "5bc33c1e0cb59ebd155136a430fef1bc4de1c96505fb1e0a8b8e75bf577cba51",
+      "edits": [
+        {
+          "old": "'x' not in f[1] or not f[5].startswith('/')",
+          "new": "'x' not in f[1]",
+          "count": 1
+        }
+      ]
+    },
+    "M03-memfd-skip-drop": {
+      "file": "/fast/scratch/hyaku/kama-r53/M3Live/mutants/M03-memfd-skip-drop.py",
+      "sha256": "7d3eab396bb09f611dbc632f1285a325e565ebf072f60ed69845f1538f5786e5",
+      "edits": [
+        {
+          "old": "or f[5].startswith('/memfd:') or (f[5], f[3], f[4]) in seen",
+          "new": "or (f[5], f[3], f[4]) in seen",
+          "count": 1
+        }
+      ]
+    },
+    "M04-dedupe-key-path-only": {
+      "file": "/fast/scratch/hyaku/kama-r53/M3Live/mutants/M04-dedupe-key-path-only.py",
+      "sha256": "66d4c47c057671c1a4be2af56477c2cb18cb687b79914e14d6456eecfceff7aa",
+      "edits": [
+        {
+          "old": "(f[5], f[3], f[4]) in seen",
+          "new": "f[5] in seen",
+          "count": 1
+        },
+        {
+          "old": "seen.add((f[5], f[3], f[4]))",
+          "new": "seen.add(f[5])",
+          "count": 1
+        }
+      ]
+    },
+    "M05-deleted-guard-drop": {
+      "file": "/fast/scratch/hyaku/kama-r53/M3Live/mutants/M05-deleted-guard-drop.py",
+      "sha256": "1f09aac14e7c53ad49e4deaf1e5678402423e06cf27c0789c757fa6a3e3deb43",
+      "edits": [
+        {
+          "old": "        if path.endswith(' (deleted)'):\n            # the mapped file has no dir",
+          "new": "",
+          "count": 1
+        }
+      ]
+    },
+    "M06-inode-compare-drop": {
+      "file": "/fast/scratch/hyaku/kama-r53/M3Live/mutants/M06-inode-compare-drop.py",
+      "sha256": "2be71960e4a26be42762324c84c8eb9d05de5de2d15a6f2ea6ea6e7305eaa18b",
+      "edits": [
+        {
+          "old": "if (not stat.S_ISREG(st.st_mode) or str(st.st_ino) != ino",
+          "new": "if (not stat.S_ISREG(st.st_mode)",
+          "count": 1
+        }
+      ]
+    },
+    "M07-dev-compare-drop-all-uid": {
+      "file": "/fast/scratch/hyaku/kama-r53/M3Live/mutants/M07-dev-compare-drop-all-uid.py",
+      "sha256": "16aac938db375a3bc11ba5dc5ad051c063aaf88cb485eaefff68a7f8204acf85",
+      "edits": [
+        {
+          "old": "or (sdev != dev and st.st_uid != 0)):",
+          "new": "):",
+          "count": 1
+        }
+      ]
+    },
+    "M08-read-loop-while-false": {
+      "file": "/fast/scratch/hyaku/kama-r53/M3Live/mutants/M08-read-loop-while-false.py",
+      "sha256": "2f42cd600c6dc00908ed116db303bbbdb92957a8f3f4c4adea103028cb6490df",
+      "edits": [
+        {
+          "old": "st_size\n            while left > 0:",
+          "new": "st_size\n            while False:",
+          "count": 1
+        }
+      ]
+    },
+    "M09-shrink-check-dead": {
+      "file": "/fast/scratch/hyaku/kama-r53/M3Live/mutants/M09-shrink-check-dead.py",
+      "sha256": "65cf2c87278739a9e4e8d0df084ae4f4bcd43b67608244eff78528acf8125d99",
+      "edits": [
+        {
+          "old": "            if left != 0:",
+          "new": "            if left < 0:",
+          "count": 1
+        }
+      ]
+    },
+    "M10-opened-flag-drop": {
+      "file": "/fast/scratch/hyaku/kama-r53/M3Live/mutants/M10-opened-flag-drop.py",
+      "sha256": "2055c7674d1c3f13e8cb28cd95a254ddddf9de429dedabea80f892ee2e5b7d63",
+      "edits": [
+        {
+          "old": "out.append({**ent, 'opened': True, 'size': st.st_size, 'uid': st.st_uid,",
+          "new": "out.append({**ent, 'size': st.st_size, 'uid': st.st_uid,",
+          "count": 1
+        }
+      ]
+    },
+    "M13-chunk-break-drop": {
+      "file": "/fast/scratch/hyaku/kama-r53/M3Live/mutants/M13-chunk-break-drop.py",
+      "sha256": "16e5dad263cc8b01995a4ec90cf5bceba35b06d447a58f1fbfc61d89eca4e504",
+      "edits": [
+        {
+          "old": "                chunk = os.read(fd, min(1 << 20, left))\n                if not c",
+          "new": "                chunk = os.read(fd, min(1 << 20, left))\n                h.update",
+          "count": 1
+        }
+      ]
+    },
+    "M11-wiring-empty-mappings": {
+      "file": "/fast/scratch/hyaku/kama-r53/M3Live/mutants/M11-wiring-empty-mappings.py",
+      "sha256": "900fb975a2a6384c4521d3c0561540050cf016fc8296a4fee56022f09122215d",
+      "edits": [
+        {
+          "old": "receipt['code_mappings'] = code_mappings(proc.pid)",
+          "new": "receipt['code_mappings'] = {'read': True, 'mappings': []}",
+          "count": 1
+        }
+      ]
+    },
+    "M12-wiring-key-rename": {
+      "file": "/fast/scratch/hyaku/kama-r53/M3Live/mutants/M12-wiring-key-rename.py",
+      "sha256": "d93794d032d50af4a0c3dd41fe30ee354314d2618a988b09461ee92b3f2244e9",
+      "edits": [
+        {
+          "old": "receipt['code_mappings']",
+          "new": "receipt['code_map']",
+          "count": 2
+        }
+      ]
+    }
+  }
+}
