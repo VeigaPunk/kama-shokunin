@@ -12,7 +12,10 @@ digest is.
     digest-ledger.py selftest
 
 Documents scanned: tracked files at REV (or regular files under DIR) whose name
-ends .md or .tsv, except paths under .ufo/ and registry/digest-ledger.tsv itself.
+ends .md or .tsv, except paths under .ufo/, registry/digest-ledger.tsv itself and
+registry/append-only-disclosures.tsv (round 51: its line_sha256 column holds sha256 keys of
+deleted lines, not artifact digests; append-only-audit v6 re-derives every one of them from
+git history and exits 1 on a row that names no such line).
 A token is a 64-character lower-case hex run not adjacent to another hex
 character. The blob set is the SHA-256 of every blob reachable from REV (git
 mode) or of every regular file under DIR.
@@ -67,13 +70,15 @@ import threading
 TOKEN = re.compile(r"(?<![0-9a-fA-F])[0-9a-f]{64}(?![0-9a-fA-F])")
 MAX_EXTERNAL = 256 * 1024 * 1024
 LEDGER = "registry/digest-ledger.tsv"
+DISCLOSURES = "registry/append-only-disclosures.tsv"
 HEADER = "digest\tclass\tsubject\tpath\tcorrect\tverified-at\tnote"
 KEYS = ("tokens", "blob", "external_ok", "external_absent", "unverifiable", "wrong_flagged",
         "ledger_bad", "wrong_unflagged", "unknown")
 
 
 def is_doc(rel: str) -> bool:
-    return not rel.startswith(".ufo/") and rel != LEDGER and rel.endswith((".md", ".tsv"))
+    return (not rel.startswith(".ufo/") and rel not in (LEDGER, DISCLOSURES)
+            and rel.endswith((".md", ".tsv")))
 
 
 def parse_ledger(text: str) -> dict:
@@ -348,8 +353,11 @@ def selftest() -> int:
         os.makedirs(os.path.join(d, ".ufo"))
         with open(os.path.join(d, ".ufo", "x.md"), "w") as f:
             f.write("ef" * 32 + "\n")
+        # round 51: the append-only disclosure ledger holds line keys, not artifact digests
+        with open(os.path.join(d, "registry", "append-only-disclosures.tsv"), "w") as f:
+            f.write("commit\tfile\tline_sha256\tcount\tclass\tnote\n" + "a" * 40 + "\tL.md\t" + "e1" * 32 + "\t1\tremoval\tx\n")
         tok, _, _, _ = scan_dir(d, None)
-        if "ef" * 32 in tok or tok != {good, wrong, unk, ext}:
+        if "ef" * 32 in tok or "e1" * 32 in tok or tok != {good, wrong, unk, ext}:
             bad += 1
             print("selftest FAIL: scope (.ufo/ or ledger file leaked into tokens)", file=sys.stderr)
         else:
