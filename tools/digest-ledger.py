@@ -362,6 +362,20 @@ def selftest() -> int:
             print("selftest FAIL: scope (.ufo/ or ledger file leaked into tokens)", file=sys.stderr)
         else:
             ok += 1
+        # round-51 seat M5Digest: the exclusions are exactly three; every other .md/.tsv is in
+        # scope (lesson files, other registry TSVs, a `.ufo`-prefixed sibling, a case variant)
+        inscope = {"corpus/lessons/x.md": "f0", "registry/other.tsv": "f1", ".ufox/y.md": "f2",
+                   "registry/Append-Only-Disclosures.tsv": "f3"}
+        for rel, pair in inscope.items():
+            os.makedirs(os.path.join(d, os.path.dirname(rel)), exist_ok=True)
+            with open(os.path.join(d, rel), "w") as f:
+                f.write(pair * 32 + "\n")
+        tok, _, _, _ = scan_dir(d, None)
+        if not all(pair * 32 in tok for pair in inscope.values()):
+            bad += 1
+            print("selftest FAIL: scope (an in-scope document was not scanned)", file=sys.stderr)
+        else:
+            ok += 1
     print(f"selftest pass={ok} fail={bad}")
     return 0 if bad == 0 else 1
 

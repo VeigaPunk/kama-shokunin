@@ -754,6 +754,10 @@ def server_exe(pid):
             left -= len(chunk)
         if left != 0:
             return {'opened': False, 'reason': 'exe-shrank-while-hashed', 'path': path}
+    except OSError as exc:
+        # round-51 seat V2Review: a read error is recorded, never raised past the docstring
+        return {'opened': False, 'reason': 'exe-read-failed:' + (exc.strerror or type(exc).__name__),
+                'path': path}
     finally:
         os.close(fd)
     return {'opened': True, 'path': path,
