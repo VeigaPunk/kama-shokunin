@@ -1,0 +1,34 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -1627,11 +1627,31 @@
+             raise AssertionError(f'pinned-url rule wrong for {url}')
+ 
+ 
++def _server_exe_selftest():
++    """Round 52 (seat M3Live mutation probe): server_exe() must report what the
++    running image IS - a plain path-backed image is not a sealed memfd, so its
++    seals are None (F_GET_SEALS is EINVAL) and nlink is the real link count."""
++    child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(20)'])
++    try:
++        time.sleep(0.3)
++        info = server_exe(child.pid)
++    finally:
++        child.kill()
++        child.wait()
++    if not info.get('opened'):
++        raise AssertionError(f'server_exe could not open a plain child image: {info}')
++    if info.get('seals') is not None:
++        raise AssertionError(f'server_exe recorded seals on a plain image: {info}')
++    if not info.get('nlink'):
++        raise AssertionError(f'server_exe recorded nlink 0 on a path-backed image: {info}')
++
++
+ def _selftest():
+     """Exercise procfs parsing, live tcp6 ownership rows, v3 verdicts, install
+     identity and v5 record-time provenance."""
+     _install_identity_selftest()
+     _provenance_selftest()
++    _server_exe_selftest()
+     port = 0x1234
+     tcp6_rows = (
+         ('00000000000000000000000001000000', True),
