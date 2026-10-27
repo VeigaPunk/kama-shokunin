@@ -264,3 +264,22 @@ round-55 measurements.
   `.ufo/waves/round-55/c1/battery/first-composition/`. They document the original
   measurement but do not change the fact that the files were absent at the final
   round-55 tip.
+
+## Append-only preservation — round-56 appendix-edit bytes
+
+These intermediate byte strings were removed while correcting the recovery appendix; they are historical text, not present-tense assertions.
+
+```text
+ - After (round end): same command → exit 0 required (receipt `.ufo/waves/round-55/census/end.out`).
+ - `considerthese/2026-10-26.md` proposal 2 (track proposal dispositions) — landed
+   round 54 as `corpus/QUALITY.md` KQ97; this lesson is the first row under it.
+ - Proposal 1 (flag append-only deletions the morning after) — pending; no lane
+   instrument exists for it; the daily reflection owns it.
+ - Proposal 3 (a running count of counters a shortcut can satisfy) — partially served
+   by this round's battery receipts (each names its killed leg); a standing tally is
+   still pending, not deferred silently.
+ - Proposal 4 (daily pin-gap line) — pending; `tools/pin-watch.py` exists since round
+   41; the daily reflection owns running it.
+  41; the daily reflection owns it.
+```
+

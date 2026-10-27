@@ -36,3 +36,13 @@ The claims are causally separable: C1 invokes only the selected counter's `env_l
 ## Assimilation and consideration
 
 Assimilation: none. `considerthese/2026-10-26.md` proposal 4 (daily pin-gap line) remains pending; round 56 did not implement it because the claims are the two frozen counter/control moves and the daily reflection output remains unimplemented. No proposal was edited.
+
+## Appendix — pre-integration census wording preserved
+
+The following two lines were replaced when the final census receipts were recorded; retained verbatim as historical bytes.
+
+```text
+- Before: `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama` → exit 0; full output `.ufo/waves/round-56/census/start.out` (standing W01/W04 warnings).
+- After: same command; final output and exit code are recorded in `.ufo/waves/round-56/census/end.out` and this section is finalized after the end-of-round run.
+```
+

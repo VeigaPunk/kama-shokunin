@@ -3154,3 +3154,12 @@ grades that preamble line; the round-56 authority above supersedes it.
 ```text
 **Current authority (round 55):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 55. Calibration 7 is the lowest assigned axis, below operability 8, and below the saturation line, so the stagnation nudge is inactive. Round 55 froze and measured the two round-54 counters (C1 operability, C2 calibration) with red base controls committed before data (SCORECARD §Round 55); the C1 kill rule fired on its literal text and is reported for the closure to rule. No axis score or capability changes. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived from the tree by `tools/round42-selfdesc-reconcile.py` (round-42 claim C1) and kept current through round 55; the round-53 banner and the head sections it replaces are kept verbatim under §Historical head sections.
 ```
+
+## Historical pre-integration authority text — round 56
+
+The exact former current-authority line is retained here; the live authority above supersedes it.
+
+```text
+**Current authority (round 56):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 56. Calibration 7 is the lowest assigned axis, below operability 8 and the saturation line, so the stagnation nudge is inactive. Round 56 froze and measured C1 (LD_AUDIT environment-name rejection, operability) and C2 (preregistration/battery roster fidelity, calibration) with red base controls committed before data (SCORECARD §Round 56). Scores remain operability 8 and calibration 7; no capability enters. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived from the tree by `tools/round42-selfdesc-reconcile.py` (round-42 claim C1) and kept current through round 56; the round-55 authority is kept under §Historical head sections.
+```
+
