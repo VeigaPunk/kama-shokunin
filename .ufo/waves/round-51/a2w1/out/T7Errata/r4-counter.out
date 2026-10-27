@@ -1,0 +1,112 @@
+# evidence r4-counter (round-51 errata seat T7Errata)
+$ sed -n '27p' /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-50.md
+- **Reject a maps inode without the file hash.** A host copy of the model path would match the inode but not `MODEL_SHA`; the counter re-opens the pathname O_NOFOLLOW, fstat-checks dev/inode, then hashes. Flip: never.
+
+$ grep -n 'O_NOFOLLOW\|fstat' /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-replay-bind-audit.py   (no output = neither token in the counter)
+grep exit=1
+
+$ sed -n '129,137p;309,340p' /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-replay-bind-audit.py
+def sha_file(path):
+    h = hashlib.sha256()
+    try:
+        with open(path, "rb") as fh:
+            for chunk in iter(lambda: fh.read(1 << 20), b""):
+                h.update(chunk)
+    except (OSError, TypeError):
+        return None
+    return h.hexdigest()
+---
+def mapped_model(pid, probs):
+    """(dev, inode) of a file-backed mapping of pid whose pathname, stat()ed now, is the
+    same file and hashes to the frozen model; None (problem appended) otherwise."""
+    try:
+        with open(f"/proc/{pid}/maps") as fh:
+            rows = fh.read().splitlines()
+    except OSError as exc:
+        probs.append(f"maps unreadable: {exc}")
+        return None
+    seen, cands = set(), []
+    for row in rows:
+        f = row.split(None, 5)
+        if len(f) < 6 or f[4] == "0" or not f[5].startswith("/"):
+            continue
+        key = (f[3], f[4], f[5])
+        if key in seen:
+            continue
+        seen.add(key)
+        cands.append(key)
+    for dev, ino, path in cands:
+        try:
+            st = os.stat(path)
+        except OSError:
+            continue
+        if f"{os.major(st.st_dev):02x}:{os.minor(st.st_dev):02x}" != dev or str(st.st_ino) != ino:
+            continue
+        if st.st_size < 1024 or st.st_size > 64 << 20:
+            continue
+        if sha_file(path) == MODEL_SHA:
+            return dev, ino
+    probs.append(f"no mapping of pid {pid} is a file hashing to the frozen model ({len(cands)} file mappings)")
+    return None
+
+$ sed -n '678,746p' /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-llamacpp-live.py   (where O_NOFOLLOW+fstat actually are)
+def model_mapping(pid, model_path):
+    """Round 50 (round-49 closure R1, seats K1Design, R0Controls: the model bytes the server
+    loaded were not bound): the file-backed mapping of the server child whose pathname is
+    the --model file, read from /proc/<pid>/maps (proc_pid_maps(5): `dev` major:minor,
+    `inode`, `pathname`), and the sha256 of that same file - opened by its pathname with
+    O_NOFOLLOW, accepted only when fstat() shows the dev and inode the maps line shows,
+    a regular file no larger than when it was mapped - so the receipt records the bytes
+    the running server maps, not a path the tool was handed. Linux only; any other
+    outcome is recorded as `mapped: False` with its reason, never guessed."""
+    want = os.path.realpath(model_path)
+    try:
+        with open(f'/proc/{pid}/maps') as fh:
+            rows = fh.read().splitlines()
+    if len(hits) != 1:
+        return {'mapped': False, 'reason': 'model-path-maps-several-files', 'path': want}
+    dev, ino = hits[0]
+    try:
+        fd = os.open(want, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError as exc:
+        return {'mapped': False, 'reason': 'model-open-failed:' + (exc.strerror or type(exc).__name__),
+                'path': want, 'dev': dev, 'inode': ino}
+    try:
+        st = os.fstat(fd)
+        sdev = '%02x:%02x' % (os.major(st.st_dev), os.minor(st.st_dev))
+        if not stat.S_ISREG(st.st_mode) or sdev != dev or str(st.st_ino) != ino:
+            return {'mapped': False, 'reason': 'mapped-file-is-not-the-model-path', 'path': want,
+                    'dev': dev, 'inode': ino, 'path_dev': sdev, 'path_inode': str(st.st_ino)}
+        h, left = hashlib.sha256(), st.st_size
+        while left > 0:
+            chunk = os.read(fd, min(1 << 20, left))
+            if not chunk:
+                break
+            h.update(chunk)
+            left -= len(chunk)
+        if left != 0:
+            return {'mapped': False, 'reason': 'model-shrank-while-hashed', 'path': want,
+                    'dev': dev, 'inode': ino}
+    finally:
+        os.close(fd)
+    return {'mapped': True, 'path': want, 'dev': dev, 'inode': ino, 'size': st.st_size,
+            'sha256': h.hexdigest()}
+
+
+def server_exe(pid):
+    """Round 51 (round-50 closure R6, seat J4Decoy: a decoy replay that exec'd the host's own
+    b11909 install met the round-50 counter): the executable the server child is running,
+    opened through /proc/<pid>/exe - proc_pid_exe(5): "attempting to open it will open the
+    executable" - so the dev and inode fstat() shows and the sha256 of the bytes read are
+    the running image itself, not a path the tool was handed and not whatever sits at that
+    path now. `path` is the readlink(2) text (it ends in " (deleted)" when the file was
+    unlinked). Linux only; any other outcome is `opened: False` with its reason."""
+    link = f'/proc/{pid}/exe'
+    try:
+        path = os.readlink(link)
+        fd = os.open(link, os.O_RDONLY)
+    except OSError as exc:
+        return {'opened': False, 'reason': 'exe-unreadable:' + (exc.strerror or type(exc).__name__)}
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode):

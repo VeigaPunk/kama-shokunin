@@ -1,0 +1,25 @@
+VERDICT: C2 is a valid calibration count of the contract-declared history-to-tip mismatches, but “lost lines 142 → 0” is not a count of all append-only mismatches and is dangerously easy to read as one.
+
+Axes: calibration (primary); depth (scope/interpretation).
+
+## What C2 actually compares
+
+`tools/round51-append-audit-v6-check.py:4-8,36-55` defines the self-assessment as the lane's declared append-only contract at the tip (`registry/append-only-contract.tsv`), including each row's path, declaration, and region. The source of observed history is the counter's topo-ordered commit walk / first-parent diffs and tip blobs, independently recomputed against the tool JSON (lines 39-47). For each whole-file (`*`) graded path, it counts deleted graded line keys not held at tip, then requires those missing keys and counts to match ledger disclosures. A-row permitted edits are explicitly not losses; region-scoped paths use a weaker membership constraint.
+
+Thus this is not a comparison of all prose in SKILL.md/SCORECARD.md/corpus/README.md to repository state, nor a machine evaluation of every sentence containing “append-only.” Contract rows are the operational self-assessment; history and current blob are the observed state. The 142 figure is the counter's “own lost lines in whole-file-graded files” at build, not a total across all regions or files; ledger has 166 disclosed lines because that total includes region-restricted events too (C2 build receipt lines 3, 16). At the measured build, lost=142 and disclosed=166 with lane=1; base control had lane=0, lost=0 because old v5 did not detect these losses (base C2 lines 15-18, 117). The exact calibrated signal is therefore closure of undisclosed whole-file losses, not elimination of historical deletions or proof every claim is true.
+
+## Claim inventory and truth status
+
+The requested search yields many historical and registry mentions; they are not all present-tense assertions. The material current assertions evidenced in the search are:
+
+- `corpus/README.md:759-771`: “Append-only self-description is now audited, not assumed” and the listed five files / mass-deletion behavior are an account of round-46 v1's limited instrument and measured result. Historically true as a description of that run; not an accurate description of the current v6 instrument if read as current policy, because the current contract has 11 rows and threshold 1, including lesson files, DELTA, errata and two knowledge-region rows (contract lines 2-11). The dated `4a2a4d55` result remains true historically. Its explicit “20-line threshold hides…” is now false as a description of current v6 default, but remains true about that old tool/version.
+- `SKILL.md:578` and `:614`: SOURCES append-only guard contract/behavior. These concern A-row source-row immutability, not whole-file deleted-line disclosure; the permitted status/recheck/used-by edits are explicitly part of C2's contract. They are consistent with current declaration and are not refuted by C2.
+- `SCORECARD.md:130` (search excerpt): defines append-only-audit as operating on the contract-declared paths/patterns and binding declarations; consistent with the notion of self-assessment, but its accuracy as a live tool description depends on its full text/version, not established solely by the excerpt. The round-51 tool is a checker, not proof the declarations cover every lane sentence.
+- `corpus/README.md:759-761` calls five paths the files treated as append-only. As a statement about the present contract, this is false/incomplete: the current contract contains 11 rows, including additional paths/regions. This is the clearest stale sentence to correct.
+- Other `append-only` matches in historical closures, registry rows, protocol records, and correction prose are dated claims about particular rounds/tools, not unqualified present-tense assertions. Do not label them false solely because v6 supersedes earlier versions.
+
+## Calibration boundary / correction
+
+“Undisclosed lost lines 142 -> 0 in whole-file-graded files” is indeed a count of a mismatch class: lines that the contract says must be retained (whole-file region) but are absent and not disclosed. It is not a direct count of inconsistency between every self-assessment sentence and observed repo state. The C2 predicate itself appropriately says “every graded line gone … restored or named” and qualifies exact recomputation for whole-file files; avoid broadening that result into “append-only compliance” without qualification. Smallest safe correction: revise current prose at `corpus/README.md:759-762` to name the current contract's 11 rows/regions and phrase the result as “no undisclosed graded line losses under the contract at the audited tip,” while retaining the round-46 statement as explicitly historical. No code or counter defect found from this framing review.
+
+Evidence used: read `tools/round51-append-audit-v6-check.py:4-55`; `registry/append-only-contract.tsv:1-11`; `.ufo/waves/round-51/measured/c2-build.out:3,16`; `.ufo/waves/round-51/controls/base.c2.out:15-18,117`. No counter or campaign was run by this seat.

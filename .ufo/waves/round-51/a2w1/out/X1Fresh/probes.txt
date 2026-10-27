@@ -1,0 +1,59 @@
+X1Fresh - observed probe transcripts (verbatim from the shell output of the sessions below)
+S=/fast/scratch/hyaku/kama-r51/X1Fresh ; TMPDIR=$S ; python3 3.14.8
+
+=== probe A: --witness-dir must exist (dirs NOT pre-created) ===
+$ python3 tools/kama-live-replay.py --receipt <receipt-2> --work $S/work2 --out $S/result2.json --witness-dir $S/wd2
+usage: kama-live-replay.py [-h] [--receipt RECEIPT] [--work WORK] [--out OUT]
+                           [--live LIVE] [--timeout TIMEOUT] [--compare A B]
+                           [--selftest] [--scratch SCRATCH]
+                           [--witness-dir WITNESS_DIR]
+                           [--witness-timeout WITNESS_TIMEOUT]
+kama-live-replay.py: error: --witness-dir must be an existing directory
+exit=2
+(work2 never appeared: the tool refused before creating it)
+
+=== probe B: release held 8 s ===
+$ python3 tools/kama-live-replay.py --receipt <receipt-2> --work $S/work2 --out $S/result2.json --witness-dir $S/wd2 &
+ready.json: {"schema": "kama-live-witness/v1", "port": 44449, "pid": 884974, "written_utc": "2026-10-27T03:49:09.480Z"}
+--- holding release 8s; result.json exists? no
+884494 /usr/bin/python3 -I .../tools/kama-llamacpp-live.py --server .../work2/server/llama-b11909/llama-server --model .../work2/download/stories260K.gguf ... --witness-dir .../wd2
+884974 .../work2/server/llama-b11909/llama-server -m .../work2/download/stories260K.gguf --alias kama-r48-live --host 127.0.0.1 --port 44449 -c 256 -t 1 --no-webui --offline
+--- after 8s: result2 exists? no; replay alive? yes
+released
+exit=0
+rerun witness: {"dir": ".../wd2", "orphaned": false, "pid": 884974, "port": 44449, "released": true, "schema": "kama-live-witness/v1", "waited_ms": 8175}
+rerun checks: 11/11 passed; result2 match=True mismatches=[]
+
+=== probe C: --out parent missing (--work absent too) ===
+$ python3 tools/kama-live-replay.py --receipt <receipt-2> --work $S/work3 --out $S/nodir3/result3.json --witness-dir $S/wd3
+-- work3 exists? yes          (the tool creates --work, line 291 os.makedirs(work, exist_ok=True))
+-- nodir3 exists? no
+ready.json {"schema": "kama-live-witness/v1", "port": 32999, "pid": 926835, "written_utc": "2026-10-27T03:50:07.987Z"}
+released
+Traceback (most recent call last):
+  File ".../tools/kama-live-replay.py", line 636, in <module>
+    sys.exit(main())
+  File ".../tools/kama-live-replay.py", line 629, in main
+    with open(a.out, "w") as fh:
+FileNotFoundError: [Errno 2] No such file or directory: '/fast/scratch/hyaku/kama-r51/X1Fresh/nodir3/result3.json'
+exit=1
+-- after: nodir3 exists? no
+(work3/rerun-receipt.json exists; python3 kama-live-replay.py --compare <receipt-2> $S/work3/rerun-receipt.json
+ -> "compare match=True mismatches=0", exit 0; so the replay had matched and still exited 1)
+
+=== probe D: --witness-timeout 2, release never created ===
+$ python3 tools/kama-live-replay.py --receipt <receipt-2> --work $S/work4 --out $S/result4.json --witness-dir $S/wd4 --witness-timeout 2
+replay match=True refused=None mismatches=0 exit=0
+exit=0 elapsed=5s
+wd4 after run: empty (ready.json removed)
+rerun witness: {"dir": ".../wd4", "orphaned": false, "pid": 958666, "port": 44635, "released": false, "schema": "kama-live-witness/v1", "waited_ms": 2012}
+teardown: returncode=0 port_refuses=True
+
+=== probe E: --help (the module docstring body does not state the default) ===
+  --witness-timeout WITNESS_TIMEOUT
+                        seconds the live tool waits for `release` (default 120)
+
+=== probe F: pgrep after the seat's runs ===
+$ pgrep -af llama-server
+(no process under /fast/scratch/hyaku/kama-r51/X1Fresh; at one sample two processes belonged to peer
+ seat J3CopyDecoy's tree /fast/scratch/hyaku/kama-r51/J3CopyDecoy/r51c1-.../work-b3/, not started by this seat)

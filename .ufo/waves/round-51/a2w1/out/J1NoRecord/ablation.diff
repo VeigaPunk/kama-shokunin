@@ -1,0 +1,19 @@
+diff --git a/tools/kama-llamacpp-live.py b/tools/kama-llamacpp-live.py
+index 182336f1..53cbda85 100755
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -2038,10 +2038,12 @@ def main(argv=None):
+         # opened through /proc/<pid>/exe (recorded the same way, never a check id)
+         if _child_running(proc):
+             receipt['model_mapping'] = model_mapping(proc.pid, args.model)
+-            receipt['server_exe'] = server_exe(proc.pid)
++            # control J1NoRecord (round-51 C1 ablation): no server_exe record
++            # receipt['server_exe'] = server_exe(proc.pid)
+         else:
+             receipt['model_mapping'] = {'mapped': False, 'reason': 'server-not-running'}
+-            receipt['server_exe'] = {'opened': False, 'reason': 'server-not-running'}
++            # control J1NoRecord (round-51 C1 ablation): no server_exe record
++            # receipt['server_exe'] = {'opened': False, 'reason': 'server-not-running'}
+         if args.witness_dir is not None:
+             # round 49 (closure R5): hold the ready server up for an outside observer
+             receipt['witness'] = hold_for_witness(

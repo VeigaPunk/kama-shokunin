@@ -1,0 +1,18 @@
+Verdict: Independent regeneration exactly matches the disclosure ledger for whole-file-graded files; no ledger discrepancy found.
+
+Evidence
+
+- Read the v6 contract in `tools/append-only-audit.py:15-25`; the relevant declarations are `registry/append-only-contract.tsv:1-11`, including `corpus/SOURCES.md` as `A-row` at line 6, `SCORECARD.md` as `exempt=` at line 3, and the two knowledge entries as `only=` at lines 10-11.
+- Added `a2w1/out/X7Regen/regen_ledger.py`, which independently walks `git rev-list --topo-order --reverse --parents <tip>`, takes first-parent `-U0` diffs, computes A-row permitted deletions, multiset-held-at-tip, SHA-256 keys and mechanical class, and emits rows. Its scope and derivation are documented at `a2w1/out/X7Regen/regen_ledger.py:1-29`; traversal, grading, and comparison are at lines 142-241. It does not invoke `build_ledger.py` or read audit JSON/`undisclosed`.
+- Exact command (run against a private `git clone --shared` at `$S/lane`):
+  `python3 <lane>/ .ufo/waves/round-51/a2w1/out/X7Regen/regen_ledger.py "$S/lane" 138af25b963450b6520794995605fa7dbbcd87e0 <lane>/registry/append-only-disclosures.tsv "$S/regen.tsv"`
+  (The actual invocation used the absolute script and ledger paths; see the output file.) Exit 0. `regen-run.out:1-4`: 341 commits, 93 whole-file-graded files; 68 deletion events, 3,540 deleted lines, 58 permitted A-row lines, 3,482 graded lines, and 142 unheld disclosure lines. Regenerated and actual scoped ledgers each have 142 rows / 142 lines; `only_in_regen=0`, `only_in_ledger=0`, `problems=[]`.
+- Order and bytes also match: `ledger.diff:1-17` records 142 lines on each side, empty unified diff, and successful `cmp`. The compared slice excludes the 24 `SCORECARD.md` rows/lines by assignment; both `only=` knowledge files are also excluded. This is a scoped comparison, not a claim that those excluded rows were regenerated.
+- An independent row-level walk is in `a2w1/out/X7Regen/verify_rows.py`; output `verify-rows.out:1-12` checks all 68 deletion events, every 142 scoped ledger rows' deleted-line preimages, notes, classes, and held-at-tip counts. It found 58 permitted A-row IDs still held with immutable cells, zero CR-bearing preimages, and zero violations.
+- Sensitivity: `mutation-proof.out:1-24` records mutations to copies of the ledger. Dropping a graded row, changing its class/count/hash, or adding a fabricated row each produces a nonzero comparison. Dropping a `SCORECARD.md` row produces no diff as expected because that file is excluded.
+- Commit stability: `commit-match.out:1-6` records `git diff --exit-code 138af25b963450b6520794995605fa7dbbcd87e0 4eca4892acca6ca4072a0a6fad577d0dd78a5dda -- registry/append-only-disclosures.tsv` exiting 0; both commits have ledger blob `f2b91ee50e614ebd9cf406d409c5a84b34eefb23`.
+- Calibration probe: running the independent script at the earlier `97c864bead3ee4a2f629574e77263d33834ec98a` tip emitted the removed blank-line key `e3b0c442…` for `corpus/SOURCES.md`; the first-parent diff showed that blank line deletion. At the requested 138af25b tip it is no longer emitted, consistent with the later restoration described by the build-fix commit. The earlier-tip output necessarily also differed on history not yet reachable at that earlier tip, so it is a focused held-at-tip probe, not the ledger comparison result.
+
+Risks / blockers: none found in this scoped regeneration. No lane files or frozen counters were modified; no build, lint, formatter, or repository tests were run.
+
+Artifacts: `a2w1/out/X7Regen/regen_ledger.py`, `verify_rows.py`, `regen-run.out`, `verify-rows.out`, `ledger.diff`, `mutation-proof.out`, and `commit-match.out`.

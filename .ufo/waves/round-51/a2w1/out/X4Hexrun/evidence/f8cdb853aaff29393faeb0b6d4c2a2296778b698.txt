@@ -1,0 +1,68 @@
+# hexrun-census evidence: fleet-repo commit f8cdb853aaff29393faeb0b6d4c2a2296778b698
+# repo: vgpnk/shokunin (fleet)
+# fleet repo origin (GitHub): https://github.com/VeigaPunk/shokunin.git
+# fleet repo root: /home/vgpnk/Projects/shokunin
+# lane: kama-shokunin; census read at round-51 build-fix 2 138af25b963450b6520794995605fa7dbbcd87e0
+# cited at (lane rev 138af25b): corpus/lessons/round-49-verifier-spotcheck.md:21 and LOG.md:2345
+# seat X4Hexrun, round 51, 2026-10-27
+
+read-only commands against the fleet repository /home/vgpnk/Projects/shokunin:
+
+$ git -C /home/vgpnk/Projects/shokunin cat-file -t f8cdb853aaff29393faeb0b6d4c2a2296778b698
+commit
+rc=0
+
+$ git -C /home/vgpnk/Projects/shokunin log -1 --format=%H %an <%ae> %ai / committer %cn <%ce> %ci / %s f8cdb853aaff29393faeb0b6d4c2a2296778b698
+f8cdb853aaff29393faeb0b6d4c2a2296778b698 kama-shokunin <kama@shokunin.local> 2026-10-26 20:48:39 -0300 / committer kama-shokunin <kama@shokunin.local> 2026-10-26 21:00:10 -0300 / round-49: kama report
+rc=0
+
+$ git -C /home/vgpnk/Projects/shokunin show --stat --format= f8cdb853aaff29393faeb0b6d4c2a2296778b698
+ .ufo/reports/round-49/kama.md | 81 +++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 81 insertions(+)
+rc=0
+
+$ git -C /home/vgpnk/Projects/shokunin log --format=%an %H -- .ufo/reports/round-49/kama.md
+kama-shokunin f8cdb853aaff29393faeb0b6d4c2a2296778b698
+rc=0
+    (the spot-check's own command, run over the cited report path;
+     exactly one commit touches it, and it is the cited one)
+
+$ git -C /home/vgpnk/Projects/shokunin rev-parse f8cdb853aaff29393faeb0b6d4c2a2296778b698:.ufo/reports/round-49/kama.md
+314dc799f37dcaa8af7206d952d70452c6fc8b73
+rc=0
+
+$ git -C /home/vgpnk/Projects/shokunin cat-file -s f8cdb853aaff29393faeb0b6d4c2a2296778b698:.ufo/reports/round-49/kama.md
+13372
+rc=0
+
+$ git -C /home/vgpnk/Projects/shokunin branch -a --contains f8cdb853aaff29393faeb0b6d4c2a2296778b698
+* (no branch)
+  main
+  master
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/main
+  remotes/origin/master
+rc=0
+
+$ git -C /home/vgpnk/Projects/shokunin merge-base --is-ancestor f8cdb853aaff29393faeb0b6d4c2a2296778b698 main
+rc=0
+    (rc=0: reachable from fleet main)
+
+Not a lane object: the commit lives in the fleet repository's object store only,
+so a shared clone of the lane at the build commit cannot resolve it. That is why
+the census classifies the token `unknown` until this ledger row binds it to this
+file:
+
+$ git -C /fast/scratch/hyaku/kama-r51/X4Hexrun/lane cat-file -t f8cdb853aaff29393faeb0b6d4c2a2296778b698
+rc=128
+
+$ python3 tools/hexrun-census.py scan --repo <lane clone> --rev 138af25b963450b6520794995605fa7dbbcd87e0
+tokens=2051 distinct=340 lane_oid=232 md5_blob=1 upstream_ok=94 unverifiable=9 wrong_flagged=2 ledger_bad=0 unknown=2
+rc=1
+    (before this ledger row lands the token counts `unknown`; with the row it
+     counts `upstream_ok` and the exit becomes 0 -- see the receipt in
+     .ufo/waves/round-51/a2w1/out/X4Hexrun/)
+
+The repo text this evidence matches for the ledger `repo` cell is `vgpnk/shokunin (fleet)`
+(line 2 above); the census `upstream` check requires that exact text plus the token to
+appear in this file, and the file's path to be a blob at the census revision.

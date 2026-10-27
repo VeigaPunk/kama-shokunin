@@ -1,0 +1,42 @@
+Finding LOW-1 (V2Review): server_exe() docstring promises `opened: False` on any failure, but an
+OSError from os.fstat()/os.read() after a successful open() propagates out of the function instead.
+
+File: tools/kama-llamacpp-live.py, lines 744-758 (second try block has only `finally`, no
+`except`); docstring line 736: "any other outcome is `opened: False` with its reason".
+
+Show it:
+  python3 - <<'EOF'
+  import sys, types
+  sys.path.insert(0, 'tools')
+  import importlib.util
+  spec = importlib.util.spec_from_file_location('live', 'tools/kama-llamacpp-live.py')
+  live = importlib.util.module_from_spec(spec); spec.loader.exec_module(live)
+  real_open, real_fstat = __builtins__.os.open, __builtins__.os.fstat
+  import os
+  os.open = lambda p, f: 99
+  os.fstat = lambda fd: (_ for _ in ()).throw(OSError(5, 'Input/output error'))
+  print(live.server_exe(1))   # raises OSError instead of returning opened: False
+  EOF
+(Conceptual driver; an EIO between open(2) and fstat(2)/read(2) is the trigger.)
+
+Consequence today: main() catches BaseException -> _record_internal, receipt['server_exe'] stays
+None -> replay flags `server-exe:absent` (loud, not silent), but the receipt loses the
+docstring-promised `opened: False` row and gains an unrelated internal_fault.
+
+Proposed fix (keeps every existing return; finally still closes the fd):
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -753,7 +753,10 @@
+             h.update(chunk)
+             left -= len(chunk)
+         if left != 0:
+             return {'opened': False, 'reason': 'exe-shrank-while-hashed', 'path': path}
++    except OSError as exc:
++        return {'opened': False,
++                'reason': 'exe-read-failed:' + (exc.strerror or type(exc).__name__),
++                'path': path}
+     finally:
+         os.close(fd)
+     return {'opened': True, 'path': path,
+
+(Counters are frozen; this is a report, not an in-place edit.)

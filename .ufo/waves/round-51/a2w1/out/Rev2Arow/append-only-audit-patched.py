@@ -1,0 +1,1536 @@
+#!/usr/bin/env python3
+"""append-only-audit.py (v6 definitions, v3 output) - set the lane's declared append-only files against its git history.
+
+v6 (round 51) grades every deletion and the rule as each contract row declares it (round-50
+closure R6: the sub-20 threshold hid 97 events, among them a real LOG.md loss at ed135b3c;
+considerthese/2026-10-26.md proposal 1); the JSON shape stays `append-only-audit/v3` with
+`"definition": "v6"` and new keys:
+  threshold   default 1 (v1-v5: 20); every (commit, file) with a deletion is an event
+  permitted   for a file whose contract rule is A-row, a deleted line that is a registry
+              row (0-3 spaces, `| S<digits> |`, eleven cells split outside backtick code
+              spans) while the commit's blob holds a row with the same id whose cells other
+              than status (8th), recheck (10th) and used-by (11th) are byte-equal: the
+              in-place change the A-row rule allows (KQ22); counted per event as
+              `permitted`, never graded; graded + ungraded + permitted == deleted
+  disclosure  a row of registry/append-only-disclosures.tsv (read at <to>; --disclosures
+              FILE overrides) `commit<TAB>file<TAB>line_sha256<TAB>count<TAB>class<TAB>note`:
+              `count` graded lines of that event whose key (CR-stripped bytes) hashes to
+              line_sha256 are not held at <to> and are disclosed as lost; `class` must be the
+              mechanical class of those lines - `revert` when the commit subject starts with
+              `Revert "`, else `in-place-edit` when their hunk adds lines, else `removal`; a
+              row naming no event, no such unheld line, too many of them or the wrong class
+              is a bad disclosure (exit 1); a ledger read from <to> may only disclose
+              commits that precede its own introduction (the first commit adding the
+              ledger path): a deletion made once the ledger existed is restored by append,
+              never disclosed (round-51 seats K2Cheat, K2Design: a ledger that accepts new
+              rows would bless any later damage)
+  undisclosed per event (JSON only), the graded lines not held at <to> and not disclosed:
+              [{line_sha256, count, classes}] - what a disclosure row would have to name
+  status      ungraded / restored as in v5; `disclosed` when not restored and every graded
+              line not held at <to> is disclosed; unrestored / partial otherwise
+The binding, regions, origin, fences, keys and restoration measures are v5's, unchanged.
+
+v5 (round 50) closes the definition gaps the round-49 closure routed (corpus/lessons/
+round-49-verifier-spotcheck.md R3; seats K2Origin, K2Cheat); the JSON output shape is
+unchanged (`"schema": "append-only-audit/v3"`) and gains `"definition": "v5"`:
+  key(l)    the line bytes with one trailing carriage return removed
+  fence      CommonMark 0.31.2 §4.5: a line of up to three spaces of indentation and at
+             least three backticks or tildes opens a fenced block (a backtick fence's
+             info string holds no backtick); the block closes at a line of up to three
+             spaces, the same character at least as many times, and only spaces or
+             tabs after; an unclosed fence runs to the end of the file
+  section    the title of the last `## ` line at or before the line that is not inside
+             (or itself) a fence line; None before the first such heading
+  birth      a commit whose blob of the file holds key k while no parent of it holds k
+  origin(l)  the union, over every birth of key(l) among the commits reachable from
+             <to>, of the section titles holding key(l) in that commit's blob - a
+             property of the commit graph and its blobs, not of any listing order
+             (v4: the first blob in `git rev-list --topo-order --reverse`, which
+             sibling order could flip)
+  ungraded   a deleted line is ungraded only when its parent section is an eligible
+             exempt title (v3, sections fence-aware) and origin(l) contains one of the
+             file's exempt titles (v4, origin as above)
+Unchanged from v4: binding (whole-word token, negation window, wildcard rows,
+integration negations), threshold, restoration measures, the JSON shape.
+
+The round-50 C2 counter (tools/round50-append-audit-v5-check.py, frozen before this
+tool) checks these on twelve constructed fixtures and bounds the lane's ungraded lines
+by its own origin count.
+
+v3 (round 48) text, kept:
+
+v3 (round 48) grades the lane's rule as the lane declares it, carve-outs included
+(round-47 closure D5; seats Rev1Restore, K1Design, V1Ctr, X1Stable, K1Fixture):
+  - the contract gains a `region` cell: `*` (every line graded), `exempt=<T1>|<T2>@<p>:<n>`
+    (lines in a `## ` section titled exactly Ti are ungraded while that section is not
+    gutted - SCORECARD.md's head, which SCORECARD.md:6 declares re-derived in place) or
+    `only=<P>@<p>:<n>` (only lines in a `## ` section whose title starts with P are
+    graded - the append-only `## Errata` region of a knowledge entry);
+  - every declaration must bind: the declared_at line says `append-only` (or
+    `append only`) for that path and is not a negation; a region pointer names every
+    title (exempt, with `re-derived`) or the prefix (only); an unbound row exits 1;
+  - `regressed` (a graded event whose file holds fewer of its lines at <to> than at its
+    best window commit) now exits 1.
+v3 definitions beyond v2 (the round-48 C1 counter, frozen before this tool,
+recomputes them on its own code path):
+  region     per contract row; a file matched by several rows takes the union of
+             their exempt titles and only prefixes
+  section    a line's section is the title of the last line at or before it that
+             starts with b"## " (`\\r` and trailing blanks stripped); none before the first
+  count(T,x) lines of the file at x whose section is T
+  eligible   an exempt title T is eligible for an event when max over the window of
+             count(T,x) >= count(T,parent) (a gutted section that never comes back
+             is graded)
+  graded G   deleted lines (by parent position) not in an eligible exempt section and,
+             when the file has only prefixes, inside a section starting with one
+  ungraded   |D| - |G|; held, restored_max/best/by and held_at_to are taken over G
+  status     ungraded when |G| == 0, else restored / unrestored / partial over |G|
+  binding    see `binds()`: lower-cased line contains `append-only`/`append only`, none of
+             `not append-only`, `not append only`, `no longer append`, `never append-only`,
+             and the declaring path matches the row's pattern or the line contains the
+             row's token (base name without extension; the parent directory's name when
+             the base name has a wildcard)
+
+v2 (round 47) text, kept:
+
+v2 (round 47) replaces the round-46 v1 definition after its outside closure
+(corpus/lessons/round-46-verifier-spotcheck.md D1, D2) and the round-46 wave
+(K2Design, Rev2Decl, X2Fixture):
+  - the audited files come from a contract, registry/append-only-contract.tsv,
+    whose every row names the lane line that declares the rule (v1 hard-coded
+    five files, a set the lane declared nowhere, and missed corpus/lessons/);
+  - deleted lines are read from the -U0 diff by hunk-header counts, byte-exact,
+    and must equal `git diff --numstat` (v1 dropped every deleted line whose
+    text starts with `--` as if it were the `---` header);
+  - restoration is a multiset measure taken over the event's own window and
+    maximised there (v1 measured set membership at the audited tip only, so a
+    later head re-anchor lowered a restoration with no new deletion).
+
+Definitions (the round-47 C1 counter, frozen before this tool, recomputes them
+on its own code path):
+  contract     tab-separated; header `path<TAB>rule<TAB>declared_at<TAB>note`;
+               path is a repo-relative path or fnmatch pattern, rule A | A-row | A-corr,
+               declared_at `<repo-relative path>:<line>`
+  files        the contract's patterns expanded over `git ls-tree -r --name-only <to>`
+  commits      `git rev-list --topo-order --reverse <to>`; diffs against the first
+               parent; a root commit has no deletions
+  lines        a blob split on b"\\n" (a final non-empty segment is a line); byte-exact
+  deleted      the multiset D of deleted lines of the first-parent diff; |D| equals the
+               numstat deletions (a binary change is skipped, numstat prints `-`)
+  event        (commit, file) with |D| >= threshold (default 20)
+  held(x)      sum over line values l of min(D[l], max(0, M_x[l] - K[l])), M_x the
+               file's lines at commit x, K the parent's lines the diff kept
+  window       the event commit and every later commit of the rev-list up to <to>
+  restored_max the maximum held(x) over the window; restored_best the first window
+               commit attaining it (null when 0); restored_by the first window commit
+               with held == |D| (null when none)
+  status       restored (max == |D|), unrestored (max == 0), partial otherwise
+Reported beside the events (round-47 wave findings; not part of the frozen counter's
+definition, which the events and files above follow exactly):
+  vanished            contract-matching paths some commit up to <to> held that <to> does
+                      not (a declared file deleted outright is never in `files`); exit 1
+  unmatched_patterns  contract patterns matching no path at <to> (a typo or `**` misuse)
+  binary_changes      (commit, file) pairs numstat reports as binary (`-`); not counted
+  held_at_to          per event, held(<to>); `summary.regressed` counts events whose file
+                      holds fewer deleted lines at <to> than at their best window commit
+                      (the window maximum keeps a restored-then-re-deleted event `restored`;
+                      round-47 seat X1Stable). Informational: the exit code follows status.
+Paths are read NUL-delimited (`ls-tree -z`, `diff --numstat -z`), so non-ASCII, tab and
+quote bytes in a path are not C-quoted away from the contract expansion.
+
+Usage:
+  append-only-audit.py --repo DIR [--to REV] [--contract FILE | --files a,b,...]
+                       [--threshold N] [--json]
+  append-only-audit.py --selftest [--scratch DIR]
+Without --contract and --files the contract is read from <to>:registry/append-only-contract.tsv
+(v3 header `path<TAB>rule<TAB>declared_at<TAB>region<TAB>note`); --files grades whole files
+and binds no declaration.
+Output: text lines `event <commit12> <file> deleted=N graded=G ungraded=U restored_max=K
+held_at_to=H status=S restored_best=<c12|-> restored_by=<c12|->`, `declaration ...` lines for
+rows that do not bind, then `summary ...`; --json prints {"schema": "append-only-audit/v3",
+"to", "threshold", "contract", "files", "commits", "events": [...], "declarations": [...],
+"vanished", "unmatched_patterns", "binary_changes", "summary": {...}} with full commit ids.
+Exit: 0 no event partial or unrestored, no regressed event, no vanished path and every
+declaration bound; 1 otherwise; 2 could not evaluate (including a malformed or CRLF
+contract). Read-only on --repo. Fixtures (selftest) live under --scratch or $TMPDIR and are
+removed on exit.
+"""
+from __future__ import annotations
+
+import argparse
+import collections
+import fnmatch
+import hashlib
+import json
+import os
+import re
+import shutil
+import subprocess
+import sys
+import tempfile
+
+SCHEMA = "append-only-audit/v3"
+CONTRACT = "registry/append-only-contract.tsv"
+HEADER = "path\trule\tdeclared_at\tregion\tnote"
+DISCLOSURES = "registry/append-only-disclosures.tsv"
+DHEADER = "commit\tfile\tline_sha256\tcount\tclass\tnote"
+CLASSES = ("revert", "in-place-edit", "removal")
+ROW = re.compile(r"^ {0,3}\| *S[0-9]{3,} *\|")
+MUTABLE_COLS = (7, 9, 10)     # status, recheck, used-by (0-based, id is 0)
+RULES = ("A", "A-row", "A-corr")
+HUNK = re.compile(rb"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
+REGION = re.compile(r"(exempt|only)=(.+)@([^@:]+):(\d+)")
+NEGATIONS = ("not append-only", "not append only", "no longer append", "never append-only")
+WHOLE = ("*",)
+
+
+class AuditError(Exception):
+    pass
+
+
+def _git(repo, *args, inp=None):
+    p = subprocess.run(["git", "-C", repo, *args], input=inp, capture_output=True)
+    if p.returncode != 0:
+        raise AuditError(f"git {' '.join(args)[:100]}: {p.stderr.decode('utf-8', 'replace').strip()[:200]}")
+    return p.stdout
+
+
+def _text(repo, *args, inp=None):
+    return _git(repo, *args, inp=inp).decode("utf-8", "replace")
+
+
+def _git_ok(repo, *args):
+    """stdout bytes, or None when git exits non-zero (an absent path at a revision)."""
+    p = subprocess.run(["git", "-C", repo, *args], capture_output=True)
+    return p.stdout if p.returncode == 0 else None
+
+
+def parse_region(cell):
+    """`*` -> ('*',); `exempt=T1|T2@p:n` -> ('exempt', frozenset, (p, n)); `only=P@p:n` ->
+    ('only', P, (p, n)); raise AuditError otherwise. Titles and prefixes start with `## `."""
+    if cell == "*":
+        return WHOLE
+    m = REGION.fullmatch(cell)
+    if not m:
+        raise AuditError(f"region {cell!r} is not `*`, `exempt=...@path:line` or `only=...@path:line`")
+    kind, body, ptr = m.group(1), m.group(2), (m.group(3), int(m.group(4)))
+    if kind == "exempt":
+        titles = frozenset(t.strip() for t in body.split("|") if t.strip())
+        if not titles or not all(t.startswith("## ") for t in titles):
+            raise AuditError(f"region {cell!r}: exempt titles must start with `## `")
+        return ("exempt", titles, ptr)
+    if not body.startswith("## "):
+        raise AuditError(f"region {cell!r}: only prefix must start with `## `")
+    return ("only", body, ptr)
+
+
+def parse_contract(text):
+    """Return [(pattern, rule, declared_at, region, note)]; raise AuditError on a malformed contract."""
+    lines = text.split("\n")
+    if "\r" in text:
+        raise AuditError("contract contains a carriage return (CRLF contract)")
+    if not lines or lines[0] != HEADER:
+        raise AuditError("contract header is not path<TAB>rule<TAB>declared_at<TAB>region<TAB>note")
+    rows = []
+    for n, line in enumerate(lines[1:], 2):
+        if not line.strip():
+            continue
+        cells = line.split("\t")
+        if len(cells) != 5:
+            raise AuditError(f"contract line {n}: {len(cells)} cells, want 5")
+        pat, rule, decl, region, note = (c.strip() for c in cells)
+        if not pat or rule not in RULES or not re.fullmatch(r"[^:]+:\d+", decl):
+            raise AuditError(f"contract line {n}: bad path, rule or declared_at")
+        rows.append((pat, rule, decl, parse_region(region), note))
+    if not rows:
+        raise AuditError("contract has no rows")
+    return rows
+
+
+def row_token(pattern):
+    """The word a declaring line must name: the base name without extension, or the
+    parent directory's name when the base name holds a wildcard."""
+    parts = pattern.split("/")
+    base = parts[-1]
+    if any(ch in base for ch in "*?["):
+        return parts[-2] if len(parts) > 1 else ""
+    return base.rsplit(".", 1)[0] if "." in base else base
+
+
+# integration (round-49 seat K2Negation F1): `cannot`/`can't`, curly apostrophes and en/em
+# dashes as separators are negations too; punctuation other than dashes still breaks the
+# window (widening it would unbind declarations such as `no edits: append-only`, F2)
+NEG_WINDOW = re.compile(r"(?:\b(?:not|never|no|nor|neither|non|cannot|can['’]t|isn['’]t|aren['’]t)\b"
+                        r"|\bno longer\b)(?:[\s\-–—]+[\w'’]+){0,3}?[\s\-–—]+append[- ]only")
+
+
+def binds(text, pattern, decl_path):
+    """A declaring line binds a row when it says append-only, is not a negation, and either
+    the declaring file is the row's (non-wildcard) path or the line names the row's token
+    as a whole word. v4 (round 49, round-48 seat K1Binding): the token match is
+    word-bounded (`log` inside `catalog` no longer binds), a negation within three words
+    before `append-only` unbinds (`not strictly append-only`), and a wildcard row is never
+    bound by a line of a file it covers merely saying append-only (self-declaration)."""
+    if text is None:
+        return False
+    low = text.lower()
+    if not ("append-only" in low or "append only" in low) or any(n in low for n in NEGATIONS) \
+            or NEG_WINDOW.search(low):
+        return False
+    tok = row_token(pattern).lower()
+    wild = any(ch in pattern for ch in "*?[")
+    if not wild and fnmatch.fnmatchcase(decl_path, pattern):
+        return True
+    return bool(tok) and re.search(r"(?<![a-z0-9_])" + re.escape(tok) + r"(?![a-z0-9_])", low) is not None
+
+
+def line_at(repo, rev, path, n):
+    p = subprocess.run(["git", "-C", repo, "show", f"{rev}:{path}"], capture_output=True)
+    if p.returncode != 0:
+        return None
+    ls = p.stdout.decode("utf-8", "replace").split("\n")
+    return ls[n - 1] if 1 <= n <= len(ls) else None
+
+
+def declaration(repo, rev, row):
+    """{path, declared_at, region, ok, reason} for one contract row at rev."""
+    pat, _rule, decl, region, _note = row
+    dp, dn = decl.rsplit(":", 1)
+    out = {"path": pat, "declared_at": decl, "region": region[0], "ok": True, "reason": ""}
+    if not binds(line_at(repo, rev, dp, int(dn)), pat, dp):
+        out.update(ok=False, reason=f"declared_at {decl} does not say append-only for {pat}")
+        return out
+    if region[0] == "*":
+        return out
+    pp, pn = region[2]
+    text = line_at(repo, rev, pp, pn)
+    low = (text or "").lower()
+    if region[0] == "exempt":
+        if text is None or "re-derived" not in low or not all(t[3:].strip().lower() in low for t in region[1]):
+            out.update(ok=False, reason=f"exempt pointer {pp}:{pn} does not name every title as re-derived")
+    elif not binds(text, pat, pp) or region[1][3:].strip().lower() not in low:
+        out.update(ok=False, reason=f"only pointer {pp}:{pn} does not declare {region[1]!r} append-only")
+    return out
+
+
+def key(ln):
+    """A line's origin key: the bytes with one trailing carriage return removed
+    (round-49 seat K2Origin F5: a line moved with a changed line ending keeps its
+    origin; the byte-exact restore measure below still uses the raw bytes)."""
+    return ln[:-1] if ln.endswith(b"\r") else ln
+
+
+def fence_open(ln):
+    """(char, length) when ln opens a CommonMark 0.31.2 §4.5 fenced block, else None.
+    Up to three spaces of indentation; >= 3 backticks or tildes; a backtick fence's
+    info string may not contain a backtick."""
+    m = re.match(rb"^ {0,3}(`{3,}|~{3,})(.*)$", ln)
+    if not m:
+        return None
+    run = m.group(1)
+    if run[:1] == b"`" and b"`" in m.group(2):
+        return None
+    return run[:1], len(run)
+
+
+def fence_close(ln, fence):
+    """True when ln closes a fence opened by `fence` (same char, at least as many, up to
+    three spaces of indentation, only spaces or tabs after)."""
+    ch, n = fence
+    s = ln.lstrip(b" ")
+    if len(ln) - len(s) > 3:
+        return False
+    k = len(s) - len(s.lstrip(ch))
+    return k >= n and s[k:].strip(b" \t") == b""
+
+
+def sections(body):
+    """The `## ` section title owning each line of a list of byte lines (None before the
+    first), ignoring `## ` lines inside CommonMark fenced code blocks (round-49 seat
+    K2Origin F4: a fenced fake title must not re-title the dated lines after it)."""
+    out, title, fence = [], None, None
+    for line in body:
+        b = line.rstrip(b"\r")
+        if fence is not None:
+            if fence_close(b, fence):
+                fence = None
+        else:
+            fo = fence_open(b)
+            if fo is not None:
+                fence = fo
+            elif b.startswith(b"## "):
+                title = b.decode("utf-8", "replace").rstrip()
+        out.append(title)
+    return out
+
+
+def tree_paths(repo, rev):
+    """Paths at rev, NUL-delimited so non-ASCII, tab and quote bytes are not C-quoted."""
+    raw = _git(repo, "ls-tree", "-r", "-z", "--name-only", rev)
+    return [t.decode("utf-8", "surrogateescape") for t in raw.split(b"\0") if t]
+
+
+def expand(repo, rev, patterns):
+    tree = tree_paths(repo, rev)
+    return sorted({t for t in tree if any(fnmatch.fnmatchcase(t, p) for p in patterns)})
+
+
+def unmatched(repo, rev, patterns):
+    tree = tree_paths(repo, rev)
+    return [p for p in patterns if not any(fnmatch.fnmatchcase(t, p) for t in tree)]
+
+
+def vanished(repo, rev, patterns, present):
+    """Paths matching the contract that some commit up to rev held but rev does not."""
+    raw = _git(repo, "log", "-z", "--format=", "--name-only", "--no-renames", rev)
+    seen = {t.decode("utf-8", "surrogateescape") for t in raw.split(b"\0") if t.strip(b"\n")}
+    seen = {t.strip("\n") for t in seen}
+    return sorted(t for t in seen if t not in present and any(fnmatch.fnmatchcase(t, p) for p in patterns))
+
+
+def split_lines(data):
+    segs = data.split(b"\n")
+    if segs and segs[-1] == b"":
+        segs.pop()
+    return segs
+
+
+def deleted_lines(repo, parent, commit, path):
+    """(parent line number, bytes, lines its hunk adds) of every deleted line, read by
+    hunk-header counts."""
+    raw = _git(repo, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", "--text",
+               parent, commit, "--", path)
+    out, lines, i = [], raw.split(b"\n"), 0
+    while i < len(lines):
+        m = HUNK.match(lines[i])
+        i += 1
+        if not m:
+            continue
+        start = int(m.group(1))
+        nd = int(m.group(2)) if m.group(2) is not None else 1
+        na = int(m.group(4)) if m.group(4) is not None else 1
+        gd = ga = 0
+        while i < len(lines) and (gd < nd or ga < na):
+            ln = lines[i]
+            if ln.startswith(b"-") and gd < nd:
+                out.append((start + gd, ln[1:], na))
+                gd += 1
+            elif ln.startswith(b"+") and ga < na:
+                ga += 1
+            i += 1
+    return out
+
+
+class Repo:
+    def __init__(self, path):
+        self.path = path
+        self._raw = {}
+        self._lines = {}
+        self._sections = {}
+
+    def blobs(self, specs):
+        """Map each `<rev>:<path>` spec to its blob id or None (one cat-file call)."""
+        if not specs:
+            return {}
+        out = _text(self.path, "cat-file", "--batch-check=%(objectname) %(objecttype)",
+                    inp=("\n".join(specs) + "\n").encode())
+        res = {}
+        for spec, line in zip(specs, out.split("\n")):
+            parts = line.split()
+            res[spec] = parts[0] if len(parts) == 2 and parts[1] == "blob" else None
+        return res
+
+    def list_lines(self, blob):
+        """The blob's lines in order; empty for an absent blob."""
+        if blob is None:
+            return []
+        if blob not in self._raw:
+            self._raw[blob] = split_lines(_git(self.path, "cat-file", "blob", blob))
+        return self._raw[blob]
+
+    def lines(self, blob):
+        if blob is None:
+            return collections.Counter()
+        if blob not in self._lines:
+            self._lines[blob] = collections.Counter(self.list_lines(blob))
+        return self._lines[blob]
+
+    def section_counts(self, blob):
+        """{section title: number of lines in it} for the blob."""
+        if blob not in self._sections:
+            self._sections[blob] = collections.Counter(sections(self.list_lines(blob)))
+        return self._sections[blob]
+
+
+def numstat(repo, parent, commit, files):
+    """{path: deletions} for text changes; {path: None} for a binary change (numstat `-`)."""
+    res = {}
+    raw = _git(repo, "diff", "--numstat", "-z", "--no-renames", parent, commit, "--", *files)
+    for rec in raw.split(b"\0"):
+        parts = rec.split(b"\t", 2)
+        if len(parts) == 3:
+            path = parts[2].decode("utf-8", "surrogateescape")
+            res[path] = int(parts[1]) if parts[1].isdigit() else None
+    return res
+
+
+def file_regions(rows, f):
+    """(exempt titles, only prefixes) for a file from every contract row whose pattern matches it."""
+    titles, prefixes = set(), []
+    for row in rows:
+        if fnmatch.fnmatchcase(f, row[0]):
+            region = row[3]
+            if region[0] == "exempt":
+                titles |= set(region[1])
+            elif region[0] == "only":
+                prefixes.append(region[1])
+    return titles, prefixes
+
+
+def row_cells(text):
+    """v6: the cells of a registry row line (bytes) split on `|` outside backtick code spans,
+    without the outer pipes; None when the line is not a row or does not close."""
+    try:
+        s = text.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+    if not ROW.match(s):
+        return None
+    s = s.rstrip("\r").strip()
+    cells, buf, code = [], [], False
+    for ch in s[1:]:
+        if ch == "`":
+            code = not code
+        if ch == "|" and not code:
+            cells.append("".join(buf).strip())
+            buf = []
+        else:
+            buf.append(ch)
+    return cells if not "".join(buf).strip() else None
+
+
+def registry_bounds(body):
+    """(lo, hi) line indices of the file's `## Registry` section: its heading to the next
+    heading of the same or a higher level, deeper subheadings inside; None when the file has
+    no such heading. This is the population SOURCES-CONTRACT-v1 rule 2 governs
+    (tools/sources-append-only.py parses exactly this range). Round-51 seat Rev2Arow."""
+    head = re.compile(r"^ {0,3}(#{1,6})[ \t]+Registry(?:[ \t]+#+)?[ \t]*$")
+    any_head = re.compile(r"^ {0,3}(#{1,6})(?:[ \t]|$)")
+    text = [ln.decode("utf-8", "replace").rstrip("\r") for ln in body]
+    for i, ln in enumerate(text):
+        m = head.match(ln)
+        if not m:
+            continue
+        level = len(m.group(1))
+        for j in range(i + 1, len(text)):
+            h = any_head.match(text[j])
+            if h and len(h.group(1)) <= level:
+                return i + 1, j
+        return i + 1, len(text)
+    return None
+
+
+def permitted_edits(dl, new_body, bounds=None):
+    """v6 A-row: positions in dl of deleted rows whose id the registry section of the new
+    blob still holds exactly once with every immutable cell byte-equal (only status, recheck
+    and used-by changed). With bounds, a deleted line that is not a registry row at all
+    (header, separator, prose, blank) is outside rule 2's population and is not graded; a
+    truncated or rewritten row is graded, and a row the section no longer holds is graded
+    (rule 2: a removed row is a violation). Round-51 seat Rev2Arow: the previous form
+    matched any 11-cell line anywhere in the blob, so a row parked outside the section - or
+    a duplicate of it - permitted the registry row's removal (findings R51-A2-1..3)."""
+    lo, hi = bounds if bounds else (0, len(new_body))
+    rows = collections.defaultdict(list)
+    for ln in new_body[lo:hi]:
+        c = row_cells(ln)
+        if c is not None and len(c) == 11:
+            rows[c[0]].append(c)
+    keep = lambda c: [x for j, x in enumerate(c) if j not in MUTABLE_COLS]
+    out = set()
+    for pos, text, _na in dl:
+        c = row_cells(text)
+        if c is None:
+            if bounds is not None:
+                out.add(pos)
+            continue
+        if len(c) != 11:
+            continue
+        held = rows.get(c[0], ())
+        if len(held) == 1 and keep(held[0]) == keep(c):
+            out.add(pos)
+    return out
+
+
+def parse_disclosures(text):
+    """[(commit, file, line_sha256, count, class, note)]; AuditError on a malformed ledger."""
+    if "\r" in text:
+        raise AuditError("disclosures carry CR bytes")
+    lines = text.split("\n")
+    if not lines or lines[0] != DHEADER:
+        raise AuditError("disclosures header is not " + DHEADER.replace("\t", "<TAB>"))
+    rows = []
+    for n, ln in enumerate(lines[1:], 2):
+        if not ln.strip():
+            continue
+        c = ln.split("\t")
+        if (len(c) != 6 or not re.fullmatch(r"[0-9a-f]{40}", c[0]) or not c[1]
+                or not re.fullmatch(r"[0-9a-f]{64}", c[2]) or not re.fullmatch(r"[1-9][0-9]*", c[3])):
+            raise AuditError(f"disclosures line {n}: bad commit, file, line_sha256 or count")
+        rows.append((c[0], c[1], c[2], int(c[3]), c[4], c[5]))
+    return rows
+
+
+def audit(repo_path, to="HEAD", threshold=1, files=None, contract=None, disclosures=None):
+    """files: explicit list (whole files graded); else contract: (label, text); else the
+    contract at <to>. disclosures: (label, text); else, with the contract at <to>, the
+    ledger at <to> when it exists; else none."""
+    r = Repo(repo_path)
+    to_full = _text(repo_path, "rev-parse", "--verify", to + "^{commit}").strip()
+    label, gone, nomatch, rows, decls = None, [], [], [], []
+    if files is None:
+        if contract is None:
+            contract = (f"{to_full}:{CONTRACT}", _text(repo_path, "show", f"{to_full}:{CONTRACT}"))
+        label, text = contract
+        rows = parse_contract(text)
+        patterns = [row[0] for row in rows]
+        files = expand(repo_path, to_full, patterns)
+        nomatch = unmatched(repo_path, to_full, patterns)
+        gone = vanished(repo_path, to_full, patterns, set(files))
+        decls = [declaration(repo_path, to_full, row) for row in rows]
+        if disclosures is None and contract[0] == f"{to_full}:{CONTRACT}":
+            got = _git_ok(repo_path, "show", f"{to_full}:{DISCLOSURES}")
+            if got is not None:
+                disclosures = (f"{to_full}:{DISCLOSURES}", got.decode("utf-8"))
+    dlabel, drows, since = None, [], None
+    if disclosures is not None:
+        dlabel, drows = disclosures[0], parse_disclosures(disclosures[1])
+        if dlabel == f"{to_full}:{DISCLOSURES}":
+            intro = _text(repo_path, "log", "--diff-filter=A", "--format=%H", "--reverse", to_full,
+                          "--", DISCLOSURES).split()
+            since = intro[0] if intro else None
+    dmap = collections.defaultdict(list)
+    for i, row in enumerate(drows):
+        dmap[(row[0], row[1])].append(i)
+    dverdict = [None] * len(drows)
+    if since is not None:
+        for di, row in enumerate(drows):
+            if row[0] == since or _git_ok(repo_path, "merge-base", "--is-ancestor", row[0], since) is None:
+                dverdict[di] = f"names a commit at or after the ledger's introduction {since[:12]}: restore by append"
+    arow = {f for f in (files or []) if any(fnmatch.fnmatchcase(f, row[0]) and row[1] == "A-row" for row in rows)}
+    files = sorted(set(files))
+    commits, parents = [], {}
+    for line in _text(repo_path, "rev-list", "--topo-order", "--reverse", "--parents", to_full).split("\n"):
+        parts = line.split()
+        if parts:
+            commits.append(parts[0])
+            parents[parts[0]] = parts[1] if len(parts) > 1 else None
+    events, binary = [], []
+    origin_cache, keyset_cache = {}, {}
+
+    def body_of(b):
+        if b not in keyset_cache:
+            body = r.list_lines(b) if b else []
+            keyset_cache[b] = (body, {key(x) for x in body})
+        return keyset_cache[b]
+
+    def origins(f):
+        """v5 origin: line key -> the `## ` titles holding it at every birth of the key
+        (a commit whose blob of f holds it while no parent's blob does), the union over all
+        commits reachable from <to> - a property of the commit graph and its blobs, not of
+        the rev-list order (round-49 seat K2Origin F3)."""
+        if f in origin_cache:
+            return origin_cache[f]
+        bl = r.blobs([f"{x}:{f}" for x in commits])
+        orig = collections.defaultdict(set)
+        for x in commits:
+            b = bl[f"{x}:{f}"]
+            if b is None:
+                continue
+            body, keys = body_of(b)
+            pkeys = set()
+            for q in (parents[x] or "").split():
+                if bl.get(f"{q}:{f}") == b:
+                    pkeys = keys
+                    break
+                qb = bl.get(f"{q}:{f}")
+                if qb is not None:
+                    pkeys |= body_of(qb)[1]
+            if pkeys is keys:
+                continue
+            for ln, t in zip(body, sections(body)):
+                k = key(ln)
+                if k not in pkeys:
+                    orig[k].add(t)
+        origin_cache[f] = orig
+        return origin_cache[f]
+
+    for i, c in enumerate(commits):
+        p = parents[c]
+        if p is None or not files:
+            continue
+        ns = numstat(repo_path, p, c, files)
+        for f in sorted(ns):
+            if ns[f] is None:
+                binary.append({"commit": c, "file": f})
+                continue
+            if ns[f] < threshold:
+                continue
+            dl = deleted_lines(repo_path, p, c, f)
+            if len(dl) != ns[f]:
+                raise AuditError(f"{c[:12]} {f}: hunk count {len(dl)} != numstat {ns[f]}")
+            D = collections.Counter(text for _pos, text, _na in dl)
+            pb = r.blobs([f"{p}:{f}"])[f"{p}:{f}"]
+            K = r.lines(pb) - D
+            window = commits[i:]
+            wb = r.blobs([f"{x}:{f}" for x in window])
+            titles, prefixes = file_regions(rows, f)
+            psec = sections(r.list_lines(pb))
+            pcount = r.section_counts(pb)
+            eligible = {t for t in titles
+                        if max(r.section_counts(wb[f"{x}:{f}"])[t] if wb[f"{x}:{f}"] else 0 for x in window)
+                        >= pcount[t]}
+            G = collections.Counter()
+            org = origins(f) if titles else {}
+            cbody = r.list_lines(wb[f"{c}:{f}"]) if wb[f"{c}:{f}"] else []
+            perm = permitted_edits(dl, cbody, registry_bounds(cbody)) if f in arow else set()
+            strict = collections.Counter()
+            for pos, text, _na in dl:
+                if pos in perm:
+                    continue
+                s = psec[pos - 1]
+                if prefixes and not any(s is not None and s.startswith(q) for q in prefixes):
+                    continue
+                # v5: the carve-out covers only text born in an exempt section (origin,
+                # keyed by the CRLF-normalized line)
+                if s in eligible and org.get(key(text), frozenset()) & titles:
+                    continue
+                G[text] += 1
+                if f in arow:
+                    rc = row_cells(text)
+                    if rc is not None and len(rc) == 11:
+                        strict[text] += 1
+            ng = sum(G.values())
+            best, best_c, by, h = 0, None, None, 0
+            for x in window:
+                M = r.lines(wb[f"{x}:{f}"])
+                h = sum(min(n, max(0, M[l] - K[l])) for l, n in G.items())
+                if h > best:
+                    best, best_c = h, x
+                if by is None and ng and h == ng:
+                    by = x
+            if strict:
+                # rule 2 is pairwise: a registry row removed at this commit is a violation
+                # even when a later commit re-appends the same bytes. Only the event
+                # commit's own blob may hold it.
+                Mc = r.lines(wb[f"{c}:{f}"]) if wb[f"{c}:{f}"] else collections.Counter()
+                if sum(min(n, max(0, Mc[l] - K[l])) for l, n in strict.items()) < sum(strict.values()):
+                    best, best_c, by = 0, None, None
+            # v6: graded lines not held at <to>, by key, against the disclosure ledger
+            Mto = r.lines(wb[f"{to_full}:{f}"]) if wb.get(f"{to_full}:{f}") else collections.Counter()
+            unheld = collections.Counter()
+            for l, n in G.items():
+                u = n - min(n, max(0, Mto[l] - K[l]))
+                if u:
+                    unheld[hashlib.sha256(key(l)).hexdigest()] += u
+            cls = collections.defaultdict(set)
+            subject = None
+            if dmap.get((c, f)) or unheld:
+                subject = _text(repo_path, "log", "-1", "--format=%s", c).strip()
+            for pos, text, na in dl:
+                if pos not in perm:
+                    cls[hashlib.sha256(key(text)).hexdigest()].add(
+                        "revert" if (subject or "").startswith('Revert "') else ("in-place-edit" if na else "removal"))
+            disclosed = 0
+            for di in dmap.get((c, f), []):
+                _c, _f, hsh, cnt, klass, _note = drows[di]
+                if dverdict[di] is not None:
+                    continue
+                if klass not in CLASSES:
+                    dverdict[di] = f"unknown class {klass}"
+                elif cnt > unheld[hsh]:
+                    dverdict[di] = f"count {cnt} > unheld graded lines {unheld[hsh]} with that key"
+                elif klass not in cls[hsh]:
+                    dverdict[di] = f"class {klass} is not {sorted(cls[hsh])}"
+                else:
+                    dverdict[di] = "ok"
+                    unheld[hsh] -= cnt
+                    disclosed += cnt
+            if ng == 0:
+                status = "ungraded"
+            elif best == ng:
+                status = "restored"
+            elif disclosed and not +unheld:
+                status = "disclosed"
+            else:
+                status = "unrestored" if best == 0 else "partial"
+            events.append({"commit": c, "file": f, "deleted": len(dl), "graded": ng,
+                           "ungraded": len(dl) - ng - len(perm), "permitted": len(perm),
+                           "restored_max": best, "restored_best": best_c, "restored_by": by,
+                           "held_at_to": h, "disclosed": disclosed, "status": status,
+                           "undisclosed": [{"line_sha256": k, "count": n, "classes": sorted(cls[k])}
+                                           for k, n in sorted((+unheld).items())]})
+    dout = [{"commit": d[0], "file": d[1], "line_sha256": d[2], "count": d[3], "class": d[4],
+             "ok": dverdict[i] == "ok", "reason": dverdict[i] or "names no event"}
+            for i, d in enumerate(drows)]
+    summary = {"commits": len(commits), "files": len(files), "events": len(events),
+               "restored": sum(e["status"] == "restored" for e in events),
+               "partial": sum(e["status"] == "partial" for e in events),
+               "unrestored": sum(e["status"] == "unrestored" for e in events),
+               "ungraded": sum(e["status"] == "ungraded" for e in events),
+               "disclosed": sum(e["status"] == "disclosed" for e in events),
+               "permitted_lines": sum(e["permitted"] for e in events),
+               "disclosed_lines": sum(e["disclosed"] for e in events),
+               "bad_disclosures": sum(not d["ok"] for d in dout),
+               "ungraded_lines": sum(e["ungraded"] for e in events),
+               "regressed": sum(e["status"] in ("restored", "partial") and e["held_at_to"] < e["restored_max"]
+                                for e in events),
+               "vanished": len(gone), "unmatched": len(nomatch), "binary": len(binary),
+               "bad_declarations": sum(not d["ok"] for d in decls)}
+    return {"schema": SCHEMA, "definition": "v6", "to": to_full, "threshold": threshold, "contract": label,
+            "disclosures_ledger": dlabel, "disclosures": dout, "files": files,
+            "commits": len(commits), "events": events, "declarations": decls, "vanished": gone,
+            "unmatched_patterns": nomatch, "binary_changes": binary, "summary": summary}
+
+
+def render(res):
+    out = [f"event {e['commit'][:12]} {e['file']} deleted={e['deleted']} graded={e['graded']} "
+           f"ungraded={e['ungraded']} permitted={e['permitted']} restored_max={e['restored_max']} "
+           f"held_at_to={e['held_at_to']} disclosed={e['disclosed']} "
+           f"status={e['status']} restored_best={(e['restored_best'] or '-')[:12]} "
+           f"restored_by={(e['restored_by'] or '-')[:12]}" for e in res["events"]]
+    s = res["summary"]
+    out += [f"declaration {d['path']} {d['declared_at']} unbound: {d['reason']}"
+            for d in res.get("declarations", []) if not d["ok"]]
+    out += [f"disclosure {d['commit'][:12]} {d['file']} {d['line_sha256'][:12]} bad: {d['reason']}"
+            for d in res.get("disclosures", []) if not d["ok"]]
+    out += [f"vanished {v}" for v in res.get("vanished", [])]
+    out += [f"unmatched-pattern {v}" for v in res.get("unmatched_patterns", [])]
+    out += [f"binary-change {b['commit'][:12]} {b['file']}" for b in res.get("binary_changes", [])]
+    out.append(f"summary commits={s['commits']} files={s['files']} events={s['events']} restored={s['restored']} "
+               f"partial={s['partial']} unrestored={s['unrestored']} ungraded={s['ungraded']} disclosed={s['disclosed']} "
+               f"permitted_lines={s['permitted_lines']} disclosed_lines={s['disclosed_lines']} "
+               f"bad_disclosures={s['bad_disclosures']} "
+               f"ungraded_lines={s['ungraded_lines']} regressed={s['regressed']} vanished={s['vanished']} "
+               f"unmatched={s['unmatched']} binary={s['binary']} bad_declarations={s['bad_declarations']}")
+    return "\n".join(out)
+
+
+def exit_code(res):
+    """1 on a partial or unrestored event, a regressed event, a vanished declared path or an
+    unbound declaration."""
+    s = res["summary"]
+    return 1 if (s["partial"] or s["unrestored"] or s["regressed"] or s["vanished"]
+                 or s["bad_declarations"] or s["bad_disclosures"]) else 0
+
+
+# ---------------------------------------------------------------- selftest
+class Fixture:
+    IDENT = ["-c", "user.name=aoa-selftest", "-c", "user.email=aoa-selftest@invalid", "-c", "commit.gpgsign=false"]
+
+    def __init__(self, root):
+        self.d = tempfile.mkdtemp(prefix="aoa-st-", dir=root)
+        _git(self.d, "init", "-q")
+        top = _text(self.d, "rev-parse", "--show-toplevel").strip()
+        if os.path.realpath(top) != os.path.realpath(self.d):
+            raise AuditError("fixture toplevel mismatch")
+        self.n = 0
+
+    def commit(self, files, delete=(), raw=False):
+        for name, body in files.items():
+            path = os.path.join(self.d, name)
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, "wb") as fh:
+                fh.write(body if raw else "".join(x + "\n" for x in body).encode())
+        for name in delete:
+            _git(self.d, "rm", "-q", name)
+        _git(self.d, "add", "-A")
+        self.n += 1
+        _git(self.d, *self.IDENT, "commit", "-q", "--allow-empty", "-m", f"c{self.n}")
+        return _text(self.d, "rev-parse", "HEAD").strip()
+
+
+def lines(tag, n):
+    return [f"{tag} line {i} {os.urandom(4).hex()}" for i in range(n)]
+
+
+def selftest(root):
+    cases = []
+    full = globals()["audit"]
+
+    def audit(*a, **k):
+        # the v1-v5 cases below pin the old default threshold (20); the v6 cases call full()
+        k.setdefault("threshold", 20)
+        return full(*a, **k)
+    F = ["LOG.md", "SCORECARD.md", "corpus/QUALITY.md", "corpus/README.md", "corpus/SOURCES.md"]
+
+    def case(name, fn):
+        try:
+            ok, why = fn()
+        except Exception as e:  # noqa: BLE001 - a crash is a failed case
+            ok, why = False, f"exception {e}"
+        cases.append((name, ok, why))
+
+    def t_none():
+        f = Fixture(root)
+        a = lines("a", 30)
+        f.commit({"LOG.md": a})
+        t = f.commit({"LOG.md": a + lines("b", 5)})
+        res = audit(f.d, t, files=F)
+        return res["events"] == [] and exit_code(res) == 0, str(res["summary"])
+
+    def t_below():
+        f = Fixture(root)
+        a = lines("a", 40)
+        f.commit({"LOG.md": a})
+        t = f.commit({"LOG.md": a[:21]})          # 19 deleted
+        res = audit(f.d, t, files=F)
+        return res["events"] == [] and exit_code(res) == 0, str(res["summary"])
+
+    def t_exact_unrestored():
+        f = Fixture(root)
+        a = lines("a", 40)
+        f.commit({"corpus/QUALITY.md": a})
+        c = f.commit({"corpus/QUALITY.md": a[20:]})   # exactly 20 deleted
+        res = audit(f.d, c, files=F)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["commit"] == c and e[0]["deleted"] == 20 and e[0]["status"] == "unrestored"
+                and e[0]["restored_by"] is None and e[0]["restored_best"] is None and exit_code(res) == 1), str(e)
+
+    def t_restored():
+        f = Fixture(root)
+        a = lines("a", 50)
+        f.commit({"SCORECARD.md": a})
+        c = f.commit({"SCORECARD.md": a[:10]})
+        f.commit({"notes.md": ["x"]})
+        r = f.commit({"SCORECARD.md": a + ["appended"]})
+        t = f.commit({"SCORECARD.md": a + ["appended", "more"]})
+        res = audit(f.d, t, files=F)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["commit"] == c and e[0]["restored_by"] == r and e[0]["restored_best"] == r
+                and e[0]["status"] == "restored" and e[0]["restored_max"] == 40 and exit_code(res) == 0), str(e)
+
+    def t_partial():
+        f = Fixture(root)
+        a = lines("a", 60)
+        f.commit({"corpus/README.md": a})
+        f.commit({"corpus/README.md": a[:20]})        # 40 deleted
+        t = f.commit({"corpus/README.md": a[:40]})    # 20 back
+        res = audit(f.d, t, files=F)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["status"] == "partial" and e[0]["restored_max"] == 20
+                and e[0]["restored_best"] == t and e[0]["restored_by"] is None and exit_code(res) == 1), str(e)
+
+    def t_undeclared():
+        f = Fixture(root)
+        a = lines("a", 50)
+        f.commit({"notes.md": a, "corpus/other.md": a})
+        t = f.commit({"notes.md": a[:5], "corpus/other.md": a[:5]})
+        res = audit(f.d, t, files=F)
+        return res["events"] == [] and exit_code(res) == 0, str(res["events"])
+
+    def t_file_removed():
+        f = Fixture(root)
+        a = lines("a", 25)
+        f.commit({"corpus/SOURCES.md": a, "LOG.md": ["keep"]})
+        c = f.commit({}, delete=["corpus/SOURCES.md"])
+        res = audit(f.d, c, files=["corpus/SOURCES.md"])
+        e = res["events"]
+        return (len(e) == 1 and e[0]["deleted"] == 25 and e[0]["status"] == "unrestored"
+                and exit_code(res) == 1), str(e)
+
+    def t_merge_first_parent():
+        f = Fixture(root)
+        a = lines("a", 40)
+        f.commit({"LOG.md": a})
+        _git(f.d, "checkout", "-q", "-b", "side")
+        f.commit({"LOG.md": a[:10]})                  # side deletes 30
+        _git(f.d, "checkout", "-q", "-")
+        f.commit({"LOG.md": a + ["main"]})
+        _git(f.d, *Fixture.IDENT, "merge", "-q", "-s", "ours", "--no-edit", "side")
+        m = _text(f.d, "rev-parse", "HEAD").strip()
+        res = audit(f.d, m, files=F)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["commit"] != m and e[0]["deleted"] == 30
+                and e[0]["status"] == "restored"), str(e)
+
+    def t_dashdash():
+        # v1 dropped deleted lines starting with `--`: 21 deleted, 2 of them `--…`, read as 19
+        f = Fixture(root)
+        a = lines("a", 30) + ["--out x", "---", "--- y"]
+        f.commit({"LOG.md": a})
+        c = f.commit({"LOG.md": a[19:30]})            # deletes 19 plain + 3 dashed = 22
+        res = audit(f.d, c, files=F)
+        e = res["events"]
+        return len(e) == 1 and e[0]["deleted"] == 22 and e[0]["status"] == "unrestored", str(e)
+
+    def t_crlf_and_eof():
+        # a CRLF line restored as LF does not count; a deleted final line without newline counts
+        f = Fixture(root)
+        body = "".join(f"p{i} {os.urandom(3).hex()}\n" for i in range(25)).encode()
+        crl = b"crlf line\r\n"
+        f.commit({"LOG.md": body + crl + b"no newline at end"}, raw=True)
+        c = f.commit({"LOG.md": b""}, raw=True)        # 27 deleted
+        t = f.commit({"LOG.md": body + b"crlf line\n"}, raw=True)
+        res = audit(f.d, t, files=F)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["commit"] == c and e[0]["deleted"] == 27 and e[0]["restored_max"] == 25
+                and e[0]["status"] == "partial"), str(e)
+
+    def t_multiset():
+        # three copies deleted, one restored: 1 of 3, not 3 of 3 (v1 set membership)
+        f = Fixture(root)
+        a = lines("a", 20) + ["dup"] * 3
+        f.commit({"LOG.md": a})
+        f.commit({"LOG.md": []})                     # 23 deleted
+        t = f.commit({"LOG.md": a[:20] + ["dup"]})
+        res = audit(f.d, t, files=F)
+        e = res["events"]
+        return len(e) == 1 and e[0]["restored_max"] == 21 and e[0]["status"] == "partial", str(e)
+
+    def t_window_max():
+        # restored fully, then re-trimmed below threshold: the window maximum keeps it restored,
+        # held_at_to shows the loss and v3 exits 1 on the regression (round-47 seat X1Stable)
+        f = Fixture(root)
+        a = lines("a", 40)
+        f.commit({"SCORECARD.md": a})
+        f.commit({"SCORECARD.md": a[:15]})           # 25 deleted
+        r = f.commit({"SCORECARD.md": a})
+        t = f.commit({"SCORECARD.md": a[:35]})       # 5 of them deleted again (no event)
+        res = audit(f.d, t, files=F)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["restored_max"] == 25 and e[0]["restored_by"] == r
+                and e[0]["status"] == "restored" and e[0]["held_at_to"] == 20
+                and res["summary"]["regressed"] == 1 and exit_code(res) == 1), str(e)
+
+    def t_relocation():
+        # a block moved inside one commit is held in that commit
+        f = Fixture(root)
+        a = lines("a", 50)
+        f.commit({"LOG.md": a})
+        c = f.commit({"LOG.md": a[25:] + a[:25]})
+        res = audit(f.d, c, files=F)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["restored_by"] == c and e[0]["status"] == "restored"), str(e)
+
+    def t_contract():
+        # files come from the contract at <to>; lessons glob included; malformed contract -> AuditError
+        f = Fixture(root)
+        a = lines("a", 30)
+        f.commit({"AGENTS.md": ["lessons are append-only"], "corpus/lessons/r1.md": a, "notes.md": a,
+                  CONTRACT: [HEADER, "corpus/lessons/*.md\tA-corr\tAGENTS.md:1\t*\tx"]})
+        t = f.commit({"corpus/lessons/r1.md": a[:5], "notes.md": a[:5]})
+        res = audit(f.d, t)
+        e = res["events"]
+        ok = (res["files"] == ["corpus/lessons/r1.md"] and len(e) == 1 and e[0]["file"] == "corpus/lessons/r1.md"
+              and res["declarations"][0]["ok"] is True)
+        for bad in ("path\trule\n", HEADER + "\nLOG.md\tA\tAGENTS.md:1\tx\n",
+                    HEADER + "\nLOG.md\tA\tAGENTS.md:1\texempt=Axes@AGENTS.md:1\tx\n",
+                    HEADER + "\nLOG.md\tA\tAGENTS.md:1\tonly=## E\tx\n"):
+            try:
+                parse_contract(bad)
+                ok = False
+            except AuditError:
+                pass
+        return ok, str(res["files"]) + str(e)
+
+    def t_threshold_flag():
+        f = Fixture(root)
+        a = lines("a", 40)
+        f.commit({"LOG.md": a})
+        t = f.commit({"LOG.md": a[:35]})              # 5 deleted
+        res = audit(f.d, t, threshold=5, files=F)
+        return len(res["events"]) == 1 and exit_code(res) == 1, str(res["events"])
+
+    def t_crlf_restore_exact():
+        # a CRLF line restored byte-exact as CRLF counts (round-47 seat M1Tool, survivor B2)
+        f = Fixture(root)
+        plain = [f"p{i} {os.urandom(3).hex()}" for i in range(30)]
+        base = ("\n".join(plain) + "\n").encode()
+        f.commit({"LOG.md": base + b"crlf line\r\n"}, raw=True)
+        c = f.commit({"LOG.md": ("\n".join(plain[:10]) + "\n").encode()}, raw=True)
+        t = f.commit({"LOG.md": base + b"crlf line\r\n"}, raw=True)
+        res = audit(f.d, t, files=F)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["commit"] == c and e[0]["deleted"] == 21
+                and e[0]["restored_max"] == 21 and e[0]["status"] == "restored"), str(e)
+
+    def t_dup_kept_not_restored():
+        # 2 of 3 copies deleted, 1 kept: the kept copy is not a restoration (survivor K2)
+        f = Fixture(root)
+        a = lines("a", 30) + ["dup"] * 3
+        f.commit({"LOG.md": a})
+        f.commit({"LOG.md": a[:10] + ["dup"]})
+        t = f.commit({"LOG.md": a[:10] + ["dup", "unrelated"]})
+        res = audit(f.d, t, files=F)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["deleted"] == 22 and e[0]["restored_max"] == 0
+                and e[0]["status"] == "unrestored"), str(e)
+
+    def t_final_segment():
+        # only the empty split artifact after a final newline is dropped (survivor S1)
+        return (split_lines(b"x\n") == [b"x"] and split_lines(b"x") == [b"x"]
+                and split_lines(b"a\n\n") == [b"a", b""] and split_lines(b"") == []
+                and split_lines(b"a\r\n") == [b"a\r"]), ""
+
+    def t_vanished_and_paths():
+        # a declared file deleted outright is reported vanished (exit 1); a non-ASCII path
+        # is expanded; a pattern matching nothing is reported; a binary change is listed
+        f = Fixture(root)
+        a = lines("a", 25)
+        contract = [HEADER, "corpus/lessons/*.md\tA-corr\tAGENTS.md:1\t*\tx", "nope/*.md\tA\tAGENTS.md:1\t*\tx"]
+        f.commit({"AGENTS.md": ["lessons and nope are append-only"], "corpus/lessons/gone.md": a,
+                  "corpus/lessons/caf\u00e9.md": a, CONTRACT: contract})
+        f.commit({"corpus/lessons/caf\u00e9.md": a + ["more"]}, delete=["corpus/lessons/gone.md"])
+        t = f.commit({"corpus/lessons/bin.md": b"\x00\x01" * 40}, raw=True)
+        t = f.commit({"corpus/lessons/bin.md": b"\x00\x02" * 41}, raw=True)
+        res = audit(f.d, t)
+        ok = (res["files"] == ["corpus/lessons/bin.md", "corpus/lessons/caf\u00e9.md"]
+              and res["vanished"] == ["corpus/lessons/gone.md"] and res["unmatched_patterns"] == ["nope/*.md"]
+              and len(res["binary_changes"]) == 2 and res["summary"]["bad_declarations"] == 0
+              and exit_code(res) == 1)
+        try:
+            parse_contract(HEADER + "\r\nLOG.md\tA\tAGENTS.md:1\t*\tx\r\n")
+            ok = False
+        except AuditError:
+            pass
+        return ok, json.dumps({k: res[k] for k in ("files", "vanished", "unmatched_patterns", "binary_changes")})
+
+    # ---- v3 (round 48): regions, binding, regressed
+    NOTES = ["# notes", "score.md is append-only below its head.",
+             "The ## Axes and ## Plan heads of score.md are re-derived in place.",
+             "know.md keeps its ## Errata region append-only.",
+             "score.md gets appended to.", "score.md is not append-only.", "LOG.md is append-only."]
+    SCORE = "score.md\tA-corr\tNOTES.md:2\texempt=## Axes|## Plan@NOTES.md:3\tx"
+    KNOW = "know.md\tA-corr\tNOTES.md:4\tonly=## Errata@NOTES.md:4\tx"
+    head, tail = ["# score", "## Axes"] + lines("h", 24), ["## Round 1"] + lines("d", 25)
+
+    def scored(rows, body):
+        f = Fixture(root)
+        f.commit({"NOTES.md": NOTES, CONTRACT: [HEADER] + rows, "score.md": body})
+        return f
+
+    def t_exempt_rewritten():
+        f = scored([SCORE], head + tail)
+        c = f.commit({"score.md": ["# score", "## Axes"] + lines("h2", 24) + tail})
+        res = audit(f.d, c)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["deleted"] == 24 and e[0]["graded"] == 0 and e[0]["ungraded"] == 24
+                and e[0]["status"] == "ungraded" and e[0]["restored_best"] is None
+                and res["summary"]["ungraded_lines"] == 24 and exit_code(res) == 0), str(e)
+
+    def t_exempt_gutted():
+        f = scored([SCORE], head + tail)
+        c = f.commit({"score.md": ["# score", "## Axes", "collapsed"] + tail})
+        res = audit(f.d, c)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["graded"] == 24 and e[0]["status"] == "unrestored"
+                and exit_code(res) == 1), str(e)
+
+    def t_exempt_gutted_then_regrown():
+        # the section shrinks at the event and grows back later in the window: eligible
+        f = scored([SCORE], head + tail)
+        c = f.commit({"score.md": ["# score", "## Axes", "collapsed"] + tail})
+        t = f.commit({"score.md": ["# score", "## Axes"] + lines("h3", 30) + tail})
+        res = audit(f.d, t)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["commit"] == c and e[0]["ungraded"] == 24 and e[0]["status"] == "ungraded"
+                and exit_code(res) == 0), str(e)
+
+    def t_dated_rewritten():
+        f = scored([SCORE], head + tail)
+        c = f.commit({"score.md": head + ["## Round 1"] + lines("d2", 25)})
+        res = audit(f.d, c)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["graded"] == 25 and e[0]["ungraded"] == 0 and e[0]["status"] == "unrestored"
+                and exit_code(res) == 1), str(e)
+
+    def t_only_errata():
+        f = Fixture(root)
+        body, errata = ["# know", "## Body"] + lines("k", 25), ["## Errata — x"] + lines("e", 20)
+        f.commit({"NOTES.md": NOTES, CONTRACT: [HEADER, KNOW], "know.md": body + errata})
+        c1 = f.commit({"know.md": ["# know", "## Body"] + errata})
+        c2 = f.commit({"know.md": ["# know", "## Body", "## Errata — x"]})
+        res = audit(f.d, c2)
+        ev = {e["commit"]: e for e in res["events"]}
+        return (len(ev) == 2 and ev[c1]["status"] == "ungraded" and ev[c1]["ungraded"] == 25
+                and ev[c2]["graded"] == 20 and ev[c2]["status"] == "unrestored" and exit_code(res) == 1), str(ev)
+
+    def t_clamp():
+        # K > M for a duplicated line must contribute 0, not a negative (round-47 seat K1Fixture)
+        f = Fixture(root)
+        u = lines("u", 20)
+        f.commit({"LOG.md": ["dup"] * 30 + u})
+        f.commit({"LOG.md": ["dup"] * 10})          # 20 dup + 20 unique deleted
+        t = f.commit({"LOG.md": u})                  # uniques back, every dup gone
+        res = audit(f.d, t, files=F)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["deleted"] == 40 and e[0]["restored_max"] == 20
+                and e[0]["status"] == "partial"), str(e)
+
+    def t_bad_declarations():
+        f = Fixture(root)
+        f.commit({"NOTES.md": NOTES, "score.md": head + tail, "LOG.md": ["x"],
+                  CONTRACT: [HEADER, "score.md\tA\tNOTES.md:5\t*\tno append-only",
+                             "score.md\tA\tNOTES.md:6\t*\tnegation",
+                             "score.md\tA-corr\tNOTES.md:2\texempt=## Axes|## Round 1@NOTES.md:3\tunnamed",
+                             "LOG.md\tA\tNOTES.md:2\t*\ttoken missing",
+                             "LOG.md\tA\tNOTES.md:7\t*\tbound"]})
+        res = audit(f.d, "HEAD")
+        oks = [d["ok"] for d in res["declarations"]]
+        return oks == [False, False, False, False, True] and exit_code(res) == 1, str(res["declarations"])
+
+    def t_clean():
+        f = scored([SCORE, "LOG.md\tA\tNOTES.md:7\t*\tx"], head + tail)
+        a = lines("c", 30)
+        f.commit({"LOG.md": a})
+        f.commit({"LOG.md": a[20:], "score.md": ["# score", "## Axes"] + lines("h4", 24) + tail})
+        t = f.commit({"LOG.md": a})
+        res = audit(f.d, t)
+        s = res["summary"]
+        return (s["events"] == 2 and s["restored"] == 1 and s["ungraded"] == 1 and s["regressed"] == 0
+                and s["bad_declarations"] == 0 and exit_code(res) == 0), str(res["events"])
+
+    def t_preamble_graded():
+        # lines before the first `## ` heading (the SCORECARD authority banner) have no
+        # section, so no exempt title covers them: a rewrite is graded (round-48 build finding;
+        # seat X1SelftestPower: no case covered the pre-heading region)
+        f = scored([SCORE], ["# score"] + lines("p", 24) + head[1:] + tail)
+        c = f.commit({"score.md": ["# score"] + lines("p2", 24) + head[1:] + tail})
+        res = audit(f.d, c)
+        e = res["events"]
+        return (len(e) == 1 and e[0]["graded"] == 24 and e[0]["ungraded"] == 0
+                and e[0]["status"] == "unrestored" and exit_code(res) == 1), str(e)
+
+    # ---- v4 (round 49): origin-aware carve-out, word-bounded token, negation window,
+    # no wildcard self-declaration (round-48 seats K1Regions, K1Binding)
+    def t_launder_through_head():
+        # dated text moved under the exempt head (a 1-line diff), then dropped there while
+        # the head regrows past its parent size: v3 left it ungraded, v4 grades it
+        f = scored([SCORE], head + tail)
+        f.commit({"score.md": head + tail[1:] + ["## Round 1", "kept"]})
+        c = f.commit({"score.md": head + lines("regrow", 30) + ["## Round 1", "kept"]})
+        res = audit(f.d, c)
+        e = [x for x in res["events"] if x["commit"] == c]
+        return (len(e) == 1 and e[0]["deleted"] == 25 and e[0]["graded"] == 25 and e[0]["ungraded"] == 0
+                and e[0]["status"] == "unrestored" and exit_code(res) == 1), str(res["events"])
+
+    def t_binding_v4():
+        f = Fixture(root)
+        f.commit({"NOTES.md": ["# n", "the catalog is append-only", "score.md is not strictly append-only",
+                               "LOG.md is append-only", "score.md cannot be called append-only",
+                               "score.md isn’t append-only", "score.md is not—append-only"],
+                  "notes/a.md": ["this file is append-only"], "notes/b.md": ["x"], "score.md": ["s"],
+                  "LOG.md": ["x"],
+                  CONTRACT: [HEADER, "LOG.md\tA\tNOTES.md:2\t*\tsubstring token",
+                             "score.md\tA\tNOTES.md:3\t*\tnegation window",
+                             "notes/*.md\tA\tnotes/a.md:1\t*\twildcard self-declaration",
+                             "LOG.md\tA\tNOTES.md:4\t*\tbound",
+                             "score.md\tA\tNOTES.md:5\t*\tcannot (seat K2Negation)",
+                             "score.md\tA\tNOTES.md:6\t*\tcurly apostrophe",
+                             "score.md\tA\tNOTES.md:7\t*\tem dash"]})
+        res = audit(f.d, "HEAD")
+        oks = [d["ok"] for d in res["declarations"]]
+        return oks == [False, False, False, True, False, False, False] and exit_code(res) == 1, \
+            str(res["declarations"])
+
+    def t_wildcard_token_bound():
+        # v4: a wildcard row binds through a line naming its directory token as a whole word,
+        # and not through the token inside a longer word. `contract` covers the positive only
+        # in passing (its declaring line is the token itself, which v3's substring test also
+        # accepts); this pins both sides of the rule.
+        f = Fixture(root)
+        f.commit({"NOTES.md": ["# n", "the logs directory is append-only",
+                               "our catalogs are append-only"],
+                  "corpus/logs/a.md": ["this file is append-only"],
+                  CONTRACT: [HEADER, "corpus/logs/*.md\tA\tNOTES.md:2\t*\tbound by token",
+                             "corpus/logs/*.md\tA\tNOTES.md:3\t*\ttoken inside longer word"]})
+        res = audit(f.d, "HEAD")
+        oks = [d["ok"] for d in res["declarations"]]
+        return oks == [True, False] and exit_code(res) == 1, str(res["declarations"])
+
+    def t_origin_preamble_moved_under_head():
+        # preamble-born text (origin None) moved under the exempt head and dropped there while
+        # the head regrows past its parent size: the carve-out needs an origin inside an exempt
+        # title, so None never qualifies and the deletion is graded (v4 origin clause, None side)
+        p = lines("p", 25)
+        f = scored([SCORE], ["# score"] + p + head[1:] + tail)
+        f.commit({"score.md": ["# score", "## Axes"] + head[2:] + p + tail})
+        c = f.commit({"score.md": ["# score", "## Axes"] + head[2:] + lines("regrow", 30) + tail})
+        res = audit(f.d, c)
+        e = [x for x in res["events"] if x["commit"] == c]
+        return (len(e) == 1 and e[0]["deleted"] == 25 and e[0]["graded"] == 25 and e[0]["ungraded"] == 0
+                and e[0]["status"] == "unrestored" and exit_code(res) == 1), str(res["events"])
+
+    def t_negation_window_three_vs_four():
+        # the negation window reaches three words before append-only, not four: both sides of
+        # the {0,3} bound are pinned (v3 had no window and bound both lines)
+        f = Fixture(root)
+        f.commit({"NOTES.md": ["# n", "score.md is not yet considered strictly append-only",
+                               "LOG.md is not yet really considered strictly append-only"],
+                  "score.md": ["s"], "LOG.md": ["x"],
+                  CONTRACT: [HEADER, "score.md\tA\tNOTES.md:2\t*\tthree words",
+                             "LOG.md\tA\tNOTES.md:3\t*\tfour words"]})
+        res = audit(f.d, "HEAD")
+        oks = [d["ok"] for d in res["declarations"]]
+        return oks == [False, True] and exit_code(res) == 1, str(res["declarations"])
+
+    def t_negation_curly_apostrophe():
+        # a word carrying a typographic apostrophe still counts as one word inside the negation
+        # window (v4 `[\\w'\u2019]`); dropping U+2019 from the class binds the line
+        f = Fixture(root)
+        f.commit({"NOTES.md": ["# n", "score.md is not the round\u2019s append-only log",
+                               "LOG.md is not the round's append-only log"],
+                  "score.md": ["s"], "LOG.md": ["x"],
+                  CONTRACT: [HEADER, "score.md\tA\tNOTES.md:2\t*\tcurly",
+                             "LOG.md\tA\tNOTES.md:3\t*\tascii"]})
+        res = audit(f.d, "HEAD")
+        oks = [d["ok"] for d in res["declarations"]]
+        return oks == [False, False] and exit_code(res) == 1, str(res["declarations"])
+
+    def t_origin_multi_title():
+        # origin(l) may hold several titles; one of them being exempt keeps the line ungraded
+        # (`origin ... contains one of`). A line born both under the head and under a dated
+        # heading is exempt (v4); a single-origin reading grades it.
+        h = lines("h", 24) + ["shared line"]
+        d = ["shared line"] + lines("d", 24)
+        f = scored([SCORE], ["# score", "## Axes"] + h + ["## Round 1"] + d)
+        c = f.commit({"score.md": ["# score", "## Axes"] + h[:-1] + lines("regrow", 30)
+                      + ["## Round 1"] + d})
+        res = audit(f.d, c, threshold=1)
+        e = [x for x in res["events"] if x["commit"] == c]
+        return (len(e) == 1 and e[0]["deleted"] == 1 and e[0]["graded"] == 0 and e[0]["ungraded"] == 1
+                and e[0]["status"] == "ungraded" and exit_code(res) == 0), str(res["events"])
+
+    def t_negation_typographic_isnt():
+        # the documented negation set is `isn't`/`aren't`, but both spellings in NEGATIONS and
+        # NEG_WINDOW are ASCII-only: `isn\u2019t append-only` binds on the build commit
+        # (already covered by the uncommitted integration edit from seat K2Negation F1)
+        f = Fixture(root)
+        f.commit({"NOTES.md": ["# n", "LOG.md isn\u2019t append-only", "QQ.md aren\u2019t append-only"],
+                  "LOG.md": ["x"], "QQ.md": ["x"],
+                  CONTRACT: [HEADER, "LOG.md\tA\tNOTES.md:2\t*\tisn't curly",
+                             "QQ.md\tA\tNOTES.md:3\t*\taren't curly"]})
+        res = audit(f.d, "HEAD")
+        oks = [d["ok"] for d in res["declarations"]]
+        return oks == [False, False], str(res["declarations"])
+
+    # ---------------- v6 (round 51): default threshold 1, A-row permitted edits, disclosures
+    AROW = ["# notes", "SRC.md is append-only by row."]
+    SRC_C = HEADER + "\nSRC.md\tA-row\tN.md:2\t*\tx\nLOG.md\tA\tN.md:3\t*\tx\n"
+    ROWS = ["| id | source | kind | tier | scope | anchor | teaches | status | opened | recheck | used-by |",
+            "|---|---|---|---|---|---|---|---|---|---|---|"] + [
+        f"| S00{i} | src {i} https://e.invalid/{i} | docs | A | scope `a|b` {i} | anchor | teaches {i} | mined "
+        f"| 2026-10-01 | 90d | x.md |" for i in range(1, 4)]
+
+    def v6fix():
+        f = Fixture(root)
+        f.commit({"N.md": AROW + ["LOG.md is append-only."], "SRC.md": ROWS, "LOG.md": lines("g", 5)})
+        return f
+
+    def v6audit(f, t, ledger=None):
+        return full(f.d, t, contract=("c", SRC_C),
+                    disclosures=None if ledger is None else ("d", DHEADER + "\n" + ledger))
+
+    def t_v6_default_threshold():
+        f = Fixture(root)
+        a = lines("a", 30)
+        f.commit({"LOG.md": a})
+        t = f.commit({"LOG.md": a[1:]})               # 1 deleted
+        res = full(f.d, t, files=F)
+        e = res["events"]
+        return (res["threshold"] == 1 and len(e) == 1 and e[0]["status"] == "unrestored"
+                and exit_code(res) == 1), str(e)
+
+    def t_v6_arow_mutable():
+        f = v6fix()
+        t = f.commit({"SRC.md": ROWS[:2] + [ROWS[2].replace("| mined |", "| rejected |").replace("90d", "30d")]
+                      + ROWS[3:]})
+        res = v6audit(f, t)
+        e = [x for x in res["events"] if x["file"] == "SRC.md"]
+        return (len(e) == 1 and e[0]["permitted"] == 1 and e[0]["graded"] == 0 and e[0]["status"] == "ungraded"
+                and exit_code(res) == 0), str(e)
+
+    def t_v6_arow_immutable():
+        f = v6fix()
+        t = f.commit({"SRC.md": ROWS[:2] + [ROWS[2].replace("teaches 1", "teaches one")] + ROWS[3:]})
+        res = v6audit(f, t)
+        e = [x for x in res["events"] if x["file"] == "SRC.md"]
+        return (len(e) == 1 and e[0]["permitted"] == 0 and e[0]["graded"] == 1 and e[0]["status"] == "unrestored"
+                and exit_code(res) == 1), str(e)
+
+    def t_v6_arow_code_span_pipe():
+        # a `|` inside a backtick span is not a cell boundary: editing the scope cell is graded
+        f = v6fix()
+        t = f.commit({"SRC.md": ROWS[:2] + [ROWS[2].replace("`a|b`", "`a|c`")] + ROWS[3:]})
+        res = v6audit(f, t)
+        e = [x for x in res["events"] if x["file"] == "SRC.md"]
+        return len(e) == 1 and e[0]["permitted"] == 0 and e[0]["graded"] == 1, str(e)
+
+    def t_v6_arow_row_dropped():
+        f = v6fix()
+        t = f.commit({"SRC.md": ROWS[:3]})
+        res = v6audit(f, t)
+        e = [x for x in res["events"] if x["file"] == "SRC.md"]
+        return len(e) == 1 and e[0]["permitted"] == 0 and e[0]["status"] == "unrestored", str(e)
+
+    def sha(x):
+        return hashlib.sha256(x.encode()).hexdigest()
+
+    def t_v6_disclosed():
+        f = v6fix()
+        body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
+        t = f.commit({"LOG.md": body[1:5]})
+        res = v6audit(f, t, f"{t}\tLOG.md\t{sha(body[0])}\t1\tremoval\tdropped")
+        e = [x for x in res["events"] if x["commit"] == t]
+        return (len(e) == 1 and e[0]["status"] == "disclosed" and e[0]["disclosed"] == 1
+                and res["summary"]["bad_disclosures"] == 0 and exit_code(res) == 0), str(res["events"])
+
+    def t_v6_bad_disclosures():
+        f = v6fix()
+        body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
+        t = f.commit({"LOG.md": body[1:5]})
+        out = []
+        for led in (f"{t}\tLOG.md\t{sha('junk')}\t1\tremoval\tx",          # no such line
+                    f"{t}\tLOG.md\t{sha(body[0])}\t2\tremoval\tx",         # too many
+                    f"{t}\tLOG.md\t{sha(body[0])}\t1\tin-place-edit\tx",   # wrong class
+                    f"{'0' * 40}\tLOG.md\t{sha(body[0])}\t1\tremoval\tx"):  # no event
+            res = v6audit(f, t, led)
+            out.append((res["summary"]["bad_disclosures"], exit_code(res)))
+        return out == [(1, 1)] * 4, str(out)
+
+    def t_v6_in_place_edit_class():
+        f = v6fix()
+        body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
+        t = f.commit({"LOG.md": ["edited"] + body[1:5]})
+        ok = v6audit(f, t, f"{t}\tLOG.md\t{sha(body[0])}\t1\tin-place-edit\tx")
+        bad = v6audit(f, t, f"{t}\tLOG.md\t{sha(body[0])}\t1\tremoval\tx")
+        return (exit_code(ok) == 0 and ok["summary"]["disclosed"] == 1
+                and bad["summary"]["bad_disclosures"] == 1), str(ok["events"])
+
+    def t_v6_partial_disclosure():
+        f = v6fix()
+        body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
+        t = f.commit({"LOG.md": body[2:5]})
+        res = v6audit(f, t, f"{t}\tLOG.md\t{sha(body[0])}\t1\tremoval\tx")
+        e = [x for x in res["events"] if x["commit"] == t]
+        return (len(e) == 1 and e[0]["status"] == "unrestored" and e[0]["disclosed"] == 1
+                and exit_code(res) == 1), str(e)
+
+    def t_v6_two_files_one_commit():
+        # a disclosure on the first file of a commit must not move the second file's window
+        # (round-51 build defect: the ledger loop reused the commit index `i`)
+        f = v6fix()
+        body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
+        f.commit({"N.md": AROW + ["LOG.md is append-only."]})
+        t = f.commit({"LOG.md": body[1:5], "SRC.md": ROWS[:4]})
+        res = v6audit(f, t, f"{t}\tLOG.md\t{sha(body[0])}\t1\tremoval\tx")
+        e = {x["file"]: x for x in res["events"] if x["commit"] == t}
+        return (e["LOG.md"]["status"] == "disclosed" and e["SRC.md"]["status"] == "unrestored"
+                and e["SRC.md"]["restored_max"] == 0 and exit_code(res) == 1), str(e)
+
+    def t_v6_ledger_cutoff():
+        # an in-tree ledger discloses only commits before its own introduction
+        f = v6fix()
+        body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
+        c1 = f.commit({"LOG.md": body[1:5]})
+        row1 = f"{c1}\tLOG.md\t{sha(body[0])}\t1\tremoval\tx"
+        f.commit({CONTRACT: SRC_C.split("\n")[:-1], DISCLOSURES: [DHEADER, row1]})
+        ok = full(f.d, "HEAD")
+        c3 = f.commit({"LOG.md": body[2:5]})
+        f.commit({DISCLOSURES: [DHEADER, row1, f"{c3}\tLOG.md\t{sha(body[1])}\t1\tremoval\tx"]})
+        late = full(f.d, "HEAD")
+        return (exit_code(ok) == 0 and ok["summary"]["disclosed"] == 1 and exit_code(late) == 1
+                and late["summary"]["bad_disclosures"] == 1
+                and "introduction" in [d for d in late["disclosures"] if not d["ok"]][0]["reason"]), \
+            str(ok["summary"]) + str(late["disclosures"])
+
+    def t_v6_restored_not_disclosable():
+        f = v6fix()
+        body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
+        t1 = f.commit({"LOG.md": body[1:5]})
+        t = f.commit({"LOG.md": body[1:5] + [body[0]]})
+        res = v6audit(f, t, f"{t1}\tLOG.md\t{sha(body[0])}\t1\tremoval\tx")
+        return res["summary"]["bad_disclosures"] == 1 and exit_code(res) == 1, str(res["disclosures"])
+
+    for name, fn in [("no-deletion", t_none), ("below-threshold", t_below),
+                     ("exact-threshold-unrestored", t_exact_unrestored), ("restored-later", t_restored),
+                     ("partial", t_partial), ("undeclared-file", t_undeclared),
+                     ("declared-file-removed", t_file_removed), ("merge-first-parent", t_merge_first_parent),
+                     ("dashdash-lines", t_dashdash), ("crlf-and-eof", t_crlf_and_eof), ("multiset", t_multiset),
+                     ("window-max", t_window_max), ("relocation", t_relocation), ("contract", t_contract),
+                     ("threshold-flag", t_threshold_flag), ("crlf-restore-exact", t_crlf_restore_exact),
+                     ("dup-kept-not-restored", t_dup_kept_not_restored), ("final-segment", t_final_segment),
+                     ("vanished-and-paths", t_vanished_and_paths), ("exempt-rewritten", t_exempt_rewritten),
+                     ("exempt-gutted", t_exempt_gutted), ("exempt-gutted-then-regrown", t_exempt_gutted_then_regrown),
+                     ("dated-rewritten", t_dated_rewritten), ("only-errata", t_only_errata), ("clamp", t_clamp),
+                     ("bad-declarations", t_bad_declarations), ("clean", t_clean),
+                     ("preamble-graded", t_preamble_graded), ("launder-through-head", t_launder_through_head),
+                     ("binding-v4", t_binding_v4),
+                     ("wildcard-token-bound", t_wildcard_token_bound),
+                     ("origin-preamble-moved-under-head", t_origin_preamble_moved_under_head),
+                     ("negation-window-three-vs-four", t_negation_window_three_vs_four),
+                     ("negation-curly-apostrophe", t_negation_curly_apostrophe),
+                     ("origin-multi-title", t_origin_multi_title),
+                     ("negation-typographic-isnt", t_negation_typographic_isnt),
+                     ("v6-default-threshold", t_v6_default_threshold), ("v6-arow-mutable", t_v6_arow_mutable),
+                     ("v6-arow-immutable", t_v6_arow_immutable), ("v6-arow-code-span-pipe", t_v6_arow_code_span_pipe),
+                     ("v6-arow-row-dropped", t_v6_arow_row_dropped), ("v6-disclosed", t_v6_disclosed),
+                     ("v6-bad-disclosures", t_v6_bad_disclosures), ("v6-in-place-edit-class", t_v6_in_place_edit_class),
+                     ("v6-partial-disclosure", t_v6_partial_disclosure),
+                     ("v6-restored-not-disclosable", t_v6_restored_not_disclosable),
+                     ("v6-two-files-one-commit", t_v6_two_files_one_commit),
+                     ("v6-ledger-cutoff", t_v6_ledger_cutoff)]:
+        case(name, fn)
+    for name, ok, why in cases:
+        print(f"{'pass' if ok else 'FAIL'} {name}" + ("" if ok else f": {why[:300]}"))
+    fails = sum(1 for _, ok, _ in cases if not ok)
+    print(f"AOA_SELFTEST pass={len(cases) - fails} fail={fails}")
+    return 0 if fails == 0 else 1
+
+
+def main(argv=None):
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--repo", default=".")
+    ap.add_argument("--to", default="HEAD")
+    ap.add_argument("--threshold", type=int, default=1)
+    ap.add_argument("--disclosures", help=f"disclosure ledger TSV (default: <to>:{DISCLOSURES} with the <to> contract)")
+    ap.add_argument("--contract", help=f"contract TSV (default: <to>:{CONTRACT})")
+    ap.add_argument("--files", help="comma list of repo-relative paths (instead of a contract)")
+    ap.add_argument("--json", action="store_true")
+    ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--scratch", help="fixture root for --selftest (default $TMPDIR)")
+    a = ap.parse_args(argv)
+    if a.selftest:
+        base = a.scratch or tempfile.gettempdir()
+        os.makedirs(base, exist_ok=True)
+        root = tempfile.mkdtemp(prefix="aoa-", dir=base)
+        try:
+            return selftest(root)
+        finally:
+            shutil.rmtree(root, ignore_errors=True)
+    if a.threshold < 1:
+        print("could-not-evaluate: --threshold must be >= 1", file=sys.stderr)
+        return 2
+    if a.files and a.contract:
+        print("could-not-evaluate: --files and --contract are exclusive", file=sys.stderr)
+        return 2
+    files = [x.strip() for x in a.files.split(",") if x.strip()] if a.files else None
+    try:
+        contract = None
+        if a.contract and files is None:
+            with open(a.contract, encoding="utf-8") as fh:
+                contract = (os.path.abspath(a.contract), fh.read())
+        disclosures = None
+        if a.disclosures:
+            with open(a.disclosures, encoding="utf-8") as fh:
+                disclosures = (os.path.abspath(a.disclosures), fh.read())
+        res = audit(a.repo, a.to, a.threshold, files, contract, disclosures)
+    except (AuditError, OSError) as e:
+        print(f"could-not-evaluate: {e}", file=sys.stderr)
+        return 2
+    print(json.dumps(res, indent=1) if a.json else render(res))
+    return exit_code(res)
+
+
+if __name__ == "__main__":
+    sys.exit(main())

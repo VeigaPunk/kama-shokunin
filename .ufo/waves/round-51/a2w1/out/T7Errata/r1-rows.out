@@ -1,0 +1,23 @@
+# evidence r1-rows (round-51 errata seat T7Errata); commands run from /home/vgpnk/Projects/shokunin/kama-shokunin
+$ for r in 26ecba64ad6fb571d09074b07202d1618a46ecd1 5a1e29a1 8370e39c b6bed925 57a2e25b 4eca4892; do printf '%s ' "$r"; git show $r:corpus/SOURCES.md | grep -cE '^\|[[:space:]]*S[0-9]{3,}[[:space:]]*\|'; done
+26ecba64ad6fb571d09074b07202d1618a46ecd1 236
+5a1e29a1 239
+8370e39c 239
+b6bed925 240
+57a2e25b 239
+4eca4892 240
+exit=0
+
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-list 26ecba64..5a1e29a1 -- corpus/SOURCES.md   # commits touching the table in the round-50 range
+3d42897b round-50: build-fix - S498 row markdown tick parity so sources-append-only row parser accepts it
+97c864be round-50: build - replay isolation + parent-death teardown, live model-mapping record, append-only-audit v5 (birth-DAG origin, fence-aware sections, CRLF-normalized keys), S496-S498
+
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff --stat 26ecba64 5a1e29a1 -- corpus/SOURCES.md
+ corpus/SOURCES.md | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff 26ecba64 5a1e29a1 -- corpus/SOURCES.md | grep -cE '^-\|[[:space:]]*S[0-9]{3,}'   # removed row lines
+0
+grep exit=1 (1 = no removed row lines)
+
+$ grep -n 'Row count' /home/vgpnk/Projects/shokunin/.ufo/reports/round-50/kama.md
+61:- **Row count** (`grep -cE '^\|[[:space:]]*S[0-9]{3,}[[:space:]]*\|' corpus/SOURCES.md`): **237 → 240**.

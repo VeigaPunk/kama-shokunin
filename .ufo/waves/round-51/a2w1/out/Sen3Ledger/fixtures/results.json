@@ -1,0 +1,357 @@
+[
+ {
+  "name": "00-valid-control",
+  "expect_exit": 0,
+  "exit": 0,
+  "why": "the lane's own ledger via --disclosures: unchanged verdict",
+  "stderr_head": "",
+  "stderr_is_traceback": false,
+  "summary": {
+   "events": 106,
+   "disclosed": 51,
+   "restored": 19,
+   "partial": 0,
+   "unrestored": 0,
+   "ungraded": 36,
+   "bad_disclosures": 0,
+   "disclosed_lines": 166
+  },
+  "bad_rows": []
+ },
+ {
+  "name": "01-crlf",
+  "expect_exit": 2,
+  "exit": 0,
+  "why": "docstring: 'disclosures carry CR bytes' is a malformed ledger (exit 2)",
+  "stderr_head": "",
+  "stderr_is_traceback": false,
+  "summary": {
+   "events": 106,
+   "disclosed": 51,
+   "restored": 19,
+   "partial": 0,
+   "unrestored": 0,
+   "ungraded": 36,
+   "bad_disclosures": 0,
+   "disclosed_lines": 166
+  },
+  "bad_rows": []
+ },
+ {
+  "name": "02-tab-inside-note",
+  "expect_exit": 2,
+  "exit": 2,
+  "why": "7 cells on the row -> malformed ledger",
+  "stderr_head": "could-not-evaluate: disclosures line 2: bad commit, file, line_sha256 or count",
+  "stderr_is_traceback": false,
+  "summary": null,
+  "bad_rows": []
+ },
+ {
+  "name": "03-upper-case-hex",
+  "expect_exit": 2,
+  "exit": 2,
+  "why": "commit must be [0-9a-f]{40}",
+  "stderr_head": "could-not-evaluate: disclosures line 2: bad commit, file, line_sha256 or count",
+  "stderr_is_traceback": false,
+  "summary": null,
+  "bad_rows": []
+ },
+ {
+  "name": "04-commit-39-chars",
+  "expect_exit": 2,
+  "exit": 2,
+  "why": "39-char commit -> malformed ledger",
+  "stderr_head": "could-not-evaluate: disclosures line 2: bad commit, file, line_sha256 or count",
+  "stderr_is_traceback": false,
+  "summary": null,
+  "bad_rows": []
+ },
+ {
+  "name": "05-count-0",
+  "expect_exit": 2,
+  "exit": 2,
+  "why": "count must be [1-9][0-9]*",
+  "stderr_head": "could-not-evaluate: disclosures line 2: bad commit, file, line_sha256 or count",
+  "stderr_is_traceback": false,
+  "summary": null,
+  "bad_rows": []
+ },
+ {
+  "name": "06-count-negative",
+  "expect_exit": 2,
+  "exit": 2,
+  "why": "count must be [1-9][0-9]*",
+  "stderr_head": "could-not-evaluate: disclosures line 2: bad commit, file, line_sha256 or count",
+  "stderr_is_traceback": false,
+  "summary": null,
+  "bad_rows": []
+ },
+ {
+  "name": "07-count-huge",
+  "expect_exit": 1,
+  "exit": 1,
+  "why": "parses; names more lines than are unheld -> bad disclosure (exit 1)",
+  "stderr_head": "",
+  "stderr_is_traceback": false,
+  "summary": {
+   "events": 106,
+   "disclosed": 50,
+   "restored": 19,
+   "partial": 0,
+   "unrestored": 1,
+   "ungraded": 36,
+   "bad_disclosures": 1,
+   "disclosed_lines": 165
+  },
+  "bad_rows": [
+   {
+    "commit": "c6199a254244",
+    "file": "corpus/README.md",
+    "count": 999999999,
+    "class": "in-place-edit",
+    "reason": "count 999999999 > unheld graded lines 1 with that key"
+   }
+  ]
+ },
+ {
+  "name": "08-file-path-with-spaces",
+  "expect_exit": 1,
+  "exit": 1,
+  "why": "a space is not a cell boundary: parses, names no event -> bad disclosure",
+  "stderr_head": "",
+  "stderr_is_traceback": false,
+  "summary": {
+   "events": 106,
+   "disclosed": 50,
+   "restored": 19,
+   "partial": 0,
+   "unrestored": 1,
+   "ungraded": 36,
+   "bad_disclosures": 1,
+   "disclosed_lines": 165
+  },
+  "bad_rows": [
+   {
+    "commit": "c6199a254244",
+    "file": "corpus/lessons/round 51.md",
+    "count": 1,
+    "class": "in-place-edit",
+    "reason": "names no event"
+   }
+  ]
+ },
+ {
+  "name": "09-file-path-unicode",
+  "expect_exit": 1,
+  "exit": 1,
+  "why": "unicode in the file cell parses, names no event -> bad disclosure",
+  "stderr_head": "",
+  "stderr_is_traceback": false,
+  "summary": {
+   "events": 106,
+   "disclosed": 50,
+   "restored": 19,
+   "partial": 0,
+   "unrestored": 1,
+   "ungraded": 36,
+   "bad_disclosures": 1,
+   "disclosed_lines": 165
+  },
+  "bad_rows": [
+   {
+    "commit": "c6199a254244",
+    "file": "corpus/lessons/round-51-caf\u00e9-\u2713.md",
+    "count": 1,
+    "class": "in-place-edit",
+    "reason": "names no event"
+   }
+  ]
+ },
+ {
+  "name": "10-duplicate-identical-row",
+  "expect_exit": 1,
+  "exit": 1,
+  "why": "second identical row: key already exhausted (1+1 > unheld 1) -> bad disclosure",
+  "stderr_head": "",
+  "stderr_is_traceback": false,
+  "summary": {
+   "events": 106,
+   "disclosed": 51,
+   "restored": 19,
+   "partial": 0,
+   "unrestored": 0,
+   "ungraded": 36,
+   "bad_disclosures": 1,
+   "disclosed_lines": 166
+  },
+  "bad_rows": [
+   {
+    "commit": "c6199a254244",
+    "file": "corpus/README.md",
+    "count": 1,
+    "class": "in-place-edit",
+    "reason": "count 1 > unheld graded lines 0 with that key"
+   }
+  ]
+ },
+ {
+  "name": "11-two-rows-sum-above-unheld",
+  "expect_exit": 1,
+  "exit": 1,
+  "why": "3 identical rows for a key with unheld 1: rows 2 and 3 are each above the remainder",
+  "stderr_head": "",
+  "stderr_is_traceback": false,
+  "summary": {
+   "events": 106,
+   "disclosed": 51,
+   "restored": 19,
+   "partial": 0,
+   "unrestored": 0,
+   "ungraded": 36,
+   "bad_disclosures": 2,
+   "disclosed_lines": 166
+  },
+  "bad_rows": [
+   {
+    "commit": "c6199a254244",
+    "file": "corpus/README.md",
+    "count": 1,
+    "class": "in-place-edit",
+    "reason": "count 1 > unheld graded lines 0 with that key"
+   },
+   {
+    "commit": "c6199a254244",
+    "file": "corpus/README.md",
+    "count": 1,
+    "class": "in-place-edit",
+    "reason": "count 1 > unheld graded lines 0 with that key"
+   }
+  ]
+ },
+ {
+  "name": "12-bom",
+  "expect_exit": 2,
+  "exit": 2,
+  "why": "BOM makes line 1 differ from the header -> malformed ledger",
+  "stderr_head": "could-not-evaluate: disclosures header is not commit<TAB>file<TAB>line_sha256<TAB>count<TAB>class<TAB>note",
+  "stderr_is_traceback": false,
+  "summary": null,
+  "bad_rows": []
+ },
+ {
+  "name": "13-empty-file",
+  "expect_exit": 2,
+  "exit": 2,
+  "why": "no header -> malformed ledger",
+  "stderr_head": "could-not-evaluate: disclosures header is not commit<TAB>file<TAB>line_sha256<TAB>count<TAB>class<TAB>note",
+  "stderr_is_traceback": false,
+  "summary": null,
+  "bad_rows": []
+ },
+ {
+  "name": "14-header-only",
+  "expect_exit": 1,
+  "exit": 1,
+  "why": "well-formed but discloses nothing: 51 events unrestored/partial, 0 bad rows -> exit 1",
+  "stderr_head": "",
+  "stderr_is_traceback": false,
+  "summary": {
+   "events": 106,
+   "disclosed": 0,
+   "restored": 19,
+   "partial": 4,
+   "unrestored": 47,
+   "ungraded": 36,
+   "bad_disclosures": 0,
+   "disclosed_lines": 0
+  },
+  "bad_rows": []
+ },
+ {
+  "name": "15-lone-cr-mid-note",
+  "expect_exit": 2,
+  "exit": 2,
+  "why": "a lone CR is translated to a line break by text-mode read -> split row",
+  "stderr_head": "could-not-evaluate: disclosures line 3: bad commit, file, line_sha256 or count",
+  "stderr_is_traceback": false,
+  "summary": null,
+  "bad_rows": []
+ },
+ {
+  "name": "16-count-leading-zero",
+  "expect_exit": 2,
+  "exit": 2,
+  "why": "count must be [1-9][0-9]*",
+  "stderr_head": "could-not-evaluate: disclosures line 2: bad commit, file, line_sha256 or count",
+  "stderr_is_traceback": false,
+  "summary": null,
+  "bad_rows": []
+ },
+ {
+  "name": "17-class-upper-case",
+  "expect_exit": 1,
+  "exit": 1,
+  "why": "class is not one of CLASSES -> bad disclosure",
+  "stderr_head": "",
+  "stderr_is_traceback": false,
+  "summary": {
+   "events": 106,
+   "disclosed": 50,
+   "restored": 19,
+   "partial": 0,
+   "unrestored": 1,
+   "ungraded": 36,
+   "bad_disclosures": 1,
+   "disclosed_lines": 165
+  },
+  "bad_rows": [
+   {
+    "commit": "c6199a254244",
+    "file": "corpus/README.md",
+    "count": 1,
+    "class": "Removal",
+    "reason": "unknown class Removal"
+   }
+  ]
+ },
+ {
+  "name": "18-whitespace-only-line",
+  "expect_exit": 0,
+  "exit": 0,
+  "why": "a tabs-only line is blank after strip(): skipped, verdict unchanged",
+  "stderr_head": "",
+  "stderr_is_traceback": false,
+  "summary": {
+   "events": 106,
+   "disclosed": 51,
+   "restored": 19,
+   "partial": 0,
+   "unrestored": 0,
+   "ungraded": 36,
+   "bad_disclosures": 0,
+   "disclosed_lines": 166
+  },
+  "bad_rows": []
+ },
+ {
+  "name": "19-missing-note-cell",
+  "expect_exit": 2,
+  "exit": 2,
+  "why": "5 cells -> malformed ledger",
+  "stderr_head": "could-not-evaluate: disclosures line 2: bad commit, file, line_sha256 or count",
+  "stderr_is_traceback": false,
+  "summary": null,
+  "bad_rows": []
+ },
+ {
+  "name": "20-invalid-utf8",
+  "expect_exit": 2,
+  "exit": 1,
+  "why": "a ledger with a non-UTF-8 byte reaches open(..., encoding='utf-8'): docstring exit 2",
+  "stderr_head": "UnicodeDecodeError: 'utf-8' codec can't decode byte 0xe9 in position 45335: invalid continuation byte",
+  "stderr_is_traceback": true,
+  "summary": null,
+  "bad_rows": []
+ }
+]

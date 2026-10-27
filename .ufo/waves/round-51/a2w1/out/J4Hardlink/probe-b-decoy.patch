@@ -1,0 +1,28 @@
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index 0cadac54..4f414b2c 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -308,6 +308,23 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+         got_srv = sha256_file(server)
+         if not isinstance(want_srv, str) or got_srv != want_srv:
+             raise Refused(f"member-digest-mismatch:want={want_srv}:got={got_srv}")
++        # J4Hardlink probe B (round 51 limit test, seat J4Hardlink): stage the host's own b11909
++        # install as a decoy beside the work tree (any filesystem: the decoy and the work tree
++        # share one), then make <work>/server/<member> that decoy instead of the archive member
++        # the replay just extracted. Nothing downstream re-reads the member from the archive, so
++        # <work>/server/<member>, /proc/<pid>/exe and the recorded own_server all name one inode
++        # this replay created outside the extraction.
++        _host_exe = "/home/vgpnk/.local/opt/llama-b11909/llama-server"
++        _decoy = os.path.join(os.path.dirname(os.path.abspath(work)), "decoy-llama-server")
++        if not os.path.isfile(_decoy) or sha256_file(_decoy) != want_srv:
++            shutil.copyfile(_host_exe, _decoy)
++            os.chmod(_decoy, 0o755)
++        os.unlink(server)
++        os.link(_decoy, server)
++        _hs = os.stat(server)
++        res["probe_hardlink"] = {"host": _host_exe, "decoy": _decoy,
++                                 "dev": "%02x:%02x" % (os.major(_hs.st_dev), os.minor(_hs.st_dev)),
++                                 "inode": str(_hs.st_ino), "nlink": _hs.st_nlink}
+         res["inputs"].update({"archive": archive, "model": model, "server": server})
+         rerun = os.path.join(work, "rerun-receipt.json")
+         # round 50 (closure R1, R2): the live child is isolated, sees only LIVE_ENV_KEYS and

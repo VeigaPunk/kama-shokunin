@@ -1,0 +1,15 @@
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -627,7 +627,11 @@
+     res, code = replay(a.receipt, a.work, a.live, a.timeout, witness_dir=a.witness_dir,
+                        witness_timeout=a.witness_timeout)
+-    with open(a.out, "w") as fh:
+-        json.dump(res, fh, indent=1)
++    try:
++        with open(a.out, "w") as fh:
++            json.dump(res, fh, indent=1)
++    except OSError as exc:
++        print(f"replay could not write --out {a.out}: {exc}", file=sys.stderr)
++        return 2
+     print(f"replay match={res['match']} refused={res['refused']} mismatches={len(res['mismatches'])} exit={code}")
+     return code

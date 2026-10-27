@@ -1,0 +1,5 @@
+Verdict: mutation campaign incomplete; pristine C2 passes, initial mutant killed.
+Evidence: source copied from tools/round51-append-audit-v6-check.py; pristine command `python3 original.py --repo lane --tip 138af25b963450b6520794995605fa7dbbcd87e0 --scratch S` exit 0, fixture=1 lane=1 scenarios=9/9 lost=142 disclosed=166 met=True.
+Mutant: fixture_total changes n == 9 to n == 8. Same detector exited 1; output fixture=0 lane=1 scenarios=9/9 lost=142 disclosed=166 met=False. Killed.
+Generated 16 further mutant variants covering aggregation, lane want, whole/region, held formula, kept computation, ledger seen/no-event, numstat, met, mutable cells, line-key equality, partial bounds, fixture result predicate, permitted-count comparison; executions remain unrun due host background-job saturation. `class_rule` substitution did not match and was skipped.
+Hashes: original source sha256=254e63bab046428d4099d008929751701ed7b0600b96874760838a56eb9a1660; source unchanged. No counter edits to lane. Exact restoration: none needed (tests only read clone and run scratch fixtures).

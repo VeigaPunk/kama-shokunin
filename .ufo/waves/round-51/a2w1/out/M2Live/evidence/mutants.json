@@ -1,0 +1,132 @@
+{
+ "L01-readlink-suffix": {
+  "file": "tools/kama-llamacpp-live.py",
+  "sha256": "0357884d383bcdd9a589806d5f0ad30232a9c17a0329420606fc70c70354056f",
+  "predicted": "survived: only the 'path' field is corrupted; counter and replay never read it"
+ },
+ "L02-open-nofollow": {
+  "file": "tools/kama-llamacpp-live.py",
+  "sha256": "c1cf74bf915f76ebcab6f25d6d6a155875b2d4fdf502653a6ee239d106ab62d2",
+  "predicted": "killed-by-counter: O_NOFOLLOW on the magic symlink -> ELOOP -> exe-unreadable"
+ },
+ "L03-open-readlink-text": {
+  "file": "tools/kama-llamacpp-live.py",
+  "sha256": "20edeaa0d6de60ee379e76b04e00d4d44476d168d63c96ae1d2d797cd669e971",
+  "predicted": "survived: opens whatever the path names now; in the counter it is the same file (reinstates the J4Decoy weakness)"
+ },
+ "L04-fstat-from-path": {
+  "file": "tools/kama-llamacpp-live.py",
+  "sha256": "12c580f7d7f536b8d8d42454f6f7802c28f103e180f65bd6f5c96443e0f7baf1",
+  "predicted": "survived: stat(path) equals fstat(fd) while the path still names the running image"
+ },
+ "L05-sisreg-dropped": {
+  "file": "tools/kama-llamacpp-live.py",
+  "sha256": "ef7772017114e341d8b81867247865e761c76c8dedbc29781fddb4774b744c6d",
+  "predicted": "survived: check unreachable for a live process's exe (defensive loss only)"
+ },
+ "L06-sisreg-inverted": {
+  "file": "tools/kama-llamacpp-live.py",
+  "sha256": "455d1a7fb3aed66f601f7ff7fee8518a542116e8885a9eafbb5e2ff56f7a0755",
+  "predicted": "killed-by-counter: every real run reports exe-not-a-regular-file -> opened False"
+ },
+ "L07-hash-half": {
+  "file": "tools/kama-llamacpp-live.py",
+  "sha256": "7292db3c7529c0e9824a7d02d972953fdcc7c4daa6e2c1bd1f4d6979eb1977cb",
+  "predicted": "killed-by-counter: sha256 of the first half != frozen server digest"
+ },
+ "L08-chunk-4096": {
+  "file": "tools/kama-llamacpp-live.py",
+  "sha256": "07b04056e22fc565eb87b7ba38a100280c67fb06aee99c33698a5541dc131f63",
+  "predicted": "survived/equivalent: same bytes hashed, only slower"
+ },
+ "L09-update-dropped": {
+  "file": "tools/kama-llamacpp-live.py",
+  "sha256": "49efa7ff7ded4d1185a0baa8eb584721190321355ef2eda345d99ac57e13ad3a",
+  "predicted": "killed-by-counter: sha256(b'') != frozen server digest"
+ },
+ "L10-left-weakened": {
+  "file": "tools/kama-llamacpp-live.py",
+  "sha256": "6af45655d2c7c6b81d821ca7befce13ac44263e5d891a3bbfb4fcf2df0f1cedf",
+  "predicted": "survived: no short reads occur on a regular-file fd in any detector (defensive loss)"
+ },
+ "L11-dev-plain-hex": {
+  "file": "tools/kama-llamacpp-live.py",
+  "sha256": "f26d7970689447221abd0ac7ee1184739442b0abfbb6bc626d35cfcde1aeb29c",
+  "predicted": "killed-by-counter: dev '67:5' != own_id '67:05' -> replay not-own-member"
+ },
+ "L12-inode-int": {
+  "file": "tools/kama-llamacpp-live.py",
+  "sha256": "8ada559ed2af8cce8016b78a9a320c1b175328610dc5f394e0bd9941a7a8581f",
+  "predicted": "survived/equivalent: both comparators str() the inode before comparing"
+ },
+ "L13-dev-swap": {
+  "file": "tools/kama-llamacpp-live.py",
+  "sha256": "5622f6995ca6034c5175919136ba4366bfcfa5c6d6497e89eadad98c680453db",
+  "predicted": "killed-by-counter: dev '05:67' != '67:05' (observed dev 103:05 has major != minor)"
+ },
+ "L14-open-devnull": {
+  "file": "tools/kama-llamacpp-live.py",
+  "sha256": "9c930baeeab4bd2aa642d81695c3976738b0e402e8eccdf9f8f2ffe20e0d066a",
+  "predicted": "killed-by-counter: fstat(/dev/null) is a char device -> exe-not-a-regular-file"
+ },
+ "L15-pid-plus-one": {
+  "file": "tools/kama-llamacpp-live.py",
+  "sha256": "72cd96f916db0a650d194a18d57a01db83d1369baba1807462e2e44f0e483c2d",
+  "predicted": "killed-by-counter: wrong process -> unopenable or sha mismatch"
+ },
+ "R01-opened-inverted": {
+  "file": "tools/kama-live-replay.py",
+  "sha256": "dc603f981ad751415780d04a44d3406989cc0fe9badd27ec181fcb0834ec6529",
+  "predicted": "killed-by-selftest: happy-path cases expect exit 0, inverted check appends a mismatch"
+ },
+ "R02-opened-dropped": {
+  "file": "tools/kama-live-replay.py",
+  "sha256": "634fec5946b029d8b716d04122198dd2b26bd5de85511a5e1f5d1e622d95dc2b",
+  "predicted": "survived-selftest: no case has a dict server_exe with opened != True and matching sha/dev/inode"
+ },
+ "R03-sha-inverted": {
+  "file": "tools/kama-live-replay.py",
+  "sha256": "eb8e31761367213c1aa136cd8130b06a8db215b1d55406d2bc6a2c7514bfe566",
+  "predicted": "killed-by-selftest: 'match' case expects exit 0, equal sha now appends"
+ },
+ "R04-sha-vs-model": {
+  "file": "tools/kama-live-replay.py",
+  "sha256": "97b6b778fe43536d0e2871f9caf7fd0ed6be066125370457d6a84005d8ff4f6d",
+  "predicted": "killed-by-selftest: server sha != model sha on the happy path"
+ },
+ "R05-own-dev-only": {
+  "file": "tools/kama-live-replay.py",
+  "sha256": "93d3ad764dfad9910fac649472d48d1e6f5fd454310df43ad49f01dbef84f20d",
+  "predicted": "killed-by-selftest: not-own-member case copies on the same device, so dev-only compare passes it"
+ },
+ "R06-own-inode-only": {
+  "file": "tools/kama-live-replay.py",
+  "sha256": "b34307e08717aa19a17d370bdb883132c045f48ccbab538f1ac34f97d8a834f2",
+  "predicted": "survived-selftest: no case has matching inode with a different dev"
+ },
+ "R07-own-dropped": {
+  "file": "tools/kama-live-replay.py",
+  "sha256": "9445795500a3a1fbb2fb74a93dffe9d5354ccf0671d6fcfc578d3ba476a54b6b",
+  "predicted": "killed-by-selftest: server-exe-not-own-member expects exit 1, gets 0"
+ },
+ "R08-ownid-format": {
+  "file": "tools/kama-live-replay.py",
+  "sha256": "1ef0ce6fb56ffba900d6b322b2b26913255aa2e2d4a3c70f8a435b3ec32b7797",
+  "predicted": "killed-by-selftest: own_id '67:5' != recorded '67:05' on the happy path"
+ },
+ "R09-ownserver-dev-decimal": {
+  "file": "tools/kama-live-replay.py",
+  "sha256": "f7a10acbc6713b569d2ff222adc60f4dc0bc03f2aee9eecea0943684b71cffe8",
+  "predicted": "survived-selftest (own_server unasserted); counter compares own_server.dev against its own '%02x:%02x' -> killed-by-counter"
+ },
+ "R10-ownserver-path-dropped": {
+  "file": "tools/kama-live-replay.py",
+  "sha256": "8856eb594164c0506e202ee8ee074174dbcb01106735c5575d00d5b16b96eea9",
+  "predicted": "survived-selftest (own_server unasserted); counter requires own_server.path -> killed-by-counter"
+ },
+ "R11-opened-only-false": {
+  "file": "tools/kama-live-replay.py",
+  "sha256": "02ddf23d2f9fb77a0aacf3827b6b52e839a05001df4cb3d54a333cfaead5d644",
+  "predicted": "survived-selftest: no case has a dict server_exe missing 'opened' with matching sha/dev/inode"
+ }
+}

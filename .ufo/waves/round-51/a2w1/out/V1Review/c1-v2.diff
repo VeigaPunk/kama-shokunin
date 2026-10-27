@@ -1,0 +1,324 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-replay-bind-audit.py	2026-10-26 21:16:03.814809927 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round51-replay-exe-audit.py	2026-10-27 00:30:04.561214399 -0300
+@@ -1,83 +1,58 @@
+ #!/usr/bin/env python3
+-"""round50-replay-bind-audit.py - kama round-50 C1 (operability, sourced) counter.
++"""round51-replay-exe-audit.py - kama round-51 C1 (operability, sourced) counter.
+ 
+ Question: at a lane revision, is the server an outside observer witnesses during a
+-replay bound to that replay - its own process tree, its own rerun receipt, a clean
+-interpreter environment and the model bytes the server actually mapped - and does
+-killing whatever started the replay take the whole tree down?
+-Routed (corpus/lessons/round-49-verifier-spotcheck.md section 6):
+-  R1  the round-49 counter never joined the observed pid with the rerun receipt's
+-      child_pid (a decoy replay copying the original receipt met it), a
+-      PYTHONPATH/sitecustomize hijack of the inherited environment met it, and the
+-      model bytes the server loaded were not bound (seats K1Cheat, K1Design, R0Controls);
+-  R2  a killed counter left replay, live tool and server up: pdeathsig covered only
+-      live tool -> server (late seat X1Kill).
++replay the very file that replay extracted from the archive it re-acquired - not a
++byte-identical binary exec'd from somewhere else - and does the rerun receipt record
++that same running image?
++Routed (corpus/lessons/round-50-verifier-spotcheck.md R6, C1 carried limits): a decoy
++replay that exec'd the host's own b11909 install in place of the extracted member, and
++sanitized its environment and mapping honestly, met the round-50 counter (seat J4Decoy):
++an exe digest says which bytes run, not which file runs.
+ 
+ Frozen names (before data):
+   receipts   .ufo/waves/round-48/c2/live/receipt-1.json, -2.json, -3.json (v5, b11909)
+   server     sha256 35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0
+   model      https://huggingface.co/ggml-org/models-moved/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/stories260K.gguf
+              sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d
+-  maps page  https://man7.org/linux/man-pages/man5/proc_pid_maps.5.html (dev, inode, pathname)
++  exe page   https://man7.org/linux/man-pages/man5/proc_pid_exe.5.html ("attempting to
++             open it will open the executable")
+   replay     tools/kama-live-replay.py     live tool  tools/kama-llamacpp-live.py
+-  base       26ecba64ad6fb571d09074b07202d1618a46ecd1 (round-49 closure; round-50 start)
+-
+-How the counter starts a replay (fixed, the same for every leg): `python3 -I
+-<tree>/tools/kama-live-replay.py --receipt R --work W --out J --witness-dir D` from a
+-small invoker process (`python3 -I -c ...`, which only starts the replay and waits),
+-with an environment of exactly PATH, LANG, HOME, XDG_CACHE_HOME and TMPDIR (the last
+-three inside --scratch), the proxy variables http(s)_proxy/HTTP(S)_PROXY/NO_PROXY/
+-no_proxy when the counter has them, and two canaries:
+-  KAMA_R50_CANARY  a fresh random value; and
+-  PYTHONPATH       a directory whose sitecustomize.py appends `<pid> <argv>` to a
+-                   marker file whenever any Python interpreter imports it.
+-The replay itself runs isolated (-I ignores PYTHONPATH), so a marker line or a canary
+-in a process's environment means the replay handed its environment on.
++  base       57a2e25bf702b03aa61f9265e968cf68058ecb82 (round-50 closure; round-51 start)
++
++How the counter starts a replay is the round-50 counter's, unchanged (an isolating
++invoker, PATH/LANG/HOME/XDG_CACHE_HOME/TMPDIR plus proxies, a KAMA_R51_CANARY variable
++and a PYTHONPATH sitecustomize marker), with --work <scratch>/work-<tag>.
+ 
+ Legs:
+-  bind      for EACH receipt, while the replay holds its server (ready.json) the
+-            counter itself checks, then releases:
+-              exe      sha256 of /proc/<pid>/exe equals the frozen server digest;
+-              listen   a LISTEN socket on 127.0.0.1/::1:<port> whose inode is one of
+-                       /proc/<pid>/fd;
+-              nonce    a fresh nonce round-trips through POST /tokenize (with_pieces)
+-                       and POST /detokenize, every piece equal to the counter's own
+-                       decoding of tokenizer.ggml.tokens from its own model download;
+-              tree     the pid descends from the replay process (the ppid chain of the
+-                       live server reaches the replay's pid);
+-              env      KAMA_R50_CANARY is in neither /proc/<pid>/environ nor the
+-                       environ of the server's parent process; afterwards the marker
+-                       file is empty (no interpreter under the replay imported the
+-                       planted sitecustomize);
+-              mapped   /proc/<pid>/maps holds a file-backed mapping (dev major:minor,
+-                       inode, pathname) whose pathname, stat()ed by the counter, has the
+-                       same dev and inode and hashes to the frozen model digest;
+-            after release: the replay exits 0 with match true; the rerun receipt says
+-            witness.released true, its child_pid equals the observed pid (join), and
+-            its model_mapping object records sha256 equal to the frozen model digest
+-            and the same dev and inode the counter observed; the pid is gone and the
+-            port refuses connections.
+-  teardown  one more replay of receipt-1 started the same way; once ready.json names
+-            the server, the counter snapshots every descendant of the invoker
+-            (pid + start time from /proc/<pid>/stat), SIGKILLs the invoker, and within
+-            30 s every snapshotted process is gone (absent, zombie, or pid reused) and
+-            the port refuses connections. The counter kills any survivor afterwards.
++  bind      the round-50 bind leg, unchanged, for EACH receipt (exe digest, listener,
++            nonce against the model's own vocabulary, process tree, canaries, mapped
++            model, child_pid join, released, teardown after release).
++  own       for EACH receipt, while the replay holds its server: the counter opens
++            /proc/<pid>/exe itself and fstat()s the open file; its (dev, inode) equals
++            os.stat() of <work>/server/<member> - the member the replay extracted, with
++            <member> the receipt's provenance.server.member - and its bytes hash to the
++            frozen server digest. After release: the rerun receipt's `server_exe` has
++            opened true, the frozen server digest and the same dev and inode, and the
++            replay's result JSON names the same file under `own_server`.
++  teardown  the round-50 teardown leg, unchanged (invoker SIGKILLed during the hold; every
++            snapshotted descendant gone and the port refusing within 30 s).
+   newrow    corpus/SOURCES.md at --tip has a registry row, absent at --base, whose
+-            cells contain man7.org/linux/man-pages/man5/proc_pid_maps.5.html.
+-met = bind (3/3) and teardown and newrow.
++            cells contain man7.org/linux/man-pages/man5/proc_pid_exe.5.html.
++met = bind (3/3) and own (3/3) and teardown and newrow.
+ PREDICATE (same sentence in the preregistration): a replay of each of the three
+-committed v5 b11909 receipts, started isolated with planted environment canaries,
+-holds a server that the counter finds executing the frozen binary as the listener,
+-answering a fresh nonce against the model's own vocabulary, descending from the
+-replay, free of the canaries, mapping a file that hashes to the frozen model, and
+-recorded in the rerun receipt with the same pid and the same mapped file; killing the
+-replay's invoker removes every process of the tree within 30 s; and the maps surface
+-is a source row; bind=1 teardown=1 newrow=1.
+-
+-Output: `bind=0|1 teardown=0|1 newrow=0|1 bound=N/3 met=True|False`, then `detail:`
+-lines. Exit 0 met, 1 not met, 2 could not evaluate (git failure).
+-Read-only on --repo; everything else lives under --scratch and is removed on exit.
+-Needs network access to github.com and huggingface.co, and Linux /proc.
++committed v5 b11909 receipts holds a server that the counter, opening its
++/proc/<pid>/exe, finds to be the very file the replay extracted to
++<work>/server/<member> (same dev and inode, frozen digest), recorded in the rerun
++receipt's server_exe with the same dev, inode and digest, while every round-50 bind
++check still holds; killing the replay's invoker still removes the whole tree within
++30 s; and the exe surface is a source row; bind=1 own=1 teardown=1 newrow=1.
++
++Output: `bind=0|1 own=0|1 teardown=0|1 newrow=0|1 bound=N/3 owned=N/3 met=True|False`,
++then `detail:` lines. Exit 0 met, 1 not met, 2 could not evaluate (git failure).
++Read-only on --repo; everything else lives under --scratch and is removed on exit;
++--out's parent directories are created before anything is written (round-50 lesson
++Mistakes #4). Needs network access to github.com and huggingface.co, and Linux /proc.
+ """
+ from __future__ import annotations
+ 
+@@ -103,8 +78,8 @@
+ MODEL_URL = ("https://huggingface.co/ggml-org/models-moved/resolve/"
+              f"{MODEL_COMMIT}/tinyllamas/stories260K.gguf")
+ MODEL_SHA = "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+-MAPS_URL = "man7.org/linux/man-pages/man5/proc_pid_maps.5.html"
+-BASE = "26ecba64ad6fb571d09074b07202d1618a46ecd1"
++EXE_URL = "man7.org/linux/man-pages/man5/proc_pid_exe.5.html"
++BASE = "57a2e25bf702b03aa61f9265e968cf68058ecb82"
+ RECEIPTS = tuple(f".ufo/waves/round-48/c2/live/receipt-{n}.json" for n in (1, 2, 3))
+ REPLAY = "tools/kama-live-replay.py"
+ READY_WAIT = 600     # seconds for ready.json (the replay downloads ~75 MB first)
+@@ -355,7 +330,7 @@
+         if keys is None:
+             probs.append(f"{who} environ unreadable (pid {p})")
+         elif canary in keys:
+-            probs.append(f"{who} pid {p} carries the planted KAMA_R50_CANARY")
++            probs.append(f"{who} pid {p} carries the planted KAMA_R51_CANARY")
+     mapped = mapped_model(pid, probs)
+     nonce = f"kama witness {secrets.token_hex(8)}"
+     try:
+@@ -373,6 +348,37 @@
+     return nonce, mapped
+ 
+ 
++def own_exe(pid, member_path, probs):
++    """The counter's own reading of which file the server runs: /proc/<pid>/exe opened and
++    fstat()ed (proc_pid_exe(5)) against os.stat() of the replay's extracted member."""
++    try:
++        fd = os.open(f"/proc/{pid}/exe", os.O_RDONLY)
++    except OSError as exc:
++        probs.append(f"own: /proc/{pid}/exe unopenable: {exc.strerror}")
++        return None
++    try:
++        st = os.fstat(fd)
++        h = hashlib.sha256()
++        with os.fdopen(os.dup(fd), "rb") as fh:
++            for chunk in iter(lambda: fh.read(1 << 20), b""):
++                h.update(chunk)
++    finally:
++        os.close(fd)
++    got = ("%02x:%02x" % (os.major(st.st_dev), os.minor(st.st_dev)), str(st.st_ino))
++    try:
++        ms = os.stat(member_path)
++        want = ("%02x:%02x" % (os.major(ms.st_dev), os.minor(ms.st_dev)), str(ms.st_ino))
++    except OSError as exc:
++        probs.append(f"own: extracted member {member_path} unreadable: {exc.strerror}")
++        return got
++    if got != want:
++        probs.append(f"own: running image dev:inode {got[0]}:{got[1]} is not the replay's extracted "
++                     f"member {member_path} ({want[0]}:{want[1]})")
++    if h.hexdigest() != SERVER_SHA:
++        probs.append(f"own: running image sha256 {h.hexdigest()} is not the frozen server")
++    return got
++
++
+ def prepare_env(S, tag):
+     """The fixed replay environment and its two canaries; returns (env, canary, marker)."""
+     env = {k: os.environ[k] for k in PASS_ENV if k in os.environ}
+@@ -380,7 +386,7 @@
+         d = os.path.join(S, sub)
+         os.makedirs(d, exist_ok=True)
+         env[k] = d
+-    canary = "KAMA_R50_CANARY"
++    canary = "KAMA_R51_CANARY"
+     env[canary] = secrets.token_hex(8)
+     cdir = os.path.join(S, f"canary-{tag}")
+     os.makedirs(cdir)
+@@ -402,7 +408,7 @@
+     argv = [sys.executable, "-I", "-c", INVOKER, sys.executable, "-I", os.path.join(tree, REPLAY),
+             "--receipt", rpath, "--work", work, "--out", outj, "--witness-dir", wd]
+     p = subprocess.Popen(argv, env=env, cwd=tree, stdout=log, stderr=log, start_new_session=True)
+-    return p, wd, outj, log, canary, marker
++    return p, wd, outj, log, canary, marker, work
+ 
+ 
+ def wait_ready(p, wd):
+@@ -438,12 +444,15 @@
+ 
+ 
+ def bind_one(tree, rpath, S, tag, vocab, detail):
+-    p, wd, outj, log, canary, marker = start_replay(tree, rpath, S, tag)
+-    probs, snap = [], {}
++    p, wd, outj, log, canary, marker, work = start_replay(tree, rpath, S, tag)
++    probs, snap, oprobs, got = [], {}, [], None
++    member = ((load(rpath) or {}).get("provenance") or {}).get("server", {}).get("member")
++    member_path = os.path.join(work, "server", member) if isinstance(member, str) else None
+     try:
+         ready = wait_ready(p, wd)
+         if ready is None:
+             probs.append(f"no ready.json (invoker exit {p.poll()})")
++            oprobs.append("own: no server was announced, so no running image was observed")
+             pid = port = None
+         else:
+             pid, port = ready["pid"], ready["port"]
+@@ -452,8 +461,12 @@
+             if rp is None or not descends_from(pid, rp):
+                 probs.append(f"server pid {pid} does not descend from the replay process {rp}")
+             nonce, mapped = observe(pid, port, vocab, canary, probs)
++            if member_path is None:
++                oprobs.append("own: receipt names no provenance.server.member")
++            else:
++                got = own_exe(pid, member_path, oprobs)
+         with open(os.path.join(wd, "release"), "w") as fh:
+-            fh.write("released by round50 counter\n")
++            fh.write("released by round51 counter\n")
+         try:
+             code = p.wait(timeout=EXIT_WAIT)
+         except subprocess.TimeoutExpired:
+@@ -474,6 +487,15 @@
+             if not (isinstance(mm, dict) and mm.get("sha256") == MODEL_SHA and mapped is not None
+                     and str(mm.get("dev")) == mapped[0] and str(mm.get("inode")) == mapped[1]):
+                 probs.append(f"rerun model_mapping {mm!r} does not record the observed mapping {mapped}")
++            se = rr.get("server_exe") if isinstance(rr, dict) else None
++            if not (isinstance(se, dict) and se.get("opened") is True and se.get("sha256") == SERVER_SHA
++                    and got is not None and (str(se.get("dev")), str(se.get("inode"))) == got):
++                oprobs.append(f"own: rerun server_exe {se!r} does not record the observed image {got}")
++            osv = j.get("own_server") if isinstance(j, dict) else None
++            if not (isinstance(osv, dict) and member_path is not None
++                    and os.path.realpath(str(osv.get("path"))) == os.path.realpath(member_path)
++                    and got is not None and (str(osv.get("dev")), str(osv.get("inode"))) == got):
++                oprobs.append(f"own: replay own_server {osv!r} does not name the observed member file")
+             if pid_alive(pid) or not port_refuses(port):
+                 probs.append("server still alive or port still accepting after the replay exited")
+         try:
+@@ -491,11 +513,16 @@
+         log.close()
+     for pr in probs:
+         detail.append(f"bind {tag}: {pr}")
+-    return not probs
++    for pr in oprobs:
++        detail.append(f"own {tag}: {pr}")
++    if not oprobs:
++        detail.append(f"own {tag}: running image {got[0]}:{got[1]} is the extracted member, recorded in "
++                      f"server_exe and own_server")
++    return (not probs), (not oprobs)
+ 
+ 
+ def teardown_leg(tree, rpath, S, detail):
+-    p, wd, _outj, log, _canary, _marker = start_replay(tree, rpath, S, "kill")
++    p, wd, _outj, log, _canary, _marker, _work = start_replay(tree, rpath, S, "kill")
+     snap, ok = {}, False
+     try:
+         ready = wait_ready(p, wd)
+@@ -534,8 +561,8 @@
+         return {ln for ln in p.stdout.decode("utf-8", "replace").split("\n")
+                 if ln.lstrip(" ")[:3] == "| S" and ln.lstrip(" ")[3:4].isdigit()}
+     new = rows(tip) - rows(BASE)
+-    hit = [ln for ln in new if MAPS_URL in ln]
+-    detail.append(f"newrow: {len(new)} rows new since base; {len(hit)} name proc_pid_maps(5): {[ln[:8] for ln in hit]}")
++    hit = [ln for ln in new if EXE_URL in ln]
++    detail.append(f"newrow: {len(new)} rows new since base; {len(hit)} name proc_pid_exe(5): {[ln[:8] for ln in hit]}")
+     return bool(hit)
+ 
+ 
+@@ -546,9 +573,11 @@
+     ap.add_argument("--scratch", default=None, help="scratch dir (default: TMPDIR)")
+     ap.add_argument("--out", default=None, help="also write the receipt here")
+     a = ap.parse_args(argv)
++    if a.out:
++        os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
+     root = a.scratch or tempfile.gettempdir()
+     os.makedirs(root, exist_ok=True)
+-    S = tempfile.mkdtemp(prefix="r50c1-", dir=root)
++    S = tempfile.mkdtemp(prefix="r51c1-", dir=root)
+     detail = []
+     try:
+         try:
+@@ -575,21 +604,25 @@
+                 detail.append(f"counter vocabulary: {len(vocab)} tokens from its own download")
+         except (OSError, EvalError, struct.error) as exc:
+             detail.append(f"counter model unavailable: {type(exc).__name__}: {exc}")
+-        bound = 0
++        bound = owned = 0
+         have = os.path.isfile(os.path.join(tree, REPLAY))
+         if vocab is not None and have:
+             for n, path in enumerate(RECEIPTS, 1):
+                 if not os.path.isfile(os.path.join(tree, path)):
+                     detail.append(f"bind: {path} absent at tip")
+                     continue
+-                bound += bind_one(tree, os.path.join(tree, path), S, f"b{n}", vocab, detail)
++                b, o = bind_one(tree, os.path.join(tree, path), S, f"b{n}", vocab, detail)
++                bound += b
++                owned += o
+         bl = bound == len(RECEIPTS)
++        ol = owned == len(RECEIPTS)
+         tl = have and os.path.isfile(os.path.join(tree, RECEIPTS[0])) and \
+             teardown_leg(tree, os.path.join(tree, RECEIPTS[0]), S, detail)
+         nl = newrow_leg(a.repo, tip, detail)
+-        met = bool(bl and tl and nl)
++        met = bool(bl and ol and tl and nl)
+         lines = [f"tip={tip}",
+-                 f"bind={int(bl)} teardown={int(bool(tl))} newrow={int(nl)} bound={bound}/{len(RECEIPTS)} met={met}"]
++                 f"bind={int(bl)} own={int(ol)} teardown={int(bool(tl))} newrow={int(nl)} "
++                 f"bound={bound}/{len(RECEIPTS)} owned={owned}/{len(RECEIPTS)} met={met}"]
+         lines += [f"detail: {d}" for d in detail]
+         text = "\n".join(lines)
+         print(text)

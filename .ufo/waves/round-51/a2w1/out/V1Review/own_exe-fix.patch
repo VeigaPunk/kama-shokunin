@@ -1,0 +1,67 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round51-replay-exe-audit.py	2026-10-27 00:30:04.561214399 -0300
++++ /fast/scratch/hyaku/kama-r51/V1Review/round51-replay-exe-audit-patched.py	2026-10-27 01:04:22.988419556 -0300
+@@ -65,6 +65,7 @@
+ import shutil
+ import signal
+ import socket
++import stat
+ import struct
+ import subprocess
+ import sys
+@@ -348,7 +349,7 @@
+     return nonce, mapped
+ 
+ 
+-def own_exe(pid, member_path, probs):
++def own_exe(pid, member_path, work, probs):
+     """The counter's own reading of which file the server runs: /proc/<pid>/exe opened and
+     fstat()ed (proc_pid_exe(5)) against os.stat() of the replay's extracted member."""
+     try:
+@@ -362,15 +363,25 @@
+         with os.fdopen(os.dup(fd), "rb") as fh:
+             for chunk in iter(lambda: fh.read(1 << 20), b""):
+                 h.update(chunk)
++    except OSError as exc:
++        probs.append(f"own: /proc/{pid}/exe unreadable: {exc.strerror or exc}")
++        return None
+     finally:
+         os.close(fd)
+     got = ("%02x:%02x" % (os.major(st.st_dev), os.minor(st.st_dev)), str(st.st_ino))
+     try:
+-        ms = os.stat(member_path)
+-        want = ("%02x:%02x" % (os.major(ms.st_dev), os.minor(ms.st_dev)), str(ms.st_ino))
++        lst = os.lstat(member_path)
+     except OSError as exc:
+         probs.append(f"own: extracted member {member_path} unreadable: {exc.strerror}")
+         return got
++    if not stat.S_ISREG(lst.st_mode):
++        probs.append(f"own: extracted member {member_path} is not a regular file")
++        return got
++    if os.path.commonpath([os.path.realpath(work), os.path.realpath(member_path)]) != os.path.realpath(work):
++        probs.append(f"own: extracted member {member_path} resolves outside the replay work dir")
++        return got
++    ms = os.stat(member_path)
++    want = ("%02x:%02x" % (os.major(ms.st_dev), os.minor(ms.st_dev)), str(ms.st_ino))
+     if got != want:
+         probs.append(f"own: running image dev:inode {got[0]}:{got[1]} is not the replay's extracted "
+                      f"member {member_path} ({want[0]}:{want[1]})")
+@@ -446,7 +457,9 @@
+ def bind_one(tree, rpath, S, tag, vocab, detail):
+     p, wd, outj, log, canary, marker, work = start_replay(tree, rpath, S, tag)
+     probs, snap, oprobs, got = [], {}, [], None
+-    member = ((load(rpath) or {}).get("provenance") or {}).get("server", {}).get("member")
++    prov = (load(rpath) or {}).get("provenance")
++    srv = prov.get("server") if isinstance(prov, dict) else None
++    member = srv.get("member") if isinstance(srv, dict) else None
+     member_path = os.path.join(work, "server", member) if isinstance(member, str) else None
+     try:
+         ready = wait_ready(p, wd)
+@@ -464,7 +477,7 @@
+             if member_path is None:
+                 oprobs.append("own: receipt names no provenance.server.member")
+             else:
+-                got = own_exe(pid, member_path, oprobs)
++                got = own_exe(pid, member_path, work, oprobs)
+         with open(os.path.join(wd, "release"), "w") as fh:
+             fh.write("released by round51 counter\n")
+         try:

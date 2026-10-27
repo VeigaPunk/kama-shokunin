@@ -1,0 +1,54 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -744,16 +744,24 @@
+     try:
+         st = os.fstat(fd)
+         if not stat.S_ISREG(st.st_mode):
+             return {'opened': False, 'reason': 'exe-not-a-regular-file', 'path': path}
+         h, left = hashlib.sha256(), st.st_size
+-        while left > 0:
+-            chunk = os.read(fd, min(1 << 20, left))
+-            if not chunk:
+-                break
+-            h.update(chunk)
+-            left -= len(chunk)
++        # Contract: "any other outcome is opened: False with its reason". A read fault
++        # (EIO on a damaged or FUSE-backed object) is such an outcome; without this
++        # except it escapes as an OSError and the caller never sees a record.
++        try:
++            while left > 0:
++                chunk = os.read(fd, min(1 << 20, left))
++                if not chunk:
++                    break
++                h.update(chunk)
++                left -= len(chunk)
++        except OSError as exc:
++            return {'opened': False,
++                    'reason': 'exe-read-failed:' + (exc.strerror or type(exc).__name__),
++                    'path': path}
+         if left != 0:
+             return {'opened': False, 'reason': 'exe-shrank-while-hashed', 'path': path}
+     finally:
+         os.close(fd)
+
+--- a/tools/round51-replay-exe-audit.py   (FROZEN counter: for a future round, not applied here)
++++ b/tools/round51-replay-exe-audit.py
+@@ -357,11 +357,17 @@ def own_exe(pid, member_path, probs):
+     try:
+         st = os.fstat(fd)
+         h = hashlib.sha256()
+-        with os.fdopen(os.dup(fd), "rb") as fh:
+-            for chunk in iter(lambda: fh.read(1 << 20), b""):
+-                h.update(chunk)
++        try:
++            with os.fdopen(os.dup(fd), "rb") as fh:
++                for chunk in iter(lambda: fh.read(1 << 20), b""):
++                    h.update(chunk)
++        except OSError as exc:
++            # own_exe is called at line 467 outside any try in the leg loop (line 614):
++            # an escaping OSError turns the whole counter into a traceback instead of a
++            # graded "own=0" line. Grade it instead.
++            probs.append(f"own: /proc/{pid}/exe read failed: {exc.strerror}")
++            return None
+     finally:
+         os.close(fd)

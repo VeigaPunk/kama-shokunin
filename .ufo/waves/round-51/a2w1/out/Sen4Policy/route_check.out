@@ -1,0 +1,108 @@
+== sources ==
+  /home/vgpnk/.omp/agent/config.yml
+    sha256=0d5874660274d3a4545d9d1f9e1da320f0629a9efb384255b788b897bba6addc size=14940 mtime=2026-10-26T23:39:08-03:00 ctime=2026-10-26T23:39:08-03:00 ino=238327845
+  /home/vgpnk/Projects/shokunin/scripts/hyaku/ufo-wave-policy-v2.json
+    sha256=f12e1d6dfeae81a4a1ff805f8de50ec8386b3a16ae7f40b171f54c5236812fff size=12676 mtime=2026-10-22T15:55:22-03:00 ctime=2026-10-22T15:55:22-03:00 ino=43197864
+  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-51/a2w1/spec.json
+    sha256=756ad4c4f1db1b459c918059ba80c02061ee8a612b257682a7bdd854c7768591 size=98218 mtime=2026-10-27T00:46:01-03:00 ctime=2026-10-27T00:46:01-03:00 ino=238384614
+  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-51/a2w1/dispatch.json
+    sha256=755821a5999e458d5c2c233540912b777a21dea6ad703004973b4705a975f324 size=203302 mtime=2026-10-27T00:46:01-03:00 ctime=2026-10-27T00:46:01-03:00 ino=238384615
+  /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-51/a2w1/out/swarm-registry.json
+    sha256=1e58dda87f8a1658e9da7d2a87319fdbac761186ecc5ed0af09807043a3faad2 size=93569 mtime=2026-10-27T00:46:01-03:00 ctime=2026-10-27T00:46:01-03:00 ino=238384629
+
+== 1. wave role counts (spec / dispatch / registry) ==
+  connector       spec= 4 dispatch= 4 registry= 4
+  critic          spec= 9 dispatch= 9 registry= 9
+  executor        spec=18 dispatch=18 registry=18
+  mutation-tester spec= 5 dispatch= 5 registry= 5
+  revenger        spec= 2 dispatch= 2 registry= 2
+  reviewer        spec=11 dispatch=11 registry=11
+  scout           spec= 5 dispatch= 5 registry= 5
+  scribe          spec= 7 dispatch= 7 registry= 7
+  sentinel        spec= 4 dispatch= 4 registry= 4
+  simplifier      spec= 1 dispatch= 1 registry= 1
+[OK ] spec, dispatch and registry carry the same role multiset
+[OK ] seat count 66 == items == tasks == registry members
+[OK ] seat names unique
+[OK ] seat count 66 == spec maxLanes 66
+[OK ] wave label identical in spec/dispatch/registry (kama-r51-a2w1)
+
+== 2. live route map (task.agentModelOverrides -> modelRoles -> enabledModels) ==
+  role             alias      target                                           enabled chain seats cfglines
+  connector        @m_antigravity google-antigravity/gemini-3.8-flash:high         True    True      4 ov=367 role=324
+  critic           @m_kfc     kimi-code/kimi-for-coding:max                    True    True      9 ov=365 role=329
+  executor         @m_mim     minimax-code/MiniMax-M3.1-Flash:high             True    True     18 ov=353 role=344
+  mutation-tester  @m_zfl     zai/glm-5.3-flash:max                            True    True      5 ov=356 role=334
+  revenger         @m_flash   opencode-go/deepseek-v4.1-flash:high             True    True      2 ov=359 role=336
+  reviewer         @m_zfl     zai/glm-5.3-flash:max                            True    True     11 ov=366 role=334
+  scout            @m_kfc     kimi-code/kimi-for-coding:max                    True    True      5 ov=360 role=329
+  scribe           @m_flash   opencode-go/deepseek-v4.1-flash:high             True    True      7 ov=362 role=336
+  sentinel         @m_flash   opencode-go/deepseek-v4.1-flash:high             True    True      4 ov=357 role=336
+  simplifier       @m_flash   opencode-go/deepseek-v4.1-flash:high             True    True      1 ov=358 role=336
+[OK ] all 10 wave roles have an agentModelOverrides entry
+[OK ] all wave roles resolve to a modelRoles target
+[OK ] every resolved target is in enabledModels
+[OK ] every wave role alias has a fallbackChain
+[OK ] no dispatch task carries model/modelAlias (routing by role only)
+[OK ] spec carries no modelAlias override
+  task.maxConcurrency=400 maxRecursionDepth=3 eager=always retry.modelFallback=True
+[OK ] task.maxConcurrency admits the wave
+
+  per-model seat counts under the live map:
+     18  27.27%  minimax-code/MiniMax-M3.1-Flash:high
+     16  24.24%  zai/glm-5.3-flash:max
+     14  21.21%  kimi-code/kimi-for-coding:max
+     14  21.21%  opencode-go/deepseek-v4.1-flash:high
+      4   6.06%  google-antigravity/gemini-3.8-flash:high
+
+== 3. attack share ==
+  reviewer=11 critic=9 mutation-tester=5 labrat=0
+  attack (reviewer/critic/mutation-tester)      = 25/66 = 37.88%
+  attack (addendum incl. labrat, 0 seats)       = 25/66 = 37.88%
+[OK ] both attack enumerations agree (labrat holds 0 seats)
+[OK ] attack share 37.88% >= 25% (17-seat floor)
+  attack seats by model: {'kimi-code/kimi-for-coding:max': 9, 'zai/glm-5.3-flash:max': 16}
+  connector seats: 4 (6.06%)
+
+== 4. policy v2 conformance ==
+  band=[64,128] maxLanes=256 hardCeiling=256 ramp=5/700ms
+[OK ] 66 seats inside the v2 band 64-128
+[OK ] 66 <= policy maxLanes 256
+[OK ] dispatch.policy band equals the policy file band
+  ramp: ceil(66/5) = 14 batches x 700 ms = 9.8 s
+[OK ] validator receipt: validate.out exit=0, validate.stderr empty
+[OK ] wave roles subset of proposalRoles ['connector', 'critic', 'executor', 'mutation-tester', 'revenger', 'reviewer', 'scout', 'scribe', 'sentinel', 'simplifier']
+  lanes[] roles=['connector', 'critic', 'executor', 'labrat', 'mutation-tester', 'revenger', 'reviewer', 'scout', 'scribe', 'simplifier']
+  wave roles absent from lanes[]: ['sentinel']  |  lanes[] roles with 0 seats: ['labrat']
+  surfaceDigest policy=sha256:1064c19addf69f294fd46ebbaa3a99298a4fe60eb5241fcb0d1406f1c0ba6bb4  ufo.json=sha256:610575e868e0f0fe0ab4af01e9a1ff438740a552f0c83956b85235279e848ce3
+
+== 5. axes binding ==
+  wave axes=['calibration', 'operability']  milestones=['r51 attack and frontier']
+     33  ['calibration']
+     18  ['operability']
+     11  ['calibration', 'operability']
+      2  ['operability', 'calibration']
+      1  ['adjacency']
+      1  ['adjacency', 'operability']
+  items binding an axis outside spec.axes: [('N1Overlap', ['adjacency']), ('Sc5Province', ['adjacency', 'operability'])]
+  These are valid canonical item axes (AXES.md); the validator accepts per-item bindings independently of spec.axes.
+  seats per declared axis: {'calibration': 46, 'operability': 32}
+
+== 6. hyaku.env routing labels vs live map ==
+  DRIFT connector       label=@m_kfc             (hyaku.env:9)  live=@m_antigravity      seats=4
+  DRIFT critic          label=@m_flash           (hyaku.env:9)  live=@m_kfc              seats=9
+  DRIFT executor        label=@m_flash           (hyaku.env:9)  live=@m_mim              seats=18
+  DRIFT scout           label=@m_sonnet          (hyaku.env:8)  live=@m_kfc              seats=5
+  seats whose label-implied model differs from the live map: 36/66 (54.55%)
+  per-model seats if the labels were believed: {'@m_flash': 41, '@m_zfl': 16, '@m_sonnet': 5, '@m_kfc': 4}
+  label entries parsed: 19; changed roles: 4
+[OK ] lane-addendum current map matches live map on the changed roles
+
+== 7. lane bounds text ==
+  seats granted one labrat: 18 (roles={'executor': 18})
+  context says 'do not spawn subagents (leaf)': True
+  spec declares labrat seats: 0
+[OK ] the labrat grant lands exactly on the executor seats
+
+== assertions ==
+RESULT pass

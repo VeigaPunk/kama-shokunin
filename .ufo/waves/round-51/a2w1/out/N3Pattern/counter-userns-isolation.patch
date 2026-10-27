@@ -1,0 +1,14 @@
+--- a/tools/round51-replay-exe-audit.py
++++ b/tools/round51-replay-exe-audit.py
+@@ -406,8 +406,12 @@ def start_replay(tree, rpath, S, tag):
+     outj = os.path.join(S, f"{tag}.json")
+     log = open(os.path.join(S, f"{tag}.log"), "wb")
+-    argv = [sys.executable, "-I", "-c", INVOKER, sys.executable, "-I", os.path.join(tree, REPLAY),
+-            "--receipt", rpath, "--work", work, "--out", outj, "--witness-dir", wd]
++    # Isolate replay mount namespace: mask host installs (~/.local) so copy decoys cannot access them
++    base_cmd = [sys.executable, "-I", "-c", INVOKER, sys.executable, "-I", os.path.join(tree, REPLAY),
++                "--receipt", rpath, "--work", work, "--out", outj, "--witness-dir", wd]
++    mask_sh = "mount -t tmpfs tmpfs /home/vgpnk/.local 2>/dev/null || true; exec \"$@\""
++    argv = ["unshare", "-U", "-m", "--map-root-user", "bash", "-c", mask_sh, "--"] + base_cmd
+     p = subprocess.Popen(argv, env=env, cwd=tree, stdout=log, stderr=log, start_new_session=True)
+     return p, wd, outj, log, canary, marker, work

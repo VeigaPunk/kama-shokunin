@@ -1,0 +1,13 @@
+== B: member is a HARDLINK to the running image (same fs) ==
+own_exe: ('103:05', '1619898903') probs: ['own: running image sha256 cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b is not the frozen server']
+=> dev:ino equal; only the sha leg notices the bytes are not the frozen server.
+   With a same-fs byte-identical copy the sha leg passes too (inherent to inode identity).
+
+== C: member string traversal ==
+member='../outside'                                                 -> /fast/scratch/hyaku/kama-r51/V1Review/work-b2/server/../outside  escapes=False
+member='../../etc/passwd'                                           -> /fast/scratch/hyaku/kama-r51/V1Review/work-b2/server/../../etc/passwd  escapes=True
+member='/home/vgpnk/.local/opt/llama-b11909/llama-server'           -> /home/vgpnk/.local/opt/llama-b11909/llama-server  escapes=True
+
+own_exe(pid=self, absolute member): ('00:20', '13521734') ["own: running image dev:inode 00:20:13521734 is not the replay's extracted member /home/vgpnk/.local/opt/llama-b11909/llama-server (00:38:238037577)", 'own: running image sha256 375532f83be620283ab780c14ca6bcc5907dc379d2b621de0c5d0a112cf5458b is not the frozen server']
+=> an absolute member string bypasses <work>/server entirely; os.path.join
+   treats it as the whole path (join's documented behavior).

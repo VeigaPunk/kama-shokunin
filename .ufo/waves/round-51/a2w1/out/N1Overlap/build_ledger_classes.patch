@@ -1,0 +1,19 @@
+--- a/.ufo/waves/round-51/c2/build_ledger.py
++++ b/.ufo/waves/round-51/c2/build_ledger.py
+@@ -19,8 +19,15 @@ def main(src, repo, out):
+                               capture_output=True, text=True, check=True).stdout.strip()
+         note = ("deleted in place by: " + subj).replace("\t", " ")[:160]
+         for u in e["undisclosed"]:
+-            if len(u["classes"]) != 1:
+-                raise SystemExit(f"{e['commit'][:12]} {e['file']}: classes {u['classes']}")
++            # When a key appears in multiple hunks of differing kinds (e.g. both in-place-edit
++            # and removal), prefer 'in-place-edit' if any hunk added replacement lines,
++            # else the single available class; fail only if classes is empty.
++            if not u["classes"]:
++                raise SystemExit(f"{e['commit'][:12]} {e['file']}: empty classes")
++            chosen_class = "in-place-edit" if "in-place-edit" in u["classes"] else u["classes"][0]
+             rows.append("\t".join([e["commit"], e["file"], u["line_sha256"], str(u["count"]),
+-                                   u["classes"][0], note]))
++                                   chosen_class, note]))
+     with open(out, "w") as fh:
+         fh.write("\n".join(rows) + "\n")

@@ -1,0 +1,30 @@
+--- a/tools/digest-ledger.py
++++ b/tools/digest-ledger.py (ADVISORY, not applied)
+@@ -345,6 +345,27 @@
+         else:
+             ok += 1
+         os.remove(os.path.join(d, "up.md"))
++        # M5Digest advisory hardening: scope cuts are silent (exit 0); a registry/ doc that is
++        # neither ledger, a plain .tsv doc, a prefix-sibling of a ledger name, and a case-variant
++        # of a ledger name must all still be scanned.
++        scope_docs = [
++            (os.path.join(d, "registry", "other.tsv"), "e2" * 32),
++            (os.path.join(d, "table.tsv"), "e3" * 32),
++            (os.path.join(d, "registry", "append-only-disclosures2.tsv"), "e4" * 32),
++            (os.path.join(d, "registry", "Append-Only-Disclosures.tsv"), "e5" * 32),
++        ]
++        for path, tok64 in scope_docs:
++            with open(path, "w") as f:
++                f.write(tok64 + "\n")
++        tok, _, _, _ = scan_dir(d, None)
++        missing = [t for _, t in scope_docs if t not in tok]
++        if missing:
++            bad += 1
++            print(f"selftest FAIL: scope (document not scanned: {missing})", file=sys.stderr)
++        else:
++            ok += 1
++        for path, _ in scope_docs:
++            os.remove(path)
+         with open(lp, "w") as f:
+             f.write(HEADER + "\n" + f"{unk}\tunverifiable\ts\t\t\t\twhy\n")
+         # a .ufo/ document and the ledger file are not documents

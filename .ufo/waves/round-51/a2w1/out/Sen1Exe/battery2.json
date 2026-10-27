@@ -1,0 +1,118 @@
+[
+ {
+  "case": "11a-decoy-exec-host-file",
+  "sha_equal": true,
+  "got": [
+   "103:05",
+   "76751355"
+  ],
+  "want": [
+   "103:05",
+   "76751356"
+  ],
+  "own_predicate": false,
+  "verdict": "CAUGHT-inode-differs"
+ },
+ {
+  "case": "11b-hardlink-collapse",
+  "sha_equal": true,
+  "got": [
+   "103:05",
+   "76751355"
+  ],
+  "want": [
+   "103:05",
+   "76751355"
+  ],
+  "own_predicate": true,
+  "nlink_now": 2,
+  "verdict": "PASSES-own-leg (identity indistinguishable)"
+ },
+ {
+  "case": "11c-hardlink-cross-device",
+  "devs": {
+   "/fast": [
+    66309,
+    "103:05"
+   ],
+   "/home": [
+    56,
+    "00:38"
+   ],
+   "/fast/scratch/hyaku/kama-r51": [
+    66309,
+    "103:05"
+   ]
+  },
+  "exdev_expected": true
+ },
+ {
+  "case": "12-userns-bindmount",
+  "server_exe": {
+   "opened": true,
+   "path": "/fast/scratch/hyaku/kama-r51/Sen1Exe/t2/ns-member",
+   "dev": "00:20",
+   "inode": "13516877",
+   "size": 47416,
+   "sha256": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b"
+  },
+  "member_dev_inode": [
+   "103:05",
+   "77221193"
+  ],
+  "own_predicate": false,
+  "member_sha_outside": "8398af7d1f94a88be3303caa083616ad22a12783e4dfee0373298bc61aef0662",
+  "verdict": "CAUGHT-inode-differs"
+ },
+ {
+  "case": "13a-shebang-no-exec",
+  "script_sha": "418917680a50d9675aee9867fc82da1b3787d25727c7ba6f020ee8c713f9551f",
+  "server_exe": {
+   "opened": true,
+   "path": "/usr/bin/bash",
+   "dev": "00:20",
+   "inode": "13507688",
+   "size": 1195144,
+   "sha256": "c14c8f498f3be96f076ceb07d65dba584a86dca3c86b5dce65ed0f6cae73358d"
+  },
+  "bash_sha": "c14c8f498f3be96f076ceb07d65dba584a86dca3c86b5dce65ed0f6cae73358d",
+  "verdict": "image-is-interpreter"
+ },
+ {
+  "case": "13b-replay-consumer-unlinked-member",
+  "server_exe": {
+   "opened": true,
+   "path": "/fast/scratch/hyaku/kama-r51/Sen1Exe/t2/member13 (deleted)",
+   "dev": "103:05",
+   "inode": "76751301",
+   "size": 47416,
+   "sha256": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b"
+  },
+  "os_stat_err": "2:No such file or directory",
+  "verdict": "replay raises OSError -> Refused(could-not-run), exit 2 (fail closed)"
+ },
+ {
+  "case": "13c-replay-consumer-swapped-member",
+  "server_exe_di": [
+   "103:05",
+   "76751302"
+  ],
+  "os_stat_di": [
+   "103:05",
+   "76751301"
+  ],
+  "mismatch": true,
+  "verdict": "mismatch appended -> exit 1 (fail closed)"
+ },
+ {
+  "case": "14-own_exe-fd",
+  "fd_before": 8,
+  "fd_after_300": 8,
+  "fd_after_missing_member": 8,
+  "problems": [
+   "own: running image sha256 cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b is not the frozen server",
+   "own: running image sha256 cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b is not the frozen server"
+  ],
+  "verdict": "PASS-no-leak"
+ }
+]

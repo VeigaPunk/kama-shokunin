@@ -1,0 +1,17 @@
+Verdict: two low-risk simplifications are justified; no proposed deletion was applied or tested, so these are candidates, not verified improvements.
+
+Axes: calibration (preserve C2 v6's exact event/class/disclosure behavior); operability (preserve C1's procfs identity checks and receipt fields).
+
+Evidence (scratch clone only; lane untouched):
+- Clone: `git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin /fast/scratch/hyaku/kama-r51/Sim1/lane`; top-level verified as `/fast/scratch/hyaku/kama-r51/Sim1/lane`. Its HEAD was `4eca4892acca6ca4072a0a6fad577d0dd78a5dda`; `git diff --stat 138af25b963450b6520794995605fa7dbbcd87e0 4eca4892 -- tools/ registry/` was empty, so those paths matched the frozen build.
+- Baseline `python3 tools/append-only-audit.py --selftest`: `AOA_SELFTEST pass=47 fail=0`, exit 0.
+- Baseline `python3 tools/kama-llamacpp-live.py --selftest`: `selftest: ok; closed tcp6 listeners ...`, exit 0.
+- Baseline `python3 tools/kama-live-replay.py --selftest --scratch "$S"`: `KLR_SELFTEST pass=26 fail=0`, exit 0, including server-exe absent/not-own-member/digest-differs.
+- Frozen C2 counter against clone at `138af25b963450b6520794995605fa7dbbcd87e0`: `fixture=1 lane=1 scenarios=9/9 lost=142 disclosed=166 met=True`, exit 0.
+- Source locations: `tools/append-only-audit.py:675-683` fetches the commit subject and derives class; event construction at `:709` emits `undisclosed` but omits subject. `.ufo/waves/round-51/c2/build_ledger.py:20-24` separately calls `git log -1 --format=%s` for each event with undisclosed rows. `tools/kama-llamacpp-live.py:710` and `:760` format device IDs identically; `:712-724` and `:747-758` repeat the bounded fd hashing loop.
+
+Candidate 1 — eliminate duplicate subject subprocesses (best candidate): add the already-fetched subject to the event JSON, and change `build_ledger.py` to consume that field and drop its `subprocess` import, repo argument, and per-event `git log`. Events that produce ledger rows necessarily have undisclosed lines, so the existing subject-fetch condition already covers them. The 51 disclosed events at build imply up to 51 redundant subprocess calls removed. Compatibility tradeoff: this adds a JSON field (schema remains v3); frozen C2 checks selected event keys, but a strict external consumer might reject additional fields. Do not claim compatibility until actual changed-copy selftests and C2 run.
+
+Candidate 2 — factor device formatting and bounded fd hashing in `kama-llamacpp-live.py`: one private helper for device `major:minor` and one helper for hashing an already-open fd with a known size can replace the duplicated expressions/loops at `model_mapping` and `server_exe`. Keep distinct caller-specific errors and regular-file validation. This is a small reduction (especially the hash loop); avoid merging model-path identity semantics with `/proc/<pid>/exe` semantics. Existing live selftest is the narrow check; replay selftest covers the consumer receipt contract; C1 is required before claiming operability retained.
+
+Not recommended: replacing `build_ledger.py` with a writer mode in the auditor. The auditor's read-only contract is clearer with a separate output writer; `undisclosed` already is the minimal hand-off. Keep it. The temporary selftests above were baseline-only, not post-change evidence; no candidate was implemented, so they do not establish retained behavior after simplification.

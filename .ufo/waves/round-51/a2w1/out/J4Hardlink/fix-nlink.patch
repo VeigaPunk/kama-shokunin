@@ -1,0 +1,12 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round51-replay-exe-audit.py	2026-10-27 00:30:04.561214399 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-51/a2w1/out/J4Hardlink/fix/counter-nlink.py	2026-10-27 00:52:37.559467227 -0300
+@@ -371,6 +371,9 @@
+     except OSError as exc:
+         probs.append(f"own: extracted member {member_path} unreadable: {exc.strerror}")
+         return got
++    if ms.st_nlink != 1:
++        probs.append(f"own: extracted member {member_path} has {ms.st_nlink} links: not a fresh "
++                     f"extraction, a link to a file the replay staged elsewhere")
+     if got != want:
+         probs.append(f"own: running image dev:inode {got[0]}:{got[1]} is not the replay's extracted "
+                      f"member {member_path} ({want[0]}:{want[1]})")

@@ -1,0 +1,116 @@
+--- a/tools/round51-replay-exe-audit.py
++++ b/tools/round51-replay-exe-audit.py
+@@ -57,6 +57,7 @@
+ from __future__ import annotations
+ 
+ import argparse
++import ctypes
+ import hashlib
+ import io
+ import json
+@@ -379,6 +380,60 @@
+     return got
+ 
+ 
++# -------------------------------- proposed own-leg widening (round-51 J3CopyDecoy limit probe)
++# The `own` leg compares the dev and inode of the running image with <work>/server/<member>.
++# A byte-identical copy written over that member in place keeps path, digest and inode, so the
++# leg cannot see it (seat J3CopyDecoy: met=True with exactly that decoy). Its write history is
++# what differs, and an inotify watch on the member's directory sees it without the archive:
++# extraction creates the member once and completes one write; the decoy adds a second
++# write completion for the same basename (lab: create=1 close_write=1 vs close_write=2).
++IN_CLOSE_WRITE, IN_MOVED_TO, IN_CREATE = 0x8, 0x80, 0x100
++WATCH_MASK = IN_CLOSE_WRITE | IN_MOVED_TO | IN_CREATE
++_LIBC = ctypes.CDLL("libc.so.6", use_errno=True)
++
++
++class MemberWrites:
++    """inotify watch on one directory, counting write completions of one basename."""
++
++    def __init__(self, directory, basename):
++        self.basename, self.seen = basename, []
++        self.fd = _LIBC.inotify_init1(os.O_NONBLOCK)
++        if self.fd < 0:
++            raise OSError(ctypes.get_errno(), "inotify_init1")
++        self.wd = _LIBC.inotify_add_watch(self.fd, os.fsencode(directory), WATCH_MASK)
++        if self.wd < 0:
++            raise OSError(ctypes.get_errno(), f"inotify_add_watch {directory}")
++
++    def counts(self):
++        while True:
++            try:
++                buf = os.read(self.fd, 65536)
++            except BlockingIOError:
++                break
++            if not buf:
++                break
++            off = 0
++            while off < len(buf):
++                _wd, mask, _cookie, ln = struct.unpack_from("iIII", buf, off)
++                off += 16
++                name = buf[off:off + ln].split(b"\0", 1)[0].decode("utf-8", "replace")
++                off += ln
++                self.seen.append((name, mask))
++        ev = [m for n, m in self.seen if n == self.basename]
++        write = [m for m in ev if m & (IN_CREATE | 0x2 | IN_CLOSE_WRITE | IN_MOVED_TO)]
++        first_close = next((i for i, m in enumerate(write) if m & IN_CLOSE_WRITE), None)
++        return {"create": sum(1 for m in ev if m & IN_CREATE),
++                "moved_to": sum(1 for m in ev if m & IN_MOVED_TO),
++                "close_write": sum(1 for m in write if m & IN_CLOSE_WRITE),
++                "late": 0 if first_close is None else len(write) - first_close - 1}
++
++    def close(self):
++        try:
++            os.close(self.fd)
++        except OSError:
++            pass
++
++
+ def prepare_env(S, tag):
+     """The fixed replay environment and its two canaries; returns (env, canary, marker)."""
+     env = {k: os.environ[k] for k in PASS_ENV if k in os.environ}
+@@ -444,10 +499,19 @@
+ 
+ 
+ def bind_one(tree, rpath, S, tag, vocab, detail):
++    member = ((load(rpath) or {}).get("provenance") or {}).get("server", {}).get("member")
++    member_path = None
++    watch = None
++    probs, snap, oprobs, got = [], {}, [], None
++    if isinstance(member, str) and member:
++        # the watch must be in place before the replay extracts, so the directory exists first
++        member_path = os.path.join(S, f"work-{tag}", "server", member)
++        try:
++            os.makedirs(os.path.dirname(member_path), exist_ok=True)
++            watch = MemberWrites(os.path.dirname(member_path), os.path.basename(member))
++        except OSError as exc:
++            oprobs.append(f"own: could not watch the member directory: {exc}")
+     p, wd, outj, log, canary, marker, work = start_replay(tree, rpath, S, tag)
+-    probs, snap, oprobs, got = [], {}, [], None
+-    member = ((load(rpath) or {}).get("provenance") or {}).get("server", {}).get("member")
+-    member_path = os.path.join(work, "server", member) if isinstance(member, str) else None
+     try:
+         ready = wait_ready(p, wd)
+         if ready is None:
+@@ -505,10 +569,21 @@
+             hits = []
+         if hits:
+             probs.append(f"planted sitecustomize imported by {len(hits)} interpreter(s): {hits[:2]}")
++        if watch is not None:
++            cnt = watch.counts()
++            watch.close()
++            watch = None
++            if not (cnt["create"] == 1 and cnt["moved_to"] == 0 and cnt["close_write"] == 1):
++                oprobs.append(f"own: member write history {cnt} is not the single extraction write "
++                              f"(create=1 moved_to=0 close_write=1)")
++            elif not oprobs:
++                detail.append(f"own {tag}: member written once (create=1 close_write=1), no second write")
+         if not probs:
+             detail.append(f"bind {tag}: pid {pid} port {port} exe+listen+tree+env+mapped ok, child_pid joined, "
+                           f"mapping dev {mapped[0]} inode {mapped[1]} recorded, nonce {nonce!r} round-tripped")
+     finally:
++        if watch is not None:
++            watch.close()
+         reap(p, snap.items())
+         log.close()
+     for pr in probs:

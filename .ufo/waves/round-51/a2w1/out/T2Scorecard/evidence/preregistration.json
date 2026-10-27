@@ -1,0 +1,46 @@
+{
+ "lane": "kama",
+ "round": 51,
+ "attempt": 2,
+ "author": "kama L1 (agent KamaR51a2)",
+ "frozen_at_utc": "2026-10-27T03:38:30Z",
+ "base": "57a2e25bf702b03aa61f9265e968cf68058ecb82",
+ "authority": "shokunin.conf assigns operability + calibration; the lowest-scoring non-retired axes are calibration, depth and adjacency (7 each); C2 works calibration (the lowest assigned axis) and C1 works operability (the other assigned axis). Stagnation nudge inactive (calibration 7 below saturation 8). Starting point: SCORECARD.md ### Planned (round 51) items 1 (sub-20 threshold decision) and 2 (decoy/pid-join edges), and the round-50 outside closure's routed R6 (corpus/lessons/round-50-verifier-spotcheck.md section 6: C1 decoy in-place exec of the host binary, seat J4Decoy; C2 the sub-20 threshold hiding 97 events incl. the real LOG.md loss at ed135b3c). C2 also takes considerthese/2026-10-26.md proposal 1 (flag deletions in append-only files).",
+ "separability": "C1 touches tools/kama-llamacpp-live.py, tools/kama-live-replay.py and a corpus/SOURCES.md row; its counter reads only those, the three committed round-48 v5 receipts and the network. C2 touches tools/append-only-audit.py and registry/append-only-disclosures.tsv; its counter reads only that tool, registry/append-only-contract.tsv, the ledger and git history. C1's SOURCES append adds lines (no deletion event, nothing for C2 to disclose); C1 touches no C2 path and C2 no C1 path.",
+ "disclosure": "Both counters were written in the same session as the build, before any lane commit of either; the C2 counter was dry-run once against an uncommitted build in a scratch clone commit (422dd121, not a lane object; fixture=1 lane=1 scenarios=9/9 lost=143 disclosed=167 met=True) before this freeze, and the C1 counter was run only at the base. No predicate, target or kill rule was changed after that dry run. The base controls below were run with the frozen bytes.",
+ "claims": [
+  {
+   "id": "C1",
+   "axis": "operability",
+   "score": "8->8",
+   "type": "measured (capability depth: the witnessed replay's server bound to the very file the replay extracted from its re-acquired archive, by dev and inode of the running image, not only by digest); sourced on proc_pid_exe(5)",
+   "statement": "kama-llamacpp-live.py records `server_exe` - the running server child's image opened through /proc/<pid>/exe (proc_pid_exe(5): opening it opens the executable), its dev, inode and sha256 - and kama-live-replay.py refuses a rerun whose server_exe is not its own extracted member <work>/server/<member> (same dev and inode) with the receipt's server digest, recording the member as `own_server`; a decoy that exec's the host's b11909 install (round-50 seat J4Decoy) therefore no longer matches.",
+   "predicate": "a replay of each of the three committed v5 b11909 receipts holds a server that the counter, opening its /proc/<pid>/exe, finds to be the very file the replay extracted to <work>/server/<member> (same dev and inode, frozen digest), recorded in the rerun receipt's server_exe with the same dev, inode and digest, while every round-50 bind check still holds; killing the replay's invoker still removes the whole tree within 30 s; and the exe surface is a source row; bind=1 own=1 teardown=1 newrow=1.",
+   "counter": "tools/round51-replay-exe-audit.py",
+   "counter_sha256": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+   "command": "python3 tools/round51-replay-exe-audit.py --repo <lane clone> --tip <full commit> --scratch <dir> --out <receipt>",
+   "target": "bind=1 own=1 teardown=1 newrow=1 bound=3/3 owned=3/3 met=True",
+   "kill": "any leg 0 at the measured commit, or met=True on any control"
+  },
+  {
+   "id": "C2",
+   "axis": "calibration",
+   "score": "7->7",
+   "type": "measured (self-assessment matched to repo state: the lane's declared append-only files graded for every deletion, the A-row rule's permitted cells separated from losses, and every graded line gone at the tip restored or disclosed by name; outside ground truth: nine constructed scenarios with expectations by construction and the counter's own recomputation of lost lines from git diffs)",
+   "statement": "append-only-audit v6: the default threshold is 1 (every deletion event graded; v5 graded only events of 20+ lines and hid 101 of 106); for A-row files a deleted registry row whose id the commit still holds with every cell but status, recheck and used-by byte-equal is `permitted`, not graded; registry/append-only-disclosures.tsv names every graded line not held at the tip by (commit, file, key sha256, count, mechanical class), and a bad row (no event, no such unheld line, over-count, wrong class) exits 1.",
+   "predicate": "append-only-audit at --tip grades every deletion by default (threshold 1), permits exactly the A-row status/recheck/used-by cell edits, and on the lane exits 0 because every graded line gone at --tip is restored or named in registry/append-only-disclosures.tsv with its mechanical class - the counter's own recomputation finding the same lost lines, key for key, in every whole-file-graded file - while nine constructed scenarios each get the verdict their construction fixes; fixture=1 lane=1.",
+   "counter": "tools/round51-append-audit-v6-check.py",
+   "counter_sha256": "254e63bab046428d4099d008929751701ed7b0600b96874760838a56eb9a1660",
+   "command": "python3 tools/round51-append-audit-v6-check.py --repo <lane clone> --tip <full commit> --scratch <dir> --out <receipt>",
+   "target": "fixture=1 lane=1 scenarios=9/9 met=True",
+   "kill": "any leg 0 at the measured commit, or met=True on any control"
+  }
+ ],
+ "controls": ".ufo/waves/round-51/controls/: base.c1.out (bind=1 own=0 teardown=1 newrow=0 met=False) and base.c2.out (fixture=0 lane=0 scenarios=0/9 met=False) at the base, committed at this freeze (do-nothing controls); after the build, ablation controls on the build tree, each removing one claimed mechanism - C1: no server_exe record; a decoy replay that exec's the host install's llama-server and skips its own server-exe check; C2: v6 tool with no ledger; v6 tool with the A-row permitted rule removed; v6 with threshold default 20; a ledger whose every class is `in-place-edit`. Every control must be met=False.",
+ "limits": [
+  "C1's own leg compares dev and inode of the running image with the replay's extracted member: a decoy that copies a byte-identical binary to <work>/server/<member> and execs that copy is indistinguishable from an extraction (the bytes are the frozen ones either way); whether the replay actually downloaded the archive is not observed by this counter.",
+  "C1 keeps every round-50 leg; the round-50 carried limits (probe PATH execution, model bytes rewritten in place after mapping, kills during download or readiness) are not addressed.",
+  "C2 discloses losses; it does not restore them. A disclosure names a key hash and a count, not the reason a line was edited in place; the class is mechanical (revert subject, hunk adds lines or not). The note column is the deleting commit's subject, not a judgment.",
+  "C2's counter recomputes lost lines key for key only for files whose contract region is `*`; for SCORECARD.md (exempt head sections) and the two `only=## ...` knowledge entries it checks only that each ledger row's key is among the event's deleted keys, relying on the tool's v5 section logic (verified by the round-50 counter) for which lines are graded."
+ ]
+}

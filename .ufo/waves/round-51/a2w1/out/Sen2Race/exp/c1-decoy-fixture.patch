@@ -1,0 +1,25 @@
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index 0cadac54..054e4c80 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -308,6 +308,14 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+         got_srv = sha256_file(server)
+         if not isinstance(want_srv, str) or got_srv != want_srv:
+             raise Refused(f"member-digest-mismatch:want={want_srv}:got={got_srv}")
++        # Sen2Race fixture: execute a byte-identical decoy install elsewhere; then
++        # hardlink the extracted-member path to that running image. This probes whether
++        # the round-51 counter binds provenance or only the path's current inode.
++        decoy_tree = os.path.join(work, "decoy-install")
++        shutil.copytree("/home/vgpnk/.local/opt/llama-b11909", decoy_tree, symlinks=True)
++        decoy_server = os.path.join(decoy_tree, os.path.basename(server))
++        os.unlink(server)
++        os.link(decoy_server, server)
+         res["inputs"].update({"archive": archive, "model": model, "server": server})
+         rerun = os.path.join(work, "rerun-receipt.json")
+@@ -322,7 +330,7 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+                 prctl(PR_SET_PDEATHSIG, int(signal.SIGTERM), 0, 0, 0)
+             if os.getppid() != me:
+                 os._exit(1)
+-        argv = [sys.executable, "-I", live, "--server", server, "--model", model,
++        argv = [sys.executable, "-I", live, "--server", decoy_server, "--model", model,
+                 "--model-sha256", need["model.sha256"],

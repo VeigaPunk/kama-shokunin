@@ -1,0 +1,272 @@
+[
+ {
+  "case": "1-unlinked-after-exec",
+  "pid": 870771,
+  "result": {
+   "opened": true,
+   "path": "/fast/scratch/hyaku/kama-r51/Sen1Exe/t/exe-unlinked (deleted)",
+   "dev": "103:05",
+   "inode": "1218451373",
+   "size": 47416,
+   "sha256": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b"
+  },
+  "truth": {
+   "readlink": "/fast/scratch/hyaku/kama-r51/Sen1Exe/t/exe-unlinked (deleted)",
+   "readlink_err": null,
+   "own_sha": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b",
+   "own_err": null,
+   "stat": {
+    "dev": "103:05",
+    "inode": "1218451373",
+    "size": 47416,
+    "mode_regular": true
+   },
+   "stat_err": null
+  },
+  "planted_sha": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b",
+  "planted_inode": "1218451373",
+  "on_disk_now": false,
+  "os_stat_path_err": "2:No such file or directory",
+  "verdict": "PASS-open-works-old-bytes"
+ },
+ {
+  "case": "2-renamed-over-after-exec",
+  "pid": 870921,
+  "result": {
+   "opened": true,
+   "path": "/fast/scratch/hyaku/kama-r51/Sen1Exe/t/exe-swapped (deleted)",
+   "dev": "103:05",
+   "inode": "1218453483",
+   "size": 47416,
+   "sha256": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b"
+  },
+  "truth": {
+   "readlink": "/fast/scratch/hyaku/kama-r51/Sen1Exe/t/exe-swapped (deleted)",
+   "readlink_err": null,
+   "own_sha": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b",
+   "own_err": null,
+   "stat": {
+    "dev": "103:05",
+    "inode": "1218453483",
+    "size": 47416,
+    "mode_regular": true
+   },
+   "stat_err": null
+  },
+  "old_sha": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b",
+  "old_inode": "1218453483",
+  "new_sha": "8398af7d1f94a88be3303caa083616ad22a12783e4dfee0373298bc61aef0662",
+  "new_inode": "1218457339",
+  "path_sha_now": "8398af7d1f94a88be3303caa083616ad22a12783e4dfee0373298bc61aef0662",
+  "path_inode_now": "1218457339",
+  "verdict": "PASS-runs-old-bytes",
+  "path_vs_fd_identity": "diverged: fd inode 1218453483 vs path inode 1218457339"
+ },
+ {
+  "case": "3-modified-in-place",
+  "pid": 871141,
+  "result": {
+   "opened": true,
+   "path": "/fast/scratch/hyaku/kama-r51/Sen1Exe/t/exe-inplace (deleted)",
+   "dev": "103:05",
+   "inode": "1218457515",
+   "size": 47416,
+   "sha256": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b"
+  },
+  "truth": {
+   "readlink": "/fast/scratch/hyaku/kama-r51/Sen1Exe/t/exe-inplace (deleted)",
+   "readlink_err": null,
+   "own_sha": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b",
+   "own_err": null,
+   "stat": {
+    "dev": "103:05",
+    "inode": "1218457515",
+    "size": 47416,
+    "mode_regular": true
+   },
+   "stat_err": null
+  },
+  "planted_sha": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b",
+  "write_attempts": {
+   "r+b": "ETXTBSY:Text file busy",
+   "wb-truncate": "ETXTBSY:Text file busy",
+   "os.truncate": "ETXTBSY:Text file busy",
+   "remove": "unlinked while running"
+  },
+  "verdict": "PASS-ETXTBSY-blocks-inplace"
+ },
+ {
+  "case": "4-zombie-child",
+  "pid": 871165,
+  "result": {
+   "opened": false,
+   "reason": "exe-unreadable:No such file or directory"
+  },
+  "truth": {
+   "readlink": null,
+   "readlink_err": "2:No such file or directory",
+   "own_sha": null,
+   "own_err": "2:No such file or directory",
+   "stat": null,
+   "stat_err": null
+  },
+  "proc_state": "Z",
+  "verdict": "PASS-fails-closed",
+  "reason_note": "exe-unreadable:No such file or directory"
+ },
+ {
+  "case": "5-pid1-root-owned",
+  "pid": 1,
+  "result": {
+   "opened": false,
+   "reason": "exe-unreadable:Permission denied"
+  },
+  "truth": {
+   "readlink": null,
+   "readlink_err": "13:Permission denied",
+   "own_sha": null,
+   "own_err": "13:Permission denied",
+   "stat": null,
+   "stat_err": null
+  },
+  "verdict": "PASS-fails-closed"
+ },
+ {
+  "case": "5b-kthread-pid2",
+  "pid": 2,
+  "result": {
+   "opened": false,
+   "reason": "exe-unreadable:Permission denied"
+  },
+  "truth": {
+   "readlink": null,
+   "readlink_err": "13:Permission denied",
+   "own_sha": null,
+   "own_err": "13:Permission denied",
+   "stat": null,
+   "stat_err": null
+  },
+  "verdict": "PASS-fails-closed"
+ },
+ {
+  "case": "6a-nondescendant-same-uid",
+  "pid": 871167,
+  "result": {
+   "opened": true,
+   "path": "/usr/bin/sleep",
+   "dev": "00:20",
+   "inode": "13516877",
+   "size": 47416,
+   "sha256": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b"
+  },
+  "truth": {
+   "readlink": "/usr/bin/sleep",
+   "readlink_err": null,
+   "own_sha": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b",
+   "own_err": null,
+   "stat": {
+    "dev": "00:20",
+    "inode": "13516877",
+    "size": 47416,
+    "mode_regular": true
+   },
+   "stat_err": null
+  },
+  "ppid": "1494",
+  "yamascope": "1",
+  "verdict": "PASS-opened"
+ },
+ {
+  "case": "6b-nondumpable-same-uid",
+  "pid": 871266,
+  "result": {
+   "opened": false,
+   "reason": "exe-unreadable:Permission denied"
+  },
+  "truth": {
+   "readlink": null,
+   "readlink_err": "13:Permission denied",
+   "own_sha": null,
+   "own_err": "13:Permission denied",
+   "stat": null,
+   "stat_err": null
+  },
+  "uid": 1000,
+  "status_uid": [
+   "Uid:\t1000\t1000\t1000\t1000",
+   "NoNewPrivs:\t0"
+  ],
+  "verdict": "PASS-fails-closed"
+ },
+ {
+  "case": "7-shebang-target",
+  "pid": 871287,
+  "result": {
+   "opened": true,
+   "path": "/usr/bin/sleep",
+   "dev": "00:20",
+   "inode": "13516877",
+   "size": 47416,
+   "sha256": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b"
+  },
+  "truth": {
+   "readlink": "/usr/bin/sleep",
+   "readlink_err": null,
+   "own_sha": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b",
+   "own_err": null,
+   "stat": {
+    "dev": "00:20",
+    "inode": "13516877",
+    "size": 47416,
+    "mode_regular": true
+   },
+   "stat_err": null
+  },
+  "script_sha": "9c6254193a28bcbd677591bb98ed4972b4738563f64599f23c863285428dc184",
+  "bash_sha": "c14c8f498f3be96f076ceb07d65dba584a86dca3c86b5dce65ed0f6cae73358d",
+  "verdict": "INFO"
+ },
+ {
+  "case": "8-exe-chmod000-after-exec",
+  "pid": 871288,
+  "result": {
+   "opened": false,
+   "reason": "exe-unreadable:Permission denied"
+  },
+  "truth": {
+   "readlink": "/fast/scratch/hyaku/kama-r51/Sen1Exe/t/exe-chmod000",
+   "readlink_err": null,
+   "own_sha": null,
+   "own_err": "13:Permission denied",
+   "stat": null,
+   "stat_err": null
+  },
+  "planted_sha": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b",
+  "mode": "0o0",
+  "verdict": "FAIL/exe-unreadable:Permission denied"
+ },
+ {
+  "case": "9-fd-leak",
+  "fd_before": 6,
+  "fd_after_500_ok": 6,
+  "fd_after_500_err": 6,
+  "verdict": "PASS-no-leak"
+ },
+ {
+  "case": "10-reaped-pid",
+  "pid": 871307,
+  "result": {
+   "opened": false,
+   "reason": "exe-unreadable:No such file or directory"
+  },
+  "truth": {
+   "readlink": null,
+   "readlink_err": "2:No such file or directory",
+   "own_sha": null,
+   "own_err": "2:No such file or directory",
+   "stat": null,
+   "stat_err": null
+  },
+  "verdict": "PASS-fails-closed"
+ }
+]

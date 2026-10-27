@@ -1,0 +1,45 @@
+# J5NoLedger — exact commands (fleet root /home/vgpnk/Projects/shokunin)
+
+S=/fast/scratch/hyaku/kama-r51/J5NoLedger; export TMPDIR="$S"; mkdir -p "$S"
+O=/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-51/a2w1/out/J5NoLedger; mkdir -p "$O"
+C=/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round51-append-audit-v6-check.py
+
+# 0. frozen counter bytes
+sha256sum "$C"                     # 254e63bab046428d4099d008929751701ed7b0600b96874760838a56eb9a1660
+
+# 1. clone
+git clone --shared -q /home/vgpnk/Projects/shokunin/kama-shokunin "$S/lane"
+git -C "$S/lane" rev-parse --show-toplevel                      # $S/lane
+git -C "$S/lane" merge-base --is-ancestor 138af25b963450b6520794995605fa7dbbcd87e0 4eca4892  # exit 0
+
+# 2. ablation commit at 138af25b
+git -C "$S/lane" checkout -q -B ablation 138af25b963450b6520794995605fa7dbbcd87e0
+git -C "$S/lane" rm -q registry/append-only-disclosures.tsv
+git -C "$S/lane" -c user.name=r51-j5-fixture -c user.email=r51-j5@invalid -c commit.gpgsign=false \
+    commit -q -m "r51 ablation J5NoLedger: delete registry/append-only-disclosures.tsv at build-fix 2 (control: no ledger)"
+git -C "$S/lane" rev-parse HEAD                                 # 7b3bea81e6e1cf988439e901a986295fc16271bd
+
+# 3. primary arm
+python3 "$C" --repo "$S/lane" --tip 7b3bea81e6e1cf988439e901a986295fc16271bd --scratch "$S/c2" --out "$O/c2-noledger.out"
+# exit 1; fixture=1 lane=0 scenarios=9/9 lost=142 disclosed=0 met=False
+
+# 4. paired arm at the unmodified tip
+python3 "$C" --repo "$S/lane" --tip 138af25b963450b6520794995605fa7dbbcd87e0 --scratch "$S/c2" --out "$O/c2-paired.out"
+# exit 0; fixture=1 lane=1 scenarios=9/9 lost=142 disclosed=166 met=True
+
+# 5. supplementary: ledger with only the 24 SCORECARD.md rows removed
+git -C "$S/lane" checkout -q -B ablation-scorecard 138af25b963450b6520794995605fa7dbbcd87e0
+awk -F'\t' 'NR==1 || $2!="SCORECARD.md"' "$S/lane/registry/append-only-disclosures.tsv" > "$S/ledger-noscorecard.tsv"
+cp "$S/ledger-noscorecard.tsv" "$S/lane/registry/append-only-disclosures.tsv"
+git -C "$S/lane" -c user.name=r51-j5-fixture -c user.email=r51-j5@invalid -c commit.gpgsign=false \
+    commit -q -am "r51 ablation J5NoLedger-supplementary: ledger without SCORECARD.md rows"
+# 24a12f3bf02f683644ac82de00690e64f8b9cb37
+python3 "$C" --repo "$S/lane" --tip 24a12f3bf02f683644ac82de00690e64f8b9cb37 --scratch "$S/c2" \
+    --out "$O/c2-supp-scorecard-rows-removed.out"
+# exit 1; fixture=1 lane=0 scenarios=9/9 lost=142 disclosed=142 met=False
+
+# 6. evidence copies + cleanup
+git -C "$S/lane" format-patch -1 --stdout 7b3bea81e6e1cf988439e901a986295fc16271bd > "$O/ablation-7b3bea81.patch"
+git -C "$S/lane" format-patch -1 --stdout 24a12f3bf02f683644ac82de00690e64f8b9cb37 > "$O/supp-scorecard-rows-removed-24a12f3b.patch"
+pgrep -af llama-server   # only other seats' X1Fresh replays; none started by me
+rm -rf "$S"

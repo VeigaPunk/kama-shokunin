@@ -1,0 +1,14 @@
+== server with model on btrfs (/home, st_dev 0x38) ==
+server_exe: {"dev": "00:38", "inode": "238037577", "opened": true, "path": "/home/vgpnk/.local/opt/llama-b11909/llama-server", "sha256": "35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0", "size": 17864}
+os.stat(exe) dev=00:38 inode=238037577 | server_exe dev/inode match: True/True
+model_mapping(model on btrfs): {"dev": "00:1e", "inode": "238450884", "mapped": false, "path": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-51/a2w1/out/Sen2Race/exp/models/model-btrfs.gguf", "path_dev": "00:38", "path_inode": "238450884", "reason": "mapped-file-is-not-the-model-path"}
+counter mapped_model(model on btrfs): None | problems: ['no mapping of pid 1506423 is a file hashing to the frozen model (24 file mappings)']
+maps rows for the model: [('00:1e', '238450884')] | os.stat model dev: 00:38
+
+== (2) counter own_exe, member = a copy of the same bytes (inode 238484276) ==
+own_exe -> got ('00:38', '238037577') probs ["own: running image dev:inode 00:38:238037577 is not the replay's extracted member /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-51/a2w1/out/Sen2Race/exp/race/server/build/bin/llama-server (00:38:238484276)"]
+-- rebound member to a hardlink of the running image (inode 238037577) --
+own_exe -> got ('00:38', '238037577') probs []
+
+== control: same bytes, model on xfs (/fast) ==
+model_mapping(model on xfs): {"dev": "103:05", "inode": "682443419", "mapped": true, "path": "/fast/scratch/hyaku/kama-r51/Sen2Race/model-xfs.gguf", "sha256": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d", "size": 1185376}

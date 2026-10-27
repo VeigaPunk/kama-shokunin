@@ -1,0 +1,149 @@
+{
+  "round": 51,
+  "seat": "N1Overlap",
+  "surfaces": {
+    "surface_1_process_image_identity": {
+      "core_primitive": "/proc/<pid>/exe and proc_pid_exe(5)",
+      "kama_implementation": {
+        "source": "corpus/SOURCES.md:252 (S499)",
+        "live_tool": "tools/kama-llamacpp-live.py:server_exe (L730-760, L2041)",
+        "replay_tool": "tools/kama-live-replay.py:own_server & member-links (L349, L367-376, L381)",
+        "counter": "tools/round51-replay-exe-audit.py:own leg (L31-37, L490-505)",
+        "purpose": "Prevent decoy binary exec (e.g. host b11909 install) by asserting running image dev/inode equals extracted archive member"
+      },
+      "sibling_overlaps": [
+        {
+          "lane": "souji-shokunin",
+          "paths": [
+            "corpus/SOURCES.md:92,99 (S069, S076)",
+            "corpus/knowledge/process-residue-observations.md:26-30",
+            ".ufo/waves/round-18/w2/ReopenS069.md:89-94",
+            ".ufo/waves/round-18/w1/SrcProcCwd.md:65,110"
+          ],
+          "disposition": "cite",
+          "rationale": "Souji independently verified proc_pid_exe(5) (man-pages 6.19) in R18, proving that the (deleted) suffix applies strictly to /proc/<pid>/exe and not to cwd or fd. Kama cites S499 proc_pid_exe(5); citing Souji S076 establishes fleet consensus on Linux procfs documentation."
+        },
+        {
+          "lane": "tabi-shokunin",
+          "paths": [
+            "corpus/knowledge/webmcp-chromium-loopback-round-16.md:35",
+            "corpus/knowledge/webmcp-invocation-round-17.md:37",
+            ".ufo/waves/round-18/w1/ConnHarnessDiff.md:34,105",
+            ".ufo/waves/round-19/w2/RuntimeUnknownParam.guards.md:39"
+          ],
+          "disposition": "cite",
+          "rationale": "Tabi solved the identical architectural problem in R16-R19: distinguishing launcher scripts (/usr/bin/chromium) from the underlying binary image (/usr/lib/chromium/chromium) by opening /proc/<pid>/exe directly and recording realExecutableSha256. Serves as prior architectural precedent."
+        },
+        {
+          "lane": "mado-shokunin",
+          "paths": [
+            "corpus/knowledge/walker-deep-r9.md:126",
+            "corpus/knowledge/walker-route-r18.md:288",
+            ".ufo/waves/round-26/harness/pilot.py:31",
+            ".ufo/waves/round-41/w2/CritEntryOverreach/overreach.md:61,160,174"
+          ],
+          "disposition": "ignore",
+          "rationale": "Mado uses readlink /proc/<pid>/exe for pacman package file reconciliation of desktop daemons; does not hash open fds or verify dev/inode of extracted build members."
+        },
+        {
+          "lane": "kengaku-shokunin",
+          "paths": [
+            "corpus/evidence/round10-fleet/r10-scout-endpoint.md:25,58,97",
+            "corpus/evidence/round14-fleet/r14-scout-surfaces.md:125"
+          ],
+          "disposition": "ignore",
+          "rationale": "Kengaku inspected kama host daemon PID 1299 via ls -l /proc/1299/exe during fleet scout sweeps; passive historical observation rather than a reusable tool/primitive."
+        },
+        {
+          "lane": "mori-shokunin",
+          "paths": [
+            ".ufo/waves/round-31/w1/SrcProcBaseCmdline.md:5,52,91"
+          ],
+          "disposition": "ignore",
+          "rationale": "Kernel source scout of fs/proc/base.c (rejected duplicate row S166) focused on cmdline null-byte parsing and setproctitle, not userspace image binding."
+        },
+        {
+          "lane": "tsukuroi-shokunin",
+          "paths": [
+            ".ufo/waves/round-30/w2/SentinelProbeHollow.md:9"
+          ],
+          "disposition": "ignore",
+          "rationale": "C LD_PRELOAD constructor inspecting /proc/self/exe to intercept git invocations; out of scope for model server verification."
+        }
+      ]
+    },
+    "surface_2_append_only_audits_and_disclosure_ledgers": {
+      "core_primitive": "append-only history auditing and mechanical disclosure ledgers",
+      "kama_implementation": {
+        "tool": "tools/append-only-audit.py v6 (threshold 1 default, A-row permitted, historical disclosures)",
+        "contract": "registry/append-only-contract.tsv (10 declared paths/patterns)",
+        "ledger": "registry/append-only-disclosures.tsv (166 lines, 51 events, sha256 line keys)",
+        "ledger_builder": ".ufo/waves/round-51/c2/build_ledger.py",
+        "counter": "tools/round51-append-audit-v6-check.py (fixture=1 lane=1, 9 scenarios)"
+      },
+      "sibling_overlaps": [
+        {
+          "lane": "kake-shokunin",
+          "paths": [
+            ".ufo/waves/round-58/c58_receipt_rewrites.py",
+            ".ufo/waves/round-58/w1/ExecLedgerBuild.files/build_ledger.py",
+            ".ufo/waves/round-58/receipt-rewrites.json"
+          ],
+          "disposition": "cite",
+          "rationale": "Kake independently created a disclosure ledger for post-commit receipt rewrites/deletions under control(s)/. Both lanes took proposals from considerthese/2026-10-26.md. Kake used build_ledger.py to mechanically derive kinds (pin-only, content, pending-fill) and enforced that live receipts cannot be rewritten (new_rewritten==0). Citing Kake validates the mechanical disclosure ledger pattern across the fleet."
+        },
+        {
+          "lane": "kotoba-shokunin",
+          "paths": [
+            "verifiers/check_sources_append_only.py:1-35"
+          ],
+          "disposition": "cite",
+          "rationale": "Kotoba created the earliest Rule 2 verifier for corpus/SOURCES.md, defining the three mutable columns (status, recheck, used-by). Kama v6 generalized this into the A-row permitted rule. Citing Kotoba establishes the lineage of the A-row exception."
+        },
+        {
+          "lane": "mori-shokunin",
+          "paths": [
+            "tools/mori-sources-appendonly.py:1-40"
+          ],
+          "disposition": "cite",
+          "rationale": "Mori built a 1114-line Rule 2 verifier tracking supersedes S### linkages across git ancestry. Relevant prior art for supersession lineage verification."
+        },
+        {
+          "lane": "kotodama-shokunin",
+          "paths": [
+            "corpus/knowledge/verification/append-only-record-verification.md:1-45"
+          ],
+          "disposition": "cite",
+          "rationale": "Kotodama codified the fleet doctrine for append-only record verification, closing snapshots, and successor-row corrections. Citing Kotodama anchors Kamas C2 disclosure ledger in fleet epistemological doctrine."
+        },
+        {
+          "lane": "chousa-shokunin",
+          "paths": [
+            "corpus/evidence/round54/considerthese-ledger-check.py",
+            "corpus/evidence/round54/considerthese-ledger.tsv",
+            ".ufo/waves/round-52/w1/R52ConnCrossClaim.md",
+            ".ufo/waves/round-53/w1/R53ConnSiblings.md"
+          ],
+          "disposition": "hand off",
+          "rationale": "Chousa R54 automated the tracking of considerthese/*.md proposals via considerthese-ledger-check.py and CT-YYYYMMDD-n IDs. Kama considerthese/2026-10-26.md proposal 2 called for tracking proposals across rounds. Kama should hand off proposal tracking schema to Chousa rather than inventing an incompatible local format."
+        },
+        {
+          "lane": "tsukuroi-shokunin",
+          "paths": [
+            "tools/check-appended-notices.py"
+          ],
+          "disposition": "ignore",
+          "rationale": "Specialized to tsukuroi R18 notice JSON schema; not generalizable to repository append-only verification."
+        },
+        {
+          "lane": "tameshi-shokunin",
+          "paths": [
+            ".ufo/evidence/round-50/w1/T50ExecAppendOnly/seat-report-append-only.py"
+          ],
+          "disposition": "ignore",
+          "rationale": "Single-seat test fixture for wave report appends."
+        }
+      ]
+    }
+  }
+}

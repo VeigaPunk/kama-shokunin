@@ -1,0 +1,50 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round51-replay-exe-audit.py	2026-10-27 00:30:04.561214399 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-51/a2w1/out/J4Hardlink/fix/counter-nlink-btrfsdev.py	2026-10-27 00:52:54.680408114 -0300
+@@ -281,6 +281,27 @@
+     return False
+ 
+ 
++def mount_dev(path):
++    """major:minor of the mount holding path (mountinfo field 3), formatted as /proc/<pid>/maps
++    prints a file's device. btrfs reports the superblock device there while stat() returns the
++    subvolume's anonymous device, so for one and the same file a maps dev can equal this and not
++    st_dev (round-51 seat J4Hardlink: maps 00:1e, stat 00:38, both on the counter's own model)."""
++    best, out = "", None
++    try:
++        with open("/proc/self/mountinfo") as fh:
++            for line in fh:
++                f = line.split()
++                if len(f) < 5:
++                    continue
++                mp = f[4].replace("\\040", " ")
++                if (path == mp or path.startswith(mp.rstrip("/") + "/")) and len(mp) > len(best):
++                    maj, _, mino = f[2].partition(":")
++                    best, out = mp, "%02x:%02x" % (int(maj), int(mino))
++    except (OSError, ValueError):
++        return None
++    return out
++
++
+ def mapped_model(pid, probs):
+     """(dev, inode) of a file-backed mapping of pid whose pathname, stat()ed now, is the
+     same file and hashes to the frozen model; None (problem appended) otherwise."""
+@@ -305,7 +326,8 @@
+             st = os.stat(path)
+         except OSError:
+             continue
+-        if f"{os.major(st.st_dev):02x}:{os.minor(st.st_dev):02x}" != dev or str(st.st_ino) != ino:
++        sdev = f"{os.major(st.st_dev):02x}:{os.minor(st.st_dev):02x}"
++        if dev not in (sdev, mount_dev(path)) or str(st.st_ino) != ino:
+             continue
+         if st.st_size < 1024 or st.st_size > 64 << 20:
+             continue
+@@ -371,6 +393,9 @@
+     except OSError as exc:
+         probs.append(f"own: extracted member {member_path} unreadable: {exc.strerror}")
+         return got
++    if ms.st_nlink != 1:
++        probs.append(f"own: extracted member {member_path} has {ms.st_nlink} links: not a fresh "
++                     f"extraction, a link to a file the replay staged elsewhere")
+     if got != want:
+         probs.append(f"own: running image dev:inode {got[0]}:{got[1]} is not the replay's extracted "
+                      f"member {member_path} ({want[0]}:{want[1]})")

@@ -1,0 +1,19 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 012406e0..6d9fdbe2 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -507,7 +507,13 @@ def row_cells(text):
+ 
+ def permitted_edits(dl, new_body):
+     """v6 A-row: positions in dl of deleted rows whose id the new blob still holds with
+-    every immutable cell byte-equal (only status, recheck and used-by changed)."""
++    every immutable cell byte-equal (only status, recheck and used-by changed).
++
++    ROUND-51 ABLATION CONTROL (seat J6NoArow): the A-row permitted rule is removed - this
++    always returns the empty set, so every deleted A-row is graded like a plain loss. The
++    ledger is NOT regenerated; the control measures the frozen C2 counter against a build
++    that lacks only this one mechanism."""
++    return set()
+     rows = collections.defaultdict(list)
+     for ln in new_body:
+         c = row_cells(ln)

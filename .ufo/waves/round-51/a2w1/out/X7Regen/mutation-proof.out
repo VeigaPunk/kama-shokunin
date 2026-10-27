@@ -1,0 +1,22 @@
+Ledger mutation sensitivity for regen_ledger.py, run at 138af25b963450b6520794995605fa7dbbcd87e0.
+Each probe is a separate copy of the actual registry/append-only-disclosures.tsv; output rows are
+compared after the seat-required exclusions (SCORECARD.md and `only=` knowledge entries).
+
+1. Drop the final ledger row (SCORECARD.md, outside comparison scope): exit=0, no diff. This is
+   expected and confirms the exclusion is deliberate; it is not a sensitivity failure.
+2. Drop first graded row (corpus/README.md): exit=1; rows_ledger=141; only_in_regen=1;
+   only_in_ledger=0. Regenerated row:
+   + c6199a2542440db77d69918599e5a378ee116337 corpus/README.md 5a0b8299e4132ece91df7d78d3c4e954d082c998055dd8bd7e4fcf1441696938 1 in-place-edit
+3. Change that row's class to `removal`: exit=1; only_in_regen=1 and only_in_ledger=1 (the
+   correct `in-place-edit` row is added; the wrong `removal` row is removed).
+4. Change that row's count from 1 to 2: exit=1; only_in_regen=1 and only_in_ledger=1.
+5. Flip its first SHA-256 hex digit: exit=1; only_in_regen=1 and only_in_ledger=1.
+6. Add fabricated all-zero commit / all-`f` hash row: exit=1; only_in_regen=0 and only_in_ledger=1.
+
+Probe results (output abbreviated to the decisive lines):
+m1a SCORECARD drop: exit=0; only_in_regen=0 only_in_ledger=0
+m1b graded-row drop: exit=1; rows_mine=142 lines_mine=142 rows_ledger=141 lines_ledger=141; only_in_regen=1 only_in_ledger=0
+m2 wrong class: exit=1; only_in_regen=1 only_in_ledger=1
+m3 wrong count: exit=1; only_in_regen=1 only_in_ledger=1
+m4 wrong sha: exit=1; only_in_regen=1 only_in_ledger=1
+m5 fabricated row: exit=1; only_in_regen=0 only_in_ledger=1

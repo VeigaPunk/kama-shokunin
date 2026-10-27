@@ -1,0 +1,15 @@
+Verdict: The 22 LOG.md ledger rows match their deleting diffs and their mechanical classes; 21 are explained corrections/re-anchors, but the five-row ed135b3c revert removed a substantive historical event without a replacement and should receive an appended correction.
+
+## Evidence
+
+- Scope: `registry/append-only-disclosures.tsv` has 167 lines including its header; filtering rows with `file=LOG.md` yielded 22. Each row has `count=1`.
+- Commands run (read-only): `git -C /home/vgpnk/Projects/shokunin/kama-shokunin show --format=fuller --no-ext-diff <commit> -- LOG.md` for all eight distinct commits; `git ... show --format= --no-ext-diff -U0 <commit> -- LOG.md` to verify per-row deleted-line hashes; and `git ... show 138af25b963450b6520794995605fa7dbbcd87e0:LOG.md` to test whether those exact CR-stripped lines remained. Git commands completed successfully (exit 0). All 22 hashes matched exactly one deleted line, and none of the exact lines was present at the measured tip; therefore no moved exact line was missed.
+- Class check follows the frozen C2 contract (`tools/round51-append-audit-v6-check.py:17-19`): ed135b3cb869 is a revert because its commit subject begins `Revert "`; all other listed changes add lines in their `-U0` hunk and are correctly `in-place-edit`. Each row’s hash and result are in `table.md`.
+- Append-only obligation: `registry/append-only-contract.tsv:2` declares `LOG.md` `A-corr`, region `*`, with corrections as new entries; its source declaration is `README.md:16` (“append-only round log”). Thus a real correction should be appended, not restored in place.
+
+## Findings
+
+- **Append an erratum for ed135b3c (five rows).** The revert deleted the complete `2026-10-13 — HOURS.md ledger opened` entry, including the operator seed, threshold/gate, zero start, accrual method, and evidence pointer. It is a real loss of historical information, not just a moved/rephrased line. Recommend an appended entry naming the superseded/reverted event and describing the retained fact without implying the reverted ledger remains operative. Do not reinsert the entry at its original location. Table rows 1–5 correspond to this single correction need.
+- The remaining 17 rows are in-place corrections or pointer re-anchors: round 4 corrects a lane-root path; round 26 replaces candidate totals and inaccurate C1 descriptions; round 29 corrects tool provenance; round 38 replaces measurement placeholders with measured values; round 42 adds counter limitations; and round 43 corrects control/Mistakes counts. The replacements are present in their same LOG sections, so an additional correction would duplicate already-corrected text. The round-26 multi-line contextual replacements were classified by the counter as `in-place-edit`; they retain and refine the affected facts rather than representing an omitted historical event.
+
+Verification gap: this scoped audit did not run the C2 counter or independently assess other ledger file slices; neither is needed to establish the LOG.md row-level diff/hash and current exact-line results reported here.

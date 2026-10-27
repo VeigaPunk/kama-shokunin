@@ -1,0 +1,15 @@
+== T1: btrfs (/home, st_dev 0x38) executable ==
+server_exe: {"dev": "00:38", "inode": "238448618", "opened": true, "path": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-51/a2w1/out/Sen2Race/exp/sleep-btrfs", "sha256": "cf9cdc41dbdbdc37c05b62b6713523e773d63f098b4455ec0a8d84b0009db57b", "size": 47416}
+os.stat   dev=00:38 inode=238448618
+maps exe rows (dev,inode,range): [('00:1e', '238448618', '5571f2a64000-5571f2a66000'), ('00:1e', '238448618', '5571f2a66000-5571f2a6c000'), ('00:1e', '238448618', '5571f2a6c000-5571f2a6e000'), ('00:1e', '238448618', '5571f2a6e000-5571f2a6f000'), ('00:1e', '238448618', '5571f2a6f000-5571f2a70000')]
+MATCH server_exe.dev==os.stat.dev: True | server_exe.inode==os.stat.inode: True
+MATCH mapping-row dev==server_exe.dev: False
+readlink: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-51/a2w1/out/Sen2Race/exp/sleep-btrfs
+fstat(/proc/pid/exe) dev=00:38 inode=238448618 == stat(path): True
+
+== T3: child exits between the live tool's _child_running and server_exe ==
+_child_running at start: True | /proc/<pid>/exe exists on unreaped zombie: False
+zombie: readlink OSError errno=2 No such file or directory | open OSError errno=2 No such file or directory
+server_exe(zombie): {"opened": false, "reason": "exe-unreadable:No such file or directory"}
+poll() (reaps): 0 | /proc exists after reap: False
+server_exe(reaped pid): {"opened": false, "reason": "exe-unreadable:No such file or directory"}
