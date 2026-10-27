@@ -1,0 +1,32 @@
+Proposal: add three server-exe cases to kama-live-replay.py _selftest()
+(round-51 mutation seat M2Live). Insert after the `server-exe-digest-differs`
+case (frozen line 511). Each case was demonstrated on scratch copies: pristine
+replay reports the mismatch (exit 1); the R02/R06/R11 mutants pass it (exit 0)
+and are killed. Do not apply to the lane in place - findings are reports.
+
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -511,6 +511,21 @@ def _selftest(root):
+         run("server-exe-digest-differs", receipt(), 1, live=badsha_live)
++        openoff_live = os.path.join(d, "openoff-live.py")
++        with open(openoff_live, "w") as fh:
++            fh.write(open(fake_live).read().replace("r['server_exe']={'opened':True,",
++                                                    "r['server_exe']={'opened':False,"))
++        run("server-exe-opened-false", receipt(), 1, live=openoff_live)
++        openabs_live = os.path.join(d, "openabs-live.py")
++        with open(openabs_live, "w") as fh:
++            fh.write(open(fake_live).read().replace("r['server_exe']={'opened':True,'sha256':h(s),",
++                                                    "r['server_exe']={'sha256':h(s),"))
++        run("server-exe-opened-absent", receipt(), 1, live=openabs_live)
++        fordev_live = os.path.join(d, "fordev-live.py")
++        with open(fordev_live, "w") as fh:
++            fh.write(open(fake_live).read().replace(
++                "'dev':'%02x:%02x'%(os.major(x.st_dev),os.minor(x.st_dev))", "'dev':'ff:ff'"))
++        run("server-exe-foreign-dev", receipt(), 1, live=fordev_live)
+
+Kills:
+- server-exe-opened-false  -> R02-opened-dropped (opened value no longer checked)
+- server-exe-opened-absent -> R11-opened-only-false (None passes `is False`)
+- server-exe-foreign-dev   -> R06-own-inode-only (dev dropped from the compare;
+  the frozen not-own-member case cannot catch it because its decoy copy sits on
+  the same device, so only the inode differs)

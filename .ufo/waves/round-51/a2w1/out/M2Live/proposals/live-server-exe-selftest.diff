@@ -1,0 +1,84 @@
+Proposal: give kama-llamacpp-live.py a server_exe() selftest section
+(round-51 mutation seat M2Live). The frozen live selftest never executes
+server_exe(), so every one of its mutants passes it. The five probes below were
+demonstrated on scratch copies (pristine passes all five; each targeted survivor
+fails its probe). Wire-in: call _server_exe_selftest() from _selftest() next to
+_install_identity_selftest()/ _provenance_selftest(); probes raise AssertionError
+like the rest of _selftest(). Do not apply to the lane in place.
+
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -1573,6 +1573,9 @@ def _provenance_selftest():
+     ...
++
++def _server_exe_selftest():
++    """Record-time contract of server_exe() on this process's own image."""
++    r = server_exe(os.getpid())
++    exe = f'/proc/{os.getpid()}/exe'
++    # path is the readlink(2) text (kills L01-readlink-suffix)
++    assert r['opened'] is True and r['path'] == os.readlink(exe), r
++    # bytes, dev format and inode recorded from the image (kills L12-inode-int)
++    with open(exe, 'rb') as fh:
++        assert r['sha256'] == hashlib.sha256(fh.read()).hexdigest(), r
++    st = os.stat(exe)
++    assert r['dev'] == '%02x:%02x' % (os.major(st.st_dev), os.minor(st.st_dev)), r
++    assert r['inode'] == str(st.st_ino) and isinstance(r['inode'], str), r
++    # the magic link itself is opened, never the readlink text (kills
++    # L03-open-readlink-text, the J4Decoy weakness again)
++    seen = []
++    real_open = os.open
++    def spy(path, *a, **k):
++        seen.append(path)
++        return real_open(path, *a, **k)
++    os.open = spy
++    try:
++        assert server_exe(os.getpid())['opened'] is True
++    finally:
++        os.open = real_open
++    assert seen and seen[0].startswith('/proc/') and seen[0].endswith('/exe'), seen
++    # observation comes from the descriptor, os.stat(path) is never consulted
++    # (kills L04-fstat-from-path)
++    real_stat = os.stat
++    os.stat = lambda *a, **k: (_ for _ in ()).throw(AssertionError('path stat'))
++    try:
++        assert server_exe(os.getpid())['opened'] is True
++    finally:
++        os.stat = real_stat
++    # a non-regular fstat mode is refused (kills L05-sisreg-dropped; L06 positively)
++    real_fstat = os.fstat
++    def fifo(fd):
++        s = real_fstat(fd)
++        return os.stat_result((stat.S_IFIFO | 0o600, s.st_ino, s.st_dev, s.st_nlink,
++                               s.st_uid, s.st_gid, s.st_size, s.st_atime, s.st_mtime,
++                               s.st_ctime))
++    os.fstat = fifo
++    try:
++        r = server_exe(os.getpid())
++    finally:
++        os.fstat = real_fstat
++    assert r['opened'] is False and r['reason'] == 'exe-not-a-regular-file', r
++    # a short read is reported, never hashed as a full image (kills L10-left-weakened)
++    real_read = os.read
++    state = {'n': 0}
++    def short(fd, n):
++        state['n'] += 1
++        chunk = real_read(fd, n)
++        return chunk[:-1] if state['n'] == 1 and chunk else chunk
++    os.read = short
++    try:
++        r = server_exe(os.getpid())
++    finally:
++        os.read = real_read
++    assert r['opened'] is False and r['reason'] == 'exe-shrank-while-hashed', r
++
++
+ def _selftest():
+@@ -1576,2 +1580,3 @@ def _selftest():
+     _install_identity_selftest()
+     _provenance_selftest()
++    _server_exe_selftest()
+
+A runnable copy of exactly these probes is probes/probe_live.py in this
+directory (usage: probe_live.py <tree-root>; exit 0 iff all five pass).
+Not covered by any proposal: L08-chunk-4096 and L10's detector-invisible twin
+are performance/defensive-equivalent (see report).

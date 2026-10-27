@@ -1,0 +1,200 @@
+[
+ {
+  "id": "mu01",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu01.py",
+  "old": "    if got != want:\n",
+  "new": "    if False:\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "6ebbd8339d3c20777f8f750debfc6242a2323bc150bd05496b47b7696c0d6de8",
+  "build_expectation": "survive",
+  "decoy_expectation": "killed-by-decoy",
+  "note": "own_exe dev/inode comparison dropped"
+ },
+ {
+  "id": "mu02",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu02.py",
+  "old": "        st = os.fstat(fd)\n",
+  "new": "        st = os.stat(f\"/proc/{pid}/exe\")\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "8ea966b088515a25b52cdf6d9c8afde7e49c7f26d60f9bff8875abc07c2f3fef",
+  "build_expectation": "survive",
+  "decoy_expectation": "survive",
+  "note": "fstat of opened /proc/pid/exe replaced by stat of the link"
+ },
+ {
+  "id": "mu03",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu03.py",
+  "old": "    if h.hexdigest() != SERVER_SHA:\n",
+  "new": "    if False:\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "2f0497fe474bca8753b97c6d4ebcbd643bcd01912e46704a0060080a6790666f",
+  "build_expectation": "survive",
+  "decoy_expectation": "survive",
+  "note": "own_exe running-image sha check dropped (observe() hashes the same bytes in the bind leg)"
+ },
+ {
+  "id": "mu04",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu04.py",
+  "old": "    member_path = os.path.join(work, \"server\", member) if isinstance(member, str) else None\n",
+  "new": "    member_path = os.path.join(work, \"server\") if isinstance(member, str) else None\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "cdc0f7a4bb413e2fd6dd86a4224a52b35c62a4cc12fbb1e393a60bb1b15d929a",
+  "build_expectation": "killed-at-build",
+  "decoy_expectation": "-",
+  "note": "member_path constructed without the member name (points at the directory)"
+ },
+ {
+  "id": "mu05",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu05.py",
+  "old": "se.get(\"opened\") is True and se.get(\"sha256\") == SERVER_SHA",
+  "new": "se.get(\"opened\") is not False and se.get(\"sha256\") == SERVER_SHA",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "097c99db4470a9a1a9cdd36752c9a3dbadab815c95a557cfa5e2c4438b87dce0",
+  "build_expectation": "survive",
+  "decoy_expectation": "survive",
+  "note": "rerun server_exe opened check weakened to not-False"
+ },
+ {
+  "id": "mu06",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu06.py",
+  "old": "and se.get(\"sha256\") == SERVER_SHA\n",
+  "new": "and True\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "43d1f860df375c51aecb1f1eda67c8308d3876ba8bed2ad099d1dd461caaddd8",
+  "build_expectation": "survive",
+  "decoy_expectation": "survive",
+  "note": "rerun server_exe sha check dropped"
+ },
+ {
+  "id": "mu07",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu07.py",
+  "old": "and got is not None and (str(se.get(\"dev\")), str(se.get(\"inode\"))) == got):\n",
+  "new": "and got is not None and str(se.get(\"dev\")) == got[0]):\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "ee0f2ef3b91c0c90c052adeed1d271bc7e09e306d4a8e2b1137056ce059c2568",
+  "build_expectation": "survive",
+  "decoy_expectation": "survive",
+  "note": "rerun server_exe dev/inode compared on dev only"
+ },
+ {
+  "id": "mu08",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu08.py",
+  "old": "and os.path.realpath(str(osv.get(\"path\"))) == os.path.realpath(member_path)\n",
+  "new": "and osv.get(\"path\") is not None\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "ca325a4e17343318c1c5f14f824b463877a897b6b7cdcdb09c5224c2bf913907",
+  "build_expectation": "survive",
+  "decoy_expectation": "survive",
+  "note": "own_server path identity check dropped (any non-None path passes)"
+ },
+ {
+  "id": "mu09",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu09.py",
+  "old": "os.path.realpath(str(osv.get(\"path\"))) == os.path.realpath(member_path)",
+  "new": "str(osv.get(\"path\")) == str(member_path)",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "4bc1e3b49f7ad6c7b94f64e0eb7b1f303a612a635f379cc6bca177e3f3e881ee",
+  "build_expectation": "survive",
+  "decoy_expectation": "survive",
+  "note": "realpath dropped: literal string comparison"
+ },
+ {
+  "id": "mu10",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu10.py",
+  "old": "and got is not None and (str(osv.get(\"dev\")), str(osv.get(\"inode\"))) == got):\n",
+  "new": "and got is not None):\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "e1726cf9afaa6645f2b8eabf87bf288cf0d1e9ad6183e035139fbd1555fd5105",
+  "build_expectation": "survive",
+  "decoy_expectation": "survive",
+  "note": "own_server dev/inode comparison dropped"
+ },
+ {
+  "id": "mu11",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu11.py",
+  "old": "            oprobs.append(\"own: no server was announced, so no running image was observed\")\n",
+  "new": "            pass\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "1a666f43abe380cfbc2779f686f37962193c568e12ba1ff904afb0da7d7a7b77",
+  "build_expectation": "survive",
+  "decoy_expectation": "survive",
+  "note": "oprobs on ready None removed (own leg passes with no observation)"
+ },
+ {
+  "id": "mu12",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu12.py",
+  "old": "                owned += o\n",
+  "new": "                owned += 1\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "a07c203bc4713c5582f62b7cba4c5d4a02b51ddad6fa75fa4366378f3d8ce89d",
+  "build_expectation": "survive",
+  "decoy_expectation": "killed-by-decoy",
+  "note": "owned counter increments regardless of the own verdict"
+ },
+ {
+  "id": "mu13",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu13.py",
+  "old": "        met = bool(bl and ol and tl and nl)\n",
+  "new": "        met = bool(bl and tl and nl)\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "f9d7853af98431ea391d78914d7c7ab7d9a7b93adff6913d5b277d4d4f8975fd",
+  "build_expectation": "survive",
+  "decoy_expectation": "killed-by-decoy",
+  "note": "own leg removed from the met conjunction"
+ },
+ {
+  "id": "mu14",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu14.py",
+  "old": "    hit = [ln for ln in new if EXE_URL in ln]\n",
+  "new": "    hit = [ln for ln in new if EXE_URL not in ln]\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "b972d5120e170439a58714fc6be6d74d116f66f1a2e0afa176a6f0f528a9d59f",
+  "build_expectation": "killed-at-build",
+  "decoy_expectation": "-",
+  "note": "newrow EXE_URL membership inverted"
+ },
+ {
+  "id": "mu15",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu15.py",
+  "old": "    if a.out:\n        os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)\n",
+  "new": "    pass  # mutant: --out parent creation removed\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "3e92d92bfe39befcc06f9ac9cafbae3a36339301275237c4fb806c0fc1450baf",
+  "build_expectation": "killed-with-missing-parent",
+  "decoy_expectation": "-",
+  "note": "--out mkdir removed; run with a nonexistent --out parent"
+ },
+ {
+  "id": "mu16",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu16.py",
+  "old": "        ol = owned == len(RECEIPTS)\n",
+  "new": "        ol = owned >= 1\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "6f7e06b03726f58ab27c14da77b7ea68c332a64346e9c3f1bfcae4b3e1d18a82",
+  "build_expectation": "survive",
+  "decoy_expectation": "survive",
+  "note": "own leg passes with a single owned replay"
+ },
+ {
+  "id": "mu17",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu17.py",
+  "old": "        probs.append(f\"own: running image sha256 {h.hexdigest()} is not the frozen server\")\n    return got\n",
+  "new": "        probs.append(f\"own: running image sha256 {h.hexdigest()} is not the frozen server\")\n    return want\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "33d405ab4e7b69c7bbcfe743949a76760ec29aaced55fc9a73bfe83599813197",
+  "build_expectation": "survive",
+  "decoy_expectation": "survive-with-mirror-lie",
+  "note": "own_exe returns the member's identity instead of the observed image"
+ },
+ {
+  "id": "mu18",
+  "file": "/fast/scratch/hyaku/kama-r51/M1Ctr/mut/mu18.py",
+  "old": "            if member_path is None:\n",
+  "new": "            if member_path is not None:\n",
+  "sha256_pristine": "e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155",
+  "sha256_mutant": "01a90847cfc16628887866d7192d9585da3290057150e55597ce694cdceb67a0",
+  "build_expectation": "killed-at-build",
+  "decoy_expectation": "-",
+  "note": "member-present branch inverted"
+ }
+]
