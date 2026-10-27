@@ -1,0 +1,621 @@
+{
+ "wave": "kama-r50-w1",
+ "reportDir": ".ufo/waves/round-50/w1/out",
+ "maxLanes": 66,
+ "axes": [
+  "calibration",
+  "operability"
+ ],
+ "context": "# Goal\nRound 50 for lane kama (local model serving and endpoint health). One v2 wave (attack + frontier together); the build already landed. The lane L1 (KamaR50) integrates; you are a leaf seat. Two claims, frozen before any build at lane commit 601c8889f33d1797c712feb753974c20cf891264 (preregistration /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/preregistration.json - claims, predicates, limits; counters /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-replay-bind-audit.py (C1) and /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-append-audit-v5-check.py (C2) - read their docstrings, they are the contract; controls in /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/controls/, all met=False). Base 26ecba64ad6fb571d09074b07202d1618a46ecd1 (round-49 closure). The build landed at lane commit 97c864bead3ee4a2f629574e77263d33834ec98a:\n- C1 operability 8->8 (sourced on S496 proc_pid_maps(5); S497 PR_SET_PDEATHSIG(2const) grounds the teardown mechanism), closes round-49 closure R1 (observed pid never joined to the rerun receipt's child_pid; PYTHONPATH/sitecustomize hijack of the counter's inherited environment met the counter; the model bytes the server loaded were not bound - seats K1Cheat, K1Design, R0Controls) and R2 (a killed counter left replay, live tool and server up; pdeathsig covered only live tool -> server - seat X1Kill). The build: /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-live-replay.py starts the live tool isolated (`python -I`) with an allow-listed environment (PATH, HOME, LANG, LC_ALL, TMPDIR) and a parent-death signal (SIGTERM) via preexec_fn; the replay sets its own parent-death signal (set_own_pdeathsig) so killing whatever started it takes replay, live tool and server down; /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-llamacpp-live.py records `model_mapping` in the receipt (the file the server maps per /proc/<pid>/maps - dev, inode, pathname - re-opened O_NOFOLLOW, fstat-checked, hashed), and the replay refuses a rerun whose model_mapping does not hash to the receipt's model. The frozen counter runs the replay from a `python3 -I -c` invoker with planted canaries (KAMA_R50_CANARY env and a PYTHONPATH sitecustomize that stamps a marker), checks bind = for each receipt the exe digest, listener ownership, the nonce round-trip against the counter's own vocabulary, the server descending from the replay process, canary absence, model mapping (dev/inode/sha256 at the rerun receipt's `child_pid` == observed pid == ready.json pid), and teardown = SIGKILL of the invoker during the hold removes every descendant within 30 s and the port refuses. L1 dry runs on scratch clones (not the measurement): C1 `bind=1 teardown=1 newrow=1 bound=3/3 met=True` at 97c864bead3ee4a2f629574e77263d33834ec98a (46 s), `bind=0 teardown=0 newrow=0 bound=0/3 met=False` at 26ecba64ad6fb571d09074b07202d1618a46ecd1. New SOURCES rows S496 (proc_pid_maps(5)) and S497 (PR_SET_PDEATHSIG(2const)) land at the build.\n- C2 calibration 7->7 (sourced on S498 CommonMark 0.31.2 \u00a74.5 for the fence rule), closes round-49 closure R3 (seats K2Origin F3-F5, K2Cheat, V2Ctr). /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py v5 definitions (JSON schema unchanged `append-only-audit/v3`, new key `definition: v5`): origin(l) = union of section titles at every birth of key(l) (a commit whose blob holds the key while no parent's blob does) - a property of the commit graph, not of rev-list order (F3); sections ignore `## ` lines inside CommonMark fenced code blocks (F4); origin keys drop one trailing carriage return (F5); and the counter checks the tool accounts for every deleted line (graded + ungraded == deleted; deleted equals `git diff --numstat`). 12 fixture scenarios (the round-49 eight: launder, native-head, dated-loss, substring, word-token, negated, wildcard-self, wildcard-named; plus order-a/order-b same-tree merge-parent swaps, fence, crlf-launder). L1 dry runs: C2 `fixture=1 lane=1 scenarios=12/12 met=True` at 97c864bead3ee4a2f629574e77263d33834ec98a (5 s) and `fixture=0 lane=1 scenarios=9/12 met=False` at 26ecba64ad6fb571d09074b07202d1618a46ecd1. Lane events at 97c864bead3ee4a2f629574e77263d33834ec98a: `ungraded_lines 89` (v4: 82; the seven `## Capabilities` mirror rows of 0718b6abbda6 are now ungraded - they have a head birth under v5, F6 resolved) and `event dd9f5dc6c0e6 ungraded 17 <= v5 natively exempt 23`.\nKnown integration items (do not re-report unless you add something): the two round-50 counters are not yet in SKILL.md's instrument registry; SCORECARD/LOG/lesson/QUALITY/README entries for round 50 are not written yet (scribe items draft them); used-by of S496/S497/S498 names corpus/lessons/round-50.md, which lands at integration; the gate registry will report the two counters unregistered.\n# Shared read-only resources\n- Lane: /home/vgpnk/Projects/shokunin/kama-shokunin (READ-ONLY for you except your report and your out directory). For any run of a counter or tool against the lane, use your own `git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin $S/lane` and pass that clone.\n- Counters: `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-replay-bind-audit.py --repo <clone> --tip <full commit> --scratch $S` (~46 s; downloads ~75 MB per replay from github.com and ~1 MB from huggingface.co; starts and stops three llama-server processes on loopback; needs /proc and a pids-capable host) and `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-append-audit-v5-check.py --repo <clone> --tip <full commit> --scratch $S` (~5 s). Neither is to be edited: findings are reports, not patches.\n- The b11909 install the round-48 receipts recorded is at /home/vgpnk/.local/opt/llama-b11909/ (read-only; run it only through the lane tools, or directly on a loopback port you pick and stop yourself).\n- Fleet repo /home/vgpnk/Projects/shokunin: READ-ONLY. shokuknow root /home/vgpnk/Projects/shokuknow: READ-ONLY; run no campaign tool there.\n# Output\n- Your tools start at the fleet root /home/vgpnk/Projects/shokunin. Every `Report:` trailer path is relative to /home/vgpnk/Projects/shokunin/kama-shokunin - write your report at /home/vgpnk/Projects/shokunin/kama-shokunin/<that path>. Put every other deliverable in /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/<YourName>/ (absolute). Lead the report with a one-line verdict, then evidence: commands, outputs, exit codes, file:line. A defect: exact file and line, the command that shows it, a proposed fix. End your final answer with the absolute paths you wrote.\n# Scratch (operator directive 2026-10-25)\n- Your scratch is /fast/scratch/hyaku/kama-r50/<YourName>/ only: `S=/fast/scratch/hyaku/kama-r50/<YourName>; mkdir -p \"$S\"; export TMPDIR=\"$S\"`. One live clone at most (`git clone --shared`). Copy any receipt you cite into /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/<YourName>/ and `rm -rf \"$S\"` before you finish; /tmp paths are never evidence (a reaper deletes idle entries).\n# Constraints\n- /home/vgpnk/Projects/shokuknow, sibling lanes and the fleet repo are READ-ONLY. Never write, commit, fetch or push there; never edit MISSION.md, AXES.md, scripts/, templates/, .ufo/state/, .scratch/ or considerthese/. Never write any file at the fleet root (seat notes landed there as stray files in earlier rounds).\n- Never mutate the lane's jj state or Git index; never `git add/commit/checkout/stash/reset` or any mutating jj in /home/vgpnk/Projects/shokunin/kama-shokunin; read-only git is fine. Any fixture repo: D=$(mktemp -d -p /fast/scratch/hyaku/kama-r50/<YourName>) && git -C \"$D\" init -q; every later git call names -C \"$D\"; verify `git -C \"$D\" rev-parse --show-toplevel` equals $D before the first commit. Never run git commit with a throwaway identity anywhere else (a seat's fixture commit once landed on the FLEET repo and deleted 4,606 paths).\n- Tooling authorization (operator, 2026-10-19): you may install or upgrade tools that help the task - read /home/vgpnk/.omp/agent/RULES.md first (official channels, update-safety gate; record tool/version/channel/reason in your report). pacman guard (orchestrator ruling 2026-10-20): ALL pacman transactions are PAUSED host-wide - never run pacman; install via uv tool / npx / an official binary in ~/.local/bin, or report the need. `gh` is installed and authenticated (API quota shared: one request per object, sparingly).\n- Never start, stop or restart services; a llama-server you start must be on a loopback port you or the tool picks and must be torn down (check `pgrep -f llama-server` for leftovers you started before finishing). Never message agent://all; do not spawn subagents (leaf). Never invent evidence: an unrun check has not passed. Counters, preregistration and controls are FROZEN: a shortcut or defect you find in them is a finding, not something to fix in place. Never edit lane files in place: proposed edits go into your out directory as full proposed text or a unified diff.\n",
+ "items": [
+  {
+   "name": "K1Cheat2",
+   "role": "critic",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item K1Cheat2: C1 shortcut attack on the frozen counter /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-replay-bind-audit.py at 97c864bead3ee4a2f629574e77263d33834ec98a. The counter joins observed pid == rerun child_pid, requires the server to descend from the replay, plants env canaries and requires the mapped model record. Build fixture clones (fixture identity) of 97c864bead3ee4a2f629574e77263d33834ec98a; for each cheat, run the counter and report the receipt line (a control must be met=False): (1) a decoy replay that runs the host's b11909 binary with the model and writes ready.json + a rerun receipt copied verbatim from the original v5 receipt (child_pid 611093); (2) the same decoy but with child_pid rewritten to the observed pid (does the tree leg still stop it? double-fork/setsid so the server is reparented); (3) an environment-injection hijack of the counter's own environment (sitecustomize via PYTHONPATH, XDG_CONFIG_HOME, PYTHONSTARTUP) proving the planted canary marker is not stamped; (4) a host-copy server that passes the exe check (stated limit - confirm and state it). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/K1Cheat2/."
+  },
+  {
+   "name": "K1Design2",
+   "role": "critic",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item K1Design2: C1 design critic on the new binding legs: what does each leg actually prove and what not? Attack: the env leg reads /proc/<pid>/environ of the server and its parent - can a live child carry the canary under a name the check misses (it checks one exact key)? Does the marker file catch a sitecustomize import that happens before -I takes effect? The mapped leg: dev/inode from maps vs stat() of the pathname - on btrfs subvolumes the maps dev can differ (fails closed - state it); a file rewritten in place after mapping with identical bytes is indistinguishable (state it). The tree leg: the counter assumes the invoker's only child is the replay; a shell-launched replay defeats the `replay_pid` helper (state as a limit). The teardown leg: pids reused inside the 30 s window (state). Propose the smallest next-counter change for each gap. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/K1Design2/."
+  },
+  {
+   "name": "J1NoEnv",
+   "role": "executor",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item J1NoEnv: Ablation control, C1 env leg: build a fixture clone of 97c864bead3ee4a2f629574e77263d33834ec98a, patch /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-live-replay.py so the live child inherits the full environment (revert `live_env()` to `dict(os.environ, TMPDIR=...)`; keep -I), commit (fixture identity), run the frozen counter /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-replay-bind-audit.py at that commit and report the receipt (expect bind=0: canary on the server's parent / marker stamped). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/J1NoEnv/."
+  },
+  {
+   "name": "J2NoPdeathsig",
+   "role": "executor",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item J2NoPdeathsig: Ablation control, C1 teardown leg: build a fixture clone of 97c864bead3ee4a2f629574e77263d33834ec98a, patch /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-live-replay.py so neither the replay nor the live child sets a parent-death signal (remove set_own_pdeathsig and the preexec_fn prctl), commit (fixture identity), run the frozen counter at that commit and report the receipt (expect teardown=0: the invoker SIGKILL leaves descendants alive). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/J2NoPdeathsig/."
+  },
+  {
+   "name": "J3NoMapping",
+   "role": "executor",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item J3NoMapping: Ablation control, C1 mapped leg: build a fixture clone of 97c864bead3ee4a2f629574e77263d33834ec98a, patch /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-llamacpp-live.py to skip recording `model_mapping` (keep everything else), commit (fixture identity), run the frozen counter at that commit and report the receipt (expect bind=0: model_mapping absent). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/J3NoMapping/."
+  },
+  {
+   "name": "J4Decoy",
+   "role": "executor",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item J4Decoy: Ablation control, C1 join/tree legs: build a fixture clone of 97c864bead3ee4a2f629574e77263d33834ec98a, add a decoy replay script (written per K1Cheat2's plan: start the host b11909 binary with the model on a loopback port, write ready.json with the real pid, copy the original receipt as the rerun with child_pid rewritten to the observed pid and witness.released true, never run the live tool's checks), make /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-live-replay.py exec it in the witness path, commit (fixture identity), run the frozen counter at that commit and report the receipt (expect bind=0: the tree leg or the env leg stops it). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/J4Decoy/."
+  },
+  {
+   "name": "Sen1Env",
+   "role": "sentinel",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item Sen1Env: Environment-injection battery against the built replay+live chain: for each vector, run a witnessed replay of /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-48/c2/live/receipt-1.json in your scratch and check whether a planted KAMA_R50_CANARY or a sitecustomize marker reaches the server/live/replay process environ or any interpreter: PYTHONPATH (should be dead: -I), PYTHONSTARTUP, XDG_CONFIG_HOME, site dirs under HOME, `python` on PATH replaced with a wrapper that outputs a marker, LD_PRELOAD into the live python, HOME with .pth files, LC_ALL/LANG effects on server stdout. The counter's own marker must stay empty and the server environ free of the canary in every successful run. Report the vector table and anything that leaks. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/Sen1Env/."
+  },
+  {
+   "name": "Sen2Proc",
+   "role": "sentinel",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item Sen2Proc: /proc observation hardening of the C1 counter and live tool: (1) pid reuse: does the counter's pid_alive use starttime? (it does - verify against a rapid spawn loop); (2) ready.json written while the server child is already dead (live tool's guard) vs pid later exiting before observation; (3) a model path whose maps entry is `(deleted)` (open fd): how does model_mapping behave? (4) dev/inode mismatch (btrfs subvolume): copy the model to a btrfs path (e.g. /home) and observe the live tool's model_mapping reason; (5) port stealing between counter check and release. Each: run, evidence, verdict. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/Sen2Proc/."
+  },
+  {
+   "name": "M1Ctr",
+   "role": "mutation-tester",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item M1Ctr: C1 counter mutation test: copy /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-replay-bind-audit.py to your scratch and mutate it (>= 20 mutants: SERVER_SHA/MODEL_SHA, exe check, listen inode join, descends_from walk (ppid chain / seen cap), canary key check, environ unreadable handling, mapped_model dev/inode/stat logic, nonce piece comparison, detokenize rule, released/child_pid join, model_mapping receipt check, port_refuses, teardown snapshot kill and 30 s wait, newrow BASE diff, MAPS_URL text). Run each mutant against a clone at 97c864bead3ee4a2f629574e77263d33834ec98a (receipt 1 only suffices for bind; the full teardown leg too) and against a base clone (control). Keep full runs under 40; report killed/survived/equivalent, survivors with a proposed killing case. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/M1Ctr/."
+  },
+  {
+   "name": "M2Live",
+   "role": "mutation-tester",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item M2Live: Live/replay tool mutation test on the round-50 code: copy /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-llamacpp-live.py and /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-live-replay.py to your scratch and mutate (>= 20 mutants: model_mapping maps parse, O_NOFOLLOW open, fstat dev/inode compare, hashing loop, mapped-not-recording skip, live_env allowlist keys, TMPDIR override, -I in argv, preexec_fn prctl call/ppid race, set_own_pdeathsig, mapping-mismatch refusal, model-mapping:absent refusal, witness passthrough). For each run its --selftest; survivors go into a fixture clone at 97c864bead3ee4a2f629574e77263d33834ec98a and run the frozen C1 counter. Report killed-by-selftest / killed-by-counter / survived / equivalent with proposed killing cases. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/M2Live/."
+  },
+  {
+   "name": "V1Review",
+   "role": "reviewer",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item V1Review: Code review of the frozen C1 counter /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-replay-bind-audit.py: gguf_tokens() (types, v2/v3, truncated input), listen_inodes() (state 0A, addresses, tcp6 v4-mapped), stat_fields/pid_alive (starttime, zombies), environ_keys (readable?), descendants()/descends_from() (multi-child, depth cap, pid reuse), mapped_model() (dev format, inode string, stat vs maps, deleted-file), teardown_leg() (snapshot before kill, port_refuses timing, leftover kill), start_replay() (INVOKER, start_new_session, env construction), witness_one() ordering, newrow_leg() parse. Run each finding on a minimal fixture in your scratch with line numbers. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/V1Review/."
+  },
+  {
+   "name": "V2Review",
+   "role": "reviewer",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item V2Review: Code review of the round-50 changes (`git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff 26ecba64ad6fb571d09074b07202d1618a46ecd1 97c864bead3ee4a2f629574e77263d33834ec98a -- tools/kama-live-replay.py tools/kama-llamacpp-live.py`): model_mapping() (maps line split, dev/inode string forms, O_NOFOLLOW|O_NONBLOCK read, size left loop, fstat before hash), the race between the maps read and the hashed open, hold_for_witness() interplay with the new mapping record, replay live_env()/argv -I/preexec_fn (thread-safety of preexec_fn with the observer thread? the replay itself is single-process but the selftest runs an observer thread - verify), set_own_pdeathsig placement, the unconditional model-mapping mismatch check and old v4 receipts (original receipts never carry model_mapping - is requiring it on reruns only correct?), resource cleanup. Run each finding on a minimal fixture in your scratch. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/V2Review/."
+  },
+  {
+   "name": "R1Rerun2",
+   "role": "reviewer",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item R1Rerun2: Independent re-measurement of C1: full `git clone /home/vgpnk/Projects/shokunin/kama-shokunin $S/lane` (not --shared), verify the counter bytes equal counter_sha256 in /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/preregistration.json, run `python3 $S/lane/tools/round50-replay-bind-audit.py --repo $S/lane --tip 97c864bead3ee4a2f629574e77263d33834ec98a --scratch $S --out /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/R1Rerun2/c1-build.out` twice at 97c864bead3ee4a2f629574e77263d33834ec98a and once at 26ecba64ad6fb571d09074b07202d1618a46ecd1. Report every receipt line and any run-to-run difference. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/R1Rerun2/."
+  },
+  {
+   "name": "R3Provenance",
+   "role": "reviewer",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item R3Provenance: Check the C1 counter's frozen constants against the outside: SERVER_SHA = sha256 of llama-b11909/llama-server inside the release asset (download https://github.com/ggml-org/llama.cpp/releases/download/b11909/llama-b11909-bin-ubuntu-x64.tar.gz into your scratch, verify, extract, hash), MODEL_SHA via the pinned URL, MAPS_URL content: /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/c1/proc_pid_maps.5.txt is a text copy of the man7 page (verify its sha256 against a fresh fetch). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/R3Provenance/."
+  },
+  {
+   "name": "U1Fresh",
+   "role": "scout",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item U1Fresh: Fresh-session runs of the C1 counter at 97c864bead3ee4a2f629574e77263d33834ec98a on a scratch clone: run it twice back-to-back; measure wall time, the three witness windows, teardown time, network bytes (du), and confirm `pgrep -f llama-server` is empty after both runs and no process under you survives. Also run it once with a scratch on /home (btrfs) and once on /fast/scratch (xfs) and report differences in the maps dev/inode lines. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/U1Fresh/."
+  },
+  {
+   "name": "U3Host",
+   "role": "scout",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item U3Host: Host-safety walk of the teardown chain: start a witnessed replay of /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-48/c2/live/receipt-1.json from a shell (not the counter's invoker), wait for ready.json, then SIGKILL the shell (replay's parent). Report what survives (replay? live? server?), how long, and whether the counter's own invoker shape avoids it. Then SIGTERM the replay and observe the chain (replay handler -> live prctl -> server teardown). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/U3Host/."
+  },
+  {
+   "name": "Sen3Teardown",
+   "role": "sentinel",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item Sen3Teardown: Teardown kill variants, each against a fresh witnessed replay of /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-48/c2/live/receipt-2.json in your scratch: SIGINT, SIGTERM, SIGKILL of (a) the invoker python, (b) the replay, (c) the live tool, (d) the server, during the hold and during the initial download; measure seconds until the port refuses and no llama-server remains. The counter's leg only exercises (a) SIGKILL; report which variants leave leftovers (they are limits of the claim) and whether the built `set_own_pdeathsig`/preexec_fn chain closes them. Clean up everything you start. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/Sen3Teardown/."
+  },
+  {
+   "name": "X1Observe2",
+   "role": "executor",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X1Observe2: Independent observer: without reading /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-replay-bind-audit.py's code, write your own observer (python) that, for a witnessed replay of each of /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-48/c2/live/receipt-1..3.json at 97c864bead3ee4a2f629574e77263d33834ec98a, checks from outside: exe digest, listener ownership, the server process descends from the replay process, the model file in /proc/<pid>/maps hashes to the frozen digest, /proc/<pid>/environ lacks KAMA_R50_CANARY, and a nonce round-trip. Compare your verdicts with the counter's; report any leg where you disagree. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X1Observe2/."
+  },
+  {
+   "name": "X10NonceEdge",
+   "role": "executor",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X10NonceEdge: Nonce robustness against a real held server (witnessed replay of /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-48/c2/live/receipt-3.json): send 30 nonces of the counter's form plus 10 edge forms (uppercase hex, digits only, leading space, 200 chars, non-ASCII, newline) through /tokenize with_pieces + /detokenize; for each check the counter's rules (pieces equal the GGUF vocab with U+2581 as space; detokenized == nonce or ' '+nonce). Release the server at the end. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X10NonceEdge/."
+  },
+  {
+   "name": "X11ModelSwap",
+   "role": "executor",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X11ModelSwap: Model-identity corner: run a witnessed replay of /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-48/c2/live/receipt-1.json; while held, replace the model file at its path with a copy of the same bytes (then with a different model, restoring the original afterwards) and re-read /proc/<pid>/maps + /proc/<pid>/cmdline; report what the live tool's recorded model_mapping would have said (it is recorded before the hold) and what a re-run after the swap would record. Verify the counter's mapped check against a swapped-path server if feasible. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X11ModelSwap/."
+  },
+  {
+   "name": "X12Zip",
+   "role": "executor",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X12Zip: Record-time archive bounds (round-49 closure R1, carried): against /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-llamacpp-live.py at 97c864bead3ee4a2f629574e77263d33834ec98a, craft archives with (a) 20,000 tiny members (count cap), (b) a member declaring the server size but truncated data, (c) a gzip stream of zeros decompressing to a huge index, (d) a valid many-member archive (positive control). Measure seconds and peak RSS per case (stub server; never run untrusted binaries) and confirm the refusals are before any hash of the member. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X12Zip/."
+  },
+  {
+   "name": "K2Critic",
+   "role": "critic",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item K2Critic: Attack the v5 origin semantics in /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py at 97c864bead3ee4a2f629574e77263d33834ec98a with adversarial DAGs (fixtures under your scratch, contract outside the repo): (1) a key born in an exempt section on one branch, deleted, then reborn in a dated section (multi-birth) - which titles count? (2) a merge where both parents hold the same blob (the `pkeys is keys` skip) - verify no birth at the merge; (3) three-parent merges with a key held by exactly one parent; (4) a key present in a parent but with different line endings (CRLF vs LF) - is the key birth right? (5) order-independence: take order-a/order-b fixtures and run the tool with `git rev-list` orders flipped at the plumbing level (use `--reverse` and parent reordering via commit-tree parents list). For each, state hand expectation first, then run /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py with --json and report agree/disagree. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/K2Critic/."
+  },
+  {
+   "name": "K3Critic",
+   "role": "critic",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item K3Critic: Attack the fence parser in /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py at 97c864bead3ee4a2f629574e77263d33834ec98a (sections()/fence_open()/fence_close()): (1) tilde fences inside a `## ` section; (2) 4-space-indented `## ` line (not a fence - must still count as a heading); (3) ```` at 3 spaces, closing fence with 5 backticks; (4) a backtick in the info string (not a fence); (5) an unclosed fence running to EOF (all subsequent `## ` lines invisible); (6) a fence opener whose line is exactly ``` followed by trailing spaces; (7) CRLF variants of fence lines; (8) a `## ` line that is also a fence close candidate. Hand expectation first, then run /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py --json. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/K3Critic/."
+  },
+  {
+   "name": "K4Critic",
+   "role": "critic",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item K4Critic: Attack the CRLF normalization in /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py at 97c864bead3ee4a2f629574e77263d33834ec98a: (1) a line born LF under `## Axes`, carried into `## Round 1` as CRLF, deleted from Axes - v5 normalizes keys, so both born in Axes: ungraded (verify); (2) a line born CRLF in Round 1, carried LF into Axes, deleted from Axes: graded (verify); (3) mixed LF/CRLF restores (byte-exact restore measure unchanged); (4) a key that after CRLF stripping collides with another real line (two lines differing only by trailing \r) - is the set semantics correct? (5) only= regions with CRLF lines. Hand expectation first, then run /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py --json. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/K4Critic/."
+  },
+  {
+   "name": "J6Ablation",
+   "role": "executor",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item J6Ablation: Ablation controls, C2: build fixture clones of 97c864bead3ee4a2f629574e77263d33834ec98a and patch /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py to (a) v4 section scan (fence-blind: drop fence_open/fence_close), (b) byte-exact origin keys (drop the key() CRLF strip), (c) v4 first-in-rev-list origin (replace the birth-DAG origins() with the round-49 first-appearance rule). Commit each (fixture identity), run the frozen counter /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-append-audit-v5-check.py at that commit and report the receipts (expect fixture=0 in each: order-a/order-b, fence, crlf-launder respectively fail). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/J6Ablation/."
+  },
+  {
+   "name": "M3Tool",
+   "role": "mutation-tester",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item M3Tool: Append-only-audit v5 tool mutation test: copy /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py to your scratch and mutate (>= 20 mutants in the v5 parts: fence_open fence/char/info-string logic, fence_close length/indent/trailing logic, sections() fence state machine, key() CRLF strip, origins() birth/children/pkeys logic incl. the `pkeys is keys` skip, body_of cache, ungraded eligibility test, definition string, selftest registration). For each run `--selftest`; survivors go into a fixture clone at 97c864bead3ee4a2f629574e77263d33834ec98a and run the frozen C2 counter. Report killed-by-selftest / killed-by-counter / survived / equivalent with proposed killing cases. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/M3Tool/."
+  },
+  {
+   "name": "M4Ctr",
+   "role": "mutation-tester",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item M4Ctr: C2 counter mutation test: copy /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-append-audit-v5-check.py to your scratch and mutate (>= 20 mutants: fence helpers, key(), origins() birth logic, native count, numstat oracle, arithmetic check, scenario expectations, order-a/b parent ordering, crlf raw fixture construction, bad_declarations checks, lane leg). Run each mutant against 97c864bead3ee4a2f629574e77263d33834ec98a and against base. Report killed/survived/equivalent, survivors with a proposed killing case. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/M4Ctr/."
+  },
+  {
+   "name": "V5Review",
+   "role": "reviewer",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item V5Review: Code review of the frozen C2 counter /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-append-audit-v5-check.py: the Fx fixture machinery (commit-tree parents, raw bytes, HEAD update), the order-a/b scenarios (are they truly same-tree, parents swapped? verify the two merge commits share trees), the fence/crlf scenarios (are the expectations the ones the tool at 97c864bead3ee4a2f629574e77263d33834ec98a gives, and would a v4 tool fail them as claimed?), the lane leg (origins() with all-parents birth, keyset_cache, numstat oracle, arithmetic), and the bindings. Run each finding on a minimal fixture in your scratch with line numbers. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/V5Review/."
+  },
+  {
+   "name": "V6Review",
+   "role": "reviewer",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item V6Review: Code review of the v5 changes to /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py (`git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff 26ecba64ad6fb571d09074b07202d1618a46ecd1 97c864bead3ee4a2f629574e77263d33834ec98a -- tools/append-only-audit.py`): origins() multi-parent handling and the `pkeys is keys` sentinel (same-blob parent), body_of() caching, sections() fence state machine vs the v3 `\\r` strip, key() use in the eligibility test but not in the reported restore measures, the definition string and docstring, selftest additions. Run each finding on a minimal fixture in your scratch with line numbers. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/V6Review/."
+  },
+  {
+   "name": "R2Rerun2",
+   "role": "reviewer",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item R2Rerun2: Independent re-measurement of C2: full `git clone /home/vgpnk/Projects/shokunin/kama-shokunin $S/lane`, verify the counter bytes equal counter_sha256 in /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/preregistration.json, run `python3 $S/lane/tools/round50-append-audit-v5-check.py --repo $S/lane --tip 97c864bead3ee4a2f629574e77263d33834ec98a --scratch $S --out /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/R2Rerun2/c2-build.out` twice at 97c864bead3ee4a2f629574e77263d33834ec98a and once at 26ecba64ad6fb571d09074b07202d1618a46ecd1. Report every receipt line and any run-to-run difference. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/R2Rerun2/."
+  },
+  {
+   "name": "V3Stable",
+   "role": "scout",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item V3Stable: Verdict stability across lane tips: run /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-append-audit-v5-check.py against 26ecba64ad6fb571d09074b07202d1618a46ecd1, the round-44 tip, the round-47 tip, the round-48 tip, the round-49 tip (scan SCORECARD.md for earlier round tips or use `git -C <clone> log` to find the last round-N commit; the counter takes any full commit) and 97c864bead3ee4a2f629574e77263d33834ec98a; report exit codes, scenario counts, lane ungraded_lines and the two lane events for each. Any crash, EvalError or anomaly is a finding. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/V3Stable/."
+  },
+  {
+   "name": "V4Determinism",
+   "role": "scout",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item V4Determinism: Determinism of /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round50-append-audit-v5-check.py at 97c864bead3ee4a2f629574e77263d33834ec98a: run it 3 times on the same clone and diff the receipts line by line (only tip=/wall lines may differ); run it once with `--scratch` on /home (btrfs) to prove the fixture repos are filesystem-independent. Report diffs. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/V4Determinism/."
+  },
+  {
+   "name": "X14FenceLane",
+   "role": "executor",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X14FenceLane: Lane impact of the fence and CRLF fixes: over the lane's history, scan every blob of the audited files (SCORECARD.md, LOG.md, corpus/QUALITY.md, corpus/README.md, corpus/SOURCES.md, AGENTS.md, SKILL.md) for (1) fenced blocks containing lines starting with `## `, (2) any `\\r` byte. For every hit (likely zero), check whether sections() at any commit would change a verdict. Also scan the lane's merge commits for the two-parent case and compute the event files' origins under both parent orders (the counter's order-a/b guarantee) to prove the lane verdict is order-independent. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X14FenceLane/."
+  },
+  {
+   "name": "X13Threshold",
+   "role": "executor",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X13Threshold: Sub-20 boundary revisit (round-49 K2Origin/planned item): run `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py --repo <clone> --to 97c864bead3ee4a2f629574e77263d33834ec98a --threshold 1 --json` and count how many deleted-line events below the threshold exist; identify the real `LOG.md` loss at `ed135b3c` (from the round-49 scorecard planned item) and state whether v5 grades it, and what a documented boundary decision would need to change (sub-20 deletions stay unwatched is the current limit - confirm nothing regressed). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X13Threshold/."
+  },
+  {
+   "name": "N2Couple2",
+   "role": "connector",
+   "axes": [
+    "calibration",
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item N2Couple2: Separability at the build: from the two counters list every path each reads. In fixture clones show: C1's counter on a clone at 601c8889f33d1797c712feb753974c20cf891264 plus only the C1 build (tools/kama-llamacpp-live.py, tools/kama-live-replay.py, the S496/S497 SOURCES rows from 97c864bead3ee4a2f629574e77263d33834ec98a), and C2's counter on a clone at 601c8889f33d1797c712feb753974c20cf891264 plus only tools/append-only-audit.py from 97c864bead3ee4a2f629574e77263d33834ec98a. Does each meet alone? Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/N2Couple2/."
+  },
+  {
+   "name": "K0Harm2",
+   "role": "critic",
+   "axes": [
+    "operability",
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item K0Harm2: No-harm attack: for each of the six axes (operability, freshness, depth, coverage, calibration, adjacency) find a way this round's changes could harm it. Run on a clone at 97c864bead3ee4a2f629574e77263d33834ec98a and report pass/fail with the command: `python3 tools/gate-registry-check.py`, `python3 tools/capability-repertoire-audit.py`, `python3 tools/round41-scorecard-reconcile.py`, `python3 tools/round42-selfdesc-reconcile.py`, `python3 tools/round43-registry-audit.py`, `python3 tools/planned-pointer-check.py SCORECARD.md`, `python3 tools/digest-ledger.py scan --repo . --rev 97c864bead3ee4a2f629574e77263d33834ec98a`, `python3 tools/hexrun-census.py scan --repo . --rev 97c864bead3ee4a2f629574e77263d33834ec98a`, `python3 tools/sources-append-only.py --from 26ecba64ad6fb571d09074b07202d1618a46ecd1 --to 97c864bead3ee4a2f629574e77263d33834ec98a`, `tests/llamacpp-live/check-receipt.py --selftest`, `tools/gguf-identity.py --selftest`, `tools/round49-replay-witness-audit.py` (does the old counter still pass at 97c864bead3ee4a2f629574e77263d33834ec98a? it checks the old witness surface - report), `tools/round49-append-audit-v4-check.py` (does v4's counter still pass? its lane leg uses its own v4 origin - report). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/K0Harm2/."
+  },
+  {
+   "name": "V1Prereg2",
+   "role": "reviewer",
+   "axes": [
+    "calibration",
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item V1Prereg2: Freeze integrity: check /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/preregistration.json predicate sentences equal the PREDICATE sentences in both counters' docstrings, counter_sha256 equals `git -C /home/vgpnk/Projects/shokunin/kama-shokunin show 601c8889f33d1797c712feb753974c20cf891264:<path> | sha256sum`, both counters byte-identical at 97c864bead3ee4a2f629574e77263d33834ec98a and at 601c8889f33d1797c712feb753974c20cf891264, frozen_at_utc precedes the freeze commit time, /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/freeze/prereg-time-check.out is consistent with `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/prereg-time-check.py --repo <clone> --path .ufo/waves/round-50/preregistration.json --rev 601c8889f33d1797c712feb753974c20cf891264`, and the build paths (live_env, model_mapping, fence helpers, birth origins, S496-S498) are absent at 601c8889f33d1797c712feb753974c20cf891264. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/V1Prereg2/."
+  },
+  {
+   "name": "R0Controls2",
+   "role": "reviewer",
+   "axes": [
+    "calibration",
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item R0Controls2: Controls: run the committed base controls (base.c1.out, base.c2.out in /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/controls/) again at 26ecba64ad6fb571d09074b07202d1618a46ecd1 with the frozen counters on a fresh clone and diff with the committed receipts; then judge each control's strength: is there a cheaper C1 cheat than the four ablation controls (J1-J4)? a cheaper C2 tool than the three ablations (J6) that still meets the frozen counter? Design (do not commit) them and say which frozen leg would stop each. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/R0Controls2/."
+  },
+  {
+   "name": "N1Overlap2",
+   "role": "connector",
+   "axes": [
+    "adjacency"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item N1Overlap2: Sibling-overlap scan, read-only: do other lanes under /home/vgpnk/Projects/shokunin/*-shokunin hold a process-tree-bound witness, /proc/<pid>/maps model binding, a parent-death teardown chain, a fence-aware section scanner or a birth-DAG origin? grep their corpus/SOURCES.md, SKILL.md, tools/ and registry/ for maps, PDEATHSIG, pdeathsig, fence, birth, origin, rev-list. Report overlaps (report, never absorb) with file:line. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/N1Overlap2/."
+  },
+  {
+   "name": "N3Pattern2",
+   "role": "connector",
+   "axes": [
+    "calibration",
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item N3Pattern2: Cross-claim pattern: both claims replace a self-report with an outside observation (C1: the counter observes the running server's process tree, environment and mapped file instead of trusting the rerun receipt; C2: the audit derives origin from the commit graph instead of trusting the section the line sits in). Read the round-49 N4Pattern list (/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/../round-49/w1/out/N4Pattern/patterns.md) and /home/vgpnk/Projects/shokunin/kama-shokunin/tools/: which instruments still accept a self-reported artefact after this build, ranked by what a cheat would exploit first (file:line), and which round-49 items this round closed. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/N3Pattern2/."
+  },
+  {
+   "name": "N4Mistakes2",
+   "role": "connector",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item N4Mistakes2: Frontier step 3 sweep: read the outside closures /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-4[5-9]-verifier-spotcheck.md (routed defects) and the Mistakes sections of /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-4[5-9].md; list every routed defect or disagreement that never became a lesson Mistakes row or a QUALITY criterion (file:line both sides), with a proposed row (class, evidence, captured-by, fix able to fail). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/N4Mistakes2/."
+  },
+  {
+   "name": "N5Sources2",
+   "role": "connector",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item N5Sources2: Cross-source pattern: the lane now cites S496 (proc_pid_maps(5)), S497 (PR_SET_PDEATHSIG(2const)), S498 (CommonMark \u00a74.5) for this round's instruments. Read those rows in /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md and map which counter check each grounds and which check has no source row (e.g. LISTEN state 0A in /proc/net/tcp - proc_net_tcp(5)?; O_NOFOLLOW semantics - open(2)?). Propose at most two rows the next round should open, with URL and why. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/N5Sources2/."
+  },
+  {
+   "name": "Rev1Base",
+   "role": "revenger",
+   "axes": [
+    "operability",
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item Rev1Base: Reverse-engineer the exact attack surfaces this round closes: read the round-49 control receipts (/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/../round-49/controls/junk-c1-fake-witness.c1.out) and seat reports (/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/../round-49/w1/out/K1Cheat/, K1Design/, K2Origin/, X1Kill/), and reproduce each reported cheat at 26ecba64ad6fb571d09074b07202d1618a46ecd1 (the base clone) - decoy replay with copied receipt, sitecustomize hijack, double-fork setsid, fenced fake heading, CRLF laundering, order flip - showing the base counter/tool indeed passes/fails as the round-49 reports claimed. For each, state precisely which built mechanism closes it. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/Rev1Base/."
+  },
+  {
+   "name": "Simp2",
+   "role": "simplifier",
+   "axes": [
+    "calibration",
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item Simp2: YAGNI review of the round-50 code in /home/vgpnk/Projects/shokunin/kama-shokunin/tools/append-only-audit.py, /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-llamacpp-live.py and /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-live-replay.py (`git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff 26ecba64ad6fb571d09074b07202d1618a46ecd1 97c864bead3ee4a2f629574e77263d33834ec98a -- tools/`): unused branches (_prctl None path, environ_keys, the `pkeys is keys` skip), duplicated logic (key() in tool vs counter), docstring history blocks. Report proposed deletions as a diff in /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/Simp2/ with evidence that behaviour is preserved (each tool's --selftest before/after in your scratch)."
+  },
+  {
+   "name": "X2HeadSim2",
+   "role": "executor",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X2HeadSim2: Pre-integration check: on a scratch clone at 97c864bead3ee4a2f629574e77263d33834ec98a, simulate this round's integration - rewrite SCORECARD.md's head for round 50 the way rounds 47-49 did (authority banner to round 50 with the round-49 banner appended byte-exact under `### Superseded head banners`, ## Axes evidence re-anchors, ## Planned pointer to round 51, capability mirror), append a `## Round 50` section, write corpus/lessons/round-50.md (even a stub with the rows' used-by satisfied), commit (fixture identity) and run `python3 tools/append-only-audit.py --repo <clone> --to HEAD` and the frozen C2 counter at that commit. Does v5 stay exit 0? Which head edits would v5 grade? Also run `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --file <clone>/corpus/SOURCES.md` and confirm the E11 used-by rows clear once the lesson file exists. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X2HeadSim2/."
+  },
+  {
+   "name": "X3Gate2",
+   "role": "executor",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X3Gate2: Gate registry prerequisites at 97c864bead3ee4a2f629574e77263d33834ec98a on a clone: run `python3 tools/gate-registry-check.py` and list what the two round-50 counters need in SKILL.md's instrument registry (read the tool for the required row shape; draft the rows), then show on a scratch copy with the rows applied that it reports unregistered 0 (paste invocation and output). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X3Gate2/."
+  },
+  {
+   "name": "X4Cap2",
+   "role": "executor",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X4Cap2: Capability census prerequisites: read /home/vgpnk/Projects/shokunin/kama-shokunin/tools/capability-repertoire-audit.py and the round-49 canonical list in /home/vgpnk/Projects/shokunin/kama-shokunin/SCORECARD.md. Draft a round-50 canonical heading and table with the 11 capabilities, `live-receipt-replay` reworded for the process-bound witness and model mapping (first-working round stays 47) and `append-only-audit` reworded for v5 (stays 46), plus the SCORECARD `## Capabilities` mirror; show on a scratch clone at 97c864bead3ee4a2f629574e77263d33834ec98a with your edit appended that `python3 tools/capability-repertoire-audit.py` reports listed = observed with no missing/unsubstantiated. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X4Cap2/."
+  },
+  {
+   "name": "X5Digest2",
+   "role": "executor",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X5Digest2: Digests and object ids this round introduces once integrated: freeze 601c8889f33d1797c712feb753974c20cf891264, build 97c864bead3ee4a2f629574e77263d33834ec98a, the maps page sha256 `e7cdf0ff\u2026`, the prctl page sha256 `906bbe5c\u2026`, the CommonMark excerpt, server digest 35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0. Run `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/digest-ledger.py scan --repo <clone> --rev 97c864bead3ee4a2f629574e77263d33834ec98a` and `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/hexrun-census.py scan --repo <clone> --rev 97c864bead3ee4a2f629574e77263d33834ec98a --details` on a scratch clone where you append a draft SCORECARD/LOG paragraph naming these values (fixture identity) and say which become unknown; draft ledger rows with evidence files (command + output) under /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X5Digest2/."
+  },
+  {
+   "name": "X6Sao2",
+   "role": "executor",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X6Sao2: Census and append-only guard at the build: run `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama` (whole output) and `--file` on a scratch copy of /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md at 97c864bead3ee4a2f629574e77263d33834ec98a; `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/sources-append-only.py --from 26ecba64ad6fb571d09074b07202d1618a46ecd1 --to 97c864bead3ee4a2f629574e77263d33834ec98a`. Report warnings/errors by code with the rows they name (S496-S498: used-by names corpus/lessons/round-50.md, not yet present), and compare with /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/census/start.out. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X6Sao2/."
+  },
+  {
+   "name": "X15NoHarm2",
+   "role": "executor",
+   "axes": [
+    "operability",
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X15NoHarm2: Regression battery at 97c864bead3ee4a2f629574e77263d33834ec98a on a clone (the L1 will re-run at integration; this is the build-time snapshot): gate, capability census, round41/42/43 reconcilers, planned-pointer, digest-ledger, hexrun-census, sources-append-only, append-only-audit (exit 0; ungraded_lines), all four selftests (AOA 36, KLR 23, live ok, check-receipt 16 VALID), round-48 C2 counter, round-49 counters. Save every receipt. Report any deviation from the round-49 measured values. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X15NoHarm2/."
+  },
+  {
+   "name": "R4Check",
+   "role": "reviewer",
+   "axes": [
+    "calibration",
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item R4Check: Receipt-shape compatibility: `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tests/llamacpp-live/check-receipt.py --selftest`; then check-receipt on (a) a rerun receipt from a witnessed replay of /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-48/c2/live/receipt-1.json (carries witness + model_mapping), (b) a round-47 v4 receipt (/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-47/c2/live/receipt-1.json), (c) a round-48 v5 receipt. Also `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/gguf-identity.py --selftest` and replay the old v4 receipt with the new /home/vgpnk/Projects/shokunin/kama-shokunin/tools/kama-live-replay.py (with and without --witness-dir). Report each with exit codes and any schema drift. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/R4Check/."
+  },
+  {
+   "name": "X9Descend",
+   "role": "executor",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X9Descend: Descendant-walk edges: verify the counter's `descendants()`/`replay_pid()` against a deliberately noisy process tree under the invoker (an extra background child of the invoker, a grandchild of the replay, a process whose ppid chain has a gap). State which shapes break the counter's assumptions (they are limits: the counter's invoker is documented). Also verify the teardown snapshot includes the grandchild (live tool) but excludes the counter's own unrelated processes. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X9Descend/."
+  },
+  {
+   "name": "X8WitnessPort",
+   "role": "executor",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X8WitnessPort: Witness-directory state across repeated runs: run three consecutive witnessed replays of /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-48/c2/live/receipt-1.json in the SAME witness dir (empty between runs) and verify ready.json (schema, written_utc, per-run tmp names) is replaced atomically, no stale ready.json/release survive, and a second run started while the first is still held behaves (two servers on distinct ports). Report anything that leaks between runs. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X8WitnessPort/."
+  },
+  {
+   "name": "S1Rows2",
+   "role": "scribe",
+   "axes": [
+    "operability",
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item S1Rows2: Re-open the three sources registered as S496, S497 and S498 in /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md: https://man7.org/linux/man-pages/man5/proc_pid_maps.5.html, https://man7.org/linux/man-pages/man2/PR_SET_PDEATHSIG.2const.html, https://spec.commonmark.org/0.31.2/#fenced-code-blocks. Check every cell against what you see (scope, anchor, teaches, recheck), that each located quote is <= 25 words and present verbatim in /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/c1/proc_pid_maps.5.txt, /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/c1/PR_SET_PDEATHSIG.2const.txt and /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/c2/commonmark-0.31.2-s4.5.txt, and draft the lesson Gate entries (URL, access time 2026-10-27T00:14:13Z, located quote). Propose full replacement rows if any cell is wrong. Gate: `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --file <scratch copy>`. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/S1Rows2/rows.md."
+  },
+  {
+   "name": "S2Gate2",
+   "role": "scribe",
+   "axes": [
+    "operability",
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item S2Gate2: Draft the round-50 Gate decisions with at least three rejects you can ground by running a command: reject `/proc/<pid>/environ` alone as proof of interpreter cleanliness (the marker file is the check; environ may be unreadable for other uids - fails closed); reject a maps inode without the file hash (a host copy of the model path would match the inode but not MODEL_SHA); reject `pdeathsig` alone as proof of teardown (the counter kills the invoker and observes the port; a host that reparents without delivering the signal would fail it). Each decision: claim, evidence (command + output), verdict, flip condition. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/S2Gate2/gate.md."
+  },
+  {
+   "name": "T1Log",
+   "role": "scribe",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item T1Log: Draft the /home/vgpnk/Projects/shokunin/kama-shokunin/LOG.md `## Round 50` entry (read the round-49 entry at the end of LOG.md for shape): motivating evidence per change (round-49 closure R1, R2, R3; seats K1Cheat, K1Design, R0Controls, X1Kill, K2Origin, K2Cheat, V2Ctr), the freeze 601c8889f33d1797c712feb753974c20cf891264, the build 97c864bead3ee4a2f629574e77263d33834ec98a, placeholders for the measured commit. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/T1Log/log.md."
+  },
+  {
+   "name": "T2Skill",
+   "role": "scribe",
+   "axes": [
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item T2Skill: Draft the SKILL.md `## Round-50 instrument registry` rows (format of /home/vgpnk/Projects/shokunin/kama-shokunin/SKILL.md \u00a7Round-49 instrument registry; read /home/vgpnk/Projects/shokunin/kama-shokunin/tools/gate-registry-check.py for what a row must carry) for tools/round50-replay-bind-audit.py, tools/round50-append-audit-v5-check.py and the round-50 changes to tools/append-only-audit.py, tools/kama-llamacpp-live.py and tools/kama-live-replay.py, and a \u00a7Re-running live evidence how-to addition covering the isolated invocation, the planted-canary counter and the teardown observation. Show on a scratch clone at 97c864bead3ee4a2f629574e77263d33834ec98a with your rows applied that `python3 tools/gate-registry-check.py` reports unregistered 0 (paste invocation and output). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/T2Skill/skill.md."
+  },
+  {
+   "name": "T3Scorecard",
+   "role": "scribe",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item T3Scorecard: Draft SCORECARD.md `## Round 50 \u2014 ...` section (model: \u00a7Round 49 near the end of /home/vgpnk/Projects/shokunin/kama-shokunin/SCORECARD.md: authority line, claims table with counting commands and evidence, controls line, placeholders for measured results, `### What met=True does not show (round-50 wave attacks)`, `### Planned (round 51)` with two items (the C1 pid-join/env/mapped gaps the wave shows; the C2 data/V2Ctr binder limit; the sub-20 decision)) and the head re-anchors (authority banner round 50 - the round-49 banner it replaces appended byte-exact under ### Superseded head banners; latest closure round 49; spot-check count; capability mirror). Run `python3 tools/round42-selfdesc-reconcile.py`, `round41-scorecard-reconcile.py`, `round43-registry-audit.py` and `planned-pointer-check.py SCORECARD.md` on a scratch clone with your draft applied and report what they require. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/T3Scorecard/scorecard.md."
+  },
+  {
+   "name": "T4Lesson",
+   "role": "scribe",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item T4Lesson: Draft /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/T4Lesson/round-50.md, the round lesson in the shape of /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-49.md: `## Claims` (placeholders for measured values), `## Gate` (S496-S498 with URL, access date 2026-10-27, <=25-word located quote; at least one admit and one reject - read seat S2Gate2's out dir if present), `## Mistakes`: at least three rows, each class, evidence pointer, captured-by, fix shown able to fail: (1) round-49 closure R2/R3 (report placeholders and census paraphrase; the checker /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/../round-49/w1/out/S9Mistakes/report-precheck.py exists); (2) round-49 closure R4-style source-count mistake (do not rerun it; find a new one from this round, e.g. a seat that counted the m_flash share from the prompt's stale map); (3) a mistake from your own draft where the counter at build was run before the build commit existed (if none, paste the sweep that found none). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/T4Lesson/."
+  },
+  {
+   "name": "T5Mistakes",
+   "role": "scribe",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item T5Mistakes: Mistake mining sweep across rounds 45-49: run `grep -n '^|' /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-4[5-9].md | grep -i 'Mistakes'` (or read the ## Mistakes tables) and list every routed defect from the closures that never became a lesson Mistakes row, with a proposed row (class, evidence, captured-by, fix shown able to fail) - at least one must be new (not a copy of a row already in a lesson). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/T5Mistakes/sweep.md."
+  },
+  {
+   "name": "T6Quality",
+   "role": "scribe",
+   "axes": [
+    "calibration",
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item T6Quality: Draft QUALITY.md criteria KQ80 onward for /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/QUALITY.md (read the last ten criteria for format; find the newest KQ number with `grep -o 'KQ[0-9]*' corpus/QUALITY.md | sort -V | tail -1`): one for witnessed execution (a replay proves the recorded binary ran only when an observer outside it sees that binary listening, descending from the replay, and answering a fresh nonce), one for process-bound evidence (the observed pid must be the receipt's child and the model file the server maps must hash to the model), one for teardown (killing the starter removes the whole tree), one for order-independent audits (a verdict must not depend on git listing order), one for complete accounting (graded + ungraded == deleted). Each cites corpus/lessons/round-50.md. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/T6Quality/quality.md."
+  },
+  {
+   "name": "T7Readme",
+   "role": "scribe",
+   "axes": [
+    "operability",
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item T7Readme: Draft the /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/README.md `## Frontier` disposition for round 50 (read the round-49 disposition at the end of the file): what the process-bound witness now proves (observed pid joined to the receipt, clean environment, mapped model hashed) and what not (file rewritten in place after mapping; host-copy binary; btrfs dev mismatch); v5 origin (birth-DAG, fence-aware, CRLF-normalized) and its lane effect (the seven mirror rows); what stays frontier (sub-20 deletions, prerelease cliff, b11906 population at b11909+, the counter's pid-join edges). Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/T7Readme/frontier.md."
+  },
+  {
+   "name": "T8Considerthese",
+   "role": "scribe",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item T8Considerthese: considerthese: read /home/vgpnk/Projects/shokunin/kama-shokunin/considerthese/2026-10-26.md (and older files only as needed) and the round-49 table /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/../round-49/w1/out/S8Considerthese/table.md. Update the table with round 50 (each cell with file:line) and name any numbered proposal of 2026-10-22..26 still unimplemented, with what one round would need to take it up. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/T8Considerthese/table.md."
+  },
+  {
+   "name": "X1Assimilation",
+   "role": "executor",
+   "axes": [
+    "calibration"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X1Assimilation: Shokuknow assimilation pre-checks (read-only on /home/vgpnk/Projects/shokuknow): (1) id collision check - run the comm/awk block from the round prompt with A=/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/X1Assimilation: extract ids from /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md (`grep -oE '^ {0,3}\\|[[:space:]]*S[0-9]{3,}' ... | grep -oE 'S[0-9]+' | sort`) and from /home/vgpnk/Projects/shokuknow/merge/kama/SOURCES.append.md, `comm -12` them into collisions (expect empty; if not, report the ids); (2) prove the guard catches an indented collision: scratch registry with a row `  | S002 |` -> nonempty collisions; (3) quarantine slice: `awk -F'|' -v l='kama' '$2 ~ (\"`\" l \"`\") && $3 ~ /round[0-9]+/ && $4 ~ /S[0-9]+/ {print $4, $5}' /home/vgpnk/Projects/shokuknow/.ufo/waves/corpus-expansion-1/absent-defect-register.md` into quarantine-slice and hand-check every row (fetch the source, locate the quote; verdict per row in the report). (4) mirror the lane's corpus/ + an append block in scratch and run /home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --file <scratch>/corpus/SOURCES.md`; paste exit code. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/X1Assimilation/."
+  },
+  {
+   "name": "X16Policy",
+   "role": "executor",
+   "axes": [
+    "calibration",
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X16Policy: Wave policy check: read /home/vgpnk/Projects/shokunin/scripts/hyaku/ufo-wave-policy-v2.json and confirm the spec's band (64-128 lanes), maxLanes, allowed roles and the wave label; read /home/vgpnk/.omp/agent/config.yml's agentModelOverrides and compute the m_flash share (executor/scribe/simplifier/revenger/sentinel seats, critic excluded) and the attack share (reviewer/critic/mutation-tester) for this wave's item list (read the spec.json beside this file). Report the shares and whether they meet >=50% and >=25%. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X16Policy/policy.md."
+  },
+  {
+   "name": "X17Cleanup",
+   "role": "executor",
+   "axes": [
+    "calibration",
+    "operability"
+   ],
+   "milestone": "r50 attack and frontier",
+   "item": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim \u2014 let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches. Do not serialize what can run in parallel. Do not output philosophical reasoning or verbose plans. Act directly via tool calls.\n\nRound 50 item X17Cleanup: End-of-wave hygiene: before you finish, report (1) `pgrep -af llama-server` (must be empty of anything you started), (2) du of /fast/scratch/hyaku/kama-r50 (top 10 by size), (3) `git -C /home/vgpnk/Projects/shokunin status --porcelain` (must not name anything you wrote; if it does, name it - do not delete it), (4) any stray files you may have written at the fleet root (named, to be swept by the L1). Do not delete other lanes' files. Output /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-50/w1/out/X17Cleanup/hygiene.md."
+  }
+ ]
+}
