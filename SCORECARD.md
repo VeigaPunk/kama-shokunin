@@ -3,7 +3,7 @@
 Contract per `AXES.md` §SCORECARD.md contract. Scores are 0–10, self-assessed,
 each bound to an evidence pointer and the round that last changed it.
 
-**Current authority (round 56):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 56. Calibration 7 is the lowest assigned axis, below operability 8 and the saturation line, so the stagnation nudge is inactive. Round 56 froze and measured C1 (LD_AUDIT environment-name rejection, operability) and C2 (preregistration/battery roster fidelity, calibration) with red base controls committed before data (SCORECARD §Round 56). Scores remain operability 8 and calibration 7; no capability enters. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived from the tree by `tools/round42-selfdesc-reconcile.py` (round-42 claim C1) and kept current through round 56; round-55 measurements, verdicts and limits remain in §Round 55.
+**Current authority (round 57):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 57. Calibration 7 is the lowest assigned axis, below operability 8 and the saturation line, so the stagnation nudge is inactive. Round 57 froze and measured C1 (no-op battery roster-control, operability) and C2 (stale self-description verifier-spotcheck count, calibration) with controls committed before data (SCORECARD §Round 57). Scores remain operability 8 and calibration 7; no capability enters. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived by `tools/round42-selfdesc-reconcile.py`; the historic round-56 statement is preserved under §Historical pre-integration authority.
 
 ## Axes
 
@@ -50,7 +50,7 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 ## Planned
 
-Superseded in round 42. The live plan is `### Planned (round 57)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
+Superseded in round 42. The live plan is `### Planned (round 58)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
 
 ## Retired
 
@@ -3145,6 +3145,22 @@ Routed work and integration: round-55 stale lesson receipt claim corrected appen
 
 1. Operability: continue the remaining round-56 plan—host-library package-byte provenance and asserted host count, fully config-hermetic Git environment, and attribute-free archive extraction—with freeze-bound counters and red do-nothing controls.
 2. Calibration: re-freeze C2 only after its counter is causally bound to executed battery invocations and a no-op harness fails the frozen counter; address the KQ98 criterion proposal only after outside closure agreement. Do not retroactively amend round-56 predicates.
+
+## Round 57 — no-op control and stale calibration census (2026-10-27)
+
+Pre-data freeze: `89dc4f5239fe1f875adda4613812e77fb9bbc7cc`; ordering correction, still before seat evidence: `7c873d7b4e3839489a93d6334cdf93fe5d34d19f`. C1 is the frozen round-56 prereg checker no-op defect (operability); C2 corrects the verifier-spotcheck count (calibration). Base `b89bdab2cc114735ec5d331c6c610134258f7864`.
+
+| Claim | Axis, score | Before → after | Counting command and evidence |
+|---|---|---|---|
+| C1 — bind declared roster to actual battery call sites | operability 8→8 | genuine round-56 roster: `met=True` → `met=True`; matching-roster no-op: `met=True` → `met=False` (exit 1) | `python3 tools/round56-prereg-check.py --repo <repo> --tip <revision>`; `.ufo/waves/round-57/measured/noop-c1.out` |
+| C2 — re-anchor the SCORECARD verifier-spotcheck count | calibration 7→7 | frozen round-42 counter `mismatches=1 met=False` (expected 42, observed 43) → `mismatches=0 met=True` | `python3 tools/round42-selfdesc-reconcile.py --repo <repo> --tip <revision>`; `.ufo/waves/round-57/controls/base-c1.out`, `.ufo/waves/round-57/measured/c2-final.out` |
+
+Scores held at operability 8 and calibration 7; no capability added. C1 does not assert that every runtime effect of a battery call was executed; it checks the call-site inventory in the committed battery AST. C2 corrects one stale factual count; it is not a mastery score.
+
+### Planned (round 58)
+
+1. Operability: address the remaining round-56 frozen plan with pre-data controls: host-library byte provenance and host-count assertions, config-hermetic Git environment, or attribute-free archive extraction.
+2. Calibration: expand the no-op resistance beyond roster call-site presence; obtain an independent outside admit/reject spot-check before claiming discernment progress.
 
 ## Historical authority banner — round 55
 
