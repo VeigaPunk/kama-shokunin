@@ -110,7 +110,7 @@ Fossil copies that must never be restored: `opencode.json.pre-qwen-model-2026082
 why a single consumer's success proves nothing:
 
 - `~/Projects/ufo-fsd-alpha/config/the-tick.machine.json` and
-  `scripts/local-helper.mjs` retain explicit 34113 pins. They were historical
+  `~/Projects/ufo-fsd-alpha/scripts/local-helper.mjs` retain explicit 34113 pins. They were historical
   `MODEL_OK` counterexamples; the current probe resolves the pins but reports
   `DEAD`. A correct pin does not guarantee endpoint readiness, and their failure
   does not by itself indict the probe.
@@ -892,7 +892,7 @@ Survival alone does not establish defensive-only status.
 
 This section is the live cutover of the round-24 instrument semantics and
 describes the canonical files `tools/report-landing-audit.py` and
-`tests/report-audit/…` as they stand in the commit that carries this
+`tests/report-audit/` as they stand in the commit that carries this
 text. The present tense below describes those canonical files.
 
 **The auditor** (`tools/report-landing-audit.py`) keeps the global Git

@@ -73,6 +73,16 @@ inode, seals, stream sha256) and the rerun's `server_exe` must name that dev and
 the four seals, link count 0 and a `/memfd:` link, else `server-exe:not-own-memfd` or
 `server-exe:not-sealed-memfd`. The extracted tree still supplies the libraries (by path);
 a memfd filled from a byte-identical host install still matches.
+Round 53 (round-52 closure R2; seat K2Design): the libraries still load by path, so the
+live tool records every executable file mapping of its server (`code_mappings`: path,
+dev, inode, owner, sha256 of the file at the path while it is the mapped inode) and the
+replay hashes the archive members those mappings name straight from the archive stream:
+a mapped file under <work>/server whose bytes are not its member is
+`code-mapping:digest:<member>` (a library swapped after the member check), one that is no
+regular member is `code-mapping:not-a-member`, an executable mapping outside the tree that
+is not root-owned is `code-mapping:foreign`, an unmatched one `code-mapping:unopened`, and
+a server mapping no archive library `code-mapping:no-archive-library`. `own_code` names the
+verified members with their archive digests and the root-owned host files.
 --compare validates both receipts' provenance like a replay would, then prints
 `compare match=<bool> mismatches=N` and one `mismatch:` line each; exit 0 equal,
 1 different, 2 unreadable or refused.
@@ -277,6 +287,57 @@ def sealed_member(archive, member, want):
                 "dev": "%02x:%02x" % (os.major(st.st_dev), os.minor(st.st_dev)), "inode": str(st.st_ino)}
 
 
+def member_digests(archive, names):
+    """{member: sha256} for each regular member of the archive whose name is in names,
+    hashed straight from the archive's stream (never from the unpacked tree)."""
+    out = {}
+    with tarfile.open(archive) as tf:
+        for ti in tf:
+            if ti.name in names and ti.isreg():
+                h = hashlib.sha256()
+                src = tf.extractfile(ti)
+                for chunk in iter(lambda: src.read(CHUNK), b""):
+                    h.update(chunk)
+                out[ti.name] = h.hexdigest()
+    return out
+
+
+def verify_code(cm, archive, tree):
+    """Round 53 (round-52 closure R2, seat K2Design: the server's libraries load by path
+    from the unpacked tree, so a library swapped after the member check would run unseen):
+    every executable file mapping the live tool recorded (`code_mappings`) must be either
+    a file under the unpacked tree whose bytes are a regular member of the archive - by
+    the member's digest, hashed from the archive's stream - or a root-owned host file; and
+    at least one archive library must be among them. Returns (own_code, mismatches)."""
+    probs, members, host = [], {}, []
+    if not isinstance(cm, dict) or cm.get("read") is not True or not isinstance(cm.get("mappings"), list):
+        reason = cm.get("reason") if isinstance(cm, dict) else "absent"
+        return {"verified": False, "members": {}, "host": []}, [f"code-mappings:{reason}"]
+    root = os.path.realpath(tree) + os.sep
+    ents = [e for e in cm["mappings"] if isinstance(e, dict)]
+    want = {os.path.relpath(str(e.get("path")), root) for e in ents if str(e.get("path")).startswith(root)}
+    digests = member_digests(archive, want)
+    for e in ents:
+        path = str(e.get("path"))
+        if e.get("opened") is not True or not isinstance(e.get("sha256"), str):
+            probs.append(f"code-mapping:unopened:{path}:{e.get('reason')}")
+        elif path.startswith(root):
+            member = os.path.relpath(path, root)
+            if member not in digests:
+                probs.append(f"code-mapping:not-a-member:{member}")
+            elif e["sha256"] != digests[member]:
+                probs.append(f"code-mapping:digest:{member}:{digests[member]}->{e['sha256']}")
+            else:
+                members[member] = digests[member]
+        elif e.get("uid") != 0:
+            probs.append(f"code-mapping:foreign:{path}:uid={e.get('uid')}")
+        else:
+            host.append(path)
+    if not members:
+        probs.append("code-mapping:no-archive-library")
+    return {"verified": not probs, "members": members, "host": sorted(host)}, probs
+
+
 def evaluated(rec):
     return {c.get("id"): c.get("passed") for c in rec.get("checks") or []
             if isinstance(c, dict) and c.get("evaluated")}
@@ -456,6 +517,10 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
                   and se.get("nlink") == 0 and str(se.get("path", "")).startswith("/memfd:")):
             res["mismatches"].append(f"server-exe:not-sealed-memfd:seals={se.get('seals')}:"
                                      f"nlink={se.get('nlink')}:path={se.get('path')}")
+        # round 53 (round-52 closure R2): the code the server maps is the archive's
+        own_code, code_probs = verify_code(rr.get("code_mappings"), archive, tree)
+        res["own_code"] = own_code
+        res["mismatches"].extend(code_probs)
         if p.returncode != 0:
             res["mismatches"].append(f"live-exit:{p.returncode}")
         # instance differences that do not fail a replay but are worth reading
@@ -487,6 +552,8 @@ def _selftest(root):
         os.makedirs(srcdir)
         with open(os.path.join(srcdir, "llama-server"), "w") as fh:
             fh.write("#!/bin/sh\nexit 0\n")
+        with open(os.path.join(srcdir, "libfake.so"), "wb") as fh:
+            fh.write(b"\x7fELF fake library " + os.urandom(16))
         arc = os.path.join(d, "srv.tar.gz")
         with tarfile.open(arc, "w:gz") as tf:
             tf.add(os.path.join(d, "src", "build"), arcname="build")
@@ -507,6 +574,10 @@ def _selftest(root):
                      "r['server_exe']={'opened':True,'sha256':h(s),'dev':'%02x:%02x'%(os.major(x.st_dev),"
                      "os.minor(x.st_dev)),'inode':str(x.st_ino),'seals':fcntl.fcntl(f,1034),"
                      "'nlink':x.st_nlink,'path':'/memfd:llama-server (deleted)'}\n"
+                     "L=os.path.join(os.path.dirname(os.path.realpath(s)),'libfake.so');y=os.stat(L)\n"
+                     "r['code_mappings']={'read':True,'mappings':[{'path':L,'dev':'%02x:%02x'%(os.major(y.st_dev),"
+                     "os.minor(y.st_dev)),'inode':str(y.st_ino),'opened':True,'uid':y.st_uid,'sha256':h(L)},"
+                     "{'path':'/usr/lib/libc.so.6','dev':'00:1e','inode':'1','opened':True,'uid':0,'sha256':'0'*64}]}\n"
                      "if '--server-archive' in a:\n"
                      "    r['schema']='kama-llamacpp-live/v5'\n"
                      "    u=a[a.index('--model-url')+1];c=re.search('/resolve/([0-9a-f]{40})/',u).group(1)\n"
@@ -614,6 +685,28 @@ def _selftest(root):
             with open(alt_live, "w") as fh:
                 fh.write(open(fake_live).read().replace(old, new))
             run(f"server-exe-{tag}", receipt(), 1, live=alt_live)
+        # round 53 (round-52 closure R2): the code mappings must be archive members by digest
+        # or root-owned host files, with at least one archive library
+        for tag, old, new in (("absent", "r['code_mappings']=", "r['unused_code']="),
+                              ("digest-differs", "'sha256':h(L)}", "'sha256':'6'*64}"),
+                              ("foreign", "'uid':0,", "'uid':1000,"),
+                              ("not-a-member", "'libfake.so');y=os.stat(L)",
+                               "'libfake.so');import shutil;shutil.copy(L,L[:-3]+'.copy.so');"
+                               "L=L[:-3]+'.copy.so';y=os.stat(L)"),
+                              ("unopened", "'opened':True,'uid':y.st_uid", "'opened':False,'uid':y.st_uid"),
+                              ("no-archive-library", "'mappings':[{'path':L,", "'mappings':[{'path':'/usr/x',")):
+            alt_live = os.path.join(d, f"code-{tag}-live.py")
+            with open(alt_live, "w") as fh:
+                src = open(fake_live).read()
+                if old not in src:
+                    raise AssertionError(f"selftest mutation {tag} does not apply")
+                fh.write(src.replace(old, new))
+            run(f"code-{tag}", receipt(), 1, live=alt_live)
+        res, code = replay(receipt(), os.path.join(d, "w-code-own"), live=fake_live, allow_file=True)
+        cases.append(("code-own-members", code == 0 and res.get("own_code", {}).get("verified") is True
+                      and list(res["own_code"].get("members", {})) == ["build/bin/libfake.so"]
+                      and res["own_code"].get("host") == ["/usr/lib/libc.so.6"],
+                      f"exit={code} own_code={res.get('own_code')} mism={res['mismatches']}"))
         # the sealed memfd is filled from the archive's member stream, not from the path
         fd, ident = sealed_member(arc, "build/bin/llama-server", ssha)
         try:

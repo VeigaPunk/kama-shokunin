@@ -771,6 +771,69 @@ def server_exe(pid):
             'nlink': st.st_nlink, 'seals': seals}
 
 
+def code_mappings(pid):
+    """Round 53 (round-52 closure R2, seat K2Design: the launcher's code lives in
+    libllama-server-impl.so and libggml*, which load by path): every executable file
+    mapping of the server child (/proc/<pid>/maps, proc_pid_maps(5): an `x` in `perms`, a
+    pathname starting with `/`; the anonymous `/memfd:` image is server_exe's), each
+    opened by its pathname with O_NOFOLLOW and hashed only when fstat() shows the inode the
+    maps line shows (and its dev, except for root-owned files: this host's btrfs/overlay
+    root reports another st_dev than maps does), so the receipt records the bytes behind
+    each mapping, its owner, and never a path the tool was handed. A mapping that cannot
+    be matched is recorded with `opened: False` and its reason, never guessed. Linux only."""
+    try:
+        with open(f'/proc/{pid}/maps') as fh:
+            rows = fh.read().splitlines()
+    except OSError as exc:
+        return {'read': False, 'reason': 'maps-unreadable:' + (exc.strerror or type(exc).__name__)}
+    seen, out = set(), []
+    for row in rows:
+        f = row.split(None, 5)
+        if (len(f) < 6 or 'x' not in f[1] or not f[5].startswith('/')
+                or f[5].startswith('/memfd:') or (f[5], f[3], f[4]) in seen):
+            continue
+        seen.add((f[5], f[3], f[4]))
+        path, dev, ino = f[5], f[3], f[4]
+        ent = {'path': path, 'dev': dev, 'inode': ino}
+        if path.endswith(' (deleted)'):
+            # the mapped file has no directory entry any more (rename-over or unlink): the
+            # name is not opened, so a file that happens to carry that name is never hashed
+            out.append({**ent, 'opened': False, 'reason': 'mapped-file-deleted'})
+            continue
+        try:
+            fd = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        except OSError as exc:
+            out.append({**ent, 'opened': False,
+                        'reason': 'open-failed:' + (exc.strerror or type(exc).__name__)})
+            continue
+        try:
+            st = os.fstat(fd)
+            sdev = '%02x:%02x' % (os.major(st.st_dev), os.minor(st.st_dev))
+            if (not stat.S_ISREG(st.st_mode) or str(st.st_ino) != ino
+                    or (sdev != dev and st.st_uid != 0)):
+                out.append({**ent, 'opened': False, 'reason': 'path-is-not-the-mapped-file',
+                            'path_dev': sdev, 'path_inode': str(st.st_ino)})
+                continue
+            h, left = hashlib.sha256(), st.st_size
+            while left > 0:
+                chunk = os.read(fd, min(1 << 20, left))
+                if not chunk:
+                    break
+                h.update(chunk)
+                left -= len(chunk)
+            if left != 0:
+                out.append({**ent, 'opened': False, 'reason': 'file-shrank-while-hashed'})
+                continue
+            out.append({**ent, 'opened': True, 'size': st.st_size, 'uid': st.st_uid,
+                        'sha256': h.hexdigest()})
+        except OSError as exc:
+            out.append({**ent, 'opened': False,
+                        'reason': 'read-failed:' + (exc.strerror or type(exc).__name__)})
+        finally:
+            os.close(fd)
+    return {'read': True, 'mappings': out}
+
+
 F_GET_SEALS = 1034          # F_LINUX_SPECIFIC_BASE + 10 (fcntl(2))
 SEALS_ALL = 15              # F_SEAL_SEAL | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_WRITE
 F_SEAL_EXEC = 32            # fcntl(2): the execute bits are frozen
@@ -1717,10 +1780,49 @@ def _server_fd_selftest():
         os.close(fd)
 
 
+def _code_mappings_selftest():
+    """Round 53: code_mappings() records a user-owned executable mapping with the bytes of
+    the file at its path only while that path is the mapped inode; after a rename-over the
+    entry is `opened: False` (mapped-file-deleted), never the newcomer's digest."""
+    src = shutil.which('sleep') or '/usr/bin/sleep'
+    with tempfile.TemporaryDirectory(prefix='kama-code-map-selftest-') as directory:
+        exe = os.path.join(directory, 'sleeper')
+        shutil.copyfile(src, exe)
+        os.chmod(exe, 0o700)
+        want = sha256_file(exe)
+        proc = subprocess.Popen([exe, '30'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        try:
+            deadline = time.monotonic() + 5
+            ent = None
+            while time.monotonic() < deadline and ent is None:
+                got = code_mappings(proc.pid)
+                ent = next((e for e in got.get('mappings') or [] if e.get('path') == exe), None)
+                if ent is None:
+                    time.sleep(0.05)
+            if not (got.get('read') is True and ent and ent.get('opened') is True
+                    and ent.get('sha256') == want and ent.get('uid') == os.getuid()):
+                raise AssertionError(f'code_mappings missed the user-owned mapping: {ent}')
+            decoy = os.path.join(directory, 'decoy')
+            with open(decoy, 'wb') as fh:
+                fh.write(b'not the mapped file')
+            os.replace(decoy, exe)
+            got = code_mappings(proc.pid)
+            ent = next((e for e in got.get('mappings') or [] if e.get('path') == exe + ' (deleted)'), None)
+            if not (ent and ent.get('opened') is False
+                    and ent.get('reason') == 'mapped-file-deleted' and 'sha256' not in ent):
+                raise AssertionError(f'code_mappings hashed a renamed-over path: {ent}')
+        finally:
+            proc.kill()
+            proc.wait()
+    if code_mappings(2 ** 22 + 7).get('read') is not False:
+        raise AssertionError('code_mappings read maps of a pid that does not exist')
+
+
 def _selftest():
     """Exercise procfs parsing, live tcp6 ownership rows, v3 verdicts, install
     identity and v5 record-time provenance."""
     _server_fd_selftest()
+    _code_mappings_selftest()
     _install_identity_selftest()
     _provenance_selftest()
     port = 0x1234
@@ -2203,9 +2305,12 @@ def main(argv=None):
         if _child_running(proc):
             receipt['model_mapping'] = model_mapping(proc.pid, args.model)
             receipt['server_exe'] = server_exe(proc.pid)
+            # round 53 (round-52 closure R2): every executable file mapping, by its bytes
+            receipt['code_mappings'] = code_mappings(proc.pid)
         else:
             receipt['model_mapping'] = {'mapped': False, 'reason': 'server-not-running'}
             receipt['server_exe'] = {'opened': False, 'reason': 'server-not-running'}
+            receipt['code_mappings'] = {'read': False, 'reason': 'server-not-running'}
         if args.witness_dir is not None:
             # round 49 (closure R5): hold the ready server up for an outside observer
             receipt['witness'] = hold_for_witness(
