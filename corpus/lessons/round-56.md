@@ -46,3 +46,11 @@ The following two lines were replaced when the final census receipts were record
 - After: same command; final output and exit code are recorded in `.ufo/waves/round-56/census/end.out` and this section is finalized after the end-of-round run.
 ```
 
+## Append-only audit closure — round 56
+
+- The v6 whole-population audit at `784d02551b2b3f18b3741555ab43d184d0040182` reports `commits=381 files=106 events=126 restored=75 partial=0 unrestored=2 ungraded=44 disclosed=5 permitted_lines=60 disclosed_lines=10 bad_disclosures=0 ungraded_lines=227 regressed=0 vanished=0 unmatched=0 binary=0 bad_declarations=4`, exit 1. Summary receipt: `.ufo/waves/round-56/measured/append-only-audit-at-784.out`.
+- The routed round-55 lesson deletion at `c2c05e30` is now restored exactly: `deleted=33 graded=33 restored_max=33 restored_by=14da0e4e55559bd8d891ba2cc0d39e5d9dd71fcf held_at_to=33 status=restored`, `undisclosed=[]`.
+- The only two unrestored events at this tip are inherited SCORECARD head rederivations: `e81d90e6` round-53 authority/depth/calibration data and `4bd7521a` round-55 depth/planned-head data, each with one graded line not held. These values were superseded by later derived head text; the intended head-region exemption cannot bind because the existing SCORECARD contract declaration points to stale `corpus/README.md:761`. No old head claim was reintroduced as live authority.
+- Four invalid contract bindings are also inherited: SCORECARD, corpus/QUALITY.md and corpus/README.md point at `corpus/README.md:761`; `corpus/lessons/*.md` points at `corpus/README.md:1239`. The pointed lines do not declare the corresponding file(s) append-only at the audited tip. This round did not modify contract governance; the audit exit 1 is reported, not hidden.
+- The pre-recovery audit at `14da0e4e` exposed four in-round appendix edits as unrestored; exact prior bytes are retained in the append-only preservation sections of SCORECARD and both lesson files. The post-recovery receipt above has `partial=0`, `regressed=0`, and no round-56-origin unrestored event.
+
