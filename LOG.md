@@ -2459,3 +2459,4 @@ Deleted by `8bee4e56a995` (round-43: LOG wording):
 - C2 calibration 7→7: SCORECARD's verifier-spotcheck count corrected from 42 to the observed 43; the re-derivation command counts `corpus/lessons/*verifier-spotcheck.md`.
 - Pre-data controls and frozen predicates: `.ufo/waves/round-57/controls/`; round-56 outside defect lesson: `corpus/lessons/round-57.md`.
 - Opened S516 from the round-56 battery's committed call sites; append-only row added and cited by C1/lesson. S515 was also reopened from its authoritative Git manual; no existing row cell changed.
+- The round-56 S513 rejection disagreement remains unresolved; this round made no source-admission decision and claims no discernment improvement (`corpus/lessons/round-57.md`).
