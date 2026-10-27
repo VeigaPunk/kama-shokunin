@@ -1,0 +1,48 @@
+{
+ "lane": "kama",
+ "round": 53,
+ "attempt": 1,
+ "author": "kama L1 (agent KamaR53)",
+ "frozen_at_utc": "2026-10-27T06:02:12Z",
+ "base": "4229ea1b9a789148dded1f159c20967d9a01373f",
+ "authority": "shokunin.conf assigns operability + calibration; the lowest-scoring non-retired axes are calibration, depth and adjacency (7 each); C2 works calibration (the lowest assigned axis) and C1 works operability (the other assigned axis). Stagnation nudge inactive (calibration 7 below saturation 8). Starting point: SCORECARD.md ### Planned (round 53) items 1 (per-mapping identity for the code the launcher loads, with a library-swap control) and 2 (land seat W3Mistakes' cited-path-exists check as a lane instrument), and the round-52 outside closure's routed R2 (libraries load by path) and R4 (planned instruments not built).",
+ "separability": "C1 touches tools/kama-llamacpp-live.py, tools/kama-live-replay.py and corpus/SOURCES.md rows; its counter reads only those, the three committed round-48 v5 receipts and the network. C2 touches SKILL.md citations, a correction section appended to SCORECARD.md and registry/cited-path-corrections.tsv; its counter reads only SCORECARD.md, SHONEN.md, SKILL.md, that ledger and git history of the lane and fleet repos. C1's SOURCES rows are not a C2 surface; C2 touches no C1 path. Either claim can be measured with the other reverted.",
+ "disclosure": "Both counters were written in this session before any build of either claim. C2 was dry-run twice at the base: the first run showed that a `:N,M` line anchor and llama.cpp's own `tools/server/...` paths were mis-parsed, so the `:N,M` anchor form and the `upstream` ledger class were added before this freeze. C1 was dry-run twice at the base: the first run crashed on a variable-name clash (exit code vs code observation); the second showed that this host's root filesystem reports a different st_dev from the one /proc/<pid>/maps shows for host libraries (00:20 vs 00:1e), so host files are matched by inode, uid 0 and not-writable instead of dev and inode. code_observe() was also exercised, before this freeze, on a server the L1 started from its own unpack of the archive (9 archive files byte-equal, 13 host files) and on the same unpack with one byte of libggml-rpc.so's executable range flipped (reported as differing) - neither is a replay of the lane's tools. No predicate, target or kill rule was changed after a dry run of a build; there is no build yet. The base controls below were run with the frozen bytes.",
+ "claims": [
+  {
+   "id": "C1",
+   "axis": "operability",
+   "score": "8->8",
+   "type": "measured (capability depth: the code the witnessed replay's server executes - not only its launcher image - is the release archive's own bytes, observed by the counter in the server's memory against its own download of the archive); sourced on proc_pid_mem(5)",
+   "statement": "kama-llamacpp-live.py records, for every executable file mapping of its running server (/proc/<pid>/maps), the path, dev, inode, owner and sha256 of the file it opened at that path when fstat() shows the mapping's dev and inode (`code_mappings`); kama-live-replay.py hashes the archive members those mappings name straight from the archive stream and refuses a rerun whose mapped archive files are not byte-identical members, whose other executable mappings are not root-owned host files, or which maps no archive library; it reports the verified members as `own_code`.",
+   "predicate": "a replay of each of the three committed v5 b11909 receipts holds a server every one of whose executable file mappings is either an archive member under the replay's unpacked tree whose mapped bytes, read by the counter from /proc/<pid>/mem, equal that member's bytes in the counter's own download of the release archive - the server implementation, ggml, ggml-base and a ggml CPU backend among them - or a root-owned host file; the rerun receipt records each such member mapping with its dev, inode and the member's digest and the replay names them as verified, while every round-52 bind and sealed check still holds; killing the replay's invoker still removes the whole tree within 30 s; and /proc/pid/mem is a source row; bind=1 sealed=1 code=1 teardown=1 newrow=1.",
+   "counter": "tools/round53-replay-code-audit.py",
+   "counter_sha256": "1a7a144204ba8b7ea9791706ab5fc90f1dab55db12a824a1af5ae89a81b75d8f",
+   "command": "python3 tools/round53-replay-code-audit.py --repo <lane clone> --tip <full commit> --scratch <dir> --out <receipt>",
+   "target": "bind=1 sealed=1 code=1 teardown=1 newrow=1 bound=3/3 sealedruns=3/3 coderuns=3/3 met=True",
+   "kill": "any leg 0 at the measured commit, or met=True on any control"
+  },
+  {
+   "id": "C2",
+   "axis": "calibration",
+   "score": "7->7",
+   "type": "measured (self-assessment matched to repo state: every repository path the lane's SCORECARD.md, SHONEN.md and SKILL.md cite as evidence resolves, or its miss is disclosed with a reason the counter re-derives from git history)",
+   "statement": "the 16 citations of SCORECARD.md, SHONEN.md and SKILL.md that resolve in neither the lane nor the fleet tree at the base are each corrected in place in SKILL.md (not an append-only file) or disclosed in registry/cited-path-corrections.tsv with a class (deleted, never, moved, eof, untracked, upstream, fixed) whose evidence the counter re-derives, and SCORECARD.md gains an appended correction section naming the ledger; the counter becomes a lane instrument.",
+   "predicate": "at the measured commit every repository path that SCORECARD.md, SHONEN.md and SKILL.md cite outside fences resolves in the lane tree or the fleet tree, or is disclosed by a correction-ledger row whose class the counter re-derives from git history, with no bad or stale row and no SCORECARD.md citation dropped since the base, and eight constructed scenarios each get their fixed verdict; fixture=1 lane=1 undisclosed=0 bad=0 stale=0 dropped=0.",
+   "counter": "tools/round53-cited-path-check.py",
+   "counter_sha256": "1afb8b9d32fd0706d0625a4ea70270890039f93fc32635c28b12fa71b13e3080",
+   "command": "python3 tools/round53-cited-path-check.py --repo <lane clone> --tip <full commit> --scratch <dir> --out <receipt>",
+   "target": "fixture=1 lane=1 scenarios=8/8 undisclosed=0 bad=0 stale=0 dropped=0 met=True",
+   "kill": "any leg 0 at the measured commit, or met=True on any control"
+  }
+ ],
+ "controls": ".ufo/waves/round-53/controls/: base.c1.out (bind=1 sealed=1 code=0 teardown=1 newrow=0 coderuns=0/3 met=False) and base.c2.out (fixture=1 lane=0 unresolved=16 undisclosed=16 met=False) at the base, committed at this freeze (do-nothing controls); after the build, ablation controls on the build tree by wave seats, each removing or forging one claimed mechanism - C1: a replay that flips one byte in an executable range of an unpacked library after its member check (library swap after the check); the same with the replay's own_code check removed; a live tool whose code_mappings omits a library; a replay that loads one library from outside the tree (LD_PRELOAD of a user-owned copy); C2: a ledger that marks every miss `never`; a `deleted` row naming a commit that did not delete the path; a SCORECARD.md citation deleted instead of disclosed; a `fixed` row whose replacement does not resolve. Every control must be met=False.",
+ "limits": [
+  "C1: a replay whose archive bytes came from the host's byte-identical install rather than from the download still meets (round-52 J5HostMemfd): bytes, not provenance, are compared.",
+  "C1: host libraries (libc, libstdc++, libssl, ...) are only classed as root-owned and not writable by the counter; their bytes are not compared with any reference.",
+  "C1: only executable mappings are compared; read-only and writable data mappings of the libraries (relocated at load) and the model mapping (round-50 leg, path-bound) are not byte-compared.",
+  "C1: the counter reads memory once, while the server is held; a library rewritten after that read is not observed.",
+  "C2: a citation resolves when its path exists; the counter does not check that the cited file says what the citing sentence claims, nor that a line anchor points at the right line (only that the file has that many lines).",
+  "C2: citations outside SCORECARD.md, SHONEN.md and SKILL.md (LOG.md, lessons, corpus/README.md, knowledge entries) are out of scope."
+ ]
+}
