@@ -58,11 +58,22 @@ def main():
                 assignment = ast.literal_eval(n.value)
             except (ValueError, SyntaxError):
                 pass
+    invoked = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call) or not isinstance(node.func, ast.Name):
+            continue
+        if node.func.id in ("run", "assert_mutant_breaks_detection") and node.args:
+            label = node.args[0]
+            if isinstance(label, ast.Constant) and isinstance(label.value, str):
+                invoked.add(label.value)
+    expected = {name for name, spec in roster.items()
+                if spec.get("designation") in ("control", "positive-control", "kill")}
+    executed = expected <= invoked
     match = assignment == roster and isinstance(roster, dict) and bool(roster)
     kills = sum(1 for v in (roster.values() if isinstance(roster, dict) else []) if v.get("designation") == "kill")
     controls = sum(1 for v in (roster.values() if isinstance(roster, dict) else [])
                    if v.get("designation") in ("control", "positive-control"))
-    met = match and kills == 1 and controls == 2
+    met = match and executed and kills == 1 and controls == 2
     text = (f"tip={tip}\npresent=1 roster_match={int(match)} kills={kills} controls={controls} "
             f"met={met}\n")
     print(text, end="")

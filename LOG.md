@@ -2452,3 +2452,10 @@ Deleted by `8bee4e56a995` (round-43: LOG wording):
 - Source curation: S512 admitted from `rtld-audit(7)`; S513 opened then rejected as broader/overlapping; S514/S515 append-only revision-anchor corrections supersede S510/S511. S512 `used-by` old→new is logged in lesson Gate. Before census exit 0, 252 rows; after census exit 0, 256 rows; full outputs `.ufo/waves/round-56/census/{start,end}.out`. Assimilation: none; considerthese proposal 4 remains pending.
 - Seat integrity observation: S01WriteScope observed only metadata-side effects from lane-cwd reads (`.git/index` stat-cache refresh and one jj snapshot op); its attribution found no content/ref changes. A seat reported temporary `/tmp` artifacts; details and limits are in `.ufo/waves/round-56/w1/out/S01WriteScope.md`. No tool installs.
 - Lesson: `corpus/lessons/round-56.md`. Round-55 late outputs were preserved and committed; no prior lane-authored round-56 leftovers were inherited.
+
+## Round 57 — counter control and calibration count (2026-10-27)
+
+- C1 operability: `tools/round56-prereg-check.py` now binds preregistered roster members to battery call sites; round-56 closure documented the passing no-op roster control (`corpus/lessons/round-56-verifier-spotcheck.md:14`).
+- C2 calibration 7→7: SCORECARD's verifier-spotcheck count corrected from 42 to the observed 43; the re-derivation command counts `corpus/lessons/*verifier-spotcheck.md`.
+- Pre-data controls and frozen predicates: `.ufo/waves/round-57/controls/`; round-56 outside defect lesson: `corpus/lessons/round-57.md`.
+- Reopened S515 source this round; no SOURCES registry cell changed.
