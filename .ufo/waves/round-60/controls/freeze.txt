@@ -1,0 +1,50 @@
+round=60 lane=kama base=ec3b0d583ed4eb05c7ae935dc59f560e86b0a80b fleet-ref=89aada889ddcaafec9557c313e9e3a9c182b3833
+frozen-before-any-seat-result (instruments written and exercised by the L1 on a fixture repo and on the base; no wave has been dispatched)
+
+Round shape: two v1 waves (w1 build+first falsifiers, w2 falsify). The round-59 routed defects are answered
+as claims below, not by another battery-checker layer: rounds 56/57/59 each closed rejected on instruments that
+checked other instruments; this round moves the lane onto a surface it has never run live (Ollama) and grades
+its own documented statements about that surface against what the live server returned.
+
+C1 operability 8 -> 8 + capability `live-ollama-lifecycle` (capability acquisition; sourced on the new SOURCES rows for the
+   Ollama v0.40.11 release asset and the Ollama server/import docs, ids assigned at integration)
+  predicate: C1-r60 a fresh-nonce run of tools/kama-ollama-live.py at the tip yields a receipt that tools/round60-c1-counter.py's
+     independent verifier accepts, and each of its 7 controls (2 fake server binaries, 1 stale nonce, 3 receipt tampers, 1
+     removed server log) is rejected, errors=0.
+  sentence: The lane starts the digest-pinned official Ollama release (bin/ollama sha256 b0a4becf...1b4c, archive sha256
+     7bedab90...4b6d, v0.40.11) on a free unregistered loopback port, imports the pinned fixture GGUF under a caller nonce,
+     captures the HTTP surfaces, replays them through tools/kama-ollama-evidence.py before (available_not_loaded) and after one
+     generation (loaded_same_digest), and tears the child down; the independent verifier re-derives the binary digest from frozen
+     constants, the nonce-named model from the capture bodies, and the server log / model manifest / imported blob from the run's own
+     work dir.
+  counter: python3 tools/round60-c1-counter.py --repo <repo> --tip <rev> [--work <scratch>]
+     prints: tool_present=1 live_ok=1/1 fake_rejected=2/2 stale_rejected=1/1 tamper_rejected=3/3 log_rejected=1/1 errors=0 met=True
+  kill rule: any of live_ok!=1/1, any control accepted, any errors>0, or the tool absent at the measured tip -> claim not met.
+  do-nothing control: base tip (tool absent) -> tool_present=0 met=False (controls/c1-base.out).
+  fixture control: scratch repo carrying only the tool files -> met=True (controls/c1-fixture.out); not evidence for the claim, proves the counter can pass.
+  limits (stated before data): one lane-owned child on one loopback port for the length of a run, CPU only (CUDA/HIP/Vulkan device
+     variables are set to -1 by the tool); not registered-consumer health, not model quality, not other Ollama versions, not GPU placement.
+
+C2 calibration 7 -> 7 (lowest assigned axis; calibration 7 < operability 8; nudge inactive)
+  predicate: C2-r60 (verbatim in tools/round60-c2-counter.py docstring): at the tip every line of the frozen base population (14 lines at base:
+     every line containing "inference" in corpus/knowledge/ollama-evidence-replay.md plus every line of SKILL.md and the other
+     corpus/knowledge/*.md containing both "inference" and one of ollama, api/tags, api/ps, expires_at, case-insensitive) is covered
+     by a row of registry/ollama-live-claims-r60.tsv whose quote is located on that base line; at least 5 rows over at least 4 distinct
+     lines carry a live predicate; every predicate is falsifiable (a mutation of a capture it reads flips its result); its recorded
+     verdict equals its evaluation on the committed receipt's captures (true = confirmed, false = contradicted); every contradicted
+     row is named with its observed text in corpus/knowledge/ollama-live-amendment-r60.md; the committed receipt's capture hashes are
+     intact; and the 5 control families (tautology predicates, flipped verdicts, corrupted quotes, dropped lines, tampered capture) are
+     all rejected, errors=0.
+  counter: python3 tools/round60-c2-counter.py --repo <repo> --tip <rev>
+     prints: population=14 rows=N covered=14/14 evaluated=E eval_lines=L sensitive=E/E bound=N contradicted=K amended=K/K receipt_ok=1 controls_rejected=a/a errors=0 met=True
+  kill rule: any listed condition false -> claim not met. The population is fixed at base; it is never re-derived from the tip.
+  do-nothing control: base tip (registry absent) -> covered=0/14 met=False (controls/c2-base.out). Tautology/flip/corrupt/drop/tamper controls are run by the counter itself on the tip registry.
+  limits (stated before data): checks lane statements about one Ollama version on one fixture model, as recorded in one committed receipt;
+     a confirmed statement is confirmed for that run only; not-observable rows are not credited as evaluated.
+
+Frontier step (inside the claim cap, not a claim): SOURCES census before/after (start: exit 0, 259 rows, .ufo/waves/round-60/census/start.out);
+  mined mistake: the round-59 spot-check disagreement on S513/S518 (supersession whose flip condition fired while the row went unmarked);
+  fix shown able to fail by tools/round60-supersession-check.py: base red (exit 1, S513 unresolved) -> after green; sourced claim: C1 cites the new rows.
+Admission floor (no axis harmed): `bash tools/test-snapshot.sh` RESULT fail=0; `python3 tools/kama-ollama-evidence.py --selftest` exit 0;
+  census exit 0 at round end; the registered consumers still sample DEAD (the probe is not changed).
+Not claimed: discernment progress (no outside admit/reject spot-check exists until the closure); no score increase; no registered-consumer health.
