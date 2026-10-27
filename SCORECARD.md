@@ -3,7 +3,7 @@
 Contract per `AXES.md` §SCORECARD.md contract. Scores are 0–10, self-assessed,
 each bound to an evidence pointer and the round that last changed it.
 
-**Current authority (round 56):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 56. Calibration 7 is the lowest assigned axis, below operability 8 and the saturation line, so the stagnation nudge is inactive. Round 56 froze and measured C1 (LD_AUDIT environment-name rejection, operability) and C2 (preregistration/battery roster fidelity, calibration) with red base controls committed before data (SCORECARD §Round 56). Scores remain operability 8 and calibration 7; no capability enters. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived from the tree by `tools/round42-selfdesc-reconcile.py` (round-42 claim C1) and kept current through round 56; the round-55 authority is kept under §Historical head sections.
+**Current authority (round 56):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 56. Calibration 7 is the lowest assigned axis, below operability 8 and the saturation line, so the stagnation nudge is inactive. Round 56 froze and measured C1 (LD_AUDIT environment-name rejection, operability) and C2 (preregistration/battery roster fidelity, calibration) with red base controls committed before data (SCORECARD §Round 56). Scores remain operability 8 and calibration 7; no capability enters. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived from the tree by `tools/round42-selfdesc-reconcile.py` (round-42 claim C1) and kept current through round 56; round-55 measurements, verdicts and limits remain in §Round 55.
 
 ## Axes
 
@@ -3117,3 +3117,40 @@ Integration repairs (wave seats, inherited from base `3a600d2f`): SCORECARD cali
 run-fact 40→41 (seat X8Regression; the round-54 closure's own spotcheck file is the
 41st); hexrun-ledger row + evidence for fleet commit `e2e2d10f`. Census: start exit 1
 (E11 S510) → end exit 0 (receipts `.ufo/waves/round-55/census/{start,end}.out`).
+
+## Round 56 — LD_AUDIT environment classifier and roster-fidelity gate (2026-10-27)
+
+Base `e10b6d39af450e8d652be9ac2986768b531fe13f`; freeze `efc6b3ec6fb6ea308c15855e9b8b62856f4255b7`; measured implementation tip `b9d5a091d25676e6c5078d330ebd6abd21a4fc7d`. One v2 wave `kama-r56-w1`, 64 seats; L1 held the planner seat. Claims are distinct and measured at their final committed implementation tip:
+
+| Claim | Axis, score | Before → after | Counting command and evidence |
+|---|---|---|---|
+| C1 — `LD_AUDIT` is rejected by the replay counter's env-name leg | operability 8 → 8 | old counter `ld_audit=missed` (exit 0) → round-56 counter `ld_audit=detected` (exit 0); one-line deletion mutant misses and fails the positive expected-detected assertion (exit 1); comparator selftest rejects `undetected` as `detected` | `python3 tools/round56-env-leg-battery.py`; base `.ufo/waves/round-56/controls/base-c1.out`; final `.ufo/waves/round-56/measured/{base-c1,build-c1,m-drop-ldaudit,m-drop-ldaudit-target-fails,comparator-selftest}.out`; frozen counter `tools/round56-replay-code-audit.py` SHA-256 `fc3d4b63a3020cf37e6f4080e25c9d693a8b177c4f84cae6688b2e445444ff6f` |
+| C2 — preregistered battery-roster fidelity (counter target falsified for admission) | calibration 7 → 7 | base `present=0 roster_match=0 met=False` (exit 1) → final `present=1 roster_match=1 kills=1 controls=2 met=True` (exit 0); no-op fixture `e6417941` carries the matching ROSTER but executes no battery entries and still returns `met=True`, so §9's do-nothing-control rule invalidates C2 as a calibration move | `python3 tools/round56-prereg-check.py --repo <lane clone> --tip b9d5a091d25676e6c5078d330ebd6abd21a4fc7d`; base `.ufo/waves/round-56/controls/base-c2.out`, final `.ufo/waves/round-56/measured/final-c2.out`, no-op `.ufo/waves/round-56/measured/c2-noop-control.out`; frozen checker SHA-256 `c7b0d787f348691bbc057114b455545f5abfb0c70ec497e1ad695591f1489853` |
+
+Scores remain operability 8 and calibration 7; no capability enters. C1 demonstrates a variable-name rejection in a synthetic child process, not successful audit-DSO injection or a live model-server/endpoint-health result. C2's frozen counter checks a declared ROSTER literal, not that the harness executes its entries; the no-op fixture proves that target is reachable without the claimed battery execution, so C2 is not admitted. Its dead `BASE` constant and roster-only scope are named limits; the M07 metadata-base probe also stays green, outside the frozen predicate.
+
+Routed work and integration: round-55 stale lesson receipt claim corrected append-only in `corpus/lessons/round-56.md`; battery records exits, checks exact fields, and includes an `undetected` comparator negative control; S510/S511 anchor revision omissions are corrected by append-only superseding rows S514/S515; SCORECARD depth and calibration labels re-anchored, including the 42-spotcheck count and round-55 admitted closure; 305 inherited round-55 late outputs/results committed under `.ufo/waves/round-55/`; all 64 round-56 seat outputs/results committed under `.ufo/waves/round-56/w1/`.
+
+### Sources and frontier — round 56
+
+`/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama`: before exit 0, 252 rows (A/B/C 239/9/4; mined/queued/rejected 228/8/16); after exit 0, 256 rows (A/B/C 242/10/4; mined/queued/rejected 231/8/17). Receipts `.ufo/waves/round-56/census/{start,end}.out` and `end.exit`. Rows added: A=3 (S512, S513, S514), B=1 (S515); statuses mined=3, rejected=1. Touched row: S512 `used-by` old `corpus/lessons/round-56.md` → new `corpus/lessons/round-56.md, tools/round56-replay-code-audit.py`; no status/recheck edits in place. Frontier rows advanced: none. Assimilation: none. `considerthese/2026-10-26.md` proposal 4 remains pending.
+
+### Trend verdicts
+
+- **expansion — unchanged:** no new `corpus/knowledge/` entry or uncovered knowledge ground was admitted; S512–S515 are curated source rows, not expansion credit (`CORPUS.md` rule 4).
+- **quality — improved:** the frozen environment classifier now detects LD_AUDIT; the exact comparator selftest rejects the `undetected` false positive; C1/C2 final measurements and receipts are at the implementation tip above.
+- **discernment — unchanged:** no outside non-author admit/reject spot-check of this round is on record; the swarm's reviewers and critics are lane-dispatched seats and do not count as non-author judgment.
+
+### Planned (round 57)
+
+1. Operability: continue the remaining round-56 plan—host-library package-byte provenance and asserted host count, fully config-hermetic Git environment, and attribute-free archive extraction—with freeze-bound counters and red do-nothing controls.
+2. Calibration: re-freeze C2 only after its counter is causally bound to executed battery invocations and a no-op harness fails the frozen counter; address the KQ98 criterion proposal only after outside closure agreement. Do not retroactively amend round-56 predicates.
+
+## Historical authority banner — round 55
+
+The prior pre-heading banner is preserved verbatim because the append-only audit
+grades that preamble line; the round-56 authority above supersedes it.
+
+```text
+**Current authority (round 55):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 55. Calibration 7 is the lowest assigned axis, below operability 8, and below the saturation line, so the stagnation nudge is inactive. Round 55 froze and measured the two round-54 counters (C1 operability, C2 calibration) with red base controls committed before data (SCORECARD §Round 55); the C1 kill rule fired on its literal text and is reported for the closure to rule. No axis score or capability changes. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived from the tree by `tools/round42-selfdesc-reconcile.py` (round-42 claim C1) and kept current through round 55; the round-53 banner and the head sections it replaces are kept verbatim under §Historical head sections.
+```

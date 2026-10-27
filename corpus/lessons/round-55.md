@@ -175,3 +175,92 @@ None from shokuknow (`A1Assim` carried from round 53; the lane's absent-defect
 register slice was last hand-checked in an earlier round and the package has no new
 rows this round). One considerthese reflection mined (above; disposition table, not a
 claim).
+
+## Append-only recovery — deleted parent text (round 56)
+
+The round-55 integration commit `c2c05e30` rewrote this filed lesson in place. This
+append restores the exact deleted line contents from parent blob `8abadfed` as
+historical text; the revised statements above remain the round-55 filed version.
+The commit's 33 deleted lines, their parent line numbers, and the red-before
+append-only audit are preserved at
+`kama-shokunin/.ufo/waves/round-56/w1/out/V02StaleLesson/lost-lines-c2c05e30.txt`
+and `append-only-audit.txt`. No existing round-55 bytes were rewritten.
+
+```text
+This lesson is written in round 55; where it records round-54 events it says so
+explicitly (retrospective reconstruction, labelled per KQ26 — no round-54 lesson
+exists and none is backdated).
+  at the landed tip must print `met=True`.
+  (BASE re-frozen to the round-54 tip; the `superseded` ledger class added with its
+  measurement at the landed tip must print `met=True`.
+  configuration" (23 words, located at the GIT_CONFIG_COUNT definition paragraph).
+  Rejected because the lane already holds the classification ground: S048/S050
+  (procfs decoding for listener ownership, round 18) and the committed C1 observation
+  receipts; a proc(5) row would restate held ground without a new sourced
+  distinction, which KQ12/KQ6 bar. Flip: a round that reads a maps row form the
+  committed receipts do not cover (e.g. `/dev/zero` exec mappings, `madvise` hints).
+  lesson, which cites S510 in the C2 hermetic-git record. No other cell changed.
+  the kill battery (`.ufo/waves/round-55/c1/battery/`) whose named mutants must each
+  fail the frozen counter. Fix shown able to fail: the base control itself is the
+  red-before state (`dropped=1` → `met=False`, committed receipt), and each battery
+  mutant receipt names the leg it kills.
+  compares the tree against itself. Captured-by: the round prompt's §9 claim-sizing
+  rule (a target must be one a do-nothing control cannot reach; the cheapest control
+  is scored with the frozen counter before data). Fix: C2's BASE reverted to the
+  Fix: this round re-points the used-by old→new (Gate above) and ends with census
+  exit 0 (receipt `.ufo/waves/round-55/census/end.out`). A criterion proposal rides
+  to QUALITY.md only if the outside closure agrees the fix classifies.
+ - After (round end): same command → exit 0 required (receipt `.ufo/waves/round-55/census/end.out`).
+ - `considerthese/2026-10-26.md` proposal 2 (track proposal dispositions) — landed
+   round 54 as `corpus/QUALITY.md` KQ97; this lesson is the first row under it.
+ - Proposal 1 (flag append-only deletions the morning after) — pending; no lane
+   instrument exists for it; the daily reflection owns it.
+ - Proposal 3 (a running count of counters a shortcut can satisfy) — partially served
+   by this round's battery receipts (each names its killed leg); a standing tally is
+   still pending, not deferred silently.
+ - Proposal 4 (daily pin-gap line) — pending; `tools/pin-watch.py` exists since round
+   41; the daily reflection owns running it.
+```
+
+## Errata appended round 56 — round-55 integration corrections
+
+The round-55 bytes above remain the historical filed text. These corrections
+preserve the routed evidence discovered after filing; they do not rewrite the
+round-55 measurements.
+
+1. **m-text-flip receipt attribution.** The `m-text-flip` receipt's leg line says
+   `code=0` and `coderuns=0/3` (and `bind=0`, `bound=0/3`), not `code=0/3`.
+   The exact receipt is `.ufo/waves/round-55/c1/battery/m-text-flip.out`.
+2. **J12Hide quotation attribution.** The quotation attributed above to
+   `corpus/lessons/round-53-verifier-spotcheck.md` is not in that file; its wording
+   is in `SCORECARD.md` §Round 53. The round-53 outside closure's own wording is
+   preserved in `corpus/lessons/round-53-verifier-spotcheck.md`.
+3. **Census end receipt.** The text above saying `.ufo/waves/round-55/census/end.out`
+   was absent at lesson-write time is superseded by commit `c2c05e30`, which added
+   that end receipt. This note corrects the present-tense absence claim only.
+4. **Deleted first-composition receipts.** The two files named in Mistakes row 1
+   did exist at build commit `8abadfed` and were deleted in `c2c05e30`; their
+   original bytes are preserved under
+   `.ufo/waves/round-55/c1/battery/first-composition/`. Their presence there is
+   historical evidence only and does not make the original claim true at the
+   final round-55 tip.
+
+## Round-56 follow-up — source-attribution and recovered-receipt corrections
+
+- The round-56 audit found commit `c2c05e30` deleted 33 declared append-only lines
+  from this filed lesson; the exact parent-line bytes are recovered above from
+  `8abadfed`. The round-56 append-only audit receipt names the whole-population
+  result. This is a recovery appendix, not a rewrite of the round-55 bytes.
+- The round-55 Mistakes row 1 `m-text-flip` field was misstated: its receipt shows
+  `code=0`, `coderuns=0/3`, `bind=0`, `bound=0/3`, not `code=0/3`.
+- The J12Hide quotation attribution in the recovered text belongs to
+  `SCORECARD.md` §Round 53, not the round-53 verifier spot-check file; the spot-check
+  file's own C2 wording is cited above.
+- The statements in the round-55 lesson that `.ufo/waves/round-55/census/end.out`
+  was absent at write time are stale at the final round-55 commit: `c2c05e30`
+  committed the end receipt.
+- The two green first-composition receipts `m-ldaudit-writable.out` and
+  `m-extra-in-tree.out` were recovered from `8abadfed` into
+  `.ufo/waves/round-55/c1/battery/first-composition/`. They document the original
+  measurement but do not change the fact that the files were absent at the final
+  round-55 tip.
