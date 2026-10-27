@@ -184,16 +184,20 @@ def main():
             by_label = {f.get("label"): f for f in frames}
             expected_labels = set(LABELS)
             names_ok = set(by_label) == expected_labels and len(frames) == len(expected_labels)
-            per_leg = {}
+            calls_ok, returns_ok = {}, {}
             for label in LABELS:
                 frame = by_label.get(label, {})
                 calls = frame.get("calls", [])
-                per_leg[label] = (len(calls) == 1 and "--counter" in calls[0]
-                                  and "--expect" in calls[0] and frame.get("returned") is True)
+                calls_ok[label] = len(calls) == 1 and "--counter" in calls[0] and "--expect" in calls[0]
+                returns_ok[label] = frame.get("returned") is True
             if not fault:
-                passed = names_ok and all(per_leg.values()) and outcome.get("exit") == 0
+                passed = names_ok and all(calls_ok.values()) and all(returns_ok.values()) and outcome.get("exit") == 0
             else:
-                passed = names_ok and per_leg.get(fault, False) and outcome.get("exit") == 1
+                passed = (names_ok and all(calls_ok.values()) and outcome.get("exit") == 1
+                          and not returns_ok.get(fault, False)
+                          and all(returns_ok[label] for label in LABELS if label != fault))
+            per_leg = {label: {"call": calls_ok[label], "returned_true": returns_ok[label]}
+                       for label in LABELS}
             results.append({"fault": fault or "baseline", "passed": passed, "exit": outcome.get("exit"),
                             "labels": names_ok, "per_leg": per_leg, "error": outcome.get("error")})
         met = all(r["passed"] for r in results)
