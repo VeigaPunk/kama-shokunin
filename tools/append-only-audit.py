@@ -1,5 +1,30 @@
 #!/usr/bin/env python3
-"""append-only-audit.py (v5 definitions, v3 output) - set the lane's declared append-only files against its git history.
+"""append-only-audit.py (v6 definitions, v3 output) - set the lane's declared append-only files against its git history.
+
+v6 (round 51) grades every deletion and the rule as each contract row declares it (round-50
+closure R6: the sub-20 threshold hid 97 events, among them a real LOG.md loss at ed135b3c;
+considerthese/2026-10-26.md proposal 1); the JSON shape stays `append-only-audit/v3` with
+`"definition": "v6"` and new keys:
+  threshold   default 1 (v1-v5: 20); every (commit, file) with a deletion is an event
+  permitted   for a file whose contract rule is A-row, a deleted line that is a registry
+              row (0-3 spaces, `| S<digits> |`, eleven cells split outside backtick code
+              spans) while the commit's blob holds a row with the same id whose cells other
+              than status (8th), recheck (10th) and used-by (11th) are byte-equal: the
+              in-place change the A-row rule allows (KQ22); counted per event as
+              `permitted`, never graded; graded + ungraded + permitted == deleted
+  disclosure  a row of registry/append-only-disclosures.tsv (read at <to>; --disclosures
+              FILE overrides) `commit<TAB>file<TAB>line_sha256<TAB>count<TAB>class<TAB>note`:
+              `count` graded lines of that event whose key (CR-stripped bytes) hashes to
+              line_sha256 are not held at <to> and are disclosed as lost; `class` must be the
+              mechanical class of those lines - `revert` when the commit subject starts with
+              `Revert "`, else `in-place-edit` when their hunk adds lines, else `removal`; a
+              row naming no event, no such unheld line, too many of them or the wrong class
+              is a bad disclosure (exit 1)
+  undisclosed per event (JSON only), the graded lines not held at <to> and not disclosed:
+              [{line_sha256, count, classes}] - what a disclosure row would have to name
+  status      ungraded / restored as in v5; `disclosed` when not restored and every graded
+              line not held at <to> is disclosed; unrestored / partial otherwise
+The binding, regions, origin, fences, keys and restoration measures are v5's, unchanged.
 
 v5 (round 50) closes the definition gaps the round-49 closure routed (corpus/lessons/
 round-49-verifier-spotcheck.md R3; seats K2Origin, K2Cheat); the JSON output shape is
@@ -131,6 +156,7 @@ from __future__ import annotations
 import argparse
 import collections
 import fnmatch
+import hashlib
 import json
 import os
 import re
@@ -142,6 +168,11 @@ import tempfile
 SCHEMA = "append-only-audit/v3"
 CONTRACT = "registry/append-only-contract.tsv"
 HEADER = "path\trule\tdeclared_at\tregion\tnote"
+DISCLOSURES = "registry/append-only-disclosures.tsv"
+DHEADER = "commit\tfile\tline_sha256\tcount\tclass\tnote"
+CLASSES = ("revert", "in-place-edit", "removal")
+ROW = re.compile(r"^ {0,3}\| *S[0-9]{3,} *\|")
+MUTABLE_COLS = (7, 9, 10)     # status, recheck, used-by (0-based, id is 0)
 RULES = ("A", "A-row", "A-corr")
 HUNK = re.compile(rb"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
 REGION = re.compile(r"(exempt|only)=(.+)@([^@:]+):(\d+)")
@@ -162,6 +193,12 @@ def _git(repo, *args, inp=None):
 
 def _text(repo, *args, inp=None):
     return _git(repo, *args, inp=inp).decode("utf-8", "replace")
+
+
+def _git_ok(repo, *args):
+    """stdout bytes, or None when git exits non-zero (an absent path at a revision)."""
+    p = subprocess.run(["git", "-C", repo, *args], capture_output=True)
+    return p.stdout if p.returncode == 0 else None
 
 
 def parse_region(cell):
@@ -355,7 +392,8 @@ def split_lines(data):
 
 
 def deleted_lines(repo, parent, commit, path):
-    """(parent line number, bytes) of every deleted line, read by hunk-header counts."""
+    """(parent line number, bytes, lines its hunk adds) of every deleted line, read by
+    hunk-header counts."""
     raw = _git(repo, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", "--text",
                parent, commit, "--", path)
     out, lines, i = [], raw.split(b"\n"), 0
@@ -371,7 +409,7 @@ def deleted_lines(repo, parent, commit, path):
         while i < len(lines) and (gd < nd or ga < na):
             ln = lines[i]
             if ln.startswith(b"-") and gd < nd:
-                out.append((start + gd, ln[1:]))
+                out.append((start + gd, ln[1:], na))
                 gd += 1
             elif ln.startswith(b"+") and ga < na:
                 ga += 1
@@ -445,9 +483,68 @@ def file_regions(rows, f):
     return titles, prefixes
 
 
-def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
+def row_cells(text):
+    """v6: the cells of a registry row line (bytes) split on `|` outside backtick code spans,
+    without the outer pipes; None when the line is not a row or does not close."""
+    try:
+        s = text.decode("utf-8")
+    except UnicodeDecodeError:
+        return None
+    if not ROW.match(s):
+        return None
+    s = s.rstrip("\r").strip()
+    cells, buf, code = [], [], False
+    for ch in s[1:]:
+        if ch == "`":
+            code = not code
+        if ch == "|" and not code:
+            cells.append("".join(buf).strip())
+            buf = []
+        else:
+            buf.append(ch)
+    return cells if not "".join(buf).strip() else None
+
+
+def permitted_edits(dl, new_body):
+    """v6 A-row: positions in dl of deleted rows whose id the new blob still holds with
+    every immutable cell byte-equal (only status, recheck and used-by changed)."""
+    rows = collections.defaultdict(list)
+    for ln in new_body:
+        c = row_cells(ln)
+        if c is not None and len(c) == 11:
+            rows[c[0]].append(c)
+    keep = lambda c: [x for j, x in enumerate(c) if j not in MUTABLE_COLS]
+    out = set()
+    for pos, text, _na in dl:
+        c = row_cells(text)
+        if c is not None and len(c) == 11 and any(keep(n) == keep(c) for n in rows.get(c[0], ())):
+            out.add(pos)
+    return out
+
+
+def parse_disclosures(text):
+    """[(commit, file, line_sha256, count, class, note)]; AuditError on a malformed ledger."""
+    if "\r" in text:
+        raise AuditError("disclosures carry CR bytes")
+    lines = text.split("\n")
+    if not lines or lines[0] != DHEADER:
+        raise AuditError("disclosures header is not " + DHEADER.replace("\t", "<TAB>"))
+    rows = []
+    for n, ln in enumerate(lines[1:], 2):
+        if not ln.strip():
+            continue
+        c = ln.split("\t")
+        if (len(c) != 6 or not re.fullmatch(r"[0-9a-f]{40}", c[0]) or not c[1]
+                or not re.fullmatch(r"[0-9a-f]{64}", c[2]) or not re.fullmatch(r"[1-9][0-9]*", c[3])):
+            raise AuditError(f"disclosures line {n}: bad commit, file, line_sha256 or count")
+        rows.append((c[0], c[1], c[2], int(c[3]), c[4], c[5]))
+    return rows
+
+
+def audit(repo_path, to="HEAD", threshold=1, files=None, contract=None, disclosures=None):
     """files: explicit list (whole files graded); else contract: (label, text); else the
-    contract at <to>."""
+    contract at <to>. disclosures: (label, text); else, with the contract at <to>, the
+    ledger at <to> when it exists; else none."""
     r = Repo(repo_path)
     to_full = _text(repo_path, "rev-parse", "--verify", to + "^{commit}").strip()
     label, gone, nomatch, rows, decls = None, [], [], [], []
@@ -461,6 +558,18 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
         nomatch = unmatched(repo_path, to_full, patterns)
         gone = vanished(repo_path, to_full, patterns, set(files))
         decls = [declaration(repo_path, to_full, row) for row in rows]
+        if disclosures is None and contract[0] == f"{to_full}:{CONTRACT}":
+            got = _git_ok(repo_path, "show", f"{to_full}:{DISCLOSURES}")
+            if got is not None:
+                disclosures = (f"{to_full}:{DISCLOSURES}", got.decode("utf-8"))
+    dlabel, drows = None, []
+    if disclosures is not None:
+        dlabel, drows = disclosures[0], parse_disclosures(disclosures[1])
+    dmap = collections.defaultdict(list)
+    for i, row in enumerate(drows):
+        dmap[(row[0], row[1])].append(i)
+    dverdict = [None] * len(drows)
+    arow = {f for f in (files or []) if any(fnmatch.fnmatchcase(f, row[0]) and row[1] == "A-row" for row in rows)}
     files = sorted(set(files))
     commits, parents = [], {}
     for line in _text(repo_path, "rev-list", "--topo-order", "--reverse", "--parents", to_full).split("\n"):
@@ -522,7 +631,7 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
             dl = deleted_lines(repo_path, p, c, f)
             if len(dl) != ns[f]:
                 raise AuditError(f"{c[:12]} {f}: hunk count {len(dl)} != numstat {ns[f]}")
-            D = collections.Counter(text for _pos, text in dl)
+            D = collections.Counter(text for _pos, text, _na in dl)
             pb = r.blobs([f"{p}:{f}"])[f"{p}:{f}"]
             K = r.lines(pb) - D
             window = commits[i:]
@@ -535,7 +644,11 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
                         >= pcount[t]}
             G = collections.Counter()
             org = origins(f) if titles else {}
-            for pos, text in dl:
+            perm = permitted_edits(dl, r.list_lines(wb[f"{c}:{f}"]) if wb[f"{c}:{f}"] else []) \
+                if f in arow else set()
+            for pos, text, _na in dl:
+                if pos in perm:
+                    continue
                 s = psec[pos - 1]
                 if prefixes and not any(s is not None and s.startswith(q) for q in prefixes):
                     continue
@@ -553,42 +666,89 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
                     best, best_c = h, x
                 if by is None and ng and h == ng:
                     by = x
+            # v6: graded lines not held at <to>, by key, against the disclosure ledger
+            Mto = r.lines(wb[f"{to_full}:{f}"]) if wb.get(f"{to_full}:{f}") else collections.Counter()
+            unheld = collections.Counter()
+            for l, n in G.items():
+                u = n - min(n, max(0, Mto[l] - K[l]))
+                if u:
+                    unheld[hashlib.sha256(key(l)).hexdigest()] += u
+            cls = collections.defaultdict(set)
+            subject = None
+            if dmap.get((c, f)) or unheld:
+                subject = _text(repo_path, "log", "-1", "--format=%s", c).strip()
+            for pos, text, na in dl:
+                if pos not in perm:
+                    cls[hashlib.sha256(key(text)).hexdigest()].add(
+                        "revert" if (subject or "").startswith('Revert "') else ("in-place-edit" if na else "removal"))
+            disclosed = 0
+            for di in dmap.get((c, f), []):
+                _c, _f, hsh, cnt, klass, _note = drows[di]
+                if klass not in CLASSES:
+                    dverdict[di] = f"unknown class {klass}"
+                elif cnt > unheld[hsh]:
+                    dverdict[di] = f"count {cnt} > unheld graded lines {unheld[hsh]} with that key"
+                elif klass not in cls[hsh]:
+                    dverdict[di] = f"class {klass} is not {sorted(cls[hsh])}"
+                else:
+                    dverdict[di] = "ok"
+                    unheld[hsh] -= cnt
+                    disclosed += cnt
             if ng == 0:
                 status = "ungraded"
+            elif best == ng:
+                status = "restored"
+            elif disclosed and not +unheld:
+                status = "disclosed"
             else:
-                status = "restored" if best == ng else ("unrestored" if best == 0 else "partial")
-            events.append({"commit": c, "file": f, "deleted": len(dl), "graded": ng, "ungraded": len(dl) - ng,
+                status = "unrestored" if best == 0 else "partial"
+            events.append({"commit": c, "file": f, "deleted": len(dl), "graded": ng,
+                           "ungraded": len(dl) - ng - len(perm), "permitted": len(perm),
                            "restored_max": best, "restored_best": best_c, "restored_by": by,
-                           "held_at_to": h, "status": status})
+                           "held_at_to": h, "disclosed": disclosed, "status": status,
+                           "undisclosed": [{"line_sha256": k, "count": n, "classes": sorted(cls[k])}
+                                           for k, n in sorted((+unheld).items())]})
+    dout = [{"commit": d[0], "file": d[1], "line_sha256": d[2], "count": d[3], "class": d[4],
+             "ok": dverdict[i] == "ok", "reason": dverdict[i] or "names no event"}
+            for i, d in enumerate(drows)]
     summary = {"commits": len(commits), "files": len(files), "events": len(events),
                "restored": sum(e["status"] == "restored" for e in events),
                "partial": sum(e["status"] == "partial" for e in events),
                "unrestored": sum(e["status"] == "unrestored" for e in events),
                "ungraded": sum(e["status"] == "ungraded" for e in events),
+               "disclosed": sum(e["status"] == "disclosed" for e in events),
+               "permitted_lines": sum(e["permitted"] for e in events),
+               "disclosed_lines": sum(e["disclosed"] for e in events),
+               "bad_disclosures": sum(not d["ok"] for d in dout),
                "ungraded_lines": sum(e["ungraded"] for e in events),
                "regressed": sum(e["status"] in ("restored", "partial") and e["held_at_to"] < e["restored_max"]
                                 for e in events),
                "vanished": len(gone), "unmatched": len(nomatch), "binary": len(binary),
                "bad_declarations": sum(not d["ok"] for d in decls)}
-    return {"schema": SCHEMA, "definition": "v5", "to": to_full, "threshold": threshold, "contract": label,
-            "files": files,
+    return {"schema": SCHEMA, "definition": "v6", "to": to_full, "threshold": threshold, "contract": label,
+            "disclosures_ledger": dlabel, "disclosures": dout, "files": files,
             "commits": len(commits), "events": events, "declarations": decls, "vanished": gone,
             "unmatched_patterns": nomatch, "binary_changes": binary, "summary": summary}
 
 
 def render(res):
     out = [f"event {e['commit'][:12]} {e['file']} deleted={e['deleted']} graded={e['graded']} "
-           f"ungraded={e['ungraded']} restored_max={e['restored_max']} held_at_to={e['held_at_to']} "
+           f"ungraded={e['ungraded']} permitted={e['permitted']} restored_max={e['restored_max']} "
+           f"held_at_to={e['held_at_to']} disclosed={e['disclosed']} "
            f"status={e['status']} restored_best={(e['restored_best'] or '-')[:12]} "
            f"restored_by={(e['restored_by'] or '-')[:12]}" for e in res["events"]]
     s = res["summary"]
     out += [f"declaration {d['path']} {d['declared_at']} unbound: {d['reason']}"
             for d in res.get("declarations", []) if not d["ok"]]
+    out += [f"disclosure {d['commit'][:12]} {d['file']} {d['line_sha256'][:12]} bad: {d['reason']}"
+            for d in res.get("disclosures", []) if not d["ok"]]
     out += [f"vanished {v}" for v in res.get("vanished", [])]
     out += [f"unmatched-pattern {v}" for v in res.get("unmatched_patterns", [])]
     out += [f"binary-change {b['commit'][:12]} {b['file']}" for b in res.get("binary_changes", [])]
     out.append(f"summary commits={s['commits']} files={s['files']} events={s['events']} restored={s['restored']} "
-               f"partial={s['partial']} unrestored={s['unrestored']} ungraded={s['ungraded']} "
+               f"partial={s['partial']} unrestored={s['unrestored']} ungraded={s['ungraded']} disclosed={s['disclosed']} "
+               f"permitted_lines={s['permitted_lines']} disclosed_lines={s['disclosed_lines']} "
+               f"bad_disclosures={s['bad_disclosures']} "
                f"ungraded_lines={s['ungraded_lines']} regressed={s['regressed']} vanished={s['vanished']} "
                f"unmatched={s['unmatched']} binary={s['binary']} bad_declarations={s['bad_declarations']}")
     return "\n".join(out)
@@ -599,7 +759,7 @@ def exit_code(res):
     unbound declaration."""
     s = res["summary"]
     return 1 if (s["partial"] or s["unrestored"] or s["regressed"] or s["vanished"]
-                 or s["bad_declarations"]) else 0
+                 or s["bad_declarations"] or s["bad_disclosures"]) else 0
 
 
 # ---------------------------------------------------------------- selftest
@@ -634,6 +794,12 @@ def lines(tag, n):
 
 def selftest(root):
     cases = []
+    full = globals()["audit"]
+
+    def audit(*a, **k):
+        # the v1-v5 cases below pin the old default threshold (20); the v6 cases call full()
+        k.setdefault("threshold", 20)
+        return full(*a, **k)
     F = ["LOG.md", "SCORECARD.md", "corpus/QUALITY.md", "corpus/README.md", "corpus/SOURCES.md"]
 
     def case(name, fn):
@@ -1087,6 +1253,128 @@ def selftest(root):
         oks = [d["ok"] for d in res["declarations"]]
         return oks == [False, False], str(res["declarations"])
 
+    # ---------------- v6 (round 51): default threshold 1, A-row permitted edits, disclosures
+    AROW = ["# notes", "SRC.md is append-only by row."]
+    SRC_C = HEADER + "\nSRC.md\tA-row\tN.md:2\t*\tx\nLOG.md\tA\tN.md:3\t*\tx\n"
+    ROWS = ["| id | source | kind | tier | scope | anchor | teaches | status | opened | recheck | used-by |",
+            "|---|---|---|---|---|---|---|---|---|---|---|"] + [
+        f"| S00{i} | src {i} https://e.invalid/{i} | docs | A | scope `a|b` {i} | anchor | teaches {i} | mined "
+        f"| 2026-10-01 | 90d | x.md |" for i in range(1, 4)]
+
+    def v6fix():
+        f = Fixture(root)
+        f.commit({"N.md": AROW + ["LOG.md is append-only."], "SRC.md": ROWS, "LOG.md": lines("g", 5)})
+        return f
+
+    def v6audit(f, t, ledger=None):
+        return full(f.d, t, contract=("c", SRC_C),
+                    disclosures=None if ledger is None else ("d", DHEADER + "\n" + ledger))
+
+    def t_v6_default_threshold():
+        f = Fixture(root)
+        a = lines("a", 30)
+        f.commit({"LOG.md": a})
+        t = f.commit({"LOG.md": a[1:]})               # 1 deleted
+        res = full(f.d, t, files=F)
+        e = res["events"]
+        return (res["threshold"] == 1 and len(e) == 1 and e[0]["status"] == "unrestored"
+                and exit_code(res) == 1), str(e)
+
+    def t_v6_arow_mutable():
+        f = v6fix()
+        t = f.commit({"SRC.md": ROWS[:2] + [ROWS[2].replace("| mined |", "| rejected |").replace("90d", "30d")]
+                      + ROWS[3:]})
+        res = v6audit(f, t)
+        e = [x for x in res["events"] if x["file"] == "SRC.md"]
+        return (len(e) == 1 and e[0]["permitted"] == 1 and e[0]["graded"] == 0 and e[0]["status"] == "ungraded"
+                and exit_code(res) == 0), str(e)
+
+    def t_v6_arow_immutable():
+        f = v6fix()
+        t = f.commit({"SRC.md": ROWS[:2] + [ROWS[2].replace("teaches 1", "teaches one")] + ROWS[3:]})
+        res = v6audit(f, t)
+        e = [x for x in res["events"] if x["file"] == "SRC.md"]
+        return (len(e) == 1 and e[0]["permitted"] == 0 and e[0]["graded"] == 1 and e[0]["status"] == "unrestored"
+                and exit_code(res) == 1), str(e)
+
+    def t_v6_arow_code_span_pipe():
+        # a `|` inside a backtick span is not a cell boundary: editing the scope cell is graded
+        f = v6fix()
+        t = f.commit({"SRC.md": ROWS[:2] + [ROWS[2].replace("`a|b`", "`a|c`")] + ROWS[3:]})
+        res = v6audit(f, t)
+        e = [x for x in res["events"] if x["file"] == "SRC.md"]
+        return len(e) == 1 and e[0]["permitted"] == 0 and e[0]["graded"] == 1, str(e)
+
+    def t_v6_arow_row_dropped():
+        f = v6fix()
+        t = f.commit({"SRC.md": ROWS[:3]})
+        res = v6audit(f, t)
+        e = [x for x in res["events"] if x["file"] == "SRC.md"]
+        return len(e) == 1 and e[0]["permitted"] == 0 and e[0]["status"] == "unrestored", str(e)
+
+    def sha(x):
+        return hashlib.sha256(x.encode()).hexdigest()
+
+    def t_v6_disclosed():
+        f = v6fix()
+        body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
+        t = f.commit({"LOG.md": body[1:5]})
+        res = v6audit(f, t, f"{t}\tLOG.md\t{sha(body[0])}\t1\tremoval\tdropped")
+        e = [x for x in res["events"] if x["commit"] == t]
+        return (len(e) == 1 and e[0]["status"] == "disclosed" and e[0]["disclosed"] == 1
+                and res["summary"]["bad_disclosures"] == 0 and exit_code(res) == 0), str(res["events"])
+
+    def t_v6_bad_disclosures():
+        f = v6fix()
+        body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
+        t = f.commit({"LOG.md": body[1:5]})
+        out = []
+        for led in (f"{t}\tLOG.md\t{sha('junk')}\t1\tremoval\tx",          # no such line
+                    f"{t}\tLOG.md\t{sha(body[0])}\t2\tremoval\tx",         # too many
+                    f"{t}\tLOG.md\t{sha(body[0])}\t1\tin-place-edit\tx",   # wrong class
+                    f"{'0' * 40}\tLOG.md\t{sha(body[0])}\t1\tremoval\tx"):  # no event
+            res = v6audit(f, t, led)
+            out.append((res["summary"]["bad_disclosures"], exit_code(res)))
+        return out == [(1, 1)] * 4, str(out)
+
+    def t_v6_in_place_edit_class():
+        f = v6fix()
+        body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
+        t = f.commit({"LOG.md": ["edited"] + body[1:5]})
+        ok = v6audit(f, t, f"{t}\tLOG.md\t{sha(body[0])}\t1\tin-place-edit\tx")
+        bad = v6audit(f, t, f"{t}\tLOG.md\t{sha(body[0])}\t1\tremoval\tx")
+        return (exit_code(ok) == 0 and ok["summary"]["disclosed"] == 1
+                and bad["summary"]["bad_disclosures"] == 1), str(ok["events"])
+
+    def t_v6_partial_disclosure():
+        f = v6fix()
+        body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
+        t = f.commit({"LOG.md": body[2:5]})
+        res = v6audit(f, t, f"{t}\tLOG.md\t{sha(body[0])}\t1\tremoval\tx")
+        e = [x for x in res["events"] if x["commit"] == t]
+        return (len(e) == 1 and e[0]["status"] == "unrestored" and e[0]["disclosed"] == 1
+                and exit_code(res) == 1), str(e)
+
+    def t_v6_two_files_one_commit():
+        # a disclosure on the first file of a commit must not move the second file's window
+        # (round-51 build defect: the ledger loop reused the commit index `i`)
+        f = v6fix()
+        body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
+        f.commit({"N.md": AROW + ["LOG.md is append-only."]})
+        t = f.commit({"LOG.md": body[1:5], "SRC.md": ROWS[:4]})
+        res = v6audit(f, t, f"{t}\tLOG.md\t{sha(body[0])}\t1\tremoval\tx")
+        e = {x["file"]: x for x in res["events"] if x["commit"] == t}
+        return (e["LOG.md"]["status"] == "disclosed" and e["SRC.md"]["status"] == "unrestored"
+                and e["SRC.md"]["restored_max"] == 0 and exit_code(res) == 1), str(e)
+
+    def t_v6_restored_not_disclosable():
+        f = v6fix()
+        body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
+        t1 = f.commit({"LOG.md": body[1:5]})
+        t = f.commit({"LOG.md": body[1:5] + [body[0]]})
+        res = v6audit(f, t, f"{t1}\tLOG.md\t{sha(body[0])}\t1\tremoval\tx")
+        return res["summary"]["bad_disclosures"] == 1 and exit_code(res) == 1, str(res["disclosures"])
+
     for name, fn in [("no-deletion", t_none), ("below-threshold", t_below),
                      ("exact-threshold-unrestored", t_exact_unrestored), ("restored-later", t_restored),
                      ("partial", t_partial), ("undeclared-file", t_undeclared),
@@ -1106,7 +1394,14 @@ def selftest(root):
                      ("negation-window-three-vs-four", t_negation_window_three_vs_four),
                      ("negation-curly-apostrophe", t_negation_curly_apostrophe),
                      ("origin-multi-title", t_origin_multi_title),
-                     ("negation-typographic-isnt", t_negation_typographic_isnt)]:
+                     ("negation-typographic-isnt", t_negation_typographic_isnt),
+                     ("v6-default-threshold", t_v6_default_threshold), ("v6-arow-mutable", t_v6_arow_mutable),
+                     ("v6-arow-immutable", t_v6_arow_immutable), ("v6-arow-code-span-pipe", t_v6_arow_code_span_pipe),
+                     ("v6-arow-row-dropped", t_v6_arow_row_dropped), ("v6-disclosed", t_v6_disclosed),
+                     ("v6-bad-disclosures", t_v6_bad_disclosures), ("v6-in-place-edit-class", t_v6_in_place_edit_class),
+                     ("v6-partial-disclosure", t_v6_partial_disclosure),
+                     ("v6-restored-not-disclosable", t_v6_restored_not_disclosable),
+                     ("v6-two-files-one-commit", t_v6_two_files_one_commit)]:
         case(name, fn)
     for name, ok, why in cases:
         print(f"{'pass' if ok else 'FAIL'} {name}" + ("" if ok else f": {why[:300]}"))
@@ -1119,7 +1414,8 @@ def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--repo", default=".")
     ap.add_argument("--to", default="HEAD")
-    ap.add_argument("--threshold", type=int, default=20)
+    ap.add_argument("--threshold", type=int, default=1)
+    ap.add_argument("--disclosures", help=f"disclosure ledger TSV (default: <to>:{DISCLOSURES} with the <to> contract)")
     ap.add_argument("--contract", help=f"contract TSV (default: <to>:{CONTRACT})")
     ap.add_argument("--files", help="comma list of repo-relative paths (instead of a contract)")
     ap.add_argument("--json", action="store_true")
@@ -1146,7 +1442,11 @@ def main(argv=None):
         if a.contract and files is None:
             with open(a.contract, encoding="utf-8") as fh:
                 contract = (os.path.abspath(a.contract), fh.read())
-        res = audit(a.repo, a.to, a.threshold, files, contract)
+        disclosures = None
+        if a.disclosures:
+            with open(a.disclosures, encoding="utf-8") as fh:
+                disclosures = (os.path.abspath(a.disclosures), fh.read())
+        res = audit(a.repo, a.to, a.threshold, files, contract, disclosures)
     except (AuditError, OSError) as e:
         print(f"could-not-evaluate: {e}", file=sys.stderr)
         return 2

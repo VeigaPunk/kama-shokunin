@@ -727,6 +727,40 @@ def model_mapping(pid, model_path):
             'sha256': h.hexdigest()}
 
 
+def server_exe(pid):
+    """Round 51 (round-50 closure R6, seat J4Decoy: a decoy replay that exec'd the host's own
+    b11909 install met the round-50 counter): the executable the server child is running,
+    opened through /proc/<pid>/exe - proc_pid_exe(5): "attempting to open it will open the
+    executable" - so the dev and inode fstat() shows and the sha256 of the bytes read are
+    the running image itself, not a path the tool was handed and not whatever sits at that
+    path now. `path` is the readlink(2) text (it ends in " (deleted)" when the file was
+    unlinked). Linux only; any other outcome is `opened: False` with its reason."""
+    link = f'/proc/{pid}/exe'
+    try:
+        path = os.readlink(link)
+        fd = os.open(link, os.O_RDONLY)
+    except OSError as exc:
+        return {'opened': False, 'reason': 'exe-unreadable:' + (exc.strerror or type(exc).__name__)}
+    try:
+        st = os.fstat(fd)
+        if not stat.S_ISREG(st.st_mode):
+            return {'opened': False, 'reason': 'exe-not-a-regular-file', 'path': path}
+        h, left = hashlib.sha256(), st.st_size
+        while left > 0:
+            chunk = os.read(fd, min(1 << 20, left))
+            if not chunk:
+                break
+            h.update(chunk)
+            left -= len(chunk)
+        if left != 0:
+            return {'opened': False, 'reason': 'exe-shrank-while-hashed', 'path': path}
+    finally:
+        os.close(fd)
+    return {'opened': True, 'path': path,
+            'dev': '%02x:%02x' % (os.major(st.st_dev), os.minor(st.st_dev)),
+            'inode': str(st.st_ino), 'size': st.st_size, 'sha256': h.hexdigest()}
+
+
 def _header_subset(headers):
     return {
         'server': headers.get('Server'),
@@ -1761,6 +1795,7 @@ def main(argv=None):
         'internal_fault': None,
         'child_pid': None,
         'model_mapping': None,
+        'server_exe': None,
         'port_listener_ownership': 'unproven',
         'source_binding': [],
         'tool': {'path': str(SCRIPT), 'sha256': None},
@@ -1999,10 +2034,14 @@ def main(argv=None):
         # round 50 (closure R1): the model file the running server maps, read from its
         # /proc/<pid>/maps and hashed through that same file (recorded, never a check id:
         # v1-v5 check lists stay as they were)
+        # round 51 (round-50 closure R6): the executable the running server child is,
+        # opened through /proc/<pid>/exe (recorded the same way, never a check id)
         if _child_running(proc):
             receipt['model_mapping'] = model_mapping(proc.pid, args.model)
+            receipt['server_exe'] = server_exe(proc.pid)
         else:
             receipt['model_mapping'] = {'mapped': False, 'reason': 'server-not-running'}
+            receipt['server_exe'] = {'opened': False, 'reason': 'server-not-running'}
         if args.witness_dir is not None:
             # round 49 (closure R5): hold the ready server up for an outside observer
             receipt['witness'] = hold_for_witness(

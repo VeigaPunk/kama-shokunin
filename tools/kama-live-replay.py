@@ -51,6 +51,12 @@ sets the same signal on itself, so killing whatever started it takes replay, liv
 and server down. A rerun must also record `model_mapping` with `mapped` true and the
 receipt's model sha256 (the file the running server maps, read by the live tool from
 /proc/<pid>/maps), else `model-mapping:<reason>` is a mismatch.
+Round 51 (round-50 closure R6, seat J4Decoy): a rerun must also record `server_exe` - the
+running server's image, opened by the live tool through /proc/<pid>/exe (proc_pid_exe(5))
+- with `opened` true, the receipt's server sha256, and the dev and inode of this replay's
+own extracted member <work>/server/<member> (the replay records them as `own_server`),
+else `server-exe:<reason>` is a mismatch; a server exec'd from any other file, even a
+byte-identical install, does not match.
 --compare validates both receipts' provenance like a replay would, then prints
 `compare match=<bool> mismatches=N` and one `mismatch:` line each; exit 0 equal,
 1 different, 2 unreadable or refused.
@@ -346,6 +352,20 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
                 f"model-mapping:{mm.get('reason') if isinstance(mm, dict) else 'absent'}")
         elif mm.get("sha256") != need["model.sha256"]:
             res["mismatches"].append(f"model-mapping:sha256:{need['model.sha256']}->{mm.get('sha256')}")
+        # round 51 (round-50 closure R6, seat J4Decoy): the rerun's server must be the member
+        # this replay extracted - the live tool opened its running image through
+        # /proc/<pid>/exe; the dev and inode it saw must be those of <work>/server/<member>
+        # and its bytes must hash to the receipt's server
+        se, own = rr.get("server_exe"), os.stat(server)
+        own_id = ("%02x:%02x" % (os.major(own.st_dev), os.minor(own.st_dev)), str(own.st_ino))
+        res["own_server"] = {"path": server, "dev": own_id[0], "inode": own_id[1]}
+        if not isinstance(se, dict) or se.get("opened") is not True:
+            res["mismatches"].append(f"server-exe:{se.get('reason') if isinstance(se, dict) else 'absent'}")
+        elif se.get("sha256") != want_srv:
+            res["mismatches"].append(f"server-exe:sha256:{want_srv}->{se.get('sha256')}")
+        elif (str(se.get("dev")), str(se.get("inode"))) != own_id:
+            res["mismatches"].append(f"server-exe:not-own-member:{se.get('dev')}:{se.get('inode')}"
+                                     f"!={own_id[0]}:{own_id[1]}")
         if p.returncode != 0:
             res["mismatches"].append(f"live-exit:{p.returncode}")
         # instance differences that do not fail a replay but are worth reading
@@ -384,12 +404,15 @@ def _selftest(root):
         fake_live = os.path.join(d, "fake-live.py")
         with open(fake_live, "w") as fh:
             # emits v5 (commit from the pinned URL, verified block) when given --server-archive
-            fh.write("import json,sys,hashlib,re\n"
+            fh.write("import json,sys,hashlib,re,os\n"
                      "a=sys.argv;o=a[a.index('--out')+1];s=a[a.index('--server')+1];m=a[a.index('--model')+1]\n"
                      "h=lambda p:hashlib.sha256(open(p,'rb').read()).hexdigest()\n"
                      "r={'schema':'kama-llamacpp-live/v4','outcome':'pass','server':{'sha256':h(s)},"
                      "'model':{'sha256':h(m)},'checks':[{'id':'health_ready','passed':True,'evaluated':True}]}\n"
                      "r['model_mapping']={'mapped':True,'sha256':h(m)}\n"
+                     "x=os.stat(s)\n"
+                     "r['server_exe']={'opened':True,'sha256':h(s),'dev':'%02x:%02x'%(os.major(x.st_dev),"
+                     "os.minor(x.st_dev)),'inode':str(x.st_ino)}\n"
                      "if '--server-archive' in a:\n"
                      "    r['schema']='kama-llamacpp-live/v5'\n"
                      "    u=a[a.index('--model-url')+1];c=re.search('/resolve/([0-9a-f]{40})/',u).group(1)\n"
@@ -470,6 +493,22 @@ def _selftest(root):
             fh.write(open(fake_live).read().replace(
                 "json.dump(r,open(o,'w'))", "r['captures']={'slots':{'element_count':9}};json.dump(r,open(o,'w'))"))
         run("projection-differs", receipt(), 1, live=proj_live)
+        # round 51 (round-50 closure R6): the rerun's server_exe must be the replay's own member
+        noexe_live = os.path.join(d, "noexe-live.py")
+        with open(noexe_live, "w") as fh:
+            fh.write(open(fake_live).read().replace("r['server_exe']=", "r['unused_exe']="))
+        run("server-exe-absent", receipt(), 1, live=noexe_live)
+        copy_live = os.path.join(d, "copy-live.py")
+        with open(copy_live, "w") as fh:
+            # a byte-identical copy elsewhere (as a decoy exec of another install would show)
+            fh.write(open(fake_live).read().replace(
+                "x=os.stat(s)\n", "import shutil;c=o+'.copy';shutil.copy(s,c);x=os.stat(c)\n"))
+        run("server-exe-not-own-member", receipt(), 1, live=copy_live)
+        badsha_live = os.path.join(d, "badsha-live.py")
+        with open(badsha_live, "w") as fh:
+            fh.write(open(fake_live).read().replace("r['server_exe']={'opened':True,'sha256':h(s),",
+                                                    "r['server_exe']={'opened':True,'sha256':'4'*64,"))
+        run("server-exe-digest-differs", receipt(), 1, live=badsha_live)
         # round 49 (X1Selftest): --witness-dir/--witness-timeout reach the live child end to
         # end, and the child really holds until an outside observer releases it. The witness
         # fake live writes ready.json *before* the shared fake receipt body, so the receipt
