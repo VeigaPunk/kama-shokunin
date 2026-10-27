@@ -1,0 +1,74 @@
+# Replay commands for R57Item40OwnershipScan (case 40 / distinct case 61)
+
+Scratch root (removed after receipts were copied here):
+  mkdir -p /fast/scratch/hyaku/kama-r57/R57Item40OwnershipScan/{tmp,empty}
+  export TMPDIR=/fast/scratch/hyaku/kama-r57/R57Item40OwnershipScan/tmp
+
+Constants:
+  K=/home/vgpnk/Projects/shokunin/kama-shokunin
+  T=/home/vgpnk/Projects/shokunin/tsukuroi-shokunin
+  B=/home/vgpnk/Projects/shokunin/tabi-shokunin
+  R=/home/vgpnk/Projects/shokunin/revenger-shokunin
+  KH=8640e34cad02adcd247ba0862da63f6fb2aab0df   # kama HEAD when measured
+  KB=b89bdab2cc114735ec5d331c6c610134258f7864   # kama frozen base (controls/freeze.txt)
+  TH=f6a46fa985a653f97726db477ccd1f304c1ae816   # tsukuroi HEAD when measured
+
+P1  tsukuroi gate -> kama tree
+  python3 "$T/tools/check-self-assessment.py" --repo "$K" --revision "$KH"
+  observed: status CANNOT_EVALUATE, detail "tools/tsukuroi-census.sh", exit 2   -> receipts/p1.out
+
+P2  tabi gate -> kama tree
+  node "$B/scripts/check-selfassessment.mjs" --repo "$K" --rev "$KH"
+  observed: "SELFASSESSMENT verdict=clean ... mismatches=0 could_not_evaluate=35 superseded=0", exit 0
+  -> receipts/p2.out (35 FINDING lines, all could-not-evaluate)
+
+P3  kama gate -> kama tree at HEAD (owner control)
+  python3 "$K/tools/round42-selfdesc-reconcile.py" --repo "$K" --tip "$KH"
+  observed: "mismatches=0 maxN=57 met=True", exit 0                            -> receipts/p3.out
+
+P4  kama gate -> tsukuroi tree (reverse reach)
+  python3 "$K/tools/round42-selfdesc-reconcile.py" --repo "$T" --tip "$TH"
+  observed: uncaught r41c1.EvalError("no line exactly '## Axes' in SCORECARD.md"), exit 1 -> receipts/p4.out
+
+P5  tabi gate -> revenger tree (third-lane reach)
+  node "$B/scripts/check-selfassessment.mjs" --repo "$R" --rev HEAD
+  observed: "SELFASSESSMENT verdict=clean ... mismatches=0 could_not_evaluate=0 superseded=0", exit 0
+  -> receipts/p5.out
+
+P6  tabi gate -> empty directory (negative control)
+  node "$B/scripts/check-selfassessment.mjs" --repo "$PWD/empty" --rev HEAD
+  observed: "SELFASSESSMENT verdict=could-not-evaluate detail=revision does not resolve: HEAD", exit 2
+  -> receipts/p6.out
+
+P7  tabi gate -> tabi tree (owner control)
+  node "$B/scripts/check-selfassessment.mjs" --repo "$B" --rev HEAD
+  observed: "SELFASSESSMENT verdict=clean ... could_not_evaluate=116 superseded=48", exit 0 -> receipts/p7.out
+
+P8  kama gate -> kama frozen base
+  python3 "$K/tools/round42-selfdesc-reconcile.py" --repo "$K" --tip "$KB"
+  observed: "r41=1 ... mismatches=1 maxN=56 met=False" + detail, exit 1       -> receipts/p8.out
+
+R09 registry-owner scan (fleet root; table-aware, owner column when present)
+  python3 - <<'PY' ... (script body uses glob("*/SKILL.md") and prints line, cell count, OWNER=… or
+  NO-OWNER-COL for every row matching self[- ]assess|self[- ]description) PY
+  observed: tsukuroi rows cells=8 OWNER=tsukuroi; kama rows cells=5 NO-OWNER-COL -> receipts/r09-registry-owners.out
+
+R10 gate-path references
+  grep -rn "round42-selfdesc" --include=*.md --include=*.py --include=*.sh . \
+    | grep -v "^./kama-shokunin/" | grep -v "^./.ufo/reports/"
+  observed: count_outside_kama_excluding_fleet_reports=0, count_in_kama_skill=1 -> receipts/r10-gate-refs.out
+
+R11 kama registry schema census
+  parse every "| Name |" header in kama/SKILL.md
+  observed: header variants {5: 19, 7: 13}; Owner-column tables at lines 396,430,470,495,533,570,
+  652,699,739,783,818,866,886; 5-column tables at 303,373,1229,1313,1328,1376,1387,1413,1426,1438,
+  1448,1469,1490,1510,1528,1547,1565,1596,1609; row 1404 belongs to header line 1387
+  -> receipts/r11-schema.out
+
+F3 canonical data at HEAD (independent parse, no counter)
+  git -C "$K" show "$KH:SCORECARD.md"   # highest "canonical list as of round N" = round 49, 11 data rows
+  git -C "$K" show "$KH:SCORECARD.md" | grep -c "^## Round "        # 58 headings, max 57
+  git -C "$K" show "$KB:SCORECARD.md" | grep -c "^## Round "        # 57 headings, max 56
+
+Note: the recorded exit for P6/P5/P7 came from the pipeline's ${PIPESTATUS[0]} in the capture
+wrapper; the summaries quoted are the gates' own final lines.

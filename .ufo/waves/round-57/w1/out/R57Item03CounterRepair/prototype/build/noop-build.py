@@ -1,0 +1,4 @@
+#!/usr/bin/env python3
+# Do-nothing "build" control: reads no SCORECARD bytes and derives nothing.
+print("r41=0 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 "
+      "readme=0 province=0 rel=0 mismatches=0 maxN=56 met=True")

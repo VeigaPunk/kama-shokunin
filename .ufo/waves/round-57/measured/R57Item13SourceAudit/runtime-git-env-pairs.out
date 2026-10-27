@@ -1,0 +1,38 @@
+# runtime GIT_CONFIG_COUNT env-pair semantics on host git
+# host: git version 2.56.0
+# cwd: /fast/scratch/hyaku/kama-r57/R57Item13SourceAudit/run (no repository; read-only config queries)
+# access: 2026-10-27T18:10:37Z
+
+## A positive pair: GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=probe.key GIT_CONFIG_VALUE_0=probe-value git config --get probe.key
+probe-value
+exit=0
+
+## B git -c overrides env pair: ... git -c probe.key=cli-value config --get probe.key
+cli-value
+exit=0
+
+## C missing value: GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=probe.key git config --get probe.key
+error: missing config value GIT_CONFIG_VALUE_0
+fatal: unable to parse command-line config
+exit=128
+
+## D empty GIT_CONFIG_COUNT
+exit=1
+
+## E GIT_CONFIG_COUNT=0 ignores supplied pairs
+exit=1
+
+## F baseline, no environment pairs
+exit=1
+
+## G config file value visible via GIT_CONFIG_GLOBAL
+file-value
+exit=0
+
+## H env pair overrides configuration file
+env-value
+exit=0
+
+## I git -c overrides env pair and file
+cli-value
+exit=0

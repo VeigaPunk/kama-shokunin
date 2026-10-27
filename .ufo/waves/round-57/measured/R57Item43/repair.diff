@@ -1,0 +1,97 @@
+--- round42-selfdesc-reconcile.py	2026-10-27 15:09:28.649019246 -0300
++++ round42-selfdesc-reconcile.repaired.py	2026-10-27 15:10:56.471072581 -0300
+@@ -73,6 +73,19 @@
+ ASSIGNED = ("operability", "calibration")
+ SAT_LINE = 8
+ RECEIPT_ROUNDS = (40, 41)
++ROUND_RE = re.compile(r"^## Round (\d+)")
++
++
++def derive_maxn(text):
++    """Canonical heading semantics, unchanged: greatest N over `^## Round (\\d+)`.
++
++    Returns (maxn, headings); `headings` is the number of round headings the
++    call actually read - the execution witness a literal summary cannot supply.
++    """
++    rounds = [int(m.group(1)) for l in text.split("\n") for m in [ROUND_RE.match(l)] if m]
++    if not rounds:
++        raise ValueError("no `## Round N` heading in SCORECARD.md")
++    return max(rounds), len(rounds)
+ 
+ 
+ def git(repo, *args):
+@@ -164,8 +177,7 @@
+             break
+         head.append(l)
+     head = "\n".join(head)
+-    rounds = [int(m.group(1)) for l in lines for m in [re.match(r"^## Round (\d+)", l)] if m]
+-    maxn = max(rounds)
++    maxn, _ = derive_maxn(sc)
+     axes = m41.axes_table(sc)
+     vector, rowtext = [], {}
+     for cells in axes:
+@@ -270,11 +282,54 @@
+     return tip, c, mism, d, maxn
+ 
+ 
++def bind(a, tip, reported):
++    """Bind a declared maxN to the tree, refusing a stale literal or an unwitnessed claim.
++
++    A declaration is accepted only when it equals the value derived from the
++    SCORECARD headings at --tip, the counter's own reported value equals that
++    derivation (an executed read, not a literal), and a claim file states a
++    nonzero read witness. Returns True when bound.
++    """
++    declared, witness, source = a.expect_maxn, None, "--expect-maxn"
++    try:
++        if a.claim:
++            with open(a.claim, encoding="utf-8", errors="replace") as f:
++                text = f.read()
++            m = re.search(r"maxN=(\d+)", text)
++            witnesses = [int(x) for x in re.findall(
++                r"(?:self_description_reads|canonical_table_reads|reads)=(\d+)", text)]
++            declared = int(m.group(1)) if m else None
++            witness = max(witnesses) if witnesses else 0
++            source = a.claim
++        derived, headings = derive_maxn(show(os.path.abspath(a.repo), tip, "SCORECARD.md") or "")
++    except (OSError, ValueError) as e:
++        print(f"could-not-evaluate: {e}", file=sys.stderr)
++        return False
++    match = declared == derived
++    witnessed = witness is None or witness > 0
++    executed = reported == derived
++    ok = match and witnessed and executed
++    line = (f"bind: source={source} declared_maxn={declared} derived_maxn={derived} "
++            f"headings={headings} reported_maxn={reported} witness={witness} "
++            f"maxn_match={int(match)} witnessed={int(witnessed)} executed={int(executed)} "
++            f"met={ok}")
++    sys.stdout.write(line + "\n")
++    if a.out:
++        with open(a.out, "a") as f:
++            f.write(line + "\n")
++    return ok
++
++
+ def main():
+     ap = argparse.ArgumentParser()
+     ap.add_argument("--repo", default=".")
+     ap.add_argument("--tip", default="HEAD")
+     ap.add_argument("--out")
++    ap.add_argument("--expect-maxn", type=int,
++                    help="declared maxN under test; the derived tree value must equal it")
++    ap.add_argument("--claim",
++                    help="file holding a claimed summary (e.g. a no-op's `maxN=... met=...` line); "
++                         "the claim must carry the derived maxN and a nonzero read witness")
+     a = ap.parse_args()
+     here = os.path.dirname(os.path.abspath(__file__))
+     try:
+@@ -290,6 +345,9 @@
+         os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
+         with open(a.out, "w") as f:
+             f.write(out)
++    if a.expect_maxn is not None or a.claim:
++        if not bind(a, tip, maxn):
++            return 1
+     return 0 if met else 1
+ 
+ 

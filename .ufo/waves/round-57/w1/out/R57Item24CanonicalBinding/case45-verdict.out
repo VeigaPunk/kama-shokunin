@@ -1,0 +1,61 @@
+== claim under test (seat prompt, verbatim) ==
+C1 calibration - repair the stale canonical capability row count, counter currently
+reports maxN=56 instead of expected 46; before output mismatch=1.
+
+== 1. the frozen receipt the claim rests on ==
+$ sed -n 1,4p .ufo/waves/round-57/controls/base-c1.out
+tip=b89bdab2cc114735ec5d331c6c610134258f7864
+r41=1 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 mismatches=1 maxN=56 met=False
+detail: r41 calibration run `python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"` no stdout line == '42' (exit 0)
+base_c1_exit=1
+
+== 2. maxN re-derived independently at the frozen base ==
+$ grep -oE "^## Round [0-9]+" base.md | grep -oE "[0-9]+" | sort -n | tail -1
+56
+$ grep -cE "^## Round [0-9]+" base.md
+57
+$ ... round headings that occur more than once (count, round)
+      2 29
+      3 30
+      4 31
+      2 32
+      2 40
+
+== 3. every other round-bearing surface at the base, as a 46 candidate ==
+^## Round ([0-9]+)                           -> 56
+^### Round-([0-9]+) measured                 -> 52
+^### Planned [(]round ([0-9]+)[)]            -> 57
+canonical list as of round ([0-9]+)[*][*]    -> 49
+head banner Latest measured round            -> Latest measured round: 56
+
+== 4. where the number 46 does appear at the base ==
+$ grep -nE "^## Round 46" base.md | cut -c1-78
+2468:## Round 46 — llama.cpp release re-verification at b11906 with machine wi
+$ canonical table rows whose first-working-round cell is 46 (name, cell)
+  append-only-audit -> 46
+  append-only-audit -> 46
+  append-only-audit -> 46
+  append-only-audit -> 46
+  append-only-audit -> 46
+$ git show 89dc4f52:.ufo/waves/round-57/controls/noop-c2.out | grep -n maxN=46
+4:summary=mismatches=0 maxN=46 met=True
+$ git show 89dc4f52:.ufo/waves/round-57/controls/c1-noop.py | grep -n maxN=46
+3:print("mismatches=0 maxN=46 met=True")
+
+== 5. the counter at the current HEAD ==
+$ python3 tools/round42-selfdesc-reconcile.py --repo LANE --tip 8a7f19760242bbe523fa2d7d1b22528b587633c1
+tip=8a7f19760242bbe523fa2d7d1b22528b587633c1
+r41=0 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 mismatches=0 maxN=57 met=True
+
+== verdict ==
+maxN=56 is the greatest "^## Round N" heading at the frozen base, which is the counter's
+own definition (tools/round42-selfdesc-reconcile.py: maxN = greatest N over SCORECARD
+lines matching "^## Round (digits)"), re-derived above from the frozen bytes.
+No surface of the SCORECARD yields 46 as a round maximum: canonical markers stop at 49,
+first-working rounds at 47, "### Round-N measured" headings at 52, "### Planned (round N)"
+at 57, and "## Round N" at 56. 46 occurs only as append-only-audit's *first-working*
+round - a column value, not a maximum - and as the literal typed into the frozen
+do-nothing controls (noop-c2.out and c1-noop.py at the freeze, both `maxN=46`).
+So the claim's second half is FALSIFIED: maxN=56 is correct, not stale.  Its first half
+is CONFIRMED: the frozen output carries mismatch=1, and the single mismatch is the r41
+calibration arm (expected `42`, observed `43` verifier-spotcheck lessons).

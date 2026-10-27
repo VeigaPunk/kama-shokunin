@@ -1,0 +1,18 @@
+Seat S01SourcesReopen — exact commands (scratch /fast/scratch/hyaku/kama-r57/S01SourcesReopen)
+cwd for all: /fast/scratch/hyaku/kama-r57/S01SourcesReopen
+
+1. curl -sS -L --max-time 60 -D headers.txt -o git-config-live.html 'https://git-scm.com/docs/git-config'
+   exit 0; HTTP/2 200; date: Tue, 27 Oct 2026 18:07:05 GMT; 830605 bytes
+2. sha256sum git-config-live.html
+   706b1566467e9cd8c6cdda853a5fc82118a48fde3119777d18cefc014bcd3d5a
+3. cmp -s git-config-live.html <lane>/.ufo/waves/round-56/sources/git-docs-git-config.html ; echo $?
+   exit 0 (byte-identical)
+4. cmp -s git-config-live.html <lane>/.ufo/waves/round-55/sources/git-docs-git-config.html ; echo $?
+   exit 0 (byte-identical)
+5. python3 s515_reopen_check.py --html git-config-live.html --label live-2026-10-27
+   exit 0; met=True; 8/8 base checks True; 4/4 mutants rejected; 26-word limit control red
+6. python3 s515_reopen_check.py --html <lane>/.ufo/waves/round-56/sources/git-docs-git-config.html --label round56-snapshot
+   exit 0; same 8 checks True; 4/4 mutants rejected
+7. python3 s515_reopen_check.py --html <lane>/.ufo/waves/round-56/sources/git-docs-git.html --label wrong-source-git1
+   exit 1; met=False; anchor/dt/quote/revision checks red (wrong page cannot satisfy the binding)
+8. registry inspection (read-only): 256 rows, max_id=S515; S515 used-by=corpus/lessons/round-56.md

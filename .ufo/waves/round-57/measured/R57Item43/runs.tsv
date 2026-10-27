@@ -1,0 +1,18 @@
+receipt	command	tip_or_target	summary	exit
+base.out	python3 round42-selfdesc-reconcile.py --repo <lane> --tip b89bdab2cc114735ec5d331c6c610134258f7864	b89bdab2cc114735ec5d331c6c610134258f7864	mismatches=1 maxN=56 met=False	1
+build-default.out	python3 round42-selfdesc-reconcile.repaired.py --repo <lane> --tip b89bdab2cc114735ec5d331c6c610134258f7864	b89bdab2cc114735ec5d331c6c610134258f7864	mismatches=1 maxN=56 met=False (byte-identical to base.out)	1
+bind-56.out	python3 round42-selfdesc-reconcile.repaired.py ... --expect-maxn 56	b89bdab2cc114735ec5d331c6c610134258f7864	bind met=True maxn_match=1 executed=1; counter met=False	1
+bind-46.out	python3 round42-selfdesc-reconcile.repaired.py ... --expect-maxn 46	b89bdab2cc114735ec5d331c6c610134258f7864	bind met=False maxn_match=0	1
+claim-noop.out	python3 round42-selfdesc-reconcile.repaired.py ... --claim claims/noop-frozen.txt	b89bdab2cc114735ec5d331c6c610134258f7864	bind met=False declared_maxn=46 derived_maxn=56 witness=0	1
+claim-noop-c2.out	python3 round42-selfdesc-reconcile.repaired.py ... --claim claims/noop-c2-frozen.txt	b89bdab2cc114735ec5d331c6c610134258f7864	bind met=False declared_maxn=46 derived_maxn=56 witness=0	1
+head.out	python3 round42-selfdesc-reconcile.py --repo <lane> --tip HEAD	7b74e2f2515a6f598918488fa5144658ff29925f	mismatches=0 maxN=56 met=True	0
+bind-57.out	python3 round42-selfdesc-reconcile.repaired.py ... --expect-maxn 57	16efcf5eedf4887df188790eec48afbb023e7991	bind met=True maxn_match=1 executed=1; counter met=True	0
+claim-witness-57.out	python3 round42-selfdesc-reconcile.repaired.py ... --claim claims/match-witness-57.txt	16efcf5eedf4887df188790eec48afbb023e7991	bind met=True witness=58	0
+claim-nowitness-57.out	python3 round42-selfdesc-reconcile.repaired.py ... --claim claims/match-no-witness-57.txt	16efcf5eedf4887df188790eec48afbb023e7991	bind met=False maxn_match=1 witnessed=0	1
+noop-frozen.out	python3 <lane>/.ufo/waves/round-57/controls/c1-noop.py	no input read	mismatches=0 maxN=46 met=True	0
+stale46-frozen.out	python3 round42-selfdesc-reconcile.py --repo fixtures/stale46 --tip HEAD	fd956dd11f5eb02a8403485d9e1cb5ac199e7861	mismatches=3 maxN=46 met=False (banner=1 planned=1)	1
+stale46-repaired.out	python3 round42-selfdesc-reconcile.repaired.py --repo fixtures/stale46 --tip HEAD	fd956dd11f5eb02a8403485d9e1cb5ac199e7861	identical to stale46-frozen.out	1
+stale46-bind46.out	python3 round42-selfdesc-reconcile.repaired.py --repo fixtures/stale46 --tip HEAD --expect-maxn 46	fd956dd11f5eb02a8403485d9e1cb5ac199e7861	bind met=True maxn_match=1 executed=1 (46 correct for a tree whose heading maximum is 46)	1
+semantics.out	python3 semantics-check.py <lane> <tip> <lane>/.ufo/waves/round-57/controls	5 texts incl. 2 control fixtures + 1 mutation	semantics: cases=5 divergent=0 met=True	0
+case64-independent.out	git plumbing derivation, no counter import (see report case 64)	8a7f19760242bbe523fa2d7d1b22528b587633c1	round_headings=58 max_round_heading=57 head_declares=57 noop_control_literal=maxN=46 noop_reads_input=0 highest_canonical=49	0
+note	round41-scorecard-reconcile.py is a byte copy of the lane tool (sha256 eff934a2...), present only so the repaired copy imports standalone; round42-selfdesc-reconcile.repaired.py is the prototype and is NOT a tree tool			-

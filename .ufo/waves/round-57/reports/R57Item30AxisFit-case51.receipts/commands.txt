@@ -1,0 +1,47 @@
+# R57Item30AxisFit case 51 — commands actually run
+# Scratch root: /fast/scratch/hyaku/kama-r57/R57Item30AxisFit (fixtures only; removed after receipts copied)
+# Lane: /home/vgpnk/Projects/shokunin/kama-shokunin (read-only except this reports/ directory)
+
+## A. Independent derivation of maxN / canonical rows at the frozen base
+git -C kama-shokunin show b89bdab2cc114735ec5d331c6c610134258f7864:SCORECARD.md > evidence/SCORECARD.at-base.md
+python3 - <<'PY'   # see derive-base.txt for output
+import re
+lines=open('.../SCORECARD.at-base.md').read().split('\n')
+rounds=[int(m.group(1)) for l in lines for m in [re.match(r'^## Round (\d+)',l)] if m]
+print(len(rounds), max(rounds))
+PY
+git -C kama-shokunin ls-tree -r --name-only b89bdab... -- corpus/lessons | grep -c 'verifier-spotcheck\.md$'
+
+## B. Frozen counter reproduction (read-only on --repo; temp exports)
+python3 tools/round42-selfdesc-reconcile.py --repo . --tip b89bdab2cc114735ec5d331c6c610134258f7864 --out evidence/r42-at-base.out
+python3 tools/round42-selfdesc-reconcile.py --repo . --tip HEAD --out evidence/r42-at-head.out
+python3 tools/round41-scorecard-reconcile.py --repo . --tip b89bdab2cc114735ec5d331c6c610134258f7864 --out evidence/r41-at-base.out
+
+## C. Instrument identity
+git show <tip>:tools/round56-prereg-check.py | sha256sum   # base c7b0d787..., live dee6f922...
+git show b89bdab...:.ufo/waves/round-56/preregistration.json | sha256sum   # fa4b5a10...
+
+## D. Minimal count/attribution fixtures (prereg + battery only)
+python3 build_variants.py     # writes variants/{no-calls,unreachable-calls,genuine} and variant-matrix.out
+# each fixture: git init; git add -A; git commit (toplevel asserted == fixture dir)
+python3 instruments/precheck-at-base.py --repo fixtures/variants/<v> --tip <tip>
+python3 instruments/precheck-at-head.py --repo fixtures/variants/<v> --tip <tip>
+KAMA57_SCRATCH=evidence python3 exec_bind.py fixtures/variants/<v> <tip>
+
+## E. Full-tree separability fixture (lane clone at base, shared objects; fixture commits only)
+git clone --shared --quiet /home/vgpnk/Projects/shokunin/kama-shokunin fixtures/baseall
+git -C fixtures/baseall checkout -q b89bdab2cc114735ec5d331c6c610134258f7864
+git -C fixtures/baseall rev-parse --show-toplevel   # asserted before every commit
+# S0 = base; S1 = +unreachable-call no-op battery (commit 858107a1); S2 = +SCORECARD 42->43 (commit c4571e86)
+python3 tools/round41-scorecard-reconcile.py --repo fixtures/baseall --tip <S0|S1|S2>
+python3 instruments/precheck-at-base.py --repo fixtures/baseall --tip <S0|S1|S2>
+python3 instruments/precheck-at-head.py --repo fixtures/baseall --tip <S0|S1|S2>
+KAMA57_SCRATCH=evidence python3 exec_bind.py fixtures/baseall <S0|S1|S2>
+python3 tools/round42-selfdesc-reconcile.py --repo fixtures/baseall --tip <S2>
+
+## F. Frozen receipt comparison
+diff -u .ufo/waves/round-57/controls/base-c2-frozen.out .ufo/waves/round-57/controls/base-c1.out
+sha256sum controls/base-c1.out controls/base-c2-frozen.out controls/noop-c1.out controls/noop-c2.out
+git cat-file -t 8caa23a2e223b96308aee981ff7897c612365523   # fatal: not in lane
+
+## G. No installs, no commits, no lane/jj mutation by this seat.

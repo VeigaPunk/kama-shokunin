@@ -1,0 +1,62 @@
+[
+ {
+  "name": "sources-registry",
+  "what": "Curate where kama learns: tier-scoped, revision-anchored rows; contract-v1 census clean",
+  "evidence": "`corpus/SOURCES.md`",
+  "first": "10"
+ },
+ {
+  "name": "ollama-offline-evidence-replay",
+  "what": "Reconcile caller-supplied `/api/tags` + `/api/ps` captures fail-closed; readiness always unknown",
+  "evidence": "`tools/kama-ollama-evidence.py`",
+  "first": "14"
+ },
+ {
+  "name": "live-llamacpp-lifecycle",
+  "what": "Start the pinned llama.cpp b11755 server on an unregistered loopback port, capture its loading and ready surfaces, grade and tear it down",
+  "evidence": "`.ufo/waves/round-16/live/receipt.json`",
+  "first": "16"
+ },
+ {
+  "name": "gguf-declared-identity-replay",
+  "what": "Decode bounded local GGUF metadata offline and compare declared metadata with a captured receipt",
+  "evidence": "`tools/gguf-identity.py`",
+  "first": "20"
+ },
+ {
+  "name": "context-capacity-receipt",
+  "what": "Run the registered context-capacity cells on the lane-owned llama.cpp fixture and write a sha256-bound receipt",
+  "evidence": "`tools/kama-context-capacity.py`",
+  "first": "25"
+ },
+ {
+  "name": "instrument-agreement",
+  "what": "Run a lane instrument N times over one tree and emit a receipt with per-run digests and an agreement counter",
+  "evidence": "`tools/instrument-agreement.py`",
+  "first": "30"
+ },
+ {
+  "name": "pin-watch",
+  "what": "List upstream release tags for each pinned serving engine (SGLang, vLLM, llama.cpp) and report, per pin, the newest release tag and how many releases sort above it; exit 1 flags a recheck trigger",
+  "evidence": "`tools/pin-watch.py`; `registry/engine-pins.tsv`; `corpus/knowledge/engine-pin-watch.md`",
+  "first": "41"
+ },
+ {
+  "name": "digest-ledger",
+  "what": "Find every full SHA-256 the lane's documents cite and classify it: a committed blob, a ledger-declared external artifact re-hashed on this host, an unverifiable digest with its reason, or a flagged known-wrong digest; exit 1 on any unexplained digest",
+  "evidence": "`tools/digest-ledger.py`; `registry/digest-ledger.tsv`",
+  "first": "42"
+ },
+ {
+  "name": "hexrun-census",
+  "what": "Find every lower-case hex run of 32-127 characters other than 64 that the lane's documents cite (git object ids, MD5 sums, over-long or abbreviated runs) and classify it: a lane object, the MD5 of a committed blob, an upstream object whose committed evidence file contains it, an unverifiable run with its reason, or a flagged wrong run linked to a correct one; exit 1 on any unexplained run",
+  "evidence": "`tools/hexrun-census.py`; `registry/hexrun-ledger.tsv`",
+  "first": "43"
+ },
+ {
+  "name": "live-receipt-replay",
+  "what": "Re-acquire a `kama-llamacpp-live/v5` receipt's server release archive and model from the https URLs its provenance block records - the model pinned to a 40-hex `/resolve/<commit>/` revision that the receipt also states as `provenance.model.commit` - verify both sha256 values before anything is extracted or executed, check the archive and its member against the asset and server digests before the server starts so a v5 receipt's `provenance.verified` block is recorded rather than asserted, re-run the lifecycle from an empty home passing the downloaded archive as `--server-archive`, hold the rerun server up for an outside observer on request (`--witness-dir`: `ready.json` names the port and the server child's pid, the server stays up until `release` or the bounded timeout, and the rerun receipt records `witness.released`), refuse a server-archive member that is sparse or whose declared size differs from the `--server` file before hashing it, compare the rerun with the original past check pass/fail on a stable projection of the captured surfaces (props fields, slots count and body digest, health status and body digest, models ids and owned_by, metrics status, loading envelope, teardown outcome, listener ownership), refuse a receipt whose provenance is missing or unverified, whose recorded digest does not match what it downloads, or whose server-archive member is unsafe, and answer `--compare A B` on two receipts without the network",
+  "evidence": "`tools/kama-live-replay.py`; `tools/kama-llamacpp-live.py`; `.ufo/waves/round-49/measured/c1-build.out`; `.ufo/waves/round-48/c2/live/receipt-1.json`",
+  "first": "47"
+ }
+]

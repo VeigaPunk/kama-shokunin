@@ -1,0 +1,13 @@
+# Seat R57Item42SiblingOverlap case 63 — exact commands (all tools run from `git archive <rev> tools` copies in scratch; --repo points at the real repo; PYTHONDONTWRITEBYTECODE=1; no repo writes)
+python3 tools/round42-selfdesc-reconcile.py --repo <repo> --tip b89bdab2   -> r42-b89bdab2.out (exit 1, mismatches=1 maxN=56)
+python3 tools/round42-selfdesc-reconcile.py --repo <repo> --tip 7b74e2f2   -> r42-7b74e2f2.out (exit 0, mismatches=0 maxN=56)
+python3 tools/round42-selfdesc-reconcile.py --repo <repo> --tip 8640e34c   -> r42-8640e34c.out (exit 0, mismatches=0 maxN=57)
+python3 tools/round56-prereg-check.py --repo <repo> --tip {b89bdab2,7b74e2f2,8640e34c} -> r56-*.out (exit 0 met=True each)
+python3 tools/round56-prereg-check.py --repo fx-genuine --tip HEAD -> fx-genuine-HEADchecker.out (exit 0 met=True)
+python3 tools/round56-prereg-check.py --repo fx-noop --tip HEAD -> fx-noop-HEADchecker.out (exit 1 met=False)
+python3 tools/round56-prereg-check-b89.py --repo fx-noop --tip HEAD -> fx-noop-b89checker.out (exit 0 met=True, false green)
+python3 tools/round56-prereg-check.py --repo fx-deadcode --tip HEAD -> fx-deadcode-HEADchecker.out (exit 0 met=True, survivor)
+python3 tools/round56-prereg-check-b89.py --repo fx-deadcode --tip HEAD -> fx-deadcode-b89checker.out (exit 0 met=True)
+python3 tools/round43-registry-audit.py --repo <repo> --tip {b89bdab2,8640e34c} -> r43-*.out (exit 1; spot leg red at both)
+fixtures: battery-HEAD.py (genuine), battery-noop.py (ROSTER kept, main returns 0), battery-deadcode.py (all run() literals inside uncalled _never_called(); main returns 0); prereg.json = .ufo/waves/round-56/preregistration.json at HEAD
+fixture commits (scratch git repos, toplevel asserted before commit): fx-genuine 1420a90e, fx-noop b8378e2c, fx-deadcode 33459ace

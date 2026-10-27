@@ -1,0 +1,40 @@
+source=worktree axes=6
+[operability]
+  RUN  OK  cmd='bash tools/test-snapshot.sh'
+       want='RESULT pass=30 fail=0' got='match' exit=0
+  RUN  OK  cmd='python3 tools/pin-watch.py selftest'
+       want='selftest pass=9 fail=0' got='match' exit=0
+  RUN  OK  cmd='python3 tools/report-landing-audit.py --selftest'
+       want='selftest cases=79 failed=0' got='match' exit=0
+  RUN  OK  cmd='python3 tools/sources-append-only.py --selftest'
+       want='45/45 selftest cases passed' got='match' exit=0
+  HASH OK  tools/kama-probe.sh sha256 lines=1138 want_lines=1138
+[freshness]
+  RUN  OK  cmd='python3 tools/citation-provenance.py --selftest'
+       want='selftest: ok (24 cases)' got='match' exit=0
+  RUN  OK  cmd='python3 -c "recheck=[l.split(chr(124))[10].strip() for l in open(\'corpus/SOURCES.md\') if l.startswith(chr(124)+\' S\') and int(l.split(chr(124))[1].strip()[1:])<=477];print(sum(1 for r in recheck if r))"'
+       want='218' got='match' exit=0
+       SCOPE stated<=S477 registry_max=S516 rows=257 excluded_rows=39 recheck_all=257 recheck_in_window=218
+  HASH OK  tools/test-snapshot.sh sha256 lines=194 want_lines=194
+  HASH OK  .ufo/waves/round-41/c2/ls-remote-vllm.txt sha256 lines=224 want_lines=-
+[depth]
+  RUN  OK  cmd="grep -c '^## ' SKILL.md"
+       want='43' got='match' exit=0
+  HASH OK  SKILL.md sha256 lines=1612 want_lines=1612
+  HASH OK  corpus/knowledge/endpoint-identity.md sha256 lines=218 want_lines=218
+[coverage]
+  RUN  OK  cmd='python3 -c "import glob;print(len([f for f in glob.glob(\'corpus/knowledge/*.md\') if \'engine-sides\' not in f and \'processes\' not in f]))"'
+       want='34' got='match' exit=0
+  HASH OK  PROVINCE.md sha256 lines=186 want_lines=186
+[calibration]
+  RUN  OK  cmd='python3 tools/capability-repertoire-audit.py --selftest'
+       want='CAP_SELFTEST pass=2 fail=0' got='match' exit=0
+  RUN  OK  cmd='python3 -c "import glob;print(len(glob.glob(\'corpus/lessons/*verifier-spotcheck.md\')))"'
+       want='43' got='match' exit=0
+  RUN  OK  cmd='python3 tools/instrument-agreement.py --selftest'
+       want='IA_SELFTEST pass=4 fail=0' got='match' exit=0
+[adjacency]
+  RUN  OK  cmd='python3 -c "print(sum(1 for l in open(\'corpus/knowledge/cross-lane-scope.md\') if l.startswith(chr(124))))"'
+       want='16' got='match' exit=0
+  HASH OK  corpus/knowledge/cross-lane-scope.md sha256 lines=87 want_lines=87
+FAILURES=1

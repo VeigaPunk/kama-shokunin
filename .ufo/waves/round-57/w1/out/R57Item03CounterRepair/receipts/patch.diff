@@ -1,0 +1,52 @@
+--- prototype/base/round42-selfdesc-reconcile.py	2026-10-27 15:10:31.062263060 -0300
++++ prototype/build/round42-selfdesc-reconcile.py	2026-10-27 15:10:39.973161109 -0300
+@@ -146,6 +146,40 @@
+     return n
+ 
+ 
++def live_lines(text):
++    """Lines of `text` outside fenced code blocks and HTML comments.
++
++    Lines inside a fenced block (opening fence of three or more backticks or
++    tildes, closed by a fence of the same character and at least the same
++    length) and lines inside a multi-line `<!-- ... -->` comment are not
++    Markdown headings: the append-only audit restores deleted SCORECARD blocks
++    verbatim inside such fences, so scanning the raw text lets a stale
++    historical heading inflate every value keyed off it.
++    """
++    out, fence, comment = [], None, False
++    for l in text.split("\n"):
++        if comment:
++            if "-->" in l:
++                comment = False
++            continue
++        if fence is None:
++            stripped = l.lstrip()
++            if stripped.startswith("<!--"):
++                if "-->" not in stripped[4:]:
++                    comment = True
++                continue
++            m = re.match(r"^ {0,3}(`{3,}|~{3,})", l)
++            if m:
++                fence = (m.group(1)[0], len(m.group(1)))
++                continue
++            out.append(l)
++        else:
++            m = re.match(r"^ {0,3}(`{3,}|~{3,})\s*$", l)
++            if m and m.group(1)[0] == fence[0] and len(m.group(1)) >= fence[1]:
++                fence = None
++    return out
++
++
+ def evaluate(repo, tip, here):
+     tip = git(repo, "rev-parse", "--verify", f"{tip}^{{commit}}").strip()
+     sc = show(repo, tip, "SCORECARD.md")
+@@ -164,7 +198,7 @@
+             break
+         head.append(l)
+     head = "\n".join(head)
+-    rounds = [int(m.group(1)) for l in lines for m in [re.match(r"^## Round (\d+)", l)] if m]
++    rounds = [int(m.group(1)) for l in live_lines(sc) for m in [re.match(r"^## Round (\d+)", l)] if m]
+     maxn = max(rounds)
+     axes = m41.axes_table(sc)
+     vector, rowtext = [], {}

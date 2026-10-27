@@ -1,0 +1,50 @@
+R57Item32CounterSemantics — independent evidence (distinct case 53)
+Counter under test: tools/round42-selfdesc-reconcile.py (calibration/operability self-description counter; imports tools/round41-scorecard-reconcile.py)
+Pins: frozen base 7c873d7b4e3839489a93d6334cdf93fe5d34d19f (fixtures and base run); lane HEAD at run time 8640e34cad02adcd247ba0862da63f6fb2aab0df (HEAD moved during this seat's run; second run below).
+Scratch: /fast/scratch/hyaku/kama-r57/R57Item32CounterSemantics/ (fixture clones under fx/, removed at cleanup). Copies of drivers and outputs: .ufo/waves/round-57/w1/out/R57Item32CounterSemantics/.
+Counter invocation (read-only on the lane; fixtures are clones): python3 tools/round42-selfdesc-reconcile.py --repo <clone> --tip HEAD ; TMPDIR set to scratch so the r41 temporary export does not land in /tmp.
+Fixture commits: made only inside throwaway clones after `git rev-parse --show-toplevel` asserted the clone dir; author r57-fixture; never pushed.
+
+## 1. Base reproduction (frozen base 7c873d7b)
+$ python3 tools/round42-selfdesc-reconcile.py --repo <clone of 7c873d7b> --tip HEAD
+tip=7c873d7b4e3839489a93d6334cdf93fe5d34d19f
+r41=1 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 mismatches=1 maxN=56 met=False
+detail: r41 calibration run `python3 -c "import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))"` no stdout line == '42' (exit 0)
+exit=1
+(Matches .ufo/waves/round-57/controls/base-c1.out. Only the r41 imported check fails; caps=0 means the head capability table names equal the round-49 canonical list (11 rows); retired=0 means the Retired section states "11 capabilities" and "6 axes".)
+
+## 2. maxN source trace (scratch analyze.py, output analyze.out)
+- SCORECARD lines matching ^## Round (\d+): 57 headings; max 56 (both fence-aware and fence-unaware).
+- One heading is inside a fenced block: line 2969 `## Round 30 — self-assessment corrections (recall population)` inside a `````text fence (lines 2968-2970); fence-unaware scan counts it (harmless here).
+- Distinct round numbers present: 6–23, 25–53, 55, 56. Round 24 is written `## Round24 — ...` (line 1245), so it is not matched; round 54 has no heading.
+- Head banner at base: `Latest measured round: 56` (head paragraph, line 5); banner=0, consistent with maxN=56.
+- No tree-derived value equals 46 as maxN. The string `maxN=46` appears only in .ufo/waves/round-57/controls/c1-noop.py (a literal print), noop-c1.out and noop-c2.out (do-nothing controls).
+
+## 3. Section selection trace (analyze.out)
+- Exact `## Axes` 8, `## Planned` 51, `## Retired` 55, `## Capabilities` 115, `## Saturation` 135: each appears once, none fenced; sections(...)[:1] picks the only one. sections() does not look at fences.
+- canon(): regex `canonical list as of round\s+(\d+)\*\*` (canon_probe.out). Headings at lines 676, 1957, 2214, 2261, 2308, 2451, 2685, 2789, 2844 match. Line 747 `**Capabilities — canonical list as of round 17:** ...` does NOT match (colon before `**`). Highest matched N = 49; 11 rows.
+
+## 4. Fixture attacks (scenarios.out; each fixture = frozen base + the one listed change, committed in the clone)
+F0 base 7c873d7b: exit=1 r41=1 maxN=56 met=False (as section 1).
+F1 repaired calibration count (`→ \`42\`` -> `\`43\`` in the head calibration row): exit=0 r41=0 ... mismatches=0 maxN=56 met=True.
+   => the only red at the frozen base is the self-typed expected count; no maxN or canonical-row defect is exercised.
+F2 shadow Retired (fenced fake `## Retired` with "6 axes; 11 capabilities." inserted before the real one; real body replaced with "Both assigned axes are retired; every model endpoint is dead."): exit=0 retired=0 mismatches=0 maxN=56 met=True.
+F3 colon-form canonical list "as of round 57:**" with a decoy 2-row table appended before the round-55 historical banner: exit=0 caps=0 mismatches=0 maxN=56 met=True (canon still round 49; newest list ignored).
+F4 round-49 canonical table removed (replaced by prose): exit=1 retired=1 saturation=1 caps=1 mismatches=3; detail: caps head names [...11 names...] != canon (round 49) ['C1 operability 8 → 8', 'C2 calibration 7 → 7']; saturation: does not state 'first-working rounds 4, 49'. => canon() reads the first table anywhere below the heading (table_rows over lines[i+1:]); it took claim rows from a later section.
+F5 fenced quote `## Round 57 — quoted planned text` inside a `````text fence before the round-55 banner: exit=1 banner=1 planned=2 maxN=57 mismatches=3; detail: banner: head lacks 'Latest measured round: 57'; planned: section does not name '### Planned (round 58)'. => quoted text changes the required values (false red).
+F6 real round written unspaced `## Round57 — measured round 57 (unspaced heading)` with body text before the round-55 banner: exit=0 maxN=56 mismatches=0 met=True. => a measured round section invisible to maxN and banner.
+
+## 5. Current lane HEAD 8640e34c (run during seat, head-8640e34c.out)
+$ python3 tools/round42-selfdesc-reconcile.py --repo <lane> --tip 8640e34c
+tip=8640e34cad02adcd247ba0862da63f6fb2aab0df
+r41=0 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 mismatches=0 maxN=57 met=True
+exit=0
+(Round-57 integrator commit 8640e34c added `## Round 57` and changed the calibration count to 43. The counter is green with maxN=57. Not an endorsement of the content; section-selection gaps F2, F3, F6 remain structurally present at this tip, checked by code path, not by a separate fixture run at 8640e34c.)
+
+## 6. Things not exercised (code reading only)
+- receipts leg: exemption is a substring test (`tok not in exempt`) over concatenated "record corrections" bodies, and only sections whose heading names Round 40 or 41 are checked. [code reading, not run]
+- r41 run_fact executes SCORECARD-declared commands in a tempdir export; the expected value is the SCORECARD's own typed constant. The check proves self-consistency with the SCORECARD, not the count's truth. [code reading + F1 demonstrates the consequence]
+- a decoy table in F4 with the same names as the true list would pass caps silently. [INFERENCE, not run]
+
+## Verdict for this seat's question
+C1 as framed ("maxN=56 instead of expected 46", "stale canonical capability row count"): not reproduced as a defect. maxN=56 matches the tree and the banner; caps=0 and retired=0 at the frozen base. The number 46 has no tree source; it is a constant in the do-nothing control.

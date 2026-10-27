@@ -1,0 +1,32 @@
+### authority 1: live lane config (shokunin.conf)
+52:kama|kama-shokunin|operability + calibration (local model serving and endpoint health)
+
+### authority 2: MISSION.md historical example (marked historical at :16)
+Historical example — the upstream fleet's initial nine-lane config, not the
+  kama:       { cwd: kama-shokunin/,   axes: "operability + freshness (local model serving/endpoints)" }
+
+### MISSION.md on axis reassignment (shokunin.conf initial, lanes may add/remove)
+50:`SCORECARD.md` with the reason. Axis assignments in `shokunin.conf` are initial;
+
+### authority 3: SCORECARD banner at live tip (open L0 since round 35)
+**Current authority (round 57):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 57. Calibration 7 is the lowest assigned axis, below operability 8 and the saturation line, so the stagnation nudge is inactive. Round 57 froze and measured C1 (no-op battery roster-control, operability) and C2 (stale self-description verifier-spotcheck count, calibration) with controls committed before data (SCORECARD §Round 57). Scores remain operability 8 and calibration 7; no capability enters. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived by `tools/round42-selfdesc-reconcile.py`; the historic round-56 statement is preserved under §Historical pre-integration authority.
+
+### authority 4: SCORECARD Round 57 claim table
+3:Pre-data freeze: `89dc4f5239fe1f875adda4613812e77fb9bbc7cc`; ordering correction, still before seat evidence: `7c873d7b4e3839489a93d6334cdf93fe5d34d19f`. C1 is the frozen round-56 prereg checker no-op defect (operability); C2 corrects the verifier-spotcheck count (calibration). Base `b89bdab2cc114735ec5d331c6c610134258f7864`.
+7:| C1 — bind declared roster to actual battery call sites | operability 8→8 | genuine round-56 roster: `met=True` → `met=True`; matching-roster no-op: `met=True` → `met=False` (exit 1) | `python3 tools/round56-prereg-check.py --repo <repo> --tip <revision>`; `.ufo/waves/round-57/measured/{noop-c1,c1-committed-tip}.out`; sourced on S516 |
+8:| C2 — re-anchor the SCORECARD verifier-spotcheck count | calibration 7→7 | frozen round-42 counter `mismatches=1 met=False` (expected 42, observed 43) → `mismatches=0 met=True` | `python3 tools/round42-selfdesc-reconcile.py --repo <repo> --tip <revision>`; `.ufo/waves/round-57/controls/base-c1.out`, `.ufo/waves/round-57/measured/c2-committed-tip.out` |
+10:Scores held at operability 8 and calibration 7; no capability added. C1 does not assert that every runtime effect of a battery call was executed; it checks the call-site inventory in the committed battery AST. C2 corrects one stale factual count; it is not a mastery score.
+
+### frozen pre-data freeze.txt
+base=b89bdab2cc114735ec5d331c6c610134258f7864
+claims=C1 calibration stale canonical-table count; C2 operability canonical-row execution binding
+base_counter=1
+noop_C1=met=True exit=0 despite skipping data
+noop_C2=met=True exit=0 despite skipping data
+frozen before wave seat findings
+
+### frozen pre-data amendment (single line, supersedes ordering)
+Pre-data correction, committed before any seat findings; supersedes the earlier round-57 freeze's claim ordering only, not its base/control evidence. C1 is the frozen round56-prereg-check no-op control defect, operability axis: the frozen checker declares met=True for a matching literal roster without executing battery entries. C1 predicate: the measured checker rejects a no-op that declares the matching roster but executes none, while the genuine battery roster remains accepted; baseline round-56 receipt `.ufo/waves/round-56/measured/c2-noop-control.out` records the false green. C2 is the tools/round42-selfdesc-reconcile.py stale calibration count, calibration axis: its base output says the calibration run expects 42 but the actual committed outside verifier spotcheck count is 43; update only the stale self-description count and require `mismatches=0`. C1 and C2 are distinct axes, each measured independently. Round-56 outside verification finding is authoritative; no post-seat target change.
+
+### seat R57Item30AxisFit prompt claim text (spec item)
+Check claim separability and axis attribution under live lane assignment/config vs MISSION disagreement. Work only with /home/vgpnk/Projects/shokunin/kama-shokunin; no shared writes. Return evidence at the Report trailer path. Distinct case 51: test the assigned case independently and report a separate evidence file.

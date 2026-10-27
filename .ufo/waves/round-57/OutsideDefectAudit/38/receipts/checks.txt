@@ -1,0 +1,128 @@
+### tree pin
+$ git rev-parse HEAD
+77e7f5eef2b0c759b7509056c7c511255477496d
+exit=0
+
+$ git status --porcelain
+?? .ufo/scopes/
+?? .ufo/waves/round-57/ClaimFalsifier/
+?? .ufo/waves/round-57/NoopAttack/
+?? .ufo/waves/round-57/OwnershipScan/
+?? .ufo/waves/round-57/SourceAudit/
+?? .ufo/waves/round-57/TrendBoundary/
+?? .ufo/waves/round-57/measured/R57Item12/
+?? .ufo/waves/round-57/measured/R57Item13SourceAudit/
+?? .ufo/waves/round-57/measured/r57item29/
+?? .ufo/waves/round-57/reports/
+?? .ufo/waves/round-57/sources/
+?? .ufo/waves/round-57/w1.ready
+?? .ufo/waves/round-57/w1.ready.dispatched
+?? .ufo/waves/round-57/w1/
+exit=0
+
+### D1 axis authority (round-56 routed defect 1)
+$ sed -n 29p /home/vgpnk/Projects/shokunin/MISSION.md
+  kama:       { cwd: kama-shokunin/,   axes: "operability + freshness (local model serving/endpoints)" }
+exit=0
+
+$ sed -n 52p /home/vgpnk/Projects/shokunin/shokunin.conf
+kama|kama-shokunin|operability + calibration (local model serving and endpoint health)
+exit=0
+
+$ awk NR==6 SCORECARD.md (first 400 bytes)
+**Current authority (round 57):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 57. Calibration 7 is the lowest assigned axis, below operability 8 and the saturation line, so the stagnation nudge is inactive. Round 57 froze and measured C1 (no-op battery rost
+exit=0
+
+### D2 executed-entry binding (round-56 routed defect 2, first half)
+$ sha256sum tools/round56-prereg-check.py
+dee6f922d0d93b10512f9a799b94f36a1e0f080404a525e08121a223b2e90ced  tools/round56-prereg-check.py
+exit=0
+
+$ git show b89bdab2:tools/round56-prereg-check.py | sha256sum
+c7b0d787f348691bbc057114b455545f5abfb0c70ec497e1ad695591f1489853  -
+exit=0
+
+### D2 SCORECARD/SHONEN disagreement half
+$ grep -c SHONEN tools/round42-selfdesc-reconcile.py
+0
+exit=1
+
+$ grep -l SHONEN tools/round53-cited-path-check.py tools/round54-cited-path-check.py
+tools/round53-cited-path-check.py
+tools/round54-cited-path-check.py
+exit=0
+
+$ grep -n surfaces  SCORECARD.md, SHONEN.md tools/round53-cited-path-check.py
+16:  surfaces  SCORECARD.md, SHONEN.md, SKILL.md (the self-assessment: scores and their
+exit=0
+
+### D3 S513 rejection rationale (round-56 routed defect 3)
+$ grep -n S513 corpus/SOURCES.md
+266:| S513 | ld.so(8) — https://man7.org/linux/man-pages/man8/ld.so.8.html | docs | A | broad dynamic-linker environment and token handling; candidate source for the round-56 LD_AUDIT name check | §LD_AUDIT, Linux man-pages 6.19 (2025-05-17), HTML snapshot `.ufo/waves/round-56/sources/ld.so.8.html` | REJECTED: this broad loader manual overlaps the dedicated rtld-audit(7) source S512 for the claim's only need (the LD_AUDIT variable loads auditor objects); flip: a future claim about secure-execution, dynamic string tokens, or loader namespace semantics | rejected | 2026-10-27 | on-release | — |
+exit=0
+
+$ grep -c S513 corpus/QUALITY.md
+0
+exit=1
+
+$ grep -c S513 corpus/lessons/round-57.md
+0
+exit=1
+
+$ grep -n S513 — REJECT corpus/lessons/round-56.md
+15:- **S513 — REJECT, tier A, rejected.** `ld.so(8)`, https://man7.org/linux/man-pages/man8/ld.so.8.html, opened live 2026-10-27 and snapshotted at `.ufo/waves/round-56/sources/ld.so.8.html`. Located quote at §LD_AUDIT: “A list of user-specified, ELF shared objects to be loaded before all others in a separate linker namespace” (18 words). Rejected because this broad loader manual overlaps the dedicated `rtld-audit(7)` source for the only fact C1 needs. Flip: a later claim on secure-execution, dynamic string tokens, or loader namespace semantics. Registry `corpus/SOURCES.md` S513.
+exit=0
+
+### D4 append-only declarations (round-56 routed defect 4)
+$ registry/append-only-contract.tsv (path, rule, declared_at, region)
+path	rule	declared_at	region
+LOG.md	A-corr	README.md:16	*
+SCORECARD.md	A-corr	corpus/README.md:761	exempt=## Axes|## Planned|## Retired|## Saturation|## Capabilities@SCORECARD.md:6
+corpus/QUALITY.md	A-corr	corpus/README.md:761	*
+corpus/README.md	A-corr	corpus/README.md:761	*
+corpus/SOURCES.md	A-row	SKILL.md:578	*
+corpus/lessons/*.md	A-corr	corpus/README.md:1239	*
+registry/history/DELTA.md	A	registry/history/DELTA.md:3	*
+registry/report-landing-errata.tsv	A	registry/report-landing-errata.tsv:1	*
+corpus/knowledge/consumer-registry.md	A-corr	corpus/knowledge/consumer-registry.md:30	only=## Errata@corpus/knowledge/consumer-registry.md:30
+corpus/knowledge/error-is-not-a-verdict.md	A-corr	corpus/knowledge/error-is-not-a-verdict.md:173	only=## Round24@corpus/knowledge/error-is-not-a-verdict.md:173
+exit=0
+
+$ corpus/README.md pointer lines
+761:   context-capacity rows' scope already excludes.
+766: Append-only self-description is now audited, not assumed: `tools/append-only-audit.py` (round-46
+767: C2, capability table row `append-only-audit`) sets the five files the lane treats as
+768: append-only (SCORECARD.md, LOG.md, corpus/QUALITY.md, corpus/README.md, corpus/SOURCES.md)
+1239: - Carried over unchanged and not re-measured here: the b11906 ledger population at
+1246: Lesson files under `corpus/lessons/` are append-only as the `A-corr` contract row declares: filed lessons stay, and corrections are appended with the superseded text named (KQ26).
+### counts used by the round-57 claims
+$ python3 -c import glob;print(len(glob.glob('corpus/lessons/*verifier-spotcheck.md')))
+43
+exit=0
+
+$ grep -n canonical list as of round 49 SCORECARD.md
+2844:**Capabilities — canonical list as of round 49**
+exit=0
+
+### round-56 non-author closure (source of the routed defects)
+$ sed -n 40,46p corpus/lessons/round-56-verifier-spotcheck.md
+
+## Routed defects for next round
+
+- Resolve the MISSION.md vs prompt/config/SCORECARD axis-authority conflict through the operator/L0 channel; do not silently claim calibration in place of freshness.
+- Strengthen C2-style calibration gates to bind actual executed battery entries and test SCORECARD/SHONEN disagreement; a roster literal/no-op harness must fail.
+- Revisit S513's rejection rationale and record the disagreement as a lesson/quality criterion if retained; round-56 S513 is an outside discernment miss.
+- Existing report audit records inherited append-only audit exit 1 and invalid `declared_at`/SCORECARD bindings; route for repair rather than treating the audit as clean.
+exit=0
+
+### round-57 lesson rows (lesson-addressing state)
+$ grep -n ^|  corpus/lessons/round-57.md
+22:| class | evidence | captured-by | fix |
+24:| calibration-staleness | `tools/round42-selfdesc-reconcile.py --repo <lane> --tip b89bdab2cc114735ec5d331c6c610134258f7864` printed `mismatches=1` and identified the SCORECARD run expectation `42`; exact file census printed `43`. | The counter's own frozen round-42 expected literal was stale; no gate required re-deriving the calibration row count at the declared base. | SCORECARD calibration row re-anchors the count to a reproducible command and latest outside closure. |
+25:| no-op-counter | `corpus/lessons/round-56-verifier-spotcheck.md:14` records a no-op harness passing `met=True` because only the roster literal was inspected. | Round-56 counter did not inspect executed battery call sites; captured by round-56 closure defect and §9 do-nothing-control rule. | Round 57 adds AST call-site binding to `tools/round56-prereg-check.py`; retains no-op receipt as a negative control. |
+exit=0
+
+$ grep -n Round-56\|round-56 corpus/lessons/round-57.md
+25:| no-op-counter | `corpus/lessons/round-56-verifier-spotcheck.md:14` records a no-op harness passing `met=True` because only the roster literal was inspected. | Round-56 counter did not inspect executed battery call sites; captured by round-56 closure defect and §9 do-nothing-control rule. | Round 57 adds AST call-site binding to `tools/round56-prereg-check.py`; retains no-op receipt as a negative control. |
+exit=0
+

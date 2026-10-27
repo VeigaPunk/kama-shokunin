@@ -1,0 +1,25 @@
+R57Item11NoopAttack — distinct case 32 (independent)
+
+Axis: C2 operability / actual canonical-row execution binding. No repository source files or shared files changed; fixture git commits were in /fast/scratch/hyaku/kama-r57/R57Item11NoopAttack/ (git root asserted to be the fixture before commit). No packages installed.
+
+Frozen control observed at `.ufo/waves/round-57/controls/noop-c2.out`:
+```
+control=no-op instrument
+canonical_table_reads=0
+self_description_reads=0
+summary=mismatches=0 maxN=46 met=True
+exit=0
+```
+Thus a pure no-op/hardcoded green is a known positive false result of the frozen C2 control. Direct fixture spoof used exactly `print("mismatches=0 maxN=46 met=True")`; exit 0. It is not a counter execution.
+
+Commands run on a scratch copy with copied `SCORECARD.md`, `README.md`, `PROVINCE.md`, `corpus/SOURCES.md`, and the two round-41/42 counter modules; baseline fixture is intentionally incomplete, so it is not presented as a clean full-counter baseline:
+`python3 tools/round42-selfdesc-reconcile.py --repo /fast/scratch/hyaku/kama-r57/R57Item11NoopAttack/fixture --tip HEAD`
+exit 1; exact summary: `r41=30 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=9 readme=0 province=0 rel=0 mismatches=39 maxN=56 met=False`.
+
+Then committed a scratch-only omission from the `## Capabilities` head table and reran the same command. Exit 1; summary `r41=30 banner=0 planned=0 retired=0 saturation=0 caps=1 receipts=9 readme=0 province=0 rel=0 mismatches=40 maxN=56 met=False`; exact diagnostic: `detail: caps: head names ['append-only-audit', 'context-capacity-receipt', 'digest-ledger', 'gguf-declared-identity-replay', 'hexrun-census', 'instrument-agreement', 'live-llamacpp-lifecycle', 'ollama-offline-evidence-replay', 'pin-watch', 'sources-registry'] != canon (round 49) ['append-only-audit', 'context-capacity-receipt', 'digest-ledger', 'gguf-declared-identity-replay', 'hexrun-census', 'instrument-agreement', 'live-llamacpp-lifecycle', 'live-receipt-replay', 'ollama-offline-evidence-replay', 'pin-watch', 'sources-registry']`. This detects a dropped head row.
+
+Canonical-row mutation attempt: a separate scratch fixture was initialized with `git init`, root asserted, then committed; the script deleted the last table-like row after a phrase match. Rerun exit 1, `caps=0`, `mismatches=39`, `maxN=56`, i.e. no additional mutation signal. The phrase match selected a non-authoritative/incorrect heading occurrence, so this is an inconclusive failed attack, not evidence the canonical table is robust. Scratch receipt at `canonical-only.out` contains the attempted invocation and summary.
+
+Source semantics observed in `tools/round42-selfdesc-reconcile.py`: `canon()` scans all lines for the highest numbered `canonical list as of round N**` and parses the following table (`120-127`); evaluation compares its names against first `## Capabilities` names (`178-224`). `maxn` independently derives maximum `## Round N` heading (`167-168`) and output reports it (`286`). In tested real counter runs it reports `maxN=56`, not frozen expected `46`; C2 correctness must therefore not be inferred from that field. No control here validates an output-only forgery against a real counter run.
+
+Artifacts: `attack.out` and `canonical-only.out` in this directory's private scratch hold captured output. Complete per-seat findings are this file. The scratch fixture contains incomplete inputs; its other mismatch details are irrelevant to the isolated `caps` leg. No installs/updates, versions, channels, or reasons apply.
