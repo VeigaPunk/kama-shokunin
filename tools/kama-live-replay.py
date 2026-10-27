@@ -43,6 +43,14 @@ with --witness-dir (round 49) the live child also gets --witness-dir/--witness-t
 the bound grows by the witness timeout. An observer reads <dir>/ready.json {port, pid} and
 creates <dir>/release; the rerun receipt's `witness` block records whether it was released.
 A witnessed replay matches exactly as an unwitnessed one: the witness is not compared.
+Round 50 (round-49 closure R1, R2): the live child runs isolated (`python -I`: no
+PYTHONPATH, user site or script-dir imports) with only the environment names in
+LIVE_ENV_KEYS (TMPDIR set to <work>/tmp), and with a parent-death signal (SIGTERM,
+prctl PR_SET_PDEATHSIG) so it tears its server down when the replay dies; the replay
+sets the same signal on itself, so killing whatever started it takes replay, live tool
+and server down. A rerun must also record `model_mapping` with `mapped` true and the
+receipt's model sha256 (the file the running server maps, read by the live tool from
+/proc/<pid>/maps), else `model-mapping:<reason>` is a mismatch.
 --compare validates both receipts' provenance like a replay would, then prints
 `compare match=<bool> mismatches=N` and one `mismatch:` line each; exit 0 equal,
 1 different, 2 unreadable or refused.
@@ -53,11 +61,13 @@ Deps: python3 stdlib.
 from __future__ import annotations
 
 import argparse
+import ctypes
 import hashlib
 import json
 import os
 import re
 import shutil
+import signal
 import subprocess
 import sys
 import tarfile
@@ -74,6 +84,35 @@ DEFAULT_LIVE = os.path.join(HERE, "kama-llamacpp-live.py")
 HEX64 = re.compile(r"[0-9a-f]{64}")
 HEX40 = re.compile(r"[0-9a-f]{40}")
 CHUNK = 1 << 20
+# environment names the live child may see (values pass, nothing else does)
+LIVE_ENV_KEYS = ("PATH", "HOME", "LANG", "LC_ALL")
+PR_SET_PDEATHSIG = 1
+
+
+def _prctl():
+    """libc prctl, resolved in the parent (a forked child only calls it); None off Linux."""
+    try:
+        return ctypes.CDLL(None, use_errno=True).prctl
+    except (OSError, AttributeError):
+        return None
+
+
+def set_own_pdeathsig(sig=signal.SIGTERM):
+    """Ask the kernel to send `sig` to this replay when its parent dies
+    (PR_SET_PDEATHSIG(2const)); exit at once if the parent was already gone before the
+    call landed. Returns True when the prctl call succeeded."""
+    parent = os.getppid()
+    prctl = _prctl()
+    ok = prctl is not None and prctl(PR_SET_PDEATHSIG, int(sig), 0, 0, 0) == 0
+    if os.getppid() != parent:
+        os._exit(1)
+    return ok
+
+
+def live_env(work):
+    env = {k: os.environ[k] for k in LIVE_ENV_KEYS if k in os.environ}
+    env["TMPDIR"] = os.path.join(work, "tmp")
+    return env
 
 
 class Refused(Exception):
@@ -265,9 +304,20 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
             raise Refused(f"member-digest-mismatch:want={want_srv}:got={got_srv}")
         res["inputs"].update({"archive": archive, "model": model, "server": server})
         rerun = os.path.join(work, "rerun-receipt.json")
-        env = dict(os.environ, TMPDIR=os.path.join(work, "tmp"))
+        # round 50 (closure R1, R2): the live child is isolated, sees only LIVE_ENV_KEYS and
+        # gets SIGTERM when this replay dies (its own handler then tears the server down)
+        env = live_env(work)
         os.makedirs(env["TMPDIR"], exist_ok=True)
-        argv = [sys.executable, live, "--server", server, "--model", model, "--model-sha256", need["model.sha256"],
+        res["live_child"] = {"isolated": True, "env_keys": sorted(env), "pdeathsig": "SIGTERM"}
+        me, prctl = os.getpid(), _prctl()
+
+        def _child_pdeathsig():
+            if prctl is not None:
+                prctl(PR_SET_PDEATHSIG, int(signal.SIGTERM), 0, 0, 0)
+            if os.getppid() != me:
+                os._exit(1)
+        argv = [sys.executable, "-I", live, "--server", server, "--model", model,
+                "--model-sha256", need["model.sha256"],
                 "--alias", str(rec.get("alias") or "kama-live-replay"), "--ctx", str(rec.get("ctx") or 256),
                 "--threads", str(rec.get("threads") or 1), "--server-asset-url", need["server.asset_url"],
                 "--server-asset-sha256", need["server.asset_sha256"], "--server-member", need["server.member"],
@@ -279,7 +329,7 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
             argv[-2:-2] = ["--witness-dir", os.path.abspath(witness_dir),
                            "--witness-timeout", str(witness_timeout)]
             res["witness_dir"] = os.path.abspath(witness_dir)
-        p = subprocess.run(argv, capture_output=True, text=True, env=env,
+        p = subprocess.run(argv, capture_output=True, text=True, env=env, preexec_fn=_child_pdeathsig,
                            timeout=timeout + (witness_timeout if witness_dir is not None else 0))
         res["live_exit"] = p.returncode
         if not os.path.isfile(rerun):
@@ -288,6 +338,14 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
         with open(rerun) as fh:
             rr = json.load(fh)
         res["mismatches"] = compare(rec, rr)
+        # round 50 (closure R1): the rerun must name the model file its server mapped, and
+        # that file must hash to the receipt's model
+        mm = rr.get("model_mapping")
+        if not isinstance(mm, dict) or mm.get("mapped") is not True:
+            res["mismatches"].append(
+                f"model-mapping:{mm.get('reason') if isinstance(mm, dict) else 'absent'}")
+        elif mm.get("sha256") != need["model.sha256"]:
+            res["mismatches"].append(f"model-mapping:sha256:{need['model.sha256']}->{mm.get('sha256')}")
         if p.returncode != 0:
             res["mismatches"].append(f"live-exit:{p.returncode}")
         # instance differences that do not fail a replay but are worth reading
@@ -331,6 +389,7 @@ def _selftest(root):
                      "h=lambda p:hashlib.sha256(open(p,'rb').read()).hexdigest()\n"
                      "r={'schema':'kama-llamacpp-live/v4','outcome':'pass','server':{'sha256':h(s)},"
                      "'model':{'sha256':h(m)},'checks':[{'id':'health_ready','passed':True,'evaluated':True}]}\n"
+                     "r['model_mapping']={'mapped':True,'sha256':h(m)}\n"
                      "if '--server-archive' in a:\n"
                      "    r['schema']='kama-llamacpp-live/v5'\n"
                      "    u=a[a.index('--model-url')+1];c=re.search('/resolve/([0-9a-f]{40})/',u).group(1)\n"
@@ -525,6 +584,7 @@ def main(argv=None):
     if not 0 < a.witness_timeout <= 3600:
         # the live tool's bound; `inf` used to overflow subprocess.run (round-49 Sen1Witness F4)
         ap.error("--witness-timeout must be > 0 and <= 3600 seconds")
+    set_own_pdeathsig()
     res, code = replay(a.receipt, a.work, a.live, a.timeout, witness_dir=a.witness_dir,
                        witness_timeout=a.witness_timeout)
     with open(a.out, "w") as fh:

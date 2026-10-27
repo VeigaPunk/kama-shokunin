@@ -1,29 +1,31 @@
 #!/usr/bin/env python3
-"""append-only-audit.py (v4 definitions, v3 output) - set the lane's declared append-only files against its git history.
+"""append-only-audit.py (v5 definitions, v3 output) - set the lane's declared append-only files against its git history.
 
-v4 (round 49) closes the two escape hatches the round-48 wave found (seats K1Regions,
-K1Binding; corpus/lessons/round-48-verifier-spotcheck.md R5); the JSON output shape is
-unchanged (`"schema": "append-only-audit/v3"`) and gains `"definition": "v4"`:
-  origin(l)  the `## ` titles (None before the first heading) holding the line text l in
-             the file's blob at the first commit of `git rev-list --topo-order --reverse
-             <to>` whose blob of that file holds l
+v5 (round 50) closes the definition gaps the round-49 closure routed (corpus/lessons/
+round-49-verifier-spotcheck.md R3; seats K2Origin, K2Cheat); the JSON output shape is
+unchanged (`"schema": "append-only-audit/v3"`) and gains `"definition": "v5"`:
+  key(l)    the line bytes with one trailing carriage return removed
+  fence      CommonMark 0.31.2 §4.5: a line of up to three spaces of indentation and at
+             least three backticks or tildes opens a fenced block (a backtick fence's
+             info string holds no backtick); the block closes at a line of up to three
+             spaces, the same character at least as many times, and only spaces or
+             tabs after; an unclosed fence runs to the end of the file
+  section    the title of the last `## ` line at or before the line that is not inside
+             (or itself) a fence line; None before the first such heading
+  birth      a commit whose blob of the file holds key k while no parent of it holds k
+  origin(l)  the union, over every birth of key(l) among the commits reachable from
+             <to>, of the section titles holding key(l) in that commit's blob - a
+             property of the commit graph and its blobs, not of any listing order
+             (v4: the first blob in `git rev-list --topo-order --reverse`, which
+             sibling order could flip)
   ungraded   a deleted line is ungraded only when its parent section is an eligible
-             exempt title (v3) AND origin(l) contains one of the file's exempt titles:
-             dated text moved under an exempt heading and dropped there is graded
-             (v3 left it ungraded while the head kept its size)
-  binding    the row token must occur as a whole word (not preceded or followed by
-             [a-z0-9_]: `log` inside `catalog` no longer binds); a line with not, never,
-             no, nor, neither, non, isn't, aren't or `no longer` within three words before
-             `append-only`/`append only` is a negation (v3's four strings still apply); a
-             wildcard row binds only through a line naming its token (a covered file
-             merely saying append-only is a self-declaration and no longer binds).
-             Integration (round-49 seat K2Negation F1): `cannot`, `can't`, curly
-             apostrophes (isn’t, aren’t, can’t) and en/em dashes between the words count
-             too. Known limits (K2Negation): other punctuation breaks the window (`not, as
-             of round 40, append-only` binds), trailing negations (`append-only? No.`) are
-             not read, and `no edits append-only` is read as a negation
-The round-49 C2 counter (tools/round49-append-audit-v4-check.py, frozen before this
-tool) checks these on eight constructed fixtures and bounds the lane's ungraded lines
+             exempt title (v3, sections fence-aware) and origin(l) contains one of the
+             file's exempt titles (v4, origin as above)
+Unchanged from v4: binding (whole-word token, negation window, wildcard rows,
+integration negations), threshold, restoration measures, the JSON shape.
+
+The round-50 C2 counter (tools/round50-append-audit-v5-check.py, frozen before this
+tool) checks these on twelve constructed fixtures and bounds the lane's ungraded lines
 by its own origin count.
 
 v3 (round 48) text, kept:
@@ -270,12 +272,53 @@ def declaration(repo, rev, row):
     return out
 
 
+def key(ln):
+    """A line's origin key: the bytes with one trailing carriage return removed
+    (round-49 seat K2Origin F5: a line moved with a changed line ending keeps its
+    origin; the byte-exact restore measure below still uses the raw bytes)."""
+    return ln[:-1] if ln.endswith(b"\r") else ln
+
+
+def fence_open(ln):
+    """(char, length) when ln opens a CommonMark 0.31.2 §4.5 fenced block, else None.
+    Up to three spaces of indentation; >= 3 backticks or tildes; a backtick fence's
+    info string may not contain a backtick."""
+    m = re.match(rb"^ {0,3}(`{3,}|~{3,})(.*)$", ln)
+    if not m:
+        return None
+    run = m.group(1)
+    if run[:1] == b"`" and b"`" in m.group(2):
+        return None
+    return run[:1], len(run)
+
+
+def fence_close(ln, fence):
+    """True when ln closes a fence opened by `fence` (same char, at least as many, up to
+    three spaces of indentation, only spaces or tabs after)."""
+    ch, n = fence
+    s = ln.lstrip(b" ")
+    if len(ln) - len(s) > 3:
+        return False
+    k = len(s) - len(s.lstrip(ch))
+    return k >= n and s[k:].strip(b" \t") == b""
+
+
 def sections(body):
-    """The `## ` section title owning each line of a list of byte lines (None before the first)."""
-    out, title = [], None
+    """The `## ` section title owning each line of a list of byte lines (None before the
+    first), ignoring `## ` lines inside CommonMark fenced code blocks (round-49 seat
+    K2Origin F4: a fenced fake title must not re-title the dated lines after it)."""
+    out, title, fence = [], None, None
     for line in body:
-        if line.startswith(b"## "):
-            title = line.rstrip(b"\r").decode("utf-8", "replace").rstrip()
+        b = line.rstrip(b"\r")
+        if fence is not None:
+            if fence_close(b, fence):
+                fence = None
+        else:
+            fo = fence_open(b)
+            if fo is not None:
+                fence = fo
+            elif b.startswith(b"## "):
+                title = b.decode("utf-8", "replace").rstrip()
         out.append(title)
     return out
 
@@ -426,26 +469,43 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
             commits.append(parts[0])
             parents[parts[0]] = parts[1] if len(parts) > 1 else None
     events, binary = [], []
-    origin_cache = {}
+    origin_cache, keyset_cache = {}, {}
+
+    def body_of(b):
+        if b not in keyset_cache:
+            body = r.list_lines(b) if b else []
+            keyset_cache[b] = (body, {key(x) for x in body})
+        return keyset_cache[b]
 
     def origins(f):
-        """v4 origin: line text -> the `## ` titles holding it in the first commit's blob of f
-        (rev-list order) that holds it."""
-        if f not in origin_cache:
-            orig, seen = {}, set()
-            bl = r.blobs([f"{x}:{f}" for x in commits])
-            for x in commits:
-                b = bl[f"{x}:{f}"]
-                if b is None or b in seen:
-                    continue
-                seen.add(b)
-                body = r.list_lines(b)
-                fresh = collections.defaultdict(set)
-                for ln, t in zip(body, sections(body)):
-                    if ln not in orig:
-                        fresh[ln].add(t)
-                orig.update(fresh)
-            origin_cache[f] = orig
+        """v5 origin: line key -> the `## ` titles holding it at every birth of the key
+        (a commit whose blob of f holds it while no parent's blob does), the union over all
+        commits reachable from <to> - a property of the commit graph and its blobs, not of
+        the rev-list order (round-49 seat K2Origin F3)."""
+        if f in origin_cache:
+            return origin_cache[f]
+        bl = r.blobs([f"{x}:{f}" for x in commits])
+        orig = collections.defaultdict(set)
+        for x in commits:
+            b = bl[f"{x}:{f}"]
+            if b is None:
+                continue
+            body, keys = body_of(b)
+            pkeys = set()
+            for q in (parents[x] or "").split():
+                if bl.get(f"{q}:{f}") == b:
+                    pkeys = keys
+                    break
+                qb = bl.get(f"{q}:{f}")
+                if qb is not None:
+                    pkeys |= body_of(qb)[1]
+            if pkeys is keys:
+                continue
+            for ln, t in zip(body, sections(body)):
+                k = key(ln)
+                if k not in pkeys:
+                    orig[k].add(t)
+        origin_cache[f] = orig
         return origin_cache[f]
 
     for i, c in enumerate(commits):
@@ -479,8 +539,9 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
                 s = psec[pos - 1]
                 if prefixes and not any(s is not None and s.startswith(q) for q in prefixes):
                     continue
-                # v4: the carve-out covers only text born in an exempt section (origin)
-                if s in eligible and org.get(text, frozenset()) & titles:
+                # v5: the carve-out covers only text born in an exempt section (origin,
+                # keyed by the CRLF-normalized line)
+                if s in eligible and org.get(key(text), frozenset()) & titles:
                     continue
                 G[text] += 1
             ng = sum(G.values())
@@ -509,7 +570,7 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
                                 for e in events),
                "vanished": len(gone), "unmatched": len(nomatch), "binary": len(binary),
                "bad_declarations": sum(not d["ok"] for d in decls)}
-    return {"schema": SCHEMA, "definition": "v4", "to": to_full, "threshold": threshold, "contract": label,
+    return {"schema": SCHEMA, "definition": "v5", "to": to_full, "threshold": threshold, "contract": label,
             "files": files,
             "commits": len(commits), "events": events, "declarations": decls, "vanished": gone,
             "unmatched_patterns": nomatch, "binary_changes": binary, "summary": summary}

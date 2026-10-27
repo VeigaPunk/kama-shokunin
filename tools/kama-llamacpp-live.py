@@ -675,7 +675,56 @@ def _preexec_pdeathsig():
 _FORKED_PPID = [0]
 
 
-
+def model_mapping(pid, model_path):
+    """Round 50 (round-49 closure R1, seats K1Design, R0Controls: the model bytes the server
+    loaded were not bound): the file-backed mapping of the server child whose pathname is
+    the --model file, read from /proc/<pid>/maps (proc_pid_maps(5): `dev` major:minor,
+    `inode`, `pathname`), and the sha256 of that same file - opened by its pathname with
+    O_NOFOLLOW, accepted only when fstat() shows the dev and inode the maps line shows,
+    a regular file no larger than when it was mapped - so the receipt records the bytes
+    the running server maps, not a path the tool was handed. Linux only; any other
+    outcome is recorded as `mapped: False` with its reason, never guessed."""
+    want = os.path.realpath(model_path)
+    try:
+        with open(f'/proc/{pid}/maps') as fh:
+            rows = fh.read().splitlines()
+    except OSError as exc:
+        return {'mapped': False, 'reason': 'maps-unreadable:' + (exc.strerror or type(exc).__name__)}
+    hits = []
+    for row in rows:
+        f = row.split(None, 5)
+        if len(f) == 6 and f[4] != '0' and f[5] == want and (f[3], f[4]) not in hits:
+            hits.append((f[3], f[4]))
+    if not hits:
+        return {'mapped': False, 'reason': 'model-path-not-in-maps', 'path': want}
+    if len(hits) != 1:
+        return {'mapped': False, 'reason': 'model-path-maps-several-files', 'path': want}
+    dev, ino = hits[0]
+    try:
+        fd = os.open(want, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+    except OSError as exc:
+        return {'mapped': False, 'reason': 'model-open-failed:' + (exc.strerror or type(exc).__name__),
+                'path': want, 'dev': dev, 'inode': ino}
+    try:
+        st = os.fstat(fd)
+        sdev = '%02x:%02x' % (os.major(st.st_dev), os.minor(st.st_dev))
+        if not stat.S_ISREG(st.st_mode) or sdev != dev or str(st.st_ino) != ino:
+            return {'mapped': False, 'reason': 'mapped-file-is-not-the-model-path', 'path': want,
+                    'dev': dev, 'inode': ino, 'path_dev': sdev, 'path_inode': str(st.st_ino)}
+        h, left = hashlib.sha256(), st.st_size
+        while left > 0:
+            chunk = os.read(fd, min(1 << 20, left))
+            if not chunk:
+                break
+            h.update(chunk)
+            left -= len(chunk)
+        if left != 0:
+            return {'mapped': False, 'reason': 'model-shrank-while-hashed', 'path': want,
+                    'dev': dev, 'inode': ino}
+    finally:
+        os.close(fd)
+    return {'mapped': True, 'path': want, 'dev': dev, 'inode': ino, 'size': st.st_size,
+            'sha256': h.hexdigest()}
 
 
 def _header_subset(headers):
@@ -1711,6 +1760,7 @@ def main(argv=None):
         'setup_error': None,
         'internal_fault': None,
         'child_pid': None,
+        'model_mapping': None,
         'port_listener_ownership': 'unproven',
         'source_binding': [],
         'tool': {'path': str(SCRIPT), 'sha256': None},
@@ -1946,6 +1996,13 @@ def main(argv=None):
             and bad_row.get('reason') == 'served-id-mismatch',
             {'exit': bad_probe['exit'], 'verdict': bad_row.get('verdict'),
              'reason': bad_row.get('reason')}))
+        # round 50 (closure R1): the model file the running server maps, read from its
+        # /proc/<pid>/maps and hashed through that same file (recorded, never a check id:
+        # v1-v5 check lists stay as they were)
+        if _child_running(proc):
+            receipt['model_mapping'] = model_mapping(proc.pid, args.model)
+        else:
+            receipt['model_mapping'] = {'mapped': False, 'reason': 'server-not-running'}
         if args.witness_dir is not None:
             # round 49 (closure R5): hold the ready server up for an outside observer
             receipt['witness'] = hold_for_witness(
