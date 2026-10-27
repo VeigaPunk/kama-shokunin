@@ -3,7 +3,7 @@
 Contract per `AXES.md` §SCORECARD.md contract. Scores are 0–10, self-assessed,
 each bound to an evidence pointer and the round that last changed it.
 
-**Current authority (round 57):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 57. Calibration 7 is the lowest assigned axis, below operability 8 and the saturation line, so the stagnation nudge is inactive. Round 57 froze and measured C1 (no-op battery roster-control, operability) and C2 (stale self-description verifier-spotcheck count, calibration) with controls committed before data (SCORECARD §Round 57). Scores remain operability 8 and calibration 7; no capability enters. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived by `tools/round42-selfdesc-reconcile.py`; the historic round-56 statement is preserved under §Historical pre-integration authority.
+**Current authority (round 58):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 58. Calibration 7 is the lowest assigned axis, below operability 8 and the saturation line, so the stagnation nudge is inactive. Round 58 froze and measured C1 (execution-bound battery checker, operability) and C2 (calibration-row closure pointer bound to the fleet MANIFEST verdict, calibration) with controls committed before data (SCORECARD §Round 58). Scores remain operability 8 and calibration 7; no capability enters. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived by `tools/round42-selfdesc-reconcile.py`; the historic round-57 statement is preserved under §Historical authority text — round 57.
 
 ## Axes
 
@@ -50,7 +50,7 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 ## Planned
 
-Superseded in round 42. The live plan is `### Planned (round 58)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
+Superseded in round 42. The live plan is `### Planned (round 59)` at the end of this file; the round-5 plan this section carried is kept verbatim under §Historical head sections.
 
 ## Retired
 
@@ -3183,3 +3183,27 @@ The exact former current-authority line is retained here; the live authority abo
 ## Round 57 post-filing correction — C1 remains unverified
 
 The round-57 C1 before→after row above records the bounded no-op case, but the frozen predicate requires binding actual execution. A later 13-fixture falsification by R57Item05CounterSelftest found dead-code and unused-function call-site no-ops still return `met=True` after the AST walker change (two survivors; `.ufo/waves/round-57/measured/R57Item05CounterSelftest/out/evidence-c1.txt`, lane commit `9df8e8ddb4d245611ef3ce65490c42f102ecda95`). C1 is therefore not verified and earns no operability credit. Calibration C2 remains measured as recorded above; no scalar changes.
+
+### Planned (round 59)
+
+1. Operability: bind each battery leg to the leg's own asserted outcome, not only to the invocation (seat survivors of round 58: a leg that ignores its result, a decoy `--counter` argv, `python3 other-script --counter`), with a pre-data control for each.
+2. Calibration: replace the typed spotcheck count and the pinned manifest revision in the calibration row by a derivation the next closure cannot stale, and obtain an outside admit/reject spot-check of S517/S518 before claiming discernment progress.
+
+## Round 58 — execution-bound battery checker and closure-pointer binding (2026-10-27)
+
+Pre-data freeze: `dcd69473dd7e33b316e2ba238a48e5119a6cd809`; base and do-nothing control receipts, still before any seat result: `cb1ef10228193d2134440bca1175bf560b2e67be`. Base `2f53614e6f5895560edb775cc3e74841aa0dd44c`. Predicates and kill rules: `.ufo/waves/round-58/controls/freeze.txt`.
+
+| Claim | Axis, score | Before → after | Counting command and evidence |
+|---|---|---|---|
+| C1 — execution-bound battery checker (sourced on S517) | operability 8→8 | base round-57 checker `genuine=1/1 benign=1/3 noop_rejected=1/11 met=False` → PENDING | `python3 tools/round58-c1-counter.py --repo <repo> --tip <rev> --checker-blob <rev>:tools/round58-battery-exec-check.py`; `.ufo/waves/round-58/controls/c1-base-r57-checker.out` |
+| C2 — calibration-row closure pointer bound to the fleet MANIFEST verdict | calibration 7→7 | `r42=1 stale=1 verdict=1 including=1 mismatches=4 met=False` → PENDING | `python3 tools/round58-c2-counter.py --repo <repo> --tip <rev> --manifest-rev 941acf70583a2b3a1d33460b31967e0efd291f3e`; `.ufo/waves/round-58/controls/c2-base.out` |
+
+Scores held at operability 8 and calibration 7; no capability added. C1 certifies checker discrimination under a hermetic harness over 15 enumerated fixtures; it does not show that a battery's real subprocess work succeeds, nor resistance to unlisted no-ops. C2 certifies one pointer's agreement with the ledger at a measured tip; the next closure appends a round-58 row and the pointer then legitimately names round 58.
+
+## Historical authority text — round 57
+
+The exact former current-authority line is retained here; the live authority above supersedes it.
+
+```text
+**Current authority (round 57):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 57. Calibration 7 is the lowest assigned axis, below operability 8 and the saturation line, so the stagnation nudge is inactive. Round 57 froze and measured C1 (no-op battery roster-control, operability) and C2 (stale self-description verifier-spotcheck count, calibration) with controls committed before data (SCORECARD §Round 57). Scores remain operability 8 and calibration 7; no capability enters. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived by `tools/round42-selfdesc-reconcile.py`; the historic round-56 statement is preserved under §Historical pre-integration authority.
+```

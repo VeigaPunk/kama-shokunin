@@ -21,7 +21,7 @@ value equal to that label's preregistered `expected` (round-58 hardening after s
 a decoy or vacuous `--counter` no longer counts), and, if the
 battery defines assert_mutant_breaks_detection, that function was invoked at least once
 and every invocation issued at least one subprocess invocation.  Exit 0 met, 1 not met,
-2 could not evaluate (child failure, timeout, or a result file lacking the parent's one-shot
+2 could not evaluate (a battery that raises anything but SystemExit is not met; child failure, timeout, or a result file lacking the parent's one-shot
 nonce, which the harness reads from stdin before exec so a battery cannot forge it).  Scratch: --work, $TMPDIR, else
 $HYAKU_SCRATCH/kama-r58; removed on exit."""
 import argparse
@@ -41,7 +41,8 @@ TIMEOUT = 60
 
 
 def clean_env():
-    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    env = {k: v for k, v in os.environ.items()
+           if not k.startswith(("GIT_", "PYTHON", "LD_", "DYLD_"))}
     env["GIT_CONFIG_GLOBAL"] = os.devnull
     env["GIT_CONFIG_NOSYSTEM"] = "1"
     env["PYTHONDONTWRITEBYTECODE"] = "1"
@@ -215,13 +216,14 @@ def main():
             print("could-not-evaluate: harness result not authored by the harness")
             return 2
         frames = doc["frames"]
+        crashed = doc.get("error") is not None
     finally:
         shutil.rmtree(work, ignore_errors=True)
     want = {k: v.get("expected") for k, v in (roster.items() if isinstance(roster, dict) else [])}
     ran = {f["label"] for f in frames if f["fn"] == "run" and want.get(f["label"]) in f.get("expects", [])}
     asserts = [f for f in frames if f["fn"] == "assert_mutant_breaks_detection"]
     assert_ok = (not defines_assert) or (bool(asserts) and all(f["sub"] >= 1 for f in asserts))
-    executed = bool(expected) and expected <= ran and assert_ok
+    executed = bool(expected) and expected <= ran and assert_ok and not crashed
     met = match and executed and kills == 1 and controls == 2
     text = (f"tip={tip}\npresent=1 roster_match={int(match)} kills={kills} controls={controls} "
             f"executed={int(executed)} legs={len(ran & expected)}/{len(expected)} "
