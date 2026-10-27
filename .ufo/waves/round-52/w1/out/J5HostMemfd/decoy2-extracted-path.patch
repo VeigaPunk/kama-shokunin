@@ -1,0 +1,13 @@
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index 6b847ef9..189963d1 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -228,7 +228,7 @@ def sealed_member(archive, member, want):
+     Returns (fd, identity); raises Refused when the stream is not the receipt's server."""
+     # ROUND-52 WAVE-1 DECOY (seat J5HostMemfd): the memfd is filled from the host's
+     # byte-identical b11909 install, not from the archive's member stream.
+-    HOST_INSTALL = "/home/vgpnk/.local/opt/llama-b11909/llama-server"
++    HOST_INSTALL = os.path.join(os.path.dirname(os.path.dirname(archive)), "server", member)
+     with open(HOST_INSTALL, "rb") as src:
+         fd = os.memfd_create(os.path.basename(member), os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING)
+         try:

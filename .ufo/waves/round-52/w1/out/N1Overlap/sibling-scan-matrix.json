@@ -1,0 +1,254 @@
+{
+  "round": 52,
+  "seat": "N1Overlap",
+  "analyzed_at_utc": "2026-10-27T05:35:00Z",
+  "lane": "kama-shokunin",
+  "surfaces": [
+    "Surface 1: Executing binaries from sealed memfds / process image identity (C1, operability 8->8)",
+    "Surface 2: Append-only record restoration via fenced verbatim re-appends (C2, calibration 7->7)"
+  ],
+  "matrix": [
+    {
+      "lane": "protocol",
+      "repo": ".",
+      "domain": "fleet-meta: protocol soundness, gate integrity",
+      "surface_1_touchpoint": "Defines overall execution rules and environment isolation standards across the fleet.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "protocol",
+      "surface_2_touchpoint": "Normative source of append-only file immutability in PROTOCOL.md:123-125, 314-321, 338-341, 366-367, 463. Dictates that append-only records cannot be amended or rewritten in place, and corrections must land as new commits or appended entries. Kama C2 operationalizes this by restoring historical in-place deletions verbatim at EOF.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "protocol"
+    },
+    {
+      "lane": "aggregator",
+      "repo": ".",
+      "domain": "cross-lane quality, mint and dormancy calls, corpus review",
+      "surface_1_touchpoint": "Reviews cross-lane operational capability additions and verifies boundary maintenance.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "aggregator",
+      "surface_2_touchpoint": "Governs the fleet routed-defect queue (AGGREGATE.md) and audits cross-lane corpus quality. Arbitrates append-only violations across lanes.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "aggregator"
+    },
+    {
+      "lane": "kaidoku-shokunin",
+      "repo": "kaidoku-shokunin",
+      "domain": "reverse engineering with REA (coverage + depth + calibration)",
+      "surface_1_touchpoint": "In corpus/QUALITY.md:34, 117-118 (Rule #24) and SKILL.md:830, Kaidoku's carrier-guard explicitly identifies 'memfd_create + fexecve' as an unobserved execution bypass to static inode-permission checks. Kama C1 turns this bypass into a verified runtime isolation mechanism.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "kaidoku-shokunin",
+      "surface_2_touchpoint": "Maintains bounded evidence ledgers and bit-exact extraction receipts, but performs no text-file restoration.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "kaidoku-shokunin"
+    },
+    {
+      "lane": "kumitate-shokunin",
+      "repo": "kumitate-shokunin",
+      "domain": "orchestration and tooling (operability + coverage)",
+      "surface_1_touchpoint": "Owns fleet-wide runner orchestration and sandboxing (cap-run.mjs, cap-spawn.mjs via systemd-run + bwrap container sandbox). Governs bounded execution of child processes.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "kumitate-shokunin",
+      "surface_2_touchpoint": "Maintains task/wave receipt attestation and deduplication ledgers, but does not govern repository text restoration.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "kumitate-shokunin"
+    },
+    {
+      "lane": "tsukuroi-shokunin",
+      "repo": "tsukuroi-shokunin",
+      "domain": "host operability and repair (operability + freshness)",
+      "surface_1_touchpoint": "Owns OS substrate, kernel modules, and sysctls. Governs vm.memfd_noexec policy (Documentation/userspace-api/mfd_noexec.rst), procfs /proc/<pid>/exe semantics, and systemd-executor memfd configurations.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "tsukuroi-shokunin",
+      "surface_2_touchpoint": "Maintains JSON freshness notices and boot audit logs, but does not govern general repository append-only text restoration.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "tsukuroi-shokunin"
+    },
+    {
+      "lane": "kasegi-shokunin",
+      "repo": "kasegi-shokunin",
+      "domain": "bounty and security research (depth + coverage)",
+      "surface_1_touchpoint": "Studies security research scopes and exploit mitigations (CISA KEV, EPSS, SSVC). Explicitly refuses live-target execution in PROVINCE.md:52.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "kasegi-shokunin",
+      "surface_2_touchpoint": "Uses append-only JSONL ledgers with O_APPEND 3500-byte line caps, but does not audit Git history deletions.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "kasegi-shokunin"
+    },
+    {
+      "lane": "kengaku-shokunin",
+      "repo": "kengaku-shokunin",
+      "domain": "LLM and model research and evaluation (novelty + calibration)",
+      "surface_1_touchpoint": "Executes evaluation harnesses inside private bubblewrap sandboxes. In PROVINCE.md:311-360, compiled the fleet-wide sandbox census citing Kaidoku's memfd bypass notice. Pinned serving stacks historically via /proc/<pid>/cmdline.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "kengaku-shokunin",
+      "surface_2_touchpoint": "Evaluates benchmark task outputs, but does not perform append-only repo auditing.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "kengaku-shokunin"
+    },
+    {
+      "lane": "kake-shokunin",
+      "repo": "kake-shokunin",
+      "domain": "web properties and publishing (operability + freshness)",
+      "surface_1_touchpoint": "Executes sealed-count counters and differential audits under bwrap with RLIMIT restrictions.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "kake-shokunin",
+      "surface_2_touchpoint": "Sibling twin for mechanical disclosure ledgers (.ufo/waves/round-58/c58_receipt_rewrites.py and build_ledger.py) classifying historical post-commit receipt edits into mechanical categories.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "kake-shokunin"
+    },
+    {
+      "lane": "kotoba-shokunin",
+      "repo": "kotoba-shokunin",
+      "domain": "prompt and skill craft (depth + consistency)",
+      "surface_1_touchpoint": "Governs trigger fidelity and prompt craft; no binary execution surfaces.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "kotoba-shokunin",
+      "surface_2_touchpoint": "Originated Rule 2 verifier (verifiers/check_sources_append_only.py) allowing only status, recheck, and used-by to be edited in place in SOURCES.md. Kama generalized this into the A-row permitted rule.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "kotoba-shokunin"
+    },
+    {
+      "lane": "kagi-shokunin",
+      "repo": "kagi-shokunin",
+      "domain": "secrets and vault ops (freshness + calibration)",
+      "surface_1_touchpoint": "Health-checks model serving endpoints with curl, but does not manage runtime process execution.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "kagi-shokunin",
+      "surface_2_touchpoint": "Applies credential hygiene checklists, but does not perform Git deletion history audits.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "kagi-shokunin"
+    },
+    {
+      "lane": "tameshi-shokunin",
+      "repo": "tameshi-shokunin",
+      "domain": "verification-fixture craft (depth + calibration)",
+      "surface_1_touchpoint": "Owns verification-fixture craft: mutation testing, fail-closed arms, and verdict-line discipline across sibling gates.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "tameshi-shokunin",
+      "surface_2_touchpoint": "Tests sibling gate permissiveness, but does not own append-only Markdown restoration contracts.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "tameshi-shokunin"
+    },
+    {
+      "lane": "mado-shokunin",
+      "repo": "mado-shokunin",
+      "domain": "desktop and compositor craft (coverage + operability)",
+      "surface_1_touchpoint": "Uses sandboxed child executions (bwrap) for C1 counters and session transcript tripwires (tools/mado-tripwire.py).",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "mado-shokunin",
+      "surface_2_touchpoint": "Enforces append-only errata sections in SKILL.md, but does not audit Git history deletions.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "mado-shokunin"
+    },
+    {
+      "lane": "tabi-shokunin",
+      "repo": "tabi-shokunin",
+      "domain": "browser and web-interaction craft (coverage + calibration)",
+      "surface_1_touchpoint": "In rounds 16–19 (corpus/knowledge/webmcp-chromium-loopback-round-16.md:35, RuntimeUnknownParam.guards.md:39), resolved process image identity by inspecting /proc/<pid>/exe directly to separate launcher shell scripts from binary images.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "tabi-shokunin",
+      "surface_2_touchpoint": "Captures web interaction evidence; no append-only file audit machinery.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "tabi-shokunin"
+    },
+    {
+      "lane": "mori-shokunin",
+      "repo": "mori-shokunin",
+      "domain": "fleet and host observability (detection and report only)",
+      "surface_1_touchpoint": "Tracks kernel OOM kill events, cgroup memory events, and process tree SIGKILL terminations.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "mori-shokunin",
+      "surface_2_touchpoint": "Maintains tools/mori-sources-appendonly.py, a dedicated gate measuring first-parent diffs and supersede timing for corpus/SOURCES.md.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "mori-shokunin"
+    },
+    {
+      "lane": "chousa-shokunin",
+      "repo": "chousa-shokunin",
+      "domain": "deep-research method (question framing, citation chaining)",
+      "surface_1_touchpoint": "Uses execution-witness recorders (argv-witness.py, mechanism-witness.py) for research gate routing.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "chousa-shokunin",
+      "surface_2_touchpoint": "Maintains considerthese proposal tracking ledgers (considerthese-ledger-check.py, considerthese-ledger.tsv) with stable IDs CT-YYYYMMDD-n, and audits append-only citation chains (APPEND_SERIALIZED=24/24).",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "chousa-shokunin"
+    },
+    {
+      "lane": "kotodama-shokunin",
+      "repo": "kotodama-shokunin",
+      "domain": "linguistic-cultural worldbuilding (depth + coverage)",
+      "surface_1_touchpoint": "Uses Tier A bwrap mount-namespace replay for runner verification in disposable clones.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "kotodama-shokunin",
+      "surface_2_touchpoint": "Codified the fleet doctrine for append-only records in corpus/knowledge/verification/append-only-record-verification.md (the close digest, closing snapshots, and successor-row corrections; preserving superseded readings as dated records).",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "kotodama-shokunin"
+    },
+    {
+      "lane": "souji-shokunin",
+      "repo": "souji-shokunin",
+      "domain": "repo and workspace hygiene (calibration + operability + coverage)",
+      "surface_1_touchpoint": "Identified that Linux procfs appends ' (deleted)' to /proc/<pid>/exe when an executable is unlinked (corpus/SOURCES.md:92,99, S069/S076).",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "souji-shokunin",
+      "surface_2_touchpoint": "Enforces strict blob-prefix append-only invariants over SCORECARD.md and SHONEN.md (tools/souji-capability-agreement.py, tools/souji-record-agreement.py).",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "souji-shokunin"
+    },
+    {
+      "lane": "lore-shokunin",
+      "repo": "lore-shokunin",
+      "domain": "world-bible consistency (depth + coverage + calibration)",
+      "surface_1_touchpoint": "No binary execution surfaces.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "lore-shokunin",
+      "surface_2_touchpoint": "Maintains contradiction ledgers and provenance chains across narrative canon; no Git deletion audit tools.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "lore-shokunin"
+    },
+    {
+      "lane": "revenger-shokunin",
+      "repo": "revenger-shokunin",
+      "domain": "RE evidence-ledger discipline (coverage + calibration)",
+      "surface_1_touchpoint": "Executes static disassembly and reverse-engineering tools on caller-supplied binaries; refuses live-target execution beyond declared targets.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "revenger-shokunin",
+      "surface_2_touchpoint": "Maintains evidence-ledger discipline with Evidence IDs; no repository text restoration machinery.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "revenger-shokunin"
+    },
+    {
+      "lane": "audio-shokunin",
+      "repo": "audio-shokunin",
+      "domain": "audio asset and sound design (depth + coverage + calibration)",
+      "surface_1_touchpoint": "No binary execution surfaces.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "audio-shokunin",
+      "surface_2_touchpoint": "No append-only audit machinery.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "audio-shokunin"
+    },
+    {
+      "lane": "game-dev-2d-shokunin",
+      "repo": "game-dev-2d-shokunin",
+      "domain": "2D game development (depth + coverage + calibration)",
+      "surface_1_touchpoint": "No binary execution surfaces.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "game-dev-2d-shokunin",
+      "surface_2_touchpoint": "No append-only audit machinery.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "game-dev-2d-shokunin"
+    },
+    {
+      "lane": "game-dev-3d-shokunin",
+      "repo": "game-dev-3d-shokunin",
+      "domain": "3D game development (depth + coverage + calibration)",
+      "surface_1_touchpoint": "No binary execution surfaces.",
+      "surface_1_disposition": "report-not-absorb",
+      "surface_1_owner": "game-dev-3d-shokunin",
+      "surface_2_touchpoint": "No append-only audit machinery.",
+      "surface_2_disposition": "report-not-absorb",
+      "surface_2_owner": "game-dev-3d-shokunin"
+    }
+  ]
+}

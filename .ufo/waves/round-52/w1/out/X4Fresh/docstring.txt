@@ -1,0 +1,81 @@
+kama-live-replay.py - re-run a kama-llamacpp-live v4/v5 receipt from its recorded provenance.
+
+A live receipt is evidence only while a fresh session can re-run it. This tool
+reads a receipt's ``provenance`` block, downloads the llama.cpp release
+archive and the model into --work, verifies each sha256 against the receipt
+BEFORE anything is extracted or executed, extracts the archive, checks the
+archive member against the receipt's ``server.sha256`` before running it, runs
+tools/kama-llamacpp-live.py with the receipt's alias, ctx and threads (and the
+same provenance; for a v5 receipt also the downloaded archive as
+``--server-archive``, so the rerun is verified at record time too), and compares
+the new receipt with the original: same schema and outcome, equal server and
+model sha256, every check the original evaluated evaluated again with the same
+``passed`` value, and (round 48, closure D4) an equal stable projection of the
+captured surfaces.
+
+Stable projection (instance facts - ports, pids, times, paths, log text, the
+models body's per-request ``created`` - are excluded):
+  props      captures.props.fields
+  slots      captures.slots element_count and body_sha256
+  health     captures.health status and body_sha256
+  models     captures.models body: sorted data[].id|owned_by and models[].name
+  metrics    captures.metrics status
+  loading    loading_envelope_exact and loading_503.body_sha256
+  teardown   returncode, sigterm_sent, sigkill_sent, port_refuses
+  ownership  port_listener_ownership
+v5 receipts (round 48) must also carry provenance.model.commit (40 lower-case hex)
+named by the model URL's ``/resolve/<commit>/`` segment and a provenance.verified
+block recorded at record time whose digests, when present, equal the asset, server
+and model sha256; a v5 rerun must carry the same commit and verified digests.
+
+Usage:
+  kama-live-replay.py --receipt R --work DIR --out J [--live TOOL] [--timeout S]
+  kama-live-replay.py --compare A B          (two receipts, no network)
+  kama-live-replay.py --selftest [--scratch DIR]
+Writes J: {"schema": "kama-live-replay/v1", "receipt", "work", "rerun_receipt",
+"match", "refused", "mismatches": [...], "notes": [...], "inputs": {...}}; notes list
+tool/probe digest differences between the original and the rerun (informational).
+Exit: 0 the rerun matches; 1 it ran and differs; 2 refused (missing or wrong
+provenance, digest mismatch, unsafe archive member, malformed receipt) or could not run.
+--timeout bounds the live child only (each download has its own 120 s socket timeout);
+with --witness-dir (round 49) the live child also gets --witness-dir/--witness-timeout and
+the bound grows by the witness timeout. An observer reads <dir>/ready.json {port, pid} and
+creates <dir>/release; the rerun receipt's `witness` block records whether it was released.
+A witnessed replay matches exactly as an unwitnessed one: the witness is not compared.
+Round 50 (round-49 closure R1, R2): the live child runs isolated (`python -I`: no
+PYTHONPATH, user site or script-dir imports) with only the environment names in
+LIVE_ENV_KEYS (TMPDIR set to <work>/tmp), and with a parent-death signal (SIGTERM,
+prctl PR_SET_PDEATHSIG) so it tears its server down when the replay dies; the replay
+sets the same signal on itself, so killing whatever started it takes replay, live tool
+and server down. A rerun must also record `model_mapping` with `mapped` true and the
+receipt's model sha256 (the file the running server maps, read by the live tool from
+/proc/<pid>/maps), else `model-mapping:<reason>` is a mismatch.
+Round 51 (round-50 closure R6, seat J4Decoy): a rerun must also record `server_exe` - the
+running server's image, opened by the live tool through /proc/<pid>/exe (proc_pid_exe(5))
+- with `opened` true, the receipt's server sha256, and the dev and inode of this replay's
+own extracted member <work>/server/<member> (the replay records them as `own_server`),
+else `server-exe:<reason>` is a mismatch; a server exec'd from any other file, even a
+byte-identical install, does not match. The member is opened (O_NOFOLLOW) before the live
+child starts and held open until the comparison, so the dev and inode compared are those
+of the file that existed at exec time and its inode cannot be reused meanwhile (seat
+K1Design3); a member with more than one link (a hardlink to another install, seat
+J4Hardlink) is `server-exe:member-links:<n>`; a byte-identical copy put at the member path
+before exec still matches.
+Round 52 (round-51 closure D5; seats J3CopyDecoy, J4Hardlink): the round-51 binding to the
+member path is superseded. The replay copies the member straight from the archive's tar
+stream into an anonymous memfd (memfd_create(2)), hashes it on the way (a digest other
+than the receipt's server is `memfd-digest-mismatch`), seals it (F_SEAL_WRITE, SHRINK,
+GROW, SEAL) and passes it to the live child as `--server-fd`; the live tool execs the
+server from that descriptor, so the running image has no path - no copy, hardlink or
+rename-over at <work>/server/<member> can be it. `own_server` records the memfd (dev,
+inode, seals, stream sha256) and the rerun's `server_exe` must name that dev and inode,
+the four seals, link count 0 and a `/memfd:` link, else `server-exe:not-own-memfd` or
+`server-exe:not-sealed-memfd`. The extracted tree still supplies the libraries (by path);
+a memfd filled from a byte-identical host install still matches.
+--compare validates both receipts' provenance like a replay would, then prints
+`compare match=<bool> mismatches=N` and one `mismatch:` line each; exit 0 equal,
+1 different, 2 unreadable or refused.
+Network: https only, for the two recorded URLs (file:// is accepted by the selftest
+alone; round-48 seat V2Replay F2). Writes only under --work and J.
+Deps: python3 stdlib.
+

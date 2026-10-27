@@ -1,0 +1,78 @@
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -217,6 +217,18 @@
+ 
+ F_ADD_SEALS, F_GET_SEALS = 1033, 1034   # F_LINUX_SPECIFIC_BASE + 9, + 10 (fcntl(2))
+ SEALS_ALL = 15                          # F_SEAL_SEAL | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_WRITE
++F_SEAL_EXEC = 32                        # fcntl(2): the execute bits are frozen
++
++
++def memfd_noexec():
++    """vm.memfd_noexec as this pid namespace reports it (mm/memfd.c
++    check_sysctl_memfd_noexec: at >= 1 a memfd_create() without MFD_EXEC gets
++    MFD_NOEXEC_SEAL implied, so the file can never be executed)."""
++    try:
++        with open("/proc/sys/vm/memfd_noexec", encoding="ascii") as fh:
++            return fh.read().strip() or "empty"
++    except OSError as exc:
++        return "unreadable:" + (exc.strerror or type(exc).__name__)
+ 
+ 
+ def sealed_member(archive, member, want):
+@@ -248,6 +260,12 @@
+             seals = fcntl.fcntl(fd, F_GET_SEALS)
+             if seals & SEALS_ALL != SEALS_ALL:
+                 raise Refused(f"memfd-not-sealed:{seals}")
++            if seals & F_SEAL_EXEC:
++                # the host made this memfd non-executable (vm.memfd_noexec >= 1
++                # implies MFD_NOEXEC_SEAL): exec would fail EACCES, so refuse now
++                # with the sysctl named instead of a bare launch failure
++                raise Refused(f"memfd-noexec:vm.memfd_noexec={memfd_noexec()}:"
++                              f"seals={seals}")
+         except BaseException:
+             os.close(fd)
+             raise
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -773,6 +773,18 @@
+ 
+ F_GET_SEALS = 1034          # F_LINUX_SPECIFIC_BASE + 10 (fcntl(2))
+ SEALS_ALL = 15              # F_SEAL_SEAL | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_WRITE
++F_SEAL_EXEC = 32            # fcntl(2): the execute bits are frozen
++
++
++def memfd_noexec():
++    """vm.memfd_noexec as this pid namespace reports it (mm/memfd.c
++    check_sysctl_memfd_noexec: at >= 1 a memfd_create() without MFD_EXEC gets
++    MFD_NOEXEC_SEAL implied, so the file can never be executed)."""
++    try:
++        with open("/proc/sys/vm/memfd_noexec", encoding="ascii") as fh:
++            return fh.read().strip() or "empty"
++    except OSError as exc:
++        return "unreadable:" + (exc.strerror or type(exc).__name__)
+ 
+ 
+ def file_seals(fd):
+@@ -795,6 +807,12 @@
+     seals = file_seals(fd)
+     if not stat.S_ISREG(st.st_mode) or seals is None or seals & SEALS_ALL != SEALS_ALL:
+         raise SetupError(f'server-fd-not-sealed:{seals}')
++    if seals & F_SEAL_EXEC:
++        # F_SEAL_EXEC freezes the exec bits off: on a host with vm.memfd_noexec >= 1
++        # memfd_create() without MFD_EXEC gets MFD_NOEXEC_SEAL implied, and the exec
++        # below would fail EACCES (mm/memfd.c check_sysctl_memfd_noexec)
++        raise SetupError('server-fd-not-executable:F_SEAL_EXEC:memfd_noexec='
++                         + memfd_noexec())
+     if st.st_size != want_size:
+         raise SetupError(f'server-fd-size:{st.st_size}!={want_size}')
+     h, off = hashlib.sha256(), 0
+@@ -1999,7 +2017,8 @@
+                 proc = subprocess.Popen(server_argv, **popen_kwargs)
+             except OSError as exc:
+                 raise SetupError(
+-                    f'launch-failed:{type(exc).__name__}') from exc
++                    f'launch-failed:{type(exc).__name__}:{exc.errno}:'
++                    f'{exc.strerror or exc}') from exc
+             receipt['child_pid'] = proc.pid
+         finally:
+             log_file.close()

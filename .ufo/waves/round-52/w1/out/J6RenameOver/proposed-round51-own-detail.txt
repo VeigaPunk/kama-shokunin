@@ -1,0 +1,29 @@
+Proposed wording correction for the round-51 C1 record (seat J6RenameOver, round 52).
+
+The counter tools/round51-replay-exe-audit.py is FROZEN: this is text for the round-52
+closure/lesson and for any future reuse of the round-51 record, not an in-place edit.
+
+Current text (provenance claim the leg cannot observe):
+  line 5   docstring: "replay the very file that replay extracted from the archive it re-acquired"
+  line 519 own-leg detail: "running image {dev}:{inode} is the extracted member, recorded in
+           server_exe and own_server"
+
+What own_exe() actually compares (lines 351-378): the dev:inode of /proc/<pid>/exe against
+os.stat(<work>/server/<member>) at observation time. The subject "the file the replay
+extracted" is not observable from those two numbers.
+
+Proposed replacement:
+  line 5   "the file at the member path the replay wrote the archive member to, stat()ed when
+           the running image is observed"
+  line 519 "running image {dev}:{inode} equals the member path's dev:inode as stat()ed at
+           observation time, recorded in server_exe and own_server"
+
+Measured basis (round 52, seat J6RenameOver): a byte-identical copy of the host
+/home/vgpnk/.local/opt/llama-b11909/llama-server renamed over <work>/server/<member> after
+the archive digest check and before the replay's own os.open(server)
+(base tools/kama-live-replay.py:351-352) yields:
+  replay   exit 0, match=True, mismatches=[], own_server == the substituted path inode
+  counter  exit 0, bind=1 own=1 teardown=1 newrow=1 met=True,
+           detail: "own b1: running image 103:05:1489349909 is the extracted member, ..."
+So rename-over joins the copy (J3CopyDecoy) and hardlink (J4Hardlink) shapes that met the
+round-51 count; the round-52 sealed-memfd image supersedes the path binding.

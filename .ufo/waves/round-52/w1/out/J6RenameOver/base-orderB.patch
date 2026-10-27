@@ -1,0 +1,23 @@
+--- /fast/scratch/hyaku/kama-r52/J6RenameOver/tree-base/tools/kama-live-replay.py	2026-10-27 02:12:24.000000000 -0300
++++ /fast/scratch/hyaku/kama-r52/J6RenameOver/tree-orderB/tools/kama-live-replay.py	2026-10-27 02:13:32.630010094 -0300
+@@ -316,9 +316,6 @@
+             raise Refused(f"member-digest-mismatch:want={want_srv}:got={got_srv}")
+         # probe J6RenameOver: rename a byte-identical copy of the host's b11909 install over
+         # the extracted member path after the archive-based digest check, before the fd hold
+-        _probe_copy = os.path.join(work, "probe-llama-server")
+-        shutil.copy2("/home/vgpnk/.local/opt/llama-b11909/llama-server", _probe_copy)
+-        os.replace(_probe_copy, server)
+         res["inputs"].update({"archive": archive, "model": model, "server": server})
+         rerun = os.path.join(work, "rerun-receipt.json")
+         # round 50 (closure R1, R2): the live child is isolated, sees only LIVE_ENV_KEYS and
+@@ -350,6 +347,10 @@
+         # server-exe comparison, so its inode cannot be freed and reused in between
+         own_fd = os.open(server, os.O_RDONLY | os.O_NOFOLLOW)
+         own = os.fstat(own_fd)
++        # probe J6RenameOver order B: the substitution lands after the replay's own open
++        _probe_copy = os.path.join(work, "probe-llama-server")
++        shutil.copy2("/home/vgpnk/.local/opt/llama-b11909/llama-server", _probe_copy)
++        os.replace(_probe_copy, server)
+         p = subprocess.run(argv, capture_output=True, text=True, env=env, preexec_fn=_child_pdeathsig,
+                            timeout=timeout + (witness_timeout if witness_dir is not None else 0))
+         res["live_exit"] = p.returncode

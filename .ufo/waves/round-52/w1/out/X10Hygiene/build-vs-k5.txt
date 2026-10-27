@@ -1,0 +1,20 @@
+# measured/*-build.out vs the L1's *-k5.out reruns (same tip 5dacf2c7, different scratch)
+
+At 02:16 -03:00 the measured dir carried 23 `*-k5.out` reruns beside the 23 `*-build.out`
+receipts.  One comparison was made before they disappeared:
+
+  $ diff <(normalize c1-build.out) <(normalize c1-k5.out)
+  1c1
+  < $ ... --scratch /fast/scratch/hyaku/kama-r52/L1/meas-build (tip=5dacf2c7...)
+  ---
+  > $ ... --scratch /fast/scratch/hyaku/kama-r52/L1/meas-k5 (tip=5dacf2c7...)
+  (all remaining lines byte-identical after pid/port/inode/nonce normalization)
+
+By 02:20-03:00 the `*-k5.out` files were gone from the measured dir: the round-52
+integration that was running in the lane at the same time removed them (this seat never
+wrote to the lane).  The sweep at 02:22:35 records the resulting tree.
+
+Consequence: at 02:22 the battery holds only the `*-build.out` receipts, and the
+reproducibility comparison available to this seat is the five reruns in
+rerun-vs-build.txt (c1, c2, hexrun, gate, digest), taken on a clean `git clone --shared`
+of the lane checked out at 5dacf2c7 in this seat's scratch.

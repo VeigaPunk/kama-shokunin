@@ -1,0 +1,38 @@
+Proposal 2 (full text) - make sabotage (a) a reported failure, kama-live-replay.py
+=================================================================================
+Round 52, seat X5Selftest. Sabotage (a) (sealed_member without F_ADD_SEALS)
+does kill `--selftest`, but by an uncaught `Refused: memfd-not-sealed:0`
+raised out of the bare call at tools/kama-live-replay.py:594: the run ends
+with a traceback, prints no `FAIL` line and no `KLR_SELFTEST` summary, and
+the four cases after it (sealed-member-digest-mismatch, witness-passthrough,
+compare-instance-only, compare-stable-differs) never execute. Replacing the
+block below with this text turns it into one reported failing case:
+measured on the sabotaged replay copy -> `FAIL sealed-member-refuses-writes:
+sealed_member refused a good member: memfd-not-sealed:0`, 16 FAIL lines,
+`KLR_SELFTEST pass=15 fail=16`, exit 1; on the pristine tool -> 31 pass,
+0 fail, exit 0.
+
+REPLACE tools/kama-live-replay.py:593-605
+
+        # the sealed memfd is filled from the archive's member stream, not from the path
+        # (round 52 X5Selftest: a bare call here turned a broken sealed_member into an
+        # uncaught Refused that skipped the witness and compare cases and printed no
+        # KLR_SELFTEST summary; record it as one failing case instead)
+        try:
+            fd, ident = sealed_member(arc, "build/bin/llama-server", ssha)
+        except Refused as exc:
+            cases.append(("sealed-member-refuses-writes", False,
+                          f"sealed_member refused a good member: {exc}"))
+        else:
+            try:
+                sealed = fcntl.fcntl(fd, F_GET_SEALS) & SEALS_ALL == SEALS_ALL
+                try:
+                    os.write(fd, b"x")
+                    wrote = True
+                except OSError:
+                    wrote = False
+            finally:
+                os.close(fd)
+            cases.append(("sealed-member-refuses-writes",
+                          sealed and not wrote and ident["memfd"] is True,
+                          f"sealed={sealed} wrote={wrote} ident={ident}"))

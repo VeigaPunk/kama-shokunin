@@ -1,0 +1,55 @@
+diff --git i/tests/llamacpp-live/check-receipt.py w/tests/llamacpp-live/check-receipt.py
+index 7ea4b108..2a11786b 100755
+--- i/tests/llamacpp-live/check-receipt.py
++++ w/tests/llamacpp-live/check-receipt.py
+@@ -63,6 +63,10 @@ MISMATCH_EXPECT = "kama-not-this-model"
+ # Producer CHILD_ENV_KEYS: the server child sees only these names when
+ # present in the harness env; the receipt records names, never values.
+ CHILD_ENV_ALLOWLIST = {"PATH", "HOME", "LANG", "LC_ALL", "TMPDIR"}
++# Round 52: a server exec'd from a sealed memfd (`--server-fd`; the receipt's
++# server block then carries `fd`) also gets LD_LIBRARY_PATH, because $ORIGIN
++# no longer names the install tree; the name is admitted only in that mode.
++CHILD_ENV_FD_MODE = {"LD_LIBRARY_PATH"}
+ 
+ REQUIRED_CHECKS_V1 = (
+     "health_ready",
+@@ -635,14 +639,19 @@ def validate(receipt, expect_model=None, expect_server=None,
+     if not isinstance(env_keys, list):
+         bad("child_env_keys is missing or not an array")
+     else:
++        srv = receipt.get("server")
++        fd_mode = isinstance(srv, dict) and isinstance(srv.get("fd"), dict)
++        allowed = CHILD_ENV_ALLOWLIST | (CHILD_ENV_FD_MODE if fd_mode else set())
+         for k in env_keys:
+             if not isinstance(k, str) or not k or "=" in k:
+                 # Never interpolate the element: a receipt carrying
+                 # NAME=<value> must not leak that value into diagnostics.
+                 bad("child_env_keys element is not a bare variable name")
+-            elif k not in CHILD_ENV_ALLOWLIST:
++            elif k not in allowed:
+                 bad("child_env_keys element is outside the "
+-                    "allowlist PATH/HOME/LANG/LC_ALL/TMPDIR")
++                    "allowlist PATH/HOME/LANG/LC_ALL/TMPDIR (plus "
++                    "LD_LIBRARY_PATH when server.fd records a sealed "
++                    "memfd)")
+         if all(isinstance(k, str) for k in env_keys) \
+                 and env_keys != sorted(set(env_keys)):
+             bad("child_env_keys is not the producer's sorted unique "
+@@ -2024,6 +2033,17 @@ def _selftest():
+         lambda r: r["child_env_keys"].append("SK_" + env_secret))
+     mut("env-key-nonstring",
+         lambda r: r["child_env_keys"].append({"v": env_secret}))
++    # round 52 (seat V2Review): a --server-fd receipt records server.fd and
++    # LD_LIBRARY_PATH; the name is VALID only together with server.fd
++    fdmode = copy.deepcopy(base)
++    fdmode["server"]["fd"] = {"dev": "00:01", "inode": "1", "nlink": 0,
++                              "seals": 15, "sha256": "0" * 64}
++    fdmode["child_env_keys"] = sorted(fdmode["child_env_keys"]
++                                      + ["LD_LIBRARY_PATH"])
++    cases.append(("fd-mode-ld-library-path-valid", fdmode, expects, 0))
++    mut("ld-library-path-without-fd",
++        lambda r: r.update(child_env_keys=sorted(r["child_env_keys"]
++                                                 + ["LD_LIBRARY_PATH"])))
+     mut("argv-missing-offline",
+         lambda r: r["argv"].remove("--offline"))
+     # falsify-wave survivors: one new rule each

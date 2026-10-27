@@ -1,0 +1,11 @@
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -234,7 +234,7 @@
+         if not ti.isreg():
+             raise Refused(f"member-not-a-regular-file:{member}")
+         src = tf.extractfile(ti)
+-        fd = os.memfd_create(os.path.basename(member), os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING)
++        fd = os.memfd_create(os.path.basename(member), os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING | 0x0008)  # ABLATION Sen1Exec: MFD_NOEXEC_SEAL (what vm.memfd_noexec>=1 implies)
+         try:
+             h = hashlib.sha256()
+             for chunk in iter(lambda: src.read(CHUNK), b""):

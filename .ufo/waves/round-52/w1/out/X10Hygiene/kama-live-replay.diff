@@ -1,0 +1,93 @@
+diff --git i/tools/kama-live-replay.py w/tools/kama-live-replay.py
+index 1d3d8225..139e478c 100755
+--- i/tools/kama-live-replay.py
++++ w/tools/kama-live-replay.py
+@@ -84,6 +84,7 @@ from __future__ import annotations
+ 
+ import argparse
+ import ctypes
++import errno
+ import fcntl
+ import hashlib
+ import json
+@@ -234,7 +235,16 @@ def sealed_member(archive, member, want):
+         if not ti.isreg():
+             raise Refused(f"member-not-a-regular-file:{member}")
+         src = tf.extractfile(ti)
+-        fd = os.memfd_create(os.path.basename(member), os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING)
++        # MFD_EXEC (Linux 6.3+): under vm.memfd_noexec=1 a memfd created without it acts as
++        # MFD_NOEXEC_SEAL and could not be exec'd (round-52 seat S4NoExec, kernel
++        # mfd_noexec documentation); a kernel that predates the flag rejects it with EINVAL
++        flags = os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING
++        try:
++            fd = os.memfd_create(os.path.basename(member), flags | getattr(os, "MFD_EXEC", 0x0010))
++        except OSError as exc:
++            if exc.errno != errno.EINVAL:
++                raise Refused(f"memfd-create-failed:{exc.strerror}") from None
++            fd = os.memfd_create(os.path.basename(member), flags)
+         try:
+             h = hashlib.sha256()
+             for chunk in iter(lambda: src.read(CHUNK), b""):
+@@ -248,6 +258,17 @@ def sealed_member(archive, member, want):
+             seals = fcntl.fcntl(fd, F_GET_SEALS)
+             if seals & SEALS_ALL != SEALS_ALL:
+                 raise Refused(f"memfd-not-sealed:{seals}")
++            # round 52 (seat M2Replay): the sealed bytes themselves, not only the stream that
++            # was written, must hash to the receipt's server - a short write would differ
++            hm, off, size = hashlib.sha256(), 0, os.fstat(fd).st_size
++            while off < size:
++                chunk = os.pread(fd, min(CHUNK, size - off), off)
++                if not chunk:
++                    break
++                hm.update(chunk)
++                off += len(chunk)
++            if hm.hexdigest() != want:
++                raise Refused(f"memfd-content-mismatch:want={want}:got={hm.hexdigest()}")
+         except BaseException:
+             os.close(fd)
+             raise
+@@ -583,7 +604,10 @@ def _selftest(root):
+                                                     "r['server_exe']={'opened':True,'sha256':'4'*64,"))
+         run("server-exe-digest-differs", receipt(), 1, live=badsha_live)
+         # round 52 (round-51 closure D5): the image must be sealed, linkless and anonymous
++        # (seat M2Replay survivors: an other-inode memfd-shaped record and a partial seal mask)
+         for tag, old, new in (("unsealed", "'seals':fcntl.fcntl(f,1034)", "'seals':0"),
++                              ("seals-partial", "'seals':fcntl.fcntl(f,1034)", "'seals':7"),
++                              ("other-inode", "'inode':str(x.st_ino)", "'inode':str(x.st_ino+1)"),
+                               ("linked", "'nlink':x.st_nlink", "'nlink':1"),
+                               ("path", "'path':'/memfd:llama-server (deleted)'", "'path':s")):
+             alt_live = os.path.join(d, f"{tag}-live.py")
+@@ -603,11 +627,33 @@ def _selftest(root):
+             os.close(fd)
+         cases.append(("sealed-member-refuses-writes", sealed and not wrote and ident["memfd"] is True,
+                       f"sealed={sealed} wrote={wrote} ident={ident}"))
++        # seat M2Replay survivors: the memfd is close-on-exec (only pass_fds hands it on), is
++        # closed on a refusal, and a short write cannot leave a truncated image
++        fd, _ident = sealed_member(arc, "build/bin/llama-server", ssha)
++        try:
++            cloexec = not os.get_inheritable(fd)
++        finally:
++            os.close(fd)
++        cases.append(("sealed-member-cloexec", cloexec, f"cloexec={cloexec}"))
++        before = len(os.listdir("/proc/self/fd"))
+         try:
+             sealed_member(arc, "build/bin/llama-server", "5" * 64)
+             cases.append(("sealed-member-digest-mismatch", False, "no refusal"))
+         except Refused as exc:
+             cases.append(("sealed-member-digest-mismatch", str(exc).startswith("memfd-digest-mismatch"), str(exc)))
++        after = len(os.listdir("/proc/self/fd"))
++        cases.append(("sealed-member-closes-on-refusal", before == after, f"fds {before}->{after}"))
++        real_write = os.write
++        os.write = lambda f, b: real_write(f, bytes(b)[:3])
++        try:
++            fd, ident = sealed_member(arc, "build/bin/llama-server", ssha)
++            os.close(fd)
++            short_ok = ident["sha256"] == ssha
++        except Refused as exc:
++            short_ok, ident = False, str(exc)
++        finally:
++            os.write = real_write
++        cases.append(("sealed-member-short-writes", short_ok, str(ident)))
+         # round 49 (X1Selftest): --witness-dir/--witness-timeout reach the live child end to
+         # end, and the child really holds until an outside observer releases it. The witness
+         # fake live writes ready.json *before* the shared fake receipt body, so the receipt

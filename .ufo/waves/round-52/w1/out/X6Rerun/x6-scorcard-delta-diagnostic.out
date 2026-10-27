@@ -1,0 +1,52 @@
+# X6Rerun diagnostic: why the base counter reports 151 A-corr unheld lines while the base ledger discloses 155
+# scratch patch to a COPY of the frozen counter (tools/round52-append-restore-check.py), one print added in lane(): lane()'s A-corr branch
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round52-append-restore-check.py	2026-10-27 01:39:35.058218530 -0300
++++ /fast/scratch/hyaku/kama-r52/X6Rerun/diag.py	2026-10-27 02:12:55.378767756 -0300
+@@ -478,6 +478,9 @@
+                 ok = False
+         else:
+             corr += n
++            if os.environ.get("X6DEBUG") and f.endswith("SCORECARD.md"):
++                print(f"DBG {c[:12]} {f} own_unheld {n} ledger {sum(led.get((c,f),{}).values())} "
++                      f"keys_unheld {dict(list(un.items()))|{}} ledger_keys {dict(led.get((c,f),{}))}", flush=True)
+             if n:
+                 corr_files[f] += n
+             if led.get((c, f)):
+
+# run: X6DEBUG=1 python3 <copy> --repo $S/lane --tip 9ff76b1f763512be2f554cbbfd0b2213b63b0847 --scratch $S/diagscratch
+# DBG lines whose ledger count exceeds own_unheld are the delta (SCORECARD ef76777e5fbd +2, 42ea1204aef3 +2)
+DBG 83bee7faf5a7 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG ea72c3eae4ec SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 84a81304d7b0 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG e246c40ec1b4 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 1e41928aba2b SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG fd48f9a3b7ca SCORECARD.md own_unheld 6 ledger 6 keys_unheld {'457a818b34240145cf45556d84470352895f211fab40e43d8e8034347d5dc5fc': 1, '6fcf98b1150c76d6fd94a83184f2055f2b8b88d990adaa25eee4e6588de70065': 1, '3de9465b0dd267cf27e165cd696dea1c295075fcd2b1f3a735b5ed712bce6893': 1, '0c1676eaf36991ae14d5a567c34914a8905b87d123196b2547b646c75c3c8ad7': 1, '15aa490748c26b6f0b39453a2cd49175133a71f81b2295ba60071fa498a6b200': 1, '49c5aa1749f868dbef9c0c62ab0420b93ef405245ba41af8fb54dfb84795a2ce': 1} ledger_keys {'0c1676eaf36991ae14d5a567c34914a8905b87d123196b2547b646c75c3c8ad7': 1, '15aa490748c26b6f0b39453a2cd49175133a71f81b2295ba60071fa498a6b200': 1, '3de9465b0dd267cf27e165cd696dea1c295075fcd2b1f3a735b5ed712bce6893': 1, '457a818b34240145cf45556d84470352895f211fab40e43d8e8034347d5dc5fc': 1, '49c5aa1749f868dbef9c0c62ab0420b93ef405245ba41af8fb54dfb84795a2ce': 1, '6fcf98b1150c76d6fd94a83184f2055f2b8b88d990adaa25eee4e6588de70065': 1}
+DBG 4d2e74f421bc SCORECARD.md own_unheld 4 ledger 4 keys_unheld {'abe18109f3695f69a5feb1a1373536e9cc84ad3c587d600cbc67884acf5efda1': 1, '268ee1234cb76daac945f5e54fbb8899e652a8dda25dbc6cf57890366049b3a6': 1, 'e7bba99195f56c2ffb5f83f0bd9ee3f1de81bffb33df80a5c973644851c625f7': 1, '356d86cd22caf874d3ccb13ac4ffb6ba2017b3384c59bf08c14568bb0c799352': 1} ledger_keys {'268ee1234cb76daac945f5e54fbb8899e652a8dda25dbc6cf57890366049b3a6': 1, '356d86cd22caf874d3ccb13ac4ffb6ba2017b3384c59bf08c14568bb0c799352': 1, 'abe18109f3695f69a5feb1a1373536e9cc84ad3c587d600cbc67884acf5efda1': 1, 'e7bba99195f56c2ffb5f83f0bd9ee3f1de81bffb33df80a5c973644851c625f7': 1}
+DBG 6de225c289b7 SCORECARD.md own_unheld 4 ledger 4 keys_unheld {'3502bbf0366e050d7b3ac15a72e9f1e347489f292b40809be1c9cc038e05a29f': 1, 'a155b71a51fe091cafacc7d6d628a6ee3959a822d18b9dcaf0a4376ca9e65930': 1, 'f6d247ad2f6d1a1bd1fae7d707885f7cc0b4d0506e59b9ce31344bb9b31d1372': 1, 'f7e86820f210b98b984306d9ef8966b77e013075be8636c5eb3fd924a9701d9b': 1} ledger_keys {'3502bbf0366e050d7b3ac15a72e9f1e347489f292b40809be1c9cc038e05a29f': 1, 'a155b71a51fe091cafacc7d6d628a6ee3959a822d18b9dcaf0a4376ca9e65930': 1, 'f6d247ad2f6d1a1bd1fae7d707885f7cc0b4d0506e59b9ce31344bb9b31d1372': 1, 'f7e86820f210b98b984306d9ef8966b77e013075be8636c5eb3fd924a9701d9b': 1}
+DBG 026eede9f46a SCORECARD.md own_unheld 1 ledger 1 keys_unheld {'411a05910b4e0a91776db0c2c8d036bd124762ac2a35cbcacfb20e3739740e33': 1} ledger_keys {'411a05910b4e0a91776db0c2c8d036bd124762ac2a35cbcacfb20e3739740e33': 1}
+DBG ce41bae692c8 SCORECARD.md own_unheld 3 ledger 3 keys_unheld {'38865018fee174a5f4a0e1a9ad35a230d745bbace0eaa364dea17ec45469e3a4': 1, 'e4e9343d20b7ddaea31bab4b3a12eb9d534aea4e1fa6dee7b3a4ff58c3f4308e': 1, '9ae1b415152e7252024a0bd63e378ae69134fb8e28449dc53b5eedbcb943ead2': 1} ledger_keys {'38865018fee174a5f4a0e1a9ad35a230d745bbace0eaa364dea17ec45469e3a4': 1, '9ae1b415152e7252024a0bd63e378ae69134fb8e28449dc53b5eedbcb943ead2': 1, 'e4e9343d20b7ddaea31bab4b3a12eb9d534aea4e1fa6dee7b3a4ff58c3f4308e': 1}
+DBG 4fe239a479bd SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG dd9f5dc6c0e6 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 2793eb5173e3 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG c8c92db4bdf1 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 8bc8e3758248 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG dabc6eee2de0 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 44fa5627adff SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG f1a4ad2a33b4 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 9307b15e0731 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG ef76777e5fbd SCORECARD.md own_unheld 0 ledger 2 keys_unheld {} ledger_keys {'b28cbdd7da31fd58100dc37a3cfc9de1eff55447e94cd304ace08c536a9de74d': 1, 'bb9019946103a15dc2c79d9f40711d1e65bbf52e7c34236fed1cbb63ce66f53f': 1}
+DBG d48e8cc32fef SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 21945c6125c2 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 0718b6abbda6 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 4340cf2f68eb SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 4991ecc28efa SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 42ea1204aef3 SCORECARD.md own_unheld 0 ledger 2 keys_unheld {} ledger_keys {'bf5869828bfadd81c8bfbec3e33f6ecc800e59ed97e2851e1b7af7a27a9acd23': 1, 'ed5ff78ef3474040c7bbafafc216af2554e8a7a5f294fbad8392e91bbd2469fe': 1}
+DBG 383f1fc78057 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 3442d707fdf9 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG c4b2175d2ff9 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 1541a0dd1628 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 24e906f034bc SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 1c030f182834 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG 8370e39cc9a0 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}
+DBG db6bfa8d9354 SCORECARD.md own_unheld 1 ledger 1 keys_unheld {'e3fe531f078849105096370422853c56eea0eba5417fcc4b217422556a8f96de': 1} ledger_keys {'e3fe531f078849105096370422853c56eea0eba5417fcc4b217422556a8f96de': 1}
+DBG c5ec93d5b8b8 SCORECARD.md own_unheld 0 ledger 0 keys_unheld {} ledger_keys {}

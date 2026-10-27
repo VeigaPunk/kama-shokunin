@@ -1,0 +1,40 @@
+### A1 report-wave-order on the ordered fixture (expect 0)
+report 52: 4ee09569de86 author=1793066400 fixture: fleet report filed after the wave landed
+seat-output: ede05d35a03c author=1793059200 fixture: seat report, results record, pointer receipt met=True -> report after by 7200s
+results-record: ede05d35a03c author=1793059200 fixture: seat report, results record, pointer receipt met=True -> report after by 7200s
+report-wave-order round=52 violations=0 met=True
+exit=0
+### B1 seat-report-immutability on the untouched fixture (expect 0)
+seat-report-immutability tip=4ee09569de86f50c3a5004f16f9c3a1b0cb649aa reports=1 violations=0 met=True
+exit=0
+### C1 claim-vs-receipt with the receipt reading met=True (expect 0)
+claim-vs-receipt tip=4ee09569de86 violations=0 met=True
+exit=0
+### D1 cited-path-exists with every citation present (expect 0)
+cited-path-exists tip=4ee09569de86 base=- misses=0 new=0 met=True
+exit=0
+### B2 seat-report-immutability after the in-place rewrite (expect 1)
+REWRITTEN .ufo/waves/round-52/w1/out/SeatA.md first=ede05d35a03c modified_by=['04d5b1d 2026-10-27T03:00:00Z fixture: in-place seat rewrite, phantom pre.out glob, pointer met=False'] sibling_present=False
+seat-report-immutability tip=04d5b1d2e5d682c1540ed89572d0fa0d39d1e3c7 reports=1 violations=1 met=False
+exit=1
+### C2 claim-vs-receipt after the receipt flipped (expect 1)
+VERDICT SCORECARD.md:5 wants met=True; .ufo/waves/round-52/measured/pointer.out -> {'.ufo/waves/round-52/measured/pointer.out': 'False'}
+claim-vs-receipt tip=04d5b1d2e5d6 violations=1 met=False
+exit=1
+### D2 cited-path-exists with the phantom glob (expect 1)
+MISSING SKILL.md:1 .ufo/waves/round-52/measured/*-pre.out
+cited-path-exists tip=04d5b1d2e5d6 base=4ee09569de86 misses=1 new=1 met=False
+exit=1
+### B3 seat-report-immutability after restore + sibling (expect 0)
+seat-report-immutability tip=5ee2ff00b7ce08bb0235f9302083ae8879d4ada3 reports=1 violations=0 met=True
+exit=0
+### D3 cited-path-exists after the citation fix (expect 0)
+cited-path-exists tip=5ee2ff00b7ce base=4ee09569de86 misses=0 new=0 met=True
+exit=0
+### A2 report-wave-order with a seat report landing after the report (expect 1)
+report 52: 4ee09569de86 author=1793066400 fixture: fleet report filed after the wave landed
+seat-output: b2fe28422711 author=1793077200 fixture: a 15th seat report lands after the report was filed -> report BEFORE by 10800s
+results-record: ede05d35a03c author=1793059200 fixture: seat report, results record, pointer receipt met=True -> report after by 7200s
+report-wave-order round=52 violations=1 met=False
+exit=1
+FIXTURE commits: good=4ee09569de86f50c3a5004f16f9c3a1b0cb649aa bad=04d5b1d2e5d682c1540ed89572d0fa0d39d1e3c7 fixed=5ee2ff00b7ce08bb0235f9302083ae8879d4ada3 late=b2fe28422711eb6c07b7f42975906bc723162fd4

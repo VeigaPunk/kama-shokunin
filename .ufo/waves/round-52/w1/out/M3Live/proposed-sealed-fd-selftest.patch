@@ -1,0 +1,66 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -1627,11 +1627,63 @@
+             raise AssertionError(f'pinned-url rule wrong for {url}')
+ 
+ 
++def _sealed_fd_selftest():
++    """Round 52 (seat M3Live mutation probe): the sealed-fd refusal paths are
++    invisible to the counter's positive replay, so the selftest exercises them
++    directly: a sealing-capable but unsealed memfd, a memfd sealed with a
++    single seal, an unsealable regular file and a plain path-backed image must
++    each be refused or honestly recorded."""
++    for seals_bit, tag in ((None, 'no seals (unsealed memfd)'),
++                           (1, 'F_SEAL_SEAL only')):
++        fd = os.memfd_create('kama-sealed-fd-selftest',
++                             os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING)
++        try:
++            os.write(fd, b'B' * 64)
++            if seals_bit is not None:
++                fcntl.fcntl(fd, 1033, seals_bit)   # F_ADD_SEALS
++            try:
++                sealed_fd(fd, hashlib.sha256(b'B' * 64).hexdigest(), 64)
++            except SetupError:
++                pass
++            else:
++                raise AssertionError('sealed_fd accepted a memfd with ' + tag)
++        finally:
++            os.close(fd)
++    with tempfile.TemporaryDirectory(prefix='kama-sealed-fd-selftest-') as d:
++        path = os.path.join(d, 'server')
++        with open(path, 'wb') as fh:
++            fh.write(b'C' * 64)
++        plain = os.open(path, os.O_RDONLY)
++        try:
++            try:
++                sealed_fd(plain, hashlib.sha256(b'C' * 64).hexdigest(), 64)
++            except SetupError:
++                pass
++            else:
++                raise AssertionError('sealed_fd accepted an unsealable regular file')
++        finally:
++            os.close(plain)
++    child = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(20)'])
++    try:
++        time.sleep(0.3)
++        info = server_exe(child.pid)
++        if not info.get('opened'):
++            raise AssertionError('server_exe could not open a plain child image')
++        if info.get('seals') == SEALS_ALL:
++            raise AssertionError('server_exe recorded memfd seals on a plain image')
++        if not info.get('nlink'):
++            raise AssertionError('server_exe recorded nlink 0 on a path-backed image')
++    finally:
++        child.kill()
++        child.wait()
++
++
+ def _selftest():
+     """Exercise procfs parsing, live tcp6 ownership rows, v3 verdicts, install
+     identity and v5 record-time provenance."""
+     _install_identity_selftest()
+     _provenance_selftest()
++    _sealed_fd_selftest()
+     port = 0x1234
+     tcp6_rows = (
+         ('00000000000000000000000001000000', True),

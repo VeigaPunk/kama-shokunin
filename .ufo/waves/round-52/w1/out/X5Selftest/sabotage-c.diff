@@ -1,0 +1,11 @@
+--- tools/kama-live-replay.py
++++ sabotage-c/kama-live-replay.py
+@@ -432,7 +432,7 @@
+             res["mismatches"].append(f"server-exe:not-own-memfd:{se.get('dev')}:{se.get('inode')}"
+                                      f"!={own['dev']}:{own['inode']}")
+         elif not (isinstance(se.get("seals"), int) and se["seals"] & SEALS_ALL == SEALS_ALL
+-                  and se.get("nlink") == 0 and str(se.get("path", "")).startswith("/memfd:")):
++                  and str(se.get("path", "")).startswith("/memfd:")):
+             res["mismatches"].append(f"server-exe:not-sealed-memfd:seals={se.get('seals')}:"
+                                      f"nlink={se.get('nlink')}:path={se.get('path')}")
+         if p.returncode != 0:

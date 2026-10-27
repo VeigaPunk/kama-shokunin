@@ -1,0 +1,40 @@
+--- tools/kama-live-replay.py
++++ tools/kama-live-replay.py+case
+@@ -591,18 +591,27 @@
+                 fh.write(open(fake_live).read().replace(old, new))
+             run(f"server-exe-{tag}", receipt(), 1, live=alt_live)
+         # the sealed memfd is filled from the archive's member stream, not from the path
+-        fd, ident = sealed_member(arc, "build/bin/llama-server", ssha)
++        # (round 52 X5Selftest: a bare call here turned a broken sealed_member into an
++        # uncaught Refused that skipped the witness and compare cases and printed no
++        # KLR_SELFTEST summary; record it as one failing case instead)
+         try:
+-            sealed = fcntl.fcntl(fd, F_GET_SEALS) & SEALS_ALL == SEALS_ALL
++            fd, ident = sealed_member(arc, "build/bin/llama-server", ssha)
++        except Refused as exc:
++            cases.append(("sealed-member-refuses-writes", False,
++                          f"sealed_member refused a good member: {exc}"))
++        else:
+             try:
+-                os.write(fd, b"x")
+-                wrote = True
+-            except OSError:
+-                wrote = False
+-        finally:
+-            os.close(fd)
+-        cases.append(("sealed-member-refuses-writes", sealed and not wrote and ident["memfd"] is True,
+-                      f"sealed={sealed} wrote={wrote} ident={ident}"))
++                sealed = fcntl.fcntl(fd, F_GET_SEALS) & SEALS_ALL == SEALS_ALL
++                try:
++                    os.write(fd, b"x")
++                    wrote = True
++                except OSError:
++                    wrote = False
++            finally:
++                os.close(fd)
++            cases.append(("sealed-member-refuses-writes",
++                          sealed and not wrote and ident["memfd"] is True,
++                          f"sealed={sealed} wrote={wrote} ident={ident}"))
+         try:
+             sealed_member(arc, "build/bin/llama-server", "5" * 64)
+             cases.append(("sealed-member-digest-mismatch", False, "no refusal"))

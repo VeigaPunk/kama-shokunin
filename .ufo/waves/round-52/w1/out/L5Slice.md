@@ -1,0 +1,15 @@
+PASS — no actionable finding in the L5Slice scope.
+
+## Evidence
+
+- At base `9ff76b1f763512be2f554cbbfd0b2213b63b0847`, `registry/append-only-disclosures.tsv` names 21 deleted line keys across the seven assigned lessons: round-1 (2), round-4-recensus (1), round-32-verifier-spotcheck (1), round-38 (11), round-40 (1), round-42 (4), round-43 (1). For each key, I hashed the corresponding line from the disclosed deleting commit's parent blob (SHA-256 after removing one trailing CR), confirmed that line is absent from that commit's file, and found it exactly once in the build restoration block.
+- At build `5dacf2c70f947ca6dc5fbbca6d45b8db5b0390c8`, the seven restoration blocks are properly paired five-backtick fences: `corpus/lessons/round-1.md:93,96`; `round-4-recensus.md:89,91`; `round-32-verifier-spotcheck.md:92,94`; `round-38.md:128,140`; `round-40.md:40,42`; `round-42.md:82,87`; `round-43.md:124,126`. Each file has one block for its deleting commit. The build disclosure ledger has no lesson rows for these restored losses.
+- Round 32's restored line is `corpus/lessons/round-32-verifier-spotcheck.md:93`, with the pre-correction token `907cdcc0a76f8656fde4574c0c50725fcea42fa9`. The parent of correction commit `cc46980359278d0967cf65e785b41c27b8d9c36c` has that exact line; the correction commit changes only the token's `c` to `a`, yielding `907cdcc0a76f8656fde4574c0a50725fcea42fa9` (commit diff, line 5). The wrong token is not a lane object; the corrected token is a lane commit and an ancestor of the correction commit.
+- `registry/hexrun-ledger.tsv:113` classifies the restored token as `wrong` and gives the corrected token above. Command `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/hexrun-census.py scan --repo /fast/scratch/hyaku/kama-r52/L5Slice/lane --rev 5dacf2c70f947ca6dc5fbbca6d45b8db5b0390c8 --details` exited 0: `tokens=1930 distinct=333 lane_oid=223 md5_blob=1 upstream_ok=97 unverifiable=9 wrong_flagged=3 ledger_bad=0 unknown=0`; details classify the restored token `wrong_flagged` and the corrected token `lane_oid`.
+- C2 command `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round52-append-restore-check.py --repo /fast/scratch/hyaku/kama-r52/L5Slice/lane --tip 5dacf2c70f947ca6dc5fbbca6d45b8db5b0390c8 --scratch /fast/scratch/hyaku/kama-r52/L5Slice/c2 --out /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-52/w1/out/L5Slice/c2-build.out` exited 0: `fixture=1 lane=1 scenarios=8/8 corr_lost=0 row_lost=10 disclosed=10 met=True`.
+
+## Residual risk and verification gaps
+
+None identified within this slice. The C2 result and hexrun census are scoped to the supplied build commit; no other revisions were assessed.
+
+Receipts: `.ufo/waves/round-52/w1/out/L5Slice/c2-build.out` and `.ufo/waves/round-52/w1/out/L5Slice/hexrun-census-build.out`.

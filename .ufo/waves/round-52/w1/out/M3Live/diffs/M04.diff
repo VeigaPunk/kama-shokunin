@@ -1,0 +1,11 @@
+--- pristine
++++ M04
+@@ -795,7 +795,7 @@
+     seals = file_seals(fd)
+     if not stat.S_ISREG(st.st_mode) or seals is None or seals & SEALS_ALL != SEALS_ALL:
+         raise SetupError(f'server-fd-not-sealed:{seals}')
+-    if st.st_size != want_size:
++    if st.st_size > want_size:
+         raise SetupError(f'server-fd-size:{st.st_size}!={want_size}')
+     h, off = hashlib.sha256(), 0
+     while off < st.st_size:

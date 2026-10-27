@@ -1,0 +1,9 @@
+REJECT — the source shows cwd is only one of multiple default backend search paths, so the categorical claim that a memfd-exec'd server needs cwd (or a backend path) is too strong.
+
+- Source URL: https://raw.githubusercontent.com/ggml-org/llama.cpp/b11909/ggml/src/ggml-backend-reg.cpp
+- Access time: 2026-10-27T02:11:22-03:00 (local)
+- Relevant symbol: `ggml_backend_load_best` (source lines 422–439; line numbers counted from returned source beginning at 1).
+- Quote (21 words): “default search paths: executable directory, current directory” (line 431); `get_executable_path()` obtains Linux path via `/proc/self/exe` (lines 386–404).
+- Relevant override: `GGML_BACKEND_DIR` is compiled into a search path when defined (lines 425–427); `ggml_backend_load_all_from_path(dir_path)` uses the supplied path instead of defaults (lines 526–540). Separately, `GGML_BACKEND_PATH` is read as an environment variable and loaded as an explicit backend library (lines 542–546). It is not an environment variable naming a search directory.
+- Judgment: REJECT the broad claim as stated: cwd is not strictly necessary when a usable backend exists in the executable directory or configured `GGML_BACKEND_DIR`; an explicit `dir_path` also replaces default lookup. The evidence supports only a conditional: when relying on the default current-directory lookup and no alternative configured path contains the backend, cwd matters. This source describes lookup paths, not whether the exact packaged server build dynamically loads CPU backend libraries or has CPU linked statically.
+- Commands/evidence: fetched the tagged raw source with the read tool; returned source lines 386–404 and 422–439, 526–546. No runtime test performed.

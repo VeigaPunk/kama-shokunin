@@ -1,0 +1,23 @@
+commit d203d4543249f8c4244de9599234bbf2a6cb4d7a
+Author: fx <fx@invalid>
+Date:   Tue Oct 27 02:09:50 2026 -0300
+
+    probe J6RenameOver: rename byte-identical host llama-server over <work>/server/<member> after sealed_member
+
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index 1d3d8225..30950889 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -398,6 +398,12 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+         # filled from the archive's own member stream (not from the extracted path), held
+         # open until the server-exe comparison; the live tool execs it through --server-fd
+         own_fd, own = sealed_member(archive, need["server.member"], want_srv)
++        # round-52 probe J6RenameOver (round-51 J4Hardlink left rename-over an [INFERENCE]):
++        # rename a byte-identical copy of the host's b11909 install over the extracted
++        # member path right after the memfd is filled; the running image must stay the memfd
++        _probe_copy = os.path.join(work, "probe-llama-server")
++        shutil.copy2("/home/vgpnk/.local/opt/llama-b11909/llama-server", _probe_copy)
++        os.replace(_probe_copy, server)
+         argv[-2:-2] = ["--server-fd", str(own_fd)]
+         p = subprocess.run(argv, capture_output=True, text=True, env=env, preexec_fn=_child_pdeathsig,
+                            pass_fds=(own_fd,),

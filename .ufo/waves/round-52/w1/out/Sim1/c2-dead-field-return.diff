@@ -1,0 +1,64 @@
+diff --git a/tools/round52-append-restore-check.py b/tools/round52-append-restore-check.py
+index bf3bfa0e..96f547bf 100755
+--- a/tools/round52-append-restore-check.py
++++ b/tools/round52-append-restore-check.py
+@@ -190,7 +190,7 @@ def region_of(cell):
+ 
+ 
+ def deleted(repo, p, c, f):
+-    """[(parent line no (1-based), bytes, hunk adds)] by hunk-header counts."""
++    """[(parent line no (1-based), bytes)] by hunk-header counts."""
+     raw = git(repo, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", "--text", p, c, "--", f)
+     out, ls, i = [], raw.split(b"\n"), 0
+     while i < len(ls):
+@@ -203,7 +203,7 @@ def deleted(repo, p, c, f):
+         gd = ga = 0
+         while i < len(ls) and (gd < nd or ga < na):
+             if ls[i].startswith(b"-") and gd < nd:
+-                out.append((start + gd, ls[i][1:], na))
++                out.append((start + gd, ls[i][1:]))
+                 gd += 1
+             elif ls[i].startswith(b"+") and ga < na:
+                 ga += 1
+@@ -223,12 +223,12 @@ def graded_of(repo, p, c, f, regions, arow, dl):
+             cc = cells(ln)
+             if cc is not None and len(cc) == 11:
+                 new[cc[0]].append([x for j, x in enumerate(cc) if j not in MUT])
+-        for pos, text, _na in dl:
++        for pos, text in dl:
+             cc = cells(text)
+             if cc is not None and len(cc) == 11 and [x for j, x in enumerate(cc) if j not in MUT] in new.get(cc[0], []):
+                 perm.add(pos)
+     out = []
+-    for pos, text, _na in dl:
++    for pos, text in dl:
+         if pos in perm:
+             continue
+         g = False
+@@ -243,7 +243,7 @@ def graded_of(repo, p, c, f, regions, arow, dl):
+                     g = True
+         if g:
+             out.append((pos, text))
+-    return out, len(perm)
++    return out
+ 
+ 
+ def recompute(repo, tip, files, detail, tev=None):
+@@ -274,7 +274,7 @@ def recompute(repo, tip, files, detail, tev=None):
+                 ok = False
+             rules = files[f]
+             regions = [region_of(reg) for _r, reg in rules]
+-            G, _perm = graded_of(repo, p, c, f, regions, any(r == "A-row" for r, _ in rules), dl)
++            G = graded_of(repo, p, c, f, regions, any(r == "A-row" for r, _ in rules), dl)
+             graded_n += len(G)
+             if tev is not None:
+                 e = tev.get((c, f))
+@@ -286,7 +286,7 @@ def recompute(repo, tip, files, detail, tev=None):
+                 unheld[(c, f)] = collections.Counter()
+                 continue
+             kept = collections.Counter(k(x) for x in lines_of(blob(repo, p, f))) - \
+-                collections.Counter(k(t) for _p, t, _n in dl)
++                collections.Counter(k(t) for _p, t in dl)
+             if f not in tipcache:
+                 tipcache[f] = collections.Counter(k(x) for x in lines_of(blob(repo, tip, f)))
+             M = tipcache[f]

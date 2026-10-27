@@ -1,0 +1,28 @@
+# J6RenameOver evidence (scratch /fast/scratch/hyaku/kama-r52/J6RenameOver, deleted after this file was written)
+
+## host install
+dev=56 inode=238037577 nlink=1 mode=755 mtime=1793047940 size=17864 path=/home/vgpnk/.local/opt/llama-b11909/llama-server
+35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0  /home/vgpnk/.local/opt/llama-b11909/llama-server
+
+## build probe manual run (/fast/scratch/hyaku/kama-r52/J6RenameOver/w2 work tree), receipt server_exe vs path
+server_exe = {"dev": "00:01", "inode": "165713", "nlink": 0, "opened": true, "path": "/memfd:llama-server (deleted)", "seals": 15, "sha256": "35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0", "size": 17864}
+own_server (replay result) = {"dev": "00:01", "inode": "165713", "member": "llama-b11909/llama-server", "memfd": true, "seals": 15, "sha256": "35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0"}
+path stat dev=103:05 inode=882670252 nlink=1 mode=100755 size=17864
+
+## base probe manual run (/fast/scratch/hyaku/kama-r52/J6RenameOver/wb work tree)
+replay match = True mismatches = []
+server_exe = {"dev": "103:05", "inode": "280207190", "opened": true, "path": "/fast/scratch/hyaku/kama-r52/J6RenameOver/wb/server/llama-b11909/llama-server", "sha256": "35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0", "size": 17864}
+own_server = {"dev": "103:05", "inode": "280207190", "path": "/fast/scratch/hyaku/kama-r52/J6RenameOver/wb/server/llama-b11909/llama-server"}
+path stat inode=280207190 nlink=1
+
+## base order-B control (/fast/scratch/hyaku/kama-r52/J6RenameOver/wb2)
+replay match = False mismatches = ['server-exe:not-own-member:103:05:1889979910!=103:05:413570010', 'server-exe:member-links:0']
+own_server = {"dev": "103:05", "inode": "413570010", "path": "/fast/scratch/hyaku/kama-r52/J6RenameOver/wb2/server/llama-b11909/llama-server"}
+
+## build mutated-copy control (/fast/scratch/hyaku/kama-r52/J6RenameOver/wm)
+replay match = False live_exit = 2
+setup_error = provenance-member-digest-mismatch outcome = setup-error
+
+## counter hashes (frozen)
+053ff50261812de3236697dd8dc847b3dff9507f8290b0d42aaf65c12e1121f5  /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round52-replay-memfd-audit.py
+e5753c453c30bd311e4c12fc962d324c7db482233b64b22795658b47b6ee5155  /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round51-replay-exe-audit.py

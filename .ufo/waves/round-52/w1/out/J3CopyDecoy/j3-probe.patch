@@ -1,0 +1,57 @@
+diff --git i/tools/kama-live-replay.py w/tools/kama-live-replay.py
+index 1d3d8225..6f7c5f1a 100755
+--- i/tools/kama-live-replay.py
++++ w/tools/kama-live-replay.py
+@@ -367,6 +367,11 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+         got_srv = sha256_file(server)
+         if not isinstance(want_srv, str) or got_srv != want_srv:
+             raise Refused(f"member-digest-mismatch:want={want_srv}:got={got_srv}")
++        # round 52 ablation (seat J3CopyDecoy, control C1 - the round-51 J3CopyDecoy shape):
++        # the extracted member is overwritten with a byte copy of the host's b11909 install.
++        # The bytes are the frozen server's, so the provenance and digest checks above and
++        # below still pass; the live tool gets no --server-fd and execs this path.
++        shutil.copyfile("/home/vgpnk/.local/opt/llama-b11909/llama-server", server)
+         res["inputs"].update({"archive": archive, "model": model, "server": server})
+         rerun = os.path.join(work, "rerun-receipt.json")
+         # round 50 (closure R1, R2): the live child is isolated, sees only LIVE_ENV_KEYS and
+@@ -394,13 +399,9 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+             argv[-2:-2] = ["--witness-dir", os.path.abspath(witness_dir),
+                            "--witness-timeout", str(witness_timeout)]
+             res["witness_dir"] = os.path.abspath(witness_dir)
+-        # round 52 (round-51 closure D5): the server runs from a sealed memfd this replay
+-        # filled from the archive's own member stream (not from the extracted path), held
+-        # open until the server-exe comparison; the live tool execs it through --server-fd
+-        own_fd, own = sealed_member(archive, need["server.member"], want_srv)
+-        argv[-2:-2] = ["--server-fd", str(own_fd)]
++        # round 52 ablation (seat J3CopyDecoy, control C1): no sealed_member(), no
++        # --server-fd; the live tool execs the extracted member path itself
+         p = subprocess.run(argv, capture_output=True, text=True, env=env, preexec_fn=_child_pdeathsig,
+-                           pass_fds=(own_fd,),
+                            timeout=timeout + (witness_timeout if witness_dir is not None else 0))
+         res["live_exit"] = p.returncode
+         if not os.path.isfile(rerun):
+@@ -417,24 +418,6 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+                 f"model-mapping:{mm.get('reason') if isinstance(mm, dict) else 'absent'}")
+         elif mm.get("sha256") != need["model.sha256"]:
+             res["mismatches"].append(f"model-mapping:sha256:{need['model.sha256']}->{mm.get('sha256')}")
+-        # round 52 (round-51 closure D5; round 51 bound the image to the extracted path's
+-        # dev and inode, which a copy, hardlink or rename-over at that path could share):
+-        # the live tool opened its server's running image through /proc/<pid>/exe; it must
+-        # be this replay's own sealed memfd - same dev and inode, the four seals, no link,
+-        # an anonymous "/memfd:" link - and hash to the receipt's server
+-        se = rr.get("server_exe")
+-        res["own_server"] = own
+-        if not isinstance(se, dict) or se.get("opened") is not True:
+-            res["mismatches"].append(f"server-exe:{se.get('reason') if isinstance(se, dict) else 'absent'}")
+-        elif se.get("sha256") != want_srv:
+-            res["mismatches"].append(f"server-exe:sha256:{want_srv}->{se.get('sha256')}")
+-        elif (str(se.get("dev")), str(se.get("inode"))) != (own["dev"], own["inode"]):
+-            res["mismatches"].append(f"server-exe:not-own-memfd:{se.get('dev')}:{se.get('inode')}"
+-                                     f"!={own['dev']}:{own['inode']}")
+-        elif not (isinstance(se.get("seals"), int) and se["seals"] & SEALS_ALL == SEALS_ALL
+-                  and se.get("nlink") == 0 and str(se.get("path", "")).startswith("/memfd:")):
+-            res["mismatches"].append(f"server-exe:not-sealed-memfd:seals={se.get('seals')}:"
+-                                     f"nlink={se.get('nlink')}:path={se.get('path')}")
+         if p.returncode != 0:
+             res["mismatches"].append(f"live-exit:{p.returncode}")
+         # instance differences that do not fail a replay but are worth reading

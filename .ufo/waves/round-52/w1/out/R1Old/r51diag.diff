@@ -1,0 +1,25 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round51-replay-exe-audit.py	2026-10-27 00:30:04.561214399 -0300
++++ /fast/scratch/hyaku/kama-r52/R1Old/diag/r51diag.py	2026-10-27 02:11:36.038249331 -0300
+@@ -474,7 +474,9 @@
+         j = load(outj)
+         if code != 0 or not isinstance(j, dict) or j.get("match") is not True:
+             probs.append(f"replay exit {code} match {j.get('match') if isinstance(j, dict) else None} "
+-                         f"refused {j.get('refused') if isinstance(j, dict) else None}")
++                         f"refused {j.get('refused') if isinstance(j, dict) else None} "
++                         f"mismatches {j.get('mismatches') if isinstance(j, dict) else None} "
++                         f"live_exit {j.get('live_exit') if isinstance(j, dict) else None}")
+         rr = load(j.get("rerun_receipt")) if isinstance(j, dict) and j.get("rerun_receipt") else None
+         if not (isinstance(rr, dict) and isinstance(rr.get("witness"), dict)
+                 and rr["witness"].get("released") is True):
+@@ -631,7 +633,10 @@
+                 fh.write(text + "\n")
+         return 0 if met else 1
+     finally:
+-        shutil.rmtree(S, ignore_errors=True)
++        if not os.environ.get("R51_DIAG_KEEP"):
++            shutil.rmtree(S, ignore_errors=True)
++        else:
++            print(f"kept-scratch: {S}")
+ 
+ 
+ if __name__ == "__main__":

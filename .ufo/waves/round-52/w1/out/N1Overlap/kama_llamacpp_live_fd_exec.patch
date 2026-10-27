@@ -1,0 +1,11 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -1965,7 +1965,7 @@ def main(argv=None):
+         if not server_arg:
+             raise SetupError('no-llama-server')
+         server_real = os.path.realpath(server_arg)
+-        if not (os.path.isfile(server_real) and os.access(server_real, os.X_OK)):
++        if not (os.path.isfile(server_real) and (args.server_fd is not None or os.access(server_real, os.X_OK))):
+             raise SetupError(f'server-not-executable:{server_real}')
+         if not os.path.isfile(args.model):
+             raise SetupError(f'model-not-found:{args.model}')

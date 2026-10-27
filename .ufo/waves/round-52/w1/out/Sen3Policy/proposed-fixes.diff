@@ -1,0 +1,50 @@
+--- a/scripts/hyaku/ufo-wave-policy-v2.json	2026-10-27 02:19:13.750171636 -0300
++++ b/scripts/hyaku/ufo-wave-policy-v2.json	2026-10-27 02:19:13.834151096 -0300
+@@ -52,7 +52,7 @@
+     "terminalLauncher": "omarchy-launch-or-focus-tui",
+     "tmuxSession": "ufo_sighting",
+     "tmuxWindow": 1,
+-    "surfaceDigest": "sha256:1064c19addf69f294fd46ebbaa3a99298a4fe60eb5241fcb0d1406f1c0ba6bb4",
++    "surfaceDigest": "sha256:610575e868e0f0fe0ab4af01e9a1ff438740a552f0c83956b85235279e848ce3",
+     "layouts": {
+       "16:9": {
+         "rows": 3,
+@@ -95,7 +95,7 @@
+     "omp-native-v1": {
+       "transport": "omp/task",
+       "judgeCommand": "ufo judge-handoff",
+-      "concurrencyCeiling": 32,
++      "concurrencyCeiling": 128,
+       "planner": {
+         "role": "planner",
+         "depth": 1,
+@@ -265,8 +265,8 @@
+       "substrate": "omp"
+     },
+     {
+-      "id": "labrat",
+-      "role": "labrat",
++      "id": "sentinel",
++      "role": "sentinel",
+       "substrate": "omp"
+     },
+     {
+--- a/scripts/hyaku/hyaku.env	2026-10-27 02:19:13.753078729 -0300
++++ b/scripts/hyaku/hyaku.env	2026-10-27 02:19:13.839284860 -0300
+@@ -7,8 +7,14 @@
+ # Run 8 (2026-10-26, operator-chosen; backup ~/.omp/agent/config.yml.pre-run8-20261026):
+ # task/main/planner @m_opus; reviewer/mutation-tester/security-reviewer @m_zfl; scout @m_sonnet;
+ # distiller/seance @m_haiku; connector @m_kfc; executor/labrat/scribe/sonic/simplifier/critic/revenger/sentinel @m_flash.
+-# Run 9 (2026-10-26): the same run-8 map, unchanged (operator: "use the same model delegations we were using as
+-# before"); rounds 64-128 seats, 256 hard ceiling; 10-round blocks per lane (.scratch/goal-20261026-hyaku-run9.md).
++# Run 9 (2026-10-26), amended during the run (operator: "use the same model delegations we were using as
++# before"); each amendment supersedes the one before, last at ~23:40 — current map:
++# task/main/planner @m_opus; executor @m_mim; reviewer/mutation-tester/security-reviewer @m_zfl;
++# scribe/sonic/simplifier/revenger/labrat/sentinel @m_flash; critic and scout @m_kfc;
++# connector @m_antigravity; distiller/seance @m_haiku. The run-7/8 "m_flash >=50%" rule no longer
++# binds (operator moved volume off m_flash); the >=25% attack share and the few-connector-seats
++# rule still apply. Rounds 64-128 seats, 256 hard ceiling; 10-round blocks per lane
++# (.scratch/goal-20261026-hyaku-run9.md).
+ L1_MODEL=@m_opus
+ JUDGE_MODEL=@m_opus
+ # Lane VCS: jj = lanes are jj-colocated at dispatch/closure time and commit through

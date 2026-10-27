@@ -1,0 +1,147 @@
+{
+ "python": "3.14.8",
+ "payload": "/bin/sleep",
+ "payload_sha256_prefix": "cf9cdc41dbdbdc37",
+ "rows": [
+  {
+   "case": "unsealed-memfd:identity",
+   "result": "/memfd:j2unsealed-unsealed-memfd (deleted)",
+   "detail": {
+    "nlink": 0,
+    "dev_ino": "00:01:183473",
+    "child_pid": 1494578,
+    "exec_link": "/proc/1494486/fd/3"
+   }
+  },
+  {
+   "case": "unsealed-memfd:F_GET_SEALS",
+   "result": "SUCCESS",
+   "detail": 0
+  },
+  {
+   "case": "unsealed-memfd:held-fd write(2)",
+   "result": "SUCCESS",
+   "detail": 1
+  },
+  {
+   "case": "unsealed-memfd:held-fd pwrite(0)+readback",
+   "result": "SUCCESS",
+   "detail": "pwrite 4 byte(s) at offset 0; pread back 00000000; first 4 bytes were 7f454c46"
+  },
+  {
+   "case": "unsealed-memfd:held-fd ftruncate(shrink)",
+   "result": "SUCCESS",
+   "detail": "shrunk"
+  },
+  {
+   "case": "unsealed-memfd:held-fd ftruncate(grow)",
+   "result": "SUCCESS",
+   "detail": "grown"
+  },
+  {
+   "case": "unsealed-memfd:open(/proc/<child>/exe,O_RDWR)+write",
+   "result": "ERROR",
+   "detail": "OSError:26:Text file busy"
+  },
+  {
+   "case": "unsealed-memfd:open(/proc/self/fd/<n>,O_WRONLY)+write",
+   "result": "ERROR",
+   "detail": "OSError:26:Text file busy"
+  },
+  {
+   "case": "unsealed-memfd:seal-late F_ADD_SEALS(15)",
+   "result": "SUCCESS",
+   "detail": 0
+  },
+  {
+   "case": "sealed-memfd:identity",
+   "result": "/memfd:j2unsealed-sealed-memfd (deleted)",
+   "detail": {
+    "nlink": 0,
+    "dev_ino": "00:01:183474",
+    "child_pid": 1494585,
+    "exec_link": "/proc/1494486/fd/3"
+   }
+  },
+  {
+   "case": "sealed-memfd:F_GET_SEALS",
+   "result": "SUCCESS",
+   "detail": 15
+  },
+  {
+   "case": "sealed-memfd:held-fd write(2)",
+   "result": "ERROR",
+   "detail": "PermissionError:1:Operation not permitted"
+  },
+  {
+   "case": "sealed-memfd:held-fd pwrite(0)+readback",
+   "result": "ERROR",
+   "detail": "PermissionError:1:Operation not permitted"
+  },
+  {
+   "case": "sealed-memfd:held-fd ftruncate(shrink)",
+   "result": "ERROR",
+   "detail": "PermissionError:1:Operation not permitted"
+  },
+  {
+   "case": "sealed-memfd:held-fd ftruncate(grow)",
+   "result": "ERROR",
+   "detail": "PermissionError:1:Operation not permitted"
+  },
+  {
+   "case": "sealed-memfd:open(/proc/<child>/exe,O_RDWR)+write",
+   "result": "ERROR",
+   "detail": "OSError:26:Text file busy"
+  },
+  {
+   "case": "sealed-memfd:open(/proc/self/fd/<n>,O_WRONLY)+write",
+   "result": "ERROR",
+   "detail": "OSError:26:Text file busy"
+  },
+  {
+   "case": "sealed-memfd:seal-late F_ADD_SEALS(15)",
+   "result": "ERROR",
+   "detail": "PermissionError:1:Operation not permitted"
+  },
+  {
+   "case": "after-exit:identity while running",
+   "result": "/memfd:j2unsealed-after-exit (deleted)",
+   "detail": "child then killed"
+  },
+  {
+   "case": "after-exit:held-fd write(2) once child is gone",
+   "result": "SUCCESS",
+   "detail": 1
+  },
+  {
+   "case": "after-exit:held-fd ftruncate(shrink) once child is gone",
+   "result": "SUCCESS",
+   "detail": "shrunk"
+  },
+  {
+   "case": "after-exit:F_GET_SEALS",
+   "result": "SUCCESS",
+   "detail": 0
+  },
+  {
+   "case": "on-disk-file:exec with held O_RDWR fd",
+   "result": "ERROR",
+   "detail": "OSError:26:Text file busy"
+  },
+  {
+   "case": "on-disk-file:identity",
+   "result": "/fast/scratch/hyaku/kama-r52/J2Unsealed/j2unsealed-jy_f0d6i/sleep-copy",
+   "detail": "/fast/scratch/hyaku/kama-r52/J2Unsealed/j2unsealed-jy_f0d6i/sleep-copy"
+  },
+  {
+   "case": "on-disk-file:open(path,O_RDWR)+write on running image",
+   "result": "ERROR",
+   "detail": "OSError:26:Text file busy"
+  },
+  {
+   "case": "on-disk-file:open(path,O_RDONLY)+F_GET_SEALS",
+   "result": "ERROR",
+   "detail": "OSError:22:Invalid argument"
+  }
+ ]
+}

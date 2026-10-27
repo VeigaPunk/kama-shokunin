@@ -1,0 +1,30 @@
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index 1d3d8225..d9396f20 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -51,17 +51,14 @@ sets the same signal on itself, so killing whatever started it takes replay, liv
+ and server down. A rerun must also record `model_mapping` with `mapped` true and the
+ receipt's model sha256 (the file the running server maps, read by the live tool from
+ /proc/<pid>/maps), else `model-mapping:<reason>` is a mismatch.
+-Round 51 (round-50 closure R6, seat J4Decoy): a rerun must also record `server_exe` - the
+-running server's image, opened by the live tool through /proc/<pid>/exe (proc_pid_exe(5))
+-- with `opened` true, the receipt's server sha256, and the dev and inode of this replay's
+-own extracted member <work>/server/<member> (the replay records them as `own_server`),
+-else `server-exe:<reason>` is a mismatch; a server exec'd from any other file, even a
+-byte-identical install, does not match. The member is opened (O_NOFOLLOW) before the live
+-child starts and held open until the comparison, so the dev and inode compared are those
+-of the file that existed at exec time and its inode cannot be reused meanwhile (seat
+-K1Design3); a member with more than one link (a hardlink to another install, seat
+-J4Hardlink) is `server-exe:member-links:<n>`; a byte-identical copy put at the member path
+-before exec still matches.
++Round 51 (round-50 closure R6, seat J4Decoy) fixed the shape of the check this round keeps:
++a rerun must record `server_exe` - the running server's image, opened by the live tool
++through /proc/<pid>/exe (proc_pid_exe(5)) - with `opened` true and the receipt's server
++sha256, else `server-exe:<reason>` is a mismatch. It bound that image to the dev and inode
++of the replay's own extracted member, opened O_NOFOLLOW before the live child started, and
++refused a member with more than one link (seat J4Hardlink, `server-exe:member-links`).
++Round 52 below replaces that binding with the memfd, so `server-exe:member-links` and
++`server-exe:not-own-member` are gone and `own_server` names the memfd, not the member path.
+ Round 52 (round-51 closure D5; seats J3CopyDecoy, J4Hardlink): the round-51 binding to the
+ member path is superseded. The replay copies the member straight from the archive's tar
+ stream into an anonymous memfd (memfd_create(2)), hashes it on the way (a digest other

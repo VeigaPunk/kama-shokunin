@@ -1,0 +1,96 @@
+# end-of-wave hygiene sweep 2026-10-27T02:22:35-03:00 (host plazir27, kernel 7.2.11-arch1-1)
+
+## (1) pgrep -af llama-server
+exit=1
+
+## (1b) pgrep -x llama-server
+exit=1
+
+## (2) ls -l /proc/*/fd 2>/dev/null | grep -c "memfd:llama"
+0
+
+## (2b) same over numeric pids only
+0
+
+## (2c) any memfd:* held by any process (name histogram)
+    282 memfd:shared-memory-region
+     28 memfd:wayland-cursor
+     12 memfd:pipewire-memfd:flags=0x0000000f,type=2,size=2312
+      6 memfd:smithay-client-toolkit
+      4 memfd:pulseaudio
+      2 memfd:dbus-broker-log
+      1 memfd:pipewire-memfd:flags=0x0000000f,type=2,size=4096
+      1 memfd:lp_dma_buf
+      1 memfd:gdk-wayland
+      1 memfd:allocation
+
+## (3) du /fast/scratch/hyaku/kama-r52 (top 10)
+1076M	/fast/scratch/hyaku/kama-r52/M3Live
+464M	/fast/scratch/hyaku/kama-r52/L1
+385M	/fast/scratch/hyaku/kama-r52/X7Regen
+385M	/fast/scratch/hyaku/kama-r52/W3Mistakes
+385M	/fast/scratch/hyaku/kama-r52/V5Review
+385M	/fast/scratch/hyaku/kama-r52/Sim1
+385M	/fast/scratch/hyaku/kama-r52/N1Overlap
+385M	/fast/scratch/hyaku/kama-r52/M4Ctr
+385M	/fast/scratch/hyaku/kama-r52/M1Ctr
+385M	/fast/scratch/hyaku/kama-r52/L5Slice
+total: 4696M in 15 dirs
+files at the top level: 0
+
+## (4) git -C /home/vgpnk/Projects/shokunin status --porcelain
+?? btrfs-scrub@.service
+?? dev-replace.c
+?? kengaku-shokukin/
+?? kstrtox.c
+?? scrub.c
+?? scrub237.c
+?? sha256-live.txt
+?? sysfs.c
+?? systemd.kill.xml
+?? tags-btrfs-progs.txt
+?? tags-linux.txt
+?? tags-systemd.txt
+?? vsprintf.c
+exit=0
+
+## (4b) same, -uall
+?? btrfs-scrub@.service
+?? dev-replace.c
+?? kengaku-shokukin/.ufo/waves/round-46/w1/R46CritC1Freeze.md
+?? kstrtox.c
+?? scrub.c
+?? scrub237.c
+?? sha256-live.txt
+?? sysfs.c
+?? systemd.kill.xml
+?? tags-btrfs-progs.txt
+?? tags-linux.txt
+?? tags-systemd.txt
+?? vsprintf.c
+
+## (5) git -C /home/vgpnk/Projects/shokunin/kama-shokunin status --porcelain
+ M corpus/QUALITY.md
+ M corpus/SOURCES.md
+ M tests/llamacpp-live/check-receipt.py
+ M tools/kama-live-replay.py
+?? .ufo/waves/round-52/c1/F_GET_SEALS.2const.txt
+?? .ufo/waves/round-52/c1/mfd_noexec.txt
+?? .ufo/waves/round-52/d3/
+?? .ufo/waves/round-52/integration/
+?? .ufo/waves/round-52/w1.ready
+?? .ufo/waves/round-52/w1.ready.dispatched
+?? .ufo/waves/round-52/w1/out/
+exit=0
+
+## (5b) lane diffstat
+ corpus/QUALITY.md                    | 12 +++++++++
+ corpus/SOURCES.md                    |  2 ++
+ tests/llamacpp-live/check-receipt.py | 24 ++++++++++++++++--
+ tools/kama-live-replay.py            | 48 +++++++++++++++++++++++++++++++++++-
+ 4 files changed, 83 insertions(+), 3 deletions(-)
+
+## (6) stale wave processes on this host (not mine, not llama-server)
+2553430    1494 05:45:43 /usr/bin/python3 /fast/scratch/hyaku/kama-r49/M1Ctr/r49c1-k_sicwpn/work-w1/stub.py -m /fast/scratch/hyaku/kama-r49/M1Ctr/r49c1-k_sicwpn/work-w1/m.gguf /fast/scratch/hyaku/kama
+2608023    1494 05:45:04 /usr/bin/python3 /fast/scratch/hyaku/kama-r49/M1Ctr/r49c1-tj8m881o/work-w1/stub.py -m /fast/scratch/hyaku/kama-r49/M1Ctr/r49c1-tj8m881o/work-w1/m.gguf /fast/scratch/hyaku/kama
+3159860  875345 00:00    python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round52-replay-memfd-audit.py --repo /fast/scratch/hyaku/kama-r52/M3Live/lane --tip 231efde1a3a7520019c056ecc59de033d

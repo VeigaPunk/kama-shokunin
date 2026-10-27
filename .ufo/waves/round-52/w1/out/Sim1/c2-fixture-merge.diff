@@ -1,0 +1,59 @@
+diff --git a/tools/round52-append-restore-check.py b/tools/round52-append-restore-check.py
+index 50d5df87..bf3bfa0e 100755
+--- a/tools/round52-append-restore-check.py
++++ b/tools/round52-append-restore-check.py
+@@ -353,20 +353,29 @@ def fixtures(tool, S, detail):
+     sha = lambda x: hashlib.sha256(x.encode()).hexdigest()  # noqa: E731
+     parsed = parse_contract((CHEADER + "\n" + "\n".join(crows)).encode())
+ 
+-    def repo(name, steps):
++    def fixture(name):
++        """A fresh fixture repo under S; commit(files) writes and commits one snapshot."""
+         d = os.path.join(S, "fx-" + name)
+         os.makedirs(d)
+         git(d, "init", "-q")
+         if os.path.realpath(git(d, "rev-parse", "--show-toplevel").decode().strip()) != os.path.realpath(d):
+             raise EvalError("fixture toplevel mismatch")
+-        for files in steps:
++
++        def commit(files):
+             for fn, body in files.items():
+                 os.makedirs(os.path.dirname(os.path.join(d, fn)) or d, exist_ok=True)
+                 with open(os.path.join(d, fn), "w") as fh:
+                     fh.write("".join(x + "\n" for x in body))
+             git(d, "add", "-A")
+             git(d, *IDENT, "commit", "-q", "--allow-empty", "-m", "fx")
+-        return d, git(d, "rev-parse", "HEAD").decode().strip()
++            return git(d, "rev-parse", "HEAD").decode().strip()
++        return d, commit
++
++    def repo(name, steps):
++        d, commit = fixture(name)
++        for files in steps:
++            t = commit(files)
++        return d, t
+ 
+     def case(name, steps, want_exit, want_unheld, want_graded=None):
+         d, t = repo(name, [base] + steps)
+@@ -393,20 +402,7 @@ def fixtures(tool, S, detail):
+     def ledger_case(name, before):
+         # before: the deletion is committed before the ledger's introduction
+         led_dir = "registry/append-only-disclosures.tsv"
+-        d = os.path.join(S, "fx-" + name)
+-        os.makedirs(d)
+-        git(d, "init", "-q")
+-        if os.path.realpath(git(d, "rev-parse", "--show-toplevel").decode().strip()) != os.path.realpath(d):
+-            raise EvalError("fixture toplevel mismatch")
+-
+-        def commit(files):
+-            for fn, body in files.items():
+-                os.makedirs(os.path.dirname(os.path.join(d, fn)) or d, exist_ok=True)
+-                with open(os.path.join(d, fn), "w") as fh:
+-                    fh.write("".join(x + "\n" for x in body))
+-            git(d, "add", "-A")
+-            git(d, *IDENT, "commit", "-q", "--allow-empty", "-m", "fx")
+-            return git(d, "rev-parse", "HEAD").decode().strip()
++        d, commit = fixture(name)
+         commit({**base, CONTRACT: [CHEADER] + crows})
+         if before:
+             c = commit({"SRC.md": drop})

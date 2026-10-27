@@ -1,0 +1,134 @@
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index 1d3d8225..d12c3410 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -51,28 +51,18 @@ sets the same signal on itself, so killing whatever started it takes replay, liv
+ and server down. A rerun must also record `model_mapping` with `mapped` true and the
+ receipt's model sha256 (the file the running server maps, read by the live tool from
+ /proc/<pid>/maps), else `model-mapping:<reason>` is a mismatch.
+-Round 51 (round-50 closure R6, seat J4Decoy): a rerun must also record `server_exe` - the
+-running server's image, opened by the live tool through /proc/<pid>/exe (proc_pid_exe(5))
+-- with `opened` true, the receipt's server sha256, and the dev and inode of this replay's
+-own extracted member <work>/server/<member> (the replay records them as `own_server`),
+-else `server-exe:<reason>` is a mismatch; a server exec'd from any other file, even a
+-byte-identical install, does not match. The member is opened (O_NOFOLLOW) before the live
+-child starts and held open until the comparison, so the dev and inode compared are those
+-of the file that existed at exec time and its inode cannot be reused meanwhile (seat
+-K1Design3); a member with more than one link (a hardlink to another install, seat
+-J4Hardlink) is `server-exe:member-links:<n>`; a byte-identical copy put at the member path
+-before exec still matches.
+-Round 52 (round-51 closure D5; seats J3CopyDecoy, J4Hardlink): the round-51 binding to the
+-member path is superseded. The replay copies the member straight from the archive's tar
+-stream into an anonymous memfd (memfd_create(2)), hashes it on the way (a digest other
+-than the receipt's server is `memfd-digest-mismatch`), seals it (F_SEAL_WRITE, SHRINK,
+-GROW, SEAL) and passes it to the live child as `--server-fd`; the live tool execs the
+-server from that descriptor, so the running image has no path - no copy, hardlink or
+-rename-over at <work>/server/<member> can be it. `own_server` records the memfd (dev,
+-inode, seals, stream sha256) and the rerun's `server_exe` must name that dev and inode,
+-the four seals, link count 0 and a `/memfd:` link, else `server-exe:not-own-memfd` or
+-`server-exe:not-sealed-memfd`. The extracted tree still supplies the libraries (by path);
+-a memfd filled from a byte-identical host install still matches.
++Round 51 (round-50 closure R6, seat J4Decoy) bound the rerun's `server_exe` - the running
++server's image, opened by the live tool through /proc/<pid>/exe (proc_pid_exe(5)) - to the
++dev and inode of this replay's own extracted member <work>/server/<member> (recorded as
++`own_server`). Round 52 replaced that binding with a sealed memfd; this ablation control
++carries neither, so the live tool still records `server_exe` (of the extracted member path)
++but the replay does not compare it.
++Round 52 ablation control (seat J1PathExec, no memfd): this tree is commit 5dacf2c7 with the
++round-52 wiring removed - the replay does NOT copy the member into a sealed memfd, does NOT
++pass `--server-fd`, and does NOT compare the rerun's `server_exe` with any identity of its
++own (no `own_server` record). The live child execs the extracted member path, exactly as in
++round 51, and the rerun's `server_exe` is that path. It exists only to measure the frozen
++round-52 C1 counter against a tree without the memfd mechanism; it is not a lane revision.
+ --compare validates both receipts' provenance like a replay would, then prints
+ `compare match=<bool> mismatches=N` and one `mismatch:` line each; exit 0 equal,
+ 1 different, 2 unreadable or refused.
+@@ -394,13 +384,10 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+             argv[-2:-2] = ["--witness-dir", os.path.abspath(witness_dir),
+                            "--witness-timeout", str(witness_timeout)]
+             res["witness_dir"] = os.path.abspath(witness_dir)
+-        # round 52 (round-51 closure D5): the server runs from a sealed memfd this replay
+-        # filled from the archive's own member stream (not from the extracted path), held
+-        # open until the server-exe comparison; the live tool execs it through --server-fd
+-        own_fd, own = sealed_member(archive, need["server.member"], want_srv)
+-        argv[-2:-2] = ["--server-fd", str(own_fd)]
++        # round-52 ablation control (seat J1PathExec, no memfd): the server is NOT handed to
++        # the live child as a sealed memfd and the replay keeps no own_server identity; the
++        # live tool execs the extracted member path, exactly as in round 51
+         p = subprocess.run(argv, capture_output=True, text=True, env=env, preexec_fn=_child_pdeathsig,
+-                           pass_fds=(own_fd,),
+                            timeout=timeout + (witness_timeout if witness_dir is not None else 0))
+         res["live_exit"] = p.returncode
+         if not os.path.isfile(rerun):
+@@ -417,24 +404,6 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+                 f"model-mapping:{mm.get('reason') if isinstance(mm, dict) else 'absent'}")
+         elif mm.get("sha256") != need["model.sha256"]:
+             res["mismatches"].append(f"model-mapping:sha256:{need['model.sha256']}->{mm.get('sha256')}")
+-        # round 52 (round-51 closure D5; round 51 bound the image to the extracted path's
+-        # dev and inode, which a copy, hardlink or rename-over at that path could share):
+-        # the live tool opened its server's running image through /proc/<pid>/exe; it must
+-        # be this replay's own sealed memfd - same dev and inode, the four seals, no link,
+-        # an anonymous "/memfd:" link - and hash to the receipt's server
+-        se = rr.get("server_exe")
+-        res["own_server"] = own
+-        if not isinstance(se, dict) or se.get("opened") is not True:
+-            res["mismatches"].append(f"server-exe:{se.get('reason') if isinstance(se, dict) else 'absent'}")
+-        elif se.get("sha256") != want_srv:
+-            res["mismatches"].append(f"server-exe:sha256:{want_srv}->{se.get('sha256')}")
+-        elif (str(se.get("dev")), str(se.get("inode"))) != (own["dev"], own["inode"]):
+-            res["mismatches"].append(f"server-exe:not-own-memfd:{se.get('dev')}:{se.get('inode')}"
+-                                     f"!={own['dev']}:{own['inode']}")
+-        elif not (isinstance(se.get("seals"), int) and se["seals"] & SEALS_ALL == SEALS_ALL
+-                  and se.get("nlink") == 0 and str(se.get("path", "")).startswith("/memfd:")):
+-            res["mismatches"].append(f"server-exe:not-sealed-memfd:seals={se.get('seals')}:"
+-                                     f"nlink={se.get('nlink')}:path={se.get('path')}")
+         if p.returncode != 0:
+             res["mismatches"].append(f"live-exit:{p.returncode}")
+         # instance differences that do not fail a replay but are worth reading
+@@ -482,10 +451,9 @@ def _selftest(root):
+                      "r={'schema':'kama-llamacpp-live/v4','outcome':'pass','server':{'sha256':h(s)},"
+                      "'model':{'sha256':h(m)},'checks':[{'id':'health_ready','passed':True,'evaluated':True}]}\n"
+                      "r['model_mapping']={'mapped':True,'sha256':h(m)}\n"
+-                     "f=int(a[a.index('--server-fd')+1]);x=os.fstat(f);import fcntl\n"
++                     "x=os.stat(s)\n"
+                      "r['server_exe']={'opened':True,'sha256':h(s),'dev':'%02x:%02x'%(os.major(x.st_dev),"
+-                     "os.minor(x.st_dev)),'inode':str(x.st_ino),'seals':fcntl.fcntl(f,1034),"
+-                     "'nlink':x.st_nlink,'path':'/memfd:llama-server (deleted)'}\n"
++                     "os.minor(x.st_dev)),'inode':str(x.st_ino)}\n"
+                      "if '--server-archive' in a:\n"
+                      "    r['schema']='kama-llamacpp-live/v5'\n"
+                      "    u=a[a.index('--model-url')+1];c=re.search('/resolve/([0-9a-f]{40})/',u).group(1)\n"
+@@ -566,30 +534,9 @@ def _selftest(root):
+             fh.write(open(fake_live).read().replace(
+                 "json.dump(r,open(o,'w'))", "r['captures']={'slots':{'element_count':9}};json.dump(r,open(o,'w'))"))
+         run("projection-differs", receipt(), 1, live=proj_live)
+-        # round 51 (round-50 closure R6): the rerun's server_exe must be the replay's own image
+-        noexe_live = os.path.join(d, "noexe-live.py")
+-        with open(noexe_live, "w") as fh:
+-            fh.write(open(fake_live).read().replace("r['server_exe']=", "r['unused_exe']="))
+-        run("server-exe-absent", receipt(), 1, live=noexe_live)
+-        copy_live = os.path.join(d, "copy-live.py")
+-        with open(copy_live, "w") as fh:
+-            # a byte-identical copy at a path (the round-51 J3CopyDecoy shape) is not the memfd
+-            fh.write(open(fake_live).read().replace(
+-                "x=os.fstat(f);", "import shutil;c=o+'.copy';shutil.copy(s,c);x=os.stat(c);"))
+-        run("server-exe-not-own-memfd", receipt(), 1, live=copy_live)
+-        badsha_live = os.path.join(d, "badsha-live.py")
+-        with open(badsha_live, "w") as fh:
+-            fh.write(open(fake_live).read().replace("r['server_exe']={'opened':True,'sha256':h(s),",
+-                                                    "r['server_exe']={'opened':True,'sha256':'4'*64,"))
+-        run("server-exe-digest-differs", receipt(), 1, live=badsha_live)
+-        # round 52 (round-51 closure D5): the image must be sealed, linkless and anonymous
+-        for tag, old, new in (("unsealed", "'seals':fcntl.fcntl(f,1034)", "'seals':0"),
+-                              ("linked", "'nlink':x.st_nlink", "'nlink':1"),
+-                              ("path", "'path':'/memfd:llama-server (deleted)'", "'path':s")):
+-            alt_live = os.path.join(d, f"{tag}-live.py")
+-            with open(alt_live, "w") as fh:
+-                fh.write(open(fake_live).read().replace(old, new))
+-            run(f"server-exe-{tag}", receipt(), 1, live=alt_live)
++        # round 52 ablation control (seat J1PathExec): the replay no longer compares the
++        # rerun's server_exe with its own identity (no memfd is handed to the live child),
++        # so the server-exe cases of the round-51/52 replay are not part of this tree
+         # the sealed memfd is filled from the archive's member stream, not from the path
+         fd, ident = sealed_member(arc, "build/bin/llama-server", ssha)
+         try:

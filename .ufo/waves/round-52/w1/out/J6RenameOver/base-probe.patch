@@ -1,0 +1,22 @@
+commit 70109e7bca37493eb67bb160cb02026e7ae130b0
+Author: fx <fx@invalid>
+Date:   Tue Oct 27 02:12:24 2026 -0300
+
+    probe J6RenameOver: rename byte-identical host llama-server over <work>/server/<member> after the archive digest check (base round-51 binding)
+
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index d8e87095..0c74663b 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -314,6 +314,11 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+         got_srv = sha256_file(server)
+         if not isinstance(want_srv, str) or got_srv != want_srv:
+             raise Refused(f"member-digest-mismatch:want={want_srv}:got={got_srv}")
++        # probe J6RenameOver: rename a byte-identical copy of the host's b11909 install over
++        # the extracted member path after the archive-based digest check, before the fd hold
++        _probe_copy = os.path.join(work, "probe-llama-server")
++        shutil.copy2("/home/vgpnk/.local/opt/llama-b11909/llama-server", _probe_copy)
++        os.replace(_probe_copy, server)
+         res["inputs"].update({"archive": archive, "model": model, "server": server})
+         rerun = os.path.join(work, "rerun-receipt.json")
+         # round 50 (closure R1, R2): the live child is isolated, sees only LIVE_ENV_KEYS and

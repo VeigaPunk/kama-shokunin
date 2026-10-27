@@ -1,0 +1,11 @@
+--- a/tools/round52-replay-memfd-audit.py
++++ b/tools/round52-replay-memfd-audit.py
+@@ -500,8 +500,10 @@
+             se = rr.get("server_exe") if isinstance(rr, dict) else None
+             if not (isinstance(se, dict) and se.get("opened") is True and se.get("sha256") == SERVER_SHA
+                     and got is not None and (str(se.get("dev")), str(se.get("inode"))) == got
+                     and isinstance(se.get("seals"), int) and se["seals"] & SEALS == SEALS):
+-                oprobs.append(f"sealed: rerun server_exe {se!r} does not record the observed sealed image {got}")
++                oprobs.append(f"sealed: rerun server_exe {se!r} does not record the observed sealed image "
++                              f"{got} with seals {obs[1]} (failed conjunct: dev/inode, digest or seals)")
+*** End Patch

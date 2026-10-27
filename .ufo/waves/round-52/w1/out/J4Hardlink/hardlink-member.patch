@@ -1,0 +1,89 @@
+diff --git c/tools/kama-live-replay.py w/tools/kama-live-replay.py
+index 1d3d8225..0275faeb 100755
+--- c/tools/kama-live-replay.py
++++ w/tools/kama-live-replay.py
+@@ -256,6 +256,37 @@ def sealed_member(archive, member, want):
+                 "dev": "%02x:%02x" % (os.major(st.st_dev), os.minor(st.st_dev)), "inode": str(st.st_ino)}
+ 
+ 
++HOST_SERVER = "/home/vgpnk/.local/opt/llama-b11909/llama-server"
++
++
++def hardlink_member(work, server, want, res):
++    """Round 52 control (seat J4Hardlink, the round-51 shape): replace the digest-checked
++    extracted member at <work>/server/<member> with a hardlink to the host's byte-identical
++    b11909 install, so the live tool execs the member path and the running image is that
++    hardlink. A hardlink needs one filesystem: when <work> is elsewhere (EXDEV) a
++    byte-identical copy is staged under <work> and that copy is hardlinked at the member
++    path (same link count and bytes, the round-51 J4Hardlink decoy). Returns the identity
++    recorded as `own_server`; raises Refused when the linked bytes are not the receipt's
++    server."""
++    source = "host-hardlink"
++    os.unlink(server)
++    try:
++        os.link(HOST_SERVER, server)
++    except OSError as exc:
++        staged = os.path.join(work, "staged-host-server")
++        shutil.copy2(HOST_SERVER, staged)
++        os.link(staged, server)
++        source = f"staged-hardlink:{exc.errno}:{exc.strerror}"
++        res["inputs"]["hardlink_fallback"] = source
++    got = sha256_file(server)
++    if got != want:
++        raise Refused(f"hardlink-digest-mismatch:want={want}:got={got}")
++    st = os.stat(server)
++    return {"memfd": False, "member": os.path.basename(server), "sha256": got, "seals": None,
++            "source": source, "nlink": st.st_nlink,
++            "dev": "%02x:%02x" % (os.major(st.st_dev), os.minor(st.st_dev)), "inode": str(st.st_ino)}
++
++
+ def evaluated(rec):
+     return {c.get("id"): c.get("passed") for c in rec.get("checks") or []
+             if isinstance(c, dict) and c.get("evaluated")}
+@@ -394,13 +425,11 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+             argv[-2:-2] = ["--witness-dir", os.path.abspath(witness_dir),
+                            "--witness-timeout", str(witness_timeout)]
+             res["witness_dir"] = os.path.abspath(witness_dir)
+-        # round 52 (round-51 closure D5): the server runs from a sealed memfd this replay
+-        # filled from the archive's own member stream (not from the extracted path), held
+-        # open until the server-exe comparison; the live tool execs it through --server-fd
+-        own_fd, own = sealed_member(archive, need["server.member"], want_srv)
+-        argv[-2:-2] = ["--server-fd", str(own_fd)]
++        # round 52 control (seat J4Hardlink, round-51 shape): the member path is a hardlink
++        # to the host's byte-identical install and the live tool execs it by path - no
++        # --server-fd, no memfd
++        own = hardlink_member(work, server, want_srv, res)
+         p = subprocess.run(argv, capture_output=True, text=True, env=env, preexec_fn=_child_pdeathsig,
+-                           pass_fds=(own_fd,),
+                            timeout=timeout + (witness_timeout if witness_dir is not None else 0))
+         res["live_exit"] = p.returncode
+         if not os.path.isfile(rerun):
+@@ -417,24 +446,16 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+                 f"model-mapping:{mm.get('reason') if isinstance(mm, dict) else 'absent'}")
+         elif mm.get("sha256") != need["model.sha256"]:
+             res["mismatches"].append(f"model-mapping:sha256:{need['model.sha256']}->{mm.get('sha256')}")
+-        # round 52 (round-51 closure D5; round 51 bound the image to the extracted path's
+-        # dev and inode, which a copy, hardlink or rename-over at that path could share):
+-        # the live tool opened its server's running image through /proc/<pid>/exe; it must
+-        # be this replay's own sealed memfd - same dev and inode, the four seals, no link,
+-        # an anonymous "/memfd:" link - and hash to the receipt's server
++        # round 52 control (seat J4Hardlink, round-51 shape): the build's replay-side
++        # requirement that the running image be this replay's own sealed memfd is removed -
++        # the live tool execs <work>/server/<member> by path, and the frozen counter's
++        # sealed leg is what judges the substitution
+         se = rr.get("server_exe")
+         res["own_server"] = own
+         if not isinstance(se, dict) or se.get("opened") is not True:
+             res["mismatches"].append(f"server-exe:{se.get('reason') if isinstance(se, dict) else 'absent'}")
+         elif se.get("sha256") != want_srv:
+             res["mismatches"].append(f"server-exe:sha256:{want_srv}->{se.get('sha256')}")
+-        elif (str(se.get("dev")), str(se.get("inode"))) != (own["dev"], own["inode"]):
+-            res["mismatches"].append(f"server-exe:not-own-memfd:{se.get('dev')}:{se.get('inode')}"
+-                                     f"!={own['dev']}:{own['inode']}")
+-        elif not (isinstance(se.get("seals"), int) and se["seals"] & SEALS_ALL == SEALS_ALL
+-                  and se.get("nlink") == 0 and str(se.get("path", "")).startswith("/memfd:")):
+-            res["mismatches"].append(f"server-exe:not-sealed-memfd:seals={se.get('seals')}:"
+-                                     f"nlink={se.get('nlink')}:path={se.get('path')}")
+         if p.returncode != 0:
+             res["mismatches"].append(f"live-exit:{p.returncode}")
+         # instance differences that do not fail a replay but are worth reading

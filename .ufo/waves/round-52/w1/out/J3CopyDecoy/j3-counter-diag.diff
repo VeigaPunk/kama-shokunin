@@ -1,0 +1,14 @@
+--- a/tools/round52-replay-memfd-audit.py
++++ b/tools/round52-replay-memfd-audit.py
+@@ (sealed leg, tools/round52-replay-memfd-audit.py:497-503)
+             se = rr.get("server_exe") if isinstance(rr, dict) else None
+-            if not (isinstance(se, dict) and se.get("opened") is True and se.get("sha256") == SERVER_SHA
+-                    and got is not None and (str(se.get("dev")), str(se.get("inode"))) == got
+-                    and isinstance(se.get("seals"), int) and se["seals"] & SEALS == SEALS):
+-                oprobs.append(f"sealed: rerun server_exe {se!r} does not record the observed sealed image {got}")
++            if not (isinstance(se, dict) and se.get("opened") is True and se.get("sha256") == SERVER_SHA
++                    and got is not None and (str(se.get("dev")), str(se.get("inode"))) == got):
++                oprobs.append(f"sealed: rerun server_exe {se!r} does not record the observed image {got}")
++            elif not (isinstance(se.get("seals"), int) and se["seals"] & SEALS == SEALS):
++                oprobs.append(f"sealed: rerun server_exe records the observed image {got} but its seals "
++                              f"{se.get('seals')!r} lack some of {SEALS}")

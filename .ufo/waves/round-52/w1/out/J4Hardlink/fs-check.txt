@@ -1,0 +1,21 @@
+## stat -c '%d %i %h %n'
+56 238037577 1 /home/vgpnk/.local/opt/llama-b11909/llama-server
+66309 1543504119 37 /fast/scratch/hyaku/kama-r52
+66309 1022387748 4 /fast/scratch/hyaku/kama-r52/J4Hardlink
+66309 134218577 10 /fast/scratch/hyaku/kama-r52/J4Hardlink/lane
+
+## stat -f -c '%T %i'
+btrfs cc4be4baa8652d82
+xfs 10305
+
+## df -T
+Filesystem       Type  1K-blocks      Used Available Use% Mounted on
+/dev/nvme1n1p2   xfs   842131708 236170840 605960868  29% /fast
+/dev/mapper/root btrfs 974646272 321267720 616574392  35% /home
+
+## literal hardlink host -> assigned scratch (expect EXDEV)
+ln: failed to create hard link '/home/vgpnk/.local/opt/llama-b11909/llama-server' => '/fast/scratch/hyaku/kama-r52/J4Hardlink/host-server.link': Invalid cross-device link
+ln_exit=1
+
+## host install digest
+35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0  /home/vgpnk/.local/opt/llama-b11909/llama-server

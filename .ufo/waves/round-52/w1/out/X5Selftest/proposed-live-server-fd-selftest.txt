@@ -1,0 +1,102 @@
+Proposal 1 (full text) - kill sabotages (e), (f) and (g), kama-llamacpp-live.py
+================================================================================
+Round 52, seat X5Selftest. Both live-side sabotages survived `--selftest`
+because nothing in kama-llamacpp-live.py's selftest calls sealed_fd()
+(def at tools/kama-llamacpp-live.py:786; the only call is at :1955). The
+same hole makes sabotage (g) - sealed_fd that refuses everything - survive
+too, so the case below also carries the positive branch.
+
+Verified against committed build 5dacf2c7 (sealed_fd bytes = lane HEAD):
+  pristine tool + case                  exit 0  "selftest: ok"
+  sabotage (e) any seals + case         exit 1  AssertionError: server-fd
+      accepted, expected server-fd-not-sealed:0
+  sabotage (f) no digest + case         exit 1  AssertionError: server-fd
+      accepted, expected server-fd-digest-differs-from-server
+  sabotage (g) always refuses + case    exit 1  AssertionError: server-fd
+      refused a sealed memfd: server-fd-unusable:sabotage-g
+
+INSERTION A - immediately before `def _selftest():` (tools/kama-llamacpp-live.py:1630).
+
+F_ADD_SEALS = 1033          # F_LINUX_SPECIFIC_BASE + 9 (fcntl(2)); round 52
+
+
+def _server_fd_selftest():
+    """Round 52 (X5Selftest): sealed_fd() accepts exactly one shape - a sealed memfd whose
+    bytes and length are the --server file's - and refuses an unsealed memfd, a file that
+    cannot be sealed at all, a partly sealed memfd, a length mismatch and a digest
+    mismatch. No case called sealed_fd before this one, so deleting the seal test or the
+    digest comparison from it (or making it refuse everything) left the selftest green."""
+    def a_memfd(payload, seals):
+        fd = os.memfd_create('server-fd-selftest',
+                             os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING)
+        if payload:
+            os.write(fd, payload)
+        if seals:
+            fcntl.fcntl(fd, F_ADD_SEALS, seals)
+        return fd
+
+    def refused(fd, want_sha, want_size, token):
+        try:
+            sealed_fd(fd, want_sha, want_size)
+        except SetupError as exc:
+            if not str(exc).startswith(token):
+                raise AssertionError(
+                    f'server-fd refusal {exc} != {token}') from None
+            return
+        raise AssertionError(f'server-fd accepted, expected {token}')
+
+    payload = b'\x7fELF server-fd selftest'
+    want = hashlib.sha256(payload).hexdigest()
+    fd = a_memfd(payload, SEALS_ALL)
+    try:
+        try:
+            ident = sealed_fd(fd, want, len(payload))
+        except SetupError as exc:
+            raise AssertionError(
+                f'server-fd refused a sealed memfd: {exc}') from None
+    finally:
+        os.close(fd)
+    if (ident['sha256'] != want or ident['nlink'] != 0
+            or ident['seals'] & SEALS_ALL != SEALS_ALL):
+        raise AssertionError(f'server-fd identity not a sealed memfd: {ident}')
+    fd = a_memfd(payload, 0)                  # memfd, never sealed
+    try:
+        refused(fd, want, len(payload), 'server-fd-not-sealed:0')
+    finally:
+        os.close(fd)
+    with tempfile.TemporaryDirectory(prefix='kama-server-fd-selftest-') as directory:
+        path = os.path.join(directory, 'server')
+        with open(path, 'wb') as fh:         # a directory file cannot be sealed
+            fh.write(payload)
+        fd = os.open(path, os.O_RDONLY)
+        try:
+            refused(fd, want, len(payload), 'server-fd-not-sealed:None')
+        finally:
+            os.close(fd)
+    fd = a_memfd(payload, 3)                  # F_SEAL_SEAL|F_SEAL_SHRINK only
+    try:
+        refused(fd, want, len(payload), 'server-fd-not-sealed:3')
+    finally:
+        os.close(fd)
+    fd = a_memfd(payload, SEALS_ALL)
+    try:
+        refused(fd, want, len(payload) + 1, 'server-fd-size:')
+    finally:
+        os.close(fd)
+    fd = a_memfd(payload, SEALS_ALL)
+    try:
+        refused(fd, '0' * 64, len(payload), 'server-fd-digest-differs-from-server')
+    finally:
+        os.close(fd)
+
+
+INSERTION B - first line of the body of `def _selftest():` (line 1633):
+
+    _server_fd_selftest()
+
+Which assertion kills which sabotage (measured, see 16-proposal-live-*.trace):
+  (e) "accepting any seals": `server-fd-not-sealed:0` - the unsealed memfd
+      is accepted where a refusal is required (the plain-file case is the
+      same guard's `seals is None` branch).
+  (f) "skipping the digest": 'server-fd-digest-differs-from-server'.
+  (g) "always refuses": the positive branch.

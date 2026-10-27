@@ -1,0 +1,11 @@
+--- pristine
++++ M01
+@@ -793,7 +793,7 @@
+     except OSError as exc:
+         raise SetupError(f'server-fd-unusable:{exc.strerror}') from exc
+     seals = file_seals(fd)
+-    if not stat.S_ISREG(st.st_mode) or seals is None or seals & SEALS_ALL != SEALS_ALL:
++    if not stat.S_ISREG(st.st_mode) or seals is None or seals & SEALS_ALL != 0:
+         raise SetupError(f'server-fd-not-sealed:{seals}')
+     if st.st_size != want_size:
+         raise SetupError(f'server-fd-size:{st.st_size}!={want_size}')
