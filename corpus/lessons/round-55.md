@@ -210,16 +210,16 @@ exists and none is backdated).
   Fix: this round re-points the used-by old→new (Gate above) and ends with census
   exit 0 (receipt `.ufo/waves/round-55/census/end.out`). A criterion proposal rides
   to QUALITY.md only if the outside closure agrees the fix classifies.
- - After (round end): same command → exit 0 required (receipt `.ufo/waves/round-55/census/end.out`).
- - `considerthese/2026-10-26.md` proposal 2 (track proposal dispositions) — landed
-   round 54 as `corpus/QUALITY.md` KQ97; this lesson is the first row under it.
- - Proposal 1 (flag append-only deletions the morning after) — pending; no lane
-   instrument exists for it; the daily reflection owns it.
- - Proposal 3 (a running count of counters a shortcut can satisfy) — partially served
-   by this round's battery receipts (each names its killed leg); a standing tally is
-   still pending, not deferred silently.
- - Proposal 4 (daily pin-gap line) — pending; `tools/pin-watch.py` exists since round
-   41; the daily reflection owns running it.
+- After (round end): same command → exit 0 required (receipt `.ufo/waves/round-55/census/end.out`).
+- `considerthese/2026-10-26.md` proposal 2 (track proposal dispositions) — landed
+  round 54 as `corpus/QUALITY.md` KQ97; this lesson is the first row under it.
+- Proposal 1 (flag append-only deletions the morning after) — pending; no lane
+  instrument exists for it; the daily reflection owns it.
+- Proposal 3 (a running count of counters a shortcut can satisfy) — partially served
+  by this round's battery receipts (each names its killed leg); a standing tally is
+  still pending, not deferred silently.
+- Proposal 4 (daily pin-gap line) — pending; `tools/pin-watch.py` exists since round
+  41; the daily reflection owns it.
 ```
 
 ## Errata appended round 56 — round-55 integration corrections
