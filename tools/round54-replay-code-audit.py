@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""round54-replay-code-audit.py - kama round-54 C1 (operability) counter.
+"""round54-replay-code-audit.py - kama round-54 C1 (operability) counter, frozen for
+kama round 55 (preregistration .ufo/waves/round-55/preregistration.json; round-55
+delta: BASE re-frozen to the round-54 tip, the newrow source row re-pointed at S511,
+and every git call run with inherited GIT_* stripped).
 
 Question: at a lane revision, is every piece of code the replay's server executes either
 the release archive's own bytes - read by this counter out of the server's memory and
@@ -24,9 +27,10 @@ Frozen names (before data):
              sha256 bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b
   model      https://huggingface.co/ggml-org/models-moved/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/stories260K.gguf
              sha256 270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d
-  source row https://git-scm.com/docs/git#Documentation/git.txt-codeGITDIRcode (S510,
-             round 54): the environment variables that redirect git, kept because the
-             round-54 C2 counter strips them from every git call
+  source row https://git-scm.com/docs/git-config#Documentation/git-config.txt-GITCONFIGCOUNT
+             (S511, round 55): GIT_CONFIG_COUNT/KEY_n/VALUE_n runtime config injection,
+             the mechanism that reaches core.hooksPath; kept because this counter and
+             the C2 counter strip GIT_* from every git call (S510 names GIT_DIR)
   required   mapped archive members matching libllama-server-impl.so, libggml-base.so*,
              libggml.so* and libggml-cpu-*.so (the server's code, ggml, its base and the
              CPU backend the loader chose)
@@ -36,7 +40,7 @@ Frozen names (before data):
              libgomp.so.1.0.0 libm.so.6 libssl.so.3 libstdc++.so.6.0.36 libz.so.1.3.2
              libzstd.so.1.5.7 - any other root-owned host executable mapping fails
   replay     tools/kama-live-replay.py     live tool  tools/kama-llamacpp-live.py
-  base       0b75a84c56e024cac1662e8ff81802f249acb410 (round-53 lane tip; round-54 start)
+  base       3a600d2f729828419aaea34cc402c8b0d20fb720 (round-54 lane tip; round-55 start)
 
 Legs (bind/sealed/code/teardown/newrow are the round-53 legs, unchanged in substance):
   code      as round 53, plus, while the replay holds its server:
@@ -122,8 +126,8 @@ MODEL_COMMIT = "499bc8821c6b12b4e53c5bffcb21ec206f212d81"
 MODEL_URL = ("https://huggingface.co/ggml-org/models-moved/resolve/"
              f"{MODEL_COMMIT}/tinyllamas/stories260K.gguf")
 MODEL_SHA = "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
-GITDOC_URL = "git-scm.com/docs/git#Documentation/git.txt-codeGITDIRcode"
-BASE = "0b75a84c56e024cac1662e8ff81802f249acb410"
+GITDOC_URL = "git-scm.com/docs/git-config#Documentation/git-config.txt-GITCONFIGCOUNT"
+BASE = "3a600d2f729828419aaea34cc402c8b0d20fb720"
 ARCHIVE_URL = "https://github.com/ggml-org/llama.cpp/releases/download/b11909/llama-b11909-bin-ubuntu-x64.tar.gz"
 ARCHIVE_SHA = "bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b"
 REQUIRED = ("libllama-server-impl.so", "libggml-base.so*", "libggml.so*", "libggml-cpu-*.so")
@@ -156,8 +160,20 @@ class EvalError(Exception):
     pass
 
 
+def clean_env(extra=None):
+    """Environment for every git call: inherited GIT_* redirection is dropped
+    (Sen4Fixture, round 55: GIT_DIR/GIT_CONFIG_COUNT reach every git call this
+    counter makes for rev-parse/archive/show - a foreign repository or an injected
+    core.hooksPath would redirect the read, not only writes). Same helper as the
+    C2 counter; grounded by S510 (git(1) env vars) and S511 (git-config(1)
+    GIT_CONFIG_COUNT)."""
+    env = {k: v for k, v in os.environ.items() if not k.startswith("GIT_")}
+    env.update(extra or {})
+    return env
+
+
 def git(repo, *args, check=True):
-    p = subprocess.run(["git", "-C", repo, *args], capture_output=True)
+    p = subprocess.run(["git", "-C", repo, *args], capture_output=True, env=clean_env())
     if check and p.returncode != 0:
         raise EvalError(f"git {' '.join(args)[:120]}: {p.stderr.decode('utf-8', 'replace').strip()[:200]}")
     return p

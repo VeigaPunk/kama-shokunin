@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
-"""round54-cited-path-check.py - kama round-54 C2 (calibration) counter.
+"""round54-cited-path-check.py - kama round-54 C2 (calibration) counter, frozen for
+kama round 55 (preregistration .ufo/waves/round-55/preregistration.json; round-55
+delta: the `superseded` class added with its fixture scenario - the round-54
+vocabulary could not row a live citation re-pointed to a different file, which the
+base control's dropped=1 demonstrates. BASE stays at the round-53 tip: the drop
+horizon must include the round-54 re-anchor; a same-tip base would let the
+do-nothing control pass, which the round-55 pre-freeze check caught and reverted).
 
 Question: at a lane revision, does every repository path the lane's self-assessment
 cites as evidence resolve in the repository it names - or, where it does not, is the
@@ -87,12 +93,20 @@ Ledger (frozen classes; a row covers every occurrence of its (surface, token) pa
                in-place correction); the token is no longer cited at --tip and was
                unresolved at --base. Exempts the token from `dropped` and `stale`,
                like `fixed`.
+  superseded (round 55) evidence = a replacement token; the original token was cited
+               in that surface at --base and resolved there (unlike `fixed`, which
+               corrects an UNRESOLVED citation, `superseded` discloses a live citation
+               re-pointed to a different file - e.g. the calibration row's
+               "latest outside closure" pointer moved from round-52's spotcheck to
+               round-53's); the token is no longer cited at --tip, and the replacement
+               is cited in that surface at --tip and resolves. Exempts the token from
+               `dropped` and `stale`, like `fixed`.
 A row is `bad` when its class check fails, and `stale` when its token is not an
-unresolved citation of its surface at --tip (for `fixed`/`externalized`: when its
-check fails it is bad).
+unresolved citation of its surface at --tip (for `fixed`/`externalized`/`superseded`:
+when its check fails it is bad).
 
 Legs:
-  fixture  fourteen constructed scenarios in a scratch git repository (built here,
+  fixture  fifteen constructed scenarios in a scratch git repository (built here,
            never in the lane) each get the verdict their construction fixes: the
            round-53 eight (unresolved counted; fenced not; brace group; forged
            deleted; true deleted; forged never; anchor past EOF; stale row) plus six:
@@ -100,25 +114,28 @@ Legs:
            bytes the surface does not pin is bad (M11 bytes); an upstream row at the
            pinned revision with the pinned bytes discloses (M11/M12 contrast); a
            `never` row on an upstream-inventory token is bad (M13); a `fixed`
-           replacement cited away from the base line is bad (M15); and an honest
-           `fixed` row - replacement at the base line, extending the original stem -
-           discloses.
+           replacement cited away from the base line is bad (M15); an honest `fixed`
+           row - replacement at the base line, extending the original stem -
+           discloses; and a `superseded` row whose live base citation was re-pointed
+           to a cited, resolving replacement discloses while a `superseded` row whose
+           token is still cited, or whose replacement is not cited at tip, is bad.
   lane     at --tip: every unresolved citation is disclosed by a good row
            (undisclosed=0), bad=0, stale=0, and no citation any of the three surfaces
-           held at --base is absent at --tip unless a `fixed`/`externalized` row
-           names it (dropped=0 across SCORECARD.md, SHONEN.md and SKILL.md -
-           J12Hide/K4Cheat a5a).
+           held at --base is absent at --tip unless a `fixed`/`externalized`/
+           `superseded` row names it (dropped=0 across SCORECARD.md, SHONEN.md and
+           SKILL.md - J12Hide/K4Cheat a5a).
 met = fixture and lane.
 PREDICATE (same sentence in the preregistration): at the measured commit every
 repository path that SCORECARD.md, SHONEN.md and SKILL.md cite outside fences resolves
 in the lane tree or the fleet tree, or is disclosed by a correction-ledger row whose
 class the counter re-derives from git history with upstream rows pinned to a full
 commit, the frozen owner and the surface-stated digest, and `fixed` rows bound to the
-original stem and line, with no bad or stale row and no citation dropped on any of the
-three surfaces since the base, and fourteen constructed scenarios each get their fixed
-verdict; fixture=1 lane=1 undisclosed=0 bad=0 stale=0 dropped=0.
+original stem and line, and `superseded` rows disclosing a live base citation
+re-pointed to a cited, resolving replacement, with no bad or stale row and no citation
+dropped on any of the three surfaces since the base, and fifteen constructed scenarios
+each get their fixed verdict; fixture=1 lane=1 undisclosed=0 bad=0 stale=0 dropped=0.
 
-Output: `fixture=0|1 lane=0|1 scenarios=N/14 cited=N unresolved=N disclosed=N
+Output: `fixture=0|1 lane=0|1 scenarios=N/15 cited=N unresolved=N disclosed=N
 undisclosed=N bad=N stale=N dropped=N met=True|False`, then `detail:` lines.
 Exit 0 met, 1 not met, 2 could not evaluate (git failure or an unfetchable upstream
 row). Read-only on --repo and --fleet; every git call runs with inherited GIT_*
@@ -138,7 +155,7 @@ import sys
 import tempfile
 import urllib.request
 
-BASE = "0b75a84c56e024cac1662e8ff81802f249acb410"
+BASE = "0b75a84c56e024cac1662e8ff81802f249acb410"  # the round-53 tip: the drop horizon must include the round-54 re-anchor (the unrowed drop the base control catches); a same-tip base would make the do-nothing control pass (round-55 pre-freeze check)
 SURFACES = ("SCORECARD.md", "SHONEN.md", "SKILL.md")
 LEDGER = "registry/cited-path-corrections.tsv"
 LANE_ROOTS = (".ufo/", "tools/", "tests/", "corpus/", "registry/", "plans/", "considerthese/")
@@ -147,8 +164,8 @@ TOP = ("AGENTS.md", "LOG.md", "MINT.md", "PROVINCE.md", "README.md", "SCORECARD.
        "SHONEN.md", "SKILL.md")
 BAD_CHARS = set(" <>$=()|'\"")
 ANCHOR = re.compile(r"^(.*?):(\d+(?:[-,]\d+)*)$")
-CLASSES = ("deleted", "never", "moved", "eof", "untracked", "upstream", "fixed", "externalized")
-SCENARIOS = 14
+CLASSES = ("deleted", "never", "moved", "eof", "untracked", "upstream", "fixed", "externalized", "superseded")
+SCENARIOS = 15
 # the lane's frozen upstream inventory: llama.cpp's tools/server files the lane pins.
 # owner/repo and revision are frozen here; the digest is the one the citing surface
 # states (full, or the truncated first/last form) - J11BadFixed/M6Ledger M10-M12.
@@ -441,6 +458,25 @@ def check_row(row, bad_exp, lane, fleet, cited_tip, base_unres, base_citelines=N
         if any(t2 == ev or ev in t2 for _n, t2, _c, _l, _h in citations(tip_text)):
             return f"externalization {ev!r} is itself cited at tip"
         return None
+    if cls == "superseded":
+        # a live citation at base re-pointed to a different file (round 55: the
+        # calibration row's "latest outside closure" pointer moved from round-52's
+        # spotcheck to round-53's in round 54, and the round-54 class vocabulary had
+        # no row for it - the base control's dropped=1 demonstrated the gap). The
+        # token is no longer cited at tip, it WAS cited at base (unlike `fixed`,
+        # whose token was unresolved at base), and the replacement token is cited
+        # in that surface at tip and resolves.
+        surf = row["surface"]
+        if tok in cited_tip.get(surf, {}):
+            return "superseded token is still cited at tip"
+        rep = cited_tip.get(surf, {}).get(ev)
+        if rep is None:
+            return f"replacement {ev!r} is not cited in {surf} at tip"
+        if any(v != "ok" for _e, v in rep):
+            return f"replacement {ev!r} does not resolve at tip"
+        if base_citelines is not None and tok not in (base_citelines.get(surf) or {}):
+            return "superseded token was not cited in this surface at the base"
+        return None
     if not bad_exp:
         return None  # stale; reported by the caller
     if cls == "deleted":
@@ -598,16 +634,17 @@ def evaluate(lane, fleet, base_lane, detail, verbose=True):
             continue
         exp = unres.get(row["surface"], {}).get(row["token"])
         why = check_row(row, exp, lane, fleet, cited, base_unres, base_citelines, digest_of, base_rows)
-        if row["class"] not in ("fixed", "externalized") and not exp and why is None:
+        if row["class"] not in ("fixed", "externalized", "superseded") and not exp and why is None:
             stale.append(row)
         elif why is not None:
             bad.append((row, why))
-        elif row["class"] not in ("fixed", "externalized"):
+        elif row["class"] not in ("fixed", "externalized", "superseded"):
             disclosed.add(key)
     n_cited = sum(len(v) for v in cited.values())
     n_unres = sum(len(v) for v in unres.values())
     undisclosed = [(s, t, v) for s, d in unres.items() for t, v in d.items() if (s, t) not in disclosed]
-    exempt = {(row["surface"], row["token"]) for row in rows if row["class"] in ("fixed", "externalized")}
+    exempt = {(row["surface"], row["token"]) for row in rows
+              if row["class"] in ("fixed", "externalized", "superseded")}
     dropped = []
     if base_lane is not None:
         for surf in SURFACES:
@@ -634,7 +671,7 @@ def evaluate(lane, fleet, base_lane, detail, verbose=True):
 
 # ------------------------------------------------------------- fixture
 def fixture(S, detail):
-    """Fourteen scenarios on a scratch repository; returns the number that get their
+    """Fifteen scenarios on a scratch repository; returns the number that get their
     verdict. The scratch git calls run with inherited GIT_* variables stripped
     (Sen4Fixture) and the fixture git dir is verified, not just its worktree."""
     D = tempfile.mkdtemp(prefix="r54c2-fx-", dir=S)
@@ -732,10 +769,32 @@ def fixture(S, detail):
              "one\ntwo `tools/deep/ok.py`\n",
              "SCORECARD.md\ttools/deep/…\tfixed\ttools/deep/ok.py\t\n",
              "fixed-honest", lambda ok, c: ok and c["bad"] == 0 and c["undisclosed"] == 0 and c["stale"] == 0),
+            # round 55: a live base citation re-pointed to a different file
+            ("superseded re-pointed citation discloses, forged superseded is bad",
+             None, None, "superseded", lambda ok, c: ok),
         ]
         for name, scard, ledger, shape, want in cases:
             sub = []
-            if shape in ("m15", "fixed-honest"):
+            if shape == "superseded":
+                # base cites a live token (it resolves); the honest tip re-points the
+                # citation to a different resolving file and rows it superseded (met,
+                # no drop); the forged tip re-points in prose with the same row (the
+                # replacement is never cited at tip -> bad, no met)
+                w("tools/live.py", "live\n")
+                w("tools/new.py", "new\n")
+                w("SCORECARD.md", "closure `tools/live.py`\n")
+                if os.path.exists(os.path.join(D, LEDGER)):
+                    os.unlink(os.path.join(D, LEDGER))
+                scen_base = Repo(D, commit("superseded base"))
+                lane = at("closure now `tools/new.py`\n",
+                          "SCORECARD.md\ttools/live.py\tsuperseded\ttools/new.py\t\n")
+                ok, c = evaluate(lane, None, scen_base, sub, verbose=False)
+                lane2 = at("closure re-pointed away in prose\n",
+                           "SCORECARD.md\ttools/live.py\tsuperseded\ttools/new.py\t\n")
+                ok2, c2 = evaluate(lane2, None, scen_base, sub, verbose=False)
+                hit = bool(want(ok, c)) and ok and c["dropped"] == 0 and c["bad"] == 0 \
+                    and (not ok2) and c2["bad"] == 1
+            elif shape in ("m15", "fixed-honest"):
                 # base cites the ellipsis token at line 2; the m15 tip cites the
                 # replacement at line 6 (away from the base line -> bad), the honest tip
                 # at line 2 (the in-place correction -> discloses)
