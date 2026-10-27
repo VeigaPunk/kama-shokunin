@@ -1,0 +1,37 @@
+diff --git a/tools/kama-llamacpp-live.py b/tools/kama-llamacpp-live.py
+index 11b4b2ef..d48b2fe7 100755
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -795,6 +795,8 @@ def code_mappings(pid):
+         seen.add((f[5], f[3], f[4]))
+         path, dev, ino = f[5], f[3], f[4]
+         ent = {'path': path, 'dev': dev, 'inode': ino}
++        if path.startswith('/memfd:kama-audit'):
++            continue  # mutant: hide the second memfd from the live tool's own record
+         if path.startswith('/memfd:'):
+             # an anonymous executable memfd has no path to open: recorded by dev and inode so
+             # the replay can admit its own sealed server image and nothing else (wave seat
+@@ -2197,6 +2199,15 @@ def main(argv=None):
+             # one; the memfd has no directory, so the server starts in the install tree
+             # and gets an absolute model path
+             server_argv[2] = os.path.abspath(args.model)
++        # J3SecondMemfd mutant: a second executable memfd in the server, no LD_PRELOAD
++        _audit_src = os.path.join(os.path.dirname(os.path.abspath(__file__)),
++                                  'kama-audit-min.so')
++        _audit_fd = os.memfd_create('kama-audit', 0)
++        with open(_audit_src, 'rb') as _fh:
++            os.write(_audit_fd, _fh.read())
++        os.lseek(_audit_fd, 0, os.SEEK_SET)
++        os.set_inheritable(_audit_fd, True)
++        child_env['LD_AUDIT'] = f'/proc/self/fd/{_audit_fd}'
+         receipt['child_env_keys'] = sorted(child_env)
+ 
+         def _term_handler(signum, _frame):
+@@ -2228,6 +2239,7 @@ def main(argv=None):
+                 preexec_fn=_preexec_pdeathsig,
+                 env=child_env,
+             )
++            popen_kwargs['pass_fds'] = (_audit_fd,)
+             if args.server_fd is not None:
+                 # argv[0] stays the --server path; the image is the memfd itself
+                 popen_kwargs['executable'] = (

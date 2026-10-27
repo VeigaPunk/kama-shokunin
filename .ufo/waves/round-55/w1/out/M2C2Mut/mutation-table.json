@@ -1,0 +1,74 @@
+[
+ {
+  "name": "m01-still-cited-drop",
+  "sha256": "b81371de1d46f0b1a6b018860770b159b5ce835aaf426c5538b9b8458db2019b",
+  "old": "        if tok in cited_tip.get(surf, {}):\n            return \"superseded token is still cited at tip\"\n",
+  "new": ""
+ },
+ {
+  "name": "m02-replacement-cited-drop",
+  "sha256": "df41a0def99bae569af545fc02401d31a3bcfbc3be4f4ecbf8ef3adb8b0b4fb9",
+  "old": "            return \"superseded token is still cited at tip\"\n        rep = cited_tip.get(surf, {}).get(ev)\n        if rep is None:\n            return f\"replacement {ev!r} is not cited in {surf} at tip\"\n",
+  "new": "            return \"superseded token is still cited at tip\"\n        rep = cited_tip.get(surf, {}).get(ev)\n"
+ },
+ {
+  "name": "m03-replacement-resolves-drop",
+  "sha256": "206e4435192362b49d3a86bc7bf5fb9ce19c3676fe58e6abdcd65a2162b70d65",
+  "old": "            return f\"replacement {ev!r} is not cited in {surf} at tip\"\n        if any(v != \"ok\" for _e, v in rep):\n            return f\"replacement {ev!r} does not resolve at tip\"\n        if base_citelines is not None",
+  "new": "            return f\"replacement {ev!r} is not cited in {surf} at tip\"\n        if base_citelines is not None"
+ },
+ {
+  "name": "m04-base-cited-drop",
+  "sha256": "97c41cadd54a454c2136e9d7c729bb9e07e2f7028ffefd8bbc050c793323a819",
+  "old": "        if base_citelines is not None and tok not in (base_citelines.get(surf) or {}):\n            return \"superseded token was not cited in this surface at the base\"\n",
+  "new": ""
+ },
+ {
+  "name": "m05-stale-exempt-tuple",
+  "sha256": "aae08e87050243b0ceb77d83e7219e2d431c0df9d4d0f5f139daab3d8103ce58",
+  "old": "    if row[\"class\"] not in (\"fixed\", \"externalized\", \"superseded\") and not exp and why is None:",
+  "new": "    if row[\"class\"] not in (\"fixed\", \"externalized\") and not exp and why is None:"
+ },
+ {
+  "name": "m06-dropped-exempt-set",
+  "sha256": "f79a2d4cefa4441079f05f33a022cb68b4badf7170887259e090efe31a2931f2",
+  "old": "              if row[\"class\"] in (\"fixed\", \"externalized\", \"superseded\")}",
+  "new": "              if row[\"class\"] in (\"fixed\", \"externalized\")}"
+ },
+ {
+  "name": "m07-disclosed-exclusion",
+  "sha256": "a9aa72d6e4c5c72377cd6e113d725a5100bdd6167fc482e1ae7a01bddb608d9e",
+  "old": "        elif row[\"class\"] not in (\"fixed\", \"externalized\", \"superseded\"):\n            disclosed.add(key)",
+  "new": "        elif row[\"class\"] not in (\"fixed\", \"externalized\"):\n            disclosed.add(key)"
+ },
+ {
+  "name": "m08-clean-env-passthrough",
+  "sha256": "6b4bb7254b2927c0f0b40e4955ec95c99efeed2fd28009551037ab77304c099f",
+  "old": "    env = {k: v for k, v in os.environ.items() if not k.startswith(\"GIT_\")}",
+  "new": "    env = dict(os.environ)"
+ },
+ {
+  "name": "m09-digest-compare-off",
+  "sha256": "a279fac175b6ec5a2d0450b5f03e631dbda898f8a07511c9ae5a188583f8b6a7",
+  "old": "            if digest != expected[1]:",
+  "new": "            if False and digest != expected[1]:"
+ },
+ {
+  "name": "m10-want-lambda-vacuous",
+  "sha256": "af0f488bdac4e8722c1c7e69298c6e96bfd3ce3584b87998228a8410e7f60543",
+  "old": "None, None, \"superseded\", lambda ok, c: ok),",
+  "new": "None, None, \"superseded\", lambda ok, c: True),"
+ },
+ {
+  "name": "m11-classes-tuple-drop",
+  "sha256": "b021bac4bc3cf935efe05fd7b1cf76f8adab7b0ae148caf5523e35f62d70cb06",
+  "old": "CLASSES = (\"deleted\", \"never\", \"moved\", \"eof\", \"untracked\", \"upstream\", \"fixed\", \"externalized\", \"superseded\")",
+  "new": "CLASSES = (\"deleted\", \"never\", \"moved\", \"eof\", \"untracked\", \"upstream\", \"fixed\", \"externalized\")"
+ },
+ {
+  "name": "m12-class-swap-fixed",
+  "sha256": "92039aaac5dc71cfd82215fc6a1dfb7b4412ed59fa0ccf276a918f49ef2928da",
+  "old": "        rows.append({\"line\": n, \"surface\": f[0], \"token\": f[1], \"class\": f[2], \"evidence\": f[3]})",
+  "new": "        rows.append({\"line\": n, \"surface\": f[0], \"token\": f[1], \"class\": \"fixed\" if f[2] == \"superseded\" else f[2], \"evidence\": f[3]})"
+ }
+]

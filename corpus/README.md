@@ -77,6 +77,13 @@ the local documentation improvement is not a completed training round.
   historical verified-round reconciliation. See lane-root
   `.ufo/round-5/continuation.md`; no outside-repo repair is absorbed here.
 
+- Round 56: `tools/round56-replay-code-audit.py` now rejects `LD_AUDIT` by
+  environment-variable name (grounded in `SOURCES.md` S512); this is an
+  operability classifier refinement, not new `knowledge/` coverage. The
+  broader host-library byte-provenance and archive-attribute routes remain
+  frontier. Assimilation: none; `considerthese/2026-10-26.md` proposal 4
+  (daily pin-gap line) remains pending.
+
 ## Corrections — round 10 (2026-10-19)
 
 *[correction 2026-10-19 (round 10, A50): `6–17 (in progress; loop 1 final)` at line 47 is stale (nl -ba corpus/knowledge/free-tier-provider-limits.md | sed -n '26,57p' => the status board has rounds 6-9 only, with loops 2-3 pending); current anchor: `corpus/knowledge/free-tier-provider-limits.md:26-57`]*

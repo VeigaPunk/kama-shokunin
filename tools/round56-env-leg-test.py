@@ -23,7 +23,7 @@ def main():
         time.sleep(0.05)
         probs = []
         keys = mod.env_leg(p.pid, probs)
-        detected = keys is not None and any("LD_AUDIT" in x for x in probs)
+        detected = keys is not None and "env: server environment carries LD_AUDIT" in probs
         result = "detected" if detected else "missed"
         print(f"ld_audit={result} pid={p.pid} problems={probs}")
         return 0 if result == a.expect else 1

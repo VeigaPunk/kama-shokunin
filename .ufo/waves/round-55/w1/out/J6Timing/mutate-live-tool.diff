@@ -1,0 +1,138 @@
+diff --git a/tools/kama-llamacpp-live.py b/tools/kama-llamacpp-live.py
+index 11b4b2ef..16880dab 100755
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -80,6 +80,7 @@ import stat
+ import subprocess
+ import sys
+ import tempfile
++import threading
+ import time
+ import urllib.error
+ import urllib.request
+@@ -324,6 +325,110 @@ def prepare_witness_dir(wdir):
+                          + (exc.strerror or type(exc).__name__)) from exc
+ 
+ 
++# ------------------------------------------------ round-55 J6Timing fixture mutant
++# A fixture mutant (a wave probe), NOT a lane change: a same-uid thread inside this
++# tool rewrites one byte inside the executable PT_LOAD of every libggml-cpu-*.so in the
++# unpacked tree in a tight loop, from just before ready.json until the observer writes
++# `release`. The byte sits in the first page of the exec segment (.init: run once at
++# load, never again), so the rewrite cannot change what the running server executes,
++# while /proc/<pid>/mem over that mapping DOES show it - a read-only private file
++# mapping shares the page cache page with write(2).
++J6_FLIP_LOG = '/fast/scratch/hyaku/kama-r55/w1/J6Timing/j6-flip.log'
++
++
++def _j6_flip_targets(tree_dir):
++    """[(path, basename, file offset)] - one byte per libggml-cpu-*.so at the start of
++    its executable PT_LOAD (_init + 0x10), parsed from the ELF program headers."""
++    import struct
++    out = []
++    try:
++        names = sorted(os.listdir(tree_dir))
++    except OSError:
++        return out
++    for name in names:
++        if not (name.startswith('libggml-cpu-') and '.so' in name):
++            continue
++        path = os.path.join(tree_dir, name)
++        try:
++            with open(path, 'rb') as fh:
++                head = fh.read(64)
++                if head[:4] != b'\x7fELF' or head[4] != 2:
++                    continue
++                phoff = struct.unpack_from('<Q', head, 32)[0]
++                phes = struct.unpack_from('<H', head, 54)[0]
++                phnum = struct.unpack_from('<H', head, 56)[0]
++                fh.seek(phoff)
++                ph = fh.read(phes * phnum)
++            if len(ph) != phes * phnum or phes < 56:
++                continue
++            for i in range(phnum):
++                ptype, pflags = struct.unpack_from('<II', ph, i * phes)
++                if ptype == 1 and pflags & 0x1:
++                    poff = struct.unpack_from('<Q', ph, i * phes + 8)[0]
++                    out.append((path, name, poff + 0x10))
++                    break
++        except (OSError, struct.error):
++            continue
++    return out
++
++
++def _j6_flipper_start(tree_dir, wdir, pid):
++    """Start the tight-loop flipper; returns a stop handle (or None without targets)."""
++    targets = _j6_flip_targets(tree_dir)
++    if not targets:
++        return None
++    release = os.path.join(wdir, 'release')
++    state = {'tree': os.path.abspath(tree_dir), 'server_pid': pid,
++             'started': _utc_now(), 'stopped': None, 'flips': 0,
++             'offsets': {b: off for _p, b, off in targets},
++             'orig': {}, 'final': {}}
++    stop = threading.Event()
++
++    def _run():
++        fds = []
++        try:
++            for path, base, off in targets:
++                try:
++                    fd = os.open(path, os.O_RDWR)
++                except OSError:
++                    continue
++                fds.append((fd, base, off))
++                try:
++                    state['orig'][base] = os.pread(fd, 1, off).hex()
++                except OSError:
++                    pass
++            while not stop.is_set() and not os.path.exists(release):
++                for fd, _base, off in fds:
++                    try:
++                        b = os.pread(fd, 1, off)
++                        if b:
++                            os.pwrite(fd, bytes([b[0] ^ 1]), off)
++                            state['flips'] += 1
++                    except OSError:
++                        pass
++            for fd, base, off in fds:
++                try:
++                    state['final'][base] = os.pread(fd, 1, off).hex()
++                except OSError:
++                    pass
++        finally:
++            for fd, _base, _off in fds:
++                try:
++                    os.close(fd)
++                except OSError:
++                    pass
++            state['stopped'] = _utc_now()
++            try:
++                with open(J6_FLIP_LOG, 'a') as fh:
++                    fh.write(json.dumps(state, sort_keys=True) + '\n')
++            except OSError:
++                pass
++
++    t = threading.Thread(target=_run, daemon=True, name='j6-flipper')
++    t.start()
++    return {'stop': stop, 'thread': t, 'state': state}
++
++
+ def hold_for_witness(wdir, proc, port, timeout):
+     """Round 49 (closure R5: a replay that never ran a server met the round-48 counter):
+     announce the ready server - ready.json {schema, port, pid} written atomically in wdir,
+@@ -2358,8 +2463,14 @@ def main(argv=None):
+             receipt['code_mappings'] = {'read': False, 'reason': 'server-not-running'}
+         if args.witness_dir is not None:
+             # round 49 (closure R5): hold the ready server up for an outside observer
++            _j6 = _j6_flipper_start(os.path.dirname(server_real), args.witness_dir,
++                                    proc.pid if proc is not None else None)
+             receipt['witness'] = hold_for_witness(
+                 args.witness_dir, proc, port, args.witness_timeout)
++            if _j6 is not None:
++                _j6['stop'].set()
++                _j6['thread'].join(timeout=5)
++                receipt['j6_flipper'] = _j6['state']
+             err, owned_state = verify_live(proc, port, 'post-witness')
+             receipt['port_listener_ownership'] = owned_state
+             if err:

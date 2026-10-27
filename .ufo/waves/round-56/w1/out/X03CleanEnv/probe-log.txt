@@ -1,0 +1,145 @@
+round-56 w1 X03CleanEnv probe log
+date=2026-10-27T16:09:19Z
+host=Linux 7.2.11-arch1-1 x86_64
+git=git version 2.56.0
+python=Python 3.14.8
+clone=/fast/scratch/hyaku/kama-r56/X03CleanEnv/work/lane-clone
+clone_head=efc6b3ec6fb6ea308c15855e9b8b62856f4255b7
+
+## A. hostile configs are effective against a naive git reader (no sanitization)
+-- fixture h-syntax.cfg:
+   [broken
+   cmd: GIT_CONFIG_GLOBAL=/fast/scratch/hyaku/kama-r56/X03CleanEnv/h-syntax.cfg GIT_CONFIG_NOSYSTEM=0 git -C CLONE rev-parse --verify efc6b3ec6fb6ea308c15855e9b8b62856f4255b7^{commit}
+   exit=128
+   stderr:
+     fatal: bad config line 1 in file /fast/scratch/hyaku/kama-r56/X03CleanEnv/h-syntax.cfg
+   cmd: GIT_CONFIG_GLOBAL=/fast/scratch/hyaku/kama-r56/X03CleanEnv/h-syntax.cfg GIT_CONFIG_NOSYSTEM=0 git -C CLONE show efc6b3ec6fb6ea308c15855e9b8b62856f4255b7:.ufo/waves/round-56/preregistration.json
+   exit=128
+-- fixture h-badbool.cfg:
+   [core]
+   	bare = maybe
+   cmd: GIT_CONFIG_GLOBAL=/fast/scratch/hyaku/kama-r56/X03CleanEnv/h-badbool.cfg GIT_CONFIG_NOSYSTEM=0 git -C CLONE rev-parse --verify efc6b3ec6fb6ea308c15855e9b8b62856f4255b7^{commit}
+   exit=128
+   stderr:
+     fatal: bad boolean config value 'maybe' for 'core.bare'
+   cmd: GIT_CONFIG_GLOBAL=/fast/scratch/hyaku/kama-r56/X03CleanEnv/h-badbool.cfg GIT_CONFIG_NOSYSTEM=0 git -C CLONE show efc6b3ec6fb6ea308c15855e9b8b62856f4255b7:.ufo/waves/round-56/preregistration.json
+   exit=128
+-- fixture h-incdir.cfg:
+   [include]
+   	path = /fast/scratch/hyaku/kama-r56/X03CleanEnv
+   cmd: GIT_CONFIG_GLOBAL=/fast/scratch/hyaku/kama-r56/X03CleanEnv/h-incdir.cfg GIT_CONFIG_NOSYSTEM=0 git -C CLONE rev-parse --verify efc6b3ec6fb6ea308c15855e9b8b62856f4255b7^{commit}
+   exit=128
+   stderr:
+     warning: unable to access '/fast/scratch/hyaku/kama-r56/X03CleanEnv': Is a directory
+     fatal: bad config line 2 in file /fast/scratch/hyaku/kama-r56/X03CleanEnv/h-incdir.cfg
+   cmd: GIT_CONFIG_GLOBAL=/fast/scratch/hyaku/kama-r56/X03CleanEnv/h-incdir.cfg GIT_CONFIG_NOSYSTEM=0 git -C CLONE show efc6b3ec6fb6ea308c15855e9b8b62856f4255b7:.ufo/waves/round-56/preregistration.json
+   exit=128
+
+-- hostile HOME (fakehome/.gitconfig bad boolean):
+   naive exit=128
+-- hostile XDG_CONFIG_HOME (xdg/git/config bad boolean):
+   naive exit=128
+-- hostile GIT_DIR=/nonexistent:
+   naive exit=128
+-- hostile GIT_CONFIG_SYSTEM=/fast/scratch/hyaku/kama-r56/X03CleanEnv/h-syntax.cfg GIT_CONFIG_NOSYSTEM=0:
+   naive exit=128
+
+## B. checker matrix (tool=tools/round56-prereg-check.py sha256 c7b0d787f348691bbc057114b455545f5abfb0c70ec497e1ad695591f1489853)
+c2-base-real-path.out                          sha256=860ad630ebe98cbdbb69166f1a67802cac148d33ad791031b05705413bfc6e5d exit-receipt=tip=e10b6d39af450e8d652be9ac2986768b531fe13f present=0 roster_match=0 kills=0 controls=0 met=False 
+c2-base-spoofed-path.out                       sha256=01d95f526ed731b1fe0c4fd3aa72457d27662d261736d31d8e3eb88f1dd9ae1c exit-receipt=tip=efc6b3ec6fb6ea308c15855e9b8b62856f4255b7 present=1 roster_match=1 kills=1 controls=2 met=True 
+c2-clone-base-clean.out                        sha256=860ad630ebe98cbdbb69166f1a67802cac148d33ad791031b05705413bfc6e5d exit-receipt=tip=e10b6d39af450e8d652be9ac2986768b531fe13f present=0 roster_match=0 kills=0 controls=0 met=False 
+c2-clone-base-combined-hostile.out             sha256=860ad630ebe98cbdbb69166f1a67802cac148d33ad791031b05705413bfc6e5d exit-receipt=tip=e10b6d39af450e8d652be9ac2986768b531fe13f present=0 roster_match=0 kills=0 controls=0 met=False 
+c2-clone-base-hostile-badbool.out              sha256=860ad630ebe98cbdbb69166f1a67802cac148d33ad791031b05705413bfc6e5d exit-receipt=tip=e10b6d39af450e8d652be9ac2986768b531fe13f present=0 roster_match=0 kills=0 controls=0 met=False 
+c2-clone-base-hostile-incdir.out               sha256=860ad630ebe98cbdbb69166f1a67802cac148d33ad791031b05705413bfc6e5d exit-receipt=tip=e10b6d39af450e8d652be9ac2986768b531fe13f present=0 roster_match=0 kills=0 controls=0 met=False 
+c2-clone-base-hostile-syntax.out               sha256=860ad630ebe98cbdbb69166f1a67802cac148d33ad791031b05705413bfc6e5d exit-receipt=tip=e10b6d39af450e8d652be9ac2986768b531fe13f present=0 roster_match=0 kills=0 controls=0 met=False 
+c2-clone-base-hostile-system.out               sha256=860ad630ebe98cbdbb69166f1a67802cac148d33ad791031b05705413bfc6e5d exit-receipt=tip=e10b6d39af450e8d652be9ac2986768b531fe13f present=0 roster_match=0 kills=0 controls=0 met=False 
+c2-clone-freeze-clean.out                      sha256=01d95f526ed731b1fe0c4fd3aa72457d27662d261736d31d8e3eb88f1dd9ae1c exit-receipt=tip=efc6b3ec6fb6ea308c15855e9b8b62856f4255b7 present=1 roster_match=1 kills=1 controls=2 met=True 
+c2-clone-freeze-combined-hostile.out           sha256=01d95f526ed731b1fe0c4fd3aa72457d27662d261736d31d8e3eb88f1dd9ae1c exit-receipt=tip=efc6b3ec6fb6ea308c15855e9b8b62856f4255b7 present=1 roster_match=1 kills=1 controls=2 met=True 
+c2-clone-freeze-hostile-badbool.out            sha256=01d95f526ed731b1fe0c4fd3aa72457d27662d261736d31d8e3eb88f1dd9ae1c exit-receipt=tip=efc6b3ec6fb6ea308c15855e9b8b62856f4255b7 present=1 roster_match=1 kills=1 controls=2 met=True 
+c2-clone-freeze-hostile-incdir.out             sha256=01d95f526ed731b1fe0c4fd3aa72457d27662d261736d31d8e3eb88f1dd9ae1c exit-receipt=tip=efc6b3ec6fb6ea308c15855e9b8b62856f4255b7 present=1 roster_match=1 kills=1 controls=2 met=True 
+c2-clone-freeze-hostile-syntax.out             sha256=01d95f526ed731b1fe0c4fd3aa72457d27662d261736d31d8e3eb88f1dd9ae1c exit-receipt=tip=efc6b3ec6fb6ea308c15855e9b8b62856f4255b7 present=1 roster_match=1 kills=1 controls=2 met=True 
+c2-clone-freeze-hostile-system.out             sha256=01d95f526ed731b1fe0c4fd3aa72457d27662d261736d31d8e3eb88f1dd9ae1c exit-receipt=tip=efc6b3ec6fb6ea308c15855e9b8b62856f4255b7 present=1 roster_match=1 kills=1 controls=2 met=True 
+c2-clone-freeze-tampered-hostile.out           sha256=01d95f526ed731b1fe0c4fd3aa72457d27662d261736d31d8e3eb88f1dd9ae1c exit-receipt=tip=efc6b3ec6fb6ea308c15855e9b8b62856f4255b7 present=1 roster_match=1 kills=1 controls=2 met=True 
+c2-lane-base-clean.out                         sha256=860ad630ebe98cbdbb69166f1a67802cac148d33ad791031b05705413bfc6e5d exit-receipt=tip=e10b6d39af450e8d652be9ac2986768b531fe13f present=0 roster_match=0 kills=0 controls=0 met=False 
+c2-lane-base-hostile-badbool.out               sha256=860ad630ebe98cbdbb69166f1a67802cac148d33ad791031b05705413bfc6e5d exit-receipt=tip=e10b6d39af450e8d652be9ac2986768b531fe13f present=0 roster_match=0 kills=0 controls=0 met=False 
+c2-lane-base-hostile-incdir.out                sha256=860ad630ebe98cbdbb69166f1a67802cac148d33ad791031b05705413bfc6e5d exit-receipt=tip=e10b6d39af450e8d652be9ac2986768b531fe13f present=0 roster_match=0 kills=0 controls=0 met=False 
+c2-lane-base-hostile-syntax.out                sha256=860ad630ebe98cbdbb69166f1a67802cac148d33ad791031b05705413bfc6e5d exit-receipt=tip=e10b6d39af450e8d652be9ac2986768b531fe13f present=0 roster_match=0 kills=0 controls=0 met=False 
+c2-lane-freeze-clean.out                       sha256=01d95f526ed731b1fe0c4fd3aa72457d27662d261736d31d8e3eb88f1dd9ae1c exit-receipt=tip=efc6b3ec6fb6ea308c15855e9b8b62856f4255b7 present=1 roster_match=1 kills=1 controls=2 met=True 
+c2-lane-freeze-hostile-badbool.out             sha256=01d95f526ed731b1fe0c4fd3aa72457d27662d261736d31d8e3eb88f1dd9ae1c exit-receipt=tip=efc6b3ec6fb6ea308c15855e9b8b62856f4255b7 present=1 roster_match=1 kills=1 controls=2 met=True 
+c2-lane-freeze-hostile-incdir.out              sha256=01d95f526ed731b1fe0c4fd3aa72457d27662d261736d31d8e3eb88f1dd9ae1c exit-receipt=tip=efc6b3ec6fb6ea308c15855e9b8b62856f4255b7 present=1 roster_match=1 kills=1 controls=2 met=True 
+c2-lane-freeze-hostile-syntax.out              sha256=01d95f526ed731b1fe0c4fd3aa72457d27662d261736d31d8e3eb88f1dd9ae1c exit-receipt=tip=efc6b3ec6fb6ea308c15855e9b8b62856f4255b7 present=1 roster_match=1 kills=1 controls=2 met=True 
+
+## C. env actually delivered by the checker to its child git (PATH shim captured argv+env)
+argv: -C /fast/scratch/hyaku/kama-r56/X03CleanEnv/work/lane-clone rev-parse --verify efc6b3ec6fb6ea308c15855e9b8b62856f4255b7^{commit}
+GIT_CONFIG_GLOBAL=/dev/null
+GIT_CONFIG_NOSYSTEM=1
+HOME=/fast/scratch/hyaku/kama-r56/X03CleanEnv/fakehome
+
+## D. committed-bytes binding under a tampered working tree (scratch clone only)
+-- working-tree tamper diff:
+ .ufo/waves/round-56/preregistration.json | 2 +-
+ tools/round56-env-leg-battery.py         | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+diff --git i/.ufo/waves/round-56/preregistration.json w/.ufo/waves/round-56/preregistration.json
+index cf222614..cd289bc0 100644
+--- i/.ufo/waves/round-56/preregistration.json
++++ w/.ufo/waves/round-56/preregistration.json
+@@ -28,7 +28,7 @@
+   },
+   "battery": {
+     "roster": {
+-      "base-old-counter": {"designation": "control", "expected": "missed"},
++      "base-old-counter": {"designation": "kill", "expected": "missed"},
+       "round56-counter": {"designation": "positive-control", "expected": "detected"},
+       "m-drop-ldaudit": {"designation": "kill", "expected": "missed"}
+     },
+diff --git i/tools/round56-env-leg-battery.py w/tools/round56-env-leg-battery.py
+index 9d51ffc3..238605a2 100755
+--- i/tools/round56-env-leg-battery.py
++++ w/tools/round56-env-leg-battery.py
+@@ -13,8 +13,8 @@ TEST = LANE / "tools/round56-env-leg-test.py"
+ OLD = LANE / "tools/round54-replay-code-audit.py"
+ NEW = LANE / "tools/round56-replay-code-audit.py"
+ ROSTER = {
+-    "base-old-counter": {"designation": "control", "expected": "missed"},
+-    "round56-counter": {"designation": "positive-control", "expected": "detected"},
++    "base-old-counter": {"designation": "kill", "expected": "missed"},
++    "round56-counter": {"designation": "kill", "expected": "detected"},
+     "m-drop-ldaudit": {"designation": "kill", "expected": "missed"},
+ }
+ 
+-- naive working-tree read of battery roster:
+ROSTER = {
+    "base-old-counter": {"designation": "kill", "expected": "missed"},
+    "round56-counter": {"designation": "kill", "expected": "detected"},
+    "m-drop-ldaudit": {"designation": "kill", "expected": "missed"},
+}
+-- naive working-tree read of prereg roster line:
+  "battery": {
+    "roster": {
+      "base-old-counter": {"designation": "kill", "expected": "missed"},
+      "round56-counter": {"designation": "positive-control", "expected": "detected"},
+      "m-drop-ldaudit": {"designation": "kill", "expected": "missed"}
+-- checker at committed freeze tip, hostile env, tampered worktree:
+tip=efc6b3ec6fb6ea308c15855e9b8b62856f4255b7
+present=1 roster_match=1 kills=1 controls=2 met=True
+   exit=0
+-- receipt identical to untampered freeze run: yes
+
+## E. independent anchor: committed blobs read via git cat-file
+prereg_blob_sha256=fa4b5a100a9fd6ceaec93c537f3d9264a0883fac873368243ff1ae041d82ee68
+battery_blob_sha256=79b19596c475863dbd5fe5c03511996b050a69d500f2671385069c02d17c335c
+roster_equal=1
+kills=1
+controls=2
+prereg_roster={"base-old-counter": {"designation": "control", "expected": "missed"}, "m-drop-ldaudit": {"designation": "kill", "expected": "missed"}, "round56-counter": {"designation": "positive-control", "expected": "detected"}}
+
+## F. residual vector: PATH substitution (out of assigned scope; scratch shim only)
+-- real gate at base tip, spoofed PATH (scratch fake git answers rev-parse/show):
+tip=efc6b3ec6fb6ea308c15855e9b8b62856f4255b7
+present=1 roster_match=1 kills=1 controls=2 met=True
+   exit=0
+-- real gate at base tip, real PATH:
+tip=e10b6d39af450e8d652be9ac2986768b531fe13f
+present=0 roster_match=0 kills=0 controls=0 met=False
+   exit=1

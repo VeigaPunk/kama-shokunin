@@ -1,0 +1,39 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round54-replay-code-audit.py	2026-10-27 10:13:09.295149691 -0300
++++ /fast/scratch/hyaku/kama-r55/w1/J5EnvNames/fix/counter-pinned.py	2026-10-27 11:23:56.918880413 -0300
+@@ -141,6 +141,25 @@
+     "libgomp.so.1.0.0", "libm.so.6", "libssl.so.3", "libstdc++.so.6.0.36",
+     "libz.so.1.3.2", "libzstd.so.1.5.7",
+ ))
++# round-55 seat J5EnvNames: bind a root-owned host library by its frozen INODE as well
++# as its basename. The basename alone admits a root-owned plant at any other path whose
++# name collides with the honest set (measured: a plant named libm.so.6 at
++# /fast/scratch/.../hostlib/libm.so.6 mapped as a 14th "host" file and passed).
++HOST_LIB_IDS = {
++    "ld-linux-x86-64.so.2": "13506894",
++    "libbrotlicommon.so.1.2.0": "8043",
++    "libbrotlidec.so.1.2.0": "8046",
++    "libbrotlienc.so.1.2.0": "8049",
++    "libcrypto.so.3": "13509470",
++    "libc.so.6": "13506903",
++    "libgcc_s.so.1": "621207",
++    "libgomp.so.1.0.0": "632877",
++    "libm.so.6": "13506913",
++    "libssl.so.3": "13509472",
++    "libstdc++.so.6.0.36": "621215",
++    "libz.so.1.3.2": "13508283",
++    "libzstd.so.1.5.7": "8527",
++}
+ KERNEL_MAPS = ("[vdso]", "[vsyscall]", "[vvar]", "[vvar_vclock]", "[vvar_boot", "[uprobes]")
+ ROW_CAP = 64 << 20  # a single maps row is read at most 64 MiB (Sen1Mem F3)
+ BAD_ENV = ("LD_PRELOAD", "DYLD_INSERT_LIBRARIES")
+@@ -563,6 +582,10 @@
+                 if os.path.basename(path) not in HOST_LIBS:
+                     probs.append(f"code: root-owned host library {path} is not in the frozen host set")
+                     continue
++                if str(st.st_ino) != HOST_LIB_IDS[os.path.basename(path)]:
++                    probs.append(f"code: root-owned host library {path} inode {st.st_ino} is not the frozen "
++                                 f"host object {HOST_LIB_IDS[os.path.basename(path)]}")
++                    continue
+                 host.add(path)
+     finally:
+         os.close(mem)

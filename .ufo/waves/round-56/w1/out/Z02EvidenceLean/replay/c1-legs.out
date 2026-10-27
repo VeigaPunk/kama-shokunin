@@ -1,0 +1,21 @@
+# C1 legs, independent replay from a fresh --no-local clone at efc6b3ec, HOME+TMPDIR in seat scratch
+$ python3 clone/tools/round56-env-leg-test.py --counter <round56-replay-code-audit.py> --expect detected
+ERROR: ld.so: object '/usr/lib/libexpat.so.1' cannot be loaded as audit interface: undefined symbol: la_version; ignored.
+ld_audit=detected pid=2097538 problems=['env: server environment carries LD_AUDIT']
+exit=0
+
+$ python3 clone/tools/round56-env-leg-test.py --counter <round54-replay-code-audit.py> --expect missed
+ERROR: ld.so: object '/usr/lib/libexpat.so.1' cannot be loaded as audit interface: undefined symbol: la_version; ignored.
+ld_audit=missed pid=2097589 problems=[]
+exit=0
+
+$ python3 clone/tools/round56-env-leg-test.py --counter <mutant-rebuilt.py> --expect missed
+ERROR: ld.so: object '/usr/lib/libexpat.so.1' cannot be loaded as audit interface: undefined symbol: la_version; ignored.
+ld_audit=missed pid=2097641 problems=[]
+exit=0
+
+$ python3 clone/tools/round56-env-leg-test.py --counter <mutant-rebuilt.py> --expect detected
+ERROR: ld.so: object '/usr/lib/libexpat.so.1' cannot be loaded as audit interface: undefined symbol: la_version; ignored.
+ld_audit=missed pid=2097693 problems=[]
+exit=1
+

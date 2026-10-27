@@ -1,0 +1,36 @@
+libggml-rpc.so (battery m-text-flip, size-0x3000): file size 0x4e120
+   LOAD file extent 0x0..0x11e40  flags=[R 0x1000]
+   LOAD file extent 0x12000..0x31469  flags=[R E]
+   LOAD file extent 0x32000..0x3a6a0  flags=[R 0x1000]
+   LOAD file extent 0x3b270..0x3c860  flags=[RW 0x1000]
+   flip offset = 0x4b120
+   inside any LOAD segment?          False
+   inside an EXECUTABLE LOAD segment? False   exec extents=[('0x12000', '0x1f469')]
+   flip is 59584 bytes PAST the last LOAD file end 0x3c860
+
+libggml-cpu-zen4.so (battery m-member-flip, size-32): file size 0x182438
+   LOAD file extent 0x0..0x14638  flags=[R 0x1000]
+   LOAD file extent 0x15000..0x139355  flags=[R E]
+   LOAD file extent 0x13a000..0x166b69  flags=[R 0x1000]
+   LOAD file extent 0x167010..0x1690c1  flags=[RW 0x1000]
+   flip offset = 0x182418
+   inside any LOAD segment?          False
+   inside an EXECUTABLE LOAD segment? False   exec extents=[('0x15000', '0x124355')]
+   flip is 103255 bytes PAST the last LOAD file end 0x1690c1
+
+libggml-rpc.so (X7 in-text probe, 0x30000): file size 0x4e120
+   LOAD file extent 0x0..0x11e40  flags=[R 0x1000]
+   LOAD file extent 0x12000..0x31469  flags=[R E]
+   LOAD file extent 0x32000..0x3a6a0  flags=[R 0x1000]
+   LOAD file extent 0x3b270..0x3c860  flags=[RW 0x1000]
+   flip offset = 0x30000
+   inside any LOAD segment?          True
+   inside an EXECUTABLE LOAD segment? True   exec extents=[('0x12000', '0x1f469')]
+
+live /proc/<pid>/maps rows of a process that dlopen()ed the archive's libggml-rpc.so:
+   fileoff 0x000000 len 73728  r--p
+   fileoff 0x012000 len 131072 r-xp
+   fileoff 0x032000 len 36864  r--p
+   fileoff 0x03b000 len 4096   ---p / r--p
+   fileoff 0x03c000 len 4096   rw-p
+   -> highest mapped file offset ends at 0x3d000; 0x4b120 (the battery's flip) is never mapped.

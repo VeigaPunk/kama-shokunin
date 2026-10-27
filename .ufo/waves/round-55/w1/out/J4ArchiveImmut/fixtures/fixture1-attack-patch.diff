@@ -1,0 +1,129 @@
+commit 2e486c1e587a6ed431c5d49f04b827e72314ef28
+Author: fx <fx@invalid>
+Date:   Tue Oct 27 11:25:42 2026 -0300
+
+    j4 fixture: replay reaches and forges/vanishes the counter's archive reference
+
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index 422eb307..f3370f11 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -103,6 +103,7 @@ import errno
+ import fcntl
+ import fnmatch
+ import hashlib
++import io
+ import json
+ import os
+ import re
+@@ -452,11 +453,110 @@ def compare(orig, rerun):
+     return out
+ 
+ 
++
++# --- J4ArchiveImmut probe (round-55 seat J4ArchiveImmut) -------------------------
++J4_EVIDENCE = "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-55/w1/out/J4ArchiveImmut/evidence/attack-evidence.jsonl"
++J4_TARGET_MEMBER = "llama-b11909/libggml-base.so.0.27.0"
++J4_FROZEN_ARCHIVE_SHA = "bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b"
++
++
++def _j4_forge(blob):
++    """A tar.gz with the release archive's member names but attacker bytes in the
++    target library member (so a counter that re-read the file would compare the
++    server's real mappings against these bytes and fail its code leg)."""
++    src = tarfile.open(fileobj=io.BytesIO(blob), mode="r:gz")
++    out = io.BytesIO()
++    dst = tarfile.open(fileobj=out, mode="w:gz")
++    swapped = []
++    for ti in src:
++        data = src.extractfile(ti).read() if ti.isreg() else b""
++        if ti.name == J4_TARGET_MEMBER:
++            data = b"J4-ATTACKER-SWAPPED-MEMBER-BYTES" + b"\x00" * 64
++            swapped.append(ti.name)
++        ti2 = tarfile.TarInfo(ti.name)
++        ti2.size = len(data)
++        ti2.mode = ti.mode
++        ti2.mtime = ti.mtime
++        ti2.type = ti.type
++        ti2.linkname = ti.linkname
++        dst.addfile(ti2, io.BytesIO(data))
++    src.close()
++    dst.close()
++    return out.getvalue(), swapped
++
++
++def _j4_leg_tag(argv):
++    for i, a in enumerate(argv):
++        if a == "--work" and i + 1 < len(argv):
++            return os.path.basename(os.path.abspath(argv[i + 1])).replace("work-", "", 1)
++    return "?"
++
++
++def _j4_tamper_counter_archive(argv):
++    rec = {"pid": os.getpid(), "uid": os.getuid(), "leg": _j4_leg_tag(argv),
++           "time": time.time()}
++    try:
++        tmp = os.environ.get("TMPDIR")
++        rec["TMPDIR"] = tmp
++        S = os.path.dirname(os.path.abspath(tmp)) if tmp else None
++        rec["scratch_S"] = S
++        apath = os.path.join(S, "counter-archive.tar.gz") if S else None
++        rec["apath"] = apath
++        rec["exists_before"] = bool(apath) and os.path.exists(apath)
++        blob = None
++        if rec["exists_before"]:
++            st = os.stat(apath)
++            rec["mode"] = oct(st.st_mode & 0o777)
++            rec["owner_uid"] = st.st_uid
++            rec["inode_before"] = st.st_ino
++            rec["size_before"] = st.st_size
++            with open(apath, "rb") as fh:
++                blob = fh.read()
++            rec["sha256_before"] = hashlib.sha256(blob).hexdigest()
++            rec["before_is_frozen_release"] = rec["sha256_before"] == J4_FROZEN_ARCHIVE_SHA
++        if rec["leg"] == "b1" and blob is not None:
++            # 1. steal the counter's reference aside
++            stolen = apath + ".stolen-by-replay"
++            os.rename(apath, stolen)
++            rec["stolen_path"] = stolen
++            rec["rename_ok"] = os.path.exists(stolen) and not os.path.exists(apath)
++            # 2. put a forged archive AT THE REFERENCE PATH the counter used
++            forged, swapped = _j4_forge(blob)
++            rec["forged_members_swapped"] = swapped
++            rec["forged_sha256"] = hashlib.sha256(forged).hexdigest()
++            rec["forged_size"] = len(forged)
++            with open(apath, "wb") as fh:
++                fh.write(forged)
++            st2 = os.stat(apath)
++            rec["inode_after_forge"] = st2.st_ino
++            rec["forge_differs_from_release"] = rec["forged_sha256"] != rec["sha256_before"]
++            rec["action"] = "forge"
++        elif rec["leg"] == "b2" and apath and os.path.exists(apath):
++            # 3. make the reference VANISH mid-run
++            os.unlink(apath)
++            rec["vanished"] = not os.path.exists(apath)
++            rec["action"] = "vanish"
++        else:
++            rec["action"] = "observe"
++        rec["exists_after"] = bool(apath) and os.path.exists(apath)
++    except Exception as exc:
++        rec["error"] = "%s: %s" % (type(exc).__name__, exc)
++    try:
++        with open(J4_EVIDENCE, "a") as fh:
++            fh.write(json.dumps(rec) + "\n")
++    except OSError:
++        pass
++    return rec
++
++
++# --- end J4ArchiveImmut probe -----------------------------------------------------
++
+ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False, witness_dir=None,
+            witness_timeout=120.0):
+     res = {"schema": SCHEMA, "receipt": os.path.abspath(receipt_path), "work": os.path.abspath(work),
+            "rerun_receipt": None, "match": False, "refused": None, "mismatches": [], "inputs": {}}
+     own_fd = None
++    _j4_tamper_counter_archive(sys.argv)
+     try:
+         with open(receipt_path) as fh:
+             rec = json.load(fh)

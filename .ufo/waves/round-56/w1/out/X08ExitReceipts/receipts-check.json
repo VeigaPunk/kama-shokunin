@@ -1,0 +1,126 @@
+{
+  "receipts": [
+    {
+      "receipt": "controls/base-c1.out",
+      "label": "base-old-counter",
+      "class": "c1",
+      "status": "PASS",
+      "fields": {
+        "ld_audit": "missed",
+        "pid": "1758490",
+        "problems": "[]",
+        "exit": "0"
+      },
+      "problems": []
+    },
+    {
+      "receipt": "controls/base-c2.out",
+      "label": "base-c2",
+      "class": "c2",
+      "status": "PASS",
+      "fields": {
+        "tip": "e10b6d39af450e8d652be9ac2986768b531fe13f",
+        "present": "0",
+        "roster_match": "0",
+        "kills": "0",
+        "controls": "0",
+        "met": "False",
+        "exit": "1"
+      },
+      "problems": []
+    },
+    {
+      "receipt": "measured/base-c1.out",
+      "label": "base-old-counter",
+      "class": "c1",
+      "status": "PASS",
+      "fields": {
+        "ld_audit": "missed",
+        "pid": "1759696",
+        "problems": "[]",
+        "exit": "0"
+      },
+      "problems": []
+    },
+    {
+      "receipt": "measured/build-c1.out",
+      "label": "round56-counter",
+      "class": "c1",
+      "status": "PASS",
+      "fields": {
+        "ld_audit": "detected",
+        "pid": "1759698",
+        "problems": "['env: server environment carries LD_AUDIT']",
+        "exit": "0"
+      },
+      "problems": []
+    },
+    {
+      "receipt": "measured/build-c2.out",
+      "label": "build-c2",
+      "class": "c2",
+      "status": "FAIL",
+      "fields": {
+        "tip": "efc6b3ec6fb6ea308c15855e9b8b62856f4255b7",
+        "present": "1",
+        "roster_match": "1",
+        "kills": "1",
+        "controls": "2",
+        "met": "True"
+      },
+      "problems": [
+        "missing-field:exit"
+      ]
+    },
+    {
+      "receipt": "measured/m-drop-ldaudit.out",
+      "label": "m-drop-ldaudit",
+      "class": "c1",
+      "status": "PASS",
+      "fields": {
+        "ld_audit": "missed",
+        "pid": "1759704",
+        "problems": "[]",
+        "exit": "0"
+      },
+      "problems": []
+    }
+  ],
+  "selftests": [
+    {
+      "test": "T1 no-exit",
+      "expected": "FAIL",
+      "observed": "FAIL",
+      "problems": [
+        "missing-field:exit"
+      ],
+      "ok": true
+    },
+    {
+      "test": "T2 contradict-exit",
+      "expected": "FAIL",
+      "observed": "FAIL",
+      "problems": [
+        "exit-outcome-conflict:exit=1 implied=0"
+      ],
+      "ok": true
+    },
+    {
+      "test": "T3 matching-exit",
+      "expected": "PASS",
+      "observed": "PASS",
+      "problems": [],
+      "ok": true
+    },
+    {
+      "test": "T4 wrong-outcome",
+      "expected": "FAIL",
+      "observed": "FAIL",
+      "problems": [
+        "outcome-not-roster-expected:missed!=detected",
+        "exit-outcome-conflict:exit=0 implied=1"
+      ],
+      "ok": true
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round54-replay-code-audit.py	2026-10-27 10:13:09.295149691 -0300
++++ /fast/scratch/hyaku/kama-r55/w1/J5EnvNames/fix/counter-fixed.py	2026-10-27 11:13:12.265657399 -0300
+@@ -143,7 +143,15 @@
+ ))
+ KERNEL_MAPS = ("[vdso]", "[vsyscall]", "[vvar]", "[vvar_vclock]", "[vvar_boot", "[uprobes]")
+ ROW_CAP = 64 << 20  # a single maps row is read at most 64 MiB (Sen1Mem F3)
+-BAD_ENV = ("LD_PRELOAD", "DYLD_INSERT_LIBRARIES")
++# K1Cheat (round 55, seat J5EnvNames): the pair was incomplete. glibc honours a
++# SECOND code-injection variable, LD_AUDIT, which loads a DSO in a separate linker
++# namespace BEFORE the program's own objects and runs its constructors; a DSO
++# exporting la_version is loaded and stays mapped (measured on this host,
++# glibc 2.44). LD_PRELOAD_32/LD_LIBRARY_PATH_32 apply to the 32-bit loader only
++# (the b11909 server is x86-64), DYLD_INSERT_LIBRARIES is macOS/BSD (no effect
++# on glibc), LD_CONFIG is not honoured by glibc, and LD_LIBRARY_PATH is set by
++# the live tool to the server's own directory (a fixed value, not inherited).
++BAD_ENV = ("LD_PRELOAD", "DYLD_INSERT_LIBRARIES", "LD_AUDIT")
+ SEALS = 15  # F_SEAL_SEAL | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_WRITE
+ F_GET_SEALS = 1034
+ RECEIPTS = tuple(f".ufo/waves/round-48/c2/live/receipt-{n}.json" for n in (1, 2, 3))

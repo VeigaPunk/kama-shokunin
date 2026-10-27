@@ -1,0 +1,21 @@
+--- a/tools/round54-replay-code-audit.py
++++ b/tools/round54-replay-code-audit.py
+@@ -788,7 +788,9 @@
+         if not cprobs and cobs is not None:
+-            detail.append(f"code {tag}: {len(cobs['files'])} archive files ({cobs['ranges']} executable ranges) "
++            # cobs['ranges'] is summed across the two observation passes (line ~717:
++            # first['ranges'] + second['ranges']); per pass it is one executable maps
++            # row per archive file (8 libs => 8 ranges, twice read => 16 reads).
++            detail.append(f"code {tag}: {len(cobs['files'])} archive files ({cobs['ranges']} executable-range reads across both passes) "
+                           f"byte-equal in /proc/<pid>/mem to the counter's own archive, {cobs['host']} root-owned "
+                           f"host files; recorded in code_mappings and own_code: "
+                           f"{sorted(os.path.basename(m) for _d, _i, m in cobs['files'].values())}")
+
+NOTE: the counter is FROZEN for round 55 (preregistration counter_sha256
+c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af). This diff is
+recorded for the NEXT freeze only; applying it now would itself trip the
+kill rule "counter bytes at measurement differ from counter_sha256".
+Prose-only change: every receipt's numbers are unchanged; only the parenthetical
+label in the `code <tag>` detail line is corrected ("16 executable ranges" ->
+"16 executable-range reads across both passes"), matching the `twopass` line's
+already-correct "16 range reads".

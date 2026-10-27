@@ -34,6 +34,7 @@ import importlib.util
 import io
 import json
 import os
+import re
 import shutil
 import sys
 import tempfile
@@ -52,6 +53,14 @@ RESULTS = []
 def check(case, name, ok, detail):
     RESULTS.append({"case": case, "check": name, "ok": bool(ok), "detail": detail})
     print(f"[{'PASS' if ok else 'FAIL'}] {case}: {name} :: {detail}")
+
+
+def defect(case, name, reproduced, detail):
+    """A DEFECT probe: `reproduced` TRUE means the defect was observed (the counter
+    misbehaved).  It is recorded as a finding, not as a harness failure."""
+    RESULTS.append({"case": case, "check": name, "ok": bool(reproduced),
+                    "defect_reproduced": bool(reproduced), "detail": detail})
+    print(f"[{'DEFECT-REPRODUCED' if reproduced else 'NOT-REPRODUCED'}] {case}: {name} :: {detail}")
 
 
 def load_module(path, name):
@@ -452,6 +461,241 @@ def scenario_mutant_m4(src, scratch):
           f"problems={cp}")
 
 
+def scenario_boundaries(mod):
+    """EXACT BOUNDARIES of both clauses - the place an off-by-one would hide.
+
+    clause A: length == ROW_CAP is READ (the cap is "at most 64 MiB");
+              length == ROW_CAP + 1 is refused.
+    clause B: off + length == len(data) exactly is ALLOWED (the row ends exactly at
+              the member's end); off + length == len(data) + 1 is refused.
+    """
+    cap = mod.ROW_CAP
+    members = required_members()
+    victim = "libggml.so.0.27.0"
+    vlen = len(members[victim])
+
+    # clause A, exact cap: the row is exactly ROW_CAP bytes long and must be read.
+    # The member must itself be >= ROW_CAP bytes, or clause B would fire first
+    # (the counter checks the cap BEFORE the member's end).
+    big = "libggml-cpu-huge.so"
+    members[big] = bytes(cap)                       # exactly ROW_CAP bytes
+    rows, regions = build_rows_and_mem(members)
+    at_cap_lo = EXTRA_BASE + 0x4000000
+    rows.append(row(at_cap_lo, at_cap_lo + cap, 0, os.path.join(TREE, big)))
+    mem = FakeMem()
+    for start, data in regions:
+        mem.add(start, data)
+    mem.add(at_cap_lo, members[big])
+    probs, out = observe(mod, rows, members, mem)
+    cp = code_problems(probs)
+    check("boundary-A", "a row of exactly ROW_CAP bytes is READ (the cap is inclusive)",
+          not [p for p in cp if "not read" in p]
+          and not [p for p in cp if "extends past the member" in p]
+          and any(o == at_cap_lo for o, _l in mem.calls),
+          f"problems={cp} preads at the cap row={[(o,l) for o,l in mem.calls if o==at_cap_lo]}")
+    check("boundary-A", "a row of exactly ROW_CAP bytes is counted as compared",
+          out["ranges"] == 6, f"ranges={out['ranges']} (5 members + the cap row)")
+
+    # clause A, one byte over the cap: refused
+    members = required_members()
+    members[big] = bytes(cap + 1)
+    rows, regions = build_rows_and_mem(members)
+    over_lo = EXTRA_BASE + 0x5000000
+    rows.append(row(over_lo, over_lo + cap + 1, 0, os.path.join(TREE, big)))
+    mem = FakeMem()
+    for start, data in regions:
+        mem.add(start, data)
+    mem.add(over_lo, members[big])
+    probs, out = observe(mod, rows, members, mem)
+    cp = code_problems(probs)
+    check("boundary-A", "a row of ROW_CAP + 1 bytes is refused and not read",
+          bool([p for p in cp if "not read" in p])
+          and not any(o == over_lo for o, _l in mem.calls),
+          f"problems={cp} preads at the over-cap row={[(o,l) for o,l in mem.calls if o==over_lo]}")
+
+    # clause B, exactly at the member's end: allowed
+    members = required_members()
+    rows, regions = build_rows_and_mem(members)
+    at_end_lo = EXTRA_BASE + 0x6000000
+    off = vlen - 0x1000
+    rows.append(row(at_end_lo, at_end_lo + 0x1000, off, os.path.join(TREE, victim)))
+    mem = FakeMem()
+    for start, data in regions:
+        mem.add(start, data)
+    mem.add(at_end_lo, members[victim][off:off + 0x1000])
+    probs, out = observe(mod, rows, members, mem)
+    cp = code_problems(probs)
+    check("boundary-B", "a row ending EXACTLY at the member's end is allowed and compared",
+          not [p for p in cp if "extends past the member" in p]
+          and any(o == at_end_lo for o, _l in mem.calls)
+          and out["ranges"] == 5,
+          f"problems={cp} ranges={out['ranges']} preads={[(o,l) for o,l in mem.calls]}")
+
+    # clause B, one byte past the member's end: refused
+    members = required_members()
+    rows, regions = build_rows_and_mem(members)
+    past_lo = EXTRA_BASE + 0x7000000
+    off = vlen - 0x1000 + 1
+    rows.append(row(past_lo, past_lo + 0x1000, off, os.path.join(TREE, victim)))
+    mem = FakeMem()
+    for start, data in regions:
+        mem.add(start, data)
+    mem.add(past_lo, b"\0" * 0x1000)
+    probs, out = observe(mod, rows, members, mem)
+    cp = code_problems(probs)
+    check("boundary-B", "a row ending ONE byte past the member's end is refused and not read",
+          bool([p for p in cp if "extends past the member" in p])
+          and not any(o == past_lo for o, _l in mem.calls),
+          f"problems={cp} preads at the past row={[(o,l) for o,l in mem.calls if o==past_lo]}")
+
+
+RELEASE_TARBALL = "/home/vgpnk/.local/opt/llama-b11909-bin-ubuntu-x64.tar.gz"
+ELF_LOAD_RX = re.compile(
+    r"^\s*LOAD\s+0x([0-9a-f]+)\s+0x([0-9a-f]+)\s+0x([0-9a-f]+)\s+0x([0-9a-f]+)\s+"
+    r"0x([0-9a-f]+)\s+([RWE ]+?)\s+0x([0-9a-f]+)\s*$")
+
+
+def scenario_frozen_geometry(mod):
+    """REACHABILITY PROOF for the frozen configuration.
+
+    code_observe can only ever read a maps row that (1) is under the replay's tree,
+    (2) names a file that IS a regular member of the counter's own archive, and
+    (3) is executable.  For the FROZEN release archive that is a closed set: every
+    such row's length is the page-rounded MemSiz of that member's executable
+    PT_LOAD, and that member's bytes are the counter's own `data`.
+
+    This scenario computes, for EVERY regular member of the frozen release
+    archive, the largest executable maps row the kernel can emit for it, and
+    checks the two clauses against it:
+
+      clause A (ROW_CAP):      is any such row longer than ROW_CAP?
+      clause B (past the end):  does any such row's off+length exceed the
+                                member's byte length?
+
+    If neither can fire, the two clauses are DEAD at the frozen configuration:
+    the frozen build measurement (met=True) carries ZERO evidence for them, and
+    a mutant that deletes either guard would still print met=True.
+    """
+    import subprocess
+    import tarfile
+
+    if not os.path.isfile(RELEASE_TARBALL):
+        check("frozen-geometry", "the frozen release archive is available for the "
+              "reachability proof", False, f"{RELEASE_TARBALL} not found")
+        return
+    PAGE = os.sysconf("SC_PAGE_SIZE")
+    tf = tarfile.open(RELEASE_TARBALL)
+    worst_row = 0
+    worst_member = None
+    clause_b_hits = []
+    members = 0
+    tmp = os.path.join(tempfile.gettempdir(), "j2rowcap-elf.so")
+    for ti in tf.getmembers():
+        if not ti.isfile():
+            continue
+        members += 1
+        blob = tf.extractfile(ti).read()
+        if blob[:4] != b"\x7fELF":
+            continue
+        with REAL_OPEN(tmp, "wb") as fh:
+            fh.write(blob)
+        txt = subprocess.run(["readelf", "-lW", tmp], capture_output=True,
+                             text=True).stdout
+        for ln in txt.splitlines():
+            m = ELF_LOAD_RX.match(ln)
+            if not m:
+                continue
+            off, msz, flags = int(m.group(1), 16), int(m.group(5), 16), m.group(6).replace(" ", "")
+            if "E" not in flags:
+                continue
+            rowlen = ((msz + PAGE - 1) // PAGE) * PAGE
+            if rowlen > worst_row:
+                worst_row, worst_member = rowlen, ti.name
+            if off + rowlen > ti.size:
+                clause_b_hits.append((ti.name, hex(off), hex(rowlen), ti.size))
+    try:
+        os.remove(tmp)
+    except OSError:
+        pass
+    check("frozen-geometry", "the frozen release archive was scanned",
+          members > 0, f"{members} regular members")
+    check("frozen-geometry",
+          "CLAUSE A is DEAD at the frozen configuration: the largest executable row "
+          "any frozen member can produce is below ROW_CAP, so the guard can never "
+          "fire on the frozen build",
+          worst_row <= mod.ROW_CAP,
+          f"largest possible exec row = {worst_row} bytes "
+          f"({worst_row / (1 << 20):.3f} MiB) in {worst_member}; ROW_CAP = {mod.ROW_CAP}")
+    check("frozen-geometry",
+          "CLAUSE B is DEAD at the frozen configuration: no frozen member's "
+          "executable row extends past the member's end, so the guard can never "
+          "fire on the frozen build",
+          not clause_b_hits,
+          f"clause-B hits over all frozen members: {clause_b_hits}")
+
+
+def scenario_partial_page(mod, workdir):
+    """REAL-KERNEL, clause B on a real mapping whose file-backed extent is not a
+    multiple of the page size.
+
+    The kernel maps the last PARTIAL page of a file and zero-fills the tail past
+    EOF, so /proc/<pid>/maps reports a row whose length is the PAGE-ROUNDED file
+    size - larger than the file.  The bytes in that tail are NOT member bytes, so
+    clause B refusing the row is CORRECT (this is the "not zero-padded" clause
+    doing its job), and the row must not be byte-compared.
+
+    A file size that IS a multiple of the page size (every b11909 release member)
+    never trips it, which is why the frozen build measurement cannot see the
+    clause fire.
+    """
+    import subprocess
+    import time
+
+    tree = os.path.join(workdir, "tree-partial")
+    os.makedirs(tree, exist_ok=True)
+    names = ["libllama-server-impl.so", "libggml-base.so.0.27.0",
+             "libggml.so.0.27.0", "libggml-cpu-zen4.so"]
+    payload = {}
+    for i, n in enumerate(names):
+        blob = bytes(((i * 37) + (j * 11)) % 256 for j in range(6144))  # 6144 % 4096 != 0
+        payload[n] = blob
+        with REAL_OPEN(os.path.join(tree, n), "wb") as fh:
+            fh.write(blob)
+    child = os.path.join(workdir, "child-partial.py")
+    with REAL_OPEN(child, "w") as fh:
+        fh.write(CHILD_SRC)
+    specs = [f"{n}:6144" for n in names]
+    proc = subprocess.Popen([sys.executable, child, tree] + specs,
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    try:
+        line = proc.stdout.readline().strip()
+        if not line.isdigit():
+            raise RuntimeError(f"child did not start: {line!r} "
+                               f"stderr={proc.stderr.read()[:300]!r}")
+        pid = int(line)
+        time.sleep(0.8)
+        saved_open, saved_os = mod.open, mod.os
+        mod.open = REAL_OPEN
+        mod.os = REAL_OS
+        try:
+            probs = []
+            out = mod.code_observe(pid, tree, FakeArchive(payload), probs, collect=True)
+        finally:
+            mod.open, mod.os = saved_open, saved_os
+        cp = code_problems(probs)
+        past = [p for p in cp if "extends past the member" in p]
+        check("clause-B-partial-page",
+              "a real row whose file-backed extent is not page aligned is refused",
+              bool(past), f"clause-B problems={past}")
+        check("clause-B-partial-page",
+              "and it is NOT byte-compared (the zero-filled tail is not member bytes)",
+              not [k for k in out["snaps"] if "libggml" in k],
+              f"snaps={sorted(out['snaps'])}")
+    finally:
+        proc.kill()
+        proc.wait()
+
+
 def scenario_real_kernel(mod, src, workdir):
     """REAL-KERNEL variant: no fake mem fd and no synthetic maps rows.  A child
     process mmaps real files (through libc mmap, which - unlike python's mmap -
@@ -591,6 +835,8 @@ def main():
     scenario_control(mod)
     scenario_row_cap(mod)
     scenario_past_member(mod)
+    scenario_boundaries(mod)
+    scenario_frozen_geometry(mod)
 
     scratch = tempfile.mkdtemp(prefix="j2rowcap-")
     try:
@@ -598,14 +844,22 @@ def main():
         scenario_mutant_m4(src, scratch)
         if a.real_kernel:
             scenario_real_kernel(mod, src, scratch)
+            scenario_partial_page(mod, scratch)
     finally:
         shutil.rmtree(scratch, ignore_errors=True)
 
-    failed = [r for r in RESULTS if not r["ok"]]
+    # harness checks are the non-defect rows; a defect probe's polarity is
+    # "reproduced", which is a FINDING, not a harness failure
+    harness = [r for r in RESULTS if "defect_reproduced" not in r]
+    defects = [r for r in RESULTS if "defect_reproduced" in r]
+    failed = [r for r in harness if not r["ok"]]
+    reproduced = [r for r in defects if r["defect_reproduced"]]
     receipt = {"counter": a.counter, "counter_sha256": sha, "row_cap": mod.ROW_CAP,
-               "checks": RESULTS, "passed": len(RESULTS) - len(failed),
-               "failed": len(failed)}
-    print(f"\n{len(RESULTS) - len(failed)}/{len(RESULTS)} checks passed")
+               "checks": RESULTS, "harness_checks": len(harness),
+               "harness_passed": len(harness) - len(failed), "harness_failed": len(failed),
+               "defect_probes": len(defects), "defects_reproduced": len(reproduced)}
+    print(f"\n{len(harness) - len(failed)}/{len(harness)} harness checks passed; "
+          f"{len(reproduced)}/{len(defects)} defect probes reproduced")
     if a.receipt:
         os.makedirs(os.path.dirname(os.path.abspath(a.receipt)), exist_ok=True)
         with REAL_OPEN(a.receipt, "w") as fh:

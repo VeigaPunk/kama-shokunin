@@ -1,0 +1,23 @@
+# X05 control separation matrix — every cell below was executed in this run; receipts named.
+# C1 leg  = python3 tools/round56-env-leg-test.py --counter <C> --expect <E>   (field ld_audit, exit)
+# C2 gate = python3 tools/round56-prereg-check.py --repo <clone> --tip <sha>  (met, exit)
+#
+# A. C1 held fixed, C2 surface varied (C1 readings are identical in all three rows)
+# C2 surface state                     | round56 counter   | base54 counter | m-drop-ldaudit mutant @expect=detected
+# -------------------------------------+-------------------+----------------+--------------------------------------
+# intact lane, C2 green (efc6b3ec)     | detected exit=0   | missed exit=0  | missed exit=1
+# island: C2 files entirely absent     | detected exit=0   | missed exit=0  | missed exit=1
+# island: bogus prereg + garbage gate  | detected exit=0   | missed exit=0  | missed exit=1
+#
+# B. C2 held fixed on its own committed surfaces, C1 surface varied (clone tips; C1 files only)
+# C1 surface state in the graded tree  | present roster_match kills controls met   exit
+# -------------------------------------+-----------------------------------------------
+# intact at base tip e10b6d39          | 0       0            0     0        False 1
+# intact at freeze tip efc6b3ec        | 1       1            1     2        True  0
+# all C1 files deleted   a0db6371      | 1       1            1     2        True  0
+# C1 deleted + one-field roster mut.
+#   (kill->control)      c815b82b      | 1       0            1     2        False 1
+#
+# C. Runtime surface isolation (strace -f -e trace=openat,open,execve)
+# C1 run opens of any C2 surface (preregistration.json / round56-prereg-check.py / battery): 0
+# C2 run opens of any C1 surface (round56-env-leg-test.py / *replay-code-audit.py):           0

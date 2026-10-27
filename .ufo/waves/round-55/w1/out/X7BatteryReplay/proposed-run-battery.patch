@@ -1,0 +1,91 @@
+--- base-run-battery.py	2026-10-27 11:23:42.847358015 -0300
++++ fixed-run-battery.py	2026-10-27 11:23:58.306989492 -0300
+@@ -6,6 +6,7 @@
+ lives under /fast/scratch/hyaku/kama-r55/c1/battery and is removed on exit.
+ """
+ import os
++import re
+ import shutil
+ import subprocess
+ import sys
+@@ -29,23 +30,25 @@
+         ENV_ANCHOR,
+         "        child_env['LD_PRELOAD'] = '/usr/lib/libzstd.so.1.5.7'\n" + ENV_ANCHOR,
+     ),
+-    # code leg: flip one byte of libggml-rpc's late text before the server starts
+-    # (post-extract, pre-Popen): the server maps the flipped content, the counter's
+-    # /proc/<pid>/mem vs archive-member compare fails. Offset -0x3000 verified live:
+-    # rpc's hot path (backend init) never reaches it, the server starts clean (the
+-    # round-53 J1SwapChecked vector; m-extra-in-tree showed the backend scan dlcloses
+-    # a DSO without ggml_backend_init, so an extra tree file never stays mapped)
++    # code leg: flip one byte INSIDE libggml-rpc's mapped executable segment before
++    # the server starts (post-extract, pre-Popen), so the counter's own
++    # /proc/<pid>/mem vs archive-member compare fails. Round-55 X7: the previous
++    # offset (size-0x3000) landed in .strtab, outside every LOAD segment, so the
++    # flipped byte was never mapped and the counter's mem compare never fired (the
++    # kill came from the replay's self-report and the rehash leg instead). 0x30000
++    # is inside .text (exec LOAD file extent 0x12000..0x31469); the server still
++    # starts clean (X7 probe: sealed 3/3, twopass 3/3).
+     "m-text-flip": (
+         "code",
+         "kill",
+         ENV_ANCHOR,
+         "        import glob as _g\n"
+         "        for _p in _g.glob(os.path.join(os.path.dirname(server_real), 'libggml-rpc.so*')):\n"
+-        "            if os.path.getsize(_p) > 0x6000:\n"
++        "            if os.path.getsize(_p) > 0x40000:\n"
+         "                with open(_p, 'r+b') as fh:\n"
+-        "                    fh.seek(-0x3000, 2)\n"
++        "                    fh.seek(0x30000)\n"
+         "                    _b = fh.read(1)\n"
+-        "                    fh.seek(-0x3000, 2)\n"
++        "                    fh.seek(0x30000)\n"
+         "                    fh.write(bytes([_b[0] ^ 1]))\n"
+         "                break\n" + ENV_ANCHOR,
+     ),
+@@ -89,6 +92,34 @@
+     return subprocess.run(cmd, capture_output=True, text=True, **kw)
+ 
+ 
++GREEN = {"bind": lambda v: v == "1", "sealed": lambda v: v == "1",
++         "code": lambda v: v == "1", "teardown": lambda v: v == "1",
++         "newrow": lambda v: v == "1", "rehash": lambda v: v == "0"}
++
++
++def leg_failed(text, leg):
++    """True when the receipt's OWN summary line says the named leg did not pass.
++
++    run-battery.py's previous check grepped every `detail:` line for "<leg> ",
++    which the PASSING detail lines satisfy too ("detail: code b1: 8 archive files
++    ... byte-equal"), so it could never distinguish a killed leg from a green one
++    (round-55 seat X7).  The summary line at index 1 carries the per-leg verdict,
++    so read it there.
++    """
++    lines = text.splitlines()
++    if len(lines) < 2:
++        return False
++    summary = lines[1]
++    m = re.search(rf"(?<![A-Za-z]){re.escape(leg)}=(\d+)(?:/(\d+))?", summary)
++    if not m:
++        return False
++    if leg in GREEN:
++        return not GREEN[leg](m.group(1))
++    if m.group(2) is not None:
++        return m.group(1) != m.group(2)          # n/3 style: killed unless n == 3
++    return m.group(1) != "0"                     # a bare counter: killed unless 0
++
++
+ def main():
+     os.makedirs(OUT, exist_ok=True)
+     shutil.rmtree(SCRATCH, ignore_errors=True)
+@@ -137,9 +168,7 @@
+         if kind == "vector":
+             ok = rc == 0 and met  # the vector is void: the mutant passes, which is the finding
+         else:
+-            leg_failed = f"{leg} " in "\n".join(
+-                ln for ln in text.splitlines() if ln.startswith("detail: "))
+-            ok = rc == 1 and not met and leg_failed
++            ok = rc == 1 and not met and leg_failed(text, leg)
+         summary.append((name, leg, kind, rc, met, ok))
+ 
+     for name, leg, kind, rc, met, ok in summary:

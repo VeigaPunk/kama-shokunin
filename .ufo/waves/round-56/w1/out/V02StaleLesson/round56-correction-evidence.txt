@@ -1,0 +1,26 @@
+# round-56 correction evidence (V02StaleLesson)
+
+## 1. the two receipts row 1 says the battery 'also holds' (repeat of the round-56 lesson's own check)
+$ for p in .ufo/waves/round-55/c1/battery/m-ldaudit-writable.out .ufo/waves/round-55/c1/battery/m-extra-in-tree.out; do test -e "$p" || echo "missing $p"; done
+missing .ufo/waves/round-55/c1/battery/m-ldaudit-writable.out
+missing .ufo/waves/round-55/c1/battery/m-extra-in-tree.out
+
+## 2. same question against the round-56 base tree e10b6d3 (what "at the round-56 start" means as committed state)
+absent@base .ufo/waves/round-55/c1/battery/m-ldaudit-writable.out
+absent@base .ufo/waves/round-55/c1/battery/m-extra-in-tree.out
+
+## 3. contents at the round-55 build commit 8abadfed (the deletion target)
+--- 8abadfed:.ufo/waves/round-55/c1/battery/m-ldaudit-writable.out
+tip=23dc15dae61f04e86efb62ef2e622154bc4db36a
+bind=1 sealed=1 code=1 teardown=1 newrow=1 bound=3/3 sealedruns=3/3 coderuns=3/3 envnames=3/3 hostlibs=3/3 anon=0 twopass=3/3 rehash=0 met=True
+--- 8abadfed:.ufo/waves/round-55/c1/battery/m-extra-in-tree.out
+tip=312530a9bcfad7bbd06130f4e7916e859182a7a7
+bind=1 sealed=1 code=1 teardown=1 newrow=1 bound=3/3 sealedruns=3/3 coderuns=3/3 envnames=3/3 hostlibs=3/3 anon=0 twopass=3/3 rehash=0 met=True
+
+## 4. the deletion commit
+ .ufo/waves/round-55/c1/battery/m-extra-in-tree.out | 24 ----------------------
+ .../round-55/c1/battery/m-ldaudit-writable.out     | 24 ----------------------
+ 2 files changed, 48 deletions(-)
+
+## 5. the sentence and the deletion are the same commit (KQ26 "same round" is too weak)
+c2c05e30 round-55 w1 integration: SCORECARD round-55 section + 41 re-anchor, LOG entry, README frontier, SKILL registry, lesson fixes (Sc1), hexrun e2e2d10f row, census end (exit 0), stale battery receipts removed, 44 seat reports

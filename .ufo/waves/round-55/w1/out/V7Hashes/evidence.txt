@@ -1,0 +1,98 @@
+# V7Hashes evidence transcript — commands and verbatim outputs
+# audit point: lane HEAD = bf336baa2fc039a8c003196c41a35d2661843003
+# bf336baa round-55 w1 integration: head authority banner re-derived for round 55; round-53 banner kept verbatim under historical head sections
+
+=== [1] lane commit resolutions (git cat-file -t + ancestry) ===
+3a600d2f729828419aaea34cc402c8b0d20fb720     commit anc-of-freeze=yes 3a600d2f round-54 verifier spot-check (integrator, hyaku): non-author admit/reject
+3a600d2f                                     commit anc-of-freeze=yes 3a600d2f round-54 verifier spot-check (integrator, hyaku): non-author admit/reject
+9c60eae6f7ed84f7da93d219a406aadc30958c6c     commit anc-of-freeze=yes 9c60eae6 round-55 w0 freeze: round-54 counters frozen with preregistration + red base cont
+9c60eae6                                     commit anc-of-freeze=yes 9c60eae6 round-55 w0 freeze: round-54 counters frozen with preregistration + red base cont
+9c60eae                                      commit anc-of-freeze=yes 9c60eae6 round-55 w0 freeze: round-54 counters frozen with preregistration + red base cont
+0b75a84c56e024cac1662e8ff81802f249acb410     commit anc-of-freeze=yes 0b75a84c round-53 w1: late K4Cheat artifacts after closure
+0b75a84c                                     commit anc-of-freeze=yes 0b75a84c round-53 w1: late K4Cheat artifacts after closure
+9a3104c771509df2dad6b6fe13c023bd3c472c35     commit anc-of-freeze=yes 9a3104c7 round-54 honest stop (run wrap-up): hardened counters built, integration reds rep
+ed135b3c                                     commit anc-of-freeze=yes ed135b3c Revert "HOURS.md: craft-hours ledger opened (§Craft-hours canon)"
+e81d90e6                                     commit anc-of-freeze=yes e81d90e6 round-53: integrate code identity, curation, falsification and report evidence
+4a2a4d55                                     commit anc-of-freeze=yes 4a2a4d55 round-46: append-only-audit tool (C2 capability, considerthese 2026-10-26 proposa
+1541a0dd                                     commit anc-of-freeze=yes 1541a0dd round-48: measured results, head Planned pointer to round 49, measured receipts
+8abadfed                                     commit anc-of-freeze=no  8abadfed round-55 w1: build measurements green at freeze (C1/C2 met=True), kill battery gr
+
+=== [2] unresolved in lane; resolved in fleet repo ===
+6c4aba34c2a22519152d8c6f32e1039eecb1381b lane-cat-file-e rc=1
+  fleet: commit | 6c4aba34 round-56: mori dispatch evidence (hyaku inline attempt 1)
+e2e2d10f lane-cat-file-e rc=128
+  fleet: commit | e2e2d10f round-54: kama honest-stop report + ed135b3c L0 forward
+e2e2d10fe4801d7a846e22e5f84cc1a8e133c4e0 lane-cat-file-e rc=1
+  fleet: commit | e2e2d10f round-54: kama honest-stop report + ed135b3c L0 forward
+  fleet rev date: 2026-10-27 10:08:34 -0300 vs freeze commit 2026-10-27 10:24:22 -0300 - fleet rev predates the freeze, consistent
+
+=== [3] fixture tips (must NOT resolve; scratch clones, fx@invalid commits) ===
+585a6cb04c3b744157a76e772469d687f35f89ea lane rc=1 ; fleet rc=1
+a12e2c0fbab50832d5321ab1f0c77c5e04a036ac lane rc=1 ; fleet rc=1
+ba085a8bcaf9fc55bcd3d19249179df189ff307e lane rc=1 ; fleet rc=1
+aa3c47cda04313221b3018520c4463a7d3ff23d4 lane rc=1 ; fleet rc=1
+
+=== [4] battery harness fixture mechanism (committed run-battery.py:118-135) ===
+    for name, (leg, kind, old, new) in MUTANTS.items():
+        # reset the clone to the freeze tip and apply exactly one mutant
+        run(["git", "-C", clone, "reset", "--hard", FREEZE], env=env)
+        src = open(live_path).read()
+        if src != original:
+            print(f"battery: {name}: clone not clean after reset")
+            return 2
+        if src.count(old) != 1:
+            print(f"battery: {name}: anchor not unique ({src.count(old)})")
+            return 2
+        open(live_path, "w").write(src.replace(old, new))
+        run(["git", "-C", clone, "add", LIVE], env=env)
+        r = run(["git", "-C", clone, "-c", "user.name=fx", "-c", "user.email=fx@invalid",
+                 "commit", "-q", "-m", f"battery mutant {name}"], env=env)
+        if r.returncode:
+            print(f"battery: {name}: fixture commit failed: {r.stderr[:300]}")
+            return 2
+        tip = run(["git", "-C", clone, "rev-parse", "HEAD"], env=env).stdout.strip()
+
+=== [5] upstream citations resolve upstream ===
+llama.cpp 704366d76f8748cf9ad3df62a464bfcc8d1ae6ad raw.githubusercontent -> HTTP 200
+HF 499bc8821c6b12b4e53c5bffcb21ec206f212d81 resolve -> HTTP 302
+llama.cpp abbrev caa8191df (receipt build_info "b11909-caa8191df") ->
+  "sha": "caa8191df159f764fb0160e3d2fc6be008948aee",
+
+=== [6] counter sha256s ===
+preregistration.json quotes (lines 16,27):
+16:      "counter_sha256": "c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af",
+27:      "counter_sha256": "d70a1729174e4df8c71e5954da85b9580d409595e7c2e1f238a81b92a326510c",
+sha256 of counter blobs at FREEZE (git show 9c60eae:<path> | sha256sum):
+c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af  -
+d70a1729174e4df8c71e5954da85b9580d409595e7c2e1f238a81b92a326510c  -
+sha256 of worktree counter files (== HEAD tracked tree):
+c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af  tools/round54-replay-code-audit.py
+d70a1729174e4df8c71e5954da85b9580d409595e7c2e1f238a81b92a326510c  tools/round54-cited-path-check.py
+lesson sha256/digest mentions (grep -cE 'sha256|digest' corpus/lessons/round-55.md):
+0
+SCORECARD "## Round 55" section sha256 value quotes: (none - grep empty)
+SKILL.md registry digest rows (adjacent artifact, informational):
+1611:| Round-55 C1 replay-code audit (frozen round-54 counter) | measurement: `python3 tools/round54-replay-code-audit.py --repo <clone> --tip <full-commit> [--scratch <dir>] [--out <receipt>]` | as t
+1612:| Round-55 C2 cited-path check (frozen round-54 counter, `superseded` class) | measurement: `python3 tools/round54-cited-path-check.py --repo <clone> --tip <full-commit> [--scratch <dir>] [--out 
+
+=== [7] battery roster + receipt stability ===
+git diff --name-status 8abadfed HEAD -- .ufo/waves/round-55/c1/battery/ .ufo/waves/round-55/measured/:
+D	.ufo/waves/round-55/c1/battery/m-extra-in-tree.out
+D	.ufo/waves/round-55/c1/battery/m-ldaudit-writable.out
+(D = deleted by the c2c05e30 integration commit; SCORECARD section names the reason)
+measured/*.out unchanged since first commit (8abadfed..HEAD diff lines):
+0
+run-battery.py unchanged since first commit (8abadfed..HEAD diff lines):
+0
+
+=== [8] sources HTML hex tokens (all doc examples/constants, none lane commits) ===
+      1 1048576
+      1 1073741824
+      1 16777215
+      2 deadbee
+      2 fa1afe1
+deadbee/fa1afe1 = git-config(1) hasconfig/onbranch doc-example placeholders (unresolvable, correct); numeric = doc constants
+
+=== [9] audited-artifact stability (git show @HEAD, unaffected by worktree) ===
+tracked mods vs HEAD outside w1/out/:
+(none)

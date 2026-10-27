@@ -1,0 +1,142 @@
+J2RowCap - proposed changes for the two clauses of C1 leg (iii).
+NOT APPLIED.  The counter is frozen (sha256
+c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af) and this file is a
+report artefact.  Every hunk is additive: both clauses keep their frozen semantics
+and their frozen messages.
+
+What was verified about the patch below (in scratch, never in the lane):
+  * `patch -p1 --dry-run` -> OK, `patch -p1` -> APPLIED, `python3 -m py_compile`
+    -> COMPILES;
+  * the patched counter was re-run through j2-rowcap-unit-harness.py --real-kernel:
+    41/42 checks pass, the only failure being the intended assertion that the
+    counter bytes equal the FROZEN sha256 (they no longer do, by construction);
+  * all four mutants, both boundary checks, both real-kernel guards and the
+    frozen-geometry reachability proof still pass on the patched counter.
+
+================================================================================
+(1) tools/round54-replay-code-audit.py - a TOTAL read budget for the code leg
+================================================================================
+
+Rationale: the frozen clause bounds each maps ROW at 64 MiB but not the SUM over
+rows.  The number of executable mappings of one tree file is bounded only by the
+audited process's own address space, so the leg's total read from /proc/<pid>/mem
+is unbounded.  Measured on this host, real kernel, 20 executable rows of exactly
+ROW_CAP each: 1,342,177,280 bytes = 1.25 GiB read in 0.24 s, no problem reported.
+
+--- a/tools/round54-replay-code-audit.py
++++ b/tools/round54-replay-code-audit.py
+@@ -143,6 +143,10 @@
+ ))
+ KERNEL_MAPS = ("[vdso]", "[vsyscall]", "[vvar]", "[vvar_vclock]", "[vvar_boot", "[uprobes]")
+ ROW_CAP = 64 << 20  # a single maps row is read at most 64 MiB (Sen1Mem F3)
++# the code leg's TOTAL read from /proc/<pid>/mem.  ROW_CAP bounds a single row;
++# this bounds the sum over rows, which the audited process controls (the number of
++# executable mappings of a tree file is bounded only by its address space).
++ROW_BUDGET = 256 << 20  # 256 MiB across the whole code leg
+ BAD_ENV = ("LD_PRELOAD", "DYLD_INSERT_LIBRARIES")
+ SEALS = 15  # F_SEAL_SEAL | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_WRITE
+ F_GET_SEALS = 1034
+@@ -477,6 +481,7 @@
+     rather than zero-padded. With collect=True, also returns {path+range: sha256(got)}
+     so the caller can compare two passes byte-for-byte. Problems are appended
+     (prefixed `code:`)."""
++    row_bytes = [0]   # total bytes read from /proc/<pid>/mem by this leg
+     try:
+         with open(f"/proc/{pid}/maps") as fh:
+             rows = fh.read().splitlines()
+@@ -528,6 +533,11 @@
+                     probs.append(f"code: maps row {f[0]} of {member} extends past the member "
+                                  f"({off + length} > {len(data)} bytes)")
+                     continue
++                if row_bytes[0] + length > ROW_BUDGET:
++                    probs.append(f"code: the code leg would read more than {ROW_BUDGET} bytes "
++                                 f"from /proc/{pid}/mem; not read")
++                    continue
++                row_bytes[0] += length
+                 want = data[off:off + length]
+                 try:
+                     got = os.pread(mem, length, lo)
+
+================================================================================
+(2) .ufo/waves/round-55/c1/battery/run-battery.py - two mutants that make the two
+    branches of leg (iii) REACHABLE, so that a live kill covers them
+================================================================================
+
+This is the sharper finding.  At the frozen configuration NEITHER branch of leg
+(iii) can fire at all:
+
+  * clause A (ROW_CAP = 64 MiB): the largest executable maps row that any member of
+    the frozen b11909 release can produce is 6,766,592 bytes = 6.453 MiB
+    (llama-b11909/llama-connect).  The guard can never fire.
+  * clause B (past the member's end): for every one of the 51 regular members of
+    the frozen release, the page-rounded end of the executable PT_LOAD lies inside
+    the member.  The guard can never fire.
+
+Consequently
+
+    grep -l "not read\|extends past the member" .ufo/waves/round-55/c1/battery/*.out
+
+matches NO receipt: the round-55 C1 kill battery exercises neither branch of leg
+(iii).  A mutant that DELETED either guard would still print met=True, and the
+frozen build measurement (met=True) therefore carries no evidence for leg (iii)
+beyond the guards' presence in the source text.  The two mutants below put a tree
+file past each guard's threshold and make the branch reachable on the frozen build.
+
+--- a/.ufo/waves/round-55/c1/battery/run-battery.py
++++ b/.ufo/waves/round-55/c1/battery/run-battery.py
+@@ -36,6 +36,30 @@
+ MUTANTS = {
++    # code leg (iii), clause A (ROW_CAP).  Unreachable at the frozen configuration
++    # (the largest executable row any frozen member can produce is 6.45 MiB), so
++    # the guard has no live kill.  This mutant plants a sparse 64 MiB + 4096 file
++    # under the tree and maps it PROT_EXEC, so the counter must refuse the row with
++    # "is ... bytes; not read".
++    "m-row-cap": (
++        "code",
++        "kill",
++        ENV_ANCHOR,
++        "        import mmap as _mm\n"
++        "        _big = os.path.join(os.path.dirname(server_real), 'libggml-cpu-huge.so')\n"
++        "        with open(_big, 'wb') as _fh:\n"
++        "            _fh.truncate((64 << 20) + 4096)\n"
++        "        _mm.mmap(os.open(_big, os.O_RDONLY), (64 << 20) + 4096,\n"
++        "                 prot=_mm.PROT_READ | _mm.PROT_EXEC)\n" + ENV_ANCHOR,
++    ),
++    # code leg (iii), clause B (past the member's end).  Also unreachable at the
++    # frozen configuration (no frozen member's executable row runs past its own
++    # end).  This mutant maps a tree file PAST its own end, so the counter must
++    # refuse the row with "extends past the member".
++    "m-past-member-end": (
++        "code",
++        "kill",
++        ENV_ANCHOR,
++        "        import mmap as _mm\n"
++        "        _p = os.path.join(os.path.dirname(server_real), 'libggml-rpc.so')\n"
++        "        _mm.mmap(os.open(_p, os.O_RDONLY), os.path.getsize(_p) + 4096,\n"
++        "                 prot=_mm.PROT_READ | _mm.PROT_EXEC)\n" + ENV_ANCHOR,
++    ),
+     # envnames leg: a frozen-set root-owned preloaded library - mapping is admissible,
+     # the LD_PRELOAD name itself is the failure
+     "m-ldpreload": (
+
+CAVEAT, stated plainly: these two battery mutants are a DESIGN, not a receipt.
+They were not run (a battery run takes three live replays and the lane is
+READ-ONLY for this seat); they are the smallest change that would give leg (iii)
+live coverage.  Note also that both would need the planted file to be a regular
+member of the counter's own archive, or code_observe refuses it earlier with
+"is not a regular member of the archive" - so a mutant that reaches clause B at
+all must first clear that check (e.g. by re-pointing the tree file at an existing
+member and mapping it past its end, which is what m-past-member-end does).
+
+================================================================================
+(3) the unit harness, as a permanent lane asset
+================================================================================
+
+.ufo/waves/round-55/w1/out/J2RowCap/j2-rowcap-unit-harness.py imports the counter by
+path with importlib, drives code_observe() with synthetic maps rows and a fake mem
+fd, and (with --real-kernel) against a real child's /proc/<pid>/maps and
+/proc/<pid>/mem.  It is the only artifact in the round-55 C1 evidence that
+exercises either branch of leg (iii): 42/42 harness checks, four mutants that each
+break one guard, both exact boundaries, and the frozen-geometry reachability proof.
+Suggested disposition: land it under the lane's tools/ as a unit test for the
+counter and have run-battery.py invoke it, so the two branches stay covered.

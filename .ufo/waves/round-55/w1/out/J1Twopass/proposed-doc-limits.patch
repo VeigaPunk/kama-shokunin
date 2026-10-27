@@ -1,0 +1,71 @@
+FROZEN FILE - proposal only. Do NOT apply in place. Target:
+  kama-shokunin/tools/round54-replay-code-audit.py
+  (sha256 c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af, frozen by
+   .ufo/waves/round-55/preregistration.json claims.C1.counter_sha256)
+and the frozen limit sentence in
+  kama-shokunin/.ufo/waves/round-55/preregistration.json:49 ("limits", C1 clause).
+
+Evidence for each change: J1Twopass round-55 probe, 26 instrumented runs of the frozen
+bind_one() at tip 9c60eae6f7ed84f7da93d219a406aadc30958c6c.
+Artifacts: .ufo/waves/round-55/w1/out/J1Twopass/{char1,race-evade,race-detect,
+race-post2,race-post2-lifetime,summary}.json
+
+--- a/tools/round54-replay-code-audit.py
++++ b/tools/round54-replay-code-audit.py
+@@ (docstring, legs (vi) and (vii); lines 64-72 in the frozen file)
+-            (vi)  the observation is two-pass: both passes read every archive range and
+-                  the two snapshots must be byte-identical, so a library rewritten while
+-                  the pass runs does not pass unnoticed (J7Late facet 3);
++            (vi)  the observation is two-pass: both passes read every archive range and
++                  the two snapshots must be byte-identical. Each pass is a SEQUENTIAL
++                  sweep of the 8 archive executable ranges, so the interval between the
++                  two reads of the SAME range is one sweep, not the 7 us between the two
++                  call boundaries: measured 6.0-252 ms (median 8.5 ms) over 208 range
++                  intervals on this host. A rewrite that is restored before the second
++                  read of that range is therefore NOT observed (measured 10/10), and a
++                  rewrite still present at that read also fails the per-range archive
++                  member comparison above - so this leg detects a change in the SET of
++                  executable archive ranges between the passes, not a byte change that
++                  the per-pass comparison would miss (J7Late facet 3, round-55
++                  J1Twopass; the frozen limit below already disclosed the restore case,
++                  this only stops the leg from claiming more than it does);
+@@ (Limits paragraph; lines 87-92 in the frozen file)
+-Limits (frozen, the honest four-facet statement): the counter samples state - a path
+-digest at receipt time in the live tool, and one or two /proc/<pid>/mem passes during
+-the hold; a library rewritten and restored between those instants, or rewritten after
+-the post-exit re-hash, is not observed (J7Late facets 2 and 4 in part). Host libraries
++Limits (frozen, the honest four-facet statement): the counter samples state - a path
++digest at receipt time in the live tool (before the hold), sixteen /proc/<pid>/mem
++range reads in two sweeps of eight ranges during the hold, and eight post-exit path
++re-hashes; a library rewritten and restored between any two of those reads is not
++observed (J7Late facets 2 and 4 in part). The exposure is not the 7 us that separates
++the two pass boundaries: the two reads of the SAME range are 6.0-252 ms apart (median
++8.5 ms), the release is written 0.01 ms after the last read, the server process keeps
++running for a further 17-31 ms after that release, and the first post-exit re-hash runs
++223 ms after the release - about 200 ms after the server has exited - so the re-hash
++can only see a rewrite left in the file, never the running text. Host libraries
+ are bound by name to the frozen set, not byte-compared. The model's mapped bytes and
+ data segments are not compared. A replay whose archive bytes came from a byte-identical
+ host install rather than the download still meets (bytes, not provenance).
+
+--- a/.ufo/waves/round-55/preregistration.json  (line 49, "limits", C1 clause)
+-(frozen sentence)  "the counter samples state (two passes and a post-exit re-hash), so a
+- library rewritten and restored between those instants is not observed"
++(proposed for a future freeze; the round-55 freeze must NOT be edited)
++ "the counter samples state (two sequential sweeps of eight /proc/<pid>/mem range reads
++ each, so the two reads of the same range are 6.0-252 ms apart, median 8.5 ms; plus a
++ post-exit re-hash that runs 223 ms after the release, ~200 ms after the server exits),
++ so a library rewritten and restored between any two of those reads is not observed"
+
+WHY THE LINE NUMBER MATTERS: the frozen leg (vi) sentence is at
+kama-shokunin/tools/round54-replay-code-audit.py:64-66 and the frozen limit paragraph at
+:87-92; the preregistration limit sentence is at
+kama-shokunin/.ufo/waves/round-55/preregistration.json:49. Reproduce the falsifying
+measurement with:
+
+  S=/fast/scratch/hyaku/kama-r55/w1/J1Twopass   # any scratch with a --shared lane clone
+  J1_S=$S TMPDIR=$S python3 j1_probe.py race --runs 10 --hold-ms 3 --trigger pin_in
+  # -> 10/10  twopass=True code=True rehash=0  (counter says met=True)
+  #    and mem_obs.bytes_differing_from_archive == 1 (the running text DID change)
+  J1_S=$S TMPDIR=$S python3 j1_probe.py race --runs 10 --hold-ms 400 --trigger pin_in
+  # -> 10/10  twopass=False code=False          (counter says met=False)

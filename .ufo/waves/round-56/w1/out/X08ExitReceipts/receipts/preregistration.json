@@ -1,0 +1,51 @@
+{
+  "lane": "kama",
+  "round": 56,
+  "attempt": 1,
+  "base": "e10b6d39af450e8d652be9ac2986768b531fe13f",
+  "authority": "kama assigned axes: operability 8, calibration 7; calibration is the lowest owned axis. Round-55 verifier spotcheck admitted r55 and routed defects 1, 2, 4, 5, 6, 7, 9, 10.",
+  "claims": {
+    "C1": {
+      "axis": "operability",
+      "score": "8 -> 8",
+      "counter": "tools/round56-env-leg-test.py + tools/round56-replay-code-audit.py",
+      "counter_sha256": "fc3d4b63a3020cf37e6f4080e25c9d693a8b177c4f84cae6688b2e445444ff6f",
+      "predicate": "For a live child process whose environment contains LD_AUDIT=/usr/lib/libexpat.so.1, the selected counter's env_leg reports the variable name as a problem; the round-55 counter is the red baseline that misses it, and the round-56 counter detects it.",
+      "target": "Round-55 counter: ld_audit=missed exit=0; round-56 counter: ld_audit=detected exit=0; one-line mutant removing LD_AUDIT from BAD_ENV: ld_audit=missed, so the battery's expected-detected check fails.",
+      "kill_rule": "C1 is falsified if the base counter detects LD_AUDIT, the round-56 counter misses it, the single-line mutant still detects it, or the measured counter sha256 differs from the frozen digest.",
+      "sourced": "S512 opened this round; its rtld-audit(7) quote grounds classifying LD_AUDIT by variable name."
+    },
+    "C2": {
+      "axis": "calibration",
+      "score": "7 -> 7",
+      "counter": "tools/round56-prereg-check.py",
+      "counter_sha256": "c7b0d787f348691bbc057114b455545f5abfb0c70ec497e1ad695591f1489853",
+      "predicate": "At a committed tip, the C1 battery roster parsed from its AST exactly equals the preregistered name/designation/expected-outcome roster, with one kill-designated mutant and two explicitly labeled controls.",
+      "target": "Base control at the round-55 tip: present=0 roster_match=0 met=False, exit 1. Freeze-tip check: present=1 roster_match=1 kills=1 controls=2 met=True, exit 0.",
+      "kill_rule": "C2 is falsified if the base control is green, if the freeze-tip roster check is red, if the counter sha256 differs from the frozen digest, or if a one-field designation mutation remains green.",
+      "sourced": "S512 is not a dependency of C2; the checker validates only the preregistration and battery bytes."
+    }
+  },
+  "battery": {
+    "roster": {
+      "base-old-counter": {"designation": "control", "expected": "missed"},
+      "round56-counter": {"designation": "positive-control", "expected": "detected"},
+      "m-drop-ldaudit": {"designation": "kill", "expected": "missed"}
+    },
+    "vector_analyses": {}
+  },
+  "controls": {
+    "base_do_nothing": {
+      "tip": "e10b6d39af450e8d652be9ac2986768b531fe13f",
+      "expected": "C1 old counter misses LD_AUDIT; C2 round-56 files absent and gate returns present=0, met=False",
+      "receipts": [".ufo/waves/round-56/controls/base-c1.out", ".ufo/waves/round-56/controls/base-c2.out"]
+    },
+    "C1_kill_battery": {
+      "mutants": ["m-drop-ldaudit (one-line deletion from BAD_ENV; must miss LD_AUDIT and fail the battery expected-detected condition)"],
+      "controls": ["base-old-counter (expected miss)", "round56-counter (expected detect)"],
+      "receipt_dir": ".ufo/waves/round-56/measured/"
+    }
+  },
+  "limits": "The env-leg probe demonstrates that the server process environment contains LD_AUDIT and that the new name classifier rejects it; it does not claim a foreign audit DSO successfully injects code on this glibc. C1 is a targeted operability move, not a complete replay-code audit refresh. C2 grades roster fidelity, not mutant quality beyond the one frozen C1 control.",
+  "tool_installs": []
+}

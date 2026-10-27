@@ -1,0 +1,10 @@
+# M06CountMutation — round 56 C2 probe
+
+- **Mutant:** In an isolated scratch repository, changed only the preregistered `m-drop-ldaudit` designation from `kill` to `control`. This changes expected counts from `kills=1 controls=2` to `kills=0 controls=3`; the battery roster remained unchanged.
+- **Detector:** Frozen `tools/round56-prereg-check.py` (SHA-256 `c7b0d787f348691bbc057114b455545f5abfb0c70ec497e1ad695591f1489853`), run against committed scratch-repository tips.
+- **Pristine baseline:** `python3 checker.py --repo <scratch-repo> --tip a85ac18aefa4666e13619186182e1e5629755fc5` → `tip=a85ac18aefa4666e13619186182e1e5629755fc5\npresent=1 roster_match=1 kills=1 controls=2 met=True`; exit **0**.
+- **Mutated:** `python3 checker.py --repo <scratch-repo> --tip 068ede3e73aa4ffd4b05cc841ad0464a82bdc8ad` → `tip=068ede3e73aa4ffd4b05cc841ad0464a82bdc8ad\npresent=1 roster_match=0 kills=0 controls=3 met=False`; exit **1**. **Verdict: killed** (target fails). The exact declared target was not green; roster mismatch also contributes to the failure.
+- **Restored:** Replaced the scratch preregistration bytes with the pristine captured bytes and ran the same checker: `python3 checker.py --repo <scratch-repo> --tip 63bc6c308de4d4601505429c4e88d067a0487579` → `tip=63bc6c308de4d4601505429c4e88d067a0487579\npresent=1 roster_match=1 kills=1 controls=2 met=True`; exit **0**.
+- **Restoration evidence:** pristine preregistration SHA-256 before mutation and after restoration: `fa4b5a100a9fd6ceaec93c537f3d9264a0883fac873368243ff1ae041d82ee68`. Mutant preregistration SHA-256: `13fe692a7f015ce19cbce2c7e85cb4df8f9718c82cc0f0135bad290d243f51cc`. Scratch repo was clean after restoration.
+- **Lane cross-check:** On the actual lane, the frozen tip `efc6b3ec6fb6ea308c15855e9b8b62856f4255b7` produced `present=1 roster_match=1 kills=1 controls=2 met=True`, exit **0**; base tip `e10b6d39af450e8d652be9ac2986768b531fe13f` produced `present=0 roster_match=0 kills=0 controls=0 met=False`, exit **1**. No lane files were modified.
+- No tools installed. Scratch used `/fast/scratch/hyaku/kama-r56/M06CountMutation` with `TMPDIR` set explicitly; removed before handoff.

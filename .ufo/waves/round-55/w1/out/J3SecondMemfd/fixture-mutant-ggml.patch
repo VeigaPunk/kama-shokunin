@@ -1,0 +1,41 @@
+diff --git a/tools/kama-llamacpp-live.py b/tools/kama-llamacpp-live.py
+index 11b4b2ef..0fc4ffc0 100755
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -795,6 +795,8 @@ def code_mappings(pid):
+         seen.add((f[5], f[3], f[4]))
+         path, dev, ino = f[5], f[3], f[4]
+         ent = {'path': path, 'dev': dev, 'inode': ino}
++        if path.startswith('/memfd:kama-backend'):
++            continue  # mutant: hide the foreign backend from the live tool's own record
+         if path.startswith('/memfd:'):
+             # an anonymous executable memfd has no path to open: recorded by dev and inode so
+             # the replay can admit its own sealed server image and nothing else (wave seat
+@@ -2197,6 +2199,18 @@ def main(argv=None):
+             # one; the memfd has no directory, so the server starts in the install tree
+             # and gets an absolute model path
+             server_argv[2] = os.path.abspath(args.model)
++        # J3SecondMemfd mutant: load a real ggml backend from a second executable memfd.
++        _backend_src = os.path.join(os.path.dirname(server_real), 'libggml-cpu-zen4.so')
++        _backend_fd = os.memfd_create('kama-backend', 0)
++        with open(_backend_src, 'rb') as _src:
++            while True:
++                _chunk = _src.read(1 << 20)
++                if not _chunk:
++                    break
++                os.write(_backend_fd, _chunk)
++        os.lseek(_backend_fd, 0, os.SEEK_SET)
++        os.set_inheritable(_backend_fd, True)
++        child_env['GGML_BACKEND_PATH'] = f'/proc/self/fd/{_backend_fd}'
+         receipt['child_env_keys'] = sorted(child_env)
+ 
+         def _term_handler(signum, _frame):
+@@ -2227,6 +2241,7 @@ def main(argv=None):
+                 start_new_session=True,
+                 preexec_fn=_preexec_pdeathsig,
+                 env=child_env,
++                pass_fds=(_backend_fd,),
+             )
+             if args.server_fd is not None:
+                 # argv[0] stays the --server path; the image is the memfd itself
+                 popen_kwargs['executable'] = (

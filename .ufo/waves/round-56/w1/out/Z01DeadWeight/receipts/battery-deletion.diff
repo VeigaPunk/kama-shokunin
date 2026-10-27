@@ -1,0 +1,34 @@
+--- /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round56-env-leg-battery.py	2026-10-27 13:00:58.703472390 -0300
++++ runs/battery-slim.py	2026-10-27 13:11:17.680704548 -0300
+@@ -2,13 +2,12 @@
+ """Round-56 C1 battery: exact field/value assertions and exit receipts for LD_AUDIT.
+ Uses committed round-54 code as the red baseline, the round-56 counter as positive
+ control, and a one-change mutant that removes LD_AUDIT from BAD_ENV."""
+-import os
+ import pathlib
+ import subprocess
+ import tempfile
+ 
+ LANE = pathlib.Path("/home/vgpnk/Projects/shokunin/kama-shokunin")
+-OUT = LANE / ".ufo/waves/round-56/measured"
++OUT = pathlib.Path("/fast/scratch/hyaku/kama-r56/Z01DeadWeight/runs/measured")
+ TEST = LANE / "tools/round56-env-leg-test.py"
+ OLD = LANE / "tools/round54-replay-code-audit.py"
+ NEW = LANE / "tools/round56-replay-code-audit.py"
+@@ -24,7 +23,6 @@
+                        capture_output=True, text=True)
+     body = p.stdout + p.stderr + f"exit={p.returncode}\n"
+     out.write_text(body)
+-    expected_result = f"ld_audit={expected}"
+     fields = {tok.split("=", 1)[0]: tok.split("=", 1)[1]
+               for tok in p.stdout.split() if "=" in tok}
+     ok = p.returncode == 0 and fields.get("ld_audit") == expected
+@@ -34,7 +32,7 @@
+ 
+ def main():
+     OUT.mkdir(parents=True, exist_ok=True)
+-    scratch = pathlib.Path("/fast/scratch/hyaku/kama-r56/l1-battery")
++    scratch = pathlib.Path("/fast/scratch/hyaku/kama-r56/Z01DeadWeight/tmp")
+     scratch.mkdir(parents=True, exist_ok=True)
+     results = []
+     results.append(run("base-old-counter", OLD, "missed", OUT / "base-c1.out"))

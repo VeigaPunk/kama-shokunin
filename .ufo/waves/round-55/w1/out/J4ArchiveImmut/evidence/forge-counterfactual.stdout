@@ -1,0 +1,30 @@
+frozen counter           /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round54-replay-code-audit.py
+frozen counter sha256    c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af
+tamper member            a/libggml-base.so (25 bytes)
+
+--- (A) IN-PLACE overwrite of the same inode (Sen1Mem F1 shape) ---
+fixture                  266240 bytes
+frozen member(before)    b'REAL-RELEASE-MEMBER-BYTES'
+round-53 member(before)  b'\x00\x01\x02\x03\x04\x05\x06\x07' (a different member, so a/libggml-base.so stays uncached)
+inode before/after       415002451 / 415002451   same inode: True
+file sha256 now          c31b1700014d2e6e...  differs from release: True  (release 359177db25a5582f...)
+(1) frozen member(after) b'REAL-RELEASE-MEMBER-BYTES'   attacker bytes? False
+    frozen sha256(blob) == release digest: True
+(2) round-53 member(after) b'!!ATTACKER-MEMBER-BYTES!!'   attacker bytes? True
+    => pre-fix, the same in-place overwrite hands the counter the ATTACKER bytes
+       (Sen1Mem F1); the frozen class still returns the RELEASE bytes and its
+       digest is still the release digest.
+
+--- (B) rename the reference aside + forged archive at the path (new inode) ---
+(1) frozen member        b'REAL-RELEASE-MEMBER-BYTES'   attacker bytes? False
+(2) round-53 member      b'REAL-RELEASE-MEMBER-BYTES'   attacker bytes? False
+    => a rename-over is inert for BOTH: the frozen class snapshotted the bytes,
+       the pre-fix fd still points at the old inode. Only an in-place overwrite
+       (A) ever changed what the pre-fix counter compared.
+
+(3) re-read Archive(path) after the tamper: b'!!ATTACKER-MEMBER-BYTES!!'   attacker bytes? True
+    => a post-replay re-read is the only shape that would launder the swap; the
+       frozen counter never performs one: apath is used at lines 915, 918, 920.
+       NOTE (pre-registration honesty): case (A) on a small archive does NOT
+       reproduce the pre-fix exposure - CPython's buffered tarfile reader serves
+       archives under its 8 KiB window from cache. The fixture above is 256 KiB.

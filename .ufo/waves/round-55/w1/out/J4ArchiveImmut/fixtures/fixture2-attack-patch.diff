@@ -1,0 +1,59 @@
+commit 813965ad32f1311753871b28dfc806980ac1e56c
+Author: fx <fx@invalid>
+Date:   Tue Oct 27 11:30:47 2026 -0300
+
+    j4 fixture 2: in-place overwrite of the counter's reference inode, then rename+forge, then vanish
+
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index f3370f11..8b8c7091 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -455,7 +455,7 @@ def compare(orig, rerun):
+ 
+ 
+ # --- J4ArchiveImmut probe (round-55 seat J4ArchiveImmut) -------------------------
+-J4_EVIDENCE = "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-55/w1/out/J4ArchiveImmut/evidence/attack-evidence.jsonl"
++J4_EVIDENCE = "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-55/w1/out/J4ArchiveImmut/evidence/attack-evidence2.jsonl"
+ J4_TARGET_MEMBER = "llama-b11909/libggml-base.so.0.27.0"
+ J4_FROZEN_ARCHIVE_SHA = "bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b"
+ 
+@@ -515,22 +515,29 @@ def _j4_tamper_counter_archive(argv):
+             rec["sha256_before"] = hashlib.sha256(blob).hexdigest()
+             rec["before_is_frozen_release"] = rec["sha256_before"] == J4_FROZEN_ARCHIVE_SHA
+         if rec["leg"] == "b1" and blob is not None:
+-            # 1. steal the counter's reference aside
+-            stolen = apath + ".stolen-by-replay"
+-            os.rename(apath, stolen)
+-            rec["stolen_path"] = stolen
+-            rec["rename_ok"] = os.path.exists(stolen) and not os.path.exists(apath)
+-            # 2. put a forged archive AT THE REFERENCE PATH the counter used
+             forged, swapped = _j4_forge(blob)
+             rec["forged_members_swapped"] = swapped
+             rec["forged_sha256"] = hashlib.sha256(forged).hexdigest()
+             rec["forged_size"] = len(forged)
++            rec["forge_differs_from_release"] = rec["forged_sha256"] != rec["sha256_before"]
++            # 1. IN-PLACE overwrite of the SAME inode (the Sen1Mem F1 shape)
++            with open(apath, "r+b") as fh:
++                fh.seek(0)
++                fh.write(forged)
++                fh.truncate()
++            st1 = os.stat(apath)
++            rec["inode_after_inplace"] = st1.st_ino
++            rec["same_inode_inplace"] = st1.st_ino == rec["inode_before"]
++            rec["sha256_after_inplace"] = hashlib.sha256(open(apath, "rb").read()).hexdigest()
++            # 2. steal the (now forged) file aside, then write a forged one at the path
++            stolen = apath + ".stolen-by-replay"
++            os.rename(apath, stolen)
++            rec["stolen_path"] = stolen
++            rec["rename_ok"] = os.path.exists(stolen) and not os.path.exists(apath)
+             with open(apath, "wb") as fh:
+                 fh.write(forged)
+-            st2 = os.stat(apath)
+-            rec["inode_after_forge"] = st2.st_ino
+-            rec["forge_differs_from_release"] = rec["forged_sha256"] != rec["sha256_before"]
+-            rec["action"] = "forge"
++            rec["inode_after_forge"] = os.stat(apath).st_ino
++            rec["action"] = "inplace+forge"
+         elif rec["leg"] == "b2" and apath and os.path.exists(apath):
+             # 3. make the reference VANISH mid-run
+             os.unlink(apath)

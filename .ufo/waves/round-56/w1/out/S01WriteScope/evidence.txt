@@ -1,0 +1,112 @@
+S01WriteScope raw evidence — round 56 w1 — window 2026-10-27 13:05:40..13:10:30 -0300
+Lane: /home/vgpnk/Projects/shokunin/kama-shokunin
+Audit instant of each block is given as an offset command line followed by its verbatim output.
+
+[1] lane identity
+$ git rev-parse --show-toplevel
+/home/vgpnk/Projects/shokunin/kama-shokunin
+$ jj --ignore-working-copy log -r '@|master' --no-graph -T 'commit_id.short() ++ " " ++ bookmarks ++ " " ++ description.first_line() ++ "\n"'
+0f65f84856f3
+efc6b3ec6fb6 master round-56: freeze LD_AUDIT env leg and prereg roster controls
+$ git rev-parse master
+efc6b3ec6fb6ea308c15855e9b8b62856f4255b7
+
+[2] freeze commit content (no lessons/round-56, no SCORECARD edit)
+$ git ls-tree -r 9244137892bf --name-only | grep -E 'lessons/round-56|SOURCES.md|round56-'
+(no lessons/round-56 match; tools and corpus/SOURCES.md matches listed)
+
+[3] frozen bytes vs efc6b3ec blobs, exit 0
+$ for f in <files>; do wt=$(sha256sum "$f"|cut -d' ' -f1); hd=$(git cat-file -p "efc6b3ec:./$f"|sha256sum|cut -d' ' -f1); [ "$wt" = "$hd" ] && echo "OK   $f" || echo "DRIFT $f wt=$wt head=$hd"; done
+OK   tools/round56-replay-code-audit.py
+OK   tools/round56-env-leg-test.py
+OK   tools/round56-env-leg-battery.py
+OK   tools/round56-prereg-check.py
+OK   corpus/SOURCES.md
+OK   .ufo/waves/round-56/preregistration.json
+OK   .ufo/waves/round-56/controls/base-c1.out
+OK   .ufo/waves/round-56/controls/base-c2.out
+
+[4] tool digests at audit time
+$ sha256sum tools/round56-*.py
+ec7a2519f6d4b2e1bd08a7ead042a53c7b60e2f58af8e4db008dfd661acf82ac  tools/round56-env-leg-test.py
+79b19596c475863dbd5fe5c03511996b050a69d500f2671385069c02d17c335c  tools/round56-env-leg-battery.py
+c7b0d787f348691bbc057114b455545f5abfb0c70ec497e1ad695591f1489853  tools/round56-prereg-check.py
+fc3d4b63a3020cf37e6f4080e25c9d693a8b177c4f84cae6688b2e445444ff6f  tools/round56-replay-code-audit.py
+
+[5] wave manifest, three instants (13:07:36 / 13:08:44 / 13:09:51)
+$ diff manifest-before.sha256 manifest-final.sha256 ; echo diff_exit=$?
+14c14
+< ad7175ef38d94776e8bd7c112155fe9235edbc9416908be1d43b63b4d8f404e7  .ufo/waves/round-56/w1.ready.partial
+---
+> da410e83d9edebf71031b34c358ccd7c7fb403727ae238071e8e6f4ae3bf149c  .ufo/waves/round-56/w1.ready.partial
+diff_exit=1
+(manifest-after at 13:08:44 differed on the same single line, value 6036f371…)
+
+[6] post-dispatch lane writes outside out/, verbatim sweep at 13:09:51
+13:04:53.9461731060 ./.ufo/waves/round-56/w1
+13:04:53.9471731010 ./.ufo/waves/round-56/w1/dispatch.json
+13:04:57.2601556340 ./.ufo/waves/round-56/w1.ready
+13:06:06.1467977940 ./corpus/lessons
+13:06:24.4097045410 ./corpus/lessons/round-56.md
+13:07:27.5633867970 ./SCORECARD.md
+13:09:51.4091204770 ./.ufo/waves/round-56
+13:09:51.4091204770 ./.ufo/waves/round-56/w1.ready.partial
+
+[7] lane git index rewritten mid-wave
+$ stat -c '%y %n' .git/index
+2026-10-27 13:07:58.235234940 -0300 .git/index
+$ ls -la .git/index
+-rw-r--r-- 1 vgpnk vgpnk 3989168 Oct 27 13:07 .git/index
+
+[8] jj op log entry appended by X06Census (jj diff --summary), 13:07:12
+f13c8cf251eb vgpnk@plazir27 default@ 45 seconds ago, lasted 32 milliseconds
+snapshot working copy
+args: jj diff --summary
+
+[9] SCORECARD drift at audit time
+$ jj --ignore-working-copy diff --stat -- SCORECARD.md
+SCORECARD.md | 6 +++---
+1 file changed, 3 insertions(+), 3 deletions(-)
+worktree sha256 1bddff003549e39ab6a68088d9fe91732dd959127e016066b0fb297fcac10993
+freeze blob sha256 50c594f5f6d44067e5d78f3c18a13a3c09009872c348fe7245649abe9a15989b
+
+[10] out/S03SecretScan transient file (13:06:21)
+$ ls -la .ufo/waves/round-56/w1/out/
+-rw------- 1 vgpnk vgpnk     0 Oct 27 13:06 S03SecretScan
+$ find .ufo/waves/round-56/w1/out -mindepth 1 -printf '%y %8s %TH:%TM:%TS %p\n'   # 19 s later
+d        0 13:06:21.0097218530 .ufo/waves/round-56/w1/out/S03SecretScan
+
+[11] /tmp residue from seat probes (13:09)
+-rw-r--r-- 1 vgpnk vgpnk 221 Oct 27 13:09 /tmp/gc.out
+-rw-r--r-- 1 vgpnk vgpnk 884 Oct 27 13:09 /tmp/gs.out
+-rw-r--r-- 1 vgpnk vgpnk 549 Oct 27 13:09 /tmp/x.out
+X03CleanEnv transcript, 16:09:08Z: rm: cannot remove '/tmp/x': Is a directory
+$ ls -d /tmp/r53c1* 2>/dev/null || echo none
+none
+
+[12] counter scratch fallback to /tmp when TMPDIR unset (S02Scratch receipts)
+1897616 mkdir("/tmp", 0777)             = -1 EEXIST (File exists)
+1897616 mkdir("/tmp/r53c1-uaepock3", 0700) = 0
+1897620 +++ exited with 128 +++
+1896934 mkdir("/tmp", 0777)             = -1 EEXIST (File exists)
+1896934 mkdir("/tmp/r53c1-3bikq1pb", 0700) = 0
+
+[13] escape checks
+$ find .ufo/waves/round-56 -type l -printf '%p -> %l\n'
+(empty)
+$ lsof +D /home/vgpnk/Projects/shokunin/kama-shokunin    # filtered to lane, .jj/.git excluded
+(no rows)
+$ find ~/.local/bin -maxdepth 1 -newermt '2026-10-27 12:00'
+(empty)
+$ find /home/vgpnk/Projects/shokuknow -maxdepth 3 -newermt '2026-10-27 12:55'
+(empty)
+$ ls tools/__pycache__/ | grep round56
+round56-replay-code-audit.cpython-314.pyc   # mtime 13:03:27, pre-dispatch (L1)
+$ ls -d <lane>/{scratch*,tmp,work,proof} 2>/dev/null
+(empty)
+
+[14] scratch root at close
+$ ls -la /fast/scratch/hyaku/kama-r56/
+per-seat dirs only; S02Scratch, X02ReplayC2, X07Anchors absent after their own rm -rf.
+
+[15] seat lane-VCS invocations: 135 unique, timestamps in seat-lane-vcs-calls.tsv

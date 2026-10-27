@@ -1,0 +1,25 @@
+### 1. the predicate over the POSITIVE CONTROL (every leg green, met=True)
+    bind=1 sealed=1 code=1 teardown=1 newrow=1 bound=3/3 sealedruns=3/3 coderuns=3/3 envnames=3/3 hostlibs=3/3 anon=0 twopass=3/3 rehash=0 met=True
+    leg=envnames  leg_failed=True   (a real kill would need this False)
+    leg=code      leg_failed=True   (a real kill would need this False)
+    leg=rehash    leg_failed=True   (a real kill would need this False)
+    leg=bind      leg_failed=True   (a real kill would need this False)
+    leg=sealed    leg_failed=True   (a real kill would need this False)
+    leg=twopass   leg_failed=True   (a real kill would need this False)
+    -> the predicate cannot distinguish ANY of these legs from a pass.
+
+### 2. the predicate applied to the m-ldpreload receipt, named leg 'code'
+    bind=1 sealed=1 code=1 teardown=1 newrow=1 bound=3/3 sealedruns=3/3 coderuns=3/3 envnames=0/3 hostlibs=3/3 anon=0 twopass=3/3 rehash=0 met=False
+    summary says code=code=1  -> the CODE leg PASSED (only envnames=0/3 failed)
+    leg_failed(text, 'code') = True  -> harness ok (rc=1, met=False, leg_failed=True) = True
+    -> the harness would certify 'leg=code ... -> ok' for a mutant whose
+       code leg passed: the leg attribution is vacuous.
+
+### 3. which committed battery receipts the harness can produce
+    harness MUTANTS keys : ['m-ldaudit-foreign', 'm-ldpreload', 'm-member-flip', 'm-text-flip']
+    receipts producible   : ['control', 'm-ldaudit-foreign', 'm-ldpreload', 'm-member-flip', 'm-text-flip']
+    receipts on disk      : ['control', 'm-ldaudit-foreign', 'm-ldpreload', 'm-member-flip', 'm-text-flip']
+    ORPHAN receipts (on disk, no harness entry): []
+    prereg named mutants  : ['m-ldpreload', 'm-ldaudit-writable', 'm-ldaudit-foreign', 'm-member-flip']
+    prereg names NOT in harness MUTANTS: ['m-ldaudit-writable']
+    harness MUTANTS NOT named in prereg: ['m-text-flip']

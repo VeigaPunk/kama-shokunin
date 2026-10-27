@@ -1,0 +1,14 @@
+# Q06SiblingOverlap — sibling ownership overlap
+
+## Findings
+
+- **Observed in kama:** `.ufo/waves/round-56/preregistration.json:11-16` scopes C1 to the `round56-env-leg-test.py` / `round56-replay-code-audit.py` counter and classification of `LD_AUDIT` in the live server process environment. `tools/round56-replay-code-audit.py:147,430-441,695-706` sets `BAD_ENV` to `LD_PRELOAD`, `DYLD_INSERT_LIBRARIES`, and `LD_AUDIT`, reads the target process's environment variable names, and invokes `env_leg` after checking the server PID descends from the replay.
+- **Observed sibling claim:** `kaidoku-shokunin/EXAMPLE.kama.md:61-71` explicitly claims ownership of local model-serving surfaces, including `llama-server`/equivalent processes, ports, consumer `baseURL`s, model-id/`/v1/models` reconciliation, liveness/readiness conventions, endpoint-drift detection, and a cross-lane endpoint-consumer registry. It describes the boundary as determining whether the model at a configured baseURL is the model the config believes it is.
+- **Overlap assessment:** This is **adjacent and potentially contested ownership**, because kama's C1 inspects the environment of the live model-serving process while kaidoku's written claim includes the serving process and endpoint-health surface. The sibling claim does **not** specifically mention process-environment inspection, `LD_AUDIT`, or injection-variable classification. Searches of sibling tools for `env_leg`, `environ_keys`, `LD_AUDIT`, `LD_PRELOAD`, `DYLD_INSERT_LIBRARIES`, and `/proc/.../environ` found no matching sibling tool implementation. Therefore evidence supports an ownership-boundary overlap at the serving-process/health surface, but not duplicate implementation or a specific sibling claim to env auditing.
+
+## Evidence / limits
+
+- Read `kaidoku-shokunin/EXAMPLE.kama.md:61-71`; no sibling edits or runtime checks were performed.
+- Search command: `grep -rIn --exclude-dir=.git --exclude-dir=.jj --exclude='*.json' --exclude='*.lock' -E 'LD_AUDIT|LD_PRELOAD|DYLD_INSERT_LIBRARIES|/proc/[^ ]*/environ|llama-server|llama_server|env_leg|environ_keys' kaidoku-shokunin kengaku-shokunin kake-shokunin tabi-shokunin tsukuroi-shokunin` (from fleet root). Results included kaidoku's ownership statement and historical environment evidence; no matching sibling audit implementation was found in this search. Scope is limited to those sibling trees and searched spellings.
+- Sibling exact env audit search in their `tools` paths returned no matches (the selected glob search did not expand; treat as non-evidence). The broader grep above is the evidence for the negative implementation finding.
+- No source ownership conflict can be resolved from this seat's evidence; kaidoku's statement is a documented claim, not proof of an adjudicated exclusive boundary.

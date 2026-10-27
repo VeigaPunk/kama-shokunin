@@ -1,0 +1,40 @@
+frozen counter          /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round54-replay-code-audit.py
+frozen counter sha256   c81fe971a0d224622d0cc8bf03a4b61af70ddaca370a873fa8ca65e5110579af
+
+Q1  scratch path relationship (what the replay sees)
+counter scratch root     /fast/scratch/hyaku/kama-r55/w1/J4ArchiveImmut/scratch/j4-archive-ref-3vft9rd2
+counter scratch S        /fast/scratch/hyaku/kama-r55/w1/J4ArchiveImmut/scratch/j4-archive-ref-3vft9rd2/r53c1-_5ivqqsg   (mode 0o700)
+replay TMPDIR            /fast/scratch/hyaku/kama-r55/w1/J4ArchiveImmut/scratch/j4-archive-ref-3vft9rd2/r53c1-_5ivqqsg/tmp-b1   (prepare_env, line 616)
+dirname(replay TMPDIR)   /fast/scratch/hyaku/kama-r55/w1/J4ArchiveImmut/scratch/j4-archive-ref-3vft9rd2/r53c1-_5ivqqsg
+-> dirname(TMPDIR) is S  True
+counter archive ref      /fast/scratch/hyaku/kama-r55/w1/J4ArchiveImmut/scratch/j4-archive-ref-3vft9rd2/r53c1-_5ivqqsg/counter-archive.tar.gz
+-> the reference sits in S  True
+-> same uid as the counter  uid 1000; file uid 1000
+-> file mode 0o644; owner-writable True; S mode 0o700
+-> replay-like child (same uid, TMPDIR in S) reach+append rc=256 (0 = the file WAS reachable and writable)
+   => the PATH is reachable; the question is whether the counter still READS it later
+
+Q2  what the counter does when the reference vanishes
+Archive(missing)          FileNotFoundError: [Errno 2] No such file or directory: '/fast/scratch/hyaku/kama-r55/w1/J4ArchiveImmut/scratch/j4-archive-ref-3vft9rd2/r53c1-_5ivqqsg/not-there.tar.gz'
+   -> is OSError: True; is tarfile.TarError: False
+   -> main()'s `except (OSError, tarfile.TarError)` (line 926) catches it ->
+      detail 'counter archive unavailable: ...', arc stays None ->
+      bind_one() line 718-719 appends 'code: the counter has no archive of its own'
+      -> code leg fails -> met=False -> exit 1  (FAIL CLOSED)
+Archive(live).blob bytes  157; sha256 2c840501b3eea39a...
+tarfile backed by         io.BytesIO(self.blob) (Archive.__init__ lines 451-453)
+   (reference file deleted from disk)
+arc.member() after delete b'REAL-RELEASE-BYTESREAL' len=144
+-> still the release bytes: True
+   => after Archive() is constructed the file on disk is NEVER read again:
+      arc.member() serves io.BytesIO(self.blob); the digest check at line 921
+      hashes arc.blob, not the file. Deleting/overwriting the file is inert.
+
+Q2c  ordering in the frozen counter (line numbers from the frozen file)
+   915: apath = os.path.join(S, "counter-archive.tar.gz")
+   920: arc = Archive(apath)  # one read: the bytes hashed are the bytes parsed
+   921: if hashlib.sha256(arc.blob).hexdigest() != ARCHIVE_SHA:
+   936: legs = bind_one(tree, os.path.join(tree, path), S, f"b{n}", vocab, arc, detail)
+   => the counter downloads, reads into memory and hashes its reference BEFORE
+      the first replay is launched (bind_one -> start_replay). There is no
+      window in which a replay can change the bytes that are compared.

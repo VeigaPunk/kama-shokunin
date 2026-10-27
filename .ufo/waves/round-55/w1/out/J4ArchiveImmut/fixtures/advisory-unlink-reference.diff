@@ -1,0 +1,14 @@
+--- a/tools/round54-replay-code-audit.py
++++ b/tools/round54-replay-code-audit.py
+@@ -917,6 +917,13 @@
+             with opener.open(ARCHIVE_URL, timeout=300) as r, open(apath, "wb") as fh:
+                 shutil.copyfileobj(r, fh)
+             arc = Archive(apath)  # one read: the bytes hashed are the bytes parsed
++            # J4ArchiveImmut (round 55, advisory): the reference bytes are now in
++            # memory and every comparison uses them, so the path is never read again -
++            # but it stays in S, reachable and writable by the same-uid replay, which
++            # CAN rewrite or delete it (measured; verdict unchanged).  Leave no path.
++            os.unlink(apath)
+             if hashlib.sha256(arc.blob).hexdigest() != ARCHIVE_SHA:
+                 detail.append("counter archive download does not hash to the frozen digest")
+                 arc = None

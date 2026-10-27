@@ -1,0 +1,27 @@
+--- a/tools/round56-prereg-check.py
++++ b/tools/round56-prereg-check.py
+@@ -39,7 +39,7 @@
+     preg = git(a.repo, "show", f"{tip}:{PREREG}")
+     bat = git(a.repo, "show", f"{tip}:{BATTERY}")
+     if preg.returncode or bat.returncode:
+-        text = f"tip={tip}\npresent=0 roster_match=0 kills=0 controls=0 met=False\n"
++        text = f"tip={tip}\npresent=0 roster_match=0 kills=0 controls=0 met=False\nexit=1\n"
+         print(text, end="")
+         if a.out:
+             open(a.out, "w").write(text)
+@@ -63,12 +63,13 @@
+     controls = sum(1 for v in (roster.values() if isinstance(roster, dict) else [])
+                    if v.get("designation") in ("control", "positive-control"))
+     met = match and kills == 1 and controls == 2
++    rc = 0 if met else 1
+     text = (f"tip={tip}\npresent=1 roster_match={int(match)} kills={kills} controls={controls} "
+-            f"met={met}\n")
++            f"met={met}\nexit={rc}\n")
+     print(text, end="")
+     if a.out:
+         open(a.out, "w").write(text)
+-    return 0 if met else 1
++    return rc
+ 
+ 
+ if __name__ == "__main__":

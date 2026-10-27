@@ -1,0 +1,15 @@
+# K07SourceScope — round 56 source scope review
+
+## Axes
+- **Operability:** S512 supports the narrow decision to reject `LD_AUDIT` by variable name; it does not establish that the test DSO loads or that the full runtime environment is safe.
+- **Calibration:** S512 is an appropriate dedicated source for the single C1 fact. S513 rejection is defensible for this claim, but its recorded snapshot date is inconsistent and should not be represented as corroborated metadata.
+
+## Counterexample and evidence
+The strongest counterexample to overreading S512 is its quoted sentence alone: “the environment variable LD_AUDIT must be defined to contain a colon-separated list of shared libraries” says what the variable contains, not that any specific listed library activates. The lesson/counter do not make that stronger claim: the counter header says “even if one specific audit object is refused”; the battery explicitly uses `/usr/lib/libexpat.so.1` as a non-audit DSO and probes only `env_leg`; that function reads environment variable NAMES and flags membership in `BAD_ENV`. The preregistration’s limits likewise explicitly disclaim successful injection by a foreign DSO on this glibc.
+
+S512 nevertheless directly supports the lesson’s *surface classification*: the opened snapshot’s DESCRIPTION says the list comprises shared libraries that can implement parts of the auditing API and that corresponding functions are invoked at auditable events (snapshot lines 89–94). Its later `la_version` passage says the loader will refuse to activate an audit module when the interface is unsupported or the function returns zero (lines 100–111). These qualifications reinforce why the claim must be about a hazardous variable/interface, not the success of this specific DSO. S512 quote presence/length was independently reported by X07Anchors: one normalized occurrence in DESCRIPTION, 15 words, <=25; it is split by HTML markup/line breaks in the snapshot. The S512 footline is Linux man-pages 6.19, 2025-05-17, consistent with the registry row.
+
+S513’s dedicated §LD_AUDIT quote is more explicit about objects “to be loaded” and loader behavior, but the counter’s need is just to identify the variable as an environment injection surface. Rejecting the broader `ld.so(8)` source as redundant in favor of `rtld-audit(7)` is therefore reasonable; the rejection does not remove necessary support. However, the S513 registry and lesson rows say man-pages 6.19 (2025-05-17), while its opened snapshot footer says Linux man-pages 6.19, **2026-08-03** (snapshot line 715). This is a rejected source, so it does not undermine C1, but the row’s snapshot/date metadata is not faithful to the recorded artifact.
+
+## Smallest safe correction
+Keep S512 and the frozen C1 predicate unchanged. Do not say or imply that `/usr/lib/libexpat.so.1` loads as an audit module; retain the explicit environment-name-only limitation. Correct S513’s date metadata to match its snapshot (or omit the date if its provenance is not established) in a future permitted registry/lesson update. No change to the frozen claim, counter, or rejection decision is warranted by this review.
