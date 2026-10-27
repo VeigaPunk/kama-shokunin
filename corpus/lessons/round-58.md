@@ -57,3 +57,5 @@ These are the exact lines this round replaced in place after first writing them 
 
 Before: exit 0, 257 rows (`.ufo/waves/round-58/census/start.out`). After: recorded at round end (`.ufo/waves/round-58/census/end.out`).
 
+
+| wrong-doc-version | S517 anchor first said "Python 3.14 docs" while the page title is "Python 3.15.2 documentation". | the Gate re-read. | Corrected in the same round; disclosed in `registry/append-only-disclosures.tsv`. |
