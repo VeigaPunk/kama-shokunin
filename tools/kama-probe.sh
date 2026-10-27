@@ -1125,7 +1125,7 @@ main() {
   if [ "$HAVE_PY" -eq 0 ]; then
     warn "python3 not found — using grep fallbacks for JSON-pointer and model-id parsing"
   fi
-  TMP_ROOT=$(mktemp -d "${KAMA_PROBE_TMPDIR:-/tmp}/kama-probe.XXXXXX")
+  TMP_ROOT=$(mktemp -d "${KAMA_PROBE_TMPDIR:-${TMPDIR:-/tmp}}/kama-probe.XXXXXX")  # round 52 (seat Sen2Scratch): honour TMPDIR
 
   case "$SUBCOMMAND" in
     listeners) load_listeners; cmd_listeners ;;

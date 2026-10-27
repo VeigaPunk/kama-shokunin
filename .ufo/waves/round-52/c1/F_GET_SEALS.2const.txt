@@ -1,0 +1,319 @@
+
+
+
+
+    
+    
+
+    F_GET_SEALS(2const) - Linux manual page
+    
+    
+
+
+
+
+
+
+    
+        
+            
+                
+                    
+                        man7.org > Linux > man-pages
+                    
+                
+                
+                    Linux/UNIX system programming training
+                
+            
+        
+    
+
+
+
+
+F_GET_SEALS(2const) — Linux manual page
+
+
+
+
+    
+        
+NAME | LIBRARY | SYNOPSIS | DESCRIPTION | RETURN VALUE | ERRORS | STANDARDS | HISTORY | SEE ALSO | COLOPHON
+        
+    
+
+
+    
+        
+
+            
+                
+                    
+                    
+                    
+                
+            
+
+        
+    
+     
+
+
+
+
+
+F_GET_SEALS(2const)                                   F_GET_SEALS(2const)
+
+NAME          top
+       F_GET_SEALS, F_ADD_SEALS - get/add file seals
+
+LIBRARY          top
+       Standard C library (libc, -lc)
+
+SYNOPSIS          top
+       #include <fcntl.h>
+
+       int fcntl(int fd, F_ADD_SEALS, int arg);
+       int fcntl(int fd, F_GET_SEALS);
+
+DESCRIPTION          top
+       File seals limit the set of allowed operations on a given file.
+       For each seal that is set on a file, a specific set of operations
+       will fail with EPERM on this file from now on.  The file is said
+       to be sealed.  The default set of seals depends on the type of the
+       underlying file and filesystem.  For an overview of file sealing,
+       a discussion of its purpose, and some code examples, see
+       memfd_create(2).
+
+       Currently, file seals can be applied only to a file descriptor
+       returned by memfd_create(2) (if the MFD_ALLOW_SEALING was
+       employed).  On other filesystems, all fcntl() operations that
+       operate on seals will return EINVAL.
+
+       Seals are a property of an inode.  Thus, all open file descriptors
+       referring to the same inode share the same set of seals.
+       Furthermore, seals can never be removed, only added.
+
+       F_ADD_SEALS
+              Add the seals given in the bit-mask argument arg to the set
+              of seals of the inode referred to by the file descriptor
+              fd.  Seals cannot be removed again.  Once this call
+              succeeds, the seals are enforced by the kernel immediately.
+              If the current set of seals includes F_SEAL_SEAL (see
+              below), then this call will be rejected with EPERM.  Adding
+              a seal that is already set is a no-op, in case F_SEAL_SEAL
+              is not set already.  In order to place a seal, the file
+              descriptor fd must be writable.
+
+       F_GET_SEALS
+              Return (as the function result) the current set of seals of
+              the inode referred to by fd.  If no seals are set, 0 is
+              returned.  If the file does not support sealing, -1 is
+              returned and errno is set to EINVAL.
+
+       The following seals are available:
+
+       F_SEAL_SEAL
+              If this seal is set, any further call to fcntl() with
+              F_ADD_SEALS fails with the error EPERM.  Therefore, this
+              seal prevents any modifications to the set of seals itself.
+              If the initial set of seals of a file includes F_SEAL_SEAL,
+              then this effectively causes the set of seals to be
+              constant and locked.
+
+       F_SEAL_SHRINK
+              If this seal is set, the file in question cannot be reduced
+              in size.  This affects open(2) with the O_TRUNC flag as
+              well as truncate(2) and ftruncate(2).  Those calls fail
+              with EPERM if you try to shrink the file in question.
+              Increasing the file size is still possible.
+
+       F_SEAL_GROW
+              If this seal is set, the size of the file in question
+              cannot be increased.  This affects write(2) beyond the end
+              of the file, truncate(2), ftruncate(2), and fallocate(2).
+              These calls fail with EPERM if you use them to increase the
+              file size.  If you keep the size or shrink it, those calls
+              still work as expected.
+
+       F_SEAL_WRITE
+              If this seal is set, you cannot modify the contents of the
+              file.  Note that shrinking or growing the size of the file
+              is still possible and allowed.  Thus, this seal is normally
+              used in combination with one of the other seals.  This seal
+              affects write(2) and fallocate(2) (only in combination with
+              the FALLOC_FL_PUNCH_HOLE flag).  Those calls fail with
+              EPERM if this seal is set.  Furthermore, trying to create
+              new shared, writable memory-mappings via mmap(2) will also
+              fail with EPERM.
+
+              Using the F_ADD_SEALS operation to set the F_SEAL_WRITE
+              seal fails with EBUSY if any writable, shared mapping
+              exists.  Such mappings must be unmapped before you can add
+              this seal.  Furthermore, if there are any asynchronous I/O
+              operations (io_submit(2)) pending on the file, all
+              outstanding writes will be discarded.
+
+       F_SEAL_FUTURE_WRITE (since Linux 5.1)
+              The effect of this seal is similar to F_SEAL_WRITE, but the
+              contents of the file can still be modified via shared
+              writable mappings that were created prior to the seal being
+              set.  Any attempt to create a new writable mapping on the
+              file via mmap(2) will fail with EPERM.  Likewise, an
+              attempt to write to the file via write(2) will fail with
+              EPERM.
+
+              Using this seal, one process can create a memory buffer
+              that it can continue to modify while sharing that buffer on
+              a "read-only" basis with other processes.
+
+       F_SEAL_EXEC (since Linux 6.3)
+              If this seal is set, the execute mode bits of the file
+              cannot be modified.  Attempting to change the execute mode
+              bits via fchmod(2) or similar will fail with EPERM.  This
+              results in a memfd that is either permanently executable or
+              permanently not executable.
+
+              Adding this seal implicitly adds F_SEAL_GROW,
+              F_SEAL_SHRINK, F_SEAL_WRITE, and F_SEAL_FUTURE_WRITE.  This
+              ensures that the executable code is not writeable.  All the
+              pre-requisites to add the implied seals must be met to
+              successfully add F_SEAL_EXEC.
+
+RETURN VALUE          top
+       F_GET_SEALS
+              A bit mask identifying the seals that have been set for the
+              inode referred to by fd.
+
+       F_ADD_SEALS
+              Zero.
+
+       On error, -1 is returned, and errno is set to indicate the error.
+
+ERRORS          top
+       See fcntl(2).
+
+       EBUSY  op is F_ADD_SEALS, arg includes F_SEAL_WRITE, and there
+              exists a writable, shared mapping on the file referred to
+              by fd.
+
+       EINVAL op is F_ADD_SEALS and arg includes an unrecognized sealing
+              bit.
+
+       EINVAL The filesystem containing the inode referred to by fd does
+              not support sealing.
+
+       EPERM  op was F_ADD_SEALS, but fd was not open for writing or the
+              current set of seals on the file already includes
+              F_SEAL_SEAL.
+
+STANDARDS          top
+       Linux.
+
+HISTORY          top
+       Linux 3.17.
+
+SEE ALSO          top
+       fcntl(2)
+
+COLOPHON          top
+       This page is part of the man-pages (Linux kernel and C library
+       user-space interface documentation) project.  Information about
+       the project can be found at 
+       ⟨https://www.kernel.org/doc/man-pages/⟩.  If you have a bug report
+       for this manual page, see
+       ⟨https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/CONTRIBUTING⟩.
+       This page was obtained from the tarball man-pages-6.19.tar.gz
+       fetched from
+       ⟨https://mirrors.edge.kernel.org/pub/linux/docs/man-pages/⟩ on
+       2026-09-09.  If you discover any rendering problems in this HTML
+       version of the page, or you believe there is a better or more up-
+       to-date source for the page, or you have corrections or
+       improvements to the information in this COLOPHON (which is not
+       part of the original manual page), send a mail to
+       man-pages@man7.org
+
+Linux man-pages 6.19            2026-06-04            F_GET_SEALS(2const)
+
+
+
+Pages that refer to this page:
+    fcntl(2)
+
+
+
+ 
+
+
+
+
+
+    
+    
+        
+            HTML rendering created 2026-09-09
+            by Michael Kerrisk,
+            author of
+            The Linux Programming Interface.
+        
+        
+            For details of in-depth
+            Linux/UNIX system programming training courses
+            that I teach, look here.
+        
+        
+            Hosting by jambit GmbH.
+        
+    
+    
+    
+    
+        
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+var sc_project=7422636;
+var sc_invisible=1;
+var sc_security="9b6714ff";
+
+
+
+
+
+
+
+
+
+
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-9830363-8']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+
+
+
+
+
+
+
+

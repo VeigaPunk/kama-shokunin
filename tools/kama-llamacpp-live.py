@@ -773,6 +773,18 @@ def server_exe(pid):
 
 F_GET_SEALS = 1034          # F_LINUX_SPECIFIC_BASE + 10 (fcntl(2))
 SEALS_ALL = 15              # F_SEAL_SEAL | F_SEAL_SHRINK | F_SEAL_GROW | F_SEAL_WRITE
+F_SEAL_EXEC = 32            # fcntl(2): the execute bits are frozen
+
+
+def memfd_noexec():
+    """Round 52 (seat Sen1Exec): vm.memfd_noexec as this pid namespace reports it (kernel
+    mfd_noexec documentation, S502: at 1 a memfd_create() without MFD_EXEC acts as
+    MFD_NOEXEC_SEAL, at 2 it is refused), named in the refusal below."""
+    try:
+        with open('/proc/sys/vm/memfd_noexec', encoding='ascii') as fh:
+            return fh.read().strip() or 'empty'
+    except OSError as exc:
+        return 'unreadable:' + (exc.strerror or type(exc).__name__)
 
 
 def file_seals(fd):
@@ -795,6 +807,11 @@ def sealed_fd(fd, want_sha, want_size):
     seals = file_seals(fd)
     if not stat.S_ISREG(st.st_mode) or seals is None or seals & SEALS_ALL != SEALS_ALL:
         raise SetupError(f'server-fd-not-sealed:{seals}')
+    if seals & F_SEAL_EXEC:
+        # F_SEAL_EXEC freezes the exec bits off (a memfd made without MFD_EXEC on a host
+        # with vm.memfd_noexec >= 1): the exec below would fail EACCES, so say why now
+        raise SetupError('server-fd-not-executable:F_SEAL_EXEC:memfd_noexec='
+                         + memfd_noexec())
     if st.st_size != want_size:
         raise SetupError(f'server-fd-size:{st.st_size}!={want_size}')
     h, off = hashlib.sha256(), 0
@@ -1627,9 +1644,83 @@ def _provenance_selftest():
             raise AssertionError(f'pinned-url rule wrong for {url}')
 
 
+F_ADD_SEALS = 1033          # F_LINUX_SPECIFIC_BASE + 9 (fcntl(2)); round 52
+
+
+def _server_fd_selftest():
+    """Round 52 (X5Selftest): sealed_fd() accepts exactly one shape - a sealed memfd whose
+    bytes and length are the --server file's - and refuses an unsealed memfd, a file that
+    cannot be sealed at all, a partly sealed memfd, a length mismatch and a digest
+    mismatch. No case called sealed_fd before this one, so deleting the seal test or the
+    digest comparison from it left the selftest green."""
+    def a_memfd(payload, seals):
+        fd = os.memfd_create('server-fd-selftest',
+                             os.MFD_CLOEXEC | os.MFD_ALLOW_SEALING)
+        if payload:
+            os.write(fd, payload)
+        if seals:
+            fcntl.fcntl(fd, F_ADD_SEALS, seals)
+        return fd
+
+    def refused(fd, want_sha, want_size, token):
+        try:
+            sealed_fd(fd, want_sha, want_size)
+        except SetupError as exc:
+            if not str(exc).startswith(token):
+                raise AssertionError(
+                    f'server-fd refusal {exc} != {token}') from None
+            return
+        raise AssertionError(f'server-fd accepted, expected {token}')
+
+    payload = b'\x7fELF server-fd selftest'
+    want = hashlib.sha256(payload).hexdigest()
+    fd = a_memfd(payload, SEALS_ALL)
+    try:
+        try:
+            ident = sealed_fd(fd, want, len(payload))
+        except SetupError as exc:
+            raise AssertionError(
+                f'server-fd refused a sealed memfd: {exc}') from None
+    finally:
+        os.close(fd)
+    if (ident['sha256'] != want or ident['nlink'] != 0
+            or ident['seals'] & SEALS_ALL != SEALS_ALL):
+        raise AssertionError(f'server-fd identity not a sealed memfd: {ident}')
+    fd = a_memfd(payload, 0)                  # memfd, never sealed
+    try:
+        refused(fd, want, len(payload), 'server-fd-not-sealed:0')
+    finally:
+        os.close(fd)
+    with tempfile.TemporaryDirectory(prefix='kama-server-fd-selftest-') as directory:
+        path = os.path.join(directory, 'server')
+        with open(path, 'wb') as fh:         # a directory file cannot be sealed
+            fh.write(payload)
+        fd = os.open(path, os.O_RDONLY)
+        try:
+            refused(fd, want, len(payload), 'server-fd-not-sealed:None')
+        finally:
+            os.close(fd)
+    fd = a_memfd(payload, 3)                  # F_SEAL_SEAL|F_SEAL_SHRINK only
+    try:
+        refused(fd, want, len(payload), 'server-fd-not-sealed:3')
+    finally:
+        os.close(fd)
+    fd = a_memfd(payload, SEALS_ALL)
+    try:
+        refused(fd, want, len(payload) + 1, 'server-fd-size:')
+    finally:
+        os.close(fd)
+    fd = a_memfd(payload, SEALS_ALL)
+    try:
+        refused(fd, '0' * 64, len(payload), 'server-fd-digest-differs-from-server')
+    finally:
+        os.close(fd)
+
+
 def _selftest():
     """Exercise procfs parsing, live tcp6 ownership rows, v3 verdicts, install
     identity and v5 record-time provenance."""
+    _server_fd_selftest()
     _install_identity_selftest()
     _provenance_selftest()
     port = 0x1234
@@ -1999,7 +2090,8 @@ def main(argv=None):
                 proc = subprocess.Popen(server_argv, **popen_kwargs)
             except OSError as exc:
                 raise SetupError(
-                    f'launch-failed:{type(exc).__name__}') from exc
+                    f'launch-failed:{type(exc).__name__}:{exc.errno}:'
+                    f'{exc.strerror or exc}') from exc
             receipt['child_pid'] = proc.pid
         finally:
             log_file.close()

@@ -1524,3 +1524,57 @@ Deleted by `2793eb5173e3` (round-42: claim fixes — adjacency count 16, README 
 `````text
 | `knowledge/context-capacity-engine-sides.md` | Engine-side half of declared versus served context capacity (K05), as source readings: vLLM v0.32.0 derives its served KV-cache token figure from the block pool and `max_model_len` and prints it beside the declared length on one startup log line; llama.cpp 704366d7's router model listing publishes the declared training context as `context_length` (not `max_model_len`); S478, S479 | 42 |
 `````
+
+## Frontier disposition — round 52 (appended)
+
+**Moved from frontier to held ground:**
+
+- *The replay's server image as a file on disk* (round-51 "not shown", first bullet; the
+  round-51 closure's C1 carried limits). The replay copies the verified member from the
+  archive's tar stream into an anonymous memfd (S500), seals it against write, shrink,
+  grow and further sealing (S501), and the live tool execs the server from that
+  descriptor (`--server-fd`); the counter opens `/proc/<pid>/exe` itself and requires a
+  `/memfd:` link, link count 0, seals 15 and the frozen digest, and the same dev, inode and
+  seals in the rerun receipt and the replay's result. A copy, a hardlink or a rename-over
+  at the member path can no longer be the running image (wave controls J3CopyDecoy and
+  J4Hardlink `sealed=0`; J6RenameOver meets because the path no longer decides the image,
+  while the same rename-over met the round-51 replay and counter at the base).
+- *Every line the A-corr files lost in place* (round-51 C2 carried limits; SCORECARD
+  §Planned (round 52) item 2). The 155 graded lines `LOG.md`, `SCORECARD.md`,
+  `corpus/QUALITY.md`, this file and 14 filed lessons lost are re-appended verbatim under
+  `## Restored lines (round 52)` (`###` in `SCORECARD.md`), fenced, one block per deleting
+  commit; the ledger keeps the 10 A/A-row lines whose re-append would duplicate a registry
+  id or an errata key (seat X8Rows: seven census `E03` refusals; three errata keys). The C2
+  counter decides graded regions with its own fence-aware section logic and tests the
+  ledger cutoff both ways, `only=` and `exempt=` regions.
+
+**Not shown by round 52:**
+
+- *Where the memfd's bytes came from.* A memfd filled from the host's byte-identical
+  install, or from the replay's own extracted path, meets the counter (seat J5HostMemfd);
+  the download stays unobserved. Two cheap distinguishers exist on this host and are not
+  part of the counter: an `strace -f -y -e trace=%file` open-set, and `bwrap` with the host
+  install hidden.
+- *The implementation the launcher loads.* The sealed image is the 17,864-byte launcher;
+  `libllama-server-impl.so` (7,923,736 bytes) and the `libggml*` set, the dynamically
+  chosen CPU backend among them, still load by path (`LD_LIBRARY_PATH`, cwd) from the
+  extracted tree (seats K2Design, N2Pattern).
+- *The model behind its path.* The model leg still joins a `/proc/<pid>/maps` entry to a
+  pathname it stats and hashes; a wave probe mapped the model from a sealed memfd (seat
+  N2Pattern), which is the route the round-50 "model bytes rewritten after mapping" limit
+  needs, but a `/memfd:` mapping has no path for that leg.
+- *Visibility of restored lines.* The C2 counter proves byte retention; a restored block
+  wrapped in an HTML comment still meets it (seat K4Cheat). Its `exempt=` rule is simpler
+  than the tool's (four `SCORECARD.md` lines, seat L2Slice), and its eight fixtures kill
+  only the two cutoff mutants of eight tool mutants (seat M5Fixtures).
+
+**Still frontier:** a verifier-owned reference for the server bytes (counter-owned
+extraction, or a witness of the replay's archive stream); per-mapping identity for the
+libraries and the model; the round-50 carried items (probe PATH execution, kills during
+download or readiness, pid start-time binding of `child_pid`); content-aware eligibility
+for the exempt head sections; the prerelease cliff (b11909 still a GitHub prerelease while
+upstream has reached b11913, seat Sc2Watch); hosts with `vm.memfd_noexec=2` (S502: no
+memfd server can run there; the replay refuses at creation).
+
+Integration (round 52, L1): written from the wave's reports (`.ufo/waves/round-52/w1/out/`);
+measured values are in SCORECARD under the round-52 measured-results heading.
