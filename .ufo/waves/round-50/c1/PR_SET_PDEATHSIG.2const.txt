@@ -1,0 +1,232 @@
+
+
+
+
+    
+    
+
+    PR_SET_PDEATHSIG(2const) - Linux manual page
+    
+    
+
+
+
+
+
+
+    
+        
+            
+                
+                    
+                        man7.org > Linux > man-pages
+                    
+                
+                
+                    Linux/UNIX system programming training
+                
+            
+        
+    
+
+
+
+
+PR_SET_PDEATHSIG(2const) — Linux manual page
+
+
+
+
+    
+        
+NAME | LIBRARY | SYNOPSIS | DESCRIPTION | RETURN VALUE | ERRORS | STANDARDS | HISTORY | CAVEATS | SEE ALSO | COLOPHON
+        
+    
+
+
+    
+        
+
+            
+                
+                    
+                    
+                    
+                
+            
+
+        
+    
+     
+
+
+
+
+
+PR_SET_PDEATHSIG(2const)                         PR_SET_PDEATHSIG(2const)
+
+NAME          top
+       PR_SET_PDEATHSIG - set the parent-death signal of the calling
+       process
+
+LIBRARY          top
+       Standard C library (libc, -lc)
+
+SYNOPSIS          top
+       #include <linux/prctl.h>  /* Definition of PR_* constants */
+       #include <sys/prctl.h>
+
+       int prctl(PR_SET_PDEATHSIG, long sig);
+
+DESCRIPTION          top
+       Set the parent-death signal of the calling process to sig (either
+       a signal value in the range [1, NSIG - 1], or 0 to clear).  This
+       is the signal that the calling process will get when its parent
+       dies.
+
+       The parent-death signal is sent upon subsequent termination of the
+       parent thread and also upon termination of each subreaper process
+       (see PR_SET_CHILD_SUBREAPER(2const)) to which the caller is
+       subsequently reparented.  If the parent thread and all ancestor
+       subreapers have already terminated by the time of the
+       PR_SET_PDEATHSIG operation, then no parent-death signal is sent to
+       the caller.
+
+       The parent-death signal is process-directed (see signal(7)) and,
+       if the child installs a handler using the sigaction(2) SA_SIGINFO
+       flag, the si_pid field of the siginfo_t argument of the handler
+       contains the PID of the terminating parent process.
+
+       The parent-death signal setting is cleared for the child of a
+       fork(2).  It is also (since Linux 2.4.36 / 2.6.23) cleared when
+       executing a set-user-ID or set-group-ID binary, or a binary that
+       has associated capabilities (see capabilities(7)); otherwise, this
+       value is preserved across execve(2).  The parent-death signal
+       setting is also cleared upon changes to any of the following
+       thread credentials: effective user ID, effective group ID,
+       filesystem user ID, or filesystem group ID.
+
+RETURN VALUE          top
+       On success, 0 is returned.  On error, -1 is returned, and errno is
+       set to indicate the error.
+
+ERRORS          top
+       EINVAL sig is not a valid signal number.
+
+STANDARDS          top
+       Linux.
+
+HISTORY          top
+       Linux 2.1.57.
+
+CAVEATS          top
+       The "parent" in this case is considered to be the thread that
+       created this process.  In other words, the signal will be sent
+       when that thread terminates (via, for example, pthread_exit(3)),
+       rather than after all of the threads in the parent process
+       terminate.
+
+SEE ALSO          top
+       prctl(2), PR_GET_PDEATHSIG(2const)
+
+COLOPHON          top
+       This page is part of the man-pages (Linux kernel and C library
+       user-space interface documentation) project.  Information about
+       the project can be found at 
+       ⟨https://www.kernel.org/doc/man-pages/⟩.  If you have a bug report
+       for this manual page, see
+       ⟨https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/CONTRIBUTING⟩.
+       This page was obtained from the tarball man-pages-6.19.tar.gz
+       fetched from
+       ⟨https://mirrors.edge.kernel.org/pub/linux/docs/man-pages/⟩ on
+       2026-09-09.  If you discover any rendering problems in this HTML
+       version of the page, or you believe there is a better or more up-
+       to-date source for the page, or you have corrections or
+       improvements to the information in this COLOPHON (which is not
+       part of the original manual page), send a mail to
+       man-pages@man7.org
+
+Linux man-pages 6.19            2026-02-08       PR_SET_PDEATHSIG(2const)
+
+
+
+Pages that refer to this page:
+    prctl(2), 
+    PR_GET_PDEATHSIG(2const)
+
+
+
+ 
+
+
+
+
+
+    
+    
+        
+            HTML rendering created 2026-09-09
+            by Michael Kerrisk,
+            author of
+            The Linux Programming Interface.
+        
+        
+            For details of in-depth
+            Linux/UNIX system programming training courses
+            that I teach, look here.
+        
+        
+            Hosting by jambit GmbH.
+        
+    
+    
+    
+    
+        
+    
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+var sc_project=7422636;
+var sc_invisible=1;
+var sc_security="9b6714ff";
+
+
+
+
+
+
+
+
+
+
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-9830363-8']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,46 @@
+{
+ "lane": "kama",
+ "round": 50,
+ "attempt": 1,
+ "author": "kama L1 (agent KamaR50)",
+ "frozen_at_utc": "2026-10-27T00:20:47Z",
+ "base": "26ecba64ad6fb571d09074b07202d1618a46ecd1",
+ "authority": "shokunin.conf assigns operability + calibration; the lowest-scoring non-retired axes are calibration, depth and adjacency (7 each); C2 works calibration (the lowest assigned axis) and C1 works operability (the other assigned axis). Stagnation nudge inactive (calibration 7 below saturation 8). Starting point: SCORECARD.md ### Planned (round 50) items 1 and 2 and the round-49 outside closure's routed R1, R2 and R3 (corpus/lessons/round-49-verifier-spotcheck.md section 6).",
+ "separability": "C1 touches tools/kama-live-replay.py, tools/kama-llamacpp-live.py and corpus/SOURCES.md rows; its counter reads only those, the three committed round-48 v5 receipts and the network. C2 touches tools/append-only-audit.py only; its counter reads only that tool, registry/append-only-contract.tsv, the declaring lines it names and git history. A C1 SOURCES append adds lines (no deletion event); C1 touches no C2 path and C2 no C1 path.",
+ "claims": [
+  {
+   "id": "C1",
+   "axis": "operability",
+   "score": "8->8",
+   "type": "measured (capability depth: the witnessed replay bound to its own process tree, rerun receipt, a clean interpreter environment and the model file the server mapped, and torn down whole when its invoker is killed); sourced on proc_pid_maps(5) (and PR_SET_PDEATHSIG(2const) for the teardown mechanism)",
+   "statement": "kama-live-replay.py starts the live tool isolated (python -I) with an allow-listed environment and a parent-death signal, and sets its own parent-death signal, so killing whatever started a replay takes replay, live tool and server down (closure R2, seat X1Kill); kama-llamacpp-live.py records in the receipt the model file the server mapped (/proc/<child>/maps dev, inode, pathname, sha256 of that same file) and the replay refuses a rerun whose mapped model does not hash to the receipt's model (closure R1, seats K1Design, R0Controls); the counter joins the observed pid with the rerun child_pid and the replay's process tree and plants environment canaries (closure R1, seat K1Cheat).",
+   "predicate": "a replay of each of the three committed v5 b11909 receipts, started isolated with planted environment canaries, holds a server that the counter finds executing the frozen binary as the listener, answering a fresh nonce against the model's own vocabulary, descending from the replay, free of the canaries, mapping a file that hashes to the frozen model, and recorded in the rerun receipt with the same pid and the same mapped file; killing the replay's invoker removes every process of the tree within 30 s; and the maps surface is a source row; bind=1 teardown=1 newrow=1.",
+   "counter": "tools/round50-replay-bind-audit.py",
+   "counter_sha256": "ff6ac2ace541ea35a4d240ceebb019653c11a2a08c025e514770f3f94a9c5e89",
+   "command": "python3 tools/round50-replay-bind-audit.py --repo <lane clone> --tip <full commit> --scratch <dir> --out <receipt>",
+   "target": "bind=1 teardown=1 newrow=1 bound=3/3 met=True",
+   "kill": "any leg 0 at the measured commit, or met=True on any control"
+  },
+  {
+   "id": "C2",
+   "axis": "calibration",
+   "score": "7->7",
+   "type": "measured (instrument correction: the lane's append-only rule graded independently of rev-list sibling order, of headings inside fenced code blocks and of a moved line's line ending, with every deleted line accounted for; outside ground truth: twelve constructed fixtures with expectations by construction and git numstat as the deletion oracle); sourced on CommonMark 0.31.2 section 4.5 for the fence rule",
+   "statement": "append-only-audit v5 definitions (round-49 seats K2Origin F3-F5, K2Cheat; closure R3): origin is the union of section titles at every birth of a line's key (a commit holding it while no parent does), so it is a property of the commit graph, not of the listing order; sections ignore `## ` lines inside CommonMark fenced code blocks; origin keys drop one trailing carriage return; graded + ungraded equals deleted for every event.",
+   "predicate": "append-only-audit at the measured commit gives the same verdict under either merge-parent order, grades dated lines behind a fenced fake heading and dated lines laundered through the head with a changed line ending, keeps every round-49 scenario, accounts for every deleted line of every event, and on the lane binds every contract row, exits 0 and ungrades no deleted line the v5 definitions grade; fixture=1 lane=1.",
+   "counter": "tools/round50-append-audit-v5-check.py",
+   "counter_sha256": "925f07a48a02ad54a9c89230aac7e54c8dafee4ba2e8a823dcb851b9cf48ca46",
+   "command": "python3 tools/round50-append-audit-v5-check.py --repo <lane clone> --tip <full commit> --scratch <dir> --out <receipt>",
+   "target": "fixture=1 lane=1 scenarios=12/12 met=True",
+   "kill": "any leg 0 at the measured commit, or met=True on any control"
+  }
+ ],
+ "controls": ".ufo/waves/round-50/controls/: base.c1.out and base.c2.out at the base (do-nothing controls, committed at the freeze); after the build, ablation controls on the build tree, each removing one claimed mechanism - C1: no env allow-list (live tool started without -I and with the replay's whole environment), no replay parent-death signal, no model_mapping record, a decoy replay that copies the original receipt's child_pid into its rerun receipt; C2: v4 sections (fence-blind), byte-exact origin keys, v4 first-in-rev-list origin. Every control must be met=False.",
+ "limits": [
+  "C1's mapped check compares the dev and inode the server's maps line shows with a stat() of its pathname and hashes that path now: a file rewritten in place after mapping with identical bytes is indistinguishable; on filesystems whose maps dev differs from stat st_dev (btrfs subvolumes) the check fails closed. The counter's scratch is xfs.",
+  "C1's env check plants two canaries (a variable and a PYTHONPATH sitecustomize); other injection channels (LD_PRELOAD into the server, a modified python on PATH) are not planted. The replay itself is started with -I by the counter.",
+  "C1's teardown leg kills the invoker once, during the witness hold; kills during download or readiness are not exercised.",
+  "C2's births are computed over every commit reachable from <to> (all parents); a key reborn after deletion adds the titles of its rebirth. Text born in both an exempt and a dated section counts as exempt-born (v4 rule kept).",
+  "C2's lane leg bounds the tool's ungraded count by the counter's own v5 count per event and checks the arithmetic and numstat deletions; the binder is still the v4 copy (seat V2Ctr) and the sub-20 threshold is unchanged."
+ ]
+}
