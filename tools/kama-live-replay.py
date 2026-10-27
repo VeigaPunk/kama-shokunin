@@ -56,7 +56,12 @@ running server's image, opened by the live tool through /proc/<pid>/exe (proc_pi
 - with `opened` true, the receipt's server sha256, and the dev and inode of this replay's
 own extracted member <work>/server/<member> (the replay records them as `own_server`),
 else `server-exe:<reason>` is a mismatch; a server exec'd from any other file, even a
-byte-identical install, does not match.
+byte-identical install, does not match. The member is opened (O_NOFOLLOW) before the live
+child starts and held open until the comparison, so the dev and inode compared are those
+of the file that existed at exec time and its inode cannot be reused meanwhile (seat
+K1Design3); a member with more than one link (a hardlink to another install, seat
+J4Hardlink) is `server-exe:member-links:<n>`; a byte-identical copy put at the member path
+before exec still matches.
 --compare validates both receipts' provenance like a replay would, then prints
 `compare match=<bool> mismatches=N` and one `mismatch:` line each; exit 0 equal,
 1 different, 2 unreadable or refused.
@@ -282,6 +287,7 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
            witness_timeout=120.0):
     res = {"schema": SCHEMA, "receipt": os.path.abspath(receipt_path), "work": os.path.abspath(work),
            "rerun_receipt": None, "match": False, "refused": None, "mismatches": [], "inputs": {}}
+    own_fd = None
     try:
         with open(receipt_path) as fh:
             rec = json.load(fh)
@@ -335,6 +341,10 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
             argv[-2:-2] = ["--witness-dir", os.path.abspath(witness_dir),
                            "--witness-timeout", str(witness_timeout)]
             res["witness_dir"] = os.path.abspath(witness_dir)
+        # round 51 (seat K1Design3): the member is held open from before exec until the
+        # server-exe comparison, so its inode cannot be freed and reused in between
+        own_fd = os.open(server, os.O_RDONLY | os.O_NOFOLLOW)
+        own = os.fstat(own_fd)
         p = subprocess.run(argv, capture_output=True, text=True, env=env, preexec_fn=_child_pdeathsig,
                            timeout=timeout + (witness_timeout if witness_dir is not None else 0))
         res["live_exit"] = p.returncode
@@ -356,7 +366,7 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
         # this replay extracted - the live tool opened its running image through
         # /proc/<pid>/exe; the dev and inode it saw must be those of <work>/server/<member>
         # and its bytes must hash to the receipt's server
-        se, own = rr.get("server_exe"), os.stat(server)
+        se = rr.get("server_exe")
         own_id = ("%02x:%02x" % (os.major(own.st_dev), os.minor(own.st_dev)), str(own.st_ino))
         res["own_server"] = {"path": server, "dev": own_id[0], "inode": own_id[1]}
         if not isinstance(se, dict) or se.get("opened") is not True:
@@ -366,6 +376,10 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
         elif (str(se.get("dev")), str(se.get("inode"))) != own_id:
             res["mismatches"].append(f"server-exe:not-own-member:{se.get('dev')}:{se.get('inode')}"
                                      f"!={own_id[0]}:{own_id[1]}")
+        # round 51 (seat J4Hardlink): a member hard-linked to another file (the host install,
+        # say) has the same inode as that file; an extracted member has exactly one link
+        if os.fstat(own_fd).st_nlink != 1:
+            res["mismatches"].append(f"server-exe:member-links:{os.fstat(own_fd).st_nlink}")
         if p.returncode != 0:
             res["mismatches"].append(f"live-exit:{p.returncode}")
         # instance differences that do not fail a replay but are worth reading
@@ -381,6 +395,9 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
             subprocess.TimeoutExpired, urllib.error.URLError) as exc:
         res["refused"] = f"could-not-run:{type(exc).__name__}:{exc}"
         return res, 2
+    finally:
+        if own_fd is not None:
+            os.close(own_fd)
 
 
 def _selftest(root):
@@ -509,6 +526,11 @@ def _selftest(root):
             fh.write(open(fake_live).read().replace("r['server_exe']={'opened':True,'sha256':h(s),",
                                                     "r['server_exe']={'opened':True,'sha256':'4'*64,"))
         run("server-exe-digest-differs", receipt(), 1, live=badsha_live)
+        link_live = os.path.join(d, "link-live.py")
+        with open(link_live, "w") as fh:
+            # the member gains a second link while the replay holds it (seat J4Hardlink)
+            fh.write(open(fake_live).read().replace("x=os.stat(s)\n", "os.link(s,o+'.link');x=os.stat(s)\n"))
+        run("server-exe-member-links", receipt(), 1, live=link_live)
         # round 49 (X1Selftest): --witness-dir/--witness-timeout reach the live child end to
         # end, and the child really holds until an outside observer releases it. The witness
         # fake live writes ready.json *before* the shared fake receipt body, so the receipt
@@ -626,8 +648,15 @@ def main(argv=None):
     set_own_pdeathsig()
     res, code = replay(a.receipt, a.work, a.live, a.timeout, witness_dir=a.witness_dir,
                        witness_timeout=a.witness_timeout)
-    with open(a.out, "w") as fh:
-        json.dump(res, fh, indent=1)
+    # round 51 (seat X1Fresh): an unwritable --out turned a finished replay into a traceback
+    try:
+        os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
+        with open(a.out, "w") as fh:
+            json.dump(res, fh, indent=1)
+    except OSError as exc:
+        print(f"replay match={res['match']} refused={res['refused']} mismatches={len(res['mismatches'])} "
+              f"exit=2 (--out not written: {exc.strerror})")
+        return 2
     print(f"replay match={res['match']} refused={res['refused']} mismatches={len(res['mismatches'])} exit={code}")
     return code
 

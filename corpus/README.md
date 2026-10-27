@@ -1417,3 +1417,56 @@ Integration (round 50, L1): drafted by wave-1 scribe T7Readme
 (`.ufo/waves/round-50/w1/out/T7Readme/frontier.md`) at the build; the measured values are
 in SCORECARD §Round-50 measured results. S496/S497 name `corpus/lessons/round-50.md` as a
 consumer, and S498 names it alone; that lesson lands at integration.
+
+## Frontier disposition — round 51 (appended)
+
+**Moved from frontier to held ground:**
+
+- *Archive-origin binding at witness time* (round-50 "still frontier", first bullet): the
+  live tool records `server_exe` — the running image opened through `/proc/<pid>/exe`
+  (S499), its dev, inode and digest — and the replay accepts a rerun only when that image
+  is its own extracted `<work>/server/<member>` (held open from before exec to the
+  comparison). A decoy that exec's the host's own b11909 install (round-50 seat J4Decoy)
+  no longer matches (round-51 seat J2DecoyHost: `own=0`, `met=False`).
+- *A derived rather than constant sub-20 threshold, and a disposition of the graded
+  sub-threshold events*: append-only-audit v6 grades every deletion (threshold 1); the
+  A-row rule's permitted status/recheck/used-by edits are separated from losses (58
+  lines); every graded line gone at the tip is named in
+  `registry/append-only-disclosures.tsv` (166 lines in 51 events at the build), the real
+  `LOG.md` loss at `ed135b3c` among them (five `revert` rows; seat Rev1Loss: operator
+  canon withdrawn by a whole-commit revert — disclosed, not restored).
+
+**Not shown by round 51:**
+
+- *A byte-identical copy at the member path.* A replay that writes the host binary's bytes
+  to `<work>/server/<member>` before exec is indistinguishable from an extraction (seat
+  K1Cheat3: `met=True`; preregistered limit). Whether the replay downloaded the archive at
+  all is not observed.
+- *Identity across the whole run.* The live tool, the replay and the counter each take
+  their own snapshot of dev and inode; they are not one atomic observation (seat
+  K1Design3).
+- *Region-restricted files in C2's own recomputation.* For `SCORECARD.md` (exempt head
+  sections) and the two `only=## ...` knowledge entries the C2 counter bounds ledger rows
+  by deleted keys but does not recompute lost lines itself; a dropped row there is caught
+  by the tool alone (seat J8OneClass probe p1).
+- *Why a line was edited in place.* A disclosure's class is mechanical and its note is the
+  deleting commit's subject; the slice audits (seats L1Slice–L6Slice) read the diffs, but
+  no row carries a judged reason.
+
+**Still frontier:** the copy decoy and an observed download (a network witness, or an
+archive-member digest taken from the replay's own extraction stream); the round-50 carried
+items (probe PATH execution, model bytes rewritten after mapping, kills during download
+or readiness, pid start-time binding of `child_pid`); content-aware eligibility for the
+exempt head sections; the prerelease cliff (b11909 is still a GitHub prerelease while
+upstream has reached b11913, seat Sc4Watch); the b11906 ledger population at b11909+; the
+`hexrun-census` unknowns (two fleet-repo commits cited by spot-checks).
+
+**Correction (appended; seat K4Calib):** the round-46 paragraph that opens "Append-only
+self-description is now audited, not assumed" (this file, round-46 disposition) names five
+files and a mass-deletion threshold. Read as current, that is stale: the contract
+`registry/append-only-contract.tsv` holds 11 rows (lesson files, `DELTA.md`, the errata
+ledger and two knowledge-entry regions among them) and v6 grades every deletion. The
+round-46 text stays as the record of that round's instrument.
+
+Integration (round 51, L1): written from the wave's reports (`.ufo/waves/round-51/a2w1/out/`);
+measured values are in SCORECARD §Round-51 measured results.

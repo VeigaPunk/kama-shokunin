@@ -19,7 +19,11 @@ considerthese/2026-10-26.md proposal 1); the JSON shape stays `append-only-audit
               mechanical class of those lines - `revert` when the commit subject starts with
               `Revert "`, else `in-place-edit` when their hunk adds lines, else `removal`; a
               row naming no event, no such unheld line, too many of them or the wrong class
-              is a bad disclosure (exit 1)
+              is a bad disclosure (exit 1); a ledger read from <to> may only disclose
+              commits that precede its own introduction (the first commit adding the
+              ledger path): a deletion made once the ledger existed is restored by append,
+              never disclosed (round-51 seats K2Cheat, K2Design: a ledger that accepts new
+              rows would bless any later damage)
   undisclosed per event (JSON only), the graded lines not held at <to> and not disclosed:
               [{line_sha256, count, classes}] - what a disclosure row would have to name
   status      ungraded / restored as in v5; `disclosed` when not restored and every graded
@@ -562,13 +566,21 @@ def audit(repo_path, to="HEAD", threshold=1, files=None, contract=None, disclosu
             got = _git_ok(repo_path, "show", f"{to_full}:{DISCLOSURES}")
             if got is not None:
                 disclosures = (f"{to_full}:{DISCLOSURES}", got.decode("utf-8"))
-    dlabel, drows = None, []
+    dlabel, drows, since = None, [], None
     if disclosures is not None:
         dlabel, drows = disclosures[0], parse_disclosures(disclosures[1])
+        if dlabel == f"{to_full}:{DISCLOSURES}":
+            intro = _text(repo_path, "log", "--diff-filter=A", "--format=%H", "--reverse", to_full,
+                          "--", DISCLOSURES).split()
+            since = intro[0] if intro else None
     dmap = collections.defaultdict(list)
     for i, row in enumerate(drows):
         dmap[(row[0], row[1])].append(i)
     dverdict = [None] * len(drows)
+    if since is not None:
+        for di, row in enumerate(drows):
+            if row[0] == since or _git_ok(repo_path, "merge-base", "--is-ancestor", row[0], since) is None:
+                dverdict[di] = f"names a commit at or after the ledger's introduction {since[:12]}: restore by append"
     arow = {f for f in (files or []) if any(fnmatch.fnmatchcase(f, row[0]) and row[1] == "A-row" for row in rows)}
     files = sorted(set(files))
     commits, parents = [], {}
@@ -684,6 +696,8 @@ def audit(repo_path, to="HEAD", threshold=1, files=None, contract=None, disclosu
             disclosed = 0
             for di in dmap.get((c, f), []):
                 _c, _f, hsh, cnt, klass, _note = drows[di]
+                if dverdict[di] is not None:
+                    continue
                 if klass not in CLASSES:
                     dverdict[di] = f"unknown class {klass}"
                 elif cnt > unheld[hsh]:
@@ -1286,8 +1300,8 @@ def selftest(root):
                       + ROWS[3:]})
         res = v6audit(f, t)
         e = [x for x in res["events"] if x["file"] == "SRC.md"]
-        return (len(e) == 1 and e[0]["permitted"] == 1 and e[0]["graded"] == 0 and e[0]["status"] == "ungraded"
-                and exit_code(res) == 0), str(e)
+        return (len(e) == 1 and e[0]["permitted"] == 1 and e[0]["graded"] == 0 and e[0]["ungraded"] == 0
+                and e[0]["status"] == "ungraded" and exit_code(res) == 0), str(e)
 
     def t_v6_arow_immutable():
         f = v6fix()
@@ -1353,6 +1367,7 @@ def selftest(root):
         res = v6audit(f, t, f"{t}\tLOG.md\t{sha(body[0])}\t1\tremoval\tx")
         e = [x for x in res["events"] if x["commit"] == t]
         return (len(e) == 1 and e[0]["status"] == "unrestored" and e[0]["disclosed"] == 1
+                and e[0]["undisclosed"] == [{"line_sha256": sha(body[1]), "count": 1, "classes": ["removal"]}]
                 and exit_code(res) == 1), str(e)
 
     def t_v6_two_files_one_commit():
@@ -1366,6 +1381,59 @@ def selftest(root):
         e = {x["file"]: x for x in res["events"] if x["commit"] == t}
         return (e["LOG.md"]["status"] == "disclosed" and e["SRC.md"]["status"] == "unrestored"
                 and e["SRC.md"]["restored_max"] == 0 and exit_code(res) == 1), str(e)
+
+    def t_v6_ledger_cutoff():
+        # an in-tree ledger discloses only commits before its own introduction
+        f = v6fix()
+        body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
+        c1 = f.commit({"LOG.md": body[1:5]})
+        row1 = f"{c1}\tLOG.md\t{sha(body[0])}\t1\tremoval\tx"
+        f.commit({CONTRACT: SRC_C.split("\n")[:-1], DISCLOSURES: [DHEADER, row1]})
+        ok = full(f.d, "HEAD")
+        c3 = f.commit({"LOG.md": body[2:5]})
+        f.commit({DISCLOSURES: [DHEADER, row1, f"{c3}\tLOG.md\t{sha(body[1])}\t1\tremoval\tx"]})
+        late = full(f.d, "HEAD")
+        return (exit_code(ok) == 0 and ok["summary"]["disclosed"] == 1 and exit_code(late) == 1
+                and late["summary"]["bad_disclosures"] == 1
+                and "introduction" in [d for d in late["disclosures"] if not d["ok"]][0]["reason"]), \
+            str(ok["summary"]) + str(late["disclosures"])
+
+    def t_v6_revert_class():
+        # round-51 seat M3Tool survivor: a `Revert "` subject classes its lines `revert`
+        f = v6fix()
+        body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
+        with open(os.path.join(f.d, "LOG.md"), "w") as fh:
+            fh.write("".join(x + "\n" for x in body[1:5]))
+        _git(f.d, "add", "-A")
+        _git(f.d, *Fixture.IDENT, "commit", "-q", "-m", 'Revert "something"')
+        t = _text(f.d, "rev-parse", "HEAD").strip()
+        ok = v6audit(f, t, f"{t}\tLOG.md\t{sha(body[0])}\t1\trevert\tx")
+        bad = v6audit(f, t, f"{t}\tLOG.md\t{sha(body[0])}\t1\tremoval\tx")
+        return exit_code(ok) == 0 and bad["summary"]["bad_disclosures"] == 1, str(bad["disclosures"])
+
+    def t_v6_crlf_key_and_ledger_cr():
+        # survivors: the disclosure key is the CR-stripped line; a ledger with CR bytes is refused
+        f = Fixture(root)
+        f.commit({"N.md": AROW + ["LOG.md is append-only."]})
+        f.commit({"LOG.md": b"one\r\ntwo\r\nthree\r\n"}, raw=True)
+        t = f.commit({"LOG.md": b"two\r\nthree\r\n"}, raw=True)
+        ok = v6audit(f, t, f"{t}\tLOG.md\t{sha('one')}\t1\tremoval\tx")
+        try:
+            v6audit(f, t, f"{t}\tLOG.md\t{sha('one')}\t1\tremoval\tx\r")
+            refused = False
+        except AuditError:
+            refused = True
+        return exit_code(ok) == 0 and ok["summary"]["disclosed"] == 1 and refused, str(ok["events"])
+
+    def t_v6_short_id_not_a_row():
+        # survivor: `| S11 |` is not a registry row (three or more digits), so its edit is graded
+        f = Fixture(root)
+        short = [r.replace("| S00", "| S1") for r in ROWS]   # S11, S12, S13: two digits
+        f.commit({"N.md": AROW + ["LOG.md is append-only."], "SRC.md": short})
+        t = f.commit({"SRC.md": short[:2] + [short[2].replace("| mined |", "| rejected |")] + short[3:]})
+        res = v6audit(f, t)
+        e = [x for x in res["events"] if x["file"] == "SRC.md"]
+        return len(e) == 1 and e[0]["permitted"] == 0 and e[0]["graded"] == 1, str(e)
 
     def t_v6_restored_not_disclosable():
         f = v6fix()
@@ -1401,7 +1469,10 @@ def selftest(root):
                      ("v6-bad-disclosures", t_v6_bad_disclosures), ("v6-in-place-edit-class", t_v6_in_place_edit_class),
                      ("v6-partial-disclosure", t_v6_partial_disclosure),
                      ("v6-restored-not-disclosable", t_v6_restored_not_disclosable),
-                     ("v6-two-files-one-commit", t_v6_two_files_one_commit)]:
+                     ("v6-two-files-one-commit", t_v6_two_files_one_commit),
+                     ("v6-ledger-cutoff", t_v6_ledger_cutoff), ("v6-revert-class", t_v6_revert_class),
+                     ("v6-crlf-key-and-ledger-cr", t_v6_crlf_key_and_ledger_cr),
+                     ("v6-short-id-not-a-row", t_v6_short_id_not_a_row)]:
         case(name, fn)
     for name, ok, why in cases:
         print(f"{'pass' if ok else 'FAIL'} {name}" + ("" if ok else f": {why[:300]}"))
