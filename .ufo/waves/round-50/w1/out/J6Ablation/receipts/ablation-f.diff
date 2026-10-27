@@ -1,0 +1,14 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 059d211a..72f7101e 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -537,8 +537,7 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
+             org = origins(f) if titles else {}
+             for pos, text in dl:
+                 s = psec[pos - 1]
+-                if prefixes and not any(s is not None and s.startswith(q) for q in prefixes):
+-                    continue
++                # ABLATION F: `only=` prefix regions ignored (no prefix gate)
+                 # v5: the carve-out covers only text born in an exempt section (origin,
+                 # keyed by the CRLF-normalized line)
+                 if s in eligible and org.get(key(text), frozenset()) & titles:

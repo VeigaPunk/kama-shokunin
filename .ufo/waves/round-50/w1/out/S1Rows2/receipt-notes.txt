@@ -1,0 +1,72 @@
+S1Rows2 — exact commands, exit codes and where they ran
+all work under S=/fast/scratch/hyaku/kama-r50/S1Rows2 (export TMPDIR="$S"); lane read-only.
+
+ 0  S=/fast/scratch/hyaku/kama-r50/S1Rows2; mkdir -p "$S"; export TMPDIR="$S"
+ 1  git clone --shared -q /home/vgpnk/Projects/shokunin/kama-shokunin "$S/lane"
+    git -C "$S/lane" rev-parse HEAD                 -> 3b79eaddf38246c637cc7ba1a94ab363422876b6
+    git -C "$S/lane" rev-parse --show-toplevel      -> $S/lane   (asserted)
+ 2  curl -sS -L --max-time 60 -o page-<name>.html <url>   (in $S/fetch)
+    200 11702  https://man7.org/linux/man-pages/man5/proc_pid_maps.5.html
+    200 10684  https://man7.org/linux/man-pages/man2/PR_SET_PDEATHSIG.2const.html
+    200 514698 https://spec.commonmark.org/0.31.2/
+    sha256 page-628a625f.html = c85f56cc2101f761cc94215c677cd2c7c1ecca9c47be016479fdfe718af60f0d
+      == the "full page sha256" recorded at .ufo/waves/round-50/c2/commonmark-0.31.2-s4.5.txt:1
+    prints/hashes: fetch-hashes.out
+ 3  python3 $S/check_rows.py                        exit 1   quote-verbatim + word-count check
+    S496 12 w VERBATIM / 13 w VERBATIM; S497 28 w MISS; S498 15 w MISS
+    output: check-quotes.out
+ 4  python3 $S/check_candidates.py                  exit 0   all replacement quotes verbatim
+    PDE-a 20, PDE-b 12, PDE-c 7, CM-a 17, CM-b 15, CM-c 13, CM-d 14, CM-e 17, MAPS-a 11
+    entity-decodes-equal: True
+    output: check-candidates.out
+ 5  bash /home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate \
+      --file "$S/lane/corpus/SOURCES.md"            exit 1   93 W04, 3 E11, 1 W01
+    (the 3 E11 are S496/S497/S498 -> corpus/lessons/round-50.md, the known integration item)
+    output: validate-head.out
+ 6  printf placeholder > "$S/lane/corpus/lessons/round-50.md"; repeat (5)
+                                                    exit 0   1 ok, 93 W04, 1 W01
+    output: validate-head-with-placeholder.out
+ 7  cp proposed-C.md "$S/lane/corpus/SOURCES.md"; repeat (5)
+                                                    exit 0   0 E-codes
+    output: validate-proposed-C.out
+ 8  cp proposed-B.md "$S/lane/corpus/SOURCES.md"; repeat (5)
+                                                    exit 0   0 E-codes
+    output: validate-proposed-B.out  (byte-identical to (7): the gate reports codes, not row text)
+ 9  git -C "$S/lane" show HEAD:corpus/SOURCES.md > sources-pristine.md; restore + rm placeholder
+10  python3 tools/sources-append-only.py --from 97c864bead3ee4a2f629574e77263d33834ec98a \
+      --to 3d42897b65294ad963cd3686ced4666822e0ec73
+                                                    exit 2
+    error: 97c864be...:corpus/SOURCES.md:251: unterminated table row (no closing pipe)
+    output: sources-append-only-at-build.out
+11  python3 tools/sources-append-only.py --from 3d42897b65294ad963cd3686ced4666822e0ec73 \
+      --to 3b79eaddf38246c637cc7ba1a94ab363422876b6
+                                                    exit 0   "no append-only violations"
+    output: sources-append-only-head.out
+12  fixtures (each: D=$(mktemp -d -p "$S" fixture.XXXXXX); git -C "$D" init -q;
+    test "$(git -C "$D" rev-parse --show-toplevel)" = "$D";
+    commits with git -C "$D" -c user.name=fixture -c user.email=fixture@localhost commit;
+    only corpus/SOURCES.md ever written)
+    a) base(HEAD registry) -> proposed-C   exit 1, 5 VIOLATION lines / "2 append-only violation(s)"
+       (S497 anchor+teaches, S498 scope+anchor+teaches) and no parse error
+       output: append-only-proposed-C.out
+    b) base -> proposed-D (raw glyph)      exit 2
+       error: HEAD:corpus/SOURCES.md:251: unterminated table row (no closing pipe)
+       output: append-only-D-raw-glyph.out
+    c) base -> proposed-E (HEAD row + sha256 restored, glyph absent)
+                                           exit 1, one VIOLATION (S498 anchor), no parse error
+       output: append-only-E-sha-restored.out
+13  no llama-server was started by this seat; no service, unit or timer was touched;
+    no pacman/uv/npx/install ran, so there is no tool record to report.
+14  rm -rf "$S" after these receipts were copied to the out directory.
+
+Reading notes
+- tools/sources-append-only.py split_cells toggles its code-span state on every backtick;
+  one unpaired backtick in a cell makes the following pipes literal, so the row loses cells
+  ("unterminated table row"). That is why (b) is exit 2 and why S498's glyph needs the
+  &#96; entity (proposed-C) or a tick-free sentence (proposed-B).
+- census validate --file resolves used-by relative to the file's parent parent directory,
+  so every run above used the clone's own corpus/SOURCES.md path.
+- the four copied scripts (check_rows.py, check_candidates.py, make_proposed.py,
+  write_rows.py) are the exact files that ran; they hard-code S=/fast/scratch/hyaku/
+  kama-r50/S1Rows2, so after step 14 they are provenance, not reruns. check_rows.py and
+  check_candidates.py read only the lane's committed copies and need no clone.

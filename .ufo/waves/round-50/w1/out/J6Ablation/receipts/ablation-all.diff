@@ -1,0 +1,100 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 059d211a..06e2f8cb 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -273,10 +273,9 @@ def declaration(repo, rev, row):
+ 
+ 
+ def key(ln):
+-    """A line's origin key: the bytes with one trailing carriage return removed
+-    (round-49 seat K2Origin F5: a line moved with a changed line ending keeps its
+-    origin; the byte-exact restore measure below still uses the raw bytes)."""
+-    return ln[:-1] if ln.endswith(b"\r") else ln
++    """ABLATION B (byte-exact origin keys, v4): the line bytes with nothing removed; a
++    line moved with a changed line ending has no origin of its own."""
++    return ln
+ 
+ 
+ def fence_open(ln):
+@@ -304,21 +303,13 @@ def fence_close(ln, fence):
+ 
+ 
+ def sections(body):
+-    """The `## ` section title owning each line of a list of byte lines (None before the
+-    first), ignoring `## ` lines inside CommonMark fenced code blocks (round-49 seat
+-    K2Origin F4: a fenced fake title must not re-title the dated lines after it)."""
+-    out, title, fence = [], None, None
++    """ABLATION A (v4 section scan, fence-blind): the `## ` section title owning each line
++    of a list of byte lines (None before the first); a `## ` line inside a fenced code
++    block re-titles the lines after it (round-49 definitions)."""
++    out, title = [], None
+     for line in body:
+-        b = line.rstrip(b"\r")
+-        if fence is not None:
+-            if fence_close(b, fence):
+-                fence = None
+-        else:
+-            fo = fence_open(b)
+-            if fo is not None:
+-                fence = fo
+-            elif b.startswith(b"## "):
+-                title = b.decode("utf-8", "replace").rstrip()
++        if line.startswith(b"## "):
++            title = line.rstrip(b"\r").decode("utf-8", "replace").rstrip()
+         out.append(title)
+     return out
+ 
+@@ -478,34 +469,25 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
+         return keyset_cache[b]
+ 
+     def origins(f):
+-        """v5 origin: line key -> the `## ` titles holding it at every birth of the key
+-        (a commit whose blob of f holds it while no parent's blob does), the union over all
+-        commits reachable from <to> - a property of the commit graph and its blobs, not of
+-        the rev-list order (round-49 seat K2Origin F3)."""
+-        if f in origin_cache:
+-            return origin_cache[f]
+-        bl = r.blobs([f"{x}:{f}" for x in commits])
+-        orig = collections.defaultdict(set)
+-        for x in commits:
+-            b = bl[f"{x}:{f}"]
+-            if b is None:
+-                continue
+-            body, keys = body_of(b)
+-            pkeys = set()
+-            for q in (parents[x] or "").split():
+-                if bl.get(f"{q}:{f}") == b:
+-                    pkeys = keys
+-                    break
+-                qb = bl.get(f"{q}:{f}")
+-                if qb is not None:
+-                    pkeys |= body_of(qb)[1]
+-            if pkeys is keys:
+-                continue
+-            for ln, t in zip(body, sections(body)):
+-                k = key(ln)
+-                if k not in pkeys:
+-                    orig[k].add(t)
+-        origin_cache[f] = orig
++        """ABLATION C (v4 first-appearance origin): line key -> the `## ` titles holding it
++        in the first blob of f, in `git rev-list --topo-order --reverse` order, that holds
++        the key - the round-49 rule, a property of the listing order (K2Origin F3)."""
++        if f not in origin_cache:
++            orig, seen = {}, set()
++            bl = r.blobs([f"{x}:{f}" for x in commits])
++            for x in commits:
++                b = bl[f"{x}:{f}"]
++                if b is None or b in seen:
++                    continue
++                seen.add(b)
++                body = r.list_lines(b)
++                fresh = collections.defaultdict(set)
++                for ln, t in zip(body, sections(body)):
++                    k = key(ln)
++                    if k not in orig:
++                        fresh[k].add(t)
++                orig.update(fresh)
++            origin_cache[f] = orig
+         return origin_cache[f]
+ 
+     for i, c in enumerate(commits):

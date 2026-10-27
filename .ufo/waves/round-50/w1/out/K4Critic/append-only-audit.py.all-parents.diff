@@ -1,0 +1,29 @@
+--- a/tools/append-only-audit.py	2026-10-26 21:23:15.971409798 -0300
++++ b/tools/append-only-audit.py	2026-10-26 22:13:42.232466377 -0300
+@@ -467,7 +467,7 @@
+         parts = line.split()
+         if parts:
+             commits.append(parts[0])
+-            parents[parts[0]] = parts[1] if len(parts) > 1 else None
++            parents[parts[0]] = parts[1:]
+     events, binary = [], []
+     origin_cache, keyset_cache = {}, {}
+ 
+@@ -492,7 +492,7 @@
+                 continue
+             body, keys = body_of(b)
+             pkeys = set()
+-            for q in (parents[x] or "").split():
++            for q in parents[x]:
+                 if bl.get(f"{q}:{f}") == b:
+                     pkeys = keys
+                     break
+@@ -509,7 +509,7 @@
+         return origin_cache[f]
+ 
+     for i, c in enumerate(commits):
+-        p = parents[c]
++        p = parents[c][0] if parents[c] else None
+         if p is None or not files:
+             continue
+         ns = numstat(repo_path, p, c, files)

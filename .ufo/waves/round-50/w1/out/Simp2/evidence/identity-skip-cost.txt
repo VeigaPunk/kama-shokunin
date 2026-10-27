@@ -1,0 +1,15 @@
+# the `pkeys is keys` fast path is load-bearing (candidate refuted)
+
+## mutant: `pkeys = keys` -> `pkeys = set(keys)` (alias removed, skip never taken)
+## tool output on the lane is unchanged; the early exit only saves work
+
+$ cmp st/before/t-build.json st/before/t-mut.json
+identical
+
+## wall time, 3 runs each, `--repo lane --to HEAD --json` (330 commits, 94 files)
+build        1.00 s
+alias-mutant 1.07 s
+build        0.99 s
+alias-mutant 1.09 s
+build        0.98 s
+alias-mutant 1.10 s

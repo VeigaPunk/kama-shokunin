@@ -1,0 +1,57 @@
+# N1Overlap2 sibling-overlap scan — commands executed 2026-10-26 (all read-only)
+# Scan set: all 20 non-kama /home/vgpnk/Projects/shokunin/*-shokunin lanes;
+# targets corpus/SOURCES.md, SKILL.md, tools/, registry/ (absent in all lanes), corpus/.
+
+ls -d /home/vgpnk/Projects/shokunin/*-shokunin                       # 21 dirs incl. kama
+for d in ...; do for sub in corpus/SOURCES.md SKILL.md tools registry corpus; do
+  [ -e "$d/$sub" ] && echo "$n: $sub"; done; done                  # 66 existing targets; registry/ absent everywhere
+
+# Mechanism greps over the 66-target path list (grep -rn equivalent):
+#   PDEATHSIG|pdeathsig|preexec_fn|PR_SET_        -> hits only audio-shokunin corpus (preexec_fn
+#     = setsid/rlimit/sigreset uses; NO pdeathsig/PR_SET_PDEATHSIG hit anywhere)
+#   /proc/[<${]|pid_maps|/maps\b|model_mapping    -> /proc/{cmdline,wchan,status,task} uses in
+#     audio corpus; ZERO /proc/<pid>/maps or model_mapping hits in siblings
+#   fence|fenced                                  -> chousa research-gate.sh:793-797,2400-2404,
+#     assimilate-rows.py:189-199, inference-ground.py:118-137; kotodama check-readme-*.py;
+#     kengaku SOURCES S054/S064; kotoba SOURCES S005
+#   \bbirth\b|origin\(|rev-list|first-parent      -> chousa SKILL.md:125 (receipt-binding census
+#     rev-list --all + cat-file --batch); audio SCORECARD --first-parent --count; 2d corpus _srv_origin (GDScript noise)
+#   child_pid|process[-_ ]tree|descendant|orphan|SIGKILL|SIGTERM|killpg|setsid|process group
+#     -> game-dev-3d run_battery.py:1138-1214 witness block; game-dev-2d run_battery reparenting
+#     arms + drive_port_recon.py:160-170; audio measure_audio.py reap_fifo_orphans:333-352 +
+#     pervasive killpg; mori/kaidoku killpg drivers; tameshi registry-check.py:39-44,391-416,673
+#   numstat|cat-file|--numstat                    -> audio LOG.md:949 only (transcription note)
+#   prctl|PR_SET|setsid|killpg|start_new_session  -> tameshi registry-check.py CHILD_SUBREAPER_PRCTL=36
+#     :111, _enable_child_subreaper :391-416, row launch :673-675; kaidoku/mori killpg drivers
+#   /proc/[^\n]{0,24}/maps|pid_maps|proc_pid_maps -> ZERO sibling hits
+#   /proc/net|sockstat|socket:\[|O_NOFOLLOW|fstat\( -> audio measure_audio.py:46718 (O_NOFOLLOW+fstat
+#     private lock); audio r67 procfd/memfd probe legs (unrelated)
+#   PYTHONPATH|sitecustomize|python3? -I|isolated -> audio corpus/live/r72-reviewer/ldstub/sitecustomize.py;
+#     kaidoku round-34 freeze-integrity.py docstring uses `python3 -I -B`
+#   llama|llamacpp|llama-server                    -> kagi SKILL.md:42-43 (curl /health, port-8080-was-
+#     Jitsi); kengaku SKILL.md:340-343,452-456,487-499,760-762 (serving-stack pin via /proc/pid/cmdline)
+#   CommonMark|commonmark|code.?fence|```          -> kengaku S054 (:76), S064 (:86); kotoba S005 (:18)
+
+# SOURCES.md kernel-spec census:
+grep -inE 'proc_pid|PR_SET|prctl|CommonMark|proc\(5\)|signal\(7\)|sigaction|kill\(2\)|waitpid|fork\(2\)|clone\(2\)|man7|man-pages' \
+  <each sibling>/corpus/SOURCES.md
+#   -> chousa: execve(2)/exec(3) rows only; kengaku: S054/S064 CommonMark + llama.cpp issue refs;
+#      kumitate: S071 proc_pid_environ, S099 proc_pid_mountinfo, S100/S101 clock_gettime/getrandom;
+#      mori: S027 pidfd_open, S031 pipe(7), S097 proc_pressure (rejected, page absent),
+#        S128-S150 oom_score pages; souji: S062 fifo(7), S066/S073 kill(2), S068/S075 proc_pid_stat,
+#        S069 proc_pid_exe; tameshi: S060/S075 strace(1), S067 prctl(2) (rejected),
+#        S068/S077 PR_SET_CHILD_SUBREAPER(2const), S069 setsid(2), S072/S078 open(2);
+#      tsukuroi: S027/S034-S038 capabilities+access, S171 ld.so(8), S176 environ(7),
+#        S181 proc_pid_status+environ, S200 mount(2); others: none.
+
+# Key file reads for line-accurate cites:
+#   tameshi-shokunin/corpus/knowledge/guard-kill-closure.md:1-83 (subreaper design, setsid escape P10)
+#   souji-shokunin/corpus/knowledge/process-residue-observations.md:1-63 (identity binder pid+starttime+boot_id)
+#   kengaku-shokunin/corpus/knowledge/extraction-policy-comparison.md:34-54 (E6 "not a CommonMark parser")
+#   kumitate-shokunin/scripts/bind-oracle.mjs:1-77 (/proc/self/mountinfo oracle)
+#   game-dev-3d-shokunin/corpus/fixtures/run_battery.py:1138-1214 (witness block)
+#   tameshi-shokunin/tools/registry-check.py:29-45,110-116,391-416,673-680 (subreaper+pidfd kill)
+
+# Lanes with no tools/ dir (scanned corpus + SKILL.md only): audio, game-dev-2d, game-dev-3d,
+# kagi, kake, kasegi, kengaku, kotoba, kumitate, lore, revenger, tabi
+# Lanes with tools/: chousa, kaidoku, kotodama, mado, mori, souji, tameshi, tsukuroi

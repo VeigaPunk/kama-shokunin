@@ -1,0 +1,83 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -60,6 +60,15 @@
+ write to), and when the hold ends it removes ``ready.json``, so an observer never
+ reads a dead pid or a release from another run.
+ 
++Round 50 (schema unchanged): the index walk is also bounded in the bytes it may
++skip - ``ARCHIVE_MAX_WALK`` (1 GiB) caps one member's declared size and the sum
++of every declared size plus its header. tarfile skips a member by seeking its
++declared size, and on a compressed archive that seek decodes the bytes, so a
++6 KB bz2 archive holding one header that declares 8 GiB spent ~13 s of record
++time while ``ARCHIVE_MAX_BYTES`` was satisfied (round-50 seat X12Zip). A sparse
++member is refused wherever it appears, from its header; new token
++``provenance-archive-walk-too-large``.
++
+ Deps: python3 stdlib only, plus whatever the probed server and
+ ``bash tools/kama-probe.sh`` (curl, ss) need.
+ """
+@@ -210,6 +219,7 @@
+ 
+ 
+ ARCHIVE_MAX_BYTES = 1 << 30      # release assets are ~70 MB; 1 GiB is generous
++ARCHIVE_MAX_WALK = 1 << 30       # decompressed bytes the index walk may skip (round 50)
+ MEMBER_MAX_COUNT = 4096          # archive index entries; the b11909 asset has ~60
+ 
+ 
+@@ -255,19 +265,27 @@
+         arc.seek(0)
+         try:
+             with tarfile.open(fileobj=arc, mode='r:*') as tf:
+-                found, count = None, 0
++                found, count, walk = None, 0, 0
+                 for info in tf:
+                     count += 1
+                     if count > MEMBER_MAX_COUNT:
+                         raise SetupError('provenance-archive-too-many-members')
++                    # round 50 (seat X12Zip): tarfile skips a member by seeking its
++                    # declared size, and on a compressed archive that seek decodes the
++                    # bytes: a 6 KB bz2 archive holding one header that declares 8 GiB
++                    # costs ~13 s of record time while ARCHIVE_MAX_BYTES is satisfied.
++                    # Both bounds are read from the header, before the skip happens.
++                    if info.sparse is not None:
++                        raise SetupError('provenance-member-sparse')
++                    walk += 512 + info.size
++                    if info.size > ARCHIVE_MAX_WALK or walk > ARCHIVE_MAX_WALK:
++                        raise SetupError('provenance-archive-walk-too-large')
+                     if info.name == member:
+                         found = info
+                 if found is None:
+                     raise SetupError('provenance-member-absent')
+                 if not found.isfile():
+                     raise SetupError('provenance-member-not-a-file')
+-                if found.sparse is not None:
+-                    raise SetupError('provenance-member-sparse')
+                 if server_size is not None and found.size != server_size:
+                     raise SetupError('provenance-member-size-mismatch')
+                 h = hashlib.sha256()
+@@ -1512,6 +1530,17 @@
+         with tarfile.open(many, 'w') as tf:
+             for i in range(MEMBER_MAX_COUNT + 1):
+                 tf.addfile(tarfile.TarInfo(f'f{i}'))
++        # round 50 (seat X12Zip): tarfile skips a member by seeking its declared size,
++        # and on a compressed archive that seek decodes the bytes - a header declaring
++        # 8 GiB inside a few-KB bz2 archive must be refused from the header, not after
++        # the skip. This is the shape that cost 13 s before ARCHIVE_MAX_WALK.
++        import bz2
++        bomb = os.path.join(d, 'walk.tar.bz2')
++        with bz2.open(bomb, 'wb') as fh:
++            ti = tarfile.TarInfo('rel/other')
++            ti.size = 8 << 30
++            fh.write(ti.tobuf(format=tarfile.GNU_FORMAT))
++            fh.write(b'\0' * (1 << 20))
+         if got != (asha, ssha):
+             raise AssertionError('right archive and member not verified')
+         for args, token in (((arc, '0' * 64, 'rel/llama-server', ssha), 'provenance-archive-digest-mismatch'),
+@@ -1521,6 +1550,7 @@
+                             ((arc, asha, 'rel/llama-server', ssha, 1), 'provenance-member-size-mismatch'),
+                             ((sparse, sha256_file(sparse), 'rel/llama-server', ssha), 'provenance-member-sparse'),
+                             ((many, sha256_file(many), 'rel/llama-server', ssha), 'provenance-archive-too-many-members'),
++                            ((bomb, sha256_file(bomb), 'rel/llama-server', ssha), 'provenance-archive-walk-too-large'),
+                             ((d, asha, 'rel/llama-server', ssha), 'provenance-archive-not-regular')):
+             try:
+                 verify_archive_member(*args)

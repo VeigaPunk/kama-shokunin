@@ -1,0 +1,21 @@
++ echo '# /home (btrfs subvol /@home) vs /fast (xfs); one script, one kernel'
+# /home (btrfs subvol /@home) vs /fast (xfs); one script, one kernel
++ python3 btrfs_maps_dev.py runs/V0-baseline/replay.json /home/vgpnk/Projects/shokunin/kama-shokunin/README.md /fast/scratch/hyaku/kama-r50/Sen1Env/tree/README.md
+runs/V0-baseline/replay.json
+  stat dev 00:38 ino 238208440 | maps dev 00:1e ino 238208440 | DIFFER
+/home/vgpnk/Projects/shokunin/kama-shokunin/README.md
+  stat dev 00:38 ino 236088673 | maps dev 00:1e ino 236088673 | DIFFER
+/fast/scratch/hyaku/kama-r50/Sen1Env/tree/README.md
+  stat dev 103:05 ino 1418274576 | maps dev 103:05 ino 1418274576 | equal
++ echo exit=1
+exit=1
++ echo
+
++ echo '# mount facts'
+# mount facts
++ findmnt -T /home -o 'TARGET,SOURCE,FSTYPE'
+TARGET SOURCE                   FSTYPE
+/home  /dev/mapper/root[/@home] btrfs
++ findmnt -T /fast -o 'TARGET,SOURCE,FSTYPE'
+TARGET SOURCE         FSTYPE
+/fast  /dev/nvme1n1p2 xfs

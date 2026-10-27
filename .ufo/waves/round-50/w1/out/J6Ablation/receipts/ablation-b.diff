@@ -1,0 +1,18 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 059d211a..5f979220 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -273,10 +273,9 @@ def declaration(repo, rev, row):
+ 
+ 
+ def key(ln):
+-    """A line's origin key: the bytes with one trailing carriage return removed
+-    (round-49 seat K2Origin F5: a line moved with a changed line ending keeps its
+-    origin; the byte-exact restore measure below still uses the raw bytes)."""
+-    return ln[:-1] if ln.endswith(b"\r") else ln
++    """ABLATION B (byte-exact origin keys, v4): the line bytes with nothing removed; a
++    line moved with a changed line ending has no origin of its own."""
++    return ln
+ 
+ 
+ def fence_open(ln):

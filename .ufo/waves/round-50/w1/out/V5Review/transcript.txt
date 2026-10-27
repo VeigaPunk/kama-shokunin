@@ -1,0 +1,52 @@
+V5Review evidence transcript (round 50, kama C2 counter review)
+================================================================
+
+[1] Counter scenarios() driven against tool @ tip 97c864be (tree-v5):
+    RESULTS all True (12/12) — matches frozen dry run fixture=1.
+
+[2] Same driver against tool @ base 26ecba64 (tree-v4):
+    order-b: FAIL exit 1 (want 0)   — v4 graded what v5 ungrades; verdict flips on parent order
+    fence:   FAIL exit 0 (want 1)   — v4 ungraded dated lines behind fenced fake heading
+    crlf-launder: FAIL exit 1, event {deleted:25, graded:0, ungraded:25, status:ungraded}
+                                  — v4 exempt-born CRLF bytes ungraded; v5 grades via key()
+    others (8 round-49 scenarios + order-a): ok.  Total 9/12 — matches frozen base dry run
+    (fixture=0 lane=1 scenarios=9/12 met=False at 26ecba64).
+
+[3] order-a/order-b merge commits share tree b0741acb416fdfb8c093d74483118de5c0c53996,
+    parents swapped; rev-list --topo-order --reverse order differs exactly as the
+    v4 origin definition is sensitive to (b1b5ade vs 6073c7d swap positions).
+
+[4] Counter lane_leg against lane clone @ tip: lane_leg True —
+    tool exit 0 events 5 bad_declarations 0; dd9f5dc6 ungraded 17 <= bound 23;
+    0718b6ab ungraded 72 <= bound 72.  Against v4 tree @ base: True (82/65 bounds),
+    as expected — the base kill comes from the fixture leg.
+
+[5] F1 duplicate-pattern repro (probe3/): contract has two rows on docs/*.md
+    (exempt=## Axes then exempt=## Planned).  Tool file_regions unions -> ungraded 25
+    (correct).  Counter titles[pat] overwrite -> ex={## Planned}, native=0 ->
+    "ungraded 25 > v5 natively exempt 0" on all 5 events -> lane_leg False.
+    A correct tool fails the lane leg.
+
+[6] F2 eligibility-free bound (bound-gap.py, gap-lines3.py on lane @ tip):
+    event dd9f5dc6 SCORECARD.md, deleted=31, parent exempt counts
+    Axes=43 Planned=12 Retired=9 Saturation=4 Capabilities=8.
+    Eligible titles at the event = all except '## Retired' (window max < parent count).
+    spec-ungraded (eligible, tool:544) = 17; counter bound (exempt, counter:489) = 23.
+    The six ## Retired lines are graded by v5 but pass the counter bound if ungraded.
+
+[7] F3 first-parent birth (probe2/): merge cm has parents [ca, cb]; key 'merge key'
+    born on cb under '## Round 1' (cb:F.md line 31), absent from ca's blob,
+    held under '## Axes' in cm's blob (cm:F.md line 27).  Tool origins() iterates
+    (parents[x] or "").split() where parents[c]=parts[1] only (tool-v5.py:470,495):
+    'merge key' counted born at cm under ## Axes -> event ungrades it.
+    Tool reports deleted=25 graded=0 ungraded=25 (spec: graded=1 ungraded=24).
+    Counter catches it: "ungraded 25 > v5 natively exempt 24" -> lane_leg False.
+    Lane status: 2 merges reachable from tip (2f7303c2, 5396a876); touched files
+    LOG.md (region '*', no exempt titles) and README.md (no row) — deviation latent
+    on the lane; all observed numbers equal spec numbers.
+
+[8] CRLF raw bytes through Fx.commit: crlf-launder blob at c2 contains 25 CR bytes,
+    c1 contains 0 — bytes land verbatim via git add -A (this host: core.autocrlf unset).
+
+[9] Env: python3 3.14.8 (tarfile.data_filter present); no core.autocrlf /
+    core.excludesFile in user config; rev-parse unborn HEAD exit=1 (handled by ok=(0,1)).

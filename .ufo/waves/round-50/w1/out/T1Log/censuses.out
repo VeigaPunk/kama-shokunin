@@ -1,0 +1,33 @@
+# T1Log evidence: local censuses re-run on the scratch clone (no network, no server)
+# date: 2026-10-27T00:58:28Z
+$ python3 tools/sources-append-only.py --repo . --from 26ecba64ad6fb571d09074b07202d1618a46ecd1 --to 3d42897b65294ad963cd3686ced4666822e0ec73
+added S496 (allowed)
+added S497 (allowed)
+added S498 (allowed)
+no append-only violations
+exit=0
+
+$ python3 tools/sources-append-only.py --repo . --from 26ecba64ad6fb571d09074b07202d1618a46ecd1 --to 3b79eaddf38246c637cc7ba1a94ab363422876b6
+added S496 (allowed)
+added S497 (allowed)
+added S498 (allowed)
+no append-only violations
+exit=0
+
+$ python3 tools/append-only-audit.py --repo . --to 3b79eaddf38246c637cc7ba1a94ab363422876b6   (summary only)
+exit=0
+event dd9f5dc6c0e6 SCORECARD.md deleted=31 graded=14 ungraded=17 restored_max=14 held_at_to=14 status=restored restored_best=dd9f5dc6c0e6 restored_by=dd9f5dc6c0e6
+event 0718b6abbda6 LOG.md deleted=2292 graded=2292 ungraded=0 restored_max=2292 held_at_to=2292 status=restored restored_best=82b5e9d33a19 restored_by=82b5e9d33a19
+event 0718b6abbda6 SCORECARD.md deleted=2421 graded=2349 ungraded=72 restored_max=2349 held_at_to=2349 status=restored restored_best=82b5e9d33a19 restored_by=82b5e9d33a19
+event 0718b6abbda6 corpus/QUALITY.md deleted=375 graded=375 ungraded=0 restored_max=375 held_at_to=375 status=restored restored_best=82b5e9d33a19 restored_by=82b5e9d33a19
+event 0718b6abbda6 corpus/README.md deleted=663 graded=663 ungraded=0 restored_max=663 held_at_to=663 status=restored restored_best=82b5e9d33a19 restored_by=82b5e9d33a19
+summary commits=330 files=94 events=5 restored=5 partial=0 unrestored=0 ungraded=0 ungraded_lines=89 regressed=0 vanished=0 unmatched=0 binary=0 bad_declarations=0
+
+$ sha256sum tools/round50-replay-bind-audit.py tools/round50-append-audit-v5-check.py
+ff6ac2ace541ea35a4d240ceebb019653c11a2a08c025e514770f3f94a9c5e89  tools/round50-replay-bind-audit.py
+925f07a48a02ad54a9c89230aac7e54c8dafee4ba2e8a823dcb851b9cf48ca46  tools/round50-append-audit-v5-check.py
+
+$ git cat-file -e f8cdb853aaff29393faeb0b6d4c2a2296778b698 (lane clone)
+exit=1
+$ git log --oneline -- .ufo/reports/round-49/kama.md (lane clone) | wc -l
+0

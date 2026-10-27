@@ -1,0 +1,39 @@
+# V6Review, round 50, finding F1 proposed fix (NOT applied - the lane is read-only
+# for this seat; counters are frozen; this is a recommendation for the lane owner).
+#
+# Make rev-list --parents parsing keep ALL parents so origins() birth detection
+# matches the frozen v5 definition ("a commit whose blob of the file holds key k
+# while no parent of it holds k" - tools/append-only-audit.py docstring line 15)
+# and the counter's implementation (tools/round50-append-audit-v5-check.py:418,
+# 445-452). Event diffing stays first-parent (numstat/deleted_lines unchanged).
+# The parsing predates v5, but only v5's birth semantics depend on it: v4 origin
+# was "first blob in rev-list order", which never read `parents`.
+#
+# After this diff, the merge fixture in merge_fixture.sh must report
+# graded=21 ungraded=0 for BOTH merge-parent orders, and
+# round50-append-audit-v5-check.py on that fixture must stop reporting
+# "ungraded 1 > v5 natively exempt 0".
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -467,7 +467,7 @@
+     for line in _text(repo_path, "rev-list", "--topo-order", "--reverse", "--parents", to_full).split("\n"):
+         parts = line.split()
+         if parts:
+             commits.append(parts[0])
+-            parents[parts[0]] = parts[1] if len(parts) > 1 else None
++            parents[parts[0]] = parts[1:] if len(parts) > 1 else []
+@@ -492,7 +492,7 @@
+             body, keys = body_of(b)
+             pkeys = set()
+-            for q in (parents[x] or "").split():
++            for q in (parents[x] or []):
+                 if bl.get(f"{q}:{f}") == b:
+                     pkeys = keys
+                     break
+@@ -509,7 +509,7 @@
+-    for i, c in enumerate(commits):
+-        p = parents[c]
++    for i, c in enumerate(commits):
++        p = (parents[c] or [None])[0]
+         if p is None or not files:
+             continue

@@ -1,0 +1,17 @@
+# commands and outputs, run from /fast/scratch/hyaku/kama-r50/Simp2 (scratch), 2026-10-26
+
+## 1. diff inventory of the round-50 build
+$ git -C <lane> diff --stat 26ecba64ad6fb571d09074b07202d1618a46ecd1 97c864bead3ee4a2f629574e77263d33834ec98a -- tools/
+ tools/append-only-audit.py             | 157 ++++++---
+ tools/kama-live-replay.py              |  66 +++-
+ tools/kama-llamacpp-live.py            |  59 +++-
+ tools/round50-append-audit-v5-check.py | 545 +++++++++++++++++++++++++++++
+ tools/round50-replay-bind-audit.py     | 605 +++++++++++++++++++++++++++++++++
+ 5 files changed, 1380 insertions(+), 52 deletions(-)
+
+## 2. dead-code sweep (AST: unreferenced top-level defs, unused imports, unused locals)
+build/append-only-audit.py: defs=29 unreferenced=[] unused_imports=[('annotations', 129)]
+build/kama-live-replay.py: defs=16 unreferenced=[] unused_imports=[('annotations', 61)]
+build/kama-llamacpp-live.py: defs=51 unreferenced=[] unused_imports=[('annotations', 66)]
+   build/kama-llamacpp-live.py:ready_captures unused locals [('health_res', 1008)]
+   build/kama-llamacpp-live.py:_observe unused locals [('ownership', 894)]

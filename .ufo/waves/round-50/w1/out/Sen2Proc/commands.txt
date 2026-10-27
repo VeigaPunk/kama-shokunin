@@ -1,0 +1,43 @@
+# Sen2Proc — exact commands and exit codes (round 50, lane kama)
+
+S=/fast/scratch/hyaku/kama-r50/Sen2Proc; export TMPDIR="$S"
+
+# 0. read-only clone and build tree
+git clone -q --shared /home/vgpnk/Projects/shokunin/kama-shokunin "$S/lane"                    # 0
+git -C "$S/lane" rev-parse 97c864bead3ee4a2f629574e77263d33834ec98a^{commit}                  # 97c864be...
+mkdir -p "$S/tree97"; git -C "$S/lane" archive 97c864bead3ee4a2f629574e77263d33834ec98a | tar -x -C "$S/tree97"  # 0
+sha256sum "$S/tree97/tools/round50-replay-bind-audit.py"   # ff6ac2ac... = prereg counter_sha256
+sha256sum "$S/tree97/tools/kama-llamacpp-live.py"          # 61e777b7...
+sha256sum "$S/tree97/tools/kama-live-replay.py"            # d5c58972...
+
+# 1. frozen model (counter URL), then an xfs and a btrfs copy
+curl -fsSL -o xfs-model/stories260K.gguf https://huggingface.co/ggml-org/models-moved/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/stories260K.gguf  # 0
+sha256sum xfs-model/stories260K.gguf                       # 270cba1b...d256d
+cp xfs-model/stories260K.gguf /home/vgpnk/.cache/kama-r50-sen2proc/stories260K.gguf
+
+# probe 1 — pid reuse (counter predicates imported from the build copy)
+python3 -B imp/probe1.py direct                            # 0  -> out/probe1-direct.json
+unshare -r -p -f --mount-proc python3 -B imp/probe1.py reuse  # 0 -> out/probe1-reuse.json
+
+# probes 3/4 — live-tool model_mapping and counter mapped_model, b11909 server on an ephemeral port
+python3 -B imp/probe34.py xfs     "$S/xfs-model/stories260K.gguf"              # 0 -> out/probe34-xfs.json
+python3 -B imp/probe34.py deleted "$S/xfs-model/del/stories260K.gguf"          # 0 -> out/probe34-deleted.json
+python3 -B imp/probe34.py btrfs   /home/vgpnk/.cache/kama-r50-sen2proc/stories260K.gguf  # 0 -> out/probe34-btrfs.json
+
+# probe 2 — ready.json announces a pid that is already dead
+python3 -B imp/probe2.py                                   # 0  -> out/probe2.json (live-dead.json)
+python3 -B imp/probe2b.py                                  # 0  -> out/probe2b.json (live-race.json)
+#   2b: inotify IN_CREATE ready.json.tmp.<pid> -> SIGSTOP live tool -> SIGKILL server -> SIGCONT
+
+# probe 5 — port stealing / saturated backlog / SO_REUSEPORT
+python3 -B imp/probe5.py                                   # 0  -> out/probe5.json
+
+# host facts used in the report
+getconf CLK_TCK                                            # 100
+cat /proc/sys/kernel/pid_max                               # 4194304
+grep -E " / | /home | /fast " /proc/self/mountinfo         # /:0:30, /home:0:30 (subvol /@home), /fast:259:5
+pgrep -af llama-server                                     # only other seats' servers; none under $S
+
+# clean-up
+rm -rf "$S"                                                # after copying evidence into out/Sen2Proc/
+rm -rf /home/vgpnk/.cache/kama-r50-sen2proc

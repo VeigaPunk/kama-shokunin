@@ -1,0 +1,94 @@
+Seat X4Cap2 - round-50 capability census prerequisites - raw run record
+Lane tip at run time: 3b79eadd (build commit measured: 97c864bead3ee4a2f629574e77263d33834ec98a)
+Scratch: /fast/scratch/hyaku/kama-r50/X4Cap2 (deleted at end of seat)
+Tool (unmodified): /home/vgpnk/Projects/shokunin/kama-shokunin/tools/capability-repertoire-audit.py
+
+== 1. clone and pin ==
+$ S=/fast/scratch/hyaku/kama-r50/X4Cap2
+$ git clone -q --shared /home/vgpnk/Projects/shokunin/kama-shokunin "$S/lane"
+$ git -C "$S/lane" rev-parse --show-toplevel
+/fast/scratch/hyaku/kama-r50/X4Cap2/lane
+$ git -C "$S/lane" checkout -q --detach 97c864bead3ee4a2f629574e77263d33834ec98a
+$ git -C "$S/lane" rev-parse --short HEAD
+97c864be
+$ git -C "$S/lane" diff --quiet HEAD 3b79eadd -- SCORECARD.md ; echo $?
+0                     # SCORECARD.md is byte-identical at the build commit and the lane tip
+
+== 2. draft edits, in the clone only ==
+SCORECARD.md line 117 (mirror intro) and lines 130-131 (append-only-audit, live-receipt-replay rows):
+  replaced with the round-50 text in mirror-replacement.md
+SCORECARD.md after line 2870: appended the block in canonical-section.md
+$ git -C "$S/lane" -c user.name=X4Cap2 -c user.email=x4cap2@lane.invalid commit -q -am "round-50 draft: canonical capability table as of round 50 + SCORECARD mirror (seat X4Cap2; draft, not for landing)"
+$ git -C "$S/lane" rev-parse HEAD
+2f0ae652c451c567e9e1e6fc1df5f0017d9ea74c
+$ git -C "$S/lane" diff --numstat 97c864be 2f0ae652 -- SCORECARD.md
+21	3	SCORECARD.md
+$ git -C "$S/lane" show 97c864be:SCORECARD.md | wc -l ; git -C "$S/lane" show 2f0ae652:SCORECARD.md | wc -l
+2870
+2888                  # mirror block keeps its 15 lines (3 content replacements); the appended section adds 18
+$ grep -n '^@@' draft.diff
+5:@@ -114,7 +114,7 @@      (mirror intro line)
+14:@@ -127,8 +127,8 @@     (the two reworded rows)
+25:@@ -2868,3 +2868,21 @@  (the appended canonical section)
+
+== 3. capability census (frozen tool, argv exactly as recorded) ==
+a) baseline, unedited SCORECARD at the build commit:
+$ python3 tools/capability-repertoire-audit.py --repo "$S/lane" --tip 97c864bead3ee4a2f629574e77263d33834ec98a --out "$S/out/cap-before.json"
+listed 11 observed 11 missing 0 unsubstantiated 0 met True
+exit=0
+  receipt {canonical_line: 2838, capability_tables: 15, met: true}
+
+b) with the draft appended (scratch commit 2f0ae652, parent 97c864be):
+$ python3 tools/capability-repertoire-audit.py --repo "$S/lane" --tip 2f0ae652c451c567e9e1e6fc1df5f0017d9ea74c --out "$S/out/cap-after.json"
+listed 11 observed 11 missing 0 unsubstantiated 0 met True
+exit=0
+  receipt {canonical_line: 2876, capability_tables: 16, met: true}
+
+c) resolution control - the same draft commit truncated so the round-50 table loses its last row:
+$ git -C "$S/lane" show 2f0ae652:SCORECARD.md | head -n -1 > "$S/lane/SCORECARD.md"
+$ git -C "$S/lane" -c user.name=X4Cap2 -c user.email=x4cap2@lane.invalid commit -q -am "control: round-50 canonical table truncated by its last row"
+$ python3 tools/capability-repertoire-audit.py --repo "$S/lane" --tip <control commit> --out "$S/out/cap-control.json"
+listed 10 observed 11 missing 1 unsubstantiated 0 met False
+exit=1
+  receipt {canonical_line: 2876, missing_names: ["live-receipt-replay"], met: false}
+  (a round-49-resolved canonical list would have read missing 0 here, so the canonical
+   resolution provably moved to the round-50 table)
+
+d) lane-tip variant - the same draft cherry-picked onto the lane tip:
+$ git -C "$S/lane" checkout -q -b head50 3b79eadd
+$ git -C "$S/lane" -c user.name=X4Cap2 -c user.email=x4cap2@lane.invalid cherry-pick 2f0ae652c451c567e9e1e6fc1df5f0017d9ea74c
+0fd94d56ffccd189b0e0a8d0cfbaf5c0647d414a
+$ python3 tools/capability-repertoire-audit.py --repo "$S/lane" --tip 0fd94d56ffccd189b0e0a8d0cfbaf5c0647d414a --out "$S/out/cap-after-head.json"
+listed 11 observed 11 missing 0 unsubstantiated 0 met True
+exit=0
+
+e) instrument selftest:
+$ python3 tools/capability-repertoire-audit.py --selftest
+CAP_SELFTEST pass=2 fail=0
+exit=0
+
+== 4. per-row pointer resolution at 0fd94d56 (stricter than the tool's any() predicate) ==
+canonical marker round 50 table at line 2876 rows 11
+sources-registry                 | corpus/SOURCES.md=True
+ollama-offline-evidence-replay   | tools/kama-ollama-evidence.py=True
+live-llamacpp-lifecycle          | .ufo/waves/round-16/live/receipt.json=True
+gguf-declared-identity-replay    | tools/gguf-identity.py=True
+context-capacity-receipt         | tools/kama-context-capacity.py=True
+instrument-agreement             | tools/instrument-agreement.py=True
+pin-watch                        | tools/pin-watch.py=True, registry/engine-pins.tsv=True, corpus/knowledge/engine-pin-watch.md=True
+digest-ledger                    | tools/digest-ledger.py=True, registry/digest-ledger.tsv=True
+hexrun-census                    | tools/hexrun-census.py=True, registry/hexrun-ledger.tsv=True
+append-only-audit                | tools/append-only-audit.py=True, registry/append-only-contract.tsv=True, .ufo/waves/round-50/measured/c2-build.out=True
+live-receipt-replay              | tools/kama-live-replay.py=True, tools/kama-llamacpp-live.py=True, .ufo/waves/round-50/measured/c1-build.out=True, .ufo/waves/round-48/c2/live/receipt-1.json=True
+
+== 5. pointer presence at the two tips ==
+97c864be: .ufo/waves/round-50/measured/c1-build.out ABSENT
+97c864be: .ufo/waves/round-50/measured/c2-build.out ABSENT
+97c864be: tools/append-only-audit.py present
+97c864be: registry/append-only-contract.tsv present
+0fd94d56: every pointer above present
+
+== 6. cleanup ==
+$ pgrep -af llama-server   -> no process started by this seat (the running ones belong to seats
+  Sen3Teardown, J4Decoy and R0Controls2; this seat started no server and ran no network tool)
+$ rm -rf /fast/scratch/hyaku/kama-r50/X4Cap2

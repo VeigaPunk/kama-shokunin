@@ -1,0 +1,18 @@
+N2Couple2 round-50 separability fixtures
+========================================
+Clone: /fast/scratch/hyaku/kama-r50/N2Couple2/lane (git clone --shared of the lane; removed after use)
+Base tree for both fixtures: freeze commit 601c8889f33d1797c712feb753974c20cf891264
+
+C1 fixture tip: e19de92e6bce9733edb3f0cd1255c11e37d3ec82  (parent 601c8889)
+  git diff --name-status 601c8889 e19de92:
+    M  corpus/SOURCES.md            (S496 + S497 rows spliced verbatim from 97c864be after the S495 row; S498 NOT included; the blank line before "## Paths" kept)
+    M  tools/kama-live-replay.py    (blob identical to 97c864be: verified via git rev-parse)
+    M  tools/kama-llamacpp-live.py  (blob identical to 97c864be: verified via git rev-parse)
+
+C2 fixture tip: 66205824583917c053d7c8305228a52b33071ce4  (parent 601c8889)
+  git diff --name-status 601c8889 66205824:
+    M  tools/append-only-audit.py   (blob identical to 97c864be: verified via git rev-parse)
+
+Commands (scratch $S=/fast/scratch/hyaku/kama-r50/N2Couple2, TMPDIR=$S):
+  python3 .../tools/round50-replay-bind-audit.py --repo $S/lane --tip e19de92e6bce9733edb3f0cd1255c11e37d3ec82 --scratch $S/c1s --out <out>/c1-separable.out
+  python3 .../tools/round50-append-audit-v5-check.py --repo $S/lane --tip 66205824583917c053d7c8305228a52b33071ce4 --scratch $S/c2s --out <out>/c2-separable.out

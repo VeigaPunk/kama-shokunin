@@ -1,0 +1,53 @@
+VERDICT: counter is sound for its frozen job — discriminates v5 from v4 (12/12 vs 9/12, verified), all-parents origins/keyset/numstat are spec-faithful — but ships two lane-leg defects: `titles[pat]` overwrite silently drops earlier contract rows on a shared pattern (false-fails a correct tool; reproduced), and the `ungraded` bound drops the tool's eligibility predicate (slack 17→23 measured on the lane, event dd9f5dc6). Also: the build's `origins()` reads only the first parent (counter catches it — reproduced on a minimal merge fixture; latent on the lane, whose two merges touch no exempt-region file).
+
+Scope: `tools/round50-append-audit-v5-check.py` (frozen, sha256 per prereg 925f07a4…), its fixture machinery, the 4 v5 scenarios, the lane leg, and the binder, reviewed against `tools/append-only-audit.py` at tip `97c864be` and base `26ecba64`. Method: line review + driving the counter's own `scenarios()`/`lane_leg()` unmodified on controlled repos in scratch (evidence: `w1/out/V5Review/transcript.txt`, probes copied alongside). Lane clone: `git clone --shared`, read-only.
+
+## Checks that held (verified, not assumed)
+
+- **Fx machinery** (`counter.py:148-184`): cumulative file dict written raw (`wb`), `git add -A` → `write-tree` → `commit-tree` → `update-ref HEAD`; raw CRLF bytes land in blobs (crlf-launder c2 blob: 25 CR bytes, c1: 0); `parents=None` → `HEAD^{commit}` handled on unborn HEAD (`ok=(0,1)`, verified exit=1); toplevel asserted. Branch topology `[c1]`/`[ca,cb]`/`[cb,ca]` yields exactly the intended DAG.
+- **order-a/b are truly same-tree, parents swapped**: both merge commits have tree `b0741acb416fdfb8c093d74483118de5c0c53996` with parents `[6073c7d, b1b5ade]` vs `[b1b5ade, 6073c7d]`; the twin's Axes-birth commit (`6073c7d`) and Round-1-birth (`b1b5ade`) are byte-identical across fixtures. Verified post-hoc on persisted fixture repos.
+- **v4 would fail as claimed** (ran `scenarios()` against the base tool): order-b FAILs — v4's first-in-rev-list origin flips with parent order (`rev-list --topo-order --reverse` emits `b1b5ade` before `6073c7d` in order-b, so the twin's origin becomes `## Round 1` → graded → exit 1); fence FAILs (exit 0, dated lines ungraded under the fenced `## Axes`); crlf-launder FAILs (`ungraded 25`, CRLF bytes "born" in Axes). All 8 round-49 scenarios + order-a still pass on v4 → 9/12, matching the frozen base control.
+- **fence/sections/key/split_lines/deleted-lines**: counter `fence_open`/`fence_close`/`sections`/`key`/`split_lines` (`305-352`) are line-equivalent to the tool's (`tool:282-320,275-279,350-354`); `deleted_with_pos` (`365-385`) is flag- and parse-identical to the tool's `deleted_lines` (`357-378`) incl. hunk-regex and `--text`.
+- **origins() all-parents birth** (`437-461`): `allpar` from `rev-list --parents` (all parents); `pkeys` = union over every parent that has a blob; same-blob parent short-circuit via `pkeys is keys`; correct for root births and rebirths; `keyset_cache` keyed by blob id (shared blobs reuse). Order-independent → matches the "property of the commit graph" spec.
+- **numstat oracle & arithmetic** (`466-475`): first-parent `par` matches the tool's diff convention; `graded+ungraded==deleted` per event; `deleted == numstat[1]`; empty-diff guard `not ns[1:]` sound (fails closed); C-quoted paths can't shift `ns[1]` (git C-quotes tabs/newlines inside names).
+- **binder** (`122-146`): token/word-bound/wildcard logic identical to tool `row_token`/`binds` (`209-244`). `NEGW` (`106-107`) lacks the tool's `cannot|can't|isn't/aren't` curly-apostrophe forms and en/em-dash separators → strictly *weaker* negation → counter binds a superset of what the tool binds; asymmetry can only bind rows the tool rejects (tool then exits 1 → `ok` fails anyway). Harmless direction, documented as "v4 copy".
+- **Lane leg reproduces the frozen dry run** on a shared clone: exit 0, 5 events, bad_declarations 0, `dd9f5dc6 ungraded 17 <= 23`, `0718b6ab ungraded 72 <= 72` → `lane_leg True`. v4 tool at base: `True` — base kill comes from fixtures only (matches control file).
+
+## Findings
+
+### F1 (latent; false-fail) — `titles[pat]` overwrite drops duplicate-pattern contract rows
+`counter.py:413-416`: `titles[pat] = {…}` replaces per pattern; the tool's `file_regions` (`tool:435-444`) **unions** exempt sets across all matching rows. A contract with two rows on one pattern is legal today (parse_contract imposes no uniqueness). Repro (probe-duprow.py, `w1/out/V5Review/`): two rows `docs/*.md` → `exempt=## Axes@…` then `exempt=## Planned@…`; five files each lose 25 Axes-native lines. Tool: `ungraded 25` per event, exit 0 (correct — Axes is exempt via row 1). Counter: `native = 0` → `ungraded 25 > v5 natively exempt 0` on all five events → `lane_leg False`. **A fully compliant tool fails the lane leg.** Latent only because the shipped contract has unique patterns. Proposed fix: `titles.setdefault(pat, set()).update(ts)` (or `titles[pat] = titles.get(pat, set()) | ts`).
+
+### F2 (coverage slack, live) — bound drops eligibility; slack measured on the lane
+`counter.py:489-490` bounds with `psec[pos-1] in ex` (declared exempt titles); the v5 definition the predicate invokes (`tool:21,52-55,544`) ungrades only in an **eligible** exempt section (`max window count ≥ parent count`). The counter's docstring itself says "eligible" (`:68`). On lane event `dd9f5dc6` (SCORECARD.md, deleted 31): eligible = {Axes, Planned, Capabilities, Saturation} — `## Retired` fails the window test (parent count 9, window max 8) — so spec-ungraded = 17 while the counter bound = 23: six `## Retired` lines (pos 72-77) that v5 *grades* would pass the bound if a tool ungraded them. The predicate's "ungrades no deleted line the v5 definitions grade" is under-checked by exactly this class. Reproduced by replicating the tool's grading loop (gap-lines3.py). Severity LOW-MODERATE: one-directional (fails closed only past the loose bound), but the slack is non-zero on real history today. Proposed fix: compute `eligible` in the counter (window = `commits[i:]` per the tool's ordering; `max(section_counts(blob)[t]) >= pcount[t]`) and use `in eligible` at :490; or downgrade the docstring/predicate wording to "declared exempt" honestly.
+
+### F3 (build defect; counter catches it; latent on lane) — tool `origins()` is first-parent-only, spec says no-parent
+`tool-v5.py:470` `parents[parts[0]] = parts[1] if len(parts) > 1 else None` keeps only the first parent; `:495` iterates `(parents[x] or "").split()` → birth = "first parent lacks the key", not the spec's "no parent holds it" (`tool:16-19`, counter docstring `:34-35`). First-parent births ⊋ all-parents births → tool origins ⊋ spec origins → tool ungraded can only be **inflated**. Reproduced (probe-merge-birth2.py): key born on the second parent under `## Round 1`, held under `## Axes` in the merge blob; tool invents an Axes-birth → `ungraded 25` (spec: 24/graded 1). The counter's all-parents bound **catches exactly this**: `ungraded 25 > v5 natively exempt 24` → `lane_leg False`. On the lane the deviation is currently invisible: reachable merges `2f7303c2`/`5396a876` touch only LOG.md (region `*`, no exempt titles) and README.md (no row) — and even triggered, inflation is observable only when a merge-imputed exempt-origin line is later deleted inside an exempt section. So `met` is not currently corrupted, but the tool does not implement its own docstring; if the deviation fires on a future lane event it over-ungrades and the counter fails the lane. Proposed fix (for the tool, not this frozen counter): `parents[parts[0]] = " ".join(parts[1:])`.
+
+### F4 (minor, residual) — event-completeness holes
+- Fixture `check` (`209-228`) verifies only the pinned commit's event; other reported events get only the arithmetic check (a spurious/misattributed extra event passes if self-consistent). The crlf-launder c2 event is intentionally unpinned (comment documents it).
+- Lane leg has no independent event enumeration: a tool that *drops* events passes if ≥5 remain (numstat is checked only for reported events). Direction is fail-open; partially structural (the counter trusts the tool's commit list).
+- Cosmetic: `why` prints `{}` when the pinned commit is absent (`221`).
+
+### F5 (minor, environmental) — fixture git calls inherit user config
+`Fx` uses `git init` + `git add -A` + `commit-tree` under only `-c` identity flags (`114-118`, `152-184`). On a host with `core.autocrlf=true` or a `core.excludesFile` matching fixture paths, raw bytes or staged files silently differ from intent (commit-tree bypasses hooks, good). This host: both unset → not an observed failure. Hardening: `git init -c core.autocrlf=false -c core.excludesFile=/dev/null` (or set `GIT_CONFIG_NOSYSTEM`/env) and/or `add --renormalize`-free `-c core.autocrlf=false add -A`.
+
+## Residual risk / verification gaps
+
+- order-a/b kill on v4 relies on git's rev-list tie-break for equal-timestamp commits — deterministic today (verified on both fixtures) but not pinned by the counter; a git change to child ordering could make v4 pass order-b.
+- Merge same-tree-ness is constructional; the counter does not self-verify `cm^{tree}` equality (I verified it externally).
+- I did not run the ablation controls (other seats' scope); my v4-full-tool run reproduces their union of failures.
+- `subprocess.TimeoutExpired` and other non-EvalError exceptions traceback to exit 1, conflated with `met=False` — fail-closed, acceptable for a kill-counter.
+- Did not review round-49's eight scenario bodies beyond confirming unchanged behavior on v4/v5 runs.
+
+## What I ran (commands, exits)
+
+- `python3 drive-scenarios.py tree-v5 fx-v5` → 12/12 `ok` (exit 0).
+- `python3 drive-scenarios.py tree-v4 fx-v4` → 9/12; FAILs: order-b (exit 1 want 0), fence (exit 0 want 1), crlf-launder (ungraded 25 want 0/unrestored).
+- `python3 drive-lane.py tree-v5 97c864be…` → `lane_leg True` (5 events, bounds 17≤23, 72≤72).
+- `python3 drive-lane.py tree-v4 26ecba64…` → `lane_leg True` (bound-only leg; consistent with base control).
+- `python3 bound-gap.py` → eligible = 4/5 titles; counter bound 23 vs spec 17 on dd9f5dc6.
+- `python3 probe-merge-birth2.py` → tool `ungraded 25`; counter `lane_leg False` ("ungraded 25 > natively exempt 24").
+- `python3 probe-duprow.py` → `lane_leg False` ×5 events ("ungraded 25 > natively exempt 0").
+- Fixture internals: `git log -p`/tree/rev-list inspection of `fx-v4/order-{a,b}`, `probe2/mb`; `git cat-file blob` CR counts.
+- Env: `git config --show-origin --get core.autocrlf` (absent), `core.excludesFile` (absent), `python3 3.14.8`; lane merges: 2 (2f7303c2, 5396a876), files LOG.md/README.md only.

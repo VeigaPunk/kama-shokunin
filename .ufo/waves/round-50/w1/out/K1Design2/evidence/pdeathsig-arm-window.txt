@@ -1,0 +1,8 @@
+== pdeathsig arm-window race ==
+[A arm before parent death] invoker dead ~t=0; child: ppid_before 2727934 ppid_after 2727934 prctl_rc 0; after-6s: ''
+[B arm after parent death] invoker dead ~t=0; child: ppid_before 1494 ppid_after 1494 prctl_rc 0; after-6s: 'STILL ALIVE 2850486'
+=> case B is the orphan: ppid already reparented at prctl time (ppid_before=1/subreaper),
+   prctl armed the NEW parent, child survives forever.
+   kama-live-replay.py set_own_pdeathsig() lines 104-108 has the same hole:
+   parent sampled at line 104, AFTER interpreter boot; a kill landing between exec
+   and line 104 leaves an unarmed replay whose own pdeathsig chain never engages.

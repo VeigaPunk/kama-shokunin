@@ -1,0 +1,51 @@
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -90,23 +90,18 @@
+ 
+ 
+ def _prctl():
+-    """libc prctl, resolved in the parent (a forked child only calls it); None off Linux."""
+-    try:
+-        return ctypes.CDLL(None, use_errno=True).prctl
+-    except (OSError, AttributeError):
+-        return None
++    """libc prctl, resolved in the parent (a forked child only calls it)."""
++    return ctypes.CDLL(None, use_errno=True).prctl
+ 
+ 
+ def set_own_pdeathsig(sig=signal.SIGTERM):
+     """Ask the kernel to send `sig` to this replay when its parent dies
+     (PR_SET_PDEATHSIG(2const)); exit at once if the parent was already gone before the
+-    call landed. Returns True when the prctl call succeeded."""
++    call landed."""
+     parent = os.getppid()
+-    prctl = _prctl()
+-    ok = prctl is not None and prctl(PR_SET_PDEATHSIG, int(sig), 0, 0, 0) == 0
++    _prctl()(PR_SET_PDEATHSIG, int(sig), 0, 0, 0)
+     if os.getppid() != parent:
+         os._exit(1)
+-    return ok
+ 
+ 
+ def live_env(work):
+@@ -312,8 +307,7 @@
+         me, prctl = os.getpid(), _prctl()
+ 
+         def _child_pdeathsig():
+-            if prctl is not None:
+-                prctl(PR_SET_PDEATHSIG, int(signal.SIGTERM), 0, 0, 0)
++            prctl(PR_SET_PDEATHSIG, int(signal.SIGTERM), 0, 0, 0)
+             if os.getppid() != me:
+                 os._exit(1)
+         argv = [sys.executable, "-I", live, "--server", server, "--model", model,
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -473,7 +473,7 @@
+ 
+     def body_of(b):
+         if b not in keyset_cache:
+-            body = r.list_lines(b) if b else []
++            body = r.list_lines(b)
+             keyset_cache[b] = (body, {key(x) for x in body})
+         return keyset_cache[b]
+ 

@@ -1,0 +1,58 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 059d211a..e2b1a9a4 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -478,34 +478,25 @@ def audit(repo_path, to="HEAD", threshold=20, files=None, contract=None):
+         return keyset_cache[b]
+ 
+     def origins(f):
+-        """v5 origin: line key -> the `## ` titles holding it at every birth of the key
+-        (a commit whose blob of f holds it while no parent's blob does), the union over all
+-        commits reachable from <to> - a property of the commit graph and its blobs, not of
+-        the rev-list order (round-49 seat K2Origin F3)."""
+-        if f in origin_cache:
+-            return origin_cache[f]
+-        bl = r.blobs([f"{x}:{f}" for x in commits])
+-        orig = collections.defaultdict(set)
+-        for x in commits:
+-            b = bl[f"{x}:{f}"]
+-            if b is None:
+-                continue
+-            body, keys = body_of(b)
+-            pkeys = set()
+-            for q in (parents[x] or "").split():
+-                if bl.get(f"{q}:{f}") == b:
+-                    pkeys = keys
+-                    break
+-                qb = bl.get(f"{q}:{f}")
+-                if qb is not None:
+-                    pkeys |= body_of(qb)[1]
+-            if pkeys is keys:
+-                continue
+-            for ln, t in zip(body, sections(body)):
+-                k = key(ln)
+-                if k not in pkeys:
+-                    orig[k].add(t)
+-        origin_cache[f] = orig
++        """ABLATION C (v4 first-appearance origin): line key -> the `## ` titles holding it
++        in the first blob of f, in `git rev-list --topo-order --reverse` order, that holds
++        the key - the round-49 rule, a property of the listing order (K2Origin F3)."""
++        if f not in origin_cache:
++            orig, seen = {}, set()
++            bl = r.blobs([f"{x}:{f}" for x in commits])
++            for x in commits:
++                b = bl[f"{x}:{f}"]
++                if b is None or b in seen:
++                    continue
++                seen.add(b)
++                body = r.list_lines(b)
++                fresh = collections.defaultdict(set)
++                for ln, t in zip(body, sections(body)):
++                    k = key(ln)
++                    if k not in orig:
++                        fresh[k].add(t)
++                orig.update(fresh)
++            origin_cache[f] = orig
+         return origin_cache[f]
+ 
+     for i, c in enumerate(commits):

@@ -1,0 +1,122 @@
+[
+ {
+  "case": "A",
+  "check": "descendants-covers-3-levels",
+  "pass": true,
+  "detail": "root invoker 874559: snapshot [874670, 874745, 874868] shim 874670 tool 874745 server 874868"
+ },
+ {
+  "case": "A",
+  "check": "replay_pid-single-child",
+  "pass": true,
+  "detail": "direct children [874670] -> replay_pid 874670"
+ },
+ {
+  "case": "A",
+  "check": "descends_from-grandchild",
+  "pass": true,
+  "detail": "tool 874745 ppid 874670 == replay 874670"
+ },
+ {
+  "case": "A",
+  "check": "descends_from-great-grandchild-to-invoker",
+  "pass": true,
+  "detail": "server 874868 -> 874745 -> 874670 -> 874559"
+ },
+ {
+  "case": "A",
+  "check": "snapshot-excludes-root-and-counter-side",
+  "pass": true,
+  "detail": "root 874559 in snap False; probe 874316 in snap False; decoy 874557 in snap False"
+ },
+ {
+  "case": "A",
+  "check": "snapshot-excludes-probes-own-descendants",
+  "pass": true,
+  "detail": "snapshot \u2229 {probe, decoy} = []"
+ },
+ {
+  "case": "A",
+  "check": "teardown-cascade-empties-snapshot",
+  "pass": true,
+  "detail": "alive [] after SIGKILL of invoker, settled in 0.05 s"
+ },
+ {
+  "case": "B",
+  "check": "extra-invoker-child-breaks-replay_pid",
+  "pass": true,
+  "detail": "invoker 876733 direct children [876826, 876828] -> replay_pid None; bind leg would append 'server pid 877028 does not descend from the replay process None'"
+ },
+ {
+  "case": "B",
+  "check": "noisy-invoker-bind-leg-false-negative",
+  "pass": true,
+  "detail": "counter expression (replay_pid None) -> problem; the server 877028 is in the invoker subtree"
+ },
+ {
+  "case": "C",
+  "check": "escaped-reparented-out-of-subtree",
+  "pass": true,
+  "detail": "escaped 878626 ppid 1494; snapshot of invoker 878448 = [878537]"
+ },
+ {
+  "case": "C",
+  "check": "descends_from-false-across-gap",
+  "pass": true,
+  "detail": "descends_from(878626, 878448) = False (the intermediate that setsid'd and exited is gone from the chain)"
+ },
+ {
+  "case": "C",
+  "check": "teardown-check-passes-while-escaped-descendant-lives",
+  "pass": true,
+  "detail": "snapshot alive []; escaped descendant 878626 alive True -> ok = not alive and refused would be True"
+ },
+ {
+  "case": "C",
+  "check": "cleanup-escaped",
+  "pass": true,
+  "detail": "escaped 878626 alive False"
+ },
+ {
+  "case": "D",
+  "check": "late-child-absent-from-snapshot",
+  "pass": true,
+  "detail": "late child 885150 ppid 884210; snapshot taken before it existed [884210, 884298, 884383]"
+ },
+ {
+  "case": "D",
+  "check": "late-child-survives-snapshot-only-check",
+  "pass": true,
+  "detail": "snapshot alive [] after 0.05 s; late descendant 885150 alive True"
+ },
+ {
+  "case": "E",
+  "check": "zombie-child-not-counted",
+  "pass": true,
+  "detail": "zombie children of 886230: ['886259']; descendants/direct live children [886260] -> replay_pid 886260"
+ },
+ {
+  "case": "E",
+  "check": "pid_alive-zombie-false",
+  "pass": true,
+  "detail": "pid_alive(['886259']) = [False]"
+ },
+ {
+  "case": "E2",
+  "check": "only-zombie-child-means-no-replay-pid",
+  "pass": true,
+  "detail": "invoker 889153 direct live children [] -> replay_pid None"
+ },
+ {
+  "case": "F",
+  "check": "descendants-finds-70-hop-chain",
+  "pass": true,
+  "detail": "invoker 894206: descendants 71 processes, deepest 894513 at 70 hops"
+ },
+ {
+  "case": "F",
+  "check": "descends_from-caps-at-64-hops",
+  "pass": true,
+  "detail": "descends_from(leaf 894513, invoker 894206) = False while the leaf is in descendants() -> the 64-hop cap disagrees with the BFS"
+ }
+]

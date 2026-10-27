@@ -1,0 +1,58 @@
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -28,55 +28,6 @@
+ tool) checks these on twelve constructed fixtures and bounds the lane's ungraded lines
+ by its own origin count.
+ 
+-v3 (round 48) text, kept:
+-
+-v3 (round 48) grades the lane's rule as the lane declares it, carve-outs included
+-(round-47 closure D5; seats Rev1Restore, K1Design, V1Ctr, X1Stable, K1Fixture):
+-  - the contract gains a `region` cell: `*` (every line graded), `exempt=<T1>|<T2>@<p>:<n>`
+-    (lines in a `## ` section titled exactly Ti are ungraded while that section is not
+-    gutted - SCORECARD.md's head, which SCORECARD.md:6 declares re-derived in place) or
+-    `only=<P>@<p>:<n>` (only lines in a `## ` section whose title starts with P are
+-    graded - the append-only `## Errata` region of a knowledge entry);
+-  - every declaration must bind: the declared_at line says `append-only` (or
+-    `append only`) for that path and is not a negation; a region pointer names every
+-    title (exempt, with `re-derived`) or the prefix (only); an unbound row exits 1;
+-  - `regressed` (a graded event whose file holds fewer of its lines at <to> than at its
+-    best window commit) now exits 1.
+-v3 definitions beyond v2 (the round-48 C1 counter, frozen before this tool,
+-recomputes them on its own code path):
+-  region     per contract row; a file matched by several rows takes the union of
+-             their exempt titles and only prefixes
+-  section    a line's section is the title of the last line at or before it that
+-             starts with b"## " (`\\r` and trailing blanks stripped); none before the first
+-  count(T,x) lines of the file at x whose section is T
+-  eligible   an exempt title T is eligible for an event when max over the window of
+-             count(T,x) >= count(T,parent) (a gutted section that never comes back
+-             is graded)
+-  graded G   deleted lines (by parent position) not in an eligible exempt section and,
+-             when the file has only prefixes, inside a section starting with one
+-  ungraded   |D| - |G|; held, restored_max/best/by and held_at_to are taken over G
+-  status     ungraded when |G| == 0, else restored / unrestored / partial over |G|
+-  binding    see `binds()`: lower-cased line contains `append-only`/`append only`, none of
+-             `not append-only`, `not append only`, `no longer append`, `never append-only`,
+-             and the declaring path matches the row's pattern or the line contains the
+-             row's token (base name without extension; the parent directory's name when
+-             the base name has a wildcard)
+-
+-v2 (round 47) text, kept:
+-
+-v2 (round 47) replaces the round-46 v1 definition after its outside closure
+-(corpus/lessons/round-46-verifier-spotcheck.md D1, D2) and the round-46 wave
+-(K2Design, Rev2Decl, X2Fixture):
+-  - the audited files come from a contract, registry/append-only-contract.tsv,
+-    whose every row names the lane line that declares the rule (v1 hard-coded
+-    five files, a set the lane declared nowhere, and missed corpus/lessons/);
+-  - deleted lines are read from the -U0 diff by hunk-header counts, byte-exact,
+-    and must equal `git diff --numstat` (v1 dropped every deleted line whose
+-    text starts with `--` as if it were the `---` header);
+-  - restoration is a multiset measure taken over the event's own window and
+-    maximised there (v1 measured set membership at the audited tip only, so a
+-    later head re-anchor lowered a restoration with no new deletion).
+-
+ Definitions (the round-47 C1 counter, frozen before this tool, recomputes them
+ on its own code path):
+   contract     tab-separated; header `path<TAB>rule<TAB>declared_at<TAB>note`;

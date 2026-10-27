@@ -1,0 +1,28 @@
+diff --git a/tools/kama-llamacpp-live.py b/tools/kama-llamacpp-live.py
+index f47f4f70..1a1c2047 100755
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ -1760,7 +1760,6 @@ def main(argv=None):
+         'setup_error': None,
+         'internal_fault': None,
+         'child_pid': None,
+-        'model_mapping': None,
+         'port_listener_ownership': 'unproven',
+         'source_binding': [],
+         'tool': {'path': str(SCRIPT), 'sha256': None},
+@@ -1996,13 +1995,8 @@ def main(argv=None):
+             and bad_row.get('reason') == 'served-id-mismatch',
+             {'exit': bad_probe['exit'], 'verdict': bad_row.get('verdict'),
+              'reason': bad_row.get('reason')}))
+-        # round 50 (closure R1): the model file the running server maps, read from its
+-        # /proc/<pid>/maps and hashed through that same file (recorded, never a check id:
+-        # v1-v5 check lists stay as they were)
+-        if _child_running(proc):
+-            receipt['model_mapping'] = model_mapping(proc.pid, args.model)
+-        else:
+-            receipt['model_mapping'] = {'mapped': False, 'reason': 'server-not-running'}
++        # ABLATION (round-50 w1, seat J3NoMapping): the model_mapping record is removed;
++        # everything else (isolation, pdeathsig, witness hold, checks) is unchanged.
+         if args.witness_dir is not None:
+             # round 49 (closure R5): hold the ready server up for an outside observer
+             receipt['witness'] = hold_for_witness(

@@ -1,0 +1,32 @@
+diff --git a/tools/append-only-audit.py b/tools/append-only-audit.py
+index 059d211a..2435645d 100755
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -304,21 +304,13 @@ def fence_close(ln, fence):
+ 
+ 
+ def sections(body):
+-    """The `## ` section title owning each line of a list of byte lines (None before the
+-    first), ignoring `## ` lines inside CommonMark fenced code blocks (round-49 seat
+-    K2Origin F4: a fenced fake title must not re-title the dated lines after it)."""
+-    out, title, fence = [], None, None
++    """ABLATION A (v4 section scan, fence-blind): the `## ` section title owning each line
++    of a list of byte lines (None before the first); a `## ` line inside a fenced code
++    block re-titles the lines after it (round-49 definitions)."""
++    out, title = [], None
+     for line in body:
+-        b = line.rstrip(b"\r")
+-        if fence is not None:
+-            if fence_close(b, fence):
+-                fence = None
+-        else:
+-            fo = fence_open(b)
+-            if fo is not None:
+-                fence = fo
+-            elif b.startswith(b"## "):
+-                title = b.decode("utf-8", "replace").rstrip()
++        if line.startswith(b"## "):
++            title = line.rstrip(b"\r").decode("utf-8", "replace").rstrip()
+         out.append(title)
+     return out
+ 

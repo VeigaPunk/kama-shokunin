@@ -1,0 +1,36 @@
+== gguf_tokens (lines 149-196) ==
+v3 well-formed -> ['a', '▁b']
+v1 -> EvalError GGUF v1 unsupported
+v4 (forward-compat, only ver<2 rejected at line 156) -> ['a', '▁b']
+tokens etype=5 (int32 array) -> EvalError tokens array is not strings
+tokens stored as string kv (t=8) -> EvalError tokenizer.ggml.tokens absent
+truncated header 12B -> error unpack_from requires a buffer of at least 24 bytes for unpacking 16 bytes at offset 8 (actual buffer size is 12)
+tail-truncated (declared string len exceeds data) -> ['a', '�'] (NO exception: silent short read)
+extra string kv -> ['a', '▁b']
+unknown value type 13 -> returned ['a', '▁b']
+empty file -> EvalError model is not GGUF
+bad magic -> EvalError model is not GGUF
+
+== stat_fields comm with ')' and space (lines 234-242) ==
+comm: a)b c)d | stat_fields: ('R', 3438, 3623394) | ppid ok: True
+
+== environ_keys + INVOKER -I isolation (lines 271-276, 114-115, 376-405) ==
+canary readable in child environ: True
+marker after NON-isolated -c child (mechanism fires): ["3467357 ['-c']"]
+invoker rc: 0 | marker after -I invoker chain (expect []): []
+environ_keys(nonexistent pid) -> None
+
+== listen_inodes: state 0A, address set (lines 198-217) ==
+127.0.0.1 LISTEN found: True ['719531082']
+::1 LISTEN found: ['719531086']
+0.0.0.0 LISTEN found (strict set, expect []): []
+ESTABLISHED inode excluded: True | intersection with own fds nonempty: True
+wrong port -> []: True
+
+== descendants / descends_from / pid_alive (lines 244-248, 279-306) ==
+descendants(kid) (root excluded by design, multi-child): [3508065, 3508066] | == {g1,g2}: True
+descends_from(g1, kid): True | descends_from(kid, g1) reversed: False
+pid_alive(g1, own start): True | pid_alive(g1, wrong start): False
+g1 state: Z | pid_alive(zombie): False | zombie in descendants: False
+all reaped: True
+F1 DONE

@@ -1,0 +1,59 @@
+--- a/tools/kama-llamacpp-live.py
++++ b/tools/kama-llamacpp-live.py
+@@ (announce: a concurrent prepare must not escape as an internal fault)
+@@ -347,7 +347,17 @@
+     with os.fdopen(fd, 'w') as fh:
+         json.dump(ready, fh)
+-    os.replace(tmp, ready_path)
++    # prepare_witness_dir() unlinks ready.json.tmp* (line 300); a second run in the same
++    # directory whose prepare lands between the create above and this rename leaves tmp
++    # gone and os.replace raises ENOENT after the server is already up. Announce or
++    # refuse with a token; never let the OSError escape as an internal fault.
++    try:
++        os.replace(tmp, ready_path)
++    except FileNotFoundError:
++        raise SetupError('witness-dir-unusable:announce-race') from None
++    except OSError as exc:
++        raise SetupError('witness-dir-unusable:'
++                         + (exc.strerror or type(exc).__name__)) from exc
+     release = os.path.join(wdir, 'release')
+@@ (teardown: only remove this run's own announcement)
+@@ -364,10 +374,22 @@
+     finally:
+         # the handshake names this run's child only while it is up: a ready.json left
+         # behind is a dead pid a later observer in the same directory would read
+-        for path in (ready_path, tmp):
++        try:
++            os.unlink(tmp)
++        except OSError:
++            pass
++        # a second run in the same directory announces after this one; an
++        # unconditional unlink takes that run's announcement while it is still held
++        try:
++            with open(ready_path) as fh:
++                body = json.load(fh)
++        except (OSError, ValueError):
++            body = None
++        if (isinstance(body, dict) and body.get('pid') == ready['pid']
++                and body.get('port') == ready['port']):
+             try:
+-                os.unlink(path)
++                os.unlink(ready_path)
+             except OSError:
+                 pass
+     return {'schema': WITNESS_SCHEMA, 'dir': os.path.abspath(wdir), 'port': port,
+             'pid': proc.pid, 'released': released, 'waited_ms': waited, 'orphaned': orphaned}
+
+# Not proposed as a patch this wave (it changes the witness contract): give the
+# handshake a run identity and make the directory single-run.
+#   1. take an exclusive flock on <wdir>/.witness.lock in prepare_witness_dir and refuse
+#      with SetupError('witness-dir-in-use') instead of deleting a live run's
+#      ready.json/release;
+#   2. name the announce per run (<wdir>/ready.<pid>.json) and the release per run
+#      (<wdir>/release.<pid>), or carry a run nonce in ready.json that release must echo,
+#      so one observer cannot release every hold in the directory and a late observer
+#      cannot attach to another run's body;
+#   3. move prepare_witness_dir() from argument parsing to the moment the replay's own
+#      work directory is ready, or have the replay call it, so the window in which a
+#      previous run's ready.json/release is still visible shrinks from the download time
+#      (~2.3 s here) to the server start.

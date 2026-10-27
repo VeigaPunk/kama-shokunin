@@ -1,0 +1,100 @@
+diff --git a/tools/kama-live-replay.py b/tools/kama-live-replay.py
+index 4d675380..75f79d2f 100755
+--- a/tools/kama-live-replay.py
++++ b/tools/kama-live-replay.py
+@@ -45,10 +45,10 @@ creates <dir>/release; the rerun receipt's `witness` block records whether it wa
+ A witnessed replay matches exactly as an unwitnessed one: the witness is not compared.
+ Round 50 (round-49 closure R1, R2): the live child runs isolated (`python -I`: no
+ PYTHONPATH, user site or script-dir imports) with only the environment names in
+-LIVE_ENV_KEYS (TMPDIR set to <work>/tmp), and with a parent-death signal (SIGTERM,
+-prctl PR_SET_PDEATHSIG) so it tears its server down when the replay dies; the replay
+-sets the same signal on itself, so killing whatever started it takes replay, live tool
+-and server down. A rerun must also record `model_mapping` with `mapped` true and the
++LIVE_ENV_KEYS (TMPDIR set to <work>/tmp), and with NO parent-death signal at all
++(ABLATION control J2NoPdeathsig: neither this replay nor the live child requests
++prctl PR_SET_PDEATHSIG), so killing whatever started the replay leaves replay, live
++tool and server running. A rerun must also record `model_mapping` with `mapped` true and the
+ receipt's model sha256 (the file the running server maps, read by the live tool from
+ /proc/<pid>/maps), else `model-mapping:<reason>` is a mismatch.
+ --compare validates both receipts' provenance like a replay would, then prints
+@@ -61,13 +61,11 @@ Deps: python3 stdlib.
+ from __future__ import annotations
+ 
+ import argparse
+-import ctypes
+ import hashlib
+ import json
+ import os
+ import re
+ import shutil
+-import signal
+ import subprocess
+ import sys
+ import tarfile
+@@ -86,27 +84,6 @@ HEX40 = re.compile(r"[0-9a-f]{40}")
+ CHUNK = 1 << 20
+ # environment names the live child may see (values pass, nothing else does)
+ LIVE_ENV_KEYS = ("PATH", "HOME", "LANG", "LC_ALL")
+-PR_SET_PDEATHSIG = 1
+-
+-
+-def _prctl():
+-    """libc prctl, resolved in the parent (a forked child only calls it); None off Linux."""
+-    try:
+-        return ctypes.CDLL(None, use_errno=True).prctl
+-    except (OSError, AttributeError):
+-        return None
+-
+-
+-def set_own_pdeathsig(sig=signal.SIGTERM):
+-    """Ask the kernel to send `sig` to this replay when its parent dies
+-    (PR_SET_PDEATHSIG(2const)); exit at once if the parent was already gone before the
+-    call landed. Returns True when the prctl call succeeded."""
+-    parent = os.getppid()
+-    prctl = _prctl()
+-    ok = prctl is not None and prctl(PR_SET_PDEATHSIG, int(sig), 0, 0, 0) == 0
+-    if os.getppid() != parent:
+-        os._exit(1)
+-    return ok
+ 
+ 
+ def live_env(work):
+@@ -304,18 +281,11 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+             raise Refused(f"member-digest-mismatch:want={want_srv}:got={got_srv}")
+         res["inputs"].update({"archive": archive, "model": model, "server": server})
+         rerun = os.path.join(work, "rerun-receipt.json")
+-        # round 50 (closure R1, R2): the live child is isolated, sees only LIVE_ENV_KEYS and
+-        # gets SIGTERM when this replay dies (its own handler then tears the server down)
++        # round 50 (closure R1, R2): the live child is isolated and sees only LIVE_ENV_KEYS;
++        # ABLATION control J2NoPdeathsig - no parent-death signal is requested for it
+         env = live_env(work)
+         os.makedirs(env["TMPDIR"], exist_ok=True)
+-        res["live_child"] = {"isolated": True, "env_keys": sorted(env), "pdeathsig": "SIGTERM"}
+-        me, prctl = os.getpid(), _prctl()
+-
+-        def _child_pdeathsig():
+-            if prctl is not None:
+-                prctl(PR_SET_PDEATHSIG, int(signal.SIGTERM), 0, 0, 0)
+-            if os.getppid() != me:
+-                os._exit(1)
++        res["live_child"] = {"isolated": True, "env_keys": sorted(env), "pdeathsig": None}
+         argv = [sys.executable, "-I", live, "--server", server, "--model", model,
+                 "--model-sha256", need["model.sha256"],
+                 "--alias", str(rec.get("alias") or "kama-live-replay"), "--ctx", str(rec.get("ctx") or 256),
+@@ -329,7 +299,7 @@ def replay(receipt_path, work, live=DEFAULT_LIVE, timeout=600, allow_file=False,
+             argv[-2:-2] = ["--witness-dir", os.path.abspath(witness_dir),
+                            "--witness-timeout", str(witness_timeout)]
+             res["witness_dir"] = os.path.abspath(witness_dir)
+-        p = subprocess.run(argv, capture_output=True, text=True, env=env, preexec_fn=_child_pdeathsig,
++        p = subprocess.run(argv, capture_output=True, text=True, env=env,
+                            timeout=timeout + (witness_timeout if witness_dir is not None else 0))
+         res["live_exit"] = p.returncode
+         if not os.path.isfile(rerun):
+@@ -584,7 +554,6 @@ def main(argv=None):
+     if not 0 < a.witness_timeout <= 3600:
+         # the live tool's bound; `inf` used to overflow subprocess.run (round-49 Sen1Witness F4)
+         ap.error("--witness-timeout must be > 0 and <= 3600 seconds")
+-    set_own_pdeathsig()
+     res, code = replay(a.receipt, a.work, a.live, a.timeout, witness_dir=a.witness_dir,
+                        witness_timeout=a.witness_timeout)
+     with open(a.out, "w") as fh:

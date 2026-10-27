@@ -1,0 +1,69 @@
+{
+  "seat": "R3Provenance",
+  "round": 50,
+  "lane": "kama",
+  "date": "2026-10-26",
+  "scope": "C1 counter frozen constants vs outside: SERVER_SHA, MODEL_SHA, MAPS_URL content",
+  "counter": "tools/round50-replay-bind-audit.py",
+  "counter_constants": {
+    "SERVER_SHA_line": 101,
+    "SERVER_SHA": "35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0",
+    "MODEL_COMMIT_line": 102,
+    "MODEL_COMMIT": "499bc8821c6b12b4e53c5bffcb21ec206f212d81",
+    "MODEL_URL_lines": "103-104",
+    "MODEL_URL": "https://huggingface.co/ggml-org/models-moved/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/stories260K.gguf",
+    "MODEL_SHA_line": 105,
+    "MODEL_SHA": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+    "MAPS_URL_line": 106,
+    "MAPS_URL": "man7.org/linux/man-pages/man5/proc_pid_maps.5.html"
+  },
+  "checks": [
+    {
+      "id": "SERVER_SHA",
+      "commands": [
+        "curl -sSL -o $S/llama-b11909-bin-ubuntu-x64.tar.gz https://github.com/ggml-org/llama.cpp/releases/download/b11909/llama-b11909-bin-ubuntu-x64.tar.gz  # http=200 size=22475032 exit 0",
+        "sha256sum $S/llama-b11909-bin-ubuntu-x64.tar.gz  # bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b",
+        "tar -xzf $S/llama-b11909-bin-ubuntu-x64.tar.gz -C $S/asset  # exit 0, top dir llama-b11909/",
+        "sha256sum $S/asset/llama-b11909/llama-server"
+      ],
+      "fresh_member_sha256": "35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0",
+      "asset_sha256": "bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b",
+      "github_release_record_digest": "sha256:bf94332a3001f3ee0b032cda37259f68460e28732ef9a579bfb1b918197e695b",
+      "github_release_record_asset_size": 22475032,
+      "local_install_sha256": "35ac50fb2cfd9c4f363720bb88ac17e799716595802c9105103593977d8d7ff0",
+      "local_install_path": "/home/vgpnk/.local/opt/llama-b11909/llama-server",
+      "verdict": "MATCH — frozen constant == fresh release-asset member == GitHub release-record digest == installed binary"
+    },
+    {
+      "id": "MODEL_SHA",
+      "commands": [
+        "curl -sSL -o $S/stories260K.gguf 'https://huggingface.co/ggml-org/models-moved/resolve/499bc8821c6b12b4e53c5bffcb21ec206f212d81/tinyllamas/stories260K.gguf'  # http=200 size=1185376 exit 0 (final URL: HF xet CDN, resolve accepted the pinned commit)",
+        "sha256sum $S/stories260K.gguf"
+      ],
+      "fresh_sha256": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d",
+      "fresh_size_bytes": 1185376,
+      "verdict": "MATCH — pinned URL resolves and serves exactly MODEL_SHA"
+    },
+    {
+      "id": "MAPS_URL",
+      "commands": [
+        "curl -sS -o $S/proc_pid_maps.5.fresh.html https://man7.org/linux/man-pages/man5/proc_pid_maps.5.html  # http=200 size=11702 exit 0",
+        "sha256sum $S/proc_pid_maps.5.fresh.html  # 3a33949653ca5132a368ed40d74b8e56ea4a8bb6b8f364fe615ddfd994d0be18",
+        "python3: html.unescape(re.sub(rb'<[^>]*>', b'', raw_html))  # tag-strip + entity decode",
+        "compare to lane .ufo/waves/round-50/c1/proc_pid_maps.5.txt"
+      ],
+      "fresh_html_sha256": "3a33949653ca5132a368ed40d74b8e56ea4a8bb6b8f364fe615ddfd994d0be18",
+      "fresh_html_bytes": 11702,
+      "lane_copy_sha256": "e7cdf0ff1c8d8d87e5c92e529a09270945ca3b7cafb8e823a7ca3d294f3c16a2",
+      "lane_copy_bytes": 7564,
+      "extraction": "strip all tags, keep text nodes verbatim, html.unescape -> byte-identical to lane copy",
+      "verdict": "MATCH — lane .txt is a faithful text copy of the page served at MAPS_URL today (byte-identical under tag-strip+unescape)"
+    }
+  ],
+  "defects": [],
+  "notes": [
+    "Counter itself only checks the MAPS_URL string in new SOURCES rows (tools/round50-replay-bind-audit.py:537); the lane .txt is supporting copy, verified here independently.",
+    "No llama-server process was started by this seat; two live processes found belong to peer seat J2NoPdeathsig's scratch and were left untouched.",
+    "No tools installed or upgraded (curl/sha256sum/tar/python3/gh only)."
+  ]
+}

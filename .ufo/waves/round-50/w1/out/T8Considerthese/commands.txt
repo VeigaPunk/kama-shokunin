@@ -1,0 +1,191 @@
+# Commands behind .ufo/waves/round-50/w1/out/T8Considerthese/table.md
+# Seat T8Considerthese (leaf, read-only on the lane). All commands from the lane root
+# /home/vgpnk/Projects/shokunin/kama-shokunin unless prefixed with the scratch clone.
+# Snapshot: lane tip 3b79eaddf38246c637cc7ba1a94ab363422876b6, 2026-10-26 (wave w1 in flight).
+# Scratch: S=/fast/scratch/hyaku/kama-r50/T8Considerthese (clone removed at the end of the pass).
+
+## 1. Lane state and tip
+
+git log --oneline -8
+  -> 3b79eadd round-50: build regression battery receipts (measure.sh + *-build.out)
+     3d42897b round-50: build-fix - S498 row markdown tick parity so sources-append-only row parser accepts it
+     6f3bd322 round-50: wave spec kama-r50-w1 (66 seats), dispatch, validate exit 0, build receipts
+     97c864be round-50: build - replay isolation + parent-death teardown, ... S496-S498      [exit 0]
+git status --porcelain | head -40
+  -> ?? .ufo/waves/round-50/w1.ready
+     ?? .ufo/waves/round-50/w1.ready.dispatched
+     ?? .ufo/waves/round-50/w1/out/J3NoMapping/                                            [exit 0]
+git rev-parse HEAD -> 3b79eaddf38246c637cc7ba1a94ab363422876b6                              [exit 0]
+
+## 2. Preregistration: does it name the proposal it mines?
+
+python3 -c "import json;d=json.load(open('.ufo/waves/round-50/preregistration.json'));print(list(d.keys()));print('frontier' in d)"
+  -> ['lane','round','attempt','author','frozen_at_utc','base','authority','separability',
+      'claims','controls','limits']  False                                                  [exit 0]
+python3 -c "import json;
+for r in (46,47,48,49,50): d=json.load(open(f'.ufo/waves/round-{r}/preregistration.json')); print(r,'frontier' in d,(d.get('frontier') or {}).get('considerthese'))"
+  -> 46 True considerthese/2026-10-26.md proposal 1 (flag deletions ...), implemented as C2.
+     47 True ... proposal 3 (running count ...) mined as the lesson's sufficiency-family row
+     48 True ... proposal 3 ...: the round-47 shortcut tally is promoted to tools/ with its --check
+     49 False None
+     50 False None                                                                          [exit 0]
+grep -n '"round"\|"attempt"\|"author"\|"frozen_at_utc"\|"base"\|"claims"\|"controls"' .ufo/waves/round-50/preregistration.json
+  -> 3 round:50  4 attempt:1  5 author:"kama L1 (agent KamaR50)"  6 frozen_at_utc 00:20:47Z
+     7 base 26ecba64...  10 "claims": [  12 "id": "C1"  38 "controls": ...                [exit 0]
+
+## 3. Round-50 measured set: which instruments actually run
+
+grep -n "" .ufo/waves/round-50/measured/measure.sh | sed -n '19,40p'
+  -> 20 c1, 21 c2, 22 gate, 23 cap, 24 r41, 25 r42, 26 r43, 27 pointer, 28 digest, 29 hexrun,
+     30 sao, 31 aoa, 32 aoa-selftest, 33 klr-selftest, 34 live-selftest, 35 cr-selftest,
+     36 tally, 37 r48c2, 38 r49c1, 39 r49c2                                           [exit 0]
+grep -n "pin-watch\|seat-yield" .ufo/waves/round-50/measured/measure.sh      -> 0 hits     [exit 1]
+grep -n "pin-watch\|seat-yield" .ufo/waves/round-49/measured/measure.sh      -> 0 hits     [exit 1]
+grep -rn "pin-watch\|newest tag\|newest=" .ufo/waves/round-50/measured/    -> no match   [exit 1]
+grep -c "pin-watch\|seat-yield\|statement" .ufo/waves/round-50/measured/measure.sh -> 0    [exit 1]
+
+## 4. Round-50 receipts (committed at 3b79eadd, measured at 97c864be unless noted)
+
+cat .ufo/waves/round-50/measured/tally-build.out
+  -> rounds=40-47 ; table rows end at round 47 ; exit=0                                 [exit 0]
+cat .ufo/waves/round-50/measured/hexrun-build.out
+  -> tokens=1858 distinct=305 ... ledger_bad=0 unknown=1 ; exit=1                       [exit 0]
+cat .ufo/waves/round-50/measured/digest-build.out
+  -> ... ledger_bad=0 wrong_unflagged=0 unknown=0 ; exit=0                              [exit 0]
+cat .ufo/waves/round-50/measured/sao-build.out
+  -> error: 97c864be...:corpus/SOURCES.md:251: unterminated table row (no closing pipe)
+     exit=2                                                                              [exit 0]
+cat .ufo/waves/round-50/measured/aoa-build.out
+  -> summary commits=327 files=94 events=5 ... ungraded_lines=89 regressed=0 ... exit=0 [exit 0]
+cat .ufo/waves/round-50/measured/aoa-selftest-build.out -> AOA_SELFTEST pass=36 fail=0   [exit 0]
+cat .ufo/waves/round-50/measured/gate-build.out
+  -> unregistered tools/round50-append-audit-v5-check.py ; ...-replay-bind-audit.py
+     registered 44 unregistered 2 defective 0 ; exit=1                                  [exit 0]
+cat .ufo/waves/round-50/measured/r41-build.out
+  -> axes=6 facts=36 ... mismatches=1 met=False ; no stdout line == '35' ; exit=1       [exit 0]
+cat .ufo/waves/round-50/measured/r42-build.out
+  -> r41=1 ... mismatches=1 maxN=49 met=False ; same detail ; exit=1                    [exit 0]
+cat .ufo/waves/round-50/measured/r43-build.out
+  -> unreg=2 defect=0 flags=0 pins=0 selftest=1 dc=0 spot=1 ... mismatches=4 met=False
+     detail: selftest: documented 'GATE_SELFTEST pass=6 fail=0', run printed 'pass=5 fail=1'
+                                                                                        [exit 0]
+cat .ufo/waves/round-50/measured/pointer-build.out -> measured: ok (### Round-49 measured results) ... met=True [exit 0]
+cat .ufo/waves/round-50/measured/c1-build.out -> bind=1 teardown=1 newrow=1 bound=3/3 met=True [exit 0]
+cat .ufo/waves/round-50/measured/c2-build.out -> fixture=1 lane=1 scenarios=12/12 met=True     [exit 0]
+cat .ufo/waves/round-50/controls/base.c1.out -> bind=0 teardown=0 newrow=0 bound=0/3 met=False [exit 0]
+cat .ufo/waves/round-50/controls/base.c2.out -> fixture=0 lane=1 scenarios=9/12 met=False      [exit 0]
+
+## 5. Wave shape (spec.json, build_spec.py)
+
+python3 -c "import json,collections;d=json.load(open('.ufo/waves/round-50/w1/spec.json'));it=d['items'];print(len(it));print(collections.Counter(x['role'] for x in it));print(d['maxLanes'],d['axes'])"
+  -> 66 ; executor 22, reviewer 10, scribe 10, critic 6, connector 5, mutation-tester 4,
+     scout 4, sentinel 3, revenger 1, simplifier 1 ; 66 ['calibration','operability']     [exit 0]
+python3 -c "import json;d=json.load(open('.ufo/waves/round-50/w1/spec.json'));print([i['name'] for i in d['items'] if 'Pin' in i['name'] or 'Fresh' in i['name']])"
+  -> ['U1Fresh']            (no U2Pins seat; U1Fresh is the C1 freshness/timing scout)   [exit 0]
+grep -n 'add("\(S1Rows2\|N5Sources2\|X6Sao2\|T4Lesson\|T5Mistakes\|V1Prereg2\|N2Couple2\)"' .ufo/waves/round-50/build_spec.py
+  -> 124 N2Couple2, 128 V1Prereg2, 138 N5Sources2, 153 X6Sao2, 164 S1Rows2, 174 T4Lesson,
+     177 T5Mistakes                                                                      [exit 0]
+grep -n "pin-watch\|pin gap\|proposal" .ufo/waves/round-50/build_spec.py
+  -> 183 only (this seat's own item text)                                                [exit 0]
+sed -n '174,176p' .ufo/waves/round-50/build_spec.py
+  -> T4Lesson asks for ## Claims / ## Gate / ## Mistakes rows with Class, evidence,
+     captured-by, fix - no "considerthese" line, no owner column                        [exit 0]
+
+## 6. Wave state at the snapshot
+
+ls .ufo/waves/round-50/w1/            -> dispatch.json out spec.json validate.out validate.stderr
+ls .ufo/waves/round-50/w1/out/*.md    -> 0 reports                                     [exit 0]
+ls -d .ufo/waves/round-50/w1/out/*/   -> 29 seat dirs                                   [exit 0]
+find .ufo/waves/round-50/w1/out -name '*.md' | wc -l -> 3 (J1NoEnv.md, T6Quality/quality.md,
+  T4Lesson/evidence/r48-report-at-15710a2a.md)                                          [exit 0]
+cat .ufo/waves/round-50/w1.ready
+  -> {"lane":"kama","round":50,"wave":"w1","dispatch":".../w1/dispatch.json","l1":"KamaR50"} [exit 0]
+head -c 120 .ufo/waves/round-50/w1.ready.dispatched -> 2026-10-26T21:54:00 + seat map    [exit 0]
+git ls-files .ufo/waves/round-49/w1.ready .ufo/waves/round-49/w1.ready.dispatched \
+               .ufo/waves/round-50/w1.ready .ufo/waves/round-50/w1.ready.dispatched
+  -> round-49 pair tracked; round-50 pair NOT tracked (see git status above)             [exit 0]
+
+## 7. Landed surfaces that a proposal's artifact lives on
+
+ls registry/                     -> no prepared-waves.tsv, no per-round-instruments.tsv   [exit 0]
+ls -l --time-style=+%Y-%m-%dT%H:%M registry/verdict-ledger.tsv registry/claim-outcome-ledger.tsv \
+       registry/staged-refusals.tsv registry/engine-pins.tsv
+  -> verdict-ledger 2026-10-26T05:10 ; claim-outcome 07:45 ; staged-refusals 01:03 ;
+     engine-pins 2026-10-26T01:03                                                         [exit 0]
+cat registry/engine-pins.tsv     -> llama.cpp ... b11755 S038 (line 4)                     [exit 0]
+grep -c b11909 registry/engine-pins.tsv -> 0                                               [exit 1]
+grep -n "definition\|--since" tools/append-only-audit.py
+  -> 2/4 v5 header ; 573 "definition": "v5" ; NO --since anywhere                          [exit 0]
+grep -rn "staged-refusals" .ufo/waves/round-50/ tools/*.py -> 0 hits                       [exit 1]
+grep -n -- '--classes' tools/shortcut-tally.py -> 0 hits                                   [exit 1]
+grep -n '"--rounds", default' tools/shortcut-tally.py -> 895: default="40-47"              [exit 0]
+grep -rln "unadmitted" tools/ registry/ SKILL.md -> only registry/report-landing-errata.tsv [exit 0]
+ls tools/round*-statement-audit.py -> round35 .. round38 (nothing newer)                   [exit 0]
+ls tools/ | grep -i verdict -> error-verdict-census.py, round44-verdict-ledger-audit.py    [exit 0]
+sed -n '30,36p' corpus/lessons/round-49.md
+  -> ## Mistakes table header: | # | Class | Evidence | Captured-by | Fix (shown able to fail) |
+     row 3 = orchestrator/operator-owned stale route quote                              [exit 0]
+grep -cE "considerthese|proposal" corpus/lessons/round-49.md -> 0                          [exit 1]
+grep -cE "considerthese|proposal" corpus/lessons/round-48.md -> 0                          [exit 1]
+grep -cE "considerthese|proposal|tally" corpus/lessons/round-49-verifier-spotcheck.md -> 0  [exit 1]
+grep -cE "proposal|considerthese|tally" corpus/lessons/round-47-verifier-spotcheck.md -> 0  [exit 1]
+grep -cE "proposal|considerthese|tally" corpus/lessons/round-48-verifier-spotcheck.md -> 0  [exit 1]
+grep -n "Class | Evidence" corpus/lessons/round-49.md -> 32 (Mistakes table header)        [exit 0]
+grep -n "Verdict:" corpus/lessons/round-49-verifier-spotcheck.md -> 11: **admitted**       [exit 0]
+grep -n "Round 49 —\|Round-49 measured results" SCORECARD.md -> 2813, 2857 ; no Round 50  [exit 0]
+grep -n "^## Round 49\|^## Round 50" LOG.md -> 2331 only ; no Round 50                     [exit 0]
+ls corpus/lessons/ | tail -12 -> round-49.md, round-49-verifier-spotcheck.md ; no round-50  [exit 0]
+
+## 8. New SOURCES rows (proposal 10's population this round)
+
+grep -n "S496\|S497\|S498" corpus/SOURCES.md
+  -> 249 S496 proc_pid_maps(5) ; 250 S497 PR_SET_PDEATHSIG(2const) ; 251 S498 CommonMark 0.31.2 4.5
+     (S498 used-by = corpus/lessons/round-50.md, which does not exist yet)              [exit 0]
+sed -n '251p' corpus/SOURCES.md | tail -c 120
+  -> "... | mined | 2026-10-27 | 360d | corpus/lessons/round-50.md |"  (closing pipe present) [exit 0]
+
+## 9. Clone at the tip (read-only runs; S=/fast/scratch/hyaku/kama-r50/T8Considerthese)
+
+mkdir -p "$S"; cd "$S"; git clone -q --shared <lane> lane
+git -C "$S/lane" rev-parse --show-toplevel -> /fast/scratch/hyaku/kama-r50/T8Considerthese/lane [exit 0]
+git -C "$S/lane" log --oneline -1 -> 3b79eadd                                             [exit 0]
+
+cd "$S/lane"; TIP=$(git rev-parse HEAD)
+python3 tools/sources-append-only.py --from 26ecba64... --to "$TIP"
+  -> added S496 (allowed) / added S497 (allowed) / added S498 (allowed)
+     no append-only violations                                                           [exit 0]
+python3 tools/hexrun-census.py scan --repo . --rev "$TIP"
+  -> ... ledger_bad=0 unknown=1 ; exit=1  (the committed receipt's number, unchanged)     [exit 0 pipe]
+python3 tools/hexrun-census.py scan --repo . --rev "$TIP" --details
+  -> detail: f8cdb853aaff29393faeb0b6d4c2a2296778b698 len=40 occurrences=1 class=unknown
+     exit=1                                                                              [exit 1]
+python3 tools/shortcut-tally.py --repo . --rev "$TIP" | head -4
+  -> rounds=40-47 (the tool's default range; rounds 48-50 absent)                         [exit 0]
+python3 tools/seat-yield.py .ufo/waves/round-50/w1
+  -> could-not-evaluate: no *-results.json or results.json in .ufo/waves/round-50/w1
+     exit=2                                                                              [exit 2]
+
+## 10. Provenance of the one unknown hex run
+
+grep -rn "f8cdb853aaff29393faeb0b6d4c2a2296778b698" --include='*.md' --include='*.tsv' --include='*.json' .
+  -> corpus/lessons/round-49-verifier-spotcheck.md:21 (round-49 report commit, fleet repo)  [exit 0]
+git cat-file -t f8cdb853aaff29393faeb0b6d4c2a2296778b698
+  -> fatal: could not get object info    (not a lane object)                              [exit 0]
+grep -c f8cdb853 registry/hexrun-ledger.tsv -> 0 (no ledger row; precedent row exists at
+  registry/hexrun-ledger.tsv:2 for a fleet-repo id, class `upstream`)                      [exit 1]
+cat .ufo/waves/round-49/measured/hexrun-build.out | tail -2 -> unknown=2 ; exit=1 (already red)
+
+## 11. Reflection series (proposal 1 / 8 practice)
+
+grep -n "^[0-9]\." considerthese/2026-10-22.md -> 20, 22, 24, 26                            [exit 0]
+grep -n "^[0-9]\." considerthese/2026-10-23.md -> 29, 31, 33, 35                            [exit 0]
+grep -n "^[0-9]\." considerthese/2026-10-24.md -> 27, 29, 31, 33                            [exit 0]
+grep -n "^[0-9]\." considerthese/2026-10-25.md -> 27, 29, 31, 33                            [exit 0]
+grep -n "^[0-9]\." considerthese/2026-10-26.md -> 29, 31, 33, 35                            [exit 0]
+grep -n "Outside verdict" considerthese/2026-10-26.md -> 5 (table header), rows 7-13        [exit 0]
+
+## 12. Cleanup
+
+pgrep -f llama-server  -> no match, rc=1 (this seat started no server, ran no counter)     [exit 1]
+grep -c b11909 registry/engine-pins.tsv -> 0 (the pin row for the replay's engine is absent) [exit 1]
+rm -rf /fast/scratch/hyaku/kama-r50/T8Considerthese

@@ -1,0 +1,160 @@
+## seat T6Quality evidence (2026-10-27T00:57:30Z)
+## lane /home/vgpnk/Projects/shokunin/kama-shokunin (read-only)
+$ git rev-parse HEAD
+3b79eaddf38246c637cc7ba1a94ab363422876b6
+exit=0
+
+$ git log --oneline -1 97c864bead3ee4a2f629574e77263d33834ec98a
+97c864be round-50: build - replay isolation + parent-death teardown, live model-mapping record, append-only-audit v5 (birth-DAG origin, fence-aware sections, CRLF-normalized keys), S496-S498
+exit=0
+
+$ grep -o "KQ[0-9]*" corpus/QUALITY.md | sort -V | tail -1
+KQ79
+exit=0
+
+$ wc -l corpus/QUALITY.md
+428 corpus/QUALITY.md
+exit=0
+
+$ sha256sum tools/round50-replay-bind-audit.py tools/round50-append-audit-v5-check.py
+ff6ac2ace541ea35a4d240ceebb019653c11a2a08c025e514770f3f94a9c5e89  tools/round50-replay-bind-audit.py
+925f07a48a02ad54a9c89230aac7e54c8dafee4ba2e8a823dcb851b9cf48ca46  tools/round50-append-audit-v5-check.py
+exit=0
+
+$ python3 -c "import json;d=json.load(open(\".ufo/waves/round-50/preregistration.json\"));print([(c[\"id\"],c[\"counter_sha256\"]) for c in d[\"claims\"]])"
+[('C1', 'ff6ac2ace541ea35a4d240ceebb019653c11a2a08c025e514770f3f94a9c5e89'), ('C2', '925f07a48a02ad54a9c89230aac7e54c8dafee4ba2e8a823dcb851b9cf48ca46')]
+exit=0
+
+$ git ls-tree -r --name-only HEAD .ufo/waves/round-50/measured .ufo/waves/round-50/controls
+.ufo/waves/round-50/controls/base.c1.out
+.ufo/waves/round-50/controls/base.c2.out
+.ufo/waves/round-50/measured/aoa-build.out
+.ufo/waves/round-50/measured/aoa-selftest-build.out
+.ufo/waves/round-50/measured/c1-build.out
+.ufo/waves/round-50/measured/c2-build.out
+.ufo/waves/round-50/measured/cap-build.out
+.ufo/waves/round-50/measured/cr-selftest-build.out
+.ufo/waves/round-50/measured/digest-build.out
+.ufo/waves/round-50/measured/gate-build.out
+.ufo/waves/round-50/measured/hexrun-build.out
+.ufo/waves/round-50/measured/klr-selftest-build.out
+.ufo/waves/round-50/measured/live-selftest-build.out
+.ufo/waves/round-50/measured/measure.sh
+.ufo/waves/round-50/measured/pointer-build.out
+.ufo/waves/round-50/measured/r41-build.out
+.ufo/waves/round-50/measured/r42-build.out
+.ufo/waves/round-50/measured/r43-build.out
+.ufo/waves/round-50/measured/sao-build.out
+.ufo/waves/round-50/measured/tally-build.out
+exit=0
+
+$ bash -c ls .ufo/waves/round-50/measured/*.out | wc -l
+17
+exit=0
+
+$ grep -c ^run  .ufo/waves/round-50/measured/measure.sh
+20
+exit=0
+
+$ bash -c for f in .ufo/waves/round-50/measured/*.out; do printf "%-24s first=%s last=%s\n" "$(basename $f)" "$(head -1 $f | cut -c1-40)" "$(tail -1 $f | cut -c1-30)"; done
+aoa-build.out            first=$ python3 tools/append-only-audit.py --r last=exit=0
+aoa-selftest-build.out   first=$ python3 tools/append-only-audit.py --s last=exit=0
+c1-build.out             first=tip=97c864bead3ee4a2f629574e77263d33834e last=detail: newrow: 3 rows new sin
+c2-build.out             first=tip=97c864bead3ee4a2f629574e77263d33834e last=detail: lane: event 0718b6abbd
+cap-build.out            first=$ python3 tools/capability-repertoire-au last=exit=0
+cr-selftest-build.out    first=$ python3 tests/llamacpp-live/check-rece last=exit=0
+digest-build.out         first=$ python3 tools/digest-ledger.py scan -- last=exit=0
+gate-build.out           first=$ python3 tools/gate-registry-check.py - last=exit=1
+hexrun-build.out         first=$ python3 tools/hexrun-census.py scan -- last=exit=1
+klr-selftest-build.out   first=$ python3 tools/kama-live-replay.py --se last=exit=0
+live-selftest-build.out  first=$ python3 tools/kama-llamacpp-live.py -- last=exit=0
+pointer-build.out        first=$ python3 tools/planned-pointer-check.py last=exit=0
+r41-build.out            first=$ python3 tools/round41-scorecard-reconc last=exit=1
+r42-build.out            first=$ python3 tools/round42-selfdesc-reconci last=exit=1
+r43-build.out            first=$ python3 tools/round43-registry-audit.p last=exit=1
+sao-build.out            first=$ python3 tools/sources-append-only.py - last=exit=2
+tally-build.out          first=$ python3 tools/shortcut-tally.py --repo last=exit=0
+exit=0
+
+$ git status --porcelain
+?? .ufo/waves/round-50/w1.ready
+?? .ufo/waves/round-50/w1.ready.dispatched
+?? .ufo/waves/round-50/w1/out/J1NoEnv.md
+?? .ufo/waves/round-50/w1/out/J1NoEnv/
+?? .ufo/waves/round-50/w1/out/J3NoMapping.md
+?? .ufo/waves/round-50/w1/out/J3NoMapping/
+?? .ufo/waves/round-50/w1/out/J6Ablation/
+?? .ufo/waves/round-50/w1/out/R1Rerun2/
+?? .ufo/waves/round-50/w1/out/R2Rerun2.md
+?? .ufo/waves/round-50/w1/out/R2Rerun2/
+?? .ufo/waves/round-50/w1/out/R3Provenance.md
+?? .ufo/waves/round-50/w1/out/R3Provenance/
+?? .ufo/waves/round-50/w1/out/Rev1Base/
+?? .ufo/waves/round-50/w1/out/S2Gate2/
+?? .ufo/waves/round-50/w1/out/Sen1Env/
+?? .ufo/waves/round-50/w1/out/Sen3Teardown/
+?? .ufo/waves/round-50/w1/out/T2Skill/
+?? .ufo/waves/round-50/w1/out/T4Lesson/
+?? .ufo/waves/round-50/w1/out/T6Quality/
+?? .ufo/waves/round-50/w1/out/V3Stable/
+?? .ufo/waves/round-50/w1/out/V4Determinism/
+?? .ufo/waves/round-50/w1/out/X10NonceEdge/
+?? .ufo/waves/round-50/w1/out/X12Zip/
+?? .ufo/waves/round-50/w1/out/X15NoHarm2/
+?? .ufo/waves/round-50/w1/out/X16Policy/
+?? .ufo/waves/round-50/w1/out/X17Cleanup/
+?? .ufo/waves/round-50/w1/out/X1Assimilation/
+?? .ufo/waves/round-50/w1/out/X1Observe2/
+?? .ufo/waves/round-50/w1/out/X4Cap2/
+?? .ufo/waves/round-50/w1/out/X5Digest2/
+?? .ufo/waves/round-50/w1/out/X8WitnessPort/
+exit=0
+
+$ bash -c ls corpus/lessons/round-5*.md corpus/lessons/round-50.md 2>&1 | tail -3
+ls: cannot access 'corpus/lessons/round-50.md': No such file or directory
+corpus/lessons/round-5.md
+exit=0
+
+$ grep -n ^# corpus/lessons/round-49.md
+1:# kama round 49 lesson
+10:## Claims
+17:## Gate
+30:## Mistakes
+exit=0
+
+$ grep -n QUALITY registry/append-only-contract.tsv
+4:corpus/QUALITY.md	A-corr	corpus/README.md:761	*	criteria appended as new rows; supersession names the old criterion (QUALITY.md:4-5)
+7:corpus/lessons/*.md	A-corr	corpus/README.md:1239	*	filed lessons stay; corrections appended (KQ26); re-anchored round 49 from corpus/QUALITY.md:143, a KQ26 criterion row that bound by coincidence (round-49 seat K2Binding), to the declaring line corpus/README.md:1239; round 48 had re-anchored it from corpus/lessons/round-23.md:100 (round-48 seat K1Binding)
+exit=0
+
+$ sha256sum .ufo/waves/round-50/measured/c1-build.out .ufo/waves/round-50/measured/c2-build.out .ufo/waves/round-50/controls/base.c1.out .ufo/waves/round-50/controls/base.c2.out
+75b8b0d77e40c8561c227d8b6b9d2bcb86c75af33009bdb3ce3dbbd495faeea1  .ufo/waves/round-50/measured/c1-build.out
+5a97b51a7ec9e0ce99e0f09a414ed7f78499fdd0a2b33dd08798b6294bf0aacb  .ufo/waves/round-50/measured/c2-build.out
+e984b680b72a7bc7556edfcbe192effaa6acad1f2ab5f81383eeb2af101ea254  .ufo/waves/round-50/controls/base.c1.out
+4bab123b7deee193ee6b10597470b283794bc1964e1af926a7b34bd0cd543856  .ufo/waves/round-50/controls/base.c2.out
+exit=0
+
+## appended 2026-10-27T01:01:16Z: SOURCES A-row guard at the measured tip (own clone --shared)
+$ git clone -q --shared <lane> /fast/scratch/hyaku/kama-r50/T6Quality/lane
+exit=0
+$ git -C /fast/scratch/hyaku/kama-r50/T6Quality/lane rev-parse --show-toplevel
+/fast/scratch/hyaku/kama-r50/T6Quality/lane
+$ python3 tools/sources-append-only.py --from 26ecba64ad6fb571d09074b07202d1618a46ecd1 --to 97c864bead3ee4a2f629574e77263d33834ec98a
+error: 97c864bead3ee4a2f629574e77263d33834ec98a:corpus/SOURCES.md:251: unterminated table row (no closing pipe)
+exit=2
+
+$ python3 tools/sources-append-only.py --from 26ecba64ad6fb571d09074b07202d1618a46ecd1 --to 3b79eaddf38246c637cc7ba1a94ab363422876b6
+added S496 (allowed)
+added S497 (allowed)
+added S498 (allowed)
+no append-only violations
+exit=0
+
+$ python3 tools/sources-append-only.py --from 97c864bead3ee4a2f629574e77263d33834ec98a --to 3b79eaddf38246c637cc7ba1a94ab363422876b6
+error: 97c864bead3ee4a2f629574e77263d33834ec98a:corpus/SOURCES.md:251: unterminated table row (no closing pipe)
+exit=2
+
+$ python3 -c print(open('corpus/SOURCES.md').read().splitlines()[250][-120:])
+anner must not treat a `## ` line inside a fence as a heading | mined | 2026-10-27 | 360d | corpus/lessons/round-50.md |
+exit=0
+

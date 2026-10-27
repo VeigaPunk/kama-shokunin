@@ -1,0 +1,21 @@
+--- a/tools/append-only-audit.py
++++ b/tools/append-only-audit.py
+@@ -465,11 +465,14 @@
+     files = sorted(set(files))
+     commits, parents = [], {}
++    allparents = {}
+     for line in _text(repo_path, "rev-list", "--topo-order", "--reverse", "--parents", to_full).split("\n"):
+         parts = line.split()
+         if parts:
+             commits.append(parts[0])
+             parents[parts[0]] = parts[1] if len(parts) > 1 else None
++            allparents[parts[0]] = parts[1:]
+     events, binary = [], []
+@@ -493,7 +496,7 @@
+             body, keys = body_of(b)
+             pkeys = set()
+-            for q in (parents[x] or "").split():
++            for q in allparents[x]:
+                 if bl.get(f"{q}:{f}") == b:
+                     pkeys = keys
+                     break

@@ -1,0 +1,14 @@
+diff --git i/tools/kama-live-replay.py w/tools/kama-live-replay.py
+index 4d675380..bbb7b06d 100755
+--- i/tools/kama-live-replay.py
++++ w/tools/kama-live-replay.py
+@@ -110,7 +110,8 @@ def set_own_pdeathsig(sig=signal.SIGTERM):
+ 
+ 
+ def live_env(work):
+-    env = {k: os.environ[k] for k in LIVE_ENV_KEYS if k in os.environ}
++    # J1NoEnv ablation: the live child inherits the replay's whole environment.
++    env = dict(os.environ)
+     env["TMPDIR"] = os.path.join(work, "tmp")
+     return env
+ 

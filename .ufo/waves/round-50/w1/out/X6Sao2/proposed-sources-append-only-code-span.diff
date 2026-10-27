@@ -1,0 +1,101 @@
+--- a/tools/sources-append-only.py
++++ b/tools/sources-append-only.py
+@@ -88,33 +88,65 @@
+     """A registry the guard cannot fully parse or grade; maps to exit 2."""
+ 
+ 
++def code_span_end(s, i):
++    r"""Index just past the code span opened by the backtick run at `i`, or -1.
++
++    A run of N backticks closes only at the next run of exactly N (CommonMark
++    0.31.2 6.2 inline code); a run with no such partner is literal text, not
++    an open span.
++    """
++    n = 0
++    while i + n < len(s) and s[i + n] == "`":
++        n += 1
++    k = i + n
++    while k < len(s):
++        if s[k] == "`":
++            m = 0
++            while k + m < len(s) and s[k + m] == "`":
++                m += 1
++            if m == n:
++                return k + m
++            k += m
++            continue
++        k += 1
++    return -1
++
++
+ def split_cells(line):
+     r"""Split one markdown table line into cells.
+ 
+     Honors `\|` escapes and treats `|` inside backtick code spans as literal.
+-    Returns the cell list excluding the outer pipes, or None if the line does
+-    not end its row (no closing unescaped pipe).
++    A backtick run is a code span only when a run of the same length closes it
++    (CommonMark 0.31.2 6.2); an unpaired run is literal text and does not hide
++    the delimiter after it. Returns the cell list excluding the outer pipes, or
++    None if the line does not end its row (no closing unescaped pipe).
+     """
+     s = line.strip()
+     if not s.startswith("|"):
+         return None
+     cells = []
+     buf = []
+-    in_code = False
+     i = 1  # skip leading pipe
+     while i < len(s):
+         ch = s[i]
+-        if ch == "\\" and i + 1 < len(s) and s[i + 1] == "|" and not in_code:
++        if ch == "\\" and i + 1 < len(s) and s[i + 1] == "|":
+             buf.append("\\")
+             buf.append("|")
+             i += 2
+             continue
+         if ch == "`":
+-            in_code = not in_code
+-            buf.append(ch)
+-            i += 1
++            end_span = code_span_end(s, i)
++            if end_span < 0:
++                j = i
++                while j < len(s) and s[j] == "`":
++                    j += 1
++                buf.append(s[i:j])
++                i = j
++                continue
++            buf.append(s[i:end_span])
++            i = end_span
+             continue
+-        if ch == "|" and not in_code:
++        if ch == "|":
+             cells.append("".join(buf).strip())
+             buf = []
+             i += 1
+@@ -134,16 +166,20 @@
+ 
+ def has_bare_pipe(line):
+     r"""True if `line` holds a `|` that split_cells would treat as a delimiter."""
+-    in_code = False
+     i = 0
+     while i < len(line):
+         ch = line[i]
+-        if ch == "\\" and not in_code and line[i + 1:i + 2] == "|":
++        if ch == "\\" and line[i + 1:i + 2] == "|":
+             i += 2
+             continue
+         if ch == "`":
+-            in_code = not in_code
+-        elif ch == "|" and not in_code:
++            end_span = code_span_end(line, i)
++            if end_span < 0:
++                i += 1  # an unpaired run is literal text, not an open span
++                continue
++            i = end_span
++            continue
++        if ch == "|":
+             return True
+         i += 1
+     return False

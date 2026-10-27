@@ -1,0 +1,316 @@
+--- a/pristine.py
++++ b/M01_fence_open_indent4.py
+@@ -100,7 +100,7 @@
+ TOOL = "tools/append-only-audit.py"
+ IDENT = ["-c", "user.name=r50c2-fixture", "-c", "user.email=r50c2-fixture@invalid", "-c", "commit.gpgsign=false"]
+ NSCEN = 12
+-FENCE_OPEN = re.compile(rb"^ {0,3}(`{3,}|~{3,})(.*)$")
++FENCE_OPEN = re.compile(rb"^ {0,4}(`{3,}|~{3,})(.*)$")
+ HEADER = "path\trule\tdeclared_at\tregion\tnote"
+ NEG3 = ("not append-only", "not append only", "no longer append", "never append-only")
+ NEGW = re.compile(r"(?:\b(?:not|never|no|nor|neither|non|isn't|aren't)\b|\bno longer\b)"
+--- a/pristine.py
++++ b/M02_fence_open_info_guard_off.py
+@@ -308,7 +308,7 @@
+     if not m:
+         return None
+     run = m.group(1)
+-    if run[:1] == b"`" and b"`" in m.group(2):
++    if run[:1] == b"`" and False:
+         return None
+     return run[:1], len(run)
+ 
+--- a/pristine.py
++++ b/M03_fence_close_strict_gt.py
+@@ -319,7 +319,7 @@
+     if len(ln) - len(s) > 3:
+         return False
+     k = len(s) - len(s.lstrip(ch))
+-    return k >= n and s[k:].strip(b" \t") == b""
++    return k > n and s[k:].strip(b" \t") == b""
+ 
+ 
+ def sections(lines):
+--- a/pristine.py
++++ b/M04_fence_close_no_trailing_ws.py
+@@ -319,7 +319,7 @@
+     if len(ln) - len(s) > 3:
+         return False
+     k = len(s) - len(s.lstrip(ch))
+-    return k >= n and s[k:].strip(b" \t") == b""
++    return k >= n and s[k:] == b""
+ 
+ 
+ def sections(lines):
+--- a/pristine.py
++++ b/M05_sections_h1_as_title.py
+@@ -334,7 +334,7 @@
+             fo = fence_open(b)
+             if fo is not None:
+                 fence = fo
+-            elif b.startswith(b"## "):
++            elif b.startswith(b"#"):
+                 t = b.decode("utf-8", "replace").rstrip()
+         out.append(t)
+     return out
+--- a/pristine.py
++++ b/M06_sections_fence_blind.py
+@@ -327,7 +327,7 @@
+     out, t, fence = [], None, None
+     for ln in lines:
+         b = ln.rstrip(b"\r")
+-        if fence is not None:
++        if False:
+             if fence_close(b, fence):
+                 fence = None
+         else:
+--- a/pristine.py
++++ b/M07_key_cr_blind.py
+@@ -341,7 +341,7 @@
+ 
+ 
+ def key(ln):
+-    return ln[:-1] if ln.endswith(b"\r") else ln
++    return ln
+ 
+ 
+ def split_lines(data):
+--- a/pristine.py
++++ b/M08_split_lines_keep_trailing_empty.py
+@@ -346,8 +346,6 @@
+ 
+ def split_lines(data):
+     s = data.split(b"\n")
+-    if s and s[-1] == b"":
+-        s.pop()
+     return s
+ 
+ 
+--- a/pristine.py
++++ b/M09_origins_births_only_off.py
+@@ -452,7 +452,7 @@
+                     break
+                 if bl.get(q) is not None:
+                     pkeys |= body_of(bl[q])[1]
+-            if pkeys is keys:
++            if False:
+                 continue
+             for ln, t in zip(body, sections(body)):
+                 k = key(ln)
+--- a/pristine.py
++++ b/M10_origins_parent_last_wins.py
+@@ -451,7 +451,7 @@
+                     pkeys = keys
+                     break
+                 if bl.get(q) is not None:
+-                    pkeys |= body_of(bl[q])[1]
++                    pkeys = body_of(bl[q])[1]
+             if pkeys is keys:
+                 continue
+             for ln, t in zip(body, sections(body)):
+--- a/pristine.py
++++ b/M11_origins_shortcut_removed.py
+@@ -447,9 +447,6 @@
+             body, keys = body_of(b)
+             pkeys = set()
+             for q in allpar[c]:
+-                if bl.get(q) == b:
+-                    pkeys = keys
+-                    break
+                 if bl.get(q) is not None:
+                     pkeys |= body_of(bl[q])[1]
+             if pkeys is keys:
+--- a/pristine.py
++++ b/M12_native_origin_conjunct_dropped.py
+@@ -487,7 +487,7 @@
+         psec = sections(pb)
+         org = origins(f)
+         native = sum(1 for pos, text in deleted_with_pos(repo, par, c, f)
+-                     if psec[pos - 1] in ex and org.get(key(text), set()) & ex)
++                     if psec[pos - 1] in ex)
+         if e["ungraded"] > native:
+             ok = False
+             detail.append(f"lane: event {c[:12]} {f} ungraded {e['ungraded']} > v5 natively exempt {native}")
+--- a/pristine.py
++++ b/M13_native_section_test_inverted.py
+@@ -487,7 +487,7 @@
+         psec = sections(pb)
+         org = origins(f)
+         native = sum(1 for pos, text in deleted_with_pos(repo, par, c, f)
+-                     if psec[pos - 1] in ex and org.get(key(text), set()) & ex)
++                     if psec[pos - 1] not in ex and org.get(key(text), set()) & ex)
+         if e["ungraded"] > native:
+             ok = False
+             detail.append(f"lane: event {c[:12]} {f} ungraded {e['ungraded']} > v5 natively exempt {native}")
+--- a/pristine.py
++++ b/M14_native_threshold_ge.py
+@@ -488,7 +488,7 @@
+         org = origins(f)
+         native = sum(1 for pos, text in deleted_with_pos(repo, par, c, f)
+                      if psec[pos - 1] in ex and org.get(key(text), set()) & ex)
+-        if e["ungraded"] > native:
++        if e["ungraded"] >= native:
+             ok = False
+             detail.append(f"lane: event {c[:12]} {f} ungraded {e['ungraded']} > v5 natively exempt {native}")
+         else:
+--- a/pristine.py
++++ b/M15_numstat_added_column.py
+@@ -470,7 +470,7 @@
+                           f"!= deleted {e.get('deleted')}")
+         if par is not None:
+             ns = git(repo, "diff", "--numstat", "--no-renames", par, c, "--", f).decode().split("\t")
+-            if not ns[1:] or not ns[1].isdigit() or int(ns[1]) != e.get("deleted"):
++            if not ns[1:] or not ns[1].isdigit() or int(ns[0]) != e.get("deleted"):
+                 ok = False
+                 detail.append(f"lane: event {str(c)[:12]} {f} deleted {e.get('deleted')} != numstat {ns[1:2]}")
+         ex = set()
+--- a/pristine.py
++++ b/M16_numstat_underreport_ok.py
+@@ -470,7 +470,7 @@
+                           f"!= deleted {e.get('deleted')}")
+         if par is not None:
+             ns = git(repo, "diff", "--numstat", "--no-renames", par, c, "--", f).decode().split("\t")
+-            if not ns[1:] or not ns[1].isdigit() or int(ns[1]) != e.get("deleted"):
++            if not ns[1:] or not ns[1].isdigit() or int(ns[1]) < e.get("deleted"):
+                 ok = False
+                 detail.append(f"lane: event {str(c)[:12]} {f} deleted {e.get('deleted')} != numstat {ns[1:2]}")
+         ex = set()
+--- a/pristine.py
++++ b/M17_fixture_arithmetic_dropped.py
+@@ -210,11 +210,7 @@
+         ok = code == want_exit and isinstance(j, dict)
+         why = f"exit {code} (want {want_exit})"
+         if isinstance(j, dict):
+-            off = [str(e.get("commit"))[:8] for e in j.get("events") or []
+-                   if e.get("graded", 0) + e.get("ungraded", 0) != e.get("deleted")]
+-            if off:
+-                ok = False
+-                why += f" graded+ungraded!=deleted at {off}"
++            off = []
+         if ok and ev is not None:
+             commit, want = ev
+             got = [e for e in j.get("events", []) if e.get("commit") == commit]
+--- a/pristine.py
++++ b/M18_lane_arithmetic_dropped.py
+@@ -464,10 +464,8 @@
+     for e in j.get("events") or []:
+         f, c = e.get("file"), e.get("commit")
+         par = (allpar.get(c) or [None])[0]
+-        if e.get("graded", 0) + e.get("ungraded", 0) != e.get("deleted"):
++        if False:
+             ok = False
+-            detail.append(f"lane: event {str(c)[:12]} {f} graded {e.get('graded')} + ungraded {e.get('ungraded')} "
+-                          f"!= deleted {e.get('deleted')}")
+         if par is not None:
+             ns = git(repo, "diff", "--numstat", "--no-renames", par, c, "--", f).decode().split("\t")
+             if not ns[1:] or not ns[1].isdigit() or int(ns[1]) != e.get("deleted"):
+--- a/pristine.py
++++ b/M19_order_expectation_loosened.py
+@@ -276,7 +276,7 @@
+         ce = f.commit({"SCORE.md": ["# s", "## Axes"] + L("nh", 30) + ["## Round 1"] + L("r", 3) + ["twin line"]},
+                       [cm])
+         code, j = run_tool(tree, f.d, ex_row, S, name)
+-        check(name, code, j, 0, (ce, {"deleted": 25, "graded": 0, "ungraded": 25, "status": "ungraded"}))
++        check(name, code, j, 0, (ce, {"deleted": 25, "ungraded": 25, "status": "ungraded"}))
+     # fence
+     f = Fx(S, "fence")
+     dated = L("fd", 25)
+--- a/pristine.py
++++ b/M20_fence_want_exit_0.py
+@@ -285,7 +285,7 @@
+     c2 = f.commit({"SCORE.md": ["# s", "## Axes"] + L("h", 3) + L("grow", 30) + ["## Round 1", "kept one",
+                                                  "```text", "## Axes", "```"]})
+     code, j = run_tool(tree, f.d, ex_row, S, "fence")
+-    check("fence", code, j, 1, (c2, {"deleted": 25, "graded": 25, "ungraded": 0, "status": "unrestored"}))
++    check("fence", code, j, 0, (c2, {"deleted": 25, "graded": 25, "ungraded": 0, "status": "unrestored"}))
+     # crlf-launder
+     f = Fx(S, "crlf-launder")
+     head5, dated = L("head", 5), L("cd", 25)
+--- a/pristine.py
++++ b/M21_crlf_fixture_lf_move.py
+@@ -293,7 +293,7 @@
+     def raw(lines_):
+         return b"".join(x if isinstance(x, bytes) else (x + "\n").encode() for x in lines_)
+     f.commit({"NOTES.md": NOTES_EX, "SCORE.md": raw(["# s", "## Axes"] + head5 + ["## Round 1"] + dated)})
+-    f.commit({"SCORE.md": raw(["# s", "## Axes"] + head5 + [(x + "\r\n").encode() for x in dated]
++    f.commit({"SCORE.md": raw(["# s", "## Axes"] + head5 + [(x + "\n").encode() for x in dated]
+                               + ["## Round 1", "round one kept"])})
+     c3 = f.commit({"SCORE.md": raw(["# s", "## Axes"] + head5 + L("regrow", 30) + ["## Round 1", "round one kept"])})
+     code, j = run_tool(tree, f.d, ex_row, S, "crlf-launder")
+--- a/pristine.py
++++ b/M22_order_parents_never_swapped.py
+@@ -272,7 +272,7 @@
+         ca = f.commit({"SCORE.md": ["# s", "## Axes"] + head24 + ["twin line", "## Round 1"] + L("r", 3)}, [c1])
+         cb = f.commit({"SCORE.md": ["# s", "## Axes"] + head24 + ["## Round 1"] + L("r", 3) + ["twin line"]}, [c1])
+         both = ["# s", "## Axes"] + head24 + ["twin line", "## Round 1"] + L("r", 3) + ["twin line"]
+-        cm = f.commit({"SCORE.md": both}, [cb, ca] if swap else [ca, cb])
++        cm = f.commit({"SCORE.md": both}, [ca, cb])
+         ce = f.commit({"SCORE.md": ["# s", "## Axes"] + L("nh", 30) + ["## Round 1"] + L("r", 3) + ["twin line"]},
+                       [cm])
+         code, j = run_tool(tree, f.d, ex_row, S, name)
+--- a/pristine.py
++++ b/M23_lane_bad_decls_neutralized.py
+@@ -394,7 +394,7 @@
+         detail.append(f"lane: tool JSON unreadable (exit {p.returncode}): {p.stderr[-200:]}")
+         return False
+     s = j.get("summary") or {}
+-    ok = p.returncode == 0 and s.get("bad_declarations") == 0 and len(j.get("events") or []) >= 5
++    ok = p.returncode == 0 and s.get("bad_declarations") is not None and len(j.get("events") or []) >= 5
+     detail.append(f"lane: tool exit {p.returncode} events {len(j.get('events') or [])} "
+                   f"bad_declarations {s.get('bad_declarations')} regressed {s.get('regressed')} "
+                   f"ungraded_lines {s.get('ungraded_lines')}")
+--- a/pristine.py
++++ b/M24_lane_events_gt5.py
+@@ -394,7 +394,7 @@
+         detail.append(f"lane: tool JSON unreadable (exit {p.returncode}): {p.stderr[-200:]}")
+         return False
+     s = j.get("summary") or {}
+-    ok = p.returncode == 0 and s.get("bad_declarations") == 0 and len(j.get("events") or []) >= 5
++    ok = p.returncode == 0 and s.get("bad_declarations") == 0 and len(j.get("events") or []) > 5
+     detail.append(f"lane: tool exit {p.returncode} events {len(j.get('events') or [])} "
+                   f"bad_declarations {s.get('bad_declarations')} regressed {s.get('regressed')} "
+                   f"ungraded_lines {s.get('ungraded_lines')}")
+--- a/pristine.py
++++ b/M25_met_or.py
+@@ -528,7 +528,7 @@
+             print(f"could-not-evaluate: {exc}")
+             return 2
+         fl = len(res) == NSCEN and all(res)
+-        met = fl and ll
++        met = fl or ll
+         lines = [f"tip={tip}", f"fixture={int(fl)} lane={int(ll)} scenarios={sum(res)}/{NSCEN} met={met}"]
+         lines += [f"detail: {d}" for d in detail]
+         text = "\n".join(lines)
+--- a/pristine.py
++++ b/M26_deleted_with_pos_args_swapped.py
+@@ -363,7 +363,7 @@
+ 
+ 
+ def deleted_with_pos(repo, parent, commit, path):
+-    raw = git(repo, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", "--text", parent, commit,
++    raw = git(repo, "diff", "--no-renames", "--no-color", "--no-ext-diff", "-U0", "--text", commit, parent,
+               "--", path)
+     out, ls, i = [], raw.split(b"\n"), 0
+     hunk = re.compile(rb"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@")
+--- a/pristine.py
++++ b/M27_native_pos_off_by_one.py
+@@ -487,7 +487,7 @@
+         psec = sections(pb)
+         org = origins(f)
+         native = sum(1 for pos, text in deleted_with_pos(repo, par, c, f)
+-                     if psec[pos - 1] in ex and org.get(key(text), set()) & ex)
++                     if psec[pos] in ex and org.get(key(text), set()) & ex)
+         if e["ungraded"] > native:
+             ok = False
+             detail.append(f"lane: event {c[:12]} {f} ungraded {e['ungraded']} > v5 natively exempt {native}")
+--- a/pristine.py
++++ b/M28_binder_neg3_emptied.py
+@@ -102,7 +102,7 @@
+ NSCEN = 12
+ FENCE_OPEN = re.compile(rb"^ {0,3}(`{3,}|~{3,})(.*)$")
+ HEADER = "path\trule\tdeclared_at\tregion\tnote"
+-NEG3 = ("not append-only", "not append only", "no longer append", "never append-only")
++NEG3 = ()
+ NEGW = re.compile(r"(?:\b(?:not|never|no|nor|neither|non|isn't|aren't)\b|\bno longer\b)"
+                   r"(?:[\s\-]+[\w'’]+){0,3}?[\s\-]+append[- ]only")
+ 

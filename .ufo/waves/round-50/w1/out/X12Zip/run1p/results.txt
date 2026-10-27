@@ -1,0 +1,122 @@
+tool /fast/scratch/hyaku/kama-r50/X12Zip/patched-tree/tools/kama-llamacpp-live.py
+tool_sha256 a4db2f07be9f8ef71729a018d76b19affdb8dbe4744a6e96cf5b53ad487d6e71
+
+case a_20000_tiny
+  archive_bytes: 10250240
+  result: refused
+  token: provenance-archive-too-many-members
+  seconds: 0.042
+  wall_seconds: 0.1
+  peak_rss_kb: 32668
+  hash_instances: 1
+  archive_hash_bytes: 10250240
+  member_hash_instances: 0
+  member_hash_bytes: 0
+  member_hashed_before_verdict: False
+  extractfile_calls: 0
+  member_bytes_read: 0
+  tar_walk: {'last_tell': 2097664, 'max_offset': 2097664, 'next_calls': 4102}
+  note: 20000 zero-length members then the real member; cap is 4096 entries
+
+case b_truncated_declared_size
+  archive_bytes: 5639
+  result: refused
+  token: provenance-archive-unreadable
+  seconds: 0.001
+  wall_seconds: 0.05
+  peak_rss_kb: 26500
+  hash_instances: 1
+  archive_hash_bytes: 5639
+  member_hash_instances: 0
+  member_hash_bytes: 0
+  member_hashed_before_verdict: False
+  extractfile_calls: 0
+  member_bytes_read: 0
+  tar_walk: {'last_tell': 9727, 'max_offset': 9728, 'next_calls': 8}
+  note: header declares the server size; data present is half of it, no EOF blocks
+
+case c2_gzip_seek_2g
+  archive_bytes: 9370979
+  result: refused
+  token: provenance-archive-walk-too-large
+  seconds: 0.005
+  wall_seconds: 0.05
+  peak_rss_kb: 28224
+  hash_instances: 1
+  archive_hash_bytes: 9370979
+  member_hash_instances: 0
+  member_hash_bytes: 0
+  member_hashed_before_verdict: False
+  extractfile_calls: 0
+  member_bytes_read: 0
+  tar_walk: {'last_tell': 512, 'max_offset': 2147484160, 'next_calls': 2}
+  note: header declares 2147483648 bytes for rel/other; zeros after it
+
+case c2_gzip_seek_512m
+  archive_bytes: 2342815
+  result: refused
+  token: provenance-member-absent
+  seconds: 0.223
+  wall_seconds: 0.28
+  peak_rss_kb: 28416
+  hash_instances: 1
+  archive_hash_bytes: 2342815
+  member_hash_instances: 0
+  member_hash_bytes: 0
+  member_hashed_before_verdict: False
+  extractfile_calls: 0
+  member_bytes_read: 0
+  tar_walk: {'last_tell': 536871424, 'max_offset': 536871424, 'next_calls': 3}
+  note: header declares 536870912 bytes for rel/other; zeros after it
+
+case c3_gzip_seek_past_eof
+  archive_bytes: 1171453
+  result: refused
+  token: provenance-archive-walk-too-large
+  seconds: 0.001
+  wall_seconds: 0.05
+  peak_rss_kb: 28076
+  hash_instances: 1
+  archive_hash_bytes: 1171453
+  member_hash_instances: 0
+  member_hash_bytes: 0
+  member_hashed_before_verdict: False
+  extractfile_calls: 0
+  member_bytes_read: 0
+  tar_walk: {'last_tell': 512, 'max_offset': 68719477248, 'next_calls': 2}
+  note: declares 68719476736 but holds 268435456; cost should stop at the stream end
+
+case c_gzip_zeros_huge
+  archive_bytes: 18741807
+  result: refused
+  token: provenance-member-absent
+  seconds: 0.009
+  wall_seconds: 0.06
+  peak_rss_kb: 27688
+  hash_instances: 1
+  archive_hash_bytes: 18741807
+  member_hash_instances: 0
+  member_hash_bytes: 0
+  member_hashed_before_verdict: False
+  extractfile_calls: 0
+  member_bytes_read: 0
+  tar_walk: {'last_tell': 512, 'max_offset': 0, 'next_calls': 1}
+  note: 4294967296 decompressed zero bytes, no tar header anywhere
+
+case d_valid_many
+  archive_bytes: 25413
+  result: accepted
+  returned: ['938193f2b66f6681bd933a717ccaee3c0b9848113b4497f79dbd2a60ea919068', 'ddf001e33b8d5441d81636625d6184103bb3b61a7b6dc2d7cd0f687ee06a2568']
+  seconds: 0.044
+  wall_seconds: 0.1
+  peak_rss_kb: 28720
+  hash_instances: 2
+  archive_hash_bytes: 25413
+  member_hash_instances: 1
+  member_hash_bytes: 8192
+  member_hashed_before_verdict: True
+  extractfile_calls: 1
+  member_bytes_read: 8192
+  tar_walk: {'last_tell': 2057216, 'max_offset': 2056704, 'next_calls': 4003}
+  note: positive control: 4001 members, correct archive sha, member sha and size
+

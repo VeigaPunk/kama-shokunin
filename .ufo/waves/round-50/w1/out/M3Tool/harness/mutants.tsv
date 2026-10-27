@@ -1,0 +1,52 @@
+id	category	sha256	change
+M01	fence_open	f9538ed9f655ad465e773d9a8ddee73456f8dd13009b954982d5de3791083fd0	4-space indent opens a fence (spec: 0-3)
+M02	fence_open	a580a8796e730921b6f76fb64974972a6826361372fd1bd85984e5b177e0de55	any indentation opens a fence
+M03	fence_open	55ac018a80a02176e2d13ae7cd5439b2700281391b6fea46ad83bd927d78bfc4	2-char run opens a fence (spec: >=3)
+M04	fence_open	185731d70e5280192be181c472d5a8b61d294be5a05d5ed5c5896c2989235d04	4+ chars required to open (3-char fences no longer open)
+M05	fence_open	27a57059b25b1c837a4ca4f5d982dcee4d7953b8292471e0c4d71e2400f1cd62	backtick fence with backtick in info string opens (spec: may not)
+M06	fence_open	5b5174872ee971bbeec9406a4e2255e41d261acfedebc3cc8e501fc1e8dd1a65	polarity flipped: backtick fence opens only with a backtick in info
+M07	fence_open	d0847b52f86e94f11f604f4272e54c8e1738cd53b6d4871d061b5400643f7fcf	tilde fences never open
+M49	fence_open	c2d93cac477f62f183efaff8dc3d428e97d9ee5ab433e90eb82124181085e905	alternation order swapped (expected equivalent)
+M08	fence_close	f70c8e95fc0e311836383b20d84932d68755b1b8259e01d005b5c2ec74e3e7f0	3-space-indented line cannot close (spec: up to three)
+M09	fence_close	c768c6ac23a6e613d251aa1382a8ab7dd33bd88a30645b3acaccb6df635ddcd2	any indentation closes a fence
+M10	fence_close	9242307a60ae2e1b5541893f737c044ab4fd786c3f5c1dec18cbeaac819b8d15	equal-length closer fails (spec: at least as many)
+M11	fence_close	2dc066ee504c2b09f6b1815b2ddab8887986ecb8dcfdd2a61fa1571d60b56ead	longer closer fails (spec: at least as many)
+M12	fence_close	c07f266af79f9ef660e14fba0c0a270f92d93e563396e880d08cc4cee2e011e8	either char closes either fence (spec: same char)
+M13	fence_close	4b9e06572f9a191adc7a97ac296872d297d5e7b92f34c028c801d2cf6d8c312a	trailing junk after closing run still closes
+M14	fence_close	27eb405747ae6b4321cec3db225c65ac1a5cba2d92e002db8e3253f38790359c	tab after closer is not allowed (spec allows space or tab)
+M50	fence_close	4dec69686d69a59a65549bf4c16295e76f56c8698b50b0af6c7c70a475c8ed59	4-space-indented line still closes (spec: up to three)
+M15	sections	d0eb595a91e1e938279f9f0529fa87ab729cffc0e7a6654a936f32b6fac4985a	F4 reintroduced: ## inside a fence re-titles following lines
+M16	sections	0d2e43f196c58e4cdf38afa79218f8b356efd76b7f9e9a4d7fc348eed41cd3b5	elif -> if inside else-branch (expected equivalent)
+M17	sections	b00f03dd88be1f0f66c192e90db968f46e761a6644a9ced50d8a0b6bd2fa8a6a	heading tested before fence-open (expected equivalent: ## cannot open)
+M18	sections	44d21a4bb8dbfeed84e65a0202e0520225ad31a2655a863e695fc785efd3243b	CR not stripped before fence/heading tests: CRLF fences never close
+M19	sections	9ec544aa62a58c9ff6e81a860f526e1ba33335e3e7ad53492b782fd5d33b40e6	##x and ### lines also become titles
+M20	sections	ae73dd098503476932d1d34c74372e3ed1bbd4a86c5310be1869642b85a502d8	indented ## lines become titles
+M21	sections	4c1a8b116c2b86d90e32694b3cbd938fe4675f0faa09ad94985353b8c66c108a	fence lines get no sections entry: title list misaligns with body
+M22	sections	50243900ac975ec051e9f9bd302d7ab1d3585e78f5bf7d356a0f5a28adcd0833	title keeps trailing blanks/tabs (spec strips)
+M23	key	d9a682024f4439a51016266a6a731dbb105101140c2a763b69bafa4f7b33d103	F5 reintroduced: raw bytes as origin key
+M24	key	10c5aff993c0dcf8fa483fda0f8a5a5eff51ab19cf001d1aef6a4820cd5cae9f	all trailing CRs removed (spec: exactly one)
+M25	key	42b07e41bcb949ad8b2c290f2900f05ef51a57c80ea354cc5472431603403fdf	trailing blanks folded into the key as well
+M26	key	0ca2a5f1796cf30e3685057a76caf6b54dfdbb55f3217cca620f8ad8f6b95b41	key truncated to 64 bytes (collision-prone)
+M27	origins	f9c0d09cc374a65a2554838cf671733cee79b60d7035b75b1ebfb26f044b11cd	F3 reintroduced: last rev-list birth wins instead of union
+M28	origins	0305c9b62115147045a9fc62d60cf2314daea2bf2fa5fa0b5b1fd940f2cc51a7	birth polarity inverted: only keys a parent already holds are births
+M29	origins	9687d985143345712c35a10e8e51adea2528d7f38c48b6427ee2ba621a465743	parents ignored: every blob is a birth of all its keys
+M30	origins	9b53b80d9b891169e7078b2100d5f85e2b21ff6c2683e7657fac0516cf48d137	identity skip weakened to equality (expected equivalent)
+M31	origins	0a2307f6b3b1af5a2946f7a8036f4b146ec8b4c464d4844c2cafaacceae8ff9c	unchanged-blob skip removed (expected equivalent: per-key test)
+M32	origins	765966fd7641d04f75b31b7ecb33bd3d813aaac6fbce4755ffb8cc5c3cab9ffd	early break on identical parent blob removed (expected equivalent)
+M33	origins	db63f41c748e264da5e15ecc48da217cd72eff97812b47205f39af7f165c98b6	absent-blob skip removed (expected equivalent: empty body)
+M34	origins	7ea499ba2d07aaf0cca27370c8514ef2085bd17ea81f1ac9949ff94a9b276585	birth scan order reversed (equivalent under union; contrast M27)
+M35	origins	3bac481a9719dff40aa75c75488639c29c45692fc36a48ff20cf84f848715527	section titles shifted one line earlier in origin birth scan
+M36	origins	28cbe9137ce7bf03da7bec7d072c49f0474124032b594ca6b50b4b95680d868f	zip operands swapped (str/bytes type confusion)
+M37	origins	4450481a007d38edad0c65b10d7babb67d40c748445b862ff2157cf1785e22ee	REPAIR-MUTANT: union ALL parents (line 470 keeps only parts[1]); predicted equivalent on counter fixtures = latent defect unpinned
+M38	body_of	8232970f5125a707e5a75e7f21c1de97bbd287a9a61511c81343489d8389eadf	keyset holds raw lines, not keys (CRLF parent lines -> phantom births)
+M39	body_of	f159d80a5aed78bc2cbbe5c7c00442f06d40e78f51b272d99c95aec04729651b	keyset always empty: every blob is a birth of all its keys
+M40	body_of	6be58bcf26a873f9f4c8fc7be7de7d068793733100c4a22434fbd0405662a848	cache tuple swapped (crash on key(str))
+M41	ungraded	881b7bd1cf44d877910793139292efc52557af371fe7526a4897bc5a3ea96623	origin clause dropped: v3 carve-out (selftest pins it)
+M42	ungraded	276470641617ce020840882287a2360cd409ac2a2e9b875fdeb0c9097f289e93	parent-section eligibility dropped: exempt origin ungrades anywhere
+M43	ungraded	f1a006324e2c15f3a012dac922a390fc550ddeb588f20f5d5152eef0076e4c02	origin must intersect eligible titles, not all exempt titles
+M44	ungraded	08273d7470fd769d301bdaa9b2b00c172c6b66c885bda181e3cb6364783a1a94	eligibility requires strict growth (spec: >= parent count)
+M45	ungraded	60829d2d0ef3f95365a5087b36c5aa73769d91c6519776597abbab0cb1de8434	deleted line attributed to next line's section (off-by-one)
+M51	ungraded	9f9964ee364946d1a4ccd344da333a5dbb980223f095720d9313f78c10da4aaa	origin clause negated: only non-exempt-born lines ungraded
+M46	definition	b56c4a5b98c0865daf6d4d334d08718decd52180b2c8051cc1220ae5a0d76240	receipt claims v4 semantics (predicted survivor: nothing pins it)
+M47	selftest	ef506ae928434a23d75b6a136e1011ba68c3ec4455cfd98a05acfa8776a5f481	v4 launder case swapped for a weaker case; registration unpinned
+M48	selftest	1d953d04001e7da5bbce30354948b423463bdbad7af5f6439acc389f385b36ca	v4 origin case de-registered; case count unpinned
