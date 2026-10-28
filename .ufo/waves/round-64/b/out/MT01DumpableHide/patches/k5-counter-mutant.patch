@@ -1,0 +1,31 @@
+diff --git i/tools/round64-c1-counter.py w/tools/round64-c1-counter.py
+index eace0211..5e0f9066 100755
+--- i/tools/round64-c1-counter.py
++++ w/tools/round64-c1-counter.py
+@@ -729,6 +729,8 @@ def score(receipt, witness, binding):
+     if mine != theirs:
+         fails.add('bind_claim')
+     td = bnd.get('teardown') or {}
++    if bnd.get('stopped_answer') is not None:
++        fails.add('bind_answers_while_held_stopped')
+     if not (td.get('gone') is True and td.get('port_closed') is True):
+         fails.add('teardown_observed')
+     return {'met': not fails, 'fails': fails}
+@@ -907,6 +909,17 @@ def witness_run(work, label, tool_path, server_path, model_path, reqs,
+                 'model_sha256': hold_doc.get('model_sha256'),
+                 'alias': hold_doc.get('alias')}
+             binding = {'raw_a': raw_a, 'raw_b': raw_b}
++            # K5 mutant: whoever answers must be the held pid - stop it, expect silence
++            try:
++                os.kill(hold_doc.get('pid'), signal.SIGSTOP)
++                binding['stopped_answer'] = http(port, '/health', timeout=3.0)[0]
++            except OSError:
++                binding['stopped_answer'] = 'no-pid'
++            finally:
++                try:
++                    os.kill(hold_doc.get('pid'), signal.SIGCONT)
++                except OSError:
++                    pass
+             break
+         if proc.poll() is not None:
+             notes.append('tool exited before hold.json')

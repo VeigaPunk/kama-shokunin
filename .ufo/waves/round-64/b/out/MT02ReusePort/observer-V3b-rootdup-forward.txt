@@ -1,0 +1,30 @@
+observe.py run (verbatim stdout) against tools/kama-completion-live.py at commit 7b7a9eb3 (FORGE_NET='rootdup', FORGE_NONDUMP=False, FORGE_ANSWER='forward'); clone scratch only.
+[V3b-rootdup-forward] tool pid=2059157 hold.json=present tool_rc=None
+[V3b-rootdup-forward] hold.json port=35457 pid=2059502 schema=kama-completion-hold/v1
+[V3b-rootdup-forward] listeners(35457) = [(1879429083, True)]
+[V3b-rootdup-forward] holder_pids = [2059502] unreadable_own_uid = [1500, 2911361]
+[V3b-rootdup-forward]   holder pid=2059502 exe=/home/vgpnk/.local/opt/llama-b11755/llama-server exe_sha=b6a31a8e9761 argv0=/home/vgpnk/.local/opt/llama-b11755/llama-server ppids=[2059157, 2058886, 923625, 923390, 923365, 1622, 1617, 1494]
+[V3b-rootdup-forward] forge-helper pid=2060954 owner_uid=0 me=1000 fd_table=NOT readable (Permission denied) in_holder_pids=False in_unreadable_own=False
+[V3b-rootdup-forward] forge-helper pid=2061073 owner_uid=0 me=1000 fd_table=NOT readable (Permission denied) in_holder_pids=False in_unreadable_own=False
+[V3b-rootdup-forward] tool fd dir: readable 4 fds
+[V3b-rootdup-forward] ss -ltnp :35457 -> LISTEN 0      512    127.0.0.1:35457 0.0.0.0:* users:(("llama-server",pid=2059502,fd=3)) |
+[V3b-rootdup-forward] 20x POST /tokenize to 127.0.0.1:35457 answered by: {'canned {"status":"ok"}': 0, 'real tokenize': 20, 'error': 0}
+[V3b-rootdup-forward] released
+[V3b-rootdup-forward] receipt verdict=REQUEST_OK setup_error=None listener_holders=[{'exe': '/home/vgpnk/.local/opt/llama-b11755/llama-server', 'exe_sha256': 'b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804', 'pid': 2059502}]
+[V3b-rootdup-forward] receipt checks failing=[]
+[V3b-rootdup-forward] tool exit rc=0; listeners after exit = []
+
+Earlier observer run V1 (same script, FORGE_NET='dup', dumpable), verbatim key lines:
+[V1-dup-fwd-dumpable] listeners(42795) = [(1862984300, True)]
+[V1-dup-fwd-dumpable] holder_pids = [1776460, 1776866] unreadable_own_uid = [1500, 1293346, 1618428, 2911361]
+[V1-dup-fwd-dumpable] ss -ltnp :42795 -> LISTEN 0      512    127.0.0.1:42795 0.0.0.0:* users:(("llama-server",pid=1776866,fd=3),("python3",pid=1776460,fd=5)) |
+
+Earlier observer run V2 (FORGE_NET='dup', FORGE_NONDUMP=True), verbatim key lines:
+[V2-dup-fwd-nondumpable] listeners(34507) = [(1863718908, True)]
+[V2-dup-fwd-nondumpable] holder_pids = [2004266] unreadable_own_uid = [1500, 1293346, 1618428, 2003559, 2911361]
+[V2-dup-fwd-nondumpable] tool fd dir readable? NO: Permission denied | stat uid of /proc/<tool> = 1000 me = 1000
+
+Earlier observer run V4 (FORGE_NET='rootdup', FORGE_ANSWER='canned'), verbatim key lines:
+[V4-rootdup-canned] listeners(38737) = [(1868927061, True)]
+[V4-rootdup-canned] holder_pids = [3512011] unreadable_own_uid = [1500, 2911361, 3371594]
+[V4-rootdup-canned] 20x POST /tokenize to 127.0.0.1:38737 answered by body: {'{"status":"ok"}': 7, ...real tokenize bodies: 13...}

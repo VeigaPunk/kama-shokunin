@@ -1,0 +1,74 @@
+Verbatim outputs of tools/observe.py and tools/observe2.py (scratch helpers; they hold the forged tool
+at the named clone commit open via the hold window, read the holder's procfs, then release it).
+Clone tip per variant: see report table. Environ values are NOT printed except HOME.
+
+--- observe.py v1_bindns
+holder pid 2756800 tool pid 2756636 ppid 2756636 TracerPid 0
+holder mnt ns mnt:[4026533765] counter mnt ns mnt:[4026531832]
+maps line inode 1417063249 path /home/vgpnk/.local/opt/llama-b11755/libllama-server-impl.so
+counter stat inode 43271225
+environ key count 5 extra keys (not in base allowlist): ['PWD', 'SHLVL']
+served id forgedid-DFMaL4p
+tool rc 0
+
+--- observe.py v2_memid
+holder pid 2758977 tool pid 2758799 ppid 2758799 TracerPid 0
+holder mnt ns mnt:[4026531832] counter mnt ns mnt:[4026531832]
+maps line inode 43271225 path /home/vgpnk/.local/opt/llama-b11755/libllama-server-impl.so
+counter stat inode 43271225
+environ key count 3 extra keys (not in base allowlist): []
+served id forgedid-ARPewPD
+tool rc 0
+
+--- observe.py v3_extrakey
+holder pid 2762459 tool pid 2762238 ppid 2762238 TracerPid 0
+holder mnt ns mnt:[4026531832] counter mnt ns mnt:[4026531832]
+maps line inode 43271225 path /home/vgpnk/.local/opt/llama-b11755/libllama-server-impl.so
+counter stat inode 43271225
+environ key count 4 extra keys (not in base allowlist): ['KAMA_R64_PROBE']
+served id chatcmpl-NtbalNR
+tool rc 0
+
+--- observe.py v6_seize_memid (first observation)
+holder pid 2712211 tool pid 2711964 ppid 2711964 TracerPid 2712234
+holder mnt ns mnt:[4026531832] counter mnt ns mnt:[4026531832]
+maps line inode 43271225 path /home/vgpnk/.local/opt/llama-b11755/libllama-server-impl.so
+counter stat inode 43271225
+served id forgedid-Xz8lbeh
+tool rc 0
+(TracerPid 2712234 is a thread of the tool process: the tracer thread, not the tool's main pid.)
+
+--- observe.py v10_etc_preload (after the cp fix)
+holder pid 3462652 tool pid 3462377 ppid 3462377 TracerPid 0
+holder mnt ns mnt:[4026533765] counter mnt ns mnt:[4026531832]
+maps line inode 43271225 path /home/vgpnk/.local/opt/llama-b11755/libllama-server-impl.so
+preload maps line inode 2013298643 path /usr/lib/libpcprofile.so
+counter stat inode libpcprofile 13506928
+counter stat inode 43271225
+environ key count 5 extra keys (not in base allowlist): ['PWD', 'SHLVL']
+served id forgedid-e2SJhTB
+tool rc 0
+
+--- observe2.py v2_memid (memory vs disk at the patched offset 0x3098bc, read by the tool's parent)
+mem bytes at chatcmpl offset: b'forgedid-' disk bytes: b'chatcmpl-' mem==disk: False perms r--p
+environ HOME value: ['HOME=/home/vgpnk'] LD_X key present: False
+TracerPid 0
+
+--- observe2.py v5_envval
+mem bytes at chatcmpl offset: b'chatcmpl-' disk bytes: b'chatcmpl-' mem==disk: True perms r--p
+environ HOME value: ['HOME=/home/vgpnj'] LD_X key present: False
+TracerPid 0
+
+--- observe2.py v4_envkey
+mem bytes at chatcmpl offset: b'chatcmpl-' disk bytes: b'chatcmpl-' mem==disk: True perms r--p
+environ HOME value: [] LD_X key present: True
+TracerPid 0
+
+--- symlink-farm experiment (no tool involved): farm/llama-server -> pinned symlink, farm copy of patched libllama-server-impl.so
+farm pid maps libllama-server-impl path: /home/vgpnk/.local/opt/llama-b11755/libllama-server-impl.so (pinned, not the farm copy)
+readlink /proc/<pid>/exe: /home/vgpnk/.local/opt/llama-b11755/llama-server
+served id: chatcmpl-EbiZuvuyIY0tHo3OX4cCmwB7Ex387ek8 (unpatched)
+
+--- bind-namespace experiment by hand (before the tool was edited)
+holder mnt ns mnt:[4026533765]; maps inode 1417063249 for libllama-server-impl; exe sha b6a31a8e97615a2a
+served id forgedid-oKel12Rn2iRjZ7nQqRH3QVlKM2XqbSNF; TracerPid 0; Uid 1000

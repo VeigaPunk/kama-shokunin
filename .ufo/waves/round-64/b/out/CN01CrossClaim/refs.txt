@@ -1,0 +1,74 @@
+# CN01CrossClaim evidence: line refs read from f6a4ea9a8b5a876d685b08e7e582ec0723412a4a blobs (git show, read-only)
+## tools/round64-c1-counter.py
+48:MODEL_SHA = '270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d'
+49:SERVER_SHA = 'b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804'
+58:EXPECT_FAMILIES = {
+81:LIBS = {
+238:def listeners(port):
+258:def holder_pids(inodes):
+382:        'unreadable_own': sorted(
+415:        and not raw.get('unreadable_own')
+470:    out['hold_fresh'] = bool(
+471:        hs and is_int(mt) and is_int(t0) and mt > t0 and is_int(tt)
+482:def holders_signature(raw):
+631:def probe_fails(p, ref, idx):
+668:        f.add('live_ref_text')
+673:        f.add('live_ref_usage')
+717:    raw_a, raw_b = bnd.get('raw_a'), bnd.get('raw_b')
+721:    if holders_signature(raw_a) != holders_signature(raw_b) or not raw_b:
+751:def draw_probes(rng, nonce):
+806:def reference_run(server, model, reqs, work):
+856:def witness_run(work, label, tool_path, server_path, model_path, reqs,
+898:            raw_a = collect(port, hold_doc, mtime, t0_ns, proc.pid,
+901:            raw_b = collect(port, hold_doc, mtime, t0_ns, proc.pid,
+1349:    def swap_answer(w):
+1355:    add('runfield', 'live_ref_text', wm=swap_answer)
+1359:    add('runfield', 'live_ref_usage', wm=lambda w: wm(
+1379:        lambda r: r.update({'unreadable_own': [999999]})))
+1435:    reg = blob(repo, tip, 'registry/endpoint-consumers.tsv')
+1436:    if reg:
+1461:    os.makedirs(work, exist_ok=True)
+1481:        rng = random.Random(int.from_bytes(os.urandom(8), 'big'))
+1482:        probe_nonce = 'r64p' + hashlib.sha256(os.urandom(8)).hexdigest()[:8]
+## tools/kama-context-capacity.py
+122:        return None
+126:        return None
+204:    return None
+218:def live_llama_server_pids():
+220:        proc = subprocess.run(['pgrep', '-x', 'llama-server'],
+223:        return None
+241:def wait_for_host_idle(timeout):
+250:        if pids is None:
+256:                seen.append(pid)
+258:            return False, round(time.monotonic() - t0, 3), seen
+498:                return None
+503:            return None
+510:            return None
+511:    return None
+756:        if receipt['model_sha256'] != MODEL_SHA:
+791:            receipt['host_idle'] = {'ok': idle_ok, 'waited_s': waited,
+792:                                    'other_pids_seen': seen,
+813:            'all_ports_closed': all(
+833:            'all_ports_closed': all(
+## tools/round63-c2-counter.py
+215:def verdict_fn(out, rc, dead, pat):
+217:    return (not dead) and bool(pat) and pat in out and rc == 0
+229:def refusal_fn(out, rc, dead, pat):
+241:            and (not vfn(out, 1 if rc == 0 else 0, dead, pat)))
+247:    return not (pat in mut and rc == 0 and not dead)
+259:                              vfn=lambda o, rc, d, p: rc == 0 and not d))
+293:        if row['quote'] not in prefix or len(row['quote']) < 8:
+336:def pgrep_foreign():
+352:    before = pgrep_foreign() if 'alt' in tpl else None
+354:        p = subprocess.run(['bash', '-c', cmd], capture_output=True,
+364:        after = pgrep_foreign()
+365:        if before and after:
+417:    muts['quote'] = j(cells(l)[0] + '\tNOT-A-PREFIX-QUOTE\t'
+466:def selfdesc_mismatches(tip_tree, repo, tip, env):
+479:def checkout_tip(repo, tip, work):
+481:    if os.path.isdir(tree):
+482:        return tree
+490:    return tree if tar.returncode == 0 and archive_rc == 0 else None
+528:    met = (baseline and selfdesc == 0
+## tools/round42-selfdesc-reconcile.py
+269:    mism = sum(c.values())

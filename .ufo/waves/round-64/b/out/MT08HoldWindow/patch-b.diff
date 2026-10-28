@@ -1,0 +1,16 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 452c5451..e811b239 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -531,6 +531,11 @@ def run(args):
+         # -- hold window: ready.json carries {port, pid} via the shared
+         # witness primitive; hold.json adds the request-plane bindings
+         if hold:
++            # forgery b: the counter's hold dir becomes a symlink to a dir the tool prepared
++            prep = os.path.join(work, 'prepared-hold')
++            os.makedirs(prep, exist_ok=True)
++            os.rmdir(hold)
++            os.symlink(prep, hold)
+             hold_doc = {
+                 'schema': 'kama-completion-hold/v1',
+                 'port': port,

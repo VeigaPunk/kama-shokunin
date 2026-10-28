@@ -1,0 +1,674 @@
+{
+  "schema": "ufo-swarm-wave-dispatch-v1",
+  "wave": null,
+  "policy": {
+    "source": "config",
+    "maxLanes": 256,
+    "minLanes": 16,
+    "waveMinLanes": 32,
+    "waveMaxLanes": 64,
+    "declaredMaxLanes": 256,
+    "hardCeiling": 256,
+    "rampBatchSize": 5,
+    "rampIntervalMs": 700,
+    "globalRunnerCeiling": 1056
+  },
+  "counts": {
+    "spawn": 42,
+    "resume": 0,
+    "total": 42
+  },
+  "registry": {
+    "schema": "ufo-swarm-registry-v1",
+    "path": ".ufo/waves/round-64/b/swarm-registry.json",
+    "reportDir": ".ufo/waves/round-64/b",
+    "members": {
+      "X01C2Counter": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": "Build item (C2): write tools/round64-c2-counter.py in your scratch clone, starting from tools/round63-c2-counter.py (read it and the wave-63 reports MT20, MT21, RV03C2CounterCode, RV04RegistryLedger, KR03DoNothing first). C2 predicate fields (freeze.txt): covered=12/12 mismatches=0; pinned=13/13 (sha256 table of the 12 bound tools + tools/round42-selfdesc-reconcile.py embedded in the counter, compared with the tip blobs); regress_flipped=12/12 (per row, a planted one-line regression - table registry/capability-regress-r64.tsv, TAB-separated columns cap, tool_path, find, replace, find must occur exactly once - applied to a scratch copy of the tip tree, the row's template re-run there, verdict must flip true->false while the unmutated run stays true); printers_rejected=12/12 (a 'printer' per row - `python3 -c print(pattern)` substituted for the bound tool, exit 0 - must be refused as not sensitive); idle_ok=1 (context-capacity row accepts host-busy only when the refusal receipt's host_idle.other_pids_seen is a subset of (pgrep llama-server set before U set after the run) and the pids present in BOTH pgreps are a subset of other_pids_seen - this tolerates churn from other live runs but cannot be satisfied by an invented set; or the idle outcome exit 0 + pattern `all_ports_closed\": true`; each outcome has a control); work_reuse_refused=1 (a second run whose --work already holds a tip tree exits 2 with `work-reused` before scoring anything); closure_ptr=1 and reconciler mismatches=0 (tools/round42-selfdesc-reconcile.py gains a conjunct: the calibration row's `latest outside closure corpus/lessons/round-N-verifier-spotcheck.md` names the newest such file at the tip; a planted stale pointer turns the reconciler false); tally_disclosed=8/8 (python3 tools/shortcut-tally.py --repo R --rev T --rounds 56-63 prints a status other than no-disclosure for every round while its selftest keeps one fixture that must still print no-disclosure; base 1/8); control families all rejected by their named failure and credited only while the unmutated baseline is met. Base-tip run of the finished counter must print met=False. Output: ONE line, `key=value` fields, ending `met=True|False`, exit 0 iff met. Every scratch path under --work; honour TMPDIR; never write /tmp. Also write registry/capability-claims-r64.tsv (same 12 rows as r63 with run templates retargeted; keep the quote/binding columns; add an `outcomes` notion for context-capacity-receipt) and a draft SCORECARD block `Capabilities - canonical list as of round 64` (the same twelve rows, byte-identical to the r63 list text) in your out dir. Consume the regression table from the four executors X02..X05 by READING registry/capability-regress-r64.partN.tsv from their out dirs under .ufo/waves/round-64/b/out/X02Regress1..X05Regress4/ if present at your end; otherwise write a 12-row stand-in table yourself and say so. The reconciler conjunct and tally reader come from X06Reconciler and X07Tally (same out-dir pattern); your counter must call both as subprocesses at the tip and print their fields. Deliver: counter, registry file(s), SCORECARD block, a controls table (family, what is mutated, the failure it must produce), and the counter's output line at your clone tip with every other part stubbed at base (fields below their targets, met=False) plus a note of what remains for met=True. Do not touch the reconciler or tally files yourself.",
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "build C2 instrument"
+      },
+      "X02Regress1": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": "Build item (C2 sensitivity): for each of these capabilities - sources-registry (tools/sources-append-only.py --selftest), ollama-offline-evidence-replay (tools/kama-ollama-evidence.py --selftest), live-llamacpp-lifecycle (tools/kama-llamacpp-live.py with the registry row template) - find ONE single-line source edit (a comparison flipped, a constant changed, a check dropped) in the bound tool that keeps the file importable but makes the row's run template (registry/capability-claims-r63.tsv, run column; %T = scratch tree of the tip, %S scratch, %R repo, TIPREV tip) stop satisfying its pattern or exit non-zero, WITHOUT merely deleting the pattern string. Prove each regression flips the verdict by running the template on the unmutated and the mutated copy in your clone (pattern present and exit 0 -> pattern absent or exit != 0), and prove the find string occurs exactly once. Deliver registry/capability-regress-r64.part1.tsv in your out dir (TAB-separated: cap, tool_path, find, replace; no header; no tabs inside cells), plus a per-row evidence table (unmutated line, mutated line, exit codes). Rows whose live target cannot be made to fail by a one-line edit must be reported with the reason instead of invented. Do not edit any lane file.",
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "planted regressions"
+      },
+      "X03Regress2": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": "Build item (C2 sensitivity): for each of these capabilities - gguf-declared-identity-replay (tools/gguf-identity.py --selftest), context-capacity-receipt (tools/kama-context-capacity.py; the regression must make its outcome neither host-busy nor idle-pass), instrument-agreement (tools/instrument-agreement.py --selftest) - find ONE single-line source edit (a comparison flipped, a constant changed, a check dropped) in the bound tool that keeps the file importable but makes the row's run template (registry/capability-claims-r63.tsv, run column; %T = scratch tree of the tip, %S scratch, %R repo, TIPREV tip) stop satisfying its pattern or exit non-zero, WITHOUT merely deleting the pattern string. Prove each regression flips the verdict by running the template on the unmutated and the mutated copy in your clone (pattern present and exit 0 -> pattern absent or exit != 0), and prove the find string occurs exactly once. Deliver registry/capability-regress-r64.part2.tsv in your out dir (TAB-separated: cap, tool_path, find, replace; no header; no tabs inside cells), plus a per-row evidence table (unmutated line, mutated line, exit codes). Rows whose live target cannot be made to fail by a one-line edit must be reported with the reason instead of invented. Do not edit any lane file.",
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "planted regressions"
+      },
+      "X04Regress3": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": "Build item (C2 sensitivity): for each of these capabilities - pin-watch (tools/pin-watch.py selftest), digest-ledger (tools/digest-ledger.py scan), hexrun-census (tools/hexrun-census.py scan) - find ONE single-line source edit (a comparison flipped, a constant changed, a check dropped) in the bound tool that keeps the file importable but makes the row's run template (registry/capability-claims-r63.tsv, run column; %T = scratch tree of the tip, %S scratch, %R repo, TIPREV tip) stop satisfying its pattern or exit non-zero, WITHOUT merely deleting the pattern string. Prove each regression flips the verdict by running the template on the unmutated and the mutated copy in your clone (pattern present and exit 0 -> pattern absent or exit != 0), and prove the find string occurs exactly once. Deliver registry/capability-regress-r64.part3.tsv in your out dir (TAB-separated: cap, tool_path, find, replace; no header; no tabs inside cells), plus a per-row evidence table (unmutated line, mutated line, exit codes). Rows whose live target cannot be made to fail by a one-line edit must be reported with the reason instead of invented. Do not edit any lane file.",
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "planted regressions"
+      },
+      "X05Regress4": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": "Build item (C2 sensitivity): for each of these capabilities - append-only-audit (tools/append-only-audit.py --selftest), live-receipt-replay (tools/kama-live-replay.py --selftest), live-ollama-lifecycle (tools/kama-ollama-live.py with the registry row template) - find ONE single-line source edit (a comparison flipped, a constant changed, a check dropped) in the bound tool that keeps the file importable but makes the row's run template (registry/capability-claims-r63.tsv, run column; %T = scratch tree of the tip, %S scratch, %R repo, TIPREV tip) stop satisfying its pattern or exit non-zero, WITHOUT merely deleting the pattern string. Prove each regression flips the verdict by running the template on the unmutated and the mutated copy in your clone (pattern present and exit 0 -> pattern absent or exit != 0), and prove the find string occurs exactly once. Deliver registry/capability-regress-r64.part4.tsv in your out dir (TAB-separated: cap, tool_path, find, replace; no header; no tabs inside cells), plus a per-row evidence table (unmutated line, mutated line, exit codes). Rows whose live target cannot be made to fail by a one-line edit must be reported with the reason instead of invented. Do not edit any lane file.",
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "planted regressions"
+      },
+      "X06Reconciler": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": "Build item (C2 closure pointer): in your clone extend tools/round42-selfdesc-reconcile.py with a conjunct `closure_ptr`: the SCORECARD.md calibration row (the `| calibration |` row of `## Axes`) names `corpus/lessons/round-N-verifier-spotcheck.md` as its latest outside closure; the conjunct is true only when N equals the numerically largest N among corpus/lessons/round-*-verifier-spotcheck.md at the tip (derive from git blobs at the tip like the rest of the tool); print it in the tool's output line (`closure_ptr=0|1`) and count a wrong pointer as a mismatch. Add a selftest-or-fixture proof that a planted stale pointer (row says round-57 while a round-63 file exists) makes the tool report mismatches>=1 and the corrected row makes it 0 (a check that cannot fail is not a check). Also write the exact replacement text of the SCORECARD calibration row's `latest outside closure` clause (and any other clause the reconciler flags at tip) as a patch in your out dir; do not edit SCORECARD.md in the lane. Report the tool's output before/after at your clone tip.",
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "closure-pointer conjunct"
+      },
+      "X07Tally": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": "Build item (C2 shortcut tally): tools/shortcut-tally.py prints `no-disclosure` for rounds 56-62 (python3 tools/shortcut-tally.py --repo <lane> --rev 0c1eff3c --rounds 56-63 -> 7 of 8 rounds). FIRST investigate honestly: for each round 56..63, which committed bytes (SCORECARD.md sections, .ufo/waves/round-N/**, corpus/lessons/round-N*.md, and the fleet reports /home/vgpnk/Projects/shokunin/.ufo/reports/round-N/kama.md read via git -C /home/vgpnk/Projects/shokunin show HEAD:.ufo/reports/round-N/kama.md) contain a statement that a frozen counter was shortcut-satisfiable / a mutant survived / no falsify wave ran? Report per round what exists and where (path:line). Then extend the tool to read those formats so each round with such a statement gets a status other than `no-disclosure`, and keep a selftest fixture that MUST still print `no-disclosure` for a round with no statement (the extension must not make every round `ok`). If fewer than 8 of the 8 rounds carry any statement in committed bytes, STOP extending past the evidence: report the exact count and which rounds, and do not invent disclosures - the L1 will amend the frozen target before any scoring. Deliver the patched tool, its selftest output, and before/after tally output.",
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "tally 56-63 reader"
+      },
+      "X08StabilityC1": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": "Run item (C1 stability): at the freeze commit f6a4ea9a8b5a876d685b08e7e582ec0723412a4a run the C1 counter 5 times in a row (fresh --work each) from your clone and report all five output lines plus wall time and any `error:` stderr; then run it 3 times concurrently (three separate --work dirs, started together) and report. Any met=False or flake must be reported with the full stderr and the failing control family; state whether the flake is a counter defect, a host-load effect (other seats run live servers) or a tool defect, with the evidence. Do not edit anything.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "repeat C1"
+      },
+      "X09ScansTip": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": "Run item (C2 supporting scans): at the freeze commit f6a4ea9a8b5a876d685b08e7e582ec0723412a4a run tools/digest-ledger.py scan --repo <lane> --rev f6a4ea9a8b5a876d685b08e7e582ec0723412a4a and tools/hexrun-census.py scan --repo <lane> --rev f6a4ea9a8b5a876d685b08e7e582ec0723412a4a (read each tool's --help for the exact flags) and python3 tools/round42-selfdesc-reconcile.py --repo <lane> --tip f6a4ea9a8b5a876d685b08e7e582ec0723412a4a; paste the output lines. List every digest/hex run flagged unknown with the file and line that cites it (the freeze commit added 28 library digests in tools/round64-c1-counter.py and four fetched-bytes digests in corpus/SOURCES.md, plus 40-hex commit ids in freeze.txt) and say which ledger row (registry/digest-ledger.tsv, registry/hexrun-ledger.tsv) each needs, with the row text proposed in the ledgers' existing format. Do not edit the ledgers; deliver the proposed rows in your out dir.",
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "ledger scans"
+      },
+      "X10EnvIdleProbe": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": "Run item (C2 idle outcome): read tools/kama-context-capacity.py and run `python3 tools/kama-context-capacity.py --only K1 --host-idle-timeout 20 --scratch $S/cc --out $S/cc.json` three times from your clone; record exit code, stdout, and the `host_idle` block (other_pids_seen) of each, together with `pgrep -f llama-server` before and after each run. Then answer from evidence: (1) is `other_pids_seen` always a subset of the union of the before/after pgrep sets, and are the pids present in both pgreps always inside it? (2) what does the tool print on an idle host (build a fixture: copy the tool, make the idle check see no foreign server, e.g. by pointing its pid listing at an empty fake - find the function it uses; report the exit code and whether `\"all_ports_closed\": true` appears)? Deliver a runnable fixture script in your out dir that produces the idle outcome without touching foreign servers. Do not edit lane files.",
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "context-capacity outcomes"
+      },
+      "MT01DumpableHide": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": "Attack item (C1): the counter fails closed on an own-uid process whose /proc/<pid>/fd it cannot read ONLY when that process started after the tool (unreadable_own); build a forged tool that hides the listener holder behind PR_SET_DUMPABLE=0 (prctl(4,0) in a child started by the tool, holding the real or fake listener) and one that hands the listener fd by SCM_RIGHTS to an older non-dumpable process the tool did not start; report whether the counter accepts either (met= line) and exactly which snapshot field decides. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "falsify C1 binding"
+      },
+      "MT02ReusePort": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": "Attack item (C1): a forger binds a second listener on the same loopback port with SO_REUSEPORT (and, separately, binds the same port on another loopback address such as 127.0.0.2 / ::1) next to the real pinned child so the kernel load-balances probes between the real server and a canned answerer. Build the forged tool, run the counter and report KILLED/SURVIVED, with the listeners() and holders output of your forged run, and say whether the reference-agreement check or the holder-set check decides. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "falsify C1 binding"
+      },
+      "MT03PidRace": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": "Attack item (C1): the counter snapshots holders (raw_a), probes twice, then snapshots again (raw_b) and compares (pid, start_ticks, exe sha). Build forged tools that change the answerer between the two snapshots: (a) a canned answerer that serves the real child's answers (proxied) for the first probe and canned text afterwards; (b) a tool that hands the listener fd to a second process after the first probe and exits the first holder; (c) a tool whose holder set changes only for a few milliseconds around the probes. Report whether any variant reaches met=True and what bind_stable / bind_holders / live_ref_* say. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "falsify C1 binding"
+      },
+      "MT04ArgvSpoof": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": "Attack item (C1): argv is spoofable (S532 limit). Build forged tools whose held process is not llama-server but passes the argv check: (a) a python process that rewrites its own cmdline (prctl PR_SET_MM / setproctitle-style via ctypes, or exec -a llama-server with the pinned path as argv[0]) - the exe link and exe sha256 should still betray it; (b) the pinned llama-server started with a SECOND `--port` or `--model` flag and `--alias` abbreviations (S054 repeated flag semantics); (c) the pinned server launched through a shell wrapper (`sh -c exec ...`) so ancestry has an extra hop. Report each as KILLED/SURVIVED with the check that decides. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "falsify C1 binding"
+      },
+      "MT05EnvInject": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": "Attack item (C1): bind_env rejects LD_* and GLIBC_TUNABLES in /proc/<pid>/environ (initial environment only, S531). Build forgeries that change the served bytes without those names: (a) a symlink farm so the server's $ORIGIN resolves to a directory with a patched libllama copy (path differs from the pinned directory), (b) a LD_PRELOAD-free hook via /etc/ld.so.preload (report if it needs root and so is out of reach), (c) the pinned binary run under a seccomp/ptrace wrapper that edits responses (strace -e inject or a small ptrace shim) started by the tool, (d) environment mutated after execve (initial environ is a limit). Report which survive and which observation could close each (maps, parent chain, ptrace status in /proc/<pid>/status TracerPid). Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "falsify C1 binding"
+      },
+      "MT06MapsLib": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": "Attack item (C1): bind_maps hashes every file mapped from the pinned directory against the LIBS table and allows /usr/lib/* system libs, the model and pseudo mappings. Build forgeries you can actually do as an unprivileged user: (a) the model mapped from a different path (hardlink or copy of the fixture bytes) - does the counter compare device/inode with the hashed file or only the path and sha256? (b) the model file replaced after load (report the (deleted) mapping and which check decides); (c) a library from the pinned directory whose sha256 is in LIBS but that the pinned server never loads (libllama-cli-impl.so) mapped through dlopen from a forged parent; (d) /usr/lib paths: report whether any file under /usr/lib the process maps can be replaced without root (expected: infeasible). Report KILLED/SURVIVED and whether a model-file inode/dev check is missing. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "falsify C1 binding"
+      },
+      "MT07RefAgree": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": "Attack item (C1): the counter's per-run field is agreement with a reference pinned server it starts itself (same flags, same probe requests, temperature 0). Attack the reference check: (a) find two probes whose answer text and usage collide so a replayed answer from probe 1 passes as probe 2 (the control `runfield` swap relies on texts differing - measure how often draw_probes yields identical reference texts over 200 seeds using a harness you write under your scratch), (b) a forged server that obtains reference answers by itself starting a second pinned server and proxying to it (holder check should kill it; confirm), (c) non-determinism: run the genuine tool 30 times and count disagreements between child and reference answers (false-fail rate). Report the numbers. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "falsify C1 binding"
+      },
+      "MT08HoldWindow": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": "Attack item (C1): the counter owns the hold window (fresh dir, t0, hold.json mtime and start ticks, release written by the counter, teardown observed). Build forged tools that (a) never write hold.json but write ready.json only, (b) write hold.json before the counter creates its dir state is impossible - instead pre-seed the hold dir through a path the tool controls (symlink hold dir to a directory the tool prepared), (c) ignore the release file and keep serving after it (does teardown_observed fail?), (d) leave the real child running after release and exit (orphaned server: gone=False?), (e) write hold.json with a port that is a different pinned server the tool started earlier (before t0) - the older start ticks must reject it. Report each. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "falsify C1 binding"
+      },
+      "MT09ReceiptTamper": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": "Attack item (C1): the v3 tool receipt gained listener_holders and the check listener_holders_pinned; the counter recomputes it (grade) and compares with its own holders (bind_claim). Mutate the receipt/tool (not the live process): drop listener_holders, reorder it, add a second holder entry, change exe path to a symlink spelling of the pinned path, change pid by one, leave sha256 upper-case. For each, say KILLED/SURVIVED and which check named it; also try the same edits at the tool level (a tool that fabricates holders after the real run). Also review the tool diff `git -C <clone> diff 0c1eff3c f6a4ea9a -- tools/kama-completion-live.py` for defects (race between holders check and hold window, setup-error paths). Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "falsify C1 binding"
+      },
+      "MT10CopyModes": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": "Attack item (C1): the counter's own 76 controls include live fake-tool scenarios (detach, proxy, canned, stale_old, stale_future, preload, pathcopy) and three forge patches. Mutate the COUNTER (in your clone) in ways a lazy author might: (a) skip the proxy scenario's holder rule, (b) make hold_fresh ignore start ticks, (c) drop the ancestry rule, (d) make forge variants not run but still counted, (e) credit a scenario whose fake crashed before hold.json. For each mutant report KILLED (met=False with which family escapes) or SURVIVED; a survivor means a control is not targeted. Also run with the forge patches removed from the tip tree and report what the counter prints. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "falsify C1 binding"
+      },
+      "MT11Selftest": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": "Attack item (C1): the evaluator self-test refuses 3 planted wrong-reason controls (eval_selftest=3/3) and families are matched exactly (EXPECT_FAMILIES). Mutate the counter's evaluator: make is_hit ignore the cap, make EXPECT_FAMILIES comparison compare only totals, make fam_ok count a scenario that raised an exception, make score_run skip the probe-nonce check, make `credit(clean_receipt=True)` a no-op. Report which mutants the counter's own output kills (met=False) and which it does not; for survivors propose a plant for the evaluator self-test. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "falsify C1 evaluator"
+      },
+      "MT12ProxyLeak": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": "Attack item (C1): environment and network. Run the counter with HTTP_PROXY/http_proxy/NO_PROXY/ALL_PROXY set to an unreachable proxy, with LD_LIBRARY_PATH set, with TMPDIR pointing at a read-only path, from a different cwd, with PATH missing ~/.local/bin (pinned server found only by the fallback), and with a second llama-server on the pinned path already listening on another port; report met= for each and classify each defect as counter, tool or host. Also run once under `unshare -n` or an equivalent if available (report infeasible if not). Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "falsify C1 binding"
+      },
+      "MT13ProbeTokens": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": "Attack item (C1): the outside probe prompts are nonce + random vocabulary words with n_predict 3..9, and grading includes usage_prompt_tokens == /tokenize count, timings prompt_n+cache_n == prompt tokens, completion_tokens == n_predict when finish_reason == length. Fuzz: 100 draws of draw_probes against the genuine pinned server through the counter's probe() function (write a harness in scratch that imports the counter module by path) and report any draw where a genuine answer fails probe_fails (false-fail rate, e.g. finish_reason stop before n_predict, cache_n surprises). Then craft a canned answerer that gets all non-ref fields right (it must tokenize: use the real server as an oracle) and show only the reference/holder checks stop it. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "falsify C1 binding"
+      },
+      "CR01PredicateCode": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "critic",
+        "item": "Review item (C1 fidelity): compare the predicate sentence in /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-64/controls/freeze.txt with the docstring of tools/round64-c1-counter.py and with what the code actually checks, clause by clause (holder = hold pid; exe sha at the counter-chosen path; argv/environ/maps; descendant and later start; fresh hold.json; counter-observed teardown; 2 random probes vs reference; 76 controls; 3 plants). For every clause name the line numbers that enforce it or say `unenforced`; list clauses the code enforces that the sentence does not state and sentence clauses the code does not enforce. f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "freeze fidelity"
+      },
+      "CR02ControlTargeting": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "critic",
+        "item": "Review item (C1 controls): for each family in EXPECT_FAMILIES of tools/round64-c1-counter.py, read the control definitions and decide whether the NAMED check is the real cause of rejection or whether another failure (bind_claim, bind_stable, live_ref_*) would reject it anyway - run the counter at f6a4ea9a8b5a876d685b08e7e582ec0723412a4a and use the detail printed for escapes, then build 5 deliberately mis-named variants (right mutation, wrong expected check) in a clone and report whether the counter credits them (it must not). List controls that are not independent (two controls the same single edit). Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "control validity"
+      },
+      "CR03DoNothing": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "critic",
+        "item": "Review item (C1 do-nothing): freeze.txt claims the target is unreachable by a do-nothing change. Build the cheapest tool that makes the counter print met=True WITHOUT the claimed work: candidates - the v2 tool with only the schema string and a hand-written listener_holders block computed from the real child; the v3 tool with listener_holders_pinned always true; a tool that launches the pinned server correctly but starts a SECOND holder only after raw_a... (be inventive but honest: each candidate is a clone edit committed and scored). Report the met= line of each; any pass means the counter or target is wrong. f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "do-nothing control"
+      },
+      "CR04OwnershipScope": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "critic",
+        "item": "Review item (C1 scope): the round-63 closure said the predicate sentence was 'the answering process is the pinned llama-server'. Decide whether the r64 sentence and counter now establish exactly that, or something narrower (a process that holds the listener AND answers correctly AND is pinned, with a socket handed to no other process) - and where the gap is (initial environ only, argv spoofable, dumpable=0, files replaced after mapping, same-uid ptrace). Draft the `What met=True does not show` bullet list for the SCORECARD (each bullet one sentence, each tied to a survivor or an unmodelled vector with path:line). f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "scope and wording"
+      },
+      "RV01ToolDiff": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "reviewer",
+        "item": "Review item (C1 tool): read `git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff 0c1eff3c f6a4ea9a8b5a876d685b08e7e582ec0723412a4a -- tools/kama-completion-live.py` and the whole tool once more. Find correctness defects in _proc_holders (zombie/process exit races between listdir and readlink, EACCES, pid reuse, IPv6 listeners via _live._listen_inodes), in the placement of the holders check relative to the hold window, in the SETUP_ERROR paths, and in schema/doc text. Run the tool bare and in hold mode 5 times; report any REQUEST_OK failure. f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "review tool v3"
+      },
+      "RV02CounterCode": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "reviewer",
+        "item": "Review item (C1 counter code): read tools/round64-c1-counter.py end to end at f6a4ea9a8b5a876d685b08e7e582ec0723412a4a and list bugs with line numbers: resource leaks (servers left running after an exception, ref-server not torn down), files written outside --work or under /tmp, hardcoded paths, global NONCE handling across scenario runs, timeouts, zombie handling in pid_gone, the cache of sha256_path (is /proc/<pid>/exe hashed fresh each time?), forged-variant patch application (patch -F3 fuzz accepting a wrong hunk), exceptions swallowed into `no credit` without surfacing as errors. For each defect say whether it can flip a verdict. Run `pgrep -af llama-server` before and after one counter run and report leaked children. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "review counter code"
+      },
+      "RV03SourcesGate": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "reviewer",
+        "item": "Review item (sourced claim): the lane registry rows S529-S532 (corpus/SOURCES.md) cite Linux man-pages proc_pid_fd(5), proc_pid_stat(5), proc_pid_environ(5), proc_pid_cmdline(5), with fetched bytes under /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-64/source/. Check each row against the contract (CORPUS.md SOURCES section rules 1-6, 11 columns, no pipe inside a cell, status/used-by valid, anchor names a section plus revision), check that the scope clause of each row does not overreach (e.g. S531 initial environment only), and check which sentence of tools/round64-c1-counter.py each row supports (grep the docstring and the grading code). Run `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama` against the lane at f6a4ea9a8b5a876d685b08e7e582ec0723412a4a using a scratch export of the tip (git -C /home/vgpnk/Projects/shokunin/kama-shokunin archive f6a4ea9a8b5a876d685b08e7e582ec0723412a4a | tar -x -C $S/tip, then --file $S/tip/corpus/SOURCES.md) and report the exit code and E/W codes. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "review sourced claim"
+      },
+      "SN01Sandbox": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "sentinel",
+        "item": "Security item (C1): the counter runs tip-supplied tools as subprocesses (the tool under judgment is untrusted) and applies patches. Review at f6a4ea9a8b5a876d685b08e7e582ec0723412a4a: can a malicious tool write outside --work (it runs with the counter's uid), signal the counter or its reference server (pids, process group - Popen without start_new_session), read the counter's own memory or the receipt template, exploit `patch -p1` path handling in apply_patch (the patch text comes from the tip tree), exploit the model/server path discovery (PATH lookup), or leave processes behind? Demonstrate each feasible issue with a harmless proof in your scratch (e.g. the forged tool touching a file in your scratch outside --work) and rate it: does it flip a verdict, or only escape the sandbox? Do not exploit anything outside your scratch. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "security of the counter"
+      },
+      "SC01ProcFd": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scout",
+        "item": "Source item: independently re-open https://man7.org/linux/man-pages/man5/proc_pid_fd.5.html (and the kernel text it relies on if linked) and decide whether corpus/SOURCES.md row S529 states only what the page says. Record the access date, the page's man-pages version line, and the ≤25-word quote that supports the row's `teaches` with its location; flag any overreach in the row's scope. Also check whether a hidepid / ptrace-access-mode caveat for reading another process's fd table is stated on this page or on proc(5) and quote it. Write your findings to your report. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "reopen S529"
+      },
+      "SC02ProcStat": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scout",
+        "item": "Source item: re-open https://man7.org/linux/man-pages/man5/proc_pid_stat.5.html and verify S530: field numbering of starttime (22) vs the code `rest[19]` after splitting past the last ')' in tools/round64-c1-counter.py (stat_fields), the units (clock ticks, sysconf(_SC_CLK_TCK)), and the rule that comm may contain spaces/parentheses. Quote ≤25 words with location, record the access date, and say whether comparing two processes' starttime values from one boot is sound (cite the page text). Write your findings to your report. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "reopen S530"
+      },
+      "SC03ProcEnvCmd": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scout",
+        "item": "Source item: re-open https://man7.org/linux/man-pages/man5/proc_pid_environ.5.html and https://man7.org/linux/man-pages/man5/proc_pid_cmdline.5.html and verify rows S531 and S532 of corpus/SOURCES.md: quote ≤25 words with location for each, the access date, and every limit the pages state (environ = initial environment; cmdline layout/rewrite behaviour; permission modes). Say whether the rows' scope clauses state those limits. Write your findings to your report. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "reopen S531 S532"
+      },
+      "SC04Considerthese": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scout",
+        "item": "Source item: read /home/vgpnk/Projects/shokunin/kama-shokunin/considerthese/ (all files; newest 2026-10-26.md) and find at most ONE proposal that is still unimplemented and fits this round's claims or the lane province (local model serving, endpoint health). For it, open what it points at (not the reflection text), say what the lane would land (lesson, QUALITY criterion or SOURCES row citing considerthese/<file> + date), and list the proposals already implemented by grep evidence (tools/ or corpus/ path and round). Write your findings to your report. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "mine considerthese"
+      },
+      "SC05Quarantine": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scout",
+        "item": "Source item: derive the kama quarantine slice (read-only): R=/home/vgpnk/Projects/shokuknow/.ufo/waves/corpus-expansion-1/absent-defect-register.md; awk -F'|' -v l='kama' '$2 ~ (\"`\" l \"`\") && $3 ~ /round[0-9]+/ && $4 ~ /S[0-9]+/ {print $4, $5}' \"$R\". Round 63 hand-checked 7 rows (4 staged quotes absent, 3 present). Re-derive the slice at today's bytes, report the row count and whether it changed, and for ONE row not already checked in round 63 (read corpus/lessons/round-63.md ## Gate) fetch the cited source and locate or fail to locate the quote (verbatim ≤25 words with location, or `absent`). Never run a tool in /home/vgpnk/Projects/shokuknow and never write there. Write your findings to your report. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "quarantine slice"
+      },
+      "SC06ProcTcp": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scout",
+        "item": "Source item: re-open the held row S049 (Linux kernel Documentation/networking/proc_net_tcp.rst at the pinned tag, URL in corpus/SOURCES.md) and verify what it says about the `st` value 0A (LISTEN), the inode column, the address byte order, and its deprecation note, against the code in tools/round64-c1-counter.py listeners() and _hex_loopback() (IPv6 words, the IPv4-mapped form). Quote ≤25 words with location, record the access date, and say whether S049 already supports every parse rule in the code or a new row is needed. Write your findings to your report. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "reopen S049"
+      },
+      "SB01Knowledge": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scribe",
+        "item": "Draft item (sourced claim): draft the new knowledge entry corpus/knowledge/process-bound-listener.md - how a verifier binds the answering process to a pinned serving binary from procfs on Linux (socket inode from /proc/net/tcp, holders from /proc/<pid>/fd, exe link and its sha256, argv, initial environ, mapped files, starttime ordering, ancestry, counter-observed teardown, reference-server agreement) and the limits each observation has. Open with `source:` (cite S529-S532 plus held S049, S495, S496, S499 by id and URL), `verified-at:` (f6a4ea9a8b5a876d685b08e7e582ec0723412a4a) and `recheck:` (a command). Every number carries its command; every quote names its location; mark opinion as opinion. Write the full draft under your out dir as process-bound-listener.md (do not write into the lane). Re-open each cited man page yourself (fetch with curl into your scratch) before you quote it. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "draft knowledge entry"
+      },
+      "SB02QualityDraft": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scribe",
+        "item": "Draft item (mistake mining): read corpus/QUALITY.md (the KQ102-KQ106 tail) and corpus/lessons/round-63.md `## Mistakes`, then draft criteria KQ107.. for this round's mined mistake class - a counter that binds the wrong object (the socket instead of the process, the receipt's own pid, a helper loaded from the tree under judgment) and a calibration cell left stale because the reconciler had no conjunct for it - each criterion in the existing row format, citing the lesson (corpus/lessons/round-64.md, to be written) and the evidence path. Also draft the lesson `## Mistakes` rows (class, evidence pointer, captured-by, fix) for: r63 C1 binding the socket not the process, r63 calibration pointer stale, r63 C2 certifying tip-tree tools by running them. Deliver as drafts in your out dir. Recipe: see context.",
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "draft QUALITY criteria"
+      },
+      "SB03LessonGate": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scribe",
+        "item": "Draft item (lesson Gate): draft the `## Gate` and `## Sources` blocks of corpus/lessons/round-64.md for rows S529-S532 as the contract requires: per new row the URL, access date, and a ≤25-word located quote (open each page yourself with curl into your scratch; the fetched bytes are also at /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-64/source/); an admit/reject table for the candidates considered (S529-S532 admitted as queued; rejections: proc_pid_map_files(5) (S508, rejected earlier - restate the reason), proc_pid_cmdline as sole evidence of identity, and any further candidate you find); the status/used-by flips planned old->new (S529-S532 queued -> mined once corpus/knowledge/process-bound-listener.md exists). Deliver in your out dir. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "draft lesson gate"
+      },
+      "CN01CrossClaim": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "connector",
+        "item": "Connector item: find patterns across C1 and C2 and across this wave's reports once they exist (read .ufo/waves/round-64/b/*.md that already exist when you start, plus the round-63 reports): where does a C2 counter weakness (certifying by running, pinned tables, regression tables) mirror a C1 weakness (certifying by the socket)? Which two seats' findings contradict each other? Produce a short table of cross-claim risks with path:line evidence and one proposed shared check that would close two weaknesses at once. Recipe: see context.",
+        "axes": [
+          "operability",
+          "calibration"
+        ],
+        "milestone": "cross-claim scan"
+      },
+      "CN02SiblingOverlap": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "connector",
+        "item": "Connector item (sibling-overlap scan): list other lanes' tools or corpus entries that already implement procfs-based process/socket binding or pinned-binary verification (grep -rIl for `/proc/` + `exe` in /home/vgpnk/Projects/shokunin/*-shokunin/tools and corpus/knowledge; read-only). For each hit decide: duplicate of what kama just built, a reusable control idea, or out of kama's province (cross-lane-scope.md). Name contested scope and where it must be reported rather than absorbed. Recipe: see context.",
+        "axes": [
+          "operability"
+        ],
+        "milestone": "sibling overlap scan"
+      }
+    }
+  },
+  "compaction": {
+    "applied": false,
+    "mechanism": null,
+    "reason": null,
+    "savedBytes": 0,
+    "payloadBytesBefore": 0,
+    "payloadBytesAfter": 0
+  },
+  "taskCall": {
+    "context": "# Goal\nRound 64, kama (local model serving & endpoint health). Axes: operability + calibration. The L1 (KamaR64) holds the canonical planner seat; this is wave b of two (b = build + first falsifiers, f = falsify). Seats are advisory leaves: return findings and report files; never a verdict on the claims, never a commit, never an edit to lane source outside your own report/out files (executors write their code into their own scratch clone and save deliverables under their out dir; the L1 integrates).\nFrozen claims & controls (READ FIRST): /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-64/controls/freeze.txt - base 0c1eff3cb9ac4c11402ab0124c35842f06a436fc, freeze commit f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. C1 operability: the process that answers is the pinned llama-server (tools/kama-completion-live.py v3 + tools/round64-c1-counter.py, 76 targeted controls, forged tools replayed, counter-owned hold window, counter-observed teardown, reference-server agreement). C2 calibration: the claim registry proves the work was done rather than printed (pins, planted regressions, printer rejection, idle outcome, work-reuse refusal, closure pointer, shortcut-tally 56-63); its instrument tools/round64-c2-counter.py does NOT exist yet - wave-b executors build its parts under the frozen C2 predicate.\nCounter commands: python3 tools/round64-c1-counter.py --repo <repo> --tip <rev> --work <scratch> (reads the tip from git blobs, runs live servers on unregistered loopback ports, ~10 s, prints one met= line, exit 0 iff met); round-63 instruments stay in tools/ as the honest-stop record: tools/round63-c1-counter.py, tools/round63-c2-counter.py, registry/capability-claims-r63.tsv.\nKey paths: tools/kama-completion-live.py (v3), tools/kama-llamacpp-live.py (dependency), tools/round64-c1-counter.py, tools/round63-c2-counter.py, tools/round42-selfdesc-reconcile.py, tools/shortcut-tally.py, tools/kama-context-capacity.py, registry/capability-claims-r63.tsv, SCORECARD.md (section 'Round 63', canonical list as of round 63), corpus/QUALITY.md, corpus/SOURCES.md (rows S529-S532 new), PROVINCE.md, corpus/lessons/round-63.md, corpus/lessons/round-63-verifier-spotcheck.md, corpus/knowledge/completion-request-plane.md, the round-63 wave reports .ufo/waves/round-63/w1/*.md (esp. MT15C1FakeConsistent, KR03DoNothing, MT20/MT21, RV03C2CounterCode, RV04RegistryLedger).\nClone recipe (everyone who runs code): S=/fast/scratch/hyaku/kama-r64/b/<YourName>; mkdir -p $S; D=$S/clone; git clone -q --shared /home/vgpnk/Projects/shokunin/kama-shokunin $D; test \"$(git -C $D rev-parse --show-toplevel)\" = \"$D\"; git -C $D checkout -q f6a4ea9a8b5a876d685b08e7e582ec0723412a4a; edit files ONLY inside $D (never in /home/vgpnk/Projects/shokunin/kama-shokunin); to score a modified tree: git -C $D add -A; git -C $D -c user.name=seat -c user.email=seat@seat.invalid commit -q -m wip; T=$(git -C $D rev-parse HEAD); run the counter from $D/tools/ with --repo $D --tip $T --work $S/work. A mutated counter is run from its clone path against the committed tool; a mutated tool is committed in the clone and scored by the unmutated counter. Report each mutant as KILLED (the pair prints met=False, or the named control escapes) or SURVIVED, with the one-line output pasted.\nScratch root: /fast/scratch/hyaku/kama-r64/b/<YourName>/ - mkdir -p it, pass it explicitly (never an inherited TMPDIR, never /tmp for anything a report cites), rm -rf it before you yield (receipts copied into your out dir first). Live runs start llama-servers on loopback ports: never touch ports 8080, 34113 or any listener that is not yours; never kill a process you did not start. You and every seat may install or upgrade tools that help the task - read /home/vgpnk/.omp/agent/RULES.md first (official channels, record tool/version/channel/reason in your report). Pacman is PAUSED host-wide: never any pacman transaction; install via uv tool / npx / an official binary in ~/.local/bin or report the blocker.\nBounds: work only inside /home/vgpnk/Projects/shokunin/kama-shokunin (read) plus your scratch root and your own report/out paths; never commit, push, or run any mutating git/jj command anywhere except inside your own scratch clone/fixture (the L1 is the only committer to the lane, via jj-lane.sh); never touch the fleet repo, sibling lanes, lane jj state, the lane Git index, /home/vgpnk/Projects/shokuknow (read-only: read bytes, run nothing there), or another seat's files. Read-only git (log/show/diff/status/ls-files/rev-parse/cat-file/merge-base) is fine. Fixture repos: D=$(mktemp -d -p your-scratch) && git -C \"$D\" init -q, every git call names -C \"$D\" explicitly; never git commit with a throwaway identity outside your own fixture or clone.\nEvery `Report:` trailer path is relative to /home/vgpnk/Projects/shokunin/kama-shokunin - write it at /home/vgpnk/Projects/shokunin/kama-shokunin/<that path>. Never agent://all; message no one except returning your result. Your report file lives under .ufo/waves/round-64/b/<YourName>.md and bulky evidence/deliverables under .ufo/waves/round-64/b/out/<YourName>/ - write the full result there (it is your durable evidence) and end with the one-line counter/tally output your item asks for where applicable. Keep each report under 250 lines. Host note: other seats run live servers at the same time; if a live run flakes, re-run once and report both outputs; a flake is data, not a pass.",
+    "tasks": [
+      {
+        "name": "X01C2Counter",
+        "agent": "executor",
+        "task": "/skill:godspeed\n\nBuild item (C2): write tools/round64-c2-counter.py in your scratch clone, starting from tools/round63-c2-counter.py (read it and the wave-63 reports MT20, MT21, RV03C2CounterCode, RV04RegistryLedger, KR03DoNothing first). C2 predicate fields (freeze.txt): covered=12/12 mismatches=0; pinned=13/13 (sha256 table of the 12 bound tools + tools/round42-selfdesc-reconcile.py embedded in the counter, compared with the tip blobs); regress_flipped=12/12 (per row, a planted one-line regression - table registry/capability-regress-r64.tsv, TAB-separated columns cap, tool_path, find, replace, find must occur exactly once - applied to a scratch copy of the tip tree, the row's template re-run there, verdict must flip true->false while the unmutated run stays true); printers_rejected=12/12 (a 'printer' per row - `python3 -c print(pattern)` substituted for the bound tool, exit 0 - must be refused as not sensitive); idle_ok=1 (context-capacity row accepts host-busy only when the refusal receipt's host_idle.other_pids_seen is a subset of (pgrep llama-server set before U set after the run) and the pids present in BOTH pgreps are a subset of other_pids_seen - this tolerates churn from other live runs but cannot be satisfied by an invented set; or the idle outcome exit 0 + pattern `all_ports_closed\": true`; each outcome has a control); work_reuse_refused=1 (a second run whose --work already holds a tip tree exits 2 with `work-reused` before scoring anything); closure_ptr=1 and reconciler mismatches=0 (tools/round42-selfdesc-reconcile.py gains a conjunct: the calibration row's `latest outside closure corpus/lessons/round-N-verifier-spotcheck.md` names the newest such file at the tip; a planted stale pointer turns the reconciler false); tally_disclosed=8/8 (python3 tools/shortcut-tally.py --repo R --rev T --rounds 56-63 prints a status other than no-disclosure for every round while its selftest keeps one fixture that must still print no-disclosure; base 1/8); control families all rejected by their named failure and credited only while the unmutated baseline is met. Base-tip run of the finished counter must print met=False. Output: ONE line, `key=value` fields, ending `met=True|False`, exit 0 iff met. Every scratch path under --work; honour TMPDIR; never write /tmp. Also write registry/capability-claims-r64.tsv (same 12 rows as r63 with run templates retargeted; keep the quote/binding columns; add an `outcomes` notion for context-capacity-receipt) and a draft SCORECARD block `Capabilities - canonical list as of round 64` (the same twelve rows, byte-identical to the r63 list text) in your out dir. Consume the regression table from the four executors X02..X05 by READING registry/capability-regress-r64.partN.tsv from their out dirs under .ufo/waves/round-64/b/out/X02Regress1..X05Regress4/ if present at your end; otherwise write a 12-row stand-in table yourself and say so. The reconciler conjunct and tally reader come from X06Reconciler and X07Tally (same out-dir pattern); your counter must call both as subprocesses at the tip and print their fields. Deliver: counter, registry file(s), SCORECARD block, a controls table (family, what is mutated, the failure it must produce), and the counter's output line at your clone tip with every other part stubbed at base (fields below their targets, met=False) plus a note of what remains for met=True. Do not touch the reconciler or tally files yourself.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: calibration\nMilestone: build C2 instrument\n\nReport: write your scoped findings to .ufo/waves/round-64/b/X01C2Counter.md"
+      },
+      {
+        "name": "X02Regress1",
+        "agent": "executor",
+        "task": "/skill:godspeed\n\nBuild item (C2 sensitivity): for each of these capabilities - sources-registry (tools/sources-append-only.py --selftest), ollama-offline-evidence-replay (tools/kama-ollama-evidence.py --selftest), live-llamacpp-lifecycle (tools/kama-llamacpp-live.py with the registry row template) - find ONE single-line source edit (a comparison flipped, a constant changed, a check dropped) in the bound tool that keeps the file importable but makes the row's run template (registry/capability-claims-r63.tsv, run column; %T = scratch tree of the tip, %S scratch, %R repo, TIPREV tip) stop satisfying its pattern or exit non-zero, WITHOUT merely deleting the pattern string. Prove each regression flips the verdict by running the template on the unmutated and the mutated copy in your clone (pattern present and exit 0 -> pattern absent or exit != 0), and prove the find string occurs exactly once. Deliver registry/capability-regress-r64.part1.tsv in your out dir (TAB-separated: cap, tool_path, find, replace; no header; no tabs inside cells), plus a per-row evidence table (unmutated line, mutated line, exit codes). Rows whose live target cannot be made to fail by a one-line edit must be reported with the reason instead of invented. Do not edit any lane file.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: calibration\nMilestone: planted regressions\n\nReport: write your scoped findings to .ufo/waves/round-64/b/X02Regress1.md"
+      },
+      {
+        "name": "X03Regress2",
+        "agent": "executor",
+        "task": "/skill:godspeed\n\nBuild item (C2 sensitivity): for each of these capabilities - gguf-declared-identity-replay (tools/gguf-identity.py --selftest), context-capacity-receipt (tools/kama-context-capacity.py; the regression must make its outcome neither host-busy nor idle-pass), instrument-agreement (tools/instrument-agreement.py --selftest) - find ONE single-line source edit (a comparison flipped, a constant changed, a check dropped) in the bound tool that keeps the file importable but makes the row's run template (registry/capability-claims-r63.tsv, run column; %T = scratch tree of the tip, %S scratch, %R repo, TIPREV tip) stop satisfying its pattern or exit non-zero, WITHOUT merely deleting the pattern string. Prove each regression flips the verdict by running the template on the unmutated and the mutated copy in your clone (pattern present and exit 0 -> pattern absent or exit != 0), and prove the find string occurs exactly once. Deliver registry/capability-regress-r64.part2.tsv in your out dir (TAB-separated: cap, tool_path, find, replace; no header; no tabs inside cells), plus a per-row evidence table (unmutated line, mutated line, exit codes). Rows whose live target cannot be made to fail by a one-line edit must be reported with the reason instead of invented. Do not edit any lane file.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: calibration\nMilestone: planted regressions\n\nReport: write your scoped findings to .ufo/waves/round-64/b/X03Regress2.md"
+      },
+      {
+        "name": "X04Regress3",
+        "agent": "executor",
+        "task": "/skill:godspeed\n\nBuild item (C2 sensitivity): for each of these capabilities - pin-watch (tools/pin-watch.py selftest), digest-ledger (tools/digest-ledger.py scan), hexrun-census (tools/hexrun-census.py scan) - find ONE single-line source edit (a comparison flipped, a constant changed, a check dropped) in the bound tool that keeps the file importable but makes the row's run template (registry/capability-claims-r63.tsv, run column; %T = scratch tree of the tip, %S scratch, %R repo, TIPREV tip) stop satisfying its pattern or exit non-zero, WITHOUT merely deleting the pattern string. Prove each regression flips the verdict by running the template on the unmutated and the mutated copy in your clone (pattern present and exit 0 -> pattern absent or exit != 0), and prove the find string occurs exactly once. Deliver registry/capability-regress-r64.part3.tsv in your out dir (TAB-separated: cap, tool_path, find, replace; no header; no tabs inside cells), plus a per-row evidence table (unmutated line, mutated line, exit codes). Rows whose live target cannot be made to fail by a one-line edit must be reported with the reason instead of invented. Do not edit any lane file.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: calibration\nMilestone: planted regressions\n\nReport: write your scoped findings to .ufo/waves/round-64/b/X04Regress3.md"
+      },
+      {
+        "name": "X05Regress4",
+        "agent": "executor",
+        "task": "/skill:godspeed\n\nBuild item (C2 sensitivity): for each of these capabilities - append-only-audit (tools/append-only-audit.py --selftest), live-receipt-replay (tools/kama-live-replay.py --selftest), live-ollama-lifecycle (tools/kama-ollama-live.py with the registry row template) - find ONE single-line source edit (a comparison flipped, a constant changed, a check dropped) in the bound tool that keeps the file importable but makes the row's run template (registry/capability-claims-r63.tsv, run column; %T = scratch tree of the tip, %S scratch, %R repo, TIPREV tip) stop satisfying its pattern or exit non-zero, WITHOUT merely deleting the pattern string. Prove each regression flips the verdict by running the template on the unmutated and the mutated copy in your clone (pattern present and exit 0 -> pattern absent or exit != 0), and prove the find string occurs exactly once. Deliver registry/capability-regress-r64.part4.tsv in your out dir (TAB-separated: cap, tool_path, find, replace; no header; no tabs inside cells), plus a per-row evidence table (unmutated line, mutated line, exit codes). Rows whose live target cannot be made to fail by a one-line edit must be reported with the reason instead of invented. Do not edit any lane file.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: calibration\nMilestone: planted regressions\n\nReport: write your scoped findings to .ufo/waves/round-64/b/X05Regress4.md"
+      },
+      {
+        "name": "X06Reconciler",
+        "agent": "executor",
+        "task": "/skill:godspeed\n\nBuild item (C2 closure pointer): in your clone extend tools/round42-selfdesc-reconcile.py with a conjunct `closure_ptr`: the SCORECARD.md calibration row (the `| calibration |` row of `## Axes`) names `corpus/lessons/round-N-verifier-spotcheck.md` as its latest outside closure; the conjunct is true only when N equals the numerically largest N among corpus/lessons/round-*-verifier-spotcheck.md at the tip (derive from git blobs at the tip like the rest of the tool); print it in the tool's output line (`closure_ptr=0|1`) and count a wrong pointer as a mismatch. Add a selftest-or-fixture proof that a planted stale pointer (row says round-57 while a round-63 file exists) makes the tool report mismatches>=1 and the corrected row makes it 0 (a check that cannot fail is not a check). Also write the exact replacement text of the SCORECARD calibration row's `latest outside closure` clause (and any other clause the reconciler flags at tip) as a patch in your out dir; do not edit SCORECARD.md in the lane. Report the tool's output before/after at your clone tip.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: calibration\nMilestone: closure-pointer conjunct\n\nReport: write your scoped findings to .ufo/waves/round-64/b/X06Reconciler.md"
+      },
+      {
+        "name": "X07Tally",
+        "agent": "executor",
+        "task": "/skill:godspeed\n\nBuild item (C2 shortcut tally): tools/shortcut-tally.py prints `no-disclosure` for rounds 56-62 (python3 tools/shortcut-tally.py --repo <lane> --rev 0c1eff3c --rounds 56-63 -> 7 of 8 rounds). FIRST investigate honestly: for each round 56..63, which committed bytes (SCORECARD.md sections, .ufo/waves/round-N/**, corpus/lessons/round-N*.md, and the fleet reports /home/vgpnk/Projects/shokunin/.ufo/reports/round-N/kama.md read via git -C /home/vgpnk/Projects/shokunin show HEAD:.ufo/reports/round-N/kama.md) contain a statement that a frozen counter was shortcut-satisfiable / a mutant survived / no falsify wave ran? Report per round what exists and where (path:line). Then extend the tool to read those formats so each round with such a statement gets a status other than `no-disclosure`, and keep a selftest fixture that MUST still print `no-disclosure` for a round with no statement (the extension must not make every round `ok`). If fewer than 8 of the 8 rounds carry any statement in committed bytes, STOP extending past the evidence: report the exact count and which rounds, and do not invent disclosures - the L1 will amend the frozen target before any scoring. Deliver the patched tool, its selftest output, and before/after tally output.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: calibration\nMilestone: tally 56-63 reader\n\nReport: write your scoped findings to .ufo/waves/round-64/b/X07Tally.md"
+      },
+      {
+        "name": "X08StabilityC1",
+        "agent": "executor",
+        "task": "/skill:godspeed\n\nRun item (C1 stability): at the freeze commit f6a4ea9a8b5a876d685b08e7e582ec0723412a4a run the C1 counter 5 times in a row (fresh --work each) from your clone and report all five output lines plus wall time and any `error:` stderr; then run it 3 times concurrently (three separate --work dirs, started together) and report. Any met=False or flake must be reported with the full stderr and the failing control family; state whether the flake is a counter defect, a host-load effect (other seats run live servers) or a tool defect, with the evidence. Do not edit anything.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: operability\nMilestone: repeat C1\n\nReport: write your scoped findings to .ufo/waves/round-64/b/X08StabilityC1.md"
+      },
+      {
+        "name": "X09ScansTip",
+        "agent": "executor",
+        "task": "/skill:godspeed\n\nRun item (C2 supporting scans): at the freeze commit f6a4ea9a8b5a876d685b08e7e582ec0723412a4a run tools/digest-ledger.py scan --repo <lane> --rev f6a4ea9a8b5a876d685b08e7e582ec0723412a4a and tools/hexrun-census.py scan --repo <lane> --rev f6a4ea9a8b5a876d685b08e7e582ec0723412a4a (read each tool's --help for the exact flags) and python3 tools/round42-selfdesc-reconcile.py --repo <lane> --tip f6a4ea9a8b5a876d685b08e7e582ec0723412a4a; paste the output lines. List every digest/hex run flagged unknown with the file and line that cites it (the freeze commit added 28 library digests in tools/round64-c1-counter.py and four fetched-bytes digests in corpus/SOURCES.md, plus 40-hex commit ids in freeze.txt) and say which ledger row (registry/digest-ledger.tsv, registry/hexrun-ledger.tsv) each needs, with the row text proposed in the ledgers' existing format. Do not edit the ledgers; deliver the proposed rows in your out dir.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: calibration\nMilestone: ledger scans\n\nReport: write your scoped findings to .ufo/waves/round-64/b/X09ScansTip.md"
+      },
+      {
+        "name": "X10EnvIdleProbe",
+        "agent": "executor",
+        "task": "/skill:godspeed\n\nRun item (C2 idle outcome): read tools/kama-context-capacity.py and run `python3 tools/kama-context-capacity.py --only K1 --host-idle-timeout 20 --scratch $S/cc --out $S/cc.json` three times from your clone; record exit code, stdout, and the `host_idle` block (other_pids_seen) of each, together with `pgrep -f llama-server` before and after each run. Then answer from evidence: (1) is `other_pids_seen` always a subset of the union of the before/after pgrep sets, and are the pids present in both pgreps always inside it? (2) what does the tool print on an idle host (build a fixture: copy the tool, make the idle check see no foreign server, e.g. by pointing its pid listing at an empty fake - find the function it uses; report the exit code and whether `\"all_ports_closed\": true` appears)? Deliver a runnable fixture script in your out dir that produces the idle outcome without touching foreign servers. Do not edit lane files.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: calibration\nMilestone: context-capacity outcomes\n\nReport: write your scoped findings to .ufo/waves/round-64/b/X10EnvIdleProbe.md"
+      },
+      {
+        "name": "MT01DumpableHide",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\n\nAttack item (C1): the counter fails closed on an own-uid process whose /proc/<pid>/fd it cannot read ONLY when that process started after the tool (unreadable_own); build a forged tool that hides the listener holder behind PR_SET_DUMPABLE=0 (prctl(4,0) in a child started by the tool, holding the real or fake listener) and one that hands the listener fd by SCM_RIGHTS to an older non-dumpable process the tool did not start; report whether the counter accepts either (met= line) and exactly which snapshot field decides. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: falsify C1 binding\n\nReport: write your scoped findings to .ufo/waves/round-64/b/MT01DumpableHide.md"
+      },
+      {
+        "name": "MT02ReusePort",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\n\nAttack item (C1): a forger binds a second listener on the same loopback port with SO_REUSEPORT (and, separately, binds the same port on another loopback address such as 127.0.0.2 / ::1) next to the real pinned child so the kernel load-balances probes between the real server and a canned answerer. Build the forged tool, run the counter and report KILLED/SURVIVED, with the listeners() and holders output of your forged run, and say whether the reference-agreement check or the holder-set check decides. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: falsify C1 binding\n\nReport: write your scoped findings to .ufo/waves/round-64/b/MT02ReusePort.md"
+      },
+      {
+        "name": "MT03PidRace",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\n\nAttack item (C1): the counter snapshots holders (raw_a), probes twice, then snapshots again (raw_b) and compares (pid, start_ticks, exe sha). Build forged tools that change the answerer between the two snapshots: (a) a canned answerer that serves the real child's answers (proxied) for the first probe and canned text afterwards; (b) a tool that hands the listener fd to a second process after the first probe and exits the first holder; (c) a tool whose holder set changes only for a few milliseconds around the probes. Report whether any variant reaches met=True and what bind_stable / bind_holders / live_ref_* say. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: falsify C1 binding\n\nReport: write your scoped findings to .ufo/waves/round-64/b/MT03PidRace.md"
+      },
+      {
+        "name": "MT04ArgvSpoof",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\n\nAttack item (C1): argv is spoofable (S532 limit). Build forged tools whose held process is not llama-server but passes the argv check: (a) a python process that rewrites its own cmdline (prctl PR_SET_MM / setproctitle-style via ctypes, or exec -a llama-server with the pinned path as argv[0]) - the exe link and exe sha256 should still betray it; (b) the pinned llama-server started with a SECOND `--port` or `--model` flag and `--alias` abbreviations (S054 repeated flag semantics); (c) the pinned server launched through a shell wrapper (`sh -c exec ...`) so ancestry has an extra hop. Report each as KILLED/SURVIVED with the check that decides. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: falsify C1 binding\n\nReport: write your scoped findings to .ufo/waves/round-64/b/MT04ArgvSpoof.md"
+      },
+      {
+        "name": "MT05EnvInject",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\n\nAttack item (C1): bind_env rejects LD_* and GLIBC_TUNABLES in /proc/<pid>/environ (initial environment only, S531). Build forgeries that change the served bytes without those names: (a) a symlink farm so the server's $ORIGIN resolves to a directory with a patched libllama copy (path differs from the pinned directory), (b) a LD_PRELOAD-free hook via /etc/ld.so.preload (report if it needs root and so is out of reach), (c) the pinned binary run under a seccomp/ptrace wrapper that edits responses (strace -e inject or a small ptrace shim) started by the tool, (d) environment mutated after execve (initial environ is a limit). Report which survive and which observation could close each (maps, parent chain, ptrace status in /proc/<pid>/status TracerPid). Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: falsify C1 binding\n\nReport: write your scoped findings to .ufo/waves/round-64/b/MT05EnvInject.md"
+      },
+      {
+        "name": "MT06MapsLib",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\n\nAttack item (C1): bind_maps hashes every file mapped from the pinned directory against the LIBS table and allows /usr/lib/* system libs, the model and pseudo mappings. Build forgeries you can actually do as an unprivileged user: (a) the model mapped from a different path (hardlink or copy of the fixture bytes) - does the counter compare device/inode with the hashed file or only the path and sha256? (b) the model file replaced after load (report the (deleted) mapping and which check decides); (c) a library from the pinned directory whose sha256 is in LIBS but that the pinned server never loads (libllama-cli-impl.so) mapped through dlopen from a forged parent; (d) /usr/lib paths: report whether any file under /usr/lib the process maps can be replaced without root (expected: infeasible). Report KILLED/SURVIVED and whether a model-file inode/dev check is missing. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: falsify C1 binding\n\nReport: write your scoped findings to .ufo/waves/round-64/b/MT06MapsLib.md"
+      },
+      {
+        "name": "MT07RefAgree",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\n\nAttack item (C1): the counter's per-run field is agreement with a reference pinned server it starts itself (same flags, same probe requests, temperature 0). Attack the reference check: (a) find two probes whose answer text and usage collide so a replayed answer from probe 1 passes as probe 2 (the control `runfield` swap relies on texts differing - measure how often draw_probes yields identical reference texts over 200 seeds using a harness you write under your scratch), (b) a forged server that obtains reference answers by itself starting a second pinned server and proxying to it (holder check should kill it; confirm), (c) non-determinism: run the genuine tool 30 times and count disagreements between child and reference answers (false-fail rate). Report the numbers. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: falsify C1 binding\n\nReport: write your scoped findings to .ufo/waves/round-64/b/MT07RefAgree.md"
+      },
+      {
+        "name": "MT08HoldWindow",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\n\nAttack item (C1): the counter owns the hold window (fresh dir, t0, hold.json mtime and start ticks, release written by the counter, teardown observed). Build forged tools that (a) never write hold.json but write ready.json only, (b) write hold.json before the counter creates its dir state is impossible - instead pre-seed the hold dir through a path the tool controls (symlink hold dir to a directory the tool prepared), (c) ignore the release file and keep serving after it (does teardown_observed fail?), (d) leave the real child running after release and exit (orphaned server: gone=False?), (e) write hold.json with a port that is a different pinned server the tool started earlier (before t0) - the older start ticks must reject it. Report each. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: falsify C1 binding\n\nReport: write your scoped findings to .ufo/waves/round-64/b/MT08HoldWindow.md"
+      },
+      {
+        "name": "MT09ReceiptTamper",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\n\nAttack item (C1): the v3 tool receipt gained listener_holders and the check listener_holders_pinned; the counter recomputes it (grade) and compares with its own holders (bind_claim). Mutate the receipt/tool (not the live process): drop listener_holders, reorder it, add a second holder entry, change exe path to a symlink spelling of the pinned path, change pid by one, leave sha256 upper-case. For each, say KILLED/SURVIVED and which check named it; also try the same edits at the tool level (a tool that fabricates holders after the real run). Also review the tool diff `git -C <clone> diff 0c1eff3c f6a4ea9a -- tools/kama-completion-live.py` for defects (race between holders check and hold window, setup-error paths). Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: falsify C1 binding\n\nReport: write your scoped findings to .ufo/waves/round-64/b/MT09ReceiptTamper.md"
+      },
+      {
+        "name": "MT10CopyModes",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\n\nAttack item (C1): the counter's own 76 controls include live fake-tool scenarios (detach, proxy, canned, stale_old, stale_future, preload, pathcopy) and three forge patches. Mutate the COUNTER (in your clone) in ways a lazy author might: (a) skip the proxy scenario's holder rule, (b) make hold_fresh ignore start ticks, (c) drop the ancestry rule, (d) make forge variants not run but still counted, (e) credit a scenario whose fake crashed before hold.json. For each mutant report KILLED (met=False with which family escapes) or SURVIVED; a survivor means a control is not targeted. Also run with the forge patches removed from the tip tree and report what the counter prints. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: falsify C1 binding\n\nReport: write your scoped findings to .ufo/waves/round-64/b/MT10CopyModes.md"
+      },
+      {
+        "name": "MT11Selftest",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\n\nAttack item (C1): the evaluator self-test refuses 3 planted wrong-reason controls (eval_selftest=3/3) and families are matched exactly (EXPECT_FAMILIES). Mutate the counter's evaluator: make is_hit ignore the cap, make EXPECT_FAMILIES comparison compare only totals, make fam_ok count a scenario that raised an exception, make score_run skip the probe-nonce check, make `credit(clean_receipt=True)` a no-op. Report which mutants the counter's own output kills (met=False) and which it does not; for survivors propose a plant for the evaluator self-test. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: falsify C1 evaluator\n\nReport: write your scoped findings to .ufo/waves/round-64/b/MT11Selftest.md"
+      },
+      {
+        "name": "MT12ProxyLeak",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\n\nAttack item (C1): environment and network. Run the counter with HTTP_PROXY/http_proxy/NO_PROXY/ALL_PROXY set to an unreachable proxy, with LD_LIBRARY_PATH set, with TMPDIR pointing at a read-only path, from a different cwd, with PATH missing ~/.local/bin (pinned server found only by the fallback), and with a second llama-server on the pinned path already listening on another port; report met= for each and classify each defect as counter, tool or host. Also run once under `unshare -n` or an equivalent if available (report infeasible if not). Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: falsify C1 binding\n\nReport: write your scoped findings to .ufo/waves/round-64/b/MT12ProxyLeak.md"
+      },
+      {
+        "name": "MT13ProbeTokens",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\n\nAttack item (C1): the outside probe prompts are nonce + random vocabulary words with n_predict 3..9, and grading includes usage_prompt_tokens == /tokenize count, timings prompt_n+cache_n == prompt tokens, completion_tokens == n_predict when finish_reason == length. Fuzz: 100 draws of draw_probes against the genuine pinned server through the counter's probe() function (write a harness in scratch that imports the counter module by path) and report any draw where a genuine answer fails probe_fails (false-fail rate, e.g. finish_reason stop before n_predict, cache_n surprises). Then craft a canned answerer that gets all non-ref fields right (it must tokenize: use the real server as an oracle) and show only the reference/holder checks stop it. Tip under test: f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context. Report each mutant as KILLED or SURVIVED with the counter one-liner pasted, and state which procfs observation (or its absence) decides it. A SURVIVED forgery is the valuable finding: describe the minimal tool/clone edit and paste its met= line.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: falsify C1 binding\n\nReport: write your scoped findings to .ufo/waves/round-64/b/MT13ProbeTokens.md"
+      },
+      {
+        "name": "CR01PredicateCode",
+        "agent": "critic",
+        "task": "/skill:godspeed\n\nReview item (C1 fidelity): compare the predicate sentence in /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-64/controls/freeze.txt with the docstring of tools/round64-c1-counter.py and with what the code actually checks, clause by clause (holder = hold pid; exe sha at the counter-chosen path; argv/environ/maps; descendant and later start; fresh hold.json; counter-observed teardown; 2 random probes vs reference; 76 controls; 3 plants). For every clause name the line numbers that enforce it or say `unenforced`; list clauses the code enforces that the sentence does not state and sentence clauses the code does not enforce. f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: freeze fidelity\n\nReport: write your scoped findings to .ufo/waves/round-64/b/CR01PredicateCode.md"
+      },
+      {
+        "name": "CR02ControlTargeting",
+        "agent": "critic",
+        "task": "/skill:godspeed\n\nReview item (C1 controls): for each family in EXPECT_FAMILIES of tools/round64-c1-counter.py, read the control definitions and decide whether the NAMED check is the real cause of rejection or whether another failure (bind_claim, bind_stable, live_ref_*) would reject it anyway - run the counter at f6a4ea9a8b5a876d685b08e7e582ec0723412a4a and use the detail printed for escapes, then build 5 deliberately mis-named variants (right mutation, wrong expected check) in a clone and report whether the counter credits them (it must not). List controls that are not independent (two controls the same single edit). Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: control validity\n\nReport: write your scoped findings to .ufo/waves/round-64/b/CR02ControlTargeting.md"
+      },
+      {
+        "name": "CR03DoNothing",
+        "agent": "critic",
+        "task": "/skill:godspeed\n\nReview item (C1 do-nothing): freeze.txt claims the target is unreachable by a do-nothing change. Build the cheapest tool that makes the counter print met=True WITHOUT the claimed work: candidates - the v2 tool with only the schema string and a hand-written listener_holders block computed from the real child; the v3 tool with listener_holders_pinned always true; a tool that launches the pinned server correctly but starts a SECOND holder only after raw_a... (be inventive but honest: each candidate is a clone edit committed and scored). Report the met= line of each; any pass means the counter or target is wrong. f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: do-nothing control\n\nReport: write your scoped findings to .ufo/waves/round-64/b/CR03DoNothing.md"
+      },
+      {
+        "name": "CR04OwnershipScope",
+        "agent": "critic",
+        "task": "/skill:godspeed\n\nReview item (C1 scope): the round-63 closure said the predicate sentence was 'the answering process is the pinned llama-server'. Decide whether the r64 sentence and counter now establish exactly that, or something narrower (a process that holds the listener AND answers correctly AND is pinned, with a socket handed to no other process) - and where the gap is (initial environ only, argv spoofable, dumpable=0, files replaced after mapping, same-uid ptrace). Draft the `What met=True does not show` bullet list for the SCORECARD (each bullet one sentence, each tied to a survivor or an unmodelled vector with path:line). f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: scope and wording\n\nReport: write your scoped findings to .ufo/waves/round-64/b/CR04OwnershipScope.md"
+      },
+      {
+        "name": "RV01ToolDiff",
+        "agent": "reviewer",
+        "task": "/skill:godspeed\n\nReview item (C1 tool): read `git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff 0c1eff3c f6a4ea9a8b5a876d685b08e7e582ec0723412a4a -- tools/kama-completion-live.py` and the whole tool once more. Find correctness defects in _proc_holders (zombie/process exit races between listdir and readlink, EACCES, pid reuse, IPv6 listeners via _live._listen_inodes), in the placement of the holders check relative to the hold window, in the SETUP_ERROR paths, and in schema/doc text. Run the tool bare and in hold mode 5 times; report any REQUEST_OK failure. f6a4ea9a8b5a876d685b08e7e582ec0723412a4a. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: review tool v3\n\nReport: write your scoped findings to .ufo/waves/round-64/b/RV01ToolDiff.md"
+      },
+      {
+        "name": "RV02CounterCode",
+        "agent": "reviewer",
+        "task": "/skill:godspeed\n\nReview item (C1 counter code): read tools/round64-c1-counter.py end to end at f6a4ea9a8b5a876d685b08e7e582ec0723412a4a and list bugs with line numbers: resource leaks (servers left running after an exception, ref-server not torn down), files written outside --work or under /tmp, hardcoded paths, global NONCE handling across scenario runs, timeouts, zombie handling in pid_gone, the cache of sha256_path (is /proc/<pid>/exe hashed fresh each time?), forged-variant patch application (patch -F3 fuzz accepting a wrong hunk), exceptions swallowed into `no credit` without surfacing as errors. For each defect say whether it can flip a verdict. Run `pgrep -af llama-server` before and after one counter run and report leaked children. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: review counter code\n\nReport: write your scoped findings to .ufo/waves/round-64/b/RV02CounterCode.md"
+      },
+      {
+        "name": "RV03SourcesGate",
+        "agent": "reviewer",
+        "task": "/skill:godspeed\n\nReview item (sourced claim): the lane registry rows S529-S532 (corpus/SOURCES.md) cite Linux man-pages proc_pid_fd(5), proc_pid_stat(5), proc_pid_environ(5), proc_pid_cmdline(5), with fetched bytes under /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-64/source/. Check each row against the contract (CORPUS.md SOURCES section rules 1-6, 11 columns, no pipe inside a cell, status/used-by valid, anchor names a section plus revision), check that the scope clause of each row does not overreach (e.g. S531 initial environment only), and check which sentence of tools/round64-c1-counter.py each row supports (grep the docstring and the grading code). Run `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama` against the lane at f6a4ea9a8b5a876d685b08e7e582ec0723412a4a using a scratch export of the tip (git -C /home/vgpnk/Projects/shokunin/kama-shokunin archive f6a4ea9a8b5a876d685b08e7e582ec0723412a4a | tar -x -C $S/tip, then --file $S/tip/corpus/SOURCES.md) and report the exit code and E/W codes. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: review sourced claim\n\nReport: write your scoped findings to .ufo/waves/round-64/b/RV03SourcesGate.md"
+      },
+      {
+        "name": "SN01Sandbox",
+        "agent": "sentinel",
+        "task": "/skill:godspeed\n\nSecurity item (C1): the counter runs tip-supplied tools as subprocesses (the tool under judgment is untrusted) and applies patches. Review at f6a4ea9a8b5a876d685b08e7e582ec0723412a4a: can a malicious tool write outside --work (it runs with the counter's uid), signal the counter or its reference server (pids, process group - Popen without start_new_session), read the counter's own memory or the receipt template, exploit `patch -p1` path handling in apply_patch (the patch text comes from the tip tree), exploit the model/server path discovery (PATH lookup), or leave processes behind? Demonstrate each feasible issue with a harmless proof in your scratch (e.g. the forged tool touching a file in your scratch outside --work) and rate it: does it flip a verdict, or only escape the sandbox? Do not exploit anything outside your scratch. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: security of the counter\n\nReport: write your scoped findings to .ufo/waves/round-64/b/SN01Sandbox.md"
+      },
+      {
+        "name": "SC01ProcFd",
+        "agent": "scout",
+        "task": "/skill:godspeed\n\nSource item: independently re-open https://man7.org/linux/man-pages/man5/proc_pid_fd.5.html (and the kernel text it relies on if linked) and decide whether corpus/SOURCES.md row S529 states only what the page says. Record the access date, the page's man-pages version line, and the ≤25-word quote that supports the row's `teaches` with its location; flag any overreach in the row's scope. Also check whether a hidepid / ptrace-access-mode caveat for reading another process's fd table is stated on this page or on proc(5) and quote it. Write your findings to your report. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: reopen S529\n\nReport: write your scoped findings to .ufo/waves/round-64/b/SC01ProcFd.md"
+      },
+      {
+        "name": "SC02ProcStat",
+        "agent": "scout",
+        "task": "/skill:godspeed\n\nSource item: re-open https://man7.org/linux/man-pages/man5/proc_pid_stat.5.html and verify S530: field numbering of starttime (22) vs the code `rest[19]` after splitting past the last ')' in tools/round64-c1-counter.py (stat_fields), the units (clock ticks, sysconf(_SC_CLK_TCK)), and the rule that comm may contain spaces/parentheses. Quote ≤25 words with location, record the access date, and say whether comparing two processes' starttime values from one boot is sound (cite the page text). Write your findings to your report. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: reopen S530\n\nReport: write your scoped findings to .ufo/waves/round-64/b/SC02ProcStat.md"
+      },
+      {
+        "name": "SC03ProcEnvCmd",
+        "agent": "scout",
+        "task": "/skill:godspeed\n\nSource item: re-open https://man7.org/linux/man-pages/man5/proc_pid_environ.5.html and https://man7.org/linux/man-pages/man5/proc_pid_cmdline.5.html and verify rows S531 and S532 of corpus/SOURCES.md: quote ≤25 words with location for each, the access date, and every limit the pages state (environ = initial environment; cmdline layout/rewrite behaviour; permission modes). Say whether the rows' scope clauses state those limits. Write your findings to your report. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: reopen S531 S532\n\nReport: write your scoped findings to .ufo/waves/round-64/b/SC03ProcEnvCmd.md"
+      },
+      {
+        "name": "SC04Considerthese",
+        "agent": "scout",
+        "task": "/skill:godspeed\n\nSource item: read /home/vgpnk/Projects/shokunin/kama-shokunin/considerthese/ (all files; newest 2026-10-26.md) and find at most ONE proposal that is still unimplemented and fits this round's claims or the lane province (local model serving, endpoint health). For it, open what it points at (not the reflection text), say what the lane would land (lesson, QUALITY criterion or SOURCES row citing considerthese/<file> + date), and list the proposals already implemented by grep evidence (tools/ or corpus/ path and round). Write your findings to your report. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: mine considerthese\n\nReport: write your scoped findings to .ufo/waves/round-64/b/SC04Considerthese.md"
+      },
+      {
+        "name": "SC05Quarantine",
+        "agent": "scout",
+        "task": "/skill:godspeed\n\nSource item: derive the kama quarantine slice (read-only): R=/home/vgpnk/Projects/shokuknow/.ufo/waves/corpus-expansion-1/absent-defect-register.md; awk -F'|' -v l='kama' '$2 ~ (\"`\" l \"`\") && $3 ~ /round[0-9]+/ && $4 ~ /S[0-9]+/ {print $4, $5}' \"$R\". Round 63 hand-checked 7 rows (4 staged quotes absent, 3 present). Re-derive the slice at today's bytes, report the row count and whether it changed, and for ONE row not already checked in round 63 (read corpus/lessons/round-63.md ## Gate) fetch the cited source and locate or fail to locate the quote (verbatim ≤25 words with location, or `absent`). Never run a tool in /home/vgpnk/Projects/shokuknow and never write there. Write your findings to your report. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: quarantine slice\n\nReport: write your scoped findings to .ufo/waves/round-64/b/SC05Quarantine.md"
+      },
+      {
+        "name": "SC06ProcTcp",
+        "agent": "scout",
+        "task": "/skill:godspeed\n\nSource item: re-open the held row S049 (Linux kernel Documentation/networking/proc_net_tcp.rst at the pinned tag, URL in corpus/SOURCES.md) and verify what it says about the `st` value 0A (LISTEN), the inode column, the address byte order, and its deprecation note, against the code in tools/round64-c1-counter.py listeners() and _hex_loopback() (IPv6 words, the IPv4-mapped form). Quote ≤25 words with location, record the access date, and say whether S049 already supports every parse rule in the code or a new row is needed. Write your findings to your report. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: reopen S049\n\nReport: write your scoped findings to .ufo/waves/round-64/b/SC06ProcTcp.md"
+      },
+      {
+        "name": "SB01Knowledge",
+        "agent": "scribe",
+        "task": "/skill:godspeed\n\nDraft item (sourced claim): draft the new knowledge entry corpus/knowledge/process-bound-listener.md - how a verifier binds the answering process to a pinned serving binary from procfs on Linux (socket inode from /proc/net/tcp, holders from /proc/<pid>/fd, exe link and its sha256, argv, initial environ, mapped files, starttime ordering, ancestry, counter-observed teardown, reference-server agreement) and the limits each observation has. Open with `source:` (cite S529-S532 plus held S049, S495, S496, S499 by id and URL), `verified-at:` (f6a4ea9a8b5a876d685b08e7e582ec0723412a4a) and `recheck:` (a command). Every number carries its command; every quote names its location; mark opinion as opinion. Write the full draft under your out dir as process-bound-listener.md (do not write into the lane). Re-open each cited man page yourself (fetch with curl into your scratch) before you quote it. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: draft knowledge entry\n\nReport: write your scoped findings to .ufo/waves/round-64/b/SB01Knowledge.md"
+      },
+      {
+        "name": "SB02QualityDraft",
+        "agent": "scribe",
+        "task": "/skill:godspeed\n\nDraft item (mistake mining): read corpus/QUALITY.md (the KQ102-KQ106 tail) and corpus/lessons/round-63.md `## Mistakes`, then draft criteria KQ107.. for this round's mined mistake class - a counter that binds the wrong object (the socket instead of the process, the receipt's own pid, a helper loaded from the tree under judgment) and a calibration cell left stale because the reconciler had no conjunct for it - each criterion in the existing row format, citing the lesson (corpus/lessons/round-64.md, to be written) and the evidence path. Also draft the lesson `## Mistakes` rows (class, evidence pointer, captured-by, fix) for: r63 C1 binding the socket not the process, r63 calibration pointer stale, r63 C2 certifying tip-tree tools by running them. Deliver as drafts in your out dir. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: calibration\nMilestone: draft QUALITY criteria\n\nReport: write your scoped findings to .ufo/waves/round-64/b/SB02QualityDraft.md"
+      },
+      {
+        "name": "SB03LessonGate",
+        "agent": "scribe",
+        "task": "/skill:godspeed\n\nDraft item (lesson Gate): draft the `## Gate` and `## Sources` blocks of corpus/lessons/round-64.md for rows S529-S532 as the contract requires: per new row the URL, access date, and a ≤25-word located quote (open each page yourself with curl into your scratch; the fetched bytes are also at /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-64/source/); an admit/reject table for the candidates considered (S529-S532 admitted as queued; rejections: proc_pid_map_files(5) (S508, rejected earlier - restate the reason), proc_pid_cmdline as sole evidence of identity, and any further candidate you find); the status/used-by flips planned old->new (S529-S532 queued -> mined once corpus/knowledge/process-bound-listener.md exists). Deliver in your out dir. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: draft lesson gate\n\nReport: write your scoped findings to .ufo/waves/round-64/b/SB03LessonGate.md"
+      },
+      {
+        "name": "CN01CrossClaim",
+        "agent": "connector",
+        "task": "/skill:godspeed\n\nConnector item: find patterns across C1 and C2 and across this wave's reports once they exist (read .ufo/waves/round-64/b/*.md that already exist when you start, plus the round-63 reports): where does a C2 counter weakness (certifying by running, pinned tables, regression tables) mirror a C1 weakness (certifying by the socket)? Which two seats' findings contradict each other? Produce a short table of cross-claim risks with path:line evidence and one proposed shared check that would close two weaknesses at once. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability, calibration\nMilestone: cross-claim scan\n\nReport: write your scoped findings to .ufo/waves/round-64/b/CN01CrossClaim.md"
+      },
+      {
+        "name": "CN02SiblingOverlap",
+        "agent": "connector",
+        "task": "/skill:godspeed\n\nConnector item (sibling-overlap scan): list other lanes' tools or corpus entries that already implement procfs-based process/socket binding or pinned-binary verification (grep -rIl for `/proc/` + `exe` in /home/vgpnk/Projects/shokunin/*-shokunin/tools and corpus/knowledge; read-only). For each hit decide: duplicate of what kama just built, a reusable control idea, or out of kama's province (cross-lane-scope.md). Name contested scope and where it must be reported rather than absorbed. Recipe: see context.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: sibling overlap scan\n\nReport: write your scoped findings to .ufo/waves/round-64/b/CN02SiblingOverlap.md"
+      }
+    ]
+  },
+  "resumeSends": [],
+  "note": "Issue exactly one batched task call with taskCall ({context, tasks}); never split a wave into multiple task calls (one-swarm-per-wave). Then one hub send per resumeSends entry: hub send --to <entry.resume> --message <entry.message> (entry.name is bookkeeping, not a hub field)."
+}

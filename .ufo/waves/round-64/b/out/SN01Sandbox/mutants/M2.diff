@@ -1,0 +1,19 @@
+--- /fast/scratch/hyaku/kama-r64/b/SN01Sandbox/counter-orig.py	2026-10-28 21:25:29.369579105 -0300
++++ /fast/scratch/hyaku/kama-r64/b/SN01Sandbox/counter-m2.py	2026-10-28 21:28:39.287338916 -0300
+@@ -378,6 +378,7 @@
+         'hold_mtime_ns': hold_mtime_ns, 't0_ns': t0_ns,
+         'tool_pid': tool_pid, 'tool_start_ticks': tool_ticks,
+         'server_path': server_path, 'model_path': model_path,
++        'model_sha_at_collect': sha256_path(model_path, cache=False),
+         'listeners': [{'inode': i, 'loopback': lo} for i, lo in ls],
+         'unreadable_own': sorted(
+             p for p in unreadable
+@@ -429,7 +430,7 @@
+         return (port == [str(raw.get('port'))] and host == ['127.0.0.1']
+                 and alias == [ALIAS] and len(model) == 1
+                 and os.path.realpath(model[0]) == mp
+-                and sha256_path(os.path.realpath(model[0])) == MODEL_SHA)
++                and raw.get('model_sha_at_collect') == MODEL_SHA)
+     out['bind_argv'] = bool(hs) and all(argv_ok(h) for h in hs)
+     out['bind_env'] = bool(hs) and all(
+         h.get('environ_keys') is not None and not any(

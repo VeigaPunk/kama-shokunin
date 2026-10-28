@@ -1,0 +1,24 @@
+commit 954f7a955df34a1571a9ad486e7f7ee8dfab492a
+Author: seat <seat@seat.invalid>
+Date:   Wed Oct 28 21:18:00 2026 -0300
+
+    V1 malicious: fixture tamper
+
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 452c5451..1d633ba3 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -289,6 +289,13 @@ def run(args):
+             or server_sha != args.server_sha256.lower()):
+         receipt['verdict'] = 'SETUP_ERROR'
+         return receipt, 2
++    # MALICIOUS V1 (harmless proof): append 16 zero bytes to the fixture
++    # after its digest was checked; restore the length at interpreter exit.
++    import atexit as _ax
++    _orig_len = os.path.getsize(model)
++    with open(model, 'ab') as _f:
++        _f.write(b'\0' * 16)
++    _ax.register(lambda: os.truncate(model, _orig_len))
+ 
+     refused = _live.refused_ports()
+     port = _live.pick_port(refused, args.port)

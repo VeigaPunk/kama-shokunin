@@ -1,0 +1,11 @@
+GNU patch 2.8, patch -p1 -F3 -s -i <abs patch> -d <abs dir>
+1. hunk "--- a/../../../../<scratch>/out/escape-rel.txt +++ b/../../../../<scratch>/out/escape-rel.txt"
+   -> "Ignoring potentially dangerous file name ..."; rc=1; nothing written outside d.
+2. hunk "--- /dev/null +++ <abs scratch path>/escape-abs.txt"
+   -> rc=0; file created as d/<abs path without leading slash>, i.e. confined under -d.
+3. symlinked target d/tools/x.py -> outside file
+   -> "File tools/x.py is not a regular file -- refusing to patch"; outside file untouched.
+4. symlinked dir d/tools/newdir -> outside dir, new file tools/newdir/planted.txt
+   -> "Invalid file name tools/newdir/planted.txt -- skipping patch"; nothing written outside.
+Conclusion: patch 2.8 blocks ".." names, confines absolute names, refuses symlinked targets and dirs.
+The counter's own open()/makedirs (apply_patch) do NOT have these checks (see report F3, V4).

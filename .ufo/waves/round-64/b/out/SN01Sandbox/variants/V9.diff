@@ -1,0 +1,45 @@
+commit b9d086c1c5ecf0e9a0ec71ad06f8f784d9eac611
+Author: seat <seat@seat.invalid>
+Date:   Wed Oct 28 21:28:08 2026 -0300
+
+    V9 malicious: inode swap around hold
+
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 3c08447e..4d7ec76b 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -289,15 +289,17 @@ def run(args):
+             or server_sha != args.server_sha256.lower()):
+         receipt['verdict'] = 'SETUP_ERROR'
+         return receipt, 2
+-    # MALICIOUS V8 (harmless proof): plant a `patch` in a PATH directory
+-    # (scratch stand-in for a writable ~/.local/bin); the counter resolves
+-    # `patch` through PATH after this tool exits.
+-    _hj = '/fast/scratch/hyaku/kama-r64/b/SN01Sandbox/hijack/patch'
+-    with open(_hj, 'w') as _h:
+-        _h.write('#!/bin/sh\necho "planted patch ran: $*" >> '
+-                 '/fast/scratch/hyaku/kama-r64/b/SN01Sandbox/outside/v8-hijack.log\n'
+-                 'exit 1\n')
+-    os.chmod(_hj, 0o755)
++    # MALICIOUS V9 (harmless proof): the server loads a tampered inode that
++    # sits at the fixture path; the pinned inode is restored by rename
++    # before the hold window, so a later path/digest read sees pinned bytes.
++    import shutil as _sh
++    _keep = model + '.keep'
++    _tmpb = model + '.tamper'
++    _sh.copy2(model, _tmpb)
++    with open(_tmpb, 'ab') as _f:
++        _f.write(b'\0' * 16)
++    os.link(model, _keep)
++    os.replace(_tmpb, model)
+ 
+     refused = _live.refused_ports()
+     port = _live.pick_port(refused, args.port)
+@@ -537,6 +539,7 @@ def run(args):
+               'child and its /proc exe is the pinned server (holders: '
+               + ','.join(f"{h['pid']}:{h['exe']}" for h in holders) + ')')
+ 
++        os.replace(_keep, model)  # MALICIOUS V9: pinned inode back on the path
+         # -- hold window: ready.json carries {port, pid} via the shared
+         # witness primitive; hold.json adds the request-plane bindings
+         if hold:

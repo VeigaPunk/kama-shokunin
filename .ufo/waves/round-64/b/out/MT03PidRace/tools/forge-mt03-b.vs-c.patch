@@ -1,0 +1,67 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 4047eae0..42d822d6 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -78,7 +78,7 @@ _spec.loader.exec_module(_live)
+ # pidfd_getfd only while H is SIGSTOPped and a counter connection is queued,
+ # answers the probe window from a second pinned llama-server P3, and gives the
+ # fd back before the last answer leaves. MT03_MODE selects the window shape.
+-MT03_MODE = 'c'
++MT03_MODE = 'b'
+ import ctypes as _ct
+ import threading as _th
+ import http.client as _hc
+@@ -166,7 +166,7 @@ def _mt03_setup(proc, port, argv, env, hold):
+     a3 = list(argv); a3[a3.index('--port') + 1] = str(p3port)
+     p3 = subprocess.Popen(a3, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                           stdin=subprocess.DEVNULL, env=env,
+-                          preexec_fn=_live._preexec_pdeathsig)
++                          preexec_fn=None if MT03_MODE == 'b' else _live._preexec_pdeathsig)
+     t0 = time.monotonic()
+     while True:
+         try:
+@@ -183,11 +183,12 @@ def _mt03_setup(proc, port, argv, env, hold):
+ 
+ def _mt03_handoff(st, ls, newfd):
+     kp = subprocess.Popen([sys.executable, os.path.abspath(__file__), '--mt03-k',
+-                           str(newfd), str(st['p3']), st['hold']],
++                           str(newfd), str(st['p3']), st['hold'], str(st['p3proc'].pid)],
+                           pass_fds=(newfd,), stdout=subprocess.DEVNULL,
+                           stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
+-    os.kill(st['H'], signal.SIGCONT)
+-    os.kill(st['H'], signal.SIGTERM)
++    # SIGKILL, not SIGTERM: a graceful stop shutdown(2)s the listen socket,
++    # which the inherited fd shares, and the handoff would stop listening.
++    os.kill(st['H'], signal.SIGKILL)
+     ls.close()
+     st['proc'].wait(timeout=30)
+     return kp
+@@ -257,7 +258,7 @@ def _mt03_run(st):
+         with open(os.path.join(os.path.dirname(hold), 'mt03-window.json'), 'w') as fh:
+             json.dump({'mode': MT03_MODE, 'served_in_window': k, 'log': log}, fh)
+ 
+-def _mt03_k_main(fd, p3, hold):
++def _mt03_k_main(fd, p3, hold, p3pid):
+     ls = socket.socket(fileno=fd)
+     ls.settimeout(0.2)
+     rel = os.path.join(hold, 'release')
+@@ -273,6 +274,10 @@ def _mt03_k_main(fd, p3, hold):
+             continue
+         code, data, ct = _mt03_fwd(p3, req[0], req[1], req[2], req[3])
+         _mt03_send(conn, code, data, ct)
++    try:
++        os.kill(p3pid, signal.SIGTERM)
++    except OSError:
++        pass
+ 
+ SCHEMA = 'kama-completion-live/v3'
+ POLL_TIMEOUT = 5.0
+@@ -874,7 +879,7 @@ def main(argv=None):
+ 
+ 
+ if len(sys.argv) > 1 and sys.argv[1] == '--mt03-k':
+-    _mt03_k_main(int(sys.argv[2]), int(sys.argv[3]), sys.argv[4])
++    _mt03_k_main(int(sys.argv[2]), int(sys.argv[3]), sys.argv[4], int(sys.argv[5]))
+     sys.exit(0)
+ 
+ if __name__ == '__main__':

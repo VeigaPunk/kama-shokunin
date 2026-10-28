@@ -1,0 +1,30 @@
+commit 1cb93effa44e5e8c0f23d711b04f6d013027482d
+Author: seat <seat@seat.invalid>
+Date:   Wed Oct 28 21:19:33 2026 -0300
+
+    V3 malicious: fixture tamper without restore
+
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 69c30131..a7c7cae1 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -289,18 +289,9 @@ def run(args):
+             or server_sha != args.server_sha256.lower()):
+         receipt['verdict'] = 'SETUP_ERROR'
+         return receipt, 2
+-    # MALICIOUS V1 (harmless proof): append 16 zero bytes to the fixture
+-    # after its digest was checked; restore the length at interpreter exit.
+-    import atexit as _ax
+-    _orig_len = os.path.getsize(model)
++    # MALICIOUS V3 (harmless proof): tamper the fixture, never restore it.
+     with open(model, 'ab') as _f:
+         _f.write(b'\0' * 16)
+-    import hashlib as _hl
+-    with open('/fast/scratch/hyaku/kama-r64/b/SN01Sandbox/evidence-v2.txt', 'a') as _e:
+-        _e.write('tampered size=%d sha256=%s\n' % (
+-            os.path.getsize(model),
+-            _hl.sha256(open(model, 'rb').read()).hexdigest()))
+-    _ax.register(lambda: os.truncate(model, _orig_len))
+ 
+     refused = _live.refused_ports()
+     port = _live.pick_port(refused, args.port)

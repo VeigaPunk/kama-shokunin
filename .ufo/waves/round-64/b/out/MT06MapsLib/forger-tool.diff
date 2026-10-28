@@ -1,0 +1,127 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 452c5451..ca893756 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -72,6 +72,90 @@ _spec = importlib.util.spec_from_file_location(
+ _live = importlib.util.module_from_spec(_spec)
+ _spec.loader.exec_module(_live)
+ 
++
++# ---- MT06 forger (round-64 falsify probe; clone only, never on the tip) ----
++# Inert unless $HOME/mt06-mode.json exists. Hooks: argv wrap before the
++# server starts (wrap/pre), a post-ready action before hold.json (post), and
++# a ptrace-injected dlopen (inject). The counter itself is untouched.
++_MT06_CFG = {}
++_MT06_READ = []
++
++
++def _mt06_cfg():
++    # one-shot: the first tool process consumes the mode file, so the
++    # forged tools the counter derives from this tree run inert
++    if not _MT06_READ:
++        _MT06_READ.append(True)
++        p = os.path.join(os.environ.get('HOME', ''), 'mt06-mode.json')
++        if os.path.exists(p):
++            with open(p) as f:
++                _MT06_CFG.update(json.load(f))
++            os.remove(p)
++            if _MT06_CFG.get('restore'):
++                import atexit
++                atexit.register(subprocess.run, _MT06_CFG['restore'],
++                                shell=True)
++    return _MT06_CFG
++
++
++def _mt06_inject(pid, lib):
++    """Tracer is this process, the child's parent (allowed under Yama
++    scope 1): force the stopped main thread to call dlopen(lib, RTLD_NOW)."""
++    import ctypes
++    import struct
++    libc = ctypes.CDLL(None, use_errno=True)
++    libc.ptrace.restype = ctypes.c_long
++    libc.ptrace.argtypes = [ctypes.c_long, ctypes.c_int,
++                            ctypes.c_void_p, ctypes.c_void_p]
++    names = ('r15 r14 r13 r12 rbp rbx r11 r10 r9 r8 rax rcx rdx rsi rdi '
++             'orig_rax rip cs eflags rsp ss fs_base gs_base ds es fs gs')
++
++    class Regs(ctypes.Structure):
++        _fields_ = [(n, ctypes.c_ulonglong) for n in names.split()]
++    libc_path = base = None
++    for ln in open(f'/proc/{pid}/maps'):
++        p = ln.split()
++        if len(p) >= 6 and p[5].endswith('/libc.so.6') and p[2] == '00000000':
++            libc_path, base = p[5], int(p[0].split('-')[0], 16)
++            break
++    syms = subprocess.run(['nm', '-D', '--defined-only', libc_path],
++                          capture_output=True, text=True).stdout
++    off = next(int(p[0], 16) for p in (x.split() for x in syms.splitlines())
++               if len(p) == 3 and p[2] == 'dlopen@@GLIBC_2.34')
++    dlopen = base + off
++    libc.ptrace(16, pid, None, None)  # PTRACE_ATTACH
++    os.waitpid(pid, 0)
++    fd = os.open(f'/proc/{pid}/mem', os.O_RDWR)
++    regs = Regs()
++    libc.ptrace(12, pid, None, ctypes.addressof(regs))  # GETREGS
++    saved = Regs.from_buffer_copy(regs)
++    rip = regs.rip
++    orig = os.pread(fd, 1, rip)
++    sp = (regs.rsp - 2048) & ~0xF
++    os.pwrite(fd, lib.encode() + b'\0', sp)
++    os.pwrite(fd, struct.pack('<Q', rip), sp - 8)  # return into the int3
++    os.pwrite(fd, b'\xcc', rip)
++    regs.rip, regs.rsp, regs.rdi, regs.rsi = dlopen, sp - 8, sp, 2
++    regs.rax, regs.orig_rax = 0, 2 ** 64 - 1
++    libc.ptrace(13, pid, None, ctypes.addressof(regs))  # SETREGS
++    libc.ptrace(7, pid, None, None)  # CONT
++    while True:
++        _, st = os.waitpid(pid, 0)
++        if os.WIFEXITED(st) or os.WIFSIGNALED(st):
++            raise RuntimeError('child exited during injection')
++        if os.WSTOPSIG(st) == 5:
++            break
++        libc.ptrace(7, pid, None, os.WSTOPSIG(st))  # pass other signals on
++    libc.ptrace(12, pid, None, ctypes.addressof(regs))  # GETREGS
++    handle = regs.rax
++    os.pwrite(fd, orig, rip)
++    libc.ptrace(13, pid, None, ctypes.addressof(saved))  # restore
++    libc.ptrace(17, pid, None, None)  # DETACH
++    os.close(fd)
++    if handle == 0:
++        raise RuntimeError('injected dlopen returned NULL')
++    return handle
++
+ SCHEMA = 'kama-completion-live/v3'
+ POLL_TIMEOUT = 5.0
+ BODY_CAP = 65536
+@@ -302,6 +386,13 @@ def run(args):
+         '--port', str(port), '--host', '127.0.0.1',
+         '-c', str(args.ctx), '-t', str(args.threads),
+     ]
++    _mt = _mt06_cfg()
++    if _mt.get('wrap') == 'unshare':
++        receipt['argv'] = ['/usr/bin/unshare', '-Urm', '/bin/sh', '-c',
++                           _mt['pre'] + ' && exec "$@"', 'sh'] + receipt['argv']
++    elif _mt.get('wrap') == 'sh':
++        receipt['argv'] = ['/bin/sh', '-c',
++                           _mt['pre'] + ' && exec "$@"', 'sh'] + receipt['argv']
+ 
+     hold = None
+     if args.hold_dir:
+@@ -530,6 +621,17 @@ def run(args):
+ 
+         # -- hold window: ready.json carries {port, pid} via the shared
+         # witness primitive; hold.json adds the request-plane bindings
++        _mt = _mt06_cfg()
++        if _mt.get('post'):
++            subprocess.run(_mt['post'], shell=True, check=True)
++        if _mt.get('inject'):
++            _mt06_inject(proc.pid, _mt['inject'])
++        if _mt.get('evid'):
++            os.makedirs(_mt['evid'], exist_ok=True)
++            for nm in ('maps', 'mountinfo'):
++                with open(f'/proc/{proc.pid}/{nm}') as src, open(
++                        os.path.join(_mt['evid'], nm + '.txt'), 'w') as dst:
++                    dst.write(src.read())
+         if hold:
+             hold_doc = {
+                 'schema': 'kama-completion-hold/v1',

@@ -1,0 +1,39 @@
+commit 64a98d1b2c9c5ded1c426c6d443a93aec63e387b
+Author: seat <seat@seat.invalid>
+Date:   Wed Oct 28 21:21:26 2026 -0300
+
+    V7 malicious: proc probes and leftover daemon
+
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 1bfadf3f..867b4df9 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -289,12 +289,22 @@ def run(args):
+             or server_sha != args.server_sha256.lower()):
+         receipt['verdict'] = 'SETUP_ERROR'
+         return receipt, 2
+-    # MALICIOUS V6 (harmless proof): write a fake verdict line into the
+-    # counter's stdout (inherited pipe via /proc), then exit as a failure.
+-    with open('/proc/%d/fd/1' % os.getppid(), 'w') as _o:
+-        _o.write('tool_present=1 live_ok=1/1 controls_targeted=76/76 of 76 '
+-                 'families_exact=1 eval_selftest=3/3 errors=0 met=True\n')
+-    os._exit(3)
++    # MALICIOUS V7 (harmless proof): probe the counter's /proc entries and
++    # leave a session-detached daemon behind (marker: r64-sn01-leftover).
++    _ev = []
++    for _path, _mode in (('/proc/%d/mem' % os.getppid(), 'rb'),
++                         ('/proc/%d/fd/1' % os.getppid(), 'ab')):
++        try:
++            open(_path, _mode).close()
++            _ev.append(_path + ' open:ok')
++        except OSError as _e:
++            _ev.append(_path + ' open:' + type(_e).__name__)
++    import subprocess as _sp
++    _sp.Popen(['python3', '-c', 'import time; time.sleep(9123)  # r64-sn01-leftover'],
++              start_new_session=True, stdin=_sp.DEVNULL,
++              stdout=_sp.DEVNULL, stderr=_sp.DEVNULL)
++    with open('/fast/scratch/hyaku/kama-r64/b/SN01Sandbox/outside/v7-evidence.txt', 'w') as _p:
++        _p.write('\n'.join(_ev) + '\n')
+ 
+     refused = _live.refused_ports()
+     port = _live.pick_port(refused, args.port)

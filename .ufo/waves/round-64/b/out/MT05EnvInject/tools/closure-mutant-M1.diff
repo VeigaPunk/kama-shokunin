@@ -1,0 +1,43 @@
+335c335,340
+<         out.append({'path': path, 'deleted': deleted, 'sha256': sha})
+---
+>         ino = int(parts[4]) if parts[4].isdigit() else None
+>         stat_ino = None
+>         if not deleted and real.startswith('/') and os.path.exists(real):
+>             stat_ino = os.stat(real).st_ino
+>         out.append({'path': path, 'deleted': deleted, 'sha256': sha,
+>                     'ino': ino, 'stat_ino': stat_ino})
+364a370,379
+>     try:
+>         rec['mnt_ns'] = os.readlink(f'/proc/{pid}/ns/mnt')
+>     except OSError:
+>         rec['mnt_ns'] = None
+>     try:
+>         st = open(f'/proc/{pid}/status').read()
+>         rec['tracer_pid'] = int([l for l in st.splitlines()
+>                                  if l.startswith('TracerPid:')][0].split()[1])
+>     except (OSError, IndexError, ValueError):
+>         rec['tracer_pid'] = None
+386a402
+>         'counter_mnt_ns': os.readlink('/proc/self/ns/mnt'),
+474a491,505
+> 
+>     def inode_ok(h):
+>         for m in h.get('maps') or []:
+>             p = m.get('path') or ''
+>             if not p.startswith('/') or m.get('deleted'):
+>                 continue
+>             if m.get('ino') is None or m.get('stat_ino') is None \
+>                     or m['ino'] != m['stat_ino']:
+>                 return False
+>         return True
+>     out['bind_mntns'] = bool(hs) and all(
+>         h.get('mnt_ns') is not None and h.get('mnt_ns') == raw.get('counter_mnt_ns')
+>         for h in hs)
+>     out['bind_inode'] = bool(hs) and all(inode_ok(h) for h in hs)
+>     out['bind_tracer'] = bool(hs) and all(h.get('tracer_pid') == 0 for h in hs)
+479c510,511
+<                'bind_env', 'bind_maps', 'bind_ancestry', 'hold_fresh')
+---
+>                'bind_env', 'bind_maps', 'bind_ancestry', 'hold_fresh',
+>                'bind_mntns', 'bind_inode', 'bind_tracer')

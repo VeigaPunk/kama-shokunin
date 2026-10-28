@@ -1,0 +1,40 @@
+--- /fast/scratch/hyaku/kama-r64/b/MT12ProxyLeak/clone/tools/round64-c1-counter.py	2026-10-28 21:28:39.839326494 -0300
++++ /fast/scratch/hyaku/kama-r64/b/MT12ProxyLeak/instr/round64-c1-counter-diag.py	2026-10-28 21:19:15.530269599 -0300
+@@ -431,14 +431,10 @@
+                 and os.path.realpath(model[0]) == mp
+                 and sha256_path(os.path.realpath(model[0])) == MODEL_SHA)
+     out['bind_argv'] = bool(hs) and all(argv_ok(h) for h in hs)
+-    def env_ok(h):
+-        keys = h.get('environ_keys')
+-        if keys is None:
+-            return False
+-        if any(k.startswith('LD_') or k.startswith('GLIBC_TUNABLES') for k in keys):
+-            return False
+-        return set(keys) <= set(_TOOL_ENV_KEYS)
+-    out['bind_env'] = bool(hs) and all(env_ok(h) for h in hs)
++    out['bind_env'] = bool(hs) and all(
++        h.get('environ_keys') is not None and not any(
++            k.startswith('LD_') or k.startswith('GLIBC_TUNABLES')
++            for k in h['environ_keys']) for h in hs)
+ 
+     def maps_ok(h):
+         ms = h.get('maps')
+@@ -1490,6 +1486,9 @@
+             errors.append('reference server produced no answers')
+         receipt, witness, binding, nonce, notes = witness_run(
+             work, 'live', tool_path, server, model, reqs)
++        if binding is not None:
++            open(os.path.join(work, 'diag-binding.json'), 'w').write(json.dumps(
++                {'raw_a': binding.get('raw_a'), 'teardown': binding.get('teardown')}, indent=1, default=str))
+         NONCE = nonce
+         # the probes carry the probe nonce; the receipt carries the tool
+         # nonce: bind both to this run
+@@ -1569,7 +1568,7 @@
+         if not hit:
+             detail.append(f'escape {fam}/{label} expect={expect} '
+                           f'met={s["met"]} nfails={len(s["fails"])} '
+-                          f'fails={sorted(s["fails"])[:8]}')
++                          f'fails={sorted(s["fails"])}')
+ 
+     for fam, m, wm, bm, expect, cap in build_controls(
+             receipt, witness, binding, work):

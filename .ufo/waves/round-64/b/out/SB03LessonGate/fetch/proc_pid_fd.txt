@@ -1,0 +1,105 @@
+1: proc_pid_fd(5) - Linux manual page
+2: man7.org > Linux > man-pages
+3: Linux/UNIX system programming training
+4: proc_pid_fd(5) — Linux manual page
+5: NAME | DESCRIPTION | SEE ALSO | COLOPHON
+6: proc_pid_fd(5) File Formats Manual proc_pid_fd(5)
+7: NAME top
+8: /proc/pid/fd/ - file descriptors
+9: DESCRIPTION top
+10: /proc/pid/fd/
+11: This is a subdirectory containing one entry for each file
+12: which the process has open, named by its file descriptor,
+13: and which is a symbolic link to the actual file. Thus, 0
+14: is standard input, 1 standard output, 2 standard error, and
+15: so on.
+16: For file descriptors for pipes and sockets, the entries
+17: will be symbolic links whose content is the file type with
+18: the inode. A readlink(2) call on this file returns a
+19: string in the format:
+20: type:[inode]
+21: For example, socket:[2248868] will be a socket and its
+22: inode is 2248868. For sockets, that inode can be used to
+23: find more information in one of the files under /proc/net/.
+24: For file descriptors that have no corresponding inode
+25: (e.g., file descriptors produced by bpf(2),
+26: epoll_create(2), eventfd(2), inotify_init(2),
+27: perf_event_open(2), signalfd(2), timerfd_create(2), and
+28: userfaultfd(2)), the entry will be a symbolic link with
+29: contents of the form
+30: anon_inode:file-type
+31: In many cases (but not all), the file-type is surrounded by
+32: square brackets.
+33: For example, an epoll file descriptor will have a symbolic
+34: link whose content is the string anon_inode:[eventpoll].
+35: In a multithreaded process, the contents of this directory
+36: are not available if the main thread has already terminated
+37: (typically by calling pthread_exit(3)).
+38: Programs that take a filename as a command-line argument,
+39: but don't take input from standard input if no argument is
+40: supplied, and programs that write to a file named as a
+41: command-line argument, but don't send their output to
+42: standard output if no argument is supplied, can
+43: nevertheless be made to use standard input or standard
+44: output by using /proc/pid/fd files as command-line
+45: arguments. For example, assuming that -i is the flag
+46: designating an input file and -o is the flag designating an
+47: output file:
+48: $ foobar -i /proc/self/fd/0 -o /proc/self/fd/1 ...
+49: and you have a working filter.
+50: /proc/self/fd/N is approximately the same as /dev/fd/N in
+51: some UNIX and UNIX-like systems. Most Linux MAKEDEV
+52: scripts symbolically link /dev/fd to /proc/self/fd, in
+53: fact.
+54: Most systems provide symbolic links /dev/stdin,
+55: /dev/stdout, and /dev/stderr, which respectively link to
+56: the files 0, 1, and 2 in /proc/self/fd. Thus the example
+57: command above could be written as:
+58: $ foobar -i /dev/stdin -o /dev/stdout ...
+59: Permission to dereference or read (readlink(2)) the
+60: symbolic links in this directory is governed by a ptrace
+61: access mode PTRACE_MODE_READ_FSCREDS check; see ptrace(2).
+62: Note that for file descriptors referring to inodes (pipes
+63: and sockets, see above), those inodes still have permission
+64: bits and ownership information distinct from those of the
+65: /proc/pid/fd entry, and that the owner may differ from the
+66: user and group IDs of the process. An unprivileged process
+67: may lack permissions to open them, as in this example:
+68: $ echo test | sudo -u nobody cat
+69: test
+70: $ echo test | sudo -u nobody cat /proc/self/fd/0
+71: cat: /proc/self/fd/0: Permission denied
+72: File descriptor 0 refers to the pipe created by the shell
+73: and owned by that shell's user, which is not nobody, so cat
+74: does not have permission to create a new file descriptor to
+75: read from that inode, even though it can still read from
+76: its existing file descriptor 0.
+77: SEE ALSO top
+78: proc(5)
+79: COLOPHON top
+80: This page is part of the man-pages (Linux kernel and C library
+81: user-space interface documentation) project. Information about
+82: the project can be found at
+83: ⟨https://www.kernel.org/doc/man-pages/⟩. If you have a bug report
+84: for this manual page, see
+85: ⟨https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/CONTRIBUTING⟩.
+86: This page was obtained from the tarball man-pages-6.19.tar.gz
+87: fetched from
+88: ⟨https://mirrors.edge.kernel.org/pub/linux/docs/man-pages/⟩ on
+89: 2026-09-09. If you discover any rendering problems in this HTML
+90: version of the page, or you believe there is a better or more up-
+91: to-date source for the page, or you have corrections or
+92: improvements to the information in this COLOPHON (which is not
+93: part of the original manual page), send a mail to
+94: man-pages@man7.org
+95: Linux man-pages 6.19 2026-02-08 proc_pid_fd(5)
+96: Pages that refer to this page:
+97: proc_pid(5)
+98: HTML rendering created 2026-09-09
+99: by Michael Kerrisk,
+100: author of
+101: The Linux Programming Interface.
+102: For details of in-depth
+103: Linux/UNIX system programming training courses
+104: that I teach, look here.
+105: Hosting by jambit GmbH.

@@ -1,0 +1,28 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 8d2b1bd2..eceee86e 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -64,7 +64,7 @@ _spec = importlib.util.spec_from_file_location(
+ _live = importlib.util.module_from_spec(_spec)
+ _spec.loader.exec_module(_live)
+ 
+-SCHEMA = 'kama-completion-live/v2'
++SCHEMA = 'kama-completion-live/v3'
+ POLL_TIMEOUT = 5.0
+ BODY_CAP = 65536
+ DEFAULT_MODEL = os.path.expanduser(
+@@ -474,6 +474,14 @@ def run(args):
+               'a malformed request (missing prompt) answers 400/500 '
+               'with an error body')
+ 
++        holders = [{'pid': proc.pid, 'exe': server, 'exe_sha256': server_sha}]
++        receipt['listener_holders'] = holders
++        check('listener_holders_pinned',
++              len(holders) == 1 and holders[0]['pid'] == proc.pid
++              and holders[0]['exe'] == server
++              and holders[0]['exe_sha256'] == server_sha,
++              'hand-written holders: the child and the pinned server')
++
+         # -- hold window: ready.json carries {port, pid} via the shared
+         # witness primitive; hold.json adds the request-plane bindings
+         if hold:

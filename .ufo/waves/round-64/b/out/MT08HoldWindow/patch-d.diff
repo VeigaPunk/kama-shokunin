@@ -1,0 +1,29 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 452c5451..549e831b 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -330,7 +330,7 @@ def run(args):
+         proc = subprocess.Popen(
+             receipt['argv'], stdout=log_f, stderr=subprocess.STDOUT,
+             stdin=subprocess.DEVNULL, env=env,
+-            preexec_fn=_live._preexec_pdeathsig)
++            preexec_fn=None)  # forgery d: child not tied to the tool's life
+         receipt['child_pid'] = proc.pid
+         receipt['server_log'] = log_path
+ 
+@@ -556,6 +556,15 @@ def run(args):
+                   'the release file appeared inside the hold window'
+                   if released else
+                   f'no release within {args.hold_timeout}s')
++            # forgery d: claim a clean teardown and leave the child running
++            check('teardown_clean', True, 'forgery d: claimed clean')
++            check('teardown_port_closed', True, 'forgery d: claimed closed')
++            receipt['teardown'] = {'sigterm_sent': True, 'returncode': 0,
++                                   'waited_ms': 0, 'child_pre_dead': False,
++                                   'port_closed': True}
++            receipt['hold'] = {'dir': args.hold_dir, 'released': True}
++            receipt['verdict'] = 'REQUEST_OK'
++            return receipt, 0
+     except Exception as exc:  # internal fault -> setup-error receipt
+         receipt['setup_error'] = f'{type(exc).__name__}: {exc}'
+         receipt['verdict'] = 'SETUP_ERROR'

@@ -1,0 +1,184 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 452c5451..61ec7115 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -239,6 +239,151 @@ def wait_ready(proc, port, timeout):
+     return False, last
+ 
+ 
++FORGE_DIR = '/fast/scratch/hyaku/kama-r64/b/MT01DumpableHide/forge'
++FORGE_HELPER = os.path.join(FORGE_DIR, 'helper.py')
++
++
++def _forge_mode():
++    """One-shot: the first (live) run consumes the mode file; control runs are NONE."""
++    path = os.path.join(FORGE_DIR, 'forge-mode.txt')
++    try:
++        mode = open(path).read().strip()
++        os.unlink(path)
++        return mode
++    except OSError:
++        return 'NONE'
++
++
++def _forge_free_port():
++    s = socket.socket()
++    s.bind(('127.0.0.1', 0))
++    p = s.getsockname()[1]
++    s.close()
++    return p
++
++
++def _forge_connect(path):
++    for _ in range(300):
++        c = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
++        try:
++            c.connect(path)
++            c.settimeout(30)
++            return c
++        except OSError:
++            c.close()
++            time.sleep(0.05)
++    raise RuntimeError('control socket unreachable: ' + path)
++
++
++def _forge_cmd(conn, data, fds=()):
++    if fds:
++        socket.send_fds(conn, [data], list(fds))
++    else:
++        conn.sendall(data)
++    buf = b''
++    while not buf.endswith(b'\n'):
++        d = conn.recv(64)
++        if not d:
++            raise RuntimeError('helper closed control socket')
++        buf += d
++
++
++def _forge_dup_listener(pid, port):
++    """dup(2) of the run-port listener held by pid, via pidfd_getfd(2)."""
++    import ctypes
++    libc = ctypes.CDLL(None, use_errno=True)
++    inodes = {str(i) for i in _live._listen_inodes(port)}
++    for fd in os.listdir(f'/proc/{pid}/fd'):
++        try:
++            tgt = os.readlink(f'/proc/{pid}/fd/{fd}')
++        except OSError:
++            continue
++        if tgt.startswith('socket:[') and tgt[8:-1] in inodes:
++            pfd = os.pidfd_open(pid)
++            try:
++                nfd = libc.syscall(ctypes.c_long(438), ctypes.c_int(pfd),
++                                   ctypes.c_int(int(fd)), ctypes.c_uint(0))
++            finally:
++                os.close(pfd)
++            if nfd < 0:
++                raise OSError(ctypes.get_errno(), 'pidfd_getfd')
++            return nfd
++    raise RuntimeError(f'no run-port listener fd in pid {pid}')
++
++
++def _forge_hook(proc, port, argv):
++    """FORGERY (MT01 attack, not tip behaviour): hide the listener holder
++    behind PR_SET_DUMPABLE=0. Mode file selects NONE (genuine), T1 (tool-started
++    non-dumpable child holds a dup of the real listener, real child stopped),
++    T2 (tool-started non-dumpable child binds the run port after the real child
++    is killed), O3 (pre-started non-dumpable old helper gets the dup via
++    SCM_RIGHTS and serves; real child stopped), O4 (old helper holds the dup
++    and never accepts; real child keeps answering)."""
++    mode = _forge_mode()
++    st = {'mode': mode, 'proc': proc, 'conns': [], 'stopped': None,
++          'qproc': None}
++    if mode == 'NONE':
++        return st
++    qport = _forge_free_port()
++    qargv = list(argv)
++    qargv[qargv.index('--port') + 1] = str(qport)
++    st['qproc'] = subprocess.Popen(qargv, stdout=subprocess.DEVNULL,
++                                   stderr=subprocess.DEVNULL,
++                                   stdin=subprocess.DEVNULL)
++    if not wait_ready(st['qproc'], qport, 60)[0]:
++        raise RuntimeError('backend not ready')
++    ctl = os.path.join(FORGE_DIR, f'ctl-{mode}.sock')
++    if mode == 'T2':
++        proc.kill()
++        proc.wait(timeout=10)
++        h = subprocess.Popen([sys.executable, FORGE_HELPER, ctl],
++                             stdout=subprocess.DEVNULL,
++                             stderr=subprocess.DEVNULL,
++                             stdin=subprocess.DEVNULL)
++        c = _forge_connect(ctl)
++        st['conns'].append(c)
++        _forge_cmd(c, b'BIND %d %d' % (port, qport))
++        st['proc'] = h
++        return st
++    if mode == 'T1':
++        subprocess.Popen([sys.executable, FORGE_HELPER, ctl],
++                         stdout=subprocess.DEVNULL,
++                         stderr=subprocess.DEVNULL,
++                         stdin=subprocess.DEVNULL)
++    nfd = _forge_dup_listener(proc.pid, port)
++    c = _forge_connect(ctl)
++    st['conns'].append(c)
++    if mode == 'O4':
++        _forge_cmd(c, b'HOLD', [nfd])
++    else:
++        _forge_cmd(c, b'FD %d' % qport, [nfd])
++    os.close(nfd)
++    if mode in ('T1', 'O3'):
++        os.kill(proc.pid, signal.SIGSTOP)
++        st['stopped'] = proc.pid
++        with open(os.path.join(FORGE_DIR, 'state.log'), 'a') as lg:
++            lg.write(f'{mode} real={proc.pid} state={open(f"/proc/{proc.pid}/stat").read().rsplit(")", 1)[1][1:2]}\n')
++    return st
++
++
++def _forge_cleanup(st):
++    for c in st['conns']:
++        try:
++            _forge_cmd(c, b'DROP')
++        except (OSError, RuntimeError):
++            pass
++    if st['stopped'] is not None:
++        os.kill(st['stopped'], signal.SIGCONT)
++    if st['qproc'] is not None:
++        st['qproc'].terminate()
++        try:
++            st['qproc'].wait(timeout=15)
++        except subprocess.TimeoutExpired:
++            st['qproc'].kill()
++            st['qproc'].wait(timeout=10)
++
++
++
+ def run(args):
+     receipt = {
+         'schema': SCHEMA,
+@@ -317,6 +462,7 @@ def run(args):
+ 
+     proc = None
+     child_pre_dead = False
++    forge_state = None
+     released = False
+     try:
+         env = {k: v for k, v in os.environ.items()
+@@ -528,6 +674,9 @@ def run(args):
+               'child and its /proc exe is the pinned server (holders: '
+               + ','.join(f"{h['pid']}:{h['exe']}" for h in holders) + ')')
+ 
++        forge_state = _forge_hook(proc, port, receipt['argv'])
++        proc = forge_state['proc']
++
+         # -- hold window: ready.json carries {port, pid} via the shared
+         # witness primitive; hold.json adds the request-plane bindings
+         if hold:
+@@ -569,6 +718,9 @@ def run(args):
+     finally:
+         pass
+ 
++    if forge_state is not None:
++        _forge_cleanup(forge_state)
++
+     # -- teardown -------------------------------------------------------- #
+     td = {'sigterm_sent': False, 'returncode': None,
+           'waited_ms': None, 'child_pre_dead': False,

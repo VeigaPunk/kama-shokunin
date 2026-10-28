@@ -111,3 +111,72 @@ a numbered AMENDMENT below, committed before the next wave dispatches.
 Mistake mined this round (class vacuous/survivor, captured-by none): the round-63 C1 counter
 bound a socket and a self-reported pid; fix = this counter, shown able to fail by the four
 pre-wave mutants and the replayed forgeries.
+
+AMENDMENT 1 (2026-10-28, after wave b settled and BEFORE wave f is dispatched and before any
+measured-tip scoring; the original C1 sentence above stays verbatim as the pre-amendment
+record; wave-b seats scored the freeze-commit instrument f6a4ea9a, so this is a rule change
+made after seats scored and is disclosed as such - the closure rules on it).
+Why (wave-b findings, all in .ufo/waves/round-64/b/): RV02 D1 and MT13 - a genuine pinned child
+with a replayed receipt passed 76/76 (the receipt was never bound to this run); RV02 D2, MT04,
+MT10 F2, MT05 F3 - argv and environ were partial/denylist (extra flags, `-m` copy, extra env keys
+passed); MT05 F1/F6/F8 - a private mount namespace, a ptrace tracer and an ld.so.preload hook
+passed; MT03 (c) - a SIGSTOPped real child with connection theft passed the holder checks; RV02
+D3 - fake-tool controls were credited at an undeclared cap of 99 (the freeze named 5/30/14);
+RV02 D4 and MT11 - the evaluator self-test passed its envelope case at the wrong cap and four
+evaluator mutants survived; RV02 D5/D6/D8-D12, MT10 - leaked servers, other-uid unreadable
+holders ignored, no hold.json upper bound, a path-keyed hash cache, fuzz-tolerant patching, a
+reusable --work, fail-open pid_gone; X08 - one flake in five runs because two probes can draw
+identical reference text; CR03 K1-K3 - forge builders keyed on source text.
+What changed (instrument only: tools/round64-c1-counter.py; the tool tools/kama-completion-live.py
+is byte-identical to the freeze commit): the counter draws the tool's own request (prompt,
+n_predict, seed) per run, passes it as `--prompt/--n-predict/--seed`, and requires the receipt's
+request and answer to equal that request and the reference server's answer (receipt_req,
+receipt_ref_text, receipt_ref_usage); exact argv list; environ an allowlist of the counter's own
+PATH/HOME/LANG/LC_ALL values; checks bind_ns (mnt/pid/net/user/ipc/uts equal the counter's),
+bind_trace (TracerPid 0) and bind_state (S/R/D at both snapshots); unreadable fd tables of ANY
+uid graded when the process started after the tool; hold.json mtime upper bound; unreadable
+pid_gone fails closed; every holder seen and the tool's process group are killed on exit; a
+non-empty --work exits 2; a draw needs three distinct non-empty reference answers; forge and
+relabel builders are structural (a Popen recorder plus a replacement `_proc_holders`, a wrapper
+around run()), the patch must dry-run without fuzz and a missing patch is an error; the evaluator
+self-test grows from 3 to 8 planted cases (3 must-not-credit, 3 must-credit, the clean-receipt
+veto, a misfiled family table).
+Amended C1 sentence (the docstring of the counter repeats it): "... runs one counter-opened
+hold-mode live request-plane lifecycle on the pinned llama.cpp fixture, sending the request
+(prompt, n_predict, seed) the counter drew for this run, and the counter - from procfs and its
+own code alone, loading nothing from the tip - binds the process that answers to the pinned
+server: every holder of the run-port listener is the hold pid, its /proc/<pid>/exe re-hashes to
+the pinned llama-server digest at the server path the counter chose, its argv is exactly the
+tool's argv, its initial environment holds only the counter's own PATH/HOME/LANG/LC_ALL values,
+its mapped files are the pinned set, it shares the counter's namespaces, is not traced and is
+not stopped, it is a descendant of the tool process started after the tool did, the hold.json is
+fresh, and teardown (the holder gone, the port closed) is observed by the counter after the
+counter's own release; the held child's answers to two outside probes drawn at random per run
+(prompt length and n_predict), and the receipt's own request and answer, agree with a reference
+pinned server the counter itself starts; and all 89 targeted controls - including live forged
+tools (the round-63 forgeries replayed, a detached server, a forwarding proxy, a canned answerer,
+stale holds, a preload, a path-copied server, a replayed receipt) - are each rejected by the check
+each names, family by family at the declared counts (EXPECT_FAMILIES, sum 89), and the counter's
+own evaluator judges all 8 planted cases correctly, errors=0."
+Cap rule as amended: 5 failing checks; 30 for the envelope break; 14 for a live patched-tool
+forgery or the replayed-receipt scenario; a live fake tool that holds a genuine receipt copy has
+no cap but must show no receipt-level failure (the earlier text implied a cap for it; the code
+used 99).
+Kill rule as amended: the clause "a v2-schema or schema-relabelled tool accepted" is read as "a
+tool whose receipt omits the holder bookkeeping accepted". Honest disclosure: seat CR03DoNothing
+built candidates K1c/K2/K3 (a v2 tool with the schema string changed and a hand-written holder
+block; a v3 tool with the tool-side check forced true) that the counter ACCEPTS with met=True,
+because the held child in those runs really is the pinned server answering - the process
+property the claim names already held at the base tool, and the counter now verifies it
+independently of the tool's bookkeeping. Under the ORIGINAL wording K1c triggers the kill rule;
+the amendment narrows the wording to what the counter can discriminate and the report states
+both readings. The honest statement of C1: the new instrument rejects forgeries the round-63
+instrument accepted; it does not make the tool-side bookkeeping a graded artifact.
+Survivors acknowledged and NOT fixed (limits, carried into SCORECARD "What met=True does not
+show"): a non-dumpable own-uid helper that existed before the tool and holds a duplicate of the
+listener (unreadable_old is recorded, never graded; MT01 O3/O4, MT08 f2); writes into the live
+server's memory through /proc/<pid>/mem (MT05 F2); a holder that exists only after the counter's
+release (CR03 K5); the blanket /usr/lib exemption in bind_maps (RV02 D7); initial-environment-only
+visibility (S531).
+Receipts: controls/c1-mutants-a1.txt (six pre-wave-f mutants of the amended counter, each
+met=False; script controls/run-c1-mutants-a1.sh).

@@ -1,0 +1,24 @@
+commit 3b04ee74189318c8f1d6996a70531d647f62a8bd
+Author: seat <seat@seat.invalid>
+Date:   Wed Oct 28 21:29:06 2026 -0300
+
+    V10b malicious: swap plus no-mmap plus evidence
+
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index cdebc330..2a003433 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -540,7 +540,12 @@ def run(args):
+               'child and its /proc exe is the pinned server (holders: '
+               + ','.join(f"{h['pid']}:{h['exe']}" for h in holders) + ')')
+ 
+-        os.replace(_keep, model)  # MALICIOUS V9: pinned inode back on the path
++        import hashlib as _h
++        _b = (os.stat(model).st_ino, _h.sha256(open(model, 'rb').read()).hexdigest()[:12])
++        os.replace(_keep, model)  # MALICIOUS V9/V10: pinned inode back on the path
++        _a = (os.stat(model).st_ino, _h.sha256(open(model, 'rb').read()).hexdigest()[:12])
++        with open('/fast/scratch/hyaku/kama-r64/b/SN01Sandbox/evidence-v10.txt', 'a') as _e:
++            _e.write('before-restore ino=%d sha=%s | after-restore ino=%d sha=%s\n' % (_b + _a))
+         # -- hold window: ready.json carries {port, pid} via the shared
+         # witness primitive; hold.json adds the request-plane bindings
+         if hold:

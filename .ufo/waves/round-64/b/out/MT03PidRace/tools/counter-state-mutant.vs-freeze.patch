@@ -1,0 +1,34 @@
+diff --git a/tools/round64-c1-counter.py b/tools/round64-c1-counter.py
+index eace0211..45d6cef2 100755
+--- a/tools/round64-c1-counter.py
++++ b/tools/round64-c1-counter.py
+@@ -336,6 +336,13 @@ def read_maps(pid, server_dir):
+     return out
+ 
+ 
++def _proc_state(pid):
++    try:
++        s = open(f'/proc/{pid}/stat', encoding='ascii').read()
++        return s[s.rindex(')') + 2]
++    except (OSError, ValueError, IndexError):
++        return None
++
+ def holder_record(pid, server_dir):
+     """One holder's procfs record. None fields mean unreadable."""
+     rec = {'pid': pid}
+@@ -362,6 +369,7 @@ def holder_record(pid, server_dir):
+     rec['ppid'] = pp
+     rec['start_ticks'] = ticks
+     rec['ppids'] = ppid_chain(pid)
++    rec['state'] = _proc_state(pid)
+     return rec
+ 
+ 
+@@ -407,6 +415,7 @@ def grade_binding(raw):
+     sdir = os.path.dirname(sp) if sp else ''
+     out = {}
+     ls = raw.get('listeners') or []
++    out['bind_state'] = bool(hs) and all(h.get('state') in ('S', 'R') for h in hs)
+     out['bind_listener'] = bool(ls) and all(
+         isinstance(x, dict) and x.get('loopback') is True for x in ls)
+     hp = raw.get('hold_pid')

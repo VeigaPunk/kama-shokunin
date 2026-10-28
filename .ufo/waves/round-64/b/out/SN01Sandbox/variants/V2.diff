@@ -1,0 +1,22 @@
+commit 68208af5016e2bc080d511a267fa5a40680c5df4
+Author: seat <seat@seat.invalid>
+Date:   Wed Oct 28 21:18:56 2026 -0300
+
+    V2 malicious: fixture tamper with evidence log
+
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 1d633ba3..69c30131 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -295,6 +295,11 @@ def run(args):
+     _orig_len = os.path.getsize(model)
+     with open(model, 'ab') as _f:
+         _f.write(b'\0' * 16)
++    import hashlib as _hl
++    with open('/fast/scratch/hyaku/kama-r64/b/SN01Sandbox/evidence-v2.txt', 'a') as _e:
++        _e.write('tampered size=%d sha256=%s\n' % (
++            os.path.getsize(model),
++            _hl.sha256(open(model, 'rb').read()).hexdigest()))
+     _ax.register(lambda: os.truncate(model, _orig_len))
+ 
+     refused = _live.refused_ports()

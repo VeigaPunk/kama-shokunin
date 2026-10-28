@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""shortcut-tally.py (v2) - tally counters that a shortcut can satisfy.
+"""shortcut-tally.py (v3) - tally counters that a shortcut can satisfy.
 
 Question (unchanged from the round-47 draft): across the lane's rounds, is the
 record saying that counter design is getting harder to fool, or only that
@@ -45,6 +45,16 @@ with the following changes, every one of which the draft's own run needed:
                         `K2Checks`, `Sen2Replay`, `L1Lowthr`. `wide` counts the
                         same sentences under the generalised seat shapes and is
                         printed when it differs; it is never gated.
+
+v3 (round 64) reads the rounds the v2 disclosure block does not cover. Rounds 56-62
+filed no `What `met=True` does not show` block, so v2 printed `no-disclosure` for seven
+of eight rounds while their lessons and SCORECARD sections say a counter was
+shortcut-satisfiable, a mutant survived or no falsify wave settled (status above). It
+also reads the named wave layout: from round 57 on a wave is `w<N>-spec.json` /
+`w<N>-dispatch.json` (inside `<wave>/` or beside it), its seat reports are every `*.md`
+below `<wave>/`, and `w<N>-spec.json` context `w<N> falsify` is a dedicated falsify
+wave; a dispatched named wave without `w<N>-results.json` prints a note. v2's falsify
+column was `none` for rounds 57-63 only because it looked for `spec.json`.
 
 Sources (read-only, lane root, all at <rev>):
   SCORECARD.md
@@ -120,13 +130,27 @@ Fields per round:
              reported with two different values (survived, equivalent, total),
              or killed+survived+equivalent != total.
 
-Status: ok | no-disclosure | unreadable:<reason>.
+Status: ok | disclosed:<kinds> | no-disclosure | unreadable:<reason>.
+  disclosed   v3 (round 64). No `What `met=True` does not show` block, but the round's
+              committed bytes say in other words that a counter was shortcut-satisfiable
+              (`shortcut`), that a mutant or probe survived (`survivor`), or that the falsify
+              wave did not run (`no-falsify`). <kinds> is the `+`-joined sorted kind set. The
+              shortcut/ids/counters/mutants columns stay `-`: a statement is not a count.
+              Sources, each hit cited as path:line in the `detail:` lines and, per kind and
+              source, counted in the record's `statement_counts`: the SCORECARD round
+              section, corpus/lessons/round-N.md, corpus/lessons/round-N-verifier-spotcheck.md
+              and, with `--fleet-repo` (`--fleet-rev`, `--fleet-report` template, default
+              `.ufo/reports/round-{n}/kama.md`), the fleet report. A mention preceded by a
+              negation (`no`, `not`, `zero`, `non-`) is not a statement, a survivor must name
+              what survived (mutant, counter, checker, control, ...) within 80 characters, and
+              wave seat reports are not read (their fixture wording is noise). A round with
+              none of this stays `no-disclosure`; a round with a block stays `ok`.
   unreadable  no `## Round N` section; a present disclosure block with no claim
               id; a mutation report that fails the parse; two mutation reports
               with the same seat basename; an unparseable spec.json/dispatch.json.
 
 `--check N` exits 1 when the latest round's shortcut count is above N, when the
-latest round cannot certify a count (no disclosure or unreadable), or when any
+latest round cannot certify a count (no disclosure block, `disclosed:` elsewhere, or unreadable), or when any
 round is unreadable; exits 0 otherwise; exits 2 when the repository, the
 revision or the lane tree itself cannot be read. `--json` prints the same
 records as `{"meta": {"repo", "rev", "rounds"}, "records": [...]}` on stdout (the
@@ -149,6 +173,14 @@ repository and proves its own toplevel before committing):
                             parse to survived/total
   contradictory-report      a battery that does not close killed+survived+
                             equivalent == total stays unreadable
+  statement-formats         rounds with no disclosure block read `disclosed:<kinds>` from a
+                            lesson, a spotcheck or the SCORECARD section, and the named wave
+                            layout (`w1-spec.json`, `w1-dispatch.json`) sets the falsify column
+  no-disclosure-stays       a round whose only wording is negated (`No mutants survived`,
+                            `non-vacuous`, `no seat falsified`) or unrelated, and a round with
+                            no statement at all, still print `no-disclosure`
+  fleet-report              `--fleet-repo` adds the fleet's per-round report as a source; the
+                            same round is `no-disclosure` without it
 
 Read-only: the repository is only read through `git rev-parse`, `git ls-tree`
 and `git cat-file`; no network, no working-tree read, no write outside the
@@ -191,6 +223,59 @@ CHEAT_REPORT = re.compile(r"^(K\d+Cheat)\.md$")
 FALSIFY_DEDICATED = re.compile(r"=\s*FALSIFY\b")
 FALSIFY_MARKED = re.compile(r"(?i)falsif")
 SC_NOT_RUN = re.compile(r"(?i)not dispatched|did not run|dispatch stalled|stalled at")
+# a wave dir of the round-57+ layout names its spec/dispatch by wave: `w1-spec.json`
+WAVE_JSON = re.compile(r"^(w\d+)-(spec|dispatch)\.json$")
+FALSIFY_DEDICATED_NAMED = re.compile(r"(?i)\bw\d+\s+falsify\b")
+
+# ---- statements outside the SCORECARD disclosure block (v3, round 64)
+# A statement is one committed line that says, in the lane's own words, that a
+# frozen counter was satisfiable without the claimed work (`shortcut`), that a
+# mutant or a probe survived (`survivor`), or that the falsify wave did not run
+# (`no-falsify`). Every hit is reported with its path:line and is checkable by eye.
+_NO_REJECT = r"(?:(?!\b(?:reject\w*|fail\w*|met=False)\b)[^\n])"
+STATEMENT_PATTERNS: dict[str, tuple[re.Pattern, ...]] = {
+    "shortcut": tuple(
+        re.compile(p, re.I)
+        for p in (
+            # a no-op / decoy / forged / printer input beside a met=True that no
+            # rejection word separates
+            r"\b(?:no-?op|do-nothing|decoy|forged|forgery|canned|printer|static assertion"
+            r"|dead-code|unused-function|boilerplate|unrelated[- ]literal)\b"
+            + _NO_REJECT + r"{0,240}?\bmet=True\b",
+            r"\b(?:still|nevertheless)\b[^\n]{0,60}\b(?:return\w*|meets?|passes?|accepts?|accepted)\b"
+            r"[^\n]{0,60}\bmet=True\b",
+            r"\b(?:accepted|passed|passes|meets?|met) by (?:the |its )?(?:measured |frozen |own )*"
+            r"(?:checker|counter)\b",
+            r"\b(?:vacuous|vacuity|gameable)\b",
+            r"\b(?:frozen|C[123]|counter|checker|predicate|claim)\b[^\n]{0,80}\bfalsified\b",
+            r"\bfalsified\b[^\n]{0,40}\b(?:frozen|predicate|counter|claim)\b",
+            r"\bprints? the frozen (?:string|pattern)\b",
+            r"\bno-?op[- ]reachable\b",
+        )
+    ),
+    "survivor": (re.compile(r"\bsurviv(?:ors?|ed|es|e)\b", re.I),),
+    "no-falsify": tuple(
+        re.compile(p, re.I)
+        for p in (
+            r"\bfalsif\w*[^\n]{0,100}\b(?:never ran|did not run|was not run|had no\b|not dispatched"
+            r"|never dispatched|stalled|unsettled)",
+            r"\b(?:wave|seat)s?\b[^\n]{0,60}\b(?:never ran|did not run|not dispatched|dispatch stalled)\b",
+            r"\bno falsif(?:y|ication|ier)s? (?:wave|seat)\b",
+        )
+    ),
+}
+# a mention preceded by a negation within a few words (`no seat falsified`, `not vacuous`,
+# `non-vacuous`, `no mutants survived`) is not a statement
+NEGATED_BEFORE = re.compile(r"(?:\b(?:no|zero|0|none|not|never)\b[\w ,/-]{0,18}|\bnon-)$", re.I)
+# `survive` is common English; a survivor statement names what survived within 80 characters
+SURVIVOR_CONTEXT = re.compile(
+    r"\b(?:mutants?|mutation|battery|counter|checker|controls?|fixtures?|predicates?|probes?"
+    r"|no-?ops?|harness|frozen|C[123]|forg\w+|decoy|seat)\b|noop",
+    re.I,
+)
+STATEMENT_CITE = 160  # characters of the line kept in a citation
+LESSON_FILES = ("corpus/lessons/round-{n}.md", "corpus/lessons/round-{n}-verifier-spotcheck.md")
+FLEET_REPORT = ".ufo/reports/round-{n}/kama.md"
 
 SCORECARD = "SCORECARD.md"
 WAVES = ".ufo/waves"
@@ -414,33 +499,74 @@ def parse_fallback_mutants(block: str) -> tuple[int, int] | None:
 # ----------------------------------------------------------------- waves
 
 
+def _wave_dirs(tree: Tree, round_prefix: str) -> list[tuple[str, str, str | None, str | None, bool]]:
+    """Waves of one round as (name, report root, spec path, dispatch path, named layout).
+
+    Legacy layout (rounds below 57): `<round>/<wave>/{spec,dispatch}.json`, reports
+    are the `*.md` under `<wave>/out`. Named layout (round 57 on): the files are
+    `w<N>-spec.json` / `w<N>-dispatch.json`, either inside `<wave>/` or beside it in the
+    round dir, and reports are every `*.md` under `<wave>/` (seats write to
+    `<wave>/out/` or straight into `<wave>/`).
+    """
+    found: dict[str, tuple[str, str | None, str | None, bool]] = {}
+    for name in tree.child_dirs(round_prefix):
+        base = f"{round_prefix}{name}/"
+        spec, dispatch = f"{base}spec.json", f"{base}dispatch.json"
+        if tree.has(spec) or tree.has(dispatch):
+            found[name] = (
+                f"{base}out/",
+                spec if tree.has(spec) else None,
+                dispatch if tree.has(dispatch) else None,
+                False,
+            )
+    named: dict[str, dict[str, str]] = {}
+    for path in tree.paths:
+        if not path.startswith(round_prefix):
+            continue
+        rest = path[len(round_prefix):]
+        head, _, leaf = rest.rpartition("/")
+        if head.count("/") > 0:
+            continue
+        m = WAVE_JSON.match(leaf)
+        if m and head in ("", m.group(1)):
+            named.setdefault(m.group(1), {})[m.group(2)] = path
+    for name, files in named.items():
+        if name in found:
+            continue
+        found[name] = (f"{round_prefix}{name}/", files.get("spec"), files.get("dispatch"), True)
+    return [(n, *found[n]) for n in sorted(found)]
+
+
 def wave_falsify(tree: Tree, round_prefix: str) -> tuple[str, str]:
     """Return (falsify value, note). Raises ValueError on unparseable wave json."""
     waves = []
-    for name in tree.child_dirs(round_prefix):
-        base = f"{round_prefix}{name}/"
-        spec = f"{base}spec.json"
-        dispatch = f"{base}dispatch.json"
-        if not (tree.has(spec) or tree.has(dispatch)):
-            continue
+    notes: list[str] = []
+    for name, report_root, spec, dispatch, named in _wave_dirs(tree, round_prefix):
         context = ""
-        if tree.has(spec):
+        if spec:
             try:
                 data = json.loads(tree.read(spec, errors="replace"))
             except (RepoError, json.JSONDecodeError) as exc:
                 raise ValueError(f"spec.json unreadable: {name}: {exc}") from exc
             if isinstance(data, dict):
                 context = str(data.get("context") or "")
-        reports = len(tree.files_under(f"{base}out/", ".md"))
+        reports = len(tree.files_under(report_root, ".md"))
+        if named and dispatch and not any(
+            tree.has(f"{d}{name}-results.json") for d in (round_prefix, f"{round_prefix}{name}/")
+        ):
+            notes.append(f"{name}: dispatched, no {name}-results.json")
         waves.append(
             {
                 "name": name,
-                "dedicated": bool(FALSIFY_DEDICATED.search(context)),
+                "dedicated": bool(
+                    FALSIFY_DEDICATED.search(context) or FALSIFY_DEDICATED_NAMED.search(context)
+                ),
                 "marked": bool(FALSIFY_MARKED.search(context)),
                 "reports": reports,
-                "dispatch": tree.has(dispatch),
+                "dispatch": bool(dispatch),
             }
         )
+    note = "; ".join(notes)
 
     if not waves:
         return "none", "no wave dir"
@@ -448,19 +574,19 @@ def wave_falsify(tree: Tree, round_prefix: str) -> tuple[str, str]:
     for w in waves:
         if w["dedicated"]:
             if w["reports"]:
-                return f"yes({w['name']},dedicated)", ""
-            return f"planned-not-run({w['name']})", ""
+                return f"yes({w['name']},dedicated)", note
+            return f"planned-not-run({w['name']})", note
     for w in waves:
         if w["marked"]:
             if w["reports"]:
-                return f"yes({w['name']})", ""
-            return f"stalled({w['name']})", ""
+                return f"yes({w['name']})", note
+            return f"stalled({w['name']})", note
     ran = [w for w in waves if w["reports"]]
     if ran:
-        return f"yes({ran[0]['name']},folded)", ""
+        return f"yes({ran[0]['name']},folded)", note
     dispatched = [w for w in waves if w["dispatch"]]
     if dispatched:
-        return f"stalled({dispatched[0]['name']})", ""
+        return f"stalled({dispatched[0]['name']})", note
     return "none", "wave dir without spec or dispatch"
 
 
@@ -493,6 +619,105 @@ def wide_ids(block: str) -> list[str]:
     return sorted(found)
 
 
+# -------------------------------------------------------------- statements
+
+
+def section_lines(lines: list[str]) -> dict[int, list[tuple[int, str]]]:
+    """round -> [(1-based line number, text)] of the round's first `## Round N` section."""
+    starts = [(i, int(m.group(1))) for i, line in enumerate(lines) if (m := ROUND_HEAD.match(line))]
+    out: dict[int, list[tuple[int, str]]] = {}
+    for idx, (start, round_no) in enumerate(starts):
+        if round_no in out:
+            continue
+        end = starts[idx + 1][0] if idx + 1 < len(starts) else len(lines)
+        out[round_no] = [(i + 1, lines[i]) for i in range(start, end)]
+    return out
+
+
+def line_statements(text: str) -> set[str]:
+    """The statement kinds one line carries."""
+    kinds: set[str] = set()
+    for kind, patterns in STATEMENT_PATTERNS.items():
+        for pattern in patterns:
+            for m in pattern.finditer(text):
+                if NEGATED_BEFORE.search(text[max(0, m.start() - 24):m.start()]):
+                    continue
+                if kind == "survivor" and not SURVIVOR_CONTEXT.search(
+                    text[max(0, m.start() - 80):m.end() + 80]
+                ):
+                    continue
+                kinds.add(kind)
+                break
+            if kind in kinds:
+                break
+    return kinds
+
+
+def read_statements(
+    round_no: int,
+    tree: Tree,
+    sc_section: list[tuple[int, str]],
+    fleet: "Fleet | None",
+) -> list[dict]:
+    """Statements about shortcut-satisfiable counters, surviving mutants and a falsify
+    wave that did not run, from the round's committed bytes outside the disclosure block:
+    the SCORECARD round section, the round's lesson files and, when given, the fleet
+    report. Wave seat reports are not read: measured against rounds 56-63 they carry
+    the same words about their own fixtures (`non-vacuous`, a PIT `survivor` source row,
+    a copied canonical-noop SCORECARD control), which is noise, not a round statement."""
+    sources: list[tuple[str, str, list[tuple[int, str]]]] = []
+    if sc_section:
+        sources.append(("scorecard", SCORECARD, sc_section))
+    for template in LESSON_FILES:
+        path = template.format(n=round_no)
+        if tree.has(path):
+            sources.append(("lesson", path, list(enumerate(tree.read(path, errors="replace").splitlines(), 1))))
+    if fleet is not None:
+        got = fleet.report(round_no)
+        if got is not None:
+            sources.append(("fleet", got[0], list(enumerate(got[1].splitlines(), 1))))
+    found: list[dict] = []
+    for cls, path, rows in sources:
+        for number, text in rows:
+            for kind in sorted(line_statements(text)):
+                found.append(
+                    {
+                        "kind": kind,
+                        "source": cls,
+                        "path": path,
+                        "line": number,
+                        "text": " ".join(text.split())[:STATEMENT_CITE],
+                    }
+                )
+    return found
+
+
+class Fleet:
+    """Optional second repository holding the fleet's per-round lane reports."""
+
+    def __init__(self, repo: Path, rev: str, template: str) -> None:
+        self.repo = repo
+        self.template = template
+        p = subprocess.run(
+            ["git", "-C", str(repo), "rev-parse", "--verify", "--quiet", f"{rev}^{{commit}}"],
+            capture_output=True,
+        )
+        out = p.stdout.decode("utf-8", "replace").strip()
+        if p.returncode != 0 or not out:
+            raise RepoError(f"{repo}: cannot resolve fleet revision {rev!r} to a commit")
+        self.rev = out
+
+    def report(self, round_no: int) -> tuple[str, str] | None:
+        path = self.template.format(n=round_no)
+        p = subprocess.run(
+            ["git", "-C", str(self.repo), "cat-file", "blob", f"{self.rev}:{path}"],
+            capture_output=True,
+        )
+        if p.returncode != 0:
+            return None
+        return f"fleet:{path}", p.stdout.decode("utf-8", "replace")
+
+
 # ----------------------------------------------------------------- per round
 
 
@@ -501,6 +726,7 @@ def tally_round(
     tree: Tree,
     blocks: dict[int, tuple[int, str]],
     sections: dict[int, str],
+    statements: list[dict] | None = None,
 ) -> dict:
     rec: dict = {
         "round": round_no,
@@ -512,6 +738,8 @@ def tally_round(
         "mutants": None,
         "falsify": "none",
         "status": "ok",
+        "statements": [],
+        "statement_counts": {},
         "notes": [],
         "provenance": [],
     }
@@ -617,6 +845,23 @@ def tally_round(
     sc_not_run = bool(SC_NOT_RUN.search(section))
     if rec["falsify"].startswith("yes") and sc_not_run:
         rec["notes"].append("conflict=sc-says-not-run")
+
+    # statements outside the disclosure block: a round with no block but with
+    # at least one committed statement is disclosed in another format, and says so
+    statements = statements or []
+    if rec["status"] == "no-disclosure" and statements:
+        kinds = sorted({s["kind"] for s in statements})
+        rec["status"] = "disclosed:" + "+".join(kinds)
+    # the record keeps the count per kind/source and the first three citations of each
+    counts: dict[str, int] = {}
+    kept: list[dict] = []
+    for s in statements:
+        key = f"{s['kind']}/{s['source']}"
+        counts[key] = counts.get(key, 0) + 1
+        if counts[key] <= 3:
+            kept.append(s)
+    rec["statement_counts"] = counts
+    rec["statements"] = kept
     return rec
 
 
@@ -654,6 +899,11 @@ def render(records: list[dict]) -> None:
             )
         for prov in r["provenance"]:
             print(f"detail: round {r['round']}: {prov}")
+        for s in r["statements"]:
+            print(f"detail: round {r['round']}: statement {s['kind']} {s['source']} {s['path']}:{s['line']} {s['text'][:100]!r}")
+        if r["statement_counts"]:
+            counts = ",".join(f"{k}={n}" for k, n in sorted(r["statement_counts"].items()))
+            print(f"detail: round {r['round']}: statements {counts}")
 
 
 # ----------------------------------------------------------------- selftest
@@ -725,6 +975,52 @@ FIX_INCONSISTENT = """# M4Ctr — fixture contradictory report
 Verdict: **5/9 mutants killed, 6 survived.**
 
 ## Detail
+"""
+
+FIX_SCORECARD_D = """# SCORECARD
+
+## Round 20 — fixture round, lesson-only disclosure
+
+Scores held.
+
+## Round 21 — fixture round, spotcheck-only disclosure
+
+Scores held.
+
+## Round 22 — fixture round, negated wording only
+
+Scores held. No mutants survived and the counter is non-vacuous.
+
+## Round 23 — fixture round, SCORECARD-only statement
+
+C1 is not verified: a decoy checker still returns `met=True`.
+
+## Round 24 — fixture round, nothing to disclose
+
+Scores held.
+"""
+
+FIX_LESSON_STATEMENT = """# Round 20 lesson
+
+- A no-op harness passes the frozen counter, `met=True`, exit 0.
+- Two mutants survived the battery (M1, M2).
+"""
+
+FIX_SPOTCHECK_STALLED = """# Round 21 spotcheck
+
+The dispatched falsification wave never ran to a results handoff.
+"""
+
+FIX_LESSON_CLEAN = """# Round 22 lesson
+
+- All 12 controls were rejected by the check each names; no seat falsified a frozen predicate.
+- Zero mutants survived; the sensitivity test is non-vacuous.
+- The survey of survivors in the wild is a separate topic; this note does not apply it.
+"""
+
+FIX_FLEET_REPORT = """# kama round 24
+
+One mutant survived the counter's battery and is recorded as a limit.
 """
 
 
@@ -879,6 +1175,57 @@ def selftest(root: Path) -> int:
         f"exit={code7} verdict={(out7 + err7).strip().splitlines()[-1] if (out7 + err7).strip() else ''!r}",
     )
 
+    # fixture D: rounds with no SCORECARD disclosure block. Round 20 states a no-op
+    # acceptance and a survivor in its lesson, round 21 a stalled wave in its spotcheck,
+    # round 22 carries only negated or unrelated wording and must stay `no-disclosure`,
+    # round 23 has a SCORECARD-only statement, round 24 has nothing at all.
+    d = _fixture(root / "d")
+    _write(d / SCORECARD, FIX_SCORECARD_D)
+    _write(d / "corpus" / "lessons" / "round-20.md", FIX_LESSON_STATEMENT)
+    _write(d / "corpus" / "lessons" / "round-21-verifier-spotcheck.md", FIX_SPOTCHECK_STALLED)
+    _write(d / "corpus" / "lessons" / "round-22.md", FIX_LESSON_CLEAN)
+    _write(d / WAVES / "round-20" / "w1" / "w1-spec.json", FIX_SPEC)
+    _write(d / WAVES / "round-20" / "w1" / "w1-dispatch.json", "{}")
+    _write(d / WAVES / "round-20" / "w1" / "w1-results.json", "{}")
+    _write(d / WAVES / "round-20" / "w1" / "seat.md", "fixture seat note\n")
+    _write(d / WAVES / "round-21" / "w1-spec.json", FIX_SPEC)
+    _write(d / WAVES / "round-21" / "w1-dispatch.json", "{}")
+    _write(d / WAVES / "round-22" / "w1" / "spec.json", FIX_SPEC)
+    _write(d / WAVES / "round-24" / "w1" / "spec.json", FIX_SPEC)
+    sha_d = _commit(d, "fixture d")
+    code8, out8, err8 = _run(["--repo", str(d), "--rev", sha_d, "--rounds", "20-24", "--json"])
+    recs8 = {r["round"]: r for r in json.loads(out8)["records"]} if code8 == 0 else {}
+    st = {n: recs8.get(n, {}).get("status") for n in range(20, 25)}
+    case(
+        "statement-formats",
+        code8 == 0
+        and st[20] == "disclosed:shortcut+survivor"
+        and st[21] == "disclosed:no-falsify"
+        and st[23] == "disclosed:shortcut"
+        and recs8[20]["falsify"] == "yes(w1,folded)"
+        and recs8[21]["falsify"] == "stalled(w1)",
+        f"exit={code8} statuses={st} falsify20={recs8.get(20, {}).get('falsify')} falsify21={recs8.get(21, {}).get('falsify')}",
+    )
+    case(
+        "no-disclosure-stays",
+        code8 == 0 and st[22] == "no-disclosure" and st[24] == "no-disclosure",
+        f"round22(negated wording)={st[22]} round24(no statement)={st[24]}",
+    )
+
+    # the fleet report is an optional second source; without it round 24 stays silent
+    f = _fixture(root / "f")
+    _write(f / ".ufo" / "reports" / "round-24" / "kama.md", FIX_FLEET_REPORT)
+    sha_f = _commit(f, "fixture fleet")
+    code9, out9, err9 = _run(
+        ["--repo", str(d), "--rev", sha_d, "--rounds", "24-24", "--fleet-repo", str(f), "--fleet-rev", sha_f, "--json"]
+    )
+    st9 = (json.loads(out9)["records"] or [{}])[0].get("status") if code9 == 0 else None
+    case(
+        "fleet-report",
+        code9 == 0 and st9 == "disclosed:survivor" and st[24] == "no-disclosure",
+        f"with fleet={st9} without fleet={st[24]}",
+    )
+
     print(f"selftest pass={cases - fails} fail={fails}")
     return 0 if fails == 0 else 1
 
@@ -901,6 +1248,15 @@ def main(argv: list[str] | None = None) -> int:
         help="exit 1 when the latest round's shortcut count is above N or a round is unreadable",
     )
     ap.add_argument("--json", action="store_true", help="print records as JSON")
+    ap.add_argument(
+        "--fleet-repo", type=Path, default=None,
+        help="optional fleet git repository whose per-round lane reports are read as statement sources",
+    )
+    ap.add_argument("--fleet-rev", default="HEAD", help="fleet commit the reports are read at (default HEAD)")
+    ap.add_argument(
+        "--fleet-report", default=FLEET_REPORT,
+        help="fleet report path template, {n} = round (default %(default)s)",
+    )
     ap.add_argument("--selftest", action="store_true", help="build fixtures and prove the checks can fail")
     ap.add_argument("--scratch", type=Path, default=None, help="fixture root for --selftest (default $TMPDIR)")
     args = ap.parse_args(argv)
@@ -935,7 +1291,23 @@ def main(argv: list[str] | None = None) -> int:
         return fail(f"could-not-evaluate: {exc}")
 
     blocks, sections = scorecard_blocks(lines)
-    records = [tally_round(n, tree, blocks, sections) for n in range(lo, hi + 1)]
+    sc_sections = section_lines(lines)
+    fleet = None
+    if args.fleet_repo is not None:
+        try:
+            fleet = Fleet(args.fleet_repo, args.fleet_rev, args.fleet_report)
+        except RepoError as exc:
+            return fail(f"could-not-evaluate: {exc}")
+    try:
+        records = [
+            tally_round(
+                n, tree, blocks, sections,
+                read_statements(n, tree, sc_sections.get(n, []), fleet),
+            )
+            for n in range(lo, hi + 1)
+        ]
+    except RepoError as exc:
+        return fail(f"could-not-evaluate: {exc}")
 
     if args.json:
         meta = {"repo": str(tree.repo.resolve()), "rev": tree.rev, "rounds": args.rounds}

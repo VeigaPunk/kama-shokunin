@@ -1,0 +1,34 @@
+## expA (holder visibility, dumpable vs PR_SET_DUMPABLE=0 extra holder; tool_ticks unset)
+== A: dumpable extra holder (control)
+mode=dump port=32951 listeners=[(1866757652, True)] hold(A)=2918523 extra(B)=2918524
+  holder_pids=[2918523, 2918524] unreadable_own=[1500, 2911361] A_visible=True B_visible=True
+  B stat uid=1000 me=1000 fd_readable=True exe_readable='/usr/bin/python3.14'
+== B: non-dumpable extra holder (PR_SET_DUMPABLE=0)
+mode=nondump port=40225 listeners=[(1866776593, True)] hold(A)=2919162 extra(B)=2919163
+  holder_pids=[2919162] unreadable_own=[1500, 2911361, 2919163] A_visible=True B_visible=False
+  B stat uid=1000 me=1000 fd_readable=False exe_readable=None
+
+## expB (non-dumpable holder started BEFORE the tool)
+(i) holders= [2919938] A= 2919938 B(nondump, pre-tool)= 2919939
+    unreadable_own= []  unreadable_old= 3
+    grade_binding bind_holders= True  (requires holders=={hold pid} and not unreadable_own)
+
+## expC (transient holder via pidfd_getfd between raw_a and raw_b)
+  raw_a (before window): holders=[2921034] unreadable_own=[]
+  pidfd_getfd ok: local fd=5 errno=0
+  raw_mid (inside window): holders=[2920978, 2921034] unreadable_own=[]
+  tool got: ping
+  client got: answered-by-tool  (answered by this process, the tool)
+  raw_b (after window): holders=[2921034] unreadable_own=[]
+  bind_holders on raw_a: True  raw_b: True  raw_a==raw_b holder sig: True
+
+## expE2 (argv self-rewrite)
+launched argv : ['<script>', '--port', '1', '--model', '/tmp/decoy.gguf']
+cmdline after self-rewrite: ['/home/vgpnk/.local/opt/llama-b11755/llama-server', '--port', '51333', '--model', '/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf', '--alias', 'kama-completion-probe']
+
+## driveE x1 (composed: genuine baseline + forged tool)
+GENUINE met=True fails=[] teardown={'gone': True, 'port_closed': True}
+FORGED notes=[] receipt=True witness=True
+FORGED met=True fails=[]
+FORGED probe_text=['. Every', 's. She likes']
+FORGED hold_pid=2923002 receipt_child=2923002 teardown={'gone': True, 'port_closed': True}

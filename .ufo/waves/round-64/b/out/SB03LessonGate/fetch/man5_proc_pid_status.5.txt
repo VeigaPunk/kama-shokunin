@@ -1,0 +1,242 @@
+1: proc_pid_status(5) - Linux manual page
+2: man7.org > Linux > man-pages
+3: Linux/UNIX system programming training
+4: proc_pid_status(5) — Linux manual page
+5: NAME | DESCRIPTION | SEE ALSO | COLOPHON
+6: proc_pid_status(5) File Formats Manual proc_pid_status(5)
+7: NAME top
+8: /proc/pid/status - memory usage and status information
+9: DESCRIPTION top
+10: /proc/pid/status
+11: Provides much of the information in /proc/pid/stat and
+12: /proc/pid/statm in a format that's easier for humans to
+13: parse. Here's an example:
+14: $ cat /proc/$$/status
+15: Name: bash
+16: Umask: 0022
+17: State: S (sleeping)
+18: Tgid: 17248
+19: Ngid: 0
+20: Pid: 17248
+21: PPid: 17200
+22: TracerPid: 0
+23: Uid: 1000 1000 1000 1000
+24: Gid: 100 100 100 100
+25: FDSize: 256
+26: Groups: 16 33 100
+27: NStgid: 17248
+28: NSpid: 17248
+29: NSpgid: 17248
+30: NSsid: 17200
+31: VmPeak: 131168 kB
+32: VmSize: 131168 kB
+33: VmLck: 0 kB
+34: VmPin: 0 kB
+35: VmHWM: 13484 kB
+36: VmRSS: 13484 kB
+37: RssAnon: 10264 kB
+38: RssFile: 3220 kB
+39: RssShmem: 0 kB
+40: VmData: 10332 kB
+41: VmStk: 136 kB
+42: VmExe: 992 kB
+43: VmLib: 2104 kB
+44: VmPTE: 76 kB
+45: VmPMD: 12 kB
+46: VmSwap: 0 kB
+47: HugetlbPages: 0 kB # 4.4
+48: CoreDumping: 0 # 4.15
+49: Threads: 1
+50: SigQ: 0/3067
+51: SigPnd: 0000000000000000
+52: ShdPnd: 0000000000000000
+53: SigBlk: 0000000000010000
+54: SigIgn: 0000000000384004
+55: SigCgt: 000000004b813efb
+56: CapInh: 0000000000000000
+57: CapPrm: 0000000000000000
+58: CapEff: 0000000000000000
+59: CapBnd: ffffffffffffffff
+60: CapAmb: 0000000000000000
+61: NoNewPrivs: 0
+62: Seccomp: 0
+63: Seccomp_filters: 0
+64: Speculation_Store_Bypass: vulnerable
+65: Cpus_allowed: 00000001
+66: Cpus_allowed_list: 0
+67: Mems_allowed: 1
+68: Mems_allowed_list: 0
+69: voluntary_ctxt_switches: 150
+70: nonvoluntary_ctxt_switches: 545
+71: The fields are as follows:
+72: Name Command run by this process. Strings longer than
+73: TASK_COMM_LEN (16) characters (including the
+74: terminating null byte) are silently truncated.
+75: Umask Process umask, expressed in octal with a leading
+76: zero; see umask(2). (Since Linux 4.7.)
+77: State Current state of the process. One of "R (running)",
+78: "S (sleeping)", "D (disk sleep)", "T (stopped)", "t
+79: (tracing stop)", "Z (zombie)", or "X (dead)".
+80: Tgid Thread group ID (i.e., Process ID).
+81: Ngid NUMA group ID (0 if none; since Linux 3.13).
+82: Pid Thread ID (see gettid(2)).
+83: PPid PID of parent process.
+84: TracerPid
+85: PID of process tracing this process (0 if not being
+86: traced).
+87: Uid
+88: Gid Real, effective, saved set, and filesystem UIDs
+89: (GIDs).
+90: FDSize Number of file descriptor slots currently allocated.
+91: Groups Supplementary group list.
+92: NStgid Thread group ID (i.e., PID) in each of the PID
+93: namespaces of which pid is a member. The leftmost
+94: entry shows the value with respect to the PID
+95: namespace of the process that mounted this procfs
+96: (or the root namespace if mounted by the kernel),
+97: followed by the value in successively nested inner
+98: namespaces. (Since Linux 4.1.)
+99: NSpid Thread ID in each of the PID namespaces of which pid
+100: is a member. The fields are ordered as for NStgid.
+101: (Since Linux 4.1.)
+102: NSpgid Process group ID in each of the PID namespaces of
+103: which pid is a member. The fields are ordered as
+104: for NStgid. (Since Linux 4.1.)
+105: NSsid descendant namespace session ID hierarchy Session ID
+106: in each of the PID namespaces of which pid is a
+107: member. The fields are ordered as for NStgid.
+108: (Since Linux 4.1.)
+109: VmPeak Peak virtual memory size.
+110: VmSize Virtual memory size.
+111: VmLck Locked memory size (see mlock(2)).
+112: VmPin Pinned memory size (since Linux 3.2). These are
+113: pages that can't be moved because something needs to
+114: directly access physical memory.
+115: VmHWM Peak resident set size ("high water mark"). This
+116: value is inaccurate; see /proc/pid/statm above.
+117: VmRSS Resident set size. Note that the value here is the
+118: sum of RssAnon, RssFile, and RssShmem. This value
+119: is inaccurate; see /proc/pid/statm above.
+120: RssAnon
+121: Size of resident anonymous memory. (since Linux
+122: 4.5). This value is inaccurate; see /proc/pid/statm
+123: above.
+124: RssFile
+125: Size of resident file mappings. (since Linux 4.5).
+126: This value is inaccurate; see /proc/pid/statm above.
+127: RssShmem
+128: Size of resident shared memory (includes System V
+129: shared memory, mappings from tmpfs(5), and shared
+130: anonymous mappings). (since Linux 4.5).
+131: VmData
+132: VmStk
+133: VmExe Size of data, stack, and text segments. This value
+134: is inaccurate; see /proc/pid/statm above.
+135: VmLib Shared library code size.
+136: VmPTE Page table entries size (since Linux 2.6.10).
+137: VmPMD Size of second-level page tables (added in Linux
+138: 4.0; removed in Linux 4.15).
+139: VmSwap Swapped-out virtual memory size by anonymous private
+140: pages; shmem swap usage is not included (since Linux
+141: 2.6.34). This value is inaccurate; see
+142: /proc/pid/statm above.
+143: HugetlbPages
+144: Size of hugetlb memory portions (since Linux 4.4).
+145: CoreDumping
+146: Contains the value 1 if the process is currently
+147: dumping core, and 0 if it is not (since Linux 4.15).
+148: This information can be used by a monitoring process
+149: to avoid killing a process that is currently dumping
+150: core, which could result in a corrupted core dump
+151: file.
+152: Threads
+153: Number of threads in process containing this thread.
+154: SigQ This field contains two slash-separated numbers that
+155: relate to queued signals for the real user ID of
+156: this process. The first of these is the number of
+157: currently queued signals for this real user ID, and
+158: the second is the resource limit on the number of
+159: queued signals for this process (see the description
+160: of RLIMIT_SIGPENDING in getrlimit(2)).
+161: SigPnd
+162: ShdPnd Mask (expressed in hexadecimal) of signals pending
+163: for thread and for process as a whole (see
+164: pthreads(7) and signal(7)).
+165: SigBlk
+166: SigIgn
+167: SigCgt Masks (expressed in hexadecimal) indicating signals
+168: being blocked, ignored, and caught (see signal(7)).
+169: CapInh
+170: CapPrm
+171: CapEff Masks (expressed in hexadecimal) of capabilities
+172: enabled in inheritable, permitted, and effective
+173: sets (see capabilities(7)).
+174: CapBnd Capability bounding set, expressed in hexadecimal
+175: (since Linux 2.6.26, see capabilities(7)).
+176: CapAmb Ambient capability set, expressed in hexadecimal
+177: (since Linux 4.3, see capabilities(7)).
+178: NoNewPrivs
+179: Value of the no_new_privs bit (since Linux 4.10, see
+180: prctl(2)).
+181: Seccomp
+182: Seccomp mode of the process (since Linux 3.8, see
+183: seccomp(2)). 0 means SECCOMP_MODE_DISABLED; 1 means
+184: SECCOMP_MODE_STRICT; 2 means SECCOMP_MODE_FILTER.
+185: This field is provided only if the kernel was built
+186: with the CONFIG_SECCOMP kernel configuration option
+187: enabled.
+188: Seccomp_filters
+189: Number of seccomp filters attached to the process
+190: (since Linux 5.9, see seccomp(2)).
+191: Speculation_Store_Bypass
+192: Speculation flaw mitigation state (since Linux 4.17,
+193: see prctl(2)).
+194: Cpus_allowed
+195: Hexadecimal mask of CPUs on which this process may
+196: run (since Linux 2.6.24, see cpuset(7)).
+197: Cpus_allowed_list
+198: Same as previous, but in "list format" (since Linux
+199: 2.6.26, see cpuset(7)).
+200: Mems_allowed
+201: Mask of memory nodes allowed to this process (since
+202: Linux 2.6.24, see cpuset(7)).
+203: Mems_allowed_list
+204: Same as previous, but in "list format" (since Linux
+205: 2.6.26, see cpuset(7)).
+206: voluntary_ctxt_switches
+207: nonvoluntary_ctxt_switches
+208: Number of voluntary and involuntary context switches
+209: (since Linux 2.6.23).
+210: SEE ALSO top
+211: proc(5)
+212: COLOPHON top
+213: This page is part of the man-pages (Linux kernel and C library
+214: user-space interface documentation) project. Information about
+215: the project can be found at
+216: ⟨https://www.kernel.org/doc/man-pages/⟩. If you have a bug report
+217: for this manual page, see
+218: ⟨https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/CONTRIBUTING⟩.
+219: This page was obtained from the tarball man-pages-6.19.tar.gz
+220: fetched from
+221: ⟨https://mirrors.edge.kernel.org/pub/linux/docs/man-pages/⟩ on
+222: 2026-09-09. If you discover any rendering problems in this HTML
+223: version of the page, or you believe there is a better or more up-
+224: to-date source for the page, or you have corrections or
+225: improvements to the information in this COLOPHON (which is not
+226: part of the original manual page), send a mail to
+227: man-pages@man7.org
+228: Linux man-pages 6.19 2026-02-08 proc_pid_status(5)
+229: Pages that refer to this page:
+230: kill(1),
+231: PR_GET_SECCOMP(2const),
+232: proc_pid(5),
+233: proc_pid_stat(5),
+234: proc_pid_statm(5)
+235: HTML rendering created 2026-09-09
+236: by Michael Kerrisk,
+237: author of
+238: The Linux Programming Interface.
+239: For details of in-depth
+240: Linux/UNIX system programming training courses
+241: that I teach, look here.
+242: Hosting by jambit GmbH.

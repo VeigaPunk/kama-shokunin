@@ -1,0 +1,267 @@
+1: proc_pid_stat(5) - Linux manual page
+2: man7.org > Linux > man-pages
+3: Linux/UNIX system programming training
+4: proc_pid_stat(5) — Linux manual page
+5: NAME | DESCRIPTION | SEE ALSO | COLOPHON
+6: proc_pid_stat(5) File Formats Manual proc_pid_stat(5)
+7: NAME top
+8: /proc/pid/stat - status information
+9: DESCRIPTION top
+10: /proc/pid/stat
+11: Status information about the process. This is used by
+12: ps(1). It is defined in the kernel source file
+13: fs/proc/array.c.
+14: The fields, in order, with their proper scanf(3) format
+15: specifiers, are listed below. Whether or not certain of
+16: these fields display valid information is governed by a
+17: ptrace access mode PTRACE_MODE_READ_FSCREDS |
+18: PTRACE_MODE_NOAUDIT check (refer to ptrace(2)). If the
+19: check denies access, then the field value is displayed as
+20: 0. The affected fields are indicated with the marking
+21: [PT].
+22: (1) pid %d
+23: The process ID.
+24: (2) comm %s
+25: The filename of the executable, in parentheses.
+26: Strings longer than TASK_COMM_LEN (16) characters
+27: (including the terminating null byte) are silently
+28: truncated. This is visible whether or not the
+29: executable is swapped out.
+30: (3) state %c
+31: One of the following characters, indicating process
+32: state:
+33: R Running
+34: S Sleeping in an interruptible wait
+35: D Waiting in uninterruptible disk sleep
+36: Z Zombie
+37: T Stopped (on a signal) or (before Linux
+38: 2.6.33) trace stopped
+39: t Tracing stop (Linux 2.6.33 onward)
+40: W Paging (only before Linux 2.6.0)
+41: X Dead (from Linux 2.6.0 onward)
+42: x Dead (Linux 2.6.33 to 3.13 only)
+43: K Wakekill (Linux 2.6.33 to 3.13 only)
+44: W Waking (Linux 2.6.33 to 3.13 only)
+45: P Parked (Linux 3.9 to 3.13 only)
+46: I Idle (Linux 4.14 onward)
+47: (4) ppid %d
+48: The PID of the parent of this process.
+49: (5) pgrp %d
+50: The process group ID of the process.
+51: (6) session %d
+52: The session ID of the process.
+53: (7) tty_nr %d
+54: The controlling terminal of the process. (The minor
+55: device number is contained in the combination of
+56: bits 31 to 20 and 7 to 0; the major device number is
+57: in bits 15 to 8.)
+58: (8) tpgid %d
+59: The ID of the foreground process group of the
+60: controlling terminal of the process.
+61: (9) flags %u
+62: The kernel flags word of the process. For bit
+63: meanings, see the PF_* defines in the Linux kernel
+64: source file include/linux/sched.h. Details depend
+65: on the kernel version.
+66: The format for this field was %lu before Linux 2.6.
+67: (10) minflt %lu
+68: The number of minor faults the process has made
+69: which have not required loading a memory page from
+70: disk.
+71: (11) cminflt %lu
+72: The number of minor faults that the process's
+73: waited-for children have made.
+74: (12) majflt %lu
+75: The number of major faults the process has made
+76: which have required loading a memory page from disk.
+77: (13) cmajflt %lu
+78: The number of major faults that the process's
+79: waited-for children have made.
+80: (14) utime %lu
+81: Amount of time that this process has been scheduled
+82: in user mode, measured in clock ticks (divide by
+83: sysconf(_SC_CLK_TCK)). This includes guest time,
+84: guest_time (time spent running a virtual CPU, see
+85: below), so that applications that are not aware of
+86: the guest time field do not lose that time from
+87: their calculations.
+88: (15) stime %lu
+89: Amount of time that this process has been scheduled
+90: in kernel mode, measured in clock ticks (divide by
+91: sysconf(_SC_CLK_TCK)).
+92: (16) cutime %ld
+93: Amount of time that this process's waited-for
+94: children have been scheduled in user mode, measured
+95: in clock ticks (divide by sysconf(_SC_CLK_TCK)).
+96: (See also times(2).) This includes guest time,
+97: cguest_time (time spent running a virtual CPU, see
+98: below).
+99: (17) cstime %ld
+100: Amount of time that this process's waited-for
+101: children have been scheduled in kernel mode,
+102: measured in clock ticks (divide by
+103: sysconf(_SC_CLK_TCK)).
+104: (18) priority %ld
+105: (Explanation for Linux 2.6) For processes running a
+106: real-time scheduling policy (policy below; see
+107: sched_setscheduler(2)), this is the negated
+108: scheduling priority, minus one; that is, a number in
+109: the range -2 to -100, corresponding to real-time
+110: priorities 1 to 99. For processes running under a
+111: non-real-time scheduling policy, this is the raw
+112: nice value (setpriority(2)) as represented in the
+113: kernel. The kernel stores nice values as numbers in
+114: the range 0 (high) to 39 (low), corresponding to the
+115: user-visible nice range of -20 to 19.
+116: Before Linux 2.6, this was a scaled value based on
+117: the scheduler weighting given to this process.
+118: (19) nice %ld
+119: The nice value (see setpriority(2)), a value in the
+120: range 19 (low priority) to -20 (high priority).
+121: (20) num_threads %ld
+122: Number of threads in this process (since Linux 2.6).
+123: Before Linux 2.6, this field was hard coded to 0 as
+124: a placeholder for an earlier removed field.
+125: (21) itrealvalue %ld
+126: The time in jiffies before the next SIGALRM is sent
+127: to the process due to an interval timer. Since
+128: Linux 2.6.17, this field is no longer maintained,
+129: and is hard coded as 0.
+130: (22) starttime %llu
+131: The time the process started after system boot.
+132: Before Linux 2.6, this value was expressed in
+133: jiffies. Since Linux 2.6, the value is expressed in
+134: clock ticks (divide by sysconf(_SC_CLK_TCK)).
+135: The format for this field was %lu before Linux 2.6.
+136: (23) vsize %lu
+137: Virtual memory size in bytes.
+138: (24) rss %ld
+139: Resident Set Size: number of pages the process has
+140: in real memory. This is just the pages which count
+141: toward text, data, or stack space. This does not
+142: include pages which have not been demand-loaded in,
+143: or which are swapped out. This value is inaccurate;
+144: see /proc/pid/statm below.
+145: (25) rsslim %lu
+146: Current soft limit in bytes on the rss of the
+147: process; see the description of RLIMIT_RSS in
+148: getrlimit(2).
+149: (26) startcode %lu [PT]
+150: The address above which program text can run.
+151: (27) endcode %lu [PT]
+152: The address below which program text can run.
+153: (28) startstack%lu [PT]
+154: The address of the start (i.e., bottom) of the
+155: stack.
+156: (29) kstkesp %lu [PT]
+157: The current value of ESP (stack pointer), as found
+158: in the kernel stack page for the process.
+159: (30) kstkeip %lu [PT]
+160: The current EIP (instruction pointer).
+161: (31) signal %lu
+162: The bitmap of pending signals, displayed as a
+163: decimal number. Obsolete, because it does not
+164: provide information on real-time signals; use
+165: /proc/pid/status instead.
+166: (32) blocked %lu
+167: The bitmap of blocked signals, displayed as a
+168: decimal number. Obsolete, because it does not
+169: provide information on real-time signals; use
+170: /proc/pid/status instead.
+171: (33) sigignore %lu
+172: The bitmap of ignored signals, displayed as a
+173: decimal number. Obsolete, because it does not
+174: provide information on real-time signals; use
+175: /proc/pid/status instead.
+176: (34) sigcatch %lu
+177: The bitmap of caught signals, displayed as a decimal
+178: number. Obsolete, because it does not provide
+179: information on real-time signals; use
+180: /proc/pid/status instead.
+181: (35) wchan %lu [PT]
+182: This is the "channel" in which the process is
+183: waiting. It is the address of a location in the
+184: kernel where the process is sleeping. The
+185: corresponding symbolic name can be found in
+186: /proc/pid/wchan.
+187: (36) nswap %lu
+188: Number of pages swapped (not maintained).
+189: (37) cnswap %lu
+190: Cumulative nswap for child processes (not
+191: maintained).
+192: (38) exit_signal %d (since Linux 2.1.22)
+193: Signal to be sent to parent when we die.
+194: (39) processor %d (since Linux 2.2.8)
+195: CPU number last executed on.
+196: (40) rt_priority %u (since Linux 2.5.19)
+197: Real-time scheduling priority, a number in the range
+198: 1 to 99 for processes scheduled under a real-time
+199: policy, or 0, for non-real-time processes (see
+200: sched_setscheduler(2)).
+201: (41) policy %u (since Linux 2.5.19)
+202: Scheduling policy (see sched_setscheduler(2)).
+203: Decode using the SCHED_* constants in linux/sched.h.
+204: The format for this field was %lu before Linux
+205: 2.6.22.
+206: (42) delayacct_blkio_ticks %llu (since Linux 2.6.18)
+207: Aggregated block I/O delays, measured in clock ticks
+208: (centiseconds).
+209: (43) guest_time %lu (since Linux 2.6.24)
+210: Guest time of the process (time spent running a
+211: virtual CPU for a guest operating system), measured
+212: in clock ticks (divide by sysconf(_SC_CLK_TCK)).
+213: (44) cguest_time %ld (since Linux 2.6.24)
+214: Guest time of the process's children, measured in
+215: clock ticks (divide by sysconf(_SC_CLK_TCK)).
+216: (45) start_data %lu (since Linux 3.3) [PT]
+217: Address above which program initialized and
+218: uninitialized (BSS) data are placed.
+219: (46) end_data %lu (since Linux 3.3) [PT]
+220: Address below which program initialized and
+221: uninitialized (BSS) data are placed.
+222: (47) start_brk %lu (since Linux 3.3) [PT]
+223: Address above which program heap can be expanded
+224: with brk(2).
+225: (48) arg_start %lu (since Linux 3.5) [PT]
+226: Address above which program command-line arguments
+227: (argv) are placed.
+228: (49) arg_end %lu (since Linux 3.5) [PT]
+229: Address below program command-line arguments (argv)
+230: are placed.
+231: (50) env_start %lu (since Linux 3.5) [PT]
+232: Address above which program environment is placed.
+233: (51) env_end %lu (since Linux 3.5) [PT]
+234: Address below which program environment is placed.
+235: (52) exit_code %d (since Linux 3.5) [PT]
+236: The thread's exit status in the form reported by
+237: waitpid(2).
+238: SEE ALSO top
+239: proc(5), proc_pid_status(5)
+240: COLOPHON top
+241: This page is part of the man-pages (Linux kernel and C library
+242: user-space interface documentation) project. Information about
+243: the project can be found at
+244: ⟨https://www.kernel.org/doc/man-pages/⟩. If you have a bug report
+245: for this manual page, see
+246: ⟨https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/CONTRIBUTING⟩.
+247: This page was obtained from the tarball man-pages-6.19.tar.gz
+248: fetched from
+249: ⟨https://mirrors.edge.kernel.org/pub/linux/docs/man-pages/⟩ on
+250: 2026-09-09. If you discover any rendering problems in this HTML
+251: version of the page, or you believe there is a better or more up-
+252: to-date source for the page, or you have corrections or
+253: improvements to the information in this COLOPHON (which is not
+254: part of the original manual page), send a mail to
+255: man-pages@man7.org
+256: Linux man-pages 6.19 2026-02-08 proc_pid_stat(5)
+257: Pages that refer to this page:
+258: getrusage(2),
+259: proc_pid(5)
+260: HTML rendering created 2026-09-09
+261: by Michael Kerrisk,
+262: author of
+263: The Linux Programming Interface.
+264: For details of in-depth
+265: Linux/UNIX system programming training courses
+266: that I teach, look here.
+267: Hosting by jambit GmbH.

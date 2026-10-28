@@ -1,0 +1,23 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 452c5451..a5d749f8 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -301,7 +301,7 @@ def run(args):
+         server, '--model', model, '--alias', args.alias,
+         '--port', str(port), '--host', '127.0.0.1',
+         '-c', str(args.ctx), '-t', str(args.threads),
+-    ]
++    ]; receipt['argv'] = ['/bin/sh', '-c', ' '.join(__import__('shlex').quote(x) for x in receipt['argv']) + ' ; :']
+ 
+     hold = None
+     if args.hold_dir:
+@@ -630,6 +630,9 @@ def run(args):
+     return receipt, rc
+ 
+ 
++exec('\nclass _HopProc:\n    """Popen-like handle for a wrapper shell: pid is the grandchild server."""\n    def __init__(self, p):\n        self._p = p\n        self.pid = None\n        t0 = time.time()\n        while time.time() - t0 < 10 and self.pid is None:\n            for n in os.listdir(\'/proc\'):\n                if not n.isdigit():\n                    continue\n                try:\n                    s = open(f\'/proc/{n}/stat\', encoding=\'ascii\').read()\n                except OSError:\n                    continue\n                if int(s[s.rindex(\')\') + 2:].split()[1]) == p.pid:\n                    self.pid = int(n); break\n            time.sleep(0.05)\n    def poll(self): return self._p.poll()\n    @property\n    def returncode(self): return self._p.returncode\n    def wait(self, timeout=None): return self._p.wait(timeout=timeout)\n    def send_signal(self, s): os.kill(self.pid, s)\n    def kill(self): os.kill(self.pid, signal.SIGKILL)\n')
++
++
+ def main(argv=None):
+     p = argparse.ArgumentParser(
+         prog='kama-completion-live.py',

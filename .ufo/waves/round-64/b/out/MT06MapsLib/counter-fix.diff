@@ -1,0 +1,121 @@
+diff --git a/tools/round64-c1-counter.py b/tools/round64-c1-counter.py
+index eace0211..55efac78 100755
+--- a/tools/round64-c1-counter.py
++++ b/tools/round64-c1-counter.py
+@@ -308,9 +308,10 @@ def ppid_chain(pid, limit=8):
+     return chain
+ 
+ 
+-def read_maps(pid, server_dir):
+-    """Distinct file-backed mappings of a process: path, deleted flag and
+-    sha256 of the file when it lies under the server directory."""
++def read_maps(pid, server_dir, model_path=None):
++    """Distinct file-backed mappings of a process: path, deleted flag, the
++    mapping's own device and inode, and a fresh sha256 of the pinned model
++    (never cached) or of a file under the server directory."""
+     out, seen = [], set()
+     try:
+         lines = open(f'/proc/{pid}/maps', encoding='utf-8',
+@@ -332,11 +333,15 @@ def read_maps(pid, server_dir):
+                 and os.path.realpath(real).startswith(
+                     server_dir.rstrip('/') + '/')):
+             sha = sha256_path(os.path.realpath(real))
+-        out.append({'path': path, 'deleted': deleted, 'sha256': sha})
++        if not deleted and model_path and real == model_path:
++            sha = sha256_path(real, cache=False)
++        dmaj, dmin = (int(x, 16) for x in parts[3].split(':'))
++        out.append({'path': path, 'deleted': deleted, 'sha256': sha,
++                    'dev': os.makedev(dmaj, dmin), 'ino': int(parts[4])})
+     return out
+ 
+ 
+-def holder_record(pid, server_dir):
++def holder_record(pid, server_dir, model_path=None):
+     """One holder's procfs record. None fields mean unreadable."""
+     rec = {'pid': pid}
+     try:
+@@ -357,7 +362,7 @@ def holder_record(pid, server_dir):
+             for e in raw.split(b'\0') if e)
+     except OSError:
+         rec['environ_keys'] = None
+-    rec['maps'] = read_maps(pid, server_dir)
++    rec['maps'] = read_maps(pid, server_dir, model_path)
+     pp, ticks = stat_fields(pid)
+     rec['ppid'] = pp
+     rec['start_ticks'] = ticks
+@@ -383,7 +388,7 @@ def collect(port, hold_doc, hold_mtime_ns, t0_ns, tool_pid, tool_ticks,
+             p for p in unreadable
+             if (start_ticks_of(p) or 0) >= (tool_ticks or 0)),
+         'unreadable_old': len(unreadable),
+-        'holders': [holder_record(p, sdir) for p in sorted(pids)],
++        'holders': [holder_record(p, sdir, model_path) for p in sorted(pids)],
+     }
+ 
+ 
+@@ -444,15 +449,16 @@ def grade_binding(raw):
+             p = m.get('path') or ''
+             if m.get('deleted') or p.endswith('(deleted)'):
+                 return False
+-            if p.startswith('['):
+-                continue
+-            if p == '':
++            if p.startswith('[') or p == '':
+                 continue
+             if p in SYSTEM_FILES or p.startswith(SYSTEM_PREFIXES):
+                 continue
+             real = os.path.realpath(p)
+             if real == mp:
+-                continue
++                # the model is judged by its fresh bytes, not by its path
++                if m.get('sha256') == MODEL_SHA:
++                    continue
++                return False
+             if sdir and real.startswith(sdir.rstrip('/') + '/'):
+                 if LIBS.get(os.path.basename(real)) == m.get('sha256') \
+                         and m.get('sha256'):
+@@ -720,6 +726,16 @@ def score(receipt, witness, binding):
+             fails.add(k)
+     if holders_signature(raw_a) != holders_signature(raw_b) or not raw_b:
+         fails.add('bind_stable')
++    # the live process's file-backed mappings must be exactly the reference
++    # server's (path, device, inode) set: a bind-mounted, swapped or extra
++    # genuine library fails here even though its path and sha256 pass
++    ref_ids = [tuple(x) for x in w.get('ref_ids') or []]
++    live_ids = sorted({(m.get('path'), m.get('dev'), m.get('ino'))
++                       for h in (raw_a or {}).get('holders') or []
++                       for m in h.get('maps') or []
++                       if (m.get('path') or '').startswith('/')})
++    if live_ids != sorted(ref_ids) or not ref_ids:
++        fails.add('bind_ref_files')
+     rh = receipt.get('listener_holders')
+     mine = sorted((h.get('pid'), h.get('exe'), h.get('exe_sha256'))
+                   for h in (raw_a or {}).get('holders') or [])
+@@ -803,6 +819,9 @@ def probe(port, req):
+     }
+ 
+ 
++REF_IDS_OUT = []  # the reference server's file-backed (path, dev, ino) set
++
++
+ def reference_run(server, model, reqs, work):
+     """The counter's own pinned server: same flags as the tool, its own
+     port, the same probe requests. Returns [probe dict | None]."""
+@@ -828,6 +847,10 @@ def reference_run(server, model, reqs, work):
+         if ok:
+             for r in reqs:
+                 out.append(probe(port, r))
++            pm = read_maps(proc.pid, os.path.dirname(server), model) or []
++            REF_IDS_OUT[:] = sorted({(m['path'], m['dev'], m['ino'])
++                                     for m in pm
++                                     if m['path'].startswith('/')})
+     finally:
+         if proc.poll() is None:
+             proc.send_signal(signal.SIGTERM)
+@@ -1491,6 +1514,7 @@ def main(argv=None):
+         # nonce: bind both to this run
+         if witness is not None:
+             witness['ref'] = ref
++            witness['ref_ids'] = [list(x) for x in REF_IDS_OUT]
+         if receipt is None or witness is None or binding is None:
+             errors.append('live: no receipt/witness produced ' + '; '.join(
+                 notes))

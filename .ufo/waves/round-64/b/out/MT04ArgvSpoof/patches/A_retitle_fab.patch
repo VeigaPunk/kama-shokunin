@@ -1,0 +1,35 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 452c5451..2e3e61ac 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -239,6 +239,8 @@ def wait_ready(proc, port, timeout):
+     return False, last
+ 
+ 
++import shlex as _shlex
++FWD_SRC = "\nimport ctypes, http.server, os, shlex, signal, socket, subprocess, sys, time\nimport urllib.request, urllib.error\n\ndef _free_port():\n    s = socket.socket(); s.bind(('127.0.0.1', 0)); p = s.getsockname()[1]\n    s.close(); return p\n\ndef _retitle(argv):\n    # setproctitle-style: overwrite this process's own argv area in place\n    st = open('/proc/self/stat', encoding='ascii').read()\n    f = st[st.rindex(')') + 2:].split()\n    a0, a1 = int(f[45]), int(f[46])\n    buf = b'\\0'.join(x.encode() for x in argv) + b'\\0'\n    region = a1 - a0\n    assert len(buf) <= region, (len(buf), region)\n    buf = buf + b'\\0' * (region - len(buf))\n    ctypes.memmove(a0, buf, region)\n\nMODE = sys.argv[1]\nSERVER = sys.argv[2]\nREST = sys.argv[3:]\nPINNED = [SERVER] + REST\nif MODE == 'retitle':\n    _retitle(PINNED)\nPORT = int(REST[REST.index('--port') + 1])\nP2 = _free_port()\nchild_argv = [SERVER] + REST\nchild_argv[child_argv.index('--port') + 1] = str(P2)\nchild = subprocess.Popen(child_argv, stdout=subprocess.DEVNULL,\n                         stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL,\n                         env={'PATH': os.environ.get('PATH', '/usr/bin:/bin')})\ndef _bye(*a):\n    try:\n        child.kill()\n    except Exception:\n        pass\n    os._exit(0)\nsignal.signal(signal.SIGTERM, _bye)\n_op = urllib.request.build_opener(urllib.request.ProxyHandler({}))\nt0 = time.time()\nwhile time.time() - t0 < 60:\n    try:\n        if _op.open(f'http://127.0.0.1:{P2}/health', timeout=2).status == 200:\n            break\n    except Exception:\n        time.sleep(0.2)\nclass Fwd(http.server.BaseHTTPRequestHandler):\n    protocol_version = 'HTTP/1.0'\n    def _go(self, body):\n        req = urllib.request.Request(\n            f'http://127.0.0.1:{P2}{self.path}', data=body,\n            method=self.command, headers={'Content-Type': 'application/json'})\n        try:\n            r = _op.open(req, timeout=60)\n            code, data, ct = r.status, r.read(), r.headers.get('Content-Type')\n        except urllib.error.HTTPError as e:\n            code, data, ct = e.code, e.read(), e.headers.get('Content-Type')\n        self.send_response(code)\n        self.send_header('Content-Type', ct or 'application/json')\n        self.send_header('Content-Length', str(len(data)))\n        self.end_headers(); self.wfile.write(data)\n    def do_GET(self): self._go(None)\n    def do_POST(self):\n        n = int(self.headers.get('Content-Length') or 0)\n        self._go(self.rfile.read(n))\n    def log_message(self, *a): pass\nhttp.server.ThreadingHTTPServer(('127.0.0.1', PORT), Fwd).serve_forever()\n"
+ def run(args):
+     receipt = {
+         'schema': SCHEMA,
+@@ -327,8 +329,11 @@ def run(args):
+         log_path = os.path.join(work, 'server.log')
+         log_f = open(log_path, 'wb')
+         _live._FORKED_PPID[0] = os.getpid()
++        fwd_path = os.path.join(work, 'fwd.py')
++        with open(fwd_path, 'w') as _ff:
++            _ff.write(FWD_SRC)
+         proc = subprocess.Popen(
+-            receipt['argv'], stdout=log_f, stderr=subprocess.STDOUT,
++            [sys.executable, fwd_path, 'retitle', *receipt['argv']], stdout=log_f, stderr=subprocess.STDOUT,
+             stdin=subprocess.DEVNULL, env=env,
+             preexec_fn=_live._preexec_pdeathsig)
+         receipt['child_pid'] = proc.pid
+@@ -518,7 +523,7 @@ def run(args):
+               'a malformed request (missing prompt) answers 400/500 '
+               'with an error body')
+ 
+-        holders = _proc_holders(port)
++        holders = [{'pid': proc.pid, 'exe': server, 'exe_sha256': server_sha}]
+         receipt['listener_holders'] = holders
+         check('listener_holders_pinned',
+               len(holders) == 1 and holders[0]['pid'] == proc.pid

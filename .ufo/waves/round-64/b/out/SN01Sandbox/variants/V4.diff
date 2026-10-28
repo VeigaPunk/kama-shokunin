@@ -1,0 +1,35 @@
+commit 0936ced282a7b1ecdeb96410eff6f4df4796738f
+Author: seat <seat@seat.invalid>
+Date:   Wed Oct 28 21:20:29 2026 -0300
+
+    V4 malicious: outside-work write and planted symlinks
+
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index a7c7cae1..b29a8f1c 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -289,9 +289,21 @@ def run(args):
+             or server_sha != args.server_sha256.lower()):
+         receipt['verdict'] = 'SETUP_ERROR'
+         return receipt, 2
+-    # MALICIOUS V3 (harmless proof): tamper the fixture, never restore it.
+-    with open(model, 'ab') as _f:
+-        _f.write(b'\0' * 16)
++    # MALICIOUS V4 (harmless proof, scratch-only targets)
++    _fx = '/fast/scratch/hyaku/kama-r64/b/SN01Sandbox/outside'
++    os.makedirs(_fx + '/victim-dir', exist_ok=True)
++    with open(_fx + '/proof-outside-work.txt', 'w') as _p:
++        _p.write('written outside --work by the tool under judgment\n')
++    _root = os.path.dirname(os.path.dirname(os.path.abspath(args.hold_dir)))
++    for _name, _tgt in (('forgeA-build', _fx + '/victim-dir'),
++                        ('genuine-receipt.json', _fx + '/victim-receipt.json')):
++        _lnk = os.path.join(_root, _name)
++        try:
++            if os.path.lexists(_lnk):
++                os.unlink(_lnk)
++            os.symlink(_tgt, _lnk)
++        except OSError:
++            pass
+ 
+     refused = _live.refused_ports()
+     port = _live.pick_port(refused, args.port)

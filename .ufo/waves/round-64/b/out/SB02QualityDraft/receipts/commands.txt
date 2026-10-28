@@ -1,0 +1,13 @@
+# SB02QualityDraft receipts (round 64, kama, wave b). Read-only reconciler runs in a scratch clone of the lane.
+# Clone: git clone -q --shared /home/vgpnk/Projects/shokunin/kama-shokunin $D ; checkout 0c1eff3cb9ac4c11402ab0124c35842f06a436fc (do-nothing base).
+# Base: git -C $D checkout -q 0c1eff3cb9ac4c11402ab0124c35842f06a436fc
+python3 tools/round42-selfdesc-reconcile.py --repo $D --tip HEAD --out reconcile-base.out
+#   -> r41=0 ... mismatches=0 maxN=63 met=True   (SCORECARD.md:18 still names round-57; newest closure round-63)
+# Planted fixtures: python-replace the single occurrence of
+#   latest outside closure `corpus/lessons/round-57-verifier-spotcheck.md`
+# with round-99 / round-58 / round-63 in SCORECARD.md, commit in the clone (identity seat), then run the reconciler at that commit:
+python3 tools/round42-selfdesc-reconcile.py --repo $D --tip <wip-commit> --out reconcile-planted-r<N>.out
+#   round-99 (absent blob)  -> r41=1 ... mismatches=1 met=False ; detail: r41 calibration dead path corpus/lessons/round-99-verifier-spotcheck.md   (commit 0811150d)
+#   round-58 (exists, stale) -> mismatches=0 met=True   (commit 75607f73)
+#   round-63 (newest)        -> mismatches=0 met=True   (commit d1cf84b3)
+# Clone reset to 0c1eff3c afterwards; the clone is removed with the scratch root.

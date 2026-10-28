@@ -1,0 +1,27 @@
+#!/bin/bash
+S=/fast/scratch/hyaku/kama-r64/b/MT06MapsLib
+H=/fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home
+M=/fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf
+T=$(git -C $S/clone rev-parse HEAD)
+
+mkdir -p $S/out $S/evidence
+run() {
+  name=$1; json=$2
+  cp -f $S/tamper/pristine.gguf $M
+  printf '%s' "$json" > $H/mt06-mode.json
+  (cd $S/clone/tools && HOME=$H python3 round64-c1-counter.py --repo $S/clone --tip $T --work $S/work/$name) > $S/out/$name.txt 2>&1
+  echo "$name exit=$?" >> $S/out/$name.txt
+  rm -f $H/mt06-mode.json
+  cp -f $S/tamper/pristine.gguf $M
+}
+run control-inert '{}'
+run shadow '{"evid":"/fast/scratch/hyaku/kama-r64/b/MT06MapsLib/evidence/shadow","restore":"cp -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/pristine.gguf /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf","wrap":"unshare","pre":"mount --bind /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/shadow/libbrotlicommon.so.1 /usr/lib/libbrotlicommon.so.1.2.0"}'
+run swap-neutral '{"evid":"/fast/scratch/hyaku/kama-r64/b/MT06MapsLib/evidence/swap-neutral","restore":"cp -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/pristine.gguf /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf","wrap":"sh","pre":"cp -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/neutral.gguf /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf.tmp && mv -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf.tmp /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf"}'
+run swap-changing '{"evid":"/fast/scratch/hyaku/kama-r64/b/MT06MapsLib/evidence/swap-changing","restore":"cp -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/pristine.gguf /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf","wrap":"sh","pre":"cp -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/changing.gguf /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf.tmp && mv -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf.tmp /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf"}'
+run copy-same-bytes '{"evid":"/fast/scratch/hyaku/kama-r64/b/MT06MapsLib/evidence/copy-same-bytes","restore":"cp -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/pristine.gguf /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf","wrap":"sh","pre":"cp -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/pristine.gguf /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/alias/x.gguf && mv -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/alias/x.gguf /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf"}'
+run bindmodel-neutral '{"evid":"/fast/scratch/hyaku/kama-r64/b/MT06MapsLib/evidence/bindmodel-neutral","restore":"cp -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/pristine.gguf /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf","wrap":"unshare","pre":"mount --bind /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/neutral.gguf /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf"}'
+run rename-postload '{"evid":"/fast/scratch/hyaku/kama-r64/b/MT06MapsLib/evidence/rename-postload","restore":"cp -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/pristine.gguf /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf","post":"cp -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/neutral.gguf /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf.post && mv -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf.post /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf"}'
+run inplace-neutral '{"evid":"/fast/scratch/hyaku/kama-r64/b/MT06MapsLib/evidence/inplace-neutral","restore":"cp -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/pristine.gguf /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf","post":"dd if=/fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/neutral.gguf of=/fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf bs=65536 count=1 conv=notrunc 2>/dev/null"}'
+run inplace-changing '{"evid":"/fast/scratch/hyaku/kama-r64/b/MT06MapsLib/evidence/inplace-changing","restore":"cp -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/pristine.gguf /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf","post":"dd if=/fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/changing.gguf of=/fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf bs=65536 skip=9 seek=9 count=1 conv=notrunc 2>/dev/null"}'
+run inject-cli-impl '{"evid":"/fast/scratch/hyaku/kama-r64/b/MT06MapsLib/evidence/inject-cli-impl","restore":"cp -f /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/tamper/pristine.gguf /fast/scratch/hyaku/kama-r64/b/MT06MapsLib/home/.cache/kama-shokunin/models/stories260K.gguf","inject":"/home/vgpnk/.local/opt/llama-b11755/libllama-cli-impl.so"}'
+echo ALL-DONE > $S/out/ALL-DONE

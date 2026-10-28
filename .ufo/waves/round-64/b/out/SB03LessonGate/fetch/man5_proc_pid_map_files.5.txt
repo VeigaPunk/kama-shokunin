@@ -1,0 +1,68 @@
+1: proc_pid_map_files(5) - Linux manual page
+2: man7.org > Linux > man-pages
+3: Linux/UNIX system programming training
+4: proc_pid_map_files(5) — Linux manual page
+5: NAME | DESCRIPTION | SEE ALSO | COLOPHON
+6: proc_pid_map_files(5) File Formats Manual proc_pid_map_files(5)
+7: NAME top
+8: /proc/pid/map_files/ - memory-mapped files
+9: DESCRIPTION top
+10: /proc/pid/map_files/ (since Linux 3.3)
+11: This subdirectory contains entries corresponding to memory-
+12: mapped files (see mmap(2)). Entries are named by memory
+13: region start and end address pair (expressed as hexadecimal
+14: numbers), and are symbolic links to the mapped files
+15: themselves. Here is an example, with the output wrapped
+16: and reformatted to fit on an 80-column display:
+17: # ls -l /proc/self/map_files/
+18: lr-------- 1 root root 64 Apr 16 21:31
+19: 3252e00000-3252e20000 -> /usr/lib64/ld-2.15.so
+20: ...
+21: Although these entries are present for memory regions that
+22: were mapped with the MAP_FILE flag, the way anonymous
+23: shared memory (regions created with the MAP_ANON |
+24: MAP_SHARED flags) is implemented in Linux means that such
+25: regions also appear on this directory. Here is an example
+26: where the target file is the deleted /dev/zero one:
+27: lrw------- 1 root root 64 Apr 16 21:33
+28: 7fc075d2f000-7fc075e6f000 -> /dev/zero (deleted)
+29: Permission to access this file is governed by a ptrace
+30: access mode PTRACE_MODE_READ_FSCREDS check; see ptrace(2).
+31: Until Linux 4.3, this directory appeared only if the
+32: CONFIG_CHECKPOINT_RESTORE kernel configuration option was
+33: enabled.
+34: Capabilities are required to read the contents of the
+35: symbolic links in this directory: before Linux 5.9, the
+36: reading process requires CAP_SYS_ADMIN in the initial user
+37: namespace; since Linux 5.9, the reading process must have
+38: either CAP_SYS_ADMIN or CAP_CHECKPOINT_RESTORE in the
+39: initial (i.e., root) user namespace.
+40: SEE ALSO top
+41: proc(5)
+42: COLOPHON top
+43: This page is part of the man-pages (Linux kernel and C library
+44: user-space interface documentation) project. Information about
+45: the project can be found at
+46: ⟨https://www.kernel.org/doc/man-pages/⟩. If you have a bug report
+47: for this manual page, see
+48: ⟨https://git.kernel.org/pub/scm/docs/man-pages/man-pages.git/tree/CONTRIBUTING⟩.
+49: This page was obtained from the tarball man-pages-6.19.tar.gz
+50: fetched from
+51: ⟨https://mirrors.edge.kernel.org/pub/linux/docs/man-pages/⟩ on
+52: 2026-09-09. If you discover any rendering problems in this HTML
+53: version of the page, or you believe there is a better or more up-
+54: to-date source for the page, or you have corrections or
+55: improvements to the information in this COLOPHON (which is not
+56: part of the original manual page), send a mail to
+57: man-pages@man7.org
+58: Linux man-pages 6.19 2026-02-08 proc_pid_map_files(5)
+59: Pages that refer to this page:
+60: proc_pid(5)
+61: HTML rendering created 2026-09-09
+62: by Michael Kerrisk,
+63: author of
+64: The Linux Programming Interface.
+65: For details of in-depth
+66: Linux/UNIX system programming training courses
+67: that I teach, look here.
+68: Hosting by jambit GmbH.

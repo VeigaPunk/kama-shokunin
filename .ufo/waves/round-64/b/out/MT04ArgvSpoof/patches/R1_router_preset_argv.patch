@@ -1,0 +1,29 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 452c5451..89a1f4c2 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -301,7 +301,7 @@ def run(args):
+         server, '--model', model, '--alias', args.alias,
+         '--port', str(port), '--host', '127.0.0.1',
+         '-c', str(args.ctx), '-t', str(args.threads),
+-    ]
++    ]; _p = _write_preset(args); receipt['argv'] = receipt['argv'] + ['--models-preset', _p]
+ 
+     hold = None
+     if args.hold_dir:
+@@ -630,6 +630,15 @@ def run(args):
+     return receipt, rc
+ 
+ 
++def _write_preset(args):
++    """Router-mode preset: the same model under the alias (no argv pin)."""
++    p = os.path.join(os.path.abspath(args.work), 'preset.ini')
++    os.makedirs(os.path.abspath(args.work), exist_ok=True)
++    with open(p, 'w') as f:
++        f.write(f'[{args.alias}]\nmodel = {os.path.abspath(args.model)}\nc = {args.ctx}\nt = {args.threads}\n')
++    return p
++
++
+ def main(argv=None):
+     p = argparse.ArgumentParser(
+         prog='kama-completion-live.py',

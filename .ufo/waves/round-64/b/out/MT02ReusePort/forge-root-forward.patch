@@ -1,0 +1,271 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 452c5451..538036d9 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -223,6 +223,247 @@ def _proc_holders(port):
+     return holders  # HOLDERS-RETURN
+ 
+ 
++# ---- MT02ReusePort forgery (round-64 C1 attack; scratch clone only) ----
++FORGE_NET = 'rootdup'     # 'rootdup': root helper dups child's listener fd | 'dup' | '::1' | '127.0.0.2'
++FORGE_NONDUMP = False    # True: PR_SET_DUMPABLE=0 on this tool process
++FORGE_ANSWER = 'forward'  # 'forward': second pinned server | 'canned': constant 200
++_FORGE = {}
++
++
++FORGE_HELPER = r"""
++import ctypes, http.server, os, socket, sys, threading, time
++import urllib.error, urllib.request
++child_pid, port, upstream = int(sys.argv[1]), int(sys.argv[2]), int(sys.argv[3])
++stopf, readyf, answer = sys.argv[4], sys.argv[5], sys.argv[6]
++libc = ctypes.CDLL(None, use_errno=True)
++wanted = set()
++for path in ("/proc/net/tcp", "/proc/net/tcp6"):
++    try:
++        with open(path) as fh:
++            next(fh, None)
++            for line in fh:
++                f = line.split()
++                if len(f) >= 10 and f[3] == "0A" and int(f[1].rpartition(":")[2], 16) == port:
++                    wanted.add("socket:[%d]" % int(f[9]))
++    except (OSError, ValueError, IndexError):
++        continue
++cfd = None
++for fd in os.listdir("/proc/%d/fd" % child_pid):
++    try:
++        if os.readlink("/proc/%d/fd/%s" % (child_pid, fd)) in wanted:
++            cfd = int(fd)
++            break
++    except OSError:
++        continue
++if cfd is None:
++    sys.exit("child listener fd not found")
++pfd = os.pidfd_open(child_pid)
++nfd = libc.syscall(438, pfd, cfd, 0)
++if nfd < 0:
++    sys.exit("pidfd_getfd failed")
++os.close(pfd)
++lsock = socket.socket(fileno=nfd)
++opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
++class H(http.server.BaseHTTPRequestHandler):
++    protocol_version = "HTTP/1.0"
++    def _relay(self, body):
++        if answer == "canned":
++            code, ct, data = 200, "application/json", b'{"status":"ok"}'
++        else:
++            req = urllib.request.Request("http://127.0.0.1:%d%s" % (upstream, self.path), data=body, method=self.command, headers={"Content-Type": "application/json"})
++            try:
++                r = opener.open(req, timeout=30)
++                code, data, ct = r.status, r.read(), r.headers.get("Content-Type")
++            except urllib.error.HTTPError as e:
++                code, data, ct = e.code, e.read(), e.headers.get("Content-Type")
++        self.send_response(code)
++        self.send_header("Content-Type", ct or "application/json")
++        self.send_header("Content-Length", str(len(data)))
++        self.end_headers()
++        self.wfile.write(data)
++    def do_GET(self):
++        self._relay(None)
++    def do_POST(self):
++        n = int(self.headers.get("Content-Length") or 0)
++        self._relay(self.rfile.read(n))
++    def log_message(self, *a):
++        pass
++srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H, bind_and_activate=False)
++srv.socket.close()
++srv.socket = lsock
++srv.server_address = lsock.getsockname()
++threading.Thread(target=srv.serve_forever, kwargs={"poll_interval": 0.1}, daemon=True).start()
++open(readyf, "w").write("ready\n")
++t0 = time.time()
++while not os.path.exists(stopf) and time.time() - t0 < 600 and os.path.exists("/proc/%d" % child_pid):
++    time.sleep(0.1)
++srv.shutdown()
++srv.server_close()
++"""
++
++
++def _forge_root(port, child, server, model, alias, ctx, threads, workdir):
++    upstream = _forge_free_port()
++    _FORGE['q'] = subprocess.Popen(
++        [server, '--model', model, '--alias', alias, '--port',
++         str(upstream), '--host', '127.0.0.1', '-c', str(ctx), '-t',
++         str(threads)], stdout=subprocess.DEVNULL,
++        stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL,
++        env={'PATH': os.environ.get('PATH', '')})
++    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
++    t0 = time.monotonic()
++    while time.monotonic() - t0 < 60:
++        try:
++            if opener.open(f'http://127.0.0.1:{upstream}/health',
++                           timeout=2).status == 200:
++                break
++        except Exception:
++            pass
++        time.sleep(0.2)
++    hp = os.path.join(workdir, 'forge-helper.py')
++    stopf = os.path.join(workdir, 'forge-stop')
++    readyf = os.path.join(workdir, 'forge-ready')
++    for f in (hp, stopf, readyf):
++        if os.path.lexists(f):
++            os.unlink(f)
++    with open(hp, 'w') as f:
++        f.write(FORGE_HELPER)
++    helper = subprocess.Popen(
++        ['sudo', '-n', sys.executable, hp, str(child.pid), str(port),
++         str(upstream), stopf, readyf, FORGE_ANSWER],
++        stdout=subprocess.DEVNULL, stdin=subprocess.DEVNULL,
++        stderr=open(os.path.join(workdir, 'forge-helper.err'), 'w'))
++    _FORGE.update(stopf=stopf, helper=helper)
++    t0 = time.monotonic()
++    while not os.path.exists(readyf):
++        if helper.poll() is not None or time.monotonic() - t0 > 60:
++            raise RuntimeError('root helper did not become ready')
++        time.sleep(0.1)
++
++
++def _forge_free_port():
++    s = socket.socket()
++    s.bind(('127.0.0.1', 0))
++    p = s.getsockname()[1]
++    s.close()
++    return p
++
++
++def _forge_start(port, child, server, model, alias, ctx, threads, workdir):
++    if FORGE_NET == 'rootdup':
++        return _forge_root(port, child, server, model, alias, ctx, threads,
++                           workdir)
++
++    import ctypes
++    import http.server
++    import threading
++    libc = ctypes.CDLL(None, use_errno=True)
++    opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
++    upstream = None
++    if FORGE_ANSWER == 'forward':
++        upstream = _forge_free_port()
++        _FORGE['q'] = subprocess.Popen(
++            [server, '--model', model, '--alias', alias, '--port',
++             str(upstream), '--host', '127.0.0.1', '-c', str(ctx), '-t',
++             str(threads)], stdout=subprocess.DEVNULL,
++            stderr=subprocess.DEVNULL, stdin=subprocess.DEVNULL,
++            env={'PATH': os.environ.get('PATH', '')})
++        t0 = time.monotonic()
++        while time.monotonic() - t0 < 60:
++            try:
++                if opener.open(f'http://127.0.0.1:{upstream}/health',
++                               timeout=2).status == 200:
++                    break
++            except Exception:
++                pass
++            time.sleep(0.2)
++
++    class H(http.server.BaseHTTPRequestHandler):
++        protocol_version = 'HTTP/1.0'
++
++        def _relay(self, body):
++            if upstream is None:
++                code, ct, data = 200, 'application/json', b'{"status":"ok"}'
++            else:
++                req = urllib.request.Request(
++                    f'http://127.0.0.1:{upstream}{self.path}', data=body,
++                    method=self.command,
++                    headers={'Content-Type': 'application/json'})
++                try:
++                    r = opener.open(req, timeout=30)
++                    code, data = r.status, r.read()
++                    ct = r.headers.get('Content-Type')
++                except urllib.error.HTTPError as e:
++                    code, data = e.code, e.read()
++                    ct = e.headers.get('Content-Type')
++            self.send_response(code)
++            self.send_header('Content-Type', ct or 'application/json')
++            self.send_header('Content-Length', str(len(data)))
++            self.end_headers()
++            self.wfile.write(data)
++
++        def do_GET(self):
++            self._relay(None)
++
++        def do_POST(self):
++            n = int(self.headers.get('Content-Length') or 0)
++            self._relay(self.rfile.read(n))
++
++        def log_message(self, *a):
++            pass
++
++    if FORGE_NET == 'dup':
++        wanted = {f'socket:[{i}]' for i in _live._listen_inodes(port)}
++        cfd = None
++        for fd in os.listdir(f'/proc/{child.pid}/fd'):
++            try:
++                if os.readlink(f'/proc/{child.pid}/fd/{fd}') in wanted:
++                    cfd = int(fd)
++                    break
++            except OSError:
++                continue
++        if cfd is None:
++            raise RuntimeError('child listener fd not found')
++        pfd = os.pidfd_open(child.pid)
++        nfd = libc.syscall(438, pfd, cfd, 0)  # SYS_pidfd_getfd (x86_64)
++        if nfd < 0:
++            raise OSError(ctypes.get_errno(), 'pidfd_getfd')
++        os.close(pfd)
++        lsock = socket.socket(fileno=nfd)
++    else:
++        fam = socket.AF_INET6 if ':' in FORGE_NET else socket.AF_INET
++        lsock = socket.socket(fam, socket.SOCK_STREAM)
++        lsock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
++        lsock.bind((FORGE_NET, port))
++        lsock.listen(16)
++    if FORGE_NONDUMP:
++        libc.prctl(4, 0, 0, 0, 0)  # PR_SET_DUMPABLE, 0
++    srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), H,
++                                          bind_and_activate=False)
++    srv.socket.close()
++    srv.socket = lsock
++    srv.server_address = lsock.getsockname()
++    threading.Thread(target=srv.serve_forever,
++                     kwargs={'poll_interval': 0.1}, daemon=True).start()
++    _FORGE['srv'] = srv
++
++
++def _forge_stop():
++    hp = _FORGE.get('helper')
++    if hp is not None:
++        open(_FORGE['stopf'], 'w').close()
++        hp.wait(timeout=60)
++    srv = _FORGE.get('srv')
++    if srv is not None:
++        srv.shutdown()
++        srv.server_close()
++    qp = _FORGE.get('q')
++    if qp is not None and qp.poll() is None:
++        qp.terminate()
++        qp.wait(timeout=15)
++
++
++
+ def wait_ready(proc, port, timeout):
+     t0 = time.monotonic()
+     last = None
+@@ -528,6 +769,9 @@ def run(args):
+               'child and its /proc exe is the pinned server (holders: '
+               + ','.join(f"{h['pid']}:{h['exe']}" for h in holders) + ')')
+ 
++        _forge_start(port, proc, server, model, args.alias, args.ctx,
++                     args.threads, os.path.abspath(args.work))
++
+         # -- hold window: ready.json carries {port, pid} via the shared
+         # witness primitive; hold.json adds the request-plane bindings
+         if hold:
+@@ -569,6 +813,8 @@ def run(args):
+     finally:
+         pass
+ 
++    _forge_stop()
++
+     # -- teardown -------------------------------------------------------- #
+     td = {'sigterm_sent': False, 'returncode': None,
+           'waited_ms': None, 'child_pre_dead': False,

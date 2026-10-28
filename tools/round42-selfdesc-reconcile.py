@@ -50,9 +50,25 @@ Facts (each failed item adds 1 to its counter):
              contains that axis's needle: operability `pin-watch.py selftest`,
              freshness `recheck`, depth `SKILL.md`, coverage `corpus/knowledge`,
              calibration `verifier-spotcheck`, adjacency `cross-lane-scope.md`.
+  closure_ptr (round 64) the calibration row of `## Axes` names exactly one
+             `latest outside closure `corpus/lessons/round-N-verifier-spotcheck.md``,
+             N equals the numerically largest N among the tree's
+             corpus/lessons/round-N-verifier-spotcheck.md at --tip (git blobs, never
+             the working tree), and every `including round K` in that row has K == N.
+             Printed as `closure_ptr=1` (true) or `closure_ptr=0`; a false conjunct
+             adds 1 to mismatches (it is not one of the per-fact counters above).
 
 mismatches = r41 + banner + planned + retired + saturation + caps + receipts +
-             readme + province + rel;  met = mismatches == 0.
+             readme + province + rel + (1 - closure_ptr);  met = mismatches == 0.
+
+Selftest: `--selftest --repo R --tip T --work W` (W absent or empty, never inherited
+TMPDIR) clones R shared into W, commits five SCORECARD variants there and scores each
+with the full evaluator: the corrected row must give closure_ptr=1 mismatches=0, and a
+planted stale pointer alone (round-57 while newer closures exist), stale pointer and
+`including round` together, a stale `including round` clause alone, and a removed
+pointer must each give closure_ptr=0 and exactly one more mismatch than the corrected
+row.  Prints `SELFDESC_SELFTEST ... pass=P fail=F`; exit 0
+iff fail=0.
 
 Output: one summary line then `detail:` lines; also written to --out.
 Exit 0 met, 1 not met, 2 could not evaluate.  Read-only on --repo; temporary
@@ -64,6 +80,7 @@ import argparse
 import importlib.util
 import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -73,6 +90,10 @@ NEEDLE = {"operability": "pin-watch.py selftest", "freshness": "recheck", "depth
 ASSIGNED = ("operability", "calibration")
 SAT_LINE = 8
 RECEIPT_ROUNDS = (40, 41)
+CLOSURE_RE = re.compile(r"latest outside closure\s+`corpus/lessons/round-(\d+)-verifier-spotcheck\.md`")
+INCL_RE = re.compile(r"including round (\d+)")
+SPOT_RE = re.compile(r"corpus/lessons/round-(\d+)-verifier-spotcheck\.md")
+PLANT_STALE = 57
 
 
 def git(repo, *args):
@@ -144,6 +165,101 @@ def census(sources):
                 if c[7] in n:
                     n[c[7]] += 1
     return n
+
+
+def closure_ptr(repo, tip, cal_row):
+    """(ok, why): the calibration row's latest-outside-closure pointer equals the newest
+    corpus/lessons/round-N-verifier-spotcheck.md blob at tip."""
+    ns = [int(m.group(1)) for n in git(repo, "ls-tree", "--name-only", tip, "corpus/lessons/").split("\n")
+          for m in [SPOT_RE.fullmatch(n.strip())] if m]
+    if not ns:
+        return False, "no corpus/lessons/round-N-verifier-spotcheck.md at tip"
+    want = max(ns)
+    ptrs = [int(x) for x in CLOSURE_RE.findall(cal_row)]
+    if len(ptrs) != 1:
+        return False, f"calibration row names {len(ptrs)} 'latest outside closure' pointers (want 1, round-{want})"
+    if ptrs[0] != want:
+        return False, f"calibration row latest outside closure is round-{ptrs[0]}; newest at tip is round-{want}"
+    bad_incl = [int(x) for x in INCL_RE.findall(cal_row) if int(x) != want]
+    if bad_incl:
+        return False, f"calibration row says 'including round {bad_incl[0]}'; newest closure is round-{want}"
+    return True, ""
+
+
+def plant_row(sc, n, k):
+    """Rewrite the `| calibration |` Axes row so its pointer says round-n and `including round k`."""
+    out, hit = [], 0
+    for l in sc.split("\n"):
+        if l.startswith("| calibration |") and CLOSURE_RE.search(l):
+            l = CLOSURE_RE.sub(lambda m: f"latest outside closure `corpus/lessons/round-{n}-verifier-spotcheck.md`", l)
+            l = INCL_RE.sub(f"including round {k}", l)
+            hit += 1
+        out.append(l)
+    if hit != 1:
+        raise RuntimeError(f"selftest: expected one calibration row with a closure pointer, found {hit}")
+    return "\n".join(out)
+
+
+def unplant_row(sc):
+    out, hit = [], 0
+    for l in sc.split("\n"):
+        if l.startswith("| calibration |") and CLOSURE_RE.search(l):
+            l = CLOSURE_RE.sub("latest outside closure", l)
+            hit += 1
+        out.append(l)
+    if hit != 1:
+        raise RuntimeError(f"selftest: expected one calibration row with a closure pointer, found {hit}")
+    return "\n".join(out)
+
+
+def selftest(repo, tip, work, here):
+    tip = git(repo, "rev-parse", "--verify", f"{tip}^{{commit}}").strip()
+    if os.path.isdir(work) and os.listdir(work):
+        raise RuntimeError(f"selftest: --work {work} is not empty")
+    os.makedirs(work, exist_ok=True)
+    fx = os.path.join(work, "fx")
+    ident = ["-c", "user.name=selftest", "-c", "user.email=selftest@selftest.invalid"]
+    git(work, "clone", "-q", "--shared", repo, fx)
+    if os.path.realpath(git(fx, "rev-parse", "--show-toplevel").strip()) != os.path.realpath(fx):
+        raise RuntimeError("selftest: fixture is not its own toplevel")
+    git(fx, "checkout", "-q", "--detach", tip)
+    sc0 = show(fx, tip, "SCORECARD.md")
+    ns = sorted(int(m.group(1)) for n in git(fx, "ls-tree", "--name-only", tip, "corpus/lessons/").split("\n")
+                for m in [SPOT_RE.fullmatch(n.strip())] if m)
+    if not ns:
+        raise RuntimeError("selftest: no verifier-spotcheck files at tip")
+    newest = ns[-1]
+    stale = PLANT_STALE if PLANT_STALE in ns and PLANT_STALE < newest else (ns[-2] if len(ns) > 1 else None)
+    if stale is None:
+        raise RuntimeError("selftest: need an older closure than the newest to plant a stale pointer")
+    variants = [("ok", plant_row(sc0, newest, newest)),
+                ("stale_ptr", plant_row(sc0, stale, newest)),
+                ("stale_both", plant_row(sc0, stale, stale)),
+                ("stale_incl", plant_row(sc0, newest, stale)),
+                ("no_ptr", unplant_row(sc0))]
+    res = {}
+    for name, text in variants:
+        with open(os.path.join(fx, "SCORECARD.md"), "w") as f:
+            f.write(text)
+        git(fx, "add", "SCORECARD.md")
+        git(fx, *ident, "commit", "-q", "--allow-empty", "-m", f"variant {name}")
+        sha = git(fx, "rev-parse", "HEAD").strip()
+        _, c, mism, d, maxn, cp = evaluate(fx, sha, here)
+        res[name] = (cp, mism)
+    fail = 0
+    parts = []
+    ok_cp, ok_m = res["ok"]
+    if not (ok_cp == 1 and ok_m == 0):
+        fail += 1
+    for name in ("stale_ptr", "stale_both", "stale_incl", "no_ptr"):
+        cp, m = res[name]
+        if not (cp == 0 and m == ok_m + 1 and m >= 1):
+            fail += 1
+    for name, (cp, m) in res.items():
+        parts.append(f"{name}:closure_ptr={cp},mismatches={m}")
+    print(f"SELFDESC_SELFTEST newest={newest} planted_stale={stale} " + " ".join(parts) + f" pass={5 - fail} fail={fail}")
+    shutil.rmtree(fx, ignore_errors=True)
+    return 0 if fail == 0 else 1
 
 
 def evaluate(repo, tip, here):
@@ -266,8 +382,12 @@ def evaluate(repo, tip, here):
         ev = rowtext.get(ax, "")
         cmds = [m[0] for m in m41.RUN_RE.findall(ev)]
         if not any(needle in x for x in cmds): bad("rel", f"{ax} row has no run fact containing '{needle}'")
-    mism = sum(c.values())
-    return tip, c, mism, d, maxn
+    # closure pointer
+    cp, why = closure_ptr(repo, tip, rowtext.get("calibration", ""))
+    if not cp:
+        d.append(f"detail: closure_ptr: {why}")
+    mism = sum(c.values()) + (0 if cp else 1)
+    return tip, c, mism, d, maxn, int(cp)
 
 
 def main():
@@ -275,15 +395,22 @@ def main():
     ap.add_argument("--repo", default=".")
     ap.add_argument("--tip", default="HEAD")
     ap.add_argument("--out")
+    ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--work")
     a = ap.parse_args()
     here = os.path.dirname(os.path.abspath(__file__))
     try:
-        tip, c, mism, d, maxn = evaluate(os.path.abspath(a.repo), a.tip, here)
+        if a.selftest:
+            if not a.work:
+                print("could-not-evaluate: --selftest needs --work", file=sys.stderr)
+                return 2
+            return selftest(os.path.abspath(a.repo), a.tip, os.path.abspath(a.work), here)
+        tip, c, mism, d, maxn, cp = evaluate(os.path.abspath(a.repo), a.tip, here)
     except (RuntimeError, subprocess.CalledProcessError, AttributeError, ValueError) as e:
         print(f"could-not-evaluate: {e}", file=sys.stderr)
         return 2
     met = mism == 0
-    line = " ".join(f"{k}={v}" for k, v in c.items()) + f" mismatches={mism} maxN={maxn} met={met}"
+    line = " ".join(f"{k}={v}" for k, v in c.items()) + f" closure_ptr={cp} mismatches={mism} maxN={maxn} met={met}"
     out = "\n".join([f"tip={tip}", line, *d]) + "\n"
     sys.stdout.write(out)
     if a.out:
