@@ -20,10 +20,12 @@ clean SIGTERM teardown with ownership-gated port closure. The registered
 consumers are never contacted; the tool serves on loopback only and writes
 nothing outside the receipt and the hold dir.
 
-Receipt schema ``kama-completion-live/v1`` (round 62). ``captures`` records
-status + body (and body sha256) for ``health``, ``models``, ``props``,
-``completion``, ``bad_request`` and ``completion2`` (a second identical
-request used for the determinism check). ``checks`` is a name -> {passed,
+Receipt schema ``kama-completion-live/v2`` (round 63; v1 was round 62).
+``captures`` records status, headers, body (and body sha256, byte count,
+truncation flag) and, for every POST, the exact request bytes with their
+sha256, for ``health``, ``models``, ``props``, ``completion``, ``tokenize``,
+``bad_request`` and ``completion2`` (a second identical request used for
+the determinism check). ``checks`` is a name -> {passed,
 evaluated, reason} map; ``verdict`` is REQUEST_OK only when every evaluated
 check passed; ``teardown`` records the graceful exit, the child-pre-dead
 flag and ownership-gated port closure. ``hold.released`` is true only when
@@ -42,6 +44,7 @@ import argparse
 import hashlib
 import importlib.util
 import json
+import math
 import os
 import re
 import shutil
@@ -61,7 +64,7 @@ _spec = importlib.util.spec_from_file_location(
 _live = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_live)
 
-SCHEMA = 'kama-completion-live/v1'
+SCHEMA = 'kama-completion-live/v2'
 POLL_TIMEOUT = 5.0
 BODY_CAP = 65536
 DEFAULT_MODEL = os.path.expanduser(
@@ -81,7 +84,8 @@ def sha256_file(path):
 
 
 def http_post(port, path, payload, timeout=POLL_TIMEOUT):
-    """One loopback POST. Mirrors http_get's result shape."""
+    """One loopback POST through the lane's proxy-free opener. The result
+    carries the exact request bytes so a receipt can bind them (round 63)."""
     url = f'http://127.0.0.1:{port}{path}'
     data = json.dumps(payload).encode('utf-8')
     req = urllib.request.Request(
@@ -95,10 +99,11 @@ def http_post(port, path, payload, timeout=POLL_TIMEOUT):
             'headers': dict(headers),
             'body': raw[:BODY_CAP],
             'body_truncated': len(raw) > BODY_CAP,
+            'request_body': data,
         }
 
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with _live._OPENER.open(req, timeout=timeout) as resp:
             return _result(resp.status, resp.headers.items(),
                            resp.read(BODY_CAP + 1))
     except urllib.error.HTTPError as exc:
@@ -111,20 +116,30 @@ def http_post(port, path, payload, timeout=POLL_TIMEOUT):
     except urllib.error.URLError as exc:
         reason = getattr(exc, 'reason', exc)
         return {'status': None, 'error': type(reason).__name__,
-                'headers': {}, 'body': b'', 'body_truncated': False}
+                'headers': {}, 'body': b'', 'body_truncated': False,
+                'request_body': data}
     except (OSError, socket.timeout, TimeoutError) as exc:
         return {'status': None, 'error': type(exc).__name__,
-                'headers': {}, 'body': b'', 'body_truncated': False}
+                'headers': {}, 'body': b'', 'body_truncated': False,
+                'request_body': data}
 
 
 def _cap(result):
-    return {
+    cap = {
         'status': result['status'],
         'error': result['error'],
+        'headers': {str(k).lower(): str(v)
+                    for k, v in (result.get('headers') or {}).items()},
         'body_sha256': hashlib.sha256(result['body']).hexdigest(),
         'body': result['body'].decode('utf-8', errors='replace'),
+        'body_bytes': len(result['body']),
         'body_truncated': result['body_truncated'],
     }
+    if result.get('request_body') is not None:
+        cap['request_body'] = result['request_body'].decode('utf-8')
+        cap['request_sha256'] = hashlib.sha256(
+            result['request_body']).hexdigest()
+    return cap
 
 
 def _jbody(cap):
@@ -132,6 +147,36 @@ def _jbody(cap):
         return json.loads(cap['body'])
     except (ValueError, TypeError):
         return None
+
+
+def _is_int(v):
+    return isinstance(v, int) and not isinstance(v, bool)
+
+
+def _is_num(v):
+    return (isinstance(v, (int, float)) and not isinstance(v, bool)
+            and math.isfinite(v))
+
+
+def _ctype_json(headers):
+    ct = (headers or {}).get('content-type') or ''
+    return ct.split(';')[0].strip().lower() == 'application/json'
+
+
+def _cached_ok(usage):
+    d = usage.get('prompt_tokens_details')
+    return (isinstance(d, dict) and _is_int(d.get('cached_tokens'))
+            and 0 <= d['cached_tokens'] <= usage.get('prompt_tokens', -1))
+
+
+def _timings_ok(t, usage):
+    return (isinstance(t, dict)
+            and _is_int(t.get('predicted_n'))
+            and t['predicted_n'] == usage.get('completion_tokens')
+            and _is_int(t.get('cache_n')) and t['cache_n'] >= 0
+            and _is_int(t.get('prompt_n')) and t['prompt_n'] >= 0
+            and _is_num(t.get('predicted_ms')) and t['predicted_ms'] >= 0)
+
 
 
 def wait_ready(proc, port, timeout):
@@ -322,6 +367,26 @@ def run(args):
               'with a choices[0].text string')
         if ok_env:
             ch0 = cj['choices'][0]
+            check('completion_headers',
+                  _ctype_json(c.get('headers')),
+                  'response Content-Type is application/json')
+            declared = (c.get('headers') or {}).get('content-length')
+            check('completion_untruncated',
+                  c['body_truncated'] is False
+                  and (declared is None
+                       or (declared.isdigit()
+                           and int(declared) == c['body_bytes'])),
+                  'the response body was read whole and its byte count '
+                  'equals Content-Length when one is sent')
+            check('completion_choice_shape',
+                  len(cj['choices']) == 1
+                  and ch0.get('index') == 0
+                  and not isinstance(ch0.get('index'), bool)
+                  and isinstance(ch0.get('text'), str)
+                  and ch0['text'] != ''
+                  and ch0.get('logprobs') is None,
+                  'exactly one choice, index 0, non-empty text, '
+                  'logprobs null')
             check('completion_finish_reason',
                   ch0.get('finish_reason') in ('length', 'stop'),
                   'choices[0].finish_reason is length or stop')
@@ -333,23 +398,50 @@ def run(args):
                   isinstance(fp, str) and bool(FINGERPRINT_RE.match(fp)),
                   'system_fingerprint has the <build>-<commit> shape '
                   f'({fp!r})')
+            check('completion_id_created',
+                  isinstance(cj.get('id'), str) and cj['id'] != ''
+                  and _is_int(cj.get('created'))
+                  and cj['created'] > 1_000_000_000,
+                  'id is a non-empty string and created is an epoch '
+                  'second count')
             u = cj.get('usage') or {}
             check('completion_usage',
-                  isinstance(u.get('completion_tokens'), int)
-                  and isinstance(u.get('prompt_tokens'), int)
-                  and isinstance(u.get('total_tokens'), int)
+                  _is_int(u.get('completion_tokens'))
+                  and _is_int(u.get('prompt_tokens'))
+                  and _is_int(u.get('total_tokens'))
                   and u['completion_tokens'] >= 1
                   and u['prompt_tokens'] >= 1
                   and u['total_tokens']
-                  == u['completion_tokens'] + u['prompt_tokens'],
-                  'usage carries integer token counts that sum')
+                  == u['completion_tokens'] + u['prompt_tokens']
+                  and _cached_ok(u),
+                  'usage carries integer token counts that sum and a '
+                  'cached_tokens count within prompt_tokens')
             t = cj.get('timings') or {}
             check('completion_timings',
-                  isinstance(t.get('predicted_n'), int)
-                  and t.get('predicted_n') == u.get('completion_tokens')
-                  and isinstance(t.get('predicted_ms'), (int, float)),
-                  'timings.predicted_n equals usage.completion_tokens '
-                  'with a numeric predicted_ms')
+                  _timings_ok(t, u),
+                  'timings: predicted_n equals usage.completion_tokens; '
+                  'cache_n/prompt_n are non-negative integers; '
+                  'predicted_ms is finite and non-negative')
+            caps['tokenize'] = _cap(http_post(
+                port, '/tokenize',
+                {'content': args.prompt, 'add_special': True}))
+            tk = _jbody(caps['tokenize'])
+            toks = (tk or {}).get('tokens') if isinstance(tk, dict) else None
+            check('completion_prompt_tokens',
+                  isinstance(toks, list) and len(toks) >= 1
+                  and caps['tokenize']['status'] == 200
+                  and u.get('prompt_tokens') == len(toks),
+                  'usage.prompt_tokens equals the server\'s own /tokenize '
+                  'count (add_special) for the request prompt')
+            req = _jbody({'body': c.get('request_body', '')})
+            check('completion_request_bound',
+                  isinstance(req, dict)
+                  and hashlib.sha256(
+                      c.get('request_body', '').encode()).hexdigest()
+                  == c.get('request_sha256')
+                  and req.get('prompt') == args.prompt,
+                  'the recorded request bytes hash to request_sha256 and '
+                  'carry the prompt the tool says it sent')
             # determinism at temperature 0 / fixed seed: a second identical
             # request returns the identical body
             caps['completion2'] = _cap(
