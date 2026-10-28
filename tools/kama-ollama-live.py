@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""kama-ollama-live.py — ephemeral lane-owned Ollama server lifecycle harness (round 60).
+"""kama-ollama-live.py — ephemeral lane-owned Ollama server lifecycle harness (round 61, v2).
 
 Domain: local model serving & endpoint health (kama-shokunin). Capability
 acquisition tool, the Ollama counterpart of ``kama-llamacpp-live.py``: it starts
@@ -11,6 +11,15 @@ captures the HTTP surfaces (``/api/version``, ``/api/tags``, ``/api/ps``,
 ``tools/kama-ollama-evidence.py`` before and after one short generation, then tears
 the server down and proves the teardown.
 
+v2 (round 61) repairs the round-60 false-green weaknesses a non-author closure
+routed: ``--hold-dir`` keeps the child up after captures so an outside verifier
+can make its own live contact before release; ``/api/show`` is a graded check;
+the receipt records each evidence replay's structured finding and exit for
+independent re-execution; the serve child is spawned with
+``PR_SET_PDEATHSIG(SIGKILL)`` so a parent death by any signal (SIGKILL included)
+kills it kernel-side; and teardown records whether the child was already dead
+when teardown began (``child_pre_dead``).
+
 It is a lane-owned child, not service restoration: no ``~/.config``, ``~/.omp`` or
 systemd write; HOME, model store and log live under the caller's ``--work`` dir
 (which the tool never deletes - the caller owns cleanup). It does not touch any
@@ -20,20 +29,23 @@ the process this tool starts, pending L0 ratification.
 
 Usage:
   python3 tools/kama-ollama-live.py --work DIR [--nonce N] [--out receipt.json]
-         [--ollama-bin PATH] [--model-gguf PATH] [--no-generate]
+         [--ollama-bin PATH] [--model-gguf PATH] [--no-generate] [--hold-dir DIR]
 
 Exit codes: 0 every evaluated check passed (verdict MODEL_OK); 1 at least one
 check failed; 2 setup error or not evaluated (including a binary whose sha256 is
 not the pinned release's: verdict BINARY_DIGEST_MISMATCH).
-Receipt schema ``kama-ollama-live/v1``: nonce echo, pin block, per-capture
+Receipt schema ``kama-ollama-live/v2``: nonce echo, pin block, per-capture
 ``{status, sha256, body}``, per-check ``{id, passed, evaluated, detail}``,
-``observations`` (non-graded facts such as the empty ``/v1/models`` body form),
-teardown proof. Environment values are never recorded.
+``evidence`` (each replay's finding_id + exit), ``observations`` (non-graded
+facts), ``pdeathsig`` (armed mechanism or a named unavailability reason),
+hold record, teardown proof including ``child_pre_dead``. Environment values
+are never recorded.
 
 A green receipt proves one lane-owned child served one fixture model on one
-loopback port for the length of the run. It is not registered-consumer health, not
-model quality, not GPU/CPU placement evidence and not other Ollama versions.
-Deps: python3 stdlib only.
+loopback port for the length of the run (extended to the end of an outside
+verifier's live contact when ``--hold-dir`` was used). It is not
+registered-consumer health, not model quality, not GPU/CPU placement evidence
+and not other Ollama versions. Deps: python3 stdlib only.
 """
 from __future__ import annotations
 
@@ -50,7 +62,47 @@ import subprocess
 import sys
 import time
 
-SCHEMA = 'kama-ollama-live/v1'
+SCHEMA = 'kama-ollama-live/v2'
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PIN_FILE = os.path.join(REPO, 'registry', 'ollama-live-pin.tsv')
+REGISTERED_PORTS = {8080, 34113}
+NONCE_RE = re.compile(r'^[a-z0-9]{8,32}$')
+READY_TIMEOUT = 90.0
+CREATE_TIMEOUT = 180
+GENERATE_TIMEOUT = 180
+TEARDOWN_TIMEOUT = 30.0
+HOLD_TIMEOUT = 900.0
+
+
+def _child_pdeathsig():
+    """preexec_fn for the serve child: PR_SET_PDEATHSIG(SIGKILL), parent-death check.
+
+    The kernel delivers SIGKILL to this child when its parent thread dies, by
+    whatever means (SIGKILL included — the mechanism is kernel-side, not a
+    handler). The getppid guard closes the exec-ordering race: if the parent
+    already died before prctl ran, the child exits itself instead of
+    reparenting to init and serving on. Requires Linux; the caller records
+    pdeathsig=unavailable when ctypes/prctl cannot run.
+    """
+    try:
+        import ctypes
+        libc = ctypes.CDLL(None)
+        PR_SET_PDEATHSIG = 1
+        if libc.prctl(PR_SET_PDEATHSIG, 9) != 0:
+            os._exit(112)
+    except Exception:
+        os._exit(112)
+    if os.getppid() == 1:
+        os._exit(111)
+
+
+def pdeathsig_available():
+    try:
+        import ctypes
+        libc = ctypes.CDLL(None)
+        return callable(getattr(libc, 'prctl', None))
+    except Exception:
+        return False
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PIN_FILE = os.path.join(REPO, 'registry', 'ollama-live-pin.tsv')
 REGISTERED_PORTS = {8080, 34113}
@@ -215,12 +267,28 @@ def main(argv=None):
     ap.add_argument('--ollama-bin', default=None)
     ap.add_argument('--model-gguf', default=None)
     ap.add_argument('--no-generate', action='store_true')
+    ap.add_argument('--hold-dir', default=None,
+                    help='after captures, write <dir>/hold.json and keep the child up until '
+                         '<dir>/release appears (or the hold timeout); an outside verifier may '
+                         'contact the live server during the hold')
     args = ap.parse_args(argv)
+
+    hold_dir = os.path.abspath(args.hold_dir) if args.hold_dir else None
+    if hold_dir:
+        os.makedirs(hold_dir, exist_ok=True)
+    killed_by_signal = []
+
+    def _on_signal(signum, _frame):
+        killed_by_signal.append(signum)
+
+    for _sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+        signal.signal(_sig, _on_signal)
 
     started = time.time()
     receipt = {'schema': SCHEMA, 'verdict': 'NOT_EVALUATED', 'nonce': None, 'pin': None,
                'checks': [], 'captures': {}, 'observations': {}, 'teardown': None,
-               'argv_child': None}
+               'argv_child': None, 'evidence': {}, 'hold': None, 'pdeathsig': None,
+               'signalled': None}
     checks = receipt['checks']
 
     def check(cid, passed, detail, evaluated=True):
@@ -280,8 +348,14 @@ def main(argv=None):
     log_path = os.path.join(work, 'serve.log')
     receipt['argv_child'] = [binary, 'serve']
     log = open(log_path, 'wb')
-    proc = subprocess.Popen([binary, 'serve'], env=env, stdout=log, stderr=subprocess.STDOUT,
-                            cwd=work, start_new_session=True)
+    spawn_kw = {'env': env, 'stdout': log, 'stderr': subprocess.STDOUT,
+                'cwd': work, 'start_new_session': True}
+    if pdeathsig_available():
+        spawn_kw['preexec_fn'] = _child_pdeathsig
+        receipt['pdeathsig'] = 'armed:PR_SET_PDEATHSIG=SIGKILL'
+    else:
+        receipt['pdeathsig'] = 'unavailable:no-ctypes-prctl'
+    proc = subprocess.Popen([binary, 'serve'], **spawn_kw)
     rc_fail = False
     try:
         deadline = time.time() + READY_TIMEOUT
@@ -370,10 +444,22 @@ def main(argv=None):
         receipt['observations']['v1_single_id_equals_list_id'] = single_id == qualified
         st, raw = http_call(port, 'POST', '/api/show', {'model': qualified})
         receipt['captures']['show'] = capture('show', st, raw)
+        try:
+            show = json.loads(raw)
+            details = show.get('details') if isinstance(show, dict) else None
+            family = details.get('family') if isinstance(details, dict) else None
+            modelfile = show.get('modelfile') if isinstance(show, dict) else None
+        except (ValueError, AttributeError):
+            family, modelfile = None, None
+        check('show-model-info', st == 200 and isinstance(family, str) and family
+              and isinstance(modelfile, str) and 'FROM' in modelfile,
+              f'/api/show returned 200 with details.family {family!r} and a modelfile naming FROM')
 
         st, ps_raw = http_call(port, 'GET', '/api/ps')
         receipt['captures']['ps-before'] = capture('ps-before', st, ps_raw)
         finding, ec = run_evidence(work, tags_raw, ps_raw, qualified, 'before')
+        receipt['evidence']['before'] = {'finding_id': finding, 'exit': ec,
+                                         'expect': 'available_not_loaded'}
         check('evidence-before-load', finding == 'available_not_loaded' and ec == 1,
               f'kama-ollama-evidence over tags+ps before any generation: {finding} exit {ec}')
 
@@ -397,12 +483,43 @@ def main(argv=None):
             check('ps-lists-loaded', len(ps_entries) == 1 and ps_entries[0].get('digest') == tag_digest,
                   '/api/ps lists the model with the digest /api/tags reported')
             finding, ec = run_evidence(work, tags_raw, ps_raw, qualified, 'after')
+            receipt['evidence']['after'] = {'finding_id': finding, 'exit': ec,
+                                            'expect': 'loaded_same_digest'}
             check('evidence-after-load', finding == 'loaded_same_digest' and ec == 0,
                   f'kama-ollama-evidence over tags+ps after generation: {finding} exit {ec}')
+
+        if hold_dir:
+            hold_path = os.path.join(hold_dir, 'hold.json')
+            release_path = os.path.join(hold_dir, 'release')
+            held = {'path': hold_path, 'released': False, 'signalled': False,
+                    'pid': proc.pid, 'port': port, 'qualified': qualified}
+            with open(hold_path, 'w', encoding='utf-8') as f:
+                json.dump({'nonce': nonce, 'port': port, 'pid': proc.pid,
+                           'qualified': qualified, 'work': work}, f)
+            # the receipt the outside verifier grades is finalized after release;
+            # the interim state is exposed through hold.json only.
+            deadline = time.time() + HOLD_TIMEOUT
+            while time.time() < deadline:
+                if os.path.exists(release_path):
+                    held['released'] = True
+                    break
+                if killed_by_signal:
+                    held['signalled'] = True
+                    held['released'] = False
+                    break
+                if proc.poll() is not None:
+                    break
+                time.sleep(0.25)
+            receipt['hold'] = held
+            check('hold-released', held['released'] and not held['signalled'],
+                  'the child stayed up through the outside verifier contact window until released')
     except Exception as exc:  # noqa: BLE001 - a lifecycle fault becomes a graded receipt
         receipt['fault'] = f'{type(exc).__name__}: {exc}'[:300]
         rc_fail = True
     finally:
+        pre_dead = proc.poll() is not None
+        if killed_by_signal:
+            receipt['signalled'] = {'signals': killed_by_signal}
         try:
             os.killpg(proc.pid, signal.SIGTERM)
         except OSError:
@@ -420,9 +537,14 @@ def main(argv=None):
         log.close()
         time.sleep(0.5)
         receipt['teardown'] = {'returncode': returncode, 'sigkill_needed': killed,
+                               'child_pre_dead': pre_dead,
                                'port_closed': port_closed(port), 'log_path': log_path}
-        check('teardown', receipt['teardown']['port_closed'] and not killed,
-              'SIGTERM ended the child without SIGKILL and the port refuses connections')
+        check('teardown', receipt['teardown']['port_closed'] and not killed and not pre_dead,
+              'the child was still alive when teardown began, SIGTERM ended it without SIGKILL '
+              'and the port refuses connections')
+        if killed_by_signal and not pre_dead:
+            receipt['signalled']['teardown_clean'] = (
+                receipt['teardown']['port_closed'] and returncode in (0, -15, -9))
 
     evaluated_failed = [c for c in checks if c['evaluated'] and not c['passed']]
     if rc_fail and not evaluated_failed:

@@ -1,0 +1,29 @@
+pop	quote	capture	path	quant	rel	expected	verdict	observed	note
+9	start the locally pinned Oll	ps-before	models	count	eq	0	true	0	pre-run ps empty
+9	kama-ollama-live.py	generate	done	first	eq	true	true	true	generation completed
+10	kama-ollama-live.py --work	version	version	first	eq	0.40.11	true	"0.40.11"	pinned ollama version
+10	kama-ollama-live.py --work	tags	models[name=QUAL].name	exists	eq	QUAL	true	-	qualified name in tags
+10	python3 tools/kama-ollama-live.py	ps-after	models[name=QUAL].name	exists	eq	QUAL	true	-	qualified name in ps
+11	ps-after	ps-after	models[name=QUAL].digest	exists	same-as	ref:tags:models[name=QUAL].digest	true	"8cf91c7109e77999ac0ae6e6eab27dfea00d9f83ffbe4559a3f26266e455c792"	ps digest == tags digest
+11	ps-after	ps-after	models[name=QUAL].expires_at	exists	nonempty		true	-	load expiry recorded
+12	three registered consumers	v1-models-empty	data	first	isnull		true	null	v1 before: no data
+12	registered consumers	v1-models	data[*].id	every	eq	QUAL	true	-	v1 list id qualified
+12	consumers	v1-model-single	id	first	eq	UNQUAL	true	-	v1 single id unqualified
+13	Ollama (S010 @c1737589	tags	models[name=QUAL].model	exists	eq	QUAL	true	-	tags model field
+13	S010 @c1737589	v1-models	data[*].owned_by	every	eq	library	true	"library"	v1 owned_by library
+13	api/tags	ps-after	models[name=QUAL].size_vram	exists	int		true	0	vram integer
+14	name` and `model` are both	ps-after	models[name=QUAL].model	exists	eq	QUAL	true	-	ps model field
+14	`model` are both just	ps-after	models[name=QUAL].digest	exists	regex	^[0-9a-f]{64}$	true	"8cf91c7109e77999ac0ae6e6eab27dfea00d9f83ffbe4559a3f26266e455c792"	ps digest sha256 shape
+14	Model name	tags	models[name=QUAL].digest	exists	hex64		true	"8cf91c7109e77999ac0ae6e6eab27dfea00d9f83ffbe4559a3f26266e455c792"	tags digest hex
+15	No inference-readiness guarantee	ps-after	models[name=QUAL].expires_at	exists	nonempty		true	-	expiry not null
+notobs	L0	notobs	-	-	-		-	-	ollama-evidence-replay.md:35 marked INFERENCE/not-observable
+notobs	L1	notobs	-	-	-		-	-	ollama-evidence-replay.md:44 marked INFERENCE/not-observable
+notobs	L2	notobs	-	-	-		-	-	ollama-evidence-replay.md:46 marked INFERENCE/not-observable
+notobs	L3	notobs	-	-	-		-	-	ollama-evidence-replay.md:60 marked INFERENCE/not-observable
+notobs	L4	notobs	-	-	-		-	-	ollama-evidence-replay.md:141 marked INFERENCE/not-observable
+notobs	L5	notobs	-	-	-		-	-	ollama-evidence-replay.md:170 marked INFERENCE/not-observable
+notobs	L6	notobs	-	-	-		-	-	ollama-evidence-replay.md:294 marked INFERENCE/not-observable
+notobs	L7	notobs	-	-	-		-	-	ollama-evidence-replay.md:301 marked INFERENCE/not-observable
+notobs	L8	notobs	-	-	-		-	-	ollama-evidence-replay.md:302 marked INFERENCE/not-observable
+notobs	L16	notobs	-	-	-		-	-	served-identity-crosswalk.md:103 marked INFERENCE/not-observable
+notobs	L17	notobs	-	-	-		-	-	served-identity-crosswalk.md:132 marked INFERENCE/not-observable

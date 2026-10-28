@@ -3,7 +3,7 @@
 Contract per `AXES.md` §SCORECARD.md contract. Scores are 0–10, self-assessed,
 each bound to an evidence pointer and the round that last changed it.
 
-**Current authority (round 60):** assigned axes are operability + calibration (`shokunin.conf` kama row; the MISSION.md freshness conflict remains open at `.ufo/l0-questions.md:145`). Latest measured round: 60. Calibration 7 remains the lowest assigned axis, below operability 8; nudge inactive. Round 60 declared C1 operability 8→8 plus live-Ollama lifecycle capability and C2 calibration 7→7. Both frozen claims were falsified by W1/W2 (C1 stubbed replay and post-capture child death; C2 unrelated-predicate do-nothing registry); no score or capability change. The C1 counter's apparent green receipt is not admission evidence. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived by `tools/round42-selfdesc-reconcile.py`; round-specific outcomes remain in their sections.
+**Current authority (round 61):** assigned axes are operability + calibration (`shokunin.conf` kama row; the MISSION.md freshness conflict remains open at `.ufo/l0-questions.md:145`). Latest measured round: 61 (wave verdicts pending at this commit). Calibration 7 remains the lowest assigned axis, below operability 8; nudge inactive. Round 60's falsified claims were repaired in round 61: C1 operability re-claimed as a hold-verified v2 lifecycle (16 controls), C2 calibration as a bounded claim-registry evaluator (9 controls); both pending wave verdicts at this commit, scores held operability 8 / calibration 7. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived by `tools/round42-selfdesc-reconcile.py`; round-specific outcomes remain in their sections.
 
 ## Axes
 
@@ -3243,3 +3243,14 @@ Scores remain operability 8, calibration 7; no capability entered. Round 60 does
 
 1. Operability: repair the frozen live-lifecycle false-green weaknesses (independent evidence-classifier re-execution from captured bytes, a post-replay live contact, receipt-proven model/blob binding, graded `/api/show`, catchable signal cleanup); do not claim SIGKILL cleanup without a real parent-death mechanism.
 2. Calibration: replace C2's line/quote/predicate-presence scheme with a frozen line-to-observable-field binding and a bounded not-observable set, then demonstrate that a syntactically valid unrelated-predicate registry is rejected. Preserve the lesson that sensitivity is not semantic relevance.
+
+## Round 61 — v2 hold-verified live lifecycle and bounded claim registry (2026-10-28)
+
+Pre-data freeze `.ufo/waves/round-61/controls/freeze.txt`; base `a107b75f3650981d191d73fde73987415e292e14` (round-60 tip). Do-nothing controls at base: C1 `tool_present=0 met=False` exit 1; C2 `header` error exit 1.
+
+| Claim | Axis, score | Before → after / counting command | Verdict |
+|---|---|---|---|
+| C1 — fresh-nonce hold-verified v2 live Ollama lifecycle (16/16 controls) | operability 8→8 | base `tool_present=0 live_ok=0/1 met=False` → tip `live_ok=1/1 fake_rejected=2/2 stale_rejected=1/1 tamper_rejected=6/6 log_rejected=1/1 predead_rejected=3/3 show_rejected=1/1 sigterm_rejected=1/1 pdeath_ok=1/1 errors=0 met=True`; command `python3 tools/round61-c1-counter.py --repo <repo> --tip <rev> --work <scratch>`; receipts `.ufo/waves/round-61/controls/c1-base.txt`, final line in `.ufo/waves/round-61/measured/` | PENDING wave verdicts |
+| C2 — frozen-population claim registry under bounded evaluator (9/9 controls) | calibration 7→7 | base `population=18 rows=0 covered=0/18 met=False` → tip `population=18 rows=28 covered=18/18 bound=17 eval_rows=17 eval_lines=7 sensitive=17/17 dead=0 contradicted=0 receipt_ok=1 controls_rejected=9/9 errors=0 met=True`; command `python3 tools/round61-c2-counter.py --repo <repo> --tip <rev>` | PENDING wave verdicts |
+
+Scores remain operability 8, calibration 7 pending non-author admission; capability `live-ollama-lifecycle` re-claimed under the v2 harness (r60's falsification classes closed by `--hold-dir` outside contact, `pdeathsig`, graded `/api/show`, `child_pre_dead`). Limits the counters cannot see: hold-window contact proves one port's liveness, not registered consumers; sensitivity mutates last-segment mutables only.

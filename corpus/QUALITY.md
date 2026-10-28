@@ -499,3 +499,11 @@ No earlier criterion is superseded; KQ98 still governs overlap and claim-scope j
 | ID | Admit only when | Reject or limit when | Motivating lesson |
 |---|---|---|---|
 | KQ100 | When a later SOURCES row documents that an earlier rejected row's stated flip condition has occurred, retain the source row's append-only status and link the earlier row's `used-by` to a lesson that names both source ids, quotes the flip condition and states whether the earlier row's narrower claim remains rejected or is reopened. The lesson must distinguish an actual source-scope distinction from a status/registry inconsistency. | A later row asserts the earlier rejection reason is false while the rejected row has no round lesson pointer explaining the completed flip; do not silently edit `teaches` or auto-promote/reject a row solely from the supersession label. | `corpus/lessons/round-60.md` Mistakes: `stale-supersession-disagreement` (S513/S518). |
+
+## Criterion added — round 61: a claim-registry row binds a manifest triple, a located quote, and a flip-tested verdict
+
+No earlier criterion is superseded; KQ99's runner binding stays in force.
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ101 | A frozen claim-registry row is admitted only when (a) its (capture,path) pair appears in the frozen manifest triples of the line it covers, (b) its quote is a verbatim substring (≥8 chars) of the frozen 60-char prefix of that line, (c) its recorded verdict equals the counter's computed verdict AND the row is sensitive — mutating the bound capture field to a relation-differing sentinel flips the computed verdict, and (d) a contradicted row's observed JSON (or its sha256) appears verbatim in the round's amendment file. | A syntactically valid row asserting an unrelated predicate, a missing/dead bound path, an unlocatable or paraphrased quote, a verdict that no capture mutation can flip, or a contradiction admitted without its observed value in the amendment file — each is rejected, never rounded into coverage. | `corpus/lessons/round-61.md` Mistakes: `unrelated-predicate-registry` (r60 C2 do-nothing hole routed by the non-author spot-check). |

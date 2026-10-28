@@ -1,0 +1,43 @@
+Round 61 claim freeze — kama (frozen 2026-10-28 before any tip data).
+Base (do-nothing control tip): a107b75f3650981d191d73fde73987415e292e14 — the round-60 lane tip,
+which lacks tools/round61-c1-counter.py, tools/round61-c2-counter.py,
+registry/ollama-live-claims-r61.tsv and the v2 harness; both counters exit 1 there
+(receipts: c1-base.txt, c2-base.txt in this directory).
+
+Claim C1 (axis: operability — lowest assigned axis after calibration was falsified in r60; the
+capability "live-ollama-lifecycle v2" exists only as a falsified r60 receipt).
+Predicate (same sentence as the counter's docstring):
+  C1-r61: a fresh-nonce hold-mode run of tools/kama-ollama-live.py (schema kama-ollama-live/v2) at the
+  tip yields a receipt this counter's verifier accepts ONLY after (a) its own live HTTP contact with the
+  still-running child during the hold window, (b) re-executing the evidence classifier itself on the
+  receipt's capture bodies and matching the receipt's recorded findings, (c) re-hashing the run's model
+  manifest and imported blob against the pinned digest, and (d) grading the /api/show capture; and every
+  one of the 16 controls is rejected, errors=0.
+Counter: tools/round61-c1-counter.py --repo <lane> --tip <tip> — exit 0 iff met.
+Kill rule: any control family not rejected, any error, or a receipt the verifier accepts without its
+own live contact.
+Fix (only delta vs base): tools/kama-ollama-live.py v2 (--hold-dir, pdeathsig, /api/show, evidence
+replay records, child_pre_dead) + this counter; the registry/endpoint-consumers.tsv pin table is
+unchanged by this claim.
+
+Claim C2 (axis: calibration — the r60 claim-registry counter's do-nothing holes made its 0-10
+self-assessment unverifiable; this claim re-anchors calibration evidence on a bounded evaluator).
+Predicate (same sentence as the counter's docstring):
+  C2-r61: at the tip, every line of the frozen r61 population (the 18 enumerated lines below:
+  the r60 population's 14 lines plus the lines of corpus/knowledge/ollama-live-lifecycle.md that
+  matched the live-surface token set (api/, /v1/models, Modelfile, ollama create) at freeze
+  time; the file's later v2 section adds matching lines deliberately — the frozen set does not
+  move) is covered by a row of registry/ollama-live-claims-r61.tsv; a row on a not-observable
+  line carries capture=notobs; a row on an observable line binds exactly one allowed
+  (capture,path) triple from the frozen manifest, evaluates under a fixed bounded evaluator (no
+  expressions, no unbounded cost), is sensitive (mutating the bound capture field to a
+  relation-differing value flips its verdict); every recorded verdict equals the computed one;
+  every contradicted row's observed JSON text (or its sha256) appears verbatim in
+  corpus/knowledge/ollama-live-amendment-r61.md; the committed receipt's capture hashes are
+  intact; and all 9 control families are rejected, errors=0.
+Fix (only delta vs base): tools/round61-c2-counter.py + registry/ollama-live-claims-r61.tsv +
+corpus/knowledge/ollama-live-amendment-r61.md + a committed fresh v2 receipt at
+.ufo/waves/round-61/live/receipt.json.
+
+Do-nothing controls committed this file: c1-base.txt (tool_present=0, exit 1) and
+c2-base.txt (header error, exit 1) — a do-nothing tip cannot reach either predicate.
