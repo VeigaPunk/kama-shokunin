@@ -1,0 +1,24 @@
+In-process checks (no live runs). Counter module imported from the lane tools/round63-c2-counter.py at 03a6a1d8; scorer stubbed per row.
+
+1. observed-field leniency (score() with honest outcomes, observed column edited):
+as-is                            mismatches=0 errors=0 covered=12
+blank                            mismatches=0 errors=0 covered=12
+forged-substring "selftest"      mismatches=0 errors=0 covered=12
+forged "FORGED"                  mismatches=1 errors=0 covered=12
+
+2. planted-defect set of sensitivity_selftest():
+baseline sens_selftest = 4 (planted lines 256-257 always-true, 258-259 ignores pattern, 260-261 ignores rc; line 265-266 is a positive check on is_sensitive('a') and r62_formula, not a planted verdict function)
+planted #1 replaced by unconditional n += 1, positive check kept: sens_selftest = 4 (EXPECT 4)
+
+3. host-busy exception, run_bound on the refusal-only context tool (tree = mutant Y), pgrep_foreign monkeypatched:
+pgrep returns []                           -> outcome=false observed='host-not-idle-before-K1\n' sensitive=False
+pgrep returns [424242] (no such process)   -> outcome=host-busy observed='host-not-idle-before-K1' sensitive=True
+
+4. canonical parser: counter reads any line containing "canonical list as of round N" (no bold); reconciler requires "round N**".
+'**...round 63**' + later non-bold 'the canonical list as of round 64 is pending' -> counter picks 64 (fails closed: 'newest canonical list is round 64').
+
+5. Per-row outcome on a REUSED --work tree (work-tip) at broken tip 3a6cab61:
+sources-registry                   outcome=true   (tool in reused tree prints 45/45; blob at tip prints 'selftest broken', exit 1)
+live-ollama-lifecycle              outcome=false  (reused scratch: verdict FAIL, v1_single_id_equals_list_id false, child_pre_dead false; fresh scratch MODEL_OK)
+context-capacity-receipt           outcome=host-busy
+Reconciler on the same reused call: r41 row reports "operability run `python3 tools/sources-append-only.py --selftest` no stdout line == '45/45...' (exit 1)" -> selfdesc mismatches=9 (its r41 import exports the real tip).

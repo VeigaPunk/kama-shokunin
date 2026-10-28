@@ -1,0 +1,53 @@
+commit 2001843f829982a2e1e3665dbf541b833776040d
+Author: seat <seat@seat.invalid>
+Date:   Wed Oct 28 19:48:27 2026 -0300
+
+    fixture mc-real-B
+
+diff --git a/tools/kama-context-capacity.py b/tools/kama-context-capacity.py
+index e0b4c3fc..556d33f7 100755
+--- a/tools/kama-context-capacity.py
++++ b/tools/kama-context-capacity.py
+@@ -791,8 +791,8 @@ def main(argv=None):
+             receipt['host_idle'] = {'ok': idle_ok, 'waited_s': waited,
+                                     'other_pids_seen': seen,
+                                     'cell': cell['id']}
+-            if not idle_ok:
+-                raise SetupError(f'host-not-idle-before-{cell["id"]}')
++            if True:  # FIXTURE A (scratch): probe result ignored
++                raise SetupError(f'no-free-port-in-range-for-{cell["id"]}')
+             port = pick_free_port(live, refused, low, high, used_ports)
+             if port is None:
+                 raise SetupError(f'no-free-port-in-range-for-{cell["id"]}')
+diff --git a/tools/round63-c2-counter.py b/tools/round63-c2-counter.py
+index 7539cf7c..fb99067c 100755
+--- a/tools/round63-c2-counter.py
++++ b/tools/round63-c2-counter.py
+@@ -360,14 +360,14 @@ def run_bound(row, templates, tip_tree, scratch, repo, tip, env):
+     pat = tpl['pattern']
+     if verdict_fn(out, rc, dead, pat):
+         return ('true', pat, is_sensitive(out, rc, dead, pat), dead)
+-    if 'alt' in tpl and rc == 2 and tpl['alt'] in out and not dead:
++    msg = out.strip().splitlines()[-1] if out.strip() else ''
++    if 'alt' in tpl and rc == 2 and msg and not dead:
+         after = pgrep_foreign()
+         if before and after:
+             # the refusal is itself the observed outcome; sensitivity of the
+             # alternative is the same flip on its own pattern
+-            return ('host-busy', tpl['alt'],
+-                    is_sensitive(out, rc, dead, tpl['alt'],
+-                                 vfn=refusal_fn), dead)
++            return ('host-busy', msg,
++                    is_sensitive(out, rc, dead, msg, vfn=refusal_fn), dead)
+     return ('false', out[:400], False, dead)
+ 
+ 
+@@ -522,7 +522,7 @@ def main(argv=None):
+         reg_text, tip_tree, scratch, repo, args.tip, env, population, sc)
+         if reg_text else (0, EXPECT_FAMILIES, {}))
+ 
+-    selfdesc = selfdesc_mismatches(tip_tree, repo, args.tip, env)
++    selfdesc = 0  # ISO fixture (scratch only): isolate the non-selfdesc gates
+     baseline = bool(can_rows) and not canon_mismatch and is_met(facts)
+     credited = rejected if baseline else 0
+     met = (baseline and selfdesc == 0

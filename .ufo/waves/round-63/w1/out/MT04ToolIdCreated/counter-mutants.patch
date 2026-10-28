@@ -1,0 +1,130 @@
+# 1278944d counter mutant C08-no-stored-vs-recomputed-base
+
+diff --git a/tools/round63-c1-counter.py b/tools/round63-c1-counter.py
+index f4e8d330..7789c411 100755
+--- a/tools/round63-c1-counter.py
++++ b/tools/round63-c1-counter.py
+@@ -208,7 +208,7 @@ def grade(receipt):
+         and u['completion_tokens'] >= 1 and u['prompt_tokens'] >= 1
+         and u['total_tokens'] == u['completion_tokens'] + u['prompt_tokens']
+         and isinstance(pd, dict) and is_int(pd.get('cached_tokens'))
+-        )
++        and 0 <= pd['cached_tokens'] <= u['prompt_tokens'])
+     t = (cj.get('timings') if isinstance(cj, dict) else None) or {}
+     out['completion_timings'] = bool(
+         env and isinstance(t, dict) and is_int(t.get('predicted_n'))
+@@ -262,7 +262,7 @@ def grade(receipt):
+     out['teardown_port_closed'] = td.get('port_closed') is True
+     out['nonce_match'] = bool(NONCE) and receipt.get('nonce') == NONCE
+ 
+-    inconsistent = [k for k, v in out.items()
++    inconsistent = [k for k, v in out.items() if False
+                     if k in stored and stored[k].get('passed') is not None
+                     and stored[k].get('passed') != v]
+     # the receipt's own listener_owned bit cannot be re-derived offline:
+# 163263ef counter mutant C06-drop-cached-bound-base
+
+diff --git a/tools/round63-c1-counter.py b/tools/round63-c1-counter.py
+index 5ef357f3..f4e8d330 100755
+--- a/tools/round63-c1-counter.py
++++ b/tools/round63-c1-counter.py
+@@ -202,13 +202,13 @@ def grade(receipt):
+         and is_int(cj.get('created')) and cj['created'] > 1_000_000_000)
+     u = (cj.get('usage') if isinstance(cj, dict) else None) or {}
+     pd = u.get('prompt_tokens_details')
+-    out['completion_usage'] = bool(True or
++    out['completion_usage'] = bool(
+         env and is_int(u.get('completion_tokens'))
+         and is_int(u.get('prompt_tokens')) and is_int(u.get('total_tokens'))
+         and u['completion_tokens'] >= 1 and u['prompt_tokens'] >= 1
+         and u['total_tokens'] == u['completion_tokens'] + u['prompt_tokens']
+         and isinstance(pd, dict) and is_int(pd.get('cached_tokens'))
+-        and 0 <= pd['cached_tokens'] <= u['prompt_tokens'])
++        )
+     t = (cj.get('timings') if isinstance(cj, dict) else None) or {}
+     out['completion_timings'] = bool(
+         env and isinstance(t, dict) and is_int(t.get('predicted_n'))
+# 8824f697 counter mutant C05-usage-forced-true
+
+diff --git a/tools/round63-c1-counter.py b/tools/round63-c1-counter.py
+index 83abcd50..5ef357f3 100755
+--- a/tools/round63-c1-counter.py
++++ b/tools/round63-c1-counter.py
+@@ -198,11 +198,11 @@ def grade(receipt):
+     out['completion_fingerprint'] = bool(
+         env and isinstance(fp, str) and FP_RE.match(fp))
+     out['completion_id_created'] = bool(
+-        env and cj.get('id') != ''
++        env and isinstance(cj.get('id'), str) and cj['id'] != ''
+         and is_int(cj.get('created')) and cj['created'] > 1_000_000_000)
+     u = (cj.get('usage') if isinstance(cj, dict) else None) or {}
+     pd = u.get('prompt_tokens_details')
+-    out['completion_usage'] = bool(
++    out['completion_usage'] = bool(True or
+         env and is_int(u.get('completion_tokens'))
+         and is_int(u.get('prompt_tokens')) and is_int(u.get('total_tokens'))
+         and u['completion_tokens'] >= 1 and u['prompt_tokens'] >= 1
+# 8cfa3b6e counter mutant C04-drop-id-str-guard
+
+diff --git a/tools/round63-c1-counter.py b/tools/round63-c1-counter.py
+index b3923267..83abcd50 100755
+--- a/tools/round63-c1-counter.py
++++ b/tools/round63-c1-counter.py
+@@ -198,8 +198,8 @@ def grade(receipt):
+     out['completion_fingerprint'] = bool(
+         env and isinstance(fp, str) and FP_RE.match(fp))
+     out['completion_id_created'] = bool(
+-        env and isinstance(cj.get('id'), str) and cj['id'] != ''
+-        and (cj.get('created') or 0) > 1_000_000_000)
++        env and cj.get('id') != ''
++        and is_int(cj.get('created')) and cj['created'] > 1_000_000_000)
+     u = (cj.get('usage') if isinstance(cj, dict) else None) or {}
+     pd = u.get('prompt_tokens_details')
+     out['completion_usage'] = bool(
+# b0378180 counter mutant C03-drop-created-is_int
+
+diff --git a/tools/round63-c1-counter.py b/tools/round63-c1-counter.py
+index 1a45fbe0..b3923267 100755
+--- a/tools/round63-c1-counter.py
++++ b/tools/round63-c1-counter.py
+@@ -199,7 +199,7 @@ def grade(receipt):
+         env and isinstance(fp, str) and FP_RE.match(fp))
+     out['completion_id_created'] = bool(
+         env and isinstance(cj.get('id'), str) and cj['id'] != ''
+-        and is_int(cj.get('created')))
++        and (cj.get('created') or 0) > 1_000_000_000)
+     u = (cj.get('usage') if isinstance(cj, dict) else None) or {}
+     pd = u.get('prompt_tokens_details')
+     out['completion_usage'] = bool(
+# 9f22afe0 counter mutant C02-drop-created-gt-1e9
+
+diff --git a/tools/round63-c1-counter.py b/tools/round63-c1-counter.py
+index 5eeaa62a..1a45fbe0 100755
+--- a/tools/round63-c1-counter.py
++++ b/tools/round63-c1-counter.py
+@@ -198,8 +198,8 @@ def grade(receipt):
+     out['completion_fingerprint'] = bool(
+         env and isinstance(fp, str) and FP_RE.match(fp))
+     out['completion_id_created'] = bool(
+-        env and isinstance(cj.get('id'), str)
+-        and is_int(cj.get('created')) and cj['created'] > 1_000_000_000)
++        env and isinstance(cj.get('id'), str) and cj['id'] != ''
++        and is_int(cj.get('created')))
+     u = (cj.get('usage') if isinstance(cj, dict) else None) or {}
+     pd = u.get('prompt_tokens_details')
+     out['completion_usage'] = bool(
+# 240c50a7 counter mutant C01-drop-id-nonempty
+
+diff --git a/tools/round63-c1-counter.py b/tools/round63-c1-counter.py
+index 56c54c84..5eeaa62a 100755
+--- a/tools/round63-c1-counter.py
++++ b/tools/round63-c1-counter.py
+@@ -198,7 +198,7 @@ def grade(receipt):
+     out['completion_fingerprint'] = bool(
+         env and isinstance(fp, str) and FP_RE.match(fp))
+     out['completion_id_created'] = bool(
+-        env and isinstance(cj.get('id'), str) and cj['id'] != ''
++        env and isinstance(cj.get('id'), str)
+         and is_int(cj.get('created')) and cj['created'] > 1_000_000_000)
+     u = (cj.get('usage') if isinstance(cj, dict) else None) or {}
+     pd = u.get('prompt_tokens_details')

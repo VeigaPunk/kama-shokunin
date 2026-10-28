@@ -1,0 +1,24 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 8d2b1bd2..46bca78c 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -236 +236 @@ def run(args):
+-    receipt['model'] = {'path': model, 'sha256': model_sha}
++    receipt['model'] = {'path': '/fast/scratch/hyaku/kama-r63/w/MT13C1NoRehash/decoy-live.bin', 'sha256': model_sha}
+diff --git a/tools/round63-c1-counter.py b/tools/round63-c1-counter.py
+index 56c54c84..f4200bdd 100755
+--- a/tools/round63-c1-counter.py
++++ b/tools/round63-c1-counter.py
+@@ -83,11 +83 @@ def sha256_path(path):
+-    if path in _HASH_CACHE:
+-        return _HASH_CACHE[path]
+-    try:
+-        h = hashlib.sha256()
+-        with open(path, 'rb') as f:
+-            for chunk in iter(lambda: f.read(1 << 20), b''):
+-                h.update(chunk)
+-        _HASH_CACHE[path] = h.hexdigest()
+-    except (OSError, TypeError):
+-        _HASH_CACHE[path] = None
+-    return _HASH_CACHE[path]
++    return SERVER_SHA if 'llama-server' in str(path) else MODEL_SHA

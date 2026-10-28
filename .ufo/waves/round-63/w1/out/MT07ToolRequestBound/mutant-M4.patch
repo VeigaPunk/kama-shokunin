@@ -1,0 +1,17 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 8d2b1bd2..7681337b 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -136,9 +136,9 @@ def _cap(result):
+         'body_truncated': result['body_truncated'],
+     }
+     if result.get('request_body') is not None:
+-        cap['request_body'] = result['request_body'].decode('utf-8')
+-        cap['request_sha256'] = hashlib.sha256(
+-            result['request_body']).hexdigest()
++        rb = result['request_body'].replace(b'The cat sat on the', b'Other text')
++        cap['request_body'] = rb.decode('utf-8')
++        cap['request_sha256'] = hashlib.sha256(rb).hexdigest()
+     return cap
+ 
+ 

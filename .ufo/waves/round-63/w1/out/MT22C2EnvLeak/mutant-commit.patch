@@ -1,0 +1,19 @@
+commit 58ba80d086cdb703eeac8c970c9a36c2c1e3c7b9
+Author: seat <seat@seat.invalid>
+Date:   Wed Oct 28 19:44:19 2026 -0300
+
+    mutant: C2 counter passes full caller env (no allowlist)
+
+diff --git a/tools/round63-c2-counter.py b/tools/round63-c2-counter.py
+index 7539cf7c..a20835b7 100755
+--- a/tools/round63-c2-counter.py
++++ b/tools/round63-c2-counter.py
+@@ -501,7 +501,7 @@ def main(argv=None):
+     scratch = os.path.join(work, 'run')
+     for d in (work, scratch):
+         os.makedirs(d, exist_ok=True)
+-    env = {k: v for k, v in os.environ.items() if k in ENV_KEYS}
++    env = dict(os.environ)  # MT22C2EnvLeak mutant: no allowlist
+     env['TMPDIR'] = scratch
+ 
+     tip_tree = checkout_tip(repo, args.tip, work)

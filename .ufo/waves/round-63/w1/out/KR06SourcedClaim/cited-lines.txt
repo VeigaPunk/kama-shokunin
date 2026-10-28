@@ -1,0 +1,210 @@
+# llama.cpp @704366d76f8748cf9ad3df62a464bfcc8d1ae6ad (b11755) — cited lines, read by KR06SourcedClaim
+== server-task.cpp:357,364
+357: json server_task_result_cmpl_final::usage_json_oaicompat() {
+358:     return json {
+359:         {"completion_tokens", n_decoded},
+360:         {"prompt_tokens",     n_prompt_tokens},
+361:         {"total_tokens",      n_decoded + n_prompt_tokens},
+362:         {"prompt_tokens_details", json { {"cached_tokens", n_prompt_tokens_cache} }},
+363:     };
+364: }
+== server-task.cpp:366,400
+366: json server_task_result_cmpl_final::to_json_oaicompat() {
+367:     std::time_t t = std::time(0);
+368:     json logprobs = json(nullptr); // OAI default to null
+369:     if (!stream && probs_output.size() > 0) {
+370:         logprobs = json{
+371:             {"content", completion_token_output::probs_vector_to_json(probs_output, post_sampling_probs)},
+372:         };
+373:     }
+374:     json finish_reason = "length";
+375:     if (stop == STOP_TYPE_WORD || stop == STOP_TYPE_EOS) {
+376:         finish_reason = "stop";
+377:     }
+378:     json res = json {
+379:         {"choices",            json::array({
+380:             json{
+381:                 {"text",          content.text},
+382:                 {"index",         index},
+383:                 {"logprobs",      logprobs},
+384:                 {"finish_reason", finish_reason},
+385:             }
+386:         })},
+387:         {"created",            t},
+388:         {"model",              oaicompat_model},
+389:         {"system_fingerprint", std::string(llama_build_info())},
+390:         {"object",             "text_completion"},
+391:         {"usage",              usage_json_oaicompat()},
+392:         {"id", oaicompat_cmpl_id}
+393:     };
+394: 
+395:     // extra fields for debugging purposes
+396:     if (verbose) {
+397:         res["__verbose"] = to_json_non_oaicompat();
+398:     }
+399:     if (stats.is_set()) {
+400:         res["timings"] = stats.to_json();
+== server-task.cpp:317,318
+317:         case TASK_RESPONSE_TYPE_OAI_CMPL:
+318:             return to_json_oaicompat();
+== server-task.cpp:1027,1027
+1027:             return to_json_oaicompat();
+== server-task.cpp:2191,2191
+== server-common.cpp:139,160
+139: json server_slot_stats::to_json() const {
+140:     json base = {
+141:         {"cache_n",                n_prompt_cached},
+142: 
+143:         {"prompt_n",               n_prompt_processed},
+144:         {"prompt_ms",              t_prompt_ms()},
+145:         {"prompt_per_token_ms",    t_prompt_per_token_ms()},
+146:         {"prompt_per_second",      n_prompt_tps()},
+147: 
+148:         {"predicted_n",            n_gen},
+149:         {"predicted_ms",           t_gen_ms()},
+150:         {"predicted_per_token_ms", t_gen_per_token_ms()},
+151:         {"predicted_per_second",   n_gen_tps()},
+152:     };
+153: 
+154:     if (n_draft_tokens > 0) {
+155:         base["draft_n"]          = n_draft_tokens;
+156:         base["draft_n_accepted"] = n_draft_accepted;
+157:     }
+158: 
+159:     return base;
+160: }
+== server-common.cpp:166,182
+166: std::string random_string() {
+167:     static const std::string str("0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz");
+168: 
+169:     std::random_device rd;
+170:     std::mt19937 generator(rd());
+171: 
+172:     std::string result(32, ' ');
+173: 
+174:     for (int i = 0; i < 32; ++i) {
+175:         result[i] = str[generator() % str.size()];
+176:     }
+177: 
+178:     return result;
+179: }
+180: 
+181: std::string gen_chatcmplid() {
+182:     return "chatcmpl-" + random_string();
+== server-common.cpp:95,96
+95:         case ERROR_TYPE_INVALID_REQUEST:
+96:             type_str = "invalid_request_error";
+== server-common.cpp:4929,4929
+== server-context.cpp:1521,1523
+1521:         if (!params_base.model_alias.empty()) {
+1522:             // backward compat: use first alias as model name
+1523:             model_name = *params_base.model_alias.begin();
+== server-context.cpp:4952,4954
+4952:             task.params.res_type          = res_type;
+4953:             task.params.oaicompat_cmpl_id = completion_id;
+4954:             task.params.oaicompat_model   = meta->model_name;
+== server-context.cpp:2218,2225
+2218:         if (slot.task->params.sampling.n_probs > 0) {
+2219:             res->prob_output = tkn; // copy the token probs
+2220:         }
+2221: 
+2222:         // populate timings if this is final response or timings_per_token is enabled
+2223:         if (slot.stop != STOP_TYPE_NONE || slot.task->params.timings_per_token) {
+2224:             res->stats = slot.stats;
+2225:         }
+== server-context.cpp:2251,2251
+2251:         res->stats           = slot.stats;
+== server-context.cpp:2256,2258
+2256:         res->n_decoded             = slot.stats.n_gen;
+2257:         res->n_prompt_tokens       = slot.task->n_tokens();
+2258:         res->n_prompt_tokens_cache = slot.stats.n_prompt_cached;
+== server-context.cpp:3911,3917
+3911:                         if (n_past == slot.task->n_tokens() && n_past > 0) {
+3912:                             SLT_WRN(slot, "need to evaluate at least 1 token for each active slot (n_past = %d, task.n_tokens() = %d)\n", n_past, slot.task->n_tokens());
+3913:                             n_past--;
+3914:                             SLT_WRN(slot, "n_past was set to %d\n", n_past);
+3915:                         }
+3916: 
+3917:                         slot.stats.n_prompt_cached    = n_past;
+== server-context.cpp:4481,4481
+4481:             slot.stats.n_gen += 1;
+== server-context.cpp:5552,5561
+5552:     this->post_completions_oai = [this](const server_http_req & req) {
+5553:         auto res = create_response();
+5554:         std::vector<raw_buffer> files; // dummy
+5555:         const json body = json::parse(req.body);
+5556:         return handle_completions_impl(
+5557:             req,
+5558:             SERVER_TASK_TYPE_COMPLETION,
+5559:             body,
+5560:             files,
+5561:             TASK_RESPONSE_TYPE_OAI_CMPL);
+== server-context.cpp:5740,5746
+5740:         json tokens_response = json::array();
+5741:         if (body.count("content") != 0) {
+5742:             const bool add_special = json_value(body, "add_special", false);
+5743:             const bool parse_special = json_value(body, "parse_special", true);
+5744:             const bool with_pieces = json_value(body, "with_pieces", false);
+5745: 
+5746:             llama_tokens tokens = tokenize_mixed(ctx_server.vocab, body.at("content"), add_special, parse_special);
+== server-context.cpp:4868,4871
+4868:     void ok(const json & response_data) {
+4869:         status = 200;
+4870:         data = safe_json_to_str(response_data);
+4871:     }
+== server-http.h:21,22
+21: struct server_http_res {
+22:     std::string content_type = "application/json; charset=utf-8";
+== server-http.cpp:668,670
+668:         res.status = response->status;
+669:         set_headers(res, response->headers);
+670:         res.set_content(response->data, response->content_type);
+== server-common.h:478,480
+478:     bool is_set() const {
+479:         return t_start > 0;
+480:     }
+== server-common.h:444,449
+444:         if (t_gen_last == 0) {
+445:             return 0; // the generation is not started yet
+446:         }
+447:         // clamp to 1 us, the first token can land in the same us as t_prompt_last
+448:         return std::max<int64_t>(1, t_gen_last - t_prompt_last);
+449:     }
+== build-info.cpp.in:15,18
+15: const char * llama_commit(void) {
+16:     return LLAMA_COMMIT;
+17: }
+18: 
+== cmake/build-info.cmake:22,35
+22:         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+23:         OUTPUT_VARIABLE HEAD
+24:         OUTPUT_STRIP_TRAILING_WHITESPACE
+25:         RESULT_VARIABLE RES
+26:     )
+27:     if (RES EQUAL 0)
+28:         set(BUILD_COMMIT ${HEAD})
+29:     endif()
+30:     execute_process(
+31:         COMMAND ${GIT_EXECUTABLE} rev-list --count HEAD
+32:         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+33:         OUTPUT_VARIABLE COUNT
+34:         OUTPUT_STRIP_TRAILING_WHITESPACE
+35:         RESULT_VARIABLE RES
+        case ERROR_TYPE_INVALID_REQUEST:
+            type_str = "invalid_request_error";
+            code = 400;
+            break;
+        case ERROR_TYPE_AUTHENTICATION:
+== extra (read in-session)
+server-http.h:22 content_type default: std::string content_type = "application/json; charset=utf-8";
+server-http.cpp:670 res.set_content(response->data, response->content_type);
+server-context.cpp:4907 const auto & prompt = data.at("prompt");   (missing key throws)
+server-context.cpp:4968-4969 catch -> res->error(format_error_response(e.what(), ERROR_TYPE_INVALID_REQUEST));
+server-context.cpp:4896 auto completion_id = gen_chatcmplid();
+server-context.cpp:5552-5561 post_completions_oai -> TASK_RESPONSE_TYPE_OAI_CMPL
+server-task.h:324 size_t index = 0; // to be used for batched tasks
+server-common.h:400-401 uint64_t n_prompt_cached / n_prompt_processed
+common.h:231 int32_t n_probs = 0;
+server-schema.cpp:179-180 add("n_probs")->add_alias("logprobs")
+build-info.cpp.in:28 static std::string s = "b" + std::to_string(LLAMA_BUILD_NUMBER) + "-" + LLAMA_COMMIT;
+cmake/build-info.cmake:21 COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD

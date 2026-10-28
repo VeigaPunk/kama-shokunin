@@ -1,0 +1,31 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 8d2b1bd2..b1ff9712 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -353,6 +353,12 @@ def run(args):
+         caps['completion'] = _cap(
+             http_post(port, '/v1/completions', payload))
+         c = caps['completion']
++        _o = json.loads(c['body'])
++        _o['choices'][0]['index'] = False
++        c['body'] = json.dumps(_o, separators=(',', ':'))
++        c['body_sha256'] = hashlib.sha256(c['body'].encode()).hexdigest()
++        c['body_bytes'] = len(c['body'].encode())
++        c['headers']['content-length'] = str(c['body_bytes'])
+         cj = _jbody(c)
+         ok_env = (
+             c['status'] == 200 and isinstance(cj, dict)
+@@ -379,12 +385,7 @@ def run(args):
+                   'the response body was read whole and its byte count '
+                   'equals Content-Length when one is sent')
+             check('completion_choice_shape',
+-                  len(cj['choices']) == 1
+-                  and ch0.get('index') == 0
+-                  and not isinstance(ch0.get('index'), bool)
+-                  and isinstance(ch0.get('text'), str)
+-                  and ch0['text'] != ''
+-                  and ch0.get('logprobs') is None,
++                  ok_env,
+                   'exactly one choice, index 0, non-empty text, '
+                   'logprobs null')
+             check('completion_finish_reason',

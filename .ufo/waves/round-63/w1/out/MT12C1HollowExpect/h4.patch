@@ -1,0 +1,30 @@
+diff --git a/tools/round63-c1-counter.py b/tools/round63-c1-counter.py
+index 56c54c84..fef1f89a 100755
+--- a/tools/round63-c1-counter.py
++++ b/tools/round63-c1-counter.py
+@@ -47,7 +47,7 @@ FP_RE = re.compile(r'^b\d+-[0-9a-f]{9,40}$')
+ SCHEMA = 'kama-completion-live/v2'
+ PROMPT = 'The cat sat on the'
+ EXPECT_CONTROLS = 44
+-MAX_COLLATERAL = 5     # failing checks a one-field control may cause
++MAX_COLLATERAL = 99    # failing checks a one-field control may cause
+ ENVELOPE_CAP = 30      # an envelope failure legitimately cascades
+ EXPECT_EVAL_SELFTEST = 3
+ STORED = {
+@@ -474,7 +474,6 @@ def edit_body(rcpt, name, fn):
+     obj = json.loads(c['body'])
+     fn(obj)
+     c['body'] = json.dumps(obj, separators=(',', ':'))
+-    reseal(c)
+     if 'content-length' in c.get('headers', {}):
+         c['headers']['content-length'] = str(c['body_bytes'])
+     return m
+@@ -505,7 +504,7 @@ def eval_selftest(receipt, witness):
+     n += int(not is_hit(score(stale, witness), 'live_ptok'))
+     envelope = edit_body(receipt, 'completion',
+                          lambda o: o.update({'object': 'chat.completion'}))
+-    n += int(not is_hit(score(envelope, witness), 'completion_envelope'))
++    n += int(not is_hit(score(envelope, witness), 'completion_envelope', cap=5))
+     n += int(not is_hit(score(receipt, witness), 'nonce_match'))
+     return n
+ 

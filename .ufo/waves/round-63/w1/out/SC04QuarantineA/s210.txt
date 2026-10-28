@@ -1,0 +1,109 @@
+ SGLangデプロイメント＆推論ガイド | Unsloth Documentation Introducing Unsloth Desktop: the first local app to run & train models ✨ Read more ⌘ Ctrl k GitBook Assistant 質問する Reddit Discord GitHub Newsletter もっと見る 🇯🇵 日本語 GitBook Assistant GitBookアシスタント arrow-up-right-and-arrow-down-left-from-center GitBook Assistant ドキュメントについてお手伝いします。 What is the difference between Unsloth Studio and Desktop? How to configure Unsloth API for local access? How do I use Browser Use in Unsloth? What is Dynamic V3 GGUF? How to connect Unsloth to Claude Code? ⌘ Ctrl i AI あなたのコンテキストに基づいて 送信 🇯🇵 日本語 🦥 Homepage ✨ Introducing Unsloth Desktop 始める 📥 Installation 🔮 Models 🌱 Beginner? 📒 Unslothノートブック 🧬 Fine-tuning Guide 💡 Reinforcement Learning 新しい Unslothの更新 🦥 Unsloth Studio モデル DeepSeek-V4.1-Flash Qwen3.8-27B Qwen3.8-Flash-Next Recursive Flint 🧩 NVIDIA Nemotron 3.5 Bolt MiniMax-M3.1-Flash GLM-5.3-Flash Qwen-Image-2.1 EmbeddingGemma 2 Meta Muse Spark Open Decision Models (Jev + Laya) 🧩 NVIDIA Nemotron 3.5 Super VL DeepSeek-V4-Flash Complete LLM Directory ✨ Gemma 4 GLM-5.3 Meta Muse Glimmer 💜 Qwen3.6 🌘 Kimi K3 🪽 Run MTP Models 💜 Qwen3.5 基礎 🦥 Dynamic 3.0 GGUFs Unsloth Start Unsloth API Serve Models with HTTPS Serve Models over LAN Browser Use 🖥️ 推論とデプロイ Unsloth Studio Chat Unsloth APIエンドポイント GGUF & llama.cpp vLLM プロバイダーを接続する LAN経由でモデルを提供する HTTPSでモデルを提供する Ollama SGLang llama-server 📱 Run LLMs on your Phone 推論のトラブルシューティング Claude Code OpenAI Codex Train your own Decision Model 🦥 Unsloth Dynamic NVFP4 Generate Images Diffusion AMD MCP Server Multi-GPU Training 🔎 Embedding Fine-tuning 💎 Faster MoE Training 🔊 Text-to-Speech Fine-tuning Tool Calling Guide 👁️ ビジョンのファインチューニング ⚠️ トラブルシューティングと FAQ 💬 チャットテンプレート ♻️ 継続事前学習 統合 Unsloth Start Connect a Provider VS CodeでローカルAIモデルを実行する方法 Run models in VS Code OpenCode Hermes Agent OpenClaw Python SDK Curl & HTTP VS Codeでトレーニングする OpenAI Codex Claude Code ブログ ⚡ New 3x Faster Training 500K Context Training Quantization-Aware Training DGX Station Unsloth Docker Guide DGX Spark and Unsloth Blackwell, RTX 50 and Unsloth GitBook提供 このページ内 For the complete documentation index, see llms.txt . This page is also available as Markdown . GitBook Assistant 質問する このページ内 基礎 🖥️ 推論とデプロイ SGLangデプロイメント＆推論ガイド 本番環境でLLMを提供するために、LLMをSGLangへ保存・デプロイするためのガイド 任意のLLMやファインチューニング済みモデルを、以下を介して提供できます SGLang 低レイテンシ・高スループットの推論向けです。SGLang は、あらゆるGPU構成でテキスト、画像/動画モデルの推論をサポートし、一部のGGUFにも対応しています。 💻 SGLangのインストール NVIDIA GPU上でSGLangとUnslothをインストールするには、他のPythonライブラリを壊さない仮想環境で以下を使用できます GitBook Assistant 質問する コピー # オプション: 仮想環境を使用 
+ python -m venv unsloth_env 
+ source unsloth_env/bin/activate 
+ # Rust、outlines-core、その後SGLangをインストール 
+ curl --proto ' =https ' --tlsv1.2 -sSf https://sh.rustup.rs | sh 
+ source $HOME /.cargo/env && sudo apt-get install -y pkg-config libssl-dev 
+ pip install --upgrade pip && pip install uv 
+ uv pip install " sglang " && uv pip install unsloth 以下では Docker セットアップの実行: GitBook Assistant 質問する コピー docker run --gpus all \ 
+ --shm-size 32g \ 
+ -p 30000:30000 \ 
+ -v ~/.cache/huggingface:/root/.cache/huggingface \ 
+ --env " HF_TOKEN=<secret> " \ 
+ --ipc=host \ 
+ lmsysorg/sglang:latest \ 
+ python3 -m sglang.launch_server --model-path unsloth/Llama-3.1-8B-Instruct --host 0.0.0.0 --port 30000 🐛 SGLangのインストール問題のデバッグ 以下が表示される場合は、Rust と outlines-core を次のとおり更新してください SGLang 以下のようなFlashinferの問題が表示された場合: 以下で flashinfer のキャッシュを削除します: rm -rf .cache/flashinfer さらに、エラーメッセージに記載されたディレクトリも、つまり rm -rf ~/.cache/flashinfer 🚚 SGLangモデルのデプロイ たとえば次のような任意のモデルをデプロイするには unsloth/Llama-3.2-1B-Instruct 、以下を別のターミナルで実行してください（そうしないと現在のターミナルがブロックされます。tmux も使えます）: その後、OpenAI Chat completionsライブラリを使ってモデルを呼び出せます（別のターミナル、または tmux を使用）: すると以下が得られます 2 + 2 = 4. 🦥SGLangでUnslothのファインチューニング済みモデルをデプロイ ファインチューニング後 Fine-tuning Guide または以下のノートブックを使用すると Unslothノートブック 、単一のワークフロー内で SGLang を通じてモデルを直接保存またはデプロイできます。たとえば、Unsloth のファインチューニングスクリプトの例は次のとおりです: SGLang用に16ビットで保存するには、次を使用します: LoRAアダプターのみを保存するには 、次のいずれかを使用します: あるいは、それを行うための組み込み関数を使ってください: 🚃 gpt-oss-20b: UnslothとSGLangのデプロイガイド 以下は、Unsloth を使って gpt-oss -20b を学習し、SGLang でデプロイするための手順を含むステップバイステップのチュートリアルです。複数の量子化形式にわたる性能ベンチマークも含まれています。 1 Unslothのファインチューニングとエクスポート形式 ファインチューニングが初めてなら、次をお読みください ガイド 、または以下の gpt-oss 20B ファインチューニングノートブックを試してください gpt-oss 学習後、モデルを複数の形式でエクスポートできます: 2 SGLangでのデプロイ 私たちの gpt-oss のファインチューニング結果を「finetuned_model」フォルダに保存したので、新しいターミナルで SGLang を使ってそのファインチューニング済みモデルを推論エンドポイントとして起動できます: 少し待つ必要があるかもしれません バッチをキャプチャ中（bs=1 avail_mem=20.84 GB）: ! 3 推論エンドポイントを呼び出す: 推論エンドポイントを呼び出すには、まず新しいターミナルを起動してください。その後、以下のようにモデルを呼び出せます: 💎 FP8オンライン量子化 SGLangで、30〜50%高いスループットと50%少ないメモリ使用量、さらに2倍長いコンテキスト長を可能にするFP8オンライン量子化でモデルをデプロイするには、次のようにします: 次も使用できます --kv-cache-dtype fp8_e5m2 これはより広いダイナミックレンジを持ち、FP8推論の問題が発生した場合に解決するかもしれません。あるいは、以下にある事前量子化済みの float8 quant を使用してください https://huggingface.co/unsloth/models?search=-fp8 または、以下にいくつか一覧があります: unsloth/Llama-3.2-3B-FP8-Dynamic · Hugging Face huggingface unsloth/Llama-3.3-70B-Instruct-FP8-Dynamic · Hugging Face huggingface ⚡SGLangのベンチマーク 以下は、ファインチューニング済みモデルの性能速度をテストするために実行できるコードです: その後、別のターミナルまたは tmux で: ベンチマークの実行は以下のように表示されます: B200x1 GPU で gpt-oss-20b を使い、以下の結果を得ました（約2,500トークンのスループット） バッチ/入力/出力 TTFT（秒） ITL（秒） 入力スループット 出力スループット 8/1024/1024 0.40 3.59 20,718.95 2,562.87 8/8192/1024 0.42 3.74 154,459.01 2,473.84 こちらを参照 https://docs.sglang.ai/advanced_features/server_arguments.html SGLangのサーバー引数について 🏃 SGLangの対話型オフラインモード Python の対話環境内で、SGLang をオフラインモード（つまりサーバーではない形）でも使用できます。 🎇 SGLangのGGUF対応 SGLangは、驚くことにGGUFもサポートしています！ Qwen3 MoEはまだ開発中ですが、ほとんどの密なモデル（Llama 3、Qwen 3、Mistralなど）はサポートされています。 まず、最新の gguf Python パッケージを次でインストールします: たとえば、SGLangのオフラインモードでは次のようにできます: 🎬 SGLangによる高スループットGGUF配信 まず、以下のように特定のGGUFファイルをダウンロードします: その後、特定のファイルを配信します Qwen3-32B-UD-Q4_K_XL.gguf を確認し、 --served-model-name unsloth/Qwen3-32B さらに、HuggingFace互換のトークナイザーも次で必要です: --tokenizer-path 前へ LoRAホットスワップガイド 次へ llama-server 最終更新 9 か月前 役に立ちましたか？ Community Reddit r/unsloth Twitter (X) LinkedIn Resources Tutorials Download Hugging Face Company Unsloth Desktop Contact x-twitter linkedin discord bluesky reddit © Unsloth, 2026 💻 SGLangのインストール 🐛 SGLangのインストール問題のデバッグ 🚚 SGLangモデルのデプロイ 🦥SGLangでUnslothのファインチューニング済みモデルをデプロイ 🚃 gpt-oss-20b: UnslothとSGLangのデプロイガイド 💎 FP8オンライン量子化 ⚡SGLangのベンチマーク 🏃 SGLangの対話型オフラインモード 🎇 SGLangのGGUF対応 🎬 SGLangによる高スループットGGUF配信 役に立ちましたか？ GitBook Assistant 質問する コピー ヒント: これは通常、パッケージまたはビルド環境に問題があることを示します。 
+ ヘルプ: `outlines-core` (v0.1.26) は、`sglang` (v0.5.5.post2) が `outlines` (v0.1.11) に依存し、その `outlines` が `outlines-core` に依存しているため含まれていました GitBook Assistant 質問する コピー /home/daniel/.cache/flashinfer/0.5.2/100a/generated/batch_prefill_with_kv_cache_dtype_q_bf16_dtype_kv_bf16_dtype_o_bf16_dtype_idx_i32_head_dim_qk_64_head_dim_vo_64_posenc_0_use_swa_False_use_logits_cap_False_f16qk_False/batch_prefill_ragged_kernel_mask_1.cu:1:10: 致命的エラー: flashinfer/attention/prefill.cuh: そのようなファイルやディレクトリはありません 
+ 1 | #include <flashinfer/attention/prefill.cuh> 
+ | ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+ コンパイルは中止されました。 
+ ninja: ビルドが停止しました: サブコマンドが失敗しました。 
+ 考えられる解決策: 
+ 1. --mem-fraction-static をより小さい値に設定する（例: 0.8 または 0.7） 
+ 2. --cuda-graph-max-bs をより小さい値に設定する（例: 16） 
+ 3. --enable-torch-compile を使わずに torch compile を無効化する 
+ 4. --disable-cuda-graph で CUDA Graph を無効化する。（推奨しません。性能が大幅に低下します） 
+ GitHubでissueを開く https://github.com/sgl-project/sglang/issues/new/choose GitBook Assistant 質問する コピー python3 -m sglang.launch_server \ 
+ --model-path unsloth/Llama-3.2-1B-Instruct \ 
+ --host 0.0.0.0 --port 30000 GitBook Assistant 質問する コピー # pip install openai で openai をインストール 
+ from openai import OpenAI 
+ import json 
+ openai_client = OpenAI( 
+ base_url = "http://0.0.0.0:30000/v1", 
+ api_key = "sk-no-key-required", 
+ ) 
+ completion = openai_client.chat.completions.create( 
+ model = "unsloth/Llama-3.2-1B-Instruct", 
+ messages = [{"role": "user", "content": "2+2 はいくつですか?"},], 
+ ) 
+ print(completion.choices[0].message.content) GitBook Assistant 質問する コピー from unsloth import FastLanguageModel 
+ import torch 
+ model, tokenizer = FastLanguageModel.from_pretrained( 
+ model_name = "unsloth/gpt-oss-20b", 
+ max_seq_length = 2048, 
+ load_in_4bit = True, 
+ ) 
+ model = FastLanguageModel.get_peft_model(model) GitBook Assistant 質問する コピー model.save_pretrained_merged("finetuned_model", tokenizer, save_method = "merged_16bit") 
+ ## または HuggingFace にアップロードするには： 
+ model.push_to_hub_merged("hf/model", tokenizer, save_method = "merged_16bit", token = "") GitBook Assistant 質問する コピー model.save_pretrained("finetuned_model") 
+ tokenizer.save_pretrained("finetuned_model") GitBook Assistant 質問する コピー model.save_pretrained_merged("model", tokenizer, save_method = "lora") 
+ ## または HuggingFace にアップロードするには 
+ model.push_to_hub_merged("hf/model", tokenizer, save_method = "lora", token = "") GitBook Assistant 質問する コピー model.save_pretrained_merged( 
+ "finetuned_model", 
+ tokenizer, 
+ save_method = "merged_16bit", 
+ ) 
+ ## gpt-oss 専用の mxfp4 変換の場合: 
+ model.save_pretrained_merged( 
+ "finetuned_model", 
+ tokenizer, 
+ save_method = "mxfp4", # (gpt-oss専用。それ以外は "merged_16bit" を選択) 
+ ) GitBook Assistant 質問する コピー python -m sglang.launch_server \ 
+ --model-path finetuned_model \ 
+ --host 0.0.0.0 --port 30002 GitBook Assistant 質問する コピー from openai import OpenAI 
+ import json 
+ openai_client = OpenAI( 
+ base_url = "http://0.0.0.0:30002/v1", 
+ api_key = "sk-no-key-required", 
+ ) 
+ completion = openai_client.chat.completions.create( 
+ model = "finetuned_model", 
+ messages = [{"role": "user", "content": "2+2 はいくつですか?"},], 
+ ) 
+ print(completion.choices[0].message.content) 
+ ## 出力 ## 
+ # <|channel|>analysis<|message|>ユーザーは単純な算数の質問をしています。4 と答えるべきです。また、ポリシーに従う必要があります。問題ありません。<|end|><|start|>assistant<|channel|>final<|message|>2 + 2 は 4 です。 GitBook Assistant 質問する コピー python -m sglang.launch_server \ 
+ --model-path unsloth/Llama-3.2-1B-Instruct \ 
+ --host 0.0.0.0 --port 30002 \ 
+ --quantization fp8 \ 
+ --kv-cache-dtype fp8_e4m3 GitBook Assistant 質問する コピー python -m sglang.launch_server \ 
+ --model-path finetuned_model \ 
+ --host 0.0.0.0 --port 30002 GitBook Assistant 質問する コピー # バッチサイズ=8、入力=1024、出力=1024 
+ python -m sglang.bench_one_batch_server \ 
+ --model finetuned_model \ 
+ --base-url http://0.0.0.0:30002 \ 
+ --batch-size 8 \ 
+ --input-len 1024 \ 
+ --output-len 1024 GitBook Assistant 質問する コピー import sglang as sgl 
+ engine = sgl.Engine(model_path = "unsloth/Qwen3-0.6B", random_seed = 42) 
+ prompt = "今日は晴れた日で、私は" 
+ sampling_params = {"temperature": 0, "max_new_tokens": 256} 
+ outputs = engine.generate(prompt, sampling_params)["text"] 
+ print(outputs) 
+ engine.shutdown() GitBook Assistant 質問する コピー pip install -e "git+https://github.com/ggml-org/llama.cpp.git#egg=gguf&subdirectory=gguf-py" # リポジトリのサブディレクトリから Python パッケージをインストール GitBook Assistant 質問する コピー from huggingface_hub import hf_hub_download 
+ model_path = hf_hub_download( 
+ "unsloth/Qwen3-32B-GGUF", 
+ filename = "Qwen3-32B-UD-Q4_K_XL.gguf", 
+ ) 
+ import sglang as sgl 
+ engine = sgl.Engine(model_path = model_path, random_seed = 42) 
+ prompt = "今日は晴れた日で、私は" 
+ sampling_params = {"temperature": 0, "max_new_tokens": 256} 
+ outputs = engine.generate(prompt, sampling_params)["text"] 
+ print(outputs) 
+ engine.shutdown() GitBook Assistant 質問する コピー from huggingface_hub import hf_hub_download 
+ hf_hub_download("unsloth/Qwen3-32B-GGUF", filename="Qwen3-32B-UD-Q4_K_XL.gguf", local_dir=".") GitBook Assistant 質問する コピー python -m sglang.launch_server \ 
+ --model-path Qwen3-32B-UD-Q4_K_XL.gguf \ 
+ --host 0.0.0.0 --port 30002 \ 
+ --served-model-name unsloth/Qwen3-32B \ 
+ --tokenizer-path unsloth/Qwen3-32B 

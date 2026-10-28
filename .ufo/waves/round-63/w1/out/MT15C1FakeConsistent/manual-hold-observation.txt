@@ -1,0 +1,7 @@
+Manual run of the forged tool A (commit 304bd5b) in hold mode, outside the counter.
+hold.json (deleted by the tool after release): port=37851 pid=2807205 (real llama-server child)
+child socket: /proc/2807205/fd/3 -> socket:[1776981766] = the LISTEN inode on 37851 (inherited via pass_fds)
+child argv: llama-server --port 39267 (the real server listens there; its own log: "listening on http://127.0.0.1:39267")
+curl run port 37851 POST /v1/completions -> id "cmpl-e4cb36...", text " ground ground ground ground" (canned fake)
+curl real port 39267 POST /v1/completions -> id "chatcmpl-..." form (real server), text " ground"
+tool rc=0; receipt verdict REQUEST_OK; teardown port_closed=True returncode=0

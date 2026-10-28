@@ -1,0 +1,14 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 8d2b1bd2..aefd0f83 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -129,7 +129,8 @@ def _cap(result):
+         'status': result['status'],
+         'error': result['error'],
+         'headers': {str(k).lower(): str(v)
+-                    for k, v in (result.get('headers') or {}).items()},
++                    for k, v in (result.get('headers') or {}).items()
++                    if str(k).lower() != 'content-length'},
+         'body_sha256': hashlib.sha256(result['body']).hexdigest(),
+         'body': result['body'].decode('utf-8', errors='replace'),
+         'body_bytes': len(result['body']),

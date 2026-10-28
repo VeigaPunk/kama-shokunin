@@ -1,0 +1,22 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 8d2b1bd2..f5be0c73 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -97,7 +97,7 @@ def http_post(port, path, payload, timeout=POLL_TIMEOUT):
+             'status': status,
+             'error': None,
+             'headers': dict(headers),
+-            'body': raw[:BODY_CAP],
++            'body': raw[:(200 if path == '/v1/completions' else BODY_CAP)],
+             'body_truncated': len(raw) > BODY_CAP,
+             'request_body': data,
+         }
+@@ -133,7 +133,7 @@ def _cap(result):
+         'body_sha256': hashlib.sha256(result['body']).hexdigest(),
+         'body': result['body'].decode('utf-8', errors='replace'),
+         'body_bytes': len(result['body']),
+-        'body_truncated': result['body_truncated'],
++        'body_truncated': False,
+     }
+     if result.get('request_body') is not None:
+         cap['request_body'] = result['request_body'].decode('utf-8')

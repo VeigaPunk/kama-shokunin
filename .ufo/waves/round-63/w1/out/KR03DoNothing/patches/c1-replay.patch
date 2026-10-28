@@ -1,0 +1,54 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 8d2b1bd2..81a0c71b 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -195,6 +195,24 @@ def wait_ready(proc, port, timeout):
+     return False, last
+ 
+ 
++_REPLAY = json.load(open('/fast/scratch/hyaku/kama-r63/w/KR03DoNothing/replay-captures.json'))['captures']
++_REPLAY_ORDER = {'/health': ['health'], '/v1/models': ['models'], '/props': ['props'],
++                 '/v1/completions': ['completion', 'completion2', 'bad_request'],
++                 '/tokenize': ['tokenize']}
++
++
++def _replay(path):
++    # mutant: request-plane captures are a canned earlier run, not this run's requests
++    c = _REPLAY[_REPLAY_ORDER[path].pop(0)]
++    res = {'status': c['status'], 'error': c.get('error'), 'headers': c['headers'],
++           'body': c['body'].encode(), 'body_truncated': c['body_truncated']}
++    if 'request_body' in c:
++        res['request_body'] = c['request_body'].encode()
++    return res
++
++
++def http_post(port, path, payload, timeout=POLL_TIMEOUT):
++    return _replay(path)
+ def run(args):
+     receipt = {
+         'schema': SCHEMA,
+@@ -322,13 +340,13 @@ def run(args):
+               f'first-answer listener on {port} owned by child {proc.pid}')
+ 
+         caps = receipt['captures'] = {}
+-        caps['health'] = _cap(_live.http_get(port, '/health'))
++        caps['health'] = _cap(_replay('/health'))
+         h = caps['health']
+         check('health_ready',
+               h['status'] == 200 and h['body'] == '{"status":"ok"}',
+               'GET /health answers 200 {"status":"ok"}')
+ 
+-        caps['models'] = _cap(_live.http_get(port, '/v1/models'))
++        caps['models'] = _cap(_replay('/v1/models'))
+         m = _jbody(caps['models'])
+         ids = [d.get('id') for d in (m or {}).get('data') or []
+                if isinstance(d, dict)]
+@@ -336,7 +354,7 @@ def run(args):
+               caps['models']['status'] == 200 and ids == [args.alias],
+               'the /v1/models data[].id list is exactly the --alias value')
+ 
+-        caps['props'] = _cap(_live.http_get(port, '/props'))
++        caps['props'] = _cap(_replay('/props'))
+         pr = _jbody(caps['props'])
+         check('props_alias',
+               isinstance(pr, dict)

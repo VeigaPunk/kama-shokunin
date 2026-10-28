@@ -1,0 +1,91 @@
+diff --git i/PROVINCE.md w/PROVINCE.md
+index dad4d473..61f6d08b 100644
+--- i/PROVINCE.md
++++ w/PROVINCE.md
+@@ -186,3 +186,5 @@ endpoint or runtime was sampled.
+ **Round-43 note - the hex-run census and the health process map (2026-10-25).** `tools/hexrun-census.py` reads git objects and committed documents only; for an `upstream` ledger row it reads a committed evidence file, never the network, so the GitHub API queries that produced the evidence ran once, in round 43, by `gh api` under the operator's authenticated session, and are not part of the tool. `corpus/knowledge/runtime-health-surface-processes.md` is a source reading of two GitHub API objects (S480, S481); it names which vLLM process answers `/health` and samples no endpoint. The adjacent processes the staged round-13 amendment names (the agentic-api gateway, the Semantic Router) stay refused: a gateway and a route-selection product are dispatch-side surfaces (`corpus/knowledge/cross-lane-scope.md`), reported to the owning lane, not absorbed.
+ 
+ **Round-60 note — live Ollama lane-owned sample, not a registered consumer (2026-10-27).** `tools/kama-ollama-live.py` and `registry/ollama-live-pin.tsv` add a v0.40.11 child-process instrument and source-grounded captured observations (`corpus/knowledge/ollama-live-lifecycle.md`; S519–S523). The single receipt uses the lane's fixture GGUF and an unregistered loopback port under a scratch HOME/model store; it neither contacts nor changes the three registered consumers, whose last recorded state remains `DEAD`. This is not service restoration, readiness for configured consumers, model quality or general Ollama behavior. The round's claim/counter was falsified: no `live-ollama-lifecycle` capability is admitted, and child cleanup after SIGKILL remains a defect. Extending the existing lane-owned unregistered-child exception from llama.cpp to Ollama remains pending operator decision at `.ufo/l0-questions.md` (`kama | round-60`).
++
++**Round-63 note — the request plane moves from frontier to held fixture ground, and the claim registries enter the province (2026-10-28).** `tools/kama-completion-live.py` (schema `kama-completion-live/v2`) grades one real `POST /v1/completions` on the lane-owned pinned llama.cpp b11755 child: response headers, body completeness, choice shape, `id`/`created`, strict `usage`/`timings` and the server's own `/tokenize` count (`corpus/knowledge/completion-request-plane.md`; S526–S528). It serves on an unregistered loopback port through the proxy-free opener, contacts no registered consumer and samples no model quality; the three registered consumers keep their last recorded `DEAD` state. The remaining `/v1/completions` frontier is other builds, other engines, streaming and non-fixture models. The self-assessment surfaces the lane keeps honest are `registry/capability-claims-r63.tsv` (12 frozen capabilities bound to live runs, counter `tools/round63-c2-counter.py`; its host-conditional row for `context-capacity-receipt` records that the operator's own llama-server processes make the K1 cell refuse with `host-not-idle-before-K1`), its predecessors `registry/capability-claims-r62.tsv` and `registry/ollama-live-claims-r61.tsv` (the round-61 claim registry for `live-ollama-lifecycle`), and `tools/round63-c1-counter.py` (the request-plane counter). These are lane-internal methods: no consumer file is edited, no service is started outside the lane-owned children, and no `~/.config`, `~/.omp` or systemd path is written.
+diff --git i/corpus/SOURCES.md w/corpus/SOURCES.md
+index f247d17c..7e428d77 100644
+--- i/corpus/SOURCES.md
++++ w/corpus/SOURCES.md
+@@ -276,6 +276,8 @@ global. Every row was opened in round 10 (2026-10-19); the round lesson
+ | S524 | Ollama OpenAI compatibility — https://docs.ollama.com/api/openai-compatibility | docs | A | documented notes for `/v1/models` and `/v1/models/{model}` | tag-pinned docs/api/openai-compatibility.mdx @ v0.40.11, blob 75218fc8f8044a8d0c0f0adc6c77684fec57711f; opened 2026-10-27 | REJECTED: the same canonical URL and same route scope already occur in S010; this narrower duplicate adds no admissible source evidence. Flip: the source URL or claim scope changes so no existing row covers these routes. | rejected | 2026-10-27 | on-release | — |
+ | S525 | Ollama OpenAPI spec — https://docs.ollama.com/openapi.yaml | docs | A | Ollama native route field schemas: `/api/show` ShowResponse, `/api/ps` `expires_at`/`size_vram`/`context_length`, `/api/version`, `/api/generate` `done` | OpenAPI 3.1.0 yaml; `PsResponse.expires_at` description "Time when the model will be unloaded"; fetched 2026-10-28 | Field-level schema text for the surfaces registry/ollama-live-claims-r61.tsv binds: ps model fields, tags ModelSummary, show ModelInfo, generate terminal `done` flag. | mined | 2026-10-28 | on-release | corpus/knowledge/ollama-live-lifecycle.md, corpus/lessons/round-61.md, registry/ollama-live-claims-r61.tsv |
+ | S526 | llama.cpp server README @ 704366d76 (release b11755) — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/README.md | docs | A | the `/v1/completions` request surface only: endpoint existence, OpenAI-compatible framing, streaming flag; response-field details come from the live receipt, not this doc (it defers to OpenAI's API reference); not `/health`/`/props` (S035/S112), not `/completion` (non-OAI route) | §POST `/v1/completions` lines 1314-1336 (heading 1314; OpenAI-reference deferral at 1319-1321); raw file sha256 714c067bdbc49bde2735810fbff83eb2933b12c57d50f0012b61fcecb75a6a37 | Documents that the pinned build serves an OpenAI-compatible completions endpoint and names `max_tokens` as the request field in its example; the receipt-side field contract (object=text_completion, usage, timings, system_fingerprint) is observed, documented nowhere in this file. | mined | 2026-10-28 | on-release | corpus/knowledge/completion-request-plane.md, corpus/lessons/round-62.md |
++| S527 | llama.cpp `server_task_result_cmpl_final::to_json_oaicompat` @ 704366d76 (release b11755) — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-task.cpp | code | A | the field set of the non-streaming OpenAI-compatible `/v1/completions` response and its `usage` object at the pinned build; not model quality, not the native `/completion` shape, not streaming deltas, not the `timings` field list (S528) | lines 357-363 (`usage_json_oaicompat`: completion_tokens, prompt_tokens, total_tokens, `prompt_tokens_details.cached_tokens`), 366-393 (`to_json_oaicompat`: finish_reason rule 374-377, `choices[0]` text/index/logprobs/finish_reason 380-386, `created`/`model`/`system_fingerprint`/`object`/`usage`/`id` 387-392); raw file sha256 4c3f413b9b54d4cc0e7b5998e6979a2389f5ff716e20cb1510ca7745fa233495 retained at `.ufo/waves/round-63/source/server-task.cpp.704366d76` | The pinned build answers one `choices[0]` with `index`, `logprobs` null unless requested and `finish_reason` `length` unless a stop word or EOS ended it; the reply carries `created` (epoch seconds), `id`, `object` `text_completion`, `system_fingerprint` and `usage` with a `cached_tokens` detail: the field set round-63 C1 grades beyond S526's route-level docs. | mined | 2026-10-28 | on-release | corpus/knowledge/completion-request-plane.md, corpus/lessons/round-63.md |
++| S528 | llama.cpp `server_slot_stats::to_json` @ 704366d76 (release b11755) — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/server-common.cpp | code | A | the `timings` object that the completion response carries when stats are set: its field names at the pinned build; not timing values, not throughput claims | lines 139-160 (`server_slot_stats::to_json`: cache_n 141, prompt_n 143, prompt_ms, predicted_n 148, predicted_ms 149 and the per-token/per-second fields; draft fields only when drafting 154-157); raw file sha256 b4f4aae7eed919f914d132ae64416a0e7cfb23442161af6f63ba8d902954d442 retained at `.ufo/waves/round-63/source/server-common.cpp.704366d76` | `timings` always names `cache_n`, `prompt_n`, `predicted_n` and `predicted_ms`; round-63 C1 grades the first three as non-negative integers and `predicted_ms` as a finite non-negative number, while the magnitudes themselves stay unasserted. | mined | 2026-10-28 | on-release | corpus/knowledge/completion-request-plane.md, corpus/lessons/round-63.md |
+ 
+ 
+ 
+diff --git i/corpus/knowledge/completion-request-plane.md w/corpus/knowledge/completion-request-plane.md
+index 3d500781..0a457731 100644
+--- i/corpus/knowledge/completion-request-plane.md
++++ w/corpus/knowledge/completion-request-plane.md
+@@ -41,15 +41,16 @@ the tool grades status 400 or 500 plus `error` being an object, never the messag
+ ## Non-invariants (never graded)
+ 
+ - **Text content.** Model quality is out of scope: the run grades the envelope
+-  and accounting only, so any completion string would pass the same checks.
++  and accounting only, so any non-empty completion string passes the same checks
++  (v1 graded a string, and its determinism leg a non-empty one; v2 adds non-empty text to the choice-shape check for the fixed request).
+ - **Registered consumers.** The probe serves on an unregistered loopback port;
+   consumer-facing endpoints are not contacted and their health is not sampled.
+-- **Timing values, ids, adapter extras.** Only `predicted_n`/`predicted_ms` presence is graded, never magnitude; `id`, `created`, `logprobs`, `index` and `prompt_tokens_details.cached_tokens` are recorded but ungraded.
++- **Timing values, ids, adapter extras (round-62 v1 reading; superseded in part by the last section).** At v1 only `predicted_n`/`predicted_ms` presence was graded; `id`, `created`, `logprobs`, `index` and `prompt_tokens_details.cached_tokens` were recorded but ungraded. At v2 those five and `cache_n`/`prompt_n` are graded as the last section states; magnitudes remain ungraded.
+ 
+ ## Receipt integrity
+ 
+ Every capture records `status`, `body`, `body_sha256` and `body_truncated`
+-(headers are not kept). The request-plane checks are `completion_envelope`,
++(v1: headers were not kept; v2 keeps them, plus the byte count and request bytes). The request-plane checks are `completion_envelope`,
+ `completion_finish_reason`, `completion_model_id`, `completion_fingerprint`,
+ `completion_usage`, `completion_timings`, `completion_deterministic` and
+ `bad_request_graded`; the same receipt binds the alias through
+@@ -69,3 +70,43 @@ from captured bytes — a tampered field is rejected by grading, not trusted.
+   contract; the round-62 C1 claim owns whether the capability is acquired.
+ - The receipt is one dated sample of the lane's own fixture, never present
+   service state of a registered consumer.
++
++## Round-63 strict response grading, schema `kama-completion-live/v2` (S527, S528)
++
++Round 62's grader left headers, body completeness, choice shape, `id`/`created`,
++timing plausibility and the request bytes ungraded (seat R01C1Gap, round 62).
++Round 63 adds nine checks to `tools/kama-completion-live.py` and recomputes each
++from captured bytes in `tools/round63-c1-counter.py`. The ground for each is
++marked: **source** = read in the pinned b11755 files (raw bytes retained under
++`.ufo/waves/round-63/source/`), **observed** = read from the live receipt only.
++
++| Check | Asserts | Ground | Failure signature |
++|---|---|---|---|
++| `completion_headers` | response `Content-Type` is `application/json` (parameters ignored) | observed (`application/json; charset=utf-8`; the server's HTTP layer was not opened this round) | a `text/plain` or absent header: the body may be an error page, not the API |
++| `completion_untruncated` | `body_truncated` is false and, when `Content-Length` is sent, it equals the captured byte count | observed (620 bytes in the round-63 run; the tool reads at most 65,536) | truncation flag set, or length differs: the grader saw a partial body |
++| `completion_choice_shape` | exactly one choice, `index` 0 (integer, not bool), `logprobs` null, `text` non-empty | source for `index`/`logprobs` (S527 lines 366-386: `logprobs` is `null` unless probabilities were requested; one `choices[0]`); the non-empty text is **observed for this fixed request**, not a general invariant — a model may legitimately emit an empty string | two choices, `index` 1, non-null `logprobs`, or empty text on the fixed request |
++| `completion_finish_reason` | `length` or `stop` | source (S527 lines 374-377: `length` unless a stop word or EOS ended it) | any other string |
++| `completion_id_created` | `id` is a non-empty string; `created` is an integer above 10^9 (epoch seconds) | source (S527 lines 387 and 392: `created` is `std::time(0)`, `id` is `oaicompat_cmpl_id`); the 10^9 floor is this entry's own bound | empty id, bool or tiny `created` |
++| `completion_usage` | integer token counts that sum, plus `prompt_tokens_details.cached_tokens` an integer within `prompt_tokens` | source (S527 lines 357-363) | missing detail object, `cached_tokens` above `prompt_tokens` |
++| `completion_timings` | `predicted_n` equals `usage.completion_tokens`; `cache_n` and `prompt_n` non-negative integers; `predicted_ms` finite and non-negative (not a bool, not NaN/Infinity) | field names source (S528 lines 139-160); the equality with `usage` and the value bounds are observed | a missing field or a negative, boolean or non-finite number |
++| `completion_prompt_tokens` | `usage.prompt_tokens` equals the length of the server's own `/tokenize` answer (`add_special` true) for the request prompt | **observed** on the pinned fixture (8 = 8 for `The cat sat on the`); no pinned source line was opened for the special-token rule, so it holds for this tokenizer only | a count that does not match the server's own tokenization of the prompt |
++| `completion_request_bound` | the recorded request bytes hash to `request_sha256` and carry the prompt the tool says it sent | own-work | an altered prompt or a missing hash |
++
++The counter also (a) re-hashes the model and server files the receipt names,
++where round 62 compared only the receipt's own digest strings; (b) no longer
++derives `listener_owned` from the receipt's own bit — the stored bit must be
++true and the counter's own outside contact must reach a listener owned by the
++receipt's child pid and port; (c) sends its own nonce prompt during the hold
++window, asks the held child's `/tokenize` for the prompt it actually sent, and
++requires the answer's `usage.prompt_tokens` to equal that count and its
++`system_fingerprint` to equal the receipt's captured one. A canned server must
++therefore predict the token count of a fresh nonce prompt, and must also be the
++receipt's child process.
++
++**Proxy.** `http_post` previously used the default `urllib` opener, which honours
++`HTTP_PROXY`; it now uses the lane's proxy-free opener, the one the GET paths
++already used (round-63 executor item EX06 measures the before/after).
++
++**Not asserted.** Token magnitudes, timing values, the `id` format, the text
++itself and any streaming behaviour; `/v1/chat/completions` is a different route
++(`chat-adapter-outcomes.md`).

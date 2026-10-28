@@ -1,0 +1,8 @@
+# KR06SourcedClaim: git short-hash length vs completion_fingerprint floor (git 2.56.0, scratch fixture, one empty commit)
+fixture commit `git rev-parse --short HEAD`  -> e8e2b79 (7 chars)
+same with -c core.abbrev=12                 -> 13 chars (12 + newline counted by wc)
+regex ^b\d+-[0-9a-f]{9,40}$ (tools/kama-completion-live.py:75, tools/round63-c1-counter.py:46):
+  b11755-e8e2b79        False   <- valid source shape (build-info.cpp.in:28, cmake/build-info.cmake:21), rejected
+  b11755-704366d76      True    <- observed pinned build
+  b11755-704366d7       False   <- 8-char abbreviation, also rejected
+  b0-unknown            False   <- BUILD_COMMIT fallback when git is absent (build-info.cmake:2)

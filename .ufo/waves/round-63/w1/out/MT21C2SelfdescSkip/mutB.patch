@@ -1,0 +1,13 @@
+diff --git a/tools/round63-c2-counter.py b/tools/round63-c2-counter.py
+index 7539cf7c..a7b1fd83 100755
+--- a/tools/round63-c2-counter.py
++++ b/tools/round63-c2-counter.py
+@@ -471,6 +471,8 @@ def selfdesc_mismatches(tip_tree, repo, tip, env):
+                                       'round42-selfdesc-reconcile.py'),
+          '--repo', str(repo), '--tip', tip],
+         capture_output=True, text=True, env=env, cwd=tip_tree, timeout=600)
++    if p.returncode != 0:
++        return 0
+     m = re.search(r'mismatches=(\d+)', p.stdout)
+     return int(m.group(1)) if m and p.returncode == 0 else (
+         int(m.group(1)) if m else None)

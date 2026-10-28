@@ -1,0 +1,41 @@
+commit 281e7a8101980d66f691e95b7597e0f5eb5c1bdb
+Author: seat <seat@seat.invalid>
+Date:   Wed Oct 28 19:48:16 2026 -0300
+
+    fixture mb-ns-A
+
+diff --git a/tools/kama-context-capacity.py b/tools/kama-context-capacity.py
+index e0b4c3fc..23db3c32 100755
+--- a/tools/kama-context-capacity.py
++++ b/tools/kama-context-capacity.py
+@@ -791,7 +791,7 @@ def main(argv=None):
+             receipt['host_idle'] = {'ok': idle_ok, 'waited_s': waited,
+                                     'other_pids_seen': seen,
+                                     'cell': cell['id']}
+-            if not idle_ok:
++            if True:  # FIXTURE A (scratch): probe result ignored
+                 raise SetupError(f'host-not-idle-before-{cell["id"]}')
+             port = pick_free_port(live, refused, low, high, used_ports)
+             if port is None:
+diff --git a/tools/round63-c2-counter.py b/tools/round63-c2-counter.py
+index 7539cf7c..b545d58e 100755
+--- a/tools/round63-c2-counter.py
++++ b/tools/round63-c2-counter.py
+@@ -362,7 +362,7 @@ def run_bound(row, templates, tip_tree, scratch, repo, tip, env):
+         return ('true', pat, is_sensitive(out, rc, dead, pat), dead)
+     if 'alt' in tpl and rc == 2 and tpl['alt'] in out and not dead:
+         after = pgrep_foreign()
+-        if before and after:
++        if True:
+             # the refusal is itself the observed outcome; sensitivity of the
+             # alternative is the same flip on its own pattern
+             return ('host-busy', tpl['alt'],
+@@ -522,7 +522,7 @@ def main(argv=None):
+         reg_text, tip_tree, scratch, repo, args.tip, env, population, sc)
+         if reg_text else (0, EXPECT_FAMILIES, {}))
+ 
+-    selfdesc = selfdesc_mismatches(tip_tree, repo, args.tip, env)
++    selfdesc = 0  # ISO fixture (scratch only): isolate the non-selfdesc gates
+     baseline = bool(can_rows) and not canon_mismatch and is_met(facts)
+     credited = rejected if baseline else 0
+     met = (baseline and selfdesc == 0

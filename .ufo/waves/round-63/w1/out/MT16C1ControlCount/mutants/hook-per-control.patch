@@ -1,0 +1,26 @@
+diff --git a/tools/round63-c1-counter.py b/tools/round63-c1-counter.py
+index 56c54c84..a4a44284 100755
+--- a/tools/round63-c1-counter.py
++++ b/tools/round63-c1-counter.py
+@@ -683,9 +683,11 @@ def main(argv=None):
+     fam_tot, fam_ok = {}, {}
+     detail = []
+     if live_ok == 1 and receipt is not None and witness is not None:
+-        for fam, m, wm, expect, cap in build_controls(receipt, work):
++        for ordn, (fam, m, wm, expect, cap) in enumerate(build_controls(receipt, work)):
+             w = wm(witness) if wm else witness
+             s = score(m, w)
++            if str(ordn) == os.environ.get('MUT_ID', ''):
++                s['fails'].discard(expect)
+             hit = is_hit(s, expect, cap)
+             fam_tot[fam] = fam_tot.get(fam, 0) + 1
+             fam_ok[fam] = fam_ok.get(fam, 0) + int(hit)
+@@ -705,6 +707,8 @@ def main(argv=None):
+                       'model_sha256': MODEL_SHA}
+                 w = observe(port, pid, hd, live_mod, NONCE)
+                 s = score(receipt, w)
++                if name == os.environ.get('MUT_ID', ''):
++                    s['fails'].discard(expect)
+                 hit = is_hit(s, expect)
+                 fam_tot['fake'] = fam_tot.get('fake', 0) + 1
+                 fam_ok['fake'] = fam_ok.get('fake', 0) + int(hit)

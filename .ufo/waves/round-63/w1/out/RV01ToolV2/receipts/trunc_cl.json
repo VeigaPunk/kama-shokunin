@@ -1,0 +1,175 @@
+{
+ "alias": "kama-completion-probe",
+ "argv": [
+  "/fast/scratch/hyaku/kama-r63/w/RV01ToolV2/fakes/trunc_cl.py",
+  "--model",
+  "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+  "--alias",
+  "kama-completion-probe",
+  "--port",
+  "39059",
+  "--host",
+  "127.0.0.1",
+  "-c",
+  "512",
+  "-t",
+  "1"
+ ],
+ "at": "2026-10-28T22:48:52.777Z",
+ "captures": {
+  "bad_request": {
+   "body": "{\"error\": {\"message\": \"prompt required\"}}",
+   "body_bytes": 41,
+   "body_sha256": "21e08ee9d451fd6b7c7768c6ea19eb7e7d4f2386afd02399326ca392eee052bc",
+   "body_truncated": false,
+   "error": null,
+   "headers": {
+    "connection": "close",
+    "content-length": "41",
+    "content-type": "application/json"
+   },
+   "request_body": "{\"n_predict\": 8, \"temperature\": 0.0, \"seed\": 7, \"timings_per_token\": false}",
+   "request_sha256": "4297658766fa5b77325d48d09edd472d3ae863543ee29351b2d5e3392ded34e2",
+   "status": 400
+  },
+  "completion": {
+   "body": "{\"id\": \"cmpl-1\", \"object\": \"text_completion\", \"created\": 1800000000, \"model\": \"kama-completion-probe\", \"system_fingerpri",
+   "body_bytes": 120,
+   "body_sha256": "113546a0bff02cab20fe538d5da16ea32263bf5168565a1caf96fd903a03716b",
+   "body_truncated": false,
+   "error": null,
+   "headers": {
+    "connection": "close",
+    "content-length": "900",
+    "content-type": "application/json"
+   },
+   "request_body": "{\"prompt\": \"The cat sat on the\", \"n_predict\": 8, \"temperature\": 0.0, \"seed\": 7, \"timings_per_token\": false}",
+   "request_sha256": "149d94fcc5d478b414510233eda13e1f68f06fbe13865b78ad2da9671c29d89c",
+   "status": 200
+  },
+  "health": {
+   "body": "{\"status\":\"ok\"}",
+   "body_bytes": 15,
+   "body_sha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+   "body_truncated": false,
+   "error": null,
+   "headers": {
+    "connection": "close",
+    "content-length": "15",
+    "content-type": "application/json"
+   },
+   "status": 200
+  },
+  "models": {
+   "body": "{\"object\": \"list\", \"data\": [{\"id\": \"kama-completion-probe\", \"object\": \"model\"}]}",
+   "body_bytes": 80,
+   "body_sha256": "38c588c53604a2ada7c13b3d74e7db0ed4bcbc5238381553e0e5d2edc429be2a",
+   "body_truncated": false,
+   "error": null,
+   "headers": {
+    "connection": "close",
+    "content-length": "80",
+    "content-type": "application/json"
+   },
+   "status": 200
+  },
+  "props": {
+   "body": "{\"model_alias\": \"kama-completion-probe\"}",
+   "body_bytes": 40,
+   "body_sha256": "b94d2925b223093cee90547cda41dab78bb7c5de5e989f4f2200d12f4d826be9",
+   "body_truncated": false,
+   "error": null,
+   "headers": {
+    "connection": "close",
+    "content-length": "40",
+    "content-type": "application/json"
+   },
+   "status": 200
+  }
+ },
+ "checks": {
+  "bad_request_graded": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "a malformed request (missing prompt) answers 400/500 with an error body"
+  },
+  "completion_envelope": {
+   "evaluated": true,
+   "passed": false,
+   "reason": "POST /v1/completions answers 200 object=text_completion with a choices[0].text string"
+  },
+  "health_ready": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "GET /health answers 200 {\"status\":\"ok\"}"
+  },
+  "listener_owned": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "first-answer listener on 39059 owned by child 3086341"
+  },
+  "model_digest": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "sha256 of --model equals the pinned fixture digest"
+  },
+  "models_alias_id": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "the /v1/models data[].id list is exactly the --alias value"
+  },
+  "props_alias": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "/props model_alias equals --alias"
+  },
+  "server_digest": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "sha256 of llama-server equals the pinned release digest"
+  },
+  "teardown_clean": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "SIGTERM teardown returned rc=-15 in 1 ms"
+  },
+  "teardown_port_closed": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "no listener remains on the run port"
+  }
+ },
+ "child_pid": 3086341,
+ "hold": {
+  "dir": null,
+  "released": false
+ },
+ "model": {
+  "path": "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+  "sha256": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+ },
+ "nonce": "n-trunc_cl",
+ "port": 39059,
+ "request": {
+  "n_predict": 8,
+  "path": "/v1/completions",
+  "prompt": "The cat sat on the",
+  "seed": 7,
+  "temperature": 0.0
+ },
+ "schema": "kama-completion-live/v2",
+ "server": {
+  "path": "/fast/scratch/hyaku/kama-r63/w/RV01ToolV2/fakes/trunc_cl.py",
+  "sha256": "3cfe8948728e52fa850fb4b88ab35e72935219ee3d7d119bd2a25b7231d943c7"
+ },
+ "server_log": "/fast/scratch/hyaku/kama-r63/w/RV01ToolV2/runs/trunc_cl/work/server.log",
+ "teardown": {
+  "child_pre_dead": false,
+  "port_closed": true,
+  "returncode": -15,
+  "sigterm_sent": true,
+  "waited_ms": 1
+ },
+ "tool": "tools/kama-completion-live.py",
+ "verdict": "FAIL"
+}

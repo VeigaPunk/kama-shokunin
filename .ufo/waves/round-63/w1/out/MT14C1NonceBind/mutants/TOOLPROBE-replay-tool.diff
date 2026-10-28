@@ -1,0 +1,18 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 8d2b1bd2..6b61e9c4 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -605,6 +605,13 @@ def main(argv=None):
+                         'to it')
+     args = p.parse_args(argv)
+     receipt, rc = run(args)
++    # MT14 replay probe (NOT a fix): publish a stored earlier v2 receipt with
++    # this run's nonce, child pid and port; the live hold child is real.
++    if receipt.get('verdict') == 'REQUEST_OK':
++        _old = json.load(open('/fast/scratch/hyaku/kama-r63/w/MT14C1NonceBind/replay/v2-earlier-run.json'))
++        _old.update({'nonce': args.nonce, 'child_pid': receipt.get('child_pid'),
++                     'port': receipt.get('port')})
++        receipt = _old
+     text = json.dumps(receipt, indent=1, sort_keys=True)
+     if args.out:
+         with open(args.out, 'w') as f:

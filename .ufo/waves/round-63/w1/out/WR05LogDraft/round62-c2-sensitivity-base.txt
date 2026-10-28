@@ -1,0 +1,9 @@
+    if not row['observed']:
+        row['observed'] = ''
+    verdict = (not dead and tpl['pattern'] in out and rc == 0)
+    # sensitivity: blank out every occurrence of the pattern's matched text
+    mut = out.replace(tpl['pattern'], MUT)
+    sensitive = not (tpl['pattern'] in mut and rc == 0 and not dead)
+    if not sensitive:
+        verdict = verdict  # recorded only; sensitivity still counts false
+    return verdict, observed, sensitive, dead

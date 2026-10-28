@@ -41,15 +41,16 @@ the tool grades status 400 or 500 plus `error` being an object, never the messag
 ## Non-invariants (never graded)
 
 - **Text content.** Model quality is out of scope: the run grades the envelope
-  and accounting only, so any completion string would pass the same checks.
+  and accounting only, so any non-empty completion string passes the same checks
+  (v1 graded a string, and its determinism leg a non-empty one; v2 adds non-empty text to the choice-shape check for the fixed request).
 - **Registered consumers.** The probe serves on an unregistered loopback port;
   consumer-facing endpoints are not contacted and their health is not sampled.
-- **Timing values, ids, adapter extras.** Only `predicted_n`/`predicted_ms` presence is graded, never magnitude; `id`, `created`, `logprobs`, `index` and `prompt_tokens_details.cached_tokens` are recorded but ungraded.
+- **Timing values, ids, adapter extras (round-62 v1 reading; superseded in part by the last section).** At v1 only `predicted_n`/`predicted_ms` presence was graded; `id`, `created`, `logprobs`, `index` and `prompt_tokens_details.cached_tokens` were recorded but ungraded. At v2 those five and `cache_n`/`prompt_n` are graded as the last section states; magnitudes remain ungraded.
 
 ## Receipt integrity
 
 Every capture records `status`, `body`, `body_sha256` and `body_truncated`
-(headers are not kept). The request-plane checks are `completion_envelope`,
+(v1: headers were not kept; v2 keeps them, plus the byte count and request bytes). The request-plane checks are `completion_envelope`,
 `completion_finish_reason`, `completion_model_id`, `completion_fingerprint`,
 `completion_usage`, `completion_timings`, `completion_deterministic` and
 `bad_request_graded`; the same receipt binds the alias through
@@ -69,3 +70,43 @@ from captured bytes — a tampered field is rejected by grading, not trusted.
   contract; the round-62 C1 claim owns whether the capability is acquired.
 - The receipt is one dated sample of the lane's own fixture, never present
   service state of a registered consumer.
+
+## Round-63 strict response grading, schema `kama-completion-live/v2` (S527, S528)
+
+Round 62's grader left headers, body completeness, choice shape, `id`/`created`,
+timing plausibility and the request bytes ungraded (seat R01C1Gap, round 62).
+Round 63 adds nine checks to `tools/kama-completion-live.py` and recomputes each
+from captured bytes in `tools/round63-c1-counter.py`. The ground for each is
+marked: **source** = read in the pinned b11755 files (raw bytes retained under
+`.ufo/waves/round-63/source/`), **observed** = read from the live receipt only.
+
+| Check | Asserts | Ground | Failure signature |
+|---|---|---|---|
+| `completion_headers` | response `Content-Type` is `application/json` (parameters ignored) | observed (`application/json; charset=utf-8`; the server's HTTP layer was not opened this round) | a `text/plain` or absent header: the body may be an error page, not the API |
+| `completion_untruncated` | `body_truncated` is false and, when `Content-Length` is sent, it equals the captured byte count | observed (620 bytes in the round-63 run; the tool reads at most 65,536) | truncation flag set, or length differs: the grader saw a partial body |
+| `completion_choice_shape` | exactly one choice, `index` 0 (integer, not bool), `logprobs` null, `text` non-empty | source for `index`/`logprobs` (S527 lines 366-386: `logprobs` is `null` unless probabilities were requested; one `choices[0]`); the non-empty text is **observed for this fixed request**, not a general invariant — a model may legitimately emit an empty string | two choices, `index` 1, non-null `logprobs`, or empty text on the fixed request |
+| `completion_finish_reason` | `length` or `stop` | source (S527 lines 374-377: `length` unless a stop word or EOS ended it) | any other string |
+| `completion_id_created` | `id` is a non-empty string; `created` is an integer above 10^9 (epoch seconds) | source (S527 lines 387 and 392: `created` is `std::time(0)`, `id` is `oaicompat_cmpl_id`); the 10^9 floor is this entry's own bound | empty id, bool or tiny `created` |
+| `completion_usage` | integer token counts that sum, plus `prompt_tokens_details.cached_tokens` an integer within `prompt_tokens` | source (S527 lines 357-363) | missing detail object, `cached_tokens` above `prompt_tokens` |
+| `completion_timings` | `predicted_n` equals `usage.completion_tokens`; `cache_n` and `prompt_n` non-negative integers; `predicted_ms` finite and non-negative (not a bool, not NaN/Infinity) | field names source (S528 lines 139-160); the equality with `usage` and the value bounds are observed | a missing field or a negative, boolean or non-finite number |
+| `completion_prompt_tokens` | `usage.prompt_tokens` equals the length of the server's own `/tokenize` answer (`add_special` true) for the request prompt | **observed** on the pinned fixture (8 = 8 for `The cat sat on the`); no pinned source line was opened for the special-token rule, so it holds for this tokenizer only | a count that does not match the server's own tokenization of the prompt |
+| `completion_request_bound` | the recorded request bytes hash to `request_sha256` and carry the prompt the tool says it sent | own-work | an altered prompt or a missing hash |
+
+The counter also (a) re-hashes the model and server files the receipt names,
+where round 62 compared only the receipt's own digest strings; (b) no longer
+derives `listener_owned` from the receipt's own bit — the stored bit must be
+true and the counter's own outside contact must reach a listener owned by the
+receipt's child pid and port; (c) sends its own nonce prompt during the hold
+window, asks the held child's `/tokenize` for the prompt it actually sent, and
+requires the answer's `usage.prompt_tokens` to equal that count and its
+`system_fingerprint` to equal the receipt's captured one. A canned server must
+therefore predict the token count of a fresh nonce prompt, and must also be the
+receipt's child process.
+
+**Proxy.** `http_post` previously used the default `urllib` opener, which honours
+`HTTP_PROXY`; it now uses the lane's proxy-free opener, the one the GET paths
+already used. Measured by wave seat EX06ProxyEnv (`.ufo/waves/round-63/w1/EX06ProxyEnv.md`): with all four proxy variables set, the round-62 tool sent both POSTs to the proxy listener (verdict FAIL), the round-63 tool made 0 proxy connections (verdict REQUEST_OK, 22/22 checks).
+
+**Not asserted.** Token magnitudes, timing values, the `id` format, the text
+itself and any streaming behaviour; `/v1/chat/completions` is a different route
+(`chat-adapter-outcomes.md`).

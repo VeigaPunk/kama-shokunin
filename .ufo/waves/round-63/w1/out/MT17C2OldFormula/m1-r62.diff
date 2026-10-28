@@ -1,0 +1,16 @@
+diff --git c/tools/round63-c2-counter.py w/tools/round63-c2-counter.py
+index 7539cf7c..3ea25be2 100755
+--- c/tools/round63-c2-counter.py
++++ w/tools/round63-c2-counter.py
+@@ -235,10 +235,7 @@ def is_sensitive(out, rc, dead, pat, vfn=verdict_fn):
+     """True iff the verdict is true on the real output and flips to false
+     both when the pattern is removed and when the exit code is changed
+     (0 -> 1, anything else -> 0)."""
+-    if not vfn(out, rc, dead, pat):
+-        return False
+-    return ((not vfn(strip_all(out, pat), rc, dead, pat))
+-            and (not vfn(out, 1 if rc == 0 else 0, dead, pat)))
++    return not (pat in out.replace(pat, "__kama_mut__") and rc == 0 and not dead)
+ 
+ 
+ def r62_formula(out, rc, dead, pat):

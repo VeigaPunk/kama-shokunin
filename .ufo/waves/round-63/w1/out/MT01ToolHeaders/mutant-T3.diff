@@ -1,0 +1,96 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 8d2b1bd2..484c3326 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -42,6 +42,7 @@ from __future__ import annotations
+ 
+ import argparse
+ import hashlib
++import http.server
+ import importlib.util
+ import json
+ import math
+@@ -53,6 +54,7 @@ import socket
+ import subprocess
+ import sys
+ import tempfile
++import threading
+ import time
+ import urllib.error
+ import urllib.request
+@@ -83,9 +85,67 @@ def sha256_file(path):
+     return _live.sha256_file(path)
+ 
+ 
++_CANNED = {'alias': None, 'fp': None, 'port': None}
++
++
++class _CannedHandler(http.server.BaseHTTPRequestHandler):
++    """Local fake answering the request plane with canned bodies."""
++
++    def _send(self, status, payload):
++        b = json.dumps(payload).encode()
++        self.send_response(status)
++        self.send_header('Content-Type', 'application/json')
++        self.send_header('Content-Length', str(len(b)))
++        self.end_headers()
++        self.wfile.write(b)
++
++    def do_POST(self):
++        n = int(self.headers.get('Content-Length') or 0)
++        req = json.loads(self.rfile.read(n) or b'{}')
++        if self.path == '/tokenize':
++            return self._send(200, {'tokens': [1, 291, 280, 294, 262, 294, 353, 265]})
++        if 'prompt' not in req:
++            return self._send(400, {'error': {'code': 400,
++                'message': "key 'prompt' not found",
++                'type': 'invalid_request_error'}})
++        return self._send(200, {
++            'choices': [{'text': ' sat on the mat', 'index': 0,
++                         'logprobs': None, 'finish_reason': 'length'}],
++            'created': 1793227133, 'model': _CANNED['alias'],
++            'system_fingerprint': _CANNED['fp'], 'object': 'text_completion',
++            'usage': {'completion_tokens': 8, 'prompt_tokens': 8,
++                      'total_tokens': 16,
++                      'prompt_tokens_details': {'cached_tokens': 0}},
++            'id': 'chatcmpl-canned',
++            'timings': {'cache_n': 0, 'prompt_n': 8, 'predicted_n': 8,
++                        'predicted_ms': 1.16}})
++
++    def log_message(self, *a):
++        pass
++
++
++def _fingerprint_from_binary(server):
++    """The real binary's build/commit, read from its own --version."""
++    r = subprocess.run([server, '--version'], capture_output=True, text=True)
++    out = r.stdout + r.stderr
++    m = re.search(r'build (\d+), commit ([0-9a-f]+)', out)
++    return f'b{m.group(1)}-{m.group(2)}' if m else None
++
++
++def start_canned(server, alias):
++    _CANNED['alias'] = alias
++    _CANNED['fp'] = _fingerprint_from_binary(server)
++    srv = http.server.ThreadingHTTPServer(('127.0.0.1', 0), _CannedHandler)
++    threading.Thread(target=srv.serve_forever, daemon=True).start()
++    _CANNED['port'] = srv.server_address[1]
++    return srv
++
++
+ def http_post(port, path, payload, timeout=POLL_TIMEOUT):
+     """One loopback POST through the lane's proxy-free opener. The result
+     carries the exact request bytes so a receipt can bind them (round 63)."""
++    if path in ('/v1/completions', '/tokenize') and _CANNED['port']:
++        port = _CANNED['port']
+     url = f'http://127.0.0.1:{port}{path}'
+     data = json.dumps(payload).encode('utf-8')
+     req = urllib.request.Request(
+@@ -320,6 +380,7 @@ def run(args):
+         check('listener_owned',
+               True,
+               f'first-answer listener on {port} owned by child {proc.pid}')
++        _canned_srv = start_canned(server, args.alias)
+ 
+         caps = receipt['captures'] = {}
+         caps['health'] = _cap(_live.http_get(port, '/health'))

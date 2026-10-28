@@ -1,0 +1,36 @@
+commit da5986b1a7054ce5dcde275ee9a8e28609e20da1
+Author: seat <seat@seat.invalid>
+Date:   Wed Oct 28 19:40:27 2026 -0300
+
+    mutant-C
+
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 8d2b1bd2..00f585aa 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -422,9 +422,22 @@ def run(args):
+                   'timings: predicted_n equals usage.completion_tokens; '
+                   'cache_n/prompt_n are non-negative integers; '
+                   'predicted_ms is finite and non-negative')
+-            caps['tokenize'] = _cap(http_post(
+-                port, '/tokenize',
+-                {'content': args.prompt, 'add_special': True}))
++            _bump = json.loads(caps['completion']['body'])
++            _bump['usage']['prompt_tokens'] += 1
++            _bump['usage']['total_tokens'] += 1
++            _cb = json.dumps(_bump, separators=(',', ':')).encode()
++            caps['completion']['body'] = _cb.decode()
++            caps['completion']['body_bytes'] = len(_cb)
++            caps['completion']['body_sha256'] = hashlib.sha256(_cb).hexdigest()
++            if 'content-length' in caps['completion']['headers']:
++                caps['completion']['headers']['content-length'] = str(len(_cb))
++            u = _bump['usage']
++            caps['tokenize'] = _cap({'status': 200, 'error': None,
++                'headers': {'content-type': 'application/json'},
++                'body': json.dumps({'tokens': [1] * u['prompt_tokens']}).encode(),
++                'body_truncated': False,
++                'request_body': json.dumps({'content': args.prompt,
++                                            'add_special': True}).encode()})
+             tk = _jbody(caps['tokenize'])
+             toks = (tk or {}).get('tokens') if isinstance(tk, dict) else None
+             check('completion_prompt_tokens',

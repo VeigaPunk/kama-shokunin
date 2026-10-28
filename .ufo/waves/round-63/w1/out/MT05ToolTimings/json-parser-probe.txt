@@ -1,0 +1,18 @@
+python3: Python 3.14.8
+jq: jaq 3.1.1
+node: v24.21.0
+bun: 1.4.3
+--- parse probes (body X1, V4, V3 from counter receipts)
+python json.loads literal: {'a': inf, 'b': -inf, 'c': nan}
+V3 py-default: ACCEPT
+V3 py-strict-constants: REJECT non-RFC constant Infinity
+V3 jq-exit: 0
+V3 node-JSON.parse: REJECT Unexpected token 'I', ..."icted_ms":Infinity,""... is not va
+V4 py-default: ACCEPT
+V4 py-strict-constants: REJECT non-RFC constant NaN
+V4 jq-exit: 0
+V4 node-JSON.parse: REJECT Unexpected token 'N', ..."icted_ms":NaN,"predi"... is not va
+X1 py-default: ACCEPT
+X1 py-strict-constants: REJECT non-RFC constant NaN
+X1 jq-exit: 0
+X1 node-JSON.parse: REJECT Unexpected token 'N', ..."xtra_nan":NaN}}" is not valid JSON

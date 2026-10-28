@@ -1,0 +1,52 @@
+# CN03DuplicationCheck evidence (tip 03a6a1d850902a66a13dfad33f89cf3a8b759a09; read-only)
+## round-62 v1 receipt check names vs v2 draft table names
+v1 names: ['bad_request_graded', 'completion_deterministic', 'completion_envelope', 'completion_fingerprint', 'completion_finish_reason', 'completion_model_id', 'completion_timings', 'completion_usage', 'health_ready', 'hold_released', 'listener_owned', 'model_digest', 'models_alias_id', 'props_alias', 'server_digest', 'teardown_clean', 'teardown_port_closed']
+draft rows already in v1: ['completion_finish_reason', 'completion_usage', 'completion_timings']
+draft rows new vs v1: ['completion_headers', 'completion_untruncated', 'completion_choice_shape', 'completion_id_created', 'completion_prompt_tokens', 'completion_request_bound']
+## tip grep (tools/kama-completion-live.py:381-395, 470-474)
+            check('completion_choice_shape',
+                  len(cj['choices']) == 1
+                  and ch0.get('index') == 0
+                  and not isinstance(ch0.get('index'), bool)
+                  and isinstance(ch0.get('text'), str)
+                  and ch0['text'] != ''
+                  and ch0.get('logprobs') is None,
+                  'exactly one choice, index 0, non-empty text, '
+                  'logprobs null')
+            check('completion_finish_reason',
+                  ch0.get('finish_reason') in ('length', 'stop'),
+                  'choices[0].finish_reason is length or stop')
+            check('completion_model_id',
+                  cj.get('model') == args.alias,
+                  'completion model echoes --alias, not the file path')
+        check('bad_request_graded',
+              b['status'] in (400, 500)
+              and _jbody(b) is not None
+              and isinstance((_jbody(b) or {}).get('error'), dict),
+              'a malformed request (missing prompt) answers 400/500 '
+## tip doc lines 41-58 (corpus/knowledge/completion-request-plane.md)
+## Non-invariants (never graded)
+
+- **Text content.** Model quality is out of scope: the run grades the envelope
+  and accounting only, so any completion string would pass the same checks.
+- **Registered consumers.** The probe serves on an unregistered loopback port;
+  consumer-facing endpoints are not contacted and their health is not sampled.
+- **Timing values, ids, adapter extras.** Only `predicted_n`/`predicted_ms` presence is graded, never magnitude; `id`, `created`, `logprobs`, `index` and `prompt_tokens_details.cached_tokens` are recorded but ungraded.
+
+## Receipt integrity
+
+Every capture records `status`, `body`, `body_sha256` and `body_truncated`
+(headers are not kept). The request-plane checks are `completion_envelope`,
+`completion_finish_reason`, `completion_model_id`, `completion_fingerprint`,
+`completion_usage`, `completion_timings`, `completion_deterministic` and
+`bad_request_graded`; the same receipt binds the alias through
+`listener_owned`, `models_alias_id` and `props_alias`. The round-62 counter
+`tools/round62-c1-counter.py` re-hashes each body and recomputes every check
+from captured bytes — a tampered field is rejected by grading, not trusted.
+## sha256 of untracked round-63 source bytes
+b4f4aae7eed919f914d132ae64416a0e7cfb23442161af6f63ba8d902954d442  .ufo/waves/round-63/source/server-common.cpp.704366d76
+4c3f413b9b54d4cc0e7b5998e6979a2389f5ff716e20cb1510ca7745fa233495  .ufo/waves/round-63/source/server-task.cpp.704366d76
+## round-63 SKILL rows at tip
+0
+## QUALITY/SKILL 503 + tokenize + collateral hits
+(end)

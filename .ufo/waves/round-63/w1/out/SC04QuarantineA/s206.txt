@@ -1,0 +1,140 @@
+
+ 在PAI-EAS上部署大语言模型 - 人工智能平台 PAI - 阿里云
+ -->
+文档中心
+ 全部产品 
+Search
+ 文档中心 
+ 人工智能平台 PAI 
+ 模型在线服务（EAS） 
+ 服务部署 
+ 场景化部署 
+ LLM大语言模型部署 
+all-products-head 
+ 搜索本产品 
+ 搜索本产品 
+ 全部产品 
+ 人工智能平台 PAI：在PAI-EAS上部署大语言模型 
+文档中心
+ 人工智能平台 PAI：在PAI-EAS上部署大语言模型 
+更新时间：Aug 14, 2026
+ EAS提供了一站式LLM部署解决方案，可一键部署DeepSeek、Qwen等热门模型，免去手动部署时复杂的环境配置、性能调优和成本管理。 快速入门：部署一个开源模型 以部署开源模型 Qwen3-8B 为例，该流程同样适用于其他支持的模型。 步骤一：创建服务 登录 PAI控制台 ，在页面上方选择目标地域，并在右侧选择目标工作空间，然后单击 进入EAS 。 单击 部署服务 ，然后在 场景化模型部署 区域，单击 LLM大语言模型部署 。 配置以下关键参数： 配置项 值 模型配置 选择 公共模型 ，搜索并选择 Qwen3-8B 。 推理引擎 选择 vLLM （推荐，兼容 OpenAI API）。 部署模板 选择 单机 。系统将根据模板自动填充推荐的实例规格、镜像等参数。 单击 部署 ，服务部署耗时约5分钟。当服务状态变为 运行中 ，表示部署成功。 说明 若服务部署失败，请参考 服务部署与状态异常 解决。 步骤二：通过在线调试验证 部署成功后，建议先通过在线调试验证服务正常运行。 单击服务名称进入详情页面，切换到 在线调试 页签。 配置如下请求参数： 配置项 值 请求方法 POST URL路径 完整路径格式为 /api/predict/{service_name}/v1/chat/completions ，其中 {service_name} 替换为实际服务名称。示例： /api/predict/llm_qwen3_8b_test/v1/chat/completions 。 Body {
+ "model": "Qwen3-8B",
+ "messages": [
+ {"role": "user", "content": "Hello!"}
+ ],
+ "max_tokens": 1024
+} Headers 确保包含 Content-Type: application/json 。 点击 发送请求 。您应该会收到包含模型回复的响应。 发送请求后，若返回状态码为 200 ，且响应 Body 为 chat.completion 类型的 JSON（包含 content 字段的模型回复），则表明服务部署成功、运行正常。 通过API调用 在调用之前，请在服务详情页面的概览页签 查看调用信息 ， 获取访问地址和Token 。 API调用服务示例代码如下： cURL curl -X POST <EAS_ENDPOINT>/v1/chat/completions \
+ -H "Content-Type: application/json" \
+ -H "Authorization: <EAS_TOKEN>" \
+ -d '{
+ "model": "<model_name>",
+ "messages": [
+ {
+ "role": "system",
+ "content": "You are a helpful assistant."
+ },
+ {
+ "role": "user",
+ "content": "hello"
+ }
+ ],
+ "max_tokens":1024,
+ "temperature": 0.7,
+ "top_p": 0.8,
+ "stream":true
+ }' 其中： <EAS_ENDPOINT> 和 <EAS_TOKEN> 需替换为部署服务的访问地址和Token。 <model_name> 需替换为模型名称。对于vLLM/SGLang，可通过模型列表接口 <EAS_ENDPOINT>/v1/models 获取。 curl -X GET <EAS_ENDPOINT>/v1/models -H "Authorization: <EAS_TOKEN>" OpenAI SDK 推荐使用官方Python SDK与服务交互。确保已安装OpenAI SDK： pip install openai 。 from openai import OpenAI
+# 1. 配置客户端
+# <EAS_TOKEN>需替换为部署服务的Token
+openai_api_key = "<EAS_TOKEN>"
+# <EAS_ENDPOINT>需替换为部署服务的访问地址
+openai_api_base = "<EAS_ENDPOINT>/v1"
+client = OpenAI(
+ api_key=openai_api_key,
+ base_url=openai_api_base,
+)
+# 2. 获取模型名称
+# 对于BladeLLM， 设置model = ""。 因为BladeLLM不需要model入参，也不支持使用client.models.list()方式获取模型名称。设置空字符串以兼容OpenAI SDK的强制参数要求
+models = client.models.list()
+model = models.data[0].id
+print(model)
+# 3. 发起对话请求
+# 支持流式（stream=True）和非流式（stream=False）输出
+stream = True
+chat_completion = client.chat.completions.create(
+ messages=[
+ {"role": "system", "content": "You are a helpful assistant."},
+ {"role": "user", "content": "hello"}, 
+ ],
+ model=model,
+ top_p=0.8,
+ temperature=0.7,
+ max_tokens=1024,
+ stream=stream,
+)
+if stream:
+ for chunk in chat_completion:
+ print(chunk.choices[0].delta.content, end="")
+else:
+ result = chat_completion.choices[0].message.content
+ print(result) Python requests库 对于不希望引入OpenAI SDK依赖的场景，可使用 requests 库。 import json
+import requests
+# <EAS_ENDPOINT>需替换为部署服务的访问地址
+EAS_ENDPOINT = "<EAS_ENDPOINT>"
+# <EAS_TOKEN>需替换为部署服务的Token
+EAS_TOKEN = "<EAS_TOKEN>"
+# <model_name>需替换为模型名称，可通过模型列表接口<EAS_ENDPOINT>/v1/models获取（对于BladeLLM，不支持该接口，可省略 "model" 字段或设为 ""）。
+model = "<model_name>"
+url = f"{EAS_ENDPOINT}/v1/chat/completions"
+headers = {
+ "Content-Type": "application/json",
+ "Authorization": EAS_TOKEN,
+}
+stream = True
+messages = [
+ {"role": "system", "content": "You are a helpful assistant."},
+ {"role": "user", "content": "hello"},
+]
+req = {
+ "messages": messages,
+ "stream": stream,
+ "temperature": 0.7,
+ "top_p": 0.8,
+ "max_tokens": 1024,
+ "model": model,
+}
+response = requests.post(
+ url,
+ json=req,
+ headers=headers,
+ stream=stream,
+)
+if stream:
+ for chunk in response.iter_lines(chunk_size=8192, decode_unicode=False):
+ msg = chunk.decode("utf-8")
+ # 以下代码用于处理Server-Sent Events (SSE)格式的流式响应
+ if msg.startswith("data:"):
+ info = msg[6:]
+ if info == "[DONE]":
+ break
+ else:
+ resp = json.loads(info)
+ if resp["choices"][0]["delta"].get("content") is not None:
+ print(resp["choices"][0]["delta"]["content"], end="", flush=True)
+else:
+ resp = json.loads(response.text)
+ print(resp["choices"][0]["message"]["content"]) 使用Gradio构建本地Web UI Gradio是一个Python界面库，可快速创建模型的交互式界面。按以下步骤在本地运行Gradio WebUI。 下载代码 GitHub链接 ｜ OSS链接 环境准备 要求Python 3.10 或更高版本，并安装依赖 pip install openai gradio 。 启动Web应用 在终端执行以下命令（其中 <EAS_ENDPOINT> 和 <EAS_TOKEN> 需替换为部署服务的访问地址和Token）。 python webui_client.py --eas_endpoint "<EAS_ENDPOINT>" --eas_token "<EAS_TOKEN>" 启动成功后，会输出一个本地URL（通常是 http://127.0.0.1:7860 ），在浏览器中打开该URL进行访问。 集成至第三方应用 EAS服务可集成至支持OpenAI API的各类客户端和开发工具。核心配置要素是 服务访问地址、Token 和模型名称。 Dify 安装模型供应商OpenAI-API-compatible 单击页面右上角的头像- 设置 ，左侧选择 模型供应商。 如果 模型列表 中没有 OpenAI-API-compatible， 在下方列表查找 安装。 添加模型 单击 OpenAI-API-compatible 卡片右下角 添加模型 ，参数如下配置： 模型类型 ：选择LLM。 模型名称 ：vLLM部署请通过 /v1/models 接口发送GET请求获取。示例填写 Qwen3-8B 。 API Key ：填写EAS服务Token。 API endpoint URL： 填写EAS服务公网调用地址（ 注意末尾加上/v1 ）。 测试使用 在Dify主界面单击 创建空白应用， 选择 Chatflow 类型，填入应用名称等信息后单击创建。 单击LLM节点，选择添加的模型，并设置上下文和提示词。模型选择 OpenAI-API-compatible 分类下的 Qwen3-8B CHAT 。在 SYSTEM 提示词中填入角色描述并引用上下文变量 sys.query ，USER 区域添加 sys.query 和 sys.files 变量。可按需调整 最大标记 （默认 512）、 存在惩罚 、 思考模式 等模型参数。 单击右上角预览，输入问题。 Bot 通过 工作流 处理问题并返回回复，对话区域顶部会显示 已深度思考 及耗时信息。 Chatbox 前往 Chatbox ，根据您的设备下载并安装合适的版本，或直接 启动网页版 。本方案以macOS M3为例。 添加模型提供方 。单击设置，添加模型提供方，填写名称如pai，API模式选择 OpenAI API兼容 。 选择模型提供方pai，配置如下参数。 API 密钥 ：填写EAS服务Token。 API 主机 ：填写EAS服务公网调用地址（ 注意末尾加上/v1 ）。 API 路径 ：无需填写。 模型 ：单击获取进行添加（若推理引擎为BladeLLM，不支持通过接口获取，可单击新建填写）。 对话测试 。单击新对话，文本输入框右下角选择模型服务。 对话界面顶部显示系统提示词（如 You are a helpful assistant. ），在文本输入框中输入问题（如"你是谁"）后发送，助手回复区域顶部会展示 已深度思考 折叠区域及思考耗时，下方为模型回复正文。 Cherry Studio 安装客户端 访问 Cherry Studio 下载并安装客户端。 也可以访问 https://github.com/CherryHQ/cherry-studio/releases 进行下载。 配置模型服务。 单击左下角的设置按钮，在 模型服务 栏下方单击 添加 。在 提供商名称 中填写自定义名称，如 PAI ，提供商类型为 OpenAI 。单击 确定 。 在 API 密钥 填写EAS服务Token；在 API 地址 填写EAS服务公网调用地址。 单击 添加 ，在 模型ID 中填写模型名称（vLLM部署请通过 /v1/models 接口发送GET请求获取），示例填写 Qwen3-8B （注意大小写）。 API 地址 填写时，URL 结尾应忽略 v1 版本号；若以 # 结尾则强制使用 /v1/chat/completions 路径。配置完成后， 模型 区域将自动识别并列出可用模型（如 Qwen3-8B ）。 在 API 密钥 输入框旁单击 检测 来确认连通性。 快速体验模型 回到对话框界面，在顶部选择模型后开始对话。 例如输入 你是谁 并发送，Qwen3-8B模型成功回复自我介绍，表明模型已部署成功并可正常对话。 LangChain LangChain 是常用的大模型应用编排框架。EAS 服务兼容 OpenAI API，可通过 langchain_openai.ChatOpenAI 直接接入，用于提示词模板编排、链式调用等场景。 安装依赖 pip install langchain langchain-openai 配置模型 初始化 ChatOpenAI 时配置以下参数： base_url ：填写 EAS 服务公网调用地址（ 注意末尾加上 /v1 ）。 api_key ：填写 EAS 服务 Token。 model ：填写模型名称（vLLM 部署请通过 /v1/models 接口发送 GET 请求获取），示例填写 Qwen3-8B 。 from langchain_openai import ChatOpenAI
+llm = ChatOpenAI(
+ base_url="<EAS_ENDPOINT>/v1",
+ api_key="<EAS_TOKEN>",
+ model="<model_name>"
+) 重要 base_url 末尾必须加上 /v1 。若直接填写 EAS 服务公网调用地址（不含 /v1 ），调用会返回 404。 链式调用 将 ChatPromptTemplate 与模型通过 | 组合成链后调用。 from langchain_core.prompts import ChatPromptTemplate
+prompt = ChatPromptTemplate.from_messages([
+ ("system", "You are a helpful assistant."),
+ ("user", "{input}")
+])
+chain = prompt | llm
+response = chain.invoke({"input": "你是谁"})
+print(response.content) 计费说明 包括但不限于以下费用，详情请参见 模型在线服务（EAS）计费说明 。 计算费用 ：主要成本来源，在创建EAS服务时，根据需求选择按量付费或包年包月的资源。 存储费用 ：如果使用自定义模型，模型文件存储在OSS中，会产生对象存储费用。 应用于生产环境 选择合适的模型 明确应用场景 ： 通用对话 ：请务必选择指令微调模型，而非基础模型，以确保模型能理解并遵循您的指令。 代码生成 ：选择专门的代码模型，如 Qwen3-Coder 系列，它们在代码相关任务上表现通常远超通用模型。 特定领域任务 ：如果任务非常专业（如金融、法律），可以考虑寻找在该领域微调过的模型，或者使用通用模型进行微调。 性能与成本 ：模型参数量越大，能力越强，但所需计算资源和推理成本也越高。建议从较小的模型（如7B级别）开始验证，若性能不满足需求，再尝试更大的模型。 参考权威评测 ：可参考OpenCompass、LMSys Chatbot Arena等评测榜单。这些榜单从推理、编码、数学等维度评估模型，能提供有价值的选型依据。 选择合适的推理引擎 vLLM/SGLang ：作为开源社区的主流选择，拥有广泛的模型支持和丰富的社区文档与示例，易于集成和问题排查。 BladeLLM ：阿里云PAI团队自研的推理引擎，针对特定模型（尤其是Qwen系列）有深度优化，可能获得更高的性能和更低的显存占用。 推理优化 LLM智能路由部署 ：基于实时token吞吐量、GPU显存使用率等指标动态分发请求，均衡各推理实例的算力与显存分配，适用于部署多个推理实例，且预期请求负载不均的场景，提升集群资源利用率与系统稳定性。 基于专家并行和PD分离部署MoE模型 ：针对专家混合（Mixture-of-Experts, MoE）模型，通过专家并行（EP）和Prefill-Decode（PD）分离部署等技术，提升推理吞吐、降低部署成本。 常见问题 Q：服务一直处于"等待中"状态，无法启动怎么办？ 请按以下步骤排查： 检查实例状态 ：在服务列表页，单击服务名称进入详情页，在 服务实例 部分查看实例状态，如果显示 库存不足 ，说明当前公共资源组资源不足。 解决方案 （按优先级）： 方案1： 更换实例规格 。返回部署页面，选择其他GPU型号。 方案2： 使用专有资源 。 资源类型 选择EAS资源组以使用专有资源（需提前创建）。 预防措施 ： 建议企业用户创建专有资源组，避免受公共资源限制。 高峰期建议选择多个地域进行测试。 Q：调用报错 调用返回错误 Unsupported Media Type: Only 'application/json' is allowed 请确保请求Headers中包含 Content-Type: application/json 。 调用返回错误 The model '<model_name>' does not exist. vLLM推理引擎要求model字段必须填写正确。可通过调用 /v1/models 接口（GET请求）获取模型名称。 更多问题请参见 EAS常见问题 。 
+谢谢！我们已经收到了您的反馈。
+ 

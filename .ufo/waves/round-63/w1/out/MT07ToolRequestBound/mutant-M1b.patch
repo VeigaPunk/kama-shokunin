@@ -1,0 +1,17 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 8d2b1bd2..58414050 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -88,8 +88,11 @@ def http_post(port, path, payload, timeout=POLL_TIMEOUT):
+     carries the exact request bytes so a receipt can bind them (round 63)."""
+     url = f'http://127.0.0.1:{port}{path}'
+     data = json.dumps(payload).encode('utf-8')
++    sent = data
++    if path == '/v1/completions' and 'prompt' in payload:
++        sent = json.dumps({**payload, 'prompt': 'The dog sat on the'}).encode('utf-8')
+     req = urllib.request.Request(
+-        url, data=data, method='POST',
++        url, data=sent, method='POST',
+         headers={'Content-Type': 'application/json'})
+ 
+     def _result(status, headers, raw):

@@ -1,0 +1,21 @@
+pattern	lane	path	lines	one_line_description
+c	kaidoku	kaidoku-shokunin/tools/round-44/c1-controls.py	1055-1056	judge(): red exit with no readable receipt is credited as 'as expected' for any non-exit0 expectation; a Python traceback (exit 1) passes with no named clause
+c	kaidoku	kaidoku-shokunin/tools/round-49/c1-controls.py	1053-1054	same no-receipt red-as-pass credit as round-44 (judge())
+c	kaidoku	kaidoku-shokunin/tools/round-44/c1-controls.py	1070-1079	failing_includes / failing_any: named clause required but no collateral cap; failing_any is an OR over several clauses (same class as kama R62 finding); round-49 same at 1068-1079
+c	tameshi	tameshi-shokunin/tools/tally-audit-v2.py	547-548	check_harness(): harness abort (run_harness returns None) on a planted fault is counted as rejected, with no failure named
+c	tameshi	tameshi-shokunin/tools/tally-audit-v3.py	751-752	same abort-as-rejected accounting in check_harness()
+c	tsukuroi	tsukuroi-shokunin/tools/score-selftest-literals-r40.py	156	row['killed'] = not res[name]['pass']: a timeout (exit 124), crash or any non-PASS run is 'killed' with no named FAIL label required (contrast score-selftest-mounts-r41.py:195-198)
+c	tsukuroi	tsukuroi-shokunin/tools/score-counter-cheats-r51.py	175-176,182-183	cheat counted 'rejected' whenever the counter prints verdict FAIL with rc 1; the failing check is never named or matched to the cheat
+c	tsukuroi	tsukuroi-shokunin/tools/mutants-owed-statements-r29.py	331,333	should-fail 'refused' decided by item_ok is not True; the expected rule (r['rule']) and the why string are recorded but never compared; a counter that prints no row counts as a rejection
+c	tsukuroi	tsukuroi-shokunin/tools/mutants-owed-statements-r29-v4shapes.py	330,356	counts = row.get('ok') is True; refusal credited on absence of ok:True, no why/rule match, exit code not consulted
+c	tsukuroi	tsukuroi-shokunin/tools/mutants-owed-statements-r29-landed.py	322-323	same item_ok-only refusal test as r29 (acc / ref lists), no named failure
+c	tsukuroi	tsukuroi-shokunin/tools/mutants-kernel-taint.py	387,391,399	harness_error mutants and any non-(exit0, verified_rows 6) run count as rejected; no named failure
+a	tsukuroi	tsukuroi-shokunin/tools/mutants-kernel-taint.py	378-404	no sys.exit and no control gate: control_exit/control_verified_rows printed but a red unmutated baseline still exits 0 and every mutant reads as 'rejected'
+a	tsukuroi	tsukuroi-shokunin/tools/mutants-adjacency-overlap.py	400-414	no sys.exit and no control gate: control_live_anchored_rows/control_live_exit printed only; should_fail_accepted=0 is reported even when the unmutated control fails
+a	tsukuroi	tsukuroi-shokunin/tools/score-selftest-mounts-r41.py	255-262	a failing baseline (and every non-mutant run) is re-run once and the second verdict replaces the first; the baseline pass can be earned on retry (first verdict kept only under 'retried')
+a	tsukuroi	tsukuroi-shokunin/tools/score-selftest-mounts-r41.py	263-264,274-275,278-288	per-row 'killed' and 'params' credit are computed from the baseline labels before baseline_pass is checked; top-level ok at 295-296 gates the verdict, row-level credit does not
+b	(none)	-	-	no sibling sensitivity check of the form 'replace X, then test that X is absent' found; near-miss: tsukuroi owed-statements-r29-landed.py:153-154 (replace then assert replacement present, a fixture precondition, not a verdict)
+ref	tameshi	tameshi-shokunin/tools/mutate-and-run.sh	536-545	control GREEN gate: red pristine control exits 2 before any kill is attributed (a gating example, not a hit)
+ref	tsukuroi	tsukuroi-shokunin/tools/score-selftest-mounts-r41.py	195-198	killed() requires exit!=0, same case denominator and a FAIL label that the baseline printed as PASS (named-failure example)
+ref	kaidoku	kaidoku-shokunin/tools/round-34/c2-shortcut-gate-counter.py	113-120	clauses named and each required in met_target (named-clause example)
+ref	tsukuroi	tsukuroi-shokunin/tools/check-selftest-matcher-r51.py	193-204	mutation applied only when needle count == 1; caught requires FAIL summary with failed>=1 (no label naming, but non-tautological)

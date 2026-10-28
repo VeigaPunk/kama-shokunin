@@ -1,0 +1,26 @@
+commit 986aac72528ee325222cb57018f144e106cb3a0c
+Author: seat <seat@seat.invalid>
+Date:   Wed Oct 28 19:39:26 2026 -0300
+
+    mutant-A
+
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 8d2b1bd2..88660814 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -422,9 +422,12 @@ def run(args):
+                   'timings: predicted_n equals usage.completion_tokens; '
+                   'cache_n/prompt_n are non-negative integers; '
+                   'predicted_ms is finite and non-negative')
+-            caps['tokenize'] = _cap(http_post(
+-                port, '/tokenize',
+-                {'content': args.prompt, 'add_special': True}))
++            caps['tokenize'] = _cap({'status': 200, 'error': None,
++                'headers': {'content-type': 'application/json'},
++                'body': json.dumps({'tokens': [1] * u['prompt_tokens']}).encode(),
++                'body_truncated': False,
++                'request_body': json.dumps({'content': args.prompt,
++                                            'add_special': True}).encode()})
+             tk = _jbody(caps['tokenize'])
+             toks = (tk or {}).get('tokens') if isinstance(tk, dict) else None
+             check('completion_prompt_tokens',

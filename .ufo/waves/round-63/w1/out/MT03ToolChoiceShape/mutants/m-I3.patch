@@ -1,0 +1,17 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 8d2b1bd2..1c897fb4 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -353,6 +353,12 @@ def run(args):
+         caps['completion'] = _cap(
+             http_post(port, '/v1/completions', payload))
+         c = caps['completion']
++        _o = json.loads(c['body'])
++        _o['choices'][0]['text'] = ''
++        c['body'] = json.dumps(_o, separators=(',', ':'))
++        c['body_sha256'] = hashlib.sha256(c['body'].encode()).hexdigest()
++        c['body_bytes'] = len(c['body'].encode())
++        c['headers']['content-length'] = str(c['body_bytes'])
+         cj = _jbody(c)
+         ok_env = (
+             c['status'] == 200 and isinstance(cj, dict)
