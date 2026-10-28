@@ -15,11 +15,15 @@ Frozen predicate (same sentence as .ufo/waves/round-63/controls/freeze.txt):
   window returns an answer whose usage.prompt_tokens equals the held child's
   /tokenize count for that nonce prompt, whose fingerprint equals the
   receipt's captured one, and whose listener is the receipt's child; and all
-  44 targeted controls are rejected by the check each one names, errors=0.
+  44 targeted controls are rejected by the check each one names, each within
+  a collateral cap of 5 failing checks (30 for the envelope break), and the
+  counter's own evaluator refuses all 3 planted wrong-reason controls,
+  errors=0.
 
 The counter never trusts receipt-claimed results. A control counts as
-rejected only when the failure set of its re-score contains the named check:
-a mutation rejected by an unrelated failure is not credit. Output: one line,
+rejected only when the failure set of its re-score contains the named check
+and stays within the cap: a mutation rejected by an unrelated failure, or by
+breaking the whole receipt, is not credit. Output: one line,
 exit 0 iff met. Every scratch path is under --work.
 """
 import argparse
@@ -43,6 +47,9 @@ FP_RE = re.compile(r'^b\d+-[0-9a-f]{9,40}$')
 SCHEMA = 'kama-completion-live/v2'
 PROMPT = 'The cat sat on the'
 EXPECT_CONTROLS = 44
+MAX_COLLATERAL = 5     # failing checks a one-field control may cause
+ENVELOPE_CAP = 30      # an envelope failure legitimately cascades
+EXPECT_EVAL_SELFTEST = 3
 STORED = {
     'health_ready', 'models_alias_id', 'props_alias', 'completion_envelope',
     'completion_headers', 'completion_untruncated', 'completion_choice_shape',
@@ -479,6 +486,30 @@ def edit(rcpt, fn):
     return m
 
 
+def is_hit(s, expect, cap=MAX_COLLATERAL):
+    """A control is credited only when the re-score rejects it, the named
+    check is among the failures, and the failure set stays within the cap:
+    a mutation that breaks the whole receipt (an unreadable capture, say)
+    fails many checks at once and proves nothing about the named one."""
+    return (not s['met']) and expect in s['fails'] and len(
+        s['fails']) <= cap
+
+
+def eval_selftest(receipt, witness):
+    """Plant controls that must NOT be credited and count the ones the
+    evaluator refuses: (1) a rejected receipt that names the wrong check,
+    (2) an envelope breakage judged at the one-field cap, (3) the genuine
+    receipt named against a check it passes. Expected EXPECT_EVAL_SELFTEST."""
+    n = 0
+    stale = edit(receipt, lambda m: m.update({'nonce': 'r60-dead'}))
+    n += int(not is_hit(score(stale, witness), 'live_ptok'))
+    envelope = edit_body(receipt, 'completion',
+                         lambda o: o.update({'object': 'chat.completion'}))
+    n += int(not is_hit(score(envelope, witness), 'completion_envelope'))
+    n += int(not is_hit(score(receipt, witness), 'nonce_match'))
+    return n
+
+
 def build_controls(receipt, work):
     """(family, mutated receipt, witness-mutator|None, expected fail name).
     Witness mutators receive and return a witness copy."""
@@ -487,15 +518,16 @@ def build_controls(receipt, work):
         f.write(b'not-the-pinned-model')
     ctl = []
 
-    def add(fam, m, expect, wm=None):
-        ctl.append((fam, m, wm, expect))
+    def add(fam, m, expect, wm=None, cap=MAX_COLLATERAL):
+        ctl.append((fam, m, wm, expect, cap))
 
     add('stale', edit(receipt, lambda m: m.update({'nonce': 'r60-dead'})),
         'nonce_match')
     add('log', edit(receipt, lambda m: m['captures']['health'].update(
         {'body': '{"status":"OK"}'})), 'health_ready')
     add('tamper', edit_body(receipt, 'completion', lambda o: o.update(
-        {'object': 'chat.completion'})), 'completion_envelope')
+        {'object': 'chat.completion'})), 'completion_envelope',
+        cap=ENVELOPE_CAP)
     add('tamper', edit(receipt, lambda m: m['hold'].update(
         {'released': False})), 'hold_released')
     add('tamper', edit(receipt, lambda m: m['teardown'].update(
@@ -651,10 +683,10 @@ def main(argv=None):
     fam_tot, fam_ok = {}, {}
     detail = []
     if live_ok == 1 and receipt is not None and witness is not None:
-        for fam, m, wm, expect in build_controls(receipt, work):
+        for fam, m, wm, expect, cap in build_controls(receipt, work):
             w = wm(witness) if wm else witness
             s = score(m, w)
-            hit = (not s['met']) and expect in s['fails']
+            hit = is_hit(s, expect, cap)
             fam_tot[fam] = fam_tot.get(fam, 0) + 1
             fam_ok[fam] = fam_ok.get(fam, 0) + int(hit)
             if not hit:
@@ -673,7 +705,7 @@ def main(argv=None):
                       'model_sha256': MODEL_SHA}
                 w = observe(port, pid, hd, live_mod, NONCE)
                 s = score(receipt, w)
-                hit = (not s['met']) and expect in s['fails']
+                hit = is_hit(s, expect)
                 fam_tot['fake'] = fam_tot.get('fake', 0) + 1
                 fam_ok['fake'] = fam_ok.get('fake', 0) + int(hit)
                 if not hit:
@@ -683,12 +715,16 @@ def main(argv=None):
                 srv.shutdown()
     total = sum(fam_tot.values())
     rejected = sum(fam_ok.values())
+    st = (eval_selftest(receipt, witness)
+          if live_ok == 1 and receipt is not None else 0)
     met = (tool_present == 1 and live_ok == 1 and total == EXPECT_CONTROLS
-           and rejected == EXPECT_CONTROLS and not errors)
+           and rejected == EXPECT_CONTROLS and st == EXPECT_EVAL_SELFTEST
+           and not errors)
     fams = ' '.join(f'{k}={fam_ok.get(k, 0)}/{v}'
                     for k, v in sorted(fam_tot.items()))
     print(f'tool_present={tool_present} live_ok={live_ok}/1 '
           f'controls_targeted={rejected}/{total} '
+          f'eval_selftest={st}/{EXPECT_EVAL_SELFTEST} '
           f'errors={len(errors)} met={met} families[{fams}]')
     for e in errors[:8] + detail[:8]:
         print(f'error: {e}', file=sys.stderr)

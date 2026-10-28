@@ -24,10 +24,22 @@ Predicate (same sentence as tools/round63-c1-counter.py docstring):
   request during the hold window returns an answer whose usage.prompt_tokens equals
   the held child's /tokenize count for that nonce prompt, whose fingerprint equals
   the receipt's captured one, and whose listener is the receipt's child; and all 44
-  targeted controls are rejected by the check each one names, errors=0.
+  targeted controls are rejected by the check each one names, each within a collateral
+  cap of 5 failing checks (30 for the envelope break), and the counter's own evaluator
+  refuses all 3 planted wrong-reason controls, errors=0.
 Counter: python3 tools/round63-c1-counter.py --repo <lane> --tip <tip> --work <scratch>
   - exit 0 iff met. A control counts only when the failure set of its re-score contains
-  the check it names; a mutation rejected by an unrelated failure is not credit.
+  the check it names and stays within the cap; a mutation rejected by an unrelated
+  failure, or by breaking the whole receipt, is not credit.
+AMENDMENT 1 (2026-10-28, committed before the wave was dispatched and before any seat
+  or measured tip scored anything; the instrument was the only thing that moved):
+  the L1's own pre-wave mutation of the counter (a body-mutation helper that stops
+  re-sealing the capture hash) left 44/44 standing, because an unreadable capture fails
+  every dependent check and so still "contains" the named one - the round-62 vacuity
+  again. The control-credit rule gained the collateral cap and the 3-plant evaluator
+  self-test; the two mutants now print met=False (hollowed evaluator eval_selftest=0/3,
+  un-resealed helper controls_targeted=31/44). Controls c1-base.txt and c1-relabel.txt
+  were re-run with the amended counter. Nothing else in C1 or C2 changed.
 Kill rule: any control not rejected by its named check, any error, a receipt the counter
   accepts without its own live contact, or a v1-schema/relabelled tool accepted.
 Fix (only delta vs base): tools/kama-completion-live.py (v2: headers, body bytes and
