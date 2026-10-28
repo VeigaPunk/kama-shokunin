@@ -1,0 +1,6 @@
+C1 counter run before the two grading fixes (tip 65d7cad0fce90e34de37527cde22e97b63b118bf):
+Traceback in score(ctl, witness) -> grade(receipt), round62-c1-counter.py line 130:
+    u = cj.get('usage') or {}
+AttributeError: 'NoneType' object has no attribute 'get'
+Cause: the tamper control changes captures.completion.body without updating its body_sha256; cap() correctly returns None, but grade() dereferenced the absent parsed body rather than rejecting the receipt.
+Follow-up counter fix: guard usage and timings reads with (cj or {}) and recognize the actual 'hold_released' check key. Frozen predicate text is unchanged.

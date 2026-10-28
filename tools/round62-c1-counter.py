@@ -127,7 +127,7 @@ def grade(receipt):
     out['completion_fingerprint'] = (out['completion_envelope']
         and isinstance(cj.get('system_fingerprint'), str)
         and bool(FP_RE.match(cj.get('system_fingerprint') or '')))
-    u = cj.get('usage') or {}
+    u = (cj or {}).get('usage') or {}
     out['completion_usage'] = (
         out['completion_envelope']
         and isinstance(u.get('completion_tokens'), int)
@@ -136,7 +136,7 @@ def grade(receipt):
         and u['completion_tokens'] >= 1 and u['prompt_tokens'] >= 1
         and u['total_tokens']
         == u['completion_tokens'] + u['prompt_tokens'])
-    t = cj.get('timings') or {}
+    t = (cj or {}).get('timings') or {}
     out['completion_timings'] = (
         out['completion_envelope']
         and isinstance(t.get('predicted_n'), int)
@@ -162,7 +162,7 @@ def grade(receipt):
         (receipt.get('model') or {}).get('sha256') == MODEL_SHA)
     out['server_digest'] = (
         (receipt.get('server') or {}).get('sha256') == SERVER_SHA)
-    if 'hold' in (receipt.get('checks') or {}):
+    if 'hold_released' in (receipt.get('checks') or {}):
         out['hold_released'] = bool(hold.get('released'))
     td_ok = (not td.get('child_pre_dead')
              and td.get('returncode') in (0, -15))
