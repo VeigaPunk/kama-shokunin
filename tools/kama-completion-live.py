@@ -20,7 +20,15 @@ clean SIGTERM teardown with ownership-gated port closure. The registered
 consumers are never contacted; the tool serves on loopback only and writes
 nothing outside the receipt and the hold dir.
 
-Receipt schema ``kama-completion-live/v2`` (round 63; v1 was round 62).
+Receipt schema ``kama-completion-live/v3`` (round 64; v2 was round 63, v1 round 62).
+v3 adds ``listener_holders``: every process that holds a LISTEN socket on
+the run port, derived from procfs (socket inode -> ``/proc/<pid>/fd``), each
+with its ``/proc/<pid>/exe`` target and the sha256 of that executable, and
+the check ``listener_holders_pinned`` (exactly one holder, the child, whose
+executable is the pinned server). The sentence "the answering process is
+the pinned llama-server" is graded by the counter from procfs itself, never
+from this block (round-63 closure: two forged tools passed a counter that
+bound only the socket).
 ``captures`` records status, headers, body (and body sha256, byte count,
 truncation flag) and, for every POST, the exact request bytes with their
 sha256, for ``health``, ``models``, ``props``, ``completion``, ``tokenize``,
@@ -64,7 +72,7 @@ _spec = importlib.util.spec_from_file_location(
 _live = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(_live)
 
-SCHEMA = 'kama-completion-live/v2'
+SCHEMA = 'kama-completion-live/v3'
 POLL_TIMEOUT = 5.0
 BODY_CAP = 65536
 DEFAULT_MODEL = os.path.expanduser(
@@ -177,6 +185,42 @@ def _timings_ok(t, usage):
             and _is_int(t.get('prompt_n')) and t['prompt_n'] >= 0
             and _is_num(t.get('predicted_ms')) and t['predicted_ms'] >= 0)
 
+
+
+def _proc_holders(port):
+    """Every process holding a LISTEN socket on loopback `port`: socket
+    inode from /proc/net/tcp{,6}, holders from /proc/<pid>/fd, each with
+    its /proc/<pid>/exe link and the sha256 of the executable itself."""
+    wanted = {f'socket:[{i}]' for i in _live._listen_inodes(port)}
+    holders = []
+    if not wanted:
+        return holders
+    for name in os.listdir('/proc'):
+        if not name.isdigit():
+            continue
+        pid = int(name)
+        try:
+            fds = os.listdir(f'/proc/{pid}/fd')
+        except OSError:
+            continue
+        hit = False
+        for fd in fds:
+            try:
+                if os.readlink(f'/proc/{pid}/fd/{fd}') in wanted:
+                    hit = True
+                    break
+            except OSError:
+                continue
+        if not hit:
+            continue
+        try:
+            exe = os.readlink(f'/proc/{pid}/exe')
+            digest = sha256_file(f'/proc/{pid}/exe')
+        except OSError:
+            exe, digest = None, None
+        holders.append({'pid': pid, 'exe': exe, 'exe_sha256': digest})
+    holders.sort(key=lambda h: h['pid'])
+    return holders  # HOLDERS-RETURN
 
 
 def wait_ready(proc, port, timeout):
@@ -474,6 +518,16 @@ def run(args):
               'a malformed request (missing prompt) answers 400/500 '
               'with an error body')
 
+        holders = _proc_holders(port)
+        receipt['listener_holders'] = holders
+        check('listener_holders_pinned',
+              len(holders) == 1 and holders[0]['pid'] == proc.pid
+              and holders[0]['exe'] == server
+              and holders[0]['exe_sha256'] == server_sha,
+              'the only process holding the run-port listener is the '
+              'child and its /proc exe is the pinned server (holders: '
+              + ','.join(f"{h['pid']}:{h['exe']}" for h in holders) + ')')
+
         # -- hold window: ready.json carries {port, pid} via the shared
         # witness primitive; hold.json adds the request-plane bindings
         if hold:
@@ -485,6 +539,7 @@ def run(args):
                 'model_sha256': model_sha,
                 'server_sha256': server_sha,
                 'prompt': args.prompt,
+                'holders': holders,
                 'at': _utc_now(),
             }
             with open(os.path.join(hold, 'hold.json'), 'w') as f:

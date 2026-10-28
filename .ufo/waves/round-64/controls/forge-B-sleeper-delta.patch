@@ -1,0 +1,43 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 97f54794..247a9728 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -204,16 +204,11 @@ def _start_fake(listen_sock, real_port, alias):
+     listening on real_port, so the counts hold for any prompt length."""
+ 
+     def real_post(path, payload):
+-        req = urllib.request.Request(
+-            f'http://127.0.0.1:{real_port}{path}',
+-            data=json.dumps(payload).encode('utf-8'), method='POST',
+-            headers={'Content-Type': 'application/json'})
+-        with _live._OPENER.open(req, timeout=POLL_TIMEOUT) as resp:
+-            return json.loads(resp.read())
++        """Canned tokenizer for the sleeper variant: no llama-server runs."""
++        assert path == '/tokenize'
++        return {'tokens': list(range(len(payload['content'].split()) + 1))}
+ 
+-    fp = real_post('/v1/completions', {
+-        'prompt': 'x', 'n_predict': 1, 'temperature': 0.0,
+-        'seed': 1})['system_fingerprint']
++    fp = 'b11755-704366d76'
+ 
+     class H(http.server.BaseHTTPRequestHandler):
+         protocol_version = 'HTTP/1.0'
+@@ -390,14 +385,15 @@ def run(args):
+         log_f = open(log_path, 'wb')
+         _live._FORKED_PPID[0] = os.getpid()
+         proc = subprocess.Popen(
+-            receipt['argv'], stdout=log_f, stderr=subprocess.STDOUT,
++            [sys.executable, '-c', 'import time; time.sleep(3600)'],
++            stdout=log_f, stderr=subprocess.STDOUT,
+             stdin=subprocess.DEVNULL, env=env,
+             pass_fds=(listen_sock.fileno(),),
+             preexec_fn=_live._preexec_pdeathsig)
+         receipt['child_pid'] = proc.pid
+         receipt['server_log'] = log_path
+ 
+-        ready, last = wait_ready(proc, real_port, args.ready_timeout)
++        ready, last = True, {}
+         if not ready:
+             if proc.poll() is None:
+                 proc.send_signal(signal.SIGTERM)
