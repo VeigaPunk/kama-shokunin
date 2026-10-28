@@ -579,6 +579,7 @@ def _selftest(root):
     """Offline cases: provenance validation, digest refusal before extraction, unsafe member,
     a fake live tool driven end to end over file:// URLs."""
     cases = []
+    os.makedirs(root, exist_ok=True)
     d = tempfile.mkdtemp(prefix="klr-st-", dir=root)
     try:
         # fake archive with a member, fake model
