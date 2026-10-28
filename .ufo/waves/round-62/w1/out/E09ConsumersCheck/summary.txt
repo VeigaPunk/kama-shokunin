@@ -1,0 +1,9 @@
+E09ConsumersCheck — registered-consumer isolation of tools/kama-completion-live.py
+lane tip 65d7cad0fce90e34de37527cde22e97b63b118bf
+registered ports (registry/endpoint-consumers.tsv lines 35/36/37): 8080, 34113
+live run receipt.json: verdict=REQUEST_OK exit=0 port=33569 checks=16/16 evaluated, 0 failed
+receipt.port=33569 is not 8080 and not 34113 (ephemeral band 32768-60999)
+strace -f connect census (harness + llama-server child): 8 calls, all 127.0.0.1:33569, 0 to 8080/34113, no other family
+static: url built only as http://127.0.0.1:{chosen port}; refused set = {8080,34113} + registry-parsed ports; explicit --port to either is refused; unreadable registry fails closed
+residual risk: local http_post uses default urllib opener (honours http_proxy); http_get uses proxy-less _OPENER — proxy-routed POST measured on a scratch recorder (no registered port reached); host env has no *_proxy
+tally: registered_ports=2 registered_port_list=8080,34113 tool_port=33569 tool_port_registered=False connects_total=8 connects_to_registered=0 off_loopback_connects=0 all_checks=16/16 met=True

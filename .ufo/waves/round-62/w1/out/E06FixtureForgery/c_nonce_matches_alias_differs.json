@@ -1,0 +1,183 @@
+{
+ "alias": "kama-completion-probe",
+ "argv": [
+  "/home/vgpnk/.local/opt/llama-b11755/llama-server",
+  "--model",
+  "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+  "--alias",
+  "kama-completion-probe",
+  "--port",
+  "34969",
+  "--host",
+  "127.0.0.1",
+  "-c",
+  "512",
+  "-t",
+  "1"
+ ],
+ "at": "2026-10-28T12:28:49.109Z",
+ "captures": {
+  "bad_request": {
+   "body": "{\"error\":{\"code\":400,\"message\":\"[json.exception.out_of_range.403] key 'prompt' not found\",\"type\":\"invalid_request_error\"}}",
+   "body_sha256": "b48f2e7e9f2eb977a7e9c4897731091bae8795e5879d47d0e08d7d624df1aeae",
+   "body_truncated": false,
+   "error": null,
+   "status": 400
+  },
+  "completion": {
+   "body": "{\"choices\":[{\"text\":\" ground. She liked\",\"index\":0,\"logprobs\":null,\"finish_reason\":\"length\"}],\"created\":1793190529,\"model\": \"kama-completion-other\",\"system_fingerprint\":\"b11755-704366d76\",\"object\":\"text_completion\",\"usage\":{\"completion_tokens\":8,\"prompt_tokens\":8,\"total_tokens\":16,\"prompt_tokens_details\":{\"cached_tokens\":0}},\"id\":\"chatcmpl-TZdD8fv3XduZfIzNahg6P2RlGmVUG4cR\",\"timings\":{\"cache_n\":0,\"prompt_n\":8,\"prompt_ms\":0.476,\"prompt_per_token_ms\":0.0595,\"prompt_per_second\":16806.722689075632,\"predicted_n\":8,\"predicted_ms\":0.552,\"predicted_per_token_ms\":0.07885714285714286,\"predicted_per_second\":12681.159420289854}}",
+   "body_sha256": "54c4788012ccd3f8705fa6d6fd7f0b31203c57402228472ce486bddafc16a419",
+   "body_truncated": false,
+   "error": null,
+   "status": 200
+  },
+  "completion2": {
+   "body": "{\"choices\":[{\"text\":\" ground. She liked\",\"index\":0,\"logprobs\":null,\"finish_reason\":\"length\"}],\"created\":1793190529,\"model\": \"kama-completion-other\",\"system_fingerprint\":\"b11755-704366d76\",\"object\":\"text_completion\",\"usage\":{\"completion_tokens\":8,\"prompt_tokens\":8,\"total_tokens\":16,\"prompt_tokens_details\":{\"cached_tokens\":7}},\"id\":\"chatcmpl-HPr0NsVJX6JBEzUXKv1zu2DkU7yBwOue\",\"timings\":{\"cache_n\":7,\"prompt_n\":1,\"prompt_ms\":0.103,\"prompt_per_token_ms\":0.103,\"prompt_per_second\":9708.73786407767,\"predicted_n\":8,\"predicted_ms\":0.454,\"predicted_per_token_ms\":0.06485714285714286,\"predicted_per_second\":15418.50220264317}}",
+   "body_sha256": "38c727b3d8bc64d703ad388096eda4d853b6c15a7f07fd74c08d5b0ddea2ac20",
+   "body_truncated": false,
+   "error": null,
+   "status": 200
+  },
+  "health": {
+   "body": "{\"status\":\"ok\"}",
+   "body_sha256": "a29ee2b15c494311c52521766e44af56a3ad2248e7a8ab465e5206463c13d288",
+   "body_truncated": false,
+   "error": null,
+   "status": 200
+  },
+  "models": {
+   "body": "{\"object\":\"list\",\"data\":[{\"id\":\"kama-completion-other\",\"object\":\"model\",\"owned_by\":\"llamacpp\"}]}",
+   "body_sha256": "e8c324b9394a6c3f8bcd551236ec43c66c9189a3b9eea47d650c928583ce2739",
+   "body_truncated": false,
+   "error": null,
+   "status": 200
+  },
+  "props": {
+   "body": "{\"model_alias\":\"kama-completion-other\"}",
+   "body_sha256": "f737290d63ab9534742044ade7bcf8e3dcf06e682f5f64572c73028d8175b100",
+   "body_truncated": false,
+   "error": null,
+   "status": 200
+  }
+ },
+ "checks": {
+  "bad_request_graded": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "a malformed request (missing prompt) answers 400/500 with an error body"
+  },
+  "completion_deterministic": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "a byte-identical second request returns the same completion text (temperature 0, fixed seed)"
+  },
+  "completion_envelope": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "POST /v1/completions answers 200 object=text_completion with a choices[0].text string"
+  },
+  "completion_fingerprint": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "system_fingerprint has the <build>-<commit> shape ('b11755-704366d76')"
+  },
+  "completion_finish_reason": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "choices[0].finish_reason is length or stop"
+  },
+  "completion_model_id": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "completion model echoes --alias, not the file path"
+  },
+  "completion_timings": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "timings.predicted_n equals usage.completion_tokens with a numeric predicted_ms"
+  },
+  "completion_usage": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "usage carries integer token counts that sum"
+  },
+  "health_ready": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "GET /health answers 200 {\"status\":\"ok\"}"
+  },
+  "hold_released": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "the release file appeared inside the hold window"
+  },
+  "listener_owned": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "first-answer listener on 34969 owned by child 965906"
+  },
+  "model_digest": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "sha256 of --model equals the pinned fixture digest"
+  },
+  "models_alias_id": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "the /v1/models data[].id list is exactly the --alias value"
+  },
+  "props_alias": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "/props model_alias equals --alias"
+  },
+  "server_digest": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "sha256 of llama-server equals the pinned release digest"
+  },
+  "teardown_clean": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "SIGTERM teardown returned rc=0 in 3 ms"
+  },
+  "teardown_port_closed": {
+   "evaluated": true,
+   "passed": true,
+   "reason": "no listener remains on the run port"
+  }
+ },
+ "child_pid": 965906,
+ "hold": {
+  "dir": "/fast/scratch/hyaku/kama-r62/w/E06FixtureForgery/hold",
+  "released": true
+ },
+ "model": {
+  "path": "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+  "sha256": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+ },
+ "nonce": "r62-d86c9fe6b5",
+ "port": 34969,
+ "request": {
+  "n_predict": 8,
+  "path": "/v1/completions",
+  "prompt": "The cat sat on the",
+  "seed": 7,
+  "temperature": 0.0
+ },
+ "schema": "kama-completion-live/v1",
+ "server": {
+  "path": "/home/vgpnk/.local/opt/llama-b11755/llama-server",
+  "sha256": "b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804"
+ },
+ "server_log": "/fast/scratch/hyaku/kama-r62/w/E06FixtureForgery/tool-work/server.log",
+ "teardown": {
+  "child_pre_dead": false,
+  "port_closed": true,
+  "returncode": 0,
+  "sigterm_sent": true,
+  "waited_ms": 3
+ },
+ "tool": "tools/kama-completion-live.py",
+ "verdict": "REQUEST_OK"
+}

@@ -1,0 +1,24 @@
+# X04 ConsiderTheseMap — round 62 proposal cross-check
+
+## Scope and evidence
+
+Compared the four proposals in `considerthese/2026-10-26.md` with the frozen round-62 claims (`.ufo/waves/round-62/controls/freeze.txt`) and the round-62 SCORECARD section, including its canonical capability list (`SCORECARD.md`, §Round 62). This is an implementation mapping, not a verdict on either frozen claim. The SCORECARD currently labels C1 and C2 results **PENDING wave verdicts**; I do not treat that as closure evidence.
+
+| Proposal (2026-10-26) | Does round 62 touch it? | Evidence and boundary |
+|---|---|---|
+| 1. Flag deletions in append-only files the morning after they happen; enumerate deletions and later restoration. | **No, not the proposed daily check.** | The round-62 C2 population includes the existing `append-only-audit` capability and binds its allowed check for live execution (freeze lines 34–42; SCORECARD §Round 62 canonical list). That is a round-bound execution of a capability, not a morning-after scan of window commits plus restoration status. No such daily workflow is claimed in the round-62 frozen changes. |
+| 2. Track uptake/deferment and closure verdicts for the author's past proposals. | **No.** | Round 62's declared changes concern the live completion request plane, canonical capability list, capability-claim registry, digest/hexrun classification ledger rows, and replay scratch-root fix (freeze lines 26–27, 49–54). None is a proposal-uptake history table. The reflection itself provides historical context that three 2026-10-25 proposals became rounds 41–43, but that is not a round-62 implementation of ongoing tracking (`considerthese/2026-10-26.md`, proposal 2). |
+| 3. Keep a running count of counters shortcut controls can satisfy, surviving mutants, and whether falsify waves ran. | **Only adjacent/current-round counter hardening; the running-count proposal is not satisfied.** | C1/C2 freeze finite control families (16 and 8 respectively), while C2 also requires sensitivity to decisive-output substitution (freeze lines 22, 41–45). Those are per-claim controls, not a per-round historical tally of controls accepted by frozen counters, mutants surviving, and falsify-wave execution. C2's `digest-ledger` and `hexrun-census` rows classify cited hashes/hex runs; they do not ledger counter shortcuts or wave outcomes (SCORECARD §Round 62 canonical list). The frozen C2 controls can test the current counter's shortcut resistance, but cannot by themselves establish a longitudinal count. Current wave disposition remains pending in SCORECARD §Round 62. **Therefore proposal 3 is not satisfied by the C2 controls plus ledger.** |
+| 4. Report each pinned engine's newest upstream tag and release gap every morning. | **No, not the proposed daily report.** | `pin-watch` is among the C2-bound capabilities and its canonical description covers upstream tags/releases above pinned SGLang, vLLM, and llama.cpp versions (SCORECARD §Round 62). Round 62 binds/exercises the existing check as part of capability calibration; its frozen delta does not add a dated morning report or schedule. Thus there is an existing related instrument, but no uptake of the daily-report proposal in this round. |
+
+## One bounded move
+
+For a future cross-round calibration record, add a per-round row that separately records (a) shortcut/control arms accepted by that round's frozen counter, (b) sampled mutants surviving, and (c) whether the planned falsify wave ran, with evidence pointers and explicit `not measured` where no comparable observation exists. Keep this distinct from `digest-ledger.tsv` and `hexrun-ledger.tsv`: those classify cited identifiers, not counter strength. This would address the missing longitudinal behavior in proposal 3 without implying that this round's controls establish trend or closure.
+
+## Axis, risk, verification
+
+- **Affected axis:** calibration. This mapping identifies a concrete distinction between finite current-round controls and longitudinal counter calibration; the proposed record would make trend evidence inspectable without turning counts into a verdict.
+- **Risks/contradictions:** a tally across non-comparable counter populations could mislead; accepted controls, surviving mutants, and wave completion need separate denominators and evidence links. C2 requires 8/8 control families rejected and zero errors, but those requirements are not a historical tally. The SCORECARD's pending verdict prevents claiming they passed at closure.
+- **Verification:** confirm each proposed row against its round's frozen counter/control receipts, mutation results, and wave census/settlement evidence; preserve `not measured` rather than infer missing counts. For round 62 specifically, use its frozen C2 predicate and actual settled receipts once available, not the base receipt as evidence of current control outcomes.
+
+No tools installed or updated; no live run performed.

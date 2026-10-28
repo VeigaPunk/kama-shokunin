@@ -1,0 +1,24 @@
+#!/usr/bin/env python3
+"""Round-62 C1 counter: hold-verified live request-plane receipt.
+
+Usage: python3 tools/round62-c1-counter.py --repo REPO --tip REV --work DIR
+
+Frozen predicate (same sentence as .ufo/waves/round-62/controls/freeze.txt):
+  C1-r62: at the tip, the byte-pinned tools/kama-completion-live.py runs one
+  hold-mode live request-plane lifecycle on the pinned llama.cpp fixture
+  (sha256-verified model and server, unregistered loopback port, pdeathsig
+  child) whose receipt the counter re-derives from captured bytes — every
+  graded check recomputed true and agreeing with the recorded verdict — while
+  the counter's own outside request during the hold window returns a live
+  answer bound to the served alias, build fingerprint and fresh nonce; and
+  all 16 controls are rejected, errors=0.
+
+The counter never trusts receipt-claimed results: it re-runs the tool's
+grading on the captured bodies, re-hashes capture bodies against their
+recorded sha256, re-hashes the model and server files, contacts the held
+child itself, and feeds the same grading 16 mutated or synthetic inputs
+(the control families below). Output: one line, exit 0 iff met.
+"""
+import argparse
+import hashlib
+import importlib.util

@@ -1,0 +1,26 @@
+V0 baseline (authoritative) — full-history clone fixture2 @ master 65d7cad0fce90e34de37527cde22e97b63b118bf
+command: python3 driver_baseline.py  (module main() == pinned counter, then per-row cache dump)
+run window: 2026-10-28, c2-baseline2, up 15m5s, exit 1
+
+population=12 rows=12 covered=12/12 bound=12 eval_lines=12 sensitive=12/12 dead=0 mismatches=4 canonical=62 controls_rejected=8/8 errors=0 met=False
+baseline_exit=1
+
+per-row measured values (counter's own _EXEC_CACHE dump):
+{"cap": "append-only-audit", "computed_verdict": true, "observed_first_120": "AOA_SELFTEST pass=", "sensitive": true, "dead": false}
+{"cap": "context-capacity-receipt", "computed_verdict": false, "observed_first_120": "TIMEOUT", "sensitive": true, "dead": false}
+{"cap": "digest-ledger", "computed_verdict": true, "observed_first_120": "unknown=0", "sensitive": true, "dead": false}
+{"cap": "gguf-declared-identity-replay", "computed_verdict": true, "observed_first_120": "\"status\": \"passed\"", "sensitive": true, "dead": false}
+{"cap": "hexrun-census", "computed_verdict": true, "observed_first_120": "unknown=0", "sensitive": true, "dead": false}
+{"cap": "instrument-agreement", "computed_verdict": true, "observed_first_120": "IA_SELFTEST pass=", "sensitive": true, "dead": false}
+{"cap": "live-llamacpp-lifecycle", "computed_verdict": true, "observed_first_120": "\"outcome\": \"pass\"", "sensitive": true, "dead": false}
+{"cap": "live-ollama-lifecycle", "computed_verdict": false, "observed_first_120": "{\n \"argv_child\": null,\n \"captures\": {},\n \"checks\": [],\n \"elapsed_s\": 0.0,\n \"evidence\": {},\n \"hold\": null,\n \"nonce\": null", "sensitive": true, "dead": false}
+{"cap": "live-receipt-replay", "computed_verdict": true, "observed_first_120": "KLR_SELFTEST pass=48 fail=0", "sensitive": true, "dead": false}
+{"cap": "ollama-offline-evidence-replay", "computed_verdict": true, "observed_first_120": "\"failed\": 0", "sensitive": true, "dead": false}
+{"cap": "pin-watch", "computed_verdict": true, "observed_first_120": "selftest pass=9 fail=0", "sensitive": true, "dead": false}
+{"cap": "sources-registry", "computed_verdict": true, "observed_first_120": "45/45 selftest cases passed", "sensitive": true, "dead": false}
+
+the 4 mismatches: context-capacity-receipt (run_bound 900 s TIMEOUT under
+fleet load; no host-idle window -> verdict false + recorded observed absent)
+and live-ollama-lifecycle (setup error before child spawn: argv_child null,
+elapsed_s 0.0 -> verdict false + recorded observed absent). Both rows are
+outside the verdict family; the victim row sources-registry is green.

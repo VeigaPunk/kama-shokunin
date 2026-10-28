@@ -1,0 +1,34 @@
+# E12KillSwitch — run9 process tree + port state, verbatim from out/teardown-receipt-run9.json
+
+## BEFORE the kill (tool + its one child, hold window open)
+pid=1208120 ppid=1208117 pgrp=1208120 sid=1208120 state=S comm=python3
+pid=1208123 ppid=1208120 pgrp=1208120 sid=1208120 state=S comm=llama-server
+child_exe = /home/vgpnk/.local/opt/llama-b11755/llama-server
+child_cmdline = /home/vgpnk/.local/opt/llama-b11755/llama-server --model /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf --alias kama-completion-probe --port 34203 --host 127.0.0.1 -c 512 -t 1
+child_descendants = []
+child_ppid_equals_tool = True
+hold_dir_listing = ['hold.json', 'ready.json']
+GET /health  -> 200 {"status":"ok"}
+GET /v1/models -> 200 (alias in data[].id, 600-byte prefix below)
+{"models":[{"name":"kama-completion-probe","model":"kama-completion-probe","modified_at":"","size":"","digest":"","type":"model","description":"","tags":[""],"capabilities":["completion"],"parameters":"","details":{"parent_model":"","format":"gguf","family":"","families":[""],"parameter_size":"","quantization_level":""}}],"object":"list","data":[{"id":"kama-completion-probe","aliases":["kama-completion-probe"],"tags":[],"object":"model","architecture":{"input_modalities":["text"],"output_modalities":["text"]},"created":1793190720,"owned_by":"llamacpp","meta":{"vocab_type":1,"n_vocab":512,"n_ct
+ss -ltnp "sport = :34203":
+State  Recv-Q Send-Q Local Address:Port  Peer Address:PortProcess
+LISTEN 0      512        127.0.0.1:34203      0.0.0.0:*    users:(("llama-server",pid=1208123,fd=3))
+listen_inodes = ['1434161059'] ; port_owned_by_child = True ; bind(127.0.0.1:34203) = [False, 'OSError:Address already in use']
+registry/endpoint-consumers.tsv port tokens for 34203 = []
+
+## KILL (SIGKILL to the tool pid only, never to the child)
+{"at_monotonic": 163420.247531, "sent_to": 1208120, "sent_to_child": false, "signal": "SIGKILL", "tool_reaped_ms": 1, "tool_returncode": -9}
+
+## AFTER (first non-alive sample of the child, /proc/<pid>/stat)
+{"at_monotonic": 163420.248652631, "final_stat": {"comm": "llama-server", "exit_code": 9, "exit_signal": 9, "pgrp": 1208120, "pid": 1208123, "ppid": 1494, "sid": 1208120, "state": "Z"}, "latency_ms": 1, "pid": 1208123}
+
+## AFTER (port state ~0.2 s later)
+ss -ltnp "sport = :34203": State Recv-Q Send-Q Local Address:Port Peer Address:PortProcess
+listen_inodes = [] ; port_owned_by_child = None ; bind = [True, None] ; tcp connect = ConnectionRefusedError:Connection refused
+child_stat = None ; child_descendants = []
+hold_dir_listing (killed run never unlinks) = ['hold.json', 'ready.json']
+tool stdout bytes = 0 ; tool receipt written = no (SIGKILL: no tool code ran after the signal)
+
+## child_death.final_stat.pgrp/sid note
+the child shared the tool session (sid=1208120) and was reparented to systemd (ppid 1494) as a ZOMBIE carrying exit_code=9 (SIGKILL) — no descendant survived the reparenting

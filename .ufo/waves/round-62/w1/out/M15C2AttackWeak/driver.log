@@ -1,0 +1,44 @@
+=== Phase A: pristine (real counter main) ===
+population=12 rows=12 covered=12/12 bound=12 eval_lines=12 sensitive=12/12 dead=0 mismatches=4 canonical=62 controls_rejected=8/8 errors=0 met=False
+[A] counter exit=1 (0 == met)
+=== Phase A detail: cached run results per capability ===
+[A-detail] append-only-audit: verdict=True sensitive=True dead=False observed='AOA_SELFTEST pass='
+[A-detail] context-capacity-receipt: verdict=False sensitive=True dead=False observed='TIMEOUT'
+[A-detail] digest-ledger: verdict=True sensitive=True dead=False observed='unknown=0'
+[A-detail] gguf-declared-identity-replay: verdict=True sensitive=True dead=False observed='"status": "passed"'
+[A-detail] hexrun-census: verdict=True sensitive=True dead=False observed='unknown=0'
+[A-detail] instrument-agreement: verdict=True sensitive=True dead=False observed='IA_SELFTEST pass='
+[A-detail] live-llamacpp-lifecycle: verdict=True sensitive=True dead=False observed='"outcome": "pass"'
+[A-detail] live-ollama-lifecycle: verdict=False sensitive=True dead=False observed='{\n "argv_child": null,\n "captures": {},\n "checks": [],\n "elapsed_s": 0.0,\n "evidence": {},\n "hold": null,\n "nonce": null,\n "observations": {},\n "pdeathsig": null,\n "pin": {\n  "archive_sha256": "7bedab90dd122661be78798e9f0edf37fccf0cccf2699d2c58ea1a3afdc04b6d",\n  "bin_sha256": "b0a4becfaf872e3ad5d2e9'
+[A-detail] live-receipt-replay: verdict=True sensitive=True dead=False observed='KLR_SELFTEST pass=48 fail=0'
+[A-detail] ollama-offline-evidence-replay: verdict=True sensitive=True dead=False observed='"failed": 0'
+[A-detail] pin-watch: verdict=True sensitive=True dead=False observed='selftest pass=9 fail=0'
+[A-detail] sources-registry: verdict=True sensitive=True dead=False observed='45/45 selftest cases passed'
+=== Phase B: registry mutations (warm cache) ===
+[V1 weak: pattern->substring (sources-registry)] population=12 rows=12 covered=11/12 bound=11 sensitive=11/11 dead=0 mismatches=4 errors=0 met=False
+[V1 weak: pattern->substring (sources-registry)] error: pattern:sources-registry
+[V1 weak: pattern->substring (sources-registry)] VERDICT: REJECTED
+[V1b weak: pattern->substring (instrument-agreement)] population=12 rows=12 covered=11/12 bound=11 sensitive=11/11 dead=0 mismatches=4 errors=0 met=False
+[V1b weak: pattern->substring (instrument-agreement)] error: pattern:instrument-agreement
+[V1b weak: pattern->substring (instrument-agreement)] VERDICT: REJECTED
+[V3a: observed column emptied (all rows)] population=12 rows=12 covered=12/12 bound=12 sensitive=12/12 dead=0 mismatches=2 errors=0 met=False
+[V3a: observed column emptied (all rows)] VERDICT: REJECTED
+[V3b: observed column -> "a" (sources-registry)] population=12 rows=12 covered=12/12 bound=12 sensitive=12/12 dead=0 mismatches=4 errors=0 met=False
+[V3b: observed column -> "a" (sources-registry)] VERDICT: REJECTED
+=== Phase C: deceptive-line tool mutant (tip-tree copy in scratch)
+[C] tool sha256 before mutation: bd9bd7082bc93f461f645a13a19f2a9429f387b8ac47f081d5d68d0a3154e586
+[C] tool sha256 after mutation:  bd9bd7082bc93f461f645a13a19f2a9429f387b8ac47f081d5d68d0a3154e586
+[C-mutant: pristine registry, deceptive tool output] population=12 rows=12 covered=12/12 bound=12 sensitive=12/12 dead=0 mismatches=4 errors=0 met=False
+[C-mutant: pristine registry, deceptive tool output] VERDICT: REJECTED
+[C-mutant] row sources-registry: verdict=True observed='45/45 selftest cases passed' sensitive=True dead=False -> ROW ACCEPTED=True
+population=12 rows=12 covered=12/12 bound=12 eval_lines=12 sensitive=12/12 dead=0 mismatches=4 canonical=62 controls_rejected=8/8 errors=0 met=False
+[C-mutant] counter exit=1 (0 == met)
+[C-stderr-only] verdict=True observed='45/45 selftest cases passed' sensitive=True dead=False -> ACCEPTED=True
+[C-mutant] controls_rejected=8/8 escapes={}
+=== Phase D: restore exact bytes ===
+[D] tool sha256 restored: bd9bd7082bc93f461f645a13a19f2a9429f387b8ac47f081d5d68d0a3154e586  matches-pristine=True
+population=12 rows=12 covered=12/12 bound=12 eval_lines=12 sensitive=12/12 dead=0 mismatches=4 canonical=62 controls_rejected=8/8 errors=0 met=False
+[D] counter exit=1 (0 == met)
+[D] direct run_bound: verdict=True observed='45/45 selftest cases passed' sensitive=True dead=False
+=== driver complete ===
+driver rc=0

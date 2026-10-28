@@ -1,0 +1,43 @@
+diff --git i/corpus/SOURCES.md w/corpus/SOURCES.md
+index 811232ef..f247d17c 100644
+--- i/corpus/SOURCES.md
++++ w/corpus/SOURCES.md
+@@ -275,6 +275,7 @@ global. Every row was opened in round 10 (2026-10-19); the round lesson
+ | S523 | kama live Ollama lifecycle gate — `tools/kama-ollama-live.py` and `.ufo/waves/round-60/live/receipt.json` | own-work | A | one lane-owned Ollama v0.40.11 child on one unregistered loopback port; not registered-consumer health or model quality | receipt `kama-ollama-live/v1` at `8b9f3060966c22bede3094d748974caf041b4c33`: verdict MODEL_OK, nonce b61c98ad5747, binary digest and 16 checks | The lane can run and tear down one digest-pinned Ollama child; this receipt alone does not prove the frozen counter resists falsified receipts. | mined | 2026-10-27 | every round | tools/kama-ollama-live.py, corpus/lessons/round-60.md |
+ | S524 | Ollama OpenAI compatibility — https://docs.ollama.com/api/openai-compatibility | docs | A | documented notes for `/v1/models` and `/v1/models/{model}` | tag-pinned docs/api/openai-compatibility.mdx @ v0.40.11, blob 75218fc8f8044a8d0c0f0adc6c77684fec57711f; opened 2026-10-27 | REJECTED: the same canonical URL and same route scope already occur in S010; this narrower duplicate adds no admissible source evidence. Flip: the source URL or claim scope changes so no existing row covers these routes. | rejected | 2026-10-27 | on-release | — |
+ | S525 | Ollama OpenAPI spec — https://docs.ollama.com/openapi.yaml | docs | A | Ollama native route field schemas: `/api/show` ShowResponse, `/api/ps` `expires_at`/`size_vram`/`context_length`, `/api/version`, `/api/generate` `done` | OpenAPI 3.1.0 yaml; `PsResponse.expires_at` description "Time when the model will be unloaded"; fetched 2026-10-28 | Field-level schema text for the surfaces registry/ollama-live-claims-r61.tsv binds: ps model fields, tags ModelSummary, show ModelInfo, generate terminal `done` flag. | mined | 2026-10-28 | on-release | corpus/knowledge/ollama-live-lifecycle.md, corpus/lessons/round-61.md, registry/ollama-live-claims-r61.tsv |
++| S526 | llama.cpp server README @ 704366d76 (release b11755) — https://github.com/ggml-org/llama.cpp/blob/704366d76f8748cf9ad3df62a464bfcc8d1ae6ad/tools/server/README.md | docs | A | the `/v1/completions` request surface only: endpoint existence, OpenAI-compatible framing, streaming flag; response-field details come from the live receipt, not this doc (it defers to OpenAI's API reference); not `/health`/`/props` (S035/S112), not `/completion` (non-OAI route) | §POST `/v1/completions` lines 1314-1336 (heading 1314; OpenAI-reference deferral at 1319-1321); raw file sha256 714c067bdbc49bde2735810fbff83eb2933b12c57d50f0012b61fcecb75a6a37 | Documents that the pinned build serves an OpenAI-compatible completions endpoint and names `max_tokens` as the request field in its example; the receipt-side field contract (object=text_completion, usage, timings, system_fingerprint) is observed, documented nowhere in this file. | mined | 2026-10-28 | on-release | corpus/knowledge/completion-request-plane.md, corpus/lessons/round-62.md |
+ 
+ 
+ 
+diff --git i/tools/round62-c1-counter.py w/tools/round62-c1-counter.py
+index 234341b8..2ff510aa 100755
+--- i/tools/round62-c1-counter.py
++++ w/tools/round62-c1-counter.py
+@@ -127,7 +127,7 @@ def grade(receipt):
+     out['completion_fingerprint'] = (out['completion_envelope']
+         and isinstance(cj.get('system_fingerprint'), str)
+         and bool(FP_RE.match(cj.get('system_fingerprint') or '')))
+-    u = cj.get('usage') or {}
++    u = (cj or {}).get('usage') or {}
+     out['completion_usage'] = (
+         out['completion_envelope']
+         and isinstance(u.get('completion_tokens'), int)
+@@ -136,7 +136,7 @@ def grade(receipt):
+         and u['completion_tokens'] >= 1 and u['prompt_tokens'] >= 1
+         and u['total_tokens']
+         == u['completion_tokens'] + u['prompt_tokens'])
+-    t = cj.get('timings') or {}
++    t = (cj or {}).get('timings') or {}
+     out['completion_timings'] = (
+         out['completion_envelope']
+         and isinstance(t.get('predicted_n'), int)
+@@ -162,7 +162,7 @@ def grade(receipt):
+         (receipt.get('model') or {}).get('sha256') == MODEL_SHA)
+     out['server_digest'] = (
+         (receipt.get('server') or {}).get('sha256') == SERVER_SHA)
+-    if 'hold' in (receipt.get('checks') or {}):
++    if 'hold_released' in (receipt.get('checks') or {}):
+         out['hold_released'] = bool(hold.get('released'))
+     td_ok = (not td.get('child_pre_dead')
+              and td.get('returncode') in (0, -15))

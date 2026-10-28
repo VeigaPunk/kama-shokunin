@@ -1,0 +1,34 @@
+== TIP ==
+counter blob /fast/scratch/hyaku/kama-r62/w/M08C1AttackThe/round62-c1-counter.py
+counter sha256 275610b51eb1be219cdaa3c3e15e3568b590f35e7a1b3ceb42ab0374243f4d8d
+receipt /fast/scratch/hyaku/kama-r62/w/M08C1AttackThe/run3/receipt.json nonce r62-cffb869ac1 port 33707 child_pid 1391246 verdict REQUEST_OK
+checks keys ['bad_request_graded', 'completion_deterministic', 'completion_envelope', 'completion_fingerprint', 'completion_finish_reason', 'completion_model_id', 'completion_timings', 'completion_usage', 'health_ready', 'hold_released', 'listener_owned', 'model_digest', 'models_alias_id', 'props_alias', 'server_digest', 'teardown_clean', 'teardown_port_closed']
+[TIP:V0-baseline] pristine receipt + receipt-derived witness
+[TIP:V0-baseline] REJECTED  score={"alltrue": true, "inconsistent": ["unexpected-checks"], "live": true, "met": false, "verdict_ok": true}
+[TIP:liveness] pid 1391246 /proc exists: False
+[TIP:liveness] port 33707: closed ([Errno 111] Connection refused)
+[TIP:F1] witness sent_prompt lacks the nonce
+[TIP:F1-nonceless-prompt] REJECTED  score={"alltrue": true, "inconsistent": ["unexpected-checks"], "live": false, "met": false, "verdict_ok": true}
+[TIP:F2] witness pid/port belong to another process
+[TIP:F2] foreign pid 1687838 (spawned sleep, owns no port)
+[TIP:F2a-both-foreign] REJECTED  score={"alltrue": true, "inconsistent": ["unexpected-checks"], "live": false, "met": false, "verdict_ok": true}
+[TIP:F2b-foreign-port-only] REJECTED  score={"alltrue": true, "inconsistent": ["unexpected-checks"], "live": false, "met": false, "verdict_ok": true}
+[TIP:F2c-foreign-pid-only] REJECTED  score={"alltrue": true, "inconsistent": ["unexpected-checks"], "live": false, "met": false, "verdict_ok": true}
+[TIP:F3] synthetic witness, receipt pid/port, zero live contact
+[TIP:F3-synthetic-witness] REJECTED  score={"alltrue": true, "inconsistent": ["unexpected-checks"], "live": true, "met": false, "verdict_ok": true}
+[TIP:F4] outside family: completion model -> other-alias
+Traceback (most recent call last):
+  File "/fast/scratch/hyaku/kama-r62/w/M08C1AttackThe/forgeries.py", line 132, in <module>
+    probe('F4a-no-rehash(=committed-control)', outside(receipt, False),
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          synth_witness())
+          ^^^^^^^^^^^^^^^^
+  File "/fast/scratch/hyaku/kama-r62/w/M08C1AttackThe/forgeries.py", line 62, in probe
+    s = c1.score(rcpt, w)
+  File "/fast/scratch/hyaku/kama-r62/w/M08C1AttackThe/round62-c1-counter.py", line 191, in score
+    recomputed, inconsistent = grade(receipt)
+                               ~~~~~^^^^^^^^^
+  File "/fast/scratch/hyaku/kama-r62/w/M08C1AttackThe/round62-c1-counter.py", line 130, in grade
+    u = cj.get('usage') or {}
+        ^^^^^^
+AttributeError: 'NoneType' object has no attribute 'get'

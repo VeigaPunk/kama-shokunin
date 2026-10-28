@@ -1,0 +1,37 @@
+W03QualityDraft — independent malformed-receipt probe of the frozen C1 counter
+Seat: advisory leaf (scribe). Tip: 65d7cad0fce90e34de37527cde22e97b63b118bf (git rev-parse master, read-only).
+
+Instrument bytes compared (sha256):
+  tools/round62-c1-counter.py, working tree : a3498308938ed4715cfdf1ce5c9a2e4ddf9cb5f9befbba29857980721fe8c415
+  tools/round62-c1-counter.py, master:path   : 275610b51eb1be219cdaa3c3e15e3568b590f35e7a1b3ceb42ab0374243f4d8d
+  `git diff -- tools/round62-c1-counter.py` = 3 lines (usage guard, timings guard, hold_released key).
+
+Probe: `git show master:tools/round62-c1-counter.py` written to the seat scratch, imported with
+importlib, NONCE set, and grade() called directly (no subprocess, no server, no network, no lane write):
+
+  empty-receipt {}                                   -> GRADE-RAISED AttributeError 'NoneType' object has no attribute 'get'
+  tamper-body-sha-mismatch (completion body present,
+    recorded body_sha256 deliberately wrong)         -> GRADE-RAISED AttributeError 'NoneType' object has no attribute 'get'
+
+Exact script executed:
+
+  import importlib.util, hashlib, json
+  p='/fast/scratch/hyaku/kama-r62/w/W03QualityDraft/c1-tip.py'
+  s=importlib.util.spec_from_file_location('c1',p); m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+  m.NONCE='r62-probe'
+  def cap(body): return {'body':body,'body_sha256':hashlib.sha256(body.encode()).hexdigest()}
+  valid='{"object":"text_completion","choices":[{"text":"hi"}],"model":"x"}'
+  cases={
+   'empty-receipt': {},
+   'tamper-body-sha-mismatch': {'captures':{'completion':{'body':valid,'body_sha256':'0'*64}},'checks':{}},
+  }
+  for name,r in cases.items():
+      try:
+          g=m.grade(r); print(name,'GRADE-RETURNED',json.dumps({k:v for k,v in list(g[0].items())[:3]}),'inconsistent',g[1])
+      except Exception as e:
+          print(name,'GRADE-RAISED',type(e).__name__,e)
+
+Scope of this probe: it shows the frozen blob's grade() raises on two malformed classes; it does not
+measure C1 or C2, does not reach the live leg, and is not a verdict on either claim. Cross-reference:
+seat E01CompletionRepeat reproduced the same crash through the counter CLI, 3/3 deterministic
+(.ufo/waves/round-62/w1/out/E01CompletionRepeat/tipblob.stderr.txt; report §4).

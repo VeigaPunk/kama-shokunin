@@ -1,0 +1,17 @@
+Victim row measured live on the variant tip (broken tool), via the pinned
+counter's own run_bound:
+
+variant fixture commit: 711c517ee1d3a41b2a901ea82153a0bdcb6acae1
+  (fixture2 = full clone of lane master 65d7cad..., one commit on top:
+   tools/sources-append-only.py gets a module-top
+   `import sys as _m12sys; _m12sys.stderr.write('SELFTEST-BROKEN-SEAT-VERDICT\n'); _m12sys.exit(3)`
+   so every invocation exits 3 with one stderr marker line; the marker holds
+   no hex-run/digest tokens — both scanners re-measured unknown=0 at this tip)
+mutated tool sha256:  (see 00-instrument-and-fixture.txt)
+pristine blob sha256: 2e23a04e6b34b2381f403c34fd6f765ad0355315dfb79dbfd749663d946d568d
+
+run_bound result for the sources-registry census row at the variant tip:
+{"victim_computed_verdict": false, "observed_repr": "'SELFTEST-BROKEN-SEAT-VERDICT\\n'", "sensitive": true, "dead": false}
+
+direct broken-tool run (same command template): rc=3, stdout+stderr concat
+exactly 'SELFTEST-BROKEN-SEAT-VERDICT\n'

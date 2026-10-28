@@ -1,0 +1,19 @@
+# Supplemental whitespace-species probe (parse-level, green-stub scorer)
+# Harness: identical to binding_attack.py; binding cell of live-ollama-lifecycle
+# set to each value below; score()/parse_registry() from master bytes
+# 15d11f1ce8f8cb85e002d83c50b40d2bd7e4dfa561d8dd2d453e2daa09c05929.
+
+binding='live\x0b'     parsed=ROW-LOST (splitlines fragmentation)  covered=11/12 errors=2 -> REJECTED ['cols=3']
+binding='live\x0c'     parsed=ROW-LOST (splitlines fragmentation)  covered=11/12 errors=2 -> REJECTED ['cols=3']
+binding='live\u3000'   parsed='live'                               covered=12/12 errors=0 -> ACCEPTED []
+binding='LIVE\u3000'   parsed='LIVE'                               covered=11/12 errors=0 -> REJECTED ['binding:live-ollama-lifecycle:LIVE']
+binding=' live\x0b'    parsed=ROW-LOST (splitlines fragmentation)  covered=11/12 errors=2 -> REJECTED ['cols=3']
+
+# Mechanism anchor:
+# raw cell bytes on disk : ' live '
+# parsed binding         : 'live'
+# comparison live==parsed: True
+# parse errors           : []
+# => parse_registry() applies str.strip() to every TSV cell before the exact
+#    t['id'] == row['binding'] comparison; str.splitlines() boundaries
+#    (\x0b, \x0c, \x85, \u2028...) fragment the row line instead.

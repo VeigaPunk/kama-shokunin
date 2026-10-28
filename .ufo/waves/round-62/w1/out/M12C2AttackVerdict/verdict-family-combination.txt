@@ -1,0 +1,31 @@
+Verdict-family combination (offline, over measured values only — no new live
+executions). Replay scorer = the counter's own per-row measurements from the
+V0 baseline live pass (v0-baseline2.txt); victim variant values measured live
+(victim-variant-probe.txt). The replay is gate-checked against the counter's
+own baseline computation before any mutation is applied.
+
+command: python3 combine_verdict_family.py
+
+GATE-replay-of-baseline2: population=12 rows=12 covered=12/12 bound=12 sensitive=12/12 dead=0 mismatches=4 controls_rejected=8/8 errors=0 met=False
+
+V1-recorded-false-while-green: population=12 rows=12 covered=12/12 bound=12 sensitive=12/12 dead=0 mismatches=5 controls_rejected=8/8 errors=0 met=False
+V2-recorded-true-while-failing: population=12 rows=12 covered=12/12 bound=12 sensitive=12/12 dead=0 mismatches=6 controls_rejected=8/8 errors=0 met=False
+V3-honest-false-while-failing: population=12 rows=12 covered=12/12 bound=12 sensitive=12/12 dead=0 mismatches=4 controls_rejected=8/8 errors=0 met=False
+
+V1_caught=True
+V2_caught=True
+V3_met=False
+
+interpretation:
+- GATE reproduces the counter's own live baseline exactly -> replay validated.
+- V1 (registry says false, run green): mismatches 4->5 -> counter rejects.
+- V2 (registry says true, run FAILS): mismatches 4->6 (verdict inequality +
+  recorded observed absent from failing output) -> counter rejects.
+- V3 (registry honestly says false + observed synced to failing output): the
+  failing capability contributes ZERO mismatches; every structural gate stays
+  green (covered 12/12, bound 12, dead 0, errors 0, controls 8/8 rejected).
+  met=False here is caused solely by the two environment-failed rows of the
+  V0 window (K1 TIMEOUT, ollama setup error); with those green — the state in
+  which the L1 measured C2 met=True at this tip — this registry scores
+  met=True. End-to-end met=True was not realizable in this seat's window (an
+  acquiring live pass was frozen by the operator wrap-up guard).

@@ -1,0 +1,42 @@
+# L02LogTail evidence extracts (regenerate: see report commands)
+## E1 run1 server.log: model load lines (4,8,9)
+0.00.004.983 I srv    load_model: loading model '/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf'
+0.00.008.440 I srv    load_model: initializing, n_slots = 4, n_ctx_slot = 512, kv_unified = 'true'
+0.00.009.715 I srv  llama_server: model loaded
+## E2 run1 server.log: port bind line (10)  [receipt port=43249]
+0.00.009.718 I srv  llama_server: listening on http://127.0.0.1:43249
+## E3 run1 server.log: SIGTERM shutdown line (29, last)
+0.00.156.836 I srv    operator(): operator(): cleaning up before exit...
+## E4 run1 server.log: inference activity = exactly two generations of 8 tokens
+0.00.103.927 I slot launch_slot_: id  0 | task 0 | processing task, is_child = 0
+0.00.105.035 I slot print_timing: id  0 | task 0 |       total time =       1.09 ms /    16 tokens
+0.00.105.497 I slot launch_slot_: id  0 | task 9 | processing task, is_child = 0
+0.00.106.049 I slot print_timing: id  0 | task 9 |       total time =       0.55 ms /     9 tokens
+## E5 run1 server.log: no HTTP access line for /v1/completions, /health, /props, 400
+0
+## E6 run2 (poisoned env) log: sentinel/key-pattern hits
+(none)
+## E7 run2 log lines 2-3,10: verbosity stays 3, bind stays 127.0.0.1 + tool port
+0.00.003.524 I cmn  common_param: common_params_print_info: verbosity = 3 (adjust with the `-lv N` CLI arg)
+0.00.003.735 W srv  llama_server: security: no API key is set and CORS allows all origins (see https://github.com/ggml-org/llama.cpp/pull/25655)
+0.00.009.629 I srv  llama_server: listening on http://127.0.0.1:33197
+## E8 run2 receipt: sentinel hits
+0
+## E9 run5 log line 1: whitelisted LLAMA_ARG_THREADS is overridden, logged as a warning
+warn: LLAMA_ARG_THREADS environment variable is set, but will be overwritten by command line argument -t
+## E10 run4 receipt: log-open failure -> SETUP_ERROR, no child, no server_log key
+ "setup_error": "PermissionError: [Errno 13] Permission denied: '/fast/scratch/hyaku/kama-r62/w/L02LogTail/run4/work-ro/server.log'",
+ "verdict": "SETUP_ERROR"
+## E11 run3: both receipts name the same server_log; only run-b's bind survives
+ "server_log": "/fast/scratch/hyaku/kama-r62/w/L02LogTail/run3/work/server.log",
+ "server_log": "/fast/scratch/hyaku/kama-r62/w/L02LogTail/run3/work/server.log",
+0.00.009.747 I srv  llama_server: listening on http://127.0.0.1:45769
+0.00.009.414 I srv  llama_server: listening on http://127.0.0.1:43921
+## E12 stream split: llama-server writes to stderr only
+  0 /fast/scratch/hyaku/kama-r62/w/L02LogTail/streams/stdout.log
+989 /fast/scratch/hyaku/kama-r62/w/L02LogTail/streams/stderr.log
+989 total
+1
+0
+## E13 log file mode
+644 3012 /fast/scratch/hyaku/kama-r62/w/L02LogTail/run1/work/server.log

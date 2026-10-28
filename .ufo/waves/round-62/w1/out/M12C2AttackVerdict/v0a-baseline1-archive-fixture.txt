@@ -1,0 +1,16 @@
+V0a (discarded fixture iteration) — single-commit archive fixture b2646c9a0c8736dc2248c5b49d67253b5a53af94
+command: python3 round62-c2-counter.py --repo <archive fixture> --tip b2646c9a0c8736dc2248c5b49d67253b5a53af94 --work work-baseline
+run window: 2026-10-28, c2-baseline, up 15m5s, exit 1
+
+population=12 rows=12 covered=12/12 bound=12 eval_lines=12 sensitive=12/12 dead=0 mismatches=8 canonical=62 controls_rejected=8/8 errors=0 met=False
+baseline_exit=1
+
+cause: digest-ledger and hexrun-census bound runs are git-history-dependent.
+On the archive fixture (tree bytes identical to master, no history):
+  hexrun-census: tokens=2051 distinct=392 lane_oid=28  md5_blob=1 upstream_ok=109 unverifiable=9 wrong_flagged=2 ledger_bad=1 unknown=242
+  digest-ledger: tokens=143 blob=117 external_ok=9 external_absent=1 unverifiable=7 wrong_flagged=1 ledger_bad=0 unknown=8
+On the full-history clone / lane master:
+  hexrun-census: tokens=2051 distinct=392 lane_oid=271 md5_blob=1 upstream_ok=108 unverifiable=9 wrong_flagged=3 ledger_bad=0 unknown=0
+  digest-ledger: tokens=143 blob=125 external_ok=9 external_absent=1 unverifiable=7 wrong_flagged=1 ledger_bad=0 unknown=0
+Method finding: the C2 counter must be run with --repo pointing at a
+full-history clone; archive/shallow exports false-fail these two rows.

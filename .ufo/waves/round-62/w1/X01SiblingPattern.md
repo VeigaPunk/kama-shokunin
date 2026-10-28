@@ -1,0 +1,25 @@
+# X01SiblingPattern — sibling counter-binding scan
+
+**Scope:** calibration; read-only local-source scan of kengaku, kumitate, tsukuroi, and kotodama checkouts. No sibling source was run or changed. No tools were installed.
+
+## Evidence and comparison
+
+- **Kengaku — closest analogue, but not the same registry/template contract.** `plans/round-25-claims.md:71-73` describes `plans/state_check.py` re-deriving frozen assertions, including re-running offline commands. Its P2a specifically uses each `SCORECARD.md` capability row's offline command and checks the row's expected evidence tokens against output (`plans/round-25-claims.md:75-77`). That binds claim evidence to execution and is materially comparable. But the cited contract does not specify a separate TSV registry whose run value must equal a per-claim frozen allowlisted template, nor an output-substitution sensitivity check. Kama's C2 counter instead hardcodes each frozen slug, canonical row prefix and allowed template (`kama-shokunin/tools/round62-c2-counter.py:40-45,48-115`), then checks the registry binding, executes it, and tests sensitivity/dead targets (`:204-239,245-274`). Thus Kama is **stronger on command-binding precision and anti-echo discrimination**; Kengaku is broader in its frozen asserted surfaces (P2 also covers axes, SHONEN, PROVINCE and README index, `plans/round-25-claims.md:78-86`). These are different coverage dimensions, not a single ranking.
+- **Tsukuroi — adjacent manifest binding, not capability-claim binding.** `tools/check-seat-bindings.py:133-160` parses a typed seat-binding manifest, constrains roots and allowlists, and for v2 requires exact edit targets also be readable and writable. This is a strict manifest-to-authority binding, but it binds seat paths/permissions to request traces, not a capability/claim row to a frozen executable template. `tools/check-report-receipts.py:2-10` also checks cited report-gate receipts at immutable revisions; that binds revision citations to receipts, not capability claims to their own run templates.
+- **Kotodama — adjacent frozen-input manifests.** `tools/check-evidence-coupling.py:67-74` specifies a frozen expected manifest: every listed input digest is checked before verdict comparison; `:1450-1484` rejects unsafe paths and digest mismatches. This is strong input provenance/fixity, but not a capability registry or claim-to-executable-template binding.
+- **Kumitate — no comparable lane-local claim/template registry found in the scoped scan.** The current checkout root contains scorecard/province/corpus surfaces but no `tools/` or `registry/` directory (directory listing). Its round-68 evidence is about routed-ledger row checks/mutants, not bound capability run templates (`.ufo/waves/round-68/w1/K68MutLedgerRows.md:3-15`). This is a scoped finding, not a claim that no historical or differently named mechanism exists.
+- **No sibling `registry/*claims*.tsv` hit** in scoped searches of kumitate, tsukuroi, or kotodama; Kengaku's comparator is documented in its plans/state checker rather than such a TSV. Searches were read-only and limited to the four named checkouts and matching tools/registry/plan surfaces.
+
+## One bounded synthesis proposal
+
+Keep Kama's explicit per-capability template allowlist and live/sensitivity execution as the calibration core; borrow Kengaku's useful second check by ensuring each canonical SCORECARD row's evidence tokens are a subset of the **same executed row's captured output**, not merely a prefix/quote-matched row plus a separately recorded pattern. This would make the scoreboard's displayed evidence provenance explicit without widening the frozen capability population or introducing a second command source. It is a proposal only; no lane source was edited.
+
+## Axis effects and risks
+
+- **Calibration:** likely improves traceability between human-facing evidence and the executed bound check; preserves explicit population/template binding.
+- **Operability:** no runtime/tool behavior change proposed, so no direct expected harm; implementation must not add extra live endpoint calls.
+- **Risk/contradiction:** Kengaku's command/token row semantics may not map cleanly to Kama's existing `pattern`/`observed` semantics. Requiring additional tokens without freezing them could silently change the predicate/population; any adoption would need to freeze the token rule and control it. Kama's current exact template allowlist is already stricter than the inspected analogues on this particular axis, so proposal is incremental rather than evidence of a current deficiency.
+
+## Verification suggested
+
+At a fixed tip, exercise a positive bound row whose captured output contains the frozen evidence substring; then independently mutate the canonical row's evidence text and substitute/remove the corresponding output substring. Confirm only the mismatching case fails, no additional model/server request is launched, and existing 12-row population and all control outcomes remain unchanged. No such verification was run for this scan.

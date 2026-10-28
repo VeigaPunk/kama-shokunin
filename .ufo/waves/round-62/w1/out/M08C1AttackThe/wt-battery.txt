@@ -1,0 +1,37 @@
+== WT ==
+counter blob /fast/scratch/hyaku/kama-r62/w/M08C1AttackThe/round62-c1-counter.worktree.py
+counter sha256 a3498308938ed4715cfdf1ce5c9a2e4ddf9cb5f9befbba29857980721fe8c415
+receipt /fast/scratch/hyaku/kama-r62/w/M08C1AttackThe/run2/receipt.json nonce r62-367a4c86dd port 42947 child_pid 1391247 verdict REQUEST_OK
+checks keys ['bad_request_graded', 'completion_deterministic', 'completion_envelope', 'completion_fingerprint', 'completion_finish_reason', 'completion_model_id', 'completion_timings', 'completion_usage', 'health_ready', 'hold_released', 'listener_owned', 'model_digest', 'models_alias_id', 'props_alias', 'server_digest', 'teardown_clean', 'teardown_port_closed']
+[WT:V0-baseline] pristine receipt + receipt-derived witness
+[WT:V0-baseline] ACCEPTED  score={"alltrue": true, "inconsistent": [], "live": true, "met": true, "verdict_ok": true}
+[WT:liveness] pid 1391247 /proc exists: False
+[WT:liveness] port 42947: closed ([Errno 111] Connection refused)
+[WT:F1] witness sent_prompt lacks the nonce
+[WT:F1-nonceless-prompt] REJECTED  score={"alltrue": true, "inconsistent": [], "live": false, "met": false, "verdict_ok": true}
+[WT:F2] witness pid/port belong to another process
+[WT:F2] foreign pid 1685102 (spawned sleep, owns no port)
+[WT:F2a-both-foreign] REJECTED  score={"alltrue": true, "inconsistent": [], "live": false, "met": false, "verdict_ok": true}
+[WT:F2b-foreign-port-only] REJECTED  score={"alltrue": true, "inconsistent": [], "live": false, "met": false, "verdict_ok": true}
+[WT:F2c-foreign-pid-only] REJECTED  score={"alltrue": true, "inconsistent": [], "live": false, "met": false, "verdict_ok": true}
+[WT:F3] synthetic witness, receipt pid/port, zero live contact
+[WT:F3-synthetic-witness] ACCEPTED  score={"alltrue": true, "inconsistent": [], "live": true, "met": true, "verdict_ok": true}
+[WT:F4] outside family: completion model -> other-alias
+[WT:F4a-no-rehash(=committed-control)] REJECTED  score={"alltrue": false, "inconsistent": ["completion_envelope", "completion_finish_reason", "completion_model_id", "completion_fingerprint", "completion_usage", "completion_timings", "completion_deterministic"], "live": false, "met": false, "verdict_ok": true}
+[WT:F4b-rehashed-capture] REJECTED  score={"alltrue": false, "inconsistent": ["completion_model_id"], "live": false, "met": false, "verdict_ok": true}
+[WT:F4c-rehashed+colluding-witness] REJECTED  score={"alltrue": false, "inconsistent": ["completion_model_id"], "live": false, "met": false, "verdict_ok": true}
+[WT:F5] nonce-containment-only prompt (no request)
+[WT:F5-nonce-substring] ACCEPTED  score={"alltrue": true, "inconsistent": [], "live": true, "met": true, "verdict_ok": true}
+[WT:F6] cross-run splice with /fast/scratch/hyaku/kama-r62/w/M08C1AttackThe/run3/receipt.json
+[WT:F6-cross-run] REJECTED  score={"alltrue": true, "inconsistent": [], "live": false, "met": false, "verdict_ok": true}
+[WT:F7] NONCE global unset
+[WT:F7-nonce-unset] REJECTED  score={"alltrue": false, "inconsistent": [], "live": true, "met": false, "verdict_ok": true}
+[WT:F8] negative gates (should reject)
+[WT:F8a-listener-owned-false] REJECTED  score={"alltrue": true, "inconsistent": [], "live": false, "met": false, "verdict_ok": true}
+[WT:F8b-fingerprint-bad] REJECTED  score={"alltrue": true, "inconsistent": [], "live": false, "met": false, "verdict_ok": true}
+[WT:F8c-model-sha-wrong] REJECTED  score={"alltrue": true, "inconsistent": [], "live": false, "met": false, "verdict_ok": true}
+[WT:F8d-server-sha-wrong] REJECTED  score={"alltrue": true, "inconsistent": [], "live": false, "met": false, "verdict_ok": true}
+[WT:F9] colluding swap: receipt pid -> live foreign process
+[WT:F9a-foreign-live-pid] ACCEPTED  score={"alltrue": true, "inconsistent": [], "live": true, "met": true, "verdict_ok": true}
+[WT:F9] foreign live listener pid=1684948 port=35621
+[WT:F9b-foreign-live-pid+port] ACCEPTED  score={"alltrue": true, "inconsistent": [], "live": true, "met": true, "verdict_ok": true}

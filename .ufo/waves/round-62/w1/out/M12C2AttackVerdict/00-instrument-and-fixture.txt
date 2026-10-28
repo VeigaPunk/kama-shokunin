@@ -1,0 +1,21 @@
+instrument: tools/round62-c2-counter.py @ master 65d7cad0fce90e34de37527cde22e97b63b118bf
+counter sha256: 15d11f1ce8f8cb85e002d83c50b40d2bd7e4dfa561d8dd2d453e2daa09c05929 (scratch copy byte-identical)
+registry sha256 @ master: 6f8365c71983bb54058212439a7bc891bae1eb58f2b40a15bd7be91f88e62009
+
+pristine victim tool blob (tools/sources-append-only.py @ master) sha256:
+2e23a04e6b34b2381f403c34fd6f765ad0355315dfb79dbfd749663d946d568d
+mutated victim tool (fixture2 @ variant 711c517ee1d3a41b2a901ea82153a0bdcb6acae1) sha256:
+8683d7fbfeeda40d46112f352b1bcc761b71dd657deb5eb8ff27ee4576765149
+
+== archive fixture (b2646c9) vs full-history clone (fixture2) scanner comparison ==
+-- hexrun-census --repo archive-fixture --rev b2646c9:
+tokens=2051 distinct=392 lane_oid=28 md5_blob=1 upstream_ok=109 unverifiable=9 wrong_flagged=2 ledger_bad=1 unknown=242
+-- digest-ledger --repo archive-fixture --rev b2646c9:
+tokens=143 blob=117 external_ok=9 external_absent=1 unverifiable=7 wrong_flagged=1 ledger_bad=0 unknown=8
+-- hexrun-census --repo fixture2 --rev 65d7cad (== lane master output):
+tokens=2051 distinct=392 lane_oid=271 md5_blob=1 upstream_ok=108 unverifiable=9 wrong_flagged=3 ledger_bad=0 unknown=0
+-- digest-ledger --repo fixture2 --rev 65d7cad (== lane master output):
+tokens=143 blob=125 external_ok=9 external_absent=1 unverifiable=7 wrong_flagged=1 ledger_bad=0 unknown=0
+
+== fixture2 pristine selftest probes (7 offline rows, all green) ==
+ollama-ev rc=0 pattern=true; gguf rc=0 pattern=true; ia rc=0 pattern=true (IA_SELFTEST pass=4 fail=0); pinwatch rc=0 pattern=true (pass=9 fail=0); aoa rc=0 pattern=true (AOA_SELFTEST pass=51 fail=0); klr rc=0 pattern=true (KLR_SELFTEST pass=48 fail=0); sources: probed on variant world rc=3 SELFTEST-BROKEN-SEAT-VERDICT (expected in variant world)
