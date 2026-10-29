@@ -192,3 +192,32 @@ to family `bind` (30 members); the control total is 91, not 89 (the amended sent
 "91 targeted controls", EXPECT_FAMILIES sums to 91). Everything else in AMENDMENT 1 stands. The
 honest-run stability of the final counter was 3 of 3 met=True runs at 91/91 (L1 receipts
 controls/c1-final-prewave-runs.txt).
+
+AMENDMENT 1b (2026-10-28, same pre-wave-f window; instrument only): the first receipts run of the
+1a counter at the lane tip showed three defects of the instrument, each repaired before wave f:
+(1) one honest run in three failed bind_holders because a process in the middle of execve is
+briefly unreadable and the counter graded the first read; holder_pids now re-reads unreadable
+tables 4 times 50 ms apart before grading (persistent unreadable tables after the tool started
+still fail closed); (2) the control `bind/bind_ancestry` set tool_pid to 1, which is in the real
+parent chain when it reaches init, so it escaped in two of three runs; it now uses a pid that
+cannot be an ancestor (999999999); (3) the `replay` scenario could draw a new request whose
+reference answer equals the replayed text; it now redraws (up to 8) until the new reference
+answer differs from every earlier one. Counter at commit 23b3fdb1a925129a9961cf551f6d40bf251602cb;
+tools/kama-completion-live.py is still byte-identical to the freeze commit.
+Pre-wave-f receipts (controls/): c1-final-prewave-runs.txt (3 of 3 met=True at 91/91, 8/8 under a
+host load average of 50-80), c1-mutants-a1.txt (six mutants of the amended counter: five KILLED
+with the named control or the self-test escaping; `gone_always` - pid_gone() forced True -
+SURVIVED: holder disappearance is also covered by the port-closed observation, so it is reported
+as a near-equivalent survivor, not hidden), c2-base.txt (C2 counter at the base tip: met=False),
+c2-prewave-tip.txt (C2 counter at 23b3fdb1: pinned=13/13 regress_flipped=12/12
+printers_rejected=12/12 idle_ok=1 work_reuse_refused=1 closure_ptr=1 recon_mismatches=0
+tally_disclosed=8/8 sens_selftest=4/4 controls_rejected=120/120 errors=0 met=True).
+C2 build disclosure: tools/round64-c2-counter.py (sha256 c8b725e57f6e761735e832d127ec6df622d4a9dff09893b5fa31131c64d93e2e, built by wave-b
+seat X01C2Counter under the frozen C2 predicate; integrated byte-exact), the regression table (X02-X05), the
+reconciler conjunct (X06), the tally reader (X07) and one hexrun ledger row (X04/X09). The C2
+predicate text above is unchanged; the idle-rule text in the wave-b build brief (a subset test)
+was wrong and was corrected by the L1 to the rule the counter implements (see
+.ufo/waves/round-64/b/X10EnvIdleProbe.md): host-busy only when exit 2, receipt error
+host-not-idle-before-K1, host_idle.ok false and every pid present in both pgrep snapshots is in
+other_pids_seen. The freeze C2 sentence said "equals the counter's pgrep set at the same moment",
+which a polling-window union cannot satisfy; that clause is replaced by the rule just stated.
