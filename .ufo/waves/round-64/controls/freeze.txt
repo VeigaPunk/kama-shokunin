@@ -180,3 +180,15 @@ release (CR03 K5); the blanket /usr/lib exemption in bind_maps (RV02 D7); initia
 visibility (S531).
 Receipts: controls/c1-mutants-a1.txt (six pre-wave-f mutants of the amended counter, each
 met=False; script controls/run-c1-mutants-a1.sh).
+
+AMENDMENT 1a (2026-10-28, same pre-wave-f window; instrument only): seat MT06MapsLib showed (SURVIVED
+6 of 9) that the model and libraries were identified by path and sha256 only - a bind-mounted
+model copy in the server's mount namespace, a model copy with identical bytes at a new inode, a
+swapped model, a dlopen-injected pinned-but-unloaded library (libllama-cli-impl.so) and a /usr/lib
+file shadowed by a user-namespace bind mount all passed. New check `bind_ref_files`: the held
+child's file-backed mappings (path, device, inode) must equal the set the counter's own
+reference server maps; the model digest in maps is hashed fresh (no cache). Two controls added
+to family `bind` (30 members); the control total is 91, not 89 (the amended sentence above reads
+"91 targeted controls", EXPECT_FAMILIES sums to 91). Everything else in AMENDMENT 1 stands. The
+honest-run stability of the final counter was 3 of 3 met=True runs at 91/91 (L1 receipts
+controls/c1-final-prewave-runs.txt).
