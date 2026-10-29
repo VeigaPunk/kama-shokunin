@@ -267,29 +267,52 @@ def listeners(port):
     return out
 
 
-def holder_pids(inodes):
-    """(pids holding a socket:[inode] fd, pids whose fd table was
-    unreadable, any uid). Unreadable tables are graded by the caller."""
+def holder_pids(inodes, retries=4):
+    """(pids holding a socket:[inode] fd, pids whose fd table stayed
+    unreadable, any uid). A process in the middle of execve is briefly
+    unreadable, so an unreadable table is re-read a few times before the
+    caller grades it (host churn made a single read flake). Unreadable
+    tables that persist are graded by the caller."""
     wanted = {f'socket:[{i}]' for i in inodes}
+
+    def scan(pid):
+        """True: holds it; False: readable, does not; None: unreadable;
+        False for a pid that vanished."""
+        try:
+            fds = os.listdir(f'/proc/{pid}/fd')
+        except PermissionError:
+            return None
+        except OSError:
+            return False
+        for fd in fds:
+            try:
+                if os.readlink(f'/proc/{pid}/fd/{fd}') in wanted:
+                    return True
+            except OSError:
+                continue
+        return False
+
     pids, unreadable = set(), set()
     for name in os.listdir('/proc'):
         if not name.isdigit():
             continue
         pid = int(name)
-        try:
-            fds = os.listdir(f'/proc/{pid}/fd')
-        except PermissionError:
+        r = scan(pid)
+        if r is True:
+            pids.add(pid)
+        elif r is None:
             unreadable.add(pid)
-            continue
-        except OSError:
-            continue
-        for fd in fds:
-            try:
-                if os.readlink(f'/proc/{pid}/fd/{fd}') in wanted:
-                    pids.add(pid)
-                    break
-            except OSError:
-                continue
+    for _ in range(retries):
+        if not unreadable:
+            break
+        time.sleep(0.05)
+        for pid in sorted(unreadable):
+            r = scan(pid)
+            if r is True:
+                pids.add(pid)
+                unreadable.discard(pid)
+            elif r is False:
+                unreadable.discard(pid)
     return pids, unreadable
 
 
@@ -1628,7 +1651,7 @@ def build_controls(receipt, witness, binding, work):
         if m.get('sha256') and m['path'].endswith('.so.0.7.0')).update(
         {'sha256': '1' * 64})))
     add('bind', 'bind_ancestry', bm=bm(
-        lambda r: r.update({'tool_pid': 1})))
+        lambda r: r.update({'tool_pid': 999999999})))
     add('bind', 'hold_fresh', bm=bm(
         lambda r: r.update({'hold_mtime_ns': r['t0_ns'] - 1})))
     add('bind', 'hold_fresh', bm=bm(lambda r: r['holders'][0].update(
@@ -1977,15 +2000,23 @@ def run_controls(args, work, tool_path, server, model, receipt, witness,
 
     # replay: a genuine pinned child holds the port but the tool writes a
     # receipt from an earlier run; the counter asked for a NEW request
-    _, tool_req2 = draw_requests(rng, probe_nonce)
-    ref2 = reference_run(server, model, [tool_req2], work)
+    texts = {(r or {}).get('text') for r in [*ref, ref_tool]}
+    ref2 = []
+    for _try in range(8):
+        _, tool_req2 = draw_requests(rng, probe_nonce)
+        ref2 = reference_run(server, model, [tool_req2], work)
+        if len(ref2) == 1 and ref2[0].get('text') not in texts \
+                and ref2[0].get('text'):
+            break
+    else:
+        ref2 = []
     if len(ref2) == 1:
         fake = write_fake(work, 'replay')
         scenario('replay', 'fake-replay', 'receipt_ref_text', SCENARIO_CAP,
                  False, fake, treq=tool_req2, tref=ref2[0],
                  extra_env=dict(env_base, KAMA_FAKE_MODE='replay'))
     else:
-        errors.append('replay: reference server gave no answer')
+        errors.append('replay: no draw with a new reference answer')
         fam_tot['replay'] = fam_tot.get('replay', 0) + 1
 
     tool_text = (blob(args.repo, args.tip, 'tools/kama-completion-live.py')
