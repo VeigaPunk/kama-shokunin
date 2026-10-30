@@ -46,3 +46,92 @@ Wave b (`.ufo/waves/round-64/b/`, v1 policy, 42 seats: executor 10, mutation-tes
 Wave f (`.ufo/waves/round-64/f/`, 42 seats validated and queued behind a host-load gate from 22:27 to 23:45 -03, 21 spawned at the last dispatcher log line before the stop; the count is the dispatcher log's, the seats' own reports are zero): stopped by the operator wrap-up before any seat wrote a report. Zero wave-f reports exist. The amended C1 counter and the integrated C2 counter were therefore attacked only by the L1's own mutants (`controls/c1-mutants-a1.txt`: 5 of 6 killed; `gone_always` survived, a near-equivalent of the port-closed observation) and the L1's receipts, never by a non-author seat. That is the honest state of both claims.
 11. **landing (misroot)** · wave-b seat MT06MapsLib wrote its report to the fleet root (`/home/vgpnk/Projects/shokunin/.ufo/waves/round-64/b/MT06MapsLib.md`) instead of the lane; copied byte-exact into the lane (`cmp` equal), the fleet copy deleted; the seat's `b-results.json` entry is the only other record · captured-by the wave context's absolute-path rule (the seat resolved a relative `Report:` trailer from the fleet root) · fix: none beyond the sweep; the wave context named absolute paths and the seat still missed it.
 12. **leak (after the stop)** · one `kama-completion-probe` llama-server (pid 2409340, parent 1494) was still running 432 s after the operator stopped the wave-f seats; killed by verified pid (alias checked) at the final sweep. A `pgrep`/`ps` over `kama-completion-probe` printed nothing afterwards.
+
+## Attempt 2 (2026-10-30) — wave f ran to settlement; both claims end not verified
+
+Wave f was re-dispatched this attempt through the inline handoff (`f.ready` → `f.ready.dispatched`;
+42 seats: mutation-tester 22, critic 5, reviewer 5, executor 4, scribe 3, connector 2, sentinel 1;
+attack-share roles 33/42 ≈ 79%). All 42 seats settled (results `f/f-results.json`; 26 report files
++ 5 evidence-only out dirs; 11 mutation-tester seats returned progress transcripts without a final
+report — their partial evidence is preserved as `f/out-missing-*.txt`, extracted by the L1 from
+`f-results.json`, and their out dirs where they exist). The dispatcher's earlier stop and the
+attempt-1 partial outputs are retained: the 10 partial seat dirs moved byte-exact to
+`f/out-attempt1/` at commit `9549c0b9` before the re-dispatch.
+
+**C1 verdict: falsified as a verified claim (operability stays 8).** The amended instrument
+measured `met=True` (pre-dispatch receipt `measured/attempt2/c1.out`; X14 red-before chain
+reproduced: base `met=False`, freeze forgeries rejected, round-63 counter still accepts forge-A
+44/44). The wave then demonstrated, with receipts, that `met=True` does not prove the predicate
+sentence: a pre-started **root** daemon holding a second `::1:<runport>` listener passes while the
+counter's own snapshot shows two listeners (`MT22` b3); a serving listener in a **private user+net
+namespace** is invisible because every procfs net table is namespace-local (`MT22` f); the receipt
+**self-reports the drawn seed** and a tool sending a different wire seed passes (`MT23` d); a
+**lazily-mapped model** is never file-backed at snapshot time and evades `bind_ref_files`
+(`MT25` D_gap600, `met=True 91/91`); the pre-existing-non-dumpable-helper limit was re-realized
+(`MT30` F3). `RV08` found the cleanup kills identity-matched but unowned holders and `pid_gone`
+still conflates unreadable with gone; `X11` measured 4 of 8 runs `met=False` on `bind_holders`
+under load (fail-closed); `SB06`'s counter mutants `m_live_status`/`m_finish_gate` survive.
+`CR06` D1: the freeze's quoted amended sentence still reads "89 targeted controls" where the
+instrument grades 91 — a record defect corrected in the report, the file stays as history.
+
+**C2 verdict: falsified as a verified claim (calibration stays 7).** The instrument measured
+`met=True` (pre-dispatch `measured/attempt2/c2.out`; `X12` 6/6 stable). The wave demonstrated the
+verdict is not bound to the bytes it names: with a **caller `PYTHONPATH` shadow** the counter
+certified the base tip — whose honest verdict is `met=False` — as `met=True` with 120/120 controls
+(`MT41` F1, case B); tip-supplied bound/planted tools **wrote into the lane clone, the export and
+outside `--work`** through committed symlinks while all controls stayed credited (`MT41` T1-T3);
+`CR07`'s self-description mutants survived — SHONEN boxes `[~]→[x]` with a fabricated verifier (M1),
+falsified calibration-row counts (M2), evidence pointers pointed at nonexistent files (M3), the
+round-63 limits paragraph deleted (M4), `SHONEN.md` deleted outright (M9), an unpinned bound tool
+deleted (M8) — while `met=True` held; `CR05` mutant 9 (prose spacers + duplication beyond the
+reconciler's graded window) survived; the shortcut-tally reader is **topic-blind** — a
+`no-disclosure` round flips to disclosed from statements about a different round (`MT38`,
+demonstrated on a neutralized clone); bound rows read **unpinned tip files** (`tools/kama-probe.sh`,
+`tests/ollama-evidence/cases.json`; `MT33`, with an exploit); the `controls_rejected` field can
+print `120/120` while its own baseline fails (`MT39` M3; `met` itself stayed honest).
+
+**Knowledge entry admitted.** `corpus/knowledge/process-bound-listener.md` (SB04's revision,
+line numbers re-derived at `23b3fdb1`, quotes `31/31` re-verified by the L1 this attempt; my
+re-run exit 0) with an appended wave-f addendum naming each realized limit. SOURCES flips
+applied, old → new (in-place status/used-by only, per the A-row rule):
+
+- S529, S530, S531, S532, S533, S534: `status` `queued` → `mined`; `used-by` `—` →
+  `corpus/knowledge/process-bound-listener.md, corpus/lessons/round-64.md` (6 rows).
+- S049: `used-by` `corpus/knowledge/loopback-listener-ownership.md, corpus/lessons/round-18.md` →
+  `…, corpus/knowledge/process-bound-listener.md`.
+- S495: `used-by` `corpus/knowledge/llamacpp-loading-lifecycle.md, corpus/lessons/round-49.md` → `…,
+  corpus/knowledge/process-bound-listener.md`.
+- S496: `used-by` `corpus/knowledge/llamacpp-loading-lifecycle.md, corpus/lessons/round-50.md` → `…,
+  corpus/knowledge/process-bound-listener.md`.
+- S499: `used-by` `corpus/lessons/round-51.md` → `…, corpus/knowledge/process-bound-listener.md`.
+
+Registry row count unchanged: 276 before and after (no row appended; the entry cites only held
+rows). Expansion credit: one admitted entry on ground the lane did not hold (process identity of a
+running server from procfs; previously only S049/S495/S496/S499 fragments). Coverage score not
+moved: coverage is not an assigned axis this round and no claim was made on it.
+
+## Mistakes (attempt 2)
+
+Class · evidence pointer · captured-by · fix.
+
+13. **instrument/false-pass (caller environment)** · the C2 counter sanitises the environment it
+hands its bound commands but not its own interpreter: a caller `PYTHONPATH` shadowing a stdlib
+module rewrote a git REF argument and the counter certified the base tip `met=True` 120/120
+(`.ufo/waves/round-64/f/MT41EnvAndSandboxC2.md` F1, cases A/B/C) · captured-by none · fix: the
+next counter binds its own interpreter env (empty env or content-addressed re-exec) and re-derives
+the scored bytes by content, not by a mutable ref; KQ116.
+14. **coverage/survivor (procfs observables are one short of the sentence)** · four new survivor
+classes against the amended C1 instrument — second visible listener on the run port (MT22 b3),
+namespace-local net tables (MT22 f), receipt-self-reported request (MT23 d), lazily-mapped model
+(MT25 D_gap600); receipts in `.ufo/waves/round-64/f/{MT22ListenerShapes,MT23ReplayVariants-as-extracted,MT25RefFilesBypass}.md`
+and `out/` · captured-by KQ107 only in part (it demands the forgeries be replayed, not that each
+sentence clause have an independent observable) · fix: record-level — the wave-f addendum in
+`corpus/knowledge/process-bound-listener.md` names each realized limit; instrument-level next
+round per SCORECARD §Planned; KQ117 pins what a claim registry must bind.
+15. **record (normative text drift)** · the freeze's amended C1 sentence reads "89 targeted
+controls" at every commit while the instrument grades 91, and AMENDMENT 1a's parenthetical
+("the amended sentence above reads '91'") is false of its own file; "unreadable pid_gone fails
+closed" is only partly delivered (`.ufo/waves/round-64/f/CR06AmendmentLegit.md` DEFECT 1/2, RV08
+D12) · captured-by none · fix: both corrections stated in the round report and in the lesson
+append above; `controls/freeze.txt` stays byte-intact (append-only discipline); a future freeze
+quotes its instrument's constant from the code, not from memory.

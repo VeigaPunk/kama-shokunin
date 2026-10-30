@@ -1,0 +1,37 @@
+# registry/endpoint-consumers.tsv — endpoint-consumers cross-lane registry (kama-shokunin)
+#
+# Tab-separated, 6 columns; '#' comments and blank lines ignored; the 'id' header row is
+# skipped. Rows must be consumers that are LIVE or LOADABLE — pure file fossils
+# (e.g. ~/.config/opencode/opencode.json.*.bak) are inventoried in the census instead of
+# being reconciled here, so drift counts keep meaning "an endpoint in service is wrong".
+#
+#   id <TAB> consumer_path <TAB> json_pointer_or_grep <TAB> declared_baseurl <TAB> expected_model_id <TAB> notes
+#
+# id                 stable row key, echoed in probe output.
+# consumer_path      file that pins (or defaults) the endpoint: config, systemd unit, script,
+#                    or binary default. '~' expands to $HOME; '$UFO_SRC/' resolves to the
+#                    ufo-fsd-alpha checkout (--ufo-src flag > $UFO_SRC env > first existing of
+#                    ~/Projects/ufo-fsd-alpha, ~/Projects/origin-work/ufo-fsd-alpha);
+#                    relative paths resolve against the repo root. The probe only ever reads it.
+# json_pointer_or_grep
+#                    how the probe re-derives the declared baseURL FROM THE FILE ITSELF
+#                    (declared_baseurl is the registry's claim, never the source of truth):
+#                      json:<RFC6901 pointer>  exact drill-down (python3; leaf-key grep fallback)
+#                      grep:<ERE>              first match wins. A match containing a URL is
+#                                              used verbatim; a match containing an EXPLICIT port
+#                                              marker (port=NNNN, --port NNNN, host:NNNN) is
+#                                              synthesised to http://127.0.0.1:<port>/v1;
+#                                              anything else marks the row file_match=inherited
+#                                              (the baseURL comes from the named provider).
+#                    A bare digit run is never read as a port — "Qwen3-Coder-30B" is not port 30.
+# declared_baseurl   the endpoint the registry believes this consumer targets.
+# expected_model_id  model id this consumer believes it is talking to; '*' or '-' = any.
+# notes              provenance / risk class. Free text, no tabs.
+#
+# Verdicts come from tools/kama-probe.sh:
+#   MODEL_OK | MODEL_MISMATCH | FOREIGN_SERVICE | UNAUTHORIZED_SERVICE | DEAD | NOT_HTTP | MODEL_LOADING
+# Evidence: path:line of the pin + probe command output.
+id	consumer_path	json_pointer_or_grep	declared_baseurl	expected_model_id	notes
+omp-llama-cpp-default	~/.local/bin/omp	grep:LLAMA_CPP_BASE_URL	http://127.0.0.1:8080	-	code-level fallback pin, not proof of the effective environment-selected URL; check reuses the declaration when file_match=inherited; sampled DEAD in registry/history/latest.tsv
+ufo-fsd-thetick	$UFO_SRC/config/the-tick.machine.json	grep:http://127\.0\.0\.1:34113[^"]*	http://127.0.0.1:34113/v1/chat/completions	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	surviving explicit pin; historical positive control, currently DEAD in registry/history/latest.tsv; a correct pin does not establish a live endpoint
+ufo-fsd-local-helper	$UFO_SRC/scripts/local-helper.mjs	grep:http://127\.0\.0\.1:[0-9]+	http://127.0.0.1:34113	Qwen3-Coder-30B-A3B-Instruct-UD-IQ2_XXS	surviving explicit DEFAULT_URL pin; historical positive control, currently DEAD in registry/history/latest.tsv; runtime readiness must be re-probed

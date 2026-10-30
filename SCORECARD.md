@@ -3387,3 +3387,47 @@ Scores stay operability 8 / calibration 7: no claim is admitted by its author, a
 Supporting measurements at `c2db22c8`: `tools/digest-ledger.py scan` `unknown=0`; `tools/hexrun-census.py scan` `unknown=0` (`measured/{digest,hexrun}-final.out`); `tools/round42-selfdesc-reconcile.py` `closure_ptr=1 mismatches=0 maxN=64 met=True`; `tools/shortcut-tally.py --rounds 56-63` prints a status other than `no-disclosure` for all 8 rounds (`measured/tally-final.out`; base 1 of 8); `sources-census.sh validate --root … kama` exit 0 at start and end, 268 → 276 rows (`census/{start,end}.out`).
 
 What `met=True` does not show: for C1, (a) a non-dumpable own-uid helper that existed before the tool and holds a duplicate of the listener (wave-b MT01 O3/O4, MT08 f2: `unreadable_old` is recorded, never graded), (b) writes into the running server's memory through `/proc/<pid>/mem` (MT05 F2), (c) a holder that exists only after the counter's release (CR03 K5), (d) the blanket `/usr/lib` exemption in `bind_maps` (RV02 D7), (e) that the environment visible is the initial one (S531) and argv alone is spoofable (S532), (f) that tool-side holder bookkeeping is graded as provenance (K1c/K2/K3), and (g) that the 91 controls are independent vectors (they are 30 families with repeats); for C2, (h) that a pin fixes bytes, not behaviour on another host, (i) that the regression table holds one regression per row, (j) that the tally statuses rest on lane-authored text read by regular expressions, and (k) that the closure pointer is stale by construction once the next closure files. Both instruments passed no outside attack at their final bytes.
+
+## Round 64 — attempt 2: wave-f falsification settled; both claims not verified (2026-10-30)
+
+The run-11 honest stop ended wave f at 21 spawned seats; this attempt re-dispatched the same
+validated wave through the inline handoff (42 seats: mutation-tester 22, critic 5, reviewer 5,
+executor 4, scribe 3, connector 2, sentinel 1; 33/42 ≈ 79 % attack-share roles; no dead seat —
+all 42 settled with results in `.ufo/waves/round-64/f/f-results.json`; 26 report files, 5
+evidence-only out dirs, 11 seats returned progress transcripts only, preserved as
+`.ufo/waves/round-64/f/out-missing-*.txt`). Attempt-1 partial seat outputs moved byte-exact to
+`f/out-attempt1/` (commit `9549c0b9`). Pre-dispatch the instruments were re-measured green at
+the wave tip `23b3fdb1` (`.ufo/waves/round-64/measured/attempt2/{c1,c2}.out`; scans at lane tip
+`9549c0b9` in the same dir; census `census/attempt2-start.out`).
+
+| Claim | Axis, score | Verdict after wave f | Falsifiers (receipts) |
+|---|---|---|---|
+| C1 — the process that answers is the pinned llama-server, bound from procfs | operability 8→8 | **not verified — falsified** (measured `met=True` stands; the wave shows `met=True` does not prove the sentence) | `f/MT22` b3 (root pre-started daemon, second `::1` listener visible in the counter's own snapshot, `met=True 91/91`); `f/MT22` (f) (serving listener in a private user+net namespace invisible — procfs net tables are per-namespace); `f/MT23` (d) (tool sends seed 4242 on the wire, receipt self-reports the drawn seed, passes); `f/MT25` D_gap600 (lazily-mapped model never file-backed at snapshot; `met=True 91/91`); `f/MT30` F3 (pre-existing non-dumpable helper holds a `pidfd_getfd` LISTEN duplicate — the acknowledged limit, realized); `f/RV08` (cleanup kills unowned identity-matched holders; `pid_gone` conflates unreadable with gone); `f/X11` (`bind_holders` flaked 4 of 8 runs under load, fail-closed); `f/SB06` (counter mutants `m_live_status`, `m_finish_gate` survive); `f/CR06` D1 (freeze's amended sentence reads 89 controls, instrument grades 91; AMENDMENT 1a's parenthetical false of its own file) |
+| C2 — the claim registry proves the work was done rather than printed | calibration 7→7 | **not verified — falsified** (measured `met=True` stands: `X12` 6/6 stable) | `f/MT41` F1 (caller `PYTHONPATH` shadow → base tip certified `met=True` 120/120, a do-nothing false pass); `f/MT41` T1-T3 (bound/planted tip code wrote into the lane clone, the export and outside `--work`; controls stayed credited); `f/CR07` M1/M2/M3/M4/M8/M9 (SHONEN `[~]→[x]` with fabricated verifier, falsified calibration counts, nonexistent evidence pointers, deleted limits paragraph, deleted unpinned bound tool, deleted SHONEN.md — all `met=True`); `f/CR05` m9 (reconciler blind beyond its graded window); `f/MT38` (tally reader topic-blind: a `no-disclosure` round flips to disclosed from other rounds' text); `f/MT33` (bound rows read unpinned `tools/kama-probe.sh` and `tests/ollama-evidence/cases.json`, exploit included); `f/MT39` (`controls_rejected` prints 120/120 while the baseline fails; `met` itself stayed honest); `f/MT37` (work-refusal guard mutants W2/W3 widen acceptance; B5 shows a same-commit self-closure pointer satisfies the numeric predicate) |
+
+Killed on the way (recorded, not decisive): `MT40` nine mandated registry mutants all KILLED;
+`MT37` B1-B4, B7 KILLED (the reconciler's `closure_ptr` is load-bearing); `CR07` M5/M6/M11
+KILLED; `RV06` reconciler selftest 5/5 with four stale-pointer fixtures; `RV05` negative-selftest
+boundary (3 fail cases, exit 1) recorded; `MT34` regress timeout is a shortened-bound scoring
+probe; `MT40` S1-S4 registry coverage findings (two-outcome row verdict not compared with its
+live outcome, `note` ungraded, quote a free substring, row order ungraded).
+
+**Admission: no.** Both claims end not verified; no score moves, no capability enters
+(`live-completion-request-plane` enters only with a verified C1), no axis harmed. Frontier:
+`corpus/knowledge/process-bound-listener.md` admitted (SB04 revision, quotes 31/31 re-verified,
+wave-f addendum appended) — SOURCES S529-S534 `queued→mined`, S049/S495/S496/S499 used-by gain
+the entry; 276 rows before and after, census exit 0 (`.ufo/waves/round-64/census/attempt2-*`).
+KQ116 (caller-environment binding) and KQ117 (registry binds every file its rows read) appended;
+lesson attempt-2 section and Mistakes 13-15 appended.
+
+**Planned (round 65) — amended by wave f.** The two attempts leave five concrete counters to
+build: (1) C1 next instrument must observe the wire request bytes (not the receipt's
+self-report), the namespace set (ns-external identity via `/proc/<pid>/ns` cross-check plus a
+counter-held netns handle), and second-listener oneness; grade `unreadable_old` holders of any
+age, or stop claiming "every holder"; (2) C2 next counter re-execs clean and re-derives scored
+bytes by content (KQ116), pins every file its bound rows read (KQ117), and extends the
+self-description grading to the CR07 survivor set (SHONEN existence and box semantics, evidence
+pointer existence, limits paragraphs) and the CR05 window; (3) the tally reader needs
+round-scoped topic matching; (4) the C1 counter's flake (`bind_holders` under load) needs a
+bounded retry budget that is itself falsifiable; (5) either claim may be re-frozen only under
+§9's do-nothing standard with these receipts as the red-before set.

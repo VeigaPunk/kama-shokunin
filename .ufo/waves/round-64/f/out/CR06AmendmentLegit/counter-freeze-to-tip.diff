@@ -1,0 +1,1349 @@
+--- c1-freeze.py	2026-10-30 07:31:10.404173386 -0300
++++ c1-tip.py	2026-10-30 07:31:10.405173383 -0300
+@@ -3,31 +3,39 @@
+ 
+ Usage: python3 tools/round64-c1-counter.py --repo REPO --tip REV --work DIR
+ 
+-Frozen predicate (same sentence as .ufo/waves/round-64/controls/freeze.txt):
++Predicate as amended (AMENDMENT 1, .ufo/waves/round-64/controls/freeze.txt;
++the original sentence is kept there verbatim):
+   C1-r64: at the tip, the byte-pinned tools/kama-completion-live.py (schema
+   kama-completion-live/v3) runs one counter-opened hold-mode live request-
+-  plane lifecycle on the pinned llama.cpp fixture whose receipt the counter
+-  re-derives from captured bytes, and the counter - from procfs and its own
+-  code alone, loading nothing from the tip - binds the process that answers
+-  to the pinned server: every holder of the run-port listener is the hold
+-  pid, its /proc/<pid>/exe re-hashes to the pinned llama-server digest at
+-  the server path the counter chose, its argv, initial environment and
+-  mapped files are the pinned set, it is a descendant of the tool process
+-  started after the tool did, the hold.json is fresh, and teardown (the
+-  holder gone, the port closed) is observed by the counter after the
+-  counter's own release; the held child's answers to two outside probes
+-  drawn at random per run (prompt length and n_predict) agree with a
+-  reference pinned server the counter itself starts; and all 76 targeted
+-  controls - including live forged tools (the round-63 forgeries replayed,
+-  a detached server, a forwarding proxy, a canned answerer, stale holds,
+-  a preload, a path-copied server) - are each rejected by the check each
+-  names, family by family at the declared counts, and the counter's own
+-  evaluator refuses all 3 planted wrong-reason controls, errors=0.
++  plane lifecycle on the pinned llama.cpp fixture, sending the request
++  (prompt, n_predict, seed) the counter drew for this run, and the counter -
++  from procfs and its own code alone, loading nothing from the tip - binds
++  the process that answers to the pinned server: every holder of the
++  run-port listener is the hold pid, its /proc/<pid>/exe re-hashes to the
++  pinned llama-server digest at the server path the counter chose, its argv
++  is exactly the tool's argv, its initial environment holds only the
++  counter's own PATH/HOME/LANG/LC_ALL values, its mapped files are the
++  pinned set, it shares the counter's namespaces, is not traced and is not
++  stopped, it is a descendant of the tool process started after the tool
++  did, the hold.json is fresh, and teardown (the holder gone, the port
++  closed) is observed by the counter after the counter's own release; the
++  held child's answers to two outside probes drawn at random per run
++  (prompt length and n_predict), and the receipt's own request and answer,
++  agree with a reference pinned server the counter itself starts; and all
++  91 targeted controls - including live forged tools (the round-63
++  forgeries replayed, a detached server, a forwarding proxy, a canned
++  answerer, stale holds, a preload, a path-copied server, a replayed
++  receipt) - are each rejected by the check each names, family by family
++  at the declared counts, and the counter's own evaluator judges all 8
++  planted cases correctly, errors=0.
+ 
+ The counter never trusts receipt-claimed results and imports nothing from
+ the tip. A control counts as rejected only when the failure set of its
+-re-score contains the named check and stays within the cap. Output: one
+-line, exit 0 iff met. Every scratch path is under --work.
++re-score contains the named check and stays within the cap (5; 30 for the
++envelope break; 14 for a live patched-tool forgery); a live fake tool that
++holds a genuine receipt copy has no cap but must show no receipt-level
++failure. Output: one line, exit 0 iff met; a --work that already holds
++files exits 2 (`work-reused`). Every scratch path is under --work.
+ """
+ import argparse
+ import hashlib
+@@ -50,8 +58,8 @@
+ ALIAS = 'kama-completion-probe'
+ FP_RE = re.compile(r'^b\d+-[0-9a-f]{9,40}$')
+ SCHEMA = 'kama-completion-live/v3'
+-PROMPT = 'The cat sat on the'
+-EXPECT_EVAL_SELFTEST = 3
++PROMPT = 'The cat sat on the'   # the tool's default prompt (round-63 value)
++EXPECT_EVAL_SELFTEST = 8
+ MAX_COLLATERAL = 5      # failing checks a one-field control may cause
+ ENVELOPE_CAP = 30       # an envelope failure legitimately cascades
+ SCENARIO_CAP = 14       # a live forged tool cascades through its run
+@@ -61,8 +69,9 @@
+     'shape': 4, 'idcr': 3, 'ptok': 2, 'reqbind': 2, 'listener': 1,
+     'digest': 1, 'schema': 1, 'witness': 5,
+     # round-64 families
+-    'bind': 20, 'runfield': 4, 'detach': 1, 'forge': 3, 'proxy': 1,
++    'bind': 30, 'runfield': 4, 'detach': 1, 'forge': 3, 'proxy': 1,
+     'canned': 1, 'stalehold': 2, 'preload': 1, 'pathcopy': 1, 'relabel': 1,
++    'receiptbind': 4, 'replay': 1,
+ }
+ EXPECT_CONTROLS = sum(EXPECT_FAMILIES.values())
+ STORED = {
+@@ -76,6 +85,7 @@
+     'model_digest', 'server_digest', 'hold_released', 'teardown_clean',
+     'teardown_port_closed'}
+ RECEIPT_LEVEL = STORED | {'schema', 'nonce_match', 'verdict'}
++RECEIPT_BIND = {'receipt_req', 'receipt_ref_text', 'receipt_ref_usage'}
+ # sha256 of every library file in the pinned llama.cpp b11755 release
+ # directory (the server's own mappings must be members of this table)
+ LIBS = {
+@@ -143,9 +153,13 @@
+          'bridge candle mirror harbor meadow thunder velvet anchor ribbon '
+          'lantern orchard pebble quartz saddle tunnel violet whistle').split()
+ NONCE = ''
++TOOL_REQ = {}   # the request the counter told the tool to send (per run)
+ _OPENER = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+ _HASH_CACHE = {}
+ _TOOL_ENV_KEYS = ('PATH', 'HOME', 'LANG', 'LC_ALL', 'TMPDIR')
++# the keys the tool's server child may inherit (tools/kama-completion-live.py
++# filters its own environment; the counter passes none of the others)
++TOOL_CHILD_ENV = ('PATH', 'HOME', 'LANG', 'LC_ALL')
+ 
+ 
+ def git(repo, *args):
+@@ -163,20 +177,18 @@
+     return hashlib.sha256(b).hexdigest()
+ 
+ 
+-def sha256_path(path, cache=True):
+-    if cache and path in _HASH_CACHE:
+-        return _HASH_CACHE[path]
++def sha256_path(path, cache=False):
++    """sha256 of a file, hashed afresh on every call (wave-b RV02 D9: a
++    path-keyed cache returned the old digest after the file was replaced).
++    `cache` is accepted for call-site compatibility and ignored."""
+     try:
+         h = hashlib.sha256()
+         with open(path, 'rb') as f:
+             for chunk in iter(lambda: f.read(1 << 20), b''):
+                 h.update(chunk)
+-        d = h.hexdigest()
++        return h.hexdigest()
+     except (OSError, TypeError):
+-        d = None
+-    if cache:
+-        _HASH_CACHE[path] = d
+-    return d
++        return None
+ 
+ 
+ def jbody(cap):
+@@ -255,34 +267,52 @@
+     return out
+ 
+ 
+-def holder_pids(inodes):
+-    """(pids holding a socket:[inode] fd, own-uid pids whose fd table was
+-    unreadable). Fails closed on unreadable own-uid tables."""
++def holder_pids(inodes, retries=4):
++    """(pids holding a socket:[inode] fd, pids whose fd table stayed
++    unreadable, any uid). A process in the middle of execve is briefly
++    unreadable, so an unreadable table is re-read a few times before the
++    caller grades it (host churn made a single read flake). Unreadable
++    tables that persist are graded by the caller."""
+     wanted = {f'socket:[{i}]' for i in inodes}
+-    pids, unreadable = set(), set()
+-    me = os.getuid()
+-    for name in os.listdir('/proc'):
+-        if not name.isdigit():
+-            continue
+-        pid = int(name)
++
++    def scan(pid):
++        """True: holds it; False: readable, does not; None: unreadable;
++        False for a pid that vanished."""
+         try:
+             fds = os.listdir(f'/proc/{pid}/fd')
+         except PermissionError:
+-            try:
+-                if os.stat(f'/proc/{pid}').st_uid == me:
+-                    unreadable.add(pid)
+-            except OSError:
+-                pass
+-            continue
++            return None
+         except OSError:
+-            continue
++            return False
+         for fd in fds:
+             try:
+                 if os.readlink(f'/proc/{pid}/fd/{fd}') in wanted:
+-                    pids.add(pid)
+-                    break
++                    return True
+             except OSError:
+                 continue
++        return False
++
++    pids, unreadable = set(), set()
++    for name in os.listdir('/proc'):
++        if not name.isdigit():
++            continue
++        pid = int(name)
++        r = scan(pid)
++        if r is True:
++            pids.add(pid)
++        elif r is None:
++            unreadable.add(pid)
++    for _ in range(retries):
++        if not unreadable:
++            break
++        time.sleep(0.05)
++        for pid in sorted(unreadable):
++            r = scan(pid)
++            if r is True:
++                pids.add(pid)
++                unreadable.discard(pid)
++            elif r is False:
++                unreadable.discard(pid)
+     return pids, unreadable
+ 
+ 
+@@ -332,16 +362,38 @@
+                 and os.path.realpath(real).startswith(
+                     server_dir.rstrip('/') + '/')):
+             sha = sha256_path(os.path.realpath(real))
+-        out.append({'path': path, 'deleted': deleted, 'sha256': sha})
++        out.append({'path': path, 'deleted': deleted, 'sha256': sha,
++                    'dev': parts[3], 'inode': parts[4]})
+     return out
+ 
+ 
++REF_FILES = []   # file-backed mappings of the counter's reference server
++
++
++def file_set(ms):
++    """Sorted (path, dev, inode) of every file-backed mapping."""
++    return sorted({(m['path'], m.get('dev'), m.get('inode'))
++                   for m in ms or [] if str(m.get('path', '')).startswith('/')})
++
++
++NS_NAMES = ('mnt', 'pid', 'net', 'user', 'ipc', 'uts')
++
++
++def ns_of(pid):
++    """Namespace identities of a process (proc_pid_ns links), None when
++    unreadable."""
++    try:
++        return {n: os.readlink(f'/proc/{pid}/ns/{n}') for n in NS_NAMES}
++    except OSError:
++        return None
++
++
+ def holder_record(pid, server_dir):
+     """One holder's procfs record. None fields mean unreadable."""
+     rec = {'pid': pid}
+     try:
+         rec['exe'] = os.readlink(f'/proc/{pid}/exe')
+-        rec['exe_sha256'] = sha256_path(f'/proc/{pid}/exe', cache=False)
++        rec['exe_sha256'] = sha256_path(f'/proc/{pid}/exe')
+     except OSError:
+         rec['exe'] = rec['exe_sha256'] = None
+     try:
+@@ -352,11 +404,25 @@
+         rec['cmdline'] = None
+     try:
+         raw = open(f'/proc/{pid}/environ', 'rb').read()
+-        rec['environ_keys'] = sorted(
+-            e.split(b'=', 1)[0].decode('utf-8', 'replace')
+-            for e in raw.split(b'\0') if e)
++        env = {}
++        for e in raw.split(b'\0'):
++            if e:
++                k, _, v = e.partition(b'=')
++                env[k.decode('utf-8', 'replace')] = v.decode(
++                    'utf-8', 'replace')
++        rec['environ'] = env
+     except OSError:
+-        rec['environ_keys'] = None
++        rec['environ'] = None
++    try:
++        st = open(f'/proc/{pid}/status', encoding='utf-8',
++                  errors='replace').read()
++        m = re.search(r'^State:\s+(\S)', st, re.M)
++        rec['state'] = m.group(1) if m else None
++        m = re.search(r'^TracerPid:\s+(\d+)', st, re.M)
++        rec['tracer_pid'] = int(m.group(1)) if m else None
++    except OSError:
++        rec['state'] = rec['tracer_pid'] = None
++    rec['ns'] = ns_of(pid)
+     rec['maps'] = read_maps(pid, server_dir)
+     pp, ticks = stat_fields(pid)
+     rec['ppid'] = pp
+@@ -376,8 +442,12 @@
+         'hold_port': (hold_doc or {}).get('port'),
+         'hold_schema': (hold_doc or {}).get('schema'),
+         'hold_mtime_ns': hold_mtime_ns, 't0_ns': t0_ns,
++        'collected_ns': time.time_ns(),
+         'tool_pid': tool_pid, 'tool_start_ticks': tool_ticks,
+         'server_path': server_path, 'model_path': model_path,
++        'self_ns': ns_of(os.getpid()),
++        'expect_env': {k: os.environ[k] for k in TOOL_CHILD_ENV
++                       if k in os.environ},
+         'listeners': [{'inode': i, 'loopback': lo} for i, lo in ls],
+         'unreadable_own': sorted(
+             p for p in unreadable
+@@ -420,22 +490,25 @@
+ 
+     def argv_ok(h):
+         a = h.get('cmdline')
+-        if not a or os.path.realpath(a[0]) != sp:
+-            return False
+-        port = _flag_values(a, '--port')
+-        host = _flag_values(a, '--host')
+-        alias = _flag_values(a, '--alias')
+-        model = _flag_values(a, '--model')
+-        return (port == [str(raw.get('port'))] and host == ['127.0.0.1']
+-                and alias == [ALIAS] and len(model) == 1
+-                and os.path.realpath(model[0]) == mp
+-                and sha256_path(os.path.realpath(model[0])) == MODEL_SHA)
++        return (isinstance(a, list)
++                and a == expected_argv(sp, mp, raw.get('port'))
++                and sha256_path(mp) == MODEL_SHA)
+     out['bind_argv'] = bool(hs) and all(argv_ok(h) for h in hs)
+-    out['bind_env'] = bool(hs) and all(
+-        h.get('environ_keys') is not None and not any(
+-            k.startswith('LD_') or k.startswith('GLIBC_TUNABLES')
+-            for k in h['environ_keys']) for h in hs)
+ 
++    def env_ok(h):
++        e = h.get('environ')
++        ex = raw.get('expect_env') or {}
++        return isinstance(e, dict) and all(
++            k in ex and e[k] == ex[k] for k in e)
++    out['bind_env'] = bool(hs) and all(env_ok(h) for h in hs)
++    sn = raw.get('self_ns')
++    out['bind_ns'] = bool(hs and sn) and all(
++        h.get('ns') == sn for h in hs)
++    out['bind_trace'] = bool(hs) and all(
++        h.get('tracer_pid') == 0 for h in hs)
++    out['bind_state'] = bool(hs) and all(
++        h.get('state') in ('S', 'R', 'D') for h in hs)
++
+     def maps_ok(h):
+         ms = h.get('maps')
+         if not ms:
+@@ -467,16 +540,26 @@
+     tt = raw.get('tool_start_ticks')
+     mt = raw.get('hold_mtime_ns')
+     t0 = raw.get('t0_ns')
++    now = raw.get('collected_ns')
+     out['hold_fresh'] = bool(
+         hs and is_int(mt) and is_int(t0) and mt > t0 and is_int(tt)
++        and is_int(now) and mt <= now + 1_000_000_000
+         and all(is_int(h.get('start_ticks')) and h['start_ticks'] >= tt
+                 for h in hs)
+         and raw.get('hold_schema') == 'kama-completion-hold/v1')
+     return out
+ 
+ 
++def expected_argv(server_path, model_path, port):
++    """The tool's exact child argv (tools/kama-completion-live.py, run())."""
++    return [server_path, '--model', model_path, '--alias', ALIAS,
++            '--port', str(port), '--host', '127.0.0.1', '-c', '512',
++            '-t', '1']
++
++
+ BIND_CHECKS = ('bind_listener', 'bind_holders', 'bind_exe', 'bind_argv',
+-               'bind_env', 'bind_maps', 'bind_ancestry', 'hold_fresh')
++               'bind_env', 'bind_ns', 'bind_trace', 'bind_state',
++               'bind_maps', 'bind_ancestry', 'hold_fresh')
+ 
+ 
+ def holders_signature(raw):
+@@ -581,7 +664,7 @@
+     out['completion_request_bound'] = bool(
+         env and isinstance(rj, dict) and isinstance(rb, str)
+         and sha256_b(rb.encode()) == c.get('request_sha256')
+-        and rj.get('prompt') == PROMPT)
++        and rj.get('prompt') == TOOL_REQ.get('prompt'))
+     c2 = cap('completion2')
+     c2j = jbody(c2) if c2 else None
+     c2c = c2j.get('choices') if isinstance(c2j, dict) else None
+@@ -714,10 +797,51 @@
+     if not (w.get('hold_port') is not None
+             and w.get('hold_port') == receipt.get('port')):
+         fails.add('live_port')
++    # the receipt's own request/answer must be this run's: the counter chose
++    # the tool's prompt, n_predict and seed, and its reference server
++    # answered the same request (wave-b MT13/RV02 D1: a genuine child with a
++    # replayed receipt passed a counter that bound only the live probes)
++    tr = w.get('tool_req') or {}
++    rt = w.get('ref_tool') or {}
++    ccap = caps.get('completion') or {}
++    try:
++        rjs = json.loads(ccap.get('request_body') or '')
++    except ValueError:
++        rjs = None
++    if not (isinstance(rjs, dict) and tr
++            and rjs.get('prompt') == tr.get('prompt')
++            and rjs.get('n_predict') == tr.get('n_predict')
++            and rjs.get('seed') == tr.get('seed')):
++        fails.add('receipt_req')
++    chs0 = (ccj.get('choices') or [{}])[0] if isinstance(
++        ccj, dict) and isinstance(ccj.get('choices'), list) else {}
++    rtext = chs0.get('text') if isinstance(chs0, dict) else None
++    if not (isinstance(rtext, str) and rtext != ''
++            and rtext == rt.get('text')):
++        fails.add('receipt_ref_text')
++    ru = (ccj.get('usage') if isinstance(ccj, dict) else None) or {}
++    if not (rt and ru.get('prompt_tokens') == rt.get('usage_prompt_tokens')
++            and ru.get('completion_tokens')
++            == rt.get('usage_completion_tokens')):
++        fails.add('receipt_ref_usage')
+     raw_a, raw_b = bnd.get('raw_a'), bnd.get('raw_b')
+     for k, v in grade_binding(raw_a).items():
+         if v is not True:
+             fails.add(k)
++    # the held child maps exactly the files (path, device, inode) the
++    # counter's own reference server maps: a bind-mounted or copied model,
++    # a swapped library or a dlopen-injected pinned-but-unloaded library
++    # differs (wave-b MT06)
++    rf = w.get('ref_files')
++    hs_a = (raw_a or {}).get('holders') or []
++    if not (rf and hs_a and all(
++            [list(x) for x in file_set(h.get('maps'))] == rf
++            for h in hs_a)):
++        fails.add('bind_ref_files')
++    gb = grade_binding(raw_b)
++    for k in ('bind_state', 'bind_trace'):
++        if gb.get(k) is not True:
++            fails.add(k)
+     if holders_signature(raw_a) != holders_signature(raw_b) or not raw_b:
+         fails.add('bind_stable')
+     rh = receipt.get('listener_holders')
+@@ -748,11 +872,12 @@
+     return stat_fields(pid)[1]
+ 
+ 
+-def draw_probes(rng, nonce):
+-    """Two probe requests whose prompt length and n_predict are drawn per
+-    run; distinct from each other and from the tool's fixed request."""
++def draw_requests(rng, nonce):
++    """Three requests drawn per run (prompt length, n_predict, seed): two
++    outside probes for the held child and the request the counter tells the
++    tool to send. All distinct; the nonce is in every prompt."""
+     out, used = [], set()
+-    while len(out) < 2:
++    while len(out) < 3:
+         k = rng.randint(2, 24)
+         n = rng.randint(3, 9)
+         if (k, n) in used:
+@@ -761,12 +886,13 @@
+         words = ' '.join(rng.choice(VOCAB) for _ in range(k))
+         out.append({'prompt': f'{nonce} {words}', 'n_predict': n,
+                     'seed': rng.randint(1, 9999)})
+-    return out
++    return out[:2], out[2]
+ 
+ 
+ def probe(port, req):
+     payload = {'prompt': req['prompt'], 'n_predict': req['n_predict'],
+-               'temperature': 0.0, 'seed': req['seed']}
++               'temperature': 0.0, 'seed': req['seed'],
++               'timings_per_token': False}
+     st, hdr, body, raw = http(port, '/v1/completions', payload)
+     try:
+         wj = json.loads(body)
+@@ -828,6 +954,8 @@
+         if ok:
+             for r in reqs:
+                 out.append(probe(port, r))
++            REF_FILES[:] = file_set(read_maps(proc.pid, os.path.dirname(
++                server)))
+     finally:
+         if proc.poll() is None:
+             proc.send_signal(signal.SIGTERM)
+@@ -841,28 +969,45 @@
+ 
+ 
+ def pid_gone(pid, ticks):
+-    """True when the pid no longer exists, was reused, or is a zombie /
+-    dead entry (its sockets are closed; only the exit status is pending)."""
++    """True when the pid no longer exists, was reused (different start
++    ticks), or is a zombie / dead entry (its sockets are closed; only the
++    exit status is pending). Unknown start ticks fail closed: not gone."""
+     pp, tk = stat_fields(pid)
+-    if pp is None or tk != ticks:
++    if pp is None:
++        return True
++    if ticks is None:
++        return False
++    if tk != ticks:
+         return True
+     try:
+         s = open(f'/proc/{pid}/stat', encoding='ascii').read()
+         return s[s.rindex(')') + 2] in 'ZX'
+     except (OSError, ValueError, IndexError):
+-        return True
++        return False
++
++
++def kill_if_same(pid, ticks):
++    """SIGKILL a recorded pid only while it is still the observed process."""
++    if ticks is None or pid_gone(pid, ticks):
++        return
++    try:
++        os.kill(pid, signal.SIGKILL)
++    except OSError:
++        pass
+ 
+ 
+ def witness_run(work, label, tool_path, server_path, model_path, reqs,
+-                extra_env=None):
++                tool_req, extra_env=None):
+     """Run one tool (the tip tool or a planted forger) in hold mode. The
+-    counter creates the hold dir, owns hold.json's freshness, probes the
+-    listener, releases, and observes teardown itself. Returns
++    counter creates the hold dir, owns hold.json's freshness, tells the tool
++    which request to send, probes the listener, releases, and observes
++    teardown itself; every holder it saw and the tool's process group are
++    killed on the way out. Returns
+     (receipt|None, witness|None, binding|None, nonce, notes)."""
+     wd = os.path.join(work, label)
+-    os.makedirs(wd, exist_ok=True)
++    os.makedirs(wd)       # a reused directory is refused, never tolerated
+     hold = os.path.join(wd, 'hold')
+-    os.makedirs(hold, mode=0o700, exist_ok=True)
++    os.makedirs(hold, mode=0o700)
+     nonce = 'r64-' + hashlib.sha256(os.urandom(16)).hexdigest()[:10]
+     out_path = os.path.join(wd, 'receipt.json')
+     env = {k: v for k, v in os.environ.items() if k in _TOOL_ENV_KEYS}
+@@ -874,68 +1019,90 @@
+          '--work', os.path.join(wd, 'tool-work'), '--server', server_path,
+          '--model', model_path, '--model-sha256', MODEL_SHA,
+          '--server-sha256', SERVER_SHA, '--alias', ALIAS,
++         '--prompt', tool_req['prompt'],
++         '--n-predict', str(tool_req['n_predict']),
++         '--seed', str(tool_req['seed']),
+          '--hold-dir', hold, '--hold-timeout', '90', '--out', out_path],
+-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)
++        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env,
++        start_new_session=True)
+     tool_ticks = start_ticks_of(proc.pid)
+     witness = binding = None
+-    hold_doc = None
+-    t0 = time.monotonic()
+-    hp = os.path.join(hold, 'hold.json')
+-    while time.monotonic() - t0 < 120:
+-        if os.path.exists(hp):
+-            try:
+-                hold_doc = json.load(open(hp))
+-                mtime = os.stat(hp).st_mtime_ns
+-            except (ValueError, OSError):
+-                time.sleep(0.2)
+-                continue
+-            if not isinstance(hold_doc, dict):
+-                break
+-            port = hold_doc.get('port')
+-            if not is_int(port):
+-                notes.append('hold.json without an int port')
+-                break
+-            raw_a = collect(port, hold_doc, mtime, t0_ns, proc.pid,
+-                            tool_ticks, server_path, model_path)
+-            probes = [probe(port, r) for r in reqs]
+-            raw_b = collect(port, hold_doc, mtime, t0_ns, proc.pid,
+-                            tool_ticks, server_path, model_path)
+-            witness = {
+-                'probes': probes, 'hold_pid': hold_doc.get('pid'),
+-                'hold_port': port, 'server_sha256':
+-                hold_doc.get('server_sha256'),
+-                'model_sha256': hold_doc.get('model_sha256'),
+-                'alias': hold_doc.get('alias')}
+-            binding = {'raw_a': raw_a, 'raw_b': raw_b}
+-            break
+-        if proc.poll() is not None:
+-            notes.append('tool exited before hold.json')
+-            break
+-        time.sleep(0.1)
+-    # counter-owned release, then counter-observed teardown
+-    open(os.path.join(hold, 'release'), 'w').write('go\n')
+-    gone = port_closed = False
+-    if binding is not None:
+-        hs = (binding['raw_a'] or {}).get('holders') or []
+-        deadline = time.monotonic() + 30
+-        while time.monotonic() < deadline:
+-            gone = all(pid_gone(h['pid'], h.get('start_ticks'))
+-                       for h in hs)
+-            port_closed = not listeners(witness['hold_port'])
+-            if gone and port_closed:
+-                break
+-            time.sleep(0.2)
+-        binding['teardown'] = {'gone': gone, 'port_closed': port_closed}
+-    try:
+-        proc.wait(timeout=60)
+-    except subprocess.TimeoutExpired:
+-        proc.kill()
+-        proc.wait(timeout=10)
++    seen = {}
+     receipt = None
+     try:
+-        receipt = json.load(open(out_path))
+-    except (ValueError, OSError):
+-        pass
++        t0 = time.monotonic()
++        hp = os.path.join(hold, 'hold.json')
++        while time.monotonic() - t0 < 120:
++            if os.path.exists(hp):
++                try:
++                    hold_doc = json.load(open(hp))
++                    mtime = os.stat(hp).st_mtime_ns
++                except (ValueError, OSError):
++                    time.sleep(0.2)
++                    continue
++                if not isinstance(hold_doc, dict):
++                    break
++                port = hold_doc.get('port')
++                if not is_int(port):
++                    notes.append('hold.json without an int port')
++                    break
++                raw_a = collect(port, hold_doc, mtime, t0_ns, proc.pid,
++                                tool_ticks, server_path, model_path)
++                for h in raw_a['holders']:
++                    seen[h['pid']] = h.get('start_ticks')
++                probes = [probe(port, r) for r in reqs]
++                raw_b = collect(port, hold_doc, mtime, t0_ns, proc.pid,
++                                tool_ticks, server_path, model_path)
++                for h in raw_b['holders']:
++                    seen[h['pid']] = h.get('start_ticks')
++                witness = {
++                    'probes': probes, 'hold_pid': hold_doc.get('pid'),
++                    'hold_port': port, 'server_sha256':
++                    hold_doc.get('server_sha256'),
++                    'model_sha256': hold_doc.get('model_sha256'),
++                    'alias': hold_doc.get('alias'), 'tool_req': tool_req}
++                binding = {'raw_a': raw_a, 'raw_b': raw_b}
++                break
++            if proc.poll() is not None:
++                notes.append('tool exited before hold.json')
++                break
++            time.sleep(0.1)
++        # counter-owned release, then counter-observed teardown
++        open(os.path.join(hold, 'release'), 'w').write('go\n')
++        if binding is not None:
++            hs = (binding['raw_a'] or {}).get('holders') or []
++            gone = port_closed = False
++            deadline = time.monotonic() + 30
++            while time.monotonic() < deadline:
++                gone = bool(hs) and all(
++                    pid_gone(h['pid'], h.get('start_ticks')) for h in hs)
++                port_closed = not listeners(witness['hold_port'])
++                if gone and port_closed:
++                    break
++                time.sleep(0.2)
++            binding['teardown'] = {'gone': gone, 'port_closed': port_closed}
++        try:
++            proc.wait(timeout=60)
++        except subprocess.TimeoutExpired:
++            proc.kill()
++            proc.wait(timeout=10)
++        try:
++            receipt = json.load(open(out_path))
++        except (ValueError, OSError):
++            pass
++    finally:
++        for pid, ticks in seen.items():
++            kill_if_same(pid, ticks)
++        try:
++            os.killpg(proc.pid, signal.SIGKILL)
++        except OSError:
++            pass
++        if proc.poll() is None:
++            proc.kill()
++            try:
++                proc.wait(timeout=10)
++            except subprocess.TimeoutExpired:
++                pass
+     return receipt, witness, binding, nonce, notes
+ 
+ 
+@@ -947,7 +1114,7 @@
+ ap = argparse.ArgumentParser()
+ for a in ('--nonce', '--work', '--server', '--model', '--model-sha256',
+           '--server-sha256', '--alias', '--hold-dir', '--hold-timeout',
+-          '--out'):
++          '--out', '--prompt', '--n-predict', '--seed'):
+     ap.add_argument(a)
+ A = ap.parse_args()
+ TPL = json.load(open(os.environ['KAMA_FAKE_TEMPLATE']))
+@@ -958,7 +1125,7 @@
+     s.close(); return p
+ def spawn_real(port, extra_env=None, exe=None):
+     env = {k: v for k, v in os.environ.items()
+-           if k in ('PATH', 'HOME', 'LANG', 'LC_ALL', 'TMPDIR')}
++           if k in ('PATH', 'HOME', 'LANG', 'LC_ALL')}
+     env.update(extra_env or {})
+     return subprocess.Popen(
+         [exe or A.server, '--model', A.model, '--alias', A.alias,
+@@ -1111,6 +1278,16 @@
+ p.terminate(); p.wait()
+ write_receipt(p.pid, port, good_holders(p.pid))
+ ''',
++    # a genuine pinned child holds the port and answers, but the receipt is
++    # a copy of an earlier run's (the counter asked for a new request)
++    'replay': r'''
++port = free_port()
++p = spawn_real(port)
++wait_health(port)
++hold_and_release(hold_doc(p.pid, port))
++p.terminate(); p.wait()
++write_receipt(p.pid, port, good_holders(p.pid))
++''',
+     # the pinned bytes copied to another path (same sha256, not the path
+     # the counter chose)
+     'pathcopy': r'''
+@@ -1143,8 +1320,9 @@
+ 
+ 
+ def apply_patch(tip_tool_text, patch_text, workdir, name):
+-    """Apply a unified diff to the tool text with `patch`; returns the
+-    patched text or None."""
++    """Apply a unified diff to the tool text with `patch`. Returns
++    (patched text | None, reason). A dry run must succeed and the real
++    run must report no fuzz (offsets are accepted, a fuzzed hunk is not)."""
+     d = os.path.join(workdir, name)
+     os.makedirs(os.path.join(d, 'tools'), exist_ok=True)
+     tp = os.path.join(d, 'tools', 'kama-completion-live.py')
+@@ -1153,35 +1331,88 @@
+     pp = os.path.join(d, 'x.patch')
+     with open(pp, 'w') as f:
+         f.write(patch_text)
+-    r = subprocess.run(['patch', '-p1', '-F3', '-s', '-i', pp, '-d', d],
+-                       capture_output=True)
+-    if r.returncode != 0:
++    dry = subprocess.run(['patch', '-p1', '--dry-run', '-i', pp, '-d', d],
++                         capture_output=True, text=True)
++    if dry.returncode != 0 or 'fuzz' in dry.stdout.lower():
++        return None, 'dry-run failed or fuzzed: ' + dry.stdout[-200:]
++    r = subprocess.run(['patch', '-p1', '-i', pp, '-d', d],
++                       capture_output=True, text=True)
++    if r.returncode != 0 or 'fuzz' in r.stdout.lower():
++        return None, 'patch failed or fuzzed: ' + r.stdout[-200:]
++    return open(tp).read(), ''
++
++
++def splice_before_main(text, code):
++    """Insert `code` before the tool's `if __name__ == '__main__':` guard
++    so it is defined before main() runs. None when the guard is absent."""
++    marker = "\nif __name__ == '__main__':"
++    i = text.rfind(marker)
++    if i < 0:
+         return None
+-    return open(tp).read()
++    return text[:i] + '\n' + code + text[i:]
++
++
++# The forger fabricates the tool's own holder bookkeeping so the tool-side
++# check cannot be what rejects it: structurally (a Popen recorder and a
++# replacement `_proc_holders`), independent of the tool's source text.
++FORGE_CLAIM = '''
++_FP_LAST = {}
++_FP_POPEN = subprocess.Popen
++class _FPopen(_FP_POPEN):
++    def __init__(self, *a, **k):
++        super().__init__(*a, **k)
++        _FP_LAST['p'] = self
++subprocess.Popen = _FPopen
++def _proc_holders(port):
++    p = _FP_LAST.get('p')
++    srv = os.path.realpath(sys.argv[sys.argv.index('--server') + 1])
++    return [{'pid': p.pid, 'exe': srv, 'exe_sha256': DEFAULT_SERVER_SHA}]
++'''
++
++# A v3-schema tool whose receipt is v2-shaped: the holder bookkeeping is
++# removed from what it writes.
++RELABEL_WRAP = '''
++_orig_run = run
++def run(args):
++    r, rc = _orig_run(args)
++    r.pop('listener_holders', None)
++    r['checks'].pop('listener_holders_pinned', None)
++    return r, rc
++'''
+ 
+ 
+ def forge_variants(repo, tip, work):
+     """Planted forged tools: the round-63 patches replayed on the tip tool
+     (A: canned fake behind the real child's inherited listener; B: no
+     llama-server at all) and each with the tool's own holder bookkeeping
+-    fabricated so the tool-side check cannot be what rejects it."""
++    fabricated. Returns ({name: tool text}, [error strings])."""
+     tool = blob(repo, tip, 'tools/kama-completion-live.py')
+-    pa = blob(repo, tip, '.ufo/waves/round-64/controls/forge-A-realchild.patch')
+-    pb = blob(repo, tip, '.ufo/waves/round-64/controls/forge-B-sleeper-delta.patch')
++    pa = blob(repo, tip,
++              '.ufo/waves/round-64/controls/forge-A-realchild.patch')
++    pb = blob(repo, tip,
++              '.ufo/waves/round-64/controls/forge-B-sleeper-delta.patch')
+     if not (tool and pa and pb):
+-        return {}
+-    tool = tool.decode()
+-    a = apply_patch(tool, pa.decode(), work, 'forgeA-build')
++        return {}, ['forge patch or tool blob missing at the tip']
++    errs = []
++    a, why = apply_patch(tool.decode(), pa.decode(), work, 'forgeA-build')
+     if a is None:
+-        return {}
+-    ab = apply_patch(a, pb.decode(), work, 'forgeAB-build')
+-    fab = "holders = [{'pid': proc.pid, 'exe': server, 'exe_sha256': server_sha}]"
++        return {}, ['forge A: ' + why]
++    ab, why = apply_patch(a, pb.decode(), work, 'forgeAB-build')
++    if ab is None:
++        errs.append('forge B: ' + why)
+     out = {'forgeA': a}
+-    if 'holders = _proc_holders(port)' in a:
+-        out['forgeA2'] = a.replace('holders = _proc_holders(port)', fab)
+-    if ab is not None and 'holders = _proc_holders(port)' in ab:
+-        out['forgeB2'] = ab.replace('holders = _proc_holders(port)', fab)
+-    return out
++    a2 = splice_before_main(a, FORGE_CLAIM)
++    if a2 is None:
++        errs.append('forge A2: no main guard to splice before')
++    else:
++        out['forgeA2'] = a2
++    if ab is not None:
++        b2 = splice_before_main(ab, FORGE_CLAIM)
++        if b2 is None:
++            errs.append('forge B2: no main guard to splice before')
++        else:
++            out['forgeB2'] = b2
++    return out, errs
+ 
+ 
+ # --------------------------------------------------------------- controls #
+@@ -1318,7 +1549,8 @@
+ 
+     def req_prompt(m):
+         c = m['captures']['completion']
+-        c['request_body'] = c['request_body'].replace(PROMPT, 'Other text')
++        c['request_body'] = c['request_body'].replace(
++            TOOL_REQ['prompt'], 'Other text')
+         c['request_sha256'] = sha256_b(c['request_body'].encode())
+     add('reqbind', 'completion_request_bound', edit(receipt, req_prompt))
+     add('reqbind', 'completion_request_bound', edit(
+@@ -1386,13 +1618,30 @@
+         {'cmdline': r['holders'][0]['cmdline'] + ['--port', '2']})))
+     add('bind', 'bind_argv', bm=bm(lambda r: r['holders'][0].update(
+         {'cmdline': r['holders'][0]['cmdline'] + ['--model', decoy]})))
+-    add('bind', 'bind_env', bm=bm(lambda r: r['holders'][0].update(
+-        {'environ_keys': r['holders'][0]['environ_keys'] + ['LD_PRELOAD']})))
+-    add('bind', 'bind_env', bm=bm(lambda r: r['holders'][0].update(
+-        {'environ_keys': r['holders'][0]['environ_keys']
+-         + ['GLIBC_TUNABLES']})))
++    add('bind', 'bind_argv', bm=bm(lambda r: r['holders'][0].update(
++        {'cmdline': r['holders'][0]['cmdline'] + ['-c', '4096']})))
++    add('bind', 'bind_argv', bm=bm(lambda r: r['holders'][0].update(
++        {'cmdline': r['holders'][0]['cmdline'] + ['-m', decoy]})))
++
++    def envp(fn):
++        return bm(lambda r: r['holders'][0].update(
++            {'environ': fn(dict(r['holders'][0]['environ']))}))
++    add('bind', 'bind_env', bm=envp(
++        lambda e: {**e, 'LD_PRELOAD': '/x.so'}))
++    add('bind', 'bind_env', bm=envp(
++        lambda e: {**e, 'GLIBC_TUNABLES': 'glibc.malloc.check=3'}))
+     add('bind', 'bind_env', bm=bm(
+-        lambda r: r['holders'][0].update({'environ_keys': None})))
++        lambda r: r['holders'][0].update({'environ': None})))
++    add('bind', 'bind_env', bm=envp(
++        lambda e: {**e, 'LLAMA_ARG_MODEL': '/other.gguf'}))
++    add('bind', 'bind_env', bm=envp(
++        lambda e: {**e, 'PATH': '/evil:' + e.get('PATH', '')}))
++    add('bind', 'bind_ns', bm=bm(lambda r: r['holders'][0].update(
++        {'ns': {**r['holders'][0]['ns'], 'mnt': 'mnt:[1]'}})))
++    add('bind', 'bind_trace', bm=bm(
++        lambda r: r['holders'][0].update({'tracer_pid': 4242})))
++    add('bind', 'bind_state', bm=bm(
++        lambda r: r['holders'][0].update({'state': 'T'})))
+     add('bind', 'bind_maps', bm=bm(lambda r: r['holders'][0]['maps'].append(
+         {'path': '/memfd:evil (deleted)', 'deleted': True, 'sha256': None})))
+     add('bind', 'bind_maps', bm=bm(lambda r: r['holders'][0]['maps'].append(
+@@ -1402,7 +1651,7 @@
+         if m.get('sha256') and m['path'].endswith('.so.0.7.0')).update(
+         {'sha256': '1' * 64})))
+     add('bind', 'bind_ancestry', bm=bm(
+-        lambda r: r.update({'tool_pid': 1})))
++        lambda r: r.update({'tool_pid': 999999999})))
+     add('bind', 'hold_fresh', bm=bm(
+         lambda r: r.update({'hold_mtime_ns': r['t0_ns'] - 1})))
+     add('bind', 'hold_fresh', bm=bm(lambda r: r['holders'][0].update(
+@@ -1411,6 +1660,67 @@
+         **clone(b), 'teardown': {'gone': False, 'port_closed': True}})
+     add('bind', 'bind_stable', bm=lambda b: {**clone(b), 'raw_b': {
+         **clone(b['raw_b']), 'holders': []}})
++    add('bind', 'hold_fresh', bm=bm(lambda r: r.update(
++        {'hold_mtime_ns': r['collected_ns'] + 10_000_000_000})))
++
++    def ref_wm(fn):
++        def f(w):
++            w = clone(w)
++            fn(w['ref_files'])
++            return w
++        return f
++    add('bind', 'bind_ref_files', wm=ref_wm(
++        lambda rf: rf[0].__setitem__(2, '1')))
++    add('bind', 'bind_ref_files', bm=bm(lambda r: r['holders'][0][
++        'maps'].append({
++            'path': os.path.join(os.path.dirname(r['server_path']),
++                                 'libllama-cli-impl.so'),
++            'deleted': False, 'dev': '00:2e', 'inode': '4242',
++            'sha256': LIBS['libllama-cli-impl.so']})))
++
++    # ---- the receipt's own request and answer must be this run's ------ #
++    def both(fn):
++        def f(m):
++            for n in ('completion', 'completion2'):
++                c = m['captures'][n]
++                o = json.loads(c['body'])
++                fn(o)
++                c['body'] = json.dumps(o, separators=(',', ':'))
++                reseal(c)
++                if 'content-length' in c.get('headers', {}):
++                    c['headers']['content-length'] = str(c['body_bytes'])
++        return f
++    add('receiptbind', 'receipt_ref_text', edit(receipt, both(
++        lambda o: o['choices'][0].update({'text': ' FABRICATED BY TOOL'}))))
++
++    def usage_plus(m):
++        both(lambda o: (o['usage'].update(
++            {'prompt_tokens': o['usage']['prompt_tokens'] + 1,
++             'total_tokens': o['usage']['total_tokens'] + 1})))(m)
++        tk = m['captures']['tokenize']
++        o = json.loads(tk['body'])
++        o['tokens'].append(7)
++        tk['body'] = json.dumps(o, separators=(',', ':'))
++        reseal(tk)
++    add('receiptbind', 'receipt_ref_usage', edit(receipt, usage_plus))
++
++    def other_prompt(m):
++        for n in ('completion', 'completion2'):
++            c = m['captures'][n]
++            o = json.loads(c['request_body'])
++            o['prompt'] = o['prompt'] + ' again'
++            c['request_body'] = json.dumps(o)
++            c['request_sha256'] = sha256_b(c['request_body'].encode())
++    add('receiptbind', 'receipt_req', edit(receipt, other_prompt))
++
++    def other_n(m):
++        for n in ('completion', 'completion2'):
++            c = m['captures'][n]
++            o = json.loads(c['request_body'])
++            o['n_predict'] = o['n_predict'] + 1
++            c['request_body'] = json.dumps(o)
++            c['request_sha256'] = sha256_b(c['request_body'].encode())
++    add('receiptbind', 'receipt_req', edit(receipt, other_n))
+     return ctl
+ 
+ 
+@@ -1451,6 +1761,23 @@
+     return None
+ 
+ 
++def families_match(tot, ok):
++    """Every family present at exactly its declared count, credited in full."""
++    return tot == EXPECT_FAMILIES and ok == EXPECT_FAMILIES
++
++
++def credit_rule(s, expect, cap, clean_receipt=False):
++    """One control's credit: rejected, the named check among the failures,
++    within the cap; a fake tool holding a genuine receipt copy must in
++    addition show no receipt-level failure (a garbled receipt is a crashed
++    fake, not the named reason). Declared in freeze.txt AMENDMENT 1."""
++    hit = is_hit(s, expect, cap)
++    if hit and clean_receipt:
++        hit = not any(k in RECEIPT_LEVEL or k in RECEIPT_BIND
++                      or k.startswith('inconsistent:') for k in s['fails'])
++    return hit
++
++
+ def main(argv=None):
+     ap = argparse.ArgumentParser()
+     ap.add_argument('--repo', required=True)
+@@ -1458,6 +1785,13 @@
+     ap.add_argument('--work', required=True)
+     args = ap.parse_args(argv)
+     work = os.path.abspath(args.work)
++    if os.path.isdir(work) and os.listdir(work):
++        print('error: work-reused: --work already holds files; the counter '
++              'refuses a reused scratch directory (pass a fresh one)',
++              file=sys.stderr)
++        print('tool_present=0 live_ok=0/1 controls_targeted=0/0 '
++              'work_reused=1 errors=1 met=False')
++        return 2
+     os.makedirs(work, exist_ok=True)
+     errors = []
+     global NONCE
+@@ -1477,36 +1811,46 @@
+     live_ok = 0
+     st = 0
+     fam_tot, fam_ok, detail = {}, {}, []
++    probe_nonce = reqs = None
+     if not errors:
+         rng = random.Random(int.from_bytes(os.urandom(8), 'big'))
+         probe_nonce = 'r64p' + hashlib.sha256(os.urandom(8)).hexdigest()[:8]
+-        reqs = draw_probes(rng, probe_nonce)
+-        ref = reference_run(server, model, reqs, work)
+-        if len(ref) != 2:
+-            errors.append('reference server produced no answers')
+-        receipt, witness, binding, nonce, notes = witness_run(
+-            work, 'live', tool_path, server, model, reqs)
+-        NONCE = nonce
+-        # the probes carry the probe nonce; the receipt carries the tool
+-        # nonce: bind both to this run
+-        if witness is not None:
+-            witness['ref'] = ref
+-        if receipt is None or witness is None or binding is None:
+-            errors.append('live: no receipt/witness produced ' + '; '.join(
+-                notes))
++        ref_all = []
++        for _attempt in range(8):
++            reqs, tool_req = draw_requests(rng, probe_nonce)
++            ref_all = reference_run(server, model, reqs + [tool_req], work)
++            texts = [(r or {}).get('text') for r in ref_all]
++            if (len(ref_all) == 3 and all(isinstance(t, str) and t
++                                          for t in texts)
++                    and len(set(texts)) == 3):
++                break
+         else:
+-            s = score_run(receipt, witness, binding, probe_nonce)
+-            live_ok = 1 if s['met'] else 0
+-            if not s['met']:
+-                errors.append('live: ' + json.dumps(sorted(s['fails'])))
++            errors.append('no draw gave three distinct reference answers')
++        if not errors:
++            TOOL_REQ.clear()
++            TOOL_REQ.update(tool_req)
++            receipt, witness, binding, nonce, notes = witness_run(
++                work, 'live', tool_path, server, model, reqs, tool_req)
++            NONCE = nonce
++            if receipt is None or witness is None or binding is None:
++                errors.append('live: no receipt/witness produced '
++                              + '; '.join(notes))
++            else:
++                witness['ref'] = ref_all[:2]
++                witness['ref_tool'] = ref_all[2]
++                witness['ref_files'] = [list(x) for x in REF_FILES]
++                s = score_run(receipt, witness, binding, probe_nonce)
++                live_ok = 1 if s['met'] else 0
++                if not s['met']:
++                    errors.append('live: ' + json.dumps(sorted(s['fails'])))
+     if live_ok == 1:
+         run_controls(args, work, tool_path, server, model, receipt,
+-                     witness, binding, reqs, probe_nonce, fam_tot, fam_ok,
+-                     detail, errors)
++                     witness, binding, reqs, probe_nonce, rng, fam_tot,
++                     fam_ok, detail, errors)
+         st = eval_selftest_run(receipt, witness, binding, probe_nonce)
+     total = sum(fam_tot.values())
+     rejected = sum(fam_ok.values())
+-    fam_match = fam_tot == EXPECT_FAMILIES and fam_ok == EXPECT_FAMILIES
++    fam_match = families_match(fam_tot, fam_ok)
+     met = (tool_present == 1 and live_ok == 1 and fam_match
+            and st == EXPECT_EVAL_SELFTEST and not errors)
+     fams = ' '.join(f'{k}={fam_ok.get(k, 0)}/{v}'
+@@ -1522,11 +1866,24 @@
+     return 0 if met else 1
+ 
+ 
+-def score_run(receipt, witness, binding, probe_nonce):
+-    """score() with the per-run probe nonce standing in for the witness
+-    nonce check (the tool's own nonce is graded through nonce_match)."""
+-    s = score(receipt, witness, binding)
+-    # the probes carry the per-run probe nonce
++def score_run(receipt, witness, binding, probe_nonce, nonce=None):
++    """score() under this run's globals: the tool nonce (nonce_match), the
++    request the counter asked of the tool (completion_request_bound), and
++    the per-run probe nonce every outside probe prompt must carry."""
++    global NONCE
++    saved_n, saved_t = NONCE, dict(TOOL_REQ)
++    if nonce is not None:
++        NONCE = nonce
++    tr = (witness or {}).get('tool_req')
++    if tr:
++        TOOL_REQ.clear()
++        TOOL_REQ.update(tr)
++    try:
++        s = score(receipt, witness, binding)
++    finally:
++        NONCE = saved_n
++        TOOL_REQ.clear()
++        TOOL_REQ.update(saved_t)
+     if not all(probe_nonce in ((p or {}).get('sent_prompt') or '')
+                for p in (witness or {}).get('probes') or []):
+         s['fails'].add('live_nonce')
+@@ -1535,6 +1892,11 @@
+ 
+ 
+ def eval_selftest_run(receipt, witness, binding, probe_nonce):
++    """Eight planted cases the evaluator must judge correctly: three that
++    must NOT be credited (wrong reason, over-cap cascade, a passing check
++    named), three that MUST be (a one-field break, the envelope break at its
++    cap, a missing probe nonce), the clean-receipt veto, and a misfiled
++    family table. Returns the number judged correctly (expected 8)."""
+     n = 0
+     stale = edit(receipt, lambda m: m.update({'nonce': 'r60-dead'}))
+     n += int(not is_hit(score_run(stale, witness, binding, probe_nonce),
+@@ -1545,21 +1907,35 @@
+                         'completion_envelope'))
+     n += int(not is_hit(score_run(receipt, witness, binding, probe_nonce),
+                         'nonce_match'))
++    health = edit(receipt, lambda m: m['captures']['health'].update(
++        {'body': '{"status":"OK"}'}))
++    n += int(is_hit(score_run(health, witness, binding, probe_nonce),
++                    'health_ready'))
++    n += int(is_hit(score_run(env, witness, binding, probe_nonce),
++                    'completion_envelope', ENVELOPE_CAP))
++    nonce_w = clone(witness)
++    nonce_w['probes'][0]['sent_prompt'] = 'no nonce here'
++    n += int(is_hit(score_run(receipt, nonce_w, binding, probe_nonce),
++                    'live_nonce'))
++    n += int(not credit_rule(
++        {'met': False, 'fails': {'bind_exe', 'health_ready'}},
++        'bind_exe', 99, clean_receipt=True))
++    bad_tot = dict(EXPECT_FAMILIES)
++    bad_tot['stale'] = 0
++    bad_tot['log'] = EXPECT_FAMILIES['log'] + 1
++    n += int(not families_match(bad_tot, bad_tot))
+     return n
+ 
+ 
+ def run_controls(args, work, tool_path, server, model, receipt, witness,
+-                 binding, reqs, probe_nonce, fam_tot, fam_ok, detail,
++                 binding, reqs, probe_nonce, rng, fam_tot, fam_ok, detail,
+                  errors):
+-    global NONCE
++    tool_req = witness['tool_req']
++    ref = witness['ref']
++    ref_tool = witness['ref_tool']
++
+     def credit(fam, s, expect, cap, label, clean_receipt=False):
+-        hit = is_hit(s, expect, cap)
+-        if hit and clean_receipt:
+-            # a forger holding a genuine receipt copy passes every
+-            # receipt-level check; a receipt-level failure means the fake
+-            # crashed or garbled the receipt, which is not the named reason
+-            hit = not any(k in RECEIPT_LEVEL or k.startswith('inconsistent:')
+-                          for k in s['fails'])
++        hit = credit_rule(s, expect, cap, clean_receipt)
+         fam_tot[fam] = fam_tot.get(fam, 0) + 1
+         fam_ok[fam] = fam_ok.get(fam, 0) + int(hit)
+         if not hit:
+@@ -1567,15 +1943,36 @@
+                           f'met={s["met"]} nfails={len(s["fails"])} '
+                           f'fails={sorted(s["fails"])[:8]}')
+ 
++    def scenario(fam, label, expect, cap, clean, tool, treq=None, tref=None,
++                 extra_env=None):
++        """One live forged-tool run scored through the same path as the
++        genuine run; a run that cannot be scored counts as a control that
++        was not rejected (and is reported)."""
++        treq = treq or tool_req
++        tref = tref or ref_tool
++        try:
++            r, w, b, nonce, notes = witness_run(
++                work, label, tool, server, model, reqs, treq, extra_env)
++        except Exception as e:  # a control that cannot run is not credit
++            errors.append(f'{label}: {type(e).__name__}: {e}')
++            fam_tot[fam] = fam_tot.get(fam, 0) + 1
++            return
++        if r is None or w is None or b is None:
++            detail.append(f'{label}: no receipt/witness {notes}')
++            fam_tot[fam] = fam_tot.get(fam, 0) + 1
++            return
++        w['ref'] = ref
++        w['ref_tool'] = tref
++        w['ref_files'] = witness['ref_files']
++        credit(fam, score_run(r, w, b, probe_nonce, nonce=nonce), expect,
++               cap, label, clean)
++
+     for fam, m, wm, bm, expect, cap in build_controls(
+             receipt, witness, binding, work):
+         w = wm(witness) if wm else witness
+         b = bm(binding) if bm else binding
+         credit(fam, score_run(m, w, b, probe_nonce), expect, cap, expect)
+ 
+-    # relabel control: the base-style v2 tool with its schema string
+-    # changed to v3 (no holder bookkeeping) must not pass
+-    tool = blob(args.repo, args.tip, 'tools/kama-completion-live.py')
+     # live forged tools, all through the same witness_run + score path
+     tpl = os.path.join(work, 'genuine-receipt.json')
+     with open(tpl, 'w') as f:
+@@ -1583,8 +1980,8 @@
+     stale_doc = os.path.join(work, 'stale-hold.json')
+     with open(stale_doc, 'w') as f:
+         json.dump({'schema': 'kama-completion-hold/v1',
+-                   'port': (witness or {}).get('hold_port'),
+-                   'pid': (witness or {}).get('hold_pid'),
++                   'port': witness.get('hold_port'),
++                   'pid': witness.get('hold_pid'),
+                    'alias': ALIAS, 'model_sha256': MODEL_SHA,
+                    'server_sha256': SERVER_SHA, 'prompt': PROMPT,
+                    'at': '2026-10-28T00:00:00Z'}, f)
+@@ -1597,113 +1994,65 @@
+             ('preload', 'preload', 'preload', 'bind_env'),
+             ('pathcopy', 'pathcopy', 'pathcopy', 'bind_exe')]
+     for mode, fam, label, expect in plan:
+-        try:
+-            fake = write_fake(work, mode)
+-            env = dict(env_base, KAMA_FAKE_MODE=mode)
+-            r, w, b, nonce, notes = witness_run(
+-                work, 'fake-' + label, fake, server, model, reqs, env)
+-            ref = (witness or {}).get('ref')
+-            if w is not None:
+-                w['ref'] = ref
+-            if r is None or w is None or b is None:
+-                detail.append(f'fake {label}: no receipt/witness '
+-                              f'{notes}')
+-                fam_tot[fam] = fam_tot.get(fam, 0) + 1
+-                continue
+-            saved, NONCE = NONCE, nonce
+-            try:
+-                s = score_run(r, w, b, probe_nonce)
+-            finally:
+-                NONCE = saved
+-            credit(fam, s, expect, 99, label, clean_receipt=True)
+-        except Exception as e:  # a control that cannot run is not credit
+-            errors.append(f'fake {label}: {type(e).__name__}: {e}')
+-            fam_tot[fam] = fam_tot.get(fam, 0) + 1
+-    forged = forge_variants(args.repo, args.tip, work)
+-    for name in ('forgeA', 'forgeA2', 'forgeB2'):
+-        fam_tot_before = fam_tot.get('forge', 0)
+-        if name not in forged:
+-            fam_tot['forge'] = fam_tot.get('forge', 0) + 1
+-            detail.append(f'forge {name}: patch did not apply to the tip tool')
+-            continue
+-        d = os.path.join(work, 'forge-' + name)
+-        os.makedirs(os.path.join(d, 'tools'), exist_ok=True)
+-        # the forged tool imports tools/kama-llamacpp-live.py from its tree
+-        shutil.copy(os.path.join(os.path.dirname(tool_path),
+-                                 'kama-llamacpp-live.py'),
++        fake = write_fake(work, mode)
++        scenario(fam, 'fake-' + label, expect, 99, True, fake,
++                 extra_env=dict(env_base, KAMA_FAKE_MODE=mode))
++
++    # replay: a genuine pinned child holds the port but the tool writes a
++    # receipt from an earlier run; the counter asked for a NEW request
++    texts = {(r or {}).get('text') for r in [*ref, ref_tool]}
++    ref2 = []
++    for _try in range(8):
++        _, tool_req2 = draw_requests(rng, probe_nonce)
++        ref2 = reference_run(server, model, [tool_req2], work)
++        if len(ref2) == 1 and ref2[0].get('text') not in texts \
++                and ref2[0].get('text'):
++            break
++    else:
++        ref2 = []
++    if len(ref2) == 1:
++        fake = write_fake(work, 'replay')
++        scenario('replay', 'fake-replay', 'receipt_ref_text', SCENARIO_CAP,
++                 False, fake, treq=tool_req2, tref=ref2[0],
++                 extra_env=dict(env_base, KAMA_FAKE_MODE='replay'))
++    else:
++        errors.append('replay: no draw with a new reference answer')
++        fam_tot['replay'] = fam_tot.get('replay', 0) + 1
++
++    tool_text = (blob(args.repo, args.tip, 'tools/kama-completion-live.py')
++                 or b'').decode()
++    forged, ferrs = forge_variants(args.repo, args.tip, work)
++    errors.extend(ferrs)
++    root = os.path.dirname(os.path.dirname(tool_path))
++
++    def planted_tool(name, text):
++        d = os.path.join(work, 'planted-' + name)
++        os.makedirs(os.path.join(d, 'tools'))
++        os.makedirs(os.path.join(d, 'registry'))
++        shutil.copy(os.path.join(root, 'tools', 'kama-llamacpp-live.py'),
+                     os.path.join(d, 'tools', 'kama-llamacpp-live.py'))
+-        os.makedirs(os.path.join(d, 'registry'), exist_ok=True)
+-        rg = os.path.join(os.path.dirname(os.path.dirname(tool_path)),
+-                          'registry', 'endpoint-consumers.tsv')
++        rg = os.path.join(root, 'registry', 'endpoint-consumers.tsv')
+         if os.path.exists(rg):
+             shutil.copy(rg, os.path.join(d, 'registry',
+                                          'endpoint-consumers.tsv'))
+         fp = os.path.join(d, 'tools', 'kama-completion-live.py')
+         with open(fp, 'w') as f:
+-            f.write(forged[name])
+-        try:
+-            r, w, b, nonce, notes = witness_run(
+-                work, 'forged-' + name, fp, server, model, reqs)
+-            if w is not None:
+-                w['ref'] = (witness or {}).get('ref')
+-            if r is None or w is None or b is None:
+-                # a forger whose tool crashes is not a forgery that was
+-                # rejected by the named check: no credit
+-                detail.append(f'forge {name}: no receipt/witness {notes}')
+-                fam_tot['forge'] = fam_tot.get('forge', 0) + 1
+-                continue
+-            saved, NONCE = NONCE, nonce
+-            try:
+-                s = score_run(r, w, b, probe_nonce)
+-            finally:
+-                NONCE = saved
+-            credit('forge', s, 'bind_holders', SCENARIO_CAP, name)
+-        except Exception as e:
+-            errors.append(f'forge {name}: {type(e).__name__}: {e}')
++            f.write(text)
++        return fp
++
++    for name in ('forgeA', 'forgeA2', 'forgeB2'):
++        if name not in forged:
+             fam_tot['forge'] = fam_tot.get('forge', 0) + 1
+-    # relabel: the tip tool with its holder bookkeeping stripped while it
+-    # keeps the v3 schema string - what a v2 tool that only changed its
+-    # schema line would emit
+-    relabel_ok = False
+-    text = (tool or b'').decode()
+-    mark = "receipt['listener_holders'] = holders"
+-    if mark in text and "check('listener_holders_pinned'," in text:
+-        stripped = text.replace(
+-            mark, "receipt.pop('listener_holders', None)").replace(
+-            "check('listener_holders_pinned',",
+-            "check('listener_holders_pinned_x',")
+-        d = os.path.join(work, 'relabel')
+-        os.makedirs(os.path.join(d, 'tools'), exist_ok=True)
+-        os.makedirs(os.path.join(d, 'registry'), exist_ok=True)
+-        shutil.copy(os.path.join(os.path.dirname(tool_path),
+-                                 'kama-llamacpp-live.py'),
+-                    os.path.join(d, 'tools', 'kama-llamacpp-live.py'))
+-        rg = os.path.join(os.path.dirname(os.path.dirname(tool_path)),
+-                          'registry', 'endpoint-consumers.tsv')
+-        if os.path.exists(rg):
+-            shutil.copy(rg, os.path.join(d, 'registry',
+-                                         'endpoint-consumers.tsv'))
+-        fp = os.path.join(d, 'tools', 'kama-completion-live.py')
+-        with open(fp, 'w') as f:
+-            f.write(stripped)
+-        try:
+-            r, w, b, nonce, notes = witness_run(
+-                work, 'relabel-run', fp, server, model, reqs)
+-            if w is not None:
+-                w['ref'] = (witness or {}).get('ref')
+-            if r is not None and w is not None and b is not None:
+-                saved, NONCE = NONCE, nonce
+-                try:
+-                    s = score_run(r, w, b, probe_nonce)
+-                finally:
+-                    NONCE = saved
+-                credit('relabel', s, 'bind_claim', SCENARIO_CAP, 'relabel')
+-                relabel_ok = True
+-        except Exception as e:
+-            errors.append(f'relabel: {type(e).__name__}: {e}')
+-    if not relabel_ok:
++            continue
++        scenario('forge', 'forged-' + name, 'bind_holders', SCENARIO_CAP,
++                 False, planted_tool(name, forged[name]))
++    relabelled = splice_before_main(tool_text, RELABEL_WRAP)
++    if relabelled is None:
++        errors.append('relabel: no main guard to splice before')
+         fam_tot['relabel'] = fam_tot.get('relabel', 0) + 1
+-        detail.append('relabel: could not run')
++    else:
++        scenario('relabel', 'relabel-run', 'bind_claim', SCENARIO_CAP,
++                 False, planted_tool('relabel', relabelled))
+ 
+ 
+ if __name__ == '__main__':

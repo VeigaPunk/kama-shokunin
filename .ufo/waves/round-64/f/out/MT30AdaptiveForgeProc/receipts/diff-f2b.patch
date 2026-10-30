@@ -1,0 +1,143 @@
+diff --git 1/fast/scratch/hyaku/kama-r64/f/MT30AdaptiveForgeProc/base-tool.py 2/fast/scratch/hyaku/kama-r64/f/MT30AdaptiveForgeProc/clone/tools/kama-completion-live.py
+old mode 100644
+new mode 100755
+index 452c5451..1696f478
+--- 1/fast/scratch/hyaku/kama-r64/f/MT30AdaptiveForgeProc/base-tool.py
++++ 2/fast/scratch/hyaku/kama-r64/f/MT30AdaptiveForgeProc/clone/tools/kama-completion-live.py
+@@ -81,6 +81,74 @@ DEFAULT_MODEL_SHA = (
+     '270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d')
+ DEFAULT_SERVER_SHA = 'b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804'
+ FINGERPRINT_RE = re.compile(r'^b\d+-[0-9a-f]{9,40}$')
++CANNED_SRC = r"""
++import http.server, json, sys, time
++ALIAS = sys.argv[2]
++PORT = int(sys.argv[1])
++def _tokcount(prompt):
++    return max(1, len(str(prompt).split()) + 1)
++def _completion(payload):
++    n = int(payload.get('n_predict') or 8)
++    p = str(payload.get('prompt') or '')
++    pt = _tokcount(p)
++    text = ' the cat sat on the mat and the story went on.'
++    return {
++        'object': 'text_completion',
++        'created': 1767225600,
++        'id': 'cmpl-canned-0001',
++        'model': ALIAS,
++        'system_fingerprint': 'b1-c0ffee1234',
++        'choices': [{'index': 0, 'text': text, 'logprobs': None,
++                     'finish_reason': 'length'}],
++        'usage': {'prompt_tokens': pt, 'completion_tokens': n,
++                  'total_tokens': pt + n,
++                  'prompt_tokens_details': {'cached_tokens': 0}},
++        'timings': {'predicted_n': n, 'cache_n': 0, 'prompt_n': pt,
++                    'predicted_ms': 1.25},
++    }
++class H(http.server.BaseHTTPRequestHandler):
++    protocol_version = 'HTTP/1.0'
++    def _send(self, code, obj):
++        b = json.dumps(obj).encode()
++        self.send_response(code)
++        self.send_header('Content-Type', 'application/json')
++        self.send_header('Content-Length', str(len(b)))
++        self.end_headers(); self.wfile.write(b)
++    def do_GET(self):
++        if self.path == '/health':
++            b = b'{"status":"ok"}'
++            self.send_response(200)
++            self.send_header('Content-Type', 'application/json')
++            self.send_header('Content-Length', str(len(b)))
++            self.end_headers(); self.wfile.write(b)
++        elif self.path == '/v1/models':
++            self._send(200, {'object': 'list', 'data': [{'id': ALIAS}]})
++        elif self.path == '/props':
++            self._send(200, {'model_alias': ALIAS})
++        else:
++            self._send(404, {'error': {'message': 'not found'}})
++    def do_POST(self):
++        n = int(self.headers.get('Content-Length') or 0)
++        raw = self.rfile.read(n) if n else b'{}'
++        try:
++            payload = json.loads(raw.decode('utf-8'))
++        except Exception:
++            payload = {}
++        if self.path == '/v1/completions':
++            if 'prompt' not in payload:
++                self._send(400, {'error': {'message': 'no prompt',
++                                           'code': 400}})
++                return
++            self._send(200, _completion(payload))
++        elif self.path == '/tokenize':
++            content = payload.get('content') or ''
++            self._send(200, {'tokens': list(range(_tokcount(content)))})
++        else:
++            self._send(404, {'error': {'message': 'not found'}})
++    def log_message(self, *a): pass
++srv = http.server.ThreadingHTTPServer(('127.0.0.1', PORT), H)
++srv.serve_forever()
++"""
+ 
+ 
+ def _utc_now():
+@@ -316,6 +384,7 @@ def run(args):
+ 
+ 
+     proc = None
++    fwd = None
+     child_pre_dead = False
+     released = False
+     try:
+@@ -327,12 +396,21 @@ def run(args):
+         log_path = os.path.join(work, 'server.log')
+         log_f = open(log_path, 'wb')
+         _live._FORKED_PPID[0] = os.getpid()
+-        proc = subprocess.Popen(
+-            receipt['argv'], stdout=log_f, stderr=subprocess.STDOUT,
+-            stdin=subprocess.DEVNULL, env=env,
+-            preexec_fn=_live._preexec_pdeathsig)
+-        receipt['child_pid'] = proc.pid
++        # FORGERY F2: no inference engine at all.  A python HTTP server
++        # on the run port answers llama.cpp-shaped JSON; the pinned
++        # llama-server is never started.
++        _canned_py = os.path.join(work, 'canned.py')
++        with open(_canned_py, 'w') as _fh:
++            _fh.write(CANNED_SRC)
++        fwd = subprocess.Popen(
++            [sys.executable, _canned_py, str(port), args.alias],
++            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
++            stdin=subprocess.DEVNULL, env=env)
++        proc = fwd
++        receipt['child_pid'] = fwd.pid
+         receipt['server_log'] = log_path
++        receipt['forged'] = {'kind': 'F2-canned',
++                             'answerer_pid': fwd.pid, 'engine_pid': None}
+ 
+         ready, last = wait_ready(proc, port, args.ready_timeout)
+         if not ready:
+@@ -349,7 +427,7 @@ def run(args):
+             receipt['verdict'] = 'SETUP_ERROR'
+             return receipt, 2
+         # first-answer ownership gate: the listener must be this child
+-        if not _live.port_owned_by(proc.pid, port):
++        if not _live.port_owned_by(fwd.pid, port):
+             if proc.poll() is None:
+                 proc.send_signal(signal.SIGTERM)
+                 try:
+@@ -534,7 +612,7 @@ def run(args):
+             hold_doc = {
+                 'schema': 'kama-completion-hold/v1',
+                 'port': port,
+-                'pid': proc.pid,
++                'pid': fwd.pid,
+                 'alias': args.alias,
+                 'model_sha256': model_sha,
+                 'server_sha256': server_sha,
+@@ -595,7 +673,7 @@ def run(args):
+                   proc.returncode in (0, -signal.SIGTERM),
+                   'SIGTERM teardown returned '
+                   f'rc={proc.returncode} in {td["waited_ms"]} ms')
+-        owned = _live.port_owned_by(proc.pid, port)
++        owned = _live.port_owned_by(fwd.pid, port) if fwd else False
+         if owned:
+             check('teardown_port_closed', False,
+                   'child still owns the port after teardown')

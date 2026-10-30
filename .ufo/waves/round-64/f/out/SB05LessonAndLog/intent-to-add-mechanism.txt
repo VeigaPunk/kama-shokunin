@@ -1,0 +1,19 @@
+# intent-to-add / jj-lane state mechanism check
+date: 2026-10-30T07:59:16-03:00
+jj-lane.sh tracked regex (scripts/hyaku/jj-lane.sh:179-181):
+  status=$(git -C "$dir" status --porcelain 2>/dev/null)
+  tracked=$(printf '%s\n' "$status" | grep -c '^[ MADRCU][MADRCU ]' 2>/dev/null || true)
+  untracked=$(printf '%s\n' "$status" | grep -c '^??' 2>/dev/null || true)
+
+fixture: 20 untracked files, then git add -N .
+-- git status --porcelain --untracked-files=no:
+ A f1.txt
+ A f10.txt
+ A f11.txt
+-- jj-lane tracked regex count:
+20
+-- git ls-files -s (first 2):
+100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0	f1.txt
+100644 e69de29bb2d1d6434b8b29ae775ad8c2e48c5391 0	f10.txt
+-- git diff --cached --stat (empty = nothing staged):
+(end)

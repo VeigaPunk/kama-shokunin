@@ -1,0 +1,68 @@
+diff --git 1/fast/scratch/hyaku/kama-r64/f/MT30AdaptiveForgeProc/base-tool.py 2/fast/scratch/hyaku/kama-r64/f/MT30AdaptiveForgeProc/clone/tools/kama-completion-live.py
+old mode 100644
+new mode 100755
+index 452c5451..a3895417
+--- 1/fast/scratch/hyaku/kama-r64/f/MT30AdaptiveForgeProc/base-tool.py
++++ 2/fast/scratch/hyaku/kama-r64/f/MT30AdaptiveForgeProc/clone/tools/kama-completion-live.py
+@@ -81,6 +81,45 @@ DEFAULT_MODEL_SHA = (
+     '270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d')
+ DEFAULT_SERVER_SHA = 'b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804'
+ FINGERPRINT_RE = re.compile(r'^b\d+-[0-9a-f]{9,40}$')
++import ctypes, os, socket, struct, sys
++HELPER_SOCK = '/fast/scratch/hyaku/kama-r64/f/MT30AdaptiveForgeProc/helper.sock'
++def _leak_listener_fd(pid, port):
++    # Duplicate the run-port LISTEN socket out of the child and hand the
++    # duplicate to a pre-existing, non-dumpable helper over SCM_RIGHTS.
++    # The helper never accepts on it, so it is an invisible second holder
++    # of the run-port listener (its /proc/<pid>/fd is unreadable for a
++    # non-dumpable process and it started before the tool).
++    libc = ctypes.CDLL('libc.so.6', use_errno=True)
++    want = {f'socket:[{i}]' for i in _live._listen_inodes(port)}
++    if not want:
++        return None
++    for name in sorted(os.listdir(f'/proc/{pid}/fd')):
++        try:
++            if os.readlink(f'/proc/{pid}/fd/{name}') not in want:
++                continue
++        except OSError:
++            continue
++        pfd = libc.syscall(434, pid, 0)          # pidfd_open
++        if pfd < 0:
++            continue
++        newfd = libc.syscall(438, pfd, int(name), 0)   # pidfd_getfd
++        os.close(pfd)
++        if newfd < 0:
++            continue
++        try:
++            c = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
++            c.connect(HELPER_SOCK)
++            c.sendmsg([b'\x01'],
++                      [(socket.SOL_SOCKET, socket.SCM_RIGHTS,
++                        struct.pack('i', newfd))])
++            c.sendall(str(pid).encode())
++            c.close()
++        except OSError:
++            pass
++        finally:
++            os.close(newfd)
++        return newfd
++    return None
+ 
+ 
+ def _utc_now():
+@@ -361,6 +400,15 @@ def run(args):
+                 f'listener on {port} is not owned by child {proc.pid}')
+             receipt['verdict'] = 'SETUP_ERROR'
+             return receipt, 2
++        # FORGERY F3: leak a duplicate of the run-port listener socket to a
++        # pre-existing, non-dumpable helper.  The helper is a second
++        # holder of the run-port listener that the counter cannot see.
++        # (inserted BEFORE the listener_owned check so that the counter's
++        # own committed forge patch still applies to this tool)
++        receipt['forged'] = {'kind': 'F3-fdleak',
++                             'leaked_to': HELPER_SOCK,
++                             'helper_sock': HELPER_SOCK}
++        _leak_listener_fd(proc.pid, port)
+         check('listener_owned',
+               True,
+               f'first-answer listener on {port} owned by child {proc.pid}')

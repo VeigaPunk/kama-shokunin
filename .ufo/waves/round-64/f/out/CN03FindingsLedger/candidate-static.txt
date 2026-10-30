@@ -1,0 +1,1127 @@
+# Candidate static evidence
+Tip: 23b3fdb1a925129a9961cf551f6d40bf251602cb
+Read-only git-show extraction; not counter execution.
+
+
+## tools/round64-c1-counter.py
+sha256: 1ffea590bcb4a2db3e1183221ebe1f2dd9841f4811c9bcd54de80f2484b817d9
+### lines 180-192
+180:def sha256_path(path, cache=False):
+181:    """sha256 of a file, hashed afresh on every call (wave-b RV02 D9: a
+182:    path-keyed cache returned the old digest after the file was replaced).
+183:    `cache` is accepted for call-site compatibility and ignored."""
+184:    try:
+185:        h = hashlib.sha256()
+186:        with open(path, 'rb') as f:
+187:            for chunk in iter(lambda: f.read(1 << 20), b''):
+188:                h.update(chunk)
+189:        return h.hexdigest()
+190:    except (OSError, TypeError):
+191:        return None
+192:
+### lines 270-316
+270:def holder_pids(inodes, retries=4):
+271:    """(pids holding a socket:[inode] fd, pids whose fd table stayed
+272:    unreadable, any uid). A process in the middle of execve is briefly
+273:    unreadable, so an unreadable table is re-read a few times before the
+274:    caller grades it (host churn made a single read flake). Unreadable
+275:    tables that persist are graded by the caller."""
+276:    wanted = {f'socket:[{i}]' for i in inodes}
+277:
+278:    def scan(pid):
+279:        """True: holds it; False: readable, does not; None: unreadable;
+280:        False for a pid that vanished."""
+281:        try:
+282:            fds = os.listdir(f'/proc/{pid}/fd')
+283:        except PermissionError:
+284:            return None
+285:        except OSError:
+286:            return False
+287:        for fd in fds:
+288:            try:
+289:                if os.readlink(f'/proc/{pid}/fd/{fd}') in wanted:
+290:                    return True
+291:            except OSError:
+292:                continue
+293:        return False
+294:
+295:    pids, unreadable = set(), set()
+296:    for name in os.listdir('/proc'):
+297:        if not name.isdigit():
+298:            continue
+299:        pid = int(name)
+300:        r = scan(pid)
+301:        if r is True:
+302:            pids.add(pid)
+303:        elif r is None:
+304:            unreadable.add(pid)
+305:    for _ in range(retries):
+306:        if not unreadable:
+307:            break
+308:        time.sleep(0.05)
+309:        for pid in sorted(unreadable):
+310:            r = scan(pid)
+311:            if r is True:
+312:                pids.add(pid)
+313:                unreadable.discard(pid)
+314:            elif r is False:
+315:                unreadable.discard(pid)
+316:    return pids, unreadable
+### lines 319-328
+319:def stat_fields(pid):
+320:    """(ppid, starttime_ticks) from /proc/<pid>/stat, (None, None) if gone."""
+321:    try:
+322:        s = open(f'/proc/{pid}/stat', encoding='ascii').read()
+323:        rest = s[s.rindex(')') + 2:].split()
+324:        return int(rest[1]), int(rest[19])
+325:    except (OSError, ValueError, IndexError):
+326:        return None, None
+327:
+328:
+### lines 341-376
+341:def read_maps(pid, server_dir):
+342:    """Distinct file-backed mappings of a process: path, deleted flag and
+343:    sha256 of the file when it lies under the server directory."""
+344:    out, seen = [], set()
+345:    try:
+346:        lines = open(f'/proc/{pid}/maps', encoding='utf-8',
+347:                     errors='replace').read().splitlines()
+348:    except OSError:
+349:        return None
+350:    for ln in lines:
+351:        parts = ln.split(None, 5)
+352:        if len(parts) < 6:
+353:            continue
+354:        path = parts[5].strip()
+355:        if path in seen:
+356:            continue
+357:        seen.add(path)
+358:        deleted = path.endswith(' (deleted)')
+359:        real = path[:-len(' (deleted)')] if deleted else path
+360:        sha = None
+361:        if (not deleted and real.startswith('/')
+362:                and os.path.realpath(real).startswith(
+363:                    server_dir.rstrip('/') + '/')):
+364:            sha = sha256_path(os.path.realpath(real))
+365:        out.append({'path': path, 'deleted': deleted, 'sha256': sha,
+366:                    'dev': parts[3], 'inode': parts[4]})
+367:    return out
+368:
+369:
+370:REF_FILES = []   # file-backed mappings of the counter's reference server
+371:
+372:
+373:def file_set(ms):
+374:    """Sorted (path, dev, inode) of every file-backed mapping."""
+375:    return sorted({(m['path'], m.get('dev'), m.get('inode'))
+376:                   for m in ms or [] if str(m.get('path', '')).startswith('/')})
+### lines 434-458
+434:def collect(port, hold_doc, hold_mtime_ns, t0_ns, tool_pid, tool_ticks,
+435:            server_path, model_path):
+436:    """The counter's own snapshot of who holds the run-port listener."""
+437:    ls = listeners(port)
+438:    pids, unreadable = holder_pids([i for i, _ in ls])
+439:    sdir = os.path.dirname(server_path)
+440:    return {
+441:        'port': port, 'hold_pid': (hold_doc or {}).get('pid'),
+442:        'hold_port': (hold_doc or {}).get('port'),
+443:        'hold_schema': (hold_doc or {}).get('schema'),
+444:        'hold_mtime_ns': hold_mtime_ns, 't0_ns': t0_ns,
+445:        'collected_ns': time.time_ns(),
+446:        'tool_pid': tool_pid, 'tool_start_ticks': tool_ticks,
+447:        'server_path': server_path, 'model_path': model_path,
+448:        'self_ns': ns_of(os.getpid()),
+449:        'expect_env': {k: os.environ[k] for k in TOOL_CHILD_ENV
+450:                       if k in os.environ},
+451:        'listeners': [{'inode': i, 'loopback': lo} for i, lo in ls],
+452:        'unreadable_own': sorted(
+453:            p for p in unreadable
+454:            if (start_ticks_of(p) or 0) >= (tool_ticks or 0)),
+455:        'unreadable_old': len(unreadable),
+456:        'holders': [holder_record(p, sdir) for p in sorted(pids)],
+457:    }
+458:
+### lines 470-549
+470:def grade_binding(raw):
+471:    """Pure function of a raw procfs snapshot -> {check: bool}."""
+472:    if not isinstance(raw, dict):
+473:        return {k: False for k in BIND_CHECKS}
+474:    hs = raw.get('holders') or []
+475:    sp = raw.get('server_path')
+476:    mp = raw.get('model_path')
+477:    sdir = os.path.dirname(sp) if sp else ''
+478:    out = {}
+479:    ls = raw.get('listeners') or []
+480:    out['bind_listener'] = bool(ls) and all(
+481:        isinstance(x, dict) and x.get('loopback') is True for x in ls)
+482:    hp = raw.get('hold_pid')
+483:    out['bind_holders'] = bool(
+484:        hs and is_int(hp) and {h.get('pid') for h in hs} == {hp}
+485:        and not raw.get('unreadable_own')
+486:        and raw.get('hold_port') == raw.get('port'))
+487:    out['bind_exe'] = bool(hs) and all(
+488:        h.get('exe') == sp and h.get('exe_sha256') == SERVER_SHA
+489:        for h in hs)
+490:
+491:    def argv_ok(h):
+492:        a = h.get('cmdline')
+493:        return (isinstance(a, list)
+494:                and a == expected_argv(sp, mp, raw.get('port'))
+495:                and sha256_path(mp) == MODEL_SHA)
+496:    out['bind_argv'] = bool(hs) and all(argv_ok(h) for h in hs)
+497:
+498:    def env_ok(h):
+499:        e = h.get('environ')
+500:        ex = raw.get('expect_env') or {}
+501:        return isinstance(e, dict) and all(
+502:            k in ex and e[k] == ex[k] for k in e)
+503:    out['bind_env'] = bool(hs) and all(env_ok(h) for h in hs)
+504:    sn = raw.get('self_ns')
+505:    out['bind_ns'] = bool(hs and sn) and all(
+506:        h.get('ns') == sn for h in hs)
+507:    out['bind_trace'] = bool(hs) and all(
+508:        h.get('tracer_pid') == 0 for h in hs)
+509:    out['bind_state'] = bool(hs) and all(
+510:        h.get('state') in ('S', 'R', 'D') for h in hs)
+511:
+512:    def maps_ok(h):
+513:        ms = h.get('maps')
+514:        if not ms:
+515:            return False
+516:        for m in ms:
+517:            p = m.get('path') or ''
+518:            if m.get('deleted') or p.endswith('(deleted)'):
+519:                return False
+520:            if p.startswith('['):
+521:                continue
+522:            if p == '':
+523:                continue
+524:            if p in SYSTEM_FILES or p.startswith(SYSTEM_PREFIXES):
+525:                continue
+526:            real = os.path.realpath(p)
+527:            if real == mp:
+528:                continue
+529:            if sdir and real.startswith(sdir.rstrip('/') + '/'):
+530:                if LIBS.get(os.path.basename(real)) == m.get('sha256') \
+531:                        and m.get('sha256'):
+532:                    continue
+533:                return False
+534:            return False
+535:        return True
+536:    out['bind_maps'] = bool(hs) and all(maps_ok(h) for h in hs)
+537:    tp = raw.get('tool_pid')
+538:    out['bind_ancestry'] = bool(hs) and all(
+539:        tp in (h.get('ppids') or []) for h in hs)
+540:    tt = raw.get('tool_start_ticks')
+541:    mt = raw.get('hold_mtime_ns')
+542:    t0 = raw.get('t0_ns')
+543:    now = raw.get('collected_ns')
+544:    out['hold_fresh'] = bool(
+545:        hs and is_int(mt) and is_int(t0) and mt > t0 and is_int(tt)
+546:        and is_int(now) and mt <= now + 1_000_000_000
+547:        and all(is_int(h.get('start_ticks')) and h['start_ticks'] >= tt
+548:                for h in hs)
+549:        and raw.get('hold_schema') == 'kama-completion-hold/v1')
+### lines 800-857
+800:    # the receipt's own request/answer must be this run's: the counter chose
+801:    # the tool's prompt, n_predict and seed, and its reference server
+802:    # answered the same request (wave-b MT13/RV02 D1: a genuine child with a
+803:    # replayed receipt passed a counter that bound only the live probes)
+804:    tr = w.get('tool_req') or {}
+805:    rt = w.get('ref_tool') or {}
+806:    ccap = caps.get('completion') or {}
+807:    try:
+808:        rjs = json.loads(ccap.get('request_body') or '')
+809:    except ValueError:
+810:        rjs = None
+811:    if not (isinstance(rjs, dict) and tr
+812:            and rjs.get('prompt') == tr.get('prompt')
+813:            and rjs.get('n_predict') == tr.get('n_predict')
+814:            and rjs.get('seed') == tr.get('seed')):
+815:        fails.add('receipt_req')
+816:    chs0 = (ccj.get('choices') or [{}])[0] if isinstance(
+817:        ccj, dict) and isinstance(ccj.get('choices'), list) else {}
+818:    rtext = chs0.get('text') if isinstance(chs0, dict) else None
+819:    if not (isinstance(rtext, str) and rtext != ''
+820:            and rtext == rt.get('text')):
+821:        fails.add('receipt_ref_text')
+822:    ru = (ccj.get('usage') if isinstance(ccj, dict) else None) or {}
+823:    if not (rt and ru.get('prompt_tokens') == rt.get('usage_prompt_tokens')
+824:            and ru.get('completion_tokens')
+825:            == rt.get('usage_completion_tokens')):
+826:        fails.add('receipt_ref_usage')
+827:    raw_a, raw_b = bnd.get('raw_a'), bnd.get('raw_b')
+828:    for k, v in grade_binding(raw_a).items():
+829:        if v is not True:
+830:            fails.add(k)
+831:    # the held child maps exactly the files (path, device, inode) the
+832:    # counter's own reference server maps: a bind-mounted or copied model,
+833:    # a swapped library or a dlopen-injected pinned-but-unloaded library
+834:    # differs (wave-b MT06)
+835:    rf = w.get('ref_files')
+836:    hs_a = (raw_a or {}).get('holders') or []
+837:    if not (rf and hs_a and all(
+838:            [list(x) for x in file_set(h.get('maps'))] == rf
+839:            for h in hs_a)):
+840:        fails.add('bind_ref_files')
+841:    gb = grade_binding(raw_b)
+842:    for k in ('bind_state', 'bind_trace'):
+843:        if gb.get(k) is not True:
+844:            fails.add(k)
+845:    if holders_signature(raw_a) != holders_signature(raw_b) or not raw_b:
+846:        fails.add('bind_stable')
+847:    rh = receipt.get('listener_holders')
+848:    mine = sorted((h.get('pid'), h.get('exe'), h.get('exe_sha256'))
+849:                  for h in (raw_a or {}).get('holders') or [])
+850:    theirs = sorted((h.get('pid'), h.get('exe'), h.get('exe_sha256'))
+851:                    for h in (rh if isinstance(rh, list) else [])
+852:                    if isinstance(h, dict))
+853:    if mine != theirs:
+854:        fails.add('bind_claim')
+855:    td = bnd.get('teardown') or {}
+856:    if not (td.get('gone') is True and td.get('port_closed') is True):
+857:        fails.add('teardown_observed')
+### lines 971-998
+971:def pid_gone(pid, ticks):
+972:    """True when the pid no longer exists, was reused (different start
+973:    ticks), or is a zombie / dead entry (its sockets are closed; only the
+974:    exit status is pending). Unknown start ticks fail closed: not gone."""
+975:    pp, tk = stat_fields(pid)
+976:    if pp is None:
+977:        return True
+978:    if ticks is None:
+979:        return False
+980:    if tk != ticks:
+981:        return True
+982:    try:
+983:        s = open(f'/proc/{pid}/stat', encoding='ascii').read()
+984:        return s[s.rindex(')') + 2] in 'ZX'
+985:    except (OSError, ValueError, IndexError):
+986:        return False
+987:
+988:
+989:def kill_if_same(pid, ticks):
+990:    """SIGKILL a recorded pid only while it is still the observed process."""
+991:    if ticks is None or pid_gone(pid, ticks):
+992:        return
+993:    try:
+994:        os.kill(pid, signal.SIGKILL)
+995:    except OSError:
+996:        pass
+997:
+998:
+### lines 1010-1028
+1010:    os.makedirs(hold, mode=0o700)
+1011:    nonce = 'r64-' + hashlib.sha256(os.urandom(16)).hexdigest()[:10]
+1012:    out_path = os.path.join(wd, 'receipt.json')
+1013:    env = {k: v for k, v in os.environ.items() if k in _TOOL_ENV_KEYS}
+1014:    env.update(extra_env or {})
+1015:    notes = []
+1016:    t0_ns = time.time_ns()
+1017:    proc = subprocess.Popen(
+1018:        [sys.executable, tool_path, '--nonce', nonce,
+1019:         '--work', os.path.join(wd, 'tool-work'), '--server', server_path,
+1020:         '--model', model_path, '--model-sha256', MODEL_SHA,
+1021:         '--server-sha256', SERVER_SHA, '--alias', ALIAS,
+1022:         '--prompt', tool_req['prompt'],
+1023:         '--n-predict', str(tool_req['n_predict']),
+1024:         '--seed', str(tool_req['seed']),
+1025:         '--hold-dir', hold, '--hold-timeout', '90', '--out', out_path],
+1026:        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env,
+1027:        start_new_session=True)
+1028:    tool_ticks = start_ticks_of(proc.pid)
+### lines 1084-1107
+1084:        try:
+1085:            proc.wait(timeout=60)
+1086:        except subprocess.TimeoutExpired:
+1087:            proc.kill()
+1088:            proc.wait(timeout=10)
+1089:        try:
+1090:            receipt = json.load(open(out_path))
+1091:        except (ValueError, OSError):
+1092:            pass
+1093:    finally:
+1094:        for pid, ticks in seen.items():
+1095:            kill_if_same(pid, ticks)
+1096:        try:
+1097:            os.killpg(proc.pid, signal.SIGKILL)
+1098:        except OSError:
+1099:            pass
+1100:        if proc.poll() is None:
+1101:            proc.kill()
+1102:            try:
+1103:                proc.wait(timeout=10)
+1104:            except subprocess.TimeoutExpired:
+1105:                pass
+1106:    return receipt, witness, binding, nonce, notes
+1107:
+### lines 1322-1341
+1322:def apply_patch(tip_tool_text, patch_text, workdir, name):
+1323:    """Apply a unified diff to the tool text with `patch`. Returns
+1324:    (patched text | None, reason). A dry run must succeed and the real
+1325:    run must report no fuzz (offsets are accepted, a fuzzed hunk is not)."""
+1326:    d = os.path.join(workdir, name)
+1327:    os.makedirs(os.path.join(d, 'tools'), exist_ok=True)
+1328:    tp = os.path.join(d, 'tools', 'kama-completion-live.py')
+1329:    with open(tp, 'w') as f:
+1330:        f.write(tip_tool_text)
+1331:    pp = os.path.join(d, 'x.patch')
+1332:    with open(pp, 'w') as f:
+1333:        f.write(patch_text)
+1334:    dry = subprocess.run(['patch', '-p1', '--dry-run', '-i', pp, '-d', d],
+1335:                         capture_output=True, text=True)
+1336:    if dry.returncode != 0 or 'fuzz' in dry.stdout.lower():
+1337:        return None, 'dry-run failed or fuzzed: ' + dry.stdout[-200:]
+1338:    r = subprocess.run(['patch', '-p1', '-i', pp, '-d', d],
+1339:                       capture_output=True, text=True)
+1340:    if r.returncode != 0 or 'fuzz' in r.stdout.lower():
+1341:        return None, 'patch failed or fuzzed: ' + r.stdout[-200:]
+### lines 1384-1415
+1384:def forge_variants(repo, tip, work):
+1385:    """Planted forged tools: the round-63 patches replayed on the tip tool
+1386:    (A: canned fake behind the real child's inherited listener; B: no
+1387:    llama-server at all) and each with the tool's own holder bookkeeping
+1388:    fabricated. Returns ({name: tool text}, [error strings])."""
+1389:    tool = blob(repo, tip, 'tools/kama-completion-live.py')
+1390:    pa = blob(repo, tip,
+1391:              '.ufo/waves/round-64/controls/forge-A-realchild.patch')
+1392:    pb = blob(repo, tip,
+1393:              '.ufo/waves/round-64/controls/forge-B-sleeper-delta.patch')
+1394:    if not (tool and pa and pb):
+1395:        return {}, ['forge patch or tool blob missing at the tip']
+1396:    errs = []
+1397:    a, why = apply_patch(tool.decode(), pa.decode(), work, 'forgeA-build')
+1398:    if a is None:
+1399:        return {}, ['forge A: ' + why]
+1400:    ab, why = apply_patch(a, pb.decode(), work, 'forgeAB-build')
+1401:    if ab is None:
+1402:        errs.append('forge B: ' + why)
+1403:    out = {'forgeA': a}
+1404:    a2 = splice_before_main(a, FORGE_CLAIM)
+1405:    if a2 is None:
+1406:        errs.append('forge A2: no main guard to splice before')
+1407:    else:
+1408:        out['forgeA2'] = a2
+1409:    if ab is not None:
+1410:        b2 = splice_before_main(ab, FORGE_CLAIM)
+1411:        if b2 is None:
+1412:            errs.append('forge B2: no main guard to splice before')
+1413:        else:
+1414:            out['forgeB2'] = b2
+1415:    return out, errs
+### lines 1449-1454
+1449:def is_hit(s, expect, cap=MAX_COLLATERAL):
+1450:    """Credit only when the re-score rejects, the named check is among the
+1451:    failures and the failure set stays within the cap."""
+1452:    return (not s['met']) and expect in s['fails'] and len(
+1453:        s['fails']) <= cap
+1454:
+### lines 1614-1723
+1614:    add('bind', 'bind_argv', bm=bm(
+1615:        lambda r: r['holders'][0].update({'cmdline': [
+1616:            r['holders'][0]['cmdline'][0], '--port', '1']})))
+1617:    add('bind', 'bind_argv', bm=bm(lambda r: r['holders'][0].update(
+1618:        {'cmdline': r['holders'][0]['cmdline'] + ['--port', '2']})))
+1619:    add('bind', 'bind_argv', bm=bm(lambda r: r['holders'][0].update(
+1620:        {'cmdline': r['holders'][0]['cmdline'] + ['--model', decoy]})))
+1621:    add('bind', 'bind_argv', bm=bm(lambda r: r['holders'][0].update(
+1622:        {'cmdline': r['holders'][0]['cmdline'] + ['-c', '4096']})))
+1623:    add('bind', 'bind_argv', bm=bm(lambda r: r['holders'][0].update(
+1624:        {'cmdline': r['holders'][0]['cmdline'] + ['-m', decoy]})))
+1625:
+1626:    def envp(fn):
+1627:        return bm(lambda r: r['holders'][0].update(
+1628:            {'environ': fn(dict(r['holders'][0]['environ']))}))
+1629:    add('bind', 'bind_env', bm=envp(
+1630:        lambda e: {**e, 'LD_PRELOAD': '/x.so'}))
+1631:    add('bind', 'bind_env', bm=envp(
+1632:        lambda e: {**e, 'GLIBC_TUNABLES': 'glibc.malloc.check=3'}))
+1633:    add('bind', 'bind_env', bm=bm(
+1634:        lambda r: r['holders'][0].update({'environ': None})))
+1635:    add('bind', 'bind_env', bm=envp(
+1636:        lambda e: {**e, 'LLAMA_ARG_MODEL': '/other.gguf'}))
+1637:    add('bind', 'bind_env', bm=envp(
+1638:        lambda e: {**e, 'PATH': '/evil:' + e.get('PATH', '')}))
+1639:    add('bind', 'bind_ns', bm=bm(lambda r: r['holders'][0].update(
+1640:        {'ns': {**r['holders'][0]['ns'], 'mnt': 'mnt:[1]'}})))
+1641:    add('bind', 'bind_trace', bm=bm(
+1642:        lambda r: r['holders'][0].update({'tracer_pid': 4242})))
+1643:    add('bind', 'bind_state', bm=bm(
+1644:        lambda r: r['holders'][0].update({'state': 'T'})))
+1645:    add('bind', 'bind_maps', bm=bm(lambda r: r['holders'][0]['maps'].append(
+1646:        {'path': '/memfd:evil (deleted)', 'deleted': True, 'sha256': None})))
+1647:    add('bind', 'bind_maps', bm=bm(lambda r: r['holders'][0]['maps'].append(
+1648:        {'path': '/tmp/evil.so', 'deleted': False, 'sha256': '0' * 64})))
+1649:    add('bind', 'bind_maps', bm=bm(lambda r: next(
+1650:        m for m in r['holders'][0]['maps']
+1651:        if m.get('sha256') and m['path'].endswith('.so.0.7.0')).update(
+1652:        {'sha256': '1' * 64})))
+1653:    add('bind', 'bind_ancestry', bm=bm(
+1654:        lambda r: r.update({'tool_pid': 999999999})))
+1655:    add('bind', 'hold_fresh', bm=bm(
+1656:        lambda r: r.update({'hold_mtime_ns': r['t0_ns'] - 1})))
+1657:    add('bind', 'hold_fresh', bm=bm(lambda r: r['holders'][0].update(
+1658:        {'start_ticks': r['tool_start_ticks'] - 1})))
+1659:    add('bind', 'teardown_observed', bm=lambda b: {
+1660:        **clone(b), 'teardown': {'gone': False, 'port_closed': True}})
+1661:    add('bind', 'bind_stable', bm=lambda b: {**clone(b), 'raw_b': {
+1662:        **clone(b['raw_b']), 'holders': []}})
+1663:    add('bind', 'hold_fresh', bm=bm(lambda r: r.update(
+1664:        {'hold_mtime_ns': r['collected_ns'] + 10_000_000_000})))
+1665:
+1666:    def ref_wm(fn):
+1667:        def f(w):
+1668:            w = clone(w)
+1669:            fn(w['ref_files'])
+1670:            return w
+1671:        return f
+1672:    add('bind', 'bind_ref_files', wm=ref_wm(
+1673:        lambda rf: rf[0].__setitem__(2, '1')))
+1674:    add('bind', 'bind_ref_files', bm=bm(lambda r: r['holders'][0][
+1675:        'maps'].append({
+1676:            'path': os.path.join(os.path.dirname(r['server_path']),
+1677:                                 'libllama-cli-impl.so'),
+1678:            'deleted': False, 'dev': '00:2e', 'inode': '4242',
+1679:            'sha256': LIBS['libllama-cli-impl.so']})))
+1680:
+1681:    # ---- the receipt's own request and answer must be this run's ------ #
+1682:    def both(fn):
+1683:        def f(m):
+1684:            for n in ('completion', 'completion2'):
+1685:                c = m['captures'][n]
+1686:                o = json.loads(c['body'])
+1687:                fn(o)
+1688:                c['body'] = json.dumps(o, separators=(',', ':'))
+1689:                reseal(c)
+1690:                if 'content-length' in c.get('headers', {}):
+1691:                    c['headers']['content-length'] = str(c['body_bytes'])
+1692:        return f
+1693:    add('receiptbind', 'receipt_ref_text', edit(receipt, both(
+1694:        lambda o: o['choices'][0].update({'text': ' FABRICATED BY TOOL'}))))
+1695:
+1696:    def usage_plus(m):
+1697:        both(lambda o: (o['usage'].update(
+1698:            {'prompt_tokens': o['usage']['prompt_tokens'] + 1,
+1699:             'total_tokens': o['usage']['total_tokens'] + 1})))(m)
+1700:        tk = m['captures']['tokenize']
+1701:        o = json.loads(tk['body'])
+1702:        o['tokens'].append(7)
+1703:        tk['body'] = json.dumps(o, separators=(',', ':'))
+1704:        reseal(tk)
+1705:    add('receiptbind', 'receipt_ref_usage', edit(receipt, usage_plus))
+1706:
+1707:    def other_prompt(m):
+1708:        for n in ('completion', 'completion2'):
+1709:            c = m['captures'][n]
+1710:            o = json.loads(c['request_body'])
+1711:            o['prompt'] = o['prompt'] + ' again'
+1712:            c['request_body'] = json.dumps(o)
+1713:            c['request_sha256'] = sha256_b(c['request_body'].encode())
+1714:    add('receiptbind', 'receipt_req', edit(receipt, other_prompt))
+1715:
+1716:    def other_n(m):
+1717:        for n in ('completion', 'completion2'):
+1718:            c = m['captures'][n]
+1719:            o = json.loads(c['request_body'])
+1720:            o['n_predict'] = o['n_predict'] + 1
+1721:            c['request_body'] = json.dumps(o)
+1722:            c['request_sha256'] = sha256_b(c['request_body'].encode())
+1723:    add('receiptbind', 'receipt_req', edit(receipt, other_n))
+### lines 1764-1795
+1764:def families_match(tot, ok):
+1765:    """Every family present at exactly its declared count, credited in full."""
+1766:    return tot == EXPECT_FAMILIES and ok == EXPECT_FAMILIES
+1767:
+1768:
+1769:def credit_rule(s, expect, cap, clean_receipt=False):
+1770:    """One control's credit: rejected, the named check among the failures,
+1771:    within the cap; a fake tool holding a genuine receipt copy must in
+1772:    addition show no receipt-level failure (a garbled receipt is a crashed
+1773:    fake, not the named reason). Declared in freeze.txt AMENDMENT 1."""
+1774:    hit = is_hit(s, expect, cap)
+1775:    if hit and clean_receipt:
+1776:        hit = not any(k in RECEIPT_LEVEL or k in RECEIPT_BIND
+1777:                      or k.startswith('inconsistent:') for k in s['fails'])
+1778:    return hit
+1779:
+1780:
+1781:def main(argv=None):
+1782:    ap = argparse.ArgumentParser()
+1783:    ap.add_argument('--repo', required=True)
+1784:    ap.add_argument('--tip', required=True)
+1785:    ap.add_argument('--work', required=True)
+1786:    args = ap.parse_args(argv)
+1787:    work = os.path.abspath(args.work)
+1788:    if os.path.isdir(work) and os.listdir(work):
+1789:        print('error: work-reused: --work already holds files; the counter '
+1790:              'refuses a reused scratch directory (pass a fresh one)',
+1791:              file=sys.stderr)
+1792:        print('tool_present=0 live_ok=0/1 controls_targeted=0/0 '
+1793:              'work_reused=1 errors=1 met=False')
+1794:        return 2
+1795:    os.makedirs(work, exist_ok=True)
+### lines 1810-1828
+1810:    receipt = witness = binding = None
+1811:    live_ok = 0
+1812:    st = 0
+1813:    fam_tot, fam_ok, detail = {}, {}, []
+1814:    probe_nonce = reqs = None
+1815:    if not errors:
+1816:        rng = random.Random(int.from_bytes(os.urandom(8), 'big'))
+1817:        probe_nonce = 'r64p' + hashlib.sha256(os.urandom(8)).hexdigest()[:8]
+1818:        ref_all = []
+1819:        for _attempt in range(8):
+1820:            reqs, tool_req = draw_requests(rng, probe_nonce)
+1821:            ref_all = reference_run(server, model, reqs + [tool_req], work)
+1822:            texts = [(r or {}).get('text') for r in ref_all]
+1823:            if (len(ref_all) == 3 and all(isinstance(t, str) and t
+1824:                                          for t in texts)
+1825:                    and len(set(texts)) == 3):
+1826:                break
+1827:        else:
+1828:            errors.append('no draw gave three distinct reference answers')
+### lines 1894-1927
+1894:def eval_selftest_run(receipt, witness, binding, probe_nonce):
+1895:    """Eight planted cases the evaluator must judge correctly: three that
+1896:    must NOT be credited (wrong reason, over-cap cascade, a passing check
+1897:    named), three that MUST be (a one-field break, the envelope break at its
+1898:    cap, a missing probe nonce), the clean-receipt veto, and a misfiled
+1899:    family table. Returns the number judged correctly (expected 8)."""
+1900:    n = 0
+1901:    stale = edit(receipt, lambda m: m.update({'nonce': 'r60-dead'}))
+1902:    n += int(not is_hit(score_run(stale, witness, binding, probe_nonce),
+1903:                        'live_ptok'))
+1904:    env = edit_body(receipt, 'completion',
+1905:                    lambda o: o.update({'object': 'chat.completion'}))
+1906:    n += int(not is_hit(score_run(env, witness, binding, probe_nonce),
+1907:                        'completion_envelope'))
+1908:    n += int(not is_hit(score_run(receipt, witness, binding, probe_nonce),
+1909:                        'nonce_match'))
+1910:    health = edit(receipt, lambda m: m['captures']['health'].update(
+1911:        {'body': '{"status":"OK"}'}))
+1912:    n += int(is_hit(score_run(health, witness, binding, probe_nonce),
+1913:                    'health_ready'))
+1914:    n += int(is_hit(score_run(env, witness, binding, probe_nonce),
+1915:                    'completion_envelope', ENVELOPE_CAP))
+1916:    nonce_w = clone(witness)
+1917:    nonce_w['probes'][0]['sent_prompt'] = 'no nonce here'
+1918:    n += int(is_hit(score_run(receipt, nonce_w, binding, probe_nonce),
+1919:                    'live_nonce'))
+1920:    n += int(not credit_rule(
+1921:        {'met': False, 'fails': {'bind_exe', 'health_ready'}},
+1922:        'bind_exe', 99, clean_receipt=True))
+1923:    bad_tot = dict(EXPECT_FAMILIES)
+1924:    bad_tot['stale'] = 0
+1925:    bad_tot['log'] = EXPECT_FAMILIES['log'] + 1
+1926:    n += int(not families_match(bad_tot, bad_tot))
+1927:    return n
+### lines 1946-1968
+1946:    def scenario(fam, label, expect, cap, clean, tool, treq=None, tref=None,
+1947:                 extra_env=None):
+1948:        """One live forged-tool run scored through the same path as the
+1949:        genuine run; a run that cannot be scored counts as a control that
+1950:        was not rejected (and is reported)."""
+1951:        treq = treq or tool_req
+1952:        tref = tref or ref_tool
+1953:        try:
+1954:            r, w, b, nonce, notes = witness_run(
+1955:                work, label, tool, server, model, reqs, treq, extra_env)
+1956:        except Exception as e:  # a control that cannot run is not credit
+1957:            errors.append(f'{label}: {type(e).__name__}: {e}')
+1958:            fam_tot[fam] = fam_tot.get(fam, 0) + 1
+1959:            return
+1960:        if r is None or w is None or b is None:
+1961:            detail.append(f'{label}: no receipt/witness {notes}')
+1962:            fam_tot[fam] = fam_tot.get(fam, 0) + 1
+1963:            return
+1964:        w['ref'] = ref
+1965:        w['ref_tool'] = tref
+1966:        w['ref_files'] = witness['ref_files']
+1967:        credit(fam, score_run(r, w, b, probe_nonce, nonce=nonce), expect,
+1968:               cap, label, clean)
+
+## tools/round64-c2-counter.py
+sha256: c8b725e57f6e761735e832d127ec6df622d4a9dff09893b5fa31131c64d93e2e
+### lines 214-217
+214:def clean_env():
+215:    return {k: v for k, v in os.environ.items() if not k.startswith('GIT_')}
+216:
+217:
+### lines 245-279
+245:def work_reused(work):
+246:    """True when --work already holds a tip tree or a run tree (an empty
+247:    pre-existing `tip/` counts: it is returned silently by a reusing
+248:    counter and every bound tool is then dead)."""
+249:    return any(os.path.lexists(os.path.join(work, d)) for d in ('tip', 'run'))
+250:
+251:
+252:def checkout_tip(repo, tip, work):
+253:    tree = os.path.join(work, 'tip')
+254:    os.makedirs(tree)
+255:    archive = subprocess.Popen(['git', '-C', str(repo), 'archive', tip],
+256:                               stdout=subprocess.PIPE, env=clean_env())
+257:    tar = subprocess.run(['tar', '-x', '-C', tree], stdin=archive.stdout)
+258:    archive.stdout.close()
+259:    archive_rc = archive.wait()
+260:    return tree if tar.returncode == 0 and archive_rc == 0 else None
+261:
+262:
+263:def pgrep_set():
+264:    """Live llama-server pids (`pgrep -x llama-server`), zombies dropped
+265:    through /proc/<pid>/stat as the context-capacity tool does."""
+266:    p = subprocess.run(['pgrep', '-x', 'llama-server'], capture_output=True,
+267:                       text=True)
+268:    pids = set()
+269:    for tok in p.stdout.split():
+270:        if not tok.isdigit():
+271:            continue
+272:        try:
+273:            with open(f'/proc/{tok}/stat') as fh:
+274:                state = fh.read().rsplit(')', 1)[1].split()[0]
+275:        except (OSError, IndexError):
+276:            continue
+277:        if state != 'Z':
+278:            pids.add(int(tok))
+279:    return pids
+### lines 338-358
+338:def check_pins(read, table, expect_n):
+339:    """(ok_count, problems). `read(path)` returns the bytes at the tip or
+340:    None. A table that does not carry expect_n files is itself a problem
+341:    (pin-table), so the 13/13 cannot be reached by dropping entries."""
+342:    probs = []
+343:    if len(table) != expect_n:
+344:        probs.append(f'pin-table: {len(table)} entries, want {expect_n}')
+345:    ok = 0
+346:    for path, want in table.items():
+347:        data = read(path)
+348:        if data is None:
+349:            probs.append(f'pin-absent:{path}')
+350:        elif sha256(data) != want:
+351:            probs.append(f'pin:{path}')
+352:        else:
+353:            ok += 1
+354:    return ok, probs
+355:
+356:
+357:# ------------------------------------------------------ verdict function #
+358:
+### lines 432-483
+432:def idle_check(out, rc, receipt_text, pat):
+433:    """(ok, reason): the declared idle outcome. Exit 0 with the pattern is
+434:    not enough: `"all_ports_closed": true` is printed vacuously on an empty
+435:    cell list. The receipt the tool wrote must show at least one cell that
+436:    ran and was observed, a host probe that found the host idle and saw no
+437:    foreign server at any point."""
+438:    if rc != 0 or pat not in out:
+439:        return False, 'rc-or-pattern'
+440:    rec = _receipt(receipt_text)
+441:    if rec is None:
+442:        return False, 'no-receipt'
+443:    s = _summary(rec)
+444:    hi = rec.get('host_idle')
+445:    if (rec.get('exit_code') != 0 or rec.get('error')
+446:            or not isinstance(s.get('cells'), int) or s['cells'] < 1
+447:            or not isinstance(s.get('observed'), int) or s['observed'] < 1
+448:            or s.get('all_ports_closed') is not True):
+449:        return False, 'idle-cells'
+450:    if (not isinstance(hi, dict) or hi.get('ok') is not True
+451:            or hi.get('other_pids_seen') != []):
+452:        return False, 'idle-host'
+453:    return True, 'idle'
+454:
+455:
+456:def busy_check(out, rc, receipt_text, before, after, alt):
+457:    """(ok, reason): the declared host-busy outcome. The refusal is exit 2
+458:    with its text; the receipt it wrote names the refusal, ran no cell and
+459:    carries host_idle.ok false. Its other_pids_seen is the union over the
+460:    tool's whole polling window, so it is not tested against the counter's
+461:    two snapshots as a subset; the check that cannot be met by an invented
+462:    set is the reverse one: every llama-server pid the counter saw in both
+463:    its before and its after snapshot (zombies dropped) stood throughout the
+464:    window and must appear in the printed set."""
+465:    if rc != 2:
+466:        return False, 'rc'
+467:    if alt not in out:
+468:        return False, 'text'
+469:    rec = _receipt(receipt_text)
+470:    if rec is None:
+471:        return False, 'no-receipt'
+472:    if (rec.get('error') != alt or rec.get('exit_code') != 2
+473:            or _summary(rec).get('cells') != 0 or rec.get('cells')):
+474:        return False, 'receipt-error'
+475:    hi = rec.get('host_idle')
+476:    if not isinstance(hi, dict) or hi.get('ok') is not False:
+477:        return False, 'no-host-idle'
+478:    seen = hi.get('other_pids_seen')
+479:    if not _is_pid_list(seen) or not seen:
+480:        return False, 'seen-empty'
+481:    if not (set(before) & set(after)) <= set(seen):
+482:        return False, 'intersection-not-seen'
+483:    return True, 'busy'
+### lines 626-645
+626:def apply_regression(src, find, replace):
+627:    """New source bytes, or (None, tag). find must occur exactly once."""
+628:    try:
+629:        s = src.decode('utf-8')
+630:    except UnicodeDecodeError:
+631:        return None, 'regress-undecodable'
+632:    if not find or '\n' in find or '\n' in replace:
+633:        return None, 'regress-multiline'
+634:    if s.count(find) != 1:
+635:        return None, 'regress-inapplicable'
+636:    if replace == find:
+637:        return None, 'regress-noop'
+638:    out = s.replace(find, replace, 1)
+639:    try:
+640:        compile(out, 'regressed', 'exec')
+641:    except (SyntaxError, ValueError):
+642:        return None, 'regress-syntax'
+643:    return out.encode('utf-8'), None
+644:
+645:
+### lines 814-828
+814:def recon_eval(rc, out):
+815:    """(mismatches | None, fields, ok): the reconciler counts only when it
+816:    exits 0 and prints mismatches=0 with met=True; a count printed beside a
+817:    non-zero exit, or no count at all, is not zero."""
+818:    line = next((ln for ln in out.splitlines()
+819:                 if ln.startswith('r41=') and 'mismatches=' in ln), None)
+820:    if line is None:
+821:        return None, {}, False
+822:    kv = parse_kv(line)
+823:    try:
+824:        n = int(kv['mismatches'])
+825:    except (KeyError, ValueError):
+826:        return None, kv, False
+827:    ok = rc == 0 and n == 0 and kv.get('met') == 'True'
+828:    return n, kv, ok
+### lines 860-877
+860:def closure_check(sc_text, lesson_paths):
+861:    """(ok, tag, ptr, newest): the calibration row names exactly one
+862:    latest-outside-closure pointer and it is the newest spotcheck file."""
+863:    nums = [int(m.group(1)) for p in lesson_paths
+864:            for m in [SPOT_RE.match(p)] if m]
+865:    if not nums:
+866:        return False, 'closure-nofiles', None, None
+867:    newest = max(nums)
+868:    row = calibration_row(sc_text)
+869:    if row is None:
+870:        return False, 'closure-norow', None, newest
+871:    ptrs = [int(x) for x in CLOSURE_RE.findall(row)]
+872:    if len(ptrs) != 1:
+873:        return False, 'closure-nopointer', None, newest
+874:    if ptrs[0] != newest:
+875:        return False, 'closure-stale', ptrs[0], newest
+876:    return True, 'closure', ptrs[0], newest
+877:
+### lines 945-967
+945:def planted_verdict(f, s):
+946:    """(ok, tag) for the repaired (`f`) and stale (`s`) reconciler runs: each
+947:    of the five clauses is one named failure."""
+948:    if f['n'] is None or s['n'] is None:
+949:        return False, 'planted-nocount'
+950:    if f['kv'].get('closure_ptr') != '1':
+951:        return False, 'planted-fixed-fails'
+952:    if s['kv'].get('closure_ptr') != '0':
+953:        return False, 'planted-stale-passes'
+954:    if not s['n'] > f['n']:
+955:        return False, 'planted-no-increase'
+956:    if 'closure_ptr:' not in s['out'] or 'closure_ptr:' in f['out']:
+957:        return False, 'planted-no-detail'
+958:    return True, 'planted'
+959:
+960:
+961:def tally_count(records, rounds):
+962:    """Rounds in `rounds` whose status is neither no-disclosure nor
+963:    unreadable (a status the tool computed from a disclosure)."""
+964:    by = {r.get('round'): r.get('status', '') for r in records}
+965:    return sum(1 for n in rounds
+966:               if by.get(n) and by[n] != 'no-disclosure'
+967:               and not by[n].startswith('unreadable'))
+### lines 1110-1120
+1110:                                             + data[1:])),
+1111:        'quote-prefix': ('quote', j([col(first, 1, 'NOT-A-PREFIX-QUOTE')]
+1112:                                    + data[1:])),
+1113:        'quote-short': ('quote', j([col(first, 1, 'Curate')] + data[1:])),
+1114:        'quote-empty': ('quote', j([col(first, 1, '')] + data[1:])),
+1115:        'free': ('binding', j(['sources-registry\tCurate where\tfree\t'
+1116:                               'bash -c "echo ok"\tok\ttrue\tok\ttrue\tfree']
+1117:                              + data[1:])),
+1118:        'weak-pattern': ('pattern', j([col(first, 4, 'pass')] + data[1:])),
+1119:        'hostbusy-undeclared': ('hostbusy-not-declared',
+1120:                                j([col(first, 5, 'host-busy')] + data[1:])),
+### lines 1174-1198
+1174:def build_pin_controls(ctl, read):
+1175:    def tags_for(rd, table, n):
+1176:        return {p.split(':')[0] for p in check_pins(rd, table, n)[1]}
+1177:
+1178:    base = tags_for(read, PINS, N_PINS)
+1179:    tool = 'tools/pin-watch.py'
+1180:    ctl.add('pins', 'pin-tool-edit', 'pin',
+1181:            tags_for(lambda p: (b'print("ok")\n' if p == tool else read(p)),
+1182:                     PINS, N_PINS), base)
+1183:    ctl.add('pins', 'pin-reconciler-edit', 'pin',
+1184:            tags_for(lambda p: ((read(p) or b'') + b'\n# mism = 0\n'
+1185:                                if p == RECON else read(p)), PINS, N_PINS),
+1186:            base)
+1187:    ctl.add('pins', 'pin-absent', 'pin-absent',
+1188:            tags_for(lambda p: None if p == tool else read(p), PINS,
+1189:                     N_PINS), base)
+1190:    short = {k: v for k, v in PINS.items() if k != RECON}
+1191:    ctl.add('pins', 'pin-table-short', 'pin-table',
+1192:            tags_for(read, short, N_PINS), base)
+1193:    dbase = tags_for(read, DEP_PINS, N_DEPS)
+1194:    dep = '.ufo/waves/round-25/count-c2.py'
+1195:    ctl.add('pins', 'dep-edit', 'pin',
+1196:            tags_for(lambda p: (b'x = 1\n' if p == dep else read(p)),
+1197:                     DEP_PINS, N_DEPS), dbase)
+1198:
+### lines 1253-1289
+1253:    def tag(res):
+1254:        return {res[1]}
+1255:    ctl.add('idle', 'busy-invented-set', 'intersection-not-seen',
+1256:            tag(busy(busy_rec(seen=[999991, 999992]))))
+1257:    ctl.add('idle', 'busy-standing-pid-omitted', 'intersection-not-seen',
+1258:            tag(busy(busy_rec(seen=[1706355, 3262613]))))
+1259:    ctl.add('idle', 'busy-empty-set', 'seen-empty',
+1260:            tag(busy(busy_rec(seen=[]))))
+1261:    ctl.add('idle', 'busy-no-host-idle', 'no-host-idle',
+1262:            tag(busy(busy_rec(host_idle=False))))
+1263:    ctl.add('idle', 'busy-host-idle-ok', 'no-host-idle',
+1264:            tag(busy(busy_rec(ok=True))))
+1265:    ctl.add('idle', 'busy-no-receipt', 'no-receipt', tag(busy(None)))
+1266:    ctl.add('idle', 'busy-wrong-error', 'receipt-error',
+1267:            tag(busy(busy_rec(error='other'))))
+1268:    ctl.add('idle', 'busy-ran-a-cell', 'receipt-error',
+1269:            tag(busy(busy_rec(cells=1))))
+1270:    ctl.add('idle', 'busy-exit-0', 'rc', tag(busy(busy_rec(), rc=0)))
+1271:    ctl.add('idle', 'busy-text-missing', 'text',
+1272:            tag(busy(busy_rec(), text='refused\n')))
+1273:    ctl.add('idle', 'idle-exit-1', 'rc-or-pattern', tag(idle(idle_rec(), rc=1)))
+1274:    ctl.add('idle', 'idle-pattern-missing', 'rc-or-pattern',
+1275:            tag(idle(idle_rec(), text='ok\n')))
+1276:    ctl.add('idle', 'idle-pattern-only', 'no-receipt',
+1277:            tag(idle(None, text='"all_ports_closed": true\n')))
+1278:    ctl.add('idle', 'idle-zero-cells', 'idle-cells',
+1279:            tag(idle(idle_rec(cells=0, observed=0))))
+1280:    ctl.add('idle', 'idle-unobserved', 'idle-cells',
+1281:            tag(idle(idle_rec(observed=0))))
+1282:    ctl.add('idle', 'idle-cells-zero-observed-one', 'idle-cells',
+1283:            tag(idle(idle_rec(cells=0, observed=1))))
+1284:    ctl.add('idle', 'idle-ports-open', 'idle-cells',
+1285:            tag(idle(idle_rec(closed=False))))
+1286:    ctl.add('idle', 'idle-exit-code-in-receipt', 'idle-cells',
+1287:            tag(idle(idle_rec(code=2))))
+1288:    ctl.add('idle', 'idle-errored', 'idle-cells',
+1289:            tag(idle(idle_rec(error='boom'))))
+### lines 1297-1317
+1297:def work_controls(ctl, work, probe):
+1298:    scratch = os.path.join(work, 'wr')
+1299:    os.makedirs(scratch)
+1300:    empty_tip = os.path.join(scratch, 'a')
+1301:    os.makedirs(os.path.join(empty_tip, 'tip'))
+1302:    clean = os.path.join(scratch, 'b')
+1303:    os.makedirs(clean)
+1304:    run_only = os.path.join(scratch, 'c')
+1305:    os.makedirs(os.path.join(run_only, 'run'))
+1306:    ctl.add('work', 'empty-tip-dir', 'work-reused',
+1307:            {'work-reused'} if work_reused(empty_tip) else {'work-free'},
+1308:            {'work-reused'} if work_reused(clean) else set())
+1309:    ctl.add('work', 'run-dir-only', 'work-reused',
+1310:            {'work-reused'} if work_reused(run_only) else {'work-free'},
+1311:            {'work-reused'} if work_reused(clean) else set())
+1312:    rc, out, free = probe
+1313:    ctl.add('work', 'second-run-same-work', 'work-reused',
+1314:            {'work-reused'} if (rc == 2 and 'work-reused' in out
+1315:                                and 'met=' not in out) else {'rc%d' % rc})
+1316:    return int(free)
+1317:
+### lines 1324-1344
+1324:                 < (newest or 0)] or [0])
+1325:    stale = set_pointer(sc_text, older)
+1326:    ctl.add('closure', 'closure-stale-pointer', 'closure-stale',
+1327:            {closure_check(stale, lesson_paths)[1]} if stale else set(),
+1328:            base)
+1329:    row = calibration_row(sc_text)
+1330:    nop = sc_text.replace(row, CLOSURE_RE.sub('latest outside closure', row),
+1331:                          1) if row else sc_text
+1332:    ctl.add('closure', 'closure-no-pointer', 'closure-nopointer',
+1333:            {closure_check(nop, lesson_paths)[1]}, base)
+1334:    ctl.add('closure', 'closure-no-row', 'closure-norow',
+1335:            {closure_check(sc_text.replace('| calibration |', '| calib |'),
+1336:                           lesson_paths)[1]}, base)
+1337:    ctl.add('closure', 'closure-no-files', 'closure-nofiles',
+1338:            {closure_check(sc_text, ['corpus/lessons/round-1-x.md'])[1]},
+1339:            base)
+1340:    ctl.add('closure', 'closure-pointer-above-newest', 'closure-stale',
+1341:            {closure_check(set_pointer(sc_text, (newest or 0) + 1),
+1342:                           lesson_paths)[1]}, base)
+1343:
+1344:
+### lines 1345-1380
+1345:def recon_controls(ctl):
+1346:    good = ('r41=0 banner=0 closure_ptr=1 mismatches=0 maxN=63 met=True')
+1347:    base = {'ok'} if recon_eval(0, good)[2] else {'bad'}
+1348:
+1349:    def tag(rc, out):
+1350:        n, kv, ok = recon_eval(rc, out)
+1351:        return {'ok' if ok else ('nocount' if n is None else
+1352:                                 'nonzero' if n else 'exit-or-met')}
+1353:    ctl.add('reconciler', 'recon-exit-1-with-zero', 'exit-or-met',
+1354:            tag(1, good), base)
+1355:    ctl.add('reconciler', 'recon-no-count', 'nocount',
+1356:            tag(0, 'detail: crashed\n'), base)
+1357:    ctl.add('reconciler', 'recon-crash-silent', 'nocount', tag(1, ''), base)
+1358:    ctl.add('reconciler', 'recon-count-nonzero', 'nonzero',
+1359:            tag(1, good.replace('mismatches=0', 'mismatches=2')), base)
+1360:    ctl.add('reconciler', 'recon-met-false-zero', 'exit-or-met',
+1361:            tag(0, good.replace('met=True', 'met=False')), base)
+1362:    fixed = {'n': 0, 'kv': {'closure_ptr': '1'}, 'out': 'met=True\n'}
+1363:    stale = {'n': 1, 'kv': {'closure_ptr': '0'},
+1364:             'out': 'detail: closure_ptr: round-57 vs round-63\n'}
+1365:    pbase = {planted_verdict(fixed, stale)[1]}
+1366:    ctl.add('reconciler', 'planted-no-count', 'planted-nocount',
+1367:            {planted_verdict(dict(fixed, n=None), stale)[1]}, pbase)
+1368:    ctl.add('reconciler', 'planted-fixed-fails', 'planted-fixed-fails',
+1369:            {planted_verdict(dict(fixed, kv={'closure_ptr': '0'}),
+1370:                             stale)[1]}, pbase)
+1371:    ctl.add('reconciler', 'planted-stale-passes', 'planted-stale-passes',
+1372:            {planted_verdict(fixed, dict(stale, kv={'closure_ptr': '1'}))[1]},
+1373:            pbase)
+1374:    ctl.add('reconciler', 'planted-no-increase', 'planted-no-increase',
+1375:            {planted_verdict(fixed, dict(stale, n=0))[1]}, pbase)
+1376:    ctl.add('reconciler', 'planted-no-detail', 'planted-no-detail',
+1377:            {planted_verdict(fixed, dict(stale, out='nothing\n'))[1]}, pbase)
+1378:    ctl.add('reconciler', 'planted-detail-on-fixed', 'planted-no-detail',
+1379:            {planted_verdict(dict(fixed, out='detail: closure_ptr: x\n'),
+1380:                             stale)[1]}, pbase)
+### lines 1390-1415
+1390:def tally_controls(ctl):
+1391:    rounds = list(range(56, 64))
+1392:    good = [{'round': n, 'status': 'ok'} for n in rounds]
+1393:    base = {'tally-undisclosed'} if tally_count(good, rounds) != 8 else set()
+1394:
+1395:    def t(recs):
+1396:        return {'tally-undisclosed'} if tally_count(recs, rounds) < 8 \
+1397:            else set()
+1398:    ctl.add('tally', 'tally-all-no-disclosure', 'tally-undisclosed',
+1399:            t([dict(r, status='no-disclosure') for r in good]), base)
+1400:    ctl.add('tally', 'tally-one-no-disclosure', 'tally-undisclosed',
+1401:            t(good[:-1] + [{'round': 63, 'status': 'no-disclosure'}]), base)
+1402:    ctl.add('tally', 'tally-unreadable', 'tally-undisclosed',
+1403:            t(good[:-1] + [{'round': 63, 'status': 'unreadable:x'}]), base)
+1404:    ctl.add('tally', 'tally-round-missing', 'tally-undisclosed',
+1405:            t(good[:-1]), base)
+1406:    ctl.add('tally', 'tally-no-records', 'tally-undisclosed', t([]), base)
+1407:    fx_base = set() if tally_fixture_ok('no-disclosure') else {'fixture'}
+1408:    ctl.add('tally', 'tally-fixture-relabelled', 'fixture',
+1409:            {'fixture'} if not tally_fixture_ok('ok') else set(), fx_base)
+1410:    ctl.add('tally', 'tally-fixture-unreadable', 'fixture',
+1411:            {'fixture'} if not tally_fixture_ok('unreadable:x') else set(),
+1412:            fx_base)
+1413:    ctl.add('tally', 'tally-fixture-none', 'fixture',
+1414:            {'fixture'} if not tally_fixture_ok(None) else set(), fx_base)
+1415:
+### lines 1722-1745
+1722:def regress_table_controls(ctl, runner, rtext, read, plan):
+1723:    """Mutate the regression table and re-plan; the harmless regression is
+1724:    applied and run live (pin-watch: the quickest bound row)."""
+1725:    rows, _ = parse_regress(rtext)
+1726:    cap = 'pin-watch'
+1727:    base_tags = {t for _, t in (plan[c] for c in SLUGS) if t}
+1728:
+1729:    def replan(new_rows):
+1730:        text = '\n'.join('\t'.join(r[c] for c in RCOLS) for r in new_rows)
+1731:        p, errs = regress_plan(text + '\n', read)
+1732:        return {t for _, t in p.values() if t} | {e.split(':')[0]
+1733:                                                  for e in errs}
+1734:    row = next(r for r in rows if r['cap'] == cap)
+1735:    others = [r for r in rows if r['cap'] != cap]
+1736:    for name, expect, new_rows in (
+1737:            ('find-twice', 'regress-inapplicable',
+1738:             others + [dict(row, find='import')]),
+1739:            ('find-absent', 'regress-inapplicable',
+1740:             others + [dict(row, find='no such text anywhere #zq')]),
+1741:            ('noop-regression', 'regress-noop',
+1742:             others + [dict(row, replace=row['find'])]),
+1743:            ('syntax-break', 'regress-syntax',
+1744:             others + [dict(row, replace='def (')]),
+1745:            ('missing-row', 'regress-missing', others),
+
+## tools/round42-selfdesc-reconcile.py
+sha256: 3d9aff8f9c2236c2cb9337b08846da82de718bc1d9e8f1d283f1a71a03acd5c0
+### lines 170-188
+170:def closure_ptr(repo, tip, cal_row):
+171:    """(ok, why): the calibration row's latest-outside-closure pointer equals the newest
+172:    corpus/lessons/round-N-verifier-spotcheck.md blob at tip."""
+173:    ns = [int(m.group(1)) for n in git(repo, "ls-tree", "--name-only", tip, "corpus/lessons/").split("\n")
+174:          for m in [SPOT_RE.fullmatch(n.strip())] if m]
+175:    if not ns:
+176:        return False, "no corpus/lessons/round-N-verifier-spotcheck.md at tip"
+177:    want = max(ns)
+178:    ptrs = [int(x) for x in CLOSURE_RE.findall(cal_row)]
+179:    if len(ptrs) != 1:
+180:        return False, f"calibration row names {len(ptrs)} 'latest outside closure' pointers (want 1, round-{want})"
+181:    if ptrs[0] != want:
+182:        return False, f"calibration row latest outside closure is round-{ptrs[0]}; newest at tip is round-{want}"
+183:    bad_incl = [int(x) for x in INCL_RE.findall(cal_row) if int(x) != want]
+184:    if bad_incl:
+185:        return False, f"calibration row says 'including round {bad_incl[0]}'; newest closure is round-{want}"
+186:    return True, ""
+187:
+188:
+### lines 384-390
+384:        if not any(needle in x for x in cmds): bad("rel", f"{ax} row has no run fact containing '{needle}'")
+385:    # closure pointer
+386:    cp, why = closure_ptr(repo, tip, rowtext.get("calibration", ""))
+387:    if not cp:
+388:        d.append(f"detail: closure_ptr: {why}")
+389:    mism = sum(c.values()) + (0 if cp else 1)
+390:    return tip, c, mism, d, maxn, int(cp)
+
+## tools/shortcut-tally.py
+sha256: 85db3cffa0c4c4b4ada10d37a7fe27cc346dcebda0ee8d234e1489140d55ff9e
+### lines 637-655
+637:def line_statements(text: str) -> set[str]:
+638:    """The statement kinds one line carries."""
+639:    kinds: set[str] = set()
+640:    for kind, patterns in STATEMENT_PATTERNS.items():
+641:        for pattern in patterns:
+642:            for m in pattern.finditer(text):
+643:                if NEGATED_BEFORE.search(text[max(0, m.start() - 24):m.start()]):
+644:                    continue
+645:                if kind == "survivor" and not SURVIVOR_CONTEXT.search(
+646:                    text[max(0, m.start() - 80):m.end() + 80]
+647:                ):
+648:                    continue
+649:                kinds.add(kind)
+650:                break
+651:            if kind in kinds:
+652:                break
+653:    return kinds
+654:
+655:
+### lines 1195-1217
+1195:    sha_d = _commit(d, "fixture d")
+1196:    code8, out8, err8 = _run(["--repo", str(d), "--rev", sha_d, "--rounds", "20-24", "--json"])
+1197:    recs8 = {r["round"]: r for r in json.loads(out8)["records"]} if code8 == 0 else {}
+1198:    st = {n: recs8.get(n, {}).get("status") for n in range(20, 25)}
+1199:    case(
+1200:        "statement-formats",
+1201:        code8 == 0
+1202:        and st[20] == "disclosed:shortcut+survivor"
+1203:        and st[21] == "disclosed:no-falsify"
+1204:        and st[23] == "disclosed:shortcut"
+1205:        and recs8[20]["falsify"] == "yes(w1,folded)"
+1206:        and recs8[21]["falsify"] == "stalled(w1)",
+1207:        f"exit={code8} statuses={st} falsify20={recs8.get(20, {}).get('falsify')} falsify21={recs8.get(21, {}).get('falsify')}",
+1208:    )
+1209:    case(
+1210:        "no-disclosure-stays",
+1211:        code8 == 0 and st[22] == "no-disclosure" and st[24] == "no-disclosure",
+1212:        f"round22(negated wording)={st[22]} round24(no statement)={st[24]}",
+1213:    )
+1214:
+1215:    # the fleet report is an optional second source; without it round 24 stays silent
+1216:    f = _fixture(root / "f")
+1217:    _write(f / ".ufo" / "reports" / "round-24" / "kama.md", FIX_FLEET_REPORT)

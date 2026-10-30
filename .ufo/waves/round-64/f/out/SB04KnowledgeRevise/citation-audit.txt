@@ -1,0 +1,22 @@
+56: MODEL_SHA = '270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d'
+57: SERVER_SHA = 'b6a31a8e97615a2a1445aeba51e6411e7b02f0a5fa554559347239ee860cd804'
+76: EXPECT_CONTROLS = sum(EXPECT_FAMILIES.values())
+150: SYSTEM_PREFIXES = ('/usr/lib/', '/lib/', '/usr/lib64/', '/lib64/')
+180: def sha256_path(path, cache=False):
+270: def holder_pids(inodes, retries=4):
+283:         except PermissionError:
+305:     for _ in range(retries):
+319: def stat_fields(pid):
+391: def holder_record(pid, server_dir):
+400:         raw = open(f'/proc/{pid}/cmdline', 'rb').read()
+434: def collect(port, hold_doc, hold_mtime_ns, t0_ns, tool_pid, tool_ticks,
+449:         'expect_env': {k: os.environ[k] for k in TOOL_CHILD_ENV
+480:     out['bind_listener'] = bool(ls) and all(
+522:             if p == '':
+846:         fails.add('bind_stable')
+854:         fails.add('bind_claim')
+932: def reference_run(server, model, reqs, work):
+947:             st, _, body, _ = http(port, '/health', timeout=2.0)
+1049:                 raw_a = collect(port, hold_doc, mtime, t0_ns, proc.pid,
+1071:         open(os.path.join(hold, 'release'), 'w').write('go\n')
+1990:             ('proxy', 'proxy', 'proxy', 'bind_holders'),

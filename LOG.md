@@ -2535,3 +2535,39 @@ Deleted by `8bee4e56a995` (round-43: LOG wording):
 - Wave b: 42 seats (executor 10, mutation-tester 13, critic 4, reviewer 3, sentinel 1, scout 6, scribe 3, connector 2), no dead seat; findings and dispositions in `corpus/lessons/round-64.md` §Wave results/§Mistakes and SCORECARD §Round 64. Wave f: 42 seats validated, 21 spawned behind the host-load gate, stopped by the operator wrap-up with no reports (partial files under `.ufo/waves/round-64/f/out/` are unreviewed byproducts, not findings).
 - Sources: S529–S536 added (6 admitted `queued`, 2 rejected); SOURCES 268→276; `sources-census.sh validate kama` exit 0 at start and end. No knowledge entry admitted (revision seat never ran); QUALITY KQ107–KQ115 added; considerthese `2026-10-24.md` proposal 2 landed as KQ113 plus `recheck-quotes.py` (27/27).
 - No score change, capability admission or round admission is claimed; non-author closure pending.
+
+## Round 64 — attempt 2: wave-f re-dispatch, falsification settled, entry admitted (2026-10-30)
+
+- Wave f re-dispatched through the inline handoff (`f.ready` l1 `KamaR64`, taken →
+  `f.ready.dispatched`); the committed spec/dispatch were re-validated first (`ufo-swarm-wave.mjs
+  plan` exit 0, tasks byte-identical to `f/f-dispatch.json`). 42 seats (mutation-tester 22,
+  critic 5, reviewer 5, executor 4, scribe 3, connector 2, sentinel 1; 33/42 ≈ 79 % attack
+  share), all settled, no dead seat; round shape stays two v1 waves summing 84 (b 42 + f 42).
+  Attempt-1 partial seat outputs moved byte-exact to `f/out-attempt1/` before the re-dispatch.
+- Pre-dispatch receipts: counters re-run green at wave tip `23b3fdb1` (C1 91/91 8/8 `met=True`
+  74 s; C2 all fields `met=True` 23 s) — `.ufo/waves/round-64/measured/attempt2/{c1,c2}.out`;
+  digest/hexrun scans, reconciler and tally re-run green at lane tip `9549c0b9` (same dir);
+  census start exit 0, 276 rows (`census/attempt2-start.out`).
+- Verdicts (receipts in `.ufo/waves/round-64/f/`): **C1 not verified — falsified** (MT22 b3/f,
+  MT23 d, MT25 D_gap600, MT30 F3, RV08 defects, X11 flake, SB06 surviving counter mutants, CR06
+  record defects); **C2 not verified — falsified** (MT41 F1 caller-`PYTHONPATH` false pass and
+  T1-T3 sandbox escapes; CR07 M1-M4/M8/M9 self-description survivors; CR05 m9; MT38 tally
+  topic-blindness; MT33 unpinned row deps; MT39 controls field). Scores stay operability 8,
+  calibration 7; no capability enters; no axis harmed; round not admitted by its author.
+- Knowledge entry admitted: `corpus/knowledge/process-bound-listener.md` (SB04 revision;
+  recheck `quotes OK=31/31` re-run by the L1, exit 0; line anchors re-derived at `23b3fdb1`;
+  wave-f addendum appended naming each realized limit). SOURCES in-place flips: S529-S534
+  `queued→mined` + used-by `—→entry, lesson`; S049/S495/S496/S499 used-by gain the entry; row
+  count 276 before and after. QUALITY KQ116 (caller-env binding), KQ117 (registry binds every
+  file its rows read). Lesson attempt-2 section + Mistakes 13-15 (caller-env false pass;
+  procfs observables one short of the sentence; normative-text drift 89/91).
+- KR06 (round-63 closure routed defect, `completion_fingerprint` 9-40 hex not source-backed):
+  still recorded, not repaired — upstream (S526 README) documents no `system_fingerprint`
+  format; the bound is receipt-derived observed shape (`b11755-704366d76`, 9 hex) graded in the
+  frozen r62/r63 honest-stop instruments only; the round-64 claim does not rest on it. Named in
+  the report; a future instrument sources the format or drops the check to observed-shape-only.
+- Changes landed through `jj-lane.sh` (each `landed <hash>`): `9549c0b9` attempt-1 partials
+  moved; `6203f6f5` pre-dispatch receipts + census start; this entry, SOURCES flips, entry,
+  QUALITY, SCORECARD and lesson land in the integration commit with the wave-f evidence
+  (`f/` reports, out dirs, `f-results.json`, extracted transcripts).
+- Tools installed/updated this attempt: none; pacman not used.

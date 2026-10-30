@@ -1,0 +1,19 @@
+# facts2.py output (captured 2026-10-30 ~07:55Z)
+== raw procfs address forms for v6 loopback variants
+    bind ::1 v6only=1: OK port=53189
+  ::1 v6only=1: tcp6 raw_addr=00000000000000000000000001000000
+    counter._hex_loopback=True tool._tcp6_is_loopback=True
+    counter.listeners=[(2235789921, True)] tool._listen_inodes=['2235789921']
+    bind ::ffff:127.0.0.1 v6only=0: OK port=32905
+  ::ffff:127.0.0.1 v6only=0: tcp6 raw_addr=0000000000000000FFFF00000100007F
+    counter._hex_loopback=True tool._tcp6_is_loopback=True
+    bind ::ffff:127.0.0.2 v6only=0: OK port=47323
+  ::ffff:127.0.0.2 v6only=0: tcp6 raw_addr=0000000000000000FFFF00000200007F
+    counter._hex_loopback=False tool._tcp6_is_loopback=True   <-- classifier divergence
+    bind ::ffff:127.0.0.1 v6only=1: FAILED OSError(22, 'Invalid argument')
+== v4 raw form
+  v4 127.0.0.1: tcp raw_addr=0100007F counter._hex_loopback=True tool(counts)='2235789926'
+  v4 127.0.0.2: tcp raw_addr=0200007F counter._hex_loopback=False tool(counts)='2235789927'  <-- tool v4 rule = last byte 7F, looser than counter
+== SO_REUSEPORT orderings against the pinned server (b11755)
+  child-first: child up=True; forger SO_REUSEPORT bind: FAILED OSError(98, 'Address already in use')
+  forger-first (SO_REUSEPORT bound, listening): child up=True rc=1   <-- child dies, no receipt path

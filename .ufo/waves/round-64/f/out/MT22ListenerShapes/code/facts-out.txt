@@ -1,0 +1,20 @@
+# facts.py output (captured 2026-10-30 ~07:50Z; host ports reused per run)
+== baseline-child: port=53179 LISTEN rows:
+    tcp addr_hex=0100007F inode=2228534289 counter_loopback=True
+    counter.listeners()=[(2228534289, True)]
+    tool._listen_inodes()=['2228534289']
+== case A: SO_REUSEPORT second listener on 127.0.0.1 (after child)
+    bind SO_REUSEPORT: FAILED OSError(98, 'Address already in use') (server does not set SO_REUSEPORT)
+== case B: same port on 127.0.0.2 and ::1, child on 127.0.0.1
+  2 ('127.0.0.2', 53179) v6only=None: bind OK
+  10 ('::1', 53179) v6only=1: bind OK
+  10 ('::ffff:127.0.0.1', 53179) v6only=1: bind FAILED OSError(22, 'Invalid argument')
+  10 ('::ffff:127.0.0.1', 53179) v6only=0: bind FAILED OSError(98, 'Address already in use')
+== case D: unix-socket front
+    unix listen OK at /tmp/mt22-facts.sock
+    /proc/net/tcp rows for any port unaffected: count=0
+== case F: listener inside a user+net namespace
+    netns listener bound on 127.0.0.1:47613 inside the new ns
+  host-view: port=47613 LISTEN rows: (none)
+    counter.listeners()=[]
+    tool._listen_inodes()=[]

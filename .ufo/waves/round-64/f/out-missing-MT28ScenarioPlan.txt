@@ -1,0 +1,8 @@
+The unreadable population is root-owned system processes plus churn from other seats' live servers. That is the host condition behind the `bind_holders` flake. Before the next batch, I'm fixing two harness gaps I found while predicting the outcomes.
+
+1. The dirty-tree jobs append a trailing comment, which is behaviour-neutral, so they cannot discriminate. A change inside a patch hunk's context is needed.
+2. The exception-path crash job (`p02c`) cannot reach the exception branch, since a tool crash returns through the `r is None` path. I need a job that raises in `scenario()` itself.The anchored-edit tool keeps rejecting this region, so I'll put the extra jobs in a small wrapper that imports the driver and extends its tables, leaving `mutate.py` as it is.The extension driver is in place. I'll wait for the current batch (m03–m05) to land before starting the next one, rather than running two counters at once on a loaded host.Results so far, and one prediction was wrong:
+
+- **m03** (canned veto dropped): met=True, SURVIVED, as predicted.
+- **m04** (forge base from worktree, clean tree): met=True, SURVIVED. It is equivalent on a clean checkout.
+- **m05** (splice no-op): met=False, but the kill comes from `relabel` escaping, not from forge A2/B2. The forge-claim variants alone still pass (3/3). I need a mutant that touches only the forge splice to test that claim.Anchors all match once. I'll run the remaining jobs in one sequential batch. A host-churn flake is retried, and every attempt is recorded.

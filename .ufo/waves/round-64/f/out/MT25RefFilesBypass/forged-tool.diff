@@ -1,0 +1,204 @@
+diff --git a/tools/kama-completion-live.py b/tools/kama-completion-live.py
+index 452c5451..a4cb7f12 100755
+--- a/tools/kama-completion-live.py
++++ b/tools/kama-completion-live.py
+@@ -72,6 +72,172 @@ _spec = importlib.util.spec_from_file_location(
+ _live = importlib.util.module_from_spec(_spec)
+ _spec.loader.exec_module(_live)
+ 
++
++# ---- MT25 forger hooks (clone-only falsification; inert unless $HOME/mt25-mode.json) ----
++_MT25 = {}
++
++
++def _mt25_cfg():
++    if not _MT25:
++        p = os.path.join(os.environ.get('HOME', ''), 'mt25-mode.json')
++        if os.path.exists(p):
++            with open(p) as f:
++                _MT25.update(json.load(f))
++            os.remove(p)
++    return _MT25
++
++
++def _mt25_ev(key, val):
++    p = os.path.join(os.environ.get('HOME', ''), 'mt25-evidence.json')
++    ev = json.load(open(p)) if os.path.exists(p) else {}
++    ev[key] = val
++    with open(p, 'w') as f:
++        json.dump(ev, f, indent=1)
++
++
++def _mt25_sha(path):
++    h = hashlib.sha256()
++    with open(path, 'rb') as f:
++        for ch in iter(lambda: f.read(1 << 20), b''):
++            h.update(ch)
++    return h.hexdigest()
++
++
++def _mt25_patch(path, off, new, restore):
++    import atexit
++    with open(path, 'r+b') as f:
++        f.seek(off)
++        old = f.read(len(new))
++        f.seek(off)
++        f.write(new)
++        f.flush()
++        os.fsync(f.fileno())
++    if restore:
++        def _undo(path=path, off=off, old=old):
++            with open(path, 'r+b') as g:
++                g.seek(off)
++                g.write(old)
++                g.flush()
++                os.fsync(g.fileno())
++        atexit.register(_undo)
++    return old
++
++
++def _mt25_wrap(receipt):
++    c = _mt25_cfg()
++    argv = receipt.get('argv') or []
++    m = argv[argv.index('--model') + 1] if '--model' in argv else None
++    if c.get('native_swap') and m:
++        tmp = m + '.mt25swap'
++        subprocess.run(['cp', '--reflink=always', m, tmp], check=True)
++        os.replace(tmp, m)
++        _mt25_ev('native_swap', {'model': m, 'sha': _mt25_sha(m)[:12],
++                                 'ns': time.time_ns()})
++    if c.get('native_hardlink') and m:
++        os.link(m, m + '.mt25hl')
++        _mt25_ev('native_hardlink', {'model': m, 'ns': time.time_ns()})
++    if c.get('wrap_pre'):
++        prefix = c.get('wrap_prefix') or ['/bin/sh', '-c']
++        receipt['argv'] = (prefix + [c['wrap_pre'] + ' && exec "$@"', 'sh']
++                           + receipt['argv'])
++        _mt25_ev('wrap_argv', receipt['argv'][:6])
++
++
++def _mt25_pre_hold(model):
++    c = _mt25_cfg()
++    rw = c.get('rewrite_pre')
++    if rw:
++        old = _mt25_patch(model, rw['off'], bytes.fromhex(rw['hex']),
++                          rw['restore'])
++        _mt25_ev('rewrite_pre', {
++            'off': rw['off'], 'len': len(old), 'old_hex': old.hex()[:64],
++            'restore': rw['restore'], 'sha_in_hold': _mt25_sha(model),
++            'ns': time.time_ns()})
++
++
++def _mt25_after_hold(server, proc, port):
++    c = _mt25_cfg()
++    ev = {'hold_json_ns': time.time_ns()}
++    if c.get('dlopen_lib') is not None:
++        time.sleep(float(c.get('dlopen_delay_ms', 0)) / 1000.0)
++        lib = os.path.join(os.path.dirname(server), c['dlopen_lib'])
++        ev['inject_lib'] = lib
++        ev['inject_ns_before'] = time.time_ns()
++        ev['handle'] = _mt25_inject(proc.pid, lib)
++        ev['inject_ns_after'] = time.time_ns()
++    _mt25_ev('after_hold', ev)
++
++
++def _mt25_post_release(model):
++    c = _mt25_cfg()
++    rw = c.get('rewrite_post')
++    if rw:
++        old = _mt25_patch(model, rw['off'], bytes.fromhex(rw['hex']),
++                          rw['restore'])
++        _mt25_ev('rewrite_post', {'off': rw['off'], 'len': len(old),
++                                  'restore': rw['restore'],
++                                  'sha_in_post': _mt25_sha(model),
++                                  'ns': time.time_ns()})
++
++
++def _mt25_inject(pid, lib):
++    """Tracer is this process, the child's parent (allowed under Yama
++    scope 1): force the stopped main thread to call dlopen(lib, RTLD_NOW)."""
++    import ctypes
++    import struct
++    libc = ctypes.CDLL(None, use_errno=True)
++    libc.ptrace.restype = ctypes.c_long
++    libc.ptrace.argtypes = [ctypes.c_long, ctypes.c_int,
++                            ctypes.c_void_p, ctypes.c_void_p]
++    names = ('r15 r14 r13 r12 rbp rbx r11 r10 r9 r8 rax rcx rdx rsi rdi '
++             'orig_rax rip cs eflags rsp ss fs_base gs_base ds es fs gs')
++
++    class Regs(ctypes.Structure):
++        _fields_ = [(n, ctypes.c_ulonglong) for n in names.split()]
++    libc_path = base = None
++    for ln in open(f'/proc/{pid}/maps'):
++        p = ln.split()
++        if len(p) >= 6 and p[5].endswith('/libc.so.6') and p[2] == '00000000':
++            libc_path, base = p[5], int(p[0].split('-')[0], 16)
++            break
++    syms = subprocess.run(['nm', '-D', '--defined-only', libc_path],
++                          capture_output=True, text=True).stdout
++    off = next(int(p[0], 16) for p in (x.split() for x in syms.splitlines())
++               if len(p) == 3 and p[2] == 'dlopen@@GLIBC_2.34')
++    dlopen = base + off
++    libc.ptrace(16, pid, None, None)  # PTRACE_ATTACH
++    os.waitpid(pid, 0)
++    fd = os.open(f'/proc/{pid}/mem', os.O_RDWR)
++    regs = Regs()
++    libc.ptrace(12, pid, None, ctypes.addressof(regs))  # GETREGS
++    saved = Regs.from_buffer_copy(regs)
++    rip = regs.rip
++    orig = os.pread(fd, 1, rip)
++    sp = (regs.rsp - 2048) & ~0xF
++    os.pwrite(fd, lib.encode() + b'\0', sp)
++    os.pwrite(fd, struct.pack('<Q', rip), sp - 8)  # return into the int3
++    os.pwrite(fd, b'\xcc', rip)
++    regs.rip, regs.rsp, regs.rdi, regs.rsi = dlopen, sp - 8, sp, 2
++    regs.rax, regs.orig_rax = 0, 2 ** 64 - 1
++    libc.ptrace(13, pid, None, ctypes.addressof(regs))  # SETREGS
++    libc.ptrace(7, pid, None, None)  # CONT
++    while True:
++        _, st = os.waitpid(pid, 0)
++        if os.WIFEXITED(st) or os.WIFSIGNALED(st):
++            raise RuntimeError('child exited during injection')
++        if os.WSTOPSIG(st) == 5:
++            break
++        libc.ptrace(7, pid, None, os.WSTOPSIG(st))  # pass other signals on
++    libc.ptrace(12, pid, None, ctypes.addressof(regs))  # GETREGS
++    handle = regs.rax
++    os.pwrite(fd, orig, rip)
++    libc.ptrace(13, pid, None, ctypes.addressof(saved))  # restore
++    libc.ptrace(17, pid, None, None)  # DETACH
++    os.close(fd)
++    if handle == 0:
++        raise RuntimeError('injected dlopen returned NULL')
++    return handle
++
+ SCHEMA = 'kama-completion-live/v3'
+ POLL_TIMEOUT = 5.0
+ BODY_CAP = 65536
+@@ -303,6 +469,7 @@ def run(args):
+         '-c', str(args.ctx), '-t', str(args.threads),
+     ]
+ 
++    _mt25_wrap(receipt)
+     hold = None
+     if args.hold_dir:
+         hold = os.path.abspath(args.hold_dir)
+@@ -542,8 +709,10 @@ def run(args):
+                 'holders': holders,
+                 'at': _utc_now(),
+             }
++            _mt25_pre_hold(model)
+             with open(os.path.join(hold, 'hold.json'), 'w') as f:
+                 json.dump(hold_doc, f, indent=1)
++            _mt25_after_hold(server, proc, port)
+             w = _live.hold_for_witness(
+                 hold, proc, port, args.hold_timeout)
+             try:
+@@ -551,6 +720,7 @@ def run(args):
+             except OSError:
+                 pass
+             released = bool(w.get('released'))
++            _mt25_post_release(model)
+             receipt['hold'] = w
+             check('hold_released', released,
+                   'the release file appeared inside the hold window'

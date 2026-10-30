@@ -1,0 +1,90 @@
+diff --git a/tools/round64-c1-counter.py b/tools/round64-c1-counter.py
+index 5078eba6..ba7d75d7 100755
+--- a/tools/round64-c1-counter.py
++++ b/tools/round64-c1-counter.py
+@@ -316,6 +316,59 @@ def holder_pids(inodes, retries=4):
+     return pids, unreadable
+ 
+ 
++def server_side_inodes(port, lport):
++    """inodes of the ESTABLISHED TCP rows whose local side is the run port
++    and whose remote side is this counter's client port: the accepted
++    socket that carried the answer (proc_net_tcp(5), state 01)."""
++    out = []
++    for path in ('/proc/net/tcp', '/proc/net/tcp6'):
++        try:
++            with open(path, encoding='ascii') as fh:
++                next(fh, None)
++                for line in fh:
++                    f = line.split()
++                    if len(f) < 10 or f[3] != '01':
++                        continue
++                    lp = int(f[1].rpartition(':')[2], 16)
++                    rp = int(f[2].rpartition(':')[2], 16)
++                    if lp == port and rp == lport:
++                        out.append(int(f[9]))
++        except (OSError, ValueError, IndexError):
++            continue
++    return out
++
++
++def conn_owner(port, timeout=5.0):
++    """Who answers one counter-owned keep-alive request on the run port:
++    the readable holders of the accepted socket that carried the request.
++    A hidden helper that accepted the connection holds that socket in a
++    non-dumpable fd table, so the answer shows no holder at all."""
++    out = {'inode': None, 'holders': []}
++    try:
++        s = socket.create_connection(('127.0.0.1', port), timeout=5.0)
++    except OSError:
++        return out
++    try:
++        lport = s.getsockname()[1]
++        try:
++            s.sendall(b'GET /health HTTP/1.1\r\nHost: 127.0.0.1\r\n\r\n')
++        except OSError:
++            pass
++        t0 = time.monotonic()
++        while time.monotonic() - t0 < timeout:
++            inos = server_side_inodes(port, lport)
++            if inos:
++                held, _unread = holder_pids(inos[:1])
++                if held:
++                    out['inode'] = inos[0]
++                    out['holders'] = sorted(held)
++                    break
++            time.sleep(0.05)
++    finally:
++        s.close()
++    return out
++
++
+ def stat_fields(pid):
+     """(ppid, starttime_ticks) from /proc/<pid>/stat, (None, None) if gone."""
+     try:
+@@ -838,6 +891,14 @@ def score(receipt, witness, binding):
+             [list(x) for x in file_set(h.get('maps'))] == rf
+             for h in hs_a)):
+         fails.add('bind_ref_files')
++    # each counter-owned keep-alive request on the run port must be
++    # answered over a socket held by the hold pid alone: a foreign acceptor
++    # (a hidden non-dumpable helper) leaves no readable holder at all
++    hp = raw_a.get('hold_pid') if isinstance(raw_a, dict) else None
++    co = bnd.get('conn_owner')
++    if not (isinstance(co, list) and co and is_int(hp) and all(
++            c.get('holders') == [hp] for c in co)):
++        fails.add('bind_conn_owner')
+     gb = grade_binding(raw_b)
+     for k in ('bind_state', 'bind_trace'):
+         if gb.get(k) is not True:
+@@ -1062,6 +1123,10 @@ def witness_run(work, label, tool_path, server_path, model_path, reqs,
+                     'model_sha256': hold_doc.get('model_sha256'),
+                     'alias': hold_doc.get('alias'), 'tool_req': tool_req}
+                 binding = {'raw_a': raw_a, 'raw_b': raw_b}
++                # the counter's own keep-alive requests on the run port:
++                # who accepted and answered each one
++                binding['conn_owner'] = [conn_owner(port)
++                                         for _ in range(6)]
+                 break
+             if proc.poll() is not None:
+                 notes.append('tool exited before hold.json')
