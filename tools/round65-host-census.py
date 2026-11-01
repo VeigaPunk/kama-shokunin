@@ -106,6 +106,12 @@ def main():
         work = Path(tempfile.mkdtemp(prefix="r65census-"))
         try:
             run_argv = [a.replace("__WORK__", str(work)) for a in argv]
+            if run_argv[0].endswith(".py"):
+                # a .py path is not a CreateProcess executable on Windows;
+                # on POSIX the shebang made direct exec work. Spawn under
+                # the running interpreter everywhere (the docstring's
+                # adaptation), keeping non-python members as declared.
+                run_argv = [sys.executable] + run_argv
             proc = subprocess.run(run_argv, cwd=str(LANE), capture_output=True,
                                   text=True, errors="replace", timeout=BUDGET)
             out = proc.stdout + proc.stderr

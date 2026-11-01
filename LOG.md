@@ -2571,3 +2571,55 @@ Deleted by `8bee4e56a995` (round-43: LOG wording):
   QUALITY, SCORECARD and lesson land in the integration commit with the wave-f evidence
   (`f/` reports, out dirs, `f-results.json`, extracted transcripts).
 - Tools installed/updated this attempt: none; pacman not used.
+
+## Round 65 (2026-10-31) — fresh-start round on the new Windows host
+
+Motivating evidence: the lane moved hosts; the former host's endpoints are
+absent (negative localhost census, `.ufo/waves/round-65/measured/endpoint-census.out`:
+no listener on 8080/34113/11434 on any interface, five HTTP probes curl exit 7;
+consumer surfaces pin-free, `consumer-*.out`); `python3` is the Microsoft Store
+stub (exit 49, `measured/before/before-*.out`), and at round start four
+registered instruments failed on this host while twenty rounds-56-64 counters
+had been unregistered for nine rounds (`measured/before/py-tools_gate-registry-check.py_--selftest.out`:
+`registered 54 unregistered 20 defective 0` at base `3325e8ed86a5468156c963b98686d3598aa22e5f`).
+Last three rejected closures re-read and spot-checked; what was ruled out and
+why is in SCORECARD §Round 65 (fresh-start §9 bar).
+
+- C1 operability: three portability repairs, each shown able to fail before
+  (report-landing-audit: fixture auto-maintenance packed fresh objects — S537
+  grounding — and read-only loose objects; digest-ledger: os.sep document
+  matching + platform open flags; citation-provenance: child env, LF-exact
+  fixture bytes, doc-bind separator, probe OSError) and twenty counter
+  registrations in SKILL.md (§Round-56-64 + §Round-65 instrument registry).
+  New instruments `tools/round65-host-census.py` (19 members, tiered) and
+  `tools/round65-province-host-audit.py`. Measured at the landed tip:
+  `HOST_CENSUS pass=16 fail=1 refused=2 total=19 tierA_fail=0 tierB_fail=1`
+  (`measured/host-census-at-tip.out`); the one fail is the append-only-audit
+  v6-revert-class arm (deterministic here, root cause unresolved in-round,
+  open defect recorded); the two refusals are fail-closed correct (missing
+  `ss`/`flock`; NTFS-invalid tracked path). Gate at tip:
+  `GATE_SELFTEST pass=6 fail=0`, `registered 76 unregistered 0 defective 0`.
+- C2 calibration: PROVINCE.md round-65 host census note with
+  `province-host:<tag>` absence markers dated 2026-10-31;
+  `tools/round65-province-host-audit.py` before `stale=9` exit 1
+  (`measured/province-audit-before.out`) → after `stale=0` exit 0
+  (`measured/province-audit-at-tip.out`).
+- Frontier: S537 added (tier A, git-maintenance `maintenance.auto`, fetched
+  bytes sha256 `b1e301c1…96cd4` retained `.ufo/waves/round-65/source/git-maintenance.html`);
+  registry rows 276 → 277; census validate exit 0 at round start and round end
+  (`measured/census-end.out`).
+- Lesson: `corpus/lessons/round-65.md` — Gate (S537 + the two negative-census
+  observations) and Mistakes 1-11 (fixture auto-maintenance packing, read-only
+  unlink, os.sep ×2, platform open flags, child env, nine rounds of registry
+  drift, NTFS-invalid path, LF-exact fixture bytes, write_text newline
+  translation on the append-only registry, silent directory skip in the commit
+  helper, the census runner's own spawn defect).
+- L0: one question filed (NTFS-invalid tracked path under
+  `.ufo/waves/round-52/w1/out/`); routed around, nothing assumed answered. The
+  L2 floor is unmet on this host — no AgentSwarm surface; the existing
+  `souji | round-46` L0 line covers the same gap and is cited, not duplicated.
+- considerthese `2026-10-26.md` re-opened; proposals 1/2/4 already landed in
+  rounds 41-45 and proposal 3 exists as `tools/shortcut-tally.py`; nothing new
+  adopted. Assimilation: none — shokuknow unreachable.
+- No capability row enters (no live-run repertoire demonstration this round);
+  scores held operability 8 / calibration 7 pending non-author closure.
