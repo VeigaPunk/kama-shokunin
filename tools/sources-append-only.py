@@ -3,9 +3,15 @@ r"""Enforce SOURCES-CONTRACT-v1 rule 2 (append-only) between two revisions.
 
 Usage:
   python3 tools/sources-append-only.py --from REV --to REV \
-      [--repo /home/vgpnk/Projects/shokunin/kama-shokunin] \
-      [--path corpus/SOURCES.md] [--json]
+      [--repo .] [--path corpus/SOURCES.md] [--json]
   python3 tools/sources-append-only.py --selftest
+
+--repo defaults to the current directory (round 68): the former default was a
+former-host absolute path (/home/vgpnk/Projects/shokunin/kama-shokunin), so on
+any other host the default invocation failed closed with
+`fatal: cannot change to '...'` (rc=128 from git) before any check ran —
+receipted at `.ufo/waves/round-67/measured/sources-append-only-default-invocation-defect.out`
+and routed to this round by the round-67 record.
 
 Reads both blobs with `git -C REPO show REV:PATH` (read-only; never touches
 the working tree or index), parses the `## Registry` table in each, and
@@ -60,6 +66,7 @@ it never runs git and is fixture self-consistency, never corpus evidence.
 
 import argparse
 import json
+import os
 import re
 import subprocess
 import sys
@@ -650,6 +657,13 @@ def run_selftest():
     checks = [
         ("oracle covers every fixture column",
          fixture_cols[1:] == list(_CELL_EDIT_EXIT) == list(_DEFAULTS)),
+        # round 68: the former default was a former-host absolute path, so the
+        # default invocation failed closed on any other host before any check
+        # ran (`fatal: cannot change to '...'`). A property check in boolean
+        # form (a good default passes by being True; the callable tuple below
+        # is pass-by-raise and would misgrade this).
+        ("default --repo is cwd-relative (not a former-host absolute path)",
+         not os.path.isabs(build_parser().get_default("repo"))),
     ]
     for name, call in (
         ("compared set without `opened` is refused",
@@ -672,7 +686,7 @@ def run_selftest():
     return 1 if failures else 0
 
 
-def main(argv=None):
+def build_parser():
     ap = argparse.ArgumentParser(
         description="Enforce SOURCES-CONTRACT-v1 rule 2 (append-only) "
         "between two revisions of corpus/SOURCES.md."
@@ -681,8 +695,8 @@ def main(argv=None):
     ap.add_argument("--to", dest="to_rev", help="target revision (newer)")
     ap.add_argument(
         "--repo",
-        default="/home/vgpnk/Projects/shokunin/kama-shokunin",
-        help="repository containing the file (default: kama-shokunin lane)",
+        default=".",
+        help="repository containing the file (default: the current directory)",
     )
     ap.add_argument("--path", default="corpus/SOURCES.md", help="blob path in repo")
     ap.add_argument("--json", action="store_true", help="emit JSON report")
@@ -691,6 +705,11 @@ def main(argv=None):
         action="store_true",
         help="run in-memory parser/diff cases (no git, no repo access)",
     )
+    return ap
+
+
+def main(argv=None):
+    ap = build_parser()
     args = ap.parse_args(argv)
 
     if args.selftest:
