@@ -934,9 +934,36 @@ def selftest():
             return True
         return False
 
+    def hermetic(repo):
+        # The fixture manipulates loose objects by path (_obj/unlink of a
+        # fresh blob, tree or tag). Auto maintenance may pack fresh objects
+        # mid-test on some hosts (observed on git 2.55 / Windows: a
+        # multi-pack-index and a cruft pack appeared while the selftest ran
+        # and the hole fixture's fresh blob was no longer loose, failing the
+        # unlink with WinError 3). Pin the channels that move objects, so
+        # fixture objects stay where the fixture put them; on hosts where
+        # the packing never triggered this changes nothing the cases read.
+        for key, value in (("gc.auto", "0"), ("gc.autoDetach", "false"),
+                           ("maintenance.auto", "false")):
+            git(repo, "config", key, value)
+
+    def drop_loose(repo, oid):
+        # Unlink a git-written loose object. git writes loose objects
+        # read-only and Windows refuses to unlink a read-only file (POSIX
+        # unlinks it fine), so clear the mode first; on POSIX this is a
+        # no-op before the same unlink.
+        path = Path(repo, git(repo, "rev-parse", "--git-path",
+                              "objects").strip(), oid[:2], oid[2:])
+        try:
+            os.chmod(path, 0o644)
+        except OSError:
+            pass
+        path.unlink()
+
     with tempfile.TemporaryDirectory(prefix="report-landing-selftest-") as tmp:
         decoy = Path(tmp, "decoy.git")
         git(tmp, "init", "-q", "--bare", str(decoy))
+        hermetic(decoy)
         decoy_before = sorted(p.name for p in (decoy / "objects").iterdir())
         saved = os.environ.get("GIT_DIR")
         os.environ["GIT_DIR"] = str(decoy)
@@ -945,6 +972,7 @@ def selftest():
             for repo in (lane, fleet):
                 repo.mkdir()
                 git(repo, "init", "-q", "-b", "master")
+                hermetic(repo)
             a = _commit(lane, "round-1: work", "kama-shokunin", 1000)
             b = _commit(lane, "round-1:measure", "kama-shokunin", 1100)
             c = _commit(lane, "checkpoint(r1) save", "kama-shokunin", 1150)
@@ -1378,9 +1406,7 @@ def selftest():
                           "mid.txt")
             _commit(lane, "round-1: top", "kama-shokunin", 1500, "top.txt")
             hole = git(lane, "rev-parse", f"{hole_commit}:hole.txt").strip()
-            Path(lane, git(lane, "rev-parse", "--git-path",
-                           "objects").strip(),
-                 hole[:2], hole[2:]).unlink()
+            drop_loose(lane, hole)
             rc, doc = run(base)
             kinds = sorted((x["kind"], x["token"])
                            for x in doc["results"][0]["defects"])
@@ -1423,9 +1449,7 @@ def selftest():
             git(lane, "tag", "-a", "-m", "hole", "v-hole", target,
                 env=identity)
             tag_oid = git(lane, "rev-parse", "v-hole").strip()
-            Path(lane, git(lane, "rev-parse", "--git-path",
-                           "objects").strip(),
-                 target[:2], target[2:]).unlink()
+            drop_loose(lane, target)
             tag_draft = Path(tmp, "tag-draft.md")
             tag_draft.write_text(
                 "## Landed changes\n- `" + tag_oid + "` tag\n",
@@ -1463,7 +1487,7 @@ def selftest():
                   rc == 1 and ("landed-unresolved", tag) in kinds)
             # the target is observable in the fleet only: the fleet proves
             # the mismatch, the lane cannot serve the target
-            _obj(lane, target).unlink()
+            drop_loose(lane, target)
             rc, doc = run(_ns(base, report=[f"1={shared_draft}"]))
             kinds = sorted((x["kind"], x["token"])
                            for x in doc["results"][0]["defects"])
@@ -1471,14 +1495,14 @@ def selftest():
                   rc == 1 and ("landed-unresolved", tag) in kinds)
             # the mirror: the target is observable in the lane only
             _obj(lane, target).write_bytes(_obj(fleet, target).read_bytes())
-            _obj(fleet, target).unlink()
+            drop_loose(fleet, target)
             rc, doc = run(_ns(base, report=[f"1={shared_draft}"]))
             kinds = sorted((x["kind"], x["token"])
                            for x in doc["results"][0]["defects"])
             check("same-tag-with-the-target-only-in-the-lane-is-a-mismatch",
                   rc == 1 and ("landed-unresolved", tag) in kinds)
             # the target is observable nowhere: the content cannot be read
-            _obj(lane, target).unlink()
+            drop_loose(lane, target)
             check("tag-target-missing-everywhere-is-unknown",
                   is_error(lambda: run(_ns(base, report=[f"1={shared_draft}"]))))
             missing, opaque = missing_reachable(
@@ -1493,9 +1517,7 @@ def selftest():
                                 stdin="dangling blob\n").strip()
             blob_tree = git(lane, "mktree", stdin=f"100644 blob "
                            f"{dangling_blob}\td\n").strip()
-            Path(lane, git(lane, "rev-parse", "--git-path",
-                           "objects").strip(),
-                 dangling_blob[:2], dangling_blob[2:]).unlink()
+            drop_loose(lane, dangling_blob)
             fake = "1234567890abcdef1234567890abcdef12345678"
             garbage_draft = Path(tmp, "garbage-draft.md")
             garbage_draft.write_text(
@@ -1527,9 +1549,7 @@ def selftest():
                                       GIT_COMMITTER_NAME="kama-shokunin",
                                       GIT_AUTHOR_EMAIL="a@x",
                                       GIT_COMMITTER_EMAIL="a@x")).strip()
-            Path(lane, git(lane, "rev-parse", "--git-path",
-                           "objects").strip(),
-                 opaque_tree[:2], opaque_tree[2:]).unlink()
+            drop_loose(lane, opaque_tree)
             missing_all, opaque_relevant = missing_reachable(
                 lane, git(lane, "rev-parse", "HEAD").strip())
             all_roots = present_roots(lane)
@@ -1551,9 +1571,7 @@ def selftest():
             check("unreachable-opaque-garbage-does-not-block",
                   rc == 1 and ("unresolved-full-hash", fake) in kinds)
             tree = git(lane, "rev-parse", f"{mid}^{{tree}}").strip()
-            Path(lane, git(lane, "rev-parse", "--git-path",
-                           "objects").strip(),
-                 tree[:2], tree[2:]).unlink()
+            drop_loose(lane, tree)
             missing, opaque = missing_reachable(
                 lane, git(lane, "rev-parse", "HEAD").strip())
             check("missing-tree-is-an-opaque-hole", tree in opaque)
@@ -1570,9 +1588,7 @@ def selftest():
             # the open range lists the fleet reports: a missing fleet tip
             # tree must be refused with the tree named
             fleet_tree = git(fleet, "rev-parse", "HEAD^{tree}").strip()
-            Path(fleet, git(fleet, "rev-parse", "--git-path",
-                            "objects").strip(),
-                 fleet_tree[:2], fleet_tree[2:]).unlink()
+            drop_loose(fleet, fleet_tree)
             message = ""
             try:
                 run(_ns(base, rounds="10-"))

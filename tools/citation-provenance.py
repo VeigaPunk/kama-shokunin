@@ -22,6 +22,7 @@ Exit: 0 all required citations found and verified; 1 missing/mismatch;
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -69,8 +70,14 @@ def scan(docs):
 
 
 def check(lane, registry, docs, allow_off_ref=False):
-    probe = subprocess.run(["git", "-C", str(lane), "rev-parse", "--git-dir"],
-                           stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    try:
+        probe = subprocess.run(
+            ["git", "-C", str(lane), "rev-parse", "--git-dir"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    except OSError as exc:
+        # a missing/unusable git executable is a distinct refusal from a
+        # lane that is not a repository; both exit 2 with "git" named
+        raise ValueError(f"cannot run git for the lane probe: {exc}") from exc
     if probe.returncode != 0:
         raise ValueError(f"lane is not a git repository: {lane}")
     rows = json.loads(Path(registry).read_text(encoding="utf-8"))
@@ -90,8 +97,12 @@ def check(lane, registry, docs, allow_off_ref=False):
         if doc_bind is not None and not isinstance(doc_bind, str):
             raise ValueError(f"invalid registry doc: {row!r}")
         same_target = [t for t in tokens if t[1] == rev and t[2] == path]
+        # doc binding compares separators-normalised paths: on Windows the
+        # scanned doc path carries backslashes while the registry cell uses
+        # forward slashes (POSIX behaviour unchanged)
         hits = [t for t in same_target if t[3] == want
-                and (doc_bind is None or str(t[0]).endswith(doc_bind))]
+                and (doc_bind is None
+                     or str(t[0]).replace(os.sep, "/").endswith(doc_bind))]
         stale = [t for t in same_target if t[3] != want]
         observed, error = git_blob(lane, rev, path)
         status = "ok"
@@ -131,6 +142,14 @@ def selftest():
         lane.mkdir()
         env = {"GIT_CONFIG_NOSYSTEM": "1", "GIT_CONFIG_GLOBAL": "/dev/null",
                "HOME": tmp, "PATH": "/usr/bin:/bin"}
+        if os.name == "nt":
+            # CreateProcess needs the loader's keys and the spawned CLI's
+            # own git probe needs a resolvable PATH; the no-bin arm below
+            # still overrides PATH, so the unusable-git case keeps its
+            # meaning. POSIX keeps the minimal env above, unchanged.
+            env["SystemRoot"] = os.environ.get("SystemRoot", r"C:\Windows")
+            env["SYSTEMDRIVE"] = os.environ.get("SYSTEMDRIVE", "C:")
+            env["PATH"] = os.environ.get("PATH", env["PATH"])
 
         def git(*argv):
             return subprocess.run(["git", "-C", str(lane), *argv],
@@ -139,7 +158,9 @@ def selftest():
                                   stderr=subprocess.PIPE, text=True).stdout
         git("init", "-q", "--template=")
         target = lane / "evidence.txt"
-        target.write_text("payload\n", encoding="utf-8")
+        # exact LF bytes: write_text would translate \n on a Windows host
+        # and the cited digest would not match the stored blob
+        target.write_bytes(b"payload\n")
         git("add", "--", "evidence.txt")
         git("-c", "user.name=t", "-c", "user.email=t@example.invalid",
             "commit", "-q", "-m", "fixture")

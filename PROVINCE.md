@@ -188,3 +188,57 @@ endpoint or runtime was sampled.
 **Round-60 note — live Ollama lane-owned sample, not a registered consumer (2026-10-27).** `tools/kama-ollama-live.py` and `registry/ollama-live-pin.tsv` add a v0.40.11 child-process instrument and source-grounded captured observations (`corpus/knowledge/ollama-live-lifecycle.md`; S519–S523). The single receipt uses the lane's fixture GGUF and an unregistered loopback port under a scratch HOME/model store; it neither contacts nor changes the three registered consumers, whose last recorded state remains `DEAD`. This is not service restoration, readiness for configured consumers, model quality or general Ollama behavior. The round's claim/counter was falsified: no `live-ollama-lifecycle` capability is admitted, and child cleanup after SIGKILL remains a defect. Extending the existing lane-owned unregistered-child exception from llama.cpp to Ollama remains pending operator decision at `.ufo/l0-questions.md` (`kama | round-60`).
 
 **Round-63 note — the v2 request-plane instrument, its falsified claim, and the claim registries (2026-10-28).** `tools/kama-completion-live.py` (schema `kama-completion-live/v2`) grades one real `POST /v1/completions` on the lane-owned pinned llama.cpp b11755 child: response headers, body completeness, choice shape, `id`/`created`, strict `usage`/`timings` and the server's own `/tokenize` count (`corpus/knowledge/completion-request-plane.md`; S526–S528). It serves on an unregistered loopback port through the proxy-free opener (its round-62 predecessor leaked the POST to an environment proxy, `.ufo/waves/round-63/w1/EX06ProxyEnv.md`), contacts no registered consumer and samples no model quality; the three registered consumers keep their last recorded `DEAD` state. The round-63 claim that this is a verified request-plane capability was falsified by the round's own wave (`.ufo/waves/round-63/w1/MT15C1FakeConsistent.md`: a canned answerer behind a real child's inherited listener passes the frozen counter), so `/v1/completions` stays frontier ground and no capability row is added. The self-assessment surfaces the lane keeps honest are `registry/capability-claims-r63.tsv` (12 frozen capabilities bound to live runs, counter `tools/round63-c2-counter.py`; its host-conditional row for `context-capacity-receipt` records that a running llama-server — the operator's own, a leaked lane child, or a concurrent seat — makes the K1 cell refuse with `host-not-idle-before-K1`), its predecessors `registry/capability-claims-r62.tsv` and `registry/ollama-live-claims-r61.tsv` (the round-61 claim registry for `live-ollama-lifecycle`), and `tools/round63-c1-counter.py` (the request-plane counter). These are lane-internal methods: no consumer file is edited, no service is started outside the lane-owned children, and no `~/.config`, `~/.omp` or systemd path is written.
+
+**Round-65 note — new Windows host census (2026-10-31).** The lane moved to a
+new host: Windows 10.0.26200, Git Bash (MinGW64, git 2.55.0.windows.3), CPython
+3.13.15 (`python`; `python3` is the Microsoft Store alias stub, exit 49). Every
+concrete former-host artifact this province named was re-checked read-only on
+the new host; each absent surface is recorded here with its marker tag
+(`tools/round65-province-host-audit.py` re-derives this list):
+
+- absent-on-this-host (2026-10-31) `province-host:omp-binary` — `~/.local/bin/omp`
+  does not exist; no `LLAMA_CPP_BASE_URL` in the environment; `~/.omp/` holds only
+  `agent/settings.json` whose single key is `shellPath` (no endpoint pin).
+- absent-on-this-host (2026-10-31) `province-host:llama-b11755-install` and
+  `province-host:llama-server-link` — `~/.local/opt/llama-b11755` and
+  `~/.local/bin/llama-server` do not exist (the round-16 fixture footprint stayed
+  on the former host; removal there remains the operator's call).
+- absent-on-this-host (2026-10-31) `province-host:kama-cache-gguf` —
+  `~/.cache/kama-shokunin/` (the pinned fixture GGUF) does not exist.
+- absent-on-this-host (2026-10-31) `province-host:llama-b11755-archive` —
+  `~/.local/opt/llama-b11755-bin-ubuntu-x64.tar.gz` does not exist.
+- absent-on-this-host (2026-10-31) `province-host:qwen-coder-unit` — no systemd
+  on this host; `~/.config/systemd/user/qwen-coder.service` does not exist
+  (row-absent since snapshot `20261014T124232Z` on the former host; unchanged).
+- absent-on-this-host (2026-10-31) `province-host:opencode-json` —
+  `~/.config/opencode/opencode.json` does not exist; the directory holds
+  `opencode.jsonc` whose only key is `$schema` (no provider block, no baseURL
+  pin; read-only shape inspection).
+- absent-on-this-host (2026-10-31) `province-host:janitor-md` —
+  `~/.config/opencode/agents/` does not exist.
+- absent-on-this-host (2026-10-31) `province-host:ufo-src` — `UFO_SRC` is unset
+  and no ufo-fsd checkout was located, so the two `$UFO_SRC`-pinned consumer
+  rows cannot be evaluated on this host (`file=missing` by absence of the tree,
+  not by pin drift).
+
+Serving-runtime census (receipts `.ufo/waves/round-65/endpoint-census.out`,
+`.ufo/waves/round-65/consumer-surfaces.out`, `.ufo/waves/round-65/consumer-shape.out`):
+no process listens on the registered consumer ports `8080` or `34113` or the
+Ollama default `11434` on any interface (full `netstat -ano -p tcp` listen set),
+and HTTP probes of `127.0.0.1:8080/health`, `127.0.0.1:8080/v1/models`,
+`[::1]:8080/health`, `127.0.0.1:34113/health` and `127.0.0.1:11434/api/tags`
+all end in connection refused (curl exit 7, HTTP 000). `ollama` and
+`llama-server` binaries are absent from PATH. The three registered consumer
+rows keep their last recorded `DEAD` state; on this host the probe gate itself
+refuses fail-closed (`ss` absent, `flock` absent), which is the correct
+verdict, not a gate defect. Restoring any serving runtime stays operator-owned
+work under the write boundary above. The lane-owned live fixtures
+(`kama-llamacpp-live`, `kama-completion-live`, `kama-ollama-live`) cannot run
+here without their pinned engine installs; they stay governed instruments on
+the former host shape, and the round-65 host census
+(`tools/round65-host-census.py`) records which lane instruments run on this
+host instead. A tracked wave-artifact path
+(`.ufo/waves/round-52/w1/out/` containing a `|` character) cannot be checked
+out under NTFS, so instruments that clone the lane (the round-42
+self-description reconciler selftest) refuse fail-closed on this host; that
+path question is filed at `.ufo/l0-questions.md` (kama round-65).

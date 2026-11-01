@@ -93,7 +93,12 @@ def parse_ledger(text: str) -> dict:
 
 
 def hash_external(path: str, roots: list):
-    """sha256 of a confined regular file, or None (absent, outside the roots, unreadable, too big)."""
+    """sha256 of a confined regular file, or None (absent, outside the roots, unreadable, too big).
+
+    The no-symlink and non-blocking open flags are POSIX: platforms without
+    them (Windows) open without those flags and keep the realpath
+    confinement and S_ISREG checks as the refusal paths.
+    """
     if not path:
         return None
     base = roots[0] if roots else os.getcwd()
@@ -101,7 +106,9 @@ def hash_external(path: str, roots: list):
     if not any(real == r or real.startswith(r.rstrip(os.sep) + os.sep) for r in roots):
         return None
     try:
-        fd = os.open(real, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        flags = (os.O_RDONLY | getattr(os, "O_BINARY", 0)
+                 | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0))
+        fd = os.open(real, flags)
     except OSError:
         return None
     try:
@@ -170,7 +177,7 @@ def scan_dir(root: str, ledger_file: str | None):
     for cur, _, files in os.walk(root):
         for name in files:
             full = os.path.join(cur, name)
-            rel = os.path.relpath(full, root)
+            rel = os.path.relpath(full, root).replace(os.sep, "/")
             if os.path.islink(full) or not os.path.isfile(full):
                 continue
             blobs.add(file_sha256(full))
@@ -363,9 +370,25 @@ def selftest() -> int:
         else:
             ok += 1
         # round-51 seat M5Digest: the exclusions are exactly three; every other .md/.tsv is in
-        # scope (lesson files, other registry TSVs, a `.ufo`-prefixed sibling, a case variant)
-        inscope = {"corpus/lessons/x.md": "f0", "registry/other.tsv": "f1", ".ufox/y.md": "f2",
-                   "registry/Append-Only-Disclosures.tsv": "f3"}
+        # scope (lesson files, other registry TSVs, a `.ufo`-prefixed sibling, a case variant).
+        # The case-variant member presumes a case-sensitive filesystem: on a
+        # case-insensitive one its path IS the excluded lowercase
+        # disclosures ledger, so that member cannot exist there. Probe the
+        # filesystem and report that one member skipped (could-not-evaluate
+        # on this host), never a vacuous pass of an unobserved state.
+        probe_a = os.path.join(d, "CaseProbe")
+        with open(probe_a, "w") as f:
+            f.write("x")
+        casefolded_fs = os.path.exists(os.path.join(d, "caseprobe"))
+        os.remove(probe_a)
+        inscope = {"corpus/lessons/x.md": "f0", "registry/other.tsv": "f1", ".ufox/y.md": "f2"}
+        skipped = 0
+        if casefolded_fs:
+            skipped = 1
+            print("selftest skip=1: case-variant disclosures fixture "
+                  "(case-insensitive filesystem)", file=sys.stderr)
+        else:
+            inscope["registry/Append-Only-Disclosures.tsv"] = "f3"
         for rel, pair in inscope.items():
             os.makedirs(os.path.join(d, os.path.dirname(rel)), exist_ok=True)
             with open(os.path.join(d, rel), "w") as f:
