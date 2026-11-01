@@ -221,8 +221,8 @@ the new host; each absent surface is recorded here with its marker tag
   rows cannot be evaluated on this host (`file=missing` by absence of the tree,
   not by pin drift).
 
-Serving-runtime census (receipts `.ufo/waves/round-65/endpoint-census.out`,
-`.ufo/waves/round-65/consumer-surfaces.out`, `.ufo/waves/round-65/consumer-shape.out`):
+Serving-runtime census (receipts `.ufo/waves/round-65/measured/endpoint-census.out`,
+`.ufo/waves/round-65/measured/consumer-surfaces.out`, `.ufo/waves/round-65/measured/consumer-shape.out`):
 no process listens on the registered consumer ports `8080` or `34113` or the
 Ollama default `11434` on any interface (full `netstat -ano -p tcp` listen set),
 and HTTP probes of `127.0.0.1:8080/health`, `127.0.0.1:8080/v1/models`,

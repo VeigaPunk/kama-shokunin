@@ -1402,8 +1402,8 @@ def selftest(root):
         # round-51 seat M3Tool survivor: a `Revert "` subject classes its lines `revert`
         f = v6fix()
         body = _text(f.d, "show", "HEAD:LOG.md").split("\n")
-        with open(os.path.join(f.d, "LOG.md"), "w") as fh:
-            fh.write("".join(x + "\n" for x in body[1:5]))
+        with open(os.path.join(f.d, "LOG.md"), "wb") as fh:
+            fh.write("".join(x + "\n" for x in body[1:5]).encode())
         _git(f.d, "add", "-A")
         _git(f.d, *Fixture.IDENT, "commit", "-q", "-m", 'Revert "something"')
         t = _text(f.d, "rev-parse", "HEAD").strip()
