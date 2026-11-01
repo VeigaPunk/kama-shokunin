@@ -3,7 +3,7 @@
 Contract per `AXES.md` §SCORECARD.md contract. Scores are 0–10, self-assessed,
 each bound to an evidence pointer and the round that last changed it.
 
-**Current authority (round 64):** assigned axes are operability + calibration (`shokunin.conf` kama row; the MISSION.md freshness conflict remains open at `.ufo/l0-questions.md:145`). Latest measured round: 64 (honest stop: the operator ended hyaku run 11 before the wave-f falsification ran; non-author closure pending at this commit). Calibration 7 remains the lowest assigned axis, below operability 8; nudge inactive. Round 63's two claims (C1 falsified by its own wave; C2 measured on its predicate with discrimination not shown, closure `corpus/lessons/round-63-verifier-spotcheck.md`: `rejected-honest-stop`) were re-claimed in round 64 under new frozen counters: C1 operability binds the process that answers to the pinned llama-server from procfs (`tools/round64-c1-counter.py`, tool v3), C2 calibration proves the claim registry's work was done rather than printed (`tools/round64-c2-counter.py`). Measured values, the findings of the wave-b falsification (42 seats) and the unrun wave f are recorded in §Round 64; scores are held operability 8 / calibration 7 until a non-author closure rules. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived by `tools/round42-selfdesc-reconcile.py`; round-specific outcomes remain in their sections.
+**Current authority (round 65):** assigned axes are operability + calibration (`shokunin.conf` kama row; the MISSION.md freshness conflict remains open at `.ufo/l0-questions.md:145`). Latest measured round: 65 — a fresh-start round on a new Windows host (the former host's llama-server/OMP endpoints are absent; the negative localhost census is the round's endpoint evidence). Round 64's claims ended not verified by the wave-f settlement; its non-author closure is `corpus/lessons/round-64-verifier-spotcheck.md` (`rejected-honest-stop`). Calibration 7 remains the lowest assigned axis, below operability 8; nudge inactive. Round 65 declared C1 operability (host self-test census: the declared set runs green or refuses fail-closed at the landed tip, after three portability repairs and the registration of the twenty rounds-56-64 counters the instrument-registry gate found unregistered) and C2 calibration (PROVINCE.md made to match the observed host: stale surfaces 9 → 0). Measured values and receipts are recorded in §Round 65; scores are held operability 8 / calibration 7 until a non-author closure rules. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived by `tools/round42-selfdesc-reconcile.py` on the former host; on this host its fixture clone refuses fail-closed on an NTFS-invalid tracked path (`.ufo/l0-questions.md`, kama round-65), so this round's re-anchors are verified by direct pasteable commands instead; round-specific outcomes remain in their sections.
 
 ## Axes
 
@@ -13,8 +13,8 @@ Round 43 re-anchors the `SKILL.md` and `PROVINCE.md` hashes after the round-43 e
 |---|---|---|---|
 | **operability** | **8** | registry gate `tools/kama-probe.sh` sha256 `4393ab819d6a741646237ef0268cc0836988a9711bab6b06c46cbfea382964f4` (1138 lines); run `bash tools/test-snapshot.sh` → `RESULT pass=30 fail=0`; run `python3 tools/pin-watch.py selftest` → `selftest pass=9 fail=0`; run `python3 tools/report-landing-audit.py --selftest` → `selftest cases=79 failed=0`; run `python3 tools/sources-append-only.py --selftest` → `45/45 selftest cases passed`. Limit: the registered endpoints sample DEAD (no authorized serving runtime; operator-owned), so no model-readiness verdict is evidenced | score round 3; evidence re-anchored round 52 |
 | **freshness** | **8** | snapshot/diff harness `tools/test-snapshot.sh` sha256 `236c23c12964cf0b2f0a2f970187e216d3398dcf2b92ffb7e8606e0fdd029646` (194 lines); run `python3 tools/citation-provenance.py --selftest` → `selftest: ok (24 cases)`; live drift evidence `.ufo/waves/round-41/c2/ls-remote-vllm.txt` sha256 `13388e483163357aa4daea784d0e67cdc8d6b5438d3166d613a2a044590b9282`; run `python3 -c "recheck=[l.split(chr(124))[10].strip() for l in open('corpus/SOURCES.md') if l.startswith(chr(124)+' S') and int(l.split(chr(124))[1].strip()[1:])<=477];print(sum(1 for r in recheck if r))"` → `218` (registry rows S001–S477 carrying a recheck cadence). Limit: snapshots are invocation-driven (no clock), and source rechecks run on each row's `recheck` cadence; release re-verification ledger `registry/release-recheck-b11889.tsv`: the 91 `on-release` registry rows pinned to a llama.cpp commit re-verified at release b11889 (counter `tools/round44-release-recheck-audit.py`, §Round-44 measured results: 82 holds, 3 holds-reworded, 6 unchanged-file, 0 drifted, 0 removed) | score round 10; evidence re-anchored round 44 |
-| depth | **7** | `SKILL.md` sha256 `ea303f2dcb84ee53b9ae6175b63fa55323fa86cca85da3e2e3d37b5baaf44168` (1641 lines); run `grep -c '^## ' SKILL.md` → `44`; `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 60 |
-| coverage | **9** | surface list `PROVINCE.md` sha256 `bd1afe5e4aa05bc9d262bafde755cc04bbdec86650e40d36127a0a7bc6a69051` (190 lines); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f and 'processes' not in f]))"` → `38` (round 60 added `corpus/knowledge/ollama-live-lifecycle.md`, round 61 `corpus/knowledge/ollama-live-amendment-r61.md`, round 62 `corpus/knowledge/completion-request-plane.md`; the count was last re-derived at 36 in round 60); held ground includes `corpus/knowledge/endpoint-health-probe-conventions.md`, `corpus/knowledge/kv-cache-reclamation-models.md`, `corpus/knowledge/serving-alias-contract.md` | score round 10; evidence re-anchored round 63 |
+| depth | **7** | `SKILL.md` sha256 `c588ca9d173abdf6b08f4a6bba9d4a381eefdb874003495256c5758c9c6cdedb` (1691 lines); run `grep -c '^## ' SKILL.md` → `46`; `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 65 |
+| coverage | **9** | surface list `PROVINCE.md` sha256 `9cee1df1eefacd8208c3ac4ba4fd1f91ca0703b4ff9e4f1ff4cc902483c07c0c` (244 lines); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f and 'processes' not in f]))"` → `38` (round 60 added `corpus/knowledge/ollama-live-lifecycle.md`, round 61 `corpus/knowledge/ollama-live-amendment-r61.md`, round 62 `corpus/knowledge/completion-request-plane.md`; the count was last re-derived at 36 in round 60); held ground includes `corpus/knowledge/endpoint-health-probe-conventions.md`, `corpus/knowledge/kv-cache-reclamation-models.md`, `corpus/knowledge/serving-alias-contract.md` | score round 10; evidence re-anchored round 65 |
 | calibration | **7** | run `python3 tools/capability-repertoire-audit.py --selftest` → `CAP_SELFTEST pass=2 fail=0`; verifier-spotcheck population and latest outside closure are derived at the measured tip by `python3 tools/round59-c2-counter.py --repo <repo> --tip <rev> --fleet-ref HEAD`; run `python3 -c "import glob; n=len(glob.glob('corpus/lessons/*verifier-spotcheck.md')); print('verifier-spotcheck population present' if n else 'verifier-spotcheck population missing')"` → `verifier-spotcheck population present` (exit 0); exact count and resolved fleet ref are in the counter receipt; latest outside closure `corpus/lessons/round-63-verifier-spotcheck.md` (rejected-honest-stop), including round 63; run `python3 tools/instrument-agreement.py --selftest` → `IA_SELFTEST pass=4 fail=0`; this table's counters `tools/round41-scorecard-reconcile.py` and `tools/round42-selfdesc-reconcile.py`; trend-verdict ledger `registry/verdict-ledger.tsv` (204 rows, self against outside for rounds 10–43: `agreement=69/87 overclaim=2 underclaim=16 other=0 absent=15`, §Round-44 calibration ledger); claim-outcome ledger `registry/claim-outcome-ledger.tsv` (126 rows, the 63 claims of rounds 10–44, self against outside: `agreement=58/61 overclaim=1 underclaim=2 other=1 absent=1`, §Round-45 claim-outcome ledger) | score round 1; evidence re-anchored round 58 |
 | adjacency | **7** | `corpus/knowledge/cross-lane-scope.md` sha256 `1801cb7fa45ef6f56ff96cb67c7840256fcffce000a56067cd8133797b9728a9` (87 lines); run `python3 -c "print(sum(1 for l in open('corpus/knowledge/cross-lane-scope.md') if l.startswith(chr(124))))"` → `16` (lines starting with a table pipe, header and separator lines included); contested scope stays reported, not absorbed (`PROVINCE.md` paragraph "Out of province → report, never absorb") | score round 1; evidence re-anchored round 42 |
 
@@ -2738,6 +2738,8 @@ Scores held: operability 8, freshness 8, depth 7, coverage 9, calibration 7, adj
 
 ### Superseded head banners (kept verbatim; round 48)
 
+**Current authority (round 64):** assigned axes are operability + calibration (`shokunin.conf` kama row; the MISSION.md freshness conflict remains open at `.ufo/l0-questions.md:145`). Latest measured round: 64 (honest stop: the operator ended hyaku run 11 before the wave-f falsification ran; non-author closure pending at this commit). Calibration 7 remains the lowest assigned axis, below operability 8; nudge inactive. Round 63's two claims (C1 falsified by its own wave; C2 measured on its predicate with discrimination not shown, closure `corpus/lessons/round-63-verifier-spotcheck.md`: `rejected-honest-stop`) were re-claimed in round 64 under new frozen counters: C1 operability binds the process that answers to the pinned llama-server from procfs (`tools/round64-c1-counter.py`, tool v3), C2 calibration proves the claim registry's work was done rather than printed (`tools/round64-c2-counter.py`). Measured values, the findings of the wave-b falsification (42 seats) and the unrun wave f are recorded in §Round 64; scores are held operability 8 / calibration 7 until a non-author closure rules. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived by `tools/round42-selfdesc-reconcile.py`; round-specific outcomes remain in their sections.
+
 Round-48 C1 build finding: `tools/append-only-audit.py` v3 at the round-47 tip reported `regressed=1` on the `0718b6ab` SCORECARD.md event. Its one graded line that the repair `82b5e9d3` held and the tip no longer holds is the round-45 authority banner (line 6, before the first `## ` heading): rounds 46 and 47 rewrote the banner in place without keeping the superseded text, although line 6 says the head text it replaces is kept verbatim under §Historical head sections. The banners rounds 45 and 46 replaced are appended below byte-exact (`git show 82b5e9d3:SCORECARD.md | sed -n 6p`, `git show 42ea1204:SCORECARD.md | sed -n 6p`); from round 48 on, each round appends the banner it replaces here.
 
 **Current authority (round 45):** the assigned axes are operability + calibration (`shokunin.conf` kama row; `MISSION.md:29` still says operability + freshness, an open L0 question since round 35). Latest measured round: 45. Calibration 7 is the lowest assigned axis, below operability 8, and below the saturation line, so the stagnation nudge is inactive. The `## Axes` table, §Planned, §Retired, §Saturation and §Capabilities below are re-derived from the tree by `tools/round42-selfdesc-reconcile.py` (round-42 claim C1) and kept current in rounds 43, 44 and 45; the round-5 banner and the head sections they replace are kept verbatim under §Historical head sections. Completed rounds are counted by the fleet's `MANIFEST.json`, not by this file.
@@ -3431,3 +3433,74 @@ pointer existence, limits paragraphs) and the CR05 window; (3) the tally reader 
 round-scoped topic matching; (4) the C1 counter's flake (`bind_holders` under load) needs a
 bounded retry budget that is itself falsifiable; (5) either claim may be re-frozen only under
 §9's do-nothing standard with these receipts as the red-before set.
+
+## Round 65 — fresh-start round on the new Windows host (2026-10-31)
+
+Host shape (all read-only probes, receipts `.ufo/waves/round-65/measured/`):
+Windows 10.0.26200, Git Bash MinGW64 (git 2.55.0.windows.3, `ss`/`pgrep`/
+`flock` absent), CPython 3.13.15 as `python` (`python3` is the Microsoft Store
+alias stub: exit 49, "Python was not found" — every registered command written
+`python3 tools/...` fails as written, exit 49, receipts
+`measured/before/before-*.out`). No `ollama`, no `llama-server`, no
+`~/.local/bin/omp`, no llama-b11755 install, no `~/.cache/kama-shokunin`; no
+listener on 8080/34113/11434 on any interface and all five HTTP probes
+connection-refused (`measured/endpoint-census.out`); `~/.config/opencode/opencode.jsonc`
+holds only `$schema`, `~/.omp/agent/settings.json` only `shellPath`
+(`measured/consumer-*.out`). The working tree is byte-faithful
+(`core.autocrlf=false`; SKILL.md sha at base equals the round-60 anchor).
+
+Fresh-start spot-check (§9): the last three rejected closures were read
+(r62/r63/r64 reports + lessons; r64 non-author spot-check). Ruled out and why:
+(a) any live request-plane / process-binding re-claim (r63 C1, r64 C1) — both
+falsified by their own waves, and the pinned engine install the counters drive
+does not exist on this host, so the counters cannot run here at all; (b) any
+claim-registry re-claim (r62 C2, r64 C2) — falsified (PYTHONPATH shadow,
+surviving self-description mutants); the do-nothing control reaches those
+counters' `met` without the work when the environment is hostile, so a new
+freeze would need a wave surface this host does not have (no seat dispatch;
+see the souji round-46 L0 line); (c) endpoint restoration or probe-gate repair
+to green — restoring a serving runtime is operator-owned (`lessons/round-1-safety.md`),
+and the gate's missing `ss`/`flock` refusals are fail-closed correct on this
+host, not defects to patch around. What remains, and what a do-nothing control
+cannot reach: the registered instruments themselves — at round start four
+failed on this host and twenty counters had been unregistered for nine rounds.
+
+| Claim | Axis, score | Before → after / counting command | Verdict |
+|---|---|---|---|
+| C1 — the declared host census set runs: every SCORECARD-anchored registered self-test passes on this host at the landed tip, the three instruments that failed at round start are repaired (behavior-preserving on POSIX, each fix shown able to fail before), and the twenty rounds-56-64 counters are registered (`registered 74 unregistered 0 defective 0`) | operability (held 8; no score move claimed) | before (round start, receipts `measured/before/`): `python tools/citation-provenance.py --selftest` exit 1 (12 FAIL lines); `python tools/digest-ledger.py selftest` exit 1 (`pass=3 fail=8`); `python tools/report-landing-audit.py --selftest` exit 2 (WinError 3); `python tools/gate-registry-check.py --selftest` exit 1 (`unregistered 20`); Tier A green 4/7 · after at the landed tip: `python tools/round65-host-census.py` → `HOST_CENSUS pass=16 fail=1 refused=2 total=19 tierA_fail=0 tierB_fail=1` (receipt `measured/host-census-at-tip.out`); the one tier-B fail is `append-only-audit --selftest` (`AOA_SELFTEST pass=50 fail=1`, its v6-revert-class arm, deterministic on this host, root cause unresolved in-round — open defect, recorded, not counted as a pass) and the two refusals are fail-closed correct (`ss`/`flock` missing; NTFS-invalid tracked path, L0 filed) | met on its predicate (self-assessed; non-author closure pending) |
+| C2 — PROVINCE.md matches the observed host: every former-host surface it names is present or recorded absent with date | calibration 7 → 7 (the move is the surface truth, not the scalar) | before: `python tools/round65-province-host-audit.py` → `PROVINCE_HOST_AUDIT surfaces=10 present=1 absent=9 stale=9`, exit 1 (`measured/province-audit-before.out`) · after: same command → `stale=0`, exit 0 (receipt `measured/province-audit-at-tip.out`); the corrections carry `province-host:<tag>` markers with date 2026-10-31 and the negative endpoint census | met on its predicate (self-assessed; non-author closure pending) |
+
+Sourced claim: C1 — its fixture-hermeticity repair rests on S537
+(`git-maintenance`, opened this round; quote and fetched-bytes sha in
+`corpus/lessons/round-65.md` §Gate). Repairs, each with the failing arm it
+fixes and the POSIX-preservation argument: report-landing-audit (fixture
+auto-maintenance packing, S537; read-only loose-object unlink),
+digest-ledger (os.sep document matching; platform open flags),
+citation-provenance (child env, LF-exact fixture bytes, doc-bind separator,
+probe OSError). Registration: §"Round-56–64 instrument registry" + §"Round-65
+instrument registry" in SKILL.md. Mistakes 1-8 mined in the round-65 lesson;
+L0 question filed (NTFS-invalid tracked path). No capability row enters this
+round (the census and province audit are registered instruments, not
+repertoire capabilities; entering one would need the live-run demonstration
+the capabilities contract requires). Scores held: operability 8 (the census
+shows the declared set green with two correct refusals and one tier-B open
+defect — not an 9), calibration 7 (the province correction repairs a real
+stale-description drift but the axis-gaining ledger work of rounds 44-45 is
+not extended here).
+
+Census before → after: `.ufo/waves/round-65/measured/census-start.out` and
+`census-end.out` (both `sources-census.sh validate --root <fleet> kama`, exit 0);
+registry rows 276 → 277 (S537, tier A).
+
+### Planned (round 66)
+
+1. Operability: root-cause the `append-only-audit` v6-revert-class arm
+(subject-if never fires for the graded commit on this host; receipts
+`measured/append-only-selftest.out`, `measured/aoa-run3.out`), either as a
+host-dependent defect or a latent one, and land the fix with a red/green pair.
+2. Calibration: extend the province-host audit to the serving-side surfaces
+the round-16/60 fixtures need (engine install, GGUF cache) so a future
+lane-owned fixture round can declare its host preconditions mechanically.
+3. Both: ruled by the L0 answer — if the operator renames the NTFS-invalid
+path, re-run the round-42 reconciler selftest on this host and re-verify the
+round-65 re-anchors with it.
