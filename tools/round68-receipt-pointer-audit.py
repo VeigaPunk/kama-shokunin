@@ -166,9 +166,11 @@ def audit(repo, rev, files, ledger_path):
                 if m:
                     current_round = m.group(1)
             for tok in CITATION_RE.findall(line):
-                # `measured/` alone (prose about the class, no path) is not a
-                # citation; a citation names a receipt path.
-                if not tok.startswith("measured/") or len(tok) <= len("measured/"):
+                # `measured/` alone, and tokens whose remainder is dots only
+                # (`measured/...`, `measured/…`), are prose about the class,
+                # not citations; a citation names a receipt path.
+                rest = tok[len("measured/"):] if tok.startswith("measured/") else ""
+                if not rest or not any(ch not in ".\u2026" for ch in rest):
                     continue
                 if current_round is None:
                     results.append(
@@ -382,7 +384,9 @@ def run_selftest():
     @arm("non-measured backticks are not citations")
     def _ignore_others(root):
         run = _init_repo(root)
-        _write(root, "DOC.md", "see `tools/x.py` and `.ufo/waves/round-5/a.out` and `banner.out`\n\n## Round 5\nnone\n")
+        _write(root, "DOC.md", "see `tools/x.py` and `.ufo/waves/round-5/a.out` and `banner.out`\n\n"
+                "## Round 5\nnone\n\n"
+                "prose about the class: `measured/` and `measured/...` and `measured/…` are not paths\n")
         _commit_all(run)
         res = audit(root, "HEAD", ["DOC.md"], os.path.join(root, "no-ledger.tsv"))
         return res == []
