@@ -41,18 +41,27 @@ Exit codes:
        git failure/timeout)
 
 Read-only: the tool issues only ``git rev-parse``, ``git ls-tree``,
-``git ls-files``, ``git show`` and ``git cat-file -e``; it never writes to
-the repository. ``--selftest`` builds sandbox fixtures under a temporary
-directory (hermetic arms 1-5) and then evaluates this lane's own tree at its
-branch tip (arm 6); it writes nothing inside any repository.
+``git show`` and ``git cat-file -e``; it never writes to the repository and
+never reads the index. ``--selftest`` builds sandbox fixtures under a
+temporary directory (hermetic arms 1-5 and the round-69 stale-index arm 7,
+the latter committed through git plumbing only so the fixture's index stays
+stale by construction) and then evaluates this lane's own tree at its branch
+tip (arm 6); it writes nothing inside any repository.
 
 Usage:
     gate-registry-check.py [--repo DIR] [--rev REV] [--selftest]
 
     --repo DIR   Repository to evaluate (default: current directory).
     --rev REV    Git revision whose tree and SKILL.md are evaluated.
-                 Default: the working tree (tracked files from the index,
-                 SKILL.md from the filesystem).
+                 Default: the working tree -- the population comes from the
+                 HEAD commit tree (``git ls-tree -r HEAD``, round 69), not
+                 from the index: the lane's commit helper lands trees without
+                 refreshing the index, so an index-sourced population
+                 undercounted on this host (75 counters vs 79 tracked at one
+                 round-68 revision; round-68 lesson Mistake 7 disclosed the
+                 defect, round 69 repairs it). SKILL.md and path existence
+                 still come from the worktree files, whose byte-identity with
+                 HEAD the round-67 worktree-landing-check certifies.
     --selftest   Run the fixture matrix; print ``GATE_SELFTEST pass=N fail=M``
                  and exit 0 only if every arm holds and the lane arm is clean.
 """
@@ -106,12 +115,16 @@ def git_root(repo: str) -> tuple[str | None, str]:
 
 
 def tracked_counters(root: str, rev: str | None) -> tuple[list[str] | None, str]:
+    # Round 69: both modes are tree-authoritative. The worktree mode reads the
+    # HEAD commit tree, not the index: this host's commit helper lands trees
+    # without refreshing the index, so `git ls-files` undercounted the
+    # population (round-68 lesson Mistake 7, disclosed there, repaired here).
     if rev is None:
-        rc, out, err = run_git(root, ["ls-files", "-z"])
+        rc, out, err = run_git(root, ["ls-tree", "-r", "-z", "--name-only", "--full-tree", "HEAD"])
     else:
         rc, out, err = run_git(root, ["ls-tree", "-r", "-z", "--name-only", "--full-tree", rev])
     if rc != 0:
-        what = "git ls-files" if rev is None else f"git ls-tree {rev}"
+        what = "git ls-tree HEAD" if rev is None else f"git ls-tree {rev}"
         return None, f"{what} failed: {err or f'rc={rc}'}"
     paths = [
         p.decode("utf-8", "surrogateescape")
@@ -347,6 +360,73 @@ def selftest() -> int:
             failed += 1
         arms.append(
             f"{'PASS' if ok else 'FAIL'} lane-tip {tip[:12]}: exit={code} line={summary!r}"
+        )
+
+    # Arm 7 (round 69): stale-index population. HEAD holds a committed counter
+    # while the index is empty -- the exact state this host's tree-commit
+    # helper produces (round-68 lesson Mistake 7). The fixture is committed
+    # through git plumbing only (hash-object / mktree / commit-tree /
+    # update-ref), so the stale index is by construction, not simulation.
+    def _run_input(repo, args, data: bytes) -> bytes:
+        p = subprocess.run(
+            ["git", "-C", repo, *args],
+            input=data, capture_output=True, timeout=GIT_TIMEOUT,
+        )
+        if p.returncode != 0:
+            raise RuntimeError(
+                f"plumbing {' '.join(args[:2])} failed: {p.stderr.decode('utf-8', 'replace')[:200]}"
+            )
+        return p.stdout
+
+    with tempfile.TemporaryDirectory(prefix="gate-selftest-stale-") as tmp:
+        repo = os.path.join(tmp, "stale")
+        counter_path = "tools/round97-count-stale.py"
+        skill_body = (
+            "Wave artifacts mention a counter in prose only: "
+            f"`{counter_path}` is not a registry row here.\n"
+        )
+        files = {counter_path: b"# fixture counter\n", SKILL_PATH: skill_body.encode("utf-8")}
+        os.makedirs(os.path.join(repo, "tools"), exist_ok=True)
+        Path(os.path.join(repo, counter_path)).write_bytes(files[counter_path])
+        Path(os.path.join(repo, SKILL_PATH)).write_text(skill_body)
+        run_git(repo, ["init", "-q", "-b", "master"])
+        blobs: dict[str, str] = {}
+        for path, content in files.items():
+            blobs[path] = _run_input(repo, ["hash-object", "-w", "--stdin"], content).decode().strip()
+        dirs = sorted({p.rsplit("/", 1)[0] for p in files if "/" in p}, key=lambda d: -d.count("/"))
+        tree_of: dict[str, str] = {}
+        for d in dirs:
+            entries = [
+                f"100644 blob {blobs[p]}\t{p.rsplit('/', 1)[1]}"
+                for p in files if p.rsplit("/", 1)[0] == d
+            ]
+            entries += [
+                f"040000 tree {tree_of[sub]}\t{sub.rsplit('/', 1)[1]}"
+                for sub in tree_of if sub.rsplit("/", 1)[0] == d
+            ]
+            tree_of[d] = _run_input(repo, ["mktree"], ("\n".join(entries) + "\n").encode()).decode().strip()
+        root_entries = [f"100644 blob {blobs[p]}\t{p}" for p in files if "/" not in p]
+        root_entries += [f"040000 tree {sha}\t{sub}" for sub, sha in tree_of.items() if "/" not in sub]
+        root_tree = _run_input(repo, ["mktree"], ("\n".join(root_entries) + "\n").encode()).decode().strip()
+        commit = _run_input(
+            repo,
+            ["-c", "user.name=g", "-c", "user.email=g@l", "commit-tree", root_tree, "-m", "stale"],
+            b"",
+        ).decode().strip()
+        run_git(repo, ["update-ref", "refs/heads/master", commit])
+        rc_ls, out_ls, _ = run_git(repo, ["ls-files", "-z"])
+        index_empty = rc_ls == 0 and out_ls == b""
+        code, lines, err = evaluate(repo, None)
+        summary = lines[-1] if lines else f"ERROR {err}"
+        hit = f"unregistered {counter_path}" in lines
+        ok = index_empty and code == EXIT_UNREGISTERED and hit
+        if ok:
+            passed += 1
+        else:
+            failed += 1
+        arms.append(
+            f"{'PASS' if ok else 'FAIL'} stale-index-population: index_empty={index_empty} "
+            f"exit={code} (want {EXIT_UNREGISTERED}) line={summary!r}"
         )
 
     for a in arms:
