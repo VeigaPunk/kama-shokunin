@@ -221,6 +221,32 @@ the new host; each absent surface is recorded here with its marker tag
   rows cannot be evaluated on this host (`file=missing` by absence of the tree,
   not by pin drift).
 
+**Round-67 note — serving-side fixture surfaces and the interpreter precondition
+(2026-10-31).** The round-67 extension of `tools/round65-province-host-audit.py`
+declares three more host surfaces: the serving-side installs the lane-owned live
+fixtures need (paths pinned in `registry/ollama-live-pin.tsv` — the round-16
+llama.cpp fixture and the round-60 Ollama fixture are governed instruments on
+the former-host shape and cannot run here without them), and the interpreter
+precondition every registered `python3 tools/...` command carries. Each absent
+surface is recorded here with its marker tag:
+
+- absent-on-this-host (2026-10-31) `province-host:ollama-v04011-install` —
+  `~/.local/opt/ollama-v0.40.11` does not exist (the pinned v0.40.11 install
+  tree stayed on the former host; removal there remains the operator's call,
+  `kama | round-60` L0).
+- absent-on-this-host (2026-10-31) `province-host:fixture-gguf-model` —
+  `~/.cache/kama-shokunin/models/stories260K.gguf` does not exist (the pinned
+  fixture GGUF the round-16 and round-60 live tools load; the parent cache
+  surface `province-host:kama-cache-gguf` is recorded absent above).
+- absent-on-this-host (2026-10-31) `province-host:python3-interpreter` —
+  `python3` on PATH is the Microsoft Store app-execution alias stub, not a
+  usable interpreter: `python3 -c "import sys"` exits 49 with "Python was not
+  found" (observed round 65), and the alias can report "command not found" or
+  open the Store instead of running Python (S539). The audit's `spawn` kind
+  grades a real run (exit 0), not PATH existence; every registered
+  `python3 tools/...` command runs here only adapted under `python`
+  (`tools/round65-host-census.py` records the adaptation).
+
 Serving-runtime census (receipts `.ufo/waves/round-65/measured/endpoint-census.out`,
 `.ufo/waves/round-65/measured/consumer-surfaces.out`, `.ufo/waves/round-65/measured/consumer-shape.out`):
 no process listens on the registered consumer ports `8080` or `34113` or the
