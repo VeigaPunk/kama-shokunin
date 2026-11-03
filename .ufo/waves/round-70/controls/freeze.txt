@@ -1,0 +1,66 @@
+ROUND 70 — kama — FROZEN CLAIMS
+Frozen before any claim work. Base (round-start lane tip): 6035e952c2521999e192d6f236331f265ac98392
+Host: Linux plazir27 7.2.11-arch1-1, python3 3.14.8, git 2.56.0, jj 0.45.1
+Lane axes: operability + calibration (shokunin.conf kama row). Calibration 7 is the lowest assigned
+axis; saturation line 8, nudge inactive. Planning/digestion seats: the L1 holds the canonical planner
+seat (the validator rejects `planner`); no separate planner seat is dispatched.
+
+C1 — calibration, score held at 7. Axis move: the lane's standing self-description is made to
+reconcile with the tree through the registered reconciler, and the reconciler's own run-fact harness
+is repaired so its git-dependent facts execute.
+
+  PREDICATE (one sentence, identical in plan, counter and receipt):
+  "the lane's self-description reconciles with the tree at the round's measured tip."
+
+  COUNTER:
+    python3 tools/round42-selfdesc-reconcile.py --repo <lane> --tip <REV>
+  TARGET: prints `... closure_ptr=1 mismatches=0 maxN=70 met=True` and exits 0 at the round-70
+    landing tip; and the same tool's own selftest prints `SELFDESC_SELFTEST ... pass=5 fail=0`,
+    exit 0, at that tip.
+  BEFORE (base 6035e952): `r41=2 banner=1 planned=1 retired=1 saturation=0 caps=0 receipts=0
+    readme=0 province=4 rel=0 closure_ptr=0 mismatches=10 maxN=69 met=False`, exit 1.
+    Receipt: measured/before/reconciler-at-base.out
+  KILL RULE: the target is not met by removing or weakening a reconciler fact check. The census
+    member count stays 22 with the reconciler arm registered; the selftest keeps five arms and its
+    four planted variants must each produce exactly one mismatch above the `ok` arm; a mutation run
+    that disables a fact check must change the verdict line.
+  DO-NOTHING CONTROL: the base tree itself — unprompted, it scores 10 mismatches, exit 1. No repair,
+    no green.
+
+C2 — operability, score held at 8. Axis move: the host census's verdict stops treating a member that
+never ran as a pass.
+
+  PREDICATE (one sentence):
+  "a census member that did not run is not a pass: the census's exit is derived from the
+   not-evaluated count."
+
+  COUNTER:
+    python3 .ufo/waves/round-70/controls/refused-member-control.py <path-to-round65-host-census.py>
+    prints `REFUSED_MEMBER_CONTROL refused_fixture_exit=<n> allpass_fixture_exit=<n>` and exits 1
+    unless refused=1 and allpass=0.
+  TARGET: refused fixture exit 1 with `not_evaluated=1` in the verdict line; all-pass fixture exit 0
+    with `not_evaluated=0`; the real census at the landing tip prints
+    `HOST_CENSUS pass=22 fail=0 not_evaluated=0 total=22`, exit 0.
+  BEFORE (base bytes): refused fixture exit 0 (fail-open: a refused tier-A member reads as pass).
+    Receipt: measured/before/refused-member-control-old.out
+    The real census at base: `HOST_CENSUS pass=21 fail=1 refused=0 total=22 tierA_fail=1
+    tierB_fail=0`, exit 1 — red for the C1 reason (its one tier-A failure is the reconciler arm).
+    Receipt: measured/before/census-at-base.out
+  KILL RULE: an always-exit-1 census fails the all-pass fixture (the target requires exit 0 there);
+    turning a refusal into a pass fails the refused fixture; deleting the member fails the
+    registered total=22.
+  DO-NOTHING CONTROL: the base census bytes on the refused fixture — exit 0, so a do-nothing tree
+    satisfies a fail-open counter; the counter is therefore the pair (refused=1, allpass=0), never
+    the exit alone.
+
+Separability: C1's counter reads the reconciler's verdict line; C2's counter runs the census bytes on
+synthetic member sets. Neither needs the other's file. C2's real-census green line is reported as a
+population effect, not as C1's evidence.
+
+Frontier step (§2b, inside the claim cap): one SOURCES row opened this round grounds C2 — pytest's
+documented exit codes distinguish "no tests collected" (5) from success, which is the outside rule
+that a runner which ran nothing must not report success. Census before/after and one mined mistake go
+into corpus/lessons/round-70.md.
+
+Mattress: every receipt lands under .ufo/waves/round-70/ in the lane tree; scratch lives under
+/fast/scratch/hyaku/kama-r70/<seat>/ and is deleted by its seat.
