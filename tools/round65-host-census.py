@@ -8,19 +8,30 @@ was not found"), so the registered counting commands are adapted to the
 running interpreter (sys.executable). This census runs the declared set, each
 member classified:
 
-    pass     exit 0 and the member's pinned marker in its output
-    refused  a pinned fail-closed refusal marker (a missing Linux dependency,
-             an NTFS-invalid tracked path) or the census time budget; a
-             refusal is recorded with its reason, never a pass
-    fail     anything else (a defect on this host)
+    pass           exit 0 and the member's pinned marker in its output
+    refused        the census could not obtain a verdict from the member: a
+                   pinned fail-closed refusal marker (a missing Linux
+                   dependency, an NTFS-invalid tracked path), the census time
+                   budget, or a member that could not be spawned at all; a
+                   refusal is recorded with its reason, never a pass
+    fail           the member ran and rejected (a defect on this host)
+
+Round 70 verdict accounting: refused members are counted in
+``not_evaluated`` and a member that did not run is never a pass. Exit is 0
+only when ``fail=0`` AND every not-evaluated member is named by an explicit
+``--waive <member-name>`` (repeatable, exact member name). A waived member
+keeps its reason on its own line and the verdict keeps ``waived=<w>``
+visible; a not-evaluated member with no waiver makes exit 1. A member that
+ran keeps its real semantics: a pass stays a pass, a fail stays a fail, and
+a waiver never covers a fail. Verdict line:
+
+    HOST_CENSUS pass=<p> fail=<f> not_evaluated=<n> waived=<w> total=<t> tierA_fail=<a> tierB_fail=<b>
 
 Tiers: tier A members are the self-tests named in SCORECARD axes evidence rows
 plus the instrument-registry gate; tier B members are the capability
-instruments' self-tests. Exit: 0 only when no member fails; a tier-B residual
-defect keeps exit 1 and is reported openly (round 65 carries one: the
-append-only-audit v6-revert-class arm, deterministic on this host, root cause
-unresolved in-round). Read-only: members write only their own temporary
-fixtures; this runner creates and removes one scratch directory per member.
+instruments' self-tests. tierA_fail / tierB_fail count only members that ran
+and failed. Read-only: members write only their own temporary fixtures; this
+runner creates and removes one scratch directory per member.
 """
 import shutil
 import subprocess
@@ -108,9 +119,40 @@ MEMBERS = [
 
 
 def main():
-    passed = failed = refused = 0
+    # --waive <member-name> (repeatable, exact member name): accepts a member
+    # that did not run on this pass. Only not-evaluated members consume a
+    # waiver; a waiver never covers a pass/fail verdict.
+    cli = sys.argv[1:]
+    waive = []
+    i = 0
+    while i < len(cli):
+        if cli[i] == "--waive" and i + 1 < len(cli):
+            waive.append(cli[i + 1])
+            i += 2
+        elif cli[i].startswith("--waive="):
+            waive.append(cli[i][len("--waive="):])
+            i += 1
+        else:
+            i += 1
+    waive_set = set(waive)
+
+    passed = failed = not_evaluated = waived = 0
     fails_a = fails_b = 0
+    evaluated = {}  # member name -> "pass" | "fail" (members that ran)
+    unwaived_ne = []  # not-evaluated members without a waiver
     lines = []
+
+    def record_ne(member_name):
+        # The member did not run, so there is no verdict about it: counted in
+        # not_evaluated, waived only by an explicit --waive of its exact name.
+        nonlocal not_evaluated, waived
+        not_evaluated += 1
+        if member_name in waive_set:
+            waived += 1
+            return " [waived]"
+        unwaived_ne.append(member_name)
+        return ""
+
     for tier, name, argv, marker, refusals in MEMBERS:
         work = Path(tempfile.mkdtemp(prefix="r65census-"))
         try:
@@ -126,13 +168,15 @@ def main():
             out = proc.stdout + proc.stderr
             hit = next((r for r in refusals if r[0] in out), None)
             if hit:
-                refused += 1
-                lines.append(f"refused [{tier}] {name}: {hit[1]} (marker {hit[0]!r})")
+                suffix = record_ne(name)
+                lines.append(f"refused [{tier}] {name}: {hit[1]} (marker {hit[0]!r}){suffix}")
             elif proc.returncode == 0 and (not marker or marker in out):
                 passed += 1
+                evaluated[name] = "pass"
                 lines.append(f"pass [{tier}] {name}")
             else:
                 failed += 1
+                evaluated[name] = "fail"
                 if tier == "A":
                     fails_a += 1
                 else:
@@ -140,22 +184,33 @@ def main():
                 tail = " | ".join(out.strip().splitlines()[-1:]) if out.strip() else ""
                 lines.append(f"FAIL [{tier}] {name}: exit={proc.returncode} tail={tail!r}")
         except subprocess.TimeoutExpired:
-            refused += 1
-            lines.append(f"refused [{tier}] {name}: census budget {BUDGET}s exceeded (recorded, not a verdict)")
+            suffix = record_ne(name)
+            lines.append(f"refused [{tier}] {name}: census budget {BUDGET}s exceeded (recorded, not a verdict){suffix}")
         except OSError as exc:
-            failed += 1
-            if tier == "A":
-                fails_a += 1
-            else:
-                fails_b += 1
-            lines.append(f"FAIL [{tier}] {name}: spawn error {exc}")
+            # Round 70: the member never ran, so this is not a verdict about
+            # the member; it is a not-evaluated member, never a silent pass.
+            suffix = record_ne(name)
+            lines.append(f"refused [{tier}] {name}: spawn error {exc}{suffix}")
         finally:
             shutil.rmtree(work, ignore_errors=True)
+    member_names = {name for _, name, _, _, _ in MEMBERS}
+    for w in waive:
+        if w not in member_names:
+            print(f"warning: --waive {w!r} is not a census member name", file=sys.stderr)
+        elif w in evaluated:
+            print(f"warning: --waive {w!r} unused: member was evaluated "
+                  f"({evaluated[w]}); a waiver covers only not-evaluated members",
+                  file=sys.stderr)
     for line in lines:
         print(line)
-    print(f"HOST_CENSUS pass={passed} fail={failed} refused={refused} total={len(MEMBERS)} "
-          f"tierA_fail={fails_a} tierB_fail={fails_b}")
-    return 0 if failed == 0 else 1
+    print(f"HOST_CENSUS pass={passed} fail={failed} not_evaluated={not_evaluated} "
+          f"waived={waived} total={len(MEMBERS)} tierA_fail={fails_a} tierB_fail={fails_b}")
+    if unwaived_ne:
+        print(f"HOST_CENSUS exit 1: {len(unwaived_ne)} not-evaluated member(s) "
+              f"without a waiver: {', '.join(unwaived_ne)}")
+    # Round 70: the exit is derived from the not-evaluated count. Exit 0 needs
+    # fail=0 AND every not-evaluated member explicitly waived.
+    return 0 if (failed == 0 and not unwaived_ne) else 1
 
 
 if __name__ == "__main__":
