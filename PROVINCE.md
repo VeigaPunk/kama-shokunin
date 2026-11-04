@@ -307,7 +307,7 @@ counter runs git and path/spawn probes; the pre-report gate runs the lane's own 
 boundary tool runs synthetic census fixtures under a scratch dir). No endpoint, consumer or service
 was sampled; the registered consumers keep their last recorded `DEAD` state.
 
-Round-73 host-identity block (2026-11-03). Host triple: `uname -s` -> `Linux`; `uname -m` -> `x86_64`; `/etc/os-release` `ID` -> `arch`. Graded by `tools/round73-province-host-drift.py`; a host move is answered by appending a later block, never by editing this one.
+Round-73 host-identity block (2026-11-03). Host triple: `uname -s` -> `Linux`; `uname -m` -> `x86_64`; `/etc/os-release` `ID` -> `arch`. Graded by `tools/round73-province-host-drift.py`; a host move is answered by appending a later block, never by editing this one. recorded at 868dd701bff531be6a36da742d3418f98818e5eb (round-74 freeze base; the v2 preservation leg compares the block text with this token sentence stripped).
 
 **Round-73 note — the three instruments and the recorded host identity (2026-11-03).**
 `tools/round73-round-scope-cases.py` (six-case round-scope counter: the three inherited r72 cases

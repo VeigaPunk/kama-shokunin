@@ -2936,3 +2936,60 @@ Round-72 errata: C2 had 961 lines / 16 arms, not 942 / 14; the Gate table in rou
 now logs old→new used-by cells and explicit rejection flips. Before-control exits are recorded.
 The stale-lane duration is stated from timestamps in the report, not asserted below a tick.
 No service restore, configuration write, package install or registered-endpoint sample occurred.
+
+## Round 74 (2026-11-04) — the reconciler sees the newest repertoire; receipt claims bind by explicit revision; host blocks answer to their recorded revision
+
+Attempt 2 (attempt 1 died `lane-dead-no-report` at launch +30s: watchdog lines 2206–2208;
+KQ47 receipt). Frozen plan `plans/round-74-claims.md` (freeze `df18ad1e`, base `868dd701`,
+controls + before receipts in the same commit). ONE v1 wave of 13 seats (spec/dispatch
+`b0b903a0`, band 8–16, attack 4/13 ≈ 30.8%: reviewer, critic, mutation-tester, revenger;
+1 connector; L1 is the planner seat). Seat EX02ClaimV2 died at spawn (empty scratch, zero
+output — reported, never replaced); the L1 built the frozen C2 module as integration work.
+
+- **C1 calibration 7→7 (R73-D1).** `tools/round74-selfdesc-canon.py`: resolves the newest
+  capability table by round number across bold/unbolded/demonstrated heading forms; exits 1
+  naming each demonstrated-only name the bold canon misses. Before: base `canon()` round 71
+  (fixture 3 rows, live 17) — `.ufo/waves/round-74/measured/before/score-survivors-base.out`.
+  After: `SURVIVORS c1 base_round=71 base_rows=3 v2_killed=1 v2=present clean=True`
+  (`measured/after/score-survivors.out`); selftest 11/11; live lane red-before with
+  `total=22 invisible=5` (EX01's `base-probe-live.out`), green-after `total=25 invisible=0`
+  once the record's bold round-74 canonical list lands. The `total` union reading is EX01's
+  reported interpretation, fixed on both pinned numbers; CRT01 F1b routed.
+- **C2 operability 8→8 (the realizable rule).** `tools/round74-receipt-claim-binding.py`:
+  paragraph-scoped claim grading over the round self-record; explicit-revision binding with
+  case-insensitive hex; kills `c2_wrapped`/`c2_offset` (base: claims=0 GREEN both); the
+  `blob-reader-seam` selftest arm covers MT01's surviving `c2_p2l_case_hex` mutant (no
+  committable fixture can carry it). Kind boundaries fixed on the frozen bytes (F2b);
+  same-line stale keeps the inherited `stale-claim` name. After: `SURVIVORS c2 base_green=2
+  v2_killed=2 v2=present clean=True`; selftest 9/9.
+- **C3 freshness 8→8 (R73-D5).** `tools/round74-province-host-drift.py`: byte-frozen r73
+  base leg plus the preservation leg — every `recorded at <rev>` block byte-identical at its
+  recorded revision and the tip (token sentence stripped; forward resolution to the
+  recording commit — the only reading satisfying both frozen fixture arms, RVW01/EX03
+  disclosed). PROVINCE.md's Round-73 block gains `recorded at 868dd701…`. After:
+  `SURVIVORS c3 base_green=1 v2_killed=1 v2=present clean=True`; selftest 10/10; live
+  `stale=0 edited=0` exit 0.
+- Gate: arm 7 composes the three v2 counters (EX04's patch, post-apply sha256
+  `6d2e379796de027cc246aaa1673a175d058ea35f1f3ad5c9b9128a095045c1c0`); selftest 15/15;
+  verdict `PRE_REPORT round=74 arms=7 failed=0 uncommitted=0` at the record tip.
+- Frontier: S546 os-release(5) opened live (accessed 2026-11-04, retained bytes sha256
+  `c7ba68ea…`, quote located §OPTIONS `ID=` lines 187–194), mirror census exit 0 BEFORE the
+  append (`measured/after/mirror-census-gate.out`, the mistake-2 ordering) — registry
+  285 → 286 rows, `corpus/knowledge/host-block-base-revision.md` admits it. Assimilation:
+  none — 9 staged-id collisions + 7 quarantined payload-absent rows
+  (`.ufo/waves/round-74/assimilation/summary.out`). considerthese 2026-10-26: nothing new
+  (proposals 1–3 landed r46/r53/r48; proposal 4 = KQ122 + this round's live pin-watch run
+  `measured/pinwatch/pin-watch-live.out`: sglang/vllm 1 behind, llama.cpp 273 behind).
+  Mistakes mined: r73 spec seat-count prose drift (number-drift; fix
+  `tools/round74-seat-count-check.py`, red on the r73 spec bytes) and the r73
+  append-before-census ordering (landing; fix the round-74 ordering + the tool's
+  `--census-order` arm, r73 replay red). Lesson `corpus/lessons/round-74.md`.
+- Attacks: LAB01 reproduced the before receipt byte-for-byte (sha256 `1a7903f3…`) and
+  demonstrated one named junk-row cheat per claim, each forbidden by the frozen wording;
+  RVW01 found no reachable shortcut (nine attempts); CRT01 refuted no claim and its
+  pre-registered gaming acceptance holds (randomized-path copies grade identically);
+  MT01: 24/25 mutants killed, survivor covered by the seam arm; SEN01: clean two-pass
+  audit (no credentials, no host writes, fixture identity absent from the lane log).
+- L0: the round-65 NTFS-path question stays unanswered — routed around; nothing assumed.
+  No service restore, configuration write, package install or registered-endpoint sample
+  occurred. Scores held: operability 8, freshness 8, calibration 7.
