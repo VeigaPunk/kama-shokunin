@@ -1677,3 +1677,30 @@ These counts describe this append's measured population, not later concurrent ad
 | Entry | Covers | Round |
 |---|---|---|
 | `knowledge/host-block-base-revision.md` | the v2 `recorded at <rev>` host-block grammar, token-stripped byte preservation against the recording revision, the frozen r73 live-triple base leg, append-only host moves, os-release `ID=` semantics, and the limits (not host uniqueness, serving-surface identity, or receipt honesty) | 74 |
+
+## Coverage map — round 76 additions (2026-11-04)
+
+Appended rather than inserted, so no existing line moves (the rule the round-10 addition states).
+The first row closes round-75 closure §6 defect 5; the second indexes SCR01's round-76 entry,
+read after it appeared during this seat. Enumeration of `corpus/knowledge/*.md` minus the
+distinct filenames in coverage-table rows found 48 files, 42 row lines, 39 distinct mapped
+entries and 9 unmapped files before these additions. Adding these two rows leaves 7 unmapped
+files (derived, not a post-edit check). This is a working-tree population at this append,
+not a claim that all concurrent round-76 work was committed.
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/append-only-accepted-history.md` | accepted history versus restoration/disclosure; audit-event binding of register hashes, counts and mechanical classes; introduction cutoffs, the S537 LF re-land example, and why acceptance does not authorize future deletion or authenticate a receipt | 75 (indexed in 76) |
+| `knowledge/fenced-quotation-scope.md` | CommonMark 0.31.2 §4.5 fence syntax versus the lane's citation policy: quoted history stays retained and disclosed, unclosed fences and empty live populations refuse, and live non-receipts remain findings; documentation of frozen obligations, not evidence those arms ran | 76 |
+
+## Frontier — round 76 coverage-map disposition (appended)
+
+After the two additions, these seven knowledge files remain without coverage-map table rows:
+`knowledge/battery-execution-evidence.md`, `knowledge/completion-request-plane.md`,
+`knowledge/ollama-live-amendment-r61.md`, `knowledge/ollama-live-lifecycle.md`,
+`knowledge/process-bound-listener.md`,
+`knowledge/sglang-docs-version-pinning-amendment-2026-10-23.md`, and
+`knowledge/sglang-docs-version-pinning.md`. The prose mention of battery execution in the
+round-58 note is not a coverage-map table row. These are index gaps, not proof that the
+entries are absent or unadmitted. No serving-runtime, consumer, K05 context-capacity or
+other previously recorded domain frontier is closed by indexing these two entries.

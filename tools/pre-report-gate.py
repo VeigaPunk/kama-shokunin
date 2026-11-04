@@ -10,18 +10,20 @@ section C1 re-points arm 5 at the six-case counter without amending that sentenc
 round 74 adds arm 7 and moves the arm count 6 -> 7):
 
     `python3 tools/pre-report-gate.py --repo <lane> --round <N> --tip <rev>` prints one
-    `PRE_REPORT round=<N> arms=8 failed=<f> uncommitted=<u>` line and exits 0 only when
+    `PRE_REPORT round=<N> arms=9 failed=<f> uncommitted=<u>` line and exits 0 only when
     the five reconciled instruments (selfdesc reconciler, newest-closure counter,
     receipt-pointer audit, worktree-landing check, round-scope counter) plus the three
     round-74 v2 counters arm 7 composes (selfdesc canon, receipt-claim binding,
-    province host drift) are all green AND no path under `.ufo/waves/round-<N>/` is
-    uncommitted; it exits 1 naming every failed arm otherwise.
+    province host drift), the round-75 trio arm 8 composes and the round-76 trio arm 9
+    composes are all green AND no path under `.ufo/waves/round-<N>/` is uncommitted; it
+    exits 1 naming every failed arm otherwise.
 
 The round-71 receipt -- `PRE_REPORT round=71 arms=5 failed=0 uncommitted=0` -- is that
 round's five-arm measurement and stays readable as one: five arms is the population round
 71 had. From round 72 on the gate printed `arms=6`; from round 74 on it printed `arms=7`
-and from round 75 on it prints `arms=8`. A five-arm line can only be a round-71 record, a
-six-arm line a round-72/73 record, a seven-arm line a round-74 record.
+from round 75 on it printed `arms=8`, and from round 76 on it prints `arms=9`. A five-arm line
+can only be a round-71 record, a six-arm line a round-72/73 record, a seven-arm line a
+round-74 record, an eight-arm line a round-75 record.
 
 Arms, in fixed order, every one run with cwd = --repo:
   1 selfdesc          tools/round42-selfdesc-reconcile.py      --repo <repo> --tip <tip>
@@ -36,6 +38,9 @@ Arms, in fixed order, every one run with cwd = --repo:
   8 round75-instruments tools/round75-interpretation-pins.py   --repo <repo>
                       tools/round75-survivor-probe.py          --repo <repo>
                       tools/round75-append-accepted.py         --repo <repo>
+  9 round76-instruments tools/round76-receipt-scope.py         --repo <repo> --round <N>
+                      tools/round76-selfrecord-facts.py        --repo <repo>
+                      tools/round76-append-exempt.py           --repo <repo>
 
 `round-scope` is the round-72 C1 addition -- the sixth arm the gate has ever had, executed
 fifth because `ARM_ORDER` derives every instrument arm from `ARM_SPECS` and keeps the
@@ -88,7 +93,7 @@ finding; arm 7 fails when any of its three counters is absent or exits non-zero)
 Because `-uall` expands untracked directories into individual files, one record is one
 file -- `.ufo/waves/round-70` at the round-71 start carries 26 files (the freeze's
 count), which the plain-status form collapses into 14 entries. Exit: 0 iff
-`failed == 0 and uncommitted == 0` across all seven arms, else 1. Exit 2 is reserved for CLI
+`failed == 0 and uncommitted == 0` across all nine arms, else 1. Exit 2 is reserved for CLI
 misuse (missing --round, --repo not a directory) and for an unevaluable selftest fixture; a
 scored run never exits 2, it names the failing arms and exits 1. Exit 3 is reserved for
 re-entry: a gate whose environment already carries PRE_REPORT_GATE_DEPTH >= 1 refuses to
@@ -104,7 +109,7 @@ an unbounded process chain; it never fires for a normal scored run.
 
 Output (default mode; one line per arm in the order above, then the verdict):
     PRE_REPORT_ARM <name> exit=<e> ok|FAIL <detail>
-    PRE_REPORT round=<N> arms=8 failed=<f> uncommitted=<u>
+    PRE_REPORT round=<N> arms=9 failed=<f> uncommitted=<u>
 
 `--json` replaces the human lines with one JSON document whose "line" field carries the
 same PRE_REPORT verdict string. Child processes get stdout+stderr captured, a 600 s
@@ -125,6 +130,7 @@ Instrument wiring
   resolves its three counters the same way and the selftest injects one stub per
   counter, so the arm's composition, its fail-closed absence handling and its
   per-counter detail are all exercised without the real round-74 modules being present.
+  Arm 9 resolves the three round-76 counters the same way, one stub per counter.
 
 Selftest (--selftest; fixtures under --work, or a fresh TMPDIR tempdir)
   (a) green fixture                              -> exit 0, failed=0 uncommitted=0
@@ -142,14 +148,19 @@ Selftest (--selftest; fixtures under --work, or a fresh TMPDIR tempdir)
   (l) arm-5 verdict selector                     -> picks `ROUND_SCOPE_V2 ` over a later line
   (m) red canon stub inside arm 7                -> exit 1, round74-v2 FAIL naming
                                                     SELFDESC_CANON_V2_FINDING
-  (n) green arm-7 stubs                          -> exit 0, verdict `arms=8`
+  (n) green arm-7 stubs                          -> exit 0, verdict `arms=9`
   (o) drift-v2 stub deleted                      -> exit 1, round74-v2 FAIL naming the
                                                     absent round74-province-host-drift.py
   (p) red pins stub inside arm 8                 -> exit 1, round75-instruments FAIL naming
                                                     INTERPRETATION_PINS_FINDING
-  (q) green arm-8 stubs                          -> exit 0, verdict `arms=8`
+  (q) green arm-8 stubs                          -> exit 0, verdict `arms=9`
   (r) append-accepted stub deleted               -> exit 1, round75-instruments FAIL naming
                                                     the absent round75-append-accepted.py
+  (s) red self-record stub inside arm 9          -> exit 1, round76-instruments FAIL naming
+                                                    SELFRECORD_FACT
+  (t) green arm-9 stubs                          -> exit 0, verdict `arms=9`
+  (u) append-exempt stub deleted                 -> exit 1, round76-instruments FAIL naming
+                                                    the absent round76-append-exempt.py
   Prints PASS/FAIL per arm and `PRE_REPORT_SELFTEST pass=<n> fail=0`; exit 0 iff every
   arm passed. A fixture tree that cannot be built or verified is a could-not-evaluate
   (exit 2), never a pass. The fixture commits into its own throwaway repository only,
@@ -177,13 +188,15 @@ from pathlib import Path
 
 PREDICATE = (
     "`python3 tools/pre-report-gate.py --repo <lane> --round <N> --tip <rev>` prints one "
-    "`PRE_REPORT round=<N> arms=8 failed=<f> uncommitted=<u>` line and exits 0 only when "
+    "`PRE_REPORT round=<N> arms=9 failed=<f> uncommitted=<u>` line and exits 0 only when "
     "the five reconciled instruments (selfdesc reconciler, newest-closure counter, "
     "receipt-pointer audit, worktree-landing check, round-scope counter), the three "
     "round-74 v2 counters arm 7 composes (selfdesc canon, receipt-claim binding, "
-    "province host drift) and the three round-75 counters arm 8 composes (interpretation "
-    "pins, survivor probe, append-accepted accounting) are all green AND no path under "
-    "`.ufo/waves/round-<N>/` is uncommitted; it exits 1 naming every failed arm otherwise."
+    "province host drift), the three round-75 counters arm 8 composes (interpretation "
+    "pins, survivor probe, append-accepted accounting) and the three round-76 counters "
+    "arm 9 composes (receipt scope, self-record facts, append-exempt accounting) are all "
+    "green AND no path under `.ufo/waves/round-<N>/` is uncommitted; it exits 1 naming "
+    "every failed arm otherwise."
 )
 
 ARM_TIMEOUT = 600
@@ -197,7 +210,7 @@ ARM_SPECS = [
                      "--tip", "{tip}")),
 ]
 ARM_ORDER = [name for name, _ in ARM_SPECS] + ["round-clean", "round74-v2",
-              "round75-instruments"]
+              "round75-instruments", "round76-instruments"]
 VERDICT_RE = {
     "selfdesc": r"mismatches=\d+ met=(?:True|False)",
     "newest-closure": r"(?:NEWEST_CLOSURE|STALE_CALIBRATION) ",
@@ -210,6 +223,9 @@ VERDICT_RE = {
     "round75-instruments-pins": r"INTERPRETATION_PINS ",
     "round75-instruments-survivors2": r"SURVIVORS2 ",
     "round75-instruments-append-accepted": r"APPEND_ACCEPTED ",
+    "round76-instruments-receipt-scope": r"RECEIPT_SCOPE ",
+    "round76-instruments-selfrecord-facts": r"SELFRECORD_FACTS ",
+    "round76-instruments-append-exempt": r"APPEND_EXEMPT ",
 }
 DEFECT_RE = re.compile(r"(?:DIRTY|MISSING|UNTRACKED|UNREADABLE) ")
 SCOPE_FINDING_RE = re.compile(r"ROUND_SCOPE_V2_FINDING ")
@@ -217,10 +233,15 @@ V2_FINDING_RE = re.compile(
     r"(?:SELFDESC_CANON_V2|RECEIPT_CLAIM_V2|PROVINCE_HOST_DRIFT_V2)_FINDING ")
 R75_FINDING_RE = re.compile(
     r"(?:INTERPRETATION_PINS|SURVIVORS2|APPEND_ACCEPTED)_FINDING ")
+R76_FINDING_RE = re.compile(
+    r"(?:RECEIPT_SCOPE|APPEND_EXEMPT)_FINDING |SELFRECORD_(?:FACT|CORRECTION) ")
 _DEFECT_ARMS = ("worktree-landing", "round-scope",
                 "round74-v2-canon", "round74-v2-claim-v2", "round74-v2-drift-v2",
                 "round75-instruments-pins", "round75-instruments-survivors2",
-                "round75-instruments-append-accepted")
+                "round75-instruments-append-accepted",
+                "round76-instruments-receipt-scope",
+                "round76-instruments-selfrecord-facts",
+                "round76-instruments-append-exempt")
 
 # Arm 7 `round74-v2`: the three round-74 v2 counters composed into one arm.
 # (module key, script name, argument template with the usual {repo}/{tip}/{round}
@@ -237,6 +258,14 @@ ROUND75_MODULES = (
     ("pins", "round75-interpretation-pins.py", ("--repo", "{repo}")),
     ("survivors2", "round75-survivor-probe.py", ("--repo", "{repo}")),
     ("append-accepted", "round75-append-accepted.py", ("--repo", "{repo}")),
+)
+
+# Arm 9 `round76-instruments`: the three round-76 counters composed into one arm.
+ROUND76_MODULES = (
+    ("receipt-scope", "round76-receipt-scope.py",
+     ("--repo", "{repo}", "--round", "{round}")),
+    ("selfrecord-facts", "round76-selfrecord-facts.py", ("--repo", "{repo}")),
+    ("append-exempt", "round76-append-exempt.py", ("--repo", "{repo}")),
 )
 
 
@@ -283,7 +312,8 @@ def _detail(name: str, text: str, fallback: str | None = None) -> str:
         chosen = "(no output)"
     defects = [ln for ln in lines
                if DEFECT_RE.match(ln) or SCOPE_FINDING_RE.match(ln)
-               or V2_FINDING_RE.match(ln) or R75_FINDING_RE.match(ln)]
+               or V2_FINDING_RE.match(ln) or R75_FINDING_RE.match(ln)
+               or R76_FINDING_RE.match(ln)]
     if name in _DEFECT_ARMS and defects:
         chosen = chosen + " | " + defects[0]
     return _one_line(chosen)
@@ -423,6 +453,33 @@ def evaluate(repo: str, round_no: int, tip: str = "master", tools_dir: str | Non
         "exit": 0 if not r75_codes else max(r75_codes),
         "ok": not r75_codes,
         "detail": " | ".join(r75_details),
+    })
+
+    # Arm 9 round76-instruments: the three round-76 counters composed the same way.
+    r76_details: list[str] = []
+    r76_codes: list[int] = []
+    for mod_name, script_name, template in ROUND76_MODULES:
+        script = os.path.join(tools_path, script_name)
+        if not os.path.isfile(script):
+            r76_details.append(f"missing {script_name}")
+            r76_codes.append(1)
+            continue
+        argv_r76 = [sys.executable, script] + [
+            token.replace("{repo}", repo_path).replace("{tip}", tip)
+                 .replace("{round}", str(round_no))
+            for token in template
+        ]
+        code_r76, text_r76, spawn_error_r76 = _run(argv_r76, repo_path, depth)
+        if code_r76 != 0:
+            r76_codes.append(code_r76)
+        r76_details.append(_detail(f"round76-instruments-{mod_name}", text_r76, spawn_error_r76))
+    arms.append({
+        "name": "round76-instruments",
+        "argv": [os.path.join(tools_path, script_name)
+                 for _, script_name, _ in ROUND76_MODULES],
+        "exit": 0 if not r76_codes else max(r76_codes),
+        "ok": not r76_codes,
+        "detail": " | ".join(r76_details),
     })
 
     failed = sum(1 for arm in arms if not arm["ok"])
@@ -639,6 +696,53 @@ print("APPEND_ACCEPTED events=53 accepted=53 unaccepted=0 bad_rows=0 bad_declara
 raise SystemExit(0)
 '''
 
+_STUB_RECEIPT_SCOPE = _STUB_COMMON + '''
+import argparse
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--repo", default=".")
+ap.add_argument("--round", type=int, required=True)
+a = ap.parse_args()
+if red("round76-receipt-scope"):
+    print("RECEIPT_SCOPE_FINDING nonreceipt :: stub live non-receipt")
+    print("RECEIPT_SCOPE round=70 fenced_quoted=0 live_citations=1 bound=0 unbound=0 "
+          "shifted=0 nonreceipt=1 unclassified=0")
+    raise SystemExit(1)
+print("RECEIPT_SCOPE round=70 fenced_quoted=1 live_citations=11 bound=9 unbound=2 "
+      "shifted=0 nonreceipt=0 unclassified=0")
+raise SystemExit(0)
+'''
+
+_STUB_SELFRECORD_FACTS = _STUB_COMMON + '''
+import argparse
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--repo", default=".")
+a = ap.parse_args()
+if red("round76-selfrecord-facts"):
+    print("SELFRECORD_FACT province-digest filed=0e8dc562 derived=af459acf")
+    print("SELFRECORD_FACTS claims=8 mismatches=1 corrected=4 unbacked=0")
+    raise SystemExit(1)
+print("SELFRECORD_FACTS claims=8 mismatches=0 corrected=5 unbacked=0")
+raise SystemExit(0)
+'''
+
+_STUB_APPEND_EXEMPT = _STUB_COMMON + '''
+import argparse
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--repo", default=".")
+a = ap.parse_args()
+if red("round76-append-exempt"):
+    print("APPEND_EXEMPT_FINDING unaccounted :: stub event without a row")
+    print("APPEND_EXEMPT events=232 register=53 exempt=82 restored=91 disclosed=5 "
+          "unaccounted=1 cutoff=10f37171 introductions=1 rotation_safe=1")
+    raise SystemExit(1)
+print("APPEND_EXEMPT events=232 register=53 exempt=83 restored=91 disclosed=5 "
+      "unaccounted=0 cutoff=10f37171 introductions=1 rotation_safe=1")
+raise SystemExit(0)
+'''
+
 _FIXTURE_FILES = {
     "SCORECARD.md": b"# Scorecard (pre-report-gate selftest fixture)\n\n## Axes\n\n"
                     b"| axis | score |\n|---|---|\n| calibration | 7 |\n",
@@ -713,6 +817,9 @@ def run_selftest(args) -> int:
     (tools / "round75-interpretation-pins.py").write_text(_STUB_PINS, encoding="utf-8")
     (tools / "round75-survivor-probe.py").write_text(_STUB_SURVIVORS2, encoding="utf-8")
     (tools / "round75-append-accepted.py").write_text(_STUB_APPEND_ACCEPTED, encoding="utf-8")
+    (tools / "round76-receipt-scope.py").write_text(_STUB_RECEIPT_SCOPE, encoding="utf-8")
+    (tools / "round76-selfrecord-facts.py").write_text(_STUB_SELFRECORD_FACTS, encoding="utf-8")
+    (tools / "round76-append-exempt.py").write_text(_STUB_APPEND_EXEMPT, encoding="utf-8")
     (tools / "scope-expect.txt").write_text("70 master\n", encoding="utf-8")
     red_file = tools / "red-arms.txt"
     red_file.write_text("", encoding="utf-8")
@@ -767,7 +874,7 @@ def run_selftest(args) -> int:
     # (a) green fixture: the target shape, exit 0.
     check("green", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0, "round-clean", True,
           detail_has="files=0",
-          want_line="PRE_REPORT round=70 arms=8 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
 
     # (b) one uncommitted file under the round's wave dir.
     extra = repo / ".ufo/waves/round-70/extra.out"
@@ -813,7 +920,7 @@ def run_selftest(args) -> int:
     check("round-scope-green", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0,
           "round-scope", True, detail_has="findings=0",
           render_has="round-scope exit=0 ok",
-          want_line="PRE_REPORT round=70 arms=8 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
 
     # (i)-(k) the real round-73 counter through the same arm-5 wiring: the clean fixture,
     # then the A5 linked-worktree survivor and the A6 ignored-older-round survivor.
@@ -824,7 +931,7 @@ def run_selftest(args) -> int:
     check("round-scope-v2-clean", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0,
           "round-scope", True,
           detail_has="ROUND_SCOPE_V2 round=70 cases=6 findings=0",
-          want_line="PRE_REPORT round=70 arms=8 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
 
     linked = work / "linked-worktree"
     added = _git(repo, "worktree", "add", "--detach", str(linked), "master", check=False)
@@ -882,7 +989,7 @@ def run_selftest(args) -> int:
           detail_has="SELFDESC_CANON_V2 canon_round=70 canon_rows=2 demonstrated=0 "
                      "total=2 invisible=0",
           render_has="round74-v2 exit=0 ok",
-          want_line="PRE_REPORT round=70 arms=8 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
 
     # (o) a deleted counter stub fails arm 7 closed, naming the absent module.
     drift_stub = tools / "round74-province-host-drift.py"
@@ -907,7 +1014,7 @@ def run_selftest(args) -> int:
           "round75-instruments", True,
           detail_has="SURVIVORS2 mutants=5 killed=5 escaped=0",
           render_has="round75-instruments exit=0 ok",
-          want_line="PRE_REPORT round=70 arms=8 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
 
     # (r) a deleted round-75 counter fails arm 8 closed, naming the absent module.
     aa_stub = tools / "round75-append-accepted.py"
@@ -917,6 +1024,32 @@ def run_selftest(args) -> int:
           detail_has="missing round75-append-accepted.py",
           render_has="round75-instruments exit=1 FAIL")
     aa_stub.write_text(_STUB_APPEND_ACCEPTED, encoding="utf-8")
+
+    # (s) red self-record stub inside arm 9: one failing counter fails the whole arm and
+    # the detail names the counter's verdict and its first finding line.
+    red_file.write_text("round76-selfrecord-facts\n", encoding="utf-8")
+    check("round76-instruments-red", evaluate(repo, round_no, "master", str(tools)), 1, 1, 0,
+          "round76-instruments", False,
+          detail_has="SELFRECORD_FACT province-digest filed=0e8dc562 derived=af459acf",
+          render_has="round76-instruments exit=1 FAIL")
+    red_file.write_text("", encoding="utf-8")
+
+    # (t) green arm-9 stubs: the arm passes and the verdict carries nine arms.
+    check("round76-instruments-green", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0,
+          "round76-instruments", True,
+          detail_has="APPEND_EXEMPT events=232 register=53 exempt=83 restored=91 disclosed=5 "
+                     "unaccounted=0 cutoff=10f37171 introductions=1 rotation_safe=1",
+          render_has="round76-instruments exit=0 ok",
+          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
+
+    # (u) a deleted round-76 counter fails arm 9 closed, naming the absent module.
+    ae_stub = tools / "round76-append-exempt.py"
+    ae_stub.unlink()
+    check("round76-instruments-missing", evaluate(repo, round_no, "master", str(tools)), 1, 1, 0,
+          "round76-instruments", False,
+          detail_has="missing round76-append-exempt.py",
+          render_has="round76-instruments exit=1 FAIL")
+    ae_stub.write_text(_STUB_APPEND_EXEMPT, encoding="utf-8")
 
     total = passed + len(failed_arms)
     print(f"PRE_REPORT_SELFTEST pass={passed} fail={len(failed_arms)}")
