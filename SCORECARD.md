@@ -152,7 +152,7 @@ Mirror of the round-75 canonical capability list that §Round 75 carries (a mirr
 
 ## Saturation
 
-Saturation line **8/10** (declared round 10, unchanged); stagnation window **N = 4** rounds. Derived at the measured commit by `tools/round42-selfdesc-reconcile.py` (kept current in round 49; on this host re-derived by direct pasteable commands, see the banner): score vector operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7 (from `## Axes`); capability first-working rounds 10, 14, 16, 20, 25, 30, 41, 42, 43, 46, 47, 61, 67, 68, 69, 71, 72, 73, 74, 75 (highest canonical list, §Round 74); the assigned axes are operability + calibration and calibration 7 is below the line, so nudge inactive. The last capabilities entered are round 74's `selfdesc-canon`, `receipt-claim-v2` and `province-host-drift-v2`; the nudge remains inactive because the lowest assigned axis (calibration 7) remains below saturation. (The superseded round-64 sentence — "`live-completion-request-plane` stays unadmitted until a non-author closure rules on C1" — is closed by history: the round-64 closure ruled `rejected-honest-stop` and no such capability ever entered; the round-61 sentence naming `live-ollama-lifecycle` as the last capability entered was true through round 66; the round-68 sentence naming `receipt-pointer-audit` as the last capability entered was true through round 68.)
+Saturation line **8/10** (declared round 10, unchanged); stagnation window **N = 4** rounds. Derived at the measured commit by `tools/round42-selfdesc-reconcile.py` (kept current in round 49; on this host re-derived by direct pasteable commands, see the banner): score vector operability 8, freshness 8, depth 7, coverage 9, calibration 7, adjacency 7 (from `## Axes`); capability first-working rounds 10, 14, 16, 20, 25, 30, 41, 42, 43, 46, 47, 61, 67, 68, 69, 71, 72, 73, 74, 75, 76 (highest canonical list, §Round 76); the assigned axes are operability + calibration and calibration 7 is below the line, so nudge inactive. The last capabilities entered are round 76's `receipt-scope`, `selfrecord-facts` and `append-exempt-class`; the nudge remains inactive because the lowest assigned axis (calibration 7) remains below saturation. (The superseded round-64 sentence — "`live-completion-request-plane` stays unadmitted until a non-author closure rules on C1" — is closed by history: the round-64 closure ruled `rejected-honest-stop` and no such capability ever entered; the round-61 sentence naming `live-ollama-lifecycle` as the last capability entered was true through round 66; the round-68 sentence naming `receipt-pointer-audit` as the last capability entered was true through round 68.)
 
 ## Historical head sections (superseded in round 42)
 
@@ -4248,3 +4248,14 @@ rather than `measured/before/`. The first-filed cells are held here byte-exactly
    `unaccounted=0` on the frozen base population, with `rotation-reintroduced` red.
 3. Calibration: extend the fact harness to the round-76 record's own facts (work tip, gate
    tally, capability count) so the next round starts from `mismatches=0`.
+
+
+### Correction (2026-11-04) — province-digest
+
+Supersedes: 0e8dc562f99367c3668c5ac2375c49828efa3152aa61fc235f28e896b271b5c4
+Revision: c9ab73d842051db5f8320bced4357bf13cf14108
+Corrected: af459acfa975d418a389f0ce19b8f1f40dd7e08d15c7eb0e9f2eb27e45d45697
+
+Re-pointed locator for the same fact as the correction above: that block keyed on
+`SCORECARD.md:4065`, and round 76's head-mirror and superseded-block edits shifted the line.
+This block supersedes the filed *value* instead, which no later append can move.
