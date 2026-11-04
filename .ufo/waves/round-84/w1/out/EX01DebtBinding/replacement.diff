@@ -1,0 +1,82 @@
+diff --git c/tools/round81-append-debt.py w/tools/round81-append-debt.py
+index 7c5f7ab4..58644a1f 100755
+--- c/tools/round81-append-debt.py
++++ w/tools/round81-append-debt.py
+@@ -158,7 +158,7 @@ def parse_register(text, label):
+ 
+ 
+ def grade(events, frozen_rows, late_rows, *, graded_keys, frozen_precedes,
+-          late_intro, is_strict_descendant, row_intro=None):
++          late_intro, is_strict_descendant, row_intro=None, subject_rounds=None):
+     """Grade both registers against the population. Pure: every git fact is a callable.
+ 
+     graded_keys          set of (commit, file) at or before the base
+@@ -168,6 +168,7 @@ def grade(events, frozen_rows, late_rows, *, graded_keys, frozen_precedes,
+     row_intro            callable(line_number) -> the commit that introduced that register line
+                          (the row's introducing commit -- the rule's own wording), or None
+     is_strict_descendant callable(event_commit, row_commit) -> bool
++    subject_rounds       callable(commit) -> int | None, the event subject's declared round
+     """
+     all_events = {}
+     for key, event in events.items():
+@@ -261,6 +262,11 @@ def grade(events, frozen_rows, late_rows, *, graded_keys, frozen_precedes,
+             bad("same-round", f"{detail}: accepting round {accepting} is not after deletion "
+                               f"round {deletion}")
+             continue
++        subject_round = subject_rounds(commit) if subject_rounds is not None else None
++        if subject_round is not None and deletion != subject_round:
++            bad("note-wrong-deletion-round", f"{detail}: note deletion round {deletion} "
++                                             f"differs from subject round {subject_round}")
++            continue
+         intro = row_intro(number) if row_intro is not None else late_intro
+         if intro is None:
+             bad("unbound-register", f"{detail}: late row has no committed introduction")
+@@ -490,13 +496,13 @@ def selftest() -> int:
+     cases = []
+ 
+     def run(rows, late_rows, *, graded_keys=graded, desc=None, intro=late_intro,
+-            frozen_ok=None, row_marks=None):
++            frozen_ok=None, row_marks=None, subject_rounds=None):
+         return grade(all_events, rows, late_rows,
+                      graded_keys=graded_keys,
+                      frozen_precedes=frozen_ok or (lambda c: c == A),
+                      late_intro=intro,
+                      is_strict_descendant=(desc or (lambda e, r: r != e)),
+-                     row_intro=row_marks)
++                     row_intro=row_marks, subject_rounds=subject_rounds)
+ 
+     def late_row(commit, file, digest, count="1", klass="in-place-edit",
+                  note=f"round-81 accepts round-80 subject; accepted history"):
+@@ -603,6 +609,14 @@ def selftest() -> int:
+             desc=lambda e, r_: r_ == later,
+             row_marks=lambda n: None)
+     cases.append(("row-intro-unbound", r, 1, "unbound-register"))
++    r = run(frozen, [late_row(B, "SCORECARD.md", H2,
++                              note="round-81 accepts round-78 subject; accepted history")],
++            subject_rounds=lambda commit: 79)
++    cases.append(("note-subject-mismatch", r, 1, "note-wrong-deletion-round"))
++    r = run(frozen, [late_row(B, "SCORECARD.md", H2,
++                              note="round-81 accepts round-78 subject; accepted history")],
++            subject_rounds=lambda commit: None)
++    cases.append(("note-subject-unresolvable", r, 0, None))
+     cases.extend(late_path_selftests())
+ 
+     fail = 0
+@@ -694,9 +708,16 @@ def main(argv=None):
+                                                                           row_commit))
+             return cache[("d", event_commit, row_commit)]
+ 
++        def subject_rounds(commit):
++            if ("s", commit) not in cache:
++                subject = git(repo, "log", "-1", "--format=%s", commit)
++                match = re.match(r"^round-([0-9]+):", subject)
++                cache[("s", commit)] = int(match.group(1)) if match is not None else None
++            return cache[("s", commit)]
++
+         result = grade(events, frozen_rows, late_rows, graded_keys=graded_keys,
+                        frozen_precedes=frozen_precedes, late_intro=late_intro,
+-                       is_strict_descendant=strict_descendant,
++                       is_strict_descendant=strict_descendant, subject_rounds=subject_rounds,
+                        row_intro=(row_marks.get if row_marks is not None else None))
+         result["round"] = args.round
+         result["base"] = base

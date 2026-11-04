@@ -32,3 +32,7 @@ Blame says nothing about whether the acceptance is honest — a row can be appen
 rule's teeth are elsewhere: exact cell equality against the frozen audit, the accepting round strictly
 greater than the deletion round, and the note's deletion round bound to the event commit's own subject.
 Blame only answers "which commit introduced this row", and the answer is one commit per row.
+
+## Round-84 correction — 2026-11-04
+
+The statements at lines 10 and 34 mean last-modification attribution, not immutable first introduction. S571 describes the revision which last modified the line. A cosmetic change can move blame attribution; that disclosed limitation remains. This corrects wording only, not the historical rule.

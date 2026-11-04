@@ -648,3 +648,9 @@ never read (`late=0 unaccepted=23 bad_rows=103`) — into one admission check.
 | ID | Admit only when | Reject or limit when | Motivating lesson |
 |---|---|---|---|
 | KQ135 | A caller-supplied register path is bound to a committed identity before any row is graded: the path resolves inside the repository working tree, is committed at the audited revision, equals its committed bytes, and its file and per-row introductions are resolved with the same `git blame` rule the default path uses (S571); each row is then graded exactly as the default path grades it. Check: `python3 tools/round81-append-debt.py --repo . --round 83 --late registry/append-only-late.tsv` prints the same `APPEND_DEBT` summary line as the default register path and exits 0. | A caller-supplied path outside the working tree, untracked, or dirty is graded per row instead of refused with exit 2; a per-row `unbound-register` verdict is offered for a path the tool never bound; an empty or rewritten register is read as a pass. | `corpus/lessons/round-83.md` §Mistakes (`caller-path-unbound`); `.ufo/waves/round-83/measured/before/c1-debt-legB.out`. |
+
+## Criterion added — round 84 (2026-11-04)
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ136 (extends KQ27) | Current-evidence head cells name the terminal receipt revision and a re-derivation command; interim values superseded by terminal receipts are corrected in live cells with dated value-bound corrections below. | Generic supersession leaves successful interim values as current evidence, or a witness token elsewhere substitutes for checking the live cell. | `lessons/round-84.md` Mistakes; `tools/round84-selfrecord-round83.py --no-corrections` shows the red state. |

@@ -1785,3 +1785,15 @@ the round report; acceptance never restores bytes and never changes the audit's 
 Registered consumers remain `DEAD`; K05 declared-versus-served context capacity across real consumers
 stays open.
 | `pin-recheck-trigger.md` | A `behind` relation in `registry/engine-pin-relations.tsv` is a recheck trigger, never drift: resolve it by re-opening the pinned document at its own ref and locating the anchored statement; the llama.cpp `/health` sentence is byte-identical at b11755 and b12103 (one line shifted, document 2402 -> 2620 lines) | S563, S564; round 82 |
+
+## Coverage map — round 84 correction and addition
+
+These are actual appended table rows; round 83 placed its claimed addition in Frontier instead. Earlier anchors remain unchanged.
+
+| Entry | Covers | Round |
+|---|---|---|
+| `corpus/knowledge/pin-recheck-rows.md` | Per-relation documentary anchor comparison, including an explicit ungraded class; not runtime health | 83; indexed correctly 84 |
+| `corpus/knowledge/register-row-introduction.md` | Blame last-modification attribution and cosmetic-edit limitation, not immutable first introduction | 83; corrected 84 |
+| `corpus/knowledge/runtime-health-surface-matrix.md` | SGLang v0.5.23 readiness versus SageMaker ping during generation pauses, S574 | 84 |
+
+Frontier retained: live SGLang behavior, registered-consumer recovery, other engines and K05 across real consumers. Kengaku S178 attribution in relation 3 is retained; kama independently reads serving documentation, never model-evaluation quality.
