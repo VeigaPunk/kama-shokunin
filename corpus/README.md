@@ -1661,3 +1661,19 @@ this section 7 files still have no map row and remain a map gap: `battery-execut
 |---|---|---|
 | `knowledge/host-identity-drift-gate.md` | what a `Round-<N> host-identity block` records, why `uname -s`/`uname -m`/os-release `ID` survive a kernel update, what the drift counter grades (newest block wins) and what it does not (serving surfaces, the kernel version, the r71 corrections) | 73 |
 | `knowledge/round-scope-survivor-cases.md` | the three r72 round-scope survivors (linked worktree, valid older label with newer ignored work, `submodule.<name>.ignore=all`) as a case/command table, the `M >= N` bound and why older rounds are excluded, and the limits (no `--allow-ignored` escape, uninitialised submodules skipped) | 73 |
+
+## Coverage map — round 74 addition (2026-11-04)
+
+Appended rather than inserted, so no existing line moves (the rule the round-10 addition states).
+Measured before appending: `ls corpus/knowledge/*.md | wc -l` → 46 files; the
+``grep -c '^| `knowledge/' corpus/README.md`` population → 41 row lines naming 38 distinct
+entries (enumerated with the file/search tools), leaving 8 files unindexed. After this block:
+46 files, 42 row lines, 39 distinct mapped entries, and 7 files still unindexed:
+`battery-execution-evidence.md`, `completion-request-plane.md`, `ollama-live-amendment-r61.md`,
+`ollama-live-lifecycle.md`, `process-bound-listener.md`,
+`sglang-docs-version-pinning-amendment-2026-10-23.md`, `sglang-docs-version-pinning.md`.
+These counts describe this append's measured population, not later concurrent additions.
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/host-block-base-revision.md` | the v2 `recorded at <rev>` host-block grammar, token-stripped byte preservation against the recording revision, the frozen r73 live-triple base leg, append-only host moves, os-release `ID=` semantics, and the limits (not host uniqueness, serving-surface identity, or receipt honesty) | 74 |

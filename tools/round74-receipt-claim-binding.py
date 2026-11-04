@@ -458,6 +458,48 @@ def _selftest_arms(scratch, outcomes):
     _arm(outcomes, "cli-misuse", proc.returncode == 2 and "usage:" in proc.stderr,
          "rc={}".format(proc.returncode))
 
+    # (10) conflicting headers remain unbound, including in the v2 header pass.
+    try:
+        ch = Fixture(scratch, "conflicting-headers")
+        ch.write("tools/counter.py", "# counter\n")
+        seed = ch.commit("base")
+        receipt = ".ufo/waves/round-74/measured/conflict.out"
+        header = "# rev={}\n# rev={}\n".format(seed, "a" * 40)
+        ch.write(receipt, header)
+        ch.commit("receipt")
+        _record(ch, 74, "C2: measured at revision {} naming `{}`.\n".format(seed, receipt))
+        ch.write("plans/round-74-claims.md", "# kama round 74 — frozen claims\n\nfixture\n")
+        tip = ch.commit("record")
+        res = audit(ch.path, tip, 74)
+        rev, problem = _header_rev_v2(header.encode("ascii"))
+        ok = (res["exit"] == 1 and res["unbound"] == 1
+              and any("RECEIPT_TIP_FINDING unbound " in line
+                      for line in res["base_finding_lines"])
+              and rev is None and "conflicting header revisions" in problem)
+        _arm(outcomes, "conflicting-headers", ok,
+             "exit={} unbound={} header_rev={} problem={}".format(
+                 res["exit"], res["unbound"], rev, problem))
+    except Exception as exc:
+        _arm(outcomes, "conflicting-headers", False, "fixture failed: {}".format(exc))
+
+    # (11) a revision on the fifth header line binds in both grading passes.
+    try:
+        hw = Fixture(scratch, "header-window-fifth-line")
+        hw.write("tools/counter.py", "# counter\n")
+        hw.write("plans/round-74-claims.md", "# kama round 74 — frozen claims\n\nfixture\n")
+        seed = hw.commit("base")
+        receipt = ".ufo/waves/round-74/measured/fifth.out"
+        hw.write(receipt, "# receipt\n# counter\n# run\n# header\n# rev={}\n".format(seed))
+        hw.commit("receipt")
+        _record(hw, 74, "C2: measured at revision {} naming `{}`.\n".format(seed, receipt))
+        tip = hw.commit("record")
+        res = audit(hw.path, tip, 74)
+        _arm(outcomes, "header-window-fifth-line",
+             res["exit"] == 0 and res["bound_revisions"] == 1,
+             "exit={} bound_revisions={}".format(res["exit"], res["bound_revisions"]))
+    except Exception as exc:
+        _arm(outcomes, "header-window-fifth-line", False, "fixture failed: {}".format(exc))
+
 
 def _header_rev_v2_case_sensitive(blob):
     """Case-SENSITIVE header parse — the mutant the seam arm must be able to fail."""
