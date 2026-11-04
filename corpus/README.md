@@ -1612,3 +1612,22 @@ Held now: `knowledge/battery-execution-evidence.md` — what a `sys.setprofile` 
 ## Round 60 frontier note (2026-10-27)
 
 `knowledge/ollama-live-lifecycle.md` records one lane-owned live Ollama v0.40.11 child and its bounded HTTP captures (S519–S523); this is a new engine-runtime sample, not a claim that Ollama is ready on a registered consumer. The frozen live-run and calibration claims were falsified by W1/W2; no capability entered `SCORECARD.md`. Open frontier: independently bound replay semantics, parent/child cleanup under signals, and whether the Ollama route/id behavior can be classified by the current `kama-probe.sh` contract. Registered consumers remain unsampled.
+
+## Round 70 frontier disposition (2026-11-03)
+
+The frontier step's source row is a re-open, not an addition: the pytest exit-codes page was already
+registered as **S052** (`corpus/SOURCES.md:64`, opened 2026-10-20, `status mined`), so the round
+extends S052's `used-by` with `corpus/lessons/round-70.md` and records today's access date, the
+≤25-word located quote and the retained-bytes sha256 in the lesson Gate rather than appending a
+duplicate row (`CORPUS.md` rule 4; the census would report the same URL twice as `W04`, a warning
+that changes no exit). Registry rows 281 → 281.
+
+New held ground is instrument-grade, not domain-grade: the registry gate's population reconciliation
+(`tools/round42-selfdesc-reconcile.py`) now executes its cited RUN facts against a checkout of the
+measured tip, so a git-dependent fact can reproduce; and the host census's verdict
+(`tools/round65-host-census.py`) separates `not_evaluated` from `pass`, so an arm that could not run
+no longer reads as a green. Both are operability/calibration repairs: no `knowledge/` entry enters,
+no serving or consumer surface was sampled, and the three registered consumers keep their last
+recorded `DEAD` state. Frontier unchanged: live serving-plane counters (pinned engines absent on
+this host), the round-65/67 host-surface claims (now Linux, next round's item 3), and K05
+declared-versus-served context capacity.
