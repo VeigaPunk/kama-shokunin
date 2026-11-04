@@ -1737,3 +1737,16 @@ live reconciliation trial respectively; indexing them here does not certify
 their execution. Registered consumers remain `DEAD`; K05 declared-versus-served
 context capacity across real consumers remains open. No consumer restoration
 or new serving-runtime integration is asserted by these coverage-map rows.
+
+## Coverage map — round 79 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `corpus/knowledge/unregistered-listener-census.md` | Round-79 `registered` census class in `listeners`: a serving listener is `yes` when a registry row declares its port, `no` when it answers a model API ungoverned, `-` otherwise; a model list is an inventory, not a loaded-model or readiness claim | 79 |
+
+Frontier: the round-79 surface is `tools/round79-unregistered-census.py` (the two-registry
+fixture legs and the live-host leg) and the `registered` column plus
+`governed`/`unregistered`/`registry` summary keys in `tools/kama-probe.sh listeners`.
+Indexing them here does not certify their execution beyond the receipts cited in the round
+report. Registered consumers remain `DEAD`; admitting a consumer pin for an ungoverned
+listener stays operator-owned and is not asserted by this row.

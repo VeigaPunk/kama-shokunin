@@ -305,6 +305,7 @@ global. Every row was opened in round 10 (2026-10-19); the round lesson
 
 
 
+| S553 | llama.cpp server README @ 39febd2a (router mode) — https://raw.githubusercontent.com/ggml-org/llama.cpp/39febd2adb947b70da35e95f9351b3bf58ad170a/tools/server/README.md | docs | A | the router's model list is an inventory: unloaded models are listed and each carries a status.value; not served-identity normalization (S001/S016/S526) and not model quality | §Router mode, `GET /models` note 1, line 2227; raw file sha256 8fd5abde2fb52de3b30f30a170631d4c0d92febecc8da44d0541e48b132b35c6 (2026-11-04) | A model that is not running is still listed, so a model list is not proof of a loaded model or of consumer readiness. | mined | 2026-11-04 | on-release | corpus/knowledge/unregistered-listener-census.md |
 
 ## Paths
 
