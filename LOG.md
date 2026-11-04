@@ -3338,3 +3338,47 @@ row's engine name to appear somewhere in the text). Both are fixed before the re
 `SELFRECORD_R79_SELFTEST pass=11 fail=0` (was 9) and `OLLAMA_CENSUS_SELFTEST pass=12 fail=0` (was 6). The
 v1→v2 C1 evolution RV01 also names is freeze divergence 4 (F2 sealed-bound), recorded in
 `corpus/lessons/round-80.md`. No claim predicate, counter target or control moves.
+
+## Round 80 — correction (appended; the round-80 bytes above stand)
+
+`LOG-CORRECTION round=80 selftest tallies pass=9/pass=6 -> pass=11/pass=12`
+
+The two selftest tallies in the round-80 entry are the pre-hardening runs; the receipts the entry cites
+(`.ufo/waves/round-80/measured/after/c1-selftest.out`, `c3-selftest.out` at `08eb6949`) print
+`SELFRECORD_R79_SELFTEST pass=11 fail=0` and `OLLAMA_CENSUS_SELFTEST pass=12 fail=0`. Graded as F1–F4 by
+`tools/round81-selfrecord-round80.py`; the superseded values are named in the appended SCORECARD
+`#### round-81 correction` block, and the filed bytes are not rewritten (routed defect R80V1).
+
+## Round 81 — the round-80 record is graded, the append-only acceptance population gets a late-acceptance rule (2026-11-04)
+
+Frozen plan `plans/round-81-claims.md` (base `e7d2fd729cf8204c89c32534303bc9f2a97fcee4`; sealed record
+`a2af1af59faf6cf66fe854559293c4e4b441aff3`). Two claims, two distinct axes:
+
+- **C1 calibration (lowest assigned axis, 7)** — `tools/round81-selfrecord-round80.py` re-derives six
+  declared facts of the round-80 self-record and grades one value-bound correction per stale fact.
+  Before: `SELFRECORD_R80_ENUM claims=6 stale=6 corrected=0` exit 1 (F1 the §Round 80 C1 tally `pass=9`
+  against its receipt's `pass=11`; F2 the C3 tally `pass=6` against `pass=12`; F3 the head calibration
+  row's `pass=9`; F4 the LOG's `pass=9`; F5 the coverage row's round-79 last-change cell against its
+  round-80 evidence; F6 the head row's round-79 closure pointer at the round-80 closure tip). After:
+  `SELFRECORD_R80 claims=6 mismatches=0 corrected=6 unbacked=0` exit 0; selftest `pass=13 fail=0`; the
+  no-corrections control prints `mismatches=6` exit 1.
+- **C2 operability** — `tools/round81-append-debt.py` grades the frozen audit's acceptance population
+  under a late-acceptance rule: a row introduced by a LATER round (strict descendant commit, `N > M`
+  round order, exact hash/count/class, base population) accepts an event the frozen register's
+  pre-introduction cutoff can never accept; the graded round's own record edits are `pending`, visible
+  and unaccepted. `registry/append-only-late.tsv` carries 88 committed rows over the ten round-79/80
+  events, generated deterministically by `tools/round81-late-rows.py` (`--check` re-derives every cell).
+  Before: `APPEND_DEBT … accepted=53 late=0 unaccepted=10` exit 1; after: `APPEND_DEBT … accepted=53
+  late=10 pending=0 unaccepted=0 bad_rows=0 bad_declarations=0 out_of_population=0` exit 0; selftest
+  `pass=16 fail=0`. The pre-report gate's arm 8 swaps its structurally unsatisfiable third member for
+  this counter and gains arm 11 `round81-instruments`.
+
+Frontier: registry 297 → 301 rows (S558 supersedes S557's dead locator, S559 `git-merge-base`, S560
+`git-diff-tree`, S561 a rejected vLLM v0.33.0 quickstart with its flip; census exit 0); one knowledge
+entry (`late-acceptance-rule`) with its coverage-map row; KQ133 from the mined `number-drift` mistake.
+
+Wave: one v1 wave, 14 seats (3 executor, 3 scribe, 2 scout, 1 connector, 2 reviewer, 2 critic,
+1 mutation-tester; attack 5/14 = 36 %). Seat results and dead seats: `.ufo/waves/round-81/w1-results.json`.
+
+Owed by round 82: accept round 81's own pending events with late rows, re-run `pin-watch` on the next
+release cadence, and keep K05 blocked until an authorized serving runtime exists.

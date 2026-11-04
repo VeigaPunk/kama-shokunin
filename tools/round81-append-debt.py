@@ -136,6 +136,7 @@ def grade(events, frozen_rows, late_rows, *, graded_keys, frozen_precedes,
     expected = {(key[0], key[1], u["line_sha256"]): u
                 for key, e in events.items() for u in e["undisclosed"]}
     findings, covered, seen = [], set(), set()
+    frozen_keys = set()
     bad_rows = 0
     out_of_population = 0
     late_seen = set()
@@ -182,6 +183,7 @@ def grade(events, frozen_rows, late_rows, *, graded_keys, frozen_precedes,
             out_of_population += 1
             continue
         covered.add(row_key)
+        frozen_keys.add(key)
 
     # ---- late register (late-acceptance rule)
     for commit, file, digest, count, klass, note, number in late_rows:
@@ -233,21 +235,19 @@ def grade(events, frozen_rows, late_rows, *, graded_keys, frozen_precedes,
         covered.add(row_key)
         late_covered.add(key)
 
-    accepted = 0
     unaccepted = []
     for key, event in events.items():
         if key not in graded_keys:
             continue
         missing = [u for u in event["undisclosed"] if (*key, u["line_sha256"]) not in covered]
-        if not missing:
-            accepted += 1
-        else:
+        if missing:
             unaccepted.append({"commit": key[0], "file": key[1], "missing": len(missing)})
             for entry in missing:
                 findings.append({"class": "count-short",
                                  "detail": f"{key[0]} {key[1]} {entry['line_sha256']}: "
                                            f"missing {entry['count']}"})
-    late = len(late_covered & graded_keys)
+    accepted = len(frozen_keys & graded_keys)
+    late = len((late_covered - frozen_keys) & graded_keys)
     result = {
         "events": len(graded_keys),
         "accepted": accepted,
@@ -407,7 +407,7 @@ def selftest() -> int:
         if want_class == "out-of-population":
             ok = ok and s["out_of_population"] >= 1
         elif want_class == "out-only":
-            ok = ok and s["out_of_population"] == 1 and s["accepted"] == 2
+            ok = ok and s["out_of_population"] == 1 and s["accepted"] == 1
         elif want_class is not None:
             ok = ok and any(f["class"] == want_class for f in result["findings"])
         if not ok:

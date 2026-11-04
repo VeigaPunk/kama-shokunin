@@ -1764,3 +1764,17 @@ beyond the receipts cited in the round report. Registered consumers remain `DEAD
 second engine's consumer pin stays operator-owned and is not asserted by this row. The pin
 relation surface (`registry/engine-pin-relations.tsv`, round 80 C2) is a freshness register,
 not coverage: it relates refs the lane already holds.
+
+## Coverage map — round 81 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `corpus/knowledge/late-acceptance-rule.md` | Round-81 late-acceptance rule for the append-only audit population: the frozen register's pre-introduction cutoff makes every post-introduction event unacceptable; a later round's row binds by strict commit ancestry and round order (`N > M`), exact hash/count/class and base population; `pending` is the graded round's own visible debt, never an acceptance | 81 |
+
+Frontier: the round-81 surface is `tools/round81-append-debt.py` (the acceptance grader),
+`tools/round81-late-rows.py` (the deterministic row generator and `--check`) and
+`registry/append-only-late.tsv` (88 rows over ten round-79/80 events), composed into the pre-report
+gate's arm 8. Indexing the entry here certifies nothing about the gate run beyond the receipts cited in
+the round report; acceptance never restores bytes and never changes the audit's `unrestored` count.
+Registered consumers remain `DEAD`; K05 declared-versus-served context capacity across real consumers
+stays open.
