@@ -236,3 +236,15 @@ receipts. Recorded for the canonical judgment: these defects are evidence-
 ``````text
   `c1-selftest.out`. Used by `corpus/knowledge/baseline-receipt-binding.md`.
 ``````
+
+4. **`mutating-git-in-lane`** — L1 ran `git checkout --` in the lane.
+   *Evidence pointer:* 2026-11-04 ~05:36, `git -C …/kama-shokunin checkout --
+   .ufo/waves/round-77/measured/after/gate-run.out` discarded L1's own uncommitted rewrite of that
+   receipt; the tree was left clean and no other path changed.
+   *Captured-by:* the round prompt's VCS rule ("Never `git add`, `git commit`, `git stash`,
+   `git checkout`, … in the lane") — the rule existed; the L1 did not follow it.
+   *Fix:* the receipt was re-captured through the gate run and committed; the correct move is to
+   leave an unwanted receipt draft for the helper to commit or to rewrite it with `write` before
+   committing, never to revert it with git. Shown able to fail: the same rule is exercised by the
+   round-scope arm, which reports any uncommitted declared path (`ROUND_SCOPE_V2_FINDING stray`),
+   and by the gate's `uncommitted=` counter on a dirty tree.
