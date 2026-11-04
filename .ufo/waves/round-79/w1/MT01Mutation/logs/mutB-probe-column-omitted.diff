@@ -1,0 +1,28 @@
+--- /fast/scratch/hyaku/kama-r79/MT01Mutation/pristine/kama-probe.sh	2026-11-04 06:49:00.684626858 -0300
++++ /fast/scratch/hyaku/kama-r79/MT01Mutation/clone/tools/kama-probe.sh	2026-11-04 06:59:35.399991265 -0300
+@@ -765,7 +765,7 @@
+   fi
+ 
+   local -a json_rows=() table=()
+-  table+=("$(printf 'port\tbind\towner\tverdict\treason\tserved_model\tevidence\tregistered')")
++  table+=("$(printf 'port\tbind\towner\tverdict\treason\tserved_model\tevidence')")
+   local i n_model=0 n_dead=0 n_foreign=0 n_nothttp=0 n_unauth=0 n_loading=0
+   local n_governed=0 n_unregistered=0 reg
+   for ((i=0; i<${#ports[@]}; i++)); do
+@@ -782,12 +782,11 @@
+     reg=$(classify_registration "$port" "$C_VERDICT")
+     [ "$reg" = "yes" ] && n_governed=$((n_governed+1))
+     [ "$reg" = "no" ] && n_unregistered=$((n_unregistered+1))
+-    table+=("$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s' \
+-      "$port" "${scopes[i]}" "${OWNER[$port]:--}" "$C_VERDICT" "$C_REASON" "$C_SERVED" "$C_EVIDENCE" "$reg")")
+-    json_rows+=("$(printf '    {"port":%s,"bind":%s,"owner":%s,"verdict":%s,"reason":%s,"served_model":%s,"evidence":%s,"registered":%s}' \
++    table+=("$(printf '%s\t%s\t%s\t%s\t%s\t%s\t%s' \
++      "$port" "${scopes[i]}" "${OWNER[$port]:--}" "$C_VERDICT" "$C_REASON" "$C_SERVED" "$C_EVIDENCE")")
++    json_rows+=("$(printf '    {"port":%s,"bind":%s,"owner":%s,"verdict":%s,"reason":%s,"served_model":%s,"evidence":%s}' \
+       "$port" "$(jstr "${scopes[i]}")" "$(jstr "${OWNER[$port]:--}")" \
+-      "$(jstr "$C_VERDICT")" "$(jstr "$C_REASON")" "$(jstr "$C_SERVED")" "$(jstr "$C_EVIDENCE")" \
+-      "$(jstr "$reg")")")
++      "$(jstr "$C_VERDICT")" "$(jstr "$C_REASON")" "$(jstr "$C_SERVED")" "$(jstr "$C_EVIDENCE")")")
+   done
+ 
+   if [ "$JSON_OUT" -eq 1 ]; then

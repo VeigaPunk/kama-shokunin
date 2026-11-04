@@ -1,0 +1,78 @@
+--- /fast/scratch/hyaku/kama-r79/MT01Mutation/pristine/round79-unregistered-census.py	2026-11-04 06:49:00.683437330 -0300
++++ /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round79-unregistered-census.py	2026-11-04 06:49:01.770249569 -0300
+@@ -91,9 +91,14 @@
+     raise RuntimeError("no free unregistered loopback port")
+ 
+ 
+-def probe_json(probe: Path, repo: Path, registry: Path, timeout: int = 180) -> tuple[dict, int]:
++def probe_json(probe: Path, repo: Path, registry: Path, port: int | None = None,
++               timeout: int = 180) -> tuple[dict, int]:
++    """Run `listeners --json`.  With `port`, the probe enumerates ONLY that listener, so the
++    summary counts are exactly the fixture's class and no host listener can enter them."""
+     argv = ([sys.executable] if probe.suffix == ".py" else ["bash"]) + [
+         str(probe), "listeners", "--json", "--registry", str(registry)]
++    if port is not None:
++        argv += ["--port", str(port)]
+     proc = subprocess.run(argv, cwd=repo, capture_output=True, text=True, timeout=timeout)
+     if proc.returncode != 0:
+         return {"__error__": proc.stderr.strip()[:300] or f"exit {proc.returncode}"}, proc.returncode
+@@ -179,8 +184,8 @@
+             reg_b = work / "registry-with.tsv"
+             write_registry(reg_a, None)
+             write_registry(reg_b, port)
+-            doc_a, rc_a = probe_json(probe, repo, reg_a)
+-            doc_b, rc_b = probe_json(probe, repo, reg_b)
++            doc_a, rc_a = probe_json(probe, repo, reg_a, port=port)
++            doc_b, rc_b = probe_json(probe, repo, reg_b, port=port)
+             receipt["probe_exit"] = [rc_a, rc_b]
+             if "__error__" in doc_a:
+                 receipt["error"] = "probe leg A: " + doc_a["__error__"]
+@@ -196,12 +201,12 @@
+             # listener between the classes, so the summary counts must differ by exactly
+             # one in the direction the class names.  The live host may carry other
+             # unregistered model endpoints; the fixture leg must not depend on their count.
+-            unregistered = 1 if (class_a == "no" and class_b == "yes" and isinstance(
+-                sum_a.get("unregistered"), int) and isinstance(sum_b.get("unregistered"), int)
+-                and sum_a["unregistered"] == sum_b["unregistered"] + 1) else 0
+-            governed = 1 if (class_a == "no" and class_b == "yes" and isinstance(
+-                sum_a.get("governed"), int) and isinstance(sum_b.get("governed"), int)
+-                and sum_b["governed"] == sum_a["governed"] + 1) else 0
++            unregistered = 1 if (class_a == "no" and class_b == "yes"
++                                 and sum_a.get("unregistered") == 1
++                                 and sum_a.get("governed") == 0) else 0
++            governed = 1 if (class_a == "no" and class_b == "yes"
++                             and sum_b.get("governed") == 1
++                             and sum_b.get("unregistered") == 0) else 0
+             receipt.update(class_a=class_a, class_b=class_b, summary_a=sum_a, summary_b=sum_b,
+                            class_missing=class_missing, unregistered=unregistered,
+                            governed=governed, rows=len(doc_a.get("listeners") or []))
+@@ -307,8 +312,8 @@
+         reg_b = work / "registry-with.tsv"
+         write_registry(reg_a, None)
+         write_registry(reg_b, 12345)
+-        doc_a, rc_a = probe_json(probe, repo, reg_a)
+-        doc_b, rc_b = probe_json(probe, repo, reg_b)
++        doc_a, rc_a = probe_json(probe, repo, reg_a, port=12345)
++        doc_b, rc_b = probe_json(probe, repo, reg_b, port=12345)
+         if "__error__" in doc_a or "__error__" in doc_b:
+             detail = (doc_a.get("__error__") or doc_b.get("__error__"))
+             print(f"UNREGISTERED_CENSUS port=12345 unregistered=0 governed=0 class_missing=0 "
+@@ -318,12 +323,12 @@
+         class_b, sum_b = classify(doc_b, 12345)
+         class_missing = 0 if (class_a is not None and class_b is not None
+                               and "governed" in sum_a and "unregistered" in sum_b) else 1
+-        unregistered = 1 if (class_a == "no" and class_b == "yes" and isinstance(
+-            sum_a.get("unregistered"), int) and isinstance(sum_b.get("unregistered"), int)
+-            and sum_a["unregistered"] == sum_b["unregistered"] + 1) else 0
+-        governed = 1 if (class_a == "no" and class_b == "yes" and isinstance(
+-            sum_a.get("governed"), int) and isinstance(sum_b.get("governed"), int)
+-            and sum_b["governed"] == sum_a["governed"] + 1) else 0
++        unregistered = 1 if (class_a == "no" and class_b == "yes"
++                             and sum_a.get("unregistered") == 1
++                             and sum_a.get("governed") == 0) else 0
++        governed = 1 if (class_a == "no" and class_b == "yes"
++                         and sum_b.get("governed") == 1
++                         and sum_b.get("unregistered") == 0) else 0
+         print(f"UNREGISTERED_CENSUS port=12345 unregistered={unregistered} governed={governed} "
+               f"class_missing={class_missing} rows={len(doc_a.get('listeners') or [])}")
+         return 0, ""
