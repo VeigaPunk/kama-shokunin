@@ -21,11 +21,15 @@ Round 70 verdict accounting: refused members are counted in
 only when ``fail=0`` AND every not-evaluated member is named by an explicit
 ``--waive <member-name>`` (repeatable, exact member name). A waived member
 keeps its reason on its own line and the verdict keeps ``waived=<w>``
-visible; a not-evaluated member with no waiver makes exit 1. A member that
-ran keeps its real semantics: a pass stays a pass, a fail stays a fail, and
-a waiver never covers a fail. Verdict line:
+visible (the token appears only when a waiver was used, so a no-waiver
+verdict keeps ``not_evaluated=<n> total=<t>`` contiguous); a not-evaluated
+member with no waiver makes exit 1 and a ``CENSUS_NOT_EVALUATED`` line names
+it. A member that ran keeps its real semantics: a pass stays a pass, a fail
+stays a fail, and a waiver never covers a fail. Verdict line:
 
-    HOST_CENSUS pass=<p> fail=<f> not_evaluated=<n> waived=<w> total=<t> tierA_fail=<a> tierB_fail=<b>
+    HOST_CENSUS pass=<p> fail=<f> not_evaluated=<n> total=<t> tierA_fail=<a> tierB_fail=<b>
+
+(with `` waived=<w>`` inserted before ``total`` when a waiver was used)
 
 Tiers: tier A members are the self-tests named in SCORECARD axes evidence rows
 plus the instrument-registry gate; tier B members are the capability
@@ -203,11 +207,15 @@ def main():
                   file=sys.stderr)
     for line in lines:
         print(line)
-    print(f"HOST_CENSUS pass={passed} fail={failed} not_evaluated={not_evaluated} "
-          f"waived={waived} total={len(MEMBERS)} tierA_fail={fails_a} tierB_fail={fails_b}")
+    # Round 70: `waived=` appears only when a waiver was used, so a no-waiver verdict
+    # keeps `not_evaluated=<n> total=<t>` contiguous (the frozen claim's green line).
+    waived_cell = f" waived={waived}" if waived else ""
+    print(f"HOST_CENSUS pass={passed} fail={failed} not_evaluated={not_evaluated}"
+          f"{waived_cell} total={len(MEMBERS)} tierA_fail={fails_a} tierB_fail={fails_b}")
     if unwaived_ne:
-        print(f"HOST_CENSUS exit 1: {len(unwaived_ne)} not-evaluated member(s) "
-              f"without a waiver: {', '.join(unwaived_ne)}")
+        # distinct prefix: a naive `grep HOST_CENSUS | tail -1` miner must not read prose
+        print(f"CENSUS_NOT_EVALUATED {len(unwaived_ne)} member(s) without a waiver: "
+              f"{', '.join(unwaived_ne)} — exit 1")
     # Round 70: the exit is derived from the not-evaluated count. Exit 0 needs
     # fail=0 AND every not-evaluated member explicitly waived.
     return 0 if (failed == 0 and not unwaived_ne) else 1
