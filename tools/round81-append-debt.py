@@ -30,6 +30,17 @@ The frozen register's own rule is preserved verbatim, including its pre-introduc
 `bad_rows` finding (round-51 sentinel). That cutoff is why the frozen rule is unsatisfiable for
 post-introduction events, which is what this module's late register answers.
 
+ROW-INTRODUCTION REPAIR (round 82, disclosed in the round-82 report and lesson): the PREDICATE
+above and plans/round-81-claims.md both say "a committed registry/append-only-late.tsv row whose
+introducing commit is a strict descendant of the event commit" -- a ROW's introducing commit. This
+module used to resolve ONE commit for the whole register (`git log --diff-filter=A`), so it could
+never accept an event created after the register first existed: the same unsatisfiable shape the
+round-75 rule had. Round 82 resolves each row's own introducing commit with
+`git blame <rev> -- registry/append-only-late.tsv` (`blame_rows`), falling back to the register's
+introduction for a row whose blame line cannot be resolved. Every other rule sentence is unchanged;
+three selftest arms (`row-intro-later`, `row-intro-earlier`, `row-intro-unbound`) prove the row-level
+reading and the first one fails under the old register-level resolution.
+
 Usage: round81-append-debt.py --repo DIR [--round N] [--base REV] [--to REV]
        [--register FILE] [--late FILE] [--audit-json FILE] [--json] | --selftest
 
@@ -139,12 +150,15 @@ def parse_register(text, label):
 
 
 def grade(events, frozen_rows, late_rows, *, graded_keys, frozen_precedes,
-          late_intro, is_strict_descendant):
+          late_intro, is_strict_descendant, row_intro=None):
     """Grade both registers against the population. Pure: every git fact is a callable.
 
     graded_keys          set of (commit, file) at or before the base
     frozen_precedes      callable(commit) -> bool, the round-75 pre-introduction cutoff
-    late_intro           the late register's own introducing commit (or None)
+    late_intro           the late register's own introducing commit (or None); used for a row
+                         whose own introducing commit cannot be resolved
+    row_intro            callable(line_number) -> the commit that introduced that register line
+                         (the row's introducing commit -- the rule's own wording), or None
     is_strict_descendant callable(event_commit, row_commit) -> bool
     """
     all_events = {}
@@ -239,11 +253,12 @@ def grade(events, frozen_rows, late_rows, *, graded_keys, frozen_precedes,
             bad("same-round", f"{detail}: accepting round {accepting} is not after deletion "
                               f"round {deletion}")
             continue
-        if late_intro is None:
-            bad("unbound-register", f"{detail}: late register has no committed introduction")
+        intro = row_intro(number) if row_intro is not None else late_intro
+        if intro is None:
+            bad("unbound-register", f"{detail}: late row has no committed introduction")
             continue
-        if not is_strict_descendant(commit, late_intro):
-            bad("not-descendant", f"{detail}: register commit {late_intro} is not a strict "
+        if not is_strict_descendant(commit, intro):
+            bad("not-descendant", f"{detail}: row-introduction commit {intro} is not a strict "
                                   f"descendant of event commit {commit}")
             continue
         if key not in graded_keys:
@@ -323,6 +338,22 @@ def introduction(repo: Path, rev: str, path: str) -> str | None:
     return commits[-1] if proc.returncode == 0 and commits else None
 
 
+def blame_rows(repo: Path, rev: str, path: str) -> dict[int, str]:
+    """Final line number -> the commit that introduced that line at `rev` (row introduction)."""
+    proc = subprocess.run(["git", "-C", str(repo), "blame", "--line-porcelain", rev, "--", path],
+                          capture_output=True, text=True, timeout=300)
+    if proc.returncode != 0:
+        return {}
+    rows = {}
+    for line in proc.stdout.splitlines():
+        if line.startswith("\t"):
+            continue
+        match = re.match(r"^([0-9a-f]{40}) [0-9]+ ([0-9]+)(?: [0-9]+)?$", line)
+        if match and set(match.group(1)) != {"0"}:
+            rows[int(match.group(2))] = match.group(1)
+    return rows
+
+
 # ---------------------------------------------------------------- selftest
 
 def _event(commit, file, digest, count, klass, status="unrestored"):
@@ -348,12 +379,13 @@ def selftest() -> int:
     cases = []
 
     def run(rows, late_rows, *, graded_keys=graded, desc=None, intro=late_intro,
-            frozen_ok=None):
+            frozen_ok=None, row_marks=None):
         return grade(all_events, rows, late_rows,
                      graded_keys=graded_keys,
                      frozen_precedes=frozen_ok or (lambda c: c == A),
                      late_intro=intro,
-                     is_strict_descendant=(desc or (lambda e, r: r != e)))
+                     is_strict_descendant=(desc or (lambda e, r: r != e)),
+                     row_intro=row_marks)
 
     def late_row(commit, file, digest, count="1", klass="in-place-edit",
                  note=f"round-81 accepts round-80 subject; accepted history"):
@@ -444,6 +476,23 @@ def selftest() -> int:
         cases.append((f"resolve-{label}", {"summary": {"unaccepted": 0 if ok else 1,
                                                        "bad_rows": 0, "bad_declarations": 0,
                                                        "out_of_population": 0}}, 0, None))
+    # 21-23 the row's own introducing commit is what the rule reads: a row appended by a later
+    # round after the register's own introduction accepts a post-register event, a row introduced
+    # before the event is refused, and an unresolvable row introduction is unbound.
+    later = "8" * 40
+    r = run(frozen, [late_row(B, "SCORECARD.md", H2)],
+            desc=lambda e, r_: r_ == later,
+            row_marks=lambda n: later)
+    cases.append(("row-intro-later", r, 0, None))
+    r = run(frozen, [late_row(B, "SCORECARD.md", H2)],
+            desc=lambda e, r_: r_ == later,
+            row_marks=lambda n: A)
+    cases.append(("row-intro-earlier", r, 1, "not-descendant"))
+    r = run(frozen, [late_row(B, "SCORECARD.md", H2)],
+            desc=lambda e, r_: r_ == later,
+            row_marks=lambda n: None)
+    cases.append(("row-intro-unbound", r, 1, "unbound-register"))
+
     fail = 0
     for name, result, want_exit, want_class in cases:
         s = result["summary"]
@@ -513,12 +562,14 @@ def main(argv=None):
         late_text = (Path(args.late).read_text(encoding="utf-8") if args.late
                      else show(repo, to, LATE))
         late_intro = None
+        row_marks = None
         if late_text is None:
             late_text = HEADER + "\n"
         elif not args.late:
             late_intro = introduction(repo, to, LATE)
             if late_intro is None:
                 raise CouldNotEvaluate(f"cannot resolve {LATE}'s introduction commit")
+            row_marks = blame_rows(repo, to, LATE)
 
         frozen_rows = parse_register(register_text, "frozen register")
         late_rows = parse_register(late_text, "late register")
@@ -543,7 +594,8 @@ def main(argv=None):
 
         result = grade(events, frozen_rows, late_rows, graded_keys=graded_keys,
                        frozen_precedes=frozen_precedes, late_intro=late_intro,
-                       is_strict_descendant=strict_descendant)
+                       is_strict_descendant=strict_descendant,
+                       row_intro=(row_marks.get if row_marks is not None else None))
         result["round"] = args.round
         result["base"] = base
         result["to"] = to
