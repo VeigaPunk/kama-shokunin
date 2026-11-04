@@ -120,7 +120,7 @@ leaks. The waiver scope is guaranteed by review, not by the counter.
    `measured/after/census-at-tip.out` (21:00, produced by `a82cad11…`) reads
    `… not_evaluated=0 waived=0 total=22 …`; `grep -c` for the freeze's literal
    (`pass=22 fail=0 not_evaluated=0 total=22`) was `0`. The `af6eb6c2` green run prints the
-   literal (`evidence/realrun-landed-af6eb6c2.out`, grep count `1`). **F1 resolved.**
+   literal (`evidence/final-af6eb6c2-census-and-cli.out`, grep count `1`). **F1 resolved.**
 4. **The records are one format generation behind.** `SCORECARD.md:3714` and
    `corpus/lessons/round-70.md` quote the 21:00 receipt's interposed line, and that receipt
    is still cited. The tool now prints a different green line, so a reader who re-runs the
@@ -155,7 +155,7 @@ codified — `c2-boundary-control.py`, without touching the frozen bytes.
 2. **F6:** produce `measured/after/census-at-<tip>.out` from the landed bytes (new file;
    do not overwrite the 21:00 receipt), then update the pointer in `SCORECARD.md:3714` and
    the quoted line in `corpus/lessons/round-70.md`. My run is
-   `evidence/realrun-landed-af6eb6c2.out`; the L1 should produce its own at its final tip.
+   `evidence/final-af6eb6c2-census-and-cli.out`; the L1 should produce its own at its final tip.
 3. **F3 (optional):** unknown `--waive` name → exit 2 before running members. Needs the
    exit map to document 2.
 4. **F5 (optional):** keep `OSError` as `fail` (base behavior), or document that

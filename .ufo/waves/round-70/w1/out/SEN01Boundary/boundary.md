@@ -227,42 +227,41 @@ Run all checks from the lane root (or pass absolute `--ledger`); see §5 for why
    that is an edit to `registry/append-only-contract.tsv`, outside this round's declared
    edit set, and it should be its own claimed item, not a silent side effect.
 
-## 8. Post-landing addendum (measured after the record landed)
+## 8. Post-landing addendum (final tip `a8df1af5`)
 
-The L1 landed `7be07423` ("round-70 C1+C2: …", 15 files, +899/−35, including both tools,
-SCORECARD.md, PROVINCE.md, corpus/SOURCES.md, corpus/lessons/round-70.md) and `73597158`
-(measured receipts). Re-measured at those bytes:
+The L1 landed `7be07423` ("round-70 C1+C2: …", 15 files, +899/−35, including both tools and
+the record), `73597158` (measured receipts), `910e6747` (lesson, LOG, README frontier, S052
+`used-by`) `af6eb6c2` (wave integration: census verdict line, SKILL exit-map row, depth row
+re-anchor, control re-scored), `2fc9ce1e` (final-tip append) and `a8df1af5` (wave evidence,
+additive only). Re-measured at the final tip, cwd = lane root:
 
-| check (cwd = lane) | exit | verdict |
+| check | exit | verdict |
 |---|---|---|
-| `python3 tools/append-only-audit.py --to 7be07423` | **1** | `commits=506 events=181 restored=87 partial=0 unrestored=28 ungraded=61 disclosed=5 … bad_declarations=5`; the only new event is `7be07423 SCORECARD.md del=5 graded=1 ungraded=4 status=restored` |
-| `python3 tools/append-only-audit.py --to 73597158` | **1** | same counts (`events=181 restored=87 unrestored=28`); `73597158` itself touches only `.ufo` receipts |
-| `python3 tools/round68-receipt-pointer-audit.py --repo . --rev 73597158` | 0 | `cited=141 resolved=124 expanded=4 corrected=13 unresolved=0` |
-| `python3 tools/sources-append-only.py --from 0e14facd --to 73597158` | 0 | `no append-only violations` |
-| `python3 tools/round67-worktree-landing-check.py --paths SCORECARD.md,LOG.md,PROVINCE.md,SKILL.md,corpus/SOURCES.md` | **1** | `clean SCORECARD.md / clean LOG.md / clean PROVINCE.md / clean SKILL.md / DIRTY corpus/SOURCES.md` — a pending uncommitted edit |
+| `python3 tools/append-only-audit.py --to a8df1af5` | **1** | `commits=511 events=183 restored=87 partial=0 unrestored=28 ungraded=63 disclosed=5 … bad_declarations=5`; the three new events are `7be07423 SCORECARD.md del=5 graded=1 ungraded=4 status=restored`, `910e6747 corpus/SOURCES.md del=1 graded=0 ungraded=0 status=ungraded` (the permitted `used-by` line), `af6eb6c2 SCORECARD.md del=2 graded=0 ungraded=2 status=ungraded` (1:1 depth-row re-anchor) |
+| `python3 tools/round68-receipt-pointer-audit.py --repo . --rev a8df1af5` | 0 | `cited=157 resolved=140 expanded=4 corrected=13 unresolved=0` |
+| `python3 tools/sources-append-only.py --from 0e14facd --to a8df1af5` | 0 | `no append-only violations` |
+| `python3 tools/round67-worktree-landing-check.py --paths SCORECARD.md,LOG.md,PROVINCE.md,SKILL.md,corpus/SOURCES.md` | 0 | `paths=5 clean=5 dirty=0 missing=0 untracked=0 unreadable=0` |
 | `python3 .ufo/waves/round-70/controls/refused-member-control.py tools/round65-host-census.py` | 0 | `REFUSED_MEMBER_CONTROL refused_fixture_exit=1 allpass_fixture_exit=0` |
-| `python3 tools/round65-host-census.py` | 0 | `HOST_CENSUS pass=22 fail=0 not_evaluated=0 waived=0 total=22 tierA_fail=0 tierB_fail=0` |
+| `python3 tools/round65-host-census.py` | 0 | `HOST_CENSUS pass=22 fail=0 not_evaluated=0 total=22 tierA_fail=0 tierB_fail=0` (the frozen target line, `waived=` omitted when 0) |
 
-The append-only prediction held: exactly one new event, `status=restored` (the banner rewrite
-plus its byte-exact re-append), and `unrestored` stays 28. No new unrestored event landed.
+The append-only prediction held end-to-end: every record event the round added is
+`restored` or `ungraded` (permitted/1:1), and `unrestored` stays 28. No new unrestored event
+landed. The standing red remains exactly the pre-existing `unrestored=28` +
+`bad_declarations=5` documented in §2; the audit exit is still 1 and still cannot be used as
+the pass signal.
 
-The pending `corpus/SOURCES.md` edit is **permitted**: it changes only the `used-by` cell of
-S052 (`… round-18.md` → `… round-18.md, corpus/lessons/round-70.md`). Tested on a fixture
-commit of those exact bytes: `sources-append-only --from HEAD^ --to HEAD` → `no append-only
-violations`, exit 0. It must still be committed before any "landed" claim; the WLC above is
-red until it is.
-
-### Landed tool bytes (now auditable)
+### Landed tool bytes
 
 - `tools/round65-host-census.py`: exit is `0 if (failed == 0 and not unwaived_ne) else 1`;
-  refusals, timeouts and spawn `OSError`s all go through `record_ne()` into `not_evaluated`,
-  and the verdict line prints `not_evaluated=<n> waived=<w>`. The `--waive <member-name>`
-  escape hatch is exact-name, consumes only not-evaluated members, warns on unknown/unused
-  names, and never covers a pass/fail. Boundary note: the frozen counter does not exercise
-  `--waive`, and a future registered command that passes it would turn a refusal into exit 0
-  while still printing `not_evaluated>0` — keep the registered command waiver-free (the
-  target requires `not_evaluated=0`). Minor: the argument loop silently ignores unknown
-  flags, so `--waiv`/`--waive` without a value is a no-op rather than an error.
+  refusals, timeouts and spawn `OSError`s all go through `record_ne()` into `not_evaluated`;
+  the verdict line prints `not_evaluated=<n>` and prints `waived=<w>` only when a waiver is
+  used. The `--waive <member-name>` escape hatch is exact-name, consumes only not-evaluated
+  members, warns on unknown/unused names, and never covers a pass/fail. Boundary note: the
+  frozen counter does not exercise `--waive`; a future registered command that passes it
+  would turn a refusal into exit 0 while still printing `not_evaluated>0` — keep the
+  registered command waiver-free (the target requires `not_evaluated=0`). Minor: the
+  argument loop silently ignores unknown flags, so `--waiv` or `--waive` without a value is
+  a no-op rather than an error.
 - `tools/round41-scorecard-reconcile.py`: the harness now does
   `git clone --shared --no-checkout` + `update-ref` mirrors + `checkout --detach <tip>`,
   points `refs/heads/master` at the tip, and deletes the checkout at exit (atexit +

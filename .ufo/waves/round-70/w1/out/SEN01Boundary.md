@@ -2,8 +2,8 @@
 
 Tips: audited at lane tip `0e14facd`; base `6035e952`; at that snapshot tools were
 byte-identical at both (`git diff --stat 6035e952..0e14facd -- tools/` empty). The L1 then
-landed `7be07423` (record + both tools) and `73597158` (measured receipts); the landing was
-measured at those bytes (§Post-landing). SCORECARD.md was tested in flight at md5
+landed `7be07423` (record + both tools), `73597158`, `910e6747`, `af6eb6c2`, `2fc9ce1e` and
+`a8df1af5` (final tip); the landing was measured at those bytes (§Post-landing). SCORECARD.md was tested in flight at md5
 `53990e14…` and `664badf3…`, PROVINCE.md at `248e7de5…`. No tracked lane file was edited; no
 git/jj mutation on the lane; no tool installs. Full evidence:
 `out/SEN01Boundary/report.md`; detailed findings: `out/SEN01Boundary/boundary.md`.
@@ -102,28 +102,32 @@ environment — keep `cwd=export`, keep the timeout, never widen to the lane wor
 census is safer: `subprocess.run(argv)`, no shell, `cwd=LANE`, temp dir removed in
 `finally`.
 
-## Post-landing measurement (`7be07423` + `73597158`)
+## Post-landing measurement (final tip `a8df1af5`)
 
-The landed record is append-only-clean at the event level. `append-only-audit --to
-7be07423` → `events=181 restored=87 unrestored=28` (exit 1, the standing red unchanged);
-the only new event is `7be07423 SCORECARD.md del=5 graded=1 ungraded=4 status=restored`
-(the banner rewrite plus its byte-exact re-append — the case-A2 prediction). Receipt-pointer
-at `73597158` → exit 0, `cited=141 resolved=124 expanded=4 corrected=13 unresolved=0`.
-Sources pair `0e14facd..73597158` → exit 0. Census control → exit 0
-(`refused_fixture_exit=1 allpass_fixture_exit=0`); live census → `HOST_CENSUS pass=22
-fail=0 not_evaluated=0 waived=0 total=22`, exit 0.
+The record landed in `7be07423` (record + both tools), `73597158` (measured receipts),
+`910e6747` (lesson, LOG, README frontier, S052 `used-by`), `af6eb6c2` (wave integration),
+`2fc9ce1e` (final-tip append) and `a8df1af5` (wave evidence, additive only). The final tip
+is append-only-clean at the event level: `append-only-audit --to a8df1af5` → `commits=511
+events=183 restored=87 unrestored=28 ungraded=63` (exit 1, the standing red unchanged). The
+new events are `7be07423 SCORECARD.md del=5 graded=1 ungraded=4 status=restored` (the banner
+rewrite plus its byte-exact re-append — the case-A2 prediction), `910e6747 corpus/SOURCES.md
+del=1 graded=0 ungraded=0 status=ungraded` (the permitted `used-by` line) and `af6eb6c2
+SCORECARD.md del=2 graded=0 ungraded=2 status=ungraded` (1:1 depth-row re-anchor); `2fc9ce1e`
+and `a8df1af5` add no event. No new unrestored event landed.
 
-One pending item: the worktree `corpus/SOURCES.md` is **dirty** — S052's `used-by` cell gains
-`corpus/lessons/round-70.md`. That cell is permitted (`sources-append-only` on the exact
-bytes → exit 0) but uncommitted, so `round67-worktree-landing-check` prints `DIRTY
-corpus/SOURCES.md`, exit 1. Commit it before any "landed" claim.
+Receipt-pointer at `a8df1af5` → exit 0, `cited=157 resolved=140 expanded=4 corrected=13
+unresolved=0`. Sources pair `0e14facd..a8df1af5` → exit 0. WLC → `paths=5 clean=5 dirty=0`,
+exit 0. Census control → exit 0 (`refused_fixture_exit=1 allpass_fixture_exit=0`); live
+census at `a8df1af5` → `HOST_CENSUS pass=22 fail=0 not_evaluated=0 total=22
+tierA_fail=0 tierB_fail=0`, exit 0.
 
 Landed tool notes: the census exits 0 only when `fail=0` **and** every not-evaluated member
-is explicitly `--waive`d (exact name; warns on unknown/unused; never covers a fail). The
-frozen counter does not exercise `--waive`, so keep the registered command waiver-free (the
-target requires `not_evaluated=0`). The reconciler runs fact commands in a
-`git clone --shared` checkout of the tip (alternates to the lane object store), deletes it
-at exit, and still inherits the full environment — keep fact commands read-only.
+is explicitly `--waive`d (exact name; warns on unknown/unused; never covers a fail; prints
+`waived=` only when used). The frozen counter does not exercise `--waive`, so keep the
+registered command waiver-free (the target requires `not_evaluated=0`). The reconciler runs
+fact commands in a `git clone --shared` checkout of the tip (alternates to the lane object
+store), deletes it at exit, and still inherits the full environment — keep fact commands
+read-only.
 
 ## Exact landing checklist (advisory; nothing landed by this seat)
 

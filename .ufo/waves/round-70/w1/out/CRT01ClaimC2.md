@@ -5,9 +5,11 @@ Full evidence, commands and exit codes:
 `.ufo/waves/round-70/w1/out/CRT01ClaimC2/report.md` and `attack.md` in the same directory.
 
 Pins: frozen counter `37fd20eb…`; base census `46389918…`; C2 landing bytes `44bebd67…`
-at tip `af6eb6c2` (the byte-identical pre-integration landing `a82cad11…` at `73597158`
-was also scored; the `af6eb6c2` integration implements this seat's F1/F2 corrections and
-rewrites `SKILL.md:1690`).
+at tip `af6eb6c2` (the pre-integration landing `a82cad11…` at `73597158` was also scored;
+`af6eb6c2` implements this seat's F1/F2 corrections and rewrites `SKILL.md:1690`). Later
+tips `2fc9ce1e` (final measured receipt) and `a8df1af5` (wave evidence, this seat's output
+directory committed) do not change the census or the controls; the boundary control is
+committed at `w1/out/CRT01ClaimC2/c2-boundary-control.py`.
 
 ## Findings
 
@@ -38,13 +40,13 @@ rewrites `SKILL.md:1690`).
    bytes printed `… waived=0 total=22 …` and a second `HOST_CENSUS exit 1:` line; measured
    literal count was `0` before the integration. The `superseded/` directory holds the
    critic's equivalent patch — do not apply it.
-6. **F6 (provenance, open): the round's citations are one format generation behind the
-   tool.** `measured/after/census-at-tip.out` (21:00) was produced by `a82cad11…`, and both
-   `SCORECARD.md:3714` and `corpus/lessons/round-70.md` quote its interposed line
-   (`… waived=0 total=22 …`). The tool at `af6eb6c2` prints the contiguous form, so a reader
-   who re-runs the cited command at the tip gets a different line than the record quotes.
-   The fix is a new green receipt at `af6eb6c2` (never overwriting the old one) and a
-   pointer update.
+6. **F6 (provenance residue): the record is one format generation behind in three
+   passages.** `measured/after/census-at-af6eb6c2.out` now exists and its contiguous line is
+   cited in the final-values paragraph (`SCORECARD.md:3732`). But `SCORECARD.md:3714`,
+   `LOG.md:2681` and `corpus/lessons/round-70.md:75` still quote the pre-integration line
+   (`… waived=0 total=22 …`) and cite `census-at-tip.out` (the `a82cad11…` output). Fix:
+   point those three at the new receipt, or label the quoted line as the `a82cad11…` output.
+   Keep both receipts (the lane preserves old receipts).
 7. **F3 (open, policy): unknown `--waive <name>` exits 0** with a stderr warning. Safe (it
    cannot green a not-evaluated member) but a typo costs a full re-run and only stderr says
    why. `warn` in the boundary control.

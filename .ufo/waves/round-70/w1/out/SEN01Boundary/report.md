@@ -284,7 +284,7 @@ no append-only violations
 EXIT=0
 ```
 
-It is permitted but uncommitted; the WLC stays red until it lands.
+It was permitted (exit 0) and then landed in `910e6747`; at the final tip the audit records it as `910e6747 corpus/SOURCES.md del=1 graded=0 ungraded=0 status=ungraded` (a permitted line), and the WLC is clean.
 
 Landed tool boundary notes: the census exits `0` only when `fail == 0` and every
 not-evaluated member is explicitly `--waive`d (exact name, warns on unknown/unused, never
@@ -292,3 +292,38 @@ covers a fail); the frozen counter does not exercise `--waive`, so keep the regi
 command waiver-free. The reconciler now runs fact commands in a `git clone --shared`
 checkout of the tip (alternates to the lane object store), deletes it at exit, and still
 inherits the full environment — keep fact commands read-only.
+
+
+### Final tip `a8df1af5` (the record tip `af6eb6c2` plus additive wave evidence)
+
+```
+$ git log --oneline -2
+a8df1af5 round-70 wave evidence: 13 seat outputs (executors, scribes, scouts, reviewers, critic, mutation-tester, sentinel, connector), the critic's boundary control and the probe reports; final audit receipts at 2fc9ce1e
+2fc9ce1e round-70 appended: final measured tip af6eb6c2 (reconciler 0, selftest 5/5, census 22/0/0 literal), wave attack dispositions, LOG wave-integration bullets
+
+$ python3 tools/append-only-audit.py --to a8df1af5
+EXIT=1
+summary commits=511 files=133 events=183 restored=87 partial=0 unrestored=28 ungraded=63 disclosed=5 permitted_lines=628 disclosed_lines=10 bad_disclosures=0 ungraded_lines=276 regressed=0 vanished=0 unmatched=0 binary=0 bad_declarations=5
+# 2fc9ce1e and a8df1af5 add no audit event (pure additions); unrestored stays 28.
+
+$ python3 tools/round68-receipt-pointer-audit.py --repo . --rev a8df1af5
+RECEIPT_POINTER_AUDIT files=2 cited=157 resolved=140 expanded=4 corrected=13 unresolved=0
+EXIT=0
+
+$ python3 tools/sources-append-only.py --from 0e14facd --to a8df1af5
+no append-only violations
+EXIT=0
+
+$ python3 tools/round67-worktree-landing-check.py --paths SCORECARD.md,LOG.md,PROVINCE.md,SKILL.md,corpus/SOURCES.md
+WORKTREE_LANDING_CHECK paths=5 clean=5 dirty=0 missing=0 untracked=0 unreadable=0
+EXIT=0
+
+$ timeout 280 python3 tools/round65-host-census.py
+HOST_CENSUS pass=22 fail=0 not_evaluated=0 total=22 tierA_fail=0 tierB_fail=0
+EXIT=0
+```
+
+Final boundary verdict: every record event the round added is `restored` or `ungraded`; no
+new unrestored event landed; receipt-pointer, sources, WLC and census are green at the final
+tip. The append-only audit remains exit 1 for the pre-existing `unrestored=28` +
+`bad_declarations=5` only.

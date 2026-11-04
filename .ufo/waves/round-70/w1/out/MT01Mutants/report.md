@@ -23,13 +23,17 @@ pre-repair bytes kept as the do-nothing control. Every row of `mutants.tsv` name
 Notes on the substrate handoff:
 
 - EX01's delivered candidate (`EX01ReconHarness/round41-scorecard-reconcile.py`,
-  `e0acb993…`) and the integrated file (`c9bb4eae…`) differ: the integrated file adds
-  `git update-ref refs/heads/master <tip>`. The delivered candidate does **not** provide a
-  local `master` in its checkout; `gate-registry-check.py --selftest`'s lane-tip arm resolves
-  `master`, so on a detached-HEAD source the candidate's nested checkouts are branchless and
-  the arm fails. Measured (this report, §3, row `ex01-out`): the delivered candidate leaves
-  `r41=1` on the green fixture while the integrated bytes leave `r41=0`. The integration
-  addition is load-bearing, not cosmetic.
+  `e0acb993…`) and the integrated file (`c9bb4eae…`) differ textually: the integrated file adds
+  `git update-ref refs/heads/master <tip>`. Measured: the two are **behaviourally identical on
+  every detector of this matrix** — both green on `G/NB/NP/NC/NH`, both red on `BASE`, both
+  `SELFDESC_SELFTEST … pass=5 fail=0` (rows `ex01`, `ex01-out` in
+  `logs/c1-synthetic.jsonl`). The addition covers a source whose clone has no local branch at
+  all (a detached HEAD with no `refs/heads/*`); this seat reproduced exactly that failure
+  (`gate-registry-check.py --selftest` lane-tip arm: `fatal: Needed a single revision`) on a
+  fixture clone whose HEAD was detached with no local branch, and the arm went green only once
+  the fixture was placed on a local `master`. So: not a defect in the delivered candidate, but
+  the integration line is the thing that makes the checkout independent of the source's HEAD
+  shape.
 - The first C2 candidate (`a82cad11…`) and the landed census (`44bebd67…`) differ only in the
   verdict-line rendering (`waived=` printed only when used; a `CENSUS_NOT_EVALUATED` line
   instead of a second `HOST_CENSUS` line). The mutant matrix was run on **both**; the results
@@ -66,7 +70,7 @@ Detectors used for C1 (all run from the pinned tool-bytes directory against pinn
 The fixture revs are commits created **only** in this seat's scratch clones (fixture identity
 `mt01fixture <mt01@fixture.invalid>`); each clone was asserted to be its own toplevel before the
 first commit, and its `HEAD` is a local `master` so that the repaired harness's nested clone
-also has a `master` (see §3 F3).
+also has a `master` (see §0, EX01 bullet).
 
 Detectors used for C2:
 
@@ -99,12 +103,12 @@ python3 "$S/fail-waiver-probe.py" "$S/v/L-c2a/round65-host-census.py"
 Exact outputs (landed bytes):
 
 ```
-$ python3 .ufo/waves/round-70/controls/refused-member-control.py v/L-c2c/round65-host-census.py
+$ python3 "$S/../../controls/refused-member-control.py" "$S/v/L-c2c/round65-host-census.py"
 {"refused_fixture": ["pass [A] synthetic-pass", "refused [A] synthetic-refused: ... ", "HOST_CENSUS pass=1 fail=0 not_evaluated=1 total=2 tierA_fail=0 tierB_fail=0", "CENSUS_NOT_EVALUATED 1 member(s) without a waiver: synthetic-refused \u2014 exit 1"], "allpass_fixture": [...]}
 REFUSED_MEMBER_CONTROL refused_fixture_exit=1 allpass_fixture_exit=0
 (exit 0)
 
-$ python3 $S/fail-waiver-probe.py v/L-c2e/round65-host-census.py
+$ python3 "$S/fail-waiver-probe.py" "$S/v/L-c2e/round65-host-census.py"
   FAIL [A] synthetic-fail: exit=1 tail='boom'
   HOST_CENSUS pass=0 fail=1 not_evaluated=0 total=1 tierA_fail=1 tierB_fail=0
 FAIL_WAIVER_PROBE fail_member_waived_exit=0     <-- mutant; the repair prints 1
@@ -116,19 +120,116 @@ waiver that covers a fail. Those three are exactly the clauses the freeze's KILL
 prose (line content, `total=22`, "a waiver never covers a fail"); none of them is mechanised by
 `refused-member-control.py`.
 
-## 3. C1 matrix — `round42-selfdesc-reconcile.py` (+ the round-41 harness)
+Commands (verbatim; `$S` = `/fast/scratch/hyaku/kama-r70/MT01Mutants`):
 
-<!-- C1_TABLE -->
+```
+python3 "$S/v/L-c1a/round42-selfdesc-reconcile.py" --repo "$S/L" --tip 73597158ec1cd6707a6f3abe0814615b82580d49
+python3 "$S/v/L-c1a/round42-selfdesc-reconcile.py" --repo "$S/fx2-nbanner" --tip 5bc6e2acc5dfeee68c93a20d7ae7301d9921c9f7
+python3 "$S/v/L-c1a/round42-selfdesc-reconcile.py" --selftest --repo "$S/L" --tip 73597158ec1cd6707a6f3abe0814615b82580d49 --work "$S/work-L-c1a"
+```
+
+Cells are `exit/mismatches` from the verdict line; the `ST` column is `exit/pass-fail`.
+Source: `logs/c1-landed.jsonl`.
+
+| mutant | change | G | NB | NP | NC | NH | TIP | BASE | ST | verdict | selftest arm that catches it |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| **landed** | — (the repair) | 0/0 | 1/1 | 1/1 | 1/1 | 0/0 | 0/0 | 1/9 | 0/5-0 | baseline | — |
+| **base-harness** | pre-repair `git archive` export | 1/1 | 1/2 | 1/2 | 1/2 | 1/2 | 1/1 | 1/10 | 1/4-1 | red control | `ok` (its run fact fails → `ok_m=1 ≠ 0`) |
+| **c1a** | delete the `banner` check | 0/0 | **0/0** | 1/1 | 1/1 | 0/0 | 0/0 | 1/8 | 0/5-0 | **KILLED** by `NB` | none |
+| **c1b** | delete the `province` check | 0/0 | 1/1 | **0/0** | 1/1 | 0/0 | 0/0 | 1/5 | 0/5-0 | **KILLED** by `NP` | none |
+| **c1c** | `closure_ptr` always `True` | 0/0 | 1/1 | 1/1 | **0/0** | 0/0 | 0/0 | 1/8 | 1/1-4 | **KILLED** by `NC` + `ST` | `stale_ptr`, `stale_both`, `stale_incl`, `no_ptr` |
+| **c1d** | keep `git archive`, special-case the two failing commands | 0/0 | 1/1 | 1/1 | 1/1 | **1/1** | 0/0 | 1/8 | 0/5-0 | **KILLED** only by `NH` | none |
+| **c1e** | `mismatches` always 0 | 0/0 | **0/0** | **0/0** | **0/0** | 0/0 | 0/0 | **0/0** | 1/1-4 | **KILLED** by `BASE`, every planted fixture, and `ST` | all four planted arms (`ok` passes; the plants collapse to `ok_m`) |
+
+Readings worth carrying into the receipt:
+
+- The frozen counter at the landed tip (`TIP`) is green for **every** mutant, `c1e` included:
+  a check disabled on a tree that passes cannot fail. The counter is a claim-verifier, not a
+  regression detector; the planted fixtures are what make the matrix meaningful.
+- `c1e` is the only mutant the red-tree control kills (`BASE 0/0` where `1/9` is required).
+  For the other four, the base tree stays red for the other mismatches, so the do-nothing
+  control says nothing about them.
+- The pre-repair harness (`base-harness`) fails the **selftest** (`ok` arm) as well as the claim
+  at the landed tip: the selftest is a genuine regression detector for the harness *when the
+  harness can no longer execute the facts*, but it is blind to a harness that executes a
+  special-case (c1d) because the special-case answers `ok` without running anything.
+- `c1d` is invisible to the frozen counter, to `TIP`, and to all five selftest arms. Only a
+  git-dependent fact the special-case does not name (`NH`) exposes it.
 
 ## 4. Findings the L1 should act on
 
-<!-- FINDINGS -->
+**F1 — `banner` and `province` have no kill surface of their own.**
+Deleting either check leaves the green fixture green (obviously), leaves the frozen counter at the
+landed tip green, and leaves all five selftest arms green — the selftest plants closure-pointer
+variants only. Measured: `c1a`/`c1b` rows, `ST=pass=5 fail=0`; the kills come only from
+`fx2-nbanner` (`0/0` where `1/1` is required) and `fx2-nprovince` (`0/0` where `1/1`).
+The base-red-tree control only *exercises* them: deleting `banner` moves that red tree's
+verdict line 9→8 and deleting `province` moves it 9→5 (the base tree violates both facts), but
+the verdict stays red, so neither is a kill. Cheap mechanisation: two more selftest arms
+that rewrite the head's `Latest measured round:` number and drop a `tools/` token from
+`PROVINCE.md` — both are one-line edits on the fixture tree the selftest already commits.
+The L1's own `check-kill-probe-gutted.out` demonstrates the `province` half on a planted tree;
+the `banner` half is unmeasured in the lane.
+
+**F2 — `closure_ptr` is doubly killed.**
+`c1c` (always `True`) turns `fx2-nclosure` green (`0/0` where `1/1` required) and fails four
+selftest arms (`pass=1 fail=4`: `stale_ptr`, `stale_both`, `stale_incl`, `no_ptr` all read
+`closure_ptr=1`). No action needed.
+
+**F3 — the harness repair cannot be killed by the frozen counter on the landed tree.**
+`c1d` (keep `git archive`, special-case `gate-registry-check.py --selftest` and
+`round69-newest-closure-counter.py --since-round` to `return True, "ok"`) reads **identical to the
+repair** on `G`, `NB`, `NP`, `NC`, `TIP` and on the five-arm selftest (`pass=5 fail=0`). It is
+killed only by `fx2-nharness`, a third git-dependent fact the special-case does not name
+(`1/1` where `0/0` required). Consequence for the freeze's KILL RULE: "a mutation run that
+disables a fact check must change the verdict line" is true only for a fixture that carries a
+git-dependent fact other than the two the mutant names — the landed tree carries exactly two, so
+a future special-case would be invisible to the registered counter. Keep the `fx2-nharness`
+recipe (or add such a fact to the selftest fixture) as the anti-cheat receipt.
+
+**F4 — the calibration row cannot carry a `row_current`-dependent run fact without breaking the
+five-arm selftest (fixture design constraint the landing already respects).**
+With such a fact present, planting a stale pointer falsifies the row's own fact as well, so each
+planted arm gains **two** mismatches instead of one and the selftest's `ok_m+1` assertion fails:
+measured `SELFDESC_SELFTEST … ok:closure_ptr=1,mismatches=1 stale_ptr:…,mismatches=2
+stale_both:2 stale_incl:2 no_ptr:2 pass=1 fail=4` on `fixture-coupling`. Dropping the fact gives
+`ok:0 / 1 / 1 / 1 / 1 pass=5 fail=0` (`fixture-gl`). The landed calibration row does **not**
+carry a `--since-round 63` run fact (verified against `73597158:SCORECARD.md`), so the landed
+tree is on the green side of this constraint — restoring such a fact in a later round would
+silently re-break the selftest. State it in the round-70 lesson so it is not re-added.
+
+**F5 — `mismatches` always 0 is killed three ways.**
+`c1e` turns the red base tree green (`BASE=0/0` where `1/9` required), turns every planted
+fixture green, and fails the four planted selftest arms (`pass=1 fail=4`). Robust.
+
+**F6 — the Axes table is pipe- and cell-count-fragile, silently.**
+Two measured instances: (i) a run fact whose command contains `|` splits the row, truncates
+cell 2 and drops every fact after it — the counter then reads `rel=1` and
+`closure_ptr: … names 0 'latest outside closure' pointers` on a row that carries both; (ii) a
+fact appended after the row's trailing `|` lands in a fifth cell and is never evaluated — the
+fixture read green with a planted `GIT_FACT_OK` fact that no checkout could satisfy. Both fail
+*silently*, i.e. in the direction of lost coverage. Suggestion: `axes_table()` (round 41) or
+`evaluate()` should warn/fail on a row whose cell count is not 4 and on an evidence cell
+containing a bare `|`; this is a two-line change and does not weaken any fact. (Not applied —
+this seat does not edit lane tools.)
+
+**F7 — C2: the frozen control is exit-code-only, and three of its five clauses live only in
+prose.** The table in §2 shows the control killing exactly the two mutants that move an exit
+code. A field drop (`c2c`), a member drop (`c2d`) and a waiver that covers a fail (`c2e`) all
+pass it. All three are named in the freeze's KILL RULE, but none is mechanised by
+`refused-member-control.py`. Cheapest hardening inside the existing counter (no new file):
+compare the refused fixture's verdict line for `not_evaluated=1` and the all-pass line for
+`not_evaluated=0`, assert `total=` equals the module's registered member count (22), and add the
+fail-waiver fixture (`fail-waiver-probe.py` in `logs/` is a 40-line implementation of that
+fixture). Each clause is one assertion in the control's `main()`.
 
 ## 5. Not verified by this seat
 
-- The real 22-member census was **not** executed end-to-end by this seat; `total` is read from
-  the module's `MEMBERS` (bounded detector). The L1's own receipt
-  (`measured/after/census-at-tip.out`) carries the full run.
+- The real 22-member census was **not** re-executed by this seat; `total` is read from the
+  module's `MEMBERS` (bounded detector, exact for the population question). The L1's receipt
+  `measured/after/census-at-tip.out` (written 21:00, census bytes `a82cad11…`) carries the full
+  run: 22 `pass` lines then `HOST_CENSUS pass=22 fail=0 not_evaluated=0 waived=0 total=22
+  tierA_fail=0 tierB_fail=0`, exit 0.
 - No mutant was run against the *authoring* Windows/MinGW host; this box is Linux and the
   NTFS refusal paths were exercised only through the frozen control's synthetic markers.
 - `EX01ReconHarness`'s and `EX02CensusVerdict`'s `demo.md`/`report.md` claims were not audited
@@ -153,7 +254,44 @@ prose (line content, `total=22`, "a waiver never covers a fail"); none of them i
 - `report.md` — this file.
 - `fixtures.md` — exact fixture recipes, revs and the one-line plants.
 - `variant-hashes.txt` — sha256 of every pristine/mutated tool byte plus the pinned fixture revs.
-- `logs/` — `c1-landed.jsonl`, `c2-latest.jsonl`, `c2-early.jsonl`, plus the raw detector output.
+- `logs/` — `c1-landed.jsonl` (the §3 matrix), `c1-synthetic.jsonl` (the cross-check on this
+  seat's reference-repair fixtures), `c2-latest.jsonl` (the §2 matrix on the landed census
+  bytes), `c2-early.jsonl` (the same matrix on the superseded first candidate), plus the driver
+  scripts and `variant-hashes.txt`.
 - `mkfix.py`, `mkneg2.py`, `mkvar.py`, `c2latest.py`, `matrix2.py`, `fail-waiver-probe.py` —
   the reproducible driver scripts (fixture-only; they write nothing outside the scratch tree
   and the out dir).
+
+## 8. Final-tip verification (run at close of this seat)
+
+The lane advanced while the matrix ran (`0e14facd → 7be07423 → 73597158 → 910e6747 → af6eb6c2 →
+…`). Tool bytes did not move after `73597158`/`af6eb6c2`, so every row above still describes the
+shipped bytes. Re-verified at the tip current at close:
+
+```
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-parse HEAD
+61f3ec423acb642370e3e56395c28b8b6332aa44
+
+$ sha256sum tools/round41-scorecard-reconcile.py tools/round42-selfdesc-reconcile.py tools/round65-host-census.py
+c9bb4eae7f228f2a8e56f3df3392d54e182c9fe8e594792266618b07726e9f3e  tools/round41-scorecard-reconcile.py
+3d9aff8f9c2236c2cb9337b08846da82de718bc1d9e8f1d283f1a71a03acd5c0  tools/round42-selfdesc-reconcile.py
+44bebd671c0d12118c92ace1ef6bd7491a60c7acbce79f1668b81a822b245919  tools/round65-host-census.py
+
+$ python3 tools/round42-selfdesc-reconcile.py --repo . --tip 61f3ec42
+tip=61f3ec423acb642370e3e56395c28b8b6332aa44
+r41=0 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 closure_ptr=1 mismatches=0 maxN=70 met=True
+EXIT=0
+
+$ python3 .ufo/waves/round-70/controls/refused-member-control.py tools/round65-host-census.py | tail -1
+REFUSED_MEMBER_CONTROL refused_fixture_exit=1 allpass_fixture_exit=0
+EXIT=0
+```
+
+Both frozen counters are green on the shipped bytes at the final tip; the five-arm selftest on
+the shipped bytes reads `pass=5 fail=0` (row `landed`, `logs/c1-landed.jsonl`). The mutation
+matrix therefore measures the shipped artifacts, not a stand-in.
+
+Lane hygiene at close: no tracked lane file was created, modified or deleted by this seat except
+this directory's own contents; `git status --porcelain -- .ufo/waves/round-70/w1/out/MT01Mutants`
+lists only this seat's files. Scratch `/fast/scratch/hyaku/kama-r70/MT01Mutants/` was removed
+after the final read of the logs copied here.
