@@ -92,7 +92,8 @@ row and the receipt label):**
   `corpus/SOURCES.md`, `corpus/knowledge/**`, `registry/**`, `plans/**`. A commit in the delta
   touching one of them is `shifted`, naming the path.
 - exit map: `0` clean, `1` findings, `2` could-not-evaluate (CLI misuse, unreadable self-record,
-  a cited path that is not a receipt path).
+  a cited path that is not a receipt path, **or `cited=0` — an empty population is never a pass,
+  the same vacuous-green class C1 kills**).
 - Counting command: `python3 tools/round72-receipt-tip-binding.py --repo . --round 72 --tip master`.
 - Kill rule: a receipt with no header (`unbound`), a header naming a non-ancestor or a revision
   whose delta touches `tools/` (`shifted`), and a cited receipt absent at the tip (`stale`) each
@@ -101,6 +102,12 @@ row and the receipt label):**
   non-zero — that is the shortcut the round-71 practice actually used. It accepts all three
   defect fixtures (`BINDING_CONTROL accepted=3`), so it cannot satisfy the target; the receipt
   is the before-measurement above.
+
+- **Freeze amendment 2, 2026-11-03T22:50 -03, before any seat returned a score**: the zero-citation
+  run is now exit 2. Without it a self-record that cites no receipt at all would be vacuously green
+  (`every cited receipt ...` is true of the empty set) — the exact class C1 kills. The selftest
+  carries an arm for it; the frozen sentence's "exits 0 only when every receipt path ... names a
+  revision ..." is unchanged, the exit map gains the empty-population refusal.
 
 Non-goals: the binding does not prove a receipt's *content* is honest (C1's module and the
 existing instruments grade that); it binds a receipt to the revision whose bytes it graded.

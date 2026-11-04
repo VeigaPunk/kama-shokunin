@@ -547,3 +547,12 @@ this round's two control receipts.
 | ID | Admit only when | Reject or limit when | Motivating lesson |
 |---|---|---|---|
 | KQ118 | A round's counter is admitted only with (a) a committed shortcut control that skips the claimed work and is scored by the frozen counter, (b) a mutant or shim set the counter is shown to kill with the killing check named, and (c) the counter's own defect-carrying fixtures each exiting nonzero. | The counter's cheapest do-nothing control meets the target; the counter reads only a verdict line the control already prints; or a shim survives with no killing check named. | `corpus/lessons/round-71.md` §Gate and §Mistakes; `.ufo/waves/round-71/measured/before/{pre-report-shortcut,census-shim-control}.out`; `considerthese/2026-10-26.md` proposal 3. |
+
+## Criterion added — round 72 (2026-11-03; no outside review yet)
+
+KQ118 stays in force; this row adds the receipt-citation obligation that round 71's practice met
+only by a hand-written invariance argument.
+
+| ID | Admit only when | Reject or limit when | Motivating lesson |
+|---|---|---|---|
+| KQ119 | A receipt cited as evidence names the revision it measured, and the delta from that revision to the citing record touches no instrument input: the round runs its binding counter (`python3 tools/round72-receipt-tip-binding.py --repo . --round <N> --tip master`) to a `RECEIPT_TIP_BINDING` line with `unbound=0 shifted=0 stale=0`, or records the run as could-not-evaluate with its reason. | A receipt is described as taken "at the report tip" while its header names an earlier revision and the invariance is argued in prose; a commit touching `tools/**`, `plans/**`, `corpus/knowledge/**`, `registry/**`, `SKILL.md`, `PROVINCE.md` or `corpus/SOURCES.md` sits in the cited revision's delta; a headerless receipt or a cited receipt absent at the tip is accepted because it exists in the worktree. | `corpus/lessons/round-72.md` §Gate and §Mistakes 2; `plans/round-72-claims.md` §C2; `corpus/lessons/round-71-verifier-spotcheck.md` §8 item 4; `.ufo/waves/round-72/measured/before/receipt-tip-control-old.out` (`BINDING_CONTROL cited=3 accepted=3 rejected=0`). |

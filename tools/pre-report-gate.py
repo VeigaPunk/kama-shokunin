@@ -1,32 +1,54 @@
 #!/usr/bin/env python3
-"""pre-report-gate.py - round-71 C1 (calibration): the round's pre-report verdict in one gate.
+"""pre-report-gate.py - round-71 C1 (calibration), round-72 C1 (six arms): the round's
+pre-report verdict in one gate.
 
-Predicate (frozen: plans/round-71-claims.md section C1; the same sentence is the
-counter's code comment and the receipt label):
+Predicate (frozen: plans/round-71-claims.md section C1, amended by
+plans/round-72-claims.md section C1; the same sentence is this gate's PREDICATE and the
+receipt label):
 
     `python3 tools/pre-report-gate.py --repo <lane> --round <N> --tip <rev>` prints one
-    `PRE_REPORT round=<N> arms=5 failed=<f> uncommitted=<u>` line and exits 0 only when
-    the four reconciled instruments (selfdesc reconciler, newest-closure counter,
-    receipt-pointer audit, worktree-landing check) are all green AND no path under
-    `.ufo/waves/round-<N>/` is uncommitted; it exits 1 naming every failed arm otherwise.
+    `PRE_REPORT round=<N> arms=6 failed=<f> uncommitted=<u>` line and exits 0 only when
+    the five reconciled instruments (selfdesc reconciler, newest-closure counter,
+    receipt-pointer audit, worktree-landing check, round-scope counter) are all green
+    AND no path under `.ufo/waves/round-<N>/` is uncommitted; it exits 1 naming every
+    failed arm otherwise.
+
+The round-71 receipt -- `PRE_REPORT round=71 arms=5 failed=0 uncommitted=0` -- is that
+round's five-arm measurement and stays readable as one: five arms is the population round
+71 had. From round 72 on the gate prints `arms=6`; a five-arm line can only be a round-71
+record.
 
 Arms, in fixed order, every one run with cwd = --repo:
   1 selfdesc          tools/round42-selfdesc-reconcile.py     --repo <repo> --tip <tip>
   2 newest-closure    tools/round69-newest-closure-counter.py --repo <repo> --rev <tip> --since-round 63
   3 receipt-audit     tools/round68-receipt-pointer-audit.py  --repo <repo> --rev <tip>
   4 worktree-landing  tools/round67-worktree-landing-check.py --repo <repo>
-  5 round-clean       git -C <repo> status --porcelain -uall -- .ufo/waves/round-<N>
+  5 round-scope       tools/round72-round-scope.py            --repo <repo> --round <N> --tip <tip>
+  6 round-clean       git -C <repo> status --porcelain -uall -- .ufo/waves/round-<N>
 
-`failed` counts the arms that did not pass (arm 5 fails when its porcelain output is
-non-empty); `uncommitted` is the number of non-empty porcelain records from arm 5.
+`round-scope` is the round-72 C1 addition -- the sixth arm the gate has ever had, executed
+fifth because `ARM_ORDER` derives every instrument arm from `ARM_SPECS` and keeps the
+built-in cleanliness check last. It grades the round's own scope rather than only its wave
+dir: `plans/round-<N>-claims.md` exists at `<tip>` with a first heading naming round `<N>`,
+no uncommitted path outside the declared record allow-list, and no git-ignored path under
+`.ufo/waves/round-<N>/`; it prints `ROUND_SCOPE round=<N> cases=3 findings=<f>` and names
+each `ROUND_SCOPE_FINDING <case> <detail>`. The wave-dir porcelain check alone is vacuously
+green for a wrong `--round` label, for round work outside the wave dir, and for a
+git-ignored file inside it (measured at the round-72 base:
+`.ufo/waves/round-72/measured/before/round-scope-control-old.out`,
+`SCOPE_CONTROL cases=3 base_green=3 killed=0`, exit 1).
+
+`failed` counts the arms that did not pass (arm 6 fails when its porcelain output is
+non-empty; arm 5 fails when the counter exits non-zero, which it does whenever it has a
+finding); `uncommitted` is the number of non-empty porcelain records from arm 6 only.
 Because `-uall` expands untracked directories into individual files, one record is one
 file -- `.ufo/waves/round-70` at the round-71 start carries 26 files (the freeze's
 count), which the plain-status form collapses into 14 entries. Exit: 0 iff
-`failed == 0 and uncommitted == 0`, else 1. Exit 2 is reserved for CLI misuse (missing
---round, --repo not a directory) and for an unevaluable selftest fixture; a scored run
-never exits 2, it names the failing arms and exits 1. Exit 3 is reserved for re-entry:
-a gate whose environment already carries PRE_REPORT_GATE_DEPTH >= 1 refuses to evaluate
-and prints `PRE_REPORT_RECURSION depth=<d> ...`. That chain is real -- a SCORECARD
+`failed == 0 and uncommitted == 0` across all six arms, else 1. Exit 2 is reserved for CLI
+misuse (missing --round, --repo not a directory) and for an unevaluable selftest fixture; a
+scored run never exits 2, it names the failing arms and exits 1. Exit 3 is reserved for
+re-entry: a gate whose environment already carries PRE_REPORT_GATE_DEPTH >= 1 refuses to
+evaluate and prints `PRE_REPORT_RECURSION depth=<d> ...`. That chain is real -- a SCORECARD
 `run` fact that executes the scored gate recurses gate -> selfdesc reconciler ->
 round-41 run-fact harness -> gate (the harness runs the fact command with a 300 s
 timeout in a clone of the tip) -- so a run fact must cite
@@ -38,7 +60,7 @@ an unbounded process chain; it never fires for a normal scored run.
 
 Output (default mode; one line per arm in the order above, then the verdict):
     PRE_REPORT_ARM <name> exit=<e> ok|FAIL <detail>
-    PRE_REPORT round=<N> arms=5 failed=<f> uncommitted=<u>
+    PRE_REPORT round=<N> arms=6 failed=<f> uncommitted=<u>
 
 `--json` replaces the human lines with one JSON document whose "line" field carries the
 same PRE_REPORT verdict string. Child processes get stdout+stderr captured, a 600 s
@@ -46,8 +68,8 @@ timeout each, cwd = --repo, the caller's environment (so TMPDIR is honoured) and
 PYTHONDONTWRITEBYTECODE=1 (the gate must not grow a __pycache__ in the repo it grades).
 
 Instrument wiring
-  By default the four scripts are resolved as <repo>/tools/<name>. `--tools-dir DIR`
-  overrides the directory (default None); the selftest uses it to inject three stub
+  By default the five instrument scripts are resolved as <repo>/tools/<name>. `--tools-dir
+  DIR` overrides the directory (default None); the selftest uses it to inject four stub
   instruments next to a copy of the real round67-worktree-landing-check.py, so the
   fixture arms exercise this gate's wiring (arm names, counts, exit map) while the
   landing arm keeps the real byte-comparison instrument -- fixture arms (d), (e) and (f)
@@ -60,12 +82,15 @@ Selftest (--selftest; fixtures under --work, or a fresh TMPDIR tempdir)
   (d) missing declared path (PROVINCE.md)        -> exit 1, worktree-landing FAIL (MISSING)
   (e) byte-changed declared path (SCORECARD.md)  -> exit 1, worktree-landing FAIL (DIRTY)
   (f) CRLF-translated declared path (SKILL.md)   -> exit 1, worktree-landing FAIL (DIRTY)
+  (g) red round-scope stub (findings=1)          -> exit 1, round-scope FAIL
+  (h) green round-scope stub                     -> exit 0, verdict `arms=6`
   Prints PASS/FAIL per arm and `PRE_REPORT_SELFTEST pass=<n> fail=0`; exit 0 iff every
   arm passed. A fixture tree that cannot be built or verified is a could-not-evaluate
   (exit 2), never a pass. The fixture commits into its own throwaway repository only,
   after asserting `git rev-parse --show-toplevel` equals the fixture directory.
 
-Receipts for this tool live under .ufo/waves/round-71/w1/EX01PreReportGate/.
+Receipts for this tool live under .ufo/waves/round-71/w1/EX01PreReportGate/ (five-arm
+build) and .ufo/waves/round-72/w1/EX03GateArm6/ (six-arm amendment).
 """
 
 from __future__ import annotations
@@ -83,10 +108,11 @@ from pathlib import Path
 
 PREDICATE = (
     "`python3 tools/pre-report-gate.py --repo <lane> --round <N> --tip <rev>` prints one "
-    "`PRE_REPORT round=<N> arms=5 failed=<f> uncommitted=<u>` line and exits 0 only when "
-    "the four reconciled instruments (selfdesc reconciler, newest-closure counter, "
-    "receipt-pointer audit, worktree-landing check) are all green AND no path under "
-    "`.ufo/waves/round-<N>/` is uncommitted; it exits 1 naming every failed arm otherwise."
+    "`PRE_REPORT round=<N> arms=6 failed=<f> uncommitted=<u>` line and exits 0 only when "
+    "the five reconciled instruments (selfdesc reconciler, newest-closure counter, "
+    "receipt-pointer audit, worktree-landing check, round-scope counter) are all green "
+    "AND no path under `.ufo/waves/round-<N>/` is uncommitted; it exits 1 naming every "
+    "failed arm otherwise."
 )
 
 ARM_TIMEOUT = 600
@@ -96,6 +122,8 @@ ARM_SPECS = [
                         "--rev", "{tip}", "--since-round", "63")),
     ("receipt-audit", ("round68-receipt-pointer-audit.py", "--repo", "{repo}", "--rev", "{tip}")),
     ("worktree-landing", ("round67-worktree-landing-check.py", "--repo", "{repo}")),
+    ("round-scope", ("round72-round-scope.py", "--repo", "{repo}", "--round", "{round}",
+                     "--tip", "{tip}")),
 ]
 ARM_ORDER = [name for name, _ in ARM_SPECS] + ["round-clean"]
 VERDICT_RE = {
@@ -103,6 +131,7 @@ VERDICT_RE = {
     "newest-closure": r"(?:NEWEST_CLOSURE|STALE_CALIBRATION) ",
     "receipt-audit": r"RECEIPT_POINTER_AUDIT ",
     "worktree-landing": r"WORKTREE_LANDING_CHECK ",
+    "round-scope": r"ROUND_SCOPE ",
 }
 DEFECT_RE = re.compile(r"(?:DIRTY|MISSING|UNTRACKED|UNREADABLE) ")
 
@@ -188,14 +217,16 @@ def _run(argv: list[str], cwd: str, depth: int = 0) -> tuple[int, str, str | Non
 
 def evaluate(repo: str, round_no: int, tip: str = "master", tools_dir: str | None = None,
              depth: int = 0) -> dict:
-    """Run the five arms and derive the pinned verdict; the only scoring entry point."""
+    """Run the six arms and derive the pinned verdict; the only scoring entry point."""
     repo_path = os.path.realpath(repo)
     tools_path = os.path.realpath(tools_dir) if tools_dir else os.path.join(repo_path, "tools")
     arms: list[dict] = []
     for name, template in ARM_SPECS:
         script = os.path.join(tools_path, template[0])
         argv = [sys.executable, script] + [
-            token.replace("{repo}", repo_path).replace("{tip}", tip) for token in template[1:]
+            token.replace("{repo}", repo_path).replace("{tip}", tip)
+                 .replace("{round}", str(round_no))
+            for token in template[1:]
         ]
         code, text, spawn_error = _run(argv, repo_path, depth)
         arms.append({
@@ -252,7 +283,7 @@ def render(result: dict) -> list[str]:
 
 # ---------------------------------------------------------------------------
 # Selftest fixtures. Nothing below touches the graded repository: the fixture is
-# a throwaway git repository under --work, its tools dir holds three stubs plus a
+# a throwaway git repository under --work, its tools dir holds four stubs plus a
 # copy of the real landing check, and every git mutation is scoped with -C and
 # guarded by a toplevel assertion.
 # ---------------------------------------------------------------------------
@@ -325,6 +356,23 @@ print("RECEIPT_POINTER_AUDIT files=2 cited=0 resolved=0 expanded=0 corrected=0 u
 raise SystemExit(0)
 '''
 
+_STUB_ROUND_SCOPE = _STUB_COMMON + '''
+import argparse
+
+ap = argparse.ArgumentParser()
+ap.add_argument("--repo", default=".")
+ap.add_argument("--round", type=int, default=0)
+ap.add_argument("--tip", default="HEAD")
+a = ap.parse_args()
+print("repo={} round={} tip={}".format(a.repo, a.round, a.tip))
+if red("round-scope"):
+    print("ROUND_SCOPE round={} cases=3 findings=1".format(a.round))
+    print("ROUND_SCOPE_FINDING label plans/round-{}-claims.md missing at {}".format(a.round, a.tip))
+    raise SystemExit(1)
+print("ROUND_SCOPE round={} cases=3 findings=0".format(a.round))
+raise SystemExit(0)
+'''
+
 _FIXTURE_FILES = {
     "SCORECARD.md": b"# Scorecard (pre-report-gate selftest fixture)\n\n## Axes\n\n"
                     b"| axis | score |\n|---|---|\n| calibration | 7 |\n",
@@ -385,6 +433,7 @@ def run_selftest(args) -> int:
     (tools / "round42-selfdesc-reconcile.py").write_text(_STUB_SELFDESC, encoding="utf-8")
     (tools / "round69-newest-closure-counter.py").write_text(_STUB_NEWEST, encoding="utf-8")
     (tools / "round68-receipt-pointer-audit.py").write_text(_STUB_RECEIPT, encoding="utf-8")
+    (tools / "round72-round-scope.py").write_text(_STUB_ROUND_SCOPE, encoding="utf-8")
     red_file = tools / "red-arms.txt"
     red_file.write_text("", encoding="utf-8")
 
@@ -401,9 +450,11 @@ def run_selftest(args) -> int:
 
     def check(label: str, result: dict, want_exit: int, want_failed: int,
               want_uncommitted: int, arm: str, want_ok: bool,
-              detail_has: str | None = None, want_line: str | None = None) -> None:
+              detail_has: str | None = None, want_line: str | None = None,
+              render_has: str | None = None) -> None:
         nonlocal passed
-        for line in render(result):
+        lines = render(result)
+        for line in lines:
             print(f"  {line}")
         problems = []
         if result["exit"] != want_exit:
@@ -424,6 +475,8 @@ def run_selftest(args) -> int:
                 problems.append(f"{arm} detail lacks {detail_has!r} (got {target['detail']!r})")
         if want_line is not None and result["line"] != want_line:
             problems.append(f"line={result['line']!r} want {want_line!r}")
+        if render_has is not None and not any(render_has in line for line in lines):
+            problems.append(f"render lacks {render_has!r}")
         if problems:
             failed_arms.append(label)
             print(f"FAIL {label} :: " + "; ".join(problems))
@@ -433,7 +486,8 @@ def run_selftest(args) -> int:
 
     # (a) green fixture: the target shape, exit 0.
     check("green", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0, "round-clean", True,
-          want_line="PRE_REPORT round=70 arms=5 failed=0 uncommitted=0")
+          detail_has="files=0",
+          want_line="PRE_REPORT round=70 arms=6 failed=0 uncommitted=0")
 
     # (b) one uncommitted file under the round's wave dir.
     extra = repo / ".ufo/waves/round-70/extra.out"
@@ -467,6 +521,19 @@ def run_selftest(args) -> int:
           "worktree-landing", False, detail_has="DIRTY SKILL.md")
     (repo / "SKILL.md").write_bytes(originals["SKILL.md"])
 
+    # (g) red round-scope stub: the sixth arm is a named failure on its own evidence.
+    red_file.write_text("round-scope\n", encoding="utf-8")
+    check("round-scope-red", evaluate(repo, round_no, "master", str(tools)), 1, 1, 0,
+          "round-scope", False, detail_has="ROUND_SCOPE round=70 cases=3 findings=1",
+          render_has="round-scope exit=1 FAIL")
+    red_file.write_text("", encoding="utf-8")
+
+    # (h) green round-scope stub: arm passes, the verdict carries six arms.
+    check("round-scope-green", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0,
+          "round-scope", True, detail_has="findings=0",
+          render_has="round-scope exit=0 ok",
+          want_line="PRE_REPORT round=70 arms=6 failed=0 uncommitted=0")
+
     total = passed + len(failed_arms)
     print(f"PRE_REPORT_SELFTEST pass={passed} fail={len(failed_arms)}")
     if failed_arms:
@@ -480,7 +547,7 @@ def run_selftest(args) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
-        description="One pre-report gate: four reconciled instruments plus round-worktree cleanliness (round 71)."
+        description="One pre-report gate: five reconciled instruments plus round-worktree cleanliness (rounds 71-72)."
     )
     ap.add_argument("--repo", default=".", help="repository to grade (default: current directory)")
     ap.add_argument("--round", dest="round_no", type=int, default=None,
@@ -489,7 +556,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--selftest", action="store_true", help="run the fixture selftest")
     ap.add_argument("--json", action="store_true", help="emit one JSON document instead of the human lines")
     ap.add_argument("--tools-dir", default=None,
-                    help="directory holding the four instrument scripts (default: <repo>/tools)")
+                    help="directory holding the five instrument scripts (default: <repo>/tools)")
     ap.add_argument("--work", default=None,
                     help="selftest scratch dir (must be absent or empty; default: fresh TMPDIR dir)")
     ap.add_argument("--keep", action="store_true", help="keep the selftest scratch dir")

@@ -1631,3 +1631,18 @@ no serving or consumer surface was sampled, and the three registered consumers k
 recorded `DEAD` state. Frontier unchanged: live serving-plane counters (pinned engines absent on
 this host), the round-65/67 host-surface claims (now Linux, next round's item 3), and K05
 declared-versus-served context capacity.
+
+## Coverage map — round 72 addition (2026-11-03)
+
+Appended rather than inserted, so no existing line moves (the rule the round-10 addition states).
+This section names the round-72 entry and closes the round-71 spot-check §8 item 5 defect: an
+admitted entry had no index row. Measured before appending: `ls corpus/knowledge/*.md | wc -l` →
+`42` files against ``grep -c '^| `knowledge/' corpus/README.md`` → `37` row lines naming 34
+distinct entries; `pre-report-gate.md` was one of the unindexed files. After this section three
+files still have no map row and remain a map gap: `completion-request-plane.md`,
+`ollama-live-amendment-r61.md`, `process-bound-listener.md`.
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/pre-report-gate.md` | one pre-report verdict from the gate's arms at one tip: arm order, exit classes, decision table, and the limits of a per-arm exit grade (the five-arm form; round 72 amends it to six arms) | 71 (indexed in 72) |
+| `knowledge/receipt-tip-binding.md` | what a receipt-to-revision binding establishes and does not; `unbound`/`shifted`/`stale` under the frozen predicate; the record-path vs instrument-input split and the commit order a clean binding requires | 72 |

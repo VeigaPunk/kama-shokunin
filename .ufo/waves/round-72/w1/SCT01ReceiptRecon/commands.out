@@ -1,0 +1,135 @@
+== lane tip ==
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-parse master
+a3cc39f08f4692e990921cf938d0269f6c25fc93
+[exit=0]
+
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin log --oneline -6 master
+a3cc39f0 round-72: amend C1 case-A anchor to the lane-owned freeze plan (pre-score) and dispatch wave 1
+090a0b25 round-72: freeze two claims (C1 calibration round-scope, C2 operability receipt-tip binding) with controls
+d30a8696 round-71 verifier spot-check (integrator, hyaku): non-author admit/reject
+7fb6cb4e round-71: lesson final-receipts block (receipt-only invariance)
+9458c3d7 round-71: final gate confirmation at 1375f51c
+1375f51c round-71: all seven report-tip receipts green at 4b284653
+[exit=0]
+
+== header check on the round-71 report-tip receipts ==
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show a3cc39f0:.ufo/waves/round-71/measured/after/pre-report-at-tip.out
+# tip=4b2846535fd918881ed3fc664aa46ef130a7d568
+PRE_REPORT_ARM selfdesc exit=0 ok r41=0 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 closure_ptr=1 mismatches=0 maxN=71 met=True
+PRE_REPORT_ARM newest-closure exit=0 ok NEWEST_CLOSURE newest=corpus/lessons/round-70-verifier-spotcheck.md date=2026-11-03 round=70 row_names=corpus/lessons/round-70-verifier-spotcheck.md row_current=true
+PRE_REPORT_ARM receipt-audit exit=0 ok RECEIPT_POINTER_AUDIT files=2 cited=167 resolved=150 expanded=4 corrected=13 unresolved=0
+PRE_REPORT_ARM worktree-landing exit=0 ok WORKTREE_LANDING_CHECK paths=5 clean=5 dirty=0 missing=0 untracked=0 unreadable=0
+PRE_REPORT_ARM round-clean exit=0 ok files=0
+PRE_REPORT round=71 arms=5 failed=0 uncommitted=0
+[exit=0]
+
+(first five lines above; header is line 1)
+== non-ancestor receipt revisions ==
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin cat-file -t a7ae13ab621160957c8ac04053a87f393b727589
+fatal: git cat-file: could not get object info
+[exit=128]
+
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin cat-file -t af6e1c84d1460bae3f0070f03a5385f77eecb2b2
+fatal: git cat-file: could not get object info
+[exit=128]
+
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin merge-base --is-ancestor a7ae13ab621160957c8ac04053a87f393b727589 a3cc39f0
+fatal: Not a valid commit name a7ae13ab621160957c8ac04053a87f393b727589
+[exit=128]
+
+== commit distances ==
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-list --count 4b284653..7fb6cb4e
+3
+[exit=0]
+
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-list --count 4b284653..a3cc39f0
+6
+[exit=0]
+
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-list --count f3ee44f4..7fb6cb4e
+9
+[exit=0]
+
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-list --oneline 4b284653..7fb6cb4e
+7fb6cb4e round-71: lesson final-receipts block (receipt-only invariance)
+9458c3d7 round-71: final gate confirmation at 1375f51c
+1375f51c round-71: all seven report-tip receipts green at 4b284653
+[exit=0]
+
+== instrument-input delta, round-70 receipt tip 7be07423 -> lane tip ==
+$ git -C $L diff --name-only 7be07423 a3cc39f0 | grep -E '^(tools/|SKILL\.md$|PROVINCE\.md$|corpus/SOURCES\.md$|corpus/knowledge/)'
+PROVINCE.md
+SKILL.md
+corpus/SOURCES.md
+corpus/knowledge/cross-lane-scope.md
+corpus/knowledge/pre-report-gate.md
+tools/census-waiver-boundary.py
+tools/pre-report-gate.py
+tools/round65-host-census.py
+tools/round71-province-host-claims.py
+
+== instrument-input delta, round-71 receipt tip 4b284653 -> lane tip ==
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin diff --name-only 4b284653 a3cc39f0
+.ufo/waves/round-71/measured/after/boundary-at-tip.out
+.ufo/waves/round-71/measured/after/newest-closure-at-tip.out
+.ufo/waves/round-71/measured/after/pre-report-at-final.out
+.ufo/waves/round-71/measured/after/pre-report-at-tip.out
+.ufo/waves/round-71/measured/after/province-claims-at-tip.out
+.ufo/waves/round-71/measured/after/receipt-audit-at-tip.out
+.ufo/waves/round-71/measured/after/reconciler-at-tip.out
+.ufo/waves/round-71/measured/after/sources-census-at-tip.out
+.ufo/waves/round-71/measured/after/wlc-at-tip.out
+.ufo/waves/round-72/controls/freeze.txt
+.ufo/waves/round-72/controls/receipt-tip-control.py
+.ufo/waves/round-72/controls/round-scope-control.py
+.ufo/waves/round-72/measured/before/receipt-tip-control-old.out
+.ufo/waves/round-72/measured/before/round-scope-control-old.out
+.ufo/waves/round-72/w1-spec.json
+.ufo/waves/round-72/w1/w1-dispatch.json
+corpus/lessons/round-71-verifier-spotcheck.md
+corpus/lessons/round-71.md
+plans/round-72-claims.md
+[exit=0]
+
+== the three commits after the round-71 receipt tip ==
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show --stat --format=%h %ci %s 1375f51c
+1375f51c 2026-11-03 22:25:38 -0300 round-71: all seven report-tip receipts green at 4b284653
+
+ .ufo/waves/round-71/measured/after/boundary-at-tip.out        | 4 ++--
+ .ufo/waves/round-71/measured/after/newest-closure-at-tip.out  | 2 +-
+ .ufo/waves/round-71/measured/after/pre-report-at-tip.out      | 7 +++----
+ .ufo/waves/round-71/measured/after/province-claims-at-tip.out | 4 ++--
+ .ufo/waves/round-71/measured/after/receipt-audit-at-tip.out   | 2 +-
+ .ufo/waves/round-71/measured/after/reconciler-at-tip.out      | 4 ++--
+ .ufo/waves/round-71/measured/after/sources-census-at-tip.out  | 2 +-
+ .ufo/waves/round-71/measured/after/wlc-at-tip.out             | 2 +-
+ 8 files changed, 13 insertions(+), 14 deletions(-)
+[exit=0]
+
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show --stat --format=%h %ci %s 9458c3d7
+9458c3d7 2026-11-03 22:25:48 -0300 round-71: final gate confirmation at 1375f51c
+
+ .ufo/waves/round-71/measured/after/pre-report-at-final.out | 7 +++++++
+ 1 file changed, 7 insertions(+)
+[exit=0]
+
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show --stat --format=%h %ci %s 7fb6cb4e
+7fb6cb4e 2026-11-03 22:26:30 -0300 round-71: lesson final-receipts block (receipt-only invariance)
+
+ corpus/lessons/round-71.md | 13 ++++++++++++-
+ 1 file changed, 12 insertions(+), 1 deletion(-)
+[exit=0]
+
+== configured --round-72 tip used by the two frozen counters ==
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show a3cc39f0:.ufo/waves/round-72/controls/freeze.txt
+round=72
+base=090a0b25a71298ed1a58e1f81315d850f4932e74
+frozen_at=2026-11-03T22:38:03-03:00
+amended_at=2026-11-03T22:41:00-03:00
+39f4ddbcd084c05213dd389decaa997e7128a7d1f8a7aebe325fe1dfdc6ad933  plans/round-72-claims.md
+a2a7e160236e0f6e2e31aaca13d1626414beafd00fa201ab251f65c016997149  .ufo/waves/round-72/controls/round-scope-control.py
+a6dc65f28a85953c283d44d974b8971868f6ea903d6cd297412b01e47e4175e6  .ufo/waves/round-72/controls/receipt-tip-control.py
+e5f3652ec80ca416130223ec086483aac47d21426e6733e61aaf89f7cf622f21  .ufo/waves/round-72/measured/before/round-scope-control-old.out
+6a59487dfdc6bdfe13347d4cbe62198c3d2eee439b9e181d35432d23e87b719c  .ufo/waves/round-72/measured/before/receipt-tip-control-old.out
+[exit=0]
+

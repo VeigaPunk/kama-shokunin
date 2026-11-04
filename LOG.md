@@ -2757,3 +2757,67 @@ uncommitted=26`), and PROVINCE.md still described a Windows host: 11 marker line
   change); SEN01 found no committed waiver, 0 secret-shaped hits and no scope/service breach; LAB01
   refuted H1/H2 and confirmed H3/H4; CON01's overlap rules landed in `corpus/knowledge/cross-lane-scope.md`;
   SCT01 independently re-derived 14/16 contradicted host surfaces.
+
+## Round 72 (2026-11-03) — the cleanliness arm cannot pass vacuously, and every cited receipt names the revision it measured
+
+Motivating evidence, measured at the round's base revision `d30a8696` before any seat scored (committed
+with the freeze commit `090a0b25`; the pre-score amendment is `a3cc39f0`): the round-71 gate's
+cleanliness arm graded `git status --porcelain -uall -- .ufo/waves/round-<N>` only, so a wrong `--round`
+label pointed at a directory that does not exist and printed `files=0`, round work outside the wave dir was
+invisible, and a git-ignored file inside the wave dir was invisible; separately the round-71 report
+described `measured/after/pre-report-at-tip.out` as running "at the report tip" while its header names
+`4b284653`, two commits before the measured tip. Controls, both exit 1 and committed at the freeze:
+`.ufo/waves/round-72/measured/before/round-scope-control-old.out` →
+`SCOPE_CONTROL base_rev=d30a8696 cases=3 base_green=3 killed=0`; `.../receipt-tip-control-old.out` →
+`BINDING_CONTROL cited=3 accepted=3 rejected=0`.
+- C1 calibration (capability `round72-round-scope`, the gate's arm 6): `tools/round72-round-scope.py`
+  prints one `ROUND_SCOPE round=<N> cases=3 findings=<f>` line over the `label`/`stray`/`ignored` cases and
+  exits 1 naming every `ROUND_SCOPE_FINDING <case> <detail>`; the gate's verdict becomes
+  `PRE_REPORT round=<N> arms=6 failed=<f> uncommitted=<u>`. Run at this writing from the lane root:
+  `ROUND_SCOPE_SELFTEST pass=16 fail=0` (exit 0, settled module sha256 `45321056…`) and `PRE_REPORT_SELFTEST pass=8 fail=0` (exit 0, whose
+  `round-scope-red`/`round-scope-green` arms print `arms=6 failed=1` / `arms=6 failed=0`) —
+  `.ufo/waves/round-72/w1/SCR03RegistryLog/selftests.out`; the build seat's kill fixtures are
+  `w1/EX01RoundScope/{clean,kill-prompt,kill-stray,kill-ignored,kill-label-wronground}.out`. The scored
+  at-tip run is the L1's; the five-arm string `PRE_REPORT round=71 arms=5 failed=0 uncommitted=0` stays the
+  round-71 measurement.
+- C2 operability (capability `round72-receipt-tip-binding`): `tools/round72-receipt-tip-binding.py` reads
+  the cited receipts as blobs at the tip and prints `RECEIPT_TIP_BINDING round=<N> cited=<c> bound=<b>
+  unbound=<u> shifted=<s> stale=<t>`, exiting 1 with `RECEIPT_TIP_FINDING <unbound|shifted|stale> <path>`
+  and 2 when the population cannot be read or is empty. Run at this writing:
+  `RECEIPT_TIP_BINDING_SELFTEST pass=16 fail=0` (exit 0, settled module sha256 `a9a4e8d3…`); the build seat's five
+  fixtures are `w1/EX02ReceiptBinding/{clean,kill-unbound,kill-shifted,kill-stale,kill-non-receipt}.out`.
+  The first selftest run on the bytes that landed at 22:46 was red — `TypeError: '<' not supported between
+  instances of 'NoneType' and 'int'`, the `cli-misuse` arm calling the CLI without `--round` — and the
+  module was repaired before the green above (lesson mistake 6).
+- Freeze amendments, both before any seat returned a score and recorded in the plan: C1's case A anchor
+  moved from the fleet prompt `.ufo/prompts/kama-round-72.md` (absent at a lane tip: `git cat-file -e
+  master:.ufo/prompts/kama-round-72.md` → exit 128) to the lane-owned `plans/round-<N>-claims.md`; C2's
+  `cited=0` became exit 2, so an empty population is never a pass.
+- Frontier: S543 added (`git-check-ignore`, tier A; 18-word §EXIT STATUS quote, access 2026-11-03, retained
+  sha256 `bdee84a9…`); S175 and S542 re-opened (S175 holds, footer still 2.43.0; S542 byte-identical —
+  fetched sha256 `22ff28ff…` equals the row's). Rows 282 → 283; collision set 9 (S330, S333, S334, S335,
+  S346, S347, S352, S353, S363); next unused id S543.
+- Registry: `SKILL.md` — `Pre-report gate` now names six arms and the `arms=6` verdict; `Census waiver
+  boundary` now maps `2 could-not-evaluate` and carries the re-derived `BOUNDARY_SELFTEST pass=18 fail=0`
+  (its earlier `19` was a copied tally, round-71 routed defect 1; the missing exit 2 was routed defect 2);
+  two rows added (`Round scope`, `Receipt-tip binding`).
+- Lesson: `corpus/lessons/round-72.md` — Gate (S543, S175, S542, a no-row decision and `Assimilation:
+  none`) and six mistakes, each with its own receipt.
+- Axes: C1 sits on calibration (tied lowest non-retired score, 7) and C2 on operability (8) per
+  `shokunin.conf`'s kama row; the MISSION.md freshness conflict stays open at `.ufo/l0-questions.md:145`
+  and the round-65 NTFS-path question stays unanswered.
+- Wave: one v1 wave of 13 seats (3 executors, 3 scribes, 1 scout, 1 connector, 1 reviewer, 1 critic,
+  1 mutation-tester, 1 sentinel, 1 revenger probe; attack share 5/13), reports under
+  `.ufo/waves/round-72/w1/`; the L1 appends the integration block after they land.
+- **Correction (appended; round-71 routed defect 3):** §Round 71's depth anchor `SKILL.md` `0b61e118…`
+  (1724 lines, 48 sections) is superseded by
+  `7ff94d6743b6bc04860371030123532cecc2a82eb966d664444fa7d908e6485f` — the content sha256 that
+  `SCORECARD.md:16` already carries, reproduced at this round's base by `sha256sum SKILL.md`, with
+  `wc -l` 1724 and `grep -c '^## '` 48. `0b61e118…` was an intermediate content sha, not the landed
+  anchor. Nothing above is edited in place; the registry rows this round amends are the rows that moved
+  with their instruments.
+- **Depth re-anchor duty for the landing commit:** this round's registry edits change the blob again
+  (`sha256sum SKILL.md` → `972f124eef2ed0f7e6b9abd421cda679e7c5d948180129a4e07740772f478668`, 1726 lines,
+  48 sections, as this entry was written), so `SCORECARD.md:16`'s depth row must be re-derived at the
+  report tip by the L1 in the same landing — otherwise the row that this correction repairs goes stale
+  again in one commit.

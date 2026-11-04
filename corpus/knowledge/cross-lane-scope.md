@@ -116,3 +116,33 @@ The rules are recorded here because no in-lane file named a sibling instrument b
 
 Caveat: the connector read sibling headers and registry rows, not their current green/red state; this
 section records adjacency and attribution, not sibling evidence.
+
+## Round 72 additions — receipt-tip binding and round scope, settled against the siblings (2026-11-03)
+
+CON01 scanned every sibling's `tools/` and registry this round (`.ufo/waves/round-72/w1/CON01Overlap/overlap.md`,
+command-by-command). The two round-72 instruments are placed as follows.
+
+- **Receipt → revision is owned by tameshi.** `receipt-revision-gate.py` (`SKILL.md:1547`) pins one
+  distinct `rev=` per receipt to `--certified` (or a byte-identical `--paths` list), `receipt-commit-bind.py`
+  refuses an empty population, `receipt-window.py` bounds a receipt between a unique id and an edit
+  window, souji r57 binds `rev=`/`EXIT=`/`instrument_sha256=`, chousa `receipt-pin.py` binds
+  `REVISION=`/`SHA256=`, tsukuroi binds cited receipts at the same revision. kotodama's
+  `check-receipt-seq.py` computes `moved_past` and deliberately refuses to let it change a verdict.
+  kama's `tools/round72-receipt-tip-binding.py` differs on one leg and only one: it derives the
+  population from the round's own self-record citations and grades the **instrument-input allow-list
+  over the `rev..tip` delta** — no sibling makes that delta a verdict (kotodama computes it and
+  refuses to grade it). Rule: a kama receipt claim cites tameshi's gate as the binding prior art and
+  claims only the delta leg; when tameshi's gate already passes a receipt, kama's run is not a second
+  opinion on the same leg.
+- **Round scope is split three ways and none is kama's verdict.** kaidoku `round-42/prefile-gate.py`
+  scans four round scopes with `status -z` and treats ignored residue as **advisory only**; mori
+  `mori-unlanded-check.py` excludes git-ignored paths on purpose; souji's pre-report gate grades a
+  whole-lane porcelain clean. kama's `tools/round72-round-scope.py` is the only one in the fleet that
+  makes the ignored class a **named failure** (`ROUND_SCOPE_FINDING ignored`) and the only one whose
+  case A binds the supplied `--round` to the lane's own frozen plan. Rule: an ignored path under a
+  round's own wave dir is kama's finding, not a neighbour's warning; a sibling that excludes ignored
+  paths is not contradicting kama's verdict.
+- **Known scope limits shared with the fleet** (round-72 reviewer survivors, routed): linked-worktree
+  dirt is invisible from the primary checkout (A5); a valid *older*-round label hides another round's
+  wave work (A6); a repository-level `submodule.<name>.ignore=all` hides dirty submodule content
+  (A7). mori and kaidoku share the first two; no sibling has solved the third.
