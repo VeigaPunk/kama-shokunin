@@ -3253,3 +3253,10 @@ non-author verification remains the authority.
 
 Owed by round 80: grade the corrections' new-value path with an independent receipt; re-measure
 the three llama.cpp pins from a live `pin-watch` run; extend the class to a second engine.
+
+Round-79 routed defect (found at the report gate): `tools/round78-live-reconcile.py --selftest`
+writes its receipt to `.ufo/waves/round-78/measured/after/{c3-selftest.json,c3-selftest.out}`
+regardless of cwd/scratch, so every scored gate run (arm 10) dirties two tracked files *after*
+the gate's own cleanliness arm has passed. The bytes were restored to their committed blobs after
+the gate run and the fix is round 80's (the selftest must write under TMPDIR/--scratch), because
+changing an instrument after the measured gate would move the gate receipt's binding.
