@@ -343,3 +343,22 @@ ungoverned listener stays operator-owned, and kengaku's endpoint identity pin (i
 the same host listener for eval identity, not governance — neither lane absorbs the other's
 scope. `tools/pre-report-gate.py` now composes the three round-78 instrument selftests as its
 tenth arm (`round78-instruments`), so a scored gate run executes the counters a round lands.
+
+**Round-80 note — the two registers and the third self-record grader (2026-11-04).**
+Three instruments and two registers enter the lane's repertoire on ground this province already
+holds. `tools/round80-selfrecord-round79.py` grades the round-79 self-record's declared facts
+against the receipts those facts cite (calibration ground: the lane's own self-description
+versus observed repo state; no endpoint is sampled). `registry/engine-pin-relations.tsv` plus
+`tools/round80-engine-pin-relations.py` relate every pinned serving-engine ref the lane holds —
+llama.cpp `b11755`, the S553 commit anchor `39febd2a` (= tag `b11963`'s peeled commit), kengaku's
+S178 tag `b7200`, sglang `v0.5.22`, vllm `v0.32.0` — to that engine's upstream newest release
+and tag identity, re-deriving every cell from a committed `git ls-remote --tags` list; it reads
+public tag lists only, never the network at grading time when `--tags-dir` is named, and samples
+no endpoint. `tools/round80-ollama-census.py` and `registry/unregistered-class-engines.tsv`
+exercise the `registered` census class on a second engine: the lane-owned pinned Ollama v0.40.11
+child, started under a scratch HOME and model store on a free unregistered loopback port, one
+model created from the fixture GGUF, both registry legs graded, torn down in the same run. That
+child is the round-16/60/61 fixture boundary, not service restoration: no `~/.config`, `~/.omp`
+or systemd write, no registered consumer contacted, no consumer row admitted, and the live-host
+leg gates nothing. The three registered consumers keep their last recorded `DEAD` state; K05
+declared-versus-served context capacity across real consumers remains frontier.
