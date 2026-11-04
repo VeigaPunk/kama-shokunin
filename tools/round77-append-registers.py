@@ -231,9 +231,26 @@ def evaluate(repo, revision, audit, accepted_tool, exempt_tool):
     histories, rotations = history(repo, data['to'])
     sections = exempt_tool.exemption_sections(repo, data, audit)
     outside = outside_regions(repo, data, audit)
-    return grade(data, (repo / ACCEPTED).read_bytes().decode('utf-8'),
-                 (repo / EXEMPT).read_bytes().decode('utf-8'),
-                 sections, outside, histories, rotations,
+    accepted = (repo / ACCEPTED).read_bytes().decode('utf-8')
+    exempt = (repo / EXEMPT).read_bytes().decode('utf-8')
+    # A row must live in a committed register blob: an uncommitted worktree row
+    # would let the tip bless its own damage without any commit (round-77 critic
+    # F2). The register may grow after the audited revision, so the comparison
+    # revision is the working tip, not --to.
+    try:
+        head = git(repo, 'rev-parse', '--verify', 'master^{commit}').strip()
+    except (CouldNotEvaluate, subprocess.CalledProcessError):
+        head = data['to']
+    for path, text in ((ACCEPTED, accepted), (EXEMPT, exempt)):
+        try:
+            committed = set(git(repo, 'show', f'{head}:{path}').splitlines())
+        except (CouldNotEvaluate, subprocess.CalledProcessError):
+            committed = set()
+        for number, line in enumerate(text.splitlines()[1:], 2):
+            if line.strip() and line not in committed:
+                rotations.append({'class': 'uncommitted', 'commit': '-', 'file': path,
+                                  'detail': f'line {number} is not in the committed register at {head[:12]}'})
+    return grade(data, accepted, exempt, sections, outside, histories, rotations,
                  lambda commit: ancestor(repo, commit, data['to']), accepted_tool)
 
 

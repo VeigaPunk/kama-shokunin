@@ -156,3 +156,70 @@ The seat's Gate admitted **S549** as the round's new row. L1 integration rejecte
 - Duty D5 is closed by the landed green demonstration: `tools/round77-append-registers.py
   --selftest` → `APPEND_REGISTERS_SELFTEST pass=7 fail=0` at
   `cc6e1d3c…`, and the counter prints the frozen C2 line.
+
+## Critic addendum received after the scribe cut
+
+CR01Critic reports the C2 wording conflict is load-bearing, not merely latent:
+of nine additional strict SCORECARD events, five precede the exempt register's
+introduction and four follow it (`417bbf81`, `461d2adb`, `661622b5`, `c1ae92d5`).
+Thus that seat derives an exempt ceiling of 52 under the literal per-register
+cutoff, rather than the target 56. Its message additionally states
+“unaccounted >= 36”; this is retained as the critic's reported number, not
+independently reconciled here with the new permitted/out-of-region buckets.
+The scope-ruling ancestry reading and predicate-cutoff reading therefore cannot
+be reported as equivalent.
+
+The same critic reports a fixture accepting a fresh graded README deletion
+through a same-commit accepted-register row under audit-revision ancestry
+(grader exit 0), while the introduction-bound reading rejects it (exit 1,
+post-introduction). This is peer-reported execution, not a run by this scribe
+or evidence that the whole current C2 CLI was exercised. The suggested
+proper-ancestor-of-first-row-carriage bound is a proposed correction, not
+adopted frozen text. The canonical judgment must retain this conflict; a green
+target alone would not dispose of the reported temporal-admission escape.
+
+Follow-up from the same critic after the counters landed: the C2 module is at
+`d86ce85b` (blob `a3b3ec41…`, reported unchanged through master `3442cb6a`).
+Against those bytes the seat reports, as executed evidence: the counter
+implements scope-ruling ancestry (precedes = ancestor of the audit revision);
+an uncommitted worktree exempt-head row naming the audited tip itself reaches
+the green line (exit 0, `exempt=57 unaccounted=0 rotation_safe=1`) on a tip
+re-deriving `## Retired` in the same commit, while the accepted register grows
+53→54 over a fresh graded deletion; and the registers are read from the
+working tree, so a later round's appended row can flip the frozen
+`--to cc6e1d3c` command to exit 1 (`wrong-class`) with buckets unchanged.
+Each is a peer-reported run bound to named bytes, not a run by this scribe;
+the cited artifacts are `.ufo/waves/round-77/w1/CR01Critic/critique.md` and its
+receipts. Recorded for the canonical judgment: these defects are evidence-
+class facts about the landed counter, not instructions to edit the frozen
+predicate, and this lesson adds no fix or re-scoring of its own.
+
+## Gate — attack findings integrated (2026-11-04, after the wave settled)
+
+CR01 (critic) reported four items against C2; SCT01 (scout) independently confirmed the base
+decomposition and the third stale fact; RV01 (reviewer) independently derived C1's 9/2/0; MT01
+(mutation-tester) read before the counters landed and its certification is **inconclusive**
+(three invocations exit 2 with `[Errno 2] No such file or directory`; it says so and fabricates
+nothing). L1's own mutation of the `audit-fixture-green` arm had already exposed a broken fixture
+contract declaration, repaired before the claim receipt.
+
+- **CR01 F1 (predicate vs ruling).** The predicate sentence says a row is admitted "under that
+  register's own introduction cutoff"; scope ruling (a) says the named event must be ancestral to
+  the audit revision. They are different semantics. The landed counter implements ruling (a),
+  which is the only reading that reaches the frozen target; the divergence is recorded in the
+  report's freeze-divergence note and here. Not repaired after data: the predicate is frozen.
+- **CR01 F2 (growth hole) — FIXED.** An uncommitted worktree row could bless its own tip. The
+  counter now requires every row line to exist in the committed register blob at `master` and
+  names `APPEND_REGISTERS_FINDING uncommitted` otherwise; the seven selftest arms stay green and
+  the frozen line is unchanged. The same-commit case (a row committed together with the damage it
+  blesses) stays a declared limit for the next round's rule.
+- **CR01 F3 (worktree registers) — RECORDED LIMIT.** Registers are read from the tip, not `--to`,
+  because the round's nine rows postdate the frozen base; a row naming an event outside `--to`
+  would flip the counting command. This is the frozen command's known limit, not repaired by
+  narrowing: the next round must retarget the command to the tip or print both register digests.
+- **CR01 F4 (clean).** `out_of_region` cannot swallow a head edit: an inside-`## Errata` deletion
+  stays a finding (`inside-region` arm, executed) and `out_of_region` stays 4.
+- **MT01 rerun.** L1 re-ran the three modules' selftests at the landed tip:
+  `CITATION_BASELINE_SELFTEST pass=7 fail=0`, `APPEND_REGISTERS_SELFTEST pass=7 fail=0`,
+  `SELFRECORD_R76_SELFTEST pass=4 fail=0`. The seat's mutation certification remains
+  inconclusive and is reported as such; no survivor claim is made.
