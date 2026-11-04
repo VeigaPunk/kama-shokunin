@@ -4520,6 +4520,17 @@ section's table is the newest canonical list).
    `arms=9` and the round's instruments are certified by their own selftests; wiring them into the
    gate as an arm is round 79's planned move.
 
+### Gate and tip state
+
+`PRE_REPORT round=78 arms=9 failed=0 uncommitted=0` at `rev=2842ad29`, exit 0
+(`.ufo/waves/round-78/measured/after/gate-run.out`); selftest `PRE_REPORT_SELFTEST pass=22 fail=0`
+(`.ufo/waves/round-78/measured/after/gate-selftest.out`). The nine arms stay the round-77 set; the
+round-78 instruments are certified by their own selftests and the frozen claim receipts, and wiring
+them in as an arm is round 79's plan (a new arm would move `arms=9` and invalidate C1's F3 target
+after data). The tip accounting is the round-77 counter, which is green at `rev=22cce544`:
+`APPEND_REGISTERS … events=250 … exempt=60 … unaccounted=0 … rotation_safe=1` — the round-78 counter
+itself is scoped to the frozen population (`events=248`) by its predicate and is not run at the tip.
+
 ### Wave
 
 One v1 wave of 12 seats (3 executor, 3 scribe, 1 scout, 1 connector, 1 reviewer, 2 critic,
