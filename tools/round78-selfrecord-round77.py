@@ -388,7 +388,12 @@ def audit(repo, sealed=SEALED):
             if fact == "F1":
                 graded[fact] = dict(value=derive_axes(worktree(repo, RECORD)), ground=None)
             elif fact == "F2":
-                graded[fact] = dict(value=derive_capabilities(worktree(repo, RECORD)), ground=None)
+                # F2's subject is the round-77 record's canonical capability table, so it is
+                # derived at the sealed revision. The worktree reading was a transcription bug:
+                # it made the fact self-refuting for any round that adds capability rows, which
+                # the round-78 record necessarily did. Correction recorded in the round report
+                # and lesson (2026-11-04); PREDICATE, target and kill rule are unchanged.
+                graded[fact] = dict(value=derive_capabilities(text(repo, sealed, RECORD)), ground=None)
             elif fact == "F3":
                 graded[fact] = dict(derive_gate_row(skill, module_newest), ground=None)
             elif fact == "F4":
