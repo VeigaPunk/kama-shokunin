@@ -3959,7 +3959,7 @@ overwrote seat EX02ClaimV2's completed deliverable twice before WAVE-DONE; EX02'
 evidence, and the L1's replacement module is the committed instrument, re-certified below.
 See `LOG.md` §Round 74 for the wave integration and receipts.
 
-All measured receipts below were re-run at revision `0701c7f6ee3cc8881428eede2c774b943f4aa204` and carry `# rev=` headers; the
+All measured receipts below were re-run at revision `77496128cfb5eca40f73e370a65279153f1613f7` and carry `# rev=` headers; the
 delta from that revision to the record tip touches only record paths, so the r72 binding
 leg binds them (the frozen C2's explicit-revision rule). The scored green pre-report gate
 receipt is reported in the fleet report, not recursively cited here (the r73 pattern).
