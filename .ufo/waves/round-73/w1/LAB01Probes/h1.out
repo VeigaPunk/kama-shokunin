@@ -1,0 +1,154 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# case=h1 driver=/fast/scratch/hyaku/kama-r73/LAB01Probes/probe.py
+# H1: does submodule.<name>.ignore=all in .gitmodules hide submodule dirt from the
+#     parent's `git status --porcelain -uall`, and does --ignore-submodules=none show it?
+
+$ git --version
+  git version 2.56.0
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/subrepo init -q
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/subrepo rev-parse --show-toplevel
+  /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/subrepo
+[exit=0]
+[assert ok: fixture root == toplevel]
+write /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/subrepo/base.txt <- 'base\n'
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/subrepo add -A
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/subrepo -c user.name=fixture -c user.email=fixture@invalid commit -q -m 'subrepo base'
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent init -q
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent rev-parse --show-toplevel
+  /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent
+[exit=0]
+[assert ok: fixture root == toplevel]
+write /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent/p.txt <- 'p\n'
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent add -A
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent -c user.name=fixture -c user.email=fixture@invalid commit -q -m 'parent base'
+  (no output)
+[exit=0]
+
+-- add the local submodule (protocol.file.allow=always) --
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent -c protocol.file.allow=always submodule add /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/subrepo mod
+  stderr| Cloning into '/fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent/mod'...
+  stderr| done.
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent add -A
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent -c user.name=fixture -c user.email=fixture@invalid commit -q -m 'add submodule mod'
+  (no output)
+[exit=0]
+
+-- positive control: same dirt BEFORE any ignore setting --
+append /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent/mod/base.txt <- 'control\n'
+write /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent/mod/control-untracked.txt <- 'new\n'
+
+[C1] parent, default policy, no ignore setting in force
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent status --porcelain -uall
+   M mod
+[exit=0]
+
+[C2] submodule's own worktree, no ignore setting in force
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent/mod status --porcelain -uall
+   M base.txt
+  ?? control-untracked.txt
+[exit=0]
+
+-- revert the control dirt so the A/B has byte-identical dirt --
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent/mod checkout -- base.txt
+  (no output)
+[exit=0]
+rm -f /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent/mod/control-untracked.txt
+
+-- set submodule.mod.ignore=all in .gitmodules only --
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent config -f .gitmodules submodule.mod.ignore all
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent add .gitmodules
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent -c user.name=fixture -c user.email=fixture@invalid commit -q -m 'set submodule.mod.ignore=all in .gitmodules'
+  (no output)
+[exit=0]
+
+-- carrier check: which file holds the setting --
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent config --get submodule.mod.ignore
+  (no output)
+[exit=1]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent config -f .gitmodules --get submodule.mod.ignore
+  all
+[exit=0]
+
+-- enumeration forms a counter could use --
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent config -f .gitmodules --get-regexp '^submodule\..*\.path$'
+  submodule.mod.path mod
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent submodule status --recursive
+   9706f17039b075a2c51a4bf383b3e0c53ca0c769 mod (heads/main)
+[exit=0]
+
+-- state A: modified tracked file + untracked file inside the submodule --
+append /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent/mod/base.txt <- 'dirty\n'
+write /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent/mod/untracked.txt <- 'new\n'
+
+[A1] parent, default ignore policy
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent status --porcelain -uall
+  (no output)
+[exit=0]
+
+[A2] parent, --ignore-submodules=none
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent status --porcelain -uall --ignore-submodules=none
+   M mod
+[exit=0]
+
+[A3] parent, explicit --ignore-submodules=all (control)
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent status --porcelain -uall --ignore-submodules=all
+  (no output)
+[exit=0]
+
+[A4] the submodule's own worktree
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent/mod status --porcelain -uall
+   M base.txt
+  ?? untracked.txt
+[exit=0]
+
+[A5] parent `submodule status` after content dirt (does it flag content?)
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent submodule status --recursive
+   9706f17039b075a2c51a4bf383b3e0c53ca0c769 mod (heads/main)
+[exit=0]
+
+-- state B: untracked file only (tracked file restored) --
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent/mod checkout -- base.txt
+  (no output)
+[exit=0]
+
+[B1] parent, default ignore policy
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent status --porcelain -uall
+  (no output)
+[exit=0]
+
+[B2] parent, --ignore-submodules=none
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent status --porcelain -uall --ignore-submodules=none
+   M mod
+[exit=0]
+
+[B3] the submodule's own worktree
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent/mod status --porcelain -uall
+  ?? untracked.txt
+[exit=0]
+
+[B4] parent `submodule status` with only untracked content
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h1/parent submodule status --recursive
+   9706f17039b075a2c51a4bf383b3e0c53ca0c769 mod (heads/main)
+[exit=0]
+
+# case h1 complete
+# driver_exit=0

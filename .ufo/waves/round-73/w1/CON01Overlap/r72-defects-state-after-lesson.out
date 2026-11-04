@@ -1,0 +1,52 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# command: third per-defect probe, after corpus/lessons/round-73.md and LOG.md landed (L1 writing the record)
+
+== 1 stale C2 tally ==
+$ git status --porcelain SCORECARD.md
+$ grep -c "pass=14 fail=0" SCORECARD.md; grep -c "14 arms" SCORECARD.md
+2
+1
+
+== 2 C2 own-record red ==
+$ grep -c "^## Round 73" SCORECARD.md; test -f corpus/lessons/round-73.md
+0
+lesson73-exit=0
+$ python3 tools/round73-receipt-claim-binding.py --repo . --round 73 --tip master
+RECEIPT_CLAIM_BINDING_UNREADABLE base tool could not evaluate: RECEIPT_TIP_BINDING_UNREADABLE SCORECARD.md at master carries no '## Round 73' section; the round's self-record cannot be read
+# exit=0
+
+== 3 used-by table location ==
+$ grep -n "used-by changes, old" corpus/lessons/round-73.md
+131:`used-by` changes, old → new (CORPUS.md rule 2):
+$ grep -n "S175 . corpus/lessons/round-73.md"
+135:| S175 | `corpus/knowledge/self-assessment-at-writing.md`, `.ufo/waves/round-29/count-c1.py` | adds `corpus/lessons/round-72.md`, `corpus/knowledge/receipt-tip-binding.md` (round 72) and `corpus/l
+$ grep -n "old.→.new recorded in its report" corpus/lessons/round-72.md
+102:  and extended S175/S542 `used-by` (old→new recorded in its report). Its id-collision check found
+
+== 4 rejected row with flip ==
+$ grep -c "REJECTED" corpus/lessons/round-73.md; grep -c "flip:" corpus/lessons/round-73.md
+2
+2
+$ grep -o "flip: [^|\"]*" corpus/lessons/round-73.md | head -3
+flip: none` 
+flip: a later round that re-opens an entry in full and passes the per-entry PROVINCE.md scope and QUALITY.md bar checks` 
+
+== 5 stale-lane line ==
+$ sed -n "199p" /home/vgpnk/Projects/shokunin/.ufo/reports/round-72/kama.md
+- **Stale-lane:** none — respawn-per-round driver, the round reported inside one driver tick; no other
+$ test -f /home/vgpnk/Projects/shokunin/.ufo/reports/round-73/kama.md
+r73-report-exit=1
+
+== 6 before-control exit codes ==
+$ grep -c "^# exit=" .ufo/waves/round-73/measured/before/*.out
+.ufo/waves/round-73/measured/before/score-survivors-base.out:2
+.ufo/waves/round-73/measured/before/sources-census-start.out:1
+
+== 7 unreceipted disclosure ==
+$ grep -rln "unrestored" .ufo/waves/round-73/ --exclude-dir=CON01Overlap
+.ufo/waves/round-73/w1/CON01Overlap.md
+grep-exit=0
+$ grep -rn "append-only-audit" .ufo/waves/round-73/ --exclude-dir=CON01Overlap | head -3
+.ufo/waves/round-73/w1/CON01Overlap.md:239:| 7 | Unreceipted disclosure (`unrestored 33 → 41`) | **OPEN** | No `unrestored` occurrence anywhere under `.ufo/waves/round-73/` outside this seat's own d
+.ufo/waves/round-73/w1/SCT01SurvivorRecon/ignored-bound.out:13:!! .ufo/waves/round-47/w1/out/M1Tool/mutants/B2/__pycache__/append-only-audit.cpython-314.pyc
+.ufo/waves/round-73/w1/SCT01SurvivorRecon/ignored-bound.out:14:!! .ufo/waves/round-47/w1/out/M1Tool/mutants/K2/__pycache__/append-only-audit.cpython-314.pyc

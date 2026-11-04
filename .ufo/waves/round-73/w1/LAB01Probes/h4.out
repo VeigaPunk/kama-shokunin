@@ -1,0 +1,137 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# case=h4 driver=/fast/scratch/hyaku/kama-r73/LAB01Probes/probe.py
+# H4: are `uname -s`, `uname -m` and /etc/os-release ID stable across a kernel-version
+#     change while `uname -r` is not? (observed values + documented field semantics;
+#     no reboot is performed)
+
+-- live values --
+$ uname -s
+  Linux
+[exit=0]
+$ uname -m
+  x86_64
+[exit=0]
+$ uname -r
+  7.2.11-arch1-1
+[exit=0]
+$ uname -v
+  #1 SMP PREEMPT_DYNAMIC Fri, 16 Oct 2026 00:28:58 +0000
+[exit=0]
+$ uname -o
+  GNU/Linux
+[exit=0]
+$ uname -a
+  Linux plazir27 7.2.11-arch1-1 #1 SMP PREEMPT_DYNAMIC Fri, 16 Oct 2026 00:28:58 +0000 x86_64 GNU/Linux
+[exit=0]
+$ uname --version
+  uname (GNU coreutils) 9.12
+  Copyright (C) 2026 Free Software Foundation, Inc.
+  License GPLv3+: GNU GPL version 3 or later <https://gnu.org/licenses/gpl.html>.
+  This is free software: you are free to change and redistribute it.
+  There is NO WARRANTY, to the extent permitted by law.
+  
+  Written by David MacKenzie.
+[exit=0]
+
+$ cat /proc/sys/kernel/osrelease
+  7.2.11-arch1-1
+[exit=0]
+$ grep -E '^(ID|NAME|VERSION_ID|BUILD_ID|PRETTY_NAME)=' /etc/os-release
+  NAME="Arch Linux"
+  PRETTY_NAME="Arch Linux"
+  ID=arch
+  BUILD_ID=rolling
+[exit=0]
+
+-- /etc/os-release provenance (a kernel package must not own it) --
+$ ls -l /etc/os-release
+  lrwxrwxrwx 1 root root 21 Oct  3 17:42 /etc/os-release -> ../usr/lib/os-release
+[exit=0]
+$ pacman -Qo /usr/lib/os-release /etc/os-release
+  /usr/lib/os-release is owned by filesystem 2025.10.12-1
+  stderr| error: No package owns /etc/os-release
+[exit=1]
+
+-- installed kernel releases (two coexist) --
+$ ls -1 /usr/lib/modules
+  6.18.57-2-lts
+  7.2.11-arch1-1
+[exit=0]
+$ pacman -Q linux linux-lts
+  linux 7.2.11.arch1-1
+  linux-lts 6.18.57-2
+[exit=0]
+$ cat /usr/lib/modules/*/pkgbase
+  linux-lts
+  linux
+[exit=0]
+$ pacman -Qo /usr/lib/modules/6.18.57-2-lts /usr/lib/modules/7.2.11-arch1-1
+  /usr/lib/modules/6.18.57-2-lts/ is owned by linux-lts 6.18.57-2
+  /usr/lib/modules/6.18.57-2-lts/ is owned by linux-lts-headers 6.18.57-2
+  /usr/lib/modules/7.2.11-arch1-1/ is owned by linux 7.2.11.arch1-1
+  /usr/lib/modules/7.2.11-arch1-1/ is owned by linux-headers 7.2.11.arch1-1
+[exit=0]
+
+-- observed kernel-release changes in the package log (same machine, no reboot) --
+$ grep -E 'upgraded linux ' /var/log/pacman.log | tail -5
+  [2026-10-11T16:14:35-0300] [ALPM] upgraded linux (7.1.4.arch1-1 -> 7.2.3.arch1-3)
+  [2026-10-20T09:16:42-0300] [ALPM] upgraded linux (7.2.3.arch1-3 -> 7.2.11.arch1-1)
+[exit=0]
+
+-- documented field semantics --
+$ MANWIDTH=100 man 1 uname | col -b | sed -n '/^ *-s, --kernel-name/,/^ *-n, --nodename/p'
+       -s, --kernel-name
+  	    print the kernel name
+  
+       -n, --nodename
+[exit=0]
+$ MANWIDTH=100 man 1 uname | col -b | sed -n '/^ *-m, --machine/,/^ *-p, --processor/p'
+       -m, --machine
+  	    print the machine hardware name
+  
+       -p, --processor
+[exit=0]
+$ MANWIDTH=100 man 1 uname | col -b | sed -n '/^ *-r, --kernel-release/,/^ *-v, --kernel-version/p'
+       -r, --kernel-release
+  	    print the kernel release
+  
+       -v, --kernel-version
+[exit=0]
+$ MANWIDTH=100 man 2 uname | col -b | sed -n '/^DESCRIPTION/,/^RETURN VALUE/p'
+  DESCRIPTION
+       uname()  returns system information in the structure pointed to by buf.  The utsname struct is
+       defined in <sys/utsname.h>:
+  
+  	 struct utsname {
+  	     char sysname[];	/* Operating system name (e.g., "Linux") */
+  	     char nodename[];	/* Name within communications network
+  				   to which the node is attached, if any */
+  	     char release[];	/* Operating system release
+  				   (e.g., "2.6.28") */
+  	     char version[];	/* Operating system version */
+  	     char machine[];	/* Hardware type identifier */
+  	 #ifdef _GNU_SOURCE
+  	     char domainname[]; /* NIS or YP domain name */
+  	 #endif
+  	 };
+  
+       The length of the arrays in a struct utsname is unspecified (see VERSIONS	and  HISTORY);	the
+       fields are terminated by a null byte ('\0').
+  
+  RETURN VALUE
+[exit=0]
+$ MANWIDTH=100 man 5 os-release | col -b | sed -n '/^ *ID=/,/^ *ID_LIKE=/p'
+       ID=
+  	 A lower-case string (no spaces or other characters outside of 0–9, a–z, ".", "_" and  "-")
+  	 identifying  the operating system, excluding any version information and suitable for pro‐
+  	 cessing by scripts or usage in generated filenames. If not set, a  default  of	 "ID=linux"
+  	 may  be  used.	 Note  that even though this string may not include characters that require
+  	 shell quoting, quoting may nevertheless be used.
+  
+  	 Examples: "ID=fedora", "ID=debian".
+  
+       ID_LIKE=
+[exit=0]
+
+# case h4 complete
+# driver_exit=0

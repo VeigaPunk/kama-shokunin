@@ -1,0 +1,32 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec seat=RVW01Attack evidence=selftests-and-control
+# command: (layout: <scratch>/lanemirror/{tools,plans} mirrors the lane siblings; all runs PYTHONDONTWRITEBYTECODE=1)
+# command: python3 tools/round73-round-scope-cases.py --selftest --repo /home/vgpnk/Projects/shokunin/kama-shokunin --work <S>/selftest-c1
+ROUND_SCOPE_V2_SELFTEST pass=26 fail=0
+# command: python3 tools/round73-receipt-claim-binding.py --selftest --work <S>/selftest-c2
+RECEIPT_CLAIM_BINDING_SELFTEST pass=14 fail=0
+# command: python3 tools/round73-province-host-drift.py --selftest --work <S>/selftest-c3
+PROVINCE_HOST_DRIFT_SELFTEST pass=9 fail=0
+# note: C3 selftest from a bare modules copy without the plans/ sibling prints
+# "[FAIL] predicate: plan_chars=absent constant_chars=564 / pass=8 fail=1" -- layout
+# artifact (the arm compares the plan file's bytes), not a landed-bytes defect.
+# note: C1 selftest from a non-git cwd crashes with an uncaught
+# round73_inherited_round72_round_scope.ScopeError traceback before printing arms;
+# with --repo <lane> (read-only) it passes. Disclosed as operability note N4.
+# command: python3 .ufo/waves/round-73/controls/score-survivors.py   (cwd = lane; read-only)
+BASE_C1 c1_a5 exit=0 verdict=GREEN ROUND_SCOPE round=73 cases=3 findings=0
+BASE_C1 c1_a6e exit=0 verdict=GREEN ROUND_SCOPE round=71 cases=3 findings=0
+BASE_C1 c1_a7sub2 exit=0 verdict=GREEN ROUND_SCOPE round=73 cases=3 findings=0
+V2_C1 c1_a5 exit=1 verdict=KILLED ROUND_SCOPE_V2 round=73 cases=6 findings=2
+V2_C1 c1_a6e exit=1 verdict=KILLED ROUND_SCOPE_V2 round=71 cases=6 findings=1
+V2_C1 c1_a7sub2 exit=1 verdict=KILLED ROUND_SCOPE_V2 round=73 cases=6 findings=3
+V2_C1 c1_clean exit=0 verdict=GREEN ROUND_SCOPE_V2 round=73 cases=6 findings=0
+SURVIVORS c1 base_green=3 v2_killed=3 v2=present clean=green
+BASE_C2 c2_b6 exit=0 verdict=GREEN RECEIPT_TIP_BINDING round=72 cited=1 bound=1 unbound=0 shifted=0 stale=0
+V2_C2 c2_b6 exit=1 verdict=KILLED RECEIPT_CLAIM_BINDING round=72 cited=1 bound=1 unbound=0 shifted=0 stale=0 claims=1 unbound_claims=1
+SURVIVORS c2 base_green=1 v2_killed=1 v2=present
+BASE_C3 c3_stale exit=0 verdict=GREEN block-exists-shortcut blocks=1
+V2_C3 c3_stale exit=1 verdict=KILLED PROVINCE_HOST_DRIFT blocks=1 recorded=Windows/AMD64/win live=Linux/x86_64/arch stale=1
+SURVIVORS c3 base_green=1 v2_killed=1 v2=present
+# exit=0
+# frozen-kill violations: none (base counters stay green on the survivors, v2 kills all
+# three survivor classes naming their new cases, c1_clean stays green).

@@ -1,0 +1,58 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# command: per-defect probe of corpus/lessons/round-72-verifier-spotcheck.md §6 against the working tree and master
+
+== defect 1: stale C2 tally ==
+$ wc -l tools/round72-receipt-tip-binding.py
+961 tools/round72-receipt-tip-binding.py
+$ grep -c "^    _arm(" tools/round72-receipt-tip-binding.py
+16
+$ grep -n "pass=14 fail=0" SCORECARD.md
+18:| calibration | **7** | run `python3 tools/capability-repertoire-audit.py --selftest` → `CAP_SELFTEST pass=2 fail=0`; run `python3 tool
+3849:| C2 — every receipt the round's self-record cites names the revision it measured, and the `rev..tip` delta carries no instrument inp
+$ grep -n "14 arms" SCORECARD.md
+3863:round-scope counter (16 selftest arms) and its kill receipts; EX02 built the binding gate (14 arms); EX03
+$ git show master:tools/round72-receipt-tip-binding.py | wc -l
+961
+
+== defect 2: C2 own-record red ==
+$ git cat-file -e master:tools/round73-receipt-claim-binding.py
+fatal: path 'tools/round73-receipt-claim-binding.py' does not exist in 'master'
+exit=128
+$ git show master:.ufo/waves/round-72/measured/after/receipt-tip-binding-at-f3cd3623.out
+RECEIPT_TIP_FINDING unbound .ufo/waves/round-72/w1/w1-dispatch.json :: no tip=/rev= header among the first 5 lines
+RECEIPT_TIP_FINDING unbound .ufo/waves/round-72/w1/w1-results.json :: no tip=/rev= header among the first 5 lines
+RECEIPT_TIP_BINDING round=72 cited=138 bound=0 unbound=105 shifted=24 stale=9
+# exit=1
+$ grep -n KQ119 corpus/QUALITY.md
+558:| KQ119 | A receipt cited as evidence names the revision it measured, and the delta from that revision to the citing record touches no instrument input: the
+
+== defect 3: used-by table location ==
+$ grep -n "used-by" corpus/lessons/round-72.md
+24:| `git-check-ignore` (new row **S543**, appended by SCR01SourceRow this round: `SOURCES.md:295`, rows 282 → 283, `used-by` `corpus/knowledge/receipt-tip-binding.md`; the id came from the wave's c
+102:  and extended S175/S542 `used-by` (old→new recorded in its report). Its id-collision check found
+
+== defect 4: rejected SOURCES row with flip ==
+$ grep -c "REJECTED" corpus/lessons/round-72.md
+0
+$ grep -c "flip:" corpus/lessons/round-72.md
+0
+
+== defect 5: stale-lane line ==
+$ grep -n "driver tick" /home/vgpnk/Projects/shokunin/.ufo/reports/round-72/kama.md
+199:- **Stale-lane:** none — respawn-per-round driver, the round reported inside one driver tick; no other
+$ ls /home/vgpnk/Projects/shokunin/.ufo/reports/round-73/kama.md
+ls: cannot access '/home/vgpnk/Projects/shokunin/.ufo/reports/round-73/kama.md': No such file or directory
+
+== defect 6: before-control exit codes ==
+$ grep -c "^# exit=" .ufo/waves/round-73/measured/before/*.out
+.ufo/waves/round-73/measured/before/score-survivors-base.out:2
+.ufo/waves/round-73/measured/before/sources-census-start.out:1
+$ tail -1 .ufo/waves/round-73/measured/before/score-survivors-base.out
+# exit=0
+
+== defect 7: unreceipted disclosure ==
+$ grep -rn "unrestored" .ufo/waves/round-73/
+.ufo/waves/round-73/w1/CON01Overlap/r72-defects-state.out:54:$ grep -rn "unrestored" .ufo/waves/round-73/
+exit=0
+$ grep -n "unrestored" /home/vgpnk/Projects/shokunin/.ufo/reports/round-72/kama.md
+204:  (b) `tools/append-only-audit.py --repo . --to master` counts `unrestored 33 → 41` across this

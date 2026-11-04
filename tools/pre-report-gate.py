@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""pre-report-gate.py - round-71 C1 (calibration), round-72 C1 (six arms): the round's
-pre-report verdict in one gate.
+"""pre-report-gate.py - round-71 C1 (calibration), round-72 C1 (six arms), round-73 C1
+(six-case round-scope arm): the round's pre-report verdict in one gate.
 
 Predicate (frozen: plans/round-71-claims.md section C1, amended by
 plans/round-72-claims.md section C1; the same sentence is this gate's PREDICATE and the
-receipt label):
+receipt label. Round 73 section C1 re-points arm 5 at the six-case counter without
+amending that sentence):
 
     `python3 tools/pre-report-gate.py --repo <lane> --round <N> --tip <rev>` prints one
     `PRE_REPORT round=<N> arms=6 failed=<f> uncommitted=<u>` line and exits 0 only when
@@ -19,24 +20,33 @@ round's five-arm measurement and stays readable as one: five arms is the populat
 record.
 
 Arms, in fixed order, every one run with cwd = --repo:
-  1 selfdesc          tools/round42-selfdesc-reconcile.py     --repo <repo> --tip <tip>
-  2 newest-closure    tools/round69-newest-closure-counter.py --repo <repo> --rev <tip> --since-round 63
-  3 receipt-audit     tools/round68-receipt-pointer-audit.py  --repo <repo> --rev <tip>
-  4 worktree-landing  tools/round67-worktree-landing-check.py --repo <repo>
-  5 round-scope       tools/round72-round-scope.py            --repo <repo> --round <N> --tip <tip>
+  1 selfdesc          tools/round42-selfdesc-reconcile.py      --repo <repo> --tip <tip>
+  2 newest-closure    tools/round69-newest-closure-counter.py  --repo <repo> --rev <tip> --since-round 63
+  3 receipt-audit     tools/round68-receipt-pointer-audit.py   --repo <repo> --rev <tip>
+  4 worktree-landing  tools/round67-worktree-landing-check.py  --repo <repo>
+  5 round-scope       tools/round73-round-scope-cases.py       --repo <repo> --round <N> --tip <tip>
   6 round-clean       git -C <repo> status --porcelain -uall -- .ufo/waves/round-<N>
 
 `round-scope` is the round-72 C1 addition -- the sixth arm the gate has ever had, executed
 fifth because `ARM_ORDER` derives every instrument arm from `ARM_SPECS` and keeps the
-built-in cleanliness check last. It grades the round's own scope rather than only its wave
+built-in cleanliness check last. Round 73 re-points it at
+`tools/round73-round-scope-cases.py`, which grades six cases: the three inherited ones
+(`label`, `stray`, `ignored`) plus one per survivor class the round-72 closure recorded --
+`worktree` (A5, dirt in a linked worktree), `ignored-older-label` (A6, a valid older-round
+label hiding another round's ignored work) and `submodule` (A7,
+`submodule.<name>.ignore=all`). It grades the round's own scope rather than only its wave
 dir: `plans/round-<N>-claims.md` exists at `<tip>` with a first heading naming round `<N>`,
-no uncommitted path outside the declared record allow-list, and no git-ignored path under
-`.ufo/waves/round-<N>/`; it prints `ROUND_SCOPE round=<N> cases=3 findings=<f>` and names
-each `ROUND_SCOPE_FINDING <case> <detail>`. The wave-dir porcelain check alone is vacuously
-green for a wrong `--round` label, for round work outside the wave dir, and for a
-git-ignored file inside it (measured at the round-72 base:
+no uncommitted path outside the declared record allow-list in the primary worktree or in
+any linked worktree, no git-ignored path under any `.ufo/waves/round-<M>/` with
+`M >= <N>`, and no uncommitted or untracked content in an initialized submodule worktree;
+it prints `ROUND_SCOPE_V2 round=<N> cases=6 findings=<f>` and names each
+`ROUND_SCOPE_V2_FINDING <case> <detail>`. The wave-dir porcelain check alone is vacuously
+green for a wrong `--round` label, for round work outside the wave dir, for a git-ignored
+file inside it, and for all three survivor classes (measured at the round-72 base:
 `.ufo/waves/round-72/measured/before/round-scope-control-old.out`,
-`SCOPE_CONTROL cases=3 base_green=3 killed=0`, exit 1).
+`SCOPE_CONTROL cases=3 base_green=3 killed=0`, exit 1 -- the round-72 counter's own
+three-case measurement is `ROUND_SCOPE round=<N> cases=3 findings=<f>`; that counter stays
+byte-frozen at `tools/round72-round-scope.py` and its line is never re-issued here).
 
 `failed` counts the arms that did not pass (arm 6 fails when its porcelain output is
 non-empty; arm 5 fails when the counter exits non-zero, which it does whenever it has a
@@ -68,12 +78,16 @@ timeout each, cwd = --repo, the caller's environment (so TMPDIR is honoured) and
 PYTHONDONTWRITEBYTECODE=1 (the gate must not grow a __pycache__ in the repo it grades).
 
 Instrument wiring
-  By default the five instrument scripts are resolved as <repo>/tools/<name>. `--tools-dir
+  By default the six instrument scripts are resolved as <repo>/tools/<name>. `--tools-dir
   DIR` overrides the directory (default None); the selftest uses it to inject four stub
   instruments next to a copy of the real round67-worktree-landing-check.py, so the
   fixture arms exercise this gate's wiring (arm names, counts, exit map) while the
   landing arm keeps the real byte-comparison instrument -- fixture arms (d), (e) and (f)
-  below are therefore real DIRTY/MISSING detections, not stub exits.
+  below are therefore real DIRTY/MISSING detections, not stub exits. The last three
+  fixture arms copy the real `tools/round73-round-scope-cases.py` (and the byte-frozen
+  `tools/round72-round-scope.py` it imports) into the same tools dir, so arm 5 is also
+  exercised as the module this gate ships with, on a clean fixture and on the A5/A6
+  survivor shapes; a missing module is a could-not-evaluate, never a pass.
 
 Selftest (--selftest; fixtures under --work, or a fresh TMPDIR tempdir)
   (a) green fixture                              -> exit 0, failed=0 uncommitted=0
@@ -82,15 +96,21 @@ Selftest (--selftest; fixtures under --work, or a fresh TMPDIR tempdir)
   (d) missing declared path (PROVINCE.md)        -> exit 1, worktree-landing FAIL (MISSING)
   (e) byte-changed declared path (SCORECARD.md)  -> exit 1, worktree-landing FAIL (DIRTY)
   (f) CRLF-translated declared path (SKILL.md)   -> exit 1, worktree-landing FAIL (DIRTY)
-  (g) red round-scope stub (findings=1)          -> exit 1, round-scope FAIL
+  (g) red round-scope stub (findings=1)          -> exit 1, round-scope FAIL, finding named
   (h) green round-scope stub                     -> exit 0, verdict `arms=6`
+  (i) real round-scope counter, clean fixture    -> exit 0, `ROUND_SCOPE_V2 ... findings=0`
+  (j) real counter, dirty linked worktree (A5)   -> exit 1, round-scope FAIL naming `worktree`
+  (k) real counter, ignored file under round-71  -> exit 1, round-scope FAIL naming
+                                                    `ignored-older-label` (A6; M=71 >= N=70)
+  (l) arm-5 verdict selector                     -> picks `ROUND_SCOPE_V2 ` over a later line
   Prints PASS/FAIL per arm and `PRE_REPORT_SELFTEST pass=<n> fail=0`; exit 0 iff every
   arm passed. A fixture tree that cannot be built or verified is a could-not-evaluate
   (exit 2), never a pass. The fixture commits into its own throwaway repository only,
   after asserting `git rev-parse --show-toplevel` equals the fixture directory.
 
 Receipts for this tool live under .ufo/waves/round-71/w1/EX01PreReportGate/ (five-arm
-build) and .ufo/waves/round-72/w1/EX03GateArm6/ (six-arm amendment).
+build), .ufo/waves/round-72/w1/EX03GateArm6/ (six-arm amendment) and
+.ufo/waves/round-73/w1/EX04GateArm/ (six-case round-scope re-point).
 """
 
 from __future__ import annotations
@@ -122,7 +142,7 @@ ARM_SPECS = [
                         "--rev", "{tip}", "--since-round", "63")),
     ("receipt-audit", ("round68-receipt-pointer-audit.py", "--repo", "{repo}", "--rev", "{tip}")),
     ("worktree-landing", ("round67-worktree-landing-check.py", "--repo", "{repo}")),
-    ("round-scope", ("round72-round-scope.py", "--repo", "{repo}", "--round", "{round}",
+    ("round-scope", ("round73-round-scope-cases.py", "--repo", "{repo}", "--round", "{round}",
                      "--tip", "{tip}")),
 ]
 ARM_ORDER = [name for name, _ in ARM_SPECS] + ["round-clean"]
@@ -131,9 +151,11 @@ VERDICT_RE = {
     "newest-closure": r"(?:NEWEST_CLOSURE|STALE_CALIBRATION) ",
     "receipt-audit": r"RECEIPT_POINTER_AUDIT ",
     "worktree-landing": r"WORKTREE_LANDING_CHECK ",
-    "round-scope": r"ROUND_SCOPE ",
+    "round-scope": r"ROUND_SCOPE_V2 ",
 }
 DEFECT_RE = re.compile(r"(?:DIRTY|MISSING|UNTRACKED|UNREADABLE) ")
+SCOPE_FINDING_RE = re.compile(r"ROUND_SCOPE_V2_FINDING ")
+_DEFECT_ARMS = ("worktree-landing", "round-scope")
 
 
 def _decode(data) -> str:
@@ -157,8 +179,9 @@ def _last_line(text: str) -> str:
 def _detail(name: str, text: str, fallback: str | None = None) -> str:
     """One-line arm detail: the arm's own verdict line (last match), else its last line.
 
-    For arm 4 the first concrete defect record (DIRTY/MISSING/UNTRACKED/UNREADABLE) is
-    appended, so a failed landing names the path that broke it.
+    For arms 4 and 5 the first concrete defect record is appended -- DIRTY/MISSING/
+    UNTRACKED/UNREADABLE for the landing check, ROUND_SCOPE_V2_FINDING for the six-case
+    round-scope counter -- so a failed arm names the path or case that broke it.
     """
     if fallback:
         return _one_line(fallback)
@@ -173,8 +196,8 @@ def _detail(name: str, text: str, fallback: str | None = None) -> str:
         chosen = lines[-1]
     if not chosen:
         chosen = "(no output)"
-    defects = [ln for ln in lines if DEFECT_RE.match(ln)]
-    if name == "worktree-landing" and defects:
+    defects = [ln for ln in lines if DEFECT_RE.match(ln) or SCOPE_FINDING_RE.match(ln)]
+    if name in _DEFECT_ARMS and defects:
         chosen = chosen + " | " + defects[0]
     return _one_line(chosen)
 
@@ -364,12 +387,20 @@ ap.add_argument("--repo", default=".")
 ap.add_argument("--round", type=int, default=0)
 ap.add_argument("--tip", default="HEAD")
 a = ap.parse_args()
-print("repo={} round={} tip={}".format(a.repo, a.round, a.tip))
-if red("round-scope"):
-    print("ROUND_SCOPE round={} cases=3 findings=1".format(a.round))
-    print("ROUND_SCOPE_FINDING label plans/round-{}-claims.md missing at {}".format(a.round, a.tip))
+try:
+    with open(os.path.join(HERE, "scope-expect.txt"), "r", encoding="utf-8") as fh:
+        want_round, want_tip = fh.read().split()
+except (OSError, ValueError):
+    want_round, want_tip = "0", "HEAD"
+if str(a.round) != want_round or a.tip != want_tip:
+    print("ROUND_SCOPE_V2_FINDING argv round={} tip={}".format(a.round, a.tip))
+    print("ROUND_SCOPE_V2 round={} cases=6 findings=1".format(a.round))
     raise SystemExit(1)
-print("ROUND_SCOPE round={} cases=3 findings=0".format(a.round))
+if red("round-scope"):
+    print("ROUND_SCOPE_V2_FINDING worktree /fixture/linked status=?? dirty.txt")
+    print("ROUND_SCOPE_V2 round={} cases=6 findings=1".format(a.round))
+    raise SystemExit(1)
+print("ROUND_SCOPE_V2 round={} cases=6 findings=0".format(a.round))
 raise SystemExit(0)
 '''
 
@@ -380,6 +411,7 @@ _FIXTURE_FILES = {
     "PROVINCE.md": b"# Province (fixture)\n",
     "SKILL.md": b"# Skill (fixture)\n\none\ntwo\n",
     "corpus/SOURCES.md": b"# Sources (fixture)\n",
+    "plans/round-70-claims.md": b"# kama round 70 \xe2\x80\x94 frozen claims\n\nfixture body\n",
     ".ufo/waves/round-70/evidence.txt": b"committed fixture evidence\n",
 }
 
@@ -426,6 +458,12 @@ def run_selftest(args) -> int:
     if not real_wlc.is_file():
         print(f"PRE_REPORT_SELFTEST could-not-evaluate: real instrument missing at {real_wlc}")
         return 2
+    real_scope = Path(__file__).resolve().parent / "round73-round-scope-cases.py"
+    real_scope_r72 = Path(__file__).resolve().parent / "round72-round-scope.py"
+    if not real_scope.is_file():
+        print("PRE_REPORT_SELFTEST could-not-evaluate: round-73 scope counter missing at "
+              f"{real_scope}")
+        return 2
 
     tools = work / "tools"
     tools.mkdir()
@@ -433,7 +471,8 @@ def run_selftest(args) -> int:
     (tools / "round42-selfdesc-reconcile.py").write_text(_STUB_SELFDESC, encoding="utf-8")
     (tools / "round69-newest-closure-counter.py").write_text(_STUB_NEWEST, encoding="utf-8")
     (tools / "round68-receipt-pointer-audit.py").write_text(_STUB_RECEIPT, encoding="utf-8")
-    (tools / "round72-round-scope.py").write_text(_STUB_ROUND_SCOPE, encoding="utf-8")
+    (tools / "round73-round-scope-cases.py").write_text(_STUB_ROUND_SCOPE, encoding="utf-8")
+    (tools / "scope-expect.txt").write_text("70 master\n", encoding="utf-8")
     red_file = tools / "red-arms.txt"
     red_file.write_text("", encoding="utf-8")
 
@@ -524,7 +563,8 @@ def run_selftest(args) -> int:
     # (g) red round-scope stub: the sixth arm is a named failure on its own evidence.
     red_file.write_text("round-scope\n", encoding="utf-8")
     check("round-scope-red", evaluate(repo, round_no, "master", str(tools)), 1, 1, 0,
-          "round-scope", False, detail_has="ROUND_SCOPE round=70 cases=3 findings=1",
+          "round-scope", False,
+          detail_has="ROUND_SCOPE_V2 round=70 cases=6 findings=1 | ROUND_SCOPE_V2_FINDING worktree",
           render_has="round-scope exit=1 FAIL")
     red_file.write_text("", encoding="utf-8")
 
@@ -533,6 +573,58 @@ def run_selftest(args) -> int:
           "round-scope", True, detail_has="findings=0",
           render_has="round-scope exit=0 ok",
           want_line="PRE_REPORT round=70 arms=6 failed=0 uncommitted=0")
+
+    # (i)-(k) the real round-73 counter through the same arm-5 wiring: the clean fixture,
+    # then the A5 linked-worktree survivor and the A6 ignored-older-round survivor.
+    shutil.copy2(real_scope, tools / real_scope.name)
+    if real_scope_r72.is_file():
+        shutil.copy2(real_scope_r72, tools / real_scope_r72.name)
+
+    check("round-scope-v2-clean", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0,
+          "round-scope", True,
+          detail_has="ROUND_SCOPE_V2 round=70 cases=6 findings=0",
+          want_line="PRE_REPORT round=70 arms=6 failed=0 uncommitted=0")
+
+    linked = work / "linked-worktree"
+    added = _git(repo, "worktree", "add", "--detach", str(linked), "master", check=False)
+    if added.returncode != 0:
+        print("PRE_REPORT_SELFTEST could-not-evaluate: fixture git worktree add failed: "
+              f"{added.stderr.strip()}")
+        return 2
+    (linked / "dirty.txt").write_text("uncommitted linked-worktree work\n", encoding="utf-8")
+    check("round-scope-v2-a5-red", evaluate(repo, round_no, "master", str(tools)), 1, 1, 0,
+          "round-scope", False,
+          detail_has="ROUND_SCOPE_V2 round=70 cases=6 findings=1 | ROUND_SCOPE_V2_FINDING worktree")
+    _git(repo, "worktree", "remove", "--force", str(linked), check=False)
+
+    exclude_rel = _git(repo, "rev-parse", "--git-path", "info/exclude").stdout.strip()
+    exclude = Path(exclude_rel)
+    if not exclude.is_absolute():
+        exclude = repo / exclude
+    exclude.parent.mkdir(parents=True, exist_ok=True)
+    prior_exclude = exclude.read_bytes() if exclude.exists() else b""
+    exclude.write_bytes(prior_exclude + b".ufo/waves/round-71/\n")
+    wave71 = repo / ".ufo/waves/round-71"
+    wave71.mkdir(parents=True)
+    (wave71 / "scratch.log").write_text("ignored round-71 evidence\n", encoding="utf-8")
+    check("round-scope-v2-a6-red", evaluate(repo, round_no, "master", str(tools)), 1, 1, 0,
+          "round-scope", False, detail_has="ROUND_SCOPE_V2_FINDING ignored-older-label")
+    shutil.rmtree(wave71)
+    exclude.write_bytes(prior_exclude)
+
+    # (l) the arm-5 verdict selector picks the V2 line, not a later diagnostic line.
+    probe = ("ROUND_SCOPE_V2_FINDING worktree /fixture/linked status=?? dirty.txt\n"
+             "ROUND_SCOPE_V2 round=70 cases=6 findings=1\n"
+             "later diagnostic line\n")
+    want_detail = ("ROUND_SCOPE_V2 round=70 cases=6 findings=1 | "
+                   "ROUND_SCOPE_V2_FINDING worktree /fixture/linked status=?? dirty.txt")
+    got_detail = _detail("round-scope", probe)
+    if got_detail == want_detail:
+        passed += 1
+        print("PASS verdict-selector")
+    else:
+        failed_arms.append("verdict-selector")
+        print(f"FAIL verdict-selector :: detail={got_detail!r} want {want_detail!r}")
 
     total = passed + len(failed_arms)
     print(f"PRE_REPORT_SELFTEST pass={passed} fail={len(failed_arms)}")
@@ -547,7 +639,7 @@ def run_selftest(args) -> int:
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(
-        description="One pre-report gate: five reconciled instruments plus round-worktree cleanliness (rounds 71-72)."
+        description="One pre-report gate: five reconciled instruments plus round-worktree cleanliness (rounds 71-73)."
     )
     ap.add_argument("--repo", default=".", help="repository to grade (default: current directory)")
     ap.add_argument("--round", dest="round_no", type=int, default=None,
@@ -556,7 +648,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--selftest", action="store_true", help="run the fixture selftest")
     ap.add_argument("--json", action="store_true", help="emit one JSON document instead of the human lines")
     ap.add_argument("--tools-dir", default=None,
-                    help="directory holding the five instrument scripts (default: <repo>/tools)")
+                    help="directory holding the six instrument scripts (default: <repo>/tools)")
     ap.add_argument("--work", default=None,
                     help="selftest scratch dir (must be absent or empty; default: fresh TMPDIR dir)")
     ap.add_argument("--keep", action="store_true", help="keep the selftest scratch dir")

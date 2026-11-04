@@ -1,0 +1,160 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# command: located evidence for each family owner and the leg r73 adds (grep -n + cut over sibling lane sources)
+
+== (a) cleanliness / ignored / worktree / submodule ==
+-- kama tools/pre-report-gate.py arms:
+119:ARM_SPECS = [
+120-    ("selfdesc", ("round42-selfdesc-reconcile.py", "--repo", "{repo}", "--tip", "{tip}")),
+121-    ("newest-closure", ("round69-newest-closure-counter.py", "--repo", "{repo}",
+122-                        "--rev", "{tip}", "--since-round", "63")),
+123-    ("receipt-audit", ("round68-receipt-pointer-audit.py", "--repo", "{repo}", "--rev", "{tip}")),
+124-    ("worktree-landing", ("round67-worktree-landing-check.py", "--repo", "{repo}")),
+125-    ("round-scope", ("round72-round-scope.py", "--repo", "{repo}", "--round", "{round}",
+126-                     "--tip", "{tip}")),
+127-]
+128-ARM_ORDER = [name for name, _ in ARM_SPECS] + ["round-clean"]
+129-VERDICT_RE = {
+-- kama tools/round72-round-scope.py ignored case (round-N only):
+26:  C `ignored`  `git -C <repo> status --porcelain -uall --ignored -- .ufo/waves/round-<N>`; every
+-- mori tools/mori-unlanded-check.py scope line:
+13:Scope: a path in `git status --porcelain=v1 -z --untracked-files=all` (untracked, modified,
+14-deleted, renamed or staged) that sits under `.ufo/waves/round-N/`, `corpus/`, `tools/`, or is a
+15-top-level `*.md` file. `.scratch/` and anything git ignores are outside the scope on purpose.
+16-`--repo` must be the repository's own top level: a subdirectory, or a directory that is not a
+-- souji tools/souji-worktree-drift.py purpose line:
+"""souji-worktree-drift.py — F1 fleet worktree-registration drift detector (r36 C3).
+
+The round-35 census (census/round-35/records/prune-census.tsv, knowledge entry
+corpus/knowledge/fleet-prune-numerator-r35.md) recorded one dated numerator:
+26 repositories, 27 registrations, 0 prunable. It was a one-off manual record;
+-- kaidoku tools/round-42/prefile-gate.py ignored policy (advisory):
+15:Advisory checks (reported, exit-neutral): ignored residue under the same scopes,
+288:        ign = _status_z(self.root, ["--ignored=matching", "--", *scopes])
+-- kaidoku tools/round-45/frozen-path-preflight.py dirty arm:
+16:  dirty    - `--check-dirty`: the worktree must be clean under the frozen pathspec
+
+== (b) receipt revision/claim binding ==
+-- tameshi tools/receipt-revision-gate.py contract:
+"""receipt-revision-gate — bind a receipt to the revision it certifies.
+
+The round-54/55 defect this gate exists for (ER-R54-1, R55.5): a positive control
+was scored at the FREEZE commit, which predated the work it certified, and every
+gate in the lane accepted it because none compared the `rev=` a receipt names with
+the revision under test. A verdict, or a positive control, is evidence only for the
+content it was measured against.
+
+Usage:
+  receipt-revision-gate.py --lane LANE --certified REV [--paths FILE]
+                           --receipt PATH:ROLE[:REQUIRE_REGEX] [--receipt ...] [--json]
+  receipt-revision-gate.py --selftest
+
+ROLE is one of:
+  positive  a control whose expected verdict is PASS. Exactly one distinct `rev=`
+            token; it must equal the certified revision, or (when --paths is given)
+-- tameshi tools/receipt-commit-bind.py arm statement:
+22:Three arms, all over every commit C in base..tip (oldest first):
+23-
+24-  Arm 1 (frozen, r65 — range-added candidates): for every path ADDED in the
+-- chousa tools/receipt-pin.py header contract:
+"""Check a research receipt's header consistency against a pinned Git blob.
+
+Validates the frozen round-65 receipt format: REVISION=<40 lowercase hex>,
+EXIT=<decimal 0..255 reported child exit>, SHA256=<64 lowercase hex>
+<canonical repo-relative POSIX path>, one empty separator line, then a
+nonempty body; exactly one of each header, in that order. The revision must
+equal the caller-selected --revision and the digest must match
+-- tsukuroi tools/check-revision-binding.py question:
+"""Read-only counting probe: are the --revision gates bound to a landed revision,
+and do they all bind the same way?
+
+-- kaidoku tools/round-62/base-binding-sweep.py purpose:
+"""base-binding-sweep.py - base-rev-threading receipt sweep.
+
+Round 62 capability (R62-C1, depth).  The r60 planned candidate, named again
+by the r61 record: the frozen single-receipt gate
+`tools/round-59/annotation-audit.py` carries a `--base-rev` option ("also
+re-derive each annotation's base: value at this revision"), but the r60
+multi-receipt sweep never threads it - its own limits line says so
+("`--base-rev` re-derivation is not swept (the base of each historical
+annotation is the single gate's option, available per receipt)").  So no
+-- kotodama harness/receipt_guard.py head:
+#!/usr/bin/env python3
+"""Preflight receipt writes against HEAD and every branch and remote-tracking ref, not the mutable Git index.
+
+``guard_receipt(path, repo_root=ROOT)`` returns normally or emits a diagnostic
+and raises SystemExit(3). Relative paths use repo_root or the current directory;
+without a root, the repository is discovered from the destination's ancestors.
+Only the exact environment value REFRESH_RECEIPTS=1 permits a committed receipt
+write. Path safety and Git errors still fail closed.
+
+The committed probe covers HEAD and every direct refs/heads/* and refs/remotes/*
+ref. A ref that does not resolve to a commit, or any for-each-ref warning, fails
+closed; symbolic refs are skipped because they duplicate their targets.
+committed_sha is HEAD's commit (none when HEAD is unborn). landed_ref and
+landed_sha name only a refs/remotes/* holder, never a local branch or HEAD, and
+-- kama tools/round72-receipt-tip-binding.py predicate:
+103:PREDICATE = (
+
+== (c) host identity / drift ==
+-- kama tools/round71-province-host-claims.py marker grammar:
+13:Marker grammar. A marker paragraph opens with ``- absent-on-this-host (YYYY-MM-DD)``
+14-and continues over indented wrap lines until a blank line. Every
+15-``province-host:TAG`` occurrence inside that paragraph declares TAG absent (a
+16-wrap naming two tags declares two claims). One marker line naming two tags is
+-- kotoba verifiers/check_host_skill_surfaces.py contract:
+"""Host installed-skill surface census (round-82 C1', read-only).
+
+Enumerates the host skills root's ``*/SKILL.md`` instruction surfaces,
+hashes each, matches by directory name against the fleet root's
+``<name>/SKILL.md`` lane copies, and classifies each surface:
+-- kumitate scripts/surface-probe.mjs contract:
+/**
+ * surface-probe.mjs — live-surface conformance probe for the two surfaces this
+ * province consumes from the origin tree. Read-only, zero deps, ESM, node >= 20.
+ * Contract: kumitate-surface-probe-v1 (parent-frozen).
+ *
+ *   node scripts/surface-probe.mjs [--src DIR] [--self DIR] [--json]
+ *                                 [--checklists] [--selftest|--self-test] [--strict]
+-- any sibling PROVINCE host-identity block:
+kama-shokunin/PROVINCE.md:310:Round-73 host-identity block (2026-11-03). Host triple: `uname -s` -> `Linux`; `uname -m` -> `x86_64`; `/etc/os-release` `ID` -> `arch`. Graded by `tools/round73-province-host-drift.py`; a host move is answered by appending a later block, never by editing this one.
+grep-exit=0
+
+== addendum: tameshi's prose-grading instruments (found after the first scan) ==
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec (append; master unchanged)
+$ sed -n '48,70p' /home/vgpnk/Projects/shokunin/tameshi-shokunin/tools/pointer-recheck.py
+  POINTER_ROW <id> expect=<e> measured=- ERROR reason=<r>
+  POINTER_RECHECK: rows=N met=M unexpected=U
+Exit map: 0 = every row met its expectation; 1 = at least one row
+unexpected or errored; 2 = usage, a zero-row manifest (fail-closed: an
+empty manifest proves nothing), malformed rows, an unresolvable record or
+target revision/path, or a sed that cannot be spawned — all resolved for
+ALL rows up front, before any row effect.
+
+Manifest (`tools/pointer-recheck.json`, schema `tameshi-pointer-recheck-v1`):
+  rows[]: id, record (repo path), record_rev (40-hex; pin the revision whose
+  bytes you verified against, never "tip"), pointer (the exact cited token),
+  target (repo path), target_rev (40-hex), start, end (1-indexed inclusive),
+  needle, expect ("hit" | "miss"), note.
+
+Selftest: `--selftest` builds a throwaway fixture repository under TMPDIR
+with git plumbing only (hash-object / mktree / commit-tree / update-ref;
+the index is never touched) and checks seven arms:
+  1. hit-met — the needle is in the span: ok, exit 0
+  2. miss-met — the fixture's stale-pointer shape, expect=miss (the red arm
+     fires): ok
+  3. mismatch-caught — expect=hit but the needle is absent: MISMATCH, exit 1
+  4. pointer-absent — the pinned token is not in the record bytes: ERROR,
+     exit 1
+
+$ head -3 tameshi-shokunin/tools/{figure-attribution,count-recheck}.py
+--- figure-attribution
+r"""tools/figure-attribution.py — a record figure pinned to a named receipt
+must live in THAT receipt's committed bytes (round 68; the named successor of
+the r67 instrument boundary — the figure-misattribution class,
+--- count-recheck
+r"""tools/count-recheck.py — a record's printed counting figure must still be
+the count its named command produces at the revision the record names
+(round 70; the standing detector for the printed-count drift class).
+
+$ grep -c "rev=" tameshi-shokunin/tools/figure-attribution.py
+0

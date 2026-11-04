@@ -1,0 +1,40 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# claim=C1 design hazard: a registered-but-prunable linked worktree makes git -C <path> status
+# fail (exit 128), which the frozen exit map would map to 2 could-not-evaluate on a clean repo
+
+### the throwaway fixture (clone of the builder seed; toplevel asserted before use)
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/extra/prune rev-parse --show-toplevel
+/fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/extra/prune
+exit=0
+
+### worktree list --porcelain lists a third entry whose directory is gone, annotated prunable
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/extra/prune worktree list --porcelain
+worktree /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/extra/prune
+HEAD 5db7823db70988ddb046b497446c9cc05e574204
+branch refs/heads/master
+
+worktree /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/extra/prune-wt
+HEAD 5db7823db70988ddb046b497446c9cc05e574204
+detached
+prunable gitdir file points to non-existent location
+
+exit=0
+
+### running git -C on the prunable path fails with 128 (no status record to grade)
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/extra/prune-wt status --porcelain -uall
+fatal: cannot change to '/fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/extra/prune-wt': No such file or directory
+exit=128
+
+### the prunable entry is identifiable without -C: worktree prune --dry-run names it
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/extra/prune worktree prune --dry-run -v
+Removing worktrees/prune-wt: gitdir file points to non-existent location
+exit=0
+
+### primary-worktree porcelain key lines the case must skip (a bare detached line is legitimate)
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin worktree list --porcelain
+worktree /home/vgpnk/Projects/shokunin/kama-shokunin
+HEAD bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+detached
+
+exit=0
+

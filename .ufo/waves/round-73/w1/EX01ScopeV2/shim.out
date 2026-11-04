@@ -1,0 +1,28 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# cmd: cat > /fast/scratch/hyaku/kama-r73/EX01ScopeV2/shim.py <<'PY' (source below)
+
+import re, subprocess, sys
+
+repo, round_no = sys.argv[1], sys.argv[2]
+proc = subprocess.run(["git", "-C", repo, "cat-file", "-p",
+                       "master:plans/round-{}-claims.md".format(round_no)],
+                      capture_output=True, text=True)
+heading = ""
+if proc.returncode == 0:
+    for line in proc.stdout.splitlines():
+        if line.lstrip().startswith("#"):
+            heading = line
+            break
+if re.search(r"(?i)\bround[\s_.\-]*0*{}\b".format(round_no), heading):
+    print("ROUND_SCOPE_V2 round={} cases=6 findings=0".format(round_no))
+    sys.exit(0)
+print("ROUND_SCOPE_V2 round={} cases=6 findings=1".format(round_no))
+sys.exit(1)
+# cmd: for each fixture: /fast/scratch/hyaku/kama-r73/EX01ScopeV2/shim.py <fixture> <round> ; and the v2 counter
+# fixture=c1_a5 shim_exit=0 required=1 shim_verdict=RED
+# fixture=c1_a5 real_round73_exit=1 real_verdict=KILLED
+# fixture=c1_a6e shim_exit=0 required=1 shim_verdict=RED
+# fixture=c1_a6e real_round73_exit=1 real_verdict=KILLED
+# fixture=c1_a7sub2 shim_exit=0 required=1 shim_verdict=RED
+# fixture=c1_a7sub2 real_round73_exit=1 real_verdict=KILLED
+# SHIM_SCORE red=3 real_killed=3 of=3

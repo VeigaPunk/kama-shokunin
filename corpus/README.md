@@ -1646,3 +1646,18 @@ files still have no map row and remain a map gap: `completion-request-plane.md`,
 |---|---|---|
 | `knowledge/pre-report-gate.md` | one pre-report verdict from the gate's arms at one tip: arm order, exit classes, decision table, and the limits of a per-arm exit grade (the five-arm form; round 72 amends it to six arms) | 71 (indexed in 72) |
 | `knowledge/receipt-tip-binding.md` | what a receipt-to-revision binding establishes and does not; `unbound`/`shifted`/`stale` under the frozen predicate; the record-path vs instrument-input split and the commit order a clean binding requires | 72 |
+
+## Coverage map — round 73 addition (2026-11-03)
+
+Appended rather than inserted, so no existing line moves (the rule the round-10 addition states).
+Measured before appending: `ls corpus/knowledge/*.md | wc -l` → 45 files against
+``grep -c '^| `knowledge/' corpus/README.md`` → 39 row lines naming 36 distinct entries. After
+this section 7 files still have no map row and remain a map gap: `battery-execution-evidence.md`,
+`completion-request-plane.md`, `ollama-live-amendment-r61.md`, `ollama-live-lifecycle.md`,
+`process-bound-listener.md`, `sglang-docs-version-pinning-amendment-2026-10-23.md`,
+`sglang-docs-version-pinning.md`.
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/host-identity-drift-gate.md` | what a `Round-<N> host-identity block` records, why `uname -s`/`uname -m`/os-release `ID` survive a kernel update, what the drift counter grades (newest block wins) and what it does not (serving surfaces, the kernel version, the r71 corrections) | 73 |
+| `knowledge/round-scope-survivor-cases.md` | the three r72 round-scope survivors (linked worktree, valid older label with newer ignored work, `submodule.<name>.ignore=all`) as a case/command table, the `M >= N` bound and why older rounds are excluded, and the limits (no `--allow-ignored` escape, uninitialised submodules skipped) | 73 |

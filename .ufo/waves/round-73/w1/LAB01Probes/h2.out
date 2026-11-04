@@ -1,0 +1,89 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# case=h2 driver=/fast/scratch/hyaku/kama-r73/LAB01Probes/probe.py
+# H2: does `git worktree list --porcelain` enumerate a --detach linked worktree, and
+#     is that worktree's dirt invisible to the primary but visible via its own status?
+
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/primary init -q
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/primary rev-parse --show-toplevel
+  /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/primary
+[exit=0]
+[assert ok: fixture root == toplevel]
+write /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/primary/file.txt <- 'one\n'
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/primary add -A
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/primary -c user.name=fixture -c user.email=fixture@invalid commit -q -m 'primary base'
+  (no output)
+[exit=0]
+
+-- create the linked worktree with --detach --
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/primary worktree add --detach /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/linked HEAD
+  HEAD is now at 612cb5a primary base
+  stderr| Preparing worktree (detached HEAD 612cb5a)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/linked rev-parse --show-toplevel
+  /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/linked
+[exit=0]
+[assert ok: fixture root == toplevel]
+
+[1] enumeration from the primary
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/primary worktree list --porcelain
+  worktree /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/primary
+  HEAD 612cb5a05b1be02af6f673cffa1b919152b61a31
+  branch refs/heads/main
+  
+  worktree /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/linked
+  HEAD 612cb5a05b1be02af6f673cffa1b919152b61a31
+  detached
+  
+[exit=0]
+
+[2] linked worktree identity
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/linked rev-parse --show-toplevel
+  /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/linked
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/linked rev-parse --git-common-dir
+  /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/primary/.git
+[exit=0]
+
+-- dirty the linked worktree (one modified tracked file, one untracked file) --
+append /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/linked/file.txt <- 'dirt\n'
+write /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/linked/untracked.txt <- 'new\n'
+
+[3] primary status --porcelain -uall
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/primary status --porcelain -uall
+  (no output)
+[exit=0]
+
+[4] primary status --porcelain -uall --ignored (wider control)
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/primary status --porcelain -uall --ignored
+  (no output)
+[exit=0]
+
+[5] linked worktree status --porcelain -uall
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/linked status --porcelain -uall
+   M file.txt
+  ?? untracked.txt
+[exit=0]
+
+[6] enumeration from inside the linked worktree
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/linked worktree list --porcelain
+  worktree /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/primary
+  HEAD 612cb5a05b1be02af6f673cffa1b919152b61a31
+  branch refs/heads/main
+  
+  worktree /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/linked
+  HEAD 612cb5a05b1be02af6f673cffa1b919152b61a31
+  detached
+  
+[exit=0]
+
+[7] primary `status` restricted to its own path (control)
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h2/primary status --porcelain -uall -- .
+  (no output)
+[exit=0]
+
+# case h2 complete
+# driver_exit=0

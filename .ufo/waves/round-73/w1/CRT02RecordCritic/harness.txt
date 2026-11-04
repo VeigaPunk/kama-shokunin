@@ -1,0 +1,880 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# command: python3 mkreceipts.py ; harness sources below are the exact files that produced
+#          fixtures.out, sequence.out, wording.out and realhistory.out (cwd /fast/scratch/hyaku/kama-r73/CRT02RecordCritic)
+# note: restore each block to its named file under a scratch dir, then run it with
+#       PYTHONDONTWRITEBYTECODE=1; the sandbox lane path is constant.
+
+# ===== BEGIN drive.py =====
+#!/usr/bin/env python3
+"""CRT02RecordCritic: landing-sequence / receipt-discipline fixtures (round 73).
+
+Every fixture is a throwaway repo under this scratch dir; every git call names -C <fixture>
+and the toplevel is asserted before the first commit. The base counter is a byte copy of the
+lane's frozen tools/round72-receipt-tip-binding.py; the claim pass is a scratch REFERENCE
+implementation of the frozen C2 sentence used only to show what the (not yet landed)
+tools/round73-receipt-claim-binding.py must print.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import importlib.util
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+
+S = os.path.dirname(os.path.abspath(__file__))
+LANE = "/home/vgpnk/Projects/shokunin/kama-shokunin"
+BASE_SRC = os.path.join(LANE, "tools/round72-receipt-tip-binding.py")
+BASE_COPY = os.path.join(S, "round72-receipt-tip-binding.py")
+CLAIM_TOOL = os.path.join(LANE, "tools/round73-receipt-claim-binding.py")
+GITID = ["-c", "user.name=fixture", "-c", "user.email=fixture@invalid",
+         "-c", "commit.gpgsign=false"]
+
+PHRASES = ("at the tip", "at the report tip", "report tip")
+
+
+def sh(argv, check=True):
+    r = subprocess.run(argv, capture_output=True, text=True)
+    if check and r.returncode != 0:
+        raise RuntimeError("{} -> {}\n{}\n{}".format(" ".join(argv), r.returncode, r.stdout, r.stderr))
+    return r
+
+
+def git(d, *args, check=True):
+    return sh(["git", "-C", d, *GITID, *args], check=check)
+
+
+def rev(d):
+    return git(d, "rev-parse", "HEAD").stdout.strip()
+
+
+def put(d, rel, text):
+    p = os.path.join(d, rel)
+    os.makedirs(os.path.dirname(p) or d, exist_ok=True)
+    with open(p, "w", encoding="utf-8") as fh:
+        fh.write(text)
+
+
+def init(path):
+    os.makedirs(path, exist_ok=True)
+    git(path, "init", "-q", "-b", "master")
+    top = os.path.realpath(git(path, "rev-parse", "--show-toplevel").stdout.strip())
+    assert top == os.path.realpath(path), "toplevel {} != fixture {}".format(top, path)
+    return path
+
+
+def commit(d, msg):
+    git(d, "add", "-A")
+    git(d, "commit", "-q", "-m", msg)
+    return rev(d)
+
+
+SEED = {
+    "LOG.md": "# fixture LOG\n",
+    "SCORECARD.md": "# fixture SCORECARD\n\n## Round 72 — previous\n\nold\n",
+    "PROVINCE.md": "# fixture PROVINCE\n\nRound-71 host-identity block (2026-10-01)\nlinux/x86_64/arch\n",
+    "SKILL.md": "# fixture SKILL\n\none\ntwo\n",
+    "corpus/SOURCES.md": "# fixture SOURCES\n",
+    "corpus/knowledge/k.md": "# fixture knowledge row\n",
+    "registry/r.md": "# fixture registry\n",
+    "plans/round-73-claims.md": "# kama round 73 — frozen claims\n\nfixture\n",
+    "corpus/lessons/round-73.md": "# round 73 lesson\n\nno citation yet\n",
+    "tools/counter.py": "v1\n",
+    "tools/gate.py": "v1\n",
+}
+
+
+def seed(d):
+    for rel, text in SEED.items():
+        put(d, rel, text)
+    return commit(d, "instruments / seed")
+
+
+def record(d, tip_rev, line, lesson_line="no citation here\n", extra=None):
+    """Commit R: record paths only."""
+    text = ("# fixture SCORECARD\n\n## Round 72 — previous\n\nold\n\n"
+            "## Round 73 — current\n\n" + line + "\n")
+    put(d, "SCORECARD.md", text)
+    put(d, "corpus/lessons/round-73.md", "# round 73 lesson\n\n" + lesson_line)
+    if extra:
+        for rel, body in extra.items():
+            put(d, rel, body)
+    return commit(d, "record R")
+
+
+def run_base(repo, tip, rnd=73):
+    argv = [sys.executable, BASE_COPY, "--repo", repo, "--round", str(rnd), "--tip", tip]
+    r = sh(argv, check=False)
+    return r.returncode, (r.stdout + r.stderr).strip(), argv
+
+
+def run_claim(repo, tip, rnd=73):
+    if not os.path.exists(CLAIM_TOOL):
+        return None, "tool absent: tools/round73-receipt-claim-binding.py", None
+    argv = [sys.executable, CLAIM_TOOL, "--repo", repo, "--round", str(rnd), "--tip", tip]
+    r = sh(argv, check=False)
+    return r.returncode, (r.stdout + r.stderr).strip(), argv
+
+
+# ------------------------------------------------------- reference claim pass
+
+
+def load_base():
+    spec = importlib.util.spec_from_file_location("base_binding", BASE_COPY)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def reference_claim(repo, tip, rnd, mod):
+    """Frozen C2 claim sentence, implemented in scratch over the base tool's readers."""
+    tip_sha = mod._commit_sha(repo, tip)
+    sc = mod._blob(repo, tip_sha, "SCORECARD.md")
+    lesson_path = "corpus/lessons/round-{}.md".format(rnd)
+    lesson = mod._blob(repo, tip_sha, lesson_path)
+    if sc is None or lesson is None:
+        return 2, ["UNREADABLE self-record"], 0, 0
+    sec = mod._round_section(sc.decode("utf-8", "replace"), rnd)
+    if sec is None:
+        return 2, ["UNREADABLE no '## Round {}' section".format(rnd)], 0, 0
+    lines, offset = sec
+    sc_lines = sc.decode("utf-8", "replace").splitlines()
+    ls_lines = lesson.decode("utf-8", "replace").splitlines()
+    cites = list(mod._citations(lines, offset, "SCORECARD.md"))
+    cites += list(mod._citations(ls_lines, 0, lesson_path))
+    by_line = {}
+    for token, filename, lineno in cites:
+        try:
+            paths = mod._resolve_citation(repo, tip_sha, rnd, token,
+                                          "{}:{}".format(filename, lineno)) or []
+        except mod.CouldNotEvaluate as exc:
+            return 2, ["UNREADABLE {}".format(exc)], 0, 0
+        if paths:
+            by_line.setdefault((filename, lineno), []).extend(paths)
+    claims = 0
+    unbound = 0
+    findings = []
+    for (filename, lineno), paths in sorted(by_line.items()):
+        src = sc_lines if filename == "SCORECARD.md" else ls_lines
+        line = src[lineno - 1].lower()
+        if not any(p in line for p in PHRASES):
+            continue
+        claims += 1
+        bad = []
+        for path in sorted(set(paths)):
+            blob = mod._blob(repo, tip_sha, path)
+            if blob is None:
+                bad.append((path, "absent"))
+                continue
+            hrev, problem = mod._header_rev(blob)
+            if hrev is None:
+                bad.append((path, problem))
+            elif hrev != tip_sha:
+                bad.append((path, "header {} != tip {}".format(hrev, tip_sha)))
+        if bad:
+            unbound += 1
+            for path, why in bad:
+                findings.append("RECEIPT_CLAIM_FINDING stale-claim {} :: {} :: {}".format(
+                    path, why, "{}:{}".format(filename, lineno)))
+    return (0 if not findings else 1), findings, claims, unbound
+
+
+def line(label, rc, out, claim_rc=None, claim_out=None, claims=None, unbound_claims=None):
+    print("== {}".format(label))
+    print("   base exit={} :: {}".format(rc, out.replace("\n", " | ")))
+    if claim_rc is not None:
+        print("   claim exit={} :: {}".format(claim_rc, (claim_out or "").replace("\n", " | ")))
+    if claims is not None:
+        print("   reference claims={} unbound_claims={}".format(claims, unbound_claims))
+
+
+def main():
+    if not os.path.exists(BASE_COPY):
+        shutil.copy2(BASE_SRC, BASE_COPY)
+    src_sha = hashlib.sha256(open(BASE_SRC, "rb").read()).hexdigest()
+    copy_sha = hashlib.sha256(open(BASE_COPY, "rb").read()).hexdigest()
+    lane_blob = sh(["git", "-C", LANE, "show", "master:tools/round72-receipt-tip-binding.py"]).stdout
+    blob_sha = hashlib.sha256(lane_blob.encode()).hexdigest()
+    print("# base copy sha256={} lane blob sha256={} equal={}".format(
+        copy_sha, blob_sha, copy_sha == blob_sha and src_sha == copy_sha))
+    print("# claim tool present={} ({})".format(os.path.exists(CLAIM_TOOL), CLAIM_TOOL))
+    mod = load_base()
+    root = tempfile.mkdtemp(dir=S, prefix="fx-")
+
+    # ---- S0: the legible green shape: receipt # rev=T, record-only delta, "measured at rev T"
+    d = init(os.path.join(root, "s0"))
+    seed(d)
+    t0 = rev(d)
+    put(d, ".ufo/waves/round-73/measured/after/x.out", "# rev={}\nverdict: green\n".format(t0))
+    r = record(d, t0, "Binding receipt measured at rev `{}`: `measured/after/x.out`.".format(t0))
+    rc, out, _ = run_base(d, "master")
+    crc, cout, _ = run_claim(d, "master")
+    ref_rc, ref_f, claims, unbound = reference_claim(d, "master", 73, mod)
+    line("S0 clean/legible (receipt #rev=T0, delta record-only, 'measured at rev T0')", rc, out,
+         crc if crc is not None else ref_rc,
+         cout if cout is not None else "; ".join(ref_f) or "(no findings)", claims, unbound)
+
+    # ---- S1a: fully qualified backticked .md seat report under the wave dir
+    d = init(os.path.join(root, "s1a"))
+    seed(d)
+    t0 = rev(d)
+    put(d, ".ufo/waves/round-73/measured/after/x.out", "# rev={}\nverdict: green\n".format(t0))
+    put(d, ".ufo/waves/round-73/w1/SEAT01/report.md", "# seat report\n")
+    record(d, t0, "Seat report: `.ufo/waves/round-73/w1/SEAT01/report.md`; receipt `measured/after/x.out`.")
+    rc, out, _ = run_base(d, "master")
+    crc, cout, _ = run_claim(d, "master")
+    ref_rc, ref_f, claims, unbound = reference_claim(d, "master", 73, mod)
+    line("S1a backticked .md seat report (fully qualified)", rc, out,
+         crc if crc is not None else ref_rc,
+         cout if cout is not None else "; ".join(ref_f) or "(no findings)", claims, unbound)
+
+    # ---- S1b: section-relative backticked .md seat report, landed
+    d = init(os.path.join(root, "s1b"))
+    seed(d)
+    t0 = rev(d)
+    put(d, ".ufo/waves/round-73/measured/after/x.out", "# rev={}\nverdict: green\n".format(t0))
+    put(d, ".ufo/waves/round-73/w1/SEAT01/report.md", "# seat report\n")
+    record(d, t0, "Seat report: `w1/SEAT01/report.md`; receipt `measured/after/x.out`.")
+    rc, out, _ = run_base(d, "master")
+    crc, cout, _ = run_claim(d, "master")
+    ref_rc, ref_f, claims, unbound = reference_claim(d, "master", 73, mod)
+    line("S1b backticked .md seat report (section-relative, landed)", rc, out,
+         crc if crc is not None else ref_rc,
+         cout if cout is not None else "; ".join(ref_f) or "(no findings)", claims, unbound)
+
+    # ---- S1c: section-relative .md cited BEFORE it lands
+    d = init(os.path.join(root, "s1c"))
+    seed(d)
+    t0 = rev(d)
+    put(d, ".ufo/waves/round-73/measured/after/x.out", "# rev={}\nverdict: green\n".format(t0))
+    record(d, t0, "Seat report: `w1/SEAT02/report.md` (not yet landed); receipt `measured/after/x.out`.")
+    rc, out, _ = run_base(d, "master")
+    line("S1c backticked .md seat report (section-relative, NOT landed)", rc, out)
+
+    # ---- S2a: backticked directory that carries one bound receipt and one .md
+    d = init(os.path.join(root, "s2a"))
+    seed(d)
+    t0 = rev(d)
+    put(d, ".ufo/waves/round-73/measured/after/x.out", "# rev={}\nverdict: green\n".format(t0))
+    put(d, ".ufo/waves/round-73/w1/SEAT01/a.out", "# rev={}\nscored\n".format(t0))
+    put(d, ".ufo/waves/round-73/w1/SEAT01/report.md", "# seat report\n")
+    record(d, t0, "Seat dir: `w1/SEAT01/`.")
+    rc, out, _ = run_base(d, "master")
+    crc, cout, _ = run_claim(d, "master")
+    line("S2a backticked directory (receipts + .md inside)", rc, out,
+         crc if crc is not None else None, cout)
+
+    # ---- S2b: backticked directory that carries no receipt at all
+    d = init(os.path.join(root, "s2b"))
+    seed(d)
+    t0 = rev(d)
+    put(d, ".ufo/waves/round-73/measured/after/x.out", "# rev={}\nverdict: green\n".format(t0))
+    put(d, ".ufo/waves/round-73/w1/SEAT01/report.md", "# seat report\n")
+    record(d, t0, "Seat dir: `w1/SEAT01/`.")
+    rc, out, _ = run_base(d, "master")
+    line("S2b backticked directory (no receipt inside)", rc, out)
+
+    # ---- S3 matrix: instrument-class commit AFTER the receipt's rev
+    classes = [
+        "tools/gate.py", "SKILL.md", "PROVINCE.md", "corpus/SOURCES.md",
+        "corpus/knowledge/k.md", "registry/r.md", "plans/round-73-claims.md",
+        ".ufo/l0-questions.md", "MISSION.md", "corpus/QUALITY.md",
+    ]
+    print("== S3 instrument-after matrix (receipt #rev=T0, one commit touches P, then record R)")
+    for i, path in enumerate(classes):
+        d = init(os.path.join(root, "s3_{}".format(i)))
+        seed(d)
+        t0 = rev(d)
+        put(d, ".ufo/waves/round-73/measured/after/x.out", "# rev={}\nverdict: green\n".format(t0))
+        put(d, path, "v2 after the receipt\n")
+        commit(d, "instrument drift at {}".format(path))
+        record(d, t0, "Binding receipt measured at rev `{}`: `measured/after/x.out`.".format(t0))
+        rc, out, _ = run_base(d, "master")
+        first = out.splitlines()[0] if out else ""
+        last = out.splitlines()[-1] if out else ""
+        print("   P={:<28} exit={} | {} | {}".format(path, rc, first, last))
+
+    # ---- S4: the B6 shape: 'at the report tip' with a non-tip header, delta record-only
+    d = init(os.path.join(root, "s4"))
+    seed(d)
+    t0 = rev(d)
+    put(d, ".ufo/waves/round-73/measured/after/x.out", "# rev={}\nverdict: green\n".format(t0))
+    record(d, t0, "Binding receipt: `measured/after/x.out`; the gate ran at the report tip.")
+    rc, out, _ = run_base(d, "master")
+    crc, cout, _ = run_claim(d, "master")
+    ref_rc, ref_f, claims, unbound = reference_claim(d, "master", 73, mod)
+    line("S4 'at the report tip' + non-tip header (B6 shape)", rc, out,
+         crc if crc is not None else ref_rc,
+         cout if cout is not None else ("; ".join(ref_f) or "(no findings)"), claims, unbound)
+
+    # ---- S5: 'at the tip' with two receipts, one header non-tip
+    d = init(os.path.join(root, "s5"))
+    seed(d)
+    t0 = rev(d)
+    put(d, ".ufo/waves/round-73/measured/after/x.out", "# rev={}\nverdict: green\n".format(t0))
+    put(d, ".ufo/waves/round-73/measured/after/y.out", "# rev={}\nverdict: green\n".format(t0))
+    record(d, t0, "Both receipts at the tip: `measured/after/x.out`, `measured/after/y.out`.")
+    rc, out, _ = run_base(d, "master")
+    crc, cout, _ = run_claim(d, "master")
+    ref_rc, ref_f, claims, unbound = reference_claim(d, "master", 73, mod)
+    line("S5 'at the tip' + two non-tip headers", rc, out,
+         crc if crc is not None else ref_rc,
+         cout if cout is not None else ("; ".join(ref_f) or "(no findings)"), claims, unbound)
+
+    # ---- S6: can a receipt's header ever equal the tip that contains it? (two-iteration attempt)
+    d = init(os.path.join(root, "s6"))
+    seed(d)
+    rel = ".ufo/waves/round-73/measured/after/self.out"
+    put(d, rel, "# rev=0000000000000000000000000000000000000000\nfirst attempt\n")
+    first = commit(d, "first attempt")
+    put(d, rel, "# rev={}\nsecond attempt\n".format(first))
+    second = commit(d, "second attempt")
+    put(d, rel, "# rev={}\nthird attempt\n".format(second))
+    third = commit(d, "third attempt")
+    print("== S6 header-equals-tip attempt")
+    print("   attempt1 commit={} names 0000000000000000000000000000000000000000".format(first))
+    print("   attempt2 commit={} names {} equal={}".format(second, first, first == second))
+    print("   attempt3 commit={} names {} equal={}".format(third, second, second == third))
+
+    # ---- S7: line with a tip claim but only repo-root instrument citations
+    d = init(os.path.join(root, "s7"))
+    seed(d)
+    t0 = rev(d)
+    put(d, ".ufo/waves/round-73/measured/after/x.out", "# rev={}\nverdict: green\n".format(t0))
+    record(d, t0, "Instrument `tools/gate.py` and receipt `measured/after/x.out` ran at the report tip.")
+    rc, out, _ = run_base(d, "master")
+    ref_rc, ref_f, claims, unbound = reference_claim(d, "master", 73, mod)
+    crc, cout, _ = run_claim(d, "master")
+    line("S7 'at the report tip' with a non-tip receipt + repo-root citation", rc, out,
+         crc if crc is not None else ref_rc,
+         cout if cout is not None else ("; ".join(ref_f) or "(no findings)"), claims, unbound)
+
+    print("== committed c2_b6 survivor (lane-controlled fixture, read-only)")
+    b6 = "/fast/scratch/hyaku/kama-r73/controls-work/fixtures/c2_b6"
+    if os.path.isdir(b6):
+        rc, out, _ = run_base(b6, "master", 72)
+        crc, cout, _ = run_claim(b6, "master", 72)
+        ref_rc, ref_f, claims, unbound = reference_claim(b6, "master", 72, mod)
+        line("c2_b6", rc, out, crc if crc is not None else ref_rc,
+             cout if cout is not None else ("; ".join(ref_f) or "(no findings)"), claims, unbound)
+    else:
+        print("   absent: {}".format(b6))
+
+    shutil.rmtree(root, ignore_errors=True)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+# ===== END drive.py =====
+
+# ===== BEGIN seq.py =====
+#!/usr/bin/env python3
+"""Landing-sequence simulation on a --shared clone of the lane (read-only over the lane).
+
+Rebuilds the planned sequence -- instrument tip T, receipts stamped # rev=T, record commit R,
+final binding run at R -- then breaks it in the four ways the plan can still lose:
+  A  record cites the pre-freeze control receipt (header 6e961996, delta includes the freeze
+     commit that wrote plans/round-73-claims.md)
+  B  a seat receipt stamped at the pre-instrument master bc9e3059
+  C  an instrument commit lands AFTER T (SKILL.md registry rows) and the run moves to the new tip
+  D  T is amended after the receipts name it
+  E  the record commit itself carries one instrument file (corpus/QUALITY.md criterion)
+"""
+
+from __future__ import annotations
+
+import os
+import shutil
+import subprocess
+import sys
+
+S = os.path.dirname(os.path.abspath(__file__))
+LANE = "/home/vgpnk/Projects/shokunin/kama-shokunin"
+TOOL = os.path.join(LANE, "tools/round72-receipt-tip-binding.py")
+WORK = os.path.join(S, "seq")
+GITID = ["-c", "user.name=fixture", "-c", "user.email=fixture@invalid",
+         "-c", "commit.gpgsign=false"]
+
+
+def sh(argv, check=True):
+    r = subprocess.run(argv, capture_output=True, text=True)
+    if check and r.returncode != 0:
+        raise RuntimeError("{} -> {}\n{}\n{}".format(" ".join(argv), r.returncode, r.stdout, r.stderr))
+    return r
+
+
+def git(d, *args, check=True):
+    return sh(["git", "-C", d, *GITID, *args], check=check)
+
+
+def rev(d, ref="HEAD"):
+    return git(d, "rev-parse", ref).stdout.strip()
+
+
+def put(d, rel, text):
+    p = os.path.join(d, rel)
+    os.makedirs(os.path.dirname(p) or d, exist_ok=True)
+    with open(p, "w", encoding="utf-8") as fh:
+        fh.write(text)
+
+
+def commit(d, msg):
+    git(d, "add", "-A")
+    git(d, "commit", "-q", "-m", msg)
+    return rev(d)
+
+
+def base(repo, tip="master", rnd=73):
+    r = sh([sys.executable, TOOL, "--repo", repo, "--round", str(rnd), "--tip", tip], check=False)
+    return r.returncode, (r.stdout + r.stderr).strip()
+
+
+def show(label, rc, out):
+    print("== {}".format(label))
+    for ln in out.splitlines():
+        print("   " + ln)
+    print("   exit={}".format(rc))
+
+
+def fresh(name):
+    d = os.path.join(WORK, name)
+    if os.path.exists(d):
+        shutil.rmtree(d)
+    sh(["git", "clone", "-q", "--shared", LANE, d])
+    top = os.path.realpath(git(d, "rev-parse", "--show-toplevel").stdout.strip())
+    assert top == os.path.realpath(d), "{} not a git root".format(d)
+    return d
+
+
+def main():
+    if os.path.exists(WORK):
+        shutil.rmtree(WORK)
+    os.makedirs(WORK)
+
+    lane_master = rev(LANE, "master")
+    print("# lane master={}".format(lane_master))
+    print("# base tool sha256={}".format(
+        __import__("hashlib").sha256(open(TOOL, "rb").read()).hexdigest()))
+
+    # ---------------- A: T + record, then cite the pre-freeze receipt
+    d = fresh("a")
+    # instrument tip: snapshot the lane worktree's instrument inputs
+    put(d, "tools/round73-province-host-drift.py",
+        open(os.path.join(LANE, "tools/round73-province-host-drift.py"), encoding="utf-8").read())
+    put(d, "PROVINCE.md", open(os.path.join(LANE, "PROVINCE.md"), encoding="utf-8").read())
+    for rel in ("corpus/knowledge/host-identity-drift-gate.md",
+                "corpus/knowledge/round-scope-survivor-cases.md"):
+        src = os.path.join(LANE, rel)
+        if os.path.exists(src):
+            put(d, rel, open(src, encoding="utf-8").read())
+    t = commit(d, "T: instrument tip (C3 tool + host block + knowledge)")
+    put(d, ".ufo/waves/round-73/measured/after/scope.out", "# rev={}\nROUND_SCOPE_V2 round=73 cases=6 findings=0\n".format(t))
+    put(d, ".ufo/waves/round-73/measured/after/province.out", "# rev={}\nPROVINCE_HOST_DRIFT blocks=1 recorded=Linux/x86_64/arch live=Linux/x86_64/arch stale=0\n".format(t))
+    put(d, "SCORECARD.md",
+        "# lane fixture SCORECARD\n\n## Round 72 — previous\n\nold\n\n"
+        "## Round 73 — current\n\n"
+        "- C1/C3 measured at rev `{}`: `measured/after/scope.out`, `measured/after/province.out`.\n".format(t))
+    put(d, "corpus/lessons/round-73.md", "# round 73 lesson\n\nno citation\n")
+    r = commit(d, "R: record")
+    rc, out = base(d, "master")
+    show("A  R cites receipts measured at T (T={} R={})".format(t[:12], r[:12]), rc, out)
+
+    # A2: same R, but the record also cites the frozen pre-freeze receipt (header 6e961996)
+    d2 = fresh("a2")
+    shutil.rmtree(d2)
+    sh(["git", "clone", "-q", "--shared", d, d2])
+    put(d2, "SCORECARD.md",
+        "# lane fixture SCORECARD\n\n## Round 72 — previous\n\nold\n\n"
+        "## Round 73 — current\n\n"
+        "- C1/C3 measured at rev `{}`: `measured/after/scope.out`; before control: "
+        "`measured/before/score-survivors-base.out`.\n".format(t))
+    r2 = commit(d2, "R2: record cites the pre-freeze before-receipt")
+    rc, out = base(d2, "master")
+    show("A2 R2 also cites measured/before/score-survivors-base.out (header 6e961996)", rc, out)
+
+    # ---------------- B: a seat receipt stamped at the pre-instrument master
+    d3 = fresh("b")
+    put(d3, "tools/round73-province-host-drift.py",
+        open(os.path.join(LANE, "tools/round73-province-host-drift.py"), encoding="utf-8").read())
+    put(d3, ".ufo/waves/round-73/measured/after/seat.out",
+        "# rev={}\nseat counter output at seat time\n".format(lane_master))
+    put(d3, "SCORECARD.md",
+        "# lane fixture SCORECARD\n\n## Round 72 — previous\n\nold\n\n"
+        "## Round 73 — current\n\n"
+        "- Seat counter measured at rev `{}`: `measured/after/seat.out`.\n".format(lane_master))
+    put(d3, "corpus/lessons/round-73.md", "# round 73 lesson\n\nno citation\n")
+    commit(d3, "R: record cites a seat receipt stamped before T")
+    rc, out = base(d3, "master")
+    show("B  R cites a receipt stamped at the pre-instrument master {}".format(lane_master[:12]),
+         rc, out)
+
+    # ---------------- C: SKILL.md registry rows land after T; run at the new tip
+    d4 = fresh("c")
+    put(d4, "tools/round73-province-host-drift.py",
+        open(os.path.join(LANE, "tools/round73-province-host-drift.py"), encoding="utf-8").read())
+    t4 = commit(d4, "T: instrument tip")
+    put(d4, ".ufo/waves/round-73/measured/after/scope.out", "# rev={}\nverdict green\n".format(t4))
+    put(d4, "SCORECARD.md",
+        "# lane fixture SCORECARD\n\n## Round 72 — previous\n\nold\n\n"
+        "## Round 73 — current\n\n- measured at rev `{}`: `measured/after/scope.out`.\n".format(t4))
+    put(d4, "corpus/lessons/round-73.md", "# round 73 lesson\n\nno citation\n")
+    r4 = commit(d4, "R: record")
+    rc, out = base(d4, "master")
+    show("C0 run at R (T={} R={})".format(t4[:12], r4[:12]), rc, out)
+    with open(os.path.join(d4, "SKILL.md"), "a", encoding="utf-8") as fh:
+        fh.write("\n| Round scope v2 | ... |\n")
+    s4 = commit(d4, "S: SKILL.md registry rows after the record")
+    rc, out = base(d4, "master")
+    show("C1 run at S after SKILL.md lands (S={})".format(s4[:12]), rc, out)
+
+    # ---------------- D: T amended after the receipts name it
+    d5 = fresh("d")
+    put(d5, "tools/round73-province-host-drift.py",
+        open(os.path.join(LANE, "tools/round73-province-host-drift.py"), encoding="utf-8").read())
+    t5 = commit(d5, "T: instrument tip")
+    put(d5, ".ufo/waves/round-73/measured/after/scope.out", "# rev={}\nverdict green\n".format(t5))
+    put(d5, "SCORECARD.md",
+        "# lane fixture SCORECARD\n\n## Round 72 — previous\n\nold\n\n"
+        "## Round 73 — current\n\n- measured at rev `{}`: `measured/after/scope.out`.\n".format(t5))
+    put(d5, "corpus/lessons/round-73.md", "# round 73 lesson\n\nno citation\n")
+    commit(d5, "R: record")
+    tree = git(d5, "rev-parse", "HEAD~1^{tree}").stdout.strip()
+    side = sh(["git", "-C", d5, *GITID, "commit-tree", tree, "-m",
+               "rewritten instrument tip (same tree, new sha)"]).stdout.strip()
+    put(d5, ".ufo/waves/round-73/measured/after/rewrite.out",
+        "# rev={}\nreceipt stamped before the tip rewrite\n".format(side))
+    put(d5, "SCORECARD.md",
+        "# lane fixture SCORECARD\n\n## Round 72 — previous\n\nold\n\n"
+        "## Round 73 — current\n\n- measured at rev `{}`: `measured/after/rewrite.out`.\n".format(side))
+    put(d5, "corpus/lessons/round-73.md", "# round 73 lesson\n\nno citation\n")
+    commit(d5, "R: record cites the rewritten-tip receipt")
+    rc, out = base(d5, "master")
+    show("D  receipt names a rewritten T ({}) that is not an ancestor of master".format(side[:12]),
+         rc, out)
+
+    # ---------------- E: the record commit carries one instrument file
+    d6 = fresh("e")
+    put(d6, "tools/round73-province-host-drift.py",
+        open(os.path.join(LANE, "tools/round73-province-host-drift.py"), encoding="utf-8").read())
+    put(d6, "corpus/QUALITY.md", "# fixture QUALITY\n")
+    t6 = commit(d6, "T: instrument tip")
+    put(d6, ".ufo/waves/round-73/measured/after/scope.out", "# rev={}\nverdict green\n".format(t6))
+    put(d6, "SCORECARD.md",
+        "# lane fixture SCORECARD\n\n## Round 72 — previous\n\nold\n\n"
+        "## Round 73 — current\n\n- measured at rev `{}`: `measured/after/scope.out`.\n".format(t6))
+    put(d6, "corpus/lessons/round-73.md", "# round 73 lesson\n\nno citation\n")
+    put(d6, "corpus/QUALITY.md", "# fixture QUALITY\n\n| KQ140 | new criterion | ... |\n")
+    r6 = commit(d6, "R: record plus the QUALITY criterion")
+    rc, out = base(d6, "master")
+    show("E  record commit also touches corpus/QUALITY.md (T={} R={})".format(t6[:12], r6[:12]),
+         rc, out)
+
+    # ---------------- F: the final binding run's own receipt cannot be cited by R
+    d7 = fresh("f")
+    put(d7, "tools/round73-province-host-drift.py",
+        open(os.path.join(LANE, "tools/round73-province-host-drift.py"), encoding="utf-8").read())
+    t7 = commit(d7, "T: instrument tip")
+    put(d7, ".ufo/waves/round-73/measured/after/scope.out", "# rev={}\nverdict green\n".format(t7))
+    put(d7, "SCORECARD.md",
+        "# lane fixture SCORECARD\n\n## Round 72 — previous\n\nold\n\n"
+        "## Round 73 — current\n\n- measured at rev `{}`: `measured/after/scope.out`; "
+        "final binding: `measured/after/final-binding.out`.\n".format(t7))
+    put(d7, "corpus/lessons/round-73.md", "# round 73 lesson\n\nno citation\n")
+    r7 = commit(d7, "R: record cites its own final-binding receipt")
+    rc, out = base(d7, "master")
+    show("F  R cites measured/after/final-binding.out (not committed at R={})".format(r7[:12]),
+         rc, out)
+    put(d7, ".ufo/waves/round-73/measured/after/final-binding.out",
+        "# rev={}\nRECEIPT_TIP_BINDING round=73 cited=1 bound=1 unbound=0 shifted=0 stale=0\n".format(r7))
+    r7b = commit(d7, "R2: land the final-binding receipt")
+    rc, out = base(d7, "master")
+    show("F2 final binding run at R2={} (receipt header R={})".format(r7b[:12], r7[:12]), rc, out)
+
+    shutil.rmtree(WORK, ignore_errors=True)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+# ===== END seq.py =====
+
+# ===== BEGIN wording.py =====
+#!/usr/bin/env python3
+"""Wording classes: which tip-claim spellings the frozen C2 claim pass sees, and which it misses.
+
+One fixture, seven record lines, one receipt per line stamped # rev=T0, delta record-only.
+Every line cites a receipt whose header is T0, never the tip.
+"""
+
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+import tempfile
+
+S = os.path.dirname(os.path.abspath(__file__))
+LANE = "/home/vgpnk/Projects/shokunin/kama-shokunin"
+GITID = ["-c", "user.name=fixture", "-c", "user.email=fixture@invalid",
+         "-c", "commit.gpgsign=false"]
+
+
+def sh(argv, check=True):
+    r = subprocess.run(argv, capture_output=True, text=True)
+    if check and r.returncode != 0:
+        raise RuntimeError("{} -> {}\n{}\n{}".format(" ".join(argv), r.returncode, r.stdout, r.stderr))
+    return r
+
+
+def git(d, *args):
+    return sh(["git", "-C", d, *GITID, *args])
+
+
+def put(d, rel, text):
+    p = os.path.join(d, rel)
+    os.makedirs(os.path.dirname(p) or d, exist_ok=True)
+    with open(p, "w", encoding="utf-8") as fh:
+        fh.write(text)
+
+
+def main():
+    d = tempfile.mkdtemp(dir=S, prefix="phrasing-")
+    try:
+        git(d, "init", "-q", "-b", "master")
+        top = os.path.realpath(git(d, "rev-parse", "--show-toplevel").stdout.strip())
+        assert top == os.path.realpath(d), "{} not a git root".format(d)
+        put(d, "LOG.md", "#\n")
+        put(d, "SCORECARD.md", "# s\n\n## Round 72 — p\n\nold\n")
+        put(d, "corpus/lessons/round-73.md", "# l\n\nnone\n")
+        git(d, "add", "-A")
+        git(d, "commit", "-q", "-m", "seed")
+        t0 = git(d, "rev-parse", "HEAD").stdout.strip()
+        rows = [
+            ("measured at rev <T0> (proposed allowed class)",
+             "measured at rev `{}`: `measured/after/a.out`.".format(t0)),
+            ("run at the instrument tip (not a frozen token)",
+             "run at the instrument tip: `measured/after/b.out`."),
+            ("AT THE TIP (case variant)",
+             "AT THE TIP: `measured/after/c.out`."),
+            ("at the report tip (frozen token)",
+             "the gate ran at the report tip: `measured/after/d.out`."),
+            ("report-tip (hyphen variant)",
+             "the report-tip check: `measured/after/e.out`."),
+            ("the tip of the report",
+             "the tip of the report: `measured/after/f.out`."),
+            ("at tip (bare)",
+             "the check at tip: `measured/after/g.out`."),
+        ]
+        for i, (_label, _line) in enumerate(rows):
+            put(d, ".ufo/waves/round-73/measured/after/{}.out".format(chr(97 + i)),
+                "# rev={}\nverdict green\n".format(t0))
+        body = "# s\n\n## Round 72 — p\n\nold\n\n## Round 73 — current\n\n"
+        for label, line in rows:
+            body += "- {} :: {}\n".format(label, line)
+        put(d, "SCORECARD.md", body)
+        git(d, "add", "-A")
+        git(d, "commit", "-q", "-m", "record with wording variants")
+        print("fixture={} T0={} tip={}".format(
+            d, t0, git(d, "rev-parse", "HEAD").stdout.strip()))
+        for tool in ("round72-receipt-tip-binding.py", "round73-receipt-claim-binding.py"):
+            path = os.path.join(LANE, "tools", tool)
+            r = sh([sys.executable, path, "--repo", d, "--round", "73", "--tip", "master"],
+                   check=False)
+            print("== {} rc={}".format(tool, r.returncode))
+            print((r.stdout + r.stderr).strip())
+        print("== which lines the claim pass counted (2 of 7 expected)")
+        for label, line in rows:
+            caught = any(tok in line.lower() for tok in
+                         ("at the tip", "at the report tip", "report tip"))
+            print("   counted={:<5} {}".format(str(caught), label))
+    finally:
+        import shutil
+        shutil.rmtree(d, ignore_errors=True)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+# ===== END wording.py =====
+
+# ===== BEGIN realhistory.py =====
+#!/usr/bin/env python3
+"""Real-history citation test: can the round's record cite the frozen before-receipt?
+
+A --shared clone of the lane at master gains only a record (SCORECARD `## Round 73` section +
+corpus/lessons/round-73.md) citing the committed before-control receipt, whose header is the
+freeze base 6e961996. No instrument is added by this fixture: whatever the verdict, it comes from
+the round's own committed history.
+"""
+
+from __future__ import annotations
+
+import os
+import shutil
+import subprocess
+import sys
+
+S = os.path.dirname(os.path.abspath(__file__))
+LANE = "/home/vgpnk/Projects/shokunin/kama-shokunin"
+GITID = ["-c", "user.name=fixture", "-c", "user.email=fixture@invalid",
+         "-c", "commit.gpgsign=false"]
+
+
+def sh(argv, check=True):
+    r = subprocess.run(argv, capture_output=True, text=True)
+    if check and r.returncode != 0:
+        raise RuntimeError("{} -> {}\n{}\n{}".format(" ".join(argv), r.returncode, r.stdout, r.stderr))
+    return r
+
+
+def main():
+    d = os.path.join(S, "cite-before")
+    if os.path.exists(d):
+        shutil.rmtree(d)
+    sh(["git", "clone", "-q", "--shared", LANE, d])
+    top = os.path.realpath(sh(["git", "-C", d, "rev-parse", "--show-toplevel"]).stdout.strip())
+    assert top == os.path.realpath(d), "{} not a git root".format(d)
+    head = sh(["git", "-C", d, "rev-parse", "master"]).stdout.strip()
+    print("clone={} master={}".format(d, head))
+    with open(os.path.join(d, "SCORECARD.md"), encoding="utf-8") as fh:
+        sc = fh.read().rstrip()
+    with open(os.path.join(d, "SCORECARD.md"), "w", encoding="utf-8") as fh:
+        fh.write(sc + "\n\n## Round 73 — fixture record\n\n"
+                 "- Before control measured at rev 6e961996: "
+                 "`measured/before/score-survivors-base.out`.\n")
+    os.makedirs(os.path.join(d, "corpus/lessons"), exist_ok=True)
+    with open(os.path.join(d, "corpus/lessons/round-73.md"), "w", encoding="utf-8") as fh:
+        fh.write("# round 73 fixture lesson\n\nno citation\n")
+    sh(["git", "-C", d, *GITID, "add", "-A"])
+    sh(["git", "-C", d, *GITID, "commit", "-q", "-m", "record cites the frozen before-receipt"])
+    tip = sh(["git", "-C", d, "rev-parse", "HEAD"]).stdout.strip()
+    print("record={} receipt header=6e961996 (committed by 24bc96ad)".format(tip))
+    for tool in ("round72-receipt-tip-binding.py", "round73-receipt-claim-binding.py"):
+        path = os.path.join(LANE, "tools", tool)
+        r = sh([sys.executable, path, "--repo", d, "--round", "73", "--tip", "master"],
+               check=False)
+        print("== {} rc={}".format(tool, r.returncode))
+        print((r.stdout + r.stderr).strip())
+    shutil.rmtree(d, ignore_errors=True)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+# ===== END realhistory.py =====
+
+# ===== BEGIN mkreceipts.py =====
+#!/usr/bin/env python3
+"""Write the CRT02RecordCritic receipts.
+
+Each receipt's first line is `# rev=<git -C LANE rev-parse master>` read at write time; the body
+is the verbatim stdout+stderr of a command this script actually runs.
+"""
+
+from __future__ import annotations
+
+import os
+import shutil
+import subprocess
+import sys
+
+S = os.path.dirname(os.path.abspath(__file__))
+LANE = "/home/vgpnk/Projects/shokunin/kama-shokunin"
+W = os.path.join(LANE, ".ufo/waves/round-73/w1/CRT02RecordCritic")
+PY = os.environ.get("PYTHONDONTWRITEBYTECODE", "1")
+
+
+def sh(argv, cwd=S):
+    env = dict(os.environ)
+    env["PYTHONDONTWRITEBYTECODE"] = PY
+    r = subprocess.run(argv, cwd=cwd, capture_output=True, text=True, env=env)
+    return r.returncode, r.stdout + r.stderr
+
+
+def master():
+    return sh(["git", "-C", LANE, "rev-parse", "master"])[1].strip()
+
+
+def write(name, cmdline, rc, body, extra=""):
+    rev = master()
+    path = os.path.join(W, name)
+    with open(path, "w", encoding="utf-8") as fh:
+        fh.write("# rev={}\n".format(rev))
+        fh.write("# command: {}\n".format(cmdline))
+        if extra:
+            fh.write("# note: {}\n".format(extra))
+        fh.write(body)
+        if not body.endswith("\n"):
+            fh.write("\n")
+        fh.write("# exit={}\n".format(rc))
+    print("wrote {} rev={} exit={}".format(path, rev, rc))
+
+
+def main():
+    os.makedirs(W, exist_ok=True)
+
+    # instrument identity at measurement time
+    rc, out = sh(["sha256sum",
+                  os.path.join(LANE, "tools/round73-round-scope-cases.py"),
+                  os.path.join(LANE, "tools/round73-receipt-claim-binding.py"),
+                  os.path.join(LANE, "tools/round73-province-host-drift.py"),
+                  os.path.join(LANE, "tools/round72-receipt-tip-binding.py"),
+                  os.path.join(LANE, "tools/pre-report-gate.py")])
+    print("instrument sha256:\n" + out)
+
+    for name, script in (("fixtures.out", "drive.py"),
+                         ("sequence.out", "seq.py"),
+                         ("wording.out", "wording.py"),
+                         ("realhistory.out", "realhistory.py")):
+        rc, body = sh([sys.executable, os.path.join(S, script)])
+        write(name, "python3 {} (cwd {})".format(script, S), rc, body,
+              extra="instrument sha256:\n" + out.strip())
+
+    # arm 6 exactly as tools/pre-report-gate.py builds it
+    arm = [sys.executable, os.path.join(LANE, "tools/round73-round-scope-cases.py"),
+           "--repo", os.path.realpath(LANE), "--round", "73", "--tip", "master"]
+    rc, body = sh(arm)
+    clean_argv = ["git", "-C", LANE, "status", "--porcelain", "-uall", "--", ".ufo/waves/round-73"]
+    rcc, clean_out = sh(clean_argv)
+    records = [ln for ln in clean_out.splitlines() if ln.strip()]
+    classes = {}
+    for ln in body.splitlines():
+        if ln.startswith("ROUND_SCOPE_V2_FINDING "):
+            classes[ln.split()[1]] = classes.get(ln.split()[1], 0) + 1
+    summary = ("\n# finding classes: {}\n"
+               "# round-clean arm (gate argv verbatim): {} -> files={}\n").format(
+        classes, " ".join(clean_argv), len(records))
+    write("arm6-live.out",
+          " ".join(arm) + " ; and " + " ".join(clean_argv),
+          rc, body.rstrip("\n") + summary)
+
+    claim = [sys.executable, os.path.join(LANE, "tools/round73-receipt-claim-binding.py"),
+             "--repo", os.path.realpath(LANE), "--round", "73", "--tip", "master"]
+    rc, body = sh(claim)
+    shutil.rmtree(os.path.join(S, "selftest-c2b"), ignore_errors=True)
+    rcs, selftest = sh(claim + ["--selftest", "--work", os.path.join(S, "selftest-c2b")])
+    write("claim-live.out",
+          " ".join(claim) + " ; then the same argv with --selftest --work <scratch>",
+          rc, body.rstrip("\n") + "\n\n== selftest rc={}\n".format(rcs) +
+          "\n".join(selftest.strip().splitlines()[-8:]))
+
+    shutil.rmtree(os.path.join(S, "selftest-c1b"), ignore_errors=True)
+    c1 = [sys.executable, os.path.join(LANE, "tools/round73-round-scope-cases.py"),
+          "--selftest", "--work", os.path.join(S, "selftest-c1b")]
+    rc, body = sh(c1, cwd=LANE)
+    tail = body.strip().splitlines()
+    write("c1-selftest.out", "cd {} && ".format(LANE) + " ".join(c1), rc,
+          "\n".join(tail[-30:]) + "\n# full output lines={}\n".format(len(tail)),
+          extra="run from the lane cwd: the module's --selftest plan-predicate arm resolves "
+                "--repo '.' (its default) and exits 1 outside a git repository")
+
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+# ===== END mkreceipts.py =====

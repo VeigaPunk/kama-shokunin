@@ -1,0 +1,127 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# case=h3x driver=/fast/scratch/hyaku/kama-r73/LAB01Probes/probe_extra.py
+# H3 addendum: tracked-and-committed file never becomes an !! record, even when its
+#             name matches an ignore pattern; an untracked ignored sibling does.
+
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo init -q
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo rev-parse --show-toplevel
+  /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo
+[exit=0]
+[assert ok: fixture root == toplevel]
+write /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo/.gitignore <- '*.bin\n'
+write /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo/.ufo/waves/round-72/w1/tracked.pyc <- 'old\n'
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo add -A
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo -c user.name=fixture -c user.email=fixture@invalid commit -q -m 'round-72 committed pyc, no ignore rule yet'
+  (no output)
+[exit=0]
+
+-- now add the ignore rule and an untracked ignored sibling --
+write /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo/.gitignore <- '*.bin\n*.pyc\n'
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo add .gitignore
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo -c user.name=fixture -c user.email=fixture@invalid commit -q -m 'ignore *.pyc'
+  (no output)
+[exit=0]
+write /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo/.ufo/waves/round-72/w1/untracked.pyc <- 'stray\n'
+
+[X1] status --ignored over the older round dir
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo status --porcelain -uall --ignored -- .ufo/waves/round-72
+  !! .ufo/waves/round-72/w1/untracked.pyc
+[exit=0]
+
+[X2] status --ignored for the tracked pyc alone (must be empty: tracked files are not ignored)
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo status --porcelain -uall --ignored -- .ufo/waves/round-72/w1/tracked.pyc
+  (no output)
+[exit=0]
+
+[X3] `git check-ignore` on the tracked pyc (default mode consults the index)
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo check-ignore -v .ufo/waves/round-72/w1/tracked.pyc
+  (no output)
+[exit=1]
+
+[X3b] same tracked path with --no-index (the ignore rule does match; only the index hides it)
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo check-ignore --no-index -v .ufo/waves/round-72/w1/tracked.pyc
+  .gitignore:2:*.pyc	.ufo/waves/round-72/w1/tracked.pyc
+[exit=0]
+
+[X4] `git check-ignore` on the untracked pyc
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo check-ignore -v .ufo/waves/round-72/w1/untracked.pyc
+  .gitignore:2:*.pyc	.ufo/waves/round-72/w1/untracked.pyc
+[exit=0]
+
+[X5] whole-repo status --ignored
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3x/repo status --porcelain -uall --ignored
+  !! .ufo/waves/round-72/w1/untracked.pyc
+[exit=0]
+
+[X6] check-ignore documentation for --no-index
+$ MANWIDTH=100 man 1 git-check-ignore | col -b | sed -n '/--no-index/,/--quiet/p'
+       but see ‘--no-index’.
+  
+  OPTIONS
+       -q, --quiet
+       --no-index
+  	 Don’t look in the index when undertaking the checks. This can be used to debug why a  path
+  	 became tracked by e.g.	 git add . and was not ignored by the rules as expected by the user
+  	 or  when  developing patterns including negation to match a path previously added with git
+  	 add -f.
+  
+  OUTPUT
+       By default, any of the given pathnames which match an ignore pattern will be output,  one	per
+       line.  If	no  pattern  matches a given path, nothing will be output for that path; this means
+       that path will not be ignored.
+  
+       If --verbose is specified, the output is a series of lines of the form:
+  
+       <source> <COLON> <linenum> <COLON> <pattern> <HT> <pathname>
+  
+       <pathname> is the path of a file being queried, <pattern> is the matching pattern, <source> is
+       the pattern’s source file, and <linenum> is the line number of the pattern within that source.
+       If the pattern contained a "!" prefix or "/" suffix, it  will  be	preserved  in  the  output.
+       <source>  will be an absolute path when referring to the file configured by core.excludesFile,
+       or relative to the repository root when referring to .git/info/exclude or a per-directory	ex‐
+       clude file.
+  
+       If -z is specified, the pathnames in the output are delimited by the null character; if --ver‐
+       bose is also specified then null characters are also used instead of colons and hard tabs:
+  
+       <source> <NULL> <linenum> <NULL> <pattern> <NULL> <pathname> <NULL>
+  
+       If	 -n  or	 --non-matching are specified, non-matching pathnames will also be output, in which
+       case all fields in each output record except for <pathname> will be empty. This can be  useful
+       when  running  non-interactively,	so  that  files can be incrementally streamed to STDIN of a
+       long-running check-ignore process, and for each of these files, STDOUT will  indicate  whether
+       that  file	 matched  a  pattern  or  not. (Without this option, it would be impossible to tell
+       whether the absence of output for a given file meant that it didn’t match any pattern, or that
+       the output hadn’t been generated yet.)
+  
+       Buffering happens as documented under the GIT_FLUSH option in git(1). The caller is  responsi‐
+       ble for avoiding deadlocks caused by overfilling an input buffer or reading from an empty out‐
+       put buffer.
+  
+  EXIT STATUS
+       0
+  	 One or more of the provided paths is ignored.
+  
+       1
+  	 None of the provided paths are ignored.
+  
+       128
+  	 A fatal error was encountered.
+  
+  SEE ALSO
+       gitignore(5) git-config(1) git-ls-files(1)
+  
+  GIT
+       Part of the git(1) suite
+  
+  Git 2.56.0				     2026-09-27				GIT-CHECK-IGNORE(1)
+[exit=0]
+
+# case h3x complete
+# driver_exit=0

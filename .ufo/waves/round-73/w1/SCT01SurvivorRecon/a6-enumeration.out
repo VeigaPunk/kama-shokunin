@@ -1,0 +1,27 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# claim=C1 ignored-older-label implementation trap: the case must enumerate round dirs on the
+# FILESYSTEM ("present in the worktree"); a git-tree enumeration misses the c1_a6e fixture entirely
+
+### c1_a6e: round dirs present on disk
+$ ls -d /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a6e/.ufo/waves/round-*
+/fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a6e/.ufo/waves/round-71
+/fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a6e/.ufo/waves/round-72
+exit=0
+
+### c1_a6e: round dirs tracked at HEAD (ls-tree sees only round-71)
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a6e ls-tree --name-only HEAD .ufo/waves/
+.ufo/waves/round-71
+exit=0
+
+### c1_a6e: is the planted round-72 directory tracked at all?
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a6e cat-file -e HEAD:.ufo/waves/round-72 && echo tracked || echo 'not tracked (filesystem-only; ls-tree would miss it)'
+fatal: path '.ufo/waves/round-72' exists on disk, but not in 'HEAD'
+not tracked (filesystem-only; ls-tree would miss it)
+exit=0
+
+### lane: round dirs on disk vs tracked at master (sanity that the lane agrees)
+$ printf 'disk: '; ls -d /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-* | wc -l; printf 'tree: '; git -C /home/vgpnk/Projects/shokunin/kama-shokunin ls-tree --name-only master .ufo/waves/ | wc -l
+disk: 63
+tree: 63
+exit=0
+

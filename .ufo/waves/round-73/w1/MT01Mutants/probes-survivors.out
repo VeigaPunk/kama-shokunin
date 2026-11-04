@@ -1,0 +1,66 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# each surviving mutant is re-run against a fixture that isolates the mutated behaviour
+# command: python3 c1_probe.py
+# exit=0
+PORCELAIN(default): '?? sub/\n'
+PORCELAIN(-uall)  : '?? sub/dir/leak.txt\n'
+--- c1-base rc=1
+ROUND_SCOPE_V2_FINDING worktree /fast/scratch/hyaku/kama-r73/MT01Mutants/probes1/wt sub/dir/leak.txt status=??
+ROUND_SCOPE_V2 round=73 cases=6 findings=1
+--- c1-m10-drop-uall-in-linked-worktree rc=1
+ROUND_SCOPE_V2_FINDING worktree /fast/scratch/hyaku/kama-r73/MT01Mutants/probes1/wt sub/ status=??
+ROUND_SCOPE_V2 round=73 cases=6 findings=1
+# command: python3 c2_probe.py
+# exit=0
+====================================================================================================
+c2-m2-absent-header-as-bound / probe=headerless: orig_rc=1 mut_rc=1
+-- orig --
+RECEIPT_TIP_FINDING unbound .ufo/waves/round-72/measured/after/x.out :: no tip=/rev= header among the first 5 lines
+RECEIPT_CLAIM_FINDING stale-claim .ufo/waves/round-72/measured/after/x.out :: 5: Receipt: `.ufo/waves/round-72/measured/after/x.out` — read at the report tip.
+RECEIPT_CLAIM_BINDING round=72 cited=1 bound=0 unbound=1 shifted=0 stale=0 claims=1 unbound_claims=1
+-- mut  --
+RECEIPT_TIP_FINDING unbound .ufo/waves/round-72/measured/after/x.out :: no tip=/rev= header among the first 5 lines
+RECEIPT_CLAIM_BINDING round=72 cited=1 bound=0 unbound=1 shifted=0 stale=0 claims=1 unbound_claims=0
+====================================================================================================
+c2-m7-line-number-drops-offset / probe=offset: orig_rc=1 mut_rc=1
+-- orig --
+RECEIPT_CLAIM_FINDING stale-claim .ufo/waves/round-72/measured/after/x.out :: 7: - evidence: `.ufo/waves/round-72/measured/after/x.out` at the report tip.
+RECEIPT_CLAIM_BINDING round=72 cited=1 bound=1 unbound=0 shifted=0 stale=0 claims=1 unbound_claims=1
+-- mut  --
+RECEIPT_CLAIM_FINDING stale-claim .ufo/waves/round-72/measured/after/x.out :: 5: - evidence: `.ufo/waves/round-72/measured/after/x.out` at the report tip.
+RECEIPT_CLAIM_BINDING round=72 cited=1 bound=1 unbound=0 shifted=0 stale=0 claims=1 unbound_claims=1
+====================================================================================================
+c2-m8-case-sensitive-token / probe=case: orig_rc=1 mut_rc=0
+-- orig --
+RECEIPT_CLAIM_FINDING stale-claim .ufo/waves/round-72/measured/after/x.out :: 5: Receipt: `.ufo/waves/round-72/measured/after/x.out` — Read At The Report Tip.
+RECEIPT_CLAIM_BINDING round=72 cited=1 bound=1 unbound=0 shifted=0 stale=0 claims=1 unbound_claims=1
+-- mut  --
+RECEIPT_CLAIM_BINDING round=72 cited=1 bound=1 unbound=0 shifted=0 stale=0 claims=0 unbound_claims=0
+====================================================================================================
+c2-m10-drop-dedupe / probe=dup: orig_rc=1 mut_rc=1
+-- orig --
+RECEIPT_CLAIM_FINDING stale-claim .ufo/waves/round-72/measured/after/x.out :: 5: Receipt: `.ufo/waves/round-72/measured/after/x.out` and `.ufo/waves/round-72/measured/after/x.out` at the report tip.
+RECEIPT_CLAIM_BINDING round=72 cited=1 bound=1 unbound=0 shifted=0 stale=0 claims=1 unbound_claims=1
+-- mut  --
+RECEIPT_CLAIM_FINDING stale-claim .ufo/waves/round-72/measured/after/x.out :: 5: Receipt: `.ufo/waves/round-72/measured/after/x.out` and `.ufo/waves/round-72/measured/after/x.out` at the report tip.
+RECEIPT_CLAIM_FINDING stale-claim .ufo/waves/round-72/measured/after/x.out :: 5: Receipt: `.ufo/waves/round-72/measured/after/x.out` and `.ufo/waves/round-72/measured/after/x.out` at the report tip.
+RECEIPT_CLAIM_BINDING round=72 cited=1 bound=1 unbound=0 shifted=0 stale=0 claims=1 unbound_claims=1
+# command: python3 c3_probe.py
+# exit=0
+LIVE ('Linux', 'x86_64', 'arch')
+MUTANT	PROBE	ORIG_RC	MUT_RC	KILLS
+m6-uname-s-only	differs-only-in-ID	orig=1	mut=0	YES
+   orig: PROVINCE_HOST_DRIFT blocks=1 recorded=Linux/x86_64/ubuntu live=Linux/x86_64/arch stale=1
+   mut : PROVINCE_HOST_DRIFT blocks=1 recorded=Linux/x86_64/ubuntu live=Linux/x86_64/arch stale=1
+m7-live-id-constant	true-live-triple	orig=0	mut=1	YES
+   orig: PROVINCE_HOST_DRIFT blocks=1 recorded=Linux/x86_64/arch live=Linux/x86_64/arch stale=0
+   mut : PROVINCE_HOST_DRIFT blocks=1 recorded=Linux/x86_64/arch live=Linux/x86_64/unknown stale=1
+m8-newest-by-round-number	out-of-order-blocks	orig=0	mut=1	YES
+   orig: PROVINCE_HOST_DRIFT blocks=2 recorded=Linux/x86_64/arch live=Linux/x86_64/arch stale=0
+   mut : PROVINCE_HOST_DRIFT blocks=2 recorded=Windows/AMD64/win live=Linux/x86_64/arch stale=1
+m9-no-block-summary-ok	no-block-detail	orig=1	mut=1	detail-only
+   orig: PROVINCE_HOST_DRIFT blocks=0 recorded=-/-/- live=Linux/x86_64/arch stale=1
+   mut : PROVINCE_HOST_DRIFT blocks=0 recorded=-/-/- live=Linux/x86_64/arch stale=1
+m11-block-count-one	two-blocks-json	orig=0	mut=0	json-differs
+   orig: {"tool": "province-host-drift/v1", "repo": "/fast/scratch/hyaku/kama-r73/MT01Mutants/probes/p-two", "file": "/fast/scratch/hyaku/kama-r73/MT01Mutants/probes/p-two/PROVINCE.md", "blocks": 2, "graded": 
+   mut : {"tool": "province-host-drift/v1", "repo": "/fast/scratch/hyaku/kama-r73/MT01Mutants/probes/p-two", "file": "/fast/scratch/hyaku/kama-r73/MT01Mutants/probes/p-two/PROVINCE.md", "blocks": 1, "graded": 

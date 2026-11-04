@@ -306,3 +306,17 @@ prose claims against this host. All three are lane-local, read-only instruments 
 counter runs git and path/spawn probes; the pre-report gate runs the lane's own instruments; the
 boundary tool runs synthetic census fixtures under a scratch dir). No endpoint, consumer or service
 was sampled; the registered consumers keep their last recorded `DEAD` state.
+
+Round-73 host-identity block (2026-11-03). Host triple: `uname -s` -> `Linux`; `uname -m` -> `x86_64`; `/etc/os-release` `ID` -> `arch`. Graded by `tools/round73-province-host-drift.py`; a host move is answered by appending a later block, never by editing this one.
+
+**Round-73 note — the three instruments and the recorded host identity (2026-11-03).**
+`tools/round73-round-scope-cases.py` (six-case round-scope counter: the three inherited r72 cases
+plus `worktree`, `ignored-older-label` and `submodule`; the pre-report gate's arm 6),
+`tools/round73-receipt-claim-binding.py` (the frozen r72 receipt-tip binding plus a claim pass over
+the citing line) and `tools/round73-province-host-drift.py` (grades the newest
+`Round-<N> host-identity block` against the live `uname -s` / `uname -m` / `/etc/os-release` `ID`
+triple) are lane-local read-only instruments: they read git state, the lane's self-record and
+`PROVINCE.md`, and sample no endpoint, start no runtime and write nothing outside a scratch dir.
+The host-identity block appended above records this host's triple; a host move is answered by
+appending a later block, never by editing that one. The three registered consumers keep their last
+recorded `DEAD` state.

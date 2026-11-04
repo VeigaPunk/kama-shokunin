@@ -1,0 +1,80 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# command: cd /tmp && python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round73-round-scope-cases.py --selftest --work /tmp/c1st-nongit/work
+# note: the --selftest plan-predicate arm resolves the default --repo '.'
+ROUND_SCOPE_V2_SELFTEST_WORK /tmp/c1st-nongit/work
+  ROUND_SCOPE_V2 round=73 cases=6 findings=0
+PASS clean
+  ROUND_SCOPE_V2_FINDING label plans/round-73-claims.md rev=master status=absent
+  ROUND_SCOPE_V2 round=73 cases=6 findings=1
+PASS label-missing
+  ROUND_SCOPE_V2_FINDING label plans/round-73-claims.md rev=master status=heading-mismatch heading=kama round 71 — mislabelled
+  ROUND_SCOPE_V2 round=73 cases=6 findings=1
+PASS label-wrong-round
+  ROUND_SCOPE_V2_FINDING label plans/round-73-claims.md rev=master status=no-heading
+  ROUND_SCOPE_V2 round=73 cases=6 findings=1
+PASS label-no-heading
+  ROUND_SCOPE_V2_FINDING stray stray-note.md status=??
+  ROUND_SCOPE_V2 round=73 cases=6 findings=1
+PASS stray-root
+  ROUND_SCOPE_V2_FINDING stray LOG.md status=R
+  ROUND_SCOPE_V2_FINDING stray moved name.md status=R
+  ROUND_SCOPE_V2 round=73 cases=6 findings=2
+PASS stray-renamed
+  ROUND_SCOPE_V2_FINDING ignored .ufo/waves/round-73/scratch.log
+  ROUND_SCOPE_V2_FINDING ignored-older-label .ufo/waves/round-73/scratch.log
+  ROUND_SCOPE_V2 round=73 cases=6 findings=2
+PASS ignored-in-wave
+  ROUND_SCOPE_V2 round=73 cases=6 findings=0
+PASS allow-exact
+  ROUND_SCOPE_V2 round=73 cases=6 findings=0
+PASS allow-dir
+  ROUND_SCOPE_V2_FINDING stray stray-note.md status=??
+  ROUND_SCOPE_V2 round=73 cases=6 findings=1
+PASS subdir-repo
+  ROUND_SCOPE_V2_FINDING worktree /tmp/c1st-nongit/work/fixtures/worktree-dirty-wt LOG.md status= M
+  ROUND_SCOPE_V2_FINDING worktree /tmp/c1st-nongit/work/fixtures/worktree-dirty-wt stray-in-wt.txt status=??
+  ROUND_SCOPE_V2 round=73 cases=6 findings=2
+PASS worktree-red
+  ROUND_SCOPE_V2_FINDING worktree /tmp/c1st-nongit/work/fixtures/worktree-dirty-wt stray-in-wt.txt status=??
+  ROUND_SCOPE_V2 round=73 cases=6 findings=1
+PASS worktree-allow
+  ROUND_SCOPE_V2 round=73 cases=6 findings=0
+PASS worktree-green
+  ROUND_SCOPE_V2_FINDING ignored-older-label .ufo/waves/round-72/hidden.log
+  ROUND_SCOPE_V2 round=71 cases=6 findings=1
+PASS older-label-red
+  ROUND_SCOPE_V2 round=73 cases=6 findings=0
+PASS older-label-green
+  ROUND_SCOPE_V2_FINDING stray sub status= M
+  ROUND_SCOPE_V2_FINDING submodule sub child.txt status= M
+  ROUND_SCOPE_V2_FINDING submodule sub leak.txt status=??
+  ROUND_SCOPE_V2_FINDING submodule sub parent-record=M sub status= M
+  ROUND_SCOPE_V2 round=73 cases=6 findings=4
+PASS submodule-red
+  ROUND_SCOPE_V2 round=73 cases=6 findings=0
+PASS submodule-green
+  ROUND_SCOPE_V2_FINDING submodule sub child.txt status= M
+  ROUND_SCOPE_V2_FINDING submodule sub leak.txt status=??
+  ROUND_SCOPE_V2_FINDING submodule sub parent-record=M sub status= M
+  ROUND_SCOPE_V2 round=73 cases=6 findings=3
+PASS submodule-ignore-all
+PASS submodule-uninitialised-skip
+PASS tip-unresolvable
+PASS bad-allow
+PASS not-a-git-repo
+PASS cli-misuse
+PASS json-roundtrip
+Traceback (most recent call last):
+  File "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round73-round-scope-cases.py", line 825, in <module>
+    sys.exit(main())
+             ~~~~^^
+  File "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round73-round-scope-cases.py", line 802, in main
+    return run_selftest(args)
+  File "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round73-round-scope-cases.py", line 716, in run_selftest
+    frozen = _plan_predicate_at_tip(mod, args.repo, _ROUND_NO, "master")
+  File "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round73-round-scope-cases.py", line 451, in _plan_predicate_at_tip
+    root = mod.resolve_repo(repo)
+  File "/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round72-round-scope.py", line 121, in resolve_repo
+    raise ScopeError("--repo {!r} is not a git repository ({})".format(repo, detail))
+round73_inherited_round72_round_scope.ScopeError: --repo '.' is not a git repository (fatal: not a git repository (or any parent up to mount point /) Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).)
+# exit=1

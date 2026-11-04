@@ -1,0 +1,146 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# executed copy: /fast/scratch/hyaku/kama-r73/LAB01Probes/probe_extra.py (header line prepended here only)
+#!/usr/bin/env python3
+"""LAB01Probes addenda: two sub-probes inside the H3 and H4 command families.
+
+h3x: a committed file whose name matches an ignore pattern is never an `!!` record, while an
+     untracked ignored sibling is -- and `git check-ignore` reports the tracked file as ignored.
+     This is the tracked/untracked boundary the C1 `ignored`/`ignored-older-label` cases sit on.
+h4x: both installed kernels are x86_64 builds, so the `machine` field of a kernel-only upgrade
+     cannot move -- package metadata for the H4 inference.
+"""
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+S = Path("/fast/scratch/hyaku/kama-r73/LAB01Probes").resolve()
+IDENT = ["-c", "user.name=fixture", "-c", "user.email=fixture@invalid"]
+
+
+def fmt(argv):
+    out = []
+    for a in argv:
+        if a == "" or any(c in a for c in " \t\n'\"$*?;|&<>()[]{}!"):
+            out.append("'" + a.replace("'", "'\\''") + "'")
+        else:
+            out.append(a)
+    return " ".join(out)
+
+
+def emit(cp):
+    if cp.stdout:
+        for line in cp.stdout.splitlines():
+            print("  " + line)
+    if cp.stderr:
+        for line in cp.stderr.splitlines():
+            print("  stderr| " + line)
+    if not cp.stdout and not cp.stderr:
+        print("  (no output)")
+    print("[exit=%d]" % cp.returncode)
+    return cp
+
+
+def run(argv):
+    print("$ " + fmt(argv))
+    return emit(subprocess.run([str(a) for a in argv], capture_output=True, text=True))
+
+
+def pipe(cmd):
+    print("$ " + cmd)
+    return emit(subprocess.run(["bash", "-c", cmd], capture_output=True, text=True))
+
+
+def write(p, text):
+    p = Path(p)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(text, encoding="utf-8")
+    print("write %s <- %r" % (p, text))
+
+
+def g(d, *args):
+    return run(["git", "-C", str(d), *args])
+
+
+def commit(d, msg):
+    return run(["git", "-C", str(d), *IDENT, "commit", "-q", "-m", msg])
+
+
+def toplevel_assert(d):
+    d = Path(d)
+    cp = subprocess.run(["git", "-C", str(d), "rev-parse", "--show-toplevel"],
+                        capture_output=True, text=True)
+    top = cp.stdout.strip()
+    print("$ git -C %s rev-parse --show-toplevel" % d)
+    print("  " + (top if top else "(no output)"))
+    print("[exit=%d]" % cp.returncode)
+    if Path(top) != d:
+        print("ASSERT FAILED: toplevel %r != fixture %r" % (top, str(d)))
+        sys.exit(9)
+    print("[assert ok: fixture root == toplevel]")
+
+
+def fresh(name):
+    fix = S / name
+    shutil.rmtree(fix, ignore_errors=True)
+    fix.mkdir(parents=True)
+    return fix
+
+
+def h3x():
+    print("# H3 addendum: tracked-and-committed file never becomes an !! record, even when its")
+    print("#             name matches an ignore pattern; an untracked ignored sibling does.")
+    print()
+    fix = fresh("h3x")
+    repo = fix / "repo"
+    repo.mkdir()
+    g(repo, "init", "-q")
+    toplevel_assert(repo)
+    write(repo / ".gitignore", "*.bin\n")
+    write(repo / ".ufo/waves/round-72/w1/tracked.pyc", "old\n")
+    g(repo, "add", "-A")
+    commit(repo, "round-72 committed pyc, no ignore rule yet")
+
+    print("\n-- now add the ignore rule and an untracked ignored sibling --")
+    write(repo / ".gitignore", "*.bin\n*.pyc\n")
+    g(repo, "add", ".gitignore")
+    commit(repo, "ignore *.pyc")
+    write(repo / ".ufo/waves/round-72/w1/untracked.pyc", "stray\n")
+
+    print("\n[X1] status --ignored over the older round dir")
+    g(repo, "status", "--porcelain", "-uall", "--ignored", "--", ".ufo/waves/round-72")
+    print("\n[X2] status --ignored for the tracked pyc alone (must be empty: tracked files are not ignored)")
+    g(repo, "status", "--porcelain", "-uall", "--ignored", "--",
+      ".ufo/waves/round-72/w1/tracked.pyc")
+    print("\n[X3] `git check-ignore` on the tracked pyc (default mode consults the index)")
+    g(repo, "check-ignore", "-v", ".ufo/waves/round-72/w1/tracked.pyc")
+    print("\n[X3b] same tracked path with --no-index (the ignore rule does match; only the index hides it)")
+    g(repo, "check-ignore", "--no-index", "-v", ".ufo/waves/round-72/w1/tracked.pyc")
+    print("\n[X4] `git check-ignore` on the untracked pyc")
+    g(repo, "check-ignore", "-v", ".ufo/waves/round-72/w1/untracked.pyc")
+    print("\n[X5] whole-repo status --ignored")
+    g(repo, "status", "--porcelain", "-uall", "--ignored")
+    print("\n[X6] check-ignore documentation for --no-index")
+    pipe("MANWIDTH=100 man 1 git-check-ignore | col -b | sed -n '/--no-index/,/--quiet/p'")
+
+
+def h4x():
+    print("# H4 addendum: both installed kernel packages are x86_64 builds, so a kernel-only")
+    print("#             upgrade cannot move the machine field.")
+    print()
+    pipe("pacman -Qi linux linux-lts | grep -E '^(Name|Version|Architecture|Build Date)'")
+    pipe("cat /proc/version")
+    print()
+    run(["uname", "-s"])
+    run(["uname", "-m"])
+    run(["grep", "^ID=", "/etc/os-release"])
+
+
+CASES = {"h3x": h3x, "h4x": h4x}
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2 or sys.argv[1] not in CASES:
+        print("usage: probe_extra.py {h3x|h4x}", file=sys.stderr)
+        sys.exit(2)
+    CASES[sys.argv[1]]()
+    print("\n# case %s complete" % sys.argv[1])

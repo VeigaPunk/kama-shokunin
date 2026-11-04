@@ -1,0 +1,73 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# claim=C1 mechanism probes on the rebuilt survivors (A5/A6/A7): the exact command that hides each
+# fixture each probe, and the minimal command that exposes it on this host
+
+### A5 base read: primary porcelain is empty
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a5 status --porcelain -uall
+exit=0
+
+### A5 expose: linked worktrees are enumerated by worktree list --porcelain
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a5 worktree list --porcelain
+worktree /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a5
+HEAD 5db7823db70988ddb046b497446c9cc05e574204
+branch refs/heads/master
+
+worktree /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a5-wt
+HEAD 5db7823db70988ddb046b497446c9cc05e574204
+detached
+
+exit=0
+
+### A5 expose: the linked worktree's own porcelain carries both records
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a5-wt status --porcelain -uall
+ M LOG.md
+?? stray-in-wt.txt
+exit=0
+
+### A6 base read: the ignored query is scoped to round-71 (the label) and is empty
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a6e status --porcelain -uall --ignored -- .ufo/waves/round-71
+exit=0
+
+### A6 expose: dropping the pathspec to .ufo/waves shows the round-72 ignored record
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a6e status --porcelain -uall --ignored -- .ufo/waves
+!! .ufo/waves/round-72/hidden.log
+exit=0
+
+### A6 the ignoring rule that makes it invisible to the stray case
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a6e check-ignore -v .ufo/waves/round-72/hidden.log
+.gitignore:1:*.log	.ufo/waves/round-72/hidden.log
+exit=0
+
+### A7 base read: parent porcelain reports nothing for the submodule
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a7sub2 status --porcelain -uall
+exit=0
+
+### A7 expose (parent): --ignore-submodules=none overrides .gitmodules ignore=all
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a7sub2 status --porcelain -uall --ignore-submodules=none
+ M sub
+exit=0
+
+### A7 expose (child): per-submodule porcelain names the modified and untracked files
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a7sub2/sub status --porcelain -uall
+ M child.txt
+?? leak.txt
+exit=0
+
+### A7 the effective setting lives in .gitmodules, not .git/config
+$ cat /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a7sub2/.gitmodules
+[submodule "sub"]
+	path = sub
+	url = /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a7_subrepo
+	ignore = all
+exit=0
+
+### A7 submodule status marks initialization (leading space = initialized)
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a7sub2 submodule status
+ 6f42fe876d5a971c0268ac85ddb0508bdab1e037 sub (heads/master)
+exit=0
+
+### A7 -C on a submodule path resolves to the submodule's own toplevel
+$ git -C /fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a7sub2/sub rev-parse --show-toplevel
+/fast/scratch/hyaku/kama-r73/SCT01SurvivorRecon/ctrl/fixtures/c1_a7sub2/sub
+exit=0
+

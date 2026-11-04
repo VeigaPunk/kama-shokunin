@@ -1,0 +1,97 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# case=h3 driver=/fast/scratch/hyaku/kama-r73/LAB01Probes/probe.py
+# H3: does `git status --porcelain -uall --ignored -- <missing-dir>` exit 0 with empty
+#     output, and does an existing dir with one ignored file print exactly one !! record?
+
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo init -q
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo rev-parse --show-toplevel
+  /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo
+[exit=0]
+[assert ok: fixture root == toplevel]
+write /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo/.gitignore <- '*.bin\n'
+write /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo/existing/ignored.bin <- 'x\n'
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo add -A
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo -c user.name=fixture -c user.email=fixture@invalid commit -q -m base
+  (no output)
+[exit=0]
+
+-- missing paths: a counter must not treat an absent round dir as an error --
+
+[M1] missing-dir, no trailing slash
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo status --porcelain -uall --ignored -- missing-dir
+  (no output)
+[exit=0]
+
+[M2] missing-dir, trailing slash
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo status --porcelain -uall --ignored -- missing-dir/
+  (no output)
+[exit=0]
+
+[M3] the counter's actual form: .ufo/waves/round-73 (absent)
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo status --porcelain -uall --ignored -- .ufo/waves/round-73
+  (no output)
+[exit=0]
+
+[M4] an absent older round dir: .ufo/waves/round-72
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo status --porcelain -uall --ignored -- .ufo/waves/round-72
+  (no output)
+[exit=0]
+
+[M5] an existing but empty directory
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo status --porcelain -uall --ignored -- empty-dir/
+  (no output)
+[exit=0]
+
+-- existing dir carrying one ignored file --
+
+[E1] pathspec existing/
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo status --porcelain -uall --ignored -- existing/
+  !! existing/ignored.bin
+[exit=0]
+
+[E2] pathspec existing (no slash)
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo status --porcelain -uall --ignored -- existing
+  !! existing/ignored.bin
+[exit=0]
+
+[E3] --ignored=matching, pathspec existing/
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo status --porcelain -uall --ignored=matching -- existing/
+  !! existing/ignored.bin
+[exit=0]
+
+[E4] whole repo, traditional --ignored
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo status --porcelain -uall --ignored
+  !! existing/ignored.bin
+[exit=0]
+
+-- a round-named dir that is itself ignored by a pattern --
+write /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo/.gitignore <- '*.bin\n.ufo/waves/round-7*/\n'
+write /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo/.ufo/waves/round-73/cache.pyc <- 'x\n'
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo add .gitignore
+  (no output)
+[exit=0]
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo -c user.name=fixture -c user.email=fixture@invalid commit -q -m 'ignore round-7* wave dirs'
+  (no output)
+[exit=0]
+
+[W1] traditional --ignored, pathspec .ufo/waves/round-73
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo status --porcelain -uall --ignored -- .ufo/waves/round-73
+  !! .ufo/waves/round-73/cache.pyc
+[exit=0]
+
+[W2] --ignored=matching, same pathspec
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo status --porcelain -uall --ignored=matching -- .ufo/waves/round-73
+  !! .ufo/waves/round-73/
+[exit=0]
+
+[W3] absent older round dir with the same pattern in force
+$ git -C /fast/scratch/hyaku/kama-r73/LAB01Probes/h3/repo status --porcelain -uall --ignored -- .ufo/waves/round-72
+  (no output)
+[exit=0]
+
+# case h3 complete
+# driver_exit=0

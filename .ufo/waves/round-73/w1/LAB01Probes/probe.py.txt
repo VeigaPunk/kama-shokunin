@@ -1,0 +1,302 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# executed copy: /fast/scratch/hyaku/kama-r73/LAB01Probes/probe.py (header line prepended here only)
+#!/usr/bin/env python3
+"""LAB01Probes round-73 driver: four bounded, falsifiable hypotheses.
+
+Read-only outside $S. Every fixture lives under
+/fast/scratch/hyaku/kama-r73/LAB01Probes/<case>/ and is created fresh per run.
+Every git call names -C <path>; every commit carries a throwaway identity passed as
+-c user.name=fixture -c user.email=fixture@invalid. No `git config` in any lane repo.
+"""
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+S = Path("/fast/scratch/hyaku/kama-r73/LAB01Probes").resolve()
+IDENT = ["-c", "user.name=fixture", "-c", "user.email=fixture@invalid"]
+
+
+def fmt(argv):
+    out = []
+    for a in argv:
+        if a == "" or any(c in a for c in " \t\n'\"$*?;|&<>()[]{}!"):
+            out.append("'" + a.replace("'", "'\\''") + "'")
+        else:
+            out.append(a)
+    return " ".join(out)
+
+
+def emit(cp):
+    if cp.stdout:
+        for line in cp.stdout.splitlines():
+            print("  " + line)
+    if cp.stderr:
+        for line in cp.stderr.splitlines():
+            print("  stderr| " + line)
+    if not cp.stdout and not cp.stderr:
+        print("  (no output)")
+    print("[exit=%d]" % cp.returncode)
+    return cp
+
+
+def run(argv, cwd=None):
+    print("$ " + fmt(argv))
+    return emit(subprocess.run([str(a) for a in argv], capture_output=True,
+                               text=True, cwd=cwd))
+
+
+def pipe(cmd):
+    print("$ " + cmd)
+    return emit(subprocess.run(["bash", "-c", cmd], capture_output=True, text=True))
+
+
+def write(p, text):
+    p = Path(p)
+    p.parent.mkdir(parents=True, exist_ok=True)
+    p.write_text(text, encoding="utf-8")
+    print("write %s <- %r" % (p, text))
+
+
+def append(p, text):
+    with open(p, "a", encoding="utf-8") as fh:
+        fh.write(text)
+    print("append %s <- %r" % (p, text))
+
+
+def g(d, *args):
+    return run(["git", "-C", str(d), *args])
+
+
+def commit(d, msg):
+    return run(["git", "-C", str(d), *IDENT, "commit", "-q", "-m", msg])
+
+
+def toplevel_assert(d):
+    d = Path(d)
+    cp = subprocess.run(["git", "-C", str(d), "rev-parse", "--show-toplevel"],
+                        capture_output=True, text=True)
+    top = cp.stdout.strip()
+    print("$ git -C %s rev-parse --show-toplevel" % d)
+    print("  " + (top if top else "(no output)"))
+    print("[exit=%d]" % cp.returncode)
+    if Path(top) != d:
+        print("ASSERT FAILED: toplevel %r != fixture %r" % (top, str(d)))
+        sys.exit(9)
+    print("[assert ok: fixture root == toplevel]")
+
+
+def fresh(name):
+    fix = S / name
+    shutil.rmtree(fix, ignore_errors=True)
+    fix.mkdir(parents=True)
+    return fix
+
+
+# ---------------------------------------------------------------- H1
+def h1():
+    print("# H1: does submodule.<name>.ignore=all in .gitmodules hide submodule dirt from the")
+    print("#     parent's `git status --porcelain -uall`, and does --ignore-submodules=none show it?")
+    print()
+    run(["git", "--version"])
+    fix = fresh("h1")
+    sub, par = fix / "subrepo", fix / "parent"
+    sub.mkdir()
+    g(sub, "init", "-q")
+    toplevel_assert(sub)
+    write(sub / "base.txt", "base\n")
+    g(sub, "add", "-A")
+    commit(sub, "subrepo base")
+    par.mkdir()
+    g(par, "init", "-q")
+    toplevel_assert(par)
+    write(par / "p.txt", "p\n")
+    g(par, "add", "-A")
+    commit(par, "parent base")
+
+    print("\n-- add the local submodule (protocol.file.allow=always) --")
+    run(["git", "-C", str(par), "-c", "protocol.file.allow=always",
+         "submodule", "add", str(sub), "mod"])
+    g(par, "add", "-A")
+    commit(par, "add submodule mod")
+
+    print("\n-- positive control: same dirt BEFORE any ignore setting --")
+    append(par / "mod" / "base.txt", "control\n")
+    write(par / "mod" / "control-untracked.txt", "new\n")
+    print("\n[C1] parent, default policy, no ignore setting in force")
+    g(par, "status", "--porcelain", "-uall")
+    print("\n[C2] submodule's own worktree, no ignore setting in force")
+    g(par / "mod", "status", "--porcelain", "-uall")
+    print("\n-- revert the control dirt so the A/B has byte-identical dirt --")
+    g(par / "mod", "checkout", "--", "base.txt")
+    p = par / "mod" / "control-untracked.txt"
+    p.unlink()
+    print("rm -f %s" % p)
+
+    print("\n-- set submodule.mod.ignore=all in .gitmodules only --")
+    g(par, "config", "-f", ".gitmodules", "submodule.mod.ignore", "all")
+    g(par, "add", ".gitmodules")
+    commit(par, "set submodule.mod.ignore=all in .gitmodules")
+    print("\n-- carrier check: which file holds the setting --")
+    g(par, "config", "--get", "submodule.mod.ignore")
+    g(par, "config", "-f", ".gitmodules", "--get", "submodule.mod.ignore")
+    print("\n-- enumeration forms a counter could use --")
+    g(par, "config", "-f", ".gitmodules", "--get-regexp", r"^submodule\..*\.path$")
+    g(par, "submodule", "status", "--recursive")
+
+    print("\n-- state A: modified tracked file + untracked file inside the submodule --")
+    append(par / "mod" / "base.txt", "dirty\n")
+    write(par / "mod" / "untracked.txt", "new\n")
+    print("\n[A1] parent, default ignore policy")
+    g(par, "status", "--porcelain", "-uall")
+    print("\n[A2] parent, --ignore-submodules=none")
+    g(par, "status", "--porcelain", "-uall", "--ignore-submodules=none")
+    print("\n[A3] parent, explicit --ignore-submodules=all (control)")
+    g(par, "status", "--porcelain", "-uall", "--ignore-submodules=all")
+    print("\n[A4] the submodule's own worktree")
+    g(par / "mod", "status", "--porcelain", "-uall")
+    print("\n[A5] parent `submodule status` after content dirt (does it flag content?)")
+    g(par, "submodule", "status", "--recursive")
+
+    print("\n-- state B: untracked file only (tracked file restored) --")
+    g(par / "mod", "checkout", "--", "base.txt")
+    print("\n[B1] parent, default ignore policy")
+    g(par, "status", "--porcelain", "-uall")
+    print("\n[B2] parent, --ignore-submodules=none")
+    g(par, "status", "--porcelain", "-uall", "--ignore-submodules=none")
+    print("\n[B3] the submodule's own worktree")
+    g(par / "mod", "status", "--porcelain", "-uall")
+    print("\n[B4] parent `submodule status` with only untracked content")
+    g(par, "submodule", "status", "--recursive")
+
+
+# ---------------------------------------------------------------- H2
+def h2():
+    print("# H2: does `git worktree list --porcelain` enumerate a --detach linked worktree, and")
+    print("#     is that worktree's dirt invisible to the primary but visible via its own status?")
+    print()
+    fix = fresh("h2")
+    pri, lnk = fix / "primary", fix / "linked"
+    pri.mkdir()
+    g(pri, "init", "-q")
+    toplevel_assert(pri)
+    write(pri / "file.txt", "one\n")
+    g(pri, "add", "-A")
+    commit(pri, "primary base")
+    print("\n-- create the linked worktree with --detach --")
+    run(["git", "-C", str(pri), "worktree", "add", "--detach", str(lnk), "HEAD"])
+    toplevel_assert(lnk)
+    print("\n[1] enumeration from the primary")
+    g(pri, "worktree", "list", "--porcelain")
+    print("\n[2] linked worktree identity")
+    g(lnk, "rev-parse", "--show-toplevel")
+    g(lnk, "rev-parse", "--git-common-dir")
+
+    print("\n-- dirty the linked worktree (one modified tracked file, one untracked file) --")
+    append(lnk / "file.txt", "dirt\n")
+    write(lnk / "untracked.txt", "new\n")
+    print("\n[3] primary status --porcelain -uall")
+    g(pri, "status", "--porcelain", "-uall")
+    print("\n[4] primary status --porcelain -uall --ignored (wider control)")
+    g(pri, "status", "--porcelain", "-uall", "--ignored")
+    print("\n[5] linked worktree status --porcelain -uall")
+    g(lnk, "status", "--porcelain", "-uall")
+    print("\n[6] enumeration from inside the linked worktree")
+    g(lnk, "worktree", "list", "--porcelain")
+    print("\n[7] primary `status` restricted to its own path (control)")
+    g(pri, "status", "--porcelain", "-uall", "--", ".")
+
+
+# ---------------------------------------------------------------- H3
+def h3():
+    print("# H3: does `git status --porcelain -uall --ignored -- <missing-dir>` exit 0 with empty")
+    print("#     output, and does an existing dir with one ignored file print exactly one !! record?")
+    print()
+    fix = fresh("h3")
+    repo = fix / "repo"
+    repo.mkdir()
+    g(repo, "init", "-q")
+    toplevel_assert(repo)
+    write(repo / ".gitignore", "*.bin\n")
+    (repo / "existing").mkdir()
+    write(repo / "existing" / "ignored.bin", "x\n")
+    (repo / "empty-dir").mkdir()
+    g(repo, "add", "-A")
+    commit(repo, "base")
+
+    print("\n-- missing paths: a counter must not treat an absent round dir as an error --")
+    print("\n[M1] missing-dir, no trailing slash")
+    g(repo, "status", "--porcelain", "-uall", "--ignored", "--", "missing-dir")
+    print("\n[M2] missing-dir, trailing slash")
+    g(repo, "status", "--porcelain", "-uall", "--ignored", "--", "missing-dir/")
+    print("\n[M3] the counter's actual form: .ufo/waves/round-73 (absent)")
+    g(repo, "status", "--porcelain", "-uall", "--ignored", "--", ".ufo/waves/round-73")
+    print("\n[M4] an absent older round dir: .ufo/waves/round-72")
+    g(repo, "status", "--porcelain", "-uall", "--ignored", "--", ".ufo/waves/round-72")
+    print("\n[M5] an existing but empty directory")
+    g(repo, "status", "--porcelain", "-uall", "--ignored", "--", "empty-dir/")
+
+    print("\n-- existing dir carrying one ignored file --")
+    print("\n[E1] pathspec existing/")
+    g(repo, "status", "--porcelain", "-uall", "--ignored", "--", "existing/")
+    print("\n[E2] pathspec existing (no slash)")
+    g(repo, "status", "--porcelain", "-uall", "--ignored", "--", "existing")
+    print("\n[E3] --ignored=matching, pathspec existing/")
+    g(repo, "status", "--porcelain", "-uall", "--ignored=matching", "--", "existing/")
+    print("\n[E4] whole repo, traditional --ignored")
+    g(repo, "status", "--porcelain", "-uall", "--ignored")
+
+    print("\n-- a round-named dir that is itself ignored by a pattern --")
+    write(repo / ".gitignore", "*.bin\n.ufo/waves/round-7*/\n")
+    (repo / ".ufo/waves/round-73").mkdir(parents=True)
+    write(repo / ".ufo/waves/round-73" / "cache.pyc", "x\n")
+    g(repo, "add", ".gitignore")
+    commit(repo, "ignore round-7* wave dirs")
+    print("\n[W1] traditional --ignored, pathspec .ufo/waves/round-73")
+    g(repo, "status", "--porcelain", "-uall", "--ignored", "--", ".ufo/waves/round-73")
+    print("\n[W2] --ignored=matching, same pathspec")
+    g(repo, "status", "--porcelain", "-uall", "--ignored=matching", "--", ".ufo/waves/round-73")
+    print("\n[W3] absent older round dir with the same pattern in force")
+    g(repo, "status", "--porcelain", "-uall", "--ignored", "--", ".ufo/waves/round-72")
+
+
+# ---------------------------------------------------------------- H4
+def h4():
+    print("# H4: are `uname -s`, `uname -m` and /etc/os-release ID stable across a kernel-version")
+    print("#     change while `uname -r` is not? (observed values + documented field semantics;")
+    print("#     no reboot is performed)")
+    print()
+    print("-- live values --")
+    for flag in ("-s", "-m", "-r", "-v", "-o"):
+        run(["uname", flag])
+    run(["uname", "-a"])
+    run(["uname", "--version"])
+    print()
+    run(["cat", "/proc/sys/kernel/osrelease"])
+    run(["grep", "-E", r"^(ID|NAME|VERSION_ID|BUILD_ID|PRETTY_NAME)=", "/etc/os-release"])
+    print("\n-- /etc/os-release provenance (a kernel package must not own it) --")
+    run(["ls", "-l", "/etc/os-release"])
+    pipe("pacman -Qo /usr/lib/os-release /etc/os-release")
+    print("\n-- installed kernel releases (two coexist) --")
+    pipe("ls -1 /usr/lib/modules")
+    pipe("pacman -Q linux linux-lts")
+    pipe("cat /usr/lib/modules/*/pkgbase")
+    pipe("pacman -Qo /usr/lib/modules/6.18.57-2-lts /usr/lib/modules/7.2.11-arch1-1")
+    print("\n-- observed kernel-release changes in the package log (same machine, no reboot) --")
+    pipe("grep -E 'upgraded linux ' /var/log/pacman.log | tail -5")
+    print("\n-- documented field semantics --")
+    pipe("MANWIDTH=100 man 1 uname | col -b | sed -n '/^ *-s, --kernel-name/,/^ *-n, --nodename/p'")
+    pipe("MANWIDTH=100 man 1 uname | col -b | sed -n '/^ *-m, --machine/,/^ *-p, --processor/p'")
+    pipe("MANWIDTH=100 man 1 uname | col -b | sed -n '/^ *-r, --kernel-release/,/^ *-v, --kernel-version/p'")
+    pipe("MANWIDTH=100 man 2 uname | col -b | sed -n '/^DESCRIPTION/,/^RETURN VALUE/p'")
+    pipe("MANWIDTH=100 man 5 os-release | col -b | sed -n '/^ *ID=/,/^ *ID_LIKE=/p'")
+
+
+CASES = {"h1": h1, "h2": h2, "h3": h3, "h4": h4}
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2 or sys.argv[1] not in CASES:
+        print("usage: probe.py {h1|h2|h3|h4}", file=sys.stderr)
+        sys.exit(2)
+    CASES[sys.argv[1]]()
+    print("\n# case %s complete" % sys.argv[1])

@@ -1,0 +1,74 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# claim=C3 input: the live host triple the newest Round-<N> host-identity block must record
+
+### live uname -s (kernel name)
+$ uname -s
+Linux
+exit=0
+
+### live uname -m (machine hardware name)
+$ uname -m
+x86_64
+exit=0
+
+### live /etc/os-release ID
+$ grep -E '^ID=' /etc/os-release
+ID=arch
+exit=0
+
+### full identity line for context (fields that a kernel-only update would move)
+$ uname -a
+Linux plazir27 7.2.11-arch1-1 #1 SMP PREEMPT_DYNAMIC Fri, 16 Oct 2026 00:28:58 +0000 x86_64 GNU/Linux
+exit=0
+
+### uname -r (kernel release: moves on a kernel package update)
+$ uname -r
+7.2.11-arch1-1
+exit=0
+
+### uname -v (kernel version build string: moves on a kernel package update)
+$ uname -v
+#1 SMP PREEMPT_DYNAMIC Fri, 16 Oct 2026 00:28:58 +0000
+exit=0
+
+### uname -n (nodename, not part of the triple)
+$ uname -n
+plazir27
+exit=0
+
+### manual: -s and -m field definitions (coreutils uname(1))
+$ MANWIDTH=100 man 1 uname 2>/dev/null | sed -n '/-s, --kernel-name/,/-r, --kernel-release/p'
+     -s, --kernel-name
+            print the kernel name
+
+     -n, --nodename
+            print the network node hostname
+
+     -r, --kernel-release
+exit=0
+
+### manual: os-release(5) ID definition (distro identifier, not kernel)
+$ MANWIDTH=100 man 5 os-release 2>/dev/null | sed -n '/^     ID=/,/^$/p'
+     ID=
+         A lower-case string (no spaces or other characters outside of 0–9, a–z, ".", "_" and  "-")
+         identifying  the operating system, excluding any version information and suitable for pro‐
+         cessing by scripts or usage in generated filenames. If not set, a  default  of  "ID=linux"
+         may  be  used.  Note  that even though this string may not include characters that require
+         shell quoting, quoting may nevertheless be used.
+
+exit=0
+
+### PROVINCE.md: does any Round-<N> host-identity block exist yet?
+$ grep -n 'host-identity block' /home/vgpnk/Projects/shokunin/kama-shokunin/PROVINCE.md || echo 'NO MATCH: no host-identity block present'
+310:Round-73 host-identity block (2026-11-03). Host triple: `uname -s` -> `Linux`; `uname -m` -> `x86_64`; `/etc/os-release` `ID` -> `arch`. Graded by `tools/round73-province-host-drift.py`; a host move is answered by appending a later block, never by editing this one.
+exit=0
+
+### PROVINCE.md: the newest host prose (round-71 re-derivation, recorded identity)
+$ sed -n '272,276p' /home/vgpnk/Projects/shokunin/kama-shokunin/PROVINCE.md
+## Host re-derivation — round 71 (2026-11-03; the round-65/67 notes above stay as written)
+
+The markers above were recorded on the 2026-10-31 Windows host. This lane now runs on a different
+host: `uname -s` → `Linux`, `uname -r` → `7.2.11-arch1-1` (2026-11-03). Each surface below was
+re-derived read-only on this host; the counter `tools/round71-province-host-claims.py` grades these
+exit=0
+

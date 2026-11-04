@@ -1,0 +1,46 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+module	mutation	verdict	killing-check
+C1:round73-round-scope-cases.py	drop "worktree" from CASE_ORDER (cases=5, sort raises on a worktree finding)	killed	clean,allow-exact,allow-dir (want_line cases=6); worktree findings crash the sort
+C1:round73-round-scope-cases.py	stop extending findings with the submodule case	killed	submodule-red,submodule-ignore-all,shim-does-nothing
+C1:round73-round-scope-cases.py	parent probe without --ignore-submodules=none	killed	submodule-ignore-all
+C1:round73-round-scope-cases.py	drop the no-worktree skip record for an uninitialised submodule	killed	submodule-uninitialised-skip
+C1:round73-round-scope-cases.py	invert the M>=N bound on older round wave dirs	killed	older-label-red,older-label-green,shim-does-nothing
+C1:round73-round-scope-cases.py	stop emitting ignored-older-label findings	killed	older-label-red,ignored-in-wave,shim-does-nothing
+C1:round73-round-scope-cases.py	invert the exit code	killed	21 arms (clean,label-*,stray-*,allow-*,worktree-*,older-*,submodule-*,json-roundtrip,shim)
+C1:round73-round-scope-cases.py	drop --ignored from the older-label probe	killed	ignored-in-wave,older-label-red,shim-does-nothing
+C1:round73-round-scope-cases.py	grade the primary worktree as if it were linked	killed	stray-root,stray-renamed,subdir-repo,submodule-red
+C1:round73-round-scope-cases.py	drop -uall from the linked-worktree status	survived	no arm puts a nested untracked dir in a linked worktree; probe: detail "sub/" instead of "sub/dir/leak.txt"
+C1:round73-round-scope-cases.py	treat an absent submodule worktree as initialised	killed	submodule-uninitialised-skip
+C1:round73-round-scope-cases.py	stop emitting submodule status findings	killed	submodule-red,submodule-ignore-all
+C2:round73-receipt-claim-binding.py	drop the "at the tip" tip-claim token	killed	lesson-tip-claim
+C2:round73-receipt-claim-binding.py	treat an absent receipt header as bound	survived	no arm isolates a headerless cited receipt; probe: unbound_claims 1->0 and the stale-claim finding disappears
+C2:round73-receipt-claim-binding.py	remove the tip-token guard so every citing line is a claim	killed	clean-no-tip-claim,measured-at-rev-no-tip-token,base-red-echo
+C2:round73-receipt-claim-binding.py	do not increment unbound_claims	killed	b6-tip-claim,claim-header-equals-tip,non-receipt-citation-out-of-scope,lesson-tip-claim,base-finding-then-claim
+C2:round73-receipt-claim-binding.py	clean verdict ignores unbound_claims	killed	b6-tip-claim,non-receipt-citation-out-of-scope,lesson-tip-claim
+C2:round73-receipt-claim-binding.py	echo cited=0 from the base verdict	killed	clean-no-tip-claim,b6-tip-claim
+C2:round73-receipt-claim-binding.py	drop the scorecard line offset from line_no	survived	every finding arm is in the lesson (offset 0) or asserts no line number; probe: 7 -> 5
+C2:round73-receipt-claim-binding.py	case-sensitive tip-token scan	survived	no arm uses a capitalised claim; probe: mixed-case claim flips rc 1 -> 0
+C2:round73-receipt-claim-binding.py	use the raw token instead of _resolve_citation	killed	lesson-tip-claim
+C2:round73-receipt-claim-binding.py	drop the per-line citation dedupe	survived	no arm cites the same receipt twice on one line; probe: duplicate finding line
+C2:round73-receipt-claim-binding.py	ignore the base exit in the clean rule	killed	base-red-echo
+C3:round73-province-host-drift.py	grade the first block instead of the last	killed	newest-matches,newest-differs
+C3:round73-province-host-drift.py	skip the triple-mismatch branch	killed	windows-stale,newest-differs
+C3:round73-province-host-drift.py	drop the no-block finding	killed	no-block
+C3:round73-province-host-drift.py	stale=0 whenever any block exists	killed	windows-stale,newest-differs,unparseable-triple
+C3:round73-province-host-drift.py	invert the exit code	killed	live-match,windows-stale,no-block,newest-matches,newest-differs,unparseable-triple
+C3:round73-province-host-drift.py	compare only uname -s (triple[:1])	survived	no fixture differs only in machine/ID; probe: recorded Linux/x86_64/ubuntu accepted (rc 1 -> 0)
+C3:round73-province-host-drift.py	live ID constant "unknown"	survived	live-match derives its fixture from the module's own live_triple(); probe: true triple rejected (rc 0 -> 1)
+C3:round73-province-host-drift.py	newest block by round number, not file order	survived	fixtures are in file order; probe: out-of-order blocks flip rc 0 -> 1
+C3:round73-province-host-drift.py	empty no-block finding detail	survived	arm asserts only the "no-block" token, never a detail; probe: "PROVINCE_HOST_DRIFT_FINDING no-block " with empty detail
+C3:round73-province-host-drift.py	drop the line= pointer from the unparseable finding	killed	unparseable-triple
+C3:round73-province-host-drift.py	JSON payload blocks=1 when any block exists	survived	no arm exercises --json; probe: blocks 2 -> 1
+C3:round73-province-host-drift.py	summary line stale=0	killed	windows-stale,newest-differs,unparseable-triple
+C3:round73-province-host-drift.py	summary line blocks=1	killed	no-block,newest-matches,newest-differs
+GATE:pre-report-gate.py	arm 6 calls round72-round-scope.py instead of the v2 module	killed	green,wave-uncommitted,stale-newest-closure,missing-declared-path,dirty-declared-path,crlf-declared-path,round-scope-red,round-scope-green,round-scope-v2-clean,round-scope-v2-a5-red,round-scope-v2-a6-red
+GATE:pre-report-gate.py	VERDICT_RE for round-scope back to "ROUND_SCOPE "	killed	verdict-selector
+GATE:pre-report-gate.py	set every arm ok=True	killed	stale-newest-closure,missing-declared-path,dirty-declared-path,crlf-declared-path,round-scope-red,round-scope-v2-a5-red,round-scope-v2-a6-red
+GATE:pre-report-gate.py	gate exit is always 0	killed	wave-uncommitted,stale-newest-closure,missing-declared-path,dirty-declared-path,crlf-declared-path,round-scope-red,round-scope-v2-a5-red,round-scope-v2-a6-red
+GATE:pre-report-gate.py	uncommitted count is always 0	killed	wave-uncommitted
+GATE:pre-report-gate.py	drop the defect-record append from the arm detail	killed	missing-declared-path,dirty-declared-path,crlf-declared-path,round-scope-red,round-scope-v2-a5-red,round-scope-v2-a6-red,verdict-selector
+GATE:pre-report-gate.py	scope finding regex back to the v1 shape	killed	round-scope-red,round-scope-v2-a5-red,round-scope-v2-a6-red,verdict-selector
+GATE:pre-report-gate.py	round-clean ok ignores the uncommitted count	killed	wave-uncommitted

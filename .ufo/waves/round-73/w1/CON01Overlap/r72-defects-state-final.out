@@ -1,0 +1,48 @@
+# rev=bc9e30599b6c6133bb094f0e7abd1a9f512778ec
+# command: final per-defect probe (same probes as r72-defects-state.out, re-run after the wave's seats landed their files)
+
+== 1 stale C2 tally ==
+$ wc -l tools/round72-receipt-tip-binding.py; grep -c "^    _arm(" tools/round72-receipt-tip-binding.py
+961 tools/round72-receipt-tip-binding.py
+16
+$ grep -c "pass=14 fail=0" SCORECARD.md
+2
+$ grep -c "14 arms" SCORECARD.md
+1
+
+== 2 C2 own-record red ==
+$ git cat-file -e master:tools/round73-receipt-claim-binding.py
+fatal: path 'tools/round73-receipt-claim-binding.py' exists on disk, but not in 'master'
+committed-exit=128
+$ test -f tools/round73-receipt-claim-binding.py
+worktree-present-exit=0
+$ grep -c "^## Round 73" SCORECARD.md; test -f corpus/lessons/round-73.md
+0
+lesson73-exit=1
+$ grep -n "unbound=105 shifted=24 stale=9" -r .ufo/waves/round-72/measured/after/ | head -1
+.ufo/waves/round-72/measured/after/receipt-tip-binding-at-f3cd3623.out:141:RECEIPT_TIP_BINDING round=72 cited=138 bound=0 unbound=105 shifted=24 stale=9
+
+== 3 used-by table location ==
+$ grep -n "used-by" corpus/lessons/round-72.md
+24:| `git-check-ignore` (new row **S543**, appended by SCR01SourceRow this round: `SOURCES.md:295`, rows 282 → 283, `used-by` `corpus/knowledge/receipt-tip-binding.md`; the id came from th
+102:  and extended S175/S542 `used-by` (old→new recorded in its report). Its id-collision check found
+
+== 4 rejected SOURCES row with flip ==
+$ grep -c REJECTED corpus/lessons/round-72.md; grep -c "flip:" corpus/lessons/round-72.md
+0
+0
+
+== 5 stale-lane line ==
+$ grep -c "driver tick" /home/vgpnk/Projects/shokunin/.ufo/reports/round-72/kama.md; test -f /home/vgpnk/Projects/shokunin/.ufo/reports/round-73/kama.md
+1
+r73-report-exit=1
+
+== 6 before-control exit codes ==
+$ grep -c "^# exit=" .ufo/waves/round-73/measured/before/*.out
+.ufo/waves/round-73/measured/before/score-survivors-base.out:2
+.ufo/waves/round-73/measured/before/sources-census-start.out:1
+
+== 7 unreceipted disclosure ==
+$ grep -rln "unrestored" .ufo/waves/round-73/ --exclude-dir=CON01Overlap; ls .ufo/waves/round-73/w1/*/ | grep -i append
+grep-exit=1
+$ grep -rn "append-only-audit.py --repo" .ufo/waves/round-73/ --exclude-dir=CON01Overlap | head -3

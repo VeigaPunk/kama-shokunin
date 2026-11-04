@@ -2821,3 +2821,85 @@ described `measured/after/pre-report-at-tip.out` as running "at the report tip" 
   48 sections, as this entry was written), so `SCORECARD.md:16`'s depth row must be re-derived at the
   report tip by the L1 in the same landing — otherwise the row that this correction repairs goes stale
   again in one commit.
+
+## Round 73 (2026-11-03) — the round-scope counter kills its own three survivors, every tip claim is bound to the revision its receipt names, and the province's recorded host is graded against this one
+
+Motivating evidence, measured at the round's base revision `6e961996` (lane `master` at the freeze) and
+frozen by `24bc96ad` before any seat scored (`bc9e3059` then froze the wave spec):
+`.ufo/waves/round-73/controls/freeze.txt` pins `base=6e9619963fef5a3f8899324e9497416a00eab7e6` plus
+the sha256 of the plan, `build-survivors.py`, `score-survivors.py`, `fixtures-meta.json` and the before
+receipt. Round 72 claimed its pre-report cleanliness arm "cannot be satisfied vacuously", yet three named
+classes still passed its counter (A5 linked-worktree dirt, A6 a valid older-round label hiding another
+round's ignored work, A7 `submodule.<name>.ignore=all`), and its own record could not bind a citing line
+that answers a receipt with the report's revision when the receipt header names an earlier one (B6).
+The control receipt `.ufo/waves/round-73/measured/before/score-survivors-base.out` (header
+`# rev=6e961996… round=73 control=pre-freeze claim=C1,C2,C3`) prints `SURVIVORS c1 base_green=3
+v2_killed=0 v2=absent clean=n/a`, `SURVIVORS c2 base_green=1 v2_killed=0 v2=absent`,
+`SURVIVORS c3 base_green=1 v2_killed=0 v2=absent` and `# exit=0`: the unchanged round-72 counter accepts
+all three survivors (`BASE_C1 c1_a5 exit=0 verdict=GREEN ROUND_SCOPE round=73 cases=3 findings=0`, same
+for `c1_a6e` at `round=71` and `c1_a7sub2`), the unchanged binding gate accepts B6 (`BASE_C2 c2_b6
+exit=0 verdict=GREEN RECEIPT_TIP_BINDING round=72 cited=1 bound=1 unbound=0 shifted=0 stale=0`), and a
+block-exists shortcut accepts the Windows-triple fixture (`BASE_C3 c3_stale exit=0 verdict=GREEN
+block-exists-shortcut blocks=1`).
+- C1 calibration (capability `round73-round-scope-cases`, the gate's arm 6): six fixed cases — `label`,
+  `stray`, `ignored` (inherited) plus `worktree` (A5), `ignored-older-label` (A6: every
+  `.ufo/waves/round-<M>/` present with `M >= <N>`) and `submodule` (A7) — prints one
+  `ROUND_SCOPE_V2 round=<N> cases=6 findings=<f>` line, exits 1 naming each
+  `ROUND_SCOPE_V2_FINDING <case> <detail>` and 2 on could-not-evaluate; the three inherited graders are
+  imported from the byte-frozen `tools/round72-round-scope.py`. Run at this writing from the lane root:
+  `ROUND_SCOPE_V2_SELFTEST pass=26 fail=0` (exit 0, module sha256 `65d9a753…`, 825 lines) — the same
+  seat receipt and `.ufo/waves/round-73/w1/EX01ScopeV2/` (`clean.out`, `kill-a5.out`, `kill-a6.out`,
+  `kill-a7.out`, `shim.out`, `selftest.out`); the do-nothing shim (a counter that only greps the plan
+  heading) scores the three survivors red.
+- C2 operability (capability `round73-receipt-claim-binding`): the module shells out to the byte-frozen
+  `tools/round72-receipt-tip-binding.py` and adds the claim pass over the same two record blobs —
+  `RECEIPT_CLAIM_BINDING round=<N> cited=<c> bound=<b> unbound=<u> shifted=<s> stale=<t> claims=<k>
+  unbound_claims=<j>` — exits 1 naming each base finding and each `RECEIPT_CLAIM_FINDING stale-claim
+  <path> :: <line>`, and 2 when the base tool or the self-record cannot be evaluated. Run at this
+  writing: `RECEIPT_CLAIM_BINDING_SELFTEST pass=14 fail=0` (exit 0, module sha256 `888eb075…`, 755
+  lines; the first bytes this seat ran printed `pass=13` at 728 lines, and the settled run replaced that
+  number — a tally is a run fact, lesson mistake 1) — the same seat receipt; EX02's kill fixture is
+  `w1/EX02ClaimBinding/kill-b6.out`. At this
+  writing the frozen counting command over the round itself exits 2 — `SCORECARD.md` at `master`
+  carries no `## Round 73` section until the L1 writes it — so the round's own binding run is the L1's
+  and KQ119's green row is not claimed from this entry.
+- C3 freshness (capability `round73-province-host-drift`): one
+  `PROVINCE_HOST_DRIFT blocks=<b> recorded=<s>/<m>/<id> live=<s>/<m>/<id> stale=<n>` line; the graded
+  block is the newest `Round-<N> host-identity block (YYYY-MM-DD)` in file order (append-only: a host
+  move is answered by appending, never by editing); exit 1 names
+  `PROVINCE_HOST_DRIFT_FINDING <no-block|stale-host> <detail>`, exit 2 could-not-evaluate. Run at this
+  writing: `PROVINCE_HOST_DRIFT_SELFTEST pass=9 fail=0` (exit 0, module sha256 `ec7bfd3f…`, 424 lines,
+  predicate arm `plan_chars=564 constant_chars=564`); the live lane reads `PROVINCE_HOST_DRIFT blocks=1
+  recorded=Linux/x86_64/arch live=Linux/x86_64/arch stale=0` exit 0 after EX03HostDrift appended the
+  round's block, while the same run before that append read `blocks=0 recorded=-/-/- …
+  stale=1` and exited 1 naming `no-block` — receipts `w1/EX03HostDrift/` and `w1/SCR03Registry/selftests.out`.
+- Control: the survivor fixtures are built by `.ufo/waves/round-73/controls/build-survivors.py` and
+  scored by `.ufo/waves/round-73/controls/score-survivors.py`, whose last line is a `# exit=` line (the
+  round-72 routed defect 6 asked for exactly that, and this round's after-run is the same command over
+  the landed modules; the before-state is quoted above).
+- Registry: `SKILL.md` — three rows added (`Round scope v2`, `Receipt-claim binding`,
+  `Province host drift`), each carrying its frozen predicate verbatim; the `Pre-report gate` row's
+  description is amended by append (from round 73 arm 6 `round-scope` calls
+  `tools/round73-round-scope-cases.py`) and its round-72 `pass=8` tally is kept as that round's
+  measurement — the gate's current selftest prints `PRE_REPORT_SELFTEST pass=12 fail=0` (run at this
+  writing), and the difference is filed as a finding rather than edited into the row.
+- Lesson: `corpus/lessons/round-73.md` — `## Claims` (the three frozen predicates) and `## Mistakes`
+  (the tally copied between records, the control whose exit lived only in its script, and the
+  re-pointed gate whose selftest was red on the bytes that landed first); `## Gate` and `## Wave` are
+  the L1's.
+- Axes: C1 sits on calibration (the lane's tied-lowest non-retired score, 7), C2 on operability (8) and
+  C3 on freshness, per the plan; the MISSION.md freshness conflict stays open at
+  `.ufo/l0-questions.md:145` and the round-65 NTFS-path question stays unanswered.
+- Frontier: per the freeze, C3 rests on a new `uname(1)` row (`uname -s`/`uname -m` semantics), C1 on a
+  new `gitmodules(5)` row (`submodule.<name>.ignore`), and C2 re-opens S175 (`git merge-base
+  --is-ancestor`) and S542 (porcelain v1); every new row is opened live with this lane's access date and
+  appended only after a scratch-mirror census gate exits 0. The append landed while this entry was
+  being written: `corpus/SOURCES.md` goes 283 → 285 rows with `S544` (GNU coreutils `uname(1)`) and
+  `S545` (`gitmodules(5)`), and `S175`/`S542` answer the re-open by adding `corpus/lessons/round-73.md`
+  to their `used-by` cells (read from `git diff corpus/SOURCES.md` at this writing, not copied from the
+  source seat's report).
+- Wave: one v1 wave. `w1-spec.json` carries **15** items (4 executors, 3 scribes, 1 scout, 1 connector,
+  1 revenger, 1 reviewer, 2 critics, 1 mutation-tester, 1 sentinel) and `w1.ready.dispatched` carries
+  the 15 dispatch names, while the spec's own seat text and this round's goal say "ONE v1 wave of 14
+  seats"; the measured count is the spec's, and the delta is recorded here rather than repaired in the
+  freeze. The L1 appends the integration block after the seats land.
