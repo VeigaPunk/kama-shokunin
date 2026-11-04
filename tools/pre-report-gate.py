@@ -285,7 +285,7 @@ _DEFECT_ARMS = ("worktree-landing", "round-scope",
 # substitution); each absent module fails the arm closed, never a vacuous green.
 # Round 77 retires `claim-v2` from this arm: its citation rule has no fence scope and
 # aborts (exit 2) on a record that quotes a markdown report in fenced history, which is
-# the contract-required form (round-76 fence ruling). Arm 10's citation-baseline grades
+# the contract-required form (round-76 fence ruling). Arm 9's citation-baseline grades
 # the same population with the fence and non-receipt classes; the old rule is not hidden,
 # it stops being current law.
 ROUND74_V2_MODULES = (
@@ -300,7 +300,7 @@ ROUND75_MODULES = (
     ("append-debt", "round81-append-debt.py", ("--repo", "{repo}", "--round", "{round}")),
 )
 
-# Arm 10 runs selftests, not the round-77 counters' live grading modes.
+# Arm 9 runs selftests, not the round-77 counters' live grading modes.
 ROUND77_MODULES = (
     "round77-citation-baseline.py",
     "round77-append-registers.py",
@@ -308,13 +308,13 @@ ROUND77_MODULES = (
 )
 ROUND77_SELFTEST_RE = re.compile(r"[A-Z][A-Z0-9_]*_SELFTEST pass=[0-9]+ fail=0")
 
-# Arm 12 `round81-instruments` (round 81): the round-81 acceptance counter's own selftest, with
-# the same own-summary rule as arm 11 - a foreign instrument's summary must not certify it.
+# Arm 11 `round81-instruments` (round 81): the round-81 acceptance counter's own selftest, with
+# the same own-summary rule as arm 10 - a foreign instrument's summary must not certify it.
 ROUND81_MODULES = (
     ("round81-append-debt.py", "APPEND_DEBT_SELFTEST"),
 )
 
-# Arm 11 `round78-instruments` (round 79): the three round-78 counters' own selftests, each
+# Arm 10 `round78-instruments` (round 79): the three round-78 counters' own selftests, each
 # required to end with its OWN summary prefix — a foreign instrument's summary must not
 # certify this one, and a `fail=1` or truncated summary fails the arm closed.
 ROUND78_MODULES = (
@@ -601,7 +601,7 @@ def evaluate(repo: str, round_no: int, tip: str = "master", tools_dir: str | Non
 
     # Arm 9 `round76-instruments` is retired (round 77): its last sub-check, the frozen
     # receipt-scope counter, shifts every pre-round baseline receipt once a tools commit lands
-    # after it — the defect round-77's citation-baseline class fixes. Arm 10 grades the same
+    # after it — the defect round-77's citation-baseline class fixes. Arm 9 grades the same
     # population with the baseline class.
 
     arms.append(_round77_instruments(tools_path, repo_path, depth))
