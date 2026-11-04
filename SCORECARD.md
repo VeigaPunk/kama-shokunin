@@ -52,7 +52,7 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 The live plan follows; historical plans remain as filed (round 78's in `plans/round-78-claims.md`, executed in the §Round 78 section below; round 77's at the end of the §Round 77 section).
 
-### Planned (round 85; not frozen or executed)
+### Planned (round 85)
 
 1. Calibration: bind repair evidence to actual authority cells, not unrelated witness-token presence; include indented Markdown correction headings in exclusion controls (CR01 round84).
 2. Operability: add direction/equality/coverage controls killing the M2/M3/M4 subject-binding mutants that escaped the round84 spec probe; retain the delivered check's measured behavior.
