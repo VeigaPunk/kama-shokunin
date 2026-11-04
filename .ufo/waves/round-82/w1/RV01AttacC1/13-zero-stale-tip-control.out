@@ -1,0 +1,308 @@
+# case: 13-zero-stale-tip-control
+# clone: /fast/scratch/hyaku/kama-r82/RV01AttacC1/clone
+# rev: 651ec485916c148564a6c4eb010ccc4f146a8e73
+# base: bacae0726d7c53455bd083bc6d478bbcd6e7fffc
+# fixture-diff (git diff --unified=1 bacae0726d7c..651ec485916c):
+diff --git a/.ufo/waves/round-81/measured/after/debt-green.out b/.ufo/waves/round-81/measured/after/debt-green.out
+index 4b7a08de..ab6bd726 100644
+--- a/.ufo/waves/round-81/measured/after/debt-green.out
++++ b/.ufo/waves/round-81/measured/after/debt-green.out
+@@ -1,4 +1,4 @@
+ # rev: 2880af058f2547c4d606df7b01e662ba9ef79fd6
+ # cmd: python3 tools/round81-append-debt.py --repo . --round 81
+-APPEND_DEBT round=81 base=e7d2fd729cf8 events=63 accepted=53 late=10 pending=4 unaccepted=0 bad_rows=0 bad_declarations=0 out_of_population=0
++APPEND_DEBT round=81 base=e7d2fd729cf8 events=63 accepted=53 late=10 pending=1 unaccepted=0 bad_rows=0 bad_declarations=0 out_of_population=0
+ EXIT=0
+diff --git a/.ufo/waves/round-81/measured/after/gate.out b/.ufo/waves/round-81/measured/after/gate.out
+index ad4e50c3..a947bc0d 100644
+--- a/.ufo/waves/round-81/measured/after/gate.out
++++ b/.ufo/waves/round-81/measured/after/gate.out
+@@ -11,5 +11,5 @@ PRE_REPORT_ARM round75-instruments exit=0 ok INTERPRETATION_PINS pins=2 declared
+ PRE_REPORT_ARM round77-instruments exit=0 ok round77-citation-baseline.py exit=0 ok CITATION_BASELINE_SELFTEST pass=7 fail=0 | round77-append-registers.py exit=0 ok APPEND_REGISTERS_SELFTEST pass=7 fail=0 | round77-selfrecord-round76.py exit=0 ok SELFRECORD_R76_SELFTEST pass=4 fail=0
+ PRE_REPORT_ARM round78-instruments exit=0 ok round78-selfrecord-round77.py exit=0 ok SELFRECORD_R77_SELFTEST pass=8 fail=0 | round78-append-registers.py exit=0 ok APPEND_REGISTERS_SELFTEST pass=7 fail=0 | round78-live-reconcile.py exit=0 ok LIVE_RECONCILE_SELFTEST pass=4 fail=0
+ PRE_REPORT_ARM round81-instruments exit=0 ok round81-append-debt.py exit=0 ok APPEND_DEBT_SELFTEST pass=22 fail=0
+-PRE_REPORT round=81 arms=11 failed=0 uncommitted=0
++PRE_REPORT round=81 arms=10 failed=0 uncommitted=0
+ EXIT=0
+diff --git a/corpus/lessons/round-81-verifier-spotcheck.md b/corpus/lessons/round-81-verifier-spotcheck.md
+deleted file mode 100644
+index eb2e1821..00000000
+--- a/corpus/lessons/round-81-verifier-spotcheck.md
++++ /dev/null
+@@ -1,236 +0,0 @@
+-author: hyaku closure (non-author integrator, @m_zfl)
+-
+-# kama round 81 — verifier spot-check (non-author closure)
+-
+-Lane: kama, round 81 (attempt 1). Base `e7d2fd729cf8204c89c32534303bc9f2a97fcee4`; lane tip after the
+-round `1b64f66ddea89c57b71165eacd14b0e1d6f24e11` (branch `master`, remote-verified). Fleet report
+-`.ufo/reports/round-81/kama.md` (fleet commit `013c49e931048eeecc7ace57394d94c516bcea02`, author
+-`kama-shokunin <kama@shokunin.local>`; author date 2026-11-04 09:25:21 -0300 is the file-write time,
+-committer date 09:26:45 -0300 is after the lane tip's 09:26:16, so the report did land last). I did not
+-author this round; I verified it. Review date 2026-11-04.
+-
+-Method note: the two claim counters are lane-owned instruments, and PROTOCOL §Gate standard forbids
+-executing a sibling lane's gate. I re-derived every ground I could with plain commands over committed
+-bytes (`git show`, `grep`, `awk`, `wc`, `git merge-base --is-ancestor`, the fleet census) and checked
+-the committed receipts for the counter verdicts; I did not run either counter. The Gate's sampled
+-decisions were re-opened live with `curl` (2026-11-04). Driver digest (copied from
+-`.ufo/watchdog.log`, mutable): `2026-11-04T08:35:11-03:00 launch kama round=81 pgid=3277606
+-driver=hyaku-inline attempt=1` / `2026-11-04T09:27:23-03:00 complete kama round=81; hyaku-inline
+-attempt=1`.
+-
+-## 1. Conformance (step 1)
+-
+-| Check | Result |
+-|---|---|
+-| Report committed in the fleet repo by the lane identity, and lands last | PASS — `git log --format='%an %H' -1 -- .ufo/reports/round-81/kama.md` → `kama-shokunin 013c49e931048eeecc7ace57394d94c516bcea02`; committer 09:26:45 > lane tip 09:26:16; `git merge-base --is-ancestor 013c49e9 origin/master` exit 0 (`origin/master` is `7678247a`, advanced by other lanes) |
+-| `## SHONEN` heading, one line per box | PASS — `grep -c '^## SHONEN'` → `1`; four `[~]` lines against `SHONEN.md`'s four boxes, each with a pointer; no `[x]` |
+-| Every cited lane commit exists and is an ancestor of the branch | PASS — `2c1faed0 f6cb5303 7eeae5bc 88b35ea5 cf28c470 436ea857 4f4bf2d2 1b96317f 37484391 50c711ec 93cdfd60 38d39b1e f6174815 7c197ef7 017c34ca e20d89c7 1b64f66d`, the base `e7d2fd72`, the sealed `a2af1af5`, and the cutoff-probe event `4af44f78` all resolve; `git merge-base --is-ancestor <h> refs/heads/master` exit 0 for every one. Five further round commits (`0db009cd 3f2c6ffd 49707341 0821da6a 2880af05`) exist and are ancestors, but the Landed-changes table does not name them (R81V8) |
+-| Lane repo clean and pushed | PASS — `scripts/hyaku/jj-lane.sh state …` → `branch=master local=1b64f66d… remote=1b64f66d… ahead=0 behind=0 head=detached tracked=0 untracked=0`; `git status --porcelain` empty; `git ls-remote origin refs/heads/master` → `1b64f66ddea89c57b71165eacd14b0e1d6f24e11` |
+-| Dispatched prompt carries the template contract | PASS — `.ufo/prompts/kama-round-81.md` (704 lines): round-level items at §1 (mission/axes), §2 (1–3 claims, lowest axis), §2b (frontier step), §3 (≥8 L2 seats in ONE batched call), §4 (report contract), §5 (commit-then-push, push scope, L0); five child-lane items at lines 101 (report path), 500–521 (commit-before-report / report lands last), 118 (SHONEN heading), 487–489 and 513–516 (commit-hash citation), 441–447 (write scope). §6 hyaku addendum present. The quoted run-15 route map is the operator's host table (`task.agentModelOverrides` is its authority); `MISSION.md` §L2 carries only advisory role-class buckets, so no quoted map contradicts a current bucket |
+-| Report is a real report, not a marker | PASS — Work performed (two claims, evidence pointers), Landed changes tied to `LOG.md` §Round 81, Before → after, Sources & frontier with its census commands, three trend verdicts, four SHONEN lines, checkable hashes |
+-| Wave shape | PASS — `.ufo/waves/round-81/w1-spec.json` `maxLanes: 16`, 14 items; `w1-results.json` `seats: 14`, 14 results, 11 non-empty and 3 empty (`RV02C2Attack`, `CR02C2Critic`, `MT01Mutants`); roles 3 executor / 3 scribe / 2 scout / 1 connector / 2 reviewer / 2 critic / 1 mutation-tester; attack 5/14 = 36 %; one v1 wave, no residual call; `w1.ready.dispatched` present |
+-
+-Conformance defects (status-neutral; routed in §6):
+-
+-1. **The round's own C2 record row misquotes its cited receipts.** `SCORECARD.md:4901` states
+-   `late=10 pending=1 …` and `selftest pass=16 fail=0` citing `measured/after/debt-green.out` and
+-   `measured/after/debt-selftest.out`; the committed receipts print `pending=4` and `pass=22` (the
+-   report's own C2 cell says 4). The appended `#### round-81 correction` block names the six C1 facts
+-   and the seventh round-79 cell, not these two values.
+-2. **The LOG's frontier line is stale.** `LOG.md:3360` says `registry 297 → 301 rows`; the tip census
+-   is 302 (`S562` landed later in `50c711ec`) and both the report and SCORECARD say 302. No
+-   `LOG-CORRECTION` names 301→302.
+-3. **The pre-report gate's registry row is stale.** `SKILL.md:309` still says “ten arms”, arm 8
+-   composing `tools/round75-append-accepted.py`, and requires `arms=10`; the gate at the tip prints
+-   `arms=11`, arm 8's third member is `tools/round81-append-debt.py`, and arm 11 is
+-   `round81-instruments`. `PROVINCE.md` records the new instruments; the registry home (`SKILL.md`)
+-   does not.
+-4. **The report's warning-inventory sentence is inaccurate.** The report and its freeze divergence 4
+-   say the `W04` set is the pre-existing inventory plus round 80's `S555`, and that round 81's warning
+-   set does not grow; `sources-census.sh validate` at the tip prints new `W04 S559` (duplicate of
+-   `S175`) and `W04 S562` (duplicate of `S560`), and the committed
+-   `measured/after/census-validate.out` carries both. The category count is unchanged; two instances
+-   are new.
+-5. **The debt receipts' revision labels do not reproduce their content.**
+-   `measured/after/debt-selftest.out` and `battery.out` carry `# rev: 2880af05…` and print
+-   `APPEND_DEBT_SELFTEST pass=22`, but `2880af05`'s tree contains the 16-arm tool; the 22-arm tool is
+-   `017c34ca`, a child of `2880af05` (the receipts were refreshed with the hardening uncommitted). The
+-   gate receipt at `e20d89c7` does reproduce the 22 arms and is the claim's binding evidence.
+-6. **Minor report/revision gaps.** The report's Controls paragraph (`:140`) cites
+-   `APPEND_DEBT_SELFTEST pass=16 fail=0` while its Gate bullet (`:57`) and the receipt say 22; it says
+-   the gate selftest “grows from 25 to 26 cases”, but base and tip both carry 26 cases (24 `check()`
+-   calls + 2 manual cases; the round changed one expectation, added none); the mutation-battery
+-   pointer names `corpus/lessons/round-81.md` §Hardening notes, which records RV01 N1–N4 and EX03 but
+-   not the battery (the battery is recorded in `LOG.md`'s appended correction and in the report only).
+-   The Before → after table's “After (revision)” cells cite receipt paths, not the measured revisions
+-   (`2880af05`; `e20d89c7` for the gate).
+-
+-## 2. Claims (step 2)
+-
+-### C1 — calibration: the round-80 self-record's six declared facts re-derive at the sealed revision or are answered by dated value-bound corrections
+-
+-**Grounds re-derived by me at the sealed revision `a2af1af5…` (round-80 receipts are byte-identical
+-from `a2af1af5` to the tip: `git diff --stat a2af1af5 e7d2fd72 -- .ufo/waves/round-80/measured/after/`
+-is empty):**
+-
+-| Fact | Declared at sealed (command) | Receipt observation (command) | Stale? |
+-|---|---|---|---|
+-| F1 | `git show a2af1af5:SCORECARD.md \| sed -n '4781p'` → §Round 80 C1 row `selftest \`pass=9 fail=0\`` | `git show a2af1af5:.ufo/waves/round-80/measured/after/c1-selftest.out \| tail -2` → `SELFRECORD_R79_SELFTEST pass=11 fail=0` | yes |
+-| F2 | `…sed -n '4783p'` → §Round 80 C3 row `pass=6 fail=0` | `…/c3-selftest.out \| tail -2` → `OLLAMA_CENSUS_SELFTEST pass=12 fail=0` | yes |
+-| F3 | `…sed -n '18p'` → head calibration row `\`--selftest\` → \`pass=9 fail=0\`` | same C1 receipt → `pass=11` | yes |
+-| F4 | `git show a2af1af5:LOG.md \| grep -n 'pass=9 fail=0\|pass=6 fail=0'` → §Round 80 lines 3288/3304 | same receipts → `pass=11`/`pass=12` | yes |
+-| F5 | `…SCORECARD.md \| sed -n '17p'` → last-change cell `score round 10; evidence re-anchored round 79` while the evidence cell opens “round 80: one admitted entry (`unregistered-class-second-engine`, source S554)” | observed round-80 evidence | yes |
+-| F6 | `…sed -n '18p'` → `newest non-author closure is \`corpus/lessons/round-79-verifier-spotcheck.md\`` | the round-80 spot-check lands at the base `e7d2fd72` (lane commit by `protocol-shokunin`) | yes (tip-bound; the lesson declares the divergence) |
+-
+-**Tip repairs re-derived:** `corpus/lessons/round-81.md` carries six `corrected F<n> old=… new=… at=a2af1af5…`
+-blocks (`grep -c '^`corrected F[1-6] '` → `6`); the SCORECARD appended block `#### round-81 correction`
+-(names each superseded value) is at `SCORECARD.md:4914`; `LOG.md:3344` carries
+-`LOG-CORRECTION round=80 selftest tallies pass=9/pass=6 -> pass=11/pass=12`. The head rows are
+-re-anchored (calibration’s `--selftest` → `pass=13`, newest closure → round-80, coverage last-change →
+-round 80) and the C1 critic’s seventh fact is repaired: the round-79 receipt
+-`.ufo/waves/round-79/measured/after/c2-gate.out` prints `PRE_REPORT round=79 arms=10 failed=1`, the
+-base head row said `failed=0`, the tip row says `failed=1`, and the appended block and `LOG.md:3399`
+-name it.
+-
+-**No filed byte rewritten:** `git diff e7d2fd72 1b64f66d -- LOG.md | grep -c '^-[^-]'` → `0`; the
+-§Round 80 SCORECARD rows are not among the SCORECARD deletions (the deletions are the live banner, the
+-three head rows, `### Planned`, the retired count and the capability mirror — the contract’s in-place
+-head-row re-anchors). **Counter verdict is evidence-verified, not executed:** `c1-green.out` (rev
+-`2880af05`) prints `SELFRECORD_R80 claims=6 mismatches=0 corrected=6 unbacked=0`, exit 0; `c1-selftest.out`
+-prints `pass=13 fail=0`; `c1-no-corrections.out` prints `mismatches=6`, exit 1; `c1-enum.out` (freeze tip
+-`2c1faed0`) prints `claims=6 stale=6 corrected=0`, exit 1.
+-
+-**Verdict: verified.** Axis calibration — **improved** (score holds 7; six inherited facts repaired
+-value-bound, a seventh named as ungraded, and the new counter is committed). Bound: the round’s own C2
+-row/LOG frontier repeat the same `number-drift` class (R81V1, R81V3).
+-
+-### C2 — operability: the append-only acceptance population is graded under a late-acceptance rule, and every pre-round undeclared deletion event is repaid by a committed late row
+-
+-**Register re-derived by me (plain `awk`/`wc`/`git` over committed bytes at the tip):**
+-
+-- `wc -l registry/append-only-late.tsv` → `89` lines = header + **88** data rows; sum of `count` → `88`;
+-  distinct `(commit,file)` keys → **10**; duplicate `(commit,file,line_sha256)` keys → **0**; classes
+-  `in-place-edit 50 / removal 38`.
+-- The base receipt `.ufo/waves/round-81/measured/before/debt-base.out` carries **88**
+-  `APPEND_DEBT_FINDING` lines over exactly those 10 `(commit,file)` pairs; my per-event grouping of the
+-  register matches it cell-for-cell (4 / 2 / 1 / 2 + 6 / 38 / 1 / 16 / 12 / 6 = 88).
+-- **Strict ancestry:** the 9 distinct event commits are each an ancestor of the register’s introduction
+-  commit `f6cb5303` (`git merge-base --is-ancestor <event> f6cb5303` → 0 for all; none equals it; the
+-  register was added by `git log --diff-filter=A -- registry/append-only-late.tsv` → `f6cb5303`).
+-- **Population:** distinct `(commit,file)` in the frozen `registry/append-only-accepted.tsv` → **53**;
+-  in the late register → **10**; union → **63**; overlap → 0. That is exactly the reported
+-  `events=63 accepted=53 late=10 unaccepted=0` at the tip and the base’s `unaccepted=10`. The frozen
+-  register and `tools/round75-append-accepted.py` are byte-untouched base→tip (`git diff --stat` empty).
+-
+-**Committed evidence verified:** `measured/after/gate.out` (header `# rev: e20d89c7…`) ends
+-`PRE_REPORT round=81 arms=11 failed=0 uncommitted=0`, exit 0; arm 8’s composed line carries
+-`APPEND_DEBT round=81 base=e7d2fd729cf8 events=63 accepted=53 late=10 … unaccepted=0 bad_rows=0
+-bad_declarations=0 out_of_population=0`; arm 11 carries `APPEND_DEBT_SELFTEST pass=22 fail=0`; the gate’s
+-own selftest `PRE_REPORT_SELFTEST pass=26 fail=0` (`gate-selftest.out`, a 5-line summary capture). The
+-counter, its register and `round81-late-rows.py` are byte-identical between `e20d89c7` and the tip
+-(`git diff --stat` empty), so the gate receipt is reproducible at the revision it names.
+-
+-**The frozen rule’s unsatisfiability is proved, not asserted:** `w1/EX02CutoffProbe/receipts/03-accepted-after-row.out`
+-reads `APPEND_ACCEPTED_FINDING post-introduction line 391: 4af44f78… corpus/lessons/round-79.md …
+-commit is not an ancestor of the register's introduction commit` with `03-…exit` = `exit=1`; the
+-appended row was syntactically perfect (`02-appended-row.txt`) and still refused. The base control
+-prints `unaccepted=10`, exit 1 (`debt-base.out`), and the report’s vacuous-green control receipts
+-(`w1/EX03GateArmProbe/…`) exist.
+-
+-**Verdict: verified.** The claim’s graded buckets (`accepted=53 late=10 unaccepted=0`) are re-measured
+-from the two registers and the event population; the counter’s own summary lines and the gate receipt
+-are evidence-verified (not executed). Bound: the `pending` token in `SCORECARD.md:4901` (1) disagrees
+-with the cited receipt (4) and the report (4); the debt receipts’ `# rev` labels name `2880af05`, whose
+-tree cannot print the 22-arm selftest (R81V1, R81V2). Neither touches the graded buckets.
+-
+-## 3. Axis harm check
+-
+-`git -C …/kama-shokunin diff e7d2fd72 1b64f66d -- SCORECARD.md`: the score vector holds
+-**operability 8 / freshness 8 / depth 7 / coverage 9 / calibration 7 / adjacency 7**; no axis is
+-retired; the capability table grows 43 → 44 with `append-debt`; the head rows are re-anchored and the
+-appended correction block names the superseded values. No admitted entry was found false and left
+-unmarked: the new `late-acceptance-rule` entry’s stale `recheck:` tally is named by its own appended
+-addendum, S558/S562 supersede S557/S560’s scope by new rows, and the seventh stale fact is named as
+-ungraded. The defects in §1 are record/label defects, routed in §6; none moves a score.
+-
+-| Axis | Verdict | Evidence |
+-|---|---|---|
+-| operability | **improved** | C2 verified; capability `append-debt` enters and runs (88 rows, 10 events, 0 unaccepted); gate arm 8 re-pointed and arm 11 added (`arms=11 failed=0`); score 8 held |
+-| calibration | **improved** | C1 verified; six stale facts repaired value-bound, a seventh named; new `SELFRECORD_R80` counter (`pass=13`); score 7 held |
+-| coverage | **unchanged** | no coverage claim; the frontier entry is credited under expansion; score 9 held |
+-| freshness | **unchanged** | no freshness claim this round; score 8 |
+-| depth | **unchanged** | no `SKILL.md` change in the diff; score 7 |
+-| adjacency | **unchanged** | connector scan returns negative evidence (no sibling cites the filed S557 URL; no sibling holds an acceptance instrument) and absorbs nothing; score 7 |
+-
+-## 4. Discernment spot-check (step 3, non-author)
+-
+-| Item | Decision | Re-opened source | Agree/disagree | Reason |
+-|---|---|---|---|---|
+-| S558 — Ollama OpenAI-compatibility docs at v0.40.11, corrected locator (`## Gate` row 1) | admit | `https://raw.githubusercontent.com/ollama/ollama/v0.40.11/docs/api/openai-compatibility.mdx` → HTTP 200, 25472 bytes, sha256 `44071a12…60cd5` | **agree** | The row’s digest, size and anchor (`### /v1/models` line 290; notes 294-295) match the fetched file; the quote “`owned_by` corresponds to the ollama username, defaulting to `library`” is verbatim at line 294 (9 words). The corrected locator resolves where S557’s omits `api/` and 404s (14 bytes), so the admit plus supersession is right |
+-| S561 — vLLM v0.33.0 quickstart (`## Gate` row 4) | reject | `https://raw.githubusercontent.com/vllm-project/vllm/v0.33.0/docs/getting_started/quickstart.md` → HTTP 200, 15859 bytes, sha256 `93e8d32d…b54` | **agree** | The quote “LLM is the main class for running offline inference with vLLM engine” is line 121 verbatim (11 words); round 81 reads no vLLM behavior and the v0.33.0 pin relation is round-80 C2’s, so the quickstart would scope install prose, not a measured relation. The rejection carries its flip (`S561`) |
+-| S559 — Git `git-merge-base` (`## Gate` row 2) | admit | `https://git-scm.com/docs/git-merge-base` → HTTP 200, 41397 bytes; `--is-ancestor` block | **agree** | The quote “Check if the first `<commit>` is an ancestor of the second `<commit>`, and exit with status 0 if true” is verbatim in the `--is-ancestor` description; the exit-status semantics are exactly what `round81-append-debt.py` binds a late row with. Tier A docs fits |
+-| `corpus/SOURCES.md` S558 row quote | admit (row) | same file as row 1; anchor cell | **agree** | The anchor cell’s quote is the same 9-word sentence at lines 294-295 (≤25 words), the stated digest/bytes re-derive, and the row’s `teaches` opens `supersedes S557 —`; the row is a new row, not an in-place rewrite |
+-| S562 — `git-diff-tree` `--numstat` scope erratum (the lesson’s S560 erratum) | admit (row) / erratum | `tools/append-only-audit.py:401,468` and the `--numstat`/`--no-renames` rendered lines | **agree** | The audit calls `git diff -U0 --text --no-renames` for deleted lines (`:401`) and `git diff --numstat -z --no-renames` for counts (`:468`); it never calls `--name-status`. S562’s scope correction is right, and `S560`’s quoted `-z` sentence still covers `--numstat`, so the supersession is the correct contract-v1 move |
+-
+-Census (`grep`/`awk`, run from the lane root): base blob `e7d2fd72` **297** rows (A 282 / B 11 / C 4;
+-mined 267 / queued 8 / rejected 22) → tip **302** (A 287 / B 11 / C 4; mined 271 / queued 8 / rejected
+-23), matching the report. `scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama`
+-exits 0; its warnings are the pre-existing `W04` set, `W01 S481`, and the **new** `W04 S559` (duplicate
+-of `S175`) and `W04 S562` (duplicate of `S560`) — the report’s “warning set does not grow” sentence is
+-wrong (R81V5), while the category count does not grow and no row is malformed.
+-
+-## 5. Trend verdicts
+-
+-| Trend | Verdict | Evidence |
+-|---|---|---|
+-| expansion | **improved** | one admitted `corpus/knowledge/late-acceptance-rule.md` on ground the coverage map did not hold (append-only acceptance policy), `source: S559, S560, S562` — all opened this round — with its `corpus/README.md` coverage row; registry 297 → 302 (four mined, one rejected); capability `append-debt` enters and is demonstrated. Bound: the LOG frontier line still prints the pre-S562 count 301 (R81V3) |
+-| quality | **improved, bound** | six stale facts of the round-80 record repaired value-bound without rewriting filed bytes (LOG 0 deletions; §Round 80 rows untouched; appended correction blocks), the seventh named as ungraded; the frozen acceptance rule’s unsatisfiability proved by an executable cutoff probe (exit 1); 88 deterministic late rows with `LATE_ROWS check=ok rows=88`; the gate re-pointed with a vacuous-green control; KQ133 cites the lesson. Bound: the round’s own C2 row and the LOG frontier print superseded values (pass=16, pending=1, 301), the report cites pass=16 once, the W04 inventory sentence is wrong, and the debt receipts’ `# rev` labels name a tree without the hardened tool (R81V1–R81V3, R81V5, R81V6) |
+-| discernment | **improved, bound** | this spot-check agrees with the sampled admit (S558), the sampled reject (S561), the second admit (S559) and the S558 SOURCES quote, each re-opened with bytes/digest/line; the S560 scope overreach was caught by the wave’s knowledge seat and superseded by S562, with the audit’s real record shape verified (`:401,468`); the Gate records URL, access date and a ≤25-word located quote per decision. Bound: the census/W04 note is inaccurate, so the lane’s own source-curation bookkeeping is not fully swept (R81V5) |
+-
+-## 6. Routed defects the lane must fix next round
+-
+-1. **R81V1 — the round's own C2 row misquotes its receipts.** `SCORECARD.md:4901` says
+-   `late=10 pending=1 …` and `selftest pass=16 fail=0` while the cited `debt-green.out` prints
+-   `pending=4` and `debt-selftest.out` prints `pass=22`; the LOG-CORRECTION at `LOG.md:3410` claims
+-   “the SCORECARD §Round 81 rows … carry the new tally”, which is false for this row. Append a
+-   SCORECARD correction naming `pass=16 -> pass=22` and `pending 1 -> 4` (append-only; do not rewrite
+-   the filed row), and add the pending correction to LOG.
+-2. **R81V2 — debt-receipt revision labels.** `debt-selftest.out` and `battery.out` name `# rev:
+-   2880af05…` and print `pass=22`, but `2880af05`’s tree has the 16-arm tool; the 22-arm tool is
+-   `017c34ca`. Re-run the receipts at the commit that contains the measured tool (or state the dirty
+-   worktree explicitly) and commit them; keep the `e20d89c7` gate receipt as the binding evidence.
+-3. **R81V3 — LOG frontier count.** `LOG.md:3360` says `registry 297 → 301 rows`; append
+-   `LOG-CORRECTION round=81 field=frontier-rows old=301 new=302 at=<rev>` (the tip census is 302).
+-4. **R81V4 — pre-report gate registry row.** `SKILL.md:309` still describes ten arms, arm 8 composing
+-   `tools/round75-append-accepted.py`, and the `arms=10` verdict line; update the registry home row to
+-   eleven arms, arm 8’s new third member (`round81-append-debt.py`) and arm 11 (`round81-instruments`),
+-   with the `arms=11` verdict line. A closure does not grade the gate conformant while its registry
+-   row is stale.
+-5. **R81V5 — warning inventory.** The report/lesson claim the `W04` set is the pre-existing inventory
+-   plus `S555` and that the warning set does not grow; `validate` prints new `W04 S559` and `W04 S562`.
+-   Correct the census note (category unchanged, two new instances) in the next report or an erratum.
+-6. **R81V6 — report citations.** The Controls paragraph (`:140`) cites `APPEND_DEBT_SELFTEST pass=16`
+-   where the receipt and the Gate bullet say 22; the mutation-battery pointer names the lesson’s
+-   §Hardening notes, which do not record it (the battery is in `LOG.md`’s appended correction and the
+-   report only). Correct the pointer and record the six mutants’ classes/outcomes in the lesson (or
+-   commit the mutant script) so the escape claim is re-derivable.
+-7. **R81V7 — gate-selftest growth claim.** The report says `--selftest` “grows from 25 to 26 cases”;
+-   the base and tip sources both carry 26 cases (24 `check()` calls + 2 manual cases) and the
+-   round-81 diff changes one expectation, adding no case. Correct the count (or name the actual case
+-   change) in the erratum.
+-8. **R81V8 — Landed-changes coverage.** The table omits five round commits (`0db009cd`, `3f2c6ffd`,
+-   `49707341`, `0821da6a`, `2880af05`), and the Before → after table’s “After (revision)” cells cite
+-   receipt paths rather than the measured revisions (`2880af05`; `e20d89c7` for the gate). Name the
+-   commits and the revisions next round.
+-
+-## 7. Verdict
+-
+-Status `ok` (a real report: committed by the lane identity, landed after the lane tip, every cited
+-hash an ancestor, the lane clean and pushed, the prompt carrying the full contract, the wave shaped to
+-its spec). Every declared claim verifies — C1’s six sealed facts and their value-bound corrections
+-were re-derived from committed blobs and the receipts; C2’s 88-row register, 10 strict-ancestry events
+-and 53+10=63 population were re-measured from committed bytes, with the counter verdict and the
+-`arms=11` gate evidence-verified at their named revisions. No axis is harmed; the score vector holds
+-and the capability set grows by one. The record defects above (stale C2 row/LOG frontier, stale SKILL
+-registry row, receipt labels, report citations) are routed and move no score.
+-**Admitted.**
+diff --git a/corpus/lessons/round-82.md b/corpus/lessons/round-82.md
+index 5c1d0294..ca9f564b 100644
+--- a/corpus/lessons/round-82.md
++++ b/corpus/lessons/round-82.md
+@@ -27,11 +27,6 @@ prints (the filed §Round 81, LOG and SKILL bytes are not rewritten; the superse
+ the appended `#### round-82 correction` block of the file each fact reads).
+ 
+ ```
+-corrected F1 old=sc81c2-pending=1 new=sc81c2-pending=4 at=1b64f66ddea89c57b71165eacd14b0e1d6f24e11 date=2026-11-04 fix=SCORECARD.md
+-corrected F2 old=log81-frontier-rows=301 new=log81-frontier-rows=302 at=1b64f66ddea89c57b71165eacd14b0e1d6f24e11 date=2026-11-04 fix=SCORECARD.md
+-corrected F3 old=skill81-gate-arms=10 new=skill81-gate-arms=11 at=1b64f66ddea89c57b71165eacd14b0e1d6f24e11 date=2026-11-04 fix=SCORECARD.md
+-corrected F4 old=calib81-newest-closure=round-80-verifier-spotcheck.md new=calib81-newest-closure=round-81-verifier-spotcheck.md at=1b64f66ddea89c57b71165eacd14b0e1d6f24e11 date=2026-11-04 fix=SCORECARD.md
+-corrected F5 old=logcorr81-c2-pending=1 new=logcorr81-c2-pending=4 at=1b64f66ddea89c57b71165eacd14b0e1d6f24e11 date=2026-11-04 fix=LOG.md
+ ```
+ 
+ - **F1** `SCORECARD.md` §Round 81 C2 row: the row's `-> exit 0` cell says `pending=1` and its
+diff --git a/plans/round-82-claims.md b/plans/round-82-claims.md
+index d4e4e5e6..b97dab83 100644
+--- a/plans/round-82-claims.md
++++ b/plans/round-82-claims.md
+@@ -1,6 +1,6 @@
+ # round-82 claims (kama) — frozen plan
+ 
+-Base revision `aaf974dbd3b6adb2ef914dc7293cda92b4e05551` (round-81 non-author closure tip). Sealed
++Base revision `d443fe3323f20ec1ca2770be39e038e23cec2cfe` (round-81 non-author closure tip). Sealed
+ revision C1 grades `1b64f66ddea89c57b71165eacd14b0e1d6f24e11` (the round-81 record tip — the revision
+ the round-81 report cites). Two claims, two distinct axes, each measured on its own receipt. Frozen
+ before any seat scored; a control is built and committed per claim before data.
+# cmd: counter --repo /fast/scratch/hyaku/kama-r82/RV01AttacC1/clone
+SELFRECORD_R81_FACT F1 holds declared=sc81c2-pending=1 witness=sc81c2-pending=1
+SELFRECORD_R81_FACT F2 holds declared=log81-frontier-rows=301 witness=log81-frontier-rows=301
+SELFRECORD_R81_FACT F3 holds declared=skill81-gate-arms=10 witness=skill81-gate-arms=10
+SELFRECORD_R81_FACT F4 holds declared=calib81-newest-closure=round-80-verifier-spotcheck.md witness=calib81-newest-closure=round-80-verifier-spotcheck.md
+SELFRECORD_R81_FACT F5 holds declared=logcorr81-c2-pending=1 witness=logcorr81-c2-pending=1
+SELFRECORD_R81_FACT F6 holds declared=sc81c1-selftest=13 witness=sc81c1-selftest=13
+SELFRECORD_R81 claims=6 mismatches=0 corrected=0 unbacked=0
+EXIT=0
+# cmd: counter --repo /fast/scratch/hyaku/kama-r82/RV01AttacC1/clone --enumerate
+SELFRECORD_R81_ENUM claims=6 stale=0 corrected=0
+EXIT=0

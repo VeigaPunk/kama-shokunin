@@ -2,7 +2,7 @@
 
 source: S563
 verified-at: 2026-11-04
-recheck: `python3 tools/pin-watch.py check --repo .` then re-open each `behind` row's pinned document at its own ref (`S564` for llama.cpp)
+recheck: `python3 tools/pin-watch.py check --pins registry/engine-pins.tsv` then re-open each `behind` row's pinned document at its own ref (`S564` for llama.cpp)
 
 ## The register and its two numbers
 

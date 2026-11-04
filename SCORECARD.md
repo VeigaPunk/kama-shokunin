@@ -4984,9 +4984,10 @@ red-capable selftest arms are named in the report and in `corpus/lessons/round-8
 
 ### Round 82 dispositions of the round-81 routed defects
 
-- **R81V1 fixed**: the §Round 81 C2 row's `pending` is corrected by the appended block above and the
-  F1/F5 corrections (the row's `pass=16` half does not exist in `SCORECARD.md`; that half is `LOG.md`'s
-  and was already corrected there — the closure's R81V1 sentence mixed the two files).
+- **R81V1 fixed, and wider than C1 graded**: the §Round 81 C2 row's `pending` is corrected by the
+  appended block above and the F1/F5 corrections; the same row's `pass=16` tally (deep in the row's
+  fourth cell) and the banner's duplicate `pending=1` are corrected in the second-pass block below —
+  the closure's R81V1 was right on both halves, and C1's six-fact population did not include them.
 - **R81V2 fixed**: every round-82 receipt is generated at the revision it names (the `# rev:` header is
   read from the tip before the command runs), and the red-before receipt is bound to the unmodified
   module's revision `b0064016`; the round-81 battery receipt label stays history and is named in the report.
@@ -5071,3 +5072,30 @@ red-capable selftest arms are named in the report and in `corpus/lessons/round-8
 | selfrecord-round79 | Re-derive six declared facts of the round-79 self-record at its sealed revision and grade one dated value-bound correction per stale fact against the tip | `tools/round80-selfrecord-round79.py` | 80 |
 | engine-pin-relations | Relate every pinned serving-engine ref the lane holds to its upstream newest release and tag identity from a committed tag list, with each cell re-derivable offline | `tools/round80-engine-pin-relations.py`, `registry/engine-pin-relations.tsv` | 80 |
 | class-engine-register | Prove the `registered` census class on a second engine fixture (Ollama v0.40.11) and audit an engine register whose every row names its receipt | `tools/round80-ollama-census.py`, `registry/unregistered-class-engines.tsv` | 80 |
+
+#### round-82 correction (second pass — stale facts C1's frozen six-fact population did not grade)
+
+The `SK02` seat scanned 104 declared claims in the round-81 record against the bytes they name and
+found 18 stale rows; C1's five corrections answer 7. The remaining eight distinct facts are corrected
+here (append-only; the filed bytes stand). C1's claim is unchanged — it grades six declared facts —
+but the population was too narrow, and this block is the honest distribution:
+
+- **U1** §Round 81 C2 row, fourth cell: `selftest pass=16 fail=0` → the cited `debt-selftest.out`
+  prints `pass=22` (and the round-82 tip prints `pass=25` after the row-introduction repair).
+- **U2** the head banner carried the same `pending=1` (duplicate of F1's cell); the round-82 banner
+  states the graded buckets and the `pending` convention instead.
+- **U3** the head calibration row's second closure pointer ("latest outside closure") named
+  `round-80-verifier-spotcheck.md`; re-anchored to the round-81 closure in `4beb4f2b` (the F4 class,
+  second location).
+- **U4** the `LOG.md` §Round 81 frontier enumeration names four added rows (`S558`–`S561`); five were
+  added (`S562` at `50c711ec`). The count correction is F2; the list correction is this block.
+- **U5** the `LOG-CORRECTION round=81 claim=C2` line says the retained receipt prints `pending=1` "at
+  `1b96317f`"; the retained receipt is `.ufo/waves/round-81/measured/after/debt-green.out` at rev
+  `2880af05` and prints `pending=4`. F5 corrects the value; this block corrects the revision label.
+- **U6** `SKILL.md` arm 8's third member was `tools/round75-append-accepted.py`; the sealed gate runs
+  `tools/round81-append-debt.py` (the twelve-arm row now says so; F3 graded only the arm count).
+- **U7** the SKILL gate enumeration stopped at arm 10; arm 11 `round81-instruments` existed and arm 12
+  `round82-instruments` now follows it (same row).
+- **U8** the §Round 81 dispositions' `R80V4` sentence says the `W04` set is "pre-existing except S555"
+  and that round 81's warning set "does not grow"; it grew by `W04 S559` and `W04 S562`. The census
+  category count is unchanged; two instances are new (round-82 adds none).

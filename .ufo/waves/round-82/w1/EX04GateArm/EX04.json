@@ -1,0 +1,245 @@
+{
+  "seat": "EX04GateArm",
+  "round": 82,
+  "wave": "w1",
+  "milestone": "kama r82 w1",
+  "judged_on": "operability",
+  "status": "complete",
+  "lane_tip_measured": "bacae0726d7c53455bd083bc6d478bbcd6e7fffc",
+  "base_revision": "aaf974dbd3b6adb2ef914dc7293cda92b4e05551",
+  "sealed_revision": "1b64f66ddea89c57b71165eacd14b0e1d6f24e11",
+  "production_writes": false,
+  "gate_edited": false,
+  "tool_installs": [],
+  "part_1_vacuous_green_control": {
+    "scratch_clone": {
+      "path": "$S/clone = /fast/scratch/hyaku/kama-r82/EX04GateArm/clone",
+      "created_with": "git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin $S/clone && git -C $S/clone checkout --detach aaf974dbd3b6adb2ef914dc7293cda92b4e05551",
+      "toplevel_verified": "$S/clone",
+      "head": "aaf974dbd3b6adb2ef914dc7293cda92b4e05551",
+      "files_source": "the clone's own tree at the base; nothing copied from the lane worktree",
+      "deleted_before_yield": true
+    },
+    "runs": [
+      {
+        "id": "A",
+        "cwd": "$S/clone",
+        "command": "python3 tools/round81-append-debt.py --repo . --round 82",
+        "exit": 2,
+        "stdout": "could-not-evaluate: no frozen plan at aaf974dbd3b6adb2ef914dc7293cda92b4e05551:plans/round-82-claims.md",
+        "note": "round-82 plan absent at the base; plans/ newest file is round-81-claims.md. Reported instead: run B (--round 81)."
+      },
+      {
+        "id": "B",
+        "cwd": "$S/clone",
+        "command": "python3 tools/round81-append-debt.py --repo . --round 81",
+        "exit": 0,
+        "stdout": "APPEND_DEBT round=81 base=e7d2fd729cf8 events=63 accepted=53 late=10 pending=5 unaccepted=0 bad_rows=0 bad_declarations=0 out_of_population=0"
+      },
+      {
+        "id": "C",
+        "cwd": "$S/clone",
+        "command": "printf 'commit\\tfile\\tline_sha256\\tcount\\tclass\\tnote\\n' > $S/empty.tsv && python3 tools/round81-append-debt.py --repo . --round 81 --late $S/empty.tsv",
+        "exit": 1,
+        "stdout": "APPEND_DEBT round=81 base=e7d2fd729cf8 events=63 accepted=53 late=0 pending=5 unaccepted=10 bad_rows=0 bad_declarations=0 out_of_population=0",
+        "finding_classes": {
+          "count-short": 88
+        },
+        "unaccepted_events": 10,
+        "distinct_event_commits_in_findings": 9,
+        "note": "header-only register: the 10 events the round-81 late rows accepted become unaccepted; no unbound-row finding exists because there are zero rows"
+      },
+      {
+        "id": "D",
+        "cwd": "$S/clone",
+        "command": "head -1 registry/append-only-late.tsv > $S/one-row.tsv; sed -n '2p' registry/append-only-late.tsv >> $S/one-row.tsv; python3 tools/round81-append-debt.py --repo . --round 81 --late $S/one-row.tsv",
+        "exit": 1,
+        "stdout": "APPEND_DEBT round=81 base=e7d2fd729cf8 events=63 accepted=53 late=0 pending=5 unaccepted=10 bad_rows=1 bad_declarations=0 out_of_population=0",
+        "finding_classes": {
+          "unbound-register": 1,
+          "count-short": 88
+        },
+        "first_finding": "APPEND_DEBT_FINDING unbound-register late line 2: 1cda04569f30005adc89f98aa02909d6659fdf99 SCORECARD.md 86188047b683f9e78de1431aa98e18a71cb70e2ff512f4b294a45044e5bfb06e",
+        "note": "the round-81 --late path never binds rows: late_intro stays None and blame_rows is not called, so any supplied row is unbound-register and can accept nothing"
+      }
+    ],
+    "register_at_base": {
+      "path": "registry/append-only-late.tsv",
+      "data_rows": 88,
+      "introduced_by": "f6cb5303171cc73dc570ace06f99125266e5b956",
+      "rows_for_five_round81_record_events": {
+        "cf28c470": 0,
+        "37484391": 0,
+        "50c711ec": 0,
+        "93cdfd60": 0,
+        "017c34ca": 0
+      }
+    },
+    "frozen_corroboration": {
+      "freeze_tip_before_receipt": ".ufo/waves/round-82/measured/before/c2-debt-base.out",
+      "line": "APPEND_DEBT round=82 base=aaf974dbd3b6 events=68 accepted=53 late=10 pending=0 unaccepted=5 bad_rows=0 bad_declarations=0 out_of_population=0",
+      "count_short_findings": 15,
+      "delta_before_receipt": ".ufo/waves/round-82/measured/before/c2-late-delta-base.out",
+      "delta_line": "LATE_DELTA round=82 base=aaf974dbd3b6 population=103 carried=88 new=15 bad=15",
+      "delta_missing_findings": 15
+    },
+    "why_neither_run_can_be_green_without_late_rows": "The counter grades only events ancestral to the round it is labelled with, and it scores an event only through a committed late-register row whose OWN introducing commit is a strict descendant of the event commit. With --round 82 at the base it cannot even evaluate: the frozen plan it reads the base from does not exist at aaf974db (exit 2). With --round 81 it is green (late=10) precisely because the ten round-81 late rows are committed in that tree; that population contains none of the five round-81 record-edit events (cf28c470, 37484391, 50c711ec, 93cdfd60, 017c34ca) whose 15 undeclared lines are the round-82 debt, and the base register has 88 rows with zero rows for those events. Delete the late rows and the same run goes red: a header-only register turns the ten events they accepted into unaccepted=10 with 88 count-short findings. Pass rows through --late instead of the committed register and they are unbound-register (late_intro=None, no per-row blame), so they accept nothing. A register-free or out-of-band run therefore cannot print the green line; at the base the --round 82 line is not merely red but unevaluable, because the elements are per-event committed rows with resolvable introductions, not a counter that wiring can satisfy."
+  },
+  "part_2_arm12_spec": {
+    "arm_name": "round82-instruments",
+    "position": {
+      "index_0_based": 11,
+      "ordinal": "12th and last",
+      "after": "round81-instruments",
+      "before": null,
+      "round_clean_stays": "6th (ARM_ORDER index 5)",
+      "arm_order_at_tip": [
+        "selfdesc",
+        "newest-closure",
+        "receipt-audit",
+        "worktree-landing",
+        "round-scope",
+        "round-clean",
+        "round74-v2",
+        "round75-instruments",
+        "round77-instruments",
+        "round78-instruments",
+        "round81-instruments",
+        "round82-instruments"
+      ]
+    },
+    "commands": {
+      "arm_12_members": [
+        "python3 tools/round82-selfrecord-round81.py --selftest",
+        "python3 tools/round82-late-delta.py --selftest"
+      ],
+      "not_in_arm_12": "python3 tools/round81-append-debt.py --repo <repo> --round 82 - this is arm 8 round75-instruments' third member (ROUND75_MODULES 'append-debt', {round} substituted), the round's live debt leg; duplicating it inside arm 12 would run the audit twice and conflate wiring with data",
+      "resolution": "cwd = --repo; scripts resolved from <repo>/tools (or --tools-dir); the arm has no argv-level role beyond the two selftests",
+      "pass_rule": "each member must exit 0 AND its LAST non-empty line must fully match '<PREFIX> pass=N fail=0' for its own prefix (SELFRECORD_R81_SELFTEST / LATE_DELTA_SELFTEST); absent module -> 'missing <script>'; nonzero exit or foreign/malformed/red summary -> 'missing valid final selftest summary: <line>'"
+    },
+    "expected_verdict_lines": {
+      "green": "PRE_REPORT round=70 arms=12 failed=0 uncommitted=0",
+      "red_one_member": "PRE_REPORT round=70 arms=12 failed=1 uncommitted=0 (detail carries SELFRECORD_R81_SELFTEST pass=2 fail=1)",
+      "missing_member": "PRE_REPORT round=70 arms=12 failed=1 uncommitted=0 (detail carries missing round82-selfrecord-round81.py)",
+      "selftest_summary": "PRE_REPORT_SELFTEST pass=29 fail=0",
+      "measured": true
+    },
+    "tip_state_sites": {
+      "present_and_correct": [
+        "docstring predicate quote arms=12 (line 13)",
+        "docstring arm-count history 'from round 82 on it prints arms=12' (line 25)",
+        "docstring numbered arm list entry 12 with both scripts (lines 50-51)",
+        "docstring output spec arms=12 (line 123)",
+        "docstring rounds narrative 'from round 82 on they carry arms=12' (line 196)",
+        "ARM_ORDER append 'round82-instruments' (lines 250-252)",
+        "ROUND82_MODULES pair (lines 327-330)",
+        "_round82_instruments runner with own-summary rule (lines 517-545)",
+        "evaluate() append after _round81_instruments (line 655)",
+        "VERDICT_RE keys round82-instruments-selfrecord / -late-delta (lines 266-267)",
+        "_DEFECT_ARMS keys (lines 285-286)",
+        "fixture stubs _STUB_R82_SELFRECORD (line 881) and _STUB_R82_DELTA (line 892)",
+        "selftest cases (z) green/red/missing (lines 1391-1409)",
+        "main() argparse description 'round-82 counter pair (arms=12 from round 82)' (line 1427)"
+      ],
+      "stale_must_change": [
+        {
+          "site": "PREDICATE constant target line",
+          "line": 223,
+          "now": "arms=11",
+          "required": "arms=12",
+          "why": "the docstring says 'the same sentence is this gate's PREDICATE'; the prose already names arm 12 but the label says 11, contradicting the runtime verdict"
+        },
+        {
+          "site": "docstring Exit sentence",
+          "line": 107,
+          "now": "across all ten arms",
+          "required": "across all twelve arms"
+        },
+        {
+          "site": "docstring selftest legend (h),(n),(q),(t)",
+          "lines": [
+            155,
+            163,
+            168,
+            173
+          ],
+          "now": "verdict `arms=11`",
+          "required": "verdict `arms=12`",
+          "why": "measured: every green selftest case prints PRE_REPORT round=70 arms=12 failed=0 uncommitted=0"
+        },
+        {
+          "site": "docstring wiring-tally sentence",
+          "line": 204,
+          "now": "move the selftest tally 22 -> 26",
+          "required": "state the measured tally 29 (or drop the number)",
+          "why": "measured PRE_REPORT_SELFTEST pass=29 fail=0 at the tip"
+        },
+        {
+          "site": "selftest case comment (x)",
+          "line": 1369,
+          "now": "green arm-11 stubs: the arm passes and the verdict carries ten arms",
+          "required": "arm-10 stubs ... twelve arms",
+          "why": "the label is round78-instruments-green and the verdict carries twelve arms"
+        },
+        {
+          "site": "docstring selftest legend stops at (u)",
+          "lines": "169-175",
+          "required": "add entries for the arm-11 case(s) and the arm-12 (z) green/red/missing cases; no legend entry currently describes arm 12"
+        }
+      ],
+      "inert_keys": {
+        "keys": [
+          "round81-instruments-debt",
+          "round82-instruments-selfrecord",
+          "round82-instruments-late-delta"
+        ],
+        "why": "the composed runners (_round77/78/81/82_instruments) build their detail with _last_line, never _detail, so VERDICT_RE/_DEFECT_ARMS entries for them can never fire; either drop them or route the runners through _detail",
+        "retained_as_history": [
+          "round76-instruments-* (documented retired-arm history)"
+        ]
+      }
+    },
+    "arm_count_assertions": {
+      "dynamic": "check() asserts [a['name'] for a in result['arms']] != ARM_ORDER -> auto-adapts to 12 and catches order/omission drift",
+      "literals_that_break": "8 literal want_line='PRE_REPORT round=70 arms=12 failed=0 uncommitted=0' strings (selftest); they fail if arm 12 is dropped from ARM_ORDER or not appended in evaluate(), because the verdict would print 11",
+      "none_numeric_on_len": "no 'len(arms) == 12' literal exists; the verdict interpolates arms={len(arms)} (line 658)",
+      "historical_safe": "the round-81 receipt keeps arms=11 and is never rewritten; no instrument asserts the SKILL row's number"
+    },
+    "skill_row_edit": {
+      "file": "SKILL.md",
+      "line": 309,
+      "current_state": {
+        "cells": 6,
+        "table_columns": 5,
+        "stale": [
+          "ten arms",
+          "arms=10 failed=0",
+          "PRE_REPORT_SELFTEST pass=26",
+          "arm 11/arm 12 text appended after the closing write-scope cell"
+        ],
+        "pipes": 7
+      },
+      "edit_kind": "one-line in-place replacement (SKILL.md is not append-only)",
+      "proposed_row": "| Pre-report gate | gate: `python3 tools/pre-report-gate.py --repo . --round N --tip master` (twelve arms, fixed order: selfdesc reconciler, newest-closure counter, receipt-pointer audit, worktree-landing check, round-scope counter, round-worktree cleanliness, arm 7 `round74-v2` composing `tools/round74-selfdesc-canon.py`, `tools/round74-receipt-claim-binding.py` and `tools/round74-province-host-drift.py`, arm 8 `round75-instruments` composing `tools/round75-interpretation-pins.py`, `tools/round75-survivor-probe.py` and `tools/round81-append-debt.py`, and arm 9 `round77-instruments` composing `tools/round77-citation-baseline.py`, `tools/round77-append-registers.py` and `tools/round77-selfrecord-round76.py`, and arm 10 `round78-instruments` composing `tools/round78-selfrecord-round77.py`, `tools/round78-append-registers.py` and `tools/round78-live-reconcile.py`, and arm 11 `round81-instruments` composing `tools/round81-append-debt.py --selftest`, and arm 12 `round82-instruments` composing `tools/round82-selfrecord-round81.py --selftest` and `tools/round82-late-delta.py --selftest`, each required to end with its own `<NAME>_SELFTEST pass=N fail=0` summary (round 79); the retired `round76-instruments` arm no longer runs; an absent module fails its arm closed, never vacuously green) | 0 iff all twelve arms green and `uncommitted=0`, i.e. the line reads `PRE_REPORT round=<N> arms=12 failed=0 uncommitted=0`; 1 names every failed arm; 2 CLI misuse; 3 re-entry refusal | `python3 tools/pre-report-gate.py --selftest` → `PRE_REPORT_SELFTEST pass=29 fail=0` (round-82 measurement, receipt `.ufo/waves/round-82/measured/after/gate-selftest.out`; the five-, six-, seven-, eight-, nine-, ten- and eleven-arm readings stay readable as their rounds' records) | Removed temp fixtures only |",
+      "proposed_cells": 5,
+      "must_also_commit": "the cited receipt .ufo/waves/round-82/measured/after/gate-selftest.out (gate-registry-check's missing-path rule) in the same or an earlier commit",
+      "verification": "row parses as 5 cells; simulated in $S/clone-tip with the receipt copied in: python3 tools/gate-registry-check.py -> 'registered 101 unregistered 10 defective 0' (identical to the unmodified tip; the 10 unregistered are pre-existing round-76/79/80/81 counters)"
+    },
+    "verification_receipts": [
+      "receipts/gate-selftest-tip.out - python3 tools/pre-report-gate.py --selftest --work $S/st-work -> exit 0, PRE_REPORT_SELFTEST pass=29 fail=0, 0 FAIL",
+      "receipts/real-selftest-round82-selfrecord-round81.out - python3 tools/round82-selfrecord-round81.py --selftest -> exit 0, SELFRECORD_R81_SELFTEST pass=19 fail=0",
+      "receipts/real-selftest-round82-late-delta.out - python3 tools/round82-late-delta.py --selftest -> exit 0, LATE_DELTA_SELFTEST pass=12 fail=0",
+      "receipts/tip-debt-r82.out - python3 tools/round81-append-debt.py --repo . --round 82 -> exit 0, APPEND_DEBT round=82 base=aaf974dbd3b6 events=68 accepted=53 late=15 pending=2 unaccepted=0 bad_rows=0 bad_declarations=0 out_of_population=0",
+      "receipts/tip-delta-r82.out - python3 tools/round82-late-delta.py --repo . --round 82 -> exit 0, LATE_DELTA round=82 base=aaf974dbd3b6 population=103 carried=88 new=15 bad=0",
+      "receipts/gate-registry-check-tip.out - python3 tools/gate-registry-check.py -> exit 1, registered 101 unregistered 10 defective 0 (pre-existing unregistered set; no round-82 tool among them)",
+      "receipts/registry-check-proposed-row.out - same check over a clone tree carrying the proposed row + cited receipt -> exit 1, registered 101 unregistered 10 defective 0"
+    ]
+  },
+  "risks": [
+    "The lane tip already carries the 15 round-82 rows (tip debt late=15 unaccepted=0; delta carried=88 new=15 bad=0), so the vacuous-green control is demonstrable only at the base (runs A-D) or from the committed pre-data receipt .ufo/waves/round-82/measured/before/c2-debt-base.out (unaccepted=5, 15 count-short findings).",
+    "The frozen plan's prose 'SKILL.md's pre-report-gate registry row is updated in place to eleven arms' conflicts with the tip gate printing arms=12; F3 is sealed-revision-bound (fact_f3 reads SKILL at sealed 1b64f66d and witnesses arms=11 from the round-81 receipt), so the live row must say twelve, not eleven.",
+    "Arm 12 proves wiring only: both members run --selftest against stub fixtures, so the arm is green whether or not the round's data is; the live data gate is arm 8's round81-append-debt --round N member (and C1's counter scored mode is outside the gate).",
+    "PREDICATE/docstring prose is not machine-asserted, so the stale arms=11 label at line 223 passes every green run; only a reviewer or a future text-bound counter catches it."
+  ],
+  "blockers": []
+}

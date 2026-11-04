@@ -1,0 +1,396 @@
+{
+  "seat": "EX03ReceiptReplay",
+  "role": "executor",
+  "item": "receipt-revision replay for every round-82 receipt",
+  "lane": "/home/vgpnk/Projects/shokunin/kama-shokunin",
+  "measured_dir": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-82/measured",
+  "lane_tip_start": "bacae0726d7c53455bd083bc6d478bbcd6e7fffc",
+  "lane_tip_end": "384ef1d5bcbf737183571398ecb0955ea5074609",
+  "lane_tip_note": "master advanced three times while the seat ran: bacae0726d7c -> 4f156ecfcf98 (SCORECARD.md, 1/1) -> 4beb4f2b -> 384ef1d5bcbf (PROVINCE.md, 3/1). `git diff bacae072 origin/master -- .ufo/waves/round-82/measured/` is empty, so the receipt set and every replay verdict are unchanged by the advance",
+  "clone": {
+    "path": "/fast/scratch/hyaku/kama-r82/EX03ReceiptReplay/clone",
+    "created_with": "git clone --shared /home/vgpnk/Projects/shokunin/kama-shokunin /fast/scratch/hyaku/kama-r82/EX03ReceiptReplay/clone",
+    "rev_parse_show_toplevel": "/fast/scratch/hyaku/kama-r82/EX03ReceiptReplay/clone",
+    "head_at_start": "bacae0726d7c53455bd083bc6d478bbcd6e7fffc",
+    "head_at_end": "384ef1d5bcbf737183571398ecb0955ea5074609",
+    "files_copied_into_clone": []
+  },
+  "method": "for each receipt: git checkout --detach <named rev> in the clone, verify HEAD, verify the cmd's entry file exists at that rev, run the `# cmd:` verbatim from the clone root, capture stdout/stderr/exit; compare stdout with the committed body minus `#` header lines and `EXIT=`",
+  "summary": {
+    "measured_files": 15,
+    "receipts_with_rev_header": 12,
+    "headerless_files": [
+      "after/census-validate.out",
+      "after/late-rows-round82.err",
+      "after/late-rows-round82.tsv"
+    ],
+    "reproduces": 7,
+    "differs": 3,
+    "unrunnable": 2,
+    "declared_exit_contradicted": [
+      "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-82/measured/after/c1-json.out",
+      "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-82/measured/control/c1-no-corrections.out"
+    ]
+  },
+  "ancestry": {
+    "distinct_revs": [
+      "5fe3c58c38bd10172f8d263633a8254f47467c75",
+      "962bd2513712d3d13e52b8fe2f65ece9a0003417",
+      "a251cbab6c3005fc9335631ea701f84192c6c55c",
+      "b00640169613bd340672bc7145e896185da01a94",
+      "bfdd7a708aaa5a34a9e6ab3baa242a32fad910cb"
+    ],
+    "revs_not_ancestor_of_tip_start": [],
+    "revs_not_ancestor_of_tip_end": [],
+    "verdict": "every named rev is an ancestor of both the start tip bacae0726d7c53455bd083bc6d478bbcd6e7fffc and the end tip 384ef1d5bcbf737183571398ecb0955ea5074609; no receipt names a non-ancestor rev"
+  },
+  "red_before_check": {
+    "receipt": ".ufo/waves/round-82/measured/defects/c2-debt-register-level-before.out",
+    "named_rev": "b00640169613bd340672bc7145e896185da01a94",
+    "prints_bad_rows_15": true,
+    "reproduced_body_byte_identical": true,
+    "detail": "the replayed run prints `APPEND_DEBT round=82 base=aaf974dbd3b6 events=68 accepted=53 late=10 pending=0 unaccepted=5 bad_rows=15 bad_declarations=0 out_of_population=0` plus 15 not-descendant findings and 15 count-short findings, exit 1 (31 body lines, sha256 match b2708ce3...); the `# defect:` line is a header comment",
+    "complement": "before/c2-debt-base.out at bfdd7a70 reproduces `bad_rows=0 unaccepted=5` byte-identically, so the pair is a genuine red-before/repair pair"
+  },
+  "supplementary_tip_probe": {
+    "label": "NOT a receipt verdict; freshness datum only",
+    "rev": "384ef1d5bcbf737183571398ecb0955ea5074609",
+    "cmd": [
+      "python3 tools/round82-selfrecord-round81.py --repo .",
+      "python3 tools/round82-late-delta.py --repo . --round 82",
+      "python3 tools/round81-append-debt.py --repo . --round 82"
+    ],
+    "stdout": [
+      "SELFRECORD_R81 claims=6 mismatches=0 corrected=5 unbacked=0",
+      "LATE_DELTA round=82 base=aaf974dbd3b6 population=103 carried=88 new=15 bad=0",
+      "APPEND_DEBT round=82 base=aaf974dbd3b6 events=68 accepted=53 late=15 pending=2 unaccepted=0 bad_rows=0 bad_declarations=0 out_of_population=0"
+    ],
+    "exit_codes": [
+      0,
+      0,
+      0
+    ]
+  },
+  "receipts": [
+    {
+      "receipt_rel": "after/c1-green.out",
+      "receipt_abs": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-82/measured/after/c1-green.out",
+      "rev": "a251cbab6c3005fc9335631ea701f84192c6c55c",
+      "cmd": "python3 tools/round82-selfrecord-round81.py --repo .",
+      "declared_exit": "EXIT=0",
+      "run_exit": 0,
+      "verdict": "reproduces",
+      "note": "body byte-identical; green line and exit both reproduce",
+      "ancestor_of_tip_start": true,
+      "ancestor_of_tip_end": true,
+      "receipt_body_sha256": "2731d88b190b10b678e994a20c29ab98cc21d365cfe12ef3fd26767c00ce09d0",
+      "run_stdout_sha256": "2731d88b190b10b678e994a20c29ab98cc21d365cfe12ef3fd26767c00ce09d0",
+      "receipt_body_lines": 7,
+      "run_stdout_lines": 7,
+      "body_is_prefix_of_run": true,
+      "body_is_suffix_of_run": true,
+      "first_differing_line": null,
+      "stderr": "",
+      "unrunnable_reason": null,
+      "evidence": [
+        "replay/after__c1-green.out/stdout.txt",
+        "replay/after__c1-green.out/exit.txt"
+      ]
+    },
+    {
+      "receipt_rel": "after/c1-json.out",
+      "receipt_abs": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-82/measured/after/c1-json.out",
+      "rev": "962bd2513712d3d13e52b8fe2f65ece9a0003417",
+      "cmd": "python3 tools/round82-selfrecord-round81.py --repo . --json",
+      "declared_exit": "EXIT=0",
+      "run_exit": 1,
+      "verdict": "differs",
+      "note": "body is the first 30 of the run's 44 lines; run at 962bd251 is RED (mismatches=1 unbacked=1) and exits 1, not 0",
+      "ancestor_of_tip_start": true,
+      "ancestor_of_tip_end": true,
+      "receipt_body_sha256": "8da7ce5f011b060e80d94b7b46da25827c62305a9b14c021beb9b641ff02941d",
+      "run_stdout_sha256": "104dd3ee67e3e07fa63fe992125ba829726c84cfc3a59bcf25a1dc6b0bc6bf20",
+      "receipt_body_lines": 30,
+      "run_stdout_lines": 44,
+      "body_is_prefix_of_run": true,
+      "body_is_suffix_of_run": false,
+      "first_differing_line": {
+        "line_index_1based": 31,
+        "receipt_line": null,
+        "rerun_line": "    {"
+      },
+      "stderr": "",
+      "unrunnable_reason": null,
+      "evidence": [
+        "replay/after__c1-json.out/stdout.txt",
+        "replay/after__c1-json.out/exit.txt"
+      ]
+    },
+    {
+      "receipt_rel": "after/c1-selftest.out",
+      "receipt_abs": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-82/measured/after/c1-selftest.out",
+      "rev": "a251cbab6c3005fc9335631ea701f84192c6c55c",
+      "cmd": "python3 tools/round82-selfrecord-round81.py --selftest",
+      "declared_exit": "EXIT=0",
+      "run_exit": 0,
+      "verdict": "differs",
+      "note": "body is the LAST of the run's 20 lines (per-case PASS lines dropped); claim pass=19 fail=0 corroborated",
+      "ancestor_of_tip_start": true,
+      "ancestor_of_tip_end": true,
+      "receipt_body_sha256": "07016b1a0d081c4b845fb4457eb021be7e269232ddc5392c07e929a6f86a9b26",
+      "run_stdout_sha256": "17af59562649fd3210a20c46f84b7a4a4ff9470e6318fff3d8a4d59212ebc764",
+      "receipt_body_lines": 1,
+      "run_stdout_lines": 20,
+      "body_is_prefix_of_run": false,
+      "body_is_suffix_of_run": true,
+      "first_differing_line": {
+        "line_index_1based": 1,
+        "receipt_line": "SELFRECORD_R81_SELFTEST pass=19 fail=0",
+        "rerun_line": "PASS honest mismatches=0 unbacked=0 corrected=5"
+      },
+      "stderr": "",
+      "unrunnable_reason": null,
+      "evidence": [
+        "replay/after__c1-selftest.out/stdout.txt",
+        "replay/after__c1-selftest.out/exit.txt"
+      ]
+    },
+    {
+      "receipt_rel": "after/c2-debt-selftest.out",
+      "receipt_abs": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-82/measured/after/c2-debt-selftest.out",
+      "rev": "5fe3c58c38bd10172f8d263633a8254f47467c75",
+      "cmd": "python3 tools/round81-append-debt.py --selftest",
+      "declared_exit": "EXIT=0",
+      "run_exit": 0,
+      "verdict": "reproduces",
+      "note": "body byte-identical",
+      "ancestor_of_tip_start": true,
+      "ancestor_of_tip_end": true,
+      "receipt_body_sha256": "43a368a9e41ffc57e029cbcb3057f6fb11fd1266867d2d4687999cdf1702c146",
+      "run_stdout_sha256": "43a368a9e41ffc57e029cbcb3057f6fb11fd1266867d2d4687999cdf1702c146",
+      "receipt_body_lines": 1,
+      "run_stdout_lines": 1,
+      "body_is_prefix_of_run": true,
+      "body_is_suffix_of_run": true,
+      "first_differing_line": null,
+      "stderr": "",
+      "unrunnable_reason": null,
+      "evidence": [
+        "replay/after__c2-debt-selftest.out/stdout.txt",
+        "replay/after__c2-debt-selftest.out/exit.txt"
+      ]
+    },
+    {
+      "receipt_rel": "after/c2-debt.out",
+      "receipt_abs": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-82/measured/after/c2-debt.out",
+      "rev": "a251cbab6c3005fc9335631ea701f84192c6c55c",
+      "cmd": "python3 tools/round81-append-debt.py --repo . --round 82",
+      "declared_exit": "EXIT=0",
+      "run_exit": 0,
+      "verdict": "reproduces",
+      "note": "body byte-identical inclusive of pending=2 at that rev",
+      "ancestor_of_tip_start": true,
+      "ancestor_of_tip_end": true,
+      "receipt_body_sha256": "e8a844105b7af5b8c0daaa33d2ae57bbea62eb87bb7dbba96a0bf3a1e124437f",
+      "run_stdout_sha256": "e8a844105b7af5b8c0daaa33d2ae57bbea62eb87bb7dbba96a0bf3a1e124437f",
+      "receipt_body_lines": 1,
+      "run_stdout_lines": 1,
+      "body_is_prefix_of_run": true,
+      "body_is_suffix_of_run": true,
+      "first_differing_line": null,
+      "stderr": "",
+      "unrunnable_reason": null,
+      "evidence": [
+        "replay/after__c2-debt.out/stdout.txt",
+        "replay/after__c2-debt.out/exit.txt"
+      ]
+    },
+    {
+      "receipt_rel": "after/c2-late-delta.out",
+      "receipt_abs": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-82/measured/after/c2-late-delta.out",
+      "rev": "a251cbab6c3005fc9335631ea701f84192c6c55c",
+      "cmd": "python3 tools/round82-late-delta.py --repo . --round 82",
+      "declared_exit": "EXIT=0",
+      "run_exit": 0,
+      "verdict": "reproduces",
+      "note": "body byte-identical",
+      "ancestor_of_tip_start": true,
+      "ancestor_of_tip_end": true,
+      "receipt_body_sha256": "6345674193427651b0a33ab8056ec62a7749d43e1afeb103b2c22433ae0b2590",
+      "run_stdout_sha256": "6345674193427651b0a33ab8056ec62a7749d43e1afeb103b2c22433ae0b2590",
+      "receipt_body_lines": 1,
+      "run_stdout_lines": 1,
+      "body_is_prefix_of_run": true,
+      "body_is_suffix_of_run": true,
+      "first_differing_line": null,
+      "stderr": "",
+      "unrunnable_reason": null,
+      "evidence": [
+        "replay/after__c2-late-delta.out/stdout.txt",
+        "replay/after__c2-late-delta.out/exit.txt"
+      ]
+    },
+    {
+      "receipt_rel": "after/c2-selftest.out",
+      "receipt_abs": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-82/measured/after/c2-selftest.out",
+      "rev": "b00640169613bd340672bc7145e896185da01a94",
+      "cmd": "python3 tools/round82-late-delta.py --selftest",
+      "declared_exit": "EXIT=0",
+      "run_exit": 0,
+      "verdict": "reproduces",
+      "note": "body byte-identical (13 lines)",
+      "ancestor_of_tip_start": true,
+      "ancestor_of_tip_end": true,
+      "receipt_body_sha256": "b0babc9c440c0df96aa61e09ea349c1637489721f5ab4ea7cfe4f90b6c5d596d",
+      "run_stdout_sha256": "b0babc9c440c0df96aa61e09ea349c1637489721f5ab4ea7cfe4f90b6c5d596d",
+      "receipt_body_lines": 13,
+      "run_stdout_lines": 13,
+      "body_is_prefix_of_run": true,
+      "body_is_suffix_of_run": true,
+      "first_differing_line": null,
+      "stderr": "",
+      "unrunnable_reason": null,
+      "evidence": [
+        "replay/after__c2-selftest.out/stdout.txt",
+        "replay/after__c2-selftest.out/exit.txt"
+      ]
+    },
+    {
+      "receipt_rel": "before/c1-enum.out",
+      "receipt_abs": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-82/measured/before/c1-enum.out",
+      "rev": "bfdd7a708aaa5a34a9e6ab3baa242a32fad910cb",
+      "cmd": "python3 tools/round82-selfrecord-round81.py --repo . --enumerate",
+      "declared_exit": "EXIT=1",
+      "run_exit": null,
+      "verdict": "unrunnable",
+      "note": "tools/round82-selfrecord-round81.py absent at bfdd7a70 (first added b0064016); body DOES reproduce at b0064016",
+      "ancestor_of_tip_start": true,
+      "ancestor_of_tip_end": true,
+      "receipt_body_sha256": "01df0c1de493628645a3dbc33a4eea9ed6d8a6119628ed66106a155cf5b3f502",
+      "run_stdout_sha256": null,
+      "receipt_body_lines": 1,
+      "run_stdout_lines": 0,
+      "body_is_prefix_of_run": false,
+      "body_is_suffix_of_run": false,
+      "first_differing_line": {
+        "line_index_1based": 1,
+        "receipt_line": "SELFRECORD_R81_ENUM claims=6 stale=5 corrected=0",
+        "rerun_line": null
+      },
+      "stderr": "",
+      "unrunnable_reason": "missing file tools/round82-selfrecord-round81.py at rev bfdd7a708aaa5a34a9e6ab3baa242a32fad910cb",
+      "evidence": [
+        "replay/before__c1-enum.out/stdout.txt",
+        "replay/before__c1-enum.out/exit.txt"
+      ]
+    },
+    {
+      "receipt_rel": "before/c2-debt-base.out",
+      "receipt_abs": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-82/measured/before/c2-debt-base.out",
+      "rev": "bfdd7a708aaa5a34a9e6ab3baa242a32fad910cb",
+      "cmd": "python3 tools/round81-append-debt.py --repo . --round 82",
+      "declared_exit": "EXIT=1",
+      "run_exit": 1,
+      "verdict": "reproduces",
+      "note": "body byte-identical",
+      "ancestor_of_tip_start": true,
+      "ancestor_of_tip_end": true,
+      "receipt_body_sha256": "2d313359a1ed12f173dd13229e5fda4738059f0a305f5b12bfdebcf28ab5cc38",
+      "run_stdout_sha256": "2d313359a1ed12f173dd13229e5fda4738059f0a305f5b12bfdebcf28ab5cc38",
+      "receipt_body_lines": 16,
+      "run_stdout_lines": 16,
+      "body_is_prefix_of_run": true,
+      "body_is_suffix_of_run": true,
+      "first_differing_line": null,
+      "stderr": "",
+      "unrunnable_reason": null,
+      "evidence": [
+        "replay/before__c2-debt-base.out/stdout.txt",
+        "replay/before__c2-debt-base.out/exit.txt"
+      ]
+    },
+    {
+      "receipt_rel": "before/c2-late-delta-base.out",
+      "receipt_abs": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-82/measured/before/c2-late-delta-base.out",
+      "rev": "bfdd7a708aaa5a34a9e6ab3baa242a32fad910cb",
+      "cmd": "python3 tools/round82-late-delta.py --repo . --round 82",
+      "declared_exit": "EXIT=1",
+      "run_exit": null,
+      "verdict": "unrunnable",
+      "note": "tools/round82-late-delta.py absent at bfdd7a70; and b0064016, the only rev holding the tool, already carries the 15 rows, so new=0/bad=15 is unreachable from any committed tree",
+      "ancestor_of_tip_start": true,
+      "ancestor_of_tip_end": true,
+      "receipt_body_sha256": "d152f308487b2cd93186169ce4420c35a40493e734edae2671bad2397ff529ed",
+      "run_stdout_sha256": null,
+      "receipt_body_lines": 16,
+      "run_stdout_lines": 0,
+      "body_is_prefix_of_run": false,
+      "body_is_suffix_of_run": false,
+      "first_differing_line": {
+        "line_index_1based": 1,
+        "receipt_line": "LATE_DELTA_FINDING missing 017c34ca2d85fb547b3cd03961ce09fc43939993 SCORECARD.md 034bf734addb09be (new row expected)",
+        "rerun_line": null
+      },
+      "stderr": "",
+      "unrunnable_reason": "missing file tools/round82-late-delta.py at rev bfdd7a708aaa5a34a9e6ab3baa242a32fad910cb",
+      "evidence": [
+        "replay/before__c2-late-delta-base.out/stdout.txt",
+        "replay/before__c2-late-delta-base.out/exit.txt"
+      ]
+    },
+    {
+      "receipt_rel": "control/c1-no-corrections.out",
+      "receipt_abs": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-82/measured/control/c1-no-corrections.out",
+      "rev": "a251cbab6c3005fc9335631ea701f84192c6c55c",
+      "cmd": "python3 tools/round82-selfrecord-round81.py --repo . --no-corrections",
+      "declared_exit": "EXIT=0",
+      "run_exit": 1,
+      "verdict": "differs",
+      "note": "body is the LAST of the run's 7 lines; run prints 7 lines and exits 1 at every rev tested (b0064016/962bd251/a251cbab), so the recorded EXIT=0 is false",
+      "ancestor_of_tip_start": true,
+      "ancestor_of_tip_end": true,
+      "receipt_body_sha256": "00383110c8d354157dba7cabbd08ff95e123eea36e1110bea2fc3ee7da74bea6",
+      "run_stdout_sha256": "e4c7da922926a691885f597d14ef1911ac14b8f58904fe2a14a7698ba812a508",
+      "receipt_body_lines": 1,
+      "run_stdout_lines": 7,
+      "body_is_prefix_of_run": false,
+      "body_is_suffix_of_run": true,
+      "first_differing_line": {
+        "line_index_1based": 1,
+        "receipt_line": "SELFRECORD_R81 claims=6 mismatches=5 corrected=0 unbacked=0",
+        "rerun_line": "SELFRECORD_R81_FACT F1 unanswered declared=sc81c2-pending=1 witness=sc81c2-pending=4"
+      },
+      "stderr": "",
+      "unrunnable_reason": null,
+      "evidence": [
+        "replay/control__c1-no-corrections.out/stdout.txt",
+        "replay/control__c1-no-corrections.out/exit.txt"
+      ]
+    },
+    {
+      "receipt_rel": "defects/c2-debt-register-level-before.out",
+      "receipt_abs": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-82/measured/defects/c2-debt-register-level-before.out",
+      "rev": "b00640169613bd340672bc7145e896185da01a94",
+      "cmd": "python3 tools/round81-append-debt.py --repo . --round 82",
+      "declared_exit": "EXIT=1",
+      "run_exit": 1,
+      "verdict": "reproduces",
+      "note": "body byte-identical incl. bad_rows=15; the red-before claim is TRUE at its named rev",
+      "ancestor_of_tip_start": true,
+      "ancestor_of_tip_end": true,
+      "receipt_body_sha256": "b2708ce37c9150ba698d72f97290c92409f4946602472cb3527184466c3a9ee7",
+      "run_stdout_sha256": "b2708ce37c9150ba698d72f97290c92409f4946602472cb3527184466c3a9ee7",
+      "receipt_body_lines": 31,
+      "run_stdout_lines": 31,
+      "body_is_prefix_of_run": true,
+      "body_is_suffix_of_run": true,
+      "first_differing_line": null,
+      "stderr": "",
+      "unrunnable_reason": null,
+      "evidence": [
+        "replay/defects__c2-debt-register-level-before.out/stdout.txt",
+        "replay/defects__c2-debt-register-level-before.out/exit.txt"
+      ]
+    }
+  ]
+}

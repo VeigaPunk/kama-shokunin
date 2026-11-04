@@ -1,0 +1,56 @@
+EX04GateArm — command provenance (kama r82 w1, 2026-11-04)
+
+Environment
+  python3 3.14.8
+  lane  /home/vgpnk/Projects/shokunin/kama-shokunin (read-only for this seat)
+  S     /fast/scratch/hyaku/kama-r82/EX04GateArm  (deleted before yield)
+  installs: none
+
+Tips read
+  git -C <lane> rev-parse master                  -> bacae0726d7c53455bd083bc6d478bbcd6e7fffc
+  git -C <lane> rev-parse aaf974db…                -> aaf974dbd3b6adb2ef914dc7293cda92b4e05551
+  git -C <lane> rev-parse 1b64f66d…                -> 1b64f66ddea89c57b71165eacd14b0e1d6f24e11
+  git -C <lane> diff --stat HEAD -- tools/pre-report-gate.py -> empty (worktree == tip)
+
+Scratch clones (toplevel asserted before use)
+  git clone --shared <lane> "$S/clone" && git -C "$S/clone" checkout --detach aaf974db…
+    git -C "$S/clone" rev-parse --show-toplevel -> /fast/scratch/hyaku/kama-r82/EX04GateArm/clone
+  git clone --shared <lane> "$S/clone-tip" && git -C "$S/clone-tip" checkout --detach bacae072…
+
+Part 1 — base control (cwd = $S/clone, HEAD = aaf974db…)
+  A python3 tools/round81-append-debt.py --repo . --round 82
+      exit 2  could-not-evaluate: no frozen plan at aaf974db…:plans/round-82-claims.md
+  B python3 tools/round81-append-debt.py --repo . --round 81
+      exit 0  APPEND_DEBT round=81 base=e7d2fd729cf8 events=63 accepted=53 late=10 pending=5 unaccepted=0 bad_rows=0 bad_declarations=0 out_of_population=0
+  C printf 'commit\tfile\tline_sha256\tcount\tclass\tnote\n' > "$S/empty.tsv"
+    python3 tools/round81-append-debt.py --repo . --round 81 --late "$S/empty.tsv"
+      exit 1  APPEND_DEBT round=81 … late=0 pending=5 unaccepted=10 bad_rows=0 …
+              88 APPEND_DEBT_FINDING count-short over 10 events (9 distinct commits)
+  D head -1 registry/append-only-late.tsv > "$S/one-row.tsv"; sed -n '2p' registry/append-only-late.tsv >> "$S/one-row.tsv"
+    python3 tools/round81-append-debt.py --repo . --round 81 --late "$S/one-row.tsv"
+      exit 1  APPEND_DEBT round=81 … late=0 pending=5 unaccepted=10 bad_rows=1 …
+              1 APPEND_DEBT_FINDING unbound-register late line 2 + 88 count-short
+  base register: 88 data rows; first-add commit f6cb5303171cc73dc570ace06f99125266e5b956;
+                  0 rows for cf28c470/37484391/50c711ec/93cdfd60/017c34ca
+
+Part 2 — tip verification (cwd = $S/clone-tip, HEAD = bacae072…; lane tip, gate not edited)
+  python3 tools/pre-report-gate.py --selftest --work "$S/st-work"
+      exit 0  PRE_REPORT_SELFTEST pass=29 fail=0 (0 FAIL)
+              green arm-12 verdict: PRE_REPORT round=70 arms=12 failed=0 uncommitted=0
+  python3 tools/round82-selfrecord-round81.py --selftest   exit 0  SELFRECORD_R81_SELFTEST pass=19 fail=0
+  python3 tools/round82-late-delta.py --selftest           exit 0  LATE_DELTA_SELFTEST pass=12 fail=0
+  python3 tools/round81-append-debt.py --repo . --round 82
+      exit 0  APPEND_DEBT round=82 base=aaf974dbd3b6 events=68 accepted=53 late=15 pending=2 unaccepted=0 bad_rows=0 bad_declarations=0 out_of_population=0
+  python3 tools/round82-late-delta.py --repo . --round 82
+      exit 0  LATE_DELTA round=82 base=aaf974dbd3b6 population=103 carried=88 new=15 bad=0
+  python3 tools/gate-registry-check.py
+      exit 1  registered 101 unregistered 10 defective 0 (pre-existing unregistered set; no round-82 tool)
+  SKILL-row simulation (clone-tip worktree only, no commit):
+    copy $S/receipts/gate-selftest-tip.out to .ufo/waves/round-82/measured/after/gate-selftest.out
+    replace SKILL.md line 309 with proposed-row.txt
+    python3 tools/gate-registry-check.py -> exit 1 registered 101 unregistered 10 defective 0 (unchanged)
+
+Read-only lane evidence cited
+  .ufo/waves/round-82/measured/before/c2-debt-base.out       (unaccepted=5, 15 count-short)
+  .ufo/waves/round-82/measured/before/c2-late-delta-base.out (carried=88 new=15 bad=15, 15 missing)
+  git -C <lane> log -3 -- tools/pre-report-gate.py            (arm-12 wiring commit 5fe3c58c)
