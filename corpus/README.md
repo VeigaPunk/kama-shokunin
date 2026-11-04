@@ -1704,3 +1704,19 @@ After the two additions, these seven knowledge files remain without coverage-map
 round-58 note is not a coverage-map table row. These are index gaps, not proof that the
 entries are absent or unadmitted. No serving-runtime, consumer, K05 context-capacity or
 other previously recorded domain frontier is closed by indexing these two entries.
+
+## Coverage map — round-77 correction of round-76 D1 (2026-11-04)
+
+| Entry | Covers | Round |
+|---|---|---|
+| `knowledge/selfrecord-fact-binding.md` | revision-bound self-record facts, value-bound corrections, and the distinction between retained historical assertions and receipt-backed execution | 76 (indexed in 77) |
+
+### Frontier correction — supersedes round-76 coverage-map disposition
+
+Supersedes: “After the two additions, these seven knowledge files remain without coverage-map table rows”. At `c2aa7fb2`, the true count was **8**, not 7: 49 knowledge files minus 41 distinct mapped knowledge entries. The omitted eighth was `knowledge/selfrecord-fact-binding.md`. The appended row above leaves **7** of that frozen population unmapped, namely the seven already listed in the original Frontier paragraph. No historical bytes were rewritten.
+
+Derivation enumerates `git -C /home/vgpnk/Projects/shokunin/kama-shokunin ls-tree -r --name-only c2aa7fb2 corpus/knowledge/` against table entry cells in `git -C /home/vgpnk/Projects/shokunin/kama-shokunin show c2aa7fb2:corpus/README.md`; annotated cells such as runtime-health-surface-processes count as mapped. Exact re-runnable command (also in the seat receipt):
+
+```sh
+python3 -c 'import subprocess,re; L="/home/vgpnk/Projects/shokunin/kama-shokunin"; tree=subprocess.check_output(["git","-C",L,"ls-tree","-r","--name-only","c2aa7fb2","corpus/knowledge/"],text=True).splitlines(); text=subprocess.check_output(["git","-C",L,"show","c2aa7fb2:corpus/README.md"],text=True); mapped=set(re.findall(r"^\| `((?:knowledge/)[^`]+)`[^|]*\|",text,re.M)); missing=sorted(set(p.removeprefix("corpus/") for p in tree)-mapped); print("COVERAGE_AT_C2AA7FB2 files=%d mapped=%d unmapped=%d"%(len(tree),len(mapped),len(missing))); print("\n".join(missing)); current=open(L+"/corpus/README.md").read(); now=set(re.findall(r"^\| `((?:knowledge/)[^`]+)`[^|]*\|",current,re.M)); print("COVERAGE_INDEX_AFTER unmapped=%d selfrecord_rows=%d"%(len(set(p.removeprefix("corpus/") for p in tree)-now),current.count("| `knowledge/selfrecord-fact-binding.md` |")))'
+```

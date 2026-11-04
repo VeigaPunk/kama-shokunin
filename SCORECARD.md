@@ -4272,3 +4272,27 @@ Corrected: af459acfa975d418a389f0ce19b8f1f40dd7e08d15c7eb0e9f2eb27e45d45697
 Re-pointed locator for the same fact as the correction above: that block keyed on
 `SCORECARD.md:4065`, and round 76's head-mirror and superseded-block edits shifted the line.
 This block supersedes the filed *value* instead, which no later append can move.
+
+### Correction (2026-11-04) — knowledge-entries
+
+Supersedes: 46
+Revision: c2aa7fb2c02dd95a185b728d5863f9ae492ecef4
+Corrected: 47
+
+`corpus/knowledge/` holds 47 files at `rev=c2aa7fb2` after excluding the two source-reading
+entries (`engine-sides`, `processes`) — the round-76 population sentence filed 46. Derivation:
+`git ls-tree --name-only c2aa7fb2:corpus/knowledge/ | grep -vc 'engine-sides\|processes'` → 47.
+The round-76 non-author closure recorded the same disagreement (§4 D2); this block is the
+value-bound correction, not an edit of the superseded sentence.
+
+### Correction (2026-11-04) — closure-pointer
+
+Supersedes: corpus/lessons/round-75-verifier-spotcheck.md
+Revision: cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7
+Corrected: corpus/lessons/round-76-verifier-spotcheck.md
+
+The newest outside closure at `rev=cc6e1d3c` is `corpus/lessons/round-76-verifier-spotcheck.md`
+(review date 2026-11-04, round 76). This supersedes only the calibration row's latest-closure
+pointer, not its historical run facts or score 7. Derivation:
+`git ls-tree --name-only cc6e1d3c:corpus/lessons/ | grep -oE 'round-[0-9]+-verifier-spotcheck\.md'`
+lists both closures and round 76 is the newest by round number; the round-75 pointer is history.

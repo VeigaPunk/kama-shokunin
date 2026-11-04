@@ -102,6 +102,28 @@ exit 0 at both ends; before: 287 + ok line, after: 288 + ok line, W04 warnings o
 Spot-check: no outside non-author check ran this round; the round-75 closure already admitted
 round 75 and its eight routed defects are closed or routed again below.
 
+### Gate supplement (2026-11-04, round-77 D4; produced by round 76)
+
+- **S498** supersedes the paraphrase “characters inside fenced code blocks are treated literally” and its incorrect word count above. The verbatim retained sentence is: “The content of a code fence is treated as literal text, not parsed as inlines.” Located at retained HTML lines 2760–2761, `https://spec.commonmark.org/0.31.2/#fenced-code-blocks`, accessed 2026-11-04 in round 76; this supplement checks retained bytes, not a new live fetch. It is 17 whitespace-delimited words (the closure's “15 words” is also a counting error), still within 25.
+- S498 `used-by` old→new: `corpus/lessons/round-50.md` → `corpus/lessons/round-50.md, corpus/knowledge/fenced-quotation-scope.md`, from base `b06cc612` to `c2aa7fb2`; status and recheck unchanged. Derivation:
+
+```sh
+python3 -c 'import re,subprocess; L="/home/vgpnk/Projects/shokunin/kama-shokunin"; text=open(L+"/.ufo/waves/round-76/w1/SCR01Sources/commonmark-0.31.2.html").read(); q="The content of a code fence is treated as literal text, not parsed as inlines."; print("S498_QUOTE "+q); assert q in re.sub(r"\s+"," ",text); old=subprocess.check_output(["git","-C",L,"show","b06cc612:corpus/SOURCES.md"],text=True); new=subprocess.check_output(["git","-C",L,"show","c2aa7fb2:corpus/SOURCES.md"],text=True); print("S498_USED_BY_OLD "+next(s for s in old.splitlines() if s.startswith("| S498 |")).split("|")[-2].strip()); print("S498_USED_BY_NEW "+next(s for s in new.splitlines() if s.startswith("| S498 |")).split("|")[-2].strip())'
+```
+
+- **S548** own-work, access date **2026-11-04**. Located quote/command receipt: `SELFRECORD_FACTS claims=8 mismatches=0 corrected=5 unbacked=0`, line 3 of `.ufo/waves/round-76/measured/after/selfrecord-facts.out`, recorded `rev=461d2adbf2b3fe596a53cb392e2bc6e82af79bfb`, exit 0. Exact re-runnable command (explicit historical revision prevents later record drift):
+
+```sh
+python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round76-selfrecord-facts.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --rev 461d2adbf2b3fe596a53cb392e2bc6e82af79bfb
+```
+
+This is own-work execution evidence, not an external-source quotation; the new receipt is retained under `.ufo/waves/round-77/w1/SC03Corrections/after-ownwork.out`.
+
+#### Correction to this supplement's word count (2026-11-04)
+
+Supersedes only the supplement's “17 whitespace-delimited words” and its assertion that the closure's “15 words” is erroneous. Corrected: **15 words**; the closure's count was right. The exact retained sentence above is unchanged. Derivation: `python3 -c 'print(len("The content of a code fence is treated as literal text, not parsed as inlines.".split()))'` → `15`, exit 0. The initial hand-count error is preserved here rather than rewritten.
+
+
 ## Routed defects from the round-75 closure
 
 | # | Item | Disposition |
@@ -174,4 +196,15 @@ first-filed bytes, so they are held here exactly:
   `c85f56cc2101f761cc94215c677cd2c7c1ecca9c47be016479fdfe718af60f0d`, retained at
   `.ufo/waves/round-76/w1/SCR01Sources/commonmark-0.31.2.html`; the quote "characters inside
 (`.ufo/waves/round-76/assimilation/{reg-ids,staged-ids,collisions,quarantine-slice,guard-proof.out}`).
+```
+
+### Correction (2026-11-04, round-77 D3) — post-cutoff events
+
+Supersedes: §Mistakes item 2, “and five otherwise-classifiable events postdate the earliest register introduction”, and its evidence parenthesis “31 wrong-class and 5 post-introduction events named”.
+Corrected: **6** events postdate the cutoff, not five; **31+6=37**, not 31+5=36. The six are five `SCORECARD.md` events plus `c2aa7fb2c02dd95a185b728d5863f9ae492ecef4`'s own `corpus/SOURCES.md` event. The committed `register-rows.txt` statement `post-introduction=5` is an earlier partial classification, not the complete after-receipt population. The round-76 C3 miss remains a miss.
+
+Derivation reads the committed after receipt at the sealed base (its header revision describes the measured state, not the later receipt-introduction commit), then tests each finding's ancestry against cutoff `10f37171fb696c542586cbee96ea4a509ab74afc`:
+
+```sh
+python3 -c 'import subprocess,re,collections; L="/home/vgpnk/Projects/shokunin/kama-shokunin"; text=subprocess.check_output(["git","-C",L,"show","cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7:.ufo/waves/round-76/measured/after/append-exempt.out"],text=True); rows=re.findall(r"^APPEND_EXEMPT_FINDING unaccounted ([0-9a-f]{40}) (\S+)",text,re.M); cutoff="10f37171fb696c542586cbee96ea4a509ab74afc"; post=[(h,p) for h,p in rows if subprocess.run(["git","-C",L,"merge-base","--is-ancestor",h,cutoff]).returncode==1]; print("POSTCUTOFF pre=%d post=%d total=%d sum=%d"%(len(rows)-len(post),len(post),len(rows),len(rows)-len(post)+len(post))); print("\n".join(h+" "+p for h,p in post))'
 ```

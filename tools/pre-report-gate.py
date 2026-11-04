@@ -171,6 +171,15 @@ build), .ufo/waves/round-72/w1/EX03GateArm6/ (six-arm amendment),
 .ufo/waves/round-73/w1/EX04GateArm/ (six-case round-scope re-point) and
 .ufo/waves/round-74/w1/EX04GateArm7/ (arm-7 `round74-v2` amendment, applied from
 arm7.patch).
+
+Round 77 adds arm 10, `round77-instruments`, after all existing arms. It runs
+`round77-citation-baseline.py --selftest`, `round77-append-registers.py --selftest`,
+then `round77-selfrecord-round76.py --selftest`, using the same per-process timeout.
+Each must exit 0 and end with a `*_SELFTEST pass=N fail=0` line. Missing scripts,
+timeouts, nonzero exits and missing/malformed final summaries fail closed, naming the
+instrument. Scored verdicts now carry `arms=10`; historical nine-arm receipts above
+retain their original meaning. One composite wiring selftest extends the 21 existing
+cases to 22 without changing their individual pass counts.
 """
 
 from __future__ import annotations
@@ -210,7 +219,7 @@ ARM_SPECS = [
                      "--tip", "{tip}")),
 ]
 ARM_ORDER = [name for name, _ in ARM_SPECS] + ["round-clean", "round74-v2",
-              "round75-instruments", "round76-instruments"]
+              "round75-instruments", "round76-instruments", "round77-instruments"]
 VERDICT_RE = {
     "selfdesc": r"mismatches=\d+ met=(?:True|False)",
     "newest-closure": r"(?:NEWEST_CLOSURE|STALE_CALIBRATION) ",
@@ -267,6 +276,14 @@ ROUND76_MODULES = (
     ("selfrecord-facts", "round76-selfrecord-facts.py", ("--repo", "{repo}")),
     ("append-exempt", "round76-append-exempt.py", ("--repo", "{repo}")),
 )
+
+# Arm 10 runs selftests, not the round-77 counters' live grading modes.
+ROUND77_MODULES = (
+    "round77-citation-baseline.py",
+    "round77-append-registers.py",
+    "round77-selfrecord-round76.py",
+)
+ROUND77_SELFTEST_RE = re.compile(r"[A-Z][A-Z0-9_]*_SELFTEST pass=[0-9]+ fail=0")
 
 
 def _decode(data) -> str:
@@ -353,6 +370,35 @@ def _run(argv: list[str], cwd: str, depth: int = 0) -> tuple[int, str, str | Non
         out, err = proc.communicate()
         return 124, _decode(out) + _decode(err), f"timeout after {ARM_TIMEOUT}s"
     return proc.returncode, _decode(out) + _decode(err), None
+
+
+def _round77_instruments(tools_path: str, repo_path: str, depth: int = 0) -> dict:
+    details: list[str] = []
+    commands: list[list[str]] = []
+    failed = False
+    for script_name in ROUND77_MODULES:
+        script = os.path.join(tools_path, script_name)
+        argv = [sys.executable, script, "--selftest"]
+        commands.append(argv)
+        if not os.path.isfile(script):
+            failed = True
+            details.append(f"missing {script_name}")
+            continue
+        code, text, error = _run(argv, repo_path, depth)
+        summary = _last_line(text)
+        ok = code == 0 and error is None and ROUND77_SELFTEST_RE.fullmatch(summary) is not None
+        failed = failed or not ok
+        reason = error or summary or "(no output)"
+        if code == 0 and not ok and error is None:
+            reason = f"missing valid final selftest summary: {reason}"
+        details.append(f"{script_name} exit={code} {'ok' if ok else 'FAIL'} {_one_line(reason)}")
+    return {
+        "name": "round77-instruments",
+        "argv": commands,
+        "exit": 1 if failed else 0,
+        "ok": not failed,
+        "detail": " | ".join(details),
+    }
 
 
 def evaluate(repo: str, round_no: int, tip: str = "master", tools_dir: str | None = None,
@@ -481,6 +527,8 @@ def evaluate(repo: str, round_no: int, tip: str = "master", tools_dir: str | Non
         "ok": not r76_codes,
         "detail": " | ".join(r76_details),
     })
+
+    arms.append(_round77_instruments(tools_path, repo_path, depth))
 
     failed = sum(1 for arm in arms if not arm["ok"])
     verdict = f"PRE_REPORT round={round_no} arms={len(arms)} failed={failed} uncommitted={uncommitted}"
@@ -820,6 +868,11 @@ def run_selftest(args) -> int:
     (tools / "round76-receipt-scope.py").write_text(_STUB_RECEIPT_SCOPE, encoding="utf-8")
     (tools / "round76-selfrecord-facts.py").write_text(_STUB_SELFRECORD_FACTS, encoding="utf-8")
     (tools / "round76-append-exempt.py").write_text(_STUB_APPEND_EXEMPT, encoding="utf-8")
+    for script_name in ROUND77_MODULES:
+        (tools / script_name).write_text(
+            "import sys\n"
+            "assert sys.argv[1:] == ['--selftest']\n"
+            "print('ROUND77_FIXTURE_SELFTEST pass=1 fail=0')\n", encoding="utf-8")
     (tools / "scope-expect.txt").write_text("70 master\n", encoding="utf-8")
     red_file = tools / "red-arms.txt"
     red_file.write_text("", encoding="utf-8")
@@ -874,7 +927,7 @@ def run_selftest(args) -> int:
     # (a) green fixture: the target shape, exit 0.
     check("green", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0, "round-clean", True,
           detail_has="files=0",
-          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
 
     # (b) one uncommitted file under the round's wave dir.
     extra = repo / ".ufo/waves/round-70/extra.out"
@@ -920,7 +973,7 @@ def run_selftest(args) -> int:
     check("round-scope-green", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0,
           "round-scope", True, detail_has="findings=0",
           render_has="round-scope exit=0 ok",
-          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
 
     # (i)-(k) the real round-73 counter through the same arm-5 wiring: the clean fixture,
     # then the A5 linked-worktree survivor and the A6 ignored-older-round survivor.
@@ -931,7 +984,7 @@ def run_selftest(args) -> int:
     check("round-scope-v2-clean", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0,
           "round-scope", True,
           detail_has="ROUND_SCOPE_V2 round=70 cases=6 findings=0",
-          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
 
     linked = work / "linked-worktree"
     added = _git(repo, "worktree", "add", "--detach", str(linked), "master", check=False)
@@ -989,7 +1042,7 @@ def run_selftest(args) -> int:
           detail_has="SELFDESC_CANON_V2 canon_round=70 canon_rows=2 demonstrated=0 "
                      "total=2 invisible=0",
           render_has="round74-v2 exit=0 ok",
-          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
 
     # (o) a deleted counter stub fails arm 7 closed, naming the absent module.
     drift_stub = tools / "round74-province-host-drift.py"
@@ -1014,7 +1067,7 @@ def run_selftest(args) -> int:
           "round75-instruments", True,
           detail_has="SURVIVORS2 mutants=5 killed=5 escaped=0",
           render_has="round75-instruments exit=0 ok",
-          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
 
     # (r) a deleted round-75 counter fails arm 8 closed, naming the absent module.
     aa_stub = tools / "round75-append-accepted.py"
@@ -1040,7 +1093,7 @@ def run_selftest(args) -> int:
           detail_has="APPEND_EXEMPT events=232 register=53 exempt=83 restored=91 disclosed=5 "
                      "unaccounted=0 cutoff=10f37171 introductions=1 rotation_safe=1",
           render_has="round76-instruments exit=0 ok",
-          want_line="PRE_REPORT round=70 arms=9 failed=0 uncommitted=0")
+          want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
 
     # (u) a deleted round-76 counter fails arm 9 closed, naming the absent module.
     ae_stub = tools / "round76-append-exempt.py"
@@ -1050,6 +1103,62 @@ def run_selftest(args) -> int:
           detail_has="missing round76-append-exempt.py",
           render_has="round76-instruments exit=1 FAIL")
     ae_stub.write_text(_STUB_APPEND_EXEMPT, encoding="utf-8")
+
+    # (v) One composite arm-10 wiring case; attack each instrument separately.
+    r77_problems: list[str] = []
+    trace = tools / "round77-order.txt"
+    r77_originals = {}
+    for script_name in ROUND77_MODULES:
+        stub = (
+            "import sys\n"
+            "from pathlib import Path\n"
+            "assert sys.argv[1:] == ['--selftest']\n"
+            f"with Path({str(trace)!r}).open('a') as out: out.write({script_name!r} + '\\n')\n"
+            "print('ROUND77_FIXTURE_SELFTEST pass=1 fail=0')\n"
+        )
+        r77_originals[script_name] = stub
+        (tools / script_name).write_text(stub, encoding="utf-8")
+    green = _round77_instruments(str(tools), str(repo))
+    if not green["ok"] or green["exit"] != 0:
+        r77_problems.append(f"green: {green['detail']}")
+    if not trace.is_file() or trace.read_text(encoding="utf-8").splitlines() != list(ROUND77_MODULES):
+        r77_problems.append("instrument execution order differs")
+    for script_name in ROUND77_MODULES:
+        target = tools / script_name
+        for label, body in (
+            ("missing", None),
+            ("nonzero", "print('ROUND77_FIXTURE_SELFTEST pass=1 fail=0')\nraise SystemExit(1)\n"),
+            ("no-summary", "print('ordinary output')\n"),
+            ("red-summary", "print('ROUND77_FIXTURE_SELFTEST pass=1 fail=1')\n"),
+            ("trailing-output", "print('ROUND77_FIXTURE_SELFTEST pass=1 fail=0')\nprint('later')\n"),
+        ):
+            if body is None:
+                target.unlink()
+            else:
+                target.write_text(body, encoding="utf-8")
+            result = _round77_instruments(str(tools), str(repo))
+            if result["ok"] or result["exit"] != 1 or script_name not in result["detail"]:
+                r77_problems.append(f"{script_name} {label}: {result['detail']}")
+            target.write_text(r77_originals[script_name], encoding="utf-8")
+    global ARM_TIMEOUT
+    saved_timeout = ARM_TIMEOUT
+    try:
+        ARM_TIMEOUT = 0.1
+        for script_name in ROUND77_MODULES:
+            target = tools / script_name
+            target.write_text("import time\ntime.sleep(60)\n", encoding="utf-8")
+            result = _round77_instruments(str(tools), str(repo))
+            if result["ok"] or result["exit"] != 1 or f"{script_name} exit=124 FAIL timeout" not in result["detail"]:
+                r77_problems.append(f"{script_name} timeout: {result['detail']}")
+            target.write_text(r77_originals[script_name], encoding="utf-8")
+    finally:
+        ARM_TIMEOUT = saved_timeout
+    if r77_problems:
+        failed_arms.append("round77-instruments")
+        print("FAIL round77-instruments :: " + "; ".join(r77_problems))
+    else:
+        passed += 1
+        print("PASS round77-instruments")
 
     total = passed + len(failed_arms)
     print(f"PRE_REPORT_SELFTEST pass={passed} fail={len(failed_arms)}")

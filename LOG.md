@@ -3092,3 +3092,44 @@ carveouts it does not serialize, and five events postdate the earliest register 
 ``````text
 (`c2-facts.out`, `c2-closure.out`, `c2-tally.out`). Why C3 — 83 audit events are unaccounted and
 ``````
+
+### Correction (2026-11-04, round-77 D3) — post-cutoff events
+
+Supersedes: §Round 76, “carveouts it does not serialize, and five events postdate the earliest register introduction).”
+Corrected: **6** events postdate the cutoff, not five; **31+6=37**, not 31+5=36. The six are five `SCORECARD.md` events plus `c2aa7fb2c02dd95a185b728d5863f9ae492ecef4`'s own `corpus/SOURCES.md` event. The committed `register-rows.txt` statement `post-introduction=5` is an earlier partial classification, not the complete after-receipt population. The round-76 C3 miss remains a miss.
+
+Derivation reads the committed after receipt at the sealed base (its header revision describes the measured state, not the later receipt-introduction commit), then tests each finding's ancestry against cutoff `10f37171fb696c542586cbee96ea4a509ab74afc`:
+
+```sh
+python3 -c 'import subprocess,re,collections; L="/home/vgpnk/Projects/shokunin/kama-shokunin"; text=subprocess.check_output(["git","-C",L,"show","cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7:.ufo/waves/round-76/measured/after/append-exempt.out"],text=True); rows=re.findall(r"^APPEND_EXEMPT_FINDING unaccounted ([0-9a-f]{40}) (\S+)",text,re.M); cutoff="10f37171fb696c542586cbee96ea4a509ab74afc"; post=[(h,p) for h,p in rows if subprocess.run(["git","-C",L,"merge-base","--is-ancestor",h,cutoff]).returncode==1]; print("POSTCUTOFF pre=%d post=%d total=%d sum=%d"%(len(rows)-len(post),len(post),len(rows),len(rows)-len(post)+len(post))); print("\n".join(h+" "+p for h,p in post))'
+```
+
+### Correction (2026-11-04, round-77 D6) — committed log-tally draft resolved
+
+Applied here, in §Round 76 only, the substance of `.ufo/waves/round-76/w1/SCR03Corrections/corrections.md` §LOG log-tally, with its proposed receipt pointer repaired to the real `.ufo/waves/round-76/measured/after/gate-selftest.out`. The draft itself remains historical draft text, not a separate landed correction or execution receipt.
+
+Supersedes: LOG.md §Round 75 `round75-instruments` assertion `PRE_REPORT_SELFTEST pass=18 fail=0` as receipt-backed evidence; the existing §Round 75 log-tally correction already withdraws it, and is not rewritten.
+Corrected: historical-unbacked; PRE_REPORT_SELFTEST pass=21 fail=0
+Receipt: .ufo/waves/round-76/measured/after/gate-selftest.out
+Receipt header revision: c2aa7fb2c02dd95a185b728d5863f9ae492ecef4
+
+No committed round-75 wave receipt backs `pass=18`; the actual round-76 receipt carries `PRE_REPORT_SELFTEST pass=21 fail=0` and `exit=0`. A later run cannot prove the old round-75 assertion. This applies the draft's truthful withdrawal while replacing its nonexistent `pre-report-selftest.out` destination; it does not claim a new gate-selftest execution. No pre-report gate was invoked by this seat. Derivation:
+
+```sh
+python3 -c 'import subprocess; L="/home/vgpnk/Projects/shokunin/kama-shokunin"; text=subprocess.check_output(["git","-C",L,"show","cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7:.ufo/waves/round-76/measured/after/gate-selftest.out"],text=True); print(text,end=""); assert "PRE_REPORT_SELFTEST pass=21 fail=0" in text and "exit=0" in text; r=subprocess.run(["git","-C",L,"grep","-l","PRE_REPORT_SELFTEST pass=18","c9ab73d8","--",".ufo/waves/round-75"],capture_output=True,text=True); print("ROUND75_PASS18_RECEIPTS=%d search_exit=%d"%(len(r.stdout.splitlines()),r.returncode)); assert r.returncode==1'
+```
+
+### Correction (2026-11-04) — work-tip
+
+Supersedes: a3fbc629fa18c26ad1192adc5d8e762671dd1d79
+Revision: cc6e1d3cf202ee3e17cd07f42fc63d2dca5f3bb7
+Corrected: 0e01f32f50a208595122b446db25c4902d379075
+
+The round-76 work tip is `0e01f32f50a208595122b446db25c4902d379075`, not the filed
+`a3fbc629fa18c26ad1192adc5d8e762671dd1d79`: under the lane's inherited rule (the newest commit
+before the outside closure that changes a path outside `LOG.md`, `SCORECARD.md`,
+`corpus/README.md`, `corpus/lessons/**` and `.ufo/waves/round-76/**`), the `PROVINCE.md` surface
+row commit `0e01f32f` postdates the instrument-receipt commit the record named. Derivation:
+`git log --first-parent --format='%H %s' 1a85a991fce5b76b60f88a5cab3df98d253b1a4a..35babc5a` and
+the per-commit `git diff-tree --name-only` filter. This is a value-bound correction; the filed
+token stays as history.
