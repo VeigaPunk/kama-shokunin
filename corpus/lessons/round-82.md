@@ -77,7 +77,7 @@ corrected F5 old=logcorr81-c2-pending=1 new=logcorr81-c2-pending=4 at=1b64f66dde
 3. **The counter repair is disclosed, not hidden.** C2's predicate names the frozen module and the rule
    text it implements; the module's *resolution* of "introducing commit" was repaired to that text after
    the red-before receipt existed. The rule sentences (exact cells, strict descendant, `N > M`, base
-   split, `pending`) are unchanged; `c2-debt-register-level-before.out` reproduces at its named rev and
+   split, `pending`) are unchanged; `measured/defects/c2-debt-register-level-before.out` reproduces at its named rev and
    the new selftest arms are red-capable. Whether that is admissible to a closure is the closure's call;
    the round reports the red-before and the green-after side by side.
 4. **`pending` is the round's own post-base events** and rises with each later record commit, as in

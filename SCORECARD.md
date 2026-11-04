@@ -4989,7 +4989,7 @@ red-capable selftest arms are named in the report and in `corpus/lessons/round-8
   and was already corrected there — the closure's R81V1 sentence mixed the two files).
 - **R81V2 fixed**: every round-82 receipt is generated at the revision it names (the `# rev:` header is
   read from the tip before the command runs), and the red-before receipt is bound to the unmodified
-  module's revision `b0064016`; the round-81 `battery.out` label stays history and is named in the report.
+  module's revision `b0064016`; the round-81 battery receipt label stays history and is named in the report.
 - **R81V3 fixed**: `log81-frontier-rows=302` in the appended block and the F2 correction.
 - **R81V4 fixed**: the SKILL gate row is now twelve arms, arm 8's third member `tools/round81-append-debt.py`,
   arm 11 `round81-instruments`, arm 12 `round82-instruments`, verdict `arms=12`.
