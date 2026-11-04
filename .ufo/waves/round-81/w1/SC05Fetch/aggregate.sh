@@ -184,7 +184,43 @@ PY
   echo "DIGESTS-STABLE-COUNT page=$(sha256sum vllm-release-v0.33.0.html vol-page-1.html vol-page-2.html | cut -d' ' -f1 | sort -u | wc -l) atom=$(sha256sum vllm-releases.atom vol-atom-1.xml vol-atom-2.xml | cut -d' ' -f1 | sort -u | wc -l)"
 } > "$E/volatility.txt" 2>&1
 
+# --- 8. quote word counts --------------------------------------------------
+{
+  echo "# word counts of the quoted spans (words = whitespace-separated tokens, markup stripped)"
+  python3 - <<'PY'
+import re
+q = {
+ "S558 ollama line295": '- `owned_by` corresponds to the ollama username, defaulting to `"library"`',
+ "S558 ollama line294": '- `created` corresponds to when the model was last modified',
+ "S559 merge-base 1703-1704": 'Check if the first <commit> is an ancestor of the second <commit>, and exit with status 0 if true, or with status 1 if not.',
+ "S560 diff-tree 4567-4568": 'git diff-tree outputs a line with the commit ID when applicable.  This flag suppresses the commit ID output.',
+ "S561 vllm atom line13": 'vLLM v0.33.0',
+}
+for k, v in q.items():
+    toks = [t for t in re.sub(r'[`*]', ' ', v).split() if re.search(r'\w', t)]
+    print(f"{k}: {len(toks)} words | {v}")
+PY
+} > "$E/quote-words.txt"
+
+# --- 9. W04 duplicate-URL pair (R80V4) -------------------------------------
+{
+  echo "## rows S553 and S555: URL cell and sha256 cell (duplicate-URL W04 pair R80V4 asks the census note to state)"
+  python3 - "$LANE" <<'PY'
+import sys, pathlib
+lines = (pathlib.Path(sys.argv[1])/'corpus/SOURCES.md').read_text().split('\n')
+for n, l in enumerate(lines, 1):
+    if l.startswith('| S553 ') or l.startswith('| S555 '):
+        cells = [c.strip() for c in l.strip().strip('|').split('|')]
+        print(f"line {n} id={cells[0]} url={cells[1].split(' - ')[-1]}")
+        print(f"   sha256 mention: {[c for c in cells if 'sha256' in c][:1]}")
+PY
+  echo "## identical-url occurrences in SOURCES.md"
+  grep -c '39febd2adb947b70da35e95f9351b3bf58ad170a/tools/server/README.md' "$LANE/corpus/SOURCES.md"
+} > "$E/w04-duplicate.txt"
+
 sha256sum ollama-openai-compatibility.mdx git-merge-base.html git-diff-tree.html \
-          vllm-release-v0.33.0.html vllm-releases.atom api-v0.33.0.json api-v0.33.0rc3.json \
+          vllm-release-v0.33.0.html vllm-releases.atom \
+          api-v0.33.0.json api-v0.32.0.json api-v0.33.0rc3.json api-latest.json \
+          pinned-git-merge-base_2.43.0.html pinned-git-diff-tree_2.56.0.html \
           > "$E/digests.tsv"
 cat "$E/"*.txt | wc -l

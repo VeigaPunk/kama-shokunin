@@ -1,0 +1,120 @@
+{
+  "seat": "EX02CutoffProbe",
+  "round": "81",
+  "wave": "w1",
+  "claim": "C2 premise: tools/round75-append-accepted.py's frozen acceptance rule is unsatisfiable for any event made after the register's introduction; the disclosure ledger cannot bless it either",
+  "verdict": "PROVEN",
+  "base_revision": "e7d2fd729cf8204c89c32534303bc9f2a97fcee4",
+  "lane_master_observed": "f6cb5303171cc73dc570ace06f99125266e5b956",
+  "fixtures": [
+    {
+      "clone": "/fast/scratch/hyaku/kama-r81/EX02CutoffProbe/clone",
+      "toplevel_verified": true,
+      "pinned": "e7d2fd729cf8204c89c32534303bc9f2a97fcee4",
+      "fixture_commits": ["0bdb22d913c257e7212bcc380b34a02a752cb698"]
+    },
+    {
+      "clone": "/fast/scratch/hyaku/kama-r81/EX02CutoffProbe/clone2",
+      "toplevel_verified": true,
+      "pinned": "e7d2fd729cf8204c89c32534303bc9f2a97fcee4",
+      "fixture_commits": ["00aeb4ae548825c2af9acf98168d9af386b6d369"]
+    }
+  ],
+  "chosen_event": {
+    "commit": "4af44f78303f04a6ea32ea62cac586f89688d73a",
+    "file": "corpus/lessons/round-79.md",
+    "line_sha256": "d217400656a81df399157a05ec6d167fe28fc9c8cd5cb11ea6af239d12703785",
+    "count": 1,
+    "class": "in-place-edit",
+    "subject": "round-79: C2 honest stop on the scored gate (arm 8 red on the round's own in-place edits), mistake 3, KQ131, wave/dead-seat record"
+  },
+  "runs": [
+    {
+      "step": "baseline-accepted-grader",
+      "command": "python3 tools/round75-append-accepted.py --repo <clone>",
+      "exit": 1,
+      "summary_line": "APPEND_ACCEPTED events=63 accepted=53 unaccepted=10 bad_rows=0 bad_declarations=0",
+      "receipts": ["receipts/01-accepted-baseline.out", "receipts/01-accepted-baseline.err", "receipts/01-accepted-baseline.exit"]
+    },
+    {
+      "step": "perfect-row-after-fixture-commit",
+      "fixture_commit": "0bdb22d913c257e7212bcc380b34a02a752cb698",
+      "command": "python3 tools/round75-append-accepted.py --repo <clone>",
+      "exit": 1,
+      "summary_line": "APPEND_ACCEPTED events=63 accepted=53 unaccepted=10 bad_rows=1 bad_declarations=0",
+      "finding": "APPEND_ACCEPTED_FINDING post-introduction line 391: 4af44f78303f04a6ea32ea62cac586f89688d73a corpus/lessons/round-79.md d217400656a81df399157a05ec6d167fe28fc9c8cd5cb11ea6af239d12703785: commit is not an ancestor of the register's introduction commit",
+      "receipts": ["receipts/02-appended-row.txt", "receipts/02-fixture-commit.txt", "receipts/02-fixture-head.txt", "receipts/03-accepted-after-row.out", "receipts/03-accepted-after-row.err", "receipts/03-accepted-after-row.exit"]
+    },
+    {
+      "step": "disclosure-ledger-attempt",
+      "fixture_commit": "00aeb4ae548825c2af9acf98168d9af386b6d369",
+      "command": "python3 tools/append-only-audit.py --repo <clone2> --json",
+      "exit": 1,
+      "bad_disclosures": 1,
+      "disclosure_verdict": {
+        "commit": "4af44f78303f04a6ea32ea62cac586f89688d73a",
+        "file": "corpus/lessons/round-79.md",
+        "ok": false,
+        "reason": "names a commit at or after the ledger's introduction b6bed925b032: restore by append"
+      },
+      "receipts": ["receipts/04-appended-disclosure-row.txt", "receipts/04-fixture-commit.txt", "receipts/04-fixture-head.txt", "receipts/05-audit-after-disclosure.json", "receipts/05-audit-after-disclosure.err", "receipts/05-audit-after-disclosure.exit"]
+    },
+    {
+      "step": "frozen-grader-selftest",
+      "command": "python3 tools/round75-append-accepted.py --selftest",
+      "exit": 0,
+      "note": "APPEND_ACCEPTED_SELFTEST post-introduction PASS exit=1 expected=1 — the red is by design",
+      "receipts": ["receipts/07-selftest.out", "receipts/07-selftest.exit"]
+    }
+  ],
+  "mechanism": {
+    "round75-append-accepted.py": {
+      "grade_docstring_lines": "69-72",
+      "cutoff_check_lines": "124-127",
+      "intro_resolution_lines": "235-241",
+      "precedes_definition_lines": "244-250",
+      "selftest_case_lines": "170-172"
+    },
+    "append-only-audit.py": {
+      "ledger_rule_docstring_lines": "21-26",
+      "since_resolution_lines": "569-575",
+      "cutoff_rule_lines": "580-583",
+      "selftest_lines": "1385-1399"
+    }
+  },
+  "introductions": {
+    "register_append-only-accepted.tsv": {
+      "commit": "10f37171fb696c542586cbee96ea4a509ab74afc",
+      "date": "2026-11-04T02:25:29-03:00",
+      "subject": "round-75: interpretation pins (F1b/F2c), survivor probe + two C2 arms, accepted-history register and declaration repair, gate arm 8, S547 and wave evidence",
+      "sole_path_addition": true
+    },
+    "ledger_append-only-disclosures.tsv": {
+      "commit": "b6bed925b032ac2c19b63ef4af358ebdd5922c26",
+      "date": "2026-10-27T00:39:06-03:00",
+      "subject": "round-51: build — server_exe record and own-member replay check (C1), append-only-audit v6 + disclosure ledger (C2), S499, freeze receipts"
+    }
+  },
+  "ten_unaccepted_events_commit_file_pairs": [
+    {"commit": "1cda04569f30005adc89f98aa02909d6659fdf99", "file": "SCORECARD.md", "undisclosed_lines": 4},
+    {"commit": "223c881a3ae74679ed5c8cbc713f331f97a12338", "file": "SCORECARD.md", "undisclosed_lines": 2},
+    {"commit": "28debbcf50c4cfe9ca6d3077508cc14aa8c7365a", "file": "SCORECARD.md", "undisclosed_lines": 1},
+    {"commit": "4af44f78303f04a6ea32ea62cac586f89688d73a", "file": "SCORECARD.md", "undisclosed_lines": 6},
+    {"commit": "4af44f78303f04a6ea32ea62cac586f89688d73a", "file": "corpus/lessons/round-79.md", "undisclosed_lines": 2},
+    {"commit": "5785cdff641fb210966c93168a6ff922b82af414", "file": "registry/append-only-accepted.tsv", "undisclosed_lines": 38},
+    {"commit": "5fcef757a64e0e7736904c68e101d96f60a5d847", "file": "SCORECARD.md", "undisclosed_lines": 1},
+    {"commit": "9100605d6cfa2c467c1fd2468eef502f162e5d3d", "file": "corpus/lessons/round-79.md", "undisclosed_lines": 16},
+    {"commit": "b574397576eaed3fbbf3568f102b8a2a155600d8", "file": "SCORECARD.md", "undisclosed_lines": 12},
+    {"commit": "f4a35f6c21778d03aa78fd9d05c6eb1b02d26b7f", "file": "SCORECARD.md", "undisclosed_lines": 6}
+  ],
+  "descendant_proof": {
+    "distinct_commits": 9,
+    "all_descendants_of_register_intro": true,
+    "all_descendants_of_ledger_intro": true,
+    "merge_base_is_ancestor_intro_to_event_rc": 0,
+    "merge_base_is_ancestor_event_to_intro_rc": 1,
+    "event_committer_date_range": "2026-11-04T06:55:52-03:00..2026-11-04T07:56:53-03:00",
+    "receipts": ["receipts/06-introduction-and-descendants.txt", "receipts/08-converse-direction.txt"]
+  },
+  "conclusion": "Unsatisfiable: a register row must name the event's own commit (grade() keys on commit+file+digest), and precedes() demands that commit be a strict ancestor of the register's introduction 10f37171; all ten events are descendants, so every possible row is a post-introduction bad_row and the events stay unaccepted (accepted is frozen at 53). The disclosure ledger independently refuses the same row (since b6bed925b0, bad_disclosures=1). Only the new late-acceptance class registry/append-only-late.tsv that C2 installs can accept them."
+}

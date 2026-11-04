@@ -8,11 +8,12 @@ dir was written; no tool was installed (the named items required none); the scra
 | field | value |
 |---|---|
 | lane tip at read | `7eeae5bca46883914dd958af140738e1cee37620` (`git -C …kama-shokunin rev-parse master`, 2026-11-04T11:51:16Z; it was `f6cb5303…` at the first read, 11:47Z — siblings were committing) |
+| lane tip at hand-off | `88b35ea5adf59f908dd25d1a0a1f50209dbc02eb` (2026-11-04T11:56:18Z) |
 | base | `e7d2fd729cf8204c89c32534303bc9f2a97fcee4` (resolves, `rev-parse`) |
 | sealed revision C1 grades | `a2af1af59faf6cf66fe854559293c4e4b441aff3` (resolves, `rev-parse`) |
-| access instant | 2026-11-04T11:46Z–11:51Z (per-fetch UTC in `evidence/fetch-status.tsv`, `evidence/headers.txt`) |
+| access instant | 2026-11-04T11:46Z–11:56Z (per-fetch UTC in `evidence/fetch-status.tsv`, `evidence/headers.txt`, `receipts.out` §access) |
 | tools | curl 8.23.0, python 3.14.8, git 2.56.0 |
-| receipts | `$SEAT/receipts.sh`, `$SEAT/aggregate.sh`, `$SEAT/receipts.out`, `$SEAT/evidence/` where `$SEAT=/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-81/w1/SC05Fetch` |
+| receipts | `$SEAT/receipts.sh` → `$SEAT/receipts.out`, `$SEAT/aggregate.sh` → `$SEAT/aggregate.out`, `$SEAT/evidence/` where `$SEAT=/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-81/w1/SC05Fetch`; both scripts were re-run from an empty scratch dir before this report was finalised |
 
 ## 1. The four candidates, measured
 
@@ -20,11 +21,11 @@ dir was written; no tool was installed (the named items required none); the scra
 
 | # | candidate | URL | HTTP | bytes | sha256 | best ≤25-word quote (physical line) | words | anchor the plan expects |
 |---|---|---|---|---|---|---|---|---|
-| S558 admit | Ollama OpenAI-compat @ v0.40.11 (**corrected** path) | `https://raw.githubusercontent.com/ollama/ollama/v0.40.11/docs/api/openai-compatibility.mdx` | 200 | 25472 | `44071a1277796b5ad28e51e561afd94ac75f6f76cd75c4b8d9d80b9dff760cd5` | `- \`owned_by\` corresponds to the ollama username, defaulting to \`"library"\`` — line **295** | 9 | `## Endpoints` **line 209** ✓; `### \`/v1/models\`` **line 290** ✓; response notes **294–295** (filed 293–294 ✗, §3) |
+| S558 admit | Ollama OpenAI-compat @ v0.40.11 (**corrected** path) | `https://raw.githubusercontent.com/ollama/ollama/v0.40.11/docs/api/openai-compatibility.mdx` | 200 | 25472 | `44071a1277796b5ad28e51e561afd94ac75f6f76cd75c4b8d9d80b9dff760cd5` | ``- `owned_by` corresponds to the ollama username, defaulting to `"library"` `` — line **295** | 9 | `## Endpoints` **line 209** ✓; ``### `/v1/models` `` **line 290** ✓; response notes **294–295** (filed 293–294 ✗, §3) |
 | — | same file, **filed** S557 path | `…/docs/api-openai-compatibility.mdx` | **404** | 14 | `d5558cd419c8d46bdc958064cb97f963d1ea793866414c025906ec15033512ed` | body is exactly `404: Not Found` | 4 | n/a — dead (§2) |
 | S559 admit | git-merge-base | `https://git-scm.com/docs/git-merge-base` | 200 | 41397 | `46d106b777754f7ec3072813ace57d2c5385d110181b8db1c56b7136cfb49644` | "Check if the first `<commit>` is an ancestor of the second `<commit>`, and exit with status 0 if true, or with status 1 if not." — lines **1703–1704** (option `dt` 1701, error clause 1705) | **25** (at the cap) | `--is-ancestor` ✓, stable id `Documentation/git-merge-base.txt---is-ancestor`; synopsis 1648 |
 | S560 admit | git-diff-tree | `https://git-scm.com/docs/git-diff-tree` | 200 | 256938 | `6473d8a3d1bc12fa2e0ce700664253db537f143a53d34d36313bbda0d9ef5000` | "git diff-tree outputs a line with the commit ID when applicable. This flag suppresses the commit ID output." — lines **4567–4568** (`--no-commit-id`, `dt` 4565) | 18 | raw-record rules ✓: `--raw` 3441–3444 ("This is the default."), `-r` 4375, `--root` 4383, `--name-only` 3654, `Raw output format` 5369, "one output line per changed file" 5400 |
-| S561 reject | vLLM v0.33.0 release page | `https://github.com/vllm-project/vllm/releases/tag/v0.33.0` | 200 | 163538 (varies by ±1, §5.1) | **not stable** — four fetches gave four digests (`597819dc…`, `46313aef…`, `18980a94…`, `600f7ee9…`) | the release's entire body is `<p>vLLM v0.33.0</p>` — `releases.atom` line **13** | 2 | **no anchor grounds a round-81 claim**: the page carries no body (§4) |
+| S561 reject | vLLM v0.33.0 release page | `https://github.com/vllm-project/vllm/releases/tag/v0.33.0` | 200 | 163537–163539 (varies) | **not stable** — every page fetch gave a new digest (seven fetches, seven digests, e.g. `597819dc…`, `46313aef…`, `e40dbe05…`) | the release's entire body is `<p>vLLM v0.33.0</p>` — `releases.atom` line **13** | 2 | **no anchor grounds a round-81 claim**: the page carries no body (§4) |
 
 Commands for the table: `bash receipts.sh` (exit 0) → `receipts.out` §`[1]`, §`[1b]`, §`[1c]`;
 digest manifest `evidence/digests.tsv`; per-anchor extracts `evidence/ollama-anchors.txt`,
@@ -126,8 +127,9 @@ new member this round (`evidence/w04-duplicate.txt`).
 ### 5.1 A GitHub release *HTML* page has no stable sha256 — do not file one
 
 `evidence/volatility.txt` (a three-fetch probe, `cmp` + `diff`): the page returns 200 at 163537 /
-163538 / 163539 bytes with three distinct digests (a fourth fetch earlier in the seat gave a
-fourth, `597819dc…`); the diffs are the per-request
+163538 / 163539 bytes with three distinct digests, and every other page fetch in this seat also
+returned a fresh digest (seven fetches, seven digests — the run's own value is in
+`receipts.out` §`[1]`/§`[8]`); the diffs are the per-request
 `request-id`, `html-safe-nonce`, `visitor-payload` and `visitor-hmac` meta tags. Any Gate row
 that states a sha256 for `github.com/.../releases/tag/...` is unreproducible and will fail a
 re-run. **Cite the atom feed instead:** `https://github.com/vllm-project/vllm/releases.atom`
@@ -190,9 +192,10 @@ Seat dir `SEAT = /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-81
 
 | receipt | command | exit |
 |---|---|---|
-| `SEAT/receipts.sh` | `bash receipts.sh` (all fetches, headers, anchor extracts, digests) | 0 |
-| `SEAT/receipts.out` | the captured stdout of the above (14827 B, 256 lines) | 0 |
-| `SEAT/aggregate.sh` | `bash aggregate.sh` (builds `evidence/`) | 0 |
+| `SEAT/receipts.sh` | `bash receipts.sh` (all fetches + headers + anchors + API cross-check + volatility probe + pinned URLs + lane grounding + revisions) | 0 |
+| `SEAT/receipts.out` | the captured stdout of the above (18025 B, 306 lines) | 0 |
+| `SEAT/aggregate.sh` | `bash aggregate.sh` (builds `evidence/` from the fetched artifacts) | 0 |
+| `SEAT/aggregate.out` | the captured stdout of the above (`270`, the evidence line total) | 0 |
 | `SEAT/evidence/fetch-status.tsv` | per-URL http/bytes/sha256/blob/lines/access | 0 |
 | `SEAT/evidence/headers.txt` | `curl -sS -I -L <url> \| grep -iE '^HTTP/\|^content-type:\|^content-length:\|^etag:\|^last-modified:'` | 0 |
 | `SEAT/evidence/ollama-anchors.txt` | `awk 'NR==209 \|\| (NR>=288 && NR<=296)'` + `grep -n '^#\{2,4\} '` | 0 |
@@ -221,8 +224,9 @@ removed before this seat yields.
 - **SC03's draft rows** did not exist at read (`.ufo/waves/round-81/w1/SC03Sources/` empty), so I
   verified the *source objects*, not the filed row text. If SC03 writes S558 with notes
   `293–294` or S559/S560 with a page-level digest, this report contradicts those cells.
-- **The API 404 for tag `v0.33.0`** is observed (`/releases/tags/v0.33.0` → 404, remaining rate
-  limit 56, while `/releases/tags/v0.32.0` and `…/v0.33.0rc3` both 200). Its *cause* is
+- **The API 404 for tag `v0.33.0`** is observed (`/releases/tags/v0.33.0` → 404 `{"message":"Not Found"}`,
+  rate limit 42 remaining at the second run, 56 at the first — not rate limiting; while
+  `/releases/tags/v0.32.0` and `…/v0.33.0rc3` both 200). Its *cause* is
   [INFERENCE] — a draft or tag-only record; GitHub does not expose drafts unauthenticated, and
   the atom feed gives no `draft` flag.
 - **Whether v0.33.0 will gain a populated body later** is unknowable here; it would change the

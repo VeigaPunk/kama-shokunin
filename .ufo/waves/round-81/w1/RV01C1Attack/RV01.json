@@ -1,0 +1,105 @@
+{
+  "seat": "RV01C1Attack",
+  "wave": "round-81/w1",
+  "target": "tools/round81-selfrecord-round80.py (C1 calibration counter)",
+  "frozen_claim": "plans/round-81-claims.md §C1 (block quote treated as frozen text)",
+  "revisions": {
+    "base": "e7d2fd729cf8204c89c32534303bc9f2a97fcee4",
+    "sealed": "a2af1af59faf6cf66fe854559293c4e4b441aff3",
+    "pinned_tip": "1b96317f690dbe9f42675099a004e150aaa54419"
+  },
+  "method_note": "Attacks 1-3 need a mutated COMMITTED corpus/lessons/round-81.md; commits are forbidden for this seat and the CLI peels --tip with ^{commit} (main, tools/round81-selfrecord-round80.py:492-493), so no tree-sha injection is possible. They were therefore driven through the production score()/derive()/corrections() functions (imported from the counter) over REAL sealed/tip lane blobs via the counter's own Fixture mechanism (tools/round81-selfrecord-round80.py:108-114), the same boundary its --selftest exercises. Attack 4 proves at the CLI that only git show rev:path feeds those functions, so the Fixture boundary is the only untested edge and it is git's own show. Lane master moved during grading; every CLI run pins --tip.",
+  "summary": {"attacks": 9, "caught": 9, "escaped": 0},
+  "attacks": [
+    {
+      "case": "A0-baseline-equivalence (control, not an attack)",
+      "command": "python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round81-selfrecord-round80.py --repo $S/clone --tip 1b96317f690dbe9f42675099a004e150aaa54419 ; harness ctr.score() on real blobs",
+      "observed": "SELFRECORD_R80 claims=6 mismatches=0 corrected=6 unbacked=0, exit 0; harness identical (stale=6 mismatches=0 corrected=6 unbacked=0)",
+      "expected": "byte-equal counts with L1 receipts .ufo/waves/round-81/measured/after/c1-green.out (# rev: 1b96317f…)",
+      "verdict": "caught",
+      "deciding_lines": "tools/round81-selfrecord-round80.py:509-517",
+      "receipts": ["receipts/cli-baseline.out", "receipts/cli-baseline.json", "receipts/parser-attacks.json"]
+    },
+    {
+      "case": "A1 correction block refiled under ## Mistakes (round-80 RV01 defect class)",
+      "command": "harness: real tip lesson blob with the F1 `corrected F1 …` line removed from ## Corrections and refiled under ## Mistakes; ctr.score()",
+      "observed": "stale=6 mismatches=1 corrected=5 unbacked=0; errors=[[\"F1\",\"no-correction\"]]; the refiled block is not parsed anywhere (not even as unbacked)",
+      "expected": "F1 must go unanswered: a corrected block outside ## Corrections is prose, not a correction",
+      "verdict": "caught",
+      "deciding_lines": "tools/round81-selfrecord-round80.py:266-274 (corrections() scans section(text,\"Corrections\") only), :117-126 (section() heading scoping), :284-289 (per-fact block-count check)",
+      "receipts": ["receipts/parser-attacks.json"]
+    },
+    {
+      "case": "A2a correction whose new does not re-derive (new=c1-selftest=pass=99)",
+      "command": "harness: real tip lesson blob with F1 new=c1-selftest=pass=11 -> pass=99; ctr.score()",
+      "observed": "stale=6 mismatches=0 corrected=5 unbacked=1; unbacked_detail=[[\"F1\",\"new=c1-selftest=pass=99 != observed c1-selftest=pass=11\"]] (CLI exit-equivalent 1)",
+      "expected": "F1 must go unbacked; corrected must drop to 5",
+      "verdict": "caught",
+      "deciding_lines": "tools/round81-selfrecord-round80.py:295-296 (new != observed check in score())",
+      "receipts": ["receipts/parser-attacks.json"]
+    },
+    {
+      "case": "A2b correction whose at names the record tip instead of the sealed revision",
+      "command": "harness: real tip lesson blob with F1 at=a2af1af… -> at=1b96317f690dbe9f42675099a004e150aaa54419; ctr.score()",
+      "observed": "stale=6 mismatches=0 corrected=5 unbacked=1; unbacked_detail=[[\"F1\",\"at=1b96317f… != sealed a2af1af59faf6cf66fe854559293c4e4b441aff3\"]]",
+      "expected": "F1 must go unbacked; at must equal the sealed revision exactly",
+      "verdict": "caught",
+      "deciding_lines": "tools/round81-selfrecord-round80.py:297-298 (at != sealed string check in score())",
+      "receipts": ["receipts/parser-attacks.json"]
+    },
+    {
+      "case": "A3 correction whose old is not the sealed declared value (old=c1-selftest=pass=7)",
+      "command": "harness: real tip lesson blob with F1 old=c1-selftest=pass=9 -> pass=7; ctr.score()",
+      "observed": "stale=6 mismatches=0 corrected=5 unbacked=1; unbacked_detail=[[\"F1\",\"old=c1-selftest=pass=7 != declared c1-selftest=pass=9\"]]",
+      "expected": "F1 must go unbacked; old must equal the sealed declared value",
+      "verdict": "caught",
+      "deciding_lines": "tools/round81-selfrecord-round80.py:293-294 (old != declared check in score())",
+      "receipts": ["receipts/parser-attacks.json"]
+    },
+    {
+      "case": "A4a worktree-only plant: SCORECARD.md record markers deleted",
+      "command": "edit $S/clone/SCORECARD.md deleting '- C1-selftest pass=9 -> pass=11' and '- C3-selftest pass=6 -> pass=12' (uncommitted); python3 … --repo $S/clone --tip 1b96317f…",
+      "observed": "git status shows ' M SCORECARD.md' (would flip F1/F2 unbacked if read); output byte-identical to pristine run (diff empty); exit 0",
+      "expected": "verdict must not move: every fact and record marker is read with git show <rev>:<path>, never the worktree",
+      "verdict": "caught",
+      "deciding_lines": "tools/round81-selfrecord-round80.py:82-88 (Repo.show shells out to git show rev:path), :303 (record = repo.show(tip, path))",
+      "receipts": ["receipts/wt-0.out", "receipts/wt-1-scorecard-plant.out"]
+    },
+    {
+      "case": "A4b worktree-only plants: LOG.md marker + lessons F1 correction deleted",
+      "command": "edit $S/clone/LOG.md deleting the `LOG-CORRECTION round=80 …` line and $S/clone/corpus/lessons/round-81.md deleting the F1 `corrected F1 …` line (both uncommitted); rerun",
+      "observed": "git status shows all three files modified; output byte-identical to pristine run (diff empty); exit 0 — the scratch-copy-of-the-tip vector for the correction container is closed by the same git-show binding",
+      "expected": "verdict must not move for corrections (lessons) and LOG record alike",
+      "verdict": "caught",
+      "deciding_lines": "tools/round81-selfrecord-round80.py:267 (corrections read via repo.show(tip, lesson)), :303 (record markers via repo.show(tip, path))",
+      "receipts": ["receipts/wt-2-all-plants.out"]
+    },
+    {
+      "case": "A5 F6 graded at the tip (newest closure) while F1-F5 stay at the sealed revision, and it is stated",
+      "command": "CLI --json at tip 1b96317f…; CLI --enumerate --tip e7d2fd72… (base); harness A5 with tip closure set = round-79 only",
+      "observed": "F6 declared=newest-closure=round-79-verifier-spotcheck.md observed=newest-closure=round-80-verifier-spotcheck.md at tip (stale, answered by the F6 correction); F6 still stale at the base (the round-80 closure landed at e7d2fd72); with a round-79-only tip closure F6 re-derives and its correction flips unbacked ('correction for a fact that re-derives'). Stated at tools/round81-selfrecord-round80.py:27-28 (docstring 'F1–F5 are graded at the sealed revision; F6 is tip-bound …'), :251 (TIP_BOUND = {\"F6\"}), and corpus/lessons/round-81.md 'Freeze divergences' 1",
+      "expected": "F6 tip-bound AND the asymmetry stated",
+      "verdict": "caught",
+      "deciding_lines": "tools/round81-selfrecord-round80.py:224-236 (f6 declared at sealed, observed via newest_closure(tip)), :90-99 (newest_closure over ls-tree at tip), :254-258 (derive dispatches f6 with tip), :27-28 (statement)",
+      "receipts": ["receipts/cli-baseline.json", "receipts/cli-enum-base.out", "receipts/parser-attacks.json"]
+    },
+    {
+      "case": "A6a --no-corrections at the tip",
+      "command": "python3 … --repo $S/clone --tip 1b96317f… --no-corrections",
+      "observed": "SELFRECORD_R80 claims=6 mismatches=6 corrected=0 unbacked=0 plus six SELFRECORD_R80_UNANSWERED <F n> no-correction lines, exit 1",
+      "expected": "exactly frozen control 2: mismatches=6, exit 1 (target unreachable without the six blocks)",
+      "verdict": "caught",
+      "deciding_lines": "tools/round81-selfrecord-round80.py:482 (--no-corrections flag), :279 (blocks=[] when disabled), :509-517 (line print + exit rule)",
+      "receipts": ["receipts/cli-nocorr.out"]
+    },
+    {
+      "case": "A6b --enumerate at the base",
+      "command": "python3 … --repo $S/clone --tip e7d2fd729cf8204c89c32534303bc9f2a97fcee4 --enumerate",
+      "observed": "SELFRECORD_R80_ENUM claims=6 stale=6 corrected=0 plus six SELFRECORD_R80_STALE lines matching the frozen fact table value-for-value, exit 1",
+      "expected": "exactly frozen control 1: claims=6 stale=6 corrected=0, exit 1",
+      "verdict": "caught",
+      "deciding_lines": "tools/round81-selfrecord-round80.py:501-508 (enumerate print + exit rule stale==corrected and unbacked==0)",
+      "receipts": ["receipts/cli-enum-base.out"]
+    }
+  ]
+}
