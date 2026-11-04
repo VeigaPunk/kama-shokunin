@@ -1,0 +1,70 @@
+== base-census.py
+   control_exit=1  REFUSED_MEMBER_CONTROL refused_fixture_exit=0 allpass_fixture_exit=0
+   target_ok=False  waiver=none  unknown=n/a  reentry=ok
+     - refused: fixture exits 0 (fail-open)
+     - refused: verdict not_evaluated != 1: 'HOST_CENSUS pass=1 fail=0 refused=1 total=2 tierA_fail=0 tierB_fail=0'
+     - allpass: verdict not_evaluated != 0: 'HOST_CENSUS pass=2 fail=0 refused=0 total=2 tierA_fail=0 tierB_fail=0'
+== s1-always-fail.py
+   control_exit=1  REFUSED_MEMBER_CONTROL refused_fixture_exit=1 allpass_fixture_exit=1
+   target_ok=False  waiver=none  unknown=n/a  reentry=ok
+     - refused: verdict not_evaluated != 1: 'HOST_CENSUS pass=1 fail=0 refused=1 total=2 tierA_fail=0 tierB_fail=0'
+     - allpass: exit=1 (must be 0)
+     - allpass: verdict not_evaluated != 0: 'HOST_CENSUS pass=2 fail=0 refused=0 total=2 tierA_fail=0 tierB_fail=0'
+== s2-refusal-as-pass.py
+   control_exit=1  REFUSED_MEMBER_CONTROL refused_fixture_exit=0 allpass_fixture_exit=0
+   target_ok=False  waiver=none  unknown=n/a  reentry=ok
+     - refused: fixture exits 0 (fail-open)
+     - refused: verdict not_evaluated != 1: 'HOST_CENSUS pass=1 fail=0 refused=1 total=2 tierA_fail=0 tierB_fail=0'
+     - allpass: verdict not_evaluated != 0: 'HOST_CENSUS pass=2 fail=0 refused=0 total=2 tierA_fail=0 tierB_fail=0'
+== s3-not-evaluated-but-exit-0.py
+   control_exit=1  REFUSED_MEMBER_CONTROL refused_fixture_exit=0 allpass_fixture_exit=0
+   target_ok=False  waiver=none  unknown=n/a  reentry=ok
+     - refused: fixture exits 0 (fail-open)
+== s4-refusal-as-fail.py
+   control_exit=0  REFUSED_MEMBER_CONTROL refused_fixture_exit=1 allpass_fixture_exit=0
+   target_ok=False  waiver=none  unknown=n/a  reentry=ok
+     - refused: verdict not_evaluated != 1: 'HOST_CENSUS pass=1 fail=1 refused=0 total=2 tierA_fail=1 tierB_fail=0'
+     - refused: verdict reports fail: 'HOST_CENSUS pass=1 fail=1 refused=0 total=2 tierA_fail=1 tierB_fail=0'
+     - allpass: verdict not_evaluated != 0: 'HOST_CENSUS pass=2 fail=0 refused=0 total=2 tierA_fail=0 tierB_fail=0'
+== s5t-hardcoded-total.py
+   control_exit=0  REFUSED_MEMBER_CONTROL refused_fixture_exit=1 allpass_fixture_exit=0
+   target_ok=False  waiver=partial  unknown=loud  reentry=ok
+     - refused: population not derived from MEMBERS: 'HOST_CENSUS pass=1 fail=0 not_evaluated=1 total=22 tierA_fail=0 tierB_fail=0'
+== s6w-waiver-swallows-failure.py
+   control_exit=0  REFUSED_MEMBER_CONTROL refused_fixture_exit=1 allpass_fixture_exit=0
+   target_ok=False  waiver=leaks-to-failure  unknown=loud  reentry=ok
+     - waiver turns a FAILING member into exit 0 (silent pass)
+== s7-argparse-in-main.py
+   control_exit=2  <no REFUSED_MEMBER_CONTROL line>
+   target_ok=False  waiver=none  unknown=n/a  reentry=ok
+     - refused: verdict not_evaluated != 1: None
+     - refused: verdict reports fail: None
+     - refused: population not derived from MEMBERS: None
+     - allpass: exit=SystemExit(2) (must be 0)
+     - allpass: verdict not_evaluated != 0: None
+     - allpass: verdict wrong: None
+   control stderr: usage: refused-member-control.py [-h] [--waive WAIVE]
+refused-member-control.py: error: unrecognized arguments: shims/s7-argparse-in-main.py
+== s8r-second-call-silent.py
+   control_exit=0  REFUSED_MEMBER_CONTROL refused_fixture_exit=1 allpass_fixture_exit=0
+   target_ok=False  waiver=partial  unknown=loud  reentry=fail
+     - second in-process call diverges from a fresh module (second exit=0, verdict=None)
+== s10d-refusal-branch-deleted.py
+   control_exit=0  REFUSED_MEMBER_CONTROL refused_fixture_exit=1 allpass_fixture_exit=0
+   target_ok=False  waiver=none  unknown=n/a  reentry=ok
+     - refused: verdict not_evaluated != 1: 'HOST_CENSUS pass=1 fail=1 not_evaluated=0 total=2 tierA_fail=1 tierB_fail=0'
+     - refused: verdict reports fail: 'HOST_CENSUS pass=1 fail=1 not_evaluated=0 total=2 tierA_fail=1 tierB_fail=0'
+== census-candidate.py
+   control_exit=0  REFUSED_MEMBER_CONTROL refused_fixture_exit=1 allpass_fixture_exit=0
+   target_ok=True  waiver=partial  unknown=loud  reentry=ok
+== ex02-candidate.py
+   control_exit=0  REFUSED_MEMBER_CONTROL refused_fixture_exit=1 allpass_fixture_exit=0
+   target_ok=False  waiver=none  unknown=n/a  reentry=ok
+     - refused: verdict not_evaluated != 1: 'HOST_CENSUS exit 1: 1 not-evaluated member(s) without a waiver: synthetic-refused'
+     - refused: verdict reports fail: 'HOST_CENSUS exit 1: 1 not-evaluated member(s) without a waiver: synthetic-refused'
+     - refused: population not derived from MEMBERS: 'HOST_CENSUS exit 1: 1 not-evaluated member(s) without a waiver: synthetic-refused'
+== ex02-candidate-corrected.py
+   control_exit=0  REFUSED_MEMBER_CONTROL refused_fixture_exit=1 allpass_fixture_exit=0
+   target_ok=True  waiver=none  unknown=n/a  reentry=ok
+
+wrote /fast/scratch/hyaku/kama-r70/CRT01ClaimC2/score.json

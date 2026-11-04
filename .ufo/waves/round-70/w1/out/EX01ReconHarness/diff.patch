@@ -1,0 +1,55 @@
+diff --git i/tools/round41-scorecard-reconcile.py w/tools/round41-scorecard-reconcile.py
+index ea0f7b3..7fbf030 100755
+--- i/tools/round41-scorecard-reconcile.py
++++ w/tools/round41-scorecard-reconcile.py
+@@ -19,8 +19,12 @@ Per axis row:
+     HASH    `PATH` md5|sha256 `HEX`   -> digest of the blob PATH at --tip
+     LINES   `PATH` (N lines           -> line count of the blob PATH at --tip
+     RUN     run `CMD` -> `OUT` [(exit N)]
+-            CMD runs with bash in a throwaway export of --tip (git archive);
+-            passes iff some stdout line, stripped, equals OUT and, when
++            CMD runs with bash in a throwaway checkout of --tip (round 70:
++            `git clone --shared --no-checkout` + `checkout --detach`, replacing
++            the metadata-free `git archive` export, so git-dependent fact
++            commands resolve the repository; the work tree equals the tip tree
++            and the checkout is deleted at exit); passes iff some stdout line,
++            stripped, equals OUT and, when
+             `(exit N)` follows, the exit status equals N. Timeout 300 s.
+     PATH    every other backticked token shaped like a repo-relative path
+             (ends in .md .py .sh .tsv .json .out .txt .jsonl .csv, or starts
+@@ -38,7 +42,8 @@ Output (one line, also written to --out):
+ followed by one `detail:` line per mismatch.
+ 
+ Exit: 0 met True; 1 met False; 2 could not evaluate.
+-Read-only on --repo: git show / cat-file / archive only.
++Read-only on --repo: git show / cat-file / clone --shared only; the checkout
++lives under TMPDIR and is deleted at exit (round 70).
+ """
+ from __future__ import annotations
+ 
+@@ -187,8 +192,23 @@ def evaluate(repo: str, tip: str) -> tuple[dict, list[str]]:
+                 export = tempfile.mkdtemp(prefix="r41c1-")
+                 atexit.register(shutil.rmtree, export, True)  # round 42: remove the export (R41A10-10)
+                 signal.signal(signal.SIGTERM, lambda *_: sys.exit(143))  # round 42: SIGTERM must reach atexit
+-                arc = git(repo, "archive", "--format=tar", tip, binary=True)
+-                subprocess.run(["tar", "-x", "-C", export], input=arc, check=True)
++                # round 70: check --tip out (git clone --shared --no-checkout, then
++                # checkout --detach) instead of exporting it metadata-free via
++                # git archive | tar -x; the work tree equals the tip tree, git
++                # metadata is present for git-dependent fact commands, and the
++                # whole checkout (including .git) is removed by the atexit hook
++                # registered above.
++                git(repo, "clone", "--shared", "--no-checkout", "--quiet",
++                    os.path.abspath(repo), export)
++                # a source with a detached HEAD (e.g. a round-42 selftest fixture)
++                # yields a clone without local branch refs; mirror the source's
++                # branch refs so lane-tip arms resolve the same refs as the
++                # source (update-ref, not fetch: fetching into the clone's own
++                # checked-out branch is refused).
++                for h in [x.strip() for x in git(repo, "for-each-ref", "--format=%(refname)",
++                                                 "refs/heads/").splitlines() if x.strip()]:
++                    git(export, "update-ref", h, git(repo, "rev-parse", "--verify", h).strip())
++                git(export, "checkout", "--detach", "--quiet", tip)
+             ok, why = run_fact(export, cmd, want, code or None)
+             if not ok:
+                 c["run_bad"] += 1

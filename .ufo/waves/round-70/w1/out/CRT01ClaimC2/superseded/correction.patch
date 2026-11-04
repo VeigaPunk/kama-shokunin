@@ -1,0 +1,28 @@
+--- a/tools/round65-host-census.py
++++ b/tools/round65-host-census.py
+@@ -25,7 +25,9 @@
+ ran keeps its real semantics: a pass stays a pass, a fail stays a fail, and
+ a waiver never covers a fail. Verdict line:
+ 
+-    HOST_CENSUS pass=<p> fail=<f> not_evaluated=<n> waived=<w> total=<t> tierA_fail=<a> tierB_fail=<b>
++    HOST_CENSUS pass=<p> fail=<f> not_evaluated=<n> total=<t> tierA_fail=<a> tierB_fail=<b>
++`waived=<w>` is appended before ``total`` only when a waiver was consumed, so a
++verdict with no waivers keeps ``not_evaluated=<n> total=<t>`` contiguous.
+ 
+ Tiers: tier A members are the self-tests named in SCORECARD axes evidence rows
+ plus the instrument-registry gate; tier B members are the capability
+@@ -203,10 +205,11 @@
+                   file=sys.stderr)
+     for line in lines:
+         print(line)
+-    print(f"HOST_CENSUS pass={passed} fail={failed} not_evaluated={not_evaluated} "
+-          f"waived={waived} total={len(MEMBERS)} tierA_fail={fails_a} tierB_fail={fails_b}")
++    waived_tok = f" waived={waived}" if waived else ""
++    print(f"HOST_CENSUS pass={passed} fail={failed} not_evaluated={not_evaluated}"
++          f"{waived_tok} total={len(MEMBERS)} tierA_fail={fails_a} tierB_fail={fails_b}")
+     if unwaived_ne:
+-        print(f"HOST_CENSUS exit 1: {len(unwaived_ne)} not-evaluated member(s) "
++        print(f"CENSUS_EXIT 1: {len(unwaived_ne)} not-evaluated member(s) "
+               f"without a waiver: {', '.join(unwaived_ne)}")
+     # Round 70: the exit is derived from the not-evaluated count. Exit 0 needs
+     # fail=0 AND every not-evaluated member explicitly waived.

@@ -1,0 +1,21 @@
+### OSError spawn-path probe (base vs EX02 vs corrected)
+base-census.py                 argv=[]                         exit=1
+    FAIL [A] gone-binary: spawn error [Errno 2] No such file or directory: '/nonexistent/round70-binary'
+    HOST_CENSUS pass=0 fail=1 refused=0 total=1 tierA_fail=1 tierB_fail=0
+base-census.py                 argv=['--waive', 'gone-binary'] exit=1
+    FAIL [A] gone-binary: spawn error [Errno 2] No such file or directory: '/nonexistent/round70-binary'
+    HOST_CENSUS pass=0 fail=1 refused=0 total=1 tierA_fail=1 tierB_fail=0
+ex02-candidate.py              argv=[]                         exit=1
+    refused [A] gone-binary: spawn error [Errno 2] No such file or directory: '/nonexistent/round70-binary'
+    HOST_CENSUS pass=0 fail=0 not_evaluated=1 waived=0 total=1 tierA_fail=0 tierB_fail=0
+    HOST_CENSUS exit 1: 1 not-evaluated member(s) without a waiver: gone-binary
+ex02-candidate.py              argv=['--waive', 'gone-binary'] exit=0
+    refused [A] gone-binary: spawn error [Errno 2] No such file or directory: '/nonexistent/round70-binary' [waived]
+    HOST_CENSUS pass=0 fail=0 not_evaluated=1 waived=1 total=1 tierA_fail=0 tierB_fail=0
+ex02-candidate-corrected.py    argv=[]                         exit=1
+    refused [A] gone-binary: spawn error [Errno 2] No such file or directory: '/nonexistent/round70-binary'
+    HOST_CENSUS pass=0 fail=0 not_evaluated=1 total=1 tierA_fail=0 tierB_fail=0
+    CENSUS_EXIT 1: 1 not-evaluated member(s) without a waiver: gone-binary
+ex02-candidate-corrected.py    argv=['--waive', 'gone-binary'] exit=0
+    refused [A] gone-binary: spawn error [Errno 2] No such file or directory: '/nonexistent/round70-binary' [waived]
+    HOST_CENSUS pass=0 fail=0 not_evaluated=1 waived=1 total=1 tierA_fail=0 tierB_fail=0

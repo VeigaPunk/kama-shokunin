@@ -1,0 +1,86 @@
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show 6035e952c2521999e192d6f236331f265ac98392:tools/round42-selfdesc-reconcile.py
+STDOUT: committed bytes retained in scratch; sha256=3d9aff8f9c2236c2cb9337b08846da82de718bc1d9e8f1d283f1a71a03acd5c0 bytes=20019
+STDERR:
+EXIT=0
+
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show 6035e952c2521999e192d6f236331f265ac98392:tools/round41-scorecard-reconcile.py
+STDOUT: committed bytes retained in scratch; sha256=eff934a27b3e7525226c78e376ce774f3ab0b225ab98427b19201e5312176cd6 bytes=9829
+STDERR:
+EXIT=0
+
+$ git -C /home/vgpnk/Projects/shokunin/kama-shokunin show 6035e952c2521999e192d6f236331f265ac98392:tools/round65-host-census.py
+STDOUT: committed bytes retained in scratch; sha256=463899182af0d154859e86da785051760e4bc314f5489659ea32424c18374513 bytes=7263
+STDERR:
+EXIT=0
+
+AST census MEMBERS count=22
+reconciler_members=['round42-selfdesc-reconcile selftest']
+
+$ python3 /fast/scratch/hyaku/kama-r70/RVW01ClaimC1/replay-frozen/round42-selfdesc-reconcile.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip 6035e952c2521999e192d6f236331f265ac98392
+STDOUT:
+tip=6035e952c2521999e192d6f236331f265ac98392
+r41=2 banner=1 planned=1 retired=1 saturation=0 caps=0 receipts=0 readme=0 province=4 rel=0 closure_ptr=0 mismatches=10 maxN=69 met=False
+detail: r41 operability run `python3 tools/gate-registry-check.py --selftest` no stdout line == 'GATE_SELFTEST pass=7 fail=0' (exit 1)
+detail: r41 calibration run `python3 tools/round69-newest-closure-counter.py --since-round 63` no stdout line == 'NEWEST_CLOSURE … row_current=true' (exit 2)
+detail: banner: head lacks 'Latest measured round: 69'
+detail: planned: section does not name '### Planned (round 70)'
+detail: retired: does not state '15 capabilities'
+detail: province: PROVINCE.md lacks tools/round67-worktree-landing-check.py (capability worktree-landing-check)
+detail: province: PROVINCE.md lacks tools/round68-receipt-pointer-audit.py (capability receipt-pointer-audit)
+detail: province: PROVINCE.md lacks registry/receipt-pointer-resolutions.tsv (capability receipt-pointer-audit)
+detail: province: PROVINCE.md lacks tools/round69-newest-closure-counter.py (capability newest-closure-counter)
+detail: closure_ptr: calibration row latest outside closure is round-68; newest at tip is round-69
+STDERR:
+EXIT=1
+
+$ python3 /fast/scratch/hyaku/kama-r70/RVW01ClaimC1/replay-frozen/round42-selfdesc-reconcile.py --selftest --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip 6035e952c2521999e192d6f236331f265ac98392 --work /fast/scratch/hyaku/kama-r70/RVW01ClaimC1/replay-work-frozen
+STDOUT:
+SELFDESC_SELFTEST newest=69 planted_stale=57 ok:closure_ptr=1,mismatches=9 stale_ptr:closure_ptr=0,mismatches=10 stale_both:closure_ptr=0,mismatches=10 stale_incl:closure_ptr=0,mismatches=10 no_ptr:closure_ptr=0,mismatches=10 pass=4 fail=1
+STDERR:
+EXIT=1
+
+$ python3 /fast/scratch/hyaku/kama-r70/RVW01ClaimC1/replay-blunt/round42-selfdesc-reconcile.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip 6035e952c2521999e192d6f236331f265ac98392
+STDOUT:
+tip=6035e952c2521999e192d6f236331f265ac98392
+r41=2 banner=1 planned=1 retired=1 saturation=0 caps=0 receipts=0 readme=0 province=4 rel=0 closure_ptr=0 mismatches=0 maxN=69 met=True
+detail: r41 operability run `python3 tools/gate-registry-check.py --selftest` no stdout line == 'GATE_SELFTEST pass=7 fail=0' (exit 1)
+detail: r41 calibration run `python3 tools/round69-newest-closure-counter.py --since-round 63` no stdout line == 'NEWEST_CLOSURE … row_current=true' (exit 2)
+detail: banner: head lacks 'Latest measured round: 69'
+detail: planned: section does not name '### Planned (round 70)'
+detail: retired: does not state '15 capabilities'
+detail: province: PROVINCE.md lacks tools/round67-worktree-landing-check.py (capability worktree-landing-check)
+detail: province: PROVINCE.md lacks tools/round68-receipt-pointer-audit.py (capability receipt-pointer-audit)
+detail: province: PROVINCE.md lacks registry/receipt-pointer-resolutions.tsv (capability receipt-pointer-audit)
+detail: province: PROVINCE.md lacks tools/round69-newest-closure-counter.py (capability newest-closure-counter)
+detail: closure_ptr: calibration row latest outside closure is round-68; newest at tip is round-69
+STDERR:
+EXIT=0
+
+$ python3 /fast/scratch/hyaku/kama-r70/RVW01ClaimC1/replay-blunt/round42-selfdesc-reconcile.py --selftest --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip 6035e952c2521999e192d6f236331f265ac98392 --work /fast/scratch/hyaku/kama-r70/RVW01ClaimC1/replay-work-blunt
+STDOUT:
+SELFDESC_SELFTEST newest=69 planted_stale=57 ok:closure_ptr=1,mismatches=0 stale_ptr:closure_ptr=0,mismatches=0 stale_both:closure_ptr=0,mismatches=0 stale_incl:closure_ptr=0,mismatches=0 no_ptr:closure_ptr=0,mismatches=0 pass=1 fail=4
+STDERR:
+EXIT=1
+
+$ python3 /fast/scratch/hyaku/kama-r70/RVW01ClaimC1/replay-surgical/round42-selfdesc-reconcile.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip 6035e952c2521999e192d6f236331f265ac98392
+STDOUT:
+tip=6035e952c2521999e192d6f236331f265ac98392
+r41=0 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 closure_ptr=0 mismatches=1 maxN=69 met=False
+detail: r41 operability run `python3 tools/gate-registry-check.py --selftest` no stdout line == 'GATE_SELFTEST pass=7 fail=0' (exit 1)
+detail: r41 calibration run `python3 tools/round69-newest-closure-counter.py --since-round 63` no stdout line == 'NEWEST_CLOSURE … row_current=true' (exit 2)
+detail: banner: head lacks 'Latest measured round: 69'
+detail: planned: section does not name '### Planned (round 70)'
+detail: retired: does not state '15 capabilities'
+detail: province: PROVINCE.md lacks tools/round67-worktree-landing-check.py (capability worktree-landing-check)
+detail: province: PROVINCE.md lacks tools/round68-receipt-pointer-audit.py (capability receipt-pointer-audit)
+detail: province: PROVINCE.md lacks registry/receipt-pointer-resolutions.tsv (capability receipt-pointer-audit)
+detail: province: PROVINCE.md lacks tools/round69-newest-closure-counter.py (capability newest-closure-counter)
+detail: closure_ptr: calibration row latest outside closure is round-68; newest at tip is round-69
+STDERR:
+EXIT=1
+
+$ python3 /fast/scratch/hyaku/kama-r70/RVW01ClaimC1/replay-surgical/round42-selfdesc-reconcile.py --selftest --repo /home/vgpnk/Projects/shokunin/kama-shokunin --tip 6035e952c2521999e192d6f236331f265ac98392 --work /fast/scratch/hyaku/kama-r70/RVW01ClaimC1/replay-work-surgical
+STDOUT:
+SELFDESC_SELFTEST newest=69 planted_stale=57 ok:closure_ptr=1,mismatches=0 stale_ptr:closure_ptr=0,mismatches=1 stale_both:closure_ptr=0,mismatches=1 stale_incl:closure_ptr=0,mismatches=1 no_ptr:closure_ptr=0,mismatches=1 pass=5 fail=0
+STDERR:
+EXIT=0
