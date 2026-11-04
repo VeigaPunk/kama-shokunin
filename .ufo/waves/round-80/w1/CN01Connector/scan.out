@@ -1,0 +1,60 @@
+# CN01 sibling-overlap scan receipts — kama round 80 wave 1
+error: unexpected argument '-z' found
+
+  tip: to pass '-z' as a value, use '-- -z'
+
+Usage: date [OPTION]... [+FORMAT]...
+       date [OPTION]... [MMDDhhmm[[CC]YY][.ss]]
+
+For more information, try '--help'.
+# date:   host: plazir27
+# lane tip: fe7b978013bd1aa6d67a7e0fbf6369b8d7a9b023
+
+$ grep -rlnE "b11755|39febd2a|b7200" */ --include={*.md,*.tsv,*.py,*.sh} | grep -v /.ufo/ | grep -v ^kama-shokunin/
+/home/vgpnk/Projects/shokunin/kaidoku-shokunin/corpus/evidence/round-41/c1/V4/oracle.tsv
+/home/vgpnk/Projects/shokunin/kaidoku-shokunin/tools/round-50/oracle/c6430.oracle.tsv
+/home/vgpnk/Projects/shokunin/kaidoku-shokunin/tools/round-50/oracle/g7581.oracle.tsv
+/home/vgpnk/Projects/shokunin/kaidoku-shokunin/tools/round-50/oracle/g7582.oracle.tsv
+/home/vgpnk/Projects/shokunin/kengaku-shokunin/LOG.md
+/home/vgpnk/Projects/shokunin/kengaku-shokunin/corpus/SOURCES.md
+/home/vgpnk/Projects/shokunin/kengaku-shokunin/corpus/knowledge/served-endpoint-identity-pin.md
+/home/vgpnk/Projects/shokunin/kengaku-shokunin/corpus/lessons/round-51-verifier-spotcheck.md
+/home/vgpnk/Projects/shokunin/kengaku-shokunin/corpus/lessons/round-51.md
+exit=0
+
+$ grep -rlnE "engine-pins|pin-watch" */ --include={*.py,*.sh,*.tsv,*.md} | grep -v /.ufo/ | grep -v ^kama-shokunin/
+exit=1 (1 = no sibling file)
+
+$ grep -rlnE "registered=(no|yes)|class_missing" */ --include={*.sh,*.py,*.md} | grep -v /.ufo/ | grep -v ^kama-shokunin/
+exit=1 (1 = no sibling file)
+
+$ grep -rlnE "corrected F[0-9]+ old=[^ ]+ new=[^ ]+ at=[0-9a-f]{40} date=" /home/vgpnk/Projects/shokunin
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-79/w1/SC03Lesson/round-79.md
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-80/w1-dispatch.json
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-80/w1-spec.json
+/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-80/w1/SC01Lesson/round-80.md
+/home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-80.md
+exit=0
+
+$ git -C kama-shokunin log --oneline -S "corrected F" -- corpus/lessons/round-79.md
+d6408a63 round-79: lesson (two mined mistakes, two corrections), S553, census entry, coverage row, pre-correction receipt
+exit=0
+
+$ git -C chousa-shokunin log --oneline -S "tag" -- PROVINCE.md ; wc -c chousa-shokunin/PROVINCE.md
+exit=0
+880 /home/vgpnk/Projects/shokunin/chousa-shokunin/PROVINCE.md
+
+$ awk -F"\t" "NR>1{print \$1}" kama-shokunin/registry/engine-pins.tsv
+sglang
+vllm
+llama.cpp
+exit=0
+
+$ grep -n "^version" kama-shokunin/registry/ollama-live-pin.tsv
+6:version	0.40.11	release tag v0.40.11; /api/version reports this string
+exit=0
+
+$ python3 -c "json keys of r60 qualified probe"
+False
+['bind', 'evidence', 'owner', 'port', 'reason', 'served_model', 'verdict']
+exit=0

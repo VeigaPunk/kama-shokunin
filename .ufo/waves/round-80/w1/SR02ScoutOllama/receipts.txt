@@ -1,0 +1,122 @@
+# SR02 receipt log — seat SR02ScoutOllama, kama r80 w1 (read-only reconnaissance)
+# window: 2026-11-04T10:35Z..10:44Z
+# scratch root: /fast/scratch/hyaku/kama-r80/SR02ScoutOllama (removed before yield)
+# lane worktree tip observed: fe7b978013bd1aa6d67a7e0fbf6369b8d7a9b023 (detached HEAD fe7b9780)
+#   (base of record c45fc7d1a8427e9c98a9dd7befa542c7b5caed38; siblings writing untracked files during the run)
+# tooling: curl 8.23.0, python 3.14.8; no installs or upgrades performed by this seat
+
+## F1 pinned prose doc
+cmd: curl -sS -o api_v0.40.11.md -w 'HTTP=%{http_code} BYTES=%{size_download}\n' \
+     https://raw.githubusercontent.com/ollama/ollama/v0.40.11/docs/api.md
+exit: 0
+HTTP=200 BYTES=54614
+sha256: 96db03080e385dbabf5d70e75f298d41b75983bc30975cae56f7119f848dd0f5
+lines: 1872
+anchors (1-based): 1352 '## List Local Models' | 1355 'GET /api/tags' | 1358 'List models that are available locally.'
+                   1763 '## List Running Models' | 1766 'GET /api/ps' | 1769 'List models that are currently loaded into memory.'
+                   1799 '"expires_at": "2024-06-04T14:38:31.83753-07:00"' (ps example) | 1800 '"size_vram": 5137025024'
+                   3 '> Note: Ollama's API docs are moving to https://docs.ollama.com/api'
+word counts (python3 str.split): tags sentence 6, ps sentence 8
+grep -n -i -E 'remote_model|remote_host|expires_at|size_vram' api_v0.40.11.md:
+  1799,1800 only (no remote_model/remote_host in this file)
+grep -n '/v1/' api_v0.40.11.md: 0 hits
+
+## F2 OpenAI-compatibility doc at the pinned tag
+cmd: curl -sS -o openai-compat.mdx -w 'HTTP=%{http_code} BYTES=%{size_download}\n' \
+     https://raw.githubusercontent.com/ollama/ollama/v0.40.11/docs/api/openai-compatibility.mdx
+exit: 0
+HTTP=200 BYTES=25472
+sha256: 44071a1277796b5ad28e51e561afd94ac75f6f76cd75c4b8d9d80b9dff760cd5
+lines: 432
+anchors: 2 'title: OpenAI compatibility' | 5 'Connect OpenAI clients to Ollama. Ollama supports a subset of the OpenAI API.'
+         209 '## Endpoints' | 290 '### `/v1/models`' | 294 "- `created` corresponds to when the model was last modified"
+         295 '- `owned_by` corresponds to the ollama username, defaulting to `"library"`'
+         297 '### `/v1/models/{model}`' | 301,302 same two notes
+word counts: line 5 quote 13, line 294 quote 9, line 295 quote 9
+
+## F3 docs tree listings at the tag (GitHub contents API, ref=v0.40.11)
+cmd: curl -sS -o docs_listing_v0.40.11.json -w 'HTTP=%{http_code} BYTES=%{size_download}\n' \
+     'https://api.github.com/repos/ollama/ollama/contents/docs?ref=v0.40.11'
+exit: 0  HTTP=200 BYTES=27042
+root docs/ entries: README.md, api.md, api/ (dir), capabilities/ (dir), cli.mdx, cloud.mdx,
+  context-length.mdx, development.md, docker.mdx, docs.json, examples.md, faq.mdx, favicon-dark.svg,
+  favicon.svg, gpu.mdx, images/ (dir), import.mdx, index.mdx, integrations/ (dir), linux.mdx,
+  logo.svg, macos.mdx, modelfile.mdx, ollama-logo.svg, ollama.png, openapi.yaml, quickstart.mdx,
+  styling.css, template.mdx, tools/ (dir), troubleshooting.mdx, windows.mdx
+  -> no openai* file at docs/ root
+docs/api: 9 files, HTTP=200 BYTES=8269
+  anthropic-compatibility.mdx, authentication.mdx, balance.mdx, cloud-usage.mdx, errors.mdx,
+  introduction.mdx, openai-compatibility.mdx, streaming.mdx, usage.mdx
+docs/integrations: HTTP=200 BYTES=25367 (chatgpt, claude-code, claude-desktop, cline-cli, cline,
+  codex, copilot-cli, deepseek-harness, droid, goose, hermes-desktop, hermes, index, jetbrains,
+  marimo, n8n, nemoclaw, oh-my-pi, onyx, openclaw, opencode, pi, pool, roo-code, vscode, xcode, zed)
+docs/capabilities: HTTP=200 BYTES=8615
+docs/tools: HTTP=200 BYTES=848 (only tools/extract-examples/ dir)
+
+## F4 docs.json (nav + redirects) at the tag
+cmd: curl -sS -o docs_json.json -w 'HTTP=%{http_code} BYTES=%{size_download}\n' \
+     https://raw.githubusercontent.com/ollama/ollama/v0.40.11/docs/docs.json
+exit: 0  HTTP=200 BYTES=6403
+grep -n -i openai docs_json.json:
+  68 '"source": "/api/openai-compatibility.mdx"'
+  69 '"destination": "/api/openai-compatibility"'
+  84 '"source": "/openai"'
+  85 '"destination": "/api/openai-compatibility"'
+  88 '"source": "/api/openai"'
+  89 '"destination": "/api/openai-compatibility"'
+  244 '"/api/openai-compatibility"'   (group "API Reference" pages list, lines 236-250)
+
+## F5 openapi.yaml at the tag
+cmd: curl -sS -o openapi_v0.40.11.yaml -w 'HTTP=%{http_code} BYTES=%{size_download}\n' \
+     https://raw.githubusercontent.com/ollama/ollama/v0.40.11/docs/openapi.yaml
+exit: 0  HTTP=200 BYTES=87348
+sha256: e94c8f02969c6807f431b7d0643eb0f8368f1d1baa719a4edaf07989b758f257
+info: openapi 3.1.0, info.title 'Ollama API', info.version 0.1.0
+paths: /api/tags 1669 (operationId list, 200 "List available models")
+       /api/ps   1704 (operationId ps,   200 "Models currently loaded into memory")
+       /v1/systemone 1189 (only /v1/* path declared)
+       '/v1/models' occurrences: 0; grep -i openai: 0
+schemas: ModelSummary 654 (remote_model 664, remote_host 667), Ps 728 (expires_at "Time when the model will be unloaded", size_vram, context_length), ListResponse 700, PsResponse 734
+
+## F6 candidate openai doc paths at the tag (all 404)
+404 docs/openai.md
+404 docs/openai.mdx
+404 docs/openai-compatibility.md
+404 docs/api/openai.md
+404 docs/integrations/openai.md
+404 docs/openai/openai.md
+404 docs/v1.md
+
+## F7 upstream tag existence
+cmd: git ls-remote --tags https://github.com/ollama/ollama 'v0.40.11' 'v0.40.11^{}'
+exit: 0
+675150d6ad2747df1e218ef59de9194bc4a7e538	refs/tags/v0.40.11
+
+## F8 lane instrument reads (read-only; sizes are bytes on disk)
+tools/kama-ollama-live.py            24157  schema kama-ollama-live/v2, 558 lines, PIN_FILE registry/ollama-live-pin.tsv, REGISTERED_PORTS={8080,34113} (line 68; identical constant block repeated at 107-112)
+tools/kama-ollama-evidence.py        21028  offline tags/ps classifier
+tools/round79-unregistered-census.py 17352  llama.cpp registered-class census
+tools/round61-c1-counter.py          20815
+tools/round61-c2-counter.py          24120
+tools/round80-selfrecord-round79.py  21771
+tools/round80-engine-pin-relations.py 15938
+tools/round80-ollama-census.py       18405  (untracked worktree file, mtime 07:43; appears after this seat started)
+registry/ollama-live-pin.tsv            11 lines
+registry/ollama-live-claims-r61.tsv     28 data rows (17 graded + 11 notobs)
+registry/endpoint-consumers.tsv         3 rows; declared ports 8080, 34113
+corpus/knowledge/ollama-live-lifecycle.md 65 lines
+.ufo/waves/round-60/live/receipt.json 19270
+.ufo/waves/round-61/live/receipt.json 20131
+
+## F9 lane state at observation
+git -C lane diff --stat c45fc7d1 -- tools/kama-probe.sh : empty (base == worktree for the probe)
+git log --oneline -S'classify_registration' -- tools/kama-probe.sh : 5ac1a8dd (round-79)
+git show c45fc7d1:tools/kama-probe.sh | grep -c classify_registration : 2 ; worktree: 2
+registry/unregistered-class-engines.tsv : absent
+.ufo/waves/round-80/measured/before/ : c1-enum.out (984), c2-relations-absent.out (567)
+.ufo/waves/round-80/measured/control/ : c1-score-nocorrections.out (1399), c2-empty-register.out (382),
+  c2-empty-register.tsv (57), c2-stale-relation.out (153), c2-stale-relation.tsv (704)
+  (c3-engines-before.out and c3-base-probe.out absent at the read)
+git status --porcelain: untracked .ufo/waves/round-80/measured/, .ufo/waves/round-80/w1-run.err,
+  .ufo/waves/round-80/w1.ready.dispatched, .ufo/waves/round-80/w1/, registry/engine-pin-relations.tsv,
+  tools/round80-engine-pin-relations.py, tools/round80-ollama-census.py, tools/round80-selfrecord-round79.py

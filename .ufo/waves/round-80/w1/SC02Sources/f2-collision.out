@@ -1,0 +1,36 @@
+# SC02 round-80 C1 F2 interaction replay (pure derivation replay, no commit, read-only on the lane)
+tip=fe7b978013bd1aa6d67a7e0fbf6369b8d7a9b023
+tip source rows (ROW_COUNT over git show fe7b9780:corpus/SOURCES.md) = 293
+tip filtered knowledge blobs (FILTERED=('engine-sides', 'processes')) = 52
+this seat's drafted rows that match ROW_COUNT = 3 ids=['S554', 'S555', 'S556']
+this seat's drafted knowledge entry name = corpus/knowledge/unregistered-class-second-engine.md
+
+f2 at the tip today          : population=sources:293,knowledge:52
+f2 at the tip after these land: population=sources:296,knowledge:53
+declared by the round-79 record (sealed a9b4543f): population=sources:293,knowledge:52
+
+counter logic: fresh = declared == sealed == tip; a stale fact with no block is mismatches+=1
+projected line after F4/F5/F6 corrections land: SELFRECORD_R79 claims=6 mismatches=1 corrected=3 unbacked=0, exit 1 (F2)
+
+## addendum — realized at the landed tip, and the staged fix (run 2026-11-04T07:5x, read-only)
+# lane master: dea7c269446994de1e5e0cd8f34767e83207bd81   HEAD: dea7c269
+# the rows above landed in that commit: git show master:corpus/SOURCES.md now carries S554-S556
+
+$ python3 <copy of master:tools/round80-selfrecord-round79.py> --repo /home/vgpnk/Projects/shokunin/kama-shokunin
+FACT F2 declared=population=sources:293,knowledge:52 sealed=population=sources:293,knowledge:52 tip=population=sources:296,knowledge:53 status=stale
+SELFRECORD_R79 claims=6 mismatches=1 corrected=3 unbacked=0
+SELFRECORD_R79_FINDING F2 stale declared=population=sources:293,knowledge:52 sealed=population=sources:293,knowledge:52 tip=population=sources:296,knowledge:53 reasons=unanswered
+exit=1
+
+# worktree change staged by another seat (git diff tools/round80-selfrecord-round79.py):
+diff: +# F2 counts the population the record declares at its own revision: later growth by the grading
+diff: +# round is not a record error, so the fact is re-derived at the sealed revision on both legs
+diff: +# (freeze divergence 4). Every other fact is graded at the tip as well.
+diff: +SEALED_BOUND = {"F2"}
+diff: -        seen_tip = tip_facts[fact]["observed"]
+diff: +        seen_tip = (sealed_facts[fact]["observed"] if fact in SEALED_BOUND
+diff: +                    else tip_facts[fact]["observed"])
+
+$ python3 /home/vgpnk/Projects/shokunin/kama-shokunin/tools/round80-selfrecord-round79.py --repo /home/vgpnk/Projects/shokunin/kama-shokunin   (worktree, with SEALED_BOUND)
+SELFRECORD_R79 claims=6 mismatches=0 corrected=3 unbacked=0
+exit=0

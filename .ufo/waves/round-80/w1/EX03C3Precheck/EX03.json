@@ -1,0 +1,131 @@
+{
+  "seat": "EX03C3Precheck",
+  "round": "kama-80 wave-1",
+  "claim_axis": "operability (C3 fixture precondition)",
+  "base_revision": "c45fc7d1a8427e9c98a9dd7befa542c7b5caed38",
+  "lane_tip_observed": "fe7b978013bd1aa6d67a7e0fbf6369b8d7a9b023",
+  "lane_tip_command": "git -C /home/vgpnk/Projects/shokunin/kama-shokunin rev-parse master",
+  "scratch_root": "/fast/scratch/hyaku/kama-r80/EX03C3Precheck",
+  "scratch_deleted_after_receipts": true,
+  "prerequisites": {
+    "ollama_binary": {
+      "path": "/home/vgpnk/.local/opt/ollama-v0.40.11/bin/ollama",
+      "size_bytes": 40779408,
+      "mode": "755",
+      "version_command": "/home/vgpnk/.local/opt/ollama-v0.40.11/bin/ollama --version",
+      "version_output_tail": "Warning: client version is 0.40.11",
+      "exit_code": 0
+    },
+    "fixture_gguf": {
+      "path": "/home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf",
+      "size_bytes": 1185376,
+      "sha256": "270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d"
+    },
+    "registry_consumer_ports_declared": [8080, 34113],
+    "chosen_port": 40917,
+    "port_checks": [
+      {
+        "command": "grep -c 40917 /home/vgpnk/Projects/shokunin/kama-shokunin/registry/endpoint-consumers.tsv",
+        "output": "0 (grep exit 1 on no match)",
+        "meaning": "port not registry-declared"
+      },
+      {
+        "command": "ss -ltn | grep -c ':40917 '",
+        "output": "0 (grep exit 1 on no match)",
+        "meaning": "port not listening"
+      }
+    ]
+  },
+  "lifecycle": [
+    {
+      "step": "start_child",
+      "time": "2026-11-04T07:44:47.923-03:00",
+      "service_id": "ollama-ex03c3p",
+      "pid": 1951437,
+      "command": "env HOME=/fast/scratch/hyaku/kama-r80/EX03C3Precheck/home OLLAMA_MODELS=/fast/scratch/hyaku/kama-r80/EX03C3Precheck/models OLLAMA_HOST=127.0.0.1:40917 TMPDIR=/fast/scratch/hyaku/kama-r80/EX03C3Precheck /home/vgpnk/.local/opt/ollama-v0.40.11/bin/ollama serve",
+      "exit_code": "n/a (service; killed at teardown)",
+      "ready_evidence": "server log: msg=\"Listening on 127.0.0.1:40917 (version 0.40.11)\"",
+      "ready_check": "bash tool service readiness on 127.0.0.1:40917, timeout 30s -> ready pid=1951437"
+    },
+    {
+      "step": "create_model",
+      "time": "2026-11-04T07:48:47.405858067-03:00 (tag modified_at)",
+      "command": "env HOME=/fast/scratch/hyaku/kama-r80/EX03C3Precheck/home OLLAMA_MODELS=/fast/scratch/hyaku/kama-r80/EX03C3Precheck/models OLLAMA_HOST=http://127.0.0.1:40917 TMPDIR=/fast/scratch/hyaku/kama-r80/EX03C3Precheck /home/vgpnk/.local/opt/ollama-v0.40.11/bin/ollama create ex03c3p-6f2e91 -f /fast/scratch/hyaku/kama-r80/EX03C3Precheck/Modelfile",
+      "exit_code": 0,
+      "stdout_tail": "copying file sha256:270cba1bd5109f42d03350f60406024560464db173c0e387d91f0426d3bd256d ... success",
+      "model_name": "ex03c3p-6f2e91:latest",
+      "modelfile": "FROM /home/vgpnk/.cache/kama-shokunin/models/stories260K.gguf"
+    },
+    {
+      "step": "capture_endpoints",
+      "time": "2026-11-04T07:51:35-03:00",
+      "commands_exit_code": 0
+    },
+    {
+      "step": "teardown",
+      "time": "2026-11-04T07:51:43.923-03:00 (derived: service up 6m56s from 07:44:47.923)",
+      "command": "write proc://ollama-ex03c3p/kill",
+      "result": "Stopped ollama-ex03c3p [service] - exited - up 6m56s"
+    },
+    {
+      "step": "port_closed_proof",
+      "checks": [
+        {"command": "ss -ltn | grep ':40917 '", "output": "no match", "exit_code": 1},
+        {"command": "curl -sS -o /dev/null -m 3 http://127.0.0.1:40917/api/version", "output": "curl: (7) Failed to connect to 127.0.0.1:40917 ... Could not connect to server", "exit_code": 7},
+        {"command": "ps -eo pid,cmd | grep 'ollama serve' | grep -v grep", "output": "no match", "exit_code": 1}
+      ]
+    }
+  ],
+  "captures": [
+    {
+      "endpoint": "GET /api/version",
+      "command": "curl -sS -o <captures>/version.json -w 'status=%{http_code} bytes=%{size_download}' -m 10 http://127.0.0.1:40917/api/version",
+      "status": 200,
+      "bytes": 21,
+      "body_sha256": "63f2fd8d6986831e7655600d9ba0dcba9b39582159cac5a84c6f5ba71c706fea",
+      "receipt": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-80/w1/EX03C3Precheck/captures/version.json",
+      "verbatim_body": "{\"version\":\"0.40.11\"}"
+    },
+    {
+      "endpoint": "GET /api/tags",
+      "command": "curl -sS -o <captures>/tags.json -w 'status=%{http_code} bytes=%{size_download}' -m 10 http://127.0.0.1:40917/api/tags",
+      "status": 200,
+      "bytes": 469,
+      "body_sha256": "0411d572fcffdf919af50633f400d17b63efb2b4768ebeb02e936ad592cf2e5f",
+      "receipt": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-80/w1/EX03C3Precheck/captures/tags.json",
+      "verbatim_body": "{\"models\":[{\"name\":\"ex03c3p-6f2e91:latest\",\"model\":\"ex03c3p-6f2e91:latest\",\"modified_at\":\"2026-11-04T07:48:47.405858067-03:00\",\"size\":1185492,\"digest\":\"8cf91c7109e77999ac0ae6e6eab27dfea00d9f83ffbe4559a3f26266e455c792\",\"details\":{\"parent_model\":\"stories260K.gguf\",\"format\":\"gguf\",\"family\":\"llama\",\"families\":[\"llama\"],\"parameter_size\":\"293K\",\"quantization_level\":\"unknown\",\"context_length\":2048,\"embedding_length\":64,\"runner\":\"llamacpp\"},\"capabilities\":[\"completion\"]}]}"
+    },
+    {
+      "endpoint": "GET /v1/models",
+      "command": "curl -sS -o <captures>/models.json -w 'status=%{http_code} bytes=%{size_download}' -m 10 http://127.0.0.1:40917/v1/models",
+      "status": 200,
+      "bytes": 117,
+      "body_sha256": "a4811cb504adf8c741620f71a7f49323fcd7b377534c0da5c4277f384476098e",
+      "receipt": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-80/w1/EX03C3Precheck/captures/models.json",
+      "verbatim_body": "{\"object\":\"list\",\"data\":[{\"id\":\"ex03c3p-6f2e91:latest\",\"object\":\"model\",\"created\":1793789327,\"owned_by\":\"library\"}]}"
+    },
+    {
+      "endpoint": "GET /api/ps",
+      "command": "curl -sS -o <captures>/ps.json -w 'status=%{http_code} bytes=%{size_download}' -m 10 http://127.0.0.1:40917/api/ps",
+      "status": 200,
+      "bytes": 13,
+      "body_sha256": "a6fe9ec6e26a38d99fca418b69826e0238b7a2bb319ff05eb153a6fcfd1fa28d",
+      "receipt": "/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-80/w1/EX03C3Precheck/captures/ps.json",
+      "verbatim_body": "{\"models\":[]}"
+    }
+  ],
+  "v1_models_verdict": {
+    "question": "does /v1/models answer with a model array (the probe's kama-probe.sh listeners only reads /v1/models)?",
+    "answers_with_model_array": true,
+    "http_status": 200,
+    "shape": "OpenAI-compatible list envelope: top-level JSON object {\"object\":\"list\",\"data\":[...]}; data is a non-empty array holding exactly one model object",
+    "data_array_length": 1,
+    "model_ids_in_data": ["ex03c3p-6f2e91:latest"],
+    "not_a_llamacpp_loading_envelope": true,
+    "notes": "Not the llama.cpp 503 single-model loading envelope documented in tools/kama-probe.sh; not a foreign-service body. The created model is visible to /v1/models exactly as to /api/tags. /api/ps is empty because no generate/load was run - a tags listing is an inventory of available models (per the C3 sourced claim), which is all the census class reads."
+  },
+  "fixture_boundary": "all child state under scratch: home/.ollama/id_ed25519 (+pub), home/.ollama/cache, models/blobs/sha256-270cba1b..., models/blobs/sha256-8cf91c71..., models/manifests*, models/metadata. Nothing written under ~/.config, ~/.omp, systemd, or any lane path outside .ufo/waves/round-80/w1/EX03C3Precheck/.",
+  "no_git_writes": true,
+  "no_installs": true,
+  "result": "PASS: pinned Ollama v0.40.11 child runs on this host; /v1/models answers 200 with a one-model array under data; child torn down and port 40917 proven closed."
+}

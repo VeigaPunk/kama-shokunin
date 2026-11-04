@@ -1,0 +1,123 @@
+[
+  {
+    "tag": "c1-m1-new-not-rederived",
+    "module": "round80-selfrecord-round79.py",
+    "old": "            if b[\"new\"] != seen_tip:\n                reasons.append(\"new-not-rederived\")\n                unbacked += 1\n                continue\n",
+    "new": "",
+    "note": "a correction is accepted although `new` does not re-derive at the tip",
+    "path": "/fast/scratch/hyaku/kama-r80/MT01Mutation/mutants/c1-m1-new-not-rederived/round80-selfrecord-round79.py",
+    "pristine_sha256": "61e49d4fcdac3a4d987ef693f50c33b9ee5054905973d0981d535edc8129e46d",
+    "mutant_sha256": "1c87b75f5121cf761930fee2dd64d89e7a94d2c6e63fef3b6a7b2e2f07a97350",
+    "kept_bytes": 21982
+  },
+  {
+    "tag": "c1-m2-at-any-resolvable",
+    "module": "round80-selfrecord-round79.py",
+    "old": "            if resolved != sealed:\n                reasons.append(\"at-not-sealed\")\n                unbacked += 1\n                continue\n",
+    "new": "",
+    "note": "`at` may name any resolvable commit, not the sealed revision",
+    "path": "/fast/scratch/hyaku/kama-r80/MT01Mutation/mutants/c1-m2-at-any-resolvable/round80-selfrecord-round79.py",
+    "pristine_sha256": "61e49d4fcdac3a4d987ef693f50c33b9ee5054905973d0981d535edc8129e46d",
+    "mutant_sha256": "48644eda798cd51ae349b2a19ae134e90e581e265c57017e07b77d0056ea573a",
+    "kept_bytes": 21988
+  },
+  {
+    "tag": "c1-m3-corrected-from-prose",
+    "module": "round80-selfrecord-round79.py",
+    "old": "        for b in fact_blocks:\n            if b[\"old\"] != declared:\n                reasons.append(\"old-mismatch\")\n                unbacked += 1\n                continue\n            if not re.fullmatch(r\"[0-9a-f]{40}\", b[\"at\"]):\n                reasons.append(\"at-malformed\")\n                unbacked += 1\n                continue\n            resolved = resolve(repo, b[\"at\"])\n            if resolved is None:\n                reasons.append(\"at-unresolvable\")\n                unbacked += 1\n                continue\n            if resolved != sealed:\n                reasons.append(\"at-not-sealed\")\n                unbacked += 1\n                continue\n            if b[\"new\"] != seen_tip:\n                reasons.append(\"new-not-rederived\")\n                unbacked += 1\n                continue\n            ok = b\n",
+    "new": "        for b in fact_blocks:\n            ok = b\n            break\n",
+    "note": "a fact counts corrected when any block is present; old/at/new are not re-derived",
+    "path": "/fast/scratch/hyaku/kama-r80/MT01Mutation/mutants/c1-m3-corrected-from-prose/round80-selfrecord-round79.py",
+    "pristine_sha256": "61e49d4fcdac3a4d987ef693f50c33b9ee5054905973d0981d535edc8129e46d",
+    "mutant_sha256": "a1dfbdff71e2d6bc09caab20974ba44ba285a7a6b0c7196c17d72391a24829ce",
+    "kept_bytes": 21378
+  },
+  {
+    "tag": "c1-m4-unbacked-ignored",
+    "module": "round80-selfrecord-round79.py",
+    "old": "    return int(bool(s[\"mismatches\"] or s[\"unbacked\"]))",
+    "new": "    return int(bool(s[\"mismatches\"]))",
+    "note": "unbacked corrections no longer fail the verdict",
+    "path": "/fast/scratch/hyaku/kama-r80/MT01Mutation/mutants/c1-m4-unbacked-ignored/round80-selfrecord-round79.py",
+    "pristine_sha256": "61e49d4fcdac3a4d987ef693f50c33b9ee5054905973d0981d535edc8129e46d",
+    "mutant_sha256": "3f4334edc9ffa71b8c9fa36f27e9c04ebfa383060c63f8ea857c395b76feab5a",
+    "kept_bytes": 22109
+  },
+  {
+    "tag": "c2-m1-newer-as-strings",
+    "module": "round80-engine-pin-relations.py",
+    "old": "        out[name] = (tuple(int(g) for g in groups), info.get(\"peeled\") or info.get(\"oid\", \"\"))",
+    "new": "        out[name] = (\".\".join(groups), info.get(\"peeled\") or info.get(\"oid\", \"\"))",
+    "note": "version keys compared lexicographically instead of numerically",
+    "path": "/fast/scratch/hyaku/kama-r80/MT01Mutation/mutants/c2-m1-newer-as-strings/round80-engine-pin-relations.py",
+    "pristine_sha256": "22da9bd41d3475bd4e818548437d148fe2762b7bebf9256c84aa56afc8b0ba49",
+    "mutant_sha256": "ec1d3d75f7715aab395592393f443fc931575ab17115f20e689e13a8da720469",
+    "kept_bytes": 15925
+  },
+  {
+    "tag": "c2-m2-missing-ref-engine-only",
+    "module": "round80-engine-pin-relations.py",
+    "old": "    required = [(p[\"engine\"], p[\"pin\"]) for p in pins] + list(cross_refs)\n    for engine, ref in required:\n        if (engine, ref) not in seen:\n            findings.append(f\"PIN_RELATIONS_FINDING missing-ref engine={engine} ref={ref}\")\n",
+    "new": "    required = [(p[\"engine\"], p[\"pin\"]) for p in pins] + list(cross_refs)\n    have_engines = {engine for engine, _ in seen}\n    for engine, ref in required:\n        if engine not in have_engines:\n            findings.append(f\"PIN_RELATIONS_FINDING missing-ref engine={engine} ref={ref}\")\n",
+    "note": "a missing ref counts as covered when any other ref of the same engine has a row",
+    "path": "/fast/scratch/hyaku/kama-r80/MT01Mutation/mutants/c2-m2-missing-ref-engine-only/round80-engine-pin-relations.py",
+    "pristine_sha256": "22da9bd41d3475bd4e818548437d148fe2762b7bebf9256c84aa56afc8b0ba49",
+    "mutant_sha256": "b1b3088b0ec5539b288e6a3490dbe67a3f79874e15c6aef305d710bfeb73adff",
+    "kept_bytes": 15989
+  },
+  {
+    "tag": "c2-m3-receipt-always-present",
+    "module": "round80-engine-pin-relations.py",
+    "old": "def receipt_committed(repo: Path, path: str, tip: str) -> bool:\n    proc = subprocess.run([\"git\", \"-C\", str(repo), \"cat-file\", \"-e\", f\"{tip}:{path}\"],\n                          capture_output=True, text=True)\n    if proc.returncode == 0:\n        return True\n    return (repo / path).is_file()\n",
+    "new": "def receipt_committed(repo: Path, path: str, tip: str) -> bool:\n    return True\n",
+    "note": "every receipt counts as present and committed",
+    "path": "/fast/scratch/hyaku/kama-r80/MT01Mutation/mutants/c2-m3-receipt-always-present/round80-engine-pin-relations.py",
+    "pristine_sha256": "22da9bd41d3475bd4e818548437d148fe2762b7bebf9256c84aa56afc8b0ba49",
+    "mutant_sha256": "0732f47c01717fbf4d89ded62c8b04b681465e63cf40fe02b07a005296e57e60",
+    "kept_bytes": 15725
+  },
+  {
+    "tag": "c3-m1-legs-share-registry",
+    "module": "round80-ollama-census.py",
+    "old": "        write_registry(no_reg, None)",
+    "new": "        write_registry(no_reg, port)",
+    "note": "the unregistered leg runs against a registry that declares the port",
+    "path": "/fast/scratch/hyaku/kama-r80/MT01Mutation/mutants/c3-m1-legs-share-registry/round80-ollama-census.py",
+    "pristine_sha256": "5e3543a6445474a5fd9f383ed6903b676626e8ad37beb59a763cb19e0fa03e4c",
+    "mutant_sha256": "741506e558f954c14a93a60bc2a0cbd3e8f88f62ff6daabae54681f50fcc8abf",
+    "kept_bytes": 18405
+  },
+  {
+    "tag": "c3-m2-governed-without-class",
+    "module": "round80-ollama-census.py",
+    "old": "            if summary.get(\"governed\") != (1 if name == \"yes\" else 0):\n                findings.append(f\"OLLAMA_CENSUS_FINDING governed-count leg={name} \"\n                                f\"governed={summary.get('governed')}\")\n",
+    "new": "",
+    "note": "the summary governed count is not tied to the registered class",
+    "path": "/fast/scratch/hyaku/kama-r80/MT01Mutation/mutants/c3-m2-governed-without-class/round80-ollama-census.py",
+    "pristine_sha256": "5e3543a6445474a5fd9f383ed6903b676626e8ad37beb59a763cb19e0fa03e4c",
+    "mutant_sha256": "9df0bf64e3d666c718a0a360c8ada21007886ea647db50f643240fb59a4523b6",
+    "kept_bytes": 18179
+  },
+  {
+    "tag": "c3-m3-audit-no-engine-name",
+    "module": "round80-ollama-census.py",
+    "old": "        if engine not in text:\n            findings.append(f\"CLASS_ENGINES_FINDING receipt-names-other-engine {engine} {receipt}\")\n            continue\n",
+    "new": "",
+    "note": "a register row verifies on a receipt that names a different engine",
+    "path": "/fast/scratch/hyaku/kama-r80/MT01Mutation/mutants/c3-m3-audit-no-engine-name/round80-ollama-census.py",
+    "pristine_sha256": "5e3543a6445474a5fd9f383ed6903b676626e8ad37beb59a763cb19e0fa03e4c",
+    "mutant_sha256": "48fd2f1777c834b7d0f227e6120b2c6a4afb46f7deeed34f2790c34e8d3380b2",
+    "kept_bytes": 18253
+  },
+  {
+    "tag": "c3-m4-audit-one-engine",
+    "module": "round80-ollama-census.py",
+    "old": "    if len(engines) < 2:\n        findings.append(f\"CLASS_ENGINES_FINDING one-engine engines={len(engines)}\")\n",
+    "new": "",
+    "note": "a one-engine register audits green; the two-engine requirement is dropped",
+    "path": "/fast/scratch/hyaku/kama-r80/MT01Mutation/mutants/c3-m4-audit-one-engine/round80-ollama-census.py",
+    "pristine_sha256": "5e3543a6445474a5fd9f383ed6903b676626e8ad37beb59a763cb19e0fa03e4c",
+    "mutant_sha256": "8469720499aeaa458d5ca42e6d4093f9ca9d31eb0830e2705756339c4415e225",
+    "kept_bytes": 18296
+  }
+]
