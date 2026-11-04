@@ -257,10 +257,13 @@ _DEFECT_ARMS = ("worktree-landing", "round-scope",
 # Arm 7 `round74-v2`: the three round-74 v2 counters composed into one arm.
 # (module key, script name, argument template with the usual {repo}/{tip}/{round}
 # substitution); each absent module fails the arm closed, never a vacuous green.
+# Round 77 retires `claim-v2` from this arm: its citation rule has no fence scope and
+# aborts (exit 2) on a record that quotes a markdown report in fenced history, which is
+# the contract-required form (round-76 fence ruling). Arm 10's citation-baseline grades
+# the same population with the fence and non-receipt classes; the old rule is not hidden,
+# it stops being current law.
 ROUND74_V2_MODULES = (
     ("canon", "round74-selfdesc-canon.py", ("--repo", "{repo}")),
-    ("claim-v2", "round74-receipt-claim-binding.py",
-     ("--repo", "{repo}", "--round", "{round}", "--tip", "{tip}")),
     ("drift-v2", "round74-province-host-drift.py", ("--repo", "{repo}")),
 )
 
@@ -276,10 +279,13 @@ ROUND75_MODULES = (
 # event after the earliest register introduction, so the round-77 register growth makes it red
 # by construction (round-77 C2 supersedes it with round77-append-registers, arm 10). It stays
 # in the tree as history; the gate never hides its red, it stops treating it as current law.
+# `selfrecord-facts` is retired here too: it resolves the closure pointer at the round's
+# work tip, so it aborts (exit 2) on its own sealed record once that record's closure
+# exists — the bug round-77's selfrecord-round76 harness fixes by pinning the record
+# revision. It stays in the tree as history.
 ROUND76_MODULES = (
     ("receipt-scope", "round76-receipt-scope.py",
      ("--repo", "{repo}", "--round", "{round}")),
-    ("selfrecord-facts", "round76-selfrecord-facts.py", ("--repo", "{repo}")),
 )
 
 # Arm 10 runs selftests, not the round-77 counters' live grading modes.
@@ -1085,28 +1091,28 @@ def run_selftest(args) -> int:
 
     # (s) red self-record stub inside arm 9: one failing counter fails the whole arm and
     # the detail names the counter's verdict and its first finding line.
-    red_file.write_text("round76-selfrecord-facts\n", encoding="utf-8")
+    red_file.write_text("round76-receipt-scope\n", encoding="utf-8")
     check("round76-instruments-red", evaluate(repo, round_no, "master", str(tools)), 1, 1, 0,
           "round76-instruments", False,
-          detail_has="SELFRECORD_FACT province-digest filed=0e8dc562 derived=af459acf",
+          detail_has="RECEIPT_SCOPE_FINDING nonreceipt",
           render_has="round76-instruments exit=1 FAIL")
     red_file.write_text("", encoding="utf-8")
 
     # (t) green arm-9 stubs: the arm passes and the verdict carries nine arms.
     check("round76-instruments-green", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0,
           "round76-instruments", True,
-          detail_has="SELFRECORD_FACTS claims=8 mismatches=0",
+          detail_has="RECEIPT_SCOPE round=70 fenced_quoted=1",
           render_has="round76-instruments exit=0 ok",
           want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
 
     # (u) a deleted round-76 counter fails arm 9 closed, naming the absent module.
-    sr_stub = tools / "round76-selfrecord-facts.py"
-    sr_stub.unlink()
+    rs_stub = tools / "round76-receipt-scope.py"
+    rs_stub.unlink()
     check("round76-instruments-missing", evaluate(repo, round_no, "master", str(tools)), 1, 1, 0,
           "round76-instruments", False,
-          detail_has="missing round76-selfrecord-facts.py",
+          detail_has="missing round76-receipt-scope.py",
           render_has="round76-instruments exit=1 FAIL")
-    sr_stub.write_text(_STUB_SELFRECORD_FACTS, encoding="utf-8")
+    rs_stub.write_text(_STUB_RECEIPT_SCOPE, encoding="utf-8")
 
     # (v) One composite arm-10 wiring case; attack each instrument separately.
     r77_problems: list[str] = []

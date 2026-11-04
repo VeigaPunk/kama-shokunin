@@ -146,7 +146,7 @@ The seat's Gate admitted **S549** as the round's new row. L1 integration rejecte
   --round 75` → `CITATION_BASELINE round=75 fenced_quoted=1 live_citations=11 bound=9 unbound=2
   shifted=0 nonreceipt=0 unclassified=0` exit 0, `--selftest` → `CITATION_BASELINE_SELFTEST
   pass=7 fail=0`, receipts `.ufo/waves/round-77/measured/after/c1-baseline.out`,
-  `c1-selftest.out`. Used by `corpus/knowledge/baseline-receipt-binding.md`.
+  `.ufo/waves/round-77/measured/after/c1-selftest.out`. Used by `corpus/knowledge/baseline-receipt-binding.md`.
 - Census after the change: `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --root
   /home/vgpnk/Projects/shokunin kama` → exit 0 (W04 warnings only, S549 among them as a rejected
   duplicate).
@@ -229,4 +229,10 @@ contract declaration, repaired before the claim receipt.
 ``````text
 the cited artifacts are `.ufo/waves/round-77/w1/CR01Critic/critique.md` and its
 receipts. Recorded for the canonical judgment: these defects are evidence-
+``````
+
+### Superseded bytes (round-77 bare-receipt-name repair; held so the audit grades the edit restored)
+
+``````text
+  `c1-selftest.out`. Used by `corpus/knowledge/baseline-receipt-binding.md`.
 ``````
