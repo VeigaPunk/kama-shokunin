@@ -3020,3 +3020,36 @@ each with a fix shown able to fail). Wave: one v1 wave, 13 seats (3 executor, 3 
 load-bearing with four cheat attempts caught; SN01's fresh-damage finding adopted as the register's
 temporal cutoff; no axis harmed (operability 8, freshness 8, depth 7, coverage 9, calibration 7,
 adjacency 7).
+
+
+### Correction (2026-11-04) — log-worktip
+
+Supersedes: LOG.md:3002
+Revision: c9ab73d842051db5f8320bced4357bf13cf14108
+Corrected: c9ab73d842051db5f8320bced4357bf13cf14108
+
+The §Round 75 entry filed work tip `b8ed2568…`; the last non-record commit of that round is
+`c9ab73d8…` (the `PROVINCE.md` capability-evidence row, listed only in the report table). The
+superseded sentence stands above as filed.
+
+### Correction (2026-11-04) — log-mistakes
+
+Supersedes: LOG.md:3017
+Revision: a3fbc629fa18c26ad1192adc5d8e762671dd1d79
+Corrected: 5
+
+The §Round 75 entry says "four mistake classes"; `corpus/lessons/round-75.md` carries five
+(`## Mistakes` 1–4 plus `## Mistakes (continued)` 5, `record-cites-control`).
+
+### Correction (2026-11-04) — log-tally
+
+Supersedes: LOG.md:3016
+Revision: a3fbc629fa18c26ad1192adc5d8e762671dd1d79
+Corrected: historical-unbacked; PRE_REPORT_SELFTEST pass=21 fail=0
+Receipt: .ufo/waves/round-76/measured/after/gate-selftest.out
+
+The §Round 75 entry asserted `PRE_REPORT_SELFTEST pass=18 fail=0` twice with no committed
+receipt anywhere in `.ufo/waves/round-75/` (grep: 0 matches). The round-75 claim stands on the
+gate run it cites; what was missing is the practice of retaining the selftest receipt. Round 76
+retains one (`PRE_REPORT_SELFTEST pass=21 fail=0`, gate now nine arms), and this correction
+records the historical value as unbacked rather than inventing a receipt for it.
