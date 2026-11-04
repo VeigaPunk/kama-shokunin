@@ -90,3 +90,25 @@ latest outside closure `corpus/lessons/round-74-verifier-spotcheck.md`
 ``````
 
 Live correction: §Correction (2026-11-04) — closure-pointer above. The contract exempts §Axes from historical append-only grading, but this draft nevertheless appends rather than rewrites.
+
+### LOG log-tally
+
+Destination: `/home/vgpnk/Projects/shokunin/kama-shokunin/LOG.md`.
+Insertion: immediately after the appended log-mistakes correction, after the original §Round 75 paragraph.
+
+### Correction (2026-11-04) — log-tally
+
+Supersedes: LOG.md:3016, §Round 75 `round75-instruments` gate-selftest assertion `PRE_REPORT_SELFTEST pass=18 fail=0`.
+Corrected: historical-unbacked
+
+Fact class: an unbacked historical execution tally, not a re-derived passing run. No committed round-75 wave receipt backs the asserted `PRE_REPORT_SELFTEST pass=18 fail=0`; the round-76 base receipt `.ufo/waves/round-76/measured/before/c2-tally.out` records zero matches. The old tally remains as filed history but is withdrawn as receipt-backed evidence. A later run cannot establish that the round-75 execution occurred.
+
+Round-76 receipt destination for re-establishing receipt-backed selftest practice: `.ufo/waves/round-76/measured/after/pre-report-selftest.out`. This destination is proposed by SCR03, not an observed or committed receipt at draft time. Receipt-backed practice is not yet re-established by this correction: only the actual output of `python3 tools/pre-report-gate.py --selftest`, captured with its measured revision and exit at that path, can establish the new run. No new tally, receipt revision or passing outcome is asserted here.
+
+#### Superseded bytes (held verbatim; original paragraph remains)
+
+``````text
+`round75-instruments` (`PRE_REPORT_SELFTEST pass=18 fail=0`), S547 (`gitattributes(5)`), three QUALITY
+``````
+
+Live correction: §Correction (2026-11-04) — log-tally above; the new receipt, when actually captured, proves only the round-76 run. This block is ready to append as a truthful withdrawal, but is not a completed receipt-bound C2 correction until L1 captures the new receipt and appends its actual revision and tally.
