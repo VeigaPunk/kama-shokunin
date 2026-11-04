@@ -5239,3 +5239,14 @@ Frozen plan/counter `7d3c987c0e3a6ee62673c18c26ecdd22f39e5cdd`, base `4401b72f64
 C1 actual head and closure cells are repaired, but `w1/out/SN01Scope/receipts/fenced-shadow.out` and `w1/out/CR01Cheats/receipts.json` show unchanged stale live cells can pass through fenced/comment shadow identities. This triggers the frozen false-pass kill rule: **C1 not verified; honest stop**, independent of later numeric green. Counter is not amended after scoring.
 
 C2 changes only the delivered debt selftest: equality, above-subject direction and exact-summary coverage arms. EX01 and MT01 independently observe pristine34/0 and actual M2/M3/M4 semantic kills; L1 terminal committed measurements are appended below. Classifier forged-summary/unrelated-arm weaknesses remain open; actual receipts, not synthetic classifier injections, establish the finite execution results. No additional capability row or axis score increase. Round84 source-origin escape stays open.
+
+### Round-85 committed measurements and verdict
+
+Measured source revision `948dec784a9736b4a36d6a10d303fbee054b19c6`, commands/streams/exits `.ufo/waves/round-85/measured/after/commands.json`:
+
+| Claim / axis | Before → after | Score delta | Verdict |
+|---|---|---|---|
+| C1 calibration | frozen `count.py c1 --repo . --rev REV --work /fast/scratch/hyaku/kama-r85/L1`: mismatches2→0, exit1→0; finite authority-controls27/0 | 7→7 | **not verified**: frozen false-pass kill condition fires on fenced/comment stale-live-cell controls; numeric green is not admission |
+| C2 operability | frozen `count.py c2 --repo . --rev REV --work /fast/scratch/hyaku/kama-r85/L1`: killed0/escaped3→killed3/escaped0, invalid0 both, exit1→0; pristine31/0→34/0 | 8→8 | finite delivered M2/M3/M4 executions verified: M2 equality arm33/1, M3 above-subject arm33/1, M4 coverage arms32/2, all child exit1 with empty stderr and one consistent summary |
+
+Full gate at this measured revision: `PRE_REPORT round=85 arms=13 failed=1 uncommitted=0`, exit1. Sole failed arm is existing append-debt: events79/accepted53/late23/pending1/unaccepted3/bad_rows0, exit1; the three round84 events are inherited unaccepted debt newly inside round85's base. Grade and main source bytes are unchanged (`source-identity.json`); no gate-green claim is made. Round84 wrong-subject invocation retains exactly one binding finding, exit1, unaccepted2/bad_rows1; its pending4 is revision-specific. Source census315→317, validate0, append-only0. No capability admitted; overall **honest stop**, all numeric scores unchanged.
