@@ -172,7 +172,9 @@ build), .ufo/waves/round-72/w1/EX03GateArm6/ (six-arm amendment),
 .ufo/waves/round-74/w1/EX04GateArm7/ (arm-7 `round74-v2` amendment, applied from
 arm7.patch).
 
-Round 77 adds arm 10, `round77-instruments`, after all existing arms. It runs
+Round 77 retires `round76-append-exempt.py` from arm 9 (its shared-cutoff rule is red by
+construction once the exempt register grows; arm 10's `round77-append-registers` supersedes it)
+and adds arm 10, `round77-instruments`, after all existing arms. It runs
 `round77-citation-baseline.py --selftest`, `round77-append-registers.py --selftest`,
 then `round77-selfrecord-round76.py --selftest`, using the same per-process timeout.
 Each must exit 0 and end with a `*_SELFTEST pass=N fail=0` line. Missing scripts,
@@ -269,12 +271,15 @@ ROUND75_MODULES = (
     ("append-accepted", "round75-append-accepted.py", ("--repo", "{repo}")),
 )
 
-# Arm 9 `round76-instruments`: the three round-76 counters composed into one arm.
+# Arm 9 `round76-instruments`: the round-76 counters that still grade the tree.
+# round76-append-exempt.py is retired from the gate: its single shared cutoff rejects every
+# event after the earliest register introduction, so the round-77 register growth makes it red
+# by construction (round-77 C2 supersedes it with round77-append-registers, arm 10). It stays
+# in the tree as history; the gate never hides its red, it stops treating it as current law.
 ROUND76_MODULES = (
     ("receipt-scope", "round76-receipt-scope.py",
      ("--repo", "{repo}", "--round", "{round}")),
     ("selfrecord-facts", "round76-selfrecord-facts.py", ("--repo", "{repo}")),
-    ("append-exempt", "round76-append-exempt.py", ("--repo", "{repo}")),
 )
 
 # Arm 10 runs selftests, not the round-77 counters' live grading modes.
@@ -1090,19 +1095,18 @@ def run_selftest(args) -> int:
     # (t) green arm-9 stubs: the arm passes and the verdict carries nine arms.
     check("round76-instruments-green", evaluate(repo, round_no, "master", str(tools)), 0, 0, 0,
           "round76-instruments", True,
-          detail_has="APPEND_EXEMPT events=232 register=53 exempt=83 restored=91 disclosed=5 "
-                     "unaccounted=0 cutoff=10f37171 introductions=1 rotation_safe=1",
+          detail_has="SELFRECORD_FACTS claims=8 mismatches=0",
           render_has="round76-instruments exit=0 ok",
           want_line="PRE_REPORT round=70 arms=10 failed=0 uncommitted=0")
 
     # (u) a deleted round-76 counter fails arm 9 closed, naming the absent module.
-    ae_stub = tools / "round76-append-exempt.py"
-    ae_stub.unlink()
+    sr_stub = tools / "round76-selfrecord-facts.py"
+    sr_stub.unlink()
     check("round76-instruments-missing", evaluate(repo, round_no, "master", str(tools)), 1, 1, 0,
           "round76-instruments", False,
-          detail_has="missing round76-append-exempt.py",
+          detail_has="missing round76-selfrecord-facts.py",
           render_has="round76-instruments exit=1 FAIL")
-    ae_stub.write_text(_STUB_APPEND_EXEMPT, encoding="utf-8")
+    sr_stub.write_text(_STUB_SELFRECORD_FACTS, encoding="utf-8")
 
     # (v) One composite arm-10 wiring case; attack each instrument separately.
     r77_problems: list[str] = []

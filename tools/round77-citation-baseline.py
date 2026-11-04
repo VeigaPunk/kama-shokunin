@@ -155,15 +155,21 @@ def _selftest_arms(scratch, outcomes):
 
 
 def run_selftest(args):
-    if not args.work:
-        raise CouldNotEvaluate("--selftest requires --work")
-    os.makedirs(os.path.abspath(args.work), exist_ok=True)
-    scratch = tempfile.mkdtemp(prefix="citation-baseline-", dir=os.path.abspath(args.work))
+    # Scratch discipline (round-77 §7): honour TMPDIR; --work is optional and the
+    # default root is removed with the fixture it holds.
+    owned = not args.work
+    root = (os.path.abspath(args.work) if args.work else
+            tempfile.mkdtemp(prefix="citation-baseline-root-",
+                             dir=os.environ.get("TMPDIR") or tempfile.gettempdir()))
+    os.makedirs(root, exist_ok=True)
+    scratch = tempfile.mkdtemp(prefix="citation-baseline-", dir=root)
     outcomes = []
     try:
         _selftest_arms(scratch, outcomes)
     finally:
         shutil.rmtree(scratch)
+        if owned:
+            shutil.rmtree(root, ignore_errors=True)
     for name, ok, rc, expected, output in outcomes:
         print("CITATION_BASELINE_SELFTEST {} {}".format(name, "PASS" if ok else "FAIL"))
         print("CITATION_BASELINE_ARM {} expect={} got={}".format(name, expected, rc))

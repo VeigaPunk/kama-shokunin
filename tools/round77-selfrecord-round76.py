@@ -12,11 +12,13 @@ from contextlib import redirect_stdout
 from datetime import date
 import importlib.util
 import io
+import os
 from pathlib import Path
 import re
 import shutil
 import subprocess
 import sys
+import tempfile
 
 sys.dont_write_bytecode = True
 _SPEC = importlib.util.spec_from_file_location(
@@ -146,9 +148,14 @@ def apply_correction(repo, rev, fact, source, sealed):
         fields = {key: value.strip() for key, value in fields.items()}
         locator = f'{fact["path"]}:{fact["line"]}'
         # Locate the superseded bytes in the read record, not a shifted line number.
+        # A head section the contract re-derives in place (`## Axes`) no longer holds the
+        # sealed bytes, so its sealed position is the stable "after the superseded text"
+        # anchor there; every append-only section is still located by its surviving bytes.
         original_line = sealed.splitlines()[fact["line"] - 1]
         position = source.find(original_line)
-        if (position < 0 or heading.start() <= position
+        if position < 0:
+            position = fact["pos"]
+        if (heading.start() <= position
                 or fields.get("Supersedes") not in {locator, fact["filed"]}):
             return "wrong-value"
         revision = fields.get("Revision", "")
@@ -283,9 +290,16 @@ def main(argv=None):
     try:
         repo = Path(args.repo).resolve()
         if args.selftest:
+            # Scratch discipline (round-77 §7): honour TMPDIR; --work is optional.
+            owned = None
             if not args.work:
-                raise CouldNotEvaluate("--selftest requires --work")
-            return run_selftest(repo, args.work)
+                owned = tempfile.mkdtemp(prefix="selfrecord-r76-root-",
+                                         dir=os.environ.get("TMPDIR") or tempfile.gettempdir())
+            try:
+                return run_selftest(repo, args.work or owned)
+            finally:
+                if owned:
+                    shutil.rmtree(owned, ignore_errors=True)
         rev = git(repo, "rev-parse", "--verify", args.rev + "^{commit}").decode().strip()
         return audit(repo, rev)
     except (CouldNotEvaluate, OSError, UnicodeError, ValueError, subprocess.CalledProcessError) as exc:
