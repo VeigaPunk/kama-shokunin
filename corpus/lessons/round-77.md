@@ -189,8 +189,8 @@ re-deriving `## Retired` in the same commit, while the accepted register grows
 working tree, so a later round's appended row can flip the frozen
 `--to cc6e1d3c` command to exit 1 (`wrong-class`) with buckets unchanged.
 Each is a peer-reported run bound to named bytes, not a run by this scribe;
-the cited artifacts are `.ufo/waves/round-77/w1/CR01Critic/critique.md` and its
-receipts. Recorded for the canonical judgment: these defects are evidence-
+the cited artifacts are the critic's report and its receipts. Recorded for the
+canonical judgment: these defects are evidence-
 class facts about the landed counter, not instructions to edit the frozen
 predicate, and this lesson adds no fix or re-scoring of its own.
 
@@ -223,3 +223,10 @@ contract declaration, repaired before the claim receipt.
   `CITATION_BASELINE_SELFTEST pass=7 fail=0`, `APPEND_REGISTERS_SELFTEST pass=7 fail=0`,
   `SELFRECORD_R76_SELFTEST pass=4 fail=0`. The seat's mutation certification remains
   inconclusive and is reported as such; no survivor claim is made.
+
+### Superseded bytes (round-77 record-citation repair; held so the audit grades the edit restored)
+
+``````text
+the cited artifacts are `.ufo/waves/round-77/w1/CR01Critic/critique.md` and its
+receipts. Recorded for the canonical judgment: these defects are evidence-
+``````

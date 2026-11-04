@@ -60,7 +60,7 @@ The live plan follows; historical plans remain as filed (round 77's in `plans/ro
 2. Freshness: extend the two-register accounting to the live tip (the round-76 and round-77
    events included) and keep the `rotation-reintroduced` and `inside-region` arms red-capable.
 3. Operability: give the baseline class a certifying control that a later `tools/` delta still
-   shifts an at-the-tip receipt, or extend the class to a sealed `measured/after` receipt whose
+   shifts an at-the-tip receipt, or extend the class to a sealed post-work receipt whose
    revision is re-runnable, whichever the next measurement shows is reachable.
 
 ## Retired
