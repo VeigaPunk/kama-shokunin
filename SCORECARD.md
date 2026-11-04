@@ -3840,8 +3840,8 @@ rejected=0`, exit 1). The scout's census of the lane's own record makes the clas
 receipts carry no revision header (`.ufo/waves/round-72/w1/SCT01ReceiptRecon/recon.json`).
 
 Frozen claims and controls: `plans/round-72-claims.md`; base `d30a8696`; freeze `090a0b25`; pre-score
-amendment `a3cc39f0`; controls `.ufo/waves/round-72/controls/{round-scope-control.py,receipt-tip-control.py}`;
-base receipts `.ufo/waves/round-72/measured/before/`.
+amendment `a3cc39f0`; controls under `.ufo/waves/round-72/controls/` (their bytes and the frozen plan sha256 pinned in `.ufo/waves/round-72/controls/freeze.txt`);
+base receipts `.ufo/waves/round-72/measured/before/round-scope-control-old.out` and `.ufo/waves/round-72/measured/before/receipt-tip-control-old.out`.
 
 | Claim | Axis, score | Before → after / counting command | Verdict |
 |---|---|---|---|
