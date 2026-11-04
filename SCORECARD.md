@@ -4236,6 +4236,19 @@ rather than `measured/before/`. The first-filed cells are held here byte-exactly
 | C3 — every append-only audit event is accounted for exactly once (register row, exempt-head class row, restoration, disclosure) and the introduction cutoff cannot be re-opened | freshness (held 8; capability `append-exempt-class`) | before `rev=b06cc612`: audit `events=232 restored=91 unrestored=53 ungraded=83 disclosed=5`, register grading 53 (`measured/before/c3-audit.out`, `c3-register.out`); after `rev=c2aa7fb2`: exit 1 `APPEND_EXEMPT events=233 register=53 exempt=47 restored=91 disclosed=5 unaccounted=37 cutoff=10f37171 introductions=2 rotation_safe=1` (`measured/after/append-exempt.out`) — **MISS against the frozen line `exempt=83 unaccounted=0 introductions=1`** | `python3 tools/round76-append-exempt.py --repo .` | the strict frozen class rule admits 47 rows; 31 events are wrong-class (the audit's `ungraded` bucket also carries A-row/only-prefix carveouts and exposes no class key) and 5 postdate the earliest register introduction — both are the frozen predicate's own contradictions, not counter slack |
 ``````
 
+## Superseded head bytes (round 76; held so the audit grades the head re-derivation restored)
+
+Round 76 re-derived the head sections in place (banner, live-plan pointer, retired count, coverage row),
+which is the declared practice for those sections, but the banner line sits before the first `## ` heading
+and is therefore graded: the audit needs the first-filed bytes held. They are, verbatim:
+
+``````text
+**Current authority (round 75):** assigned axes are operability + calibration (`shokunin.conf`); Latest measured round: 75. Round 73 was an honest stop (B6 verified; the full frozen clean-fixture clause unprovable on committed bytes) and its closure routed defects 1/2/5 → this round's three claims. Round 74 works C1 calibration (R73-D1: the self-description reconciler sees the newest capability repertoire whatever heading form it wears), C2 operability (the receipt-claim rule is realizable: explicit-revision binding replacing the impossible committed-header-equals-tip clause; wrapped/offset kill arms) and C3 freshness (host-block base-revision preservation; not a change of assigned axes). Scores hold. The C2 kind boundaries (F2b), the token-strip and forward-resolution readings of the C3 preservation leg, and the C1 `total` union reading are seat-flagged interpretations the L1 fixed on the frozen fixture bytes; the freeze was never edited. Round admission is not self-certified.
+| coverage | **9** | surface list `PROVINCE.md` sha256 `af459acfa975d418a389f0ce19b8f1f40dd7e08d15c7eb0e9f2eb27e45d45697` (322 lines); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f and 'processes' not in f]))"` → `46` (round 76 added the fence-scope and self-record fact entries; round 75’s instrument entry had brought it to 45) | score round 10; evidence re-anchored round 74 |
+The live plan is `### Planned (round 76)` below; historical plans remain as filed, and round 75's plan is at the end of the §Round 75 section.
+None. 6 axes and 28 capabilities remain active. Neither assigned axis is retired: the registered consumers still sample DEAD (`registry/history/latest.tsv`; restoring a serving runtime is operator-owned), while the lane-owned llama.cpp fixture reaches `MODEL_OK` on an unregistered loopback port (`.ufo/waves/round-16/live/receipt.json`), so the surface is not permanently gone. Retirement would need evidence of permanent absence or of saturation, and neither is observed.
+``````
+
 ### Planned (round 77)
 
 1. Operability: give the citation-scope counter the delta-invariance class it needs — a
