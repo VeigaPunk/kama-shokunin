@@ -1,0 +1,238 @@
+{
+  "schema": "ufo-swarm-wave-dispatch-v1",
+  "wave": "kama-r74-w1",
+  "policy": {
+    "source": "config",
+    "maxLanes": 13,
+    "minLanes": 8,
+    "waveMinLanes": 8,
+    "waveMaxLanes": 16,
+    "declaredMaxLanes": 13,
+    "hardCeiling": 256,
+    "rampBatchSize": 5,
+    "rampIntervalMs": 700,
+    "globalRunnerCeiling": 1056
+  },
+  "counts": {
+    "spawn": 13,
+    "resume": 0,
+    "total": 13
+  },
+  "registry": {
+    "schema": "ufo-swarm-registry-v1",
+    "path": ".ufo/waves/round-74/w1/swarm-registry.json",
+    "reportDir": ".ufo/waves/round-74/w1",
+    "members": {
+      "EX01CanonV2": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": null,
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "kama r74 w1"
+      },
+      "EX02ClaimV2": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": null,
+        "axes": [
+          "operability"
+        ],
+        "milestone": "kama r74 w1"
+      },
+      "EX03DriftV2": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": null,
+        "axes": [
+          "freshness"
+        ],
+        "milestone": "kama r74 w1"
+      },
+      "EX04GateArm7": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "executor",
+        "item": null,
+        "axes": [
+          "operability"
+        ],
+        "milestone": "kama r74 w1"
+      },
+      "SCR01Sources": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scribe",
+        "item": null,
+        "axes": [
+          "expansion"
+        ],
+        "milestone": "kama r74 w1"
+      },
+      "SCR02Lesson": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scribe",
+        "item": null,
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "kama r74 w1"
+      },
+      "SCO01Recon": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "scout",
+        "item": null,
+        "axes": [
+          "adjacency"
+        ],
+        "milestone": "kama r74 w1"
+      },
+      "CON01Overlap": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "connector",
+        "item": null,
+        "axes": [
+          "adjacency"
+        ],
+        "milestone": "kama r74 w1"
+      },
+      "LAB01Controls": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "revenger",
+        "item": null,
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "kama r74 w1"
+      },
+      "RVW01Plan": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "reviewer",
+        "item": null,
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "kama r74 w1"
+      },
+      "CRT01Claims": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "critic",
+        "item": null,
+        "axes": [
+          "calibration"
+        ],
+        "milestone": "kama r74 w1"
+      },
+      "MT01Mutants": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "mutation-tester",
+        "item": null,
+        "axes": [
+          "operability"
+        ],
+        "milestone": "kama r74 w1"
+      },
+      "SEN01Bounds": {
+        "kind": "spawn",
+        "agentId": null,
+        "role": "sentinel",
+        "item": null,
+        "axes": [
+          "adjacency"
+        ],
+        "milestone": "kama r74 w1"
+      }
+    }
+  },
+  "compaction": {
+    "applied": false,
+    "mechanism": null,
+    "reason": null,
+    "savedBytes": 0,
+    "payloadBytesBefore": 0,
+    "payloadBytesAfter": 0
+  },
+  "taskCall": {
+    "context": "# Goal\nkama lane, round 74: ONE v1 wave of 13 seats (build + attack). The round's three claims are FROZEN in `/home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-74-claims.md` — read it first, in full. Predicates, counters, kill rules and control receipts are fixed there. A rule changed after a seat has scored is not the claim's rule: report a disagreement in your report, never edit the freeze or the frozen tools.\n\nC1 calibration — `tools/round74-selfdesc-canon.py`: the r42 reconciler's `canon()` sees only BOLD `**Capabilities — canonical list as of round <M>**` headings; demonstrated-capabilities tables under unbolded headings are invisible (R73-D1). Before receipt: base canon resolves round 71 over a fixture whose hand census counts 7.\nC2 operability — `tools/round74-receipt-claim-binding.py`: replaces the impossible committed-header-equals-tip clean rule with a realizable explicit-revision predicate; paragraph-scoped claim grading kills wrapped/offset escapes the line-scoped r73 pass misses (base: claims=0 GREEN on both); hex revisions bind case-insensitively.\nC3 freshness — `tools/round74-province-host-drift.py`: adds base-revision preservation — a host block carrying a `recorded at <rev>` token must be byte-identical at `<rev>` and at the tip; an edited block is a finding even when it matches the live triple (base: GREEN on the edited fixture).\n\n# Contract\n- You are ONE seat. Write scope: `/home/vgpnk/Projects/shokunin/kama-shokunin` only, plus your scratch dir. NEVER run mutating git/jj commands anywhere (no commit/add/push/reset/stash); the L1 integrates and commits. NEVER touch the fleet root, sibling lane repos, `MANIFEST.json`, `.ufo/state/`, `.ufo/watchdog.log`, `.scratch/`, or `~/.omp/agent/config.yml` (operator-owned route table: never pass or edit a model).\n- Do NOT edit byte-frozen tools: `tools/round42-selfdesc-reconcile.py`, `tools/round72-*.py`, `tools/round73-*.py`, `tools/pre-report-gate.py` (EX04's arm-7 amendment is the only sanctioned edit, via a patch file it owns). New instruments are NEW files named exactly as the plan freezes.\n- Scratch: all clones/fixtures/work dirs live under `/fast/scratch/hyaku/kama-r74/<your-seat-name>/` (mkdir -p; HYAKU discipline: /tmp is for files under 50 MB only; counters honour TMPDIR). Delete your scratch dir before you yield; copy receipts into your wave out dir first. A `/tmp` path is never citable evidence.\n- Git fixtures (labrat/executors): create only under your scratch dir with `git -C <dir> init`, assert `rev-parse --show-toplevel` equals it before the first commit, use the fixture identity `-c user.name=fixture -c user.email=fixture@invalid -c commit.gpgsign=false`; never run git writes anywhere else.\n- Tooling authorization (operator, 2026-10-19): you may install/upgrade tools that help the task — read `/home/vgpnk/.omp/agent/RULES.md` first (official channels only: pacman → uv tool → official binary in ~/.local/bin → cargo/npm -g; record tool/version/channel/reason in your report). PACMAN GUARD (orchestrator ruling 2026-10-20): all pacman transactions are PAUSED host-wide — install via `uv tool`/`npx`/an official binary, or file an L0 question; never `-Sy`/`-Syu`/`-R`.\n- Seats never message `agent://all`; address the L1 only if blocked. Deadlines are your own budget — land the smallest complete artifact.\n- Every `Report:` trailer path is relative to `/home/vgpnk/Projects/shokunin/kama-shokunin` — write it at `/home/vgpnk/Projects/shokunin/kama-shokunin/<that path>`.\n- Evidence discipline: an unrun check has not passed; paste real command output into your report; ground every claim in a path:line or command.",
+    "tasks": [
+      {
+        "name": "EX01CanonV2",
+        "agent": "executor",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches.\n\n# C1 build — `/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round74-selfdesc-canon.py`\n\nRead `/home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-74-claims.md` section C1 in full; its predicate blockquote is frozen. Also read `tools/round42-selfdesc-reconcile.py` (byte-frozen: import it, never edit) and the fixture builder/scorer `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-74/controls/build-survivors.py` + `score-survivors.py` + `probe-canon-base.py`.\n\nBuild the module exactly as the predicate freezes: resolve the capability repertoire from the newest capability table by round number regardless of heading markup (bold `**Capabilities — canonical list as of round <M>**`, unbolded `## Capabilities — canonical list as of round <M>`, `### Capabilities demonstrated in round <M>`), reuse r42's canon()/table parser via import, print `SELFDESC_CANON_V2 canon_round=<N> canon_rows=<c> demonstrated=<d> total=<t> invisible=<i>`, exit 0 only when invisible=0, exit 1 naming each `SELFDESC_CANON_V2_FINDING invisible <round> <name>` (capability named by a demonstrated table newer than the newest bold canon while the bold canon does not name it), exit 2 could-not-evaluate. `total` = distinct names in the newest-by-round resolution; `demonstrated` = names added by tables newer than the bold canon.\n\nDeliverables: (1) the module; (2) a selftest (same pattern as r73 modules: fixture arms built in your scratch dir, including a predicate arm comparing your PREDICATE constant against the plan's C1 blockquote read from `plans/round-74-claims.md`) printing `SELFDESC_CANON_V2_SELFTEST pass=<n> fail=0`; (3) run the selftest and the scorer's expectations manually: over the committed fixture `c1_invisible` (rebuild fixtures with the builder into YOUR scratch, never mutate the committed meta paths) exit 1 with invisible=4; over `c1_clean` exit 0 total=7; over the live lane (`--repo /home/vgpnk/Projects/shokunin/kama-shokunin`) exit 1 naming the demonstrated round-73/24 names invisible vs the round-71 bold canon (expected red until the record lands); (4) report at Report: .ufo/waves/round-74/w1/EX01CanonV2/report.md with module sha256, selftest output, and the three run receipts. Do not edit any frozen file; do not commit anything.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: calibration\nMilestone: kama r74 w1\n\nReport: write your scoped findings to .ufo/waves/round-74/w1/EX01CanonV2.md"
+      },
+      {
+        "name": "EX02ClaimV2",
+        "agent": "executor",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches.\n\n# C2 build — `/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round74-receipt-claim-binding.py`\n\nRead `/home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-74-claims.md` section C2 in full; its predicate blockquote is frozen. Read `tools/round73-receipt-claim-binding.py` and the byte-frozen `tools/round72-receipt-tip-binding.py` (shell out to the r72 tool for the base leg; import r73 only for shared helpers if it exposes them — never edit either).\n\nBuild the module exactly as the predicate freezes: paragraph-scoped (blank-line-separated) grading of the round's self-record (`## Round <N>` SCORECARD section + `corpus/lessons/round-<N>.md` at `--tip`), tip claims (`at the tip`, `at the report tip`, `report tip`, case-insensitive, matched across line breaks inside the paragraph) bound only when every cited receipt's `tip=`/`rev=` header (case-insensitive key AND hex, first 5 lines) equals `<tip>`; explicit 40-hex revision mentions bind cited receipts whose header equals that revision (hex case-insensitive), finding `stale-revision` when they differ; findings `RECEIPT_CLAIM_V2_FINDING <wrapped-claim|offset-claim|stale-revision> <path> :: <line>`; print `RECEIPT_CLAIM_V2 round=<N> cited=<c> bound=<b> unbound=<u> shifted=<s> stale=<t> claims=<k> unbound_claims=<j> bound_revisions=<r>`; exit 0 only when the r72 base verdict is green and no claim finding exists; exit 2 could-not-evaluate.\n\nDeliverables: (1) the module with PREDICATE constant byte-equal to the plan's C1... NO — the plan's C2 blockquote; (2) selftest `RECEIPT_CLAIM_V2_SELFTEST pass=<n> fail=0` with fixture arms in your scratch (rebuild the c2 fixtures with the committed builder: c2_wrapped and c2_offset must exit 1 naming wrapped-claim/offset-claim; c2_mixed_honest exit 0 with bound_revisions=1; c2_clean_realizable exit 0 — plus arms proving the r72 base leg failure propagates as exit 2 and the r73 module is byte-untouched); (3) run over the live lane at `--round 74 --tip master` and report what the current record would grade (expected: no round-74 section yet → exit 2, recorded honestly); (4) report at Report: .ufo/waves/round-74/w1/EX02ClaimV2/report.md with sha256s and receipts. Do not edit frozen files; do not commit.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: operability\nMilestone: kama r74 w1\n\nReport: write your scoped findings to .ufo/waves/round-74/w1/EX02ClaimV2.md"
+      },
+      {
+        "name": "EX03DriftV2",
+        "agent": "executor",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches.\n\n# C3 build — `/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round74-province-host-drift.py`\n\nRead `/home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-74-claims.md` section C3 in full; its predicate blockquote is frozen. Read the byte-frozen `tools/round73-province-host-drift.py` (run it as the base leg; never edit it).\n\nBuild the module exactly as the predicate freezes: parse `recorded at <40-hex>` tokens in host-identity blocks of `PROVINCE.md` (block grammar unchanged from r73: `Round-<N> host-identity block (YYYY-MM-DD)` paragraph with the three arrow triples); for every block carrying the token, compare the block's byte text resolved at `<rev>` (`git show <rev>:PROVINCE.md`, same paragraph) with the worktree block — any byte difference (triple, date, anything) is `PROVINCE_HOST_DRIFT_V2_FINDING edited-block <detail>` even when the edited block matches the live triple; print `PROVINCE_HOST_DRIFT_V2 blocks=<b> recorded=<s>/<m>/<id> live=<s>/<m>/<id> stale=<n> edited=<e>`; exit 0 only when the r73 base leg is green and edited=0; exit 1 naming `PROVINCE_HOST_DRIFT_V2_FINDING <no-block|stale-host|edited-block> <detail>`; exit 2 could-not-evaluate (unresolvable `recorded at` rev is could-not-evaluate, name it).\n\nDeliverables: (1) the module with PREDICATE constant byte-equal to the plan's C3 blockquote; (2) selftest `PROVINCE_HOST_DRIFT_V2_SELFTEST pass=<n> fail=0` with fixture arms in your scratch (rebuild c3 fixtures with the committed builder: c3_edited exits 1 naming edited-block while the r73 base leg alone stays green on it; c3_clean exits 0 edited=0; arms for no-block, stale-host passthrough, unresolvable rev → exit 2); (3) run over the live lane and report (expected: no `recorded at` token yet → the preservation leg is vacuous; say so honestly, do not fake a token); (4) report at Report: .ufo/waves/round-74/w1/EX03DriftV2/report.md with sha256s and receipts. Do not edit frozen files; do not commit.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: freshness\nMilestone: kama r74 w1\n\nReport: write your scoped findings to .ufo/waves/round-74/w1/EX03DriftV2.md"
+      },
+      {
+        "name": "EX04GateArm7",
+        "agent": "executor",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches.\n\n# Gate wiring — arm 7 for `/home/vgpnk/Projects/shokunin/kama-shokunin/tools/pre-report-gate.py`\n\nRead `/home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-74-claims.md` (C wiring notes: arm 7 composes the three v2 modules; verdict becomes `PRE_REPORT round=<N> arms=7 failed=<f> uncommitted=<u>`), `tools/pre-report-gate.py` in full, and the r72 arm-6 amendment receipt pattern in `.ufo/waves/round-72/w1/EX03GateArm6/`.\n\nBecause pre-report-gate.py is byte-frozen for every other seat, YOU do not edit it either. Instead: (1) draft the exact unified diff patch `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-74/w1/EX04GateArm7/arm7.patch` adding arm 7 `round74-v2` that runs the three v2 counters (canon, claim-v2, drift-v2; each absent → the arm fails closed naming the absent module, never vacuous green) and bumps the verdict to arms=7, keeping arms 1–6 and every existing selftest arm green (the selftest's expected arm counts/verdict strings move 6→7 exactly where the frozen r72/r73 receipts pin them — name each selftest arm you had to retarget and why); (2) apply the patch in a SCRATCH copy of the tools dir (git clone --shared the lane into your scratch, apply, run `python3 tools/pre-report-gate.py --selftest` there) and paste the full selftest output (`PRE_REPORT_SELFTEST pass=<n> fail=0` expected, n = 12 + your new arms, every arm named); (3) run the patched gate over the scratch clone at `--round 74` and paste the verdict; (4) write the patch application recipe (exact `git apply` command the L1 will run at integration, and the sha256 the patched file must have); (5) report at Report: .ufo/waves/round-74/w1/EX04GateArm7/report.md. The L1 owns applying the patch to the real tree — you must not. Also verify: with the v2 modules absent the patched gate's arm 7 fails (red demo) — paste it.\n\nLane bounds: leaf member — no subagent dispatch except your single labrat.\nJudged on: operability\nMilestone: kama r74 w1\n\nReport: write your scoped findings to .ufo/waves/round-74/w1/EX04GateArm7.md"
+      },
+      {
+        "name": "SCR01Sources",
+        "agent": "scribe",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches.\n\n# Sourced claim — open `os-release(5)` for C3 and draft the row + knowledge entry\n\nThe C3 claim rests on a SOURCES row opened this round: `os-release(5)` (man7.org/linux/man-pages/man5/os-release.5.html), grounding the `ID=` field semantics of the host-triple's distribution component. Steps: (1) verify the lane registry has NO existing os-release row: `grep -i 'os-release' /home/vgpnk/Projects/shokunin/kama-shokunin/corpus/SOURCES.md` (paste output; if a row exists, STOP and report — id reuse is refused); (2) fetch the page live (curl), retain the bytes at `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-74/w1/SCR01Sources/source/os-release.5.html` with its sha256, record the access date (today), and locate a ≤25-word quote grounding the `ID=` field semantics (paste the quote with its location); (3) draft the registry row as the NEXT id after the registry's current maximum (derive it by parsing the registry, paste the derivation) — kind docs, tier A, scope host-triple distribution identification, status queued→mined once the knowledge entry cites it, `used-by corpus/knowledge/host-block-base-revision.md`, recheck 180d; (4) draft `corpus/knowledge/host-block-base-revision.md` opening with the provenance trio (`source: S### — <url>`, `verified-at: <today>`, `recheck: 180d`) documenting the v2 block grammar: the `recorded at <rev>` token, the preservation rule (byte-identical at rev and tip), the honest host-move answer (append, never edit), citing the os-release ID semantics for the triple's third component; (5) scratch-mirror census gate BEFORE any append would happen: copy the lane corpus/ to your scratch, add the row to the mirror registry, run `/home/vgpnk/Projects/shokunin/scripts/sources-census.sh validate --file <mirror>/corpus/SOURCES.md`, paste exit and warnings (must exit 0 before the L1 will append); (6) write BOTH drafts to your wave out dir (`.ufo/waves/round-74/w1/SCR01Sources/drafts/`) — do NOT touch the real corpus/SOURCES.md or corpus/knowledge/ (the L1 appends at integration, after the exit-0 mirror gate); (7) report at Report: .ufo/waves/round-74/w1/SCR01Sources/report.md with the derivation, quote, digest and census output.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: expansion\nMilestone: kama r74 w1\n\nReport: write your scoped findings to .ufo/waves/round-74/w1/SCR01Sources.md"
+      },
+      {
+        "name": "SCR02Lesson",
+        "agent": "scribe",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches.\n\n# Lesson draft + seat-count check tool\n\nDeliverables: (1) draft `/home/vgpnk/Projects/shokunin/kama-shokunin/corpus/lessons/round-74.md` skeleton in your wave out dir (`.ufo/waves/round-74/w1/SCR02Lesson/drafts/round-74.md`): `## Gate` (candidates: the new S### os-release row with URL/access date/quote placeholder filled by SCR01's retained bytes reference; the assimilation none-decision with the id-collision receipt pointer; the considerthese disposition for 2026-10-26.md) and `## Mistakes` with two rows — mistake 1: class number-drift, evidence `.ufo/waves/round-73/w1-spec.json` (milestone/goal prose says 14 seats, items array carries 15 — paste the jq/python derivation), captured-by `none`, fix `tools/round74-seat-count-check.py`; mistake 2: class landing, evidence `corpus/lessons/round-73-verifier-spotcheck.md` §6 item 6 (registry append preceded the first exit-0 mirror census), captured-by `none`, fix: round-74 runbook orders mirror-census-exit-0 before append and the check tool's census-ordering arm replays the r73 ordering red.\n(2) Build `/home/vgpnk/Projects/shokunin/kama-shokunin/tools/round74-seat-count-check.py`: reads a wave spec JSON, recomputes the seat count from `len(items)`, and fails (exit 1) when any prose field (milestone, context) names a different count (`seats`, `seat` near a number); a `--census-order DIR` arm asserts a committed mirror-census receipt (exit 0) exists in the round dir and predates the registry append receipt, failing on the r73 ordering replay. Selftest: red on the real r73 spec bytes (`python3 tools/round74-seat-count-check.py --spec .ufo/waves/round-73/w1-spec.json` must exit 1 naming the drift), green on the r74 spec (13 items, prose names 13), `SEAT_COUNT_CHECK_SELFTEST pass=<n> fail=0`. Fixtures live in your scratch; the tool itself honours TMPDIR and takes paths as arguments (no hardcoded /tmp).\n(3) Run the tool on both real specs and paste outputs. (4) Report at Report: .ufo/waves/round-74/w1/SCR02Lesson/report.md. Do not edit the r73 spec, the real lesson file, or anything outside your deliverable paths; do not commit.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: calibration\nMilestone: kama r74 w1\n\nReport: write your scoped findings to .ufo/waves/round-74/w1/SCR02Lesson.md"
+      },
+      {
+        "name": "SCO01Recon",
+        "agent": "scout",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches.\n\n# Read-only reconnaissance (three questions)\n\nYou are READ-ONLY outside your own wave out dir. No edits anywhere.\n\n(1) Sibling instruments: search the fleet lanes for tools grading capability-heading visibility, receipt-to-revision claim binding, or host-block history preservation — `grep -rl 'canonical list as of\\|receipt-claim\\|host-identity block' /home/vgpnk/Projects/shokunin/*-shokunin/tools/ 2>/dev/null` plus targeted reads of any hits (kaidoku, tameshi, chousa are the likely holders). For each hit: what it grades, how it differs from kama's frozen predicates, one line.\n(2) Assimilation state: list `/home/vgpnk/Projects/shokuknow/merge/kama/` (read-only — never write/run anything there): MERGE-REPORT.md's staged count, SOURCES.append.md's row count, and derive the kama slice of `/home/vgpnk/Projects/shokuknow/.ufo/waves/corpus-expansion-1/absent-defect-register.md` with the awk from the round prompt §10 (`awk -F'|' -v l='kama' '$2 ~ (\"`\" l \"`\") && $3 ~ /round[0-9]+/ && $4 ~ /S[0-9]+/'`); paste counts. Verdict input only — the L1 decides adoption.\n(3) considerthese: read `/home/vgpnk/Projects/shokunin/kama-shokunin/considerthese/2026-10-26.md` (latest file): which proposals are still unimplemented as lane-round work (proposal 4 landed as tools/pin-watch.py in round 41 plus a round-73 QUALITY criterion — verify both pointers exist: `ls tools/pin-watch.py` and grep the criterion); one-line disposition each.\nReport at Report: .ufo/waves/round-74/w1/SCO01Recon/report.md with commands and outputs.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: adjacency\nMilestone: kama r74 w1\n\nReport: write your scoped findings to .ufo/waves/round-74/w1/SCO01Recon.md"
+      },
+      {
+        "name": "CON01Overlap",
+        "agent": "connector",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches.\n\n# Cross-lane overlap scan\n\nREAD-ONLY everywhere except your wave out dir. The round lands three instruments: `round74-selfdesc-canon.py` (SCORECARD capability-heading visibility vs a self-description reconciler), `round74-receipt-claim-binding.py` (self-record receipt citations bound to explicit revisions; paragraph-scoped claim grading), `round74-province-host-drift.py` (PROVINCE host-identity blocks preserved byte-identical across a recorded base revision). Scan ALL sibling lane repos under `/home/vgpnk/Projects/shokunin/` for: (a) tools or registry files implementing or recently amending anything in the same three classes (grep for `canon`, `selfdesc`, `reconcile`, `receipt.*bind`, `claim.*bind`, `host.*drift`, `host-identity`, `recorded at` under each `*-shokunin/tools/`, `*-shokunin/registry/`, newest lessons); (b) any sibling's non-author closure or spot-check lesson from the last 5 rounds touching kama's instruments (grep for `kama` in `*-shokunin/corpus/lessons/*verifier-spotcheck.md` round-70+, and in fleet `.ufo/reports/round-7{0,1,2,3,4}/`); (c) MANIFEST.json's kama entry for the last closure verdict. Output one table: lane · surface · overlap class (identical/strong/weak/none) · action for kama's report (cite sibling prior art in the knowledge entry / contested-scope report / none). Write `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-74/w1/CON01Overlap/overlap.md` and report at Report: .ufo/waves/round-74/w1/CON01Overlap/report.md with the commands used. Do not edit anything else.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: adjacency\nMilestone: kama r74 w1\n\nReport: write your scoped findings to .ufo/waves/round-74/w1/CON01Overlap.md"
+      },
+      {
+        "name": "LAB01Controls",
+        "agent": "revenger",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches.\n\n# Control verification and do-nothing probes\n\nWork entirely in `/fast/scratch/hyaku/kama-r74/LAB01Controls/`. Git fixtures only there with the fixture identity and toplevel assertion (see context).\n\n(1) Rebuild the round-74 fixtures from the committed controls: `python3 /home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-74/controls/build-survivors.py --work /fast/scratch/hyaku/kama-r74/LAB01Controls/fixtures --meta /fast/scratch/hyaku/kama-r74/LAB01Controls/fixtures-meta.json`, then rerun `score-survivors.py --meta <your meta>` with `--lane /home/vgpnk/Projects/shokunin/kama-shokunin` and verify the SURVIVORS lines match the committed before receipt `.ufo/waves/round-74/measured/before/score-survivors-base.out` byte-for-byte (paste both). Also verify fixtures-meta.json matches `controls/freeze.txt`'s pinned sha256.\n(2) Do-nothing probes against the frozen targets: (a) C1 — show NO resolution the byte-frozen r42 `canon()` can produce over `c1_invisible` reaches `total=7` (it structurally returns the bold-71 table; paste the probe output); (b) C2 — show the r73 counter cannot see the wrapped/offset claims by ANY line-level tweak that leaves bytes otherwise honest (try comment insertion, case games, citation reshaping on scratch fixture copies; each must either still exit 0 = hole confirmed, or exit 1 for a reason other than the claim = report the false positive precisely); (c) C3 — show the r73 counter stays green when the block date is edited but the triple matches live, and separately when the `recorded at` token is DELETED from an edited block (history scrub; paste both receipts).\n(3) Attempt ONE junk-row-style cheat per claim the way a lazy seat might (e.g., v2 hardcoding fixture paths, total counting the bold canon + demonstrated rows without the invisible check). Each cheat must be named with the exact reason the frozen predicate's wording forbids it (quote the plan sentence).\nReport at Report: .ufo/waves/round-74/w1/LAB01Controls/report.md with every command and receipt. Do not write outside your scratch and wave out dirs; do not commit.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: calibration\nMilestone: kama r74 w1\n\nReport: write your scoped findings to .ufo/waves/round-74/w1/LAB01Controls.md"
+      },
+      {
+        "name": "RVW01Plan",
+        "agent": "reviewer",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches.\n\n# Attack the frozen plan (reviewer)\n\nRead `/home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-74-claims.md` in full plus the three base tools and the before receipt `.ufo/waves/round-74/measured/before/score-survivors-base.out`. Attack, do not build:\n(1) Predicate unambiguity: for each of C1/C2/C3, find any reading of the frozen blockquote under which a wrong implementation passes (name the ambiguity, quote the words, propose the minimal disambiguation the L1 could add WITHOUT widening the claim — or certify none found per claim).\n(2) Control reachability: verify each before-control receipt is reproducible from the base bytes (rerun the pinned commands yourself in scratch; report any mismatch).\n(3) Kill-rule completeness: for each claim, can a do-nothing control (base counter) meet the frozen target by ANY means other than the claimed v2 work? Try at least three shortcuts per claim.\n(4) §9 sizing: is each after-state one concrete value re-derivable with one command? Flag any universal clause or uncounted population.\n(5) Honesty pre-check: the round-74 record must add a bold round-74 canonical list and a `recorded at` token to PROVINCE — verify these record edits are inside the plan's stated non-goals/scope and name any record edit the plan forgot.\nWrite `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-74/w1/RVW01Plan/attack.md` and report at Report: .ufo/waves/round-74/w1/RVW01Plan/report.md. Do not edit the plan (report disagreements); read-only outside your out dir; do not commit.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: calibration\nMilestone: kama r74 w1\n\nReport: write your scoped findings to .ufo/waves/round-74/w1/RVW01Plan.md"
+      },
+      {
+        "name": "CRT01Claims",
+        "agent": "critic",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches.\n\n# Falsify the claims (critic)\n\nYour job is to REFUTE C1/C2/C3 as frozen in `/home/vgpnk/Projects/shokunin/kama-shokunin/plans/round-74-claims.md`. Concrete falsification paths: (1) build ONE fixture per claim that a minimally-compliant v2 implementation would grade WRONG in the claim's own favor (e.g., C1: a demonstrated table older than the bold canon; a demonstrated table with a DUPLICATE name that inflates `total`; C2: a paragraph that cites TWO receipts with different revs where one binds and one does not — which finding names what?; a `recorded at`-style hex inside the record that is NOT a revision mention; C3: two blocks where the newest has no token and an older does; a block edited BEFORE its `recorded at` rev is impossible — what does the module do?); (2) selftest-blindness: which frozen selftest arms can pass while the module is gutted (name the gutted behavior and the fixture that would catch it); (3) the mixed-case arm: construct the exact record text where a case-SENSITIVE v2 passes everything and exits 0 on c2_mixed_honest — proving the arm load-bearing, or refuting it; (4) score-survivors gaming: can a v2 hardcode fixture paths or string-match fixture names to force KILLED? Paste the receipt you'd accept as proof the gaming fails.\nWrite `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-74/w1/CRT01Claims/attack.md` with every attempt, its command and output; report at Report: .ufo/waves/round-74/w1/CRT01Claims/report.md. Work in scratch; write only in your out dir; do not commit.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: calibration\nMilestone: kama r74 w1\n\nReport: write your scoped findings to .ufo/waves/round-74/w1/CRT01Claims.md"
+      },
+      {
+        "name": "MT01Mutants",
+        "agent": "mutation-tester",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches.\n\n# Mutation-test the three v2 modules\n\nThe executors may land `tools/round74-selfdesc-canon.py`, `tools/round74-receipt-claim-binding.py`, `tools/round74-province-host-drift.py` WHILE you run. Strategy: work on COPIES in `/fast/scratch/hyaku/kama-r74/MT01Mutants/` — if a module exists at your first check, snapshot its sha256 and mutate the copy; re-snapshot at the end and report whether the live bytes changed under you (if they did, mutate the NEW bytes and say so). If a module does not exist yet, build a PROTOTYPE from the frozen predicate and mutate that, clearly labeled `prototype`.\n\nMutation classes (at least 6 distinct mutants per available module, 30+ total): comparison flips (invisible=0 forced, case-sensitivity restored, != flipped to ==), exit-code flips (finding → exit 0), scope cuts (paragraph → line, newest-block-only, first-table-only), header-window cuts, `recorded at` token regex broken, union→intersection on name sets, selftest oracle tampering (assert True). For each mutant: apply to the scratch copy, run the module against the committed fixtures (rebuild them with the committed builder into your scratch) and the module selftest; record killed/survived + the exact surviving behavior. A mutant that survives BOTH the fixtures and the selftest is a live defect — name it, with the fixture arm the module's selftest SHOULD have had (the r70 rule: the check is load-bearing only on a fixture that carries its defect).\nWrite `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-74/w1/MT01Mutants/mutants.md` (matrix + tally) and report at Report: .ufo/waves/round-74/w1/MT01Mutants/report.md. Mutate only scratch copies; never edit live tools; do not commit.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: operability\nMilestone: kama r74 w1\n\nReport: write your scoped findings to .ufo/waves/round-74/w1/MT01Mutants.md"
+      },
+      {
+        "name": "SEN01Bounds",
+        "agent": "sentinel",
+        "task": "/skill:godspeed\nYou are a Godspeed-enabled subagent.\n\n1. **Name the axes.**\n2. **Iterate cheap, in parallel.**\n3. **Keep moves that improve any axis and harm none.**\n4. **Don't aim — let the frontier walk itself.**\n\n## IMMEDIATELY STOP ASKING CLARIFYING QUESTIONS. Execute tool calls concurrently in large batches.\n\n# Bounds and safety audit of the round's surface\n\nRead-only audit (write only in your out dir). Audit the round-74 surface as it exists at your run time and again at the end; report both passes: (1) credential/secret sweep over everything the round has touched or will touch — `tools/round74-*.py` if present, `.ufo/waves/round-74/`, the frozen plan, fixture bytes under the scratch roots: no API keys, tokens, cookies, `op://` refs, session material (paste your grep commands and hits-clean output); (2) host-write sweep: nothing outside `/home/vgpnk/Projects/shokunin/kama-shokunin`, `/fast/scratch/hyaku/kama-r74/`, and wave out dirs — check for stray writes at the fleet root (`git -C /home/vgpnk/Projects/shokunin status --porcelain` output is orchestrator-owned state; distinguish it), /tmp usage over 50 MB (`du -sh /tmp/* 2>/dev/null | sort -h | tail -5`), and any hardcoded `/tmp` in new committed-intended tools (grep); (3) fixture-git discipline: no fixture identity (`user.name=fixture`) appears in the LANE repo's git log (`git -C /home/vgpnk/Projects/shokunin/kama-shokunin log --format='%an %ae' -15`) and no fixture repo leaked outside scratch; (4) scope: confirm no seat-editable file outside the lane repo changed (fleet root, siblings, ~/.omp) — `git -C` each sibling lane `status --porcelain | head -3`; (5) pacman guard: no seat needed pacman (ask via nothing — check shell histories are unavailable; instead verify no lock: `ls /var/lib/pacman/db.lck 2>&1`).\nWrite `/home/vgpnk/Projects/shokunin/kama-shokunin/.ufo/waves/round-74/w1/SEN01Bounds/audit.md` and report at Report: .ufo/waves/round-74/w1/SEN01Bounds/report.md.\n\nLane bounds: leaf member — no subagent dispatch.\nJudged on: adjacency\nMilestone: kama r74 w1\n\nReport: write your scoped findings to .ufo/waves/round-74/w1/SEN01Bounds.md"
+      }
+    ]
+  },
+  "resumeSends": [],
+  "note": "Issue exactly one batched task call with taskCall ({context, tasks}); never split a wave into multiple task calls (one-swarm-per-wave). Then one hub send per resumeSends entry: hub send --to <entry.resume> --message <entry.message> (entry.name is bookkeeping, not a hub field)."
+}
