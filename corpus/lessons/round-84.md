@@ -74,3 +74,24 @@ Outside admit/reject spot-check remains the independent closure's duty; dispatch
 At `3e93febb0f40955b08dc80367e8ef658eaccdfd6`: debt round84 events76/accepted53/late23/pending1/unaccepted0/bad_rows0 exit0; wrong-subject fixture exit1 with exactly one note-wrong-deletion-round finding (and two uncovered events, expected for this fixed fixture). C2 claims8/mismatches0/corrected6/unbacked0 exit0, selftest16/0; `--no-corrections` mismatches6/unbacked6 exit1. C3 rows5/graded5/holds5/ungraded0/bad0 exit0. Gate selftest35/0; primary gate arms13/failed1/uncommitted0 exit1: the calibration row omitted the selfdesc instrument's required run fact containing verifier-spotcheck. That record-shape error was repaired by a truthful file-presence-only run fact, separately from the newest-closure semantic check. Final gate measurement follows in after/gate-final.out. No frozen target changes.
 
 The earlier draft-worded prose is retained as committed integration history; these measured results supersede its prospective wording. No filed bytes are rewritten.
+
+## Terminal gate and frontier result
+
+At measured commit `b53cd336e0cb204cf71246e95fdf7494babeafa4`, `python3 tools/pre-report-gate.py --repo . --round 84 --tip master` prints `PRE_REPORT round=84 arms=13 failed=0 uncommitted=0`, exit0. Receipt `.ufo/waves/round-84/measured/after/gate-final-green.out` names that revision, never a later publication commit. Debt there has pending3 (round84's own events), not earlier pending1; accepted53/late23/unaccepted0/bad0 remain. The gate's selfdesc arm has zero mismatches. Intermediate red receipts are retained: calibration run-fact, freshness/operability run-facts, saturation vector, exact planned heading, latest measured-round marker and five abbreviated receipt paths were repaired without changing instrument predicates.
+
+Source census validate: start `kama ok`, exit0 (311 rows; A296/B11/C4; mined279/queued8/rejected24); end `kama ok`, exit0 (315 rows; A300/B11/C4; mined283/queued8/rejected24). Commands: `scripts/sources-census.sh validate --root /home/vgpnk/Projects/shokunin kama` and `scripts/sources-census.sh census --file corpus/SOURCES.md`; final receipts under measured/after. No old source status/recheck/used-by cells changed; append-only check base→3e93febb exits0. Four rows added A/mined. No round admission inferred: C1 numeric predicate verifies, but its frozen auxiliary disclosure instruction is missed; C2/C3 numeric predicates verify with documented scope limits. Outside closure decides admission.
+
+The rejected alternate document path was independently reopened by L1: `https://raw.githubusercontent.com/ggml-org/llama.cpp/b7200/examples/server/README.md`, HTTP404, response line1 “404: Not Found”, access2026-11-04. Refuse it as documentary support; flip on a retrievable revision-specific document. Actual b7200 tools/server source is admitted (S572). Independent acquisition JSON records four HTTP200 bodies and the reject; b7200 retained extract exactly matches its fetched line range.
+
+### Gate supplement — both sides independently reopened
+
+L1 reopened all eight unique document URLs behind all nine committed extracts on2026-11-04; every retained range matches fetched bytes. Evidence `.ufo/waves/round-84/measured/after/all-anchor-reopens.json` records URL, access date, status200, full-document digest and range equality for each. This includes four older sides beyond S572–S575:
+
+| URL | Location | ≤25-word located quote |
+|---|---|---|
+| `https://raw.githubusercontent.com/ggml-org/llama.cpp/b11755/tools/server/README.md` | line481 | This endpoint is public (no API key check). `/v1/health` also works. |
+| `https://raw.githubusercontent.com/ggml-org/llama.cpp/39febd2adb947b70da35e95f9351b3bf58ad170a/tools/server/README.md` | line2199 | Listing all models in cache. The model metadata will also include a field to indicate the status of the model: |
+| `https://raw.githubusercontent.com/sgl-project/sglang/v0.5.22/docs/docs/basic_usage/native_api.mdx` | line109 | `/health`: Check the health of the server. |
+| `https://raw.githubusercontent.com/vllm-project/vllm/v0.32.0/docs/design/prefix_caching.md` | line3 | Prefix caching kv-cache blocks is a popular optimization in LLM inference to avoid redundant prompt computations. |
+
+These existing sources receive no new registry row or mutable-cell change. Every relation's pin and newest sides were opened this round; comparison still proves documentary consistency, not serving behavior.
