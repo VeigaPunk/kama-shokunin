@@ -45,8 +45,8 @@ ROUND-83 PATH-BINDING: a caller-supplied --late path is resolved inside the repo
 tree and must be committed at the audited revision. Its file and row introductions are resolved
 there before the unchanged grade rule runs. Relative paths are relative to --repo; outside,
 untracked, or unresolvable row identities refuse evaluation (exit 2), not per-row verdicts.
-The arms late-path-outside-repo, late-path-untracked, and late-path-bound cover these bindings
-and equality with default-path grading.
+The arms late-path-outside-repo, late-path-untracked, late-path-dirty, and late-path-bound cover
+these bindings and equality with default-path grading.
 
 Usage: round81-append-debt.py --repo DIR [--round N] [--base REV] [--to REV]
        [--register FILE] [--late FILE] [--audit-json FILE] [--json] | --selftest
@@ -374,7 +374,10 @@ def load_late(repo: Path, rev: str, requested: str | None):
         except ValueError as exc:
             raise CouldNotEvaluate("--late path is outside the repository") from exc
         git(repo, "cat-file", "-e", f"{rev}:{path}")
-        text = resolved.read_text(encoding="utf-8")
+        text = resolved.read_bytes().decode("utf-8")
+        committed = show(repo, rev, path)
+        if committed is None or text != committed:
+            raise CouldNotEvaluate(f"--late {path} differs from its committed bytes at {rev}")
     else:
         text = show(repo, rev, path)
     if text is None:
@@ -433,6 +436,15 @@ def late_path_selftests():
             except CouldNotEvaluate:
                 refused = True
             record(name, refused)
+        committed_text = register.read_text(encoding="utf-8")
+        register.write_text(committed_text + "# local edit, never committed\n", encoding="utf-8")
+        dirty_refused = False
+        try:
+            load_late(repo, rev, LATE)
+        except CouldNotEvaluate:
+            dirty_refused = True
+        record("late-path-dirty", dirty_refused)
+        register.write_text(committed_text, encoding="utf-8")
         default = load_late(repo, rev, None)
         bound = load_late(repo, rev, LATE)
         event = _event(event_commit, "SCORECARD.md", digest, 1, "in-place-edit")

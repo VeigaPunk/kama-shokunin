@@ -5099,3 +5099,39 @@ but the population was too narrow, and this block is the honest distribution:
 - **U8** the §Round 81 dispositions' `R80V4` sentence says the `W04` set is "pre-existing except S555"
   and that round 81's warning set "does not grow"; it grew by `W04 S559` and `W04 S562`. The census
   category count is unchanged; two instances are new (round-82 adds none).
+
+## Round 83 — the caller path binds, round 82's pending events are repaid, and the pin gap becomes a graded register (2026-11-04)
+
+Frozen plan `plans/round-83-claims.md` (freeze `743c1060`; base `30d8eac394a8714fad3dc792b74a45a25b4366a2`;
+sealed record `b1ba614b51255a3dcfe3e0946f32f8e31bd65c09`). Three claims, three axes, each measured on its
+own receipt. No score is claimed to move; each row names what changed on the line.
+
+| Claim | Axis | Before → after (measured) | Counting command | Evidence |
+|---|---|---|---|---|
+| C1 — the late register's on-disk path binds per row, round 82's eight pending events are repaid, and the pending count falls | operability (held 8; capability `late-path-binding` and `pending-falls` enter) | leg A `unaccepted=8` exit 1 → `unaccepted=0 late=23` exit 0; leg B `late=0 unaccepted=23 bad_rows=103` exit 1 → the leg A summary, exit 0; leg C `accepted=0 unaccepted=8 falls=no` exit 1 → `accepted=8 unaccepted=0 falls=yes` exit 0; rows `carried=103 new=20 bad=0` | `python3 tools/round81-append-debt.py --repo . --round 83` (and with `--late registry/append-only-late.tsv`); `python3 tools/round83-pending-falls.py --repo . --round 83`; `python3 tools/round82-late-delta.py --repo . --round 83` | `.ufo/waves/round-83/measured/before/{c1-debt-legA,c1-debt-legB}.out`, `.ufo/waves/round-83/measured/after/*`; selftest `APPEND_DEBT_SELFTEST pass=29 fail=0`, `PENDING_FALLS_SELFTEST pass=7 fail=0` |
+| C2 — the round-82 record's six declared facts re-derive at the sealed revision or are answered by dated value-bound corrections, with the population facts bound at freeze and a fix leg that rejects a lesson-only token | calibration (lowest assigned axis, 7; held 7) | `SELFRECORD_R82_ENUM claims=6 stale=3` exit 1 → `SELFRECORD_R82 claims=6 mismatches=0 corrected=3 unbacked=0` exit 0; the container-only control stays `mismatches=3 unbacked=3` exit 1 | `python3 tools/round83-selfrecord-round82.py --repo .` (and `--enumerate`, `--no-corrections`, `--selftest`) | `.ufo/waves/round-83/measured/before/c2-*.out`, `.ufo/waves/round-83/measured/after/c2-*.out`; selftest `SELFRECORD_R82_SELFTEST pass=16 fail=0` |
+| C3 — every relation row carries a recheck row whose verdict the counter re-derives from committed anchor extracts | freshness (held 8; capability `pin-recheck` enters) | register absent, exit 2 → `PIN_RECHECK rows=5 graded=4 holds=4 reworded=0 moved=0 drifted=0 ungraded=1 bad=0` exit 0 | `python3 tools/round83-pin-rechecks.py --repo . --register registry/engine-pin-relations.tsv --rows registry/pin-recheck-rows.tsv` | `registry/pin-recheck-rows.tsv`, `corpus/anchors/` (8 extracts); selftest `PIN_RECHECK_SELFTEST pass=11 fail=0`; live trigger `python3 tools/pin-watch.py check --pins registry/engine-pins.tsv` (`pins=3 current=0 behind=3 missing=0 error=0`) |
+
+Record corrections this round (append-only; the filed §Round 82 bytes are not rewritten): the §Round 82
+C1 row's `--selftest` tally is `sc82c1-selftest=23`, not the `pass=22` the row carries, and the head
+calibration row's copy of the same tally is `calib82-selftest=23`. Both read
+`.ufo/waves/round-82/measured/after/c1-selftest.out`, which prints `SELFRECORD_R81_SELFTEST pass=23
+fail=0`; the §Round 82 LOG bullet's `pass=18` is corrected in `LOG.md` as `log82-c1-selftest=23`.
+
+What `met=True` does not show: leg A's `late` bucket counts events, not rows, so the plan's `late=35`
+target token is unreachable and the reachable value is 23 — the row promise is measured by
+`LATE_DELTA … new=20 bad=0` instead (round-83 freeze divergence 1). The `--late` binding refuses more
+than the plan listed (a dirty worktree copy is also `could-not-evaluate`, arm `late-path-dirty`). C2's
+green depends on record lines outside the correction containers: the containers alone leave every
+correction `unbacked`, which is the tightening working rather than a defect. C3's `holds` couples four
+relations to committed extracts that a later edit could change; the counter re-derives their digests,
+and a moved upstream tag changes `date`/`newest`, never a verdict.
+
+#### round-83 correction
+
+`sc82c1-selftest=22 -> sc82c1-selftest=23` (§Round 82 C1 row, sealed line 4970);
+`calib82-selftest=22 -> calib82-selftest=23` (`## Axes` calibration row, sealed line 18);
+`log82-c1-selftest=18 -> log82-c1-selftest=23` (LOG §Round 82 C1 bullet, sealed line 3432). All three
+witness the same committed receipt `.ufo/waves/round-82/measured/after/c1-selftest.out`
+(`SELFRECORD_R81_SELFTEST pass=23 fail=0`). Round-82 verifier defect R82V1, repaired here as C2's three
+stale facts.

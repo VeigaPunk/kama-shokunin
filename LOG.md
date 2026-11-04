@@ -3464,3 +3464,55 @@ The round-81 correction line quoted `pending=1`; the receipt it names
 (`.ufo/waves/round-81/measured/after/debt-green.out`) prints `pending=4`, so the correction's own target
 was stale. The round-82 counter grades this as F5 (`logcorr81-c2-pending=4`), and the C2 row's same cell
 as F1 (`sc81c2-pending=4`).
+
+## Round 83 — the caller path binds, round 82's pending events are repaid, and the pin gap becomes a graded register (2026-11-04)
+
+Frozen plan `plans/round-83-claims.md` (freeze `743c1060`; base
+`30d8eac394a8714fad3dc792b74a45a25b4366a2`, the round-82 non-author closure tip; sealed record
+`b1ba614b51255a3dcfe3e0946f32f8e31bd65c09`). Three claims, three distinct axes:
+
+- **C1 operability** — `tools/round81-append-debt.py` gains `load_late()`: a caller-supplied `--late`
+  path resolves inside `git rev-parse --show-toplevel`, must be committed at the audited revision, must
+  equal its committed bytes, and has its file and per-row introductions resolved by the same `git blame`
+  rule the default path uses; an out-of-tree, untracked or dirty path is `could-not-evaluate` (exit 2),
+  never a per-row verdict. Before: `APPEND_DEBT round=83 base=30d8eac394a8 events=76 accepted=53 late=15
+  pending=0 unaccepted=8 bad_rows=0 bad_declarations=0 out_of_population=0` exit 1 (leg A) and `… late=0
+  unaccepted=23 bad_rows=103 …` exit 1 (leg B). After: both legs print `events=76 accepted=53 late=23
+  pending=0 unaccepted=0 bad_rows=0 bad_declarations=0 out_of_population=0`, exit 0, and
+  `tools/round83-pending-falls.py` prints `PENDING_FALLS round=83 from=82 declared=8 window=8 accepted=8
+  unaccepted=0 falls=yes`, exit 0. The 20 new rows over round 82's eight events are measured by
+  `LATE_DELTA round=83 base=30d8eac394a8 population=123 carried=103 new=20 bad=0`, exit 0. The
+  counter's selftest moves 25 → 29 arms (`late-path-outside-repo`, `late-path-untracked`,
+  `late-path-dirty`, `late-path-bound`).
+- **C2 calibration (lowest assigned axis, 7)** — `tools/round83-selfrecord-round82.py` re-derives six
+  declared facts of the round-82 record at the sealed revision and grades one dated value-bound
+  correction per stale fact. Before: `SELFRECORD_R82_ENUM claims=6 stale=3 corrected=0` exit 1 and, with
+  only the named correction containers, `SELFRECORD_R82 claims=6 mismatches=3 corrected=0 unbacked=3`
+  exit 1. After: `SELFRECORD_R82 claims=6 mismatches=0 corrected=3 unbacked=0` exit 0; selftest
+  `SELFRECORD_R82_SELFTEST pass=16 fail=0`; the no-corrections control prints `mismatches=3` exit 1.
+  F1 (`log82-c1-selftest=18`), F2 (`sc82c1-selftest=22`) and F3 (`calib82-selftest=22`) are stale against
+  `c1-selftest.out`'s `pass=23`; F4, F5 and F6 hold and are not corrected — the direction test. F5's
+  population is bound at freeze to the sealed revision (305 rows), so this round's own six SOURCES rows
+  cannot move the witness.
+- **C3 freshness** — `tools/round83-pin-rechecks.py` grades `registry/pin-recheck-rows.tsv` against
+  `registry/engine-pin-relations.tsv` and re-derives each verdict by byte comparison of two committed
+  anchor extracts under `corpus/anchors/`. Before: the register does not exist — `could-not-evaluate: no
+  registry/pin-recheck-rows.tsv`, exit 2. After: `PIN_RECHECK rows=5 graded=4 holds=4 reworded=0 moved=0
+  drifted=0 ungraded=1 bad=0`, exit 0; selftest `PIN_RECHECK_SELFTEST pass=11 fail=0`. Relations 1, 2, 4
+  and 5 are `holds`; relation 3 (`llama.cpp b7200`, the cross-lane kengaku role) is `ungraded` because the
+  lane holds no document at that ref.
+
+Record correction (round 82, F1): the §Round 82 C1 bullet quotes the pre-hardening tally; the committed
+receipt prints `SELFRECORD_R81_SELFTEST pass=23 fail=0`, so the corrected value is
+`log82-c1-selftest=23`.
+
+`LOG-CORRECTION round=82 field=c1-selftest old=pass=18 new=pass=23 at=b1ba614b51255a3dcfe3e0946f32f8e31bd65c09`
+
+Frontier: registry 305 → 311 rows (S566 llama.cpp README at b12110, S567/S568 the SGLang native-API page
+at v0.5.23 and v0.5.22, S569/S570 the vLLM prefix-caching doc at v0.33.0 and v0.32.0, S571 the git-blame
+manual; census exit 0); two admitted knowledge entries (`pin-recheck-rows`, `register-row-introduction`)
+with their coverage row; KQ135 from the mined `caller-path-unbound` mistake. `Assimilation: none` — the
+three claims repair lane instruments and the source budget is spent on C3's anchors.
+
+Owed by round 84: the debt leg's note check binds only `N > M` while the delta leg binds the deletion
+round to the commit subject (RV01 R83-1), and the round's own `pending` events.
