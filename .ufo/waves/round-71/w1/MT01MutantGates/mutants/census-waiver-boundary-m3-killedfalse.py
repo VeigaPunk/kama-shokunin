@@ -22,9 +22,14 @@ Seven cases, each a fixture that drives the census's `main` entry point:
                            exit 0, verdict not_evaluated=1 waived=1 total=2
   4 waiver on an evaluated failing member
                            exit nonzero, fail=1, no waived credit,
-                           not_evaluated=0 -- a failure is not waivable
-  5 unknown waiver name    warns on stderr and leaves the exit unchanged, on
-                           the all-pass and on the refused fixture
+                           not_evaluated=0 -- a failure is not waivable; a
+                           waiver on a passing member earns no credit either,
+                           and a repeated call with the same waiver set must
+                           repeat the same verdict (no silenced re-run)
+  5 unknown waiver name    warns on stderr and leaves the exit and every
+                           verdict token unchanged, on the all-pass and on the
+                           refused fixture (no phantom not_evaluated, no forged
+                           waived credit)
   6 the five named shims   each REJECTED, with the check that rejects it named
   7 landed census bytes    real host run: exit 0, pass=22 fail=0
                            not_evaluated=0 total=22, no waived token
@@ -755,7 +760,9 @@ def case_waiver_ne(cand):
 
 def case_waiver_fail(cand):
     c = Checks()
-    r = _run_once(cand, FAILING_MEMBERS, ["synthetic-broken"])
+    mod = _load(cand)
+    r = _call(mod, FAILING_MEMBERS, ["synthetic-broken"])
+    r2 = _call(mod, FAILING_MEMBERS, ["synthetic-broken"])
     c.add("waiver_never_covers_fail", r.code != 0, f"exit={r.code}")
     c.add("fail_still_counted", _has(r, "fail", "1"), _kv(r, "fail"))
     c.add("fail_no_waived_credit",
@@ -763,9 +770,22 @@ def case_waiver_fail(cand):
     c.add("fail_population_total", _has(r, "total", str(TOTAL)), _kv(r, "total"))
     c.add("fail_not_evaluated_zero", _has(r, "not_evaluated", "0"),
           _kv(r, "not_evaluated"))
+    # Waiver scope, second polarity: a member that ran and passed keeps its
+    # semantics too -- a waiver on it earns no credited waiver.
+    p = _run_once(cand, ALLPASS_MEMBERS, ["synthetic-pass"])
+    c.add("waiver_never_covers_pass",
+          p.code == 0 and p.tokens is not None and p.tokens.get("waived", "0") == "0"
+          and _has(p, "pass", str(TOTAL)),
+          f"pass-waiver exit={p.code} pass={_sv(p, 'pass')} waived={_sv(p, 'waived')}")
+    # The waived path must be re-entrant too: a census that silences a second
+    # call with the same waiver set turns an operator's re-run into a fake green.
+    c.add("fail_waiver_reentrant",
+          r2.code != 0 and r2.tokens is not None and r2.verdict == r.verdict,
+          f"second call exit={r2.code} verdict={r2.verdict!r}")
     facts = (f"waived-fail exit={r.code} fail={_sv(r, 'fail')} "
              f"not_evaluated={_sv(r, 'not_evaluated')} waived={_sv(r, 'waived')} "
-             f"stderr={_stderr_hint(r)!r}")
+             f"pass-waiver exit={p.code} waived={_sv(p, 'waived')} "
+             f"second-call exit={r2.code} stderr={_stderr_hint(r)!r}")
     return c, facts
 
 
@@ -782,8 +802,17 @@ def case_unknown(cand):
           _stderr_hint(unk_all))
     c.add("unknown_waiver_refusal_exit_unchanged", unk_ref.code == base_ref.code,
           f"refused exit {base_ref.code}->{unk_ref.code}")
+    # An unknown name must not move any observable verdict token either: a
+    # phantom not_evaluated or a forged waived credit is still a changed claim.
+    c.add("unknown_waiver_verdict_unchanged",
+          unk_all.tokens is not None and unk_all.tokens == base_all.tokens,
+          f"all-pass {base_all.verdict!r} -> {unk_all.verdict!r}")
+    c.add("unknown_waiver_refusal_verdict_unchanged",
+          unk_ref.tokens is not None and unk_ref.tokens == base_ref.tokens,
+          f"refused {base_ref.verdict!r} -> {unk_ref.verdict!r}")
     facts = (f"unknown-waiver all-pass {base_all.code}->{unk_all.code} "
-             f"refused {base_ref.code}->{unk_ref.code} stderr={_stderr_hint(unk_all)!r}")
+             f"refused {base_ref.code}->{unk_ref.code} verdict-unchanged "
+             f"stderr={_stderr_hint(unk_all)!r}")
     return c, facts
 
 
@@ -989,21 +1018,6 @@ def _selftest(census, landed, shim_paths, shim_source, as_json):
     arms.append(("shims_distinct_from_census", distinct,
                  "every shim differs from the census bytes" if distinct
                  else "a shim is byte-identical to the census"))
-    # negative arm: a census whose exit map is gutted must be rejected (case 1).
-    scratch = Path(tempfile.mkdtemp(prefix="cwb-mutants-"))
-    try:
-        gutted = scratch / "gutted-exit.py"
-        text = census.read_text()
-        needle = "return 0 if (failed == 0 and not unwaived_ne) else 1"
-        if needle in text:
-            gutted.write_text(text.replace(needle, "return 0"))
-            checks, facts = case_refused(gutted)
-            arms.append(("mutant:gutted-exit-killed", bool(checks.failed()), facts))
-        else:
-            arms.append(("mutant:gutted-exit-killed", False,
-                         "exit-map line not found in the census bytes"))
-    finally:
-        shutil.rmtree(scratch, ignore_errors=True)
     failures = [arm for arm in arms if not arm[1]]
     if as_json:
         print(json.dumps({

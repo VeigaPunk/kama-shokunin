@@ -177,11 +177,43 @@ def parse_markers(text):
     return markers, tags
 
 
+def marker_paragraphs(text):
+    """Map each province-host tag to the normalized text of its marker paragraph."""
+    out = {}
+    current = None
+    buf = []
+
+    def flush():
+        if current is None:
+            return
+        joined = " ".join(part.strip() for part in buf if part.strip())
+        for tag in re.findall(r"province-host:([A-Za-z0-9._-]+)", joined):
+            out.setdefault(tag, joined)
+
+    for line in text.splitlines():
+        if line.startswith("- absent-on-this-host ("):
+            flush()
+            current, buf = line, [line]
+        elif current is not None and line.strip() and not line.startswith("- "):
+            buf.append(line)
+        else:
+            flush()
+            current, buf = None, []
+    flush()
+    return out
+
+
 def parse_corrections(text):
     found = []
     for line in text.splitlines():
         match = CORRECTION_RE.match(line)
         if not match:
+            continue
+        try:
+            _dt.date.fromisoformat(match.group(1))
+        except ValueError:
+            print(f"warning: correction date {match.group(1)!r} is not a calendar date; "
+                  f"the line covers nothing", file=sys.stderr)
             continue
         found.append({"date": match.group(1), "tag": match.group(2),
                       "verdict": match.group(3), "evidence": match.group(4).strip()})
@@ -433,9 +465,14 @@ def main(argv=None):
     options = parser.parse_args(argv)
 
     created_scratch = options.scratch is None
-    scratch_root = Path(os.path.expanduser(options.scratch)) if options.scratch \
-        else Path(tempfile.mkdtemp(prefix="r71-province-claims-"))
-    scratch_root.mkdir(parents=True, exist_ok=True)
+    try:
+        scratch_root = Path(os.path.expanduser(options.scratch)) if options.scratch \
+            else Path(tempfile.mkdtemp(prefix="r71-province-claims-"))
+        scratch_root.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        print(f"PROVINCE_HOST_CLAIMS could-not-evaluate: unusable --scratch root: {exc}",
+              file=sys.stderr)
+        return 2
     try:
         if options.selftest:
             return selftest(scratch_root, options.keep)
@@ -453,7 +490,13 @@ def main(argv=None):
             _base_markers, base_tags = parse_markers(base_text)
             tip_tags = {claim["tag"] for claim in result["claims"]
                         if claim["kind"] == "marker"}
-            rewritten = [tag for tag in base_tags if tag not in tip_tags]
+            tip_text = corrections.read_text(encoding="utf-8")
+            base_paragraphs = marker_paragraphs(base_text)
+            tip_paragraphs = marker_paragraphs(tip_text)
+            rewritten = [tag for tag, paragraph in base_paragraphs.items()
+                         if tip_paragraphs.get(tag) != paragraph]
+            rewritten += [tag for tag in base_tags
+                          if tag not in tip_paragraphs and tag not in rewritten]
         exit_code = 0 if result["uncovered"] == 0 and not rewritten else 1
         if options.draft:
             write_draft(options.draft, result["claims"], draft_date(result["claims"]))

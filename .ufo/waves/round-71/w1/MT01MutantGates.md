@@ -9,10 +9,11 @@ no verdict on the claims, no lane edit, no subagent dispatch.
 | tool | sha256 tested | drift seen while this seat ran |
 |---|---|---|
 | `tools/pre-report-gate.py` | `07cfc04fbba413f8…` | `d0957e0b` -> `07cfc04f` (recursion guard added); matrix re-run on `07cfc04f` |
-| `tools/census-waiver-boundary.py` | `8922b954f481059a…` | `16e5cf4f` -> `3a9cec94` -> `fc988852` -> `8922b954` (case-4/5 hardening); matrix re-run on `8922b954` |
-| `tools/round71-province-host-claims.py` | `1f6bb43aa9e9e0f0…` | stable throughout |
+| `tools/census-waiver-boundary.py` | `7c75963300dbb46b…` | `16e5cf4f` -> `3a9cec94` -> `fc988852` -> `8922b954` -> `7c759633` (case-4/5 hardening, negative arm removed); matrix re-run on `7c759633` |
+| `tools/round71-province-host-claims.py` | `cde640641077b275…` | `1f6bb43a` -> `cde64064` (paragraph-rewrite check + correction-date validation); matrix re-run on `cde64064` |
 
-Lane HEAD at snapshot: `e2b860c8` (freeze `b43e71a8`). The C1/C2 executors were still revising their tools
+Lane HEAD at snapshot: `e2b860c8`; at close `702d677e`, with the three tool bytes still equal to the tested
+hashes above. The C1/C2 executors were still revising their tools
 when this seat started; every matrix below was re-run after the bytes settled, and the table names the
 hash the row was measured on. Scratch root `/fast/scratch/hyaku/kama-r71/MT01MutantGates`; `TMPDIR` pinned
 there for every child, so no run touched `/tmp`.
@@ -61,14 +62,14 @@ need the external fixtures; none of the six does.
 `HOLE` puts a compliant census in one shim slot; `LB` plants a defective landed census (case 7).
 | mutant | ST | R | BAD | HOLE | LB |
 |---|---|---|---|---|---|
-| pristine | 0 `pass=19 fail=0` | 0 `BOUNDARY cases=7 killed=5 survivors=0` | 1 `cases1-5 FAIL` | 1 `BOUNDARY cases=7 killed=4 survivors=1` | 1 `case7 FAIL` |
-| m1-exit0 | 0 `pass=19 fail=0` | 0 `BOUNDARY cases=7 killed=5 survivors=0` | 0 `cases1-5 FAIL` | 0 `BOUNDARY cases=7 killed=4 survivors=1` | 0 `case7 FAIL` |
-| m2-survivors0 | 0 `pass=19 fail=0` | 0 `BOUNDARY cases=7 killed=5 survivors=0` | 1 `cases1-5 FAIL` | 1 `BOUNDARY cases=7 killed=4 survivors=0` | 1 `case7 FAIL` |
-| m3-killedfalse | 1 `pass=13 fail=6` | 1 `BOUNDARY cases=7 killed=0 survivors=5` | 1 `cases1-5 FAIL` | 1 `BOUNDARY cases=7 killed=0 survivors=5` | 1 `case7 FAIL` |
-| m4-drop-fail-waiver | 1 `pass=18 fail=1` | 1 `BOUNDARY cases=7 killed=5 survivors=0` | 1 `cases1-5 FAIL` | 1 `BOUNDARY cases=7 killed=4 survivors=1` | 1 `case7 FAIL` |
-| m5-accepted-as-killed | 0 `pass=19 fail=0` | 0 `BOUNDARY cases=7 killed=5 survivors=0` | 1 `cases1-5 FAIL` | 0 `BOUNDARY cases=7 killed=5 survivors=0` | 1 `case7 FAIL` |
-| m6-landed-blind | 0 `pass=19 fail=0` | 0 `BOUNDARY cases=7 killed=5 survivors=0` | 1 `cases1-5 FAIL` | 1 `BOUNDARY cases=7 killed=4 survivors=1` | 0 `case7 FAIL` |
-| m7-drop-waiver-ne | 0 `pass=19 fail=0` | 0 `BOUNDARY cases=7 killed=5 survivors=0` | 1 `cases1-5 FAIL` | 1 `BOUNDARY cases=7 killed=4 survivors=1` | 1 `case7 FAIL` |
+| pristine | 0 `pass=18 fail=0` | 0 `BOUNDARY cases=7 killed=5 survivors=0` | 1 `cases1-5 FAIL` | 1 `BOUNDARY cases=7 killed=4 survivors=1` | 1 `case7 FAIL` |
+| m1-exit0 | 0 `pass=18 fail=0` | 0 `BOUNDARY cases=7 killed=5 survivors=0` | 0 `cases1-5 FAIL` | 0 `BOUNDARY cases=7 killed=4 survivors=1` | 0 `case7 FAIL` |
+| m2-survivors0 | 0 `pass=18 fail=0` | 0 `BOUNDARY cases=7 killed=5 survivors=0` | 1 `cases1-5 FAIL` | 1 `BOUNDARY cases=7 killed=4 survivors=0` | 1 `case7 FAIL` |
+| m3-killedfalse | 1 `pass=12 fail=6` | 1 `BOUNDARY cases=7 killed=0 survivors=5` | 1 `cases1-5 FAIL` | 1 `BOUNDARY cases=7 killed=0 survivors=5` | 1 `case7 FAIL` |
+| m4-drop-fail-waiver | 1 `pass=17 fail=1` | 1 `BOUNDARY cases=7 killed=5 survivors=0` | 1 `cases1-5 FAIL` | 1 `BOUNDARY cases=7 killed=4 survivors=1` | 1 `case7 FAIL` |
+| m5-accepted-as-killed | 0 `pass=18 fail=0` | 0 `BOUNDARY cases=7 killed=5 survivors=0` | 1 `cases1-5 FAIL` | 0 `BOUNDARY cases=7 killed=5 survivors=0` | 1 `case7 FAIL` |
+| m6-landed-blind | 0 `pass=18 fail=0` | 0 `BOUNDARY cases=7 killed=5 survivors=0` | 1 `cases1-5 FAIL` | 1 `BOUNDARY cases=7 killed=4 survivors=1` | 0 `case7 FAIL` |
+| m7-drop-waiver-ne | 0 `pass=18 fail=0` | 0 `BOUNDARY cases=7 killed=5 survivors=0` | 1 `cases1-5 FAIL` | 1 `BOUNDARY cases=7 killed=4 survivors=1` | 1 `case7 FAIL` |
 
 Kill surfaces: `m1-exit0` by `BAD`, `HOLE` and `LB` (exit 1 -> 0; the selftest computes its own exit and
 stays green); `m2-survivors0` by the `HOLE` summary token (`killed=4 survivors=1` -> `survivors=0`, both
@@ -131,9 +132,10 @@ identical to pristine on every line
 **F3 - C2's case-7 and case-6 kills are not in the shipped selftest.**
 `m5-accepted-as-killed` and `m6-landed-blind` are invisible to the frozen counter and to `--selftest`;
 they die only on fixtures this seat built (`--shims` with a compliant census in a slot; a defective
-landed census). The shipped negative arm (`mutant:gutted-exit-killed`) covers case 1 only. Two cheap
-arms would close it: run `case_shims` over a shim dir with the landed census in one slot and require
-`survivors==1`; run `case_landed` over a truncated verdict (`pass=21`).
+landed census). The shipped selftest has no negative arm at all (the earlier `mutant:gutted-exit-killed`
+arm was removed in the `7c759633` revision), so it certifies the boundary but never plants a defect
+against itself. Two cheap arms would close it: run `case_shims` over a shim dir with the landed
+census in one slot and require `survivors==1`; run `case_landed` over a truncated verdict (`pass=21`).
 
 **F4 - C1's kill rule is fully mechanised.**
 All four freeze clauses map to distinct checks (uncommitted file -> `round-clean`; stale pointer ->
@@ -149,12 +151,14 @@ code alone will not detect a dropped rewrite check. The shipped selftest already
 
 - The lane's three tools were never opened for writing. Their sha256 before and after this seat:
   `pre-report-gate.py 07cfc04fbba413f851034734bfee1122b12463ed5d65486762d6bd736cb3bd0b`,
-  `census-waiver-boundary.py 8922b954f481059a4d89690326e01f59e1c24af608f6d3c93a6d86b14f427013`,
-  `round71-province-host-claims.py 1f6bb43aa9e9e0f0f43e096cfcce2b677dcaa0cdfab266bb1975dc90fea8b0ff` (the only movement is the
+  `census-waiver-boundary.py 7c75963300dbb46b030a856636cb39ffc97dd42be3f528de1868e07a365c060e`,
+  `round71-province-host-claims.py cde640641077b27541fb28751321f6eed7c6bcacaf59dd4a9511b7f4043d3baf` (the only movement is the
   executors' own revisions, recorded in section 0; the tested hashes are the ones in that table).
 - Mutants are separate files in `S/host/tools`; pristine copies in `S/pristine` were re-run after the
-  matrices and read identically to their pre-matrix baselines (`logs/c1-matrix-v2.json`,
-  `logs/c2-matrix-v2.json`, `logs/c3-matrix.json` all carry a `pristine` row).
+  matrices and read identically to their baselines (`logs/c1-matrix-v2.json`, `logs/c2-matrix-v2.json`,
+  `logs/c3-matrix.json` all carry a `pristine` row): at close `PRE_REPORT_SELFTEST pass=6 fail=0`,
+  `BOUNDARY_SELFTEST pass=18 fail=0`, `PROVINCE_HOST_CLAIMS_SELFTEST pass=7 fail=0`. sha256
+  before/after are in `logs/pristine-hashes-*.txt`.
 - Fixture git repos were created with `git clone`/`git init` under S and each asserted
   `git rev-parse --show-toplevel` equals the fixture directory before the only commits made there.
 - No git/jj mutation was run in the lane; no serving process, port or credential was touched.
