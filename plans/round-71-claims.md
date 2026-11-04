@@ -96,3 +96,19 @@ not new domain claims; no axis is harmed. No new serving-runtime or endpoint sam
 3 executors (C1/C2/C3 tools), 2 scribes (knowledge entry + lessons/corrections), 1 scout (host census),
 1 connector (sibling overlap + inherited-defect inventory), 1 reviewer, 1 critic, 1 mutation-tester,
 1 sentinel, 1 labrat (attack share 5/12 = 42%). Residual: none. Planner: L1.
+
+## Freeze annex — post-wave corrections (appended 2026-11-03; no predicate changed)
+
+Three factual slips in this freeze were found by the wave seats and are corrected here as an annex, not
+by editing the text above (the predicates, counters and kill rules are unchanged):
+
+1. **C1's `--round` label.** The counter line says `--round 70` while the target line says
+   `PRE_REPORT round=71`. The counter is the same command with the report's round: the before/control
+   receipts use `--round 70` (the inherited wave dir, 26 files) and the after receipt uses `--round 71`
+   (`failed=0 uncommitted=0`). Both receipts are committed; the report names which N each used.
+2. **The population command.** `gate-registry-check.py` takes `--repo`/`--rev`/`--selftest` (omitting
+   `--rev` already means the worktree); `--mode worktree` exits 2.
+3. **The population delta.** The gate's declared regex is
+   `^(?:\.ufo/waves/round-[^/]+/count-[^/]+|tools/round[0-9]+-[A-Za-z0-9._-]+)\.py$`, so only
+   `tools/round71-province-host-claims.py` enters it: measured `79 → 80`, not 82. The other two tools
+   are documented SKILL rows outside that population (lesson Mistake 1).

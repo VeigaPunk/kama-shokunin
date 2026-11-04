@@ -1,0 +1,33 @@
+# cases 1-5 probe on the landed census bytes and on the reviewer's H1-H4 holes
+2026-11-03T22:03:52-03:00
+tool_sha256=7c75963300dbb46b030a856636cb39ffc97dd42be3f528de1868e07a365c060e
+########## tools/round65-host-census.py
+case_refused: held | refused-fixture exit=1 pass=1 fail=0 not_evaluated=1 total=2 repeat=stable
+case_allpass: held | all-pass exit=0 pass=2 fail=0 not_evaluated=0 total=2
+case_waiver_ne: held | waived-not-evaluated exit=0 not_evaluated=1 waived=1 total=2
+case_waiver_fail: held | waived-fail exit=1 fail=1 not_evaluated=0 waived=<absent> pass-waiver exit=0 waived=<absent> second-call exit=1 stderr="warning: --waive 'synthetic-broken' unused: member was evaluated (fail); a waiver covers only not-evaluated members"
+case_unknown: held | unknown-waiver all-pass 0->0 refused 1->1 verdict-unchanged stderr="warning: --waive 'no-such-member' is not a census member name"
+########## ./h1-waiver-covers-pass.py
+case_refused: held | refused-fixture exit=1 pass=1 fail=0 not_evaluated=1 total=2 repeat=stable
+case_allpass: held | all-pass exit=0 pass=2 fail=0 not_evaluated=0 total=2
+case_waiver_ne: held | waived-not-evaluated exit=0 not_evaluated=1 waived=1 total=2
+case_waiver_fail: FAILED waiver_never_covers_pass | waived-fail exit=1 fail=1 not_evaluated=0 waived=<absent> pass-waiver exit=0 waived=1 second-call exit=1 stderr="warning: --waive 'synthetic-broken' unused: member was evaluated (fail); a waiver covers only not-evaluated members"
+case_unknown: held | unknown-waiver all-pass 0->0 refused 1->1 verdict-unchanged stderr="warning: --waive 'no-such-member' is not a census member name"
+########## ./h2-forged-waived-on-unknown.py
+case_refused: held | refused-fixture exit=1 pass=1 fail=0 not_evaluated=1 total=2 repeat=stable
+case_allpass: held | all-pass exit=0 pass=2 fail=0 not_evaluated=0 total=2
+case_waiver_ne: held | waived-not-evaluated exit=0 not_evaluated=1 waived=1 total=2
+case_waiver_fail: held | waived-fail exit=1 fail=1 not_evaluated=0 waived=<absent> pass-waiver exit=0 waived=<absent> second-call exit=1 stderr="warning: --waive 'synthetic-broken' unused: member was evaluated (fail); a waiver covers only not-evaluated members"
+case_unknown: FAILED unknown_waiver_verdict_unchanged;unknown_waiver_refusal_verdict_unchanged | unknown-waiver all-pass 0->0 refused 1->1 verdict-unchanged stderr="warning: --waive 'no-such-member' is not a census member name"
+########## demo-H3-second-call-silent-shims/s5t-hardcoded-total.py
+case_refused: held | refused-fixture exit=1 pass=1 fail=0 not_evaluated=1 total=2 repeat=stable
+case_allpass: held | all-pass exit=0 pass=2 fail=0 not_evaluated=0 total=2
+case_waiver_ne: held | waived-not-evaluated exit=0 not_evaluated=1 waived=1 total=2
+case_waiver_fail: FAILED fail_waiver_reentrant | waived-fail exit=1 fail=1 not_evaluated=0 waived=<absent> pass-waiver exit=0 waived=<absent> second-call exit=0 stderr="warning: --waive 'synthetic-broken' unused: member was evaluated (fail); a waiver covers only not-evaluated members"
+case_unknown: held | unknown-waiver all-pass 0->0 refused 1->1 verdict-unchanged stderr="warning: --waive 'no-such-member' is not a census member name"
+########## demo-H4-phantom-not-evaluated-shims/s5t-hardcoded-total.py
+case_refused: held | refused-fixture exit=1 pass=1 fail=0 not_evaluated=1 total=2 repeat=stable
+case_allpass: held | all-pass exit=0 pass=2 fail=0 not_evaluated=0 total=2
+case_waiver_ne: held | waived-not-evaluated exit=0 not_evaluated=1 waived=1 total=2
+case_waiver_fail: held | waived-fail exit=1 fail=1 not_evaluated=0 waived=<absent> pass-waiver exit=0 waived=<absent> second-call exit=1 stderr="warning: --waive 'synthetic-broken' unused: member was evaluated (fail); a waiver covers only not-evaluated members"
+case_unknown: FAILED unknown_waiver_verdict_unchanged;unknown_waiver_refusal_verdict_unchanged | unknown-waiver all-pass 0->0 refused 1->1 verdict-unchanged stderr="warning: --waive 'no-such-member' is not a census member name"

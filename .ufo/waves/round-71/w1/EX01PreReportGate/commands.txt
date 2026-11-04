@@ -1,7 +1,16 @@
 # Paste block for the L1 (round-71 C1)
 
+## 0. Do NOT cite the scored gate as a SCORECARD `run` fact (D4: recursion)
+# r41's run-fact harness executes the fact with bash -c in a tip clone, so a `run` cell naming the
+# scored gate chains gate -> selfdesc reconciler -> r41 -> gate and arm1 can never be green.
+# Cite the selftest instead (it touches no lane instrument):
+#   run `python3 tools/pre-report-gate.py --selftest` → `PRE_REPORT_SELFTEST pass=6 fail=0` (exit 0)
+# The gate also refuses a nested scored evaluation (PRE_REPORT_GATE_DEPTH >= 1 -> exit 3,
+# `PRE_REPORT_RECURSION depth=<d> refused ...`), so a mis-landed row fails fast instead of stacking
+# clones and instruments; the guard does not make such a row green.
+
 ## 1. SKILL.md registry row (L1 adds; five-column table, model: SKILL.md:1721)
-| Round-71 pre-report gate | measurement: `python3 tools/pre-report-gate.py --repo DIR --round N --tip REV` (five arms, cwd = repo: `tools/round42-selfdesc-reconcile.py --repo DIR --tip REV`; `tools/round69-newest-closure-counter.py --repo DIR --rev REV --since-round 63`; `tools/round68-receipt-pointer-audit.py --repo DIR --rev REV`; `tools/round67-worktree-landing-check.py --repo DIR`; then `git -C DIR status --porcelain -uall -- .ufo/waves/round-N`; defaults repo `.`, tip `master`; `--json`; `--tools-dir DIR` selects the instrument directory; `--selftest` builds throwaway fixtures under `--work` or a fresh TMPDIR directory) | 0 iff the four instruments all exit 0 AND the round worktree is clean (`PRE_REPORT round=N arms=5 failed=0 uncommitted=0`); 1 naming every failed arm (`PRE_REPORT_ARM <name> exit=<e> ok|FAIL <detail>`); 2 CLI misuse (missing `--round`, `--repo` not a directory) or an unevaluable selftest fixture | selftest: six arms -- green, one uncommitted wave file, red newest-closure stub, missing declared path, byte-dirty declared path, CRLF-translated declared path -- prints `PRE_REPORT_SELFTEST pass=6 fail=0`; pinned: `arms=5`, `failed` counts failing arms including arm 5 (four green instruments + 26 uncommitted prints `failed=1 uncommitted=26`), `uncommitted` counts `-uall` porcelain records | writes nothing in the graded repo (`PYTHONDONTWRITEBYTECODE=1` for children); fixtures only under `--work`/TMPDIR |
+| Round-71 pre-report gate | measurement: `python3 tools/pre-report-gate.py --repo DIR --round N --tip REV` (five arms, cwd = repo: `tools/round42-selfdesc-reconcile.py --repo DIR --tip REV`; `tools/round69-newest-closure-counter.py --repo DIR --rev REV --since-round 63`; `tools/round68-receipt-pointer-audit.py --repo DIR --rev REV`; `tools/round67-worktree-landing-check.py --repo DIR`; then `git -C DIR status --porcelain -uall -- .ufo/waves/round-N`; defaults repo `.`, tip `master`; `--json`; `--tools-dir DIR` selects the instrument directory; `--selftest` builds throwaway fixtures under `--work` or a fresh TMPDIR directory) | 0 iff the four instruments all exit 0 AND the round worktree is clean (`PRE_REPORT round=N arms=5 failed=0 uncommitted=0`); 1 naming every failed arm (`PRE_REPORT_ARM <name> exit=<e> ok|FAIL <detail>`); 2 CLI misuse (missing `--round`, `--repo` not a directory) or an unevaluable selftest fixture; 3 re-entry refused (`PRE_REPORT_RECURSION depth=<d>`) | selftest: six arms -- green, one uncommitted wave file, red newest-closure stub, missing declared path, byte-dirty declared path, CRLF-translated declared path -- prints `PRE_REPORT_SELFTEST pass=6 fail=0`; pinned: `arms=5`, `failed` counts failing arms including arm 5 (four green instruments + 26 uncommitted prints `failed=1 uncommitted=26`), `uncommitted` counts `-uall` porcelain records | writes nothing in the graded repo (`PYTHONDONTWRITEBYTECODE=1` for children); fixtures only under `--work`/TMPDIR |
 
 ## 2. Counter at the report tip (freeze D1: pick one N and record it)
 $ python3 tools/pre-report-gate.py --repo . --round 70 --tip master; echo EXIT=$?
@@ -11,7 +20,7 @@ $ python3 tools/pre-report-gate.py --repo . --round 71 --tip master; echo EXIT=$
 PRE_REPORT round=71 arms=5 failed=0 uncommitted=0
 EXIT=0
 
-## 3. Selftest
+## 3. Selftest (also the run-fact citation from section 0)
 $ python3 tools/pre-report-gate.py --selftest; echo EXIT=$?
 PRE_REPORT_SELFTEST pass=6 fail=0
 EXIT=0
@@ -25,4 +34,9 @@ $ python3 tools/pre-report-gate.py --repo . --round 71 --json | tail -4
 
 ## Preconditions for the green after-line (L1): SCORECARD calibration row names
 ## corpus/lessons/round-70-verifier-spotcheck.md; every .ufo/waves/round-71/ file committed
-## (for --round 71, including this seat's report + receipts); declared self-record set byte-clean.
+## (for --round 71, including this seat's report + receipts); declared self-record set byte-clean;
+## run fact cites --selftest, not the scored gate (D4); coverage cell and the knowledge entry
+## corpus/knowledge/pre-report-gate.md land in the same commit (D5: live snapshot 40 = 40).
+## The three cited measured/after receipts must land in the SAME commit as the SCORECARD row:
+## r41 grades a cited path fact by existence at the tip (`dead path` when absent), and the
+## receipt audit grades the same target, so a row-only commit still fails arm 1.

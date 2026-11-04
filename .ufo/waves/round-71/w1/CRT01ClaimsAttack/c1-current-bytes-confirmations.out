@@ -1,0 +1,34 @@
+# current lane gate sha 07cfc04fbba413f8, tools-dir=lane tools
+
+## fixture case-outside-wave: git status shows a dirty round artifact outside the wave dir
+$ git -C fixture status --porcelain -uall -- corpus/lessons/round-70.md
+ M corpus/lessons/round-70.md
+$ python3 tools/pre-report-gate.py --repo F1 --tools-dir tools --round 71 --tip master
+PRE_REPORT_ARM selfdesc exit=0 ok r41=0 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 closure_ptr=1 mismatches=0 maxN=70 met=True
+PRE_REPORT_ARM newest-closure exit=0 ok NEWEST_CLOSURE newest=corpus/lessons/round-70-verifier-spotcheck.md date=2026-11-03 round=70 row_names=corpus/lessons/round-70-verifier-spotcheck.md row_current=true
+PRE_REPORT_ARM receipt-audit exit=0 ok RECEIPT_POINTER_AUDIT files=2 cited=157 resolved=140 expanded=4 corrected=13 unresolved=0
+PRE_REPORT_ARM worktree-landing exit=0 ok WORKTREE_LANDING_CHECK paths=5 clean=5 dirty=0 missing=0 untracked=0 unreadable=0
+PRE_REPORT_ARM round-clean exit=0 ok files=0
+PRE_REPORT round=71 arms=5 failed=0 uncommitted=0
+EXIT=0
+
+## fixture case-hidden-ignored: nested .gitignore '*' hides two uncommitted wave files
+$ git -C fixture status --porcelain -uall -- .ufo/waves/round-71  (empty)
+$ find fixture/.ufo/waves/round-71/w1/scratch -type f
+/fast/scratch/hyaku/kama-r71/CRT01ClaimsAttack/fx/case-hidden-ignored/.ufo/waves/round-71/w1/scratch/.gitignore
+/fast/scratch/hyaku/kama-r71/CRT01ClaimsAttack/fx/case-hidden-ignored/.ufo/waves/round-71/w1/scratch/leak.out
+$ python3 tools/pre-report-gate.py --repo F2 --tools-dir tools --round 71 --tip master
+PRE_REPORT_ARM selfdesc exit=0 ok r41=0 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 closure_ptr=1 mismatches=0 maxN=70 met=True
+PRE_REPORT_ARM newest-closure exit=0 ok NEWEST_CLOSURE newest=corpus/lessons/round-70-verifier-spotcheck.md date=2026-11-03 round=70 row_names=corpus/lessons/round-70-verifier-spotcheck.md row_current=true
+PRE_REPORT_ARM receipt-audit exit=0 ok RECEIPT_POINTER_AUDIT files=2 cited=157 resolved=140 expanded=4 corrected=13 unresolved=0
+PRE_REPORT_ARM worktree-landing exit=0 ok WORKTREE_LANDING_CHECK paths=5 clean=5 dirty=0 missing=0 untracked=0 unreadable=0
+PRE_REPORT_ARM round-clean exit=0 ok files=0
+PRE_REPORT round=71 arms=5 failed=0 uncommitted=0
+EXIT=0
+
+== 22:10 recheck (lane worktree, HEAD e2b860c8) ==
+worktree run-form citation count: 0
+HEAD run-form citation count: 1
+gate EXIT=1
+PRE_REPORT_ARM round-clean exit=0 FAIL files=94 first= M .ufo/waves/round-71/w1/EX01PreReportGate.md
+PRE_REPORT round=71 arms=5 failed=4 uncommitted=94

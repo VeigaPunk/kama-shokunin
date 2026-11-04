@@ -2741,3 +2741,19 @@ uncommitted=26`), and PROVINCE.md still described a Windows host: 11 marker line
 - L0: the kama round-65 NTFS-path question stays unanswered — routed around (this host checks the `|` path
   out). The L2 floor rides this round's one v1 wave (12 seats: 3 executors, 2 scribes, 1 scout,
   1 connector, 1 reviewer, 1 critic, 1 mutation-tester, 1 sentinel, 1 revenger probe).
+- Wave integration (appended; the bullets above are the pre-wave measurements): ONE v1 wave of 12 seats
+  (3 executors, 2 scribes, 1 scout, 1 connector, 1 reviewer, 1 critic, 1 mutation-tester, 1 sentinel,
+  1 revenger probe; attack share 5/12). All 12 seat reports landed under `.ufo/waves/round-71/w1/`.
+  Integrated findings: EX01's D1–D5 (freeze `--round` label, invalid population command, 79 → 80,
+  the recursion class, count timing) are corrected in `plans/round-71-claims.md` annex and lessons
+  Mistake 1/6; EX02's case 7 was red only at `e2b860c8` (the tip carried C1's two record defects) and is
+  green at the report tip; RVW01's four new sixth-shim candidates are all killed on the final boundary
+  bytes (C2 HELD); CRT01 found three C1 survivors (a wrong `--round` name is a vacuous green; round work
+  outside the wave dir and git-ignored files inside it are invisible — routed to round 72) and C3 gaps,
+  three of which are repaired in the landed tool before this commit (base-marker paragraph identity,
+  calendar-date validation, exit 2 on an unusable `--scratch`; `measured/hardening/`); MT01 ran 19
+  mutants (C1 6/6 killed; C2 6/7, `m7` survives the `waiver_keeps_not_evaluated` check; C3 5/6, `m6`
+  survives the correction-date guard — both are coverage findings routed to round 72, no predicate
+  change); SEN01 found no committed waiver, 0 secret-shaped hits and no scope/service breach; LAB01
+  refuted H1/H2 and confirmed H3/H4; CON01's overlap rules landed in `corpus/knowledge/cross-lane-scope.md`;
+  SCT01 independently re-derived 14/16 contradicted host surfaces.

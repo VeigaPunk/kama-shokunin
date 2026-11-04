@@ -1,5 +1,5 @@
-source: S542 — Git git-status, https://git-scm.com/docs/git-status §Porcelain Format Version 1 (version-1 records "guaranteed not to change in a backwards-incompatible way", retained sha256 22ff28ff73f83696c4a503e9c92e7a15f4ded2f91d96cc5668ee79db0a1b0180); `plans/round-71-claims.md` §C1 (frozen predicate, counter, kill rule, do-nothing control); code `tools/pre-report-gate.py` sha256 d0957e0bc3f7f393ddd157c8f644d217aaa3e40d99a2d905f93d546163dd9bfb and the four instruments it wires
-verified-at: b43e71a8 — lane tip; the gate was read and run from the round-71 worktree (absent from b43e71a8, `git status --porcelain -uall -- tools/pre-report-gate.py` → `??` at read time); receipts `.ufo/waves/round-71/w1/SCR01KnowledgeEntry/{selftest,gate-round70,gate-round71,shortcut-rerun}.out`
+source: S542 — Git git-status, https://git-scm.com/docs/git-status §Porcelain Format Version 1 (version-1 records "guaranteed not to change in a backwards-incompatible way", retained sha256 22ff28ff73f83696c4a503e9c92e7a15f4ded2f91d96cc5668ee79db0a1b0180); `plans/round-71-claims.md` §C1 (frozen predicate, counter, kill rule, do-nothing control); code `tools/pre-report-gate.py` sha256 07cfc04fbba413f851034734bfee1122b12463ed5d65486762d6bd736cb3bd0b (re-entry guard) and the four instruments it wires
+verified-at: b43e71a8 (freeze base) and e2b860c8 (the integration commit that landed the tool, this entry and the calibration row; the counter was re-run there) — the gate was read and run from the round-71 worktree (absent from b43e71a8, `git status --porcelain -uall -- tools/pre-report-gate.py` → `??` at first read; the pre-guard revision `d0957e0b…` was probed first, then `07cfc04f…`); receipts `.ufo/waves/round-71/w1/SCR01KnowledgeEntry/{selftest,gate-round70,gate-round71,shortcut-rerun,recursion-guard-direct,run-fact-recursion-probe}.out`
 recheck: `python3 tools/pre-report-gate.py --selftest` → `PRE_REPORT_SELFTEST pass=6 fail=0` (exit 0); re-run the counter at the report tip; S542 recheck on-release
 
 # One pre-report verdict: arms green at the tip and round work committed
@@ -48,8 +48,8 @@ CLI misuse (missing `--round`, `--repo` not a directory) and unevaluable selftes
 The verdict line carries no tip field: the measured revision is the `--tip` argument, so a
 receipt quotes the command with its tip.
 
-Observed at b43e71a8 with the worktree carrying round-71 edits: `PRE_REPORT round=70 arms=5 failed=3 uncommitted=0`
-(selfdesc, newest-closure, worktree-landing `DIRTY SCORECARD.md`), and `PRE_REPORT round=71 arms=5 failed=4 uncommitted=51`, both exit 1.
+Observed at `e2b860c8` (round-71 worktree): `PRE_REPORT round=70 arms=5 failed=3 uncommitted=0`
+(selfdesc `r41 calibration run … exit 3 != 0`, receipt-audit `unresolved=3`, worktree-landing `DIRTY SCORECARD.md`) and `PRE_REPORT round=71 arms=5 failed=4 uncommitted=19`, exit 1.
 
 ## Decision table
 
@@ -76,8 +76,9 @@ Observed at b43e71a8 with the worktree carrying round-71 edits: `PRE_REPORT roun
 - `git status --porcelain` version 1 is S542's script-stable record shape; a shape break is an
   upstream guarantee break, not a parser bug. A failed `git status` marks round-clean FAIL
   while `uncommitted` prints 0, so the exit stays nonzero (code read, not probed).
-- It is a step the L1 runs, not a hook: nothing forces a report to cite it. Wiring it as the calibration
-  row's RUN fact loops: the selfdesc arm runs the reconciler, whose r41 harness executes that same
-  command in a tip checkout (it mirrors `refs/heads/master`), so the gate re-enters itself — depth log
-  0-3 in `.ufo/waves/round-71/w1/SCR01KnowledgeEntry/run-fact-recursion-probe.out`; `failed=0` is then unreachable.
+- It is a step the L1 runs, not a hook. A RUN fact that executes the scored gate loops (selfdesc arm →
+  reconciler → r41 run-fact harness → gate; the harness mirrors `refs/heads/master` at the tip). The tool
+  refuses a re-entry at depth>=1 (`PRE_REPORT_RECURSION depth=<d> refused`, exit 3): bounded, still red —
+  the live row showed `r41 calibration run … exit 3 != 0`, so a tip carrying that row cannot print
+  `failed=0`; cite `--selftest` or a committed after-receipt there, never the scored gate.
 - S052, the freeze's second grounding, is the fail-closed-on-no-verdict precedent: an arm with no verdict is a failure, never a skip.

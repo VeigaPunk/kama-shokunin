@@ -1,0 +1,28 @@
+$ python3 tools/round42-selfdesc-reconcile.py --repo . --tip master   # lane HEAD e2b860c8
+tip=e2b860c8907a4ba122dbbf5f2b2188695fb7c5f5
+r41=2 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 closure_ptr=1 mismatches=2 maxN=71 met=False
+detail: r41 depth sha256 SKILL.md cited 0b61e1187a5e5f0f71a3998faceaa5324107c116932f4fbe194cdbae6969f883 observed aa61f109134eb1d6ddff4b83bf2ddc44c80876d6fcec1056969657bd6889956e
+detail: r41 calibration run `python3 tools/pre-report-gate.py --repo . --round 71 --tip master` exit 1 != 0
+EXIT=1
+
+--- selftest expectations (tools/round42-selfdesc-reconcile.py:250-258):
+    parts = []
+    ok_cp, ok_m = res["ok"]
+    if not (ok_cp == 1 and ok_m == 0):
+        fail += 1
+    for name in ("stale_ptr", "stale_both", "stale_incl", "no_ptr"):
+        cp, m = res[name]
+        if not (cp == 0 and m == ok_m + 1 and m >= 1):
+            fail += 1
+    for name, (cp, m) in res.items():
+
+--- consequence: with ok_m=2 the `ok` arm fails (2 != 0); every stale arm reads 3 == ok_m+1
+--- and closure_ptr=0, so they pass. EX02 relayed exactly: ok:closure_ptr=1,mismatches=2,
+--- stale_ptr/stale_both/stale_incl/no_ptr all 3, pass=4 fail=1. The failing arm is `ok`,
+--- not `stale_incl`; the instrument is reporting a red tip, not a broken fixture.
+
+--- worktree-shape probe (fixture a5f30233): CLI with the current
+--- worktree SCORECARD + SKILL + knowledge entry (depth row re-derived to aa61f109, SKILL now e19708d2):
+r41=1 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 closure_ptr=1 mismatches=1 maxN=71 met=False
+detail: r41 depth sha256 SKILL.md cited aa61f109134eb1d6ddff4b83bf2ddc44c80876d6fcec1056969657bd6889956e observed e19708d204a7231862e03294d0482f810edc5df32b9b31197205e72e538d412f
+PROBE_EXIT=1

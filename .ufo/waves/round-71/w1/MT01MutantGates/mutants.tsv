@@ -1,0 +1,20 @@
+tool	mutant	change	verdict	changed_detectors	killing_check
+C1	pre-report-gate-m1-exit0	result['exit'] = 0 (exit map gutted)	KILLED	ST,fx-uncommitted,fx-stale,fx-missing,fx-dirty,fx-crlf	selftest arms (a)-(f): all five defect arms exit=0 want 1; every external defect fixture also exits 0
+C1	pre-report-gate-m2-uncommitted0	uncommitted = 0 (ignore the round-dir count)	KILLED	ST,fx-uncommitted	selftest wave-uncommitted (uncommitted=0 want 1); fx-uncommitted prints failed=0 uncommitted=0
+C1	pre-report-gate-m3-fail-only-silent	arm ok = exit==0 or the arm printed anything	KILLED	ST,fx-stale,fx-missing,fx-dirty,fx-crlf	selftest stale/missing/dirty/crlf arms (exit=0 want 1); the four external defect fixtures go green
+C1	pre-report-gate-m4-roundclean-ok	round-clean ok ignores the porcelain count	KILLED	ST,fx-uncommitted	selftest wave-uncommitted (failed=0 want 1, round-clean ok=True); fx-uncommitted failed=0
+C1	pre-report-gate-m5-failed0	failed = 0 hard-coded	KILLED	ST,fx-uncommitted,fx-stale,fx-missing,fx-dirty,fx-crlf	selftest five defect arms (failed=0); external defect fixtures print failed=0
+C1	pre-report-gate-m6-accept-dirty	worktree-landing nonzero accepted unless MISSING	KILLED	ST,fx-dirty,fx-crlf	selftest dirty/crlf arms; external fx-dirty/fx-crlf print failed=0
+C2	census-waiver-boundary-m1-exit0	report exit_code = 0	KILLED	BAD,HOLE,LB	BAD, HOLE and LB exit 1 -> 0 (the report exit is gutted; `--selftest` computes its own exit and stays green)
+C2	census-waiver-boundary-m2-survivors0	survivors = 0	KILLED	HOLE	HOLE: summary `killed=4 survivors=1` -> `killed=4 survivors=0` (exit 1 both; the survivors token is the only difference)
+C2	census-waiver-boundary-m3-killedfalse	killed = False per shim	KILLED	ST,R,BAD,HOLE,LB	R (frozen counter) prints killed=0 survivors=5 exit=1; selftest shim arms fail
+C2	census-waiver-boundary-m4-drop-fail-waiver	waiver_never_covers_fail always held	KILLED	ST,R	selftest case 6: `shim:s6w-waiver-swallows-failure:attributed` FAIL - the named check never fires (the shim stays killed by other checks)
+C2	census-waiver-boundary-m5-accepted-as-killed	killed = attributed = True	KILLED	HOLE	HOLE: a compliant census in a shim slot is counted killed -> killed=5 survivors=0 exit=0
+C2	census-waiver-boundary-m6-landed-blind	held excludes case 7	KILLED	LB	LB: defective landed census accepted, exit 1 -> 0
+C2	census-waiver-boundary-m7-drop-waiver-ne	waiver_keeps_not_evaluated always held	SURVIVED	-	none: no fixture zeroes not_evaluated under a waiver; SURVIVES
+C3	round71-province-host-claims-m1-accept-any	covering_correction drops date+verdict guards	KILLED	ST,flipped	selftest flipped-verdict and shortcut-all-flipped; external flipped exit 1 -> 0
+C3	round71-province-host-claims-m2-ignore-verdict	drops the verdict-equality guard	KILLED	ST,flipped	selftest flipped-verdict and shortcut-all-flipped; external flipped exit 1 -> 0
+C3	round71-province-host-claims-m3-wrong-tag	drops the tag-equality guard	KILLED	ST,flipped,wrongtag	selftest flipped-verdict/shortcut/wrong-tag; external wrongtag exit 1 -> 0
+C3	round71-province-host-claims-m4-drop-rewritten	rewritten = []	KILLED	ST,rewritten	selftest rewritten-marker (REWRITTEN line absent); external rewritten fixture keeps exit 1 via uncovered=14
+C3	round71-province-host-claims-m5-uncovered0	uncovered = 0	KILLED	ST,base,flipped,wrongtag,rewritten	selftest base/flipped/shortcut/wrong-tag; external base exit 1 -> 0
+C3	round71-province-host-claims-m6-drop-date	drops the correction-date guard	SURVIVED	-	none: no same-or-earlier-dated correction fixture; SURVIVES

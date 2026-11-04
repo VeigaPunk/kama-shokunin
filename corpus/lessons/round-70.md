@@ -99,3 +99,9 @@ Three of the round-70 closure's five status-neutral defects are corrected here, 
    that never existed in the lane repo (`git cat-file -t` → `fatal: Not a valid object name` for
    both, 2026-11-03). Provenance: they are dry-run/fixture receipts of the r70 tooling, not claim
    evidence; the claim evidence is `measured/after/reconciler-at-af6eb6c2.out`.
+
+4. **Correction to correction 1 above (appended 2026-11-03, same round):** the sentence "the round-71
+   pre-report gate now records its own tip in every receipt line (`PRE_REPORT` prints `tip=<rev>`)" is
+   wrong — the frozen `PRE_REPORT round=<N> arms=<a> failed=<f> uncommitted=<u>` line carries no tip
+   field (`corpus/knowledge/pre-report-gate.md` §CLI states the limit). The tip is recorded by the
+   receipt wrapper (`# tip=<rev>`) and by the command's `--tip` argument; the gate itself stays frozen.

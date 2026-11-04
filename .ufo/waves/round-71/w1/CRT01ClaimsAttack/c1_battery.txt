@@ -1,0 +1,47 @@
+## baseline green fixture
+baseline round=71 exit=0 PRE_REPORT round=71 arms=5 failed=0 uncommitted=0 | PRE_REPORT_ARM round-clean exit=0 ok files=0
+baseline round=70 exit=0 PRE_REPORT round=70 arms=5 failed=0 uncommitted=0 | PRE_REPORT_ARM round-clean exit=0 ok files=0
+baseline round=9999 exit=0 PRE_REPORT round=9999 arms=5 failed=0 uncommitted=0 | PRE_REPORT_ARM round-clean exit=0 ok files=0
+baseline round=0 exit=0 PRE_REPORT round=0 arms=5 failed=0 uncommitted=0 | PRE_REPORT_ARM round-clean exit=0 ok files=0
+baseline round=-1 exit=0 PRE_REPORT round=-1 arms=5 failed=0 uncommitted=0 | PRE_REPORT_ARM round-clean exit=0 ok files=0
+
+## one uncommitted file under .ufo/waves/round-71/
+--round 71   PRE_REPORT round=71 arms=5 failed=1 uncommitted=1 | PRE_REPORT_ARM round-clean exit=0 FAIL files=1 first=?? .ufo/waves/round-71/w1/leak.md
+--round 70   PRE_REPORT round=70 arms=5 failed=0 uncommitted=0 | PRE_REPORT_ARM round-clean exit=0 ok files=0
+--round 9999 PRE_REPORT round=9999 arms=5 failed=0 uncommitted=0 | PRE_REPORT_ARM round-clean exit=0 ok files=0
+status: ?? .ufo/waves/round-71/w1/leak.md
+
+## uncommitted round artifact outside the wave dir (corpus/lessons/round-70.md)
+status: M corpus/lessons/round-70.md
+-> gate exit=0 PRE_REPORT round=71 arms=5 failed=0 uncommitted=0 | PRE_REPORT_ARM round-clean exit=0 ok files=0
+
+## committed CRLF SKILL.md (fixture commit eacca4c9)
+--round 71 PRE_REPORT round=71 arms=5 failed=1 uncommitted=0 | PRE_REPORT_ARM round-clean exit=0 ok files=0
+## same file then modified (uncommitted CRLF translation)
+--round 71 PRE_REPORT round=71 arms=5 failed=2 uncommitted=0 | PRE_REPORT_ARM round-clean exit=0 ok files=0
+
+## uncommitted wave files hidden by a nested .gitignore '*'
+--round 71 PRE_REPORT round=71 arms=5 failed=0 uncommitted=0 | PRE_REPORT_ARM round-clean exit=0 ok files=0
+status: ''
+
+## uncommitted wave file hidden by .git/info/exclude
+--round 71 PRE_REPORT round=71 arms=5 failed=0 uncommitted=0 | PRE_REPORT_ARM round-clean exit=0 ok files=0
+
+## committed wave file byte-changed with --assume-unchanged
+--round 71 PRE_REPORT round=71 arms=5 failed=0 uncommitted=0 | PRE_REPORT_ARM round-clean exit=0 ok files=0
+status: ''
+
+## missing instrument (tools/round67-worktree-landing-check.py removed)
+exit=1 PRE_REPORT round=71 arms=5 failed=1 uncommitted=0 | PRE_REPORT_ARM worktree-landing exit=2 FAIL /usr/bin/python3: can't open file '/fast/scratch/hyaku/kama-r71/CRT01ClaimsAttack/fx/case-missing-instrument/tools/round67-worktree-landing-check.py': [Errno 2] No such file or directory
+
+## --repo .ufo (subdirectory) with a dirty wave dir
+exit=1 PRE_REPORT round=71 arms=5 failed=5 uncommitted=1 | PRE_REPORT_ARM round-clean exit=0 FAIL files=1 first=warning: could not open directory '.ufo/.ufo/waves/': No such file or directory
+
+## --tip f3ee44f4 (round-start base, branch tip is the fixture HEAD)
+exit=1 PRE_REPORT round=71 arms=5 failed=2 uncommitted=0 | PRE_REPORT_ARM round-clean exit=0 ok files=0
+
+## kill rule (ii) stale newest-closure pointer: exit=1 PRE_REPORT round=71 arms=5 failed=2 uncommitted=0 | PRE_REPORT_ARM newest-closure exit=1 FAIL STALE_CALIBRATION row_names=corpus/lessons/round-69-verifier-spotcheck.md newest=corpus/lessons/round-70-verifier-spotcheck.md newest_date=2026-11-03
+
+## kill rule (iii) missing declared path: exit=1 PRE_REPORT round=71 arms=5 failed=1 uncommitted=0 | PRE_REPORT_ARM worktree-landing exit=1 FAIL WORKTREE_LANDING_CHECK paths=5 clean=4 dirty=0 missing=1 untracked=0 unreadable=0 | MISSING PROVINCE.md
+
+## kill rule (iv) dirty declared path: exit=1 PRE_REPORT round=71 arms=5 failed=1 uncommitted=0 | PRE_REPORT_ARM worktree-landing exit=1 FAIL WORKTREE_LANDING_CHECK paths=5 clean=4 dirty=1 missing=0 untracked=0 unreadable=0 | DIRTY SCORECARD.md

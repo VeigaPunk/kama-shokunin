@@ -1,0 +1,33 @@
+=== C1 self-reference isolation receipts ===
+
+--- fixture fx/selfref (citation kept, citations reconciled) ---
+$ python3 tools/round42-selfdesc-reconcile.py --repo . --tip master
+tip=2355dac645dd9fa603d2859355f2bcc934a4f7db
+r41=3 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 closure_ptr=1 mismatches=3 maxN=70 met=False
+detail: r41 operability run `python3 tools/gate-registry-check.py --selftest` no stdout line == 'GATE_SELFTEST pass=7 fail=0' (exit 1)
+detail: r41 freshness run `python3 -c "recheck=[l.split(chr(124))[10].strip() for l in open('corpus/SOURCES.md') if l.startswith(chr(124)+' S') and int(l.split(chr(124))[1].strip()[1:])<=477];print(sum(1 for r in recheck if r))"` no stdout line == '40' (exit 0)
+detail: r41 calibration run `python3 tools/pre-report-gate.py --repo . --round 71 --tip master` exit 1 != 0
+EXIT=1
+
+$ python3 tools/pre-report-gate.py --repo . --round 71 --tip master
+PRE_REPORT_ARM selfdesc exit=1 FAIL detail: r41 calibration run `python3 tools/pre-report-gate.py --repo . --round 71 --tip master` exit 1 != 0
+PRE_REPORT_ARM newest-closure exit=0 ok NEWEST_CLOSURE newest=corpus/lessons/round-70-verifier-spotcheck.md date=2026-11-03 round=70 row_names=corpus/lessons/round-70-verifier-spotcheck.md row_current=true
+PRE_REPORT_ARM receipt-audit exit=0 ok RECEIPT_POINTER_AUDIT files=2 cited=157 resolved=140 expanded=4 corrected=13 unresolved=0
+PRE_REPORT_ARM worktree-landing exit=0 ok WORKTREE_LANDING_CHECK paths=5 clean=5 dirty=0 missing=0 untracked=0 unreadable=0
+PRE_REPORT_ARM round-clean exit=0 ok files=0
+PRE_REPORT round=71 arms=5 failed=1 uncommitted=0
+EXIT=1
+
+--- fixture fx/nocite (citation removed, citations reconciled) ---
+$ python3 tools/round42-selfdesc-reconcile.py --repo . --tip master
+tip=f20569bc459b30e7a8ed76f550694bc531956f56
+r41=0 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 closure_ptr=1 mismatches=0 maxN=70 met=True
+EXIT=0
+$ python3 tools/pre-report-gate.py --repo . --round 71 --tip master
+PRE_REPORT_ARM selfdesc exit=0 ok r41=0 banner=0 planned=0 retired=0 saturation=0 caps=0 receipts=0 readme=0 province=0 rel=0 closure_ptr=1 mismatches=0 maxN=70 met=True
+PRE_REPORT_ARM newest-closure exit=0 ok NEWEST_CLOSURE newest=corpus/lessons/round-70-verifier-spotcheck.md date=2026-11-03 round=70 row_names=corpus/lessons/round-70-verifier-spotcheck.md row_current=true
+PRE_REPORT_ARM receipt-audit exit=0 ok RECEIPT_POINTER_AUDIT files=2 cited=157 resolved=140 expanded=4 corrected=13 unresolved=0
+PRE_REPORT_ARM worktree-landing exit=0 ok WORKTREE_LANDING_CHECK paths=5 clean=5 dirty=0 missing=0 untracked=0 unreadable=0
+PRE_REPORT_ARM round-clean exit=0 ok files=0
+PRE_REPORT round=71 arms=5 failed=0 uncommitted=0
+EXIT=0

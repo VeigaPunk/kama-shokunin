@@ -1,0 +1,13 @@
+# fail-waiver probe: --waive on an evaluated failing member (frozen case 4), landed census bytes
+2026-11-03T22:02:43-03:00
+tool_sha256=7c75963300dbb46b030a856636cb39ffc97dd42be3f528de1868e07a365c060e
+census_sha256=44bebd671c0d12118c92ace1ef6bd7491a60c7acbce79f1668b81a822b245919
+case_waiver_fail: held
+facts: waived-fail exit=1 fail=1 not_evaluated=0 waived=<absent> pass-waiver exit=0 waived=<absent> second-call exit=1 stderr="warning: --waive 'synthetic-broken' unused: member was evaluated (fail); a waiver covers only not-evaluated members"
+  waiver_never_covers_fail: ok exit=1
+  fail_still_counted: ok fail=1
+  fail_no_waived_credit: ok waived=<absent>
+  fail_population_total: ok total=2
+  fail_not_evaluated_zero: ok not_evaluated=0
+  waiver_never_covers_pass: ok pass-waiver exit=0 pass=2 waived=<absent>
+  fail_waiver_reentrant: ok second call exit=1 verdict='HOST_CENSUS pass=1 fail=1 not_evaluated=0 total=2 tierA_fail=1 tierB_fail=0'

@@ -1,30 +1,32 @@
 # SCR01KnowledgeEntry — C1 knowledge entry (`pre-report-gate`)
 
 Seat: scribe, calibration axis, kama r71 w1. Leaf member: no subagents, no swarm.
-Base: lane tip `b43e71a8` (freeze commit; still HEAD at every read). Tool absent at first
-read (21:37), landed during the work (21:39); every tool sentence below was verified by
-running the landed bytes, not read from the spec.
+Base: freeze tip `b43e71a8`. The lane tip moved during the work: L1's integration commit
+`e2b860c8` landed the three instruments, this entry, the provinces and the wave evidence,
+and the last measurements below are at that tip. The tool was absent at first read (21:37)
+and landed during the work (21:39, later re-issued with a re-entry guard `07cfc04f…`);
+every tool sentence below was verified by running the bytes on disk at that moment, never
+read from the spec.
 
 ## Behavior
 
-Wrote ONE new corpus entry, `corpus/knowledge/pre-report-gate.md` (83 file lines; body
-79 lines, title to EOF). Provenance trio:
+Wrote ONE new corpus entry, `corpus/knowledge/pre-report-gate.md` (84 file lines; body
+80 lines, title to EOF — the cap). Provenance trio:
 
 - `source:` S542 (the row SCR02 appended: Git git-status, §Porcelain Format Version 1,
   retained sha256 `22ff28ff…0180`) + `plans/round-71-claims.md` §C1 + the gate's own
-  bytes (`sha256 d0957e0bc3f7f393ddd157c8f644d217aaa3e40d99a2d905f93d546163dd9bfb`).
-- `verified-at: b43e71a8` with the qualifier that the tool was read/run from the
-  round-71 worktree, where `git status --porcelain -uall -- tools/pre-report-gate.py`
-  prints `??` (absent from `b43e71a8`).
+  bytes (`sha256 07cfc04f…`, the guard revision; the entry first named `d0957e0b…`, the
+  pre-guard bytes I probed — see Touched surfaces).
+- `verified-at: b43e71a8` (freeze base) and `e2b860c8` (the integration commit that
+  landed the tool, the entry and the row), with the qualifier that the gate was read and
+  run from the round-71 worktree, where `git status --porcelain -uall --
+  tools/pre-report-gate.py` printed `??` before `e2b860c8`.
 - `recheck:` `python3 tools/pre-report-gate.py --selftest` →
   `PRE_REPORT_SELFTEST pass=6 fail=0` (exit 0); S542 recheck `on-release`.
 
-Body sections: why one verdict exists (round-70 closure defect 1), the five arms as a
-table with the failure class each detects, the CLI/output contract
-(`PRE_REPORT_ARM …` + `PRE_REPORT round= arms= failed= uncommitted=`), a six-row
-decision table (shape → meaning → next action), and six limits bullets.
-
-I did not edit SCORECARD.md, LOG.md, SKILL.md, PROVINCE.md, SOURCES.md or any lesson.
+Body sections: why one verdict exists (round-70 closure defect 1), the five arms with the
+failure class each detects, the CLI/output contract, a six-row decision table, six limits
+bullets. I did not edit SCORECARD.md, LOG.md, SKILL.md, PROVINCE.md, SOURCES.md or any lesson.
 
 ## Grounding: exact commands and outputs used
 
@@ -74,15 +76,13 @@ row: `python3 tools/pre-report-gate.py --repo . --round 71 --tip master` →
 the counter's own parser (`round41-scorecard-reconcile.py`, `RUN_RE`) yields exactly six
 run facts, this one included with `(exit 0)`.
 
-That closes a loop across two committed instruments:
-- gate arm 1 runs `tools/round42-selfdesc-reconcile.py --repo R --tip master`;
-- the reconciler calls `round41-scorecard-reconcile.py::evaluate(R, tip)`, whose RUN
-  facts execute with `bash -c` in a tip checkout (`git clone --shared` + `checkout
-  --detach`) and which explicitly mirrors `refs/heads/master` at the tip
-  (`round41-scorecard-reconcile.py`, "Point the branch at the measured tip");
-- the checkout's SCORECARD therefore carries the same gate run fact, so `bash -c
-  "python3 tools/pre-report-gate.py --repo . --round 71 --tip master"` starts the gate
-  again, with `--repo .` = the checkout.
+That closes a loop across two committed instruments: gate arm 1 runs
+`tools/round42-selfdesc-reconcile.py`; the reconciler calls
+`round41-scorecard-reconcile.py::evaluate(R, tip)`, whose RUN facts execute with `bash -c`
+in a tip checkout (`git clone --shared` + `checkout --detach`) that explicitly mirrors
+`refs/heads/master` at the tip ("Point the branch at the measured tip"); that checkout's
+SCORECARD carries the same gate run fact, so `bash -c "python3 tools/pre-report-gate.py
+--repo . --round 71 --tip master"` starts the gate again with `--repo .` = the checkout.
 
 Probe (bounded, fixture under S, master pointing at the probe commit): the worktree
 SCORECARD.md was committed on top of `b43e71a8`, `tools/pre-report-gate.py` was replaced
@@ -101,26 +101,43 @@ PROVINCE.md from `b43e71a8` while the copied SCORECARD's canon names the round-7
 (the live worktree PROVINCE.md already names `tools/round71-province-host-claims.py`
 twice), and its receipt pointers point at receipts the fixture repo does not hold.
 
-Without a base case the regress has no green leaf, so arm 1 can never be green at a tip
-whose calibration row carries that run fact: the frozen after-target
-`PRE_REPORT round=71 arms=5 failed=0 uncommitted=0` is unreachable, and a real run would
-nest until the 300 s per-run-fact / 600 s per-arm timeouts. Options (L1's call, not mine):
-keep the scored run out of the RUN-fact cell (e.g. cite `--selftest` → `PRE_REPORT_SELFTEST
-pass=6 fail=0`), or give the gate a base case (an explicit no-recursion flag/marker). I
-did not edit SCORECARD.md or the tool.
+EX01 then added a re-entry guard to the tool (`PRE_REPORT_GATE_DEPTH` exported to every
+child; a scored re-entry at depth>=1 prints `PRE_REPORT_RECURSION depth=<d> refused` and
+exits 3). Verified directly: `PRE_REPORT_GATE_DEPTH=1 python3 tools/pre-report-gate.py
+--repo . --round 70 --tip master` → that refusal line, `EXIT=3`
+(`recursion-guard-direct.out`); `--selftest` still returns `pass=6 fail=0`.
 
-### F2 (landing action) — the knowledge count run fact goes 39 → 40 in the same landing
+The guard bounds the chain but does not make the target reachable — and that is now
+measured at a committed tip, not inferred. L1's integration commit `e2b860c8` landed the
+tool, this entry and the calibration row, whose RUN fact is
+`run \`python3 tools/pre-report-gate.py --repo . --round 71 --tip master\` → \`PRE_REPORT
+round=71 arms=5 failed=0 uncommitted=0\` (exit 0)`. The frozen counter at that tip:
+`PRE_REPORT_ARM selfdesc exit=1 FAIL detail: r41 calibration run \`python3
+tools/pre-report-gate.py --repo . --round 71 --tip master\` exit 3 != 0`, verdict
+`PRE_REPORT round=70 arms=5 failed=3 uncommitted=0`, exit 1 (`gate-round70.out`; header
+names the tool sha and the measurement instant). So the frozen after-target
+`PRE_REPORT round=71 arms=5 failed=0 uncommitted=0` cannot be printed while that row cites
+the scored gate: arm 1 is red by construction. The fix is L1's — cite
+`python3 tools/pre-report-gate.py --selftest` → `PRE_REPORT_SELFTEST pass=6 fail=0` (exit 0)
+in that run fact, or drop it. I edited neither SCORECARD.md nor the tool.
+(One artifact to note: the fixture chain I built at 21:49 copied an intermediate SCORECARD
+that lacked the fact, which is why that fixture ran in 5 s with no exit-3 detail; the live
+HEAD run above is the evidence, not the fixture.)
 
-Landing `corpus/knowledge/pre-report-gate.md` makes the coverage row's pinned command
-print a new number:
-`python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if
-'engine-sides' not in f and 'processes' not in f]))"` → `40` (worktree, after the write;
-39 before). The coverage row declares `→ 39`, and `run_fact` requires a stdout line
-exactly equal to the declared token, so without re-deriving that cell in the same landing
-the reconciler gets `run_bad=1` and the gate's arm 1 is red at the report tip — the same
-"count that grows during the round" class the round-70 lesson records. The claims table's
-"39 or 40 (one new entry only if admitted)" is L1's admission call; if admitted, the row
-and this count move together.
+Current worktree state (repair in flight, uncommitted, not mine): the calibration row no
+longer executes the scored gate. Feeding that row through r41's own parser (`axes_table` +
+`RUN_RE`) returns five RUN facts, none of them the gate, and the gate is cited as the path
+`.ufo/waves/round-71/measured/after/pre-report-at-tip.out` with its expected verdict text.
+As a PATH fact that receipt must exist at the tip, so SCORECARD.md and the receipt land
+together — otherwise arm 1 fails as `dead path` instead of `exit 3`.
+
+### F2 (resolved at e2b860c8) — the coverage count moved 39 → 40 with the entry
+
+The entry makes the coverage row's pinned glob print 40, and `git show
+e2b860c8:SCORECARD.md` declares `→ `40`` in that cell, so row and count landed together.
+At the fixture built before that commit the cell still said 39 and `run_fact` reported
+`no stdout line == '40' (exit 0)` for the glob — the "count that grows during the round"
+class the round-70 lesson records. No action remains unless a later count moves again.
 
 ### F3 (disagreement, recorded not edited) — `corpus/lessons/round-70.md` says `PRE_REPORT` prints `tip=<rev>`
 
@@ -134,36 +151,49 @@ argument.
 
 ### F4 (observation) — the gate is red on the live worktree for two independent reasons
 
-Arm 4 reports `DIRTY SCORECARD.md` (clean=2 dirty=3) because in-flight lane edits to the
-five declared self-record paths differ from HEAD. That is correct behavior and not a
+Arm 4 reports `DIRTY SCORECARD.md` (clean=4 dirty=1 at `e2b860c8`; it was clean=2 dirty=3
+while two more self-record paths were still uncommitted) because in-flight lane edits to
+the five declared self-record paths differ from HEAD. That is correct behavior and not a
 defect, but it means the report-tip run must happen after everything is committed — and
 that a sibling's uncommitted edit to any of the five paths reddens the gate for everyone
 until it lands.
 
 ## Touched surfaces
 
-- `corpus/knowledge/pre-report-gate.md` — new (the deliverable).
-- `.ufo/waves/round-71/w1/SCR01KnowledgeEntry/{selftest,gate-round70,gate-round71,shortcut-rerun,run-fact-recursion-probe}.out` — receipts cited by the entry.
+- `corpus/knowledge/pre-report-gate.md` — new (the deliverable). L1 committed my first
+  revision at `e2b860c8`; the current worktree copy is a modification of that blob (tool
+  sha re-pin, observed runs at the integration tip, recursion bullet with the guard). It is
+  UNCOMMITTED — L1 must commit it, or the entry describes the pre-guard bytes while the
+  tree carries the guard. Same for the re-measured receipts at that tip
+  (`gate-round70.out`, `gate-round71.out`, `selftest.out`) and the new
+  `recursion-guard-direct.out`; the committed tool blob itself is unchanged at
+  `07cfc04f…`.
+- `.ufo/waves/round-71/w1/SCR01KnowledgeEntry/{selftest,gate-round70,gate-round71,shortcut-rerun,recursion-guard-direct,run-fact-recursion-probe}.out` — receipts cited by the entry.
 - Scratch `/fast/scratch/hyaku/kama-r71/SCR01KnowledgeEntry/` — created, receipts copied
   out, tree deleted on exit (fixtures were `git clone --shared`, no lane mutation).
 - No tool installs or upgrades were needed (nothing to record). No pacman.
 
 ## Out of scope / routed to L1
 
-- Re-derive the coverage row count to `40` (F2) and decide the calibration RUN-fact
-  question (F1).
+- F1 (repair in flight): the worktree calibration row now cites the after-receipt instead of
+  executing the scored gate; produce `.ufo/waves/round-71/measured/after/pre-report-at-tip.out`
+  and land it with SCORECARD.md, or arm 1 falls back to `dead path`. Landing the pre-repair
+  row would restore the unreachability measured at `e2b860c8`.
+- Commit the guard-era entry revision described under Touched surfaces.
 - `corpus/README.md`'s coverage map has no row for the new entry; it is a curated index,
   not an instrument surface, so I left it to L1 if the lane wants the index complete.
-- Registry rows (SKILL 79 → 82), capability rows (15 → 17) and the caps census counts
-  (`mined` grows by S542, `queued`/`rejected` unchanged) are L1's, per the wave plan.
+- Registry rows, capability rows and the caps census counts (`mined` grows by S542,
+  `queued`/`rejected` unchanged) are L1's, per the wave plan; the tip already carries the
+  re-derived coverage count `40`.
 
 ## Not verified
 
-- The recursion's unbounded form (I capped the probe at depth 3; the no-base-case claim
-  is the code path plus that re-entry proof, not an unbounded run).
-- Any post-landing state: the tool, the SCORECARD edit and the SOURCES row were all
-  uncommitted when read, so every "at the report tip" statement above is a prediction
-  labelled as such where it appears.
-- The entry's admission, and the census validator run over the new file — SCR02 owns the
+- The recursion's unbounded form: I capped the depth probe at 3 on the pre-guard bytes; the
+  no-base-case claim is that re-entry proof plus the code path, and the guard now makes the
+  unbounded form unreachable in any case.
+- The live-worktree numbers are dated observations of a moving tree (siblings write while
+  I read): `uncommitted=19`, `unresolved=3` and `dirty=1` are that instant's state, not a
+  claim about the report tip.
+- The entry's admission and the census validator run over the new file — SCR02 owns the
   registry; E11 only resolves `used-by` paths, and `corpus/knowledge/pre-report-gate.md`
-  now exists at the exact path S542 names.
+  exists at the exact path S542 names.
