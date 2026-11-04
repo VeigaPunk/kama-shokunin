@@ -68,3 +68,9 @@ Stale-lane: this steered lane-round is progressing; no second kama mission is ow
 Assimilation: none — SCO01Upstream inspected package/proposal fit, but no staged entry or unimplemented proposal is adopted. C3 is independent source curation.
 
 Outside admit/reject spot-check remains the independent closure's duty; dispatched seats are author-side advisors.
+
+## Measured results at integrated revision
+
+At `3e93febb0f40955b08dc80367e8ef658eaccdfd6`: debt round84 events76/accepted53/late23/pending1/unaccepted0/bad_rows0 exit0; wrong-subject fixture exit1 with exactly one note-wrong-deletion-round finding (and two uncovered events, expected for this fixed fixture). C2 claims8/mismatches0/corrected6/unbacked0 exit0, selftest16/0; `--no-corrections` mismatches6/unbacked6 exit1. C3 rows5/graded5/holds5/ungraded0/bad0 exit0. Gate selftest35/0; primary gate arms13/failed1/uncommitted0 exit1: the calibration row omitted the selfdesc instrument's required run fact containing verifier-spotcheck. That record-shape error was repaired by a truthful file-presence-only run fact, separately from the newest-closure semantic check. Final gate measurement follows in after/gate-final.out. No frozen target changes.
+
+The earlier draft-worded prose is retained as committed integration history; these measured results supersede its prospective wording. No filed bytes are rewritten.

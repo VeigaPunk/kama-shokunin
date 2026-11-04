@@ -15,7 +15,7 @@ Round 43 re-anchors the `SKILL.md` and `PROVINCE.md` hashes after the round-43 e
 | **freshness** | **8** | round-83 terminal receipt `.ufo/waves/round-83/measured/final/c3.out` at `1d90dc816e200481c7a136934a35e8c418ec4501`: `PIN_RECHECK rows=5 graded=4 holds=4 reworded=0 moved=0 drifted=0 ungraded=1 bad=0`, exit 0; `c3-selftest.out` prints `PIN_RECHECK_SELFTEST pass=14 fail=0`, exit 0, not the superseded 11. Re-derive with `git show master:.ufo/waves/round-83/measured/final/c3-selftest.out`. Historical source and runtime samples remain dated below; no live endpoint claim follows from document bytes. | score round 10; terminal evidence corrected round 84 |
 | depth | **7** | `SKILL.md` sha256 `1731f848b950461cca3c03632faefac5a76264e28395f26df14b322e8966dc0b` (1747 lines); run `grep -c '^## ' SKILL.md` → `49`; round84 registers the three round83 scripts plus the new selfrecord instrument. `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) remains unchanged. | score round1; anchors re-derived round84 |
 | coverage | **9** | Round84 appends actual coverage-table rows for round83 entries and SGLang readiness/ping distinction; S572–S575 opened, four A/mined rows. Surface list `PROVINCE.md` sha256 `c5a2fe07ff83de490593aac45dc81b8f156414e95c3aee7c905d717e3cb19848` (404 lines); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f and 'processes' not in f]))"` → `57`. Documentary extension, not registered endpoint readiness; historical row counts remain below. | score round10; anchors re-derived round84 |
-| calibration | **7** | round-83 final `SELFRECORD_R82 claims=6 mismatches=0 corrected=3 unbacked=0`, exit 0; `SELFRECORD_R82_SELFTEST pass=17 fail=0`, exit 0; receipts at `1d90dc816e200481c7a136934a35e8c418ec4501`, `.ufo/waves/round-83/measured/final/c2.out` and `c2-selftest.out`. Eight round-84 facts remain bounded, never a whole-record census; latest outside closure `corpus/lessons/round-83-verifier-spotcheck.md` (round 83, rejected-harmed, not admitted). Historical instrument evidence remains below. | score round 1; evidence corrected round 84 |
+| calibration | **7** | round-83 final `SELFRECORD_R82 claims=6 mismatches=0 corrected=3 unbacked=0`, exit 0; `SELFRECORD_R82_SELFTEST pass=17 fail=0`, exit 0; receipts at `1d90dc816e200481c7a136934a35e8c418ec4501`, `.ufo/waves/round-83/measured/final/c2.out` and `c2-selftest.out`. Eight round-84 facts are bounded, not a whole-record census; latest outside closure `corpus/lessons/round-83-verifier-spotcheck.md` (round83 rejected-harmed, not admitted). File-presence only: run `test -f corpus/lessons/round-83-verifier-spotcheck.md && printf present` → `present` (exit 0); newest-closure counter, not presence, grades its currency. Historical evidence remains below. | score round1; corrected round84 |
 | adjacency | **7** | `corpus/knowledge/cross-lane-scope.md` sha256 `c45318b5a7ade2b797c2cf88120fbbcd48bd2c31630620b15c892d13be907f74` (148 lines); run `python3 -c "print(sum(1 for l in open('corpus/knowledge/cross-lane-scope.md') if l.startswith(chr(124))))"` → `16` (lines starting with a table pipe, header and separator lines included); contested scope stays reported, not absorbed (`PROVINCE.md` paragraph "Out of province → report, never absorb") | score round 1; evidence re-anchored round 42 and again round 72 (the round-72 additions name tameshi's binding gate, kaidoku/mori/souji scope instruments and the three shared limits) |
 
 ### Historical axes table (round-3 assessment; superseded in round 41)
@@ -52,19 +52,11 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 The live plan follows; historical plans remain as filed (round 78's in `plans/round-78-claims.md`, executed in the §Round 78 section below; round 77's at the end of the §Round 77 section).
 
-### Planned (round 84)
+### Planned (round 85; not frozen or executed)
 
-1. Operability: bind the late register's note check to the event commit's own subject round in
-   `tools/round81-append-debt.py`'s `grade()` (RV01 R83-1: the debt leg still accepts
-   `round-83 accepts round-79` over a round-82 event; `tools/round82-late-delta.py` already binds it),
-   and compose `round83-pending-falls` and `round83-pin-rechecks` into `tools/pre-report-gate.py` as
-   arm 13 with its stub selftest.
-2. Calibration: widen the self-record population to the fourth stale cell the round-83 critic found
-   (`SCORECARD.md:4971`'s `new=0` against its receipt's `new=15`) and re-grade the round-83 record's
-   declared facts at its sealed revision.
-3. Freshness: grade a `moved`/`drifted` row honestly (the C3 vocabulary currently has no member of the
-   register in those classes) and re-read the SGLang `/ready` and `/ping` routes into the health-surface
-   matrix.
+1. Calibration: bind repair evidence to actual authority cells, not unrelated witness-token presence; include indented Markdown correction headings in exclusion controls (CR01 round84).
+2. Operability: add direction/equality/coverage controls killing the M2/M3/M4 subject-binding mutants that escaped the round84 spec probe; retain the delivered check's measured behavior.
+3. Freshness: keep real document reads distinct from hash-consistent fabricated extracts; only pursue a moved/drifted class when observed bytes justify it. All five round84 real quotes held.
 
 ## Retired
 
@@ -5223,3 +5215,15 @@ Ordinary value-bound repairs to the round-83 record (not proof by container alon
 The first three bind round-83 terminal receipts at `1d90dc816e200481c7a136934a35e8c418ec4501` (debt late22/bad10 exit1; window7/falls=no exit1; delta113/103/10/bad10 exit1); F4 binds the round-82 before receipt new15; F5 binds terminal selftest14. F6/F7 still hold, not corrected. Live head cells are repaired, not merely supplemented with these tokens; dated historical rows remain untouched.
 
 R83V1 answered by these six correction blocks and corrected head cells; R83V2 by SKILL registry and arm13; R83V3 by row rotation plus subject binding (auxiliary disclosure-row premise fails honestly: ungraded is not restored); R83V4 by appended last-modification wording; R83V5 by actual appended coverage table. No outside verification or promotion is claimed. Final counters, survivor limits and source provenance are in the round lesson.
+
+### Round-84 measured results and limits
+
+Measured commit `3e93febb0f40955b08dc80367e8ef658eaccdfd6`; score delta0 on every axis.
+
+| Claim | Counting command | Before → after | Evidence |
+|---|---|---|---|
+| C1 operability | `python3 tools/pre-report-gate.py --repo . --round 84 --tip master`; debt fixture conjunction in frozen plan | Before arms12/failed3/uncommitted0 in independent clean control; integrated arms13/failed1/uncommitted0, exit1, repaired record-shape run fact before terminal rerun. Debt itself unaccepted1/bad10 → unaccepted0/bad0 exit0; wrong-subject finding0 → exactly1 exit1 | `.ufo/waves/round-84/measured/after/gate.out`, `c1-debt.out`, `c1-fixture.out`; terminal gate receipt recorded separately |
+| C2 calibration | `python3 tools/round84-selfrecord-round83.py --repo .` | mismatches6/corrected0/unbacked6 exit1 → claims8/mismatches0/corrected6/unbacked0 exit0; selftest16/0 | `.ufo/waves/round-84/measured/after/c2.out`, `c2-red.out`, `c2-selftest.out` |
+| C3 freshness | `python3 tools/round83-pin-rechecks.py --repo . --register registry/engine-pin-relations.tsv --rows registry/pin-recheck-rows.tsv` | graded4/ungraded1 → rows5/graded5/holds5/ungraded0/bad0 exit0 | `.ufo/waves/round-84/measured/after/c3.out`; L1 source acquisition JSON corroborates origin independently |
+
+C1's planned event-loss disclosure row is not fabricated: source event is ungraded, not restored. History archived unchanged and narrative disclosed. That auxiliary instruction is missed even if the final numeric gate verifies; no unconditional round admission. C2 is bounded token-backed repair, with actual head cells corrected; indented-heading and unrelated-token critic escapes remain disclosed. C3 numeric integrity alone is not acquisition provenance. No new repertoire capability is claimed or pre-entered; the canonical 49-row repertoire stays unchanged.
