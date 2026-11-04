@@ -362,3 +362,15 @@ child is the round-16/60/61 fixture boundary, not service restoration: no `~/.co
 or systemd write, no registered consumer contacted, no consumer row admitted, and the live-host
 leg gates nothing. The three registered consumers keep their last recorded `DEAD` state; K05
 declared-versus-served context capacity across real consumers remains frontier.
+
+## Round-81 instrument note (appended 2026-11-04)
+
+The append-only acceptance surface is now lane-owned instruments: `tools/round81-append-debt.py`
+grades the frozen audit's acceptance population under the late-acceptance rule (a later round's
+row binds by strict commit ancestry and round order, exact hash/count/class, base population;
+`pending` is the graded round's own visible debt), `tools/round81-late-rows.py` generates and
+`--check`s the deterministic row set, and `registry/append-only-late.tsv` is the committed
+late-acceptance register. The frozen `tools/round75-append-accepted.py` and
+`registry/append-only-accepted.tsv` stay as history: their pre-introduction cutoff cannot accept a
+post-introduction event, which is why the pre-report gate's arm 8 now composes the new counter.
+Late acceptance never restores bytes and never changes the audit's `unrestored` count.
