@@ -158,3 +158,28 @@ bound (B2); the delta is graded by path, not by the claiming sentence, so a reco
 header that is not the tip and a prose "at the tip" goes ungraded (B6); brace expansion is mechanical,
 so a fenced example citation is read as a citation (B4). No claim says the registered consumers serve:
 they keep their last recorded `DEAD` state and nothing was sampled.
+
+## L1 final note (appended at the receipts tip; nothing above is rewritten)
+
+Two defects of this round's own making, disclosed rather than repaired in place.
+
+1. **The round's records commit landed before the record was final, and I then edited dated lines in
+   place.** `tools/append-only-audit.py --repo . --to master` reports `unrestored 33 → 41` across the
+   round's commit range: the round-72 `SCORECARD.md` section and this lesson were committed at
+   `e608134a` and then corrected in place while the pre-report gate's self-description arm was red
+   (closure pointer, banner, planned pointer, depth sha, line counts). Correct method: derive every
+   cited value at the instrument tip first, write the dated section once, and correct by append. The
+   surviving record is accurate; the history is not clean, and the audit's count is the evidence.
+2. **The binding gate cannot yet grade this lane's own record, and the run is left red on purpose.**
+   `python3 tools/round72-receipt-tip-binding.py --repo . --round 72 --tip master` at the receipts tip
+   prints `cited=138 bound=0 unbound=105 shifted=24 stale=9`, exit 1, against the frozen predicate. Three
+   causes, all structural rather than defects in the tool's rule: (a) most citations name **seat
+   receipts measured against throwaway fixture repositories**, whose header revisions are fixture
+   commits that cannot be ancestors of a lane tip — the predicate has no `fixture` role (tameshi's
+   `receipt-revision-gate.py` models `positive`/`verdict`/`control` roles and would grade these as a
+   different class); (b) a bare basename resolves to the wave root (SCT01 finding 7) and then fails as
+   absent or headerless; (c) `freeze.txt`, `w1-results.json` and `w1-dispatch.json` are wave evidence
+   that carries no measurement header. The claim verifies on its frozen kill rule (three kills, clean
+   fixture, `cited=0`/missing-section exit 2, and the round-71 record re-graded `bound=1` on real bytes);
+   the lane-record run is a routed finding, not a pass, and the fix is a `fixture` receipt class plus a
+   path-only resolver — round 73, with a red fixture first.
