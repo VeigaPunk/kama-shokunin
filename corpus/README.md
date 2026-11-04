@@ -1750,3 +1750,17 @@ fixture legs and the live-host leg) and the `registered` column plus
 Indexing them here does not certify their execution beyond the receipts cited in the round
 report. Registered consumers remain `DEAD`; admitting a consumer pin for an ungoverned
 listener stays operator-owned and is not asserted by this row.
+
+## Coverage map — round 80 addition
+
+| Entry | Covers | Round |
+|---|---|---|
+| `corpus/knowledge/unregistered-class-second-engine.md` | Round-80 second-engine reading of the `registered` census class: Ollama's native `GET /api/tags` is an inventory of models available locally, the probe reads `/v1/models`, and the class keys on the registry's declared ports rather than on engine identity; an inventory is not a loaded-model or readiness claim | 80 |
+
+Frontier: the round-80 second-engine surface is `tools/round80-ollama-census.py` (the Ollama
+v0.40.11 fixture leg, the two-registry legs and the `--audit` engine register) plus
+`registry/unregistered-class-engines.tsv`; indexing the entry here does not certify that run
+beyond the receipts cited in the round report. Registered consumers remain `DEAD`; admitting a
+second engine's consumer pin stays operator-owned and is not asserted by this row. The pin
+relation surface (`registry/engine-pin-relations.tsv`, round 80 C2) is a freshness register,
+not coverage: it relates refs the lane already holds.
