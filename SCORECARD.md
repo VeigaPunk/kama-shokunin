@@ -50,7 +50,7 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 ## Planned
 
-The live plan is `### Planned (round 74)` below; historical plans remain as filed.
+The live plan is `### Planned (round 75)` below; historical plans remain as filed.
 
 ## Retired
 
