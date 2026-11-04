@@ -3,7 +3,7 @@
 Contract per `AXES.md` §SCORECARD.md contract. Scores are 0–10, self-assessed,
 each bound to an evidence pointer and the round that last changed it.
 
-**Current authority (round 72):** assigned axes are operability + calibration (`shokunin.conf` kama row; the MISSION.md freshness conflict remains open at `.ufo/l0-questions.md:145`). Latest measured round: 72, with round 71 closed **admitted** by the round-71 non-author closure (`corpus/lessons/round-71-verifier-spotcheck.md`: all three claims verified on re-measurement; no axis harmed; scores held operability 8 / calibration 7; five status-neutral defects routed, all five closed in round 72). Round 72 declares C1 calibration (a registered `round-scope` counter grades the round label, the whole-repo uncommitted class and the ignored class, and enters the pre-report gate as arm 6) and C2 operability (a registered `receipt-tip-binding` gate binds every receipt the round's self-record cites to the revision it measured and refuses a `rev..tip` delta that touches an instrument input); both are instrument repairs, so the scores hold.
+**Current authority (round 73):** assigned axes are operability + calibration (`shokunin.conf`); Latest measured round: 73. Round 72 was admitted by `corpus/lessons/round-72-verifier-spotcheck.md`. Round 73 works C1 calibration (three disclosed self-assessment mismatches closed by the scope cases), C2 operability (receipt claim binding) and C3 freshness (bounded host-triple drift; not a change of assigned axes). Scores hold. C2's full frozen clean-fixture clause is unprovable on committed bytes; B6 is killed and the real record is evaluated with explicit measured revisions. Round admission is not self-certified.
 
 ## Axes
 
@@ -50,7 +50,7 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 ## Planned
 
-Superseded in round 42. The live plan is `### Planned (round 73)` below (§Round 72); the round-5 plan this section carried is kept verbatim under §Historical head sections.
+The live plan is `### Planned (round 74)` below; historical plans remain as filed.
 
 ## Retired
 
@@ -3885,3 +3885,66 @@ killing fixture; none is in this round's frozen kill rule.
 1. Calibration: give C1's three survivors (linked worktree, valid older label, `submodule.ignore=all`) a named fixture each and extend the counter's predicate by append — one new case at a time, never a widened freeze after data.
 2. Operability: extend C2's delta grading to the citing line (a "at the tip" token against a non-tip header), the B6 class CRT01 named, with a red fixture first.
 3. Freshness: re-run `tools/round71-province-host-claims.py` unchanged (`uncovered=0` expected) and give the four prose claims their `recheck` cadence so a host move is caught by a counter.
+
+## Round 73 — survivor cases, receipt claims and a bounded host-triple check (2026-11-03)
+
+Frozen plan: `plans/round-73-claims.md`; base `6e961996`, freeze `24bc96ad`, wave freeze
+`bc9e3059`. ONE v1 wave, 15 seats, all settled before this record. See `LOG.md` §Round 73 and
+`corpus/lessons/round-73.md` for Gate, mistakes, wave integration and the prior closure's defects.
+
+All receipt citations below were re-run at revision
+`2e3ca86788c0ef041b34b329d58db6d7953513fc`, then committed at `7f6c96e3`.
+That revision is the final instrument input, not the commit containing these citing lines.
+The final binding receipt is reported in the fleet report, not recursively cited here.
+
+| Claim | Axis / score delta | Before → after, command and evidence | Verdict |
+|---|---|---|---|
+| C1: the three disclosed round-72 self-assessment mismatches acquire killing cases | calibration 7 → 7 | Command: `python3 .ufo/waves/round-73/controls/score-survivors.py`. Base counter accepts 3/3 survivors; final `SURVIVORS c1 base_green=3 v2_killed=3 v2=present clean=green`, measured at the revision above: `measured/after/score-survivors.out`. Direct command `python3 tools/round73-round-scope-cases.py --repo . --round 73 --tip master` prints `ROUND_SCOPE_V2 round=73 cases=6 findings=0`: `measured/after/round-scope-v2-live.out`. Selftest 26/26: `measured/after/round73-scope-selftest.out`. Nested-submodule and linked-worktree ignored F3 counterexamples both now exit 1: `measured/after/f3-replay.out`. | verified on the named mismatch population; calibration classification contested by CRT01 |
+| C2: the three-token citing-line claim population is checked over the frozen base binding | operability 8 → 8 | Command: `python3 tools/round73-receipt-claim-binding.py --repo . --round 73 --tip master`. Base accepts B6; final B6 exits 1 with `stale-claim`, `SURVIVORS c2 base_green=1 v2_killed=1`: `measured/after/score-survivors.out`. Final selftest is 14/14, not the earlier 13-arm seat measurement: `measured/after/round73-claim-selftest.out`. The real record uses explicit receipt revisions and must print zero base findings and zero three-token claims. | B6 verified; full frozen clean-fixture clause unprovable: a committed receipt cannot contain its own commit hash |
+| C3: the latest declared kernel/architecture/distribution triple equals the live triple | freshness 8 → 8 | Command: `python3 tools/round73-province-host-drift.py --repo .`. Before no counter/block; shortcut accepts stale triple. Final `PROVINCE_HOST_DRIFT blocks=1 recorded=Linux/x86_64/arch live=Linux/x86_64/arch stale=0`: `measured/after/province-host-drift-live.out`; 9/9 selftest includes no-block and component comparisons: `measured/after/round73-drift-selftest.out`. | verified for the triple only; not physical-host uniqueness or history integrity |
+
+Gate measured at the same revision: `PRE_REPORT round=73 arms=6 failed=0 uncommitted=0`,
+`measured/after/pre-report-gate.out`; gate selftest 12/12:
+`measured/after/pre-report-selftest.out`. Inherited r72 selftests remain 16/16 each:
+`measured/after/round72-round-scope-selftest.out`,
+`measured/after/round72-binding-selftest.out`.
+Registry 85 registered, 0 unregistered, 0 defective: `measured/after/gate-registry.out`.
+Province marker counter remains `contradicted=14 uncovered=0`: `measured/after/province-host-claims.out`.
+
+The scorer's exit 0 by itself is not claim evidence: absent modules also produce exit 0.
+Its actual `v2=present`, kill totals and clean-reference fields above, direct module runs and
+final module bytes are the evidence. The predicates and scorer were not widened after scoring.
+L1's F3 implementation repair brought two missing enumerations inside the frozen sentence.
+The three-token claim pass does not cover wrapped lines or unlisted wording. Host blocks do
+not prove physical-machine identity and edit/delete history is ungraded. Thus C2 prevents an
+unqualified whole-round admission claim; the round lands an honest stop on its full frozen rule.
+
+### Capabilities demonstrated in round 73
+
+The round-72 list remains the 19-row repertoire; these three demonstrated operations extend
+it to 22. The old head mirror remains the 17-row round-71 list. R73-D1: the self-description
+reconciler recognises bold canonical headings only, so the unbolded round-72 list is invisible
+to it. This discrepancy is disclosed, not treated as a reconciler certification of 22 rows.
+
+| Capability | What it can now do | Evidence pointer | First-working round |
+|---|---|---|---|
+| round-scope-cases | Grade linked-worktree dirt, newer-round ignored work and nested submodule dirt in addition to the inherited scope cases | `tools/round73-round-scope-cases.py`; `measured/after/score-survivors.out`; `measured/after/f3-replay.out` | 73 |
+| receipt-claim-binding | Reject a three-token tip claim whose cited receipt header names another revision; real records use explicit revisions | `tools/round73-receipt-claim-binding.py`; `measured/after/score-survivors.out` | 73 |
+| province-host-drift | Compare the newest recorded kernel/architecture/distribution triple with the live triple | `tools/round73-province-host-drift.py`; `measured/after/province-host-drift-live.out` | 73 |
+
+### Round-72 record erratum
+
+The round-72 C2 row's `pass=14`/14-arm descriptions are superseded: the committed r72 module
+has 961 lines and its selftest prints `RECEIPT_TIP_BINDING_SELFTEST pass=16 fail=0`.
+The current 14-arm tally belongs to the separate round-73 claim module, not that r72 tool.
+The lesson's Gate now carries the prior and current `used-by` transitions plus explicit
+rejection reasons and flips. Before controls carry exit lines this round. Round-72's own-record
+red remains historical; it is not retrospectively made green.
+
+### Planned (round 74)
+
+1. Calibration: repair R73-D1 with a frozen fixture that makes the newest repertoire heading visible.
+2. Operability: replace C2's impossible committed header-equals-containing-tip clean rule with a
+   realizable explicit-revision predicate; add mixed-case, wrapped-line and line-offset kill arms.
+3. Freshness: add base-revision preservation checking for host blocks; retain the bounded triple
+   description and do not call it a unique physical-host identifier.

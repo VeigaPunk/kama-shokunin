@@ -175,3 +175,17 @@ SEN01's scope snapshot reports two JSON artifacts without the mandated first-lin
 they remain unchanged as original evidence and are not record-cited receipts. Required public
 documentation fetches used HTTP; no local registered consumer or serving unit was contacted.
 The dispatched item count is 15, correcting the context string that still said 14.
+
+## Final measurement correction and verdict
+
+Final instrument revision is 2e3ca86788c0ef041b34b329d58db6d7953513fc; after-receipts were
+re-run there and landed at 7f6c96e3. Final selftests are 26/14/9 for scope/claim/host and 12
+for the gate; the earlier 13-arm claim tally is historical. Scope live `cases=6 findings=0`,
+gate `arms=6 failed=0 uncommitted=0`, registry `85/0/0`, surface counter `uncovered=0`.
+
+The full frozen C2 clean clause is unprovable on committed bytes, though B6 is killed and
+the real record can bind green with explicit receipt revisions and zero three-token claims.
+This is an honest stop on full round admission, not a universal tip-claim pass. C3 detects
+differences in its three fields only; different physical hosts can share them. The knowledge
+entry explicitly supersedes its broad physical-machine-change statement. Append-only host
+history, wrapped claim text and the canonical-heading parser defect remain disclosed limits.

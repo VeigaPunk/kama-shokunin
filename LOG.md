@@ -2903,3 +2903,36 @@ block-exists-shortcut blocks=1`).
   the 15 dispatch names, while the spec's own seat text and this round's goal say "ONE v1 wave of 14
   seats"; the measured count is the spec's, and the delta is recorded here rather than repaired in the
   freeze. The L1 appends the integration block after the seats land.
+
+### Round-73 L1 landing and limitations
+
+WAVE-DONE: all 15 seats settled before filing. Instruments/evidence landed `e9c41554`;
+the host-triple scope correction and initial receipts landed `2e3ca867` (final instrument
+input), and re-run receipts naming that revision landed `7f6c96e3`.
+Commands and complete streams/exits live in `.ufo/waves/round-73/measured/after/`.
+The survivor fields are C1 `base_green=3 v2_killed=3 clean=green`, C2 `base_green=1
+v2_killed=1`, C3 `base_green=1 v2_killed=1`. Direct scope verdict `cases=6 findings=0`;
+host-triple verdict `stale=0`; inherited scope/binding selftests 16/16 each; final new
+selftests scope 26, claim binding 14, host drift 9, gate 12, all fail=0. The earlier 13-arm
+claim-module tally was superseded by the final 14-arm implementation, not copied forward.
+Gate `PRE_REPORT round=73 arms=6 failed=0 uncommitted=0`; registry 85/0/0; province surface
+counter `contradicted=14 uncovered=0`; source census exit 0, rows 283 → 285.
+
+L1 repaired CRT01 F3 by recursively enumerating nested submodules and ignored newer-round
+directories in every worktree, keeping the predicate and scorer unchanged. The independent
+replay kills both counterexamples (exit 1 each). Module digests and direct after-runs, not the
+scorer's exit alone, bind the final implementation. MT01's original-byte matrix is 44 mutants,
+34 killed / 10 survived; no claim that its matrix retested the L1 repair is made.
+
+Honesty: C2's frozen clean branch (a committed receipt header equals its containing commit)
+is a hash fixed-point requirement and was not demonstrated on committed bytes. B6 is killed,
+but the full C2 kill rule is unprovable, so round 73 is an honest stop, not self-admitted.
+C3 grades the kernel/architecture/distribution triple, not unique physical identity or
+append-only history. The source/knowledge correction explicitly marks that overclaim.
+C1's calibration framing is contested (CRT01); its measured mismatch population is exactly
+the three survivors disclosed by the previous self-assessment. Scores remain unchanged.
+
+Round-72 errata: C2 had 961 lines / 16 arms, not 942 / 14; the Gate table in round-73's lesson
+now logs old→new used-by cells and explicit rejection flips. Before-control exits are recorded.
+The stale-lane duration is stated from timestamps in the report, not asserted below a tick.
+No service restore, configuration write, package install or registered-endpoint sample occurred.
