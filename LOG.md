@@ -3165,3 +3165,47 @@ Correction (2026-11-04, round 77) — the gate shape: the whole `round76-instrum
 (its baseline-shifting receipt rule and its closure-resolving fact harness are superseded by arm 10),
 so the gate carries nine arms; `PRE_REPORT round=77 arms=9 failed=0 uncommitted=0`. The round entry
 above names one sub-check; that is superseded by this line.
+
+## Round 78 — the round-77 self-record is graded, the registers bind at the audited revision, the verdict runs live (2026-11-04)
+
+Frozen plan `plans/round-78-claims.md` (freeze `11f46d64`, amended pre-dispatch; base
+`c62ffd3a`). Work landed at `773c8abe`. Three claims, three distinct axes, all verified:
+
+- **C1 calibration (lowest assigned axis, 7)** — `tools/round78-selfrecord-round77.py` re-derives six
+  declared facts of the round-77 self-record at the sealed revision `6c1550a14babaca…` and grades
+  dated, value-bound corrections. Before: `SELFRECORD_R77_ENUM claims=6 stale=4` exit 1; after:
+  `SELFRECORD_R77 claims=6 mismatches=0 corrected=4 unbacked=0` exit 0; selftest `pass=8 fail=0`.
+  The four repairs: SKILL's pre-report-gate row (nine arms, `arms=9`, `pass=22`,
+  `round77-instruments`), an appended pointer correction to §Round 77, a `source-correction:` line
+  citing S073 in `register-cutoff-split.md`, and two coverage-map rows.
+- **C2 freshness** — `tools/round78-append-registers.py` extends the round-77 accounting to the base
+  revision with an ancestry filter and a committed-row boundary. Before: `events=248 … exempt=56 …
+  unaccounted=3` exit 1; after: `events=248 accepted=53 exempt=59 permitted=28 out_of_region=4
+  restored=99 disclosed=5 unaccounted=0 introductions=1/1 rotation_safe=1` exit 0; selftest
+  `pass=7 fail=0`; three `exempt-head` rows appended for the round-77 SCORECARD events
+  (`05a03980`, `0fca5e18`, `21458716`). The frozen predicate's "committed at the audited revision or
+  earlier" clause and the plan's scope ruling (b) differ; the ruling is the operative reading and the
+  divergence is recorded in SCORECARD, not rewritten.
+- **C3 operability** — `tools/round78-live-reconcile.py` starts the pinned `llama-b11755` child on an
+  unregistered loopback port, writes a three-row scratch registry and grades the probe's verdicts:
+  `LIVE_RECONCILE rows=3 model_ok=1 mismatch=1 dead=1 probe_exit=2 runtime=llama.cpp
+  served=stories260K` exit 0; arms `pass=4 fail=0`. The three registered consumers were not sampled
+  and keep their recorded `DEAD` state.
+
+Frontier: registry 290 → 292 rows (S551 git-rev-parse `--verify` admitted with a located 18-word
+quote; S552 own-work instrument class; the `git-cat-file` candidate rejected as a duplicate of
+S071/S083 with its flip recorded); two knowledge entries admitted
+(`append-registers-at-the-tip.md`, `live-reconcile-trial.md`); `corpus/QUALITY.md` gains KQ129 from
+`considerthese/2026-10-26.md` proposal 3. Round-77 routed defects D1–D9 are disposed in SCORECARD
+§Round 78. An unregistered live listener (`127.0.0.1:1234`, four LFM3 ids) is recorded as an
+observation, not adopted.
+
+Wave: one v1 wave, 12 seats (3 executor, 3 scribe, 1 scout, 1 connector, 1 reviewer, 2 critic,
+1 mutation-tester; attack 4/12 = 33 %). Three seats returned output; nine returned empty and are
+recorded dead — their landed files are used only where they re-derive, and the L1 ran the claim
+counters, the do-nothing controls against the base receipts, and the gate. No attack seat certified
+this round; the closure's non-author verification remains the authority.
+
+Owed by round 79: wire the three round-78 instruments into the pre-report gate as their own arm and
+re-anchor the SKILL row in the same commit; extend the self-record harness to the round-78 record;
+turn the unregistered-listener observation into a probe-visible census class.
