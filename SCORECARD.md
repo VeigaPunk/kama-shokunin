@@ -11,7 +11,7 @@ Round 43 re-anchors the `SKILL.md` and `PROVINCE.md` hashes after the round-43 e
 
 | Axis | Score | Evidence pointer (re-derivable at the measured commit) | Last change |
 |---|---|---|---|
-| **operability** | **8** | registry gate `tools/kama-probe.sh` sha256 `4393ab819d6a741646237ef0268cc0836988a9711bab6b06c46cbfea382964f4` (1138 lines); run `python3 tools/pin-watch.py selftest` → `selftest pass=9 fail=0`; run `python3 tools/pre-report-gate.py --selftest` → `PRE_REPORT_SELFTEST pass=21 fail=0`; run `python3 tools/round72-round-scope.py --selftest` → `ROUND_SCOPE_SELFTEST pass=16 fail=0`; round 74: run `python3 tools/round74-receipt-claim-binding.py --selftest` → `RECEIPT_CLAIM_V2_SELFTEST pass=11 fail=0`; run `python3 tools/pre-report-gate.py --selftest` → `PRE_REPORT_SELFTEST pass=21 fail=0` (arm 7 composes the three v2 counters). Limit: registered consumers retain their last recorded DEAD state; these are lane-local instrument checks, not a readiness claim | score round 3; run facts re-derived round 74 |
+| **operability** | **8** | registry gate `tools/kama-probe.sh` sha256 `4393ab819d6a741646237ef0268cc0836988a9711bab6b06c46cbfea382964f4` (1138 lines); run `python3 tools/pin-watch.py selftest` → `selftest pass=9 fail=0`; run `python3 tools/pre-report-gate.py --selftest` → `PRE_REPORT_SELFTEST pass=22 fail=0`; run `python3 tools/round72-round-scope.py --selftest` → `ROUND_SCOPE_SELFTEST pass=16 fail=0`; round 74: run `python3 tools/round74-receipt-claim-binding.py --selftest` → `RECEIPT_CLAIM_V2_SELFTEST pass=11 fail=0`; run `python3 tools/pre-report-gate.py --selftest` → `PRE_REPORT_SELFTEST pass=21 fail=0` (arm 7 composes the three v2 counters). Limit: registered consumers retain their last recorded DEAD state; these are lane-local instrument checks, not a readiness claim | score round 3; run facts re-derived round 74 |
 | **freshness** | **8** | snapshot/diff harness `tools/test-snapshot.sh` sha256 `236c23c12964cf0b2f0a2f970187e216d3398dcf2b92ffb7e8606e0fdd029646` (194 lines); run `python3 tools/citation-provenance.py --selftest` → `selftest: ok (24 cases)`; round 74: run `python3 tools/round74-province-host-drift.py --selftest` → `PROVINCE_HOST_DRIFT_V2_SELFTEST pass=10 fail=0`; live drift evidence `.ufo/waves/round-41/c2/ls-remote-vllm.txt` sha256 `13388e483163357aa4daea784d0e67cdc8d6b5438d3166d613a2a044590b9282`; run `python3 -c "recheck=[l.split(chr(124))[10].strip() for l in open('corpus/SOURCES.md') if l.startswith(chr(124)+' S') and int(l.split(chr(124))[1].strip()[1:])<=477];print(sum(1 for r in recheck if r))"` → `218` (registry rows S001–S477 carrying a recheck cadence). Limit: snapshots are invocation-driven (no clock), and source rechecks run on each row's `recheck` cadence; release re-verification ledger `registry/release-recheck-b11889.tsv`: the 91 `on-release` registry rows pinned to a llama.cpp commit re-verified at release b11889 (counter `tools/round44-release-recheck-audit.py`, §Round-44 measured results: 82 holds, 3 holds-reworded, 6 unchanged-file, 0 drifted, 0 removed) | score round 10; evidence re-anchored round 44 and again round 72 (registry rows `282 → 283`; S543 `git-check-ignore` opened this round, `used-by` this round's knowledge entry) |
 | depth | **7** | `SKILL.md` sha256 `f18c9bcc7db5de4280fecd33337613b852fb650e757563621fa676745fe9a421` (1736 lines); run `grep -c '^## ' SKILL.md` → `48`; `corpus/knowledge/endpoint-identity.md` sha256 `0100ac6d89876b2f11a58542ae1ab75c3765f61d9d138fdad4d720074ddf13d7` (218 lines) | score round 1; evidence re-anchored round 73 after registry edits |
 | coverage | **9** | surface list `PROVINCE.md` sha256 `7242a9db1c40c6911de3e5454bd46368a00cbdb28ee077259d21c44b22a6a730` (331 lines; round 77 left it unchanged); run `python3 -c "import glob;print(len([f for f in glob.glob('corpus/knowledge/*.md') if 'engine-sides' not in f and 'processes' not in f]))"` → `49` (round 77 added the baseline-receipt and register-cutoff entries; round 76’s fence-scope and self-record fact entries had brought it to 47) | score round 10; evidence re-anchored round 77 |
@@ -50,7 +50,18 @@ tree but nothing listens on 34113. Unblock: operator restarts `qwen-coder.servic
 
 ## Planned
 
-The live plan is `### Planned (round 78)` once written; historical plans remain as filed, round 77's plan is in `plans/round-77-claims.md` and executed in the §Round 77 section below, and round 76's plan is at the end of the §Round 76 section.
+The live plan follows; historical plans remain as filed (round 77's in `plans/round-77-claims.md`, executed in the §Round 77 section below; round 76's at the end of the §Round 76 section).
+
+### Planned (round 78)
+
+1. Calibration: run the sealed-fact harness against the round-77 record's own facts (work tip,
+   the three corrections' values, the 34-row capability count) so the next round starts from
+   `mismatches=0` with a target whose corrected count was measured before the freeze.
+2. Freshness: extend the two-register accounting to the live tip (the round-76 and round-77
+   events included) and keep the `rotation-reintroduced` and `inside-region` arms red-capable.
+3. Operability: give the baseline class a certifying control that a later `tools/` delta still
+   shifts an at-the-tip receipt, or extend the class to a sealed `measured/after` receipt whose
+   revision is re-runnable, whichever the next measurement shows is reachable.
 
 ## Retired
 
@@ -149,7 +160,7 @@ Mirror of the round-77 canonical capability list that §Round 77 carries (a mirr
 | receipt-scope | Classify a self-record's citation population: fenced quotation excluded, self-description deltas non-shifting, every live citation named | `tools/round76-receipt-scope.py` | 76 |
 | selfrecord-facts | Re-derive eight declared self-record facts at the revisions they name and count value-bound corrections | `tools/round76-selfrecord-facts.py` | 76 |
 | append-exempt-class | Account every audit event once and preserve a multi-register introduction cutoff | `tools/round76-append-exempt.py` | 76 |
-| citation-baseline | Bind a `measured/before/` receipt by header ancestry and byte reproducibility at its introducing commit while the at-the-tip delta rule still shifts ordinary receipts | `tools/round77-citation-baseline.py` | 77 |
+| citation-baseline | Bind a pre-round measurement receipt by header ancestry and byte reproducibility at its introducing commit while the at-the-tip delta rule still shifts ordinary receipts | `tools/round77-citation-baseline.py` | 77 |
 | append-registers | Account every audit event once across two registers with independent introduction cutoffs, the audit's `permitted` carriage class and the contract's `out_of_region` class, with rotation detection | `tools/round77-append-registers.py` | 77 |
 | selfrecord-round76 | Re-derive six sealed round-76 facts and accept only value-bound corrections whose stated value re-derives | `tools/round77-selfrecord-round76.py` | 77 |
 
@@ -4373,3 +4384,12 @@ Population at `rev=d86ce85b`: `SKILL.md` 1736 lines sha256 `f18c9bcc…` (unchan
 gate `PRE_REPORT_SELFTEST pass=22 fail=0`; the round-76 `append-exempt` sub-check is retired from
 the gate because its shared-cutoff rule is red by construction once the exempt register grows
 (`measured/after/gate-selftest.out`, `gate-run.out`).
+
+## Superseded head bytes (round 77; held so the audit grades the head re-derivation restored)
+
+Round 77 re-derived the banner in place, which the append-only contract grades because it sits
+before the first `## ` heading. The first-filed banner is held here byte-exactly:
+
+``````text
+**Current authority (round 76):** assigned axes are operability + calibration (`shokunin.conf`); Latest measured round: 76. Round 76 declared three claims: C2 calibration verified (the round-75 self-record's eight facts re-derive or are superseded by value-bound corrections, `mismatches=0 corrected=5`), C1 operability and C3 freshness honest misses (their frozen targets were unsatisfiable as written; both instruments, registers and arms landed and the measurements that disprove the targets precede any green run). Scores hold: operability 8, freshness 8, calibration 7, depth 7, coverage 9, adjacency 7; the three new capabilities enter the repertoire. The detailed head of the round is the `## Round 76` section below.
+``````
