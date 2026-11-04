@@ -387,3 +387,18 @@ only honest resolution is re-opening the pinned document at its own ref; the rou
 llama.cpp `tools/server/README.md` at `b11755` and at `b12103` (the `### GET /health` statement is
 byte-identical, one line shifted, while the document grew 2402 → 2620 lines), recorded in
 `corpus/knowledge/pin-recheck-trigger.md`. No consumer config, unit or host surface is touched.
+
+**Round-83 note — the recheck register and the caller-path binding (2026-11-04).**
+`registry/pin-recheck-rows.tsv` answers each data row of `registry/engine-pin-relations.tsv` with one
+graded recheck, re-derived by `tools/round83-pin-rechecks.py` from two committed anchor extracts under
+`corpus/anchors/` (S566–S570); the verdict vocabulary and the `ungraded` class live in
+`corpus/knowledge/pin-recheck-rows.md`. The extracts are bounded regions of upstream documents, never
+the whole file, and the counter reads committed bytes only — no endpoint, runtime or registered consumer
+is sampled, and the three registered consumers keep their last recorded `DEAD` state.
+`tools/round83-pending-falls.py` reads the round-82 gate receipt and recomputes the population window
+from the frozen audit; it samples nothing. Two further admitted sources ground lane-internal rules
+rather than serving surface: S571 (the `git blame` manual) is the per-row introduction rule's ground,
+and `corpus/knowledge/register-row-introduction.md` states both the rule and its limit (blame attributes
+the last byte change, not a stable first introduction). A serving-runtime disposition, other engines'
+documents and the `/ready` + `/ping` classes on a live server stay frontier; service restoration
+remains operator-owned work under the write boundary above.

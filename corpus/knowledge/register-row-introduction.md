@@ -23,6 +23,11 @@ with exit 2. A row whose line cannot be blamed is `unbound-register`, never acce
 
 ## What it does not say
 
+Blame answers "which commit last changed this line's bytes", not "which commit first introduced the
+row": a later whitespace-only edit moves the attribution (the critic's fixture, `.ufo/waves/round-83/w1/CR01FalsifyClaims/blame-whitespace.out`, shows the attributed commit changing after a
+committed trailing-space edit). The frozen rule is therefore honest only as blame attribution, and a
+cosmetic edit can move a row's provenance forward. That limit is disclosed, not repaired.
+
 Blame says nothing about whether the acceptance is honest — a row can be appended by any commit. The
 rule's teeth are elsewhere: exact cell equality against the frozen audit, the accepting round strictly
 greater than the deletion round, and the note's deletion round bound to the event commit's own subject.

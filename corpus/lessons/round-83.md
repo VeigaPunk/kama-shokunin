@@ -60,6 +60,17 @@ unbacked=3`, exit 1 (`.ufo/waves/round-83/w1/EX03SelfRecord/final-records-only.o
 record lines outside those regions turn the same run green (`mismatches=0 corrected=3 unbacked=0`). The
 tightened leg is therefore load-bearing, not decorative.
 
+## Routed record correction (round 82, outside the C2 population)
+
+The critic's sealed sweep found a fourth stale cell the six-fact population does not carry:
+`SCORECARD.md:4971` (§Round 82 C2 row) states its cited before receipt prints `new=0 bad=15`, and
+`.ufo/waves/round-82/measured/before/c2-late-delta-base.out` actually prints
+`LATE_DELTA round=82 base=aaf974dbd3b6 population=103 carried=88 new=15 bad=15`, exit 1. The row's
+`new=` cell is therefore stale by one value. It is recorded here as prose, not as a `corrected F<n>`
+block, because C2's population was frozen at six facts and widening it after data would rewrite the
+claim; the row's `bad=15` and its exit-1 verdict are correct and the correction is owed to round 84's
+own counter population.
+
 ## Mistakes
 
 | class | evidence pointer | captured-by | fix |
